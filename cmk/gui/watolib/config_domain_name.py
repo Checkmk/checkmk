@@ -11,7 +11,7 @@ import pprint
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Final
+from typing import Any, Final, TypedDict
 
 import cmk.ccc.plugin_registry
 from cmk.ccc import store
@@ -41,14 +41,18 @@ def wato_fileheader() -> str:
     return "# Created by WATO\n\n"
 
 
-SerializedSettings = Mapping[str, Any]
+class SerializedSettings(TypedDict, total=False):
+    hosts_to_update: Sequence[HostName]
+    need_apache_reload: bool
+
+
 DomainSettings = Mapping[ConfigDomainName, SerializedSettings]
 
 
 @dataclass
 class DomainRequest:
     name: str
-    settings: SerializedSettings = field(default_factory=dict)
+    settings: SerializedSettings = field(default_factory=lambda: SerializedSettings(dict()))
 
 
 DomainRequests = Sequence[DomainRequest]

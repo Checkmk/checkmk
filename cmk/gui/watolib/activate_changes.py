@@ -878,19 +878,17 @@ def _get_domains_needing_activation(
     omd_ident: ConfigDomainName, site_changes_activate_until: Sequence[ChangeSpec]
 ) -> DomainRequests:
     domain_settings: dict[ConfigDomainName, list[SerializedSettings]] = {}
-    omd_domain_used: bool = False
+    omd_domain_setting_changes: list[SerializedSettings] = []
     for change in site_changes_activate_until:
         if change["need_restart"]:
             for domain_name in change["domains"]:
+                settings = get_config_domain(domain_name).get_domain_settings(change)
                 # ConfigDomainOMD needs a restart of the apache,
                 # make sure it's executed at the end
                 if domain_name == omd_ident:
-                    omd_domain_used = True
-                    omd_domain_change = change
+                    omd_domain_setting_changes.append(settings)
                     continue
-                domain_settings.setdefault(domain_name, []).append(
-                    get_config_domain(domain_name).get_domain_settings(change)
-                )
+                domain_settings.setdefault(domain_name, []).append(settings)
 
     domain_requests = sorted(
         (
@@ -900,8 +898,10 @@ def _get_domains_needing_activation(
         key=lambda x: x.name,
     )
 
-    if omd_domain_used:
-        domain_requests.append(get_config_domain(omd_ident).get_domain_request([omd_domain_change]))
+    if omd_domain_setting_changes:
+        domain_requests.append(
+            get_config_domain(omd_ident).get_domain_request(omd_domain_setting_changes)
+        )
 
     return domain_requests
 

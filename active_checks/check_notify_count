@@ -90,6 +90,9 @@ details = []
 num_users = 0
 raw_notifications = 0
 for contact_name, num in c.query_table(query):
+    # This results in an invalid metric and should therefore be skipped.
+    if contact_name == "":
+        continue
     if contact_name == "check-mk-notify":
         raw_notifications += num
     else:

@@ -2,6 +2,14 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""This module provides a class for managing web sessions with a Checkmk site.
+
+It contains methods for handling HTTP requests, verifying HTML page resources, and
+managing authentication.
+
+Note: this implementation is purely request-based and does not manage cookies or running
+JavaScript scripts.
+"""
 
 import logging
 import os

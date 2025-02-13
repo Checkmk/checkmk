@@ -136,7 +136,7 @@ def _execute_automation(
     parse_data: bool = True,
 ) -> object:
     cmdline = ["cmk", "--automation", cmd, *([] if args is None else args)]
-    p = site.run(cmdline, input=stdin, check=False)
+    p = site.run(cmdline, input_=stdin, check=False)
     error_msg = "Exit code: %d, Output: %r, Error: %r" % (p.returncode, p.stdout, p.stderr)
 
     assert p.returncode == expect_exit_code, error_msg

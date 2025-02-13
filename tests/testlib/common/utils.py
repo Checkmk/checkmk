@@ -229,7 +229,7 @@ def run(
     capture_output: bool = True,
     check: bool = True,
     encoding: str | None = "utf-8",
-    input: str | bytes | None = None,
+    input_: str | bytes | None = None,
     preserve_env: list[str] | None = None,
     sudo: bool = False,
     substitute_user: str | None = None,
@@ -241,7 +241,7 @@ def run(
 
     kwargs["capture_output"] = capture_output
     kwargs["encoding"] = encoding
-    kwargs["input"] = input
+    kwargs["input"] = input_
 
     with tracer.span("run", attributes={"cmk.command": repr(args_)}):
         return subprocess.run(args_, check=check, **kwargs)
@@ -414,7 +414,7 @@ def _terminate_daemon(
 def check_output(
     cmd: list[str],
     encoding: str = "utf-8",
-    input: str | bytes | None = None,
+    input_: str | bytes | None = None,
     preserve_env: list[str] | None = None,
     sudo: bool = False,
     substitute_user: str | None = None,
@@ -426,7 +426,7 @@ def check_output(
 def check_output(
     cmd: list[str],
     encoding: None,
-    input: str | bytes | None = None,
+    input_: str | bytes | None = None,
     preserve_env: list[str] | None = None,
     sudo: bool = False,
     substitute_user: str | None = None,
@@ -437,7 +437,7 @@ def check_output(
 def check_output(
     cmd: list[str],
     encoding: str | None = "utf-8",
-    input: str | bytes | None = None,
+    input_: str | bytes | None = None,
     preserve_env: list[str] | None = None,
     sudo: bool = False,
     substitute_user: str | None = None,
@@ -451,7 +451,7 @@ def check_output(
     cmd_ = _extend_command(cmd, substitute_user, None, sudo, preserve_env, kwargs)
 
     kwargs["encoding"] = encoding
-    kwargs["input"] = input
+    kwargs["input"] = input_
 
     with tracer.span("execute", attributes={"cmk.command": repr(cmd_)}):
         return subprocess.check_output(cmd_, **kwargs)
@@ -468,7 +468,7 @@ def write_file(
         _ = run(
             ["tee", Path(path).as_posix()],
             capture_output=False,
-            input=content,
+            input_=content,
             stdout=subprocess.DEVNULL,
             encoding=None if isinstance(content, bytes) else "utf-8",
             sudo=sudo,

@@ -49,7 +49,7 @@ def test_proxy_register_import_workflow(
             [agent_ctl.as_posix(), "import"],
             sudo=True,
             text=True,
-            input=proxy_registration_proc.stdout,
+            input_=proxy_registration_proc.stdout,
         )
 
         logger.info("Waiting for controller to open TCP socket or push data")

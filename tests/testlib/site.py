@@ -553,7 +553,7 @@ class Site:
         capture_output: bool = True,
         check: bool = True,
         encoding: str | None = "utf-8",
-        input: str | None = None,
+        input_: str | None = None,
         preserve_env: list[str] | None = None,
         **kwargs: Any,
     ) -> subprocess.CompletedProcess:
@@ -561,7 +561,7 @@ class Site:
             args=args,
             capture_output=capture_output,
             check=check,
-            input=input,
+            input_=input_,
             encoding=encoding,
             preserve_env=preserve_env,
             sudo=True,
@@ -574,7 +574,7 @@ class Site:
         self,
         cmd: list[str],
         encoding: str = "utf-8",
-        input: str | None = None,
+        input_: str | None = None,
         preserve_env: list[str] | None = None,
         **kwargs: Any,
     ) -> str: ...
@@ -584,7 +584,7 @@ class Site:
         self,
         cmd: list[str],
         encoding: None,
-        input: str | None = None,
+        input_: str | None = None,
         preserve_env: list[str] | None = None,
         **kwargs: Any,
     ) -> bytes: ...
@@ -593,7 +593,7 @@ class Site:
         self,
         cmd: list[str],
         encoding: str | None = "utf-8",
-        input: str | None = None,
+        input_: str | None = None,
         preserve_env: list[str] | None = None,
         **kwargs: Any,
     ) -> str | bytes:
@@ -603,7 +603,7 @@ class Site:
         """
         output = check_output(
             cmd=cmd,
-            input=input,
+            input_=input_,
             encoding=encoding,
             preserve_env=preserve_env,
             sudo=True,
@@ -753,7 +753,7 @@ class Site:
         makedirs(self.path(rel_path), sudo=True, substitute_user=self.id)
 
     def reset_admin_password(self, new_password: str | None = None) -> None:
-        self.run(["cmk-passwd", "-i", ADMIN_USER], input=new_password or self.admin_password)
+        self.run(["cmk-passwd", "-i", ADMIN_USER], input_=new_password or self.admin_password)
 
     def listdir(self, rel_path: str | Path) -> list[str]:
         output = self.check_output(["ls", "-1", self.path(rel_path).as_posix()])
@@ -2083,13 +2083,13 @@ class PythonHelper:
 
     def check_output(
         self,
-        input: str | None = None,
+        input_: str | None = None,
         encoding: str = "utf-8",
     ) -> str:
         with self.copy_helper():
             output = self.site.check_output(
                 ["python3", str(self.site_path)],
-                input=input,
+                input_=input_,
                 encoding=encoding,
                 stderr=subprocess.PIPE,
             )

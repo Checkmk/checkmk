@@ -42,7 +42,7 @@ def test_export_msi_file_table(site: Site) -> None:
     for name in ["File", "Property", "Component"]:
         size = int(
             site.python_helper("helper_test_export_msi_file_table.py")
-            .check_output(input=repr((name, str(msi_in))))
+            .check_output(input_=repr((name, str(msi_in))))
             .rstrip()
         )
         assert size > 0, f"Ups for [{name}]"

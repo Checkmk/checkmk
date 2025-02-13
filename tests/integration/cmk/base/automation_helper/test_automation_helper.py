@@ -132,5 +132,5 @@ def _fake_config_file(site: Site) -> Generator[None]:
 
 def _query_automation_helper(site: Site, serialized_input: str) -> str:
     return site.python_helper("_helper_query_automation_helper.py").check_output(
-        input=serialized_input
+        input_=serialized_input
     )

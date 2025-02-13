@@ -46,7 +46,7 @@ def get_snmp_table(
 ) -> tuple[Sequence[SNMPTable], MutableMapping[tuple[str, str, bool], list[tuple[str, bytes]]]]:
     return ast.literal_eval(
         site.python_helper("helper_get_snmp_table.py").check_output(
-            input=repr(
+            input_=repr(
                 (
                     tree.to_json(),
                     backend_type.serialize(),
@@ -67,7 +67,7 @@ def get_single_oid(
     ):
         return ast.literal_eval(
             site.python_helper("helper_get_single_oid.py").check_output(
-                input=repr(
+                input_=repr(
                     (
                         oid,
                         backend_type.serialize(),

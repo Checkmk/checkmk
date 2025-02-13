@@ -2,6 +2,11 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""This module sets up environment for sending and testing email notifications.
+
+It includes functions to configure and remove local Postfix server, wait for incoming emails,
+and verify the content of received emails.
+"""
 
 import email
 import logging

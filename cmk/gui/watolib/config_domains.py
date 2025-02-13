@@ -581,14 +581,14 @@ class ConfigDomainOMD(ABCConfigDomain):
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         current_settings = self._load_site_config()
 
-        settings = {}
-        settings.update(self._to_omd_config(self.load()))
-        settings.update(self._to_omd_config(self.load_site_globals()))
+        omd_settings = {}
+        omd_settings.update(self._to_omd_config(self.load()))
+        omd_settings.update(self._to_omd_config(self.load_site_globals()))
 
         config_change_commands: list[str] = []
-        self._logger.debug("Set omd config: %r" % settings)
+        self._logger.debug("Set omd config: %r" % omd_settings)
 
-        for key, val in settings.items():
+        for key, val in omd_settings.items():
             if key not in current_settings:
                 continue  # Skip settings unknown to current OMD
 

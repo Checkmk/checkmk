@@ -84,7 +84,7 @@ function getPlaceholder(magnitude: Magnitude): string {
     }
     return `${value}`
   }
-  return ''
+  return '0'
 }
 
 const localValidation = ref<Array<string>>([])

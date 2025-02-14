@@ -33,6 +33,10 @@ def validate_rule_values(
 
         for folder, index, rule in ruleset.get_rules():
             try:
+                ruleset.rulespec.valuespec.validate_datatype(
+                    rule.value,
+                    "",
+                )
                 ruleset.rulespec.valuespec.validate_value(
                     rule.value,
                     "",

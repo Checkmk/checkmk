@@ -113,11 +113,7 @@ class CrashReportsRowTable(RowTable):
     ) -> Iterator[dict[str, str]]:
         # First fetch the information that is needed to query for the dynamic columns (crash_info,
         # ...)
-        crash_infos = self._get_crash_report_info(only_sites, filter_headers)
-        if not crash_infos:
-            return
-
-        for crash_info in crash_infos:
+        for crash_info in self._get_crash_report_info(only_sites, filter_headers):
             file_path = "/".join([crash_info["crash_type"], crash_info["crash_id"]])
 
             headers = ["site", "crash_info"]
@@ -151,7 +147,7 @@ class CrashReportsRowTable(RowTable):
 
     def _get_crash_report_info(
         self, only_sites: OnlySites, filter_headers: str | None = None
-    ) -> list[dict[str, str]]:
+    ) -> Iterator[dict[str, str]]:
         rows = query_livestatus(
             Query(
                 QuerySpecification(
@@ -166,7 +162,7 @@ class CrashReportsRowTable(RowTable):
         )
 
         columns = ["site", "crash_id", "crash_type"]
-        return [dict(zip(columns, r)) for r in rows]
+        return (dict(zip(columns, r)) for r in rows)
 
 
 class PainterCrashIdent(Painter):

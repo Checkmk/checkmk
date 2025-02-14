@@ -20,7 +20,7 @@ from watchdog.events import (
     FileSystemEvent,
 )
 
-from tests.testlib.utils import wait_until
+from tests.testlib.common.utils import wait_until
 
 from cmk.base.automation_helper._cache import Cache
 from cmk.base.automation_helper._config import Schedule, WatcherConfig

@@ -18,8 +18,8 @@ from pathlib import Path
 import pytest
 from pytest import MonkeyPatch
 
+from tests.testlib.common.utils import wait_until
 from tests.testlib.unit.utils import import_module_hack
-from tests.testlib.utils import wait_until
 
 import cmk.ccc.debug
 from cmk.ccc import store

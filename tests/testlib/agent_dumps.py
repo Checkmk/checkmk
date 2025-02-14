@@ -5,8 +5,8 @@
 import os
 from pathlib import Path
 
+from tests.testlib.common.utils import logger, run
 from tests.testlib.site import Site
-from tests.testlib.utils import logger, run
 from tests.testlib.version import CMKVersion, get_min_version
 
 

@@ -14,7 +14,7 @@ import pytest
 from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
 
-from tests.testlib.utils import wait_until
+from tests.testlib.common.utils import wait_until
 
 from cmk.ccc.version import Version
 

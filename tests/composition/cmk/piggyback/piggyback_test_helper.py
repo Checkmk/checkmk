@@ -13,8 +13,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, IO
 
+from tests.testlib.common.utils import ServiceInfo
 from tests.testlib.site import AUTOMATION_USER, Site
-from tests.testlib.utils import ServiceInfo
 
 
 @dataclass

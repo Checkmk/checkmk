@@ -8,8 +8,8 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
+from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
-from tests.testlib.utils import wait_until
 
 from cmk.automations.helper_api import AutomationPayload
 

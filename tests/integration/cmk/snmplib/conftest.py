@@ -27,8 +27,8 @@ from pysnmp.hlapi import (  # type: ignore[import-untyped]
 )
 
 from tests.testlib.common.repo import repo_path
+from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
-from tests.testlib.utils import wait_until
 
 from cmk.ccc import debug
 

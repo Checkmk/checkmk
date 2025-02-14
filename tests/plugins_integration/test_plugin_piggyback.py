@@ -9,8 +9,8 @@ import time
 
 import pytest
 
+from tests.testlib.common.utils import get_services_with_status, write_file
 from tests.testlib.site import Site
-from tests.testlib.utils import get_services_with_status, write_file
 
 from tests.plugins_integration.checks import (
     dump_path_site,

@@ -12,7 +12,7 @@ from typing import Callable, Self
 
 from psutil import Process
 
-from tests.testlib.utils import run
+from tests.testlib.common.utils import run
 
 
 class SessionTimeoutError(TimeoutError): ...

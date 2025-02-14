@@ -36,8 +36,8 @@ from tests.testlib.common.repo import (  # noqa: E402
     is_saas_repo,
     repo_path,
 )
+from tests.testlib.common.utils import run, verbose_called_process_error  # noqa: E402
 from tests.testlib.timeouts import MonitorTimeout, SessionTimeoutError  # noqa: E402
-from tests.testlib.utils import run, verbose_called_process_error  # noqa: E402
 
 logger = logging.getLogger(__name__)
 

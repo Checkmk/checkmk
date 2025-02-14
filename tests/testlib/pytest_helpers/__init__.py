@@ -5,7 +5,7 @@
 import os
 from dataclasses import dataclass
 
-from tests.testlib.utils import is_containerized
+from tests.testlib.common.utils import is_containerized
 from tests.testlib.version import version_from_env
 
 

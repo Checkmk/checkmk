@@ -16,9 +16,9 @@ from pathlib import Path
 import pytest
 from psutil import Process
 
+from tests.testlib.common.utils import run
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.site import get_site_factory, Site
-from tests.testlib.utils import run
 from tests.testlib.web_session import CMKWebSession
 
 from cmk.utils.paths import mkbackup_lock_dir

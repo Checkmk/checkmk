@@ -18,6 +18,7 @@ import docker.models.images  # type: ignore[import-untyped]
 import pytest
 
 from tests.testlib.common.repo import repo_path
+from tests.testlib.common.utils import wait_until
 from tests.testlib.docker import (
     CheckmkApp,
     copy_to_container,
@@ -25,7 +26,6 @@ from tests.testlib.docker import (
     resolve_image_alias,
 )
 from tests.testlib.pytest_helpers.marks import skip_if_not_enterprise_edition
-from tests.testlib.utils import wait_until
 
 logger = logging.getLogger()
 

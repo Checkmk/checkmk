@@ -10,9 +10,9 @@ from contextlib import contextmanager
 
 import pytest
 
+from tests.testlib.common.utils import wait_until
 from tests.testlib.pytest_helpers.marks import skip_if_saas_edition
 from tests.testlib.site import Site
-from tests.testlib.utils import wait_until
 
 logger = logging.getLogger(__name__)
 

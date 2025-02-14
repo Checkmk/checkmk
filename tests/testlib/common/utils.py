@@ -290,7 +290,7 @@ def _extend_command(
 ) -> list[str]:
     """Return extended command by adding `sudo` or `su` usage."""
 
-    methods = "`testlib.utils.check_output / execute / run`"
+    methods = "`testlib.common.utils.check_output / execute / run`"
     # TODO: remove usage of kwargs & shell from methods `check_output / execute / run`.
     if kwargs.get("shell", False):
         raise NotImplementedError(

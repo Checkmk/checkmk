@@ -8,9 +8,9 @@ from collections.abc import Iterator
 
 import pytest
 
+from tests.testlib.common.utils import run
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.site import get_site_factory, Site, SiteFactory
-from tests.testlib.utils import run
 from tests.testlib.version import get_min_version
 
 from tests.plugins_integration import checks

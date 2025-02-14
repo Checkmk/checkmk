@@ -117,9 +117,6 @@ def test_checks_executor(
         checks_result = submitter.results
         assert checks_result
 
-        # apache service is flaky. Todo: investigate
-        checks_result = [service for service in checks_result if "apache" not in service.name]
-
         if request.config.getoption("--store"):
             store_services_states(checks_result, agent_data_filename)
             return

@@ -149,13 +149,7 @@ cmk_werks = ["cmk.werks"]
 explicit_package_bases = true
 # TODO: `mypy_path` shouldn't be required with Bazel.
 mypy_path = """\
-    $MYPY_CONFIG_FILE_DIR:\
-    $MYPY_CONFIG_FILE_DIR/non-free/cmk-update-agent:\
-    $MYPY_CONFIG_FILE_DIR/non-free/packages/cmk-otel-collector:\
-    $MYPY_CONFIG_FILE_DIR/livestatus/api/python:\
     $MYPY_CONFIG_FILE_DIR/omd/packages/omd:\
-    $MYPY_CONFIG_FILE_DIR/tests/typeshed:\
-    $MYPY_CONFIG_FILE_DIR/packages/cmk-trace\
     """
 plugins = ["pydantic.mypy"]
 python_version = "3.12"

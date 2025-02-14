@@ -85,4 +85,3 @@ types-requests  # used for type checking
 types-setuptools  # used for type checking
 types-simplejson  # used for type checking
 types-urllib3  # used for type checking
-uvicorn

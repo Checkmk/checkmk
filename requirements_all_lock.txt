@@ -278,17 +278,17 @@ blinker==1.9.0 \
     # via
     #   -r requirements_all.txt
     #   flask
-boto3==1.36.19 \
-    --hash=sha256:7784590369a9d545bb07b2de56b6ce4d5a5e232883a957f704c3f842caeba155 \
-    --hash=sha256:8c2c2a4ccdfe35dd2611ee1b7473dd2383948415c777e42dc4e7f1ebe371fe8c
+boto3==1.36.20 \
+    --hash=sha256:4a27ffc0543c2a429600542047f00c6a1e95270139d36d8cc636e9cc9a78b835 \
+    --hash=sha256:e132e31232ee107f1c187f566d96863a907433e5bdd8d8928effddd30a96242f
     # via -r requirements_all.txt
 boto3-stubs[logs]==1.36.19 \
     --hash=sha256:1bd23cd3a9f7bd313123a3f90ce5da452d9b3782f4a72b40eace6201671b6094 \
     --hash=sha256:644e661c5dad882b31a0691d8d5274c99db8d79221d32e9d7c8d077a7fa38834
     # via -r requirements_dev.txt
-botocore==1.36.19 \
-    --hash=sha256:98882c106fec4c08678ea028199f7f5119550fab95d682b30846f7aae04b7bec \
-    --hash=sha256:cdf6729f601f82b1acdb9004b1f88b57cfb470f576394cdb3bbf5150f7fafb5b
+botocore==1.36.20 \
+    --hash=sha256:0110bf2208e4569659d0ccfca94baa4999501334397987b02712a94493cbf48b \
+    --hash=sha256:3815a05518ff03a8dbc8d5a3c29b95889409a25ac87a282067f6e26fefb7c40a
     # via
     #   -r requirements_all.txt
     #   boto3
@@ -748,9 +748,9 @@ execnet==2.1.1 \
     --hash=sha256:26dee51f1b80cebd6d0ca8e74dd8745419761d3bef34163928cbebbdc4749fdc \
     --hash=sha256:5189b52c6121c24feae288166ab41b32549c7e2348652736540b9e6e7d4e72e3
     # via pytest-xdist
-faker==36.1.0 \
-    --hash=sha256:aa0b93487d3adf7cd89953d172e3df896cb7b35d8a5222c0da873edbe2f7adf5 \
-    --hash=sha256:f40510350aecfe006f45cb3f8879b35e861367cf347f51a7f2ca2c0571fdcc0b
+faker==36.1.1 \
+    --hash=sha256:7cb2bbd4c8f040e4a340ae4019e9a48b6cf1db6a71bda4e5a61d8d13b7bef28d \
+    --hash=sha256:ad1f1be7fd692ec0256517404a9d7f007ab36ac5d4674082fa72404049725eaa
     # via polyfactory
 fakeredis[lua]==2.27.0 \
     --hash=sha256:7b7584ec104392592297f46864a82cb7339a23e254ee885bf5ae07cfc64fbce7 \
@@ -4296,7 +4296,6 @@ uvicorn==0.34.0 \
     --hash=sha256:404051050cd7e905de2c9a7e61790943440b3416f49cb409f965d9dcd0fa73e9
     # via
     #   -r requirements_all.txt
-    #   -r requirements_dev.txt
     #   uvicorn-worker
 uvicorn-worker==0.3.0 \
     --hash=sha256:6baeab7b2162ea6b9612cbe149aa670a76090ad65a267ce8e27316ed13c7de7b \

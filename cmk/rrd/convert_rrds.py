@@ -8,9 +8,7 @@ from collections.abc import Sequence
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.base import config  # pylint: disable=cmk-module-layer-violation
-
-from .config import RRDConfigImpl  # pylint: disable=cmk-module-layer-violation
+from .config import read_hostnames, RRDConfigImpl  # pylint: disable=cmk-module-layer-violation
 from .interface import RRDInterface  # pylint: disable=cmk-module-layer-violation
 from .rrd import RRDConverter  # pylint: disable=cmk-module-layer-violation
 
@@ -21,11 +19,10 @@ def convert_rrds(
     split: bool,
     delete: bool,
 ) -> None:
-    config.load(discovery_rulesets=(), with_conf_d=True)
     rrd_config = RRDConfigImpl()
 
     if not hostnames:
-        hostnames = rrd_config.get_hosts()
+        hostnames = read_hostnames()
 
     for hostname in hostnames:
         RRDConverter(rrd_interface, hostname).convert_rrds_of_host(

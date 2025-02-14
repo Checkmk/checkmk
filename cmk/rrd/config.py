@@ -3,53 +3,72 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import itertools
-from collections.abc import Sequence
-from typing import Literal
+from collections.abc import Mapping, Sequence
+from pathlib import Path
+from typing import Literal, TypedDict
 
-from cmk.utils.config_path import LATEST_CONFIG
+from cmk.ccc.store import load_object_from_file
+
+from cmk.utils.config_path import LATEST_CONFIG, VersionedConfigPath
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
-
-from cmk.base import config as base_config  # pylint: disable=cmk-module-layer-violation
-from cmk.base.config import CEEConfigCache  # pylint: disable=cmk-module-layer-violation
 
 from .interface import (  # pylint: disable=cmk-module-layer-violation
     RRDObjectConfig,
     RRDReloadableConfig,
 )
 
+RRD_CONFIG_FOLDER = "rrd_config"
+RRD_CONFIG_HOSTS_FOLDER = "hosts"
+CMC_LOG_RRDCREATION = "cmc_log_rrdcreation"
+
+
+class _RRDHostConfig(TypedDict, total=False):
+    host: RRDObjectConfig
+    services: Mapping[str, RRDObjectConfig]
+
 
 class RRDConfigImpl(RRDReloadableConfig):
-    def __init__(self):
-        self._cee_config_cache = self._load_cee_config_cache()
+    def __init__(self) -> None:
+        self._loaded_host_configs: dict[HostName, _RRDHostConfig] = {}
+        self._config_base_path = VersionedConfigPath.current()
+        self._config_path = Path(self._config_base_path) / RRD_CONFIG_FOLDER
+        self._hosts_path = self._config_path / RRD_CONFIG_HOSTS_FOLDER
 
-    def reload(self):
-        self._cee_config_cache = self._load_cee_config_cache()
+    def reload(self) -> None:
+        new_config_base_path = VersionedConfigPath.current()
+        if new_config_base_path != self._config_base_path:
+            self._loaded_host_configs = {}
+            self._config_base_path = new_config_base_path
+            self._config_path = Path(new_config_base_path) / RRD_CONFIG_FOLDER
+            self._hosts_path = self._config_path / RRD_CONFIG_HOSTS_FOLDER
 
     def rrd_config(self, hostname: HostName) -> RRDObjectConfig | None:
-        return self._cee_config_cache.rrd_config(hostname)
+        self._conditionally_load_host_config(hostname)
+        return self._loaded_host_configs[hostname].get("host")
 
     def rrd_config_of_service(
         self, hostname: HostName, description: ServiceName
     ) -> RRDObjectConfig | None:
-        return self._cee_config_cache.rrd_config_of_service(hostname, description)
+        self._conditionally_load_host_config(hostname)
+        return self._loaded_host_configs[hostname].get("services", {}).get(description)
 
     def cmc_log_rrdcreation(self) -> Literal["terse", "full"] | None:
-        return self._cee_config_cache.cmc_log_rrdcreation()
+        if not self._config_path.exists():
+            self.reload()
+        return load_object_from_file(self._config_path / CMC_LOG_RRDCREATION, default=None)
 
-    def get_hosts(self) -> Sequence[HostName]:
-        hosts_config = base_config.make_hosts_config()
-        return sorted(
-            {
-                hn
-                for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
-                if self._cee_config_cache.is_active(hn) and self._cee_config_cache.is_online(hn)
-            }
-        )
+    def _conditionally_load_host_config(self, hostname: HostName) -> None:
+        if not self._hosts_path.exists():
+            self.reload()
+        if hostname not in self._loaded_host_configs:
+            self._loaded_host_configs[hostname] = load_object_from_file(
+                self._hosts_path / hostname, default={}
+            )
 
-    def _load_cee_config_cache(self) -> CEEConfigCache:
-        base_config.load_packed_config(LATEST_CONFIG, discovery_rulesets=())
-        config_cache = base_config.get_config_cache()
-        assert isinstance(config_cache, CEEConfigCache)
-        return config_cache
+
+def read_hostnames() -> Sequence[HostName]:
+    return [
+        HostName(p.name)
+        for p in (Path(LATEST_CONFIG) / RRD_CONFIG_FOLDER / RRD_CONFIG_HOSTS_FOLDER).glob("*")
+    ]

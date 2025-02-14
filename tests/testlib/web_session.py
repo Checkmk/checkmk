@@ -6,6 +6,9 @@
 
 It contains methods for handling HTTP requests, verifying HTML page resources, and
 managing authentication.
+
+Note: this implementation is purely request-based and does not manage cookies or running
+JavaScript scripts.
 """
 
 import logging

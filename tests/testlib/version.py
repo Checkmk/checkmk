@@ -28,36 +28,135 @@ from cmk.ccc.version import Edition
 logger = logging.getLogger()
 
 
+class CMKEditionType:
+    """Wrap `cmk.ccc.version:Edition` and extend with test-framework functionality.
+
+    This object acts as an interface and wrapper to `Edition` present within the source code.
+    `CMKEdition` has been initialized in this module, using this wrapper, to act as an interface
+    to the test code.
+
+    Usage:
+    - `edition = CMKEdition.CCE/CEE/CME/CRE/CSE`
+    - `pkg_edition = CMKEdition(edition) / CMKEdition(CMKEdition.edition_from_text("cloud"))`
+    - `pkg_edition.short/long/title`
+    - `pkg_edition.is_enterprise_edition()`
+    - `pkg_edition = CMKEdition(CMKEdition.from_version_string("2.4.0.cee"))`
+
+    Note:
+    Wrapping 'Edition' using inheriting would be easier but not possisble,
+    as 'enum.Enum' with existing members must not be subclassed.
+    """
+
+    CRE = Edition.CRE
+    CEE = Edition.CEE
+    CCE = Edition.CCE
+    CSE = Edition.CSE
+    CME = Edition.CME
+
+    def __init__(self, edition: Edition | None = None) -> None:
+        self._edition: type[Edition] | Edition
+        self._edition = Edition if not edition else edition
+
+    def __call__(self, edition: Edition) -> "CMKEditionType":
+        """Return a new instance, which is initialized with an 'Edition' value."""
+        return CMKEditionType(edition)
+
+    @property
+    def edition(self) -> Edition:
+        if isinstance(self._edition, Edition) and hasattr(self._edition, "value"):
+            return self._edition
+        raise AttributeError(
+            "An `edition` has not been assigned to the object!\n"
+            "Use `CMKEdition(CMKEdition.CCE/CEE/...)` to initialize the object with an edition."
+        )
+
+    @property
+    def short(self) -> str:
+        """Return short-form of Checkmk edition."""
+        return self.edition.short
+
+    @property
+    def long(self) -> str:
+        """Return Checkmk edition as string."""
+        return self.edition.long
+
+    @property
+    def title(self) -> str:
+        """Return edition as displayed on Checkmk UI."""
+        return self.edition.title
+
+    def is_managed_edition(self) -> bool:
+        return self.edition is self.CME
+
+    def is_enterprise_edition(self) -> bool:
+        return self.edition is self.CEE
+
+    def is_raw_edition(self) -> bool:
+        return self.edition is self.CRE
+
+    def is_cloud_edition(self) -> bool:
+        return self.edition is self.CCE
+
+    def is_saas_edition(self) -> bool:
+        return self.edition is self.CSE
+
+    def edition_from_text(self, value: str) -> Edition:
+        """Parse text and return an Edition.
+
+        'short' and 'long' forms of edition strings are accepted. Example,
+        'cee', 'enterprise', 'cloud'.
+        """
+        excp = ValueError()
+        try:
+            edition = self.from_long_edition(value)
+        except RuntimeError as excp_short:
+            excp.add_note(str(excp_short))
+            try:
+                edition = getattr(self, value.upper())
+            except AttributeError as excp_long:
+                excp.add_note(str(excp_long))
+                excp.add_note(
+                    f"String: '{value}' neither matches 'short' nor 'long' edition formats!"
+                )
+                raise excp
+        return edition
+
+    def from_long_edition(self, text: str) -> Edition:
+        return self._edition.from_long_edition(text)
+
+    def from_version_string(self, text: str) -> Edition:
+        return self._edition.from_version_string(text)
+
+
+# import this in other modules, rather than 'CMKEditionType'.
+CMKEdition: Final = CMKEditionType()
+
+
 # It's ok to make it currently only work on debian based distros
 class CMKVersion:
     """
     Compare versions without timestamps.
-    >>> CMKVersion("2.0.0p12", Edition.CEE) < CMKVersion("2.1.0p12", Edition.CEE)
+    >>> CMKVersion("2.0.0p12") < CMKVersion("2.1.0p12")
     True
-    >>> CMKVersion("2.3.0p3", Edition.CEE) > CMKVersion("2.3.0", Edition.CEE)
+    >>> CMKVersion("2.3.0p3") > CMKVersion("2.3.0")
     True
-    >>> CMKVersion("2.3.0", Edition.CCE) >= CMKVersion("2.3.0", Edition.CCE)
+    >>> CMKVersion("2.3.0") >= CMKVersion("2.3.0")
     True
-    >>> CMKVersion("2.2.0p11", Edition.CCE) <= CMKVersion("2.2.0p11", Edition.CCE)
-    True
-    >>> try:
-    ...     CMKVersion("2.3.0", Edition.CCE) == CMKVersion("2.3.0", Edition.CEE)
-    ... except Exception as e:
-    ...     isinstance(e, TypeError)
+    >>> CMKVersion("2.2.0p11") <= CMKVersion("2.2.0p11")
     True
 
     Only one of the versions has a timestamp (only daily builds have a timestamp)
-    >>> CMKVersion("2.2.0-2024.05.05", Edition.CEE) > CMKVersion("2.2.0p26", Edition.CEE)
+    >>> CMKVersion("2.2.0-2024.05.05") > CMKVersion("2.2.0p26")
     True
-    >>> CMKVersion("2.2.0-2024.05.05", Edition.CRE) < CMKVersion("2.3.0p3", Edition.CRE)
+    >>> CMKVersion("2.2.0-2024.05.05") < CMKVersion("2.3.0p3")
     True
-    >>> CMKVersion("2.1.0-2024.05.05", Edition.CEE) != CMKVersion("2.1.0p18", Edition.CEE)
+    >>> CMKVersion("2.1.0-2024.05.05") != CMKVersion("2.1.0p18")
     True
 
     Both the versions have a timestamp (patch versions are always `0`)
-    >>> CMKVersion("2.3.0-2024.05.05", Edition.CEE) > CMKVersion("2.2.0-2024.05.05", Edition.CEE)
+    >>> CMKVersion("2.3.0-2024.05.05") > CMKVersion("2.2.0-2024.05.05")
     True
-    >>> CMKVersion("2.2.0-2024.05.05", Edition.CEE) < CMKVersion("2.2.0-2024.05.10", Edition.CEE)
+    >>> CMKVersion("2.2.0-2024.05.05") < CMKVersion("2.2.0-2024.05.10")
     True
     """
 
@@ -68,14 +167,12 @@ class CMKVersion:
     def __init__(
         self,
         version_spec: str,
-        edition: Edition,
         branch: str = current_base_branch_name(),
         branch_version: str = current_branch_version(),
     ) -> None:
         self.version_spec: Final = version_spec
         self.version_rc_aware: Final = self._version(version_spec, branch, branch_version)
         self.version: Final = re.sub(r"-rc(\d+)", "", self.version_rc_aware)
-        self.edition: Final = edition
         self.branch: Final = branch
         self.branch_version: Final = branch_version
 
@@ -108,49 +205,17 @@ class CMKVersion:
             raise Exception("Invalid version. Remove the edition suffix!")
         return version_spec
 
-    def is_managed_edition(self) -> bool:
-        return self.edition is Edition.CME
-
-    def is_enterprise_edition(self) -> bool:
-        return self.edition is Edition.CEE
-
-    def is_raw_edition(self) -> bool:
-        return self.edition is Edition.CRE
-
-    def is_cloud_edition(self) -> bool:
-        return self.edition is Edition.CCE
-
-    def is_saas_edition(self) -> bool:
-        return self.edition is Edition.CSE
-
     def is_release_candidate(self) -> bool:
         return self.version != self.version_rc_aware
 
-    def version_directory(self) -> str:
-        return self.omd_version()
-
-    def omd_version(self) -> str:
-        return f"{self.version}.{self.edition.short}"
-
-    def version_path(self) -> str:
-        return "/omd/versions/%s" % self.version_directory()
-
-    def is_installed(self) -> bool:
-        return os.path.exists(self.version_path())
-
     def __repr__(self) -> str:
-        return f"CMKVersion([{self.version}][{self.edition.long}][{self.branch}])"
+        return f"CMKVersion([{self.version}][{self.branch}])"
 
     @staticmethod
     def _checkmk_compare_versions_logic(
         primary: object, other: object, compare_operator: Callable[..., bool]
     ) -> bool:
         if isinstance(primary, CMKVersion) and isinstance(other, CMKVersion):
-            if primary.edition != other.edition:
-                raise TypeError(
-                    "Invalid comparison, mismatching editions! "
-                    f"{primary.edition} != {other.edition}"
-                )
             primary_version, primary_timestamp = CMKVersion._sanitize_version_spec(primary.version)
             other_version, other_timestamp = CMKVersion._sanitize_version_spec(other.version)
             # if only one of the versions has a timestamp and other does not
@@ -225,43 +290,66 @@ class CMKVersion:
         return self < other or self == other
 
 
+class CMKPackageInfo:
+    """Consolidate information about a Checkmk package."""
+
+    def __init__(self, version: CMKVersion, edition: CMKEditionType) -> None:
+        self._version = version
+        self._edition = edition
+
+    def __str__(self) -> str:
+        return self.omd_version()
+
+    def __repr__(self) -> str:
+        return (
+            "CMKPackageInfo"
+            f"([{self._version.version}][{self._edition.long}][{self._version.branch}])"
+        )
+
+    @property
+    def version(self) -> CMKVersion:
+        return self._version
+
+    @property
+    def edition(self) -> CMKEditionType:
+        return self._edition
+
+    def is_installed(self) -> bool:
+        return os.path.exists(self.version_path())
+
+    def version_path(self) -> str:
+        return "/omd/versions/%s" % self.version_directory()
+
+    def version_directory(self) -> str:
+        return self.omd_version()
+
+    def omd_version(self) -> str:
+        return f"{self._version.version}.{self._edition.short}"
+
+
 def version_from_env(
     *,
     fallback_version_spec: str | None = None,
-    fallback_edition: Edition = Edition.CEE,
     fallback_branch: str | Callable[[], str] | None = None,
 ) -> CMKVersion:
     return CMKVersion(
         version_spec_from_env(fallback_version_spec or CMKVersion.DAILY),
-        edition_from_env(fallback_edition),
         branch_from_env(env_var="BRANCH", fallback=fallback_branch or current_base_branch_name),
     )
 
 
-def parse_raw_edition(raw_edition: str) -> Edition:
+def edition_from_env(fallback: Edition = CMKEdition.CEE) -> CMKEditionType:
+    value = os.getenv("EDITION", "")
     try:
-        return Edition[raw_edition.upper()]
-    except KeyError:
-        for edition in Edition:
-            if edition.long == raw_edition:
-                return edition
-    raise ValueError(f"Unknown edition: {raw_edition}")
+        edition = CMKEdition.edition_from_text(value)
+    except ValueError:
+        edition = fallback
+    return CMKEdition(edition)
 
 
-def edition_from_env(fallback: Edition | None = None) -> Edition:
-    if raw_editon := os.environ.get("EDITION"):
-        return parse_raw_edition(raw_editon)
-    if fallback:
-        return fallback
-    raise RuntimeError("EDITION environment variable, e.g. cre or enterprise, is missing")
-
-
-def get_min_version(edition: Edition | None = None) -> CMKVersion:
+def get_min_version() -> CMKVersion:
     """Minimal version supported for an update to the daily version of this branch."""
-    if edition is None:
-        # by default, fallback to edition: CEE
-        edition = edition_from_env(fallback=Edition.CEE)
-    return CMKVersion(os.getenv("MIN_VERSION", "2.3.0p11"), edition)
+    return CMKVersion(os.getenv("MIN_VERSION", "2.3.0p11"))
 
 
 def git_tag_exists(version: CMKVersion) -> bool:

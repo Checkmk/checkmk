@@ -41,7 +41,7 @@ from typing import Any, Final, Literal, overload
 import pytest
 import pytest_check
 
-from tests.testlib.common.repo import current_base_branch_name, repo_path
+from tests.testlib.common.repo import current_branch_name, repo_path
 from tests.testlib.common.utils import (
     check_output,
     execute,
@@ -60,12 +60,19 @@ from tests.testlib.cse.utils import (  # type: ignore[import-untyped, unused-ign
     cse_openid_oauth_provider,
 )
 from tests.testlib.openapi_session import CMKOpenApiSession
-from tests.testlib.version import CMKVersion, get_min_version, version_from_env
+from tests.testlib.version import (
+    CMKEditionType,
+    CMKPackageInfo,
+    CMKVersion,
+    edition_from_env,
+    get_min_version,
+    version_from_env,
+)
 from tests.testlib.web_session import CMKWebSession
 
 import livestatus
 
-from cmk.ccc.version import Edition, Version
+from cmk.ccc.version import Version
 
 from cmk import trace
 from cmk.crypto.password import Password
@@ -101,7 +108,7 @@ class Site:
 
     def __init__(
         self,
-        version: CMKVersion,
+        package: CMKPackageInfo,
         site_id: str,
         reuse: bool = True,
         admin_password: str = "cmk",
@@ -113,10 +120,10 @@ class Site:
         assert site_id
         self.id = site_id
         self.root = Path("/omd/sites") / self.id
-        self.version: Final = version
+        self._package = package
         # keep track of the initial installation status to be able to
         # uninstall only if the version was not installed already
-        self.version_was_preinstalled = self.version.is_installed()
+        self._package_was_preinstalled = self._package.is_installed()
 
         self.reuse = reuse
 
@@ -142,10 +149,22 @@ class Site:
             user=ADMIN_USER,
             password=self.admin_password,
             site=self.id,
-            site_version=self.version,
+            site_version=self._package.version,
         )
 
         self.result_dir().mkdir(parents=True, exist_ok=True)
+
+    @property
+    def version(self) -> CMKVersion:
+        return self._package.version
+
+    @property
+    def edition(self) -> CMKEditionType:
+        return self._package.edition
+
+    @property
+    def package(self) -> CMKPackageInfo:
+        return self._package
 
     @property
     def apache_port(self) -> int:
@@ -780,7 +799,7 @@ class Site:
         if not self.exists():
             return
 
-        if self.current_version_directory() == self.version.version_directory():
+        if self.current_version_directory() == self._package.version_directory():
             return
 
         # Now cleanup!
@@ -792,17 +811,15 @@ class Site:
     @tracer.instrument("Site.install_cmk")
     def install_cmk(self) -> None:
         """Install the Checkmk version of the site if it is not installed already."""
-        if not self.version.is_installed():
-            logger.info("Installing Checkmk version %s", self.version.version_directory())
+        if not self._package.is_installed():
+            logger.info("Installing Checkmk version %s", self._package.version_directory())
             try:
                 _ = run(
                     [
                         f"{repo_path()}/scripts/run-uvenv",
                         f"{repo_path()}/tests/scripts/install-cmk.py",
                     ],
-                    env=dict(
-                        os.environ, VERSION=self.version.version, EDITION=self.version.edition.short
-                    ),
+                    env=dict(os.environ, VERSION=self.version.version, EDITION=self.edition.short),
                 )
             except subprocess.CalledProcessError as excp:
                 excp.add_note("Execute 'tests/scripts/install-cmk.py' manually to debug the issue.")
@@ -818,9 +835,9 @@ class Site:
 
     @tracer.instrument("Site.uninstall_cmk")
     def uninstall_cmk(self) -> None:
-        """Uninstall the Checkmk version of the site if it was not preinstalled."""
-        if self.version.is_installed() and not self.version_was_preinstalled:
-            logger.info("Uninstalling Checkmk version %s", self.version.version_directory())
+        """Uninstall the Checkmk package corresponding to the site, if it was not preinstalled."""
+        if self._package.is_installed() and not self._package_was_preinstalled:
+            logger.info("Uninstalling Checkmk package %s", self._package.version_directory())
             try:
                 _ = run(
                     [
@@ -828,25 +845,26 @@ class Site:
                         f"{repo_path()}/tests/scripts/install-cmk.py",
                         "--uninstall",
                     ],
-                    env=dict(
-                        os.environ, VERSION=self.version.version, EDITION=self.version.edition.short
-                    ),
+                    env=dict(os.environ, VERSION=self.version.version, EDITION=self.edition.short),
                 )
             except subprocess.CalledProcessError as excp:
                 excp.add_note(
-                    "Execute 'tests/scripts/install-cmk.py --uninstall' manually to debug the issue."
+                    "Execute 'tests/scripts/install-cmk.py --uninstall' "
+                    "manually to debug the issue."
                 )
                 if excp.returncode == 22:
                     raise RuntimeError(
-                        f"Version {self.version.version} could not be uninstalled!"
+                        f"Package '{self._package}' could not be uninstalled!"
                     ) from excp
                 raise excp
-            output = run(["ls", "-laR", self.version.version_path()], check=False, sudo=True).stdout
+            output = run(
+                ["ls", "-laR", self._package.version_path()], check=False, sudo=True
+            ).stdout
             remaining_files = (
                 [_ for _ in output.strip().split("\n") if _] if isinstance(output, str) else []
             )
             assert not remaining_files, (
-                f"Version {self.version.version} is still installed, "
+                f"Package '{self._package}' is still installed, "
                 "even though the uninstallation was completed with RC=0!"
                 f"Remaining files: {remaining_files}"
             )
@@ -866,7 +884,7 @@ class Site:
                         "omd",
                         "-f",
                         "-V",
-                        self.version.version_directory(),
+                        self._package.version_directory(),
                         "update",
                         f"--conflict={self.update_conflict_mode}",
                         self.id,
@@ -875,7 +893,7 @@ class Site:
                     else [
                         "omd",
                         "-V",
-                        self.version.version_directory(),
+                        self._package.version_directory(),
                         "create",
                         "--admin-password",
                         self.admin_password,
@@ -893,7 +911,7 @@ class Site:
             # This seems to cause an issue with GUI and XSS crawl (they take too long or seem to
             # hang) job. Disable as a quick fix. We may have to parametrize this per job type.
             # self._set_number_of_apache_processes()
-            if not self.version.is_raw_edition():
+            if not self.edition.is_raw_edition():
                 self._set_number_of_cmc_helpers()
                 self._enable_cmc_core_dumps()
                 self._enable_cmc_debug_logging()
@@ -1239,7 +1257,7 @@ class Site:
         return stdout.strip() or default
 
     def core_name(self) -> Literal["cmc", "nagios"]:
-        return "nagios" if self.version.is_raw_edition() else "cmc"
+        return "nagios" if self.edition.is_raw_edition() else "cmc"
 
     def core_history_log(self) -> Path:
         core = self.core_name()
@@ -1279,7 +1297,7 @@ class Site:
         self._create_automation_user(username)
         if self.enforce_english_gui:
             web = CMKWebSession(self)
-            if not self.version.is_saas_edition():
+            if not self.edition.is_saas_edition():
                 web.login()
             self.enforce_non_localized_gui(web)
         self._add_wato_test_config()
@@ -1631,14 +1649,14 @@ class SiteFactory:
 
     def __init__(
         self,
-        version: CMKVersion,
+        package: CMKPackageInfo,
         prefix: str | None = None,
         update: bool = False,
         update_conflict_mode: str = "install",
         enforce_english_gui: bool = True,
     ) -> None:
-        self.version = version
-        self._base_ident = prefix if prefix is not None else "s_%s_" % version.branch[:6]
+        self._package = package
+        self._base_ident = prefix if prefix is not None else "s_%s_" % self.version.branch[:6]
         self._sites: dict[str, Site] = {}
         self._index = 1
         self._update = update
@@ -1649,10 +1667,18 @@ class SiteFactory:
     def sites(self) -> Mapping[str, Site]:
         return self._sites
 
+    @property
+    def version(self) -> CMKVersion:
+        return self._package.version
+
+    @property
+    def edition(self) -> CMKEditionType:
+        return self._package.edition
+
     def get_site(self, name: str) -> Site:
         site = self._site_obj(name)
 
-        if self.version.is_saas_edition():
+        if self.edition.is_saas_edition():
             # We need to create some CSE config files before starting the site, exactly as it
             # happens on the SaaS environment, where k8s takes care of creating the config files
             # before the site is created.
@@ -1686,7 +1712,7 @@ class SiteFactory:
         if prepare_for_tests:
             with (
                 cse_openid_oauth_provider(f"http://localhost:{site.apache_port}")
-                if self.version.is_saas_edition()
+                if self.edition.is_saas_edition()
                 else nullcontext()
             ):
                 site.prepare_for_tests()
@@ -1703,7 +1729,7 @@ class SiteFactory:
         return site
 
     def setup_customers(self, site: Site, customers: Sequence[str]) -> None:
-        if not self.version.is_managed_edition():
+        if not self.edition.is_managed_edition():
             return
         customer_content = "\n".join(
             f"customers.update({{'{customer}': {{'name': '{customer}', 'macros': [], 'customer_report_layout': 'default'}}}})"
@@ -1783,18 +1809,18 @@ class SiteFactory:
     def interactive_update(
         self,
         test_site: Site,
-        target_version: CMKVersion,
+        target_package: CMKPackageInfo,
         min_version: CMKVersion,
         conflict_mode: str = "keepold",
         logfile_path: str = "/tmp/sep.out",
         timeout: int = 60,
     ) -> Site:
-        """Update the test-site with the given target-version, if supported.
+        """Update the test-site with the given target-package, if supported.
 
         Such update process is performed interactively via Pexpect.
         """
-        base_version = test_site.version
-        self.version = target_version
+        base_package: CMKPackageInfo = test_site.package
+        self._package = target_package
 
         # refresh site object to install the correct target version
         self._base_ident = ""
@@ -1804,14 +1830,14 @@ class SiteFactory:
         site.stop()
 
         logger.info(
-            "Updating %s site from %s version to %s version...",
+            "Updating '%s' site from '%s' version to '%s' version...",
             site.id,
-            base_version.version,
-            target_version.version_directory(),
+            base_package.omd_version(),
+            target_package.omd_version(),
         )
 
         pexpect_dialogs = []
-        version_supported = base_version >= min_version
+        version_supported = base_package.version >= min_version
         if version_supported:
             logger.info("Updating to a supported version.")
             pexpect_dialogs.extend(
@@ -1819,8 +1845,8 @@ class SiteFactory:
                     PExpectDialog(
                         expect=(
                             f"You are going to update the site {site.id} "
-                            f"from version {base_version.version_directory()} "
-                            f"to version {target_version.version_directory()}."
+                            f"from version {base_package.omd_version()} "
+                            f"to version {target_package.omd_version()}."
                         ),
                         send="u\r",
                     )
@@ -1828,9 +1854,10 @@ class SiteFactory:
             )
         else:  # update-process not supported. Still, verify the correct message is displayed
             logger.info(
-                "Updating from version %s to version %s is not supported",
-                base_version.version_directory(),
-                target_version.version_directory(),
+                "Updating '%s' site from version '%s' to version '%s' is not supported",
+                site.id,
+                base_package.omd_version(),
+                target_package.omd_version(),
             )
 
             pexpect_dialogs.extend(
@@ -1838,8 +1865,8 @@ class SiteFactory:
                     PExpectDialog(
                         expect=(
                             f"ERROR: You are trying to update from "
-                            f"{base_version.version_directory()} to "
-                            f"{target_version.version_directory()} which is not supported."
+                            f"{base_package.omd_version()} to "
+                            f"{target_package.omd_version()} which is not supported."
                         ),
                         send="\r",
                     )
@@ -1855,7 +1882,7 @@ class SiteFactory:
                 "/usr/bin/sudo",
                 "omd",
                 "-V",
-                target_version.version_directory(),
+                target_package.version_directory(),
                 "update",
                 f"--conflict={conflict_mode}",
                 site.id,
@@ -1874,7 +1901,7 @@ class SiteFactory:
             )
         else:
             assert rc == 256, f"Executed command returned {rc} exit status. Expected: 256"
-            pytest.skip(f"{base_version} is not a supported version for {target_version}")
+            pytest.skip(f"{base_package} is not a supported version for {target_package}")
 
         with open(logfile_path) as logfile:
             logger.debug("OMD automation logfile: %s", logfile.read())
@@ -1882,7 +1909,7 @@ class SiteFactory:
         # refresh the site object after creating the site
         site = self.get_existing_site(test_site.id)
 
-        _assert_tmpfs(site, base_version)
+        _assert_tmpfs(site, base_package.version)
 
         # open the livestatus port
         site.open_livestatus_tcp(encrypted=False)
@@ -1895,29 +1922,33 @@ class SiteFactory:
 
         restart_httpd()
 
-        assert site.version.version == target_version.version, "Version mismatch during update!"
-        assert site.version.edition.short == target_version.edition.short, (
-            "Edition mismatch during update!"
+        assert site.version.version == target_package.version.version, (
+            "Version mismatch during update!"
         )
+        assert site.edition.short == target_package.edition.short, "Edition mismatch during update!"
         return site
 
     def update_as_site_user(
         self,
         test_site: Site,
-        target_version: CMKVersion = version_from_env(
-            fallback_version_spec=CMKVersion.DAILY,
-            fallback_edition=Edition.CEE,
-            fallback_branch=current_base_branch_name(),
+        target_package: CMKPackageInfo = CMKPackageInfo(
+            version_from_env(
+                fallback_version_spec=CMKVersion.DAILY,
+                fallback_branch=current_branch_name(),
+            ),
+            edition=edition_from_env(),
         ),
-        min_version: CMKVersion = get_min_version(Edition.CEE),
+        min_version: CMKVersion = get_min_version(),
         conflict_mode: str = "keepold",
     ) -> Site:
-        base_version = test_site.version
-        self.version = target_version
+        base_package = test_site.package
+        self._package = target_package
 
-        version_supported = base_version >= min_version
+        version_supported = base_package.version >= min_version
         if not version_supported:
-            pytest.skip(f"{base_version} is not a supported version for {target_version.version}")
+            pytest.skip(
+                f"{base_package.version} is not a supported version for {target_package.version}"
+            )
 
         # refresh site object to install the correct target version
         self._base_ident = ""
@@ -1929,15 +1960,15 @@ class SiteFactory:
         logger.info(
             "Updating %s site from %s version to %s version...",
             site.id,
-            base_version.version,
-            target_version.version_directory(),
+            base_package.version,
+            target_package.version_directory(),
         )
 
         cmd = [
             "omd",
             "-f",
             "-V",
-            target_version.version_directory(),
+            target_package.version_directory(),
             "update",
             f"--conflict={conflict_mode}",
         ]
@@ -1947,7 +1978,7 @@ class SiteFactory:
         # refresh the site object after creating the site
         site = self.get_existing_site(site.id)
 
-        _assert_tmpfs(site, base_version)
+        _assert_tmpfs(site, base_package.version)
 
         # open the livestatus port
         site.open_livestatus_tcp(encrypted=False)
@@ -1960,10 +1991,10 @@ class SiteFactory:
 
         restart_httpd()
 
-        assert site.version.version == target_version.version, "Version mismatch during update!"
-        assert site.version.edition.short == target_version.edition.short, (
-            "Edition mismatch during update!"
+        assert site.version.version == target_package.version.version, (
+            "Version mismatch during update!"
         )
+        assert site.edition.short == target_package.edition.short, "Edition mismatch during update!"
 
         site.openapi.changes.activate_and_wait_for_completion()
 
@@ -2054,7 +2085,7 @@ class SiteFactory:
             )
             with (
                 cse_openid_oauth_provider(f"http://localhost:{site.apache_port}")
-                if self.version.is_saas_edition()
+                if self.edition.is_saas_edition()
                 else nullcontext()
             ):
                 yield site
@@ -2094,7 +2125,7 @@ class SiteFactory:
         site_id = f"{self._base_ident}{name}"
 
         return Site(
-            version=self.version,
+            package=self._package,
             site_id=site_id,
             reuse=False,
             update=self._update,
@@ -2123,7 +2154,7 @@ class SiteFactory:
 def get_site_factory(
     *,
     prefix: str,
-    version: CMKVersion | None = None,
+    package: CMKPackageInfo | None = None,
     fallback_branch: str | Callable[[], str] | None = None,
 ) -> SiteFactory:
     """retrieves a correctly parameterized SiteFactory object
@@ -2132,19 +2163,21 @@ def get_site_factory(
         * the default one (daily) or
         * as parameterized from the environment
     """
-    version = version or version_from_env(
-        fallback_version_spec=CMKVersion.DAILY,
-        fallback_edition=Edition.CEE,
-        fallback_branch=fallback_branch,
+    package_info = package or CMKPackageInfo(
+        version_from_env(
+            fallback_version_spec=CMKVersion.DAILY,
+            fallback_branch=fallback_branch,
+        ),
+        edition_from_env(),
     )
     logger.info(
         "Version: %s, Edition: %s, Branch: %s",
-        version.version,
-        version.edition.long,
-        version.branch,
+        package_info.version.version,
+        package_info.edition.long,
+        package_info.version.branch,
     )
     return SiteFactory(
-        version=version,
+        package=package_info,
         prefix=prefix,
     )
 

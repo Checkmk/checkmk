@@ -23,7 +23,7 @@ def _distributed_site_secret(site: Site) -> str:
         "automation_login.py",
         params={
             "_version": f"{site.version.branch_version}p1337",
-            "_edition_short": site.version.edition.short,
+            "_edition_short": site.edition.short,
         },
     )
     return literal_eval(r.text)["login_secret"]
@@ -42,7 +42,7 @@ def test_central_site_version_is_stored(site: Site) -> None:
             "secret": _distributed_site_secret(site),
             "command": "ping",
             "_version": f"{site.version.branch_version}p1337",
-            "_edition_short": site.version.edition.short,
+            "_edition_short": site.edition.short,
         },
     )
 
@@ -64,7 +64,7 @@ def test_wrong_central_site_version(site: Site) -> None:
             "secret": _distributed_site_secret(site),
             "command": "ping",
             "_version": "foobar",
-            "_edition_short": site.version.edition.short,
+            "_edition_short": site.edition.short,
         },
     )
     assert r.text == "Invalid version string &quot;foobar&quot;"

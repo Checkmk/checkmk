@@ -24,13 +24,13 @@ def test_run_omd_help(site: Site) -> None:
 def test_run_omd_version(site: Site) -> None:
     p = site.run(["omd", "version"])
     assert p.stderr == ""
-    assert p.stdout.endswith("%s\n" % site.version.omd_version())
+    assert p.stdout.endswith("%s\n" % site.package.omd_version())
 
 
 def test_run_omd_version_bare(site: Site) -> None:
     p = site.run(["omd", "version", "-b"])
     assert p.stderr == ""
-    assert p.stdout.rstrip("\n") == site.version.omd_version()
+    assert p.stdout.rstrip("\n") == site.package.omd_version()
 
 
 def test_run_omd_versions(site: Site) -> None:
@@ -38,7 +38,7 @@ def test_run_omd_versions(site: Site) -> None:
     assert p.stderr == ""
     versions = [v.split(" ", 1)[0] for v in p.stdout.split("\n")]
     assert len(versions) >= 1
-    assert site.version.omd_version() in versions
+    assert site.package.omd_version() in versions
 
 
 def test_run_omd_versions_bare(site: Site) -> None:
@@ -46,7 +46,7 @@ def test_run_omd_versions_bare(site: Site) -> None:
     assert p.stderr == ""
     versions = p.stdout.split("\n")
     assert len(versions) >= 1
-    assert site.version.omd_version() in versions
+    assert site.package.omd_version() in versions
 
 
 def test_run_omd_sites(site: Site) -> None:

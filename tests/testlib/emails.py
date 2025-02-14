@@ -180,7 +180,7 @@ def create_notification_user(site: Site, admin: bool = False) -> Iterator[tuple[
         password=faker.password(length=12),
         email=email_address,
         contactgroups=["all"],
-        customer="global" if site.version.is_managed_edition() else None,
+        customer="global" if site.edition.is_managed_edition() else None,
         roles=["admin"] if admin else [],
     )
     site.openapi.changes.activate_and_wait_for_completion()

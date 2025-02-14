@@ -15,7 +15,7 @@ from cmk.gui.theme import Theme
 @pytest.fixture(name="th")
 def fixture_th(tmp_path: Path, site: Site) -> Theme:
     th = Theme(
-        edition=site.version.edition,
+        edition=site.edition.edition,
         web_dir=site.root / "share" / "check_mk" / "web",
         local_web_dir=tmp_path,
     )

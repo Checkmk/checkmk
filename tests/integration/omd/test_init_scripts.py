@@ -26,16 +26,16 @@ def test_init_scripts(site: Site) -> None:
         "xinetd",
     }
 
-    if not site.version.is_raw_edition():
+    if not site.edition.is_raw_edition():
         scripts |= {
             "cmc",
             "dcd",
             "liveproxyd",
             "mknotifyd",
         }
-    if site.version.is_cloud_edition() or site.version.is_managed_edition():
+    if site.edition.is_cloud_edition() or site.edition.is_managed_edition():
         scripts |= {"otel-collector"}
-    if not site.version.is_saas_edition():
+    if not site.edition.is_saas_edition():
         scripts |= {"jaeger"}
 
     installed_scripts = set(site.listdir("etc/init.d"))

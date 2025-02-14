@@ -12,13 +12,12 @@ import yaml
 
 from tests.testlib.common.repo import repo_path
 from tests.testlib.site import Site
-from tests.testlib.version import version_from_env
+from tests.testlib.version import edition_from_env
 
 # Apply the skipif marker to all tests in this file for non Managed or Cloud edition
 pytestmark = [
     pytest.mark.skipif(
-        True
-        not in [version_from_env().is_cloud_edition(), version_from_env().is_managed_edition()],
+        not any([edition_from_env().is_cloud_edition(), edition_from_env().is_managed_edition()]),
         reason="otel-collector only shipped with Cloud or Managed",
     )
 ]

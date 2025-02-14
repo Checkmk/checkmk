@@ -22,7 +22,7 @@ import subprocess
 import tarfile
 from collections.abc import Iterator, Mapping
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Final, Literal
 
 import docker.client  # type: ignore[import-untyped]
 import docker.errors  # type: ignore[import-untyped]
@@ -35,7 +35,7 @@ from tests.testlib.common.repo import repo_path
 from tests.testlib.common.utils import wait_until
 from tests.testlib.openapi_session import CMKOpenApiSession
 from tests.testlib.package_manager import ABCPackageManager
-from tests.testlib.version import CMKVersion, version_from_env
+from tests.testlib.version import CMKPackageInfo, edition_from_env, version_from_env
 
 from cmk.crypto.password import Password
 
@@ -43,7 +43,7 @@ logger = logging.getLogger()
 
 build_path = repo_path() / "docker_image"
 image_prefix = "docker-tests"
-distro_codename = "jammy"
+DISTRO_CODENAME: Final = "jammy"  # ubuntu-22.04
 cse_config_root = Path("/tmp/cmk-docker-test/cse-config-volume")
 
 
@@ -83,21 +83,29 @@ def send_to_container(c: docker.models.containers.Container, text: str) -> None:
     s.close()
 
 
-def image_name(version: CMKVersion) -> str:
-    return f"docker-tests/check-mk-{version.edition.long}-{version.branch}-{version.version}"
+def image_name(package_info: CMKPackageInfo) -> str:
+    return (
+        "docker-tests/check-mk-"
+        f"{package_info.edition.long}-{package_info.version.branch}-{package_info.version.version}"
+    )
 
 
-def package_name(version: CMKVersion) -> str:
-    return f"check-mk-{version.edition.long}-{version.version}_0.{distro_codename}_amd64.deb"
+def package_name(package_info: CMKPackageInfo) -> str:
+    """Return full name of a debian-based Checkmk package."""
+    return (
+        f"check-mk-{package_info.edition.long}-{package_info.version.version}_0"
+        f".{DISTRO_CODENAME}_amd64.deb"
+    )
 
 
 def prepare_build() -> None:
     assert subprocess.run(["make", "needed-packages"], cwd=build_path, check=False).returncode == 0
 
 
-def prepare_package(version: CMKVersion) -> None:
+def prepare_package(package_info: CMKPackageInfo) -> None:
     """On Jenkins copies a previously built package to the build path."""
-    test_package_path = build_path / package_name(version)
+    pkg_name = package_name(package_info)
+    test_package_path = build_path / pkg_name
     if "WORKSPACE" not in os.environ:
         if test_package_path.exists():
             logger.info("Checkmk package already exists at %s!", test_package_path)
@@ -109,8 +117,8 @@ def prepare_package(version: CMKVersion) -> None:
     source_package_path = Path(
         os.environ["WORKSPACE"],
         "downloaded_packages_for_docker_tests",
-        version.version,
-        package_name(version),
+        package_info.version.version,
+        pkg_name,
     )
 
     logger.info("Executed on CI: Preparing package %s", test_package_path)
@@ -129,13 +137,13 @@ def prepare_package(version: CMKVersion) -> None:
 
 
 def pull_checkmk(
-    client: docker.client.DockerClient, version: CMKVersion
+    client: docker.client.DockerClient, package_info: CMKPackageInfo
 ) -> docker.models.containers.Image:
-    if not version.is_raw_edition():
+    if not package_info.edition.is_raw_edition():
         raise Exception("Can only fetch raw edition at the moment")
 
-    logger.info("Downloading docker image: checkmk/check-mk-raw:%s", version.version)
-    return client.images.pull("checkmk/check-mk-raw", tag=version.version)
+    logger.info("Downloading docker image: checkmk/check-mk-raw:%s", package_info.version.version)
+    return client.images.pull("checkmk/check-mk-raw", tag=package_info.version.version)
 
 
 def resolve_image_alias(alias: str) -> str:
@@ -152,7 +160,7 @@ def resolve_image_alias(alias: str) -> str:
 
 def build_checkmk(
     client: docker.client.DockerClient,
-    version: CMKVersion,
+    package_info: CMKPackageInfo,
     prepare_pkg: bool = True,
 ) -> tuple[docker.models.containers.Image, Iterator[Mapping[str, Any]]]:
     """Builds (or reuses) and verifies a docker image for a given Checkmk version.
@@ -169,18 +177,18 @@ def build_checkmk(
     prepare_build()
 
     if prepare_pkg:
-        prepare_package(version)
+        prepare_package(package_info)
 
-    logger.info("Building docker image (or reuse existing): %s", image_name(version))
+    logger.info("Building docker image (or reuse existing): %s", image_name(package_info))
     try:
         image: docker.models.images.Image
         build_logs: Iterator[Mapping[str, Any]]
         image, build_logs = client.images.build(
             path=build_path.as_posix(),
-            tag=image_name(version),
+            tag=image_name(package_info),
             buildargs={
-                "CMK_VERSION": version.version,
-                "CMK_EDITION": version.edition.long,
+                "CMK_VERSION": package_info.version.version,
+                "CMK_EDITION": package_info.edition.long,
                 "IMAGE_CMK_BASE": resolve_image_alias("IMAGE_CMK_BASE"),
             },
         )
@@ -210,7 +218,7 @@ def build_checkmk(
 
     assert config["Labels"] == {
         "org.opencontainers.image.vendor": "Checkmk GmbH",
-        "org.opencontainers.image.version": version.version,
+        "org.opencontainers.image.version": package_info.version.version,
         "maintainer": "feedback@checkmk.com",
         "org.opencontainers.image.description": "Checkmk is a leading tool for Infrastructure & Application Monitoring",
         "org.opencontainers.image.ref.name": "ubuntu",  # TODO: investigate who sets this
@@ -255,7 +263,7 @@ class CheckmkApp:
     def __init__(
         self,
         client: docker.client.DockerClient,
-        version: CMKVersion | None = None,
+        package_info: CMKPackageInfo | None = None,
         is_update: bool = False,
         site_id: str = "cmk",
         name: str | None = None,
@@ -280,14 +288,14 @@ class CheckmkApp:
         self.hostname = hostname
         self.site_id = site_id
         self.site_root = f"/omd/sites/{self.site_id}"
-        self.version = version or version_from_env()
+        self.package_info = package_info or CMKPackageInfo(version_from_env(), edition_from_env())
         self.environment = {"CMK_PASSWORD": self.password, "CMK_SITE_ID": self.site_id} | (
             environment or {}
         )
         self.is_update = is_update
         self.ports = ports
         self.volumes = volumes or []
-        if self.version.is_saas_edition():
+        if self.package_info.edition.is_saas_edition():
             self.volumes += self._get_cse_volumes(cse_config_root)
         self.volumes_from = volumes_from
 
@@ -301,7 +309,7 @@ class CheckmkApp:
             host=self.ip,
             user=self.username,
             password=self.password,
-            site_version=self.version,
+            site_version=self.package_info.version,
             port=self.port,
             site=self.site_id,
             api_version=self.api_version,
@@ -316,12 +324,12 @@ class CheckmkApp:
         """Provide a readily configured Checkmk docker container."""
 
         try:
-            if self.version.version == version_from_env().version:
-                _image, _build_logs = build_checkmk(self.client, self.version)
+            if self.package_info.version.version == version_from_env().version:
+                _image, _build_logs = build_checkmk(self.client, self.package_info)
             else:
                 # In case the given version is not the current branch version, don't
                 # try to build it. Download it instead!
-                _image = pull_checkmk(self.client, self.version)
+                _image = pull_checkmk(self.client, self.package_info)
         except requests.exceptions.ConnectionError as e:
             raise Exception(
                 "Failed to access docker socket (Permission denied). You need to be member of the"
@@ -329,7 +337,7 @@ class CheckmkApp:
                 " to fix this, then restart your computer and try again."
             ) from e
 
-        if self.version.is_saas_edition():
+        if self.package_info.edition.is_saas_edition():
             from tests.testlib.cse.utils import (  # type: ignore[import-untyped, unused-ignore]
                 create_cse_initial_config,
             )

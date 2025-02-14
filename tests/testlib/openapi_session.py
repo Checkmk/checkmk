@@ -700,7 +700,7 @@ class ServiceDiscoveryAPI(BaseAPI):
             "ignore_errors": ignore_errors,
         }
 
-        if self.session.site_version >= CMKVersion("2.3.0", self.session.site_version.edition):
+        if self.session.site_version >= CMKVersion("2.3.0"):
             body["options"] = {
                 "monitor_undecided_services": monitor_undecided_services,
                 "remove_vanished_services": remove_vanished_services,

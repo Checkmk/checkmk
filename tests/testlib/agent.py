@@ -121,7 +121,7 @@ def download_and_install_agent_package(site: Site, tmp_dir: Path) -> Path:
     # agents/scripts/super-server/0_systemd/setup).
     run([site.path("share/check_mk/agents/linux/cmk-agent-ctl").as_posix(), "--version"])
 
-    if site.version.is_raw_edition():
+    if site.edition.is_raw_edition():
         agent_download_resp = site.openapi.get(
             "domain-types/agent/actions/download/invoke",
             params={

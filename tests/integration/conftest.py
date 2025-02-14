@@ -32,7 +32,7 @@ def get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
 def fixture_web(site: Site) -> CMKWebSession:
     web = CMKWebSession(site)
 
-    if not site.version.is_saas_edition():
+    if not site.edition.is_saas_edition():
         web.login()
     site.enforce_non_localized_gui(web)
     return web

@@ -95,7 +95,7 @@ def test_version_file_permissions(site: Site) -> None:
     """
     writable_files = {
         str(p)
-        for p in iter_dir(Path(site.version.version_path()))
+        for p in iter_dir(Path(site.package.version_path()))
         if has_permission(p, Mode.WORLD_WRITEABLE ^ Mode.GROUP_WRITEABLE)
     }
     assert not writable_files, (
@@ -110,7 +110,7 @@ def test_version_file_ownership(site: Site) -> None:
     There are some files with omd as group, because of some caps, these are
     explicitly listed in the end, therefore the set construct"""
 
-    path_to_version = Path(site.version.version_path())
+    path_to_version = Path(site.package.version_path())
     non_root_group = set()
     for p in iter_dir(path_to_version):
         assert p.owner() == "root", p
@@ -123,7 +123,7 @@ def test_version_file_ownership(site: Site) -> None:
         "lib/nagios/plugins/check_dhcp",
         "lib/nagios/plugins/check_icmp",
     }
-    if not site.version.is_raw_edition():
+    if not site.edition.is_raw_edition():
         exceptions |= {
             "lib/cmc/icmpsender",
             "lib/cmc/icmpreceiver",

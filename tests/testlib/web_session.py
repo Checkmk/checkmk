@@ -21,7 +21,7 @@ from http.cookiejar import Cookie
 import requests
 from bs4 import BeautifulSoup
 
-from tests.testlib.version import version_from_env
+from tests.testlib.version import edition_from_env
 
 
 class APIError(Exception):
@@ -129,7 +129,7 @@ class CMKWebSession:
         # by checkmk. We do not want to check it in the integration tests
         script_filters = (
             [("src", "https://static.saas-dev.cloudsandbox.checkmk.cloud")]
-            if version_from_env().is_saas_edition()
+            if edition_from_env().is_saas_edition()
             else None
         )
         self._check_resources(
@@ -239,7 +239,7 @@ class CMKWebSession:
         try:
             return all(x in r.text for x in ("About Checkmk", "Your IT monitoring platform"))
         except requests.exceptions.ConnectionError:
-            if version_from_env().is_saas_edition():
+            if edition_from_env().is_saas_edition():
                 # with the auth provider running, the get request may fail
                 return self.get_auth_cookie() is not None
             else:

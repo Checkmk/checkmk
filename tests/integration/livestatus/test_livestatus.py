@@ -72,7 +72,7 @@ def test_host_custom_variables(site: Site) -> None:
         "ADDRESS_4": "127.0.0.1",
         "ADDRESS_6": "",
     }
-    if site.version.is_managed_edition():
+    if site.edition.is_managed_edition():
         expected_variables["CUSTOMER"] = "provider"
     assert custom_variables == expected_variables
     assert tags == {

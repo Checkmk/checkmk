@@ -32,7 +32,7 @@ from docker.models.images import Image  # type: ignore[import-untyped]
 from tests.testlib.common.repo import git_commit_id, git_essential_directories, repo_path
 from tests.testlib.common.utils import get_cmk_download_credentials, package_hash_path
 from tests.testlib.package_manager import DISTRO_CODES
-from tests.testlib.version import CMKVersion
+from tests.testlib.version import CMKPackageInfo, CMKVersion
 
 _DOCKER_REGISTRY = "artifacts.lan.tribe29.com:4000"
 _DOCKER_REGISTRY_URL = "https://%s/v2/" % _DOCKER_REGISTRY
@@ -51,7 +51,7 @@ class DockerBind(TypedDict):
 def execute_tests_in_container(
     distro_name: str,
     docker_tag: str,
-    version: CMKVersion,
+    package_info: CMKPackageInfo,
     result_path: Path,
     command: list[str],
     interactive: bool,
@@ -60,8 +60,10 @@ def execute_tests_in_container(
     info = client.info()
     logger.info("Docker version: %s", info["ServerVersion"])
 
-    container_env = _container_env(version)
-    image_name_with_tag = _create_cmk_image(client, distro_name, docker_tag, version, container_env)
+    container_env = _container_env(package_info)
+    image_name_with_tag = _create_cmk_image(
+        client, distro_name, docker_tag, package_info, container_env
+    )
 
     # Start the container
     container: docker.Container
@@ -227,7 +229,7 @@ def _handle_api_error(e: docker.errors.APIError) -> None:
     raise e
 
 
-def check_for_local_package(version: CMKVersion, distro_name: str) -> bool:
+def check_for_local_package(package_info: CMKPackageInfo, distro_name: str) -> bool:
     """Checks package_download folder for a Checkmk package and returns True if
     exactly one package is available and meets some requirements. If there are
     invalid packages, the application terminates."""
@@ -247,9 +249,12 @@ def check_for_local_package(version: CMKVersion, distro_name: str) -> bool:
 
         package_name = available_packages[0].name
         os_name = DISTRO_CODES.get(distro_name, f"UNKNOWN DISTRO: {distro_name}")
-        pkg_pattern = rf"check-mk-{version.edition.long}-{version.version}.*{os_name}.*\.(deb|rpm)"
+        pkg_pattern = (
+            rf"check-mk-{package_info.edition.long}-{package_info.version.version}"
+            rf".*{os_name}.*\.(deb|rpm)"
+        )
         if not re.match(f"^{pkg_pattern}$", package_name):
-            logger.error("Error: '%s' does not match version=%s", package_name, version)
+            logger.error("Error: '%s' does not match version=%s", package_name, package_info)
             logger.error("Error:  (must be '%s')", pkg_pattern)
             raise SystemExit(1)
 
@@ -275,7 +280,7 @@ def _create_cmk_image(
     client: docker.DockerClient,
     distro_name: str,
     docker_tag: str,
-    version: CMKVersion,
+    package_info: CMKPackageInfo,
     container_env: Mapping[str, str],
 ) -> str:
     base_image_name_with_tag = f"{_DOCKER_REGISTRY}/{distro_name}:{docker_tag}"
@@ -289,8 +294,12 @@ def _create_cmk_image(
 
     # This installs the requested Checkmk Edition+Version into the new image, for this reason we add
     # these parts to the target image name. The tag is equal to the origin image.
-    image_name_with_tag = f"{_DOCKER_REGISTRY}/{distro_name}-{version.edition.short}-{version.version_rc_aware}:{docker_tag}"
-    if use_local_package := check_for_local_package(version, distro_name):
+    image_name_with_tag = (
+        f"{_DOCKER_REGISTRY}/"
+        f"{distro_name}-{package_info.edition.short}-{package_info.version.version_rc_aware}"
+        f":{docker_tag}"
+    )
+    if use_local_package := check_for_local_package(package_info, distro_name):
         logger.info("+====================================================================+")
         logger.info("| Use locally available package (i.e. don't try to fetch test-image) |")
         logger.info("+====================================================================+")
@@ -304,7 +313,7 @@ def _create_cmk_image(
         if (
             (image := _get_or_load_image(client, image_name_with_tag))
             and _is_based_on_current_base_image(image, base_image)
-            and _is_using_current_cmk_package(image, version)
+            and _is_using_current_cmk_package(image, package_info.version)
         ):
             # We found something locally or remote and ensured it's available locally.
             # Only use it when it's based on the latest available base image. Otherwise
@@ -318,10 +327,10 @@ def _create_cmk_image(
         "com.checkmk.build_id": base_image.short_id,
         "com.checkmk.base_image": base_image_name_with_tag,
         "com.checkmk.base_image_hash": base_image.short_id,
-        "com.checkmk.cmk_edition_short": version.edition.short,
-        "com.checkmk.cmk_version": version.version,
-        "com.checkmk.cmk_version_rc_aware": version.version_rc_aware,
-        "com.checkmk.cmk_branch": version.branch,
+        "com.checkmk.cmk_edition_short": package_info.edition.short,
+        "com.checkmk.cmk_version": package_info.version.version,
+        "com.checkmk.cmk_version_rc_aware": package_info.version.version_rc_aware,
+        "com.checkmk.cmk_branch": package_info.version.branch,
         # override the base image label
         "com.checkmk.image_type": "cmk-image",
     }
@@ -371,7 +380,10 @@ def _create_cmk_image(
         # image labels.
         logger.info("Get Checkmk package hash")
         _exit_code, output = container.exec_run(
-            ["cat", str(package_hash_path(version.version, version.edition))],
+            [
+                "cat",
+                str(package_hash_path(package_info.version.version, package_info.edition.edition)),
+            ],
         )
         hash_entry = output.decode("ascii").strip()
         logger.info("Checkmk package hash entry: %s", hash_entry)
@@ -389,7 +401,7 @@ def _create_cmk_image(
         labeled_container.remove(v=True, force=True)
 
         logger.info("Commited image [%s] (%s)", image_name_with_tag, image.short_id)
-        if not use_local_package and not version.is_release_candidate():
+        if not use_local_package and not package_info.version.is_release_candidate():
             try:
                 logger.info(
                     "Uploading [%s] to registry (%s)",
@@ -517,14 +529,14 @@ def _runtime_binds() -> Mapping[str, DockerBind]:
     }
 
 
-def _container_env(version: CMKVersion) -> Mapping[str, str]:
+def _container_env(package_info: CMKPackageInfo) -> Mapping[str, str]:
     # In addition to the ones defined here, some environment vars, like "DISTRO" are added through
     # the docker image
     return {
         "LANG": "C",
-        "VERSION": version.version_spec,
-        "EDITION": version.edition.short,
-        "BRANCH": version.branch,
+        "VERSION": package_info.version.version_spec,
+        "EDITION": package_info.edition.short,
+        "BRANCH": package_info.version.branch,
         "RESULT_PATH": "/results",
         "CI": os.environ.get("CI", ""),
         "OTEL_EXPORTER_OTLP_ENDPOINT": os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT", ""),

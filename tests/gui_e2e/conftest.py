@@ -33,8 +33,6 @@ from tests.testlib.emails import EmailManager
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.site import ADMIN_USER, get_site_factory, Site
 
-from cmk.ccc.version import Edition
-
 logger = logging.getLogger(__name__)
 
 pytest_plugins = ("tests.gui_e2e.testlib.playwright.plugin",)
@@ -64,7 +62,7 @@ def _log_in(
     request: pytest.FixtureRequest,
     test_site: Site,
 ) -> None:
-    if test_site.version.edition == Edition.CSE:
+    if test_site.edition.is_saas_edition():
         return
     video_name = f"login_for_{request.node.name.replace('.py', '')}"
     with manage_new_page_from_browser_context(context, request, video_name) as page:

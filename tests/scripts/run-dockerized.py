@@ -26,9 +26,11 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.realp
 
 from tests.testlib.common.repo import current_base_branch_name
 from tests.testlib.script_helpers.dockerized_execution import execute_tests_in_container
-from tests.testlib.version import CMKVersion, version_from_env
-
-from cmk.ccc.version import Edition
+from tests.testlib.version import (
+    CMKPackageInfo,
+    edition_from_env,
+    version_from_env,
+)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(filename)s %(message)s")
 logger = logging.getLogger()
@@ -40,16 +42,15 @@ def main(raw_args):
 
     distro_name = _os_environ_get("DISTRO", "ubuntu-22.04")
     docker_tag = _os_environ_get("DOCKER_TAG", f"{current_base_branch_name()}-latest")
-    version = version_from_env(
-        fallback_version_spec=CMKVersion.DAILY,
-        fallback_edition=Edition.CEE,
-        fallback_branch=current_base_branch_name,
-    )
+    version = version_from_env()
+    edition = edition_from_env()
+    package_info = CMKPackageInfo(version, edition)
+
     logger.info(
         "Version: %s (%s), Edition: %s, Branch: %s",
         version.version,
         version.version_spec,
-        version.edition.long,
+        edition.long,
         version.branch,
     )
 
@@ -73,7 +74,7 @@ def main(raw_args):
         distro_name=distro_name,
         docker_tag=docker_tag,
         command=command,
-        version=version,
+        package_info=package_info,
         result_path=result_path,
         interactive=args.make_target.rsplit("-", 1)[-1] == "debug",
     )

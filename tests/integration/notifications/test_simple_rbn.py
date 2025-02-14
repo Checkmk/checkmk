@@ -69,7 +69,7 @@ def fixture_test_user(site: Site) -> Iterator[None]:
         password="1234abcdabcd",
         email=f"{site.id}@localhost",
         contactgroups=["all"],
-        customer="global" if site.version.is_managed_edition() else None,
+        customer="global" if site.edition.is_managed_edition() else None,
     )
     site.activate_changes_and_wait_for_core_reload()
 

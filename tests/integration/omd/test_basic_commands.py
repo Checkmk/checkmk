@@ -22,7 +22,7 @@ def test_basic_commands(site: Site) -> None:
         "bin/cmk-validate-plugins",
     ]
 
-    if not site.version.is_raw_edition():
+    if not site.edition.is_raw_edition():
         commands.append("bin/fetcher")
 
     for rel_path in commands:

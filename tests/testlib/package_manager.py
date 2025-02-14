@@ -21,7 +21,11 @@ from tests.testlib.common.utils import (
     package_hash_path,
     run,
 )
-from tests.testlib.version import CMKVersion, version_from_env
+from tests.testlib.version import (
+    CMKPackageInfo,
+    edition_from_env,
+    version_from_env,
+)
 
 from cmk.ccc.version import Edition
 
@@ -73,11 +77,13 @@ class ABCPackageManager(abc.ABC):
         return Path("/etc/debian_version").exists()
 
     def download(
-        self, version: CMKVersion | None = None, target_folder: Path | None = None
+        self, package_info: CMKPackageInfo | None = None, target_folder: Path | None = None
     ) -> Path:
-        version = version or version_from_env()
-        package_name = self.package_name(version.edition, version.version)
-        package_url = self.package_url_internal(version.version, package_name)
+        package_info = (
+            package_info if package_info else CMKPackageInfo(version_from_env(), edition_from_env())
+        )
+        package_name = self.package_name(package_info.edition.edition, package_info.version.version)
+        package_url = self.package_url_internal(package_info.version.version, package_name)
 
         target_path = (
             target_folder / package_name if target_folder else self._temp_package_path(package_name)

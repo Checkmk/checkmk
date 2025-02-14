@@ -279,6 +279,6 @@ def _snmpsimd_process(process_def: ProcessDef) -> psutil.Process | None:
 @pytest.fixture(name="backend_type", params=SNMPBackendEnum)
 def backend_type_fixture(site: Site, request: pytest.FixtureRequest) -> SNMPBackendEnum:
     backend_type: SNMPBackendEnum = request.param
-    if site.version.is_raw_edition() and backend_type is SNMPBackendEnum.INLINE:
+    if site.edition.is_raw_edition() and backend_type is SNMPBackendEnum.INLINE:
         return pytest.skip("CEE feature only")
     return backend_type

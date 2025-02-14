@@ -17,7 +17,7 @@ from tests.testlib.agent import (
 )
 from tests.testlib.common.utils import ServiceInfo
 from tests.testlib.site import Site
-from tests.testlib.version import version_from_env
+from tests.testlib.version import edition_from_env
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.definition import RuleGroup
@@ -48,7 +48,7 @@ def _host_services(
     site: Site, agent_ctl: Path, request: pytest.FixtureRequest
 ) -> Iterator[dict[str, ServiceInfo]]:
     active_mode = request.param
-    if active_mode and version_from_env().is_saas_edition():
+    if active_mode and edition_from_env().is_saas_edition():
         pytest.skip("Active mode requires pull agent, which is not available in CSE")
     rule_id = None
     hostname = HostName(f"host-{request.node.callspec.id}")
@@ -71,7 +71,7 @@ def _host_services(
         if active_mode:
             site.reschedule_services(hostname)
         else:
-            if not version_from_env().is_saas_edition():
+            if not edition_from_env().is_saas_edition():
                 # Reduce check interval to 3 seconds
                 rule_id = site.openapi.rules.create(
                     ruleset_name=RuleGroup.ExtraServiceConf("check_interval"),
@@ -154,7 +154,7 @@ def test_shipped_ps_disocvery(host_services: dict[str, ServiceInfo], site: Site)
             # f"Process {site.id} real-time helper",  # not enabled
             f"Process {site.id} rrd helper",
         }
-    if not site.version.is_raw_edition():
+    if not site.edition.is_raw_edition():
         expected_ps_services |= {
             f"Process {site.id} dcd",
         }

@@ -146,7 +146,7 @@ from cmk.base.sources import SNMPFetcherConfig
 from cmk import trace
 from cmk.agent_based.legacy import discover_legacy_checks, FileLoader, find_plugin_files
 from cmk.piggyback import backend as piggyback_backend
-from cmk.rrd.interface import RRDObjectConfig  # pylint: disable=cmk-module-layer-violation
+from cmk.rrd.config import RRDObjectConfig  # pylint: disable=cmk-module-layer-violation
 from cmk.server_side_calls import v1 as server_side_calls_api
 from cmk.server_side_calls_backend import (
     ActiveCheck,

@@ -43,12 +43,12 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
 from cmk.utils.metrics import MetricName
 
-from .interface import (  # pylint: disable=cmk-module-layer-violation
+from .config import (  # pylint: disable=cmk-module-layer-violation
     RRDConfig,
-    RRDInterface,
     RRDObjectConfig,
     RRDReloadableConfig,
 )
+from .interface import RRDInterface  # pylint: disable=cmk-module-layer-violation
 
 _Seconds = NewType("_Seconds", int)
 

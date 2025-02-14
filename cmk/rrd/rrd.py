@@ -46,7 +46,6 @@ from cmk.utils.metrics import MetricName
 from .config import (  # pylint: disable=cmk-module-layer-violation
     RRDConfig,
     RRDObjectConfig,
-    RRDReloadableConfig,
 )
 from .interface import RRDInterface  # pylint: disable=cmk-module-layer-violation
 
@@ -737,7 +736,7 @@ class RRDCreator:
         self._rrd_interface = rrd_interface
         self._rrd_helper_output_buffer = b""
 
-    def create_rrds_keepalive(self, *, config: RRDReloadableConfig) -> None:
+    def create_rrds_keepalive(self, config: RRDConfig) -> None:
         input_buffer = b""
         self._rrd_helper_output_buffer = b""
 

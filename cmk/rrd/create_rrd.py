@@ -10,7 +10,7 @@ from typing import NoReturn
 
 from cmk.ccc.exceptions import MKTerminate
 
-from .config import RRDConfigImpl  # pylint: disable=cmk-module-layer-violation
+from .config import RRDConfig  # pylint: disable=cmk-module-layer-violation
 from .interface import RRDInterface  # pylint: disable=cmk-module-layer-violation
 from .rrd import RRDCreator  # pylint: disable=cmk-module-layer-violation
 
@@ -22,4 +22,4 @@ def _handle_keepalive_interrupt(signum: int, frame: FrameType | None) -> NoRetur
 
 def create_rrd(rrd_interface: RRDInterface) -> None:
     signal.signal(signal.SIGINT, _handle_keepalive_interrupt)
-    RRDCreator(rrd_interface).create_rrds_keepalive(config=RRDConfigImpl())
+    RRDCreator(rrd_interface).create_rrds_keepalive(RRDConfig())

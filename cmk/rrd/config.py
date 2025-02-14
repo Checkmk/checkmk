@@ -6,7 +6,7 @@
 from collections.abc import Iterable, Mapping, Sequence
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal, Protocol, TypedDict
+from typing import Literal, TypedDict
 
 from cmk.ccc.store import load_object_from_file
 
@@ -44,22 +44,8 @@ class _RRDHostConfig(TypedDict, total=False):
     services: Mapping[str, RRDObjectConfig]
 
 
-class RRDConfig(Protocol):
-    def rrd_config(self, hostname: HostName) -> RRDObjectConfig | None: ...
-
-    def rrd_config_of_service(
-        self, hostname: HostName, description: ServiceName
-    ) -> RRDObjectConfig | None: ...
-
-    def cmc_log_rrdcreation(self) -> Literal["terse", "full"] | None: ...
-
-
-class RRDReloadableConfig(RRDConfig):
-    def reload(self) -> None: ...
-
-
-class RRDConfigImpl(RRDReloadableConfig):
-    def __init__(self) -> None:
+class RRDConfig:
+    def __init__(self):
         self._loaded_host_configs: dict[HostName, _RRDHostConfig] = {}
         self._config_base_path = VersionedConfigPath.current()
         self._config_path = rrd_config_dir(self._config_base_path)

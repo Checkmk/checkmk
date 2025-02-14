@@ -22,7 +22,7 @@ git_override(
 
 bazel_dep(name = "rules_cc", version = "0.0.17")
 bazel_dep(name = "rules_multitool", version = "0.4.0")
-bazel_dep(name = "rules_rust", version = "0.49.3")
+bazel_dep(name = "rules_rust", version = "0.54.1")
 bazel_dep(name = "rules_python", version = "1.1.0")
 single_version_override(
     module_name = "rules_python",

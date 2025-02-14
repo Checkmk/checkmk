@@ -54,12 +54,15 @@ from cmk.gui.openapi.utils import (
 from cmk.gui.wsgi.applications.utils import AbstractWSGIApp
 from cmk.gui.wsgi.wrappers import ParameterDict
 
+from cmk import trace
 from cmk.crypto import MKCryptoException
 
 if TYPE_CHECKING:
     from cmk.gui.http import HTTPMethod
     from cmk.gui.openapi.restful_objects.type_defs import EndpointTarget
     from cmk.gui.wsgi.type_defs import WSGIResponse
+
+tracer = trace.get_tracer()
 
 ARGS_KEY = "CHECK_MK_REST_API_ARGS"
 
@@ -456,6 +459,7 @@ class CheckmkRESTAPI(AbstractWSGIApp):
         for path in path_entries:
             self._rules.append(Rule(path, methods=methods, endpoint=key))
 
+    @tracer.instrument("CheckmkRESTAPI._lookup_destination")
     def _lookup_destination(self, environ: WSGIEnvironment) -> tuple[AbstractWSGIApp, PathArgs]:
         """Match the URL which is requested with the corresponding endpoint.
 

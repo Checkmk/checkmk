@@ -29,10 +29,11 @@ _HostLabelFunctionAllParams = Callable[
     [Sequence[Mapping[str, object]], _Section], HostLabelGenerator
 ]
 
-InventoryFunction = Callable[..., InventoryResult]  # type: ignore[misc]
+AgentParseFunction = Callable[[StringTable], _Section | None]
+InventoryFunction = Callable[..., InventoryResult]  # type: ignore[misc]  # Type contains explicit Any
 
-CheckFunction = Callable[..., CheckResult]  # type: ignore[misc]
-DiscoveryFunction = Callable[..., DiscoveryResult]  # type: ignore[misc]
+CheckFunction = Callable[..., CheckResult]  # type: ignore[misc]  # Type contains explicit Any
+DiscoveryFunction = Callable[..., DiscoveryResult]  # type: ignore[misc]  # Type contains explicit Any
 
 
 @dataclass
@@ -90,7 +91,7 @@ class AgentSection(Generic[_Section]):
     """
 
     name: str
-    parse_function: Callable[[StringTable], _Section | None]
+    parse_function: AgentParseFunction[_Section]
     parsed_section_name: str | None = None
     host_label_function: (
         _HostLabelFunctionNoParams[_Section]
@@ -108,7 +109,7 @@ class AgentSection(Generic[_Section]):
         self,
         *,
         name: str,
-        parse_function: Callable[[StringTable], _Section | None],
+        parse_function: AgentParseFunction[_Section],
         host_label_function: _HostLabelFunctionNoParams[_Section] | None = None,
         host_label_default_parameters: None = None,
         host_label_ruleset_name: None = None,
@@ -122,7 +123,7 @@ class AgentSection(Generic[_Section]):
         self,
         *,
         name: str,
-        parse_function: Callable[[StringTable], _Section | None],
+        parse_function: AgentParseFunction[_Section],
         host_label_function: _HostLabelFunctionMergedParams[_Section],
         host_label_default_parameters: Mapping[str, object],
         host_label_ruleset_name: str,

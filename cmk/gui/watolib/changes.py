@@ -195,6 +195,8 @@ def add_service_change(
     action_name: str,
     text: str,
     object_ref: ObjectRef,
+    domains: Sequence[ABCConfigDomain],
+    domain_settings: DomainSettings,
     site_id: SiteId,
     diff_text: str | None = None,
     need_sync: bool = False,
@@ -206,4 +208,6 @@ def add_service_change(
         sites=[site_id],
         diff_text=diff_text,
         need_sync=need_sync,
+        domains=domains,
+        domain_settings=domain_settings,
     )

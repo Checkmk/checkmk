@@ -23,6 +23,13 @@ from cmk.gui.logged_in import user
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.changes import add_service_change
 from cmk.gui.watolib.check_mk_automations import autodiscovery
+from cmk.gui.watolib.config_domain_name import (
+    config_domain_registry,
+    generate_hosts_to_update_settings,
+)
+from cmk.gui.watolib.config_domain_name import (
+    CORE as CORE_DOMAIN,
+)
 from cmk.gui.watolib.hosts_and_folders import Host
 
 
@@ -81,6 +88,8 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
                     "autodiscovery",
                     message,
                     host.object_ref(),
+                    [config_domain_registry[CORE_DOMAIN]],
+                    {CORE_DOMAIN: generate_hosts_to_update_settings([host.name()])},
                     self.site_id,
                     diff_text=discovery_result.diff_text,
                 )

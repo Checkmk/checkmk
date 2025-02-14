@@ -2015,7 +2015,7 @@ class ModeTestNotifications(ModeNotifications):
         all_parameters = NotificationParameterConfigFile().load_for_reading()
         for script_name, title in notification_script_choices():
             choices = []
-            if script_name in notification_parameter_registry and script_name in all_parameters:
+            if script_name in all_parameters:
                 for parameter_id in all_parameters[script_name]:
                     choices.append(
                         (

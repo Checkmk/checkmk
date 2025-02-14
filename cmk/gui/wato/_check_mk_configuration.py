@@ -3835,7 +3835,7 @@ def _host_check_commands_host_check_command_choices() -> list[CascadingDropdownC
             NetworkPort(label=_("to port:"), minvalue=1, maxvalue=65535, default_value=80),
         ),
         ("ok", _("Always assume host to be up")),
-        ("agent", _("Use the status of the Checkmk Agent")),
+        ("agent", _("Use the status of the Check_MK Service")),
         (
             "service",
             _("Use the status of the service..."),

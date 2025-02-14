@@ -82,9 +82,12 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domain_name import (
-    ConfigDomainName,
+    config_domain_registry,
     DomainSettings,
     generate_hosts_to_update_settings,
+)
+from cmk.gui.watolib.config_domain_name import (
+    CORE as CORE_DOMAIN,
 )
 from cmk.gui.watolib.host_attributes import (
     all_host_attributes,
@@ -928,10 +931,8 @@ def _wato_folders_factory(tree: FolderTree) -> Mapping[PathWithoutSlash, Folder]
     return WATOFoldersOnDemand(tree, {x.rstrip("/"): None for x in wato_redis_client.folder_paths})
 
 
-def _generate_domain_settings(
-    ident: ConfigDomainName, hostnames: Sequence[HostName]
-) -> DomainSettings:
-    return {ident: generate_hosts_to_update_settings(hostnames)}
+def _core_settings_hosts_to_update(hostnames: Sequence[HostName]) -> DomainSettings:
+    return {CORE_DOMAIN: generate_hosts_to_update_settings(hostnames)}
 
 
 class FolderTree:
@@ -2421,7 +2422,8 @@ class Folder(FolderProtocol):
             object_ref=host.object_ref(),
             sites=[host.site_id()],
             diff_text=diff_attributes({}, None, host.attributes, host.cluster_nodes()),
-            domain_settings=_generate_domain_settings("check_mk", [host_name]),
+            domains=[config_domain_registry[CORE_DOMAIN]],
+            domain_settings=_core_settings_hosts_to_update([host_name]),
         )
 
     def delete_hosts(
@@ -3376,7 +3378,8 @@ class Host:
             object_ref=self.object_ref(),
             sites=affected_sites,
             diff_text=diff,
-            domain_settings=_generate_domain_settings("check_mk", [self.name()]),
+            domains=[config_domain_registry[CORE_DOMAIN]],
+            domain_settings=_core_settings_hosts_to_update([self.name()]),
         )
 
     def edit(self, attributes: HostAttributes, cluster_nodes: Sequence[HostName] | None) -> None:
@@ -3413,6 +3416,8 @@ class Host:
             object_ref=self.object_ref(),
             sites=affected_sites,
             diff_text=diff_attributes(old_attrs, old_nodes, self.attributes, self._cluster_nodes),
+            domains=[config_domain_registry[CORE_DOMAIN]],
+            domain_settings=_core_settings_hosts_to_update([self.name()]),
         )
 
     def _need_folder_write_permissions(self) -> None:

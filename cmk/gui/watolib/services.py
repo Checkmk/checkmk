@@ -57,6 +57,13 @@ from cmk.gui.watolib.check_mk_automations import (
     set_autochecks_v2,
     update_host_labels,
 )
+from cmk.gui.watolib.config_domain_name import (
+    config_domain_registry,
+    generate_hosts_to_update_settings,
+)
+from cmk.gui.watolib.config_domain_name import (
+    CORE as CORE_DOMAIN,
+)
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.rulesets import EnabledDisabledServicesEditor
 from cmk.gui.watolib.utils import may_edit_ruleset
@@ -404,6 +411,8 @@ class Discovery:
             action_name="set-autochecks",
             text=message,
             object_ref=self._host.object_ref(),
+            domains=[config_domain_registry[CORE_DOMAIN]],
+            domain_settings={CORE_DOMAIN: generate_hosts_to_update_settings([self._host.name()])},
             site_id=self._host.site_id(),
             need_sync=need_sync,
             diff_text=make_diff_text(
@@ -640,6 +649,8 @@ def _perform_update_host_labels(labels_by_nodes: Mapping[HostName, Sequence[Host
             "update-host-labels",
             message,
             host.object_ref(),
+            [config_domain_registry[CORE_DOMAIN]],
+            {CORE_DOMAIN: generate_hosts_to_update_settings([host.name()])},
             host.site_id(),
         )
         update_host_labels(
@@ -932,6 +943,8 @@ def get_check_table(host: Host, action: DiscoveryAction, *, raise_errors: bool) 
             "refresh-autochecks",
             _("Refreshed check configuration of host '%s'") % host.name(),
             host.object_ref(),
+            [config_domain_registry[CORE_DOMAIN]],
+            {CORE_DOMAIN: generate_hosts_to_update_settings([host.name()])},
             host.site_id(),
         )
 

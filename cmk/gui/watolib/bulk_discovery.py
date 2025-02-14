@@ -44,6 +44,13 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.watolib.changes import add_service_change
 from cmk.gui.watolib.check_mk_automations import discovery
+from cmk.gui.watolib.config_domain_name import (
+    config_domain_registry,
+    generate_hosts_to_update_settings,
+)
+from cmk.gui.watolib.config_domain_name import (
+    CORE as CORE_DOMAIN,
+)
 from cmk.gui.watolib.hosts_and_folders import disk_or_search_folder_from_request, folder_tree, Host
 
 DoFullScan = NewType("DoFullScan", bool)
@@ -394,6 +401,8 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
                 result.self_total_host_labels,
             ),
             host.object_ref(),
+            [config_domain_registry[CORE_DOMAIN]],
+            {CORE_DOMAIN: generate_hosts_to_update_settings([host.name()])},
             host.site_id(),
             diff_text=result.diff_text,
         )

@@ -14,8 +14,8 @@ from pathlib import Path
 from typing import Any, Final, Literal, Self
 
 import urllib3
-from redfish import redfish_logger
-from redfish.rest.v1 import (
+from redfish import redfish_logger  # type: ignore[import-untyped]
+from redfish.rest.v1 import (  # type: ignore[import-untyped]
     HttpClient,
     JsonDecodingError,
     redfish_client,

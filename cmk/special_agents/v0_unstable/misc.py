@@ -256,7 +256,7 @@ def vcrtrace(**vcr_init_kwargs):
                 setattr(namespace, self.dest, _NullContext())
                 return
 
-            import vcr
+            import vcr  # type: ignore[import-untyped]
 
             use_cassette = vcr.VCR(**vcr_init_kwargs).use_cassette
             setattr(namespace, self.dest, lambda **kwargs: use_cassette(filename, **kwargs))
@@ -371,3 +371,11 @@ def JsonCachedData(
             LOG.debug("Cache: write file: %r", str(cache_file.absolute()))
             with cache_file.open(mode="w") as cwfile:
                 json.dump(cache, cwfile, indent=2)
+
+
+if __name__ == "__main__":
+    # Please keep these lines - they make TDD easy and have no effect on normal test runs.
+    # Just run this file from your IDE and dive into the code.
+    import pytest
+
+    assert not pytest.main(["--doctest-modules", __file__])

@@ -36,7 +36,7 @@ import typing
 import urllib.parse
 from wsgiref.types import StartResponse, WSGIApplication, WSGIEnvironment
 
-import pyprof2calltree
+import pyprof2calltree  # type: ignore[import-untyped]
 
 P = typing.ParamSpec("P")
 

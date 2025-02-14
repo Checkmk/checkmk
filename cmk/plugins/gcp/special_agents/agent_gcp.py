@@ -11,17 +11,16 @@ from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import cache
 from types import TracebackType
-from typing import Any, assert_never, Protocol, Self
+from typing import Any, assert_never, Protocol
 
-import google.protobuf.duration_pb2 as duration
+import google.protobuf.duration_pb2 as duration  # to satisfy pylint with `duration.Duration`
 from google.api_core.exceptions import PermissionDenied, Unauthenticated
 from google.cloud import asset_v1, monitoring_v3
 from google.cloud.monitoring_v3.types import Aggregation as GoogleAggregation
 from google.cloud.monitoring_v3.types import TimeSeries
 from google.oauth2 import service_account
-from googleapiclient.discovery import build, Resource
-from googleapiclient.errors import HttpError
-from googleapiclient.http import HttpRequest
+from googleapiclient.discovery import build, Resource  # type: ignore[import-untyped]
+from googleapiclient.http import HttpError, HttpRequest  # type: ignore[import-untyped]
 
 from cmk.plugins.gcp.lib.constants import Extractors
 from cmk.special_agents.v0_unstable.agent_common import (
@@ -50,9 +49,9 @@ class Asset:
         return json.dumps(asset_v1.Asset.to_dict(obj.asset))
 
     @classmethod
-    def deserialize(cls, data: str) -> Self:
+    def deserialize(cls, data: str) -> "Asset":
         asset = asset_v1.Asset.from_json(data)
-        return cls(asset=asset)  # type: ignore[arg-type]
+        return cls(asset=asset)
 
 
 Schema = Sequence[Mapping[str, str]]
@@ -125,14 +124,14 @@ class Client:
         )
 
         body = {"query": query, "useLegacySql": False}
-        request: HttpRequest = self.bigquery().query(projectId=self.project, body=body)  # type: ignore[attr-defined]
+        request: HttpRequest = self.bigquery().query(projectId=self.project, body=body)
         response = request.execute()
         schema: Schema = response["schema"]["fields"]
 
         pages: list[Page] = [response["rows"]]
         # collect all rows, even if we use pagination
         if "pageToken" in response:
-            request = self.bigquery().getQueryResults(  # type: ignore[attr-defined]
+            request = self.bigquery().getQueryResults(
                 projectId=self.project,
                 jobId=response["jobReference"]["jobId"],
                 location=response["jobReference"]["location"],
@@ -141,7 +140,7 @@ class Client:
             response = request.execute()
             pages.append(response["rows"])
 
-            while next_request := self.bigquery().getQueryResults_next(request, response):  # type: ignore[attr-defined]
+            while next_request := self.bigquery().getQueryResults_next(request, response):
                 next_response = next_request.execute()
                 request = next_request
                 response = next_response
@@ -270,7 +269,7 @@ class Result:
             per_series_aligner=raw_aggregation["per_series_aligner"],
             cross_series_reducer=raw_aggregation["cross_series_reducer"],
         )
-        return cls(ts=ts, aggregation=aggregation)  # type: ignore[arg-type]
+        return cls(ts=ts, aggregation=aggregation)
 
 
 @dataclass(frozen=True)

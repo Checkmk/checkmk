@@ -26,10 +26,8 @@ if sys.version_info[0] >= 3:
 
 # Continue if typing cannot be imported, e.g. for running unit tests
 try:
-    from typing import Any, TYPE_CHECKING  # noqa: F401
-
-    if TYPE_CHECKING:
-        from collections.abc import Callable  # noqa: F401
+    from collections.abc import Callable  # noqa: F401
+    from typing import Any  # noqa: F401
 except ImportError:
     pass
 
@@ -226,7 +224,7 @@ QUERY_SPECS_LEGACY = [
         [],
         True,
     ),
-]  # type: list[tuple[str, str, str, list[object], bool]]
+]  # type: list[tuple[str, str, str, list, bool]]
 
 QUERY_SPECS_SPECIFIC_LEGACY = {
     "weblogic": [
@@ -312,7 +310,7 @@ def write_section(name, iterable):
 
 
 def cached(function):
-    cache = {}  # type: dict[str, Callable[[object], object]]
+    cache = {}  # type: dict[str, Callable]
 
     def cached_function(*args):
         key = repr(args)

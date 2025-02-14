@@ -11,7 +11,7 @@ from pprint import pformat
 from typing import cast
 
 import urllib3
-from opsgenie_sdk import (
+from opsgenie_sdk import (  # type: ignore[import-untyped]
     AcknowledgeAlertPayload,
     AddNoteToAlertPayload,
     AddTagsToAlertPayload,
@@ -25,7 +25,7 @@ from opsgenie_sdk import (
     UpdateAlertDescriptionPayload,
     UpdateAlertMessagePayload,
 )
-from opsgenie_sdk.exceptions import AuthenticationException
+from opsgenie_sdk.exceptions import AuthenticationException  # type: ignore[import-untyped]
 from requests.utils import get_environ_proxies
 from tenacity import RetryError
 from urllib3.util import parse_url
@@ -64,7 +64,7 @@ class Connector:
     def __init__(
         self, api_key: str, host_url: str | None, proxy_url: str | None, ignore_ssl: bool
     ) -> None:
-        conf = Configuration()  # type: ignore[no-untyped-call]
+        conf = Configuration()
         conf.api_key["Authorization"] = api_key
         if host_url is not None:
             conf.host = "%s" % host_url
@@ -82,16 +82,13 @@ class Connector:
 
         sys.stdout.flush()
 
-        api_client: ApiClient = ApiClient(configuration=conf)  # type: ignore[no-untyped-call]
-        self.alert_api = AlertApi(api_client=api_client)  # type: ignore[no-untyped-call]
+        api_client: ApiClient = ApiClient(configuration=conf)
+        self.alert_api = AlertApi(api_client=api_client)
 
     def get_existing_alert(self, alias: str) -> Alert | None:
         with _handle_api_exceptions("get_alert"):
             try:
-                response = self.alert_api.get_alert(  # type: ignore[no-untyped-call]
-                    identifier=alias,
-                    identifier_type="alias",
-                )
+                response = self.alert_api.get_alert(identifier=alias, identifier_type="alias")
             except ApiException:
                 sys.stdout.write(f'Alert with alias "{alias}" not found.\n')
                 return None
@@ -102,11 +99,11 @@ class Connector:
 
     def handle_alert_update_description(self, identifier: str, description: str) -> None:
         with _handle_api_exceptions("update_alert_description"):
-            response = self.alert_api.update_alert_description(  # type: ignore[no-untyped-call]
+            response = self.alert_api.update_alert_description(
                 identifier,
                 identifier_type="id",
-                update_alert_description_payload=(
-                    UpdateAlertDescriptionPayload(description=description)  # type: ignore[no-untyped-call]
+                update_alert_description_payload=UpdateAlertDescriptionPayload(
+                    description=description
                 ),
             )
 
@@ -116,12 +113,10 @@ class Connector:
 
     def handle_alert_update_message(self, identifier: str, message: str) -> None:
         with _handle_api_exceptions("update_alert_message"):
-            response = self.alert_api.update_alert_message(  # type: ignore[no-untyped-call]
+            response = self.alert_api.update_alert_message(
                 identifier,
                 identifier_type="id",
-                update_alert_message_payload=(
-                    UpdateAlertMessagePayload(message=message)  # type: ignore[no-untyped-call]
-                ),
+                update_alert_message_payload=UpdateAlertMessagePayload(message=message),
             )
 
         sys.stdout.write(
@@ -130,9 +125,7 @@ class Connector:
 
     def handle_alert_creation(self, create_alert_payload: CreateAlertPayload) -> None:
         with _handle_api_exceptions("create_alert"):
-            response = self.alert_api.create_alert(  # type: ignore[no-untyped-call]
-                create_alert_payload=create_alert_payload
-            )
+            response = self.alert_api.create_alert(create_alert_payload=create_alert_payload)
 
         sys.stdout.write(f"Request id: {response.request_id}, successfully created alert.\n")
 
@@ -140,7 +133,7 @@ class Connector:
         self, alias: str | None, close_alert_payload: CloseAlertPayload
     ) -> None:
         with _handle_api_exceptions("close_alert"):
-            response = self.alert_api.close_alert(  # type: ignore[no-untyped-call]
+            response = self.alert_api.close_alert(
                 identifier=alias,
                 identifier_type="alias",
                 close_alert_payload=close_alert_payload,
@@ -152,7 +145,7 @@ class Connector:
         self, alias: str | None, acknowledge_alert_payload: AcknowledgeAlertPayload
     ) -> None:
         with _handle_api_exceptions("acknowledge_alert"):
-            response = self.alert_api.acknowledge_alert(  # type: ignore[no-untyped-call]
+            response = self.alert_api.acknowledge_alert(
                 identifier=alias,
                 identifier_type="alias",
                 acknowledge_alert_payload=acknowledge_alert_payload,
@@ -164,7 +157,7 @@ class Connector:
 
     def add_note(self, alias: str, payload: AddNoteToAlertPayload) -> None:
         with _handle_api_exceptions("add_note"):
-            response = self.alert_api.add_note(  # type: ignore[no-untyped-call]
+            response = self.alert_api.add_note(
                 identifier=alias, identifier_type="alias", add_note_to_alert_payload=payload
             )
 
@@ -172,7 +165,7 @@ class Connector:
 
     def add_tags(self, alias: str, payload: AddTagsToAlertPayload) -> None:
         with _handle_api_exceptions("add_tags"):
-            response = self.alert_api.add_tags(  # type: ignore[no-untyped-call]
+            response = self.alert_api.add_tags(
                 identifier=alias, identifier_type="alias", add_tags_to_alert_payload=payload
             )
 
@@ -182,7 +175,7 @@ class Connector:
         self, alias: str, tags: list[str], source: str | None, user: str | None, note: str | None
     ) -> None:
         with _handle_api_exceptions("remove_tags"):
-            response = self.alert_api.remove_tags(  # type: ignore[no-untyped-call]
+            response = self.alert_api.remove_tags(
                 identifier=alias,
                 identifier_type="alias",
                 tags=tags,
@@ -349,7 +342,7 @@ def _handle_problem(
     existing_alert = connector.get_existing_alert(alias) if integration_team else None
 
     connector.handle_alert_creation(
-        create_alert_payload=CreateAlertPayload(  # type: ignore[no-untyped-call]
+        create_alert_payload=CreateAlertPayload(
             note=note_created,
             actions=actions_list,
             description=desc,
@@ -387,7 +380,7 @@ def _handle_acknowledgement(
         ack_comment = context["SERVICEACKCOMMENT"]
     connector.handle_alert_ack(
         alias=alias,
-        acknowledge_alert_payload=AcknowledgeAlertPayload(  # type: ignore[no-untyped-call]
+        acknowledge_alert_payload=AcknowledgeAlertPayload(
             source=alert_source,
             user=ack_author,
             note=ack_comment,
@@ -413,7 +406,7 @@ def _handle_alert_handler(
         note = note[:24997] + "..."
     connector.add_note(
         alias=alias,
-        payload=AddNoteToAlertPayload(  # type: ignore[no-untyped-call]
+        payload=AddNoteToAlertPayload(
             source=alert_source,
             user=owner,
             note=note,
@@ -435,7 +428,7 @@ def main() -> None:
         case "RECOVERY":
             connector.handle_alert_deletion(
                 alias=alias,
-                close_alert_payload=CloseAlertPayload(  # type: ignore[no-untyped-call]
+                close_alert_payload=CloseAlertPayload(
                     source=alert_source,
                     user=owner,
                     note=context.get("PARAMETER_NOTE_CLOSED") or "Alert closed by Check_MK",
@@ -447,7 +440,7 @@ def main() -> None:
             _requires_integration_team(nt, integration_team)
             connector.add_tags(
                 alias=alias,
-                payload=AddTagsToAlertPayload(  # type: ignore[no-untyped-call]
+                payload=AddTagsToAlertPayload(
                     tags=["Flapping"],
                     source=alert_source,
                     user=owner,
@@ -467,7 +460,7 @@ def main() -> None:
             _requires_integration_team(nt, integration_team)
             connector.add_tags(
                 alias=alias,
-                payload=AddTagsToAlertPayload(  # type: ignore[no-untyped-call]
+                payload=AddTagsToAlertPayload(
                     tags=["Downtime"],
                     source=alert_source,
                     user=owner,

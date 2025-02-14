@@ -40,27 +40,9 @@ from pathlib import Path
 from typing import Any, cast, Literal
 
 # docs: http://www.python-ldap.org/doc/html/index.html
-import ldap
-import ldap.filter
-from ldap import (  # type: ignore[attr-defined]  # dynamic attributes
-    CONTROL_PAGEDRESULTS,
-    FILTER_ERROR,
-    INAPPROPRIATE_AUTH,
-    INVALID_CREDENTIALS,
-    LDAPError,
-    LOCAL_ERROR,
-    NO_SUCH_OBJECT,
-    OPT_REFERRALS,
-    OPT_X_TLS_CACERTFILE,
-    OPT_X_TLS_NEWCTX,
-    SCOPE_BASE,
-    SCOPE_ONELEVEL,
-    SCOPE_SUBTREE,
-    SERVER_DOWN,
-    SIZELIMIT_EXCEEDED,
-    TIMEOUT,
-)
-from ldap.controls import SimplePagedResultsControl
+import ldap  # type: ignore[import-untyped]
+import ldap.filter  # type: ignore[import-untyped]
+from ldap.controls import SimplePagedResultsControl  # type: ignore[import-untyped]
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store
@@ -212,10 +194,10 @@ LDAPUserSpec = dict[str, list[str]]
 
 
 def _get_ad_locator():
-    import activedirectory
-    from activedirectory.protocol import netlogon
+    import activedirectory  # type: ignore[import-untyped]
+    from activedirectory.protocol import netlogon  # type: ignore[import-untyped]
 
-    class FasterDetectLocator(activedirectory.Locator):  # type: ignore[misc, name-defined]
+    class FasterDetectLocator(activedirectory.Locator):  # type: ignore[misc]
         def _detect_site(self, domain):
             """Detect our site using the netlogon protocol.
             This modified function only changes the number of parallel queried servers from 3 to 60
@@ -323,7 +305,6 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             # in production as it leaks sensitive information.
             # if self._logger.isEnabledFor(logging.DEBUG):
             #     os.environ["GNUTLS_DEBUG_LEVEL"] = "99"
-            #     ldap.set_option(OPT_DEBUG_LEVEL, 4095)  # type: ignore[attr-defined]
             #     ldap.set_option(ldap.OPT_DEBUG_LEVEL, 4095)
             #     trace_level = 2
             #     trace_file: IO[str] | None = sys.stderr
@@ -343,10 +324,10 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             # When using the domain top level as base-dn, the subtree search stumbles with referral objects.
             # whatever. We simply disable them here when using active directory. Hope this fixes all problems.
             if self._is_active_directory():
-                conn.set_option(OPT_REFERRALS, 0)
+                conn.set_option(ldap.OPT_REFERRALS, 0)
 
             if "use_ssl" in self._config:
-                conn.set_option(OPT_X_TLS_CACERTFILE, str(cmk.utils.paths.trusted_ca_file))
+                conn.set_option(ldap.OPT_X_TLS_CACERTFILE, str(cmk.utils.paths.trusted_ca_file))
 
                 # Caused trouble on older systems or systems with some special configuration or set of
                 # libraries. For example we saw a Ubuntu 17.10 system with libldap  2.4.45+dfsg-1ubuntu1 and
@@ -354,25 +335,25 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 # the exact same liraries did not. Try to do this on systems that support this call and ignore
                 # the errors on other systems.
                 try:
-                    conn.set_option(OPT_X_TLS_NEWCTX, 0)
+                    conn.set_option(ldap.OPT_X_TLS_NEWCTX, 0)
                 except ValueError:
                     pass
 
             self._default_bind(conn)
             return conn, None
 
-        except (SERVER_DOWN, TIMEOUT, LOCAL_ERROR, LDAPError) as e:
+        except (ldap.SERVER_DOWN, ldap.TIMEOUT, ldap.LOCAL_ERROR, ldap.LDAPError) as e:
             self._clear_nearest_dc_cache()
             if hasattr(e, "message") and "desc" in e.message:
                 msg = e.message["desc"]
             else:
                 msg = "%s" % e
 
-            return None, f"{uri}: {msg}"  # type: ignore[return-value]
+            return None, f"{uri}: {msg}"
 
         except MKLDAPException as e:
             self._clear_nearest_dc_cache()
-            return None, "%s" % e  # type: ignore[return-value]
+            return None, "%s" % e
 
     def _format_ldap_uri(self, server: str) -> str:
         uri = "ldaps://" if self.use_ssl() else "ldap://"
@@ -409,7 +390,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             for server in servers:
                 ldap_obj, error_msg = self.connect_server(server)
 
-                if ldap_obj:  # type: ignore[truthy-bool]
+                if ldap_obj:
                     self._ldap_obj = ldap_obj
                 else:
                     if error_msg is not None:  # it should be, though
@@ -503,7 +484,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 )
             else:
                 self._bind("", ("password", ""), catch=False, conn=conn)  # anonymous bind
-        except (INVALID_CREDENTIALS, INAPPROPRIATE_AUTH):
+        except (ldap.INVALID_CREDENTIALS, ldap.INAPPROPRIATE_AUTH):
             raise MKLDAPException(
                 _(
                     "Unable to connect to LDAP server with the configured bind credentials. "
@@ -526,9 +507,9 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         try:
             conn.simple_bind_s(user_dn, password_store.extract(password_id))
             self._logger.info("  SUCCESS")
-        except (INVALID_CREDENTIALS, INAPPROPRIATE_AUTH):
+        except (ldap.INVALID_CREDENTIALS, ldap.INAPPROPRIATE_AUTH):
             raise
-        except LDAPError as e:
+        except ldap.LDAPError as e:
             self._logger.info(f"  FAILED ({e.__class__.__name__}: {e})")
             if catch:
                 raise MKLDAPException(_("Unable to authenticate with LDAP (%s)") % e)
@@ -678,7 +659,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             # Mark current position in pagination control for next loop
             cookie = None
             for serverctrl in serverctrls:
-                if serverctrl.controlType == CONTROL_PAGEDRESULTS:
+                if serverctrl.controlType == ldap.CONTROL_PAGEDRESULTS:
                     cookie = serverctrl.cookie
                     if cookie:
                         lc.cookie = cookie
@@ -726,17 +707,17 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                             new_obj[key.lower()] = [v.decode("utf-8") for v in val]
                         result.append((dn.lower(), new_obj))
                     success = True
-                except NO_SUCH_OBJECT as e:
+                except ldap.NO_SUCH_OBJECT as e:
                     raise MKLDAPException(
                         _('The given base object "%s" does not exist in LDAP (%s))') % (base, e)
                     )
 
-                except FILTER_ERROR as e:
+                except ldap.FILTER_ERROR as e:
                     raise MKLDAPException(
                         _('The given ldap filter "%s" is invalid (%s)') % (filt, e)
                     )
 
-                except SIZELIMIT_EXCEEDED:
+                except ldap.SIZELIMIT_EXCEEDED:
                     raise MKLDAPException(
                         _(
                             "The response reached a size limit. This could be due to "
@@ -745,7 +726,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                             "within the ldap or adapt the limit settings of the LDAP server."
                         )
                     )
-            except (SERVER_DOWN, TIMEOUT, MKLDAPException) as e:
+            except (ldap.SERVER_DOWN, ldap.TIMEOUT, MKLDAPException) as e:
                 self._clear_nearest_dc_cache()
 
                 last_exc = e
@@ -785,11 +766,11 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
     def _ldap_get_scope(self, scope):
         # Had "subtree" in Checkmk for several weeks. Better be compatible to both definitions.
         if scope in ["sub", "subtree"]:
-            return SCOPE_SUBTREE
+            return ldap.SCOPE_SUBTREE
         if scope == "base":
-            return SCOPE_BASE
+            return ldap.SCOPE_BASE
         if scope == "one":
-            return SCOPE_ONELEVEL
+            return ldap.SCOPE_ONELEVEL
         raise Exception("Invalid scope specified: %s" % scope)
 
     # Returns the ldap filter depending on the configured ldap directory type
@@ -1299,7 +1280,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             self._bind(user_dn, ("password", password.raw))
             userid = self.get_matching_user_profile(UserId(ldap_user_id))
             result: CheckCredentialsResult = False if userid is None else userid
-        except (INVALID_CREDENTIALS, INAPPROPRIATE_AUTH) as e:
+        except (ldap.INVALID_CREDENTIALS, ldap.INAPPROPRIATE_AUTH) as e:
             self._logger.warning(
                 "Unable to authenticate user %s. Reason: %s", user_id, e.args[0].get("desc", e)
             )

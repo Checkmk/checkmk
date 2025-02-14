@@ -150,6 +150,7 @@ explicit_package_bases = true
 # TODO: `mypy_path` shouldn't be required with Bazel.
 mypy_path = """\
     $MYPY_CONFIG_FILE_DIR:\
+    $MYPY_CONFIG_FILE_DIR/non-free/packages/cmc-protocols:\
     $MYPY_CONFIG_FILE_DIR/non-free/cmk-update-agent:\
     $MYPY_CONFIG_FILE_DIR/non-free/packages/cmk-otel-collector:\
     $MYPY_CONFIG_FILE_DIR/livestatus/api/python:\
@@ -173,22 +174,6 @@ disable_memoryview_promotion = true
 check_untyped_defs = true
 warn_redundant_casts = true
 warn_unused_configs = true
-
-[[tool.mypy.overrides]]
-module = [
-  # 3rd party that "does not explictly export attribute ... [attr-defined]"
-  "icalendar",
-  "feedparser",
-  "marshmallow_oneofschema",
-  "msal",
-  "opsgenie_sdk",
-  "requests_oauthlib",
-  "robot",
-  "robot.model",
-  "robot.result",
-  "vcr",
-]
-no_implicit_reexport = false
 
 [[tool.mypy.overrides]]
 module = [
@@ -317,11 +302,6 @@ strict_optional = true
 warn_unreachable = false        # 240 errors in 133 files
 
 [[tool.mypy.overrides]]
-module = ["mk_jolokia"]
-disallow_untyped_calls = false
-disallow_untyped_defs = false
-
-[[tool.mypy.overrides]]
 module = [
   "cmk.active_checks.check_sftp",
   "cmk.cee.bakery.*",
@@ -349,13 +329,6 @@ disallow_untyped_calls = true
 disallow_untyped_defs = true
 warn_return_any = true
 warn_unused_ignores = true
-
-[[tool.mypy.overrides]]
-module = [
-  # generated code
-  "cmc_proto.*",
-]
-disallow_untyped_calls = false
 
 [[tool.mypy.overrides]]
 module = ["cmk.crypto.*"]

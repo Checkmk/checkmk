@@ -7,8 +7,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any, cast, Literal, TYPE_CHECKING, TypedDict
 
+import marshmallow_oneofschema
 from marshmallow import post_load, pre_dump, types, validates_schema, ValidationError
-from marshmallow_oneofschema import OneOfSchema
 
 from cmk.utils.rulesets.conditions import (
     HostOrServiceConditions,
@@ -92,7 +92,7 @@ class MoveToSpecificRule(_BaseMoveTo):
     )
 
 
-class MoveRuleTo(OneOfSchema):
+class MoveRuleTo(marshmallow_oneofschema.OneOfSchema):
     """
 
     Examples:
@@ -348,7 +348,7 @@ class TagConditionConditionSchemaBase(TagConditionSchemaBase):
 # Although all these operators are supported, each one only applies to one or two
 # particular locations in the code. There is no one piece of code which understands the
 # operators, there are many.
-class TagConditionSchema(OneOfSchema):
+class TagConditionSchema(marshmallow_oneofschema.OneOfSchema):
     """Convert Rulesets to Checkmk Structure and back
 
     Examples:

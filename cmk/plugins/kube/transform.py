@@ -14,37 +14,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from typing import cast, Literal, TypeAlias, TypeVar
 
 import pydantic
-from kubernetes.client import (  # type: ignore[attr-defined]
-    # https://github.com/kubernetes-client/python/issues/2033
-    V1Container,
-    V1ContainerStatus,
-    V1CronJob,
-    V1CronJobSpec,
-    V1CronJobStatus,
-    V1DaemonSet,
-    V1DaemonSetSpec,
-    V1DaemonSetStatus,
-    V1Deployment,
-    V1DeploymentSpec,
-    V1DeploymentStatus,
-    V1Job,
-    V1JobCondition,
-    V1JobStatus,
-    V1LabelSelector,
-    V1LabelSelectorRequirement,
-    V1Namespace,
-    V1ObjectMeta,
-    V1PersistentVolumeClaim,
-    V1Pod,
-    V1PodCondition,
-    V1PodSpec,
-    V1ReplicaSet,
-    V1ReplicationController,
-    V1ResourceQuota,
-    V1ResourceQuotaSpec,
-    V1ScopeSelector,
-    V1StatefulSet,
-)
+from kubernetes import client  # type: ignore[import-untyped]
 
 from . import transform_json
 from .schemata import api
@@ -52,15 +22,15 @@ from .schemata.api import convert_to_timestamp, parse_cpu_cores, parse_resource_
 from .transform_any import parse_match_labels
 
 
-def parse_metadata_no_namespace(metadata: V1ObjectMeta) -> api.MetaDataNoNamespace:
+def parse_metadata_no_namespace(metadata: client.V1ObjectMeta) -> api.MetaDataNoNamespace:
     return api.MetaDataNoNamespace.model_validate(metadata)
 
 
-def parse_metadata(metadata: V1ObjectMeta) -> api.MetaData:
+def parse_metadata(metadata: client.V1ObjectMeta) -> api.MetaData:
     return api.MetaData.model_validate(metadata)
 
 
-def container_resources(container: V1Container) -> api.ContainerResources:
+def container_resources(container: client.V1Container) -> api.ContainerResources:
     parsed_limits = api.ResourcesRequirements()
     parsed_requests = api.ResourcesRequirements()
     if container.resources is not None:
@@ -81,7 +51,7 @@ def container_resources(container: V1Container) -> api.ContainerResources:
     )
 
 
-def containers_spec(containers: Sequence[V1Container]) -> Sequence[api.ContainerSpec]:
+def containers_spec(containers: Sequence[client.V1Container]) -> Sequence[api.ContainerSpec]:
     return [
         api.ContainerSpec(
             name=container.name,
@@ -101,8 +71,8 @@ def expect_value(v: T | None) -> T:
     return v
 
 
-def pod_spec(pod: V1Pod) -> api.PodSpec:
-    spec: V1PodSpec = expect_value(pod.spec)
+def pod_spec(pod: client.V1Pod) -> api.PodSpec:
+    spec: client.V1PodSpec = expect_value(pod.spec)
 
     def _parse_obj_as(
         model: type[list[T]], expr: typing.Sequence[T] | None
@@ -125,7 +95,7 @@ def pod_spec(pod: V1Pod) -> api.PodSpec:
     )
 
 
-def pod_status(pod: V1Pod) -> api.PodStatus:
+def pod_status(pod: client.V1Pod) -> api.PodStatus:
     start_time: float | None
     if pod.status.start_time is not None:
         start_time = convert_to_timestamp(pod.status.start_time)
@@ -143,7 +113,7 @@ def pod_status(pod: V1Pod) -> api.PodStatus:
 
 
 def pod_containers(
-    container_statuses: Sequence[V1ContainerStatus] | None,
+    container_statuses: Sequence[client.V1ContainerStatus] | None,
 ) -> dict[str, api.ContainerStatus]:
     result: dict[str, api.ContainerStatus] = {}
     if container_statuses is None:
@@ -191,7 +161,7 @@ def pod_containers(
 
 
 def pod_conditions(
-    conditions: Sequence[V1PodCondition],
+    conditions: Sequence[client.V1PodCondition],
 ) -> list[api.PodCondition]:
     condition_types = {
         "PodHasNetwork": api.ConditionType.PODHASNETWORK,
@@ -223,7 +193,9 @@ def pod_conditions(
     return result
 
 
-def deployment_replicas(status: V1DeploymentStatus, spec: V1DeploymentSpec) -> api.Replicas:
+def deployment_replicas(
+    status: client.V1DeploymentStatus, spec: client.V1DeploymentSpec
+) -> api.Replicas:
     # A deployment always has at least 1 replica. It is not possible to deploy
     # a deployment that has 0 replicas. On the other hand, it is possible to have
     # 0 available/unavailable/updated/ready replicas. This is shown as 'null'
@@ -241,7 +213,7 @@ def deployment_replicas(status: V1DeploymentStatus, spec: V1DeploymentSpec) -> a
 
 
 def deployment_conditions(
-    status: V1DeploymentStatus,
+    status: client.V1DeploymentStatus,
 ) -> Mapping[str, api.DeploymentCondition]:
     return {
         condition.type.lower(): api.DeploymentCondition(
@@ -254,7 +226,7 @@ def deployment_conditions(
     }
 
 
-def pod_from_client(pod: V1Pod, controllers: Sequence[api.Controller]) -> api.Pod:
+def pod_from_client(pod: client.V1Pod, controllers: Sequence[api.Controller]) -> api.Pod:
     return api.Pod(
         uid=api.PodUID(pod.metadata.uid),
         metadata=parse_metadata(pod.metadata),
@@ -267,7 +239,7 @@ def pod_from_client(pod: V1Pod, controllers: Sequence[api.Controller]) -> api.Po
 
 
 def parse_match_expressions(
-    match_expressions: Iterable[V1LabelSelectorRequirement] | None,
+    match_expressions: Iterable[client.V1LabelSelectorRequirement] | None,
 ) -> api.MatchExpressions:
     return [
         api.MatchExpression(
@@ -279,14 +251,14 @@ def parse_match_expressions(
     ]
 
 
-def parse_selector(selector: V1LabelSelector) -> api.Selector:
+def parse_selector(selector: client.V1LabelSelector) -> api.Selector:
     return api.Selector(
         match_labels=parse_match_labels(selector.match_labels or {}),
         match_expressions=parse_match_expressions(selector.match_expressions),
     )
 
 
-def parse_deployment_spec(deployment_spec: V1DeploymentSpec) -> api.DeploymentSpec:
+def parse_deployment_spec(deployment_spec: client.V1DeploymentSpec) -> api.DeploymentSpec:
     if deployment_spec.strategy.type == "Recreate":
         return api.DeploymentSpec(
             min_ready_seconds=deployment_spec.min_ready_seconds or 0,
@@ -306,7 +278,7 @@ def parse_deployment_spec(deployment_spec: V1DeploymentSpec) -> api.DeploymentSp
 
 
 def deployment_from_client(
-    deployment: V1Deployment, pod_uids: Sequence[api.PodUID]
+    deployment: client.V1Deployment, pod_uids: Sequence[api.PodUID]
 ) -> api.Deployment:
     return api.Deployment(
         metadata=parse_metadata(deployment.metadata),
@@ -319,7 +291,7 @@ def deployment_from_client(
     )
 
 
-def parse_cron_job_spec(spec: V1CronJobSpec) -> api.CronJobSpec:
+def parse_cron_job_spec(spec: client.V1CronJobSpec) -> api.CronJobSpec:
     return api.CronJobSpec(
         concurrency_policy=api.ConcurrencyPolicy(spec.concurrency_policy),
         schedule=spec.schedule,
@@ -329,7 +301,7 @@ def parse_cron_job_spec(spec: V1CronJobSpec) -> api.CronJobSpec:
     )
 
 
-def parse_cron_job_status(status: V1CronJobStatus) -> api.CronJobStatus:
+def parse_cron_job_status(status: client.V1CronJobStatus) -> api.CronJobStatus:
     return api.CronJobStatus(
         active=[ref.uid for ref in status.active] if status.active is not None else None,
         last_successful_time=(
@@ -346,7 +318,7 @@ def parse_cron_job_status(status: V1CronJobStatus) -> api.CronJobStatus:
 
 
 def cron_job_from_client(
-    cron_job: V1CronJob,
+    cron_job: client.V1CronJob,
     pod_uids: Sequence[api.PodUID],
     job_uids: Sequence[api.JobUID],
 ) -> api.CronJob:
@@ -360,7 +332,7 @@ def cron_job_from_client(
     )
 
 
-def parse_job_status(status: V1JobStatus) -> api.JobStatus:
+def parse_job_status(status: client.V1JobStatus) -> api.JobStatus:
     return api.JobStatus(
         active=status.active,
         start_time=convert_to_timestamp(status.start_time) if status.start_time else None,
@@ -374,7 +346,7 @@ def parse_job_status(status: V1JobStatus) -> api.JobStatus:
 
 
 def _parse_and_remove_duplicate_conditions(
-    conditions: Sequence[V1JobCondition] | None,
+    conditions: Sequence[client.V1JobCondition] | None,
 ) -> Sequence[api.JobCondition]:
     """Parse and remove duplicate job conditions
 
@@ -387,13 +359,13 @@ def _parse_and_remove_duplicate_conditions(
     if conditions is None:
         return []
 
-    def _parse_job_condition(condition: V1JobCondition) -> api.JobCondition:
+    def _parse_job_condition(condition: client.V1JobCondition) -> api.JobCondition:
         return api.JobCondition(
             type_=api.JobConditionType(condition.type.capitalize()),
             status=api.ConditionStatus(condition.status.capitalize()),
         )
 
-    def _condition_identifier(condition: V1JobCondition) -> str:
+    def _condition_identifier(condition: client.V1JobCondition) -> str:
         return f"{condition.type}-{condition.last_probe_time}"
 
     parsed_conditions: dict[str, api.JobCondition] = {}
@@ -407,7 +379,7 @@ def _parse_and_remove_duplicate_conditions(
 
 
 def job_from_client(
-    job: V1Job,
+    job: client.V1Job,
     pod_uids: Sequence[api.PodUID],
 ) -> api.Job:
     return api.Job(
@@ -418,7 +390,7 @@ def job_from_client(
     )
 
 
-def parse_daemonset_status(status: V1DaemonSetStatus) -> api.DaemonSetStatus:
+def parse_daemonset_status(status: client.V1DaemonSetStatus) -> api.DaemonSetStatus:
     return api.DaemonSetStatus(
         desired_number_scheduled=status.desired_number_scheduled,
         updated_number_scheduled=status.updated_number_scheduled or 0,
@@ -428,7 +400,7 @@ def parse_daemonset_status(status: V1DaemonSetStatus) -> api.DaemonSetStatus:
     )
 
 
-def parse_daemonset_spec(daemonset_spec: V1DaemonSetSpec) -> api.DaemonSetSpec:
+def parse_daemonset_spec(daemonset_spec: client.V1DaemonSetSpec) -> api.DaemonSetSpec:
     if daemonset_spec.update_strategy.type == "OnDelete":
         return api.DaemonSetSpec(
             min_ready_seconds=daemonset_spec.min_ready_seconds or 0,
@@ -447,7 +419,9 @@ def parse_daemonset_spec(daemonset_spec: V1DaemonSetSpec) -> api.DaemonSetSpec:
     raise ValueError(f"Unknown strategy type: {daemonset_spec.update_strategy.type}")
 
 
-def daemonset_from_client(daemonset: V1DaemonSet, pod_uids: Sequence[api.PodUID]) -> api.DaemonSet:
+def daemonset_from_client(
+    daemonset: client.V1DaemonSet, pod_uids: Sequence[api.PodUID]
+) -> api.DaemonSet:
     return api.DaemonSet(
         metadata=parse_metadata(daemonset.metadata),
         spec=parse_daemonset_spec(daemonset.spec),
@@ -456,12 +430,12 @@ def daemonset_from_client(daemonset: V1DaemonSet, pod_uids: Sequence[api.PodUID]
     )
 
 
-def namespace_from_client(namespace: V1Namespace) -> api.Namespace:
+def namespace_from_client(namespace: client.V1Namespace) -> api.Namespace:
     return api.Namespace.model_validate(namespace)
 
 
 def parse_resource_quota_spec(
-    spec: V1ResourceQuotaSpec,
+    spec: client.V1ResourceQuotaSpec,
 ) -> api.ResourceQuotaSpec:
     # TODO: CMK-10288 add validation logic
     try:
@@ -506,7 +480,7 @@ def parse_resource_requirement(
 
 
 def parse_scope_selector(
-    scope_selector: V1ScopeSelector | None,
+    scope_selector: client.V1ScopeSelector | None,
 ) -> api.ScopeSelector | None:
     if scope_selector is None:
         return None
@@ -523,7 +497,7 @@ def parse_scope_selector(
 
 
 def resource_quota_from_client(
-    resource_quota: V1ResourceQuota,
+    resource_quota: client.V1ResourceQuota,
 ) -> api.ResourceQuota | None:
     """Parse Kubernetes resource quota client object
 
@@ -542,7 +516,7 @@ def resource_quota_from_client(
 
 
 def persistent_volume_claim_from_client(
-    persistent_volume_claim: V1PersistentVolumeClaim,
+    persistent_volume_claim: client.V1PersistentVolumeClaim,
 ) -> api.PersistentVolumeClaim:
     return api.PersistentVolumeClaim(
         metadata=parse_metadata(persistent_volume_claim.metadata),
@@ -552,14 +526,14 @@ def persistent_volume_claim_from_client(
 
 
 WorkloadResource: TypeAlias = (
-    V1Pod
-    | V1Deployment
-    | V1ReplicaSet
-    | V1DaemonSet
-    | V1Job
-    | V1CronJob
-    | V1ReplicationController
-    | V1StatefulSet
+    client.V1Pod
+    | client.V1Deployment
+    | client.V1ReplicaSet
+    | client.V1DaemonSet
+    | client.V1Job
+    | client.V1CronJob
+    | client.V1ReplicationController
+    | client.V1StatefulSet
 )
 
 

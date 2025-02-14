@@ -11,7 +11,7 @@ import itertools
 import time
 import typing
 
-import feedparser
+import feedparser  # type: ignore[import-untyped]
 import pydantic
 from pydantic import ConfigDict
 

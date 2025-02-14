@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import gunicorn.app.base
+import gunicorn.app.base  # type: ignore[import-untyped]
 from fastapi import FastAPI
 
 from ._config import ServerConfig
@@ -16,7 +16,7 @@ def run(
     _ApplicationServer(app, config).run()
 
 
-class _ApplicationServer(gunicorn.app.base.BaseApplication):
+class _ApplicationServer(gunicorn.app.base.BaseApplication):  # type: ignore[misc]
     def __init__(
         self,
         app: FastAPI,
@@ -27,7 +27,6 @@ class _ApplicationServer(gunicorn.app.base.BaseApplication):
         super().__init__()
 
     def load_config(self) -> None:
-        assert self.cfg is not None
         self.cfg.set("proc_name", "automation-helper")
         self.cfg.set("umask", 0o077)
         self.cfg.set("bind", f"unix:{self._config.unix_socket}")

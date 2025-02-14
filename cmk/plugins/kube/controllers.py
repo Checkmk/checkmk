@@ -6,10 +6,7 @@
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 
-from kubernetes.client import (  # type: ignore[attr-defined]
-    # https://github.com/kubernetes-client/python/issues/2033
-    V1Pod,
-)
+from kubernetes import client  # type: ignore[import-untyped]
 
 from cmk.plugins.kube.schemata import api
 
@@ -107,7 +104,7 @@ def _match_controllers(
 
 
 def map_controllers(
-    raw_pods: Sequence[V1Pod],
+    raw_pods: Sequence[client.V1Pod],
     object_to_owners: Mapping[str, api.OwnerReferences],
 ) -> tuple[Mapping[str, Sequence[api.PodUID]], Mapping[api.PodUID, Sequence[api.Controller]]]:
     pod_to_controllers = _find_control_chains(

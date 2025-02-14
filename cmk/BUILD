@@ -23,18 +23,17 @@ genrule(
 
 REQUIRED_EXTERNAL_DEPS = [
     # alphabetical order
+    "annotated-types",
     "apispec",
     "apispec-oneofschema",
     "azure-identity",
     "azure-storage-blob",
-    "bcrypt",
     "boto3",
     "botocore",
     "cryptography",
     "cython",
     "docstring-parser",
     "exchangelib",  # missing wheel
-    "fastapi",
     "feedparser",
     "fido2",
     "flask",
@@ -43,18 +42,15 @@ REQUIRED_EXTERNAL_DEPS = [
     "google-auth",
     "google-cloud-asset",
     "google-cloud-monitoring",
-    "gunicorn",
     "icalendar",
     "jinja2",
     "jira",
     "kubernetes",
     "lxml",
-    "markdown",
     "marshmallow",
     "marshmallow-oneofschema",
     "meraki",
     "msal",
-    "mypy-boto3-logs",
     "netapp-ontap",  # provided elsewhere
     "numpy",
     "oauthlib",
@@ -71,9 +67,8 @@ REQUIRED_EXTERNAL_DEPS = [
     "paho-mqtt",
     "paramiko",
     "pillow",
-    "pika",
     "ply",
-    "protobuf",
+    # "protobuf",  # provided elsewhere
     "psutil",
     "psycopg2-binary",  # missing wheel
     "pyasn1",
@@ -81,7 +76,6 @@ REQUIRED_EXTERNAL_DEPS = [
     "pydantic_core",
     "pyghmi",
     "pyjwt",
-    "pymongo",
     "pymssql",
     "pymysql",
     "pyopenssl",
@@ -95,7 +89,6 @@ REQUIRED_EXTERNAL_DEPS = [
     "python-active-directory",  # missing wheel
     "python-dateutil",
     "python-ldap",  # missing wheel
-    "python-multipart",
     "python-snap7",
     "pyyaml",
     "recurring_ical_events",
@@ -106,19 +99,14 @@ REQUIRED_EXTERNAL_DEPS = [
     "requests-oauthlib",
     "robotframework",
     "roman",
-    # "rrdtool",
     "setproctitle",
-    "setuptools",
     "setuptools-scm",
-    "simplejson",
     "snmpsim-lextudio",
-    "tenacity",
     "urllib3",
     "uvicorn",
     "uvicorn-worker",
     "vcrpy",
     "watchdog",
-    "werkzeug",
 ]
 
 CRE_PY = glob([
@@ -230,24 +218,6 @@ py_library(
     ("cme", CME_PY),
     ("cse", CSE_PY),
 ]]
-
-py_library(
-    # HACK to avoid Source file found twice under different module names: "meraki" and "meraki.__init__"
-    name = "lib_cmk_repo_no_meraki",
-    srcs = glob(
-        include = ["**/*.py"],
-        exclude = ["special_agents/agent_cisco_meraki.py"],
-    ),
-    data = ["gui/wsgi/applications/index.wsgi"],
-    imports = [".."],
-    visibility = ["//tests/unit:__pkg__"],
-    deps = [
-        "//agents/plugins:mk_jolokia",
-    ] + select({
-        "@//:gpl_repo": [],
-        "@//:gpl+enterprise_repo": CMC_PROTO_DEPS,
-    }) + CMK_PACKAGES + [requirement(dep) for dep in REQUIRED_EXTERNAL_DEPS if dep != "meraki"],
-)
 
 py_library(
     # The repo edition is only used for testing.

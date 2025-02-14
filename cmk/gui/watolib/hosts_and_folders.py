@@ -2456,6 +2456,8 @@ class Folder(FolderProtocol):
                 _l("Deleted host %s") % host_name,
                 object_ref=host.object_ref(),
                 sites=[host.site_id()],
+                domains=[config_domain_registry[CORE_DOMAIN]],
+                domain_settings=_core_settings_hosts_to_update([host.name()]),
             )
 
         self.save_folder_attributes()  # num_hosts has changed

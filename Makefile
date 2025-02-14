@@ -158,7 +158,8 @@ EXCLUDE_PROPER= \
 	    --exclude="**/.idea" \
 	    --exclude=".werks/.last" \
 	    --exclude=".werks/.my_ids" \
-	    --exclude="user.bazelrc"
+	    --exclude="user.bazelrc" \
+	    --exclude="remote.bazelrc"
 
 EXCLUDE_CLEAN=$(EXCLUDE_PROPER) \
 	    --exclude=".venv" \

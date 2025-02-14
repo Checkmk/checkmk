@@ -130,8 +130,13 @@ def _validate_rule_values(
         for folder, index, rule in ruleset.get_rules():
             logger.log(VERBOSE, f"Validating ruleset '{ruleset.name}' in folder '{folder.name()}'")
             try:
+                transformed_value = ruleset.rulespec.valuespec.transform_value(rule.value)
+                ruleset.rulespec.valuespec.validate_datatype(
+                    transformed_value,
+                    "",
+                )
                 ruleset.rulespec.valuespec.validate_value(
-                    ruleset.rulespec.valuespec.transform_value(rule.value),
+                    transformed_value,
                     "",
                 )
             except (MKUserError, AssertionError, ValueError, TypeError) as e:

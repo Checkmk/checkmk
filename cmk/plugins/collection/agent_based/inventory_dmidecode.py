@@ -343,6 +343,7 @@ def _parse_physical_memory_array(
 
 @dataclass(frozen=True, kw_only=True)
 class MemoryDevice:
+    physical_memory_array: int
     index: int
     total_width: str
     data_width: str
@@ -413,6 +414,7 @@ def _parse_memory_device(
                     size = _parse_size(raw_value)
     counter.update({"memory_device": 1})
     return MemoryDevice(
+        physical_memory_array=counter["physical_memory_array"],
         index=counter["memory_device"],
         total_width=total_width,
         data_width=data_width,
@@ -508,7 +510,7 @@ def inventory_dmidecode(section: Section) -> InventoryResult:
                             "hardware",
                             "memory",
                             "arrays",
-                            str(counter["physical_memory_array"]),
+                            str(memory_device.physical_memory_array),
                             "devices",
                         ],
                         key_columns={

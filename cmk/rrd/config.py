@@ -10,7 +10,7 @@ from typing import Literal, TypedDict
 
 from cmk.ccc.store import load_object_from_file
 
-from cmk.utils.config_path import ConfigPath, LATEST_CONFIG, VersionedConfigPath
+from cmk.utils.config_path import ConfigPath, LATEST_CONFIG
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
@@ -45,46 +45,23 @@ class _RRDHostConfig(TypedDict, total=False):
 
 
 class RRDConfig:
-    def __init__(self):
-        self._loaded_host_configs: dict[HostName, _RRDHostConfig] = {}
-        self._config_base_path = VersionedConfigPath.current()
-        self._config_path = rrd_config_dir(self._config_base_path)
-        self._hosts_path = rrd_config_hosts_dir(self._config_base_path)
+    def __init__(self, hostname: HostName) -> None:
+        self._loaded_config: _RRDHostConfig = load_object_from_file(
+            rrd_config_hosts_dir(LATEST_CONFIG) / hostname, default={}
+        )
+        self._cmc_log_rrdcreation = load_object_from_file(
+            rrd_config_dir(LATEST_CONFIG) / CMC_LOG_RRDCREATION, default=None
+        )
 
-    def reload(self) -> None:
-        new_config_base_path = VersionedConfigPath.current()
-        if new_config_base_path != self._config_base_path:
-            self._loaded_host_configs = {}
-            self._config_base_path = new_config_base_path
-            self._config_path = rrd_config_dir(self._config_base_path)
-            self._hosts_path = rrd_config_hosts_dir(self._config_base_path)
+    def rrd_config(self) -> RRDObjectConfig | None:
+        return self._loaded_config.get("host")
 
-    def rrd_config(self, hostname: HostName) -> RRDObjectConfig | None:
-        self._conditionally_load_host_config(hostname)
-        return self._loaded_host_configs[hostname].get("host")
-
-    def rrd_config_of_service(
-        self, hostname: HostName, description: ServiceName
-    ) -> RRDObjectConfig | None:
-        self._conditionally_load_host_config(hostname)
-        return self._loaded_host_configs[hostname].get("services", {}).get(description)
+    def rrd_config_of_service(self, description: ServiceName) -> RRDObjectConfig | None:
+        return self._loaded_config.get("services", {}).get(description)
 
     def cmc_log_rrdcreation(self) -> Literal["terse", "full"] | None:
-        if not self._config_path.exists():
-            self.reload()
-        return load_object_from_file(self._config_path / CMC_LOG_RRDCREATION, default=None)
-
-    def _conditionally_load_host_config(self, hostname: HostName) -> None:
-        if not self._hosts_path.exists():
-            self.reload()
-        if hostname not in self._loaded_host_configs:
-            self._loaded_host_configs[hostname] = load_object_from_file(
-                self._hosts_path / hostname, default={}
-            )
+        return self._cmc_log_rrdcreation
 
 
 def read_hostnames() -> Sequence[HostName]:
-    return [
-        HostName(p.name)
-        for p in (Path(LATEST_CONFIG) / RRD_CONFIG_FOLDER / RRD_CONFIG_HOSTS_FOLDER).glob("*")
-    ]
+    return [HostName(p.name) for p in rrd_config_hosts_dir(LATEST_CONFIG).glob("*")]

@@ -19,14 +19,12 @@ def convert_rrds(
     split: bool,
     delete: bool,
 ) -> None:
-    rrd_config = RRDConfig()
-
     if not hostnames:
         hostnames = read_hostnames()
 
     for hostname in hostnames:
         RRDConverter(rrd_interface, hostname).convert_rrds_of_host(
-            rrd_config,
+            RRDConfig(hostname),
             split=split,
             delete=delete,
         )

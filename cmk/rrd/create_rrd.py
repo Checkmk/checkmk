@@ -22,4 +22,4 @@ def _handle_keepalive_interrupt(signum: int, frame: FrameType | None) -> NoRetur
 
 def create_rrd(rrd_interface: RRDInterface) -> None:
     signal.signal(signal.SIGINT, _handle_keepalive_interrupt)
-    RRDCreator(rrd_interface).create_rrds_keepalive(RRDConfig())
+    RRDCreator(rrd_interface).create_rrds_keepalive(RRDConfig)

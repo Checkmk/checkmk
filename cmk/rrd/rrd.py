@@ -118,12 +118,12 @@ rrd_heartbeat = 8460
 
 
 def _get_rrd_conf(
-    config: RRDConfig, hostname: HostName, servicedesc: _RRDServiceName = "_HOST_"
+    config: RRDConfig, servicedesc: _RRDServiceName = "_HOST_"
 ) -> _RRDFileConfigWithFormat:
     if servicedesc == "_HOST_":
-        rrdconf: RRDObjectConfig | None = config.rrd_config(hostname)
+        rrdconf: RRDObjectConfig | None = config.rrd_config()
     else:
-        rrdconf = config.rrd_config_of_service(hostname, servicedesc)
+        rrdconf = config.rrd_config_of_service(servicedesc)
 
     if rrdconf is not None:
         rra_config = sorted(
@@ -183,9 +183,7 @@ def _create_rrd(
     type is CMC SINGLE. This mode is for extending existing RRDs by new metrics."""
     # We get the configured rrd_format here as well. But we rather trust what CMC
     # specifies.
-    _unused_configured_rrd_format, rra_config, step, heartbeat = _get_rrd_conf(
-        config, spec.host, spec.service
-    )
+    _unused_configured_rrd_format, rra_config, step, heartbeat = _get_rrd_conf(config, spec.service)
 
     match spec.format:
         case "pnp_multiple":
@@ -309,7 +307,7 @@ class RRDConverter:
         # Find services with RRDs in the two possible formats "cmc" and "pnp". "_HOST_" means
         # host metrics.
         for servicedesc, existing_rrd_formats in existing_rrds.items():
-            target_rrdconf = _get_rrd_conf(config, self._hostname, servicedesc)
+            target_rrdconf = _get_rrd_conf(config, servicedesc)
             target_rrd_format = target_rrdconf[0]
             if target_rrd_format not in existing_rrd_formats:
                 if target_rrd_format == "pnp_multiple":
@@ -344,7 +342,7 @@ class RRDConverter:
             if "pnp_multiple" in existing_rrd_formats:
                 console.verbose(f"  {servicedesc} ({tty.bold}{tty.cyan}PNP{tty.normal})...")
                 xmlinfo = self._read_pnp_xml_for(servicedesc)
-                target_rrdconf = _get_rrd_conf(config, self._hostname, servicedesc)[1:]
+                target_rrdconf = _get_rrd_conf(config, servicedesc)[1:]
                 self._convert_pnp_rrds_of(
                     servicedesc,
                     host_dir,
@@ -361,7 +359,7 @@ class RRDConverter:
                 console.verbose_no_lf(f"  {servicedesc} ({tty.bold}{tty.bold}CMC{tty.normal})...")
                 base_path = host_dir + "/" + cmk.utils.pnp_cleanup(servicedesc)
                 existing_metrics = _read_existing_metrics(base_path + ".info")
-                target_rrdconf = _get_rrd_conf(config, self._hostname, servicedesc)[1:]
+                target_rrdconf = _get_rrd_conf(config, servicedesc)[1:]
                 rrd_file_path = base_path + ".rrd"
                 self._convert_cmc_rrd_of(
                     config,
@@ -407,7 +405,7 @@ class RRDConverter:
 
         # We get the configured rrd_format here as well. But we rather trust what CMC
         # specifies.
-        rra_config, step, heartbeat = _get_rrd_conf(config, self._hostname, servicedesc)[1:]
+        rra_config, step, heartbeat = _get_rrd_conf(config, servicedesc)[1:]
 
         host_dir = _rrd_cmc_host_dir(self._hostname)
         base_file_name = host_dir + "/" + cmk.utils.pnp_cleanup(servicedesc)
@@ -736,7 +734,7 @@ class RRDCreator:
         self._rrd_interface = rrd_interface
         self._rrd_helper_output_buffer = b""
 
-    def create_rrds_keepalive(self, config: RRDConfig) -> None:
+    def create_rrds_keepalive(self, config_class: type[RRDConfig]) -> None:
         input_buffer = b""
         self._rrd_helper_output_buffer = b""
 
@@ -784,12 +782,15 @@ class RRDCreator:
                 # Create *one* RRD file
                 if job_queue:
                     if job_queue[0] == b"*":
+                        # Obsolete. We can't reload the config explicitly, as this is done already
+                        # by core config generation.
                         console.verbose("Reloading configuration.")
-                        config.reload()
                     else:
                         spec = job_queue[0].decode("utf-8")
+                        parsed_spec = RRDSpec.parse(spec)
+                        config = config_class(parsed_spec.host)
                         try:
-                            self._create_rrd_from_spec(config, RRDSpec.parse(spec))
+                            self._create_rrd_from_spec(config, parsed_spec)
                         except self._rrd_interface.OperationalError as exc:
                             self._queue_rrd_helper_response(f"Error creating RRD: {exc!s}")
                         except OSError as exc:

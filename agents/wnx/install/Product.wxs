@@ -365,9 +365,6 @@ just to signal that real build script was not called -->
             <Component Id="cmpDA3AA5A21788961EA252DF4F86230677" Guid="{178B1BD1-2F7E-46C0-BA10-EE030F027FBD}">
                 <File Id="fil0E43AE5883F9C6E509B57083C9A3184E" KeyPath="yes" Source="..\..\windows\plugins\windows_intel_bonding.bat" DiskId="1"  />
             </Component>
-            <Component Id="cmp6C2C816B1A2BFFA73BA877CEF0A285F8" Guid="{CF2F4F05-DE6B-4936-AA34-3D7248DD83F5}">
-                <File Id="filF46ABE49F18E73AE3C8969D0619BCB5B" KeyPath="yes" Source="..\..\windows\plugins\windows_multipath.vbs" DiskId="1"  />
-            </Component>
             <Component Id="cmp58B593286B37436B9B814D441B0350EE" Guid="{37E3122F-A09F-4693-BB22-6EC92F670A44}">
                 <File Id="fil70CE7AE7E9AC44A8BA2AEB7430BF8BC7" KeyPath="yes" Source="..\..\windows\plugins\windows_multipath.ps1" DiskId="1"  />
             </Component>
@@ -437,7 +434,6 @@ just to signal that real build script was not called -->
             <ComponentRef Id="cmp601FE4ED2C2FD3F546593475F9666973" />
             <ComponentRef Id="cmp8A6994FC62D135D9A6BA2E01B62043FF" />
             <ComponentRef Id="cmpDA3AA5A21788961EA252DF4F86230677" />
-            <ComponentRef Id="cmp6C2C816B1A2BFFA73BA877CEF0A285F8" />
             <ComponentRef Id="cmp58B593286B37436B9B814D441B0350EE" />
             <ComponentRef Id="cmp10FDAC6C36BC91AC9660DCD519E0EBD3" />
             <ComponentRef Id="cmp57F6981D839AA296FACB18CA0B80F385" />

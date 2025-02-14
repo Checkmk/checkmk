@@ -20,11 +20,7 @@ def parse_ups_power(
     string_table: Sequence[StringTable],
 ) -> dict[str, int]:
     section: dict[str, int] = {}
-    for idx, voltage_str, power_str in string_table[0]:
-        if (voltage := _parse_value(voltage_str)) is None or not voltage:
-            # TODO Fix unused voltage
-            continue
-
+    for idx, power_str in string_table[0]:
         if (power := _parse_value(power_str)) is None:
             continue
 
@@ -47,7 +43,6 @@ snmp_section_ups_power = SNMPSection(
             base=".1.3.6.1.2.1.33.1.4.4.1",
             oids=[
                 OIDEnd(),
-                "2",  # voltage
                 "4",  # power
             ],
         )

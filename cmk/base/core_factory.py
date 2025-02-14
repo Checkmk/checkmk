@@ -22,7 +22,7 @@ def get_licensing_handler_type() -> type[LicensingHandler]:
 
 def create_core(core_name: str) -> MonitoringCore:
     if core_name == "cmc":
-        from cmk.base.cee.microcore_config import (  # type: ignore[import-untyped, unused-ignore]
+        from cmk.base.cee.microcore_config import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
             CmcPb,
         )
 

@@ -27,7 +27,7 @@ from multiprocessing import Lock
 from pathlib import Path
 from typing import Any, Literal, NamedTuple, TypeVar
 
-import msal  # type: ignore[import-untyped]
+import msal
 import requests
 
 from cmk.utils import password_store

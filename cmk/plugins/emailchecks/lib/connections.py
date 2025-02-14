@@ -25,7 +25,7 @@ from typing import assert_never, final, Literal, Self
 # Isort messes with the type annotation and creates a unused-ignore for the
 # OAUTH2 and OAuth2Credentials imports.
 # isort: off
-from exchangelib import (  # type: ignore[import-untyped]
+from exchangelib import (
     Account,
     Configuration,
     Credentials,
@@ -138,7 +138,7 @@ class EWS(_Connection):
         for parent_folder in [self._account.inbox.parent, self._account.inbox]:
             i = 0
             for i, fname in enumerate(subfolder_names):
-                if f := next(parent_folder.glob(fname).resolve(), None):
+                if f := next(parent_folder.glob(fname).resolve(), None):  # type: ignore[union-attr]
                     if i == len(subfolder_names) - 1:  # full match - folder path already exists
                         return f
                     parent_folder = f

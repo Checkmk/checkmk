@@ -315,11 +315,11 @@ def _bake_on_restart(
 ) -> None:
     try:
         # Local import is needed, because this is not available in all environments
-        from cmk.base.cee.bakery import (  # type: ignore[import-untyped, unused-ignore]
+        from cmk.base.cee.bakery import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
             agent_bakery,
         )
 
-        from cmk.cee.bakery.type_defs import (  # type: ignore[import-untyped, unused-ignore]
+        from cmk.cee.bakery.type_defs import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
             BakeRevisionMode,
         )
 

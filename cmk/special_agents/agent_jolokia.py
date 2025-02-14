@@ -16,7 +16,7 @@ from cmk.special_agents.v0_unstable.misc import vcrtrace
 
 sys.path.append(str(cmk.utils.paths.local_agents_dir / "plugins"))
 sys.path.append(os.path.join(cmk.utils.paths.agents_dir, "plugins"))
-import mk_jolokia  # type: ignore[import-not-found]
+import mk_jolokia
 
 __version__ = "2.5.0b1"
 
@@ -35,7 +35,9 @@ def parse_arguments(argv):
     )
 
     opts_with_help: list[tuple[str, str | None | float, str]] = [
-        opt for opt in mk_jolokia.DEFAULT_CONFIG_TUPLES if len(opt) == 3
+        opt  # type: ignore[misc]
+        for opt in mk_jolokia.DEFAULT_CONFIG_TUPLES
+        if len(opt) == 3
     ]
 
     for key, default, help_str in opts_with_help:

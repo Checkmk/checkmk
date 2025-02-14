@@ -17,7 +17,7 @@ from email.message import Message as POPIMAPMessage
 from pathlib import Path
 from typing import assert_never
 
-from exchangelib import Message as EWSMessage  # type: ignore[import-untyped]
+from exchangelib import Message as EWSMessage
 
 from cmk.plugins.emailchecks.lib.ac_args import add_trx_arguments, parse_trx_arguments, Scope
 from cmk.plugins.emailchecks.lib.connections import (
@@ -137,9 +137,9 @@ def subject_and_received_timestamp_from_msg(
 
     if isinstance(msg, EWSMessage):
         try:
-            return msg.subject, int(msg.datetime_received.timestamp())
+            return msg.subject, int(msg.datetime_received.timestamp())  # type: ignore[attr-defined,return-value]
         except Exception:
-            return msg.subject, None
+            return msg.subject, None  # type: ignore[return-value]
 
     return assert_never(msg)
 
@@ -313,7 +313,7 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
             # Do not delete all messages in the inbox. Only the ones which were
             # processed before! In the meantime new ones might have come in.
             logging.debug("delete messages...")
-            connection.delete(deletion_candidates)
+            connection.delete(deletion_candidates)  # type: ignore[arg-type]
         else:
             logging.debug("deletion not active (--delete-messages not provided)")
 

@@ -12,9 +12,9 @@ from datetime import datetime, timezone
 from fnmatch import fnmatch
 from typing import NamedTuple
 
-from smb.base import NotConnectedError, SharedFile  # type: ignore[import-untyped]
-from smb.smb_structs import OperationFailure  # type: ignore[import-untyped]
-from smb.SMBConnection import SMBConnection  # type: ignore[import-untyped]
+from smb.base import NotConnectedError, SharedFile
+from smb.smb_structs import OperationFailure
+from smb.SMBConnection import SMBConnection
 
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser

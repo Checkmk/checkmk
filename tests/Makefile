@@ -419,7 +419,13 @@ test-mypy:
 	    $(MYPY_ADDOPTS) \
 	    $(ADDITIONAL_MYPY_ARGS) \
 	    --config-file="$(REPO_PATH)/pyproject.toml" \
-	    -- $$($(FIND_PYTHON_FILES))
+	    -- $$($(FIND_PYTHON_FILES) | grep -v "$(realpath ..)\/cmk\/")
+	cd .. && $(UVENV) mypy \
+	    $(MYPY_ADDOPTS) \
+	    $(ADDITIONAL_MYPY_ARGS) \
+	    --config-file="$(REPO_PATH)/pyproject.toml" \
+	    -- cmk/special_agents/agent_cisco_meraki.py
+	$(BAZEL_CMD) build --config=mypy //cmk:lib_cmk_repo_no_meraki
 
 test-mypy-raw:
 	$(MAKE) test-mypy ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"

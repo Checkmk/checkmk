@@ -162,7 +162,7 @@ from cmk.server_side_calls_backend.config_processing import PreprocessingResult
 
 cme_labels: ModuleType | None
 try:
-    from cmk.utils.cme import (  # type: ignore[import-untyped, no-redef, unused-ignore]
+    from cmk.utils.cme import (  # type: ignore[import-not-found, import-untyped, no-redef, unused-ignore]
         labels as cme_labels,
     )
 except ModuleNotFoundError:

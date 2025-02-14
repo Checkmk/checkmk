@@ -75,7 +75,7 @@ if cmk_version.edition(cmk.utils.paths.omd_root) in [
     cmk_version.Edition.CCE,
     cmk_version.Edition.CSE,
 ]:
-    from cmk.base.cee.diagnostics import (  # type: ignore[import-untyped, unused-ignore]
+    from cmk.base.cee.diagnostics import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
         cmc_specific_attrs,  # type: ignore[import,unused-ignore]
     )
 else:

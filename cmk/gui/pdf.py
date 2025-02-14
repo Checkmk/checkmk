@@ -27,11 +27,11 @@ from pathlib import Path
 from textwrap import wrap
 from typing import Literal, NewType, overload, Protocol, TypedDict
 
-from reportlab.lib.units import mm  # type: ignore[import-untyped]
-from reportlab.lib.utils import ImageReader  # type: ignore[import-untyped]
+from reportlab.lib.units import mm
+from reportlab.lib.utils import ImageReader
 
 # Import software from reportlab (thanks to them!)
-from reportlab.pdfgen import canvas  # type: ignore[import-untyped]
+from reportlab.pdfgen import canvas
 
 import cmk.utils.paths
 from cmk.utils.images import CMKImage, ImageType
@@ -372,7 +372,7 @@ class Document:
 
         anchor = position[0]
         if anchor in ("s", "n", "w", "e"):
-            offset = position[1] * mm
+            offset = position[1] * mm  # type: ignore[operator]
             if anchor == "n":
                 return h_center, self._top - offset
             if anchor == "s":

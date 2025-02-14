@@ -30,24 +30,19 @@ def test_ups_power_detect(as_path: Callable[[str], Path]) -> None:
     "string_table, section",
     [
         pytest.param(
-            [[["1", "", ""]]],
-            {},
-            id="empty voltage and power",
-        ),
-        pytest.param(
-            [[["1", "", "2"]]],
-            {},
-            id="empty voltage",
-        ),
-        pytest.param(
-            [[["1", "0", ""]]],
+            [[["1", ""]]],
             {},
             id="empty power",
         ),
         pytest.param(
-            [[["1", "1", "0"]]],
+            [[["1", "2"]]],
+            {"1": 2},
+            id="power present",
+        ),
+        pytest.param(
+            [[["1", "0"]]],
             {"1": 0},
-            id="voltage and power",
+            id="power is zero",
         ),
     ],
 )

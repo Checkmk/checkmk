@@ -33,11 +33,6 @@ from cmk.fields import base
 class BaseSchema(Schema):
     """The Base Schema for all request and response schemas."""
 
-    class Meta:
-        """Holds configuration for marshmallow"""
-
-        ordered = True  # we want to have documentation in definition-order
-
     cast_to_dict: bool = False
     schema_example: dict[str, typing.Any] | None = None
 

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections import OrderedDict
 from collections.abc import MutableMapping
 from typing import Any
 
@@ -224,8 +225,11 @@ class UserInterfaceAttributes(BaseSchema):
 
 class CustomUserAttributes(BaseSchema):
     class Meta:
-        ordered = True
         unknown = marshmallow.INCLUDE
+
+    @property
+    def dict_class(self) -> type:
+        return OrderedDict
 
     @marshmallow.post_load(pass_original=True)
     def validate_custom_attributes(

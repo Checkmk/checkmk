@@ -37,7 +37,7 @@ from tests.testlib.common.repo import (  # noqa: E402
     repo_path,
 )
 from tests.testlib.common.utils import run, verbose_called_process_error  # noqa: E402
-from tests.testlib.timeouts import MonitorTimeout, SessionTimeoutError  # noqa: E402
+from tests.testlib.pytest_helpers.timeouts import MonitorTimeout, SessionTimeoutError  # noqa: E402
 
 logger = logging.getLogger(__name__)
 

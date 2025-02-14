@@ -7,9 +7,7 @@
 import json
 import logging
 import os
-import pickle
 import pprint
-import re
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 
@@ -46,9 +44,6 @@ from cmk.base.checkers import (
     SectionPluginMapper,
 )
 from cmk.base.config import ConfigCache, ParserFactory
-from cmk.base.modes.check_mk import (  # type: ignore[attr-defined]
-    CheckPluginName,
-)
 
 LOGGER = logging.getLogger(__name__)
 DATA_DIR = qa_test_data_path() / "plugins_siteless"
@@ -107,47 +102,6 @@ def summarizer(hostname_: HostName) -> CMKSummarizer:
         _summary_config,
         override_non_ok_state=None,
     )
-
-
-def _get_discovered_services_path(target_name: str) -> Path:
-    discovered_services_dir = DATA_DIR / "discovered_services"
-    assert discovered_services_dir.exists()
-
-    for file_name in os.listdir(discovered_services_dir):
-        if target_name in file_name:
-            return discovered_services_dir / file_name
-
-    raise FileNotFoundError(f"No discovered services file found for target {target_name}")
-
-
-def get_discovered_services(agent_data_filename: str) -> Sequence[ConfiguredService]:
-    """Load ConfiguredService instances from a pickle file."""
-    # agent_data_filename must be in the format 'agentVersion_targetName_targetVersion'
-    # here we extract the targetName from the filename
-    if match := re.match(r"^(.+?)_(.+?)_(.*)$", agent_data_filename):
-        target_name = match.group(2)
-    else:
-        raise ValueError(
-            f"Invalid agent data filename: {agent_data_filename}. "
-            f"Expected format: 'agentVersion_targetName_targetVersion'"
-        )
-
-    with open(_get_discovered_services_path(target_name), "rb") as discovered_services_path:
-        loaded_services = pickle.load(discovered_services_path)
-
-    return [
-        ConfiguredService(
-            check_plugin_name=CheckPluginName(service["plugin_name"]),
-            item=service["item"],
-            description=service["description"],
-            parameters=service["parameters"],
-            discovered_parameters=service["discovered_parameters"],
-            labels=service["labels"],
-            discovered_labels=service["discovered_labels"],
-            is_enforced=service["is_enforced"],
-        )
-        for service in loaded_services
-    ]
 
 
 def get_agent_data_filenames() -> list[str]:

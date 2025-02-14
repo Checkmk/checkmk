@@ -2,7 +2,12 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Consolidate helper functions for interacting with the repository."""
+"""
+Consolidated helper functions for interacting with the repository.
+
+The functions in this module are designed with caching where appropriate to optimize performance.
+They almost all require a Git repository to be present.
+"""
 
 import logging
 import os
@@ -198,6 +203,14 @@ def git_essential_directories(checkout_dir: Path) -> Iterator[str]:
 
 @cache
 def find_git_rm_mv_files(dirpath: Path) -> list[str]:
+    """lists all files that have been deleted or renamed in the git repository below dirpath
+
+    Args:
+        dirpath (Path): Path to search for (relative to root of git repository)
+
+    Returns:
+        list[str]: list of detected files
+    """
     del_files = []
 
     out = subprocess.check_output(

@@ -2,6 +2,15 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+"""helper functions to manage agent dumps during testing
+
+This module provides helper functions to:
+- Verify that the dump files in a given directory are consistent with the minimum required version,
+- Inject these dumps into a test site by creating the necessary directories, copying the files,
+    and setting up a corresponding rule to simulate agent output.
+"""
+
 import os
 from pathlib import Path
 

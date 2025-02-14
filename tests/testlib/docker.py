@@ -3,7 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+"""
+Module for managing Checkmk Docker containers in integration tests.
+
+This module provides utilities for:
+- Preparing and cleaning Checkmk packages for Docker containers,
+- Building and pulling Docker images with required configurations,
+- Copying files and sending input to containers,
+- Resolving Docker image aliases,
+- Extracting container IPs.
+- the CheckmkApp class for managing Checkmk application containers.
+"""
+
 # pylint: disable=protected-access
+
 import io
 import logging
 import os
@@ -144,6 +157,17 @@ def build_checkmk(
     version: CMKVersion,
     prepare_pkg: bool = True,
 ) -> tuple[docker.models.containers.Image, Iterator[Mapping[str, Any]]]:
+    """Builds (or reuses) and verifies a docker image for a given Checkmk version.
+
+    Args:
+        client (docker.client.DockerClient): the used docker client
+        version (CMKVersion): the Checkmk version to build the image for
+        prepare_pkg (bool, optional): Also pull CMK packages; see prepare_package. Defaults to True.
+
+    Returns:
+        tuple[docker.models.containers.Image, Iterator[Mapping[str, Any]]]: the docker image and
+            the docker build logs
+    """
     prepare_build()
 
     if prepare_pkg:
@@ -222,6 +246,14 @@ def build_checkmk(
 
 
 class CheckmkApp:
+    """A Checkmk application docker container usable for testing.
+
+    It encapsulates the lifecycle of a Checkmk application container,
+    including site initialization, OpenAPI session setup, agent installation, and registration.
+
+    The module supports both raw and SaaS editions of Checkmk.
+    """
+
     def __init__(
         self,
         client: docker.client.DockerClient,

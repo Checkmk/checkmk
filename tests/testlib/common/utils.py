@@ -516,6 +516,16 @@ def get_services_with_status(
 
 
 def wait_until(condition: Callable[[], bool], timeout: float = 1, interval: float = 0.1) -> None:
+    """Waits until a given condition is met (or timeout was reached -> TimeoutError).
+
+    Args:
+        condition (Callable[[], bool]): condition to be met. Will be called repeatedly until true.
+        timeout (float, optional): Timeout in seconds. Defaults to 1.
+        interval (float, optional): Time to wait (sleep) between checks. Defaults to 0.1.
+
+    Raises:
+        TimeoutError: If the condition was not met within the given timeout.
+    """
     start = time.time()
     logger.info("Waiting for %r to finish for %ds", condition, timeout)
     while time.time() - start < timeout:

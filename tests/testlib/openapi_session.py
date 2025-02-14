@@ -3,6 +3,30 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+"""
+Module Summary:
+    This module implements a REST API client for interacting with the Checkmk system in tests.
+    It extends the requests.Session class to provide custom URL construction, authentication,
+    logging, and error handling tailored to the Checkmk API.
+
+selected objects:
+    - CMKOpenApiSession: A custom session class that manages HTTP requests and responses for
+        Checkmk APIs. It automatically constructs request URLs, sets up authentication, logs
+        request/response details, and handles HTTP redirection.
+    - Exception Classes: Custom exceptions (e.g., RestSessionException, UnexpectedResponse,
+        AuthorizationFailed, NoActiveChanges, Redirect) are defined to handle various error
+        conditions encountered during API interactions.
+    - API Interfaces: Multiple helper classes
+        (e.g., ChangesAPI, UsersAPI, FoldersAPI, HostsAPI, HostGroupsAPI, ServiceDiscoveryAPI)
+        provide domain-specific methods to perform actions such as activating changes, managing
+        users and hosts, and running service discovery. These classes encapsulate the logic
+        required to form, send, and process API requests.
+    - Utility Functions: The module includes utility functions and context managers
+        (e.g., wait_for_completion) to facilitate asynchronous operations by waiting for and
+        processing HTTP redirects associated with long-running tasks.
+
+"""
+
 import itertools
 import logging
 import pprint

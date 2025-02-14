@@ -3,6 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+"""
+This module provides a collection of utility functions and context managers for managing and testing
+the Checkmk agent in various environments.
+"""
+
 import contextlib
 import json
 import logging
@@ -182,7 +187,8 @@ def agent_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen | None]
 def register_controller(
     ctl_path: Path, site: Site, hostname: HostName, site_address: str | None = None
 ) -> None:
-    # first we delete all registrations to have a sane default state
+    # Register the agent controller with the site
+    # (previously ran delete-all. Now part of _clean_agent_controller)
     run(
         [
             ctl_path.as_posix(),
@@ -300,6 +306,16 @@ def _query_hosts_service_count(site: Site, hostname: HostName) -> int:
 
 
 def wait_for_baking_job(central_site: Site, expected_start_time: float) -> None:
+    """Waits for the baking job to first start, then finish
+
+    Args:
+        central_site (Site): active site to use/watch
+        expected_start_time (float): Time (as of time.time) when the job is expected to have started
+
+    Raises:
+        AssertionError: If the baking job didn't start after expected_start_time
+            or didn't finish successfully after a certain amount of time.
+    """
     waiting_time = 2
     waiting_cycles = 30
     for _ in range(waiting_cycles):

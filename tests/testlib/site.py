@@ -4,6 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 # ruff: noqa: A005
 
+"""Module for managing Checkmk test sites.
+
+This module provides classes and functions for managing Checkmk test sites. The main classes are
+    - Site:
+        encapsulates operations for managing a Checkmk site within a test environment.
+    - SiteFactory`:
+        provides a factory for creating and managing (including teardown of) Checkmk
+        test sites.
+    - PythonHelper:
+        provides a helper for running Python scripts within a Checkmk test site.
+"""
+
 from __future__ import annotations
 
 import ast
@@ -78,6 +90,15 @@ NO_TRACING = TracingConfig(collect_traces=False, otlp_endpoint="", extra_resourc
 
 
 class Site:
+    """
+    Represents a Checkmk site for test and development environments.
+
+    This class encapsulates the operations and configurations necessary to manage a Checkmk site,
+    including installation, lifecycle management, command execution, and file operations.
+    It provides high-level methods to restart core services, schedule checks, query the site status,
+    and manipulate site-related files and configurations.
+    """
+
     def __init__(
         self,
         version: CMKVersion,
@@ -1520,6 +1541,13 @@ class GlobalSettingsUpdate:
 
 
 class SiteFactory:
+    """
+    SiteFactory is a utility class for managing test sites in a Check_MK context.
+
+    It supports creating, initializing, updating (both interactively and as a specific site user),
+    copying, restoring, and removing sites - including multi-site environments.
+    """
+
     def __init__(
         self,
         version: CMKVersion,

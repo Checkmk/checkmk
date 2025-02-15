@@ -91,7 +91,9 @@ def main() -> int:
         _errors, sections, checks = config.load_and_convert_legacy_checks(CONFIG.checks_to_load)
         load_selected_plugins(CONFIG.locations, sections, checks, validate=debug)
 
-        discovery_rulesets = extract_known_discovery_rulesets(get_previously_loaded_plugins())
+        discovery_rulesets = extract_known_discovery_rulesets(
+            plugins := get_previously_loaded_plugins()
+        )
 
         config.load_packed_config(LATEST_CONFIG, discovery_rulesets)
 
@@ -104,6 +106,7 @@ def main() -> int:
             [CONFIG.hostname],
             active_check_handler=lambda *args: None,
             keepalive=False,
+            plugin_loader=lambda: plugins,
             precompiled_host_check=True,
         )
     except KeyboardInterrupt:

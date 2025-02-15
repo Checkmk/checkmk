@@ -2374,6 +2374,7 @@ def mode_check(
     *,
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
+    plugin_loader: Callable[[], agent_based_register.AgentBasedPlugins],
     precompiled_host_check: bool = False,
 ) -> ServiceState:
     file_cache_options = _handle_fetcher_options(options)
@@ -2388,7 +2389,7 @@ def mode_check(
     if len(args) == 2:
         ipaddress = HostAddress(args[1])
 
-    plugins = load_checks_and_config()
+    plugins = plugin_loader()
     config_cache = config.get_config_cache()
     hosts_config = config.make_hosts_config()
 
@@ -2532,6 +2533,7 @@ def register_mode_check(
                 mode_check,
                 get_submitter_,
                 active_check_handler=active_check_handler,
+                plugin_loader=lambda: load_checks_and_config(),
                 keepalive=False,
             ),
             argument=True,

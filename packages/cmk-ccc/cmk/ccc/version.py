@@ -672,7 +672,10 @@ _REQUIRED_PATCH_RELEASES_MAP: Final = {
         ),
     ),
     _BaseVersion(2, 4, 0): max(
-        (Version.from_str("2.3.0p11"),),  # dcd piggyback config converted to modern format
+        (
+            Version.from_str("2.3.0p11"),  # dcd piggyback config converted to modern format
+            Version.from_str("2.3.0p26"),  # CMK-19258 - \n separated audit log
+        ),
     ),
 }
 

@@ -115,6 +115,9 @@ class Site:
         self.id = site_id
         self.root = Path("/omd/sites") / self.id
         self.version: Final = version
+        # keep track of the initial installation status to be able to
+        # uninstall only if the version was not installed already
+        self.version_was_preinstalled = self.version.is_installed()
 
         self.reuse = reuse
 
@@ -792,6 +795,7 @@ class Site:
 
     @tracer.start_as_current_span("Site.install_cmk")
     def install_cmk(self) -> None:
+        """Install the Checkmk version of the site if it is not installed already."""
         if not self.version.is_installed():
             logger.info("Installing Checkmk version %s", self.version.version_directory())
             try:
@@ -817,6 +821,36 @@ class Site:
                         f"Version {self.version.version} could not be downloaded!"
                     ) from excp
                 raise excp
+
+    @tracer.start_as_current_span("Site.uninstall_cmk")
+    def uninstall_cmk(self) -> None:
+        """Uninstall the Checkmk version of the site if it was not preinstalled."""
+        if self.version.is_installed() and not self.version_was_preinstalled:
+            logger.info("Uninstalling Checkmk version %s", self.version.version_directory())
+            try:
+                _ = run(
+                    [
+                        f"{repo_path()}/scripts/run-uvenv",
+                        f"{repo_path()}/tests/scripts/install-cmk.py",
+                        "--uninstall",
+                    ],
+                    env=dict(
+                        os.environ, VERSION=self.version.version, EDITION=self.version.edition.short
+                    ),
+                )
+            except subprocess.CalledProcessError as excp:
+                excp.add_note(
+                    "Execute 'tests/scripts/install-cmk.py --uninstall' manually to debug the issue."
+                )
+                if excp.returncode == 22:
+                    raise RuntimeError(
+                        f"Version {self.version.version} could not be uninstalled!"
+                    ) from excp
+                raise excp
+            assert not self.version.is_installed(), (
+                f"Version {self.version.version} is still installed, "
+                "even though the uninstallation was completed with RC=0!"
+            )
 
     @tracer.start_as_current_span("Site.create")
     def create(self) -> None:

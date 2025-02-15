@@ -5,6 +5,7 @@
 """Is executed in container from git top level as working directory to install
 the desired Checkmk version"""
 
+import argparse
 import logging
 import os
 import subprocess
@@ -29,7 +30,28 @@ CMK_DOWNLOAD_ERROR = 11
 CMK_INSTALL_ERROR = 22
 
 
+class InstallCmkArgs(argparse.Namespace):
+    def __init__(self):
+        self.uninstall: bool = False
+
+
+def parse_args() -> tuple[InstallCmkArgs, list[str]]:
+    """Parse all installation arguments."""
+    parser = argparse.ArgumentParser(description="Installs or uninstalls Checkmk.")
+    parser.add_argument(
+        "--uninstall",
+        dest="uninstall",
+        type=bool,
+        help="Perform an uninstallation instead of an installation",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+    )
+    return parser.parse_known_args(namespace=InstallCmkArgs())
+
+
 def main():
+    args, _ = parse_args()
+    operation = "uninstall" if args.uninstall else "install"
     add_python_paths()
     version = version_from_env(
         fallback_version_spec=CMKVersion.DAILY,
@@ -50,9 +72,12 @@ def main():
 
     manager = ABCPackageManager.factory()
     try:
-        manager.install(version.version_rc_aware, version.edition)
+        if args.uninstall:
+            manager.uninstall(version.version_rc_aware, version.edition)
+        else:
+            manager.install(version.version_rc_aware, version.edition)
     except subprocess.CalledProcessError as excp:
-        excp.add_note(f"Failed to install {version.version}.{version.edition.short}!")
+        excp.add_note(f"Failed to {operation} {version.edition} {version.version}!")
         logger.exception(excp)
         return CMK_INSTALL_ERROR
     except requests.exceptions.HTTPError as excp:

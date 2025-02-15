@@ -120,6 +120,10 @@ class ABCPackageManager(abc.ABC):
             self._install_package(package_path)
             os.unlink(package_path)
 
+    def uninstall(self, version: str, edition: Edition) -> None:
+        package_name = self.package_name(edition, version)
+        self._uninstall_package(package_name)
+
     def _write_package_hash(self, version: str, edition: Edition, package_path: Path) -> None:
         pkg_hash = _sha256_file(package_path)
         package_hash_path(version, edition).write_text(f"{pkg_hash}  {package_path.name}\n")
@@ -160,6 +164,10 @@ class ABCPackageManager(abc.ABC):
     def _install_package(self, package_path: Path) -> None:
         raise NotImplementedError()
 
+    @abc.abstractmethod
+    def _uninstall_package(self, package_name: str) -> None:
+        raise NotImplementedError()
+
     def _execute(self, cmd: list[str | Path]) -> None:
         logger.debug("Executing: %s", subprocess.list2cmdline(list(map(str, cmd))))
 
@@ -191,6 +199,9 @@ class PackageManagerDEB(ABCPackageManager):
         # this step should fail in case additional packages would be required
         self._execute(["dpkg", "-i", package_path])
 
+    def _uninstall_package(self, package_name: str) -> None:
+        self._execute(["dpkg", "-P", package_name])
+
 
 class ABCPackageManagerRPM(ABCPackageManager):
     def package_name(self, edition: Edition, version: str) -> str:
@@ -201,10 +212,16 @@ class PackageManagerSuSE(ABCPackageManagerRPM):
     def _install_package(self, package_path: Path) -> None:
         self._execute(["rpm", "-i", package_path])
 
+    def _uninstall_package(self, package_name: str) -> None:
+        self._execute(["rpm", "-e", package_name])
+
 
 class PackageManagerRHEL(ABCPackageManagerRPM):
     def _install_package(self, package_path: Path) -> None:
         self._execute(["yum", "install", "-y", package_path])
+
+    def _uninstall_package(self, package_name: str) -> None:
+        self._execute(["rpm", "-e", package_name])
 
 
 class PackageManagerCMA(PackageManagerDEB):

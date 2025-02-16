@@ -60,7 +60,9 @@ def cpu_util_elements():
                 title=_("Averaging for total CPU utilization"),
                 help=_(
                     "When this option is activated then the CPU utilization is being "
-                    "averaged <b>before</b> the levels on total CPU utilization are being applied."
+                    "averaged <b>before</b> the levels on total CPU utilization are being applied.\n"
+                    "Note: The average is calculated using the Exponential Moving Average (EMA) method, "
+                    "which considers both the new value and the previous average while applying a weighted factor to each."
                 ),
                 unit=_("minutes"),
                 minvalue=1,
@@ -75,7 +77,9 @@ def cpu_util_elements():
                 help=_(
                     "Compute averaged single-core CPU utilizations. Note that this option only has "
                     "an effect if at least one of the sub-options 'Apply single-core levels' or "
-                    "'Graphs for averaged single-core utilizations' is enabled."
+                    "'Graphs for averaged single-core utilizations' is enabled.\n"
+                    "Note: The average is calculated using the Exponential Moving Average (EMA) method, "
+                    "which considers both the new value and the previous average while applying a weighted factor to each."
                 ),
                 elements=[
                     (

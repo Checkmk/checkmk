@@ -5,6 +5,7 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from typing import Self
 
 from cmk.utils.sectionname import SectionName
 
@@ -25,12 +26,21 @@ registered_check_plugins: dict[CheckPluginName, CheckPlugin] = {}
 registered_inventory_plugins: dict[InventoryPluginName, InventoryPlugin] = {}
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class AgentBasedPlugins:
     agent_sections: Mapping[SectionName, AgentSectionPlugin]
     snmp_sections: Mapping[SectionName, SNMPSectionPlugin]
     check_plugins: Mapping[CheckPluginName, CheckPlugin]
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin]
+
+    @classmethod
+    def empty(cls) -> Self:
+        return cls(
+            agent_sections={},
+            snmp_sections={},
+            check_plugins={},
+            inventory_plugins={},
+        )
 
 
 def get_previously_loaded_plugins() -> AgentBasedPlugins:

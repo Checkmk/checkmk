@@ -76,7 +76,7 @@ def test_do_create_config_nagios(
     core_config.do_create_config(
         create_core("nagios"),
         core_scenario,
-        AgentBasedPlugins({}, {}, {}, {}),
+        AgentBasedPlugins.empty(),
         discovery_rules={},
         ip_address_of=ip_address_of,
         all_hosts=[HostName("test-host")],
@@ -103,7 +103,7 @@ def test_do_create_config_nagios_collects_passwords(
     core_config.do_create_config(
         create_core("nagios"),
         core_scenario,
-        AgentBasedPlugins({}, {}, {}, {}),
+        AgentBasedPlugins.empty(),
         discovery_rules={},
         ip_address_of=ip_address_of,
         all_hosts=[HostName("test-host")],

@@ -28,8 +28,6 @@ from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, replace_macros
 from cmk.server_side_calls_backend import load_active_checks
 
-_NO_PLUGINS_FOR_TEST = AgentBasedPlugins({}, {}, {}, {})
-
 _CONFIG_FRAGMENT = config.LoadedConfigFragment(discovery_rules={})
 
 
@@ -69,7 +67,7 @@ class TestAutomationDiagHost:
     def test_execute(self, hostname: str, ipaddress: str, raw_data: str) -> None:
         args = [hostname, "agent", ipaddress, "", "6557", "10", "5", "5", ""]
         assert check_mk.AutomationDiagHost().execute(
-            args, _NO_PLUGINS_FOR_TEST, _CONFIG_FRAGMENT
+            args, AgentBasedPlugins.empty(), _CONFIG_FRAGMENT
         ) == DiagHostResult(
             0,
             raw_data,
@@ -203,7 +201,7 @@ def test_automation_active_check(
 
     active_check = AutomationActiveCheckTestable()
     assert (
-        active_check.execute(active_check_args, _NO_PLUGINS_FOR_TEST, _CONFIG_FRAGMENT)
+        active_check.execute(active_check_args, AgentBasedPlugins.empty(), _CONFIG_FRAGMENT)
         == expected_result
     )
 
@@ -265,6 +263,6 @@ def test_automation_active_check_invalid_args(
     monkeypatch.setattr(cmk.ccc.debug, "enabled", lambda: False)
 
     active_check = check_mk.AutomationActiveCheck()
-    active_check.execute(active_check_args, _NO_PLUGINS_FOR_TEST, _CONFIG_FRAGMENT)
+    active_check.execute(active_check_args, AgentBasedPlugins.empty(), _CONFIG_FRAGMENT)
 
     assert error_message == capsys.readouterr().err

@@ -94,7 +94,7 @@ def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
         "explicit": "explicit",
     }
     assert automation.execute(
-        ["test-host"], AgentBasedPlugins({}, {}, {}, {}), LoadedConfigFragment(discovery_rules={})
+        ["test-host"], AgentBasedPlugins.empty(), LoadedConfigFragment(discovery_rules={})
     ) == AnalyseHostResult(
         label_sources=label_sources | additional_label_sources,
         labels={
@@ -136,7 +136,7 @@ def test_service_labels(monkeypatch):
 
     assert automation.execute(
         ["test-host", "CPU load", "CPU temp"],
-        AgentBasedPlugins({}, {}, {}, {}),
+        AgentBasedPlugins.empty(),
         LoadedConfigFragment(discovery_rules={}),
     ) == GetServicesLabelsResult(
         {

@@ -54,7 +54,7 @@ def _make_sources(
     # to test.
     ipaddress = HostAddress("127.0.0.1")
     return make_sources(
-        AgentBasedPlugins({}, {}, {}, {}),
+        AgentBasedPlugins.empty(),
         hostname,
         ipaddress,
         IPStackConfig.IPv4,

@@ -1210,7 +1210,7 @@ def _to_named_schema(fields_: dict[str, Field]) -> type[Schema]:
     attrs["Meta"] = type(
         "GeneratedMeta",
         (Schema.Meta,),
-        {"register": True, "ordered": True},
+        {"register": True},
     )
     _hash = hashlib.sha256()
 

@@ -10,7 +10,7 @@ import logging
 import sys
 from collections.abc import Iterator
 from pathlib import Path
-from typing import NamedTuple
+from typing import IO, NamedTuple
 
 LINKS = {
     "0BSD": "http://landley.net/toybox/license.html",
@@ -48,6 +48,7 @@ LINKS = {
     "MIT-CMU": "https://github.com/python-pillow/Pillow/blob/fffb426092c8db24a5f4b6df243a8a3c01fb63cd/LICENSE",
     "MPL-1.1": "http://www.mozilla.org/MPL/MPL-1.1.html",
     "MPL-2.0": "https://opensource.org/licenses/MPL-2.0",
+    "OFL-1.1": "https://opensource.org/license/OFL-1.1",
     "OpenSSL": "http://www.openssl.org/source/license.html",
     "PSF-2.0": "https://opensource.org/licenses/Python-2.0",
     "Python-2.0": "https://opensource.org/licenses/Python-2.0",
@@ -107,7 +108,8 @@ def _links_for_license(license_str: str) -> str:
 
 def _get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("bom_file", type=Path)
+    parser.add_argument("--bom", type=Path, required=True)
+    parser.add_argument("--out", type=Path, required=True)
     return parser.parse_args()
 
 
@@ -246,10 +248,9 @@ def _check_links(bom_info: dict) -> None:
         sys.exit("There are links to licenses missing")
 
 
-def _write_csv(csv_sections: dict[str, list[CsvRow]]) -> None:
+def _write_csv(csv_sections: dict[str, list[CsvRow]], csv_file: IO[str]) -> None:
     """write the sections as csv to stdout"""
-
-    writer = csv.writer(sys.stdout, lineterminator="\n")
+    writer = csv.writer(csv_file, lineterminator="\n")
     writer.writerow(
         ("Name", "Version", "License", "Link License Text", "Repository path", "Comment")
     )
@@ -266,12 +267,13 @@ def _main() -> None:
 
     args = _get_args()
 
-    with args.bom_file.open() as bom_file:
+    with args.bom.open() as bom_file:
         bom_info = json.load(bom_file)
 
     _check_links(bom_info)
 
-    _write_csv(_get_csv_sections(bom_info))
+    with args.out.open("w") as csv_file:
+        _write_csv(_get_csv_sections(bom_info), csv_file)
 
 
 if __name__ == "__main__":

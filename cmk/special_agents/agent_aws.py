@@ -3023,6 +3023,10 @@ class ELB(AWSSectionCloudwatch):
     def granularity(self) -> int:
         return 300
 
+    @property
+    def host_labels(self) -> Mapping[str, str]:
+        return {"cmk/aws/service": "elb"}
+
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("elb_summary")
         if colleague and colleague.content:
@@ -3082,7 +3086,7 @@ class ELB(AWSSectionCloudwatch):
 
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [
-            AWSSectionResult(piggyback_hostname, rows)
+            AWSSectionResult(piggyback_hostname, rows, self.host_labels)
             for piggyback_hostname, rows in computed_content.content.items()
         ]
 

@@ -22,7 +22,6 @@ from cmk.gui.userdb import (
     UserRole,
     UserRolesConfigFile,
 )
-from cmk.gui.utils.transaction_manager import transactions
 
 RoleID = NewType("RoleID", str)
 
@@ -82,7 +81,7 @@ def delete_role(role_id: RoleID) -> None:
     all_roles: dict[RoleID, UserRole] = get_all_roles()
     role_to_delete: UserRole = get_role(role_id)
 
-    if transactions.transaction_valid() and role_to_delete.builtin:
+    if role_to_delete.builtin:
         raise MKUserError(None, _("You cannot delete the built-in roles!"))
 
     # Check if currently being used by a user

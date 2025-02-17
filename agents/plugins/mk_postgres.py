@@ -29,6 +29,10 @@ Example of an environment file:
 export PGDATABASE="data"
 export PGPORT="5432"
 export PGVERSION="14"
+# optional:
+# export PGHOST="hostname.my.domain"
+# or (for access through socket):
+# export PGHOST="/tmp"
 ----------------------------------------------------------
 
 Inside of the environment file, only `PGPORT` is mandatory.
@@ -167,6 +171,7 @@ class PostgresBase:
         self.name = instance["name"]
         self.pg_user = instance["pg_user"]
         self.pg_port = instance["pg_port"]
+        self.pg_host = instance["pg_host"]
         self.pg_database = instance["pg_database"]
         self.pg_passfile = instance.get("pg_passfile", "")
         self.pg_version = instance.get("pg_version")
@@ -463,6 +468,8 @@ class PostgresWin(PostgresBase):
         extra_args += " -U %s" % self.pg_user
         extra_args += " -d %s" % self.pg_database
         extra_args += " -p %s" % self.pg_port
+        if self.pg_host != "":
+            extra_args += " -h %s" % self.pg_host
 
         if quiet:
             extra_args += " -q"
@@ -792,6 +799,8 @@ class PostgresLinux(PostgresBase):
         extra_args += " -U %s" % self.pg_user
         extra_args += " -d %s" % self.pg_database
         extra_args += " -p %s" % self.pg_port
+        if self.pg_host != "":
+            extra_args += " -h %s" % self.pg_host
 
         if quiet:
             extra_args += " -q"
@@ -1205,10 +1214,11 @@ def open_env_file(file_to_open):
 
 
 def parse_env_file(env_file):
-    # type: (str) -> tuple[str, str, str | None]
+    # type: (str) -> tuple[str, str, str | None, str]
     pg_port = None  # mandatory in env_file
     pg_database = "postgres"  # default value
     pg_version = None
+    pg_host = ""
 
     for line in open_env_file(env_file):
         line = line.strip()
@@ -1220,10 +1230,12 @@ def parse_env_file(env_file):
             pg_port = re.sub(re.compile("#.*"), "", line.split("=")[-1]).strip()
         elif "PGVERSION=" in line:
             pg_version = re.sub(re.compile("#.*"), "", line.split("=")[-1]).strip()
+        elif "PGHOST=" in line:
+            pg_host = re.sub(re.compile("#.*"), "", line.split("=")[-1]).strip()
 
     if pg_port is None:
         raise ValueError("PGPORT is not specified in %s" % env_file)
-    return pg_database, pg_port, pg_version
+    return pg_database, pg_port, pg_version, pg_host
 
 
 def _parse_INSTANCE_value(value, config_separator):
@@ -1260,7 +1272,7 @@ def parse_postgres_cfg(postgres_cfg, config_separator):
             env_file, pg_user, pg_passfile, instance_name = _parse_INSTANCE_value(
                 value, config_separator
             )
-            pg_database, pg_port, pg_version = parse_env_file(env_file)
+            pg_database, pg_port, pg_version, pg_host = parse_env_file(env_file)
             instances.append(
                 {
                     "name": instance_name.strip(),
@@ -1268,6 +1280,7 @@ def parse_postgres_cfg(postgres_cfg, config_separator):
                     "pg_passfile": pg_passfile.strip(),
                     "pg_database": pg_database,
                     "pg_port": pg_port,
+                    "pg_host": pg_host,
                     "pg_version": pg_version,
                 }
             )
@@ -1328,6 +1341,7 @@ def main(argv=None):
             "pg_user": "postgres",
             "pg_database": "postgres",
             "pg_port": "5432",
+            "pg_host": "",
             # Assumption: if no pg_passfile is specified no password will be required.
             # If a password is required but no pg_passfile is specified the process will
             # interactivly prompt for a password.

@@ -108,6 +108,7 @@ class TestLinux:
             "pg_user": "myuser",
             "pg_passfile": "/home/.pgpass",
             "pg_version": "12.3",
+            "pg_host": "",
         }  # type: dict[str, str | None]
         myPostgresOnLinux = mk_postgres.postgres_factory("postgres", None, instance)
 
@@ -169,6 +170,7 @@ class TestLinux:
             "pg_database": "postgres",
             "pg_port": "5432",
             "pg_passfile": "",
+            "pg_host": "",
         }  # type: dict[str, str | None]
         myPostgresOnLinux = mk_postgres.postgres_factory("postgres", None, instance)
 
@@ -195,6 +197,7 @@ class TestLinux:
             "pg_user": "myuser",
             "pg_passfile": "/home/.pgpass",
             "pg_version": "12.3",
+            "pg_host": "",
         }  # type: dict[str, str | None]
         process_mock = Mock()
         attrs = {
@@ -231,6 +234,7 @@ class TestLinux:
             "name": "main",
             "pg_user": "myuser",
             "pg_passfile": "/home/.pgpass",
+            "pg_host": "",
             "version": "12.3",
         }  # type: dict[str, str | None]
         process_mock = Mock()
@@ -291,6 +295,7 @@ class TestLinux:
             "pg_user": "myuser",
             "pg_passfile": "/home/.pgpass",
             "pg_version": "12.3",
+            "pg_host": "",
         }
 
         process_mock = Mock()
@@ -428,6 +433,7 @@ class TestWindows:
             "name": "data",
             "pg_user": "myuser",
             "pg_passfile": "/home/.pgpass",
+            "pg_host": "",
         }  # type: dict[str, str | None]
         myPostgresOnWin = mk_postgres.postgres_factory("postgres", None, instance)
 
@@ -455,6 +461,7 @@ class TestWindows:
             "name": "mydb",
             "pg_user": "myuser",
             "pg_version": "12.1",
+            "pg_host": "",
         }  # type: dict[str, str | None]
         process_mock = Mock()
         attrs = {
@@ -486,6 +493,7 @@ class TestWindows:
             "pg_user": "myuser",
             "pg_passfile": "c:\\User\\.pgpass",
             "pg_version": "12.1",
+            "pg_host": "",
         }  # type: dict[str, str | None]
         process_mock = Mock()
         attrs = {
@@ -589,6 +597,7 @@ def test_parse_env_file(tmp_path):
         # the value will be used on the commandline, so bash will handle the quoting...
         "ut_pg_port",
         '"some version"',  # same as above
+        "",
     )
 
 
@@ -605,6 +614,24 @@ def test_parse_env_file_comments(tmp_path):
         "ut_pg_database",
         "123",
         None,
+        "",
+    )
+
+
+def test_parse_env_file_pghost(tmp_path):
+    path = tmp_path / ".env"
+    with open(str(path), "wb") as fo:
+        fo.write(
+            b"export PGDATABASE=ut_pg_database\n"
+            b"# export PGDATABASE=ut_some_other_database\n"
+            b"PGPORT=123\n"
+            b'export PGHOST="hostname.my.domain"\n'
+        )
+    assert mk_postgres.parse_env_file(str(path)) == (
+        "ut_pg_database",
+        "123",
+        None,
+        '"hostname.my.domain"',
     )
 
 
@@ -623,4 +650,5 @@ def test_parse_env_file_parser(tmp_path):
         "ut_pg_database",
         "123",
         None,
+        "",
     )

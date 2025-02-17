@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import csv
+import io
+import json
 import logging
 import os
 import re
@@ -396,3 +399,52 @@ def test_python_files_are_precompiled_pycs(package_path: str, cmk_version: str) 
             missing_pycs.add(path)
 
     assert not missing_pycs, f"The following files aren't precompiled: {', '.join(missing_pycs)}"
+
+
+def test_bom(package_path: str, cmk_version: str) -> None:
+    """Check that there is a BOM and it contains dependencies from various eco-systems"""
+    bom = json.loads(
+        _get_file_from_package(package_path, cmk_version, "share/doc/bill-of-materials.json")
+    )
+    purls_wo_version = {c["purl"].split("@", 1)[0] for c in bom["components"] if "purl" in c}
+
+    # These are manually picked and should represent dependencies from our various ecosystems.
+    # I chose dependencies that are unlikely to be removed...
+    assert "pkg:cargo/clap" in purls_wo_version
+    assert "pkg:npm/d3" in purls_wo_version
+    assert "pkg:github/google/re2" in purls_wo_version
+    assert "pkg:pypi/certifi" in purls_wo_version
+
+
+def test_bom_csv_synchronous(package_path: str, cmk_version: str) -> None:
+    """test that the csv and bom contain the same versions
+
+    let's just check for certifi and openssl since I know they are updated constantly"""
+
+    bom = json.loads(
+        _get_file_from_package(package_path, cmk_version, "share/doc/bill-of-materials.json")
+    )
+    license_file = io.StringIO(
+        _get_file_from_package(package_path, cmk_version, "share/doc/Licenses.csv").decode("utf-8")
+    )
+    reader = csv.DictReader(license_file)
+    license_csv = list(reader)
+
+    openssl_version: str | None = None
+    # we have multiple certifis (agent updater 2x and in a site)
+    certifi_versions: set[str] = set()
+
+    for component in bom["components"]:
+        if component["name"] == "openssl" and "cpe" in component:
+            openssl_version = component["version"]
+        if component.get("purl", "").startswith("pkg:pypi/certifi@"):
+            certifi_versions.add(component["version"])
+
+    assert openssl_version is not None
+    assert certifi_versions
+
+    for row in license_csv:
+        if row["Name"] == "openssl":
+            assert row["Version"] == openssl_version
+        if row["Name"] == "Python module: certifi":
+            assert row["Version"] in certifi_versions

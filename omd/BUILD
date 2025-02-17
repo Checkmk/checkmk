@@ -56,6 +56,7 @@ create_venv(
         "//packages/cmk-server-side-calls:pkg_tar",
         "//packages/cmk-trace:pkg_tar",
         "//packages/cmk-werks:pkg_tar",
+        ":license_info",
     ] + edition_deps[edition],
 ) for edition in [
     "cre",
@@ -192,4 +193,15 @@ run_binary(
         "$(location :generate_licenses_csv)",
     ],
     tool = ":build_license_texts_pdf_py",
+)
+
+pkg_tar(
+    name = "license_info",
+    srcs = [
+        "bill-of-materials.json",
+        ":build_license_texts_pdf",
+        ":generate_licenses_csv",
+    ],
+    package_dir = "share/doc/",
+    package_file_name = "license_info_archive.tar",
 )

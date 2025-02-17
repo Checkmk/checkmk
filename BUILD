@@ -96,13 +96,12 @@ genrule(
     srcs = [
         "//cmk:requirements_pinned.txt",
         ":requirements_runtime.txt",
-    ],
-    outs = ["_requirements_runtime.txt"],
-    cmd = "cat $(SRCS) > $@;" + select({
-        "@//:gpl_repo": "",
-        "@//:gpl+enterprise_repo": "echo \"-r non-free/packages/cmk-mknotifyd/requirements.txt\" >> $@;" +
-                                   "echo \"-r non-free/packages/cmk-otel-collector/requirements.txt\" >> $@",
+    ] + select({
+        "@//:gpl_repo": [],
+        "@//:gpl+enterprise_repo": ["//non-free:requirements.txt"],
     }),
+    outs = ["_requirements_runtime.txt"],
+    cmd = "cat $(SRCS) > $@",
 )
 
 # TODO: De-dup with list in cmk/BUILD:CMK_PACKAGES
@@ -123,10 +122,7 @@ REQUIREMENTS_CMK = [
     "//packages/cmk-werks:requirements.txt",
 ] + select({
     "@//:gpl_repo": [],
-    "@//:gpl+enterprise_repo": [
-        "//non-free/packages/cmk-mknotifyd:requirements.txt",
-        "//non-free/packages/cmk-otel-collector:requirements.txt",
-    ],
+    "@//:gpl+enterprise_repo": ["//non-free:python_requirements"],
 })
 
 pip_compile(

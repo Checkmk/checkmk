@@ -35,6 +35,7 @@ from cmk.utils.notify_types import (
     SplunkPluginModel,
 )
 
+import cmk.gui.exceptions
 from cmk.gui.utils.script_helpers import application_and_request_context
 from cmk.gui.watolib import sample_config
 from cmk.gui.watolib.notifications import (
@@ -1087,3 +1088,31 @@ def test_migrate_mixed_notification_plugins() -> None:
     ]
 
     assert all(got == want for got, want in zip(value, expected))
+
+
+@pytest.mark.xfail(reason="Currently None is not being treated at migrated.")
+def test_migrate_with_already_migrated_rules() -> None:
+    # Note: `None` and UUID are considered migrated.
+    config = [
+        EventRuleFactory.build(notify_plugin=("mail", "2e61d376-7226-42b8-a98c-d41dc5585bcf")),
+        EventRuleFactory.build(notify_plugin=("mail", None)),
+    ]
+    assert migrate_parameters(config) == {}
+
+
+@pytest.mark.xfail(reason="Currently migrated values with string are not handled.")
+def test_migrate_with_partially_migrated_rules() -> None:
+    config = [
+        EventRuleFactory.build(notify_plugin=("mail", "2e61d376-7226-42b8-a98c-d41dc5585bcf")),
+        ASCII_RULE_CONFIG[0],  # rule to migrate
+    ]
+    assert migrate_parameters(config)
+
+
+@pytest.mark.xfail(
+    reason="Need to find a way create a notification parameter as a fixture.",
+    raises=cmk.gui.exceptions.MKUserError,
+)
+def test_migrate_with_list_parameter_for_custom_plugin_does_not_raise_validation_error() -> None:
+    config = [EventRuleFactory.build(notify_plugin=("custom_pigeon_notifier", ["foo", "bar"]))]
+    assert migrate_parameters(config)

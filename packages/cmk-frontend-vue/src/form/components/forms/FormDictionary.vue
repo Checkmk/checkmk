@@ -89,8 +89,11 @@ immediateWatch(
 immediateWatch(
   () => props.backendValidation,
   (newValidation: ValidationMessages) => {
-    const [, _elementValidation] = groupNestedValidations(props.spec.elements, newValidation)
-    elementValidation.value = _elementValidation
+    const [, dictionaryElementsValidation] = groupNestedValidations(
+      props.spec.elements,
+      newValidation
+    )
+    elementValidation.value = dictionaryElementsValidation
   }
 )
 

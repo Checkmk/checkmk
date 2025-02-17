@@ -88,6 +88,10 @@ def _modify_test_site(site: Site, hostname: str) -> Iterator[None]:
         site.set_config("OPENTELEMETRY_COLLECTOR", "off", with_restart=True)
 
 
+@pytest.mark.skipif(
+    os.environ.get("DISTRO") == "sles-15sp5",
+    reason="No GLIBC_2.32 found, see CMK-20960",
+)
 def test_otel_collector_self_monitoring(site: Site) -> None:
     hostname = "otelhost"
     with _modify_test_site(site, hostname):

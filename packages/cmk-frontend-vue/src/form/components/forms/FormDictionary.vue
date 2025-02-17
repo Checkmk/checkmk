@@ -21,6 +21,7 @@ import FormRequired from '@/form/private/FormRequired.vue'
 import FormReadonly from '@/form/components/FormReadonly.vue'
 import { rendersRequiredLabelItself } from '@/form/private/requiredValidator'
 import FormIndent from '@/form/private/FormIndent.vue'
+import FormValidation from '@/form/components/FormValidation.vue'
 
 const DICT_ELEMENT_NO_GROUP = '-ungrouped-'
 
@@ -66,6 +67,7 @@ const variant: DictionaryVariants['variant'] =
 
 const data = defineModel<Record<string, unknown>>('data', { required: true })
 const elementValidation = ref<Record<string, ValidationMessages>>({})
+const validation = ref<ValidationMessages>([])
 
 function getDefaultValue(key: string): unknown {
   const element = props.spec.elements.find((element) => element.name === key)
@@ -89,11 +91,12 @@ immediateWatch(
 immediateWatch(
   () => props.backendValidation,
   (newValidation: ValidationMessages) => {
-    const [, dictionaryElementsValidation] = groupNestedValidations(
+    const [dictionaryValidation, dictionaryElementsValidation] = groupNestedValidations(
       props.spec.elements,
       newValidation
     )
     elementValidation.value = dictionaryElementsValidation
+    validation.value = dictionaryValidation
   }
 )
 
@@ -263,6 +266,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
     </tbody>
   </table>
   <span v-else>{{ spec.no_elements_text }}</span>
+  <FormValidation :validation="validation.map((m) => m.message)"></FormValidation>
 </template>
 
 <style scoped>

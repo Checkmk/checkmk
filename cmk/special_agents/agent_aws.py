@@ -4258,6 +4258,51 @@ class DynamoDB(AWSSection):
         ]
 
 
+class DynamoDBLabelsGeneric(AWSSectionLabels):
+    def __init__(
+        self,
+        client: BaseClient,
+        region: str,
+        config: AWSConfig,
+        distributor: ResultDistributor | None = None,
+        resource: str = "",
+    ) -> None:
+        self._resource = resource
+        super().__init__(client, region, config, distributor=distributor)
+
+    @property
+    def name(self) -> str:
+        return "%s_generic_labels" % self._resource
+
+    @property
+    def cache_interval(self) -> int:
+        return 300
+
+    @property
+    def granularity(self) -> int:
+        return 300
+
+    def _get_colleague_contents(self) -> AWSColleagueContents:
+        colleague = self._received_results.get("%s_summary" % self._resource)
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents({}, 0.0)
+
+    def get_live_data(self, *args: AWSColleagueContents) -> object:
+        (colleague_contents,) = args
+        return colleague_contents.content
+
+    def _compute_content(
+        self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
+    ) -> AWSComputedContent:
+        computed_content = {
+            elb_instance_id: data.get("TagsForCmkLabels")
+            for elb_instance_id, data in raw_content.content.items()
+            if data.get("TagsForCmkLabels")
+        }
+        return AWSComputedContent(computed_content, raw_content.cache_timestamp)
+
+
 class DynamoDBLimits(AWSSectionLimits):
     @property
     def name(self) -> str:
@@ -6935,15 +6980,20 @@ class AWSSectionsGeneric(AWSSections):
         if "dynamodb" in services:
             dynamodb_client = self._init_client("dynamodb")
             dynamodb = DynamoDB(dynamodb_client, region, config)
+            dynamodb_labels = DynamoDBLabelsGeneric(
+                dynamodb_client, region, config, resource="dynamodb"
+            )
             dynamodb_limits = DynamoDBLimits(dynamodb_client, region, config, distributor)
             dynamodb_summary = DynamoDBSummary(dynamodb_client, region, config, distributor)
             dynamodb_table = DynamoDBTable(cloudwatch_client, region, config)
             distributor.add(dynamodb_limits.name, dynamodb_summary)
+            distributor.add(dynamodb_summary.name, dynamodb_labels)
             distributor.add(dynamodb_summary.name, dynamodb)
             distributor.add(dynamodb_summary.name, dynamodb_table)
             if config.service_config.get("dynamodb_limits"):
                 self._sections.append(dynamodb_limits)
             self._sections.append(dynamodb_summary)
+            self._sections.append(dynamodb_labels)
             self._sections.append(dynamodb)
             self._sections.append(dynamodb_table)
 

@@ -1,6 +1,7 @@
 load("@aspect_rules_py//py:defs.bzl", "py_binary")
 load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@rules_uv//uv:venv.bzl", "create_venv")
@@ -140,3 +141,55 @@ py_binary(
     "cme",
     "cse",
 ]]
+
+py_binary(
+    name = "generate_licenses_csv_py",
+    srcs = ["license_sources/generate_licenses_csv.py"],
+)
+
+run_binary(
+    name = "generate_licenses_csv",
+    srcs = ["bill-of-materials.json"],
+    outs = ["Licenses.csv"],
+    args = [
+        "--bom",
+        "$(location bill-of-materials.json)",
+        "--out",
+        "$(location Licenses.csv)",
+    ],
+    tool = ":generate_licenses_csv_py",
+)
+
+filegroup(
+    name = "license_texts",
+    srcs = glob([
+        "license_sources/license_texts/*.txt",
+    ]),
+)
+
+py_binary(
+    name = "build_license_texts_pdf_py",
+    srcs = ["license_sources/build_license_texts_pdf.py"],
+    data = [
+        "license_sources/Calibri.ttf",
+        "license_sources/checkmk_logo.svg",
+        ":license_texts",
+    ],
+    deps = [
+        requirement("reportlab"),
+        requirement("svglib"),
+    ],
+)
+
+run_binary(
+    name = "build_license_texts_pdf",
+    srcs = [":generate_licenses_csv"],
+    outs = ["License_texts.pdf"],
+    args = [
+        "--pdf",
+        "$(location License_texts.pdf)",
+        "--csv",
+        "$(location :generate_licenses_csv)",
+    ],
+    tool = ":build_license_texts_pdf_py",
+)

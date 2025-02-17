@@ -1961,6 +1961,7 @@ def main(argv=None):
         for subscription in args.subscriptions:
             if (test_result := test_connection(args, subscription)) != 0:
                 return test_result
+        return 0
 
     LOGGER.debug("%s", selector)
     main_graph_client(args)

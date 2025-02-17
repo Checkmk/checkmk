@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Pre update checks, executed before any configuration is changed."""
 
-from collections.abc import Sequence
+from dataclasses import dataclass
 from logging import Logger
 
 from cmk.ccc import version
@@ -18,7 +18,6 @@ from cmk.gui.groups import GroupSpec
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.groups_io import load_contact_group_information
-from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 
@@ -140,54 +139,66 @@ def _validate_rule_values(
                     "",
                 )
             except (MKUserError, AssertionError, ValueError, TypeError) as e:
-                error_message = _error_message(ruleset, rule.value, folder, index, e)
-                logger.error(error_message)
+                error_messages = [
+                    "WARNING: Invalid rule configuration detected",
+                    f"Ruleset: {ruleset.name}",
+                    f"Title: {ruleset.title()}",
+                    f"Folder: {folder.path() or 'main'}",
+                    f"Rule nr: {index + 1}",
+                    f"Exception: {e}\n",
+                ]
+                add_info = _additional_info(ruleset, rule.value, contact_groups)
+                logger.error("\n".join(error_messages + add_info.messages))
+                if add_info.skip_user_input:
+                    continue
                 if _continue_on_invalid_rule(conflict_mode).is_abort():
                     return False
 
     return True
 
 
-def _error_message(
+@dataclass(frozen=True, kw_only=True)
+class _AdditionalInfo:
+    messages: list[str]
+    skip_user_input: bool
+
+
+def _additional_info(
     ruleset: Ruleset,
     rule_value: object,
-    folder: Folder,
-    index: int,
-    exception: Exception,
-) -> str:
-    return "\n".join(
-        [
-            "WARNING: Invalid rule configuration detected",
-            f"Ruleset: {ruleset.name}",
-            f"Title: {ruleset.title()}",
-            f"Folder: {folder.path() or 'main'}",
-            f"Rule nr: {index + 1}",
-            f"Exception: {exception}\n",
-            *_make_additional_info(ruleset, rule_value),
-        ]
-    )
-
-
-def _make_additional_info(ruleset: Ruleset, rule_value: object) -> Sequence[str]:
+    contact_groups: GroupSpec,
+) -> _AdditionalInfo:
     if version.edition(paths.omd_root) is not version.Edition.CME:
-        return ()
+        return _AdditionalInfo(messages=[], skip_user_input=False)
     if ruleset.name not in (
         "host_contactgroups",
         "host_groups",
         "service_contactgroups",
         "service_groups",
     ):
-        return ()
-    return (
-        "Note:",
-        (
-            f"The group {rule_value!r} may not be synchronized to this site because"
-            " the customer setting of the group is not set to global."
-        ),
-        (
-            "If you continue the invalid rule does not have any effect but should"
-            " be fixed anyway.\n"
-        ),
+        return _AdditionalInfo(messages=[], skip_user_input=False)
+    if rule_value == "all" and (
+        "all" not in contact_groups
+        or ("all" in contact_groups and "customer" not in contact_groups["all"])
+    ):
+        # These special cases are handled later in the update action 'SetContactGroupAllScope'.
+        # Thus we skip them here.
+        return _AdditionalInfo(
+            messages=["Note:", f"The group {rule_value!r} will be automatically updated later.\n"],
+            skip_user_input=True,
+        )
+    return _AdditionalInfo(
+        messages=[
+            "Note:",
+            (
+                f"The group {rule_value!r} may not be synchronized to this site because"
+                " the customer setting of the group is not set to global."
+            ),
+            (
+                "If you continue the invalid rule does not have any effect but should be fixed anyway.\n"
+            ),
+        ],
+        skip_user_input=False,
     )
 
 

@@ -52,8 +52,10 @@
   --icon-alert-up: url('~cmk-frontend/src/themes/facelift/images/icon_alert_up.png');
   --icon-about-checkmk: url('~cmk-frontend/src/themes/facelift/images/icon_about_checkmk.svg');
   --icon-check: url('~cmk-frontend/src/themes/facelift/images/icon_check.svg');
+  --icon-cross: url('~cmk-frontend/src/themes/facelift/images/icon_cross.svg');
   --icon-save: url('~cmk-frontend/src/themes/facelift/images/icon_save.svg');
   --icon-cancel: url('~cmk-frontend/src/themes/facelift/images/icon_cancel.svg');
+  --icon-pending-task: url('~cmk-frontend/src/themes/facelift/images/icon_pending_task.svg');
 
   /* TODO: remove icno-info and replace it with icon-help-new (icon-help later)*/
   --icon-info: url('~cmk-frontend/src/themes/facelift/images/icon_info.svg');

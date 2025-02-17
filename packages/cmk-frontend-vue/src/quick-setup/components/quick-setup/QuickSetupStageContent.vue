@@ -49,6 +49,10 @@ const invokeAction = (waitLabel: string, action: () => void) => {
   loadWaitLabel.value = waitLabel
   action()
 }
+
+const waitComponentEnabled = computed(() => {
+  return typeof props.hideWaitLegend === 'undefined' || !props.hideWaitLegend
+})
 </script>
 
 <template>
@@ -78,8 +82,10 @@ const invokeAction = (waitLabel: string, action: () => void) => {
         </CmkButton>
       </div>
       <div v-else class="qs-stage-content__loading">
-        <CmkIcon name="load-graph" variant="inline" size="xlarge" />
-        <span>{{ loadWaitLabel }}</span>
+        <div v-if="waitComponentEnabled">
+          <CmkIcon name="load-graph" variant="inline" size="xlarge" />
+          <span>{{ loadWaitLabel }}</span>
+        </div>
       </div>
     </div>
   </div>

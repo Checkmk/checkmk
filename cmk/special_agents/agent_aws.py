@@ -4217,6 +4217,49 @@ class CloudwatchAlarms(AWSSection):
 #   '----------------------------------------------------------------------'
 
 
+class DynamoDB(AWSSection):
+    @property
+    def name(self) -> str:
+        return "dynamodb"
+
+    @property
+    def cache_interval(self) -> int:
+        return 300
+
+    @property
+    def granularity(self) -> int:
+        return 300
+
+    @property
+    def host_labels(self) -> Mapping[str, str]:
+        return {"cmk/aws/service": "dynamodb"}
+
+    def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, str]] | None:
+        (colleague_contents,) = args
+        return colleague_contents.content
+
+    def _get_colleague_contents(self) -> AWSColleagueContents:
+        colleague = self._received_results.get("dynamodb_summary")
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents([], 0.0)
+
+    def _compute_content(
+        self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
+    ) -> AWSComputedContent:
+        content_by_piggyback_hosts: dict[str, list[str]] = {}
+        for row in colleague_contents.content:
+            content_by_piggyback_hosts.setdefault(row, []).append(row)
+
+        return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
+        return [
+            AWSSectionResult(piggyback_hostname, rows, self.host_labels)
+            for piggyback_hostname, rows in computed_content.content.items()
+        ]
+
+
 class DynamoDBLimits(AWSSectionLimits):
     @property
     def name(self) -> str:
@@ -6893,14 +6936,17 @@ class AWSSectionsGeneric(AWSSections):
 
         if "dynamodb" in services:
             dynamodb_client = self._init_client("dynamodb")
+            dynamodb = DynamoDB(dynamodb_client, region, config)
             dynamodb_limits = DynamoDBLimits(dynamodb_client, region, config, distributor)
             dynamodb_summary = DynamoDBSummary(dynamodb_client, region, config, distributor)
             dynamodb_table = DynamoDBTable(cloudwatch_client, region, config)
             distributor.add(dynamodb_limits.name, dynamodb_summary)
+            distributor.add(dynamodb_summary.name, dynamodb)
             distributor.add(dynamodb_summary.name, dynamodb_table)
             if config.service_config.get("dynamodb_limits"):
                 self._sections.append(dynamodb_limits)
             self._sections.append(dynamodb_summary)
+            self._sections.append(dynamodb)
             self._sections.append(dynamodb_table)
 
         if "wafv2" in services:

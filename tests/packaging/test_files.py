@@ -7,6 +7,7 @@ import logging
 import os
 import re
 import subprocess
+from functools import cache
 from pathlib import Path, PosixPath
 
 import pytest
@@ -166,6 +167,7 @@ def test_files_not_in_version_path(package_path: str, cmk_version: str) -> None:
         assert is_allowed, f"Found unexpected global file: {path} in {package_path}"
 
 
+@cache
 def _get_paths_from_package(path_to_package: str) -> list[str]:
     if path_to_package.endswith(".rpm"):
         paths = subprocess.check_output(

@@ -66,6 +66,7 @@ def main() {
                 ],
                 build_params_no_check: [
                     CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
+                    CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
                     CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
                 ],
                 no_remove_others: true, // do not delete other files in the dest dir
@@ -76,7 +77,7 @@ def main() {
         }
 
         smart_stage(name: 'Fetch agent binaries', condition: !params.FAKE_WINDOWS_ARTIFACTS) {
-            package_helper.provide_agent_binaries(version, edition, disable_cache);
+            package_helper.provide_agent_binaries(version, edition, disable_cache, params.CIPARAM_BISECT_COMMENT);
         }
 
         smart_stage(name: 'Fake agent binaries', condition: params.FAKE_WINDOWS_ARTIFACTS) {

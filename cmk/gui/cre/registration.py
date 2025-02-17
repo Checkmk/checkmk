@@ -97,6 +97,7 @@ from cmk.gui.watolib.mode import mode_registry
 from cmk.gui.watolib.notification_parameter import notification_parameter_registry
 from cmk.gui.watolib.piggyback_hub import distribute_piggyback_hub_configs
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
+from cmk.gui.watolib.sample_config import SampleConfigGeneratorGroups
 from cmk.gui.watolib.search import match_item_generator_registry
 from cmk.gui.watolib.simple_config_file import config_file_registry
 from cmk.gui.watolib.sites import site_management_registry, SiteManagement
@@ -126,6 +127,7 @@ def register_painters() -> None:
 
 
 def register(edition: Edition) -> None:
+    sample_config_generator_registry.register(SampleConfigGeneratorGroups)
     network_scan.register(host_attribute_registry, automation_command_registry, cron_job_registry)
     nagvis.register(permission_section_registry, permission_registry, snapin_registry)
     ldap.register(mode_registry)

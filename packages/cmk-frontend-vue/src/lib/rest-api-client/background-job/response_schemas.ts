@@ -6,6 +6,11 @@
 
 interface BackgroundJobStatus {
   state: string
+  log_info: {
+    JobProgressUpdate: string[]
+    JobResult: string[]
+    JobException: string[]
+  }
 }
 
 interface BackgroundJobSnapshot {

@@ -919,9 +919,6 @@ class ModeBIRules(ABCBIMode):
         with html.form_context(
             "bulk_action_form",
             method="POST",
-            require_confirmation=RequireConfirmation(
-                html=_("Do you really want to move the selected rules?")
-            ),
         ):
             if self._view_type == "list":
                 self.render_rules(_("Rules"), only_unused=False)

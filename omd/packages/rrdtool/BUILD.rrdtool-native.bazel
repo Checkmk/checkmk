@@ -116,6 +116,7 @@ cc_shared_library(
     deps = [
         "rrd_library",
         "rrdgraph",
+        "rrdupd",
     ],
 )
 

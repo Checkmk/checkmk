@@ -17,7 +17,6 @@ RUN apt-get install -y \
     dialog \
     git \
     graphviz \
-    librrd-dev \
     libsasl2-dev \
     libxml2 \
     make \
@@ -25,7 +24,6 @@ RUN apt-get install -y \
     php-common \
     python3-dev \
     python3-pip \
-    rrdtool \
     strace \
     sudo \
     vim

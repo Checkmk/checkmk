@@ -22,7 +22,6 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15sp6 sles15sp6 \
     make \
     python \
     python3-devel \
-    rrdtool-devel \
     sudo \
     && zypper clean -a
 

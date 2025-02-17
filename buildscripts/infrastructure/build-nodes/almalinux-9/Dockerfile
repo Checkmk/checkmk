@@ -79,7 +79,6 @@ RUN yum -y makecache \
     readline-devel \
     rpcbind \
     rpm-build \
-    rrdtool-devel \
     rsync \
     samba-client \
     sqlite-devel \

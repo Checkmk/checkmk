@@ -272,7 +272,6 @@ install_for_cpp_dev() {
         "libpango1.0-dev"
         "libpq-dev"
         "libreadline-dev"
-        "librrd-dev"
         "libsasl2-dev"
         "libsqlite3-dev"
         "libtool-bin"

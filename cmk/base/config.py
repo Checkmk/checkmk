@@ -33,7 +33,6 @@ from typing import (
     Literal,
     NamedTuple,
     overload,
-    TypeAlias,
     TypeVar,
 )
 
@@ -143,6 +142,7 @@ from cmk.base.sources import SNMPFetcherConfig
 from cmk import trace
 from cmk.agent_based.legacy import discover_legacy_checks, FileLoader, find_plugin_files
 from cmk.piggyback import backend as piggyback_backend
+from cmk.rrd.config import RRDObjectConfig  # pylint: disable=cmk-module-layer-violation
 from cmk.server_side_calls import v1 as server_side_calls_api
 from cmk.server_side_calls_backend import (
     ActiveCheck,
@@ -164,11 +164,6 @@ try:
 except ModuleNotFoundError:
     cme_labels = None
 
-try:
-    from cmk.base.cee.rrd import RRDObjectConfig
-except ModuleNotFoundError:
-    # Non-existing edition layering...
-    RRDObjectConfig: TypeAlias = object  # type: ignore[no-redef]
 
 tracer = trace.get_tracer()
 
@@ -2801,7 +2796,7 @@ class ConfigCache:
         # was the internal "site" tag that is created by HostAttributeSite.
         tags = {v for k, v in tag_groups.items() if k != TagGroupID("site")}
         tags.add(TagID(host_path))
-        tags.add(TagID(f'site:{tag_groups[TagGroupID("site")]}'))
+        tags.add(TagID(f"site:{tag_groups[TagGroupID('site')]}"))
         return tuple(tags)
 
     @staticmethod
@@ -3655,7 +3650,7 @@ class ConfigCache:
             if host_name in self.hosts_config.clusters:
                 # TODO(ml): What is the difference between this and `self.parents()`?
                 parents_list = self.get_cluster_nodes_for_config(host_name)
-                attrs.setdefault("alias", f'cluster of {", ".join(parents_list)}')
+                attrs.setdefault("alias", f"cluster of {', '.join(parents_list)}")
                 attrs.update(
                     self.get_cluster_attributes(
                         host_name,

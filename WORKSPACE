@@ -1,7 +1,7 @@
 workspace(name = "omd_packages")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
+load("//:bazel_variables.bzl", "RUFF_VERSION", "UPSTREAM_MIRROR_URL")
 
 RULES_PKG_VERSION = "0.9.1"
 
@@ -252,3 +252,7 @@ http_archive(
 load("//omd/packages/rabbitmq:rabbitmq_http.bzl", "rabbitmq_workspace")
 
 rabbitmq_workspace()
+
+load("@aspect_rules_lint//lint:ruff.bzl", "fetch_ruff")
+
+fetch_ruff(RUFF_VERSION)

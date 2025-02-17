@@ -81,8 +81,7 @@ git_override(
     remote = "https://github.com/TimotheusBachinger/rules_py",
 )
 
-# NOTE: We should better keep the used ruff versions in sync, here and in the venv!
-bazel_dep(name = "aspect_rules_lint", version = "1.1.0")
+bazel_dep(name = "aspect_rules_lint", version = "1.2.0")
 
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
 pip.parse(

@@ -4,6 +4,7 @@ load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile
 load("@repo_license//:license.bzl", "REPO_LICENSE")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@rules_uv//uv:venv.bzl", "create_venv")
+load("//:bazel_variables.bzl", "RUFF_VERSION")
 load("//bazel/rules:copy_to_directory.bzl", "copy_to_directory")
 load("//bazel/rules:proto.bzl", "proto_library_as")
 
@@ -83,17 +84,17 @@ refresh_compile_commands(
 
 genrule(
     name = "_append_dev_dependencies",
-    srcs = [
-        ":requirements_runtime_lock.txt",
-    ],
+    srcs = [":requirements_runtime_lock.txt"],
     outs = ["requirements_all.txt"],
-    cmd = "cat $< > $@; echo '-r requirements_dev.txt' >> $@",
+    cmd = """
+    cat $< <(echo "ruff==%s") <(echo "-r requirements_dev.txt") > $@
+    """ % RUFF_VERSION,
 )
 
 genrule(
     name = "_append_cmk_dependencies",
     srcs = [
-        "//cmk:requirements_protobuf_pinned.txt",
+        "//cmk:requirements_pinned.txt",
         ":requirements_runtime.txt",
     ],
     outs = ["_requirements_runtime.txt"],
@@ -106,7 +107,7 @@ genrule(
 
 # TODO: De-dup with list in cmk/BUILD:CMK_PACKAGES
 REQUIREMENTS_CMK = [
-    "//cmk:requirements_protobuf_pinned.txt",
+    "//cmk:requirements_pinned.txt",
     "//packages/cmk-agent-based:requirements.txt",
     "//packages/cmk-agent-receiver:requirements.txt",
     "//packages/cmk-ccc:requirements.txt",

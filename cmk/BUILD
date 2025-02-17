@@ -13,11 +13,10 @@ genrule(
 )
 
 genrule(
-    name = "_pin_protobuf_requirement",
+    name = "_pin_requirements",
     srcs = [":requirements_pruned.txt"],
-    outs = ["requirements_protobuf_pinned.txt"],
-    # We go for "compatible release" with `~=`.
-    cmd = "cat $< <(echo protobuf~=%s) > $@" % PROTOBUF_PYTHON_VERSION,
+    outs = ["requirements_pinned.txt"],
+    cmd = "cat $< <(echo protobuf==%s) > $@" % PROTOBUF_PYTHON_VERSION,
     visibility = ["//:__subpackages__"],
 )
 

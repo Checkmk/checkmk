@@ -1,4 +1,5 @@
 UPSTREAM_MIRROR_URL = "https://artifacts.lan.tribe29.com/repository/upstream-archives/"
+RUFF_VERSION = "0.9.6"
 
 edition_deps = {
     "cre": [],

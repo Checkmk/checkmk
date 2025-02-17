@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-01-08 06:05+0000\n"
+"PO-Revision-Date: 2025-02-17 05:51+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -1274,12 +1274,16 @@ msgstr ""
 msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above hosts"
 msgstr "<b>否定:</b>上記のホストを<b>除く</b>すべてのホストにルールを適用する"
 
+#, python-format
 msgid ""
 "<b>Note:</b> The ntopng integration is an add-on feature for which a "
-"subscription add-on has to be purchased separately."
+"subscription add-on has to be purchased separately. It requires a commercial "
+"edition of ntopng. See the <a href='%s' target='_blank'> Checkmk docs</a> "
+"for detailed requirements."
 msgstr ""
 "<b>注意:</b> ntopng統合はアドオン機能であり、サブスクリプションアドオンを別途"
-"購入する必要があります。"
+"購入する必要があります。また商用エディションのntopngが必要です。詳しい要件に"
+"ついては、<a href='%s' target='_blank'>ドキュメント</a>をご参照ください。"
 
 msgid ""
 "<b>Note:</b> the shown results are incomplete and do not reflect the sort "
@@ -1353,6 +1357,9 @@ msgid ""
 "need to be removed and rediscovered to apply the changes. Otherwise there is "
 "a risk of mismatch between the discovered and checked services."
 msgstr ""
+"<br> <br>  <b>重要な注意事項</b>: このオプションを変更する場合、変更を適用す"
+"るためにサービスを削除し、再検出する必要がある。そのようにしない場合、発見さ"
+"れたサービスとチェックされたサービスの間に不一致が生じる危険性があります。"
 
 msgid ""
 "<br> HINT: The individual program is called from the current working "
@@ -1734,7 +1741,6 @@ msgstr ""
 "とえば、このルールを使用して、式 \"%s\" (引用符なし)を指定し、 \"%s\" を選択"
 "することで、Dockerコンテナに属するすべてのプロセスを除外できます。</p>"
 
-#, fuzzy
 msgid ""
 "<p>The process name may contain one or more occurrences of <tt>%s</tt>. If "
 "you do this, then the pattern must be a regular expression and be prefixed "
@@ -1751,19 +1757,19 @@ msgid ""
 "may also use <tt>%1</tt>, <tt>%2</tt>, etc. These will be replaced by the "
 "first, second, ... matching group. This allows you to reorder things."
 msgstr ""
-"<p>プロセス名には、<tt>%s</tt>を1つ以上含めえることができます。この場合、パ"
-"ターンは接頭辞〜が付いた正規表現である必要があります。説明の<tt>%s</tt>ごと"
-"に、式に1つの\"グループ\"が含めなければなりません。グループは、括弧で囲まれた"
-"部分式です。たとえば、 <tt>(.*)</tt> または<tt>([a-zA-Z]+)</tt>または"
-"<tt>(...)</tt>など。インベントリがパターンに一致するタスクを見つけると、"
-"チェックを作成するときに、そのようなすべてのグループを実際の値に置き換えま"
-"す。このようにして、1つのルールでホスト上に複数のチェックを作成できます。</"
-"p><p>パターンがサービスの説明の<tt>%s</tt>の出現よりも多くのグループが含む場"
-"合、最初に一致する部分式のみが使用されます。それでも、残りのグループに対応す"
-"る一致した部分文字列は正規表現にコピーされます。</p><p> <tt>%s</tt>の代わり"
-"に、<tt>%1</tt>や<tt>%2</tt>などを使用することもできます 。これらの式は、最"
-"初、2番目、...の一致するグループに置き換えられ、並べ替えることができます。</"
-"p>"
+"<p>プロセス名には、<tt>%s</tt>を1つ以上含めることができます。この場合、パター"
+"ンは接頭辞〜が付いた正規表現である必要があります。説明の<tt>%s</tt>ごとに、"
+"式に1つの\"グループ\"を含めなければなりません"
+"。グループは、括弧で囲まれた部分式です。たとえば、 <tt>(.*)</tt> または<tt>(["
+"a-zA-Z]+)</tt>または<tt>(...)</tt>など。インベントリがパターンに一致するタス"
+"クを見つけると、チェックを作成するときに、そのようなすべてのグループを実際の"
+"値に置き換えます。このようにして、1つのルールでホスト上に複数のチェックを作成"
+"できます。</p><p>パターンがサービスの説明の<tt>%s</tt>の出現よりも多くのグル"
+"ープが含む場合、最初に一致する部分式のみが使用されます。それでも、残りのグル"
+"ープに対応する一致した部分文字列は正規表現にコピーされます。</p><p> "
+"<tt>%s</tt>の代わりに、<tt>%1</tt>や<tt>%2</tt>などを使用することもできます "
+"。これらの式は、最初、2番目、..."
+"の一致するグループに置き換えられ、並べ替えることができます。</p>"
 
 msgid ""
 "<p>The service description may contain one or more occurances of <tt>%s</"
@@ -4712,9 +4718,9 @@ msgstr "エージェントの更新"
 msgid "Agent updates are currently disabled"
 msgstr "エージェントの更新は現在無効になっています"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Agent updates are disabled for host name %s:"
-msgstr "ホスト名 %s のエージェント更新は無効になっています"
+msgstr "ホスト名 %s のエージェント更新が無効："
 
 msgid "Agent updates are enabled"
 msgstr "エージェントの更新が有効になっている"
@@ -11177,9 +11183,9 @@ msgid ""
 "server name, or if you want to specify one."
 msgstr "NetBIOSサーバー名に親ホスト情報を使用するか指定するかを選択します。"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Chosen file: %s"
-msgstr "コアファイル"
+msgstr "選ばれたファイル：%s"
 
 msgid "Chrony timesynchronisation"
 msgstr "慢性的な時間同期"
@@ -11676,7 +11682,7 @@ msgid "Code verifier not found. Cache value is None."
 msgstr "Code verifierが見つかりません。キャッシュ値は None です。"
 
 msgid "Codec that should be used to decode the matching files"
-msgstr "一致するファイルをデコードするために使用する必要があるコーデック"
+msgstr "一致するファイルのデコードに使用するコーデック"
 
 msgid "Codes copied"
 msgstr "コピーされたコード"
@@ -28182,9 +28188,8 @@ msgstr ""
 msgid ""
 "If you want to continue to use Checkmk, please contact the Checkmk sales "
 "team at %s."
-msgstr ""
-"Checkmk の使用を継続したい場合は、%s をサポートするライセンスを購入する"
-"か、%s の Checkmk 営業チームまでご連絡ください。"
+msgstr "Checkmkのご利用を継続される場合は、Checkmk営業チーム（%s "
+"）までご連絡ください。"
 
 #, python-format
 msgid ""
@@ -32042,13 +32047,12 @@ msgstr "ライセンスの有効期限切れ：「 変更を有効にする」�
 msgid "License expired: Renew license now"
 msgstr "ライセンスの有効期限切れ：今すぐライセンスを更新してください"
 
-#, fuzzy
 msgid "License expired: Renew license now to avoid site deletion."
-msgstr "ライセンスの有効期限切れ：今すぐライセンスを更新してください"
+msgstr "ライセンスの有効期限切れ：サイトの削除を避けるために、今すぐライセンスを更新"
+"してください。"
 
-#, fuzzy
 msgid "License expired: Renew license now to reactivate change activation."
-msgstr "ライセンスの有効期限切れ：今すぐライセンスを更新してください"
+msgstr "ライセンスの有効期限切れ：今すぐライセンスを更新してください。"
 
 msgid "License start"
 msgstr "ライセンス開始"
@@ -32062,16 +32066,14 @@ msgstr "ライセンス状態: Free"
 msgid "License suspended: 'Activate changes' is blocked"
 msgstr "ライセンスの一時停止: 「変更を有効にする」がブロックされています"
 
-#, fuzzy
 msgid "License suspended: 'Activate changes' is blocked."
-msgstr "ライセンスの一時停止: 「変更を有効にする」がブロックされています"
+msgstr "ライセンスの一時停止: 「変更を有効にする」がブロックされています。"
 
 msgid "License suspended: Contact Checkmk sales team now"
 msgstr "ライセンスの一時停止：今すぐCheckmk営業チームに連絡してください"
 
-#, fuzzy
 msgid "License suspended: Contact Checkmk sales team now."
-msgstr "ライセンスの一時停止：今すぐCheckmk営業チームに連絡してください"
+msgstr "ライセンスの一時停止：今すぐCheckmk営業チームに連絡してください。"
 
 msgid "License usage"
 msgstr "ライセンスの使用法"
@@ -32093,7 +32095,7 @@ msgstr "ライセンス"
 
 #, fuzzy
 msgid "Licensed phase: too many services."
-msgstr "Betaフェーズ：サービスが多すぎる"
+msgstr "ライセンス段階：サービスが多すぎる。"
 
 msgid "Licensed services"
 msgstr "ライセンス対象サービス"
@@ -32994,7 +32996,7 @@ msgstr ""
 
 #, fuzzy
 msgid "Log the automatic host removal process."
-msgstr "ホストの自動削除を有効化"
+msgstr "ホストの自動削除プロセスを記録する。"
 
 msgid "Log: Details"
 msgstr "ログ:詳細"
@@ -37620,9 +37622,9 @@ msgstr ""
 msgid "No graph available: %s"
 msgstr "利用可能なグラフがありません: %s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "No graph with the ID <tt>%s</tt> found for user <tt>%s</tt>"
-msgstr "IDが<tt>%s </tt>のグラフはありません"
+msgstr "ユーザー <tt>%s</tt> に対して ID <tt>%s</tt> のグラフが見つかりません"
 
 msgid "No groups are defined yet."
 msgstr "グループはまだ定義されていません。"
@@ -39578,9 +39580,8 @@ msgstr "ダウンホスト上"
 msgid "On host name exclusion list."
 msgstr "%s 除外リスト。"
 
-#, fuzzy
 msgid "On host: Schedule downtime"
-msgstr "ダウンタイムをスケジュールしますか?"
+msgstr "ホスト側：ダウンタイムのスケジュール"
 
 #, fuzzy
 msgid "On recovery (OK/UP)"
@@ -39652,7 +39653,8 @@ msgstr ""
 msgid ""
 "Once you reach 100%, further change activations will be blocked. Avoid "
 "interruptions by upgrading your license to extend your service limit, "
-msgstr ""
+msgstr "100%に達すると、それ以上の変更はブロックされます。中断を回避するには、"
+"ライセンスをアップグレードしてサービス制限を延長してください, "
 
 msgid ""
 "One Metric History painter time range is set to inherit from report, yet "
@@ -39967,7 +39969,7 @@ msgid "Only use device's levels, ignore yours"
 msgstr "デバイスのレベルのみを使用し、自分のレベルは無視してください"
 
 msgid "Only valid in Jenkins versions <= 1.622."
-msgstr ""
+msgstr "Jenkinsバージョン1.622以下でのみ有効です。"
 
 msgid "Only when the cancelled event is in phase OPEN"
 msgstr "キャンセルされたイベントがOPENフェーズの場合のみ"
@@ -48685,7 +48687,7 @@ msgid "Service Level Agreements"
 msgstr "サービスレベルアグリーメント"
 
 msgid "Service Limit Reached: Action Required."
-msgstr ""
+msgstr "サービス上限に達しました：対応が必要です。"
 
 msgid "Service Name"
 msgstr "サービス名"
@@ -51239,6 +51241,10 @@ msgid ""
 "server is not monitored by itself, but from a different site (which is "
 "actually recommended), please enter the name of that host here."
 msgstr ""
+"診断データの一部は、関連サイトのCheckmkサーバーを代表するホストから収集する必"
+"要があります。CheckmkサーバーがCheckmkサーバー自体で自身を監視しているのでは"
+"なく、別のサイトから監視さしている場合（実際にはこれが推奨されます）、そのホ"
+"スト名をここに入力してください。"
 
 msgid ""
 "Some of the display columns offer options for customizing their output. For "
@@ -53370,9 +53376,8 @@ msgstr "やめる"
 msgid "Stop SNMP processing on timeout"
 msgstr "イベント処理時間"
 
-#, fuzzy
 msgid "Stop and do not create hosts"
-msgstr "停止し、ホストを作成しないでください。"
+msgstr "停止し、ホストを作成しないでください"
 
 msgid "Stop background jobs"
 msgstr "バックグラウンドジョブ停止"
@@ -53501,7 +53506,7 @@ msgid "Stored reports"
 msgstr "保存されたレポート"
 
 msgid "Stormshield quality"
-msgstr ""
+msgstr "ストームシールドの品質"
 
 msgid "Straight"
 msgstr "まっすぐ"
@@ -56108,9 +56113,9 @@ msgstr ""
 msgid "The content element \"%s, %s\" cannot be rendered: %s"
 msgstr "コンテンツ要素 \"%s, %s\" はレンダリングできません: %s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "The content of this file %s could not be processed successfully: %s"
-msgstr "このファイルのコンテンツは正常に処理されませんでした:%s"
+msgstr "このファイル%s の内容は正常に処理できませんでした：%s"
 
 msgid ""
 "The corresponding username in ntopng of the current checkmk user. It is "
@@ -59049,9 +59054,9 @@ msgid "The user %s used by the network scan of the folder %s does not exist."
 msgstr ""
 "フォルダ %s のネットワークスキャンで使ったユーザー %s は、存在しません。"
 
-#, fuzzy, python-format
+#, python-format
 msgid "The user id '%s' already exists"
-msgstr "このIDはすでに存在します。"
+msgstr "ユーザー ID '%s' は既に存在します"
 
 msgid "The user interface"
 msgstr "ユーザーインターフェース"
@@ -64471,10 +64476,10 @@ msgstr ""
 "性のあるPythonデータ構造の文字列表現である必要があります。"
 
 msgid "To unlock higher limits, purchase a license "
-msgstr ""
+msgstr "より高い制限を解除するには、ライセンスを購入してください "
 
 msgid "To unlock higher limits, upgrade your license "
-msgstr ""
+msgstr "より高い制限を解除するには、ライセンスをアップグレードしてください "
 
 msgid "To:"
 msgstr "に:"
@@ -67264,9 +67269,8 @@ msgstr "試用期間終了： 分散セットアップ不可"
 msgid "Trial period ended: Reduce your number of services"
 msgstr "試用期間終了： サービスの数を減らしてください"
 
-#, fuzzy
 msgid "Trial phase: too many services."
-msgstr "Betaフェーズ：サービスが多すぎる"
+msgstr "Trialフェーズ：サービスが多すぎる。"
 
 #, fuzzy
 msgid "Trial time left is visible in the user admin panel"
@@ -71205,6 +71209,10 @@ msgid ""
 "'Create additional service for IO stats bytes' or 'Create additional service "
 "for IO stats requests' in 'Oracle performance discovery'."
 msgstr ""
+"警告：このセクションでは、Checkmkサーバーの負荷が増加し、データベースの負荷も"
+"増加する可能性があります。結果を表示するには、「Oracle performance "
+"discovery」の「Create additional service for IO stats bytes」または「Create "
+"additional service for IO stats requests」をアクティブにする必要があります。"
 
 msgid "WCU"
 msgstr "WCU"
@@ -71504,9 +71512,9 @@ msgstr "警告:このホストの構成は無効です!"
 msgid "Warning: This host has an invalid configuration: "
 msgstr "警告: このホストの設定は無効です: "
 
-#, python-format
+#, fuzzy, python-format
 msgid "Warning: You are over 90% of your service limit."
-msgstr ""
+msgstr "警告：利用限度の90％ を超えています。"
 
 msgid "Warnings:"
 msgstr "警告:"
@@ -74792,9 +74800,9 @@ msgstr ""
 msgid "You have permission to this host."
 msgstr "このホストへのアクセス許可があります。"
 
-#, fuzzy, python-format
+#, python-format
 msgid "You have reached your limit of %s. "
-msgstr "移行用に%d%sを選択しました: %s"
+msgstr "%s の上限に達しています。 "
 
 #, python-format
 msgid "You have selected %d %s for migration: %s"
@@ -75234,9 +75242,9 @@ msgstr ""
 "checkmk.com/checkmk_support_contract.html\" target=\"_blank\">当社のウェブサ"
 "イト</a>で詳細を確認してください。"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Your current service limit is %s. "
-msgstr "サービス制限を監視する"
+msgstr "現在のサービス利用は%s です。 "
 
 msgid "Your end date is before your start date."
 msgstr "終了日は開始日より前です。"
@@ -75290,11 +75298,11 @@ msgid ""
 "Your license has been suspended. Please contact the Checkmk sales team at %s."
 msgstr "ライセンスが停止されました。Checkmk営業チーム%sまでご連絡ください。"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Your license has been suspended. Please contact the Checkmk sales team at "
 "%s. "
-msgstr "ライセンスが停止されました。Checkmk営業チーム%sまでご連絡ください。"
+msgstr "ライセンスが停止されました。Checkmk営業チーム%s までご連絡ください。 "
 
 msgid ""
 "Your license has been suspended. Until it is reactivated, 'Activate changes' "
@@ -75315,9 +75323,9 @@ msgstr ""
 msgid "Your license has expired on %s."
 msgstr "あなたのライセンスは%sで失効しました。"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Your license has expired on %s. "
-msgstr "あなたのライセンスは%sで失効しました。"
+msgstr "あなたのライセンスは%sで失効しました。 "
 
 #, python-format
 msgid ""

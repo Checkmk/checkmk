@@ -1300,9 +1300,12 @@ msgstr ""
 "<b>Negare:</b> face regula să se aplice pentru <b>toate elementele mai "
 "puțin</b> cei de sus"
 
+#, fuzzy, python-format
 msgid ""
 "<b>Note:</b> The ntopng integration is an add-on feature for which a "
-"subscription add-on has to be purchased separately."
+"subscription add-on has to be purchased separately. It requires a commercial "
+"edition of ntopng. See the <a href='%s' target='_blank'> Checkmk docs</a> "
+"for detailed requirements."
 msgstr ""
 "<b>Nota:</b> Integrarea ntopng este o funcție suplimentară pentru care "
 "trebuie achiziționat separat un abonament suplimentar."

@@ -1307,9 +1307,12 @@ msgstr ""
 "<b>Négation : </b> faire en sorte que la règle s'applique à <b>tous sauf</b> "
 "les hôtes ci-dessus"
 
+#, fuzzy, python-format
 msgid ""
 "<b>Note:</b> The ntopng integration is an add-on feature for which a "
-"subscription add-on has to be purchased separately."
+"subscription add-on has to be purchased separately. It requires a commercial "
+"edition of ntopng. See the <a href='%s' target='_blank'> Checkmk docs</a> "
+"for detailed requirements."
 msgstr ""
 "<b>Note:</b> L'intégration de ntopng est une fonctionnalité complémentaire "
 "pour laquelle un add-on d'abonnement doit être acheté séparément."

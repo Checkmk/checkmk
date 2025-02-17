@@ -20,7 +20,6 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15sp3 sles15sp3 \
     git \
     make \
     python \
-    rrdtool-devel \
     sudo \
     vim \
     && zypper clean -a

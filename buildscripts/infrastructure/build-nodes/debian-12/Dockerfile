@@ -15,12 +15,10 @@ RUN apt-get update
 
 RUN apt-get install -y \
     git \
-    librrd-dev \
     libsasl2-dev \
     make \
     python3-dev \
     python3-pip \
-    rrdtool \
     strace \
     sudo \
     vim

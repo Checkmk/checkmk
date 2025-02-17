@@ -2,7 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any, assert_never, cast, get_args, Literal
 
 from cmk.utils.notify_types import HostEventType, ServiceEventType
@@ -57,7 +57,6 @@ from cmk.gui.quick_setup.v0_unstable.setups import (
 )
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     ActionId,
-    GeneralStageErrors,
     ParsedFormData,
     QuickSetupId,
     StageIndex,
@@ -263,19 +262,13 @@ def _event_choices(
     ]
 
 
-def _validate_at_least_one_event(
-    _quick_setup_id: QuickSetupId,
-    form_data: ParsedFormData,
-    _progress_logger: ProgressLogger,
-) -> GeneralStageErrors:
-    match form_data[FormSpecId("triggering_events")]:
-        case ("specific_events", data):
-            if not data:
-                return [
-                    "No triggering events selected. "
-                    "Please select at least one event to trigger the notification."
-                ]
-    return []
+def _validate_at_least_one_event(triggering_events: Mapping) -> None:
+    if not triggering_events:
+        raise ValidationError(
+            Message(
+                "No triggering events selected. Please select at least one event to trigger the notification."
+            )
+        )
 
 
 def triggering_events() -> QuickSetupStage:
@@ -336,6 +329,7 @@ def triggering_events() -> QuickSetupStage:
                                         ),
                                     ),
                                 },
+                                custom_validate=[_validate_at_least_one_event],
                             ),
                         ),
                         CascadingSingleChoiceElement(
@@ -361,7 +355,7 @@ def triggering_events() -> QuickSetupStage:
         actions=[
             QuickSetupStageAction(
                 id=ActionId("action"),
-                custom_validators=[_validate_at_least_one_event],
+                custom_validators=[],
                 recap=[custom_recap_formspec_triggering_events],
                 next_button_label=_("Next step: Specify host/services"),
             ),

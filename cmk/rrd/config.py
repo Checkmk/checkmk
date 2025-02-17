@@ -4,18 +4,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable, Mapping, Sequence
+from functools import lru_cache
 from pathlib import Path
 from typing import Literal, Protocol, TypedDict
 
 from cmk.ccc.store import load_object_from_file
 
-from cmk.utils.config_path import LATEST_CONFIG, VersionedConfigPath
+from cmk.utils.config_path import ConfigPath, LATEST_CONFIG, VersionedConfigPath
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
 RRD_CONFIG_FOLDER = "rrd_config"
 RRD_CONFIG_HOSTS_FOLDER = "hosts"
 CMC_LOG_RRDCREATION = "cmc_log_rrdcreation"
+
+
+@lru_cache
+def rrd_config_dir(config_path: ConfigPath) -> Path:
+    return Path(config_path) / RRD_CONFIG_FOLDER
+
+
+@lru_cache
+def rrd_config_hosts_dir(config_path: ConfigPath) -> Path:
+    return rrd_config_dir(config_path) / RRD_CONFIG_FOLDER / RRD_CONFIG_HOSTS_FOLDER
 
 
 class RRDObjectConfig(TypedDict):
@@ -51,16 +62,16 @@ class RRDConfigImpl(RRDReloadableConfig):
     def __init__(self) -> None:
         self._loaded_host_configs: dict[HostName, _RRDHostConfig] = {}
         self._config_base_path = VersionedConfigPath.current()
-        self._config_path = Path(self._config_base_path) / RRD_CONFIG_FOLDER
-        self._hosts_path = self._config_path / RRD_CONFIG_HOSTS_FOLDER
+        self._config_path = rrd_config_dir(self._config_base_path)
+        self._hosts_path = rrd_config_hosts_dir(self._config_base_path)
 
     def reload(self) -> None:
         new_config_base_path = VersionedConfigPath.current()
         if new_config_base_path != self._config_base_path:
             self._loaded_host_configs = {}
             self._config_base_path = new_config_base_path
-            self._config_path = Path(new_config_base_path) / RRD_CONFIG_FOLDER
-            self._hosts_path = self._config_path / RRD_CONFIG_HOSTS_FOLDER
+            self._config_path = rrd_config_dir(self._config_base_path)
+            self._hosts_path = rrd_config_hosts_dir(self._config_base_path)
 
     def rrd_config(self, hostname: HostName) -> RRDObjectConfig | None:
         self._conditionally_load_host_config(hostname)

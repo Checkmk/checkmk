@@ -49,25 +49,26 @@ rabbitmq_accepting_connections() {
     # "${RABBITMQ_DIAGNOSTICS}" check_port_connectivity --node "${RABBITMQ_NODENAME}"
 }
 
-await_rabbitmq_ready() {
-    for _N in $(seq 600); do
-        [ -s "${PIDFILE}" ] && rabbitmq_accepting_connections &>/dev/null && return 0
-        [ -e "${PIDFILE}" ] || break
-        sleep 0.1
-    done
-    return 1
-}
-
 await_process_start() {
     # Only write output in the end, otherwise we clobber the logfile.
     max=$(("${1}" * 10))
     # If the PIDFILE gets filled, rabbitmq started
     for N in $(seq "${max}"); do
-        [ $((N % 10)) -eq 0 ] && printf "."
-        [ -s "${PIDFILE}" ] && return 0
-        [ -e "${PIDFILE}" ] || break
+        [ -s "${PIDFILE}" ] && rabbitmq_accepting_connections &>/dev/null && break
+        [ -e "${PIDFILE}" ] || {
+            date +"%F %T.%N RabbitMQ failed to start (pidfile vanished)"
+            return 1
+        }
         sleep 0.1
     done
+
+    # once again, mostly to get the output of the diagnostics call
+    [ -s "${PIDFILE}" ] && rabbitmq_accepting_connections && {
+        date +"%F %T.%N RabbitMQ considered ready"
+        return 0
+    }
+
+    date +"%F %T.%N RabbitMQ failed to start (giving up after timeout)"
     return 1
 }
 
@@ -129,13 +130,6 @@ case "$1" in
         rm --force "${PIDFILE}" # should be removed by rabbitmq itself
         ;;
 
-    setup-monitoring)
-        await_rabbitmq_ready || exit_failure "RabbitMQ not ready after 60 seconds."
-        RABBITMQ_NODENAME="${RABBITMQ_NODENAME}" \
-            RABBITMQCTL="${RABBITMQCTL}" \
-            cmk-monitor-broker --setup
-        ;;
-
     start)
         printf "Starting rabbitmq..."
         if ! flock --nonblock "${PIDFILE}" --command :; then
@@ -153,7 +147,9 @@ case "$1" in
 
         # try for one minute to interpret the outcome
         if await_process_start 60 &>>"${INITLOG}"; then
-            nohup "${0}" "setup-monitoring" &>>"${INITLOG}" &
+            RABBITMQ_NODENAME="${RABBITMQ_NODENAME}" \
+                RABBITMQCTL="${RABBITMQCTL}" \
+                cmk-monitor-broker --setup &>>"${INITLOG}"
             exit_successfully "OK"
         fi
 

@@ -1042,10 +1042,6 @@ class DiscoveryPageRenderer:
             table.cell(_("Check parameters"), css=["expanding"])
             self._show_check_parameters(entry)
 
-        unchanged_labels: Labels = {}
-        changed_labels: Labels = {}
-        added_labels: Labels = {}
-        removed_labels: Labels = {}
         if entry.check_source == DiscoveryState.CHANGED:
             unchanged_labels, changed_labels, added_labels, removed_labels = (
                 self._calculate_changes(entry.old_labels, entry.new_labels)
@@ -1068,19 +1064,8 @@ class DiscoveryPageRenderer:
             )
 
         if self._options.show_discovered_labels:
-            table.cell(
-                _("Previously discovered")
-                if entry.check_source == DiscoveryState.CHANGED
-                else _("Discovered service labels")
-            )
+            table.cell(_("Active discovered service labels"))
             self._show_discovered_labels(entry.old_labels)
-
-            if entry.check_source == DiscoveryState.CHANGED:
-                table.cell(_("Newly discovered"))
-                self._show_discovered_labels(unchanged_labels)
-                self._show_discovered_labels(changed_labels, override_label_render_type="changed")
-                self._show_discovered_labels(added_labels, override_label_render_type="added")
-                self._show_discovered_labels(removed_labels, override_label_render_type="removed")
 
         if self._options.show_plugin_names:
             table.cell(
@@ -1124,15 +1109,18 @@ class DiscoveryPageRenderer:
                 ungettext("%d changed label", "%d changed labels", len(changed_labels))
                 % len(changed_labels)
             )
+            self._show_discovered_labels(changed_labels, override_label_render_type="changed")
         if added_labels:
             html.p(
                 ungettext("%d new label", "%d new labels", len(added_labels)) % len(added_labels)
             )
+            self._show_discovered_labels(added_labels, override_label_render_type="added")
         if removed_labels:
             html.p(
                 ungettext("%d removed label", "%d removed labels", len(removed_labels))
                 % len(removed_labels)
             )
+            self._show_discovered_labels(removed_labels, override_label_render_type="removed")
         if changed_parameters:
             html.p(
                 ungettext(

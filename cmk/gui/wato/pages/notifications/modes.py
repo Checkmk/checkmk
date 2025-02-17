@@ -1698,15 +1698,12 @@ class ModeTestNotifications(ModeNotifications):
             )
         )
         if dispatch_method := request.var("dispatch"):
-            notifications_sent = [
-                rule for rule in analyse_resulting_notifications if rule[1] == dispatch_method
-            ]
-            if notifications_sent:
-                contacts = [rule[0] for rule in notifications_sent]
-                unique_contacts = set(",".join(contacts).split(","))
-                notification_sent_count = len(unique_contacts)
-            else:
-                notification_sent_count = 0
+            unique_contacts = {
+                contact
+                for contact, method, *_ in analyse_resulting_notifications
+                if method == dispatch_method
+            }
+            notification_sent_count = len(unique_contacts)
             html.br()
             html.write_text_permissive(
                 _("%d %s %s.")

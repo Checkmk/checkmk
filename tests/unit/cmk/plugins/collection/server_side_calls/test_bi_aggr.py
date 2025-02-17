@@ -31,7 +31,7 @@ HOST_CONFIG = HostConfig(
                 "optional": {},
             },
             ActiveCheckCommand(
-                service_description="Aggr foo",
+                service_description="foo",
                 command_arguments=["-b", "some/path", "-a", "foo", "--use-automation-user"],
             ),
             id="required params",
@@ -45,7 +45,7 @@ HOST_CONFIG = HostConfig(
                 "optional": {},
             },
             ActiveCheckCommand(
-                service_description="Aggr hostname",
+                service_description="hostname",
                 command_arguments=[
                     "-b",
                     "some/path",

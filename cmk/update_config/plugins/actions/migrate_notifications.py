@@ -67,14 +67,17 @@ class MigrateNotifications(UpdateAction):
                 {},
             )
 
-            parameter_id = [
-                param_id
-                for param_id, params in parameters_per_method[method].items()
-                if params["parameter_properties"] == parameter  # type: ignore[comparison-overlap]
-            ]
+            parameter_id = next(
+                (
+                    param_id
+                    for param_id, params in parameters_per_method[method].items()
+                    if params["parameter_properties"] == parameter  # type: ignore[comparison-overlap]
+                ),
+                None,
+            )
 
-            if not parameter_id:
-                parameter_id = [sample_config.new_notification_parameter_id()]
+            if parameter_id is None:
+                parameter_id = sample_config.new_notification_parameter_id()
 
                 # Call with the following parameter...
                 if isinstance(parameter, list):
@@ -82,7 +85,7 @@ class MigrateNotifications(UpdateAction):
 
                 parameters_per_method[method].update(
                     {
-                        parameter_id[0]: self._get_data_for_disk(
+                        parameter_id: self._get_data_for_disk(
                             method=method,
                             parameter=parameter,  # type: ignore[arg-type]
                             nr=nr,
@@ -90,7 +93,7 @@ class MigrateNotifications(UpdateAction):
                     }
                 )
 
-            rule["notify_plugin"] = (method, parameter_id[0])
+            rule["notify_plugin"] = (method, parameter_id)
             updated_notification_rules.append(rule)
 
         NotificationParameterConfigFile().save(parameters_per_method)

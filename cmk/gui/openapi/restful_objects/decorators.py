@@ -324,7 +324,6 @@ class Endpoint:
         self.status_descriptions = self._dict(status_descriptions)
         self.tag_group = tag_group
         self.blacklist_in: list[EndpointTarget] = self._list(blacklist_in)
-        self.additional_status_codes = self._list(additional_status_codes)
         self.permissions_description = self._dict(permissions_description)
         self.valid_from = valid_from
         self.valid_until = valid_until
@@ -347,12 +346,22 @@ class Endpoint:
         self.permissions_required = permissions_required
         self._used_permissions: set[str] = set()
 
-        self._expected_status_codes = self.additional_status_codes.copy()
+        # TODO: should maintain set functionality
+        self._expected_status_codes = list(
+            identify_expected_status_codes(
+                method=self.method,
+                doc_category=self.tag_group,
+                content_type=self.content_type,
+                etag=self.etag,
+                has_response=not output_empty,
+                has_path_params=self.path_params is not None,
+                has_query_params=self.query_params is not None,
+                has_request_schema=self.request_schema is not None,
+                additional_status_codes=self._list(additional_status_codes),
+            )
+        )
 
-        if content_type == "application/json":
-            if self.response_schema is not None:
-                self._expected_status_codes.append(200)  # ok
-        else:
+        if content_type != "application/json":
             if output_empty:
                 raise ValueError(
                     f"output_emtpy=True not allowed on custom content_type "
@@ -363,7 +372,6 @@ class Endpoint:
                     "response_schema not allowed for content_type "
                     f"{self.content_type}. [{self.method} {self.path}]"
                 )
-            self._expected_status_codes.append(200)  # ok
 
         if self.method == "delete" and self.request_schema:
             warnings.warn(
@@ -372,28 +380,6 @@ class Endpoint:
                 "containing bodies. Consider using the POST method instead.",
                 UserWarning,
             )
-
-        self._expected_status_codes.append(406)
-
-        if self.tag_group == "Setup":
-            self._expected_status_codes.append(403)
-
-        if self.output_empty:
-            self._expected_status_codes.append(204)  # no content
-
-        if self.method in ("put", "post"):
-            self._expected_status_codes.append(400)  # bad request
-            self._expected_status_codes.append(415)  # unsupported media type
-
-        if self.path_params:
-            self._expected_status_codes.append(404)  # not found
-
-        if self.query_params or self.request_schema:
-            self._expected_status_codes.append(400)  # bad request
-
-        if self.etag in ("input", "both"):
-            self._expected_status_codes.append(412)  # precondition failed
-            self._expected_status_codes.append(428)  # precondition required
 
         for error_status_code in self.error_schemas:
             if error_status_code < 400:
@@ -1013,3 +999,43 @@ def _verify_parameters(path: str, path_schema: type[Schema] | None) -> None:
         raise ValueError(
             f"Params {missing_in_path!r} not used in path {path}. Found params: {path_params!r}"
         )
+
+
+def identify_expected_status_codes(
+    method: HTTPMethod,
+    doc_category: TagGroup,
+    content_type: str,
+    etag: ETagBehaviour | None,
+    has_response: bool,
+    has_path_params: bool,
+    has_query_params: bool,
+    has_request_schema: bool,
+    additional_status_codes: Sequence[StatusCodeInt],
+) -> set[StatusCodeInt]:
+    expected_status_codes = set(additional_status_codes)
+    expected_status_codes.add(406)
+
+    if content_type != "application/json" or (content_type == "application/json" and has_response):
+        expected_status_codes.add(200)
+
+    if not has_response:
+        expected_status_codes.add(204)
+
+    if doc_category == "Setup":
+        expected_status_codes.add(403)
+
+    if method in ("put", "post"):
+        expected_status_codes.add(400)  # bad request
+        expected_status_codes.add(415)  # unsupported media type
+
+    if has_path_params:
+        expected_status_codes.add(404)  # not found
+
+    if has_query_params or has_request_schema:
+        expected_status_codes.add(400)  # bad request
+
+    if etag in ("input", "both"):
+        expected_status_codes.add(412)  # precondition failed
+        expected_status_codes.add(428)  # precondition required
+
+    return expected_status_codes

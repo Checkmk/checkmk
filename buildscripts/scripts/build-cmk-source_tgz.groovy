@@ -62,11 +62,11 @@ def main() {
                     /// we should define dependency paths for build-cmk-distro-package
                     CUSTOM_GIT_REF: effective_git_ref,
                     VERSION: version,
-                    CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
                     DISABLE_CACHE: disable_cache,
                 ],
                 build_params_no_check: [
                     CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
+                    CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
                 ],
                 no_remove_others: true, // do not delete other files in the dest dir
                 no_venv: true,          // run ci-artifacts call without venv

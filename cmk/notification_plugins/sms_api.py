@@ -134,7 +134,7 @@ def _get_request_params_from_context(
     return RequestParameter(
         recipient=recipient,
         url=raw_context["PARAMETER_URL"],
-        verify="PARAMETER_IGNORE_SSL" in raw_context,
+        verify="PARAMETER_IGNORE_SSL" not in raw_context,
         proxies=deserialize_http_proxy_config(
             raw_context.get("PARAMETER_PROXY_URL")
         ).to_requests_proxies(),

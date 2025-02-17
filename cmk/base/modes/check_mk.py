@@ -2385,8 +2385,7 @@ def mode_check(
         options,
         args,
         active_check_handler=active_check_handler,
-        keepalive=False,
-        precompiled_host_check=False,
+        password_store_file=cmk.utils.password_store.pending_password_store_path(),
     )
 
 
@@ -2400,8 +2399,7 @@ def run_checking(
     args: list[str],
     *,
     active_check_handler: Callable[[HostName, str], object],
-    keepalive: bool,
-    precompiled_host_check: bool = False,
+    password_store_file: Path,
 ) -> ServiceState:
     file_cache_options = _handle_fetcher_options(options)
     try:
@@ -2438,11 +2436,7 @@ def run_checking(
         selected_sections=selected_sections,
         simulation_mode=config.simulation_mode,
         snmp_backend_override=snmp_backend_override,
-        password_store_file=(
-            cmk.utils.password_store.core_password_store_path(LATEST_CONFIG)
-            if precompiled_host_check
-            else cmk.utils.password_store.pending_password_store_path()
-        ),
+        password_store_file=password_store_file,
     )
     parser = CMKParser(
         config_cache.parser_factory(),
@@ -2463,7 +2457,7 @@ def run_checking(
         plugin_name="mk",
         is_cluster=hostname in hosts_config.clusters,
         snmp_backend=config_cache.get_snmp_backend(hostname),
-        keepalive=keepalive,
+        keepalive=False,
     )
 
     checks_result: Sequence[ActiveCheckResult] = []
@@ -2515,7 +2509,7 @@ def run_checking(
                     host_name=hostname,
                     perfdata_format=("pnp" if config.perfdata_format == "pnp" else "standard"),
                     show_perfdata=options.get("perfdata", False),
-                    keepalive=keepalive,
+                    keepalive=False,
                 ),
                 exit_spec=config_cache.exit_code_spec(hostname),
             )
@@ -2534,12 +2528,10 @@ def run_checking(
 
     check_result = ActiveCheckResult.from_subresults(*checks_result)
     active_check_handler(hostname, check_result.as_text())
-    if keepalive:
-        console.verbose_no_lf(check_result.as_text())
-    else:
-        with suppress(IOError):
-            sys.stdout.write(check_result.as_text() + "\n")
-            sys.stdout.flush()
+
+    with suppress(IOError):
+        sys.stdout.write(check_result.as_text() + "\n")
+        sys.stdout.flush()
     return check_result.state
 
 

@@ -12,6 +12,7 @@ import cmk.ccc.debug
 import cmk.utils.log
 from cmk.utils.config_path import LATEST_CONFIG
 from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.password_store import core_password_store_path
 
 from cmk.checkengine.submitters import get_submitter
 
@@ -108,8 +109,7 @@ def main() -> int:
             {},
             [CONFIG.hostname],
             active_check_handler=lambda *args: None,
-            keepalive=False,
-            precompiled_host_check=True,
+            password_store_file=core_password_store_path(LATEST_CONFIG),
         )
     except KeyboardInterrupt:
         with suppress(IOError):

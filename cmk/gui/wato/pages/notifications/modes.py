@@ -1702,7 +1702,9 @@ class ModeTestNotifications(ModeNotifications):
                 rule for rule in analyse_resulting_notifications if rule[1] == dispatch_method
             ]
             if notifications_sent:
-                notification_sent_count = len(notifications_sent[-1][0].split(","))
+                contacts = [rule[0] for rule in notifications_sent]
+                unique_contacts = set(",".join(contacts).split(","))
+                notification_sent_count = len(unique_contacts)
             else:
                 notification_sent_count = 0
             html.br()

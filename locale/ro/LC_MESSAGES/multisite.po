@@ -105,6 +105,12 @@ msgstr ""
 "Identificatorul trebuie să fie unic în cadrul unui grup de VALUETYPES."
 
 #, python-format
+msgid ""
+" Enforcing two factor for the %s role will terminate any current sessions "
+"for users who have this role but have not enabled any two factor."
+msgstr ""
+
+#, python-format
 msgid " Finished at: %s."
 msgstr " Finalizat la: %s."
 
@@ -1448,9 +1454,12 @@ msgstr ""
 "<b>Negare:</b> face regula să se aplice pentru <b>toate elementele mai "
 "puțin</b> cei de sus"
 
+#, fuzzy, python-format
 msgid ""
 "<b>Note:</b> The ntopng integration is an add-on feature for which a "
-"subscription add-on has to be purchased separately."
+"subscription add-on has to be purchased separately. It requires a commercial "
+"edition of ntopng. See the <a href='%s' target='_blank'> Checkmk docs</a> "
+"for detailed requirements."
 msgstr ""
 "<b>Nota:</b> Integrarea ntopng este o funcție suplimentară pentru care "
 "trebuie achiziționat separat un abonament suplimentar."
@@ -8669,6 +8678,22 @@ msgstr "Baze de date Azure"
 
 msgid "Azure Load Balancer Health"
 msgstr "Sănătatea Azure Load Balancer"
+
+#, fuzzy
+msgid "Azure SQL database CPU usage"
+msgstr "Baze de date Azure"
+
+#, fuzzy
+msgid "Azure SQL database deadlocks"
+msgstr "Conexiuni la baza de date"
+
+#, fuzzy
+msgid "Azure SQL database storage"
+msgstr "Baze de date Azure"
+
+#, fuzzy
+msgid "Azure SQL database throughput"
+msgstr "Unitatea de debit a bazei de date"
 
 msgid "Azure Storage"
 msgstr "Azure Storage"
@@ -22724,6 +22749,14 @@ msgstr "Forța de muncă arată mai mult"
 msgid "Enforce two factor authentication"
 msgstr "Îndepărtați autentificarea cu doi factori"
 
+#, fuzzy, python-format
+msgid "Enforce two factor on %s role"
+msgstr "Îndepărtați autentificarea cu doi factori"
+
+#, fuzzy, python-format
+msgid "Enforce two factor on all users with %s role?"
+msgstr "Îndepărtați autentificarea cu doi factori"
+
 #, fuzzy
 msgid "Enforced service"
 msgstr "Servicii executate silit"
@@ -31618,9 +31651,10 @@ msgstr ""
 "raportul pentru a fi generat în mod asincron într-o sarcină de fundal."
 
 msgid ""
-"If set, all users with this role will be required to setup two factor "
-"authentication. 'Enforce two factor authentication' in global settings will "
-"override this setting."
+"If set enabled from a disabled state, all users with this role will be "
+"required to setup two factor authentication and will be logout out of any "
+"current sessions if they have not enabled two factor. 'Enforce two factor "
+"authentication' in global settings will override this setting."
 msgstr ""
 
 #, fuzzy
@@ -42954,6 +42988,10 @@ msgstr "Stat nou: %s"
 msgid "New view"
 msgstr "Vedere nouă"
 
+#, python-format
+msgid "New: %r"
+msgstr ""
+
 msgid "Newer events"
 msgstr "Evenimente mai noi"
 
@@ -45358,6 +45396,12 @@ msgstr "Vechea setare"
 #, python-format
 msgid "Old setting: \"%s\". Choose that in the new ruleset."
 msgstr "Setare veche: \"%s\". Alegeți asta în noul set de reguli."
+
+#, python-format
+msgid ""
+"Old: %r\n"
+"New: %r"
+msgstr ""
 
 msgid "Older events"
 msgstr "Evenimente mai vechi"
@@ -52855,6 +52899,10 @@ msgstr "A fost eliminată conexiunea '%s'"
 #, python-format
 msgid "Removed unpackaged extension file %s: %s"
 msgstr "A fost eliminat fișierul de extensie neambalat %s: %s."
+
+#, fuzzy, python-format
+msgid "Removed: %r"
+msgstr "Eliminat: %s"
 
 #, python-format
 msgid "Removed: %s"
@@ -71730,6 +71778,32 @@ msgstr ""
 "utilizează Checkmk Micro Core cu SMART Ping și doriți să urmăriți totuși "
 "datele de performanță ale PING-ului către anumite gazde."
 
+#, fuzzy
+msgid "This ruleset allows you to configure levels for the database CPU usage"
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
+#, fuzzy
+msgid "This ruleset allows you to configure levels for the database throughput"
+msgstr ""
+"Acest set de reguli vă permite să configurați o verificare SSH pentru o gazdă"
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for the deadlocks in the database"
+msgstr ""
+"Această regulă vă permite să configurați limite pentru contoarele de "
+"deadlocks și lockwaits ale unui DB2."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for the used storage space in "
+"percent"
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
 msgid ""
 "This ruleset allows you to install executable scripts on your target "
 "machines that can be called by the Checkmk server via an alert handler. That "
@@ -79434,6 +79508,10 @@ msgstr "Spațiu utilizat în sistemele de fișiere"
 msgid "Used space in filesystems via SNMP"
 msgstr "Spațiul utilizat în sistemele de fișiere prin SNMP"
 
+#, fuzzy
+msgid "Used storage"
+msgstr "Spațiu de depozitare utilizat"
+
 msgid "Used storage in percent"
 msgstr "Stocarea utilizată în procente"
 
@@ -81493,6 +81571,10 @@ msgstr "Prag de avertizare"
 msgid "Warning threshold must be smaller than maximum session duration"
 msgstr ""
 "Pragul de avertizare trebuie să fie mai mic decât durata maximă a sesiunii"
+
+#, fuzzy
+msgid "Warning:"
+msgstr "Avertisment: "
 
 msgid "Warning: "
 msgstr "Avertisment: "

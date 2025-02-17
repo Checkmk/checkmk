@@ -107,6 +107,12 @@ msgstr ""
 "identifier moet uniek zijn binnen een groep van WAARDEN."
 
 #, python-format
+msgid ""
+" Enforcing two factor for the %s role will terminate any current sessions "
+"for users who have this role but have not enabled any two factor."
+msgstr ""
+
+#, python-format
 msgid " Finished at: %s."
 msgstr " Klaar op: %s."
 
@@ -1437,9 +1443,12 @@ msgstr ""
 "<b>Sluit uit:</b> pas de regel toe voor <b>alles behalve</b> de bovenstaande "
 "hosts"
 
+#, fuzzy, python-format
 msgid ""
 "<b>Note:</b> The ntopng integration is an add-on feature for which a "
-"subscription add-on has to be purchased separately."
+"subscription add-on has to be purchased separately. It requires a commercial "
+"edition of ntopng. See the <a href='%s' target='_blank'> Checkmk docs</a> "
+"for detailed requirements."
 msgstr ""
 "<b>Opmerking:</b> De ntopng integratie is een add-on feature waarvoor een "
 "subscriptie add-on apart gekocht moet worden."
@@ -8672,6 +8681,22 @@ msgstr "Azure Databases"
 
 msgid "Azure Load Balancer Health"
 msgstr "Gezondheid Azure Load Balancer"
+
+#, fuzzy
+msgid "Azure SQL database CPU usage"
+msgstr "Azure Databases"
+
+#, fuzzy
+msgid "Azure SQL database deadlocks"
+msgstr "Databaseverbindingen"
+
+#, fuzzy
+msgid "Azure SQL database storage"
+msgstr "Azure Databases"
+
+#, fuzzy
+msgid "Azure SQL database throughput"
+msgstr "Database doorvoer eenheid"
 
 msgid "Azure Storage"
 msgstr "Azure Opslag"
@@ -22690,6 +22715,14 @@ msgstr "Handhaving toon meer"
 msgid "Enforce two factor authentication"
 msgstr "Twee-factor authenticatie verwijderen"
 
+#, fuzzy, python-format
+msgid "Enforce two factor on %s role"
+msgstr "Twee-factor authenticatie verwijderen"
+
+#, fuzzy, python-format
+msgid "Enforce two factor on all users with %s role?"
+msgstr "Twee-factor authenticatie verwijderen"
+
 #, fuzzy
 msgid "Enforced service"
 msgstr "Afgedwongen diensten"
@@ -31580,9 +31613,10 @@ msgstr ""
 "achtergrondtaak."
 
 msgid ""
-"If set, all users with this role will be required to setup two factor "
-"authentication. 'Enforce two factor authentication' in global settings will "
-"override this setting."
+"If set enabled from a disabled state, all users with this role will be "
+"required to setup two factor authentication and will be logout out of any "
+"current sessions if they have not enabled two factor. 'Enforce two factor "
+"authentication' in global settings will override this setting."
 msgstr ""
 
 #, fuzzy
@@ -42881,6 +42915,10 @@ msgstr "Job staat: %s"
 msgid "New view"
 msgstr "Nieuw uitzicht"
 
+#, python-format
+msgid "New: %r"
+msgstr ""
+
 msgid "Newer events"
 msgstr "Nieuwere evenementen"
 
@@ -45301,6 +45339,12 @@ msgstr "Oude instelling"
 #, python-format
 msgid "Old setting: \"%s\". Choose that in the new ruleset."
 msgstr "Oude instelling: \"%s\". Kies dat in de nieuwe regelset."
+
+#, python-format
+msgid ""
+"Old: %r\n"
+"New: %r"
+msgstr ""
 
 msgid "Older events"
 msgstr "Oudere evenementen"
@@ -52792,6 +52836,10 @@ msgstr "Verwijderde verbinding %s"
 #, python-format
 msgid "Removed unpackaged extension file %s: %s"
 msgstr "Uitgepakt extensiebestand %s verwijderd: %s"
+
+#, fuzzy, python-format
+msgid "Removed: %r"
+msgstr "Verwijderd: %s"
 
 #, python-format
 msgid "Removed: %s"
@@ -71489,6 +71537,31 @@ msgstr ""
 "wanneer u de Checkmk Micro Core met SMART Ping gebruikt en u toch "
 "prestatiegegevens van de PING naar sommige hosts wilt bijhouden."
 
+#, fuzzy
+msgid "This ruleset allows you to configure levels for the database CPU usage"
+msgstr ""
+"Deze regel staat je toe om bloat levels te configureren voor een databases "
+"tablespace en indexspace."
+
+#, fuzzy
+msgid "This ruleset allows you to configure levels for the database throughput"
+msgstr "Met deze regelset kunt u een SSH-controle configureren voor een host"
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for the deadlocks in the database"
+msgstr ""
+"Met deze regel kunt u limieten configureren voor de deadlocks en lockwaits "
+"tellers van een DB2."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for the used storage space in "
+"percent"
+msgstr ""
+"Deze regel staat je toe om bloat levels te configureren voor een databases "
+"tablespace en indexspace."
+
 msgid ""
 "This ruleset allows you to install executable scripts on your target "
 "machines that can be called by the Checkmk server via an alert handler. That "
@@ -79253,6 +79326,10 @@ msgstr "Gebruikte ruimte in bestandssystemen"
 msgid "Used space in filesystems via SNMP"
 msgstr "Gebruikte ruimte in bestandssystemen via SNMP"
 
+#, fuzzy
+msgid "Used storage"
+msgstr "Gebruikte opslagruimte"
+
 msgid "Used storage in percent"
 msgstr "Gebruikte opslag in procenten"
 
@@ -81315,6 +81392,10 @@ msgstr "Waarschuwingsdrempel"
 
 msgid "Warning threshold must be smaller than maximum session duration"
 msgstr ""
+
+#, fuzzy
+msgid "Warning:"
+msgstr "Waarschuwingen:"
 
 #, fuzzy
 msgid "Warning: "

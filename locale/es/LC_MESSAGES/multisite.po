@@ -105,6 +105,12 @@ msgstr ""
 "VALORES."
 
 #, python-format
+msgid ""
+" Enforcing two factor for the %s role will terminate any current sessions "
+"for users who have this role but have not enabled any two factor."
+msgstr ""
+
+#, python-format
 msgid " Finished at: %s."
 msgstr " Finalizado en: %s."
 
@@ -1430,9 +1436,12 @@ msgstr ""
 "<b>Negar:</b> hacer que la regla se aplique a <b>todos menos</b> los hosts "
 "anteriores"
 
+#, fuzzy, python-format
 msgid ""
 "<b>Note:</b> The ntopng integration is an add-on feature for which a "
-"subscription add-on has to be purchased separately."
+"subscription add-on has to be purchased separately. It requires a commercial "
+"edition of ntopng. See the <a href='%s' target='_blank'> Checkmk docs</a> "
+"for detailed requirements."
 msgstr ""
 "<b>Nota:</b> La integración ntopng es una función complementaria para lo "
 "cual se debe comprar un complemento de suscripción por separado."
@@ -8742,6 +8751,22 @@ msgstr "Bases de datos Azure"
 
 msgid "Azure Load Balancer Health"
 msgstr "Salud del balanceador de carga de Azure"
+
+#, fuzzy
+msgid "Azure SQL database CPU usage"
+msgstr "Bases de datos Azure"
+
+#, fuzzy
+msgid "Azure SQL database deadlocks"
+msgstr "Conexiones de bases de datos"
+
+#, fuzzy
+msgid "Azure SQL database storage"
+msgstr "Bases de datos Azure"
+
+#, fuzzy
+msgid "Azure SQL database throughput"
+msgstr "Unidad de rendimiento de la base de datos"
 
 msgid "Azure Storage"
 msgstr "Almacenamiento de Azure"
@@ -22867,6 +22892,14 @@ msgstr "Hacer cumplir mostrar más"
 msgid "Enforce two factor authentication"
 msgstr "Eliminar la autenticación de dos factores"
 
+#, fuzzy, python-format
+msgid "Enforce two factor on %s role"
+msgstr "Eliminar la autenticación de dos factores"
+
+#, fuzzy, python-format
+msgid "Enforce two factor on all users with %s role?"
+msgstr "Eliminar la autenticación de dos factores"
+
 #, fuzzy
 msgid "Enforced service"
 msgstr "Servicios obligatorios"
@@ -31827,9 +31860,10 @@ msgstr ""
 "fondo."
 
 msgid ""
-"If set, all users with this role will be required to setup two factor "
-"authentication. 'Enforce two factor authentication' in global settings will "
-"override this setting."
+"If set enabled from a disabled state, all users with this role will be "
+"required to setup two factor authentication and will be logout out of any "
+"current sessions if they have not enabled two factor. 'Enforce two factor "
+"authentication' in global settings will override this setting."
 msgstr ""
 
 #, fuzzy
@@ -43230,6 +43264,10 @@ msgstr "Estado del trabajo: %s"
 msgid "New view"
 msgstr "Nueva vista"
 
+#, python-format
+msgid "New: %r"
+msgstr ""
+
 msgid "Newer events"
 msgstr "Nuevos eventos"
 
@@ -45673,6 +45711,12 @@ msgstr "Antiguo escenario"
 msgid "Old setting: \"%s\". Choose that in the new ruleset."
 msgstr ""
 "Antigua configuración: \"%s\". Elija eso en el nuevo conjunto de reglas."
+
+#, python-format
+msgid ""
+"Old: %r\n"
+"New: %r"
+msgstr ""
 
 msgid "Older events"
 msgstr "Eventos antiguos"
@@ -53223,6 +53267,10 @@ msgstr "Conexión eliminada %s"
 #, python-format
 msgid "Removed unpackaged extension file %s: %s"
 msgstr "Se ha eliminado el archivo de extensión sin empaquetar %s: %s"
+
+#, fuzzy, python-format
+msgid "Removed: %r"
+msgstr "Eliminado: %s"
 
 #, python-format
 msgid "Removed: %s"
@@ -72118,6 +72166,31 @@ msgstr ""
 "Micro Core con SMART Ping y se desea realizar un seguimiento de los datos de "
 "rendimiento del PING a algunos hosts, no obstante."
 
+#, fuzzy
+msgid "This ruleset allows you to configure levels for the database CPU usage"
+msgstr ""
+"Esta regla permite configurar los niveles de bloat para el tablespace y el "
+"indexspace de una base de datos."
+
+#, fuzzy
+msgid "This ruleset allows you to configure levels for the database throughput"
+msgstr "Este rulset le permite configurar una comprobación SSH para un host"
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for the deadlocks in the database"
+msgstr ""
+"Esta regla permite configurar los límites de los contadores de deadlocks y "
+"lockwaits de un DB2."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for the used storage space in "
+"percent"
+msgstr ""
+"Esta regla permite configurar los niveles de bloat para el tablespace y el "
+"indexspace de una base de datos."
+
 msgid ""
 "This ruleset allows you to install executable scripts on your target "
 "machines that can be called by the Checkmk server via an alert handler. That "
@@ -79930,6 +80003,10 @@ msgstr "Espacio utilizado en los sistemas de archivos"
 msgid "Used space in filesystems via SNMP"
 msgstr "Espacio utilizado en los sistemas de archivos a través de SNMP"
 
+#, fuzzy
+msgid "Used storage"
+msgstr "Espacio de almacenamiento utilizado"
+
 msgid "Used storage in percent"
 msgstr "Almacenamiento usado en porcentaje"
 
@@ -82005,6 +82082,10 @@ msgstr "Umbral de advertencia"
 msgid "Warning threshold must be smaller than maximum session duration"
 msgstr ""
 "El umbral de advertencia debe ser inferior a la duración máxima de la sesión"
+
+#, fuzzy
+msgid "Warning:"
+msgstr "Advertencias:"
 
 #, fuzzy
 msgid "Warning: "

@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import contextlib
+import json
 import logging
 import re
 import signal
 import subprocess
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from types import FrameType
 from typing import IO
@@ -170,3 +171,38 @@ def p2p_connection(central_site: Site, remote_site: Site, remote_site_2: Site) -
     finally:
         central_site.openapi.broker_connections.delete(connection_id)
         central_site.openapi.changes.activate_and_wait_for_completion()
+
+
+def _rabbitmq_status_vhost(site: Site, vhost: str) -> str:
+    status_commands = {
+        "Queues": ["rabbitmqctl", "list_queues", "-p", vhost, "--formatter", "json"],
+        "Bindings": ["rabbitmqctl", "list_bindings", "-p", vhost, "--formatter", "json"],
+        "Consumers": ["rabbitmqctl", "list_consumers", "--formatter", "json"],
+        "Listeners": ["rabbitmq-diagnostics", "listeners", "--formatter", "json"],
+        "Shovel Status": ["rabbitmqctl", "shovel_status", "--formatter", "json"],
+    }
+    status_info = "\n".join(
+        f"{name}: {site.run(cmd).stdout}" for name, cmd in status_commands.items()
+    )
+    return f"Vhost '{vhost}' status:\n{status_info}\n"
+
+
+@contextlib.contextmanager
+def rabbitmq_info_on_failure(sites: Sequence[Site]) -> Iterator[None]:
+    try:
+        yield
+    except (AssertionError, RuntimeError) as e:
+        error_message = f"{e}\n"
+        for site in sites:
+            error_message += f"\nSite {site.id}\n"
+            try:
+                error_message += "".join(
+                    _rabbitmq_status_vhost(site, vhost_raw["name"])
+                    for vhost_raw in json.loads(
+                        site.run(["rabbitmqctl", "list_vhosts", "--formatter", "json"]).stdout
+                    )
+                )
+            except Exception as exc:
+                error_message = f"Could not determine rabbitmq status: {exc}\n"
+                continue
+        raise type(e)(error_message) from e

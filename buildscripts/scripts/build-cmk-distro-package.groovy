@@ -99,7 +99,7 @@ def main() {
 
         inside_container_minimal(safe_branch_name: safe_branch_name) {
             smart_stage(name: 'Fetch agent binaries', condition: !params.FAKE_WINDOWS_ARTIFACTS) {
-                package_helper.provide_agent_binaries(version, edition, disable_cache);
+                package_helper.provide_agent_binaries(version, edition, disable_cache, params.CIPARAM_BISECT_COMMENT);
             }
 
             smart_stage(name: 'Fake agent binaries', condition: params.FAKE_WINDOWS_ARTIFACTS) {

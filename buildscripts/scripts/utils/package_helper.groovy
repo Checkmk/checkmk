@@ -23,7 +23,7 @@ def branch_base_folder(with_testing_prefix) {
     return project_name_components[checkmk_index..checkmk_index + 1].join('/');
 }
 
-def provide_agent_binaries(version, edition, disable_cache) {
+def provide_agent_binaries(version, edition, disable_cache, bisect_comment) {
     // This _should_ go to an externally maintained file (single point of truth), see
     // https://jira.lan.tribe29.com/browse/CMK-13857
     // and https://review.lan.tribe29.com/c/check_mk/+/67387
@@ -125,6 +125,9 @@ def provide_agent_binaries(version, edition, disable_cache) {
             build_params: [
                 DISABLE_CACHE: disable_cache,
                 VERSION: version,
+            ],
+            build_params_no_check: [
+                CIPARAM_BISECT_COMMENT: bisect_comment,
             ],
             dependency_paths: details.dependency_paths,
             no_venv: true,          // run ci-artifacts call without venv

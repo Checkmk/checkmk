@@ -197,6 +197,11 @@ def _load_plugins(logger: logging.Logger) -> None:
             if edition(paths.omd_root) is Edition.CRE
             else load_plugins_with_exceptions("cmk.update_config.cee.plugins.actions")
         ),
+        (
+            load_plugins_with_exceptions("cmk.update_config.cme.plugins.actions")
+            if edition(paths.omd_root) is Edition.CME
+            else []
+        ),
     ):
         logger.error("Error in action plug-in %s: %s\n", plugin, exc)
         if debug.enabled():

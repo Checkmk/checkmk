@@ -6,15 +6,8 @@ load("//:bazel_variables.bzl", "edition_deps")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 
 genrule(
-    name = "_prune_requirements_in",
-    srcs = ["//cmk:requirements.txt"],
-    outs = ["requirements_pruned.txt"],
-    cmd = "cat $< | grep -v -e ^rrdtool > $@",
-)
-
-genrule(
     name = "_pin_requirements",
-    srcs = [":requirements_pruned.txt"],
+    srcs = ["//cmk:requirements.txt"],
     outs = ["requirements_pinned.txt"],
     cmd = "cat $< <(echo protobuf==%s) > $@" % PROTOBUF_PYTHON_VERSION,
     visibility = ["//:__subpackages__"],

@@ -19,7 +19,6 @@ BAZEL_CMD ?= $(realpath $(SCRIPTS)/run-bazel.sh)
 SHELLCHECK := $(BAZEL_CMD) run --ui_event_filters=-info,-stderr //bazel/tools:shellcheck_bin --
 SHFMT := $(BAZEL_CMD) run --ui_event_filters=-info,-stderr //bazel/tools:shfmt_bin --
 TAPLO := $(BAZEL_CMD) run --ui_event_filters=-info,-stderr //bazel/tools:taplo_bin --
-FIND_INVALID_TEST_FILES := $(SCRIPTS)/find-invalid-autogen-files
 ADDITIONAL_MYPY_ARGS := $(JUNIT_XML)
 # Please note: We can currently not include defines.make as it would override
 # the EDITIONS environment variable handed over by some jenkins test jobs.
@@ -172,13 +171,13 @@ $(foreach VERS,$(filter 2.%,$(AGENT_PLUGIN_PYTHON_VERSIONS)),test-agent-plugin-u
 
 $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker):
 	@if [ -z ${DOCKER_REGISTRY_NO_HTTPS} ]; then \
-  	   echo "DOCKER_REGISTRY_NO_HTTPS is not set, please export this environment variable during make target call."; \
-  	   echo "Hint: export DOCKER_REGISTRY_NO_HTTPS=artifacts.lan.tribe29.com:4000"; \
-  	   exit 1; \
-  	fi; \
-	# Clean up auto-generated files, which do not have a corresponding source file anymore
-	flock ./agent-plugin-unit $(FIND_INVALID_TEST_FILES)
-	# Recursive Makefiles suck big time...
+	   echo "DOCKER_REGISTRY_NO_HTTPS is not set, please export this environment variable during make target call."; \
+	   echo "Hint: export DOCKER_REGISTRY_NO_HTTPS=artifacts.lan.tribe29.com:4000"; \
+	   exit 1; \
+	fi
+	: # Clean up auto-generated files, which do not have a corresponding source file anymore
+	flock ./agent-plugin-unit scripts/remove-stale-autogen-files
+	: # Recursive Makefiles suck big time...
 	flock ../agents/plugins $(MAKE) -C ../agents/plugins
 	PYTHON_VERSION="$(patsubst test-agent-plugin-unit-py%-docker,%,$@)" ; \
 	case $$PYTHON_VERSION in \

@@ -122,7 +122,7 @@ test('FormDictionary enable element, check frontend validators', async () => {
   screen.getByText('String length must be between 1 and 20')
 })
 
-test('FormDictionary render backend validation message', async () => {
+test('FormDictionary render backend validation message of children', async () => {
   render(FormEdit, {
     props: {
       spec,
@@ -134,6 +134,18 @@ test('FormDictionary render backend validation message', async () => {
   })
 
   await screen.findByDisplayValue('other_value')
+
+  screen.getByText('Backend error message')
+})
+
+test('FormDictionary renders its own backend validation message', async () => {
+  render(FormEdit, {
+    props: {
+      spec,
+      data: { bar: 'some_value' },
+      backendValidation: [{ location: [], message: 'Backend error message', invalid_value: null }]
+    }
+  })
 
   screen.getByText('Backend error message')
 })

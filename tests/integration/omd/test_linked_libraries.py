@@ -12,8 +12,6 @@ from collections.abc import Collection, Iterator
 from pathlib import Path
 from typing import NamedTuple
 
-import pytest
-
 from tests.testlib.site import Site
 
 ldd_regex = re.compile(r"(\S+) => (\S+) \(0x[0-9a-f]+\)")
@@ -107,7 +105,6 @@ def _is_in_exclude_list(file: Path, exclusions: Collection[str]) -> bool:
     return any(str(file).endswith(path) for path in exclusions)
 
 
-@pytest.mark.skip(reason="fails unexpected at the moment - CMK-15651")
 def test_linked_libraries(site: Site) -> None:
     """
     A test to sanity check linked libraries in the installation.
@@ -144,6 +141,17 @@ def test_linked_libraries(site: Site) -> None:
         "var/tmp/xinetd",
         # Actually fixed, but not here
         "lib/nagios/plugins/check_nrpe",
+        # system kerberos links on certain distros to openssl 1, see CMK-15651
+        "lib/python3.12/site-packages/activedirectory/protocol/krb5.cpython-312-x86_64-linux-gnu.so",
+        # ToDo: Pymsql links on certain distros to openssl 1, see CMK-21906
+        "lib/python3.12/site-packages/pymssql/_mssql.cpython-312-x86_64-linux-gnu.so",
+        "lib/python3.12/site-packages/pymssql/_pymssql.cpython-312-x86_64-linux-gnu.so",
+        # ToDo: _ldap links on certain distros to openssl 1, see CMK-21908
+        "lib/python3.12/site-packages/_ldap.cpython-312-x86_64-linux-gnu.so",
+        # ToDo: SSLeay links on certain distros to openssl 1, see CMK-21910
+        "lib/perl5/lib/perl5/x86_64-linux-thread-multi/auto/Crypt/SSLeay/SSLeay.so",
+        # ToDo: Psycog 2 links on certain distros to openssl 1, see CMK-21909
+        "lib/python3.12/site-packages/psycopg2/_psycopg.cpython-312-x86_64-linux-gnu.so",
     ]
 
     for file in files:

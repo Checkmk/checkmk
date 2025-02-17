@@ -7,24 +7,24 @@ from cmk.graphing.v1 import Title
 from cmk.graphing.v1.graphs import Graph
 from cmk.graphing.v1.metrics import Color, DecimalNotation, Metric, StrictPrecision, Unit
 
-EXECUTOR_UNIT = Unit(DecimalNotation("executors"), StrictPrecision(0))
+_UNIT_COUNT = Unit(DecimalNotation(""), StrictPrecision(0))
 
 metric_jenkins_num_executors = Metric(
     name="jenkins_num_executors",
     title=Title("Total number of executors"),
-    unit=EXECUTOR_UNIT,
+    unit=_UNIT_COUNT,
     color=Color.WHITE,
 )
 metric_jenkins_busy_executors = Metric(
     name="jenkins_busy_executors",
     title=Title("Number of busy executors"),
-    unit=EXECUTOR_UNIT,
+    unit=_UNIT_COUNT,
     color=Color.YELLOW,
 )
 metric_jenkins_idle_executors = Metric(
     name="jenkins_idle_executors",
     title=Title("Number of idle executors"),
-    unit=EXECUTOR_UNIT,
+    unit=_UNIT_COUNT,
     color=Color.GREEN,
 )
 

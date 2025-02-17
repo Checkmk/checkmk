@@ -14,8 +14,6 @@ from cmk.graphing.v1.metrics import (
     Unit,
 )
 
-EXECUTOR_UNIT = Unit(DecimalNotation("executors"), StrictPrecision(0))
-
 metric_jenkins_job_score = Metric(
     name="jenkins_job_score",
     title=Title("Job score"),

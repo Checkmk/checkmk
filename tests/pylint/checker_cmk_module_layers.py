@@ -616,6 +616,20 @@ def _allow_for_cmkpasswd(
     )
 
 
+def _is_allowed_for_rrd(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return any(
+        (
+            _in_component(imported=imported, component=Component("cmk.rrd")),
+            _in_component(imported=imported, component=Component("cmk.ccc")),
+            _in_component(imported=imported, component=Component("cmk.utils")),
+        )
+    )
+
+
 _COMPONENTS = (
     (Component("agents.special"), _is_allowed_for_special_agent_executable),
     (Component("tests.unit.cmk"), _allow_default_plus_component_under_test),
@@ -690,6 +704,7 @@ _COMPONENTS = (
     (Component("cmk.active_checks"), _is_default_allowed_import),
     (Component("cmk.cee.robotmk"), _allowed_for_robotmk),
     (Component("cmk.diskspace"), _is_allowed_for_diskspace),
+    (Component("cmk.rrd"), _is_allowed_for_rrd),
 )
 
 _EXPLICIT_FILE_TO_COMPONENT = {

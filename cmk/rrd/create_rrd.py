@@ -10,9 +10,9 @@ from typing import NoReturn
 
 from cmk.ccc.exceptions import MKTerminate
 
-from .config import RRDConfig  # pylint: disable=cmk-module-layer-violation
-from .interface import RRDInterface  # pylint: disable=cmk-module-layer-violation
-from .rrd import RRDCreator  # pylint: disable=cmk-module-layer-violation
+from .config import RRDConfig
+from .interface import RRDInterface
+from .rrd import RRDCreator
 
 
 # register SIGINT handler for consistent CTRL+C handling

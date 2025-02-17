@@ -27,7 +27,7 @@ from cmk.utils.notify_types import (
 from cmk.utils.paths import configuration_lockfile, site_cert_file
 from cmk.utils.tags import sample_tag_config, TagConfig
 
-from cmk.gui.groups import AllGroupSpecs, GroupName
+from cmk.gui.groups import GroupSpec
 from cmk.gui.log import logger
 from cmk.gui.userdb import create_cmk_automation_user
 from cmk.gui.watolib.config_domain_name import (
@@ -36,7 +36,6 @@ from cmk.gui.watolib.config_domain_name import (
 )
 from cmk.gui.watolib.config_domains import ConfigDomainCACertificates
 from cmk.gui.watolib.global_settings import save_global_settings
-from cmk.gui.watolib.groups_io import save_group_information
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.notifications import (
     NotificationParameterConfigFile,
@@ -46,6 +45,7 @@ from cmk.gui.watolib.rulesets import FolderRulesets
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
 
+from ._abc import SampleConfigGeneratorABCGroups
 from ._constants import SHIPPED_RULES, USE_NEW_DESCRIPTIONS_FOR_SETTING
 
 
@@ -154,6 +154,13 @@ def get_default_notification_rule() -> EventRule:
     )
 
 
+class SampleConfigGeneratorGroups(SampleConfigGeneratorABCGroups):
+    def _all_group_spec(self) -> GroupSpec:
+        return {
+            "alias": "Everything",
+        }
+
+
 class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
     @classmethod
     def ident(cls) -> str:
@@ -161,16 +168,10 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
 
     @classmethod
     def sort_index(cls) -> int:
-        return 10
+        return 11
 
     def generate(self) -> None:
         save_global_settings(self._initial_global_settings(), skip_cse_edition_check=True)
-
-        # A contact group for all hosts and services
-        groups: AllGroupSpecs = {
-            "contact": {GroupName("all"): {"alias": "Everything"}},
-        }
-        save_group_information(groups)
 
         self._initialize_tag_config()
 

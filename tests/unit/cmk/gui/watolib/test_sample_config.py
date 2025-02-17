@@ -5,9 +5,12 @@
 
 from pathlib import Path
 
+import pytest
+
 from cmk.utils.paths import omd_root
 
-from cmk.gui.watolib.sample_config import init_wato_datastructures
+from cmk.gui.watolib.groups_io import load_contact_group_information
+from cmk.gui.watolib.sample_config import init_wato_datastructures, SampleConfigGeneratorGroups
 
 
 def test_init_wato_data_structures(request_context: None) -> None:
@@ -18,3 +21,13 @@ def test_init_wato_data_structures(request_context: None) -> None:
     assert not Path(omd_root, "var/check_mk/web/automation").exists()
     assert Path(omd_root, "var/check_mk/web/agent_registration").exists()
     assert Path(omd_root, "var/check_mk/web/agent_registration/automation.secret").exists()
+
+
+@pytest.mark.usefixtures("request_context")
+def test_sample_config_gen_groups() -> None:
+    SampleConfigGeneratorGroups().generate()
+    assert load_contact_group_information() == {
+        "all": {
+            "alias": "Everything",
+        },
+    }

@@ -378,6 +378,7 @@ def enable_2fa(site: Site, username: str) -> Iterator[None]:
         site.delete_file(f"var/check_mk/web/{username}/two_factor_credentials.mk")
 
 
+@skip_if_saas_edition  # CMK-21865
 def test_rest_api_access_with_enabled_2fa(site: Site) -> None:
     """you're not supposed to access the rest api if you have 2fa enabled (except for cookie auth)
 

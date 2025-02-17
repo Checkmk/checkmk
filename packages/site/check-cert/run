@@ -180,7 +180,7 @@ main() {
     test ${RUN_CLEAN} = yes && run_cargo_cmd_with_explicit_package clean
     # TODO: Re-evaluate usage of --all-targets below
     test ${RUN_BUILD} = yes && "${BAZEL_CMD}" build :all
-    test ${RUN_UNIT_TESTS} = yes &&  "${BAZEL_CMD}" test :all
+    test ${RUN_UNIT_TESTS} = yes && "${BAZEL_CMD}" test :all
     test ${RUN_CHECK_FORMAT} = yes && run_check_format
     test ${RUN_CLIPPY} = yes && "${BAZEL_CMD}" build --config=clippy :all
     test ${RUN_FORMAT} = yes && run_format

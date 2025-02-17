@@ -23,7 +23,7 @@ from cmk.base.api.agent_based.register import (
     load_selected_plugins,
 )
 from cmk.base.core_nagios import HostCheckConfig
-from cmk.base.modes.check_mk import mode_check
+from cmk.base.modes.check_mk import run_checking
 
 from cmk.discover_plugins import PluginLocation
 
@@ -90,23 +90,25 @@ def main() -> int:
     try:
         _errors, sections, checks = config.load_and_convert_legacy_checks(CONFIG.checks_to_load)
         load_selected_plugins(CONFIG.locations, sections, checks, validate=debug)
-
-        discovery_rulesets = extract_known_discovery_rulesets(
-            plugins := get_previously_loaded_plugins()
-        )
+        plugins = get_previously_loaded_plugins()
+        discovery_rulesets = extract_known_discovery_rulesets(plugins)
 
         config.load_packed_config(LATEST_CONFIG, discovery_rulesets)
+        config_cache = config.get_config_cache()
+        hosts_config = config.make_hosts_config()
 
         config.ipaddresses = CONFIG.ipaddresses
         config.ipv6addresses = CONFIG.ipv6addresses
 
-        return mode_check(
+        return run_checking(
+            plugins,
+            config_cache,
+            hosts_config,
             get_submitter,
             {},
             [CONFIG.hostname],
             active_check_handler=lambda *args: None,
             keepalive=False,
-            plugin_loader=lambda: plugins,
             precompiled_host_check=True,
         )
     except KeyboardInterrupt:

@@ -248,10 +248,12 @@ relock_venv:
 	for type in runtime all; do \
 	    filename=requirements_$${type}_lock.txt; \
 	    > $${filename}; \
-	done; \
-	bazel mod deps --lockfile_mode=update; \
-	bazel run //:requirements_runtime.update; bazel mod deps --lockfile_mode=update; \
-	bazel run //:requirements_all.update; bazel mod deps --lockfile_mode=update; \
+	done
+	bazel mod deps --lockfile_mode=update
+	bazel run //:requirements_runtime.update
+	bazel mod deps --lockfile_mode=update
+	bazel run //:requirements_all.update
+	bazel mod deps --lockfile_mode=update
 
 # .venv is PHONY because the dependencies are resolved by bazel
 .venv:

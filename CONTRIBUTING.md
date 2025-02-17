@@ -519,17 +519,15 @@ To include mypy there adjust the following things in the `.vimrc`:
 
   ```vim
   let g:ale_linters = {
-  \ 'python': ['pylint', 'mypy'],
+  \ 'python': ['mypy'],
   \ 'javascript': ['eslint'],
   \}
   ```
 
-* Then tell the linter how to run pylint and mypy:
+* Then tell the linter how to run mypy:
 
   ```vim
   let g:ale_python_mypy_executable = 'YOUR_REPO_PATH/check_mk/scripts/run-mypy'
-  let g:ale_python_pylint_executable = 'YOUR_REPO_PATH/check_mk/scripts/run-pylint'
-  let g:ale_python_pylint_options = '--rcfile YOUR_REPO_PATH/check_mk/.pylintrc'
   ```
 
 ---
@@ -546,14 +544,6 @@ With ":ALEInfo" you get information about the error diagnosis below, if it doesn
 
 * The mypy.ini should be found by Flycheck without further configuration.
 * To use the correct mypy executable a `.dir-locals.el` in the root directory of the Checkmk repository is used.
-* Flycheck by default does not execute multiple checkers.
-  To enable the mypy checker after the pylint checker the following snippet can be used e.g. in the `dotspacemacs/user-config`:
-
-  ```lisp
-    (with-eval-after-load 'flycheck
-      (flycheck-add-next-checker 'python-pylint 'python-mypy))
-  ```
-
 * To disable the risky variable warning that is triggered by setting the mypy executable the `safe-local-variables` variable has to be extended by:
 
   ```lisp

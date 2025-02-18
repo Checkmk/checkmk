@@ -99,7 +99,7 @@ from cmk.gui.utils import escaping
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.watolib import backup_snapshots, config_domain_name
+from cmk.gui.watolib import backup_snapshots
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.broker_certificates import (
@@ -115,6 +115,7 @@ from cmk.gui.watolib.config_domain_name import (
     get_config_domain,
     SerializedSettings,
 )
+from cmk.gui.watolib.config_domain_name import OMD as OMDDomainName
 from cmk.gui.watolib.config_sync import (
     create_rabbitmq_new_definitions_file,
     replication_path_registry,
@@ -875,7 +876,7 @@ def _is_activate_needed(all_site_changes: Sequence[ChangeSpec]) -> bool:
 
 
 def _get_domains_needing_activation(
-    omd_ident: ConfigDomainName, site_changes_activate_until: Sequence[ChangeSpec]
+    site_changes_activate_until: Sequence[ChangeSpec],
 ) -> DomainRequests:
     domain_settings: dict[ConfigDomainName, list[SerializedSettings]] = {}
     omd_domain_setting_changes: list[SerializedSettings] = []
@@ -885,7 +886,7 @@ def _get_domains_needing_activation(
                 settings = get_config_domain(domain_name).get_domain_settings(change)
                 # ConfigDomainOMD needs a restart of the apache,
                 # make sure it's executed at the end
-                if domain_name == omd_ident:
+                if domain_name == OMDDomainName:
                     omd_domain_setting_changes.append(settings)
                     continue
                 domain_settings.setdefault(domain_name, []).append(settings)
@@ -900,7 +901,7 @@ def _get_domains_needing_activation(
 
     if omd_domain_setting_changes:
         domain_requests.append(
-            get_config_domain(omd_ident).get_domain_request(omd_domain_setting_changes)
+            get_config_domain(OMDDomainName).get_domain_request(omd_domain_setting_changes)
         )
 
     return domain_requests
@@ -935,8 +936,7 @@ def _get_omd_domain_background_job_result(site_id: SiteId) -> Sequence[str]:
 def _call_activate_changes_automation(
     site_id: SiteId, site_changes_activate_until: Sequence[ChangeSpec]
 ) -> ConfigWarnings:
-    omd_ident: ConfigDomainName = config_domain_name.OMD
-    domain_requests = _get_domains_needing_activation(omd_ident, site_changes_activate_until)
+    domain_requests = _get_domains_needing_activation(site_changes_activate_until)
 
     if site_is_local(active_config, site_id):
         return execute_activate_changes(domain_requests)
@@ -957,8 +957,10 @@ def _call_activate_changes_automation(
 
     # If request.settings is empty no `omd-config-change` job is started
     assert isinstance(response, dict)
-    if any(request.name == omd_ident and request.settings for request in domain_requests):
-        response.setdefault(omd_ident, []).extend(_get_omd_domain_background_job_result(site_id))
+    if any(request.name == OMDDomainName and request.settings for request in domain_requests):
+        response.setdefault(OMDDomainName, []).extend(
+            _get_omd_domain_background_job_result(site_id)
+        )
 
     return response
 

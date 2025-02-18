@@ -1033,6 +1033,8 @@ class Site:
     @tracer.instrument("Site.rm")
     def rm(self, site_id: str | None = None) -> None:
         # Wait a bit to avoid unnecessarily stress testing the site.
+        site_id = site_id or self.id
+        logger.info('Removing site "%s"...', site_id)
         time.sleep(1)
         _ = run(
             [
@@ -1041,7 +1043,7 @@ class Site:
                 "rm",
                 "--apache-reload",
                 "--kill",
-                site_id or self.id,
+                site_id,
             ],
             sudo=True,
         )

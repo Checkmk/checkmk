@@ -6,6 +6,7 @@
 import argparse
 import dataclasses
 import sys
+from typing import Annotated, Literal
 
 import pydantic
 
@@ -22,17 +23,24 @@ from cmk.update_config.http.conflicts import detect_conflicts, MigratableValue
 from cmk.update_config.http.migrate import migrate
 
 
-class Args(pydantic.BaseModel):
+class Migrate(pydantic.BaseModel):
+    command: Literal["migrate"]
     write: bool = False
 
 
-def parse_arguments() -> Args:
-    parser = argparse.ArgumentParser(prog="cmk-migrate-http")
-    subparser = parser.add_subparsers(dest="command", required=True)
+class Activate(pydantic.BaseModel):
+    command: Literal["activate"]
 
-    parser_migrate = subparser.add_parser("migrate", help="Migrate command")
-    parser_migrate.add_argument("--write", action="store_true", help="persist changes on disk")
-    return Args.model_validate(vars(parser.parse_args()))
+
+class Deactivate(pydantic.BaseModel):
+    command: Literal["deactivate"]
+
+
+Args = Annotated[Migrate | Activate | Deactivate, pydantic.Field(discriminator="command")]
+
+
+class ArgsParser(pydantic.RootModel[Args]):
+    root: Args
 
 
 def _new_migrated_rules(ruleset_v1: Ruleset, ruleset_v2: Ruleset) -> None:
@@ -96,8 +104,7 @@ def _construct_v2_rule(rule_v1: Rule, value: MigratableValue, ruleset_v2: Rulese
     )
 
 
-def main() -> None:
-    args = parse_arguments()
+def _migrate_main(write: bool) -> None:
     load_plugins()
     with disable_redis(), gui_context(), SuperUserContext():
         set_global_vars()
@@ -106,8 +113,59 @@ def main() -> None:
         ruleset_v2 = all_rulesets.get("active_checks:httpv2")
         _overwrite_migrated_rules(ruleset_v1, ruleset_v2)
         _new_migrated_rules(ruleset_v1, ruleset_v2)
-        if args.write:
+        if write:
             all_rulesets.save()
+
+
+def _parse_arguments() -> Args:
+    parser = argparse.ArgumentParser(prog="cmk-migrate-http")
+    subparser = parser.add_subparsers(dest="command", required=True)
+    parser_migrate = subparser.add_parser("migrate", help="Migrate")
+    parser_migrate.add_argument("--write", action="store_true", help="persist changes on disk")
+    parser_migrate = subparser.add_parser("activate", help="Activation")
+    parser_migrate = subparser.add_parser("deactivate", help="Deactivation")
+    return ArgsParser.model_validate(vars(parser.parse_args())).root
+
+
+def _activate_main() -> None:
+    load_plugins()
+    with disable_redis(), gui_context(), SuperUserContext():
+        set_global_vars()
+        all_rulesets = AllRulesets.load_all_rulesets()
+        ruleset_v2 = all_rulesets.get("active_checks:httpv2")
+        for folder, rule_index, rule_v2 in ruleset_v2.get_rules():
+            if "from_v1" in rule_v2.value:
+                sys.stdout.write(f"Overwriting rule: {folder}, {rule_index}\n")
+                new_rule_v2 = rule_v2.clone(preserve_id=True)
+                new_rule_v2.rule_options = dataclasses.replace(rule_v2.rule_options, disabled=False)
+                ruleset_v2.edit_rule(rule_v2, new_rule_v2)
+        all_rulesets.save()
+
+
+def _deactivate_main() -> None:
+    load_plugins()
+    with disable_redis(), gui_context(), SuperUserContext():
+        set_global_vars()
+        all_rulesets = AllRulesets.load_all_rulesets()
+        ruleset_v2 = all_rulesets.get("active_checks:httpv2")
+        for folder, rule_index, rule_v2 in ruleset_v2.get_rules():
+            if "from_v1" in rule_v2.value:
+                sys.stdout.write(f"Overwriting rule: {folder}, {rule_index}\n")
+                new_rule_v2 = rule_v2.clone(preserve_id=True)
+                new_rule_v2.rule_options = dataclasses.replace(rule_v2.rule_options, disabled=True)
+                ruleset_v2.edit_rule(rule_v2, new_rule_v2)
+        all_rulesets.save()
+
+
+def main() -> None:
+    args = _parse_arguments()
+    match args:
+        case Migrate(write=write):
+            _migrate_main(write)
+        case Activate():
+            _activate_main()
+        case Deactivate():
+            _deactivate_main()
 
 
 if __name__ == "__main__":

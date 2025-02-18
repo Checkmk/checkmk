@@ -23,7 +23,6 @@ __all__ = [
     "cleanup_locks",
     "have_lock",
     "lock_checkmk_configuration",
-    "lock_exclusive",
     "locked",
     "release_all_locks",
     "release_lock",
@@ -63,11 +62,6 @@ def lock_checkmk_configuration(lockfile: Path) -> Iterator[None]:
         yield
     finally:
         release_lock(lockfile)
-
-
-# TODO: Use lock_checkmk_configuration() and nuke this! (only one caller)
-def lock_exclusive(lockfile: Path) -> None:
-    acquire_lock(lockfile)
 
 
 # .

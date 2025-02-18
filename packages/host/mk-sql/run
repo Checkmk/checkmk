@@ -183,7 +183,7 @@ main() {
     # Cargo below, but we need a statically linked executable, and our Bazel
     # machinery for Rust doesn't handle this yet.
     test ${RUN_BUILD} = yes && run_cargo_cmd_with_explicit_package build --jobs="${JOBS}" --release --all-targets ${FEATURES:+"--features=$FEATURES"}
-    test ${RUN_UNIT_TESTS} = yes && "${BAZEL_CMD}" test :all --test_env=CI_TEST_SQL_DB_ENDPOINT=${CI_TEST_SQL_DB_ENDPOINT}
+    test ${RUN_UNIT_TESTS} = yes && "${BAZEL_CMD}" test :all
     test ${RUN_CHECK_FORMAT} = yes && run_check_format
     test ${RUN_CLIPPY} = yes && "${BAZEL_CMD}" build --config=clippy :all
     test ${RUN_FORMAT} = yes && run_format

@@ -7,9 +7,9 @@ from cmk.agent_based.v2 import AgentSection, StringTable
 from cmk.plugins.lib import interfaces
 
 
-def parse_aix_if(
+def _parse_aix_common(
     string_table: StringTable,
-) -> interfaces.Section[interfaces.InterfaceWithCounters]:
+) -> tuple[dict[str, interfaces.InterfaceWithCounters], dict[str, list[str]]]:
     ifaces = {}
     flags = {}
     index = 0
@@ -52,6 +52,14 @@ def parse_aix_if(
             flags[nic] = line[3:]
         elif line and ":" not in line and nic in flags:
             flags[nic] += line
+
+    return ifaces, flags
+
+
+def parse_aix_if(
+    string_table: StringTable,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
+    ifaces, flags = _parse_aix_common(string_table)
 
     for nic, iface in ifaces.items():
         iface_flags = flags.get(nic, [])

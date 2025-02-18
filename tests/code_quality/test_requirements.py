@@ -124,8 +124,9 @@ def test_all_packages_pinned(loaded_requirements: dict[str, str]) -> None:
             "For the sake of reproducibility, all packages must be pinned to a version!"
         ) % " ,".join(unpinned_packages)
     except AssertionError:
-        branch = f"{branch_from_env(env_var='GERRIT_BRANCH', fallback=current_base_branch_name)}"
-        logging.getLogger().warning(f"Branch: {branch}")
+        env_branch = f"{branch_from_env(env_var='GERRIT_BRANCH', fallback='fallback')}"
+        base_branch = current_base_branch_name()
+        logging.getLogger().warning(f"Base branch: {base_branch}, env_branch: {env_branch}")
 
 
 def iter_sourcefiles(basepath: Path) -> Iterable[Path]:

@@ -1251,7 +1251,7 @@ class ModeEditRuleset(WatoMode):
                 if _is_ineffective_rules_page(search_options):
                     html.icon("hyphen", _("Ineffective rule"))
                 else:
-                    html.icon("checkmark", _("Matches"))
+                    html.icon("checkmark_plus", _("Matches"))
             else:
                 html.empty_icon()
 

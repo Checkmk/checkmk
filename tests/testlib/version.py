@@ -246,7 +246,7 @@ def get_min_version(edition: Edition | None = None) -> CMKVersion:
     if edition is None:
         # by default, fallback to edition: CEE
         edition = edition_from_env(fallback=Edition.CEE)
-    return CMKVersion(os.getenv("MIN_VERSION", "2.3.0p11"), edition)
+    return CMKVersion(os.getenv("MIN_VERSION", "2.3.0p26"), edition)
 
 
 def git_tag_exists(version: CMKVersion) -> bool:

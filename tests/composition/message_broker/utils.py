@@ -8,6 +8,7 @@ import logging
 import re
 import signal
 import subprocess
+import time
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from types import FrameType
@@ -156,6 +157,31 @@ def broker_stopped(site: Site) -> Iterator[None]:
         yield
     finally:
         assert site.omd("start", "rabbitmq") == 0
+        await_broker_ready(site)
+
+
+def await_broker_ready(*sites: Site) -> None:
+    for site in sites:
+        _await_port_ready(site)
+        _await_shovels_ready(site)
+
+
+def _await_port_ready(site: Site) -> None:
+    port = int(site.run(["omd", "config", "show", "RABBITMQ_PORT"]).stdout)
+    for _ in range(180):
+        if site.execute(["rabbitmq-diagnostics", "check_port_listener", str(port)]).wait() == 0:
+            return
+        time.sleep(1)
+    raise Timeout(f"Rabbitmq did not start properly (port {port} not listening)")
+
+
+def _await_shovels_ready(site: Site) -> None:
+    for _ in range(180):
+        raw = json.loads(site.run(["rabbitmqctl", "shovel_status", "--formatter", "json"]).stdout)
+        if all(shovel["state"] == "running" for shovel in raw):
+            return
+        time.sleep(1)
+    raise Timeout(f"Rabbitmq shovels not started properly: {raw!r}")
 
 
 @contextmanager

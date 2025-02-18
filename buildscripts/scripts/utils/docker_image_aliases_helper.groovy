@@ -151,7 +151,6 @@ inside_container_minimal = {Map arg1=[:], Closure arg2 ->
     def image_name = "minimal-alpine-checkmk-ci-${args.get('safe_branch_name', 'BRANCH')}:latest";
     def dockerfile = "${checkout_dir}/buildscripts/scripts/Dockerfile";
     def docker_build_args = "-f ${dockerfile} .";
-    def minimal_image = docker.build(image_name, docker_build_args);
 
     // the reference repo dir is required for any git based interactions
     def reference_repo_dir = cmd_output("""
@@ -164,7 +163,10 @@ inside_container_minimal = {Map arg1=[:], Closure arg2 ->
     }
 
     println("inside_container(image=${image_name} docker_args: ${run_args_str})");
-    minimal_image.inside(run_args_str) {
-        body();
+    docker.withRegistry(DOCKER_REGISTRY, "nexus") {
+        def minimal_image = docker.build(image_name, docker_build_args);
+        minimal_image.inside(run_args_str) {
+            body();
+        }
     }
 }

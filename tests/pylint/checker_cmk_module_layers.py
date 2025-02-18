@@ -47,16 +47,6 @@ def register(linter: PyLinter) -> None:
     linter.register_checker(CMKModuleLayerChecker(linter))
 
 
-# https://www.python.org/dev/peps/pep-0616/
-def removeprefix(text: str, prefix: Path) -> str:
-    prefix_as_string = str(prefix) + "/"
-    return text[len(prefix_as_string) :] if text.startswith(prefix_as_string) else text
-
-
-def removesuffix(text: str, suffix: str) -> str:
-    return text[: -len(suffix)] if suffix and text.endswith(suffix) else text
-
-
 def get_absolute_importee(
     *,
     root_name: str,
@@ -766,8 +756,7 @@ class CMKModuleLayerChecker(BaseChecker):
             return
 
         # We use paths relative to our project root, but not for our "pasting magic".
-        absolute_path: str = node.root().file
-        importing_path = ModulePath(removeprefix(absolute_path, self.cmk_path_cached))
+        importing_path = ModulePath(str(Path(node.root().file).relative_to(self.cmk_path_cached)))
 
         # Tests are allowed to import everything for now. Should be cleaned up soon
         if str(importing_path).startswith("tests/testlib"):
@@ -782,9 +771,8 @@ class CMKModuleLayerChecker(BaseChecker):
         # Due to our symlinks and pasting magic, astroid gets confused, so we need to compute the
         # real module name from the file path of the module.
         parts = importing_path.split("/")
-        parts[-1] = removesuffix(parts[-1], ".py")
         # Emacs' flycheck stores files to be checked in a temporary file with a prefix.
-        parts[-1] = removeprefix(parts[-1], Path("flycheck_"))
+        parts[-1] = parts[-1].removeprefix("flycheck_").removesuffix(".py")
         # For all modules which don't live below cmk after mangling, just assume a toplevel module.
         if parts[0] not in ("cmk", "tests"):
             parts = [parts[-1]]
@@ -794,13 +782,8 @@ class CMKModuleLayerChecker(BaseChecker):
         self, importing_path: ModulePath, importing: ModuleName, imported: ModuleName
     ) -> bool:
         for component, component_specific_checker in _COMPONENTS:
-            if not self._is_part_of_component(importing, importing_path, component):
-                continue
-
-            return component_specific_checker(
-                imported=imported,
-                component=component,
-            )
+            if self._is_part_of_component(importing, importing_path, component):
+                return component_specific_checker(imported=imported, component=component)
 
         # the rest (matched no component)
         return _is_allowed_import(imported)

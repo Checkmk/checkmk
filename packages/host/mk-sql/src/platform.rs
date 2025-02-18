@@ -46,6 +46,7 @@ pub fn get_row_value_by_idx(row: &[String], idx: usize) -> String {
     row.get(idx).cloned().unwrap_or_default()
 }
 
+#[allow(dead_code)] // NamedPipe is needed on Windows and not Linux.
 #[derive(Debug, Clone)]
 struct NamedPipe(String);
 

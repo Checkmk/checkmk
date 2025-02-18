@@ -205,7 +205,7 @@ def _migrate_name(name: str) -> Mapping[str, object]:
     return {"prefix": "auto", "name": name}
 
 
-def migrate(rule_value: Mapping[str, object]) -> Mapping[str, object]:
+def migrate(id_: str, rule_value: Mapping[str, object]) -> Mapping[str, object]:
     value = MigratableValue.model_validate(rule_value)
     match value.host.address_family:
         case "any":
@@ -240,4 +240,5 @@ def migrate(rule_value: Mapping[str, object]) -> Mapping[str, object]:
             },
         ],
         "standard_settings": {},
+        "from_v1": id_,
     }

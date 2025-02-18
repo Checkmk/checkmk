@@ -813,6 +813,7 @@ def _form_active_checks_httpv2() -> Dictionary:
             "endpoints": DictElement(parameter_form=_valuespec_endpoints(), required=True),
             "standard_settings": DictElement(parameter_form=_valuespec_settings(), required=True),
         },
+        ignored_elements=("from_v1",),
     )
 
 

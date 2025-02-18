@@ -28,11 +28,6 @@ _FrontendModel = Sequence[str]
 class MultipleChoiceVisitor(
     FormSpecVisitor[MultipleChoiceExtended, _ParsedValueModel, _FrontendModel]
 ):
-    def _is_valid_choice(self, value: str) -> bool:
-        if isinstance(self.form_spec.elements, shared_type_defs.Autocompleter):
-            return True
-        return value in [x.name for x in self.form_spec.elements]
-
     def _strip_invalid_choices(self, raw_value: list[str]) -> list[str]:
         if isinstance(self.form_spec.elements, shared_type_defs.Autocompleter):
             return raw_value

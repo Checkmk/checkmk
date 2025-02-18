@@ -12,7 +12,6 @@ load("//bazel/rules:proto.bzl", "proto_library_as")
 exports_files(
     [
         "pyproject.toml",
-        "requirements_runtime.txt",
         "requirements_dev.txt",
         "requirements_all_lock.txt",
     ],
@@ -87,7 +86,7 @@ genrule(
     name = "requirements-runtime-main",
     srcs = [
         "//cmk:requirements.txt",
-        ":requirements_runtime.txt",
+        "//packages:python_requirements",
     ],
     outs = ["requirements-runtime-main.txt"],
     cmd = """
@@ -105,7 +104,7 @@ genrule(
         ":requirements_dev.txt",
     ] + select({
         "@//:gpl_repo": [],
-        "@//:gpl+enterprise_repo": ["//non-free:requirements.txt"],
+        "@//:gpl+enterprise_repo": ["//non-free:python_requirements"],
     }),
     outs = ["requirements-main.txt"],
     cmd = """
@@ -119,14 +118,12 @@ genrule(
 pip_compile(
     name = "requirements_runtime",
     data = [
-        ":requirements_runtime.txt",
         "//cmk:requirements.txt",
         "//packages:python_requirements",
     ] + select({
         "@//:gpl_repo": [],
         "@//:gpl+enterprise_repo": [
             "//non-free:python_requirements",
-            "//non-free:requirements.txt",
         ],
     }),
     requirements_in = ":requirements-runtime-main",
@@ -144,7 +141,6 @@ pip_compile(
         "@//:gpl_repo": [],
         "@//:gpl+enterprise_repo": [
             "//non-free:python_requirements",
-            "//non-free:requirements.txt",
         ],
     }),
     requirements_in = ":requirements-main",

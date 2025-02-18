@@ -239,4 +239,5 @@ def migrate(rule_value: Mapping[str, object]) -> Mapping[str, object]:
                 },
             },
         ],
+        "standard_settings": {},
     }

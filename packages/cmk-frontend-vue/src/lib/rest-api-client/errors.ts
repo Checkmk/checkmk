@@ -3,10 +3,10 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { CmkError, CmkSimpleError } from '@/lib/error.ts'
 import type { AxiosError } from 'axios'
 import axios from 'axios'
 
-import { CmkError } from '@/lib/error'
 import type { Errors, StageErrors } from '@/lib/rest-api-client/quick-setup/response_schemas'
 import type { MaybeRestApiCrashReport, MaybeRestApiError } from '@/lib/types'
 // import type { Errors, StageErrors } from '@lib/rest./response_types'
@@ -62,6 +62,10 @@ export interface AllStagesValidationError extends RestApiError, OrUndefined<Stag
  */
 export const argumentError = (err: Error): CmkError | QuickSetupAxiosError => {
   if (axios.isAxiosError<MaybeRestApiError, unknown>(err)) {
+    if (err.response?.status === 429 && err.response?.data?.detail) {
+      return new CmkSimpleError(`${err.response.data.title}: ${err.response.data.detail}`)
+    }
+
     const msg = err.response?.data?.detail || err.response?.data?.title || err.message
     return new QuickSetupAxiosError(msg, err)
   } else {

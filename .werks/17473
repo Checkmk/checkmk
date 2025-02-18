@@ -1,0 +1,15 @@
+Title: No page break before first subreport
+Class: fix
+Compatible: incomp
+Component: reporting
+Date: 1739860566
+Edition: cee
+Level: 1
+Version: 2.2.0p40
+
+If you used the option "Begin child reports on new page" in "Host report for
+multiple hosts" or "Service report for multiple services" content elements, a
+page break was added before the first subreport, leading to an empty start
+page.
+
+This has been fixed.

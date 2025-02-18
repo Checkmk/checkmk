@@ -51,6 +51,28 @@ SYSTEM_TESTS := \
     test-gui-e2e-cse \
     test-extension-compatibility
 PYTEST_SYSTEM_TEST_ARGS := -p "no:cov" --log-cli-level=INFO
+DOCKERABLE_TESTS := \
+	test-bandit \
+	test-code-quality \
+	test-cycles \
+	test-file-content \
+	test-format-bazel \
+	test-format-python \
+	test-format-shell \
+	test-format-toml \
+	test-license-headers \
+	test-lint-bazel \
+	test-lint-groovy \
+	test-mypy \
+	test-requirements \
+	test-ruff \
+	test-pylint \
+	test-shellcheck \
+	test-unit-all \
+	test-unit-shell \
+	test-unit-testlib \
+	test-werks \
+	test-semgrep
 
 # HINT: the "layering_violation" checker is not production ready and left out on purpose
 PYLINT_CUSTOM_CHECKERS := cmk-module-layer-violation,localization-html-tags-checker,localization-literal-string-checker
@@ -95,60 +117,21 @@ help:
 	    echo "$${i}              - Run $${i} locally"; \
 	    echo "$${i}-docker       - Run $${i} in container"; \
 	done
-	@echo "test-bandit                         - Run bandit (security) tests"
-	@echo "test-bandit-docker                  - Run bandit (security) tests in docker"
+	@for i in $(DOCKERABLE_TESTS); do \
+	    echo "$${i}              - Run $${i} locally"; \
+	    echo "$${i}-docker       - Run $${i} in container"; \
+	done
 	@echo "test-bandit-nosec-markers           - Check if all bandit #nosec markers are annotated properly"
-	@echo "test-code-quality                   - Run code quality tests locally"
-	@echo "test-code-quality-docker            - Run code quality tests in container"
-	@echo "test-cycles                         - Run cycles check"
-	@echo "test-cycles-docker                  - Run cycles check in docker"
 	@echo "test-docker                         - Run docker tests"
 	@echo "test-docker-docker                  - Run docker tests in docker"
 	@echo "test-integration-agent-plugin       - Run agent plugin integration tests"
 	@echo "test-integration-agent-plugin-docker - Run agent plugin integration tests in docker"
-	@echo "test-format-bazel                   - Run the Bazel formatting"
-	@echo "test-format-bazel-docker            - Run the Bazel formatting in docker"
-	@echo "test-format-python                  - Run formatting tests"
-	@echo "test-format-python-docker           - Run formatting tests in docker"
-	@echo "test-format-shell                   - Run the shell formatting"
-	@echo "test-format-toml                    - Run the toml formatting"
-	@echo "test-format-toml-docker             - Run the toml formatting in docker"
-	@echo "test-gui-e2e                        - Run GUI End-to-End locally"
-	@echo "test-gui-e2e-docker                 - Run GUI End-to-End in container"
-	@echo "test-license-headers                - Run license headers tests"
-	@echo "test-license-headers-docker         - Run license headers tests in docker"
-	@echo "test-lint-bazel                     - Run the Bazel linting"
-	@echo "test-lint-bazel-docker              - Run the Bazel linting in docker"
-	@echo "test-lint-groovy                    - Run the Groovy linting"
-	@echo "test-lint-groovy-docker             - Run the Groovy linting in docker"
-	@echo "test-mypy                           - Run mypy"
-	@echo "test-mypy-docker                    - Run mypy in docker"
 	@echo "test-mypy-raw                       - Run mypy with raw edition config"
 	@echo "test-packaging                      - Run packaging tests"
-	@echo "test-requirements                   - Run requirements test"
-	@echo "test-requirements-docker            - Run requirements test in docker"
-	@echo "test-ruff                           - Run ruff based tests"
-	@echo "test-ruff-docker                    - Run ruff based tests in docker"
-	@echo "test-pylint                         - Run pylint based tests"
-	@echo "test-pylint-docker                  - Run pylint based tests in docker"
-	@echo "test-shellcheck                     - Run shellcheck tests"
-	@echo "test-shellcheck-docker              - Run shellcheck tests in docker"
-	@echo "test-typescript-types               - Run TypeScript types check"
-	@echo "test-typescript-types-docker        - Run TypeScript types check in docker"
 	@echo "test-unit                           - Run unit tests"
-	@echo "test-unit-all                       - Run unit tests (including those marked as slow)"
 	@echo "test-unit-cmc                       - Run unit tests for cmc"
 	@echo "test-unit-docker                    - Run unit tests in docker"
 	@echo "test-unit-neb                       - Run unit tests for neb"
-	@echo "test-unit-shell                     - Run shell unit tests"
-	@echo "test-unit-shell-docker              - Run shell unit tests in docker"
-	@echo "test-unit-testlib                   - Run doctests present in testlib-modules"
-	@echo "test-unit-testlib-docker            - Run doctests present in testlib-modules within docker container."
-	@echo "test-werks                          - Run Werks tests"
-	@echo "test-werks-docker                   - Run Werks tests in docker"
-	@echo "test-semgrep                        - Run semgrep code quality tests"
-	@echo "test-semgrep-docker                 - Run semgrep code quality tests in docker"
-
 bandit.ini:
 	( echo -n -e "[bandit]\ntargets: "; \
 	  $(FIND_PYTHON_FILES) | tr '\n' ',' | sed 's/,$$//'; \
@@ -208,16 +191,10 @@ test-semgrep:
 	    --error \
 	    $(realpath ..)
 
-test-semgrep-docker:
-	../scripts/run-in-docker.sh make test-semgrep
-
 test-bandit: bandit.ini
 # Currently only care about high severity reported issues. Once this is reached,
 # go and enable the medium/low checks.
 	$(BANDIT) -c ../bandit.yaml -r -ll --ini bandit.ini $(BANDIT_OUTPUT_ARGS)
-
-test-bandit-docker:
-	../scripts/run-in-docker.sh make test-bandit
 
 test-bandit-nosec-markers:
 	$(UVENV) python bandit-nosec-markers/nosec_reason.py --doc bandit-nosec-markers/bandit-exclusions.md check $(realpath ..)
@@ -258,14 +235,8 @@ test-format-python-format: ../pyproject.toml
 	xargs -n 1500 ../scripts/run-uvenv ruff format --check --diff | tee -a ../ruff_check_and_format.txt;\
 	exit $${PIPESTATUS[1]}
 
-test-format-python-docker:
-	../scripts/run-in-docker.sh make --quiet test-format-python
-
 test-format-shell:
 	$(SHFMT) -d -i 4 -ci $(FIND_SHELL_FILES)
-
-test-format-shell-docker:
-	../scripts/run-in-docker.sh make --quiet test-format-shell
 
 format-toml:
 	$(TAPLO) format ../pyproject.toml
@@ -273,26 +244,14 @@ format-toml:
 test-format-toml:
 	$(TAPLO) format --check --diff ../pyproject.toml
 
-test-format-toml-docker:
-	../scripts/run-in-docker.sh make --quiet test-format-toml
-
 test-lint-bazel:
 	../scripts/run-buildifier --lint=warn --mode=check
-
-test-lint-bazel-docker:
-	../scripts/run-in-docker.sh make --quiet test-lint-bazel
 
 test-format-bazel:
 	../scripts/run-buildifier --mode=check
 
-test-format-bazel-docker:
-	../scripts/run-in-docker.sh make --quiet test-format-bazel
-
 test-lint-groovy:
 	cd ..; scripts/run-groovy-lint --loglevel warning --failon error $(GROOVYLINT_OUTPUT_ARGS)
-
-test-lint-groovy-docker:
-	../scripts/run-in-docker.sh make --quiet test-lint-groovy
 
 test-gui-crawl: prepare-playwright
 	$(PYTEST) -T gui_crawl $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py)
@@ -370,19 +329,16 @@ $(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker):
 container-debug $(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker-debug):
 	$(UVENV) scripts/run-dockerized.py debug
 
+$(foreach TEST,$(DOCKERABLE_TESTS),$(TEST)-docker):
+	../scripts/run-in-docker.sh make --quiet "$(subst -docker,,$@)"
+
 test-license-headers:
 	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
 	xargs -n 1500 --no-run-if-empty $(PYTEST_UV) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_license_headers.py) \
 	--python-files;
 
-test-license-headers-docker:
-	../scripts/run-in-docker.sh make --quiet test-license-headers
-
 test-requirements:
 	$(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_requirements.py);
-
-test-requirements-docker:
-	../scripts/run-in-docker.sh make --quiet test-requirements
 
 test-file-content:
 	if test -z "$$CHANGED_FILES_REL_FILE"; then \
@@ -391,28 +347,16 @@ test-file-content:
 	    cat "$$CHANGED_FILES_REL_FILE" | xargs -n 1500 --no-run-if-empty $(PYTEST_UV) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content) --changed-files ; \
 	fi \
 
-test-file-content-docker:
-	../scripts/run-in-docker.sh make --quiet test-file-content
-
 test-werks:
 	$(PYTEST_UV) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_werks.py);
 
-test-werks-docker:
-	../scripts/run-in-docker.sh make --quiet test-werks
-
 test-code-quality: test-license-headers test-requirements test-file-content test-werks
-
-test-code-quality-docker:
-	../scripts/run-in-docker.sh make --quiet test-code-quality
 
 test-mypy: prepare-protobuf-files
 	cd .. ; $(UVENV) mypy $(MYPY_ADDOPTS) $(ADDITIONAL_MYPY_ARGS) $$($(FIND_PYTHON_FILES))
 
 test-mypy-raw:
 	$(MAKE) test-mypy ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"
-
-test-mypy-docker:
-	../scripts/run-in-docker.sh make test-mypy
 
 test-packaging:
 	$(PYTEST) -T packaging packaging
@@ -430,20 +374,11 @@ test-pylint: prepare-protobuf-files
 	    tests/unit/test_pylint_checker_cmk_module_layers.py \
 	    tests/unit/test_pylint_checker_localization.py
 
-test-pylint-docker:
-	../scripts/run-in-docker.sh make --quiet test-pylint
-
 test-ruff: prepare-protobuf-files
 	cd ..; echo $$($(FIND_PYTHON_FILES)) | xargs -n 1500 $(UVENV) ruff check
 
-test-ruff-docker:
-	../scripts/run-in-docker.sh make --quiet test-ruff
-
 test-shellcheck:
 	cd .. && $(SHELLCHECK) -x $(SHELLCHECK_OUTPUT_ARGS) $(FIND_SHELL_FILES)
-
-test-shellcheck-docker:
-	../scripts/run-in-docker.sh make --quiet test-shellcheck
 
 test-cycles:
 	$(CYCLES) \
@@ -453,9 +388,6 @@ test-cycles:
 		--strategy johnson \
 		--threshold 116 \
 		--verbose
-
-test-cycles-docker:
-	../scripts/run-in-docker.sh make --quiet test-cycles
 
 test-unit-omdlib:
 	cd .. && TZ=$(RANDOM_TZ) $(PYTEST_UV) \
@@ -490,9 +422,6 @@ test-unit-all:
 	    --test_env=TZ=$(RANDOM_TZ) \
 	    --test_arg="--numprocesses=4"
 
-test-unit-all-docker:
-	../scripts/run-in-docker.sh make --quiet test-unit-all
-
 test-unit-testlib:
 	find -name '__pycache__' -exec rm -rf {} \; 2> /dev/null || true
 	cd .. && TZ=$(RANDOM_TZ) $(PYTEST_UV) \
@@ -505,17 +434,11 @@ test-unit-testlib:
 		-- \
 		tests/testlib/
 
-test-unit-testlib-docker:
-	../scripts/run-in-docker.sh make test-unit-testlib
-
 test-agent-plugin-docker:
 	../scripts/run-in-docker.sh make $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker)
 
 test-unit-shell:
 	./unit-shell/runner.sh
-
-test-unit-shell-docker:
-	../scripts/run-in-docker.sh make test-unit-shell
 
 test-unit-neb:
 	cd ../packages/neb/test && ./.f12

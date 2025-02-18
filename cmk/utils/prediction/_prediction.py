@@ -149,9 +149,12 @@ class PredictionStore:
 def compute_prediction(
     info: PredictionInfo,
     get_recorded_data: Callable[[str, int, int], MetricRecord | None],
+    now: float,
 ) -> PredictionData | None:
     time_windows = time_slices(
-        info.valid_interval[0], info.params.horizon * 86400, info.params.period
+        int(now),
+        info.params.horizon * 86400,
+        info.params.period,
     )
 
     from_time = time_windows[0][0]

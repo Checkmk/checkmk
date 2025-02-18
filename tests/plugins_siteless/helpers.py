@@ -130,9 +130,12 @@ def compare_services_states(
     checks_result: list[FormattedSubmittee], services_states_filename: str
 ) -> None:
     expected_services_states = _load_expected_states(services_states_filename)
-    LOGGER.info("%s services found", len(checks_result))
     actual_states = {s.name: s.state for s in checks_result}
-    LOGGER.info("Services' states:\n%s", pprint.pformat(actual_states))
+    LOGGER.info(
+        "%s services executed. Services' states:\n%s",
+        len(checks_result),
+        pprint.pformat(actual_states),
+    )
     LOGGER.debug(
         "Services' details:\n%s", pprint.pformat({s.name: s.details for s in checks_result})
     )
@@ -207,5 +210,9 @@ def discover_services(
         )
         for autocheck in autochecks
     ]
-
+    LOGGER.info(
+        "%s services discovered:\n%s",
+        len(discovered_services),
+        pprint.pformat(sorted([str(service.description) for service in discovered_services])),
+    )
     return discovered_services

@@ -77,3 +77,8 @@ class BackgroundStatusSnapshot:
             status: BaseModel = job_snapshot["status"]
             job_snapshot["status"] = status.model_dump()
         return job_snapshot
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "BackgroundStatusSnapshot":
+        data["status"] = JobStatusSpec(**data["status"])
+        return cls(**data)

@@ -10,15 +10,19 @@ as the background process is running.
 
 """
 
+import json
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.gui.background_job import BackgroundJob
+from cmk.gui.background_job import BackgroundJob, BackgroundStatusSnapshot
+from cmk.gui.config import active_config
 from cmk.gui.http import Response
 from cmk.gui.openapi.endpoints.background_job.response_schemas import BackgroundJobSnapshotObject
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import problem, serve_json
+from cmk.gui.site_config import get_site_config, site_is_local
+from cmk.gui.watolib.automations import do_remote_automation
 
 from cmk import fields as gui_fields
 
@@ -29,6 +33,15 @@ class JobID:
         description="The ID of the background job",
         example="foobar",
         required=True,
+    )
+
+
+class SiteId:
+    field_name = "site"
+    field_definition = gui_fields.String(
+        description="The site where the background job is located. Defaults to local site",
+        example="foobar",
+        required=False,
     )
 
 
@@ -44,13 +57,33 @@ class JobID:
             JobID.field_name: JobID.field_definition,
         }
     ],
+    query_params=[
+        {
+            SiteId.field_name: SiteId.field_definition,
+        }
+    ],
     response_schema=BackgroundJobSnapshotObject,
 )
 def show_background_job_snapshot(params: Mapping[str, Any]) -> Response:
     """Show the last status of a background job"""
     job_id = params[JobID.field_name]
-    background_job = BackgroundJob(job_id)
-    snapshot = background_job.get_status_snapshot()
+    site_id = params.get(SiteId.field_name)
+    if site_id and not site_is_local(active_config, site_id):
+        snapshot = BackgroundStatusSnapshot.from_dict(
+            json.loads(
+                str(
+                    do_remote_automation(
+                        site=get_site_config(active_config, site_id),
+                        command="fetch-background-job-snapshot",
+                        vars_=[("job_id", job_id)],
+                    )
+                )
+            )
+        )
+    else:
+        background_job = BackgroundJob(job_id)
+        snapshot = background_job.get_status_snapshot()
+
     if not snapshot.exists:
         return problem(
             status=404,

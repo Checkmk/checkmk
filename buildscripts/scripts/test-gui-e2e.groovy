@@ -96,9 +96,10 @@ def main() {
                         DOCKER_TAG: docker_tag,
                         CUSTOM_GIT_REF: effective_git_ref,
                         FAKE_WINDOWS_ARTIFACTS: params.FAKE_WINDOWS_ARTIFACTS,
+                        // FIPS node specifier has to be respected
+                        CIPARAM_OVERRIDE_BUILD_NODE: CIPARAM_OVERRIDE_BUILD_NODE,
                     ],
                     build_params_no_check: [
-                        CIPARAM_OVERRIDE_BUILD_NODE: CIPARAM_OVERRIDE_BUILD_NODE,
                         CIPARAM_CLEANUP_WORKSPACE: CIPARAM_CLEANUP_WORKSPACE,
                         CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
 

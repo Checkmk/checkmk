@@ -21,7 +21,6 @@ def main() {
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
-    def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
 
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
@@ -29,7 +28,6 @@ def main() {
 
     // TODO: we should always use USE_CASE directly from the job parameters
     def use_case = (USE_CASE == "fips") ? USE_CASE : "daily_tests"
-    test_jenkins_helper.assert_fips_testing(use_case, NODE_LABELS);
     def all_distros = versioning.get_distros(override: "all");
     def selected_distros = versioning.get_distros(
         edition: EDITION,
@@ -101,7 +99,7 @@ def main() {
                         CUSTOM_GIT_REF: effective_git_ref,
                         FAKE_WINDOWS_ARTIFACTS: params.FAKE_WINDOWS_ARTIFACTS,
                         // FIPS node specifier has to be respected
-                        CIPARAM_OVERRIDE_BUILD_NODE: CIPARAM_OVERRIDE_BUILD_NODE,
+                        CIPARAM_OVERRIDE_BUILD_NODE: (USE_CASE == "fips") ? "fips" : CIPARAM_OVERRIDE_BUILD_NODE,
                     ],
                     build_params_no_check: [
                         CIPARAM_CLEANUP_WORKSPACE: CIPARAM_CLEANUP_WORKSPACE,

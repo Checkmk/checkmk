@@ -46,16 +46,16 @@ def main() {
         stringParam(name: "CIPARAM_BISECT_COMMENT", value: params.CIPARAM_BISECT_COMMENT),
         // PUBLISH_IN_MARKETPLACE will only be set during the release process (aka bw-release)
         booleanParam(name: 'PUBLISH_IN_MARKETPLACE', value: false),
+        stringParam(name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: params.CIPARAM_OVERRIDE_BUILD_NODE),
     ];
 
     job_parameters_use_case = [
         stringParam(name: 'USE_CASE', value: use_case),
-        stringParam(name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: params.CIPARAM_OVERRIDE_BUILD_NODE),
     ];
 
     job_parameters_fips = [
+        // build node selection in done base on USE_CASE value
         stringParam(name: 'USE_CASE', value: 'fips'),
-        stringParam(name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: "fips"),
     ];
 
     job_parameters = job_parameters_common + job_parameters_use_case;

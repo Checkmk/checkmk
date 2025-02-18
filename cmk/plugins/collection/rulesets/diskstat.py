@@ -167,7 +167,7 @@ def _parameter_valuespec_diskstat() -> Dictionary:
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((50 * _MB, 100 * _MB)),
                     predictive=PredictiveLevels(
-                        reference_metric="read_throughput",
+                        reference_metric="disk_read_throughput",
                         prefill_abs_diff=DefaultValue((0.0, 0.0)),
                     ),
                     migrate=migrate_to_upper_integer_levels,
@@ -184,7 +184,7 @@ def _parameter_valuespec_diskstat() -> Dictionary:
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((50 * _MB, 100 * _MB)),
                     predictive=PredictiveLevels(
-                        reference_metric="write_throughput",
+                        reference_metric="disk_write_throughput",
                         prefill_abs_diff=DefaultValue((0.0, 0.0)),
                     ),
                     migrate=migrate_to_upper_integer_levels,
@@ -200,7 +200,7 @@ def _parameter_valuespec_diskstat() -> Dictionary:
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((0.8, 0.9)),
                     predictive=PredictiveLevels(
-                        reference_metric="utilization",
+                        reference_metric="disk_utilization",
                         prefill_abs_diff=DefaultValue((0.0, 0.0)),
                     ),
                     migrate=migrate_to_upper_float_levels,
@@ -214,7 +214,7 @@ def _parameter_valuespec_diskstat() -> Dictionary:
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((0.08, 0.16)),
                     predictive=PredictiveLevels(
-                        reference_metric="latency",
+                        reference_metric="disk_latency",
                         prefill_abs_diff=DefaultValue((0.0, 0.0)),
                     ),
                     migrate=migrate_to_upper_float_levels,
@@ -228,7 +228,7 @@ def _parameter_valuespec_diskstat() -> Dictionary:
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((0.08, 0.16)),
                     predictive=PredictiveLevels(
-                        reference_metric="read_latency",
+                        reference_metric="disk_read_latency",
                         prefill_abs_diff=DefaultValue((0.0, 0.0)),
                     ),
                     migrate=migrate_to_upper_float_levels,
@@ -242,7 +242,7 @@ def _parameter_valuespec_diskstat() -> Dictionary:
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((0.08, 0.16)),
                     predictive=PredictiveLevels(
-                        reference_metric="write_latency",
+                        reference_metric="disk_write_latency",
                         prefill_abs_diff=DefaultValue((0.0, 0.0)),
                     ),
                     migrate=migrate_to_upper_float_levels,
@@ -256,7 +256,7 @@ def _parameter_valuespec_diskstat() -> Dictionary:
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((0.03, 0.05)),
                     predictive=PredictiveLevels(
-                        reference_metric="average_read_wait",
+                        reference_metric="disk_average_read_wait",
                         prefill_abs_diff=DefaultValue((0.0, 0.0)),
                     ),
                     migrate=migrate_to_upper_float_levels,
@@ -270,7 +270,7 @@ def _parameter_valuespec_diskstat() -> Dictionary:
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((0.03, 0.05)),
                     predictive=PredictiveLevels(
-                        reference_metric="average_write_wait",
+                        reference_metric="disk_average_write_wait",
                         prefill_abs_diff=DefaultValue((0.0, 0.0)),
                     ),
                     migrate=migrate_to_upper_float_levels,
@@ -304,7 +304,7 @@ def _parameter_valuespec_diskstat() -> Dictionary:
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((400.0, 600.0)),
                     predictive=PredictiveLevels(
-                        reference_metric="read_ios",
+                        reference_metric="disk_read_ios",
                         prefill_abs_diff=DefaultValue((0.0, 0.0)),
                     ),
                     migrate=migrate_to_upper_float_levels,
@@ -318,7 +318,7 @@ def _parameter_valuespec_diskstat() -> Dictionary:
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((300.0, 400.0)),
                     predictive=PredictiveLevels(
-                        reference_metric="write_ios",
+                        reference_metric="disk_write_ios",
                         prefill_abs_diff=DefaultValue((0.0, 0.0)),
                     ),
                     migrate=migrate_to_upper_float_levels,

@@ -587,6 +587,7 @@ def agent_proxmox_ve_main(args: Args) -> int:
                         "type": vm["type"],
                         "status": vm["status"],
                         "name": vm["name"],
+                        "uptime": vm["uptime"],
                     }
                 )
             if vm["type"] != "qemu":
@@ -597,11 +598,35 @@ def agent_proxmox_ve_main(args: Args) -> int:
                             "max_disk": vm["maxdisk"],
                         }
                     )
+            with SectionWriter("proxmox_ve_disk_throughput") as writer:
+                writer.append_json(
+                    {
+                        "disk_read": vm["diskread"],
+                        "disk_write": vm["diskwrite"],
+                        "uptime": vm["uptime"],
+                    }
+                )
             with SectionWriter("proxmox_ve_mem_usage") as writer:
                 writer.append_json(
                     {
                         "mem": vm["mem"],
                         "max_mem": vm["maxmem"],
+                    }
+                )
+            with SectionWriter("proxmox_ve_cpu_util") as writer:
+                writer.append_json(
+                    {
+                        "cpu": vm["cpu"],
+                        "max_cpu": vm["maxcpu"],
+                        "uptime": vm["uptime"],
+                    }
+                )
+            with SectionWriter("proxmox_ve_network_throughput") as writer:
+                writer.append_json(
+                    {
+                        "net_in": vm["netin"],
+                        "net_out": vm["netout"],
+                        "uptime": vm["uptime"],
                     }
                 )
             with SectionWriter("proxmox_ve_vm_backup_status") as writer:

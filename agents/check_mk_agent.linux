@@ -606,7 +606,11 @@ section_labels() {
     if [ -n "${IS_DOCKERIZED}" ] || [ -n "${IS_LXC_CONTAINER}" ]; then
         echo '{"cmk/device_type":"container"}'
     elif grep "hypervisor" /proc/cpuinfo >/dev/null 2>&1; then
-        echo '{"cmk/device_type":"vm"}'
+        if [ -e /proc/xen/capabilities ] && grep -q control_d /proc/xen/capabilities; then
+            :
+        else
+            echo '{"cmk/device_type":"vm"}'
+        fi
     fi
 }
 

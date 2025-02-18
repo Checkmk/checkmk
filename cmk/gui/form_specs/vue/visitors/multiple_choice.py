@@ -37,8 +37,8 @@ class MultipleChoiceVisitor(
 
         return {element.name for element in self.form_spec.elements}
 
-    def _filter_out_invalid_choices(self, raw_values: list[str]) -> list[str]:
-        return list(set(raw_values) & self._get_valid_choices())
+    def _filter_out_invalid_choices(self, raw_values: set[str]) -> set[str]:
+        return raw_values & self._get_valid_choices()
 
     def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
         if isinstance(raw_value, DefaultValue):
@@ -54,7 +54,7 @@ class MultipleChoiceVisitor(
             return InvalidValue(reason=_("Invalid data"), fallback_value=[])
 
         # Filter out invalid choices without warning
-        return sorted(self._filter_out_invalid_choices(raw_value))
+        return sorted(self._filter_out_invalid_choices(set(raw_value)))
 
     def _to_vue(
         self, raw_value: object, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]

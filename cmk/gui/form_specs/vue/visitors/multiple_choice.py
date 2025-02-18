@@ -28,11 +28,11 @@ _FrontendModel = Sequence[str]
 class MultipleChoiceVisitor(
     FormSpecVisitor[MultipleChoiceExtended, _ParsedValueModel, _FrontendModel]
 ):
-    def _strip_invalid_choices(self, raw_value: list[str]) -> list[str]:
+    def _filter_out_invalid_choices(self, raw_values: list[str]) -> list[str]:
         if isinstance(self.form_spec.elements, shared_type_defs.Autocompleter):
-            return raw_value
-        valid_choices = {x.name for x in self.form_spec.elements}
-        return list(set(raw_value) & valid_choices)
+            return raw_values
+        valid_choices = {element.name for element in self.form_spec.elements}
+        return list(set(raw_values) & valid_choices)
 
     def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
         if isinstance(raw_value, DefaultValue):
@@ -48,7 +48,7 @@ class MultipleChoiceVisitor(
             return InvalidValue(reason=_("Invalid data"), fallback_value=[])
 
         # Filter out invalid choices without warning
-        return sorted(self._strip_invalid_choices(raw_value))
+        return sorted(self._filter_out_invalid_choices(raw_value))
 
     def _to_vue(
         self, raw_value: object, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]

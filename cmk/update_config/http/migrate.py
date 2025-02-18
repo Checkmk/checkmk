@@ -3,6 +3,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+"""
+*Known Limitations*
+
+The option `Additional header lines` with value `:abc` will now result in following error:
+```
+error: invalid value ':abc' for '--header <HEADERS>': invalid HTTP header name
+```
+According to RFC 7320, a header-name has to be non-empty, and V2 does not support sending invalid HTTP requests.
+
+Why did the user agent change from `check_http/v2.3.3 (monitoring-plugins 2.3.3)` to `checkmk-active-httpv2/2.4.0`?
+The migration script does not aim to always preserve behaviour. It makes little sense for `check_httpv2` to impersonate `check_http`.
+
+Selecting the options `Don't wait for document body` and `Fixed string to expect in the content` results in the following error:
+```
+error: the argument '--without-body' cannot be used with '--body-string <BODY_STRING>'
+```
+In the version V1, this was also an error with a different message. The new check correctly explains the configuration error.
+
+Why has the `request-target` changed?
+V1 supports HTTP/1.0 and HTTP/1.1. V2 only supports HTTP/1.1 and HTTP/2.0. HTTP/1.1 was designed in such a way that old applications can handle the new format. Since `check_http` and `check_httpv2` work differently at the HTTP protocol level, these changes are expected.
+"""
 
 from collections.abc import Mapping
 from typing import assert_never
@@ -16,7 +37,7 @@ from cmk.update_config.http.conflicts import (
 
 def _migrate_header(header: str) -> dict[str, object]:
     name, value = header.split(":", 1)
-    return {"header_name": name, "header_value": value.strip()}  # TODO: This is not a 1:1 mapping.
+    return {"header_name": name, "header_value": value.strip()}
 
 
 def _migrate_url_params(
@@ -44,8 +65,6 @@ def _migrate_url_params(
             timeout = {"timeout": float(timeout_sec)}
     match url_params.user_agent:
         case None:
-            # TODO: This implicitly changes the user agent from `check_http/v2.3.3
-            # (monitoring-plugins 2.3.3)` to `checkmk-active-httpv2/2.4.0`
             user_agent: Mapping[str, object] = {}
         case agent:
             user_agent = {"user_agent": agent}
@@ -72,8 +91,6 @@ def _migrate_url_params(
         case expect_response:
             server_response = {"server_response": {"expected": expect_response}}
     match url_params.onredirect:
-        # TODO: V1 and V2 work differently, if searching for strings in documents, also need to test
-        # with http codes.
         case None:
             redirects: Mapping[str, object] = {"redirects": "ok"}
         case onredirect:
@@ -129,7 +146,6 @@ def _migrate_url_params(
         case None:
             document_body: Mapping[str, object] = {"document_body": "fetch"}
         case True:
-            # TODO: What happens to the searching document bodies here?
             document_body = {"document_body": "ignore"}
     match url_params.page_size:
         case None:

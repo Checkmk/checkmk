@@ -475,16 +475,16 @@ def _add_summary_error_message(
     all_stage_errors: list[ValidationErrors] = []
     all_stage_errors.extend(current_errors)
 
-    normalized_faulty_stage_indices = sorted(
+    normalized_faulty_stage_numbers = sorted(
         err.stage_index + 1 for err in current_errors if err.stage_index is not None
     )
 
     msg = (
         _("Stages %s contain invalid form data. Please correct them and try again.")
-        % ", ".join(str(index) for index in normalized_faulty_stage_indices)
-        if len(normalized_faulty_stage_indices) > 1
+        % ", ".join(str(index) for index in normalized_faulty_stage_numbers)
+        if len(normalized_faulty_stage_numbers) > 1
         else _("Stage %s contains invalid form data. Please correct them and try again.")
-        % normalized_faulty_stage_indices[0]
+        % normalized_faulty_stage_numbers[0]
     )
 
     all_stage_errors.append(

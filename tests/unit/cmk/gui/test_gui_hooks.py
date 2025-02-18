@@ -136,7 +136,7 @@ def test_threaded_memoize(
     def cached_function(x: int) -> int:
         return x * x
 
-    @page_registry.register_page("thread_test")
+    @page_registry.register_page("my_page")
     class PageClass(Page):
         def page(self) -> None:
             def worker(i: int) -> None:
@@ -167,7 +167,7 @@ def test_threaded_memoize(
             else:
                 assert cached_function.cache_info() is None  # type: ignore[attr-defined]
 
-    logged_in_wsgi_app.get("/NO_SITE/check_mk/thread_test.py", status=200)
+    logged_in_wsgi_app.get("/NO_SITE/check_mk/my_page.py", status=200)
     # Note: Even after the get request from the line above, no request end has been called yet
     # Check both event types
     for clear_event in ["request-end", "request-context-exit"]:
@@ -175,6 +175,8 @@ def test_threaded_memoize(
         cached_function(42)
         hooks.call(clear_event)
         assert cached_function.cache_info() is None  # type: ignore[attr-defined]
+
+    page_registry.unregister("my_page")
 
 
 @pytest.mark.usefixtures("reset_hooks")

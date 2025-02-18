@@ -63,6 +63,7 @@ def main() {
                         --outfile '${bom_path}' \
                         --research_file researched_master.yml \
                         --license_cache license_cache_master.json \
+                        --type bazel_files --type cargo --type omd --type package-lock --type cmk_runtime_lock \
                         '${checkout_dir}'
                     """);
                 }

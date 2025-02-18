@@ -17,6 +17,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.i18n import _
+from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
@@ -485,6 +486,7 @@ def _make_projection(
     focus_range: perfometers_api.FocusRange,
     projection_parameters: _ProjectionParameters,
     translated_metrics: Mapping[str, TranslatedMetric],
+    perfometer_name: str,
 ) -> _Projection:
     # TODO At the moment we have a unit conversion only for temperature metrics and we want to have
     # the orig value at the same place as the converted value, eg.:
@@ -508,8 +510,21 @@ def _make_projection(
     else:
         upper_x = _evaluate_quantity(focus_range.upper.value, translated_metrics).value
 
-    if lower_x > upper_x:
-        raise ValueError((lower_x, upper_x))
+    if lower_x >= upper_x:
+        logger.debug(
+            "Cannot compute the range from %s and %s of the perfometer %s",
+            lower_x,
+            upper_x,
+            perfometer_name,
+        )
+        return _Projection(
+            lower_x=float("nan"),
+            upper_x=float("nan"),
+            lower_atan=lambda v: float("nan"),
+            focus_linear=lambda v: float("nan"),
+            upper_atan=lambda v: float("nan"),
+            limit=float("nan"),
+        )
 
     # Note: if we have closed boundaries and a value exceeds the lower or upper limit then we use
     # the related limit. With this the value is always visible, we don't have any execption and the
@@ -632,7 +647,6 @@ def _project_segments(
         if projected_values_sum == 0.0
         else [(p / projected_values_sum) for p in projected_values]
     )
-
     projections = [
         (
             round(filled_total * share, 2),
@@ -646,6 +660,8 @@ def _project_segments(
             themed_perfometer_bg_color,
         )
     )
+    if not (projections := [p for p in projections if not math.isnan(p[0])]):
+        return [(0.0, themed_perfometer_bg_color)]
     return projections
 
 
@@ -708,6 +724,7 @@ class MetricometerRendererPerfometer(MetricometerRenderer):
                 self.perfometer.focus_range,
                 _PERFOMETER_PROJECTION_PARAMETERS,
                 self.translated_metrics,
+                self.perfometer.name,
             ),
             _evaluate_segments(
                 self.perfometer.segments,
@@ -761,6 +778,7 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
                 ),
                 _BIDIRECTIONAL_PROJECTION_PARAMETERS,
                 self.translated_metrics,
+                self.perfometer.name,
             ),
             _evaluate_segments(
                 self.perfometer.left.segments,
@@ -778,6 +796,7 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
                 ),
                 _BIDIRECTIONAL_PROJECTION_PARAMETERS,
                 self.translated_metrics,
+                self.perfometer.name,
             ),
             _evaluate_segments(
                 self.perfometer.right.segments,

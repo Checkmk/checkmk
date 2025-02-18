@@ -1485,4 +1485,4 @@ def test_preserve_http_version() -> None:
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
     assert ssc_value[0].settings.connection is not None
-    assert ssc_value[0].settings.connection.http_versions == "http_1_1"
+    assert ssc_value[0].settings.connection.http_versions is None

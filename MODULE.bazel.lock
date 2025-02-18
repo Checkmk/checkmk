@@ -3302,7 +3302,7 @@
           "@@grpc~//requirements.bazel.txt": "95a27c3f9a46b8114d464c70ba93cda18cfe8c02004db81028f9306b2691701e",
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
           "@@rules_python~//tools/publish/requirements_windows.txt": "d18538a3982beab378fd5687f4db33162ee1ece69801f9a451661b1b64286b76",
-          "@@//requirements_all_lock.txt": "4ac9e89db37ebd4695bb5f9e304efb6227a0db4df9e24a783506c8d028ad3a75",
+          "@@//requirements_all_lock.txt": "5397719ea15b49b0d59ee7cafed37d072d80aba70e90988fd4bb0f234498c3ed",
           "@@rules_mypy~//mypy/private/requirements.txt": "a1f94fdc72dde074efe30628a69ce502984b09c61db2938601ed18d320f59d26",
           "@@protobuf~//python/requirements.txt": "983be60d3cec4b319dcab6d48aeb3f5b2f7c3350f26b3a9e97486c37967c73c5",
           "@@rules_python~//tools/publish/requirements_darwin.txt": "095d4a4f3d639dce831cd493367631cd51b53665292ab20194bac2c0c6458fa8"
@@ -3870,7 +3870,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_3_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "botocore-stubs==1.36.22 --hash=sha256:20d46e9639edd2eef37197bba0f9dbee77410ac00a9c4de627711c949c543454 --hash=sha256:4d76940ade5dca987bb66a5d9844a862fd09acfccf3fcb79d761e185e56145e5"
+              "requirement": "botocore-stubs==1.36.23 --hash=sha256:2283cf6e926a323d2a2ba0322228960db7f40061dfee197858118359d8402816 --hash=sha256:b150699f4f98e39e3e90e0d6787f5e8f919876f9ddbd24e3663b8311222588ec"
             }
           },
           "cmk_requirements_312_redis": {
@@ -4932,7 +4932,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_3_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "pkginfo==1.12.0 --hash=sha256:8ad91a0445a036782b9366ef8b8c2c50291f83a553478ba8580c73d3215700cf --hash=sha256:dcd589c9be4da8973eceffa247733c144812759aa67eaf4bbf97016a02f39088"
+              "requirement": "pkginfo==1.12.1.1 --hash=sha256:4a09d6ab00af353d24021a42c1b00ac9d0beef0ccc012a5c122430acbeb01c0e --hash=sha256:57f0b56061c84d5875556fb9437ef80b69863dea56dbad30b0b9a9887652b47c"
             }
           },
           "cmk_requirements_312_opentelemetry_instrumentation_wsgi": {
@@ -6155,7 +6155,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_3_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "boto3==1.36.22 --hash=sha256:39957eabdce009353d72d131046489fbbfa15891865d5f069f1e8bfa414e6b81 --hash=sha256:768c8a4d4a6227fe2258105efa086f1424cba5ca915a5eb2305b2cd979306ad1"
+              "requirement": "boto3==1.36.23 --hash=sha256:006800604c34382873521b20890b758eea7109d699696ece932131259d0a4658 --hash=sha256:d59642672b1f35f55f47b317693241ce53333816f47c9e72fcc8fd0e9adc6a87"
             }
           },
           "rules_python_publish_deps_311_cryptography_cp39_abi3_manylinux_2_17_x86_64_0f996e72": {
@@ -10173,7 +10173,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_3_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "boto3-stubs[logs]==1.36.22 --hash=sha256:55cee1e9d7b181f07b8ffc7d71eb0fc681b1b2eb1601d19373f33008d4070826 --hash=sha256:d17acae4b6fc6fd67b0b0c2b9b897a501e2451d883e9e9f4264448a6089541df"
+              "requirement": "boto3-stubs[logs]==1.36.23 --hash=sha256:e09016f06daf7794d11815891b962f588c513c5f5ee6c0ab2c045c375f798c9a --hash=sha256:ee2738fd742742dbe9db2745c66ac1f853ed497b4f2f9c1625d81b0a27b6d1b2"
             }
           },
           "cmk_requirements_312_sphinx_autoapi": {
@@ -13894,7 +13894,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_3_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "botocore==1.36.22 --hash=sha256:59520247d5a479731724f97c995d5a1c2aae3b303b324f39d99efcfad1d3019e --hash=sha256:75d6b34acb0686ee4d54ff6eb285e78ccfe318407428769d1e3e13351714d890"
+              "requirement": "botocore==1.36.23 --hash=sha256:886730e79495a2e153842725ebdf85185c8277cdf255b3b5879cd097ddc7fcc3 --hash=sha256:9feaa2d876f487e718a5fd80a35fa401042b518c0c75117d3e1ea39a567439e7"
             }
           },
           "cmk_requirements_312_pytest_check": {

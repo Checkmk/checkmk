@@ -1,5 +1,6 @@
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@com_google_protobuf//:protobuf_version.bzl", "PROTOBUF_PYTHON_VERSION")
 load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile_commands")
 load("@repo_license//:license.bzl", "REPO_LICENSE")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
@@ -83,40 +84,53 @@ refresh_compile_commands(
 )
 
 genrule(
-    name = "_append_dev_dependencies",
-    srcs = [":requirements_runtime_lock.txt"],
-    outs = ["requirements_all.txt"],
+    name = "requirements-runtime-main",
+    srcs = [
+        "//cmk:requirements.txt",
+        ":requirements_runtime.txt",
+    ],
+    outs = ["requirements-runtime-main.txt"],
     cmd = """
-    cat $< <(echo "ruff==%s") <(echo "-r requirements_dev.txt") > $@
-    """ % RUFF_VERSION,
+    for req in $(SRCS); do
+      echo "-r $$req" >> $@
+    done
+    echo "protobuf==%s" >> $@
+    """ % PROTOBUF_PYTHON_VERSION,
 )
 
 genrule(
-    name = "_append_cmk_dependencies",
+    name = "requirements-main",
     srcs = [
-        "//cmk:requirements_pinned.txt",
-        ":requirements_runtime.txt",
+        ":requirements_runtime_lock.txt",
+        ":requirements_dev.txt",
     ] + select({
         "@//:gpl_repo": [],
         "@//:gpl+enterprise_repo": ["//non-free:requirements.txt"],
     }),
-    outs = ["_requirements_runtime.txt"],
-    cmd = "cat $(SRCS) > $@",
+    outs = ["requirements-main.txt"],
+    cmd = """
+    for req in $(SRCS); do
+      echo "-r $$req" >> $@
+    done
+    echo ruff==%s >> $@
+    """ % RUFF_VERSION,
 )
-
-REQUIREMENTS_CMK = [
-    "//cmk:requirements_pinned.txt",
-    "//packages:python_requirements",
-] + select({
-    "@//:gpl_repo": [],
-    "@//:gpl+enterprise_repo": ["//non-free:python_requirements"],
-})
 
 pip_compile(
     name = "requirements_runtime",
-    data = REQUIREMENTS_CMK,
-    requirements_in = ":_requirements_runtime.txt",
-    requirements_txt = "@//:requirements_runtime_lock.txt",
+    data = [
+        ":requirements_runtime.txt",
+        "//cmk:requirements.txt",
+        "//packages:python_requirements",
+    ] + select({
+        "@//:gpl_repo": [],
+        "@//:gpl+enterprise_repo": [
+            "//non-free:python_requirements",
+            "//non-free:requirements.txt",
+        ],
+    }),
+    requirements_in = ":requirements-runtime-main",
+    requirements_txt = ":requirements_runtime_lock.txt",
     tags = ["manual"],
     visibility = ["//visibility:public"],
 )
@@ -124,9 +138,16 @@ pip_compile(
 pip_compile(
     name = "requirements_all",
     data = [
-        "//:requirements_dev.txt",
-    ] + REQUIREMENTS_CMK,
-    requirements_in = "@//:requirements_all.txt",
+        ":requirements_dev.txt",
+        ":requirements_runtime_lock.txt",
+    ] + select({
+        "@//:gpl_repo": [],
+        "@//:gpl+enterprise_repo": [
+            "//non-free:python_requirements",
+            "//non-free:requirements.txt",
+        ],
+    }),
+    requirements_in = ":requirements-main",
     requirements_txt = "@//:requirements_all_lock.txt",
     tags = ["manual"],
     visibility = ["//visibility:public"],

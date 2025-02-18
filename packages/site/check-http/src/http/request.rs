@@ -23,14 +23,14 @@ use std::str::FromStr;
 #[derive(Clone, Debug)]
 pub enum Server {
     IpAddr(IpAddr),
-    Url(Url),
+    Hostname(String),
 }
 
 impl fmt::Display for Server {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Server::IpAddr(ip) => write!(f, "{}", ip),
-            Server::Url(url) => write!(f, "{}", url),
+            Self::IpAddr(ip) => write!(f, "{}", ip),
+            Self::Hostname(hostname) => write!(f, "{}", hostname),
         }
     }
 }
@@ -40,9 +40,9 @@ impl FromStr for Server {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if let Ok(ip) = s.parse::<IpAddr>() {
-            Ok(Server::IpAddr(ip))
-        } else if let Ok(url) = s.parse::<Url>() {
-            Ok(Server::Url(url))
+            Ok(Self::IpAddr(ip))
+        } else if !s.is_empty() {
+            Ok(Self::Hostname(s.to_string()))
         } else {
             bail!("Invalid server address: {}", s)
         }
@@ -52,15 +52,15 @@ impl FromStr for Server {
 impl Server {
     pub fn to_socket_addr(&self, port: u16) -> Result<std::net::SocketAddr, anyhow::Error> {
         match self {
-            Server::IpAddr(ip) => Ok(std::net::SocketAddr::new(*ip, port)),
-            Server::Url(url) => {
-                let host = url
-                    .host_str()
-                    .ok_or_else(|| anyhow::anyhow!("Invalid URL: no host"))?;
-                let ip = std::net::ToSocketAddrs::to_socket_addrs(&(host, port))?
-                    .next()
-                    .ok_or_else(|| anyhow::anyhow!("Unable to resolve host: {}", host))?;
-                Ok(ip)
+            Self::IpAddr(ip) => Ok(std::net::SocketAddr::new(*ip, port)),
+            Self::Hostname(hostname) => {
+                let socket_addrs =
+                    std::net::ToSocketAddrs::to_socket_addrs(&(hostname.as_str(), port))?
+                        .next()
+                        .ok_or_else(|| {
+                            anyhow::anyhow!("Unable to resolve hostname: {}", hostname)
+                        })?;
+                Ok(socket_addrs)
             }
         }
     }

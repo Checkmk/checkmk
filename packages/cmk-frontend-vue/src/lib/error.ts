@@ -48,3 +48,10 @@ export class CmkError<T extends Error = Error> extends Error {
     return ''
   }
 }
+
+export class CmkSimpleError extends CmkError {
+  constructor(message: string) {
+    super(message, null)
+    this.name = 'CmkSimpleError'
+  }
+}

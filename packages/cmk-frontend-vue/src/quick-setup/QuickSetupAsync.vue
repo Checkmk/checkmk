@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed, ref, toValue, type Ref, watch, provide, readonly } from 'vue'
 import QuickSetup from './components/quick-setup/QuickSetup.vue'
-import { CmkError, formatError } from '@/lib/error.ts'
+import { CmkError, CmkSimpleError, formatError } from '@/lib/error.ts'
 import {
   getOverview,
   getAllStages,
@@ -429,7 +429,9 @@ const handleBackgroundJobError = (
 }
 
 const handleExceptionError = (err: unknown) => {
-  if (err instanceof CmkError) {
+  if (err instanceof CmkSimpleError) {
+    globalError.value = err.message
+  } else if (err instanceof CmkError) {
     globalError.value = {
       type: 'DetailedError',
       message: err.message,

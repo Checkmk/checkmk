@@ -124,7 +124,7 @@ class TestPageAutomation:
             m.setattr(
                 request,
                 "headers",
-                {"x-checkmk-version": "2.3.0p11", "x-checkmk-edition": "cee"},
+                {"x-checkmk-version": "2.3.0p26", "x-checkmk-edition": "cee"},
             )
             automation.PageAutomation()._execute_cmk_automation()
             assert response.get_data() == b"((1, 2),)"

@@ -1,0 +1,13 @@
+Title: Filter value of "Host has software package" not loaded on view edit
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1739883512
+Edition: cre
+Level: 1
+Version: 2.2.0p40
+
+The context / serachfilter "Host has software package" did not properly load the previously set regex/filter value.
+Therefore, this value was lost after editing a view without explicitly resetting the value manually.
+
+The filter now works as expected.

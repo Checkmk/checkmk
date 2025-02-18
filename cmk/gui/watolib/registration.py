@@ -91,6 +91,7 @@ from .sample_config import (
     ConfigGeneratorRegistrationUser,
 )
 from .search import launch_requests_processing_background, SearchIndexBackgroundJob
+from .services import ServiceDiscoveryBackgroundJob
 from .timeperiods import TimeperiodUsageFinderRegistry
 from .user_profile import handle_ldap_sync_finished, PushUserProfilesToSite
 
@@ -194,6 +195,7 @@ def _register_gui_background_jobs(job_registry: BackgroundJobRegistry) -> None:
     job_registry.register(RenameHostsBackgroundJob)
     job_registry.register(RenameHostBackgroundJob)
     job_registry.register(CheckmkAutomationBackgroundJob)
+    job_registry.register(ServiceDiscoveryBackgroundJob)
 
 
 def _register_config_domains(config_domain_registry: ConfigDomainRegistry) -> None:

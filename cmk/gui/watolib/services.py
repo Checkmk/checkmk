@@ -41,7 +41,6 @@ from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundProcessInterface,
     InitialStatusArgs,
-    job_registry,
     JobStatusSpec,
     JobStatusStates,
     JobTarget,
@@ -1164,6 +1163,3 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
             update={"state": JobStatusStates.FINISHED, "loginfo": new_loginfo},
             deep=True,  # not sure, better play it safe.
         )
-
-
-job_registry.register(ServiceDiscoveryBackgroundJob)

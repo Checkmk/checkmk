@@ -107,9 +107,9 @@ class ABCCrashReportPage(Page, abc.ABC):
         except StopIteration:
             return None
 
-    def _get_serialized_crash_report(self):
+    def _get_serialized_crash_report(self) -> Mapping[str, bytes | None]:
         return {
-            k: v
+            k: v.encode()
             for k, v in self._get_crash_row().items()
             if k not in ["site", "crash_id", "crash_type"]
         }

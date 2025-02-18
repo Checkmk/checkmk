@@ -484,7 +484,10 @@ class FilterInvHasSoftwarePackage(Filter):
         return bool(value.get(self._varprefix + "name"))
 
     def display(self, value: FilterHTTPVariables) -> None:
-        html.text_input(self._varprefix + "name")
+        html.text_input(
+            varname=self._varprefix + "name",
+            default_value=value.get(self._varprefix + "name", ""),
+        )
         html.br()
         display_filter_radiobuttons(
             varname=self._varprefix + "match",

@@ -28,6 +28,7 @@ check_info = {}
 # Insert any new keys here
 # https://msdn.microsoft.com/en-us/library/aa383803%28v=vs.85%29.aspx#properties
 rds_licenses_product_versionid_map = {
+    "8": "Windows Server 2025",
     "7": "Windows Server 2022",
     "6": "Windows Server 2019",
     "5": "Windows Server 2016",

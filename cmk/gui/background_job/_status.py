@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from typing import TypedDict
 
 from pydantic import BaseModel
@@ -69,3 +69,11 @@ class BackgroundStatusSnapshot:
     acknowledged_by: str | None
     may_stop: bool
     may_delete: bool
+
+    def to_dict(self) -> dict:
+        job_snapshot = asdict(self)
+        if "status" in job_snapshot:
+            # additional conversion due to pydantic usage for status only
+            status: BaseModel = job_snapshot["status"]
+            job_snapshot["status"] = status.model_dump()
+        return job_snapshot

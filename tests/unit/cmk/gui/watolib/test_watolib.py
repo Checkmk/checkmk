@@ -59,6 +59,7 @@ def test_registered_automation_commands() -> None:
         "fetch-agent-output-get-file",
         "fetch-agent-output-get-status",
         "fetch-agent-output-start",
+        "fetch-background-job-snapshot",
         "store-broker-certs",
         "network-scan",
         "ping",

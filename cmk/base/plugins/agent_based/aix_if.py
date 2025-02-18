@@ -5,12 +5,13 @@
 
 from cmk.plugins.lib import interfaces
 
-from .agent_based_api.v1 import register, type_defs
+from .agent_based_api.v1 import register
+from .agent_based_api.v1.type_defs import StringTable
 
 
-def parse_aix_if(  # pylint: disable=too-many-branches
-    string_table: type_defs.StringTable,
-) -> interfaces.Section[interfaces.InterfaceWithCounters]:
+def _parse_aix_common(
+    string_table: StringTable,
+) -> tuple[dict[str, interfaces.InterfaceWithCounters], dict[str, list[str]]]:
     ifaces = {}
     flags = {}
     index = 0
@@ -53,6 +54,14 @@ def parse_aix_if(  # pylint: disable=too-many-branches
             flags[nic] = line[3:]
         elif line and ":" not in line and nic in flags:
             flags[nic] += line
+
+    return ifaces, flags
+
+
+def parse_aix_if(
+    string_table: StringTable,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
+    ifaces, flags = _parse_aix_common(string_table)
 
     for nic, iface in ifaces.items():
         iface_flags = flags.get(nic, [])

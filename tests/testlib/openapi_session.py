@@ -132,7 +132,12 @@ class CMKOpenApiSession(requests.Session):
         self.headers["Authorization"] = f"Bearer {user} {password}"
 
     def request(  # type: ignore[no-untyped-def]
-        self, method: str | bytes, url: str | bytes, *args, **kwargs
+        self,
+        method: str | bytes,
+        url: str | bytes,
+        *args,
+        timeout: float | tuple[float, float] | tuple[float, None] | None = 300.0,
+        **kwargs,
     ) -> requests.Response:
         """
         Suggested method to use a base url with a requests.Session
@@ -140,6 +145,7 @@ class CMKOpenApiSession(requests.Session):
         """
         assert isinstance(method, str)  # HACK
         assert isinstance(url, str)  # HACK
+        kwargs["timeout"] = timeout
 
         if not url.startswith("http://"):
             url = f"http://{self.host}:{self.port}/{self.site}/check_mk/api/{self.api_version}/{url.strip('/')}"

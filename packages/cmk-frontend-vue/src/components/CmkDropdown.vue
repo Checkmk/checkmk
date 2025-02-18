@@ -41,8 +41,10 @@ const {
 const vClickOutside = useClickOutside()
 
 const selectedOption = defineModel<string | null>('selectedOption', { required: true })
-const selectedOptionTitle = computed(
-  () => options.find(({ name }) => name === selectedOption.value)?.title ?? inputHint
+const dropdownButtonLabel = computed(() =>
+  options.length === 0
+    ? noElementsText
+    : (options.find(({ name }) => name === selectedOption.value)?.title ?? inputHint)
 )
 
 const noChoiceAvailable = computed(() => options.length === 0)
@@ -111,7 +113,6 @@ function selectOption(option: DropdownOption): void {
     class="cmk-dropdown"
   >
     <CmkButton
-      v-if="options.length > 0"
       :id="componentId"
       ref="comboboxButtonRef"
       role="combobox"
@@ -126,13 +127,12 @@ function selectOption(option: DropdownOption): void {
       :variant="'transparent'"
       @click.prevent="showSuggestions"
     >
-      {{ selectedOptionTitle
+      {{ dropdownButtonLabel
       }}<template v-if="requiredText !== '' && !selectedOption!!">
         {{ ' '
         }}<FormRequired :show="true" :space="'before'" :i18n-required="requiredText" /></template
       ><ArrowDown class="cmk-dropdown__button_arrow" />
     </CmkButton>
-    <span v-else>{{ noElementsText }}</span>
     <CmkSuggestions
       v-if="!!suggestionsShown"
       ref="suggestionsRef"

@@ -112,7 +112,8 @@ const { ErrorBoundary, error } = useErrorBoundary()
     <CmkDropdown
       v-model:selected-option="selectedObjectId"
       :options="choices"
-      :input-hint="choices.length === 0 ? spec.i18n.no_objects : spec.i18n.no_selection"
+      :input-hint="spec.i18n.no_selection"
+      :no-elements-text="spec.i18n.no_objects"
       :show-filter="props.spec.elements.length > 5"
       :required-text="spec.i18n_base.required"
       :label="spec.title"

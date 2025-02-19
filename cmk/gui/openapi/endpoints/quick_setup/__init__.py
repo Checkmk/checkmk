@@ -57,6 +57,7 @@ from cmk.gui.quick_setup.v0_unstable.definitions import QuickSetupSaveRedirect
 from cmk.gui.quick_setup.v0_unstable.predefined import build_formspec_map_from_stages
 from cmk.gui.quick_setup.v0_unstable.setups import (
     QuickSetupActionMode,
+    QuickSetupBackgroundAction,
     QuickSetupBackgroundStageAction,
 )
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, RawFormData, StageIndex
@@ -395,7 +396,7 @@ def complete_quick_setup_action(params: Mapping[str, Any], mode: QuickSetupActio
             status_code=400,
         )
 
-    if action.run_in_background:
+    if isinstance(action, QuickSetupBackgroundAction):
         try:
             background_job_id = start_quick_setup_job(
                 quick_setup=quick_setup,

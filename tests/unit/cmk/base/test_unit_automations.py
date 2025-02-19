@@ -87,14 +87,16 @@ def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
             },
         },
     )
-    ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch)
 
     label_sources: dict[str, LabelSource] = {
         "cmk/site": "discovered",
         "explicit": "explicit",
     }
     assert automation.execute(
-        ["test-host"], AgentBasedPlugins.empty(), LoadedConfigFragment(discovery_rules={})
+        ["test-host"],
+        AgentBasedPlugins.empty(),
+        LoadedConfigFragment(discovery_rules={}, config_cache=config_cache),
     ) == AnalyseHostResult(
         label_sources=label_sources | additional_label_sources,
         labels={
@@ -132,12 +134,12 @@ def test_service_labels(monkeypatch):
             ]
         ),
     )
-    ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch)
 
     assert automation.execute(
         ["test-host", "CPU load", "CPU temp"],
         AgentBasedPlugins.empty(),
-        LoadedConfigFragment(discovery_rules={}),
+        LoadedConfigFragment(discovery_rules={}, config_cache=config_cache),
     ) == GetServicesLabelsResult(
         {
             "CPU load": {"label1": "val1", "label2": "val2"},

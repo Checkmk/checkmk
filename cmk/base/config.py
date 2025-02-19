@@ -570,6 +570,11 @@ class LoadedConfigFragment:
     """
 
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]]
+    # Adding the config cache as an attribute here is the easiest way to (almost) remove the need
+    # to access a globally cached instance and make sure it is only created upon loading the config.
+    # But I think it actually should be the other way around: This class should be
+    # an argument needed to instantiate the ConfigCache.
+    config_cache: ConfigCache
 
 
 # This function still mostly manipulates a global state.
@@ -588,11 +593,11 @@ def load(
     loaded_config = _perform_post_config_loading_actions(discovery_rulesets)
 
     if validate_hosts:
-        config_cache = get_config_cache()
-        hosts_config = config_cache.hosts_config
+        hosts_config = loaded_config.config_cache.hosts_config
         if duplicates := sorted(
             hosts_config.duplicates(
-                lambda hn: config_cache.is_active(hn) and config_cache.is_online(hn)
+                lambda hn: loaded_config.config_cache.is_active(hn)
+                and loaded_config.config_cache.is_online(hn)
             )
         ):
             # TODO: Raise an exception
@@ -643,8 +648,8 @@ def _perform_post_config_loading_actions(
     discovery_settings = _collect_parameter_rulesets_from_globals(global_dict, discovery_rulesets)
     _transform_plugin_names_from_160_to_170(global_dict)
 
-    get_config_cache().initialize()
-    return LoadedConfigFragment(discovery_rules=discovery_settings)
+    config_cache = get_config_cache().initialize()
+    return LoadedConfigFragment(discovery_rules=discovery_settings, config_cache=config_cache)
 
 
 class SetFolderPathAbstract:

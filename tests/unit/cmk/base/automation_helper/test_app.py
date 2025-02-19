@@ -32,7 +32,7 @@ from cmk.base.automation_helper._app import (
 from cmk.base.automation_helper._cache import Cache
 from cmk.base.automation_helper._config import ReloaderConfig
 from cmk.base.automations import AutomationError
-from cmk.base.config import LoadedConfigFragment
+from cmk.base.config import ConfigCache, LoadedConfigFragment
 
 
 class _DummyAutomationResult(ABCAutomationResult):
@@ -235,7 +235,7 @@ def test_health_check(cache: Cache) -> None:
     with _make_test_client(
         _DummyAutomationEngineSuccess(),
         cache,
-        lambda p: LoadedConfigFragment(discovery_rules={}),
+        lambda plugins: LoadedConfigFragment(discovery_rules={}, config_cache=ConfigCache()),
         lambda: None,
     ) as client:
         resp = client.get("/health")

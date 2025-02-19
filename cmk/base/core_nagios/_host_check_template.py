@@ -92,8 +92,7 @@ def main() -> int:
         plugins = get_previously_loaded_plugins()
         discovery_rulesets = extract_known_discovery_rulesets(plugins)
 
-        config.load_packed_config(LATEST_CONFIG, discovery_rulesets)
-        config_cache = config.get_config_cache()
+        loaded_config = config.load_packed_config(LATEST_CONFIG, discovery_rulesets)
         hosts_config = config.make_hosts_config()
 
         config.ipaddresses = CONFIG.ipaddresses
@@ -101,7 +100,7 @@ def main() -> int:
 
         return run_checking(
             plugins,
-            config_cache,
+            loaded_config.config_cache,
             hosts_config,
             {},
             [CONFIG.hostname],

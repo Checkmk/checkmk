@@ -28,13 +28,14 @@ _plugins: AgentBasedPlugins | None = None
 
 
 # TODO: This should be solved in the config module / ConfigCache object
-def _load_config() -> None:
+def _load_config() -> config.LoadedConfigFragment:
     global _config
     if _config is None:
         # not sure if we need the plugins here (probably not)
         # but this whole module is soon to be removed anyway
         plugins = _load_checks()
         _config = config.load(extract_known_discovery_rulesets(plugins), validate_hosts=False)
+    return _config
 
 
 # TODO: This should be solved in the config module / ConfigCache object
@@ -74,8 +75,7 @@ def logwatch_service_description(
 
 def get_ruleset_matcher() -> RulesetMatcher:
     """Return a helper object to perform matching on Checkmk rulesets"""
-    _load_config()
-    return config.get_config_cache().ruleset_matcher
+    return _load_config().config_cache.ruleset_matcher
 
 
 def get_host_labels(hostname: HostName) -> Labels:

@@ -355,7 +355,7 @@ class QuickSetupStageActionBackgroundJob(BackgroundJob):
 
 
 def start_quick_setup_stage_job(
-    quick_setup: QuickSetup,
+    quick_setup_id: QuickSetupId,
     action_id: ActionId,
     stage_index: StageIndex,
     user_input_stages: Sequence[dict],
@@ -363,7 +363,7 @@ def start_quick_setup_stage_job(
     job_uuid = str(uuid.uuid4())
     job = QuickSetupStageActionBackgroundJob(
         job_uuid=job_uuid,
-        quick_setup_id=quick_setup.id,
+        quick_setup_id=quick_setup_id,
         action_id=action_id,
         stage_index=stage_index,
         user_input_stages=user_input_stages,
@@ -374,7 +374,7 @@ def start_quick_setup_stage_job(
             callable=quick_setup_stage_action_job_entry_point,
             args=QuickSetupStageActionJobArgs(
                 job_uuid=job_uuid,
-                quick_setup_id=quick_setup.id,
+                quick_setup_id=quick_setup_id,
                 action_id=action_id,
                 stage_index=stage_index,
                 user_input_stages=user_input_stages,
@@ -382,7 +382,7 @@ def start_quick_setup_stage_job(
         ),
         InitialStatusArgs(
             title=_("Running Quick setup %s stage %s action %s")
-            % (quick_setup.id, stage_index, action_id),
+            % (quick_setup_id, stage_index, action_id),
             user=str(user.id) if user.id else None,
         ),
     )

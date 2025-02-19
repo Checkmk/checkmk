@@ -269,7 +269,7 @@ def quicksetup_run_stage_action(params: Mapping[str, Any]) -> Response:
 
     if isinstance(stage_action, QuickSetupBackgroundStageAction):
         background_job_id = start_quick_setup_stage_job(
-            quick_setup=quick_setup,
+            quick_setup_id=quick_setup.id,
             action_id=stage_action_id,
             stage_index=stage_index,
             user_input_stages=body["stages"],

@@ -47,6 +47,7 @@ def show_filter_form(
             vs_filters._page_request_vars,
             page_name,
             reset_ajax_page,
+            context,
         )
 
         html.open_div(id_=filter_list_selected_id, class_=["side_popup_content"])
@@ -74,6 +75,7 @@ def _show_filter_form_buttons(
     page_request_vars: Mapping[str, Any] | None,
     view_name: str,
     reset_ajax_page: str,
+    context: VisualContext,
 ) -> None:
     html.open_div(class_="side_popup_controls")
 
@@ -92,12 +94,13 @@ def _show_filter_form_buttons(
         "%s_reset" % varprefix,
         _("Reset"),
         cssclass="reset",
-        onclick="cmk.valuespecs.visual_filter_list_reset(%s, %s, %s, %s)"
+        onclick="cmk.valuespecs.visual_filter_list_reset(%s, %s, %s, %s, %s)"
         % (
             json.dumps(varprefix),
             json.dumps(page_request_vars),
             json.dumps(view_name),
             json.dumps(reset_ajax_page),
+            json.dumps(context),
         ),
     )
     html.close_div()

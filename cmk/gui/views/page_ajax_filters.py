@@ -47,7 +47,17 @@ class AjaxInitialViewFilters(ABCAjaxInitialFilters):
         show_filters = visuals.filters_of_visual(
             view_spec, datasource.infos, link_filters=datasource.link_filters
         )
+
         view_context = view_spec.get("context", {})
+        current_context = self.webapi_request().get("context")
+
+        # If single info keys are missing in the spec context take them from the current context
+        single_info_keys = visuals.get_missing_single_infos(view_spec["single_infos"], view_context)
+        if single_info_keys and current_context is not None:
+            view_context = {
+                **view_context,
+                **{k: current_context[k] for k in single_info_keys if k in current_context},
+            }
 
         # Return a visual filters dict filled with the view context values
         return {f.ident: view_context.get(f.ident, {}) for f in show_filters if f.available()}

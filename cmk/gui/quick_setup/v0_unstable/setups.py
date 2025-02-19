@@ -42,7 +42,7 @@ CallableAction = Callable[[ParsedFormData, QuickSetupActionMode, str | None], st
 WidgetConfigurator = Callable[[], Sequence[Widget]]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class QuickSetupStageAction:
     """Data class representing an action that can be triggered in a quick setup stage when
     proceeding to the next stage.
@@ -86,7 +86,7 @@ class QuickSetupStageAction:
     run_in_background: bool = False
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class QuickSetupStage:
     """Quick setup stage definition
 
@@ -115,7 +115,7 @@ class QuickSetupStage:
     prev_button_label: str | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class QuickSetupAction:
     """Dataclass representing an action that can be triggered at the end of the Quick setup flow.
 
@@ -151,7 +151,7 @@ class QuickSetupAction:
     run_in_background: bool = False
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class QuickSetup:
     title: str
     id: QuickSetupId

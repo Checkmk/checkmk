@@ -36,7 +36,11 @@ from tests.testlib.common.repo import (  # noqa: E402
     is_saas_repo,
     repo_path,
 )
-from tests.testlib.common.utils import run, verbose_called_process_error  # noqa: E402
+from tests.testlib.common.utils import (  # noqa: E402
+    is_containerized,
+    run,
+    verbose_called_process_error,
+)
 from tests.testlib.pytest_helpers.timeouts import MonitorTimeout, SessionTimeoutError  # noqa: E402
 
 logger = logging.getLogger(__name__)
@@ -79,26 +83,46 @@ def pytest_exception_interact(
     if not (excinfo := call.excinfo):
         return
 
-    _excp = excinfo.value
+    testsuite_type = node.config.getoption("-T")
+    sudo_run_in_container = is_containerized()
+
+    excp_ = excinfo.value
+    if testsuite_type in ("composition"):
+        ps_out = _stdout_or_return_exception(ps_cmd := "ps -ef", sudo=sudo_run_in_container)
+        lslocks_out = _stdout_or_return_exception(
+            lslocks_cmd := "lslocks --output-all --notruncate", sudo=sudo_run_in_container
+        )
+        excp_.add_note("-" * 80)
+        excp_.add_note(f"OUTPUT '{ps_cmd}':\n{ps_out}")
+        excp_.add_note("-" * 80)
+        excp_.add_note(f"OUTPUT '{lslocks_cmd}':\n{lslocks_out}")
+
     if excinfo.type == SessionTimeoutError:
         # Prevents execution of the next test and exits the pytest-run, and
         # leads to clean termination of the affected test run.
         node.session.shouldstop = True
     elif excinfo.type in (TimeoutError, PWTimeoutError):
-        try:
-            top_output = f"\n{run(["top", "-b", "-n", "1"], check=False).stdout}"
-            print(top_output)
-        except Exception:
-            # silence any exception when running top since
-            # we do not want to break the exception handling
-            logger.error('Could not get "top" output on TimeoutError!')
-    elif isinstance(_excp, subprocess.CalledProcessError):
-        _excp.add_note(verbose_called_process_error(_excp))
-        logger.exception(_excp)
+        top_out = _stdout_or_return_exception(top_cmd := "top -b -n 1", sudo=sudo_run_in_container)
+        excp_.add_note("-" * 80)
+        excp_.add_note(f"OUTPUT '{top_cmd}':\n{top_out}")
+    elif isinstance(excp_, subprocess.CalledProcessError):
+        excp_.add_note(verbose_called_process_error(excp_))
+        logger.exception(excp_)
 
     report.longrepr = node.repr_failure(excinfo)
     if PYTEST_RAISE:
-        raise _excp
+        raise excp_
+
+
+def _stdout_or_return_exception(cmd: str, sudo: bool) -> str:
+    """Catch exception arising from command run and return it as string.
+
+    Command execution can have non-zero exit-code.
+    """
+    try:
+        return run(cmd.split(" "), sudo=sudo, check=False).stdout
+    except BaseException as excp:
+        return str(excp)
 
 
 @pytest.hookimpl(tryfirst=True)

@@ -19,7 +19,7 @@ from ._status import JobLogInfo, JobStatusSpec, JobStatusStates
 class JobStatusSpecUpdate(TypedDict, total=False):
     state: str  # Make Literal["initialized", "running", "finished", "stopped", "exception"]
     started: float  # Change to Timestamp type later
-    pid: int | None
+    pid: int | None  # Jobs are threads now, so this holds the thread ID now
     loginfo: JobLogInfo
     is_active: bool
     duration: float  # Make this mandatory
@@ -28,7 +28,7 @@ class JobStatusSpecUpdate(TypedDict, total=False):
     deletable: bool
     user: str | None
     estimated_duration: float | None
-    ppid: int
+    ppid: int  # Process ID of the job scheduler
     logfile_path: str
     acknowledged_by: str | None
     lock_wato: bool

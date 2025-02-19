@@ -10,6 +10,7 @@ This must not be imported from anywhere outside of the background job process.""
 from __future__ import annotations
 
 import logging
+import os
 import threading
 import time
 from collections.abc import Callable, Iterator
@@ -95,7 +96,13 @@ def run_process(job_parameters: JobParameters) -> None:
             ),
         ):
             logger.log(VERBOSE, "Initialized background job (Job ID: %s)", job_id)
-            jobstatus_store.update({"state": JobStatusStates.RUNNING})
+            jobstatus_store.update(
+                {
+                    "state": JobStatusStates.RUNNING,
+                    "ppid": os.getpid(),
+                    "pid": threading.get_native_id(),
+                }
+            )
 
             _execute_function(
                 logger,

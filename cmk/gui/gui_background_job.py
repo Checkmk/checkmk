@@ -285,7 +285,7 @@ class JobRenderer:
             )
         for left, right in [
             (_("Runtime"), runtime_info),
-            (_("PID"), str(job_status.pid) or ""),
+            (_("Thread ID"), str(job_status.pid) or ""),
             (_("Result"), "<br>".join(loginfo["JobResult"])),
         ]:
             if right is None:
@@ -378,7 +378,7 @@ class JobRenderer:
             _("State"),
             _("Started"),
             _("Owner"),
-            _("PID"),
+            _("Thread ID"),
             _("Runtime"),
             _("Last progress info"),
             _("Results"),
@@ -426,25 +426,14 @@ class JobRenderer:
         html.a(job_id, href=uri)
         html.close_td()
 
-        # Title
         html.td(job_status.title, css="job_title")
-
-        # State
         html.td(
             HTMLWriter.render_span(job_status.state),
             css=cls.get_css_for_jobstate(job_status.state),
         )
-
-        # Started
         html.td(cmk.utils.render.date_and_time(job_status.started), css="job_started")
-
-        # Owner
         html.td(job_status.user or _("Internal user"), css="job_owner")
-
-        # PID
         html.td(job_status.pid or "", css="job_pid")
-
-        # Druation
         html.td(cmk.utils.render.timespan(job_status.duration), css="job_runtime")
 
         # Progress info

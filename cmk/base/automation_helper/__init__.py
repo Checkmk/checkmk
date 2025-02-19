@@ -86,6 +86,6 @@ def _reload_automation_config(plugins: AgentBasedPlugins) -> config.LoadedConfig
 
 
 def _clear_caches_before_each_call() -> None:
-    ruleset_matcher = config.get_config_cache().ruleset_matcher
+    ruleset_matcher = config.access_globally_cached_config_cache().ruleset_matcher
     ruleset_matcher.ruleset_optimizer.clear_caches()
     ruleset_matcher.ruleset_optimizer.clear_ruleset_caches()

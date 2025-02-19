@@ -648,7 +648,8 @@ def _perform_post_config_loading_actions(
     discovery_settings = _collect_parameter_rulesets_from_globals(global_dict, discovery_rulesets)
     _transform_plugin_names_from_160_to_170(global_dict)
 
-    config_cache = get_config_cache().initialize()
+    config_cache = _create_config_cache().initialize()
+    _globally_cache_config_cache(config_cache)
     return LoadedConfigFragment(discovery_rules=discovery_settings, config_cache=config_cache)
 
 
@@ -4041,19 +4042,14 @@ class ConfigCache:
         return list(set(self.ruleset_matcher.get_host_values(host_name, host_icons_and_actions)))
 
 
-def get_config_cache() -> ConfigCache:
-    """get current or create clean config cache using cache manager"""
-    config_cache = cache_manager.obtain_cache("config_cache")
-    if not config_cache:
-        config_cache["cache"] = _create_config_cache()
-    return config_cache["cache"]
+def access_globally_cached_config_cache() -> ConfigCache:
+    """Get the global config cache"""
+    return cache_manager.obtain_cache("config_cache")["cache"]
 
 
-def reset_config_cache() -> ConfigCache:
-    """clean config cache using cache manager"""
-    config_cache = cache_manager.obtain_cache("config_cache")
-    config_cache["cache"] = _create_config_cache()
-    return config_cache["cache"]
+def _globally_cache_config_cache(config_cache: ConfigCache) -> None:
+    """Create a new ConfigCache and set it in the cache manager"""
+    cache_manager.obtain_cache("config_cache")["cache"] = config_cache
 
 
 def _create_config_cache() -> ConfigCache:

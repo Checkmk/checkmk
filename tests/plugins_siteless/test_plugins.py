@@ -71,7 +71,7 @@ def test_checks_executor(
 
     source_info = SourceInfo(HOSTNAME, None, "test_dump", FetcherType.PUSH_AGENT, SourceType.HOST)
     submitter = BasicSubmitter(HOSTNAME)
-    config_cache = config.get_config_cache()
+    config_cache = config.access_globally_cached_config_cache()
     discovered_services = discover_services(
         HOSTNAME, agent_data_filename, config_cache, agent_based_plugins, source_info
     )

@@ -196,7 +196,7 @@ def test_automation_active_check(
     monkeypatch.setattr(core_config, "get_service_attributes", lambda *a, **kw: service_attrs)
     monkeypatch.setattr(config, "get_resource_macros", lambda *a, **kw: {})
 
-    config_cache = config.reset_config_cache()
+    config_cache = config.ConfigCache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *a, **kw: active_checks)
 
     active_check = AutomationActiveCheckTestable()
@@ -261,7 +261,7 @@ def test_automation_active_check_invalid_args(
     monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda *a, **kw: host_attrs)
     monkeypatch.setattr(config, "get_resource_macros", lambda *a, **kw: {})
 
-    config_cache = config.reset_config_cache()
+    config_cache = config.ConfigCache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *a, **kw: active_checks)
 
     monkeypatch.setattr(cmk.ccc.debug, "enabled", lambda: False)

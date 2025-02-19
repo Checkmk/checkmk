@@ -151,7 +151,7 @@ class RulesetAccess:
         *, host_name: str, plugin: CheckPlugin, logfile: str
     ) -> Sequence[ParameterLogwatchRules]:
         host_name = HostName(host_name)
-        matcher = cmk.base.config.get_config_cache().ruleset_matcher
+        matcher = cmk.base.config.access_globally_cached_config_cache().ruleset_matcher
         # We're using the logfile to match the ruleset, not necessarily the "item"
         # (which might be the group). However: the ruleset matcher expects this to be the item.
         # As a result, the following will all fail (hidden in `service_extra_conf`):
@@ -187,9 +187,11 @@ class RulesetAccess:
     @staticmethod
     def logwatch_ec_all(host_name: str) -> Sequence[ParameterLogwatchEc]:
         """Isolate the remaining API violation w.r.t. parameters"""
-        return cmk.base.config.get_config_cache().ruleset_matcher.get_host_values(
-            HostName(host_name),
-            cmk.base.config.checkgroup_parameters.get("logwatch_ec", []),  # type: ignore[arg-type]
+        return (
+            cmk.base.config.access_globally_cached_config_cache().ruleset_matcher.get_host_values(
+                HostName(host_name),
+                cmk.base.config.checkgroup_parameters.get("logwatch_ec", []),  # type: ignore[arg-type]
+            )
         )
 
 

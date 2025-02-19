@@ -10,6 +10,8 @@ from collections.abc import Iterable
 import pytest
 from pytest_mock import MockerFixture
 
+from cmk.base import config
+
 from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.logwatch.agent_based import commons as logwatch_
 from cmk.plugins.logwatch.agent_based import logwatch
@@ -163,6 +165,9 @@ def test_check_single(
     monkeypatch: pytest.MonkeyPatch, log_name: str, expected_result: Iterable[Result]
 ) -> None:
     monkeypatch.setattr(logwatch, "get_value_store", lambda: {})
+    monkeypatch.setattr(
+        config, config.access_globally_cached_config_cache.__name__, config.ConfigCache
+    )
     monkeypatch.setattr(
         logwatch_,
         logwatch_.compile_reclassify_params.__name__,

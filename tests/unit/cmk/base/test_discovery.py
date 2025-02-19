@@ -1287,6 +1287,10 @@ def test_commandline_discovery(
     ts.add_host(testhost, ipaddress=HostAddress("127.0.0.1"))
     ts.fake_standard_linux_agent_output(testhost)
     config_cache = ts.apply(monkeypatch)
+
+    # damn you logwatch!!
+    config._globally_cache_config_cache(config_cache)
+
     file_cache_options = FileCacheOptions()
     parser = CMKParser(
         config_cache.parser_factory(),

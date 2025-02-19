@@ -2720,9 +2720,7 @@ def test_get_config_file_paths_with_confd(folder_path_test_config: None) -> None
 
 
 def test_load_config_folder_paths(folder_path_test_config: None) -> None:
-    # reset makes our testing environment explicit and stable, but the test runs good with almost
-    # any config_cache.
-    config_cache = config.reset_config_cache()
+    config_cache = config.ConfigCache()
 
     assert config_cache.host_path(HostName("main-host")) == "/"
     assert config_cache.host_path(HostName("lvl0-host")) == "/wato/"

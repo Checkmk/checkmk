@@ -153,6 +153,7 @@ def current_branch_name(default: str = "no-branch") -> str:
             encoding="utf-8",
             stderr=subprocess.DEVNULL,
         )
+        LOGGER.info("Current branch: %s", branch_name)
     except subprocess.CalledProcessError:
         return default
 

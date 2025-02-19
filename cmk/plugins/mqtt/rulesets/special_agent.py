@@ -25,6 +25,7 @@ from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 def parameter_form() -> Dictionary:
     return Dictionary(
         title=Title("MQTT broker statistics"),
+        migrate=_migrate_instance_and_client_id,
         help_text=Help(
             "Connect to an MQTT broker to get statistics out of your instance. "
             "The information is fetched from the <tt>$SYS</tt> topic of the broker. The "

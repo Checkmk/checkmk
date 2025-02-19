@@ -304,6 +304,21 @@ export function toggle_folder(
     const obj = oDiv.parentNode as HTMLElement;
     const id = obj.id.substr(7);
 
+    // If the dropdown of the current folder object is currently open, we have
+    // to prevent pointer events on other folders. They would close the current
+    // dropdown.
+    const popup_menu = obj.querySelector("#popup_menu");
+    const all_folder_divs = document.querySelectorAll("div[id^='folder_']");
+    all_folder_divs.forEach(div => {
+        if (div.id.endsWith(id)) return;
+
+        if (popup_menu) {
+            (div as HTMLElement).style.pointerEvents = "none";
+        } else {
+            (div as HTMLElement).style.pointerEvents = "auto";
+        }
+    });
+
     const elements = ["edit", "popup_trigger_move", "delete"];
     for (const num in elements) {
         const elem = document.getElementById(elements[num] + "_" + id);

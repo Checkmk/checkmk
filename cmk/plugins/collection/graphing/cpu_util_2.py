@@ -17,7 +17,7 @@ metric_cpu_util_steal = metrics.Metric(
     name="cpu_util_steal",
     title=Title("Steal"),
     unit=UNIT_PERCENTAGE,
-    color=metrics.Color.ORANGE,
+    color=metrics.Color.BROWN,
 )
 metric_engine_cpu_util = metrics.Metric(
     name="engine_cpu_util",
@@ -65,7 +65,7 @@ metric_user = metrics.Metric(
     name="user",
     title=Title("User"),
     unit=UNIT_PERCENTAGE,
-    color=metrics.Color.GREEN,
+    color=metrics.Color.PURPLE,
 )
 metric_util = metrics.Metric(
     name="util",

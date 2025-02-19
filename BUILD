@@ -1,6 +1,7 @@
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@com_google_protobuf//:protobuf_version.bzl", "PROTOBUF_PYTHON_VERSION")
+load("@gazelle//:def.bzl", "gazelle")
 load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile_commands")
 load("@repo_license//:license.bzl", "REPO_LICENSE")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
@@ -215,4 +216,16 @@ proto_library_as(
         "@com_google_protobuf//:duration_proto",
         "@com_google_protobuf//:timestamp_proto",
     ],
+)
+
+gazelle(
+    name = "gazelle-update-repos",
+    args = [
+        "-from_file=non-free/packages/otel-collector/go.mod",
+    ],
+    command = "update-repos",
+)
+
+gazelle(
+    name = "gazelle",
 )

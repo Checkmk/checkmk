@@ -1974,7 +1974,7 @@ def _checkbox_js_url(host: Host, options: DiscoveryOptions) -> str:
 
 def _page_menu_entry_show_discovered_labels(host: Host, options: DiscoveryOptions) -> PageMenuEntry:
     return PageMenuEntry(
-        title=_("Show discovered service labels"),
+        title=_("Show active discovered service labels"),
         icon_name="toggle_on" if options.show_discovered_labels else "toggle_off",
         item=make_simple_link(
             _checkbox_js_url(

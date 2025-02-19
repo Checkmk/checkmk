@@ -180,12 +180,12 @@ graph_mem_absolute_2 = Graph(
         CriticalOf("mem_used"),
     ),
     compound_lines=(
-        "mem_used",
-        "mem_free",
+        "sreclaimable",
         "mem_lnx_cached",
         "mem_lnx_buffers",
         "swap_cached",
-        "sreclaimable",
+        "mem_free",
+        "mem_used",
     ),
     optional=("swap_cached", "sreclaimable"),
 )

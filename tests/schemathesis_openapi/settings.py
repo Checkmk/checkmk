@@ -41,7 +41,7 @@ schemathesis.register_string_format(
 )
 
 # hypothesis settings
-current_profile = getattr(settings, "_current_profile", "default")
+current_profile = getenv("SCHEMATHESIS_PROFILE", getattr(settings, "_current_profile", "default"))
 
 # default settings profile
 default_settings = {

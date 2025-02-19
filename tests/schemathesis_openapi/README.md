@@ -14,3 +14,5 @@ environment variables described below.
 * SCHEMATHESIS_ALLOW ........ Comma-separated list of unsuppressed known-issues (default: None)
 * SCHEMATHESIS_METHOD ....... The method to use for the stateless testing (default: <all>)
 * SCHEMATHESIS_ENDPOINT ..... The endpoint to use for the stateless testing (default: <all>)
+* SCHMATHESIS_PROFILE ....... The configuration profile to use for the testing (default: "default")
+                              Available options: "default", "qa", "ci", "debug"

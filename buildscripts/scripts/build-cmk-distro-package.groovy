@@ -97,6 +97,11 @@ def main() {
                     make buildclean
                     find . -name *.pth -delete
                 """);
+                if(disable_cache) {
+                    sh("""
+                        rm -rf remote.bazelrc
+                    """)
+                }
                 versioning.configure_checkout_folder(edition, cmk_version);
             }
 

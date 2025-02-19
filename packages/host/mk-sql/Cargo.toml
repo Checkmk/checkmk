@@ -10,46 +10,43 @@ edition.workspace = true
 unexpected_cfgs = { level = "allow", check-cfg = ['cfg(build_system_bazel)'] }
 
 [dependencies]
-tiberius = { version = "0.12.3", features = [
-  "winauth",
-  "sql-browser-tokio",
-  # "integrated-auth-gssapi",
-] } # MS SQL
-
-
-# need to compile OpenSSL. See:
-# https://stackoverflow.com/questions/68871193/pkg-config-error-during-rust-cross-compilation
-# https://github.com/rust-cross/rust-musl-cross/issues/44
-openssl = { version = "0.10.68", features = ["vendored"] }
-tokio = { version = "1.42.0", features = [
-  "full",
-  "rt",
-  "rt-multi-thread",
-  "macros",
-] }
-# tokio-rustls = "0.24.1"
-tokio-util = { version = "0.7.13", features = ["compat"] }
-anyhow = "1.0.94"
-# tokio-macros = "2.1.0"
-flexi_logger = { version = "0.29", default-features = false } # extension for log to allow log redirection
-log = { version = "0.4" }
-clap = { version = "4.5.22", features = ["derive"] }
-yaml-rust2 = "0.9.0"
-lazy_static = { version = "1.5" }
-futures = { version = "0.3.31" }
+anyhow.workspace = true
+clap = { workspace = true, features = ["derive"] }
 # used for New Types derives, may be removed
-derive_more = { version = "1.0", features = [
+derive_more = { workspace = true, features = [
   "from",
   "display",
   "into",
   "default",
 ] }
-
+flexi_logger.workspace = true
+futures.workspace = true
+lazy_static.workspace = true
+log.workspace = true
+# need to compile OpenSSL. See:
+# https://stackoverflow.com/questions/68871193/pkg-config-error-during-rust-cross-compilation
+# https://github.com/rust-cross/rust-musl-cross/issues/44
+openssl = { workspace = true, features = ["vendored"] }
+tiberius = { workspace = true, features = [
+  "winauth",
+  "sql-browser-tokio",
+  # "integrated-auth-gssapi",
+] } # MS SQL
+tokio = { workspace = true, features = [
+  "full",
+  "rt",
+  "rt-multi-thread",
+  "macros",
+] }
+# tokio-macros = "2.1.0"
+# tokio-rustls = "0.24.1"
+tokio-util = { workspace = true, features = ["compat"] }
+yaml-rust2.workspace = true
 
 [target.'cfg(windows)'.dependencies]
-winreg = "0.52"
-odbc-api = "10.0.0"
+odbc-api.workspace = true
+winreg.workspace = true
 
 [dev-dependencies]
-tempfile = { version = "*" }
-assert_cmd = { version = "*" }
+assert_cmd.workspace = true
+tempfile.workspace = true

@@ -42,6 +42,8 @@ ARGV = [
     "--require-tag-value",
     "tag2",
     "value2",
+    "--cache-id",
+    "testhost",
 ]
 
 ARGS = Args(
@@ -56,6 +58,7 @@ ARGS = Args(
     client="client-id",
     tenant="tenant-id",
     secret="secret",
+    cache_id="testhost",
     proxy=None,
     require_tag=["tag1"],
     require_tag_value=[["tag2", "value2"]],
@@ -83,6 +86,7 @@ ARGS = Args(
                 "argparse: client = 'client-id'",
                 "argparse: tenant = 'tenant-id'",
                 "argparse: secret = '****'",
+                "argparse: cache_id = 'testhost'",
                 "argparse: proxy = None",
                 "argparse: require_tag = ['tag1']",
                 "argparse: require_tag_value = [['tag2', 'value2']]",

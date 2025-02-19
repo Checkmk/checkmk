@@ -117,6 +117,11 @@ def agent_azure_arguments(
     if params.connection_test:
         args += ["--connection-test"]
 
+    args += [
+        "--cache-id",
+        host_config.name,
+    ]
+
     yield SpecialAgentCommand(command_arguments=args)
 
 

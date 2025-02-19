@@ -5,11 +5,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { computed } from 'vue'
+
 import CmkCollapsible from '@/components/CmkCollapsible.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
 
 import QuickSetupStageContent from './QuickSetupStageContent.vue'
-
 import type { QuickSetupStageProps } from './quick_setup_types'
 
 const props = defineProps<QuickSetupStageProps>()
@@ -33,11 +33,14 @@ const onClickGoTo = computed(() =>
   >
     <div class="qs-stage__content">
       <CmkLabel variant="title" :on-click="onClickGoTo">{{ title }}</CmkLabel>
-      <CmkLabel v-if="!isCompleted && sub_title" variant="subtitle">{{ sub_title }}</CmkLabel>
 
-      <div v-if="isCompleted && recapContent">
+      <CmkCollapsible :open="isCompleted && !!recapContent">
         <component :is="recapContent" />
-      </div>
+      </CmkCollapsible>
+
+      <CmkCollapsible :open="!isCompleted && !!sub_title">
+        <CmkLabel variant="subtitle">{{ sub_title }}</CmkLabel>
+      </CmkCollapsible>
 
       <CmkCollapsible :open="isOpen">
         <QuickSetupStageContent

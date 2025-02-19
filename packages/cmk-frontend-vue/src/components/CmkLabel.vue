@@ -22,7 +22,7 @@ const labelVariants = cva('', {
 })
 type LabelVariants = VariantProps<typeof labelVariants>
 
-interface LabelProps {
+export interface LabelProps {
   variant?: LabelVariants['variant']
   onClick?: (() => void) | null
 }

@@ -102,6 +102,8 @@ const waitIconEnabled = computed(() => {
 .qs-stage-content__loading {
   display: flex;
   align-items: center;
+  box-sizing: border-box;
+  height: 40px;
   padding-top: 12px;
 }
 </style>

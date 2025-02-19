@@ -9,6 +9,8 @@ from cmk.gui.form_specs.private.single_choice_editable import SingleChoiceEditab
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import _
 
+from cmk.rulesets.v1 import Message
+from cmk.rulesets.v1.form_specs.validators import ValidationError
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 
@@ -20,7 +22,7 @@ from ._utils import (
     get_title_and_help,
 )
 
-_ParsedValueModel = str
+_ParsedValueModel = str | None
 _FrontendModel = str | None
 
 
@@ -28,6 +30,8 @@ class SingleChoiceEditableVisitor(
     FormSpecVisitor[SingleChoiceEditable, _ParsedValueModel, _FrontendModel]
 ):
     def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
+        if raw_value is None:
+            return None
         if isinstance(raw_value, DefaultValue):
             return InvalidValue[_FrontendModel](reason=_("Invalid data"), fallback_value=None)
         if not isinstance(raw_value, str):
@@ -35,7 +39,15 @@ class SingleChoiceEditableVisitor(
         return raw_value
 
     def _validators(self) -> Sequence[Callable[[_ParsedValueModel], object]]:
-        return compute_validators(self.form_spec)
+        def _validate_not_none(value: str | None) -> None:
+            if value is None:
+                raise ValidationError(
+                    Message('Please choose a parameter or click "Create" to add a new one.'),
+                )
+
+        validators = [_validate_not_none]
+
+        return validators + compute_validators(self.form_spec)
 
     def _to_vue(
         self, raw_value: object, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]

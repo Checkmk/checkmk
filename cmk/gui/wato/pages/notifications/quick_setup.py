@@ -1094,7 +1094,6 @@ def notification_method() -> QuickSetupStage:
                                                 )
                                                 for script_name, title in notification_script_choices()
                                             ],
-                                            custom_validate=[_validate_parameter_choice],
                                             layout=CascadingSingleChoiceLayout.vertical,
                                             prefill=DefaultValue("mail"),
                                         ),
@@ -1137,15 +1136,6 @@ def notification_method() -> QuickSetupStage:
         ],
         prev_button_label=PREV_BUTTON_LABEL,
     )
-
-
-def _validate_parameter_choice(script_config: tuple[str, object]) -> None:
-    parameter_choice = script_config[1]
-    assert isinstance(parameter_choice, dict)
-    if parameter_choice.get("parameter_id") is None:
-        raise ValidationError(
-            Message("Please choose a notification parameter or create one."),
-        )
 
 
 def _get_sorted_users() -> list[tuple[UserId, str]]:

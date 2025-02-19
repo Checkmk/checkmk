@@ -1,5 +1,5 @@
 {
-  "checksum": "9c835e099f46901dcb7566aa6bdada6170036e50babc52dbe0cc2d23370cfc61",
+  "checksum": "c867a61a05955a03e85c96ff3f21499829a8d45e09fff1d372c19f39a4853c91",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -815,96 +815,6 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "asn1-rs 0.7.0": {
-      "name": "asn1-rs",
-      "version": "0.7.0",
-      "package_url": "https://github.com/rusticata/asn1-rs.git",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/asn1-rs/0.7.0/download",
-          "sha256": "607495ec7113b178fbba7a6166a27f99e774359ef4823adbefd756b5b81d7970"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "asn1_rs",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "asn1_rs",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "datetime",
-            "default",
-            "std",
-            "time"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "nom 7.1.3",
-              "target": "nom"
-            },
-            {
-              "id": "num-traits 0.2.19",
-              "target": "num_traits"
-            },
-            {
-              "id": "rusticata-macros 4.1.0",
-              "target": "rusticata_macros"
-            },
-            {
-              "id": "thiserror 2.0.11",
-              "target": "thiserror"
-            },
-            {
-              "id": "time 0.3.37",
-              "target": "time"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2018",
-        "proc_macro_deps": {
-          "common": [
-            {
-              "id": "asn1-rs-derive 0.6.0",
-              "target": "asn1_rs_derive"
-            },
-            {
-              "id": "asn1-rs-impl 0.2.0",
-              "target": "asn1_rs_impl"
-            },
-            {
-              "id": "displaydoc 0.2.5",
-              "target": "displaydoc"
-            }
-          ],
-          "selects": {}
-        },
-        "version": "0.7.0"
-      },
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
     "asn1-rs-derive 0.4.0": {
       "name": "asn1-rs-derive",
       "version": "0.4.0",
@@ -965,66 +875,6 @@
       ],
       "license_file": null
     },
-    "asn1-rs-derive 0.6.0": {
-      "name": "asn1-rs-derive",
-      "version": "0.6.0",
-      "package_url": "https://github.com/rusticata/asn1-rs.git",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/asn1-rs-derive/0.6.0/download",
-          "sha256": "3109e49b1e4909e9db6515a30c633684d68cdeaa252f215214cb4fa1a5bfee2c"
-        }
-      },
-      "targets": [
-        {
-          "ProcMacro": {
-            "crate_name": "asn1_rs_derive",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "asn1_rs_derive",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "proc-macro2 1.0.93",
-              "target": "proc_macro2"
-            },
-            {
-              "id": "quote 1.0.38",
-              "target": "quote"
-            },
-            {
-              "id": "syn 2.0.98",
-              "target": "syn"
-            },
-            {
-              "id": "synstructure 0.13.1",
-              "target": "synstructure"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2018",
-        "version": "0.6.0"
-      },
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
     "asn1-rs-impl 0.1.0": {
       "name": "asn1-rs-impl",
       "version": "0.1.0",
@@ -1073,62 +923,6 @@
         },
         "edition": "2018",
         "version": "0.1.0"
-      },
-      "license": "MIT/Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": null
-    },
-    "asn1-rs-impl 0.2.0": {
-      "name": "asn1-rs-impl",
-      "version": "0.2.0",
-      "package_url": "https://github.com/rusticata/asn1-rs.git",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/asn1-rs-impl/0.2.0/download",
-          "sha256": "7b18050c2cd6fe86c3a76584ef5e0baf286d038cda203eb6223df2cc413565f7"
-        }
-      },
-      "targets": [
-        {
-          "ProcMacro": {
-            "crate_name": "asn1_rs_impl",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "asn1_rs_impl",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "proc-macro2 1.0.93",
-              "target": "proc_macro2"
-            },
-            {
-              "id": "quote 1.0.38",
-              "target": "quote"
-            },
-            {
-              "id": "syn 2.0.98",
-              "target": "syn"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2018",
-        "version": "0.2.0"
       },
       "license": "MIT/Apache-2.0",
       "license_ids": [
@@ -2027,7 +1821,7 @@
               "target": "tracing_subscriber"
             },
             {
-              "id": "x509-parser 0.17.0",
+              "id": "x509-parser 0.15.1",
               "target": "x509_parser"
             }
           ],
@@ -2843,88 +2637,6 @@
         "version": "8.2.0"
       },
       "license": "MIT/Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
-    "der-parser 10.0.0": {
-      "name": "der-parser",
-      "version": "10.0.0",
-      "package_url": "https://github.com/rusticata/der-parser.git",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/der-parser/10.0.0/download",
-          "sha256": "07da5016415d5a3c4dd39b11ed26f915f52fc4e0dc197d87908bc916e51bc1a6"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "der_parser",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "der_parser",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "bigint",
-            "default",
-            "num-bigint",
-            "std"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "asn1-rs 0.7.0",
-              "target": "asn1_rs"
-            },
-            {
-              "id": "nom 7.1.3",
-              "target": "nom"
-            },
-            {
-              "id": "num-bigint 0.4.6",
-              "target": "num_bigint"
-            },
-            {
-              "id": "num-traits 0.2.19",
-              "target": "num_traits"
-            },
-            {
-              "id": "rusticata-macros 4.1.0",
-              "target": "rusticata_macros"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2018",
-        "proc_macro_deps": {
-          "common": [
-            {
-              "id": "displaydoc 0.2.5",
-              "target": "displaydoc"
-            }
-          ],
-          "selects": {}
-        },
-        "version": "10.0.0"
-      },
-      "license": "MIT OR Apache-2.0",
       "license_ids": [
         "Apache-2.0",
         "MIT"
@@ -7758,91 +7470,6 @@
         ]
       },
       "license": "MIT/Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
-    "oid-registry 0.8.1": {
-      "name": "oid-registry",
-      "version": "0.8.1",
-      "package_url": "https://github.com/rusticata/oid-registry.git",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/oid-registry/0.8.1/download",
-          "sha256": "12f40cff3dde1b6087cc5d5f5d4d65712f34016a03ed60e9c08dcc392736b5b7"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "oid_registry",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "oid_registry",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "crypto",
-            "default",
-            "kdf",
-            "nist_algs",
-            "pkcs1",
-            "pkcs12",
-            "pkcs7",
-            "pkcs9",
-            "registry",
-            "x509",
-            "x962"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "asn1-rs 0.7.0",
-              "target": "asn1_rs"
-            },
-            {
-              "id": "oid-registry 0.8.1",
-              "target": "build_script_build"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2018",
-        "version": "0.8.1"
-      },
-      "build_script_attrs": {
-        "data_glob": [
-          "**"
-        ]
-      },
-      "license": "MIT OR Apache-2.0",
       "license_ids": [
         "Apache-2.0",
         "MIT"
@@ -12786,7 +12413,9 @@
         ],
         "crate_features": {
           "common": [
+            "default",
             "password-hash",
+            "simple",
             "std"
           ],
           "selects": {}
@@ -14708,13 +14337,6 @@
         "compile_data_glob": [
           "**"
         ],
-        "crate_features": {
-          "common": [
-            "default",
-            "std"
-          ],
-          "selects": {}
-        },
         "deps": {
           "common": [
             {
@@ -19809,92 +19431,6 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "x509-parser 0.17.0": {
-      "name": "x509-parser",
-      "version": "0.17.0",
-      "package_url": "https://github.com/rusticata/x509-parser.git",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/x509-parser/0.17.0/download",
-          "sha256": "4569f339c0c402346d4a75a9e39cf8dad310e287eef1ff56d4c68e5067f53460"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "x509_parser",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "x509_parser",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "default"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "asn1-rs 0.7.0",
-              "target": "asn1_rs"
-            },
-            {
-              "id": "data-encoding 2.8.0",
-              "target": "data_encoding"
-            },
-            {
-              "id": "der-parser 10.0.0",
-              "target": "der_parser"
-            },
-            {
-              "id": "lazy_static 1.5.0",
-              "target": "lazy_static"
-            },
-            {
-              "id": "nom 7.1.3",
-              "target": "nom"
-            },
-            {
-              "id": "oid-registry 0.8.1",
-              "target": "oid_registry"
-            },
-            {
-              "id": "rusticata-macros 4.1.0",
-              "target": "rusticata_macros"
-            },
-            {
-              "id": "thiserror 2.0.11",
-              "target": "thiserror"
-            },
-            {
-              "id": "time 0.3.37",
-              "target": "time"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2018",
-        "version": "0.17.0"
-      },
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
     "yoke 0.7.5": {
       "name": "yoke",
       "version": "0.7.5",
@@ -20929,8 +20465,7 @@
     "tracing 0.1.41",
     "tracing-subscriber 0.3.19",
     "typed-builder 0.18.2",
-    "x509-parser 0.15.1",
-    "x509-parser 0.17.0"
+    "x509-parser 0.15.1"
   ],
   "direct_dev_deps": [
     "assertor 0.0.3",

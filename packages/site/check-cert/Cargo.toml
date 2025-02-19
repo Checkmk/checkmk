@@ -10,14 +10,14 @@ edition.workspace = true
 vendored = ["openssl/vendored"]
 
 [dependencies]
-anyhow = { version = "1.0.75", features = ["backtrace"] }
-clap = { version = "4.3.24", features = ["derive"] }
-openssl = { version = "0.10.57" }
-openssl-probe = "0.1.5"
-time = "0.3.37"
-typed-builder = "0.18.0"
-x509-parser = "0.15.1"
+anyhow = { workspace = true, features = ["backtrace"] }
+clap = { workspace = true, features = ["derive"] }
+openssl.workspace = true
+openssl-probe.workspace = true
+time.workspace = true
+typed-builder.workspace = true
+x509-parser.workspace = true
 
 [dev-dependencies]
-assertor = "*"
-tempfile = "*"
+assertor.workspace = true
+tempfile.workspace = true

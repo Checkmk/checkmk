@@ -11,28 +11,28 @@ edition.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-aes-gcm = { version = "*", features = ["aes", "std"] }
-anyhow = { version = "*" }
-bytes = { version = "*" }
-clap = { version = "*", features = ["derive"] }
-encoding_rs = { version = "*" }
-httpdate = { version = "*" }
-log = { version = "*" }
-mime = { version = "*" }
-regex = { version = "*" }
+aes-gcm = { workspace = true, features = ["aes", "std"] }
+anyhow.workspace = true
+bytes.workspace = true
+clap = { workspace = true, features = ["derive"] }
+encoding_rs.workspace = true
+httpdate.workspace = true
+log.workspace = true
+mime.workspace = true
+regex.workspace = true
 # We need either rustls-tls or native-tls-alpn to establish HTTP/2 connections.
 # Only native-tls supports TLS1.0/TLS1.1, while setting TLS1.3 as minimum version is only
 # supported by rustls.
 # Since we only know that at runtime we need to pull in both TLS backends.
-reqwest = { version = "*", features = [
+reqwest = { workspace = true, features = [
   "json",
   "rustls-tls-webpki-roots", # CCADB store (https://www.ccadb.org/) - Updated on (re)compilation
   "rustls-tls-native-roots", # Additionally listen to SSL_CERT_FILE
   "native-tls-alpn",
   "socks",
 ] }
-scrypt = { version = "*", default-features = false, features = ["std"] }
-tokio = { version = "*", features = ["rt", "macros", "rt-multi-thread"] }
-tracing = { version = "*" }
-tracing-subscriber = { version = "*", features = ["env-filter"] }
-x509-parser = { version = "*" }
+scrypt = { workspace = true, default-features = false, features = ["std"] }
+tokio = { workspace = true, features = ["rt", "macros", "rt-multi-thread"] }
+tracing.workspace = true
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
+x509-parser.workspace = true

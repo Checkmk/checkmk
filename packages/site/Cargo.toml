@@ -10,3 +10,27 @@ members = [
 ]
 package.edition = "2021"
 resolver = "2"
+
+
+[workspace.dependencies]
+aes-gcm = "*"
+anyhow = "1.0.75"
+assertor = "*"
+tempfile = "*" 
+bytes = "*"
+clap = { version = "4.3.24", features = ["derive"] }
+encoding_rs = "*"
+httpdate = "*"
+log = "*"
+mime = "*"
+regex = "*"
+reqwest = "*"
+openssl = { version = "0.10.57" }
+openssl-probe = "0.1.5"
+scrypt = "*"
+time = "0.3.37"
+tokio = "*"
+tracing = "*"
+tracing-subscriber = "*"
+typed-builder = "0.18.0"
+x509-parser = "0.15.1"

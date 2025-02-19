@@ -94,8 +94,9 @@ write_file(
 genrule(
     name = "_requirements-main",
     srcs = [
-        ":requirements_runtime_lock.txt",
-        ":requirements_dev.txt",
+        "//cmk:requirements.txt",
+        "//packages:python_requirements",
+        "//:requirements_dev.txt",
     ] + select({
         "@//:gpl_repo": [],
         "@//:gpl+enterprise_repo": ["//non-free:python_requirements"],
@@ -128,7 +129,8 @@ pip_compile(
         ":bazel-requirements-constraints.txt",
         ":requirements-main.txt",
         ":requirements_dev.txt",
-        ":requirements_runtime_lock.txt",
+        "//cmk:requirements.txt",
+        "//packages:python_requirements",
     ] + select({
         "@//:gpl_repo": [],
         "@//:gpl+enterprise_repo": [
@@ -160,11 +162,13 @@ genrule(
     srcs = [
         ":_requirements-runtime-main.txt",
         ":bazel-requirements-constraints.txt",
+        ":requirements_all_lock.txt",
     ],
     outs = ["requirements-runtime-main.txt"],
     cmd = """
       echo "-r $$(basename $(location _requirements-runtime-main.txt))" >> $@
       echo "-c $$(basename $(location bazel-requirements-constraints.txt))" >> $@
+      echo "-c $(location requirements_all_lock.txt)" >> $@
     """,
 )
 
@@ -174,6 +178,7 @@ pip_compile(
         ":_requirements-runtime-main.txt",
         ":bazel-requirements-constraints.txt",
         ":requirements-runtime-main.txt",
+        ":requirements_all_lock.txt",
         "//cmk:requirements.txt",
         "//packages:python_requirements",
     ] + select({

@@ -145,7 +145,6 @@ def current_base_branch_name() -> str:
     return branch_name
 
 
-@cache
 def current_branch_name(default: str = "no-branch") -> str:
     try:
         branch_name = subprocess.check_output(

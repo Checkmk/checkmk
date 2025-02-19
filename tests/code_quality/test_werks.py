@@ -130,10 +130,14 @@ def test_werk_versions_after_tagged(precompiled_werks: None) -> None:
 
     assert not list_of_offenders, (
         "The following Werks are not found in the git tag corresponding to their Version. "
-        "Looks like the wrong version was declared in these werks:\n"
-        + "\n".join(
-            "Werk #%d has version %s, not found in git tag %s, first found in %s" % entry
-            for entry in list_of_offenders
+        "Looks like the wrong version was declared in these werks:\n%s\n"
+        "Your HEAD thinks the next version to be released is %s."
+        % (
+            "\n".join(
+                "Werk #%d has version %s, not found in git tag %s, first found in %s" % entry
+                for entry in list_of_offenders
+            ),
+            cmk_version.__version__,
         )
     )
 

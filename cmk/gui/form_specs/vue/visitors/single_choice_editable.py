@@ -33,9 +33,14 @@ class SingleChoiceEditableVisitor(
         if raw_value is None:
             return None
         if isinstance(raw_value, DefaultValue):
-            return InvalidValue[_FrontendModel](reason=_("Invalid data"), fallback_value=None)
+            return InvalidValue[_FrontendModel](
+                reason=_("Value is default. Please provide a non-default value."),
+                fallback_value=None,
+            )
         if not isinstance(raw_value, str):
-            return InvalidValue[_FrontendModel](reason=_("Invalid data"), fallback_value=None)
+            return InvalidValue[_FrontendModel](
+                reason=_("Invalid data: value is not a string."), fallback_value=None
+            )
         return raw_value
 
     def _validators(self) -> Sequence[Callable[[_ParsedValueModel], object]]:

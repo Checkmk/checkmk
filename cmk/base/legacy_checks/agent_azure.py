@@ -62,6 +62,10 @@ def agent_azure_arguments(  # pylint: disable=too-many-branches
         elif isinstance(requirement, tuple) and requirement[0] == "value":
             args += ["--require-tag-value", tag, requirement[1]]
 
+    args += [
+        "--cache-id",
+        hostname,
+    ]
     return args
 
 

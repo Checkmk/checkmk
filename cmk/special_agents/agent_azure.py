@@ -255,6 +255,9 @@ def parse_arguments(argv: Sequence[str]) -> Args:
     parser.add_argument("--client", required=True, help="Azure client ID")
     parser.add_argument("--tenant", required=True, help="Azure tenant ID")
     parser.add_argument("--secret", required=True, help="Azure authentication secret")
+    parser.add_argument(
+        "--cache-id", required=True, help="Unique id for this special agent configuration"
+    )
 
     parser.add_argument(
         "--proxy",
@@ -1404,15 +1407,19 @@ def process_recovery_services_vaults(mgmt_client: MgmtApiClient, resource: Azure
 class MetricCache(DataCache):
     def __init__(
         self,
+        *,
         metric_definition: tuple[str, str, str],
         resource_type: str,
         region: str,
+        cache_id: str,
         ref_time: datetime.datetime,
         debug: bool = False,
     ) -> None:
         self.metric_definition = metric_definition
         metric_names = metric_definition[0]
-        super().__init__(self.get_cache_path(resource_type, region), metric_names, debug=debug)
+        super().__init__(
+            self.get_cache_path(cache_id, resource_type, region), metric_names, debug=debug
+        )
         self.remaining_reads = None
         self.timedelta = {
             "PT1M": datetime.timedelta(minutes=1),
@@ -1428,10 +1435,10 @@ class MetricCache(DataCache):
         self.end_time = ref_time.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     @staticmethod
-    def get_cache_path(resource_type: str, region: str) -> Path:
+    def get_cache_path(cache_id: str, resource_type: str, region: str) -> Path:
         valid_chars = f"-_.() {string.ascii_letters}{string.digits}"
         subdir = "".join(c if c in valid_chars else "_" for c in f"{region}_{resource_type}")
-        return AZURE_CACHE_FILE_PATH / subdir
+        return AZURE_CACHE_FILE_PATH / cache_id / subdir
 
     @property
     def cache_interval(self) -> int:
@@ -1542,7 +1549,12 @@ def gather_metrics(
         metric_definitions = ALL_METRICS.get(resource_type, [])
         for metric_definition in metric_definitions:
             cache = MetricCache(
-                metric_definition, resource_type, resource_region, NOW, debug=args.debug
+                metric_definition=metric_definition,
+                resource_type=resource_type,
+                region=resource_region,
+                cache_id=args.cache_id,
+                ref_time=NOW,
+                debug=args.debug,
             )
             try:
                 metrics = cache.get_data(

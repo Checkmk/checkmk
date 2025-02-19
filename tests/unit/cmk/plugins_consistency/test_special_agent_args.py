@@ -126,6 +126,8 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
         "TENANT",
         "--secret",
         "SECRET",
+        "--cache-id",
+        "HOSTNAME",
     ],
     "couchbase": ["HOSTNAME"],
     "elasticsearch": ["HOSTNAME"],

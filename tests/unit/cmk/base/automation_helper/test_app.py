@@ -32,7 +32,7 @@ from cmk.base.automation_helper._app import (
 from cmk.base.automation_helper._cache import Cache
 from cmk.base.automation_helper._config import ReloaderConfig
 from cmk.base.automations import AutomationError
-from cmk.base.config import LoadedConfigSentinel
+from cmk.base.config import LoadedConfigFragment
 
 
 class _DummyAutomationResult(ABCAutomationResult):
@@ -50,7 +50,7 @@ class _DummyAutomationEngineSuccess:
         cmd: str,
         args: list[str],
         plugins: AgentBasedPlugins | None,
-        loaded_config: LoadedConfigSentinel | None,
+        loaded_config: LoadedConfigFragment | None,
     ) -> _DummyAutomationResult:
         sys.stdout.write("stdout_success")
         sys.stderr.write("stderr_success")
@@ -63,7 +63,7 @@ class _DummyAutomationEngineFailure:
         cmd: str,
         args: list[str],
         plugins: AgentBasedPlugins | None,
-        loaded_config: LoadedConfigSentinel | None,
+        loaded_config: LoadedConfigFragment | None,
     ) -> AutomationError:
         sys.stdout.write("stdout_failure")
         sys.stderr.write("stderr_failure")
@@ -76,7 +76,7 @@ class _DummyAutomationEngineSystemExit:
         cmd: str,
         args: list[str],
         plugins: AgentBasedPlugins | None,
-        loaded_config: LoadedConfigSentinel | None,
+        loaded_config: LoadedConfigFragment | None,
     ) -> AutomationError:
         sys.stdout.write("stdout_system_exit")
         sys.stderr.write("stderr_system_exit")
@@ -91,7 +91,7 @@ _EXAMPLE_AUTOMATION_PAYLOAD = AutomationPayload(
 def _make_test_client(
     engine: AutomationEngine,
     cache: Cache,
-    reload_config: Callable[[], LoadedConfigSentinel],
+    reload_config: Callable[[], LoadedConfigFragment],
     clear_caches_before_each_call: Callable[[], None],
     reloader_config: ReloaderConfig = ReloaderConfig(
         active=True,
@@ -235,7 +235,7 @@ def test_health_check(cache: Cache) -> None:
     with _make_test_client(
         _DummyAutomationEngineSuccess(),
         cache,
-        LoadedConfigSentinel,
+        lambda: LoadedConfigFragment(discovery_rules={}),
         lambda: None,
     ) as client:
         resp = client.get("/health")

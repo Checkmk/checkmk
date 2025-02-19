@@ -58,7 +58,7 @@ class Automations:
         cmd: str,
         args: list[str],
         plugins: AgentBasedPlugins | None = None,
-        loaded_config: config.LoadedConfigSentinel | None = None,
+        loaded_config: config.LoadedConfigFragment | None = None,
     ) -> ABCAutomationResult | AutomationError:
         remaining_args, timeout = self._extract_timeout_from_args(args)
         with nullcontext() if timeout is None else Timeout(timeout, message="Action timed out."):
@@ -69,7 +69,7 @@ class Automations:
         cmd: str,
         args: list[str],
         plugins: AgentBasedPlugins | None = None,
-        loaded_config: config.LoadedConfigSentinel | None = None,
+        loaded_config: config.LoadedConfigFragment | None = None,
     ) -> int:
         try:
             result = self.execute(
@@ -100,7 +100,7 @@ class Automations:
         cmd: str,
         args: list[str],
         plugins: AgentBasedPlugins | None,
-        loaded_config: config.LoadedConfigSentinel | None,
+        loaded_config: config.LoadedConfigFragment | None,
     ) -> ABCAutomationResult | AutomationError:
         try:
             try:
@@ -149,7 +149,7 @@ def load_plugins() -> AgentBasedPlugins:
     return get_previously_loaded_plugins()
 
 
-def load_config(discovery_rulesets: Iterable[RuleSetName]) -> config.LoadedConfigSentinel:
+def load_config(discovery_rulesets: Iterable[RuleSetName]) -> config.LoadedConfigFragment:
     with tracer.span("load_config"):
         return config.load(discovery_rulesets, validate_hosts=False)
 
@@ -162,7 +162,7 @@ class Automation(abc.ABC):
         self,
         args: list[str],
         plugins: AgentBasedPlugins | None,
-        loaded_config: config.LoadedConfigSentinel | None,
+        loaded_config: config.LoadedConfigFragment | None,
     ) -> ABCAutomationResult: ...
 
 

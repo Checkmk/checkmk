@@ -44,7 +44,7 @@ class AutomationEngine(Protocol):
         cmd: str,
         args: list[str],
         plugins: AgentBasedPlugins | None,
-        loaded_config: config.LoadedConfigSentinel | None,
+        loaded_config: config.LoadedConfigFragment | None,
     ) -> ABCAutomationResult | AutomationError: ...
 
 
@@ -53,7 +53,7 @@ class _State:
     automation_or_reload_lock: asyncio.Lock
     last_reload_at: float
     plugins: AgentBasedPlugins | None
-    loaded_config: config.LoadedConfigSentinel | None
+    loaded_config: config.LoadedConfigFragment | None
 
 
 @dataclass(frozen=True)
@@ -61,7 +61,7 @@ class _ApplicationDependencies:
     automation_engine: AutomationEngine
     changes_cache: Cache
     reloader_config: ReloaderConfig
-    reload_config: Callable[[], config.LoadedConfigSentinel]
+    reload_config: Callable[[], config.LoadedConfigFragment]
     clear_caches_before_each_call: Callable[[], None]
     state: _State
 
@@ -75,7 +75,7 @@ def make_application(
     engine: AutomationEngine,
     cache: Cache,
     reloader_config: ReloaderConfig,
-    reload_config: Callable[[], config.LoadedConfigSentinel],
+    reload_config: Callable[[], config.LoadedConfigFragment],
     clear_caches_before_each_call: Callable[[], None],
 ) -> FastAPI:
     app = FastAPI(
@@ -139,7 +139,7 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 async def _reloader_task(
     config: ReloaderConfig,
     cache: Cache,
-    reload_callback: Callable[[], config.LoadedConfigSentinel],
+    reload_callback: Callable[[], config.LoadedConfigFragment],
     state: _State,
     delayer_factory: Callable[[float], Awaitable[None]] = asyncio.sleep,
 ) -> None:
@@ -209,7 +209,7 @@ def _execute_automation_endpoint(
     payload: AutomationPayload,
     engine: AutomationEngine,
     cache: Cache,
-    reload_config: Callable[[], config.LoadedConfigSentinel],
+    reload_config: Callable[[], config.LoadedConfigFragment],
     clear_caches_before_each_call: Callable[[], None],
     state: _State,
 ) -> AutomationResponse:

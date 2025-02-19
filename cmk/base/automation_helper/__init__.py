@@ -79,7 +79,7 @@ def main() -> int:
     return 0
 
 
-def _reload_automation_config() -> config.LoadedConfigSentinel:
+def _reload_automation_config() -> config.LoadedConfigFragment:
     cache_manager.clear()
     plugins = get_previously_loaded_plugins()
     discovery_rulesets = extract_known_discovery_rulesets(plugins)

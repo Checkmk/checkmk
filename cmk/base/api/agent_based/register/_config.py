@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Collection, Mapping, Sequence
+from collections.abc import Collection, Mapping
 from dataclasses import dataclass
 
 from cmk.utils.rulesets import RuleSetName
-from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
@@ -25,13 +24,6 @@ registered_agent_sections: dict[SectionName, AgentSectionPlugin] = {}
 registered_snmp_sections: dict[SectionName, SNMPSectionPlugin] = {}
 registered_check_plugins: dict[CheckPluginName, CheckPlugin] = {}
 registered_inventory_plugins: dict[InventoryPluginName, InventoryPlugin] = {}
-
-# N O T E: This currently contains discovery *and* host_label rulesets.
-# The rules are deliberately put the same dictionary, as we allow for
-# the host_label_function and the discovery_function to share a ruleset.
-# We provide separate API functions however, should the need arise to
-# separate them.
-stored_rulesets: dict[RuleSetName, Sequence[RuleSpec]] = {}
 
 
 @dataclass(frozen=True)
@@ -68,10 +60,6 @@ def extract_known_discovery_rulesets(plugins: AgentBasedPlugins) -> Collection[R
     }
 
 
-def get_previously_collected_discovery_rules() -> Mapping[RuleSetName, Sequence[RuleSpec]]:
-    return stored_rulesets
-
-
 def add_check_plugin(check_plugin: CheckPlugin) -> None:
     registered_check_plugins[check_plugin.name] = check_plugin
 
@@ -102,11 +90,3 @@ def is_registered_inventory_plugin(inventory_plugin_name: InventoryPluginName) -
 
 def is_registered_section_plugin(section_name: SectionName) -> bool:
     return section_name in registered_snmp_sections or section_name in registered_agent_sections
-
-
-def set_discovery_ruleset(
-    ruleset_name: RuleSetName,
-    rules: Sequence[RuleSpec],
-) -> None:
-    """Set a ruleset to a given value"""
-    stored_rulesets[ruleset_name] = rules

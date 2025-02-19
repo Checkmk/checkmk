@@ -558,8 +558,9 @@ def register(name: str, default_value: Any) -> None:
 #   '----------------------------------------------------------------------'
 
 
-class LoadedConfigSentinel:
-    """Indicate that a config loading function has been called.
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class LoadedConfigFragment:
+    """Return *some of* the values that have been loaded as part of the config loading process.
 
     The config loading currently mostly manipulates a global state.
     Return an instance of this class, to indicate that the config has been loaded.
@@ -567,8 +568,7 @@ class LoadedConfigSentinel:
     Someday (TM): return the actual loaded config!
     """
 
-    def __bool__(self) -> Literal[True]:
-        return True
+    discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]]
 
 
 # This function still mostly manipulates a global state.
@@ -577,14 +577,14 @@ def load(
     discovery_rulesets: Iterable[RuleSetName],
     with_conf_d: bool = True,
     validate_hosts: bool = True,
-) -> LoadedConfigSentinel:
+) -> LoadedConfigFragment:
     _initialize_config()
 
     _changed_var_names = _load_config(with_conf_d)
 
     _initialize_derived_config_variables()
 
-    _perform_post_config_loading_actions(discovery_rulesets)
+    loaded_config = _perform_post_config_loading_actions(discovery_rulesets)
 
     if validate_hosts:
         config_cache = get_config_cache()
@@ -601,12 +601,14 @@ def load(
             )
             sys.exit(3)
 
-    return LoadedConfigSentinel()
+    return loaded_config
 
 
 # This function still mostly manipulates a global state.
 # Passing the discovery rulesets as an argument is a first step to make it more functional.
-def load_packed_config(config_path: ConfigPath, discovery_rulesets: Iterable[RuleSetName]) -> None:
+def load_packed_config(
+    config_path: ConfigPath, discovery_rulesets: Iterable[RuleSetName]
+) -> LoadedConfigFragment:
     """Load the configuration for the CMK helpers of CMC
 
     These files are written by PackedConfig().
@@ -622,23 +624,26 @@ def load_packed_config(config_path: ConfigPath, discovery_rulesets: Iterable[Rul
     """
     _initialize_config()
     globals().update(PackedConfigStore.from_serial(config_path).read())
-    _perform_post_config_loading_actions(discovery_rulesets)
+    return _perform_post_config_loading_actions(discovery_rulesets)
 
 
 def _initialize_config() -> None:
     load_default_config()
 
 
-def _perform_post_config_loading_actions(discovery_rulesets: Iterable[RuleSetName]) -> None:
+def _perform_post_config_loading_actions(
+    discovery_rulesets: Iterable[RuleSetName],
+) -> LoadedConfigFragment:
     """These tasks must be performed after loading the Check_MK base configuration"""
     # First cleanup things (needed for e.g. reloading the config)
     cache_manager.clear_all()
 
     global_dict = globals()
-    _collect_parameter_rulesets_from_globals(global_dict, discovery_rulesets)
+    discovery_settings = _collect_parameter_rulesets_from_globals(global_dict, discovery_rulesets)
     _transform_plugin_names_from_160_to_170(global_dict)
 
     get_config_cache().initialize()
+    return LoadedConfigFragment(discovery_rules=discovery_settings)
 
 
 class SetFolderPathAbstract:
@@ -782,10 +787,10 @@ def _transform_plugin_names_from_160_to_170(global_dict: dict[str, Any]) -> None
 
 def _collect_parameter_rulesets_from_globals(
     global_dict: dict[str, Any], discovery_rulesets: Iterable[RuleSetName]
-) -> None:
-    for ruleset_name in discovery_rulesets:
-        if (var_name := str(ruleset_name)) in global_dict:
-            agent_based_register.set_discovery_ruleset(ruleset_name, global_dict.pop(var_name))
+) -> Mapping[RuleSetName, Sequence[RuleSpec]]:
+    return {
+        ruleset_name: global_dict.pop(str(ruleset_name), []) for ruleset_name in discovery_rulesets
+    }
 
 
 # Create list of all files to be included during configuration loading

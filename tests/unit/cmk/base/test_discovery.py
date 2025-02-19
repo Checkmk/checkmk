@@ -20,7 +20,6 @@ from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.rulesets import RuleSetName
-from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib import SNMPRawData
@@ -1366,23 +1365,6 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
     ts.add_host(hostname, ipaddress=HostAddress("127.0.0.1"))
     config_cache = ts.apply(monkeypatch)
 
-    agent_based_register.set_discovery_ruleset(
-        RuleSetName("inventory_df_rules"),
-        list[RuleSpec[dict[str, list[str]]]](
-            [
-                {
-                    "id": "nobody-cares-about-the-id-in-this-test",
-                    "value": {
-                        "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
-                        "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
-                    },
-                    "condition": {
-                        "host_label_groups": [("and", [("and", "cmk/check_mk_server:yes")])]
-                    },
-                }
-            ]
-        ),
-    )
     DiscoveredHostLabelsStore(hostname).save(
         [
             HostLabel("existing_label", "bar", SectionName("foo")),
@@ -1470,23 +1452,6 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
     )
     config_cache = ts.apply(monkeypatch)
 
-    agent_based_register.set_discovery_ruleset(
-        RuleSetName("inventory_df_rules"),
-        list[RuleSpec[dict[str, list[str]]]](
-            [
-                {
-                    "id": "nobody-cares-about-the-id-in-this-test",
-                    "value": {
-                        "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
-                        "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
-                    },
-                    "condition": {
-                        "host_label_groups": [("and", [("and", "cmk/check_mk_server:yes")])]
-                    },
-                }
-            ]
-        ),
-    )
     DiscoveredHostLabelsStore(node1_hostname).save(
         [HostLabel("node1_existing_label", "true", SectionName("node1_plugin"))]
     )

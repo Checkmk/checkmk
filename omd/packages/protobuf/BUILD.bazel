@@ -5,11 +5,12 @@ load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 # Nowadays we are shipping those, so dynamic linking should work as well.
 pkg_files(
     name = "protobuf_bin",
-    srcs = ["@com_google_protobuf//:protoc"],
+    srcs = ["@com_google_protobuf//:protoc_static"],
     attributes = pkg_attributes(
         mode = "0755",
     ),
     prefix = "bin",
+    renames = {"@com_google_protobuf//:protoc_static": "protoc"},
 )
 
 pkg_files(

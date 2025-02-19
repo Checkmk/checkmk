@@ -298,8 +298,7 @@ def pytest_collection_modifyitems(items: list[pytest.Item], config: pytest.Confi
         type_marker = item.get_closest_marker("type")
         if type_marker and type_marker.args:
             continue  # Do not modify manually set marks
-        file_path = Path("%s" % item.reportinfo()[0])
-        repo_rel_path = file_path.relative_to(Path(__file__).parent.parent)
+        repo_rel_path = item.path.relative_to(Path(__file__).parent.parent)
         ty = repo_rel_path.parts[1]
         if ty not in test_types:
             if not isinstance(item, pytest.DoctestItem):

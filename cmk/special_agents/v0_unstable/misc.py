@@ -105,6 +105,12 @@ def datetime_serializer(obj):
 
 
 class DataCache(abc.ABC):
+    """
+    Attention! A user may configure multiple special agents per Checkmk instance.
+    Most of the time you don't want to share the Cache between those configurations.
+    Normally you should use the hostname as part of the cache_file_name or cache_file_dir.
+    """
+
     def __init__(self, cache_file_dir: Path, cache_file_name: str, debug: bool = False) -> None:
         self._cache_file_dir = cache_file_dir
         self._cache_file = self._cache_file_dir / ("%s.cache" % cache_file_name)

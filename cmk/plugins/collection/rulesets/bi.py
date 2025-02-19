@@ -21,6 +21,8 @@ from cmk.rulesets.v1.form_specs import (
     Password,
     RegularExpression,
     ServiceState,
+    SingleChoice,
+    SingleChoiceElement,
     String,
     validators,
 )
@@ -137,14 +139,13 @@ def _parameter_form() -> Dictionary:
                                         "aggr_group_prefix": DictElement(
                                             required=False,
                                             parameter_form=List(
-                                                element_template=CascadingSingleChoice(
+                                                element_template=SingleChoice(
                                                     elements=[
-                                                        CascadingSingleChoiceElement(
-                                                            name=name,
-                                                            title=Title(name),  # pylint: disable=localization-of-non-literal-string
-                                                            parameter_form=FixedValue(value=value),
+                                                        SingleChoiceElement(
+                                                            name=value,
+                                                            title=Title(title),  # pylint: disable=localization-of-non-literal-string
                                                         )
-                                                        for name, value in bi.aggregation_group_choices()
+                                                        for value, title in bi.aggregation_group_choices()
                                                     ],
                                                 ),
                                                 title=Title("By aggregation group prefix"),

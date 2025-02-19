@@ -186,7 +186,6 @@ include \
     packages/stunnel/stunnel.make \
     packages/check_mk/check_mk.make \
     packages/heirloom-pkgtools/heirloom-pkgtools.make \
-    packages/cpp-libs/cpp-libs.make \
     packages/libgsf/libgsf.make \
     packages/maintenance/maintenance.make \
     packages/mod_fcgid/mod_fcgid.make \

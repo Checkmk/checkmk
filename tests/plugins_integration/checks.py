@@ -9,7 +9,7 @@ import re
 import shlex
 import subprocess
 import time
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import IntEnum
@@ -47,24 +47,26 @@ class CheckConfig:
     mode: CheckModes = CheckModes.DEFAULT
     skip_cleanup: bool = False
     dump_types: list[str] | None = None
-    data_dir: str | None = None
-    dump_dir: str | None = None
-    response_dir: str | None = None
+    data_dir_integration: str | None = None
+    dump_dir_integration: str | None = None
+    response_dir_integration: str | None = None
+    data_dir_siteless: str | None = None
+    dump_dir_siteless: str | None = None
+    response_dir_siteless: str | None = None
     diff_dir: str | None = None
     host_names: list[str] | None = None
     check_names: list[str] | None = None
     api_services_cols: list[str] | None = None
 
     def load(self):
-        data_dir_default = str(qa_test_data_path() / "plugins_integration")
-        dump_dir_default = f"{data_dir_default}/dumps"
-        response_dir_default = f"{data_dir_default}/responses"
+        self.data_dir_integration = str(qa_test_data_path() / "plugins_integration")
+        self.dump_dir_integration = f"{self.data_dir_integration}/dumps"
+        self.response_dir_integration = f"{self.data_dir_integration}/responses"
 
-        self.data_dir = str(self.data_dir or os.getenv("DATA_DIR", data_dir_default))
-        self.dump_dir = str(self.dump_dir or os.getenv("DUMP_DIR", dump_dir_default))
-        self.response_dir = str(
-            self.response_dir or os.getenv("RESPONSE_DIR", response_dir_default)
-        )
+        self.data_dir_siteless = str(qa_test_data_path() / "plugins_siteless")
+        self.dump_dir_siteless = f"{self.data_dir_siteless}/agent_data"
+        self.response_dir_siteless = f"{self.data_dir_siteless}/responses"
+
         self.diff_dir = str(self.diff_dir or os.getenv("DIFF_DIR", "/tmp"))
         self.host_names = (
             [_.strip() for _ in str(os.getenv("HOST_NAMES", "")).split(",") if _.strip()]
@@ -130,10 +132,12 @@ def get_check_results(site: Site, host_name: str) -> dict[str, Any]:
         ) from exc
 
 
-def get_host_names(site: Site | None = None, piggyback: bool = False) -> list[str]:
+def get_host_names(
+    site: Site | None = None, dump_dir: str | None = None, piggyback: bool = False
+) -> list[str]:
     """Return the list of agent/snmp hosts via filesystem or site.openapi."""
     host_names = []
-    dump_dir = str(config.dump_dir) + ("/piggyback" if piggyback else "")
+    dump_dir = str(dump_dir or config.dump_dir_integration) + ("/piggyback" if piggyback else "")
     if site:
         hosts = [_ for _ in site.openapi.hosts.get_all() if _.get("id") not in (None, "", site.id)]
         agent_host_names = [
@@ -185,7 +189,7 @@ def get_host_names(site: Site | None = None, piggyback: bool = False) -> list[st
 
 def read_disk_dump(host_name: str, piggyback: bool = False) -> str:
     """Return the content of an agent dump from the dumps' folder."""
-    dump_dir = str(config.dump_dir) + ("/piggyback" if piggyback else "")
+    dump_dir = str(config.dump_dir_integration) + ("/piggyback" if piggyback else "")
     dump_file_path = f"{dump_dir}/{host_name}"
     with open(dump_file_path, encoding="utf-8") as dump_file:
         return dump_file.read()
@@ -285,7 +289,7 @@ def process_check_output(
 
     logger.info('> Processing agent host "%s"...', host_name)
     diffs = {}
-    response_path = f"{config.response_dir}/{host_name}.json"
+    response_path = f"{config.response_dir_integration}/{host_name}.json"
 
     if os.path.exists(response_path):
         with open(response_path, encoding="utf-8") as json_file:
@@ -349,7 +353,8 @@ def process_check_output(
     return diffs
 
 
-def setup_site(site: Site, dump_path: str) -> None:
+def setup_site(site: Site, dump_path: str, dump_dirs: Sequence[str] | None = None) -> None:
+    dump_dirs = dump_dirs or [str(config.dump_dir_integration)]
     # NOTE: the snmpwalks folder cannot be changed!
     walk_path = site.path("var/check_mk/snmpwalks")
     # create dump folder in the test site
@@ -357,23 +362,24 @@ def setup_site(site: Site, dump_path: str) -> None:
     _ = site.run(["mkdir", "-p", dump_path])
 
     logger.info("Injecting agent-output...")
-    for dump_name in get_host_names():
-        assert (
-            run(
-                [
-                    "cp",
-                    "-f",
-                    f"{config.dump_dir}/{dump_name}",
-                    (
-                        f"{walk_path}/{dump_name}"
-                        if re.search(r"\bsnmp\b", dump_name)
-                        else f"{dump_path}/{dump_name}"
-                    ),
-                ],
-                sudo=True,
-            ).returncode
-            == 0
-        )
+    for dump_dir in dump_dirs:
+        for dump_name in get_host_names(dump_dir=dump_dir):
+            assert (
+                run(
+                    [
+                        "cp",
+                        "-f",
+                        f"{dump_dir}/{dump_name}",
+                        (
+                            f"{walk_path}/{dump_name}"
+                            if re.search(r"\bsnmp\b", dump_name)
+                            else f"{dump_path}/{dump_name}"
+                        ),
+                    ],
+                    sudo=True,
+                ).returncode
+                == 0
+            )
 
     for dump_type in config.dump_types:  # type: ignore[union-attr]
         host_folder = f"/{dump_type}"

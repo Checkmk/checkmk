@@ -127,9 +127,9 @@ def pytest_configure(config):
         )
     )
     checks.config.skip_cleanup = config.getoption("--skip-cleanup")
-    checks.config.data_dir = config.getoption(name="--data-dir")
-    checks.config.dump_dir = config.getoption(name="--dump-dir")
-    checks.config.response_dir = config.getoption(name="--response-dir")
+    checks.config.data_dir_integration = config.getoption(name="--data-dir")
+    checks.config.dump_dir_integration = config.getoption(name="--dump-dir")
+    checks.config.response_dir_integration = config.getoption(name="--response-dir")
     checks.config.diff_dir = config.getoption(name="--diff-dir")
     checks.config.host_names = config.getoption(name="--host-names")
     checks.config.check_names = config.getoption(name="--check-names")
@@ -220,7 +220,14 @@ def _get_site_update(
     ):
         for site in site_factory_update.get_test_site(auto_cleanup=not checks.config.skip_cleanup):
             dump_path = site.path("var/check_mk/dumps").as_posix()
-            checks.setup_site(site, dump_path)
+            checks.setup_site(
+                site,
+                dump_path,
+                [
+                    str(checks.config.dump_dir_integration),
+                    str(checks.config.dump_dir_siteless),
+                ],
+            )
 
             yield site
 

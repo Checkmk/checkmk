@@ -7,6 +7,7 @@ import logging
 from tests.testlib.common.utils import get_services_with_status
 from tests.testlib.site import Site, SiteFactory
 
+from tests.plugins_integration import checks
 from tests.plugins_integration.checks import (
     get_host_names,
     setup_host,
@@ -52,7 +53,10 @@ def test_plugin_update(
     psd_rules_base = test_site_update.openapi.rules.get_all("periodic_discovery")
     base_data = {}
     base_data_status_0 = {}
-    for host_name in (_ for _ in get_host_names() if _ not in SKIPPED_DUMPS):
+    hostnames = get_host_names(dump_dir=checks.config.dump_dir_integration) + get_host_names(
+        dump_dir=checks.config.dump_dir_siteless
+    )
+    for host_name in (_ for _ in hostnames if _ not in SKIPPED_DUMPS):
         with setup_host(test_site_update, host_name, skip_cleanup=True):
             base_data[host_name] = test_site_update.get_host_services(host_name)
 

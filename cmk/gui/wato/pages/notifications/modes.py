@@ -1700,7 +1700,8 @@ class ModeTestNotifications(ModeNotifications):
         if dispatch_method := request.var("dispatch"):
             unique_contacts = {
                 contact
-                for contact, method, *_ in analyse_resulting_notifications
+                for raw_contact, method, *_ in analyse_resulting_notifications
+                for contact in raw_contact.split(",")
                 if method == dispatch_method
             }
             notification_sent_count = len(unique_contacts)

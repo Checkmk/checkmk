@@ -8,10 +8,8 @@ beautifulsoup4  # used by the GUI crawler and various tests
 boto3-stubs[logs]  # used for type checking, keep version in sync with boto3
 botocore-stubs  # used for type checking, keep version in sync with botocore
 bson  # used by test_mk_mongodb unit test
-checkmk-dev-tools~=0.4.4  # provides tooling for build artifacts
-# Locked to 0.26.1 since 0.26.3 handled const strings differently
-# which broke inheritance.
-datamodel-code-generator==0.26.1  # used for cmk-shared-typing generation
+checkmk-dev-tools  # provides tooling for build artifacts
+datamodel-code-generator  # used for cmk-shared-typing generation
 devpi-client # Managing the devpi server
 dill
 docker  # used by test_docker test and mk_docker agent plugin
@@ -37,7 +35,7 @@ py-import-cycles  # used in tests/Makefile
 pylint  # used by test/Makefile's test-pylint target
 pylint-pydantic
 pylsp-mypy  # mypy plugin for python-lsp-server
-pymongo<4.9  # used by mk_mongodb agent plugin # 4.9 has no pymongo.database.Database anymore
+pymongo  # used by mk_mongodb agent plugin
 pytest
 pytest-asyncio  # faciliate testing of async code
 pytest-html  # used to generate HTML reports for test suites
@@ -55,7 +53,7 @@ semver
 sphinx  # used for the plugin API documentation
 sphinx-autoapi  # used for automatically generating plugin API documentation
 sphinx-autodoc-typehints  # used for the plugin API documentation
-sphinx-rtd-theme~=2.0.0  # used for the plugin API documentation # TODO: Unpin this here and in omd/Pipfile when "make -C doc/plugin-api html" works again without it.
+sphinx-rtd-theme  # used for the plugin API documentation
 sphinxcontrib-plantuml  # used for the API and architecture
 sphinxcontrib-spelling
 svglib  # license csv pdf generating

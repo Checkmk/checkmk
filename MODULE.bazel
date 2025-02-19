@@ -93,7 +93,7 @@ pip.parse(
     hub_name = "cmk_requirements",
     python_version = PYTHON_VERSION,
     requirements_by_platform = {
-        "@//:requirements_all_lock.txt": "linux_*",
+        "@//:requirements.txt": "linux_*",
     },
 )
 use_repo(pip, "cmk_requirements")
@@ -102,7 +102,7 @@ types = use_extension("@rules_mypy//mypy:types.bzl", "types")
 types.requirements(
     name = "cmk_types",
     pip_requirements = "@cmk_requirements//:requirements.bzl",
-    requirements_txt = "//:requirements_all_lock.txt",
+    requirements_txt = "//:requirements.txt",
 )
 use_repo(types, "cmk_types")
 

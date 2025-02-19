@@ -12,8 +12,7 @@ load("//bazel/rules:proto.bzl", "proto_library_as")
 exports_files(
     [
         "pyproject.toml",
-        "requirements_dev.txt",
-        "requirements_all_lock.txt",
+        "requirements.txt",
     ],
 )
 
@@ -94,9 +93,9 @@ write_file(
 genrule(
     name = "_requirements-main",
     srcs = [
-        "//cmk:requirements.txt",
+        "//cmk:requirements.in",
         "//packages:python_requirements",
-        "//:requirements_dev.txt",
+        "//:dev-requirements.in",
     ] + select({
         "@//:gpl_repo": [],
         "@//:gpl+enterprise_repo": ["//non-free:python_requirements"],
@@ -114,22 +113,25 @@ genrule(
     srcs = [
         ":_requirements-main.txt",
         ":bazel-requirements-constraints.txt",
+        "//:constraints.txt",
     ],
     outs = ["requirements-main.txt"],
     cmd = """
       echo "-r $$(basename $(location _requirements-main.txt))" >> $@
       echo "-c $$(basename $(location bazel-requirements-constraints.txt))" >> $@
+      echo "-c $(location constraints.txt)" >> $@
     """,
 )
 
 pip_compile(
-    name = "requirements_all",
+    name = "requirements",
     data = [
         ":_requirements-main.txt",
         ":bazel-requirements-constraints.txt",
         ":requirements-main.txt",
-        ":requirements_dev.txt",
-        "//cmk:requirements.txt",
+        "//:constraints.txt",
+        "//:dev-requirements.in",
+        "//cmk:requirements.in",
         "//packages:python_requirements",
     ] + select({
         "@//:gpl_repo": [],
@@ -138,18 +140,18 @@ pip_compile(
         ],
     }),
     requirements_in = ":requirements-main",
-    requirements_txt = "@//:requirements_all_lock.txt",
+    requirements_txt = "@//:requirements.txt",
     tags = ["manual"],
     visibility = ["//visibility:public"],
 )
 
 genrule(
-    name = "_requirements-runtime-main",
+    name = "_runtime-requirement-main",
     srcs = [
-        "//cmk:requirements.txt",
+        "//cmk:requirements.in",
         "//packages:python_requirements",
     ],
-    outs = ["_requirements-runtime-main.txt"],
+    outs = ["_runtime-requirement-main.txt"],
     cmd = """
     for req in $(SRCS); do
       echo "-r $$req" >> $@
@@ -158,28 +160,28 @@ genrule(
 )
 
 genrule(
-    name = "requirements-runtime-main",
+    name = "runtime-requirement-main",
     srcs = [
-        ":_requirements-runtime-main.txt",
+        ":_runtime-requirement-main.txt",
         ":bazel-requirements-constraints.txt",
-        ":requirements_all_lock.txt",
+        ":requirements.txt",
     ],
-    outs = ["requirements-runtime-main.txt"],
+    outs = ["runtime-requirement-main.txt"],
     cmd = """
-      echo "-r $$(basename $(location _requirements-runtime-main.txt))" >> $@
+      echo "-r $$(basename $(location _runtime-requirement-main.txt))" >> $@
       echo "-c $$(basename $(location bazel-requirements-constraints.txt))" >> $@
-      echo "-c $(location requirements_all_lock.txt)" >> $@
+      echo "-c $(location requirements.txt)" >> $@
     """,
 )
 
 pip_compile(
-    name = "requirements_runtime",
+    name = "runtime_requirements",
     data = [
-        ":_requirements-runtime-main.txt",
+        ":_runtime-requirement-main.txt",
         ":bazel-requirements-constraints.txt",
-        ":requirements-runtime-main.txt",
-        ":requirements_all_lock.txt",
-        "//cmk:requirements.txt",
+        ":requirements.txt",
+        ":runtime-requirement-main.txt",
+        "//cmk:requirements.in",
         "//packages:python_requirements",
     ] + select({
         "@//:gpl_repo": [],
@@ -187,17 +189,17 @@ pip_compile(
             "//non-free:python_requirements",
         ],
     }),
-    requirements_in = ":requirements-runtime-main",
-    requirements_txt = ":requirements_runtime_lock.txt",
+    requirements_in = ":runtime-requirement-main",
+    requirements_txt = ":runtime-requirements.txt",
     tags = ["manual"],
     visibility = ["//visibility:public"],
 )
 
 test_suite(
-    name = "requirements_test",
+    name = "requirements_test_suite",
     tests = [
-        ":requirements_all_test",
-        ":requirements_runtime_test",
+        ":requirements_test",
+        ":runtime_requirements_test",
     ],
 )
 
@@ -228,7 +230,7 @@ write_file(
 create_venv(
     name = "create_venv",
     destination_folder = ".venv",
-    requirements_txt = "@//:requirements_all_lock.txt",
+    requirements_txt = "@//:requirements.txt",
     site_packages_extra_files = [":sitecustomize.py"],
     whls = [
         "@rrdtool_native//:rrdtool_python_wheel",

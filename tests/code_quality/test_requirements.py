@@ -40,13 +40,13 @@ IGNORED_LIBS |= isort.stdlibs._all.stdlib  # builtin stuff
 IGNORED_LIBS |= {"__future__"}  # other builtin stuff
 
 # currently runtime requirements are stored in multiple files
-DEV_REQ_FILES_LIST = [repo_path() / "requirements_dev.txt"]
+DEV_REQ_FILES_LIST = [repo_path() / "dev-requirements.in"]
 RUNTIME_REQ_FILES_LIST = (
     [
-        repo_path() / "cmk/requirements.txt",
+        repo_path() / "cmk/requirements.in",
     ]
-    + list((repo_path() / "packages").glob("*/requirements.txt"))
-    + list((repo_path() / "non-free" / "packages").glob("*/requirements.txt"))
+    + list((repo_path() / "packages").glob("*/requirements.in"))
+    + list((repo_path() / "non-free" / "packages").glob("*/requirements.in"))
 )
 
 REQUIREMENTS_FILES = {

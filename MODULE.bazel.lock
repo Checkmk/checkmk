@@ -3176,7 +3176,7 @@
     "@@rules_mypy~//mypy:types.bzl%types": {
       "general": {
         "bzlTransitiveDigest": "bTsjWhC2MntN++D5GogAmgdWEGUqG5ZSXm2SoK8d/5U=",
-        "usagesDigest": "utN5s3dEoeEjwaXm/wo1pLK+BsC/Wxom7m1tdNjUm+4=",
+        "usagesDigest": "jFeuvrmh61ntTjST/r4II3QFb056IJd5DmR6auZLg90=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
@@ -3186,7 +3186,7 @@
             "ruleClassName": "generate",
             "attributes": {
               "pip_requirements": "@@rules_python~~pip~cmk_requirements//:requirements.bzl",
-              "requirements_txt": "@@//:requirements_all_lock.txt"
+              "requirements_txt": "@@//:requirements.txt"
             }
           }
         },
@@ -3296,13 +3296,13 @@
     "@@rules_python~//python/extensions:pip.bzl%pip": {
       "general": {
         "bzlTransitiveDigest": "joCwFG3q+cRz72UfNFq87nblDH5vjpFc5IhKLCzkDwk=",
-        "usagesDigest": "JRo+nYXYzri8HXM2xiODhG1T16FTIIfmk4ldumXbXf0=",
+        "usagesDigest": "ITg56quD0lZpyrVihhqoOMQijDwR9wr5Xe26dutowz4=",
         "recordedFileInputs": {
           "@@rules_python~//tools/publish/requirements_linux.txt": "d576e0d8542df61396a9b38deeaa183c24135ed5e8e73bb9622f298f2671811e",
           "@@grpc~//requirements.bazel.txt": "95a27c3f9a46b8114d464c70ba93cda18cfe8c02004db81028f9306b2691701e",
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
+          "@@//requirements.txt": "f8722b1de1d34c6f8add27f1ed6761c855aad5d0dcdfc73aff66f94b106089ac",
           "@@rules_python~//tools/publish/requirements_windows.txt": "d18538a3982beab378fd5687f4db33162ee1ece69801f9a451661b1b64286b76",
-          "@@//requirements_all_lock.txt": "43ed9e1fe084f9cbf656a6bf4860d6656a6e35167599ac45bf2d24b7d2fc9f3b",
           "@@rules_mypy~//mypy/private/requirements.txt": "a1f94fdc72dde074efe30628a69ce502984b09c61db2938601ed18d320f59d26",
           "@@protobuf~//python/requirements.txt": "983be60d3cec4b319dcab6d48aeb3f5b2f7c3350f26b3a9e97486c37967c73c5",
           "@@rules_python~//tools/publish/requirements_darwin.txt": "095d4a4f3d639dce831cd493367631cd51b53665292ab20194bac2c0c6458fa8"

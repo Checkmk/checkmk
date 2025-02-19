@@ -1,0 +1,90 @@
+setuptools
+setuptools-scm  # needed by various setup.py
+python-dateutil  # direct dependency
+pyyaml  # needed by vcrpy
+vcrpy  # used by various unit tests to mock HTTP transactions in some special agents (only)
+cryptography
+paramiko
+pyasn1
+ply  # needed by pysmi, python-active-directory
+pysmi-lextudio  # needed by pysnmp
+pysnmp-lextudio  # needed by Event Console
+snmpsim-lextudio  # needed by pysnmp integration tests
+urllib3  # needed by requests
+pyopenssl
+pyghmi  # needed by base for IPMI
+requests
+jinja2  # needed by flask
+werkzeug  # direct dependency and needed by flask
+flask  # direct dependency
+openapi-spec-validator  # direct dependency
+psutil  # needed for omdlib
+oauthlib
+requests-oauthlib
+jira # needed by jira
+msal # needed by agent_azure
+pillow  # needed by reporting & CME logo image processing
+python-ldap # needed by GUI (User sync), python-active-directory
+cython # needed by numpy & pymssql
+numpy # needed by GUI (metrics)
+reportlab # needed by GUI (reporting)
+pypdf  # needed by GUI (reporting)
+roman # needed by GUI (reporting)
+google-auth  # needed by kubernetes
+kubernetes # needed by kubernetes
+botocore  # needed by boto3 (aws), keep version in sync with botocore-stubs
+boto3  # needed by boto3 (aws), keep version in sync with boto3-stubs
+python-snap7 # needed by Siemens PLC special agent
+pymssql # needed by check_sql active check
+pymysql # needed by check_sql active check
+psycopg2-binary # needed by check_sql active check
+apispec
+marshmallow
+marshmallow-oneofschema
+apispec-oneofschema
+pydantic
+pydantic_core # used by pydantic and by us
+paho-mqtt # needed for MQTT special agent
+python-active-directory
+docstring-parser # direct dependency
+pyprof2calltree # used for GUI/API profiling
+pyparsing
+redis # needed by GUI (caching)
+fido2  # used for GUI 2fa webauthn
+opsgenie-sdk # needed by opsgenie_issues
+tenacity  # used by opsgenie-sdk
+protobuf #  pinning is done in bazel in order to get the matching protobuf version from @com_google_protobuf
+pysmb # used by SMB share special agent
+google-cloud-monitoring  # used by the gcp special agent
+google-cloud-asset  # used by the gcp special agent
+exchangelib # used by active checks for mail
+lxml # used via beautifulsoup4 as a parser and in the agent_netapp special agent
+google-api-python-client  # use rest api to query big query for gcp cost monitoring
+setproctitle # used by mkbench/dcd/liveproxyd
+meraki # used by special agent Cisco Meraki
+feedparser  # used by special agent Microsoft Azure Status
+pysaml2 # used by SSO via SAML2.0
+azure-storage-blob # used for backups to Azure Blob Storage
+azure-identity # used for backups to Azure Blob Storage
+pyjwt[crypto]  # used for SSO via OAUTH2
+GitPython # used for werk collecting
+icalendar # used for importing .ical files
+recurring_ical_events # used for parsing recurring events in icalendar objects
+netapp-ontap # used by netapp special agent
+redfish # used for management board monitoring via Redfish, used by optional MKP
+robotframework # used for parsing robotmk agent data
+oracledb  # used by active check_sql
+opentelemetry-api # used for distributed tracing of Checkmk
+opentelemetry-sdk # used for distributed tracing of Checkmk
+opentelemetry-exporter-otlp # used for distributed tracing of Checkmk
+opentelemetry-instrumentation-wsgi # used for distributed tracing of Checkmk
+opentelemetry-instrumentation-requests # used for distributed tracing of Checkmk
+opentelemetry-instrumentation-redis # used for distributed tracing of Checkmk
+opentelemetry-instrumentation-fastapi # used for distributed tracing of Checkmk
+opentelemetry-semantic-conventions # used for distributed tracing of Checkmk
+fastapi  # automation helper and needed to run fake idp for cse tests
+gunicorn  # automation helper
+watchdog  # automation helper
+uvicorn-worker  # automation helper
+simplejson  # mk_jolokia
+uvicorn  # ui-job-scheduler

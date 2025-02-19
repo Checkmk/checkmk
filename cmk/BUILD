@@ -4,7 +4,7 @@ load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//:bazel_variables.bzl", "edition_deps")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 
-exports_files(["requirements.txt"])
+exports_files(["requirements.in"])
 
 REQUIRED_EXTERNAL_DEPS = [
     # alphabetical order

@@ -263,10 +263,18 @@ function get_effective_tags() {
     return current_tags;
 }
 
-export function randomize_secret(id: string, message: string) {
-    const secret = window.crypto.randomUUID();
+export function randomize_secret(id: string, len: number, message: string) {
+    const charset =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
+    const array = new Uint8Array(len);
+    window.crypto.getRandomValues(array);
+    let secret = "";
+    for (let i = 0; i < len; i++) {
+        secret += charset.charAt(array[i] % charset.length);
+    }
     const oInput = document.getElementById(id) as HTMLInputElement;
     oInput.value = secret;
+
     copy_to_clipboard(secret, message);
 }
 

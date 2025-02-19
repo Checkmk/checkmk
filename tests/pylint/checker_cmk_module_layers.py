@@ -6,7 +6,6 @@
 
 from collections.abc import Sequence
 from pathlib import Path
-from typing import NewType
 
 from astroid.nodes import Import, ImportFrom  # type: ignore[import-untyped]
 from pylint.checkers import BaseChecker
@@ -15,31 +14,53 @@ from pylint.lint.pylinter import PyLinter
 
 from tests.testlib.common.repo import repo_path
 
-ModulePath = NewType("ModulePath", str)  # TODO: use pathlib.Path
-Component = NewType("Component", str)
+
+class ModulePath(Path):
+    def is_below(self, path: str) -> bool:
+        return is_prefix_of(Path(path).parts, self.parts)
+
+
+class Component:
+    def __init__(self, name: str):
+        self._parts = name.split(".")
+
+    @property
+    def parts(self) -> Sequence[str]:
+        return self._parts
+
+    def __repr__(self) -> str:
+        return ".".join(self.parts)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Component):
+            return NotImplemented
+        return self.parts == other.parts
+
+    def is_below(self, component: str) -> bool:
+        return is_prefix_of(Component(component).parts, self.parts)
 
 
 class ModuleName:
     def __init__(self, name: str):
         self._parts = name.split(".")
 
-    def __repr__(self) -> str:
-        return ".".join(self._parts)
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, ModuleName):
-            return NotImplemented
-        return self._parts == other._parts
-
     @property
     def parts(self) -> Sequence[str]:
         return self._parts
 
+    def __repr__(self) -> str:
+        return ".".join(self.parts)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, ModuleName):
+            return NotImplemented
+        return self.parts == other.parts
+
     def in_component(self, component: Component) -> bool:
-        return _is_prefix_of(ModuleName(component)._parts, self._parts)
+        return is_prefix_of(component.parts, self.parts)
 
 
-def _is_prefix_of[T](x: Sequence[T], y: Sequence[T]) -> bool:
+def is_prefix_of[T](x: Sequence[T], y: Sequence[T]) -> bool:
     return x == y[: len(x)]
 
 
@@ -466,10 +487,14 @@ def _allow_default_plus_component_under_test(
     imported: ModuleName,
     component: Component,
 ) -> bool:
-    if component.startswith("tests.unit.checks"):
+    if component.is_below("tests.unit.checks"):
         component_under_test = Component("cmk.plugins")
-    elif component.startswith("tests.unit.") or component.startswith("tests.integration"):
-        component_under_test = Component(".".join(component.split(".")[2:]))
+    elif (
+        component.is_below("tests.unit")
+        or component.is_below("tests.integration")
+        or component.is_below("tests.integration_redfish")
+    ):
+        component_under_test = Component(".".join(component.parts[2:]))
     else:
         raise ValueError(f"Unhandled component: {component}")
 
@@ -756,10 +781,10 @@ class CMKModuleLayerChecker(BaseChecker):
             return
 
         # We use paths relative to our project root, but not for our "pasting magic".
-        importing_path = ModulePath(str(Path(node.root().file).relative_to(self.cmk_path_cached)))
+        importing_path = ModulePath(node.root().file).relative_to(self.cmk_path_cached)
 
         # Tests are allowed to import everything for now. Should be cleaned up soon
-        if str(importing_path).startswith("tests/testlib"):
+        if importing_path.is_below("tests/testlib"):
             return
 
         importing = self._get_module_name_of_files(importing_path)
@@ -767,16 +792,15 @@ class CMKModuleLayerChecker(BaseChecker):
             self.add_message("cmk-module-layer-violation", node=node, args=(imported, importing))
 
     @staticmethod
-    def _get_module_name_of_files(importing_path: ModulePath) -> ModuleName:
+    def _get_module_name_of_files(path: ModulePath) -> ModuleName:
         # Due to our symlinks and pasting magic, astroid gets confused, so we need to compute the
         # real module name from the file path of the module.
-        parts = importing_path.split("/")
         # Emacs' flycheck stores files to be checked in a temporary file with a prefix.
-        parts[-1] = parts[-1].removeprefix("flycheck_").removesuffix(".py")
+        p = path.with_name(path.name.removeprefix("flycheck_").removesuffix(".py"))
         # For all modules which don't live below cmk after mangling, just assume a toplevel module.
-        if parts[0] not in ("cmk", "tests"):
-            parts = [parts[-1]]
-        return ModuleName(".".join(parts))
+        return ModuleName(
+            ".".join(p.parts) if p.is_below("cmk") or p.is_below("tests") else p.parts[-1]
+        )
 
     def _is_import_allowed(
         self, importing_path: ModulePath, importing: ModuleName, imported: ModuleName
@@ -799,19 +823,17 @@ class CMKModuleLayerChecker(BaseChecker):
         if explicit_component is not None:
             return explicit_component == component
 
-        if component == Component("cmk.notification_plugins") and importing_path.startswith(
-            "notifications/"
-        ):
-            return True
-
-        if component == Component("agents.special") and importing_path.startswith(
-            "agents/special/"
-        ):
-            return True
-
-        if component == Component("cmk.active_checks") and importing_path.startswith(
-            "active_checks/"
-        ):
-            return True
-
-        return False
+        return (
+            (
+                component == Component("cmk.notification_plugins")
+                and importing_path.is_below(("notifications"))
+            )
+            or (
+                component == Component("agents.special")
+                and importing_path.is_below("agents/special")
+            )
+            or (
+                component == Component("cmk.active_checks")
+                and importing_path.is_below("active_checks")
+            )
+        )

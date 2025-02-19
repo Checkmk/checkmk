@@ -55,7 +55,10 @@ from cmk.gui.quick_setup.handlers.utils import ValidationErrors
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import QuickSetupSaveRedirect
 from cmk.gui.quick_setup.v0_unstable.predefined import build_formspec_map_from_stages
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupActionMode
+from cmk.gui.quick_setup.v0_unstable.setups import (
+    QuickSetupActionMode,
+    QuickSetupBackgroundStageAction,
+)
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, RawFormData, StageIndex
 
 from cmk import fields
@@ -263,7 +266,7 @@ def quicksetup_run_stage_action(params: Mapping[str, Any]) -> Response:
             status_code=400,
         )
 
-    if stage_action.run_in_background:
+    if isinstance(stage_action, QuickSetupBackgroundStageAction):
         background_job_id = start_quick_setup_stage_job(
             quick_setup=quick_setup,
             action_id=stage_action_id,

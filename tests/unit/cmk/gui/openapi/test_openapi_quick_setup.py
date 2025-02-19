@@ -18,6 +18,7 @@ from cmk.gui.quick_setup.v0_unstable.setups import (
     ProgressLogger,
     QuickSetup,
     QuickSetupAction,
+    QuickSetupBackgroundStageAction,
     QuickSetupStage,
     QuickSetupStageAction,
 )
@@ -659,12 +660,11 @@ class TestValidateAndRetrieveNext:
                         widgets.unique_id_formspec_wrapper(Title("account name")),
                     ],
                     actions=[
-                        QuickSetupStageAction(
+                        QuickSetupBackgroundStageAction(
                             id=ActionId("action"),
                             custom_validators=[],
                             recap=[recaps.recaps_form_spec],
                             next_button_label="Next",
-                            run_in_background=True,
                         )
                     ],
                 ),

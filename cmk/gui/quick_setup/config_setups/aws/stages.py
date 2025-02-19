@@ -29,6 +29,7 @@ from cmk.gui.quick_setup.v0_unstable.setups import (
     QuickSetup,
     QuickSetupAction,
     QuickSetupActionMode,
+    QuickSetupBackgroundStageAction,
     QuickSetupStage,
     QuickSetupStageAction,
 )
@@ -112,7 +113,7 @@ def prepare_aws() -> QuickSetupStage:
             ),
         ],
         actions=[
-            QuickSetupStageAction(
+            QuickSetupBackgroundStageAction(
                 id=ActionId("connection_test"),
                 custom_validators=[
                     qs_validators.validate_unique_id,
@@ -127,7 +128,6 @@ def prepare_aws() -> QuickSetupStage:
                 ],
                 recap=[recaps.recaps_form_spec],
                 next_button_label=_("Configure host and regions"),
-                run_in_background=True,
             )
         ],
     )
@@ -274,7 +274,7 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
         sub_title=_("Test the AWS connection based on your configuration settings"),
         configure_components=[],
         actions=[
-            QuickSetupStageAction(
+            QuickSetupBackgroundStageAction(
                 id=ActionId("action"),
                 custom_validators=[],
                 recap=[
@@ -282,7 +282,6 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
                 ],
                 load_wait_label=_("This process may take several minutes, please wait..."),
                 next_button_label=_("Test configuration"),
-                run_in_background=True,
             ),
             QuickSetupStageAction(
                 id=ActionId("skip_configuration_test"),

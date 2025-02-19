@@ -15,56 +15,6 @@ use reqwest::{
 use tracing::{event, span, Level};
 
 use super::client::ClientAdapter;
-use anyhow::bail;
-use std::fmt;
-use std::net::IpAddr;
-use std::str::FromStr;
-
-#[derive(Clone, Debug)]
-pub enum Server {
-    IpAddr(IpAddr),
-    Hostname(String),
-}
-
-impl fmt::Display for Server {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::IpAddr(ip) => write!(f, "{}", ip),
-            Self::Hostname(hostname) => write!(f, "{}", hostname),
-        }
-    }
-}
-
-impl FromStr for Server {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if let Ok(ip) = s.parse::<IpAddr>() {
-            Ok(Self::IpAddr(ip))
-        } else if !s.is_empty() {
-            Ok(Self::Hostname(s.to_string()))
-        } else {
-            bail!("Invalid server address: {}", s)
-        }
-    }
-}
-
-impl Server {
-    pub fn to_socket_addr(&self, port: u16) -> Result<std::net::SocketAddr, anyhow::Error> {
-        match self {
-            Self::IpAddr(ip) => Ok(std::net::SocketAddr::new(*ip, port)),
-            Self::Hostname(hostname) => {
-                let socket_addrs =
-                    std::net::ToSocketAddrs::to_socket_addrs(&(hostname.as_str(), port))?
-                        .next()
-                        .ok_or_else(|| {
-                            anyhow::anyhow!("Unable to resolve hostname: {}", hostname)
-                        })?;
-                Ok(socket_addrs)
-            }
-        }
-    }
-}
 
 pub struct RequestConfig {
     pub url: Url,

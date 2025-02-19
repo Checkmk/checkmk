@@ -2,7 +2,6 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::http::Server;
 use crate::pwstore::password_from_store;
 use crate::version;
 use anyhow::{bail, Result as AnyhowResult};
@@ -12,6 +11,8 @@ use reqwest::{
     header::{HeaderName, HeaderValue},
     Method, StatusCode, Url,
 };
+use std::fmt;
+use std::net::IpAddr;
 use std::{str::FromStr, time::Duration};
 use tracing_subscriber::filter::LevelFilter;
 
@@ -335,6 +336,52 @@ pub struct ProxyPw {
     /// Password for proxy server Basic Auth, provided as ID for password store lookup
     #[arg(long, requires = "proxy_user", value_parser=password_from_store)]
     pub proxy_pw_pwstore: Option<String>,
+}
+
+#[derive(Clone, Debug)]
+pub enum Server {
+    IpAddr(IpAddr),
+    Hostname(String),
+}
+
+impl fmt::Display for Server {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::IpAddr(ip) => write!(f, "{}", ip),
+            Self::Hostname(hostname) => write!(f, "{}", hostname),
+        }
+    }
+}
+
+impl FromStr for Server {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if let Ok(ip) = s.parse::<IpAddr>() {
+            Ok(Self::IpAddr(ip))
+        } else if !s.is_empty() {
+            Ok(Self::Hostname(s.to_string()))
+        } else {
+            bail!("Invalid server address: {}", s)
+        }
+    }
+}
+
+impl Server {
+    pub fn to_socket_addr(&self, port: u16) -> Result<std::net::SocketAddr, anyhow::Error> {
+        match self {
+            Self::IpAddr(ip) => Ok(std::net::SocketAddr::new(*ip, port)),
+            Self::Hostname(hostname) => {
+                let mut socket_addrs =
+                    std::net::ToSocketAddrs::to_socket_addrs(&(hostname.as_str(), port))?;
+                if let Some(socket_addr) = socket_addrs.next() {
+                    Ok(socket_addr)
+                } else {
+                    Err(anyhow::anyhow!("Unable to resolve hostname: {}", hostname))
+                }
+            }
+        }
+    }
 }
 
 fn header_value_from_store(value: &str) -> AnyhowResult<HeaderValue> {

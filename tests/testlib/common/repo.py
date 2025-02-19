@@ -94,6 +94,7 @@ def current_branch_version() -> str:
     ).strip()
 
 
+@cache
 def current_base_branch_name() -> str:
     branch_name = current_branch_name()
 
@@ -144,6 +145,7 @@ def current_base_branch_name() -> str:
     return branch_name
 
 
+@cache
 def current_branch_name(default: str = "no-branch") -> str:
     try:
         branch_name = subprocess.check_output(
@@ -151,7 +153,6 @@ def current_branch_name(default: str = "no-branch") -> str:
             encoding="utf-8",
             stderr=subprocess.DEVNULL,
         )
-        LOGGER.warning("Current branch: %s", branch_name)
     except subprocess.CalledProcessError:
         return default
 

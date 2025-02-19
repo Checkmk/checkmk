@@ -94,7 +94,6 @@ def current_branch_version() -> str:
     ).strip()
 
 
-@cache
 def current_base_branch_name() -> str:
     branch_name = current_branch_name()
 

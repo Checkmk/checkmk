@@ -1453,11 +1453,13 @@ export function visual_filter_list_reset(
     page_request_vars: Record<string, any> | undefined,
     page_name: string,
     reset_ajax_page: string,
+    context: Record<string, Record<string, string>>,
 ) {
     const request = {
         varprefix: varprefix,
         page_request_vars: page_request_vars,
         page_name: page_name,
+        context: context,
     };
     const post_data = "request=" + encodeURIComponent(JSON.stringify(request));
 

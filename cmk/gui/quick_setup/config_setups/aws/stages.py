@@ -14,6 +14,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.quick_setup.config_setups.aws import form_specs as aws
 from cmk.gui.quick_setup.config_setups.aws.form_specs import quick_setup_aws_form_spec
+from cmk.gui.quick_setup.v0_unstable.definitions import QSSiteSelection
 from cmk.gui.quick_setup.v0_unstable.predefined import (
     collect_params_from_form_data,
     collect_params_with_defaults_from_form_data,
@@ -281,6 +282,7 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
                 ],
                 load_wait_label=_("This process may take several minutes, please wait..."),
                 next_button_label=_("Test configuration"),
+                target_site_formspec_key=QSSiteSelection,
             ),
             QuickSetupStageAction(
                 id=ActionId("skip_configuration_test"),

@@ -26,8 +26,8 @@ from cmk.gui.quick_setup.v0_unstable.predefined import validators as qs_validato
 from cmk.gui.quick_setup.v0_unstable.setups import (
     ProgressLogger,
     QuickSetup,
-    QuickSetupAction,
     QuickSetupActionMode,
+    QuickSetupBackgroundAction,
     QuickSetupBackgroundStageAction,
     QuickSetupStage,
     QuickSetupStageAction,
@@ -412,11 +412,10 @@ quick_setup_aws = QuickSetup(
         review_and_run_preview_service_discovery,
     ],
     actions=[
-        QuickSetupAction(
+        QuickSetupBackgroundAction(
             id=ActionId("activate_changes"),
             label=_("Save & go to Activate changes"),
             action=action,
-            run_in_background=True,
             custom_validators=[qs_validators.validate_host_name_doesnt_exists],
         ),
     ],

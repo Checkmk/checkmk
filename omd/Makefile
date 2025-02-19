@@ -28,7 +28,6 @@ PACKAGES := \
     erlang \
     redis \
     libgsf \
-    cpp-libs \
     lcab \
     msitools \
     apache-omd \

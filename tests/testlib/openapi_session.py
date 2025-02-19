@@ -708,10 +708,24 @@ class ServiceDiscoveryAPI(BaseAPI):
 
         status = self.get_bulk_discovery_job_status(job_id)
 
-        if status["extensions"]["status"]["state"] != "finished":
-            raise RuntimeError(f"Discovery job {job_id} failed: {status}")
+        is_new_version = self.session.site_version >= CMKVersion(
+            "2.4.0", self.session.site_version.edition
+        )
+        state = (
+            status["extensions"]["status"]["state"]
+            if is_new_version
+            else status["extensions"]["state"]
+        )
+        if state != "finished":
+            raise RuntimeError(f"Bulk discovery job {job_id} failed: {status}")
 
-        output = "\n".join(status["extensions"]["status"]["log_info"]["JobProgressUpdate"])
+        progress_logs = (
+            status["extensions"]["status"]["log_info"]["JobProgressUpdate"]
+            if is_new_version
+            else status["extensions"]["logs"]["progress"]
+        )
+        output = "\n".join(progress_logs)
+
         if "Traceback (most recent call last)" in output:
             raise RuntimeError(f"Found traceback in job output: {output}")
         if "0 failed" not in output:
@@ -721,11 +735,20 @@ class ServiceDiscoveryAPI(BaseAPI):
 
     def get_bulk_discovery_status(self, job_id: str) -> str:
         job_status_response = self.get_bulk_discovery_job_status(job_id)
-        status: str = job_status_response["extensions"]["status"]["state"]
+        status: str
+        if self.session.site_version >= CMKVersion("2.4.0", self.session.site_version.edition):
+            status = job_status_response["extensions"]["status"]["state"]
+        else:
+            status = job_status_response["extensions"]["state"]
         return status
 
     def get_bulk_discovery_job_status(self, job_id: str) -> dict:
-        response = self.session.get(f"/objects/background_job/{job_id}")
+        domain_type = (
+            "background_job"
+            if self.session.site_version >= CMKVersion("2.4.0", self.session.site_version.edition)
+            else "discovery_run"
+        )
+        response = self.session.get(f"/objects/{domain_type}/{job_id}")
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
         job_status_response: dict = response.json()

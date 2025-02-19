@@ -1643,8 +1643,8 @@ protobuf==5.29.3 \
     --hash=sha256:c027e08a08be10b67c06bf2370b99c811c466398c357e615ca88c91c07f0910f \
     --hash=sha256:daaf63f70f25e8689c072cfad4334ca0ac1d1e05a92fc15c54eb9cf23c3efd84
     # via
+    #   -c bazel-requirements-constraints.txt
     #   -r cmk/requirements.txt
-    #   -r requirements-runtime-main.txt
     #   google-api-core
     #   google-cloud-access-context-manager
     #   google-cloud-asset

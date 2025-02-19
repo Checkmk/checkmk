@@ -82,23 +82,44 @@ refresh_compile_commands(
     },
 )
 
+write_file(
+    name = "bazel-requirements-constraints",
+    out = "bazel-requirements-constraints.txt",
+    content = [
+        "ruff==%s" % RUFF_VERSION,
+        "protobuf==%s" % PROTOBUF_PYTHON_VERSION,
+    ],
+)
+
 genrule(
-    name = "requirements-runtime-main",
+    name = "_requirements-runtime-main",
     srcs = [
         "//cmk:requirements.txt",
         "//packages:python_requirements",
     ],
-    outs = ["requirements-runtime-main.txt"],
+    outs = ["_requirements-runtime-main.txt"],
     cmd = """
     for req in $(SRCS); do
       echo "-r $$req" >> $@
     done
-    echo "protobuf==%s" >> $@
-    """ % PROTOBUF_PYTHON_VERSION,
+    """,
 )
 
 genrule(
-    name = "requirements-main",
+    name = "requirements-runtime-main",
+    srcs = [
+        ":_requirements-runtime-main.txt",
+        ":bazel-requirements-constraints.txt",
+    ],
+    outs = ["requirements-runtime-main.txt"],
+    cmd = """
+      echo "-r $$(basename $(location _requirements-runtime-main.txt))" >> $@
+      echo "-c $$(basename $(location bazel-requirements-constraints.txt))" >> $@
+    """,
+)
+
+genrule(
+    name = "_requirements-main",
     srcs = [
         ":requirements_runtime_lock.txt",
         ":requirements_dev.txt",
@@ -106,18 +127,33 @@ genrule(
         "@//:gpl_repo": [],
         "@//:gpl+enterprise_repo": ["//non-free:python_requirements"],
     }),
-    outs = ["requirements-main.txt"],
+    outs = ["_requirements-main.txt"],
     cmd = """
     for req in $(SRCS); do
       echo "-r $$req" >> $@
     done
-    echo ruff==%s >> $@
-    """ % RUFF_VERSION,
+    """,
+)
+
+genrule(
+    name = "requirements-main",
+    srcs = [
+        ":_requirements-main.txt",
+        ":bazel-requirements-constraints.txt",
+    ],
+    outs = ["requirements-main.txt"],
+    cmd = """
+      echo "-r $$(basename $(location _requirements-main.txt))" >> $@
+      echo "-c $$(basename $(location bazel-requirements-constraints.txt))" >> $@
+    """,
 )
 
 pip_compile(
     name = "requirements_runtime",
     data = [
+        ":_requirements-runtime-main.txt",
+        ":bazel-requirements-constraints.txt",
+        ":requirements-runtime-main.txt",
         "//cmk:requirements.txt",
         "//packages:python_requirements",
     ] + select({
@@ -135,6 +171,9 @@ pip_compile(
 pip_compile(
     name = "requirements_all",
     data = [
+        ":_requirements-main.txt",
+        ":bazel-requirements-constraints.txt",
+        ":requirements-main.txt",
         ":requirements_dev.txt",
         ":requirements_runtime_lock.txt",
     ] + select({

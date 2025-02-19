@@ -2514,6 +2514,7 @@ protobuf==5.29.3 \
     --hash=sha256:c027e08a08be10b67c06bf2370b99c811c466398c357e615ca88c91c07f0910f \
     --hash=sha256:daaf63f70f25e8689c072cfad4334ca0ac1d1e05a92fc15c54eb9cf23c3efd84
     # via
+    #   -c bazel-requirements-constraints.txt
     #   -r requirements_runtime_lock.txt
     #   google-api-core
     #   google-cloud-access-context-manager
@@ -3514,7 +3515,7 @@ ruff==0.9.6 \
     --hash=sha256:d1bbc6808bf7b15796cef0815e1dfb796fbd383e7dbd4334709642649625e7c5 \
     --hash=sha256:dc61dd5131742e21103fbbdcad683a8813be0e3c204472d520d9a5021ca8b217
     # via
-    #   -r requirements-main.txt
+    #   -c bazel-requirements-constraints.txt
     #   -r requirements_dev.txt
 s3transfer==0.11.2 \
     --hash=sha256:3b39185cb72f5acc77db1a58b6e25b977f28d20496b6e58d6813d75f464d632f \

@@ -785,7 +785,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
 
     def _page_form_render_entry_valuespec(self) -> None:
         vs = self.valuespec()
-        vs.render_input("_edit", dict(self._entry) if not self._new else {})
+        vs.render_input("_edit", dict(self._entry) if not self._new or self._clone else {})
         vs.set_focus("_edit")
 
     def _page_form_render_entry_form_spec(self, form_spec: FormSpec) -> None:

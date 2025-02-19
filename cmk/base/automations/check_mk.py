@@ -755,8 +755,6 @@ def _execute_discovery(
 
 class AutomationAutodiscovery(DiscoveryAutomation):
     cmd = "autodiscovery"
-    needs_config = True
-    needs_checks = True
 
     def execute(
         self,
@@ -1024,8 +1022,6 @@ class AutomationSetAutochecksV2(DiscoveryAutomation):
     # This is an incompatibly changed version of the set-autochecks command.
     # The last version to support the old 'set-autochecks' was 2.4
     # Consider changing the name back to 'set-autochecks' in 2.6
-    needs_config = True
-    needs_checks = True
 
     def execute(
         self,

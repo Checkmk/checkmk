@@ -1,5 +1,5 @@
 pub use client::{ClientConfig, ForceIP, OnRedirect};
-pub use request::{Body, ProcessedResponse, RequestConfig, Server};
+pub use request::{Body, ProcessedResponse, RequestConfig};
 
 mod client;
 mod request;

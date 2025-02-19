@@ -10,13 +10,13 @@ use check_http::runner::collect_checks;
 use clap::Parser;
 use cli::Cli;
 use reqwest::{tls::Version as TlsVersion, Method, Version};
+use std::net::SocketAddr;
 use tracing_subscriber::{
     self,
     filter::{EnvFilter, FilterFn, LevelFilter},
     fmt,
     prelude::*,
 };
-
 mod cli;
 mod pwstore;
 mod version;
@@ -126,6 +126,38 @@ fn make_configs(
         cli::OnRedirect::Stickyport => http::OnRedirect::Stickyport,
     };
 
+    let server: Option<SocketAddr> = match args.server.as_ref() {
+        Some(server) => {
+            let url = args.url.clone();
+            let port = url.port().unwrap_or_else(|| match url.scheme() {
+                "http" => 80,
+                "https" => 443,
+                scheme => {
+                    let output = Output::from_check_results(vec![
+                        CheckResult::summary(State::Crit, "Unsupported URL scheme").unwrap(),
+                        CheckResult::details(State::Crit, scheme).unwrap(),
+                    ]);
+                    println!("{}", output);
+                    std::process::exit(output.worst_state.into());
+                }
+            });
+
+            match server.to_socket_addr(port) {
+                Ok(addrs) => Some(addrs),
+                Err(e) => {
+                    let output = Output::from_check_results(vec![
+                        CheckResult::summary(State::Crit, "Error resolving server address")
+                            .unwrap(),
+                        CheckResult::details(State::Crit, e.to_string().as_str()).unwrap(),
+                    ]);
+                    println!("{}", output);
+                    std::process::exit(output.worst_state.into());
+                }
+            }
+        }
+        None => None,
+    };
+
     (
         ClientConfig {
             version: args.http_version.clone().map(|ver| match ver {
@@ -162,7 +194,7 @@ fn make_configs(
             },
             disable_certificate_verification: args.disable_certificate_verification,
             url: args.url.clone(),
-            server: args.server.clone(),
+            server,
         },
         RequestConfig {
             url: args.url.clone(),
@@ -194,7 +226,7 @@ fn make_configs(
             user_agent,
             onredirect,
             timeout: args.timeout,
-            server: args.server.clone(),
+            server: args.server.map(|server| server.to_string()),
         },
         CheckParameters {
             status_code: args.status_code,

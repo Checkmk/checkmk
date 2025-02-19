@@ -39,7 +39,6 @@ def get_service_discovery_preview(
     passwords = _collect_passwords_from_form_data(all_stages_form_data, parameter_form)
     site_id = _find_id_in_form_data(all_stages_form_data, QSSiteSelection)
     host_name = _find_id_in_form_data(all_stages_form_data, QSHostName)
-
     service_discovery_result = special_agent_discovery_preview(
         SiteId(site_id) if site_id else omd_site(),
         _create_diag_special_agent_input(

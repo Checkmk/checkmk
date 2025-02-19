@@ -19,11 +19,14 @@ from urllib.parse import urlparse
 
 from pydantic import BaseModel
 
+from livestatus import SiteId
+
 from cmk.ccc.i18n import _
 
 from cmk.utils.encoding import json_encode
 
 from cmk.gui.background_job import AlreadyRunningError
+from cmk.gui.config import active_config
 from cmk.gui.http import Response
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.constructors import (
@@ -47,20 +50,23 @@ from cmk.gui.quick_setup.handlers.stage import (
     matching_stage_action,
     NextStageStructure,
     StageActionResult,
+    start_quick_setup_stage_action_job_on_remote,
     start_quick_setup_stage_job,
     validate_stage_formspecs,
     verify_custom_validators_and_recap_stage,
 )
-from cmk.gui.quick_setup.handlers.utils import ValidationErrors
+from cmk.gui.quick_setup.handlers.utils import form_spec_parse, ValidationErrors
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import QuickSetupSaveRedirect
 from cmk.gui.quick_setup.v0_unstable.predefined import build_formspec_map_from_stages
+from cmk.gui.quick_setup.v0_unstable.predefined._common import _find_id_in_form_data
 from cmk.gui.quick_setup.v0_unstable.setups import (
     QuickSetupActionMode,
     QuickSetupBackgroundAction,
     QuickSetupBackgroundStageAction,
 )
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, RawFormData, StageIndex
+from cmk.gui.site_config import site_is_local
 
 from cmk import fields
 
@@ -253,12 +259,13 @@ def quicksetup_run_stage_action(params: Mapping[str, Any]) -> Response:
 
     built_stages = [stage() for stage in quick_setup.stages[: stage_index + 1]]
     form_spec_map = build_formspec_map_from_stages(built_stages)
+    stages_raw_formspecs = [RawFormData(stage["form_data"]) for stage in body["stages"]]
     # Validate the stage formspec data; this is separate from the custom validators of the stage
     # as the custom validators can potentially take a long time (and therefore be run in a
     # background job)
     errors = validate_stage_formspecs(
         stage_index=stage_index,
-        stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in body["stages"]],
+        stages_raw_formspecs=stages_raw_formspecs,
         quick_setup_formspec_map=form_spec_map,
     )
     if errors.exist():
@@ -268,19 +275,40 @@ def quicksetup_run_stage_action(params: Mapping[str, Any]) -> Response:
         )
 
     if isinstance(stage_action, QuickSetupBackgroundStageAction):
-        background_job_id = start_quick_setup_stage_job(
-            quick_setup_id=quick_setup.id,
-            action_id=stage_action_id,
-            stage_index=stage_index,
-            user_input_stages=body["stages"],
-        )
+        site_id = None
+        if stage_action.target_site_formspec_key:
+            site_id = _find_id_in_form_data(
+                form_spec_parse(stages_raw_formspecs, form_spec_map),
+                target_key=stage_action.target_site_formspec_key,
+            )
+            assert site_id is not None
+
+        if site_id and not site_is_local(active_config, SiteId(site_id)):
+            background_job_id = start_quick_setup_stage_action_job_on_remote(
+                site_id=site_id,
+                quick_setup_id=quick_setup_id,
+                action_id=stage_action_id,
+                stage_index=stage_index,
+                user_input_stages=body["stages"],
+            )
+        else:
+            background_job_id = start_quick_setup_stage_job(
+                quick_setup_id=quick_setup.id,
+                action_id=stage_action_id,
+                stage_index=stage_index,
+                user_input_stages=body["stages"],
+            )
+
         background_job_status_link = constructors.link_endpoint(
             module_name="cmk.gui.openapi.endpoints.background_job",
             rel="cmk/show",
             parameters={background_job.JobID.field_name: background_job_id},
         )
         response = Response(status=303)
-        response.location = urlparse(background_job_status_link["href"]).path
+        url = urlparse(background_job_status_link["href"]).path
+        if site_id and not site_is_local(active_config, SiteId(site_id)):
+            url = f"{url}?{background_job.SiteId.field_name}={site_id}"
+        response.location = url
         return response
 
     result = verify_custom_validators_and_recap_stage(

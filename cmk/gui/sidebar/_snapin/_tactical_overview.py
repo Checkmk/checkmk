@@ -21,6 +21,7 @@ from cmk.gui.valuespec import CascadingDropdown, Checkbox, Dictionary, ListOf, T
 
 from ._base import CustomizableSidebarSnapin
 from ._helpers import link
+from ._registry import CustomSnapinParamsConfig, CustomSnapinParamsRowConfig
 
 
 class ViewURLParams(NamedTuple):
@@ -159,17 +160,17 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         ]
 
     @classmethod
-    def parameters(cls):
-        return {
-            "show_stale": True,
-            "show_failed_notifications": True,
-            "show_sites_not_connected": True,
-            "rows": [
-                {"query": ("hosts", {}), "title": "Hosts"},
-                {"query": ("services", {}), "title": "Services"},
-                {"query": ("events", {}), "title": "Events"},
+    def parameters(cls) -> CustomSnapinParamsConfig:
+        return CustomSnapinParamsConfig(
+            show_stale=True,
+            show_failed_notifications=True,
+            show_sites_not_connected=True,
+            rows=[
+                CustomSnapinParamsRowConfig(query=("hosts", {}), title="Hosts"),
+                CustomSnapinParamsRowConfig(query=("services", {}), title="Services"),
+                CustomSnapinParamsRowConfig(query=("events", {}), title="Events"),
             ],
-        }
+        )
 
     def show(self) -> None:
         self._show_rows()
@@ -185,7 +186,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
 
         html.open_table(class_=["tacticaloverview"], cellspacing="2", cellpadding="0", border="0")
 
-        show_stales = self.parameters()["show_stale"] and user.may(
+        show_stales = self.parameters().show_stale is not None and user.may(
             "general.see_stales_in_tactical_overview"
         )
         has_stale_objects = bool(
@@ -261,8 +262,8 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
 
     def _get_rows(self) -> list[OverviewRow]:
         rows = []
-        for row_config in self.parameters()["rows"]:
-            what, context = row_config["query"]
+        for row_config in self.parameters().rows:
+            what, context = row_config.query
 
             if what == "events" and not user.may("mkeventd.see_in_tactical_overview"):
                 continue
@@ -272,7 +273,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             rows.append(
                 OverviewRow(
                     what=what,
-                    title=row_config["title"],
+                    title=row_config.title,
                     context=context,
                     stats=stats,
                     views=self._row_views(what),
@@ -479,7 +480,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             sites.live().set_auth_domain("read")
 
     def _show_failed_notifications(self) -> None:
-        if not self.parameters()["show_failed_notifications"]:
+        if self.parameters().show_failed_notifications is None:
             return
 
         failed_notifications = notifications.number_of_failed_notifications(
@@ -505,7 +506,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         html.close_div()
 
     def _show_site_status(self) -> None:
-        if not self.parameters().get("show_sites_not_connected"):
+        if self.parameters().show_sites_not_connected is None:
             return
 
         site_states = sites.get_grouped_site_states()

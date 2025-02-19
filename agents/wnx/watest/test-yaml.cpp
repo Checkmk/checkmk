@@ -169,7 +169,7 @@ TEST(AgentConfig, AggregateMap) {
         // artificial but realistic data
         std::string tgt =
             "  execution:\n"
-            "    - pattern: '$CUSTOM_PLUGINS_PATH$\\windows_updates.vbs'\n"  // add
+            "    - pattern: '$CUSTOM_PLUGINS_PATH$\\windows_updates.ps1'\n"  // add
             "      cache_age: 14400\n"
             "      async: yes\n"
             "      timeout: 600\n"
@@ -201,7 +201,7 @@ TEST(AgentConfig, AggregateMap) {
         ASSERT_EQ(merged_yaml.size(), 4);
         // from user
         ASSERT_EQ(select(0, vars::kPluginPattern),
-                  "$CUSTOM_PLUGINS_PATH$\\windows_updates.vbs");
+                  "$CUSTOM_PLUGINS_PATH$\\windows_updates.ps1");
 
         EXPECT_EQ(select(1, vars::kPluginPattern),
                   std::string(yml_var::kBuiltinPlugins) + "\\*.*");
@@ -349,7 +349,7 @@ TEST(AgentConfig, Aggregate) {
             "  enabled: true\n"
             "  folders:  ['c:\\Users\\Public']\n"  // add
             "  execution:\n"
-            "    - pattern: ' $CUSTOM_PLUGINS_PATH$\\windows_updates.vbs'\n"  // add
+            "    - pattern: ' $CUSTOM_PLUGINS_PATH$\\windows_updates.ps1'\n"  // add
             "      cache_age: 14400\n"
             "      async: yes\n"
             "      timeout: 600\n"

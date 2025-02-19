@@ -215,7 +215,7 @@ plugins:
     # we will look for a folder in core(Program Files/Check_mk/plugins), if not found in
     # ProgramData, if not found in __mdlx, etc/
     execution:
-        # execution pattern for  windows-updates.vbs:
+        # execution pattern for  windows-updates.ps1:
         - pattern     : 'mk_inventory.vbs'  # [-] absolute or relative path. Better in ' ', wildcards [?] allowed
           async       : yes                 # [-] only for testing you may switch no
           timeout     : 120                 # [-] after 120 seconds process will be killed.

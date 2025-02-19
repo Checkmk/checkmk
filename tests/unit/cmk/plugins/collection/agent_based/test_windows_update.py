@@ -40,7 +40,7 @@ SECTION_FAILED: Final = Section(
     important_updates=[],
     optional_updates=[],
     forced_reboot=None,
-    failed="The text from the windows_update.vbs, second line!",
+    failed="The text from the windows_update.ps1, second line!",
 )
 
 
@@ -52,7 +52,7 @@ Update f�r WMDRM-f�hige Medienplayer (KB891122); Windows Media Player 11; Wi
 
 OUTPUT_FAILED: Final = """<<<windows_updates>>>
 x x x
-The text from the windows_update.vbs, second line!
+The text from the windows_update.ps1, second line!
 """
 
 

@@ -266,7 +266,7 @@ TEST(CvtTest, PluginsLocalSection) {
         EXPECT_EQ(plu[vars::kPluginsExecution].size(), 5);
         auto exec = plu[vars::kPluginsExecution];
         EXPECT_EQ(exec[0][vars::kPluginPattern].as<std::string>(),
-                  std::string(yml_var::kUserPlugins) + "\\windows_updates.vbs");
+                  std::string(yml_var::kUserPlugins) + "\\windows_updates.ps1");
         EXPECT_EQ(exec[1][vars::kPluginPattern].as<std::string>(),
                   std::string(yml_var::kUserPlugins) + "\\mk_inventory.ps1");
         EXPECT_EQ(exec[2][vars::kPluginPattern].as<std::string>(),

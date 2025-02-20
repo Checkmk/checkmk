@@ -49,7 +49,6 @@ PACKAGES := \
     patch \
     heirloom-mailx \
     snap7 \
-    heirloom-pkgtools \
     livestatus \
     unixcat \
     neb \

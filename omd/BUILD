@@ -33,6 +33,7 @@ create_venv(
     deps = [
         #added here instead of above because of disappearing file
         "//omd/packages/Python:python_tar",
+        "//omd/packages/heirloom-pkgtools",
         "//omd/packages/net-snmp:net-snmp_tar",
         "//omd/packages/openssl:openssl_tar_" + edition,
         "//omd/packages/perl-modules",

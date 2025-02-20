@@ -4325,8 +4325,8 @@ def _from_periodic_service_discovery_config(values: dict | None) -> dict | None:
     if "severity_changed_service_labels" not in values:
         values["severity_changed_service_labels"] = 0
 
-    if "severity_changed_service_params" in values:
-        values.pop("severity_changed_service_params")
+    if "severity_changed_service_params" not in values:
+        values["severity_changed_service_params"] = 0
 
     return values
 
@@ -4339,6 +4339,7 @@ def _valuespec_periodic_discovery():
                 "check_interval": 2 * 60,
                 "severity_unmonitored": 1,
                 "severity_changed_service_labels": 0,
+                "severity_changed_service_params": 0,
                 "severity_vanished": 0,
                 "severity_new_host_label": 1,
             },
@@ -4433,6 +4434,22 @@ def _vs_periodic_discovery() -> Dictionary:
                     help=_(
                         "Please select which alarm state the service discovery check services "
                         "shall assume in case that labels of services have changed."
+                    ),
+                    choices=[
+                        (0, _("OK - do not alert, just display")),
+                        (1, _("Warning")),
+                        (2, _("Critical")),
+                        (3, _("Unknown")),
+                    ],
+                ),
+            ),
+            (
+                "severity_changed_service_params",
+                DropdownChoice(
+                    title=_("Severity of services with changed parameters"),
+                    help=_(
+                        "Please select which alarm state the service discovery check services "
+                        "shall assume in case that parameters of services have changed."
                     ),
                     choices=[
                         (0, _("OK - do not alert, just display")),

@@ -256,6 +256,7 @@ def _periodic_service_discovery_rule() -> dict:
         "severity_unmonitored": 2,
         "severity_vanished": 1,
         "severity_changed_service_labels": 1,
+        "severity_changed_service_params": 1,
         "severity_new_host_label": 1,
         "inventory_rediscovery": {
             "mode": (

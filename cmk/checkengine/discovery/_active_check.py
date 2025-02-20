@@ -47,7 +47,8 @@ from ._utils import DiscoverySettings, QualifiedDiscovery
 __all__ = ["execute_check_discovery"]
 
 
-_CHANGED_PARAMS_FEATURE_FLAG = False
+# TODO: remove this feature flag, once successfully tested
+_CHANGED_PARAMS_FEATURE_FLAG = True
 
 
 class _Transition(enum.Enum):

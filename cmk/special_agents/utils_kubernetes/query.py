@@ -14,6 +14,7 @@ import argparse
 import enum
 import json
 import logging
+import os
 from collections.abc import Iterable, Iterator, Mapping, MutableMapping
 from typing import final, NewType
 
@@ -119,11 +120,15 @@ class PrometheusSessionConfig(SessionConfig):
 
 
 def create_session(config: SessionConfig, logger: logging.Logger) -> requests.Session:
-    if not config.usage_verify_cert:
+    session = requests.Session()
+    if config.usage_verify_cert:
+        session.verify = (
+            os.environ.get("REQUESTS_CA_BUNDLE") or os.environ.get("CURL_CA_BUNDLE") or True
+        )
+    else:
         logger.warning("Disabling SSL certificate verification.")
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-    session = requests.Session()
+        session.verify = False
     session.proxies.update(config.requests_proxies())
     session.headers.update(
         {} if config.token is None else {"Authorization": f"Bearer {config.token}"}
@@ -170,7 +175,7 @@ def _send_query_request_get(
     request = requests.Request("GET", query_url + f"?query={query}")
     prepared_request = session.prepare_request(request)
     try:
-        response = session.send(prepared_request, verify=requests_verify, timeout=requests_timeout)
+        response = session.send(prepared_request, timeout=requests_timeout)
     except requests.exceptions.RequestException as e:
         return query, e
     return query, parse_raw_response(response.content)
@@ -190,11 +195,15 @@ def node_exporter_getter(
 
 
 def make_api_client_requests(config: APISessionConfig, logger: logging.Logger) -> requests.Session:
-    if not config.verify_cert_api:
+    session = requests.Session()
+    if config.verify_cert_api:
+        session.verify = (
+            os.environ.get("REQUESTS_CA_BUNDLE") or os.environ.get("CURL_CA_BUNDLE") or True
+        )
+    else:
         logger.warning("Disabling SSL certificate verification.")
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-    session = requests.Session()
+        session.verify = False
     session.proxies.update(config.requests_proxies())
     session.headers.update({"Authorization": f"Bearer {config.token}"})
     session.headers.update({"Content-Type": "application/json"})

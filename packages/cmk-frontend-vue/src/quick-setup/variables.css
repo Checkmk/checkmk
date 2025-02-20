@@ -6,7 +6,7 @@
 @layer quick-setup {
   body[data-theme='facelift'] {
     /* Colors */
-    --qs-stage-line-color: rgb(232, 232, 238);
+    --qs-stage-line-color: rgb(211, 211, 211);
   }
 
   body[data-theme='modern-dark'] {

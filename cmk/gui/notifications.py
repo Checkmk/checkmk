@@ -41,7 +41,6 @@ from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri
 from cmk.gui.watolib.user_scripts import declare_notification_plugin_permissions
-from cmk.gui.watolib.users import get_enabled_remote_sites_for_logged_in_user
 
 
 def register(
@@ -208,7 +207,7 @@ class ClearFailedNotificationPage(Page):
         if request.var("_confirm"):
             _acknowledge_failed_notifications(acktime, time.time())
 
-            if get_enabled_remote_sites_for_logged_in_user(user):
+            if user.authorized_login_sites():
                 title = _("Replicate user profile")
                 breadcrumb = make_simple_page_breadcrumb(
                     mega_menu_registry.menu_monitoring(), title

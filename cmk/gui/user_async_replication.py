@@ -14,13 +14,12 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.activate_changes import ActivateChanges, ACTIVATION_TIME_PROFILE_SYNC
 from cmk.gui.watolib.changes import add_change
-from cmk.gui.watolib.users import get_enabled_remote_sites_for_logged_in_user
 
 
 def user_profile_async_replication_page(back_url: str) -> None:
-    user_profile_async_replication_dialog(
-        sites=list(get_enabled_remote_sites_for_logged_in_user(user)), back_url=back_url
-    )
+    sites = list(user.authorized_login_sites().keys())
+    user_profile_async_replication_dialog(sites=sites, back_url=back_url)
+
     html.footer()
 
 

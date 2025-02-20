@@ -89,7 +89,6 @@ from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.utils.user_security_message import SecurityNotificationEvent, send_security_message
 from cmk.gui.valuespec import Dictionary, FixedValue, TextInput
 from cmk.gui.watolib.mode import redirect
-from cmk.gui.watolib.users import get_enabled_remote_sites_for_logged_in_user
 
 from cmk.crypto.password import Password
 from cmk.crypto.password_hashing import PasswordHash
@@ -650,7 +649,6 @@ class RegisterTotpSecret(ABCUserProfilePage):
 
     def _show_form(self) -> None:
         assert user.id is not None
-        assert user.alias is not None
 
         if not self.secret:
             self.secret = TOTP.generate_secret()
@@ -764,7 +762,7 @@ class EditCredentialAlias(ABCUserProfilePage):
         # user profile replication now which will redirect the user to the destination
         # page after completion. Otherwise directly open up the destination page.
         origtarget = "user_two_factor_overview.py"
-        if get_enabled_remote_sites_for_logged_in_user(user):
+        if user.authorized_login_sites():
             raise redirect(
                 makeuri_contextless(
                     request, [("back", origtarget)], filename="user_profile_replicate.py"

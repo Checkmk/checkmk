@@ -10,7 +10,7 @@ from collections.abc import Generator
 import pytest
 from pytest_mock import MockerFixture
 
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
 from cmk.ccc.exceptions import MKGeneralException
 

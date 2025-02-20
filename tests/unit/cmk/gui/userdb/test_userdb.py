@@ -46,7 +46,7 @@ from cmk.crypto import password_hashing
 from cmk.crypto.password import Password
 
 if TYPE_CHECKING:
-    from tests.unit.cmk.gui.conftest import SetConfig, SingleRequest, WebTestAppForCMK
+    from tests.unit.cmk.web_test_app import SetConfig, SingleRequest, WebTestAppForCMK
 
 
 @pytest.fixture(name="user_id")

@@ -9,7 +9,7 @@ from typing import Any, Literal
 
 import pytest
 
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
 from livestatus import SiteId
 

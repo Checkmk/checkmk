@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from tests.unit.cmk.gui.conftest import CmkTestResponse, WebTestAppForCMK
+from tests.unit.cmk.web_test_app import CmkTestResponse, WebTestAppForCMK
 
 import cmk.ccc.version as cmk_version
 

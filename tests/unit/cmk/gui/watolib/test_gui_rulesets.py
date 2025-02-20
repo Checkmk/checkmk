@@ -12,7 +12,7 @@ from unittest.mock import patch
 import pytest
 from pytest import FixtureRequest
 
-from tests.unit.cmk.gui.conftest import SetConfig
+from tests.unit.cmk.web_test_app import SetConfig
 
 from cmk.ccc import version
 from cmk.ccc.exceptions import MKGeneralException

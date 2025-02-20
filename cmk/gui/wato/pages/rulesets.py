@@ -111,7 +111,12 @@ from cmk.gui.valuespec import (
 from cmk.gui.valuespec import LabelGroups as VSLabelGroups
 from cmk.gui.view_utils import render_label_groups
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
-from cmk.gui.watolib.check_mk_automations import analyse_service, get_check_information
+from cmk.gui.watolib.check_mk_automations import (
+    analyse_service,
+    analyze_host_rule_matches,
+    analyze_service_rule_matches,
+    get_check_information,
+)
 from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.host_label_sync import execute_host_label_sync
 from cmk.gui.watolib.hosts_and_folders import (
@@ -1175,6 +1180,7 @@ class ModeEditRuleset(WatoMode):
                 self._hostname,
                 self._item,
                 self._service,
+                ruleset.rulespec,
                 [e[2] for e in rules],
             )
             if self._hostname and self._host
@@ -1316,6 +1322,7 @@ class ModeEditRuleset(WatoMode):
         host_name: HostName,
         item: Item,
         service_name: ServiceName | None,
+        rulespec: Rulespec,
         rules: Sequence[Rule],
     ) -> dict[str, RuleMatchResult]:
         with tracer.span(
@@ -1339,16 +1346,25 @@ class ModeEditRuleset(WatoMode):
             span.set_attribute("cmk.service_labels", repr(service_labels))
             self._get_host_labels_from_remote_site()
 
-            rule_matches = {
-                rule.id: rule.matches(
-                    host_name,
-                    item,
-                    service_name,
-                    only_host_conditions=False,
-                    service_labels=service_labels,
-                )
-                for rule in rules
-            }
+            if rulespec.is_for_services:
+                rule_matches = {
+                    rule_id: bool(matches)
+                    for rule_id, matches in analyze_service_rule_matches(
+                        host_name,
+                        (service_name if rulespec.item_type == "service" else item) or "",
+                        service_labels,
+                        [r.to_single_base_ruleset() for r in rules],
+                    ).results.items()
+                }
+            else:
+                rule_matches = {
+                    rule_id: bool(matches)
+                    for rule_id, matches in analyze_host_rule_matches(
+                        host_name,
+                        [r.to_single_base_ruleset() for r in rules],
+                    ).results.items()
+                }
+
             span.set_attribute("cmk.gui.rule_matches", repr(rule_matches))
 
             match_state = MatchState({"matched": False, "keys": set()})

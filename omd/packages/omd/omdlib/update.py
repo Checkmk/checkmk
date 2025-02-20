@@ -149,6 +149,7 @@ HOOK_RELPATHS = [
     "etc/mod-gearman/perfdata.conf",
     "etc/nagios/nagios.d/pnp4nagios.cfg",
     "etc/nagvis/conf.d/cookie_auth.ini.php",
+    "etc/omd/site.conf",
     "etc/pnp4nagios/config.d/cookie_auth.php",
     "etc/rabbitmq/conf.d/01-default.conf",
     "etc/rabbitmq/conf.d/02-management-port.conf",

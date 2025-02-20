@@ -1112,6 +1112,7 @@ def notification_method() -> QuickSetupStage:
                                                 )
                                                 for script_name, title in notification_script_choices()
                                             ],
+                                            prefill=DefaultValue("mail"),
                                         ),
                                     ),
                                 ],

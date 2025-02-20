@@ -28,6 +28,8 @@ def test_registered_automations() -> None:
     needed_automations = [
         "active-check",
         "analyse-host",
+        "analyze-host-rule-matches",
+        "analyze-service-rule-matches",
         "get-services-labels",
         "analyse-service",
         "create-diagnostics-dump",

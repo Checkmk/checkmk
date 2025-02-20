@@ -77,6 +77,8 @@ from cmk.automations.results import (
     ActiveCheckResult,
     AnalyseHostResult,
     AnalyseServiceResult,
+    AnalyzeHostRuleMatchesResult,
+    AnalyzeServiceRuleMatchesResult,
     AutodiscoveryResult,
     CreateDiagnosticsDumpResult,
     DeleteHostsKnownRemoteResult,
@@ -1741,6 +1743,89 @@ class AutomationAnalyseHost(Automation):
 
 
 automations.register(AutomationAnalyseHost())
+
+
+class AutomationAnalyzeHostRuleMatches(Automation):
+    cmd = "analyze-host-rule-matches"
+    needs_config = True
+    needs_checks = False
+
+    def execute(
+        self,
+        args: list[str],
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigFragment | None,
+    ) -> AnalyzeHostRuleMatchesResult:
+        host_name = HostName(args[0])
+        # We read the list of rules from stdin since it could be too much for the command line
+        match_rules = ast.literal_eval(sys.stdin.read())
+
+        if loaded_config is None:
+            loaded_config = load_config(discovery_rulesets=())
+        ruleset_matcher = loaded_config.config_cache.ruleset_matcher
+        ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
+
+        return AnalyzeHostRuleMatchesResult(
+            {
+                rules[0]["id"]: list(ruleset_matcher.get_host_values(host_name, rules))
+                # The caller needs to get one result per rule. For this reason we can not just use
+                # the list of rules with the ruleset matching functions but have to execute rule
+                # matching for the rules individually. If we would use the provided list of rules,
+                # then the not matching rules would not be represented in the result and we would
+                # not know which matched value is related to which rule.
+                for rules in match_rules
+            }
+        )
+
+
+automations.register(AutomationAnalyzeHostRuleMatches())
+
+
+class AutomationAnalyzeServiceRuleMatches(Automation):
+    cmd = "analyze-service-rule-matches"
+    needs_config = True
+    needs_checks = False
+
+    def execute(
+        self,
+        args: list[str],
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigFragment | None,
+    ) -> AnalyzeServiceRuleMatchesResult:
+        host_name = HostName(args[0])
+        # This is not necessarily a service description. Can also be an item name when matching
+        # checkgroup rules.
+        service_or_item = args[1]
+
+        # We read the list of rules from stdin since it could be too much for the command line
+        match_rules, service_labels = ast.literal_eval(sys.stdin.read())
+
+        if loaded_config is None:
+            loaded_config = load_config(discovery_rulesets=())
+        ruleset_matcher = loaded_config.config_cache.ruleset_matcher
+        ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
+
+        return AnalyzeServiceRuleMatchesResult(
+            {
+                rules[0]["id"]: list(
+                    ruleset_matcher._get_service_ruleset_values(
+                        host_name,
+                        service_or_item,
+                        service_labels,
+                        rules,
+                    )
+                )
+                # The caller needs to get one result per rule. For this reason we can not just
+                # use the list of rules with the ruleset matching functions but have to execute
+                # rule matching for the rules individually. If we would use the provided list of
+                # rules, then the not matching rules would not be represented in the result and
+                # we would not know which matched value is related to which rule.
+                for rules in match_rules
+            }
+        )
+
+
+automations.register(AutomationAnalyzeServiceRuleMatches())
 
 
 class ABCDeleteHosts:

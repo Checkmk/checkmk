@@ -46,6 +46,11 @@ class BackgroundJobStatus(BaseSchema):
 
 class BackgroundJobSnapshot(BaseSchema):
     # TODO add more fields
+    site_id = fields.String(
+        required=True,
+        description="The site ID where the background job is located",
+        example="foobar",
+    )
     status = fields.Nested(
         BackgroundJobStatus,
         description="The status of the background job",

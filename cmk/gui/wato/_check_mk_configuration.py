@@ -4466,6 +4466,7 @@ def _valuespec_automatic_rediscover_parameters() -> Dictionary:
                                 "add_new_services": False,
                                 "remove_vanished_services": False,
                                 "update_changed_service_labels": False,
+                                "update_changed_service_parameters": False,
                                 "update_host_labels": True,
                             },
                         ),
@@ -4502,6 +4503,13 @@ def _valuespec_automatic_rediscover_parameters() -> Dictionary:
                                             "update_changed_service_labels",
                                             Checkbox(
                                                 label=_("Update service labels"),
+                                                default_value=False,
+                                            ),
+                                        ),
+                                        (
+                                            "update_changed_service_parameters",
+                                            Checkbox(
+                                                label=_("Update service parameters"),
                                                 default_value=False,
                                             ),
                                         ),
@@ -4704,6 +4712,7 @@ def _migrate_automatic_rediscover_parameters(
                 "add_new_services": True,
                 "remove_vanished_services": False,
                 "update_changed_service_labels": False,
+                "update_changed_service_parameters": False,
                 "update_host_labels": True,
             },
         )
@@ -4715,6 +4724,7 @@ def _migrate_automatic_rediscover_parameters(
                 "add_new_services": False,
                 "remove_vanished_services": True,
                 "update_changed_service_labels": False,
+                "update_changed_service_parameters": False,
                 "update_host_labels": False,
             },
         )
@@ -4726,6 +4736,7 @@ def _migrate_automatic_rediscover_parameters(
                 "add_new_services": True,
                 "remove_vanished_services": True,
                 "update_changed_service_labels": False,
+                "update_changed_service_parameters": False,
                 "update_host_labels": True,
             },
         )

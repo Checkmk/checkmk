@@ -17,6 +17,7 @@ from cmk.utils.hostaddress import HostName
 
 from cmk.messaging import Channel, CMKConnectionError, DeliveryTag, RoutingKey
 from cmk.piggyback.backend import (
+    get_messages_for,
     PiggybackMessage,
     store_piggyback_raw_data,
     watch_new_messages,
@@ -143,3 +144,34 @@ class SendingPayloadProcess(multiprocessing.Process):
         config = load_config(self.paths)
         self.reload_config.clear()
         return config
+
+
+def send_messages_oneshot(
+    logger: logging.Logger,
+    omd_root: Path,
+    omd_site: str,
+    targets: Mapping[HostName, str],
+) -> None:
+    task_name = "sending oneshot messages"
+    logger.info("Starting: %s", task_name)
+
+    hub_payloads = [
+        (site_id, PiggybackPayload.from_message(message))
+        for host, site_id in targets.items()
+        for message in get_messages_for(host, omd_root)
+    ]
+
+    try:
+        with make_connection(omd_root, omd_site, logger, task_name) as conn:
+            channel = conn.channel(PiggybackPayload)
+            for site, payload in hub_payloads:
+                logger.debug(
+                    "%s: to site '%s' for host '%s'",
+                    task_name.title(),
+                    site,
+                    ",".join(payload.raw_data),  # it's only one.
+                )
+                channel.publish_for_site(site, payload, routing=RoutingKey("payload"))
+
+    except CMKConnectionError as exc:
+        logger.error("Connection error: %s: %s", task_name, exc)

@@ -12,6 +12,7 @@ from cmk.utils.hostaddress import HostName
 
 from cmk.messaging import DeliveryTag
 from cmk.piggyback.hub._config import (
+    ConfigType,
     load_config,
     PiggybackHubConfig,
 )
@@ -21,8 +22,12 @@ from cmk.piggyback.hub._paths import create_paths
 
 def test_handle_received_config(tmp_path: Path) -> None:
     test_logger = logging.getLogger("test")
-    input_payload = PiggybackHubConfig(locations={HostName("test_host"): "test_site"})
-    on_message = handle_received_config(test_logger, tmp_path, (reload_config := make_event()))
+    input_payload = PiggybackHubConfig(
+        type=ConfigType.PERSISTED, locations={HostName("test_host"): "test_site"}
+    )
+    on_message = handle_received_config(
+        test_logger, tmp_path, "mysite", (reload_config := make_event())
+    )
 
     assert not reload_config.is_set()
     on_message(Mock(), DeliveryTag(0), input_payload)

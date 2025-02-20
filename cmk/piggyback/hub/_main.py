@@ -20,10 +20,11 @@ from cmk.ccc.daemon import daemonize, pid_file_lock
 
 from cmk.messaging import Channel, DeliveryTag, QueueName, set_logging_level
 
-from ._config import CONFIG_QUEUE, PiggybackHubConfig, save_config
+from ._config import CONFIG_QUEUE, ConfigType, PiggybackHubConfig, save_config
 from ._payload import (
     PiggybackPayload,
     save_payload_on_message,
+    send_messages_oneshot,
     SendingPayloadProcess,
 )
 from ._utils import APP_NAME, ReceivingProcess
@@ -47,18 +48,21 @@ class Arguments:
 
 
 def handle_received_config(
-    logger: logging.Logger, omd_root: Path, reload_config: Event
+    logger: logging.Logger, omd_root: Path, omd_site: str, reload_config: Event
 ) -> Callable[[Channel[PiggybackHubConfig], DeliveryTag, PiggybackHubConfig], None]:
     def _on_message(
         channel: Channel[PiggybackHubConfig],
         delivery_tag: DeliveryTag,
         received: PiggybackHubConfig,
     ) -> None:
-        logger.debug("New configuration received")
+        logger.debug("New configuration received (type: %s)", received.type.name)
 
-        save_config(omd_root, received)
-
-        reload_config.set()
+        match received.type:
+            case ConfigType.ONESHOT:
+                send_messages_oneshot(logger, omd_root, omd_site, received.locations)
+            case ConfigType.PERSISTED:
+                save_config(omd_root, received)
+                reload_config.set()
 
         channel.acknowledge(delivery_tag)
 
@@ -136,7 +140,7 @@ def run_piggyback_hub(
             omd_root,
             omd_site,
             PiggybackHubConfig,
-            handle_received_config(logger, omd_root, reload_config),
+            handle_received_config(logger, omd_root, omd_site, reload_config),
             crash_report_callback,
             CONFIG_QUEUE,
             message_ttl=None,

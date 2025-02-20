@@ -12,7 +12,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from pathlib import Path
 from typing import Final
 
@@ -95,13 +95,21 @@ def pytest_exception_interact(
                 sudo=sudo_run_in_container,
             )
         )
-        excp_.add_note("-" * 80)
-        excp_.add_note(
-            _render_command_output(
-                "lslocks --output-all --notruncate",
-                sudo=sudo_run_in_container,
+        if sudo_run_in_container:
+            for site_name in _currently_existing_omd_site_names():
+                excp_.add_note("-" * 80)
+                excp_.add_note(f"SITE: {site_name}")
+                for command_output in _rendered_command_outputs_for_site(site_name):
+                    excp_.add_note("-" * 80)
+                    excp_.add_note(command_output)
+        else:
+            excp_.add_note("-" * 80)
+            excp_.add_note(
+                _render_command_output(
+                    "lslocks --output-all --notruncate",
+                    sudo=False,
+                )
             )
-        )
 
     if excinfo.type == SessionTimeoutError:
         # Prevents execution of the next test and exits the pytest-run, and
@@ -124,7 +132,7 @@ def pytest_exception_interact(
         raise excp_
 
 
-def _render_command_output(cmd: str, sudo: bool) -> str:
+def _render_command_output(cmd: str, sudo: bool, substitute_user: str | None = None) -> str:
     """Render stdout and stderr from command as string or exception if raised.
 
     Command execution can have non-zero exit-code.
@@ -134,11 +142,36 @@ def _render_command_output(cmd: str, sudo: bool) -> str:
             cmd.split(" "),
             sudo=sudo,
             check=False,
+            substitute_user=substitute_user,
         )
     except BaseException as excp:
         return f"EXCEPTION '{cmd}':\n{excp}"
     return (
         f"STDOUT '{cmd}':\n{completed_process.stdout}\nSTDERR '{cmd}':\n{completed_process.stderr}"
+    )
+
+
+def _currently_existing_omd_site_names() -> Generator[str]:
+    """Yield the names of all currently existing OMD sites"""
+    yield from (site_path.name for site_path in Path("/omd/sites").iterdir())
+
+
+def _rendered_command_outputs_for_site(site_name: str) -> Generator[str]:
+    """Yield rendered output for OMD site command-by-command"""
+    yield _render_command_output(
+        "lslocks --output-all --notruncate",
+        sudo=True,
+        substitute_user=site_name,
+    )
+    yield _render_command_output(
+        "omd status",
+        sudo=True,
+        substitute_user=site_name,
+    )
+    yield _render_command_output(
+        'lq "GET hosts\\nColumns: name"',
+        sudo=True,
+        substitute_user=site_name,
     )
 
 

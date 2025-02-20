@@ -14,6 +14,10 @@ import json
 from collections.abc import Mapping
 from typing import Any
 
+from livestatus import SiteId
+
+from cmk.ccc.site import omd_site
+
 from cmk.gui.background_job import BackgroundJob, BackgroundStatusSnapshot
 from cmk.gui.config import active_config
 from cmk.gui.http import Response
@@ -36,7 +40,7 @@ class JobID:
     )
 
 
-class SiteId:
+class FieldSiteId:
     field_name = "site"
     field_definition = gui_fields.String(
         description="The site where the background job is located. Defaults to local site",
@@ -59,7 +63,7 @@ class SiteId:
     ],
     query_params=[
         {
-            SiteId.field_name: SiteId.field_definition,
+            FieldSiteId.field_name: FieldSiteId.field_definition,
         }
     ],
     response_schema=BackgroundJobSnapshotObject,
@@ -67,8 +71,12 @@ class SiteId:
 def show_background_job_snapshot(params: Mapping[str, Any]) -> Response:
     """Show the last status of a background job"""
     job_id = params[JobID.field_name]
-    site_id = params.get(SiteId.field_name)
-    if site_id and not site_is_local(active_config, site_id):
+    if (site_id_value := params.get(FieldSiteId.field_name)) is not None:
+        site_id = SiteId(site_id_value)
+    else:
+        site_id = omd_site()
+
+    if not site_is_local(active_config, site_id):
         snapshot = BackgroundStatusSnapshot.from_dict(
             json.loads(
                 str(
@@ -88,7 +96,7 @@ def show_background_job_snapshot(params: Mapping[str, Any]) -> Response:
         return problem(
             status=404,
             title="The requested background job does not exist",
-            detail=f"Could not find a background job with the ID '{job_id}'",
+            detail=f"Could not find a background job with the ID '{job_id}' on site {site_id}",
         )
 
     status = snapshot.status
@@ -98,6 +106,7 @@ def show_background_job_snapshot(params: Mapping[str, Any]) -> Response:
             identifier=job_id,
             title=f"Background job {job_id} {'is active' if snapshot.is_active else 'is finished'}",
             extensions={
+                "site_id": site_id,
                 # TODO: add the snapshot fields
                 "active": snapshot.is_active,
                 "status": {"state": status.state, "log_info": status.loginfo},

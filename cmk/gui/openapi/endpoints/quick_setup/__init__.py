@@ -308,7 +308,7 @@ def quicksetup_run_stage_action(params: Mapping[str, Any]) -> Response:
         response = Response(status=303)
         url = urlparse(background_job_status_link["href"]).path
         if site_id and not site_is_local(active_config, SiteId(site_id)):
-            url = f"{url}?{background_job.SiteId.field_name}={site_id}"
+            url = f"{url}?{background_job.FieldSiteId.field_name}={site_id}"
         response.location = url
         return response
 

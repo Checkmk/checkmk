@@ -33,7 +33,7 @@ def make_updated_predictions(
     store.remove_outdated_predictions(now)
     return {
         hash(meta): _make_reference_and_prediction(
-            meta, valid_prediction or _update_prediction(store, meta, get_recorded_data, now), now
+            meta, valid_prediction or _update_prediction(store, meta, get_recorded_data), now
         )
         for meta, valid_prediction in store.iter_all_valid_predictions(now)
     }
@@ -60,7 +60,6 @@ def _update_prediction(
     store: PredictionStore,
     meta: PredictionInfo,
     get_recorded_data: Callable[[str, int, int], MetricRecord | None],
-    now: float,
 ) -> PredictionData | None:
     logger.log(
         VERBOSE,
@@ -69,7 +68,7 @@ def _update_prediction(
         meta.params.period,
         meta.valid_interval[0],
     )
-    if (prediction := compute_prediction(meta, get_recorded_data, now)) is None:
+    if (prediction := compute_prediction(meta, get_recorded_data)) is None:
         return None
     store.save_prediction(meta, prediction)
     return prediction

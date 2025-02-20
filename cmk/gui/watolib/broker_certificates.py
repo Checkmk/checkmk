@@ -139,7 +139,7 @@ def sync_broker_certs(
         settings,
         "store-broker-certs",
         [("certificates", remote_broker_certs.model_dump_json()), ("site_id", omd_site())],
-        timeout=60,
+        timeout=120,
     )
 
 
@@ -191,7 +191,7 @@ def sync_remote_broker_certs(
         site,
         "store-broker-certs",
         [("certificates", broker_certificates.model_dump_json()), ("site_id", omd_site())],
-        timeout=60,
+        timeout=120,
     )
 
 

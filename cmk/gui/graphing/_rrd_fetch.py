@@ -63,7 +63,12 @@ def fetch_rrd_data_for_graph(
     rrd_data: dict[RRDDataKey, TimeSeries] = {}
     for (site, host_name, service_description), metrics in by_service.items():
         with contextlib.suppress(livestatus.MKLivestatusNotFoundError):
-            for (metric_name, consolidation_function, scale), data in _fetch_rrd_data(
+            for (metric_name, consolidation_function, scale), (
+                start,
+                end,
+                step,
+                values,
+            ) in _fetch_rrd_data(
                 site,
                 host_name,
                 service_description,
@@ -81,7 +86,7 @@ def fetch_rrd_data_for_graph(
                         scale,
                     )
                 ] = TimeSeries(
-                    data,
+                    [start, end, step] + list(values),
                     conversion=conversion,
                 )
     _align_and_resample_rrds(rrd_data, graph_recipe.consolidation_function)
@@ -175,7 +180,7 @@ def _fetch_rrd_data(
     metrics: set[MetricProperties],
     consolidation_function: GraphConsolidationFunction | None,
     graph_data_range: GraphDataRange,
-) -> list[tuple[MetricProperties, TimeSeriesValues]]:
+) -> list[tuple[MetricProperties, tuple[int, int, int, TimeSeriesValues]]]:
     start_time, end_time = graph_data_range.time_range
 
     step = graph_data_range.step
@@ -188,7 +193,9 @@ def _fetch_rrd_data(
     query = livestatus_lql([host_name], lql_columns, service_description)
 
     with sites.only_sites(site):
-        return list(zip(metrics, sites.live().query_row(query)))
+        data = sites.live().query_row(query)
+
+    return list(zip(metrics, [(int(d[0]), int(d[1]), int(d[2]), d[3:]) for d in data]))
 
 
 def rrd_columns(

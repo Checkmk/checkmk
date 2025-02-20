@@ -13,13 +13,14 @@ from itertools import cycle
 from logging import getLogger
 from logging.handlers import WatchedFileHandler
 from multiprocessing import Event as make_event
+from multiprocessing.synchronize import Event
 from pathlib import Path
 
 from cmk.ccc.daemon import daemonize, pid_file_lock
 
-from cmk.messaging import QueueName, set_logging_level
+from cmk.messaging import Channel, DeliveryTag, QueueName, set_logging_level
 
-from .config import CONFIG_QUEUE, PiggybackHubConfig, save_config_on_message
+from .config import CONFIG_QUEUE, PiggybackHubConfig, save_config
 from .payload import (
     PiggybackPayload,
     save_payload_on_message,
@@ -43,6 +44,25 @@ class Arguments:
     log_file: str
     omd_root: str
     omd_site: str
+
+
+def handle_received_config(
+    logger: logging.Logger, omd_root: Path, reload_config: Event
+) -> Callable[[Channel[PiggybackHubConfig], DeliveryTag, PiggybackHubConfig], None]:
+    def _on_message(
+        channel: Channel[PiggybackHubConfig],
+        delivery_tag: DeliveryTag,
+        received: PiggybackHubConfig,
+    ) -> None:
+        logger.debug("New configuration received")
+
+        save_config(omd_root, received)
+
+        reload_config.set()
+
+        channel.acknowledge(delivery_tag)
+
+    return _on_message
 
 
 def _parse_arguments(argv: list[str]) -> Arguments:
@@ -116,7 +136,7 @@ def run_piggyback_hub(
             omd_root,
             omd_site,
             PiggybackHubConfig,
-            save_config_on_message(logger, omd_root, reload_config),
+            handle_received_config(logger, omd_root, reload_config),
             crash_report_callback,
             CONFIG_QUEUE,
             message_ttl=None,

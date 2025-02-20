@@ -194,7 +194,8 @@ def draw_dashboard(name: DashboardName, owner: UserId) -> None:
         ),
     )
 
-    if need_replication:
+    # replication is only needed if we have remote sites
+    if need_replication and user.authorized_login_sites():
         save_and_replicate_all_dashboards(
             makeuri(request, [("name", name), ("edit", "1" if mode == "edit" else "0")])
         )

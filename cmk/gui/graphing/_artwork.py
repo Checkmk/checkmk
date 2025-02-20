@@ -22,7 +22,6 @@ from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
 
 from ._color import fade_color, parse_color, render_color
 from ._formatter import Label, NotationFormatter
@@ -37,6 +36,7 @@ from ._graph_specification import (
 from ._legacy import get_unit_info, LegacyUnitSpecification, UnitInfo
 from ._metric_operation import clean_time_series_point, LineType, RRDData
 from ._rrd_fetch import fetch_rrd_data_for_graph
+from ._time_series import TimeSeries, TimeSeriesValue, Timestamp
 from ._unit import user_specific_unit, UserSpecificUnit
 from ._utils import SizeEx
 

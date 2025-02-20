@@ -10,7 +10,7 @@ import pytest
 from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.gui.graphing._metric_operation import _time_series_math, Operators
-from cmk.gui.time_series import TimeSeries
+from cmk.gui.graphing._time_series import TimeSeries
 
 
 @pytest.mark.parametrize(

@@ -25,8 +25,9 @@ from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
 from cmk.gui.i18n import _
-from cmk.gui.time_series import TimeSeries, TimeSeriesValues
 from cmk.gui.utils import escaping
+
+from ._time_series import TimeSeries, TimeSeriesValues
 
 GraphConsolidationFunction = Literal["max", "min", "average"]
 LineType = Literal["line", "area", "stack", "-line", "-area", "-stack"]

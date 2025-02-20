@@ -23,7 +23,6 @@ from cmk.utils.servicename import ServiceName
 
 from cmk.gui import sites
 from cmk.gui.i18n import _
-from cmk.gui.time_series import TimeSeries, TimeSeriesValues
 from cmk.gui.type_defs import ColumnName
 
 from ._graph_specification import GraphDataRange, GraphRecipe
@@ -42,6 +41,7 @@ from ._metric_operation import (
     time_series_operators,
 )
 from ._metrics import get_metric_spec
+from ._time_series import TimeSeries, TimeSeriesValues
 from ._translated_metrics import find_matching_translation, TranslationSpec
 
 

@@ -40,6 +40,7 @@ single_version_override(
         "//bazel/patches:rules_uv_rm_venv.patch",
         "//bazel/patches:rules_uv_quiet.patch",
         "//bazel/patches:rules_uv_create_venv_whls.patch",
+        "//bazel/patches:rules_uv-requirements_in_info.patch",
     ],
 )
 

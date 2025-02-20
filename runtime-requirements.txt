@@ -6,7 +6,7 @@ aiohappyeyeballs==2.4.6 \
     --hash=sha256:147ec992cf873d74f5062644332c539fcd42956dc69453fe5204195e560517e1 \
     --hash=sha256:9b05052f9042985d32ecbe4b59a77ae19c006a78f1344d7fdad69d28ded3d0b0
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   aiohttp
 aiohttp==3.11.12 \
     --hash=sha256:0450ada317a65383b7cce9576096150fdb97396dcfe559109b403c7242faffef \
@@ -91,51 +91,51 @@ aiohttp==3.11.12 \
     --hash=sha256:f752e80606b132140883bb262a457c475d219d7163d996dc9072434ffb0784c4 \
     --hash=sha256:f7914ab70d2ee8ab91c13e5402122edbc77821c66d2758abb53aabe87f013287
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   meraki
 aiosignal==1.3.2 \
     --hash=sha256:45cde58e409a301715980c2b01d0c28bdde3770d8290b5eb2173759d9acb31a5 \
     --hash=sha256:a8c255c66fafb1e499c9351d0bf32ff2d8a0321595ebac3b93713656d2436f54
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   aiohttp
 annotated-types==0.7.0 \
     --hash=sha256:1f02e8b43a8fbbc3f3e0d4f0f4bfc8131bcb4eebe8849b8e5c773f3a1c582a53 \
     --hash=sha256:aff07c09a53a08bc8cfccb9c85b05f1aa9a2a6f23728d790723543408344ce89
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   pydantic
 anyio==4.8.0 \
     --hash=sha256:1d9fe889df5212298c0c0723fa20479d1b94883a2df44bd3897aa91083316f7a \
     --hash=sha256:b5011f270ab5eb0abf13385f851315585cc37ef330dd88e27ec3d34d651fd47a
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   httpx
     #   starlette
 apispec==6.8.1 \
     --hash=sha256:eacba00df745efc9adb2a45cf992300e87938582077e101fb26b78ecf4320beb \
     --hash=sha256:f4916cbb7be156963b18f5929a0e42bd2349135834b680a81b12432bcfaa9a39
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   apispec-oneofschema
 apispec-oneofschema==3.0.1 \
     --hash=sha256:56aeab968abf22b01b3fbcf2d3dc95be09585581f08c62c09bd94f5aa7192fab \
     --hash=sha256:a88b54c99ffc175f39217b38c5850706a78aadc4cf5cea31fe7c20e25c2491ee
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 asgiref==3.8.1 \
     --hash=sha256:3e1e3ecc849832fe52ccf2cb6686b7a55f82bb1d6aee72a58826471390335e47 \
     --hash=sha256:c343bd80a0bec947a9860adb4c432ffa7db769836c64238fc34bdc3fec84d590
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   opentelemetry-instrumentation-asgi
 attrs==25.1.0 \
     --hash=sha256:1c97078a80c814273a76b2a298a932eb681c87415c11dee0a6921de7f1b02c3e \
     --hash=sha256:c75a69e28a550a7e93789579c22aa26b0f5b83b75dc4e08fe092980051e1090a
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   aiohttp
     #   jsonschema
     #   referencing
@@ -143,20 +143,20 @@ azure-core==1.32.0 \
     --hash=sha256:22b3c35d6b2dae14990f6c1be2912bf23ffe50b220e708a28ab1bb92b1c730e5 \
     --hash=sha256:eac191a0efb23bfa83fddf321b27b122b4ec847befa3091fa736a5c32c50d7b4
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   azure-identity
     #   azure-storage-blob
 azure-identity==1.17.1 \
     --hash=sha256:32ecc67cc73f4bd0595e4f64b1ca65cd05186f4fe6f98ed2ae9f1aa32646efea \
     --hash=sha256:db8d59c183b680e763722bfe8ebc45930e6c57df510620985939f7f3191e0382
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 azure-storage-blob==12.20.0 \
     --hash=sha256:de6b3bf3a90e9341a6bcb96a2ebe981dffff993e9045818f6549afea827a52a9 \
     --hash=sha256:eeb91256e41d4b5b9bad6a87fd0a8ade07dd58aa52344e2c8d2746e27a017d3b
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 bcrypt==4.2.1 \
     --hash=sha256:041fa0155c9004eb98a232d54da05c0b41d4b8e66b6fc3cb71b4b3f6144ba837 \
@@ -185,26 +185,26 @@ bcrypt==4.2.1 \
     --hash=sha256:e84e0e6f8e40a242b11bce56c313edc2be121cec3e0ec2d76fce01f6af33c07c \
     --hash=sha256:f85b1ffa09240c89aa2e1ae9f3b1c687104f7b2b9d2098da4e923f1b7082d331
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r packages/cmk-crypto/requirements.in
     #   paramiko
 blinker==1.9.0 \
     --hash=sha256:b4ce2265a7abece45e7cc896e98dbebe6cead56bcf805a3d23136d145f5445bf \
     --hash=sha256:ba0efaa9080b619ff2f3459d1d500c57bddea4a6b424b60a91141db6fd2f08bc
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   flask
 boto3==1.36.24 \
     --hash=sha256:777ec08a6fe0ad77fa0607b431542c51d2d2e4145fecd512bee9f383ee4184f2 \
     --hash=sha256:c9055fe6a33f79c43053c06db432092cfcf88f4b4181950f5ca8f2f0cb6abb87
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 botocore==1.36.24 \
     --hash=sha256:7d35ba92ccbed7aa7e1563b12bb339bde612d5f845c89bfdd79a6db8c26b9f2e \
     --hash=sha256:b8b2ad60e6545aaef3a40163793c39555fcfd67fb081a38695018026c4f4db25
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   boto3
     #   s3transfer
@@ -212,19 +212,19 @@ cached-property==2.0.1 \
     --hash=sha256:484d617105e3ee0e4f1f58725e72a8ef9e93deee462222dbd51cd91230897641 \
     --hash=sha256:f617d70ab1100b7bcf6e42228f9ddcb78c676ffa167278d9f730d1c2fba69ccb
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   exchangelib
 cachetools==5.5.1 \
     --hash=sha256:70f238fbba50383ef62e55c6aff6d9673175fe59f7c6782c7a0b9e38f4a9df95 \
     --hash=sha256:b76651fdc3b24ead3c648bbdeeb940c1b04d365b38b4af66788f9ec4a81d42bb
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   google-auth
 certifi==2025.1.31 \
     --hash=sha256:3d5da6925056f6f18f119200434a4780a94263f10d1c21d032a6f6b2baa20651 \
     --hash=sha256:ca78db4565a652026a4db2bcdf68f2fb589ea80d0be70e03929ed730746b84fe
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   httpcore
     #   httpx
     #   kubernetes
@@ -300,14 +300,14 @@ cffi==1.17.1 \
     --hash=sha256:f7f5baafcc48261359e14bcd6d9bff6d4b28d9103847c9e136694cb0501aef87 \
     --hash=sha256:fc48c783f9c87e60831201f2cce7f3b2e4846bf4d8728eabe54d60700b318a0b
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   cryptography
     #   pynacl
 chardet==5.2.0 \
     --hash=sha256:1b3b6ff479a8c414bc3fa2c0852995695c4a026dcd6d0633b2dd092ca39c1cf7 \
     --hash=sha256:e1cf59446890a00105fe7b7912492ea04b6e6f06d4b742b2c788469e34c82970
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   reportlab
 charset-normalizer==3.4.1 \
     --hash=sha256:0167ddc8ab6508fe81860a57dd472b2ef4060e8d378f0cc555707126830f2537 \
@@ -403,13 +403,13 @@ charset-normalizer==3.4.1 \
     --hash=sha256:fd4ec41f914fa74ad1b8304bbc634b3de73d2a0889bd32076342a573e0779e00 \
     --hash=sha256:ffc9202a29ab3920fa812879e95a9e78b2465fd10be7fcbd042899695d75e616
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   requests
 click==8.1.8 \
     --hash=sha256:63c132bbbed01578a06712a2d1f497bb62d9c1c0d329b7903a866228027263b2 \
     --hash=sha256:ed53c9d8990d83c2a27deae68e4ee337473f6330c040a31d4225c9574d16096a
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   flask
     #   uvicorn
 cryptography==43.0.3 \
@@ -441,7 +441,7 @@ cryptography==43.0.3 \
     --hash=sha256:f46304d6f0c6ab8e52770addfa2fc41e6629495548862279641972b6215451cd \
     --hash=sha256:f7b178f11ed3664fd0e995a47ed2b5ff0a12d893e41dd0494f406d1cf555cab7
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-crypto/requirements.in
@@ -526,19 +526,19 @@ cython==3.0.11 \
     --hash=sha256:f3953d2f504176f929862e5579cfc421860c33e9707f585d70d24e1096accdf7 \
     --hash=sha256:f988f7f8164a6079c705c39e2d75dbe9967e3dacafe041420d9af7b9ee424162
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 decorator==5.1.1 \
     --hash=sha256:637996211036b6385ef91435e4fae22989472f9d571faba8927ba8253acbc330 \
     --hash=sha256:b8c3f85900b9dc423225913c5aace94729fe1fa9763b38939a95226f02d37186
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   jsonpath-rw
 defusedxml==0.7.1 \
     --hash=sha256:1bb3032db185915b62d7c6209c5a8792be6a32ab2fedacc84e01b52c51aa3e69 \
     --hash=sha256:a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   exchangelib
     #   jira
     #   pysaml2
@@ -546,7 +546,7 @@ deprecated==1.2.18 \
     --hash=sha256:422b6f6d859da6f2ef57857761bfb392480502a64c3028ca9bbe86085d72115d \
     --hash=sha256:bd5011788200372a32418f888e326a09ff80d0214bd961147cfed01b5c018eec
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   opentelemetry-api
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
@@ -555,51 +555,51 @@ dnspython==2.7.0 \
     --hash=sha256:b4c34b7d10b51bcc3a5071e7b8dee77939f1e878477eeecc965e9835f63c6c86 \
     --hash=sha256:ce9c432eda0dc91cf618a5cedf1a4e142651196bbcd2c80e89ed5a907e5cfaf1
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   exchangelib
     #   python-active-directory
 docstring-parser==0.16 \
     --hash=sha256:538beabd0af1e2db0146b6bd3caa526c35a34d61af9fd2887f3a8a27a739aa6e \
     --hash=sha256:bf0a1387354d3691d102edef7ec124f219ef639982d096e26e3b60aeffa90637
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 elementpath==4.7.0 \
     --hash=sha256:607804a1b4250ac448c1e2bfaec4ee1c980b0a07cfdb0d9057b57102038ed480 \
     --hash=sha256:a2029dc8752fcfec49663d1ed1b412c6daf278c0c91938f50f63c4fe9ed1848e
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   xmlschema
 exchangelib==5.4.0 \
     --hash=sha256:8fc6a98e7cc7b203f1eafc332ddf19c46979809f7138d2411e19491fcb7aa69a \
     --hash=sha256:edd4f5bca3b6dc67a3ad02f4b6d02ea141bff0788e5eb692d3bd09dc16a9a897
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 fastapi==0.115.8 \
     --hash=sha256:0ce9111231720190473e222cdf0f07f7206ad7e53ea02beb1d2dc36e2f0741e9 \
     --hash=sha256:753a96dd7e036b34eeef8babdfcfe3f28ff79648f86551eb36bfc1b0bf4a8cbf
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
 feedparser==6.0.11 \
     --hash=sha256:0be7ee7b395572b19ebeb1d6aafb0028dee11169f1c934e0ed67d54992f4ad45 \
     --hash=sha256:c9d0407b64c6f2a065d0ebb292c2b35c01050cc0dc33757461aaabdc4c4184d5
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 fido2==1.2.0 \
     --hash=sha256:e39f95920122d64283fda5e5581d95a206e704fa42846bfa4662f86aa0d3333b \
     --hash=sha256:f7c8ee62e359aa980a45773f9493965bb29ede1b237a9218169dbfe60c80e130
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 flask==3.0.3 \
     --hash=sha256:34e815dfaa43340d1d15a5c3a02b8476004037eb4840b34910c6e21679d288f3 \
     --hash=sha256:ceb27b0af3823ea2737928a4d99d125a06175b8512c445cbd9a9ce200ef76842
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 frozenlist==1.5.0 \
     --hash=sha256:000a77d6034fbad9b6bb880f7ec073027908f1b40254b5d6f26210d2dab1240e \
@@ -695,27 +695,27 @@ frozenlist==1.5.0 \
     --hash=sha256:fd74520371c3c4175142d02a976aee0b4cb4a7cc912a60586ffd8d5929979b30 \
     --hash=sha256:feeb64bc9bcc6b45c6311c9e9b99406660a9c05ca8a5b30d14a78555088b0b3a
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   aiohttp
     #   aiosignal
 gitdb==4.0.12 \
     --hash=sha256:5ef71f855d191a3326fcfbc0d5da835f26b13fbcba60c32c21091c349ffdb571 \
     --hash=sha256:67073e15955400952c6565cc3e707c554a4eea2e428946f7a4c162fab9bd9bcf
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   gitpython
 gitpython==3.1.44 \
     --hash=sha256:9e0e10cda9bed1ee64bc9a6de50e7e38a9c9943241cd7f585f6df3ed28011110 \
     --hash=sha256:c87e30b26253bf5418b01b0660f818967f3c503193838337fe5e573331249269
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   -r packages/cmk-werks/requirements.in
 google-api-core[grpc]==2.24.1 \
     --hash=sha256:bc78d608f5a5bf853b80bd70a795f703294de656c096c0968320830a4bc280f1 \
     --hash=sha256:f8b36f5456ab0dd99a1b693a40a31d1e7757beea380ad1b38faaf8941eae9d8a
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   google-api-python-client
     #   google-cloud-access-context-manager
     #   google-cloud-asset
@@ -726,13 +726,13 @@ google-api-python-client==2.161.0 \
     --hash=sha256:324c0cce73e9ea0a0d2afd5937e01b7c2d6a4d7e2579cdb6c384f9699d6c9f37 \
     --hash=sha256:9476a5a4f200bae368140453df40f9cda36be53fa7d0e9a9aac4cdb859a26448
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 google-auth==2.38.0 \
     --hash=sha256:8285113607d3b80a3f1543b75962447ba8a09fe85783432a784fdeef6ac094c4 \
     --hash=sha256:e7dae6694313f434a2727bf2906f27ad259bae090d7aa896590d86feec3d9d4a
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   google-api-core
     #   google-api-python-client
@@ -746,43 +746,43 @@ google-auth-httplib2==0.2.0 \
     --hash=sha256:38aa7badf48f974f1eb9861794e9c0cb2a0511a4ec0679b1f886d108f5640e05 \
     --hash=sha256:b65a0a2123300dd71281a7bf6e64d65a0759287df52729bdd1ae2e47dc311a3d
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   google-api-python-client
 google-cloud-access-context-manager==0.2.1 \
     --hash=sha256:3bfac6a8ee2e6f95105a8eecf4e1890b1a7963702eb8c655fecf02557d348e8a \
     --hash=sha256:6b817485872458c6dee08d11b9fb2416dfbc5f42633cd2150070408cc0e8f4d5
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   google-cloud-asset
 google-cloud-asset==3.29.0 \
     --hash=sha256:0a5b6b07ed3fd72bb58229e71835fdf1bac65de58387a98165b082fb7aa7ed4c \
     --hash=sha256:ae1df5356279cfea363e6489087af5fe046053c25ee5f5bb02f344aa8701211b
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 google-cloud-monitoring==2.27.0 \
     --hash=sha256:d51c006b778d2873955c23144a0a13de839c5ebe619e8fca77e1f3aa2643db35 \
     --hash=sha256:f66552528812e7b6a9f2fb7e0b7c3e7904cc0c13504f4fcb42035722b5da2bc4
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 google-cloud-org-policy==1.13.0 \
     --hash=sha256:6a314729023a7c3fd7fe062b6ac6f5ab064d6ceceb172260f2651ac5af4278ce \
     --hash=sha256:992bbca9ef9839fcf2f2ef1225d727f1a2ed6f4d1a73b33149716fa12fbbf862
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   google-cloud-asset
 google-cloud-os-config==1.20.0 \
     --hash=sha256:19ccc8a73a35eb5ac9f93c54f4b07dc1cbed2d77e8a524687de3bd5324b8b4c4 \
     --hash=sha256:7ae567689418671f3ca63d7b9a86f93415b030e016de366e9c2f7d067c9a35fa
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   google-cloud-asset
 googleapis-common-protos[grpc]==1.67.0 \
     --hash=sha256:21398025365f138be356d5923e9168737d94d46a72aefee4a6110a1f23463c86 \
     --hash=sha256:579de760800d13616f51cf8be00c876f00a9f146d3e6510e19d1f4111758b741
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   google-api-core
     #   grpc-google-iam-v1
     #   grpcio-status
@@ -792,7 +792,7 @@ grpc-google-iam-v1==0.14.0 \
     --hash=sha256:c66e07aa642e39bb37950f9e7f491f70dad150ac9801263b42b2814307c2df99 \
     --hash=sha256:fb4a084b30099ba3ab07d61d620a0d4429570b13ff53bd37bac75235f98b7da4
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   google-cloud-asset
 grpcio==1.70.0 \
     --hash=sha256:0495c86a55a04a874c7627fd33e5beaee771917d92c0e6d9d797628ac40e7655 \
@@ -851,7 +851,7 @@ grpcio==1.70.0 \
     --hash=sha256:fe9dbd916df3b60e865258a8c72ac98f3ac9e2a9542dcb72b7a34d236242a5ce \
     --hash=sha256:ff4a8112a79464919bb21c18e956c54add43ec9a4850e3949da54f61c241a4a6
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   google-api-core
     #   googleapis-common-protos
     #   grpc-google-iam-v1
@@ -861,13 +861,13 @@ grpcio-status==1.70.0 \
     --hash=sha256:0e7b42816512433b18b9d764285ff029bde059e9d41f8fe10a60631bd8348101 \
     --hash=sha256:fc5a2ae2b9b1c1969cc49f3262676e6854aa2398ec69cb5bd6c47cd501904a85
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   google-api-core
 gunicorn==23.0.0 \
     --hash=sha256:ec400d38950de4dfd418cff8328b2c8faed0edb0d517d3394e457c317908ca4d \
     --hash=sha256:f014447a0101dc57e294f6c18ca6b40227a4c90e9bdb586042628030cba004ec
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   uvicorn-worker
@@ -875,7 +875,7 @@ h11==0.14.0 \
     --hash=sha256:8f19fbbe99e72420ff35c00b27a34cb9937e902a8b810e2c88300c6f0a3b699d \
     --hash=sha256:e3fe4ac4b851c468cc8363d500db52c2ead036020723024a109d37346efaa761
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r packages/cmk-agent-receiver/requirements.in
     #   httpcore
     #   uvicorn
@@ -883,26 +883,26 @@ httpcore==1.0.7 \
     --hash=sha256:8551cb62a169ec7162ac7be8d4817d561f60e08eaa485234898414bb5a8a0b4c \
     --hash=sha256:a3fff8f43dc260d5bd363d9f9cf1830fa3a458b332856f34282de498ed420edd
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   httpx
 httplib2==0.22.0 \
     --hash=sha256:14ae0a53c1ba8f3d37e9e27cf37eabb0fb9980f435ba405d546948b009dd64dc \
     --hash=sha256:d7a10bc5ef5ab08322488bde8c726eeee5c8618723fdb399597ec58f3d82df81
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   google-api-python-client
     #   google-auth-httplib2
 httpx==0.28.1 \
     --hash=sha256:75e98c5f16b0f35b567856f597f06ff2270a374470a5c2392242528e3e3e42fc \
     --hash=sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r packages/cmk-agent-receiver/requirements.in
 icalendar==5.0.7 \
     --hash=sha256:18ad51f9d1741d33795ddaf5c886c59f6575f287d30e5a145c2d42ef72910c7f \
     --hash=sha256:e306014a64dc4dcf638da0acb2487ee4ada57b871b03a62ed7b513dfc135655c
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   recurring-ical-events
     #   x-wr-timezone
@@ -910,7 +910,7 @@ idna==3.10 \
     --hash=sha256:12f65c9b470abda6dc35cf8e63cc574b1c52b11df2c86030af0ac09b01b13ea9 \
     --hash=sha256:946d195a0d259cbba61165e88e65941f16e9b36ea6ddb97f00452bae8b1287d3
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   anyio
     #   httpx
     #   requests
@@ -919,32 +919,32 @@ importlib-metadata==8.5.0 \
     --hash=sha256:45e54197d28b7a7f1559e60b95e7c567032b602131fbd588f1497f47880aa68b \
     --hash=sha256:71522656f0abace1d072b9e5481a48f07c138e00f079c38c8f883823f9c26bd7
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   opentelemetry-api
 iniconfig==2.0.0 \
     --hash=sha256:2d91e135bf72d31a410b17c16da610a82cb55f6b0477d1a902134b24a455b8b3 \
     --hash=sha256:b6a85871a79d2e3b22d2d1b94ac2824226a63c6b741c88f7ae975f18b6778374
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   pytest
 isodate==0.7.2 \
     --hash=sha256:28009937d8031054830160fce6d409ed342816b543597cece116d966c6d99e15 \
     --hash=sha256:4cd1aa0f43ca76f4a6c6c0292a85f40b35ec2e43e315b59f06e6d32171a953e6
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   azure-storage-blob
     #   exchangelib
 itsdangerous==2.2.0 \
     --hash=sha256:c6242fc49e35958c8b15141343aa660db5fc54d4f13a1db01a3f5891b98700ef \
     --hash=sha256:e0050c0b7da1eea53ffaf149c0cfbb5c6e2e2b69c4bef22c81fa6eb73e5f6173
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   flask
 jinja2==3.1.5 \
     --hash=sha256:8fefff8dc3034e27bb80d67c671eb8a9bc424c0ef4c0826edbff304cceff43bb \
     --hash=sha256:aba0f4dc9ed8013c424088f68a5c226f7d6097ed89b246d7749c2ec4175c6adb
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   flask
     #   pysmi-lextudio
@@ -952,58 +952,58 @@ jira==3.8.0 \
     --hash=sha256:12190dc84dad00b8a6c0341f7e8a254b0f38785afdec022bd5941e1184a5a3fb \
     --hash=sha256:63719c529a570aaa01c3373dbb5a104dab70381c5be447f6c27f997302fa335a
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 jmespath==1.0.1 \
     --hash=sha256:02e2e4cc71b5bcab88332eebf907519190dd9e6e82107fa7f83b1003a6252980 \
     --hash=sha256:90261b206d6defd58fdd5e85f478bf633a2901798906be2ad389150c5c60edbe
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   boto3
     #   botocore
 jsonpatch==1.33 \
     --hash=sha256:0ae28c0cd062bbd8b8ecc26d7d164fbbea9652a1a3693f3b956c1eae5145dade \
     --hash=sha256:9fcd4009c41e6d12348b4a0ff2563ba56a2923a7dfee731d004e212e1ee5030c
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   redfish
 jsonpath-rw==1.4.0 \
     --hash=sha256:05c471281c45ae113f6103d1268ec7a4831a2e96aa80de45edc89b11fac4fbec
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   redfish
 jsonpointer==3.0.0 \
     --hash=sha256:13e088adc14fca8b6aa8177c044e12701e6ad4b28ff10e65f2267a90109c9942 \
     --hash=sha256:2b2d729f2091522d61c3b31f82e11870f60b68f43fbc705cb76bf4b832af59ef
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   jsonpatch
     #   redfish
 jsonschema==4.23.0 \
     --hash=sha256:d71497fef26351a33265337fa77ffeb82423f3ea21283cd9467bb03999266bc4 \
     --hash=sha256:fbadb6f8b144a8f8cf9f0b89ba94501d143e50411a1278633f56a7acf7fd5566
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   openapi-schema-validator
     #   openapi-spec-validator
 jsonschema-path==0.3.4 \
     --hash=sha256:8365356039f16cc65fddffafda5f58766e34bebab7d6d105616ab52bc4297001 \
     --hash=sha256:f502191fdc2b22050f9a81c9237be9d27145b9001c55842bece5e94e382e52f8
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   openapi-spec-validator
 jsonschema-specifications==2024.10.1 \
     --hash=sha256:0f38b83639958ce1152d02a7f062902c41c8fd20d558b0c34344292d417ae272 \
     --hash=sha256:a09a0680616357d9a0ecf05c12ad234479f549239d0f5b55f3deea67475da9bf
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   jsonschema
     #   openapi-schema-validator
 kubernetes==21.7.0 \
     --hash=sha256:044c20253f8577491a87af8f9edea1f929ed6d62ce306376a6cb8aed24e572c5 \
     --hash=sha256:c9849afc2eafdce60efa210049ee7a94e7ef6cf3a7afa14a69b3bf0447825977
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 lazy-object-proxy==1.10.0 \
     --hash=sha256:009e6bb1f1935a62889ddc8541514b6a9e1fcf302667dcb049a0be5c8f613e56 \
@@ -1044,7 +1044,7 @@ lazy-object-proxy==1.10.0 \
     --hash=sha256:edb45bb8278574710e68a6b021599a10ce730d156e5b254941754a9cc0b17d03 \
     --hash=sha256:fec03caabbc6b59ea4a638bee5fce7117be8e99a4103d9d5ad77f15d6f81020c
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   openapi-spec-validator
 lxml==4.9.3 \
     --hash=sha256:05186a0f1346ae12553d66df1cfce6f251589fea3ad3da4f3ef4e34b2d58c6a3 \
@@ -1140,7 +1140,7 @@ lxml==4.9.3 \
     --hash=sha256:fcdd00edfd0a3001e0181eab3e63bd5c74ad3e67152c84f93f13769a40e073a7 \
     --hash=sha256:fe4bda6bd4340caa6e5cf95e73f8fea5c4bfc55763dd42f1b50a94c1b4a2fbd4
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   -r packages/cmk-werks/requirements.in
     #   exchangelib
@@ -1148,7 +1148,7 @@ markdown==3.7 \
     --hash=sha256:2ae2471477cfd02dbbf038d5d9bc226d40def84b4fe2986e49b59b6b472bbed2 \
     --hash=sha256:7eb6df5690b81a1d7942992c97fad2938e956e79df20cbc6186e9c3a77b1c803
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r packages/cmk-werks/requirements.in
 markupsafe==3.0.2 \
     --hash=sha256:0bff5e0ae4ef2e1ae4fdf2dfd5b76c75e5c2fa4132d05fc1b0dabcd20c7e28c4 \
@@ -1213,14 +1213,14 @@ markupsafe==3.0.2 \
     --hash=sha256:f8b3d067f2e40fe93e1ccdd6b2e1d16c43140e76f02fb1319a05cf2b79d99430 \
     --hash=sha256:fcabf5ff6eea076f859677f5f0b6b5c1a51e70a376b0579e0eadef8db48c6b50
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   jinja2
     #   werkzeug
 marshmallow==3.26.1 \
     --hash=sha256:3350409f20a70a7e4e11a27661187b77cdcaeb20abca41c1454fe33636bea09c \
     --hash=sha256:e6d8affb6cb61d39d26402096dc0aee12d5a26d490a121f118d2e81dc0719dc6
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   apispec-oneofschema
     #   marshmallow-oneofschema
@@ -1229,20 +1229,20 @@ marshmallow-oneofschema==3.1.1 \
     --hash=sha256:68b4a57d0281a04ac25d4eb7a4c5865a57090a0a8fd30fd6362c8e833ac6a6d9 \
     --hash=sha256:ff4cb2a488785ee8edd521a765682c2c80c78b9dc48894124531bdfa1ec9303b
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   apispec-oneofschema
 meraki==1.41.0 \
     --hash=sha256:697706311aa48953e72c462bcc830b0e21575aeac144d94c8383a745de6396b6 \
     --hash=sha256:6b3f31981d278cbba2cce5229436528da4ecac5054d1cb7da6467f6d854cac84
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 msal==1.26.0 \
     --hash=sha256:224756079fe338be838737682b49f8ebc20a87c1c5eeaf590daae4532b83de15 \
     --hash=sha256:be77ba6a8f49c9ff598bbcdc5dfcf1c9842f3044300109af738e8c3e371065b5
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   azure-identity
     #   msal-extensions
@@ -1250,7 +1250,7 @@ msal-extensions==1.1.0 \
     --hash=sha256:01be9711b4c0b1a151450068eeb2c4f0997df3bba085ac299de3a66f585e382f \
     --hash=sha256:6ab357867062db7b253d0bd2df6d411c7891a0ee7308d54d1e4317c1d1c54252
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   azure-identity
 multidict==6.1.0 \
     --hash=sha256:052e10d2d37810b99cc170b785945421141bf7bb7d2f8799d431e7db229c385f \
@@ -1346,14 +1346,14 @@ multidict==6.1.0 \
     --hash=sha256:f90c822a402cb865e396a504f9fc8173ef34212a342d92e362ca498cad308e28 \
     --hash=sha256:ff3827aef427c89a25cc96ded1759271a93603aba9fb977a6d264648ebf989db
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   aiohttp
     #   yarl
 netapp-ontap==9.14.1.0 \
     --hash=sha256:495e679e10e61b9bb2cf5a432a5cdaf9f2ec56855540ba221c021d31a6b91eb7 \
     --hash=sha256:9e1ed21dccae8d35574a0c506a3440e04b9e37a1dff1c2ae7906ec6e7afafaac
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 numpy==1.26.4 \
     --hash=sha256:03a8c78d01d9781b28a6989f6fa1bb2c4f2d51201cf99d3dd875df6fbd96b23b \
@@ -1393,13 +1393,13 @@ numpy==1.26.4 \
     --hash=sha256:f870204a840a60da0b12273ef34f7051e98c3b5961b61b0c2c1be6dfd64fbcd3 \
     --hash=sha256:ffa75af20b44f8dba823498024771d5ac50620e6915abac414251bd971b4529f
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 oauthlib==3.2.2 \
     --hash=sha256:8139f29aac13e25d502680e9e19963e83f16838d48a0d71c287fe40e7067fbca \
     --hash=sha256:9859c40929662bec5d64f34d01c99e093149682a3f38915dc0655d5a633dd918
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   exchangelib
     #   requests-oauthlib
@@ -1407,19 +1407,19 @@ openapi-schema-validator==0.6.3 \
     --hash=sha256:f37bace4fc2a5d96692f4f8b31dc0f8d7400fd04f3a937798eaf880d425de6ee \
     --hash=sha256:f3b9870f4e556b5a62a1c39da72a6b4b16f3ad9c73dc80084b1b11e74ba148a3
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   openapi-spec-validator
 openapi-spec-validator==0.7.1 \
     --hash=sha256:3c81825043f24ccbcd2f4b149b11e8231abce5ba84f37065e14ec947d8f4e959 \
     --hash=sha256:8577b85a8268685da6f8aa30990b83b7960d4d1117e901d451b5d572605e5ec7
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 opentelemetry-api==1.30.0 \
     --hash=sha256:375893400c1435bf623f7dfb3bcd44825fe6b56c34d0667c542ea8257b1a1240 \
     --hash=sha256:d5f5284890d73fdf47f843dda3210edf37a38d66f44f2b5aedc1e89ed455dc09
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   -r packages/cmk-trace/requirements.in
     #   opentelemetry-exporter-otlp-proto-grpc
@@ -1436,34 +1436,34 @@ opentelemetry-exporter-otlp==1.30.0 \
     --hash=sha256:44e11054ec571ccfed73a83c6429dee5d334d061d0e0572e3160d6de97156dbc \
     --hash=sha256:da7769f95cd5be5b09dd4188ac153a33709eda652217f2d10aed6518c8e60f0d
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   -r packages/cmk-trace/requirements.in
 opentelemetry-exporter-otlp-proto-common==1.30.0 \
     --hash=sha256:5468007c81aa9c44dc961ab2cf368a29d3475977df83b4e30aeed42aa7bc3b38 \
     --hash=sha256:ddbfbf797e518411857d0ca062c957080279320d6235a279f7b64ced73c13897
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
 opentelemetry-exporter-otlp-proto-grpc==1.30.0 \
     --hash=sha256:2906bcae3d80acc54fd1ffcb9e44d324e8631058b502ebe4643ca71d1ff30830 \
     --hash=sha256:d0f10f0b9b9a383b7d04a144d01cb280e70362cccc613987e234183fd1f01177
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r packages/cmk-trace/requirements.in
     #   opentelemetry-exporter-otlp
 opentelemetry-exporter-otlp-proto-http==1.30.0 \
     --hash=sha256:9578e790e579931c5ffd50f1e6975cbdefb6a0a0a5dea127a6ae87df10e0a589 \
     --hash=sha256:c3ae75d4181b1e34a60662a6814d0b94dd33b628bee5588a878bed92cee6abdc
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   opentelemetry-exporter-otlp
 opentelemetry-instrumentation==0.51b0 \
     --hash=sha256:4ca266875e02f3988536982467f7ef8c32a38b8895490ddce9ad9604649424fa \
     --hash=sha256:c6de8bd26b75ec8b0e54dff59e198946e29de6a10ec65488c357d4b34aa5bdcf
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   opentelemetry-instrumentation-asgi
     #   opentelemetry-instrumentation-fastapi
     #   opentelemetry-instrumentation-redis
@@ -1473,37 +1473,37 @@ opentelemetry-instrumentation-asgi==0.51b0 \
     --hash=sha256:b3fe97c00f0bfa934371a69674981d76591c68d937b6422a5716ca21081b4148 \
     --hash=sha256:e8072993db47303b633c6ec1bc74726ba4d32bd0c46c28dfadf99f79521a324c
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   opentelemetry-instrumentation-fastapi
 opentelemetry-instrumentation-fastapi==0.51b0 \
     --hash=sha256:10513bbc11a1188adb9c1d2c520695f7a8f2b5f4de14e8162098035901cd6493 \
     --hash=sha256:1624e70f2f4d12ceb792d8a0c331244cd6723190ccee01336273b4559bc13abc
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 opentelemetry-instrumentation-redis==0.51b0 \
     --hash=sha256:0e0bf2d641dca35d5d35b6d6c34a6133ccb0961b54527dd9ce21a6463d7bd173 \
     --hash=sha256:a390df3fb73a0efc9410b85d3099c2d8faf1f85e83724c4f8bd54c65001cfc5c
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 opentelemetry-instrumentation-requests==0.51b0 \
     --hash=sha256:0723aaafaeb2a825723f31c0bf644f9642377046063d1a52fc86571ced87feac \
     --hash=sha256:e7f4bd3ffcab6ebcce8a1c652af218e050354c8e7cac2c34814292d4de75167a
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 opentelemetry-instrumentation-wsgi==0.51b0 \
     --hash=sha256:a759b020a41c5ddddbb3c71149aa60f2dd06c423ec507c8dfecec89e0570d5bc \
     --hash=sha256:bd0403cf00b39b0e4b2acf9aa08ccd6799e2d3b45b950bfaabfb10aed301727f
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 opentelemetry-proto==1.30.0 \
     --hash=sha256:afe5c9c15e8b68d7c469596e5b32e8fc085eb9febdd6fb4e20924a93a0389179 \
     --hash=sha256:c6290958ff3ddacc826ca5abbeb377a31c2334387352a259ba0df37c243adc11
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   opentelemetry-exporter-otlp-proto-common
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
@@ -1511,7 +1511,7 @@ opentelemetry-sdk==1.30.0 \
     --hash=sha256:14fe7afc090caad881addb6926cec967129bd9260c4d33ae6a217359f6b61091 \
     --hash=sha256:c9287a9e4a7614b9946e933a67168450b9ab35f08797eb9bc77d998fa480fa18
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   -r packages/cmk-trace/requirements.in
     #   opentelemetry-exporter-otlp-proto-grpc
@@ -1520,7 +1520,7 @@ opentelemetry-semantic-conventions==0.51b0 \
     --hash=sha256:3fabf47f35d1fd9aebcdca7e6802d86bd5ebc3bc3408b7e3248dde6e87a18c47 \
     --hash=sha256:fdc777359418e8d06c86012c3dc92c88a6453ba662e941593adb062e48c2eeae
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   -r packages/cmk-trace/requirements.in
     #   opentelemetry-instrumentation
@@ -1534,7 +1534,7 @@ opentelemetry-util-http==0.51b0 \
     --hash=sha256:0561d7a6e9c422b9ef9ae6e77eafcfcd32a2ab689f5e801475cbb67f189efa20 \
     --hash=sha256:05edd19ca1cc3be3968b1e502fd94816901a365adbeaab6b6ddb974384d3a0b9
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   opentelemetry-instrumentation-asgi
     #   opentelemetry-instrumentation-fastapi
     #   opentelemetry-instrumentation-requests
@@ -1543,7 +1543,7 @@ opsgenie-sdk==2.1.5 \
     --hash=sha256:c38a2f0c7acbcbeb9202ced80ec857b5eda2d99919392fed4083bdfa7be32669 \
     --hash=sha256:fe0af399030a91ec5755ecfb899965bf18fcb46e17fd2d3a4d71fa68999947e9
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 oracledb==2.5.1 \
     --hash=sha256:0374481329fa873a2af24eb12de4fd597c6c111e148065200562eb75ea0c6be7 \
@@ -1578,13 +1578,13 @@ oracledb==2.5.1 \
     --hash=sha256:f42524b586733daa896f675acad8b9f2fc2f4380656d60a22a109a573861fc93 \
     --hash=sha256:fcf446f6250d8edad5367ff03ad73dbbe672a2e4b060c51a774821dd723b0283
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 packaging==24.2 \
     --hash=sha256:09abb1bccd265c01f4a3aa3f7a7db064b36514d2cba19a2f694fe6150451a759 \
     --hash=sha256:c228a6dc5e932d346bc5739379109d49e8853dd8223571c7c5b55260edc0b97f
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   apispec
     #   gunicorn
     #   jira
@@ -1595,25 +1595,25 @@ packaging==24.2 \
 paho-mqtt==1.6.1 \
     --hash=sha256:2a8291c81623aec00372b5a85558a372c747cbca8e9934dfe218638b8eefc26f
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 paramiko==3.5.1 \
     --hash=sha256:43b9a0501fc2b5e70680388d9346cf252cfb7d00b0667c39e80eb43a408b8f61 \
     --hash=sha256:b2c665bc45b2b215bd7d7f039901b14b067da00f3a11e6640995fd58f2664822
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 pathable==0.4.4 \
     --hash=sha256:5ae9e94793b6ef5a4cbe0a7ce9dbbefc1eec38df253763fd0aeeacf2762dbbc2 \
     --hash=sha256:6905a3cd17804edfac7875b5f6c9142a218c7caef78693c2dbbbfbac186d88b2
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   jsonschema-path
 pika==1.3.2 \
     --hash=sha256:0779a7c1fafd805672796085560d290213a465e4f6f76a6fb19e378d8041a14f \
     --hash=sha256:b2a327ddddf8570b4965b3576ac77091b850262d34ce8c1d8cb4e4146aa4145f
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r packages/cmk-messaging/requirements.in
 pillow==11.1.0 \
     --hash=sha256:015c6e863faa4779251436db398ae75051469f7c903b043a48f078e437656f83 \
@@ -1688,7 +1688,7 @@ pillow==11.1.0 \
     --hash=sha256:f86d3a7a9af5d826744fabf4afd15b9dfef44fe69a98541f666f66fbb8d3fef9 \
     --hash=sha256:fbd43429d0d7ed6533b25fc993861b8fd512c42d04514a0dd6337fb3ccf22761
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   jira
     #   reportlab
@@ -1696,13 +1696,13 @@ pluggy==1.5.0 \
     --hash=sha256:2cffa88e94fdc978c4c574f15f9e59b7f4201d439195c3715ca9e2486f1d0cf1 \
     --hash=sha256:44e1ad92c8ca002de6377e165f3e0f1be63266ab4d554740532335b9d75ea669
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   pytest
 ply==3.11 \
     --hash=sha256:00c7c1aaa88358b9c765b6d3000c6eec0ba42abca5351b095321aef446081da3 \
     --hash=sha256:096f9b8350b65ebd2fd1346b12452efe5b9607f7482813ffca50c22722a807ce
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   jsonpath-rw
     #   pysmi-lextudio
@@ -1711,7 +1711,7 @@ portalocker==2.10.1 \
     --hash=sha256:53a5984ebc86a025552264b459b46a2086e269b21823cb572f8f28ee759e45bf \
     --hash=sha256:ef1bf844e878ab08aee7e40184156e1151f228f103aa5c6bd0724cc330960f8f
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   msal-extensions
 propcache==0.2.1 \
     --hash=sha256:03ff9d3f665769b2a85e6157ac8b439644f2d7fd17615a82fa55739bc97863f4 \
@@ -1797,14 +1797,14 @@ propcache==0.2.1 \
     --hash=sha256:f7a31fc1e1bd362874863fdeed71aed92d348f5336fd84f2197ba40c59f061bd \
     --hash=sha256:f9479aa06a793c5aeba49ce5c5692ffb51fcd9a7016e017d555d5e2b0045d212
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   aiohttp
     #   yarl
 proto-plus==1.26.0 \
     --hash=sha256:6e93d5f5ca267b54300880fff156b6a3386b3fa3f43b1da62e680fc0c586ef22 \
     --hash=sha256:bf2dfaa3da281fc3187d12d224c707cb57214fb2c22ba854eb0c105a3fb2d4d7
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   google-api-core
     #   google-cloud-asset
     #   google-cloud-monitoring
@@ -1823,8 +1823,8 @@ protobuf==5.29.3 \
     --hash=sha256:c027e08a08be10b67c06bf2370b99c811c466398c357e615ca88c91c07f0910f \
     --hash=sha256:daaf63f70f25e8689c072cfad4334ca0ac1d1e05a92fc15c54eb9cf23c3efd84
     # via
-    #   -c ./requirements.txt
     #   -c bazel-requirements-constraints.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   google-api-core
     #   google-cloud-access-context-manager
@@ -1855,7 +1855,7 @@ psutil==5.9.8 \
     --hash=sha256:d06016f7f8625a1825ba3732081d77c94589dca78b7a3fc072194851e88461a4 \
     --hash=sha256:d16bbddf0693323b8c6123dd804100241da461e41d6e332fb0ba6058f630f8c8
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 psycopg2-binary==2.9.6 \
     --hash=sha256:02c0f3757a4300cf379eb49f543fb7ac527fb00144d39246ee40e1df684ab514 \
@@ -1921,13 +1921,13 @@ psycopg2-binary==2.9.6 \
     --hash=sha256:f81e65376e52f03422e1fb475c9514185669943798ed019ac50410fb4c4df232 \
     --hash=sha256:ffe9dc0a884a8848075e576c1de0290d85a533a9f6e9c4e564f19adf8f6e54a7
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 pyasn1==0.6.0 \
     --hash=sha256:3a35ab2c4b5ef98e17dfdec8ab074046fbda76e281c5a706ccd82328cfc8f64c \
     --hash=sha256:cca4bb0f2df5504f02f6f8a775b6e416ff9b0b3b16f7ee80b5a3153d9b804473
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   pyasn1-modules
     #   pysmb
@@ -1938,20 +1938,20 @@ pyasn1-modules==0.4.1 \
     --hash=sha256:49bfa96b45a292b711e986f222502c1c9a5e1f4e568fc30e2574a6c7d07838fd \
     --hash=sha256:c28e2dbf9c06ad61c71a075c7e0f9fd0f1b0bb2d2ad4377f240d33ac2ab60a7c
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   google-auth
     #   python-ldap
 pycparser==2.22 \
     --hash=sha256:491c8be9c040f5390f5bf44a5b07752bd07f56edf992381b05c701439eec10f6 \
     --hash=sha256:c3702b6d3dd8c7abc1afa565d7e63d53a1d0bd86cdc24edd75470f4de499cfcc
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   cffi
 pydantic==2.10.6 \
     --hash=sha256:427d664bf0b8a2b34ff5dd0f5a18df00591adcee7198fbd71981054cef37b584 \
     --hash=sha256:ca5daa827cce33de7a42be142548b0096bf05a7e7b365aebfa5f8eeec7128236
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   -r packages/cmk-agent-based/requirements.in
     #   -r packages/cmk-ccc/requirements.in
@@ -2061,26 +2061,26 @@ pydantic-core==2.27.2 \
     --hash=sha256:fa8e459d4954f608fa26116118bb67f56b93b209c39b008277ace29937453dc9 \
     --hash=sha256:fd1aea04935a508f62e0d0ef1f5ae968774a32afc306fb8545e06f5ff5cdf3ad
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   pydantic
 pyghmi==1.5.60 \
     --hash=sha256:9c18ef0be1b4ba6a9477d426031eebff32897a8f95cbfe27b58fd410f8c31736 \
     --hash=sha256:d61839df5a56d3e3845483abf35e3a48cbf2669e41c1110912157808ce1a194b
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 pygments==2.19.1 \
     --hash=sha256:61c16d2a8576dc0649d9f39e089b5f02bcd27fba10d8fb4dcc28173f7a45151f \
     --hash=sha256:9ea1544ad55cecf4b8242fab6dd35a93bbce657034b0611ee383099054ab6d8c
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   exchangelib
 pyjwt[crypto]==2.10.1 \
     --hash=sha256:3cc5772eb20009233caf06e9d8a0577824723b44e6648ee0a2aedb6cf9381953 \
     --hash=sha256:dcdd193e30abefd5debf142f9adfcdd2b58004e644f25406ffaebd50bd98dacb
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   msal
 pymssql==2.3.1 \
@@ -2166,13 +2166,13 @@ pymssql==2.3.1 \
     --hash=sha256:f00f618d1c0f58617de548e5094f7d55ab6034b94068d7eebba60a034866b10b \
     --hash=sha256:fdfadb055a9ecad58356decfecc41626999ad7b548cc7ea898cf159e2217f7bb
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 pymysql==1.1.1 \
     --hash=sha256:4de15da4c61dc132f4fb9ab763063e693d521a80fd0e87943b9a453dd4c19d6c \
     --hash=sha256:e127611aaf2b417403c60bf4dc570124aeb4a57f5f37b8e95ae399a42f904cd0
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 pynacl==1.5.0 \
     --hash=sha256:06b8f6fa7f5de8d5d2f7573fe8c863c051225a27b61e6860fd047b1775807858 \
@@ -2186,75 +2186,75 @@ pynacl==1.5.0 \
     --hash=sha256:a422368fc821589c228f4c49438a368831cb5bbc0eab5ebe1d7fac9dded6567b \
     --hash=sha256:e46dae94e34b085175f8abb3b0aaa7da40767865ac82c928eeb9e57e1ea8a543
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   paramiko
 pyopenssl==25.0.0 \
     --hash=sha256:424c247065e46e76a37411b9ab1782541c23bb658bf003772c3405fbaa128e90 \
     --hash=sha256:cd2cef799efa3936bb08e8ccb9433a575722b9dd986023f1cabc4ae64e9dac16
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   pysaml2
 pyparsing==3.2.1 \
     --hash=sha256:506ff4f4386c4cec0590ec19e6302d3aedb992fdc02c761e90416f158dacf8e1 \
     --hash=sha256:61980854fd66de3a90028d679a954d5f2623e83144b5afe5ee86f43d762e5f0a
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   httplib2
 pypdf==5.3.0 \
     --hash=sha256:08393660dfea25b27ec6fe863fb2f2248e6270da5103fae49e9dea8178741951 \
     --hash=sha256:d7b6db242f5f8fdb4990ae11815c394b8e1b955feda0befcce862efd8559c181
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 pyprof2calltree==1.4.5 \
     --hash=sha256:a635672ff31677486350b2be9a823ef92f740e6354a6aeda8fa4a8a3768e8f2f
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 pysaml2==7.5.0 \
     --hash=sha256:bc6627cc344476a83c757f440a73fda1369f13b6fda1b4e16bca63ffbabb5318 \
     --hash=sha256:f36871d4e5ee857c6b85532e942550d2cf90ea4ee943d75eb681044bbc4f54f7
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 pysmb==1.2.9.1 \
     --hash=sha256:ad613988d54b1317ca0466dc3546f47b2dddea16e645d755d29fb75a86903326
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 pysmi-lextudio==1.4.3 \
     --hash=sha256:7d255fb38669410835acf6c2e8ab41975a6d8e64593b119552e36ecba004054f \
     --hash=sha256:cb629c6386a30c976f83c29fc71e53b06d60f15094d0c0114cf8d095351b76e5
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   pysnmp-lextudio
 pysnmp-lextudio==6.1.2 \
     --hash=sha256:4035677d236f9fb6da5dbcfae2dc9122ee3652f535efeb904a56f54f162f28c9 \
     --hash=sha256:5a30d289f73fbdd56ca4a6b83e43cef3a1871eee402651748c8ff47f603e5cb2
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   snmpsim-lextudio
 pysnmpcrypto==0.0.4 \
     --hash=sha256:5889733caa030f45d9e03ea9d6370fb06426a8cb7f839aabbcdde33c6f634679 \
     --hash=sha256:b635fb3b1ec6637b9a0033f50506214e16eb84574b1d25ab027bbde4caa55129
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   pysnmp-lextudio
 pyspnego==0.11.2 \
     --hash=sha256:74abc1fb51e59360eb5c5c9086e5962174f1072c7a50cf6da0bda9a4bcfdfbd4 \
     --hash=sha256:994388d308fb06e4498365ce78d222bf4f3570b6df4ec95738431f61510c971b
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   requests-ntlm
 pytest==8.3.4 \
     --hash=sha256:50e16d954148559c9a74109af1eaf0c945ba2d8f30f0a3d3335edde19788b6f6 \
     --hash=sha256:965370d062bce11e73868e0335abac31b4d3de0e82f4007408d242b4f8610761
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r packages/cmk-agent-based/requirements.in
     #   -r packages/cmk-werks/requirements.in
     #   pytest-mock
@@ -2262,7 +2262,7 @@ pytest-mock==3.14.0 \
     --hash=sha256:0b72c38033392a5f4621342fe11e9219ac11ec9d375f8e2a0c164539e0d70f6f \
     --hash=sha256:2719255a1efeceadbc056d6bf3df3d1c5015530fb40cf347c0f9afac88410bd0
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r packages/cmk-agent-receiver/requirements.in
 python-active-directory==2.0.1 \
     --hash=sha256:023d5d47fa1fc966527d63d73b6c3864a233c236e3e258f9af778e73549230e0 \
@@ -2312,13 +2312,13 @@ python-active-directory==2.0.1 \
     --hash=sha256:fc5f5bf45840e33e000527eaa9241b264e651c764b800bdd9a920449e3f3c57a \
     --hash=sha256:febd238057469a11650db2a178d269a5142e106381197e3754c6c15815c97082
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 python-dateutil==2.9.0.post0 \
     --hash=sha256:37dd54208da7e1cd875388217d5e00ebd4179249f90fb72437e91a35459a0ad3 \
     --hash=sha256:a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-crypto/requirements.in
@@ -2333,14 +2333,14 @@ python-dateutil==2.9.0.post0 \
 python-ldap==3.4.3 \
     --hash=sha256:ab26c519a0ef2a443a2a10391fa3c5cb52d7871323399db949ebfaa9f25ee2a0
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   python-active-directory
 python-multipart==0.0.20 \
     --hash=sha256:8a62d3a8335e06589fe01f2a3e178cdcc632f3fbe0d492ad9ee0ec35aab1f104 \
     --hash=sha256:8dd0cab45b8e23064ae09147625994d090fa46f5b0d1e13af944c331a7fa9d13
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r packages/cmk-agent-receiver/requirements.in
 python-snap7==1.3 \
     --hash=sha256:441d162f9dc08ab6790f1bd4e1940ca2fe8c0d9bdd7dda0ba4a4e7738dab82c8 \
@@ -2350,13 +2350,13 @@ python-snap7==1.3 \
     --hash=sha256:f8bb72cf387b1af8e1e1b4bbbabf086ca7694c6024129c7a52054e3913f40ad6 \
     --hash=sha256:fc2dada8e157a6e8f5e02b7a702f3103ec1d99ad2f06b69748a2c40405b3e229
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 pytz==2025.1 \
     --hash=sha256:89dd22dca55b46eac6eda23b2d72721bf1bdfef212645d81513ef5d03038de57 \
     --hash=sha256:c2db42be2a2518b28e65f9207c4d05e6ff547d1efa4086469ef855e4ab70178e
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   icalendar
     #   pysaml2
     #   recurring-ical-events
@@ -2414,7 +2414,7 @@ pyyaml==6.0.1 \
     --hash=sha256:fd1592b3fdf65fff2ad0004b5e363300ef59ced41c2e6b3a99d4089fa8c5435d \
     --hash=sha256:fd66fc5d0da6d9815ba2cebeb4205f95818ff4b79c3ebe268e75d961704af52f
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   jsonschema-path
     #   kubernetes
@@ -2423,25 +2423,25 @@ recurring-ical-events==2.0.2 \
     --hash=sha256:a618140129e2ff00afa6b7afc1a154c2cb2177166621a519941b7058d6f6c339 \
     --hash=sha256:c4bc7d0d26fcda0ac3b773c9706fd1e271b7b0e0230ad0ee02ccab55e274ea11
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 redfish==3.2.8 \
     --hash=sha256:7846e075dd27c4973f49d9f84e97c9efe8f3da2c1cdf22a172d56f8a041ec69d \
     --hash=sha256:e5786a7c91d7fd44b8936b0e74384cccd23ac687efe600975c042d9f03bc1e8c
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 redis==4.5.4 \
     --hash=sha256:2c19e6767c474f2e85167909061d525ed65bea9301c0770bb151e041b7ac89a2 \
     --hash=sha256:73ec35da4da267d6847e47f68730fdd5f62e2ca69e3ef5885c6a78a9374c3893
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 referencing==0.36.2 \
     --hash=sha256:df2e89862cd09deabbdba16944cc3f10feb6b3e6f18e902f7cc25609a34775aa \
     --hash=sha256:e8699adbbf8b5c7de96d8ffa0eb5c158b3beafce084968e2ea8bb08c6794dcd0
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   jsonschema
     #   jsonschema-path
     #   jsonschema-specifications
@@ -2449,13 +2449,13 @@ reportlab==4.1.0 \
     --hash=sha256:28a40d5000afbd8ccae15a47f7abe2841768461354bede1a9d42841132997c98 \
     --hash=sha256:3a99faf412691159c068b3ff01c15307ce2fd2cf6b860199434874e002040a84
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 requests==2.32.3 \
     --hash=sha256:55365417734eb18255590a9ff9eb97e9e1da868d4ccd6402399eaf68af20a760 \
     --hash=sha256:70761cfe03c773ceb22aa2f671b4757976145175cdfca038c02654d061d6dcc6
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   azure-core
@@ -2479,13 +2479,13 @@ requests-ntlm==1.3.0 \
     --hash=sha256:4c7534a7d0e482bb0928531d621be4b2c74ace437e88c5a357ceb7452d25a510 \
     --hash=sha256:b29cc2462623dffdf9b88c43e180ccb735b4007228a542220e882c58ae56c668
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   exchangelib
 requests-oauthlib==1.3.1 \
     --hash=sha256:2577c501a2fb8d05a304c09d090d6e47c306fef15809d102b327cf8364bddab5 \
     --hash=sha256:75beac4a47881eeb94d5ea5d6ad31ef88856affe2332b9aafb52c6452ccf0d7a
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   exchangelib
     #   jira
@@ -2494,7 +2494,7 @@ requests-toolbelt==1.0.0 \
     --hash=sha256:7681a0a3d047012b5bdc0ee37d7f8f07ebe76ab08caeccfc3921ce23c88d5bc6 \
     --hash=sha256:cccfdd665f0a24fcf4726e690f65639d272bb0637b9b92dfd91a5568ccf6bd06
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   jira
     #   netapp-ontap
     #   redfish
@@ -2502,25 +2502,25 @@ requests-unixsocket==0.3.0 \
     --hash=sha256:28304283ea9357d45fff58ad5b11e47708cfbf5806817aa59b2a363228ee971e \
     --hash=sha256:c685c680f0809e1b2955339b1e5afc3c0022b3066f4f7eb343f43a6065fc0e5d
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   redfish
 rfc3339-validator==0.1.4 \
     --hash=sha256:138a2abdf93304ad60530167e51d2dfb9549521a836871b88d7f4695d0022f6b \
     --hash=sha256:24f6ec1eda14ef823da9e36ec7113124b39c04d50a4d3d3a3c2859577e7791fa
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   openapi-schema-validator
 robotframework==7.2.2 \
     --hash=sha256:1cb4ec69d52aae515bf6037cee66a2a2d8dc3256368081c0f4b3d4578d40904e \
     --hash=sha256:9c420f6d35e9c8cd4b75b77cc78e36407604534ec4ab0cbddf699d7c0b2fc435
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 roman==4.0 \
     --hash=sha256:6caab7ba51b83c46b5bf8839e5d782769a6b08fdea8abdfa62a4197c041fd513 \
     --hash=sha256:8b8eefb6dedfdfebd789547e49a1274c12aae5a32b43911994f22e276a7b8c8b
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 rpds-py==0.22.3 \
     --hash=sha256:009de23c9c9ee54bf11303a966edf4d9087cd43a6003672e6aa7def643d06518 \
@@ -2627,20 +2627,20 @@ rpds-py==0.22.3 \
     --hash=sha256:fda7cb070f442bf80b642cd56483b5548e43d366fe3f39b98e67cce780cded00 \
     --hash=sha256:feea821ee2a9273771bae61194004ee2fc33f8ec7db08117ef9147d4bbcbca8e
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   jsonschema
     #   referencing
 rsa==4.9 \
     --hash=sha256:90260d9058e514786967344d0ef75fa8727eed8a7d2e43ce9f4bcf1b536174f7 \
     --hash=sha256:e38464a49c6c85d7f1351b0126661487a7e0a14a50f1675ec50eb34d4f20ef21
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   google-auth
 s3transfer==0.11.2 \
     --hash=sha256:3b39185cb72f5acc77db1a58b6e25b977f28d20496b6e58d6813d75f464d632f \
     --hash=sha256:be6ecb39fadd986ef1701097771f87e4d2f821f27f6071c872143884d2950fbc
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   boto3
 setproctitle==1.3.3 \
     --hash=sha256:00e6e7adff74796ef12753ff399491b8827f84f6c77659d71bd0b35870a17d8f \
@@ -2732,13 +2732,13 @@ setproctitle==1.3.3 \
     --hash=sha256:fc74e84fdfa96821580fb5e9c0b0777c1c4779434ce16d3d62a9c4d8c710df39 \
     --hash=sha256:ff814dea1e5c492a4980e3e7d094286077054e7ea116cbeda138819db194b2cd
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 setuptools==70.3.0 \
     --hash=sha256:f171bab1dfbc86b132997f26a119f6056a57950d058587841a0082e8830f9dc5 \
     --hash=sha256:fe384da74336c398e0d956d1cae0669bc02eed936cdb1d49b57de1990dc11ffc
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   kubernetes
     #   opsgenie-sdk
@@ -2747,12 +2747,12 @@ setuptools-scm==4.1.2 \
     --hash=sha256:69258e2eeba5f7ce1ed7a5f109519580fa3578250f8e4d6684859f86d1b15826 \
     --hash=sha256:a8994582e716ec690f33fec70cca0f85bd23ec974e3f783233e4879090a7faa8
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 sgmllib3k==1.0.0 \
     --hash=sha256:7868fb1c8bfa764c1ac563d3cf369c381d1325d36124933a726f29fcdaa812e9
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   feedparser
 simplejson==3.20.1 \
     --hash=sha256:000602141d0bddfcff60ea6a6e97d5e10c9db6b17fd2d6c66199fa481b6214bb \
@@ -2866,13 +2866,13 @@ simplejson==3.20.1 \
     --hash=sha256:f924b485537b640dc69434565463fd6fc0c68c65a8c6e01a823dd26c9983cf79 \
     --hash=sha256:fc0f523ce923e7f38eb67804bc80e0a028c76d7868500aa3f59225574b5d0453
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 six==1.17.0 \
     --hash=sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274 \
     --hash=sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   azure-core
     #   jsonpath-rw
     #   kubernetes
@@ -2884,32 +2884,32 @@ smmap==5.0.2 \
     --hash=sha256:26ea65a03958fa0c8a1c7e8c7a58fdc77221b8910f6be2131affade476898ad5 \
     --hash=sha256:b30115f0def7d7531d22a0fb6502488d879e75b260a9db4d0819cfb25403af5e
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   gitdb
 sniffio==1.3.1 \
     --hash=sha256:2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2 \
     --hash=sha256:f4324edc670a0f49750a81b895f35c3adb843cca46f0530f79fc1babb23789dc
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   anyio
 snmpsim-lextudio==1.1.0 \
     --hash=sha256:0d6fe597652b8c0fd517433f0c92b67ad9febbc8733f6658d2aea3b1e3d35e59 \
     --hash=sha256:24eaeacac89fea434126ec3f9c8cf96ebfb27fa7a81b4d4736137c977391b281
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 starlette==0.45.3 \
     --hash=sha256:2cbcba2a75806f8a41c722141486f37c28e30a0921c5f6fe4346cb0dcee1302f \
     --hash=sha256:dfb6d332576f136ec740296c7e8bb8c8a7125044e7c6da30744718880cdd059d
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r packages/cmk-agent-receiver/requirements.in
     #   fastapi
 tenacity==9.0.0 \
     --hash=sha256:807f37ca97d62aa361264d497b0e31e92b8027044942bfa756160d908320d73b \
     --hash=sha256:93de0c98785b27fcf659856aa9f54bfbd399e29969b0621bc7f762bd441b4539
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   opsgenie-sdk
 time-machine==2.16.0 \
@@ -2970,37 +2970,37 @@ time-machine==2.16.0 \
     --hash=sha256:ef768e14768eebe3bb1196c0dece8e14c1c6991605721214a0c3c68cf77eb216 \
     --hash=sha256:f6927dda86425f97ffda36131f297b1a601c64a6ee6838bfa0e6d3149c2f0d9f
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r packages/cmk-crypto/requirements.in
 tqdm==4.67.1 \
     --hash=sha256:26445eca388f82e72884e0d580d5464cd801a3ea01e63e5601bdff9ba6a48de2 \
     --hash=sha256:f8aef9c52c08c13a65f30ea34f4e5aac3fd1a34959879d7e59e63027286627f2
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   pysmb
 types-markdown==3.7.0.20241204 \
     --hash=sha256:ecca2b25cd23163fd28ed5ba34d183d731da03e8a5ed3a20b60daded304c5410 \
     --hash=sha256:f96146c367ea9c82bfe9903559d72706555cc2a1a3474c58ebba03b418ab18da
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r packages/cmk-werks/requirements.in
 types-pika-ts==1.3.0.20241203 \
     --hash=sha256:2c58793ddea7eabb4e604ef3b9f35e8d4db020c78a89aa2b3ba58bc3e8ff89bb \
     --hash=sha256:3be9f9be1199e87d7a462597cd999a3ecea145062114250b2c66386122cde023
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r packages/cmk-messaging/requirements.in
 types-python-dateutil==2.9.0.20241206 \
     --hash=sha256:18f493414c26ffba692a72369fea7a154c502646301ebfe3d56a04b3767284cb \
     --hash=sha256:e248a4bc70a486d3e3ec84d0dc30eec3a5f979d6e7ee4123ae043eedbb987f53
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r packages/cmk-crypto/requirements.in
 typing-extensions==4.12.2 \
     --hash=sha256:04e5ca0351e0f3f85c6853954072df659d0d13fac324d0072316b67d7794700d \
     --hash=sha256:1a7ead55c7e559dd4dee8856e3a88b41225abfe1ce8df57b7c13915fe121ffb8
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   anyio
     #   azure-core
     #   azure-identity
@@ -3016,25 +3016,25 @@ tzdata==2025.1 \
     --hash=sha256:24894909e88cdb28bd1636c6887801df64cb485bd593f2fd83ef29075a81d694 \
     --hash=sha256:7e127113816800496f027041c570f50bcd464a020098a3b6b199517772303639
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   exchangelib
 tzlocal==5.3 \
     --hash=sha256:2fafbfc07e9d8b49ade18f898d6bcd37ae88ce3ad6486842a2e4f03af68323d2 \
     --hash=sha256:3814135a1bb29763c6e4f08fd6e41dbb435c7a60bfbb03270211bcc537187d8c
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   exchangelib
 uritemplate==4.1.1 \
     --hash=sha256:4346edfc5c3b79f694bccd6d6099a322bbeb628dbf2cd86eea55a456ce5124f0 \
     --hash=sha256:830c08b8d99bdd312ea4ead05994a38e8936266f84b9a7878232db50b044e02e
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   google-api-python-client
 urllib3==2.3.0 \
     --hash=sha256:1cee9ad369867bfdbbb48b7dd50374c0967a0bb7710050facf0dd6911440e3df \
     --hash=sha256:f8c5449b3cf0861679ce7e0503c7b44b5ec981bec0d1d3795a07f1ba96f0204d
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   botocore
     #   kubernetes
@@ -3046,7 +3046,7 @@ uvicorn==0.34.0 \
     --hash=sha256:023dc038422502fa28a09c7a30bf2b6991512da7dcdb8fd35fe57cfc154126f4 \
     --hash=sha256:404051050cd7e905de2c9a7e61790943440b3416f49cb409f965d9dcd0fa73e9
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   uvicorn-worker
@@ -3054,14 +3054,14 @@ uvicorn-worker==0.3.0 \
     --hash=sha256:6baeab7b2162ea6b9612cbe149aa670a76090ad65a267ce8e27316ed13c7de7b \
     --hash=sha256:ef0fe8aad27b0290a9e602a256b03f5a5da3a9e5f942414ca587b645ec77dd52
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
 vcrpy==7.0.0 \
     --hash=sha256:176391ad0425edde1680c5b20738ea3dc7fb942520a48d2993448050986b3a50 \
     --hash=sha256:55791e26c18daa363435054d8b35bd41a4ac441b6676167635d1b37a71dbe124
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 watchdog==6.0.0 \
     --hash=sha256:07df1fdd701c5d4c8e55ef6cf55b8f0120fe1aef7ef39a1c6fc6bc2e606d517a \
@@ -3095,19 +3095,19 @@ watchdog==6.0.0 \
     --hash=sha256:e7631a77ffb1f7d2eefa4445ebbee491c720a5661ddf6df3498ebecae5ed375c \
     --hash=sha256:ef810fbf7b781a5a593894e4f439773830bdecb885e6880d957d5b9382a960d2
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
 websocket-client==1.8.0 \
     --hash=sha256:17b44cc997f5c498e809b22cdf2d9c7a9e71c02c8cc2b6c56e7c2d1239bfa526 \
     --hash=sha256:3239df9f44da632f96012472805d40a23281a991027ce11d2f45a6f24ac4c3da
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   kubernetes
 werkzeug==3.1.3 \
     --hash=sha256:54b78bf3716d19a65be4fceccc0d1d7b89e608834989dfae50ea87564639213e \
     --hash=sha256:60723ce945c19328679790e3282cc758aa4a6040e4bb330f53d30fa546d44746
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   -r cmk/requirements.in
     #   flask
 wrapt==1.17.2 \
@@ -3191,7 +3191,7 @@ wrapt==1.17.2 \
     --hash=sha256:fc78a84e2dfbc27afe4b2bd7c80c8db9bca75cc5b85df52bfe634596a1da846b \
     --hash=sha256:ff04ef6eec3eee8a5efef2401495967a916feaa353643defcc03fc74fe213b58
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   deprecated
     #   opentelemetry-instrumentation
     #   opentelemetry-instrumentation-redis
@@ -3200,13 +3200,13 @@ x-wr-timezone==0.0.7 \
     --hash=sha256:0b5e16f677c8f51ce41087a0b3d4f786c5fdcf78af4f8a75d4d960107dcb6d3a \
     --hash=sha256:ccbaae164a52086535fd2eb1dced164a5250acc83a672fbb044d11e81a268965
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   recurring-ical-events
 xmlschema==2.5.1 \
     --hash=sha256:4f7497de6c8b6dc2c28ad7b9ed6e21d186f4afe248a5bea4f54eedab4da44083 \
     --hash=sha256:ec2b2a15c8896c1fcd14dcee34ca30032b99456c3c43ce793fdb9dca2fb4b869
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   pysaml2
 yarl==1.18.3 \
     --hash=sha256:00e5a1fea0fd4f5bfa7440a47eff01d9822a65b4488f7cff83155a0f31a2ecba \
@@ -3292,12 +3292,12 @@ yarl==1.18.3 \
     --hash=sha256:fe57328fbc1bfd0bd0514470ac692630f3901c0ee39052ae47acd1d90a436719 \
     --hash=sha256:fea09ca13323376a2fdfb353a5fa2e59f90cd18d7ca4eaa1fd31f0a8b4f91e62
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   aiohttp
     #   vcrpy
 zipp==3.21.0 \
     --hash=sha256:2c9958f6430a2040341a52eb608ed6dd93ef4392e02ffe219417c1b28b5dd1f4 \
     --hash=sha256:ac1bbe05fd2991f160ebce24ffbac5f6d11d83dc90891255885223d42b3cd931
     # via
-    #   -c ./requirements.txt
+    #   -c requirements.txt
     #   importlib-metadata

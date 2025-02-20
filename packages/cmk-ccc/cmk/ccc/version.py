@@ -663,6 +663,14 @@ def versions_compatible(
     return target_too_new
 
 
+# Please note: When you change the minimum patch release, you will have to update a few tests:
+#
+# old_version in tests/docker/test_docker.py
+# test_execute_cmk_automation_previous_version in tests/unit/cmk/gui/wato/pages/test_automation.py
+# get_min_version in tests/testlib/version.py
+#
+# The test in tests/update/cee/test_update_from_backup.py needs a new backup snapshot to work
+# properly. Skip the test and ask the QA team to create a new backup snapshot.
 _REQUIRED_PATCH_RELEASES_MAP: Final = {
     # max can be evaluated in place, obviously, but we keep a list for documentation.
     _BaseVersion(2, 3, 0): max(

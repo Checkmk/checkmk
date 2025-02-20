@@ -76,6 +76,7 @@ def test_registered_automation_commands() -> None:
         "hosts-for-auto-removal",
         "rename-hosts-uuid-link",
         "start-quick-setup-stage-action",
+        "fetch-quick-setup-stage-action-result",
     ]
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:

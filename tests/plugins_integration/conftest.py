@@ -266,6 +266,7 @@ def _periodic_service_discovery_rule() -> dict:
                     "add_new_services": True,
                     "remove_vanished_services": False,
                     "update_changed_service_labels": True,
+                    "update_changed_service_parameters": True,
                     "update_host_labels": True,
                 },
             ),

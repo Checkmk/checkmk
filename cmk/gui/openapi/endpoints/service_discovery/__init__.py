@@ -560,6 +560,12 @@ class BulkDiscoveryOptions(BaseSchema):
         example=True,
         load_default=False,
     )
+    update_service_parameters = fields.Boolean(
+        required=False,
+        description="The option whether to update discovered service parameters or not.",
+        example=True,
+        load_default=False,
+    )
     update_host_labels = fields.Boolean(
         required=False,
         description="The option whether to update host labels or not.",
@@ -583,6 +589,7 @@ class BulkDiscovery(BaseSchema):
             "monitor_undecided_services": True,
             "remove_vanished_services": True,
             "update_service_labels": True,
+            "update_service_parameters": True,
             "update_host_labels": True,
         },
     )
@@ -635,7 +642,7 @@ def execute_bulk_discovery(params: Mapping[str, Any]) -> Response:
         add_new_services=options["monitor_undecided_services"],
         remove_vanished_services=options["remove_vanished_services"],
         update_changed_service_labels=options["update_service_labels"],
-        update_changed_service_parameters=False,
+        update_changed_service_parameters=options["update_service_parameters"],
     )
     hosts_to_discover = prepare_hosts_for_discovery(body["hostnames"])
     if (

@@ -20,6 +20,7 @@ DiscoveryVsSetting = dict[
         "remove_vanished_services",
         "update_host_labels",
         "update_changed_service_labels",
+        "update_changed_service_parameters",
     ],
     bool,
 ]
@@ -72,7 +73,9 @@ class DiscoverySettings:
             add_new_services=mode[1].get("add_new_services", False),
             remove_vanished_services=mode[1].get("remove_vanished_services", False),
             update_changed_service_labels=mode[1].get("update_changed_service_labels", False),
-            update_changed_service_parameters=False,
+            update_changed_service_parameters=mode[1].get(
+                "update_changed_service_parameters", False
+            ),
         )
 
     def to_json(self) -> str:

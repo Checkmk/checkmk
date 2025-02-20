@@ -88,23 +88,33 @@ def pytest_exception_interact(
 
     excp_ = excinfo.value
     if testsuite_type in ("composition"):
-        ps_out = _stdout_or_return_exception(ps_cmd := "ps -ef", sudo=sudo_run_in_container)
-        lslocks_out = _stdout_or_return_exception(
-            lslocks_cmd := "lslocks --output-all --notruncate", sudo=sudo_run_in_container
+        excp_.add_note("-" * 80)
+        excp_.add_note(
+            _render_command_output(
+                "ps -ef",
+                sudo=sudo_run_in_container,
+            )
         )
         excp_.add_note("-" * 80)
-        excp_.add_note(f"OUTPUT '{ps_cmd}':\n{ps_out}")
-        excp_.add_note("-" * 80)
-        excp_.add_note(f"OUTPUT '{lslocks_cmd}':\n{lslocks_out}")
+        excp_.add_note(
+            _render_command_output(
+                "lslocks --output-all --notruncate",
+                sudo=sudo_run_in_container,
+            )
+        )
 
     if excinfo.type == SessionTimeoutError:
         # Prevents execution of the next test and exits the pytest-run, and
         # leads to clean termination of the affected test run.
         node.session.shouldstop = True
     elif excinfo.type in (TimeoutError, PWTimeoutError):
-        top_out = _stdout_or_return_exception(top_cmd := "top -b -n 1", sudo=sudo_run_in_container)
         excp_.add_note("-" * 80)
-        excp_.add_note(f"OUTPUT '{top_cmd}':\n{top_out}")
+        excp_.add_note(
+            _render_command_output(
+                "top -b -n 1",
+                sudo=sudo_run_in_container,
+            )
+        )
     elif isinstance(excp_, subprocess.CalledProcessError):
         excp_.add_note(verbose_called_process_error(excp_))
         logger.exception(excp_)
@@ -114,15 +124,22 @@ def pytest_exception_interact(
         raise excp_
 
 
-def _stdout_or_return_exception(cmd: str, sudo: bool) -> str:
-    """Catch exception arising from command run and return it as string.
+def _render_command_output(cmd: str, sudo: bool) -> str:
+    """Render stdout and stderr from command as string or exception if raised.
 
     Command execution can have non-zero exit-code.
     """
     try:
-        return run(cmd.split(" "), sudo=sudo, check=False).stdout
+        completed_process = run(
+            cmd.split(" "),
+            sudo=sudo,
+            check=False,
+        )
     except BaseException as excp:
-        return str(excp)
+        return f"EXCEPTION '{cmd}':\n{excp}"
+    return (
+        f"STDOUT '{cmd}':\n{completed_process.stdout}\nSTDERR '{cmd}':\n{completed_process.stderr}"
+    )
 
 
 @pytest.hookimpl(tryfirst=True)

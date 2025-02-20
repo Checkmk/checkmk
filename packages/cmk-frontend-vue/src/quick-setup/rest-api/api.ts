@@ -110,7 +110,8 @@ export const saveOrEditQuickSetup = async (
     If the action is executed asynchronously, an object of the background_job domain is returned.
     The result can be obtained after the job has finished executing.
   */
-    await _waitForBackgroundJobToFinish(data.id, onLogUpdate)
+    const siteId = data.extensions.site_id
+    await _waitForBackgroundJobToFinish(data.id, siteId, onLogUpdate)
     return await quickSetupClient.fetchBackgroundJobResult(data.id)
   } else {
     return data as QuickSetupCompleteResponse
@@ -145,7 +146,8 @@ export const validateAndRecapStage = async (
     If the action is executed asynchronously, an object of the background_job domain is returned.
     The result can be obtained after the job has finished executing.
   */
-    await _waitForBackgroundJobToFinish(data.id, onLogUpdate)
+    const siteId = data.extensions.site_id
+    await _waitForBackgroundJobToFinish(data.id, siteId, onLogUpdate)
     return await quickSetupClient.fetchStageBackgroundJobResult(data.id)
   } else {
     return data as QuickSetupStageActionResponse
@@ -170,17 +172,19 @@ export const getStageStructure = async (
 /**
  * Wait until background job is finished
  * @param id string - Background Job ID
+ * @param siteId string - Site ID
  * @param onLogUpdate?: LogWatcher - Callback to update the log
  */
 const _waitForBackgroundJobToFinish = async (
   id: string,
+  siteId: string,
   onLogUpdate?: LogWatcher
 ): Promise<void> => {
   let isActive = true
   let lastLog: LogUpdate | null = null
 
   do {
-    const data = await backgroundJobClient.get(id)
+    const data = await backgroundJobClient.get(id, siteId)
     isActive = !!data.extensions.active
 
     if (onLogUpdate) {

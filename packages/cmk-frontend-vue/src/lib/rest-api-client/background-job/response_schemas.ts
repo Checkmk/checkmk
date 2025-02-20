@@ -14,6 +14,7 @@ interface BackgroundJobStatus {
 }
 
 interface BackgroundJobSnapshot {
+  site_id: string
   status: BackgroundJobStatus
   active: boolean
 }

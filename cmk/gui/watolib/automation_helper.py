@@ -19,6 +19,8 @@ from cmk.utils import paths
 
 from cmk.automations.helper_api import AutomationPayload, AutomationResponse
 
+from cmk.gui.exceptions import MKInternalError
+
 from .automation_executor import arguments_with_timeout, AutomationExecutor, LocalAutomationResult
 
 AUTOMATION_HELPER_HOST: Final = "localhost"
@@ -80,7 +82,13 @@ class _LocalAutomationConnection(HTTPConnection):
 
     def connect(self) -> None:
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        self.sock.connect(str(paths.omd_root.joinpath(AUTOMATION_HELPER_SOCKET)))
+        try:
+            self.sock.connect(str(paths.omd_root.joinpath(AUTOMATION_HELPER_SOCKET)))
+        except FileNotFoundError as err:
+            raise MKInternalError(
+                "The automation-helper service is not running. "
+                "Please run `omd start automation-helper`."
+            ) from err
 
 
 class _LocalAutomationConnectionPool(HTTPConnectionPool):

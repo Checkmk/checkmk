@@ -167,21 +167,6 @@ def test_unauthenticated_users_authorized_sites(
     assert user.authorized_sites() == {"site1": {}, "site2": {}}
 
 
-@pytest.mark.parametrize("user", [LoggedInNobody(), LoggedInSuperUser()])
-def test_unauthenticated_users_authorized_login_sites(
-    monkeypatch: MonkeyPatch, user: LoggedInUser
-) -> None:
-    monkeypatch.setattr("cmk.gui.site_config.get_login_slave_sites", lambda: ["slave_site"])
-    monkeypatch.setattr(
-        "cmk.gui.site_config.enabled_sites",
-        lambda: {
-            "master_site": {},
-            "slave_site": {},
-        },
-    )
-    assert user.authorized_login_sites() == {"slave_site": {}}
-
-
 @pytest.mark.usefixtures("request_context")
 def test_logged_in_nobody_permissions(mocker: MockerFixture, monkeypatch: MonkeyPatch) -> None:
     user = LoggedInNobody()

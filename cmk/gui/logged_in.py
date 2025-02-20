@@ -25,6 +25,7 @@ from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import session_attr
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.i18n import _
+from cmk.gui.type_defs import UserSpec
 from cmk.gui.utils.permission_verification import BasePerm
 from cmk.gui.utils.roles import may_with_roles, roles_of_user
 from cmk.gui.utils.selection_id import SelectionId
@@ -94,9 +95,9 @@ class LoggedInUser:
 
         self.confdir = _confdir_for_user_id(self.id)
         self.role_ids = self._gather_roles(self.id)
-        self._attributes = self._load_attributes(self.id, self.role_ids)
-        self.alias = self._attributes.get("alias", self.id)
-        self.email = self._attributes.get("email", self.id)
+        self.attributes: UserSpec = self._load_attributes(self.id, self.role_ids)
+        self.alias = self.attributes.get("alias", self.id)
+        self.email = self.attributes.get("email", self.id)
 
         self.explicitly_given_permissions: Final = explicitly_given_permissions
         self._siteconf = self.load_file("siteconfig", {})
@@ -123,10 +124,10 @@ class LoggedInUser:
     def _gather_roles(self, user_id: UserId | None) -> list[str]:
         return roles_of_user(user_id)
 
-    def _load_attributes(self, user_id: UserId | None, role_ids: list[str]) -> Any:
+    def _load_attributes(self, user_id: UserId | None, role_ids: list[str]) -> UserSpec:
         if user_id is None:
             return {"roles": role_ids}
-        attributes = self.load_file("cached_profile", None)
+        attributes: UserSpec | None = self.load_file("cached_profile", None)
         if attributes is None:
             attributes = active_config.multisite_users.get(
                 user_id,
@@ -134,17 +135,18 @@ class LoggedInUser:
                     "roles": role_ids,
                 },
             )
+
         return attributes
 
     def get_attribute(self, key: str, deflt: Any = None) -> Any:
-        return self._attributes.get(key, deflt)
+        return self.attributes.get(key, deflt)
 
     def _set_attribute(self, key: str, value: Any) -> None:
-        self._attributes[key] = value
+        self.attributes[key] = value  # type: ignore[literal-required]
 
     def _unset_attribute(self, key: str) -> None:
         try:
-            del self._attributes[key]
+            del self.attributes[key]  # type: ignore[misc]
         except KeyError:
             pass
 
@@ -405,18 +407,6 @@ class LoggedInUser:
                 for site_id, s in unfiltered_sites.items()
                 if site_id in authorized_sites  #
             }
-        )
-
-    def authorized_login_sites(self) -> SiteConfigurations:
-        login_site_ids = site_config.get_login_slave_sites()
-        return self.authorized_sites(
-            SiteConfigurations(
-                {
-                    site_id: s
-                    for site_id, s in site_config.enabled_sites().items()
-                    if site_id in login_site_ids  #
-                }
-            )
         )
 
     def may(self, pname: str) -> bool:

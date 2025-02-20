@@ -432,8 +432,15 @@ def _set_triggering_events(event_rule: EventRule, notification: NotificationQuic
 
 
 def _set_event_console_filters(
-    event_rule: EventRule, notification: NotificationQuickSetupSpec
+    event_rule: EventRule,
+    notification: NotificationQuickSetupSpec,
 ) -> None:
+    if (
+        notification["triggering_events"][0] == "specific_events"
+        and notification["triggering_events"][1].get("ec_alerts") is None
+    ):
+        return
+
     if not (ec_alert_filters := notification.get("ec_alert_filters")):
         return
 

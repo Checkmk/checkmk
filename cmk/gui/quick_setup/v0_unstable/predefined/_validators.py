@@ -25,7 +25,7 @@ from cmk.gui.quick_setup.v0_unstable.predefined._common import (
     _create_diag_special_agent_input,
     _find_id_in_form_data,
 )
-from cmk.gui.quick_setup.v0_unstable.setups import CallableValidator, ProgressLogger
+from cmk.gui.quick_setup.v0_unstable.setups import CallableValidator, ProgressLogger, StepStatus
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
     ParsedFormData,
@@ -77,25 +77,32 @@ def _validate_test_connection(
     progress_logger: ProgressLogger,
 ) -> GeneralStageErrors:
     general_errors: GeneralStageErrors = []
-    progress_logger.log_progress("Parsing the configuration data")
+    progress_logger.log_new_progress_step("parse_config", "Parse the connection configuration data")
     site_id = _find_id_in_form_data(all_stages_form_data, QSSiteSelection)
     host_name = _find_id_in_form_data(all_stages_form_data, QSHostName) or str(uuid4())
     params = collect_params(all_stages_form_data, parameter_form)
     passwords = _collect_passwords_from_form_data(all_stages_form_data, parameter_form)
-    progress_logger.log_progress("Evaluating the connection with parsed configuration")
+    progress_logger.update_progress_step_status("parse_config", StepStatus.COMPLETED)
+    progress_logger.log_new_progress_step(
+        "test_connection", "Use input data to test connection to datasource"
+    )
     output = diag_special_agent(
         SiteId(site_id) if site_id else omd_site(),
         _create_diag_special_agent_input(
             rulespec_name=rulespec_name, host_name=host_name, passwords=passwords, params=params
         ),
     )
-    progress_logger.log_progress("Evaluating the connection result")
+    progress_logger.update_progress_step_status("test_connection", StepStatus.COMPLETED)
+    progress_logger.log_new_progress_step(
+        "evaluate_connection_result", "Evaluate test connection result"
+    )
     for result in output.results:
         if result.return_code != 0:
             if error_message:
                 general_errors.append(error_message)
             # Do not show long output
             general_errors.append(result.response.split("\n")[-1])
+    progress_logger.update_progress_step_status("evaluate_connection_result", StepStatus.COMPLETED)
     return general_errors
 
 

@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import enum
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
@@ -22,13 +23,22 @@ from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, Widget
 from cmk.rulesets.v1.form_specs import FormSpec
 
 
+class StepStatus(enum.Enum):
+    ACTIVE = "active"
+    COMPLETED = "completed"
+
+
 class QuickSetupActionMode(StrEnum):
     SAVE = "save"
     EDIT = "edit"
 
 
 class ProgressLogger(Protocol):
-    def log_progress(self, message: str) -> None: ...
+    def log_new_progress_step(
+        self, step_name: str, step_title: str, status: StepStatus = StepStatus.ACTIVE
+    ) -> None: ...
+
+    def update_progress_step_status(self, step_name: str, status: StepStatus) -> None: ...
 
 
 FormspecMap = Mapping[FormSpecId, FormSpec]

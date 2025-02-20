@@ -2,7 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import enum
 from collections.abc import Iterable, Mapping, MutableMapping, MutableSequence, Sequence
 from dataclasses import asdict, dataclass, field
 from typing import Any, cast
@@ -19,7 +19,12 @@ from cmk.gui.form_specs.vue.form_spec_visitor import (
 from cmk.gui.form_specs.vue.visitors import DataOrigin, DEFAULT_VALUE
 from cmk.gui.log import logger
 from cmk.gui.quick_setup.private.widgets import ConditionalNotificationStageWidget
-from cmk.gui.quick_setup.v0_unstable.setups import CallableValidator, FormspecMap, ProgressLogger
+from cmk.gui.quick_setup.v0_unstable.setups import (
+    CallableValidator,
+    FormspecMap,
+    ProgressLogger,
+    StepStatus,
+)
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     ActionId,
     GeneralStageErrors,
@@ -45,18 +50,59 @@ NEXT_BUTTON_LABEL = _("Next")
 NEXT_BUTTON_ARIA_LABEL = _("Go to the next stage")
 
 
+@dataclass
+class ProgressStep:
+    title: str
+    status: StepStatus
+    index: int
+
+
+@dataclass
+class ProgressState:
+    steps: Sequence[ProgressStep]
+
+
 class InfoLogger:
     @staticmethod
-    def log_progress(message: str) -> None:
-        logger.info("[QuickSetup] %s", message)
+    def log_new_progress_step(
+        step_name: str, step_title: str, status: StepStatus = StepStatus.ACTIVE
+    ) -> None:
+        logger.info(f"[QuickSetup] {step_name} - {status}")
+
+    @staticmethod
+    def update_progress_step_status(step_name: str, status: StepStatus) -> None:
+        logger.info(f"[QuickSetup] {step_name} - {status}")
 
 
 class JobBasedProgressLogger:
     def __init__(self, progress_interface: BackgroundProcessInterface):
         self._progress_interface = progress_interface
+        self._steps: dict[str, ProgressStep] = {}
 
-    def log_progress(self, message: str) -> None:
-        self._progress_interface.send_progress_update("[QuickSetup] %s" % message)
+    def log_new_progress_step(
+        self, step_name: str, step_title: str, status: StepStatus = StepStatus.ACTIVE
+    ) -> None:
+        self._steps[step_name] = ProgressStep(
+            title=step_title, status=status, index=len(self._steps)
+        )
+        self._log_progress()
+
+    def update_progress_step_status(self, step_name: str, status: StepStatus) -> None:
+        self._steps[step_name].status = status
+        self._log_progress()
+
+    def _log_progress(self) -> None:
+        ordered_steps = sorted(self._steps.values(), key=lambda step: step.index)
+        state = ProgressState(steps=ordered_steps)
+        self._progress_interface.send_progress_update(
+            "[QuickSetup] %s"
+            % asdict(
+                state,
+                dict_factory=lambda x: {
+                    k: (v.value if isinstance(v, enum.Enum) else v) for k, v in x
+                },
+            )
+        )
 
 
 @dataclass

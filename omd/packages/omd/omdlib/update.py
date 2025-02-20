@@ -147,6 +147,7 @@ HOOK_RELPATHS = [
     "etc/pnp4nagios/config.d/cookie_auth.php",
     "etc/check_mk/multisite.d/mkeventd.mk",
     "etc/check_mk/conf.d/mkeventd.mk",
+    "etc/omd/site.conf",
 ]
 
 

@@ -498,3 +498,16 @@ class AutomationQuickSetupStageAction(AutomationCommand[QuickSetupStageActionJob
             user_input_stages=api_request.user_input_stages,
             job_uuid=api_request.job_uuid,
         )
+
+
+class AutomationQuickSetupStageActionResult(AutomationCommand[str]):
+    """Fetch the result of a Quick Setup stage action from a remote site"""
+
+    def command_name(self) -> str:
+        return "fetch-quick-setup-stage-action-result"
+
+    def get_request(self) -> str:
+        return request.get_request()["job_id"]
+
+    def execute(self, api_request: str) -> str:
+        return StageActionResult.load_from_job_result(api_request).model_dump_json()

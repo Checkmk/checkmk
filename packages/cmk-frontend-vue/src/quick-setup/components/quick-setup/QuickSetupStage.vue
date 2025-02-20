@@ -77,7 +77,7 @@ const { ErrorBoundary } = useErrorBoundary()
     height: 24px;
     border-radius: 50%;
     color: #212121;
-    background-color: lightgrey;
+    background-color: var(--qs-stage-line-color);
   }
 
   &:not(:last-child):after {

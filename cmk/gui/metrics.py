@@ -184,6 +184,7 @@ def load_plugins() -> None:
     """Plug-in initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     _register_pre_21_plugin_api()
     utils.load_web_plugins("metrics", globals())
+    utils.load_web_plugins("perfometer", globals())
     _add_graphing_plugins(_load_graphing_plugins())
 
 
@@ -203,6 +204,28 @@ def _register_pre_21_plugin_api() -> None:
     # Needs to be a local import to not influence the regular plug-in loading order
     import cmk.gui.plugins.metrics as legacy_api_module  # pylint: disable=cmk-module-layer-violation
     import cmk.gui.plugins.metrics.utils as legacy_plugin_utils  # pylint: disable=cmk-module-layer-violation
+    from cmk.gui import fake
+
+    fake.module(
+        ("cmk", "gui", "plugins", "metrics"),
+        "translation",
+        {
+            "cisco_mem_translation": {},
+            "cisco_mem_translation_with_trend": {},
+            "cpu_util_unix_translate": {},
+            "df_translation": {},
+            "disk_utilization_translation": {},
+            "do_not_display_fs_size_translation": {},
+            "if_translation": {},
+            "juniper_mem": {},
+            "memory_simple_translation": {},
+            "mem_vsphere_hostsystem": {},
+            "mq_translation": {},
+            "netapp_volumes_metrics": {},
+            "ps_translation": {},
+            "ram_used_swap_translation": {},
+        },
+    )
 
     for name in (
         "check_metrics",

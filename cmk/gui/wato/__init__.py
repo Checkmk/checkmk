@@ -181,10 +181,33 @@ subgroup_hardware = RulespecGroupCheckParametersHardware().sub_group_name
 subgroup_inventory = RulespecGroupCheckParametersDiscovery().sub_group_name
 
 
+def _register_pre_24_plugin_api() -> None:
+    from cmk.gui import fake
+
+    fake.module(
+        ("cmk", "gui", "plugins", "wato", "special_agents"),
+        "common",
+        {
+            "RulespecGroupVMCloudContainer": RulespecGroupVMCloudContainer,
+            "RulespecGroupDatasourcePrograms": RulespecGroupDatasourcePrograms,
+            "RulespecGroupDatasourceProgramsOS": RulespecGroupDatasourceProgramsOS,
+            "RulespecGroupDatasourceProgramsApps": RulespecGroupDatasourceProgramsApps,
+            "RulespecGroupDatasourceProgramsCloud": RulespecGroupDatasourceProgramsCloud,
+            "RulespecGroupDatasourceProgramsCustom": RulespecGroupDatasourceProgramsCustom,
+            "RulespecGroupDatasourceProgramsHardware": RulespecGroupDatasourceProgramsHardware,
+            "RulespecGroupDatasourceProgramsTesting": RulespecGroupDatasourceProgramsTesting,
+            "RulespecGroupIntegrateOtherServices": RulespecGroupIntegrateOtherServices,
+            "RulespecGroupActiveChecks": RulespecGroupActiveChecks,
+            "MigrateToIndividualOrStoredPassword": MigrateToIndividualOrStoredPassword,
+        },
+    )
+
+
 def load_plugins() -> None:
     """Plug-in initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     # Initialize watolib things which are needed before loading the Setup plugins.
     # This also loads the watolib plugins.
     watolib.load_watolib_plugins()
 
+    _register_pre_24_plugin_api()
     utils.load_web_plugins("wato", globals())

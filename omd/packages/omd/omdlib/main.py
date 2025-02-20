@@ -2904,6 +2904,7 @@ def main_update(
 
         # Let hooks of the new(!) version do their work and update configuration.
         config_set_all(site)
+        save_site_conf(site)
 
         # Before the hooks can be executed the tmpfs needs to be mounted. This requires access to the
         # initialized tmpfs.
@@ -2940,8 +2941,6 @@ def main_update(
         open_pty=is_tty,
         add_env=additional_update_env,
     )
-
-    save_site_conf(site)
 
     call_scripts(site, "post-update", open_pty=is_tty)
 

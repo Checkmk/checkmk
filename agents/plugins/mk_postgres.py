@@ -1214,7 +1214,7 @@ def open_env_file(file_to_open):
 
 
 def parse_env_file(env_file):
-    # type: (str) -> tuple[str, str, str | None]
+    # type: (str) -> tuple[str, str, str | None, str]
     pg_port = None  # mandatory in env_file
     pg_database = "postgres"  # default value
     pg_version = None

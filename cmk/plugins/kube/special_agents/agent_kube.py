@@ -460,17 +460,7 @@ def request_cluster_collector(
     request = requests.Request("GET", url)
     prepare_request = session.prepare_request(request)
     try:
-        cluster_resp = session.send(
-            prepare_request,
-            timeout=config.requests_timeout(),
-            **session.merge_environment_settings(
-                url=request.url,
-                proxies={},
-                stream=None,
-                verify=config.usage_verify_cert,
-                cert=None,
-            ),
-        )
+        cluster_resp = session.send(prepare_request, timeout=config.requests_timeout())
         cluster_resp.raise_for_status()
     except requests.HTTPError as e:
         raise CollectorHandlingException(

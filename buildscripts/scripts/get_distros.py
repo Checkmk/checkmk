@@ -25,7 +25,7 @@ def print_internal_build_artifacts(args: Args, loaded_yaml: dict) -> None:
             )
         distros = [loaded_yaml["distro_to_codename"][d] for d in distros]
     if args.as_rsync_exclude_pattern:
-        exclude_elements = list(distros) + list(editions)
+        exclude_elements = list(distros) + list(editions) + ["omd", "bazel"]
         patterns = ",".join([f"'*{d}*'" for d in exclude_elements])
         if len(exclude_elements) > 1:
             print("{" + patterns + "}")  # this expands in bash

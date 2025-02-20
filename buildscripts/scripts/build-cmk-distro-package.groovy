@@ -112,11 +112,12 @@ def main() {
         }
 
         inside_container_minimal(safe_branch_name: safe_branch_name) {
+            def build_instance = null;
             smart_stage(
                 name: "Build BOM",
-                raiseOnError: false,
+                raiseOnError: true,
             ) {
-                def build_instance = smart_build(
+                build_instance = smart_build(
                     // see global-defaults.yml, needs to run in minimal container
                     use_upstream_build: true,
                     relative_job_name: "${branch_base_folder}/builders/build-cmk-bom",
@@ -133,7 +134,12 @@ def main() {
                     no_remove_others: true, // do not delete other files in the dest dir
                     download: false,    // use copyArtifacts to avoid nested directories
                 );
-
+            }
+            smart_stage(
+                name: "Copy artifacts",
+                condition: build_instance,
+                raiseOnError: true,
+            ) {
                 copyArtifacts(
                     projectName: "${branch_base_folder}/builders/build-cmk-bom",
                     selector: specific(build_instance.getId()),
@@ -142,7 +148,11 @@ def main() {
                 )
             }
 
-            smart_stage(name: 'Fetch agent binaries', condition: !params.FAKE_WINDOWS_ARTIFACTS) {
+            smart_stage(
+                name: 'Fetch agent binaries',
+                condition: !params.FAKE_WINDOWS_ARTIFACTS,
+                raiseOnError: true,
+            ) {
                 package_helper.provide_agent_binaries(version, edition, disable_cache, params.CIPARAM_BISECT_COMMENT);
             }
 

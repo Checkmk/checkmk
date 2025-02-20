@@ -93,7 +93,7 @@ def main() {
             smart_stage(
                 name: "Build source package",
                 condition: build_image,
-                raiseOnError: false,
+                raiseOnError: true,
             ) {
                 build_instance = smart_build(
                     // see global-defaults.yml, needs to run in minimal container
@@ -119,7 +119,7 @@ def main() {
             smart_stage(
                 name: "Copy artifacts",
                 condition: build_instance && build_image,
-                raiseOnError: false,
+                raiseOnError: true,
             ) {
                 copyArtifacts(
                     projectName: "${branch_base_folder}/builders/build-cmk-source_tgz",
@@ -136,7 +136,7 @@ def main() {
             smart_stage(
                 name: "Build Package",
                 condition: build_image,
-                raiseOnError: false,
+                raiseOnError: true,
             ) {
                 build_instance = smart_build(
                     // see global-defaults.yml, needs to run in minimal container
@@ -162,7 +162,7 @@ def main() {
             smart_stage(
                 name: "Copy artifacts",
                 condition: build_instance && build_image,
-                raiseOnError: false,
+                raiseOnError: true,
             ) {
                 copyArtifacts(
                     projectName: "${branch_base_folder}/builders/build-cmk-distro-package",

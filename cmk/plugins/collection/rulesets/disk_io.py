@@ -42,7 +42,7 @@ def _parameter_form() -> Dictionary:
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((50_000_000, 100_000_000)),
                     predictive=PredictiveLevels(
-                        reference_metric="disk_read_throughput",
+                        reference_metric="read_throughput",
                         prefill_abs_diff=DefaultValue((0.0, 0.0)),
                     ),
                     migrate=migrate_to_upper_integer_levels,
@@ -58,7 +58,7 @@ def _parameter_form() -> Dictionary:
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((50_000_000, 100_000_000)),
                     predictive=PredictiveLevels(
-                        reference_metric="disk_read_throughput",
+                        reference_metric="read_throughput",
                         prefill_abs_diff=DefaultValue((0.0, 0.0)),
                     ),
                     migrate=migrate_to_upper_integer_levels,
@@ -86,7 +86,7 @@ def _parameter_form() -> Dictionary:
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((0.08, 0.16)),
                     predictive=PredictiveLevels(
-                        reference_metric="disk_latency",
+                        reference_metric="latency",
                         prefill_abs_diff=DefaultValue((0.0, 0.0)),
                     ),
                     migrate=migrate_to_upper_float_levels,
@@ -99,7 +99,7 @@ def _parameter_form() -> Dictionary:
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((80.0, 90.0)),
                     predictive=PredictiveLevels(
-                        reference_metric="disk_read_ql",
+                        reference_metric="read_ql",
                         prefill_abs_diff=DefaultValue((0.0, 0.0)),
                     ),
                     migrate=migrate_to_upper_float_levels,
@@ -112,7 +112,7 @@ def _parameter_form() -> Dictionary:
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((80.0, 90.0)),
                     predictive=PredictiveLevels(
-                        reference_metric="disk_write_ql",
+                        reference_metric="write_ql",
                         prefill_abs_diff=DefaultValue((0.0, 0.0)),
                     ),
                     migrate=migrate_to_upper_float_levels,
@@ -125,7 +125,7 @@ def _parameter_form() -> Dictionary:
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((400.0, 600.0)),
                     predictive=PredictiveLevels(
-                        reference_metric="disk_read_ios",
+                        reference_metric="read_ios",
                         prefill_abs_diff=DefaultValue((0.0, 0.0)),
                     ),
                     migrate=migrate_to_upper_float_levels,
@@ -138,7 +138,7 @@ def _parameter_form() -> Dictionary:
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((300.0, 400.0)),
                     predictive=PredictiveLevels(
-                        reference_metric="disk_write_ios",
+                        reference_metric="write_ios",
                         prefill_abs_diff=DefaultValue((0.0, 0.0)),
                     ),
                     migrate=migrate_to_upper_float_levels,

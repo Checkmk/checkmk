@@ -474,6 +474,12 @@ def _set_host_filters(event_rule: EventRule, notification: NotificationQuickSetu
 
 
 def _set_service_filters(event_rule: EventRule, notification: NotificationQuickSetupSpec) -> None:
+    if (
+        notification["triggering_events"][0] == "specific_events"
+        and notification["triggering_events"][1].get("service_events") is None
+    ):
+        return
+
     if not (service_filters := notification.get("service_filters")):
         return
 

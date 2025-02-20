@@ -10,7 +10,7 @@ from uuid import UUID
 import pytest
 from pytest_mock import MockerFixture
 
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
 from cmk.utils.agent_registration import UUIDLinkManager
 from cmk.utils.hostaddress import HostName

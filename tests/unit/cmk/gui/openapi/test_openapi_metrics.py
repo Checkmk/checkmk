@@ -9,7 +9,7 @@ import pytest
 
 from tests.testlib.unit.rest_api_client import RestApiClient
 
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 

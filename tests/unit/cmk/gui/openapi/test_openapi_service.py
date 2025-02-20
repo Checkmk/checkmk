@@ -9,7 +9,7 @@ import pytest
 
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
-from tests.unit.cmk.gui.conftest import CmkTestResponse, WebTestAppForCMK
+from tests.unit.cmk.web_test_app import CmkTestResponse, WebTestAppForCMK
 
 from cmk.ccc import version
 

@@ -8,7 +8,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from tests.unit.cmk.gui.conftest import SetConfig
+from tests.unit.cmk.web_test_app import SetConfig
 
 from cmk.utils.metrics import MetricName
 

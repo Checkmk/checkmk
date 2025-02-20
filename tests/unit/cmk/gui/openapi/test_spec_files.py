@@ -10,7 +10,7 @@ import pytest
 import yaml
 from openapi_spec_validator import validate
 
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
 from cmk.utils import paths
 

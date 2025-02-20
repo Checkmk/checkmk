@@ -12,10 +12,10 @@ from tests.unit.cmk.gui.conftest import (  # noqa: F401
     load_config,
     load_plugins,
     request_context,
-    WebTestAppForCMK,
     with_admin,
     wsgi_app,
 )
+from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
 from cmk.gui import http
 

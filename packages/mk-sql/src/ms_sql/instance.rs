@@ -71,7 +71,7 @@ impl SqlInstanceBuilder {
         self
     }
     pub fn alias(mut self, alias: &Option<InstanceAlias>) -> Self {
-        self.alias = alias.clone();
+        self.alias.clone_from(alias);
         self
     }
     pub fn id<S: Into<String>>(mut self, id: S) -> Self {

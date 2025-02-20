@@ -1136,7 +1136,7 @@ def notification_method() -> QuickSetupStage:
                                 layout=CascadingSingleChoiceLayout.button_group,
                                 title=Title("Notification effect"),
                                 help_text=Help(
-                                    "Specifies whether to send a notification or to cancel all previous notifications for the same method"
+                                    "Toggle to either send notifications or suppress all previous notifications for the method selected."
                                 ),
                                 elements=[
                                     CascadingSingleChoiceElement(

@@ -841,9 +841,14 @@ class Site:
                         f"Version {self.version.version} could not be uninstalled!"
                     ) from excp
                 raise excp
-            assert not self.version.is_installed(), (
+            output = run(["ls", "-laR", self.version.version_path()], check=False, sudo=True).stdout
+            remaining_files = (
+                [_ for _ in output.strip().split("\n") if _] if isinstance(output, str) else []
+            )
+            assert not remaining_files, (
                 f"Version {self.version.version} is still installed, "
                 "even though the uninstallation was completed with RC=0!"
+                f"Remaining files: {remaining_files}"
             )
 
     @tracer.instrument("Site.create")

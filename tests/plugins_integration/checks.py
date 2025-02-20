@@ -271,13 +271,6 @@ def _verify_check_result(
     return False, diff
 
 
-def process_raw_data(site: Site, host_name: str) -> tuple[str, str]:
-    """Return both the cmk dump and the disk dump."""
-    disk_dump = read_disk_dump(host_name)
-    dump_type = "snmp" if disk_dump[0] == "." else "agent"
-    return disk_dump, read_cmk_dump(host_name, site, dump_type)
-
-
 def process_check_output(
     site: Site,
     host_name: str,

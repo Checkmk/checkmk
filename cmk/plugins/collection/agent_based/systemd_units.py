@@ -675,7 +675,7 @@ def _services_split(
     }
     compiled_patterns = [re.compile(p) for p in blacklist]
     for service in services:
-        if any(expr.match(service.name) for expr in compiled_patterns):
+        if any(expr.match(service.name) for expr in compiled_patterns) or service.name in blacklist:
             services_organised["excluded"].append(service)
             continue
         if service.active_status in ("reloading", "activating", "deactivating"):
@@ -762,9 +762,11 @@ def check_systemd_units_summary(
 
     yield Result(
         state=State(params["states"].get("failed", params["states_default"]))
-        if (number_of_failed_units := sum(s.active_status == "failed" for s in units))
+        if sum(
+            s.active_status == "failed" for s in units if s not in services_organised["excluded"]
+        )
         else State.OK,
-        summary=f"Failed: {number_of_failed_units:d}",
+        summary=f"Failed: {sum(s.active_status == 'failed' for s in units)}",
     )
 
     included_template = "{count:d} {unit_type} {status} ({service_text})"

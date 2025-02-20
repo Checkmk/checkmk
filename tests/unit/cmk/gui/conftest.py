@@ -278,7 +278,7 @@ def make_html_object_explode(mocker: MagicMock) -> None:
 
 
 @pytest.fixture()
-def inline_background_jobs(mocker: MagicMock) -> None:
+def inline_background_jobs(mocker: MockerFixture) -> None:
     """Prevent threading.Thread to spin off a new thread
 
     This will run the code (non-concurrently, blocking) in the main execution path.
@@ -289,14 +289,33 @@ def inline_background_jobs(mocker: MagicMock) -> None:
     mocker.patch("multiprocessing.Process.start", new=lambda self: self.run())
     mocker.patch("multiprocessing.context.SpawnProcess.start", new=lambda self: self.run())
     # We stub out everything preventing smooth execution.
+    mocker.patch("threading.Thread.join")
     mocker.patch("multiprocessing.Process.join")
     mocker.patch("multiprocessing.context.SpawnProcess.join")
     mocker.patch("multiprocessing.Process.pid", 1234)
     mocker.patch("multiprocessing.context.SpawnProcess.pid", 1234)
     mocker.patch("multiprocessing.Process.exitcode", 0)
     mocker.patch("multiprocessing.context.SpawnProcess.exitcode", 0)
+
+    class SynchronousQueue(list):
+        def put(self, x: Any) -> None:
+            self.append(x)
+
+        def get(self) -> Any:
+            return self.pop()
+
+        def empty(self) -> bool:
+            return not bool(self)
+
+    mocker.patch("multiprocessing.Queue", wraps=SynchronousQueue)
+    # ThreadPool creates its own Process internally so we need to mock explictly
+    thread_pool_mock = mocker.patch("multiprocessing.pool.ThreadPool")
+    thread_pool_mock.return_value.__enter__.return_value.apply_async = (
+        lambda func, args=None, kwds=None, callback=(lambda *_args: None): callback(
+            func(*(args or ()), **(kwds or {}))
+        )
+    )
     mocker.patch("sys.exit")
-    mocker.patch("threading.Thread.start", new=lambda self: self.run())
     mocker.patch("cmk.ccc.daemon.daemonize")
     mocker.patch("cmk.ccc.daemon.closefrom")
 
@@ -309,7 +328,7 @@ def allow_background_jobs() -> None:
 
 @pytest.fixture(autouse=True)
 def fail_on_unannotated_background_job_start(
-    request: pytest.FixtureRequest, mocker: MagicMock
+    request: pytest.FixtureRequest, mocker: MockerFixture
 ) -> None:
     """Unannotated background job call
 

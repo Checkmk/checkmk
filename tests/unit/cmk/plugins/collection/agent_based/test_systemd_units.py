@@ -1355,6 +1355,124 @@ def test_check_systemd_units_sockets(
             ],
             id="Custom systemd state",
         ),
+        pytest.param(
+            {
+                "else": 2,
+                "states": {"active": 0, "failed": 2, "inactive": 0},
+                "states_default": 2,
+                "ignored": [
+                    "systemd-timesyncd.service",
+                    "systemd-ask-password-console",
+                    "zfs-import@fgprs\\x2dpbs02\\x2dpool1\\x2d100",
+                ],
+                "activating_levels": (30, 60),
+                "deactivating_levels": (30, 60),
+                "reloading_levels": (30, 60),
+            },
+            Section(
+                sockets={},
+                services={
+                    "zfs-import@fgprs\\x2dpbs02\\x2dpool1\\x2d100": UnitEntry(
+                        name="zfs-import@fgprs\\x2dpbs02\\x2dpool1\\x2d100",
+                        loaded_status="loaded",
+                        active_status="failed",
+                        current_state="failed",
+                        description="Import ZFS pool fgprs\\x2dpbs02\\x2dpool1\\x2d100",
+                        enabled_status="enabled",
+                    ),
+                },
+            ),
+            [
+                Result(state=State.OK, summary="Total: 1"),
+                Result(state=State.OK, summary="Disabled: 0"),
+                Result(state=State.OK, summary="Failed: 1"),
+                Result(state=State.OK, notice="Ignored: 1"),
+            ],
+            id="Failed, but ignored service",
+        ),
+        pytest.param(
+            {
+                "else": 2,
+                "states": {"active": 0, "failed": 2, "inactive": 0},
+                "states_default": 2,
+                "ignored": [
+                    "systemd.",
+                ],
+                "activating_levels": (30, 60),
+                "deactivating_levels": (30, 60),
+                "reloading_levels": (30, 60),
+            },
+            Section(
+                sockets={},
+                services={
+                    "zfs-import@fgprs\\x2dpbs02\\x2dpool1\\x2d100": UnitEntry(
+                        name="zfs-import@fgprs\\x2dpbs02\\x2dpool1\\x2d100",
+                        loaded_status="loaded",
+                        active_status="failed",
+                        current_state="failed",
+                        description="Import ZFS pool fgprs\\x2dpbs02\\x2dpool1\\x2d100",
+                        enabled_status="enabled",
+                    ),
+                    "systemd-timesyncd.service": UnitEntry(
+                        name="systemd-timesyncd.service",
+                        loaded_status="loaded",
+                        active_status="failed",
+                        current_state="failed",
+                        description="Import ZFS pool fgprs\\x2dpbs02\\x2dpool1\\x2d100",
+                        enabled_status="enabled",
+                    ),
+                },
+            ),
+            [
+                Result(state=State.OK, summary="Total: 2"),
+                Result(state=State.OK, summary="Disabled: 0"),
+                Result(state=State.CRIT, summary="Failed: 2"),
+                Result(
+                    state=State.CRIT,
+                    summary="1 service failed (zfs-import@fgprs\\x2dpbs02\\x2dpool1\\x2d100)",
+                ),
+                Result(state=State.OK, notice="Ignored: 1"),
+            ],
+            id="Two failed. One failed but ignored with regex",
+        ),
+        pytest.param(
+            {
+                "else": 2,
+                "states": {"active": 0, "failed": 0, "inactive": 0},
+                "states_default": 2,
+                "ignored": [],
+                "activating_levels": (30, 60),
+                "deactivating_levels": (30, 60),
+                "reloading_levels": (30, 60),
+            },
+            Section(
+                sockets={},
+                services={
+                    "zfs-import@fgprs\\x2dpbs02\\x2dpool1\\x2d100": UnitEntry(
+                        name="zfs-import@fgprs\\x2dpbs02\\x2dpool1\\x2d100",
+                        loaded_status="loaded",
+                        active_status="failed",
+                        current_state="failed",
+                        description="Import ZFS pool fgprs\\x2dpbs02\\x2dpool1\\x2d100",
+                        enabled_status="enabled",
+                    ),
+                    "systemd-timesyncd.service": UnitEntry(
+                        name="systemd-timesyncd.service",
+                        loaded_status="loaded",
+                        active_status="failed",
+                        current_state="failed",
+                        description="Import ZFS pool fgprs\\x2dpbs02\\x2dpool1\\x2d100",
+                        enabled_status="enabled",
+                    ),
+                },
+            ),
+            [
+                Result(state=State.OK, summary="Total: 2"),
+                Result(state=State.OK, summary="Disabled: 0"),
+                Result(state=State.OK, summary="Failed: 2"),
+            ],
+            id="Two failed, but OK state configured in params",
+        ),
     ],
 )
 def test_check_systemd_units_services_summary(

@@ -21,6 +21,7 @@ from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.language_cookie import set_language_cookie
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.wato.pages.users import select_language
+from cmk.gui.watolib.users import get_enabled_remote_sites_for_logged_in_user
 
 from .abstract_page import ABCUserProfilePage
 
@@ -85,7 +86,7 @@ class UserProfile(ABCUserProfilePage):
         # In distributed setups with remote sites where the user can login, start the
         # user profile replication now which will redirect the user to the destination
         # page after completion. Otherwise directly open up the destination page.
-        if user.authorized_login_sites():
+        if get_enabled_remote_sites_for_logged_in_user(user):
             back_url = "user_profile_replicate.py?back=user_profile.py"
         else:
             back_url = "user_profile.py"

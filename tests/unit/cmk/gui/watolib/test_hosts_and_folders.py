@@ -937,7 +937,7 @@ def _run_num_host_test(
         )
 
         # Old mechanism
-        with patch.dict(logged_in_user._attributes, {"contactgroups": user_test.contactgroups}):
+        with patch.dict(logged_in_user.attributes, {"contactgroups": user_test.contactgroups}):
             assert (
                 wato_folder.num_hosts_recursively()
                 == expected_host_count + legacy_base_folder_host_offset

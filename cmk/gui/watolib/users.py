@@ -8,7 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import cast, Literal, TypeAlias
 
-from livestatus import SiteId
+from livestatus import SiteConfigurations, SiteId
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.version import Edition, edition
@@ -18,11 +18,11 @@ from cmk.utils.log.security_event import log_security_event
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.user import UserId
 
-from cmk.gui import hooks, userdb
+from cmk.gui import hooks, site_config, userdb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _l
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.type_defs import UserContactDetails, UserObject, Users, UserSpec
 from cmk.gui.userdb import add_internal_attributes, get_user_attributes
 from cmk.gui.userdb._connections import get_connection
@@ -392,6 +392,22 @@ class UserFeaturesRegistry(Registry[UserFeatures]):
 
 
 user_features_registry = UserFeaturesRegistry()
+
+
+def get_enabled_remote_sites_for_logged_in_user(logged_in_user: LoggedInUser) -> SiteConfigurations:
+    all_enabled_slave_sites = site_config.wato_slave_sites()
+    if (
+        site_ids_for_user := user_features_registry.features().sites(logged_in_user.attributes)
+    ) is None:
+        return all_enabled_slave_sites
+
+    return SiteConfigurations(
+        {
+            site_id: site_config
+            for site_id, site_config in all_enabled_slave_sites.items()
+            if site_id in site_ids_for_user
+        }
+    )
 
 
 def register(config_file_registry: ConfigFileRegistry) -> None:

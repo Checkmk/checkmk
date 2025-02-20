@@ -66,7 +66,8 @@ from cmk.gui.quick_setup.v0_unstable.setups import (
     QuickSetupBackgroundStageAction,
 )
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, RawFormData, StageIndex
-from cmk.gui.site_config import site_is_local
+from cmk.gui.site_config import get_site_config, site_is_local
+from cmk.gui.watolib.automations import do_remote_automation
 
 from cmk import fields
 
@@ -324,18 +325,42 @@ def quicksetup_run_stage_action(params: Mapping[str, Any]) -> Response:
     )
 
 
+class FieldSiteId:
+    field_name = "site"
+    field_definition = fields.String(
+        description="The site where the quick setup stage action result is located. Defaults to local site",
+        example="foobar",
+        required=False,
+    )
+
+
 @Endpoint(
     object_href("quick_setup_stage_action_result", "{job_id}"),
     "cmk/fetch",
     tag_group="Checkmk Internal",
     method="get",
     path_params=[JOB_ID],
+    query_params=[{FieldSiteId.field_name: FieldSiteId.field_definition}],
     response_schema=QuickSetupStageActionResponse,
 )
 def fetch_quick_setup_stage_action_result(params: Mapping[str, Any]) -> Response:
     """Fetch the Quick setup stage action background job result"""
     action_background_job_id = params["job_id"]
-    action_result = StageActionResult.load_from_job_result(job_id=action_background_job_id)
+    site_id = params.get(FieldSiteId.field_name)
+    if site_id and site_is_local(active_config, SiteId(site_id)):
+        action_result = StageActionResult.model_validate_json(
+            str(
+                do_remote_automation(
+                    get_site_config(active_config, SiteId(site_id)),
+                    "fetch-quick-setup-stage-action-result",
+                    [
+                        ("job_id", action_background_job_id),
+                    ],
+                )
+            )
+        )
+    else:
+        action_result = StageActionResult.load_from_job_result(job_id=action_background_job_id)
     return _serve_action_result(action_result)
 
 

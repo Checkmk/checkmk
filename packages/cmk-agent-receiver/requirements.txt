@@ -1,4 +1,4 @@
-cryptography==43.0.3
+cryptography==44.0.1
 fastapi==0.115.6
 gunicorn==23.0.0
 h11==0.14.0

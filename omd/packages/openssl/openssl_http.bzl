@@ -7,7 +7,7 @@ def openssl_workspace():
     http_archive(
         name = "openssl",
         urls = [
-            "https://www.openssl.org/source/" + filename,
+            "https://github.com/openssl/openssl/releases/download/openssl-" + version_str + "/" + filename,
             UPSTREAM_MIRROR_URL + filename,
         ],
         sha256 = "57e03c50feab5d31b152af2b764f10379aecd8ee92f16c985983ce4a99f7ef86",

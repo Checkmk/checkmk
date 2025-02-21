@@ -1090,7 +1090,6 @@ def test_migrate_mixed_notification_plugins() -> None:
     assert all(got == want for got, want in zip(value, expected))
 
 
-@pytest.mark.xfail(reason="Currently None is not being treated at migrated.")
 def test_migrate_with_already_migrated_rules() -> None:
     # Note: `None` and UUID are considered migrated.
     config = [
@@ -1100,7 +1099,6 @@ def test_migrate_with_already_migrated_rules() -> None:
     assert migrate_parameters(config) == {}
 
 
-@pytest.mark.xfail(reason="Currently migrated values with string are not handled.")
 def test_migrate_with_partially_migrated_rules() -> None:
     config = [
         EventRuleFactory.build(notify_plugin=("mail", "2e61d376-7226-42b8-a98c-d41dc5585bcf")),

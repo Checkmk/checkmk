@@ -5,12 +5,13 @@
 
 from logging import Logger
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from cmk.utils import tty
 from cmk.utils.notify_types import (
     EventRule,
     NotificationParameterGeneralInfos,
+    NotificationParameterID,
     NotificationParameterItem,
     NotificationParameterMethod,
     NotificationParameterSpecs,
@@ -33,6 +34,12 @@ from cmk.gui.watolib.notifications import (
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
+# We're dealing with both the legacy and migrated representation of the "notify_plugin" parameter
+# field. So, we need a type to account for both regresentations.
+type LegacyParameter = dict[str, object] | list[object]
+type MigratedParameter = NotificationParameterID | None
+type Parameter = LegacyParameter | MigratedParameter
+
 
 class MigrateNotifications(UpdateAction):
     def __init__(self, name: str, title: str, sort_index: int) -> None:
@@ -42,9 +49,8 @@ class MigrateNotifications(UpdateAction):
 
     def __call__(self, logger: Logger) -> None:
         notification_rules = NotificationRuleConfigFile().load_for_reading()
-        if all(
-            isinstance(event_rule["notify_plugin"][1], str) for event_rule in notification_rules
-        ):
+        notification_rule_params = (rule["notify_plugin"][1] for rule in notification_rules)
+        if all(params is None or isinstance(params, str) for params in notification_rule_params):
             logger.debug("       Already migrated")
             return
 
@@ -55,9 +61,10 @@ class MigrateNotifications(UpdateAction):
         parameters_per_method: NotificationParameterSpecs = {}
         updated_notification_rules: list[EventRule] = []
         for nr, rule in enumerate(notification_rules):
-            method, parameter = rule["notify_plugin"]
+            method = rule["notify_plugin"][0]
+            parameter = cast(Parameter, rule["notify_plugin"][1])
 
-            if parameter is None:
+            if parameter is None or isinstance(parameter, str):
                 rule["notify_plugin"] = (method, parameter)
                 updated_notification_rules.append(rule)
                 continue
@@ -71,7 +78,7 @@ class MigrateNotifications(UpdateAction):
                 (
                     param_id
                     for param_id, params in parameters_per_method[method].items()
-                    if params["parameter_properties"] == parameter  # type: ignore[comparison-overlap]
+                    if params["parameter_properties"] == parameter
                 ),
                 None,
             )
@@ -87,7 +94,7 @@ class MigrateNotifications(UpdateAction):
                     {
                         parameter_id: self._get_data_for_disk(
                             method=method,
-                            parameter=parameter,  # type: ignore[arg-type]
+                            parameter=parameter,
                             nr=nr,
                         )
                     }

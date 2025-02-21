@@ -269,7 +269,6 @@ use_repo(
     "io_opentelemetry_go_collector_processor_batchprocessor",
     "io_opentelemetry_go_collector_receiver",
     "io_opentelemetry_go_collector_receiver_otlpreceiver",
-    "org_golang_x_sys",
 )
 
 # The overrides are needed to avoid issues like:

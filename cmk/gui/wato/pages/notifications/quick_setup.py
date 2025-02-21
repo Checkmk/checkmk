@@ -1458,6 +1458,14 @@ def _get_time_periods() -> list[tuple[TimeperiodName, str]]:
     return sorted((name, f"{name} - {spec["alias"]}") for name, spec in load_timeperiods().items())
 
 
+def validate_notification_count_values(values: tuple[object, ...]) -> None:
+    match values:
+        case (int() as lower_value, int() as upper_value) if lower_value >= upper_value:
+            raise ValidationError(
+                Message("The first value must be lower than the second value."),
+            )
+
+
 def sending_conditions() -> QuickSetupStage:
     def _components() -> Sequence[Widget]:
         return [
@@ -1498,6 +1506,7 @@ def sending_conditions() -> QuickSetupStage:
                                                 ),
                                             ],
                                             layout="horizontal",
+                                            custom_validate=[validate_notification_count_values],
                                         )
                                     ),
                                     "throttle_periodic": DictElement(
@@ -1548,6 +1557,13 @@ def sending_conditions() -> QuickSetupStage:
                                             help_text=Help(
                                                 "Only applies to notifications triggered by the command `Custom notifications`"
                                             ),
+                                            custom_validate=[
+                                                not_empty(
+                                                    error_msg=Message(
+                                                        "Please enter a comment to filter for."
+                                                    )
+                                                )
+                                            ],
                                         )
                                     ),
                                 },

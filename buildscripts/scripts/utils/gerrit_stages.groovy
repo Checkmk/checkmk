@@ -40,39 +40,37 @@ def create_stage(Map args, time_stage_started) {
         println("CMD: ${args.COMMAND}");
         def cmd_status;
 
-        inside_container() {
-            withCredentials(args.SEC_VAR_LIST.collect{string(credentialsId: it, variable: it)}) {
-                withEnv(args.ENV_VAR_LIST) {
-                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                        dir(args.DIR) {
-                            // be very carefull here. Setting quantity to 0 or null, takes all available resources
-                            if (args.BAZEL_LOCKS_AMOUNT >= 1) {
-                                lock(label: 'bzl_lock_' + env.NODE_NAME.split("\\.")[0].split("-")[-1], quantity: args.BAZEL_LOCKS_AMOUNT, resource : null) {
-                                    cmd_status = sh(script: args.COMMAND, returnStatus: true);
-                                }
-                            } else {
+        withCredentials(args.SEC_VAR_LIST.collect{string(credentialsId: it, variable: it)}) {
+            withEnv(args.ENV_VAR_LIST) {
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    dir(args.DIR) {
+                        // be very carefull here. Setting quantity to 0 or null, takes all available resources
+                        if (args.BAZEL_LOCKS_AMOUNT >= 1) {
+                            lock(label: 'bzl_lock_' + env.NODE_NAME.split("\\.")[0].split("-")[-1], quantity: args.BAZEL_LOCKS_AMOUNT, resource : null) {
                                 cmd_status = sh(script: args.COMMAND, returnStatus: true);
                             }
+                        } else {
+                            cmd_status = sh(script: args.COMMAND, returnStatus: true);
                         }
-                        duration = groovy.time.TimeCategory.minus(new Date(), time_stage_started);
-                        desc_add_status_row(
-                            args.NAME,
-                            duration, cmd_status==0 ? "success" : "failure",
-                            "${args.RESULT_CHECK_FILE_PATTERN}"
-                        );
-
-                        println("Check results: ${args.RESULT_CHECK_TYPE}");
-                        if (args.RESULT_CHECK_TYPE) {
-                            issues = test_jenkins_helper.analyse_issues(
-                                args.RESULT_CHECK_TYPE,
-                                args.RESULT_CHECK_FILE_PATTERN,
-                                false
-                            );
-                        }
-
-                        /// make the stage fail if the command returned nonzero
-                        sh("exit ${cmd_status}");
                     }
+                    duration = groovy.time.TimeCategory.minus(new Date(), time_stage_started);
+                    desc_add_status_row(
+                        args.NAME,
+                        duration, cmd_status==0 ? "success" : "failure",
+                        "${args.RESULT_CHECK_FILE_PATTERN}"
+                    );
+
+                    println("Check results: ${args.RESULT_CHECK_TYPE}");
+                    if (args.RESULT_CHECK_TYPE) {
+                        issues = test_jenkins_helper.analyse_issues(
+                            args.RESULT_CHECK_TYPE,
+                            args.RESULT_CHECK_FILE_PATTERN,
+                            false
+                        );
+                    }
+
+                    /// make the stage fail if the command returned nonzero
+                    sh("exit ${cmd_status}");
                 }
             }
         }

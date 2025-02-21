@@ -70,25 +70,27 @@ def main() {
             def stage_info = load_json("${result_dir}/stages.json");
             def allStagesPassed = true;
             def thisStagePassed = true;
-            stage_info.STAGES.each { item ->
-                (thisStagePassed, thisIssues) = test_gerrit_helper.create_stage(item, time_stage_started);
-                allStagesPassed = thisStagePassed && allStagesPassed;
-                if (thisIssues && !thisStagePassed) {
-                    stage("Analyse Issues") {
-                        thisIssues.each { issue ->
-                            publishIssues(
-                                issues: [issue],
-                                name: "${item.NAME}",
-                                // Only characters, digits, dashes and underscores allowed
-                                // ID must match the regex \p{Alnum}[\p{Alnum}-_]*).
-                                id: "${item.RESULT_CHECK_FILE_PATTERN}".replaceAll("""([^A-Za-z0-9\\-\\_]+)""", "-"),
-                                trendChartType: 'TOOLS_ONLY',
-                                qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]]
-                            );
+            inside_container() {
+                stage_info.STAGES.each { item ->
+                    (thisStagePassed, thisIssues) = test_gerrit_helper.create_stage(item, time_stage_started);
+                    allStagesPassed = thisStagePassed && allStagesPassed;
+                    if (thisIssues && !thisStagePassed) {
+                        stage("Analyse Issues") {
+                            thisIssues.each { issue ->
+                                publishIssues(
+                                    issues: [issue],
+                                    name: "${item.NAME}",
+                                    // Only characters, digits, dashes and underscores allowed
+                                    // ID must match the regex \p{Alnum}[\p{Alnum}-_]*).
+                                    id: "${item.RESULT_CHECK_FILE_PATTERN}".replaceAll("""([^A-Za-z0-9\\-\\_]+)""", "-"),
+                                    trendChartType: 'TOOLS_ONLY',
+                                    qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]]
+                                );
+                            }
                         }
                     }
+                    time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);
                 }
-                time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);
             }
             currentBuild.result = allStagesPassed ? "SUCCESS" : "FAILED";
         }

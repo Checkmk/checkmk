@@ -69,10 +69,7 @@ class MigrateNotifications(UpdateAction):
                 updated_notification_rules.append(rule)
                 continue
 
-            parameters_per_method.setdefault(
-                NotificationParameterMethod(method),
-                {},
-            )
+            parameters_per_method.setdefault(method, {})
 
             parameter_id = next(
                 (
@@ -84,21 +81,13 @@ class MigrateNotifications(UpdateAction):
             )
 
             if parameter_id is None:
-                parameter_id = sample_config.new_notification_parameter_id()
-
-                # Call with the following parameter...
+                # Special handling for custom plugins whose parameter values may be a list.
                 if isinstance(parameter, list):
                     parameter = {"params": parameter}
 
-                parameters_per_method[method].update(
-                    {
-                        parameter_id: self._get_data_for_disk(
-                            method=method,
-                            parameter=parameter,
-                            nr=nr,
-                        )
-                    }
-                )
+                parameter_id = sample_config.new_notification_parameter_id()
+                data_for_disk = self._get_data_for_disk(method=method, parameter=parameter, nr=nr)
+                parameters_per_method[method].update({parameter_id: data_for_disk})
 
             rule["notify_plugin"] = (method, parameter_id)
             updated_notification_rules.append(rule)

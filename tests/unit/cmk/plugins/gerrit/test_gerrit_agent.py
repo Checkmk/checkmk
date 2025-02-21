@@ -11,7 +11,7 @@ import pytest
 from cmk.utils.semantic_version import SemanticVersion
 
 from cmk.plugins.gerrit.lib import agent
-from cmk.plugins.gerrit.lib.agent import LatestVersions
+from cmk.plugins.gerrit.lib.collector import collect_sections, LatestVersions
 from cmk.plugins.gerrit.lib.shared_typing import SectionName, Sections
 
 
@@ -39,7 +39,7 @@ def test_fetch_section_data() -> None:
         def collect(self) -> Sections:
             return {SectionName("foobar"): {"foo": "bar"}}
 
-    value = agent.collect_sections(DummySectionCollector())
+    value = collect_sections(DummySectionCollector())
     expected = {SectionName("foobar"): {"foo": "bar"}}
 
     assert value == expected

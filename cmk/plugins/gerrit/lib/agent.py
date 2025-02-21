@@ -4,19 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import argparse
-import dataclasses
-import json
 import pathlib
 import sys
-from collections.abc import Collection, Sequence
-from typing import Protocol, Self
-
-import requests
+from collections.abc import Sequence
 
 from cmk.utils import password_store
-from cmk.utils.semantic_version import SemanticVersion
 
-from cmk.plugins.gerrit.lib.shared_typing import SectionName, Sections
+from cmk.plugins.gerrit.lib.collector import collect_sections, SyncSectionCollector
+from cmk.plugins.gerrit.lib.shared_typing import Sections
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
 
@@ -54,6 +49,7 @@ def run_agent(args: Args) -> int:
 
     collector = SyncSectionCollector(api_url=api_url, auth=auth)
     sections = collect_sections(collector)
+
     write_sections(sections)
 
     return 0
@@ -68,73 +64,10 @@ def get_password_from_args(args: Args) -> str:
     return password_store.lookup(pathlib.Path(pw_file), pw_id)
 
 
-class SectionCollector(Protocol):
-    def collect(self) -> Sections: ...
-
-
-def collect_sections(collector: SectionCollector) -> Sections:
-    return collector.collect()
-
-
 def write_sections(sections: Sections) -> None:
     for name, data in sections.items():
         with SectionWriter(f"gerrit_{name}") as writer:
             writer.append_json(data)
-
-
-@dataclasses.dataclass
-class LatestVersions:
-    major: str | None
-    minor: str | None
-    patch: str | None
-
-    @classmethod
-    def build(cls, current: SemanticVersion, versions: Collection[SemanticVersion]) -> Self:
-        return cls(
-            major=str(max((v for v in versions if v.major > current.major), default="")) or None,
-            minor=str(max((v for v in versions if v.minor > current.minor), default="")) or None,
-            patch=str(max((v for v in versions if v.patch > current.patch), default="")) or None,
-        )
-
-
-class SyncSectionCollector:
-    def __init__(self, api_url: str, auth: tuple[str, str]) -> None:
-        self.api_url = api_url
-        self.auth = auth
-
-    def collect(self) -> Sections:
-        current_version = self._get_current_section()
-        latest_versions = self._get_latest_versions(current_version)
-
-        return {
-            SectionName("version"): {
-                "current": str(current_version),
-                "latest": dataclasses.asdict(latest_versions),
-            },
-        }
-
-    def _get_current_section(self) -> SemanticVersion:
-        uri = "/config/server/version?verbose"
-
-        resp = requests.get(self.api_url + uri, auth=self.auth, timeout=30)
-        resp.raise_for_status()
-
-        clean_content = resp.content.lstrip(b")]}'")  # prefixed with )]}' for security
-        data = json.loads(clean_content)
-
-        return SemanticVersion.from_string(data["gerrit_version"])
-
-    @staticmethod
-    def _get_latest_versions(current: SemanticVersion) -> LatestVersions:
-        gerrit_releases_url = "https://www.googleapis.com/storage/v1/b/gerrit-releases/o"
-        query = "?projection=noAcl&fields=items(name)&matchGlob=gerrit-[0-9]*.[0-9]*.[0-9]*.war"
-
-        resp = requests.get(gerrit_releases_url + query, timeout=30)
-        resp.raise_for_status()
-
-        versions = {SemanticVersion.from_string(item["name"]) for item in resp.json()["items"]}
-
-        return LatestVersions.build(current, versions)
 
 
 if __name__ == "__main__":

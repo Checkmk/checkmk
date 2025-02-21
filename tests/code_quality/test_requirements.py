@@ -403,3 +403,11 @@ def test_dependencies_are_declared() -> None:
             str(d) for d in undeclared_dependencies if d.name not in known_undeclared_dependencies
         )
     )
+
+
+def test_runtime_requirements_are_a_strict_subset_of_all_requirements() -> None:
+    reqs = frozenset(parse_requirements_file(repo_path() / "requirements.txt").items())
+    runtime = frozenset(parse_requirements_file(repo_path() / "runtime-requirements.txt").items())
+    assert runtime.issubset(reqs), (
+        f"The following dependencies are incorrectly pinned: {dict(runtime - reqs)}"
+    )

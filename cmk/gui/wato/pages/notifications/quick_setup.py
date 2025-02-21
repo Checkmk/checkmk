@@ -390,7 +390,7 @@ def custom_recap_formspec_triggering_events(
 def _validate_empty_selection(selections: Sequence[Sequence[str | None]]) -> None:
     # TODO validation seems not to be possible for a single empty element of
     # the Tuple
-    if ["", None] in selections:
+    if ["", None] in selections or not selections:
         raise ValidationError(
             Message("At least one selection is missing."),
         )

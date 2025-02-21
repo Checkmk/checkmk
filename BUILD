@@ -120,6 +120,7 @@ compile_requirements_in(
     constraints = [
         ":bazel-requirements-constraints.txt",
         ":requirements.txt",
+        "//:constraints.txt",
     ],
     requirements = [
         "//cmk:requirements.in",

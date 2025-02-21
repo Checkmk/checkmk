@@ -22,6 +22,7 @@ def test_parse_arguments() -> None:
         user="abc",
         password_ref=None,
         password="123",
+        version_cache=28800.0,
         proto="https",
         port=443,
         hostname="review.gerrit.com",

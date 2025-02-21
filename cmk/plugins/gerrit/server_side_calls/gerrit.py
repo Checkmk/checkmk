@@ -23,6 +23,7 @@ class GerritParams(BaseModel):
     password: Secret
     protocol: Literal["http", "https"] | None = None
     port: int | None = None
+    version_cache: float | None = None
 
 
 def agent_gerrit_config(
@@ -35,6 +36,9 @@ def agent_gerrit_config(
 
     if params.port:
         args.extend(["--port", str(params.port)])
+
+    if params.version_cache:
+        args.extend(["--version-cache", str(params.version_cache)])
 
     args.append(replace_macros(params.instance, host_config.macros))
 

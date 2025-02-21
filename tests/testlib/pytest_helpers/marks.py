@@ -40,6 +40,11 @@ skip_if_not_saas_edition = pytest.mark.skipif(
     reason=pytest_helpers.not_saas_edition.reason,
 )
 
+skip_if_not_cloud_or_managed_edition = pytest.mark.skipif(
+    pytest_helpers.not_cloud_or_managed_edition.condition,
+    reason=pytest_helpers.not_cloud_or_managed_edition.reason,
+)
+
 skip_if_cloud_edition = pytest.mark.skipif(
     pytest_helpers.is_cloud_edition.condition,
     reason=pytest_helpers.is_cloud_edition.reason,

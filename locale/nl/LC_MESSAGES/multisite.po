@@ -12682,10 +12682,14 @@ msgstr "SLA-specificatie"
 msgid "Compute average over last "
 msgstr "Bereken gemiddelde over laatste "
 
+#, fuzzy
 msgid ""
 "Compute averaged single-core CPU utilizations. Note that this option only "
 "has an effect if at least one of the sub-options 'Apply single-core levels' "
-"or 'Graphs for averaged single-core utilizations' is enabled."
+"or 'Graphs for averaged single-core utilizations' is enabled.\n"
+"Note: The average is calculated using the Exponential Moving Average (EMA) "
+"method, which considers both the new value and the previous average while "
+"applying a weighted factor to each."
 msgstr ""
 "Bereken gemiddelde single-core CPU-gebruikswaarden. Merk op dat deze optie "
 "alleen effect heeft als tenminste één van de subopties \"Single-core niveaus "
@@ -18939,9 +18943,6 @@ msgstr "Draag context over"
 
 msgid "Do you really want to move the selected aggregations?"
 msgstr "Wilt u echt de geselecteerde aggregaten verplaatsen?"
-
-msgid "Do you really want to move the selected rules?"
-msgstr "Wilt u echt de geselecteerde regels verplaatsen?"
 
 #, fuzzy, python-format
 msgid ""
@@ -71648,8 +71649,9 @@ msgstr ""
 msgid "Use the remote SID"
 msgstr "Gebruik de externe SID"
 
-msgid "Use the status of the Checkmk Agent"
-msgstr "Gebruik de status van de Checkmk Agent"
+#, fuzzy
+msgid "Use the status of the Check_MK Service"
+msgstr "Gebruik de status van de dienst..."
 
 msgid "Use the status of the service..."
 msgstr "Gebruik de status van de dienst..."
@@ -74428,9 +74430,13 @@ msgstr ""
 "van geërfde rapporten verschijnen voor de elementen gedefinieerd in dit "
 "rapport."
 
+#, fuzzy
 msgid ""
 "When this option is activated then the CPU utilization is being averaged "
-"<b>before</b> the levels on total CPU utilization are being applied."
+"<b>before</b> the levels on total CPU utilization are being applied.\n"
+"Note: The average is calculated using the Exponential Moving Average (EMA) "
+"method, which considers both the new value and the previous average while "
+"applying a weighted factor to each."
 msgstr ""
 "Als deze optie is geactiveerd, wordt het CPU-gebruik gemiddeld <b>voordat</"
 "b> de niveaus voor het totale CPU-gebruik worden toegepast."
@@ -79887,6 +79893,12 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#~ msgid "Do you really want to move the selected rules?"
+#~ msgstr "Wilt u echt de geselecteerde regels verplaatsen?"
+
+#~ msgid "Use the status of the Checkmk Agent"
+#~ msgstr "Gebruik de status van de Checkmk Agent"
 
 #, fuzzy
 #~ msgid "Beta Trial"

@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-01-09 06:05+0000\n"
+"PO-Revision-Date: 2025-02-21 18:02+0000\n"
 "Language-Team: French <https://translate.checkmk.com/projects/checkmk/stable/"
 "fr/>\n"
 "Language: fr\n"
@@ -1307,7 +1307,7 @@ msgstr ""
 "<b>Négation : </b> faire en sorte que la règle s'applique à <b>tous sauf</b> "
 "les hôtes ci-dessus"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "<b>Note:</b> The ntopng integration is an add-on feature for which a "
 "subscription add-on has to be purchased separately. It requires a commercial "
@@ -1315,7 +1315,9 @@ msgid ""
 "for detailed requirements."
 msgstr ""
 "<b>Note:</b> L'intégration de ntopng est une fonctionnalité complémentaire "
-"pour laquelle un add-on d'abonnement doit être acheté séparément."
+"pour laquelle un add-on d'abonnement doit être acheté séparément. Il faut "
+"une édition commerciale de ntopng. Voir <a href='%s' target='_blank'>la "
+"documentation Checkmk</a> pour plus de détails."
 
 msgid ""
 "<b>Note:</b> the shown results are incomplete and do not reflect the sort "
@@ -12787,10 +12789,14 @@ msgstr "Spécification SLA"
 msgid "Compute average over last "
 msgstr "Calculer la moyenne sur le dernier "
 
+#, fuzzy
 msgid ""
 "Compute averaged single-core CPU utilizations. Note that this option only "
 "has an effect if at least one of the sub-options 'Apply single-core levels' "
-"or 'Graphs for averaged single-core utilizations' is enabled."
+"or 'Graphs for averaged single-core utilizations' is enabled.\n"
+"Note: The average is calculated using the Exponential Moving Average (EMA) "
+"method, which considers both the new value and the previous average while "
+"applying a weighted factor to each."
 msgstr ""
 "Calcule la moyenne de l'utilisation des processeurs à un seul cœur. Notez "
 "que cette option n'a d'effet que si au moins une des sous-options 'Appliquer "
@@ -19106,9 +19112,6 @@ msgstr "Transférer le contexte"
 
 msgid "Do you really want to move the selected aggregations?"
 msgstr "Voulez-vous vraiment déplacer les agrégations sélectionnées ?"
-
-msgid "Do you really want to move the selected rules?"
-msgstr "Voulez-vous vraiment déplacer les règles sélectionnées ?"
 
 #, python-format
 msgid ""
@@ -39274,9 +39277,10 @@ msgstr ""
 msgid "No graph available: %s"
 msgstr "Aucun graphique disponible : %s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "No graph with the ID <tt>%s</tt> found for user <tt>%s</tt>"
-msgstr "Aucun graphique avec l'ID <tt>%s</tt>"
+msgstr ""
+"Aucun graphique avec l'ID <tt>%s</tt> trouvé pour l'utilisateur <tt>%s</tt>"
 
 msgid "No groups are defined yet."
 msgstr "Aucun groupe n'est encore défini."
@@ -72382,8 +72386,9 @@ msgstr ""
 msgid "Use the remote SID"
 msgstr "Utiliser le SID distant"
 
-msgid "Use the status of the Checkmk Agent"
-msgstr "Utiliser le statut de l'agent Checkmk"
+#, fuzzy
+msgid "Use the status of the Check_MK Service"
+msgstr "Utiliser le statut du service..."
 
 msgid "Use the status of the service..."
 msgstr "Utiliser le statut du service..."
@@ -74202,13 +74207,13 @@ msgid "Warning at"
 msgstr "Avertissement à"
 
 msgid "Warning at a RAM usage of"
-msgstr "Attention à une utilisation de la RAM de"
+msgstr "Avertissement à une utilisation de la RAM de"
 
 msgid "Warning at a disk wait of"
-msgstr "Attention à une attente de disque de"
+msgstr "Avertissement à une attente de disque de"
 
 msgid "Warning at a memory usage of"
-msgstr "Attention à une utilisation de la mémoire de"
+msgstr "Avertissement à une utilisation de la mémoire de"
 
 msgid "Warning at a provisioning of"
 msgstr "Avertissement à un provisionnement de"
@@ -74217,13 +74222,13 @@ msgid "Warning at a steal time of"
 msgstr "Avertissement à un moment de vol de"
 
 msgid "Warning at a swap usage of"
-msgstr "Attention à une utilisation de swap de"
+msgstr "Avertissement à une utilisation de swap de"
 
 msgid "Warning at a usage of"
 msgstr "Avertissement à une utilisation de"
 
 msgid "Warning at a utilization of"
-msgstr "Attention à une utilisation de"
+msgstr "Avertissement à une utilisation de"
 
 msgid "Warning at or above"
 msgstr "Avertissement à ou au-dessus"
@@ -74252,26 +74257,25 @@ msgid "Warning if above"
 msgstr "Avertissement si ci-dessus"
 
 msgid "Warning if at"
-msgstr "Attention si à"
+msgstr "Avertissement si à"
 
 msgid "Warning if below"
-msgstr "Attention si vous êtes en dessous de"
+msgstr "Avertissement en dessous de"
 
-#, fuzzy
 msgid "Warning if below or equal"
-msgstr "avertissement si inférieur ou égal à"
+msgstr "Avertissement si inférieur ou égal à"
 
 msgid "Warning if equal or below"
 msgstr "Avertissement si égal ou inférieur"
 
 msgid "Warning if less than"
-msgstr "Attention si moins de"
+msgstr "Avertissement si moins de"
 
 msgid "Warning if less then"
 msgstr "Avertissement si moins de"
 
 msgid "Warning if more than"
-msgstr "Attention si plus de"
+msgstr "Avertissement si plus de"
 
 msgid "Warning if older than"
 msgstr "Avertissement si plus ancien que"
@@ -74280,7 +74284,7 @@ msgid "Warning if over"
 msgstr "Avertissement si plus de"
 
 msgid "Warning if under"
-msgstr "Attention si sous"
+msgstr "Avertissement si sous"
 
 msgid "Warning level for remaining"
 msgstr "Niveau d'alerte pour le reste"
@@ -75206,9 +75210,13 @@ msgstr ""
 "Les éléments de page et les éléments de page fixes des rapports hérités "
 "apparaissent avant les éléments définis dans ce rapport."
 
+#, fuzzy
 msgid ""
 "When this option is activated then the CPU utilization is being averaged "
-"<b>before</b> the levels on total CPU utilization are being applied."
+"<b>before</b> the levels on total CPU utilization are being applied.\n"
+"Note: The average is calculated using the Exponential Moving Average (EMA) "
+"method, which considers both the new value and the previous average while "
+"applying a weighted factor to each."
 msgstr ""
 "Lorsque cette option est activée, l'utilisation du CPU est moyennée "
 "<b>avant</b> l'application des niveaux sur l'utilisation totale du CPU."
@@ -80733,6 +80741,12 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#~ msgid "Do you really want to move the selected rules?"
+#~ msgstr "Voulez-vous vraiment déplacer les règles sélectionnées ?"
+
+#~ msgid "Use the status of the Checkmk Agent"
+#~ msgstr "Utiliser le statut de l'agent Checkmk"
 
 #, fuzzy
 #~ msgid "Beta Trial"

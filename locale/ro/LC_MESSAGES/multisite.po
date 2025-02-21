@@ -12688,10 +12688,14 @@ msgstr "Specificația API REST Compute"
 msgid "Compute average over last "
 msgstr "Calculați media pe ultima "
 
+#, fuzzy
 msgid ""
 "Compute averaged single-core CPU utilizations. Note that this option only "
 "has an effect if at least one of the sub-options 'Apply single-core levels' "
-"or 'Graphs for averaged single-core utilizations' is enabled."
+"or 'Graphs for averaged single-core utilizations' is enabled.\n"
+"Note: The average is calculated using the Exponential Moving Average (EMA) "
+"method, which considers both the new value and the previous average while "
+"applying a weighted factor to each."
 msgstr ""
 "Calculați utilizările medii ale CPU cu un singur nucleu. Rețineți că această "
 "opțiune are efect numai dacă cel puțin una dintre subopțiunile 'Apply single-"
@@ -18961,9 +18965,6 @@ msgstr "Transferați contextul"
 
 msgid "Do you really want to move the selected aggregations?"
 msgstr "Chiar doriți să mutați agregările selectate?"
-
-msgid "Do you really want to move the selected rules?"
-msgstr "Chiar doriți să mutați regulile selectate?"
 
 #, python-format
 msgid ""
@@ -71780,8 +71781,9 @@ msgstr ""
 msgid "Use the remote SID"
 msgstr "Utilizați SID-ul la distanță"
 
-msgid "Use the status of the Checkmk Agent"
-msgstr "Utilizați starea agentului Checkmk"
+#, fuzzy
+msgid "Use the status of the Check_MK Service"
+msgstr "Utilizați starea serviciului..."
 
 msgid "Use the status of the service..."
 msgstr "Utilizați starea serviciului..."
@@ -74568,9 +74570,13 @@ msgstr ""
 "Elementele de pagină și elementele de pagină fixe din rapoartele moștenite "
 "apar înaintea elementelor definite în acest raport."
 
+#, fuzzy
 msgid ""
 "When this option is activated then the CPU utilization is being averaged "
-"<b>before</b> the levels on total CPU utilization are being applied."
+"<b>before</b> the levels on total CPU utilization are being applied.\n"
+"Note: The average is calculated using the Exponential Moving Average (EMA) "
+"method, which considers both the new value and the previous average while "
+"applying a weighted factor to each."
 msgstr ""
 "Când această opțiune este activată, atunci se calculează media utilizării "
 "CPU <b>înainte de</b> aplicarea nivelurilor privind utilizarea totală a CPU."
@@ -80022,6 +80028,12 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#~ msgid "Do you really want to move the selected rules?"
+#~ msgstr "Chiar doriți să mutați regulile selectate?"
+
+#~ msgid "Use the status of the Checkmk Agent"
+#~ msgstr "Utilizați starea agentului Checkmk"
 
 #, fuzzy
 #~ msgid "Beta Trial"

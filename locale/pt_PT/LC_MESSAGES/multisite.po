@@ -12677,10 +12677,14 @@ msgstr "Especificação do SLA"
 msgid "Compute average over last "
 msgstr "Calcule a média do último "
 
+#, fuzzy
 msgid ""
 "Compute averaged single-core CPU utilizations. Note that this option only "
 "has an effect if at least one of the sub-options 'Apply single-core levels' "
-"or 'Graphs for averaged single-core utilizations' is enabled."
+"or 'Graphs for averaged single-core utilizations' is enabled.\n"
+"Note: The average is calculated using the Exponential Moving Average (EMA) "
+"method, which considers both the new value and the previous average while "
+"applying a weighted factor to each."
 msgstr ""
 "Calcule a média de utilização da CPU de um só núcleo. Note que esta opção só "
 "tem efeito se pelo menos uma das subopções 'Aplicar níveis de núcleo único' "
@@ -18932,9 +18936,6 @@ msgstr "Contexto de transferência"
 
 msgid "Do you really want to move the selected aggregations?"
 msgstr "Você realmente quer mover as agregações selecionadas?"
-
-msgid "Do you really want to move the selected rules?"
-msgstr "Você realmente quer mover as regras selecionadas?"
 
 #, fuzzy, python-format
 msgid ""
@@ -71578,8 +71579,9 @@ msgstr ""
 msgid "Use the remote SID"
 msgstr "Use o SID remoto"
 
-msgid "Use the status of the Checkmk Agent"
-msgstr "Use o status do Agente Checkmk"
+#, fuzzy
+msgid "Use the status of the Check_MK Service"
+msgstr "Use o status do serviço..."
 
 msgid "Use the status of the service..."
 msgstr "Use o status do serviço..."
@@ -74344,9 +74346,13 @@ msgstr ""
 "da página e os elementos fixos da página dos relatórios herdados aparecem "
 "antes dos elementos definidos neste relatório."
 
+#, fuzzy
 msgid ""
 "When this option is activated then the CPU utilization is being averaged "
-"<b>before</b> the levels on total CPU utilization are being applied."
+"<b>before</b> the levels on total CPU utilization are being applied.\n"
+"Note: The average is calculated using the Exponential Moving Average (EMA) "
+"method, which considers both the new value and the previous average while "
+"applying a weighted factor to each."
 msgstr ""
 "Quando esta opção é ativada, a utilização da CPU está sendo calculada como "
 "média <b> antes de</b> os níveis de utilização total da CPU estão sendo "
@@ -79771,6 +79777,12 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#~ msgid "Do you really want to move the selected rules?"
+#~ msgstr "Você realmente quer mover as regras selecionadas?"
+
+#~ msgid "Use the status of the Checkmk Agent"
+#~ msgstr "Use o status do Agente Checkmk"
 
 #, fuzzy
 #~ msgid "Beta Trial"

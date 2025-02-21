@@ -374,9 +374,6 @@ just to signal that real build script was not called -->
             <Component Id="cmp57F6981D839AA296FACB18CA0B80F385" Guid="{4E4D51FC-3829-4CE5-B26F-022DA372B3B0}">
                 <File Id="fil3C227A99C2CDD7FA84B1310AD2C5A01A" KeyPath="yes" Source="..\..\windows\plugins\windows_tasks.ps1" DiskId="1"  />
             </Component>
-            <Component Id="cmp61E0F87AE1301C873DCBE5B46E029A77" Guid="{A7BA9FFC-958B-45FF-A530-A6E3C9A5EBA3}">
-                <File Id="fil15C29091CE6AA9903FDCAF7095E86B15" KeyPath="yes" Source="..\..\windows\plugins\windows_updates.vbs" DiskId="1"  />
-            </Component>
             <Component Id="cmp23E4BF6C7C534A32BFE976FEA694B14F" Guid="{B79990AF-326A-4186-B942-F20F87331BDE}">
                 <File Id="fil2D476020F3EF4F4FA8E2AD8BCEBE0B3A" KeyPath="yes" Source="..\..\windows\plugins\windows_updates.ps1" DiskId="1"  />
             </Component>
@@ -440,7 +437,6 @@ just to signal that real build script was not called -->
             <ComponentRef Id="cmp58B593286B37436B9B814D441B0350EE" />
             <ComponentRef Id="cmp10FDAC6C36BC91AC9660DCD519E0EBD3" />
             <ComponentRef Id="cmp57F6981D839AA296FACB18CA0B80F385" />
-            <ComponentRef Id="cmp61E0F87AE1301C873DCBE5B46E029A77" />
             <ComponentRef Id="cmp23E4BF6C7C534A32BFE976FEA694B14F" />
             <ComponentRef Id="cmp1C47F228C3994B4CAEF42FB94962ABD2" />
             <ComponentRef Id="cmp96008BD5424F4E9D0BF1111A1E4EA3C3" />

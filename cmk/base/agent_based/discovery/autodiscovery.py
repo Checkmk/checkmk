@@ -170,7 +170,7 @@ def automation_discovery(
             host_labels = QualifiedDiscovery.empty()
 
         # Compute current state of new and existing checks
-        services = get_host_services(
+        services, _has_changes = get_host_services(
             host_name,
             config_cache=config_cache,
             providers=providers,
@@ -575,7 +575,7 @@ def get_host_services(
     providers: Mapping[HostKey, Provider],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     on_error: OnError,
-) -> ServicesByTransition:
+) -> tuple[ServicesByTransition, bool]:
     services: ServicesTable[_Transition]
     if config_cache.is_cluster(host_name):
         services = {
@@ -588,18 +588,19 @@ def get_host_services(
                 on_error=on_error,
             )
         }
+        has_changes = False  # only needed for autodiscovery
     else:
-        services = {
-            **_get_node_services(
-                config_cache,
-                host_name,
-                providers=providers,
-                check_plugins=check_plugins,
-                on_error=on_error,
-                host_of_clustered_service=config_cache.host_of_clustered_service,
-                find_service_description=find_service_description,
-            )
-        }
+        raw_services, has_changes = _get_node_services(
+            config_cache,
+            host_name,
+            providers=providers,
+            check_plugins=check_plugins,
+            on_error=on_error,
+            host_of_clustered_service=config_cache.host_of_clustered_service,
+            find_service_description=find_service_description,
+        )
+
+        services = {**raw_services}
 
     services.update(
         _reclassify_disabled_items(config_cache, host_name, services, find_service_description)
@@ -607,7 +608,10 @@ def get_host_services(
 
     # remove the ones shadowed by enforced services
     enforced_services = config_cache.enforced_services_table(host_name)
-    return _group_by_transition({k: v for k, v in services.items() if k not in enforced_services})
+    return (
+        _group_by_transition({k: v for k, v in services.items() if k not in enforced_services}),
+        has_changes,
+    )
 
 
 # Do the actual work for a non-cluster host or node
@@ -620,7 +624,7 @@ def _get_node_services(
     on_error: OnError,
     host_of_clustered_service: Callable[[HostName, ServiceName], HostName],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
-) -> ServicesTable[_Transition]:
+) -> tuple[ServicesTable[_Transition], bool]:
 
     service_result = analyse_discovered_services(
         config_cache,
@@ -648,7 +652,7 @@ def _get_node_services(
         )
         for check_source, entry in service_result.chain_with_qualifier()
         if (service_name := find_service_description(host_name, *entry.id()))
-    }
+    }, service_result.has_changed_services
 
 
 def _node_service_source(

@@ -116,7 +116,7 @@ def execute_check_discovery(
         )
     )
 
-    services = get_host_services(
+    services, services_properties_have_changed = get_host_services(
         host_name,
         config_cache=config_cache,
         providers=providers,
@@ -125,13 +125,16 @@ def execute_check_discovery(
         on_error=OnError.RAISE,
     )
 
-    services_result, services_need_rediscovery = _check_service_lists(
+    services_result, services_presence_has_changed = _check_service_lists(
         host_name=host_name,
         services_by_transition=services,
         params=params,
         service_filters=_ServiceFilters.from_settings(params.rediscovery),
         discovery_mode=discovery_mode,
         find_service_description=find_service_description,
+    )
+    services_need_rediscovery = services_presence_has_changed or (
+        discovery_mode is DiscoveryMode.REFRESH and services_properties_have_changed
     )
 
     host_labels_result, host_labels_need_rediscovery = _check_host_labels(

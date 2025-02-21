@@ -139,7 +139,7 @@ def get_check_preview(
         for line in result.details:
             console.warning(line)
 
-    grouped_services = get_host_services(
+    grouped_services, _has_changes = get_host_services(
         host_name,
         config_cache=config_cache,
         providers=providers,

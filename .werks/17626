@@ -1,0 +1,14 @@
+Title: Discovery check failed to recognise changed services
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1740134923
+Edition: cre
+Level: 1
+Version: 2.2.0p40
+
+This only affects users that have the "_Periodic service discovery_" rule configred to "_Automatically update service configuration_" *and* set the mode to "_Refresh all services and host labels (tabula rasa)_".
+
+With this setting it is expected that not only new services are added and vanished ones are removed, but also changed service properties (discovered parameters and service labels) are updated.
+
+While the autodiscovery was doing this correctly, the periodic service discovery check failed to trigger the autodiscovery in case there where only changed services (but no new or vanished ones).

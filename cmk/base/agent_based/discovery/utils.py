@@ -47,6 +47,7 @@ class QualifiedDiscovery(Generic[_DiscoveredItem]):
         self.old: Final = [v for k, v in preexisting_dict.items() if k in current_dict]
         self.new: Final = [v for k, v in current_dict.items() if k not in preexisting_dict]
         self.present: Final = self.old + self.new
+        self.has_changed_services: Final = any(old != current_dict[key(old)] for old in self.old)
 
     @classmethod
     def empty(cls) -> "QualifiedDiscovery":

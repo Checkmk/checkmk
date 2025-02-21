@@ -1683,14 +1683,17 @@ def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
         find_service_description=lambda *_args: "desc",
         host_of_clustered_service=lambda hn, _svcdescr: hn,
         on_error=OnError.RAISE,
-    ) == {
-        entry.id(): (
-            discovery_status,
-            entry,
-            [HostName("horst")],
-        )
-        for discovery_status, entry in entries.items()
-    }
+    ) == (
+        {
+            entry.id(): (
+                discovery_status,
+                entry,
+                [HostName("horst")],
+            )
+            for discovery_status, entry in entries.items()
+        },
+        False,
+    )
 
 
 def test_make_discovery_diff_empty() -> None:

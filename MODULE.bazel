@@ -32,6 +32,7 @@ single_version_override(
         "//bazel/patches:rules_python-py_wheel-filter_out_virtual_imports.patch",
     ],
 )
+
 bazel_dep(name = "rules_uv", version = "0.44.0")
 single_version_override(
     module_name = "rules_uv",
@@ -111,7 +112,7 @@ bazel_dep(name = "protobuf", version = "29.3", repo_name = "com_google_protobuf"
 single_version_override(
     module_name = "protobuf",
     patch_strip = 1,
-    patches = ["//bazel/patches:protobuf-silence_build_warnings.patch"]
+    patches = ["//bazel/patches:protobuf-silence_build_warnings.patch"],
 )
 
 bazel_dep(
@@ -198,6 +199,7 @@ exports_files([
 SHFMT_VERSION = "v3.10.0"
 
 http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+
 http_file(
     name = "shfmt",
     executable = True,
@@ -226,8 +228,18 @@ bazel_dep(
 )
 
 new_local_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:local.bzl", "new_local_repository")
-new_local_repository(name="glib", build_file="@//omd/packages/glib:BUILD", path="/usr")
-new_local_repository(name="libxml2", build_file="@//omd/packages/libxml2:BUILD", path="/usr")
+
+new_local_repository(
+    name = "glib",
+    build_file = "@//omd/packages/glib:BUILD",
+    path = "/usr",
+)
+
+new_local_repository(
+    name = "libxml2",
+    build_file = "@//omd/packages/libxml2:BUILD",
+    path = "/usr",
+)
 
 # Build custom OpenTelementry collector
 
@@ -235,8 +247,8 @@ OCB_VERSION = "0.113.0"
 
 http_file(
     name = "otel_collector_custom_builder",
-    sha256 = "bbccc5ab73364a17d99b22f0c1d53fc0efecee5fa8f93000596b4cfbe9a73325",
     executable = True,
+    sha256 = "bbccc5ab73364a17d99b22f0c1d53fc0efecee5fa8f93000596b4cfbe9a73325",
     url = "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fbuilder%2Fv" + OCB_VERSION + "/ocb_" + OCB_VERSION + "_linux_amd64",
 )
 
@@ -278,7 +290,7 @@ use_repo(
 # https://github.com/bazel-contrib/bazel-gazelle/blob/56b3f7867eff7bd43dd93777987af9f9668ae896/internal/bzlmod/go_deps.bzl#L206
 
 go_deps.gazelle_override(
-    directives=[
+    directives = [
         "gazelle:proto disable",
     ],
     path = "github.com/prometheus/prometheus",

@@ -32,15 +32,12 @@ COMPONENT_LIST = [c for c, _ in _COMPONENTS]
 def test_get_absolute_importee(
     root_name: str, modname: str, level: int, is_package: bool, abs_module: str
 ) -> None:
-    assert (
-        get_absolute_importee(
-            root_name=root_name,
-            modname=modname,
-            level=level,
-            is_package=is_package,
-        )
-        == abs_module
-    )
+    assert get_absolute_importee(
+        root_name=root_name,
+        modname=modname,
+        level=level,
+        is_package=is_package,
+    ) == ModuleName(abs_module)
 
 
 @pytest.mark.parametrize(

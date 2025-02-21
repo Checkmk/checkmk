@@ -4,9 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Checker to prevent disallowed imports of modules"""
 
-from contextlib import suppress
+from collections.abc import Sequence
 from pathlib import Path
-from typing import NewType
 
 from astroid.nodes import Import, ImportFrom  # type: ignore[import-untyped]
 from pylint.checkers import BaseChecker
@@ -15,23 +14,58 @@ from pylint.lint.pylinter import PyLinter
 
 from tests.testlib.common.repo import repo_path
 
-ModuleName = NewType("ModuleName", str)
-ModulePath = NewType("ModulePath", str)  # TODO: use pathlib.Path
-Component = NewType("Component", str)
+
+class ModulePath(Path):
+    def is_below(self, path: str) -> bool:
+        return is_prefix_of(Path(path).parts, self.parts)
+
+
+class Component:
+    def __init__(self, name: str):
+        self._parts = name.split(".")
+
+    @property
+    def parts(self) -> Sequence[str]:
+        return self._parts
+
+    def __repr__(self) -> str:
+        return ".".join(self.parts)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Component):
+            return NotImplemented
+        return self.parts == other.parts
+
+    def is_below(self, component: str) -> bool:
+        return is_prefix_of(Component(component).parts, self.parts)
+
+
+class ModuleName:
+    def __init__(self, name: str):
+        self._parts = name.split(".")
+
+    @property
+    def parts(self) -> Sequence[str]:
+        return self._parts
+
+    def __repr__(self) -> str:
+        return ".".join(self.parts)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, ModuleName):
+            return NotImplemented
+        return self.parts == other.parts
+
+    def in_component(self, component: Component) -> bool:
+        return is_prefix_of(component.parts, self.parts)
+
+
+def is_prefix_of[T](x: Sequence[T], y: Sequence[T]) -> bool:
+    return x == y[: len(x)]
 
 
 def register(linter: PyLinter) -> None:
     linter.register_checker(CMKModuleLayerChecker(linter))
-
-
-# https://www.python.org/dev/peps/pep-0616/
-def removeprefix(text: str, prefix: Path) -> str:
-    prefix_as_string = str(prefix) + "/"
-    return text[len(prefix_as_string) :] if text.startswith(prefix_as_string) else text
-
-
-def removesuffix(text: str, suffix: str) -> str:
-    return text[: -len(suffix)] if suffix and text.endswith(suffix) else text
 
 
 def get_absolute_importee(
@@ -53,41 +87,33 @@ def _is_package(node: ImportFrom) -> bool:
         return _is_package(parent)
 
 
-def _in_component(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    return imported == ModuleName(component) or imported.startswith(component + ".")
-
-
 def _is_allowed_import(imported: ModuleName) -> bool:
     """these are allowed to be imported from all over the place"""
     return any(
         (
-            imported == "cmk",
-            _in_component(imported=imported, component=Component("cmk.ccc")),
-            _in_component(imported=imported, component=Component("cmk.crypto")),
-            _in_component(imported=imported, component=Component("cmk.utils")),
-            _in_component(imported=imported, component=Component("cmk.fields")),
-            _in_component(imported=imported, component=Component("cmk.automations")),
-            _in_component(imported=imported, component=Component("cmk.bi")),
-            _in_component(imported=imported, component=Component("cmk.piggyback")),
-            _in_component(imported=imported, component=Component("cmk.piggyback_hub")),
-            _in_component(imported=imported, component=Component("cmk.plugins.mail")),
-            _in_component(imported=imported, component=Component("cmk.plugins.collection")),
-            _in_component(imported=imported, component=Component("cmk.discover_plugins")),
-            _in_component(imported=imported, component=Component("cmk.agent_based")),
-            _in_component(imported=imported, component=Component("cmk.rulesets")),
-            _in_component(imported=imported, component=Component("cmk.shared_typing")),
-            _in_component(imported=imported, component=Component("cmk.server_side_calls")),
-            _in_component(imported=imported, component=Component("cmk.werks")),
-            _in_component(imported=imported, component=Component("cmk.messaging")),
-            _in_component(imported=imported, component=Component("cmk.mkp_tool")),
-            _in_component(imported=imported, component=Component("cmk.graphing")),
-            _in_component(imported=imported, component=Component("cmk.trace")),
-            _in_component(imported=imported, component=Component("cmk.events")),
-            _in_component(imported=imported, component=Component("cmk.otel_collector")),
+            imported == ModuleName("cmk"),
+            imported.in_component(Component("cmk.ccc")),
+            imported.in_component(Component("cmk.crypto")),
+            imported.in_component(Component("cmk.utils")),
+            imported.in_component(Component("cmk.fields")),
+            imported.in_component(Component("cmk.automations")),
+            imported.in_component(Component("cmk.bi")),
+            imported.in_component(Component("cmk.piggyback")),
+            imported.in_component(Component("cmk.piggyback_hub")),
+            imported.in_component(Component("cmk.plugins.mail")),
+            imported.in_component(Component("cmk.plugins.collection")),
+            imported.in_component(Component("cmk.discover_plugins")),
+            imported.in_component(Component("cmk.agent_based")),
+            imported.in_component(Component("cmk.rulesets")),
+            imported.in_component(Component("cmk.shared_typing")),
+            imported.in_component(Component("cmk.server_side_calls")),
+            imported.in_component(Component("cmk.werks")),
+            imported.in_component(Component("cmk.messaging")),
+            imported.in_component(Component("cmk.mkp_tool")),
+            imported.in_component(Component("cmk.graphing")),
+            imported.in_component(Component("cmk.trace")),
+            imported.in_component(Component("cmk.events")),
+            imported.in_component(Component("cmk.otel_collector")),
         )
     )
 
@@ -97,7 +123,7 @@ def _is_default_allowed_import(
     imported: ModuleName,
     component: Component,
 ) -> bool:
-    return _is_allowed_import(imported) or _in_component(imported=imported, component=component)
+    return _is_allowed_import(imported) or imported.in_component(component)
 
 
 def _is_allowed_for_special_agent_executable(
@@ -105,16 +131,16 @@ def _is_allowed_for_special_agent_executable(
     imported: ModuleName,
     component: Component,
 ) -> bool:
-    if _in_component(imported=imported, component=Component("cmk.special_agents")):
-        # still ok, but is on its way out.
-        return True
-
-    if _in_component(imported=imported, component=Component("cmk.plugins")):
-        # allow all `cmk.plugins.<FAMILY>.special_agents`
-        with suppress(IndexError):
-            return imported.split(".")[3] == "special_agents"
-
-    return False
+    return (
+        # still OK, but is on its way out.
+        imported.in_component(Component("cmk.special_agents"))
+        or (
+            # allow all `cmk.plugins.<FAMILY>.special_agents`
+            imported.in_component(Component("cmk.plugins"))
+            and len(imported.parts) >= 4
+            and imported.parts[3] == "special_agents"
+        )
+    )
 
 
 def _allow_default_plus_checkers(
@@ -126,7 +152,7 @@ def _allow_default_plus_checkers(
     return any(
         (
             _is_default_allowed_import(imported=imported, component=component),
-            _in_component(imported=imported, component=Component("cmk.checkengine")),
+            imported.in_component(Component("cmk.checkengine")),
         )
     )
 
@@ -150,8 +176,8 @@ def _allow_default_plus_fetchers_and_snmplib(
     return any(
         (
             _is_default_allowed_import(imported=imported, component=component),
-            _in_component(imported=imported, component=Component("cmk.fetchers")),
-            _in_component(imported=imported, component=Component("cmk.snmplib")),
+            imported.in_component(Component("cmk.fetchers")),
+            imported.in_component(Component("cmk.snmplib")),
         )
     )
 
@@ -174,7 +200,7 @@ def _allow_default_plus_fetchers_checkers_and_snmplib(
                 imported=imported,
                 component=component,
             ),
-            _in_component(imported=imported, component=Component("cmk.checkengine")),
+            imported.in_component(Component("cmk.checkengine")),
         )
     )
 
@@ -197,9 +223,9 @@ def _allowed_for_base(
                 imported=imported,
                 component=component,
             ),
-            _in_component(imported=imported, component=Component("cmk.cee.helpers")),
-            _in_component(imported=imported, component=Component("cmk.cee.bakery")),
-            _in_component(imported=imported, component=Component("cmk.server_side_calls_backend")),
+            imported.in_component(Component("cmk.cee.helpers")),
+            imported.in_component(Component("cmk.cee.bakery")),
+            imported.in_component(Component("cmk.server_side_calls_backend")),
         )
     )
 
@@ -212,11 +238,9 @@ def _allowed_for_base_cee(
     return any(
         (
             _allowed_for_base(imported=imported, component=component),
-            _in_component(imported=imported, component=Component("cmk.cee.robotmk.licensing")),
-            _in_component(imported=imported, component=Component("cmk.cee.robotmk.html_log_dir")),
-            _in_component(
-                imported=imported, component=Component("cmk.cee.robotmk.bakery.core_bakelets")
-            ),
+            imported.in_component(Component("cmk.cee.robotmk.licensing")),
+            imported.in_component(Component("cmk.cee.robotmk.html_log_dir")),
+            imported.in_component(Component("cmk.cee.robotmk.bakery.core_bakelets")),
         )
     )
 
@@ -229,10 +253,10 @@ def _allow_for_gui_plugins(
     return any(
         (
             _is_allowed_import(imported=imported),
-            _in_component(imported=imported, component=Component("cmk.gui")),
-            _in_component(imported=imported, component=Component("cmk.checkengine")),
-            _in_component(imported=imported, component=Component("cmk.fetchers")),
-            _in_component(imported=imported, component=Component("cmk.cee.bakery")),
+            imported.in_component(Component("cmk.gui")),
+            imported.in_component(Component("cmk.checkengine")),
+            imported.in_component(Component("cmk.fetchers")),
+            imported.in_component(Component("cmk.cee.bakery")),
         )
     )
 
@@ -246,15 +270,16 @@ def _allow_for_gui(
         (
             _is_allowed_import(imported=imported),
             (
-                _in_component(imported=imported, component=Component("cmk.gui"))
-                and not _in_component(imported=imported, component=Component("cmk.gui.cee"))
-                and not _in_component(imported=imported, component=Component("cmk.gui.cce"))
-                and not _in_component(imported=imported, component=Component("cmk.gui.cme"))
+                imported.in_component(Component("cmk.gui"))
+                and not imported.in_component(Component("cmk.gui.cee"))
+                and not imported.in_component(Component("cmk.gui.cce"))
+                and not imported.in_component(Component("cmk.gui.cme"))
                 and not _is_a_plugin_import(imported=imported)
             ),
-            _in_component(imported=imported, component=Component("cmk.checkengine")),
-            _in_component(imported=imported, component=Component("cmk.messaging")),
-            _in_component(imported=imported, component=Component("cmk.server_side_calls_backend")),
+            imported.in_component(Component("cmk.checkengine")),
+            imported.in_component(Component("cmk.messaging")),
+            imported.in_component(Component("cmk.server_side_calls_backend")),
+            imported.in_component(Component("cmk.diskspace.config")),
         )
     )
 
@@ -268,15 +293,15 @@ def _allow_for_gui_cee(
         (
             _is_allowed_import(imported=imported),
             (
-                _in_component(imported=imported, component=Component("cmk.gui"))
-                and not _in_component(imported=imported, component=Component("cmk.gui.cce"))
-                and not _in_component(imported=imported, component=Component("cmk.gui.cme"))
+                imported.in_component(Component("cmk.gui"))
+                and not imported.in_component(Component("cmk.gui.cce"))
+                and not imported.in_component(Component("cmk.gui.cme"))
                 and not _is_a_plugin_import(imported=imported)
             ),
-            _in_component(imported=imported, component=Component("cmk.checkengine")),
-            _in_component(imported=imported, component=Component("cmk.fetchers")),
-            _in_component(imported=imported, component=Component("cmk.cee.bakery")),
-            _in_component(imported=imported, component=Component("cmk.cee.robotmk.gui")),
+            imported.in_component(Component("cmk.checkengine")),
+            imported.in_component(Component("cmk.fetchers")),
+            imported.in_component(Component("cmk.cee.bakery")),
+            imported.in_component(Component("cmk.cee.robotmk.gui")),
         )
     )
 
@@ -290,14 +315,14 @@ def _allow_for_gui_cce(
         (
             _is_allowed_import(imported=imported),
             (
-                _in_component(imported=imported, component=Component("cmk.gui"))
-                and not _in_component(imported=imported, component=Component("cmk.gui.cme"))
+                imported.in_component(Component("cmk.gui"))
+                and not imported.in_component(Component("cmk.gui.cme"))
                 and not _is_a_plugin_import(imported=imported)
             ),
-            _in_component(imported=imported, component=Component("cmk.checkengine")),
-            _in_component(imported=imported, component=Component("cmk.fetchers")),
-            _in_component(imported=imported, component=Component("cmk.cee.bakery")),
-            _in_component(imported=imported, component=Component("cmk.cee.robotmk.gui")),
+            imported.in_component(Component("cmk.checkengine")),
+            imported.in_component(Component("cmk.fetchers")),
+            imported.in_component(Component("cmk.cee.bakery")),
+            imported.in_component(Component("cmk.cee.robotmk.gui")),
         )
     )
 
@@ -311,13 +336,13 @@ def _allow_for_gui_cme(
         (
             _is_allowed_import(imported=imported),
             (
-                _in_component(imported=imported, component=Component("cmk.gui"))
+                imported.in_component(Component("cmk.gui"))
                 and not _is_a_plugin_import(imported=imported)
             ),
-            _in_component(imported=imported, component=Component("cmk.checkengine")),
-            _in_component(imported=imported, component=Component("cmk.fetchers")),
-            _in_component(imported=imported, component=Component("cmk.cee.bakery")),
-            _in_component(imported=imported, component=Component("cmk.cee.robotmk.gui")),
+            imported.in_component(Component("cmk.checkengine")),
+            imported.in_component(Component("cmk.fetchers")),
+            imported.in_component(Component("cmk.cee.bakery")),
+            imported.in_component(Component("cmk.cee.robotmk.gui")),
         )
     )
 
@@ -331,10 +356,10 @@ def _allow_for_gui_cse(
         (
             _is_allowed_import(imported=imported),
             (
-                _in_component(imported=imported, component=Component("cmk.gui"))
+                imported.in_component(Component("cmk.gui"))
                 and not _is_a_plugin_import(imported=imported)
             ),
-            _in_component(imported=imported, component=Component("cmk.cee.robotmk.gui")),
+            imported.in_component(Component("cmk.cee.robotmk.gui")),
         )
     )
 
@@ -342,9 +367,9 @@ def _allow_for_gui_cse(
 def _is_a_plugin_import(*, imported: ModuleName) -> bool:
     return any(
         (
-            _in_component(imported=imported, component=Component("cmk.gui.plugins")),
-            _in_component(imported=imported, component=Component("cmk.gui.cee.plugins")),
-            _in_component(imported=imported, component=Component("cmk.gui.cce.plugins")),
+            imported.in_component(Component("cmk.gui.plugins")),
+            imported.in_component(Component("cmk.gui.cee.plugins")),
+            imported.in_component(Component("cmk.gui.cce.plugins")),
         )
     )
 
@@ -363,8 +388,8 @@ def _allow_default_plus_gui_and_base(
     return any(
         (
             _is_default_allowed_import(imported=imported, component=component),
-            _in_component(imported=imported, component=Component("cmk.base")),
-            _in_component(imported=imported, component=Component("cmk.gui")),
+            imported.in_component(Component("cmk.base")),
+            imported.in_component(Component("cmk.gui")),
         )
     )
 
@@ -383,14 +408,27 @@ def _allow_for_cmk_update_config(
     return any(
         (
             _is_default_allowed_import(imported=imported, component=component),
-            _in_component(imported=imported, component=Component("cmk.checkengine")),
-            _in_component(imported=imported, component=Component("cmk.fetchers")),
-            _in_component(imported=imported, component=Component("cmk.cee.bakery")),
-            _in_component(imported=imported, component=Component("cmk.base")),
-            _in_component(imported=imported, component=Component("cmk.gui")),
-            _in_component(imported=imported, component=Component("cmk.cee.robotmk")),
-            _in_component(imported=imported, component=Component("cmk.diskspace")),
-            _in_component(imported=imported, component=Component("cmk.validate_config")),
+            imported.in_component(Component("cmk.checkengine")),
+            imported.in_component(Component("cmk.fetchers")),
+            imported.in_component(Component("cmk.cee.bakery")),
+            imported.in_component(Component("cmk.base")),
+            imported.in_component(Component("cmk.gui")),
+            imported.in_component(Component("cmk.cee.robotmk")),
+            imported.in_component(Component("cmk.diskspace")),
+            imported.in_component(Component("cmk.validate_config")),
+        )
+    )
+
+
+def _is_allowed_for_diskspace(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return any(
+        (
+            imported.in_component(Component("cmk.diskspace")),
+            imported.in_component(Component("cmk.ccc")),
         )
     )
 
@@ -398,19 +436,19 @@ def _allow_for_cmk_update_config(
 def _is_allowed_for_plugins(
     *,
     imported: ModuleName,
-    component: Component,  # pylint: disable=unused-argument
+    component: Component,
 ) -> bool:
     return any(
         (
-            _in_component(imported=imported, component=Component("cmk.agent_based.v1")),
-            _in_component(imported=imported, component=Component("cmk.agent_based.v2")),
-            _in_component(imported=imported, component=Component("cmk.graphing.v1")),
-            _in_component(imported=imported, component=Component("cmk.rulesets.v1")),
-            _in_component(imported=imported, component=Component("cmk.server_side_calls.v1")),
-            _in_component(imported=imported, component=Component("cmk.special_agents.v0_unstable")),
-            _in_component(imported=imported, component=Component("cmk.plugins")),
-            _in_component(imported=imported, component=Component("cmk.utils")),
-            _in_component(imported=imported, component=Component("cmk.ccc")),
+            imported.in_component(Component("cmk.agent_based.v1")),
+            imported.in_component(Component("cmk.agent_based.v2")),
+            imported.in_component(Component("cmk.graphing.v1")),
+            imported.in_component(Component("cmk.rulesets.v1")),
+            imported.in_component(Component("cmk.server_side_calls.v1")),
+            imported.in_component(Component("cmk.special_agents.v0_unstable")),
+            imported.in_component(Component("cmk.plugins")),
+            imported.in_component(Component("cmk.utils")),
+            imported.in_component(Component("cmk.ccc")),
         )
     )
 
@@ -420,10 +458,7 @@ def _is_allowed_for_robotmk_agent_based_cee_plugins(
     imported: ModuleName,
     component: Component,
 ) -> bool:
-    return _in_component(
-        imported=imported,
-        component=Component("cmk.cee.robotmk.checking.agent_based"),
-    )
+    return imported.in_component(Component("cmk.cee.robotmk.checking.agent_based"))
 
 
 def _is_allowed_for_robotmk_graphing_cee_plugins(
@@ -431,10 +466,7 @@ def _is_allowed_for_robotmk_graphing_cee_plugins(
     imported: ModuleName,
     component: Component,
 ) -> bool:
-    return _in_component(
-        imported=imported,
-        component=Component("cmk.cee.robotmk.checking.graphing"),
-    )
+    return imported.in_component(Component("cmk.cee.robotmk.checking.graphing"))
 
 
 def _is_allowed_for_robotmk_rulesets_cee_plugins(
@@ -444,14 +476,8 @@ def _is_allowed_for_robotmk_rulesets_cee_plugins(
 ) -> bool:
     return any(
         (
-            _in_component(
-                imported=imported,
-                component=Component("cmk.cee.robotmk.checking.rulesets"),
-            ),
-            _in_component(
-                imported=imported,
-                component=Component("cmk.cee.robotmk.bakery.rulesets"),
-            ),
+            imported.in_component(Component("cmk.cee.robotmk.checking.rulesets")),
+            imported.in_component(Component("cmk.cee.robotmk.bakery.rulesets")),
         )
     )
 
@@ -461,10 +487,14 @@ def _allow_default_plus_component_under_test(
     imported: ModuleName,
     component: Component,
 ) -> bool:
-    if component.startswith("tests.unit.checks"):
+    if component.is_below("tests.unit.checks"):
         component_under_test = Component("cmk.plugins")
-    elif component.startswith("tests.unit.") or component.startswith("tests.integration"):
-        component_under_test = Component(".".join(component.split(".")[2:]))
+    elif (
+        component.is_below("tests.unit")
+        or component.is_below("tests.integration")
+        or component.is_below("tests.integration_redfish")
+    ):
+        component_under_test = Component(".".join(component.parts[2:]))
     else:
         raise ValueError(f"Unhandled component: {component}")
 
@@ -483,18 +513,13 @@ def _is_allowed_for_legacy_checks(
 ) -> bool:
     return any(
         (
-            _in_component(imported=imported, component=Component("cmk.base.legacy_checks")),
-            _in_component(imported=imported, component=Component("cmk.base.check_legacy_includes")),
-            _in_component(imported=imported, component=Component("cmk.plugins")),
-            _in_component(imported=imported, component=Component("cmk.base.config")),
-            _in_component(
-                imported=imported, component=Component("cmk.agent_based.legacy.v0_unstable")
-            ),
-            _in_component(
-                imported=imported,
-                component=Component("cmk.base.plugins.agent_based"),
-            ),
-            _in_component(imported=imported, component=Component("cmk.agent_based")),
+            imported.in_component(Component("cmk.base.legacy_checks")),
+            imported.in_component(Component("cmk.base.check_legacy_includes")),
+            imported.in_component(Component("cmk.plugins")),
+            imported.in_component(Component("cmk.base.config")),
+            imported.in_component(Component("cmk.agent_based.legacy.v0_unstable")),
+            imported.in_component(Component("cmk.base.plugins.agent_based")),
+            imported.in_component(Component("cmk.agent_based")),
         )
     )
 
@@ -507,13 +532,13 @@ def _is_allowed_for_legacy_check_tests(
     return any(
         (
             _allow_default_plus_component_under_test(imported=imported, component=component),
-            _in_component(imported=imported, component=Component("cmk.base.legacy_checks")),
-            _in_component(imported=imported, component=Component("cmk.base.check_legacy_includes")),
-            _in_component(imported=imported, component=Component("cmk.server_side_calls_backend")),
-            _in_component(imported=imported, component=Component("cmk.base.api.agent_based")),
-            _in_component(imported=imported, component=Component("cmk.checkengine")),
-            _in_component(imported=imported, component=Component("cmk.snmplib")),
-            _in_component(imported=imported, component=Component("cmk.plugins")),
+            imported.in_component(Component("cmk.base.legacy_checks")),
+            imported.in_component(Component("cmk.base.check_legacy_includes")),
+            imported.in_component(Component("cmk.server_side_calls_backend")),
+            imported.in_component(Component("cmk.base.api.agent_based")),
+            imported.in_component(Component("cmk.checkengine")),
+            imported.in_component(Component("cmk.snmplib")),
+            imported.in_component(Component("cmk.plugins")),
         )
     )
 
@@ -526,8 +551,8 @@ def _allow_default_plus_component_under_test_bakery_checkengine(
     return any(
         (
             _allow_default_plus_component_under_test(imported=imported, component=component),
-            _in_component(imported=imported, component=Component("cmk.checkengine")),
-            _in_component(imported=imported, component=Component("cmk.cee.bakery")),
+            imported.in_component(Component("cmk.checkengine")),
+            imported.in_component(Component("cmk.cee.bakery")),
         )
     )
 
@@ -541,8 +566,8 @@ def _allowed_for_robotmk(
         (
             _allow_default_plus_gui_and_base(imported=imported, component=component),
             _is_allowed_for_plugins(imported=imported, component=component),
-            _in_component(imported=imported, component=Component("cmk.checkengine")),
-            _in_component(imported=imported, component=Component("cmk.cee.bakery")),
+            imported.in_component(Component("cmk.checkengine")),
+            imported.in_component(Component("cmk.cee.bakery")),
         )
     )
 
@@ -555,8 +580,8 @@ def _allow_for_cmk_checkengine(
     return any(
         (
             _is_default_allowed_import(imported=imported, component=component),
-            _in_component(imported=imported, component=Component("cmk.checkengine")),
-            _in_component(imported=imported, component=Component("cmk.snmplib")),
+            imported.in_component(Component("cmk.checkengine")),
+            imported.in_component(Component("cmk.snmplib")),
         )
     )
 
@@ -569,9 +594,9 @@ def _allow_for_cmk_fetchers(
     return any(
         (
             _is_default_allowed_import(imported=imported, component=component),
-            _in_component(imported=imported, component=Component("cmk.fetchers")),
-            _in_component(imported=imported, component=Component("cmk.snmplib")),
-            _in_component(imported=imported, component=Component("cmk.checkengine")),
+            imported.in_component(Component("cmk.fetchers")),
+            imported.in_component(Component("cmk.snmplib")),
+            imported.in_component(Component("cmk.checkengine")),
         )
     )
 
@@ -584,7 +609,34 @@ def _allow_for_cmk_piggyback_hub(
     return any(
         (
             _is_default_allowed_import(imported=imported, component=component),
-            _in_component(imported=imported, component=Component("cmk.messaging")),
+            imported.in_component(Component("cmk.messaging")),
+        )
+    )
+
+
+def _allow_for_cmkpasswd(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return any(
+        (
+            _is_default_allowed_import(imported=imported, component=component),
+            imported.in_component(Component("cmk.gui.utils.htpasswd")),
+        )
+    )
+
+
+def _is_allowed_for_rrd(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return any(
+        (
+            imported.in_component(Component("cmk.rrd")),
+            imported.in_component(Component("cmk.ccc")),
+            imported.in_component(Component("cmk.utils")),
         )
     )
 
@@ -617,11 +669,7 @@ _COMPONENTS = (
     (Component("cmk.base.ip_lookup"), _is_default_allowed_import),
     (Component("cmk.base"), _allowed_for_base_cee),
     (Component("cmk.base.cee"), _allowed_for_base_cee),
-    (
-        # Allow everything here because it's a program.  It can't be imported anywhere, however.
-        Component("cmk.cmkpasswd"),
-        _allow_for_gui,
-    ),
+    (Component("cmk.cmkpasswd"), _allow_for_cmkpasswd),
     (Component("cmk.checkengine"), _allow_for_cmk_checkengine),
     (Component("cmk.fetchers"), _allow_for_cmk_fetchers),
     (Component("cmk.cee.helpers"), _allow_default_plus_fetchers_checkers_and_snmplib),
@@ -666,6 +714,8 @@ _COMPONENTS = (
     (Component("cmk.post_rename_site"), _allow_default_plus_gui_and_base),
     (Component("cmk.active_checks"), _is_default_allowed_import),
     (Component("cmk.cee.robotmk"), _allowed_for_robotmk),
+    (Component("cmk.diskspace"), _is_allowed_for_diskspace),
+    (Component("cmk.rrd"), _is_allowed_for_rrd),
 )
 
 _EXPLICIT_FILE_TO_COMPONENT = {
@@ -677,6 +727,7 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("bin/cmk-piggyback-hub"): Component("cmk.piggyback"),
     ModulePath("bin/cmk-ui-job-scheduler"): Component("cmk.gui"),
     ModulePath("bin/cmk-update-config"): Component("cmk.update_config"),
+    ModulePath("bin/cmk-migrate-http"): Component("cmk.update_config"),
     ModulePath("bin/cmk-validate-config"): Component("cmk.validate_config"),
     ModulePath("bin/cmk-validate-plugins"): Component("cmk.validate_plugins"),
     ModulePath("bin/post-rename-site"): Component("cmk.post_rename_site"),
@@ -726,15 +777,14 @@ class CMKModuleLayerChecker(BaseChecker):
 
     def _check_import(self, node: Import | ImportFrom, imported: ModuleName) -> None:
         # We only care about imports of our own modules.
-        if not imported.startswith("cmk"):
+        if not imported.in_component(Component("cmk")):
             return
 
         # We use paths relative to our project root, but not for our "pasting magic".
-        absolute_path: str = node.root().file
-        importing_path = ModulePath(removeprefix(absolute_path, self.cmk_path_cached))
+        importing_path = ModulePath(node.root().file).relative_to(self.cmk_path_cached)
 
         # Tests are allowed to import everything for now. Should be cleaned up soon
-        if str(importing_path).startswith("tests/testlib"):
+        if importing_path.is_below("tests/testlib"):
             return
 
         importing = self._get_module_name_of_files(importing_path)
@@ -742,29 +792,22 @@ class CMKModuleLayerChecker(BaseChecker):
             self.add_message("cmk-module-layer-violation", node=node, args=(imported, importing))
 
     @staticmethod
-    def _get_module_name_of_files(importing_path: ModulePath) -> ModuleName:
+    def _get_module_name_of_files(path: ModulePath) -> ModuleName:
         # Due to our symlinks and pasting magic, astroid gets confused, so we need to compute the
         # real module name from the file path of the module.
-        parts = importing_path.split("/")
-        parts[-1] = removesuffix(parts[-1], ".py")
         # Emacs' flycheck stores files to be checked in a temporary file with a prefix.
-        parts[-1] = removeprefix(parts[-1], Path("flycheck_"))
+        p = path.with_name(path.name.removeprefix("flycheck_").removesuffix(".py"))
         # For all modules which don't live below cmk after mangling, just assume a toplevel module.
-        if parts[0] not in ("cmk", "tests"):
-            parts = [parts[-1]]
-        return ModuleName(".".join(parts))
+        return ModuleName(
+            ".".join(p.parts) if p.is_below("cmk") or p.is_below("tests") else p.parts[-1]
+        )
 
     def _is_import_allowed(
         self, importing_path: ModulePath, importing: ModuleName, imported: ModuleName
     ) -> bool:
         for component, component_specific_checker in _COMPONENTS:
-            if not self._is_part_of_component(importing, importing_path, component):
-                continue
-
-            return component_specific_checker(
-                imported=imported,
-                component=component,
-            )
+            if self._is_part_of_component(importing, importing_path, component):
+                return component_specific_checker(imported=imported, component=component)
 
         # the rest (matched no component)
         return _is_allowed_import(imported)
@@ -773,26 +816,24 @@ class CMKModuleLayerChecker(BaseChecker):
     def _is_part_of_component(
         importing: ModuleName, importing_path: ModulePath, component: Component
     ) -> bool:
-        if _in_component(imported=importing, component=component):
+        if importing.in_component(component):
             return True
 
         explicit_component = _EXPLICIT_FILE_TO_COMPONENT.get(importing_path)
         if explicit_component is not None:
             return explicit_component == component
 
-        if component == Component("cmk.notification_plugins") and importing_path.startswith(
-            "notifications/"
-        ):
-            return True
-
-        if component == Component("agents.special") and importing_path.startswith(
-            "agents/special/"
-        ):
-            return True
-
-        if component == Component("cmk.active_checks") and importing_path.startswith(
-            "active_checks/"
-        ):
-            return True
-
-        return False
+        return (
+            (
+                component == Component("cmk.notification_plugins")
+                and importing_path.is_below(("notifications"))
+            )
+            or (
+                component == Component("agents.special")
+                and importing_path.is_below("agents/special")
+            )
+            or (
+                component == Component("cmk.active_checks")
+                and importing_path.is_below("active_checks")
+            )
+        )

@@ -1757,7 +1757,9 @@ class SiteFactory:
             assert rc == 0, (
                 f"Failed to interactively update the test-site!\n"
                 "Logfile content:\n"
-                f"{pprint.pformat(site.read_file("var/log/update.log"), indent=4)}"
+                f"{pprint.pformat(Path(logfile_path).read_text(), indent=4)}\n\n"
+                f"You might want to consider modifying {min_version=} to adapt it to the current "
+                f"minimal supported version."
             )
         else:
             assert rc == 256, f"Executed command returned {rc} exit status. Expected: 256"

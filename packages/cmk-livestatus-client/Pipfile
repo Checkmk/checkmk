@@ -5,7 +5,7 @@ name = "pypi"
 
 [dev-packages]
 bandit = "*"
-ruff = "*"
+ruff = "==0.6.7"
 mypy = "*"
 pylint = "*"
 pytest = "*"

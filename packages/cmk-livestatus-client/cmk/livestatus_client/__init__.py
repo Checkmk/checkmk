@@ -501,7 +501,7 @@ Must begin with 'tcp:', 'tcp6:' or 'unix:'
             return address_family, (host, port)
 
     raise MKLivestatusConfigError(
-        "Invalid livestatus URL '%s'. " "Must begin with 'tcp:', 'tcp6:' or 'unix:'" % url
+        "Invalid livestatus URL '%s'. Must begin with 'tcp:', 'tcp6:' or 'unix:'" % url
     )
 
 

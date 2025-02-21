@@ -197,7 +197,7 @@ create_python_requirements(
         # Broken third party packages
         "netapp-ontap",  # their build process is broken, see https://github.com/NetApp/ontap-rest-python/issues/46
     ],
-    requirements_lock = "//:requirements_runtime_lock.txt",
+    requirements_lock = "//:runtime-requirements.txt",
 )
 
 load("//omd/packages/mod_wsgi:mod_wsgi_http.bzl", "mod_wsgi_workspace")

@@ -103,7 +103,7 @@ compile_requirements_in(
         "//:dev-requirements.in",
     ] + select({
         "@//:gpl_repo": [],
-        "@//:gpl+enterprise_repo": ["//non-free:python_requirements"],
+        "@//:gpl+enterprise_repo": ["//non-free/packages:python_requirements"],
     }),
 )
 
@@ -126,7 +126,7 @@ compile_requirements_in(
         "//packages:python_requirements",
     ] + select({
         "@//:gpl_repo": [],
-        "@//:gpl+enterprise_repo": ["//non-free:python_requirements"],
+        "@//:gpl+enterprise_repo": ["//non-free/packages:python_requirements"],
     }),
 )
 

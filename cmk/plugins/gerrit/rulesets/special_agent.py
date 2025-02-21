@@ -13,8 +13,10 @@ from cmk.rulesets.v1.form_specs import (
     SingleChoice,
     SingleChoiceElement,
     String,
+    TimeMagnitude,
+    TimeSpan,
 )
-from cmk.rulesets.v1.form_specs.validators import LengthInRange, NetworkPort
+from cmk.rulesets.v1.form_specs.validators import LengthInRange, NetworkPort, NumberInRange
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 rule_spec_gerrit = SpecialAgent(
@@ -78,6 +80,21 @@ rule_spec_gerrit = SpecialAgent(
                     custom_validate=[LengthInRange(min_value=1)],
                 ),
                 required=True,
+            ),
+            "version_cache": DictElement(
+                parameter_form=TimeSpan(
+                    title=Title("Time to wait before fetching version information"),
+                    help_text=Help(
+                        "By setting a higher value, you reduce the amount of requests sent to"
+                        "your own instance as well as Gerrit's host infrastructure."
+                    ),
+                    displayed_magnitudes=(
+                        TimeMagnitude.HOUR,
+                        TimeMagnitude.MINUTE,
+                    ),
+                    prefill=DefaultValue(28800.0),  # 8 hours
+                    custom_validate=[NumberInRange(min_value=0.0)],
+                )
             ),
         },
     ),

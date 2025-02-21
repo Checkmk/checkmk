@@ -10,7 +10,7 @@ from collections.abc import Sequence
 
 from cmk.utils import password_store
 
-from cmk.plugins.gerrit.lib import collectors
+from cmk.plugins.gerrit.lib import collectors, storage
 from cmk.plugins.gerrit.lib.shared_typing import Sections
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
@@ -31,6 +31,12 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     )
     group_password.add_argument("-s", "--password", help="Password for Gerrit login")
     parser.add_argument(
+        "--version-cache",
+        default=28800.0,  # 8 hours
+        type=float,
+        help="Cache interval in seconds for Gerrit version collection (default: 28800.0 [8h])",
+    )
+    parser.add_argument(
         "-P",
         "--proto",
         choices=("https", "http"),
@@ -50,7 +56,8 @@ def run_agent(args: Args) -> int:
     sections: Sections = {}
 
     version_collector = collectors.GerritVersion(api_url=api_url, auth=auth)
-    sections.update(version_collector.collect())
+    version_cache = storage.VersionCache(collector=version_collector, interval=args.version_cache)
+    sections.update(version_cache.get_sections())
 
     write_sections(sections)
 

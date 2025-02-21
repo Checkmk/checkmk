@@ -574,6 +574,13 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                             "Use this condition to select hosts based on the configured host labels."
                                         ),
                                         world=World.CORE,
+                                        custom_validate=[
+                                            not_empty(
+                                                error_msg=Message(
+                                                    "Please add at least one host label."
+                                                )
+                                            )
+                                        ],
                                     )
                                 ),
                                 "match_host_groups": DictElement(
@@ -588,6 +595,13 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                         ],
                                         show_toggle_all=True,
                                         layout=MultipleChoiceExtendedLayout.dual_list,
+                                        custom_validate=[
+                                            not_empty(
+                                                error_msg=Message(
+                                                    "Please add at least one host group."
+                                                )
+                                            )
+                                        ],
                                     ),
                                 ),
                                 "match_hosts": DictElement(
@@ -601,6 +615,11 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 ),
                                             ),
                                         ),
+                                        custom_validate=[
+                                            not_empty(
+                                                error_msg=Message("Please add at least one host.")
+                                            )
+                                        ],
                                     ),
                                 ),
                                 "exclude_hosts": DictElement(
@@ -614,6 +633,11 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 ),
                                             ),
                                         ),
+                                        custom_validate=[
+                                            not_empty(
+                                                error_msg=Message("Please add at least one host.")
+                                            )
+                                        ],
                                     ),
                                 ),
                             },
@@ -638,7 +662,14 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                     "Use this condition to select services based on the configured service labels."
                                                 ),
                                                 world=World.CORE,
-                                            )
+                                                custom_validate=[
+                                                    not_empty(
+                                                        error_msg=Message(
+                                                            "Please add at least one service label."
+                                                        )
+                                                    )
+                                                ],
+                                            ),
                                         ),
                                         "match_service_groups": DictElement(
                                             parameter_form=MultipleChoiceExtended(
@@ -652,6 +683,13 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 ],
                                                 show_toggle_all=True,
                                                 layout=MultipleChoiceExtendedLayout.dual_list,
+                                                custom_validate=[
+                                                    not_empty(
+                                                        error_msg=Message(
+                                                            "Please add at least one service group."
+                                                        )
+                                                    )
+                                                ],
                                             ),
                                         ),
                                         "exclude_service_groups": DictElement(
@@ -666,6 +704,13 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 ],
                                                 show_toggle_all=True,
                                                 layout=MultipleChoiceExtendedLayout.dual_list,
+                                                custom_validate=[
+                                                    not_empty(
+                                                        error_msg=Message(
+                                                            "Please add at least one service group."
+                                                        )
+                                                    )
+                                                ],
                                             ),
                                         ),
                                         "match_services": DictElement(
@@ -674,6 +719,13 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 string_spec=String(
                                                     field_size=FieldSize.MEDIUM,
                                                 ),
+                                                custom_validate=[
+                                                    not_empty(
+                                                        error_msg=Message(
+                                                            "Please add at least one service."
+                                                        )
+                                                    )
+                                                ],
                                             ),
                                         ),
                                         "exclude_services": DictElement(
@@ -682,6 +734,13 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 string_spec=String(
                                                     field_size=FieldSize.MEDIUM,
                                                 ),
+                                                custom_validate=[
+                                                    not_empty(
+                                                        error_msg=Message(
+                                                            "Please add at least one service."
+                                                        )
+                                                    )
+                                                ],
                                             ),
                                         ),
                                     },
@@ -715,6 +774,13 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                         ],
                                         show_toggle_all=True,
                                         layout=MultipleChoiceExtendedLayout.dual_list,
+                                        custom_validate=[
+                                            not_empty(
+                                                error_msg=Message(
+                                                    "Please add at least one contact group."
+                                                )
+                                            )
+                                        ],
                                     ),
                                 ),
                                 "users": DictElement(
@@ -740,6 +806,11 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                             ],
                                         ),
                                         prefill=DefaultValue([]),
+                                        custom_validate=[
+                                            not_empty(
+                                                error_msg=Message("Please add at least one member.")
+                                            )
+                                        ],
                                     ),
                                 ),
                             },
@@ -816,6 +887,11 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                         ],
                                         show_toggle_all=True,
                                         layout=MultipleChoiceExtendedLayout.dual_list,
+                                        custom_validate=[
+                                            not_empty(
+                                                error_msg=Message("Please add at least one site.")
+                                            )
+                                        ],
                                     ),
                                 ),
                                 "check_type_plugin": DictElement(
@@ -829,6 +905,13 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                         ),
                                         show_toggle_all=True,
                                         layout=MultipleChoiceExtendedLayout.dual_list,
+                                        custom_validate=[
+                                            not_empty(
+                                                error_msg=Message(
+                                                    "Please add at least one check type."
+                                                )
+                                            )
+                                        ],
                                     ),
                                 ),
                             },

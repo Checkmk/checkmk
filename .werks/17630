@@ -1,0 +1,10 @@
+Title: Interface HW/SW inventory: handle "NOSUCHINSTANCE" reported by Calix E7
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1741868718
+Edition: cre
+Level: 1
+Version: 2.2.0p41
+
+This change prevents a crash when running the HW/SW inventory on the Calix E7 carrier switch.

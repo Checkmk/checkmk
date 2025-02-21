@@ -4483,46 +4483,49 @@ def _valuespec_automatic_rediscover_parameters() -> Dictionary:
                             (
                                 "custom",
                                 _("Custom service configuration update"),
-                                Dictionary(
-                                    elements=[
-                                        (
-                                            "add_new_services",
-                                            Checkbox(
-                                                label=_("Monitor undecided services"),
-                                                default_value=False,
+                                Migrate(
+                                    migrate=_migrate_custom_service_configuration_update,
+                                    valuespec=Dictionary(
+                                        elements=[
+                                            (
+                                                "add_new_services",
+                                                Checkbox(
+                                                    label=_("Monitor undecided services"),
+                                                    default_value=False,
+                                                ),
                                             ),
-                                        ),
-                                        (
-                                            "remove_vanished_services",
-                                            Checkbox(
-                                                label=_("Remove vanished services"),
-                                                default_value=False,
+                                            (
+                                                "remove_vanished_services",
+                                                Checkbox(
+                                                    label=_("Remove vanished services"),
+                                                    default_value=False,
+                                                ),
                                             ),
-                                        ),
-                                        (
-                                            "update_changed_service_labels",
-                                            Checkbox(
-                                                label=_("Update service labels"),
-                                                default_value=False,
+                                            (
+                                                "update_changed_service_labels",
+                                                Checkbox(
+                                                    label=_("Update service labels"),
+                                                    default_value=False,
+                                                ),
                                             ),
-                                        ),
-                                        (
-                                            "update_changed_service_parameters",
-                                            Checkbox(
-                                                label=_("Update service parameters"),
-                                                default_value=False,
+                                            (
+                                                "update_changed_service_parameters",
+                                                Checkbox(
+                                                    label=_("Update service parameters"),
+                                                    default_value=False,
+                                                ),
                                             ),
-                                        ),
-                                        (
-                                            "update_host_labels",
-                                            Checkbox(
-                                                label=_("Update host labels"),
-                                                default_value=False,
+                                            (
+                                                "update_host_labels",
+                                                Checkbox(
+                                                    label=_("Update host labels"),
+                                                    default_value=False,
+                                                ),
                                             ),
-                                        ),
-                                    ],
-                                    optional_keys=[],
-                                    indent=False,
+                                        ],
+                                        optional_keys=[],
+                                        indent=False,
+                                    ),
                                 ),
                             ),
                         ],
@@ -4696,6 +4699,12 @@ def _valuespec_automatic_rediscover_parameters() -> Dictionary:
         ],
         optional_keys=["service_filters", "keep_clustered_vanished_services"],
     )
+
+
+def _migrate_custom_service_configuration_update(values: dict) -> dict:
+    if "update_changed_service_parameters" not in values:
+        values["update_changed_service_parameters"] = False
+    return values
 
 
 def _migrate_automatic_rediscover_parameters(

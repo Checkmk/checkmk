@@ -42,6 +42,7 @@ def pre_parse_hr_mem(string_table: Sequence[StringTable]) -> PreParsed:
             "iso.3.6.1.2.1.25.2.1.2": "RAM",  # OKI 8300e bug
             ".0.1.3.6.1.2.1.25.2.1": "RAM",  # HP bug
             ".2.3848679438.841888046.842346034.774975026": "RAM",  # HP Officejet Pro 8600 N911g
+            ".1.3.6.1.2.1.25.3.1.9": None,  # Ciena 5164 SAOS 10 just reports this value for all partitions
             # Some devices don't care about proper SNMP at all but are known to not write
             # interesting data anyway so we can ignore them silently by returning None (rather
             # than "unknown")

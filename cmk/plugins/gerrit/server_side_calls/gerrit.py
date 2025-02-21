@@ -18,8 +18,6 @@ from cmk.server_side_calls.v1 import (
 
 
 class GerritParams(BaseModel):
-    """The expected parameters to receive from the special agent ruleset."""
-
     instance: str
     user: str
     password: Secret

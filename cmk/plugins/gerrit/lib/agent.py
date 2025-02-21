@@ -22,12 +22,10 @@ from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default
 
 
 def main() -> int:
-    """Entrypoint for Gerrit special agent."""
     return special_agent_main(parse_arguments, run_agent)
 
 
 def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
-    """Parse commandline arguments passed to special agent."""
     parser = create_default_argument_parser(description=__doc__)
 
     parser.add_argument("-u", "--user", default="", help="Username for Gerrit login")
@@ -51,7 +49,6 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
 
 
 def run_agent(args: Args) -> int:
-    """Run Gerrit special agent."""
     api_url = f"{args.proto}://{args.hostname}:{args.port}/a"
     auth = (args.user, get_password_from_args(args))
 
@@ -63,7 +60,6 @@ def run_agent(args: Args) -> int:
 
 
 def get_password_from_args(args: Args) -> str:
-    """Extract password from store if explicit password not passed as argument."""
     if args.password:
         return args.password
 
@@ -73,19 +69,14 @@ def get_password_from_args(args: Args) -> str:
 
 
 class SectionCollector(Protocol):
-    """An interface for collecting agent sections."""
-
-    def collect(self) -> Sections:
-        """Collect Gerrit related data grouped by section."""
+    def collect(self) -> Sections: ...
 
 
 def collect_sections(collector: SectionCollector) -> Sections:
-    """Send off requests and collect the results."""
     return collector.collect()
 
 
 def write_sections(sections: Sections) -> None:
-    """Write out sections to the special agent output."""
     for name, data in sections.items():
         with SectionWriter(f"gerrit_{name}") as writer:
             writer.append_json(data)
@@ -93,15 +84,12 @@ def write_sections(sections: Sections) -> None:
 
 @dataclasses.dataclass
 class LatestVersions:
-    """Latest release major, minor, and patch version, if available."""
-
     major: str | None
     minor: str | None
     patch: str | None
 
     @classmethod
     def build(cls, current: SemanticVersion, versions: Collection[SemanticVersion]) -> Self:
-        """Search for potential updates based on the current and provided versions."""
         return cls(
             major=str(max((v for v in versions if v.major > current.major), default="")) or None,
             minor=str(max((v for v in versions if v.minor > current.minor), default="")) or None,
@@ -110,8 +98,6 @@ class LatestVersions:
 
 
 class SyncSectionCollector:
-    """Client for collecting sections synchronously."""
-
     def __init__(self, api_url: str, auth: tuple[str, str]) -> None:
         self.api_url = api_url
         self.auth = auth

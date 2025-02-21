@@ -9,13 +9,14 @@ import json
 import pathlib
 import sys
 from collections.abc import Collection, Sequence
-from typing import Any, NewType, Protocol, Self, TypeAlias
+from typing import Protocol, Self
 
 import requests
 
 from cmk.utils import password_store
 from cmk.utils.semantic_version import SemanticVersion
 
+from cmk.plugins.gerrit.lib.shared_typing import SectionName, Sections
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
 
@@ -69,14 +70,6 @@ def get_password_from_args(args: Args) -> str:
     pw_id, pw_file = args.password_ref.split(":", maxsplit=1)
 
     return password_store.lookup(pathlib.Path(pw_file), pw_id)
-
-
-SectionName = NewType("SectionName", str)
-"""The name that will be provided to agent output section heading."""
-SectionData: TypeAlias = dict[str, Any]
-"""The (JSON) data that the will be written out to agent output section."""
-Sections: TypeAlias = dict[SectionName, SectionData]
-"""A mapping of all section names and respective data."""
 
 
 class SectionCollector(Protocol):

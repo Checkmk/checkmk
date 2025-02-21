@@ -11,7 +11,8 @@ import pytest
 from cmk.utils.semantic_version import SemanticVersion
 
 from cmk.plugins.gerrit.lib import agent
-from cmk.plugins.gerrit.lib.agent import LatestVersions, SectionName, Sections
+from cmk.plugins.gerrit.lib.agent import LatestVersions
+from cmk.plugins.gerrit.lib.shared_typing import SectionName, Sections
 
 
 def test_parse_arguments() -> None:

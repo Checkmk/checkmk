@@ -227,8 +227,8 @@ lint-bazel:
 documentation:
 	echo Nothing to do here remove this target
 
-sw-documentation-docker:
-	scripts/run-in-docker.sh scripts/run-uvenv make -C doc/documentation html
+sw-documentation:
+	scripts/run-uvenv make -C doc/documentation html
 
 # Use this target to update the requirements_*_lock.txt files
 # TODO: Find a _way_ better ways to handle this

@@ -188,12 +188,64 @@ def form_alert_remapping():
         custom_validate=(validators.LengthInRange(min_value=1),),
     )
 
+def form_severity_remapping():
+    return Dictionary(
+        elements={
+            "info": DictElement(
+                parameter_form=String(
+                    title=Title("Information"), prefill=DefaultValue("info"),
+                ),
+                required=True,
+            ),
+            "warning": DictElement(
+                parameter_form=String(
+                    title=Title("Warning"), prefill=DefaultValue("warning"),
+                ),
+                required=True,
+            ),
+            "alert": DictElement(
+                parameter_form=String(
+                    title=Title("Alert"), prefill=DefaultValue("alert"),
+                ),
+                required=True,
+            ),
+            "critical": DictElement(
+                parameter_form=String(
+                    title=Title("Critical"), prefill=DefaultValue("critical"),
+                ),
+                required=True,
+            ),
+            "error": DictElement(
+                parameter_form=String(
+                    title=Title("Error"), prefill=DefaultValue("error"),
+                ),
+                required=True,
+            ),
+            "none": DictElement(
+                parameter_form=String(
+                    title=Title("None"), prefill=DefaultValue("none"),
+                ),
+                required=True,
+            ),
+            "na": DictElement(
+                parameter_form=String(
+                    title=Title("N/A"), prefill=DefaultValue("not_applicable"),
+                ),
+                required=True,
+            ),
+        },
+        title=Title("Remap severity names"),
+        help_text=Help("Configure the Severity State Name for Alertmanager Events."),
+        custom_validate=(validators.LengthInRange(min_value=1),),
+    )
+
 
 def _check_parameters_form_alertmanager():
     return Dictionary(
         title=Title("Alert manager rule state"),
         elements={
             "alert_remapping": DictElement(parameter_form=form_alert_remapping()),
+            "severity_remapping": DictElement(parameter_form=form_severity_remapping()),
         },
     )
 

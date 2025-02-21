@@ -1156,6 +1156,16 @@ def _contact_group_choice() -> Sequence[UniqueSingleChoiceElement]:
     ]
 
 
+def custom_macros_cannot_be_empty(custom_macros: Sequence[tuple[str, str]]) -> None:
+    for name, match in custom_macros:
+        if not name.strip() and not match.strip():
+            raise ValidationError(Message("A macro name and a regular expression are required"))
+        if not name.strip():
+            raise ValidationError(Message("A macro name is required"))
+        if not match.strip():
+            raise ValidationError(Message("A regular expression is required"))
+
+
 def recipient() -> QuickSetupStage:
     def _components() -> Sequence[Widget]:
         return [
@@ -1332,6 +1342,7 @@ def recipient() -> QuickSetupStage:
                                                             "Please add at least one macro"
                                                         ),
                                                     ),
+                                                    custom_macros_cannot_be_empty,
                                                 ],
                                             ),
                                         ),

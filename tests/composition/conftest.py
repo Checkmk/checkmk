@@ -62,6 +62,7 @@ def _central_site(request: pytest.FixtureRequest, ensure_cron: None) -> Iterator
                 update={
                     "log_levels": {
                         "cmk.web": 10,
+                        "cmk.web.agent_registration": 10,
                         "cmk.web.background-job": 10,
                     }
                 },

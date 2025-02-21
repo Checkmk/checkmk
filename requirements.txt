@@ -148,10 +148,6 @@ attrs==25.1.0 \
     #   jsonschema
     #   pytest-subtests
     #   referencing
-autoflake==2.3.1 \
-    --hash=sha256:3ae7495db9084b7b32818b4140e6dc4fc280b712fb414f5b8fe57b0a8e85a840 \
-    --hash=sha256:c98b75dc5b0a86459c4f01a1d32ac7eb4338ec4317a4469515ff1e687ecd909e
-    # via -r dev-requirements.in
 azure-common==1.1.28 \
     --hash=sha256:4ac0cd3214e36b6a1b6a442686722a5d8cc449603aa833f3f0f40bda836704a3 \
     --hash=sha256:5c12d3dcf4ec20599ca6b0d3e09e86e146353d443e7fcc050c9a19c1f9df20ad
@@ -2740,10 +2736,6 @@ pyenchant==3.2.2 \
     --hash=sha256:5facc821ece957208a81423af7d6ec7810dad29697cb0d77aae81e4e11c8e5a6 \
     --hash=sha256:6153f521852e23a5add923dbacfbf4bebbb8d70c4e4bad609a8e0f9faeb915d1
     # via sphinxcontrib-spelling
-pyflakes==3.2.0 \
-    --hash=sha256:1c61603ff154621fb2a9172037d84dca3500def8c8b630657d1701f026f8af3f \
-    --hash=sha256:84b5be138a2dfbb40689ca07e2152deb896a65c3a3e24c251c5c62489568074a
-    # via autoflake
 pyghmi==1.5.60 \
     --hash=sha256:9c18ef0be1b4ba6a9477d426031eebff32897a8f95cbfe27b58fd410f8c31736 \
     --hash=sha256:d61839df5a56d3e3845483abf35e3a48cbf2669e41c1110912157808ce1a194b

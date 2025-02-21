@@ -58,12 +58,6 @@ repos:
             entry: scripts/check-cmk-namespace
             types: [file, python]
             require_serial: true
-          - id: remove-stale-imports
-            name: Remove stale imports
-            language: script
-            entry: scripts/run-autoflake
-            types: [file, python]
-            require_serial: true
           - id: bandit
             name: Run bandit
             # -l level low -ll = level medium -lll level high

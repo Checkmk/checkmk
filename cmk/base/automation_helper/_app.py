@@ -240,12 +240,14 @@ def _execute_automation_endpoint(
     ):
         clear_caches_before_each_call()
         try:
+            automation_start_time = time.time()
             result_or_error_code: ABCAutomationResult | int = engine.execute(
                 payload.name,
                 list(payload.args),
                 state.plugins,
                 state.loaded_config,
             )
+            automation_end_time = time.time()
         except SystemExit as system_exit:
             LOGGER.error(
                 '[automation] Encountered SystemExit exception while processing automation "%s" with args: %s',
@@ -259,9 +261,10 @@ def _execute_automation_endpoint(
             )
         else:
             LOGGER.info(
-                '[automation] Processed automation command "%s" with args: %s',
+                '[automation] Processed automation command "%s" with args "%s" in %.2f seconds',
                 payload.name,
                 payload.args,
+                automation_end_time - automation_start_time,
             )
 
         match result_or_error_code:

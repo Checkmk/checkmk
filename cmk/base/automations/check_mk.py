@@ -1034,7 +1034,6 @@ class AutomationSetAutochecksV2(DiscoveryAutomation):
         loaded_config: config.LoadedConfigFragment | None,
     ) -> SetAutochecksV2Result:
         set_autochecks_input = SetAutochecksInput.deserialize(sys.stdin.read())
-        config_cache = config.get_config_cache()
 
         if plugins is None:
             plugins = load_plugins()
@@ -1044,6 +1043,7 @@ class AutomationSetAutochecksV2(DiscoveryAutomation):
             loaded_config = load_config(
                 discovery_rulesets=agent_based_register.extract_known_discovery_rulesets(plugins)
             )
+        config_cache = config.get_config_cache()
 
         service_descriptions: Mapping[tuple[HostName, CheckPluginName, str | None], ServiceName] = {
             (host, autocheck_entry.check_plugin_name, autocheck_entry.item): service_name

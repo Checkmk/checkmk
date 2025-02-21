@@ -20,6 +20,7 @@ from cmk.gui import (
     crash_handler,
     crash_reporting,
     default_permissions,
+    deprecations,
     graphing,
     gui_background_job,
     help_menu,
@@ -289,3 +290,4 @@ def register(
     user_connections_config(config_file_registry)
     user_config.register(config_file_registry)
     configuration_bundles.register(config_file_registry)
+    deprecations.register(cron_job_registry)

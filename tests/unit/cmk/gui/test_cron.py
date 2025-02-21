@@ -23,6 +23,7 @@ def test_registered_jobs() -> None:
         "execute_host_removal_job",
         "cleanup_topology_layouts",
         "execute_autodiscovery",
+        "execute_deprecation_tests_and_notify_users",
     ]
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:

@@ -777,12 +777,18 @@ export function toggle_more(
     dom_levels_up: number,
 ) {
     event!.stopPropagation();
-    let container: HTMLElement | ParentNode | null = trigger;
+    let container: HTMLElement | ParentNode | null =
+        document.getElementById(toggle_id);
     let state;
-    for (let i = 0; i < dom_levels_up; i++) {
-        container = container!.parentNode;
-        while ((container as HTMLElement).className.includes("simplebar-"))
+
+    if (container === null) {
+        container = trigger;
+
+        for (let i = 0; i < dom_levels_up; i++) {
             container = container!.parentNode;
+            while ((container as HTMLElement).className.includes("simplebar-"))
+                container = container!.parentNode;
+        }
     }
 
     if (has_class(container as HTMLElement, "more")) {

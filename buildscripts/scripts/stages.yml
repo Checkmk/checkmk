@@ -86,7 +86,7 @@ VARIABLES:
       REPLACE_NEWLINES: true
 
     - NAME: CHANGED_WERK_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '.werks/' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^\\.werks/' || true"
       REPLACE_NEWLINES: true
 
     - NAME: CHANGED_WERK_CODE_FILES

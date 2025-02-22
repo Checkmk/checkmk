@@ -10,7 +10,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import CheckResult, IgnoreResultsError, Metric
+from cmk.agent_based.v2 import CheckResult, IgnoreResultsError, Metric, Service
 from cmk.plugins.collection.agent_based import winperf_phydisk
 from cmk.plugins.lib import diskstat
 
@@ -205,6 +205,20 @@ def test_parse_winperf_phydisk_real_life() -> None:
         "2",
         "3",
         "D:",
+    ]
+
+
+@pytest.mark.xfail(strict=True)
+def test_discover_winperf_phydisk() -> None:
+    params: list[Mapping[str, object]] = [
+        {"diskless": True, "lvm": True, "physical": "name", "summary": True, "vxvm": True},
+        {"diskless": False, "lvm": False, "summary": True, "vxvm": False},
+    ]
+    section = winperf_phydisk.parse_winperf_phydisk(STRING_TABLE)
+    assert section is not None
+    assert list(winperf_phydisk.discover_winperf_phydisk(params, section)) == [
+        Service(item="SUMMARY"),
+        Service(item="C:"),
     ]
 
 

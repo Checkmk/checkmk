@@ -10,8 +10,8 @@ from typing import Any, TypeVar
 
 from cmk.ccc import debug
 
+from cmk.utils import paths
 from cmk.utils.hostaddress import HostName
-from cmk.utils.paths import autochecks_dir
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.checkengine.checking import CheckPluginName
@@ -20,6 +20,7 @@ from cmk.checkengine.legacy import LegacyCheckParameters
 
 from cmk.base.api.agent_based import register
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin
+from cmk.base.config import load_all_plugins
 
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
 
@@ -71,9 +72,14 @@ def rewrite_yielding_errors(*, write: bool) -> Iterable[RewriteError]:
     to ensure consistency.
     """
     all_rulesets = AllRulesets.load_all_rulesets()
-    check_plugins = register.get_previously_loaded_plugins().check_plugins
+    plugins, _errors = load_all_plugins(
+        local_checks_dir=paths.local_checks_dir,
+        checks_dir=paths.checks_dir,
+    )
     for hostname in _autocheck_hosts():
-        fixed_autochecks = yield from _get_fixed_autochecks(hostname, all_rulesets, check_plugins)
+        fixed_autochecks = yield from _get_fixed_autochecks(
+            hostname, all_rulesets, plugins.check_plugins
+        )
         if write:
             AutochecksStore(hostname).write(fixed_autochecks)
 
@@ -106,7 +112,7 @@ def _get_fixed_autochecks(
 
 
 def _autocheck_hosts() -> Iterable[HostName]:
-    for autocheck_file in Path(autochecks_dir).glob("*.mk"):
+    for autocheck_file in Path(paths.autochecks_dir).glob("*.mk"):
         yield HostName(autocheck_file.stem)
 
 

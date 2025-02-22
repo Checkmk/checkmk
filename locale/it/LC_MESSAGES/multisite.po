@@ -3381,6 +3381,10 @@ msgstr "Il riconoscimento scade:"
 msgid "Acknowledgments: "
 msgstr "Ringraziamenti: "
 
+#, fuzzy
+msgid "Acquired lock"
+msgstr "Serrature esclusive"
+
 msgid "Act."
 msgstr "Atto."
 
@@ -3689,6 +3693,10 @@ msgstr "I controlli attivi sono stati abilitati manualmente per questo %s!"
 
 msgid "Active connections"
 msgstr "Connessioni attive"
+
+#, fuzzy
+msgid "Active discovered service labels"
+msgstr "Etichette di servizio scoperte"
 
 msgid "Active guest memory"
 msgstr "Memoria ospite attiva"
@@ -7538,6 +7546,10 @@ msgid "Authorizations per DB security group"
 msgstr "Autorizzazioni per gruppo di sicurezza DB"
 
 msgid "Authorized sites"
+msgstr "Siti autorizzati"
+
+#, fuzzy
+msgid "Authorized users"
 msgstr "Siti autorizzati"
 
 #, fuzzy
@@ -13862,10 +13874,14 @@ msgstr "Specifiche API REST di calcolo"
 msgid "Compute average over last "
 msgstr "Calcolare la media sull'ultimo "
 
+#, fuzzy
 msgid ""
 "Compute averaged single-core CPU utilizations. Note that this option only "
 "has an effect if at least one of the sub-options 'Apply single-core levels' "
-"or 'Graphs for averaged single-core utilizations' is enabled."
+"or 'Graphs for averaged single-core utilizations' is enabled.\n"
+"Note: The average is calculated using the Exponential Moving Average (EMA) "
+"method, which considers both the new value and the previous average while "
+"applying a weighted factor to each."
 msgstr ""
 "Calcola l'utilizzo medio della CPU single-core. Nota che questa opzione ha "
 "effetto solo se almeno una delle sotto-opzioni 'Applica livelli single-core' "
@@ -15022,6 +15038,9 @@ msgstr "Aiuto sensibile al contesto"
 msgid "Context switches"
 msgstr "Interruttori di contesto"
 
+msgid "Contextual help icon"
+msgstr ""
+
 msgid "Continue"
 msgstr "Continua"
 
@@ -15089,11 +15108,11 @@ msgid "Convert imported User-IDs to lower case during synchronization."
 msgstr ""
 "Convertire gli ID utente importati in minuscolo durante la sincronizzazione."
 
-msgid "Cooldown after host a change batch has been processed"
-msgstr ""
-
 msgid "Cooldown before retrying failed remote or local delivery"
 msgstr "Cooldown prima di riprovare una consegna remota o locale fallita"
+
+msgid "Cooldown time after a change batch has been processed"
+msgstr ""
 
 msgid "Cooldown time before trying to reconnect after failure"
 msgstr ""
@@ -19469,9 +19488,6 @@ msgstr "Etichette di host scoperte (%s)"
 msgid "Discovered process name"
 msgstr "Nome del processo scoperto"
 
-msgid "Discovered service labels"
-msgstr "Etichette di servizio scoperte"
-
 msgid "Discovery"
 msgstr "Discovery"
 
@@ -20532,9 +20548,6 @@ msgstr "Non mostrare il titolo"
 msgid "Do not show the service status"
 msgstr "Non mostrare lo stato del servizio"
 
-msgid "Do not show title"
-msgstr "Non mostrare il titolo"
-
 msgid "Do not status data inventory"
 msgstr "Non fare l'inventario dei dati di stato"
 
@@ -20585,9 +20598,6 @@ msgstr "Trasferire il contesto"
 
 msgid "Do you really want to move the selected aggregations?"
 msgstr "Vuoi davvero spostare le aggregazioni selezionate?"
-
-msgid "Do you really want to move the selected rules?"
-msgstr "Vuoi davvero spostare le regole selezionate?"
 
 #, python-format
 msgid ""
@@ -28152,6 +28162,10 @@ msgstr "Nascondere dalla GUI di stato"
 msgid "Hide hosttags in Setup folder view"
 msgstr "Nascondere gli hosttag nella vista della cartella Setup"
 
+#, fuzzy
+msgid "Hide icon"
+msgstr "Icona del sito"
+
 msgid "Hide in report"
 msgstr "Nascondi nel rapporto"
 
@@ -28188,6 +28202,10 @@ msgstr "Nascondi questo %s nei menu a discesa"
 #, python-format
 msgid "Hide this %s in the monitor menu"
 msgstr "Nascondi questo %s nel menu del monitor"
+
+#, fuzzy
+msgid "Hide title"
+msgstr "Titolo della pagina"
 
 msgid "Hide user rules"
 msgstr "Nascondere le regole dell'utente"
@@ -37258,6 +37276,9 @@ msgstr ""
 msgid "List of patterns to exclude"
 msgstr "Elenco dei modelli da escludere"
 
+msgid "List of users and password allowed to use this endpoint"
+msgstr ""
+
 msgid "List unpackaged files"
 msgstr "Elencare i file non confezionati"
 
@@ -40371,6 +40392,10 @@ msgstr "Grafico delle metriche di un singolo servizio"
 msgid "Metrics of service"
 msgstr "Metriche di servizio"
 
+#, fuzzy
+msgid "Metrics path"
+msgstr "Metriche"
+
 msgid "Metrics system"
 msgstr "Sistema metrico"
 
@@ -42566,9 +42591,6 @@ msgstr "Età del file più recente qui sotto"
 msgid "Newest first"
 msgstr "Prima i più nuovi"
 
-msgid "Newly discovered"
-msgstr "Scoperto di recente"
-
 #, fuzzy
 msgid "Next"
 msgstr "Prossima corsa"
@@ -43071,6 +43093,11 @@ msgstr "Nessun host di prova"
 
 msgid "No title"
 msgstr "Nessun titolo"
+
+msgid ""
+"No triggering events selected. Please select at least one event to trigger "
+"the notification."
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -49367,6 +49394,15 @@ msgstr ""
 "Selezionate quale stato di allarme devono assumere i servizi di controllo "
 "del service discovery nel caso in cui siano monitorati servizi non esistenti."
 
+#, fuzzy
+msgid ""
+"Please select which alarm state the service discovery check services shall "
+"assume in case that parameters of services have changed."
+msgstr ""
+"Selezionare quale stato di allarme devono assumere i servizi di controllo "
+"della ricerca dei servizi nel caso in cui le etichette dei servizi siano "
+"cambiate."
+
 msgid ""
 "Please select which alarm state the service discovery check services shall "
 "assume in case that un-monitored services are found."
@@ -50076,9 +50112,6 @@ msgstr "Anteprima di questo rapporto"
 
 #, fuzzy
 msgid "Previous cycle"
-msgstr "Scoperto in precedenza"
-
-msgid "Previously discovered"
 msgstr "Scoperto in precedenza"
 
 msgid "PrimSeq erros"
@@ -57152,6 +57185,10 @@ msgstr "Gravità delle nuove etichette dell'ospite"
 msgid "Severity of services with changed labels"
 msgstr "Gravità dei servizi con etichette modificate"
 
+#, fuzzy
+msgid "Severity of services with changed parameters"
+msgstr "Gravità dei servizi con etichette modificate"
+
 msgid "Severity of unmonitored services"
 msgstr "Gravità dei servizi non monitorati"
 
@@ -57283,6 +57320,10 @@ msgstr "Mostra un messaggio di accesso"
 msgid "Show a margin round the graph"
 msgstr "Mostra un margine intorno al grafico"
 
+#, fuzzy
+msgid "Show active discovered service labels"
+msgstr "Etichette di servizio scoperte"
+
 msgid "Show affected host groups"
 msgstr "Mostra i gruppi di host interessati"
 
@@ -57371,9 +57412,6 @@ msgstr "Mostra i dettagli"
 msgid "Show details about livestatus encryption"
 msgstr "Mostra dettagli sulla crittografia di livestatus"
 
-msgid "Show discovered service labels"
-msgstr "Mostra le etichette di servizio scoperte"
-
 msgid "Show dynamic"
 msgstr "Mostra dinamica"
 
@@ -57423,6 +57461,10 @@ msgstr "Mostra lo stato dell'host"
 #, fuzzy
 msgid "Show host tags"
 msgstr "Mostra lo stato dell'host"
+
+#, fuzzy
+msgid "Show icon"
+msgstr "Mostra pin"
 
 msgid "Show icon linking to Setup parameter editor for services"
 msgstr ""
@@ -58579,6 +58621,10 @@ msgstr ""
 "PING in un millisecondo. Con questa impostazione si può forzare un piccolo "
 "tempo di attesa tra due gruppi di PING inviati. Per impostazione "
 "predefinita, inviamo con la massima velocità possibile"
+
+#, fuzzy
+msgid "Some help text"
+msgstr "nascondere il testo di aiuto"
 
 #, python-format
 msgid "Some hosts could not be deleted:<ul>%s</ul>"
@@ -62797,6 +62843,9 @@ msgstr "Non è stato possibile trovare il DN di base del gruppo."
 
 msgid "The Group Base DN is not configured, not fetching any groups."
 msgstr "Il DN di base del gruppo non è configurato, non recupera alcun gruppo."
+
+msgid "The HTTP resource path on which to fetch metrics from targets."
+msgstr ""
 
 #, fuzzy, python-format
 msgid "The ID %s is already used by another connection."
@@ -72100,6 +72149,10 @@ msgid ""
 "page."
 msgstr ""
 
+#, fuzzy
+msgid "Thread ID"
+msgstr "Threads"
+
 msgid "Thread creations per second"
 msgstr "Creazioni di thread al secondo"
 
@@ -76770,6 +76823,14 @@ msgstr "Aggiornare le informazioni sul server"
 msgid "Update service labels"
 msgstr "Aggiornare le etichette di servizio"
 
+#, fuzzy
+msgid "Update service parameters"
+msgstr "Esempio di parametri"
+
+#, fuzzy
+msgid "Update service params"
+msgstr "Aggiornare le etichette di servizio"
+
 msgid "Update site DNS Cache"
 msgstr "Aggiornare la cache DNS del sito"
 
@@ -78186,8 +78247,9 @@ msgstr ""
 msgid "Use the remote SID"
 msgstr "Utilizzare il SID remoto"
 
-msgid "Use the status of the Checkmk Agent"
-msgstr "Utilizzare lo stato del Checkmk Agent"
+#, fuzzy
+msgid "Use the status of the Check_MK Service"
+msgstr "Usa lo stato del servizio..."
 
 msgid "Use the status of the service..."
 msgstr "Usa lo stato del servizio..."
@@ -80493,6 +80555,9 @@ msgstr "Aspettando che altri interruttori siano online"
 msgid "Waiting for replication to start"
 msgstr "In attesa dell'avvio della replica"
 
+msgid "Waiting to acquire lock"
+msgstr ""
+
 #, fuzzy
 msgid "Waiting..."
 msgstr "In attesa"
@@ -81553,9 +81618,13 @@ msgstr ""
 "elementi di pagina e gli elementi di pagina fissi dei rapporti ereditati "
 "appaiono prima degli elementi definiti in questo rapporto."
 
+#, fuzzy
 msgid ""
 "When this option is activated then the CPU utilization is being averaged "
-"<b>before</b> the levels on total CPU utilization are being applied."
+"<b>before</b> the levels on total CPU utilization are being applied.\n"
+"Note: The average is calculated using the Exponential Moving Average (EMA) "
+"method, which considers both the new value and the previous average while "
+"applying a weighted factor to each."
 msgstr ""
 "Quando questa opzione è attivata, l'utilizzo della CPU viene calcolato come "
 "media <b>prima</b> di applicare i livelli di utilizzo totale della CPU."
@@ -84269,6 +84338,11 @@ msgstr "È necessario selezionare almeno un utente."
 
 msgid "You have to specify a connector to migrate to."
 msgstr "È necessario specificare un connettore da migrare."
+
+msgid ""
+"You have to specify at least one authenticated user to use Basic "
+"Authentication on an endpoint"
+msgstr ""
 
 #, fuzzy, python-format
 msgid "You have to specify at least one receiver: %s"
@@ -87151,6 +87225,24 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usa SSL per la connessione."
 
+#~ msgid "Show discovered service labels"
+#~ msgstr "Mostra le etichette di servizio scoperte"
+
+#~ msgid "Do you really want to move the selected rules?"
+#~ msgstr "Vuoi davvero spostare le regole selezionate?"
+
+#~ msgid "Do not show title"
+#~ msgstr "Non mostrare il titolo"
+
+#~ msgid "Newly discovered"
+#~ msgstr "Scoperto di recente"
+
+#~ msgid "Previously discovered"
+#~ msgstr "Scoperto in precedenza"
+
+#~ msgid "Use the status of the Checkmk Agent"
+#~ msgstr "Utilizzare lo stato del Checkmk Agent"
+
 #~ msgid ""
 #~ "<p>You should have a backup configured for being able to restore your "
 #~ "monitoring environment in case of a data loss.<br>In case you a using a "
@@ -88260,9 +88352,6 @@ msgstr "Usa SSL per la connessione."
 #~ msgstr ""
 #~ "Se disattivato, Setup mostra i testi di aiuto delle regole anche nelle "
 #~ "viste elenco."
-
-#~ msgid "hide help text"
-#~ msgstr "nascondere il testo di aiuto"
 
 #~ msgid "Database for PostgreSQL"
 #~ msgstr "Database per PostgreSQL"

@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-02-14 06:00+0000\n"
+"PO-Revision-Date: 2025-02-21 06:00+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -267,7 +267,7 @@ msgid "#Containers"
 msgstr "#Container"
 
 msgid "#Containers paused"
-msgstr "#Container pausiert"
+msgstr "#Container pausieren"
 
 msgid "#Containers running"
 msgstr "#Container aktiv"
@@ -285,7 +285,7 @@ msgid "#Hyperthreads"
 msgstr "#Hyperthreads"
 
 msgid "#Images"
-msgstr "#Images"
+msgstr "#Darstellungen"
 
 msgid "#Increments"
 msgstr "#Zuwachs"
@@ -313,11 +313,11 @@ msgstr "% / Bereich"
 
 #, no-python-format
 msgid "% above predicted value"
-msgstr "% über der Prognose"
+msgstr "% über dem prognostizierten Wert"
 
 #, no-python-format
 msgid "% below predicted value"
-msgstr "% unter der Prognose"
+msgstr "% unter dem prognostizierten Wert"
 
 #, no-python-format
 msgid "% free"
@@ -1428,15 +1428,17 @@ msgstr ""
 "<b>Negation:</b> Wende Regel auf alle <b> außer</b> den oben stehenden Hosts "
 "an"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "<b>Note:</b> The ntopng integration is an add-on feature for which a "
 "subscription add-on has to be purchased separately. It requires a commercial "
 "edition of ntopng. See the <a href='%s' target='_blank'> Checkmk docs</a> "
 "for detailed requirements."
 msgstr ""
-"<b>Notiz:</b> Die Ntop Einbindung ist ein Add-On Feature, für das eine "
-"seperate Add-On Suskription gekauft werden muss."
+"<b>Hinweis:</b> Die ntopng-Integration ist eine Add-on-Funktion, für die "
+"eine separate Add-on-Subskription erworben werden muss. Sie erfordert eine "
+"kommerzielle Edition von ntopng. Detaillierte Anforderungen finden Sie im <a "
+"href='%s' target='_blank'>Checkmk-Handbuch</a>."
 
 msgid ""
 "<b>Note:</b> the shown results are incomplete and do not reflect the sort "
@@ -1554,7 +1556,7 @@ msgid ""
 msgstr ""
 "<br>Hinweis: Manche Dateien können hochsensitive Daten, wie Passwörter "
 "enthalten. Diese Dateien werden mit einem 'H' markiert. Andere Dateien "
-"können IP-Adressen, Host- oder Benutzernamen, Email-Adressen oder "
+"können IP-Adressen, Host- oder Benutzernamen, E-Mail-Adressen oder "
 "Telefonnummern beinhalten. Diese werden mit einem 'M' markiert."
 
 msgid ""
@@ -1596,11 +1598,12 @@ msgid ""
 "possible, it is not recommended to use Checkmk this way because it may "
 "reduce the overall performance of Checkmk.</p>"
 msgstr ""
-"<p>Standardmäßig hat jede Checkmk ein eigenes temporäres Dateisystem (eine "
-"Ramdisk) unterhalb von <tt>[SITE]/tmp</tt> eingebunden. Falls das Einbinden "
-"nicht möglich ist, startet Checkmk ohne dieses temporäre Dateisystem.</"
-"p><p>Auch wenn dies möglich ist, wird es nicht empfohlen Checkmk so zu "
-"betreiben, da es die Performance von Checkmk beeinträchtigen kann.</p>"
+"<p>Standardmäßig hat jede Checkmk-Instanz ein eigenes temporäres Dateisystem "
+"(eine Ramdisk) unterhalb von <tt>[SITE]/tmp</tt> eingebunden. Falls das "
+"Einbinden nicht möglich ist, startet Checkmk ohne dieses temporäre "
+"Dateisystem.</p><p>Auch wenn dies möglich ist, wird es nicht empfohlen "
+"Checkmk so zu betreiben, da es die Performance von Checkmk beeinträchtigen "
+"kann.</p>"
 
 msgid ""
 "<p>Having a large number of users configured in Checkmk may decrease the "
@@ -1689,16 +1692,16 @@ msgid ""
 "a look at <a href=\"werk.py?werk=7017\">werk #7017</a> for further "
 "information.</p>"
 msgstr ""
-"<p>In verteilten Installationen wird Livestatus verwendet, um die an einem "
-"Standort gesammelten Zustandsinformationen in der Zentrale verfügbar zu "
-"machen. Mit Checkmk 1.6 ist es nativ möglich und dringend empfohlen, diesen "
-"Livestatus-Verkehr zu verschlüsseln.</p> <p>Dies kann über die globale "
-"Einstellung <a href=\"wato.py?mode=edit_configvar&varname=site_livestatus_tcp"
-"\">Zugriff auf Livestatus über TCP</a> aktiviert werden. Bevor Sie dies "
-"aktivieren, sollten Sie sicherstellen, dass alle Ihre Livestatus-Clients in "
-"der Lage sind, die SSL-verschlüsselte Livestatus-Kommunikation zu "
-"verarbeiten. Werfen Sie einen Blick auf <a href=\"werk.py?werk=7017\">werk "
-"#7017</a> für weitere Informationen.</p>"
+"<p>In verteilten Setups wird Livestatus verwendet, um die in einer Instanz "
+"gesammelten Zustandsinformationen zur Zentralinstanz zu transportieren. Mit "
+"Checkmk 1.6 ist es nativ möglich und dringend empfohlen, diesen Livestatus-"
+"Verkehr zu verschlüsseln.</p> <p>Dies kann über die globale Einstellung <a "
+"href=\"wato.py?mode=edit_configvar&varname=site_livestatus_tcp\">Zugriff auf "
+"Livestatus über TCP</a> aktiviert werden. Bevor Sie dies aktivieren, sollten "
+"Sie sicherstellen, dass alle Ihre Livestatus-Clients in der Lage sind, die "
+"SSL-verschlüsselte Livestatus-Kommunikation zu verarbeiten. Werfen Sie einen "
+"Blick auf <a href=\"werk.py?werk=7017\">werk #7017</a> für weitere "
+"Informationen.</p>"
 
 msgid ""
 "<p>In distributed setups it is possible to synchronize the extensions (MKPs "
@@ -3113,7 +3116,7 @@ msgid "Access"
 msgstr "Zugriff"
 
 msgid "Access Checkmk Agent via TCP"
-msgstr "Checkmk Agenten via TCP abrufen"
+msgstr "Checkmk-Agent via TCP abrufen"
 
 msgid "Access Point"
 msgstr "Zugangspunkt"
@@ -3197,7 +3200,7 @@ msgid ""
 "access to this module can make arbitrary changes to the configuration by "
 "restoring uploaded snapshots."
 msgstr ""
-"Zugriff auf Modul <i>Instanz-Sicherung</i>. Achtung: Ein Benutzer mit "
+"Zugriff auf Modul <i>Instanz-Backup</i>. Achtung: Ein Benutzer mit "
 "Schreibrechten auf dieses Modul kann Veränderungen an der Konfiguration "
 "durch das Wiederherstellen von Sicherungen vornehmen."
 
@@ -3354,6 +3357,9 @@ msgstr "Ablauf der Quittierung:"
 msgid "Acknowledgments: "
 msgstr "Quittierungen: "
 
+msgid "Acquired lock"
+msgstr "Erlangte Sperre"
+
 msgid "Act."
 msgstr "Akt."
 
@@ -3427,7 +3433,7 @@ msgid ""
 "Activate changes error. Unable to prepare site snapshots. Failed command: "
 "%r, Exception: %s"
 msgstr ""
-"Problem beim Aktivieren der Änderungen. Die Site Snapshots konnten nicht "
+"Problem beim Aktivieren der Änderungen. Die Instanz-Snapshots konnten nicht "
 "erstellt werden. Fehlgeschlagenes Kommando %r, Fehler: %s"
 
 #, python-format
@@ -3460,7 +3466,8 @@ msgid "Activate foreign changes"
 msgstr "Aktiviere fremde Änderungen"
 
 msgid "Activate modern eventlog API introduced in vista"
-msgstr "Aktiviere die moderne Eventlog-API, die in Vista eingeführt wurde"
+msgstr ""
+"Aktiviere die moderne Ereignisprotokoll-API, die in Vista eingeführt wurde"
 
 msgid ""
 "Activate modern eventlog api introduced in vista. Pro: supports new logs "
@@ -3468,11 +3475,11 @@ msgid ""
 "well tested, maybe slower. Note: setting this does not change the default "
 "set of monitored logs, see logname for that"
 msgstr ""
-"Aktiviere die moderne Eventlog-API, die in Vista eingeführt wurde. Pro: "
-"Unterstützt neue Logs, die in Vista eingeführt wurden. Kontra: Nur in Vista "
-"(Server 2008) und neuer verfügbar, geringe Testabdeckung, ggfs. langsamer. "
-"Beachte: Ist die Option gesetzt, ändert dies nicht das Standardverhalten von "
-"zu überwachenden Logs, siehe auch Protokollname"
+"Aktiviere die moderne Ereignisprotokoll-API, die in Vista eingeführt wurde. "
+"Pro: Unterstützt neue Logs, die in Vista eingeführt wurden. Kontra: Nur in "
+"Vista (Server 2008) und neuer verfügbar, geringe Testabdeckung, ggfs. "
+"langsamer. Beachte: Ist die Option gesetzt, ändert dies nicht das "
+"Standardverhalten von zu überwachenden Logs, siehe auch Protokollname"
 
 msgid "Activate monitoring of host via a HTTP connect to the HiveManager"
 msgstr ""
@@ -3653,6 +3660,9 @@ msgstr "Aktive Checks wurden für %s manuell aktiviert!"
 
 msgid "Active connections"
 msgstr "Aktive Verbindungen"
+
+msgid "Active discovered service labels"
+msgstr "Aktive, erkannte Service-Labels"
 
 msgid "Active guest memory"
 msgstr "Aktiver Speicher auf dem Gast"
@@ -4989,7 +4999,7 @@ msgid "Agent controller"
 msgstr "Agent Controller"
 
 msgid "Agent controller auto-registration"
-msgstr "Automatische Registrierung von Agent Controllern"
+msgstr "Autoregistrierung von Agent Controllern"
 
 msgid "Agent controller connections"
 msgstr "Agent Controller Verbindungen"
@@ -5733,8 +5743,8 @@ msgid ""
 "All problem services of a given host. The host and site must be set via HTTP "
 "variables."
 msgstr ""
-"Alle Problem-Services eines bestimmten Hosts. Der Host und die Site müssen "
-"per HTTP-Variablen gesetzt sein."
+"Alle Problem-Services eines bestimmten Hosts. Der Host und die Instanz "
+"müssen per HTTP-Variablen gesetzt sein."
 
 msgid "All problematic logfiles"
 msgstr "Alle problematischen Log-Dateien"
@@ -5826,7 +5836,9 @@ msgstr "Alle Services von Hosts, die auf einen Namen passen"
 msgid ""
 "All services ordered by their service check durations, grouped by their "
 "sites.\n"
-msgstr "Alle Services, sortiert nach ihrer Laufzeit, gruppiert nach Instanz.\n"
+msgstr ""
+"Alle Services, sortiert nach ihrer Laufzeit, gruppiert nach ihren "
+"Instanzen.\n"
 
 msgid "All services with a certain description"
 msgstr "Alle Services mit einer bestimmten Beschreibung"
@@ -6157,7 +6169,7 @@ msgid "Also bulk outside of time period"
 msgstr "Zusätzliches Bulken außerhalb der Zeitperiode"
 
 msgid "Also contact Checkmk agent"
-msgstr "Kontaktiere zusätzlich den Checkmk Agent"
+msgstr "Kontaktiere zusätzlich den Checkmk-Agent"
 
 msgid "Also search in subfolders"
 msgstr "Zusätzlich in Unterordnern suchen"
@@ -7426,6 +7438,9 @@ msgstr "Berechtigungen pro DB-Sicherheitsgruppe"
 
 msgid "Authorized sites"
 msgstr "Berechtigte Instanzen"
+
+msgid "Authorized users"
+msgstr "Berechtigte Benutzer"
 
 msgid "Auto"
 msgstr "Auto"
@@ -9021,7 +9036,7 @@ msgid "Body"
 msgstr "Inhalt"
 
 msgid "Body for report mail"
-msgstr "Inhalt von Berichtsemails"
+msgstr "Inhalt von Berichts-E-Mails"
 
 msgid "Body head for both host and service notifications"
 msgstr "Anfang des E-Mail-Texts für Host-/Service-Benachrichtigungen"
@@ -11065,7 +11080,7 @@ msgstr "Kann Datei \"%s\" nichyt lesen: %s"
 
 msgid "Cannot render dropdown: Missing required information"
 msgstr ""
-"Dropdown kann nicht dargestellt werden: Fehlende erforderliche Informationen"
+"Drop-down kann nicht dargestellt werden: Fehlende erforderliche Informationen"
 
 #, python-format
 msgid "Cannot render graph: host %s, service %s not found."
@@ -11660,7 +11675,7 @@ msgid "Check document size"
 msgstr "Prüfe Größe des Dokuments"
 
 msgid "Check email"
-msgstr "Email prüfen"
+msgstr "E-Mail prüfen"
 
 msgid "Check email delivery"
 msgstr "E-Mail-Zustellung prüfen"
@@ -11887,10 +11902,10 @@ msgstr "Checkmk-Agent"
 
 #, python-format
 msgid "Checkmk Agent Port (<a href=\"%s\">Rules</a>)"
-msgstr "Checkmk Agent Port (<a href=\"%s\">Regeln</a>)"
+msgstr "Checkmk-Agenten-Port (<a href=\"%s\">Regeln</a>)"
 
 msgid "Checkmk Agent installation auditing"
-msgstr "Überwachung der Checkmk-Agent Installation"
+msgstr "Überwachung der Checkmk-Agenten-Installation"
 
 msgid ""
 "Checkmk Agent, Number, version and edition of sites, cluster host; number of "
@@ -11898,7 +11913,7 @@ msgid ""
 "Apache, Core, Crontab, DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
 "(Agent plug-in mk_inventory needs to be installed)"
 msgstr ""
-"Checkmk Agent, Anzahl, Version und Edition der Instanzen, Cluster-Host; "
+"Checkmk-Agent, Anzahl, Version und Edition der Instanzen, Cluster-Host; "
 "Anzahl der Hosts, Dienste, CMK-Helper, Live-Helper, Helper-Auslastung; "
 "Zustand der Daemons: Apache, Core, Crontab, DCD, Liveproxyd, MKEventd, "
 "MKNotifyd, RRDCached (Agentenplugin mk_inventory muss installiert sein)"
@@ -11949,7 +11964,7 @@ msgid "Checkmk Windows agent service settings"
 msgstr "Einstellungen des Checkmk Windows-Agenten-Service"
 
 msgid "Checkmk agent"
-msgstr "Checkmk Agent"
+msgstr "Checkmk-Agent"
 
 msgid "Checkmk agent / API integrations"
 msgstr "Checkmk-Agent / API-Integrationen"
@@ -11961,10 +11976,10 @@ msgid "Checkmk agent local directory"
 msgstr "Lokales Verzeichnis des Checkmk-Agent"
 
 msgid "Checkmk agent network service (Linux)"
-msgstr "Checkmk Agent Netzwerk-Service (Linux)"
+msgstr "Checkmk-Agent Netzwerk-Service (Linux)"
 
 msgid "Checkmk agent network service (Solaris)"
-msgstr "Checkmk Agent Netzwerkdienst (Solaris)"
+msgstr "Checkmk-Agent Netzwerkdienst (Solaris)"
 
 msgid "Checkmk agent plug-ins"
 msgstr "Checkmk-Agentenplugins"
@@ -11974,7 +11989,7 @@ msgstr "Verzeichnis der Checkmk-Agentenplugins"
 
 msgid "Checkmk agent: Execute the Checkmk agent within running containers"
 msgstr ""
-"Checkmk Agent: Führe den Checkmk Agenten innerhalb laufender Container aus"
+"Checkmk-Agent: Führe den Checkmk-Agenten innerhalb laufender Container aus"
 
 msgid "Checkmk automation"
 msgstr "Checkmk Automatisierung"
@@ -13532,12 +13547,19 @@ msgstr "Durchschnitt erzeugen über die letzten "
 msgid ""
 "Compute averaged single-core CPU utilizations. Note that this option only "
 "has an effect if at least one of the sub-options 'Apply single-core levels' "
-"or 'Graphs for averaged single-core utilizations' is enabled."
+"or 'Graphs for averaged single-core utilizations' is enabled.\n"
+"Note: The average is calculated using the Exponential Moving Average (EMA) "
+"method, which considers both the new value and the previous average while "
+"applying a weighted factor to each."
 msgstr ""
-"Single-Core-CPU-Auslastungen Durchschnittswerte berechnen. Beachten Sie, "
-"dass diese Option nur dann eine Wirkung hat, wenn mindestens eine der "
-"Unteroptionen 'Single-Core-Levels anwenden' oder 'Graphen für gemittelte "
-"Single-Core-Auslastungen' aktiviert ist."
+"Berechne gemittelte Einzelkern-CPU-Auslastung. Beachten Sie, dass diese "
+"Option nur dann eine Auswirkung hat, wenn mindestens eine der Unteroptionen "
+"'Einzelkern-Levels anwenden' oder 'Graphen für gemittelte "
+"Einzelkernauslastung' aktiviert ist.\n"
+"Hinweis: Der Durchschnitt wird mit der Methode des exponentiellen gleitenden "
+"Durchschnitts (EMA) berechnet, bei der sowohl der neue Wert als auch der "
+"vorherige Durchschnitt berücksichtigt werden, wobei auf beide ein "
+"gewichteter Faktor angewendet wird."
 
 msgid "Compute range accoring to displayed data"
 msgstr "Automatisch mit den angezeigten Werten skalieren"
@@ -14674,6 +14696,9 @@ msgstr "Kontextsensitive Hilfe"
 msgid "Context switches"
 msgstr "Kontextswitche"
 
+msgid "Contextual help icon"
+msgstr "Kontextabhängiges Hilfesymbol"
+
 msgid "Continue"
 msgstr "Fortsetzen"
 
@@ -14739,13 +14764,13 @@ msgstr ""
 "Importierte Benutzer IDs während Synchronisation in Kleinbuchstaben "
 "umwandeln."
 
-msgid "Cooldown after host a change batch has been processed"
-msgstr ""
-
 msgid "Cooldown before retrying failed remote or local delivery"
 msgstr ""
 "Abkühlzeit vor dem erneuten Versuch einer fehlgeschlagenen Remote- oder "
 "lokalen Zustellung"
+
+msgid "Cooldown time after a change batch has been processed"
+msgstr "Abkühlzeit nach Verarbeitung einer Änderungscharge"
 
 msgid "Cooldown time before trying to reconnect after failure"
 msgstr "Abklingzeit, bevor nach Abbruch Wiederverbindung versucht wird"
@@ -19005,9 +19030,6 @@ msgstr "Erkannte Host-Labels (%s)"
 msgid "Discovered process name"
 msgstr "Erkannter Prozessname"
 
-msgid "Discovered service labels"
-msgstr "Erkannte Service-Labels"
-
 msgid "Discovery"
 msgstr "Erkennung"
 
@@ -19914,7 +19936,7 @@ msgid "Do not impose levels, always be OK"
 msgstr "Keine Level anwenden, immer OK"
 
 msgid "Do not manage the controllers auto-registration"
-msgstr "Die automatische Registrierung von Controllern nicht verwalten"
+msgstr "Die Autoregistrierung von Controllern nicht verwalten"
 
 msgid "Do not map roles"
 msgstr "Rollen nicht zuordnen"
@@ -19977,9 +19999,6 @@ msgstr "Nicht erneut anzeigen"
 msgid "Do not show the service status"
 msgstr "Den Service-Zustand nicht anzeigen"
 
-msgid "Do not show title"
-msgstr "Titel nicht anzeigen"
-
 msgid "Do not status data inventory"
 msgstr "Führe keine Zustandsdaten-Inventur durch"
 
@@ -20027,9 +20046,6 @@ msgstr "Kontext übermitteln"
 
 msgid "Do you really want to move the selected aggregations?"
 msgstr "Wollen Sie die ausgewählten Aggregationen wirklich verschieben?"
-
-msgid "Do you really want to move the selected rules?"
-msgstr "Wollen Sie die ausgewählten Regeln wirklich verschieben?"
 
 #, python-format
 msgid ""
@@ -20278,10 +20294,10 @@ msgid "Downloaded Agent"
 msgstr "Heruntergeladener Agent"
 
 msgid "Downloads Checkmk agent and plug-ins for Linux"
-msgstr "Checkmk Agent und Plugins für Linux herunterladen"
+msgstr "Checkmk-Agent und Plugins für Linux herunterladen"
 
 msgid "Downloads Checkmk agent and plug-ins for Windows"
-msgstr "Checkmk Agent und Plugins für Windows herunterladen"
+msgstr "Checkmk-Agent und Plugins für Windows herunterladen"
 
 msgid "Downloads Checkmk agents for other operating systems"
 msgstr "Checkmk-Agenten für andere Betriebssysteme herunterladen"
@@ -20833,7 +20849,8 @@ msgstr "Jeder Service überwacht Robot Framework tests.\n"
 msgid ""
 "Each tag group will create one dropdown choice in the host configuration."
 msgstr ""
-"Jede Merkmal-Gruppe erstellt eine Dropdown-Auswahl in der Host-Konfiguration."
+"Jede Merkmal-Gruppe erstellt eine Drop-down-Auswahl in der Host-"
+"Konfiguration."
 
 msgid "Each tag key must be unique and cannot be used multiple times."
 msgstr ""
@@ -21477,7 +21494,7 @@ msgid "Emails"
 msgstr "E-Mails"
 
 msgid "Emails containing URL per second"
-msgstr "Emails mit URL pro Sekunde"
+msgstr "E-Mails mit URL pro Sekunde"
 
 msgid "Emails containing attachment per second"
 msgstr "E-Mails mit Anhang pro Sekunde"
@@ -21772,7 +21789,7 @@ msgid ""
 msgstr ""
 "Durch das Aktivieren von Sammelbenachrichtigungen werden mehrere aufeinander "
 "folgende Benachrichtigungen für denselben Kontakt in eine einzige "
-"Benachrichtigung (also z.B. in einer Email) zusammengefasst, die alle "
+"Benachrichtigung (also z.B. in einer E-Mail) zusammengefasst, die alle "
 "Probleme auflistet. Dadurch kann bei einem kurzzeitigen Auftreten vieler "
 "verwandter Probleme die Anzahl der Benachrichtigungen deutlich reduziert "
 "werden."
@@ -24295,7 +24312,7 @@ msgid "Find on this page ..."
 msgstr "Suche ... auf dieser Seite."
 
 msgid "Finetune Windows Eventlog monitoring"
-msgstr "Windows Eventlog-Monitoring justieren"
+msgstr "Windows Ereignisprotokoll-Monitoring justieren"
 
 msgid "Finetune Windows process monitoring"
 msgstr "Windows Prozess-Monitoring justieren"
@@ -26322,7 +26339,7 @@ msgid "HTTP(S) load balancer"
 msgstr "HTTP(S) Loadbalancer"
 
 msgid "HTTP, TCP, Email, ..."
-msgstr "HTTP, TCP, Email, ..."
+msgstr "HTTP, TCP, E-Mail, ..."
 
 msgid "HTTP: Active Requests"
 msgstr "HTTP: aktive Anfragen"
@@ -27374,8 +27391,8 @@ msgid ""
 "Here you can specify the subject text instead of default text 'Check_MK-Mail-"
 "Loop'."
 msgstr ""
-"Hier kann der Emailsubjekttext statt der Defaulteinstellung 'Check_MK-Mail-"
-"Loop' konfiguriert werden."
+"Hier können Sie den Betrefftext anstelle des Standardtextes 'Check_MK-Mail-"
+"Loop' angeben."
 
 msgid "Here you can specify the total memory usage levels for clustered hosts."
 msgstr ""
@@ -27497,6 +27514,9 @@ msgstr "Nicht in Status GUI anzeigen"
 msgid "Hide hosttags in Setup folder view"
 msgstr "Host-Merkmale in Setup-Ordneransicht verstecken"
 
+msgid "Hide icon"
+msgstr "Symbol verbergen"
+
 msgid "Hide in report"
 msgstr "Im Report verbergen"
 
@@ -27528,11 +27548,14 @@ msgstr "Die Checkmk-Version auf der Login-Box verbergen"
 
 #, python-format
 msgid "Hide this %s in dropdown menus"
-msgstr "%s in der Dropdown-Liste ausblenden"
+msgstr "%s im Drop-down-Menü"
 
 #, python-format
 msgid "Hide this %s in the monitor menu"
 msgstr "%s im Monitor-Menü ausblenden"
+
+msgid "Hide title"
+msgstr "Titel verbergen"
 
 msgid "Hide user rules"
 msgstr "Benutzerregeln zu"
@@ -30909,7 +30932,7 @@ msgstr ""
 "notwendig. Beachten Sie, dass der Agent nicht erreichbar ist, wenn ein Linux-"
 "Host diese Anforderungen nicht erfüllt, d. h. das Aktivieren eines Services, "
 "der die IP-Beschränkung nicht realisieren kann, wird bei der Agenten-"
-"Installation verhindert, siehe „Checkmk Agent Netzwerk-Service (Linux)“ "
+"Installation verhindert, siehe „Checkmk-Agent Netzwerk-Service (Linux)“ "
 "Regelsatz. Selbst wenn Sie die Bäckerei nicht nutzen, werden die "
 "konfigurierten IP-Adressbeschränkungen eines Hosts anhand der vom Agenten "
 "gemeldeten zulässigen IP-Adressen überprüft. Dies geschieht während dem "
@@ -35854,7 +35877,7 @@ msgid "Limit from AWS API"
 msgstr "Grenzwert aus der AWS-API"
 
 msgid "Limit length of mail body"
-msgstr "Länge der Email-Inhalts begrenzen"
+msgstr "Länge des E-Mail-Inhalts begrenzen"
 
 msgid "Limit local agent data access to the agent controller"
 msgstr "Zugriff auf lokale Agentendaten auf den Agent Controller einschränken"
@@ -36182,6 +36205,9 @@ msgstr ""
 
 msgid "List of patterns to exclude"
 msgstr "Liste der auszuschließenden Patterns"
+
+msgid "List of users and password allowed to use this endpoint"
+msgstr "Liste der Benutzer und Passwörter, die diesen Endpunkt nutzen dürfen"
 
 msgid "List unpackaged files"
 msgstr "Entpackte Dateien auflisten"
@@ -36706,7 +36732,7 @@ msgid ""
 "controller registration command."
 msgstr ""
 "Protokollieren Sie den Prozess der Agentenregistrierung bei eingehenden "
-"Anfragen mit dem Befehl Checkmk agent controller registration."
+"Anfragen mit dem Befehl Checkmk Agent Controller Registrierung."
 
 msgid "Log the automatic host removal process."
 msgstr "Protokolliere den automatischen Entfernungsprozess für Hosts."
@@ -37480,10 +37506,10 @@ msgstr "Magnetischer Datenträgerplatz"
 
 #, python-format
 msgid "Mail could not be delivered: '%s'"
-msgstr "Die Email konnte nicht zugestellt werden: '%s'"
+msgstr "Die E-Mail konnte nicht zugestellt werden: '%s'"
 
 msgid "Mail latency"
-msgstr "Emaillatenz"
+msgstr "E-Mail-Latenz"
 
 msgid "Mail queue name"
 msgstr "Mailschlangen-Namen"
@@ -37501,16 +37527,16 @@ msgid "Mailqueue"
 msgstr "Mailqueue"
 
 msgid "Mails Waiting for DNS Queue"
-msgstr "Emails, die auf DNS warten"
+msgstr "E-Mails, die auf DNS warten"
 
 msgid "Mails in Dead Queue"
-msgstr "Emails in der Dead-Schlange"
+msgstr "E-Mails in der Dead-Schlange"
 
 msgid "Mails in Hold Queue"
-msgstr "Emails in der Hold-Schlange"
+msgstr "E-Mails in der Hold-Schlange"
 
 msgid "Mails in Waiting Queue"
-msgstr "Emails in der Waiting-Schlange"
+msgstr "E-Mails in der Waiting-Schlange"
 
 msgid "Mails in active mail queue"
 msgstr "Mails in der aktiven Mailqueue"
@@ -37693,7 +37719,7 @@ msgstr ""
 
 msgid "Makes the icon appear in the column instead of the dropdown menu."
 msgstr ""
-"Lässt das Symbol direkt in der Spalte erscheinen und nicht im Popup-Menü."
+"Lässt das Symbol direkt in der Spalte erscheinen und nicht im Drop-down-Menü."
 
 msgid "Man Page Browser"
 msgstr "Manpage Browser"
@@ -38605,7 +38631,7 @@ msgid "Maximum number of delivery attempts"
 msgstr "Maximale Anzahl Zustellungsversuche"
 
 msgid "Maximum number of emails in queue"
-msgstr "Maximale Anzahl von Emails in der Warteschlange"
+msgstr "Maximale Anzahl von E-Mails in der Warteschlange"
 
 msgid "Maximum number of executions"
 msgstr "Maximale Anzahl an Ausführungen"
@@ -39236,6 +39262,9 @@ msgstr "Graph eines einzelnen Services"
 
 msgid "Metrics of service"
 msgstr "Metriken der Services"
+
+msgid "Metrics path"
+msgstr "Pfad der Metriken"
 
 msgid "Metrics system"
 msgstr "Metrik-System"
@@ -41349,9 +41378,6 @@ msgstr "Alter der neuesten Datei kleiner als"
 msgid "Newest first"
 msgstr "Neuste zuerst"
 
-msgid "Newly discovered"
-msgstr "Neu erkannt"
-
 msgid "Next"
 msgstr "Nächste/r/s"
 
@@ -41835,6 +41861,14 @@ msgstr "Kein Testhost"
 
 msgid "No title"
 msgstr "Kein Titel"
+
+#, fuzzy
+msgid ""
+"No triggering events selected. Please select at least one event to trigger "
+"the notification."
+msgstr ""
+"Alle Host-Ereignisse, Service-Ereignisse und Warnungen der Event Console "
+"werden eine Benachrichtigung auslösen"
 
 #, python-format
 msgid ""
@@ -44069,7 +44103,7 @@ msgid "Only problems"
 msgstr "Nur Probleme"
 
 msgid "Only process mails with matching subject"
-msgstr "Nur Emails mit passendem Betreff verarbeiten"
+msgstr "Nur E-Mails mit passendem Betreff verarbeiten"
 
 msgid "Only query the following SIDs (if found)"
 msgstr "Nur folgende SIDs abfragen (falls gefunden)"
@@ -44494,7 +44528,7 @@ msgid "Options"
 msgstr "Optionen"
 
 msgid "Options for report emails"
-msgstr "Optionen für Berichtsemails"
+msgstr "Optionen für Berichts-E-Mails"
 
 msgid ""
 "Options in this group define how the connection to the web server is "
@@ -47813,6 +47847,14 @@ msgstr ""
 "Legen Sie den Zustand fest, den der Service-Erkennungs-Check annehmen soll "
 "wenn nicht existierende Services gefunden werden."
 
+#, fuzzy
+msgid ""
+"Please select which alarm state the service discovery check services shall "
+"assume in case that parameters of services have changed."
+msgstr ""
+"Bitte wählen Sie aus, welchen Alarmzustand die Check-Services der Service-"
+"Erkennung annehmen sollen, wenn sich die Service-Labels geändert haben."
+
 msgid ""
 "Please select which alarm state the service discovery check services shall "
 "assume in case that un-monitored services are found."
@@ -48497,9 +48539,6 @@ msgstr "Vorschau dieses Berichts"
 msgid "Previous cycle"
 msgstr "Vorheriger Zyklus"
 
-msgid "Previously discovered"
-msgstr "Kürzlich erkannt"
-
 msgid "PrimSeq erros"
 msgstr "PrimSeq-Fehler"
 
@@ -49049,7 +49088,7 @@ msgid "Push configuration to this site"
 msgstr "Konfiguration auf diese Instanz übertragen"
 
 msgid "Push: Checkmk agent contacts the server"
-msgstr "Push: Der Checkmk Agent kontaktiert den Server"
+msgstr "Push: Der Checkmk-Agent kontaktiert den Server"
 
 msgid "Pushover"
 msgstr "Pushover"
@@ -50603,7 +50642,7 @@ msgstr "Entferne explizite Einstellungen"
 
 msgid "Remove files and subdirectories managed by the Checkmk agent"
 msgstr ""
-"Dateien und Verzeichnisse entfernen, welche durch den Checkmk Agenten "
+"Dateien und Verzeichnisse entfernen, welche durch den Checkmk-Agenten "
 "benutzt werden"
 
 msgid "Remove filter"
@@ -55277,7 +55316,7 @@ msgid "Settings"
 msgstr "Einstellungen"
 
 msgid "Settings concerning the connection to the Checkmk and SNMP agents"
-msgstr "Einstellungen für die Verbindungen zu Checkmk/SNMP Agenten"
+msgstr "Einstellungen für die Verbindungen zu Checkmk und den SNMP-Agenten"
 
 #, python-format
 msgid "Settings for %s state in case of recovery"
@@ -55375,6 +55414,10 @@ msgid "Severity of new host labels"
 msgstr "Schweregrad der neuen Host-Labels"
 
 msgid "Severity of services with changed labels"
+msgstr "Schwere von Services mit geänderten Labels"
+
+#, fuzzy
+msgid "Severity of services with changed parameters"
 msgstr "Schwere von Services mit geänderten Labels"
 
 msgid "Severity of unmonitored services"
@@ -55504,6 +55547,9 @@ msgstr "Eine Login-Nachricht anzeigen"
 msgid "Show a margin round the graph"
 msgstr "Zeige Rand um den Graphen"
 
+msgid "Show active discovered service labels"
+msgstr "Aktive, erkannte Service-Labels anzeigen"
+
 msgid "Show affected host groups"
 msgstr "Betroffene Host-Gruppen anzeigen"
 
@@ -55589,9 +55635,6 @@ msgstr "Details anzeigen"
 msgid "Show details about livestatus encryption"
 msgstr "Details zur Livestatus-Verschlüsselung anzeigen"
 
-msgid "Show discovered service labels"
-msgstr "Erkannte Servicelabels anzeigen"
-
 msgid "Show dynamic"
 msgstr "Dynamisch anzeigen"
 
@@ -55639,6 +55682,9 @@ msgstr "Host-Zustand anzeigen"
 
 msgid "Show host tags"
 msgstr "Host-Merkmale anzeigen"
+
+msgid "Show icon"
+msgstr "Symbol anzeigen"
 
 msgid "Show icon linking to Setup parameter editor for services"
 msgstr ""
@@ -55925,8 +55971,8 @@ msgid ""
 "setting is turned from 'on' to 'off' while a user has set a community "
 "translated language, the user's language is changed to 'English'."
 msgstr ""
-"Anzeigen/Ausblenden der von der Community übersetzten Sprachen in der "
-"Dropdown-Liste „Sprache“ (Benutzer > Profil bearbeiten). Beachten Sie, dass "
+"Anzeigen/Ausblenden der von der Community übersetzten Sprachen in der Drop-"
+"down-Liste „Sprache“ (Benutzer > Profil bearbeiten). Beachten Sie, dass "
 "diese Übersetzungen von der Checkmk-Community zur Verfügung gestellt werden "
 "und daher keine Haftung für ihre Gültigkeit übernommen wird.<br>Wenn diese "
 "Einstellung von „ein“ auf „aus“ gestellt wird, während ein Benutzer eine von "
@@ -56768,6 +56814,9 @@ msgstr ""
 "Millisekunde zu verarbeiten. Mit dieser Einstellung können Sie eine kleine "
 "Wartezeit zwischen zwei gesendeten PING-Paketen erzwingen. Standardmäßig "
 "senden wir mit der vollen möglichen Rate"
+
+msgid "Some help text"
+msgstr "Ein Hilfetext"
 
 #, python-format
 msgid "Some hosts could not be deleted:<ul>%s</ul>"
@@ -59931,7 +59980,7 @@ msgid "TCP port for connection"
 msgstr "TCP Port für Verbindung"
 
 msgid "TCP port for connection to Checkmk agent"
-msgstr "TCP Port für die Verbindung zum Checkmk Agent"
+msgstr "TCP Port für die Verbindung zum Checkmk-Agent"
 
 msgid "TCP port number"
 msgstr "TCP-Portnummer"
@@ -60749,7 +60798,7 @@ msgid ""
 "host's Python installation, e.g., if Python 3 is available via <tt>python</"
 "tt>, you can enforce the right version by setting this rule entry."
 msgstr ""
-"Der Checkmk Agent Unix wird die Python 3 Installation feststellen, in dem er "
+"Der Checkmk-Agent Unix wird die Python 3 Installation feststellen, in dem er "
 "nach dem <tt>python3</tt> Befehl sucht, die Python 2 Installation wird "
 "erkannt, indem nach den Befehlen <tt>python2</tt> oder <tt>python</tt> "
 "gesucht wird. Wenn dies nicht bei der Python Installation am Host zutrifft, "
@@ -60919,6 +60968,10 @@ msgid "The Group Base DN is not configured, not fetching any groups."
 msgstr ""
 "Der Basis-DN für die Gruppen ist nicht konfiguriert, ich werde keine Gruppen "
 "holen."
+
+msgid "The HTTP resource path on which to fetch metrics from targets."
+msgstr ""
+"Der Pfad zur HTTP-Ressource, über den Metriken von Zielen abgerufen werden."
 
 #, python-format
 msgid "The ID %s is already used by another connection."
@@ -61301,12 +61354,12 @@ msgid ""
 "href='%s'>online documentation</a> for details. The prefix should end with a "
 "slash. Omit the <tt>/nagvis/</tt> from the prefix."
 msgstr ""
-"Das URL-Präfix wird Links von Addons wie NagVis vorangestellt, wenn ein Link "
-"zu solchen Anwendungen auf einen Host oder Service auf dieser Instanz zeigt. "
-"Sie können entweder ein absolutes URL-Präfix wie <tt>http://some.host/mysite/"
-"</tt> oder eine relative URL wie <tt>/mysite/</tt> verwenden. Wenn Sie "
-"relative Präfixe verwenden, benötigen Sie eine mod_proxy-Konfiguration in "
-"Ihrem lokalen System apache, die solche URLs auf die entsprechende Remote-"
+"Das URL-Präfix wird Links von Add-ons wie NagVis vorangestellt, wenn ein "
+"Link zu solchen Anwendungen auf einen Host oder Service auf dieser Instanz "
+"zeigt. Sie können entweder ein absolutes URL-Präfix wie <tt>http://some.host/"
+"mysite/</tt> oder eine relative URL wie <tt>/mysite/</tt> verwenden. Wenn "
+"Sie relative Präfixe verwenden, benötigen Sie eine mod_proxy-Konfiguration "
+"in Ihrem lokalen System apache, die solche URLs auf die entsprechende Remote-"
 "Instanz projiziert. Einzelheiten entnehmen Sie bitte der <a target=_blank "
 "href='%s'>Online-Dokumentation</a>. Das Präfix sollte mit einem Schrägstrich "
 "enden. Lassen Sie das <tt>/nagvis/</tt> im Präfix weg."
@@ -63558,7 +63611,7 @@ msgid ""
 "The most CPU performance is needed by the Eventlog monitoring and the "
 "performance counters."
 msgstr ""
-"Die meiste CPU-Leistung wird vom Eventlog-Monitoring und den "
+"Die meiste CPU-Leistung wird vom Ereignisprotokoll-Monitoring und den "
 "Leistungszählern benötigt."
 
 #, python-format
@@ -66432,8 +66485,8 @@ msgid ""
 "This check is used to monitor successful email delivery through Symantec "
 "Brightmail Scanner appliances."
 msgstr ""
-"Diese Regel dient der Beobachtung der Mailqueue der Symantec Brightmail "
-"Scanner Appliance."
+"Dieser Check wird zur Überwachung der erfolgreichen E-Mail-Zustellung durch "
+"Symantec Brightmail Scanner-Appliances verwendet."
 
 msgid "This check monitors MSSQL page life expectancies."
 msgstr "Dieser Check überwacht die Lebensdauer von MSSQL-Seiten."
@@ -66826,7 +66879,7 @@ msgid "This host has a baked agent"
 msgstr "Dieser Host verwendet einen gebackenen Agenten"
 
 msgid "This host has no Checkmk agents."
-msgstr "Dieser Host hat keine Checkmk Agenten."
+msgstr "Dieser Host hat keine Checkmk-Agenten."
 
 #, python-format
 msgid "This host is a cluster of %s"
@@ -67314,7 +67367,7 @@ msgstr ""
 "Sektionen reduziert die CPU-Last auf dem überwachten Host und die Menge der "
 "übertragenen Daten. Es kann jedoch dazu führen, dass der zugehörige Checkmk-"
 "Service oder die zugehörigen Services ausfallen. Die meiste CPU-Leistung "
-"wird vom Eventlog-Monitoring und den Leistungszählern benötigt. "
+"wird vom Ereignisprotokoll-Monitoring und den Leistungszählern benötigt. "
 
 msgid "This option allows to skip specific sections of the Checkmk agent."
 msgstr ""
@@ -69255,14 +69308,14 @@ msgid ""
 "This ruleset allows you to configure levels for the deadlocks in the database"
 msgstr ""
 "Dieser Regelsatz ermöglicht es Ihnen, Levels für die Deadlocks in der "
-"Datenbank zu konfigurieren."
+"Datenbank zu konfigurieren"
 
 msgid ""
 "This ruleset allows you to configure levels for the used storage space in "
 "percent"
 msgstr ""
 "Dieser Regelsatz ermöglicht es Ihnen, Levels für den genutzten Speicherplatz "
-"in Prozent zu konfigurieren."
+"in Prozent zu konfigurieren"
 
 msgid ""
 "This ruleset allows you to install executable scripts on your target "
@@ -70186,7 +70239,7 @@ msgid ""
 "both the requests python library on the host running the plug-in <b>and</b> "
 "the WAR file on the JVMs."
 msgstr ""
-"Hiermit wird das Checkmk-Agenten-Plugin <tt>mk_jolokia</tt> verteilt und "
+"Hiermit wird das Checkmk-Agentenplugin <tt>mk_jolokia</tt> verteilt und "
 "konfiguriert. Um dies zu nutzen, benötigen Sie die Datei Jolokia <tt>.war</"
 "tt> aus der <a href='http://www.jolokia.org/index.html'>Jolokia Project "
 "Homepage</a>, die in Ihren JVMs verteilt wird. Derzeit werden mindestens "
@@ -70224,8 +70277,8 @@ msgid ""
 "you have to to determine the path to sapgenpse. It's recommended to run the "
 "plug-in asynchronously."
 msgstr ""
-"Dieser Regelsatz sorgt für die Verteilung und Konfiguration des "
-"<tt>mk_saprouter</tt>-Plugins. Das Plugin läuft in der Umgebung des "
+"Dieser Regelsatz sorgt für die Verteilung und Konfiguration des Checkmk-"
+"Agentenplugins <tt>mk_saprouter</tt>. Das Plugin läuft in der Umgebung des "
 "angegebenen Benutzers. Außerdem müssen Sie den Pfad zu sapgenpse bestimmen. "
 "Es wird empfohlen, das Plugin asynchron auszuführen."
 
@@ -70235,8 +70288,8 @@ msgid ""
 "environment. Furthermore you have to to determine host tags or service check "
 "commands."
 msgstr ""
-"Dieser Regelsatz sorgt für die Verteilung und Konfiguration des Checkmk "
-"Agenten-Plugin <tt>mk_site_object_counts</tt>. Das Plugin läuft in der "
+"Dieser Regelsatz sorgt für die Verteilung und Konfiguration des Checkmk-"
+"Agentenplugins <tt>mk_site_object_counts</tt>. Das Plugin läuft in der "
 "Umgebung des angegebenen Benutzers. Außerdem müssen Sie Host-Merkmale oder "
 "Service-Check-Befehle angeben."
 
@@ -70407,6 +70460,9 @@ msgstr ""
 "Dieses {type_name} ist Teil des {qs_name} Konfigurationsbündels.<br>Es "
 "enthält weitere Teile, die auf einer Übersichtsseite zugänglich sind und "
 "zusammengefasst werden."
+
+msgid "Thread ID"
+msgstr "Thread-ID"
 
 msgid "Thread creations per second"
 msgstr "Threaderstellungen pro Sekunde"
@@ -70815,7 +70871,7 @@ msgid "Time spent in GC"
 msgstr "Zeit in GC"
 
 msgid "Time spent waiting for Checkmk agent"
-msgstr "Wartezeit auf Antwort von Checkmk-Agent"
+msgstr "Wartezeit auf Antwort vom Checkmk-Agenten"
 
 msgid "Time spent waiting for SNMP responses"
 msgstr "Wartezeit auf SNMP-Antworten"
@@ -71430,7 +71486,7 @@ msgid "Total PGA used for manual workareas"
 msgstr "Gesamte PGA benutzt für manuelle Arbeitsbereiche"
 
 msgid "Total Pending Mails"
-msgstr "Gesamtzahl ausstehender Emails"
+msgstr "Gesamtzahl ausstehender E-Mails"
 
 msgid "Total Provisioned IOPS SSD (io1) IO operations per seconds"
 msgstr "Insgesamt bereitgestellte IOPS SSD (io1) IO-Vorgänge pro Sekunde"
@@ -74576,6 +74632,14 @@ msgstr "Informationen zum Update-Server"
 msgid "Update service labels"
 msgstr "Service-Labels aktualisieren"
 
+#, fuzzy
+msgid "Update service parameters"
+msgstr "Erkennungsparameter aktualisieren"
+
+#, fuzzy
+msgid "Update service params"
+msgstr "Service-Labels aktualisieren"
+
 msgid "Update site DNS Cache"
 msgstr "DNS-Cache der Instanz aktualisieren"
 
@@ -74853,15 +74917,16 @@ msgid "Upper levels for \"LRU nuked objects\" per second"
 msgstr "Obergrenzen für \"LRU nuked objects\" pro Sekunde"
 
 msgid "Upper levels for \"backend connections busy/too many\" per second"
-msgstr "Obergrenzen für \"backend connections busy/too many\" pro Sekunde"
+msgstr ""
+"Obergrenzen für \"Backend Verbindungen beschäftigt/zu viele\" pro Sekunde"
 
 msgid "Upper levels for \"backend connections failures\" per second"
-msgstr "Obergrenzen für \"backend connections failures\" pro Sekunde"
+msgstr "Obergrenzen für \"Backend Verbindungsfehler\" pro Sekunde"
 
 msgid ""
 "Upper levels for \"backend connections unhealthy/not attempted\" per second"
 msgstr ""
-"Obergrenzen für \"backend connections unhealthy/not attempted\" pro Sekunde"
+"Obergrenzen für \"Backend Verbindungen ungesund/nicht versucht\" pro Sekunde"
 
 msgid "Upper levels for \"cache misses\" per second"
 msgstr "Obergrenzen für \"Cache Misses\" pro Sekunde"
@@ -75966,8 +76031,8 @@ msgstr ""
 msgid "Use the remote SID"
 msgstr "Benutze die Remote-ID"
 
-msgid "Use the status of the Checkmk Agent"
-msgstr "Den Zustand des Checkmk-Agenten verwenden"
+msgid "Use the status of the Check_MK Service"
+msgstr "Den Zustand des Check_MK Service verwenden"
 
 msgid "Use the status of the service..."
 msgstr "Den Zustand verwenden von Service..."
@@ -78097,6 +78162,9 @@ msgstr "Warte auf andere Switche online zu gehen"
 msgid "Waiting for replication to start"
 msgstr "Warte auf den Beginn der Replikation"
 
+msgid "Waiting to acquire lock"
+msgstr "Warten auf Sperre"
+
 msgid "Waiting..."
 msgstr "Wartet..."
 
@@ -78734,8 +78802,8 @@ msgid ""
 "When forwarding mails from the mailbox to the event console, the body of the "
 "mail is limited to the given number of characters."
 msgstr ""
-"Wenn Sie Emails vom Postfach an die Event Console weiterleiten, wird der "
-"Inhalt der Email auf die hier eingestellte Anzahl von Zeichen gekürzt."
+"Wenn Sie E-Mails vom Postfach an die Event Console weiterleiten, wird der "
+"Inhalt der E-Mail auf die hier eingestellte Anzahl von Zeichen gekürzt."
 
 msgid ""
 "When forwarding messages and no facility can be extracted from the message "
@@ -79161,10 +79229,17 @@ msgstr ""
 
 msgid ""
 "When this option is activated then the CPU utilization is being averaged "
-"<b>before</b> the levels on total CPU utilization are being applied."
+"<b>before</b> the levels on total CPU utilization are being applied.\n"
+"Note: The average is calculated using the Exponential Moving Average (EMA) "
+"method, which considers both the new value and the previous average while "
+"applying a weighted factor to each."
 msgstr ""
-"Wenn diese Option aktiviert ist, wird die CPU-Auslastung gemittelt <b>bevor</"
-"b> die Level auf die Gesamt-CPU-Auslastung angewendet werden."
+"Wenn diese Option aktiviert ist, wird die CPU-Auslastung gemittelt, "
+"<b>bevor</b> die Levels auf die gesamte CPU-Auslastung angewendet werden.\n"
+"Hinweis: Der Durchschnitt wird mit der Methode des exponentiellen gleitenden "
+"Durchschnitts (EMA) berechnet, bei der sowohl der neue Wert als auch der "
+"vorherige Durchschnitt berücksichtigt werden, wobei auf beide ein "
+"gewichteter Faktor angewendet wird."
 
 msgid ""
 "When this option is activated then the packet rates are being averaged "
@@ -79317,9 +79392,9 @@ msgid ""
 "in size so that the dropdown will not get too large when you have a huge "
 "number of lists. "
 msgstr ""
-"Beim Eintippen von Text in die Schnellsuche öffnet sich eine Liste mit "
-"passenden Host-Namen. Die Länge der Liste ist begrenzt, damit Sie nicht die "
-"Übersicht bei zu vielen Treffern verlieren. "
+"Beim Eintippen von Text in die Schnellsuche öffnet sich eine Drop-down-Liste "
+"mit passenden Host-Namen. Die Länge der Drop-down-Liste ist begrenzt, damit "
+"Sie nicht die Übersicht bei zu vielen Treffern verlieren. "
 
 msgid ""
 "When using the regular HTTP protocol all data transfered between the Checkmk "
@@ -81904,6 +81979,13 @@ msgstr "Sie müssen mindestens einen Benutzer auswählen."
 
 msgid "You have to specify a connector to migrate to."
 msgstr "Sie müssen einen Konnektor angeben, zu dem migriert werden soll."
+
+msgid ""
+"You have to specify at least one authenticated user to use Basic "
+"Authentication on an endpoint"
+msgstr ""
+"Sie müssen mindestens einen authentifizierten Benutzer angeben, um Basic "
+"Authentication auf einem Endpunkt zu verwenden"
 
 #, python-format
 msgid "You have to specify at least one receiver: %s"
@@ -84819,6 +84901,24 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 
+#~ msgid "Show discovered service labels"
+#~ msgstr "Erkannte Servicelabels anzeigen"
+
+#~ msgid "Do you really want to move the selected rules?"
+#~ msgstr "Wollen Sie die ausgewählten Regeln wirklich verschieben?"
+
+#~ msgid "Do not show title"
+#~ msgstr "Titel nicht anzeigen"
+
+#~ msgid "Newly discovered"
+#~ msgstr "Neu erkannt"
+
+#~ msgid "Previously discovered"
+#~ msgstr "Kürzlich erkannt"
+
+#~ msgid "Use the status of the Checkmk Agent"
+#~ msgstr "Den Zustand des Checkmk-Agenten verwenden"
+
 #~ msgid ""
 #~ "<p>You should have a backup configured for being able to restore your "
 #~ "monitoring environment in case of a data loss.<br>In case you a using a "
@@ -86144,9 +86244,6 @@ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 #~ msgstr ""
 #~ "Wenn deaktiviert, zeigt Setup die Hilfetexte der Regeln auch in den "
 #~ "Listenansichten an."
-
-#~ msgid "hide help text"
-#~ msgstr "Hilfetext ausblenden"
 
 #~ msgid "Database for PostgreSQL"
 #~ msgstr "Datenbank für PostgreSQL"

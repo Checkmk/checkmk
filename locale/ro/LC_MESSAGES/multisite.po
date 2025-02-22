@@ -3419,6 +3419,10 @@ msgstr "Confirmarea expiră:"
 msgid "Acknowledgments: "
 msgstr "Recunoștințe: "
 
+#, fuzzy
+msgid "Acquired lock"
+msgstr "Încuietori exclusive"
+
 msgid "Act."
 msgstr "Act."
 
@@ -3731,6 +3735,10 @@ msgstr "Verificările active au fost activate manual pentru acest %s!"
 
 msgid "Active connections"
 msgstr "Conexiuni active"
+
+#, fuzzy
+msgid "Active discovered service labels"
+msgstr "Etichete de serviciu descoperite"
 
 msgid "Active guest memory"
 msgstr "Memorie activă pentru oaspeți"
@@ -7604,6 +7612,10 @@ msgid "Authorizations per DB security group"
 msgstr "Autorizații per grup de securitate DB"
 
 msgid "Authorized sites"
+msgstr "Site-uri autorizate"
+
+#, fuzzy
+msgid "Authorized users"
 msgstr "Site-uri autorizate"
 
 #, fuzzy
@@ -14006,10 +14018,14 @@ msgstr "Specificația API REST Compute"
 msgid "Compute average over last "
 msgstr "Calculați media pe ultima "
 
+#, fuzzy
 msgid ""
 "Compute averaged single-core CPU utilizations. Note that this option only "
 "has an effect if at least one of the sub-options 'Apply single-core levels' "
-"or 'Graphs for averaged single-core utilizations' is enabled."
+"or 'Graphs for averaged single-core utilizations' is enabled.\n"
+"Note: The average is calculated using the Exponential Moving Average (EMA) "
+"method, which considers both the new value and the previous average while "
+"applying a weighted factor to each."
 msgstr ""
 "Calculați utilizările medii ale CPU cu un singur nucleu. Rețineți că această "
 "opțiune are efect numai dacă cel puțin una dintre subopțiunile 'Apply single-"
@@ -15173,6 +15189,9 @@ msgstr "Ajutor sensibil la context"
 msgid "Context switches"
 msgstr "Comutarea contextului"
 
+msgid "Contextual help icon"
+msgstr ""
+
 msgid "Continue"
 msgstr "Continuați"
 
@@ -15241,13 +15260,13 @@ msgstr ""
 "Conversia ID-urilor de utilizator importate în minuscule în timpul "
 "sincronizării."
 
-msgid "Cooldown after host a change batch has been processed"
-msgstr ""
-
 msgid "Cooldown before retrying failed remote or local delivery"
 msgstr ""
 "Perioada de răcire înainte de a încerca din nou o livrare locală sau la "
 "distanță eșuată"
+
+msgid "Cooldown time after a change batch has been processed"
+msgstr ""
 
 msgid "Cooldown time before trying to reconnect after failure"
 msgstr "Timp de răcire înainte de a încerca să se reconecteze după eșec"
@@ -19670,9 +19689,6 @@ msgstr "Etichete gazdă descoperite (%s)"
 msgid "Discovered process name"
 msgstr "Numele procesului descoperit"
 
-msgid "Discovered service labels"
-msgstr "Etichete de serviciu descoperite"
-
 msgid "Discovery"
 msgstr "Descoperire"
 
@@ -20741,9 +20757,6 @@ msgstr "Nu afișați titlul"
 msgid "Do not show the service status"
 msgstr "Nu afișați starea serviciului"
 
-msgid "Do not show title"
-msgstr "Nu afișați titlul"
-
 msgid "Do not status data inventory"
 msgstr "Nu faceți inventarul datelor de stare"
 
@@ -20792,9 +20805,6 @@ msgstr "Transferați contextul"
 
 msgid "Do you really want to move the selected aggregations?"
 msgstr "Chiar doriți să mutați agregările selectate?"
-
-msgid "Do you really want to move the selected rules?"
-msgstr "Chiar doriți să mutați regulile selectate?"
 
 #, python-format
 msgid ""
@@ -28430,6 +28440,10 @@ msgstr "Ascundeți din GUI de stare"
 msgid "Hide hosttags in Setup folder view"
 msgstr "Ascundeți etichetele de gazdă în vizualizarea folderului Setup"
 
+#, fuzzy
+msgid "Hide icon"
+msgstr "Pictograma site-ului"
+
 msgid "Hide in report"
 msgstr "Ascundeți în raport"
 
@@ -28466,6 +28480,10 @@ msgstr "Ascundeți acest %s în meniurile derulante"
 #, python-format
 msgid "Hide this %s in the monitor menu"
 msgstr "Ascundeți acest %s în meniul monitorului"
+
+#, fuzzy
+msgid "Hide title"
+msgstr "Titlul paginii"
 
 msgid "Hide user rules"
 msgstr "Ascundeți regulile utilizatorului"
@@ -37635,6 +37653,9 @@ msgstr ""
 msgid "List of patterns to exclude"
 msgstr "Lista modelelor care trebuie excluse"
 
+msgid "List of users and password allowed to use this endpoint"
+msgstr ""
+
 msgid "List unpackaged files"
 msgstr "Lista fișierelor neambalate"
 
@@ -40773,6 +40794,10 @@ msgstr "Graficul de măsurători al unui singur serviciu"
 msgid "Metrics of service"
 msgstr "Măsurători de serviciu"
 
+#, fuzzy
+msgid "Metrics path"
+msgstr "Metrici"
+
 msgid "Metrics system"
 msgstr "Sistem de măsurare"
 
@@ -43007,9 +43032,6 @@ msgstr "Cea mai nouă vârstă a fișierului de mai jos"
 msgid "Newest first"
 msgstr "Cel mai nou mai întâi"
 
-msgid "Newly discovered"
-msgstr "Descoperit recent"
-
 #, fuzzy
 msgid "Next"
 msgstr "Următoarea cursă"
@@ -43514,6 +43536,11 @@ msgstr "Nici o gazdă de testare"
 
 msgid "No title"
 msgstr "Fără titlu"
+
+msgid ""
+"No triggering events selected. Please select at least one event to trigger "
+"the notification."
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -49861,6 +49888,15 @@ msgstr ""
 "verificare a descoperirii serviciilor în cazul în care sunt monitorizate "
 "servicii inexistente."
 
+#, fuzzy
+msgid ""
+"Please select which alarm state the service discovery check services shall "
+"assume in case that parameters of services have changed."
+msgstr ""
+"Vă rugăm să selectați ce stare de alarmă trebuie să adopte serviciile de "
+"verificare a descoperirii serviciilor în cazul în care etichetele "
+"serviciilor au fost modificate."
+
 msgid ""
 "Please select which alarm state the service discovery check services shall "
 "assume in case that un-monitored services are found."
@@ -50575,9 +50611,6 @@ msgstr "Previzualizați acest raport"
 
 #, fuzzy
 msgid "Previous cycle"
-msgstr "Descoperit anterior"
-
-msgid "Previously discovered"
 msgstr "Descoperit anterior"
 
 msgid "PrimSeq erros"
@@ -57767,6 +57800,10 @@ msgstr "Severitatea noilor etichete de gazdă"
 msgid "Severity of services with changed labels"
 msgstr "Severitatea serviciilor cu etichete modificate"
 
+#, fuzzy
+msgid "Severity of services with changed parameters"
+msgstr "Severitatea serviciilor cu etichete modificate"
+
 msgid "Severity of unmonitored services"
 msgstr "Gravitatea serviciilor nemonitorizate"
 
@@ -57900,6 +57937,10 @@ msgstr "Afișați un mesaj de autentificare"
 msgid "Show a margin round the graph"
 msgstr "Afișați o margine în jurul graficului"
 
+#, fuzzy
+msgid "Show active discovered service labels"
+msgstr "Etichete de serviciu descoperite"
+
 msgid "Show affected host groups"
 msgstr "Afișați grupurile de gazde afectate"
 
@@ -57988,9 +58029,6 @@ msgstr "Arată detalii"
 msgid "Show details about livestatus encryption"
 msgstr "Afișați detalii despre criptarea livestatus"
 
-msgid "Show discovered service labels"
-msgstr "Afișați etichetele serviciilor descoperite"
-
 msgid "Show dynamic"
 msgstr "Arată dinamic"
 
@@ -58040,6 +58078,10 @@ msgstr "Afișați starea gazdei"
 #, fuzzy
 msgid "Show host tags"
 msgstr "Afișați starea gazdei"
+
+#, fuzzy
+msgid "Show icon"
+msgstr "Arată acul"
 
 msgid "Show icon linking to Setup parameter editor for services"
 msgstr ""
@@ -59199,6 +59241,10 @@ msgstr ""
 "într-o milisecundă. Cu această setare puteți forța un mic timp de așteptare "
 "între două pachete de PING-uri trimise. În mod implicit, trimitem cu rata "
 "maximă posibilă"
+
+#, fuzzy
+msgid "Some help text"
+msgstr "ascundeți textul de ajutor"
 
 #, python-format
 msgid "Some hosts could not be deleted:<ul>%s</ul>"
@@ -63475,6 +63521,9 @@ msgstr "DN-ul de bază al grupului nu a putut fi găsit."
 
 msgid "The Group Base DN is not configured, not fetching any groups."
 msgstr "DN-ul de bază al grupului nu este configurat, nu se preia niciun grup."
+
+msgid "The HTTP resource path on which to fetch metrics from targets."
+msgstr ""
 
 #, fuzzy, python-format
 msgid "The ID %s is already used by another connection."
@@ -72923,6 +72972,10 @@ msgid ""
 "page."
 msgstr ""
 
+#, fuzzy
+msgid "Thread ID"
+msgstr "Fire"
+
 msgid "Thread creations per second"
 msgstr "Crearea de fire pe secundă"
 
@@ -77607,6 +77660,14 @@ msgstr "Actualizarea informațiilor despre server"
 msgid "Update service labels"
 msgstr "Actualizarea etichetelor de serviciu"
 
+#, fuzzy
+msgid "Update service parameters"
+msgstr "Exemplu pentru parametri"
+
+#, fuzzy
+msgid "Update service params"
+msgstr "Actualizarea etichetelor de serviciu"
+
 msgid "Update site DNS Cache"
 msgstr "Actualizați site-ul DNS Cache"
 
@@ -79047,8 +79108,9 @@ msgstr ""
 msgid "Use the remote SID"
 msgstr "Utilizați SID-ul la distanță"
 
-msgid "Use the status of the Checkmk Agent"
-msgstr "Utilizați starea agentului Checkmk"
+#, fuzzy
+msgid "Use the status of the Check_MK Service"
+msgstr "Utilizați starea serviciului..."
 
 msgid "Use the status of the service..."
 msgstr "Utilizați starea serviciului..."
@@ -81368,6 +81430,9 @@ msgstr "Așteptând ca alte comutatoare să fie puse în funcțiune"
 msgid "Waiting for replication to start"
 msgstr "Așteptare pentru începerea replicării"
 
+msgid "Waiting to acquire lock"
+msgstr ""
+
 #, fuzzy
 msgid "Waiting..."
 msgstr "Așteptare"
@@ -82444,9 +82509,13 @@ msgstr ""
 "Elementele de pagină și elementele de pagină fixe din rapoartele moștenite "
 "apar înaintea elementelor definite în acest raport."
 
+#, fuzzy
 msgid ""
 "When this option is activated then the CPU utilization is being averaged "
-"<b>before</b> the levels on total CPU utilization are being applied."
+"<b>before</b> the levels on total CPU utilization are being applied.\n"
+"Note: The average is calculated using the Exponential Moving Average (EMA) "
+"method, which considers both the new value and the previous average while "
+"applying a weighted factor to each."
 msgstr ""
 "Când această opțiune este activată, atunci se calculează media utilizării "
 "CPU <b>înainte de</b> aplicarea nivelurilor privind utilizarea totală a CPU."
@@ -85179,6 +85248,11 @@ msgstr "Trebuie să selectați cel puțin un utilizator."
 
 msgid "You have to specify a connector to migrate to."
 msgstr "Trebuie să specificați un conector către care să migrați."
+
+msgid ""
+"You have to specify at least one authenticated user to use Basic "
+"Authentication on an endpoint"
+msgstr ""
 
 #, fuzzy, python-format
 msgid "You have to specify at least one receiver: %s"
@@ -88104,6 +88178,24 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
 
+#~ msgid "Show discovered service labels"
+#~ msgstr "Afișați etichetele serviciilor descoperite"
+
+#~ msgid "Do you really want to move the selected rules?"
+#~ msgstr "Chiar doriți să mutați regulile selectate?"
+
+#~ msgid "Do not show title"
+#~ msgstr "Nu afișați titlul"
+
+#~ msgid "Newly discovered"
+#~ msgstr "Descoperit recent"
+
+#~ msgid "Previously discovered"
+#~ msgstr "Descoperit anterior"
+
+#~ msgid "Use the status of the Checkmk Agent"
+#~ msgstr "Utilizați starea agentului Checkmk"
+
 #~ msgid ""
 #~ "<p>You should have a backup configured for being able to restore your "
 #~ "monitoring environment in case of a data loss.<br>In case you a using a "
@@ -89260,9 +89352,6 @@ msgstr "Utilizați SSL pentru conexiune."
 #~ msgstr ""
 #~ "Dacă este dezactivat, Setup afișează textele de ajutor ale regulilor și "
 #~ "în vizualizările listei."
-
-#~ msgid "hide help text"
-#~ msgstr "ascundeți textul de ajutor"
 
 #~ msgid "Database for PostgreSQL"
 #~ msgstr "Baza de date pentru PostgreSQL"

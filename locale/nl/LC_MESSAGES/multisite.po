@@ -3400,6 +3400,10 @@ msgstr "Erken problemen"
 msgid "Acknowledgments: "
 msgstr "Erkenning"
 
+#, fuzzy
+msgid "Acquired lock"
+msgstr "Exclusieve sloten"
+
 msgid "Act."
 msgstr "Act."
 
@@ -3713,6 +3717,10 @@ msgstr "Actieve controles zijn handmatig ingeschakeld voor deze %s!"
 
 msgid "Active connections"
 msgstr "Actieve verbindingen"
+
+#, fuzzy
+msgid "Active discovered service labels"
+msgstr "Ontdekte service labels tonen"
 
 msgid "Active guest memory"
 msgstr "Actief gastgeheugen"
@@ -7605,6 +7613,10 @@ msgid "Authorizations per DB security group"
 msgstr "Autorisaties per DB-beveiligingsgroep"
 
 msgid "Authorized sites"
+msgstr "Toegestane sites"
+
+#, fuzzy
+msgid "Authorized users"
 msgstr "Toegestane sites"
 
 #, fuzzy
@@ -13994,10 +14006,14 @@ msgstr "SLA-specificatie"
 msgid "Compute average over last "
 msgstr "Bereken gemiddelde over laatste "
 
+#, fuzzy
 msgid ""
 "Compute averaged single-core CPU utilizations. Note that this option only "
 "has an effect if at least one of the sub-options 'Apply single-core levels' "
-"or 'Graphs for averaged single-core utilizations' is enabled."
+"or 'Graphs for averaged single-core utilizations' is enabled.\n"
+"Note: The average is calculated using the Exponential Moving Average (EMA) "
+"method, which considers both the new value and the previous average while "
+"applying a weighted factor to each."
 msgstr ""
 "Bereken gemiddelde single-core CPU-gebruikswaarden. Merk op dat deze optie "
 "alleen effect heeft als tenminste één van de subopties \"Single-core niveaus "
@@ -15166,6 +15182,9 @@ msgstr "Contextgevoelige hulp"
 msgid "Context switches"
 msgstr "Context schakelaars"
 
+msgid "Contextual help icon"
+msgstr ""
+
 msgid "Continue"
 msgstr "Ga door"
 
@@ -15235,13 +15254,13 @@ msgid "Convert imported User-IDs to lower case during synchronization."
 msgstr ""
 "Converteer geïmporteerde User-IDs naar kleine letters tijdens synchronisatie."
 
-msgid "Cooldown after host a change batch has been processed"
-msgstr ""
-
 msgid "Cooldown before retrying failed remote or local delivery"
 msgstr ""
 "Afkoeling voor het opnieuw proberen van mislukte aflevering op afstand of "
 "lokaal"
+
+msgid "Cooldown time after a change batch has been processed"
+msgstr ""
 
 msgid "Cooldown time before trying to reconnect after failure"
 msgstr ""
@@ -19653,10 +19672,6 @@ msgstr "Ontdekte host labels (%s)"
 msgid "Discovered process name"
 msgstr "Ontdekte procesnaam"
 
-#, fuzzy
-msgid "Discovered service labels"
-msgstr "Ontdekte service labels tonen"
-
 msgid "Discovery"
 msgstr "Ontdekking"
 
@@ -20704,9 +20719,6 @@ msgstr "Titel niet tonen"
 msgid "Do not show the service status"
 msgstr "Laat de dienst status niet zien"
 
-msgid "Do not show title"
-msgstr "Titel niet tonen"
-
 msgid "Do not status data inventory"
 msgstr "Geen status gegevensinventaris"
 
@@ -20758,9 +20770,6 @@ msgstr "Draag context over"
 
 msgid "Do you really want to move the selected aggregations?"
 msgstr "Wilt u echt de geselecteerde aggregaten verplaatsen?"
-
-msgid "Do you really want to move the selected rules?"
-msgstr "Wilt u echt de geselecteerde regels verplaatsen?"
 
 #, fuzzy, python-format
 msgid ""
@@ -28392,6 +28401,10 @@ msgstr "Verberg van Status GUI"
 msgid "Hide hosttags in Setup folder view"
 msgstr "Verberg hosttags in Setup-mapweergave"
 
+#, fuzzy
+msgid "Hide icon"
+msgstr "Site-icoon"
+
 msgid "Hide in report"
 msgstr "Verbergen in rapport"
 
@@ -28429,6 +28442,10 @@ msgstr "Verberg deze %s in vervolgkeuzemenu's"
 #, python-format
 msgid "Hide this %s in the monitor menu"
 msgstr "Verberg deze %s in het monitor menu"
+
+#, fuzzy
+msgid "Hide title"
+msgstr "Titel van de pagina"
 
 msgid "Hide user rules"
 msgstr "Verberg gebruikersregels"
@@ -37576,6 +37593,9 @@ msgstr ""
 msgid "List of patterns to exclude"
 msgstr "Lijst van uit te sluiten patronen"
 
+msgid "List of users and password allowed to use this endpoint"
+msgstr ""
+
 msgid "List unpackaged files"
 msgstr "Lijst van uitgepakte bestanden"
 
@@ -40722,6 +40742,10 @@ msgstr "Metriekgrafiek van een enkele dienst"
 msgid "Metrics of service"
 msgstr "Metriek van de dienst"
 
+#, fuzzy
+msgid "Metrics path"
+msgstr "Metriek"
+
 msgid "Metrics system"
 msgstr "Metriek systeem"
 
@@ -42935,10 +42959,6 @@ msgid "Newest first"
 msgstr "Nieuwste eerst"
 
 #, fuzzy
-msgid "Newly discovered"
-msgstr "NTP ontdekking"
-
-#, fuzzy
 msgid "Next"
 msgstr "Volgende run"
 
@@ -43447,6 +43467,11 @@ msgstr "Geen test host"
 
 msgid "No title"
 msgstr "Geen titel"
+
+msgid ""
+"No triggering events selected. Please select at least one event to trigger "
+"the notification."
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -49792,6 +49817,14 @@ msgstr ""
 "Selecteer welke alarmtoestand de service discovery check services moeten "
 "aannemen in het geval dat niet-bestaande services worden gemonitord."
 
+#, fuzzy
+msgid ""
+"Please select which alarm state the service discovery check services shall "
+"assume in case that parameters of services have changed."
+msgstr ""
+"Selecteer welke alarmtoestand de service discovery check services moeten "
+"aannemen in het geval dat niet-gemonitorde services worden gevonden."
+
 msgid ""
 "Please select which alarm state the service discovery check services shall "
 "assume in case that un-monitored services are found."
@@ -50503,10 +50536,6 @@ msgstr "Bekijk een voorbeeld van dit verslag"
 
 #, fuzzy
 msgid "Previous cycle"
-msgstr "Proces ontdekking"
-
-#, fuzzy
-msgid "Previously discovered"
 msgstr "Proces ontdekking"
 
 msgid "PrimSeq erros"
@@ -57635,6 +57664,10 @@ msgstr "Urgentie van nieuwe host labels"
 msgid "Severity of services with changed labels"
 msgstr "Urgentie van nieuwe host labels"
 
+#, fuzzy
+msgid "Severity of services with changed parameters"
+msgstr "Urgentie van nieuwe host labels"
+
 msgid "Severity of unmonitored services"
 msgstr "Urgentie van niet-gecontroleerde diensten"
 
@@ -57766,6 +57799,10 @@ msgstr "Een inlogbericht tonen"
 msgid "Show a margin round the graph"
 msgstr "Toon een marge rond de grafiek"
 
+#, fuzzy
+msgid "Show active discovered service labels"
+msgstr "Ontdekte service labels tonen"
+
 msgid "Show affected host groups"
 msgstr "Getroffen hostgroepen tonen"
 
@@ -57855,9 +57892,6 @@ msgstr "Toon details"
 msgid "Show details about livestatus encryption"
 msgstr "Toon details over livestatus encryptie"
 
-msgid "Show discovered service labels"
-msgstr "Ontdekte service labels tonen"
-
 msgid "Show dynamic"
 msgstr "Toon dynamisch"
 
@@ -57908,6 +57942,10 @@ msgstr "Toon host status"
 #, fuzzy
 msgid "Show host tags"
 msgstr "Toon host status"
+
+#, fuzzy
+msgid "Show icon"
+msgstr "Speld tonen"
 
 msgid "Show icon linking to Setup parameter editor for services"
 msgstr "Toon icoon dat linkt naar Setup parameter editor voor diensten"
@@ -59069,6 +59107,10 @@ msgstr ""
 "één milliseconde te verwerken. Met deze instelling kunt u een kleine "
 "wachttijd forceren tussen twee bulks PING's die worden verzonden. Standaard "
 "verzenden we met de volledig mogelijke snelheid"
+
+#, fuzzy
+msgid "Some help text"
+msgstr "help tekst verbergen"
 
 #, python-format
 msgid "Some hosts could not be deleted:<ul>%s</ul>"
@@ -63326,6 +63368,9 @@ msgstr "De groep Base DN kon niet worden gevonden."
 msgid "The Group Base DN is not configured, not fetching any groups."
 msgstr ""
 "De Groep Base DN is niet geconfigureerd, er worden geen groepen opgehaald."
+
+msgid "The HTTP resource path on which to fetch metrics from targets."
+msgstr ""
 
 #, fuzzy, python-format
 msgid "The ID %s is already used by another connection."
@@ -72671,6 +72716,10 @@ msgid ""
 "page."
 msgstr ""
 
+#, fuzzy
+msgid "Thread ID"
+msgstr "Draad"
+
 msgid "Thread creations per second"
 msgstr "Draad creaties per seconde"
 
@@ -77439,6 +77488,14 @@ msgstr "Serverinformatie bijwerken"
 msgid "Update service labels"
 msgstr "Overeenkomende dienst labels"
 
+#, fuzzy
+msgid "Update service parameters"
+msgstr "Voorbeeld voor parameters"
+
+#, fuzzy
+msgid "Update service params"
+msgstr "Overeenkomende dienst labels"
+
 msgid "Update site DNS Cache"
 msgstr "DNS-cache van site bijwerken"
 
@@ -78874,8 +78931,9 @@ msgstr ""
 msgid "Use the remote SID"
 msgstr "Gebruik de externe SID"
 
-msgid "Use the status of the Checkmk Agent"
-msgstr "Gebruik de status van de Checkmk Agent"
+#, fuzzy
+msgid "Use the status of the Check_MK Service"
+msgstr "Gebruik de status van de dienst..."
 
 msgid "Use the status of the service..."
 msgstr "Gebruik de status van de dienst..."
@@ -81186,6 +81244,9 @@ msgstr "Wachten op andere wissels om online te komen"
 msgid "Waiting for replication to start"
 msgstr "Wachten op replicatie om te beginnen"
 
+msgid "Waiting to acquire lock"
+msgstr ""
+
 #, fuzzy
 msgid "Waiting..."
 msgstr "Waiting"
@@ -82262,9 +82323,13 @@ msgstr ""
 "van geërfde rapporten verschijnen voor de elementen gedefinieerd in dit "
 "rapport."
 
+#, fuzzy
 msgid ""
 "When this option is activated then the CPU utilization is being averaged "
-"<b>before</b> the levels on total CPU utilization are being applied."
+"<b>before</b> the levels on total CPU utilization are being applied.\n"
+"Note: The average is calculated using the Exponential Moving Average (EMA) "
+"method, which considers both the new value and the previous average while "
+"applying a weighted factor to each."
 msgstr ""
 "Als deze optie is geactiveerd, wordt het CPU-gebruik gemiddeld <b>voordat</"
 "b> de niveaus voor het totale CPU-gebruik worden toegepast."
@@ -85004,6 +85069,11 @@ msgstr "U moet ten minste één gebruiker selecteren."
 
 msgid "You have to specify a connector to migrate to."
 msgstr "U moet een connector opgeven waarnaar u wilt migreren."
+
+msgid ""
+"You have to specify at least one authenticated user to use Basic "
+"Authentication on an endpoint"
+msgstr ""
 
 #, fuzzy, python-format
 msgid "You have to specify at least one receiver: %s"
@@ -87917,6 +87987,26 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
 
+#~ msgid "Show discovered service labels"
+#~ msgstr "Ontdekte service labels tonen"
+
+#~ msgid "Do you really want to move the selected rules?"
+#~ msgstr "Wilt u echt de geselecteerde regels verplaatsen?"
+
+#~ msgid "Do not show title"
+#~ msgstr "Titel niet tonen"
+
+#, fuzzy
+#~ msgid "Newly discovered"
+#~ msgstr "NTP ontdekking"
+
+#, fuzzy
+#~ msgid "Previously discovered"
+#~ msgstr "Proces ontdekking"
+
+#~ msgid "Use the status of the Checkmk Agent"
+#~ msgstr "Gebruik de status van de Checkmk Agent"
+
 #~ msgid ""
 #~ "<p>You should have a backup configured for being able to restore your "
 #~ "monitoring environment in case of a data loss.<br>In case you a using a "
@@ -89037,9 +89127,6 @@ msgstr "Gebruik SSL voor de verbinding."
 #~ msgstr ""
 #~ "Indien uitgeschakeld, toont Setup de helpteksten van regels ook in de "
 #~ "lijstweergaven."
-
-#~ msgid "hide help text"
-#~ msgstr "help tekst verbergen"
 
 #~ msgid "Database for PostgreSQL"
 #~ msgstr "Database voor PostgreSQL"

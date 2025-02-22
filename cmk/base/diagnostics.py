@@ -17,7 +17,7 @@ import textwrap
 import traceback
 import urllib.parse
 import uuid
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Iterator, Mapping
 from datetime import datetime
 from functools import cache
 from pathlib import Path
@@ -61,13 +61,9 @@ from cmk.utils.licensing.usage import deserialize_dump
 from cmk.utils.local_secrets import SiteInternalSecret
 from cmk.utils.log import console, section
 from cmk.utils.paths import omd_root
-from cmk.utils.rulesets import RuleSetName
 from cmk.utils.structured_data import load_tree, SDNodeName, SDRawTree, serialize_tree
 
-from cmk.base.api.agent_based.register import (
-    extract_known_discovery_rulesets,
-    get_previously_loaded_plugins,
-)
+from cmk.base.config import LoadedConfigFragment
 
 if cmk_version.edition(cmk.utils.paths.omd_root) in [
     cmk_version.Edition.CEE,
@@ -80,15 +76,17 @@ if cmk_version.edition(cmk.utils.paths.omd_root) in [
     )
 else:
 
-    def cmc_specific_attrs(discovery_rulesets: Iterable[RuleSetName]) -> Mapping[str, int]:
+    def cmc_specific_attrs(loaded_config: LoadedConfigFragment) -> Mapping[str, int]:
         return {}
 
 
 SUFFIX = ".tar.gz"
 
 
-def create_diagnostics_dump(parameters: DiagnosticsOptionalParameters | None) -> None:
-    dump = DiagnosticsDump(parameters)
+def create_diagnostics_dump(
+    loaded_config: LoadedConfigFragment, parameters: DiagnosticsOptionalParameters | None
+) -> None:
+    dump = DiagnosticsDump(loaded_config, parameters)
     dump.create()
 
     section.section_step("Creating diagnostics dump", verbose=False)
@@ -147,8 +145,12 @@ class DiagnosticsDump:
 
     _keep_num_dumps = 10
 
-    def __init__(self, parameters: DiagnosticsOptionalParameters | None = None) -> None:
-        self.fixed_elements = self._get_fixed_elements()
+    def __init__(
+        self,
+        loaded_config: LoadedConfigFragment,
+        parameters: DiagnosticsOptionalParameters | None = None,
+    ) -> None:
+        self.fixed_elements = self._get_fixed_elements(loaded_config)
         self.optional_elements = self._get_optional_elements(parameters)
         self.elements = self.fixed_elements + self.optional_elements
 
@@ -158,10 +160,12 @@ class DiagnosticsDump:
         self.tarfile_path = dump_folder.joinpath(_file_name).with_suffix(SUFFIX)
         self.tarfile_created = False
 
-    def _get_fixed_elements(self) -> list[ABCDiagnosticsElement]:
+    def _get_fixed_elements(
+        self, loaded_config: LoadedConfigFragment
+    ) -> list[ABCDiagnosticsElement]:
         return [
             GeneralDiagnosticsElement(),
-            PerfDataDiagnosticsElement(),
+            PerfDataDiagnosticsElement(loaded_config),
             HWDiagnosticsElement(),
             VendorDiagnosticsElement(),
             EnvironmentDiagnosticsElement(),
@@ -528,6 +532,9 @@ class GeneralDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
 
 class PerfDataDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+    def __init__(self, load_config: LoadedConfigFragment) -> None:
+        self._loaded_config = load_config
+
     @property
     def ident(self) -> str:
         return "perfdata"
@@ -550,8 +557,7 @@ class PerfDataDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             if (key := result[0][i]) not in ["license_usage_history"]
         }
 
-        discovery_rulesets = extract_known_discovery_rulesets(get_previously_loaded_plugins())
-        performance_data.update(cmc_specific_attrs(discovery_rulesets))
+        performance_data.update(cmc_specific_attrs(self._loaded_config))
 
         return performance_data
 

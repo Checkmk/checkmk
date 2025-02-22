@@ -21,6 +21,13 @@ import livestatus
 import cmk.utils.paths
 
 from cmk.base import diagnostics
+from cmk.base.config import ConfigCache, LoadedConfigFragment
+
+
+def _make_diagnostics_dump() -> diagnostics.DiagnosticsDump:
+    return diagnostics.DiagnosticsDump(
+        LoadedConfigFragment(discovery_rules={}, config_cache=ConfigCache())
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -55,13 +62,13 @@ def test_diagnostics_dump_elements() -> None:
     fixed_element_classes = {
         diagnostics.GeneralDiagnosticsElement,
     }
-    element_classes = {type(e) for e in diagnostics.DiagnosticsDump().elements}
+    element_classes = {type(e) for e in _make_diagnostics_dump().elements}
     assert fixed_element_classes.issubset(element_classes)
 
 
 @pytest.mark.usefixtures("mock_livestatus")
 def test_diagnostics_dump_create() -> None:
-    diagnostics_dump = diagnostics.DiagnosticsDump()
+    diagnostics_dump = _make_diagnostics_dump()
     diagnostics_dump._create_dump_folder()
 
     assert isinstance(diagnostics_dump.dump_folder, Path)
@@ -77,7 +84,7 @@ def test_diagnostics_dump_create() -> None:
 
 
 def test_diagnostics_cleanup_dump_folder() -> None:
-    diagnostics_dump = diagnostics.DiagnosticsDump()
+    diagnostics_dump = _make_diagnostics_dump()
     diagnostics_dump._create_dump_folder()
 
     # Fake existing tarfiles
@@ -140,7 +147,9 @@ def test_diagnostics_element_general_content(
 
 
 def test_diagnostics_element_perfdata() -> None:
-    diagnostics_element = diagnostics.PerfDataDiagnosticsElement()
+    diagnostics_element = diagnostics.PerfDataDiagnosticsElement(
+        LoadedConfigFragment(discovery_rules={}, config_cache=ConfigCache())
+    )
     assert diagnostics_element.ident == "perfdata"
     assert diagnostics_element.title == "Performance data"
     assert diagnostics_element.description == (

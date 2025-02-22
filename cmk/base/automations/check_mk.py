@@ -3275,12 +3275,14 @@ class AutomationCreateDiagnosticsDump(Automation):
         plugins: AgentBasedPlugins | None,
         loaded_config: config.LoadedConfigFragment | None,
     ) -> CreateDiagnosticsDumpResult:
+        if loaded_config is None:
+            loaded_config = load_config(discovery_rulesets=())
         buf = io.StringIO()
         with redirect_stdout(buf), redirect_stderr(buf):
             log.setup_console_logging()
             # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
             log.logger.setLevel(logging.INFO)
-            dump = DiagnosticsDump(deserialize_cl_parameters(args))
+            dump = DiagnosticsDump(loaded_config, deserialize_cl_parameters(args))
             dump.create()
             return CreateDiagnosticsDumpResult(
                 output=buf.getvalue(),

@@ -487,7 +487,7 @@ class AutomationDiscoveryPreview(Automation):
         fetcher = CMKFetcher(
             config_cache,
             config_cache.fetcher_factory(),
-            agent_based_register.get_previously_loaded_plugins(),
+            plugins,
             file_cache_options=file_cache_options,
             force_snmp_cache_refresh=not prevent_fetching,
             ip_address_of=config.ConfiguredIPLookup(

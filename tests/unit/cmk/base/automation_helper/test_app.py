@@ -91,7 +91,7 @@ _EXAMPLE_AUTOMATION_PAYLOAD = AutomationPayload(
 def _make_test_client(
     engine: AutomationEngine,
     cache: Cache,
-    reload_config: Callable[[], LoadedConfigFragment],
+    reload_config: Callable[[AgentBasedPlugins], LoadedConfigFragment],
     clear_caches_before_each_call: Callable[[], None],
     reloader_config: ReloaderConfig = ReloaderConfig(
         active=True,
@@ -235,7 +235,7 @@ def test_health_check(cache: Cache) -> None:
     with _make_test_client(
         _DummyAutomationEngineSuccess(),
         cache,
-        lambda: LoadedConfigFragment(discovery_rules={}),
+        lambda p: LoadedConfigFragment(discovery_rules={}),
         lambda: None,
     ) as client:
         resp = client.get("/health")

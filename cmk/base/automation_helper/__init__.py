@@ -17,8 +17,8 @@ from cmk.utils.redis import get_redis_client
 
 from cmk.base import config
 from cmk.base.api.agent_based.register import (
+    AgentBasedPlugins,
     extract_known_discovery_rulesets,
-    get_previously_loaded_plugins,
 )
 from cmk.base.automations import automations
 
@@ -79,9 +79,8 @@ def main() -> int:
     return 0
 
 
-def _reload_automation_config() -> config.LoadedConfigFragment:
+def _reload_automation_config(plugins: AgentBasedPlugins) -> config.LoadedConfigFragment:
     cache_manager.clear()
-    plugins = get_previously_loaded_plugins()
     discovery_rulesets = extract_known_discovery_rulesets(plugins)
     return config.load(discovery_rulesets, validate_hosts=False)
 

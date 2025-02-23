@@ -3839,31 +3839,6 @@ class ConfigCache:
         """Returns the nodes of a cluster. Returns () if no match."""
         return self._nodes_cache.get(hostname, ())
 
-    def effective_host_of_autocheck(self, node_name: HostName, entry: AutocheckEntry) -> HostName:
-        plugins = agent_based_register.get_previously_loaded_plugins().check_plugins
-        return self.effective_host(
-            node_name,
-            (
-                service_name := service_description(
-                    self.ruleset_matcher,
-                    node_name,
-                    entry.check_plugin_name,
-                    service_name_template=(
-                        None
-                        if (
-                            p := agent_based_register.get_check_plugin(
-                                entry.check_plugin_name, plugins
-                            )
-                        )
-                        is None
-                        else p.service_name
-                    ),
-                    item=entry.item,
-                )
-            ),
-            self.ruleset_matcher.labels_of_service(node_name, service_name, entry.service_labels),
-        )
-
     def effective_host(
         self,
         host_name: HostName,

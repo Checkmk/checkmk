@@ -4,22 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from importlib import import_module
 from typing import assert_never
 
-from cmk.base.api.agent_based.plugin_classes import (
-    AgentBasedPlugins,
-)
-from cmk.base.api.agent_based.plugin_classes import (
-    AgentSectionPlugin as BackendAgentSectionPlugin,
-)
-from cmk.base.api.agent_based.plugin_classes import (
-    CheckPlugin as BackendCheckPlugin,
-)
-from cmk.base.api.agent_based.plugin_classes import (
-    SNMPSectionPlugin as BackendSNMPSectionPlugin,
-)
+from cmk.utils.sectionname import SectionName
+
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.inventory import InventoryPluginName
+
+from cmk.base.api.agent_based import plugin_classes as backend
 
 from cmk import trace
 from cmk.agent_based.v2 import (
@@ -32,16 +26,6 @@ from cmk.agent_based.v2 import (
 )
 from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup, PluginLocation
 
-from ._config import (
-    add_check_plugin,
-    add_inventory_plugin,
-    add_section_plugin,
-    get_inventory_plugin,
-    get_previously_loaded_plugins,
-    get_section_plugin,
-    is_registered_inventory_plugin,
-    is_registered_section_plugin,
-)
 from .check_plugins import create_check_plugin, get_check_plugin
 from .inventory_plugins import create_inventory_plugin
 from .section_plugins import create_agent_section_plugin, create_snmp_section_plugin
@@ -50,15 +34,67 @@ _ABPlugins = SimpleSNMPSection | SNMPSection | AgentSection | CheckPlugin | Inve
 
 tracer = trace.get_tracer()
 
+registered_agent_sections: dict[SectionName, backend.AgentSectionPlugin] = {}
+registered_snmp_sections: dict[SectionName, backend.SNMPSectionPlugin] = {}
+registered_check_plugins: dict[CheckPluginName, backend.CheckPlugin] = {}
+registered_inventory_plugins: dict[InventoryPluginName, backend.InventoryPlugin] = {}
+
+
+def get_previously_loaded_plugins(errors: Sequence[str] = ()) -> backend.AgentBasedPlugins:
+    """Return the previously loaded agent-based plugins
+
+    In the long run we want to get rid of this function and instead
+    return the plugins directly after loading them (without registry).
+    """
+    return backend.AgentBasedPlugins(
+        agent_sections=registered_agent_sections,
+        snmp_sections=registered_snmp_sections,
+        check_plugins=registered_check_plugins,
+        inventory_plugins=registered_inventory_plugins,
+        errors=errors,
+    )
+
+
+def add_check_plugin(check_plugin: backend.CheckPlugin) -> None:
+    registered_check_plugins[check_plugin.name] = check_plugin
+
+
+def add_inventory_plugin(inventory_plugin: backend.InventoryPlugin) -> None:
+    registered_inventory_plugins[inventory_plugin.name] = inventory_plugin
+
+
+def add_section_plugin(section_plugin: backend.SectionPlugin) -> None:
+    if isinstance(section_plugin, backend.AgentSectionPlugin):
+        registered_agent_sections[section_plugin.name] = section_plugin
+    else:
+        registered_snmp_sections[section_plugin.name] = section_plugin
+
+
+def get_inventory_plugin(plugin_name: InventoryPluginName) -> backend.InventoryPlugin | None:
+    """Returns the registered inventory plug-in"""
+    return registered_inventory_plugins.get(plugin_name)
+
+
+def get_section_plugin(section_name: SectionName) -> backend.SectionPlugin | None:
+    return registered_agent_sections.get(section_name) or registered_snmp_sections.get(section_name)
+
+
+def is_registered_inventory_plugin(inventory_plugin_name: InventoryPluginName) -> bool:
+    return inventory_plugin_name in registered_inventory_plugins
+
+
+def is_registered_section_plugin(section_name: SectionName) -> bool:
+    return section_name in registered_snmp_sections or section_name in registered_agent_sections
+
 
 @tracer.instrument("load_all_plugins")
 def load_all_plugins(
-    sections: Iterable[BackendSNMPSectionPlugin | BackendAgentSectionPlugin],
-    checks: Iterable[BackendCheckPlugin],
+    sections: Iterable[backend.SNMPSectionPlugin | backend.AgentSectionPlugin],
+    checks: Iterable[backend.CheckPlugin],
     *,
     legacy_errors: Iterable[str],
     raise_errors: bool,
-) -> AgentBasedPlugins:
+) -> backend.AgentBasedPlugins:
     with tracer.span("discover_plugins"):
         discovered_plugins: DiscoveredPlugins[_ABPlugins] = discover_plugins(
             PluginGroup.AGENT_BASED, entry_point_prefixes(), raise_errors=raise_errors
@@ -85,11 +121,11 @@ def load_all_plugins(
 
 def load_selected_plugins(
     locations: Iterable[PluginLocation],
-    sections: Iterable[BackendSNMPSectionPlugin | BackendAgentSectionPlugin],
-    checks: Iterable[BackendCheckPlugin],
+    sections: Iterable[backend.SNMPSectionPlugin | backend.AgentSectionPlugin],
+    checks: Iterable[backend.CheckPlugin],
     *,
     validate: bool,
-) -> AgentBasedPlugins:
+) -> backend.AgentBasedPlugins:
     for location in locations:
         module = import_module(location.module)
         if location.name is not None:
@@ -217,7 +253,7 @@ def register_inventory_plugin(inventory: InventoryPlugin, location: PluginLocati
 
 
 def _add_sections_to_register(
-    sections: Iterable[BackendSNMPSectionPlugin | BackendAgentSectionPlugin],
+    sections: Iterable[backend.SNMPSectionPlugin | backend.AgentSectionPlugin],
 ) -> None:
     for section in sections:
         if is_registered_section_plugin(section.name):
@@ -226,7 +262,7 @@ def _add_sections_to_register(
 
 
 def _add_checks_to_register(
-    checks: Iterable[BackendCheckPlugin],
+    checks: Iterable[backend.CheckPlugin],
 ) -> None:
     existing_plugins = get_previously_loaded_plugins().check_plugins
     for check in checks:

@@ -9,11 +9,11 @@ def _impl(ctx):
     for constraint in ctx.files.constraints:
         content.append("-c %s" % constraint.short_path)
         runfiles.append(constraint)
-    out = ctx.actions.declare_file(ctx.attr.name + "-requirements.in")
-    ctx.actions.write(out, content = "\n".join(content + [""]))
+    requirements_txt = ctx.actions.declare_file(ctx.attr.name + ".txt")
+    ctx.actions.write(requirements_txt, content = "\n".join(content + [""]))
     return [
         DefaultInfo(
-            files = depset([out]),
+            files = depset([requirements_txt]),
             runfiles = ctx.runfiles(files = runfiles),
         ),
         RequirementsInInfo(srcs = ctx.attr.requirements + ctx.attr.constraints),

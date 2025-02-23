@@ -9,13 +9,13 @@ UNIT_PER_SECOND = metrics.Unit(metrics.DecimalNotation("/s"))
 
 metric_audiocodes_tel2ip_fax_success_calls = metrics.Metric(
     name="audiocodes_tel2ip_fax_success_calls",
-    title=Title("Number of SIP/H323 fax success calls"),
+    title=Title("Tel2IP Number of SIP/H323 fax success calls"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.GREEN,
 )
 metric_audiocodes_ip2tel_fax_success_calls = metrics.Metric(
     name="audiocodes_ip2tel_fax_success_calls",
-    title=Title("Number of SIP/H323 fax success calls"),
+    title=Title("IP2Tel Number of SIP/H323 fax success calls"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.PURPLE,
 )

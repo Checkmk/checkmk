@@ -76,7 +76,7 @@ def test_discovery_function() -> None:
                     state=State.OK, notice="Tel2IP Number of SIP/H323 fax success calls: -0.0/s"
                 ),
                 Metric("audiocodes_tel2ip_fax_success_calls", -0.016666666666666666),
-                Result(state=State.OK, notice="Tel2IP Total duration of SIP/H323 calls: 2.00"),
+                Result(state=State.OK, notice="Tel2IP Total duration of SIP/H323 calls: 2.0s"),
                 Metric("audiocodes_tel2ip_total_duration", 2.0),
             ],
             id="Tel2IP",
@@ -117,7 +117,7 @@ def test_discovery_function() -> None:
                     state=State.OK, notice="IP2Tel Number of SIP/H323 fax success calls: -0.0/s"
                 ),
                 Metric("audiocodes_ip2tel_fax_success_calls", -0.016666666666666666),
-                Result(state=State.OK, notice="IP2Tel Total duration of SIP/H323 calls: 2.00"),
+                Result(state=State.OK, notice="IP2Tel Total duration of SIP/H323 calls: 2.0s"),
                 Metric("audiocodes_ip2tel_total_duration", 2.0),
             ],
             id="IP2Tel",

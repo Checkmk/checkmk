@@ -37,7 +37,7 @@ def check_liebert_reheating(params: Mapping[str, Any], section: Section[float]) 
     value, unit = data
     yield from check_levels_v1(
         value,
-        metric_name="filehandler_perc",
+        metric_name="fan_perc",
         levels_upper=params["levels"],
         render_func=lambda x: f"{x:.2f} {unit}",
     )

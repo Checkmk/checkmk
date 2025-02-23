@@ -179,7 +179,7 @@ def detect_conflicts(rule_value: Mapping[str, object]) -> Conflict | MigratableV
                 mode_fields=["onredirect", "expect_response"],
             )
     elif value.disable_sni:  # Cert mode is always https
-        return Conflict(  # TODO: We can migrate this by setting the SSL version to 3.0
+        return Conflict(
             type_="cant_disable_sni_with_https",
             disable_sni=True,
         )

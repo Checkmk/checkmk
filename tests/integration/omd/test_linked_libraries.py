@@ -126,8 +126,6 @@ def test_linked_libraries(site: Site) -> None:
     exclude_entirely = [
         # That is a 32bit binary.
         "share/check_mk/agents/plugins/cmk-update-agent-32",
-        # oTel links against wrong glibc, will be fixed in CMK-20806
-        "bin/otelcol",
     ]
 
     exclude_from_forbidden_links_check = [

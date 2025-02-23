@@ -105,7 +105,7 @@ def check_audiocodes_overall_operational_state(
 
 check_plugin_audiocodes_overall_operational_state = CheckPlugin(
     name="audiocodes_overall_operational_state",
-    service_name="Operational State",
+    service_name="Operational state",
     discovery_function=discover_audiocodes_overall_operational_state,
     check_function=check_audiocodes_overall_operational_state,
 )

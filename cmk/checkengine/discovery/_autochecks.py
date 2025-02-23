@@ -17,7 +17,7 @@ import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import Item, ServiceName
 
-from cmk.checkengine.checking import CheckPluginName, ConfiguredService, ServiceID
+from cmk.checkengine.checking import CheckPluginName, ServiceID
 from cmk.checkengine.discovery._utils import DiscoveredItem
 
 __all__ = [
@@ -176,7 +176,6 @@ class AutochecksManager:
 
     def __init__(self) -> None:
         super().__init__()
-        self._configured_services_cache: dict[HostName, Sequence[ConfiguredService]] = {}
         self._raw_autochecks_cache: dict[HostName, Sequence[AutocheckEntry]] = {}
 
     def get_autochecks(

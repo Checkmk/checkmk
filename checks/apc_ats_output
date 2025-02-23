@@ -44,12 +44,26 @@ def check_apc_ats_output(item, params, data):
             unit="V",
         )
     if power is not None:
-        yield 0, "Power: %.2f W" % power
+        yield check_levels(
+            power,
+            "watt",
+            params.get("output_power_max", (None, None))
+            + params.get("output_power_min", (None, None)),
+            infoname="Power",
+            unit="W",
+        )
 
     if current is not None:
-        yield 0, "Current: %.2f A" % current
+        yield check_levels(
+            current,
+            "current",
+            params.get("output_current_max", (None, None))
+            + params.get("output_current_min", (None, None)),
+            infoname="Current",
+            unit="A",
+        )
 
-    if perc_load is not None:
+    if perc_load not in (None, -1):
         yield check_levels(
             perc_load,
             "load_perc",

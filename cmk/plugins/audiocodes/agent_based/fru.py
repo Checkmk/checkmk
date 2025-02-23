@@ -131,7 +131,7 @@ def check_audiocodes_fru(
 
 check_plugin_audiocodes_fru = CheckPlugin(
     name="audiocodes_fru",
-    service_name="AudioCodes FRU %s",
+    service_name="FRU %s",
     sections=["audiocodes_module_names", "audiocodes_fru"],
     discovery_function=discover_audiocodes_fru,
     check_function=check_audiocodes_fru,

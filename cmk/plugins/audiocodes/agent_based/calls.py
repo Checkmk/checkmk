@@ -152,7 +152,7 @@ def check_audiocodes_calls_testable(
 
 check_plugin_audiocodes_calls = CheckPlugin(
     name="audiocodes_calls",
-    service_name="AudioCodes SBC Calls",
+    service_name="SBC Calls",
     discovery_function=discover_audiocodes_calls,
     check_function=check_audiocodes_calls,
     check_ruleset_name="audiocodes_calls",

@@ -140,7 +140,7 @@ def check_audiocodes_ipgroup(item: str, section: Mapping[str, IPGroup]) -> Check
 
 check_plugin_audiocodes_ipgroup = CheckPlugin(
     name="audiocodes_ipgroup",
-    service_name="AudioCodes IPGroup %s",
+    service_name="IPGroup %s",
     discovery_function=discover_audiocodes_ipgroup,
     check_function=check_audiocodes_ipgroup,
 )

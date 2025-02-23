@@ -153,7 +153,6 @@ from cmk.base import config, core_config, notify, sources
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin
 from cmk.base.api.agent_based.register import (
     AgentBasedPlugins,
-    get_previously_loaded_plugins,
 )
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.automations import (
@@ -1540,6 +1539,7 @@ class AutomationAnalyseServices(Automation):
             if (
                 found := self._search_service(
                     config_cache=config_cache,
+                    plugins=plugins,
                     host_name=host_name,
                     servicedesc=servicedesc,
                     ip_address_of=config.ConfiguredIPLookup(
@@ -1558,6 +1558,7 @@ class AutomationAnalyseServices(Automation):
     def _search_service(
         self,
         config_cache: ConfigCache,
+        plugins: AgentBasedPlugins,
         host_name: HostName,
         servicedesc: str,
         ip_address_of: config.IPLookup,
@@ -1572,7 +1573,7 @@ class AutomationAnalyseServices(Automation):
                     config_cache,
                     host_name,
                     servicedesc,
-                    get_previously_loaded_plugins().check_plugins,
+                    plugins.check_plugins,
                 ),
                 self._search_classical_checks(config_cache, host_name, servicedesc),
                 self._search_active_checks(config_cache, host_name, ip_address_of, servicedesc),

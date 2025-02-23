@@ -12,5 +12,8 @@ DETECT = all_of(
         startswith(".1.3.6.1.2.1.1.1.0", "IPSO "),
         matches(".1.3.6.1.2.1.1.1.0", "Linux.*cpx.*"),
     ),
-    startswith(".1.3.6.1.4.1.2620.1.1.21.0", "firewall"),
+    any_of(
+        startswith(".1.3.6.1.4.1.2620.1.1.21.0", "firewall"),
+        matches(".1.3.6.1.4.1.2620.1.6.5.1.0", "Gaia"),
+    ),
 )

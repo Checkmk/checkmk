@@ -59,11 +59,11 @@ def test_discovery_function() -> None:
                 Result(
                     state=State.OK,
                     summary="Status: active",
-                    details="IP Group Name: N11 intern, Type: Server, IP Group Index: 0, Description: None, Proxy set connectivity: Connected",
+                    details="IP group name: N11 intern, Type: Server, IP group index: 0, Description: None, Proxy set connectivity: Connected",
                 ),
-                Result(state=State.OK, summary="Active Calls In: 12.00"),
+                Result(state=State.OK, summary="Active calls in: 12"),
                 Metric("audiocodes_ipgroup_active_calls_in", 12.0),
-                Result(state=State.OK, summary="Active Calls Out: 13.00"),
+                Result(state=State.OK, summary="Active calls out: 13"),
                 Metric("audiocodes_ipgroup_active_calls_out", 13.0),
             ],
             id="Everything OK. Active calls in and out available",
@@ -75,7 +75,7 @@ def test_discovery_function() -> None:
                 Result(
                     state=State.OK,
                     summary="Status: active",
-                    details="IP Group Name: N13 extern, Type: Server, IP Group Index: 5, Description: None, Proxy set connectivity: NA",
+                    details="IP group name: N13 extern, Type: Server, IP group index: 5, Description: None, Proxy set connectivity: NA",
                 ),
             ],
             id="Connect status is not available, but overall state is OK",
@@ -87,7 +87,7 @@ def test_discovery_function() -> None:
                 Result(
                     state=State.CRIT,
                     summary="Status: notInService",
-                    details="IP Group Name: CSIP HAN, Type: Gateway, IP Group Index: 7, Description: None, Proxy set connectivity: Disconnected",
+                    details="IP group name: CSIP HAN, Type: Gateway, IP group index: 7, Description: None, Proxy set connectivity: Disconnected",
                 ),
             ],
             id="Bad status. Overall state is CRIT",
@@ -99,7 +99,7 @@ def test_discovery_function() -> None:
                 Result(
                     state=State.OK,
                     summary="Status: active",
-                    details="IP Group Name: N11 intern, Type: Server, IP Group Index: 0, Description: None, Proxy set connectivity: Connected",
+                    details="IP group name: N11 intern, Type: Server, IP group index: 0, Description: None, Proxy set connectivity: Connected",
                 ),
             ],
             id="OK. No call information available",

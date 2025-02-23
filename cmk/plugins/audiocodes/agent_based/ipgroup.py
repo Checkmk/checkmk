@@ -128,9 +128,9 @@ def check_audiocodes_ipgroup(item: str, section: Mapping[str, IPGroup]) -> Check
         state=_check_ipgroup_state(ipgroup),
         summary=f"Status: {ipgroup.attributes.status}",
         details=(
-            f"IP Group Name: {ipgroup.attributes.name}, "
+            f"IP group name: {ipgroup.attributes.name}, "
             f"Type: {ipgroup.attributes.type}, "
-            f"IP Group Index: {ipgroup.attributes.index}, "
+            f"IP group index: {ipgroup.attributes.index}, "
             f"Description: {ipgroup.attributes.description}, "
             f"Proxy set connectivity: {ipgroup.attributes.connect_status}"
         ),
@@ -140,7 +140,7 @@ def check_audiocodes_ipgroup(item: str, section: Mapping[str, IPGroup]) -> Check
 
 check_plugin_audiocodes_ipgroup = CheckPlugin(
     name="audiocodes_ipgroup",
-    service_name="IPGroup %s",
+    service_name="IP group %s",
     discovery_function=discover_audiocodes_ipgroup,
     check_function=check_audiocodes_ipgroup,
 )
@@ -173,11 +173,13 @@ def _check_ipgroup_calls_information(
         yield from check_levels(
             value=active_calls.calls_in,
             metric_name="audiocodes_ipgroup_active_calls_in",
-            label="Active Calls In",
+            label="Active calls in",
+            render_func=lambda x: f"{int(x)}",
         )
     if active_calls.calls_out is not None:
         yield from check_levels(
             value=active_calls.calls_out,
             metric_name="audiocodes_ipgroup_active_calls_out",
-            label="Active Calls Out",
+            label="Active calls out",
+            render_func=lambda x: f"{int(x)}",
         )

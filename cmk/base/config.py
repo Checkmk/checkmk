@@ -280,7 +280,11 @@ def _aggregate_check_table_services(
             )
         else:
             yield from (
-                s for s in config_cache.get_discovered_services(host_name) if sfilter.keep(s)
+                s
+                for s in configure_autochecks(
+                    host_name, config_cache.autochecks_manager.get_autochecks(host_name)
+                )
+                if sfilter.keep(s)
             )
 
     yield from (
@@ -1927,20 +1931,22 @@ class ConfigCache:
                 if self.is_active(hn) and self.is_online(hn)
             }
         )
+        return self
 
-        check_plugins = agent_based_register.get_previously_loaded_plugins().check_plugins
-
-        self._service_configurer = ServiceConfigurer(
+    def make_service_configurer(
+        self, check_plugins: Mapping[CheckPluginName, CheckPlugin]
+    ) -> ServiceConfigurer:
+        # This function is not part of the checkengine, because it still has
+        # hidden dependencies to the loaded config in the global scope of this module.
+        return ServiceConfigurer(
             _make_compute_check_parameters_cb(self.ruleset_matcher, check_plugins),
             _make_service_description_cb(self.ruleset_matcher, check_plugins),
             self.effective_host,
             self.ruleset_matcher.labels_of_service,
         )
 
-        return self
-
-    def fetcher_factory(self) -> FetcherFactory:
-        return FetcherFactory(self, self.ruleset_matcher)
+    def fetcher_factory(self, service_configurer: ServiceConfigurer) -> FetcherFactory:
+        return FetcherFactory(self, self.ruleset_matcher, service_configurer)
 
     def parser_factory(self) -> ParserFactory:
         return ParserFactory(self, self.ruleset_matcher)
@@ -2072,6 +2078,7 @@ class ConfigCache:
     def make_checking_sections(
         self,
         plugins: agent_based_register.AgentBasedPlugins,
+        service_configurer: ServiceConfigurer,
         hostname: HostName,
         *,
         selected_sections: SectionNameCollection,
@@ -2086,6 +2093,7 @@ class ConfigCache:
                         for n in self.check_table(
                             hostname,
                             plugins.check_plugins,
+                            service_configurer,
                             filter_mode=FilterMode.INCLUDE_CLUSTERED,
                             skip_ignored=True,
                         ).needed_check_names()
@@ -2135,6 +2143,7 @@ class ConfigCache:
         self,
         hostname: HostName,
         plugins: Mapping[CheckPluginName, CheckPlugin],
+        service_configurer: ServiceConfigurer,
         *,
         use_cache: bool = True,
         filter_mode: FilterMode = FilterMode.NONE,
@@ -2153,7 +2162,7 @@ class ConfigCache:
                 skip_ignored=skip_ignored,
                 filter_mode=filter_mode,
                 get_autochecks=self.autochecks_manager.get_autochecks,
-                configure_autochecks=self._service_configurer.configure_autochecks,
+                configure_autochecks=service_configurer.configure_autochecks,
                 plugins=plugins,
             )
         )
@@ -2164,18 +2173,24 @@ class ConfigCache:
         return host_check_table
 
     def _sorted_services(
-        self, hostname: HostName, plugins: Mapping[CheckPluginName, CheckPlugin]
+        self,
+        hostname: HostName,
+        plugins: Mapping[CheckPluginName, CheckPlugin],
+        service_configurer: ServiceConfigurer,
     ) -> Sequence[ConfiguredService]:
         # This method is only useful for the monkeypatching orgy of the "unit"-tests.
         return sorted(
-            self.check_table(hostname, plugins).values(),
+            self.check_table(hostname, plugins, service_configurer).values(),
             key=lambda service: service.description,
         )
 
     def configured_services(
-        self, hostname: HostName, plugins: Mapping[CheckPluginName, CheckPlugin]
+        self,
+        hostname: HostName,
+        plugins: Mapping[CheckPluginName, CheckPlugin],
+        service_configurer: ServiceConfigurer,
     ) -> Sequence[ConfiguredService]:
-        services = self._sorted_services(hostname, plugins)
+        services = self._sorted_services(hostname, plugins, service_configurer)
         if is_cmc():
             return services
 
@@ -3538,11 +3553,6 @@ class ConfigCache:
         except KeyError:
             return {}
 
-    def get_discovered_services(self, hostname: HostName) -> Sequence[ConfiguredService]:
-        return self._service_configurer.configure_autochecks(
-            hostname, self.autochecks_manager.get_autochecks(hostname)
-        )
-
     def section_name_of(self, section: str) -> str:
         try:
             return self._cache_section_name_of[section]
@@ -4185,9 +4195,15 @@ class ParserFactory:
 
 class FetcherFactory:
     # TODO: better and clearer separation between ConfigCache and this class.
-    def __init__(self, config_cache: ConfigCache, ruleset_matcher_: RulesetMatcher) -> None:
+    def __init__(
+        self,
+        config_cache: ConfigCache,
+        ruleset_matcher_: RulesetMatcher,
+        service_configurer: ServiceConfigurer,
+    ) -> None:
         self._config_cache: Final = config_cache
         self._ruleset_matcher: Final = ruleset_matcher_
+        self._service_configurer: Final = service_configurer
         self.__disabled_snmp_sections: dict[HostName, frozenset[SectionName]] = {}
 
     def clear(self) -> None:
@@ -4252,7 +4268,10 @@ class FetcherFactory:
             sections=self._make_snmp_sections(
                 host_name,
                 checking_sections=self._config_cache.make_checking_sections(
-                    plugins, host_name, selected_sections=fetcher_config.selected_sections
+                    plugins,
+                    self._service_configurer,
+                    host_name,
+                    selected_sections=fetcher_config.selected_sections,
                 ),
                 sections=plugins.snmp_sections.values(),
             ),

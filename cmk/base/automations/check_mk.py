@@ -128,7 +128,7 @@ from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.fetchers.snmp import make_backend as make_snmp_backend
 
-from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checking import CheckPluginName, ServiceConfigurer
 from cmk.checkengine.discovery import (
     AutocheckEntry,
     autodiscovery,
@@ -304,6 +304,7 @@ class AutomationDiscovery(DiscoveryAutomation):
         config_cache = loaded_config.config_cache
         ruleset_matcher = config_cache.ruleset_matcher
         autochecks_config = config.AutochecksConfigurer(config_cache, plugins.check_plugins)
+        service_configurer = config_cache.make_service_configurer(plugins.check_plugins)
 
         results: dict[HostName, DiscoveryResult] = {}
 
@@ -315,7 +316,7 @@ class AutomationDiscovery(DiscoveryAutomation):
         )
         fetcher = CMKFetcher(
             config_cache,
-            config_cache.fetcher_factory(),
+            config_cache.fetcher_factory(service_configurer),
             plugins,
             file_cache_options=file_cache_options,
             force_snmp_cache_refresh=force_snmp_cache_refresh,
@@ -423,6 +424,7 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
             )
 
         config_cache = loaded_config.config_cache
+        service_configurer = config_cache.make_service_configurer(plugins.check_plugins)
         file_cache_options = FileCacheOptions(use_outdated=False, use_only_cache=False)
         password_store_file = Path(cmk.utils.paths.tmp_dir, f"passwords_temp_{uuid.uuid4()}")
         try:
@@ -436,7 +438,7 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
                 run_settings.http_proxies,
             )
             fetcher = SpecialAgentFetcher(
-                config_cache.fetcher_factory(),
+                config_cache.fetcher_factory(service_configurer),
                 agent_name=run_settings.agent_name,
                 cmds=cmds,
                 file_cache_options=file_cache_options,
@@ -481,13 +483,14 @@ class AutomationDiscoveryPreview(Automation):
 
         config_cache = loaded_config.config_cache
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
+        service_configurer = config_cache.make_service_configurer(plugins.check_plugins)
         on_error = OnError.RAISE if raise_errors else OnError.WARN
         file_cache_options = FileCacheOptions(
             use_outdated=prevent_fetching, use_only_cache=prevent_fetching
         )
         fetcher = CMKFetcher(
             config_cache,
-            config_cache.fetcher_factory(),
+            config_cache.fetcher_factory(service_configurer),
             plugins,
             file_cache_options=file_cache_options,
             force_snmp_cache_refresh=not prevent_fetching,
@@ -791,6 +794,7 @@ def _execute_autodiscovery(
         )
 
     config_cache = loaded_config.config_cache
+    service_configurer = config_cache.make_service_configurer(ab_plugins.check_plugins)
     autochecks_config = config.AutochecksConfigurer(config_cache, ab_plugins.check_plugins)
     ip_address_of = config.ConfiguredIPLookup(
         config_cache,
@@ -809,7 +813,7 @@ def _execute_autodiscovery(
     )
     fetcher = CMKFetcher(
         config_cache,
-        config_cache.fetcher_factory(),
+        config_cache.fetcher_factory(service_configurer),
         ab_plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -1485,7 +1489,12 @@ class AutomationGetServicesLabels(Automation):
         )
 
         # I think we might be computing something here that the caller already knew.
-        discovered_services = loaded_config.config_cache.get_discovered_services(host_name)
+        service_configurer = loaded_config.config_cache.make_service_configurer(
+            plugins.check_plugins
+        )
+        discovered_services = service_configurer.configure_autochecks(
+            host_name, loaded_config.config_cache.autochecks_manager.get_autochecks(host_name)
+        )
         discovered_labels = {s.description: s.labels for s in discovered_services}
 
         return GetServicesLabelsResult(
@@ -1631,17 +1640,22 @@ class AutomationAnalyseServices(Automation):
     ) -> Iterable[_FoundService]:
         # NOTE: Iterating over the check table would make things easier. But we might end up with
         # different information.
-        table = config_cache.check_table(host_name, check_plugins)
+        service_configurer = config_cache.make_service_configurer(check_plugins)
+        table = config_cache.check_table(host_name, check_plugins, service_configurer)
         services = (
             [
                 service
                 for node in config_cache.nodes(host_name)
-                for service in config_cache.get_discovered_services(node)
+                for service in service_configurer.configure_autochecks(
+                    node, config_cache.autochecks_manager.get_autochecks(node)
+                )
                 if host_name
                 == config_cache.effective_host(node, service.description, service.labels)
             ]
             if host_name in config_cache.hosts_config.clusters
-            else config_cache.get_discovered_services(host_name)
+            else service_configurer.configure_autochecks(
+                host_name, config_cache.autochecks_manager.get_autochecks(host_name)
+            )
         )
 
         for service in services:
@@ -2468,6 +2482,7 @@ class AutomationDiagHost(Automation):
                 return DiagHostResult(
                     *self._execute_agent(
                         loaded_config.config_cache,
+                        loaded_config.config_cache.make_service_configurer(plugins.check_plugins),
                         plugins,
                         host_name,
                         ipaddress,
@@ -2549,6 +2564,7 @@ class AutomationDiagHost(Automation):
     def _execute_agent(
         self,
         config_cache: ConfigCache,
+        service_configurer: ServiceConfigurer,
         plugins: agent_based_register.AgentBasedPlugins,
         host_name: HostName,
         ipaddress: HostAddress,
@@ -2585,7 +2601,7 @@ class AutomationDiagHost(Automation):
             host_name,
             ipaddress,
             ConfigCache.ip_stack_config(host_name),
-            fetcher_factory=config_cache.fetcher_factory(),
+            fetcher_factory=config_cache.fetcher_factory(service_configurer),
             snmp_fetcher_config=SNMPFetcherConfig(
                 scan_config=snmp_scan_config,
                 selected_sections=NO_SELECTION,
@@ -3042,6 +3058,9 @@ class AutomationGetAgentOutput(Automation):
         loaded_config = loaded_config or load_config(
             agent_based_register.extract_known_discovery_rulesets(plugins)
         )
+        service_configurer = loaded_config.config_cache.make_service_configurer(
+            plugins.check_plugins
+        )
         config_cache = loaded_config.config_cache
         hosts_config = config.make_hosts_config()
 
@@ -3085,7 +3104,7 @@ class AutomationGetAgentOutput(Automation):
                     hostname,
                     ipaddress,
                     ip_stack_config,
-                    fetcher_factory=config_cache.fetcher_factory(),
+                    fetcher_factory=config_cache.fetcher_factory(service_configurer),
                     snmp_fetcher_config=SNMPFetcherConfig(
                         scan_config=snmp_scan_config,
                         selected_sections=NO_SELECTION,

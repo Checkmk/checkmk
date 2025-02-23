@@ -235,7 +235,9 @@ def dump_host(
             hostname,
             ipaddress,
             ConfigCache.ip_stack_config(hostname),
-            fetcher_factory=config_cache.fetcher_factory(),
+            fetcher_factory=config_cache.fetcher_factory(
+                config_cache.make_service_configurer(plugins.check_plugins)
+            ),
             snmp_fetcher_config=SNMPFetcherConfig(
                 scan_config=SNMPScanConfig(
                     on_error=OnError.RAISE,
@@ -294,7 +296,11 @@ def dump_host(
 
     table_data = []
     for service in sorted(
-        config_cache.check_table(hostname, plugins.check_plugins).values(),
+        config_cache.check_table(
+            hostname,
+            plugins.check_plugins,
+            config_cache.make_service_configurer(plugins.check_plugins),
+        ).values(),
         key=lambda s: s.description,
     ):
         table_data.append(

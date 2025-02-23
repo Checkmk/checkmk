@@ -290,6 +290,7 @@ def _get_needed_plugins(
             for name in config_cache.check_table(
                 host_name,
                 agent_based_plugins.check_plugins,
+                config_cache.make_service_configurer(agent_based_plugins.check_plugins),
                 filter_mode=FilterMode.INCLUDE_CLUSTERED,
                 skip_ignored=False,
             ).needed_check_names()

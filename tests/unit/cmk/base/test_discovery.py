@@ -1300,7 +1300,7 @@ def test_commandline_discovery(
     )
     fetcher = CMKFetcher(
         config_cache,
-        config_cache.fetcher_factory(),
+        config_cache.fetcher_factory(config_cache.make_service_configurer({})),
         agent_based_plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,

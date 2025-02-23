@@ -447,7 +447,9 @@ def create_nagios_servicedefs(
 
         return result
 
-    host_check_table = config_cache.check_table(hostname, plugins)
+    host_check_table = config_cache.check_table(
+        hostname, plugins, config_cache.make_service_configurer(plugins)
+    )
     have_at_least_one_service = False
     used_descriptions: dict[ServiceName, AbstractServiceID] = {}
     service_labels: dict[ServiceName, Labels] = {}

@@ -658,7 +658,9 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
             hostname,
             ipaddress,
             ip_stack_config,
-            fetcher_factory=config_cache.fetcher_factory(),
+            fetcher_factory=config_cache.fetcher_factory(
+                config_cache.make_service_configurer(plugins.check_plugins)
+            ),
             snmp_fetcher_config=SNMPFetcherConfig(
                 scan_config=snmp_scan_config,
                 selected_sections=NO_SELECTION,
@@ -1861,7 +1863,7 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
     discovery_file_cache_max_age = 1.5 * check_interval if file_cache_options.use_outdated else 0
     fetcher = CMKFetcher(
         config_cache,
-        config_cache.fetcher_factory(),
+        config_cache.fetcher_factory(config_cache.make_service_configurer(plugins.check_plugins)),
         plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -2180,7 +2182,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     )
     fetcher = CMKFetcher(
         config_cache,
-        config_cache.fetcher_factory(),
+        config_cache.fetcher_factory(config_cache.make_service_configurer(plugins.check_plugins)),
         plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -2359,9 +2361,10 @@ def run_checking(
         itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
         CheckPluginName,
     )
+    service_configurer = config_cache.make_service_configurer(plugins.check_plugins)
     fetcher = CMKFetcher(
         config_cache,
-        config_cache.fetcher_factory(),
+        config_cache.fetcher_factory(service_configurer),
         plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -2435,7 +2438,9 @@ def run_checking(
                 inventory_plugins=InventoryPluginMapper(),
                 inventory_parameters=config_cache.inventory_parameters,
                 params=config_cache.hwsw_inventory_parameters(hostname),
-                services=config_cache.configured_services(hostname, plugins.check_plugins),
+                services=config_cache.configured_services(
+                    hostname, plugins.check_plugins, service_configurer
+                ),
                 run_plugin_names=run_plugin_names,
                 get_check_period=lambda service_name,
                 service_labels: config_cache.check_period_of_service(
@@ -2576,7 +2581,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     )
     fetcher = CMKFetcher(
         config_cache,
-        config_cache.fetcher_factory(),
+        config_cache.fetcher_factory(config_cache.make_service_configurer(plugins.check_plugins)),
         plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -2830,7 +2835,7 @@ def mode_inventory_as_check(options: Mapping[str, object], hostname: HostName) -
 
     fetcher = CMKFetcher(
         config_cache,
-        config_cache.fetcher_factory(),
+        config_cache.fetcher_factory(config_cache.make_service_configurer(plugins.check_plugins)),
         plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -2991,7 +2996,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
     )
     fetcher = CMKFetcher(
         config_cache,
-        config_cache.fetcher_factory(),
+        config_cache.fetcher_factory(config_cache.make_service_configurer(plugins.check_plugins)),
         plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,

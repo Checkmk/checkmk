@@ -1885,7 +1885,10 @@ class ConfigCache:
             self._nodes_cache,
         ) = _make_clusters_nodes_maps()
 
-        self._autochecks_manager = AutochecksManager()
+        # TODO: remove this from the config cache. It is a completely
+        # self-contained object that should be passed around (if it really
+        # has to exist at all).
+        self.autochecks_manager = AutochecksManager()
         self._effective_host_cache: dict[
             tuple[HostName, ServiceName, tuple[tuple[str, str], ...], tuple[HostName, ...]],
             HostName,
@@ -2149,7 +2152,7 @@ class ConfigCache:
                 config_cache=self,
                 skip_ignored=skip_ignored,
                 filter_mode=filter_mode,
-                get_autochecks=self._autochecks_manager.get_autochecks,
+                get_autochecks=self.autochecks_manager.get_autochecks,
                 configure_autochecks=self._service_configurer.configure_autochecks,
                 plugins=plugins,
             )
@@ -3537,7 +3540,7 @@ class ConfigCache:
 
     def get_discovered_services(self, hostname: HostName) -> Sequence[ConfiguredService]:
         return self._service_configurer.configure_autochecks(
-            hostname, self._autochecks_manager.get_autochecks(hostname)
+            hostname, self.autochecks_manager.get_autochecks(hostname)
         )
 
     def section_name_of(self, section: str) -> str:

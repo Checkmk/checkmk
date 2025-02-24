@@ -7216,7 +7216,7 @@ class TextOrRegExp(Alternative):
                 vs_text,
                 Transform(
                     valuespec=vs_regex,
-                    to_valuespec=lambda v: v[1:],  # strip off "~"
+                    to_valuespec=lambda v: None if v is None else v[1:],  # strip off "~"
                     from_valuespec=lambda v: "~" + v,  # add "~"
                 ),
             ],

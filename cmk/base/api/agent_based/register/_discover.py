@@ -55,21 +55,6 @@ def get_previously_loaded_plugins(errors: Sequence[str] = ()) -> backend.AgentBa
     )
 
 
-def add_section_plugin(section_plugin: backend.SectionPlugin) -> None:
-    if isinstance(section_plugin, backend.AgentSectionPlugin):
-        registered_agent_sections[section_plugin.name] = section_plugin
-    else:
-        registered_snmp_sections[section_plugin.name] = section_plugin
-
-
-def get_section_plugin(section_name: SectionName) -> backend.SectionPlugin | None:
-    return registered_agent_sections.get(section_name) or registered_snmp_sections.get(section_name)
-
-
-def is_registered_section_plugin(section_name: SectionName) -> bool:
-    return section_name in registered_snmp_sections or section_name in registered_agent_sections
-
-
 @tracer.instrument("load_all_plugins")
 def load_all_plugins(
     sections: Iterable[backend.SNMPSectionPlugin | backend.AgentSectionPlugin],
@@ -142,7 +127,10 @@ def register_agent_section(
 ) -> None:
     section_plugin = create_agent_section_plugin(section, location, validate=validate)
 
-    if (existing_section := get_section_plugin(section_plugin.name)) is not None:
+    if (
+        existing_section := registered_agent_sections.get(section_plugin.name)
+        or registered_snmp_sections.get(section_plugin.name)
+    ) is not None:
         if existing_section.location == location:
             # This is relevant if we're loading the plugins twice:
             # Loading of v2 plugins is *not* a no-op the second time round.
@@ -154,7 +142,7 @@ def register_agent_section(
 
         raise ValueError(f"duplicate section definition: {section_plugin.name}")
 
-    add_section_plugin(section_plugin)
+    registered_agent_sections[section_plugin.name] = section_plugin
 
 
 def register_snmp_section(
@@ -162,7 +150,10 @@ def register_snmp_section(
 ) -> None:
     section_plugin = create_snmp_section_plugin(section, location, validate=validate)
 
-    if (existing_section := get_section_plugin(section_plugin.name)) is not None:
+    if (
+        existing_section := registered_agent_sections.get(section_plugin.name)
+        or registered_snmp_sections.get(section_plugin.name)
+    ) is not None:
         if existing_section.location == location:
             # This is relevant if we're loading the plugins twice:
             # Loading of v2 plugins is *not* a no-op the second time round.
@@ -173,7 +164,7 @@ def register_snmp_section(
             return
         raise ValueError(f"duplicate section definition: {section_plugin.name}")
 
-    add_section_plugin(section_plugin)
+    registered_snmp_sections[section_plugin.name] = section_plugin
 
 
 def register_check_plugin(check: CheckPlugin, location: PluginLocation) -> None:
@@ -237,9 +228,12 @@ def _add_sections_to_register(
     sections: Iterable[backend.SNMPSectionPlugin | backend.AgentSectionPlugin],
 ) -> None:
     for section in sections:
-        if is_registered_section_plugin(section.name):
+        if section.name in registered_agent_sections or section.name in registered_snmp_sections:
             continue
-        add_section_plugin(section)
+        if isinstance(section, backend.AgentSectionPlugin):
+            registered_agent_sections[section.name] = section
+        else:
+            registered_snmp_sections[section.name] = section
 
 
 def _add_checks_to_register(

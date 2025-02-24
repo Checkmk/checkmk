@@ -757,220 +757,6 @@ EXAMPLE_93: Mapping[str, object] = {
 
 
 @pytest.mark.parametrize(
-    "rule_value",
-    [
-        EXAMPLE_12,
-        EXAMPLE_68,
-    ],
-)
-def test_nothing_to_assert_rules(rule_value: Mapping[str, object]) -> None:
-    # Act
-    migrated = migrate(ID, rule_value)
-    _ = parse_http_params(process_configuration_to_parameters(migrated).value)
-
-
-@pytest.mark.parametrize(
-    "rule_value, url, server",
-    [
-        (EXAMPLE_10, "http://facebook.de", "google.com"),
-        (EXAMPLE_15, "http://google.com", "google.com"),
-        (EXAMPLE_16, "http://127.0.0.1", "127.0.0.1"),
-        (EXAMPLE_17, "http://localhost", "localhost"),
-        (EXAMPLE_18, "http://[::1]", "[::1]"),
-        (EXAMPLE_19, "http://[::1]:80:80", "[::1]:80"),  # TODO: This may or may not be acceptable.
-        (EXAMPLE_21, "http://[::1]/werks", "[::1]"),
-        (EXAMPLE_25, "https://[::1]", "[::1]"),
-        (EXAMPLE_26, "https://google.com", "google.com"),
-    ],
-)
-def test_migrate_url(rule_value: Mapping[str, object], url: str, server: str) -> None:
-    # Act
-    migrated = migrate(ID, rule_value)
-    # Assemble
-    ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
-    # Assert
-    assert ssc_value[0].url == url
-    assert ssc_value[0].settings.server == server
-
-
-@pytest.mark.parametrize(
-    "rule_value, expected",
-    [
-        (
-            EXAMPLE_27,
-            Document(
-                document_body=DocumentBodyOption.FETCH,
-                max_age=None,
-                page_size=None,
-            ),
-        ),
-        (
-            EXAMPLE_64,
-            Document(
-                document_body=DocumentBodyOption.IGNORE,
-                max_age=None,
-                page_size=None,
-            ),
-        ),
-        (
-            EXAMPLE_65,
-            Document(
-                document_body=DocumentBodyOption.FETCH,
-                max_age=None,
-                page_size=PageSize(min=42, max=0),
-            ),
-        ),
-        (
-            EXAMPLE_66,
-            Document(
-                document_body=DocumentBodyOption.FETCH,
-                max_age=111.0,
-                page_size=None,
-            ),
-        ),
-        (
-            EXAMPLE_67,
-            Document(
-                document_body=DocumentBodyOption.IGNORE,
-                max_age=111.0,
-                page_size=None,
-            ),
-        ),
-    ],
-)
-def test_migrate_document(rule_value: Mapping[str, object], expected: object) -> None:
-    # Act
-    migrated = migrate(ID, rule_value)
-    # Assemble
-    ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
-    # Assert
-    assert ssc_value[0].settings.document == expected
-
-
-@pytest.mark.parametrize(
-    "rule_value, expected",
-    [
-        (
-            EXAMPLE_27,
-            (HttpMethod.GET, None),
-        ),
-        (
-            EXAMPLE_50,
-            (
-                HttpMethod.POST,
-                SendData(
-                    send_data=SendDataInner(
-                        content="da",
-                        content_type=(SendDataType.CUSTOM, "text/html"),
-                    )
-                ),
-            ),
-        ),
-        (
-            EXAMPLE_52,
-            (
-                HttpMethod.POST,
-                SendData(
-                    send_data=SendDataInner(
-                        content="da",
-                        content_type=(SendDataType.CUSTOM, "video"),
-                    )
-                ),
-            ),
-        ),
-        (
-            EXAMPLE_53,
-            (
-                HttpMethod.PUT,
-                SendData(
-                    send_data=SendDataInner(
-                        content="",
-                        content_type=(SendDataType.CUSTOM, "gif"),
-                    )
-                ),
-            ),
-        ),
-        (
-            EXAMPLE_54,
-            (HttpMethod.GET, None),
-        ),
-        (
-            EXAMPLE_55,
-            (HttpMethod.DELETE, None),
-        ),
-        (
-            EXAMPLE_56,
-            (HttpMethod.HEAD, None),
-        ),
-        (
-            EXAMPLE_57,
-            (HttpMethod.PUT, SendData(send_data=None)),
-        ),
-        (
-            EXAMPLE_58,
-            (HttpMethod.POST, SendData(send_data=None)),
-        ),
-    ],
-)
-def test_migrate_method(rule_value: Mapping[str, object], expected: object) -> None:
-    # Act
-    migrated = migrate(ID, rule_value)
-    # Assemble
-    ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
-    # Assert
-    assert ssc_value[0].settings.connection is not None
-    assert ssc_value[0].settings.connection.method == expected
-
-
-@pytest.mark.parametrize(
-    "rule_value, expected",
-    [
-        (EXAMPLE_27, None),
-        (
-            EXAMPLE_47,
-            (
-                MatchType.REGEX,
-                BodyRegex(regex="example", case_insensitive=True, multiline=True, invert=True),
-            ),
-        ),
-        (
-            EXAMPLE_48,
-            (
-                MatchType.REGEX,
-                BodyRegex(regex="", case_insensitive=False, multiline=False, invert=False),
-            ),
-        ),
-    ],
-)
-def test_migrate_expect_regex(rule_value: Mapping[str, object], expected: object) -> None:
-    # Act
-    migrated = migrate(ID, rule_value)
-    # Assemble
-    ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
-    # Assert
-    assert ssc_value[0].settings.content is not None
-    assert ssc_value[0].settings.content.body == expected
-
-
-@pytest.mark.parametrize(
-    "rule_value, expected",
-    [
-        (EXAMPLE_17, None),
-        (EXAMPLE_25, {"min_version": TlsVersion.TLS_1_2, "allow_higher": False}),
-        (EXAMPLE_27, {"min_version": TlsVersion.AUTO, "allow_higher": True}),
-    ],
-)
-def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
-    # Act
-    migrated = migrate(ID, rule_value)
-    # Assemble
-    ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
-    # Assert
-    assert ssc_value[0].settings.connection is not None
-    assert ssc_value[0].settings.connection.model_dump().get("tls_versions") == expected
-
-
-@pytest.mark.parametrize(
     "rule_value, conflict",
     [
         (
@@ -1216,6 +1002,220 @@ def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
 )
 def test_detect_conflicts(rule_value: Mapping[str, object], conflict: Conflict) -> None:
     assert detect_conflicts(rule_value) == conflict
+
+
+@pytest.mark.parametrize(
+    "rule_value",
+    [
+        EXAMPLE_12,
+        EXAMPLE_68,
+    ],
+)
+def test_nothing_to_assert_rules(rule_value: Mapping[str, object]) -> None:
+    # Act
+    migrated = migrate(ID, rule_value)
+    _ = parse_http_params(process_configuration_to_parameters(migrated).value)
+
+
+@pytest.mark.parametrize(
+    "rule_value, url, server",
+    [
+        (EXAMPLE_10, "http://facebook.de", "google.com"),
+        (EXAMPLE_15, "http://google.com", "google.com"),
+        (EXAMPLE_16, "http://127.0.0.1", "127.0.0.1"),
+        (EXAMPLE_17, "http://localhost", "localhost"),
+        (EXAMPLE_18, "http://[::1]", "[::1]"),
+        (EXAMPLE_19, "http://[::1]:80:80", "[::1]:80"),  # TODO: This may or may not be acceptable.
+        (EXAMPLE_21, "http://[::1]/werks", "[::1]"),
+        (EXAMPLE_25, "https://[::1]", "[::1]"),
+        (EXAMPLE_26, "https://google.com", "google.com"),
+    ],
+)
+def test_migrate_url(rule_value: Mapping[str, object], url: str, server: str) -> None:
+    # Act
+    migrated = migrate(ID, rule_value)
+    # Assemble
+    ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
+    # Assert
+    assert ssc_value[0].url == url
+    assert ssc_value[0].settings.server == server
+
+
+@pytest.mark.parametrize(
+    "rule_value, expected",
+    [
+        (
+            EXAMPLE_27,
+            Document(
+                document_body=DocumentBodyOption.FETCH,
+                max_age=None,
+                page_size=None,
+            ),
+        ),
+        (
+            EXAMPLE_64,
+            Document(
+                document_body=DocumentBodyOption.IGNORE,
+                max_age=None,
+                page_size=None,
+            ),
+        ),
+        (
+            EXAMPLE_65,
+            Document(
+                document_body=DocumentBodyOption.FETCH,
+                max_age=None,
+                page_size=PageSize(min=42, max=0),
+            ),
+        ),
+        (
+            EXAMPLE_66,
+            Document(
+                document_body=DocumentBodyOption.FETCH,
+                max_age=111.0,
+                page_size=None,
+            ),
+        ),
+        (
+            EXAMPLE_67,
+            Document(
+                document_body=DocumentBodyOption.IGNORE,
+                max_age=111.0,
+                page_size=None,
+            ),
+        ),
+    ],
+)
+def test_migrate_document(rule_value: Mapping[str, object], expected: object) -> None:
+    # Act
+    migrated = migrate(ID, rule_value)
+    # Assemble
+    ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
+    # Assert
+    assert ssc_value[0].settings.document == expected
+
+
+@pytest.mark.parametrize(
+    "rule_value, expected",
+    [
+        (
+            EXAMPLE_27,
+            (HttpMethod.GET, None),
+        ),
+        (
+            EXAMPLE_50,
+            (
+                HttpMethod.POST,
+                SendData(
+                    send_data=SendDataInner(
+                        content="da",
+                        content_type=(SendDataType.CUSTOM, "text/html"),
+                    )
+                ),
+            ),
+        ),
+        (
+            EXAMPLE_52,
+            (
+                HttpMethod.POST,
+                SendData(
+                    send_data=SendDataInner(
+                        content="da",
+                        content_type=(SendDataType.CUSTOM, "video"),
+                    )
+                ),
+            ),
+        ),
+        (
+            EXAMPLE_53,
+            (
+                HttpMethod.PUT,
+                SendData(
+                    send_data=SendDataInner(
+                        content="",
+                        content_type=(SendDataType.CUSTOM, "gif"),
+                    )
+                ),
+            ),
+        ),
+        (
+            EXAMPLE_54,
+            (HttpMethod.GET, None),
+        ),
+        (
+            EXAMPLE_55,
+            (HttpMethod.DELETE, None),
+        ),
+        (
+            EXAMPLE_56,
+            (HttpMethod.HEAD, None),
+        ),
+        (
+            EXAMPLE_57,
+            (HttpMethod.PUT, SendData(send_data=None)),
+        ),
+        (
+            EXAMPLE_58,
+            (HttpMethod.POST, SendData(send_data=None)),
+        ),
+    ],
+)
+def test_migrate_method(rule_value: Mapping[str, object], expected: object) -> None:
+    # Act
+    migrated = migrate(ID, rule_value)
+    # Assemble
+    ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
+    # Assert
+    assert ssc_value[0].settings.connection is not None
+    assert ssc_value[0].settings.connection.method == expected
+
+
+@pytest.mark.parametrize(
+    "rule_value, expected",
+    [
+        (EXAMPLE_27, None),
+        (
+            EXAMPLE_47,
+            (
+                MatchType.REGEX,
+                BodyRegex(regex="example", case_insensitive=True, multiline=True, invert=True),
+            ),
+        ),
+        (
+            EXAMPLE_48,
+            (
+                MatchType.REGEX,
+                BodyRegex(regex="", case_insensitive=False, multiline=False, invert=False),
+            ),
+        ),
+    ],
+)
+def test_migrate_expect_regex(rule_value: Mapping[str, object], expected: object) -> None:
+    # Act
+    migrated = migrate(ID, rule_value)
+    # Assemble
+    ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
+    # Assert
+    assert ssc_value[0].settings.content is not None
+    assert ssc_value[0].settings.content.body == expected
+
+
+@pytest.mark.parametrize(
+    "rule_value, expected",
+    [
+        (EXAMPLE_17, None),
+        (EXAMPLE_25, {"min_version": TlsVersion.TLS_1_2, "allow_higher": False}),
+        (EXAMPLE_27, {"min_version": TlsVersion.AUTO, "allow_higher": True}),
+    ],
+)
+def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
+    # Act
+    migrated = migrate(ID, rule_value)
+    # Assemble
+    ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
+    # Assert
+    assert ssc_value[0].settings.connection is not None
+    assert ssc_value[0].settings.connection.model_dump().get("tls_versions") == expected
 
 
 @pytest.mark.parametrize(

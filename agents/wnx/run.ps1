@@ -28,9 +28,9 @@ $argDetach = $false
 $argSkipSqlTest = $false
 
 $msbuild_exe = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" `
-                 -latest `
-                 -requires Microsoft.Component.MSBuild `
-                 -find MSBuild\**\Bin\MSBuild.exe
+    -latest `
+    -requires Microsoft.Component.MSBuild `
+    -find MSBuild\**\Bin\MSBuild.exe
 
 $repo_root = (get-item $pwd).parent.parent.FullName
 $arte = "$repo_root/artefacts"
@@ -398,7 +398,7 @@ function Start-BinarySigning {
         "$build_dir/check_mk_service/x64/Release/check_mk_service64.exe",
         "$build_dir/check_mk_service/Win32/Release/check_mk_service32.exe",
         "$arte/cmk-agent-ctl.exe",
-        "$arte/cmk-sql.exe",
+        "$arte/mk-sql.exe",
         "$ohm_dir/OpenHardwareMonitorLib.dll",
         "$ohm_dir/OpenHardwareMonitorCLI.exe"
     )
@@ -551,7 +551,8 @@ try {
     Build-Package $argCtl "host/cmk-agent-ctl" "Controller"
     if ($argSkipSqlTest -ne $true) {
         Build-Package $argSql "host/mk-sql" "MK-SQL"
-    } else {
+    }
+    else {
         Build-Package $argSql "host/mk-sql" "MK-SQL" --build
     }
     Build-Ohm

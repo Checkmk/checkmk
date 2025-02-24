@@ -1010,6 +1010,13 @@ EXAMPLE_94: Mapping[str, object] = {
                 mode_fields=["ssl"],
             ),
         ),
+        (
+            EXAMPLE_94,
+            Conflict(
+                type_=ConflictType.http_1_0_not_supported,
+                host_fields=["virthost"],
+            ),
+        ),
     ],
 )
 def test_detect_conflicts(rule_value: Mapping[str, object], conflict: Conflict) -> None:

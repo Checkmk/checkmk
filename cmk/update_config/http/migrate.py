@@ -51,8 +51,10 @@ def _migrate_url_params(
             tls_versions = {"tls_versions": {"min_version": "auto", "allow_higher": True}}
         case "ssl_1_2":
             tls_versions = {"tls_versions": {"min_version": "tls_1_2", "allow_higher": False}}
-        case too_old:
-            assert_never(too_old)
+        case "ssl_1_1" | "ssl_1" | "ssl_2" | "ssl_3":
+            tls_versions = {"tls_versions": {"min_version": "auto", "allow_higher": True}}
+        case never:
+            assert_never(never)
     match url_params.response_time:
         case None:
             response_time: Mapping[str, object] = {}

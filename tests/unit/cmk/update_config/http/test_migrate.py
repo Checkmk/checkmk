@@ -33,15 +33,15 @@ from cmk.update_config.http.conflicts import (
     _migrate_expect_response,
     Config,
     Conflict,
+    ConflictType,
     detect_conflicts,
     HostType,
     HTTP10NotSupported,
+    SSLIncompatible,
 )
 from cmk.update_config.http.migrate import migrate
 
-CONFIG = Config(
-    http_1_0_not_supported=HTTP10NotSupported.skip,
-)
+DEFAULT = Config()
 
 ID = ""
 HOST_1 = {"address": ("direct", "[::1]"), "virthost": "[::1]"}
@@ -858,21 +858,21 @@ EXAMPLE_94: Mapping[str, object] = {
         (
             EXAMPLE_22,
             Conflict(
-                type_="ssl_incompatible",
+                type_=ConflictType.ssl_incompatible,
                 mode_fields=["ssl"],
             ),
         ),
         (
             EXAMPLE_23,
             Conflict(
-                type_="ssl_incompatible",
+                type_=ConflictType.ssl_incompatible,
                 mode_fields=["ssl"],
             ),
         ),
         (
             EXAMPLE_24,
             Conflict(
-                type_="ssl_incompatible",
+                type_=ConflictType.ssl_incompatible,
                 mode_fields=["ssl"],
             ),
         ),
@@ -1006,14 +1006,14 @@ EXAMPLE_94: Mapping[str, object] = {
         (
             EXAMPLE_93,
             Conflict(
-                type_="ssl_incompatible",
+                type_=ConflictType.ssl_incompatible,
                 mode_fields=["ssl"],
             ),
         ),
     ],
 )
 def test_detect_conflicts(rule_value: Mapping[str, object], conflict: Conflict) -> None:
-    assert detect_conflicts(CONFIG, rule_value) == conflict
+    assert detect_conflicts(DEFAULT, rule_value) == conflict
 
 
 @pytest.mark.parametrize(
@@ -1025,7 +1025,7 @@ def test_detect_conflicts(rule_value: Mapping[str, object], conflict: Conflict) 
 )
 def test_nothing_to_assert_rules(rule_value: Mapping[str, object]) -> None:
     # Assemble
-    for_migration = detect_conflicts(CONFIG, rule_value)
+    for_migration = detect_conflicts(DEFAULT, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)
@@ -1048,7 +1048,7 @@ def test_nothing_to_assert_rules(rule_value: Mapping[str, object]) -> None:
 )
 def test_migrate_url(rule_value: Mapping[str, object], url: str, server: str) -> None:
     # Assemble
-    for_migration = detect_conflicts(CONFIG, rule_value)
+    for_migration = detect_conflicts(DEFAULT, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)
@@ -1106,7 +1106,7 @@ def test_migrate_url(rule_value: Mapping[str, object], url: str, server: str) ->
 )
 def test_migrate_document(rule_value: Mapping[str, object], expected: object) -> None:
     # Assemble
-    for_migration = detect_conflicts(CONFIG, rule_value)
+    for_migration = detect_conflicts(DEFAULT, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)
@@ -1183,7 +1183,7 @@ def test_migrate_document(rule_value: Mapping[str, object], expected: object) ->
 )
 def test_migrate_method(rule_value: Mapping[str, object], expected: object) -> None:
     # Assemble
-    for_migration = detect_conflicts(CONFIG, rule_value)
+    for_migration = detect_conflicts(DEFAULT, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)
@@ -1216,7 +1216,7 @@ def test_migrate_method(rule_value: Mapping[str, object], expected: object) -> N
 )
 def test_migrate_expect_regex(rule_value: Mapping[str, object], expected: object) -> None:
     # Assemble
-    for_migration = detect_conflicts(CONFIG, rule_value)
+    for_migration = detect_conflicts(DEFAULT, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)
@@ -1228,16 +1228,36 @@ def test_migrate_expect_regex(rule_value: Mapping[str, object], expected: object
 
 
 @pytest.mark.parametrize(
-    "rule_value, expected",
+    "rule_value, config, expected",
     [
-        (EXAMPLE_17, None),
-        (EXAMPLE_25, {"min_version": TlsVersion.TLS_1_2, "allow_higher": False}),
-        (EXAMPLE_27, {"min_version": TlsVersion.AUTO, "allow_higher": True}),
+        (EXAMPLE_17, DEFAULT, None),
+        (EXAMPLE_25, DEFAULT, {"min_version": TlsVersion.TLS_1_2, "allow_higher": False}),
+        (EXAMPLE_27, DEFAULT, {"min_version": TlsVersion.AUTO, "allow_higher": True}),
+        (
+            EXAMPLE_22,
+            Config(ssl_incompatible=SSLIncompatible.negotiate),
+            {"min_version": TlsVersion.AUTO, "allow_higher": True},
+        ),
+        (
+            EXAMPLE_23,
+            Config(ssl_incompatible=SSLIncompatible.negotiate),
+            {"min_version": TlsVersion.AUTO, "allow_higher": True},
+        ),
+        (
+            EXAMPLE_24,
+            Config(ssl_incompatible=SSLIncompatible.negotiate),
+            {"min_version": TlsVersion.AUTO, "allow_higher": True},
+        ),
+        (
+            EXAMPLE_93,
+            Config(ssl_incompatible=SSLIncompatible.negotiate),
+            {"min_version": TlsVersion.AUTO, "allow_higher": True},
+        ),
     ],
 )
-def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
+def test_migrate_ssl(rule_value: Mapping[str, object], config: Config, expected: str) -> None:
     # Assemble
-    for_migration = detect_conflicts(CONFIG, rule_value)
+    for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)
@@ -1260,7 +1280,7 @@ def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
 )
 def test_migrate_response_time(rule_value: Mapping[str, object], expected: object) -> None:
     # Assemble
-    for_migration = detect_conflicts(CONFIG, rule_value)
+    for_migration = detect_conflicts(DEFAULT, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)
@@ -1279,7 +1299,7 @@ def test_migrate_response_time(rule_value: Mapping[str, object], expected: objec
 )
 def test_migrate_expect_string(rule_value: Mapping[str, object], expected: object) -> None:
     # Assemble
-    for_migration = detect_conflicts(CONFIG, rule_value)
+    for_migration = detect_conflicts(DEFAULT, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)
@@ -1300,7 +1320,7 @@ def test_migrate_expect_string(rule_value: Mapping[str, object], expected: objec
 )
 def test_migrate_timeout(rule_value: Mapping[str, object], expected: object) -> None:
     # Assemble
-    for_migration = detect_conflicts(CONFIG, rule_value)
+    for_migration = detect_conflicts(DEFAULT, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)
@@ -1320,7 +1340,7 @@ def test_migrate_timeout(rule_value: Mapping[str, object], expected: object) -> 
 )
 def test_migrate_user_agent(rule_value: Mapping[str, object], expected: object) -> None:
     # Assemble
-    for_migration = detect_conflicts(CONFIG, rule_value)
+    for_migration = detect_conflicts(DEFAULT, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)
@@ -1363,7 +1383,7 @@ def test_migrate_user_agent(rule_value: Mapping[str, object], expected: object) 
 )
 def test_migrate_add_headers(rule_value: Mapping[str, object], expected: object) -> None:
     # Assemble
-    for_migration = detect_conflicts(CONFIG, rule_value)
+    for_migration = detect_conflicts(DEFAULT, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)
@@ -1376,7 +1396,7 @@ def test_migrate_add_headers(rule_value: Mapping[str, object], expected: object)
 
 def test_migrate_auth_user() -> None:
     # Assemble
-    for_migration = detect_conflicts(CONFIG, EXAMPLE_36)
+    for_migration = detect_conflicts(DEFAULT, EXAMPLE_36)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)
@@ -1390,7 +1410,7 @@ def test_migrate_auth_user() -> None:
 
 def test_migrate_auth_no_auth() -> None:
     # Assemble
-    for_migration = detect_conflicts(CONFIG, EXAMPLE_27)
+    for_migration = detect_conflicts(DEFAULT, EXAMPLE_27)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)
@@ -1415,7 +1435,7 @@ def test_migrate_auth_no_auth() -> None:
 )
 def test_migrate_redirect(rule_value: Mapping[str, object], expected: object) -> None:
     # Assemble
-    for_migration = detect_conflicts(CONFIG, rule_value)
+    for_migration = detect_conflicts(DEFAULT, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)
@@ -1454,7 +1474,7 @@ def test_helper_migrate_expect_response() -> None:
 )
 def test_migrate_expect_response(rule_value: Mapping[str, object], expected: object) -> None:
     # Assemble
-    for_migration = detect_conflicts(CONFIG, rule_value)
+    for_migration = detect_conflicts(DEFAULT, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)
@@ -1473,7 +1493,7 @@ def test_migrate_expect_response(rule_value: Mapping[str, object], expected: obj
 )
 def test_migrate_cert(rule_value: Mapping[str, object], expected: object) -> None:
     # Assemble
-    for_migration = detect_conflicts(CONFIG, rule_value)
+    for_migration = detect_conflicts(DEFAULT, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)
@@ -1493,7 +1513,7 @@ def test_migrate_cert(rule_value: Mapping[str, object], expected: object) -> Non
 )
 def test_migrate_expect_response_header(rule_value: Mapping[str, object], expected: object) -> None:
     # Assemble
-    for_migration = detect_conflicts(CONFIG, rule_value)
+    for_migration = detect_conflicts(DEFAULT, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)
@@ -1515,7 +1535,7 @@ def test_migrate_expect_response_header(rule_value: Mapping[str, object], expect
 )
 def test_migrate_name(rule_value: Mapping[str, object], expected: object) -> None:
     # Assemble
-    for_migration = detect_conflicts(CONFIG, rule_value)
+    for_migration = detect_conflicts(DEFAULT, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)
@@ -1537,7 +1557,7 @@ def test_migrate_name(rule_value: Mapping[str, object], expected: object) -> Non
 )
 def test_migrate_address_family(rule_value: Mapping[str, object], expected: object) -> None:
     # Assemble
-    for_migration = detect_conflicts(CONFIG, rule_value)
+    for_migration = detect_conflicts(DEFAULT, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)
@@ -1550,7 +1570,7 @@ def test_migrate_address_family(rule_value: Mapping[str, object], expected: obje
 
 def test_preserve_http_version() -> None:
     # Assemble
-    for_migration = detect_conflicts(CONFIG, EXAMPLE_27)
+    for_migration = detect_conflicts(DEFAULT, EXAMPLE_27)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)

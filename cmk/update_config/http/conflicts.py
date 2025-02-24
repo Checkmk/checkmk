@@ -19,6 +19,7 @@ from cmk.update_config.http.v1_scheme import V1Cert, V1Host, V1Proxy, V1Url, V1V
 
 class ConflictType(enum.Enum):
     http_1_0_not_supported = "http-1-0-not-supported"
+    ssl_incompatible = "ssl-incompatible"
 
 
 class HTTP10NotSupported(enum.Enum):
@@ -26,14 +27,18 @@ class HTTP10NotSupported(enum.Enum):
     ignore = "ignore"
 
 
+class SSLIncompatible(enum.Enum):
+    skip = "skip"
+    negotiate = "negotiate"
+
+
 @dataclass(frozen=True, kw_only=True)
 class Config:
     http_1_0_not_supported: HTTP10NotSupported = HTTP10NotSupported.skip
+    ssl_incompatible: SSLIncompatible = SSLIncompatible.skip
 
 
 class MigratableUrl(V1Url):
-    ssl: Literal["auto", "ssl_1_2"] | None = None
-
     def migrate_expect_response(self) -> None | list[int]:
         if self.expect_response is None:
             return None
@@ -154,9 +159,14 @@ def detect_conflicts(config: Config, rule_value: Mapping[str, object]) -> Confli
                 type_="add_headers_incompatible",
                 mode_fields=["add_headers"],
             )
-        if mode.ssl in ["ssl_1", "ssl_2", "ssl_3", "ssl_1_1"]:
+        if config.ssl_incompatible is SSLIncompatible.skip and mode.ssl in [
+            "ssl_1",
+            "ssl_2",
+            "ssl_3",
+            "ssl_1_1",
+        ]:
             return Conflict(
-                type_="ssl_incompatible",
+                type_=ConflictType.ssl_incompatible,
                 mode_fields=["ssl"],
             )
         if mode.expect_response_header is not None:
@@ -218,6 +228,7 @@ class Migrate(BaseModel):
     command: Literal["migrate"]
     write: bool = False
     http_1_0_not_supported: HTTP10NotSupported
+    ssl_incompatible: SSLIncompatible
 
 
 def add_migrate_parsing(parser: argparse.ArgumentParser) -> None:
@@ -228,9 +239,21 @@ def add_migrate_parsing(parser: argparse.ArgumentParser) -> None:
         choices=[e.value for e in HTTP10NotSupported],
         help="; ".join(
             [
-                "handle missing support for HTTP/1.0",
-                "skip (default): do not migrate rule",
-                "ignore: use HTTP/1.1 with virtual host set to the address",
+                "conflict: v2 does not support HTTP/1.0",
+                f"{HTTP10NotSupported.skip.value} (default): do not migrate rule",
+                f"{HTTP10NotSupported.ignore.value}: use HTTP/1.1 with virtual host set to the address",
+            ]
+        ),
+    )
+    parser.add_argument(
+        f"--{ConflictType.ssl_incompatible.value}",
+        default=SSLIncompatible.skip.value,
+        choices=[e.value for e in SSLIncompatible],
+        help="; ".join(
+            [
+                "conflict: v2 only support TLS 1.2 or 1.3",
+                f"{SSLIncompatible.skip.value} (default): do not migrate rule",
+                f"{SSLIncompatible.negotiate.value}: use HTTP/1.1 with virtual host set to the address",
             ]
         ),
     )

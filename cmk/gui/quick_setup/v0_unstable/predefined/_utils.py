@@ -20,6 +20,7 @@ from cmk.gui.quick_setup.v0_unstable.predefined._common import (
     _find_id_in_form_data,
     _match_service_interest,
 )
+from cmk.gui.quick_setup.v0_unstable.setups import ProgressLogger, StepStatus
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     ParsedFormData,
     ServiceInterest,
@@ -34,17 +35,24 @@ def get_service_discovery_preview(
     all_stages_form_data: ParsedFormData,
     parameter_form: Dictionary,
     collect_params: Callable[[ParsedFormData, Dictionary], Mapping[str, object]],
+    progress_logger: ProgressLogger,
 ) -> SpecialAgentDiscoveryPreviewResult:
+    progress_logger.log_new_progress_step("parse_config", "Parse the connection configuration data")
     params = collect_params(all_stages_form_data, parameter_form)
     passwords = _collect_passwords_from_form_data(all_stages_form_data, parameter_form)
     site_id = _find_id_in_form_data(all_stages_form_data, QSSiteSelection)
     host_name = _find_id_in_form_data(all_stages_form_data, QSHostName)
+    progress_logger.update_progress_step_status("parse_config", StepStatus.COMPLETED)
+    progress_logger.log_new_progress_step(
+        "test_connection", "Use input data to test connection to datasource"
+    )
     service_discovery_result = special_agent_discovery_preview(
         SiteId(site_id) if site_id else omd_site(),
         _create_diag_special_agent_input(
             rulespec_name=rulespec_name, host_name=host_name, passwords=passwords, params=params
         ),
     )
+    progress_logger.update_progress_step_status("test_connection", StepStatus.COMPLETED)
     return service_discovery_result
 
 

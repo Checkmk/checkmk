@@ -1040,20 +1040,22 @@ class DcdAPI(BaseAPI):
                 "comment": comment,
                 "disabled": disabled,
                 "site": self.session.site,
-                "connector_type": "piggyback",
-                "restrict_source_hosts": restrict_source_hosts or [],
-                "interval": interval,
-                "creation_rules": [
-                    {
-                        "folder_path": "/",
-                        "host_attributes": host_attributes or {},
-                        "delete_hosts": delete_hosts,
-                    }
-                ],
-                "discover_on_creation": discover_on_creation,
-                "no_deletion_time_after_init": no_deletion_time_after_init,
-                "max_cache_age": max_cache_age,
-                "validity_period": validity_period,
+                "connector": {
+                    "connector_type": "piggyback",
+                    "restrict_source_hosts": restrict_source_hosts or [],
+                    "interval": interval,
+                    "creation_rules": [
+                        {
+                            "folder_path": "/",
+                            "host_attributes": host_attributes or {},
+                            "delete_hosts": delete_hosts,
+                        }
+                    ],
+                    "discover_on_creation": discover_on_creation,
+                    "no_deletion_time_after_init": no_deletion_time_after_init,
+                    "max_cache_age": max_cache_age,
+                    "validity_period": validity_period,
+                },
             },
         )
         if resp.status_code != 200:

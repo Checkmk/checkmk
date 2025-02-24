@@ -1,5 +1,5 @@
 [submodule "tests/qa-test-data"]
 	path = tests/qa-test-data
         url = ../qa-test-data
-	branch = master
+	branch = 2.4.0
 	ignore = all

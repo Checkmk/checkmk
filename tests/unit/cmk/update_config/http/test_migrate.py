@@ -31,6 +31,7 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
 from cmk.update_config.http.conflicts import (
     _classify,
     _migrate_expect_response,
+    AdditionalHeaders,
     Config,
     Conflict,
     ConflictType,
@@ -270,7 +271,7 @@ EXAMPLE_32: Mapping[str, object] = {
 EXAMPLE_33: Mapping[str, object] = {
     "name": "headers",
     "host": HOST_1,
-    "mode": ("url", {"add_headers": ["mop"]}),
+    "mode": ("url", {"add_headers": ["head: tail", "mop"]}),
 }
 
 EXAMPLE_34: Mapping[str, object] = {
@@ -851,7 +852,7 @@ EXAMPLE_94: Mapping[str, object] = {
         (
             EXAMPLE_33,
             Conflict(
-                type_="add_headers_incompatible",
+                type_=ConflictType.add_headers_incompatible,
                 mode_fields=["add_headers"],
             ),
         ),
@@ -1359,11 +1360,16 @@ def test_migrate_user_agent(rule_value: Mapping[str, object], expected: object) 
 
 
 @pytest.mark.parametrize(
-    "rule_value, expected",
+    "rule_value, config, expected",
     [
-        (EXAMPLE_27, None),
+        (
+            EXAMPLE_27,
+            DEFAULT,
+            None,
+        ),
         (
             EXAMPLE_32,
+            DEFAULT,
             [
                 {"header_name": "head", "header_value": "tail"},
                 {"header_name": "mop", "header_value": ""},
@@ -1372,25 +1378,36 @@ def test_migrate_user_agent(rule_value: Mapping[str, object], expected: object) 
         ),
         (
             EXAMPLE_34,
+            DEFAULT,
             [{"header_name": "head", "header_value": "tail"}],
         ),
         (
             EXAMPLE_35,
+            DEFAULT,
             [{"header_name": "head", "header_value": ""}],
         ),
         (
             EXAMPLE_71,
+            DEFAULT,
             [{"header_name": "", "header_value": "tail"}],
         ),
         (
             EXAMPLE_72,
+            DEFAULT,
+            [{"header_name": "head", "header_value": "tail"}],
+        ),
+        (
+            EXAMPLE_33,
+            Config(add_headers_incompatible=AdditionalHeaders.ignore),
             [{"header_name": "head", "header_value": "tail"}],
         ),
     ],
 )
-def test_migrate_add_headers(rule_value: Mapping[str, object], expected: object) -> None:
+def test_migrate_add_headers(
+    rule_value: Mapping[str, object], config: Config, expected: object
+) -> None:
     # Assemble
-    for_migration = detect_conflicts(DEFAULT, rule_value)
+    for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)

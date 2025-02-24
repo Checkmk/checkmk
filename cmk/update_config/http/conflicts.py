@@ -20,6 +20,7 @@ from cmk.update_config.http.v1_scheme import V1Cert, V1Host, V1Proxy, V1Url, V1V
 class ConflictType(enum.Enum):
     http_1_0_not_supported = "http-1-0-not-supported"
     ssl_incompatible = "ssl-incompatible"
+    add_headers_incompatible = "add-headers-incompatible"
 
 
 class HTTP10NotSupported(enum.Enum):
@@ -32,10 +33,23 @@ class SSLIncompatible(enum.Enum):
     negotiate = "negotiate"
 
 
+class AdditionalHeaders(enum.Enum):
+    skip = "skip"
+    ignore = "ignore"
+
+
 @dataclass(frozen=True, kw_only=True)
 class Config:
     http_1_0_not_supported: HTTP10NotSupported = HTTP10NotSupported.skip
     ssl_incompatible: SSLIncompatible = SSLIncompatible.skip
+    add_headers_incompatible: AdditionalHeaders = AdditionalHeaders.skip
+
+
+def _migrate_header(header: str) -> dict[str, str] | None:
+    match header.split(":", 1):
+        case [name, value]:
+            return {"header_name": name, "header_value": value.strip()}
+    return None
 
 
 class MigratableUrl(V1Url):
@@ -43,6 +57,16 @@ class MigratableUrl(V1Url):
         if self.expect_response is None:
             return None
         return _migrate_expect_response(self.expect_response)
+
+    def migrate_add_headers(self) -> None | list[dict[str, str]]:
+        if self.add_headers is None:
+            return None
+
+        return [
+            migrated
+            for header in self.add_headers
+            if (migrated := _migrate_header(header)) is not None
+        ]
 
 
 def _migrate_expect_response(response: list[str]) -> list[int]:
@@ -154,9 +178,11 @@ def detect_conflicts(config: Config, rule_value: Mapping[str, object]) -> Confli
                 )
     mode = value.mode[1]
     if isinstance(mode, V1Url):
-        if any(":" not in header for header in mode.add_headers or []):
+        if config.add_headers_incompatible is AdditionalHeaders.skip and any(
+            ":" not in header for header in mode.add_headers or []
+        ):
             return Conflict(
-                type_="add_headers_incompatible",
+                type_=ConflictType.add_headers_incompatible,
                 mode_fields=["add_headers"],
             )
         if config.ssl_incompatible is SSLIncompatible.skip and mode.ssl in [
@@ -229,6 +255,7 @@ class Migrate(BaseModel):
     write: bool = False
     http_1_0_not_supported: HTTP10NotSupported
     ssl_incompatible: SSLIncompatible
+    add_headers_incompatible: AdditionalHeaders
 
 
 def add_migrate_parsing(parser: argparse.ArgumentParser) -> None:
@@ -254,6 +281,18 @@ def add_migrate_parsing(parser: argparse.ArgumentParser) -> None:
                 "conflict: v2 only support TLS 1.2 or 1.3",
                 f"{SSLIncompatible.skip.value} (default): do not migrate rule",
                 f"{SSLIncompatible.negotiate.value}: use HTTP/1.1 with virtual host set to the address",
+            ]
+        ),
+    )
+    parser.add_argument(
+        f"--{ConflictType.add_headers_incompatible.value}",
+        default=AdditionalHeaders.skip.value,
+        choices=[e.value for e in AdditionalHeaders],
+        help="; ".join(
+            [
+                "conflict: `Additional header lines` must be in the format `Header: Value` for migration",
+                f"{AdditionalHeaders.skip.value} (default): do not migrate rule",
+                f"{AdditionalHeaders.ignore.value}: create rule without header lines in incompatible format",
             ]
         ),
     )

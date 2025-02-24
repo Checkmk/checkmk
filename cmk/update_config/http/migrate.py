@@ -70,11 +70,11 @@ def _migrate_url_params(
             user_agent: Mapping[str, object] = {}
         case agent:
             user_agent = {"user_agent": agent}
-    match url_params.add_headers:
+    match url_params.migrate_add_headers():
         case None:
             add_headers: Mapping[str, object] = {}
         case headers:
-            add_headers = {"add_headers": [_migrate_header(header) for header in headers]}
+            add_headers = {"add_headers": headers}
     match url_params.auth:
         case None:
             auth: Mapping[str, object] = {}

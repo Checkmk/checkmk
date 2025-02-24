@@ -82,7 +82,7 @@ def _process_sub_table(sub_table: Sequence[str | Sequence[int]]) -> Iterable[Int
 
     # Ignore useless entries for "TenGigabitEthernet2/1/21--Uncontrolled" (type) or half-empty
     # tables (e.g. Viprinet-Router)
-    if type_ in ("231", "232") or last_change in ("", "NULL") or not speed:
+    if type_ in ("231", "232") or last_change in ("", "NULL", "NOSUCHINSTANCE") or not speed:
         return
 
     yield Interface(

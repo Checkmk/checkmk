@@ -1963,6 +1963,7 @@ class StatusServer(ECServerThread):
         event_status: EventStatus,
         event_server: EventServer,
         terminate_main_event: threading.Event,
+        reload_config_event: threading.Event,
     ) -> None:
         super().__init__(
             name="StatusServer",
@@ -1988,6 +1989,7 @@ class StatusServer(ECServerThread):
         self._event_server = event_server
         self._event_columns = StatusTableEvents.columns
         self._terminate_main_event = terminate_main_event
+        self._reload_config_event = reload_config_event
 
         self.open_unix_socket()
         self.open_tcp_socket()
@@ -2300,16 +2302,7 @@ class StatusServer(ECServerThread):
             self._history.add(event, "CHANGESTATE", user)
 
     def handle_command_reload(self) -> None:
-        reload_configuration(
-            self.settings,
-            getLogger("cmk.mkeventd"),
-            self._lock_configuration,
-            self._history,
-            self._event_status,
-            self._event_server,
-            self,
-            self._slave_status,
-        )
+        self._reload_config_event.set()
 
     def handle_command_reopenlog(self) -> None:
         self._logger.info("Closing this logfile")
@@ -2431,6 +2424,7 @@ def run_eventd(  # pylint: disable=too-many-branches
     status_server: StatusServer,
     slave_status: SlaveStatus,
     logger: Logger,
+    reload_config_event: threading.Event,
 ) -> None:
     """Dispatching: starting and managing the two threads."""
     status_server.start()
@@ -2453,9 +2447,22 @@ def run_eventd(  # pylint: disable=too-many-branches
                     event_list.append(next_replication)
 
                 time_left = max(0, min(event_list) - time.time())
-                time.sleep(min(time_left, 60))
-
+                reload_config_event.wait(min(time_left, 60))
                 now = time.time()
+
+                if reload_config_event.is_set():
+                    reload_config_event.clear()
+                    history = reload_configuration(
+                        settings,
+                        getLogger("cmk.mkeventd"),
+                        lock_configuration,
+                        history,
+                        event_status,
+                        event_server,
+                        status_server,
+                        slave_status,
+                    )
+
                 if now > next_housekeeping:
                     event_server.do_housekeeping()
                     next_housekeeping = now + config["housekeeping_interval"]
@@ -3441,6 +3448,7 @@ def main() -> None:
             StatusTableEvents.columns,
         )
         terminate_main_event = threading.Event()
+        reload_config_event = threading.Event()
         status_server = StatusServer(
             logger.getChild("StatusServer"),
             settings,
@@ -3452,6 +3460,7 @@ def main() -> None:
             event_status,
             event_server,
             terminate_main_event,
+            reload_config_event,
         )
 
         event_status.load_status(event_server)
@@ -3486,6 +3495,7 @@ def main() -> None:
             status_server,
             slave_status,
             logger,
+            reload_config_event,
         )
 
         # We reach this point, if the server has been killed by

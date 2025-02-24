@@ -170,4 +170,5 @@ def fixture_status_server(
         event_status,
         event_server,
         threading.Event(),
+        threading.Event(),
     )

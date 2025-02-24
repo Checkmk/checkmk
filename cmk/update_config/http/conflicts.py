@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import argparse
 import enum
 import re
 from collections.abc import Mapping, Sequence
@@ -11,9 +12,23 @@ from dataclasses import dataclass
 from ipaddress import AddressValueError, IPv6Address, NetmaskValueError
 from typing import Literal, LiteralString
 
-from pydantic import HttpUrl, ValidationError
+from pydantic import BaseModel, HttpUrl, ValidationError
 
 from cmk.update_config.http.v1_scheme import V1Cert, V1Host, V1Proxy, V1Url, V1Value
+
+
+class ConflictType(enum.Enum):
+    http_1_0_not_supported = "http-1-0-not-supported"
+
+
+class HTTP10NotSupported(enum.Enum):
+    skip = "skip"
+    ignore = "ignore"
+
+
+@dataclass(frozen=True, kw_only=True)
+class Config:
+    http_1_0_not_supported: HTTP10NotSupported = HTTP10NotSupported.skip
 
 
 class MigratableUrl(V1Url):
@@ -64,8 +79,14 @@ class MigratableValue(V1Value):
 
 
 @dataclass(frozen=True)
+class ForMigration:
+    value: MigratableValue
+    config: Config
+
+
+@dataclass(frozen=True)
 class Conflict:
-    type_: LiteralString
+    type_: LiteralString | ConflictType
     mode_fields: Sequence[str] = ()
     host_fields: Sequence[str] = ()
     disable_sni: bool = False
@@ -88,7 +109,7 @@ def _classify(host: str) -> HostType:
     return HostType.INVALID
 
 
-def detect_conflicts(rule_value: Mapping[str, object]) -> Conflict | MigratableValue:
+def detect_conflicts(config: Config, rule_value: Mapping[str, object]) -> Conflict | ForMigration:
     try:
         value = V1Value.model_validate(rule_value)
     except ValidationError:
@@ -109,9 +130,13 @@ def detect_conflicts(rule_value: Mapping[str, object]) -> Conflict | MigratableV
                 host_fields=["address"],
             )
         elif isinstance(address, str):
-            if not value.uses_https() and value.host.virthost is None:
+            if (
+                config.http_1_0_not_supported is HTTP10NotSupported.skip
+                and not value.uses_https()
+                and value.host.virthost is None
+            ):
                 return Conflict(
-                    type_="http_1_0_not_supported",
+                    type_=ConflictType.http_1_0_not_supported,
                     host_fields=["virthost"],
                 )
             type_ = _classify(address)
@@ -183,4 +208,29 @@ def detect_conflicts(rule_value: Mapping[str, object]) -> Conflict | MigratableV
             type_="cant_disable_sni_with_https",
             disable_sni=True,
         )
-    return MigratableValue.model_validate(value.model_dump())
+    return ForMigration(
+        value=MigratableValue.model_validate(value.model_dump()),
+        config=config,
+    )
+
+
+class Migrate(BaseModel):
+    command: Literal["migrate"]
+    write: bool = False
+    http_1_0_not_supported: HTTP10NotSupported
+
+
+def add_migrate_parsing(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--write", action="store_true", help="persist changes on disk")
+    parser.add_argument(
+        f"--{ConflictType.http_1_0_not_supported.value}",
+        default=HTTP10NotSupported.skip.value,
+        choices=[e.value for e in HTTP10NotSupported],
+        help="; ".join(
+            [
+                "handle missing support for HTTP/1.0",
+                "skip (default): do not migrate rule",
+                "ignore: use HTTP/1.1 with virtual host set to the address",
+            ]
+        ),
+    )

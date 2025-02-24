@@ -29,9 +29,9 @@ from collections.abc import Mapping
 from typing import assert_never
 
 from cmk.update_config.http.conflicts import (
+    ForMigration,
     MigratableCert,
     MigratableUrl,
-    MigratableValue,
 )
 
 
@@ -205,8 +205,8 @@ def _migrate_name(name: str) -> Mapping[str, object]:
     return {"prefix": "auto", "name": name}
 
 
-def migrate(id_: str, rule_value: Mapping[str, object]) -> Mapping[str, object]:
-    value = MigratableValue.model_validate(rule_value)
+def migrate(id_: str, for_migration: ForMigration) -> Mapping[str, object]:
+    value = for_migration.value
     match value.host.address_family:
         case "any":
             address_family = "any"

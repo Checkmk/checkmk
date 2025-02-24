@@ -7,7 +7,10 @@ package(default_visibility = [":__subpackages__"])
 py_library(
     name = "conftest",
     testonly = True,
-    srcs = ["conftest.py"],
+    srcs = [
+        "conftest.py",
+        "mocks_and_helpers.py",
+    ],
     deps = [
         "//cmk:lib_cmk",
         "//packages/cmk-livestatus-client:py_livestatus",

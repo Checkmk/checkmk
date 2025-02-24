@@ -27,7 +27,7 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-from tests.unit.conftest import FixPluginLegacy
+from tests.unit.mocks_and_helpers import FixPluginLegacy
 
 from . import generictests
 

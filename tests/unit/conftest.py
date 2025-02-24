@@ -23,6 +23,8 @@ from tests.testlib.common.repo import (
     repo_path,
 )
 
+from tests.unit.mocks_and_helpers import DummyLicensingHandler, FixPluginLegacy
+
 import livestatus
 
 import cmk.ccc.debug
@@ -33,12 +35,6 @@ from cmk.ccc.site import omd_site
 import cmk.utils.caching
 import cmk.utils.paths
 from cmk.utils import redis, tty
-from cmk.utils.licensing.handler import (
-    LicenseState,
-    LicensingHandler,
-    NotificationHandler,
-    UserEffect,
-)
 from cmk.utils.livestatus_helpers.testing import (
     mock_livestatus_communication,
     MockLiveStatusConnection,
@@ -50,7 +46,6 @@ from cmk.base.api.agent_based.register import (  # pylint: disable=cmk-module-la
 )
 
 import cmk.crypto.password_hashing
-from cmk.agent_based.legacy import discover_legacy_checks, FileLoader, find_plugin_files
 
 logger = logging.getLogger(__name__)
 
@@ -299,22 +294,6 @@ def agent_based_plugins() -> AgentBasedPlugins:
     return get_previously_loaded_plugins()
 
 
-class FixPluginLegacy:
-    """Access legacy dicts like `check_info`"""
-
-    def __init__(self) -> None:
-        result = discover_legacy_checks(
-            find_plugin_files(str(repo_path() / "cmk/base/legacy_checks")),
-            FileLoader(
-                precomile_path=cmk.utils.paths.precompiled_checks_dir,
-                local_path="/not_relevant_for_test",
-                makedirs=store.makedirs,
-            ),
-            raise_errors=True,
-        )
-        self.check_info = {p.name: p for p in result.sane_check_info}
-
-
 @pytest.fixture(scope="session")
 def fix_plugin_legacy() -> Iterator[FixPluginLegacy]:
     yield FixPluginLegacy()
@@ -383,35 +362,6 @@ def reduce_password_hashing_rounds() -> Iterator[None]:
 def fixture_monkeypatch_module() -> Iterator[pytest.MonkeyPatch]:
     with pytest.MonkeyPatch.context() as mp:
         yield mp
-
-
-class DummyNotificationHandler(NotificationHandler):
-    def manage_notification(self) -> None:
-        pass
-
-
-class DummyLicensingHandler(LicensingHandler):
-    @classmethod
-    def make(cls) -> "DummyLicensingHandler":
-        return cls()
-
-    @property
-    def state(self) -> LicenseState:
-        return LicenseState.LICENSED
-
-    @property
-    def message(self) -> str:
-        return ""
-
-    def effect_core(self, num_services: int, num_hosts_shadow: int) -> UserEffect:
-        return UserEffect(header=None, email=None, block=None)
-
-    def effect(self, licensing_settings_link: str | None = None) -> UserEffect:
-        return UserEffect(header=None, email=None, block=None)
-
-    @property
-    def notification_handler(self) -> NotificationHandler:
-        return DummyNotificationHandler(email_notification=None)
 
 
 @pytest.fixture(name="is_licensed", scope="module")

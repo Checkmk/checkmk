@@ -97,7 +97,6 @@ def test_standard_workflow_involving_automations(site: Site) -> None:
         site.activate_changes_and_wait_for_core_reload()
 
 
-@pytest.mark.xfail
 def test_two_subsequent_automations_involving_ruleset_matcher_same_ruleset_different_hosts(
     request: pytest.FixtureRequest,
     site: Site,

@@ -55,10 +55,6 @@ def get_previously_loaded_plugins(errors: Sequence[str] = ()) -> backend.AgentBa
     )
 
 
-def add_check_plugin(check_plugin: backend.CheckPlugin) -> None:
-    registered_check_plugins[check_plugin.name] = check_plugin
-
-
 def add_section_plugin(section_plugin: backend.SectionPlugin) -> None:
     if isinstance(section_plugin, backend.AgentSectionPlugin):
         registered_agent_sections[section_plugin.name] = section_plugin
@@ -210,7 +206,7 @@ def register_check_plugin(check: CheckPlugin, location: PluginLocation) -> None:
             return
         raise ValueError(f"duplicate check plug-in definition: {plugin.name}")
 
-    add_check_plugin(plugin)
+    registered_check_plugins[plugin.name] = plugin
 
 
 def register_inventory_plugin(inventory: InventoryPlugin, location: PluginLocation) -> None:
@@ -261,4 +257,4 @@ def _add_checks_to_register(
                 f"Legacy check plug-in still exists for check plug-in {check.name}. "
                 "Please remove legacy plug-in."
             )
-        add_check_plugin(check)
+        registered_check_plugins[check.name] = check

@@ -182,7 +182,7 @@ GRAPHS_2_2 = [
     "nfsv4_1_ops",
     "bandwidth_translated",
     "bandwidth",
-    "if_errors",
+    "if_errors_discards",
     "bm_packets",
     "packets_1",
     "packets_2",

@@ -561,7 +561,7 @@ class SiteManagement:
         )
 
         del all_sites[site_id]
-        sites_config_file.save(all_sites)
+        cls.save_sites(all_sites)
 
         cmk.gui.watolib.changes.add_change(
             "edit-sites",

@@ -691,19 +691,18 @@ def add_changes_after_editing_site_connection(
             not in {
                 "apache",
                 "ca-certificates",
+                "check_mk",
                 "diskspace",
                 "ec",
                 "omd",
+                "otel_collector",
                 "rrdcached",
                 # Can we remove more here? Investigate further to minimize the domains:
-                # "check_mk",
-                # "ec",
                 # "liveproxyd",
                 # "multisite",
                 # "piggyback_hub",
                 # "dcd",
                 # "mknotifyd",
-                # "otel_collector",
             }
         ],
     )

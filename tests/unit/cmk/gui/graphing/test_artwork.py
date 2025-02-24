@@ -18,8 +18,11 @@ from cmk.gui.graphing._artwork import (
     _t_axis_labels_seconds,
     _t_axis_labels_week,
     _VAxisMinMax,
+    Curve,
     LayoutedCurve,
     LayoutedCurveLine,
+    LayoutedCurveStack,
+    order_graph_curves_for_legend_and_mouse_hover,
     TimeAxis,
     TimeAxisLabel,
 )
@@ -677,3 +680,147 @@ def test_compute_graph_t_axis(
             )
             == expected_result
         )
+
+
+def test_order_graph_curves_for_legend_and_mouse_hover_curves() -> None:
+    rrd_data = TimeSeries([1.0, 2.0, 1.0])
+    assert list(
+        order_graph_curves_for_legend_and_mouse_hover(
+            [
+                Curve(
+                    line_type="line",
+                    color="",
+                    title="1",
+                    rrddata=rrd_data,
+                ),
+                Curve(
+                    line_type="ref",
+                    color="",
+                    title="2",
+                    rrddata=rrd_data,
+                ),
+                Curve(
+                    line_type="-area",
+                    color="",
+                    title="3",
+                    rrddata=rrd_data,
+                ),
+                Curve(
+                    line_type="stack",
+                    color="",
+                    title="4",
+                    rrddata=rrd_data,
+                ),
+                Curve(
+                    line_type="area",
+                    color="",
+                    title="5",
+                    rrddata=rrd_data,
+                ),
+                Curve(
+                    line_type="-stack",
+                    color="",
+                    title="6",
+                    rrddata=rrd_data,
+                ),
+                Curve(
+                    line_type="stack",
+                    color="",
+                    title="7",
+                    rrddata=rrd_data,
+                ),
+            ]
+        )
+    ) == [
+        Curve(
+            line_type="line",
+            color="",
+            title="1",
+            rrddata=rrd_data,
+        ),
+        Curve(
+            line_type="ref",
+            color="",
+            title="2",
+            rrddata=rrd_data,
+        ),
+        Curve(
+            line_type="-area",
+            color="",
+            title="3",
+            rrddata=rrd_data,
+        ),
+        Curve(
+            line_type="stack",
+            color="",
+            title="7",
+            rrddata=rrd_data,
+        ),
+        Curve(
+            line_type="area",
+            color="",
+            title="5",
+            rrddata=rrd_data,
+        ),
+        Curve(
+            line_type="-stack",
+            color="",
+            title="6",
+            rrddata=rrd_data,
+        ),
+        Curve(
+            line_type="stack",
+            color="",
+            title="4",
+            rrddata=rrd_data,
+        ),
+    ]
+
+
+def test_order_graph_curves_for_legend_and_mouse_hover_layouted_curves() -> None:
+    layouted_curves: list[LayoutedCurve] = [
+        LayoutedCurveStack(
+            type="stack",
+            color="",
+            title="1",
+            scalars={},
+            points=[],
+        ),
+        LayoutedCurveStack(
+            type="stack",
+            color="",
+            title="2",
+            scalars={},
+            points=[],
+        ),
+        LayoutedCurveLine(
+            type="line",
+            color="",
+            title="3",
+            scalars={},
+            points=[],
+        ),
+    ]
+    assert list(order_graph_curves_for_legend_and_mouse_hover(layouted_curves)) == [
+        LayoutedCurveStack(
+            type="stack",
+            color="",
+            title="2",
+            scalars={},
+            points=[],
+        ),
+        LayoutedCurveStack(
+            type="stack",
+            color="",
+            title="1",
+            scalars={},
+            points=[],
+        ),
+        LayoutedCurveLine(
+            type="line",
+            color="",
+            title="3",
+            scalars={},
+            points=[],
+        ),
+    ]

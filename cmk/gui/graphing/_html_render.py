@@ -490,9 +490,7 @@ def _show_graph_legend(  # pylint: disable=too-many-branches
     html.close_tr()
 
     # Render the curve related rows
-    for curve in order_graph_curves_for_legend_and_mouse_hover(
-        graph_artwork.definition, graph_artwork.curves
-    ):
+    for curve in order_graph_curves_for_legend_and_mouse_hover(graph_artwork.curves):
         html.open_tr()
         html.open_td(style=font_size_style)
         html.write_html(render_color_icon(curve["color"]))
@@ -1011,7 +1009,7 @@ def _render_ajax_graph_hover(
         "rendered_hover_time": cmk.utils.render.date_and_time(hover_time),
         "curve_values": list(
             compute_curve_values_at_timestamp(
-                order_graph_curves_for_legend_and_mouse_hover(graph_recipe, curves),
+                order_graph_curves_for_legend_and_mouse_hover(curves),
                 get_render_function(
                     get_unit_info(graph_recipe.unit_spec.id)
                     if isinstance(graph_recipe.unit_spec, LegacyUnitSpecification)

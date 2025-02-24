@@ -19,7 +19,6 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-
 class RuleState(StrEnum):
     INACTIVE = "inactive"
     FIRING = "firing"
@@ -93,7 +92,13 @@ default_check_parameters = CheckParams(
     alert_remapping=[
         AlertRemapping(
             rule_names=["Watchdog"],
-            map={"inactive": 2, "pending": 2, "firing": 0, "none": 2, "not_applicable": 2},
+            map={
+                "inactive": 2,
+                "pending": 2,
+                "firing": 0,
+                "none": 2,
+                "not_applicable": 2,
+            },
         )
     ]
 )
@@ -117,6 +122,19 @@ def _get_mapping(rule: Rule, params: CheckParams) -> StateMapping | None:
         if rule.rule_name in mapping["rule_names"]:
             return mapping["map"]
     return None
+
+def _get_custom_severity_mapping(params: CheckParams) -> Severity | None:
+    """Returns remapping config if one exists"""
+    if mapping := params.get("severity_remapping"):
+        return {y:x for x, y in mapping.items()}
+    return None
+
+def _get_severity(params: CheckParams, severity: str):
+    """ Get individual Severity """
+    mapping = _get_custom_severity_mapping(params)
+    if mapping:
+        return Severity(mapping.get(severity, 'uknown')).value
+    return Severity(severity).value
 
 
 def _create_group_service(group_name: str, group: Group, params: DiscoveryParams) -> bool:
@@ -184,7 +202,7 @@ def check_alertmanager_rules(item: str, params: CheckParams, section: Section) -
             if rule.severity is not Severity.NA:
                 yield Result(
                     state=State.OK,
-                    summary=f"Severity: {rule.severity}",
+                    summary="Severity: %s" % _get_severity(params, rule.severity),
                 )
             yield Result(
                 state=State.OK,

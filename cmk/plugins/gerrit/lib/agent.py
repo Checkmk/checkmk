@@ -47,8 +47,10 @@ def run_agent(args: Args) -> int:
     api_url = f"{args.proto}://{args.hostname}:{args.port}/a"
     auth = (args.user, get_password_from_args(args))
 
+    sections: Sections = {}
+
     version_collector = GerritVersion(api_url=api_url, auth=auth)
-    sections = collect_sections(version_collector)
+    sections.update(collect_sections(version_collector))
 
     write_sections(sections)
 

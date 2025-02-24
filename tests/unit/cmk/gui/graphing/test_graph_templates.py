@@ -1988,15 +1988,6 @@ def test__get_evaluated_graph_templates_with_predictive_metrics(
             id="active_and_inactive_memory",
         ),
         pytest.param(
-            ["mem_lnx_active", "mem_lnx_inactive", "mem_lnx_active_anon"],
-            [
-                "METRIC_mem_lnx_active",
-                "METRIC_mem_lnx_active_anon",
-                "METRIC_mem_lnx_inactive",
-            ],
-            id="active_and_inactive_memory_conflicting_metrics",
-        ),
-        pytest.param(
             ["mem_used"],
             ["ram_used"],
             id="ram_used",

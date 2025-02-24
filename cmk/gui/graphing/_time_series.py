@@ -60,17 +60,9 @@ class TimeSeries:
     def __init__(
         self,
         data: TimeSeriesValues,
-        time_window: TimeWindow | None = None,
+        time_window: TimeWindow,
         conversion: Callable[[float], float] = lambda v: v,
     ) -> None:
-        if time_window is None:
-            if not data or data[0] is None or data[1] is None or data[2] is None:
-                raise ValueError(data)
-
-            time_window = int(data[0]), int(data[1]), int(data[2])
-            data = data[3:]
-
-        assert time_window is not None
         self.start = int(time_window[0])
         self.end = int(time_window[1])
         self.step = int(time_window[2])

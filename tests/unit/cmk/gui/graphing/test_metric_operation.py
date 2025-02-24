@@ -26,5 +26,5 @@ def test__time_series_math_exc_symbol(args: tuple[Literal["%"], list[TimeSeries]
 
 @pytest.mark.parametrize("operator", ["+", "*", "MAX", "MIN", "AVERAGE", "MERGE"])
 def test__time_series_math_stable_singles(operator: Operators) -> None:
-    test_ts = TimeSeries([0, 180, 60, 6, 5, 10, None, -2, -3.14])
+    test_ts = TimeSeries([6, 5, 10, None, -2, -3.14], (0, 180, 60))
     assert _time_series_math(operator, [test_ts]) == test_ts

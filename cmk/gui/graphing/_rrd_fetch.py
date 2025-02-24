@@ -86,7 +86,8 @@ def fetch_rrd_data_for_graph(
                         scale,
                     )
                 ] = TimeSeries(
-                    [start, end, step] + list(values),
+                    values,
+                    (start, end, step),
                     conversion=conversion,
                 )
     _align_and_resample_rrds(rrd_data, graph_recipe.consolidation_function)
@@ -301,10 +302,18 @@ def translate_and_merge_rrd_columns(
         metric_translation = find_matching_translation(metric_name, translations)
 
         if metric_translation.name == target_metric:
-            relevant_ts.append(TimeSeries(data, conversion=scaler(metric_translation.scale)))
+            if not data or data[0] is None or data[1] is None or data[2] is None:
+                raise ValueError(data)
+            relevant_ts.append(
+                TimeSeries(
+                    data[3:],
+                    (int(data[0]), int(data[1]), int(data[2])),
+                    conversion=scaler(metric_translation.scale),
+                )
+            )
 
     if not relevant_ts:
-        return TimeSeries([0, 0, 0])
+        return TimeSeries([], (0, 0, 0))
 
     _op_title, op_func = time_series_operators()["MERGE"]
     single_value_series = [op_func_wrapper(op_func, list(tsp)) for tsp in zip(*relevant_ts)]

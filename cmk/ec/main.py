@@ -2495,7 +2495,7 @@ def run_eventd(  # pylint: disable=too-many-branches
         except MKSignalException as e:
             if e.signum == 1:
                 logger.info("Received SIGHUP - going to reload configuration")
-                reload_configuration(
+                history = reload_configuration(
                     settings,
                     logger,
                     lock_configuration,
@@ -3351,7 +3351,7 @@ def reload_configuration(
     event_server: EventServer,
     status_server: StatusServer,
     slave_status: SlaveStatus,
-) -> None:
+) -> History:
     with lock_configuration:
         config = load_configuration(settings, logger, slave_status)
 
@@ -3364,6 +3364,7 @@ def reload_configuration(
     event_status.reload_configuration(config, history)
     status_server.reload_configuration(config, history)
     logger.info("Reloaded configuration.")
+    return history
 
 
 # .

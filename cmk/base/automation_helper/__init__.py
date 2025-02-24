@@ -81,4 +81,6 @@ def _reload_automation_config() -> None:
 
 
 def _clear_caches_before_each_call() -> None:
-    config.get_config_cache().ruleset_matcher.clear_caches()
+    ruleset_matcher = config.get_config_cache().ruleset_matcher
+    ruleset_matcher.ruleset_optimizer.clear_caches()
+    ruleset_matcher.ruleset_optimizer.clear_ruleset_caches()

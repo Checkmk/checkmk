@@ -32,6 +32,7 @@ from cmk.update_config.http.conflicts import (
     _classify,
     _migrate_expect_response,
     AdditionalHeaders,
+    CantHaveRegexAndString,
     Config,
     Conflict,
     ConflictType,
@@ -895,7 +896,7 @@ EXAMPLE_94: Mapping[str, object] = {
         (
             EXAMPLE_49,
             Conflict(
-                type_="cant_have_regex_and_string",
+                type_=ConflictType.cant_have_regex_and_string,
                 mode_fields=["expect_regex", "expect_string"],
             ),
         ),
@@ -1204,11 +1205,12 @@ def test_migrate_method(rule_value: Mapping[str, object], expected: object) -> N
 
 
 @pytest.mark.parametrize(
-    "rule_value, expected",
+    "rule_value, config, expected",
     [
-        (EXAMPLE_27, None),
+        (EXAMPLE_27, DEFAULT, None),
         (
             EXAMPLE_47,
+            DEFAULT,
             (
                 MatchType.REGEX,
                 BodyRegex(regex="example", case_insensitive=True, multiline=True, invert=True),
@@ -1216,16 +1218,27 @@ def test_migrate_method(rule_value: Mapping[str, object], expected: object) -> N
         ),
         (
             EXAMPLE_48,
+            DEFAULT,
             (
                 MatchType.REGEX,
                 BodyRegex(regex="", case_insensitive=False, multiline=False, invert=False),
             ),
         ),
+        (
+            EXAMPLE_49,
+            Config(cant_have_regex_and_string=CantHaveRegexAndString.regex),
+            (
+                MatchType.REGEX,
+                BodyRegex(regex="example", case_insensitive=True, multiline=True, invert=True),
+            ),
+        ),
     ],
 )
-def test_migrate_expect_regex(rule_value: Mapping[str, object], expected: object) -> None:
+def test_migrate_expect_regex(
+    rule_value: Mapping[str, object], config: Config, expected: object
+) -> None:
     # Assemble
-    for_migration = detect_conflicts(DEFAULT, rule_value)
+    for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)
@@ -1300,15 +1313,22 @@ def test_migrate_response_time(rule_value: Mapping[str, object], expected: objec
 
 
 @pytest.mark.parametrize(
-    "rule_value, expected",
+    "rule_value, config, expected",
     [
-        (EXAMPLE_27, None),
-        (EXAMPLE_46, (MatchType.STRING, "example")),
+        (EXAMPLE_27, DEFAULT, None),
+        (EXAMPLE_46, DEFAULT, (MatchType.STRING, "example")),
+        (
+            EXAMPLE_49,
+            Config(cant_have_regex_and_string=CantHaveRegexAndString.string),
+            (MatchType.STRING, "example"),
+        ),
     ],
 )
-def test_migrate_expect_string(rule_value: Mapping[str, object], expected: object) -> None:
+def test_migrate_expect_string(
+    rule_value: Mapping[str, object], config: Config, expected: object
+) -> None:
     # Assemble
-    for_migration = detect_conflicts(DEFAULT, rule_value)
+    for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)

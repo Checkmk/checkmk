@@ -171,6 +171,7 @@ def main() -> None:
                 ssl_incompatible=args.ssl_incompatible,
                 add_headers_incompatible=args.add_headers_incompatible,
                 expect_response_header=args.expect_response_header,
+                cant_have_regex_and_string=args.cant_have_regex_and_string,
             )
             _migrate_main(config, write)
         case Activate():

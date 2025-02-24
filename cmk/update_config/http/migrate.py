@@ -29,6 +29,7 @@ from collections.abc import Mapping
 from typing import assert_never
 
 from cmk.update_config.http.conflicts import (
+    CantHaveRegexAndString,
     ForMigration,
     MigratableCert,
     MigratableUrl,
@@ -36,7 +37,9 @@ from cmk.update_config.http.conflicts import (
 
 
 def _migrate_url_params(
-    url_params: MigratableUrl, address_family: str
+    cant_have_regex_and_string: CantHaveRegexAndString,
+    url_params: MigratableUrl,
+    address_family: str,
 ) -> tuple[dict[str, object], Mapping[str, object]]:
     match url_params.ssl:
         case None:
@@ -90,26 +93,23 @@ def _migrate_url_params(
             redirects: Mapping[str, object] = {"redirects": "ok"}
         case onredirect:
             redirects = {"redirects": onredirect}
-    match url_params.expect_string, url_params.expect_regex:
-        case None, None:
+
+    match (
+        url_params.migrate_expect_string(),
+        url_params.migrate_expect_regex(),
+        cant_have_regex_and_string,
+    ):
+        case None, None, _:
             body: Mapping[str, object] = {}
-        case expect_string, None:
-            assert expect_string is not None
-            body = {"body": ("string", expect_string)}
-        case None, expect_regex:
-            assert expect_regex is not None
-            body = {
-                "body": (
-                    "regex",
-                    {
-                        "regex": expect_regex.regex,
-                        "case_insensitive": expect_regex.case_insensitive,
-                        "multiline": expect_regex.multiline,
-                        "invert": expect_regex.crit_if_found,
-                    },
-                )
-            }
-        case _, _:
+        case migrate_expect_string, None, _:
+            body = {"body": migrate_expect_string}
+        case None, migrate_expect_regex, _:
+            body = {"body": migrate_expect_regex}
+        case migrate_expect_string, migrate_expect_regex, CantHaveRegexAndString.string:
+            body = {"body": migrate_expect_string}
+        case migrate_expect_string, migrate_expect_regex, CantHaveRegexAndString.regex:
+            body = {"body": migrate_expect_regex}
+        case migrate_expect_string, migrate_expect_regex, CantHaveRegexAndString.skip:
             raise NotImplementedError()
     match url_params.method, url_params.post_data:
         case None, None:
@@ -216,7 +216,11 @@ def migrate(id_: str, for_migration: ForMigration) -> Mapping[str, object]:
     if isinstance(value.mode[1], MigratableCert):
         connection, remaining_settings = _migrate_cert_params(value.mode[1], address_family)
     else:
-        connection, remaining_settings = _migrate_url_params(value.mode[1], address_family)
+        connection, remaining_settings = _migrate_url_params(
+            for_migration.config.cant_have_regex_and_string,
+            value.mode[1],
+            address_family,
+        )
     return {
         "endpoints": [
             {

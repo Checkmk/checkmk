@@ -22,6 +22,7 @@ class ConflictType(enum.Enum):
     ssl_incompatible = "ssl-incompatible"
     add_headers_incompatible = "add-headers-incompatible"
     expect_response_header = "expect-response-header"
+    cant_have_regex_and_string = "cant-have-regex-and-string"
 
 
 class HTTP10NotSupported(enum.Enum):
@@ -44,12 +45,19 @@ class ExpectResponseHeader(enum.Enum):
     ignore = "ignore"
 
 
+class CantHaveRegexAndString(enum.Enum):
+    skip = "skip"
+    string = "string"
+    regex = "regex"
+
+
 @dataclass(frozen=True, kw_only=True)
 class Config:
     http_1_0_not_supported: HTTP10NotSupported = HTTP10NotSupported.skip
     ssl_incompatible: SSLIncompatible = SSLIncompatible.skip
     add_headers_incompatible: AdditionalHeaders = AdditionalHeaders.skip
     expect_response_header: ExpectResponseHeader = ExpectResponseHeader.skip
+    cant_have_regex_and_string: CantHaveRegexAndString = CantHaveRegexAndString.skip
 
 
 def _migrate_header(header: str) -> dict[str, str] | None:
@@ -81,6 +89,22 @@ class MigratableUrl(V1Url):
         if "\r\n" in self.expect_response_header.strip("\r\n"):
             return None
         return _migrate_header(self.expect_response_header.strip("\r\n"))
+
+    def migrate_expect_regex(self) -> None | tuple[str, object]:
+        if self.expect_regex is None:
+            return None
+        return (
+            "regex",
+            {
+                "regex": self.expect_regex.regex,
+                "case_insensitive": self.expect_regex.case_insensitive,
+                "multiline": self.expect_regex.multiline,
+                "invert": self.expect_regex.crit_if_found,
+            },
+        )
+
+    def migrate_expect_string(self) -> None | tuple[str, object]:
+        return None if self.expect_string is None else ("string", self.expect_string)
 
 
 def _migrate_expect_response(response: list[str]) -> list[int]:
@@ -223,9 +247,13 @@ def detect_conflicts(config: Config, rule_value: Mapping[str, object]) -> Confli
                     type_=ConflictType.expect_response_header,
                     mode_fields=["expect_response_header"],
                 )
-        if mode.expect_regex is not None and mode.expect_string is not None:
+        if (
+            config.cant_have_regex_and_string is CantHaveRegexAndString.skip
+            and mode.expect_regex is not None
+            and mode.expect_string is not None
+        ):
             return Conflict(
-                type_="cant_have_regex_and_string",
+                type_=ConflictType.cant_have_regex_and_string,
                 mode_fields=["expect_regex", "expect_string"],
             )
         if mode.method in ["OPTIONS", "TRACE", "CONNECT", "CONNECT_POST", "PROPFIND"]:
@@ -274,6 +302,7 @@ class Migrate(BaseModel):
     ssl_incompatible: SSLIncompatible
     add_headers_incompatible: AdditionalHeaders
     expect_response_header: ExpectResponseHeader
+    cant_have_regex_and_string: CantHaveRegexAndString
 
 
 def add_migrate_parsing(parser: argparse.ArgumentParser) -> None:
@@ -323,6 +352,19 @@ def add_migrate_parsing(parser: argparse.ArgumentParser) -> None:
                 "conflict: `String to expect in response headers` must be in the format `Header: Value` for migration",
                 f"{ExpectResponseHeader.skip.value} (default): do not migrate rule",
                 f"{ExpectResponseHeader.ignore.value}: create rule without this option",
+            ]
+        ),
+    )
+    parser.add_argument(
+        f"--{ConflictType.cant_have_regex_and_string.value}",
+        default=CantHaveRegexAndString.skip.value,
+        choices=[e.value for e in CantHaveRegexAndString],
+        help="; ".join(
+            [
+                "conflict: Must choose `Fixed string to expect in the content` or `Regular expression to expect in the content`",
+                f"{CantHaveRegexAndString.skip.value} (default): do not migrate rule",
+                f"{CantHaveRegexAndString.string.value}: create rule choosing string, if two options are available",
+                f"{CantHaveRegexAndString.regex.value}: create rule choosing regex, if two options are available",
             ]
         ),
     )

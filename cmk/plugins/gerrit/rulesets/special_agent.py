@@ -69,7 +69,12 @@ rule_spec_gerrit = SpecialAgent(
             ),
             "password": DictElement(
                 parameter_form=Password(
-                    title=Title("Password of the user"),
+                    title=Title("User generated HTTP password (not account password)"),
+                    help_text=Help(
+                        "The HTTP password can be generated from the settings page in Gerrit "
+                        "under '/settings/#HTTPCredentials' or from the REST API. "
+                        "NOTE: you should NOT enter your account credentials here!"
+                    ),
                     custom_validate=[LengthInRange(min_value=1)],
                 ),
                 required=True,

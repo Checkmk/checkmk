@@ -164,6 +164,18 @@ def test_heirloommailx(site: Site) -> None:
     assert "12.5" in version
 
 
+def test_heirloompkgtools_pkgmk(site: Site) -> None:
+    p = site.execute(["pkgmk"], stderr=subprocess.PIPE)
+    message = p.stderr.read() if p.stderr else "<NO STDERR>"
+    assert "pkgmk: ERROR: unable to find info for device <spool>" in message
+
+
+def test_heirloompkgtools_pkgtrans(site: Site) -> None:
+    p = site.execute(["pkgtrans"], stderr=subprocess.PIPE)
+    message = p.stderr.read() if p.stderr else "<NO STDERR>"
+    assert "usage: pkgtrans [-cinos] srcdev dstdev [pkg [pkg...]]" in message
+
+
 def test_stunnel(site: Site) -> None:
     p = site.execute(["stunnel", "-help"], stderr=subprocess.PIPE)
     help_text = p.stderr.read() if p.stderr else ""

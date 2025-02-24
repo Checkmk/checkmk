@@ -59,10 +59,6 @@ def add_check_plugin(check_plugin: backend.CheckPlugin) -> None:
     registered_check_plugins[check_plugin.name] = check_plugin
 
 
-def add_inventory_plugin(inventory_plugin: backend.InventoryPlugin) -> None:
-    registered_inventory_plugins[inventory_plugin.name] = inventory_plugin
-
-
 def add_section_plugin(section_plugin: backend.SectionPlugin) -> None:
     if isinstance(section_plugin, backend.AgentSectionPlugin):
         registered_agent_sections[section_plugin.name] = section_plugin
@@ -70,17 +66,8 @@ def add_section_plugin(section_plugin: backend.SectionPlugin) -> None:
         registered_snmp_sections[section_plugin.name] = section_plugin
 
 
-def get_inventory_plugin(plugin_name: InventoryPluginName) -> backend.InventoryPlugin | None:
-    """Returns the registered inventory plug-in"""
-    return registered_inventory_plugins.get(plugin_name)
-
-
 def get_section_plugin(section_name: SectionName) -> backend.SectionPlugin | None:
     return registered_agent_sections.get(section_name) or registered_snmp_sections.get(section_name)
-
-
-def is_registered_inventory_plugin(inventory_plugin_name: InventoryPluginName) -> bool:
-    return inventory_plugin_name in registered_inventory_plugins
 
 
 def is_registered_section_plugin(section_name: SectionName) -> bool:
@@ -236,10 +223,8 @@ def register_inventory_plugin(inventory: InventoryPlugin, location: PluginLocati
         location=location,
     )
 
-    if is_registered_inventory_plugin(plugin.name):
-        if (
-            present := get_inventory_plugin(plugin.name)
-        ) is not None and present.location == location:
+    if (present := registered_inventory_plugins.get(plugin.name)) is not None:
+        if present.location == location:
             # This is relevant if we're loading the plugins twice:
             # Loading of v2 plugins is *not* a no-op the second time round.
             # But since we're storing the plugins in a global variable,
@@ -249,7 +234,7 @@ def register_inventory_plugin(inventory: InventoryPlugin, location: PluginLocati
             return
         raise ValueError(f"duplicate inventory plug-in definition: {plugin.name}")
 
-    add_inventory_plugin(plugin)
+    registered_inventory_plugins[plugin.name] = plugin
 
 
 def _add_sections_to_register(

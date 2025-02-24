@@ -92,6 +92,14 @@ interface LayoutedCurveArea {
     color: string;
 }
 
+interface LayoutedCurveStack {
+    type: "stack" | "-stack";
+    points: [TimeSeriesValue, TimeSeriesValue][];
+    //dynamic
+    title?: string;
+    color: string;
+}
+
 interface LayoutedCurveLine {
     type: "line";
     points: TimeSeriesValue[];
@@ -100,7 +108,10 @@ interface LayoutedCurveLine {
     color: string;
 }
 
-export type LayoutedCurve = LayoutedCurveLine | LayoutedCurveArea;
+export type LayoutedCurve =
+    | LayoutedCurveLine
+    | LayoutedCurveArea
+    | LayoutedCurveStack;
 
 interface TimeAxisLabel {
     position: number;
@@ -675,7 +686,11 @@ function render_graph(graph: GraphArtwork) {
             opacity = "4c"; // that is 0.3
         }
 
-        if (curve["type"] == "area") {
+        if (
+            curve["type"] == "area" ||
+            curve["type"] == "stack" ||
+            curve["type"] == "-stack"
+        ) {
             const corner_markers = points as [
                 TimeSeriesValue,
                 TimeSeriesValue,

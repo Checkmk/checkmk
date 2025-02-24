@@ -6,7 +6,7 @@
 
 import math
 import time
-from collections.abc import Callable, Iterable, Iterator, Sequence
+from collections.abc import Callable, Generator, Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
@@ -67,12 +67,16 @@ class LayoutedCurveLine(_LayoutedCurveBase):
 
 
 class LayoutedCurveArea(_LayoutedCurveBase):
-    # Handle area and stack.
     type: Literal["area"]
     points: Sequence[tuple[TimeSeriesValue, TimeSeriesValue]]
 
 
-LayoutedCurve = LayoutedCurveLine | LayoutedCurveArea
+class LayoutedCurveStack(_LayoutedCurveBase):
+    type: Literal["stack"] | Literal["-stack"]
+    points: Sequence[tuple[TimeSeriesValue, TimeSeriesValue]]
+
+
+LayoutedCurve = LayoutedCurveLine | LayoutedCurveArea | LayoutedCurveStack
 
 
 class VerticalAxis(TypedDict):
@@ -244,15 +248,6 @@ def _layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], 
     # For areas we put (lower, higher) as point into the list of points.
     # For lines simply the values. For mirrored values from is >= to.
 
-    def _positive_line_type(line_type: LineType) -> Literal["line", "area", "stack"]:
-        if line_type == "-line":
-            return "line"
-        if line_type == "-area":
-            return "area"
-        if line_type == "-stack":
-            return "stack"
-        raise ValueError(line_type)
-
     layouted_curves = []
     for curve in curves:
         line_type = curve["line_type"]
@@ -264,35 +259,38 @@ def _layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], 
 
         if line_type[0] == "-":
             raw_points = [None if p is None else -p for p in raw_points]
-            line_type = _positive_line_type(line_type)
             mirrored = True
             stack_nr = 0
         else:
             stack_nr = 1
 
-        if line_type == "line":
-            # Handles lines, they cannot stack
-            layouted_curve: LayoutedCurve = LayoutedCurveLine(
-                type="line",
-                points=raw_points,
-                color=curve["color"],
-                title=curve["title"],
-                scalars=curve["scalars"],
-            )
-
-        else:
-            # Handle area and stack.
-            this_stack = stacks[stack_nr]
-            base = [] if this_stack is None or line_type == "area" else this_stack
-
-            layouted_curve = LayoutedCurveArea(
-                type="area",
-                points=_areastack(raw_points, base),
-                color=curve["color"],
-                title=curve["title"],
-                scalars=curve["scalars"],
-            )
-            stacks[stack_nr] = [x[stack_nr] for x in layouted_curve["points"]]
+        match line_type:
+            case "line" | "-line":
+                layouted_curve: LayoutedCurve = LayoutedCurveLine(
+                    type="line",
+                    points=raw_points,
+                    color=curve["color"],
+                    title=curve["title"],
+                    scalars=curve["scalars"],
+                )
+            case "area" | "-area":
+                layouted_curve = LayoutedCurveArea(
+                    type="area",
+                    points=_areastack(raw_points, []),
+                    color=curve["color"],
+                    title=curve["title"],
+                    scalars=curve["scalars"],
+                )
+                stacks[stack_nr] = [x[stack_nr] for x in layouted_curve["points"]]
+            case "stack" | "-stack":
+                layouted_curve = LayoutedCurveStack(
+                    type=line_type,
+                    points=_areastack(raw_points, stacks[stack_nr] or []),
+                    color=curve["color"],
+                    title=curve["title"],
+                    scalars=curve["scalars"],
+                )
+                stacks[stack_nr] = [x[stack_nr] for x in layouted_curve["points"]]
 
         layouted_curves.append(layouted_curve)
 
@@ -415,13 +413,30 @@ _TCurveType = TypeVar("_TCurveType", Curve, LayoutedCurve)
 
 
 def order_graph_curves_for_legend_and_mouse_hover(
-    graph_recipe: GraphRecipe, curves: Iterable[_TCurveType]
-) -> Iterator[_TCurveType]:
-    yield from (
-        reversed(list(curves))
-        if any(graph_metric.line_type == "stack" for graph_metric in graph_recipe.metrics)
-        else curves
-    )
+    curves: Sequence[_TCurveType],
+) -> Generator[_TCurveType]:
+    """
+    Positive stack curves are rendered st. the first metric is at the bottom and the last one at the
+    top. Therefore, we want to reverse the order of metrics rendered as a positive stack in the
+    legend and the mouse hover, st. it corresponds to the order in the graph. At the same time, we
+    want to leave other curves untouched. Of course, mixing different types of curves quickly
+    results in a useless graph.
+    """
+
+    def is_positive_stack_curve(curve: _TCurveType) -> bool:
+        return curve.get("line_type", curve.get("type")) == "stack"
+
+    positive_stack_curves_in_reverse_order = [
+        curve for curve in curves if is_positive_stack_curve(curve)
+    ][::-1]
+    positive_stack_counter = 0
+
+    for curve in curves:
+        if is_positive_stack_curve(curve):
+            yield positive_stack_curves_in_reverse_order[positive_stack_counter]
+            positive_stack_counter += 1
+        else:
+            yield curve
 
 
 # .

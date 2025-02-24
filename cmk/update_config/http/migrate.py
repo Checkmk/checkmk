@@ -35,11 +35,6 @@ from cmk.update_config.http.conflicts import (
 )
 
 
-def _migrate_header(header: str) -> dict[str, object]:
-    name, value = header.split(":", 1)
-    return {"header_name": name, "header_value": value.strip()}
-
-
 def _migrate_url_params(
     url_params: MigratableUrl, address_family: str
 ) -> tuple[dict[str, object], Mapping[str, object]]:
@@ -80,13 +75,11 @@ def _migrate_url_params(
             auth: Mapping[str, object] = {}
         case user_auth:
             auth = {"auth": ("user_auth", user_auth.model_dump())}
-    match url_params.expect_response_header:
+    match url_params.migrate_expect_response_header():
         case None:
             content_header: Mapping[str, object] = {}
         case expect_response_header:
-            content_header = {
-                "header": ("string", _migrate_header(expect_response_header.strip("\r\n")))
-            }
+            content_header = {"header": ("string", expect_response_header)}
     match url_params.migrate_expect_response():
         case None:
             server_response: Mapping[str, object] = {}

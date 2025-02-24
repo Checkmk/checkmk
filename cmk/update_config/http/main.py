@@ -170,6 +170,7 @@ def main() -> None:
                 http_1_0_not_supported=args.http_1_0_not_supported,
                 ssl_incompatible=args.ssl_incompatible,
                 add_headers_incompatible=args.add_headers_incompatible,
+                expect_response_header=args.expect_response_header,
             )
             _migrate_main(config, write)
         case Activate():

@@ -36,6 +36,7 @@ from cmk.update_config.http.conflicts import (
     Conflict,
     ConflictType,
     detect_conflicts,
+    ExpectResponseHeader,
     HostType,
     HTTP10NotSupported,
     SSLIncompatible,
@@ -880,14 +881,14 @@ EXAMPLE_94: Mapping[str, object] = {
         (
             EXAMPLE_74,
             Conflict(
-                type_="cant_match_multiple_response_header",
+                type_=ConflictType.expect_response_header,
                 mode_fields=["expect_response_header"],
             ),
         ),
         (
             EXAMPLE_88,
             Conflict(
-                type_="must_decide_whether_name_or_value",
+                type_=ConflictType.expect_response_header,
                 mode_fields=["expect_response_header"],
             ),
         ),
@@ -1528,16 +1529,28 @@ def test_migrate_cert(rule_value: Mapping[str, object], expected: object) -> Non
 
 
 @pytest.mark.parametrize(
-    "rule_value, expected",
+    "rule_value, config, expected",
     [
-        (EXAMPLE_27, None),
-        (EXAMPLE_43, (MatchType.STRING, HeaderSpec(header_name="yes", header_value="no"))),
-        (EXAMPLE_73, (MatchType.STRING, HeaderSpec(header_name="yes", header_value="no"))),
+        (EXAMPLE_27, DEFAULT, None),
+        (EXAMPLE_43, DEFAULT, (MatchType.STRING, HeaderSpec(header_name="yes", header_value="no"))),
+        (EXAMPLE_73, DEFAULT, (MatchType.STRING, HeaderSpec(header_name="yes", header_value="no"))),
+        (
+            EXAMPLE_74,
+            Config(expect_response_header=ExpectResponseHeader.ignore),
+            None,
+        ),
+        (
+            EXAMPLE_88,
+            Config(expect_response_header=ExpectResponseHeader.ignore),
+            None,
+        ),
     ],
 )
-def test_migrate_expect_response_header(rule_value: Mapping[str, object], expected: object) -> None:
+def test_migrate_expect_response_header(
+    rule_value: Mapping[str, object], config: Config, expected: object
+) -> None:
     # Assemble
-    for_migration = detect_conflicts(DEFAULT, rule_value)
+    for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)

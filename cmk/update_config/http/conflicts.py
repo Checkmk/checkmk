@@ -21,6 +21,7 @@ class ConflictType(enum.Enum):
     http_1_0_not_supported = "http-1-0-not-supported"
     ssl_incompatible = "ssl-incompatible"
     add_headers_incompatible = "add-headers-incompatible"
+    expect_response_header = "expect-response-header"
 
 
 class HTTP10NotSupported(enum.Enum):
@@ -38,11 +39,17 @@ class AdditionalHeaders(enum.Enum):
     ignore = "ignore"
 
 
+class ExpectResponseHeader(enum.Enum):
+    skip = "skip"
+    ignore = "ignore"
+
+
 @dataclass(frozen=True, kw_only=True)
 class Config:
     http_1_0_not_supported: HTTP10NotSupported = HTTP10NotSupported.skip
     ssl_incompatible: SSLIncompatible = SSLIncompatible.skip
     add_headers_incompatible: AdditionalHeaders = AdditionalHeaders.skip
+    expect_response_header: ExpectResponseHeader = ExpectResponseHeader.skip
 
 
 def _migrate_header(header: str) -> dict[str, str] | None:
@@ -67,6 +74,13 @@ class MigratableUrl(V1Url):
             for header in self.add_headers
             if (migrated := _migrate_header(header)) is not None
         ]
+
+    def migrate_expect_response_header(self) -> None | dict[str, str]:
+        if self.expect_response_header is None:
+            return None
+        if "\r\n" in self.expect_response_header.strip("\r\n"):
+            return None
+        return _migrate_header(self.expect_response_header.strip("\r\n"))
 
 
 def _migrate_expect_response(response: list[str]) -> list[int]:
@@ -195,15 +209,18 @@ def detect_conflicts(config: Config, rule_value: Mapping[str, object]) -> Confli
                 type_=ConflictType.ssl_incompatible,
                 mode_fields=["ssl"],
             )
-        if mode.expect_response_header is not None:
+        if (
+            config.expect_response_header is ExpectResponseHeader.skip
+            and mode.expect_response_header is not None
+        ):
             if "\r\n" in mode.expect_response_header.strip("\r\n"):
                 return Conflict(
-                    type_="cant_match_multiple_response_header",
+                    type_=ConflictType.expect_response_header,
                     mode_fields=["expect_response_header"],
                 )
             if ":" not in mode.expect_response_header:
                 return Conflict(
-                    type_="must_decide_whether_name_or_value",
+                    type_=ConflictType.expect_response_header,
                     mode_fields=["expect_response_header"],
                 )
         if mode.expect_regex is not None and mode.expect_string is not None:
@@ -256,6 +273,7 @@ class Migrate(BaseModel):
     http_1_0_not_supported: HTTP10NotSupported
     ssl_incompatible: SSLIncompatible
     add_headers_incompatible: AdditionalHeaders
+    expect_response_header: ExpectResponseHeader
 
 
 def add_migrate_parsing(parser: argparse.ArgumentParser) -> None:
@@ -293,6 +311,18 @@ def add_migrate_parsing(parser: argparse.ArgumentParser) -> None:
                 "conflict: `Additional header lines` must be in the format `Header: Value` for migration",
                 f"{AdditionalHeaders.skip.value} (default): do not migrate rule",
                 f"{AdditionalHeaders.ignore.value}: create rule without header lines in incompatible format",
+            ]
+        ),
+    )
+    parser.add_argument(
+        f"--{ConflictType.expect_response_header.value}",
+        default=ExpectResponseHeader.skip.value,
+        choices=[e.value for e in ExpectResponseHeader],
+        help="; ".join(
+            [
+                "conflict: `String to expect in response headers` must be in the format `Header: Value` for migration",
+                f"{ExpectResponseHeader.skip.value} (default): do not migrate rule",
+                f"{ExpectResponseHeader.ignore.value}: create rule without this option",
             ]
         ),
     )

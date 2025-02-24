@@ -5,7 +5,7 @@
 
 import pytest
 
-from tests.unit.conftest import FixPluginLegacy
+from tests.unit.mocks_and_helpers import FixPluginLegacy
 
 from cmk.utils.sectionname import SectionName
 

@@ -61,6 +61,8 @@ from cmk.gui.watolib.services import (
 
 from cmk import fields
 
+from ._response_schemas import ServiceDiscoveryResultSchema, ServiceDiscoveryRunSchema
+
 DISCOVERY_PERMISSIONS = permissions.AllPerm(
     [
         permissions.Perm("wato.edit"),
@@ -151,7 +153,7 @@ DISCOVERY_ACTION = {
     constructors.object_href("service_discovery", "{host_name}"),
     "cmk/list",
     method="get",
-    response_schema=response_schemas.DomainObject,
+    response_schema=ServiceDiscoveryResultSchema,
     tag_group="Setup",
     path_params=[
         {
@@ -272,7 +274,7 @@ def _update_single_service_phase(
     method="get",
     tag_group="Setup",
     path_params=[HOST_NAME],
-    response_schema=response_schemas.DomainObject,
+    response_schema=ServiceDiscoveryRunSchema,
 )
 def show_service_discovery_run(params: Mapping[str, Any]) -> Response:
     """Show the last service discovery background job on a host"""

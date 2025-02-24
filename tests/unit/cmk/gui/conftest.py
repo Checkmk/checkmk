@@ -16,13 +16,10 @@ from unittest import mock
 from unittest.mock import MagicMock, patch
 
 import pytest
-from flask import Flask
 from pytest_mock import MockerFixture
 from werkzeug.test import create_environ
 
 from tests.testlib.unit.rest_api_client import (
-    ClientRegistry,
-    get_client_registry,
     RestApiClient,
 )
 
@@ -43,20 +40,17 @@ from cmk.automations.results import DeleteHostsResult
 import cmk.gui.config as config_module
 import cmk.gui.mkeventd.wato as mkeventd
 import cmk.gui.watolib.password_store
-from cmk.gui import hooks, http, login, main_modules, userdb
+from cmk.gui import http, userdb
 from cmk.gui.config import active_config
 from cmk.gui.livestatus_utils.testing import mock_livestatus
 from cmk.gui.session import session, SuperUserContext, UserContext
 from cmk.gui.type_defs import SessionInfo
 from cmk.gui.userdb.session import load_session_infos
-from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.json import patch_json
 from cmk.gui.utils.script_helpers import session_wsgi_app
 from cmk.gui.watolib import activate_changes, groups
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.wsgi.blueprints import checkmk, rest_api
-
-from .users import create_and_destroy_user
 
 SPEC_LOCK = threading.Lock()
 
@@ -83,18 +77,6 @@ def disable_automation_helper(monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.fixture(autouse=True)
 def execute_background_jobs_without_job_scheduler(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("_CMK_BG_JOBS_WITHOUT_JOB_SCHEDULER", "1")
-
-
-@pytest.fixture(autouse=True)
-def gui_cleanup_after_test(
-    mocker: MockerFixture,
-) -> Iterator[None]:
-    # deactivate_search_index_building_at_requenst_end.
-    mocker.patch("cmk.gui.watolib.search.updates_requested", return_value=False)
-    yield
-    # In case some tests use @request_memoize but don't use the request context, we'll emit the
-    # clear event after each request.
-    hooks.call("request-end")
 
 
 def fake_detect_icon_path(_: None, icon_name: str = "", prefix: str = "") -> str:
@@ -127,25 +109,11 @@ def patch_theme() -> Iterator[None]:
         yield
 
 
-@pytest.fixture()
-def request_context(flask_app: Flask) -> Iterator[None]:
-    """Empty fixture. Invokes usage of `flask_app` fixture."""
-    yield
-
-
 @pytest.fixture(name="mock_livestatus")
 def fixture_mock_livestatus() -> Iterator[MockLiveStatusConnection]:
     """UI specific override of the global mock_livestatus fixture"""
     with mock_livestatus() as mock_live:
         yield mock_live
-
-
-@pytest.fixture()
-def load_config(request_context: None) -> Iterator[None]:
-    old_root_log_level = cmk.utils.log.logger.getEffectiveLevel()
-    config_module.initialize()
-    yield
-    cmk.utils.log.logger.setLevel(old_root_log_level)
 
 
 @pytest.fixture(name="set_config")
@@ -189,49 +157,10 @@ def set_config(**kwargs: Any) -> Iterator[None]:
         config_module._post_config_load_hooks.remove(_set_config)
 
 
-@pytest.fixture(scope="session", autouse=True)
-def load_plugins() -> None:
-    main_modules.load_plugins()
-    if errors := get_failed_plugins():
-        raise Exception(f"The following errors occured during plug-in loading: {errors}")
-
-
-@pytest.fixture()
-def ui_context(load_plugins: None, load_config: None) -> Iterator[None]:
-    """Some helper fixture to provide a initialized UI context to tests outside of tests/unit/cmk/gui"""
-    yield
-
-
 @pytest.fixture(name="patch_json", autouse=True)
 def fixture_patch_json() -> Iterator[None]:
     with patch_json(json):
         yield
-
-
-@pytest.fixture()
-def with_user(load_config: None) -> Iterator[tuple[UserId, str]]:
-    with create_and_destroy_user(automation=False, role="user") as user:
-        yield user
-
-
-@pytest.fixture()
-def with_user_login(with_user: tuple[UserId, str]) -> Iterator[UserId]:
-    user_id = UserId(with_user[0])
-    with login.TransactionIdContext(user_id):
-        yield user_id
-
-
-@pytest.fixture()
-def with_admin(load_config: None) -> Iterator[tuple[UserId, str]]:
-    with create_and_destroy_user(automation=False, role="admin") as user:
-        yield user
-
-
-@pytest.fixture()
-def with_admin_login(with_admin: tuple[UserId, str]) -> Iterator[UserId]:
-    user_id = with_admin[0]
-    with login.TransactionIdContext(user_id):
-        yield user_id
 
 
 @pytest.fixture()
@@ -354,12 +283,6 @@ def suppress_spec_generation_in_background(mocker: MockerFixture) -> MagicMock:
 
 
 @pytest.fixture()
-def with_automation_user(load_config: None) -> Iterator[tuple[UserId, str]]:
-    with create_and_destroy_user(automation=True, role="admin") as user:
-        yield user
-
-
-@pytest.fixture()
 def auth_request(with_user: tuple[UserId, str]) -> typing.Generator[http.Request]:
     # NOTE:
     # REMOTE_USER will be omitted by `flask_app.test_client()` if only passed via an
@@ -367,18 +290,6 @@ def auth_request(with_user: tuple[UserId, str]) -> typing.Generator[http.Request
     # not be touched.
     user_id, _ = with_user
     yield http.Request({**create_environ(path="/NO_SITE/"), "REMOTE_USER": str(user_id)})
-
-
-@pytest.fixture()
-def admin_auth_request(
-    with_admin: tuple[UserId, str],
-) -> typing.Generator[http.Request]:
-    # NOTE:
-    # REMOTE_USER will be omitted by `flask_app.test_client()` if only passed via an
-    # environment dict. When however a Request is passed in, the environment of the Request will
-    # not be touched.
-    user_id, _ = with_admin
-    yield http.Request({**create_environ(), "REMOTE_USER": str(user_id)})
 
 
 @pytest.fixture(scope="function")
@@ -404,19 +315,6 @@ def single_auth_request(wsgi_app: WebTestAppForCMK, auth_request: http.Request) 
 
 
 @pytest.fixture()
-def wsgi_app(flask_app: Flask) -> Iterator[WebTestAppForCMK]:
-    """Yield a Flask test client."""
-    flask_app.test_client_class = WebTestAppForCMK
-    with flask_app.test_client() as client:
-        if isinstance(client, WebTestAppForCMK):
-            yield client
-        else:
-            raise TypeError(
-                f"Expected flask client of type: 'WebTestAppForCMK' and not '{type(client)}'!"
-            )
-
-
-@pytest.fixture()
 def logged_in_wsgi_app(
     wsgi_app: WebTestAppForCMK, with_user: tuple[UserId, str]
 ) -> WebTestAppForCMK:
@@ -429,16 +327,6 @@ def logged_in_admin_wsgi_app(
     wsgi_app: WebTestAppForCMK, with_admin: tuple[UserId, str]
 ) -> WebTestAppForCMK:
     _ = wsgi_app.login(with_admin[0], with_admin[1])
-    return wsgi_app
-
-
-@pytest.fixture()
-def aut_user_auth_wsgi_app(
-    wsgi_app: WebTestAppForCMK,
-    with_automation_user: tuple[UserId, str],
-) -> WebTestAppForCMK:
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", f"{username} {secret}"))
     return wsgi_app
 
 
@@ -520,35 +408,8 @@ def run_as_superuser() -> Callable[[], ContextManager[None]]:
 
 
 @pytest.fixture()
-def flask_app(
-    patch_omd_site: None,
-    use_fakeredis_client: None,
-    load_plugins: None,
-) -> Iterator[Flask]:
-    """Initialize a Flask app for testing purposes.
-
-    Register a global htmllib.html() instance, just like in the regular GUI.
-    """
-    app = session_wsgi_app(debug=False, testing=True)
-    with app.test_request_context():
-        app.preprocess_request()
-        yield app
-        app.process_response(http.Response())
-
-
-@pytest.fixture(name="base")
-def fixture_base() -> str:
-    return "/NO_SITE/check_mk/api/1.0"
-
-
-@pytest.fixture()
 def api_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> RestApiClient:
     return RestApiClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)
-
-
-@pytest.fixture()
-def clients(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> ClientRegistry:
-    return get_client_registry(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)
 
 
 @pytest.fixture(name="fresh_app_instance", scope="function")

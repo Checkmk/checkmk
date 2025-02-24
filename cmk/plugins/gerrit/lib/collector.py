@@ -38,7 +38,7 @@ class LatestVersions:
         )
 
 
-class SyncSectionCollector:
+class GerritVersion:
     def __init__(self, api_url: str, auth: tuple[str, str]) -> None:
         self.api_url = api_url
         self.auth = auth

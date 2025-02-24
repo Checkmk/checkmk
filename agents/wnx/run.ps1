@@ -33,9 +33,9 @@ $msbuild_exe = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vsw
     -find MSBuild\**\Bin\MSBuild.exe
 
 $repo_root = (get-item $pwd).parent.parent.FullName
-$arte = "$repo_root/artefacts"
-$build_dir = "$pwd/build"
-$ohm_dir = "$build_dir/ohm/"
+$arte = "$repo_root\artefacts"
+$build_dir = "$pwd\build"
+$ohm_dir = "$build_dir\ohm\"
 $env:ExternalCompilerOptions = "/DDECREASE_COMPILE_TIME"
 $hash_file = "$arte\windows_files_hashes.txt"
 $usbip_exe = "c:\common\usbip-win-0.3.6-dev\usbip.exe"
@@ -395,12 +395,12 @@ function Start-BinarySigning {
     Remove-Item $hash_file -Force
 
     $files_to_sign = @(
-        "$build_dir/check_mk_service/x64/Release/check_mk_service64.exe",
-        "$build_dir/check_mk_service/Win32/Release/check_mk_service32.exe",
-        "$arte/cmk-agent-ctl.exe",
-        "$arte/mk-sql.exe",
-        "$ohm_dir/OpenHardwareMonitorLib.dll",
-        "$ohm_dir/OpenHardwareMonitorCLI.exe"
+        "$build_dir\check_mk_service\x64\Release\check_mk_service64.exe",
+        "$build_dir\check_mk_service\Win32\Release\check_mk_service32.exe",
+        "$arte\cmk-agent-ctl.exe",
+        "$arte\mk-sql.exe",
+        "$ohm_dir\OpenHardwareMonitorLib.dll",
+        "$ohm_dir\OpenHardwareMonitorCLI.exe"
     )
 
     foreach ($file in $files_to_sign) {

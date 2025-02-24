@@ -33,6 +33,7 @@ from cmk.gui.quick_setup.v0_unstable.setups import (
     QuickSetupBackgroundStageAction,
     QuickSetupStage,
     QuickSetupStageAction,
+    StepStatus,
 )
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     ActionId,
@@ -244,19 +245,24 @@ def recap_found_services(
     _quick_setup_id: QuickSetupId,
     _stage_index: StageIndex,
     parsed_data: ParsedFormData,
-    _progress_logger: ProgressLogger,
+    progress_logger: ProgressLogger,
 ) -> Sequence[Widget]:
     service_discovery_result = utils.get_service_discovery_preview(
         rulespec_name=RuleGroup.SpecialAgents("aws"),
         all_stages_form_data=parsed_data,
         parameter_form=quick_setup_aws_form_spec(),
         collect_params=aws_collect_params_with_defaults,
+        progress_logger=progress_logger,
+    )
+    progress_logger.log_new_progress_step(
+        "identify_relevant_services", "Search for AWS related services"
     )
     aws_service_interest = ServiceInterest(r"(?i).*aws.*", "services")
     filtered_groups_of_services, _other_services = utils.group_services_by_interest(
         services_of_interest=[aws_service_interest],
         service_discovery_result=service_discovery_result,
     )
+    progress_logger.update_progress_step_status("identify_relevant_services", StepStatus.COMPLETED)
     if len(filtered_groups_of_services[aws_service_interest]):
         return _save_and_activate_recap(_("AWS services found!"), parsed_data)
     return [

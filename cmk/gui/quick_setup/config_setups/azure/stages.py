@@ -227,13 +227,14 @@ def recap_found_services(
     _quick_setup_id: QuickSetupId,
     _stage_index: StageIndex,
     parsed_data: ParsedFormData,
-    _progress_logger: ProgressLogger,
+    progress_logger: ProgressLogger,
 ) -> Sequence[Widget]:
     service_discovery_result = utils.get_service_discovery_preview(
         rulespec_name=RuleGroup.SpecialAgents("azure"),
         all_stages_form_data=parsed_data,
         parameter_form=azure.formspec(),
         collect_params=azure_collect_params,
+        progress_logger=progress_logger,
     )
     azure_service_interest = ServiceInterest(r"(?i).*azure.*", "services")
     filtered_groups_of_services, _other_services = utils.group_services_by_interest(

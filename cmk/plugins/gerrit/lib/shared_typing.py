@@ -3,10 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, NewType
+from typing import Any, NewType, Protocol
 
 SectionName = NewType("SectionName", str)
 """The heading name of an agent output section."""
 
 type Sections = dict[SectionName, dict[str, Any]]
 """The data structure used to write out the agent output."""
+
+
+class SectionCollector(Protocol):
+    def collect(self) -> Sections: ...

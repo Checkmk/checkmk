@@ -6,17 +6,13 @@
 import dataclasses
 import json
 from collections.abc import Collection
-from typing import Protocol, Self
+from typing import Self
 
 import requests
 
 from cmk.utils.semantic_version import SemanticVersion
 
 from cmk.plugins.gerrit.lib.shared_typing import SectionName, Sections
-
-
-class SectionCollector(Protocol):
-    def collect(self) -> Sections: ...
 
 
 @dataclasses.dataclass

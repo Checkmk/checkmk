@@ -19,14 +19,8 @@ from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, Ruleset
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 
-from cmk.update_config.http.conflicts import (
-    add_migrate_parsing,
-    Config,
-    Conflict,
-    detect_conflicts,
-    ForMigration,
-    Migrate,
-)
+from cmk.update_config.http.conflict_options import add_migrate_parsing, Config
+from cmk.update_config.http.conflicts import Conflict, detect_conflicts, ForMigration, Migrate
 from cmk.update_config.http.migrate import migrate
 
 
@@ -166,14 +160,7 @@ def main() -> None:
     args = _parse_arguments()
     match args:
         case Migrate(write=write):
-            config = Config(
-                http_1_0_not_supported=args.http_1_0_not_supported,
-                ssl_incompatible=args.ssl_incompatible,
-                add_headers_incompatible=args.add_headers_incompatible,
-                expect_response_header=args.expect_response_header,
-                cant_have_regex_and_string=args.cant_have_regex_and_string,
-            )
-            _migrate_main(config, write)
+            _migrate_main(args, write)
         case Activate():
             _activate_main()
         case Deactivate():

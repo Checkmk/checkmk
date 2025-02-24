@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import argparse
 import enum
 import re
 from collections.abc import Mapping, Sequence
@@ -12,59 +11,24 @@ from dataclasses import dataclass
 from ipaddress import AddressValueError, IPv6Address, NetmaskValueError
 from typing import Literal, LiteralString
 
-from pydantic import BaseModel, HttpUrl, ValidationError
+from pydantic import HttpUrl, ValidationError
 
+from cmk.update_config.http.conflict_options import (
+    AdditionalHeaders,
+    CantHaveRegexAndString,
+    Config,
+    ConflictType,
+    ExpectResponseHeader,
+    HTTP10NotSupported,
+    OnlyStatusCodesAllowed,
+    SSLIncompatible,
+)
 from cmk.update_config.http.v1_scheme import V1Cert, V1Host, V1Proxy, V1Url, V1Value
 
 
-class ConflictType(enum.Enum):
-    http_1_0_not_supported = "http-1-0-not-supported"
-    ssl_incompatible = "ssl-incompatible"
-    add_headers_incompatible = "add-headers-incompatible"
-    expect_response_header = "expect-response-header"
-    cant_have_regex_and_string = "cant-have-regex-and-string"
-    only_status_codes_allowed = "only-status-codes-allowed"
-
-
-class HTTP10NotSupported(enum.Enum):
-    skip = "skip"
-    ignore = "ignore"
-
-
-class SSLIncompatible(enum.Enum):
-    skip = "skip"
-    negotiate = "negotiate"
-
-
-class AdditionalHeaders(enum.Enum):
-    skip = "skip"
-    ignore = "ignore"
-
-
-class ExpectResponseHeader(enum.Enum):
-    skip = "skip"
-    ignore = "ignore"
-
-
-class CantHaveRegexAndString(enum.Enum):
-    skip = "skip"
-    string = "string"
-    regex = "regex"
-
-
-class OnlyStatusCodesAllowed(enum.Enum):
-    skip = "skip"
-    ignore = "ignore"
-
-
-@dataclass(frozen=True, kw_only=True)
-class Config:
-    http_1_0_not_supported: HTTP10NotSupported = HTTP10NotSupported.skip
-    ssl_incompatible: SSLIncompatible = SSLIncompatible.skip
-    add_headers_incompatible: AdditionalHeaders = AdditionalHeaders.skip
-    expect_response_header: ExpectResponseHeader = ExpectResponseHeader.skip
-    cant_have_regex_and_string: CantHaveRegexAndString = CantHaveRegexAndString.skip
-    only_status_codes_allowed: OnlyStatusCodesAllowed = OnlyStatusCodesAllowed.skip
+class Migrate(Config):
+    command: Literal["migrate"]
+    write: bool = False
 
 
 def _migrate_header(header: str) -> dict[str, str] | None:
@@ -298,91 +262,4 @@ def detect_conflicts(config: Config, rule_value: Mapping[str, object]) -> Confli
     return ForMigration(
         value=MigratableValue.model_validate(value.model_dump()),
         config=config,
-    )
-
-
-class Migrate(BaseModel):
-    command: Literal["migrate"]
-    write: bool = False
-    http_1_0_not_supported: HTTP10NotSupported
-    ssl_incompatible: SSLIncompatible
-    add_headers_incompatible: AdditionalHeaders
-    expect_response_header: ExpectResponseHeader
-    cant_have_regex_and_string: CantHaveRegexAndString
-
-
-def add_migrate_parsing(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--write", action="store_true", help="persist changes on disk")
-    parser.add_argument(
-        f"--{ConflictType.http_1_0_not_supported.value}",
-        default=HTTP10NotSupported.skip.value,
-        choices=[e.value for e in HTTP10NotSupported],
-        help="; ".join(
-            [
-                "conflict: v2 does not support HTTP/1.0",
-                f"{HTTP10NotSupported.skip.value} (default): do not migrate rule",
-                f"{HTTP10NotSupported.ignore.value}: use HTTP/1.1 with virtual host set to the address",
-            ]
-        ),
-    )
-    parser.add_argument(
-        f"--{ConflictType.ssl_incompatible.value}",
-        default=SSLIncompatible.skip.value,
-        choices=[e.value for e in SSLIncompatible],
-        help="; ".join(
-            [
-                "conflict: v2 only support TLS 1.2 or 1.3",
-                f"{SSLIncompatible.skip.value} (default): do not migrate rule",
-                f"{SSLIncompatible.negotiate.value}: migrate rule without `SSL` option, allow auto-negotiation",
-            ]
-        ),
-    )
-    parser.add_argument(
-        f"--{ConflictType.add_headers_incompatible.value}",
-        default=AdditionalHeaders.skip.value,
-        choices=[e.value for e in AdditionalHeaders],
-        help="; ".join(
-            [
-                "conflict: `Additional header lines` must be in the format `Header: Value` for migration",
-                f"{AdditionalHeaders.skip.value} (default): do not migrate rule",
-                f"{AdditionalHeaders.ignore.value}: create rule without header lines in incompatible format",
-            ]
-        ),
-    )
-    parser.add_argument(
-        f"--{ConflictType.expect_response_header.value}",
-        default=ExpectResponseHeader.skip.value,
-        choices=[e.value for e in ExpectResponseHeader],
-        help="; ".join(
-            [
-                "conflict: `String to expect in response headers` must be in the format `Header: Value` for migration",
-                f"{ExpectResponseHeader.skip.value} (default): do not migrate rule",
-                f"{ExpectResponseHeader.ignore.value}: create rule without this option",
-            ]
-        ),
-    )
-    parser.add_argument(
-        f"--{ConflictType.cant_have_regex_and_string.value}",
-        default=CantHaveRegexAndString.skip.value,
-        choices=[e.value for e in CantHaveRegexAndString],
-        help="; ".join(
-            [
-                "conflict: Must choose `Fixed string to expect in the content` or `Regular expression to expect in the content`",
-                f"{CantHaveRegexAndString.skip.value} (default): do not migrate rule",
-                f"{CantHaveRegexAndString.string.value}: create rule choosing string, if two options are available",
-                f"{CantHaveRegexAndString.regex.value}: create rule choosing regex, if two options are available",
-            ]
-        ),
-    )
-    parser.add_argument(
-        f"--{ConflictType.only_status_codes_allowed.value}",
-        default=OnlyStatusCodesAllowed.skip.value,
-        choices=[e.value for e in OnlyStatusCodesAllowed],
-        help="; ".join(
-            [
-                "conflict: `Strings to expect in server response` must be a three-digit status code for migration",
-                f"{OnlyStatusCodesAllowed.skip.value} (default): do not migrate rule",
-                f"{OnlyStatusCodesAllowed.ignore.value}: create rule without incompatible entries",
-            ]
-        ),
     )

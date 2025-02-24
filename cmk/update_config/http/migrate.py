@@ -28,12 +28,8 @@ V1 supports HTTP/1.0 and HTTP/1.1. V2 only supports HTTP/1.1 and HTTP/2.0. HTTP/
 from collections.abc import Mapping
 from typing import assert_never
 
-from cmk.update_config.http.conflicts import (
-    CantHaveRegexAndString,
-    ForMigration,
-    MigratableCert,
-    MigratableUrl,
-)
+from cmk.update_config.http.conflict_options import CantHaveRegexAndString
+from cmk.update_config.http.conflicts import ForMigration, MigratableCert, MigratableUrl
 
 
 def _migrate_url_params(

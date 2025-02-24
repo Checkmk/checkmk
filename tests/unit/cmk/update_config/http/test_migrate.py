@@ -28,20 +28,22 @@ from cmk.plugins.collection.server_side_calls.httpv2 import (
     TlsVersion,
 )
 from cmk.server_side_calls_backend.config_processing import process_configuration_to_parameters
-from cmk.update_config.http.conflicts import (
-    _classify,
-    _migrate_expect_response,
+from cmk.update_config.http.conflict_options import (
     AdditionalHeaders,
     CantHaveRegexAndString,
     Config,
-    Conflict,
     ConflictType,
-    detect_conflicts,
     ExpectResponseHeader,
-    HostType,
     HTTP10NotSupported,
     OnlyStatusCodesAllowed,
     SSLIncompatible,
+)
+from cmk.update_config.http.conflicts import (
+    _classify,
+    _migrate_expect_response,
+    Conflict,
+    detect_conflicts,
+    HostType,
 )
 from cmk.update_config.http.migrate import migrate
 

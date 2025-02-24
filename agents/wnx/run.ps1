@@ -391,7 +391,7 @@ function Start-BinarySigning {
         "$build_dir/check_mk_service/x64/Release/check_mk_service64.exe",
         "$build_dir/check_mk_service/Win32/Release/check_mk_service32.exe",
         "$arte/cmk-agent-ctl.exe",
-        "$arte/cmk-sql.exe",
+        "$arte/mk-sql.exe",
         "$ohm_dir/OpenHardwareMonitorLib.dll",
         "$ohm_dir/OpenHardwareMonitorCLI.exe"
     )

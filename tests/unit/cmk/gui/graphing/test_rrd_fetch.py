@@ -109,8 +109,10 @@ def test_fetch_rrd_data_for_graph(
                 "max",
                 1,
             ): TimeSeries(
-                [4, 5, None],
-                time_window=(1, 2, 3),
+                start=1,
+                end=2,
+                step=3,
+                values=[4, 5, None],
             )
         }
 
@@ -130,8 +132,10 @@ def test_fetch_rrd_data_for_graph_with_conversion(
                 "max",
                 1,
             ): TimeSeries(
-                [39.2, 41.0, None],
-                time_window=(1, 2, 3),
+                start=1,
+                end=2,
+                step=3,
+                values=[39.2, 41.0, None],
             )
         }
 
@@ -147,8 +151,10 @@ def test_translate_and_merge_rrd_columns() -> None:
         ],
         {},
     ) == TimeSeries(
-        [1, 2, 3, 4],
-        time_window=(1682324400, 1682497800, 600),
+        start=1682324400,
+        end=1682497800,
+        step=600,
+        values=[1, 2, 3, 4],
     )
 
 
@@ -174,8 +180,10 @@ def test_translate_and_merge_rrd_columns_with_translation() -> None:
             )
         },
     ) == TimeSeries(
-        [10, 20, 3, 4],
-        time_window=(1682324400, 1682497800, 600),
+        start=1682324400,
+        end=1682497800,
+        step=600,
+        values=[10, 20, 3, 4],
     )
 
 
@@ -290,8 +298,10 @@ def test_translate_and_merge_rrd_columns_unit_conversion(
         ],
         {},
     ) == TimeSeries(
-        expected_data_points,
-        time_window=(1682324400, 1682497800, 600),
+        start=1682324400,
+        end=1682497800,
+        step=600,
+        values=expected_data_points,
     )
 
 

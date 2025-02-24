@@ -302,7 +302,14 @@ def test_t_axis_labels_week() -> None:
 
 
 def test_halfstep_interpolation() -> None:
-    assert _halfstep_interpolation(TimeSeries([5.0, 7.0, None], (123, 234, 10))) == [
+    assert _halfstep_interpolation(
+        TimeSeries(
+            start=123,
+            end=234,
+            step=10,
+            values=[5.0, 7.0, None],
+        )
+    ) == [
         5.0,
         5.0,
         5.0,

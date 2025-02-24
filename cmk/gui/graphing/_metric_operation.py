@@ -227,7 +227,16 @@ class MetricOpConstant(MetricOperation, frozen=True):
 
     def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
         num_points, twindow = _derive_num_points_twindow(rrd_data)
-        return [AugmentedTimeSeries(data=TimeSeries([self.value] * num_points, twindow))]
+        return [
+            AugmentedTimeSeries(
+                data=TimeSeries(
+                    start=twindow[0],
+                    end=twindow[1],
+                    step=twindow[2],
+                    values=[self.value] * num_points,
+                )
+            )
+        ]
 
 
 class MetricOpConstantNA(MetricOperation, frozen=True):
@@ -240,7 +249,16 @@ class MetricOpConstantNA(MetricOperation, frozen=True):
 
     def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
         num_points, twindow = _derive_num_points_twindow(rrd_data)
-        return [AugmentedTimeSeries(data=TimeSeries([None] * num_points, twindow))]
+        return [
+            AugmentedTimeSeries(
+                data=TimeSeries(
+                    start=twindow[0],
+                    end=twindow[1],
+                    step=twindow[2],
+                    values=[None] * num_points,
+                )
+            )
+        ]
 
 
 def _time_series_math(
@@ -268,7 +286,10 @@ def _time_series_math(
     twindow = operands_evaluated[0].twindow
 
     return TimeSeries(
-        [op_func_wrapper(op_func, list(tsp)) for tsp in zip(*operands_evaluated)], twindow
+        start=twindow[0],
+        end=twindow[1],
+        step=twindow[2],
+        values=[op_func_wrapper(op_func, list(tsp)) for tsp in zip(*operands_evaluated)],
     )
 
 
@@ -338,4 +359,13 @@ class MetricOpRRDSource(MetricOperation, frozen=True):
             return [AugmentedTimeSeries(data=rrd_data[key])]
 
         num_points, twindow = _derive_num_points_twindow(rrd_data)
-        return [AugmentedTimeSeries(data=TimeSeries([None] * num_points, twindow))]
+        return [
+            AugmentedTimeSeries(
+                data=TimeSeries(
+                    start=twindow[0],
+                    end=twindow[1],
+                    step=twindow[2],
+                    values=[None] * num_points,
+                ),
+            )
+        ]

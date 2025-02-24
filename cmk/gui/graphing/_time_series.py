@@ -59,14 +59,17 @@ class TimeSeries:
 
     def __init__(
         self,
-        data: TimeSeriesValues,
-        time_window: TimeWindow,
+        *,
+        start: int,
+        end: int,
+        step: int,
+        values: TimeSeriesValues,
         conversion: Callable[[float], float] = lambda v: v,
     ) -> None:
-        self.start = int(time_window[0])
-        self.end = int(time_window[1])
-        self.step = int(time_window[2])
-        self.values: TimeSeriesValues = [v if v is None else conversion(v) for v in data]
+        self.start = start
+        self.end = end
+        self.step = step
+        self.values: TimeSeriesValues = [v if v is None else conversion(v) for v in values]
 
     @property
     def twindow(self) -> TimeWindow:
@@ -121,7 +124,8 @@ class TimeSeries:
         return list(zip(rrd_timestamps(self.twindow), self.values))
 
     def __repr__(self) -> str:
-        return f"TimeSeries({self.values}, timewindow={self.twindow})"
+        start, end, step = self.twindow
+        return f"TimeSeries(start={start}, end={end}, step{step}, values={self.values})"
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, TimeSeries):

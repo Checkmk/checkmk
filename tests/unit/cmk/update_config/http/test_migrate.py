@@ -1044,22 +1044,29 @@ def test_nothing_to_assert_rules(rule_value: Mapping[str, object]) -> None:
 
 
 @pytest.mark.parametrize(
-    "rule_value, url, server",
+    "rule_value, config, url, server",
     [
-        (EXAMPLE_10, "http://facebook.de", "google.com"),
-        (EXAMPLE_15, "http://google.com", "google.com"),
-        (EXAMPLE_16, "http://127.0.0.1", "127.0.0.1"),
-        (EXAMPLE_17, "http://localhost", "localhost"),
-        (EXAMPLE_18, "http://[::1]", "[::1]"),
-        (EXAMPLE_19, "http://[::1]:80:80", "[::1]:80"),  # TODO: This may or may not be acceptable.
-        (EXAMPLE_21, "http://[::1]/werks", "[::1]"),
-        (EXAMPLE_25, "https://[::1]", "[::1]"),
-        (EXAMPLE_26, "https://google.com", "google.com"),
+        (EXAMPLE_10, DEFAULT, "http://facebook.de", "google.com"),
+        (EXAMPLE_15, DEFAULT, "http://google.com", "google.com"),
+        (EXAMPLE_16, DEFAULT, "http://127.0.0.1", "127.0.0.1"),
+        (EXAMPLE_17, DEFAULT, "http://localhost", "localhost"),
+        (EXAMPLE_18, DEFAULT, "http://[::1]", "[::1]"),
+        (
+            EXAMPLE_19,
+            DEFAULT,
+            "http://[::1]:80:80",
+            "[::1]:80",
+        ),  # TODO: This may or may not be acceptable.
+        (EXAMPLE_21, DEFAULT, "http://[::1]/werks", "[::1]"),
+        (EXAMPLE_25, DEFAULT, "https://[::1]", "[::1]"),
+        (EXAMPLE_26, DEFAULT, "https://google.com", "google.com"),
     ],
 )
-def test_migrate_url(rule_value: Mapping[str, object], url: str, server: str) -> None:
+def test_migrate_url(
+    rule_value: Mapping[str, object], config: Config, url: str, server: str
+) -> None:
     # Assemble
-    for_migration = detect_conflicts(DEFAULT, rule_value)
+    for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)
@@ -1071,10 +1078,11 @@ def test_migrate_url(rule_value: Mapping[str, object], url: str, server: str) ->
 
 
 @pytest.mark.parametrize(
-    "rule_value, expected",
+    "rule_value, config, expected",
     [
         (
             EXAMPLE_27,
+            DEFAULT,
             Document(
                 document_body=DocumentBodyOption.FETCH,
                 max_age=None,
@@ -1083,6 +1091,7 @@ def test_migrate_url(rule_value: Mapping[str, object], url: str, server: str) ->
         ),
         (
             EXAMPLE_64,
+            DEFAULT,
             Document(
                 document_body=DocumentBodyOption.IGNORE,
                 max_age=None,
@@ -1091,6 +1100,7 @@ def test_migrate_url(rule_value: Mapping[str, object], url: str, server: str) ->
         ),
         (
             EXAMPLE_65,
+            DEFAULT,
             Document(
                 document_body=DocumentBodyOption.FETCH,
                 max_age=None,
@@ -1099,6 +1109,7 @@ def test_migrate_url(rule_value: Mapping[str, object], url: str, server: str) ->
         ),
         (
             EXAMPLE_66,
+            DEFAULT,
             Document(
                 document_body=DocumentBodyOption.FETCH,
                 max_age=111.0,
@@ -1107,6 +1118,7 @@ def test_migrate_url(rule_value: Mapping[str, object], url: str, server: str) ->
         ),
         (
             EXAMPLE_67,
+            DEFAULT,
             Document(
                 document_body=DocumentBodyOption.IGNORE,
                 max_age=111.0,
@@ -1115,9 +1127,11 @@ def test_migrate_url(rule_value: Mapping[str, object], url: str, server: str) ->
         ),
     ],
 )
-def test_migrate_document(rule_value: Mapping[str, object], expected: object) -> None:
+def test_migrate_document(
+    rule_value: Mapping[str, object], config: Config, expected: object
+) -> None:
     # Assemble
-    for_migration = detect_conflicts(DEFAULT, rule_value)
+    for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)
@@ -1128,14 +1142,16 @@ def test_migrate_document(rule_value: Mapping[str, object], expected: object) ->
 
 
 @pytest.mark.parametrize(
-    "rule_value, expected",
+    "rule_value, config, expected",
     [
         (
             EXAMPLE_27,
+            DEFAULT,
             (HttpMethod.GET, None),
         ),
         (
             EXAMPLE_50,
+            DEFAULT,
             (
                 HttpMethod.POST,
                 SendData(
@@ -1148,6 +1164,7 @@ def test_migrate_document(rule_value: Mapping[str, object], expected: object) ->
         ),
         (
             EXAMPLE_52,
+            DEFAULT,
             (
                 HttpMethod.POST,
                 SendData(
@@ -1160,6 +1177,7 @@ def test_migrate_document(rule_value: Mapping[str, object], expected: object) ->
         ),
         (
             EXAMPLE_53,
+            DEFAULT,
             (
                 HttpMethod.PUT,
                 SendData(
@@ -1172,29 +1190,34 @@ def test_migrate_document(rule_value: Mapping[str, object], expected: object) ->
         ),
         (
             EXAMPLE_54,
+            DEFAULT,
             (HttpMethod.GET, None),
         ),
         (
             EXAMPLE_55,
+            DEFAULT,
             (HttpMethod.DELETE, None),
         ),
         (
             EXAMPLE_56,
+            DEFAULT,
             (HttpMethod.HEAD, None),
         ),
         (
             EXAMPLE_57,
+            DEFAULT,
             (HttpMethod.PUT, SendData(send_data=None)),
         ),
         (
             EXAMPLE_58,
+            DEFAULT,
             (HttpMethod.POST, SendData(send_data=None)),
         ),
     ],
 )
-def test_migrate_method(rule_value: Mapping[str, object], expected: object) -> None:
+def test_migrate_method(rule_value: Mapping[str, object], config: Config, expected: object) -> None:
     # Assemble
-    for_migration = detect_conflicts(DEFAULT, rule_value)
+    for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)
@@ -1292,18 +1315,20 @@ def test_migrate_ssl(rule_value: Mapping[str, object], config: Config, expected:
 
 
 @pytest.mark.parametrize(
-    "rule_value, expected",
+    "rule_value, config, expected",
     [
-        (EXAMPLE_1, (LevelsType.FIXED, (0.1, 0.2))),
-        (EXAMPLE_2, (LevelsType.FIXED, (0.1, 0.2))),
-        (EXAMPLE_27, None),
-        (EXAMPLE_28, (LevelsType.FIXED, (0.0, 0.0))),
-        (EXAMPLE_84, (LevelsType.NO_LEVELS, None)),
+        (EXAMPLE_1, DEFAULT, (LevelsType.FIXED, (0.1, 0.2))),
+        (EXAMPLE_2, DEFAULT, (LevelsType.FIXED, (0.1, 0.2))),
+        (EXAMPLE_27, DEFAULT, None),
+        (EXAMPLE_28, DEFAULT, (LevelsType.FIXED, (0.0, 0.0))),
+        (EXAMPLE_84, DEFAULT, (LevelsType.NO_LEVELS, None)),
     ],
 )
-def test_migrate_response_time(rule_value: Mapping[str, object], expected: object) -> None:
+def test_migrate_response_time(
+    rule_value: Mapping[str, object], config: Config, expected: object
+) -> None:
     # Assemble
-    for_migration = detect_conflicts(DEFAULT, rule_value)
+    for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)
@@ -1341,16 +1366,18 @@ def test_migrate_expect_string(
 
 
 @pytest.mark.parametrize(
-    "rule_value, expected",
+    "rule_value, config, expected",
     [
-        (EXAMPLE_27, None),
-        (EXAMPLE_29, 10.0),
-        (EXAMPLE_30, 0.0),
+        (EXAMPLE_27, DEFAULT, None),
+        (EXAMPLE_29, DEFAULT, 10.0),
+        (EXAMPLE_30, DEFAULT, 0.0),
     ],
 )
-def test_migrate_timeout(rule_value: Mapping[str, object], expected: object) -> None:
+def test_migrate_timeout(
+    rule_value: Mapping[str, object], config: Config, expected: object
+) -> None:
     # Assemble
-    for_migration = detect_conflicts(DEFAULT, rule_value)
+    for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)
@@ -1362,15 +1389,17 @@ def test_migrate_timeout(rule_value: Mapping[str, object], expected: object) -> 
 
 
 @pytest.mark.parametrize(
-    "rule_value, expected",
+    "rule_value, config, expected",
     [
-        (EXAMPLE_27, None),
-        (EXAMPLE_31, "agent"),
+        (EXAMPLE_27, DEFAULT, None),
+        (EXAMPLE_31, DEFAULT, "agent"),
     ],
 )
-def test_migrate_user_agent(rule_value: Mapping[str, object], expected: object) -> None:
+def test_migrate_user_agent(
+    rule_value: Mapping[str, object], config: Config, expected: object
+) -> None:
     # Assemble
-    for_migration = detect_conflicts(DEFAULT, rule_value)
+    for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)
@@ -1468,20 +1497,22 @@ def test_migrate_auth_no_auth() -> None:
 
 
 @pytest.mark.parametrize(
-    "rule_value, expected",
+    "rule_value, config, expected",
     [
-        (EXAMPLE_27, "ok"),  # TODO: discuss with PM
-        (EXAMPLE_37, "ok"),
-        (EXAMPLE_38, "warning"),
-        (EXAMPLE_39, "critical"),
-        (EXAMPLE_40, "follow"),
-        (EXAMPLE_41, "sticky"),
-        (EXAMPLE_42, "stickyport"),
+        (EXAMPLE_27, DEFAULT, "ok"),  # TODO: discuss with PM
+        (EXAMPLE_37, DEFAULT, "ok"),
+        (EXAMPLE_38, DEFAULT, "warning"),
+        (EXAMPLE_39, DEFAULT, "critical"),
+        (EXAMPLE_40, DEFAULT, "follow"),
+        (EXAMPLE_41, DEFAULT, "sticky"),
+        (EXAMPLE_42, DEFAULT, "stickyport"),
     ],
 )
-def test_migrate_redirect(rule_value: Mapping[str, object], expected: object) -> None:
+def test_migrate_redirect(
+    rule_value: Mapping[str, object], config: Config, expected: object
+) -> None:
     # Assemble
-    for_migration = detect_conflicts(DEFAULT, rule_value)
+    for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)
@@ -1538,15 +1569,15 @@ def test_migrate_expect_response(
 
 
 @pytest.mark.parametrize(
-    "rule_value, expected",
+    "rule_value, config, expected",
     [
-        (EXAMPLE_69, (CertificateValidity.VALIDATE, (LevelsType.FIXED, (0.0, 0.0)))),
-        (EXAMPLE_70, (CertificateValidity.VALIDATE, (LevelsType.NO_LEVELS, None))),
+        (EXAMPLE_69, DEFAULT, (CertificateValidity.VALIDATE, (LevelsType.FIXED, (0.0, 0.0)))),
+        (EXAMPLE_70, DEFAULT, (CertificateValidity.VALIDATE, (LevelsType.NO_LEVELS, None))),
     ],
 )
-def test_migrate_cert(rule_value: Mapping[str, object], expected: object) -> None:
+def test_migrate_cert(rule_value: Mapping[str, object], config: Config, expected: object) -> None:
     # Assemble
-    for_migration = detect_conflicts(DEFAULT, rule_value)
+    for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)
@@ -1590,17 +1621,17 @@ def test_migrate_expect_response_header(
 
 
 @pytest.mark.parametrize(
-    "rule_value, expected",
+    "rule_value, config, expected",
     [
-        (EXAMPLE_76, ServiceDescription(prefix=ServicePrefix.AUTO, name="name")),
-        (EXAMPLE_77, ServiceDescription(prefix=ServicePrefix.NONE, name="name")),
-        (EXAMPLE_78, ServiceDescription(prefix=ServicePrefix.AUTO, name="name")),
-        (EXAMPLE_79, ServiceDescription(prefix=ServicePrefix.AUTO, name="name")),
+        (EXAMPLE_76, DEFAULT, ServiceDescription(prefix=ServicePrefix.AUTO, name="name")),
+        (EXAMPLE_77, DEFAULT, ServiceDescription(prefix=ServicePrefix.NONE, name="name")),
+        (EXAMPLE_78, DEFAULT, ServiceDescription(prefix=ServicePrefix.AUTO, name="name")),
+        (EXAMPLE_79, DEFAULT, ServiceDescription(prefix=ServicePrefix.AUTO, name="name")),
     ],
 )
-def test_migrate_name(rule_value: Mapping[str, object], expected: object) -> None:
+def test_migrate_name(rule_value: Mapping[str, object], config: Config, expected: object) -> None:
     # Assemble
-    for_migration = detect_conflicts(DEFAULT, rule_value)
+    for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)
@@ -1611,18 +1642,20 @@ def test_migrate_name(rule_value: Mapping[str, object], expected: object) -> Non
 
 
 @pytest.mark.parametrize(
-    "rule_value, expected",
+    "rule_value, config, expected",
     [
-        (EXAMPLE_27, AddressFamily.ANY),
-        (EXAMPLE_80, AddressFamily.ANY),
-        (EXAMPLE_81, AddressFamily.IPV4),
-        (EXAMPLE_82, AddressFamily.PRIMARY),
-        (EXAMPLE_83, AddressFamily.IPV6),
+        (EXAMPLE_27, DEFAULT, AddressFamily.ANY),
+        (EXAMPLE_80, DEFAULT, AddressFamily.ANY),
+        (EXAMPLE_81, DEFAULT, AddressFamily.IPV4),
+        (EXAMPLE_82, DEFAULT, AddressFamily.PRIMARY),
+        (EXAMPLE_83, DEFAULT, AddressFamily.IPV6),
     ],
 )
-def test_migrate_address_family(rule_value: Mapping[str, object], expected: object) -> None:
+def test_migrate_address_family(
+    rule_value: Mapping[str, object], config: Config, expected: object
+) -> None:
     # Assemble
-    for_migration = detect_conflicts(DEFAULT, rule_value)
+    for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)

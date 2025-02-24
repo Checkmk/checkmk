@@ -10,7 +10,7 @@ from collections.abc import Sequence
 
 from cmk.utils import password_store
 
-from cmk.plugins.gerrit.lib.collector import collect_sections, SyncSectionCollector
+from cmk.plugins.gerrit.lib.collector import collect_sections, GerritVersion
 from cmk.plugins.gerrit.lib.shared_typing import Sections
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
@@ -47,8 +47,8 @@ def run_agent(args: Args) -> int:
     api_url = f"{args.proto}://{args.hostname}:{args.port}/a"
     auth = (args.user, get_password_from_args(args))
 
-    collector = SyncSectionCollector(api_url=api_url, auth=auth)
-    sections = collect_sections(collector)
+    version_collector = GerritVersion(api_url=api_url, auth=auth)
+    sections = collect_sections(version_collector)
 
     write_sections(sections)
 

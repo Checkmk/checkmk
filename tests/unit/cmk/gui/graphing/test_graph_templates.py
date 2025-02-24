@@ -808,48 +808,64 @@ def test__parse_graph_from_api(
                 range=None,
                 scalars=[
                     MetricExpression(
-                        WarningOf(Metric("metric-name-l3")),
-                        line_type="-line",
-                        title="Warning of Title",
-                    ),
-                    MetricExpression(
-                        CriticalOf(Metric("metric-name-l4")),
-                        line_type="-line",
-                        title="Critical of Title",
-                    ),
-                    MetricExpression(
-                        MinimumOf(Metric("metric-name-l5")),
-                        line_type="-line",
-                        title="Title",
-                        color=COLOR_HEX,
-                    ),
-                    MetricExpression(
-                        MaximumOf(Metric("metric-name-l6")),
-                        line_type="-line",
-                        title="Title",
-                        color=COLOR_HEX,
-                    ),
-                    MetricExpression(
-                        WarningOf(Metric("metric-name-u3")),
+                        WarningOf(
+                            Metric("metric-name-u3"),
+                        ),
                         line_type="line",
                         title="Warning of Title",
                     ),
                     MetricExpression(
-                        CriticalOf(Metric("metric-name-u4")),
+                        CriticalOf(
+                            Metric("metric-name-u4"),
+                        ),
                         line_type="line",
                         title="Critical of Title",
                     ),
                     MetricExpression(
-                        MinimumOf(Metric("metric-name-u5")),
+                        MinimumOf(
+                            Metric("metric-name-u5"),
+                        ),
+                        color=COLOR_HEX,
                         line_type="line",
                         title="Title",
-                        color=COLOR_HEX,
                     ),
                     MetricExpression(
-                        MaximumOf(Metric("metric-name-u6")),
+                        MaximumOf(
+                            Metric("metric-name-u6"),
+                        ),
+                        color=COLOR_HEX,
                         line_type="line",
                         title="Title",
+                    ),
+                    MetricExpression(
+                        WarningOf(
+                            Metric("metric-name-l3"),
+                        ),
+                        line_type="-line",
+                        title="Warning of Title",
+                    ),
+                    MetricExpression(
+                        CriticalOf(
+                            Metric("metric-name-l4"),
+                        ),
+                        line_type="-line",
+                        title="Critical of Title",
+                    ),
+                    MetricExpression(
+                        MinimumOf(
+                            Metric("metric-name-l5"),
+                        ),
                         color=COLOR_HEX,
+                        line_type="-line",
+                        title="Title",
+                    ),
+                    MetricExpression(
+                        MaximumOf(
+                            Metric("metric-name-l6"),
+                        ),
+                        color=COLOR_HEX,
+                        line_type="-line",
+                        title="Title",
                     ),
                 ],
                 conflicting_metrics=["metric-name-confl-l", "metric-name-confl-u"],
@@ -857,10 +873,10 @@ def test__parse_graph_from_api(
                 consolidation_function=None,
                 omit_zero_metrics=False,
                 metrics=[
-                    MetricExpression(Metric("metric-name-l1"), line_type="-stack", title="Title"),
                     MetricExpression(Metric("metric-name-u1"), line_type="stack", title="Title"),
-                    MetricExpression(Metric("metric-name-l2"), line_type="-line", title="Title"),
+                    MetricExpression(Metric("metric-name-l1"), line_type="-stack", title="Title"),
                     MetricExpression(Metric("metric-name-u2"), line_type="line", title="Title"),
+                    MetricExpression(Metric("metric-name-l2"), line_type="-line", title="Title"),
                 ],
             ),
             id="lower-upper",
@@ -887,8 +903,8 @@ def test__parse_graph_from_api(
                 id="name",
                 title="Title",
                 range=MinimalGraphTemplateRange(
-                    min=Minimum([Constant(1), Constant(2)]),
-                    max=Maximum([Constant(10), Constant(11)]),
+                    min=Minimum([Constant(2), Constant(1)]),
+                    max=Maximum([Constant(11), Constant(10)]),
                 ),
                 scalars=[],
                 conflicting_metrics=[],
@@ -896,8 +912,8 @@ def test__parse_graph_from_api(
                 consolidation_function=None,
                 omit_zero_metrics=False,
                 metrics=[
-                    MetricExpression(Metric("metric-name-l"), line_type="-line", title="Title"),
                     MetricExpression(Metric("metric-name-u"), line_type="line", title="Title"),
+                    MetricExpression(Metric("metric-name-l"), line_type="-line", title="Title"),
                 ],
             ),
             id="range-both",
@@ -932,8 +948,8 @@ def test__parse_graph_from_api(
                 consolidation_function=None,
                 omit_zero_metrics=False,
                 metrics=[
-                    MetricExpression(Metric("metric-name-l"), line_type="-line", title="Title"),
                     MetricExpression(Metric("metric-name-u"), line_type="line", title="Title"),
+                    MetricExpression(Metric("metric-name-l"), line_type="-line", title="Title"),
                 ],
             ),
             id="range-only-lower",
@@ -968,8 +984,8 @@ def test__parse_graph_from_api(
                 consolidation_function=None,
                 omit_zero_metrics=False,
                 metrics=[
-                    MetricExpression(Metric("metric-name-l"), line_type="-line", title="Title"),
                     MetricExpression(Metric("metric-name-u"), line_type="line", title="Title"),
+                    MetricExpression(Metric("metric-name-l"), line_type="-line", title="Title"),
                 ],
             ),
             id="range-only-upper",

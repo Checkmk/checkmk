@@ -19,10 +19,6 @@ class SectionCollector(Protocol):
     def collect(self) -> Sections: ...
 
 
-def collect_sections(collector: SectionCollector) -> Sections:
-    return collector.collect()
-
-
 @dataclasses.dataclass
 class LatestVersions:
     major: str | None

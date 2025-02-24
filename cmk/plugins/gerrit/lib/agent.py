@@ -10,7 +10,7 @@ from collections.abc import Sequence
 
 from cmk.utils import password_store
 
-from cmk.plugins.gerrit.lib.collector import collect_sections, GerritVersion
+from cmk.plugins.gerrit.lib.collector import GerritVersion
 from cmk.plugins.gerrit.lib.shared_typing import Sections
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
@@ -50,7 +50,7 @@ def run_agent(args: Args) -> int:
     sections: Sections = {}
 
     version_collector = GerritVersion(api_url=api_url, auth=auth)
-    sections.update(collect_sections(version_collector))
+    sections.update(version_collector.collect())
 
     write_sections(sections)
 

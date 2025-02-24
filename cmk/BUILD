@@ -16,7 +16,6 @@ REQUIRED_EXTERNAL_DEPS = [
     "boto3",
     "botocore",
     "cryptography",
-    "cython",
     "docstring-parser",
     "exchangelib",  # missing wheel
     "fastapi",
@@ -57,7 +56,6 @@ REQUIRED_EXTERNAL_DEPS = [
     "paramiko",
     "pillow",
     "pika",
-    "ply",
     "protobuf",
     "psutil",
     "psycopg2-binary",  # missing wheel

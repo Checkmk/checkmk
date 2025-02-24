@@ -52,6 +52,7 @@ LINKS = {
     "PSF-2.0": "https://opensource.org/licenses/Python-2.0",
     "Python-2.0": "https://opensource.org/licenses/Python-2.0",
     "TCL": "https://fedoraproject.org/wiki/Licensing/TCL",
+    "UPL-1.0": "https://opensource.org/license/UPL",
     "Unicode-3.0": "https://www.unicode.org/license.txt",
     "Unicode-DFS-2016": "https://www.unicode.org/license.txt",
     "Unlicense": "https://opensource.org/licenses/unlicense",

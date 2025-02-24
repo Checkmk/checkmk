@@ -3,7 +3,7 @@ setuptools-scm==4.1.2  # needed by various setup.py
 python-dateutil~=2.9.0  # direct dependency
 pyyaml==6.0.1  # needed by vcrpy
 vcrpy==6.0.1  # used by various unit tests to mock HTTP transactions in some special agents (only)
-cryptography==44.0.1
+cryptography==43.0.3
 paramiko==3.5.0
 pyasn1<0.6.1  # 0.6.1 removed pyasn1.compat.octets, but this is used by pysnmp <6.2.6. But updating that leads to API incompatibilities and integration test failures at the moment. :-/
 ply==3.11  # needed by pysmi, python-active-directory
@@ -22,7 +22,7 @@ psutil==5.9.8  # needed for omdlib
 oauthlib==3.2.2
 requests-oauthlib==1.3.1
 jira==3.8.0 # needed by jira
-msal==1.31.1 # needed by agent_azure
+msal==1.26.0 # needed by agent_azure
 pillow==11.0.0 # needed by reporting & CME logo image processing
 python-ldap==3.4.3 # needed by GUI (User sync), python-active-directory
 cython==3.0.11 # needed by numpy & pymssql

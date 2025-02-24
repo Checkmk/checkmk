@@ -3016,8 +3016,6 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
         check_function=_noop_check,
     )
 
-    monkeypatch.setattr(agent_based_register._discover, "registered_check_plugins", {})
-
     monkeypatch.setattr(
         agent_based_register._discover,
         "discover_plugins",
@@ -3053,8 +3051,6 @@ def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:
         fetch=SNMPTree(base=".1.2.3", oids=[]),
         parse_function=dummy_parse_function,
     )
-
-    monkeypatch.setattr(agent_based_register._discover, "registered_snmp_sections", {})
 
     monkeypatch.setattr(
         agent_based_register._discover,

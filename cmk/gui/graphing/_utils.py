@@ -20,7 +20,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.metrics import MetricName
 from cmk.utils.plugin_registry import Registry
 
-import cmk.gui.sites as sites
+from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKHTTPException
 from cmk.gui.i18n import _
@@ -379,31 +379,19 @@ class GraphTemplate:
     def from_bidirectional(cls, graph: graphs.Bidirectional) -> Self:
         ranges_min = []
         ranges_max = []
-        if graph.lower.minimal_range is not None:
-            lower_range = _parse_minimal_range(graph.lower.minimal_range)
-            ranges_min.append(lower_range.min)
-            ranges_max.append(lower_range.max)
         if graph.upper.minimal_range is not None:
             upper_range = _parse_minimal_range(graph.upper.minimal_range)
             ranges_min.append(upper_range.min)
             ranges_max.append(upper_range.max)
+        if graph.lower.minimal_range is not None:
+            lower_range = _parse_minimal_range(graph.lower.minimal_range)
+            ranges_min.append(lower_range.min)
+            ranges_max.append(lower_range.max)
 
-        metrics_ = [_parse_quantity(l, "-stack") for l in graph.lower.compound_lines] + [
-            _parse_quantity(l, "stack") for l in graph.upper.compound_lines
+        metrics_ = [_parse_quantity(l, "stack") for l in graph.upper.compound_lines] + [
+            _parse_quantity(l, "-stack") for l in graph.lower.compound_lines
         ]
         scalars: list[ScalarDefinition] = []
-        for line in graph.lower.simple_lines:
-            match line:
-                case (
-                    metrics.WarningOf()
-                    | metrics.CriticalOf()
-                    | metrics.MinimumOf()
-                    | metrics.MaximumOf()
-                ):
-                    parsed = _parse_quantity(line, "-line")
-                    scalars.append(ScalarDefinition(parsed.expression, parsed.title))
-                case _:
-                    metrics_.append(_parse_quantity(line, "-line"))
         for line in graph.upper.simple_lines:
             match line:
                 case (
@@ -416,6 +404,18 @@ class GraphTemplate:
                     scalars.append(ScalarDefinition(parsed.expression, parsed.title))
                 case _:
                     metrics_.append(_parse_quantity(line, "line"))
+        for line in graph.lower.simple_lines:
+            match line:
+                case (
+                    metrics.WarningOf()
+                    | metrics.CriticalOf()
+                    | metrics.MinimumOf()
+                    | metrics.MaximumOf()
+                ):
+                    parsed = _parse_quantity(line, "-line")
+                    scalars.append(ScalarDefinition(parsed.expression, parsed.title))
+                case _:
+                    metrics_.append(_parse_quantity(line, "-line"))
         return cls(
             id=graph.name,
             title=graph.title.localize(_),

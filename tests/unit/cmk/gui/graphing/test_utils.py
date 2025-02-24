@@ -974,7 +974,6 @@ def test_get_graph_templates_with_predictive_metrics(
             ["cpu_utilization_7_util"],
             id="cpu_utilization_6_guest_util_conflicting_metrics",
         ),
-        #
         pytest.param(
             [
                 "user",
@@ -1832,22 +1831,6 @@ def test_graph_template_from_graph(
                 range=None,
                 scalars=[
                     utils.ScalarDefinition(
-                        WarningOf(Metric("metric-name-l3"), "warn"),
-                        "Warning of metric-name-l3",
-                    ),
-                    utils.ScalarDefinition(
-                        CriticalOf(Metric("metric-name-l4"), "crit"),
-                        "Critical of metric-name-l4",
-                    ),
-                    utils.ScalarDefinition(
-                        MinimumOf(Metric("metric-name-l5"), "min", explicit_color=COLOR_HEX),
-                        "metric-name-l5",
-                    ),
-                    utils.ScalarDefinition(
-                        MaximumOf(Metric("metric-name-l6"), "max", explicit_color=COLOR_HEX),
-                        "metric-name-l6",
-                    ),
-                    utils.ScalarDefinition(
                         WarningOf(Metric("metric-name-u3"), "warn"),
                         "Warning of metric-name-u3",
                     ),
@@ -1863,16 +1846,32 @@ def test_graph_template_from_graph(
                         MaximumOf(Metric("metric-name-u6"), "max", explicit_color=COLOR_HEX),
                         "metric-name-u6",
                     ),
+                    utils.ScalarDefinition(
+                        WarningOf(Metric("metric-name-l3"), "warn"),
+                        "Warning of metric-name-l3",
+                    ),
+                    utils.ScalarDefinition(
+                        CriticalOf(Metric("metric-name-l4"), "crit"),
+                        "Critical of metric-name-l4",
+                    ),
+                    utils.ScalarDefinition(
+                        MinimumOf(Metric("metric-name-l5"), "min", explicit_color=COLOR_HEX),
+                        "metric-name-l5",
+                    ),
+                    utils.ScalarDefinition(
+                        MaximumOf(Metric("metric-name-l6"), "max", explicit_color=COLOR_HEX),
+                        "metric-name-l6",
+                    ),
                 ],
                 conflicting_metrics=["metric-name-confl-l", "metric-name-confl-u"],
                 optional_metrics=["metric-name-opt-l", "metric-name-opt-u"],
                 consolidation_function=None,
                 omit_zero_metrics=False,
                 metrics=[
-                    MetricDefinition(Metric("metric-name-l1"), "-stack", "metric-name-l1"),
                     MetricDefinition(Metric("metric-name-u1"), "stack", "metric-name-u1"),
-                    MetricDefinition(Metric("metric-name-l2"), "-line", "metric-name-l2"),
+                    MetricDefinition(Metric("metric-name-l1"), "-stack", "metric-name-l1"),
                     MetricDefinition(Metric("metric-name-u2"), "line", "metric-name-u2"),
+                    MetricDefinition(Metric("metric-name-l2"), "-line", "metric-name-l2"),
                 ],
             ),
             id="lower-upper",
@@ -1899,8 +1898,8 @@ def test_graph_template_from_graph(
                 id="name",
                 title="Title",
                 range=utils.MinimalGraphTemplateRange(
-                    min=Minimum([Constant(1), Constant(2)]),
-                    max=Maximum([Constant(10), Constant(11)]),
+                    min=Minimum([Constant(2), Constant(1)]),
+                    max=Maximum([Constant(11), Constant(10)]),
                 ),
                 scalars=[],
                 conflicting_metrics=[],
@@ -1908,8 +1907,8 @@ def test_graph_template_from_graph(
                 consolidation_function=None,
                 omit_zero_metrics=False,
                 metrics=[
-                    MetricDefinition(Metric("metric-name-l"), "-line", "metric-name-l"),
                     MetricDefinition(Metric("metric-name-u"), "line", "metric-name-u"),
+                    MetricDefinition(Metric("metric-name-l"), "-line", "metric-name-l"),
                 ],
             ),
             id="range-both",
@@ -1944,8 +1943,8 @@ def test_graph_template_from_graph(
                 consolidation_function=None,
                 omit_zero_metrics=False,
                 metrics=[
-                    MetricDefinition(Metric("metric-name-l"), "-line", "metric-name-l"),
                     MetricDefinition(Metric("metric-name-u"), "line", "metric-name-u"),
+                    MetricDefinition(Metric("metric-name-l"), "-line", "metric-name-l"),
                 ],
             ),
             id="range-only-lower",
@@ -1980,8 +1979,8 @@ def test_graph_template_from_graph(
                 consolidation_function=None,
                 omit_zero_metrics=False,
                 metrics=[
-                    MetricDefinition(Metric("metric-name-l"), "-line", "metric-name-l"),
                     MetricDefinition(Metric("metric-name-u"), "line", "metric-name-u"),
+                    MetricDefinition(Metric("metric-name-l"), "-line", "metric-name-l"),
                 ],
             ),
             id="range-only-upper",

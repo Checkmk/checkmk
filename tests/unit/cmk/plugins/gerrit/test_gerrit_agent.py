@@ -11,7 +11,7 @@ import pytest
 from cmk.utils.semantic_version import SemanticVersion
 
 from cmk.plugins.gerrit.lib import agent
-from cmk.plugins.gerrit.lib.collector import LatestVersions
+from cmk.plugins.gerrit.lib.collectors.version import LatestVersions
 from cmk.plugins.gerrit.lib.shared_typing import SectionName, Sections
 
 

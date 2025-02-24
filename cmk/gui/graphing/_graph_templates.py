@@ -196,30 +196,19 @@ def _parse_bidirectional_from_api(
 ) -> GraphTemplate:
     ranges_min = []
     ranges_max = []
-    if bidirectional.lower.minimal_range is not None:
-        lower_range = _parse_minimal_range(bidirectional.lower.minimal_range)
-        ranges_min.append(lower_range.min)
-        ranges_max.append(lower_range.max)
     if bidirectional.upper.minimal_range is not None:
         upper_range = _parse_minimal_range(bidirectional.upper.minimal_range)
         ranges_min.append(upper_range.min)
         ranges_max.append(upper_range.max)
+    if bidirectional.lower.minimal_range is not None:
+        lower_range = _parse_minimal_range(bidirectional.lower.minimal_range)
+        ranges_min.append(lower_range.min)
+        ranges_max.append(lower_range.max)
 
     metrics = [
-        parse_expression_from_api(l, "-stack") for l in bidirectional.lower.compound_lines
-    ] + [parse_expression_from_api(l, "stack") for l in bidirectional.upper.compound_lines]
+        parse_expression_from_api(l, "stack") for l in bidirectional.upper.compound_lines
+    ] + [parse_expression_from_api(l, "-stack") for l in bidirectional.lower.compound_lines]
     scalars: list[MetricExpression] = []
-    for line in bidirectional.lower.simple_lines:
-        match line:
-            case (
-                metrics_api.WarningOf()
-                | metrics_api.CriticalOf()
-                | metrics_api.MinimumOf()
-                | metrics_api.MaximumOf()
-            ):
-                scalars.append(parse_expression_from_api(line, "-line"))
-            case _:
-                metrics.append(parse_expression_from_api(line, "-line"))
     for line in bidirectional.upper.simple_lines:
         match line:
             case (
@@ -231,6 +220,17 @@ def _parse_bidirectional_from_api(
                 scalars.append(parse_expression_from_api(line, "line"))
             case _:
                 metrics.append(parse_expression_from_api(line, "line"))
+    for line in bidirectional.lower.simple_lines:
+        match line:
+            case (
+                metrics_api.WarningOf()
+                | metrics_api.CriticalOf()
+                | metrics_api.MinimumOf()
+                | metrics_api.MaximumOf()
+            ):
+                scalars.append(parse_expression_from_api(line, "-line"))
+            case _:
+                metrics.append(parse_expression_from_api(line, "-line"))
     return GraphTemplate(
         id=id_,
         title=_parse_title(bidirectional),

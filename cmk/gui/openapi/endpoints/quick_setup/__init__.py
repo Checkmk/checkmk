@@ -326,7 +326,7 @@ def quicksetup_run_stage_action(params: Mapping[str, Any]) -> Response:
 
 
 class FieldSiteId:
-    field_name = "site"
+    field_name = "site_id"
     field_definition = fields.String(
         description="The site where the quick setup stage action result is located. Defaults to local site",
         example="foobar",

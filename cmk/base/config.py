@@ -33,6 +33,7 @@ from typing import (
     Literal,
     NamedTuple,
     overload,
+    TypeGuard,
     TypeVar,
 )
 
@@ -1447,6 +1448,19 @@ def load_and_convert_legacy_checks(
 #   '----------------------------------------------------------------------'
 
 
+def _is_mapping_rulespec(rs: RuleSpec[object]) -> TypeGuard[RuleSpec[Mapping[str, object]]]:
+    return isinstance(rs["value"], dict) and all(isinstance(k, str) for k in rs["value"])
+
+
+def _parsed_ssc_rules(
+    ssc_rules: Mapping[str, Sequence[RuleSpec[object]]],
+) -> Sequence[tuple[str, Sequence[RuleSpec[Mapping[str, object]]]]]:
+    return [
+        (k, [rs for rs in rulespecs if _is_mapping_rulespec(rs)])
+        for k, rulespecs in ssc_rules.items()
+    ]
+
+
 def _make_compute_check_parameters_cb(
     matcher: RulesetMatcher,
 ) -> Callable[
@@ -2448,7 +2462,9 @@ class ConfigCache:
 
         def make_active_checks() -> Sequence[SSCRules]:
             configured_checks: list[SSCRules] = []
-            for plugin_name, ruleset in sorted(active_checks.items(), key=lambda x: x[0]):
+            for plugin_name, ruleset in sorted(
+                _parsed_ssc_rules(active_checks), key=lambda x: x[0]
+            ):
                 # Skip Check_MK HW/SW Inventory for all ping hosts, even when the
                 # user has enabled the inventory for ping only hosts
                 if plugin_name == "cmk_inv" and self.is_ping_host(host_name):
@@ -2575,7 +2591,7 @@ class ConfigCache:
             # over config.special_agents.
             # We now sort the matching special agents by their name to at least get
             # a deterministic order of the special agents.
-            for agentname, ruleset in sorted(special_agents.items()):
+            for agentname, ruleset in sorted(_parsed_ssc_rules(special_agents)):
                 params = self.ruleset_matcher.get_host_values(host_name, ruleset)
                 if params:
                     # we have match type first, so pick the first.
@@ -2638,18 +2654,18 @@ class ConfigCache:
         # consider making the hosts an argument. Sometimes we only need one.
 
         def _compose_filtered_ssc_rules(
-            ssc_config: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]],
+            ssc_config: Iterable[tuple[str, Sequence[RuleSpec[Mapping[str, object]]]]],
         ) -> Sequence[tuple[str, Sequence[Mapping[str, object]]]]:
             """Get _all_ configured rulesets (not only the ones matching any host)"""
-            return [(name, [r["value"] for r in ruleset]) for name, ruleset in ssc_config.items()]
+            return [(name, [r["value"] for r in ruleset]) for name, ruleset in ssc_config]
 
         return {
             **password_store.load(password_store.password_store_path()),
             **PreprocessingResult.from_config(
-                _compose_filtered_ssc_rules(active_checks)
+                _compose_filtered_ssc_rules(_parsed_ssc_rules(active_checks))
             ).ad_hoc_secrets,
             **PreprocessingResult.from_config(
-                _compose_filtered_ssc_rules(special_agents)
+                _compose_filtered_ssc_rules(_parsed_ssc_rules(special_agents))
             ).ad_hoc_secrets,
         }
 

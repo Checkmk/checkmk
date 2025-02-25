@@ -419,15 +419,15 @@ test-unit-omdlib:
 		tests/unit/omdlib/
 
 test-doctest:
-	cd .. && \
-	    $(BAZEL_CMD) test //cmk:doctest
+	$(BAZEL_CMD) test //cmk:doctest | tee ../results/$@.txt; \
+	exit $${PIPESTATUS[0]}
 
 test-unit:
-	cd .. && \
-	    $(BAZEL_CMD) test --test_verbose_timeout_warnings //tests/unit:all \
+	$(BAZEL_CMD) test --test_verbose_timeout_warnings //tests/unit:all \
 	    --test_env=TZ=$(RANDOM_TZ) \
 	    --test_arg="-m" --test_arg="not slow" \
-	    --test_arg="--numprocesses=4"
+	    --test_arg="--numprocesses=4" | tee ../results/$@.txt; \
+	exit $${PIPESTATUS[0]}
 
 test-unit-docker:
 	../scripts/run-in-docker.sh '\

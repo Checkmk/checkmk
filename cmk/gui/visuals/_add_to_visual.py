@@ -30,6 +30,7 @@ from cmk.gui.type_defs import Choices, VisualContext
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.regex import validate_regex
 from cmk.gui.valuespec import AjaxDropdownChoice
 from cmk.gui.visuals.type import visual_type_registry
 
@@ -219,6 +220,7 @@ def add_to_report_choices_autocompleter(value: str, params: dict) -> Choices:
 
 
 def _get_visual_choices(visual_type: str, value: str) -> Choices:
+    validate_regex(value, varname=None)
     match_pattern = re.compile(value, re.IGNORECASE)
     matching_visuals = []
     for name, content in sorted(visual_type_registry[f"{visual_type}"]().permitted_visuals.items()):

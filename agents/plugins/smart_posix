@@ -27,6 +27,7 @@ main() {
 
         # Run smartctl with the extracted device information
         printf '%s\n' "$device_info" | xargs smartctl --all --json=c
+        printf "\n"
     done
 }
 

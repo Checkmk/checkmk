@@ -1405,11 +1405,25 @@ def recipient() -> QuickSetupStage:
                                                     elements=[
                                                         String(
                                                             title=Title("Name of the macro"),
+                                                            custom_validate=[
+                                                                not_empty(
+                                                                    error_msg=Message(
+                                                                        "Please enter a name."
+                                                                    )
+                                                                )
+                                                            ],
                                                         ),
                                                         String(
                                                             title=Title(
                                                                 "Required match (regular expression)"
                                                             ),
+                                                            custom_validate=[
+                                                                not_empty(
+                                                                    error_msg=Message(
+                                                                        "Please enter a required match."
+                                                                    )
+                                                                )
+                                                            ],
                                                         ),
                                                     ],
                                                 ),

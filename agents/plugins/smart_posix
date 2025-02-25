@@ -27,7 +27,8 @@ main() {
 
         # Run smartctl with the extracted device information
         smartctl --all --json=c $device_info
-done
+        printf "\n"
+    done
 }
 
 [ -z "${MK_SOURCE_ONLY}" ] && main

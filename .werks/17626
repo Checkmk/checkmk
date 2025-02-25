@@ -5,7 +5,7 @@ Component: checks
 Date: 1740134923
 Edition: cre
 Level: 1
-Version: 2.2.0p40
+Version: 2.2.0p41
 
 This only affects users that have the "_Periodic service discovery_" rule configred to "_Automatically update service configuration_" *and* set the mode to "_Refresh all services and host labels (tabula rasa)_".
 

@@ -36,7 +36,7 @@ from ._graph_specification import (
 from ._legacy import get_unit_info, LegacyUnitSpecification, UnitInfo
 from ._metric_operation import clean_time_series_point, LineType, RRDData
 from ._rrd_fetch import fetch_rrd_data_for_graph
-from ._time_series import TimeSeries, TimeSeriesValue, Timestamp
+from ._time_series import TimeSeries, TimeSeriesValue
 from ._unit import user_specific_unit, UserSpecificUnit
 from ._utils import SizeEx
 
@@ -111,15 +111,15 @@ class GraphArtwork(BaseModel):
     time_axis: TimeAxis
     mark_requested_end_time: bool
     # Displayed range
-    start_time: Timestamp
-    end_time: Timestamp
+    start_time: int
+    end_time: int
     step: Seconds
     explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None
     requested_vrange: tuple[float, float] | None
-    requested_start_time: Timestamp
-    requested_end_time: Timestamp
+    requested_start_time: int
+    requested_end_time: int
     requested_step: str | Seconds
-    pin_time: Timestamp | None
+    pin_time: int | None
     # Definition itself, for reproducing the graph
     definition: GraphRecipe
     # Display id to avoid mixups in our JS code when rendering the same graph multiple times in
@@ -1005,9 +1005,7 @@ def _remove_useless_zeroes(label: str) -> str:
 #   '----------------------------------------------------------------------'
 
 
-def _compute_graph_t_axis(
-    start_time: Timestamp, end_time: Timestamp, width: int, step: Seconds
-) -> TimeAxis:
+def _compute_graph_t_axis(start_time: int, end_time: int, width: int, step: Seconds) -> TimeAxis:
     # Depending on which time range is being shown we have different
     # steps of granularity
 

@@ -6,14 +6,12 @@
 from collections.abc import Callable, Iterator, Sequence
 from statistics import fmean
 
-Timestamp = int
-
-TimeWindow = tuple[Timestamp, Timestamp, int]
+TimeWindow = tuple[int, int, int]
 TimeSeriesValue = float | None
 TimeSeriesValues = Sequence[TimeSeriesValue]
 
 
-def rrd_timestamps(time_window: TimeWindow) -> list[Timestamp]:
+def rrd_timestamps(time_window: TimeWindow) -> list[int]:
     start, end, step = time_window
     return [] if step == 0 else [t + step for t in range(start, end, step)]
 
@@ -120,7 +118,7 @@ class TimeSeries:
 
         return dwsa
 
-    def time_data_pairs(self) -> list[tuple[Timestamp, TimeSeriesValue]]:
+    def time_data_pairs(self) -> list[tuple[int, TimeSeriesValue]]:
         return list(zip(rrd_timestamps(self.twindow), self.values))
 
     def __repr__(self) -> str:

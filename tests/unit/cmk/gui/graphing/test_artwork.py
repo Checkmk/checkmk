@@ -27,7 +27,7 @@ from cmk.gui.graphing._artwork import (
     TimeAxisLabel,
 )
 from cmk.gui.graphing._graph_specification import FixedVerticalRange, MinimalVerticalRange
-from cmk.gui.graphing._time_series import TimeSeries, TimeSeriesValue, Timestamp
+from cmk.gui.graphing._time_series import TimeSeries, TimeSeriesValue
 from cmk.gui.graphing._utils import SizeEx
 
 
@@ -671,8 +671,8 @@ def test_fringe(
     ],
 )
 def test_compute_graph_t_axis(
-    start_time: Timestamp,
-    end_time: Timestamp,
+    start_time: int,
+    end_time: int,
     width: int,
     step: int,
     expected_result: TimeAxis,

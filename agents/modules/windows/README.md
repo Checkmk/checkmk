@@ -79,7 +79,7 @@ In one turn the script makes two calls:
 
 ```bat
 :: build_the_cached.cmd <ARTEFACT_DIR> <CREDENTIALS> <CACHE_URL> <PYTHON_VERSION> <PYTHON_SUBVERSION>
-build_the_cached.cmd artefact_dir credentials url 3.12 1
+build_the_cached.cmd artefact_dir credentials url 3.12 9
 ```
 
 #### Caching

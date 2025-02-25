@@ -23,6 +23,7 @@ class ConflictType(enum.Enum):
     add_headers_incompatible = "add-headers-incompatible"
     expect_response_header = "expect-response-header"
     cant_have_regex_and_string = "cant-have-regex-and-string"
+    only_status_codes_allowed = "only-status-codes-allowed"
 
 
 class HTTP10NotSupported(enum.Enum):
@@ -51,6 +52,11 @@ class CantHaveRegexAndString(enum.Enum):
     regex = "regex"
 
 
+class OnlyStatusCodesAllowed(enum.Enum):
+    skip = "skip"
+    ignore = "ignore"
+
+
 @dataclass(frozen=True, kw_only=True)
 class Config:
     http_1_0_not_supported: HTTP10NotSupported = HTTP10NotSupported.skip
@@ -58,6 +64,7 @@ class Config:
     add_headers_incompatible: AdditionalHeaders = AdditionalHeaders.skip
     expect_response_header: ExpectResponseHeader = ExpectResponseHeader.skip
     cant_have_regex_and_string: CantHaveRegexAndString = CantHaveRegexAndString.skip
+    only_status_codes_allowed: OnlyStatusCodesAllowed = OnlyStatusCodesAllowed.skip
 
 
 def _migrate_header(header: str) -> dict[str, str] | None:
@@ -112,8 +119,6 @@ def _migrate_expect_response(response: list[str]) -> list[int]:
     for item in response:
         if (status := re.search(r"\d{3}", item)) is not None:
             result.append(int(status.group()))
-        else:
-            raise ValueError(f"Invalid status code: {item}")
     return result
 
 
@@ -266,11 +271,12 @@ def detect_conflicts(config: Config, rule_value: Mapping[str, object]) -> Confli
                 type_="cant_post_data_with_get_delete_head",
                 mode_fields=["method", "post_data"],
             )
-        try:
-            migrated_expect_response = _migrate_expect_response(mode.expect_response or [])
-        except ValueError:
+        migrated_expect_response = _migrate_expect_response(mode.expect_response or [])
+        if config.only_status_codes_allowed is OnlyStatusCodesAllowed.skip and (
+            len(migrated_expect_response) != len(mode.expect_response or [])
+        ):
             return Conflict(
-                type_="only_status_codes_allowed",
+                type_=ConflictType.only_status_codes_allowed,
                 mode_fields=["expect_response"],
             )
         if value.uses_https() and value.disable_sni:
@@ -365,6 +371,18 @@ def add_migrate_parsing(parser: argparse.ArgumentParser) -> None:
                 f"{CantHaveRegexAndString.skip.value} (default): do not migrate rule",
                 f"{CantHaveRegexAndString.string.value}: create rule choosing string, if two options are available",
                 f"{CantHaveRegexAndString.regex.value}: create rule choosing regex, if two options are available",
+            ]
+        ),
+    )
+    parser.add_argument(
+        f"--{ConflictType.only_status_codes_allowed.value}",
+        default=OnlyStatusCodesAllowed.skip.value,
+        choices=[e.value for e in OnlyStatusCodesAllowed],
+        help="; ".join(
+            [
+                "conflict: `Strings to expect in server response` must be a three-digit status code for migration",
+                f"{OnlyStatusCodesAllowed.skip.value} (default): do not migrate rule",
+                f"{OnlyStatusCodesAllowed.ignore.value}: create rule without incompatible entries",
             ]
         ),
     )

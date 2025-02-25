@@ -40,6 +40,7 @@ from cmk.update_config.http.conflicts import (
     ExpectResponseHeader,
     HostType,
     HTTP10NotSupported,
+    OnlyStatusCodesAllowed,
     SSLIncompatible,
 )
 from cmk.update_config.http.migrate import migrate
@@ -945,7 +946,7 @@ EXAMPLE_94: Mapping[str, object] = {
         (
             EXAMPLE_44,
             Conflict(
-                type_="only_status_codes_allowed",
+                type_=ConflictType.only_status_codes_allowed,
                 mode_fields=["expect_response"],
             ),
         ),
@@ -1511,15 +1512,22 @@ def test_helper_migrate_expect_response() -> None:
 
 
 @pytest.mark.parametrize(
-    "rule_value, expected",
+    "rule_value, config, expected",
     [
-        (EXAMPLE_27, None),
-        (EXAMPLE_45, ServerResponse(expected=[])),
+        (EXAMPLE_27, DEFAULT, None),
+        (EXAMPLE_45, DEFAULT, ServerResponse(expected=[])),
+        (
+            EXAMPLE_44,
+            Config(only_status_codes_allowed=OnlyStatusCodesAllowed.ignore),
+            ServerResponse(expected=[]),
+        ),
     ],
 )
-def test_migrate_expect_response(rule_value: Mapping[str, object], expected: object) -> None:
+def test_migrate_expect_response(
+    rule_value: Mapping[str, object], config: Config, expected: object
+) -> None:
     # Assemble
-    for_migration = detect_conflicts(DEFAULT, rule_value)
+    for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)

@@ -68,20 +68,28 @@ export async function fetchData<OutputType>(
 export function setupAutocompleter<OutputType>(getAutocompleter: () => Autocompleter | null): {
   input: Ref<string | undefined>
   output: Ref<OutputType | undefined>
+  error: Ref<string>
 } {
   const input = ref<string>()
   const output = ref<OutputType>()
+  const error = ref<string>('')
 
   watch([input, getAutocompleter], async ([_, autocompleter]) => {
     if (autocompleter === null) {
       return
     }
     if (autocompleter.fetch_method === 'ajax_vs_autocomplete') {
-      await fetchData<OutputType>(input.value, autocompleter.data).then((result: OutputType) => {
-        output.value = result
-      })
+      error.value = ''
+      try {
+        output.value = await fetchData<OutputType>(input.value, autocompleter.data)
+      } catch (e: unknown) {
+        const errorDescription = (e as AutoCompleterResponseError).response?.result
+        console.log('error!', errorDescription)
+        error.value = errorDescription || ''
+        output.value = undefined
+      }
     }
   })
 
-  return { input, output }
+  return { input, output, error }
 }

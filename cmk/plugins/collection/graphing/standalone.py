@@ -1573,7 +1573,7 @@ metric_nvme_critical_warning = metrics.Metric(
 )
 metric_nvme_available_spare = metrics.Metric(
     name="nvme_available_spare",
-    title=Title("Available Spare"),
+    title=Title("Available spare"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.YELLOW,
 )

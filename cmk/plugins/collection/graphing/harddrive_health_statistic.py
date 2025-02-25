@@ -35,7 +35,7 @@ metric_harddrive_reallocated_events = metrics.Metric(
     name="harddrive_reallocated_events",
     title=Title("Harddrive reallocated events"),
     unit=UNIT_COUNTER,
-    color=metrics.Color.RED,
+    color=metrics.Color.DARK_YELLOW,
 )
 metric_harddrive_reallocated_sectors = metrics.Metric(
     name="harddrive_reallocated_sectors",

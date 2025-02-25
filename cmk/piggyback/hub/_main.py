@@ -20,13 +20,13 @@ from cmk.ccc.daemon import daemonize, pid_file_lock
 
 from cmk.messaging import Channel, DeliveryTag, QueueName, set_logging_level
 
-from .config import CONFIG_QUEUE, PiggybackHubConfig, save_config
-from .payload import (
+from ._config import CONFIG_QUEUE, PiggybackHubConfig, save_config
+from ._payload import (
     PiggybackPayload,
     save_payload_on_message,
     SendingPayloadProcess,
 )
-from .utils import APP_NAME, ReceivingProcess
+from ._utils import APP_NAME, ReceivingProcess
 
 VERBOSITY_MAP = {
     0: logging.INFO,

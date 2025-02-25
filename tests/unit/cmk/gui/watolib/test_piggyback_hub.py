@@ -10,7 +10,7 @@ from cmk.utils.hostaddress import HostAddress
 
 from cmk.gui.watolib.piggyback_hub import compute_new_config
 
-from cmk.piggyback.hub.config import PiggybackHubConfig
+from cmk.piggyback.hub import PiggybackHubConfig
 
 
 def test_update_sites_with_hub_config() -> None:

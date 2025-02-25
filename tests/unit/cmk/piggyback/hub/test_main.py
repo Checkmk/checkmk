@@ -11,12 +11,12 @@ from unittest.mock import Mock
 from cmk.utils.hostaddress import HostName
 
 from cmk.messaging import DeliveryTag
-from cmk.piggyback.hub.config import (
+from cmk.piggyback.hub._config import (
     load_config,
     PiggybackHubConfig,
 )
-from cmk.piggyback.hub.main import handle_received_config
-from cmk.piggyback.hub.paths import create_paths
+from cmk.piggyback.hub._main import handle_received_config
+from cmk.piggyback.hub._paths import create_paths
 
 
 def test_handle_received_config(tmp_path: Path) -> None:

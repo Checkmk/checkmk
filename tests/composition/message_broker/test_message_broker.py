@@ -59,7 +59,7 @@ class TestCMKBrokerTest:
             with broker_pong(central_site) as pong:
                 assert pong.returncode is None  # it's running
 
-    @pytest.skip("Flaky test in nightly build of CME")  # type: ignore[misc]
+    @pytest.mark.skip("Flaky test in nightly build of CME")
     def test_pong_received_message(self, central_site: Site, remote_site: Site) -> None:
         """Test if the `pong_received_message` works as intended"""
         with rabbitmq_info_on_failure([central_site, remote_site]):
@@ -79,7 +79,7 @@ def _next_free_port(site: Site, key: str, port: str) -> int:
 
 @skip_if_saas_edition
 class TestMessageBroker:
-    @pytest.skip("Flaky test in nightly build of CME")  # type: ignore[misc]
+    @pytest.mark.skip("Flaky test in nightly build of CME")
     def test_message_broker_central_remote(self, central_site: Site, remote_site: Site) -> None:
         """Test if the connection between central and remote site works"""
         with rabbitmq_info_on_failure([central_site, remote_site]):

@@ -1561,10 +1561,40 @@ def _make_compute_check_parameters_cb(
         params: Mapping[str, object],
     ) -> TimespecificParameters:
         return compute_check_parameters(
-            matcher, check_plugins, host_name, plugin_name, item, service_labels, params, None
+            matcher, check_plugins, host_name, plugin_name, item, service_labels, params
         )
 
     return callback
+
+
+# TODO: simplify this
+def compute_enforced_service_parameters(
+    matcher: RulesetMatcher,
+    plugins: Mapping[CheckPluginName, CheckPlugin],
+    host_name: HostName,
+    plugin_name: CheckPluginName,
+    item: Item,
+    service_labels: Labels,
+    params: Mapping[str, object],
+    configured_parameters: TimespecificParameters,
+) -> TimespecificParameters:
+    """Compute effective check parameters for enforced services.
+
+    Honoring (in order of precedence):
+     * the configured parameters
+     * the plugins defaults
+    """
+    check_plugin = agent_based_register.get_check_plugin(plugin_name, plugins)
+    if check_plugin is None:  # handle vanished check plug-in
+        return TimespecificParameters()
+
+    return TimespecificParameters(
+        [
+            *configured_parameters.entries,
+            TimespecificParameterSet.from_parameters(params),
+            TimespecificParameterSet.from_parameters(check_plugin.check_default_parameters or {}),
+        ]
+    )
 
 
 def compute_check_parameters(
@@ -1575,7 +1605,6 @@ def compute_check_parameters(
     item: Item,
     service_labels: Labels,
     params: Mapping[str, object],
-    configured_parameters: TimespecificParameters | None = None,
 ) -> TimespecificParameters:
     """Compute effective check parameters.
 
@@ -1588,15 +1617,14 @@ def compute_check_parameters(
     if check_plugin is None:  # handle vanished check plug-in
         return TimespecificParameters()
 
-    if configured_parameters is None:
-        configured_parameters = _get_configured_parameters(
-            matcher,
-            host_name,
-            plugin_name,
-            service_labels,
-            ruleset_name=check_plugin.check_ruleset_name,
-            item=item,
-        )
+    configured_parameters = _get_configured_parameters(
+        matcher,
+        host_name,
+        plugin_name,
+        service_labels,
+        ruleset_name=check_plugin.check_ruleset_name,
+        item=item,
+    )
 
     return TimespecificParameters(
         [
@@ -2272,7 +2300,7 @@ class ConfigCache:
                         check_plugin_name=check_plugin_name,
                         item=item,
                         description=descr,
-                        parameters=compute_check_parameters(
+                        parameters=compute_enforced_service_parameters(
                             self.ruleset_matcher,
                             plugins,
                             self.effective_host(hostname, descr, labels),

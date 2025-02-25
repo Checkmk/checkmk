@@ -690,7 +690,12 @@ def test_compute_graph_t_axis(
 
 
 def test_order_graph_curves_for_legend_and_mouse_hover_curves() -> None:
-    rrd_data = TimeSeries([1.0, 2.0, 1.0])
+    rrd_data = TimeSeries(
+        start=1,
+        end=2,
+        step=1,
+        values=[],
+    )
     assert list(
         order_graph_curves_for_legend_and_mouse_hover(
             [

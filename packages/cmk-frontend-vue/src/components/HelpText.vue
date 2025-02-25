@@ -58,6 +58,7 @@ const closeHelp = () => {
         side="top"
         align="start"
         as-child
+        class="help-text__popup"
         @pointer-down-outside="(e: Event) => checkClosing(e as MouseEvent)"
         @escape-key-down="closeHelp"
       >
@@ -92,6 +93,10 @@ body.inline_help_as_text .help-text__icon {
     outline: none;
     box-shadow: none;
   }
+}
+
+.help-text__popup {
+  z-index: 1000;
 }
 
 .help-text__content {

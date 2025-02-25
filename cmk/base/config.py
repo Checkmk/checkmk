@@ -2241,7 +2241,7 @@ class ConfigCache:
                     ),
                 )
 
-        return table
+        return self.__enforced_services_table.setdefault(hostname, table)
 
     @staticmethod
     def _sanitize_enforced_entry(

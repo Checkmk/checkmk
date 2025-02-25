@@ -469,7 +469,7 @@ function Start-MsiSigning {
     }
 
     Write-Host "MSI signing..." -ForegroundColor White
-    & ./scripts/sign_code.cmd $arte/check_mk_agent.msi
+    & ./scripts/sign_code.cmd $arte\check_mk_agent.msi
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Failed sign MSI " $LASTEXITCODE -foreground Red
         return

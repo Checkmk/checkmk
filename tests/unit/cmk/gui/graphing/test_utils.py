@@ -1868,8 +1868,8 @@ def test_graph_template_from_graph(
                 consolidation_function=None,
                 omit_zero_metrics=False,
                 metrics=[
-                    MetricDefinition(Metric("metric-name-u1"), "stack", "metric-name-u1"),
                     MetricDefinition(Metric("metric-name-l1"), "-stack", "metric-name-l1"),
+                    MetricDefinition(Metric("metric-name-u1"), "stack", "metric-name-u1"),
                     MetricDefinition(Metric("metric-name-u2"), "line", "metric-name-u2"),
                     MetricDefinition(Metric("metric-name-l2"), "-line", "metric-name-l2"),
                 ],

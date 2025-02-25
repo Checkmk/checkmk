@@ -388,8 +388,8 @@ class GraphTemplate:
             ranges_min.append(lower_range.min)
             ranges_max.append(lower_range.max)
 
-        metrics_ = [_parse_quantity(l, "stack") for l in graph.upper.compound_lines] + [
-            _parse_quantity(l, "-stack") for l in graph.lower.compound_lines
+        metrics_ = [_parse_quantity(l, "-stack") for l in graph.lower.compound_lines] + [
+            _parse_quantity(l, "stack") for l in graph.upper.compound_lines
         ]
         scalars: list[ScalarDefinition] = []
         for line in graph.upper.simple_lines:

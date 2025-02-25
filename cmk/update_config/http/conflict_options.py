@@ -17,6 +17,7 @@ class ConflictType(enum.Enum):
     expect_response_header = "expect-response-header"
     only_status_codes_allowed = "only-status-codes-allowed"
     cant_post_data = "cant-post-data"
+    method_unavailable = "method-unavailable"
     cant_have_regex_and_string = "cant-have-regex-and-string"
 
 
@@ -173,6 +174,30 @@ class CantPostData(enum.Enum):
         return "the option `Send HTTP POST data` is incompatible with GET, DELETE, HEAD"
 
 
+class MethodUnavailable(enum.Enum):
+    skip = "skip"
+    ignore = "ignore"
+
+    @classmethod
+    def type_(cls) -> ConflictType:
+        return ConflictType.method_unavailable
+
+    @classmethod
+    def default(cls) -> "MethodUnavailable":
+        return cls.skip
+
+    def help(self) -> str:
+        match self:
+            case MethodUnavailable.skip:
+                return "do not migrate rule"
+            case MethodUnavailable.ignore:
+                return "ignore this option during migration, use `GET` method or `POST` if post data is present"
+
+    @classmethod
+    def help_header(cls) -> str:
+        return "v2 does not support OPTIONS, TRACE, CONNECT, CONNECT_POST, PROPFIND options"
+
+
 class CantHaveRegexAndString(enum.Enum):
     skip = "skip"
     string = "string"
@@ -207,6 +232,7 @@ class Config(BaseModel):
     expect_response_header: ExpectResponseHeader = ExpectResponseHeader.default()
     only_status_codes_allowed: OnlyStatusCodesAllowed = OnlyStatusCodesAllowed.default()
     cant_post_data: CantPostData = CantPostData.default()
+    method_unavailable: MethodUnavailable = MethodUnavailable.default()
     cant_have_regex_and_string: CantHaveRegexAndString = CantHaveRegexAndString.default()
 
 
@@ -218,6 +244,7 @@ def add_migrate_parsing(parser: ArgumentParser) -> None:
     _add_argument(parser, ExpectResponseHeader, ExpectResponseHeader.default())
     _add_argument(parser, OnlyStatusCodesAllowed, OnlyStatusCodesAllowed.default())
     _add_argument(parser, CantPostData, CantPostData.default())
+    _add_argument(parser, MethodUnavailable, MethodUnavailable.default())
     _add_argument(parser, CantHaveRegexAndString, CantHaveRegexAndString.default())
 
 

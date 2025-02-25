@@ -21,6 +21,7 @@ from cmk.update_config.http.conflict_options import (
     ConflictType,
     ExpectResponseHeader,
     HTTP10NotSupported,
+    MethodUnavailable,
     OnlyStatusCodesAllowed,
     SSLIncompatible,
 )
@@ -236,9 +237,15 @@ def detect_conflicts(config: Config, rule_value: Mapping[str, object]) -> Confli
                 type_=ConflictType.cant_have_regex_and_string,
                 mode_fields=["expect_regex", "expect_string"],
             )
-        if mode.method in ["OPTIONS", "TRACE", "CONNECT", "CONNECT_POST", "PROPFIND"]:
+        if config.method_unavailable is MethodUnavailable.skip and mode.method in [
+            "OPTIONS",
+            "TRACE",
+            "CONNECT",
+            "CONNECT_POST",
+            "PROPFIND",
+        ]:
             return Conflict(
-                type_="method_unavailable",
+                type_=ConflictType.method_unavailable,
                 mode_fields=["method"],
             )
         if (

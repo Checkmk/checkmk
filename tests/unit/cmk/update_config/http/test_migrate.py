@@ -36,6 +36,7 @@ from cmk.update_config.http.conflict_options import (
     ConflictType,
     ExpectResponseHeader,
     HTTP10NotSupported,
+    MethodUnavailable,
     OnlyStatusCodesAllowed,
     SSLIncompatible,
 )
@@ -775,6 +776,67 @@ EXAMPLE_94: Mapping[str, object] = {
 }
 
 
+EXAMPLE_95: Mapping[str, object] = {
+    "name": "method",
+    "host": HOST_1,
+    "mode": (
+        "url",
+        {
+            "method": "OPTIONS",
+            "post_data": {"data": "", "content_type": "gif"},
+        },
+    ),
+}
+
+EXAMPLE_96: Mapping[str, object] = {
+    "name": "method",
+    "host": HOST_1,
+    "mode": (
+        "url",
+        {
+            "method": "TRACE",
+            "post_data": {"data": "", "content_type": "gif"},
+        },
+    ),
+}
+
+EXAMPLE_97: Mapping[str, object] = {
+    "name": "method",
+    "host": HOST_1,
+    "mode": (
+        "url",
+        {
+            "method": "CONNECT",
+            "post_data": {"data": "", "content_type": "gif"},
+        },
+    ),
+}
+
+EXAMPLE_98: Mapping[str, object] = {
+    "name": "method",
+    "host": HOST_1,
+    "mode": (
+        "url",
+        {
+            "method": "CONNECT_POST",
+            "post_data": {"data": "", "content_type": "gif"},
+        },
+    ),
+}
+
+EXAMPLE_99: Mapping[str, object] = {
+    "name": "method",
+    "host": HOST_1,
+    "mode": (
+        "url",
+        {
+            "method": "PROPFIND",
+            "post_data": {"data": "", "content_type": "gif"},
+        },
+    ),
+}
+
+
 @pytest.mark.parametrize(
     "rule_value, conflict",
     [
@@ -907,35 +969,35 @@ EXAMPLE_94: Mapping[str, object] = {
         (
             EXAMPLE_59,
             Conflict(
-                type_="method_unavailable",
+                type_=ConflictType.method_unavailable,
                 mode_fields=["method"],
             ),
         ),
         (
             EXAMPLE_60,
             Conflict(
-                type_="method_unavailable",
+                type_=ConflictType.method_unavailable,
                 mode_fields=["method"],
             ),
         ),
         (
             EXAMPLE_61,
             Conflict(
-                type_="method_unavailable",
+                type_=ConflictType.method_unavailable,
                 mode_fields=["method"],
             ),
         ),
         (
             EXAMPLE_62,
             Conflict(
-                type_="method_unavailable",
+                type_=ConflictType.method_unavailable,
                 mode_fields=["method"],
             ),
         ),
         (
             EXAMPLE_63,
             Conflict(
-                type_="method_unavailable",
+                type_=ConflictType.method_unavailable,
                 mode_fields=["method"],
             ),
         ),
@@ -1233,6 +1295,81 @@ def test_migrate_document(
             EXAMPLE_51,
             Config(cant_post_data=CantPostData.prefermethod),
             (HttpMethod.GET, None),
+        ),
+        (
+            EXAMPLE_59,
+            Config(method_unavailable=MethodUnavailable.ignore),
+            (HttpMethod.GET, None),
+        ),
+        (
+            EXAMPLE_60,
+            Config(method_unavailable=MethodUnavailable.ignore),
+            (HttpMethod.GET, None),
+        ),
+        (
+            EXAMPLE_61,
+            Config(method_unavailable=MethodUnavailable.ignore),
+            (HttpMethod.GET, None),
+        ),
+        (
+            EXAMPLE_62,
+            Config(method_unavailable=MethodUnavailable.ignore),
+            (HttpMethod.GET, None),
+        ),
+        (
+            EXAMPLE_63,
+            Config(method_unavailable=MethodUnavailable.ignore),
+            (HttpMethod.GET, None),
+        ),
+        (
+            EXAMPLE_95,
+            Config(method_unavailable=MethodUnavailable.ignore),
+            (
+                HttpMethod.POST,
+                SendData(
+                    send_data=SendDataInner(content="", content_type=(SendDataType.CUSTOM, "gif"))
+                ),
+            ),
+        ),
+        (
+            EXAMPLE_96,
+            Config(method_unavailable=MethodUnavailable.ignore),
+            (
+                HttpMethod.POST,
+                SendData(
+                    send_data=SendDataInner(content="", content_type=(SendDataType.CUSTOM, "gif"))
+                ),
+            ),
+        ),
+        (
+            EXAMPLE_97,
+            Config(method_unavailable=MethodUnavailable.ignore),
+            (
+                HttpMethod.POST,
+                SendData(
+                    send_data=SendDataInner(content="", content_type=(SendDataType.CUSTOM, "gif"))
+                ),
+            ),
+        ),
+        (
+            EXAMPLE_98,
+            Config(method_unavailable=MethodUnavailable.ignore),
+            (
+                HttpMethod.POST,
+                SendData(
+                    send_data=SendDataInner(content="", content_type=(SendDataType.CUSTOM, "gif"))
+                ),
+            ),
+        ),
+        (
+            EXAMPLE_99,
+            Config(method_unavailable=MethodUnavailable.ignore),
+            (
+                HttpMethod.POST,
+                SendData(
+                    send_data=SendDataInner(content="", content_type=(SendDataType.CUSTOM, "gif"))
+                ),
+            ),
         ),
     ],
 )

@@ -137,6 +137,18 @@ def _migrate_url_params(
             method = {"method": (_migrate_method(url_params.method), None)}
         case "GET" | "HEAD" | "DELETE", _send_data, CantPostData.skip:
             raise NotImplementedError()
+        case (
+            "OPTIONS" | "TRACE" | "CONNECT" | "CONNECT_POST" | "PROPFIND",
+            None,
+            _,
+        ):
+            method = {"method": ("get", None)}
+        case (
+            "OPTIONS" | "TRACE" | "CONNECT" | "CONNECT_POST" | "PROPFIND",
+            send_data,
+            _,
+        ):
+            method = {"method": ("post", send_data)}
     match url_params.no_body:
         case None:
             document_body: Mapping[str, object] = {"document_body": "fetch"}

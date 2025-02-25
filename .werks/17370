@@ -1,0 +1,13 @@
+Title: Ship python package "oracledb" with omd
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1740491012
+Edition: cre
+Level: 1
+Version: 2.2.0p41
+
+The active check <tt>check_sql</tt> uses the python package <tt>oracledb</tt>.
+Previously, the user needed to install this package by hand. This situation may have caused issues during an omd update regarding python requirements resolution.
+
+In order to avoid such issues, we simply now ship the python package and avoid the need for a user to install the package by hand.

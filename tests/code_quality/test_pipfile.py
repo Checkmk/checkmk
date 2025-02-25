@@ -262,6 +262,7 @@ CEE_UNUSED_PACKAGES = [
     "more-itertools",
     "multidict",
     "openapi-spec-validator",
+    "oracledb",  # actually used now by check_sql but those files are not yet checked to to missing .py extension (CMK-21797)
     "ordered-set",
     "pbr",
     "ply",

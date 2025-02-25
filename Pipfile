@@ -152,6 +152,7 @@ apispec = "==5.2.2"  # direct dependency
 marshmallow = "==3.19.0"  # direct dependency
 marshmallow-oneofschema = "==3.0.1"  # direct dependency
 mypy_extensions = "==0.4.3" # direct dependency
+oracledb = "==2.5.1"  # used by active check_sql
 apispec-oneofschema = "==3.0.0"  # direct dependency
 typing_extensions = "==4.9.0"   # required by pydantic
 pydantic = "==1.10.2"

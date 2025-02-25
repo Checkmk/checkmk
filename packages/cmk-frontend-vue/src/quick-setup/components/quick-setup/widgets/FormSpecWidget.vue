@@ -24,9 +24,13 @@ const validationErrors = computed((): ValidationMessages => {
 //This will set a starting value on the quick setup component for this form spec
 emit('update', formSpecId, internal)
 
-watch(internal, (newValue) => {
-  emit('update', formSpecId, newValue)
-})
+watch(
+  internal,
+  (newValue) => {
+    emit('update', formSpecId, newValue)
+  },
+  { deep: true }
+)
 </script>
 
 <template>

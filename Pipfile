@@ -158,6 +158,7 @@ psycopg2-binary = "==2.9.6"  # needed by check_sql active check
 apispec = "==6.4.0"  # direct dependency
 marshmallow = "==3.19.0"  # direct dependency
 marshmallow-oneofschema = "==3.0.1"  # direct dependency
+oracledb = "==2.5.1"  # used by active check_sql
 apispec-oneofschema = "==3.0.0"  # direct dependency
 pydantic = "==2.5.2"
 pydantic_core = "==2.14.5"  # used by pydantic and by us

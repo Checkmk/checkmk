@@ -338,6 +338,7 @@ CEE_UNUSED_PACKAGES = [
     "markupsafe",
     "more-itertools",
     "multidict",
+    "oracledb",  # actually used now by check_sql but those files are not yet checked to to missing .py extension (CMK-21797)
     "pbr",
     "ply",
     "psycopg2-binary",

@@ -47,10 +47,6 @@ export const renderContent = (
   formSpecErrors?: AllValidationMessages,
   userInput?: StageData
 ): VnodeOrNull => {
-  if (!components || components.length === 0) {
-    return null
-  }
-
   return markRaw(
     h(QuickSetupStageWidgetContent, {
       components,

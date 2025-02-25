@@ -32,8 +32,8 @@ export interface QuickSetupProps {
   /** @property {boolean} prevent-leaving - this and that */
   preventLeaving: boolean
 
-  /** @property {boolean} hideWaitLegend - When set to true will hide the spinner and "please wait" legend  */
-  hideWaitLegend?: boolean
+  /** @property {boolean} hideWaitIcon - When set to true will hide the spinner and "please wait" legend  */
+  hideWaitIcon?: boolean
 }
 
 /**
@@ -81,8 +81,8 @@ interface QuickSetupSaveAndStageContentProps extends QuickSetupSaveStageSpec {
   /** @property {WizardMode} mode - Sets the quick setup in overview or guided mode */
   mode: WizardMode
 
-  /** @property {boolean} hideWaitLegend - When set to true will hide the spinner and "please wait" legend  */
-  hideWaitLegend?: boolean
+  /** @property {boolean} hideWaitIcon - When set to true will hide the spinner and "please wait" legend  */
+  hideWaitIcon?: boolean
 }
 
 export interface QuickSetupSaveStageProps extends QuickSetupSaveAndStageContentProps {

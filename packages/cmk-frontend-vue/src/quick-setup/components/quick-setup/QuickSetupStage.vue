@@ -56,7 +56,7 @@ const { ErrorBoundary } = useErrorBoundary()
           :errors="errors"
           :actions="actions"
           :content="content || null"
-          :hide-wait-legend="!!hideWaitLegend"
+          :hide-wait-icon="!!hideWaitIcon"
         />
       </CmkCollapsible>
     </div>

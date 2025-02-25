@@ -226,11 +226,14 @@ export const fetchBackgroundJobResult = async (
  * @returns Promise<QuickSetupStageActionResponse | QuickSetupStageActionValidationResponse>
  */
 export const fetchStageBackgroundJobResult = async (
-  jobId: string
+  jobId: string,
+  siteId?: string
 ): Promise<QuickSetupStageActionResponse | QuickSetupStageActionValidationResponse> => {
+  const suffix = siteId ? `?site_id=${siteId}` : ''
+
   try {
     const { data } = await axios.get(
-      `${API_ROOT}/objects/${API_DOMAIN}_stage_action_result/${jobId}`
+      `${API_ROOT}/objects/${API_DOMAIN}_stage_action_result/${jobId}${suffix}`
     )
 
     if (data?.validation_errors || data?.background_job_exception) {

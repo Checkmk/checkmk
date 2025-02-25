@@ -20,7 +20,7 @@ defineProps<QuickSetupSaveStageProps>()
       :mode="mode"
       :actions="actions"
       :content="content || null"
-      :hide-wait-legend="!!hideWaitLegend"
+      :hide-wait-icon="!!hideWaitIcon"
     />
   </div>
 </template>

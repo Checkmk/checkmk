@@ -148,7 +148,7 @@ export const validateAndRecapStage = async (
   */
     const siteId = data.extensions.site_id
     await _waitForBackgroundJobToFinish(data.id, siteId, onLogUpdate)
-    return await quickSetupClient.fetchStageBackgroundJobResult(data.id)
+    return await quickSetupClient.fetchStageBackgroundJobResult(data.id, siteId)
   } else {
     return data as QuickSetupStageActionResponse
   }

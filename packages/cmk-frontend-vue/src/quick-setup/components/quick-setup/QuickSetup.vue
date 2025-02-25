@@ -60,7 +60,7 @@ function handleBrowserDialog(event: BeforeUnloadEvent) {
       :recap-content="stg.recapContent || null"
       :errors="stg.errors"
       :go-to-this-stage="stg.goToThisStage || null"
-      :hide-wait-legend="!!props.hideWaitLegend"
+      :hide-wait-icon="!!props.hideWaitIcon"
     />
   </ol>
   <QuickSetupSaveStage
@@ -73,7 +73,7 @@ function handleBrowserDialog(event: BeforeUnloadEvent) {
     :content="saveStage.content || null"
     :errors="saveStage.errors || []"
     :actions="saveStage.actions || []"
-    :hide-wait-legend="!!props.hideWaitLegend"
+    :hide-wait-icon="!!props.hideWaitIcon"
   />
 </template>
 

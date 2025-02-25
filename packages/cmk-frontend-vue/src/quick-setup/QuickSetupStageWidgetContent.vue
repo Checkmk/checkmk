@@ -21,6 +21,7 @@ const updateData = (id: string, value: object) => {
 
 <template>
   <CompositeWidget
+    v-if="components.length > 0"
     :items="components"
     :data="internalUserInput"
     :errors="formSpecErrors || {}"

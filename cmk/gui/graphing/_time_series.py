@@ -11,8 +11,7 @@ TimeSeriesValue = float | None
 TimeSeriesValues = Sequence[TimeSeriesValue]
 
 
-def rrd_timestamps(time_window: TimeWindow) -> list[int]:
-    start, end, step = time_window
+def rrd_timestamps(*, start: int, end: int, step: int) -> list[int]:
     return [] if step == 0 else [t + step for t in range(start, end, step)]
 
 
@@ -102,7 +101,7 @@ class TimeSeries:
 
         dwsa = []
         co: list[TimeSeriesValue] = []
-        desired_times = rrd_timestamps(twindow)
+        desired_times = rrd_timestamps(start=twindow[0], end=twindow[1], step=twindow[2])
         i = 0
         for t, val in self.time_data_pairs():
             if t > desired_times[i]:
@@ -119,7 +118,9 @@ class TimeSeries:
         return dwsa
 
     def time_data_pairs(self) -> list[tuple[int, TimeSeriesValue]]:
-        return list(zip(rrd_timestamps(self.twindow), self.values))
+        return list(
+            zip(rrd_timestamps(start=self.start, end=self.end, step=self.step), self.values)
+        )
 
     def __repr__(self) -> str:
         start, end, step = self.twindow

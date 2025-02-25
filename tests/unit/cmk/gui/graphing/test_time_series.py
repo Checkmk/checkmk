@@ -10,10 +10,14 @@ from cmk.gui.graphing._time_series import rrd_timestamps, TimeSeries, TimeSeries
 
 
 @pytest.mark.parametrize(
-    "twindow, result", [((0, 0, 0), []), ((100, 200, 25), [125, 150, 175, 200])]
+    "start, end, step, result",
+    [
+        (0, 0, 0, []),
+        (100, 200, 25, [125, 150, 175, 200]),
+    ],
 )
-def test_rrdtimestamps(twindow: TimeWindow, result: list[int]) -> None:
-    assert rrd_timestamps(twindow) == result
+def test_rrdtimestamps(start: int, end: int, step: int, result: list[int]) -> None:
+    assert rrd_timestamps(start=start, end=end, step=step) == result
 
 
 @pytest.mark.parametrize(

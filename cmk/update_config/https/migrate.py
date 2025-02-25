@@ -28,9 +28,9 @@ V1 supports HTTP/1.0 and HTTP/1.1. V2 only supports HTTP/1.1 and HTTP/2.0. HTTP/
 from collections.abc import Mapping
 from typing import assert_never, Literal
 
-from cmk.update_config.http.conflict_options import CantHaveRegexAndString, CantPostData
-from cmk.update_config.http.conflicts import ForMigration, MigratableCert, MigratableUrl
-from cmk.update_config.http.render import MIGRATE_POSTFIX
+from cmk.update_config.https.conflict_options import CantHaveRegexAndString, CantPostData
+from cmk.update_config.https.conflicts import ForMigration, MigratableCert, MigratableUrl
+from cmk.update_config.https.render import MIGRATE_POSTFIX
 
 
 def _migrate_method(method: Literal["GET", "HEAD", "DELETE", "POST", "PUT"]) -> str:

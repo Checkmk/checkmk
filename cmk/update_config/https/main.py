@@ -13,11 +13,16 @@ import pydantic
 from cmk.gui.utils import gen_id
 from cmk.gui.watolib.rulesets import Rule, Ruleset
 
-from cmk.update_config.http.conflict_options import add_migrate_parsing, Config
-from cmk.update_config.http.conflicts import Conflict, detect_conflicts, ForMigration, Migrate
-from cmk.update_config.http.migrate import migrate
-from cmk.update_config.http.render import MIGRATE_POSTFIX
-from cmk.update_config.http.search import add_search_arguments, SearchArgs, select, with_allrulesets
+from cmk.update_config.https.conflict_options import add_migrate_parsing, Config
+from cmk.update_config.https.conflicts import Conflict, detect_conflicts, ForMigration, Migrate
+from cmk.update_config.https.migrate import migrate
+from cmk.update_config.https.render import MIGRATE_POSTFIX
+from cmk.update_config.https.search import (
+    add_search_arguments,
+    SearchArgs,
+    select,
+    with_allrulesets,
+)
 
 
 class Finalize(SearchArgs):

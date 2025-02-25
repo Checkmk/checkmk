@@ -28,7 +28,7 @@ from cmk.plugins.collection.server_side_calls.httpv2 import (
     TlsVersion,
 )
 from cmk.server_side_calls_backend.config_processing import process_configuration_to_parameters
-from cmk.update_config.http.conflict_options import (
+from cmk.update_config.https.conflict_options import (
     AdditionalHeaders,
     CantConstructURL,
     CantDisableSNIWithHTTPS,
@@ -43,8 +43,8 @@ from cmk.update_config.http.conflict_options import (
     SSLIncompatible,
     V1ChecksRedirectResponse,
 )
-from cmk.update_config.http.conflicts import _migrate_expect_response, Conflict, detect_conflicts
-from cmk.update_config.http.migrate import migrate
+from cmk.update_config.https.conflicts import _migrate_expect_response, Conflict, detect_conflicts
+from cmk.update_config.https.migrate import migrate
 
 DEFAULT = Config()
 

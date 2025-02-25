@@ -12,7 +12,7 @@ from typing import Literal
 
 from pydantic import HttpUrl, ValidationError
 
-from cmk.update_config.http.conflict_options import (
+from cmk.update_config.https.conflict_options import (
     AdditionalHeaders,
     CantConstructURL,
     CantDisableSNIWithHTTPS,
@@ -27,8 +27,8 @@ from cmk.update_config.http.conflict_options import (
     SSLIncompatible,
     V1ChecksRedirectResponse,
 )
-from cmk.update_config.http.search import SearchArgs
-from cmk.update_config.http.v1_scheme import V1Cert, V1Host, V1Url, V1Value
+from cmk.update_config.https.search import SearchArgs
+from cmk.update_config.https.v1_scheme import V1Cert, V1Host, V1Url, V1Value
 
 
 class Migrate(Config, SearchArgs):

@@ -9,7 +9,7 @@ from typing import Iterable, Protocol
 
 from pydantic import BaseModel
 
-from cmk.update_config.http.search import add_search_arguments
+from cmk.update_config.https.search import add_search_arguments
 
 
 class ConflictType(enum.Enum):

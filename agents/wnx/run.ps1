@@ -313,12 +313,19 @@ function Invoke-Attach($usbip, $addr, $port) {
         return
     }
     &$usbip attach -r $addr -b $port
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "Failed to attach USB token" $LASTEXITCODE -foreground Red
-        $argSign = $False
-        return
+    for ($i = 1; $i -le 3; $i++) {
+        if ($LASTEXITCODE -eq 0) {
+            break
+        }
+        Write-Host "Waiting 2 seconds for USB to attach" -ForegroundColor White
+        Start-Sleep -Seconds 2
     }
-    Write-Host "Attached USB" -ForegroundColor Green
+    if ($LASTEXITCODE -ne 0) {
+        $argSign = $False
+        Write-Host "Failed to attach USB token" $LASTEXITCODE -foreground Red
+        throw "Attach to the signing key is not possible. Signing can't be done"
+    }
+    Write-Host "Attached USB, waiting a bit" -ForegroundColor Green
     Start-Sleep -Seconds 5
     return
 }
@@ -339,9 +346,9 @@ function Invoke-TestSigning($usbip) {
     }
 
     if (-not(Test-Path -Path $usbip -PathType Leaf)) {
-        Write-Host "$usbip doesn't exist" -ForegroundColor Red
         $argSign = $False
-        return
+        Write-Host "$usbip doesn't exist" -ForegroundColor Red
+        throw 
     }
 
     if (-not (Test-Administrator)) {
@@ -353,9 +360,9 @@ function Invoke-TestSigning($usbip) {
     Write-Host "check port"
     &$usbip port
     if ($LastExitCode -eq 3) {
-        Write-Host "No chance"
         $argSign = $False
-        return
+        Write-Host "No chance"
+        throw 
     }
     Write-Host "try to detach"
 
@@ -402,6 +409,7 @@ function Start-BinarySigning {
         & ./scripts/sign_code.cmd $file
         if ($LASTEXITCODE -ne 0) {
             Write-Error "Error Signing, error code is $LASTEXITCODE" -ErrorAction Stop
+            throw
         }
         Add-HashLine $file $hash_file
 
@@ -474,14 +482,14 @@ function Start-MsiSigning {
     & ./scripts/sign_code.cmd $arte\check_mk_agent.msi
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Failed sign MSI " $LASTEXITCODE -foreground Red
-        return
+        throw
     }
     Add-HashLine $arte/check_mk_agent.msi $hash_file
     Invoke-Detach $argSign
     & ./scripts/call_signing_tests.cmd
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Failed test MSI " $LASTEXITCODE -foreground Red
-        return
+        throw
     }
     & py "-3" "./scripts/check_hashes.py" "$hash_file"
     if ($LASTEXITCODE -ne 0) {
@@ -544,7 +552,7 @@ try {
     Update-ArtefactDirs
     Clear-Artifacts
     Clear-All
-    
+
     # BUILDING
     Build-Agent
     Build-Package $argCtl "host/cmk-agent-ctl" "Controller"

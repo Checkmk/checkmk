@@ -15,8 +15,8 @@ class ConflictType(enum.Enum):
     ssl_incompatible = "ssl-incompatible"
     add_headers_incompatible = "add-headers-incompatible"
     expect_response_header = "expect-response-header"
-    cant_have_regex_and_string = "cant-have-regex-and-string"
     only_status_codes_allowed = "only-status-codes-allowed"
+    cant_have_regex_and_string = "cant-have-regex-and-string"
 
 
 class HTTP10NotSupported(enum.Enum):
@@ -119,6 +119,32 @@ class ExpectResponseHeader(enum.Enum):
         return "`String to expect in response headers` must be in the format `Header: Value` for migration"
 
 
+class OnlyStatusCodesAllowed(enum.Enum):
+    skip = "skip"
+    ignore = "ignore"
+
+    @classmethod
+    def type_(cls) -> ConflictType:
+        return ConflictType.only_status_codes_allowed
+
+    @classmethod
+    def default(cls) -> "OnlyStatusCodesAllowed":
+        return cls.skip
+
+    def help(self) -> str:
+        match self:
+            case OnlyStatusCodesAllowed.skip:
+                return "do not migrate rule"
+            case OnlyStatusCodesAllowed.ignore:
+                return "create rule without incompatible entries"
+
+    @classmethod
+    def help_header(cls) -> str:
+        return (
+            "`Strings to expect in server response` must be a three-digit status code for migration"
+        )
+
+
 class CantHaveRegexAndString(enum.Enum):
     skip = "skip"
     string = "string"
@@ -144,32 +170,6 @@ class CantHaveRegexAndString(enum.Enum):
     @classmethod
     def help_header(cls) -> str:
         return "must choose `Fixed string to expect in the content` or `Regular expression to expect in the content`"
-
-
-class OnlyStatusCodesAllowed(enum.Enum):
-    skip = "skip"
-    ignore = "ignore"
-
-    @classmethod
-    def type_(cls) -> ConflictType:
-        return ConflictType.only_status_codes_allowed
-
-    @classmethod
-    def default(cls) -> "OnlyStatusCodesAllowed":
-        return cls.skip
-
-    def help(self) -> str:
-        match self:
-            case OnlyStatusCodesAllowed.skip:
-                return "do not migrate rule"
-            case OnlyStatusCodesAllowed.ignore:
-                return "create rule without incompatible entries"
-
-    @classmethod
-    def help_header(cls) -> str:
-        return (
-            "`Strings to expect in server response` must be a three-digit status code for migration"
-        )
 
 
 class Config(BaseModel):

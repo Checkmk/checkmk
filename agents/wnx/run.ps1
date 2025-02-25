@@ -319,6 +319,7 @@ function Invoke-Attach($usbip, $addr, $port) {
         return
     }
     Write-Host "Attached USB" -ForegroundColor Green
+    Start-Sleep -Seconds 5
     return
 }
 
@@ -449,6 +450,7 @@ function Start-MsiPatching {
 
 function Invoke-Detach($argFlag) {
     if ($argFlag -ne $true) {
+        Write-Host "No need to detach"
         return
     }
     & $usbip_exe detach -p 00
@@ -536,11 +538,14 @@ Invoke-CheckApp "is_crlf" "python .\scripts\check_crlf.py"
 $argAttached = $false
 $result = 1
 try {
+    # SETTING UP
     $mainStartTime = Get-Date
     Invoke-Detach $argDetach
     Update-ArtefactDirs
     Clear-Artifacts
     Clear-All
+    
+    # BUILDING
     Build-Agent
     Build-Package $argCtl "host/cmk-agent-ctl" "Controller"
     Build-Package $argSql "host/mk-sql" "MK-SQL"
@@ -549,6 +554,8 @@ try {
     Build-MSI
     Set-Msi-Version
     Start-UnitTests
+
+    # SIGNING
     Invoke-TestSigning $usbip_exe
     Start-MsiControlBuild
     Invoke-Attach $usbip_exe "yubi-usbserver.lan.checkmk.net" "1-1.2"

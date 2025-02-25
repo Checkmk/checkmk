@@ -347,7 +347,7 @@ def fetch_quick_setup_stage_action_result(params: Mapping[str, Any]) -> Response
     """Fetch the Quick setup stage action background job result"""
     action_background_job_id = params["job_id"]
     site_id = params.get(FieldSiteId.field_name)
-    if site_id and site_is_local(active_config, SiteId(site_id)):
+    if site_id and not site_is_local(active_config, SiteId(site_id)):
         action_result = StageActionResult.model_validate_json(
             str(
                 do_remote_automation(

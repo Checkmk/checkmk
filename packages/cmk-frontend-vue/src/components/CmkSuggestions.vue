@@ -53,11 +53,7 @@ function selectSuggestion(suggestionIndex: number): void {
   }
 }
 
-function setActiveSuggestion(filteredSuggestionIndex: number | null): void {
-  if (filteredSuggestionIndex === null) {
-    selectedSuggestionIndex.value = null
-    return
-  }
+function setActiveSuggestion(filteredSuggestionIndex: number): void {
   const suggestionIndex = filteredSuggestions.value[filteredSuggestionIndex]
   if (suggestionIndex === undefined) {
     throw new Error('Invalid filtered suggestion index')
@@ -88,9 +84,7 @@ function moveSuggestion(amount: number): void {
     throw new Error('Selected suggestion suggestion index not found in filtered suggestions')
   }
   setActiveSuggestion(
-    filteredSuggestions.value[
-      wrap(selectedFilteredSuggestionIndex + amount, filteredSuggestions.value.length)
-    ] ?? null
+    wrap(selectedFilteredSuggestionIndex + amount, filteredSuggestions.value.length)
   )
 }
 

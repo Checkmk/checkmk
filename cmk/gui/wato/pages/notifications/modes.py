@@ -1720,7 +1720,7 @@ class ModeTestNotifications(ModeNotifications):
             )
         html.br()
         html.br()
-        html.write_text_permissive("View the following tables for more details.")
+        html.write_text_permissive("See the following tables for more details.")
         html.close_div()
         html.close_div()
 

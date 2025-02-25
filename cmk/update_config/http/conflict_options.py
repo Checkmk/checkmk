@@ -16,6 +16,7 @@ class ConflictType(enum.Enum):
     add_headers_incompatible = "add-headers-incompatible"
     expect_response_header = "expect-response-header"
     only_status_codes_allowed = "only-status-codes-allowed"
+    cant_post_data = "cant-post-data"
     cant_have_regex_and_string = "cant-have-regex-and-string"
 
 
@@ -145,6 +146,33 @@ class OnlyStatusCodesAllowed(enum.Enum):
         )
 
 
+class CantPostData(enum.Enum):
+    skip = "skip"
+    post = "post"
+    prefermethod = "prefermethod"
+
+    @classmethod
+    def type_(cls) -> ConflictType:
+        return ConflictType.cant_post_data
+
+    @classmethod
+    def default(cls) -> "CantPostData":
+        return cls.skip
+
+    def help(self) -> str:
+        match self:
+            case CantPostData.skip:
+                return "do not migrate rule"
+            case CantPostData.post:
+                return "use POST method if post data is present"
+            case CantPostData.prefermethod:
+                return "migrate `HTTP method` if post data is present, don't migrate data option"
+
+    @classmethod
+    def help_header(cls) -> str:
+        return "the option `Send HTTP POST data` is incompatible with GET, DELETE, HEAD"
+
+
 class CantHaveRegexAndString(enum.Enum):
     skip = "skip"
     string = "string"
@@ -178,6 +206,7 @@ class Config(BaseModel):
     add_headers_incompatible: AdditionalHeaders = AdditionalHeaders.default()
     expect_response_header: ExpectResponseHeader = ExpectResponseHeader.default()
     only_status_codes_allowed: OnlyStatusCodesAllowed = OnlyStatusCodesAllowed.default()
+    cant_post_data: CantPostData = CantPostData.default()
     cant_have_regex_and_string: CantHaveRegexAndString = CantHaveRegexAndString.default()
 
 
@@ -188,6 +217,7 @@ def add_migrate_parsing(parser: ArgumentParser) -> None:
     _add_argument(parser, AdditionalHeaders, AdditionalHeaders.default())
     _add_argument(parser, ExpectResponseHeader, ExpectResponseHeader.default())
     _add_argument(parser, OnlyStatusCodesAllowed, OnlyStatusCodesAllowed.default())
+    _add_argument(parser, CantPostData, CantPostData.default())
     _add_argument(parser, CantHaveRegexAndString, CantHaveRegexAndString.default())
 
 

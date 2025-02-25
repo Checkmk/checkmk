@@ -16,6 +16,7 @@ from pydantic import HttpUrl, ValidationError
 from cmk.update_config.http.conflict_options import (
     AdditionalHeaders,
     CantHaveRegexAndString,
+    CantPostData,
     Config,
     ConflictType,
     ExpectResponseHeader,
@@ -76,6 +77,16 @@ class MigratableUrl(V1Url):
 
     def migrate_expect_string(self) -> None | tuple[str, object]:
         return None if self.expect_string is None else ("string", self.expect_string)
+
+    def migrate_to_send_data(self) -> None | dict[str, dict[str, object]]:
+        if self.post_data is None:
+            return None
+        return {
+            "send_data": {
+                "content": self.post_data.data,
+                "content_type": ("custom", self.post_data.content_type),
+            }
+        }
 
 
 def _migrate_expect_response(response: list[str]) -> list[int]:
@@ -230,9 +241,13 @@ def detect_conflicts(config: Config, rule_value: Mapping[str, object]) -> Confli
                 type_="method_unavailable",
                 mode_fields=["method"],
             )
-        if mode.post_data is not None and mode.method in ("GET", "DELETE", "HEAD"):
+        if (
+            config.cant_post_data is CantPostData.skip
+            and mode.post_data is not None
+            and mode.method in ("GET", "DELETE", "HEAD")
+        ):
             return Conflict(
-                type_="cant_post_data_with_get_delete_head",
+                type_=ConflictType.cant_post_data,
                 mode_fields=["method", "post_data"],
             )
         migrated_expect_response = _migrate_expect_response(mode.expect_response or [])

@@ -26,14 +26,29 @@ V1 supports HTTP/1.0 and HTTP/1.1. V2 only supports HTTP/1.1 and HTTP/2.0. HTTP/
 """
 
 from collections.abc import Mapping
-from typing import assert_never
+from typing import assert_never, Literal
 
-from cmk.update_config.http.conflict_options import CantHaveRegexAndString
+from cmk.update_config.http.conflict_options import CantHaveRegexAndString, CantPostData
 from cmk.update_config.http.conflicts import ForMigration, MigratableCert, MigratableUrl
+
+
+def _migrate_method(method: Literal["GET", "HEAD", "DELETE", "POST", "PUT"]) -> str:
+    match method:
+        case "GET":
+            return "get"
+        case "HEAD":
+            return "head"
+        case "DELETE":
+            return "delete"
+        case "POST":
+            return "post"
+        case "PUT":
+            return "put"
 
 
 def _migrate_url_params(
     cant_have_regex_and_string: CantHaveRegexAndString,
+    cant_post_data: CantPostData,
     url_params: MigratableUrl,
     address_family: str,
 ) -> tuple[dict[str, object], Mapping[str, object]]:
@@ -107,32 +122,21 @@ def _migrate_url_params(
             body = {"body": migrate_expect_regex}
         case migrate_expect_string, migrate_expect_regex, CantHaveRegexAndString.skip:
             raise NotImplementedError()
-    match url_params.method, url_params.post_data:
-        case None, None:
+    match url_params.method, url_params.migrate_to_send_data(), cant_post_data:
+        case None, None, _:
             method: Mapping[str, object] = {"method": ("get", None)}
-        case "GET", None:
-            method = {"method": ("get", None)}
-        case "HEAD", None:
-            method = {"method": ("head", None)}
-        case "DELETE", None:
-            method = {"method": ("delete", None)}
-        case "POST" | "PUT" | None, post_data:
-            method_type = {
-                "POST": "post",
-                "PUT": "put",
-                None: "post",  # TODO: Is this truly the default?
-            }[url_params.method]
-            send_data = (
-                {}
-                if post_data is None
-                else {
-                    "send_data": {
-                        "content": post_data.data,
-                        "content_type": ("custom", post_data.content_type),
-                    }
-                }
-            )
-            method = {"method": (method_type, send_data)}
+        case "GET" | "HEAD" | "DELETE", None, _:
+            method = {"method": (_migrate_method(url_params.method), None)}
+        case "POST" | "PUT", send_data, _:
+            method = {"method": (_migrate_method(url_params.method), send_data or {})}
+        case None, send_data, _:
+            method = {"method": ("post", send_data or {})}  # TODO: Is this truly the default?
+        case "GET" | "HEAD" | "DELETE", send_data, CantPostData.post:
+            method = {"method": ("post", send_data or {})}
+        case "GET" | "HEAD" | "DELETE", _send_data, CantPostData.prefermethod:
+            method = {"method": (_migrate_method(url_params.method), None)}
+        case "GET" | "HEAD" | "DELETE", _send_data, CantPostData.skip:
+            raise NotImplementedError()
     match url_params.no_body:
         case None:
             document_body: Mapping[str, object] = {"document_body": "fetch"}
@@ -214,6 +218,7 @@ def migrate(id_: str, for_migration: ForMigration) -> Mapping[str, object]:
     else:
         connection, remaining_settings = _migrate_url_params(
             for_migration.config.cant_have_regex_and_string,
+            for_migration.config.cant_post_data,
             value.mode[1],
             address_family,
         )

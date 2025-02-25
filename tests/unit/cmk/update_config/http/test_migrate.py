@@ -31,6 +31,7 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
 from cmk.update_config.http.conflict_options import (
     AdditionalHeaders,
     CantHaveRegexAndString,
+    CantPostData,
     Config,
     ConflictType,
     ExpectResponseHeader,
@@ -941,7 +942,7 @@ EXAMPLE_94: Mapping[str, object] = {
         (
             EXAMPLE_51,
             Conflict(
-                type_="cant_post_data_with_get_delete_head",
+                type_=ConflictType.cant_post_data,
                 mode_fields=["method", "post_data"],
             ),
         ),
@@ -1214,6 +1215,24 @@ def test_migrate_document(
             EXAMPLE_58,
             DEFAULT,
             (HttpMethod.POST, SendData(send_data=None)),
+        ),
+        (
+            EXAMPLE_51,
+            Config(cant_post_data=CantPostData.post),
+            (
+                HttpMethod.POST,
+                SendData(
+                    send_data=SendDataInner(
+                        content="da",
+                        content_type=(SendDataType.CUSTOM, "text/html"),
+                    )
+                ),
+            ),
+        ),
+        (
+            EXAMPLE_51,
+            Config(cant_post_data=CantPostData.prefermethod),
+            (HttpMethod.GET, None),
         ),
     ],
 )

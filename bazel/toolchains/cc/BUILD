@@ -23,10 +23,14 @@ LINK_FLAGS = [
     # However, I still don't understand why it would fail as were hardcoding the ld path for the CI toolchain
     "-Wl,-no-as-needed",
     "-Wl,-z,relro,-z,now",
-    "-pass-exit-codes",
 ]
 
-linux_gcc13_link_flags = ["-B/usr/bin"]
+linux_clang19_link_flags = ["-B/usr/bin"]
+
+linux_gcc13_link_flags = [
+    "-B/usr/bin",
+    "-pass-exit-codes",
+]
 
 ci_link_flags = ["-B/opt/bin"]
 
@@ -44,11 +48,39 @@ OPT_COMPILE_FLAGS = [
 OPT_LINK_FLAGS = ["-Wl,--gc-sections"]
 
 UNFILTERED_COMPILE_FLAGS = [
-    "-fno-canonical-system-headers",
     "-Wno-builtin-macro-redefined",
     "-D__DATE__=\"redacted\"",
     "-D__TIMESTAMP__=\"redacted\"",
     "-D__TIME__=\"redacted\"",
+]
+
+gcc_extra_compile_flags = [
+    "-fno-canonical-system-headers",
+]
+
+clang_extra_compile_flags = []
+
+linux_clang19_tool_paths = {
+    "ar": "/usr/bin/llvm-ar-19",
+    "cpp": "/usr/bin/clang-cpp-19",
+    "gcc": "/usr/bin/clang-19",
+    "gcov": "/bin/false",
+    "ld": "/usr/bin/ld",
+    "nm": "/usr/bin/llvm-nm-19",
+    "objdump": "/usr/bin/llvm-objdump-19",
+    "strip": "/usr/bin/llvm-strip-19",
+    "llvm-cov": "/usr/bin/llvm-cov-19",
+    "objcopy": "/usr/bin/llvm-objcopy-19",
+}
+
+linux_clang19_cxx_builtin_include_directories = [
+    # List obtained from `clang-19 -E -xc++ - -v < /dev/null` and `realpath`.
+    "/usr/include/c++/13",
+    "/usr/include/x86_64-linux-gnu/c++/13",
+    "/usr/include/c++/13/backward",
+    "/usr/lib/llvm-19/lib/clang/19/include",
+    "/usr/include/x86_64-linux-gnu",
+    "/usr/include",
 ]
 
 linux_gcc13_tool_paths = {
@@ -94,15 +126,23 @@ ci_cxx_builtin_include_directories = [
 ]
 
 TOOLCHAINS = {
+    "linux_clang19": (
+        linux_clang19_cxx_builtin_include_directories,
+        linux_clang19_tool_paths,
+        linux_clang19_link_flags,
+        clang_extra_compile_flags,
+    ),
     "linux_gcc13": (
         linux_gcc13_cxx_builtin_include_directories,
         linux_gcc13_tool_paths,
         linux_gcc13_link_flags,
+        gcc_extra_compile_flags,
     ),
     "ci": (
         ci_cxx_builtin_include_directories,
         ci_tool_paths,
         ci_link_flags,
+        gcc_extra_compile_flags,
     ),
 }
 
@@ -126,12 +166,13 @@ TOOLCHAINS = {
         target_system_name = "local",
         tool_paths = tool_paths,
         toolchain_identifier = identifier,
-        unfiltered_compile_flags = UNFILTERED_COMPILE_FLAGS,
+        unfiltered_compile_flags = UNFILTERED_COMPILE_FLAGS + extra_unfiltered_compile_flags,
     )
     for identifier, (
         cxx_builtin_include_directories,
         tool_paths,
         link_flags,
+        extra_unfiltered_compile_flags,
     ) in TOOLCHAINS.items()
 ]
 

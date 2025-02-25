@@ -397,6 +397,7 @@ function Start-BinarySigning {
     )
 
     foreach ($file in $files_to_sign) {
+        Write-Host "Signing $file" -ForegroundColor White
         & ./scripts/sign_code.cmd $file
         if ($LASTEXITCODE -ne 0) {
             Write-Error "Error Signing, error code is $LASTEXITCODE" -ErrorAction Stop

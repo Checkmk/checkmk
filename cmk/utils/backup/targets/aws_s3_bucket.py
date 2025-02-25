@@ -72,7 +72,10 @@ class S3Bucket:
         self.bucket.delete_objects(Delete={"Objects": [{"Key": str(key)}]})
 
     def objects(self) -> Iterator[Path]:
-        yield from (Path(object_summary.key) for object_summary in self.bucket.objects.all())
+        paginator = self.client.get_paginator("list_objects_v2")
+        for page in paginator.paginate(Bucket=self.bucket.name):
+            for obj in page["Contents"]:
+                yield Path(obj["Key"])
 
 
 class S3Target(RemoteTarget[S3Params, S3Bucket]):

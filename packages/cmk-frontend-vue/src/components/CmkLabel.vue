@@ -66,7 +66,6 @@ label {
 
   &.cmk-label--clickable {
     cursor: pointer;
-    pointer-events: all;
   }
 }
 </style>

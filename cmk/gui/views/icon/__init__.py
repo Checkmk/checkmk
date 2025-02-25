@@ -3,8 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.config import active_config
 from cmk.gui.painter.v0 import PainterRegistry
-from cmk.gui.permissions import PermissionSectionRegistry
+from cmk.gui.permissions import (
+    declare_dynamic_permissions,
+    PermissionSectionRegistry,
+)
 
 from .base import Icon
 from .builtin import (
@@ -32,6 +36,7 @@ from .builtin import (
     StalenessIcon,
     StarsIcon,
 )
+from .config_icons import declare_icons_and_actions_perm
 from .page_ajax_popup_action_menu import ajax_popup_action_menu
 from .painter import PainterHostIcons, PainterServiceIcons
 from .permission_section import PermissionSectionIconsAndActions
@@ -71,6 +76,11 @@ def register(
     icon_registry.register(StarsIcon)
     icon_registry.register(CrashdumpsIcon)
     icon_registry.register(CheckPeriodIcon)
+
+    # also declare permissions for custom icons
+    declare_dynamic_permissions(
+        lambda: declare_icons_and_actions_perm(active_config.user_icons_and_actions)
+    )
 
 
 __all__ = [

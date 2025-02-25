@@ -6,6 +6,9 @@
 # pylint: disable=protected-access
 
 
+from cmk.gui.config import default_authorized_builtin_role_ids
+from cmk.gui.i18n import _
+from cmk.gui.permissions import declare_permission, permission_registry
 from cmk.gui.type_defs import BuiltinIconVisibility, IconSpec
 
 from .base import Icon
@@ -28,6 +31,8 @@ def update_builtin_icons_from_config(
 
 
 def config_based_icons(user_icons_and_actions: dict[str, IconSpec]) -> dict[str, Icon]:
+    declare_icons_and_actions_perm(user_icons_and_actions)
+
     return {
         icon_id: type(
             "CustomIcon%s" % icon_id.title(),
@@ -49,3 +54,16 @@ def config_based_icons(user_icons_and_actions: dict[str, IconSpec]) -> dict[str,
         )()
         for icon_id, icon_cfg in user_icons_and_actions.items()
     }
+
+
+def declare_icons_and_actions_perm(icons: dict[str, IconSpec]) -> None:
+    for ident, _icon in icons.items():
+        if (permname := f"icons_and_actions.{ident}") in permission_registry:
+            continue
+
+        declare_permission(
+            permname,
+            ident,
+            _("Allow to see the icon %s in the host and service views") % ident,
+            default_authorized_builtin_role_ids,
+        )

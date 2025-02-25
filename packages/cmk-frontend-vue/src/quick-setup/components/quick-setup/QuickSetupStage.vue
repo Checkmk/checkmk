@@ -106,15 +106,11 @@ const onClickGoTo = computed(() =>
   }
 
   &.qs-stage--complete {
-    pointer-events: none;
-
     &:before {
       background-image: var(--icon-check);
       background-repeat: no-repeat;
       background-position: center;
       content: '';
-      cursor: pointer;
-      pointer-events: all;
     }
 
     &:after {

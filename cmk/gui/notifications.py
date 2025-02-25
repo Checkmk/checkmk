@@ -59,7 +59,7 @@ class FailedNotificationTimes(NamedTuple):
 g_columns: list[str] = [
     "time",
     "contact_name",
-    "type",
+    "command_name",
     "host_name",
     "service_description",
     "comment",
@@ -247,7 +247,7 @@ class ClearFailedNotificationPage(Page):
                     _("Time"), cmk.utils.render.approx_age(time.time() - row[header["time"]])
                 )
                 table.cell(_("Contact"), row[header["contact_name"]])
-                table.cell(_("Plug-in"), row[header["type"]])
+                table.cell(_("Plug-in"), row[header["command_name"]])
                 table.cell(_("Host"), row[header["host_name"]])
                 table.cell(_("Service"), row[header["service_description"]])
                 table.cell(_("Output"), row[header["comment"]])

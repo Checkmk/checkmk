@@ -262,13 +262,9 @@ def _event_choices(
     ]
 
 
-def _validate_at_least_one_event(triggering_events: Mapping) -> None:
-    if not triggering_events:
-        raise ValidationError(
-            Message(
-                "No triggering events selected. Please select at least one event to trigger the notification."
-            )
-        )
+def _validate_at_least_one_event(trigger_events: Mapping) -> None:
+    if not trigger_events:
+        raise ValidationError(Message("At least one triggering event must be selected."))
 
 
 def triggering_events() -> QuickSetupStage:

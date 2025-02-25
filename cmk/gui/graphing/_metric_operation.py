@@ -283,12 +283,11 @@ def _time_series_math(
         return None
 
     _op_title, op_func = operators[operator_id]
-    twindow = operands_evaluated[0].twindow
-
+    time_series = operands_evaluated[0]
     return TimeSeries(
-        start=twindow[0],
-        end=twindow[1],
-        step=twindow[2],
+        start=time_series.start,
+        end=time_series.end,
+        step=time_series.step,
         values=[op_func_wrapper(op_func, list(tsp)) for tsp in zip(*operands_evaluated)],
     )
 

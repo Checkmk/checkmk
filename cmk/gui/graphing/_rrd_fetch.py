@@ -114,8 +114,8 @@ def _align_and_resample_rrds(
             raise MKGeneralException(_("Cannot get RRD data for %s") % spec_title)
 
         if time_window is None:
-            time_window = time_series.twindow
-        elif time_window != time_series.twindow:
+            time_window = (time_series.start, time_series.end, time_series.step)
+        elif time_window != (time_series.start, time_series.end, time_series.step):
             time_series.values = (
                 time_series.downsample(
                     start=time_window[0],
@@ -144,7 +144,7 @@ def _chop_last_empty_step(graph_data_range: GraphDataRange, rrd_data: RRDData) -
         return
 
     sample_data = next(iter(rrd_data.values()))
-    step = sample_data.twindow[2]
+    step = sample_data.step
     # Disable graph chop for graphs which do not end within the current step
     if abs(time.time() - graph_data_range.time_range[1]) > step:
         return
@@ -325,13 +325,14 @@ def translate_and_merge_rrd_columns(
     if not relevant_ts:
         return TimeSeries(start=0, end=0, step=0, values=[])
 
+    timeseries = relevant_ts[0]
     _op_title, op_func = time_series_operators()["MERGE"]
     single_value_series = [op_func_wrapper(op_func, list(tsp)) for tsp in zip(*relevant_ts)]
 
     return TimeSeries(
-        start=relevant_ts[0].twindow[0],
-        end=relevant_ts[0].twindow[1],
-        step=relevant_ts[0].twindow[2],
+        start=timeseries.start,
+        end=timeseries.end,
+        step=timeseries.step,
         values=single_value_series,
         conversion=get_conversion_function(get_metric_spec(metric_name).unit_spec),
     )

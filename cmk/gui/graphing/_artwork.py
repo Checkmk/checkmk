@@ -171,7 +171,8 @@ def compute_graph_artwork(
     width, height = size
 
     try:
-        start_time, end_time, step = curves[0]["rrddata"].twindow
+        time_series = curves[0]["rrddata"]
+        start_time, end_time, step = time_series.start, time_series.end, time_series.step
     except IndexError:  # Empty graph
         (start_time, end_time), step = graph_data_range.time_range, 60
 
@@ -508,8 +509,7 @@ def _render_scalar_value(
 
 
 def _get_value_at_timestamp(pin_time: int, rrddata: TimeSeries) -> TimeSeriesValue:
-    start_time, _, step = rrddata.twindow
-    nth_value = (pin_time - start_time) // step
+    nth_value = (pin_time - rrddata.start) // rrddata.step
     if 0 <= nth_value < len(rrddata):
         return rrddata[nth_value]
     return None

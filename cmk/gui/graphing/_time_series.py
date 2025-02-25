@@ -6,7 +6,6 @@
 from collections.abc import Callable, Iterator, Sequence
 from statistics import fmean
 
-TimeWindow = tuple[int, int, int]
 TimeSeriesValue = float | None
 TimeSeriesValues = Sequence[TimeSeriesValue]
 
@@ -68,10 +67,6 @@ class TimeSeries:
         self.step = step
         self.values: TimeSeriesValues = [v if v is None else conversion(v) for v in values]
 
-    @property
-    def twindow(self) -> TimeWindow:
-        return self.start, self.end, self.step
-
     def forward_fill_resample(self, *, start: int, end: int, step: int) -> TimeSeriesValues:
         """Upsample by forward filling values"""
         if start == self.start and end == self.end and step == self.step:
@@ -116,8 +111,9 @@ class TimeSeries:
         )
 
     def __repr__(self) -> str:
-        start, end, step = self.twindow
-        return f"TimeSeries(start={start}, end={end}, step{step}, values={self.values})"
+        return (
+            f"TimeSeries(start={self.start}, end={self.end}, step{self.step}, values={self.values})"
+        )
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, TimeSeries):

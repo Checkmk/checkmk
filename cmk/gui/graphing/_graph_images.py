@@ -254,17 +254,18 @@ def graph_spec_from_request(api_request: dict[str, Any]) -> dict[str, Any]:
     curves = compute_graph_artwork_curves(graph_recipe, graph_data_range)
 
     api_curves = []
-    (start_time, end_time), step = graph_data_range.time_range, 60  # empty graph
+    (start, end), step = graph_data_range.time_range, 60  # empty graph
 
     for c in curves:
-        start_time, end_time, step = c["rrddata"].twindow
+        time_series = c["rrddata"]
+        start, end, step = time_series.start, time_series.end, time_series.step
         api_curve: dict[str, Any] = dict(c)
         api_curve["rrddata"] = c["rrddata"].values
         api_curves.append(api_curve)
 
     return {
-        "start_time": start_time,
-        "end_time": end_time,
+        "start_time": start,
+        "end_time": end,
         "step": step,
         "curves": api_curves,
     }

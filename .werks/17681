@@ -1,0 +1,11 @@
+Title: Fix enabling realtime checks via bakery on Windows
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1740412033
+Edition: cee
+Level: 1
+Version: 2.2.0p41
+
+This fixes the regression for real time checks on Windows agent.
+Added missing "enabled" key to the bakery config.

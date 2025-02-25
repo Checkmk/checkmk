@@ -4,6 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from ._config import distribute_config as distribute_config
-from ._config import PiggybackHubConfig as PiggybackHubConfig
+from ._config import HostLocations as HostLocations
+from ._config import publish_persisted_locations as publish_persisted_locations
 from ._main import main as main

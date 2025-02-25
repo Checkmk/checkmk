@@ -21,16 +21,20 @@ CONFIG_ROUTE = RoutingKey("config")
 CONFIG_QUEUE = QueueName("config")
 
 
+type HostLocations = Mapping[HostName, str]
+"""A map of host names to the sites they are monitored on."""
+
+
 class PiggybackHubConfig(BaseModel):
-    targets: Mapping[HostName, str] = {}
+    locations: HostLocations
 
 
 class _PersistedPiggybackHubConfig(BaseModel):
-    targets: Mapping[HostName, str] = {}
+    locations: Mapping[HostName, str] = {}
 
 
 def save_config(omd_root: Path, config: PiggybackHubConfig) -> None:
-    persisted = _PersistedPiggybackHubConfig(targets=config.targets)
+    persisted = _PersistedPiggybackHubConfig(locations=config.locations)
     paths = create_paths(omd_root)
     paths.config.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
     tmp_path = paths.config.with_suffix(f".{os.getpid()}.tmp")
@@ -40,16 +44,18 @@ def save_config(omd_root: Path, config: PiggybackHubConfig) -> None:
 
 def load_config(paths: PiggybackHubPaths) -> PiggybackHubConfig:
     try:
-        persisted = _PersistedPiggybackHubConfig.model_validate_json(paths.config.read_text())
+        locations = _PersistedPiggybackHubConfig.model_validate_json(
+            paths.config.read_text()
+        ).locations
     except FileNotFoundError:
-        return PiggybackHubConfig()
-    return PiggybackHubConfig(targets=persisted.targets)
+        locations = {}
+    return PiggybackHubConfig(locations=locations)
 
 
-def distribute_config(
-    configs: Mapping[str, PiggybackHubConfig], omd_root: Path, omd_site: str
+def publish_persisted_locations(
+    destination_site: str, locations: HostLocations, omd_root: Path, omd_site: str
 ) -> None:
-    for site_id, config in configs.items():
-        with Connection(APP_NAME, omd_root, omd_site) as conn:
-            channel = conn.channel(PiggybackHubConfig)
-            channel.publish_for_site(site_id, config, routing=CONFIG_ROUTE)
+    config = PiggybackHubConfig(locations=locations)
+    with Connection(APP_NAME, omd_root, omd_site) as conn:
+        channel = conn.channel(PiggybackHubConfig)
+        channel.publish_for_site(destination_site, config, routing=CONFIG_ROUTE)

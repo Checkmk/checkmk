@@ -21,7 +21,7 @@ from cmk.piggyback.hub._paths import create_paths
 
 def test_handle_received_config(tmp_path: Path) -> None:
     test_logger = logging.getLogger("test")
-    input_payload = PiggybackHubConfig(targets={HostName("test_host"): "test_site"})
+    input_payload = PiggybackHubConfig(locations={HostName("test_host"): "test_site"})
     on_message = handle_received_config(test_logger, tmp_path, (reload_config := make_event()))
 
     assert not reload_config.is_set()

@@ -122,7 +122,7 @@ class SendingPayloadProcess(multiprocessing.Process):
         config: PiggybackHubConfig,
         message: PiggybackMessage,
     ) -> None:
-        if (site_id := config.targets.get(message.meta.piggybacked, self.site)) == self.site:
+        if (site_id := config.locations.get(message.meta.piggybacked, self.site)) == self.site:
             return
 
         self.logger.debug(

@@ -40,6 +40,7 @@ from cmk.update_config.http.conflict_options import (
     MethodUnavailable,
     OnlyStatusCodesAllowed,
     SSLIncompatible,
+    V1ChecksRedirectResponse,
 )
 from cmk.update_config.http.conflicts import (
     _classify,
@@ -1062,7 +1063,7 @@ EXAMPLE_99: Mapping[str, object] = {
         (
             EXAMPLE_91,
             Conflict(
-                type_="v1_checks_redirect_response",
+                type_=ConflictType.v1_checks_redirect_response,
                 mode_fields=["onredirect", "expect_response"],
             ),
         ),
@@ -1670,19 +1671,65 @@ def test_migrate_auth_no_auth() -> None:
 
 
 @pytest.mark.parametrize(
-    "rule_value, config, expected",
+    "rule_value, config, redirects, expect_response",
     [
-        (EXAMPLE_27, DEFAULT, "ok"),  # TODO: discuss with PM
-        (EXAMPLE_37, DEFAULT, "ok"),
-        (EXAMPLE_38, DEFAULT, "warning"),
-        (EXAMPLE_39, DEFAULT, "critical"),
-        (EXAMPLE_40, DEFAULT, "follow"),
-        (EXAMPLE_41, DEFAULT, "sticky"),
-        (EXAMPLE_42, DEFAULT, "stickyport"),
+        (
+            EXAMPLE_27,
+            DEFAULT,
+            "ok",
+            None,
+        ),  # TODO: discuss with PM
+        (
+            EXAMPLE_37,
+            DEFAULT,
+            "ok",
+            None,
+        ),
+        (
+            EXAMPLE_38,
+            DEFAULT,
+            "warning",
+            None,
+        ),
+        (
+            EXAMPLE_39,
+            DEFAULT,
+            "critical",
+            None,
+        ),
+        (
+            EXAMPLE_40,
+            DEFAULT,
+            "follow",
+            None,
+        ),
+        (
+            EXAMPLE_41,
+            DEFAULT,
+            "sticky",
+            None,
+        ),
+        (
+            EXAMPLE_42,
+            DEFAULT,
+            "stickyport",
+            None,
+        ),
+        (
+            EXAMPLE_91,
+            Config(
+                v1_checks_redirect_response=V1ChecksRedirectResponse.acknowledge,
+            ),
+            "stickyport",
+            ServerResponse(expected=[302]),
+        ),
     ],
 )
 def test_migrate_redirect(
-    rule_value: Mapping[str, object], config: Config, expected: object
+    rule_value: Mapping[str, object],
+    config: Config,
+    redirects: object,
+    expect_response: object,
 ) -> None:
     # Assemble
     for_migration = detect_conflicts(config, rule_value)
@@ -1693,7 +1740,8 @@ def test_migrate_redirect(
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
     assert ssc_value[0].settings.connection is not None
-    assert ssc_value[0].settings.connection.model_dump()["redirects"] == expected
+    assert ssc_value[0].settings.connection.model_dump()["redirects"] == redirects
+    assert ssc_value[0].settings.server_response == expect_response
 
 
 @pytest.mark.parametrize(

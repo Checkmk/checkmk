@@ -25,6 +25,7 @@ from cmk.update_config.http.conflict_options import (
     MethodUnavailable,
     OnlyStatusCodesAllowed,
     SSLIncompatible,
+    V1ChecksRedirectResponse,
 )
 from cmk.update_config.http.v1_scheme import V1Cert, V1Host, V1Proxy, V1Url, V1Value
 
@@ -276,9 +277,13 @@ def detect_conflicts(config: Config, rule_value: Mapping[str, object]) -> Confli
                 mode_fields=["ssl"],
                 disable_sni=True,
             )
-        if migrated_expect_response and mode.onredirect in ["follow", "sticky", "stickyport"]:
+        if (
+            config.v1_checks_redirect_response is V1ChecksRedirectResponse.skip
+            and migrated_expect_response
+            and mode.onredirect in ["follow", "sticky", "stickyport"]
+        ):
             return Conflict(
-                type_="v1_checks_redirect_response",
+                type_=ConflictType.v1_checks_redirect_response,
                 mode_fields=["onredirect", "expect_response"],
             )
     elif (

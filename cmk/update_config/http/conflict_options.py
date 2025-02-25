@@ -19,6 +19,7 @@ class ConflictType(enum.Enum):
     cant_post_data = "cant-post-data"
     method_unavailable = "method-unavailable"
     cant_disable_sni_with_https = "cant-disable-sni-with-https"
+    v1_checks_redirect_response = "v1-checks-redirect-response"
     cant_have_regex_and_string = "cant-have-regex-and-string"
 
 
@@ -223,6 +224,30 @@ class CantDisableSNIWithHTTPS(enum.Enum):
         return "v2 does not have option to use TLS without SNI"
 
 
+class V1ChecksRedirectResponse(enum.Enum):
+    skip = "skip"
+    acknowledge = "acknowledge"
+
+    @classmethod
+    def type_(cls) -> ConflictType:
+        return ConflictType.v1_checks_redirect_response
+
+    @classmethod
+    def default(cls) -> "V1ChecksRedirectResponse":
+        return cls.skip
+
+    def help(self) -> str:
+        match self:
+            case V1ChecksRedirectResponse.skip:
+                return "do not migrate rule"
+            case V1ChecksRedirectResponse.acknowledge:
+                return "migrate both options despite change in behaviour"
+
+    @classmethod
+    def help_header(cls) -> str:
+        return "version v1 will checks the response obtained before following the redirect, version v2 will first follow the redirect and then check the status code"
+
+
 class CantHaveRegexAndString(enum.Enum):
     skip = "skip"
     string = "string"
@@ -259,6 +284,7 @@ class Config(BaseModel):
     cant_post_data: CantPostData = CantPostData.default()
     method_unavailable: MethodUnavailable = MethodUnavailable.default()
     cant_disable_sni_with_https: CantDisableSNIWithHTTPS = CantDisableSNIWithHTTPS.default()
+    v1_checks_redirect_response: V1ChecksRedirectResponse = V1ChecksRedirectResponse.default()
     cant_have_regex_and_string: CantHaveRegexAndString = CantHaveRegexAndString.default()
 
 
@@ -272,6 +298,7 @@ def add_migrate_parsing(parser: ArgumentParser) -> None:
     _add_argument(parser, CantPostData, CantPostData.default())
     _add_argument(parser, MethodUnavailable, MethodUnavailable.default())
     _add_argument(parser, CantDisableSNIWithHTTPS, CantDisableSNIWithHTTPS.default())
+    _add_argument(parser, V1ChecksRedirectResponse, V1ChecksRedirectResponse.default())
     _add_argument(parser, CantHaveRegexAndString, CantHaveRegexAndString.default())
 
 

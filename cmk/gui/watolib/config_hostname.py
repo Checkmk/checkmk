@@ -8,6 +8,7 @@ import re
 from cmk.utils.hostaddress import HostName
 
 from cmk.gui.type_defs import Choices
+from cmk.gui.utils.regex import validate_regex
 from cmk.gui.valuespec import AjaxDropdownChoice
 
 from .hosts_and_folders import Host
@@ -27,6 +28,7 @@ def config_hostname_autocompleter(value: str, params: dict) -> Choices:
     Called by the webservice with the current input field value and the completions_params to get the list of choices
     """
     all_hosts: dict[HostName, Host] = Host.all()
+    validate_regex(value, varname=None)
     match_pattern = re.compile(value, re.IGNORECASE)
     match_list: Choices = []
     for host_name, host_object in all_hosts.items():

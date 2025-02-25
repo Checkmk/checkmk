@@ -50,6 +50,7 @@ from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
+from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.rendering import set_inpage_search_result_info
 from cmk.gui.utils.sort import natural_sort
 from cmk.gui.utils.transaction_manager import transactions
@@ -114,6 +115,7 @@ def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
 
 
 def wato_folder_choices_autocompleter(value: str, params: dict) -> Choices:
+    validate_regex(value, varname=None)
     match_pattern = re.compile(value, re.IGNORECASE)
     matching_folders: Choices = []
     for path, name in folder_tree().folder_choices_fulltitle():

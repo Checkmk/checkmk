@@ -15,6 +15,7 @@ from pydantic import HttpUrl, ValidationError
 
 from cmk.update_config.http.conflict_options import (
     AdditionalHeaders,
+    CantDisableSNIWithHTTPS,
     CantHaveRegexAndString,
     CantPostData,
     Config,
@@ -265,9 +266,13 @@ def detect_conflicts(config: Config, rule_value: Mapping[str, object]) -> Confli
                 type_=ConflictType.only_status_codes_allowed,
                 mode_fields=["expect_response"],
             )
-        if value.uses_https() and value.disable_sni:
+        if (
+            config.cant_disable_sni_with_https is CantDisableSNIWithHTTPS.skip
+            and value.uses_https()
+            and value.disable_sni
+        ):
             return Conflict(
-                type_="cant_disable_sni_with_https",
+                type_=ConflictType.cant_disable_sni_with_https,
                 mode_fields=["ssl"],
                 disable_sni=True,
             )
@@ -276,9 +281,12 @@ def detect_conflicts(config: Config, rule_value: Mapping[str, object]) -> Confli
                 type_="v1_checks_redirect_response",
                 mode_fields=["onredirect", "expect_response"],
             )
-    elif value.disable_sni:  # Cert mode is always https
+    elif (
+        config.cant_disable_sni_with_https is CantDisableSNIWithHTTPS.skip
+        and value.disable_sni  # Cert mode is always https
+    ):
         return Conflict(
-            type_="cant_disable_sni_with_https",
+            type_=ConflictType.cant_disable_sni_with_https,
             disable_sni=True,
         )
     return ForMigration(

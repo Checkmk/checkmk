@@ -30,6 +30,7 @@ from cmk.plugins.collection.server_side_calls.httpv2 import (
 from cmk.server_side_calls_backend.config_processing import process_configuration_to_parameters
 from cmk.update_config.http.conflict_options import (
     AdditionalHeaders,
+    CantDisableSNIWithHTTPS,
     CantHaveRegexAndString,
     CantPostData,
     Config,
@@ -1039,14 +1040,14 @@ EXAMPLE_99: Mapping[str, object] = {
         (
             EXAMPLE_75,
             Conflict(
-                type_="cant_disable_sni_with_https",
+                type_=ConflictType.cant_disable_sni_with_https,
                 disable_sni=True,
             ),
         ),
         (
             EXAMPLE_89,
             Conflict(
-                type_="cant_disable_sni_with_https",
+                type_=ConflictType.cant_disable_sni_with_https,
                 mode_fields=["ssl"],
                 disable_sni=True,
             ),
@@ -1093,15 +1094,29 @@ def test_detect_conflicts(rule_value: Mapping[str, object], conflict: Conflict) 
 
 
 @pytest.mark.parametrize(
-    "rule_value",
+    "rule_value, config",
     [
-        EXAMPLE_12,
-        EXAMPLE_68,
+        (
+            EXAMPLE_12,
+            DEFAULT,
+        ),
+        (
+            EXAMPLE_68,
+            DEFAULT,
+        ),
+        (
+            EXAMPLE_75,
+            Config(cant_disable_sni_with_https=CantDisableSNIWithHTTPS.ignore),
+        ),
+        (
+            EXAMPLE_89,
+            Config(cant_disable_sni_with_https=CantDisableSNIWithHTTPS.ignore),
+        ),
     ],
 )
-def test_nothing_to_assert_rules(rule_value: Mapping[str, object]) -> None:
+def test_nothing_to_assert_rules(rule_value: Mapping[str, object], config: Config) -> None:
     # Assemble
-    for_migration = detect_conflicts(DEFAULT, rule_value)
+    for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(ID, for_migration)

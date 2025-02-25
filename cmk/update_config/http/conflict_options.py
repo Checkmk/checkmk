@@ -18,6 +18,7 @@ class ConflictType(enum.Enum):
     only_status_codes_allowed = "only-status-codes-allowed"
     cant_post_data = "cant-post-data"
     method_unavailable = "method-unavailable"
+    cant_disable_sni_with_https = "cant-disable-sni-with-https"
     cant_have_regex_and_string = "cant-have-regex-and-string"
 
 
@@ -198,6 +199,30 @@ class MethodUnavailable(enum.Enum):
         return "v2 does not support OPTIONS, TRACE, CONNECT, CONNECT_POST, PROPFIND options"
 
 
+class CantDisableSNIWithHTTPS(enum.Enum):
+    skip = "skip"
+    ignore = "ignore"
+
+    @classmethod
+    def type_(cls) -> ConflictType:
+        return ConflictType.cant_disable_sni_with_https
+
+    @classmethod
+    def default(cls) -> "CantDisableSNIWithHTTPS":
+        return cls.skip
+
+    def help(self) -> str:
+        match self:
+            case CantDisableSNIWithHTTPS.skip:
+                return "do not migrate rule"
+            case CantDisableSNIWithHTTPS.ignore:
+                return "ignore `Disable SSL/TLS host name extension support` option, enable SNI"
+
+    @classmethod
+    def help_header(cls) -> str:
+        return "v2 does not have option to use TLS without SNI"
+
+
 class CantHaveRegexAndString(enum.Enum):
     skip = "skip"
     string = "string"
@@ -233,6 +258,7 @@ class Config(BaseModel):
     only_status_codes_allowed: OnlyStatusCodesAllowed = OnlyStatusCodesAllowed.default()
     cant_post_data: CantPostData = CantPostData.default()
     method_unavailable: MethodUnavailable = MethodUnavailable.default()
+    cant_disable_sni_with_https: CantDisableSNIWithHTTPS = CantDisableSNIWithHTTPS.default()
     cant_have_regex_and_string: CantHaveRegexAndString = CantHaveRegexAndString.default()
 
 
@@ -245,6 +271,7 @@ def add_migrate_parsing(parser: ArgumentParser) -> None:
     _add_argument(parser, OnlyStatusCodesAllowed, OnlyStatusCodesAllowed.default())
     _add_argument(parser, CantPostData, CantPostData.default())
     _add_argument(parser, MethodUnavailable, MethodUnavailable.default())
+    _add_argument(parser, CantDisableSNIWithHTTPS, CantDisableSNIWithHTTPS.default())
     _add_argument(parser, CantHaveRegexAndString, CantHaveRegexAndString.default())
 
 

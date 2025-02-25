@@ -327,7 +327,7 @@ def add_migrate_parsing(parser: argparse.ArgumentParser) -> None:
             [
                 "conflict: v2 only support TLS 1.2 or 1.3",
                 f"{SSLIncompatible.skip.value} (default): do not migrate rule",
-                f"{SSLIncompatible.negotiate.value}: use HTTP/1.1 with virtual host set to the address",
+                f"{SSLIncompatible.negotiate.value}: migrate rule without `SSL` option, allow auto-negotiation",
             ]
         ),
     )

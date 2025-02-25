@@ -1476,7 +1476,6 @@ def test_host_config_custom_checks(
                             (
                                 TimespecificParameterSet({"param1": 1}, ()),
                                 TimespecificParameterSet({}, ()),
-                                TimespecificParameterSet({}, ()),
                             )
                         ),
                         discovered_parameters={},
@@ -1494,7 +1493,6 @@ def test_host_config_custom_checks(
                         parameters=TimespecificParameters(
                             (
                                 TimespecificParameterSet({"param2": 2}, ()),
-                                TimespecificParameterSet({}, ()),
                                 TimespecificParameterSet({}, ()),
                             )
                         ),
@@ -3112,7 +3110,12 @@ def test_boil_down_agent_rules(
                         check_plugin_name=CheckPluginName("check1"),
                         item="item",
                         description="Unimplemented check check1 / item",
-                        parameters=TimespecificParameters(()),
+                        parameters=TimespecificParameters(
+                            (
+                                TimespecificParameterSet({"origin": "enforced1"}, ()),
+                                TimespecificParameterSet({}, ()),
+                            )
+                        ),
                         discovered_parameters={},
                         labels={},
                         discovered_labels={},
@@ -3130,7 +3133,12 @@ def test_boil_down_agent_rules(
                         check_plugin_name=CheckPluginName("check1"),
                         item="item",
                         description="Unimplemented check check1 / item",
-                        parameters=TimespecificParameters(()),
+                        parameters=TimespecificParameters(
+                            (
+                                TimespecificParameterSet({"origin": "enforced1"}, ()),
+                                TimespecificParameterSet({}, ()),
+                            )
+                        ),
                         discovered_parameters={},
                         labels={},
                         discovered_labels={},

@@ -1567,16 +1567,10 @@ def _make_compute_check_parameters_cb(
     return callback
 
 
-# TODO: simplify this
 def compute_enforced_service_parameters(
-    matcher: RulesetMatcher,
     plugins: Mapping[CheckPluginName, CheckPlugin],
-    host_name: HostName,
     plugin_name: CheckPluginName,
-    item: Item,
-    service_labels: Labels,
-    params: Mapping[str, object],
-    configured_parameters: TimespecificParameters,
+    configured_parameters: TimespecificParameterSet,
 ) -> TimespecificParameters:
     """Compute effective check parameters for enforced services.
 
@@ -1584,16 +1578,14 @@ def compute_enforced_service_parameters(
      * the configured parameters
      * the plugins defaults
     """
-    check_plugin = agent_based_register.get_check_plugin(plugin_name, plugins)
-    if check_plugin is None:  # handle vanished check plug-in
-        return TimespecificParameters()
+    defaults = (
+        {}
+        if (check_plugin := agent_based_register.get_check_plugin(plugin_name, plugins)) is None
+        else check_plugin.check_default_parameters or {}
+    )
 
     return TimespecificParameters(
-        [
-            *configured_parameters.entries,
-            TimespecificParameterSet.from_parameters(params),
-            TimespecificParameterSet.from_parameters(check_plugin.check_default_parameters or {}),
-        ]
+        [configured_parameters, TimespecificParameterSet.from_parameters(defaults)]
     )
 
 
@@ -1620,7 +1612,6 @@ def compute_check_parameters(
     configured_parameters = _get_configured_parameters(
         matcher,
         host_name,
-        plugin_name,
         service_labels,
         ruleset_name=check_plugin.check_ruleset_name,
         item=item,
@@ -1638,7 +1629,6 @@ def compute_check_parameters(
 def _get_configured_parameters(
     matcher: RulesetMatcher,
     host_name: HostName,
-    plugin_name: CheckPluginName,
     service_labels: Labels,
     *,  # the following are all the same type :-(
     ruleset_name: RuleSetName | None,
@@ -2273,42 +2263,32 @@ class ConfigCache:
         with contextlib.suppress(KeyError):
             return self.__enforced_services_table[hostname]
 
-        table = {}
-        for checkgroup_name, ruleset in static_checks.items():
-            for check_plugin_name, item, params in (
-                ConfigCache._sanitize_enforced_entry(*entry)
-                for entry in reversed(self.ruleset_matcher.get_host_values(hostname, ruleset))
-            ):
-                descr = service_description(
-                    self.ruleset_matcher,
-                    hostname,
-                    check_plugin_name,
-                    service_name_template=(
-                        None
-                        if (p := agent_based_register.get_check_plugin(check_plugin_name, plugins))
-                        is None
-                        else p.service_name
-                    ),
-                    item=item,
-                )
-                labels = self.ruleset_matcher.labels_of_service(
-                    hostname, descr, discovered_labels={}
-                )
-                table[ServiceID(check_plugin_name, item)] = (
+        return self.__enforced_services_table.setdefault(
+            hostname,
+            {
+                ServiceID(check_plugin_name, item): (
                     RulesetName(checkgroup_name),
                     ConfiguredService(
                         check_plugin_name=check_plugin_name,
                         item=item,
-                        description=descr,
-                        parameters=compute_enforced_service_parameters(
+                        description=service_description(
                             self.ruleset_matcher,
-                            plugins,
-                            self.effective_host(hostname, descr, labels),
+                            hostname,
                             check_plugin_name,
-                            item,
-                            labels,
-                            {},
-                            configured_parameters=TimespecificParameters((params,)),
+                            service_name_template=(
+                                None
+                                if (
+                                    p := agent_based_register.get_check_plugin(
+                                        check_plugin_name, plugins
+                                    )
+                                )
+                                is None
+                                else p.service_name
+                            ),
+                            item=item,
+                        ),
+                        parameters=compute_enforced_service_parameters(
+                            plugins, check_plugin_name, params
                         ),
                         discovered_parameters={},
                         discovered_labels={},
@@ -2316,8 +2296,13 @@ class ConfigCache:
                         is_enforced=True,
                     ),
                 )
-
-        return self.__enforced_services_table.setdefault(hostname, table)
+                for checkgroup_name, ruleset in static_checks.items()
+                for check_plugin_name, item, params in (
+                    ConfigCache._sanitize_enforced_entry(*entry)
+                    for entry in reversed(self.ruleset_matcher.get_host_values(hostname, ruleset))
+                )
+            },
+        )
 
     @staticmethod
     def _sanitize_enforced_entry(

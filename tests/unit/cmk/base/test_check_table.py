@@ -176,7 +176,6 @@ def test_check_table_enforced_vs_discovered_precedence(
                     parameters=TimespecificParameters(
                         (
                             TimespecificParameterSet({}, ()),
-                            TimespecificParameterSet({}, ()),
                             TimespecificParameterSet({"levels": (35, 40)}, ()),
                         )
                     ),
@@ -205,7 +204,12 @@ def test_check_table_enforced_vs_discovered_precedence(
                     check_plugin_name=CheckPluginName("blub_bla"),
                     item="ITEM",
                     description="Unimplemented check blub_bla / ITEM",
-                    parameters=TimespecificParameters(),
+                    parameters=TimespecificParameters(
+                        (
+                            TimespecificParameterSet({}, ()),
+                            TimespecificParameterSet({}, ()),
+                        )
+                    ),
                     discovered_parameters={},
                     labels={},
                     discovered_labels={},
@@ -223,7 +227,6 @@ def test_check_table_enforced_vs_discovered_precedence(
                     description="Temperature SMART ITEM2",
                     parameters=TimespecificParameters(
                         (
-                            TimespecificParameterSet({}, ()),
                             TimespecificParameterSet({}, ()),
                             TimespecificParameterSet({"levels": (35, 40)}, ()),
                         )
@@ -261,7 +264,6 @@ def test_check_table_enforced_vs_discovered_precedence(
                     parameters=TimespecificParameters(
                         (
                             TimespecificParameterSet({}, ()),
-                            TimespecificParameterSet({}, ()),
                             TimespecificParameterSet({"levels": (35, 40)}, ()),
                         )
                     ),
@@ -282,7 +284,6 @@ def test_check_table_enforced_vs_discovered_precedence(
                     description="Temperature SMART static-cluster",
                     parameters=TimespecificParameters(
                         (
-                            TimespecificParameterSet({}, ()),
                             TimespecificParameterSet({}, ()),
                             TimespecificParameterSet({"levels": (35, 40)}, ()),
                         )
@@ -700,7 +701,6 @@ def test_check_table__get_static_check_entries(
     assert static_check_parameter == TimespecificParameters(
         (
             TimespecificParameterSet(static_parameters_default, ()),
-            TimespecificParameterSet({}, ()),
             TimespecificParameterSet({}, ()),
         )
     )

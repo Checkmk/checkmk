@@ -30,6 +30,7 @@ from cmk.plugins.collection.server_side_calls.httpv2 import (
 from cmk.server_side_calls_backend.config_processing import process_configuration_to_parameters
 from cmk.update_config.http.conflict_options import (
     AdditionalHeaders,
+    CantConstructURL,
     CantDisableSNIWithHTTPS,
     CantHaveRegexAndString,
     CantPostData,
@@ -42,13 +43,7 @@ from cmk.update_config.http.conflict_options import (
     SSLIncompatible,
     V1ChecksRedirectResponse,
 )
-from cmk.update_config.http.conflicts import (
-    _classify,
-    _migrate_expect_response,
-    Conflict,
-    detect_conflicts,
-    HostType,
-)
+from cmk.update_config.http.conflicts import _migrate_expect_response, Conflict, detect_conflicts
 from cmk.update_config.http.migrate import migrate
 
 DEFAULT = Config()
@@ -845,77 +840,56 @@ EXAMPLE_99: Mapping[str, object] = {
         (
             EXAMPLE_3,
             Conflict(
-                type_="cant_migrate_address_with_macro",
-                host_fields=["address"],
-            ),
-        ),
-        (
-            EXAMPLE_4,
-            Conflict(
-                type_="cant_migrate_address_with_macro",
-                host_fields=["address"],
+                type_=ConflictType.http_1_0_not_supported,
+                host_fields=["virthost"],
             ),
         ),
         (
             EXAMPLE_5,
             Conflict(
-                type_="cant_migrate_address_with_macro",
-                host_fields=["address"],
+                type_=ConflictType.http_1_0_not_supported,
+                host_fields=["virthost"],
             ),
         ),
         (
             EXAMPLE_6,
             Conflict(
-                type_="cant_migrate_address_with_macro",
-                host_fields=["address"],
+                type_=ConflictType.http_1_0_not_supported,
+                host_fields=["virthost"],
             ),
         ),
         (
             EXAMPLE_7,
             Conflict(
-                type_="cant_migrate_address_with_macro",
-                host_fields=["address"],
+                type_=ConflictType.http_1_0_not_supported,
+                host_fields=["virthost"],
             ),
         ),
         (
             EXAMPLE_8,
             Conflict(
-                type_="cant_migrate_address_with_macro",
-                host_fields=["address"],
+                type_=ConflictType.http_1_0_not_supported,
+                host_fields=["virthost"],
             ),
         ),
         (
             EXAMPLE_9,
             Conflict(
-                type_="cant_migrate_address_with_macro",
-                host_fields=["address"],
-            ),
-        ),
-        (
-            EXAMPLE_11,
-            Conflict(
-                type_="cant_migrate_address_with_macro",
-                host_fields=["address"],
+                type_=ConflictType.http_1_0_not_supported,
+                host_fields=["virthost"],
             ),
         ),
         (
             EXAMPLE_13,
             Conflict(
-                type_="proxy_tunnel_not_available",
+                type_=ConflictType.cant_migrate_proxy,
                 host_fields=["address"],
             ),
         ),
         (
             EXAMPLE_14,
             Conflict(
-                type_="proxy_tunnel_not_available",
-                host_fields=["address"],
-            ),
-        ),
-        (
-            EXAMPLE_20,  # TODO: check whether this would work in V1, or whether users typically use `[::1]` in their rule
-            Conflict(
-                type_="cant_turn_address_into_url",
+                type_=ConflictType.cant_migrate_proxy,
                 host_fields=["address"],
             ),
         ),
@@ -1020,21 +994,21 @@ EXAMPLE_99: Mapping[str, object] = {
         (
             EXAMPLE_85,
             Conflict(
-                type_="proxy_tunnel_not_available",
+                type_=ConflictType.cant_migrate_proxy,
                 host_fields=["address"],
             ),
         ),
         (
             EXAMPLE_86,
             Conflict(
-                type_="proxy_tunnel_not_available",
+                type_=ConflictType.cant_migrate_proxy,
                 host_fields=["address"],
             ),
         ),
         (
             EXAMPLE_86,
             Conflict(
-                type_="proxy_tunnel_not_available",
+                type_=ConflictType.cant_migrate_proxy,
                 host_fields=["address"],
             ),
         ),
@@ -1088,6 +1062,20 @@ EXAMPLE_99: Mapping[str, object] = {
                 host_fields=["virthost"],
             ),
         ),
+        (
+            EXAMPLE_19,
+            Conflict(
+                type_=ConflictType.cant_construct_url,
+                host_fields=["address", "uri", "virthost"],
+            ),
+        ),
+        (
+            EXAMPLE_4,
+            Conflict(
+                type_=ConflictType.cant_construct_url,
+                host_fields=["address", "uri", "virthost"],
+            ),
+        ),
     ],
 )
 def test_detect_conflicts(rule_value: Mapping[str, object], conflict: Conflict) -> None:
@@ -1133,14 +1121,21 @@ def test_nothing_to_assert_rules(rule_value: Mapping[str, object], config: Confi
         (EXAMPLE_17, DEFAULT, "http://localhost", "localhost"),
         (EXAMPLE_18, DEFAULT, "http://[::1]", "[::1]"),
         (
-            EXAMPLE_19,
+            EXAMPLE_20,  # TODO: check whether this would work in V1, or whether users typically use `[::1]` in their rule
             DEFAULT,
+            "http://[::1]",
+            "::1",
+        ),
+        (
+            EXAMPLE_19,
+            Config(cant_construct_url=CantConstructURL.force),
             "http://[::1]:80:80",
             "[::1]:80",
-        ),  # TODO: This may or may not be acceptable.
+        ),
         (EXAMPLE_21, DEFAULT, "http://[::1]/werks", "[::1]"),
         (EXAMPLE_25, DEFAULT, "https://[::1]", "[::1]"),
         (EXAMPLE_26, DEFAULT, "https://google.com", "google.com"),
+        (EXAMPLE_11, DEFAULT, "http://facebook.de", "$HOSTADDRESS$"),
     ],
 )
 def test_migrate_url(
@@ -1742,21 +1737,6 @@ def test_migrate_redirect(
     assert ssc_value[0].settings.connection is not None
     assert ssc_value[0].settings.connection.model_dump()["redirects"] == redirects
     assert ssc_value[0].settings.server_response == expect_response
-
-
-@pytest.mark.parametrize(
-    "host,type_",
-    [
-        ("google.com", HostType.EMBEDDABLE),
-        ("localhost", HostType.EMBEDDABLE),
-        ("127.0.0.1", HostType.EMBEDDABLE),
-        ("::1", HostType.IPV6),
-        ("[::1]", HostType.EMBEDDABLE),
-        ("::1127.0.0.1", HostType.INVALID),
-    ],
-)
-def test_classify(host: str, type_: HostType) -> None:
-    assert _classify(host) == type_
 
 
 def test_helper_migrate_expect_response() -> None:

@@ -234,6 +234,10 @@ def migrate(id_: str, for_migration: ForMigration) -> Mapping[str, object]:
             value.mode[1],
             address_family,
         )
+    if value.host.address is None:
+        server = "$HOSTADDRESS$"
+    else:
+        server = value.host.address[1]
     return {
         "endpoints": [
             {
@@ -246,7 +250,7 @@ def migrate(id_: str, for_migration: ForMigration) -> Mapping[str, object]:
                 "url": value.url(),
                 "individual_settings": {
                     "connection": connection,
-                    "server": value.host.address[1],
+                    "server": server,
                     **remaining_settings,
                 },
             },

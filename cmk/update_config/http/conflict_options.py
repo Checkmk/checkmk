@@ -20,6 +20,8 @@ class ConflictType(enum.Enum):
     method_unavailable = "method-unavailable"
     cant_disable_sni_with_https = "cant-disable-sni-with-https"
     v1_checks_redirect_response = "v1-checks-redirect-response"
+    cant_construct_url = "cant-construct-url"
+    cant_migrate_proxy = "cant-migrate-proxy"
     cant_have_regex_and_string = "cant-have-regex-and-string"
 
 
@@ -248,6 +250,30 @@ class V1ChecksRedirectResponse(enum.Enum):
         return "version v1 will checks the response obtained before following the redirect, version v2 will first follow the redirect and then check the status code"
 
 
+class CantConstructURL(enum.Enum):
+    skip = "skip"
+    force = "force"
+
+    @classmethod
+    def type_(cls) -> ConflictType:
+        return ConflictType.cant_construct_url
+
+    @classmethod
+    def default(cls) -> "CantConstructURL":
+        return cls.skip
+
+    def help(self) -> str:
+        match self:
+            case CantConstructURL.skip:
+                return "do not migrate rule"
+            case CantConstructURL.force:
+                return "use invalid URL"
+
+    @classmethod
+    def help_header(cls) -> str:
+        return "the migration uses a simple scheme consisting of various parts of the URL"
+
+
 class CantHaveRegexAndString(enum.Enum):
     skip = "skip"
     string = "string"
@@ -285,6 +311,7 @@ class Config(BaseModel):
     method_unavailable: MethodUnavailable = MethodUnavailable.default()
     cant_disable_sni_with_https: CantDisableSNIWithHTTPS = CantDisableSNIWithHTTPS.default()
     v1_checks_redirect_response: V1ChecksRedirectResponse = V1ChecksRedirectResponse.default()
+    cant_construct_url: CantConstructURL = CantConstructURL.default()
     cant_have_regex_and_string: CantHaveRegexAndString = CantHaveRegexAndString.default()
 
 
@@ -299,6 +326,7 @@ def add_migrate_parsing(parser: ArgumentParser) -> None:
     _add_argument(parser, MethodUnavailable, MethodUnavailable.default())
     _add_argument(parser, CantDisableSNIWithHTTPS, CantDisableSNIWithHTTPS.default())
     _add_argument(parser, V1ChecksRedirectResponse, V1ChecksRedirectResponse.default())
+    _add_argument(parser, CantConstructURL, CantConstructURL.default())
     _add_argument(parser, CantHaveRegexAndString, CantHaveRegexAndString.default())
 
 

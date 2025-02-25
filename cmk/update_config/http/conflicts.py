@@ -8,13 +8,13 @@ import re
 from collections.abc import Mapping, Sequence
 from contextlib import suppress
 from dataclasses import dataclass
-from ipaddress import AddressValueError, IPv6Address, NetmaskValueError
 from typing import Literal, LiteralString
 
 from pydantic import HttpUrl, ValidationError
 
 from cmk.update_config.http.conflict_options import (
     AdditionalHeaders,
+    CantConstructURL,
     CantDisableSNIWithHTTPS,
     CantHaveRegexAndString,
     CantPostData,
@@ -27,7 +27,7 @@ from cmk.update_config.http.conflict_options import (
     SSLIncompatible,
     V1ChecksRedirectResponse,
 )
-from cmk.update_config.http.v1_scheme import V1Cert, V1Host, V1Proxy, V1Url, V1Value
+from cmk.update_config.http.v1_scheme import V1Cert, V1Host, V1Url, V1Value
 
 
 class Migrate(Config):
@@ -40,6 +40,55 @@ def _migrate_header(header: str) -> dict[str, str] | None:
         case [name, value]:
             return {"header_name": name, "header_value": value.strip()}
     return None
+
+
+MACROS = {
+    "$HOSTNAME$",
+    "$HOSTADDRESS$",
+    "$HOSTALIAS$",
+    "$HOST_TAGS$",
+    "$_HOSTTAGS$",
+    "$HOST__TAG_site$",
+    "$_HOST_TAG_site$",
+    "$HOST__TAG_address_family$",
+    "$_HOST_TAG_address_family$",
+    "$HOST__TAG_ip-v4$",
+    "$_HOST_TAG_ip-v4$",
+    "$HOST__TAG_agent$",
+    "$_HOST_TAG_agent$",
+    "$HOST__TAG_tcp$",
+    "$_HOST_TAG_tcp$",
+    "$HOST__TAG_checkmk-agent$",
+    "$_HOST_TAG_checkmk-agent$",
+    "$HOST__TAG_piggyback$",
+    "$_HOST_TAG_piggyback$",
+    "$HOST__TAG_snmp_ds$",
+    "$_HOST_TAG_snmp_ds$",
+    "$HOST__TAG_criticality$",
+    "$_HOST_TAG_criticality$",
+    "$HOST__TAG_networking$",
+    "$_HOST_TAG_networking$",
+    "$HOST__LABEL_cmk/site$",
+    "$_HOST_LABEL_cmk/site$",
+    "$HOST__LABELSOURCE_cmk/site$",
+    "$_HOST_LABELSOURCE_cmk/site$",
+    "$HOST_ADDRESS_4$",
+    "$_HOSTADDRESS_4$",
+    "$HOST_ADDRESS_6$",
+    "$_HOSTADDRESS_6$",
+    "$HOST_ADDRESS_FAMILY$",
+    "$_HOSTADDRESS_FAMILY$",
+    "$HOST_ADDRESSES_4$",
+    "$_HOSTADDRESSES_4$",
+    "$HOST_ADDRESSES_6$",
+    "$_HOSTADDRESSES_6$",
+    "$HOST_FILENAME$",
+    "$_HOSTFILENAME$",
+    "$USER1$",
+    "$USER2$",
+    "$USER3$",
+    "$USER4$",
+}
 
 
 class MigratableUrl(V1Url):
@@ -105,7 +154,7 @@ class MigratableCert(V1Cert):
 
 
 class MigrateableHost(V1Host):
-    address: tuple[Literal["direct"], str]
+    address: tuple[Literal["direct"], str] | None = None
 
 
 def _build_url(scheme: str, host: str, port: int | None, path: str) -> str:
@@ -120,11 +169,10 @@ class MigratableValue(V1Value):
     def url(self) -> str:
         scheme = "https" if self.uses_https() else "http"
         path = self.mode[1].uri or "" if isinstance(self.mode[1], MigratableUrl) else ""
-        hostname = self.host.virthost or self.host.address[1]
-        # TODO: currently not possible, due to proxy tunneling unavailable in V2.
-        # if isinstance(address, V1Proxy):
-        #     proxy = _build_url(scheme, address.address, address.port or value.host.port, path)
-        #     connection["proxy"] = proxy
+        if isinstance(self.host.address, tuple):
+            hostname = self.host.virthost or self.host.address[1]
+        else:
+            hostname = self.host.virthost or "$HOSTADDRESS$"
         return _build_url(scheme, hostname, self.host.port, path)
 
 
@@ -143,20 +191,16 @@ class Conflict:
     cant_load: bool = False
 
 
-class HostType(enum.Enum):
-    IPV6 = enum.auto()
-    EMBEDDABLE = enum.auto()
-    INVALID = enum.auto()
+class UrlType(enum.Enum):
+    VALID = "valid"
+    INVALID = "invalid"
 
 
-def _classify(host: str) -> HostType:
+def _classify(url: str) -> UrlType:
     with suppress(ValidationError):
-        HttpUrl(url=f"http://{host}")
-        return HostType.EMBEDDABLE
-    with suppress(AddressValueError, NetmaskValueError):
-        IPv6Address(host)
-        return HostType.IPV6
-    return HostType.INVALID
+        HttpUrl(url=url)
+        return UrlType.VALID
+    return UrlType.INVALID
 
 
 def detect_conflicts(config: Config, rule_value: Mapping[str, object]) -> Conflict | ForMigration:
@@ -167,36 +211,20 @@ def detect_conflicts(config: Config, rule_value: Mapping[str, object]) -> Confli
             type_="invalid_value",
             cant_load=True,
         )
-    if value.host.address is None:
+    if isinstance(value.host.address, tuple) and value.host.address[0] == "proxy":
         return Conflict(
-            type_="cant_migrate_address_with_macro",
+            type_=ConflictType.cant_migrate_proxy,
             host_fields=["address"],
         )
-    else:
-        address = value.host.address[1]
-        if isinstance(address, V1Proxy):
-            return Conflict(
-                type_="proxy_tunnel_not_available",
-                host_fields=["address"],
-            )
-        elif isinstance(address, str):
-            if (
-                config.http_1_0_not_supported is HTTP10NotSupported.skip
-                and not value.uses_https()
-                and value.host.virthost is None
-            ):
-                return Conflict(
-                    type_=ConflictType.http_1_0_not_supported,
-                    host_fields=["virthost"],
-                )
-            type_ = _classify(address)
-            if type_ is not HostType.EMBEDDABLE:
-                # This might have some issues, since customers can put a port, uri, and really mess with
-                # us in a multitude of ways.
-                return Conflict(
-                    type_="cant_turn_address_into_url",
-                    host_fields=["address"],
-                )
+    if (
+        config.http_1_0_not_supported is HTTP10NotSupported.skip
+        and not value.uses_https()
+        and value.host.virthost is None
+    ):
+        return Conflict(
+            type_=ConflictType.http_1_0_not_supported,
+            host_fields=["virthost"],
+        )
     mode = value.mode[1]
     if isinstance(mode, V1Url):
         if config.add_headers_incompatible is AdditionalHeaders.skip and any(
@@ -294,7 +322,18 @@ def detect_conflicts(config: Config, rule_value: Mapping[str, object]) -> Confli
             type_=ConflictType.cant_disable_sni_with_https,
             disable_sni=True,
         )
-    return ForMigration(
-        value=MigratableValue.model_validate(value.model_dump()),
-        config=config,
-    )
+
+    migratable_value = MigratableValue.model_validate(value.model_dump())
+    if config.cant_construct_url is CantConstructURL.skip:
+        url = migratable_value.url()
+        if _classify(url) is UrlType.INVALID:
+            return Conflict(
+                type_=ConflictType.cant_construct_url,
+                host_fields=["address", "uri", "virthost"],
+            )
+        if any(macro in url for macro in MACROS):
+            return Conflict(
+                type_=ConflictType.cant_construct_url,
+                host_fields=["address", "uri", "virthost"],
+            )
+    return ForMigration(value=migratable_value, config=config)

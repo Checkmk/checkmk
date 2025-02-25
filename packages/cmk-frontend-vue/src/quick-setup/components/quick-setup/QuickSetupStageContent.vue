@@ -50,8 +50,8 @@ const invokeAction = (waitLabel: string, action: () => void) => {
   action()
 }
 
-const waitComponentEnabled = computed(() => {
-  return typeof props.hideWaitLegend === 'undefined' || !props.hideWaitLegend
+const waitIconEnabled = computed(() => {
+  return typeof props.hideWaitIcon === 'undefined' || !props.hideWaitIcon
 })
 </script>
 
@@ -82,10 +82,8 @@ const waitComponentEnabled = computed(() => {
         </CmkButton>
       </div>
       <div v-else class="qs-stage-content__loading">
-        <div v-if="waitComponentEnabled">
-          <CmkIcon name="load-graph" variant="inline" size="xlarge" />
-          <span>{{ loadWaitLabel }}</span>
-        </div>
+        <CmkIcon v-if="waitIconEnabled" name="load-graph" variant="inline" size="xlarge" />
+        <span>{{ loadWaitLabel }}</span>
       </div>
     </div>
   </div>

@@ -512,7 +512,7 @@ preventLeaving.value = false
     :current-stage="quickSetupHook.stage.value"
     :mode="quickSetupHook.mode"
     :prevent-leaving="preventLeaving"
-    :hide-wait-legend="backgroundJobLogHook.entries.value.length > 0"
+    :hide-wait-icon="backgroundJobLogHook.entries.value.length > 0"
   />
 </template>
 

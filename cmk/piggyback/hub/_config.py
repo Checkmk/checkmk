@@ -13,8 +13,8 @@ from cmk.utils.hostaddress import HostName
 
 from cmk.messaging import Connection, QueueName, RoutingKey
 
-from .paths import create_paths, PiggybackHubPaths
-from .utils import APP_NAME
+from ._paths import create_paths, PiggybackHubPaths
+from ._utils import APP_NAME
 
 CONFIG_ROUTE = RoutingKey("config")
 

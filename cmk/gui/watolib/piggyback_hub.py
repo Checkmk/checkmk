@@ -15,7 +15,7 @@ from cmk.utils.paths import omd_root
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.site_changes import ChangeSpec
 
-from cmk.piggyback.hub.config import distribute_config, PiggybackHubConfig
+from cmk.piggyback.hub import distribute_config, PiggybackHubConfig
 
 _HOST_CHANGES = (
     "edit-host",

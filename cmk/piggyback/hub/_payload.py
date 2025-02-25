@@ -22,9 +22,9 @@ from cmk.piggyback.backend import (
     watch_new_messages,
 )
 
-from .config import load_config, PiggybackHubConfig
-from .paths import create_paths
-from .utils import make_connection, make_log_and_exit
+from ._config import load_config, PiggybackHubConfig
+from ._paths import create_paths
+from ._utils import make_connection, make_log_and_exit
 
 
 class PiggybackPayload(BaseModel):

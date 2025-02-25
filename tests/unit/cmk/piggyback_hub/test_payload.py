@@ -15,18 +15,18 @@ from cmk.piggyback.backend import (
     PiggybackMessage,
     PiggybackMetaData,
 )
-from cmk.piggyback.hub.payload import PiggybackPayload, save_payload_on_message
+from cmk.piggyback.hub import _payload as payload
 
 
 def test__on_message() -> None:
     test_logger = logging.getLogger("test")
-    input_payload = PiggybackPayload(
+    input_payload = payload.PiggybackPayload(
         source_host=HostName("source"),
         raw_data={HostName("target"): [b"line1\nline2"]},
         message_timestamp=1640000020,
         contact_timestamp=1640000000,
     )
-    on_message = save_payload_on_message(test_logger, cmk.utils.paths.omd_root)
+    on_message = payload.save_payload_on_message(test_logger, cmk.utils.paths.omd_root)
 
     on_message(Mock(), DeliveryTag(0), input_payload)
 

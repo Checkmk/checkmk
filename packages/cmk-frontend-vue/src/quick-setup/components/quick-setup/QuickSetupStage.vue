@@ -8,7 +8,6 @@ import { computed } from 'vue'
 
 import CmkCollapsible from '@/components/CmkCollapsible.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
-import { useErrorBoundary } from '@/components/useErrorBoundary'
 
 import QuickSetupStageContent from './QuickSetupStageContent.vue'
 import type { QuickSetupStageProps } from './quick_setup_types'
@@ -21,8 +20,6 @@ const isOpen = computed(() => isSelectedStage.value || props.mode === 'overview'
 const onClickGoTo = computed(() =>
   !!props.goToThisStage && props.currentStage > props.index ? () => props.goToThisStage!() : null
 )
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const { ErrorBoundary } = useErrorBoundary()
 </script>
 
 <template>
@@ -38,9 +35,7 @@ const { ErrorBoundary } = useErrorBoundary()
       <CmkLabel variant="title" :on-click="onClickGoTo">{{ title }}</CmkLabel>
 
       <CmkCollapsible :open="isCompleted && !!recapContent">
-        <ErrorBoundary>
-          <component :is="recapContent" />
-        </ErrorBoundary>
+        <component :is="recapContent" />
       </CmkCollapsible>
 
       <CmkCollapsible :open="!isCompleted && !!sub_title">

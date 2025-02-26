@@ -2497,7 +2497,7 @@ def run_checking(
                 service_labels: config_cache.check_period_of_service(
                     hostname, service_name, service_labels
                 ),
-                submitter=get_submitter_(
+                submitter=get_submitter(
                     check_submission=config.check_submission,
                     monitoring_core=config.monitoring_core,
                     dry_run=dry_run,

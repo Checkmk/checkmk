@@ -24,4 +24,4 @@ fi
 # shellcheck source=/dev/null
 source "${REPO_PATH}/.venv/bin/activate"
 "$@"
-exit
+deactivate

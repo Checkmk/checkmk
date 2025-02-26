@@ -399,6 +399,10 @@ class ApiError(RuntimeError):
     pass
 
 
+class ApiLoginFailed(ApiError):
+    pass
+
+
 class ApiErrorMissingData(ApiError):
     pass
 
@@ -495,6 +499,11 @@ class BaseApiClient(abc.ABC):
             proxies=self._http_proxy_config.to_requests_proxies(),
         )
         token = client_app.acquire_token_for_client([self._resource_url + "/.default"])
+
+        if error := token.get("error"):
+            if error_description := token.get("error_description"):
+                error = f"{error}. {error_description}"
+            raise ApiLoginFailed(error)
 
         self._headers.update(
             {
@@ -1749,7 +1758,7 @@ def main_graph_client(args: Args) -> None:
         graph_client.login(args.tenant, args.client, args.secret)
         write_section_ad(graph_client, AzureSection("ad"), args)
         write_section_app_registrations(graph_client, args)
-    except ApiErrorAuthorizationRequestDenied as exc:
+    except (ApiLoginFailed, ApiErrorAuthorizationRequestDenied) as exc:
         # We are not raising the exception in debug mode.
         # Having no permissions for the graph API is a legit configuration
         write_exception_to_agent_info_section(exc, "Graph client")
@@ -1898,7 +1907,7 @@ def test_connection(args: Args, subscription: str) -> int | tuple[int, str]:
     )
     try:
         mgmt_client.login(args.tenant, args.client, args.secret)
-    except ValueError as exc:
+    except (ApiLoginFailed, ValueError) as exc:
         error_msg = f"Management client login failed with: {exc}\n"
         sys.stdout.write(error_msg)
         return 2, error_msg
@@ -1960,6 +1969,9 @@ def main(argv=None):
     if args.connection_test:
         for subscription in args.subscriptions:
             if (test_result := test_connection(args, subscription)) != 0:
+                if isinstance(test_result, tuple):
+                    sys.stderr.write(test_result[1])
+                    return test_result[0]
                 return test_result
         return 0
 

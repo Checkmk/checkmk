@@ -67,12 +67,12 @@ class RRDDataKey:
 RRDData = Mapping[RRDDataKey, TimeSeries]
 
 
-def _derive_num_points_twindow(rrd_data: RRDData) -> tuple[int, tuple[int, int, int]]:
+def _derive_num_points(rrd_data: RRDData) -> tuple[int, int, int, int]:
     if rrd_data:
         sample_data = next(iter(rrd_data.values()))
-        return len(sample_data), sample_data.twindow
+        return len(sample_data), sample_data.start, sample_data.end, sample_data.step
     # no data, default clean graph, use for pure scalars on custom graphs
-    return 1, (0, 60, 60)
+    return 1, 0, 60, 60
 
 
 _TOperatorReturn = TypeVar("_TOperatorReturn")
@@ -226,13 +226,13 @@ class MetricOpConstant(MetricOperation, frozen=True):
         yield from ()
 
     def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
-        num_points, twindow = _derive_num_points_twindow(rrd_data)
+        num_points, start, end, step = _derive_num_points(rrd_data)
         return [
             AugmentedTimeSeries(
                 data=TimeSeries(
-                    start=twindow[0],
-                    end=twindow[1],
-                    step=twindow[2],
+                    start=start,
+                    end=end,
+                    step=step,
                     values=[self.value] * num_points,
                 )
             )
@@ -248,13 +248,13 @@ class MetricOpConstantNA(MetricOperation, frozen=True):
         yield from ()
 
     def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
-        num_points, twindow = _derive_num_points_twindow(rrd_data)
+        num_points, start, end, step = _derive_num_points(rrd_data)
         return [
             AugmentedTimeSeries(
                 data=TimeSeries(
-                    start=twindow[0],
-                    end=twindow[1],
-                    step=twindow[2],
+                    start=start,
+                    end=end,
+                    step=step,
                     values=[None] * num_points,
                 )
             )
@@ -358,13 +358,13 @@ class MetricOpRRDSource(MetricOperation, frozen=True):
         ) in rrd_data:
             return [AugmentedTimeSeries(data=rrd_data[key])]
 
-        num_points, twindow = _derive_num_points_twindow(rrd_data)
+        num_points, start, end, step = _derive_num_points(rrd_data)
         return [
             AugmentedTimeSeries(
                 data=TimeSeries(
-                    start=twindow[0],
-                    end=twindow[1],
-                    step=twindow[2],
+                    start=start,
+                    end=end,
+                    step=step,
                     values=[None] * num_points,
                 ),
             )

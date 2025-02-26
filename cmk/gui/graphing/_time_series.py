@@ -72,20 +72,14 @@ class TimeSeries:
     def twindow(self) -> TimeWindow:
         return self.start, self.end, self.step
 
-    def forward_fill_resample(self, twindow: TimeWindow) -> TimeSeriesValues:
-        """Upsample by forward filling values
-
-        twindow : 3-tuple, (start, end, step)
-             description of target time interval
-        """
-        if twindow == self.twindow:
+    def forward_fill_resample(self, *, start: int, end: int, step: int) -> TimeSeriesValues:
+        """Upsample by forward filling values"""
+        if start == self.start and end == self.end and step == self.step:
             return self.values
-
         idx_max = len(self.values) - 1
-
         return [
             self.values[max(0, min(int((t - self.start) / self.step), idx_max))]
-            for t in range(*twindow)
+            for t in range(start, end, step)
         ]
 
     def downsample(self, twindow: TimeWindow, cf: str | None = "max") -> TimeSeriesValues:

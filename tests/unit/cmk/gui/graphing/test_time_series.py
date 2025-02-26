@@ -21,7 +21,7 @@ def test_rrdtimestamps(start: int, end: int, step: int, result: list[int]) -> No
 
 
 @pytest.mark.parametrize(
-    "time_series, twindow, upsampled",
+    "time_series, start, end, step, upsampled",
     [
         # The following test resamples the identity function consisting of the points
         # (0|0), (10|10), (20|20), (30|30) and (40|40).
@@ -31,43 +31,57 @@ def test_rrdtimestamps(start: int, end: int, step: int, result: list[int]) -> No
         # When dealing with missing data, this is commonly refered to as "forward filling".
         (
             TimeSeries(start=0, end=50, step=10, values=[0, 10, 20, 30, 40]),
-            (4, 47, 4),
+            4,
+            47,
+            4,
             [0, 0, 10, 10, 20, 20, 20, 30, 30, 40, 40],
         ),
         # Here are some more tests that I don't know the significance of:
         (
             TimeSeries(start=10, end=20, step=10, values=[20]),
-            (10, 20, 10),
+            10,
+            20,
+            10,
             [20],
         ),
         (
             TimeSeries(start=10, end=20, step=10, values=[20]),
-            (10, 20, 5),
+            10,
+            20,
+            5,
             [20, 20],
         ),
         (
             TimeSeries(start=0, end=120, step=40, values=[25, 65, 105]),
-            (0, 100, 10),
+            0,
+            100,
+            10,
             [25, 25, 25, 25, 65, 65, 65, 65, 105, 105],
         ),
         (
             TimeSeries(start=0, end=120, step=40, values=[25, None, 105]),
-            (0, 100, 10),
+            0,
+            100,
+            10,
             [25, 25, 25, 25, None, None, None, None, 105, 105],
         ),
         (
             TimeSeries(start=0, end=120, step=40, values=[25, 65, 105]),
-            (30, 110, 10),
+            30,
+            110,
+            10,
             [25, 65, 65, 65, 65, 105, 105, 105],
         ),
     ],
 )
 def test_time_series_upsampling(
     time_series: TimeSeries,
-    twindow: TimeWindow,
+    start: int,
+    end: int,
+    step: int,
     upsampled: TimeSeriesValues,
 ) -> None:
-    assert time_series.forward_fill_resample(twindow) == upsampled
+    assert time_series.forward_fill_resample(start=start, end=end, step=step) == upsampled
 
 
 @pytest.mark.parametrize(

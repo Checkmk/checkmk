@@ -121,8 +121,12 @@ def _align_and_resample_rrds(
                     time_window,
                     key.consolidation_function or consolidation_function,
                 )
-                if time_window[2] >= time_series.twindow[2]
-                else time_series.forward_fill_resample(time_window)
+                if time_window[2] >= time_series.step
+                else time_series.forward_fill_resample(
+                    start=time_window[0],
+                    end=time_window[1],
+                    step=time_window[2],
+                )
             )
 
 

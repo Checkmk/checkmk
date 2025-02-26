@@ -418,9 +418,11 @@ test-unit-omdlib:
 		omd/packages/omd/ \
 		tests/unit/omdlib/
 
-test-unit:
+test-doctest:
 	cd .. && \
 	    $(BAZEL_CMD) test //cmk:doctest
+
+test-unit:
 	cd .. && \
 	    $(BAZEL_CMD) test --test_verbose_timeout_warnings //tests/unit:all \
 	    --test_env=TZ=$(RANDOM_TZ) \

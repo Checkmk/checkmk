@@ -751,12 +751,6 @@ msgstr "%s de %s"
 msgid "%s of %s%%"
 msgstr "%s de %s%%"
 
-#, fuzzy, python-format
-msgid "%s other service"
-msgid_plural "%s other services"
-msgstr[0] "Outros serviços"
-msgstr[1] "Outros serviços"
-
 #, python-format
 msgid "%s properties"
 msgstr "%s propriedades"
@@ -2323,6 +2317,14 @@ msgstr ""
 "ASCII, dígitos e sublinhados."
 
 #, fuzzy
+msgid "A macro name and a regular expression are required"
+msgstr "Arquivos de grupo baseados em um padrão de expressão regular."
+
+#, fuzzy
+msgid "A macro name is required"
+msgstr "como macro denominada"
+
+#, fuzzy
 msgid ""
 "A matrix of performance data values from all hosts in a certain host group"
 msgstr ""
@@ -2367,6 +2369,10 @@ msgstr ""
 msgid "A provisioning of over 100% means over provisioning."
 msgstr ""
 "Um provisionamento superior a 100% significa um provisionamento superior."
+
+#, fuzzy
+msgid "A regular expression is required"
+msgstr "Expressão regular a esperar no conteúdo"
 
 msgid ""
 "A regular expression matching the <b>beginning</b> of a service description. "
@@ -3687,6 +3693,10 @@ msgstr "Fluxos de alerta activos"
 
 #, fuzzy
 msgid "Active and inactive memory"
+msgstr "Memória Ativa e Inativa"
+
+#, fuzzy
+msgid "Active and inactive memory - files and anonymous"
 msgstr "Memória Ativa e Inativa"
 
 msgid "Active check"
@@ -7362,6 +7372,9 @@ msgstr ""
 msgid "At least one selection is missing."
 msgstr "Indique quando falta o arquivo"
 
+msgid "At least one triggering event must be selected."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "At most that many notifications are kept back for bulking. A value of 1 "
@@ -7916,9 +7929,6 @@ msgstr "Disponível (em falta)"
 msgid "Available Memory"
 msgstr "Memória disponível"
 
-msgid "Available Spare"
-msgstr "Sobressalentes disponíveis"
-
 msgid "Available agent configurations"
 msgstr "Configurações de agentes disponíveis"
 
@@ -7939,6 +7949,10 @@ msgstr "Processadores físicos disponíveis em pool compartilhado"
 
 msgid "Available replicas"
 msgstr "Réplicas disponíveis"
+
+#, fuzzy
+msgid "Available spare"
+msgstr "Sobressalentes disponíveis"
 
 msgid "Available temp space"
 msgstr "Espaço temporário disponível"
@@ -34637,6 +34651,10 @@ msgstr "Fonte de dados inválida: %s"
 msgid "Invalid data. Missing filename"
 msgstr "Nome de arquivo inválido"
 
+#, fuzzy
+msgid "Invalid data: value is not a string."
+msgstr "Valor inválido para o parâmetro ack."
+
 #, python-format
 msgid "Invalid datasource '%s' configured."
 msgstr "Fonte de dados inválida '%s' configurada."
@@ -43455,11 +43473,6 @@ msgstr "Sem hospedeiro de teste"
 msgid "No title"
 msgstr "Sem título"
 
-msgid ""
-"No triggering events selected. Please select at least one event to trigger "
-"the notification."
-msgstr ""
-
 #, fuzzy, python-format
 msgid ""
 "No unpackaged files found. If you want to create new extension packages then "
@@ -49279,6 +49292,10 @@ msgstr ""
 "Active a monitorização de, pelo menos, um tipo de dispositivo: Android, iOS "
 "ou outros dispositivos"
 
+#, fuzzy
+msgid "Please add at least one check type."
+msgstr "Por favor, acrescente pelo menos um nó de criança."
+
 msgid "Please add at least one child node."
 msgstr "Por favor, acrescente pelo menos um nó de criança."
 
@@ -49290,6 +49307,10 @@ msgid "Please add at least one contact group"
 msgstr "Por favor, acrescente pelo menos um nó de criança."
 
 #, fuzzy
+msgid "Please add at least one contact group."
+msgstr "Por favor, acrescente pelo menos um nó de criança."
+
+#, fuzzy
 msgid "Please add at least one email address"
 msgstr "Por favor, acrescente pelo menos um nó de criança."
 
@@ -49298,11 +49319,43 @@ msgid "Please add at least one endpoint to monitor"
 msgstr "Por favor, adicione pelo menos uma coluna à sua vista."
 
 #, fuzzy
+msgid "Please add at least one host group."
+msgstr "Por favor, acrescente pelo menos um nó de criança."
+
+#, fuzzy
+msgid "Please add at least one host label."
+msgstr "Por favor, acrescente pelo menos um nó de criança."
+
+#, fuzzy
+msgid "Please add at least one host."
+msgstr "Por favor, acrescente pelo menos um nó de criança."
+
+#, fuzzy
 msgid "Please add at least one macro"
 msgstr "Por favor, acrescente pelo menos um nó de criança."
 
 #, fuzzy
+msgid "Please add at least one member."
+msgstr "Por favor, acrescente pelo menos um nó de criança."
+
+#, fuzzy
 msgid "Please add at least one recipient"
+msgstr "Por favor, acrescente pelo menos um nó de criança."
+
+#, fuzzy
+msgid "Please add at least one service group."
+msgstr "Por favor, acrescente pelo menos um nó de criança."
+
+#, fuzzy
+msgid "Please add at least one service label."
+msgstr "Por favor, acrescente pelo menos um nó de criança."
+
+#, fuzzy
+msgid "Please add at least one service."
+msgstr "Por favor, acrescente pelo menos um nó de criança."
+
+#, fuzzy
+msgid "Please add at least one site."
 msgstr "Por favor, acrescente pelo menos um nó de criança."
 
 #, fuzzy
@@ -49363,7 +49416,7 @@ msgid "Please choose a file to upload."
 msgstr "Por favor, escolha um arquivo para carregar."
 
 #, fuzzy
-msgid "Please choose a notification parameter or create one."
+msgid "Please choose a parameter or click \"Create\" to add a new one."
 msgstr "Eliminar esta regra de notificação"
 
 msgid "Please choose a report to schedule"
@@ -49457,6 +49510,10 @@ msgstr ""
 #, fuzzy
 msgid "Please enter a Service Integration Key"
 msgstr "Chave de Integração do Serviço PagerDuty"
+
+#, fuzzy
+msgid "Please enter a comment to filter for."
+msgstr "Por favor, introduza uma hora."
 
 msgid "Please enter a filename."
 msgstr "Por favor, introduza um nome de ficheiro."
@@ -49595,6 +49652,11 @@ msgstr ""
 "Observe que é necessário definir <tt>RequestHeader set X-Forwarded-Proto "
 "\"https\"</tt> na configuração do Apache do sistema para informar a GUI do "
 "Checkmk sobre a configuração do SSL."
+
+msgid ""
+"Please note that your site will be deleted when the trial period ends or "
+"when you activate a license. "
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -63362,6 +63424,12 @@ msgstr "Não foi possível encontrar o DN de base do grupo."
 msgid "The Group Base DN is not configured, not fetching any groups."
 msgstr "O DN base do grupo não está configurado, não vai buscar nenhum grupo."
 
+msgid ""
+"The HTTP password can be generated from the settings page in Gerrit under '/"
+"settings/#HTTPCredentials' or from the REST API. NOTE: you should NOT enter "
+"your account credentials here!"
+msgstr ""
+
 msgid "The HTTP resource path on which to fetch metrics from targets."
 msgstr ""
 
@@ -64978,6 +65046,10 @@ msgstr ""
 "do título (se você tiver algum). Se você usar os títulos corretos, os "
 "atributos podem ser mapeados automaticamente. Os atributos atualmente "
 "disponíveis são:"
+
+#, fuzzy
+msgid "The first value must be lower than the second value."
+msgstr "O agrupamento deve ter pelo menos um nó"
 
 msgid "The folder is not permitted for any contact group."
 msgstr "A pasta não é permitida para nenhum grupo de contato."
@@ -79419,6 +79491,9 @@ msgstr "Opções de criação de porquinhos"
 msgid "User for login"
 msgstr "Usuário para login"
 
+msgid "User generated HTTP password (not account password)"
+msgstr ""
+
 msgid "User interface"
 msgstr "Interface do usuário"
 
@@ -80420,6 +80495,9 @@ msgstr "Valor %r não é permitido aqui."
 
 msgid "Value Type"
 msgstr "Tipo de valor"
+
+msgid "Value is default. Please provide a non-default value."
+msgstr ""
 
 #, fuzzy, python-format
 msgid "Value must be one of '%s'"
@@ -82529,6 +82607,13 @@ msgstr ""
 "Quando você deseja processar armadilhas SNMP com o Console de Eventos é "
 "necessário configurar as credenciais para descriptografar as armadilhas de "
 "entrada."
+
+msgid ""
+"Whenever Checkmk creates, modifies or deletes hosts via this connection, it "
+"will only consider hosts that receive piggyback data from hosts with names "
+"matching one of these regular expressions. Please note: The attribution of "
+"piggyback data to existing hosts is not affected by this setting."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -85371,11 +85456,6 @@ msgstr "As suas extensões têm um tamanho de %s."
 msgid "Your filename must not end with a slash."
 msgstr "O seu nome de arquivo não deve terminar com uma barra."
 
-msgid ""
-"Your free trial is active! Please note that your site will be deleted when "
-"the trial period ends. "
-msgstr ""
-
 #, fuzzy
 msgid "Your host name has an invalid format."
 msgstr "O seu nome de anfitrião tem um formato inválido."
@@ -87886,6 +87966,12 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
+
+#, fuzzy, python-format
+#~ msgid "%s other service"
+#~ msgid_plural "%s other services"
+#~ msgstr[0] "Outros serviços"
+#~ msgstr[1] "Outros serviços"
 
 #~ msgid "Show discovered service labels"
 #~ msgstr "Mostrar as etiquetas de serviço descobertas"

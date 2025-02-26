@@ -756,13 +756,6 @@ msgstr "%s din %s"
 msgid "%s of %s%%"
 msgstr "%s de %s%%"
 
-#, fuzzy, python-format
-msgid "%s other service"
-msgid_plural "%s other services"
-msgstr[0] "Alte servicii"
-msgstr[1] "Alte servicii"
-msgstr[2] "Alte servicii"
-
 #, python-format
 msgid "%s properties"
 msgstr "%s proprietăți"
@@ -2346,6 +2339,14 @@ msgstr ""
 "litere ASCII de sus, cifre și caractere de subliniere."
 
 #, fuzzy
+msgid "A macro name and a regular expression are required"
+msgstr "Grupați fișiere pe baza unui model de expresie regulată."
+
+#, fuzzy
+msgid "A macro name is required"
+msgstr "ca macro numit"
+
+#, fuzzy
 msgid ""
 "A matrix of performance data values from all hosts in a certain host group"
 msgstr ""
@@ -2388,6 +2389,10 @@ msgstr ""
 #, no-python-format
 msgid "A provisioning of over 100% means over provisioning."
 msgstr "O dotare de peste 100% înseamnă o dotare excesivă."
+
+#, fuzzy
+msgid "A regular expression is required"
+msgstr "Expresie regulată de așteptat"
 
 msgid ""
 "A regular expression matching the <b>beginning</b> of a service description. "
@@ -3708,6 +3713,10 @@ msgstr "Fluxuri alertate active"
 
 #, fuzzy
 msgid "Active and inactive memory"
+msgstr "Memorie activă și inactivă"
+
+#, fuzzy
+msgid "Active and inactive memory - files and anonymous"
 msgstr "Memorie activă și inactivă"
 
 msgid "Active check"
@@ -7365,6 +7374,9 @@ msgstr ""
 msgid "At least one selection is missing."
 msgstr "Starea când lipsește fișierul"
 
+msgid "At least one triggering event must be selected."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "At most that many notifications are kept back for bulking. A value of 1 "
@@ -7907,9 +7919,6 @@ msgstr "Disponibil (lipsă)"
 msgid "Available Memory"
 msgstr "Memorie disponibilă"
 
-msgid "Available Spare"
-msgstr "Rezerva disponibilă"
-
 msgid "Available agent configurations"
 msgstr "Configurații de agent disponibile"
 
@@ -7930,6 +7939,10 @@ msgstr "Procesoarele fizice disponibile în pool-ul partajat"
 
 msgid "Available replicas"
 msgstr "Replici disponibile"
+
+#, fuzzy
+msgid "Available spare"
+msgstr "Rezerva disponibilă"
 
 msgid "Available temp space"
 msgstr "Spațiu temporar disponibil"
@@ -34729,6 +34742,10 @@ msgstr "Sursă de date invalidă: %s"
 msgid "Invalid data. Missing filename"
 msgstr "Nume de fișier invalid"
 
+#, fuzzy
+msgid "Invalid data: value is not a string."
+msgstr "Valoare invalidă pentru parametrul ack."
+
 #, python-format
 msgid "Invalid datasource '%s' configured."
 msgstr "Sursă de date invalidă '%s' configurată."
@@ -43537,11 +43554,6 @@ msgstr "Nici o gazdă de testare"
 msgid "No title"
 msgstr "Fără titlu"
 
-msgid ""
-"No triggering events selected. Please select at least one event to trigger "
-"the notification."
-msgstr ""
-
 #, fuzzy, python-format
 msgid ""
 "No unpackaged files found. If you want to create new extension packages then "
@@ -49376,6 +49388,10 @@ msgstr ""
 "Vă rugăm să activați monitorizarea a cel puțin unui tip de dispozitiv: "
 "Android, iOS sau alte dispozitive"
 
+#, fuzzy
+msgid "Please add at least one check type."
+msgstr "Vă rugăm să adăugați cel puțin un nod copil."
+
 msgid "Please add at least one child node."
 msgstr "Vă rugăm să adăugați cel puțin un nod copil."
 
@@ -49387,6 +49403,10 @@ msgid "Please add at least one contact group"
 msgstr "Vă rugăm să adăugați cel puțin un nod copil."
 
 #, fuzzy
+msgid "Please add at least one contact group."
+msgstr "Vă rugăm să adăugați cel puțin un nod copil."
+
+#, fuzzy
 msgid "Please add at least one email address"
 msgstr "Vă rugăm să adăugați cel puțin un nod copil."
 
@@ -49394,11 +49414,43 @@ msgid "Please add at least one endpoint to monitor"
 msgstr "Vă rugăm să adăugați cel puțin un punct final pentru a monitoriza"
 
 #, fuzzy
+msgid "Please add at least one host group."
+msgstr "Vă rugăm să adăugați cel puțin un nod copil."
+
+#, fuzzy
+msgid "Please add at least one host label."
+msgstr "Vă rugăm să adăugați cel puțin un nod copil."
+
+#, fuzzy
+msgid "Please add at least one host."
+msgstr "Vă rugăm să adăugați cel puțin un nod copil."
+
+#, fuzzy
 msgid "Please add at least one macro"
 msgstr "Vă rugăm să adăugați cel puțin un nod copil."
 
 #, fuzzy
+msgid "Please add at least one member."
+msgstr "Vă rugăm să adăugați cel puțin un nod copil."
+
+#, fuzzy
 msgid "Please add at least one recipient"
+msgstr "Vă rugăm să adăugați cel puțin un nod copil."
+
+#, fuzzy
+msgid "Please add at least one service group."
+msgstr "Vă rugăm să adăugați cel puțin un nod copil."
+
+#, fuzzy
+msgid "Please add at least one service label."
+msgstr "Vă rugăm să adăugați cel puțin un nod copil."
+
+#, fuzzy
+msgid "Please add at least one service."
+msgstr "Vă rugăm să adăugați cel puțin un nod copil."
+
+#, fuzzy
+msgid "Please add at least one site."
 msgstr "Vă rugăm să adăugați cel puțin un nod copil."
 
 #, fuzzy
@@ -49459,7 +49511,7 @@ msgid "Please choose a file to upload."
 msgstr "Vă rugăm să alegeți un fișier de încărcat."
 
 #, fuzzy
-msgid "Please choose a notification parameter or create one."
+msgid "Please choose a parameter or click \"Create\" to add a new one."
 msgstr "Ștergeți această regulă de notificare"
 
 msgid "Please choose a report to schedule"
@@ -49554,6 +49606,10 @@ msgstr ""
 #, fuzzy
 msgid "Please enter a Service Integration Key"
 msgstr "Cheia de integrare a serviciului PagerDuty"
+
+#, fuzzy
+msgid "Please enter a comment to filter for."
+msgstr "Vă rugăm să introduceți o oră."
 
 msgid "Please enter a filename."
 msgstr "Vă rugăm să introduceți un nume de fișier."
@@ -49696,6 +49752,11 @@ msgstr ""
 "Vă rugăm să rețineți că trebuie să setați <tt>RequestHeader set X-Forwarded-"
 "Proto \"https\"</tt> în configurația sistemului Apache pentru a informa "
 "Checkmk GUI despre configurarea SSL."
+
+msgid ""
+"Please note that your site will be deleted when the trial period ends or "
+"when you activate a license. "
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -63522,6 +63583,12 @@ msgstr "DN-ul de bază al grupului nu a putut fi găsit."
 msgid "The Group Base DN is not configured, not fetching any groups."
 msgstr "DN-ul de bază al grupului nu este configurat, nu se preia niciun grup."
 
+msgid ""
+"The HTTP password can be generated from the settings page in Gerrit under '/"
+"settings/#HTTPCredentials' or from the REST API. NOTE: you should NOT enter "
+"your account credentials here!"
+msgstr ""
+
 msgid "The HTTP resource path on which to fetch metrics from targets."
 msgstr ""
 
@@ -65150,6 +65217,10 @@ msgstr ""
 "utilizând titlurile găsite în rândul de titluri (dacă aveți unele). Dacă "
 "folosiți titlurile corecte, atributele pot fi puse în corespondență automat. "
 "Atributele disponibile în prezent sunt: Atributele:"
+
+#, fuzzy
+msgid "The first value must be lower than the second value."
+msgstr "Clusterul trebuie să aibă cel puțin un nod"
 
 msgid "The folder is not permitted for any contact group."
 msgstr "Dosarul nu este permis pentru niciun grup de contacte."
@@ -79658,6 +79729,9 @@ msgstr "Opțiuni de creare Piggyback"
 msgid "User for login"
 msgstr "Utilizator pentru autentificare"
 
+msgid "User generated HTTP password (not account password)"
+msgstr ""
+
 msgid "User interface"
 msgstr "Interfața cu utilizatorul"
 
@@ -80662,6 +80736,9 @@ msgstr "Valoarea %r nu este permisă aici."
 
 msgid "Value Type"
 msgstr "Tip de valoare"
+
+msgid "Value is default. Please provide a non-default value."
+msgstr ""
 
 #, fuzzy, python-format
 msgid "Value must be one of '%s'"
@@ -82785,6 +82862,13 @@ msgid ""
 msgstr ""
 "Atunci când doriți să procesați capcane SNMP cu Consola de evenimente, este "
 "necesar să configurați acreditările pentru decriptarea capcanelor primite."
+
+msgid ""
+"Whenever Checkmk creates, modifies or deletes hosts via this connection, it "
+"will only consider hosts that receive piggyback data from hosts with names "
+"matching one of these regular expressions. Please note: The attribution of "
+"piggyback data to existing hosts is not affected by this setting."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -85654,11 +85738,6 @@ msgstr "Extensiile dvs. au o dimensiune de %s."
 msgid "Your filename must not end with a slash."
 msgstr "Numele de fișier nu trebuie să se termine cu o bară oblică."
 
-msgid ""
-"Your free trial is active! Please note that your site will be deleted when "
-"the trial period ends. "
-msgstr ""
-
 #, fuzzy
 msgid "Your host name has an invalid format."
 msgstr "Numele dvs. de gazdă are un format invalid."
@@ -88177,6 +88256,13 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, fuzzy, python-format
+#~ msgid "%s other service"
+#~ msgid_plural "%s other services"
+#~ msgstr[0] "Alte servicii"
+#~ msgstr[1] "Alte servicii"
+#~ msgstr[2] "Alte servicii"
 
 #~ msgid "Show discovered service labels"
 #~ msgstr "Afișați etichetele serviciilor descoperite"

@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-02-21 06:00+0000\n"
+"PO-Revision-Date: 2025-02-25 23:50+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -745,12 +745,6 @@ msgstr "%s von %s"
 #, python-format
 msgid "%s of %s%%"
 msgstr "%s von %s%%"
-
-#, python-format
-msgid "%s other service"
-msgid_plural "%s other services"
-msgstr[0] "%s anderer Service"
-msgstr[1] "%s andere Services"
 
 #, python-format
 msgid "%s properties"
@@ -2328,6 +2322,14 @@ msgstr ""
 "Ein Makro muss mit '$' beginnen und enden. Es dürfen nur ASCII "
 "Großbuchstaben, Ziffern und Unterstriche enthalten sein."
 
+#, fuzzy
+msgid "A macro name and a regular expression are required"
+msgstr "Dateien anhand eines regulären Ausdrucks-Pattern gruppieren."
+
+#, fuzzy
+msgid "A macro name is required"
+msgstr "als Makro benannt"
+
 msgid ""
 "A matrix of performance data values from all hosts in a certain host group"
 msgstr "Eine Matrix von Metriken aller Hosts in einer bestimmten Host-Gruppe"
@@ -2367,6 +2369,10 @@ msgstr ""
 #, no-python-format
 msgid "A provisioning of over 100% means over provisioning."
 msgstr "Eine Provisionierung von über 100% bedeutet Überprovisionierung."
+
+#, fuzzy
+msgid "A regular expression is required"
+msgstr "Zu erwartender regulärer Ausdruck"
 
 msgid ""
 "A regular expression matching the <b>beginning</b> of a service description. "
@@ -3434,7 +3440,7 @@ msgid ""
 "%r, Exception: %s"
 msgstr ""
 "Problem beim Aktivieren der Änderungen. Die Instanz-Snapshots konnten nicht "
-"erstellt werden. Fehlgeschlagenes Kommando %r, Fehler: %s"
+"erstellt werden. Fehlgeschlagenes Kommando %r, Exception: %s"
 
 #, python-format
 msgid ""
@@ -3635,6 +3641,10 @@ msgstr "Aktive, alarmierende 'flows'"
 msgid "Active and inactive memory"
 msgstr "Aktiver und inaktiver Speicher"
 
+#, fuzzy
+msgid "Active and inactive memory - files and anonymous"
+msgstr "Aktiver und inaktiver Speicher"
+
 msgid "Active check"
 msgstr "Aktiver Check"
 
@@ -3790,7 +3800,7 @@ msgid "Add Counter Object"
 msgstr "Leistungsindikatorobjekt hinzufügen"
 
 msgid "Add Exception"
-msgstr "Ausnahme ergänzen"
+msgstr "Exception ergänzen"
 
 msgid "Add Group"
 msgstr "Gruppe hinzufügen"
@@ -3951,7 +3961,7 @@ msgid "Add event"
 msgstr "Ereignis hinzufügen"
 
 msgid "Add exception"
-msgstr "Ausnahme hinzufügen"
+msgstr "Exception hinzufügen"
 
 msgid "Add exclusion"
 msgstr "Ausnahme hinzufügen"
@@ -5115,17 +5125,17 @@ msgstr ""
 "\"HTTPS_PROXY\" auf dem Host."
 
 msgid "Agent updates"
-msgstr "Agentenupdates"
+msgstr "Agenten-Updates"
 
 msgid "Agent updates are currently disabled"
-msgstr "Agentenupdates sind aktuell deaktiviert"
+msgstr "Agenten-Updates sind aktuell deaktiviert"
 
 #, python-format
 msgid "Agent updates are disabled for host name %s:"
-msgstr "Agentenupdates sind für den Host-Namen %s deaktiviert:"
+msgstr "Agenten-Updates sind für den Host-Namen %s deaktiviert:"
 
 msgid "Agent updates are enabled"
-msgstr "Agentenupdates sind eingeschaltet"
+msgstr "Agenten-Updates sind eingeschaltet"
 
 msgid "Agent user"
 msgstr "Benutzer des Agenten"
@@ -6312,7 +6322,7 @@ msgstr ""
 "Eine XML-Text (Datei) mit den Metadaten des Identitätsanbieters Ihrer "
 "Organisation. Dies ist nützlich, wenn der Checkmk-Server nicht in der Lage "
 "ist, auf den Metadaten-Endpunkt des Identitätsanbieters zuzugreifen. Bitte "
-"beachten Sie jedoch, dass dies bedeutet, dass alle Aktualisierungen manuell "
+"beachten Sie jedoch, dass dies bedeutet, dass alle Updates manuell "
 "vorgenommen werden müssen. Wir empfehlen daher, wenn möglich, die URL-Option "
 "zu verwenden."
 
@@ -6356,10 +6366,10 @@ msgstr "Beim letzten Update ist ein Fehler aufgetreten"
 
 #, python-format
 msgid "An exception occured: %s"
-msgstr "Es ist eine Ausnahme aufgetreten: %s"
+msgstr "Es ist eine Exception aufgetreten: %s"
 
 msgid "An exception occurred"
-msgstr "Eine Ausnahme ist aufgetreten"
+msgstr "Eine Exception ist aufgetreten"
 
 msgid "An fatal error occured:"
 msgstr "Ein schwerwiegender Fehler ist aufgetreten:"
@@ -7192,6 +7202,9 @@ msgstr ""
 msgid "At least one selection is missing."
 msgstr "Mindestens eine Auswahl fehlt."
 
+msgid "At least one triggering event must be selected."
+msgstr ""
+
 msgid ""
 "At most that many notifications are kept back for bulking. A value of 1 "
 "essentially turns off notification bulking."
@@ -7529,7 +7542,7 @@ msgid "Automatic activation"
 msgstr "Automatisches Aktivieren"
 
 msgid "Automatic agent updates"
-msgstr "Automatische Agentenupdates"
+msgstr "Automatische Agenten-Updates"
 
 msgid "Automatic detection (Python 3 > Python 2)"
 msgstr "Automatische Erkennung (Python 3 > Python 2)"
@@ -7726,9 +7739,6 @@ msgstr "Verfügbar (fehlend)"
 msgid "Available Memory"
 msgstr "Verfügbarer Speicher"
 
-msgid "Available Spare"
-msgstr "Verfügbare Reserven"
-
 msgid "Available agent configurations"
 msgstr "Verfügbare Agenten-Konfigurationen"
 
@@ -7749,6 +7759,10 @@ msgstr "Verfügbare physische Prozessoren im gemeinsamen Pool"
 
 msgid "Available replicas"
 msgstr "Verfügbare Repliken"
+
+#, fuzzy
+msgid "Available spare"
+msgstr "Verfügbare Reserven"
 
 msgid "Available temp space"
 msgstr "Verfügbarer temporärer Speicher"
@@ -8971,7 +8985,7 @@ msgid "Bind to source address"
 msgstr "Quell-IP-Adresse setzen"
 
 msgid "Bit map updates"
-msgstr "Aktualisierungen der Bitmap"
+msgstr "Update der Bitmap"
 
 msgid "Bits"
 msgstr "Bits"
@@ -9957,7 +9971,7 @@ msgstr ""
 "B. Service-Ausgaben oder Protokollmeldungen. Aber es gibt bestimmte Gründe, "
 "diese Sicherheitsfunktion zu deaktivieren. Zum Beispiel, wenn Sie die HTML-"
 "Ausgabe eines bestimmten Check-Plugins anzeigen möchten. Die Deaktivierung "
-"des Escapings erlaubt es dem Plugin außerdem, nicht nur HTML-, sondern auch "
+"der Maskierung erlaubt es dem Plugin außerdem, nicht nur HTML-, sondern auch "
 "Javascript-Code im Kontext Ihres Browsers auszuführen. Dies ermöglicht die "
 "Ausführung von beliebigem Javascript, sogar für Injektionsangriffe.<br> Aus "
 "diesem Grund sollten Sie diese Funktion nur für eine kleine, sehr "
@@ -13677,7 +13691,7 @@ msgid "Configuration of agent registration rules"
 msgstr "Konfiguration von Agentenregistrierungsregeln"
 
 msgid "Configuration of agent updates"
-msgstr "Konfiguration von Agentenupdates"
+msgstr "Konfiguration von Agenten-Updates"
 
 msgid "Configuration of customers"
 msgstr "Einstellungen von Kunden"
@@ -13709,7 +13723,7 @@ msgid ""
 "Configuration update failed\n"
 "%s"
 msgstr ""
-"Aktualisierung der Konfiguration fehlgeschlagen\n"
+"Update der Konfiguration fehlgeschlagen\n"
 "%s"
 
 msgid "Configuration variable:"
@@ -15870,7 +15884,7 @@ msgid "Current O2 percentage"
 msgstr "Aktueller O2-Prozentsatz"
 
 msgid "Current agent update status of all registered hosts."
-msgstr "Aktueller Agentenupdate-Zustand von allen registrierten Hosts."
+msgstr "Aktueller Zustand des Agenten-Updates von allen registrierten Hosts."
 
 msgid "Current check attempt"
 msgstr "Aktueller Check-Versuch"
@@ -16163,7 +16177,7 @@ msgid "Custom service attributes"
 msgstr "Benutzerdefinierte Serviceattribute"
 
 msgid "Custom service configuration update"
-msgstr "Aktualisierung der benutzerdefinierten Service-Konfiguration"
+msgstr "Update der benutzerdefinierten Service-Konfiguration"
 
 msgid "Custom service name"
 msgstr "Benutzerdefinierter Service-Name"
@@ -18408,7 +18422,7 @@ msgid ""
 msgstr ""
 "Der Verteilungszustand des Hosts {} ist fehlerhaft. Erwägen Sie, die "
 "entsprechende Datei auf dem Checkmk-Server unter {} zu löschen und den Host "
-"{} neu zu registrieren. Ausnahme: {}"
+"{} neu zu registrieren. Exception: {}"
 
 msgid "Deployment type"
 msgstr "Verteilungstyp"
@@ -19127,7 +19141,7 @@ msgid "Disk flush interval of old data"
 msgstr "Schreibintervall alter Daten"
 
 msgid "Disk flush interval of updated metrics"
-msgstr "Schreibintervall für aktualisierte Metriken"
+msgstr "Intervall für die Aktualisierung von Metriken auf der Festplatte"
 
 msgid "Disk latency"
 msgstr "Plattenlatenz"
@@ -19698,7 +19712,7 @@ msgid "Do not deploy Windows Updates plug-in"
 msgstr "Windows Updates-Plugin nicht verteilen"
 
 msgid "Do not deploy automatic agent update plug-in"
-msgstr "Plugin für automatisches Agentenupdate nicht verteilen"
+msgstr "Plugin für automatisches Agenten-Update nicht verteilen"
 
 msgid "Do not deploy iptables plug-in"
 msgstr "iptables-Plugin nicht verteilen"
@@ -21578,7 +21592,7 @@ msgid "Enable and disable notifications on hosts and services"
 msgstr "Benachrichtigungen von Hosts/Services ein/aus"
 
 msgid "Enable automatic agent updates"
-msgstr "Automatische Agentenupdates aktivieren"
+msgstr "Automatische Agenten-Updates aktivieren"
 
 msgid "Enable automatic host key acceptance (OpenSSH version >= 7.6)"
 msgstr ""
@@ -22367,7 +22381,7 @@ msgstr ""
 
 #, python-format
 msgid "Escaping is <a href=\"%s\">enabled globally</a>"
-msgstr "Escaping ist <a href=\"%s\">global aktiviert</a>"
+msgstr "Maskierung ist <a href=\"%s\">global aktiviert</a>"
 
 msgid "Established TCP/UDP connections"
 msgstr "Bestehende TCP/UDP Verbindungen"
@@ -22740,15 +22754,15 @@ msgid "Exc."
 msgstr "Ausnahme"
 
 msgid "Exception"
-msgstr "Ausnahme"
+msgstr "Exception"
 
 #, python-format
 msgid "Exception (Crash ID: %s): %s"
-msgstr "Ausnahme (Absturz-ID: %s): %s"
+msgstr "Exception (Absturz-ID: %s): %s"
 
 #, python-format
 msgid "Exception during element refresh (element '%s')"
-msgstr "Fehler beim Aktualisieren des Elements ('%s')"
+msgstr "Exception beim Aktualisieren des Elements ('%s')"
 
 #, python-format
 msgid "Exception in icon '%s': %s"
@@ -22756,20 +22770,20 @@ msgstr "Exception im Symbol '%s': %s"
 
 #, python-format
 msgid "Exception(s) caught during snapshot preparation: %s"
-msgstr "Bei der Snapshot-Erstellung abgefangene Ausnahme(n): %s"
+msgstr "Bei der Snapshot-Erstellung abgefangene Exception(s): %s"
 
 #, python-format
 msgid "Exception: %s"
-msgstr "Ausnahme: %s"
+msgstr "Exception: %s"
 
 msgid "Exceptions"
-msgstr "Fehler"
+msgstr "Exceptions"
 
 msgid "Exceptions (from weekdays)"
-msgstr "Ausnahme (von den Wochentagen)"
+msgstr "Exceptions (von den Wochentagen)"
 
 msgid "Exceptions for piggybacked hosts (VMs, ...)"
-msgstr "Ausnahmen für Piggyback-Hosts (VMs, ...)"
+msgstr "Exceptions für Piggyback-Hosts (VMs, ...)"
 
 msgid "Exchanges"
 msgstr "Wechsel"
@@ -23792,7 +23806,7 @@ msgid "Failover servers"
 msgstr "Failover-Server"
 
 msgid "Failover states"
-msgstr "Failover States"
+msgstr "Failover Zustände"
 
 msgid ""
 "Failover: The check function of the plug-in will be applied to each "
@@ -23957,10 +23971,10 @@ msgid "Fetch zero length"
 msgstr "Anfrage mit Länge 0"
 
 msgid "Fetcher helper"
-msgstr "Fetcher-Helper"
+msgstr "Fetcher Helper"
 
 msgid "Fetcher helper usage"
-msgstr "Auslastung der Fetcher-Helper"
+msgstr "Auslastung der Fetcher Helper"
 
 msgid "Fetches"
 msgstr "Abfragen"
@@ -24745,7 +24759,7 @@ msgid ""
 "the fetcher helpers."
 msgstr ""
 "Für die Durchführung von Checkmk-basierten Checks hält der Micro Core einen "
-"Pool von spezialisierten Helper-Prozessen vor, welche die von den Fetcher-"
+"Pool von spezialisierten Helper-Prozessen vor, welche die von den Fetcher "
 "Helpern gesammelten Informationen interpretieren und auswerten."
 
 msgid ""
@@ -24888,7 +24902,7 @@ msgid "Force unencrypted communication"
 msgstr "Unverschlüsselte Kommunikation erzwingen"
 
 msgid "Force update of PNP meta information on restart / reload"
-msgstr "Aktualisierung der PNP-Metainformationen beim Neustart"
+msgstr "Update der PNP-Metainformationen beim Neustart"
 
 msgid "Forecast Graph"
 msgstr "Vorhersagegraph"
@@ -27160,9 +27174,9 @@ msgid ""
 "connections to Checkmk sites."
 msgstr ""
 "Hier können Sie CA- oder selbstsignierte Zertifikate angeben, die bei der "
-"Registrierung oder Aktualisierung zusammen mit der URL der Remote-Instanz an "
-"den kontaktierenden Agent Updater gesendet werden. Diese Liste wird vom "
-"Agent Updater verwendet, um HTTPS-Verbindungen zu Checkmk-Instanzen zu "
+"Registrierung oder dem Update zusammen mit der URL der Remote-Instanz an den "
+"kontaktierenden Agent Updater gesendet werden. Diese Liste wird vom Agent "
+"Updater verwendet, um HTTPS-Verbindungen zu Checkmk-Instanzen zu "
 "verifizieren."
 
 msgid ""
@@ -28955,7 +28969,7 @@ msgid "Host names to resolve"
 msgstr "Aufzulösende Host-Namen"
 
 msgid "Host needs agent update"
-msgstr "Host benötigt Agentenupdate"
+msgstr "Host benötigt Agenten-Update"
 
 msgid "Host network"
 msgstr "Host-Netzwerk"
@@ -29306,7 +29320,7 @@ msgid "Hosts that have not been checked for too long."
 msgstr "Hosts, die schon lange nicht mehr geprüft wurden."
 
 msgid "Hosts that need an agent update"
-msgstr "Hosts, die ein Agentenupdate benötigen"
+msgstr "Hosts, die ein Agenten-Update benötigen"
 
 msgid "Hosts that never downloaded an agent"
 msgstr "Hosts, die nie einen Agenten heruntergeladen haben"
@@ -31965,7 +31979,7 @@ msgid ""
 "report to the Checkmk team to fix this issue Only users with this permission "
 "are able to see the reports in the GUI."
 msgstr ""
-"Falls eine Ausnahme auftritt, während Checkmk ausgeführt wird, kann es "
+"Falls eine Exception auftritt, während Checkmk ausgeführt wird, kann es "
 "Absturzberichte erstellen, mit denen Sie die Probleme im Code aufspüren oder "
 "als Bericht an das Checkmk-Team senden können, um dieses Problem zu beheben. "
 "Nur Benutzer mit dieser Berechtigung können die Berichte in der GUI sehen."
@@ -32041,7 +32055,7 @@ msgid ""
 "core dumps are stored in <tt>var/check_mk/core</tt> by default, but this "
 "might vary depending on your system settings."
 msgstr ""
-"Im Falle einer ungültigen Ausnahme kann der Micro Core einen Speicherabzug "
+"Im Falle einer ungültigen Exception kann der Micro Core einen Speicherabzug "
 "erstellen und sich beenden. Dieser Abzug kann später zur Fehlersuche "
 "verwendet werden und einige MB groß sein. Der Dateiname ist normalerweise "
 "<tt>var/check_mk/core</tt>, aber eventuell ist das in Ihrem Betriebssystem "
@@ -33057,8 +33071,8 @@ msgid ""
 "\". The rulesets have the additional advantage that the configured value is "
 "accessible in the notification context."
 msgstr ""
-"Anstatt diese Option global zu deaktivieren, wird dringend empfohlen, das "
-"Escaping selektiv für einzelne Hosts und Services mit den Regelsätzen "
+"Anstatt diese Option global zu deaktivieren, wird dringend empfohlen, die "
+"Maskierung selektiv für einzelne Hosts und Services mit den Regelsätzen "
 "\"Escape HTML in Host-Ausgabe\" und \"Escape HTML in Service-Ausgabe\" zu "
 "deaktivieren. Die Regelsätze haben den zusätzlichen Vorteil, dass der "
 "konfigurierte Wert im Benachrichtigungskontext zugänglich ist."
@@ -33238,11 +33252,10 @@ msgstr "Intervall für den Updatecheck"
 
 msgid "Interval of sidebar popup notification updates"
 msgstr ""
-"Intervall für die Aktualisierung von Popup-Benachrichtigungen in der "
-"Seitenleiste"
+"Intervall für die Updates von Popup-Benachrichtigungen in der Seitenleiste"
 
 msgid "Interval of sidebar status updates"
-msgstr "Intervall für Sidebar-Statuszustand"
+msgstr "Intervall für Updates des Seitenleistenstatus"
 
 msgid "Interval to monitor"
 msgstr "Überwachter Zeitraum"
@@ -33390,6 +33403,10 @@ msgstr "Ungültige Datenquelle: %s"
 
 msgid "Invalid data. Missing filename"
 msgstr "Ungültige Daten. Dateiname fehlt"
+
+#, fuzzy
+msgid "Invalid data: value is not a string."
+msgstr "Ungültiger Wert für ACK Parameter."
 
 #, python-format
 msgid "Invalid datasource '%s' configured."
@@ -34831,7 +34848,7 @@ msgid "Last Seen"
 msgstr "Zuletzt gesehen"
 
 msgid "Last Updated"
-msgstr "Zuletzt Aktualisiert"
+msgstr "Zuletzt aktualisiert"
 
 msgid "Last backup"
 msgstr "Letztes Backup"
@@ -34846,19 +34863,19 @@ msgid "Last completed duration"
 msgstr "Letzte abgeschlossene Dauer"
 
 msgid "Last contact of agent updater"
-msgstr "Letzter Kontakt vom Agentenupdater"
+msgstr "Letzter Kontakt vom Agent Updater"
 
 msgid "Last day of last month"
 msgstr "Letzter Tag im Monat"
 
 msgid "Last download of agent updater"
-msgstr "Letzter Download vom Agentenupdater"
+msgstr "Letzter Download vom Agent Updater"
 
 msgid "Last error log"
 msgstr "Letztes Fehlerprotokoll"
 
 msgid "Last exception"
-msgstr "Letzte Ausnahme"
+msgstr "Letzte Exception"
 
 msgid "Last flush time"
 msgstr "Zeitpunkt des letzten Flush"
@@ -34934,7 +34951,7 @@ msgid "Last time the service was OK"
 msgstr "Letzter Zeitpunkt, zu dem der Service OK war"
 
 msgid "Last user synchronization ran into an exception: "
-msgstr "Die letzte Benutzersynchronisation ist in eine Ausnahme geraten: "
+msgstr "Die letzte Benutzersynchronisation ist in eine Exception geraten: "
 
 #, python-format
 msgid "Last verification %s"
@@ -36407,7 +36424,7 @@ msgid "Load in a new window / tab"
 msgstr "In einem neuen Fenster/Tab laden"
 
 msgid "Load in current content area (keep sidebar)"
-msgstr "Im aktuellen Fenster laden (erhält die Seiteleiste)"
+msgstr "Im aktuellen Fenster laden (erhält die Seitenleiste)"
 
 msgid "Load in current window / tab"
 msgstr "Im aktuellen Fenster/Tab laden"
@@ -37237,7 +37254,7 @@ msgid "Lower limit of expected interfaces"
 msgstr "Untergrenze der erwarteten Schnittstellen"
 
 msgid "Lowest: No notification, update badge number"
-msgstr "Am niedrigsten: keine Benachrichtigung, Hinweiszahl erhöhen"
+msgstr "Am niedrigsten: keine Benachrichtigung, Badge-Nummer aktualisieren"
 
 msgid "MAC address"
 msgstr "MAC-Addresse"
@@ -41862,14 +41879,6 @@ msgstr "Kein Testhost"
 msgid "No title"
 msgstr "Kein Titel"
 
-#, fuzzy
-msgid ""
-"No triggering events selected. Please select at least one event to trigger "
-"the notification."
-msgstr ""
-"Alle Host-Ereignisse, Service-Ereignisse und Warnungen der Event Console "
-"werden eine Benachrichtigung auslösen"
-
 #, python-format
 msgid ""
 "No unpackaged files found. If you want to create new extension packages then "
@@ -45932,7 +45941,7 @@ msgid ""
 "no delay."
 msgstr ""
 "PNP4Nagios benötigt Meta-Informationen über Hosts und Services. Diese sind "
-"in XML-Dateien gespeichert. Das Aktualisieren dieser Dateien bei jeden neu "
+"in XML-Dateien gespeichert. Das Update dieser Dateien bei jeden neu "
 "ausgeführten Check würde so einer hohen Schreiblast auf dem Dateisystem "
 "führen. Deswegen werden die Dateien vom CMC normalerweise nur einmal pro "
 "Stunde neu geschrieben. Der Preis dafür ist, dass die in den Diagrammen "
@@ -45948,12 +45957,13 @@ msgid ""
 "this to have the meta information updated when processing the result of the "
 "first check after the restart."
 msgstr ""
-"PNP4Nagios benötigt Meta-Informationen über Hosts und Services. Diese sind "
-"in XML-Dateien gespeichert. Wenn diese Dateien bei jeder "
-"Konfigurationsänderung des Monitoring-Kerns neu geschrieben werden, kann "
-"dies sprungartig zu einer hohen Schreiblast führen. In kleineren "
-"Installationen ist dies unkritisch und vermeidet eine verzögerte "
-"Aktualisierung von Warn/Krit-Schwellen in den Graphen."
+"PNP4Nagios benötigt Metainformationen über Hosts und Services. Diese "
+"Informationen werden in XML-Dateien gespeichert. Die Aktualisierung dieser "
+"Dateien bei einem Neustart oder Neuladen des Monitoring-Kerns kann kurz nach "
+"dem Neustart eine E/A-Spitze verursachen. Dies ist bei kleineren "
+"Installationen kein Problem. Sie können dies aktivieren, damit die "
+"Metainformationen bei der Verarbeitung des Ergebnisses der ersten Prüfung "
+"nach dem Neustart aktualisiert werden."
 
 msgid "PNP4Nagios templates (deprecated)"
 msgstr "PNP4Nagios-Schablonen (veraltet)"
@@ -47349,6 +47359,10 @@ msgstr ""
 "Bitte aktivieren Sie das Monitoring von mindestens einem Gerätetyp: Android, "
 "iOS oder andere Geräte"
 
+#, fuzzy
+msgid "Please add at least one check type."
+msgstr "Bitte fügen Sie mindestens einen untergeordneten Knoten hinzu."
+
 msgid "Please add at least one child node."
 msgstr "Bitte fügen Sie mindestens einen untergeordneten Knoten hinzu."
 
@@ -47358,17 +47372,53 @@ msgstr "Bitte mindestens eine Spalte zur Ansicht hinzufügen."
 msgid "Please add at least one contact group"
 msgstr "Bitte fügen Sie mindestens eine Kontaktgruppe hinzu."
 
+#, fuzzy
+msgid "Please add at least one contact group."
+msgstr "Bitte fügen Sie mindestens eine Kontaktgruppe hinzu."
+
 msgid "Please add at least one email address"
 msgstr "Bitte fügen Sie mindestens eine E-Mail-Adresse hinzu."
 
 msgid "Please add at least one endpoint to monitor"
 msgstr "Bitte mindestens einen Endpunkt für die Überwachung hinzufügen"
 
+#, fuzzy
+msgid "Please add at least one host group."
+msgstr "Bitte fügen Sie mindestens eine Kontaktgruppe hinzu."
+
+#, fuzzy
+msgid "Please add at least one host label."
+msgstr "Bitte fügen Sie mindestens einen Benutzer hinzu."
+
+#, fuzzy
+msgid "Please add at least one host."
+msgstr "Bitte fügen Sie mindestens einen Benutzer hinzu."
+
 msgid "Please add at least one macro"
 msgstr "Bitte fügen Sie mindestens ein Makro hinzu."
 
+#, fuzzy
+msgid "Please add at least one member."
+msgstr "Bitte fügen Sie mindestens einen Benutzer hinzu."
+
 msgid "Please add at least one recipient"
 msgstr "Bitte fügen Sie mindestens einen Empfänger hinzu."
+
+#, fuzzy
+msgid "Please add at least one service group."
+msgstr "Bitte fügen Sie mindestens eine Kontaktgruppe hinzu."
+
+#, fuzzy
+msgid "Please add at least one service label."
+msgstr "Bitte fügen Sie mindestens einen Benutzer hinzu."
+
+#, fuzzy
+msgid "Please add at least one service."
+msgstr "Bitte fügen Sie mindestens einen Benutzer hinzu."
+
+#, fuzzy
+msgid "Please add at least one site."
+msgstr "Bitte fügen Sie mindestens einen Benutzer hinzu."
 
 msgid "Please add at least one tag condition."
 msgstr "Bitte fügen Sie mindestens eine Merkmalsbedingung hinzu."
@@ -47426,7 +47476,8 @@ msgstr "Bitte wählen Sie ein PNG-Bild."
 msgid "Please choose a file to upload."
 msgstr "Bitte wählen Sie eine Datei zum Hochladen."
 
-msgid "Please choose a notification parameter or create one."
+#, fuzzy
+msgid "Please choose a parameter or click \"Create\" to add a new one."
 msgstr ""
 "Bitte wählen Sie einen Benachrichtigungsparameter aus oder erstellen Sie "
 "einen."
@@ -47469,7 +47520,7 @@ msgstr ""
 "Bitte ziehen Sie in Erwägung, die Host- oder Service-Regelsätze <a href=\"%s"
 "\">Escape HTML in der Service-Ausgabe</a> oder <a href=\"%s\">HTML in der "
 "Host-Ausgabe ausblenden</a> zu konfigurieren, anstatt <a href=\"%s"
-"\">Escaping global zu deaktivieren</a>"
+"\">Maskierung global zu deaktivieren</a>"
 
 #, python-format
 msgid ""
@@ -47525,6 +47576,10 @@ msgstr ""
 
 msgid "Please enter a Service Integration Key"
 msgstr "Bitte geben Sie einen Service-Integrationsschlüssel ein"
+
+#, fuzzy
+msgid "Please enter a comment to filter for."
+msgstr "Bitte eine Zeit eingeben."
 
 msgid "Please enter a filename."
 msgstr "Bitte Dateinamen eingeben."
@@ -47658,6 +47713,13 @@ msgstr ""
 "Bitte beachten Sie, dass Sie <tt>RequestHeader set X-Forwarded-Proto \"https"
 "\"</tt> in Ihrer System-Apache-Konfiguration setzen müssen, um die Checkmk-"
 "Oberfläche über die SSL-Einrichtung zu informieren."
+
+msgid ""
+"Please note that your site will be deleted when the trial period ends or "
+"when you activate a license. "
+msgstr ""
+"Bitte beachten Sie, dass Ihre Instanz gelöscht wird, wenn der Testzeitraum "
+"endet oder wenn Sie eine Lizenz aktivieren. "
 
 msgid ""
 "Please note, that the agent replaces spaces in the service names with "
@@ -47847,13 +47909,12 @@ msgstr ""
 "Legen Sie den Zustand fest, den der Service-Erkennungs-Check annehmen soll "
 "wenn nicht existierende Services gefunden werden."
 
-#, fuzzy
 msgid ""
 "Please select which alarm state the service discovery check services shall "
 "assume in case that parameters of services have changed."
 msgstr ""
 "Bitte wählen Sie aus, welchen Alarmzustand die Check-Services der Service-"
-"Erkennung annehmen sollen, wenn sich die Service-Labels geändert haben."
+"Erkennung annehmen sollen, wenn sich Parameter der Services geändert haben."
 
 msgid ""
 "Please select which alarm state the service discovery check services shall "
@@ -50977,7 +51038,7 @@ msgid "Replica ready state"
 msgstr "Bereitschaftszustand der Replik"
 
 msgid "Replica update state"
-msgstr "Aktualisierungszustand des Replicas"
+msgstr "Update-Status des Replicas"
 
 msgid "Replicate Event Console config"
 msgstr "Event Console Konfiguration replizieren"
@@ -53922,7 +53983,7 @@ msgid "Selection of alarms"
 msgstr "Auswahl der Alarme"
 
 msgid "Selection of hosts to activate agent updates for"
-msgstr "Auswahl von Hosts, für die Aktivierung der Agentenupdates"
+msgstr "Auswahl von Hosts, für die Aktivierung der Agenten-Updates"
 
 msgid "Selection of multiple host groups"
 msgstr "Auswahl von mehreren Host-Gruppen"
@@ -54871,7 +54932,7 @@ msgid "Set levels for the checker latency time"
 msgstr "Level für die Checker-Latenzzeit einstellen"
 
 msgid "Set levels for the fetcher helper usage"
-msgstr "Level für die Auslastung der Fetcher-Helper festlegen"
+msgstr "Level für die Auslastung der Fetcher Helper festlegen"
 
 msgid "Set levels for the fetcher latency time"
 msgstr "Level für die Latenzzeit der Fetcher festlegen"
@@ -55416,9 +55477,8 @@ msgstr "Schweregrad der neuen Host-Labels"
 msgid "Severity of services with changed labels"
 msgstr "Schwere von Services mit geänderten Labels"
 
-#, fuzzy
 msgid "Severity of services with changed parameters"
-msgstr "Schwere von Services mit geänderten Labels"
+msgstr "Schwere von Services mit geänderten Parametern"
 
 msgid "Severity of unmonitored services"
 msgstr "Zustand bei nicht überwachten Services"
@@ -56033,10 +56093,10 @@ msgid "Sidebar"
 msgstr "Seitenleiste"
 
 msgid "Sidebar element"
-msgstr "Seitenleisten-Element"
+msgstr "Seitenleistenelement"
 
 msgid "Sidebar elements"
-msgstr "Seitenleiste-Elemente"
+msgstr "Seitenleistenelemente"
 
 msgid "Sidebar integration"
 msgstr "Integration in die Seitenleiste"
@@ -58546,7 +58606,7 @@ msgstr ""
 "(oder nicht gelesen werden kann)"
 
 msgid "State in case of unhandled exception"
-msgstr "Zustand im Falle von unbehandelten Ausnahmen"
+msgstr "Zustand im Falle von unbehandelter Exception"
 
 msgid "State in case of unknown OS build"
 msgstr "Zustand im Falle eines unbekannten OS-Builds"
@@ -58877,7 +58937,7 @@ msgid ""
 "State when updates are pending, which are neither recommended or a security "
 "update"
 msgstr ""
-"Sttus, wenn Updates ausstehen, die weder empfohlen noch ein "
+"Status, wenn Updates ausstehen, die weder empfohlen noch ein "
 "Sicherheitsupdate sind"
 
 msgid "State, if BI aggregate is acknowledged"
@@ -60658,11 +60718,10 @@ msgid ""
 msgstr ""
 "Der Agent Updater kommuniziert mit der Agentenbäckerei, um Informationen "
 "über die zu installierenden Agenten und den Agenten selbst abzurufen und den "
-"Aktualisierungszustand an die Bäckerei zu melden. Dies kann entweder über "
-"HTTP oder HTTPS erfolgen. Um einen sicheren Transport der Daten zu "
-"gewährleisten, wird die Verwendung von HTTPS dringend empfohlen. Dies kann "
-"über den Regelsatz <a href=\"%s\">Agent Updater (Linux, Windows)</a> "
-"konfiguriert werden."
+"Update-Zustand an die Bäckerei zu melden. Dies kann entweder über HTTP oder "
+"HTTPS erfolgen. Um einen sicheren Transport der Daten zu gewährleisten, wird "
+"die Verwendung von HTTPS dringend empfohlen. Dies kann über den Regelsatz <a "
+"href=\"%s\">Agent Updater (Linux, Windows)</a> konfiguriert werden."
 
 msgid "The Amazon Resource Name (ARN) of the role to assume."
 msgstr "Der Amazon Ressource Name (ARN) der Rolle die eingenommen werden soll."
@@ -60968,6 +61027,15 @@ msgid "The Group Base DN is not configured, not fetching any groups."
 msgstr ""
 "Der Basis-DN für die Gruppen ist nicht konfiguriert, ich werde keine Gruppen "
 "holen."
+
+msgid ""
+"The HTTP password can be generated from the settings page in Gerrit under '/"
+"settings/#HTTPCredentials' or from the REST API. NOTE: you should NOT enter "
+"your account credentials here!"
+msgstr ""
+"Das HTTP-Passwort kann über die Einstellungsseite in Gerrit unter '/settings/"
+"#HTTPCredentials' oder über die REST-API generiert werden. HINWEIS: Sie "
+"sollten hier NICHT Ihre Anmeldedaten für das Konto eingeben!"
 
 msgid "The HTTP resource path on which to fetch metrics from targets."
 msgstr ""
@@ -61559,8 +61627,8 @@ msgstr ""
 "Leistungsprobleme zurückzuführen. Es ist immer eine gute Idee, dass der "
 "Agent nur Nachrichten weiterleitet, die potenzielle Probleme darstellen, um "
 "den Netzwerkverkehr zu reduzieren. Die zentrale Neuklassifizierung hingegen "
-"ist bequemer, da keine Aktualisierung des Agenten erforderlich ist, wenn "
-"Regeln geändert werden müssen."
+"ist bequemer, da kein Update des Agenten erforderlich ist, wenn Regeln "
+"geändert werden müssen."
 
 msgid ""
 "The agent stops sending real-time data to the monitoring server after the "
@@ -62445,7 +62513,7 @@ msgid ""
 "have stopped, so setting this to a high value is acceptable in most cases."
 msgstr ""
 "Der Cache wird in dem hier konfigurierten Intervall nach Werten durchsucht, "
-"die auf die Festplatte geschrieben werden sollen. Diese Option betrtifft nur "
+"die auf die Festplatte geschrieben werden sollen. Diese Option betrifft nur "
 "Werte, die nicht aktualisiert werden. Es ist also im Normalfall gut dies "
 "selten zu machen."
 
@@ -62615,6 +62683,10 @@ msgstr ""
 "vorhanden) die Spalten automatisch Attributen zuzuordnen. Wenn Sie die "
 "korrekten Titel benutzen, können die Attribute automatisch zugeordnet "
 "werden. Die momentan verfügbaren Attribute sind:"
+
+#, fuzzy
+msgid "The first value must be lower than the second value."
+msgstr "Der Timeout muss mindestens eine Sekunde betragen."
 
 msgid "The folder is not permitted for any contact group."
 msgstr "Keine Kontaktgruppe hat auf diesem Ordner eine Berechtigung."
@@ -62818,9 +62890,9 @@ msgstr ""
 "konfigurierte Zeit sind, werden bei der nächsten Ausführung des Diskspace-"
 "Cleanups gelöscht.<br>Die historischen Metriken werden in Dateien pro Host "
 "und Service gespeichert. Wenn ein Host oder Service aus dem Monitoring "
-"entfernt wird, bleiben die Metriken davon zunächst unberührt. Erst wenn die "
-"letzte Aktualisierung (Änderungsdatum) älter als das konfigurierte Alter "
-"ist, werden diese Dateien gelöscht."
+"entfernt wird, bleiben die Metriken davon zunächst unberührt. Erst wenn das "
+"letzte Update (Änderungsdatum) älter als das konfigurierte Alter ist, werden "
+"diese Dateien gelöscht."
 
 msgid "The history for changes in hardware- and software inventory of a host"
 msgstr "Die Änderungshistorie der Hardware- und Softwareinventur eines Hosts"
@@ -62976,11 +63048,11 @@ msgid ""
 "If you remove these hosts from the monitoring, they are automatically "
 "unregistered and removed from this list."
 msgstr ""
-"Die hier aufgelisteten Hosts haben den Aktualisierungsserver in der "
-"Vergangenheit kontaktiert und waren somit zu diesem Zeitpunkt korrekt "
-"registriert, doch sie fragen keine Aktualisierungen mehr nach. Wenn Sie "
-"diese Hosts aus dem Monitoring entfernen, werden sie automatisch "
-"deregistriert und von dieser Liste entfernt."
+"Die hier aufgelisteten Hosts haben den Update-Server in der Vergangenheit "
+"kontaktiert und waren somit zu diesem Zeitpunkt korrekt registriert, doch "
+"sie fragen keine Updates mehr nach. Wenn Sie diese Hosts aus dem Monitoring "
+"entfernen, werden sie automatisch deregistriert und von dieser Liste "
+"entfernt."
 
 #, python-format
 msgid "The icon type is %s, but should be str"
@@ -63185,7 +63257,7 @@ msgid ""
 "The last %s operation ran into an exception. Please acknowledge this to "
 "proceed."
 msgstr ""
-"Der letzte %s-Vorgang ist auf eine Ausnahme gestoßen. Bitte bestätigen Sie "
+"Der letzte %s-Vorgang ist auf eine Exception gestoßen. Bitte bestätigen Sie "
 "dies, um fortzufahren."
 
 msgid "The last 25 hours"
@@ -64566,10 +64638,11 @@ msgid ""
 "queued simultaneously. This number should not be higher than the value "
 "specified in \"Disk flush interval of updated metrics\"."
 msgstr ""
-"Der rrdcached verzögert die Schreibvorgänge von Metriken auf die Festplatte "
-"um einen Zufallswert von 0 bis X Sekunden. Dies wird gemacht um die "
-"Schreibvorgänge zeitlich etwas zu verteilen. Die hier konfigurierte Zahl "
-"sollte nicht höher als das \"Metrik-Schreibintervall\" sein."
+"Der rrdcached verzögert das Schreiben der einzelnen Metriken um eine "
+"zufällige Anzahl von Sekunden im Bereich [0..delay]. Dadurch wird vermieden, "
+"dass zu viele Schreibvorgänge gleichzeitig in die Warteschlange gestellt "
+"werden. Diese Zahl sollte nicht höher sein als der in „Intervall für die "
+"Aktualisierung von Metriken auf der Festplatte“ angegebene Wert."
 
 msgid "The rule conditions do not match."
 msgstr "Die Regelbedingungen treffen nicht zu."
@@ -65775,15 +65848,15 @@ msgid ""
 "These host have correctly registered for updates but, never downloaded an "
 "agent. (nor installed one)"
 msgstr ""
-"Diese Hosts haben sich korrekt für Aktualisierungen registriert, aber nie "
-"einen Agenten heruntergeladen. (oder installiert)"
+"Diese Hosts haben sich korrekt für Updates registriert, aber nie einen "
+"Agenten heruntergeladen (oder installiert)."
 
 msgid ""
 "These hosts have at least once in the last 24 hours connected the update "
 "server and asked for an update."
 msgstr ""
 "Diese Hosts haben mindestens einmal innerhalb der letzten 24 Stunden den "
-"Aktualisierungsserver kontaktiert und nach einem Update gefragt."
+"Update-Server kontaktiert und nach einem Update gefragt."
 
 msgid "These hosts have installed the correct version of their agent."
 msgstr "Diese Hosts haben die korrekte Version ihres Agenten installiert."
@@ -66561,15 +66634,14 @@ msgstr ""
 "<b>Installationsüberprüfung des Checkmk-Agenten</b> konfiguriert ist und "
 "nicht einer der Stati <b>WARN</b> (default) oder <b>CRIT</b> ist. Mit der "
 "obigen Einstellung können Sie den Standard-Service-Zustand überschreiben. "
-"Dies wird Ihnen helfen, die oben genannten Warnungen während des "
-"Aktualisierungsprozesses Ihrer Checkmk-Instanzen und -Agenten zu reduzieren. "
-"Wir empfehlen, diese Option nur für die betroffenen Hosts zu setzen, solange "
-"Sie Agenten älter als Checkmk 2.0 überwachen. Nach der Aktualisierung "
-"sollten Sie diese Einstellung wieder auf den ursprünglichen Wert "
-"zurücksetzen. Hintergrund: Mit IP-Zugriffslisten können Sie kontrollieren, "
-"welche Server mit diesen Agenten sprechen dürfen. Es handelt sich also um "
-"ein Sicherheitsproblem und sollte nicht dauerhaft deaktiviert oder auf "
-"<b>OK</b> gesetzt werden."
+"Dies wird Ihnen helfen, die oben genannten Warnungen während des Update-"
+"Prozesses Ihrer Checkmk-Instanzen und -Agenten zu reduzieren. Wir empfehlen, "
+"diese Option nur für die betroffenen Hosts zu setzen, solange Sie Agenten "
+"älter als Checkmk 2.0 überwachen. Nach der Aktualisierung sollten Sie diese "
+"Einstellung wieder auf den ursprünglichen Wert zurücksetzen. Hintergrund: "
+"Mit IP-Zugriffslisten können Sie kontrollieren, welche Server mit diesen "
+"Agenten sprechen dürfen. Es handelt sich also um ein Sicherheitsproblem und "
+"sollte nicht dauerhaft deaktiviert oder auf <b>OK</b> gesetzt werden."
 
 msgid ""
 "This check tests the connection to a TCP port. It uses <tt>check_tcp</tt> "
@@ -67018,7 +67090,7 @@ msgid ""
 "This is only relevant when agent updates are globally enabled. Otherwise, "
 "configured host conditions are not tested and won't yield an error message."
 msgstr ""
-"Dies ist nur relevant, wenn Agentenupdates global aktiviert sind. "
+"Dies ist nur relevant, wenn Agenten-Updates global aktiviert sind. "
 "Andernfalls werden die konfigurierten Host-Bedingungen nicht getestet und "
 "führen nicht zu einer Fehlermeldung."
 
@@ -67060,7 +67132,7 @@ msgid ""
 "This is the master switch that allows you to immediately stop the agent "
 "updates in case of some problem."
 msgstr ""
-"Das ist der Hauptschalter, der die Agentenupdates im Falle eines Problems "
+"Das ist der Hauptschalter, der die Agenten-Updates im Falle eines Problems "
 "sofort anhalten kann."
 
 msgid ""
@@ -67757,9 +67829,9 @@ msgid ""
 msgstr ""
 "Diese Seite kann verwendet werden, um eine neue Zeitperiode zu definieren, "
 "die auf den Terminen einer iCalendar-Datei (<tt>*.ics</tt>) basiert. Dieser "
-"Import wird normalerweise verwendet, um Ereignisse als Ausnahmen zu "
+"Import wird normalerweise verwendet, um Ereignisse als Exception zu "
 "importieren. Zeiträume und wiederkehrende Ereignisse werden unterstützt, "
-"allerdings kann die Gesamtzahl von 75 Ausnahmen derzeit nicht überschritten "
+"allerdings kann die Gesamtzahl von 75 Exceptions derzeit nicht überschritten "
 "werden."
 
 msgid "This page does not provide an inline help."
@@ -67979,8 +68051,8 @@ msgstr ""
 
 msgid "This permissions allows full control of the automatic agent updates."
 msgstr ""
-"Diese Berechtigung erlaubt die volle Kontrolle über automatische "
-"Agentenupdates."
+"Diese Berechtigung erlaubt die volle Kontrolle über automatische Agenten-"
+"Updates."
 
 msgid ""
 "This permissions allows users to use Setup - Checkmk's Web Administration "
@@ -68164,8 +68236,7 @@ msgstr "Dieses Plugin überwacht Kanäle, Manager und Warteschlangen von IBM MQ.
 
 msgid "This plug-in monitors the NFS version 4 exports of a Linux host."
 msgstr ""
-"Mit diesem Plugin überwachen Sie Exporte von NFS Version 4 eines Linux-"
-"Servers."
+"Mit diesem Plugin überwachen Sie Exporte von NFS Version 4 eines Linux-Hosts."
 
 msgid ""
 "This plug-in monitors the number of print jobs in the printer queues and the "
@@ -69532,7 +69603,7 @@ msgstr ""
 "\"nicht bereit\", \"nicht verfügbar\" oder \"nicht aktuell\" befinden "
 "dürfen. Für DaemonSets können Sie zusätzlich die Dauer angeben, für die es "
 "eine positive Anzahl von fehlgeplanten Replikaten geben darf. Beachten Sie, "
-"dass sich die Replikate während einer Aktualisierung vorübergehend in diesen "
+"dass sich die Replikate während eines Updates vorübergehend in diesen "
 "Zuständen befinden können. Daher ist es empfehlenswert, immer eine "
 "Karenzzeit zu konfigurieren."
 
@@ -69866,9 +69937,9 @@ msgid ""
 "updates have been placed in the queue. Default is 5 minutes."
 msgstr ""
 "Diese Einstellung legt das Intervall fest, in dem der Daemon der dynamischen "
-"Konfiguration auf die nächsten Aktualisierungen von dem/den Konnektor(en) "
-"wartet, wenn vorherige Aktualisierungen in die Warteschlange gestellt "
-"wurden. Der Standardwert ist 5 Minuten."
+"Konfiguration auf das nächste Update von dem/den Konnektor(en) wartet, wenn "
+"vorherige Updates in die Warteschlange gestellt wurden. Der Standardwert ist "
+"5 Minuten."
 
 msgid ""
 "This setting delays notifications about host problems by the specified "
@@ -71260,7 +71331,7 @@ msgid ""
 "update interval is set to {bound} (You entered {actual})"
 msgstr ""
 "Um zu verhindern, dass der Agent Updater ausgesperrt wird, ist das maximal "
-"zulässige Aktualisierungsintervall auf {bound} gesetzt (Sie haben {actual} "
+"zulässige Update-Intervall auf {bound} gesetzt (Sie haben {actual} "
 "eingegeben)"
 
 msgid ""
@@ -73922,8 +73993,8 @@ msgstr ""
 "Die URL des Remote-Servers, mit der er von seinen überwachten Hosts aus "
 "erreichbar ist, einschließlich des Protokolls (<tt>http://</tt> oder "
 "<tt>https://</tt>) und </tt>/check_mk/</tt>. Diese URL wird verwendet, um "
-"die Aktualisierungs-URL für einen Host automatisch bei der Registrierung "
-"oder Aktualisierung des Agenten bereitzustellen."
+"die Update-URL für einen Host automatisch bei der Registrierung oder dem "
+"Update des Agenten bereitzustellen."
 
 msgid "URL:"
 msgstr "URL:"
@@ -74317,7 +74388,7 @@ msgid "Unhandled"
 msgstr "offen"
 
 msgid "Unhandled exception occurred"
-msgstr "Unbehandelte Ausnahme aufgetreten"
+msgstr "Unbehandelte Exception aufgetreten"
 
 msgid "Unhandled host problems"
 msgstr "Unbehandelte Hostprobleme"
@@ -74565,10 +74636,10 @@ msgid "Up-to-date replicas"
 msgstr "Replicas auf dem neusten Stand"
 
 msgid "Update"
-msgstr "Aktualisierung"
+msgstr "Update"
 
 msgid "Update & acknowledge"
-msgstr "Aktualisieren & Bestätigen"
+msgstr "Aktualisieren & bestätigen"
 
 msgid "Update & acknowledge event?"
 msgstr "Ereignis aktualisieren & bestätigen?"
@@ -74577,41 +74648,41 @@ msgid "Update DNS cache"
 msgstr "DNS-Cache aktualisieren"
 
 msgid "Update State"
-msgstr "Updatezustand"
+msgstr "Update-Zustand"
 
 msgid "Update Status"
-msgstr "Updatezustand"
+msgstr "Update-Zustand"
 
 msgid "Update an event"
-msgstr "Ereignis aktualisieren"
+msgstr "Ein Ereignis aktualisieren"
 
 msgid "Update an event: change comment"
-msgstr "Ereignis aktualisieren: Kommentar ändern"
+msgstr "Ein Ereignis aktualisieren: Kommentar ändern"
 
 msgid "Update an event: change contact"
-msgstr "Ereignis aktualisieren: Kontakt ändern"
+msgstr "Ein Ereignis aktualisieren: Kontakt ändern"
 
 msgid "Update core config"
 msgstr "Konfiguration des Kerns aktualisieren"
 
 msgid "Update delay for PNP meta information"
-msgstr "Verzögerte Aktualisierung von PNP-Metadaten"
+msgstr "Verzögertes Update von PNP-Metadaten"
 
 msgid "Update discovery parameters"
 msgstr "Erkennungsparameter aktualisieren"
 
 msgid "Update duration"
-msgstr "Dauer der Aktualisierung"
+msgstr "Dauer des Updates"
 
 msgid "Update event?"
 msgstr "Ereignis aktualisieren?"
 
 msgid "Update existing security notifications"
-msgstr "existierende Sicherheitsbenachrichtigungen aktualisieren"
+msgstr "Existierende Sicherheitsbenachrichtigungen aktualisieren"
 
 msgid "Update existing security notifications to use the new max duration."
 msgstr ""
-"Bestehende Sicherheitsbenachrichtigungen aktualisieren, um die neue "
+"Existierende Sicherheitsbenachrichtigungen aktualisieren, um die neue "
 "Höchstdauer zu verwenden."
 
 msgid "Update host labels"
@@ -74632,13 +74703,11 @@ msgstr "Informationen zum Update-Server"
 msgid "Update service labels"
 msgstr "Service-Labels aktualisieren"
 
-#, fuzzy
 msgid "Update service parameters"
-msgstr "Erkennungsparameter aktualisieren"
+msgstr "Service-Parameter aktualisieren"
 
-#, fuzzy
 msgid "Update service params"
-msgstr "Service-Labels aktualisieren"
+msgstr "Service-Parameter aktualisieren"
 
 msgid "Update site DNS Cache"
 msgstr "DNS-Cache der Instanz aktualisieren"
@@ -74647,16 +74716,16 @@ msgid "Update site DNS cache"
 msgstr "DNS-Cache der Instanz aktualisieren"
 
 msgid "Update status"
-msgstr "Updatezustand"
+msgstr "Update-Zustand"
 
 msgid "Update status of this host"
-msgstr "Updatezustand für diesen Host"
+msgstr "Update-Zustand für diesen Host"
 
 msgid "Update transform"
 msgstr "Transformation aktualisieren"
 
 msgid "Updated attributes: "
-msgstr "Modizifierte Attribute: "
+msgstr "Aktualisierte Attribute: "
 
 #, python-format
 msgid "Updated discovered host labels of '%s' with %d labels"
@@ -74667,24 +74736,24 @@ msgid ""
 "operation is only performed for metrics that are being updated. Old metrics "
 "are not affected by this option."
 msgstr ""
-"Aktualisierte Metriken werden in diesem Intervall auf die Festplatte "
-"geschrieben. Diese Schreiboperation wird nur für Metriken ausgeführt, die "
-"aktuelle Werte erhalten. Veraltete Metriken sind nicht von dieser Option "
+"Aktualisierte Metriken werden im konfigurierten Intervall auf die Festplatte "
+"geschrieben. Der Schreibvorgang wird nur für Metriken durchgeführt, die "
+"gerade aktualisiert werden. Alte Metriken sind von dieser Option nicht "
 "betroffen."
 
 #, python-format
 msgid "Updated properties of %s group %s"
-msgstr "Eigenschaften der %s-Gruppe %s bearbeitet"
+msgstr "Eigenschaften der %s-Gruppe %s aktualisiert"
 
 #, python-format
 msgid "Updated properties of %sgroup %s"
-msgstr "Eigenschaften der %s-Gruppe %s bearbeitet"
+msgstr "Eigenschaften der %s-Gruppe %s aktualisiert"
 
 msgid "Updates"
-msgstr "Aktualisierungen"
+msgstr "Updates"
 
 msgid "Updates are expected at least every"
-msgstr "Aktualisierungen werden ... erwartet"
+msgstr "Erwartet werden Updates mindestens alle"
 
 #, python-format
 msgid "Updates will be <b>disabled</b> for this host: %s"
@@ -76412,7 +76481,7 @@ msgid "Used disk capacity"
 msgstr "Verwendete Plattenkapazität"
 
 msgid "Used file handles"
-msgstr "Benutze Inodes"
+msgstr "Verwendete Datei-Handles"
 
 msgid "Used host tags"
 msgstr "Genutzte Host-Merkmale"
@@ -76554,6 +76623,9 @@ msgstr "Optionen für die Erzeugung von Benutzern"
 
 msgid "User for login"
 msgstr "Benutzer für Login"
+
+msgid "User generated HTTP password (not account password)"
+msgstr "Vom Benutzer generiertes HTTP-Passwort (kein Kontopasswort)"
 
 msgid "User interface"
 msgstr "Benutzerschnittstelle"
@@ -76724,8 +76796,8 @@ msgid ""
 msgstr ""
 "Es wird nicht empfohlen, den Gerätenamen als Service-Namen zu verwenden. "
 "Gerätenamen sind nicht beständig und können sich nach einem Reboot oder "
-"einer Aktualisierung ändern. Falls die WWN nicht verfügbar ist, wird der "
-"Gerätename verwendet."
+"einem Update ändern. Falls die WWN nicht verfügbar ist, wird der Gerätename "
+"verwendet."
 
 msgid "Using predefined condition"
 msgstr "Verwendung einer vordefinierten Bedingung"
@@ -77414,6 +77486,9 @@ msgstr "Der Wert %r ist hier nicht erlaubt."
 
 msgid "Value Type"
 msgstr "Werttyp"
+
+msgid "Value is default. Please provide a non-default value."
+msgstr ""
 
 #, python-format
 msgid "Value must be one of '%s'"
@@ -78150,8 +78225,8 @@ msgid ""
 "Waiting for first status update from the job. In case this message is shown "
 "for a longer time, the startup got interrupted."
 msgstr ""
-"Wartet auf die erste Zustandsaktualisierung des Auftrags. Wenn diese Meldung "
-"länger angezeigt wird, wurde der Startvorgang unterbrochen."
+"Wartet auf das erste Zustandsupdate des Auftrags. Wenn diese Meldung länger "
+"angezeigt wird, wurde der Startvorgang unterbrochen."
 
 msgid "Waiting for new master initialization"
 msgstr "Warte auf Initialisierung der neuen Zentralinstanz"
@@ -78717,9 +78792,9 @@ msgid ""
 "When enabled all exceptions occuring during the helper execution will raise "
 "through and directly result in termination of the helper process."
 msgstr ""
-"Falls Sie alle Ausnahmebehandlungen eingeschaltet haben, die während der "
-"Ausführung der Helper auftreten, werden diese nach oben durchschlagen und "
-"den entsprechenden Helper-Prozess beenden."
+"Wenn diese Option aktiviert ist, werden alle Exceptions, die während der "
+"Ausführung des Helper-Prozesses auftreten, durchgelassen und führen direkt "
+"zur Beendigung des Helper-Prozesses."
 
 msgid ""
 "When enabled, a subfolder is not shown, when the user does not have "
@@ -78880,12 +78955,12 @@ msgid ""
 msgstr ""
 "Wenn mehrere HTTP-Clients ein Objekt zur selben Zeit aktualisieren wollen, "
 "kann es passieren, dass der langsamere Client die Änderungen des schnelleren "
-"überschreibt. Dies wird oft als \"Problem der verlorenen Aktualisierung\" "
+"überschreibt. Dies wird oft als \"Problem des verlorenen Updates\" "
 "bezeichnet. Um solche Situationen zu vermeiden, nutzt Checkmk in der REST-"
 "API die Funktion der \"optimistischen Sperrung\" über ETags im HTTP-Header. "
 "In diesem Fall wird das ETag des Objekts im HTTP If-Match Header zum Server "
 "geschickt. Dieses Verhalten kann deaktiviert werden, aber dann zum \"Problem "
-"der verlorenen Aktualisierung\" führen."
+"des verlorenen Updates\" führen."
 
 msgid ""
 "When performing walks on an OID during checking, Checkmk fetches all sub "
@@ -79287,8 +79362,8 @@ msgstr ""
 "erheblich beschleunigen. Der Cache wird in einer einfachen Datei "
 "gespeichert. Hinweise: Wenn der Cache aktiviert ist, werden Änderungen an "
 "der IP-Adresse eines Hosts in Ihrem Name-Server nicht sofort erkannt. Wenn "
-"Sie eine sofortige Aktualisierung benötigen, deaktivieren Sie einfach einmal "
-"den Cache, aktivieren Sie die Änderungen und aktivieren Sie ihn wieder. OMD-"
+"Sie ein sofortiges Update benötigen, deaktivieren Sie einfach einmal den "
+"Cache, aktivieren Sie die Änderungen und aktivieren Sie ihn wieder. OMD-"
 "basierte Installationen aktualisieren den Cache automatisch einmal pro Tag."
 
 msgid ""
@@ -79507,6 +79582,13 @@ msgstr ""
 "Wenn Sie mit der Event Console SNMP-Traps verarbeiten wollen, müssen Sie die "
 "Daten zur verarbeitung der eingehenden Traps konfigurieren."
 
+msgid ""
+"Whenever Checkmk creates, modifies or deletes hosts via this connection, it "
+"will only consider hosts that receive piggyback data from hosts with names "
+"matching one of these regular expressions. Please note: The attribution of "
+"piggyback data to existing hosts is not affected by this setting."
+msgstr ""
+
 #, python-format
 msgid ""
 "Whenever a server component of Checkmk opens a SSL connection it uses the "
@@ -79718,7 +79800,7 @@ msgid "Windows Terminal Server Sessions"
 msgstr "Windows Terminal Server Sessions"
 
 msgid "Windows Updates"
-msgstr "Windows-Aktualisierungen"
+msgstr "Windows-Updates"
 
 msgid "Windows WMI Timeout"
 msgstr "Windows WMI-Timeout"
@@ -79794,8 +79876,9 @@ msgid ""
 "and register but cannot download packges for update."
 msgstr ""
 "Mit dem Hauptschalter können Sie sofort Agentenupdates ein- oder "
-"ausschalten. Ist er ausgeschaltet, dann können Agenten lediglich Ihre "
-"Konfiguration abfragen, aber nicht die Updates herunterladen."
+"ausschalten. Wenn er ausgeschaltet ist, können die Agenten immer noch ihre "
+"Zielkonfiguration abfragen und sich registrieren, aber keine Pakete zum "
+"Update herunterladen."
 
 #, python-format
 msgid ""
@@ -81751,7 +81834,7 @@ msgstr ""
 
 #, python-format
 msgid "You cannot use weekday names (%s) in exceptions"
-msgstr "Namen von Wochentagen (%s) können nicht in Ausnahmen verwendet werden"
+msgstr "Namen von Wochentagen (%s) können nicht in Exceptions verwendet werden"
 
 msgid "You configured the host to be it's own parent, which is not allowed."
 msgstr ""
@@ -82281,7 +82364,7 @@ msgid "You need to provide at least %d characters."
 msgstr "Geben Sie bitte mindestens %d Zeichen an."
 
 msgid "You need to provide time period exceptions in YYYY-MM-DD format"
-msgstr "Sie müssen Zeitperiodenausnahmen im Format JJJJJ-MM-TT angeben"
+msgstr "Sie müssen Zeitperioden-Exceptions im Format JJJJJ-MM-TT angeben"
 
 msgid "You need to provide your current password."
 msgstr "Geben Sie bitte Ihr aktuelles Passwort an."
@@ -82416,13 +82499,6 @@ msgstr "Ihre Erweitrungen haben eine Größe von %s."
 
 msgid "Your filename must not end with a slash."
 msgstr "Ihre Dateiname darf nicht mit einem Schrägstrich enden."
-
-msgid ""
-"Your free trial is active! Please note that your site will be deleted when "
-"the trial period ends. "
-msgstr ""
-"Ihr kostenloser Testzeitraum ist aktiv! Bitte beachten Sie, dass Ihre "
-"Instanz am Ende des Testzeitraums gelöscht wird. "
 
 msgid "Your host name has an invalid format."
 msgstr "Der Host-Name hat ein ungültiges Format."
@@ -82675,7 +82751,7 @@ msgid "Zpool status"
 msgstr "Zpool-Zustand"
 
 msgid "Zypper Updates"
-msgstr "Zypper-Aktualisierungen"
+msgstr "Zypper-Updates"
 
 msgid "Zypper normal and security updates (Linux)"
 msgstr "Normale und Sicherheitsupdates für Zypper (Linux)"
@@ -82686,7 +82762,7 @@ msgstr "[%s] - Quick Setup"
 
 #, python-format
 msgid "[%s] Exception: %s"
-msgstr "[%s] Ausnahme: %s"
+msgstr "[%s] Exception: %s"
 
 #, python-format
 msgid "[%s] Finished sync for connection"
@@ -84900,6 +84976,19 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid ""
+#~ "No triggering events selected. Please select at least one event to "
+#~ "trigger the notification."
+#~ msgstr ""
+#~ "Keine auslösenden Ereignisse ausgewählt. Bitte wählen Sie mindestens ein "
+#~ "Ereignis, um die Benachrichtigung auszulösen."
+
+#, python-format
+#~ msgid "%s other service"
+#~ msgid_plural "%s other services"
+#~ msgstr[0] "%s anderer Service"
+#~ msgstr[1] "%s andere Services"
 
 #~ msgid "Show discovered service labels"
 #~ msgstr "Erkannte Servicelabels anzeigen"

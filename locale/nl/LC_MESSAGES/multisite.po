@@ -750,12 +750,6 @@ msgstr "%s van %s"
 msgid "%s of %s%%"
 msgstr "%s van %s%%"
 
-#, fuzzy, python-format
-msgid "%s other service"
-msgid_plural "%s other services"
-msgstr[0] "Andere diensten"
-msgstr[1] "Andere diensten"
-
 #, python-format
 msgid "%s properties"
 msgstr "%s eigenschappen"
@@ -2326,6 +2320,14 @@ msgstr ""
 "hoofdletters, cijfers en underscores bevatten."
 
 #, fuzzy
+msgid "A macro name and a regular expression are required"
+msgstr "Groepeert bestanden op basis van een regelmatig expressiepatroon."
+
+#, fuzzy
+msgid "A macro name is required"
+msgstr "als macro met de naam"
+
+#, fuzzy
 msgid ""
 "A matrix of performance data values from all hosts in a certain host group"
 msgstr ""
@@ -2366,6 +2368,10 @@ msgstr ""
 #, no-python-format
 msgid "A provisioning of over 100% means over provisioning."
 msgstr "Een bevoorrading van meer dan 100% betekent overbevoorrading."
+
+#, fuzzy
+msgid "A regular expression is required"
+msgstr "Reguliere uitdrukking te verwachten in de inhoud"
 
 msgid ""
 "A regular expression matching the <b>beginning</b> of a service description. "
@@ -3690,6 +3696,10 @@ msgstr "Actieve gealarmeerde stromen"
 
 #, fuzzy
 msgid "Active and inactive memory"
+msgstr "Actief en inactief geheugen"
+
+#, fuzzy
+msgid "Active and inactive memory - files and anonymous"
 msgstr "Actief en inactief geheugen"
 
 msgid "Active check"
@@ -7351,6 +7361,9 @@ msgstr ""
 msgid "At least one selection is missing."
 msgstr "Staat wanneer bestand ontbreekt"
 
+msgid "At least one triggering event must be selected."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "At most that many notifications are kept back for bulking. A value of 1 "
@@ -7907,9 +7920,6 @@ msgstr "Beschikbaar (ontbreekt)"
 msgid "Available Memory"
 msgstr "Beschikbaar geheugen"
 
-msgid "Available Spare"
-msgstr "Beschikbare reserve"
-
 msgid "Available agent configurations"
 msgstr "Beschikbare agent configuraties"
 
@@ -7930,6 +7940,10 @@ msgstr "Beschikbare fysieke processoren in gedeelde pool"
 
 msgid "Available replicas"
 msgstr "Beschikbare replica's"
+
+#, fuzzy
+msgid "Available spare"
+msgstr "Beschikbare reserve"
 
 msgid "Available temp space"
 msgstr "Beschikbare temp-ruimte"
@@ -34644,6 +34658,10 @@ msgstr "Ongeldige gegevensbron: %s"
 msgid "Invalid data. Missing filename"
 msgstr "Ongeldige bestandsnaam"
 
+#, fuzzy
+msgid "Invalid data: value is not a string."
+msgstr "Ongeldige waarde voor ack parameter."
+
 #, python-format
 msgid "Invalid datasource '%s' configured."
 msgstr "Ongeldige datasource '%s' geconfigureerd."
@@ -43468,11 +43486,6 @@ msgstr "Geen test host"
 msgid "No title"
 msgstr "Geen titel"
 
-msgid ""
-"No triggering events selected. Please select at least one event to trigger "
-"the notification."
-msgstr ""
-
 #, fuzzy, python-format
 msgid ""
 "No unpackaged files found. If you want to create new extension packages then "
@@ -49320,6 +49333,10 @@ msgstr ""
 "Activeer de bewaking van ten minste één apparaattype: Android, iOS of andere "
 "apparaten"
 
+#, fuzzy
+msgid "Please add at least one check type."
+msgstr "Voeg ten minste één kindknooppunt toe."
+
 msgid "Please add at least one child node."
 msgstr "Voeg ten minste één kindknooppunt toe."
 
@@ -49331,6 +49348,10 @@ msgid "Please add at least one contact group"
 msgstr "Voeg ten minste één kindknooppunt toe."
 
 #, fuzzy
+msgid "Please add at least one contact group."
+msgstr "Voeg ten minste één kindknooppunt toe."
+
+#, fuzzy
 msgid "Please add at least one email address"
 msgstr "Voeg ten minste één kindknooppunt toe."
 
@@ -49339,11 +49360,43 @@ msgid "Please add at least one endpoint to monitor"
 msgstr "Voeg ten minste één kolom toe aan je uitzicht."
 
 #, fuzzy
+msgid "Please add at least one host group."
+msgstr "Voeg ten minste één kindknooppunt toe."
+
+#, fuzzy
+msgid "Please add at least one host label."
+msgstr "Voeg ten minste één kindknooppunt toe."
+
+#, fuzzy
+msgid "Please add at least one host."
+msgstr "Voeg ten minste één kindknooppunt toe."
+
+#, fuzzy
 msgid "Please add at least one macro"
 msgstr "Voeg ten minste één kindknooppunt toe."
 
 #, fuzzy
+msgid "Please add at least one member."
+msgstr "Voeg ten minste één kindknooppunt toe."
+
+#, fuzzy
 msgid "Please add at least one recipient"
+msgstr "Voeg ten minste één kindknooppunt toe."
+
+#, fuzzy
+msgid "Please add at least one service group."
+msgstr "Voeg ten minste één kindknooppunt toe."
+
+#, fuzzy
+msgid "Please add at least one service label."
+msgstr "Voeg ten minste één kindknooppunt toe."
+
+#, fuzzy
+msgid "Please add at least one service."
+msgstr "Voeg ten minste één kindknooppunt toe."
+
+#, fuzzy
+msgid "Please add at least one site."
 msgstr "Voeg ten minste één kindknooppunt toe."
 
 #, fuzzy
@@ -49401,7 +49454,7 @@ msgid "Please choose a file to upload."
 msgstr "Kies een bestand om te uploaden."
 
 #, fuzzy
-msgid "Please choose a notification parameter or create one."
+msgid "Please choose a parameter or click \"Create\" to add a new one."
 msgstr "Verwijder deze meldingsregel"
 
 msgid "Please choose a report to schedule"
@@ -49491,6 +49544,10 @@ msgstr ""
 #, fuzzy
 msgid "Please enter a Service Integration Key"
 msgstr "PagerDuty Service Integratie Sleutel"
+
+#, fuzzy
+msgid "Please enter a comment to filter for."
+msgstr "Geef een tijd op."
 
 msgid "Please enter a filename."
 msgstr "Voer een bestandsnaam in."
@@ -49627,6 +49684,11 @@ msgstr ""
 "Merk op dat u <tt>RequestHeader set X-Forwarded-Proto \"https\"</tt> in uw "
 "systeem Apache configuratie moet instellen om de Checkmk GUI te vertellen "
 "over de SSL setup."
+
+msgid ""
+"Please note that your site will be deleted when the trial period ends or "
+"when you activate a license. "
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -63369,6 +63431,12 @@ msgid "The Group Base DN is not configured, not fetching any groups."
 msgstr ""
 "De Groep Base DN is niet geconfigureerd, er worden geen groepen opgehaald."
 
+msgid ""
+"The HTTP password can be generated from the settings page in Gerrit under '/"
+"settings/#HTTPCredentials' or from the REST API. NOTE: you should NOT enter "
+"your account credentials here!"
+msgstr ""
+
 msgid "The HTTP resource path on which to fetch metrics from targets."
 msgstr ""
 
@@ -64990,6 +65058,10 @@ msgstr ""
 "attributen te koppelen door de titels in de titelrij te gebruiken (als u die "
 "heeft). Als u de juiste titels gebruikt, kunnen de attributen automatisch "
 "gemapt worden. De momenteel beschikbare attributen zijn:"
+
+#, fuzzy
+msgid "The first value must be lower than the second value."
+msgstr "Het cluster moet ten minste één knooppunt hebben"
 
 msgid "The folder is not permitted for any contact group."
 msgstr "De map is niet toegestaan voor een contactgroep."
@@ -79473,6 +79545,9 @@ msgstr "Piggyback creatie opties"
 msgid "User for login"
 msgstr "Gebruiker voor aanmelding"
 
+msgid "User generated HTTP password (not account password)"
+msgstr ""
+
 msgid "User interface"
 msgstr "Gebruikersinterface"
 
@@ -80473,6 +80548,9 @@ msgstr "De waarde %r is hier niet toegestaan."
 
 msgid "Value Type"
 msgstr "Waarde Type"
+
+msgid "Value is default. Please provide a non-default value."
+msgstr ""
 
 #, fuzzy, python-format
 msgid "Value must be one of '%s'"
@@ -82600,6 +82678,13 @@ msgid ""
 msgstr ""
 "Wanneer je SNMP traps wil verwerken met de Event Console is het nodig om de "
 "credentials te configureren om de inkomende traps te decoderen."
+
+msgid ""
+"Whenever Checkmk creates, modifies or deletes hosts via this connection, it "
+"will only consider hosts that receive piggyback data from hosts with names "
+"matching one of these regular expressions. Please note: The attribution of "
+"piggyback data to existing hosts is not affected by this setting."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -85471,11 +85556,6 @@ msgstr "Uw extensies hebben een grootte van %s."
 msgid "Your filename must not end with a slash."
 msgstr "Uw bestandsnaam mag niet eindigen met een schuine streep."
 
-msgid ""
-"Your free trial is active! Please note that your site will be deleted when "
-"the trial period ends. "
-msgstr ""
-
 #, fuzzy
 msgid "Your host name has an invalid format."
 msgstr "Uw hostnaam heeft een ongeldig formaat."
@@ -87986,6 +88066,12 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy, python-format
+#~ msgid "%s other service"
+#~ msgid_plural "%s other services"
+#~ msgstr[0] "Andere diensten"
+#~ msgstr[1] "Andere diensten"
 
 #~ msgid "Show discovered service labels"
 #~ msgstr "Ontdekte service labels tonen"

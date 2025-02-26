@@ -28,7 +28,7 @@ def main() {
         inside_container(
             set_docker_group_id: true,
             mount_credentials: true,
-            priviliged: true,
+            privileged: true,
         ) {
             withCredentials([
                 usernamePassword(

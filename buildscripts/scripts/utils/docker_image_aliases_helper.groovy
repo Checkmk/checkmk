@@ -61,7 +61,7 @@ inside_container = {Map arg1=[:], Closure arg2 ->
      """);
 
     def image = args.image ?: docker_reference_image();
-    def privileged = args.get("priviliged", false).asBoolean();
+    def privileged = args.get("privileged", false).asBoolean();
     def init = args.get("init", false).asBoolean();
     def pull = args.get("pull", false).asBoolean();
     def mount_reference_repo = args.get("mount_reference_repo", true).asBoolean();

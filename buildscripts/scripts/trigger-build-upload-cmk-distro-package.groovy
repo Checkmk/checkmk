@@ -66,7 +66,7 @@ def main() {
             set_docker_group_id: true,
             ulimit_nofile: 1024,
             mount_credentials: true,
-            priviliged: true,
+            privileged: true,
         ) {
             single_tests.prepare_workspace(
                 cleanup: [
@@ -89,7 +89,7 @@ def main() {
             set_docker_group_id: true,
             ulimit_nofile: 1024,
             mount_credentials: true,
-            priviliged: true,
+            privileged: true,
         ) {
             dir("${checkout_dir}") {
                 stage("Fetch Checkmk package") {

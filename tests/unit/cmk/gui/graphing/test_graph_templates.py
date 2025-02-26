@@ -1899,7 +1899,7 @@ def test__get_evaluated_graph_templates_with_predictive_metrics(
         ),
         # fs.py
         pytest.param(
-            ["fs_used", "fs_size"],
+            ["fs_used", "fs_free", "fs_size"],
             ["fs_used"],
             id="fs_used",
         ),

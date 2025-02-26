@@ -102,8 +102,8 @@ class FakeTemplateGraphSpecification(TemplateGraphSpecification):
     def _get_graph_data_from_livestatus(self) -> Row:
         return {
             "site": "site_id",
-            "service_perf_data": "/=163651.992188;;;; fs_size=477500.03125;;;; growth=-1280.489081;;;;",
-            "service_metrics": ["metric_name"],
+            "service_perf_data": "fs_used=163651.992188;;;; fs_free=313848.039062;;; fs_size=477500.03125;;;; growth=-1280.489081;;;;",
+            "service_metrics": ["fs_used", "fs_free", "fs_size", "growth"],
             "service_check_command": "check_mk-df",
             "host_name": "host_name",
             "service_description": "Service name",
@@ -130,26 +130,13 @@ def test_template_recipes() -> None:
                 GraphMetric(
                     title="Used space",
                     line_type="stack",
-                    operation=MetricOpOperator(
-                        operator_name="MERGE",
-                        operands=[
-                            MetricOpRRDSource(
-                                site_id=SiteId("site_id"),
-                                host_name=HostName("host_name"),
-                                service_name="Service name",
-                                metric_name="_",
-                                consolidation_func_name="max",
-                                scale=1048576.0,
-                            ),
-                            MetricOpRRDSource(
-                                site_id=SiteId("site_id"),
-                                host_name=HostName("host_name"),
-                                service_name="Service name",
-                                metric_name="metric_name",
-                                consolidation_func_name="max",
-                                scale=1048576.0,
-                            ),
-                        ],
+                    operation=MetricOpRRDSource(
+                        site_id=SiteId("site_id"),
+                        host_name=HostName("host_name"),
+                        service_name="Service name",
+                        metric_name="fs_used",
+                        consolidation_func_name="max",
+                        scale=1048576.0,
                     ),
                     unit=ConvertibleUnitSpecification(
                         notation=IECNotation(symbol="B"),
@@ -160,45 +147,19 @@ def test_template_recipes() -> None:
                 GraphMetric(
                     title="Free space",
                     line_type="stack",
-                    operation=MetricOpOperator(
-                        operator_name="-",
-                        operands=[
-                            MetricOpRRDSource(
-                                site_id=SiteId("site_id"),
-                                host_name=HostName("host_name"),
-                                service_name="Service name",
-                                metric_name="fs_size",
-                                consolidation_func_name="max",
-                                scale=1048576.0,
-                            ),
-                            MetricOpOperator(
-                                operator_name="MERGE",
-                                operands=[
-                                    MetricOpRRDSource(
-                                        site_id=SiteId("site_id"),
-                                        host_name=HostName("host_name"),
-                                        service_name="Service name",
-                                        metric_name="_",
-                                        consolidation_func_name="max",
-                                        scale=1048576.0,
-                                    ),
-                                    MetricOpRRDSource(
-                                        site_id=SiteId("site_id"),
-                                        host_name=HostName("host_name"),
-                                        service_name="Service name",
-                                        metric_name="metric_name",
-                                        consolidation_func_name="max",
-                                        scale=1048576.0,
-                                    ),
-                                ],
-                            ),
-                        ],
+                    operation=MetricOpRRDSource(
+                        site_id=SiteId("site_id"),
+                        host_name=HostName("host_name"),
+                        service_name="Service name",
+                        metric_name="fs_free",
+                        consolidation_func_name="max",
+                        scale=1048576.0,
                     ),
                     unit=ConvertibleUnitSpecification(
                         notation=IECNotation(symbol="B"),
                         precision=AutoPrecision(digits=2),
                     ),
-                    color="#ffffff",
+                    color="#d28df6",
                 ),
                 GraphMetric(
                     title="Total size",

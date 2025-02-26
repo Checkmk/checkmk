@@ -46,10 +46,22 @@ ServiceLabels = dict[str, str]
 _ItemAppearance = Literal["index", "descr", "alias"]
 
 
+class ConditionsForLabels(TypedDict, total=False):
+    match_index: list[str]
+    match_alias: list[str]
+    match_desc: list[str]
+
+
+class LabelsConditions(TypedDict, total=False):
+    conditions: ConditionsForLabels
+    labels: ServiceLabels
+
+
 class SingleInterfaceDiscoveryParams(TypedDict, total=False):
     item_appearance: _ItemAppearance
     pad_portnumbers: bool
     labels: ServiceLabels
+    labels_conditions: list[LabelsConditions]
 
 
 MatchingConditions = Mapping[str, list[str]]
@@ -1142,7 +1154,7 @@ def discover_interfaces(
     if len(section) == 0:
         return
 
-    pre_inventory = []
+    pre_inventory: list[tuple[str, dict[str, object], int, bool, dict[str, str] | None]] = []
     seen_indices: set[str] = set()
     n_times_item_seen: dict[str, int] = defaultdict(int)
     interface_groups: dict[str, GroupConfiguration] = {}
@@ -1152,7 +1164,9 @@ def discover_interfaces(
     # ==============================================================================================
     for interface in section:
         discover_single_interface = False
-        single_interface_settings = DISCOVERY_DEFAULT_PARAMETERS["discovery_single"][1]
+        single_interface_settings: SingleInterfaceDiscoveryParams = DISCOVERY_DEFAULT_PARAMETERS[
+            "discovery_single"
+        ][1]
         # find the most specific rule which applies to this interface and which has single-interface
         # discovery settings
         for rule in params:
@@ -1212,13 +1226,34 @@ def discover_interfaces(
             except (TypeError, ValueError):
                 index_as_item = False
 
+            labels = {}
+            if labels_conditions := single_interface_settings.get("labels_conditions"):
+                for labels_condition in labels_conditions:
+                    conditions = labels_condition.get("conditions", {})
+                    if (
+                        check_regex_match_conditions(
+                            interface.attributes.index, conditions.get("match_index")
+                        )
+                        and check_regex_match_conditions(
+                            interface.attributes.alias, conditions.get("match_alias")
+                        )
+                        and check_regex_match_conditions(
+                            interface.attributes.descr, conditions.get("match_desc")
+                        )
+                    ):
+                        for k, v in labels_condition.get("labels", {}).items():
+                            labels[k] = v
+
+            for k, v in single_interface_settings.get("labels", {}).items():
+                labels[k] = v
+
             pre_inventory.append(
                 (
                     item,
                     discovered_params_single,
                     int(interface.attributes.index),
                     index_as_item,
-                    single_interface_settings.get("labels"),
+                    labels,
                 )
             )
             seen_indices.add(interface.attributes.index)
@@ -1278,7 +1313,7 @@ def discover_interfaces(
             pre_inventory.append((group_name, discovered_params_group, 1, False, group_labels))
 
     # Check for duplicate items (e.g. when using Alias as item and the alias is not unique)
-    for item, discovered_params, index, index_as_item, labels in pre_inventory:
+    for item, discovered_params, index, index_as_item, item_labels in pre_inventory:
         if not index_as_item and n_times_item_seen[item] > 1:
             new_item = "%s %d" % (item, index)
         else:
@@ -1286,7 +1321,9 @@ def discover_interfaces(
         yield Service(
             item=new_item,
             parameters=dict(discovered_params),
-            labels=[ServiceLabel(key, value) for key, value in labels.items()] if labels else None,
+            labels=[ServiceLabel(key, value) for key, value in item_labels.items()]
+            if item_labels
+            else None,
         )
 
 

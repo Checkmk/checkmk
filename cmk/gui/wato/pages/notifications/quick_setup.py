@@ -1476,6 +1476,18 @@ def validate_notification_count_values(values: tuple[object, ...]) -> None:
             )
 
 
+def validate_throttling_values(values: tuple[object, ...]) -> None:
+    match values:
+        case (int() as first_value, _) if first_value < 1:
+            raise ValidationError(
+                Message("The first value must be greater than 0."),
+            )
+        case (int() as first_value, int() as second_value) if second_value < first_value:
+            raise ValidationError(
+                Message("The second value must be equal to or greater than the first value.")
+            )
+
+
 def sending_conditions() -> QuickSetupStage:
     def _components() -> Sequence[Widget]:
         return [
@@ -1539,6 +1551,7 @@ def sending_conditions() -> QuickSetupStage:
                                                 ),
                                             ],
                                             layout="horizontal",
+                                            custom_validate=[validate_throttling_values],
                                         )
                                     ),
                                 },

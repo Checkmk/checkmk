@@ -171,9 +171,9 @@ pub fn check(der: &[u8], config: Config) -> Check {
         check_pubkey_size(cert.public_key(), config.pubkey_size),
         check_validity_not_after(
             cert.validity().time_to_expiration(),
-            config.not_after,
             cert.validity().not_after,
         ),
+        check_validity_duration(cert.validity().time_to_expiration(), config.not_after,),
         check_max_validity(cert.validity(), config.max_validity),
     ))
 }
@@ -308,28 +308,46 @@ fn check_pubkey_size(
 
 fn check_validity_not_after(
     time_to_expiration: Option<Duration>,
-    levels: Option<Levels<Duration>>,
     not_after: ASN1Time,
 ) -> Option<CheckResult<Real>> {
-    levels.map(|levels| match time_to_expiration {
-        None => SimpleCheckResult::crit(format!("Certificate expired ({not_after})")).into(),
-        Some(time_to_expiration) => CheckResult::from_levels(
-            pretty_levels(
-                &format!(
+    if time_to_expiration.is_some() {
+        return None;
+    };
+    Some(SimpleCheckResult::crit(format!("Certificate expired ({not_after})")).into())
+}
+
+fn check_validity_duration(
+    time_to_expiration: Option<Duration>,
+    levels: Option<Levels<Duration>>,
+) -> Option<CheckResult<Real>> {
+    time_to_expiration.map(|time_to_expiration| {
+        let metric = Metric::builder()
+            .label("certificate_remaining_validity")
+            .value(time_to_expiration)
+            .uom("s".parse().unwrap())
+            .levels(levels.clone())
+            .build()
+            .map(|x| Real::from(x.whole_seconds() as isize));
+        match levels {
+            None => CheckResult::notice(
+                format!(
                     "Server certificate validity: {} day(s)",
-                    time_to_expiration.whole_days(),
+                    time_to_expiration.whole_days()
                 ),
-                levels.clone().map(|x| Real::from(x.whole_days() as isize)),
-                "day(s)",
+                metric.clone(),
             ),
-            Metric::builder()
-                .label("certificate_remaining_validity")
-                .value(time_to_expiration)
-                .uom("s".parse().unwrap())
-                .levels(Some(levels))
-                .build()
-                .map(|x| Real::from(x.whole_seconds() as isize)),
-        ),
+            Some(levels) => CheckResult::from_levels(
+                pretty_levels(
+                    &format!(
+                        "Server certificate validity: {} day(s)",
+                        time_to_expiration.whole_days(),
+                    ),
+                    levels.clone().map(|x| Real::from(x.whole_days() as isize)),
+                    "day(s)",
+                ),
+                metric.clone(),
+            ),
+        }
     })
 }
 

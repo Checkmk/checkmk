@@ -32,7 +32,7 @@ not_managed_edition = SkipIf(
     not version_from_env().is_managed_edition(), "Skipping test; intended for Managed edition"
 )
 not_raw_edition = SkipIf(
-    not version_from_env().is_managed_edition(), "Skipping test; intended for Raw edition"
+    not version_from_env().is_raw_edition(), "Skipping test; intended for Raw edition"
 )
 not_saas_edition = SkipIf(
     not version_from_env().is_saas_edition(), "Skipping test; intended for SaaS edition"

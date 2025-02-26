@@ -13,8 +13,6 @@ import cmk.utils.log
 from cmk.utils.config_path import LATEST_CONFIG
 from cmk.utils.hostaddress import HostAddress, HostName
 
-from cmk.checkengine.submitters import get_submitter
-
 import cmk.base.utils
 from cmk.base import config
 from cmk.base.api.agent_based.register import load_selected_plugins
@@ -93,7 +91,6 @@ def main() -> int:
         config.ipv6addresses = CONFIG.ipv6addresses
 
         return mode_check(
-            get_submitter,
             {},
             [CONFIG.hostname],
             active_check_handler=lambda *args: None,

@@ -15,7 +15,7 @@ from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from contextlib import suppress
 from functools import partial
 from pathlib import Path
-from typing import Final, Literal, NamedTuple, Protocol, TypedDict, TypeVar
+from typing import Final, Literal, NamedTuple, TypedDict, TypeVar
 
 import livestatus
 
@@ -96,7 +96,7 @@ from cmk.checkengine.parser import (
     SectionNameCollection,
 )
 from cmk.checkengine.sectionparser import SectionPlugin
-from cmk.checkengine.submitters import get_submitter, ServiceState, Submitter
+from cmk.checkengine.submitters import get_submitter, ServiceState
 from cmk.checkengine.summarize import summarize, SummarizerFunction
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -241,7 +241,7 @@ def option_fake_dns(a: HostAddress) -> None:
 modes.register_general_option(
     Option(
         long_option="fake-dns",
-        short_help="Fake IP addresses of all hosts to be IP. This " "prevents DNS lookups.",
+        short_help="Fake IP addresses of all hosts to be IP. This prevents DNS lookups.",
         handler_function=option_fake_dns,
         argument=True,
         argument_descr="IP",
@@ -2306,22 +2306,7 @@ _CheckingOptions = TypedDict(
 )
 
 
-class GetSubmitter(Protocol):
-    def __call__(
-        self,
-        check_submission: Literal["pipe", "file"],
-        monitoring_core: Literal["nagios", "cmc"],
-        host_name: HostName,
-        *,
-        dry_run: bool,
-        perfdata_format: Literal["pnp", "standard"],
-        show_perfdata: bool,
-        keepalive: bool,
-    ) -> Submitter: ...
-
-
 def mode_check(
-    get_submitter_: GetSubmitter,
     options: _CheckingOptions,
     args: list[str],
     *,
@@ -2470,7 +2455,6 @@ def mode_check(
 
 
 def register_mode_check(
-    get_submitter_: GetSubmitter,
     *,
     active_check_handler: Callable[[HostName, str], object],
 ) -> None:
@@ -2479,7 +2463,6 @@ def register_mode_check(
             long_option="check",
             handler_function=partial(
                 mode_check,
-                get_submitter_,
                 active_check_handler=active_check_handler,
                 keepalive=False,
             ),
@@ -2523,7 +2506,7 @@ def register_mode_check(
 
 
 if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE:
-    register_mode_check(get_submitter, active_check_handler=lambda *_: None)
+    register_mode_check(active_check_handler=lambda *_: None)
 
 # .
 #   .--inventory-----------------------------------------------------------.

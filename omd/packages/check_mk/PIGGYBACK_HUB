@@ -9,7 +9,7 @@
 
 case "$1" in
     default)
-        echo "on"
+        echo "off"
         ;;
     choices)
         echo "on: enable"

@@ -82,20 +82,19 @@ class TimeSeries:
             for t in range(start, end, step)
         ]
 
-    def downsample(self, twindow: TimeWindow, cf: str | None = "max") -> TimeSeriesValues:
+    def downsample(
+        self, *, start: int, end: int, step: int, cf: str | None = "max"
+    ) -> TimeSeriesValues:
         """Downsample time series by consolidation function
-
-        twindow : 3-tuple, (start, end, step)
-             description of target time interval
         cf : str ('max', 'average', 'min')
              consolidation function imitating RRD methods
         """
-        if twindow == self.twindow:
+        if start == self.start and end == self.end and step == self.step:
             return self.values
 
         dwsa = []
         co: list[TimeSeriesValue] = []
-        desired_times = rrd_timestamps(start=twindow[0], end=twindow[1], step=twindow[2])
+        desired_times = rrd_timestamps(start=start, end=end, step=step)
         i = 0
         for t, val in self.time_data_pairs():
             if t > desired_times[i]:

@@ -6,7 +6,7 @@
 
 import pytest
 
-from cmk.gui.graphing._time_series import rrd_timestamps, TimeSeries, TimeSeriesValues, TimeWindow
+from cmk.gui.graphing._time_series import rrd_timestamps, TimeSeries, TimeSeriesValues
 
 
 @pytest.mark.parametrize(
@@ -85,53 +85,69 @@ def test_time_series_upsampling(
 
 
 @pytest.mark.parametrize(
-    "time_series, twindow, cf, downsampled",
+    "time_series, start, end, step, cf, downsampled",
     [
         (
             TimeSeries(start=10, end=25, step=5, values=[15, 20, 25]),
-            (10, 30, 10),
+            10,
+            30,
+            10,
             "average",
             [17.5, 25],
         ),
         (
             TimeSeries(start=10, end=25, step=5, values=[15, 20, 25]),
-            (10, 30, 10),
+            10,
+            30,
+            10,
             "max",
             [20, 25],
         ),
         (
             TimeSeries(start=10, end=45, step=5, values=[15, 20, 25, 30, 35, 40, 45]),
-            (10, 40, 10),
+            10,
+            40,
+            10,
             "max",
             [20, 30, 40],
         ),
         (
             TimeSeries(start=10, end=45, step=5, values=[15, 20, 25, 30, 35, 40, 45]),
-            (10, 60, 10),
+            10,
+            60,
+            10,
             "max",
             [20, 30, 40, 45, None],
         ),
         (
             TimeSeries(start=10, end=45, step=5, values=[15, None, 25, None, None, None, 45]),
-            (10, 60, 10),
+            10,
+            60,
+            10,
             "max",
             [15, 25, None, 45, None],
         ),
         (
             TimeSeries(start=10, end=45, step=5, values=[15, 20, 25, 30, 35, 40, 45]),
-            (0, 60, 10),
+            0,
+            60,
+            10,
             "max",
             [None, 20, 30, 40, 45, None],
         ),
         (
             TimeSeries(start=10, end=45, step=5, values=[15, 20, 25, 30, 35, 40, 45]),
-            (10, 40, 10),
+            10,
+            40,
+            10,
             "average",
             [17.5, 27.5, 37.5],
         ),
         (
             TimeSeries(start=10, end=45, step=5, values=[15, 20, 25, 30, None, 40, 45]),
-            (10, 40, 10),
+            10,
+            40,
+            10,
             "average",
             [17.5, 27.5, 40.0],
         ),
@@ -139,11 +155,13 @@ def test_time_series_upsampling(
 )
 def test_time_series_downsampling(
     time_series: TimeSeries,
-    twindow: TimeWindow,
+    start: int,
+    end: int,
+    step: int,
     cf: str,
     downsampled: TimeSeriesValues,
 ) -> None:
-    assert time_series.downsample(twindow, cf) == downsampled
+    assert time_series.downsample(start=start, end=end, step=step, cf=cf) == downsampled
 
 
 class TestTimeseries:

@@ -1097,7 +1097,7 @@ class ABCBackupTargetType(abc.ABC):
         time0 = time.time()
         for ident, info in self.target.list_backups():
             backups[ident] = info
-            if time.time() - time0 > request.request_timeout - 10:
+            if time.time() - time0 > request.request_timeout - 20:
                 return _Backups(backups, timed_out=True)
         return _Backups(backups, timed_out=False)
 

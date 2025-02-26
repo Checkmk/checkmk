@@ -387,6 +387,10 @@ def update_and_activate_rabbitmq_definitions(omd_root: Path, logger: Logger) -> 
     if old_definitions == new_definitions:
         return
 
+    # also return if rabbitmq is not running at all. This might be fine.
+    if rabbitmqctl_process(("ping",), wait=False).wait() != 0:
+        return
+
     # run in parallel
     for process in [
         *_start_cleanup_unused_definitions(old_definitions, new_definitions),

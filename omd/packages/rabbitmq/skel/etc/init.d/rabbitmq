@@ -110,6 +110,13 @@ stop_process() {
     kill "${1}" 2>/dev/null
 }
 
+rabbimq_enabled() {
+    # only enable rabbitmq if there's at least one service that needs it
+    [ "${CONFIG_PIGGYBACK_HUB:?}" = "on" ]
+}
+
+rabbimq_enabled | exit 5
+
 case "$1" in
 
     start-blocking)

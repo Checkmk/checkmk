@@ -16,6 +16,7 @@ from cmk.messaging.rabbitmq import (
     Definitions,
     Permission,
     Queue,
+    QUEUE_DEFAULT_MAX_LENGTH_BYTES,
     QUEUE_DEFAULT_MESSAGE_TTL,
     Shovel,
     ShovelValue,
@@ -29,7 +30,7 @@ def _get_queue(site_id: str) -> Queue:
         vhost="/",
         durable=True,
         auto_delete=False,
-        arguments={**QUEUE_DEFAULT_MESSAGE_TTL},
+        arguments={**QUEUE_DEFAULT_MESSAGE_TTL, **QUEUE_DEFAULT_MAX_LENGTH_BYTES},
     )
 
 

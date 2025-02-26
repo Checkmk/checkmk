@@ -36,7 +36,6 @@ def create_stage(Map args, time_stage_started) {
             return [true, issues];
         }
 
-        sh(script: "figlet -w 150 '${args.NAME}'", returnStatus: true);
         println("CMD: ${args.COMMAND}");
         def cmd_status;
 

@@ -30,11 +30,6 @@ NEW_DEFINITIONS_FILE_PATH = f"{DEFINITIONS_PATH}/definitions.next.json"
 # see https://www.rabbitmq.com/docs/ttl
 QUEUE_DEFAULT_MESSAGE_TTL = {"x-message-ttl": 60000}
 
-# maximum dimension of the queue in bytes
-# the queue will drop old messages when the size exceeds this value
-# see https://www.rabbitmq.com/docs/maxlength
-QUEUE_DEFAULT_MAX_LENGTH_BYTES = {"x-max-length-bytes": 1073741824}  # 1GB
-
 
 class User(BaseModel):
     name: str
@@ -303,7 +298,7 @@ def add_connecter_definitions(connection: Connection, definition: Definitions) -
         vhost=vhost_name,
         durable=True,
         auto_delete=False,
-        arguments={**QUEUE_DEFAULT_MESSAGE_TTL, **QUEUE_DEFAULT_MAX_LENGTH_BYTES},
+        arguments={**QUEUE_DEFAULT_MESSAGE_TTL},
     )
     binding = Binding(
         source=INTERSITE_EXCHANGE,
@@ -349,7 +344,7 @@ def add_connectee_definitions(connection: Connection, definition: Definitions) -
         vhost=DEFAULT_VHOST_NAME,
         durable=True,
         auto_delete=False,
-        arguments={**QUEUE_DEFAULT_MESSAGE_TTL, **QUEUE_DEFAULT_MAX_LENGTH_BYTES},
+        arguments={**QUEUE_DEFAULT_MESSAGE_TTL},
     )
 
     # only add binding on default vhost if the connection is within the same customer

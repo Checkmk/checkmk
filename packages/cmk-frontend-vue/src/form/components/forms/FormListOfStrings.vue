@@ -23,6 +23,14 @@ const validation = ref<Array<string>>([])
 type ElementIndex = number
 const elementValidation = ref<Record<ElementIndex, ValidationMessages>>({})
 
+watch(
+  backendData,
+  () => {
+    checkAutoextend()
+  },
+  { deep: true }
+)
+
 function initialize(newBackendData: unknown[]) {
   validation.value.splice(0)
   elementValidation.value = {}
@@ -93,20 +101,19 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 </script>
 
 <template>
-  <table ref="tableRef" class="form-list-of-srings">
+  <table ref="tableRef" class="form-list-of-strings">
     <tbody>
       <template v-for="(_, index) in backendData" :key="index">
         <tr
           class="listof_element"
           :style="{ float: props.spec.layout === 'vertical' ? 'unset' : 'left' }"
+          @paste="(event: ClipboardEvent) => onPaste(event, index)"
         >
           <td class="vlof_content">
             <FormEditDispatcher
               v-model:data="backendData[index]"
               :spec="spec.string_spec"
               :backend-validation="elementValidation[index]!"
-              @update:data="checkAutoextend"
-              @paste="(event: ClipboardEvent) => onPaste(event, index)"
             />
           </td>
         </tr>
@@ -117,7 +124,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 </template>
 
 <style scoped>
-.form-list-of-srings {
+.form-list-of-strings {
   border-spacing: 2px 0;
 
   > tbody > .listof_element > .vlof_content {

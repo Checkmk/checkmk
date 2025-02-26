@@ -16,7 +16,7 @@ def main() {
 
     inside_container(
         set_docker_group_id: true,
-        priviliged: true,
+        privileged: true,
     ) {
         dir("${checkout_dir}") {
             // pre-create virtual environments before parallel execution

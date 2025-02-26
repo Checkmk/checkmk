@@ -43,7 +43,7 @@ def main() {
 
     inside_container(
         set_docker_group_id: true,
-        priviliged: true,
+        privileged: true,
     ) {
         // TODO: check why this doesn't work
         // docker_reference_image().inside(docker_args) {

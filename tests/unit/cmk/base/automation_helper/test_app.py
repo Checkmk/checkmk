@@ -18,6 +18,8 @@ from tests.testlib.common.utils import wait_until
 
 from cmk.ccc.version import Version
 
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
+
 from cmk.automations.helper_api import AutomationPayload, AutomationResponse
 from cmk.automations.results import ABCAutomationResult, SerializedResult
 
@@ -92,7 +94,7 @@ def _make_test_client(
     engine: AutomationEngine,
     cache: Cache,
     reload_config: Callable[[AgentBasedPlugins], LoadedConfigFragment],
-    clear_caches_before_each_call: Callable[[], None],
+    clear_caches_before_each_call: Callable[[RulesetMatcher], None],
     reloader_config: ReloaderConfig = ReloaderConfig(
         active=True,
         poll_interval=1.0,
@@ -116,7 +118,7 @@ def test_reloader_is_running(mocker: MockerFixture, cache: Cache) -> None:
         _DummyAutomationEngineSuccess(),
         cache,
         mock_reload_config,
-        lambda: None,
+        lambda ruleset_matcher: None,
         reloader_config=ReloaderConfig(
             active=True,
             poll_interval=0.0,
@@ -236,7 +238,7 @@ def test_health_check(cache: Cache) -> None:
         _DummyAutomationEngineSuccess(),
         cache,
         lambda plugins: LoadedConfigFragment(discovery_rules={}, config_cache=ConfigCache()),
-        lambda: None,
+        lambda ruleset_matcher: None,
     ) as client:
         resp = client.get("/health")
 

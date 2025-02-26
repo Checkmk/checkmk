@@ -21,6 +21,7 @@ from cmk.ccc import version as cmk_version
 
 from cmk.utils import paths, tty
 from cmk.utils.log import logger as cmk_logger
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 
 from cmk.automations.helper_api import AutomationPayload, AutomationResponse
 from cmk.automations.results import ABCAutomationResult
@@ -62,7 +63,7 @@ class _ApplicationDependencies:
     changes_cache: Cache
     reloader_config: ReloaderConfig
     reload_config: Callable[[AgentBasedPlugins], config.LoadedConfigFragment]
-    clear_caches_before_each_call: Callable[[], None]
+    clear_caches_before_each_call: Callable[[RulesetMatcher], None]
     state: _State
 
 
@@ -76,7 +77,7 @@ def make_application(
     cache: Cache,
     reloader_config: ReloaderConfig,
     reload_config: Callable[[AgentBasedPlugins], config.LoadedConfigFragment],
-    clear_caches_before_each_call: Callable[[], None],
+    clear_caches_before_each_call: Callable[[RulesetMatcher], None],
 ) -> FastAPI:
     app = FastAPI(
         lifespan=_lifespan,
@@ -213,7 +214,7 @@ def _execute_automation_endpoint(
     engine: AutomationEngine,
     cache: Cache,
     reload_config: Callable[[AgentBasedPlugins], config.LoadedConfigFragment],
-    clear_caches_before_each_call: Callable[[], None],
+    clear_caches_before_each_call: Callable[[RulesetMatcher], None],
     state: _State,
 ) -> AutomationResponse:
     LOGGER.info(
@@ -249,7 +250,8 @@ def _execute_automation_endpoint(
         _redirect_stdin(io.StringIO(payload.stdin)),
         temporary_log_level(cmk_logger, payload.log_level),
     ):
-        clear_caches_before_each_call()
+        if state.loaded_config:
+            clear_caches_before_each_call(state.loaded_config.config_cache.ruleset_matcher)
         try:
             automation_start_time = time.time()
             result_or_error_code: ABCAutomationResult | int = engine.execute(

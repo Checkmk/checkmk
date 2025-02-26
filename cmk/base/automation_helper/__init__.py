@@ -14,6 +14,7 @@ from cmk.ccc.daemon import daemonize
 from cmk.utils.caching import cache_manager
 from cmk.utils.paths import omd_root
 from cmk.utils.redis import get_redis_client
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 
 from cmk.base import config
 from cmk.base.api.agent_based.register import (
@@ -85,7 +86,6 @@ def _reload_automation_config(plugins: AgentBasedPlugins) -> config.LoadedConfig
     return config.load(discovery_rulesets, validate_hosts=False)
 
 
-def _clear_caches_before_each_call() -> None:
-    ruleset_matcher = config.access_globally_cached_config_cache().ruleset_matcher
+def _clear_caches_before_each_call(ruleset_matcher: RulesetMatcher) -> None:
     ruleset_matcher.ruleset_optimizer.clear_caches()
     ruleset_matcher.ruleset_optimizer.clear_ruleset_caches()

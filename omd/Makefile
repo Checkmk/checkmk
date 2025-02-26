@@ -34,7 +34,6 @@ PACKAGES := \
     apache-omd \
     xinetd \
     mod_fcgid \
-    mod_wsgi \
     check_mk \
     mk-livestatus \
     stunnel \

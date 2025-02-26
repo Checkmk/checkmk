@@ -400,9 +400,11 @@ test-unit-omdlib:
 		omd/packages/omd/ \
 		tests/unit/omdlib/
 
-test-unit:
+test-doctest:
 	cd .. && \
 	    ./scripts/run-bazel.sh test //cmk:doctest
+
+test-unit:
 	cd .. && \
 	    ./scripts/run-bazel.sh test --test_verbose_timeout_warnings //tests/unit:all \
 	    --test_env=TZ=$(RANDOM_TZ) \

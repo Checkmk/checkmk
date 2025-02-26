@@ -18,6 +18,7 @@ def check_ps(
     section_ps: ps.Section | None,
     section_mem: memory.SectionMem | None,
     section_mem_used: memory.SectionMemUsed | None,
+    section_mem_total: memory.SectionMemTotal | None,
     section_cpu: cpu.Section | None,
 ) -> CheckResult:
     if not section_ps:
@@ -27,7 +28,7 @@ def check_ps(
     if section_cpu:
         cpu_cores = section_cpu.num_cpus or cpu_cores
 
-    total_ram = (section_mem or section_mem_used or {}).get("MemTotal")
+    total_ram = (section_mem_total or section_mem or section_mem_used or {}).get("MemTotal")
 
     yield from ps.check_ps_common(
         label="Processes",
@@ -46,6 +47,7 @@ def cluster_check_ps(
     section_ps: Mapping[str, ps.Section | None],
     section_mem: Mapping[str, memory.SectionMem | None],
     section_mem_used: Mapping[str, memory.SectionMemUsed | None],
+    section_mem_total: Mapping[str, memory.SectionMemTotal | None],
     section_cpu: Mapping[str, cpu.Section | None],  # unused
 ) -> CheckResult:
     iter_non_trivial_sections = (
@@ -78,6 +80,9 @@ def cluster_check_ps(
         cpu_cores=cpu_cores,
         total_ram_map={
             **{
+                node: section.memory_total for node, section in section_mem_total.items() if section
+            },
+            **{
                 node: section["MemTotal"]
                 for node, section in section_mem.items()
                 if section and "MemTotal" in section
@@ -94,7 +99,7 @@ def cluster_check_ps(
 register.check_plugin(
     name="ps",
     service_name="Process %s",
-    sections=["ps", "mem", "mem_used", "cpu"],
+    sections=["ps", "mem", "mem_used", "mem_total", "cpu"],
     discovery_function=ps.discover_ps,
     discovery_ruleset_name="inventory_processes_rules",
     discovery_default_parameters={},

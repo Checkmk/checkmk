@@ -14,15 +14,14 @@ from tests.testlib import set_timezone
 
 import cmk.base.plugins.agent_based.agent_based_api.v1.type_defs as type_defs
 from cmk.base.plugins.agent_based import ps_check, ps_section
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Metric,
-    render,
-    Result,
-    Service,
-    State,
-)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, render, Result, Service, State
 
+from cmk.plugins.lib import memory
 from cmk.plugins.lib import ps as ps_utils
+
+CHECK_DEFAULT_PARAMETERS = {
+    "levels": (1, 1, 99999, 99999),
+}
 
 
 def splitter(
@@ -563,6 +562,7 @@ def test_inventory_common() -> None:
             for s in ps_utils.discover_ps(
                 PS_DISCOVERY_WATO_RULES,  # type: ignore[arg-type]
                 ps_section._parse_ps(int(time.time()), info),
+                None,
                 None,
                 None,
                 None,
@@ -1276,7 +1276,7 @@ def test_subset_patterns() -> None:
         ),
     ]
 
-    test_discovered = ps_utils.discover_ps(inv_params, section_ps, None, None, None)
+    test_discovered = ps_utils.discover_ps(inv_params, section_ps, None, None, None, None)
     assert {s.item: s for s in test_discovered} == {s.item: s for s in discovered}
 
     _, data, ps_time = section_ps
@@ -1414,6 +1414,7 @@ def test_parse_ps_windows(mocker: MockerFixture) -> None:
                 section_ps=section_ps,
                 section_mem=section_mem,
                 section_mem_used=section_mem_used,
+                section_mem_total=None,
                 section_cpu=section_cpu,
             )
         )
@@ -1434,6 +1435,7 @@ def test_parse_ps_windows(mocker: MockerFixture) -> None:
             section_ps=section_ps,
             section_mem=section_mem,
             section_mem_used=section_mem_used,
+            section_mem_total=None,
             section_cpu=section_cpu,
         )
     )
@@ -1487,6 +1489,7 @@ def test_discover_empty_command_line() -> None:
             None,
             None,
             None,
+            None,
         )
     ) == [
         Service(
@@ -1519,6 +1522,7 @@ def test_check_empty_command_line() -> None:
             None,
             None,
             None,
+            None,
         )
     ) == [
         Result(state=State.OK, summary="Processes: 1"),
@@ -1533,3 +1537,56 @@ def test_check_empty_command_line() -> None:
         Metric("age_youngest", 106396.0),
         Metric("age_oldest", 106396.0),
     ]
+
+
+@pytest.mark.usefixtures("initialised_item_state")
+def test_ps_check_percent_memory_unknown() -> None:
+    assert Result(
+        state=State.UNKNOWN, summary="Percentual RAM levels configured, but total RAM is unknown"
+    ) in list(
+        ps_check.check_ps(
+            item="my_proc",
+            params={**CHECK_DEFAULT_PARAMETERS, "resident_levels_perc": (5.0, 10.0)},
+            section_ps=_SECTION_EMPTY_CMD_LINE,
+            section_mem=None,
+            section_mem_used=None,
+            section_mem_total=None,
+            section_cpu=None,
+        )
+    )
+
+
+@pytest.mark.usefixtures("initialised_item_state")
+def test_ps_check_percent_memory_mem_total() -> None:
+    assert Result(
+        state=State.CRIT,
+        summary="Percentage of resident memory: 100.00% (warn/crit at 5.00%/10.00%)",
+    ) in list(
+        ps_check.check_ps(
+            item="my_proc",
+            params={**CHECK_DEFAULT_PARAMETERS, "resident_levels_perc": (5.0, 10.0)},
+            section_ps=_SECTION_EMPTY_CMD_LINE,
+            section_mem=None,
+            section_mem_used=None,
+            section_mem_total=memory.SectionMemTotal(3530752),
+            section_cpu=None,
+        )
+    )
+
+
+@pytest.mark.usefixtures("initialised_item_state")
+def test_ps_check_percent_memory_mem_used() -> None:
+    assert Result(
+        state=State.CRIT,
+        summary="Percentage of resident memory: 100.00% (warn/crit at 5.00%/10.00%)",
+    ) in list(
+        ps_check.check_ps(
+            item="my_proc",
+            params={**CHECK_DEFAULT_PARAMETERS, "resident_levels_perc": (5.0, 10.0)},
+            section_ps=_SECTION_EMPTY_CMD_LINE,
+            section_mem=None,
+            section_mem_used={"MemTotal": 3530752},
+            section_mem_total=None,
+            section_cpu=None,
+        )
+    )

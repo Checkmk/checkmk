@@ -445,6 +445,8 @@ section_ps() {
         ps -o "user=USER............" -o vsz,rss,pcpu,etime,pid,args ${pszone} |
             sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
     fi
+    echo '<<<mem_total_solaris:sep(0)>>>'
+    prtconf | grep "Memory"
 }
 
 section_statgrab() {

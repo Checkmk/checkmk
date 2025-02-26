@@ -53,7 +53,7 @@ def discover_domino_tasks(
     section_domino_tasks: ps.Section | None,
     section_mem: memory.SectionMem | None,
 ) -> DiscoveryResult:
-    yield from ps.discover_ps(params, section_domino_tasks, section_mem, None, None)
+    yield from ps.discover_ps(params, section_domino_tasks, section_mem, None, None, None)
 
 
 def check_domino_tasks(

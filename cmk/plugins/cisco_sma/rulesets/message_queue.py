@@ -44,10 +44,7 @@ def _queue_form() -> Dictionary:
                     prefill=DefaultValue(ServiceState.CRIT),
                 )
             ),
-            "monitoring_status_percent_queue_utilization": DictElement[
-                SimpleLevelsConfigModel[float]
-            ](
-                required=True,
+            "levels_queue_utilization": DictElement[SimpleLevelsConfigModel[float]](
                 parameter_form=SimpleLevels(
                     title=Title("Levels on queue utilization"),
                     level_direction=LevelDirection.UPPER,
@@ -55,8 +52,7 @@ def _queue_form() -> Dictionary:
                     prefill_fixed_levels=InputHint((80.0, 90.0)),
                 ),
             ),
-            "monitoring_status_work_queue_messages": DictElement[SimpleLevelsConfigModel[int]](
-                required=True,
+            "levels_queue_length": DictElement[SimpleLevelsConfigModel[int]](
                 parameter_form=SimpleLevels(
                     title=Title("Levels on total number of messages in queue"),
                     level_direction=LevelDirection.UPPER,
@@ -64,8 +60,7 @@ def _queue_form() -> Dictionary:
                     prefill_fixed_levels=InputHint((500, 1000)),
                 ),
             ),
-            "monitoring_status_oldest_message_age": DictElement[SimpleLevelsConfigModel[float]](
-                required=True,
+            "levels_oldest_message_age": DictElement[SimpleLevelsConfigModel[float]](
                 parameter_form=SimpleLevels(
                     title=Title("Levels on age of oldest message"),
                     level_direction=LevelDirection.UPPER,
@@ -87,7 +82,7 @@ def _queue_form() -> Dictionary:
 
 
 rule_spec_queue = CheckParameters(
-    name="cisco_sma_queue",
+    name="cisco_sma_message_queue",
     title=Title("Cisco SMA queue"),
     topic=Topic.APPLICATIONS,
     parameter_form=_queue_form,

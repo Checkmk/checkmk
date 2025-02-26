@@ -41,7 +41,7 @@ class Queue(BaseModel):
     oldest_message_age: float
 
 
-def _parse_mail_queue(string_table: StringTable) -> Queue | None:
+def _parse_message_queue(string_table: StringTable) -> Queue | None:
     if not string_table or not string_table[0]:
         return None
 
@@ -55,15 +55,15 @@ def _parse_mail_queue(string_table: StringTable) -> Queue | None:
     )
 
 
-snmp_section_queue = SimpleSNMPSection(
-    parsed_section_name="cisco_sma_queue",
-    name="cisco_sma_queue",
+snmp_section_message_queue = SimpleSNMPSection(
+    parsed_section_name="cisco_sma_message_queue",
+    name="cisco_sma_message_queue",
     detect=DETECT_CISCO_SMA_SNMP,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.15497.1.1.1",
         oids=["4", "5", "11", "14"],
     ),
-    parse_function=_parse_mail_queue,
+    parse_function=_parse_message_queue,
 )
 
 
@@ -71,13 +71,12 @@ class Params(TypedDict):
     monitoring_status_memory_available: int
     monitoring_status_memory_shortage: int
     monitoring_status_queue_full: int
+    levels_queue_utilization: SimpleLevelsConfigModel[float]
+    levels_queue_length: SimpleLevelsConfigModel[int]
+    levels_oldest_message_age: SimpleLevelsConfigModel[float]
 
-    monitoring_status_percent_queue_utilization: SimpleLevelsConfigModel[float]
-    monitoring_status_work_queue_messages: SimpleLevelsConfigModel[int]
-    monitoring_status_oldest_message_age: SimpleLevelsConfigModel[float]
 
-
-def _check_mail_queue(params: Params, section: Queue) -> CheckResult:
+def _check_message_queue(params: Params, section: Queue) -> CheckResult:
     match section.availability_status:
         case QueueAvailabilityStatus.queue_space_available:
             yield Result(
@@ -99,43 +98,44 @@ def _check_mail_queue(params: Params, section: Queue) -> CheckResult:
         label="Utilization",
         render_func=render.percent,
         metric_name="cisco_sma_queue_utilization",
-        levels_upper=params["monitoring_status_percent_queue_utilization"],
+        levels_upper=params["levels_queue_utilization"],
     )
 
     yield from check_levels(
         section.length,
         label="Total messages",
         metric_name="cisco_sma_queue_length",
-        levels_upper=params["monitoring_status_work_queue_messages"],
+        levels_upper=params["levels_queue_length"],
         notice_only=True,
+        render_func=lambda x: str(int(x)),
     )
 
     yield from check_levels(
         section.oldest_message_age,
         label="Oldest message age",
         metric_name="cisco_sma_queue_oldest_message_age",
-        levels_upper=params["monitoring_status_oldest_message_age"],
+        levels_upper=params["levels_oldest_message_age"],
         render_func=render.timespan,
         notice_only=True,
     )
 
 
-def _discover_queue(section: Queue) -> DiscoveryResult:
+def _discover_message_queue(section: Queue) -> DiscoveryResult:
     yield Service()
 
 
-check_plugin_queue = CheckPlugin(
-    name="cisco_sma_queue",
+check_plugin_message_queue = CheckPlugin(
+    name="cisco_sma_message_queue",
     service_name="Queue",
-    discovery_function=_discover_queue,
-    check_function=_check_mail_queue,
-    check_ruleset_name="cisco_sma_queue",
+    discovery_function=_discover_message_queue,
+    check_function=_check_message_queue,
+    check_ruleset_name="cisco_sma_message_queue",
     check_default_parameters=Params(
         monitoring_status_memory_available=State.OK.value,
         monitoring_status_memory_shortage=State.WARN.value,
         monitoring_status_queue_full=State.CRIT.value,
-        monitoring_status_percent_queue_utilization=("fixed", (80.0, 90.0)),
-        monitoring_status_work_queue_messages=("fixed", (500, 1000)),
-        monitoring_status_oldest_message_age=("no_levels", None),
+        levels_queue_utilization=("fixed", (80.0, 90.0)),
+        levels_queue_length=("fixed", (500, 1000)),
+        levels_oldest_message_age=("no_levels", None),
     ),
 )

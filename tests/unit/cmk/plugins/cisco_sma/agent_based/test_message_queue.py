@@ -14,10 +14,10 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.cisco_sma.agent_based.mail_queue import (
-    _check_mail_queue,
-    _discover_queue,
-    _parse_mail_queue,
+from cmk.plugins.cisco_sma.agent_based.message_queue import (
+    _check_message_queue,
+    _discover_message_queue,
+    _parse_message_queue,
     Params,
 )
 
@@ -28,10 +28,10 @@ from cmk.plugins.cisco_sma.agent_based.mail_queue import (
         ([["10", "2", "30", "40"]]),
     ],
 )
-def test_discover_queue(string_table: StringTable) -> None:
-    queue = _parse_mail_queue(string_table)
+def test_discover_message_queue(string_table: StringTable) -> None:
+    queue = _parse_message_queue(string_table)
     assert queue is not None
-    assert list(_discover_queue(queue)) == [Service()]
+    assert list(_discover_message_queue(queue)) == [Service()]
 
 
 @pytest.mark.parametrize(
@@ -42,16 +42,16 @@ def test_discover_queue(string_table: StringTable) -> None:
                 monitoring_status_memory_available=State.OK.value,
                 monitoring_status_memory_shortage=State.WARN.value,
                 monitoring_status_queue_full=State.CRIT.value,
-                monitoring_status_percent_queue_utilization=("fixed", (80.0, 90.0)),
-                monitoring_status_work_queue_messages=("fixed", (500, 1000)),
-                monitoring_status_oldest_message_age=("no_levels", None),
+                levels_queue_utilization=("fixed", (80.0, 90.0)),
+                levels_queue_length=("fixed", (500, 1000)),
+                levels_oldest_message_age=("no_levels", None),
             ),
             [["10", "2", "300", "400"]],
             [
                 Result(state=State.WARN, summary="Memory shortage"),
                 Result(state=State.OK, summary="Utilization: 10.00%"),
                 Metric("cisco_sma_queue_utilization", 10.0, levels=(80.0, 90.0)),
-                Result(state=State.OK, notice="Total messages: 300.00"),
+                Result(state=State.OK, notice="Total messages: 300"),
                 Metric("cisco_sma_queue_length", 300.0, levels=(500.0, 1000.0)),
                 Result(state=State.OK, notice="Oldest message age: 6 minutes 40 seconds"),
                 Metric("cisco_sma_queue_oldest_message_age", 400.0),
@@ -62,9 +62,9 @@ def test_discover_queue(string_table: StringTable) -> None:
                 monitoring_status_memory_available=State.OK.value,
                 monitoring_status_memory_shortage=State.WARN.value,
                 monitoring_status_queue_full=State.CRIT.value,
-                monitoring_status_percent_queue_utilization=("fixed", (80.0, 90.0)),
-                monitoring_status_work_queue_messages=("fixed", (500, 1000)),
-                monitoring_status_oldest_message_age=("fixed", (3000, 3600)),
+                levels_queue_utilization=("fixed", (80.0, 90.0)),
+                levels_queue_length=("fixed", (500, 1000)),
+                levels_oldest_message_age=("fixed", (3000, 3600)),
             ),
             [["85", "2", "700", "3600"]],
             [
@@ -73,9 +73,7 @@ def test_discover_queue(string_table: StringTable) -> None:
                     state=State.WARN, summary="Utilization: 85.00% (warn/crit at 80.00%/90.00%)"
                 ),
                 Metric("cisco_sma_queue_utilization", 85.0, levels=(80.0, 90.0)),
-                Result(
-                    state=State.WARN, summary="Total messages: 700.00 (warn/crit at 500.00/1000.00)"
-                ),
+                Result(state=State.WARN, summary="Total messages: 700 (warn/crit at 500/1000)"),
                 Metric("cisco_sma_queue_length", 700.0, levels=(500.0, 1000.0)),
                 Result(
                     state=State.CRIT,
@@ -86,11 +84,11 @@ def test_discover_queue(string_table: StringTable) -> None:
         ),
     ),
 )
-def test_check_mail_queue(
+def test_check_message_queue(
     params: Params,
     string_table: StringTable,
     expected: CheckResult,
 ) -> None:
-    queue = _parse_mail_queue(string_table)
+    queue = _parse_message_queue(string_table)
     assert queue is not None
-    assert list(_check_mail_queue(params, queue)) == list(expected)
+    assert list(_check_message_queue(params, queue)) == list(expected)

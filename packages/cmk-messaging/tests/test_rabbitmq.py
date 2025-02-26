@@ -635,7 +635,7 @@ def test_compute_distributed_definitions_permissions(
                         vhost=DEFAULT_VHOST_NAME,
                         durable=True,
                         auto_delete=False,
-                        arguments={},
+                        arguments={**rabbitmq.QUEUE_DEFAULT_MESSAGE_TTL},
                     )
                 ],
                 "central": [
@@ -644,7 +644,7 @@ def test_compute_distributed_definitions_permissions(
                         vhost=DEFAULT_VHOST_NAME,
                         durable=True,
                         auto_delete=False,
-                        arguments={},
+                        arguments={**rabbitmq.QUEUE_DEFAULT_MESSAGE_TTL},
                     )
                 ],
             },
@@ -659,7 +659,7 @@ def test_compute_distributed_definitions_permissions(
                         vhost=DEFAULT_VHOST_NAME,
                         durable=True,
                         auto_delete=False,
-                        arguments={},
+                        arguments={**rabbitmq.QUEUE_DEFAULT_MESSAGE_TTL},
                     )
                 ],
                 "central": [
@@ -668,7 +668,7 @@ def test_compute_distributed_definitions_permissions(
                         vhost="customer1",
                         durable=True,
                         auto_delete=False,
-                        arguments={},
+                        arguments={**rabbitmq.QUEUE_DEFAULT_MESSAGE_TTL},
                     )
                 ],
             },
@@ -682,7 +682,7 @@ def test_compute_distributed_definitions_permissions(
                         vhost=DEFAULT_VHOST_NAME,
                         durable=True,
                         auto_delete=False,
-                        arguments={},
+                        arguments={**rabbitmq.QUEUE_DEFAULT_MESSAGE_TTL},
                     )
                 ],
                 "remote2": [
@@ -691,7 +691,7 @@ def test_compute_distributed_definitions_permissions(
                         vhost=DEFAULT_VHOST_NAME,
                         durable=True,
                         auto_delete=False,
-                        arguments={},
+                        arguments={**rabbitmq.QUEUE_DEFAULT_MESSAGE_TTL},
                     )
                 ],
                 "central": [
@@ -700,14 +700,14 @@ def test_compute_distributed_definitions_permissions(
                         vhost="customer1",
                         durable=True,
                         auto_delete=False,
-                        arguments={},
+                        arguments={**rabbitmq.QUEUE_DEFAULT_MESSAGE_TTL},
                     ),
                     rabbitmq.Queue(
                         name="cmk.intersite.remote2",
                         vhost="customer1",
                         durable=True,
                         auto_delete=False,
-                        arguments={},
+                        arguments={**rabbitmq.QUEUE_DEFAULT_MESSAGE_TTL},
                     ),
                 ],
             },
@@ -721,7 +721,7 @@ def test_compute_distributed_definitions_permissions(
                         vhost=DEFAULT_VHOST_NAME,
                         durable=True,
                         auto_delete=False,
-                        arguments={},
+                        arguments={**rabbitmq.QUEUE_DEFAULT_MESSAGE_TTL},
                     )
                 ],
                 "remote2": [
@@ -730,7 +730,7 @@ def test_compute_distributed_definitions_permissions(
                         vhost=DEFAULT_VHOST_NAME,
                         durable=True,
                         auto_delete=False,
-                        arguments={},
+                        arguments={**rabbitmq.QUEUE_DEFAULT_MESSAGE_TTL},
                     )
                 ],
                 "central": [
@@ -739,14 +739,14 @@ def test_compute_distributed_definitions_permissions(
                         vhost="customer1",
                         durable=True,
                         auto_delete=False,
-                        arguments={},
+                        arguments={**rabbitmq.QUEUE_DEFAULT_MESSAGE_TTL},
                     ),
                     rabbitmq.Queue(
                         name="cmk.intersite.remote2",
                         vhost="customer2",
                         durable=True,
                         auto_delete=False,
-                        arguments={},
+                        arguments={**rabbitmq.QUEUE_DEFAULT_MESSAGE_TTL},
                     ),
                 ],
             },
@@ -760,14 +760,14 @@ def test_compute_distributed_definitions_permissions(
                         vhost=DEFAULT_VHOST_NAME,
                         durable=True,
                         auto_delete=False,
-                        arguments={},
+                        arguments={**rabbitmq.QUEUE_DEFAULT_MESSAGE_TTL},
                     ),
                     rabbitmq.Queue(
                         name="cmk.intersite.remote2",
                         vhost=DEFAULT_VHOST_NAME,
                         durable=True,
                         auto_delete=False,
-                        arguments={},
+                        arguments={**rabbitmq.QUEUE_DEFAULT_MESSAGE_TTL},
                     ),
                 ],
                 "remote2": [
@@ -776,14 +776,14 @@ def test_compute_distributed_definitions_permissions(
                         vhost=DEFAULT_VHOST_NAME,
                         durable=True,
                         auto_delete=False,
-                        arguments={},
+                        arguments={**rabbitmq.QUEUE_DEFAULT_MESSAGE_TTL},
                     ),
                     rabbitmq.Queue(
                         name="cmk.intersite.remote1",
                         vhost=DEFAULT_VHOST_NAME,
                         durable=True,
                         auto_delete=False,
-                        arguments={},
+                        arguments={**rabbitmq.QUEUE_DEFAULT_MESSAGE_TTL},
                     ),
                 ],
                 "central": [
@@ -792,14 +792,14 @@ def test_compute_distributed_definitions_permissions(
                         vhost="customer1",
                         durable=True,
                         auto_delete=False,
-                        arguments={},
+                        arguments={**rabbitmq.QUEUE_DEFAULT_MESSAGE_TTL},
                     ),
                     rabbitmq.Queue(
                         name="cmk.intersite.remote2",
                         vhost="customer1",
                         durable=True,
                         auto_delete=False,
-                        arguments={},
+                        arguments={**rabbitmq.QUEUE_DEFAULT_MESSAGE_TTL},
                     ),
                 ],
             },
@@ -813,14 +813,14 @@ def test_compute_distributed_definitions_permissions(
                         vhost=DEFAULT_VHOST_NAME,
                         durable=True,
                         auto_delete=False,
-                        arguments={},
+                        arguments={**rabbitmq.QUEUE_DEFAULT_MESSAGE_TTL},
                     ),
                     rabbitmq.Queue(
                         name="cmk.intersite.remote2",
                         vhost=DEFAULT_VHOST_NAME,
                         durable=True,
                         auto_delete=False,
-                        arguments={},
+                        arguments={**rabbitmq.QUEUE_DEFAULT_MESSAGE_TTL},
                     ),
                 ],
                 "remote2": [
@@ -829,14 +829,14 @@ def test_compute_distributed_definitions_permissions(
                         vhost=DEFAULT_VHOST_NAME,
                         durable=True,
                         auto_delete=False,
-                        arguments={},
+                        arguments={**rabbitmq.QUEUE_DEFAULT_MESSAGE_TTL},
                     ),
                     rabbitmq.Queue(
                         name="cmk.intersite.remote1",
                         vhost=DEFAULT_VHOST_NAME,
                         durable=True,
                         auto_delete=False,
-                        arguments={},
+                        arguments={**rabbitmq.QUEUE_DEFAULT_MESSAGE_TTL},
                     ),
                 ],
                 "central": [
@@ -845,14 +845,14 @@ def test_compute_distributed_definitions_permissions(
                         vhost=DEFAULT_VHOST_NAME,
                         durable=True,
                         auto_delete=False,
-                        arguments={},
+                        arguments={**rabbitmq.QUEUE_DEFAULT_MESSAGE_TTL},
                     ),
                     rabbitmq.Queue(
                         name="cmk.intersite.remote2",
                         vhost=DEFAULT_VHOST_NAME,
                         durable=True,
                         auto_delete=False,
-                        arguments={},
+                        arguments={**rabbitmq.QUEUE_DEFAULT_MESSAGE_TTL},
                     ),
                 ],
             },

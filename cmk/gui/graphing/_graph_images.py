@@ -79,12 +79,15 @@ def _answer_graph_image_request() -> None:
         try:
             row = get_graph_data_from_livestatus(site, host_name, service_description)
         except livestatus.MKLivestatusNotFoundError:
+            logger.debug(
+                "Cannot fetch graph data: site: %s, host %s, service %s",
+                site,
+                host_name,
+                service_description,
+            )
             if active_config.debug:
                 raise
-            raise Exception(
-                _("Cannot render graph: site: %s, host %s, service %s not found.")
-                % (site, host_name, service_description)
-            ) from None
+            return
 
         site = row["site"]
 

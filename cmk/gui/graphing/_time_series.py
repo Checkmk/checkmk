@@ -14,7 +14,7 @@ def rrd_timestamps(*, start: int, end: int, step: int) -> list[int]:
     return [] if step == 0 else [t + step for t in range(start, end, step)]
 
 
-def aggregation_functions(series: TimeSeriesValues, aggr: str | None) -> TimeSeriesValue:
+def _aggregation_functions(series: TimeSeriesValues, aggr: str | None) -> TimeSeriesValue:
     """Aggregate data in series list according to aggr
 
     If series has None values they are dropped before aggregation"""
@@ -93,14 +93,14 @@ class TimeSeries:
         i = 0
         for t, val in self.time_data_pairs():
             if t > desired_times[i]:
-                dwsa.append(aggregation_functions(co, cf))
+                dwsa.append(_aggregation_functions(co, cf))
                 co = []
                 i += 1
             co.append(val)
 
         diff_len = len(desired_times) - len(dwsa)
         if diff_len > 0:
-            dwsa.append(aggregation_functions(co, cf))
+            dwsa.append(_aggregation_functions(co, cf))
             dwsa += [None] * (diff_len - 1)
 
         return dwsa

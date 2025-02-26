@@ -14,8 +14,6 @@ from cmk.utils.config_path import LATEST_CONFIG
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.password_store import core_password_store_path
 
-from cmk.checkengine.submitters import get_submitter
-
 import cmk.base.utils
 from cmk.base import config
 from cmk.base.api.agent_based.register import (
@@ -105,7 +103,6 @@ def main() -> int:
             plugins,
             config_cache,
             hosts_config,
-            get_submitter,
             {},
             [CONFIG.hostname],
             active_check_handler=lambda *args: None,

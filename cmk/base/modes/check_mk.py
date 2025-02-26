@@ -15,7 +15,7 @@ from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from contextlib import suppress
 from functools import partial
 from pathlib import Path
-from typing import Final, Literal, NamedTuple, Protocol, TypedDict, TypeVar
+from typing import Final, Literal, NamedTuple, TypedDict, TypeVar
 
 import livestatus
 
@@ -96,7 +96,7 @@ from cmk.checkengine.parser import (
     SectionNameCollection,
 )
 from cmk.checkengine.sectionparser import SectionPlugin
-from cmk.checkengine.submitters import get_submitter, ServiceState, Submitter
+from cmk.checkengine.submitters import get_submitter, ServiceState
 from cmk.checkengine.summarize import summarize, SummarizerFunction
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -2347,22 +2347,7 @@ _CheckingOptions = TypedDict(
 )
 
 
-class GetSubmitter(Protocol):
-    def __call__(
-        self,
-        check_submission: Literal["pipe", "file"],
-        monitoring_core: Literal["nagios", "cmc"],
-        host_name: HostName,
-        *,
-        dry_run: bool,
-        perfdata_format: Literal["pnp", "standard"],
-        show_perfdata: bool,
-        keepalive: bool,
-    ) -> Submitter: ...
-
-
 def mode_check(
-    get_submitter_: GetSubmitter,
     options: _CheckingOptions,
     args: list[str],
     *,
@@ -2376,7 +2361,6 @@ def mode_check(
         plugins,
         config_cache,
         hosts_config,
-        get_submitter_,
         options,
         args,
         active_check_handler=active_check_handler,
@@ -2389,7 +2373,6 @@ def run_checking(
     plugins: agent_based_register.AgentBasedPlugins,
     config_cache: ConfigCache,
     hosts_config: Hosts,
-    get_submitter_: GetSubmitter,
     options: _CheckingOptions,
     args: list[str],
     *,
@@ -2504,7 +2487,6 @@ def run_checking(
                     host_name=hostname,
                     perfdata_format=("pnp" if config.perfdata_format == "pnp" else "standard"),
                     show_perfdata=options.get("perfdata", False),
-                    keepalive=False,
                 ),
                 exit_spec=config_cache.exit_code_spec(hostname),
             )
@@ -2531,7 +2513,6 @@ def run_checking(
 
 
 def register_mode_check(
-    get_submitter_: GetSubmitter,
     *,
     active_check_handler: Callable[[HostName, str], object],
 ) -> None:
@@ -2540,7 +2521,6 @@ def register_mode_check(
             long_option="check",
             handler_function=partial(
                 mode_check,
-                get_submitter_,
                 active_check_handler=active_check_handler,
             ),
             argument=True,
@@ -2583,7 +2563,7 @@ def register_mode_check(
 
 
 if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE:
-    register_mode_check(get_submitter, active_check_handler=lambda *_: None)
+    register_mode_check(active_check_handler=lambda *_: None)
 
 # .
 #   .--inventory-----------------------------------------------------------.

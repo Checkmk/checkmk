@@ -1522,7 +1522,7 @@ COLOR_HEX = "#1e90ff"
                             explicit_color=COLOR_HEX,
                         ),
                         "stack",
-                        "metric-name-4",
+                        "Minimum of metric-name-4",
                     ),
                     MetricDefinition(
                         MaximumOf(
@@ -1530,7 +1530,7 @@ COLOR_HEX = "#1e90ff"
                             explicit_color=COLOR_HEX,
                         ),
                         "stack",
-                        "metric-name-5",
+                        "Maximum of metric-name-5",
                     ),
                     MetricDefinition(
                         Sum(
@@ -1638,14 +1638,14 @@ COLOR_HEX = "#1e90ff"
                             Metric("metric-name-4"),
                             explicit_color=COLOR_HEX,
                         ),
-                        "metric-name-4",
+                        "Minimum of metric-name-4",
                     ),
                     utils.ScalarDefinition(
                         MaximumOf(
                             Metric("metric-name-5"),
                             explicit_color=COLOR_HEX,
                         ),
-                        "metric-name-5",
+                        "Maximum of metric-name-5",
                     ),
                 ],
                 conflicting_metrics=(),
@@ -1840,11 +1840,11 @@ def test_graph_template_from_graph(
                     ),
                     utils.ScalarDefinition(
                         MinimumOf(Metric("metric-name-u5"), "min", explicit_color=COLOR_HEX),
-                        "metric-name-u5",
+                        "Minimum of metric-name-u5",
                     ),
                     utils.ScalarDefinition(
                         MaximumOf(Metric("metric-name-u6"), "max", explicit_color=COLOR_HEX),
-                        "metric-name-u6",
+                        "Maximum of metric-name-u6",
                     ),
                     utils.ScalarDefinition(
                         WarningOf(Metric("metric-name-l3"), "warn"),
@@ -1856,11 +1856,11 @@ def test_graph_template_from_graph(
                     ),
                     utils.ScalarDefinition(
                         MinimumOf(Metric("metric-name-l5"), "min", explicit_color=COLOR_HEX),
-                        "metric-name-l5",
+                        "Minimum of metric-name-l5",
                     ),
                     utils.ScalarDefinition(
                         MaximumOf(Metric("metric-name-l6"), "max", explicit_color=COLOR_HEX),
-                        "metric-name-l6",
+                        "Maximum of metric-name-l6",
                     ),
                 ],
                 conflicting_metrics=["metric-name-confl-l", "metric-name-confl-u"],

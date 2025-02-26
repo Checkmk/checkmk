@@ -221,7 +221,7 @@ def _parse_quantity(
                     explicit_color=parse_color(quantity.color),
                 ),
                 line_type=line_type,
-                title=str(metric_["title"]),
+                title=_("Minimum of %s") % metric_["title"],
             )
         case metrics.MaximumOf():
             metric_ = get_extended_metric_info(quantity.metric_name)
@@ -231,7 +231,7 @@ def _parse_quantity(
                     explicit_color=parse_color(quantity.color),
                 ),
                 line_type=line_type,
-                title=str(metric_["title"]),
+                title=_("Maximum of %s") % metric_["title"],
             )
         case metrics.Sum():
             return MetricDefinition(

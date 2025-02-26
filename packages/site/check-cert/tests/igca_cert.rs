@@ -31,11 +31,11 @@ fn test_cert_ok() {
             .pubkey_size(Some(PUBKEY_SZ))
             .build(),
     );
-    assert_eq!(check::exit_code(&coll), 0);
+    assert_eq!(check::exit_code(&coll), 2);
     assert_eq!(
         coll.to_string(),
         format!(
-            "Subject CN: IGC/A\n\
+            "Subject CN: IGC/A, Certificate expired (Oct 17 14:29:22 2020 +00:00) (!!)\n\
             Subject CN: IGC/A\n\
             Subject O: PM/SGDN\n\
             Subject OU: DCSSI\n\
@@ -47,7 +47,8 @@ fn test_cert_ok() {
             Issuer C: FR\n\
             Certificate signature algorithm: sha1WithRSAEncryption\n\
             Public key algorithm: {PUBKEY_ALG}\n\
-            Public key size: {PUBKEY_SZ}"
+            Public key size: {PUBKEY_SZ}\n\
+            Certificate expired (Oct 17 14:29:22 2020 +00:00) (!!)"
         )
     );
 }
@@ -69,12 +70,11 @@ fn test_cert_wrong_serial() {
             .issuer_c(s("FR"))
             .build(),
     );
-    assert_eq!(check::exit_code(&coll), 1);
+    assert_eq!(check::exit_code(&coll), 2);
     assert_eq!(
         coll.to_string(),
         format!(
-            "Subject CN: IGC/A, \
-            Serial number: {SERIAL} but expected {serial} (!)\n\
+            "Subject CN: IGC/A, Serial number: {SERIAL} but expected {serial} (!), Certificate expired (Oct 17 14:29:22 2020 +00:00) (!!)\n\
             Subject CN: IGC/A\n\
             Subject O: PM/SGDN\n\
             Subject OU: DCSSI\n\
@@ -83,7 +83,8 @@ fn test_cert_wrong_serial() {
             Issuer O: PM/SGDN\n\
             Issuer OU: DCSSI\n\
             Issuer ST: France\n\
-            Issuer C: FR"
+            Issuer C: FR\n\
+            Certificate expired (Oct 17 14:29:22 2020 +00:00) (!!)"
         )
     );
 }

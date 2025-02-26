@@ -1,5 +1,5 @@
 {
-  "checksum": "758f0533f8132b0d94dadc01650dd8ce271dbf349fd01f4f46b30bbb87b1be56",
+  "checksum": "a8f53a89c32ca07775f0c89bf1b42b271a6f8af6bc30b9c64a6843438f43c3b7",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -12503,9 +12503,7 @@
         ],
         "crate_features": {
           "common": [
-            "default",
             "password-hash",
-            "simple",
             "std"
           ],
           "selects": {}

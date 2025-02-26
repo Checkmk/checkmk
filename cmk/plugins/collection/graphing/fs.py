@@ -114,12 +114,7 @@ graph_fs_used = graphs.Graph(
     ),
     compound_lines=[
         "fs_used",
-        metrics.Difference(
-            Title("Free space"),
-            metrics.Color.WHITE,
-            minuend="fs_size",
-            subtrahend="fs_used",
-        ),
+        "fs_free",
     ],
     simple_lines=[
         "fs_size",

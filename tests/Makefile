@@ -434,8 +434,11 @@ test-unit-testlib:
 		-- \
 		tests/testlib/
 
+test-agent-plugin:
+	make $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker)
+
 test-agent-plugin-docker:
-	../scripts/run-in-docker.sh make $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker)
+	../scripts/run-in-docker.sh make test-agent-plugin
 
 test-unit-shell:
 	./unit-shell/runner.sh

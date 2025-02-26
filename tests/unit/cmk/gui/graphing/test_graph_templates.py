@@ -498,13 +498,13 @@ COLOR_HEX = "#1e90ff"
                     MetricExpression(
                         MinimumOf(Metric("metric-name-4")),
                         line_type="stack",
-                        title="Title",
+                        title="Minimum of Title",
                         color=COLOR_HEX,
                     ),
                     MetricExpression(
                         MaximumOf(Metric("metric-name-5")),
                         line_type="stack",
-                        title="Title",
+                        title="Maximum of Title",
                         color=COLOR_HEX,
                     ),
                     MetricExpression(
@@ -615,13 +615,13 @@ COLOR_HEX = "#1e90ff"
                     MetricExpression(
                         MinimumOf(Metric("metric-name-4")),
                         line_type="line",
-                        title="Title",
+                        title="Minimum of Title",
                         color=COLOR_HEX,
                     ),
                     MetricExpression(
                         MaximumOf(Metric("metric-name-5")),
                         line_type="line",
-                        title="Title",
+                        title="Maximum of Title",
                         color=COLOR_HEX,
                     ),
                 ],
@@ -826,7 +826,7 @@ def test__parse_graph_from_api(
                         ),
                         color=COLOR_HEX,
                         line_type="line",
-                        title="Title",
+                        title="Minimum of Title",
                     ),
                     MetricExpression(
                         MaximumOf(
@@ -834,7 +834,7 @@ def test__parse_graph_from_api(
                         ),
                         color=COLOR_HEX,
                         line_type="line",
-                        title="Title",
+                        title="Maximum of Title",
                     ),
                     MetricExpression(
                         WarningOf(
@@ -856,7 +856,7 @@ def test__parse_graph_from_api(
                         ),
                         color=COLOR_HEX,
                         line_type="-line",
-                        title="Title",
+                        title="Minimum of Title",
                     ),
                     MetricExpression(
                         MaximumOf(
@@ -864,7 +864,7 @@ def test__parse_graph_from_api(
                         ),
                         color=COLOR_HEX,
                         line_type="-line",
-                        title="Title",
+                        title="Maximum of Title",
                     ),
                 ],
                 conflicting_metrics=["metric-name-confl-l", "metric-name-confl-u"],

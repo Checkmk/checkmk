@@ -2434,7 +2434,7 @@ def mode_check(
                 services=config_cache.configured_services(hostname),
                 run_plugin_names=run_plugin_names,
                 get_check_period=partial(config_cache.check_period_of_service, hostname),
-                submitter=get_submitter_(
+                submitter=get_submitter(
                     check_submission=config.check_submission,
                     monitoring_core=config.monitoring_core,
                     dry_run=dry_run,

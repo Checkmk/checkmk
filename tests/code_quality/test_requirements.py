@@ -132,6 +132,16 @@ def test_all_packages_pinned(loaded_requirements: dict[str, str]) -> None:
         logging.getLogger().warning(f"Base branch: {base_branch}, env_branch: {env_branch}")
 
 
+def is_python_file(file_path: Path) -> bool:
+    """Checks if a file is a python file by checking the file extension or the shebang line"""
+    shebang_pattern = re.compile(r"^#!.*python3$")
+    if file_path.suffix == ".py":
+        return True
+    with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+        first_line = f.readline().rstrip("\n")
+    return bool(shebang_pattern.match(first_line))
+
+
 def iter_sourcefiles(basepath: Path) -> Iterable[Path]:
     """iter over the repo and return all source files
 
@@ -151,7 +161,7 @@ def iter_sourcefiles(basepath: Path) -> Iterable[Path]:
             continue
         if sub_path.name.startswith("."):
             continue
-        if sub_path.is_file() and sub_path.name.endswith(".py"):
+        if sub_path.is_file() and is_python_file(sub_path):
             yield sub_path
 
         # Given the fact that the googletest directory contains a hash, it is
@@ -166,9 +176,6 @@ def iter_relevant_files(basepath: Path) -> Iterable[Path]:
         basepath / "node_modules",
         basepath / "omd/license_sources",  # update_licenses.py contains imports
         basepath / "tests",
-        # migration_helpers need libcst. I am conservative here, but wondering if we shouldn't
-        # exclude all treasures.
-        basepath / "doc/treasures/migration_helpers",
     )
     exclusions_from_exclusions = (basepath / "agents/plugins/mk_jolokia.py",)
 
@@ -340,9 +347,6 @@ def get_undeclared_dependencies() -> Iterable[Import]:
 
 
 CEE_UNUSED_PACKAGES = [
-    "psycopg2-binary",
-    "pymssql",
-    "pymysql",
     "setuptools-scm",
     "snmpsim-lextudio",
     "python-multipart",  # needed by fastapi
@@ -350,7 +354,6 @@ CEE_UNUSED_PACKAGES = [
     "types-python-dateutil",
     "types-markdown",
     "types-pika-ts",
-    "oracledb",  # actually used now by check_sql but those files are not yet checked to to missing .py extension (CMK-21797)
 ]
 
 
@@ -388,6 +391,14 @@ def test_dependencies_are_declared() -> None:
         "mypy_boto3_logs",  # used by mypy within typing.TYPE_CHECKING
         "docker",  # optional
         "msrest",  # used in publish_cloud_images.py and not in the product
+        "pip",  # is included by default in python
+        "rrdtool",  # is built as part of the project
+        # the following packages must be installed additionally by the user
+        "ibm_db",  # active_checks/check_sql
+        "ibm_db_dbi",  # active_checks/check_sql
+        "sqlanydb",  # active_checks/check_sql
+        "libcst",  # doc/treasures/migration_helpers
+        "pypsrp",  # doc/treasures/alert_handler/windows
     }
 
     assert undeclared_dependencies_str >= known_undeclared_dependencies, (

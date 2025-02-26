@@ -25,6 +25,7 @@ ADDITIONAL_MYPY_ARGS := $(JUNIT_XML)
 # Looks like we need to cleanup the EDITION handling here.
 AGENT_PLUGIN_PYTHON_VERSIONS := $(shell make --no-print-directory --file=../defines.make print-AGENT_PLUGIN_PYTHON_VERSIONS)
 REPO_PATH := $(shell make --no-print-directory --file=../defines.make print-REPO_PATH)
+MAX_CHARS := 1500000
 
 # A random time zone between UTC-11...UTC+14. Note the recursively expanded
 # variable assignment to get a new time zone on every access.
@@ -228,11 +229,11 @@ test-integration-agent-plugin:
 test-format-python: test-format-python-sort test-format-python-format
 
 test-format-python-sort: ../pyproject.toml
-	echo $$($(FIND_PYTHON_FILES)) | xargs ../scripts/run-uvenv ruff check --select I --diff | tee -a ../ruff_check_and_format.txt;\
+	echo $$($(FIND_PYTHON_FILES)) | xargs $(MAX_CHARS:%=--max-chars=%) ../scripts/run-uvenv ruff check --select I --diff | tee -a ../ruff_check_and_format.txt;\
 	exit $${PIPESTATUS[1]}
 
 test-format-python-format: ../pyproject.toml
-	echo $$($(FIND_PYTHON_FILES)) | xargs ../scripts/run-uvenv ruff format --check --diff | tee -a ../ruff_check_and_format.txt;\
+	echo $$($(FIND_PYTHON_FILES)) | xargs $(MAX_CHARS:%=--max-chars=%) ../scripts/run-uvenv ruff format --check --diff | tee -a ../ruff_check_and_format.txt;\
 	exit $${PIPESTATUS[1]}
 
 test-format-shell:
@@ -340,7 +341,7 @@ $(foreach TEST,$(DOCKERABLE_TESTS),$(TEST)-docker):
 
 test-license-headers:
 	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
-	xargs --no-run-if-empty $(PYTEST_UV) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_license_headers.py) \
+	xargs $(MAX_CHARS:%=--max-chars=%) --no-run-if-empty $(PYTEST_UV) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_license_headers.py) \
 	--python-files;
 
 test-requirements:
@@ -350,7 +351,7 @@ test-file-content:
 	if test -z "$$CHANGED_FILES_REL_FILE"; then \
 	    $(PYTEST_UV) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content) --test-all-files ; \
 	else \
-	    cat "$$CHANGED_FILES_REL_FILE" | xargs --no-run-if-empty $(PYTEST_UV) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content) --changed-files ; \
+	    cat "$$CHANGED_FILES_REL_FILE" | xargs $(MAX_CHARS:%=--max-chars=%) --no-run-if-empty $(PYTEST_UV) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content) --changed-files ; \
 	fi \
 
 test-werks:
@@ -391,7 +392,7 @@ test-pylint:
 	    tests/unit/test_pylint_checker_localization.py
 
 test-ruff:
-	cd ..; echo $$($(FIND_PYTHON_FILES)) | xargs $(UVENV) ruff check
+	cd ..; echo $$($(FIND_PYTHON_FILES)) | xargs $(MAX_CHARS:%=--max-chars=%) $(UVENV) ruff check
 
 test-shellcheck:
 	cd .. && $(SHELLCHECK) -x $(SHELLCHECK_OUTPUT_ARGS) $(FIND_SHELL_FILES)

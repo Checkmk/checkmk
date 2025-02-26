@@ -101,18 +101,16 @@ index 7677e9dbb..489bc680f 100644
      }
      annotation->set_source_file(file_path);
 diff --git a/src/google/protobuf/map.cc b/src/google/protobuf/map.cc
-index 570b61bec..82ed91b75 100644
+index 570b61bec..6f4ce35f3 100644
 --- a/src/google/protobuf/map.cc
 +++ b/src/google/protobuf/map.cc
-@@ -116,8 +116,16 @@ void UntypedMapBase::ClearTable(const ClearInput input) {
+@@ -116,8 +116,14 @@ void UntypedMapBase::ClearTable(const ClearInput input) {
    ABSL_DCHECK_NE(num_buckets_, kGlobalEmptyTableSize);
  
    if (alloc_.arena() == nullptr) {
 +#pragma GCC diagnostic push
 +#pragma GCC diagnostic ignored "-Wdeprecated"
      const auto loop = [=](auto destroy_node) {
-+#pragma GCC diagnostic pop
-+#pragma clang diagnostic push
 +#ifdef __clang__
 +#pragma clang diagnostic ignored "-Wdeprecated-this-capture"
 +#endif

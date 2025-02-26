@@ -124,7 +124,9 @@ def _answer_graph_image_request() -> None:
         response.set_data(json.dumps(graphs))
 
     except Exception as e:
-        logger.error("Call to ajax_graph_images.py failed: %s\n%s", e, traceback.format_exc())
+        logger.error(
+            "Call to ajax_graph_images.py failed: %s\n%s", e, "".join(traceback.format_stack())
+        )
         if active_config.debug:
             raise
 

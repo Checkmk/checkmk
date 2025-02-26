@@ -23,13 +23,6 @@ DEFINITIONS_PATH = "etc/rabbitmq/definitions.d"
 ACTIVE_DEFINITIONS_FILE_PATH = f"{DEFINITIONS_PATH}/{ACTIVE_DEFINITIONS_FILE_NAME}"
 NEW_DEFINITIONS_FILE_PATH = f"{DEFINITIONS_PATH}/definitions.next.json"
 
-# this defines the default message ttl for all the messages in the queue
-# we opted for this instead of per-message TTL because when setting per-message TTL
-# expired messages can queue up behind non-expired ones until the latter are consumed or expired.
-# Hence resources used by such expired messages will not be freed.
-# see https://www.rabbitmq.com/docs/ttl
-QUEUE_DEFAULT_MESSAGE_TTL = {"x-message-ttl": 60000}
-
 
 class User(BaseModel):
     name: str
@@ -105,7 +98,7 @@ class Queue(BaseModel):
     vhost: str
     durable: bool
     auto_delete: bool
-    arguments: Mapping[str, str | int]
+    arguments: Mapping[str, str]
 
 
 class Definitions(BaseModel):
@@ -298,7 +291,7 @@ def add_connecter_definitions(connection: Connection, definition: Definitions) -
         vhost=vhost_name,
         durable=True,
         auto_delete=False,
-        arguments={**QUEUE_DEFAULT_MESSAGE_TTL},
+        arguments={},
     )
     binding = Binding(
         source=INTERSITE_EXCHANGE,
@@ -344,7 +337,7 @@ def add_connectee_definitions(connection: Connection, definition: Definitions) -
         vhost=DEFAULT_VHOST_NAME,
         durable=True,
         auto_delete=False,
-        arguments={**QUEUE_DEFAULT_MESSAGE_TTL},
+        arguments={},
     )
 
     # only add binding on default vhost if the connection is within the same customer

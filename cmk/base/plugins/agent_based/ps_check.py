@@ -17,7 +17,7 @@ def check_ps(
     params: Mapping[str, Any],
     section_ps: ps.Section | None,
     section_mem: memory.SectionMem | None,
-    section_mem_used: memory.SectionMem | None,
+    section_mem_used: memory.SectionMemUsed | None,
     section_cpu: cpu.Section | None,
 ) -> CheckResult:
     if not section_ps:
@@ -45,7 +45,7 @@ def cluster_check_ps(
     params: Mapping[str, Any],
     section_ps: Mapping[str, ps.Section | None],
     section_mem: Mapping[str, memory.SectionMem | None],
-    section_mem_used: Mapping[str, memory.SectionMem | None],
+    section_mem_used: Mapping[str, memory.SectionMemUsed | None],
     section_cpu: Mapping[str, cpu.Section | None],  # unused
 ) -> CheckResult:
     iter_non_trivial_sections = (

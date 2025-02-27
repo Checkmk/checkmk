@@ -3,13 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable
 from enum import Enum
 from typing import assert_never, TypedDict
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
+    DiscoveryResult,
     Result,
     Service,
     SimpleSNMPSection,
@@ -51,7 +51,7 @@ def _check_mail_transfer_memory(params: Params, section: MailTransferMemoryStatu
             assert_never(section)
 
 
-def _discover_mail_transfer_memory(section: MailTransferMemoryStatus) -> Iterable[Service]:
+def _discover_mail_transfer_memory(section: MailTransferMemoryStatus) -> DiscoveryResult:
     yield Service()
 
 

@@ -36496,6 +36496,10 @@ msgstr "Número máximo de hilos"
 msgid "Maximum of "
 msgstr "Máximo"
 
+#, fuzzy, python-format
+msgid "Maximum of %s"
+msgstr "Máximo"
+
 msgid "Maximum parallel connections"
 msgstr "Máximas conexiones paralelas"
 
@@ -37252,6 +37256,10 @@ msgstr "Número mínimo de nodos trabajadores listos"
 
 #, fuzzy
 msgid "Minimum of "
+msgstr "Mínimo"
+
+#, fuzzy, python-format
+msgid "Minimum of %s"
 msgstr "Mínimo"
 
 msgid "Minimum password length"

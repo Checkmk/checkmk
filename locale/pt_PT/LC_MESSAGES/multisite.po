@@ -36167,6 +36167,10 @@ msgstr "Número máximo de threads"
 msgid "Maximum of "
 msgstr "Máximo"
 
+#, fuzzy, python-format
+msgid "Maximum of %s"
+msgstr "Máximo"
+
 msgid "Maximum parallel connections"
 msgstr "Máximo de ligações paralelas"
 
@@ -36919,6 +36923,10 @@ msgstr "Número mínimo de nós de trabalho prontos"
 
 #, fuzzy
 msgid "Minimum of "
+msgstr "Mínimo"
+
+#, fuzzy, python-format
+msgid "Minimum of %s"
 msgstr "Mínimo"
 
 msgid "Minimum password length"

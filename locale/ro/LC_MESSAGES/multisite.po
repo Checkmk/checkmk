@@ -36211,6 +36211,10 @@ msgstr "Numărul maxim de fire"
 msgid "Maximum of "
 msgstr "Maximum de "
 
+#, fuzzy, python-format
+msgid "Maximum of %s"
+msgstr "Maximum de "
+
 msgid "Maximum parallel connections"
 msgstr "Număr maxim de conexiuni paralele"
 
@@ -36958,6 +36962,10 @@ msgid "Minimum number of ready worker nodes"
 msgstr "Numărul minim de noduri de lucru pregătite"
 
 msgid "Minimum of "
+msgstr "Minimum de "
+
+#, fuzzy, python-format
+msgid "Minimum of %s"
 msgstr "Minimum de "
 
 msgid "Minimum password length"

@@ -13,7 +13,6 @@ import sys
 import time
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from contextlib import suppress
-from functools import partial
 from pathlib import Path
 from typing import Final, Literal, NamedTuple, TypedDict, TypeVar
 
@@ -1844,12 +1843,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_check_discovery(
-    options: Mapping[str, object],
-    hostname: HostName,
-    *,
-    active_check_handler: Callable[[HostName, str], object],
-) -> int:
+def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> int:
     file_cache_options = _handle_fetcher_options(options)
     try:
         snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
@@ -1957,38 +1951,29 @@ def mode_check_discovery(
         check_results = (error_handler.result,)
 
     check_result = ActiveCheckResult.from_subresults(*check_results)
-    active_check_handler(hostname, check_result.as_text())
     with suppress(IOError):
         sys.stdout.write(check_result.as_text() + "\n")
         sys.stdout.flush()
     return check_result.state
 
 
-def register_mode_check_discovery(
-    *, active_check_handler: Callable[[HostName, str], object]
-) -> None:
-    modes.register(
-        Mode(
-            long_option="check-discovery",
-            handler_function=partial(
-                mode_check_discovery, active_check_handler=active_check_handler
-            ),
-            argument=True,
-            argument_descr="HOSTNAME",
-            short_help="Check for not yet monitored services",
-            long_help=[
-                "Make Check_MK behave as monitoring plug-ins that checks if an "
-                "inventory would find new or vanished services for the host. "
-                "If configured to do so, this will queue those hosts for automatic "
-                "autodiscovery"
-            ],
-            sub_options=[*_FETCHER_OPTIONS, _SNMP_BACKEND_OPTION],
-        )
+modes.register(
+    Mode(
+        long_option="check-discovery",
+        handler_function=mode_check_discovery,
+        argument=True,
+        argument_descr="HOSTNAME",
+        short_help="Check for not yet monitored services",
+        long_help=[
+            "Make Check_MK behave as monitoring plug-ins that checks if an "
+            "inventory would find new or vanished services for the host. "
+            "If configured to do so, this will queue those hosts for automatic "
+            "autodiscovery"
+        ],
+        sub_options=[*_FETCHER_OPTIONS, _SNMP_BACKEND_OPTION],
     )
+)
 
-
-if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE:
-    register_mode_check_discovery(active_check_handler=lambda *_: None)
 
 # .
 #   .--discover------------------------------------------------------------.
@@ -2331,12 +2316,7 @@ _CheckingOptions = TypedDict(
 )
 
 
-def mode_check(
-    options: _CheckingOptions,
-    args: list[str],
-    *,
-    active_check_handler: Callable[[HostName, str], object],
-) -> ServiceState:
+def mode_check(options: _CheckingOptions, args: list[str]) -> ServiceState:
     plugins = load_checks()
     config_cache = load_config(plugins).config_cache
     hosts_config = config.make_hosts_config()
@@ -2346,7 +2326,6 @@ def mode_check(
         hosts_config,
         options,
         args,
-        active_check_handler=active_check_handler,
         password_store_file=cmk.utils.password_store.pending_password_store_path(),
     )
 
@@ -2359,7 +2338,6 @@ def run_checking(
     options: _CheckingOptions,
     args: list[str],
     *,
-    active_check_handler: Callable[[HostName, str], object],
     password_store_file: Path,
 ) -> ServiceState:
     file_cache_options = _handle_fetcher_options(options)
@@ -2487,66 +2465,53 @@ def run_checking(
         checks_result = (error_handler.result,)
 
     check_result = ActiveCheckResult.from_subresults(*checks_result)
-    active_check_handler(hostname, check_result.as_text())
-
     with suppress(IOError):
         sys.stdout.write(check_result.as_text() + "\n")
         sys.stdout.flush()
     return check_result.state
 
 
-def register_mode_check(
-    *,
-    active_check_handler: Callable[[HostName, str], object],
-) -> None:
-    modes.register(
-        Mode(
-            long_option="check",
-            handler_function=partial(
-                mode_check,
-                active_check_handler=active_check_handler,
+modes.register(
+    Mode(
+        long_option="check",
+        handler_function=mode_check,
+        argument=True,
+        argument_descr="HOST [IPADDRESS]",
+        argument_optional=True,
+        short_help="Check all services on the given HOST",
+        long_help=[
+            "Execute all checks on the given HOST. Optionally you can specify "
+            "a second argument, the IPADDRESS. If you don't set this, the "
+            "configured IP address of the HOST is used.",
+            "By default the check results are sent to the core. If you provide "
+            "the option '-n', the results will not be sent to the core and the "
+            "counters of the check will not be stored.",
+            "You can use '-v' to see the results of the checks. Add '-p' to "
+            "also see the performance data of the checks. "
+            "Can be restricted to certain check types. Write '--checks df -I' if "
+            "you just want to look for new filesystems. Use 'check_mk -L' for a "
+            "list of all check types. Use 'tcp' for all TCP based checks and "
+            "'snmp' for all SNMP based checks.",
+        ],
+        sub_options=[
+            *_FETCHER_OPTIONS,
+            _SNMP_BACKEND_OPTION,
+            Option(
+                long_option="no-submit",
+                short_option="n",
+                short_help="Do not submit results to core, do not save counters",
             ),
-            argument=True,
-            argument_descr="HOST [IPADDRESS]",
-            argument_optional=True,
-            short_help="Check all services on the given HOST",
-            long_help=[
-                "Execute all checks on the given HOST. Optionally you can specify "
-                "a second argument, the IPADDRESS. If you don't set this, the "
-                "configured IP address of the HOST is used.",
-                "By default the check results are sent to the core. If you provide "
-                "the option '-n', the results will not be sent to the core and the "
-                "counters of the check will not be stored.",
-                "You can use '-v' to see the results of the checks. Add '-p' to "
-                "also see the performance data of the checks. "
-                "Can be restricted to certain check types. Write '--checks df -I' if "
-                "you just want to look for new filesystems. Use 'check_mk -L' for a "
-                "list of all check types. Use 'tcp' for all TCP based checks and "
-                "'snmp' for all SNMP based checks.",
-            ],
-            sub_options=[
-                *_FETCHER_OPTIONS,
-                _SNMP_BACKEND_OPTION,
-                Option(
-                    long_option="no-submit",
-                    short_option="n",
-                    short_help="Do not submit results to core, do not save counters",
-                ),
-                Option(
-                    long_option="perfdata",
-                    short_option="p",
-                    short_help="Also show performance data (use with -v)",
-                ),
-                _option_sections,
-                _get_plugins_option(CheckPluginName),
-                _option_detect_plugins,
-            ],
-        )
+            Option(
+                long_option="perfdata",
+                short_option="p",
+                short_help="Also show performance data (use with -v)",
+            ),
+            _option_sections,
+            _get_plugins_option(CheckPluginName),
+            _option_detect_plugins,
+        ],
     )
-
-
-if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE:
-    register_mode_check(active_check_handler=lambda *_: None)
+)
 
 # .
 #   .--inventory-----------------------------------------------------------.
@@ -2849,12 +2814,7 @@ def _get_save_tree_actions(
     )
 
 
-def mode_inventory_as_check(
-    options: Mapping[str, object],
-    hostname: HostName,
-    *,
-    active_check_handler: Callable[[HostName, str], object],
-) -> ServiceState:
+def mode_inventory_as_check(options: Mapping[str, object], hostname: HostName) -> ServiceState:
     try:
         snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
     except ValueError as exc:
@@ -2936,70 +2896,60 @@ def mode_inventory_as_check(
         check_results = (error_handler.result,)
 
     check_result = ActiveCheckResult.from_subresults(*check_results)
-    active_check_handler(hostname, check_result.as_text())
     with suppress(IOError):
         sys.stdout.write(check_result.as_text() + "\n")
         sys.stdout.flush()
     return check_result.state
 
 
-def register_mode_inventory_as_check(
-    *, active_check_handler: Callable[[HostName, str], object]
-) -> None:
-    modes.register(
-        Mode(
-            long_option="inventory-as-check",
-            handler_function=partial(
-                mode_inventory_as_check, active_check_handler=active_check_handler
+modes.register(
+    Mode(
+        long_option="inventory-as-check",
+        handler_function=mode_inventory_as_check,
+        argument=True,
+        argument_descr="HOST",
+        short_help="Do HW/SW Inventory, behave like check plug-in",
+        sub_options=[
+            *_FETCHER_OPTIONS,
+            _SNMP_BACKEND_OPTION,
+            Option(
+                long_option="hw-changes",
+                argument=True,
+                argument_descr="S",
+                argument_conv=int,
+                short_help="Use monitoring state S for HW changes",
             ),
-            argument=True,
-            argument_descr="HOST",
-            short_help="Do HW/SW Inventory, behave like check plug-in",
-            sub_options=[
-                *_FETCHER_OPTIONS,
-                _SNMP_BACKEND_OPTION,
-                Option(
-                    long_option="hw-changes",
-                    argument=True,
-                    argument_descr="S",
-                    argument_conv=int,
-                    short_help="Use monitoring state S for HW changes",
-                ),
-                Option(
-                    long_option="sw-changes",
-                    argument=True,
-                    argument_descr="S",
-                    argument_conv=int,
-                    short_help="Use monitoring state S for SW changes",
-                ),
-                Option(
-                    long_option="sw-missing",
-                    argument=True,
-                    argument_descr="S",
-                    argument_conv=int,
-                    short_help="Use monitoring state S for missing SW packages info",
-                ),
-                Option(
-                    long_option="inv-fail-status",
-                    argument=True,
-                    argument_descr="S",
-                    argument_conv=int,
-                    short_help="Use monitoring state S in case of error",
-                ),
-                Option(
-                    long_option="nw-changes",
-                    argument=True,
-                    argument_descr="S",
-                    argument_conv=int,
-                    short_help="Use monitoring state S for NW changes",
-                ),
-            ],
-        )
+            Option(
+                long_option="sw-changes",
+                argument=True,
+                argument_descr="S",
+                argument_conv=int,
+                short_help="Use monitoring state S for SW changes",
+            ),
+            Option(
+                long_option="sw-missing",
+                argument=True,
+                argument_descr="S",
+                argument_conv=int,
+                short_help="Use monitoring state S for missing SW packages info",
+            ),
+            Option(
+                long_option="inv-fail-status",
+                argument=True,
+                argument_descr="S",
+                argument_conv=int,
+                short_help="Use monitoring state S in case of error",
+            ),
+            Option(
+                long_option="nw-changes",
+                argument=True,
+                argument_descr="S",
+                argument_conv=int,
+                short_help="Use monitoring state S for NW changes",
+            ),
+        ],
     )
-
-
-if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE:
-    register_mode_inventory_as_check(active_check_handler=lambda *_: None)
+)
 
 # .
 #   .--inventorize-marked-hosts--------------------------------------------.

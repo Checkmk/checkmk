@@ -104,7 +104,6 @@ def main() -> int:
             hosts_config,
             {},
             [CONFIG.hostname],
-            active_check_handler=lambda *args: None,
             password_store_file=core_password_store_path(LATEST_CONFIG),
         )
     except KeyboardInterrupt:

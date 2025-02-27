@@ -58,7 +58,7 @@ class ACResultState(enum.IntEnum):
 class ACSingleResult:
     state: ACResultState
     text: str
-    site_id: SiteId = dataclasses.field(default_factory=omd_site)
+    site_id: SiteId
 
     @property
     def state_marked_text(self) -> str:
@@ -80,7 +80,7 @@ class ACTestResult:
     category: str
     title: str
     help: str
-    site_id: SiteId = dataclasses.field(default_factory=omd_site)
+    site_id: SiteId
 
     @classmethod
     def from_repr(cls, repr_data: Mapping[str, Any]) -> Self:
@@ -194,6 +194,7 @@ class ACTest:
                 category=self.category(),
                 title=self.title(),
                 help=self.help(),
+                site_id=omd_site(),
             )
         except Exception:
             gui_logger.exception("error executing configuration test %s", self.__class__.__name__)
@@ -206,6 +207,7 @@ class ACTest:
                 category=self.category(),
                 title=self.title(),
                 help=self.help(),
+                site_id=omd_site(),
             )
 
     def _uses_microcore(self) -> bool:

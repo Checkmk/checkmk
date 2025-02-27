@@ -1831,7 +1831,6 @@ def mode_check_discovery(
     hostname: HostName,
     *,
     active_check_handler: Callable[[HostName, str], object],
-    keepalive: bool,
 ) -> int:
     file_cache_options = _handle_fetcher_options(options)
     try:
@@ -1885,7 +1884,7 @@ def mode_check_discovery(
         plugin_name="discover",
         is_cluster=hostname in config_cache.hosts_config.clusters,
         snmp_backend=config_cache.get_snmp_backend(hostname),
-        keepalive=keepalive,
+        keepalive=False,
     )
 
     check_results: Sequence[ActiveCheckResult] = []
@@ -1932,12 +1931,9 @@ def mode_check_discovery(
 
     check_result = ActiveCheckResult.from_subresults(*check_results)
     active_check_handler(hostname, check_result.as_text())
-    if keepalive:
-        console.verbose_no_lf(check_result.as_text())
-    else:
-        with suppress(IOError):
-            sys.stdout.write(check_result.as_text() + "\n")
-            sys.stdout.flush()
+    with suppress(IOError):
+        sys.stdout.write(check_result.as_text() + "\n")
+        sys.stdout.flush()
     return check_result.state
 
 
@@ -1948,9 +1944,7 @@ def register_mode_check_discovery(
         Mode(
             long_option="check-discovery",
             handler_function=partial(
-                mode_check_discovery,
-                active_check_handler=active_check_handler,
-                keepalive=False,
+                mode_check_discovery, active_check_handler=active_check_handler
             ),
             argument=True,
             argument_descr="HOSTNAME",
@@ -2814,7 +2808,6 @@ def mode_inventory_as_check(
     hostname: HostName,
     *,
     active_check_handler: Callable[[HostName, str], object],
-    keepalive: bool,
 ) -> ServiceState:
     config_cache = config.get_config_cache()
     config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
@@ -2862,7 +2855,7 @@ def mode_inventory_as_check(
         plugin_name="check_mk_active-cmk_inv",
         is_cluster=hostname in hosts_config.clusters,
         snmp_backend=config_cache.get_snmp_backend(hostname),
-        keepalive=keepalive,
+        keepalive=False,
     )
     check_results: Sequence[ActiveCheckResult] = []
     with error_handler:
@@ -2897,12 +2890,9 @@ def mode_inventory_as_check(
 
     check_result = ActiveCheckResult.from_subresults(*check_results)
     active_check_handler(hostname, check_result.as_text())
-    if keepalive:
-        console.verbose_no_lf(check_result.as_text())
-    else:
-        with suppress(IOError):
-            sys.stdout.write(check_result.as_text() + "\n")
-            sys.stdout.flush()
+    with suppress(IOError):
+        sys.stdout.write(check_result.as_text() + "\n")
+        sys.stdout.flush()
     return check_result.state
 
 
@@ -2913,9 +2903,7 @@ def register_mode_inventory_as_check(
         Mode(
             long_option="inventory-as-check",
             handler_function=partial(
-                mode_inventory_as_check,
-                active_check_handler=active_check_handler,
-                keepalive=False,
+                mode_inventory_as_check, active_check_handler=active_check_handler
             ),
             argument=True,
             argument_descr="HOST",

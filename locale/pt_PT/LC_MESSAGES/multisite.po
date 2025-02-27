@@ -10478,6 +10478,11 @@ msgid "By service group"
 msgstr "Por grupo de serviço"
 
 msgid ""
+"By setting a higher value, you reduce the amount of requests sent toyour own "
+"instance as well as Gerrit's host infrastructure."
+msgstr ""
+
+msgid ""
 "By specifying a customer here, you configure on which sites this object will "
 "be available. In case you select global, it will be available on all your "
 "sites. Otherwise it will only be available to the sites assigned with the "
@@ -11463,10 +11468,6 @@ msgstr "Não é possível ler o ficheiro \"%s\": %s"
 #, fuzzy
 msgid "Cannot render dropdown: Missing required information"
 msgstr "Falta de informação de contexto necessária"
-
-#, python-format
-msgid "Cannot render graph: host %s, service %s not found."
-msgstr "Não é possível fazer gráfico: host %s, service %s não encontrados."
 
 #, python-format
 msgid ""
@@ -40138,6 +40139,10 @@ msgstr "Número máximo de interrupções de serviço"
 msgid "Maximum number of threads"
 msgstr "Número máximo de threads"
 
+#, fuzzy, python-format
+msgid "Maximum of %s"
+msgstr "Máximo"
+
 msgid "Maximum parallel connections"
 msgstr "Máximo de ligações paralelas"
 
@@ -40918,6 +40923,10 @@ msgstr "Número mínimo de nós do plano de controlo prontos"
 
 msgid "Minimum number of ready worker nodes"
 msgstr "Número mínimo de nós de trabalho prontos"
+
+#, fuzzy, python-format
+msgid "Minimum of %s"
+msgstr "Mínimo"
 
 msgid "Minimum password length"
 msgstr "Comprimento mínimo da senha"
@@ -49517,6 +49526,14 @@ msgstr "Por favor, introduza uma hora."
 
 msgid "Please enter a filename."
 msgstr "Por favor, introduza um nome de ficheiro."
+
+#, fuzzy
+msgid "Please enter a name."
+msgstr "Por favor, introduza um nome de ficheiro."
+
+#, fuzzy
+msgid "Please enter a required match."
+msgstr "Por favor, especifique um nome de caminho absoluto"
 
 msgid "Please enter a time."
 msgstr "Por favor, introduza uma hora."
@@ -65048,6 +65065,10 @@ msgstr ""
 "disponíveis são:"
 
 #, fuzzy
+msgid "The first value must be greater than 0."
+msgstr "O agrupamento deve ter pelo menos um nó"
+
+#, fuzzy
 msgid "The first value must be lower than the second value."
 msgstr "O agrupamento deve ter pelo menos um nó"
 
@@ -67062,6 +67083,10 @@ msgstr "O horário que você está tentando apagar não existe."
 
 msgid "The schedule you are trying to edit does not exist."
 msgstr "O horário que você está tentando editar não existe."
+
+#, fuzzy
+msgid "The second value must be equal to or greater than the first value."
+msgstr "O agrupamento deve ter pelo menos um nó"
 
 msgid "The secret access key for your AWS account"
 msgstr "A chave de acesso secreto para a sua conta AWS"
@@ -73233,6 +73258,10 @@ msgstr "Tempo para resolver o DNS"
 
 msgid "Time to send request"
 msgstr "Tempo para enviar o pedido"
+
+#, fuzzy
+msgid "Time to wait before fetching version information"
+msgstr "Inventariar a informação de configuração da rede"
 
 msgid ""
 "Time to wait for a command to finish before continuing with the next "
@@ -87967,6 +87996,10 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
 
+#, python-format
+#~ msgid "Cannot render graph: host %s, service %s not found."
+#~ msgstr "Não é possível fazer gráfico: host %s, service %s não encontrados."
+
 #, fuzzy, python-format
 #~ msgid "%s other service"
 #~ msgid_plural "%s other services"
@@ -89288,14 +89321,6 @@ msgstr "Use SSL para a conexão."
 #, fuzzy
 #~ msgid "Critical of "
 #~ msgstr "Crítico se %s"
-
-#, fuzzy
-#~ msgid "Maximum of "
-#~ msgstr "Máximo"
-
-#, fuzzy
-#~ msgid "Minimum of "
-#~ msgstr "Mínimo"
 
 #, fuzzy
 #~ msgid "Warning of "

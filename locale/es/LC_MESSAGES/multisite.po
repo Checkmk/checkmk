@@ -10551,6 +10551,11 @@ msgid "By service group"
 msgstr "Por grupo de servicios"
 
 msgid ""
+"By setting a higher value, you reduce the amount of requests sent toyour own "
+"instance as well as Gerrit's host infrastructure."
+msgstr ""
+
+msgid ""
 "By specifying a customer here, you configure on which sites this object will "
 "be available. In case you select global, it will be available on all your "
 "sites. Otherwise it will only be available to the sites assigned with the "
@@ -11537,11 +11542,6 @@ msgstr "No se puede leer el archivo \"%s\": %s"
 #, fuzzy
 msgid "Cannot render dropdown: Missing required information"
 msgstr "Falta información de contexto necesaria"
-
-#, python-format
-msgid "Cannot render graph: host %s, service %s not found."
-msgstr ""
-"No se puede representar el gráfico: host %s, servicio %s no encontrado."
 
 #, python-format
 msgid ""
@@ -40469,6 +40469,10 @@ msgstr "Número máximo de cortes de servicio"
 msgid "Maximum number of threads"
 msgstr "Número máximo de hilos"
 
+#, fuzzy, python-format
+msgid "Maximum of %s"
+msgstr "Máximo"
+
 msgid "Maximum parallel connections"
 msgstr "Máximas conexiones paralelas"
 
@@ -41253,6 +41257,10 @@ msgstr "Número mínimo de nodos del plano de control preparados"
 
 msgid "Minimum number of ready worker nodes"
 msgstr "Número mínimo de nodos trabajadores listos"
+
+#, fuzzy, python-format
+msgid "Minimum of %s"
+msgstr "Mínimo"
 
 msgid "Minimum password length"
 msgstr "Longitud mínima de la contraseña"
@@ -49951,6 +49959,14 @@ msgstr "Por favor, introduzca una hora."
 
 msgid "Please enter a filename."
 msgstr "Por favor, introduzca un nombre de archivo."
+
+#, fuzzy
+msgid "Please enter a name."
+msgstr "Por favor, introduzca un nombre de archivo."
+
+#, fuzzy
+msgid "Please enter a required match."
+msgstr "Especifique un nombre de ruta absoluta"
 
 msgid "Please enter a time."
 msgstr "Por favor, introduzca una hora."
@@ -65636,6 +65652,10 @@ msgstr ""
 "actualmente son:"
 
 #, fuzzy
+msgid "The first value must be greater than 0."
+msgstr "El clúster debe tener al menos un nodo"
+
+#, fuzzy
 msgid "The first value must be lower than the second value."
 msgstr "El clúster debe tener al menos un nodo"
 
@@ -67668,6 +67688,10 @@ msgstr "La agenda que intenta eliminar no existe."
 
 msgid "The schedule you are trying to edit does not exist."
 msgstr "El horario que intenta editar no existe."
+
+#, fuzzy
+msgid "The second value must be equal to or greater than the first value."
+msgstr "El clúster debe tener al menos un nodo"
 
 msgid "The secret access key for your AWS account"
 msgstr "La clave secreta de acceso a su cuenta de AWS"
@@ -73912,6 +73936,10 @@ msgstr "Nombres de host para resolver"
 
 msgid "Time to send request"
 msgstr "Hora de enviar la solicitud"
+
+#, fuzzy
+msgid "Time to wait before fetching version information"
+msgstr "Inventariar la información de configuración de la red"
 
 msgid ""
 "Time to wait for a command to finish before continuing with the next "
@@ -88794,6 +88822,11 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usar SSL para la conexión."
 
+#, python-format
+#~ msgid "Cannot render graph: host %s, service %s not found."
+#~ msgstr ""
+#~ "No se puede representar el gráfico: host %s, servicio %s no encontrado."
+
 #, fuzzy, python-format
 #~ msgid "%s other service"
 #~ msgid_plural "%s other services"
@@ -90114,14 +90147,6 @@ msgstr "Usar SSL para la conexión."
 #, fuzzy
 #~ msgid "Critical of "
 #~ msgstr "Crítico si %s"
-
-#, fuzzy
-#~ msgid "Maximum of "
-#~ msgstr "Máximo"
-
-#, fuzzy
-#~ msgid "Minimum of "
-#~ msgstr "Mínimo"
 
 #, fuzzy
 #~ msgid "Warning of "

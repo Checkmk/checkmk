@@ -10135,6 +10135,11 @@ msgid "By service group"
 msgstr "Nach Service-Gruppe"
 
 msgid ""
+"By setting a higher value, you reduce the amount of requests sent toyour own "
+"instance as well as Gerrit's host infrastructure."
+msgstr ""
+
+msgid ""
 "By specifying a customer here, you configure on which sites this object will "
 "be available. In case you select global, it will be available on all your "
 "sites. Otherwise it will only be available to the sites assigned with the "
@@ -11095,10 +11100,6 @@ msgstr "Kann Datei \"%s\" nichyt lesen: %s"
 msgid "Cannot render dropdown: Missing required information"
 msgstr ""
 "Drop-down kann nicht dargestellt werden: Fehlende erforderliche Informationen"
-
-#, python-format
-msgid "Cannot render graph: host %s, service %s not found."
-msgstr "Graph nicht darstellbar: Host %s, Service %s nicht gefunden."
 
 #, python-format
 msgid ""
@@ -38684,6 +38685,10 @@ msgstr "Maximale Anzahl von Ausfällen"
 msgid "Maximum number of threads"
 msgstr "Maximale Anzahl von Threads"
 
+#, fuzzy, python-format
+msgid "Maximum of %s"
+msgstr "Maximum von "
+
 msgid "Maximum parallel connections"
 msgstr "Maximale Anzahl paralleler Verbindungen"
 
@@ -39435,6 +39440,10 @@ msgstr "Mindestanzahl einsatzbereiter Control-Plane-Knoten"
 
 msgid "Minimum number of ready worker nodes"
 msgstr "Mindestanzahl von einsatzbereiten Worker-Knoten"
+
+#, fuzzy, python-format
+msgid "Minimum of %s"
+msgstr "Minimum von "
 
 msgid "Minimum password length"
 msgstr "Minimale Passwortlänge"
@@ -47583,6 +47592,14 @@ msgstr "Bitte eine Zeit eingeben."
 
 msgid "Please enter a filename."
 msgstr "Bitte Dateinamen eingeben."
+
+#, fuzzy
+msgid "Please enter a name."
+msgstr "Bitte Dateinamen eingeben."
+
+#, fuzzy
+msgid "Please enter a required match."
+msgstr "Bitte geben Sie einen absoluten Pfad an."
 
 msgid "Please enter a time."
 msgstr "Bitte eine Zeit eingeben."
@@ -62685,6 +62702,10 @@ msgstr ""
 "werden. Die momentan verfügbaren Attribute sind:"
 
 #, fuzzy
+msgid "The first value must be greater than 0."
+msgstr "Der Timeout muss mindestens eine Sekunde betragen."
+
+#, fuzzy
 msgid "The first value must be lower than the second value."
 msgstr "Der Timeout muss mindestens eine Sekunde betragen."
 
@@ -64771,6 +64792,10 @@ msgstr "Der Eintrag, den Sie löschen möchten, existiert nicht."
 
 msgid "The schedule you are trying to edit does not exist."
 msgstr "Der Eintrag, den Sie bearbeiten möchten, existiert nicht."
+
+#, fuzzy
+msgid "The second value must be equal to or greater than the first value."
+msgstr "Der Timeout muss mindestens eine Sekunde betragen."
 
 msgid "The secret access key for your AWS account"
 msgstr "Der geheime Schlüssel für Ihr AWS-Konto"
@@ -70982,6 +71007,10 @@ msgstr "Zeitdauer für DNS-Auflösung"
 
 msgid "Time to send request"
 msgstr "Zeit für das Senden der Anfrage"
+
+#, fuzzy
+msgid "Time to wait before fetching version information"
+msgstr "Die Netzwerkkonfiguration inventarisieren"
 
 msgid ""
 "Time to wait for a command to finish before continuing with the next "
@@ -84977,6 +85006,10 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 
+#, python-format
+#~ msgid "Cannot render graph: host %s, service %s not found."
+#~ msgstr "Graph nicht darstellbar: Host %s, Service %s nicht gefunden."
+
 #~ msgid ""
 #~ "No triggering events selected. Please select at least one event to "
 #~ "trigger the notification."
@@ -86493,12 +86526,6 @@ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 
 #~ msgid "Critical of "
 #~ msgstr "Kritisch bei "
-
-#~ msgid "Maximum of "
-#~ msgstr "Maximum von "
-
-#~ msgid "Minimum of "
-#~ msgstr "Minimum von "
 
 #~ msgid "Warning of "
 #~ msgstr "Warnung bei "

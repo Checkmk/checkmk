@@ -10498,6 +10498,11 @@ msgid "By service group"
 msgstr "Pe grupe de servicii"
 
 msgid ""
+"By setting a higher value, you reduce the amount of requests sent toyour own "
+"instance as well as Gerrit's host infrastructure."
+msgstr ""
+
+msgid ""
 "By specifying a customer here, you configure on which sites this object will "
 "be available. In case you select global, it will be available on all your "
 "sites. Otherwise it will only be available to the sites assigned with the "
@@ -11484,10 +11489,6 @@ msgstr "Nu se poate citi fișierul \"%s\": %s."
 
 msgid "Cannot render dropdown: Missing required information"
 msgstr "Nu se poate reda lista derulantă: Lipsesc informațiile necesare"
-
-#, python-format
-msgid "Cannot render graph: host %s, service %s not found."
-msgstr "Nu se poate reda graficul: gazda %s, serviciul %s nu a fost găsit."
 
 #, python-format
 msgid ""
@@ -40199,6 +40200,10 @@ msgstr "Numărul maxim de întreruperi ale serviciului"
 msgid "Maximum number of threads"
 msgstr "Numărul maxim de fire"
 
+#, fuzzy, python-format
+msgid "Maximum of %s"
+msgstr "Maximum de "
+
 msgid "Maximum parallel connections"
 msgstr "Număr maxim de conexiuni paralele"
 
@@ -40975,6 +40980,10 @@ msgstr "Numărul minim de noduri de plan de control pregătite"
 
 msgid "Minimum number of ready worker nodes"
 msgstr "Numărul minim de noduri de lucru pregătite"
+
+#, fuzzy, python-format
+msgid "Minimum of %s"
+msgstr "Minimum de "
 
 msgid "Minimum password length"
 msgstr "Lungimea minimă a parolei"
@@ -49613,6 +49622,14 @@ msgstr "Vă rugăm să introduceți o oră."
 
 msgid "Please enter a filename."
 msgstr "Vă rugăm să introduceți un nume de fișier."
+
+#, fuzzy
+msgid "Please enter a name."
+msgstr "Vă rugăm să introduceți un nume de fișier."
+
+#, fuzzy
+msgid "Please enter a required match."
+msgstr "Vă rugăm să specificați un nume de cale absolută"
 
 msgid "Please enter a time."
 msgstr "Vă rugăm să introduceți o oră."
@@ -65219,6 +65236,10 @@ msgstr ""
 "Atributele disponibile în prezent sunt: Atributele:"
 
 #, fuzzy
+msgid "The first value must be greater than 0."
+msgstr "Clusterul trebuie să aibă cel puțin un nod"
+
+#, fuzzy
 msgid "The first value must be lower than the second value."
 msgstr "Clusterul trebuie să aibă cel puțin un nod"
 
@@ -67260,6 +67281,10 @@ msgstr "Programul pe care încercați să îl ștergeți nu există."
 
 msgid "The schedule you are trying to edit does not exist."
 msgstr "Programul pe care încercați să îl editați nu există."
+
+#, fuzzy
+msgid "The second value must be equal to or greater than the first value."
+msgstr "Clusterul trebuie să aibă cel puțin un nod"
 
 msgid "The secret access key for your AWS account"
 msgstr "Cheia secretă de acces pentru contul AWS"
@@ -73519,6 +73544,10 @@ msgstr "Timp pentru rezolvarea DNS"
 
 msgid "Time to send request"
 msgstr "Timpul de trimitere a cererii"
+
+#, fuzzy
+msgid "Time to wait before fetching version information"
+msgstr "Inventarierea informațiilor de configurare a rețelei"
 
 msgid ""
 "Time to wait for a command to finish before continuing with the next "
@@ -88257,6 +88286,10 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
 
+#, python-format
+#~ msgid "Cannot render graph: host %s, service %s not found."
+#~ msgstr "Nu se poate reda graficul: gazda %s, serviciul %s nu a fost găsit."
+
 #, fuzzy, python-format
 #~ msgid "%s other service"
 #~ msgid_plural "%s other services"
@@ -89600,12 +89633,6 @@ msgstr "Utilizați SSL pentru conexiune."
 
 #~ msgid "Critical of "
 #~ msgstr "Critic pentru "
-
-#~ msgid "Maximum of "
-#~ msgstr "Maximum de "
-
-#~ msgid "Minimum of "
-#~ msgstr "Minimum de "
 
 #~ msgid "Warning of "
 #~ msgstr "Avertisment de "

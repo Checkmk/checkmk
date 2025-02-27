@@ -10479,6 +10479,11 @@ msgid "By service group"
 msgstr "Per dienstengroep"
 
 msgid ""
+"By setting a higher value, you reduce the amount of requests sent toyour own "
+"instance as well as Gerrit's host infrastructure."
+msgstr ""
+
+msgid ""
 "By specifying a customer here, you configure on which sites this object will "
 "be available. In case you select global, it will be available on all your "
 "sites. Otherwise it will only be available to the sites assigned with the "
@@ -11458,10 +11463,6 @@ msgstr "Kan bestand \"%s\" niet lezen: %s"
 #, fuzzy
 msgid "Cannot render dropdown: Missing required information"
 msgstr "Ontbrekende vereiste contextinformatie"
-
-#, python-format
-msgid "Cannot render graph: host %s, service %s not found."
-msgstr "Kan grafiek niet weergeven: host %s, service %s niet gevonden."
 
 #, python-format
 msgid ""
@@ -40150,6 +40151,10 @@ msgstr "Maximum aantal dienstonderbrekingen"
 msgid "Maximum number of threads"
 msgstr "Maximaal aantal threads"
 
+#, fuzzy, python-format
+msgid "Maximum of %s"
+msgstr "Maximum"
+
 msgid "Maximum parallel connections"
 msgstr "Maximaal aantal parallelle verbindingen"
 
@@ -40925,6 +40930,10 @@ msgstr "Minimumaantal gereedstaande besturingsknooppunten"
 
 msgid "Minimum number of ready worker nodes"
 msgstr "Minimum aantal gereed werkend knooppunten"
+
+#, fuzzy, python-format
+msgid "Minimum of %s"
+msgstr "Minimum"
 
 msgid "Minimum password length"
 msgstr "Minimale lengte wachtwoord"
@@ -49551,6 +49560,14 @@ msgstr "Geef een tijd op."
 
 msgid "Please enter a filename."
 msgstr "Voer een bestandsnaam in."
+
+#, fuzzy
+msgid "Please enter a name."
+msgstr "Voer een bestandsnaam in."
+
+#, fuzzy
+msgid "Please enter a required match."
+msgstr "Geef een absolute padnaam op"
 
 msgid "Please enter a time."
 msgstr "Geef een tijd op."
@@ -65060,6 +65077,10 @@ msgstr ""
 "gemapt worden. De momenteel beschikbare attributen zijn:"
 
 #, fuzzy
+msgid "The first value must be greater than 0."
+msgstr "Het cluster moet ten minste één knooppunt hebben"
+
+#, fuzzy
 msgid "The first value must be lower than the second value."
 msgstr "Het cluster moet ten minste één knooppunt hebben"
 
@@ -67083,6 +67104,10 @@ msgstr "Het schema dat u probeert te verwijderen bestaat niet."
 
 msgid "The schedule you are trying to edit does not exist."
 msgstr "De agenda die u probeert te bewerken bestaat niet."
+
+#, fuzzy
+msgid "The second value must be equal to or greater than the first value."
+msgstr "Het cluster moet ten minste één knooppunt hebben"
 
 msgid "The secret access key for your AWS account"
 msgstr "De geheime toegangssleutel voor uw AWS account"
@@ -73278,6 +73303,10 @@ msgstr "Hostnamen om op te lossen"
 
 msgid "Time to send request"
 msgstr "Tijd om verzoek te verzenden"
+
+#, fuzzy
+msgid "Time to wait before fetching version information"
+msgstr "Inventariseer netwerk configuratie informatie"
 
 msgid ""
 "Time to wait for a command to finish before continuing with the next "
@@ -88067,6 +88096,10 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
 
+#, python-format
+#~ msgid "Cannot render graph: host %s, service %s not found."
+#~ msgstr "Kan grafiek niet weergeven: host %s, service %s niet gevonden."
+
 #, fuzzy, python-format
 #~ msgid "%s other service"
 #~ msgid_plural "%s other services"
@@ -89377,14 +89410,6 @@ msgstr "Gebruik SSL voor de verbinding."
 #, fuzzy
 #~ msgid "Critical of "
 #~ msgstr "Kritisch als %s"
-
-#, fuzzy
-#~ msgid "Maximum of "
-#~ msgstr "Maximum"
-
-#, fuzzy
-#~ msgid "Minimum of "
-#~ msgstr "Minimum"
 
 #, fuzzy
 #~ msgid "Warning of "

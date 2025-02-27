@@ -18,6 +18,7 @@ import queue
 import time
 import traceback
 from collections.abc import Iterable, Iterator, Mapping, Sequence
+from pathlib import Path
 from typing import Any, assert_never, Self, TypedDict
 
 from livestatus import LocalConnection, SiteConfigurations, SiteId
@@ -59,6 +60,7 @@ class ACSingleResult:
     state: ACResultState
     text: str
     site_id: SiteId
+    path: Path | None = None
 
     @property
     def state_marked_text(self) -> str:

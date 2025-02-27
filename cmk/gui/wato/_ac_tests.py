@@ -1265,7 +1265,7 @@ class ACTestDeprecatedV1CheckPlugins(ACTest):
             for plugin_filepath in plugin_files:
                 yield ACSingleResult(
                     state=ACResultState.CRIT,
-                    text=_("Check plug-in tries to use the removed API"),
+                    text=_("Check plug-in uses the deprecated API (v1)"),
                     site_id=site_id,
                     path=plugin_filepath,
                 )
@@ -1273,7 +1273,7 @@ class ACTestDeprecatedV1CheckPlugins(ACTest):
 
         yield ACSingleResult(
             state=ACResultState.OK,
-            text=_("No check plug-ins trying to use the removed API"),
+            text=_("No check plug-ins using the deprecated API (v1)"),
             site_id=site_id,
         )
 
@@ -1341,7 +1341,7 @@ class ACTestDeprecatedInventoryPlugins(ACTest):
             for plugin_filepath in local_inventory_dir.iterdir():
                 yield ACSingleResult(
                     state=ACResultState.CRIT,
-                    text=_("Ignored HW/SW Inventory plug-in found"),
+                    text=_("HW/SW Inventory plug-in uses the deprecated API"),
                     site_id=site_id,
                     path=plugin_filepath,
                 )
@@ -1349,7 +1349,7 @@ class ACTestDeprecatedInventoryPlugins(ACTest):
 
         yield ACSingleResult(
             state=ACResultState.OK,
-            text=_("No ignored HW/SW Inventory plug-ins found"),
+            text=_("No HW/SW Inventory plug-ins using the deprecated API"),
             site_id=site_id,
         )
 

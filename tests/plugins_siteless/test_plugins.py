@@ -71,7 +71,10 @@ def test_checks_executor(
 
     source_info = SourceInfo(HOSTNAME, None, "test_dump", FetcherType.PUSH_AGENT, SourceType.HOST)
     submitter = BasicSubmitter(HOSTNAME)
-    config_cache = config.access_globally_cached_config_cache()
+    config_cache = config.ConfigCache().initialize()
+    # make sure logwatch doesn't crash
+    config._globally_cache_config_cache(config_cache)
+
     discovered_services = discover_services(
         HOSTNAME, agent_data_filename, config_cache, agent_based_plugins, source_info
     )
@@ -92,7 +95,7 @@ def test_checks_executor(
         assert check_plugins
 
         LOGGER.debug("check_plugins found: %s\n\n", list(check_plugins))
-        _ = execute_checkmk_checks(
+        r = execute_checkmk_checks(
             hostname=HOSTNAME,
             fetched=[(source_info, get_raw_data(DUMPS_DIR / agent_data_filename))],
             parser=parser(config_cache.parser_factory()),

@@ -14,7 +14,7 @@ import sys
 import time
 import traceback
 from collections.abc import Callable, Iterable, Mapping
-from typing import Any, cast
+from typing import Any, cast, Literal
 from urllib.parse import quote, urlencode
 
 import livestatus
@@ -544,6 +544,8 @@ def event_match_rule(
             event_match_checktype,
             event_match_timeperiod,
             event_match_servicelevel,
+            event_match_hostlabels,
+            event_match_servicelabels,
         ],
         rule,
         context,
@@ -1006,6 +1008,50 @@ def event_match_servicelevel(
 
         if sl < from_sl or sl > to_sl:
             return "The service level %d is not between %d and %d." % (sl, from_sl, to_sl)
+    return None
+
+
+def event_match_hostlabels(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
+) -> str | None:
+    if "match_hostlabels" in rule:
+        return _event_handle_labels(rule, context, "host")
+
+    return None
+
+
+def event_match_servicelabels(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
+) -> str | None:
+    if "match_servicelabels" in rule:
+        return _event_handle_labels(rule, context, "service")
+
+    return None
+
+
+def _event_handle_labels(
+    rule: EventRule, context: EventContext, what: Literal["host", "service"]
+) -> str | None:
+    labels: dict[str, Any] = {}
+    context_str = "%sLABEL" % what.upper()
+    labels = {
+        variable.replace("%s_" % context_str, ""): value
+        for variable, value in context.items()
+        if variable.startswith(context_str)
+    }
+
+    key: Literal["match_servicelabels", "match_hostlabels"] = (
+        "match_servicelabels" if what == "service" else "match_hostlabels"
+    )
+    if not set(labels.items()).issuperset(set(rule[key].items())):
+        return f"The {what} labels {rule[key]} did not match {labels}"
+
     return None
 
 

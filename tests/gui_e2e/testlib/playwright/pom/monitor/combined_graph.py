@@ -37,9 +37,9 @@ class CombinedGraphsServiceSearch(CmkPage):
         )
 
     def graph(self, graph_title: str) -> Locator:
-        return self._graph_with_timeranges_container(graph_title).locator(
-            "div[class='graph'] >> canvas"
-        )
+        container = self._graph_with_timeranges_container(graph_title)
+        expect(container).to_be_attached()
+        return container.locator("div[class='graph'] >> canvas")
 
     def timerange_graph(self, graph_title: str, timerange_name: str) -> Locator:
         return self._graph_with_timeranges_container(graph_title).locator(
@@ -51,7 +51,10 @@ class CombinedGraphsServiceSearch(CmkPage):
         return self.main_area.locator("div[class*='brokengraph']")
 
     def check_graph_with_timeranges(self, graph_title: str) -> None:
-        expect(self.graph(graph_title)).to_be_visible()
+        graph = self.graph(graph_title)
+        expect(graph).to_be_attached()
+        graph.scroll_into_view_if_needed()
+        expect(graph).to_be_visible()
         timeranges_list = [
             "The last 4 hours",
             "The last 25 hours",
@@ -60,4 +63,7 @@ class CombinedGraphsServiceSearch(CmkPage):
             "The last 400 days",
         ]
         for timerange in timeranges_list:
-            expect(self.timerange_graph(graph_title, timerange)).to_be_visible()
+            timerange_graph = self.timerange_graph(graph_title, timerange)
+            expect(timerange_graph).to_be_attached()
+            timerange_graph.scroll_into_view_if_needed()
+            expect(timerange_graph).to_be_visible()

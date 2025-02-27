@@ -36,7 +36,6 @@ RUN zypper ref -s \
     gcc-c++ \
     gd-devel \
     glib2-devel \
-    glibc-devel-static \
     groff \
     gtk-doc \
     intltool \

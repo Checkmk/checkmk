@@ -491,16 +491,19 @@ class FilterSidebar(LocatorHelper):
 
     def apply_service_filter(self, service_filter: str) -> None:
         self.select_service_field.click()
+        logger.info("Set service name=%s", service_filter)
         self.search_text_field.fill(service_filter)
         self.dropdown_option(service_filter, exact=True).click()
 
     def apply_host_filter(self, host_filter: str) -> None:
         self.select_host_field.click()
+        logger.info("Set host name=%s", host_filter)
         self.search_text_field.fill(host_filter)
         # TODO: remove 'nth(0)' after fixing CMK-19975
         self.dropdown_option(host_filter, exact=True).nth(0).click()
 
     def apply_filters(self, expected_locator: Locator) -> None:
+        logger.info("Apply filters")
         self.apply_filters_button.click()
         self.page.wait_for_load_state("load")
         expect(expected_locator).to_be_visible()

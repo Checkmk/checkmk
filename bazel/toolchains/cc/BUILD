@@ -34,7 +34,10 @@ linux_gcc13_link_flags = [
 
 ci_link_flags = ["-B/opt/bin"]
 
-LINK_LIBS = ["-lm"]
+LINK_LIBS = [
+    "-lstdc++",
+    "-lm",
+]
 
 OPT_COMPILE_FLAGS = [
     "-g0",

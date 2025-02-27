@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from livestatus import LivestatusResponse
-
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 
 from cmk.gui.i18n import _
@@ -63,7 +61,7 @@ def get_failed_notification_count() -> int:
     return number_of_failed_notifications(after=acknowledged_time())
 
 
-def get_total_sent_notifications(from_timestamp: int) -> LivestatusResponse:
+def get_total_sent_notifications(from_timestamp: int) -> int:
     query = (
         "GET log\n"
         "Stats: class = 3\n"
@@ -73,8 +71,13 @@ def get_total_sent_notifications(from_timestamp: int) -> LivestatusResponse:
         "Filter: log_command_name != check-mk-notify\n"
     )
     try:
-        return live().query(query)
+        send_per_site_list = live().query(query)
     except MKTimeout:
         raise
     except Exception as exc:
         raise MKGeneralException(_("The query returned no data.")) from exc
+
+    if not send_per_site_list:
+        return 0
+
+    return sum(sum(site) for site in send_per_site_list)

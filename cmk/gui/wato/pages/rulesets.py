@@ -156,6 +156,9 @@ from cmk.rulesets.v1.form_specs import FormSpec
 from ._match_conditions import HostTagCondition
 from ._rule_conditions import DictHostTagCondition
 
+_DEPRECATION_WARNING = "<b>This feature will be deprecated in a future version of Checkmk.</b>"
+_DEPRECATION_PLANNED = ["agent_config:agent_paths", "agent_config:agent_user"]
+
 tracer = trace.get_tracer()
 
 
@@ -186,7 +189,10 @@ def _group_rulesets(
 
         for group_name, group_rulesets in sorted(sub_groups.items(), key=lambda x: x[0]):
             sub_group_list.append(
-                (group_name, sorted(group_rulesets, key=lambda x: str(x.title())))
+                (
+                    group_name,
+                    sorted(group_rulesets, key=lambda x: str(x.title())),
+                )
             )
 
         grouped.append((main_group_name, sub_group_list))
@@ -1126,6 +1132,9 @@ class ModeEditRuleset(WatoMode):
             self._name
         )
 
+        if self._rulespec.name in _DEPRECATION_PLANNED:
+            forms.warning_message(_DEPRECATION_WARNING)
+
         html.help(ruleset.help())
         self._explain_match_type(ruleset.match_type())
         self._rule_listing(ruleset)
@@ -2043,7 +2052,10 @@ class ABCEditRuleMode(WatoMode):
             return folder_preserving_link(var_list)
 
         return folder_preserving_link(
-            [("mode", self._back_mode), ("host", request.get_ascii_input_mandatory("host", ""))]
+            [
+                ("mode", self._back_mode),
+                ("host", request.get_ascii_input_mandatory("host", "")),
+            ]
         )
 
     def action(self) -> ActionResult:
@@ -2193,7 +2205,14 @@ class ABCEditRuleMode(WatoMode):
         call_hooks("rmk_ruleset_banner", self._ruleset.name)
 
         help_text = self._ruleset.help()
-        if help_text:
+
+        if self._rulespec.name in _DEPRECATION_PLANNED:
+            forms.warning_message(
+                _DEPRECATION_WARNING + "<br>" + str(help_text)
+                if help_text
+                else _DEPRECATION_WARNING
+            )
+        elif help_text:
             html.div(help_text, class_="info")
 
         with html.form_context("rule_editor", method="POST"):
@@ -2667,8 +2686,7 @@ class VSExplicitConditions(Transform):
         return DictHostTagCondition(
             title=_("Host tags"),
             help_txt=_(
-                "Rule only applies to hosts that meet all of the host tag "
-                "conditions listed here",
+                "Rule only applies to hosts that meet all of the host tag conditions listed here",
             ),
         )
 

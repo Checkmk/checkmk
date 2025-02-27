@@ -95,7 +95,7 @@ def test_checks_executor(
         assert check_plugins
 
         LOGGER.debug("check_plugins found: %s\n\n", list(check_plugins))
-        r = execute_checkmk_checks(
+        _ = execute_checkmk_checks(
             hostname=HOSTNAME,
             fetched=[(source_info, get_raw_data(DUMPS_DIR / agent_data_filename))],
             parser=parser(config_cache.parser_factory()),

@@ -23,7 +23,6 @@ def _dns_requests_form() -> Dictionary:
     return Dictionary(
         elements={
             "pending_dns_levels": DictElement[SimpleLevelsConfigModel[int]](
-                required=True,
                 parameter_form=SimpleLevels(
                     title=Title("Thresholds on pending DNS requests"),
                     level_direction=LevelDirection.UPPER,
@@ -33,7 +32,6 @@ def _dns_requests_form() -> Dictionary:
                 ),
             ),
             "outstanding_dns_levels": DictElement[SimpleLevelsConfigModel[int]](
-                required=True,
                 parameter_form=SimpleLevels(
                     title=Title("Thresholds on outstanding DNS requests"),
                     level_direction=LevelDirection.UPPER,

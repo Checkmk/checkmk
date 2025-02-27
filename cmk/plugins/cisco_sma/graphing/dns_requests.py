@@ -4,18 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.graphing.v1 import metrics, Title
-from cmk.plugins.collection.graphing.standalone import UNIT_COUNTER
+
+UNIT_COUNT = metrics.Unit(metrics.DecimalNotation(""))
 
 metric_outstanding_dns_requests = metrics.Metric(
     name="outstanding_dns_requests",
     title=Title("Outstanding DNS requests"),
-    unit=UNIT_COUNTER,
+    unit=UNIT_COUNT,
     color=metrics.Color.BLUE,
 )
 
 metric_pending_dns_requests = metrics.Metric(
     name="pending_dns_requests",
     title=Title("Pending DNS requests"),
-    unit=UNIT_COUNTER,
+    unit=UNIT_COUNT,
     color=metrics.Color.ORANGE,
 )

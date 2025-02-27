@@ -2101,7 +2101,7 @@ class ConfigVariableTrustedCertificateAuthorities(ConfigVariable):
                 (
                     "trusted_cas",
                     ListOfCAs(
-                        title=_("Checkmk specific"),
+                        title=_("Manually added"),
                         allow_empty=True,
                     ),
                 ),

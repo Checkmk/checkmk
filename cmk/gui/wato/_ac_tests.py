@@ -1172,11 +1172,12 @@ class ACTestBrokenGUIExtension(ACTest):
                 site_id=site_id,
             )
 
-        for _path, gui_part, plugin_file, error in errors:
+        for plugin_filepath, gui_part, plugin_file, error in errors:
             yield ACSingleResult(
                 state=ACResultState.CRIT,
                 text=_('Loading "%s/%s" failed: %s') % (gui_part, plugin_file, error),
                 site_id=site_id,
+                path=plugin_filepath,
             )
 
 
@@ -1261,12 +1262,13 @@ class ACTestDeprecatedV1CheckPlugins(ACTest):
     def execute(self) -> Iterator[ACSingleResult]:
         site_id = omd_site()
         if plugin_files := self._get_files():
-            yield ACSingleResult(
-                state=ACResultState.CRIT,
-                text=_("%d check plug-ins trying to use the removed API: %s")
-                % (len(plugin_files), ", ".join(f.name for f in plugin_files)),
-                site_id=site_id,
-            )
+            for plugin_filepath in plugin_files:
+                yield ACSingleResult(
+                    state=ACResultState.CRIT,
+                    text=_("Check plug-in tries to use the removed API"),
+                    site_id=site_id,
+                    path=plugin_filepath,
+                )
             return
 
         yield ACSingleResult(
@@ -1300,14 +1302,14 @@ class ACTestDeprecatedCheckPlugins(ACTest):
     def execute(self) -> Iterator[ACSingleResult]:
         site_id = omd_site()
         with suppress(FileNotFoundError):
-            if plugin_files := list(local_checks_dir.iterdir()):
+            for plugin_filepath in local_checks_dir.iterdir():
                 yield ACSingleResult(
                     state=ACResultState.CRIT,
-                    text=_("%d check plug-ins using the deprecated API: %s")
-                    % (len(plugin_files), ", ".join(f.name for f in plugin_files)),
+                    text=_("Check plug-in uses the deprecated API"),
                     site_id=site_id,
+                    path=plugin_filepath,
                 )
-                return
+            return
 
         yield ACSingleResult(
             state=ACResultState.OK,
@@ -1336,14 +1338,14 @@ class ACTestDeprecatedInventoryPlugins(ACTest):
     def execute(self) -> Iterator[ACSingleResult]:
         site_id = omd_site()
         with suppress(FileNotFoundError):
-            if plugin_files := list(local_inventory_dir.iterdir()):
+            for plugin_filepath in local_inventory_dir.iterdir():
                 yield ACSingleResult(
                     state=ACResultState.CRIT,
-                    text=_("%d ignored HW/SW Inventory plug-ins found: %s")
-                    % (len(plugin_files), ", ".join(f.name for f in plugin_files)),
+                    text=_("Ignored HW/SW Inventory plug-in found"),
                     site_id=site_id,
+                    path=plugin_filepath,
                 )
-                return
+            return
 
         yield ACSingleResult(
             state=ACResultState.OK,

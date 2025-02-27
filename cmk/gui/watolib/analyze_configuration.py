@@ -11,13 +11,14 @@ from __future__ import annotations
 import ast
 import dataclasses
 import enum
+import json
 import logging
 import multiprocessing
 import queue
 import time
 import traceback
-from collections.abc import Iterable, Iterator, Mapping
-from typing import Any, assert_never, Self
+from collections.abc import Iterable, Iterator, Mapping, Sequence
+from typing import Any, assert_never, Self, TypedDict
 
 from livestatus import LocalConnection, SiteConfigurations, SiteId
 
@@ -29,7 +30,7 @@ from cmk.utils.statename import short_service_state_name
 import cmk.gui.sites
 from cmk.gui import log
 from cmk.gui.config import Config
-from cmk.gui.http import Request
+from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local
@@ -229,17 +230,28 @@ class ACTestRegistry(cmk.ccc.plugin_registry.Registry[type[ACTest]]):
 ac_test_registry = ACTestRegistry()
 
 
-class AutomationCheckAnalyzeConfig(AutomationCommand[None]):
+class _TCheckAnalyzeConfig(TypedDict):
+    categories: Sequence[str] | None
+
+
+class AutomationCheckAnalyzeConfig(AutomationCommand[_TCheckAnalyzeConfig]):
     def command_name(self) -> str:
         return "check-analyze-config"
 
-    def get_request(self) -> None:
-        return None
+    def get_request(self) -> _TCheckAnalyzeConfig:
+        raw_categories = request.get_request().get("categories")
+        return _TCheckAnalyzeConfig(
+            categories=json.loads(raw_categories) if raw_categories else None
+        )
 
-    def execute(self, _unused_request: None) -> list[ACTestResult]:
+    def execute(self, api_request: _TCheckAnalyzeConfig) -> list[ACTestResult]:
+        categories = api_request["categories"]
         results: list[ACTestResult] = []
         for test_cls in ac_test_registry.values():
             test = test_cls()
+
+            if categories and test.category() not in categories:
+                continue
 
             if not test.is_relevant():
                 continue
@@ -253,8 +265,9 @@ class AutomationCheckAnalyzeConfig(AutomationCommand[None]):
 def _perform_tests_for_site(
     logger: logging.Logger,
     active_config: Config,
-    request: Request,
+    request_: Request,
     site_id: SiteId,
+    categories: Sequence[str] | None,
     result_queue: multiprocessing.JoinableQueue[tuple[SiteId, str]],
 ) -> None:
     # Executes the tests on the site. This method is executed in a dedicated
@@ -279,15 +292,13 @@ def _perform_tests_for_site(
 
         if site_is_local(active_config, site_id):
             automation = AutomationCheckAnalyzeConfig()
-            # NOTE: The mypy people are too stubborn to fix this, see https://github.com/python/mypy/issues/6549
-            results_data = automation.execute(automation.get_request())  # type: ignore[func-returns-value]
-
+            results_data = automation.execute(_TCheckAnalyzeConfig(categories=categories))
         else:
             raw_results_data = do_remote_automation(
                 get_site_config(active_config, site_id),
                 "check-analyze-config",
-                [],
-                timeout=request.request_timeout - 10,
+                [("categories", json.dumps(categories))],
+                timeout=request_.request_timeout - 10,
             )
             assert isinstance(raw_results_data, list)
             results_data = raw_results_data
@@ -327,8 +338,9 @@ def _connectivity_result(*, state: ACResultState, text: str, site_id: SiteId) ->
 def perform_tests(
     logger: logging.Logger,
     active_config: Config,
-    request: Request,
+    request_: Request,
     test_sites: SiteConfigurations,
+    categories: Sequence[str] | None = None,  # 'None' means 'No filtering'
 ) -> dict[SiteId, list[ACTestResult]]:
     logger.debug("Executing tests for %d sites" % len(test_sites))
     results_by_site: dict[SiteId, list[ACTestResult]] = {}
@@ -343,7 +355,7 @@ def perform_tests(
     for site_id in test_sites:
         process = multiprocessing.Process(
             target=_perform_tests_for_site,
-            args=(logger, active_config, request, site_id, result_queue),
+            args=(logger, active_config, request_, site_id, categories, result_queue),
         )
         process.start()
         processes.append((site_id, process))
@@ -364,14 +376,15 @@ def perform_tests(
                     result = ACTestResult.from_repr(result_data)
                     test_results.append(result)
 
-                # Add general connectivity result
-                test_results.append(
-                    _connectivity_result(
-                        state=ACResultState.OK,
-                        text=_("No connectivity problems"),
-                        site_id=site_id,
+                if categories and "connectivity" in categories:
+                    # Add general connectivity result
+                    test_results.append(
+                        _connectivity_result(
+                            state=ACResultState.OK,
+                            text=_("No connectivity problems"),
+                            site_id=site_id,
+                        )
                     )
-                )
 
                 results_by_site[site_id] = test_results
 
@@ -382,13 +395,14 @@ def perform_tests(
             time.sleep(0.5)  # wait some time to prevent CPU hogs
 
         except Exception as e:
-            results_by_site[site_id] = [
-                _connectivity_result(
-                    state=ACResultState.CRIT,
-                    text=str(e),
-                    site_id=site_id,
-                )
-            ]
+            if categories and "connectivity" in categories:
+                results_by_site[site_id] = [
+                    _connectivity_result(
+                        state=ACResultState.CRIT,
+                        text=str(e),
+                        site_id=site_id,
+                    )
+                ]
 
             logger.exception("error analyzing configuration for site %s", site_id)
 

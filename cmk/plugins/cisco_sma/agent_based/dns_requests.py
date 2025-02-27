@@ -15,8 +15,9 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.cisco_sma.agent_based.detect import DETECT_CISCO_SMA_SNMP
 from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
+
+from .detect import DETECT_CISCO_SMA
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -82,7 +83,7 @@ def _parse_dns_requests(string_table: StringTable) -> DNSRequests | None:
 snmp_section_dns_requests = SimpleSNMPSection(
     parsed_section_name="cisco_sma_dns_requests",
     name="cisco_sma_dns_requests",
-    detect=DETECT_CISCO_SMA_SNMP,
+    detect=DETECT_CISCO_SMA,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.15497.1.1.1",
         oids=["15.0", "16.0"],

@@ -8,7 +8,8 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.cisco_sma.agent_based.detect import DETECT_CISCO_SMA_SNMP
+
+from .detect import DETECT_CISCO_SMA
 
 
 def _parse_memory_percentage_used(string_table: StringTable) -> float | None:
@@ -21,7 +22,7 @@ def _parse_memory_percentage_used(string_table: StringTable) -> float | None:
 snmp_section_memory_utilization = SimpleSNMPSection(
     parsed_section_name="memory_utilization",
     name="cisco_sma_memory_utilization",
-    detect=DETECT_CISCO_SMA_SNMP,
+    detect=DETECT_CISCO_SMA,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.15497.1.1.1",
         oids=["1.0"],

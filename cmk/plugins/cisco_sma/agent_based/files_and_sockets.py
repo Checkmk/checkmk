@@ -16,8 +16,9 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.cisco_sma.agent_based.detect import DETECT_CISCO_SMA_SNMP
 from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
+
+from .detect import DETECT_CISCO_SMA
 
 
 class Params(TypedDict):
@@ -63,7 +64,7 @@ def _parse_files_and_sockets(string_table: StringTable) -> int | None:
 snmp_section_files_and_sockets = SimpleSNMPSection(
     parsed_section_name="cisco_sma_files_and_sockets",
     name="cisco_sma_files_and_sockets",
-    detect=DETECT_CISCO_SMA_SNMP,
+    detect=DETECT_CISCO_SMA,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.15497.1.1.1",
         oids=["19"],

@@ -17,7 +17,8 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.cisco_sma.agent_based.detect import DETECT_CISCO_SMA_SNMP
+
+from .detect import DETECT_CISCO_SMA
 
 
 class MailTransferMemoryStatus(Enum):
@@ -79,7 +80,7 @@ def _parse_mail_transfer_memory(string_table: StringTable) -> MailTransferMemory
 snmp_section_mail_transfer_memory = SimpleSNMPSection(
     parsed_section_name="cisco_sma_mail_transfer_memory",
     name="cisco_sma_mail_transfer_memory",
-    detect=DETECT_CISCO_SMA_SNMP,
+    detect=DETECT_CISCO_SMA,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.15497.1.1.1",
         oids=["7"],

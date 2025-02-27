@@ -8,7 +8,8 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.cisco_sma.agent_based.detect import DETECT_CISCO_SMA_SNMP
+
+from .detect import DETECT_CISCO_SMA
 
 
 def parse(string_table: StringTable) -> float | None:
@@ -18,7 +19,7 @@ def parse(string_table: StringTable) -> float | None:
 snmp_section_disk_io_utilization = SimpleSNMPSection(
     parsed_section_name="disk_io_utilization",
     name="cisco_sma_disk_io_utilization",
-    detect=DETECT_CISCO_SMA_SNMP,
+    detect=DETECT_CISCO_SMA,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.15497.1.1.1",
         oids=["3.0"],

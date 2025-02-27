@@ -23,8 +23,9 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.cisco_sma.agent_based.detect import DETECT_CISCO_SMA_SNMP
 from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
+
+from .detect import DETECT_CISCO_SMA
 
 
 class QueueAvailabilityStatus(Enum):
@@ -58,7 +59,7 @@ def _parse_message_queue(string_table: StringTable) -> Queue | None:
 snmp_section_message_queue = SimpleSNMPSection(
     parsed_section_name="cisco_sma_message_queue",
     name="cisco_sma_message_queue",
-    detect=DETECT_CISCO_SMA_SNMP,
+    detect=DETECT_CISCO_SMA,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.15497.1.1.1",
         oids=["4", "5", "11", "14"],

@@ -6,7 +6,7 @@
 
 import math
 import time
-from collections.abc import Callable, Generator, Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
@@ -415,7 +415,7 @@ _TCurveType = TypeVar("_TCurveType", Curve, LayoutedCurve)
 
 def order_graph_curves_for_legend_and_mouse_hover(
     curves: Sequence[_TCurveType],
-) -> Generator[_TCurveType]:
+) -> list[_TCurveType]:
     """
     Positive stack curves are rendered st. the first metric is at the bottom and the last one at the
     top. Therefore, we want to reverse the order of metrics rendered as a positive stack in the
@@ -427,17 +427,16 @@ def order_graph_curves_for_legend_and_mouse_hover(
     def is_positive_stack_curve(curve: _TCurveType) -> bool:
         return curve.get("line_type", curve.get("type")) == "stack"
 
-    positive_stack_curves_in_reverse_order = [
-        curve for curve in curves if is_positive_stack_curve(curve)
-    ][::-1]
-    positive_stack_counter = 0
+    positive_stack_curves_in_reverse_order = reversed(
+        [curve for curve in curves if is_positive_stack_curve(curve)]
+    )
 
-    for curve in curves:
-        if is_positive_stack_curve(curve):
-            yield positive_stack_curves_in_reverse_order[positive_stack_counter]
-            positive_stack_counter += 1
-        else:
-            yield curve
+    return [
+        next(positive_stack_curves_in_reverse_order, curve)
+        if is_positive_stack_curve(curve)
+        else curve
+        for curve in curves
+    ]
 
 
 # .

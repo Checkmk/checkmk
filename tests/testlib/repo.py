@@ -12,7 +12,7 @@ import sys
 from contextlib import suppress
 from functools import cache
 from pathlib import Path
-from typing import Callable, Iterator
+from typing import Callable
 
 logger = logging.getLogger(__name__)
 
@@ -145,10 +145,11 @@ def git_commit_id(path: Path | str) -> str:
 
 
 @cache
-def git_essential_directories(checkout_dir: Path) -> Iterator[str]:
-    """Yields paths to all directories needed to be accessible in order to run git operations
+def git_essential_directories(checkout_dir: Path) -> list[str]:
+    """Returns paths to all directories needed to be accessible in order to run git operations
     Note that if a directory is a subdirectory of checkout_dir it will be skipped"""
 
+    essential_dirs = []
     # path to the 'real git repository directory', i.e. the common dir when dealing with work trees
     common_dir = (
         (
@@ -162,7 +163,7 @@ def git_essential_directories(checkout_dir: Path) -> Iterator[str]:
     )
 
     if not common_dir.is_relative_to(checkout_dir):
-        yield common_dir.as_posix()
+        essential_dirs.append(common_dir.as_posix())
 
     # In case of reference clones we also need to access them.
     # Not sure if 'objects/info/alternates' can contain more than one line and if we really need
@@ -171,7 +172,9 @@ def git_essential_directories(checkout_dir: Path) -> Iterator[str]:
         with (common_dir / "objects/info/alternates").open() as alternates:
             for alternate in (Path(line).parent for line in alternates):
                 if not alternate.is_relative_to(checkout_dir):
-                    yield alternate.as_posix()
+                    essential_dirs.append(alternate.as_posix())
+
+    return essential_dirs
 
 
 @cache

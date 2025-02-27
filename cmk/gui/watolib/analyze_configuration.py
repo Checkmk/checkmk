@@ -5,24 +5,37 @@
 """Provides the user with hints about his setup. Performs different
 checks and tells the user what could be improved."""
 
+# See https://github.com/pylint-dev/pylint/issues/3488
+from __future__ import annotations
+
+import ast
 import dataclasses
 import enum
+import logging
+import multiprocessing
+import queue
+import time
 import traceback
 from collections.abc import Iterable, Iterator, Mapping
 from typing import Any, assert_never, Self
 
-from livestatus import LocalConnection, SiteId
+from livestatus import LocalConnection, SiteConfigurations, SiteId
 
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
 
 from cmk.utils.statename import short_service_state_name
 
 import cmk.gui.sites
+from cmk.gui import log
+from cmk.gui.config import Config
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
-from cmk.gui.log import logger
-from cmk.gui.site_config import is_wato_slave_site
+from cmk.gui.log import logger as gui_logger
+from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local
 from cmk.gui.utils import escaping
 from cmk.gui.watolib.automation_commands import AutomationCommand
+from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.sites import get_effective_global_setting
 
 
@@ -182,7 +195,7 @@ class ACTest:
                 help=self.help(),
             )
         except Exception:
-            logger.exception("error executing configuration test %s", self.__class__.__name__)
+            gui_logger.exception("error executing configuration test %s", self.__class__.__name__)
             yield ACTestResult(
                 state=ACResultState.CRIT,
                 text="<pre>%s</pre>"
@@ -235,3 +248,149 @@ class AutomationCheckAnalyzeConfig(AutomationCommand[None]):
                 results.append(result)
 
         return results
+
+
+def _perform_tests_for_site(
+    logger: logging.Logger,
+    active_config: Config,
+    request: Request,
+    site_id: SiteId,
+    result_queue: multiprocessing.JoinableQueue[tuple[SiteId, str]],
+) -> None:
+    # Executes the tests on the site. This method is executed in a dedicated
+    # subprocess (One per site)
+    logger.debug("[%s] Starting" % site_id)
+    result = None
+    try:
+        # Would be better to clean all open fds that are not needed, but we don't
+        # know the FDs of the result_queue pipe. Can we find it out somehow?
+        # Cleanup resources of the apache
+        # for x in range(3, 256):
+        #    try:
+        #        os.close(x)
+        #    except OSError, e:
+        #        if e.errno == errno.EBADF:
+        #            pass
+        #        else:
+        #            raise
+
+        # Reinitialize logging targets
+        log.init_logging()  # NOTE: We run in a subprocess!
+
+        if site_is_local(active_config, site_id):
+            automation = AutomationCheckAnalyzeConfig()
+            # NOTE: The mypy people are too stubborn to fix this, see https://github.com/python/mypy/issues/6549
+            results_data = automation.execute(automation.get_request())  # type: ignore[func-returns-value]
+
+        else:
+            raw_results_data = do_remote_automation(
+                get_site_config(active_config, site_id),
+                "check-analyze-config",
+                [],
+                timeout=request.request_timeout - 10,
+            )
+            assert isinstance(raw_results_data, list)
+            results_data = raw_results_data
+
+        logger.debug("[%s] Finished" % site_id)
+
+        result = {
+            "state": 0,
+            "response": results_data,
+        }
+
+    except Exception:
+        logger.exception("[%s] Failed" % site_id)
+        result = {
+            "state": 1,
+            "response": "Traceback:<br>%s" % (traceback.format_exc().replace("\n", "<br>\n")),
+        }
+    finally:
+        result_queue.put((site_id, repr(result)))
+        result_queue.close()
+        result_queue.join_thread()
+        result_queue.join()
+
+
+def _connectivity_result(*, state: ACResultState, text: str, site_id: SiteId) -> ACTestResult:
+    return ACTestResult(
+        state=state,
+        text=text,
+        site_id=site_id,
+        test_id="ACTestConnectivity",
+        category=ACTestCategories.connectivity,
+        title=_("Site connectivity"),
+        help=_("This check returns CRIT if the connection to the remote site failed."),
+    )
+
+
+def perform_tests(
+    logger: logging.Logger,
+    active_config: Config,
+    request: Request,
+    test_sites: SiteConfigurations,
+) -> dict[SiteId, list[ACTestResult]]:
+    logger.debug("Executing tests for %d sites" % len(test_sites))
+    results_by_site: dict[SiteId, list[ACTestResult]] = {}
+
+    # Results are fetched simultaneously from the remote sites
+    result_queue: multiprocessing.JoinableQueue[tuple[SiteId, str]] = (
+        multiprocessing.JoinableQueue()
+    )
+
+    processes = []
+    site_id = SiteId("unknown_site")
+    for site_id in test_sites:
+        process = multiprocessing.Process(
+            target=_perform_tests_for_site,
+            args=(logger, active_config, request, site_id, result_queue),
+        )
+        process.start()
+        processes.append((site_id, process))
+
+    # Now collect the results from the queue until all processes are finished
+    while any(p.is_alive() for site_id, p in processes):
+        try:
+            site_id, results_data = result_queue.get_nowait()
+            result_queue.task_done()
+            result = ast.literal_eval(results_data)
+
+            if result["state"] == 1:
+                raise MKGeneralException(result["response"])
+
+            if result["state"] == 0:
+                test_results = []
+                for result_data in result["response"]:
+                    result = ACTestResult.from_repr(result_data)
+                    test_results.append(result)
+
+                # Add general connectivity result
+                test_results.append(
+                    _connectivity_result(
+                        state=ACResultState.OK,
+                        text=_("No connectivity problems"),
+                        site_id=site_id,
+                    )
+                )
+
+                results_by_site[site_id] = test_results
+
+            else:
+                raise NotImplementedError()
+
+        except queue.Empty:
+            time.sleep(0.5)  # wait some time to prevent CPU hogs
+
+        except Exception as e:
+            results_by_site[site_id] = [
+                _connectivity_result(
+                    state=ACResultState.CRIT,
+                    text=str(e),
+                    site_id=site_id,
+                )
+            ]
+
+            logger.exception("error analyzing configuration for site %s", site_id)
+
+    logger.debug("Got test results")
+    return results_by_site

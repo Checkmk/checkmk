@@ -8,7 +8,8 @@ Don't add new stuff here!
 """
 
 import logging
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from contextlib import contextmanager
 from itertools import groupby
 from pathlib import Path
 from stat import filemode
@@ -42,6 +43,14 @@ def format_file_name(package_id: PackageID) -> str:
     return f"{package_id.name}-{package_id.version}.mkp"
 
 
+@contextmanager
+def _log_exception(m: Manifest, name: str) -> Iterator[None]:
+    try:
+        yield
+    except Exception as e:
+        _logger.error("[%s %s]: Error in post %s hook: %s", m.name, m.version, name, e)
+
+
 def release(
     installer: Installer,
     pacname: PackageName,
@@ -57,7 +66,8 @@ def release(
             _logger.info("    %s", f)
 
     for part in set(manifest.files) & set(callbacks):
-        callbacks[part].release(manifest.files[part])
+        with _log_exception(manifest, "release"):
+            callbacks[part].release(manifest.files[part])
 
     installer.remove_installed_manifest(pacname)
 
@@ -72,7 +82,8 @@ def _uninstall(
         raise PackageError(", ".join(err))
 
     for part in set(manifest.files) & set(callbacks):
-        callbacks[part].uninstall(manifest.files[part])
+        with _log_exception(manifest, "uninstall"):
+            callbacks[part].uninstall(manifest.files[part])
 
     installer.remove_installed_manifest(manifest.name)
 
@@ -346,7 +357,8 @@ def _install(
     _fix_files_permissions(manifest, path_config)
 
     for part in set(manifest.files) & set(callbacks):
-        callbacks[part].install(manifest.files[part])
+        with _log_exception(manifest, "install"):
+            callbacks[part].install(manifest.files[part])
 
     # In case of an update remove files from old_package not present in new one
     if old_manifest is not None:
@@ -355,7 +367,10 @@ def _install(
 
         for part in set(old_manifest.files) & set(callbacks):
             new_files = set(manifest.files.get(part, []))
-            callbacks[part].uninstall([f for f in old_manifest.files[part] if f not in new_files])
+            with _log_exception(old_manifest, "uninstall"):
+                callbacks[part].uninstall(
+                    [f for f in old_manifest.files[part] if f not in new_files]
+                )
 
     # Last but not least install package file
     installer.add_installed_manifest(manifest)

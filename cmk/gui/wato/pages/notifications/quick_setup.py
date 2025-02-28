@@ -1478,14 +1478,14 @@ def validate_notification_count_values(values: tuple[object, ...]) -> None:
 
 def validate_throttling_values(values: tuple[object, ...]) -> None:
     match values:
-        case (int() as first_value, _) if first_value < 1:
-            raise ValidationError(
-                Message("The first value must be greater than 0."),
-            )
-        case (int() as first_value, int() as second_value) if second_value < first_value:
-            raise ValidationError(
-                Message("The second value must be equal to or greater than the first value.")
-            )
+        case (int(notification_number), _) if notification_number < 1:
+            raise ValidationError(Message("The notification number value must be greater than 0."))
+        case (_, int(every_n_notification)) if every_n_notification < 1:
+            raise ValidationError(Message("The send every value must be greater than 0."))
+        case (int(_), int(_)):
+            return
+        case _:
+            raise ValidationError(Message("Unexpected throttling values shape passed."))
 
 
 def sending_conditions() -> QuickSetupStage:

@@ -36,6 +36,7 @@ create_venv(
         "//omd/packages/Python:python_tar",
         "//omd/packages/heirloom-pkgtools",
         "//omd/packages/mod_wsgi",
+        "//omd/packages/mod_fcgid",
         "//omd/packages/net-snmp:net-snmp_tar",
         "//omd/packages/openssl:openssl_tar_" + edition,
         "//omd/packages/perl-modules",

@@ -54,3 +54,10 @@ genrule(
         cp -r --dereference $$(dirname $(execpath @omd_packages//omd/packages/stunnel/skel:skel_root)) $$(realpath $(RULEDIR))
     """,
 )
+
+filegroup(
+    name = "mod_fcgid.so",
+    srcs = [":mod_fcgid"],
+    output_group = "mod_fcgid.so",
+    visibility = ["//visibility:public"],
+)

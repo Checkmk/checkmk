@@ -33,7 +33,6 @@ PACKAGES := \
     msitools \
     apache-omd \
     xinetd \
-    mod_fcgid \
     check_mk \
     mk-livestatus \
     stunnel \

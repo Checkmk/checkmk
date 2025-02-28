@@ -139,6 +139,7 @@ class _FakeACTestMultiSite(ACTest):
                     category="category",
                     title="Fake AC test",
                     help="Help",
+                    path=None,
                 )
             ],
             id="single-site",
@@ -154,6 +155,7 @@ class _FakeACTestMultiSite(ACTest):
                     category="category",
                     title="Fake AC test",
                     help="Help",
+                    path=None,
                 ),
                 ACTestResult(
                     state=ACResultState.WARN,
@@ -163,6 +165,7 @@ class _FakeACTestMultiSite(ACTest):
                     category="category",
                     title="Fake AC test",
                     help="Help",
+                    path=None,
                 ),
                 ACTestResult(
                     state=ACResultState.OK,
@@ -172,6 +175,7 @@ class _FakeACTestMultiSite(ACTest):
                     category="category",
                     title="Fake AC test",
                     help="Help",
+                    path=None,
                 ),
                 ACTestResult(
                     state=ACResultState.CRIT,
@@ -181,6 +185,7 @@ class _FakeACTestMultiSite(ACTest):
                     category="category",
                     title="Fake AC test",
                     help="Help",
+                    path=None,
                 ),
             ],
             id="multi-sites",

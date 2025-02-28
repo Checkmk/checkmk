@@ -9,6 +9,17 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
+class BrokerStatus:
+    memory: int
+
+
+@dataclass(frozen=True)
+class Shovel:
+    name: str
+    state: str
+
+
+@dataclass(frozen=True)
 class Queue:
     vhost: str
     name: str
@@ -16,6 +27,8 @@ class Queue:
 
 
 SectionQueues = Mapping[str, Sequence[Queue]]
+SectionStatus = Mapping[str, BrokerStatus]
+SectionShovels = Mapping[str, Sequence[Shovel]]
 
 
 _NODE_NAME_PREFIX = "rabbit-"

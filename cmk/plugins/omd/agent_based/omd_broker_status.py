@@ -6,8 +6,7 @@
 
 import json
 from collections import Counter, defaultdict
-from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from collections.abc import Sequence
 
 from cmk.agent_based.v1 import Result, State
 from cmk.agent_based.v2 import (
@@ -21,22 +20,15 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-from .libbroker import node_to_site, Queue, SectionQueues
-
-
-@dataclass(frozen=True)
-class BrokerStatus:
-    memory: int
-
-
-@dataclass(frozen=True)
-class Shovel:
-    name: str
-    state: str
-
-
-SectionStatus = Mapping[str, BrokerStatus]
-SectionShovels = Mapping[str, Sequence[Shovel]]
+from .libbroker import (
+    BrokerStatus,
+    node_to_site,
+    Queue,
+    SectionQueues,
+    SectionShovels,
+    SectionStatus,
+    Shovel,
+)
 
 
 def parse_omd_broker_status(string_table: StringTable) -> SectionStatus:

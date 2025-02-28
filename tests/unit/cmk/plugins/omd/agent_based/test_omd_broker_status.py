@@ -14,16 +14,19 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.omd.agent_based.libbroker import Queue, SectionQueues
-from cmk.plugins.omd.agent_based.omd_broker_status import (
+from cmk.plugins.omd.agent_based.libbroker import (
     BrokerStatus,
+    Queue,
+    SectionQueues,
+    SectionShovels,
+    SectionStatus,
+    Shovel,
+)
+from cmk.plugins.omd.agent_based.omd_broker_status import (
     check_omd_broker_status,
     discover_omd_broker_status,
     parse_omd_broker_shovels,
     parse_omd_broker_status,
-    SectionShovels,
-    SectionStatus,
-    Shovel,
 )
 
 

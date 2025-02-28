@@ -775,26 +775,21 @@ class RRDCreator:
         self._rrd_helper_output_buffer = self._rrd_helper_output_buffer[written:]
 
     def _handle_job(self, spec: str, config_class: type[RRDConfig]) -> None:
-        if spec == "*":
-            # Obsolete. We can't reload the config explicitly, as this is done already
-            # by core config generation.
-            console.verbose("Reloading configuration.")
-        else:
-            parsed_spec = RRDSpec.parse(spec)
-            config = config_class(parsed_spec.host)
-            try:
-                self._create_rrd_from_spec(config, parsed_spec)
-            except self._rrd_interface.OperationalError as exc:
-                self._queue_rrd_helper_response(f"Error creating RRD: {exc!s}")
-            except OSError as exc:
-                self._queue_rrd_helper_response(f"Error creating RRD: {exc.strerror}")
-            except Exception as e:
-                if cmk.ccc.debug.enabled():
-                    raise
-                create_crash_report()
-                self._queue_rrd_helper_response(
-                    f"Error creating RRD for {spec}: {str(e) or traceback.format_exc()}"
-                )
+        parsed_spec = RRDSpec.parse(spec)
+        config = config_class(parsed_spec.host)
+        try:
+            self._create_rrd_from_spec(config, parsed_spec)
+        except self._rrd_interface.OperationalError as exc:
+            self._queue_rrd_helper_response(f"Error creating RRD: {exc!s}")
+        except OSError as exc:
+            self._queue_rrd_helper_response(f"Error creating RRD: {exc.strerror}")
+        except Exception as e:
+            if cmk.ccc.debug.enabled():
+                raise
+            create_crash_report()
+            self._queue_rrd_helper_response(
+                f"Error creating RRD for {spec}: {str(e) or traceback.format_exc()}"
+            )
 
     def _create_rrd_from_spec(self, config: RRDConfig, spec: RRDSpec) -> None:
         rrd_file_name = _create_rrd(

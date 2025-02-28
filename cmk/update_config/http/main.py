@@ -55,9 +55,9 @@ def _new_migrated_rules(config: Config, ruleset_v1: Ruleset, ruleset_v2: Ruleset
 
 def _overwrite_migrated_rules(config: Config, ruleset_v1: Ruleset, ruleset_v2: Ruleset) -> None:
     for folder, rule_index, rule_v2 in ruleset_v2.get_rules():
-        if "from_v1" in rule_v2.value:
+        if (rule_v1_id := _migrated_from(rule_v2)) is not None:
             sys.stdout.write(f"Overwriting rule: {folder}, {rule_index}\n")
-            rule_v1 = _from_v1(rule_v2.value["from_v1"], ruleset_v1)
+            rule_v1 = _from_v1(rule_v1_id, ruleset_v1)
             if rule_v1 is None:
                 sys.stdout.write("Deleted, v1 counter-part no longer exits.\n")
                 ruleset_v2.delete_rule(rule_v2)
@@ -69,7 +69,7 @@ def _overwrite_migrated_rules(config: Config, ruleset_v1: Ruleset, ruleset_v2: R
                 continue
             sys.stdout.write("Migrated, edited exiting rule.\n")
             new_rule_v2 = rule_v2.clone(preserve_id=True)
-            new_rule_v2.value = migrate(rule_v1.id, for_migration)
+            new_rule_v2.value = migrate(for_migration)
             ruleset_v2.edit_rule(rule_v2, new_rule_v2)
 
 
@@ -80,21 +80,31 @@ def _from_v1(rule_v1_id: str, ruleset_v1: Ruleset) -> Rule | None:
     return None
 
 
+def _migrated_from(rule_v2: Rule) -> str | None:
+    if not rule_v2.rule_options.comment.startswith("Migrated from v1: "):
+        return None
+    return rule_v2.rule_options.comment.removeprefix("Migrated from v1: ").strip()
+
+
 def _migrated_rule(rule_v1_id: str, ruleset_v2: Ruleset) -> Rule | None:
     for _folder, _rule_index, rule_v2 in ruleset_v2.get_rules():
-        if rule_v2.value.get("from_v1") == rule_v1_id:
+        if _migrated_from(rule_v2) == rule_v1_id:
             return rule_v2
     return None
 
 
 def _construct_v2_rule(rule_v1: Rule, for_migration: ForMigration, ruleset_v2: Ruleset) -> Rule:
-    new_rule_value = migrate(rule_v1.id, for_migration)
+    new_rule_value = migrate(for_migration)
     return Rule(
         id_=gen_id(),
         folder=rule_v1.folder,
         ruleset=ruleset_v2,
         conditions=rule_v1.conditions.clone(),
-        options=dataclasses.replace(rule_v1.rule_options, disabled=True),
+        options=dataclasses.replace(
+            rule_v1.rule_options,
+            disabled=True,
+            comment=f"Migrated from v1: {rule_v1.id}",
+        ),
         value=new_rule_value,
         locked_by=None,
     )
@@ -133,7 +143,7 @@ def _activate_main() -> None:
         all_rulesets = AllRulesets.load_all_rulesets()
         ruleset_v2 = all_rulesets.get("active_checks:httpv2")
         for folder, rule_index, rule_v2 in ruleset_v2.get_rules():
-            if "from_v1" in rule_v2.value:
+            if _migrated_from(rule_v2) is not None:
                 sys.stdout.write(f"Overwriting rule: {folder}, {rule_index}\n")
                 new_rule_v2 = rule_v2.clone(preserve_id=True)
                 new_rule_v2.rule_options = dataclasses.replace(rule_v2.rule_options, disabled=False)
@@ -148,7 +158,7 @@ def _deactivate_main() -> None:
         all_rulesets = AllRulesets.load_all_rulesets()
         ruleset_v2 = all_rulesets.get("active_checks:httpv2")
         for folder, rule_index, rule_v2 in ruleset_v2.get_rules():
-            if "from_v1" in rule_v2.value:
+            if _migrated_from(rule_v2) is not None:
                 sys.stdout.write(f"Overwriting rule: {folder}, {rule_index}\n")
                 new_rule_v2 = rule_v2.clone(preserve_id=True)
                 new_rule_v2.rule_options = dataclasses.replace(rule_v2.rule_options, disabled=True)

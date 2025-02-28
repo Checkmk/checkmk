@@ -212,7 +212,7 @@ def _migrate_name(name: str) -> Mapping[str, object]:
     return {"prefix": "auto", "name": name}
 
 
-def migrate(id_: str, for_migration: ForMigration) -> Mapping[str, object]:
+def migrate(for_migration: ForMigration) -> Mapping[str, object]:
     value = for_migration.value
     match value.host.address_family:
         case "any":
@@ -256,5 +256,4 @@ def migrate(id_: str, for_migration: ForMigration) -> Mapping[str, object]:
             },
         ],
         "standard_settings": {},
-        "from_v1": id_,
     }

@@ -48,7 +48,6 @@ from cmk.update_config.http.migrate import migrate
 
 DEFAULT = Config()
 
-ID = ""
 HOST_1 = {"address": ("direct", "[::1]"), "virthost": "[::1]"}
 
 EXAMPLE_1 = {
@@ -1108,7 +1107,7 @@ def test_nothing_to_assert_rules(rule_value: Mapping[str, object], config: Confi
     for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
-    migrated = migrate(ID, for_migration)
+    migrated = migrate(for_migration)
     _ = parse_http_params(process_configuration_to_parameters(migrated).value)
 
 
@@ -1145,7 +1144,7 @@ def test_migrate_url(
     for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
-    migrated = migrate(ID, for_migration)
+    migrated = migrate(for_migration)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1210,7 +1209,7 @@ def test_migrate_document(
     for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
-    migrated = migrate(ID, for_migration)
+    migrated = migrate(for_migration)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1389,7 +1388,7 @@ def test_migrate_method(rule_value: Mapping[str, object], config: Config, expect
     for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
-    migrated = migrate(ID, for_migration)
+    migrated = migrate(for_migration)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1434,7 +1433,7 @@ def test_migrate_expect_regex(
     for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
-    migrated = migrate(ID, for_migration)
+    migrated = migrate(for_migration)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1475,7 +1474,7 @@ def test_migrate_ssl(rule_value: Mapping[str, object], config: Config, expected:
     for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
-    migrated = migrate(ID, for_migration)
+    migrated = migrate(for_migration)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1500,7 +1499,7 @@ def test_migrate_response_time(
     for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
-    migrated = migrate(ID, for_migration)
+    migrated = migrate(for_migration)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1526,7 +1525,7 @@ def test_migrate_expect_string(
     for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
-    migrated = migrate(ID, for_migration)
+    migrated = migrate(for_migration)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1549,7 +1548,7 @@ def test_migrate_timeout(
     for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
-    migrated = migrate(ID, for_migration)
+    migrated = migrate(for_migration)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1571,7 +1570,7 @@ def test_migrate_user_agent(
     for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
-    migrated = migrate(ID, for_migration)
+    migrated = migrate(for_migration)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1630,7 +1629,7 @@ def test_migrate_add_headers(
     for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
-    migrated = migrate(ID, for_migration)
+    migrated = migrate(for_migration)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1643,7 +1642,7 @@ def test_migrate_auth_user() -> None:
     for_migration = detect_conflicts(DEFAULT, EXAMPLE_36)
     assert not isinstance(for_migration, Conflict)
     # Act
-    migrated = migrate(ID, for_migration)
+    migrated = migrate(for_migration)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1657,7 +1656,7 @@ def test_migrate_auth_no_auth() -> None:
     for_migration = detect_conflicts(DEFAULT, EXAMPLE_27)
     assert not isinstance(for_migration, Conflict)
     # Act
-    migrated = migrate(ID, for_migration)
+    migrated = migrate(for_migration)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1730,7 +1729,7 @@ def test_migrate_redirect(
     for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
-    migrated = migrate(ID, for_migration)
+    migrated = migrate(for_migration)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1762,7 +1761,7 @@ def test_migrate_expect_response(
     for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
-    migrated = migrate(ID, for_migration)
+    migrated = migrate(for_migration)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1781,7 +1780,7 @@ def test_migrate_cert(rule_value: Mapping[str, object], config: Config, expected
     for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
-    migrated = migrate(ID, for_migration)
+    migrated = migrate(for_migration)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1813,7 +1812,7 @@ def test_migrate_expect_response_header(
     for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
-    migrated = migrate(ID, for_migration)
+    migrated = migrate(for_migration)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1835,7 +1834,7 @@ def test_migrate_name(rule_value: Mapping[str, object], config: Config, expected
     for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
-    migrated = migrate(ID, for_migration)
+    migrated = migrate(for_migration)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1859,7 +1858,7 @@ def test_migrate_address_family(
     for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
-    migrated = migrate(ID, for_migration)
+    migrated = migrate(for_migration)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1872,7 +1871,7 @@ def test_preserve_http_version() -> None:
     for_migration = detect_conflicts(DEFAULT, EXAMPLE_27)
     assert not isinstance(for_migration, Conflict)
     # Act
-    migrated = migrate(ID, for_migration)
+    migrated = migrate(for_migration)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
@@ -1899,7 +1898,7 @@ def test_migrate_http_1_0(
     for_migration = detect_conflicts(config, rule_value)
     assert not isinstance(for_migration, Conflict)
     # Act
-    migrated = migrate(ID, for_migration)
+    migrated = migrate(for_migration)
     # Assemble
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert

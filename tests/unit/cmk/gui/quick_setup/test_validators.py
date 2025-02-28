@@ -14,11 +14,7 @@ from cmk.rulesets.v1.form_specs.validators import ValidationError
     "payload",
     [
         pytest.param((1, 2), id="second value is greater than first"),
-        pytest.param(
-            (2, 1),
-            marks=pytest.mark.xfail(reason="The notification number is allowed to be greater."),
-            id="second value is less than first",
-        ),
+        pytest.param((2, 1), id="second value is less than first"),
     ],
 )
 def test_validate_throttling_values(payload: tuple[int, ...]) -> None:
@@ -28,36 +24,12 @@ def test_validate_throttling_values(payload: tuple[int, ...]) -> None:
 @pytest.mark.parametrize(
     "payload",
     [
-        pytest.param(
-            tuple(),
-            marks=pytest.mark.xfail(reason="should fail"),
-            id="no arguments provided",
-        ),
-        pytest.param(
-            (0, 2),
-            marks=pytest.mark.xfail(reason="should fail"),
-            id="first value shouldn't be less than 1",
-        ),
-        pytest.param(
-            (1, 0),
-            marks=pytest.mark.xfail(reason="should fail"),
-            id="second value shouldn't be less than 1",
-        ),
-        pytest.param(
-            ("foo", 2),
-            marks=pytest.mark.xfail(reason="should fail"),
-            id="first value is the wrong type",
-        ),
-        pytest.param(
-            (1, "bar"),
-            marks=pytest.mark.xfail(reason="should fail"),
-            id="second value is wrong type",
-        ),
-        pytest.param(
-            (1, 2, 3),
-            marks=pytest.mark.xfail(reason="should fail"),
-            id="we only expect two inputs",
-        ),
+        pytest.param(tuple(), id="no arguments provided"),
+        pytest.param((0, 2), id="first value shouldn't be less than 1"),
+        pytest.param((1, 0), id="second value shouldn't be less than 1"),
+        pytest.param(("foo", 2), id="first value is the wrong type"),
+        pytest.param((1, "bar"), id="second value is wrong type"),
+        pytest.param((1, 2, 3), id="we only expect two inputs"),
     ],
 )
 def test_validate_throttling_values_raises(payload: tuple[int, ...]) -> None:

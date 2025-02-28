@@ -392,3 +392,72 @@ test('FormDictionary is able to be rerenderd: static value', async () => {
 
   expect(getCurrentData()).toBe('{"another_key":"another_value"}')
 })
+
+test('Default values of dict elements dont influence each other', async () => {
+  const innerList: FormSpec.List = {
+    type: 'list',
+    title: 'innerList',
+    help: '',
+    validators: [],
+    element_template: stringFormSpec,
+    element_default_value: 'default value',
+    editable_order: false,
+    add_element_label: 'Add inner element',
+    remove_element_label: 'Remove inner element',
+    no_element_label: 'No element'
+  }
+
+  const dictSpec: FormSpec.Dictionary = {
+    type: 'dictionary',
+    title: 'dictTitle',
+    help: 'fooHelp',
+    i18n_base: { required: 'required' },
+    layout: 'one_column',
+    validators: [],
+    groups: [],
+    no_elements_text: 'no_text',
+    additional_static_elements: null,
+    elements: [
+      {
+        name: 'bar',
+        render_only: false,
+        required: false,
+        default_value: [],
+        parameter_form: innerList,
+        group: dictElementGroupFormSpec
+      }
+    ]
+  }
+
+  const outerList: FormSpec.List = {
+    type: 'list',
+    title: 'outerList',
+    help: '',
+    validators: [],
+    element_template: dictSpec,
+    element_default_value: {},
+    editable_order: false,
+    add_element_label: 'Add outer element',
+    remove_element_label: 'Remove outer element',
+    no_element_label: 'No element'
+  }
+
+  const { getCurrentData } = renderFormWithData({
+    spec: outerList,
+    data: [],
+    backendValidation: []
+  })
+
+  await fireEvent.click(screen.getByText('Add outer element'))
+  await fireEvent.click(screen.getByRole('checkbox'))
+  await fireEvent.click(screen.getByText('Add inner element'))
+
+  const textbox = screen.getByRole('textbox')
+  await fireEvent.update(textbox, 'some value')
+
+  await fireEvent.click(screen.getByText('Add outer element'))
+  await fireEvent.click(screen.getAllByRole('checkbox')[1]!)
+  await fireEvent.click(screen.getAllByText('Add inner element')[1]!)
+
+  expect(getCurrentData()).toBe('[{"bar":["some value"]},{"bar":["default value"]}]')
+})

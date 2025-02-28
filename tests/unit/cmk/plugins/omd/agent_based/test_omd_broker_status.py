@@ -23,33 +23,39 @@ from cmk.plugins.omd.agent_based.libbroker import (
     Shovel,
 )
 from cmk.plugins.omd.agent_based.omd_broker_status import (
+    agent_section_omd_broker_shovels,
+    agent_section_omd_broker_status,
     check_omd_broker_status,
     discover_omd_broker_status,
-    parse_omd_broker_shovels,
-    parse_omd_broker_status,
 )
 
 
 @pytest.mark.parametrize(
     "string_table, expected_parsed_data",
     [
-        (
+        pytest.param(
             [['[{"name": "rabbit-heute@localhost", "mem_used":  1000000000}]']],
             {"heute": BrokerStatus(memory=1000000000)},
+            id="good data",
         ),
-        ([], {}),
+        pytest.param(
+            [['{"error":"not_authorized","reason":"Not_Authorized"}']],
+            None,
+            id="error from broker (e.g. mgmt plugin disabled)",
+        ),
+        pytest.param([], {}, id="empty list (e.g. broker not running)"),
     ],
 )
 def test_parse_omd_broker_status(
     string_table: StringTable, expected_parsed_data: SectionStatus
 ) -> None:
-    assert parse_omd_broker_status(string_table) == expected_parsed_data
+    assert agent_section_omd_broker_status.parse_function(string_table) == expected_parsed_data
 
 
 @pytest.mark.parametrize(
     "string_table, expected_parsed_data",
     [
-        (
+        pytest.param(
             [
                 [
                     """[{
@@ -83,14 +89,20 @@ def test_parse_omd_broker_status(
                 ],
                 "heute_remote": [Shovel(name="cmk.shovel.heute->heute_remote_1", state="starting")],
             },
+            id="good data",
         ),
-        ([], {}),
+        pytest.param(
+            [['{"error":"not_authorized","reason":"Not_Authorized"}']],
+            None,
+            id="error from broker (e.g. mgmt plugin disabled)",
+        ),
+        pytest.param([], {}, id="empty list (e.g. broker not running)"),
     ],
 )
 def test_parse_omd_broker_shovels(
     string_table: StringTable, expected_parsed_data: SectionShovels
 ) -> None:
-    assert parse_omd_broker_shovels(string_table) == expected_parsed_data
+    assert agent_section_omd_broker_shovels.parse_function(string_table) == expected_parsed_data
 
 
 @pytest.mark.parametrize(

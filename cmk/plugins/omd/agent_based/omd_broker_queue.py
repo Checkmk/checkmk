@@ -4,10 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 #
 
-import json
-from collections import defaultdict
 from collections.abc import Mapping, Sequence
-from typing import Final
+from typing import Any, Final
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -18,35 +16,26 @@ from cmk.agent_based.v2 import (
     Result,
     Service,
     State,
-    StringTable,
 )
 
-from .libbroker import node_to_site, Queue, SectionQueues
+from .libbroker import node_to_site, Parser, Queue, SectionQueues
 
 # These could still be enforced, but don't autodiscover them
 _ENFORCED_ONLY_APPS: Final = ("cmk-broker-test",)
 DEFAULT_VHOST_NAME: Final = "/"
 
 
-def parse(string_table: StringTable) -> SectionQueues:
-    parsed: dict[str, list[Queue]] = defaultdict(list)
-
-    for (word,) in string_table:
-        for raw_queue in json.loads(word):
-            parsed[node_to_site(raw_queue["node"])].append(
-                Queue(
-                    vhost=str(raw_queue["vhost"]),
-                    name=raw_queue["name"],
-                    messages=int(raw_queue["messages"]),
-                )
-            )
-
-    return parsed
+def parse(raw_queue: dict[str, Any]) -> tuple[str, Queue]:
+    return node_to_site(raw_queue["node"]), Queue(
+        vhost=str(raw_queue["vhost"]),
+        name=raw_queue["name"],
+        messages=int(raw_queue["messages"]),
+    )
 
 
 agent_section_omd_broker_queues = AgentSection(
     name="omd_broker_queues",
-    parse_function=parse,
+    parse_function=Parser[SectionQueues](callback=parse, aggregate=True),
 )
 
 
@@ -63,7 +52,9 @@ def _site_application(section: SectionQueues) -> Mapping[tuple[str, str], Sequen
     return site_application
 
 
-def discover_omd_broker_queues(section: SectionQueues) -> DiscoveryResult:
+def discover_omd_broker_queues(section: SectionQueues | None) -> DiscoveryResult:
+    if section is None:
+        return
     yield from (
         Service(item=f"{site} {application}")
         for site, application in _site_application(section)

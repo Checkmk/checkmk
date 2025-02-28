@@ -9,6 +9,7 @@ import os
 import shutil
 import subprocess
 import tarfile
+import threading
 import time
 import traceback
 from collections.abc import Callable
@@ -80,23 +81,53 @@ class SnapshotStatus(TypedDict):
     checksums: NotRequired[None | bool]
 
 
-def create_snapshot_subprocess(
-    comment: str,
-    created_by: Literal[""] | UserId,
-    secret: bytes,
-    max_snapshots: int,
-    use_git: bool,
-    debug: bool,
-    parent_span_context: trace.SpanContext,
-) -> None:
-    """Entry point of the backup subprocess"""
-    context = trace.set_span_in_context(trace.NonRecordingSpan(parent_span_context))
-    with trace.get_tracer().start_as_current_span("create_backup_snapshot", context):
-        create_snapshot(comment, created_by, secret, max_snapshots, use_git, debug)
+class CreateSnapshotThread(threading.Thread):
+    def __init__(
+        self,
+        *,
+        comment: str | None,
+        created_by: Literal[""] | UserId,
+        secret: bytes,
+        max_snapshots: int,
+        use_git: bool,
+        debug: bool,
+        parent_span_context: trace.SpanContext,
+    ) -> None:
+        super().__init__()
+        self._comment = comment
+        self._created_by = created_by
+        self._secret = secret
+        self._max_snapshots = max_snapshots
+        self._use_git = use_git
+        self._debug = debug
+        self._parent_span_context = parent_span_context
+        self._error_caught_during_run: Exception | None = None
+
+    def run(self) -> None:
+        with trace.get_tracer().start_as_current_span(
+            "create_backup_snapshot",
+            trace.set_span_in_context(trace.NonRecordingSpan(self._parent_span_context)),
+        ):
+            try:
+                create_snapshot(
+                    comment=self._comment,
+                    created_by=self._created_by,
+                    secret=self._secret,
+                    max_snapshots=self._max_snapshots,
+                    use_git=self._use_git,
+                    debug=self._debug,
+                )
+            except Exception as e:
+                self._error_caught_during_run = e
+
+    @property
+    def error_caught_during_run(self) -> Exception | None:
+        return self._error_caught_during_run
 
 
 def create_snapshot(
-    comment: str,
+    *,
+    comment: str | None,
     created_by: Literal[""] | UserId,
     secret: bytes,
     max_snapshots: int,

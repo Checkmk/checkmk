@@ -12,7 +12,6 @@ import enum
 import hashlib
 import io
 import logging
-import multiprocessing
 import os
 import re
 import shutil
@@ -1658,19 +1657,16 @@ class ActivateChangesManager(ActivateChanges):
                     ),
                 )
 
-            backup_snapshot_proc = multiprocessing.Process(
-                target=backup_snapshots.create_snapshot_subprocess,
-                args=(
-                    self._comment,
-                    user.id or "",
-                    backup_snapshots.snapshot_secret(),
-                    active_config.wato_max_snapshots,
-                    active_config.wato_use_git,
-                    active_config.debug,
-                    trace.get_current_span().get_span_context(),
-                ),
+            backup_snapshot_thread = backup_snapshots.CreateSnapshotThread(
+                comment=self._comment,
+                created_by=user.id or "",
+                secret=backup_snapshots.snapshot_secret(),
+                max_snapshots=active_config.wato_max_snapshots,
+                use_git=active_config.wato_use_git,
+                debug=active_config.debug,
+                parent_span_context=trace.get_current_span().get_span_context(),
             )
-            backup_snapshot_proc.start()
+            backup_snapshot_thread.start()
 
             if self._activation_id is None:
                 raise Exception("activation ID is not set")
@@ -1691,9 +1687,11 @@ class ActivateChangesManager(ActivateChanges):
             logger.debug("Config sync snapshot creation took %.4f", time.time() - start)
 
             logger.debug("Waiting for backup snapshot creation to complete")
-            backup_snapshot_proc.join()
-            if backup_snapshot_proc.exitcode != 0:
-                raise MKGeneralException("Failed to create backup snapshot")
+            backup_snapshot_thread.join()
+            if backup_snapshot_thread.error_caught_during_run:
+                raise MKGeneralException(
+                    "Failed to create backup snapshot"
+                ) from backup_snapshot_thread.error_caught_during_run
 
         logger.debug("Finished all snapshots")
 

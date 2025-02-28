@@ -34,7 +34,7 @@ def test_create_snapshot() -> None:
 @pytest.mark.usefixtures("patch_omd_site")
 def test_snapshot_status() -> None:
     backup_snapshots.create_snapshot(
-        "test snapshot",
+        comment="test snapshot",
         created_by="",
         secret=b"abc",
         max_snapshots=10,
@@ -53,7 +53,7 @@ def test_snapshot_status() -> None:
 @pytest.mark.usefixtures("patch_omd_site")
 def test_extract_snapshot() -> None:
     backup_snapshots.create_snapshot(
-        "",
+        comment="",
         created_by=UserId("harry"),
         secret=b"abc",
         max_snapshots=10,

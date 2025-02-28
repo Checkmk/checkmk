@@ -388,7 +388,7 @@ def test_compute_distributed_definitions_users(
                     rabbitmq.Permission(
                         user="central",
                         vhost=DEFAULT_VHOST_NAME,
-                        configure="^$",
+                        configure="cmk.intersite..*",
                         write="cmk.intersite",
                         read="cmk.intersite..*",
                     )
@@ -397,7 +397,7 @@ def test_compute_distributed_definitions_users(
                     rabbitmq.Permission(
                         user="remote1",
                         vhost=DEFAULT_VHOST_NAME,
-                        configure="^$",
+                        configure="cmk.intersite..*",
                         write="cmk.intersite",
                         read="cmk.intersite..*",
                     )
@@ -411,7 +411,7 @@ def test_compute_distributed_definitions_users(
                     rabbitmq.Permission(
                         user="central",
                         vhost=DEFAULT_VHOST_NAME,
-                        configure="^$",
+                        configure="cmk.intersite..*",
                         write="cmk.intersite",
                         read="cmk.intersite..*",
                     )
@@ -420,7 +420,7 @@ def test_compute_distributed_definitions_users(
                     rabbitmq.Permission(
                         user="remote1",
                         vhost="customer1",
-                        configure="^$",
+                        configure="cmk.intersite..*",
                         write="cmk.intersite",
                         read="cmk.intersite..*",
                     )
@@ -434,7 +434,7 @@ def test_compute_distributed_definitions_users(
                     rabbitmq.Permission(
                         user="central",
                         vhost=DEFAULT_VHOST_NAME,
-                        configure="^$",
+                        configure="cmk.intersite..*",
                         write="cmk.intersite",
                         read="cmk.intersite..*",
                     )
@@ -443,7 +443,7 @@ def test_compute_distributed_definitions_users(
                     rabbitmq.Permission(
                         user="central",
                         vhost=DEFAULT_VHOST_NAME,
-                        configure="^$",
+                        configure="cmk.intersite..*",
                         write="cmk.intersite",
                         read="cmk.intersite..*",
                     )
@@ -452,14 +452,14 @@ def test_compute_distributed_definitions_users(
                     rabbitmq.Permission(
                         user="remote1",
                         vhost="customer1",
-                        configure="^$",
+                        configure="cmk.intersite..*",
                         write="cmk.intersite",
                         read="cmk.intersite..*",
                     ),
                     rabbitmq.Permission(
                         user="remote2",
                         vhost="customer1",
-                        configure="^$",
+                        configure="cmk.intersite..*",
                         write="cmk.intersite",
                         read="cmk.intersite..*",
                     ),
@@ -473,7 +473,7 @@ def test_compute_distributed_definitions_users(
                     rabbitmq.Permission(
                         user="central",
                         vhost=DEFAULT_VHOST_NAME,
-                        configure="^$",
+                        configure="cmk.intersite..*",
                         write="cmk.intersite",
                         read="cmk.intersite..*",
                     )
@@ -482,7 +482,7 @@ def test_compute_distributed_definitions_users(
                     rabbitmq.Permission(
                         user="central",
                         vhost=DEFAULT_VHOST_NAME,
-                        configure="^$",
+                        configure="cmk.intersite..*",
                         write="cmk.intersite",
                         read="cmk.intersite..*",
                     )
@@ -491,14 +491,14 @@ def test_compute_distributed_definitions_users(
                     rabbitmq.Permission(
                         user="remote1",
                         vhost="customer1",
-                        configure="^$",
+                        configure="cmk.intersite..*",
                         write="cmk.intersite",
                         read="cmk.intersite..*",
                     ),
                     rabbitmq.Permission(
                         user="remote2",
                         vhost="customer2",
-                        configure="^$",
+                        configure="cmk.intersite..*",
                         write="cmk.intersite",
                         read="cmk.intersite..*",
                     ),
@@ -512,14 +512,14 @@ def test_compute_distributed_definitions_users(
                     rabbitmq.Permission(
                         user="central",
                         vhost=DEFAULT_VHOST_NAME,
-                        configure="^$",
+                        configure="cmk.intersite..*",
                         write="cmk.intersite",
                         read="cmk.intersite..*",
                     ),
                     rabbitmq.Permission(
                         user="remote2",
                         vhost=DEFAULT_VHOST_NAME,
-                        configure="^$",
+                        configure="cmk.intersite..*",
                         write="cmk.intersite",
                         read="cmk.intersite..*",
                     ),
@@ -528,14 +528,14 @@ def test_compute_distributed_definitions_users(
                     rabbitmq.Permission(
                         user="central",
                         vhost=DEFAULT_VHOST_NAME,
-                        configure="^$",
+                        configure="cmk.intersite..*",
                         write="cmk.intersite",
                         read="cmk.intersite..*",
                     ),
                     rabbitmq.Permission(
                         user="remote1",
                         vhost=DEFAULT_VHOST_NAME,
-                        configure="^$",
+                        configure="cmk.intersite..*",
                         write="cmk.intersite",
                         read="cmk.intersite..*",
                     ),
@@ -544,14 +544,14 @@ def test_compute_distributed_definitions_users(
                     rabbitmq.Permission(
                         user="remote1",
                         vhost="customer1",
-                        configure="^$",
+                        configure="cmk.intersite..*",
                         write="cmk.intersite",
                         read="cmk.intersite..*",
                     ),
                     rabbitmq.Permission(
                         user="remote2",
                         vhost="customer1",
-                        configure="^$",
+                        configure="cmk.intersite..*",
                         write="cmk.intersite",
                         read="cmk.intersite..*",
                     ),
@@ -565,14 +565,14 @@ def test_compute_distributed_definitions_users(
                     rabbitmq.Permission(
                         user="central",
                         vhost=DEFAULT_VHOST_NAME,
-                        configure="^$",
+                        configure="cmk.intersite..*",
                         write="cmk.intersite",
                         read="cmk.intersite..*",
                     ),
                     rabbitmq.Permission(
                         user="remote2",
                         vhost=DEFAULT_VHOST_NAME,
-                        configure="^$",
+                        configure="cmk.intersite..*",
                         write="cmk.intersite",
                         read="cmk.intersite..*",
                     ),
@@ -581,14 +581,14 @@ def test_compute_distributed_definitions_users(
                     rabbitmq.Permission(
                         user="central",
                         vhost=DEFAULT_VHOST_NAME,
-                        configure="^$",
+                        configure="cmk.intersite..*",
                         write="cmk.intersite",
                         read="cmk.intersite..*",
                     ),
                     rabbitmq.Permission(
                         user="remote1",
                         vhost=DEFAULT_VHOST_NAME,
-                        configure="^$",
+                        configure="cmk.intersite..*",
                         write="cmk.intersite",
                         read="cmk.intersite..*",
                     ),
@@ -597,14 +597,14 @@ def test_compute_distributed_definitions_users(
                     rabbitmq.Permission(
                         user="remote1",
                         vhost=DEFAULT_VHOST_NAME,
-                        configure="^$",
+                        configure="cmk.intersite..*",
                         write="cmk.intersite",
                         read="cmk.intersite..*",
                     ),
                     rabbitmq.Permission(
                         user="remote2",
                         vhost=DEFAULT_VHOST_NAME,
-                        configure="^$",
+                        configure="cmk.intersite..*",
                         write="cmk.intersite",
                         read="cmk.intersite..*",
                     ),

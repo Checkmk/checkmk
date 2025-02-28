@@ -155,7 +155,7 @@ def make_default_remote_user_permission(user_name: str) -> Permission:
     return Permission(
         user=user_name,
         vhost=DEFAULT_VHOST_NAME,
-        configure="^$",
+        configure="cmk.intersite..*",
         write=INTERSITE_EXCHANGE,
         read="cmk.intersite..*",
     )
@@ -294,7 +294,7 @@ def add_connecter_definitions(connection: Connection, definition: Definitions) -
     permission = Permission(
         user=user.name,
         vhost=vhost_name,
-        configure="^$",
+        configure="cmk.intersite..*",
         write=INTERSITE_EXCHANGE,
         read="cmk.intersite..*",
     )

@@ -47,7 +47,11 @@ def _get_binding(site_id: str) -> Binding:
 
 def _get_permission(site_id: str) -> Permission:
     return Permission(
-        user=site_id, vhost="/", configure="^$", write="cmk.intersite", read="cmk.intersite..*"
+        user=site_id,
+        vhost="/",
+        configure="cmk.intersite..*",
+        write="cmk.intersite",
+        read="cmk.intersite..*",
     )
 
 

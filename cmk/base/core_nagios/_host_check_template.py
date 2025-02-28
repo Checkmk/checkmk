@@ -90,13 +90,7 @@ def main() -> int:
         config.ipaddresses = CONFIG.ipaddresses
         config.ipv6addresses = CONFIG.ipv6addresses
 
-        return mode_check(
-            {},
-            [CONFIG.hostname],
-            active_check_handler=lambda *args: None,
-            keepalive=False,
-            precompiled_host_check=True,
-        )
+        return mode_check({}, [CONFIG.hostname], precompiled_host_check=True)
     except KeyboardInterrupt:
         with suppress(IOError):
             sys.stderr.write("<Interrupted>\n")

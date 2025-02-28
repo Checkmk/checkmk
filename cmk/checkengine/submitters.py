@@ -89,9 +89,7 @@ def get_submitter(
     dry_run: bool,
     perfdata_format: Literal["pnp", "standard"],
     show_perfdata: bool,
-    keepalive: bool,
 ) -> Submitter:
-    """Enterprise should use `cmk.base.cee.keepalive.submitters`."""
     if dry_run:
         return NoOpSubmitter(
             host_name, perfdata_format=perfdata_format, show_perfdata=show_perfdata

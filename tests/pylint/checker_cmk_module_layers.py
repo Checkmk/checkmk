@@ -732,6 +732,8 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("bin/cmk-validate-plugins"): Component("cmk.validate_plugins"),
     ModulePath("bin/post-rename-site"): Component("cmk.post_rename_site"),
     ModulePath("bin/mkeventd"): Component("cmk.ec"),
+    ModulePath("bin/cmk-convert-rrds"): Component("cmk.rrd"),
+    ModulePath("bin/cmk-create-rrd"): Component("cmk.rrd"),
     ModulePath("omd/packages/enterprise/bin/liveproxyd"): Component("cmk.cee.liveproxy"),
     ModulePath("omd/packages/enterprise/bin/mknotifyd"): Component("cmk.cee.mknotifyd"),
     ModulePath("omd/packages/enterprise/bin/dcd"): Component("cmk.cee.dcd"),

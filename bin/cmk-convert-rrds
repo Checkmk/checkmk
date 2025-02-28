@@ -10,7 +10,7 @@ import rrdtool  # type: ignore[import-not-found]
 # NOTE: rrdtool is missing type hints
 from cmk.utils.hostaddress import HostName
 
-from cmk.rrd.convert_rrds import convert_rrds  # pylint: disable=cmk-module-layer-violation
+from cmk.rrd.convert_rrds import convert_rrds
 
 
 def main() -> None:

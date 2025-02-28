@@ -72,6 +72,7 @@ class ACTestResult:
     title: str
     help: str
     site_id: SiteId
+    path: Path | None
 
     @property
     def state_marked_text(self) -> str:
@@ -94,6 +95,7 @@ class ACTestResult:
             category=repr_data["category"],
             title=repr_data["title"],
             help=repr_data["help"],
+            path=None if (p := repr_data.get("path")) is None else Path(p),
         )
 
     def __repr__(self) -> str:
@@ -115,6 +117,7 @@ class ACTestResult:
                     ACResultState.WARN: "ACResultWARN",
                     ACResultState.CRIT: "ACResultCRIT",
                 }[self.state],
+                "path": self.path,
             }
         )
 
@@ -178,6 +181,7 @@ class ACTest:
                     category=self.category(),
                     title=self.title(),
                     help=self.help(),
+                    path=result.path,
                 )
         except Exception:
             gui_logger.exception("error executing configuration test %s", self.__class__.__name__)
@@ -191,6 +195,7 @@ class ACTest:
                 title=self.title(),
                 help=self.help(),
                 site_id=omd_site(),
+                path=None,
             )
 
     def _uses_microcore(self) -> bool:
@@ -317,6 +322,7 @@ def _connectivity_result(*, state: ACResultState, text: str, site_id: SiteId) ->
         category=ACTestCategories.connectivity,
         title=_("Site connectivity"),
         help=_("This check returns CRIT if the connection to the remote site failed."),
+        path=None,
     )
 
 
@@ -417,6 +423,7 @@ def _merge_test_results_of_site(
                 title=first.title,
                 help=first.help,
                 site_id=omd_site(),
+                path=None,
             )
 
 

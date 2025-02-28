@@ -438,7 +438,7 @@ test-unit-docker:
 	    cp -Lr ../bazel-testlogs/tests/ ../results/testlogs ;\
 	    exit $$x'
 
-test-unit-all:
+test-unit-all: test-doctest
 	cd .. && \
 	    $(BAZEL_CMD) test --test_verbose_timeout_warnings //tests/unit:all \
 	    --test_env=TZ=$(RANDOM_TZ) \

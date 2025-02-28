@@ -240,6 +240,14 @@ class GUIViewRenderer(ABCViewRenderer):
         call_hooks("rmk_view_banner", self.view.name)
 
         if not has_done_actions and not missing_single_infos:
+            if self.view.spec.get("mustsearch") and len(rows) == 0:
+                html.open_div(class_="info")
+                html.icon("toggle_details")
+                html.span(
+                    _(' To view content, click on "<b>Apply filters</b>" in the "Filters" panel.')
+                )
+                html.close_div()
+
             html.div("", id_="row_info")
             if display_options.enabled(display_options.W):
                 row_limit = None if self.view.datasource.ignore_limit else self.view.row_limit

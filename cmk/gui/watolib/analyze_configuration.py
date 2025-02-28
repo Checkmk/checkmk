@@ -62,17 +62,6 @@ class ACSingleResult:
     site_id: SiteId
     path: Path | None = None
 
-    @property
-    def state_marked_text(self) -> str:
-        match self.state:
-            case ACResultState.OK:
-                return self.text
-            case ACResultState.WARN:
-                return f"{self.text} (!)"
-            case ACResultState.CRIT:
-                return f"{self.text} (!!)"
-        assert_never(self.state)
-
 
 @dataclasses.dataclass(frozen=True)
 class ACTestResult:
@@ -83,6 +72,17 @@ class ACTestResult:
     title: str
     help: str
     site_id: SiteId
+
+    @property
+    def state_marked_text(self) -> str:
+        match self.state:
+            case ACResultState.OK:
+                return self.text
+            case ACResultState.WARN:
+                return f"{self.text} (!)"
+            case ACResultState.CRIT:
+                return f"{self.text} (!!)"
+        assert_never(self.state)
 
     @classmethod
     def from_repr(cls, repr_data: Mapping[str, Any]) -> Self:
@@ -169,35 +169,16 @@ class ACTest:
 
     def run(self) -> Iterator[ACTestResult]:
         try:
-            # Do not merge results that have been gathered on one site for different sites
-            results = list(self.execute())
-            num_sites = len({r.site_id for r in results})
-            if num_sites > 1:
-                yield from (
-                    ACTestResult(
-                        state=result.state,
-                        text=result.text,
-                        site_id=result.site_id,
-                        test_id=self.id(),
-                        category=self.category(),
-                        title=self.title(),
-                        help=self.help(),
-                    )
-                    for result in results
+            for result in self.execute():
+                yield ACTestResult(
+                    state=result.state,
+                    text=result.text,
+                    site_id=result.site_id,
+                    test_id=self.id(),
+                    category=self.category(),
+                    title=self.title(),
+                    help=self.help(),
                 )
-                return
-
-            yield ACTestResult(
-                state=(
-                    ACResultState.worst(r.state for r in results) if results else ACResultState.OK
-                ),
-                text=", ".join(r.state_marked_text for r in results),
-                test_id=self.id(),
-                category=self.category(),
-                title=self.title(),
-                help=self.help(),
-                site_id=omd_site(),
-            )
         except Exception:
             gui_logger.exception("error executing configuration test %s", self.__class__.__name__)
             yield ACTestResult(
@@ -412,3 +393,38 @@ def perform_tests(
 
     logger.debug("Got test results")
     return results_by_site
+
+
+def _merge_test_results_of_site(
+    test_results_of_site: Sequence[ACTestResult],
+) -> Iterator[ACTestResult]:
+    test_results_by_test_id: dict[str, list[ACTestResult]] = {}
+    for test_result in test_results_of_site:
+        test_results_by_test_id.setdefault(test_result.test_id, []).append(test_result)
+
+    for test_id, test_results in test_results_by_test_id.items():
+        # Do not merge test_results that have been gathered on one site for different sites
+        num_sites = len({r.site_id for r in test_results})
+        if num_sites > 1:
+            yield from test_results
+        elif test_results:
+            first = test_results[0]
+            yield ACTestResult(
+                state=ACResultState.worst(r.state for r in test_results),
+                text=", ".join(r.state_marked_text for r in test_results),
+                test_id=test_id,
+                category=first.category,
+                title=first.title,
+                help=first.help,
+                site_id=omd_site(),
+            )
+
+
+def merge_tests(
+    test_results_by_site_id: Mapping[SiteId, Sequence[ACTestResult]],
+) -> Mapping[SiteId, Sequence[ACTestResult]]:
+    return {
+        site_id: merged
+        for site_id, test_results_of_site in test_results_by_site_id.items()
+        if (merged := list(_merge_test_results_of_site(test_results_of_site)))
+    }

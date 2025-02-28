@@ -44,6 +44,7 @@ from cmk.gui.watolib.analyze_configuration import (
     ACResultState,
     ACTestCategories,
     ACTestResult,
+    merge_tests,
     perform_tests,
 )
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
@@ -146,11 +147,13 @@ class ModeAnalyzeConfig(WatoMode):
 
         # Group results by category in first instance and then then by test
         results_by_category: dict[str, dict[str, _TestResult]] = {}
-        for _site_id, results in perform_tests(
-            self._logger,
-            active_config,
-            request,
-            self._analyze_sites(),
+        for _site_id, results in merge_tests(
+            perform_tests(
+                self._logger,
+                active_config,
+                request,
+                self._analyze_sites(),
+            )
         ).items():
             for result in results:
                 category_results = results_by_category.setdefault(result.category, {})

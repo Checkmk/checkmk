@@ -25,7 +25,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    convert_rrds(rrdtool, args.hostnames, args.split, args.delete)
+    convert_rrds(rrdtool, args.hostnames, args.split_rrds, args.delete_rrds)
 
 
 if __name__ == "__main__":

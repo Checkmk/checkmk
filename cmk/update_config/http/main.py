@@ -48,29 +48,8 @@ def _new_migrated_rules(config: Config, ruleset_v1: Ruleset, ruleset_v2: Ruleset
                 sys.stdout.write(f"Can't migrate: {for_migration.type_}\n")
                 continue
             sys.stdout.write("Migrated, new.\n")
-            rule_v2 = _migrated_rule(rule_v1.id, ruleset_v2)
             rule_v2 = _construct_v2_rule(rule_v1, for_migration, ruleset_v2)
             ruleset_v2.append_rule(rule_v1.folder, rule_v2)
-
-
-def _overwrite_migrated_rules(config: Config, ruleset_v1: Ruleset, ruleset_v2: Ruleset) -> None:
-    for folder, rule_index, rule_v2 in ruleset_v2.get_rules():
-        if (rule_v1_id := _migrated_from(rule_v2)) is not None:
-            sys.stdout.write(f"Overwriting rule: {folder}, {rule_index}\n")
-            rule_v1 = _from_v1(rule_v1_id, ruleset_v1)
-            if rule_v1 is None:
-                sys.stdout.write("Deleted, v1 counter-part no longer exits.\n")
-                ruleset_v2.delete_rule(rule_v2)
-                continue
-            for_migration = detect_conflicts(config, rule_v1.value)
-            if isinstance(for_migration, Conflict):
-                sys.stdout.write("Deleted, v1 counter-part no longer migratable.\n")
-                ruleset_v2.delete_rule(rule_v2)
-                continue
-            sys.stdout.write("Migrated, edited exiting rule.\n")
-            new_rule_v2 = rule_v2.clone(preserve_id=True)
-            new_rule_v2.value = migrate(for_migration)
-            ruleset_v2.edit_rule(rule_v2, new_rule_v2)
 
 
 def _from_v1(rule_v1_id: str, ruleset_v1: Ruleset) -> Rule | None:
@@ -117,7 +96,6 @@ def _migrate_main(config: Config, write: bool) -> None:
         all_rulesets = AllRulesets.load_all_rulesets()
         ruleset_v1 = all_rulesets.get("active_checks:http")
         ruleset_v2 = all_rulesets.get("active_checks:httpv2")
-        _overwrite_migrated_rules(config, ruleset_v1, ruleset_v2)
         _new_migrated_rules(config, ruleset_v1, ruleset_v2)
         if write:
             all_rulesets.save()

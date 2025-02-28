@@ -394,6 +394,11 @@ def update_and_activate_rabbitmq_definitions(omd_root: Path, logger: Logger) -> 
     ]:
         (logger.info if process.wait() == 0 else logger.error)(_format_process(process))
 
+    if set(old_definitions.parameters) - set(new_definitions.parameters):
+        # avoid zombie shovels
+        rabbitmqctl_process(("stop_app",), wait=True)
+        rabbitmqctl_process(("start_app",), wait=True)
+
 
 def _start_cleanup_unused_definitions(
     old_definitions: Definitions, new_definitions: Definitions

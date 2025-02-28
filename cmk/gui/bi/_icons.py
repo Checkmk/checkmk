@@ -94,11 +94,17 @@ class AggregationIcon(Icon):
         ):
             command = row["service_check_command"]
             args = shlex.split(command)
-            base_url = args[1]
+
+            if "stored_passwords" in args[0]:
+                base_url = args[2]
+                aggr_name = args[4]
+            else:
+                base_url = args[1]
+                aggr_name = args[3]
+
             base_url = base_url.replace("$HOSTADDRESS$", row["host_address"])
             base_url = base_url.replace("$HOSTNAME$", row["host_name"])
 
-            aggr_name = args[3]
             aggr_name = aggr_name.replace("$HOSTADDRESS$", row["host_address"])
             aggr_name = aggr_name.replace("$HOSTNAME$", row["host_name"])
 

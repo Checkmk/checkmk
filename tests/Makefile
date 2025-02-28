@@ -419,10 +419,12 @@ test-unit-omdlib:
 		tests/unit/omdlib/
 
 test-doctest:
+	mkdir -p ../results; \
 	$(BAZEL_CMD) test //cmk:doctest | tee ../results/$@.txt; \
 	exit $${PIPESTATUS[0]}
 
 test-unit:
+	mkdir -p ../results; \
 	$(BAZEL_CMD) test --test_verbose_timeout_warnings //tests/unit:all \
 	    --test_env=TZ=$(RANDOM_TZ) \
 	    --test_arg="-m" --test_arg="not slow" \

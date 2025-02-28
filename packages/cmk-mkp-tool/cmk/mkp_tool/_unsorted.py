@@ -497,15 +497,15 @@ def _raise_for_too_old_cmk_version(
     If the sites version can not be parsed, the check is simply passing without error.
     """
     try:
-        too_old = parse_version(site_version) < parse_version(min_version)
+        if parse_version(min_version) <= parse_version(site_version):
+            return
     except Exception:
         # Be compatible: When a version can not be parsed, then skip this check
         return
 
-    if too_old:
-        raise PackageError(
-            f"Package requires Checkmk version {min_version} (this is {site_version})"
-        )
+    raise PackageError(
+        f"Package requires a Checkmk version {min_version} or higher (this is {site_version})."
+    )
 
 
 def _raise_for_too_new_cmk_version(
@@ -521,15 +521,15 @@ def _raise_for_too_new_cmk_version(
         return
 
     try:
-        too_new = parse_version(site_version) >= parse_version(until_version)
+        if parse_version(site_version) < parse_version(until_version):
+            return
     except Exception:
         # Be compatible: When a version can not be parsed, then skip this check
         return
 
-    if too_new:
-        raise PackageError(
-            f"Package requires Checkmk version below {until_version} (this is {site_version})"
-        )
+    raise PackageError(
+        f"Package requires a Checkmk version below {until_version} (this is {site_version})."
+    )
 
 
 class StoredManifests(BaseModel):

@@ -19,6 +19,7 @@ from cmk.gui.watolib.analyze_configuration import (
     ACSingleResult,
     ACTest,
     ACTestResult,
+    merge_tests,
 )
 
 
@@ -187,4 +188,4 @@ class _FakeACTestMultiSite(ACTest):
     ],
 )
 def test_ac_test_run(ac_test: type[ACTest], test_result: Sequence[ACTestResult]) -> None:
-    assert list(ac_test().run()) == test_result
+    assert merge_tests({SiteId("foo"): list(ac_test().run())}) == {SiteId("foo"): test_result}

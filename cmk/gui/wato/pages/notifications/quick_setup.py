@@ -1470,10 +1470,16 @@ def _get_time_periods() -> list[tuple[TimeperiodName, str]]:
 
 def validate_notification_count_values(values: tuple[object, ...]) -> None:
     match values:
-        case (int() as lower_value, int() as upper_value) if lower_value >= upper_value:
-            raise ValidationError(
-                Message("The first value must be lower than the second value."),
-            )
+        case (int(lower_bound), _) if lower_bound < 1:
+            raise ValidationError(Message("The lower bound must be greater than 0."))
+        case (_, int(upper_bound)) if upper_bound < 1:
+            raise ValidationError(Message("The upper bound must be greater than 0."))
+        case (int(lower_bound), int(upper_bound)) if lower_bound > upper_bound:
+            raise ValidationError(Message("Lower bound cannot be higher than upper bound."))
+        case (int(_), int(_)):
+            return
+        case _:
+            raise ValidationError(Message("Unexpected notification count values passed."))
 
 
 def validate_throttling_values(values: tuple[object, ...]) -> None:

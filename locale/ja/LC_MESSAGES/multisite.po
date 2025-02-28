@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-02-27 06:00+0000\n"
+"PO-Revision-Date: 2025-02-27 21:50+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/dev/"
 "ja/>\n"
 "Language: ja\n"
@@ -38379,9 +38379,9 @@ msgstr "サービス停止の最大数"
 msgid "Maximum number of threads"
 msgstr "スレッドの最大数"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Maximum of %s"
-msgstr "最大 "
+msgstr "最大%s"
 
 msgid "Maximum parallel connections"
 msgstr "最大並列接続"
@@ -39129,9 +39129,9 @@ msgstr "Readyコントロールプレーンノードの最小数"
 msgid "Minimum number of ready worker nodes"
 msgstr "Readyワーカーノードの最小数"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Minimum of %s"
-msgstr "最小 "
+msgstr "最低%s"
 
 msgid "Minimum password length"
 msgstr "パスワードの最小長"
@@ -70623,7 +70623,7 @@ msgid "Total RAM + Swap installed"
 msgstr "合計RAM +インストールされたスワップ"
 
 msgid "Total Running On-Demand Instances(Deprecated by AWS)"
-msgstr "稼働中のオンデマンドインスタンスの総数(AWSで非推奨)"
+msgstr "稼動中のオンデマンドインスタンスの総数(AWSで非推奨)"
 
 msgid "Total Throughput Optimized HDD space"
 msgstr "合計スループットが最適化されたHDDスペース"
@@ -70957,7 +70957,7 @@ msgid "Total running on-demand G instances vCPUs"
 msgstr "稼動中のオンデマンドGインスタンスの総vCPU数"
 
 msgid "Total running on-demand Inf instances vCPUs"
-msgstr "稼働中のオンデマンドインフラインスタンス総vCPU数"
+msgstr "稼動中のオンデマンドインフラインスタンス総vCPU数"
 
 msgid "Total running on-demand Instances of type z1d"
 msgstr "稼働中のzldタイプオンデマンドインスタンスの総数"
@@ -70967,1855 +70967,1502 @@ msgstr "稼動中のオンデマンドPインスタンスの総vCPU数"
 
 msgid ""
 "Total running on-demand Standard (A, C, D, H, I, M, R, T, Z) instances vCPUs"
-msgstr ""
-"稼働中のオンデマンドスタンダード（A、C、D、H、I、M、R、T、Z）インスタンスの総"
+msgstr "稼動中のオンデマンドスタンダード（A、C、D、H、I、M、R、T、Z）インスタンスの総"
 "vCPU数"
 
 msgid "Total running on-demand X instances vCPUs"
 msgstr "稼動中のオンデマンドXインスタンスの総vCPU数"
 
 msgid "Total running on-demand a1.2xlarge instances"
-msgstr "稼働中のオンデマンドa1.2xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドa1.2xlargeインスタンスの総数"
 
 msgid "Total running on-demand a1.4xlarge instances"
-msgstr "稼働中のオンデマンドa1.4xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドa1.4xlargeインスタンスの総数"
 
 msgid "Total running on-demand a1.large instances"
-msgstr "稼働中のオンデマンドa1.largeインスタンスの総数"
+msgstr "稼動中のオンデマンドa1.largeインスタンスの総数"
 
 msgid "Total running on-demand a1.medium instances"
-msgstr "稼働中のオンデマンドa1.mediumインスタンスの総数"
+msgstr "稼動中のオンデマンドa1.mediumインスタンスの総数"
 
 msgid "Total running on-demand a1.metal instances"
-msgstr "稼働中のオンデマンドa1.metalインスタンスの総数"
+msgstr "稼動中のオンデマンドa1.metalインスタンスの総数"
 
 msgid "Total running on-demand a1.xlarge instances"
-msgstr "稼働中のオンデマンドのa1.xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドのa1.xlargeインスタンスの総数"
 
 msgid "Total running on-demand c1.medium instances"
-msgstr "稼働中のオンデマンドc1.mediumインスタンスの総数"
+msgstr "稼動中のオンデマンドc1.mediumインスタンスの総数"
 
 msgid "Total running on-demand c1.xlarge instances"
-msgstr "稼働中のオンデマンドc1.xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc1.xlargeインスタンスの総数"
 
 msgid "Total running on-demand c3.2xlarge instances"
-msgstr "稼働中のオンデマンドc3.2xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc3.2xlargeインスタンスの総数"
 
 msgid "Total running on-demand c3.4xlarge instances"
 msgstr "稼働中オンデマンドc3.4xlargeインスタンスの総数"
 
 msgid "Total running on-demand c3.8xlarge instances"
-msgstr "稼働中のオンデマンドc3.8xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc3.8xlargeインスタンスの総数"
 
 msgid "Total running on-demand c3.large instances"
-msgstr "稼働中のオンデマンドc3.largeインスタンスの総数"
+msgstr "稼動中のオンデマンドc3.largeインスタンスの総数"
 
 msgid "Total running on-demand c3.xlarge instances"
-msgstr "稼働中のオンデマンドc3.xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc3.xlargeインスタンスの総数"
 
 msgid "Total running on-demand c4.2xlarge instances"
-msgstr "稼働中のオンデマンドc4.2xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc4.2xlargeインスタンスの総数"
 
 msgid "Total running on-demand c4.4xlarge instances"
-msgstr "稼働中のオンデマンドc4.4xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc4.4xlargeインスタンスの総数"
 
 msgid "Total running on-demand c4.8xlarge instances"
-msgstr "稼働中のオンデマンドc4.8xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc4.8xlargeインスタンスの総数"
 
 msgid "Total running on-demand c4.large instances"
-msgstr "稼働中のオンデマンドc4.largeインスタンスの総数"
+msgstr "稼動中のオンデマンドc4.largeインスタンスの総数"
 
 msgid "Total running on-demand c4.xlarge instances"
-msgstr "稼働中のオンデマンドc4.xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc4.xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5.12xlarge instances"
-msgstr "稼働中のオンデマンドc5.12xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5.12xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5.18xlarge instances"
-msgstr "稼働中のオンデマンドc5.18xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5.18xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5.24xlarge instances"
-msgstr "稼働中のオンデマンドc5.24xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5.24xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5.2xlarge instances"
-msgstr "稼働中のオンデマンドc5.2xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5.2xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5.4xlarge instances"
-msgstr "稼働中のオンデマンドc5.4xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5.4xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5.9xlarge instances"
-msgstr "稼働中のオンデマンドc5.9xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5.9xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5.large instances"
-msgstr "稼働中のオンデマンドc5.largeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5.largeインスタンスの総数"
 
 msgid "Total running on-demand c5.metal instances"
-msgstr "稼働中のオンデマンドc5.metalインスタンスの総数"
+msgstr "稼動中のオンデマンドc5.metalインスタンスの総数"
 
 msgid "Total running on-demand c5.xlarge instances"
-msgstr "稼働中のオンデマンドc5.xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5.xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5a.12xlarge instances"
-msgstr "稼働中のオンデマンドc5a.12xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5a.12xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5a.16xlarge instances"
-msgstr "稼働中のオンデマンドc5a.16xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5a.16xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5a.24xlarge instances"
-msgstr "稼働中のオンデマンドc5a.24xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5a.24xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5a.2xlarge instances"
-msgstr "稼働中のオンデマンドc5a.2xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5a.2xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5a.4xlarge instances"
-msgstr "稼働中のオンデマンドc5a.4xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5a.4xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5a.8xlarge instances"
-msgstr "稼働中のオンデマンドc5a.8xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5a.8xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5a.large instances"
-msgstr "稼働中のオンデマンドc5a.largeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5a.largeインスタンスの総数"
 
 msgid "Total running on-demand c5a.xlarge instances"
-msgstr "稼働中のオンデマンドc5a.xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5a.xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5ad.12xlarge instances"
-msgstr "稼働中のオンデマンドc5ad.12xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5ad.12xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5ad.16xlarge instances"
-msgstr "稼働中のオンデマンドc5ad.16xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5ad.16xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5ad.24xlarge instances"
-msgstr "稼働中のオンデマンド c5ad.24xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンド c5ad.24xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5ad.2xlarge instances"
-msgstr "稼働中のオンデマンド c5ad.2xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンド c5ad.2xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5ad.4xlarge instances"
-msgstr "稼働中のオンデマンド c5ad.4xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンド c5ad.4xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5ad.8xlarge instances"
-msgstr "稼働中のオンデマンドc5ad.8xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5ad.8xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5ad.large instances"
-msgstr "稼働中のオンデマンドc5ad.largeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5ad.largeインスタンスの総数"
 
 msgid "Total running on-demand c5ad.xlarge instances"
-msgstr "稼働中のオンデマンドc5ad.xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5ad.xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5d.12xlarge instances"
-msgstr "稼働中のオンデマンドc5d.12xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5d.12xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5d.18xlarge instances"
-msgstr "稼働中のオンデマンドc5d.18xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5d.18xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5d.24xlarge instances"
-msgstr "稼働中のオンデマンド c5d.24xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンド c5d.24xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5d.2xlarge instances"
-msgstr "稼働中のオンデマンド c5d.2xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンド c5d.2xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5d.4xlarge instances"
-msgstr "稼働中のオンデマンドc5d.4xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5d.4xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5d.9xlarge instances"
-msgstr "稼働中のオンデマンドc5d.9xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5d.9xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5d.large instances"
-msgstr "稼働中のオンデマンドc5d.largeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5d.largeインスタンスの総数"
 
 msgid "Total running on-demand c5d.metal instances"
-msgstr "稼働中のオンデマンドc5d.metalインスタンスの総数"
+msgstr "稼動中のオンデマンドc5d.metalインスタンスの総数"
 
 msgid "Total running on-demand c5d.xlarge instances"
-msgstr "稼働中のオンデマンドc5d.xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5d.xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5n.18xlarge instances"
-msgstr "稼働中のオンデマンドc5n.18xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5n.18xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5n.2xlarge instances"
-msgstr "稼働中のオンデマンドc5n.2xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5n.2xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5n.4xlarge instances"
-msgstr "稼働中のオンデマンドc5n.4xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5n.4xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5n.9xlarge instances"
-msgstr "稼働中のオンデマンドc5n.9xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5n.9xlargeインスタンスの総数"
 
 msgid "Total running on-demand c5n.large instances"
-msgstr "稼働中のオンデマンドc5n.largeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5n.largeインスタンスの総数"
 
 msgid "Total running on-demand c5n.metal instances"
-msgstr "稼働中のオンデマンドc5n.metalインスタンスの総数"
+msgstr "稼動中のオンデマンドc5n.metalインスタンスの総数"
 
 msgid "Total running on-demand c5n.xlarge instances"
-msgstr "稼働中のオンデマンドc5n.xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc5n.xlargeインスタンスの総数"
 
 msgid "Total running on-demand c6g.12xlarge instances"
-msgstr "稼働中のオンデマンドc6g.12xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc6g.12xlargeインスタンスの総数"
 
 msgid "Total running on-demand c6g.16xlarge instances"
-msgstr "稼働中のオンデマンドc6g.16xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc6g.16xlargeインスタンスの総数"
 
 msgid "Total running on-demand c6g.2xlarge instances"
-msgstr "稼働中のオンデマンドc6g.2xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc6g.2xlargeインスタンスの総数"
 
 msgid "Total running on-demand c6g.4xlarge instances"
-msgstr "稼働中のオンデマンドc6g.4xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc6g.4xlargeインスタンスの総数"
 
 msgid "Total running on-demand c6g.8xlarge instances"
-msgstr "稼働中のオンデマンドc6g.8xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc6g.8xlargeインスタンスの総数"
 
 msgid "Total running on-demand c6g.large instances"
-msgstr "稼働中のオンデマンドc6g.largeインスタンスの総数"
+msgstr "稼動中のオンデマンドc6g.largeインスタンスの総数"
 
 msgid "Total running on-demand c6g.medium instances"
-msgstr "稼働中のオンデマンドc6g.mediumインスタンスの総数"
+msgstr "稼動中のオンデマンドc6g.mediumインスタンスの総数"
 
 msgid "Total running on-demand c6g.metal instances"
-msgstr "稼働中のオンデマンドc6g.metalインスタンスの総数"
+msgstr "稼動中のオンデマンドc6g.metalインスタンスの総数"
 
 msgid "Total running on-demand c6g.xlarge instances"
-msgstr "稼働中のオンデマンドc6g.xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc6g.xlargeインスタンスの総数"
 
 msgid "Total running on-demand c6gd.12xlarge instances"
-msgstr "稼働中のオンデマンドc6gd.12xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc6gd.12xlargeインスタンスの総数"
 
 msgid "Total running on-demand c6gd.16xlarge instances"
-msgstr "稼働中のオンデマンドc6gd.16xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc6gd.16xlargeインスタンスの総数"
 
 msgid "Total running on-demand c6gd.2xlarge instances"
-msgstr "稼働中のオンデマンドc6gd.2xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc6gd.2xlargeインスタンスの総数"
 
 msgid "Total running on-demand c6gd.4xlarge instances"
-msgstr "稼働中のオンデマンドc6gd.4xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc6gd.4xlargeインスタンスの総数"
 
 msgid "Total running on-demand c6gd.8xlarge instances"
-msgstr "稼働中のオンデマンドc6gd.8xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc6gd.8xlargeインスタンスの総数"
 
 msgid "Total running on-demand c6gd.large instances"
-msgstr "稼働中のオンデマンドc6gd.largeインスタンスの総数"
+msgstr "稼動中のオンデマンドc6gd.largeインスタンスの総数"
 
 msgid "Total running on-demand c6gd.medium instances"
-msgstr "稼働中のオンデマンドc6gd.mediumインスタンスの総数"
+msgstr "稼動中のオンデマンドc6gd.mediumインスタンスの総数"
 
 msgid "Total running on-demand c6gd.metal instances"
-msgstr "稼働中のオンデマンドc6gd.metalインスタンスの総数"
+msgstr "稼動中のオンデマンドc6gd.metalインスタンスの総数"
 
 msgid "Total running on-demand c6gd.xlarge instances"
-msgstr "稼働中のオンデマンドc6gd.xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc6gd.xlargeインスタンスの総数"
 
 msgid "Total running on-demand c6gn.12xlarge instances"
-msgstr "稼働中のオンデマンドc6gn.12xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc6gn.12xlargeインスタンスの総数"
 
 msgid "Total running on-demand c6gn.16xlarge instances"
-msgstr "稼働中のオンデマンドc6gn.16xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc6gn.16xlargeインスタンスの総数"
 
 msgid "Total running on-demand c6gn.2xlarge instances"
-msgstr "稼働中のオンデマンドc6gn.2xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc6gn.2xlargeインスタンスの総数"
 
 msgid "Total running on-demand c6gn.4xlarge instances"
-msgstr "稼働中のオンデマンドc6gn.4xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc6gn.4xlargeインスタンスの総数"
 
 msgid "Total running on-demand c6gn.8xlarge instances"
-msgstr "稼働中のオンデマンドc6gn.8xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc6gn.8xlargeインスタンスの総数"
 
 msgid "Total running on-demand c6gn.large instances"
-msgstr "稼働中のオンデマンドc6gn.largeインスタンスの総数"
+msgstr "稼動中のオンデマンドc6gn.largeインスタンスの総数"
 
 msgid "Total running on-demand c6gn.medium instances"
-msgstr "稼働中のオンデマンドc6gn.mediumインスタンスの総数"
+msgstr "稼動中のオンデマンドc6gn.mediumインスタンスの総数"
 
 msgid "Total running on-demand c6gn.xlarge instances"
-msgstr "稼働中のオンデマンドc6gn.xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドc6gn.xlargeインスタンスの総数"
 
 msgid "Total running on-demand cc1.4xlarge instances"
-msgstr "稼働中のオンデマンドcc1.4xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドcc1.4xlargeインスタンスの総数"
 
 msgid "Total running on-demand cc2.8xlarge instances"
-msgstr "稼働中のオンデマンドcc2.8xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドcc2.8xlargeインスタンスの総数"
 
 msgid "Total running on-demand cg1.4xlarge instances"
-msgstr "稼働中のオンデマンドcg1.4xlarge インスタンスの総数"
+msgstr "稼動中のオンデマンドcg1.4xlarge インスタンスの総数"
 
 msgid "Total running on-demand cr1.8xlarge instances"
-msgstr "稼働中のオンデマンドcr1.8xlarge インスタンスの総数"
+msgstr "稼動中のオンデマンドcr1.8xlarge インスタンスの総数"
 
 msgid "Total running on-demand d2.2xlarge instances"
-msgstr "稼働中のオンデマンドd2.2xlarge インスタンスの総数"
+msgstr "稼動中のオンデマンドd2.2xlarge インスタンスの総数"
 
 msgid "Total running on-demand d2.4xlarge instances"
-msgstr "稼働中のオンデマンドd2.4xlarge インスタンスの総数"
+msgstr "稼動中のオンデマンドd2.4xlarge インスタンスの総数"
 
 msgid "Total running on-demand d2.8xlarge instances"
-msgstr "稼働中のオンデマンドd2.8xlarge インスタンスの総数"
+msgstr "稼動中のオンデマンドd2.8xlarge インスタンスの総数"
 
 msgid "Total running on-demand d2.xlarge instances"
-msgstr "稼働中のオンデマンドd2.xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドd2.xlargeインスタンスの総数"
 
 msgid "Total running on-demand d3.2xlarge instances"
-msgstr "稼働中のオンデマンドd3.2xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドd3.2xlargeインスタンスの総数"
 
 msgid "Total running on-demand d3.4xlarge instances"
-msgstr "稼働中のオンデマンドd3.4xlarge インスタンスの総数"
+msgstr "稼動中のオンデマンドd3.4xlarge インスタンスの総数"
 
 msgid "Total running on-demand d3.8xlarge instances"
-msgstr "稼働中のオンデマンドd3.8xlarge インスタンスの総数"
+msgstr "稼動中のオンデマンドd3.8xlarge インスタンスの総数"
 
 msgid "Total running on-demand d3.xlarge instances"
-msgstr "稼働中のオンデマンドd3.xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドd3.xlargeインスタンスの総数"
 
 msgid "Total running on-demand d3en.12xlarge instances"
-msgstr "稼働中のオンデマンドd3en.12xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドd3en.12xlargeインスタンスの総数"
 
 msgid "Total running on-demand d3en.2xlarge instances"
-msgstr "稼働中のオンデマンドd3en.2xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドd3en.2xlargeインスタンスの総数"
 
 msgid "Total running on-demand d3en.4xlarge instances"
-msgstr "稼働中のオンデマンドd3en.4xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドd3en.4xlargeインスタンスの総数"
 
 msgid "Total running on-demand d3en.6xlarge instances"
-msgstr "稼働中のオンデマンドd3en.6xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドd3en.6xlargeインスタンスの総数"
 
 msgid "Total running on-demand d3en.8xlarge instances"
-msgstr "稼働中のオンデマンドd3en.8xlarge インスタンスの総数"
+msgstr "稼動中のオンデマンドd3en.8xlarge インスタンスの総数"
 
 msgid "Total running on-demand d3en.xlarge instances"
-msgstr "稼働中のオンデマンドd3en.xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドd3en.xlargeインスタンスの総数"
 
 msgid "Total running on-demand f1.16xlarge instances"
-msgstr "稼働中のオンデマンドf1.16xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドf1.16xlargeインスタンスの総数"
 
 msgid "Total running on-demand f1.2xlarge instances"
-msgstr "稼働中のオンデマンドf1.2xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドf1.2xlargeインスタンスの総数"
 
 msgid "Total running on-demand f1.4xlarge instances"
-msgstr "稼働中のオンデマンドf1.4xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドf1.4xlargeインスタンスの総数"
 
 msgid "Total running on-demand g2.2xlarge instances"
-msgstr "稼働中のオンデマンドg2.2xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドg2.2xlargeインスタンスの総数"
 
 msgid "Total running on-demand g2.8xlarge instances"
-msgstr "稼働中のオンデマンドg2.8xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドg2.8xlargeインスタンスの総数"
 
 msgid "Total running on-demand g3.16xlarge instances"
-msgstr "稼働中のオンデマンドg3.16xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドg3.16xlargeインスタンスの総数"
 
 msgid "Total running on-demand g3.4xlarge instances"
-msgstr "稼働中のオンデマンド g3.4xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンド g3.4xlargeインスタンスの総数"
 
 msgid "Total running on-demand g3.8xlarge instances"
-msgstr "稼働中のオンデマンドg3.8xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドg3.8xlargeインスタンスの総数"
 
 msgid "Total running on-demand g3s.xlarge instances"
-msgstr "稼働中のオンデマンドg3s.xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドg3s.xlargeインスタンスの総数"
 
 msgid "Total running on-demand g4ad.16xlarge instances"
-msgstr "稼働中のオンデマンドg4ad.16xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドg4ad.16xlargeインスタンスの総数"
 
 msgid "Total running on-demand g4ad.2xlarge instances"
-msgstr "稼働中のオンデマンドg4ad.2xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドg4ad.2xlargeインスタンスの総数"
 
 msgid "Total running on-demand g4ad.4xlarge instances"
-msgstr "稼働中のオンデマンドg4ad.4xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドg4ad.4xlargeインスタンスの総数"
 
 msgid "Total running on-demand g4ad.8xlarge instances"
-msgstr "稼働中のオンデマンドg4ad.8xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドg4ad.8xlargeインスタンスの総数"
 
 msgid "Total running on-demand g4ad.xlarge instances"
-msgstr "稼働中のオンデマンドg4ad.xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドg4ad.xlargeインスタンスの総数"
 
 msgid "Total running on-demand g4dn.12xlarge instances"
-msgstr "稼働中のオンデマンドg4dn.12xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドg4dn.12xlargeインスタンスの総数"
 
 msgid "Total running on-demand g4dn.16xlarge instances"
-msgstr "稼働中のオンデマンドg4dn.16xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドg4dn.16xlargeインスタンスの総数"
 
 msgid "Total running on-demand g4dn.2xlarge instances"
-msgstr "稼働中のオンデマンドg4dn.2xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドg4dn.2xlargeインスタンスの総数"
 
 msgid "Total running on-demand g4dn.4xlarge instances"
-msgstr "稼働中のオンデマンドg4dn.4xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドg4dn.4xlargeインスタンスの総数"
 
 msgid "Total running on-demand g4dn.8xlarge instances"
-msgstr "稼働中のオンデマンドg4dn.8xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドg4dn.8xlargeインスタンスの総数"
 
 msgid "Total running on-demand g4dn.metal instances"
-msgstr "稼働中のオンデマンドg4dn.metal インスタンスの総数"
+msgstr "稼動中のオンデマンドg4dn.metal インスタンスの総数"
 
 msgid "Total running on-demand g4dn.xlarge instances"
-msgstr "稼働中のオンデマンドg4dn.xlarge インスタンスの総数"
+msgstr "稼動中のオンデマンドg4dn.xlarge インスタンスの総数"
 
 msgid "Total running on-demand h1.16xlarge instances"
-msgstr "稼働中のオンデマンドh1.16xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドh1.16xlargeインスタンスの総数"
 
 msgid "Total running on-demand h1.2xlarge instances"
-msgstr "稼働中のオンデマンドh1.2xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドh1.2xlargeインスタンスの総数"
 
 msgid "Total running on-demand h1.4xlarge instances"
-msgstr "稼働中のオンデマンドh1.4xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンドh1.4xlargeインスタンスの総数"
 
 msgid "Total running on-demand h1.8xlarge instances"
-msgstr "稼働中のオンデマンドh1.8xlarge インスタンスの総数"
+msgstr "稼動中のオンデマンドh1.8xlarge インスタンスの総数"
 
 msgid "Total running on-demand hi1.4xlarge instances"
-msgstr "稼働中のオンデマンドhi1.4xlarge インスタンスの総数"
+msgstr "稼動中のオンデマンドhi1.4xlarge インスタンスの総数"
 
 msgid "Total running on-demand hs1.8xlarge instances"
-msgstr "稼働中のオンデマンドhs1.8xlarge インスタンスの総数"
+msgstr "稼動中のオンデマンドhs1.8xlarge インスタンスの総数"
 
 msgid "Total running on-demand i2.2xlarge instances"
 msgstr "稼働中のオンデマンドi2.2xlarge インスタンスの総数"
 
 msgid "Total running on-demand i2.4xlarge instances"
-msgstr "稼働中のオンデマンドi2.4xlarge インスタンスの総数"
+msgstr "稼動中のオンデマンドi2.4xlarge インスタンスの総数"
 
 msgid "Total running on-demand i2.8xlarge instances"
-msgstr "稼働中のオンデマンドi2.8xlarge インスタンスの総数"
+msgstr "稼動中のオンデマンドi2.8xlarge インスタンスの総数"
 
 msgid "Total running on-demand i2.xlarge instances"
-msgstr "稼働中のオンデマンド i2.xlargeインスタンスの総数"
+msgstr "稼動中のオンデマンド i2.xlargeインスタンスの総数"
 
 msgid "Total running on-demand i3.16xlarge instances"
-msgstr "稼働中のオンデマンドi3.16xlarge インスタンスの総数"
+msgstr "稼動中のオンデマンドi3.16xlarge インスタンスの総数"
 
 msgid "Total running on-demand i3.2xlarge instances"
-msgstr "稼働中のオンデマンドi3.2xlarge インスタンスの総数"
+msgstr "稼動中のオンデマンドi3.2xlarge インスタンスの総数"
 
 msgid "Total running on-demand i3.4xlarge instances"
-msgstr "稼働中のオンデマンドi3.4xlarge インスタンスの総数"
+msgstr "稼動中のオンデマンドi3.4xlarge インスタンスの総数"
 
 msgid "Total running on-demand i3.8xlarge instances"
-msgstr "稼働中のオンデマンドi3.8xlarge インスタンスの総数"
+msgstr "稼動中のオンデマンドi3.8xlarge インスタンスの総数"
 
 msgid "Total running on-demand i3.large instances"
-msgstr "稼働中のオンデマンドi3.large インスタンスの総数"
+msgstr "稼動中のオンデマンドi3.large インスタンスの総数"
 
 msgid "Total running on-demand i3.metal instances"
-msgstr "稼働中のオンデマンドi3.metalインスタンスの総数"
+msgstr "稼動中のオンデマンドi3.metalインスタンスの総数"
 
 msgid "Total running on-demand i3.xlarge instances"
 msgstr "稼働中のオンデマンドi3.xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand i3en.12xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンド i3en.12xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand i3en.24xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドi3en.24xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand i3en.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンド i3en.2xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand i3en.3xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドi3en.3xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand i3en.6xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドi3en.6xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand i3en.large instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドi3en.largeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand i3en.metal instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドi3en.metalインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand i3en.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドi3en.xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand inf1.24xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドinf1.24xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand inf1.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドinf1.2xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand inf1.6xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドinf1.6xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand inf1.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドinf1.xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type a1"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のa1タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type c1"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のc1タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type c3"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のc3タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type c4"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のc4タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type c5"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のc5タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type c5ad"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のc5adタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type c5d"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のc5dタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type c5n"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のc5nタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type c6g"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のc6gタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type c6gd"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のc6gdタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type c6gn"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のc6gnタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type cc1"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のcc1タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type cc2"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のcc2タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type cg1"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のcg1タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type cr1"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のcr1タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type d2"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のd2タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type d3"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のd3タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type d3en"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のd3enタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type f1"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のf1タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type g2"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のg2タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type g3"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のg3タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type g3s"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のg3sタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type g4ad"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のg4adタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type g4dn"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のg4dnタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type h1"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のh1タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type hi1"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のhi1タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type hs1"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のhs1タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type i2"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のi2タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type i3"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のi3タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type i3en"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のi3enタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type inf1"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のinf1タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type m1"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のm1タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type m2"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のm2タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type m3"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のm3タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type m4"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のm4タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type m5"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のm5タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type m5a"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のm5aタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type m5ad"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のm5adタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type m5d"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のm5dタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type m5dn"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のm5dnタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type m5n"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のm5nタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type m5zn"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のm5znタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type m6g"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のm6gタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type m6gd"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のm6gdタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type m6i"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のm6iタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type mac1"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のmac1タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type p2"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のp2タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type p3"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のp3タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type p3dn"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のp3dnタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type p4d"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のp4dタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type r3"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のr3タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type r4"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のr4タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type r5"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のr5タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type r5a"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のr5aタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type r5ad"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のr5adタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type r5b"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のr5bタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type r5d"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のr5dタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type r5dn"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のr5dnタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type r5n"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のr5nタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type r6g"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のr6gタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type r6gd"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のr6gdタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type t1"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のt1タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type t2"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のt2タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type t3"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のt3タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type t3a"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のt3aタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type t4g"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のt4gタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type u-12tb1"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のu-12tb1タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type u-18tb1"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のu-18tb1タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type u-24tb1"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のu-24tb1タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type u-6tb1"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のu-6tb1タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type u-9tb1"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のu-9tb1タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type vt1"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のvt1タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type x1"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のx1タイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type x1e"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のx1eタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand instances of type x2gd"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のx2gdタイプオンデマンドインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m1.large instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm1.largeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m1.medium instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm1.medium インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m1.small instances"
-msgstr "実行中のオンデマンド%sインスタンスの合計"
+msgstr "稼動中のオンデマンドm1.small インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m1.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm1.xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m2.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm2.2xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m2.4xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm2.4xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m2.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm2.xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m3.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm3.2xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m3.large instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm3.large インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m3.medium instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm3.medium インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m3.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm3.xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m4.10xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm4.10xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m4.16xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm4.16xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m4.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm4.2xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m4.4xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm4.4xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m4.large instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm4.large インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m4.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm4.xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5.12xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5.12xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5.16xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5.16xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5.24xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5.24xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5.2xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5.4xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5.4xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5.8xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5.8xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5.large instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5.large インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5.metal instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5.metal インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5.xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5a.12xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5.12xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5a.16xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5a.16xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5a.24xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5a.24xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5a.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5a.2xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5a.4xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5a.4xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5a.8xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5a.8xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5a.large instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5a.large インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5a.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5a.xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5ad.12xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5ad.12xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5ad.16xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5ad.16xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5ad.24xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5ad.24xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5ad.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5ad.2xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5ad.4xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5ad.4xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5ad.8xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5ad.8xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5ad.large instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5ad.large インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5ad.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5ad.xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5d.12xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5ad.12xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5d.16xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5ad.16xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5d.24xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5d.24xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5d.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5d.2xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5d.4xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5d.4xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5d.8xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5d.8xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5d.large instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5d.large インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5d.metal instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5d.metal インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5d.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5d.xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5dn.12xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5dn.12xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5dn.16xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5dn.16xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5dn.24xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5dn.24xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5dn.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5dn.2xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5dn.4xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5dn.4xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5dn.8xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5dn.8xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5dn.large instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5dn.large インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5dn.metal instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5dn.metal インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5dn.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5dn.xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5n.12xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5n.12xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5n.16xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5n.16xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5n.24xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5n.24xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5n.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5n.2xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5n.4xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5n.4xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5n.8xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5n.8xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5n.large instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5n.large インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5n.metal instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5n.metal インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5n.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5n.xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5zn.12xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5zn.12xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5zn.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5zn.2xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5zn.3xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5zn.3xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5zn.6xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5zn.6xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5zn.large instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5zn.large インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5zn.metal instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5zn.metal インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m5zn.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm5zn.xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m6g.12xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm6g.12xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m6g.16xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm6g.16xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m6g.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm6g.2xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m6g.4xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm6g.4xlarge "
+"インスタンスの総数実行中のオンデマンドインスタンスの合計"
 
-#, fuzzy
 msgid "Total running on-demand m6g.8xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm6g.8xlarge "
+"インスタンスの総数実行中のオンデマンドインスタンスの合計"
 
-#, fuzzy
 msgid "Total running on-demand m6g.large instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm6g.large "
+"インスタンスの総数実行中のオンデマンドインスタンスの合計"
 
-#, fuzzy
 msgid "Total running on-demand m6g.medium instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm6g.mediumインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m6g.metal instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm6g.metalインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m6g.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm6g.xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m6gd.12xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm6g.12xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m6gd.16xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm6g.16xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m6gd.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm6gd.2xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m6gd.4xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm6gd.4xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m6gd.8xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm6gd.8xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m6gd.large instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm6gd.large インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m6gd.medium instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm6gd.medium インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m6gd.metal instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm6gd.metal インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m6gd.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm6gd.xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m6i.12xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm6i.12xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m6i.16xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm6i.16xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m6i.24xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm6i.24xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m6i.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm6i.2xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m6i.32xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm6i.32xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m6i.4xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm6i.4xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m6i.8xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm6i.8xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m6i.large instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm6i.largeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand m6i.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドm6i.xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand mac1.metal instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドmac1.metal インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand p2.16xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドp2.16xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand p2.8xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンド p2.8xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand p2.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンド p2.xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand p3.16xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンド p3.16xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand p3.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンド p3.2xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand p3.8xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンド p3.8xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand p3dn.24xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドp3dn.24xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand p4d.24xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドp4d.24xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r3.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr3.2xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r3.4xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr3.4xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r3.8xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンド r3.8xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r3.large instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr3.largeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r3.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr3.xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r4.16xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr4.16xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r4.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr4.2xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r4.4xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr4.4xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r4.8xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr4.8xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r4.large instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr4.large インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r4.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr4.xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5.12xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5.12xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5.16xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5.16xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5.24xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5.24xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5.2xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5.4xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5.4xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5.8xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5.8xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5.large instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5.large インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5.metal instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5.metal インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5.xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5a.12xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5a.12xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5a.16xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5a.16xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5a.24xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5a.24xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5a.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5a.2xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5a.4xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5a.4xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5a.8xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5a.8xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5a.large instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5a.large インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5a.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5a.xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5ad.12xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5ad.12xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5ad.16xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5ad.16xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5ad.24xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5ad.24xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5ad.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5ad.2xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5ad.4xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5ad.4xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5ad.8xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5ad.8xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5ad.large instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5ad.large インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5ad.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5ad.xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5b.12xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5b.12xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5b.16xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5b.16xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5b.24xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5b.24xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5b.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5b.2xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5b.4xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5b.4xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5b.8xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5b.8xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5b.large instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5b.largeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5b.metal instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5b.metalインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5b.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5b.xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5d.12xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5b.12xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5d.16xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5b.16xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5d.24xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5b.24xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5d.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5b.2xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5d.4xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5d.4xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5d.8xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5d.8xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5d.large instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5d.large インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5d.metal instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5d.metal インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5d.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5d.xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5dn.12xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5dn.12xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5dn.16xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5dn.16xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5dn.24xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5dn.24xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5dn.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5dn.2xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5dn.4xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5dn.4xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5dn.8xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5dn.8xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5dn.large instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5dn.large インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5dn.metal instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5dn.metal インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5dn.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5dn.xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5n.12xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5dn.12xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5n.16xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5n.16xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5n.24xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5n.24xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5n.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5n.2xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5n.4xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5n.4xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5n.8xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5n.8xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5n.large instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5n.large インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5n.metal instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5n.metal インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r5n.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr5n.xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r6g.12xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr6g.12xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r6g.16xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr6g.12xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r6g.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr6g.2xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r6g.4xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr6g.4xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r6g.8xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr6g.8xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r6g.large instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr6g.large インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r6g.medium instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr6g.medium インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r6g.metal instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr6g.metal インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r6g.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr6g.xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r6gd.12xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr6gd.12xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r6gd.16xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr6gd.16xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r6gd.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr6gd.2xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r6gd.4xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr6gd.4xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r6gd.8xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr6gd.8xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r6gd.large instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr6gd.large インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r6gd.medium instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr6gd.medium インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r6gd.metal instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr6gd.metal インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand r6gd.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドr6gd.xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand t1.micro instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドt1.micro インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand t2.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドt2.2xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand t2.large instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドt2.largeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand t2.medium instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドt2.medium インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand t2.micro instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドt2.micro インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand t2.nano instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドt2.nano インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand t2.small instances"
-msgstr "実行中のオンデマンド%sインスタンスの合計"
+msgstr "稼動中のオンデマンドt2.small インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand t2.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドt2.xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand t3.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドt3.2xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand t3.large instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドt3.large インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand t3.medium instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドt3.medium インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand t3.micro instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドt3.micro インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand t3.nano instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドt3.nano インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand t3.small instances"
-msgstr "実行中のオンデマンド%sインスタンスの合計"
+msgstr "稼動中のオンデマンドt3.small インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand t3.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドt3.xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand t3a.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドt3a.2xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand t3a.large instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドt3a.large インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand t3a.medium instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドt3a.medium インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand t3a.micro instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドt3a.micro インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand t3a.nano instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドt3a.nano インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand t3a.small instances"
-msgstr "実行中のオンデマンド%sインスタンスの合計"
+msgstr "稼動中のオンデマンドt3a.smallインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand t3a.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドt3a.xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand t4g.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドt4g.2xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand t4g.large instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドt4g.large インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand t4g.medium instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドt4g.medium インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand t4g.micro instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドt4g.micro インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand t4g.nano instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドt4g.nano インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand t4g.small instances"
-msgstr "実行中のオンデマンド%sインスタンスの合計"
+msgstr "稼動中のオンデマンドt4g.small インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand t4g.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドt4g.xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand u-12tb1.112xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドu-12tb1.112xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand u-12tb1.metal instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドu-12tb1.metalインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand u-18tb1.metal instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドu-18tb1.metalインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand u-24tb1.metal instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドu-24tb1.metalインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand u-6tb1.112xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドu-6tb1.112xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand u-6tb1.56xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドu-6tb1.56xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand u-6tb1.metal instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドu-6tb1.metal インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand u-9tb1.112xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドu-9tb1.112xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand u-9tb1.metal instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドu-9tb1.metal インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand vt1.24xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドvt1.24xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand vt1.3xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドvt1.3xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand vt1.6xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドvt1.6xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand x1.16xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドx1.16xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand x1.32xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドx1.32xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand x1e.16xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドx1e.16xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand x1e.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドx1e.2xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand x1e.32xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドx1e.32xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand x1e.4xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドx1e.4xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand x1e.8xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドx1e.8xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand x1e.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドx1e.xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand x2gd.12xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドx2gd.12xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand x2gd.16xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドx2gd.16xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand x2gd.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドx2gd.2xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand x2gd.4xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドx2gd.4xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand x2gd.8xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドx2gd.8xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand x2gd.large instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドx2gd.large インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand x2gd.medium instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドx2gd.medium インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand x2gd.metal instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドx2gd.metal インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand x2gd.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドx2gd.xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand z1d.12xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドz1d.12xlargeインスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand z1d.2xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドz1d.2xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand z1d.3xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドz1d.3xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand z1d.6xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドz1d.6xlarge インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand z1d.large instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドz1d.large インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand z1d.metal instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドz1d.metal インスタンスの総数"
 
-#, fuzzy
 msgid "Total running on-demand z1d.xlarge instances"
-msgstr "実行中のオンデマンドインスタンスの合計"
+msgstr "稼動中のオンデマンドz1d.xlarge インスタンスの総数"
 
 #, fuzzy
 msgid "Total sent notifications"
@@ -72860,11 +72507,9 @@ msgstr "1秒あたりの合計スループット"
 msgid "Total timeout of check"
 msgstr "チェックの合計タイムアウト"
 
-#, fuzzy
 msgid "Total traffic maximum"
 msgstr "最大総トラフィック"
 
-#, fuzzy
 msgid "Total traffic minimum"
 msgstr "最小総トラフィック"
 

@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-02-25 23:50+0000\n"
+"PO-Revision-Date: 2025-02-27 21:50+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -2322,13 +2322,11 @@ msgstr ""
 "Ein Makro muss mit '$' beginnen und enden. Es dürfen nur ASCII "
 "Großbuchstaben, Ziffern und Unterstriche enthalten sein."
 
-#, fuzzy
 msgid "A macro name and a regular expression are required"
-msgstr "Dateien anhand eines regulären Ausdrucks-Pattern gruppieren."
+msgstr "Ein Makroname und ein regulärer Ausdruck sind erforderlich"
 
-#, fuzzy
 msgid "A macro name is required"
-msgstr "als Makro benannt"
+msgstr "Ein Makroname ist erforderlich"
 
 msgid ""
 "A matrix of performance data values from all hosts in a certain host group"
@@ -2370,9 +2368,8 @@ msgstr ""
 msgid "A provisioning of over 100% means over provisioning."
 msgstr "Eine Provisionierung von über 100% bedeutet Überprovisionierung."
 
-#, fuzzy
 msgid "A regular expression is required"
-msgstr "Zu erwartender regulärer Ausdruck"
+msgstr "Ein regulärer Ausdruck ist erforderlich"
 
 msgid ""
 "A regular expression matching the <b>beginning</b> of a service description. "
@@ -3641,9 +3638,8 @@ msgstr "Aktive, alarmierende 'flows'"
 msgid "Active and inactive memory"
 msgstr "Aktiver und inaktiver Speicher"
 
-#, fuzzy
 msgid "Active and inactive memory - files and anonymous"
-msgstr "Aktiver und inaktiver Speicher"
+msgstr "Aktiver und inaktiver Speicher - Dateien und anonym"
 
 msgid "Active check"
 msgstr "Aktiver Check"
@@ -7203,7 +7199,7 @@ msgid "At least one selection is missing."
 msgstr "Mindestens eine Auswahl fehlt."
 
 msgid "At least one triggering event must be selected."
-msgstr ""
+msgstr "Es muss mindestens ein auslösendes Ereignis ausgewählt werden."
 
 msgid ""
 "At most that many notifications are kept back for bulking. A value of 1 "
@@ -7760,9 +7756,8 @@ msgstr "Verfügbare physische Prozessoren im gemeinsamen Pool"
 msgid "Available replicas"
 msgstr "Verfügbare Repliken"
 
-#, fuzzy
 msgid "Available spare"
-msgstr "Verfügbare Reserven"
+msgstr "Verfügbarer Ersatz"
 
 msgid "Available temp space"
 msgstr "Verfügbarer temporärer Speicher"
@@ -10138,6 +10133,9 @@ msgid ""
 "By setting a higher value, you reduce the amount of requests sent toyour own "
 "instance as well as Gerrit's host infrastructure."
 msgstr ""
+"Indem Sie einen höheren Wert einstellen, verringern Sie die Anzahl der "
+"Anfragen, die an Ihre eigene Instanz sowie an die Host-Infrastruktur von "
+"Gerrit gesendet werden."
 
 msgid ""
 "By specifying a customer here, you configure on which sites this object will "
@@ -33405,9 +33403,8 @@ msgstr "Ungültige Datenquelle: %s"
 msgid "Invalid data. Missing filename"
 msgstr "Ungültige Daten. Dateiname fehlt"
 
-#, fuzzy
 msgid "Invalid data: value is not a string."
-msgstr "Ungültiger Wert für ACK Parameter."
+msgstr "Ungültige Daten: Wert ist keine Zeichenkette."
 
 #, python-format
 msgid "Invalid datasource '%s' configured."
@@ -38685,9 +38682,9 @@ msgstr "Maximale Anzahl von Ausfällen"
 msgid "Maximum number of threads"
 msgstr "Maximale Anzahl von Threads"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Maximum of %s"
-msgstr "Maximum von "
+msgstr "Maximum von %s"
 
 msgid "Maximum parallel connections"
 msgstr "Maximale Anzahl paralleler Verbindungen"
@@ -39441,9 +39438,9 @@ msgstr "Mindestanzahl einsatzbereiter Control-Plane-Knoten"
 msgid "Minimum number of ready worker nodes"
 msgstr "Mindestanzahl von einsatzbereiten Worker-Knoten"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Minimum of %s"
-msgstr "Minimum von "
+msgstr "Minimum von %s"
 
 msgid "Minimum password length"
 msgstr "Minimale Passwortlänge"
@@ -47368,9 +47365,8 @@ msgstr ""
 "Bitte aktivieren Sie das Monitoring von mindestens einem Gerätetyp: Android, "
 "iOS oder andere Geräte"
 
-#, fuzzy
 msgid "Please add at least one check type."
-msgstr "Bitte fügen Sie mindestens einen untergeordneten Knoten hinzu."
+msgstr "Bitte fügen Sie mindestens einen Check-Typ hinzu."
 
 msgid "Please add at least one child node."
 msgstr "Bitte fügen Sie mindestens einen untergeordneten Knoten hinzu."
@@ -47381,7 +47377,6 @@ msgstr "Bitte mindestens eine Spalte zur Ansicht hinzufügen."
 msgid "Please add at least one contact group"
 msgstr "Bitte fügen Sie mindestens eine Kontaktgruppe hinzu."
 
-#, fuzzy
 msgid "Please add at least one contact group."
 msgstr "Bitte fügen Sie mindestens eine Kontaktgruppe hinzu."
 
@@ -47391,43 +47386,35 @@ msgstr "Bitte fügen Sie mindestens eine E-Mail-Adresse hinzu."
 msgid "Please add at least one endpoint to monitor"
 msgstr "Bitte mindestens einen Endpunkt für die Überwachung hinzufügen"
 
-#, fuzzy
 msgid "Please add at least one host group."
-msgstr "Bitte fügen Sie mindestens eine Kontaktgruppe hinzu."
+msgstr "Bitte fügen Sie mindestens eine Host-Gruppe hinzu."
 
-#, fuzzy
 msgid "Please add at least one host label."
-msgstr "Bitte fügen Sie mindestens einen Benutzer hinzu."
+msgstr "Bitte fügen Sie mindestens ein Host-Label hinzu."
 
-#, fuzzy
 msgid "Please add at least one host."
-msgstr "Bitte fügen Sie mindestens einen Benutzer hinzu."
+msgstr "Bitte fügen Sie mindestens einen Host hinzu."
 
 msgid "Please add at least one macro"
 msgstr "Bitte fügen Sie mindestens ein Makro hinzu."
 
-#, fuzzy
 msgid "Please add at least one member."
-msgstr "Bitte fügen Sie mindestens einen Benutzer hinzu."
+msgstr "Bitte fügen Sie mindestens ein Mitglied hinzu."
 
 msgid "Please add at least one recipient"
 msgstr "Bitte fügen Sie mindestens einen Empfänger hinzu."
 
-#, fuzzy
 msgid "Please add at least one service group."
-msgstr "Bitte fügen Sie mindestens eine Kontaktgruppe hinzu."
+msgstr "Bitte fügen Sie mindestens eine Service-Gruppe hinzu."
 
-#, fuzzy
 msgid "Please add at least one service label."
-msgstr "Bitte fügen Sie mindestens einen Benutzer hinzu."
+msgstr "Bitte fügen Sie mindestens ein Service-Label hinzu."
 
-#, fuzzy
 msgid "Please add at least one service."
-msgstr "Bitte fügen Sie mindestens einen Benutzer hinzu."
+msgstr "Bitte fügen Sie mindestens einen Service hinzu."
 
-#, fuzzy
 msgid "Please add at least one site."
-msgstr "Bitte fügen Sie mindestens einen Benutzer hinzu."
+msgstr "Bitte fügen Sie mindestens eine Instanz hinzu."
 
 msgid "Please add at least one tag condition."
 msgstr "Bitte fügen Sie mindestens eine Merkmalsbedingung hinzu."
@@ -47485,11 +47472,10 @@ msgstr "Bitte wählen Sie ein PNG-Bild."
 msgid "Please choose a file to upload."
 msgstr "Bitte wählen Sie eine Datei zum Hochladen."
 
-#, fuzzy
 msgid "Please choose a parameter or click \"Create\" to add a new one."
 msgstr ""
-"Bitte wählen Sie einen Benachrichtigungsparameter aus oder erstellen Sie "
-"einen."
+"Bitte wählen Sie einen Parameter aus oder klicken Sie auf „Erstellen“, um "
+"einen neuen hinzuzufügen."
 
 msgid "Please choose a report to schedule"
 msgstr "Bitte wählen Sie einen Bericht für den Planeintrag aus"
@@ -47586,20 +47572,17 @@ msgstr ""
 msgid "Please enter a Service Integration Key"
 msgstr "Bitte geben Sie einen Service-Integrationsschlüssel ein"
 
-#, fuzzy
 msgid "Please enter a comment to filter for."
-msgstr "Bitte eine Zeit eingeben."
+msgstr "Bitte geben Sie einen Kommentar ein, nach dem Sie filtern möchten."
 
 msgid "Please enter a filename."
 msgstr "Bitte Dateinamen eingeben."
 
-#, fuzzy
 msgid "Please enter a name."
-msgstr "Bitte Dateinamen eingeben."
+msgstr "Bitte geben Sie einen Namen ein."
 
-#, fuzzy
 msgid "Please enter a required match."
-msgstr "Bitte geben Sie einen absoluten Pfad an."
+msgstr "Bitte geben Sie einen erforderlichen Match ein."
 
 msgid "Please enter a time."
 msgstr "Bitte eine Zeit eingeben."
@@ -56838,14 +56821,14 @@ msgid ""
 "applied to the translated piggybacked hosts."
 msgstr ""
 "Manche Agenten oder Agenten-Plugins senden Daten nicht nur für den "
-"abgefragten Host, sondern für andere Hosts &quot;piggyback&quot; mit ihren "
-"eigenen Daten. Das ist z.B. der Fall für den vSphere-Spezialagenten und das "
-"SAP R/3-Plugin. Die Host-Namen, die von solchen Agenten gesendet werden, "
-"müssen mit den Host-Namen, wie sie im Monitoring konfiguriert sind, "
-"übereinstimmen. Wenn das nicht der Fall ist, können Sie mit dieser Regel "
-"eine Host-Namen-Konvertierung konfigurieren. Hinweis: Diese Regel muss für "
-"den Host konfiguriert werden, auf dem der Agent läuft. Sie wird nicht auf "
-"die übersetzten Piggyback-Hosts angewendet."
+"abgefragten Host, sondern für andere Hosts \"piggyback\" mit ihren eigenen "
+"Daten. Das ist z.B. der Fall für den vSphere-Spezialagenten und das SAP R/3-"
+"Plugin. Die Host-Namen, die von solchen Agenten gesendet werden, müssen mit "
+"den Host-Namen, wie sie im Monitoring konfiguriert sind, übereinstimmen. "
+"Wenn das nicht der Fall ist, können Sie mit dieser Regel eine Host-Namen-"
+"Konvertierung konfigurieren. Hinweis: Diese Regel muss für den Host "
+"konfiguriert werden, auf dem der Agent läuft. Sie wird nicht auf die "
+"übersetzten Piggyback-Hosts angewendet."
 
 msgid ""
 "Some built-in or own views may take longer time than expected. In order to "
@@ -62701,13 +62684,11 @@ msgstr ""
 "korrekten Titel benutzen, können die Attribute automatisch zugeordnet "
 "werden. Die momentan verfügbaren Attribute sind:"
 
-#, fuzzy
 msgid "The first value must be greater than 0."
-msgstr "Der Timeout muss mindestens eine Sekunde betragen."
+msgstr "Der erste Wert muss größer als 0 sein."
 
-#, fuzzy
 msgid "The first value must be lower than the second value."
-msgstr "Der Timeout muss mindestens eine Sekunde betragen."
+msgstr "Der erste Wert muss niedriger sein als der zweite Wert."
 
 msgid "The folder is not permitted for any contact group."
 msgstr "Keine Kontaktgruppe hat auf diesem Ordner eine Berechtigung."
@@ -64793,9 +64774,8 @@ msgstr "Der Eintrag, den Sie löschen möchten, existiert nicht."
 msgid "The schedule you are trying to edit does not exist."
 msgstr "Der Eintrag, den Sie bearbeiten möchten, existiert nicht."
 
-#, fuzzy
 msgid "The second value must be equal to or greater than the first value."
-msgstr "Der Timeout muss mindestens eine Sekunde betragen."
+msgstr "Der zweite Wert muss mindestens so groß sein wie der erste Wert."
 
 msgid "The secret access key for your AWS account"
 msgstr "Der geheime Schlüssel für Ihr AWS-Konto"
@@ -71008,9 +70988,8 @@ msgstr "Zeitdauer für DNS-Auflösung"
 msgid "Time to send request"
 msgstr "Zeit für das Senden der Anfrage"
 
-#, fuzzy
 msgid "Time to wait before fetching version information"
-msgstr "Die Netzwerkkonfiguration inventarisieren"
+msgstr "Wartezeit bis zum Abruf der Versionsinformationen"
 
 msgid ""
 "Time to wait for a command to finish before continuing with the next "
@@ -77518,6 +77497,7 @@ msgstr "Werttyp"
 
 msgid "Value is default. Please provide a non-default value."
 msgstr ""
+"Der Wert ist voreingestellt. Bitte geben Sie einen Nicht-Standardwert an."
 
 #, python-format
 msgid "Value must be one of '%s'"
@@ -79617,6 +79597,11 @@ msgid ""
 "matching one of these regular expressions. Please note: The attribution of "
 "piggyback data to existing hosts is not affected by this setting."
 msgstr ""
+"Immer, wenn Checkmk über diese Verbindung Hosts anlegt, ändert oder löscht, "
+"werden nur solche Hosts berücksichtigt, die Piggyback-Daten von Hosts "
+"erhalten, deren Namen einem dieser regulären Ausdrücke entsprechen. Bitte "
+"beachten Sie: Die Zuordnung von Piggyback-Daten zu bestehenden Hosts wird "
+"durch diese Einstellung nicht beeinflusst."
 
 #, python-format
 msgid ""

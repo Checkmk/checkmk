@@ -6,7 +6,8 @@
 import argparse
 import dataclasses
 import sys
-from typing import Annotated, Literal
+from contextlib import contextmanager
+from typing import Annotated, Iterator, Literal
 
 import pydantic
 
@@ -24,6 +25,10 @@ from cmk.update_config.http.conflicts import Conflict, detect_conflicts, ForMigr
 from cmk.update_config.http.migrate import migrate
 
 
+class Delete(pydantic.BaseModel):
+    command: Literal["delete"]
+
+
 class Activate(pydantic.BaseModel):
     command: Literal["activate"]
 
@@ -32,7 +37,7 @@ class Deactivate(pydantic.BaseModel):
     command: Literal["deactivate"]
 
 
-Args = Annotated[Migrate | Activate | Deactivate, pydantic.Field(discriminator="command")]
+Args = Annotated[Migrate | Activate | Deactivate | Delete, pydantic.Field(discriminator="command")]
 
 
 class ArgsParser(pydantic.RootModel[Args]):
@@ -90,10 +95,7 @@ def _construct_v2_rule(rule_v1: Rule, for_migration: ForMigration, ruleset_v2: R
 
 
 def _migrate_main(config: Config, write: bool) -> None:
-    load_plugins()
-    with disable_redis(), gui_context(), SuperUserContext():
-        set_global_vars()
-        all_rulesets = AllRulesets.load_all_rulesets()
+    with _with_allrulesets() as all_rulesets:
         ruleset_v1 = all_rulesets.get("active_checks:http")
         ruleset_v2 = all_rulesets.get("active_checks:httpv2")
         _new_migrated_rules(config, ruleset_v1, ruleset_v2)
@@ -109,16 +111,33 @@ def _parse_arguments() -> Args:
 
     _parser_activate = subparser.add_parser("activate", help="Activation")
 
+    _parser_activate = subparser.add_parser("delete", help="Delete")
+
     _parser_deactivate = subparser.add_parser("deactivate", help="Deactivation")
 
     return ArgsParser.model_validate(vars(parser.parse_args())).root
 
 
-def _activate_main() -> None:
+@contextmanager
+def _with_allrulesets() -> Iterator[AllRulesets]:
     load_plugins()
     with disable_redis(), gui_context(), SuperUserContext():
         set_global_vars()
-        all_rulesets = AllRulesets.load_all_rulesets()
+        yield AllRulesets.load_all_rulesets()
+
+
+def _delete_main() -> None:
+    with _with_allrulesets() as all_rulesets:
+        ruleset_v2 = all_rulesets.get("active_checks:httpv2")
+        for folder, rule_index, rule_v2 in ruleset_v2.get_rules():
+            if _migrated_from(rule_v2) is not None:
+                sys.stdout.write(f"Deleting rule: {folder}, {rule_index}\n")
+                ruleset_v2.delete_rule(rule_v2)
+        all_rulesets.save()
+
+
+def _activate_main() -> None:
+    with _with_allrulesets() as all_rulesets:
         ruleset_v2 = all_rulesets.get("active_checks:httpv2")
         for folder, rule_index, rule_v2 in ruleset_v2.get_rules():
             if _migrated_from(rule_v2) is not None:
@@ -130,10 +149,7 @@ def _activate_main() -> None:
 
 
 def _deactivate_main() -> None:
-    load_plugins()
-    with disable_redis(), gui_context(), SuperUserContext():
-        set_global_vars()
-        all_rulesets = AllRulesets.load_all_rulesets()
+    with _with_allrulesets() as all_rulesets:
         ruleset_v2 = all_rulesets.get("active_checks:httpv2")
         for folder, rule_index, rule_v2 in ruleset_v2.get_rules():
             if _migrated_from(rule_v2) is not None:
@@ -153,6 +169,8 @@ def main() -> None:
             _activate_main()
         case Deactivate():
             _deactivate_main()
+        case Delete():
+            _delete_main()
 
 
 if __name__ == "__main__":

@@ -391,6 +391,15 @@ def get_configuration(*config_var_names: str) -> results.GetConfigurationResult:
     )
 
 
+def update_merged_password_file() -> results.UpdatePasswordsMergedFileResult:
+    return _deserialize(
+        _automation_serialized(
+            "update-passwords-merged-file",
+        ),
+        results.UpdatePasswordsMergedFileResult,
+    )
+
+
 def get_check_information() -> results.GetCheckInformationResult:
     return _deserialize(
         _automation_serialized("get-check-information"),

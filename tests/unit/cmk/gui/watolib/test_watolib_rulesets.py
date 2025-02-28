@@ -2,9 +2,9 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import subprocess
 from collections.abc import Callable
 from typing import Any
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -17,28 +17,11 @@ from cmk.gui.watolib.rulesets import (
     AllRulesets,
     Rule,
     RuleConditions,
-    RuleConfigFile,
     RuleOptions,
     Ruleset,
 )
 from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfigurationVarious
 from cmk.gui.watolib.rulespecs import Rulespec
-
-
-class MockCall:
-    def __init__(self, callback: Callable[..., Any] | None = None) -> None:
-        self._callback = callback
-        self.call_list: list[tuple[tuple[Any, ...], dict[str, Any]]] = []
-
-    def __call__(self, *args: Any, **kwargs: Any) -> Any:
-        self.call_list.append((args, kwargs))
-        if callable(self._callback):
-            return self._callback()
-        return None
-
-    @property
-    def call_count(self) -> int:
-        return len(self.call_list)
 
 
 @pytest.fixture(name="allrulesets_with_rules_in_multiple_files")
@@ -139,16 +122,14 @@ def fixture_allrulesets_with_rules_in_multiple_files() -> AllRulesets:
         pytest.param(lambda *args, **kwargs: 1 / 0, id="Exception in hook call"),
     ],
 )
-@pytest.mark.usefixtures("request_context", "allrulesets_with_rules_in_multiple_files")
+@pytest.mark.usefixtures("request_context")
+@patch("cmk.gui.watolib.rulesets.update_merged_password_file")
 def test_all_rulesets_save(
-    callback: Callable[..., Any] | None,
+    updated_password_file_automation: MagicMock,
     allrulesets_with_rules_in_multiple_files: AllRulesets,
-    monkeypatch: pytest.MonkeyPatch,
+    callback: Callable[..., Any] | None,
 ) -> None:
-    mock_check_call = MockCall(callback=callback)
-    mock_save_call = MockCall()
-    monkeypatch.setattr(subprocess, "check_call", mock_check_call)
-    monkeypatch.setattr(RuleConfigFile, "save_rulesets_and_unknown_rulesets", mock_save_call)
+    updated_password_file_automation.side_effect = callback
 
     if callback is not None:
         with pytest.raises(ZeroDivisionError):
@@ -156,5 +137,4 @@ def test_all_rulesets_save(
     else:
         allrulesets_with_rules_in_multiple_files.save()
 
-    assert mock_save_call.call_count == 2
-    assert mock_check_call.call_count == 1
+    assert updated_password_file_automation.called

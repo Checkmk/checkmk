@@ -401,11 +401,13 @@ test-unit-omdlib:
 		tests/unit/omdlib/
 
 test-doctest:
+	mkdir -p ../results; \
 	cd .. && \
 	    ./scripts/run-bazel.sh test //cmk:doctest | tee results/$@.txt; \
 	exit $${PIPESTATUS[0]}
 
 test-unit:
+	mkdir -p ../results; \
 	cd .. && \
 	    ./scripts/run-bazel.sh test --test_verbose_timeout_warnings //tests/unit:all \
 	    --test_env=TZ=$(RANDOM_TZ) \

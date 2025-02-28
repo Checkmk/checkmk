@@ -398,13 +398,13 @@ def update_and_activate_rabbitmq_definitions(omd_root: Path, logger: Logger) -> 
 def _start_cleanup_unused_definitions(
     old_definitions: Definitions, new_definitions: Definitions
 ) -> Iterator[subprocess.Popen[str]]:
-    for user in {u.name for u in old_definitions.users} - {u.name for u in new_definitions.users}:
-        yield rabbitmqctl_process(("delete_user", user), wait=False)
-
-    for vhost in {v.name for v in old_definitions.vhosts} - {
-        v.name for v in new_definitions.vhosts
-    }:
-        yield rabbitmqctl_process(("delete_vhost", vhost), wait=False)
+    # currently only shovels, but we don't have to care here
+    # delete shovels before deleting e.g. users to avoid shovels trying to connect using deleted
+    # resources
+    for param in set(old_definitions.parameters) - set(new_definitions.parameters):
+        yield rabbitmqctl_process(
+            ("clear_parameter", "-p", param.vhost, param.component, param.name), wait=False
+        )
 
     for queue in set(
         binding.destination
@@ -415,11 +415,13 @@ def _start_cleanup_unused_definitions(
         # we delete the queue to remove the bindings
         yield rabbitmqctl_process(("delete_queue", queue), wait=False)
 
-    # currently only shovels, but we don't have to care here
-    for param in set(old_definitions.parameters) - set(new_definitions.parameters):
-        yield rabbitmqctl_process(
-            ("clear_parameter", "-p", param.vhost, param.component, param.name), wait=False
-        )
+    for vhost in {v.name for v in old_definitions.vhosts} - {
+        v.name for v in new_definitions.vhosts
+    }:
+        yield rabbitmqctl_process(("delete_vhost", vhost), wait=False)
+
+    for user in {u.name for u in old_definitions.users} - {u.name for u in new_definitions.users}:
+        yield rabbitmqctl_process(("delete_user", user), wait=False)
 
 
 def _start_import_new_definitions(definitions_file: Path) -> subprocess.Popen[str]:

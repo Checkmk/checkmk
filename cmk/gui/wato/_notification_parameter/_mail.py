@@ -303,7 +303,9 @@ def _bulk_elements() -> dict[str, DictElement[Any]]:
                 layout=DictionaryGroupLayout.vertical,
             ),
             parameter_form=Integer(
-                title=Title("Number of graphs per event (default: 5)"),
+                title=Title(
+                    "Limit number of events with graphs per bulk notification (default: 5)"
+                ),
                 label=Label("Show graphs for the first"),
                 unit_symbol="notifications",
                 prefill=DefaultValue(5),

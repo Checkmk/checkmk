@@ -298,7 +298,7 @@ def install(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     *,
     site_version: str,
-    allow_outdated: bool = True,
+    version_check: bool,
     parse_version: Callable[[str], ComparableVersion],
 ) -> Manifest:
     try:
@@ -308,7 +308,7 @@ def install(
             path_config,
             callbacks,
             site_version=site_version,
-            allow_outdated=allow_outdated,
+            version_check=version_check,
             parse_version=parse_version,
         )
     finally:
@@ -324,11 +324,7 @@ def _install(
     *,
     site_version: str,
     parse_version: Callable[[str], ComparableVersion],
-    # I am not sure whether we should install outdated packages by default -- but
-    #  a) this is the compatible way to go
-    #  b) users cannot even modify packages without installing them
-    # Reconsider!
-    allow_outdated: bool,
+    version_check: bool,
 ) -> Manifest:
     manifest = extract_manifest(mkp)
 
@@ -348,7 +344,7 @@ def _install(
         manifest,
         old_manifest,
         site_version,
-        allow_outdated,
+        version_check,
         parse_version,
     )
 
@@ -403,12 +399,12 @@ def _raise_for_installability(
     package: Manifest,
     old_package: Manifest | None,
     site_version: str,
-    allow_outdated: bool,
+    version_check: bool,
     parse_version: Callable[[str], ComparableVersion],
 ) -> None:
     """Raise a `PackageException` if we should not install this package"""
-    _raise_for_too_old_cmk_version(parse_version, package.version_min_required, site_version)
-    if not allow_outdated:
+    if version_check:
+        _raise_for_too_old_cmk_version(parse_version, package.version_min_required, site_version)
         _raise_for_too_new_cmk_version(parse_version, package.version_usable_until, site_version)
     _raise_for_conflicts(package, old_package, installer, path_config)
 
@@ -505,6 +501,7 @@ def _raise_for_too_old_cmk_version(
 
     raise PackageError(
         f"Package requires a Checkmk version {min_version} or higher (this is {site_version})."
+        f" You can skip all version checks by using the `--force-install` flag on the commandline."
     )
 
 
@@ -529,6 +526,7 @@ def _raise_for_too_new_cmk_version(
 
     raise PackageError(
         f"Package requires a Checkmk version below {until_version} (this is {site_version})."
+        f" You can skip all version checks by using the `--force-install` flag on the commandline."
     )
 
 
@@ -647,7 +645,7 @@ def _deinstall_inapplicable_active_packages(
                 manifest,
                 manifest,
                 site_version,
-                allow_outdated=False,
+                version_check=True,
                 parse_version=parse_version,
             )
         except PackageError as exc:
@@ -684,8 +682,8 @@ def _install_applicable_inactive_packages(
                         manifest.id,
                         path_config,
                         callbacks,
-                        allow_outdated=False,
                         site_version=site_version,
+                        version_check=True,
                         parse_version=parse_version,
                     )
                 )

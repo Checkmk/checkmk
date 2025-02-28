@@ -20,8 +20,8 @@ from cmk.rulesets.v1.form_specs.validators import ValidationError
         pytest.param((2, 1), id="second value is less than first"),
     ],
 )
-def test_validate_throttling_values(payload: tuple[int, ...]) -> None:
-    assert validate_throttling_values(payload) is None  # type: ignore[func-returns-value]
+def test_validate_throttling_values_valid(payload: tuple[int, ...]) -> None:
+    validate_throttling_values(payload)
 
 
 @pytest.mark.parametrize(
@@ -47,8 +47,8 @@ def test_validate_throttling_values_raises(payload: tuple[int, ...]) -> None:
         pytest.param((1, 1), id="values are the same"),
     ],
 )
-def test_validate_notification_count_values(payload: tuple[int, ...]) -> None:
-    assert validate_notification_count_values(payload) is None  # type: ignore[func-returns-value]
+def test_validate_notification_count_values_valid(payload: tuple[int, ...]) -> None:
+    validate_notification_count_values(payload)
 
 
 @pytest.mark.parametrize(

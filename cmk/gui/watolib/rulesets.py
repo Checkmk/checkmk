@@ -12,7 +12,6 @@ import itertools
 import os
 import pprint
 import re
-import subprocess
 from collections.abc import Callable, Container, Generator, Iterable, Iterator, Mapping, Sequence
 from enum import auto, Enum
 from pathlib import Path
@@ -60,7 +59,7 @@ from cmk import trace
 from cmk.server_side_calls_backend.config_processing import process_configuration_to_parameters
 
 from .changes import add_change
-from .check_mk_automations import get_services_labels
+from .check_mk_automations import get_services_labels, update_merged_password_file
 from .hosts_and_folders import (
     Folder,
     folder_preserving_link,
@@ -438,12 +437,6 @@ class RulesetCollection:
             self.replace_folder_ruleset_config(folder, ruleset_config, varname)
 
     @staticmethod
-    def _update_password_file() -> None:
-        subprocess.check_call(
-            ["cmk", "--automation", "update-passwords-merged-file"], stdout=subprocess.DEVNULL
-        )
-
-    @staticmethod
     def _save_folder(
         folder: Folder,
         rulesets: Mapping[RulesetName, Ruleset],
@@ -528,11 +521,11 @@ class AllRulesets(RulesetCollection):
     def save(self) -> None:
         """Save all rulesets of all folders recursively"""
         if self._save_rulesets_recursively(folder_tree().root_folder()):
-            self._update_password_file()
+            update_merged_password_file()
 
     def save_folder(self, folder: Folder) -> None:
         if self._save_folder(folder, self._rulesets, self._unknown_rulesets):
-            self._update_password_file()
+            update_merged_password_file()
 
     def _save_rulesets_recursively(self, folder: Folder) -> bool:
         needs_password_file_updating = False
@@ -627,7 +620,7 @@ class FolderRulesets(RulesetCollection):
 
     def save_folder(self) -> None:
         if RulesetCollection._save_folder(self._folder, self._rulesets, self._unknown_rulesets):
-            RulesetCollection._update_password_file()
+            update_merged_password_file()
 
 
 class Ruleset:

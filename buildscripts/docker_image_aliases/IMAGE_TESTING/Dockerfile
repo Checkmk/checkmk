@@ -1,1 +1,1 @@
-FROM artifacts.lan.tribe29.com:4000/ubuntu-20.04@sha256:3c75b3bce2cb58051ee412229bf6c09955df12e2d31d02ce411bfd5544f27727
+FROM artifacts.lan.tribe29.com:4000/ubuntu-20.04@sha256:0db1da292f7baafdfad4c14156d60b020f8b84c0865c684142f1a9ad49c44189

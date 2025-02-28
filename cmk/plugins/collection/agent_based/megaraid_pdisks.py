@@ -61,52 +61,52 @@ def parse_megaraid_pdisks(  # pylint: disable=too-many-branches
     enclosure_devid = -181
     predictive_failure_count = None
     for line in string_table:
-        if line[0] == "adapter":
-            current_adapter = {}
-            adapters[int(line[1])] = current_adapter
-        elif line[0] == "dev2enc":
-            if line[2].isdigit():
-                current_adapter[int(line[5])] = int(line[2])
-        elif line[0] == "Adapter" and len(line) == 2:
-            current_adapter = adapters[int(line[1][1:])]  # Raute weglassen
-            adapter = int(line[1][1:])
-        elif line[0] == "Enclosure" and line[1] == "Device":
-            try:
-                enclosure_devid = int(line[-1])
-                # this should fix inventory problems.
-                adapters[adapter][enclosure_devid] = enclosure_devid
+        match line:
+            case ["adapter", adapter_id]:
+                current_adapter = {}
+                adapters[int(adapter_id)] = current_adapter
+            case ["dev2enc", _, dev2enc_id, _, _, enc_id]:
+                if dev2enc_id.isdigit():
+                    current_adapter[int(enc_id)] = int(dev2enc_id)
+            case ["Adapter", adapter_id] if len(line) == 2:
+                current_adapter = adapters[int(adapter_id[1:])]  # remove hash symbol
+                adapter = int(adapter_id[1:])
+            case ["Enclosure", "Device", "ID:", *data]:
+                try:
+                    enclosure_devid = int(data[-1])
+                    # this should fix inventory problems.
+                    adapters[adapter][enclosure_devid] = enclosure_devid
 
-            except Exception:  # no enclosure device
-                enclosure_devid = 0
-                adapters[adapter][0] = 0
-        elif line[0] == "Enclosure" and line[1] == "Number:":
-            for devid, number in current_adapter.items():
-                if number == int(line[-1]):
-                    enclosure_devid = devid
-                    break
+                except Exception:  # no enclosure device
+                    enclosure_devid = 0
+                    adapters[adapter][0] = 0
+            case ["Enclosure", "Number:", *data]:
+                for devid, number in current_adapter.items():
+                    if number == int(data[-1]):
+                        enclosure_devid = devid
+                        break
+            case ["Slot", *data]:
+                slot = int(data[-1])
+            case ["Predictive", "Failure", "Count:", pfc]:
+                predictive_failure_count = int(pfc)
+            case ["Firmware", "state:", firmware_state]:
+                state = firmware_state.rstrip(",")
+            case ["Inquiry", "Data:", *inquiry_data]:
+                name = " ".join(inquiry_data)
+                # Adapter, Enclosure, Encolsure Device ID, Slot, State, Name
+                enclosure = adapters[adapter][enclosure_devid]
+                item = f"/c{adapter}/e{enclosure}/s{slot}"
 
-        elif line[0] == "Slot":
-            slot = int(line[-1])
-        elif line[0] == "Predictive" and line[1] == "Failure" and line[2] == "Count:":
-            predictive_failure_count = int(line[3])
-        elif line[0] == "Firmware" and line[1] == "state:":
-            state = line[2].rstrip(",")
-        elif line[0] == "Inquiry" and line[1] == "Data:":
-            name = " ".join(line[2:])
-            # Adapter, Enclosure, Encolsure Device ID, Slot, State, Name
-            enclosure = adapters[adapter][enclosure_devid]
-            item = f"/c{adapter}/e{enclosure}/s{slot}"
+                disk = megaraid.PDisk(
+                    name, _NORMALIZE_STATE.get(state, state), predictive_failure_count
+                )
 
-            disk = megaraid.PDisk(
-                name, _NORMALIZE_STATE.get(state, state), predictive_failure_count
-            )
+                parsed[item] = disk
+                predictive_failure_count = None
 
-            parsed[item] = disk
-            predictive_failure_count = None
-
-            # Add it under the old item name. Not discovered, but can be used when checking
-            legacy_item = f"{megaraid_pdisks_adapterstr[adapter]}{enclosure}/{slot}"
-            parsed[legacy_item] = disk
+                # Add it under the old item name. Not discovered, but can be used when checking
+                legacy_item = f"{megaraid_pdisks_adapterstr[adapter]}{enclosure}/{slot}"
+                parsed[legacy_item] = disk
 
     return parsed
 

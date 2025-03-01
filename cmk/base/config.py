@@ -652,6 +652,7 @@ def _perform_post_config_loading_actions(
     global_dict = globals()
     discovery_settings = _collect_parameter_rulesets_from_globals(global_dict, discovery_rulesets)
     _transform_plugin_names_from_160_to_170(global_dict)
+    _drop_invalid_ssc_rules(global_dict)
 
     config_cache = _create_config_cache().initialize()
     _globally_cache_config_cache(config_cache)
@@ -794,6 +795,26 @@ def _transform_plugin_names_from_160_to_170(global_dict: dict[str, Any]) -> None
     if "service_descriptions" in global_dict:
         global_dict["service_descriptions"] = {
             maincheckify(k): str(v) for k, v in global_dict["service_descriptions"].items()
+        }
+
+
+def _is_mapping_rulespec(rs: RuleSpec[object]) -> TypeGuard[RuleSpec[Mapping[str, object]]]:
+    return isinstance(rs["value"], dict) and all(isinstance(k, str) for k in rs["value"])
+
+
+def _drop_invalid_ssc_rules(global_dict: dict[str, Any]) -> None:
+    """Drop all SSC rules whos values are not Mapping[str, object]s
+
+    These days, we rely on all values of these type of rules to be Mappings.
+    This is ensured by the new ruleset types, but users could have old
+    configurations flying around.
+    """
+    for ssc_rule_type in ("active_checks", "special_agents"):
+        if ssc_rule_type not in global_dict:
+            continue
+        global_dict[ssc_rule_type] = {
+            k: [rs for rs in rulespecs if _is_mapping_rulespec(rs)]
+            for k, rulespecs in global_dict[ssc_rule_type].items()
         }
 
 
@@ -1518,19 +1539,6 @@ def load_and_convert_legacy_checks(
 #   +----------------------------------------------------------------------+
 #   | Misc check related helper functions                                  |
 #   '----------------------------------------------------------------------'
-
-
-def _is_mapping_rulespec(rs: RuleSpec[object]) -> TypeGuard[RuleSpec[Mapping[str, object]]]:
-    return isinstance(rs["value"], dict) and all(isinstance(k, str) for k in rs["value"])
-
-
-def _parsed_ssc_rules(
-    ssc_rules: Mapping[str, Sequence[RuleSpec[object]]],
-) -> Sequence[tuple[str, Sequence[RuleSpec[Mapping[str, object]]]]]:
-    return [
-        (k, [rs for rs in rulespecs if _is_mapping_rulespec(rs)])
-        for k, rulespecs in ssc_rules.items()
-    ]
 
 
 def _make_compute_check_parameters_cb(
@@ -2597,9 +2605,7 @@ class ConfigCache:
 
         def make_active_checks() -> Sequence[SSCRules]:
             configured_checks: list[SSCRules] = []
-            for plugin_name, ruleset in sorted(
-                _parsed_ssc_rules(active_checks), key=lambda x: x[0]
-            ):
+            for plugin_name, ruleset in sorted(active_checks.items()):
                 # Skip Check_MK HW/SW Inventory for all ping hosts, even when the
                 # user has enabled the inventory for ping only hosts
                 if plugin_name == "cmk_inv" and self.is_ping_host(host_name):
@@ -2726,7 +2732,7 @@ class ConfigCache:
             # over config.special_agents.
             # We now sort the matching special agents by their name to at least get
             # a deterministic order of the special agents.
-            for agentname, ruleset in sorted(_parsed_ssc_rules(special_agents)):
+            for agentname, ruleset in sorted(special_agents.items()):
                 params = self.ruleset_matcher.get_host_values(host_name, ruleset)
                 if params:
                     # we have match type first, so pick the first.
@@ -2797,10 +2803,10 @@ class ConfigCache:
         return {
             **password_store.load(password_store.password_store_path()),
             **PreprocessingResult.from_config(
-                _compose_filtered_ssc_rules(_parsed_ssc_rules(active_checks))
+                _compose_filtered_ssc_rules(active_checks.items())
             ).ad_hoc_secrets,
             **PreprocessingResult.from_config(
-                _compose_filtered_ssc_rules(_parsed_ssc_rules(special_agents))
+                _compose_filtered_ssc_rules(special_agents.items())
             ).ad_hoc_secrets,
         }
 

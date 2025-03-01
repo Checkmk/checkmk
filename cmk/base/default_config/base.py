@@ -25,6 +25,8 @@ from cmk.fetchers import IPMICredentials
 from cmk.checkengine.discovery import RediscoveryParameters
 from cmk.checkengine.exitspec import ExitSpec
 
+from cmk.server_side_calls_backend import ConfigSet as SSCConfigSet
+
 # This file contains the defaults settings for almost all configuration
 # variables that can be overridden in main.mk. Some configuration
 # variables are preset in checks/* as well.
@@ -189,10 +191,10 @@ inv_parameters: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
 
 
 # WATO variant for fully formalized checks / special agents.
-# We whould like to know this is of type Mapping[str, list[RuleSpec[SSCConfigSet]]], but we load this from files.
-# There might be ancient configurations living there.
-active_checks: dict[str, list[RuleSpec[object]]] = {}
-special_agents: dict[str, list[RuleSpec[object]]] = {}
+# The typing here is a lie, we cannot know what customers have configred (in the past)
+# There's a parsing step later that ensures this.
+active_checks: dict[str, list[RuleSpec[SSCConfigSet]]] = {}
+special_agents: dict[str, list[RuleSpec[SSCConfigSet]]] = {}
 
 
 # WATO variant for free-form custom checks without formalization

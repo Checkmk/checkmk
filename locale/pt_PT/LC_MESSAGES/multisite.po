@@ -437,14 +437,6 @@ msgstr "%d modificações"
 msgid "%d chaotic state changes from %s until %s (%s)"
 msgstr "%d mudanças caóticas de estado de %s até %s (%s)"
 
-#, fuzzy, python-format
-msgid "%d check plug-ins trying to use the removed API: %s"
-msgstr "%d verificar os plug-ins que utilizam a API obsoleta: %s"
-
-#, fuzzy, python-format
-msgid "%d check plug-ins using the deprecated API: %s"
-msgstr "%d verificar os plug-ins que utilizam a API obsoleta: %s"
-
 #, python-format
 msgid "%d columns"
 msgstr "%d colunas"
@@ -510,10 +502,6 @@ msgstr "%d icons e ações"
 #, python-format
 msgid "%d icons customized"
 msgstr "%d icons customizados"
-
-#, fuzzy, python-format
-msgid "%d ignored HW/SW Inventory plug-ins found: %s"
-msgstr "%d plug-ins de inventário HW/SW ignorados encontrados: %s"
 
 #, python-format
 msgid "%d incompatible Werks have been acknowledged."
@@ -12190,6 +12178,14 @@ msgid "Check plug-in timeout"
 msgstr "Verificar timeout do plugin"
 
 #, fuzzy
+msgid "Check plug-in uses the deprecated API"
+msgstr "Não verificar os plugins que utilizam a API obsoleta"
+
+#, fuzzy
+msgid "Check plug-in uses the deprecated API (v1)"
+msgstr "Não verificar os plugins que utilizam a API obsoleta"
+
+#, fuzzy
 msgid "Check plug-ins matching"
 msgstr "Verificar correspondência de plugins"
 
@@ -15262,8 +15258,9 @@ msgid "Cooldown before retrying failed remote or local delivery"
 msgstr ""
 "Refrigeração antes de tentar novamente a entrega remota ou local falhou"
 
-msgid "Cooldown time after a change batch has been processed"
-msgstr ""
+#, fuzzy
+msgid "Cooldown time after processing cycle"
+msgstr "Tempo de processamento de eventos"
 
 msgid "Cooldown time before trying to reconnect after failure"
 msgstr ""
@@ -20681,6 +20678,10 @@ msgstr "Não fundir fases consecutivas com estado igual"
 
 msgid "Do not monitor"
 msgstr "Não monitorar"
+
+#, fuzzy
+msgid "Do not monitor hosts without discovered services"
+msgstr "Nenhum anfitrião a ser descoberto"
 
 #, fuzzy
 msgid "Do not monitor limits"
@@ -27275,6 +27276,10 @@ msgstr "Hardware/Software-Inventário (Linux, Windows, Solaris, AIX)"
 #, fuzzy
 msgid "HW/SW Inventory history"
 msgstr "Histórico de inventário do anfitrião"
+
+#, fuzzy
+msgid "HW/SW Inventory plug-in uses the deprecated API"
+msgstr "Não verificar os plugins que utilizam a API obsoleta"
 
 #, fuzzy
 msgid "HW/SW Inventory rules"
@@ -38434,6 +38439,9 @@ msgstr "Níveis de temperatura mais baixos"
 msgid "Lower age levels for expire date"
 msgstr "Níveis de idade mais baixos para a data de expiração"
 
+msgid "Lower bound cannot be higher than upper bound."
+msgstr ""
+
 msgid "Lower case User-IDs"
 msgstr "IDs de usuário em minúsculas"
 
@@ -39842,8 +39850,9 @@ msgstr "Tamanho máximo do ficheiro de registo"
 msgid "Maximal number of daemon threads"
 msgstr "Número máximo de fios de daemon"
 
-msgid "Maximal number of hosts per bulk discovery REST API call"
-msgstr ""
+#, fuzzy
+msgid "Maximal number of hosts per bulk discovery"
+msgstr "Número esperado de descritores de ficheiros abertos"
 
 msgid "Maximal number of log files to backup"
 msgstr "Número máximo de ficheiros de registo a salvaguardar"
@@ -40220,10 +40229,6 @@ msgstr "Tamanho máximo da bobina"
 #, fuzzy
 msgid "Maximum test runtime"
 msgstr "Tempo de execução do teste"
-
-#, fuzzy
-msgid "Maximum time between batch start and forced activation of changes"
-msgstr "Comentário para ativação das mudanças"
 
 msgid "Maximum time since last start of job execution"
 msgstr "Tempo máximo desde o último início da execução do trabalho"
@@ -43071,6 +43076,10 @@ msgstr ""
 msgid "No GCP services found."
 msgstr "Não foram encontrados hospedeiros/serviços."
 
+#, fuzzy
+msgid "No HW/SW Inventory plug-ins using the deprecated API"
+msgstr "Não verificar os plugins que utilizam a API obsoleta"
+
 msgid "No IP"
 msgstr "Sem IP"
 
@@ -43132,11 +43141,11 @@ msgid "No certificate"
 msgstr "Sem certificado"
 
 #, fuzzy
-msgid "No check plug-ins trying to use the removed API"
+msgid "No check plug-ins using the deprecated API"
 msgstr "Não verificar os plugins que utilizam a API obsoleta"
 
 #, fuzzy
-msgid "No check plug-ins using the deprecated API"
+msgid "No check plug-ins using the deprecated API (v1)"
 msgstr "Não verificar os plugins que utilizam a API obsoleta"
 
 msgid "No colon, slash or backslash is allowed in the filename."
@@ -43264,10 +43273,6 @@ msgstr "Nenhum anfitrião a ser descoberto"
 
 msgid "No hosts/services found."
 msgstr "Não foram encontrados hospedeiros/serviços."
-
-#, fuzzy
-msgid "No ignored HW/SW Inventory plug-ins found"
-msgstr "Não foram encontrados plugins de inventário HW/SW ignorados"
 
 msgid "No influence on element display"
 msgstr "Nenhuma influência na exibição de elementos"
@@ -58888,10 +58893,6 @@ msgid "Skip hosts with explicit parent definitions (even if empty)"
 msgstr ""
 "Saltar anfitriões com definições explícitas dos pais (mesmo que vazios)"
 
-#, fuzzy
-msgid "Skip monitoring non discovered hosts"
-msgstr "Núcleos de monitorização OMD"
-
 msgid "Skip preexisting log messages"
 msgstr "Saltar mensagens de registo pré-existentes"
 
@@ -63988,6 +63989,16 @@ msgstr ""
 "Neste caso, o agente funcionará no modo de extracção antigo. Nota: no modo "
 "de extracção tradicional, os dados transportados não são encriptados."
 
+msgid ""
+"The agent installation path configuration now simplifies to one single "
+"directory, which can be configured with the new <i>Customize agent package</"
+"i> ruleset.<br>When configuring <i>Customize agent package</i>, matching "
+"rules from this ruleset will be ignored.<br><b>Note</b>: When updating "
+"agents to the new directory structure, please keep this ruleset until the "
+"agent update is done. The agent package will read the old installation paths "
+"to migrate your files to the new directory structure."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "The agent plug-in <tt>mk_filestats</tt> monitors a configured set of files "
@@ -64851,6 +64862,14 @@ msgid "The duration in minutes of the ad hoc downtime."
 msgstr "A duração em minutos do tempo de inatividade do adhoc."
 
 msgid ""
+"The dynamic configuration will interrupt the service discovery and force an "
+"activation after this time. The time is counted from the start of the "
+"processing cycle. This is useful to ensure that changes are activated in a "
+"timely manner and allow changes to the config, which will then be activated "
+"as well. Default is 10 minutes."
+msgstr ""
+
+msgid ""
 "The eWON router can act as a proxy to metrics from a secondary non-snmp "
 "device.Here you can make settings to the monitoring of the proxied device."
 msgstr ""
@@ -65064,14 +65083,6 @@ msgstr ""
 "atributos podem ser mapeados automaticamente. Os atributos atualmente "
 "disponíveis são:"
 
-#, fuzzy
-msgid "The first value must be greater than 0."
-msgstr "O agrupamento deve ter pelo menos um nó"
-
-#, fuzzy
-msgid "The first value must be lower than the second value."
-msgstr "O agrupamento deve ter pelo menos um nó"
-
 msgid "The folder is not permitted for any contact group."
 msgstr "A pasta não é permitida para nenhum grupo de contato."
 
@@ -65081,10 +65092,6 @@ msgstr "Os grupos de contato permitidos para a pasta são <b>%s</b>."
 
 #, python-format
 msgid "The following %s could not be found: %s"
-msgstr "O seguinte %s não pôde ser encontrado: %s"
-
-#, fuzzy, python-format
-msgid "The following files are missing in the archive: %s"
 msgstr "O seguinte %s não pôde ser encontrado: %s"
 
 msgid ""
@@ -65775,6 +65782,10 @@ msgstr "O logfile não existe no site."
 msgid "The login is currently locked"
 msgstr "O login está actualmente bloqueado"
 
+#, fuzzy
+msgid "The lower bound must be greater than 0."
+msgstr "O agrupamento deve ter pelo menos um nó"
+
 #, fuzzy, python-format
 msgid ""
 "The managed robot with ID %s that you attempted to clone does not exist."
@@ -65907,9 +65918,21 @@ msgstr ""
 "aos lúpulos no meio."
 
 msgid ""
+"The maximum time for an individual bulk discovery operation. After this, the "
+"processing cycle will continue irregardless of the outcome of the bulk "
+"discovery. Default is 1 minute."
+msgstr ""
+
+msgid ""
 "The maximum time that the Robotmk scheduler allows for a single Robot "
 "Framework execution. This time, when multiplied by the number of executions, "
 "sets the total runtime limit for the execution of a plan."
+msgstr ""
+
+msgid ""
+"The maximum time the dynamic configuration will wait for activate changes to "
+"be completed. After this, the processing cycle will continue or finish."
+"Default is 2 minutes."
 msgstr ""
 
 msgid "The maximum value length is 256 characters."
@@ -66268,6 +66291,10 @@ msgstr ""
 
 msgid "The notification is being processed"
 msgstr "A notificação está sendo processada"
+
+#, fuzzy
+msgid "The notification number value must be greater than 0."
+msgstr "O agrupamento deve ter pelo menos um nó"
 
 #, python-format
 msgid "The notification script %s does not allow bulking."
@@ -67084,10 +67111,6 @@ msgstr "O horário que você está tentando apagar não existe."
 msgid "The schedule you are trying to edit does not exist."
 msgstr "O horário que você está tentando editar não existe."
 
-#, fuzzy
-msgid "The second value must be equal to or greater than the first value."
-msgstr "O agrupamento deve ter pelo menos um nó"
-
 msgid "The secret access key for your AWS account"
 msgstr "A chave de acesso secreto para a sua conta AWS"
 
@@ -67140,6 +67163,10 @@ msgstr "Os anfitriões seleccionados não têm atributos explícitos"
 
 msgid "The selected icon does not exist."
 msgstr "O ícone selecionado não existe."
+
+#, fuzzy
+msgid "The send every value must be greater than 0."
+msgstr "O agrupamento deve ter pelo menos um nó"
 
 msgid "The sensor name"
 msgstr "O nome do sensor"
@@ -67253,6 +67280,16 @@ msgid ""
 msgstr ""
 "O serviço accionará um estado de aviso ou crítico se o tamanho da base de "
 "dados exceder estes níveis."
+
+msgid ""
+"The services are discovered for a bulk of hosts for higher performance "
+"versus individual service discovery. A too large number here can extend the "
+"cycle time of the dynamic configuration as an activation can only be forced, "
+"when no service discovery is running. Decrease this value, if long service "
+"discoveries block the forced activation. Default is 50 and optimized for the "
+"hosts typically being handled by dynamic configuration, where no network "
+"communication happens."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -67697,6 +67734,10 @@ msgstr "O arquivo não se parece com um arquivo chave válido."
 msgid "The uploaded file must be either a tar.gz or a zip file."
 msgstr ""
 
+#, fuzzy
+msgid "The upper bound must be greater than 0."
+msgstr "O agrupamento deve ter pelo menos um nó"
+
 #, no-python-format
 msgid ""
 "The used and free levels for the memory on UNIX systems take into account "
@@ -67971,6 +68012,10 @@ msgstr ""
 "permissão <tt>wato.rulesets</tt> juntamente com esta permissão para poder "
 "configurar conjuntos de regras onde são configuradas linhas de comando "
 "simples."
+
+#, fuzzy, python-format
+msgid "There are issues with the following archive entries: %s"
+msgstr "Chamada com os seguintes parâmetros:"
 
 msgid "There are no configured rules in this aggregation pack"
 msgstr "Não há regras configuradas neste pacote de agregação"
@@ -71811,29 +71856,6 @@ msgstr ""
 "<tt>check_disk_smb</tt> que verifica o acesso às partilhas do sistema de "
 "ficheiros que são exportadas via SMB/CIFS."
 
-msgid ""
-"This ruleset is deprecated and will be removed in a future Checkmk release. "
-"Instead of configuring each directory separately, please use the new agent "
-"ruleset \"Customize agent package\", where you can configure one "
-"installation directory which will contain all agent files underneath.<br> "
-"When configuring a \"Customize agent package\" rule, configured directories "
-"from this ruleset will be ignored.<br> <b>Note</b>: When updating an agent "
-"to the new directory structure, please keep this ruleset activated until the "
-"update is done, since the agent package will use the old installation paths "
-"for migrating your runtime files to the new directory structure."
-msgstr ""
-
-msgid ""
-"This ruleset is deprecated and will be removed in a future Checkmk release. "
-"Please use the new agent ruleset \"Customize agent package\" instead. This "
-"has the advantage that a non-root user specified there will come with a non-"
-"root agent installation, that cares for the needed environment on the target "
-"system.<br> (Vice versa, a user from this ruleset will only be applied as "
-"the user running the agent, without caring for necessary permissions on the "
-"target system.)<br> When configuring a \"Customize agent package\" with non-"
-"root user, the configured user from this ruleset will be ignored."
-msgstr ""
-
 #, python-format
 msgid ""
 "This ruleset is deprecated. Please use the ruleset <i>\"%s\"</i> instead."
@@ -71944,6 +71966,15 @@ msgstr ""
 "monitorar (localmente) as instâncias do SAP R/3. Nota: ainda é necessário "
 "implantar manualmente o SAP NetWeaver RFCSDK (nwrfcsdk) e o módulo Python "
 "sapnwrfc."
+
+msgid ""
+"This ruleset will only set the agent user to the configured value.<br>It "
+"will not take care of further needed permissions on the target system."
+"<br>Please use the new ruleset <i>Customize agent package</i> instead, which "
+"offers a proper non-root agent installation.<br> When configuring "
+"<i>Customize agent package</i>, matching rules from this ruleset will be "
+"ignored.<br>"
+msgstr ""
 
 #, fuzzy
 msgid "This rulespec is deprecated and will be removed in future versions."
@@ -72127,27 +72158,6 @@ msgid ""
 "hosts in short time"
 msgstr ""
 
-#, fuzzy
-msgid ""
-"This setting decides how many hosts will be discovered in one Api call. "
-"Default is 20"
-msgstr ""
-"Esta configuração determina como as portas serão habilitadas no Firewall do "
-"Windows."
-
-msgid ""
-"This setting decides when the activate changes operation will be timed out. "
-"Default is 2 minutes"
-msgstr ""
-
-msgid ""
-"This setting decides when the bulk discovery operation will be timed out. "
-"Default is 2 minutes"
-msgstr ""
-
-msgid "This setting decides whether we prevent false alarms. Default is True"
-msgstr ""
-
 msgid ""
 "This setting decides which types of messages to log into the daemon log of "
 "the Checkmk Micro Core. The object history (service alerts, events, etc.) is "
@@ -72180,12 +72190,6 @@ msgid ""
 msgstr ""
 "Esta configuração decide que tipos de mensagens devem entrar no registo web "
 "<tt>%s</tt>."
-
-msgid ""
-"This setting defines the interval during which the dynamic configuration "
-"daemon will wait for the next updates from the connector(s) if previous "
-"updates have been placed in the queue. Default is 5 minutes."
-msgstr ""
 
 msgid ""
 "This setting delays notifications about host problems by the specified "
@@ -72919,6 +72923,13 @@ msgid "Time between new classical active checks"
 msgstr "Tempo entre novas verificações ativas clássicas"
 
 msgid ""
+"Time between the end of one processing cycle and the start of the next one. "
+"You can increase the cooldown time to throttle the processing of new data. "
+"This can reduce the load of the dynamic configuration on your system. "
+"Default is 30 seconds."
+msgstr ""
+
+msgid ""
 "Time between the last operation on primary's oplog and on secondary above"
 msgstr ""
 "Tempo entre a última operação no oplog do primário e na secundária acima"
@@ -73318,6 +73329,10 @@ msgstr ""
 
 msgid "Time until credentials expiration"
 msgstr "Tempo até à expiração das credenciais"
+
+#, fuzzy
+msgid "Time until forced activation of changes after cycle start"
+msgstr "Comentário para ativação das mudanças"
 
 msgid "Time until license expiration"
 msgstr "Tempo até a expiração da licença"
@@ -76635,6 +76650,16 @@ msgstr "Tipo: %s"
 msgid "Types of events that are being processed"
 msgstr "Tipos de eventos que estão sendo processados"
 
+msgid ""
+"Typically hosts without discovered services bear little value for monitoring "
+"and can cause false alerts. In case an activation is forced or the dynamic "
+"configuration is forcefully interrupted, there might be hosts without "
+"discovered services. With this option, hosts will receive a hidden attribute "
+"so that they will not be monitored until the service discovery has been "
+"exectued by the dynamic configuration. Only activate, if the dynamic "
+"configuration can not finish before a forced activation.Default is False."
+msgstr ""
+
 msgid "U"
 msgstr "U"
 
@@ -77206,6 +77231,13 @@ msgstr "Desfazer Estatísticas"
 
 msgid "Unevictable memory"
 msgstr "Memória irrecuperável"
+
+#, fuzzy
+msgid "Unexpected notification count values passed."
+msgstr "Eliminar regra de notificação #%d"
+
+msgid "Unexpected throttling values shape passed."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -86235,6 +86267,10 @@ msgstr "diagFault"
 msgid "directly in the folder <b>%s</b>"
 msgstr "diretamente na pasta <b>%s</b>"
 
+#, fuzzy
+msgid "directory"
+msgstr "Diretório de dados"
+
 msgid "disable"
 msgstr "desativar"
 
@@ -87108,6 +87144,10 @@ msgstr "não disponíveis"
 msgid "not disabled"
 msgstr "inválido"
 
+#, fuzzy
+msgid "not found"
+msgstr "Não encontrado"
+
 msgid "not installed"
 msgstr "não instalado"
 
@@ -87405,6 +87445,14 @@ msgstr "considerar como tempo de paragem programado"
 
 msgid "regular expression, substring match"
 msgstr "expressão regular, correspondência de substrato"
+
+#, fuzzy
+msgid "regular file"
+msgstr "Substituir por"
+
+#, fuzzy
+msgid "regular file or directory"
+msgstr "Limpeza do trabalhador em modo inativo"
 
 msgid "relative URI under which Jolokia is visible"
 msgstr "URI relativo sob o qual Jolokia é visível"
@@ -87932,6 +87980,10 @@ msgstr "pior estado"
 msgid "wrap"
 msgstr "embrulho"
 
+#, python-format
+msgid "wrong type, expected %s"
+msgstr ""
+
 msgid "xinetd"
 msgstr "xinetd"
 
@@ -87995,6 +88047,54 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
+
+#, fuzzy, python-format
+#~ msgid "%d check plug-ins trying to use the removed API: %s"
+#~ msgstr "%d verificar os plug-ins que utilizam a API obsoleta: %s"
+
+#, fuzzy, python-format
+#~ msgid "%d check plug-ins using the deprecated API: %s"
+#~ msgstr "%d verificar os plug-ins que utilizam a API obsoleta: %s"
+
+#, fuzzy, python-format
+#~ msgid "%d ignored HW/SW Inventory plug-ins found: %s"
+#~ msgstr "%d plug-ins de inventário HW/SW ignorados encontrados: %s"
+
+#, fuzzy
+#~ msgid "Maximum time between batch start and forced activation of changes"
+#~ msgstr "Comentário para ativação das mudanças"
+
+#, fuzzy
+#~ msgid "No check plug-ins trying to use the removed API"
+#~ msgstr "Não verificar os plugins que utilizam a API obsoleta"
+
+#, fuzzy
+#~ msgid "No ignored HW/SW Inventory plug-ins found"
+#~ msgstr "Não foram encontrados plugins de inventário HW/SW ignorados"
+
+#, fuzzy
+#~ msgid "Skip monitoring non discovered hosts"
+#~ msgstr "Núcleos de monitorização OMD"
+
+#, fuzzy
+#~ msgid "The first value must be lower than the second value."
+#~ msgstr "O agrupamento deve ter pelo menos um nó"
+
+#, fuzzy, python-format
+#~ msgid "The following files are missing in the archive: %s"
+#~ msgstr "O seguinte %s não pôde ser encontrado: %s"
+
+#, fuzzy
+#~ msgid "The second value must be equal to or greater than the first value."
+#~ msgstr "O agrupamento deve ter pelo menos um nó"
+
+#, fuzzy
+#~ msgid ""
+#~ "This setting decides how many hosts will be discovered in one Api call. "
+#~ "Default is 20"
+#~ msgstr ""
+#~ "Esta configuração determina como as portas serão habilitadas no Firewall "
+#~ "do Windows."
 
 #, python-format
 #~ msgid "Cannot render graph: host %s, service %s not found."
@@ -88775,10 +88875,6 @@ msgstr "Use SSL para a conexão."
 #, fuzzy
 #~ msgid "Delete hosts automatically"
 #~ msgstr "detectar automaticamente"
-
-#, fuzzy
-#~ msgid "Do not include in monitoring hosts to be discovered"
-#~ msgstr "Nenhum anfitrião a ser descoberto"
 
 #, fuzzy
 #~ msgid "Dynamic configuration activate changes timeout"

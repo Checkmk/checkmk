@@ -33,6 +33,7 @@ from typing import (
     Literal,
     NamedTuple,
     overload,
+    TypeGuard,
     TypeVar,
 )
 
@@ -581,6 +582,7 @@ def _perform_post_config_loading_actions() -> None:
     global_dict = globals()
     _collect_parameter_rulesets_from_globals(global_dict)
     _transform_plugin_names_from_160_to_170(global_dict)
+    _drop_invalid_ssc_rules(global_dict)
 
     get_config_cache().initialize()
 
@@ -721,6 +723,26 @@ def _transform_plugin_names_from_160_to_170(global_dict: dict[str, Any]) -> None
     if "service_descriptions" in global_dict:
         global_dict["service_descriptions"] = {
             maincheckify(k): str(v) for k, v in global_dict["service_descriptions"].items()
+        }
+
+
+def _is_mapping_rulespec(rs: RuleSpec[object]) -> TypeGuard[RuleSpec[Mapping[str, object]]]:
+    return isinstance(rs["value"], dict) and all(isinstance(k, str) for k in rs["value"])
+
+
+def _drop_invalid_ssc_rules(global_dict: dict[str, Any]) -> None:
+    """Drop all SSC rules whos values are not Mapping[str, object]s
+
+    These days, we rely on all values of these type of rules to be Mappings.
+    This is ensured by the new ruleset types, but users could have old
+    configurations flying around.
+    """
+    for ssc_rule_type in ("active_checks", "special_agents"):
+        if ssc_rule_type not in global_dict:
+            continue
+        global_dict[ssc_rule_type] = {
+            k: [rs for rs in rulespecs if _is_mapping_rulespec(rs)]
+            for k, rulespecs in global_dict[ssc_rule_type].items()
         }
 
 
@@ -2448,7 +2470,7 @@ class ConfigCache:
 
         def make_active_checks() -> Sequence[SSCRules]:
             configured_checks: list[SSCRules] = []
-            for plugin_name, ruleset in sorted(active_checks.items(), key=lambda x: x[0]):
+            for plugin_name, ruleset in sorted(active_checks.items()):
                 # Skip Check_MK HW/SW Inventory for all ping hosts, even when the
                 # user has enabled the inventory for ping only hosts
                 if plugin_name == "cmk_inv" and self.is_ping_host(host_name):
@@ -2638,18 +2660,18 @@ class ConfigCache:
         # consider making the hosts an argument. Sometimes we only need one.
 
         def _compose_filtered_ssc_rules(
-            ssc_config: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]],
+            ssc_config: Iterable[tuple[str, Sequence[RuleSpec[Mapping[str, object]]]]],
         ) -> Sequence[tuple[str, Sequence[Mapping[str, object]]]]:
             """Get _all_ configured rulesets (not only the ones matching any host)"""
-            return [(name, [r["value"] for r in ruleset]) for name, ruleset in ssc_config.items()]
+            return [(name, [r["value"] for r in ruleset]) for name, ruleset in ssc_config]
 
         return {
             **password_store.load(password_store.password_store_path()),
             **PreprocessingResult.from_config(
-                _compose_filtered_ssc_rules(active_checks)
+                _compose_filtered_ssc_rules(active_checks.items())
             ).ad_hoc_secrets,
             **PreprocessingResult.from_config(
-                _compose_filtered_ssc_rules(special_agents)
+                _compose_filtered_ssc_rules(special_agents.items())
             ).ad_hoc_secrets,
         }
 

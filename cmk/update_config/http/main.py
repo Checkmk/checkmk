@@ -16,6 +16,7 @@ from cmk.gui.watolib.rulesets import Rule, Ruleset
 from cmk.update_config.http.conflict_options import add_migrate_parsing, Config
 from cmk.update_config.http.conflicts import Conflict, detect_conflicts, ForMigration, Migrate
 from cmk.update_config.http.migrate import migrate
+from cmk.update_config.http.render import MIGRATE_POSTFIX
 from cmk.update_config.http.search import add_search_arguments, SearchArgs, select, with_allrulesets
 
 
@@ -127,6 +128,13 @@ def _parse_arguments() -> Args:
     return ArgsParser.model_validate(vars(parser.parse_args())).root
 
 
+def _strip_postfix(value: dict) -> None:
+    for endpoint in value["endpoints"]:
+        endpoint["service_name"]["name"] = endpoint["service_name"]["name"].removesuffix(
+            MIGRATE_POSTFIX
+        )
+
+
 def _finalize_main(search: SearchArgs) -> None:
     with with_allrulesets() as all_rulesets:
         ruleset_v1 = all_rulesets.get("active_checks:http")
@@ -144,6 +152,7 @@ def _finalize_main(search: SearchArgs) -> None:
                 new_rule_v2.rule_options = dataclasses.replace(
                     rule_v2.rule_options, comment=comment
                 )
+                _strip_postfix(new_rule_v2.value)
                 ruleset_v2.edit_rule(rule_v2, new_rule_v2)
                 if rule_v1 is not None:
                     ruleset_v1.delete_rule(rule_v1)

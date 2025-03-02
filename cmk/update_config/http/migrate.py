@@ -30,6 +30,7 @@ from typing import assert_never, Literal
 
 from cmk.update_config.http.conflict_options import CantHaveRegexAndString, CantPostData
 from cmk.update_config.http.conflicts import ForMigration, MigratableCert, MigratableUrl
+from cmk.update_config.http.render import MIGRATE_POSTFIX
 
 
 def _migrate_method(method: Literal["GET", "HEAD", "DELETE", "POST", "PUT"]) -> str:
@@ -208,8 +209,8 @@ def _migrate_cert_params(
 def _migrate_name(name: str) -> Mapping[str, object]:
     # Currently, this implementation is consistent with V1.
     if name.startswith("^"):
-        return {"prefix": "none", "name": name[1:]}
-    return {"prefix": "auto", "name": name}
+        return {"prefix": "none", "name": name[1:] + MIGRATE_POSTFIX}
+    return {"prefix": "auto", "name": name + MIGRATE_POSTFIX}
 
 
 def migrate(for_migration: ForMigration) -> Mapping[str, object]:

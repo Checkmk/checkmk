@@ -1823,10 +1823,26 @@ def test_migrate_expect_response_header(
 @pytest.mark.parametrize(
     "rule_value, config, expected",
     [
-        (EXAMPLE_76, DEFAULT, ServiceDescription(prefix=ServicePrefix.AUTO, name="name")),
-        (EXAMPLE_77, DEFAULT, ServiceDescription(prefix=ServicePrefix.NONE, name="name")),
-        (EXAMPLE_78, DEFAULT, ServiceDescription(prefix=ServicePrefix.AUTO, name="name")),
-        (EXAMPLE_79, DEFAULT, ServiceDescription(prefix=ServicePrefix.AUTO, name="name")),
+        (
+            EXAMPLE_76,
+            DEFAULT,
+            ServiceDescription(prefix=ServicePrefix.AUTO, name="name (migrated)"),
+        ),
+        (
+            EXAMPLE_77,
+            DEFAULT,
+            ServiceDescription(prefix=ServicePrefix.NONE, name="name (migrated)"),
+        ),
+        (
+            EXAMPLE_78,
+            DEFAULT,
+            ServiceDescription(prefix=ServicePrefix.AUTO, name="name (migrated)"),
+        ),
+        (
+            EXAMPLE_79,
+            DEFAULT,
+            ServiceDescription(prefix=ServicePrefix.AUTO, name="name (migrated)"),
+        ),
     ],
 )
 def test_migrate_name(rule_value: Mapping[str, object], config: Config, expected: object) -> None:

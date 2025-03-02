@@ -122,7 +122,7 @@ def _activate_main() -> None:
         ruleset_v2 = all_rulesets.get("active_checks:httpv2")
         for folder, rule_index, rule_v2 in ruleset_v2.get_rules():
             if _migrated_from(rule_v2) is not None:
-                sys.stdout.write(f"Overwriting rule: {folder}, {rule_index}\n")
+                sys.stdout.write(f"Activating rule: {folder}, {rule_index}\n")
                 new_rule_v2 = rule_v2.clone(preserve_id=True)
                 new_rule_v2.rule_options = dataclasses.replace(rule_v2.rule_options, disabled=False)
                 ruleset_v2.edit_rule(rule_v2, new_rule_v2)
@@ -137,7 +137,7 @@ def _deactivate_main() -> None:
         ruleset_v2 = all_rulesets.get("active_checks:httpv2")
         for folder, rule_index, rule_v2 in ruleset_v2.get_rules():
             if _migrated_from(rule_v2) is not None:
-                sys.stdout.write(f"Overwriting rule: {folder}, {rule_index}\n")
+                sys.stdout.write(f"Deactivating rule: {folder}, {rule_index}\n")
                 new_rule_v2 = rule_v2.clone(preserve_id=True)
                 new_rule_v2.rule_options = dataclasses.replace(rule_v2.rule_options, disabled=True)
                 ruleset_v2.edit_rule(rule_v2, new_rule_v2)

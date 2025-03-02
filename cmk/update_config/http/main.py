@@ -57,7 +57,7 @@ def _new_migrated_rules(config: Config, ruleset_v1: Ruleset, ruleset_v2: Ruleset
             for_migration = detect_conflicts(config, rule_v1.value)
             sys.stdout.write(f"Rule: {folder}, {rule_index}\n")
             if isinstance(for_migration, Conflict):
-                sys.stdout.write(f"Can't migrate: {for_migration.type_}\n")
+                sys.stdout.write(f"Can't migrate: {for_migration.type_.value}\n")
                 continue
             sys.stdout.write("Migrated, new.\n")
             rule_v2 = _construct_v2_rule(rule_v1, for_migration, ruleset_v2)

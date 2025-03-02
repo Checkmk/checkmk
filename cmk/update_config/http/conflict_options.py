@@ -11,6 +11,7 @@ from pydantic import BaseModel
 
 
 class ConflictType(enum.Enum):
+    invalid_value = "invalid-value"
     http_1_0_not_supported = "http-1-0-not-supported"
     ssl_incompatible = "ssl-incompatible"
     add_headers_incompatible = "add-headers-incompatible"

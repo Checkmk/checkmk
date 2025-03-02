@@ -1029,7 +1029,7 @@ EXAMPLE_99: Mapping[str, object] = {
         (
             EXAMPLE_90,
             Conflict(
-                type_="invalid_value",
+                type_=ConflictType.invalid_value,
                 cant_load=True,
             ),
         ),
@@ -1043,7 +1043,7 @@ EXAMPLE_99: Mapping[str, object] = {
         (
             EXAMPLE_92,
             Conflict(
-                type_="invalid_value",
+                type_=ConflictType.invalid_value,
                 cant_load=True,
             ),
         ),

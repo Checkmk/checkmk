@@ -8,7 +8,7 @@ import re
 from collections.abc import Mapping, Sequence
 from contextlib import suppress
 from dataclasses import dataclass
-from typing import Literal, LiteralString
+from typing import Literal
 
 from pydantic import HttpUrl, ValidationError
 
@@ -184,7 +184,7 @@ class ForMigration:
 
 @dataclass(frozen=True)
 class Conflict:
-    type_: LiteralString | ConflictType
+    type_: ConflictType
     mode_fields: Sequence[str] = ()
     host_fields: Sequence[str] = ()
     disable_sni: bool = False
@@ -208,7 +208,7 @@ def detect_conflicts(config: Config, rule_value: Mapping[str, object]) -> Confli
         value = V1Value.model_validate(rule_value)
     except ValidationError:
         return Conflict(
-            type_="invalid_value",
+            type_=ConflictType.invalid_value,
             cant_load=True,
         )
     if isinstance(value.host.address, tuple) and value.host.address[0] == "proxy":

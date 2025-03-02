@@ -25,6 +25,10 @@ from cmk.update_config.http.conflicts import Conflict, detect_conflicts, ForMigr
 from cmk.update_config.http.migrate import migrate
 
 
+class Finalize(pydantic.BaseModel):
+    command: Literal["finalize"]
+
+
 class Delete(pydantic.BaseModel):
     command: Literal["delete"]
 
@@ -37,7 +41,10 @@ class Deactivate(pydantic.BaseModel):
     command: Literal["deactivate"]
 
 
-Args = Annotated[Migrate | Activate | Deactivate | Delete, pydantic.Field(discriminator="command")]
+Args = Annotated[
+    Migrate | Activate | Deactivate | Delete | Finalize,
+    pydantic.Field(discriminator="command"),
+]
 
 
 class ArgsParser(pydantic.RootModel[Args]):
@@ -115,6 +122,8 @@ def _parse_arguments() -> Args:
 
     _parser_deactivate = subparser.add_parser("deactivate", help="Deactivation")
 
+    _parser_finalize = subparser.add_parser("finalize", help="Finalize")
+
     return ArgsParser.model_validate(vars(parser.parse_args())).root
 
 
@@ -124,6 +133,29 @@ def _with_allrulesets() -> Iterator[AllRulesets]:
     with disable_redis(), gui_context(), SuperUserContext():
         set_global_vars()
         yield AllRulesets.load_all_rulesets()
+
+
+def _finalize_main() -> None:
+    with _with_allrulesets() as all_rulesets:
+        ruleset_v1 = all_rulesets.get("active_checks:http")
+        ruleset_v2 = all_rulesets.get("active_checks:httpv2")
+        for folder, rule_index, rule_v2 in ruleset_v2.get_rules():
+            if (rule_v1_id := _migrated_from(rule_v2)) is not None:
+                rule_v1 = _from_v1(rule_v1_id, ruleset_v1)
+                if rule_v1 is None:
+                    sys.stdout.write(f"Could find counter-part: {folder}, {rule_index}\n")
+                    comment = ""
+                else:
+                    comment = rule_v1.rule_options.comment
+                sys.stdout.write("Migrated, edited exiting rule.\n")
+                new_rule_v2 = rule_v2.clone(preserve_id=True)
+                new_rule_v2.rule_options = dataclasses.replace(
+                    rule_v2.rule_options, comment=comment
+                )
+                ruleset_v2.edit_rule(rule_v2, new_rule_v2)
+                if rule_v1 is not None:
+                    ruleset_v1.delete_rule(rule_v1)
+        all_rulesets.save()
 
 
 def _delete_main() -> None:
@@ -171,6 +203,8 @@ def main() -> None:
             _deactivate_main()
         case Delete():
             _delete_main()
+        case Finalize():
+            _finalize_main()
 
 
 if __name__ == "__main__":

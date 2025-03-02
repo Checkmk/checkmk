@@ -27,10 +27,11 @@ from cmk.update_config.http.conflict_options import (
     SSLIncompatible,
     V1ChecksRedirectResponse,
 )
+from cmk.update_config.http.search import SearchArgs
 from cmk.update_config.http.v1_scheme import V1Cert, V1Host, V1Url, V1Value
 
 
-class Migrate(Config):
+class Migrate(Config, SearchArgs):
     command: Literal["migrate"]
     write: bool = False
 

@@ -9,6 +9,8 @@ from typing import Iterable, Protocol
 
 from pydantic import BaseModel
 
+from cmk.update_config.http.search import add_search_arguments
+
 
 class ConflictType(enum.Enum):
     invalid_value = "invalid-value"
@@ -318,6 +320,7 @@ class Config(BaseModel):
 
 def add_migrate_parsing(parser: ArgumentParser) -> None:
     parser.add_argument("--write", action="store_true", help="persist changes on disk")
+    add_search_arguments(parser)
     _add_argument(parser, HTTP10NotSupported, HTTP10NotSupported.default())
     _add_argument(parser, SSLIncompatible, SSLIncompatible.default())
     _add_argument(parser, AdditionalHeaders, AdditionalHeaders.default())

@@ -217,32 +217,6 @@ check_info["rabbitmq_nodes.filedesc"] = LegacyCheckDefinition(
 )
 
 
-def check_rabbitmq_nodes_sockets(item, params, parsed):
-    socket_data = parsed.get(item, {}).get("sockets")
-    if not socket_data:
-        return None
-
-    value = socket_data.get("sockets_used")
-    if value is None:
-        return None
-
-    total = socket_data.get("sockets_total")
-    if total is None:
-        return None
-
-    return _handle_output(params, value, total, "Sockets used", "sockets")
-
-
-check_info["rabbitmq_nodes.sockets"] = LegacyCheckDefinition(
-    name="rabbitmq_nodes_sockets",
-    service_name="RabbitMQ Node %s Sockets",
-    sections=["rabbitmq_nodes"],
-    discovery_function=discover_key("sockets"),
-    check_function=check_rabbitmq_nodes_sockets,
-    check_ruleset_name="rabbitmq_nodes_sockets",
-)
-
-
 def check_rabbitmq_nodes_mem(item, params, parsed):
     mem_data = parsed.get(item, {}).get("mem")
     if not mem_data:

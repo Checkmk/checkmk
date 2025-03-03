@@ -85,8 +85,9 @@ _create_user() {
     }
 
     if [ -n "${AGENT_USER_GID}" ]; then
-        # If we have an explicit gid, we must add it before, because we can't choose on user creation
-        groupadd --gid "${AGENT_USER_GID}" "${AGENT_USER}" || exit 1
+        # If we have an explicit gid and want to create the group, we must do it before user creation,
+        # because we can't choose it on user creation
+        getent group "${AGENT_USER_GID}" >/dev/null 2>&1 || groupadd --gid "${AGENT_USER_GID}" "${AGENT_USER}" || exit 1
         group_argument="--no-user-group --gid ${AGENT_USER_GID}"
     else
         group_argument="--user-group"

@@ -34,7 +34,6 @@ from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetcher import FetcherType, SourceInfo, SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters
 
-import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.checkers import (
@@ -63,18 +62,19 @@ def _setup_dirs() -> Iterator[None]:
 def test_checks_executor(
     agent_data_filename: str, request: pytest.FixtureRequest, setup_dirs: Iterator[None]
 ) -> None:
-    encountered_errors = config.load_all_plugins(
+    agent_based_plugins = config.load_all_plugins(
         local_checks_dir=Path(__file__).parent,  # dummy path, not really needed for this test
         checks_dir=str(repo_path() / "cmk/base/legacy_checks"),
     )
-    assert not encountered_errors
-
-    agent_based_plugins = agent_based_register.get_previously_loaded_plugins()
+    assert not agent_based_plugins.errors
     assert agent_based_plugins.agent_sections
 
     source_info = SourceInfo(HOSTNAME, None, "test_dump", FetcherType.PUSH_AGENT, SourceType.HOST)
     submitter = BasicSubmitter(HOSTNAME)
-    config_cache = config.get_config_cache()
+    config_cache = config.ConfigCache().initialize()
+    # make sure logwatch doesn't crash
+    config._globally_cache_config_cache(config_cache)
+
     discovered_services = discover_services(
         HOSTNAME, agent_data_filename, config_cache, agent_based_plugins, source_info
     )
@@ -103,7 +103,7 @@ def test_checks_executor(
             section_plugins=SectionPluginMapper(
                 {**agent_based_plugins.agent_sections, **agent_based_plugins.snmp_sections}
             ),
-            section_error_handling=lambda *a: None,  # type: ignore[arg-type]
+            section_error_handling=lambda *a: "",
             check_plugins=check_plugins,
             inventory_plugins=InventoryPluginMapper(),
             inventory_parameters=lambda host, plugin: plugin.defaults,

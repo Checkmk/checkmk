@@ -3,13 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable
 from enum import Enum
 from typing import assert_never, TypedDict
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
+    DiscoveryResult,
     Result,
     Service,
     SimpleSNMPSection,
@@ -17,7 +17,8 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.cisco_sma.agent_based.detect import DETECT_CISCO_SMA_SNMP
+
+from .detect import DETECT_CISCO_SMA
 
 
 class MailTransferMemoryStatus(Enum):
@@ -51,7 +52,7 @@ def _check_mail_transfer_memory(params: Params, section: MailTransferMemoryStatu
             assert_never(section)
 
 
-def _discover_mail_transfer_memory(section: MailTransferMemoryStatus) -> Iterable[Service]:
+def _discover_mail_transfer_memory(section: MailTransferMemoryStatus) -> DiscoveryResult:
     yield Service()
 
 
@@ -79,7 +80,7 @@ def _parse_mail_transfer_memory(string_table: StringTable) -> MailTransferMemory
 snmp_section_mail_transfer_memory = SimpleSNMPSection(
     parsed_section_name="cisco_sma_mail_transfer_memory",
     name="cisco_sma_mail_transfer_memory",
-    detect=DETECT_CISCO_SMA_SNMP,
+    detect=DETECT_CISCO_SMA,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.15497.1.1.1",
         oids=["7"],

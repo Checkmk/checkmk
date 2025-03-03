@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import enum
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
@@ -22,13 +23,22 @@ from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, Widget
 from cmk.rulesets.v1.form_specs import FormSpec
 
 
+class StepStatus(enum.Enum):
+    ACTIVE = "active"
+    COMPLETED = "completed"
+
+
 class QuickSetupActionMode(StrEnum):
     SAVE = "save"
     EDIT = "edit"
 
 
 class ProgressLogger(Protocol):
-    def log_progress(self, message: str) -> None: ...
+    def log_new_progress_step(
+        self, step_name: str, step_title: str, status: StepStatus = StepStatus.ACTIVE
+    ) -> None: ...
+
+    def update_progress_step_status(self, step_name: str, status: StepStatus) -> None: ...
 
 
 FormspecMap = Mapping[FormSpecId, FormSpec]
@@ -71,11 +81,6 @@ class QuickSetupStageAction:
 
             load_wait_label:
                 The label of the loading spinner. If not set, the default label is used.
-
-            run_in_background:
-                A flag indicating if the action should be executed in the background. This should
-                be used for actions that CAN take a long time to complete. This is
-                necessary as the interface will run into a Gateway Timeout error after 120 seconds
     """
 
     id: ActionId
@@ -83,7 +88,26 @@ class QuickSetupStageAction:
     recap: Iterable[CallableRecap]
     next_button_label: str | None = None
     load_wait_label: str | None = None
-    run_in_background: bool = False
+
+
+@dataclass(frozen=True, kw_only=True)
+class QuickSetupBackgroundStageAction(QuickSetupStageAction):
+    """Data class representing an action that can be triggered in a quick setup stage when
+    proceeding to the next stage. The action itself is run as a background task.
+
+    This should be used for actions that CAN take a long time to complete. This is necessary
+    as the interface will run into a Gateway Timeout error after 120 seconds.
+
+        Attributes:
+            target_site_formspec_key:
+                The formspec key that references the target site selection. The background job will
+                bet executed on the configured site. If not set, the background action will be
+                executed on the current site. This is useful for actions that are site specific and
+                would require long-running remote automation calls as they can also run into a
+                timeout. In most cases, a local background job is sufficient.
+    """
+
+    target_site_formspec_key: str | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -138,17 +162,20 @@ class QuickSetupAction:
 
             Therefore, relevant custom validators should be included again here (especially
             if the 'overview' mode is enabled)
-        run_in_background:
-            A flag indicating if the action should be executed in the background. This should
-            be used for actions that CAN take a long time to complete. This is
-            necessary as the interface will run into a Gateway Timeout error after 120 seconds
     """
 
     id: ActionId
     label: str
     action: CallableAction
     custom_validators: Iterable[CallableValidator] = ()
-    run_in_background: bool = False
+
+
+@dataclass(frozen=True, kw_only=True)
+class QuickSetupBackgroundAction(QuickSetupAction):
+    """Dataclass representing an action that can be triggered at the end of the Quick setup flow.
+
+    The action itself is run as a background task.
+    """
 
 
 @dataclass(frozen=True, kw_only=True)

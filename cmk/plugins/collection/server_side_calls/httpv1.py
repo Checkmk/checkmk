@@ -22,6 +22,9 @@ from cmk.server_side_calls.v1 import (
 FloatLevels = tuple[Literal["no_levels"], None] | tuple[Literal["fixed"], tuple[float, float]]
 
 
+_SECONDS_PER_DAY = 3600 * 24
+
+
 class RegexMode(BaseModel):
     regex: str
     case_insensitive: bool
@@ -233,7 +236,7 @@ def _cert_arguments(
     args: list[str | Secret] = []
     match settings.cert_days:
         case ("fixed", (float(warn), float(crit))):
-            args += ["-C", "%d,%d" % (int(warn), int(crit))]
+            args += ["-C", "%d,%d" % (int(warn / _SECONDS_PER_DAY), int(crit / _SECONDS_PER_DAY))]
     if isinstance(host, ProxyHost):
         args += ["--ssl", "-j", "CONNECT"]
 

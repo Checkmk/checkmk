@@ -23,9 +23,12 @@ import {
 } from '@/lib/rest-api-client'
 import type { QuickSetupStageRequest } from '@/lib/rest-api-client/quick-setup/request_schemas'
 import type { BackgroundJobSpawnResponse } from '@/lib/rest-api-client/background-job/response_schemas'
+import type { LogUpdate } from '../components/BackgroundJobLog/useBackgroundJobLog'
 
 /** @constant {number} BACKGROUND_JOB_CHECK_INTERVAL - Wait time in milliseconds between checks */
-export const BACKGROUND_JOB_CHECK_INTERVAL = 5000
+export const BACKGROUND_JOB_CHECK_INTERVAL = 1000
+
+export type LogWatcher = (log: LogUpdate | null) => void
 
 /**
  * Retrive all stages overview together with the first stage components
@@ -88,7 +91,8 @@ export const saveOrEditQuickSetup = async (
   quickSetupId: string,
   buttonId: string,
   formData: StageData[],
-  objectId: string | null = null
+  objectId: string | null = null,
+  onLogUpdate?: LogWatcher
 ): Promise<QuickSetupCompleteResponse | QuickSetupCompleteActionValidationResponse> => {
   const stages: QuickSetupStageRequest[] = formData.map((stage) => ({ form_data: stage }))
 
@@ -106,7 +110,8 @@ export const saveOrEditQuickSetup = async (
     If the action is executed asynchronously, an object of the background_job domain is returned.
     The result can be obtained after the job has finished executing.
   */
-    await _waitForBackgroundJobToFinish(data.id)
+    const siteId = data.extensions.site_id
+    await _waitForBackgroundJobToFinish(data.id, siteId, onLogUpdate)
     return await quickSetupClient.fetchBackgroundJobResult(data.id)
   } else {
     return data as QuickSetupCompleteResponse
@@ -118,13 +123,14 @@ export const saveOrEditQuickSetup = async (
  * @param quickSetupId string
  * @param actionId string
  * @param formData StageData[]
- * @param objectId string | null
+ * @param onLogUpdate?: LogWatcher
  * @returns Promise<QuickSetupActionResponse>
  */
 export const validateAndRecapStage = async (
   quickSetupId: string,
   actionId: string,
-  formData: StageData[]
+  formData: StageData[],
+  onLogUpdate?: LogWatcher
 ): Promise<QuickSetupStageActionResponse | QuickSetupStageActionValidationResponse> => {
   const stages = formData.map((stage) => ({ form_data: stage }))
 
@@ -140,8 +146,9 @@ export const validateAndRecapStage = async (
     If the action is executed asynchronously, an object of the background_job domain is returned.
     The result can be obtained after the job has finished executing.
   */
-    await _waitForBackgroundJobToFinish(data.id)
-    return await quickSetupClient.fetchStageBackgroundJobResult(data.id)
+    const siteId = data.extensions.site_id
+    await _waitForBackgroundJobToFinish(data.id, siteId, onLogUpdate)
+    return await quickSetupClient.fetchStageBackgroundJobResult(data.id, siteId)
   } else {
     return data as QuickSetupStageActionResponse
   }
@@ -165,12 +172,37 @@ export const getStageStructure = async (
 /**
  * Wait until background job is finished
  * @param id string - Background Job ID
+ * @param siteId string - Site ID
+ * @param onLogUpdate?: LogWatcher - Callback to update the log
  */
-const _waitForBackgroundJobToFinish = async (id: string): Promise<void> => {
+const _waitForBackgroundJobToFinish = async (
+  id: string,
+  siteId: string,
+  onLogUpdate?: LogWatcher
+): Promise<void> => {
   let isActive = true
+  let lastLog: LogUpdate | null = null
+
   do {
-    const data = await backgroundJobClient.get(id)
+    const data = await backgroundJobClient.get(id, siteId)
     isActive = !!data.extensions.active
+
+    if (onLogUpdate) {
+      const latestLogRecord = data.extensions.status.log_info.JobProgressUpdate.filter((row) =>
+        row.startsWith('[QuickSetup]')
+      ).pop()
+
+      if (latestLogRecord) {
+        const latestLog = JSON.parse(
+          latestLogRecord.replace('[QuickSetup]', '').replace(/'/g, '"').trim()
+        )
+
+        if (!lastLog || JSON.stringify(lastLog) !== JSON.stringify(latestLog)) {
+          lastLog = latestLog
+          onLogUpdate(latestLog)
+        }
+      }
+    }
 
     if (!isActive) {
       return

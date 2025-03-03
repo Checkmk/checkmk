@@ -1,6 +1,7 @@
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@com_google_protobuf//:protobuf_version.bzl", "PROTOBUF_PYTHON_VERSION")
+load("@gazelle//:def.bzl", "gazelle")
 load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile_commands")
 load("@repo_license//:license.bzl", "REPO_LICENSE")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
@@ -8,12 +9,12 @@ load("@rules_uv//uv:venv.bzl", "create_venv")
 load("//:bazel_variables.bzl", "RUFF_VERSION")
 load("//bazel/rules:copy_to_directory.bzl", "copy_to_directory")
 load("//bazel/rules:proto.bzl", "proto_library_as")
+load("//bazel/rules:requirements.bzl", "compile_requirements_in")
 
 exports_files(
     [
         "pyproject.toml",
-        "requirements_dev.txt",
-        "requirements_all_lock.txt",
+        "requirements.txt",
     ],
 )
 
@@ -91,113 +92,59 @@ write_file(
     ],
 )
 
-genrule(
-    name = "_requirements-main",
-    srcs = [
-        "//cmk:requirements.txt",
+compile_requirements_in(
+    name = "requirements-in",
+    constraints = [
+        ":bazel-requirements-constraints.txt",
+        "//:constraints.txt",
+    ],
+    requirements = [
+        "//cmk:requirements.in",
         "//packages:python_requirements",
-        "//:requirements_dev.txt",
+        "//:dev-requirements.in",
     ] + select({
         "@//:gpl_repo": [],
-        "@//:gpl+enterprise_repo": ["//non-free:python_requirements"],
+        "@//:gpl+enterprise_repo": ["//non-free/packages:python_requirements"],
     }),
-    outs = ["_requirements-main.txt"],
-    cmd = """
-    for req in $(SRCS); do
-      echo "-r $$req" >> $@
-    done
-    """,
-)
-
-genrule(
-    name = "requirements-main",
-    srcs = [
-        ":_requirements-main.txt",
-        ":bazel-requirements-constraints.txt",
-    ],
-    outs = ["requirements-main.txt"],
-    cmd = """
-      echo "-r $$(basename $(location _requirements-main.txt))" >> $@
-      echo "-c $$(basename $(location bazel-requirements-constraints.txt))" >> $@
-    """,
 )
 
 pip_compile(
-    name = "requirements_all",
-    data = [
-        ":_requirements-main.txt",
-        ":bazel-requirements-constraints.txt",
-        ":requirements-main.txt",
-        ":requirements_dev.txt",
-        "//cmk:requirements.txt",
-        "//packages:python_requirements",
-    ] + select({
-        "@//:gpl_repo": [],
-        "@//:gpl+enterprise_repo": [
-            "//non-free:python_requirements",
-        ],
-    }),
-    requirements_in = ":requirements-main",
-    requirements_txt = "@//:requirements_all_lock.txt",
+    name = "requirements",
+    requirements_in = ":requirements-in",
+    requirements_txt = "@//:requirements.txt",
     tags = ["manual"],
     visibility = ["//visibility:public"],
 )
 
-genrule(
-    name = "_requirements-runtime-main",
-    srcs = [
-        "//cmk:requirements.txt",
-        "//packages:python_requirements",
-    ],
-    outs = ["_requirements-runtime-main.txt"],
-    cmd = """
-    for req in $(SRCS); do
-      echo "-r $$req" >> $@
-    done
-    """,
-)
-
-genrule(
-    name = "requirements-runtime-main",
-    srcs = [
-        ":_requirements-runtime-main.txt",
+compile_requirements_in(
+    name = "runtime-requirements-in",
+    constraints = [
         ":bazel-requirements-constraints.txt",
-        ":requirements_all_lock.txt",
+        ":requirements.txt",
+        "//:constraints.txt",
     ],
-    outs = ["requirements-runtime-main.txt"],
-    cmd = """
-      echo "-r $$(basename $(location _requirements-runtime-main.txt))" >> $@
-      echo "-c $$(basename $(location bazel-requirements-constraints.txt))" >> $@
-      echo "-c $(location requirements_all_lock.txt)" >> $@
-    """,
-)
-
-pip_compile(
-    name = "requirements_runtime",
-    data = [
-        ":_requirements-runtime-main.txt",
-        ":bazel-requirements-constraints.txt",
-        ":requirements-runtime-main.txt",
-        ":requirements_all_lock.txt",
-        "//cmk:requirements.txt",
+    requirements = [
+        "//cmk:requirements.in",
         "//packages:python_requirements",
     ] + select({
         "@//:gpl_repo": [],
-        "@//:gpl+enterprise_repo": [
-            "//non-free:python_requirements",
-        ],
+        "@//:gpl+enterprise_repo": ["//non-free/packages:python_requirements"],
     }),
-    requirements_in = ":requirements-runtime-main",
-    requirements_txt = ":requirements_runtime_lock.txt",
+)
+
+pip_compile(
+    name = "runtime_requirements",
+    requirements_in = ":runtime-requirements-in",
+    requirements_txt = ":runtime-requirements.txt",
     tags = ["manual"],
     visibility = ["//visibility:public"],
 )
 
 test_suite(
-    name = "requirements_test",
+    name = "requirements_test_suite",
     tests = [
-        ":requirements_all_test",
-        ":requirements_runtime_test",
+        ":requirements_test",
+        ":runtime_requirements_test",
     ],
 )
 
@@ -228,7 +175,7 @@ write_file(
 create_venv(
     name = "create_venv",
     destination_folder = ".venv",
-    requirements_txt = "@//:requirements_all_lock.txt",
+    requirements_txt = "@//:requirements.txt",
     site_packages_extra_files = [":sitecustomize.py"],
     whls = [
         "@rrdtool_native//:rrdtool_python_wheel",
@@ -269,4 +216,16 @@ proto_library_as(
         "@com_google_protobuf//:duration_proto",
         "@com_google_protobuf//:timestamp_proto",
     ],
+)
+
+gazelle(
+    name = "gazelle-update-repos",
+    args = [
+        "-from_file=non-free/packages/otel-collector/go.mod",
+    ],
+    command = "update-repos",
+)
+
+gazelle(
+    name = "gazelle",
 )

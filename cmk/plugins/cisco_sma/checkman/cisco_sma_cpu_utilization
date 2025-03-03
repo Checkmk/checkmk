@@ -1,0 +1,19 @@
+title: Cisco SMA CPU utilization
+agents: snmp
+catalog: os/storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the total CPU utilization in percent on Cisco Security Management Appliance
+ (SMA) as reported by the appliance software.
+
+ The check creates a metric that is measured against configurable levels. Note that not all
+ configuration options of the corresponding ruleset will have an effect on this check. In
+ particular, any option related to individual CPU cores will have no effect, since no single-core
+ data is available from the appliance.
+
+ The check utilizes the OID perCentCPUUtilization (.1.3.6.1.4.1.15497.1.1.1.2)
+ from ASYNCOS-MAIL-MIB.
+
+discovery:
+ One service is created.

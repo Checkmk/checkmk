@@ -16,6 +16,8 @@ from cmk.messaging.rabbitmq import (
     Definitions,
     Permission,
     Queue,
+    QUEUE_DEFAULT_MAX_LENGTH_BYTES,
+    QUEUE_DEFAULT_MESSAGE_TTL,
     Shovel,
     ShovelValue,
     User,
@@ -24,7 +26,11 @@ from cmk.messaging.rabbitmq import (
 
 def _get_queue(site_id: str) -> Queue:
     return Queue(
-        name=f"cmk.intersite.{site_id}", vhost="/", durable=True, auto_delete=False, arguments={}
+        name=f"cmk.intersite.{site_id}",
+        vhost="/",
+        durable=True,
+        auto_delete=False,
+        arguments={**QUEUE_DEFAULT_MESSAGE_TTL, **QUEUE_DEFAULT_MAX_LENGTH_BYTES},
     )
 
 

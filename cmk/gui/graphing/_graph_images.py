@@ -79,12 +79,15 @@ def _answer_graph_image_request() -> None:
         try:
             row = get_graph_data_from_livestatus(site, host_name, service_description)
         except livestatus.MKLivestatusNotFoundError:
+            logger.debug(
+                "Cannot fetch graph data: site: %s, host %s, service %s",
+                site,
+                host_name,
+                service_description,
+            )
             if active_config.debug:
                 raise
-            raise Exception(
-                _("Cannot render graph: host %s, service %s not found.")
-                % (host_name, service_description)
-            ) from None
+            return
 
         site = row["site"]
 
@@ -121,7 +124,9 @@ def _answer_graph_image_request() -> None:
         response.set_data(json.dumps(graphs))
 
     except Exception as e:
-        logger.error("Call to ajax_graph_images.py failed: %s\n%s", e, traceback.format_exc())
+        logger.error(
+            "Call to ajax_graph_images.py failed: %s\n%s", e, "".join(traceback.format_stack())
+        )
         if active_config.debug:
             raise
 
@@ -254,17 +259,18 @@ def graph_spec_from_request(api_request: dict[str, Any]) -> dict[str, Any]:
     curves = compute_graph_artwork_curves(graph_recipe, graph_data_range)
 
     api_curves = []
-    (start_time, end_time), step = graph_data_range.time_range, 60  # empty graph
+    (start, end), step = graph_data_range.time_range, 60  # empty graph
 
     for c in curves:
-        start_time, end_time, step = c["rrddata"].twindow
+        time_series = c["rrddata"]
+        start, end, step = time_series.start, time_series.end, time_series.step
         api_curve: dict[str, Any] = dict(c)
         api_curve["rrddata"] = c["rrddata"].values
         api_curves.append(api_curve)
 
     return {
-        "start_time": start_time,
-        "end_time": end_time,
+        "start_time": start,
+        "end_time": end,
         "step": step,
         "curves": api_curves,
     }

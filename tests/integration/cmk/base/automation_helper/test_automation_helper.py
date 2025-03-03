@@ -4,14 +4,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from collections.abc import Generator
+from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from pathlib import Path
+
+import pytest
+
+from tests.integration.linux_test_host import create_linux_test_host
 
 from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
 
-from cmk.automations.helper_api import AutomationPayload
+from cmk.utils.rulesets.definition import RuleGroup
+
+from cmk.automations.helper_api import AutomationPayload, AutomationResponse
+from cmk.automations.results import AnalyseServiceResult, SerializedResult
 
 from cmk.base.automation_helper._app import HealthCheckResponse
 from cmk.base.automation_helper._config import (
@@ -90,6 +97,38 @@ def test_standard_workflow_involving_automations(site: Site) -> None:
         site.activate_changes_and_wait_for_core_reload()
 
 
+def test_two_subsequent_automations_involving_ruleset_matcher_same_ruleset_different_hosts(
+    request: pytest.FixtureRequest,
+    site: Site,
+) -> None:
+    fs_rule_id = None
+    try:
+        create_linux_test_host(request, site, "host1")
+        create_linux_test_host(request, site, "host2")
+        site.openapi.service_discovery.run_discovery_and_wait_for_completion("host1")
+        site.openapi.service_discovery.run_discovery_and_wait_for_completion("host2")
+        fs_rule_id = site.openapi.rules.create(
+            {"magic": 0.8},
+            ruleset_name=RuleGroup.CheckgroupParameters("filesystem"),
+        )
+        site.activate_changes_and_wait_for_core_reload()
+
+        with _set_automation_helper_worker_count_to_one(site):
+            analyse_service_result_host1 = _query_analyse_service(site, ["host1", "Filesystem /"])
+            analyse_service_result_host2 = _query_analyse_service(site, ["host2", "Filesystem /"])
+
+        service_params_host1 = analyse_service_result_host1.service_info.get("parameters")
+        service_params_host2 = analyse_service_result_host2.service_info.get("parameters")
+        assert isinstance(service_params_host1, dict)
+        assert isinstance(service_params_host2, dict)
+        assert service_params_host1["magic"] == service_params_host2["magic"] == 0.8
+
+    finally:
+        if fs_rule_id is not None:
+            site.openapi.rules.delete(fs_rule_id)
+            site.activate_changes_and_wait_for_core_reload()
+
+
 @contextmanager
 def _disable_automation_helper_reloader_and_set_worker_count_to_one(site: Site) -> Generator[None]:
     default_configuration = default_config(
@@ -122,6 +161,33 @@ def _disable_automation_helper_reloader_and_set_worker_count_to_one(site: Site) 
 
 
 @contextmanager
+def _set_automation_helper_worker_count_to_one(site: Site) -> Generator[None]:
+    default_configuration = default_config(
+        omd_root=site.root,
+        run_directory=site.root / "tmp" / "run",
+        log_directory=site.root / "var" / "log" / "automation-helper",
+    )
+    adjusted_configuration = Config(
+        server_config=ServerConfig(
+            unix_socket=default_configuration.server_config.unix_socket,
+            pid_file=default_configuration.server_config.pid_file,
+            access_log=default_configuration.server_config.access_log,
+            error_log=default_configuration.server_config.error_log,
+            num_workers=1,
+        ),
+        watcher_config=default_configuration.watcher_config,
+        reloader_config=default_configuration.reloader_config,
+    )
+    site.write_text_file(RELATIVE_CONFIG_PATH_FOR_TESTING, adjusted_configuration.model_dump_json())
+    site.run(["omd", "restart", "automation-helper"])
+    try:
+        yield
+    finally:
+        site.delete_file(RELATIVE_CONFIG_PATH_FOR_TESTING)
+        site.run(["omd", "restart", "automation-helper"])
+
+
+@contextmanager
 def _fake_config_file(site: Site) -> Generator[None]:
     site.write_text_file("etc/check_mk/conf.d/aut_helper_reload_trigger.mk", "")
     try:
@@ -133,4 +199,24 @@ def _fake_config_file(site: Site) -> Generator[None]:
 def _query_automation_helper(site: Site, serialized_input: str) -> str:
     return site.python_helper("_helper_query_automation_helper.py").check_output(
         input_=serialized_input
+    )
+
+
+def _query_analyse_service(site: Site, args: Sequence[str]) -> AnalyseServiceResult:
+    return AnalyseServiceResult.deserialize(
+        SerializedResult(
+            AutomationResponse.model_validate_json(
+                _query_automation_helper(
+                    site,
+                    AutomationMode(
+                        payload=AutomationPayload(
+                            name="analyse-service",
+                            args=args,
+                            stdin="",
+                            log_level=logging.INFO,
+                        )
+                    ).model_dump_json(),
+                )
+            ).serialized_result_or_error_code
+        )
     )

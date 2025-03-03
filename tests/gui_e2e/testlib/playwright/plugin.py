@@ -36,6 +36,7 @@ logger = logging.getLogger(__name__)
 _browser_engines = ["chromium", "firefox"]  # engines selectable via CLI
 _browser_engines_ci = ["chromium"]  # align with what playwright installs in the CI (see Makefile)
 _mobile_devices = ["iPhone 6", "Galaxy S8"]
+_viewport = {"width": 1920, "height": 1080}
 
 
 @pytest.fixture(scope="session", name="browser_type_launch_args")
@@ -103,7 +104,7 @@ def fixture_context_launch_kwargs(pytestconfig: pytest.Config) -> dict[str, t.An
     kwargs = {"locale": pytestconfig.getoption("--locale")}
     if pytestconfig.getoption("--video"):
         kwargs["record_video_dir"] = str(pytestconfig.getoption("--output"))
-        kwargs["record_video_size"] = {"width": 1280, "height": 960}
+        kwargs["record_video_size"] = _viewport  # video size should match the viewport size
     return kwargs
 
 
@@ -113,6 +114,8 @@ def _context(
     context_launch_kwargs: dict[str, t.Any],
 ) -> t.Generator[BrowserContext, None, None]:
     """Create a browser context(browser testing) for one test-module at a time."""
+    if "viewport" not in context_launch_kwargs:
+        context_launch_kwargs.update({"viewport": _viewport})
     with manage_new_browser_context(_browser, context_launch_kwargs) as context:
         yield context
 

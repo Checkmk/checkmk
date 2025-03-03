@@ -184,7 +184,7 @@ def main() {
         ],
         ulimit_nofile: 1024,
         set_docker_group_id: true,
-        priviliged: true,
+        privileged: true,
     ) {
         withCredentials([
             usernamePassword(

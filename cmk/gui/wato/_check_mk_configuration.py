@@ -2138,7 +2138,7 @@ class ConfigVariableTrustedCertificateAuthorities(ConfigVariable):
                 (
                     "trusted_cas",
                     ListOfCAs(
-                        title=_("Checkmk specific"),
+                        title=_("Manually added"),
                         allow_empty=True,
                     ),
                 ),
@@ -4325,8 +4325,8 @@ def _from_periodic_service_discovery_config(values: dict | None) -> dict | None:
     if "severity_changed_service_labels" not in values:
         values["severity_changed_service_labels"] = 0
 
-    if "severity_changed_service_params" in values:
-        values.pop("severity_changed_service_params")
+    if "severity_changed_service_params" not in values:
+        values["severity_changed_service_params"] = 0
 
     return values
 
@@ -4339,6 +4339,7 @@ def _valuespec_periodic_discovery():
                 "check_interval": 2 * 60,
                 "severity_unmonitored": 1,
                 "severity_changed_service_labels": 0,
+                "severity_changed_service_params": 0,
                 "severity_vanished": 0,
                 "severity_new_host_label": 1,
             },
@@ -4443,6 +4444,22 @@ def _vs_periodic_discovery() -> Dictionary:
                 ),
             ),
             (
+                "severity_changed_service_params",
+                DropdownChoice(
+                    title=_("Severity of services with changed parameters"),
+                    help=_(
+                        "Please select which alarm state the service discovery check services "
+                        "shall assume in case that parameters of services have changed."
+                    ),
+                    choices=[
+                        (0, _("OK - do not alert, just display")),
+                        (1, _("Warning")),
+                        (2, _("Critical")),
+                        (3, _("Unknown")),
+                    ],
+                ),
+            ),
+            (
                 "severity_new_host_label",
                 DropdownChoice(
                     title=_("Severity of new host labels"),
@@ -4486,6 +4503,7 @@ def _valuespec_automatic_rediscover_parameters() -> Dictionary:
                                 "add_new_services": False,
                                 "remove_vanished_services": False,
                                 "update_changed_service_labels": False,
+                                "update_changed_service_parameters": False,
                                 "update_host_labels": True,
                             },
                         ),
@@ -4502,39 +4520,49 @@ def _valuespec_automatic_rediscover_parameters() -> Dictionary:
                             (
                                 "custom",
                                 _("Custom service configuration update"),
-                                Dictionary(
-                                    elements=[
-                                        (
-                                            "add_new_services",
-                                            Checkbox(
-                                                label=_("Monitor undecided services"),
-                                                default_value=False,
+                                Migrate(
+                                    migrate=_migrate_custom_service_configuration_update,
+                                    valuespec=Dictionary(
+                                        elements=[
+                                            (
+                                                "add_new_services",
+                                                Checkbox(
+                                                    label=_("Monitor undecided services"),
+                                                    default_value=False,
+                                                ),
                                             ),
-                                        ),
-                                        (
-                                            "remove_vanished_services",
-                                            Checkbox(
-                                                label=_("Remove vanished services"),
-                                                default_value=False,
+                                            (
+                                                "remove_vanished_services",
+                                                Checkbox(
+                                                    label=_("Remove vanished services"),
+                                                    default_value=False,
+                                                ),
                                             ),
-                                        ),
-                                        (
-                                            "update_changed_service_labels",
-                                            Checkbox(
-                                                label=_("Update service labels"),
-                                                default_value=False,
+                                            (
+                                                "update_changed_service_labels",
+                                                Checkbox(
+                                                    label=_("Update service labels"),
+                                                    default_value=False,
+                                                ),
                                             ),
-                                        ),
-                                        (
-                                            "update_host_labels",
-                                            Checkbox(
-                                                label=_("Update host labels"),
-                                                default_value=False,
+                                            (
+                                                "update_changed_service_parameters",
+                                                Checkbox(
+                                                    label=_("Update service parameters"),
+                                                    default_value=False,
+                                                ),
                                             ),
-                                        ),
-                                    ],
-                                    optional_keys=[],
-                                    indent=False,
+                                            (
+                                                "update_host_labels",
+                                                Checkbox(
+                                                    label=_("Update host labels"),
+                                                    default_value=False,
+                                                ),
+                                            ),
+                                        ],
+                                        optional_keys=[],
+                                        indent=False,
+                                    ),
                                 ),
                             ),
                         ],
@@ -4710,6 +4738,12 @@ def _valuespec_automatic_rediscover_parameters() -> Dictionary:
     )
 
 
+def _migrate_custom_service_configuration_update(values: dict) -> dict:
+    if "update_changed_service_parameters" not in values:
+        values["update_changed_service_parameters"] = False
+    return values
+
+
 def _migrate_automatic_rediscover_parameters(
     param: int | tuple[str, dict[str, bool]],
 ) -> tuple[str, dict[str, bool] | None]:
@@ -4724,6 +4758,7 @@ def _migrate_automatic_rediscover_parameters(
                 "add_new_services": True,
                 "remove_vanished_services": False,
                 "update_changed_service_labels": False,
+                "update_changed_service_parameters": False,
                 "update_host_labels": True,
             },
         )
@@ -4735,6 +4770,7 @@ def _migrate_automatic_rediscover_parameters(
                 "add_new_services": False,
                 "remove_vanished_services": True,
                 "update_changed_service_labels": False,
+                "update_changed_service_parameters": False,
                 "update_host_labels": False,
             },
         )
@@ -4746,6 +4782,7 @@ def _migrate_automatic_rediscover_parameters(
                 "add_new_services": True,
                 "remove_vanished_services": True,
                 "update_changed_service_labels": False,
+                "update_changed_service_parameters": False,
                 "update_host_labels": True,
             },
         )

@@ -36,7 +36,7 @@ _READABLE_SEVERITY = {
 class ActiveAlarm:
     sequence_number: int
     sysuptime: int
-    date_and_time: datetime.datetime
+    date_and_time: datetime.datetime | None
     name: str
     description: str
     source: str
@@ -49,18 +49,32 @@ class Section:
     archived_alarm_history_sequence_number: int
 
 
-def _parse_date_and_time(octet_string: str) -> datetime.datetime:
-    components = octet_string.split()
-
-    return datetime.datetime(
-        year=int(components[0], 16) * 256 + int(components[1], 16),
-        month=int(components[2], 16),
-        day=int(components[3], 16),
-        hour=int(components[4], 16),
-        minute=int(components[5], 16),
-        second=int(components[6], 16),
-        microsecond=int(components[7], 16) * 100000,
-    )
+def _parse_date_and_time(datetime_string: str) -> datetime.datetime | None:
+    try:
+        components = datetime_string.split()
+        return datetime.datetime(
+            year=int(components[0], 16) * 256 + int(components[1], 16),
+            month=int(components[2], 16),
+            day=int(components[3], 16),
+            hour=int(components[4], 16),
+            minute=int(components[5], 16),
+            second=int(components[6], 16),
+            microsecond=int(components[7], 16) * 100000,
+        )
+    except (ValueError, IndexError):
+        try:
+            byte_data = datetime_string.encode("latin-1")
+            return datetime.datetime(
+                year=byte_data[0] * 256 + byte_data[1],
+                month=byte_data[2],
+                day=byte_data[3],
+                hour=byte_data[4],
+                minute=byte_data[5],
+                second=byte_data[6],
+                microsecond=byte_data[7] * 100000,
+            )
+        except (ValueError, IndexError):
+            return None
 
 
 def parse_audiocodes_system_events(string_table: Sequence[StringTable]) -> Section | None:
@@ -144,9 +158,13 @@ def check_audiocodes_system_events(
                     f"Name: {alarm.name}, "
                     f"Severity: {alarm.severity_readable}, "
                     f"Sysuptime: {render.timespan(alarm.sysuptime)}, "
-                    f"Date and Time: {alarm.date_and_time}, "
                     f"Description: {alarm.description}, "
                     f"Source: {alarm.source}"
+                    + (
+                        f", Date and Time: {alarm.date_and_time}"
+                        if alarm.date_and_time is not None
+                        else ""
+                    )
                 ),
             )
         )
@@ -168,7 +186,7 @@ def check_audiocodes_system_events(
 
 check_plugin_audiocodes_system_events = CheckPlugin(
     name="audiocodes_system_events",
-    service_name="AudioCodes System Events",
+    service_name="System Events",
     discovery_function=discover_audiocodes_system_events,
     check_function=check_audiocodes_system_events,
     check_ruleset_name="audiocodes_system_events",

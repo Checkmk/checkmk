@@ -22,8 +22,9 @@ from cmk.gui.quick_setup.v0_unstable.predefined import validators as qs_validato
 from cmk.gui.quick_setup.v0_unstable.setups import (
     ProgressLogger,
     QuickSetup,
-    QuickSetupAction,
     QuickSetupActionMode,
+    QuickSetupBackgroundAction,
+    QuickSetupBackgroundStageAction,
     QuickSetupStage,
     QuickSetupStageAction,
 )
@@ -135,7 +136,7 @@ def configure_authentication() -> QuickSetupStage:
             ),
         ],
         actions=[
-            QuickSetupStageAction(
+            QuickSetupBackgroundStageAction(
                 id=ActionId("action"),
                 custom_validators=[
                     qs_validators.validate_unique_id,
@@ -150,7 +151,6 @@ def configure_authentication() -> QuickSetupStage:
                 ],
                 recap=[recaps.recaps_form_spec],
                 next_button_label=_("Configure host and authority"),
-                run_in_background=True,
             ),
         ],
     )
@@ -227,13 +227,14 @@ def recap_found_services(
     _quick_setup_id: QuickSetupId,
     _stage_index: StageIndex,
     parsed_data: ParsedFormData,
-    _progress_logger: ProgressLogger,
+    progress_logger: ProgressLogger,
 ) -> Sequence[Widget]:
     service_discovery_result = utils.get_service_discovery_preview(
         rulespec_name=RuleGroup.SpecialAgents("azure"),
         all_stages_form_data=parsed_data,
         parameter_form=azure.formspec(),
         collect_params=azure_collect_params,
+        progress_logger=progress_logger,
     )
     azure_service_interest = ServiceInterest(r"(?i).*azure.*", "services")
     filtered_groups_of_services, _other_services = utils.group_services_by_interest(
@@ -261,7 +262,7 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
         sub_title=_("Review your configuration and run preview service discovery"),
         configure_components=[],
         actions=[
-            QuickSetupStageAction(
+            QuickSetupBackgroundStageAction(
                 id=ActionId("action"),
                 custom_validators=[],
                 recap=[
@@ -269,7 +270,6 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
                 ],
                 next_button_label=_("Test configuration"),
                 load_wait_label=_("This process may take several minutes, please wait..."),
-                run_in_background=True,
             ),
             QuickSetupStageAction(
                 id=ActionId("skip_configuration_test"),
@@ -342,11 +342,10 @@ quick_setup_azure = QuickSetup(
         review_and_run_preview_service_discovery,
     ],
     actions=[
-        QuickSetupAction(
+        QuickSetupBackgroundAction(
             id=ActionId("activate_changes"),
             label=_("Save & go to Activate changes"),
             action=action,
-            run_in_background=True,
         ),
     ],
 )

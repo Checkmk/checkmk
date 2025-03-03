@@ -9,6 +9,9 @@ from importlib import import_module
 from typing import assert_never
 
 from cmk.base.api.agent_based.plugin_classes import (
+    AgentBasedPlugins,
+)
+from cmk.base.api.agent_based.plugin_classes import (
     AgentSectionPlugin as BackendAgentSectionPlugin,
 )
 from cmk.base.api.agent_based.plugin_classes import (
@@ -53,14 +56,18 @@ def load_all_plugins(
     sections: Iterable[BackendSNMPSectionPlugin | BackendAgentSectionPlugin],
     checks: Iterable[BackendCheckPlugin],
     *,
+    legacy_errors: Iterable[str],
     raise_errors: bool,
-) -> list[str]:
+) -> AgentBasedPlugins:
     with tracer.span("discover_plugins"):
         discovered_plugins: DiscoveredPlugins[_ABPlugins] = discover_plugins(
             PluginGroup.AGENT_BASED, entry_point_prefixes(), raise_errors=raise_errors
         )
 
-    errors = [f"Error in agent based plugin: {exc}" for exc in discovered_plugins.errors]
+    errors = [
+        *legacy_errors,
+        *(f"Error in agent based plugin: {exc}" for exc in discovered_plugins.errors),
+    ]
 
     with tracer.span("load_discovered_plugins"):
         for location, plugin in discovered_plugins.plugins.items():
@@ -73,7 +80,7 @@ def load_all_plugins(
 
     _add_sections_to_register(sections)
     _add_checks_to_register(checks)
-    return errors
+    return get_previously_loaded_plugins(errors)
 
 
 def load_selected_plugins(
@@ -82,13 +89,14 @@ def load_selected_plugins(
     checks: Iterable[BackendCheckPlugin],
     *,
     validate: bool,
-) -> None:
+) -> AgentBasedPlugins:
     for location in locations:
         module = import_module(location.module)
         if location.name is not None:
             _register_plugin_by_type(location, getattr(module, location.name), validate=validate)
     _add_sections_to_register(sections)
     _add_checks_to_register(checks)
+    return get_previously_loaded_plugins()
 
 
 def _register_plugin_by_type(

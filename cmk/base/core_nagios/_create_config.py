@@ -36,8 +36,8 @@ from cmk.checkengine.checking import CheckPluginName
 
 import cmk.base.utils
 from cmk.base import config, core_config
-from cmk.base.api.agent_based.plugin_classes import CheckPlugin
-from cmk.base.api.agent_based.register import AgentBasedPlugins, get_check_plugin
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins, CheckPlugin
+from cmk.base.api.agent_based.register import get_check_plugin
 from cmk.base.config import ConfigCache, HostgroupName, ObjectAttributes, ServicegroupName
 from cmk.base.core_config import (
     AbstractServiceID,
@@ -447,7 +447,9 @@ def create_nagios_servicedefs(
 
         return result
 
-    host_check_table = config_cache.check_table(hostname, plugins)
+    host_check_table = config_cache.check_table(
+        hostname, plugins, config_cache.make_service_configurer(plugins)
+    )
     have_at_least_one_service = False
     used_descriptions: dict[ServiceName, AbstractServiceID] = {}
     service_labels: dict[ServiceName, Labels] = {}

@@ -18,13 +18,11 @@ const data = defineModel<unknown>('data', { required: true })
 </script>
 
 <template>
-  <span>
-    <FormHelp :help="spec.help" />
-    <component
-      :is="getComponent(spec.type)"
-      v-model:data="data"
-      :backend-validation="backendValidation"
-      :spec="spec"
-    />
-  </span>
+  <FormHelp :help="spec.help" />
+  <component
+    :is="getComponent(spec.type)"
+    v-model:data="data"
+    :backend-validation="backendValidation"
+    :spec="spec"
+  />
 </template>

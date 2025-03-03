@@ -8,8 +8,12 @@ import pytest
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.api.agent_based.plugin_classes import CheckFunction, CheckPlugin, DiscoveryFunction
-from cmk.base.api.agent_based.register import AgentBasedPlugins
+from cmk.base.api.agent_based.plugin_classes import (
+    AgentBasedPlugins,
+    CheckFunction,
+    CheckPlugin,
+    DiscoveryFunction,
+)
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 

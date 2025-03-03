@@ -21,7 +21,7 @@ CI ?= false
         format format-c test-format-c format-python format-shell \
         help install mrproper mrclean \
         packages setup setversion version openapi \
-        requirements_all_lock.txt frontend-vue .venv
+        requirements.txt frontend-vue .venv
 
 help:
 	@echo "setup                          --> Prepare system for development and building"
@@ -227,20 +227,18 @@ lint-bazel:
 documentation:
 	echo Nothing to do here remove this target
 
-sw-documentation-docker:
-	scripts/run-in-docker.sh scripts/run-uvenv make -C doc/documentation html
+sw-documentation:
+	scripts/run-uvenv make -C doc/documentation html
 
 # Use this target to update the requirements_*_lock.txt files
 # TODO: Find a _way_ better ways to handle this
 relock_venv:
-	for type in runtime all; do \
-	    filename=requirements_$${type}_lock.txt; \
-	    > $${filename}; \
-	done
+	touch requirements.txt
+	touch runtime-requirements.txt
 	bazel mod deps --lockfile_mode=update > /dev/null
-	bazel run //:requirements_all.update > /dev/null
+	bazel run //:requirements.update > /dev/null
 	bazel mod deps --lockfile_mode=update > /dev/null
-	bazel run //:requirements_runtime.update > /dev/null
+	bazel run //:runtime_requirements.update > /dev/null
 	bazel mod deps --lockfile_mode=update > /dev/null
 
 # .venv is PHONY because the dependencies are resolved by bazel
@@ -254,7 +252,7 @@ relock_venv:
 		fi; \
 		# TODO: We currently need to first have an updated runtime lock file as this is the input for the all_lock file. \
 		# Therefore execution order matters! \
-		bazel run //:requirements_runtime.update; bazel mod deps --lockfile_mode=update; \
-		bazel run //:requirements_all.update; bazel mod deps --lockfile_mode=update; \
+		bazel run //:runtime_requirements.update; bazel mod deps --lockfile_mode=update; \
+		bazel run //:requirements.update; bazel mod deps --lockfile_mode=update; \
 	fi; \
 	CC="gcc" bazel run //:create_venv

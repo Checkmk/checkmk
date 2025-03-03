@@ -273,7 +273,10 @@ def test_host_folder_matching(
     )
 
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.fetcher_factory()._agent_port(hostname) == result
+    assert (
+        config_cache.fetcher_factory(config_cache.make_service_configurer({}))._agent_port(hostname)
+        == result
+    )
 
 
 @pytest.mark.parametrize(
@@ -867,7 +870,10 @@ def test_agent_port(monkeypatch: MonkeyPatch, hostname: HostName, result: int) -
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.fetcher_factory()._agent_port(hostname) == result
+    assert (
+        config_cache.fetcher_factory(config_cache.make_service_configurer({}))._agent_port(hostname)
+        == result
+    )
 
 
 @pytest.mark.parametrize(
@@ -892,7 +898,12 @@ def test_tcp_connect_timeout(monkeypatch: MonkeyPatch, hostname: HostName, resul
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.fetcher_factory()._tcp_connect_timeout(hostname) == result
+    assert (
+        config_cache.fetcher_factory(config_cache.make_service_configurer({}))._tcp_connect_timeout(
+            hostname
+        )
+        == result
+    )
 
 
 @pytest.mark.parametrize(
@@ -918,7 +929,12 @@ def test_encryption_handling(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.fetcher_factory()._encryption_handling(hostname) is result
+    assert (
+        config_cache.fetcher_factory(config_cache.make_service_configurer({}))._encryption_handling(
+            hostname
+        )
+        is result
+    )
 
 
 @pytest.mark.parametrize(
@@ -944,7 +960,12 @@ def test_symmetric_agent_encryption(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.fetcher_factory()._symmetric_agent_encryption(hostname) is result
+    assert (
+        config_cache.fetcher_factory(
+            config_cache.make_service_configurer({})
+        )._symmetric_agent_encryption(hostname)
+        is result
+    )
 
 
 @pytest.mark.parametrize(
@@ -1832,7 +1853,9 @@ def test_get_sorted_check_table_no_cmc(
         }.get(descr, []),
     )
 
-    services = config_cache.configured_services(host_name, {})
+    services = config_cache.configured_services(
+        host_name, {}, config_cache.make_service_configurer({})
+    )
     assert [s.description for s in services] == [
         "description F",  #
         "description C",  # no deps => input order maintained
@@ -1872,7 +1895,9 @@ def test_resolve_service_dependencies_cyclic(
             " 'description B' (plugin_B / item)"
         ),
     ):
-        config_cache.configured_services(HostName("MyHost"), {})
+        config_cache.configured_services(
+            HostName("MyHost"), {}, config_cache.make_service_configurer({})
+        )
 
 
 def test_service_depends_on_unknown_host(monkeypatch: MonkeyPatch) -> None:
@@ -2720,9 +2745,7 @@ def test_get_config_file_paths_with_confd(folder_path_test_config: None) -> None
 
 
 def test_load_config_folder_paths(folder_path_test_config: None) -> None:
-    # reset makes our testing environment explicit and stable, but the test runs good with almost
-    # any config_cache.
-    config_cache = config.reset_config_cache()
+    config_cache = config.ConfigCache()
 
     assert config_cache.host_path(HostName("main-host")) == "/"
     assert config_cache.host_path(HostName("lvl0-host")) == "/wato/"
@@ -3013,6 +3036,7 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
         agent_based_register.load_all_plugins(
             sections=(),
             checks=converted_legacy_checks,
+            legacy_errors=(),
             raise_errors=False,  # we still expect the error to be raised
         )
 
@@ -3040,12 +3064,12 @@ def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:
         ),
     )
 
-    agent_based_register.load_all_plugins(
+    plugins = agent_based_register.load_all_plugins(
         sections=convert_legacy_sections(duplicate_plugin, {}, raise_errors=True)[1],
         checks=(),
+        legacy_errors=(),
         raise_errors=True,  # we don't expect any errors
     )
-    plugins = agent_based_register.get_previously_loaded_plugins()
     assert plugins.snmp_sections[SectionName("duplicate_plugin")].detect_spec
 
 
@@ -3150,7 +3174,7 @@ def test_check_table_cluster_merging_enforced_and_discovered(
     )
     config_cache = ts.apply(monkeypatch)
 
-    assert config_cache.check_table(CN, {}) == expected
+    assert config_cache.check_table(CN, {}, config_cache.make_service_configurer({})) == expected
 
 
 def test_collect_passwords_includes_non_matching_rulesets(monkeypatch: MonkeyPatch) -> None:

@@ -264,10 +264,10 @@ def container_name_suffix(distro_name: str, docker_tag: str) -> str:
     However they need to be informative but unique to avoid conflicts.
     In order to be able to use the same naming scheme for incremental test-image builds soon,
     we put everything in that qualifies a container for a certain scenario (distro, docker_tag,
-    requirements_runtime_lock.txt) but make it 'unique' for now by adding a timestamp"""
+    runtime-requirements.txt) but make it 'unique' for now by adding a timestamp"""
     return (
         f"{distro_name}-{docker_tag}"
-        f"-{git_commit_id('requirements_runtime_lock.txt')[:10]}"
+        f"-{git_commit_id('runtime-requirements.txt')[:10]}"
         f"-{time.strftime('%Y%m%d%H%M%S')}"
     )
 

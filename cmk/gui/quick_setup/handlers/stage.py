@@ -13,6 +13,8 @@ from typing import Any
 
 from pydantic import BaseModel, ValidationError
 
+from livestatus import SiteId
+
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
@@ -24,10 +26,12 @@ from cmk.gui.background_job import (
     InitialStatusArgs,
     JobTarget,
 )
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.form_specs.vue.form_spec_visitor import (
     validate_value_from_frontend,
 )
+from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.quick_setup.config_setups import register as register_config_setups
 from cmk.gui.quick_setup.handlers.utils import (
@@ -71,6 +75,9 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     FormSpecId,
     Widget,
 )
+from cmk.gui.site_config import get_site_config
+from cmk.gui.watolib.automation_commands import AutomationCommand
+from cmk.gui.watolib.automations import do_remote_automation
 
 from cmk.rulesets.v1.form_specs import FormSpec
 
@@ -355,15 +362,17 @@ class QuickSetupStageActionBackgroundJob(BackgroundJob):
 
 
 def start_quick_setup_stage_job(
-    quick_setup: QuickSetup,
+    quick_setup_id: QuickSetupId,
     action_id: ActionId,
     stage_index: StageIndex,
     user_input_stages: Sequence[dict],
+    job_uuid: str | None = None,
 ) -> str:
-    job_uuid = str(uuid.uuid4())
+    if job_uuid is None:
+        job_uuid = str(uuid.uuid4())
     job = QuickSetupStageActionBackgroundJob(
         job_uuid=job_uuid,
-        quick_setup_id=quick_setup.id,
+        quick_setup_id=quick_setup_id,
         action_id=action_id,
         stage_index=stage_index,
         user_input_stages=user_input_stages,
@@ -374,7 +383,7 @@ def start_quick_setup_stage_job(
             callable=quick_setup_stage_action_job_entry_point,
             args=QuickSetupStageActionJobArgs(
                 job_uuid=job_uuid,
-                quick_setup_id=quick_setup.id,
+                quick_setup_id=quick_setup_id,
                 action_id=action_id,
                 stage_index=stage_index,
                 user_input_stages=user_input_stages,
@@ -382,7 +391,7 @@ def start_quick_setup_stage_job(
         ),
         InitialStatusArgs(
             title=_("Running Quick setup %s stage %s action %s")
-            % (quick_setup.id, stage_index, action_id),
+            % (quick_setup_id, stage_index, action_id),
             user=str(user.id) if user.id else None,
         ),
     )
@@ -443,3 +452,63 @@ def get_stage_structure(
             for action in stage.actions
         ],
     )
+
+
+def start_quick_setup_stage_action_job_on_remote(
+    site_id: str,
+    quick_setup_id: QuickSetupId,
+    action_id: ActionId,
+    stage_index: StageIndex,
+    user_input_stages: Sequence[dict],
+) -> str:
+    job_uuid = str(uuid.uuid4())
+    args = QuickSetupStageActionJobArgs(
+        job_uuid=job_uuid,
+        quick_setup_id=quick_setup_id,
+        action_id=action_id,
+        stage_index=stage_index,
+        user_input_stages=user_input_stages,
+    )
+    job_id = str(
+        do_remote_automation(
+            get_site_config(active_config, SiteId(site_id)),
+            "start-quick-setup-stage-action",
+            [
+                ("args", args.model_dump_json()),
+            ],
+        )
+    )
+    return job_id
+
+
+class AutomationQuickSetupStageAction(AutomationCommand[QuickSetupStageActionJobArgs]):
+    """Start a Quick Setup stage action in the background on a remote site"""
+
+    def command_name(self) -> str:
+        return "start-quick-setup-stage-action"
+
+    def get_request(self) -> QuickSetupStageActionJobArgs:
+        api_request = request.get_request()
+        return QuickSetupStageActionJobArgs.model_validate_json(api_request["args"])
+
+    def execute(self, api_request: QuickSetupStageActionJobArgs) -> str:
+        return start_quick_setup_stage_job(
+            quick_setup_id=api_request.quick_setup_id,
+            action_id=api_request.action_id,
+            stage_index=api_request.stage_index,
+            user_input_stages=api_request.user_input_stages,
+            job_uuid=api_request.job_uuid,
+        )
+
+
+class AutomationQuickSetupStageActionResult(AutomationCommand[str]):
+    """Fetch the result of a Quick Setup stage action from a remote site"""
+
+    def command_name(self) -> str:
+        return "fetch-quick-setup-stage-action-result"
+
+    def get_request(self) -> str:
+        return request.get_request()["job_id"]
+
+    def execute(self, api_request: str) -> str:
+        return StageActionResult.load_from_job_result(api_request).model_dump_json()

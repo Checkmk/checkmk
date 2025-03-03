@@ -271,7 +271,7 @@ plugins:
         # to execute only first one will run ^^^^^^^^^^^^^^                              xxxxxxxxxxxxxx
         #
         # *********************************************************************************************
-        # execution pattern for  windows-updates.vbs:
+        # execution pattern for  windows-updates.ps1:
         # all parameters below are DEFAULT set for every entry
         #- pattern     : '$CUSTOM_PLUGINS_PATH$\mk_inventory.vbs'  # Plugin name or absolute path . * and ? are allowed
         #  run         : yes                 # execute this plugin if plugin found

@@ -564,8 +564,11 @@ def extend_context(context: dict[str, str]) -> None:
         context.get("SERVICEDESC", ""),
     )
 
-    if "graph" in context.get("PARAMETER_ELEMENTSS", "graph").split():
+    if "graph" in context.get("PARAMETER_ELEMENTSS", "").split():
         context["GRAPH_URL"] = utils.graph_url_from_context(context)
+
+    if "is_bulk" in context.get("PARAMETER_ELEMENTSS", "").split():
+        context["EVENTHISTORYURL"] = utils.eventhistory_url_from_context(context)
 
     if context["HOSTALIAS"] and context["HOSTNAME"] != context["HOSTALIAS"]:
         context["HOSTNAME_AND_ALIAS_TXT"] = "$HOSTNAME$ ($HOSTALIAS$)"

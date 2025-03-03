@@ -71,7 +71,7 @@ impl SqlInstanceBuilder {
         self
     }
     pub fn alias(mut self, alias: &Option<InstanceAlias>) -> Self {
-        self.alias = alias.clone();
+        self.alias.clone_from(alias);
         self
     }
     pub fn id<S: Into<String>>(mut self, id: S) -> Self {
@@ -2424,7 +2424,7 @@ async fn generate_result(
 
     // processing here
     let s: u32 = ms_sql.options().max_connections().into();
-    let results = stream::iter(tasks)
+    let results: Vec<String> = stream::iter(tasks)
         .buffer_unordered(s as usize)
         .collect::<Vec<_>>()
         .await;

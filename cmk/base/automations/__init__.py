@@ -24,10 +24,7 @@ from cmk.utils.timeout import Timeout
 from cmk.automations.results import ABCAutomationResult
 
 from cmk.base import config, profiling
-from cmk.base.api.agent_based.register import (
-    AgentBasedPlugins,
-    get_previously_loaded_plugins,
-)
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 
 from cmk import trace
 
@@ -58,7 +55,7 @@ class Automations:
         cmd: str,
         args: list[str],
         plugins: AgentBasedPlugins | None = None,
-        loaded_config: config.LoadedConfigSentinel | None = None,
+        loaded_config: config.LoadedConfigFragment | None = None,
     ) -> ABCAutomationResult | AutomationError:
         remaining_args, timeout = self._extract_timeout_from_args(args)
         with nullcontext() if timeout is None else Timeout(timeout, message="Action timed out."):
@@ -69,7 +66,7 @@ class Automations:
         cmd: str,
         args: list[str],
         plugins: AgentBasedPlugins | None = None,
-        loaded_config: config.LoadedConfigSentinel | None = None,
+        loaded_config: config.LoadedConfigFragment | None = None,
     ) -> int:
         try:
             result = self.execute(
@@ -100,7 +97,7 @@ class Automations:
         cmd: str,
         args: list[str],
         plugins: AgentBasedPlugins | None,
-        loaded_config: config.LoadedConfigSentinel | None,
+        loaded_config: config.LoadedConfigFragment | None,
     ) -> ABCAutomationResult | AutomationError:
         try:
             try:
@@ -142,14 +139,14 @@ def load_plugins() -> AgentBasedPlugins:
         redirect_stdout(open(os.devnull, "w")),
     ):
         log.setup_console_logging()
-        config.load_all_plugins(
+        plugins = config.load_all_plugins(
             local_checks_dir=paths.local_checks_dir,
             checks_dir=paths.checks_dir,
         )
-    return get_previously_loaded_plugins()
+    return plugins
 
 
-def load_config(discovery_rulesets: Iterable[RuleSetName]) -> config.LoadedConfigSentinel:
+def load_config(discovery_rulesets: Iterable[RuleSetName]) -> config.LoadedConfigFragment:
     with tracer.span("load_config"):
         return config.load(discovery_rulesets, validate_hosts=False)
 
@@ -162,7 +159,7 @@ class Automation(abc.ABC):
         self,
         args: list[str],
         plugins: AgentBasedPlugins | None,
-        loaded_config: config.LoadedConfigSentinel | None,
+        loaded_config: config.LoadedConfigFragment | None,
     ) -> ABCAutomationResult: ...
 
 

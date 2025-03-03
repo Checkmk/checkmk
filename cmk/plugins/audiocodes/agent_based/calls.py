@@ -101,8 +101,9 @@ def check_audiocodes_calls_testable(
 ) -> CheckResult:
     yield from check_levels(
         value=section.active_calls,
-        label="Active Calls",
+        label="Active calls",
         metric_name="audiocodes_active_calls",
+        render_func=lambda x: f"{int(x)}",
     )
 
     call_rate = get_rate(
@@ -113,7 +114,7 @@ def check_audiocodes_calls_testable(
     )
     yield from check_levels(
         value=call_rate,
-        label="Calls per Second",
+        label="Calls per second",
         metric_name="audiocodes_calls_per_sec",
         render_func=lambda x: f"{x:.2f}/s",
     )
@@ -122,13 +123,13 @@ def check_audiocodes_calls_testable(
         value=section.average_success_ratio,
         levels_lower=params.get("asr_lower_levels"),
         render_func=render.percent,
-        label="Average Succes Ratio",
+        label="Average succes ratio",
         metric_name="audiocodes_average_success_ratio",
     )
 
     yield from check_levels(
         value=section.average_call_duration,
-        label="Average Call Duration",
+        label="Average call duration",
         metric_name="audiocodes_average_call_duration",
         render_func=render.timespan,
     )
@@ -136,23 +137,25 @@ def check_audiocodes_calls_testable(
     if section.active_calls_in is not None:
         yield from check_levels(
             value=section.active_calls_in,
-            label="Active Calls In",
+            label="Active calls in",
             metric_name="audiocodes_active_calls_in",
             notice_only=True,
+            render_func=lambda x: f"{int(x)}",
         )
 
     if section.active_calls_out is not None:
         yield from check_levels(
             value=section.active_calls_out,
-            label="Active Calls Out",
+            label="Active calls out",
             metric_name="audiocodes_active_calls_out",
             notice_only=True,
+            render_func=lambda x: f"{int(x)}",
         )
 
 
 check_plugin_audiocodes_calls = CheckPlugin(
     name="audiocodes_calls",
-    service_name="AudioCodes SBC Calls",
+    service_name="SBC calls",
     discovery_function=discover_audiocodes_calls,
     check_function=check_audiocodes_calls,
     check_ruleset_name="audiocodes_calls",

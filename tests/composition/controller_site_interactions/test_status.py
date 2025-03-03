@@ -14,7 +14,10 @@ from tests.testlib.agent import (
     controller_status_json,
     register_controller,
 )
-from tests.testlib.pytest_helpers.marks import skip_if_not_cloud_edition, skip_if_not_containerized
+from tests.testlib.pytest_helpers.marks import (
+    skip_if_not_cloud_or_managed_edition,
+    skip_if_not_containerized,
+)
 from tests.testlib.site import Site
 
 from cmk.utils.agent_registration import HostAgentConnectionMode
@@ -66,7 +69,7 @@ def test_status_pull(
 
 
 @skip_if_not_containerized
-@skip_if_not_cloud_edition
+@skip_if_not_cloud_or_managed_edition
 def test_status_push(
     central_site: Site,
     agent_ctl: Path,

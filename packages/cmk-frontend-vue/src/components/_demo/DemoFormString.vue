@@ -7,29 +7,56 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { onBeforeMount, onBeforeUnmount, ref } from 'vue'
 import type { String } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import FormEdit from '@/form/components/FormEdit.vue'
+import CmkCheckbox from '@/components/CmkCheckbox.vue'
 
-import { http, HttpResponse } from 'msw'
+import { passthrough, http, HttpResponse } from 'msw'
 import { setupWorker } from 'msw/browser'
 
-async function interceptor() {
+const apiReturnsError = ref<boolean>(false)
+
+const ALL: Array<string> = []
+for (let i = 0; i < 200; i++) {
+  ALL.push(window.crypto.randomUUID())
+}
+
+async function interceptor({ request }: { request: Request }) {
+  if (apiReturnsError.value) {
+    return HttpResponse.json({
+      result:
+        'some error very very very very very very very very very very very very very very very very very very very very very long message',
+      result_code: 1,
+      severity: 'error'
+    })
+  }
+
+  const jsonData = (await request.formData()).get('request')
+  if (jsonData === null) {
+    throw new Error('could not find json data in form')
+  }
+  if (jsonData instanceof File) {
+    throw new Error('got file, expected string')
+  }
+  const value = JSON.parse(jsonData).value
+
+  const choices = ALL.filter((element: string) => element.includes(value)).map(
+    (element: unknown) => [element, element]
+  )
   return HttpResponse.json({
     result: {
-      choices: [
-        ['two', 'two'],
-        ['one', 'one']
-      ]
+      choices: choices
     },
     result_code: 0,
     severity: 'success'
   })
 }
 const worker = setupWorker(
-  ...[
-    http.post(
-      new RegExp(`${location.protocol}//${location.host}/ajax_vs_autocomplete.py`),
-      interceptor
-    )
-  ]
+  http.post(
+    new RegExp(`${location.protocol}//${location.host}/ajax_vs_autocomplete.py`),
+    interceptor
+  ),
+  http.get(/.+/, () => {
+    return passthrough()
+  })
 )
 
 onBeforeMount(async () => {
@@ -76,6 +103,7 @@ const data = ref<string>('some thing')
 
 <template>
   <h2>With autocompleter</h2>
+  <CmkCheckbox v-model="apiReturnsError" label="error in autocompleter" />
   <pre>{{ JSON.stringify(data) }}</pre>
   <span v-if="mockLoaded">
     <FormEdit v-model:data="data" :spec="spec" :backend-validation="[]" />

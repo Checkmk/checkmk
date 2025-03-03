@@ -39,6 +39,10 @@ import {
   type QuickSetupGuidedResponse,
   type QuickSetupStageStructure
 } from '@/lib/rest-api-client/quick-setup/response_schemas'
+import {
+  useBackgroundJobLog,
+  type LogUpdate
+} from './components/BackgroundJobLog/useBackgroundJobLog'
 
 /**
  * Type definition for internal stage storage
@@ -71,7 +75,7 @@ const preventLeaving = ref(false)
 const stages = ref<QSStageStore[]>([])
 const globalError = ref<string | DetailedError | null>(null) //Main error message
 const loading: Ref<boolean> = ref(false) // Loading flag
-
+const backgroundJobLogHook = useBackgroundJobLog()
 const numberOfStages = computed(() => stages.value.length) //Number of stages
 
 // Data from all stages
@@ -98,24 +102,29 @@ const nextStage = async (actionId: string) => {
   }
 
   try {
-    const actionResponse = await validateAndRecapStage(props.quick_setup_id, actionId, userInput)
-    loading.value = false
+    const actionResponse = await validateAndRecapStage(
+      props.quick_setup_id,
+      actionId,
+      userInput,
+      handleBackgroundJobLogUpdate
+    )
 
     if (actionResponse instanceof QuickSetupStageActionValidationResponse) {
       handleValidationError(actionResponse, thisStageNumber)
       handleBackgroundJobError(actionResponse)
+      backgroundJobLogHook.setActiveTasksToError()
+      loading.value = false
       return
     }
-
+    backgroundJobLogHook.clear()
     stages.value[thisStageNumber]!.form_spec_errors =
       actionResponse.validation_errors?.formspec_errors || {}
     stages.value[thisStageNumber]!.errors = actionResponse.validation_errors?.stage_errors || []
     stages.value[thisStageNumber]!.recap = actionResponse.stage_recap
   } catch (err: unknown) {
     handleExceptionError(err)
-    return
-  } finally {
     loading.value = false
+    return
   }
 
   //If we have not finished the quick setup yet, but still on the, regular step
@@ -165,6 +174,7 @@ const nextStage = async (actionId: string) => {
   }
 
   quickSetupHook.next()
+  loading.value = false
 }
 
 const prevStage = () => {
@@ -311,7 +321,8 @@ const save = async (buttonId: string) => {
       props.quick_setup_id,
       buttonId,
       userInput,
-      props.objectId
+      props.objectId,
+      handleBackgroundJobLogUpdate
     )
     loading.value = true
 
@@ -348,6 +359,7 @@ const clearErrors = () => {
     stage.errors = []
     stage.form_spec_errors = {}
   }
+  backgroundJobLogHook.clear()
 }
 
 //
@@ -369,6 +381,7 @@ const regularStages = computed((): QuickSetupStageSpec[] => {
       content: renderContent(
         stg.components || [],
         (value) => update(index, value),
+        backgroundJobLogHook.entries,
         stg.form_spec_errors,
         stg.user_input
       ),
@@ -450,6 +463,10 @@ const handleExceptionError = (err: unknown) => {
   }
 }
 
+const handleBackgroundJobLogUpdate = (log: LogUpdate | null) => {
+  backgroundJobLogHook.update(log)
+}
+
 const wizardMode: Ref<WizardMode> = usePersistentRef<WizardMode>(
   'quick_setup_wizard_mode',
   props.mode
@@ -495,6 +512,7 @@ preventLeaving.value = false
     :current-stage="quickSetupHook.stage.value"
     :mode="quickSetupHook.mode"
     :prevent-leaving="preventLeaving"
+    :hide-wait-icon="backgroundJobLogHook.entries.value.length > 0"
   />
 </template>
 

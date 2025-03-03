@@ -26,7 +26,7 @@ def rrd_config_dir(config_path: ConfigPath) -> Path:
 
 @lru_cache
 def rrd_config_hosts_dir(config_path: ConfigPath) -> Path:
-    return rrd_config_dir(config_path) / RRD_CONFIG_FOLDER / RRD_CONFIG_HOSTS_FOLDER
+    return rrd_config_dir(config_path) / RRD_CONFIG_HOSTS_FOLDER
 
 
 class RRDObjectConfig(TypedDict):

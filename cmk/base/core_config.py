@@ -34,9 +34,8 @@ from cmk.utils.tags import TagGroupID, TagID
 
 from cmk.checkengine.checking import ServiceID
 
-import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config
-from cmk.base.api.agent_based.plugin_classes import CheckPlugin
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins, CheckPlugin
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.nagios_utils import do_check_nagiosconfig
 
@@ -66,7 +65,7 @@ class MonitoringCore(abc.ABC):
         self,
         config_path: VersionedConfigPath,
         config_cache: ConfigCache,
-        plugins: agent_based_register.AgentBasedPlugins,
+        plugins: AgentBasedPlugins,
         discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
         ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
         passwords: Mapping[str, str],
@@ -92,7 +91,7 @@ class MonitoringCore(abc.ABC):
         config_cache: ConfigCache,
         ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
         licensing_handler: LicensingHandler,
-        plugins: agent_based_register.AgentBasedPlugins,
+        plugins: AgentBasedPlugins,
         discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
         passwords: Mapping[str, str],
         hosts_to_update: set[HostName] | None = None,
@@ -263,7 +262,7 @@ def check_icmp_arguments_of(
 def do_create_config(
     core: MonitoringCore,
     config_cache: ConfigCache,
-    plugins: agent_based_register.AgentBasedPlugins,
+    plugins: AgentBasedPlugins,
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
     ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     all_hosts: Iterable[HostName],
@@ -388,7 +387,7 @@ def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
 def _create_core_config(
     core: MonitoringCore,
     config_cache: ConfigCache,
-    plugins: agent_based_register.AgentBasedPlugins,
+    plugins: AgentBasedPlugins,
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
     ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     hosts_to_update: set[HostName] | None = None,

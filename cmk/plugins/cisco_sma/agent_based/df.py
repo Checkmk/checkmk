@@ -11,11 +11,12 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.cisco_sma.agent_based.detect import DETECT_CISCO_SMA_SNMP
 from cmk.plugins.lib.df import (
     DfBlock,
     DfSection,
 )
+
+from .detect import DETECT_CISCO_SMA
 
 _UNIT_TO_MB = {
     "kB": 10**-3,
@@ -64,7 +65,7 @@ def _parse_df(string_table: StringTable) -> DfSection | None:
 snmp_section_disk_io_utilization = SimpleSNMPSection(
     parsed_section_name="df",
     name="cisco_sma_filesystem",
-    detect=DETECT_CISCO_SMA_SNMP,
+    detect=DETECT_CISCO_SMA,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.15497.1.1.1",
         oids=["27.0"],

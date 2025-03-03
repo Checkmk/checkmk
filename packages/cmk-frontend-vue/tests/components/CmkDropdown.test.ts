@@ -136,6 +136,32 @@ test('dropdown option selection via keyboard wraps', async () => {
   expect(selectedOption).toBe('option2')
 })
 
+test('dropdown option keyboard selection with filtering wraps', async () => {
+  let selectedOption: string | null = ''
+  render(CmkDropdown, {
+    props: {
+      options: [
+        { title: 'Bar', name: 'bar' },
+        { title: 'Option 1', name: 'option1' },
+        { title: 'Option 2', name: 'option2' },
+        { title: 'Foo', name: 'foo' }
+      ],
+      showFilter: true,
+      selectedOption: null,
+      inputHint: 'Select an option',
+      'onUpdate:selectedOption': (option: string | null) => {
+        selectedOption = option
+      },
+      label: 'some aria label'
+    }
+  })
+  await fireEvent.click(screen.getByRole('combobox', { name: 'some aria label' }))
+
+  await userEvent.keyboard('opt[ArrowUp][Enter]')
+
+  expect(selectedOption).toBe('option2')
+})
+
 test('dropdown option immediate focus and filtering', async () => {
   let selectedOption: string | null = ''
   render(CmkDropdown, {

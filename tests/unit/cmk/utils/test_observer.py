@@ -3,11 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from logging import getLogger
 
 import pytest
 
 from cmk.utils.observer import FetcherMemoryObserver, vm_size
 
+logger = getLogger("cmk.base")
 LOG_MESSAGE = "13;heute;checking;60"
 ONE_KiB = 2**10  # 1024
 STEADY_CYCLE = 5
@@ -27,7 +29,7 @@ def _change_state(
 
 def test_fetcher_memory_observer_before_steady() -> None:
     memory_used = ONE_KiB
-    observer = FetcherMemoryObserver(100, lambda: memory_used)
+    observer = FetcherMemoryObserver(logger, 100, lambda: memory_used)
     initial_memory_usage = observer.memory_usage()
     _change_state(observer)
     # exceed 'hard_limit' of memory usage.
@@ -42,7 +44,7 @@ def test_fetcher_memory_observer_before_steady() -> None:
 
 def test_fetcher_memory_observer_steady_setup() -> None:
     memory_usage = ONE_KiB
-    observer = FetcherMemoryObserver(100, lambda: memory_usage)
+    observer = FetcherMemoryObserver(logger, 100, lambda: memory_usage)
     _change_state(observer, steady=True, log=LOG_MESSAGE)
     assert observer._context() == f'[cycle {STEADY_CYCLE}, command "{LOG_MESSAGE}"]'
     assert observer.memory_usage() == memory_usage
@@ -50,7 +52,7 @@ def test_fetcher_memory_observer_steady_setup() -> None:
 
 def test_fetcher_memory_observer_overflow() -> None:
     memory_used = ONE_KiB
-    observer = FetcherMemoryObserver(100, lambda: memory_used)
+    observer = FetcherMemoryObserver(logger, 100, lambda: memory_used)
     _change_state(observer, steady=True, log=LOG_MESSAGE)
     steady_state_memory_usage = observer.memory_usage()
     # exceed 'hard_limit' of memory usage.
@@ -71,7 +73,7 @@ def test_fetcher_memory_observer_no_overflow(delta: int) -> None:
     memory_used = ONE_KiB
     factor = 2
     # 'allowed_growth' calculates 'hard_limit' as a factor of current memory usage.
-    observer = FetcherMemoryObserver(factor * 100, lambda: memory_used)
+    observer = FetcherMemoryObserver(logger, factor * 100, lambda: memory_used)
     _change_state(observer, steady=True, log=LOG_MESSAGE)
     steady_state_memory_usage = observer.memory_usage()
     # define 'hard_limit' of memory usage.
@@ -98,7 +100,7 @@ def test_fetcher_memory_obeserver_vm_size():
 def test_fetcher_memory_observer_hard_limit(growth_factor: float) -> None:
     ram_size = ONE_KiB
     expected_limit = int(ram_size * growth_factor)
-    observer = FetcherMemoryObserver(int(growth_factor * 100), lambda: ram_size)
+    observer = FetcherMemoryObserver(logger, int(growth_factor * 100), lambda: ram_size)
     assert observer.hard_limit() == 0, "Updates itself ONLY at steady state!"
     _change_state(observer, steady=True, log=LOG_MESSAGE)
     assert observer.hard_limit() == expected_limit

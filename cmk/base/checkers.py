@@ -76,6 +76,7 @@ from cmk.checkengine.summarize import summarize, SummaryConfig
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.api.agent_based.register._config as _api
 from cmk.base.api.agent_based import cluster_mode, value_store
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin as AgentSectionPluginAPI
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin as CheckPluginAPI
 from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin as SNMPSectionPluginAPI
@@ -323,7 +324,7 @@ class CMKFetcher:
         self,
         config_cache: ConfigCache,
         factory: FetcherFactory,
-        plugins: agent_based_register.AgentBasedPlugins,
+        plugins: AgentBasedPlugins,
         *,
         # alphabetically sorted
         file_cache_options: FileCacheOptions,

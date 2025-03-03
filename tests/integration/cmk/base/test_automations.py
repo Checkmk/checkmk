@@ -344,6 +344,91 @@ def test_automation_analyse_service_no_check(site: Site) -> None:
     assert automation_result.label_sources == {}
 
 
+@pytest.mark.usefixtures("test_cfg")
+def test_automation_analyze_host_rule_matches(site: Site) -> None:
+    automation_result = _execute_automation(
+        site,
+        "analyze-host-rule-matches",
+        args=["modes-test-host"],
+        stdin=repr(
+            [
+                [
+                    {
+                        "id": "b92a5406-1d56-4f1d-953d-225b111239e3",
+                        "value": "ag",
+                        "condition": {},
+                        "options": {
+                            "description": "",
+                        },
+                    }
+                ],
+                [
+                    {
+                        "id": "aaaaaaaa-1d56-4f1d-953d-225b111239e3",
+                        "value": "duda",
+                        "condition": {
+                            "host_tags": {
+                                "criticality": "test",
+                            }
+                        },
+                        "options": {
+                            "description": "",
+                        },
+                    }
+                ],
+            ]
+        ),
+    )
+
+    assert isinstance(automation_result, results.AnalyzeHostRuleMatchesResult)
+    assert automation_result.results == {
+        "b92a5406-1d56-4f1d-953d-225b111239e3": ["ag"],
+        "aaaaaaaa-1d56-4f1d-953d-225b111239e3": [],
+    }
+
+
+@pytest.mark.usefixtures("test_cfg")
+def test_automation_analyze_service_rule_matches(site: Site) -> None:
+    automation_result = _execute_automation(
+        site,
+        "analyze-service-rule-matches",
+        args=["modes-test-host", "Ding"],
+        stdin=repr(
+            (
+                [
+                    [
+                        {
+                            "id": "b92a5406-1d56-4f1d-953d-225b111239e3",
+                            "value": "yay",
+                            "condition": {"service_description": [{"$regex": "Ding$"}]},
+                            "options": {
+                                "description": "",
+                            },
+                        }
+                    ],
+                    [
+                        {
+                            "id": "aaaaaaaa-1d56-4f1d-953d-225b111239e3",
+                            "value": "nono",
+                            "condition": {"service_description": [{"$regex": "Dong$"}]},
+                            "options": {
+                                "description": "",
+                            },
+                        }
+                    ],
+                ],
+                {},
+            )
+        ),
+    )
+
+    assert isinstance(automation_result, results.AnalyzeServiceRuleMatchesResult)
+    assert automation_result.results == {
+        "b92a5406-1d56-4f1d-953d-225b111239e3": ["yay"],
+        "aaaaaaaa-1d56-4f1d-953d-225b111239e3": [],
+    }
+
+
 def test_automation_discovery_preview_not_existing_host(site: Site) -> None:
     _execute_automation(
         site,
@@ -673,9 +758,3 @@ def test_automation_restart_with_non_resolvable_host(site: Site) -> None:
 
     assert isinstance(result, results.RestartResult)
     assert any(f"Failed to lookup IPv4 address of {host}" in w for w in result.config_warnings)
-
-
-# TODO: rename-hosts
-# TODO: delete-hosts
-# TODO: scan-parents
-# TODO: diag-host

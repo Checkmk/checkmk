@@ -23,6 +23,14 @@ for i in $IMAGE_ALIASES; do
     fi
 done
 
+# Use the global .venv to have required modules available
+make -C ../.. .venv
+source ../../.venv/bin/activate
+
+# Still test if the modules used in register.py are available before removing the folders
+echo -n "Testing if required Python modules are available..."
+(python3 -c "import docker; import yaml" && echo "OK") || exit 1
+
 echo "Update images for: $IMAGE_ALIASES"
 
 for i in $IMAGE_ALIASES; do

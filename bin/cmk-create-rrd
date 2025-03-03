@@ -6,7 +6,7 @@
 # NOTE: rrdtool is missing type hints
 import rrdtool  # type: ignore[import-not-found]
 
-from cmk.rrd.create_rrd import create_rrd  # pylint: disable=cmk-module-layer-violation
+from cmk.rrd.create_rrd import create_rrd
 
 
 def main() -> None:

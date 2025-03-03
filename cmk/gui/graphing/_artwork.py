@@ -22,7 +22,6 @@ from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
 
 from ._color import fade_color, parse_color, render_color
 from ._formatter import Label, NotationFormatter
@@ -37,6 +36,7 @@ from ._graph_specification import (
 from ._legacy import get_unit_info, LegacyUnitSpecification, UnitInfo
 from ._metric_operation import clean_time_series_point, LineType, RRDData
 from ._rrd_fetch import fetch_rrd_data_for_graph
+from ._time_series import TimeSeries, TimeSeriesValue
 from ._unit import user_specific_unit, UserSpecificUnit
 from ._utils import SizeEx
 
@@ -67,12 +67,16 @@ class LayoutedCurveLine(_LayoutedCurveBase):
 
 
 class LayoutedCurveArea(_LayoutedCurveBase):
-    # Handle area and stack.
     type: Literal["area"]
     points: Sequence[tuple[TimeSeriesValue, TimeSeriesValue]]
 
 
-LayoutedCurve = LayoutedCurveLine | LayoutedCurveArea
+class LayoutedCurveStack(_LayoutedCurveBase):
+    type: Literal["stack"] | Literal["-stack"]
+    points: Sequence[tuple[TimeSeriesValue, TimeSeriesValue]]
+
+
+LayoutedCurve = LayoutedCurveLine | LayoutedCurveArea | LayoutedCurveStack
 
 
 class VerticalAxis(TypedDict):
@@ -107,15 +111,15 @@ class GraphArtwork(BaseModel):
     time_axis: TimeAxis
     mark_requested_end_time: bool
     # Displayed range
-    start_time: Timestamp
-    end_time: Timestamp
+    start_time: int
+    end_time: int
     step: Seconds
     explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None
     requested_vrange: tuple[float, float] | None
-    requested_start_time: Timestamp
-    requested_end_time: Timestamp
+    requested_start_time: int
+    requested_end_time: int
     requested_step: str | Seconds
-    pin_time: Timestamp | None
+    pin_time: int | None
     # Definition itself, for reproducing the graph
     definition: GraphRecipe
     # Display id to avoid mixups in our JS code when rendering the same graph multiple times in
@@ -167,7 +171,8 @@ def compute_graph_artwork(
     width, height = size
 
     try:
-        start_time, end_time, step = curves[0]["rrddata"].twindow
+        time_series = curves[0]["rrddata"]
+        start_time, end_time, step = time_series.start, time_series.end, time_series.step
     except IndexError:  # Empty graph
         (start_time, end_time), step = graph_data_range.time_range, 60
 
@@ -244,15 +249,6 @@ def _layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], 
     # For areas we put (lower, higher) as point into the list of points.
     # For lines simply the values. For mirrored values from is >= to.
 
-    def _positive_line_type(line_type: LineType) -> Literal["line", "area", "stack"]:
-        if line_type == "-line":
-            return "line"
-        if line_type == "-area":
-            return "area"
-        if line_type == "-stack":
-            return "stack"
-        raise ValueError(line_type)
-
     layouted_curves = []
     for curve in curves:
         line_type = curve["line_type"]
@@ -264,35 +260,38 @@ def _layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], 
 
         if line_type[0] == "-":
             raw_points = [None if p is None else -p for p in raw_points]
-            line_type = _positive_line_type(line_type)
             mirrored = True
             stack_nr = 0
         else:
             stack_nr = 1
 
-        if line_type == "line":
-            # Handles lines, they cannot stack
-            layouted_curve: LayoutedCurve = LayoutedCurveLine(
-                type="line",
-                points=raw_points,
-                color=curve["color"],
-                title=curve["title"],
-                scalars=curve["scalars"],
-            )
-
-        else:
-            # Handle area and stack.
-            this_stack = stacks[stack_nr]
-            base = [] if this_stack is None or line_type == "area" else this_stack
-
-            layouted_curve = LayoutedCurveArea(
-                type="area",
-                points=_areastack(raw_points, base),
-                color=curve["color"],
-                title=curve["title"],
-                scalars=curve["scalars"],
-            )
-            stacks[stack_nr] = [x[stack_nr] for x in layouted_curve["points"]]
+        match line_type:
+            case "line" | "-line":
+                layouted_curve: LayoutedCurve = LayoutedCurveLine(
+                    type="line",
+                    points=raw_points,
+                    color=curve["color"],
+                    title=curve["title"],
+                    scalars=curve["scalars"],
+                )
+            case "area" | "-area":
+                layouted_curve = LayoutedCurveArea(
+                    type="area",
+                    points=_areastack(raw_points, []),
+                    color=curve["color"],
+                    title=curve["title"],
+                    scalars=curve["scalars"],
+                )
+                stacks[stack_nr] = [x[stack_nr] for x in layouted_curve["points"]]
+            case "stack" | "-stack":
+                layouted_curve = LayoutedCurveStack(
+                    type=line_type,
+                    points=_areastack(raw_points, stacks[stack_nr] or []),
+                    color=curve["color"],
+                    title=curve["title"],
+                    scalars=curve["scalars"],
+                )
+                stacks[stack_nr] = [x[stack_nr] for x in layouted_curve["points"]]
 
         layouted_curves.append(layouted_curve)
 
@@ -415,13 +414,29 @@ _TCurveType = TypeVar("_TCurveType", Curve, LayoutedCurve)
 
 
 def order_graph_curves_for_legend_and_mouse_hover(
-    graph_recipe: GraphRecipe, curves: Iterable[_TCurveType]
-) -> Iterator[_TCurveType]:
-    yield from (
-        reversed(list(curves))
-        if any(graph_metric.line_type == "stack" for graph_metric in graph_recipe.metrics)
-        else curves
+    curves: Sequence[_TCurveType],
+) -> list[_TCurveType]:
+    """
+    Positive stack curves are rendered st. the first metric is at the bottom and the last one at the
+    top. Therefore, we want to reverse the order of metrics rendered as a positive stack in the
+    legend and the mouse hover, st. it corresponds to the order in the graph. At the same time, we
+    want to leave other curves untouched. Of course, mixing different types of curves quickly
+    results in a useless graph.
+    """
+
+    def is_positive_stack_curve(curve: _TCurveType) -> bool:
+        return curve.get("line_type", curve.get("type")) == "stack"
+
+    positive_stack_curves_in_reverse_order = reversed(
+        [curve for curve in curves if is_positive_stack_curve(curve)]
     )
+
+    return [
+        next(positive_stack_curves_in_reverse_order, curve)
+        if is_positive_stack_curve(curve)
+        else curve
+        for curve in curves
+    ]
 
 
 # .
@@ -493,8 +508,7 @@ def _render_scalar_value(
 
 
 def _get_value_at_timestamp(pin_time: int, rrddata: TimeSeries) -> TimeSeriesValue:
-    start_time, _, step = rrddata.twindow
-    nth_value = (pin_time - start_time) // step
+    nth_value = (pin_time - rrddata.start) // rrddata.step
     if 0 <= nth_value < len(rrddata):
         return rrddata[nth_value]
     return None
@@ -990,9 +1004,7 @@ def _remove_useless_zeroes(label: str) -> str:
 #   '----------------------------------------------------------------------'
 
 
-def _compute_graph_t_axis(
-    start_time: Timestamp, end_time: Timestamp, width: int, step: Seconds
-) -> TimeAxis:
+def _compute_graph_t_axis(start_time: int, end_time: int, width: int, step: Seconds) -> TimeAxis:
     # Depending on which time range is being shown we have different
     # steps of granularity
 

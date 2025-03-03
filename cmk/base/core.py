@@ -8,7 +8,7 @@ import enum
 import os
 import subprocess
 import sys
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, suppress
 from typing import Literal
 
@@ -20,13 +20,12 @@ import cmk.utils.cleanup
 import cmk.utils.paths
 from cmk.utils import ip_lookup, tty
 from cmk.utils.hostaddress import HostName
+from cmk.utils.rulesets import RuleSetName
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 
 import cmk.base.nagios_utils
 from cmk.base import core_config
-from cmk.base.api.agent_based.register import (
-    get_previously_collected_discovery_rules,
-    get_previously_loaded_plugins,
-)
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.config import ConfigCache, ConfiguredIPLookup
 from cmk.base.core_config import MonitoringCore
 
@@ -60,8 +59,10 @@ def do_reload(
     config_cache: ConfigCache,
     ip_address_of: ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     core: MonitoringCore,
+    plugins: AgentBasedPlugins,
     *,
     all_hosts: Iterable[HostName],
+    discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
     hosts_to_update: set[HostName] | None = None,
     locking_mode: _LockingMode,
     duplicates: Sequence[HostName],
@@ -70,8 +71,10 @@ def do_reload(
         config_cache,
         ip_address_of,
         core,
+        plugins,
         action=CoreAction.RELOAD,
         all_hosts=all_hosts,
+        discovery_rules=discovery_rules,
         hosts_to_update=hosts_to_update,
         locking_mode=locking_mode,
         duplicates=duplicates,
@@ -82,8 +85,10 @@ def do_restart(
     config_cache: ConfigCache,
     ip_address_of: ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     core: MonitoringCore,
+    plugins: AgentBasedPlugins,
     *,
     all_hosts: Iterable[HostName],
+    discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
     action: CoreAction = CoreAction.RESTART,
     hosts_to_update: set[HostName] | None = None,
     locking_mode: _LockingMode,
@@ -95,8 +100,8 @@ def do_restart(
             core_config.do_create_config(
                 core=core,
                 config_cache=config_cache,
-                plugins=get_previously_loaded_plugins(),
-                discovery_rules=get_previously_collected_discovery_rules(),
+                plugins=plugins,
+                discovery_rules=discovery_rules,
                 ip_address_of=ip_address_of,
                 all_hosts=all_hosts,
                 hosts_to_update=hosts_to_update,

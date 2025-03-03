@@ -106,7 +106,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, IPv6Config, Secret
                 "name": "irrelevant",
                 "mode": (
                     "cert",
-                    {"cert_days": ("fixed", (10, 20))},
+                    {"cert_days": ("fixed", (10 * 3600 * 24, 20 * 3600 * 24))},
                 ),
                 "host": {
                     "address": ("direct", "www.test123.com"),
@@ -132,7 +132,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, IPv6Config, Secret
         (
             {
                 "name": "irrelevant",
-                "mode": ("cert", {"cert_days": ("fixed", (10, 20))}),
+                "mode": ("cert", {"cert_days": ("fixed", (10 * 3600 * 24, 20 * 3600 * 24))}),
                 "host": {
                     "address": ("proxy", {"address": "p.roxy"}),
                     "port": 42,
@@ -161,7 +161,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, IPv6Config, Secret
                 "name": "irrelevant",
                 "mode": (
                     "cert",
-                    {"cert_days": ("fixed", (10, 20))},
+                    {"cert_days": ("fixed", (10 * 3600 * 24, 20 * 3600 * 24))},
                 ),
                 "host": {
                     "address": ("proxy", {"address": "p.roxy"}),
@@ -191,7 +191,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, IPv6Config, Secret
                 "name": "irrelevant",
                 "mode": (
                     "cert",
-                    {"cert_days": ("fixed", (10, 20))},
+                    {"cert_days": ("fixed", (10 * 3600 * 24, 20 * 3600 * 24))},
                 ),
                 "host": {
                     "address": (
@@ -239,7 +239,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, IPv6Config, Secret
                     "address_family": "ipv6_enforced",
                     "virthost": "www.test123.com",
                 },
-                "mode": ("cert", {"cert_days": ("fixed", (10, 20))}),
+                "mode": ("cert", {"cert_days": ("fixed", (10 * 3600 * 24, 20 * 3600 * 24))}),
                 "disable_sni": True,
             },
             HostConfig(

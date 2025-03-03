@@ -7,13 +7,12 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.utils.sectionname import SectionName
-
-from cmk.checkengine.checking import CheckPluginName
-
-from cmk.base.api.agent_based.register import AgentBasedPlugins
-
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
+from cmk.plugins.collection.agent_based.sap_hana_proc import (
+    check_sap_hana_proc,
+    discovery_sap_hana_proc,
+    parse_sap_hana_proc,
+)
 from cmk.plugins.lib.sap_hana import ParsedSection
 
 
@@ -79,13 +78,8 @@ from cmk.plugins.lib.sap_hana import ParsedSection
         ),
     ],
 )
-def test_parse_sap_hana_proc(
-    agent_based_plugins: AgentBasedPlugins,
-    info: StringTable,
-    expected_result: ParsedSection,
-) -> None:
-    section_plugin = agent_based_plugins.agent_sections[SectionName("sap_hana_proc")]
-    assert section_plugin.parse_function(info) == expected_result
+def test_parse_sap_hana_proc(info: StringTable, expected_result: ParsedSection) -> None:
+    assert parse_sap_hana_proc(info) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -106,12 +100,9 @@ def test_parse_sap_hana_proc(
         ),
     ],
 )
-def test_inventory_sap_hana_proc(
-    agent_based_plugins: AgentBasedPlugins, info: StringTable, expected_result: DiscoveryResult
-) -> None:
-    section = agent_based_plugins.agent_sections[SectionName("sap_hana_proc")].parse_function(info)
-    plugin = agent_based_plugins.check_plugins[CheckPluginName("sap_hana_proc")]
-    assert list(plugin.discovery_function(section)) == expected_result
+def test_inventory_sap_hana_proc(info: StringTable, expected_result: DiscoveryResult) -> None:
+    section = parse_sap_hana_proc(info)
+    assert list(discovery_sap_hana_proc(section)) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -168,12 +159,10 @@ def test_inventory_sap_hana_proc(
     ],
 )
 def test_check_sap_hana_proc(
-    agent_based_plugins: AgentBasedPlugins,
     item: str,
     params: Mapping[str, str],
     info: StringTable,
     expected_result: CheckResult,
 ) -> None:
-    section = agent_based_plugins.agent_sections[SectionName("sap_hana_proc")].parse_function(info)
-    plugin = agent_based_plugins.check_plugins[CheckPluginName("sap_hana_proc")]
-    assert list(plugin.check_function(item, params, section)) == expected_result
+    section = parse_sap_hana_proc(info)
+    assert list(check_sap_hana_proc(item, params, section)) == expected_result

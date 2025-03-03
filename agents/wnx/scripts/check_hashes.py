@@ -17,6 +17,7 @@
 import sys
 
 expected_files = {
+    "mk-sql.exe",
     "check_mk_agent.msi",
     "check_mk_service32.exe",
     "check_mk_service64.exe",
@@ -29,10 +30,12 @@ expected_files = {
 with open(sys.argv[1]) as inp:
     lines = inp.readlines()
     files = {l.split()[0] for l in lines}
-    hashes = {l.split()[1] for l in lines}
     if {f.lower() for f in expected_files} != {f.lower() for f in files}:
+        print(f"MISSING FILE(S) ERROR: {files} not equal to expected {expected_files}")
         sys.exit(1)
-    if len(hashes) != 6 or {len(h) for h in hashes} != {64}:
+    hashes = {l.split()[1] for l in lines}
+    if len(hashes) != len(expected_files) or {len(h) for h in hashes} != {64}:
+        print(f"WRONG COUNT ERROR: {len(hashes)}")
         sys.exit(1)
 
 sys.exit(0)

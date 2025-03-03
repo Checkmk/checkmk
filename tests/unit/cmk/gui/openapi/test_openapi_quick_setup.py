@@ -18,6 +18,8 @@ from cmk.gui.quick_setup.v0_unstable.setups import (
     ProgressLogger,
     QuickSetup,
     QuickSetupAction,
+    QuickSetupBackgroundAction,
+    QuickSetupBackgroundStageAction,
     QuickSetupStage,
     QuickSetupStageAction,
 )
@@ -659,12 +661,11 @@ class TestValidateAndRetrieveNext:
                         widgets.unique_id_formspec_wrapper(Title("account name")),
                     ],
                     actions=[
-                        QuickSetupStageAction(
+                        QuickSetupBackgroundStageAction(
                             id=ActionId("action"),
                             custom_validators=[],
                             recap=[recaps.recaps_form_spec],
                             next_button_label="Next",
-                            run_in_background=True,
                         )
                     ],
                 ),
@@ -698,12 +699,11 @@ class TestCompleteAction:
     def test_openapi_background_job_setup_action(self, clients: ClientRegistry) -> None:
         register_quick_setup(
             actions=[
-                QuickSetupAction(
+                QuickSetupBackgroundAction(
                     id=ActionId("save"),
                     label="Complete",
                     action=lambda stages, mode, object_id: "http://save/url",
                     custom_validators=[],
-                    run_in_background=True,
                 ),
             ],
             setup_stages=[

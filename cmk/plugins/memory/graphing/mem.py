@@ -297,5 +297,8 @@ graph_ram_used = Graph(
         WarningOf("mem_used"),
         CriticalOf("mem_used"),
     ],
-    conflicting=["swap_used"],
+    conflicting=[
+        "swap_used",
+        "mem_free",
+    ],
 )

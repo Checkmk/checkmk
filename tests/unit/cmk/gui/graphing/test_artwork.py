@@ -18,14 +18,17 @@ from cmk.gui.graphing._artwork import (
     _t_axis_labels_seconds,
     _t_axis_labels_week,
     _VAxisMinMax,
+    Curve,
     LayoutedCurve,
     LayoutedCurveLine,
+    LayoutedCurveStack,
+    order_graph_curves_for_legend_and_mouse_hover,
     TimeAxis,
     TimeAxisLabel,
 )
 from cmk.gui.graphing._graph_specification import FixedVerticalRange, MinimalVerticalRange
+from cmk.gui.graphing._time_series import TimeSeries, TimeSeriesValue
 from cmk.gui.graphing._utils import SizeEx
-from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
 
 
 @pytest.mark.parametrize(
@@ -302,7 +305,14 @@ def test_t_axis_labels_week() -> None:
 
 
 def test_halfstep_interpolation() -> None:
-    assert _halfstep_interpolation(TimeSeries([5.0, 7.0, None], (123, 234, 10))) == [
+    assert _halfstep_interpolation(
+        TimeSeries(
+            start=123,
+            end=234,
+            step=10,
+            values=[5.0, 7.0, None],
+        )
+    ) == [
         5.0,
         5.0,
         5.0,
@@ -661,8 +671,8 @@ def test_fringe(
     ],
 )
 def test_compute_graph_t_axis(
-    start_time: Timestamp,
-    end_time: Timestamp,
+    start_time: int,
+    end_time: int,
     width: int,
     step: int,
     expected_result: TimeAxis,
@@ -677,3 +687,152 @@ def test_compute_graph_t_axis(
             )
             == expected_result
         )
+
+
+def test_order_graph_curves_for_legend_and_mouse_hover_curves() -> None:
+    rrd_data = TimeSeries(
+        start=1,
+        end=2,
+        step=1,
+        values=[],
+    )
+    assert list(
+        order_graph_curves_for_legend_and_mouse_hover(
+            [
+                Curve(
+                    line_type="line",
+                    color="",
+                    title="1",
+                    rrddata=rrd_data,
+                ),
+                Curve(
+                    line_type="ref",
+                    color="",
+                    title="2",
+                    rrddata=rrd_data,
+                ),
+                Curve(
+                    line_type="-area",
+                    color="",
+                    title="3",
+                    rrddata=rrd_data,
+                ),
+                Curve(
+                    line_type="stack",
+                    color="",
+                    title="4",
+                    rrddata=rrd_data,
+                ),
+                Curve(
+                    line_type="area",
+                    color="",
+                    title="5",
+                    rrddata=rrd_data,
+                ),
+                Curve(
+                    line_type="-stack",
+                    color="",
+                    title="6",
+                    rrddata=rrd_data,
+                ),
+                Curve(
+                    line_type="stack",
+                    color="",
+                    title="7",
+                    rrddata=rrd_data,
+                ),
+            ]
+        )
+    ) == [
+        Curve(
+            line_type="line",
+            color="",
+            title="1",
+            rrddata=rrd_data,
+        ),
+        Curve(
+            line_type="ref",
+            color="",
+            title="2",
+            rrddata=rrd_data,
+        ),
+        Curve(
+            line_type="-area",
+            color="",
+            title="3",
+            rrddata=rrd_data,
+        ),
+        Curve(
+            line_type="stack",
+            color="",
+            title="7",
+            rrddata=rrd_data,
+        ),
+        Curve(
+            line_type="area",
+            color="",
+            title="5",
+            rrddata=rrd_data,
+        ),
+        Curve(
+            line_type="-stack",
+            color="",
+            title="6",
+            rrddata=rrd_data,
+        ),
+        Curve(
+            line_type="stack",
+            color="",
+            title="4",
+            rrddata=rrd_data,
+        ),
+    ]
+
+
+def test_order_graph_curves_for_legend_and_mouse_hover_layouted_curves() -> None:
+    layouted_curves: list[LayoutedCurve] = [
+        LayoutedCurveStack(
+            type="stack",
+            color="",
+            title="1",
+            scalars={},
+            points=[],
+        ),
+        LayoutedCurveStack(
+            type="stack",
+            color="",
+            title="2",
+            scalars={},
+            points=[],
+        ),
+        LayoutedCurveLine(
+            type="line",
+            color="",
+            title="3",
+            scalars={},
+            points=[],
+        ),
+    ]
+    assert list(order_graph_curves_for_legend_and_mouse_hover(layouted_curves)) == [
+        LayoutedCurveStack(
+            type="stack",
+            color="",
+            title="2",
+            scalars={},
+            points=[],
+        ),
+        LayoutedCurveStack(
+            type="stack",
+            color="",
+            title="1",
+            scalars={},
+            points=[],
+        ),
+        LayoutedCurveLine(
+            type="line",
+            color="",
+            title="3",
+            scalars={},
+            points=[],
+        ),
+    ]

@@ -14,13 +14,10 @@ from cmk.utils.config_path import LATEST_CONFIG
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.password_store import core_password_store_path
 
-from cmk.checkengine.submitters import get_submitter
-
 import cmk.base.utils
 from cmk.base import config
 from cmk.base.api.agent_based.register import (
     extract_known_discovery_rulesets,
-    get_previously_loaded_plugins,
     load_selected_plugins,
 )
 from cmk.base.core_nagios import HostCheckConfig
@@ -90,12 +87,11 @@ def main() -> int:
 
     try:
         _errors, sections, checks = config.load_and_convert_legacy_checks(CONFIG.checks_to_load)
-        load_selected_plugins(CONFIG.locations, sections, checks, validate=debug)
-        plugins = get_previously_loaded_plugins()
+        plugins = load_selected_plugins(CONFIG.locations, sections, checks, validate=debug)
+
         discovery_rulesets = extract_known_discovery_rulesets(plugins)
 
-        config.load_packed_config(LATEST_CONFIG, discovery_rulesets)
-        config_cache = config.get_config_cache()
+        loaded_config = config.load_packed_config(LATEST_CONFIG, discovery_rulesets)
         hosts_config = config.make_hosts_config()
 
         config.ipaddresses = CONFIG.ipaddresses
@@ -103,12 +99,10 @@ def main() -> int:
 
         return run_checking(
             plugins,
-            config_cache,
+            loaded_config.config_cache,
             hosts_config,
-            get_submitter,
             {},
             [CONFIG.hostname],
-            active_check_handler=lambda *args: None,
             password_store_file=core_password_store_path(LATEST_CONFIG),
         )
     except KeyboardInterrupt:

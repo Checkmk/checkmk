@@ -20,9 +20,17 @@ git_override(
     remote = "https://github.com/erenon/bazel_clang_tidy.git",
 )
 
-bazel_dep(name = "rules_cc", version = "0.0.17")
+bazel_dep(name = "rules_cc", version = "0.1.1")
+single_version_override(
+    module_name = "rules_cc",
+    patch_strip = 1,
+    patches = [
+        "//bazel/patches:rules_cc-add_static_link_cpp_runtimes.patch",
+    ],
+)
+
 bazel_dep(name = "rules_multitool", version = "0.4.0")
-bazel_dep(name = "rules_rust", version = "0.49.3")
+bazel_dep(name = "rules_rust", version = "0.54.1")
 bazel_dep(name = "rules_python", version = "1.1.0")
 single_version_override(
     module_name = "rules_python",
@@ -32,6 +40,7 @@ single_version_override(
         "//bazel/patches:rules_python-py_wheel-filter_out_virtual_imports.patch",
     ],
 )
+
 bazel_dep(name = "rules_uv", version = "0.44.0")
 single_version_override(
     module_name = "rules_uv",
@@ -40,6 +49,7 @@ single_version_override(
         "//bazel/patches:rules_uv_rm_venv.patch",
         "//bazel/patches:rules_uv_quiet.patch",
         "//bazel/patches:rules_uv_create_venv_whls.patch",
+        "//bazel/patches:rules_uv-requirements_in_info.patch",
     ],
 )
 
@@ -93,7 +103,7 @@ pip.parse(
     hub_name = "cmk_requirements",
     python_version = PYTHON_VERSION,
     requirements_by_platform = {
-        "@//:requirements_all_lock.txt": "linux_*",
+        "@//:requirements.txt": "linux_*",
     },
 )
 use_repo(pip, "cmk_requirements")
@@ -102,7 +112,7 @@ types = use_extension("@rules_mypy//mypy:types.bzl", "types")
 types.requirements(
     name = "cmk_types",
     pip_requirements = "@cmk_requirements//:requirements.bzl",
-    requirements_txt = "//:requirements_all_lock.txt",
+    requirements_txt = "//:requirements.txt",
 )
 use_repo(types, "cmk_types")
 
@@ -110,7 +120,7 @@ bazel_dep(name = "protobuf", version = "29.3", repo_name = "com_google_protobuf"
 single_version_override(
     module_name = "protobuf",
     patch_strip = 1,
-    patches = ["//bazel/patches:protobuf-silence_build_warnings.patch"]
+    patches = ["//bazel/patches:protobuf-silence_build_warnings.patch"],
 )
 
 bazel_dep(
@@ -127,12 +137,6 @@ bazel_dep(
     version = "0.3.7",
 )
 bazel_dep(name = "rules_proto_grpc", version = "5.0.1")
-
-fork_cc_toolchain_config = use_repo_rule("//bazel/toolchains/cc:fork_cc_toolchain_config.bzl", "fork_cc_toolchain_config")
-
-fork_cc_toolchain_config(
-    name = "forked_cc_toolchain_config",
-)
 
 register_toolchains("//bazel/toolchains/cc:linux_gcc13")
 
@@ -177,15 +181,6 @@ http_archive(
     ],
 )
 
-http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
-
-http_file(
-    name = "otel-collector",
-    executable = True,
-    sha256 = "b41803c86effc3aaae74b39c372df513070ebfd4b0fefd25a91e6e34e4e0f040",
-    url = "https://artifacts.lan.tribe29.com/repository/upstream-archives/otelcol",
-)
-
 SHELLCHECK_VERSION = "v0.10.0"
 
 http_archive(
@@ -204,6 +199,8 @@ exports_files([
 )
 
 SHFMT_VERSION = "v3.10.0"
+
+http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 
 http_file(
     name = "shfmt",
@@ -233,5 +230,74 @@ bazel_dep(
 )
 
 new_local_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:local.bzl", "new_local_repository")
-new_local_repository(name="glib", build_file="@//omd/packages/glib:BUILD", path="/usr")
-new_local_repository(name="libxml2", build_file="@//omd/packages/libxml2:BUILD", path="/usr")
+
+new_local_repository(
+    name = "glib",
+    build_file = "@//omd/packages/glib:BUILD",
+    path = "/usr",
+)
+
+new_local_repository(
+    name = "libxml2",
+    build_file = "@//omd/packages/libxml2:BUILD",
+    path = "/usr",
+)
+
+# Build custom OpenTelementry collector
+
+OCB_VERSION = "0.113.0"
+
+http_file(
+    name = "otel_collector_custom_builder",
+    executable = True,
+    sha256 = "bbccc5ab73364a17d99b22f0c1d53fc0efecee5fa8f93000596b4cfbe9a73325",
+    url = "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fbuilder%2Fv" + OCB_VERSION + "/ocb_" + OCB_VERSION + "_linux_amd64",
+)
+
+bazel_dep(name = "gazelle", version = "0.42.0")
+bazel_dep(name = "rules_go", version = "0.50.1")
+
+go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
+go_sdk.download(version = "1.22.10")
+
+go_deps = use_extension("@gazelle//:extensions.bzl", "go_deps")
+go_deps.from_file(go_mod = "//:go.mod")
+use_repo(
+    go_deps,
+    "com_github_open_telemetry_opentelemetry_collector_contrib_exporter_fileexporter",
+    "com_github_open_telemetry_opentelemetry_collector_contrib_extension_basicauthextension",
+    "com_github_open_telemetry_opentelemetry_collector_contrib_processor_transformprocessor",
+    "com_github_open_telemetry_opentelemetry_collector_contrib_receiver_prometheusreceiver",
+    "io_opentelemetry_go_collector_component",
+    "io_opentelemetry_go_collector_confmap",
+    "io_opentelemetry_go_collector_confmap_provider_envprovider",
+    "io_opentelemetry_go_collector_confmap_provider_fileprovider",
+    "io_opentelemetry_go_collector_confmap_provider_httpprovider",
+    "io_opentelemetry_go_collector_confmap_provider_httpsprovider",
+    "io_opentelemetry_go_collector_confmap_provider_yamlprovider",
+    "io_opentelemetry_go_collector_connector",
+    "io_opentelemetry_go_collector_exporter",
+    "io_opentelemetry_go_collector_extension",
+    "io_opentelemetry_go_collector_otelcol",
+    "io_opentelemetry_go_collector_processor",
+    "io_opentelemetry_go_collector_processor_batchprocessor",
+    "io_opentelemetry_go_collector_receiver",
+    "io_opentelemetry_go_collector_receiver_otlpreceiver",
+)
+
+# The overrides are needed to avoid issues like:
+# no such package '@@gazelle~~go_deps~com_github_prometheus_prometheus//gogoproto': BUILD file not found in directory 'gogoproto' of external repository
+# See conversation here: https://github.com/bazel-contrib/bazel-gazelle/issues/1035
+# The mentioned solution 'build_file_proto_mode = "disable_global"' is deprecated and was moved to 'gazelle_override':
+# https://github.com/bazel-contrib/bazel-gazelle/blob/56b3f7867eff7bd43dd93777987af9f9668ae896/internal/bzlmod/go_deps.bzl#L206
+
+go_deps.gazelle_override(
+    directives = [
+        "gazelle:proto disable",
+    ],
+    path = "github.com/prometheus/prometheus",
+)
+go_deps.gazelle_override(
+    build_file_generation = "on",
+    path = "github.com/cncf/xds/go",
+)

@@ -124,9 +124,9 @@ class TimeSpanVisitor(FormSpecVisitor[TimeSpan, _ParsedValueModel, _FrontendMode
                     # TODO: remove this once we have i18n in the frontend
                     millisecond=localize(Label("ms")),
                     second=localize(Label("s")),
-                    minute=localize(Label("mins")),
-                    hour=localize(Label("hours")),
-                    day=localize(Label("days")),
+                    minute=localize(Label("min")),
+                    hour=localize(Label("h")),
+                    day=localize(Label("d")),
                     validation_negative_number=localize(Label("Negative values not allowed")),
                 ),
                 input_hint=compute_input_hint(self.form_spec.prefill),

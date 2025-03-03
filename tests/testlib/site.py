@@ -841,9 +841,14 @@ class Site:
                         f"Version {self.version.version} could not be uninstalled!"
                     ) from excp
                 raise excp
-            assert not self.version.is_installed(), (
+            output = run(["ls", "-laR", self.version.version_path()], check=False, sudo=True).stdout
+            remaining_files = (
+                [_ for _ in output.strip().split("\n") if _] if isinstance(output, str) else []
+            )
+            assert not remaining_files, (
                 f"Version {self.version.version} is still installed, "
                 "even though the uninstallation was completed with RC=0!"
+                f"Remaining files: {remaining_files}"
             )
 
     @tracer.instrument("Site.create")
@@ -1823,7 +1828,9 @@ class SiteFactory:
             assert rc == 0, (
                 f"Failed to interactively update the test-site!\n"
                 "Logfile content:\n"
-                f"{pprint.pformat(site.read_file('var/log/update.log'), indent=4)}"
+                f"{pprint.pformat(Path(logfile_path).read_text(), indent=4)}\n\n"
+                f"You might want to consider modifying {min_version=} to adapt it to the current "
+                f"minimal supported version."
             )
         else:
             assert rc == 256, f"Executed command returned {rc} exit status. Expected: 256"

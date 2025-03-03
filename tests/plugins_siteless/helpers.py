@@ -35,7 +35,7 @@ from cmk.checkengine.submitters import (
 )
 from cmk.checkengine.summarize import SummaryConfig
 
-from cmk.base.api.agent_based.register._config import AgentBasedPlugins
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.checkers import (
     CMKParser,
     CMKSummarizer,
@@ -139,7 +139,14 @@ def compare_services_states(
     LOGGER.debug(
         "Services' details:\n%s", pprint.pformat({s.name: s.details for s in checks_result})
     )
-    assert actual_states == expected_services_states
+    assert actual_states == expected_services_states, (
+        f"\nActual-states\n:"
+        f"{pprint.pformat(actual_states)}\n"
+        f"\nExpected-states:\n"
+        f"{pprint.pformat(expected_services_states)}\n"
+        f"\nDiff:\n"
+        f"{pprint.pformat(set(actual_states.items()) ^ set(expected_services_states.items()))}\n"
+    )
 
 
 def discover_services(

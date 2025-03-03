@@ -8,15 +8,15 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.utils.sectionname import SectionName
-
-from cmk.checkengine.checking import CheckPluginName
-
-from cmk.base.api.agent_based.register import AgentBasedPlugins
-
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.plugins.oracle.agent_based.liboracle import OraErrors
-from cmk.plugins.oracle.agent_based.oracle_processes import OracleProcess, SectionOracleProcesses
+from cmk.plugins.oracle.agent_based.oracle_processes import (
+    check_oracle_processes,
+    discover_oracle_processes,
+    OracleProcess,
+    parse_oracle_processes,
+    SectionOracleProcesses,
+)
 
 
 @pytest.mark.parametrize(
@@ -36,13 +36,8 @@ from cmk.plugins.oracle.agent_based.oracle_processes import OracleProcess, Secti
         ),
     ],
 )
-def test_parse_oracle_processes(
-    info: StringTable,
-    parse_result: SectionOracleProcesses,
-    agent_based_plugins: AgentBasedPlugins,
-) -> None:
-    check = agent_based_plugins.agent_sections[SectionName("oracle_processes")]
-    assert check.parse_function(info) == parse_result
+def test_parse_oracle_processes(info: StringTable, parse_result: SectionOracleProcesses) -> None:
+    assert parse_oracle_processes(info) == parse_result
 
 
 @pytest.mark.parametrize(
@@ -59,14 +54,10 @@ def test_parse_oracle_processes(
     ],
 )
 def test_parse_error_oracle_processes(
-    info: StringTable,
-    parse_result: SectionOracleProcesses,
-    agent_based_plugins: AgentBasedPlugins,
+    info: StringTable, parse_result: SectionOracleProcesses
 ) -> None:
-    check = agent_based_plugins.agent_sections[SectionName("oracle_processes")]
     process_name = info[0][0]
-
-    parse_value = check.parse_function(info).error_processes[process_name]
+    parse_value = parse_oracle_processes(info).error_processes[process_name]
     error_parse_result = parse_result.error_processes[process_name]
     assert parse_value.has_error == error_parse_result.has_error
     assert parse_value.ignore == error_parse_result.ignore
@@ -107,12 +98,9 @@ def test_parse_error_oracle_processes(
     ],
 )
 def test_discover_oracle_processes(
-    section: SectionOracleProcesses,
-    discovered_item: Sequence[Service],
-    agent_based_plugins: AgentBasedPlugins,
+    section: SectionOracleProcesses, discovered_item: Sequence[Service]
 ) -> None:
-    check = agent_based_plugins.check_plugins[CheckPluginName("oracle_processes")]
-    assert list(check.discovery_function(section)) == discovered_item
+    assert list(discover_oracle_processes(section)) == discovered_item
 
 
 @pytest.mark.parametrize(
@@ -193,10 +181,8 @@ def test_check_oracle_processes(
     section: SectionOracleProcesses,
     item: str,
     check_result: Sequence[Result | Metric],
-    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
-    check = agent_based_plugins.check_plugins[CheckPluginName("oracle_processes")]
     assert (
-        list(check.check_function(item=item, params={"levels": (70.0, 90.0)}, section=section))
+        list(check_oracle_processes(item=item, params={"levels": (70.0, 90.0)}, section=section))
         == check_result
     )

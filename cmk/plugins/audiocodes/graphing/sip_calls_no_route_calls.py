@@ -9,13 +9,13 @@ UNIT_PER_SECOND = metrics.Unit(metrics.DecimalNotation("/s"))
 
 metric_audiocodes_tel2ip_no_route_calls = metrics.Metric(
     name="audiocodes_tel2ip_no_route_calls",
-    title=Title("Number of No Route SIP/H323 calls. Most likely to be due to wrong number"),
+    title=Title("Tel2IP Number of No Route SIP/H323 calls. Most likely to be due to wrong number"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.GREEN,
 )
 metric_audiocodes_ip2tel_no_route_calls = metrics.Metric(
     name="audiocodes_ip2tel_no_route_calls",
-    title=Title("Number of No Route SIP/H323 calls. Most likely to be due to wrong number"),
+    title=Title("IP2Tel Number of No Route SIP/H323 calls. Most likely to be due to wrong number"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.PURPLE,
 )

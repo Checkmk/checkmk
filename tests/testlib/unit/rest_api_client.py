@@ -2376,31 +2376,31 @@ class DcdClient(RestApiClient):
         discover_on_creation: bool | None = None,
         no_deletion_time_after_init: int | None = None,
         validity_period: int | None = None,
-        exclude_time_ranges: list[dict[str, str]] | None = None,
         creation_rules: list[dict[str, Any]] | None = None,
         restrict_source_hosts: list[str] | None = None,
         expect_ok: bool = True,
     ) -> Response:
-        body: dict[str, Any] = {
-            k: v
-            for k, v in {
+        body: dict[str, Any] = _only_set_keys(
+            {
                 "dcd_id": dcd_id,
                 "title": title,
                 "site": site,
                 "comment": comment,
                 "documentation_url": documentation_url,
                 "disabled": disabled,
-                "interval": interval,
-                "discover_on_creation": discover_on_creation,
-                "no_deletion_time_after_init": no_deletion_time_after_init,
-                "validity_period": validity_period,
-                "creation_rules": creation_rules,
-                "exclude_time_ranges": exclude_time_ranges,
-                "connector_type": connector_type,
-                "restrict_source_hosts": restrict_source_hosts,
-            }.items()
-            if v is not None
-        }
+                "connector": _only_set_keys(
+                    {
+                        "connector_type": connector_type,
+                        "interval": interval,
+                        "discover_on_creation": discover_on_creation,
+                        "no_deletion_time_after_init": no_deletion_time_after_init,
+                        "validity_period": validity_period,
+                        "creation_rules": creation_rules,
+                        "restrict_source_hosts": restrict_source_hosts,
+                    }
+                ),
+            }
+        )
 
         return self.request(
             "post",

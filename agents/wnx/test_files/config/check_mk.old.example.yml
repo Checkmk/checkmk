@@ -269,13 +269,13 @@ plugins:
         - default   # special keyword to use default location
         - c:\mydlx  #
         - c:\zx     #
-    # example: the windows_updates.vbs
+    # example: the windows_updates.ps1
     # plugin is executed asynchronous
     # and is only updated every 3600 seconds
     # it may fail (timeout / error) up to 3 times before the last known data is discarded
     execution:
-        # execution pattern for  windows-updates.vbs:
-        - pattern     : windows_updates.vbs
+        # execution pattern for  windows-updates.ps1:
+        - pattern     : windows_updates.ps1
           async       : yes
           timeout     : 120
           cache_age   : 3600

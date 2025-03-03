@@ -9,30 +9,25 @@ from __future__ import annotations
 import json
 import threading
 import typing
-import urllib.parse
-from base64 import b64encode
-from collections.abc import Callable, Generator, Iterator, Mapping
-from contextlib import contextmanager, nullcontext
-from typing import Any, cast, ContextManager, Literal, NamedTuple
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
+from typing import Any, ContextManager, NamedTuple
 from unittest import mock
 from unittest.mock import MagicMock, patch
 
 import pytest
-from flask import Flask
-from flask.testing import FlaskClient
-from mypy_extensions import KwArg
 from pytest_mock import MockerFixture
-from werkzeug.test import create_environ, TestResponse
+from werkzeug.test import create_environ
 
 from tests.testlib.unit.rest_api_client import (
-    assert_and_delete_rest_crash_report,
-    ClientRegistry,
-    expand_rel,
-    get_client_registry,
-    get_link,
-    RequestHandler,
-    Response,
     RestApiClient,
+)
+
+from tests.unit.cmk.web_test_app import (
+    SetConfig,
+    SingleRequest,
+    WebTestAppForCMK,
+    WebTestAppRequestHandler,
 )
 
 import cmk.utils.log
@@ -45,20 +40,17 @@ from cmk.automations.results import DeleteHostsResult
 import cmk.gui.config as config_module
 import cmk.gui.mkeventd.wato as mkeventd
 import cmk.gui.watolib.password_store
-from cmk.gui import hooks, http, login, main_modules, userdb
+from cmk.gui import http, userdb
 from cmk.gui.config import active_config
 from cmk.gui.livestatus_utils.testing import mock_livestatus
 from cmk.gui.session import session, SuperUserContext, UserContext
 from cmk.gui.type_defs import SessionInfo
 from cmk.gui.userdb.session import load_session_infos
-from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.json import patch_json
 from cmk.gui.utils.script_helpers import session_wsgi_app
 from cmk.gui.watolib import activate_changes, groups
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.wsgi.blueprints import checkmk, rest_api
-
-from .users import create_and_destroy_user
 
 SPEC_LOCK = threading.Lock()
 
@@ -66,20 +58,6 @@ SPEC_LOCK = threading.Lock()
 class RemoteAutomation(NamedTuple):
     automation: MagicMock
     responses: Any
-
-
-HTTPMethod = Literal[
-    "get",
-    "put",
-    "post",
-    "delete",
-    "GET",
-    "PUT",
-    "POST",
-    "DELETE",
-    "patch",
-    "options",
-]  # fmt: off
 
 
 @pytest.fixture
@@ -99,18 +77,6 @@ def disable_automation_helper(monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.fixture(autouse=True)
 def execute_background_jobs_without_job_scheduler(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("_CMK_BG_JOBS_WITHOUT_JOB_SCHEDULER", "1")
-
-
-@pytest.fixture(autouse=True)
-def gui_cleanup_after_test(
-    mocker: MockerFixture,
-) -> Iterator[None]:
-    # deactivate_search_index_building_at_requenst_end.
-    mocker.patch("cmk.gui.watolib.search.updates_requested", return_value=False)
-    yield
-    # In case some tests use @request_memoize but don't use the request context, we'll emit the
-    # clear event after each request.
-    hooks.call("request-end")
 
 
 def fake_detect_icon_path(_: None, icon_name: str = "", prefix: str = "") -> str:
@@ -143,28 +109,11 @@ def patch_theme() -> Iterator[None]:
         yield
 
 
-@pytest.fixture()
-def request_context(flask_app: Flask) -> Iterator[None]:
-    """Empty fixture. Invokes usage of `flask_app` fixture."""
-    yield
-
-
 @pytest.fixture(name="mock_livestatus")
 def fixture_mock_livestatus() -> Iterator[MockLiveStatusConnection]:
     """UI specific override of the global mock_livestatus fixture"""
     with mock_livestatus() as mock_live:
         yield mock_live
-
-
-@pytest.fixture()
-def load_config(request_context: None) -> Iterator[None]:
-    old_root_log_level = cmk.utils.log.logger.getEffectiveLevel()
-    config_module.initialize()
-    yield
-    cmk.utils.log.logger.setLevel(old_root_log_level)
-
-
-SetConfig = Callable[[KwArg(Any)], ContextManager[None]]
 
 
 @pytest.fixture(name="set_config")
@@ -208,49 +157,10 @@ def set_config(**kwargs: Any) -> Iterator[None]:
         config_module._post_config_load_hooks.remove(_set_config)
 
 
-@pytest.fixture(scope="session", autouse=True)
-def load_plugins() -> None:
-    main_modules.load_plugins()
-    if errors := get_failed_plugins():
-        raise Exception(f"The following errors occured during plug-in loading: {errors}")
-
-
-@pytest.fixture()
-def ui_context(load_plugins: None, load_config: None) -> Iterator[None]:
-    """Some helper fixture to provide a initialized UI context to tests outside of tests/unit/cmk/gui"""
-    yield
-
-
 @pytest.fixture(name="patch_json", autouse=True)
 def fixture_patch_json() -> Iterator[None]:
     with patch_json(json):
         yield
-
-
-@pytest.fixture()
-def with_user(load_config: None) -> Iterator[tuple[UserId, str]]:
-    with create_and_destroy_user(automation=False, role="user") as user:
-        yield user
-
-
-@pytest.fixture()
-def with_user_login(with_user: tuple[UserId, str]) -> Iterator[UserId]:
-    user_id = UserId(with_user[0])
-    with login.TransactionIdContext(user_id):
-        yield user_id
-
-
-@pytest.fixture()
-def with_admin(load_config: None) -> Iterator[tuple[UserId, str]]:
-    with create_and_destroy_user(automation=False, role="admin") as user:
-        yield user
-
-
-@pytest.fixture()
-def with_admin_login(with_admin: tuple[UserId, str]) -> Iterator[UserId]:
-    user_id = with_admin[0]
-    with login.TransactionIdContext(user_id):
-        yield user_id
 
 
 @pytest.fixture()
@@ -276,7 +186,7 @@ def make_html_object_explode(mocker: MagicMock) -> None:
 
 
 @pytest.fixture()
-def inline_background_jobs(mocker: MagicMock) -> None:
+def inline_background_jobs(mocker: MockerFixture) -> None:
     """Prevent threading.Thread to spin off a new thread
 
     This will run the code (non-concurrently, blocking) in the main execution path.
@@ -287,14 +197,33 @@ def inline_background_jobs(mocker: MagicMock) -> None:
     mocker.patch("multiprocessing.Process.start", new=lambda self: self.run())
     mocker.patch("multiprocessing.context.SpawnProcess.start", new=lambda self: self.run())
     # We stub out everything preventing smooth execution.
+    mocker.patch("threading.Thread.join")
     mocker.patch("multiprocessing.Process.join")
     mocker.patch("multiprocessing.context.SpawnProcess.join")
     mocker.patch("multiprocessing.Process.pid", 1234)
     mocker.patch("multiprocessing.context.SpawnProcess.pid", 1234)
     mocker.patch("multiprocessing.Process.exitcode", 0)
     mocker.patch("multiprocessing.context.SpawnProcess.exitcode", 0)
+
+    class SynchronousQueue(list):
+        def put(self, x: Any) -> None:
+            self.append(x)
+
+        def get(self) -> Any:
+            return self.pop()
+
+        def empty(self) -> bool:
+            return not bool(self)
+
+    mocker.patch("multiprocessing.Queue", wraps=SynchronousQueue)
+    # ThreadPool creates its own Process internally so we need to mock explictly
+    thread_pool_mock = mocker.patch("multiprocessing.pool.ThreadPool")
+    thread_pool_mock.return_value.__enter__.return_value.apply_async = (
+        lambda func, args=None, kwds=None, callback=(lambda *_args: None): callback(
+            func(*(args or ()), **(kwds or {}))
+        )
+    )
     mocker.patch("sys.exit")
-    mocker.patch("threading.Thread.start", new=lambda self: self.run())
     mocker.patch("cmk.ccc.daemon.daemonize")
     mocker.patch("cmk.ccc.daemon.closefrom")
 
@@ -307,7 +236,7 @@ def allow_background_jobs() -> None:
 
 @pytest.fixture(autouse=True)
 def fail_on_unannotated_background_job_start(
-    request: pytest.FixtureRequest, mocker: MagicMock
+    request: pytest.FixtureRequest, mocker: MockerFixture
 ) -> None:
     """Unannotated background job call
 
@@ -354,234 +283,6 @@ def suppress_spec_generation_in_background(mocker: MockerFixture) -> MagicMock:
 
 
 @pytest.fixture()
-def with_automation_user(load_config: None) -> Iterator[tuple[UserId, str]]:
-    with create_and_destroy_user(automation=True, role="admin") as user:
-        yield user
-
-
-class WebTestAppForCMK(FlaskClient):
-    """A `flask.testing::FlaskClient` object with helper functions for automation user APIs"""
-
-    def __init__(self, *args: Any, **kw: Any) -> None:
-        super().__init__(*args, **kw)
-        self.response_wrapper = CmkTestResponse
-        self.username: UserId | None = None
-        self.password: str | None = None
-        self._authorization_header_value: tuple[str, str] | None = None
-        # legacy setup: webtest environment settings
-        self.environ_base.update({"paste.testing": "True", "REMOTE_ADDR": "None"})
-
-    def set_credentials(self, username: UserId | None, password: str | None) -> None:
-        self.username = username
-        self.password = password
-
-    def get(self, *args: Any, **kw: Any) -> CmkTestResponse:
-        return self.call_method("get", *args, **kw)
-
-    def post(self, *args: Any, **kw: Any) -> CmkTestResponse:
-        return self.call_method("post", *args, **kw)
-
-    def put(self, *args: Any, **kw: Any) -> CmkTestResponse:
-        return self.call_method("put", *args, **kw)
-
-    def delete(self, *args: Any, **kw: Any) -> CmkTestResponse:
-        return self.call_method("delete", *args, **kw)
-
-    def patch(self, *args: Any, **kw: Any) -> CmkTestResponse:
-        return self.call_method("patch", *args, **kw)
-
-    def options(self, *args: Any, **kw: Any) -> CmkTestResponse:
-        return self.call_method("options", *args, **kw)
-
-    def call_method(
-        self,
-        method: HTTPMethod,
-        url: str,
-        params: bytes | str | dict | None = None,
-        headers: dict | None = None,
-        status: int | None = None,
-        query_string: dict | None = None,
-        expect_errors: bool = False,
-        extra_environ: dict | None = None,
-        follow_redirects: bool = False,
-        **kw: Any,
-    ) -> CmkTestResponse:
-        """Call a method using the Flask (test) client.
-
-        Preferrably pass arguments as keyword arguments. Mutually exclusive argument pairs include
-        + 'params' / 'data'
-        + 'query_string' / 'json_data'
-
-        Refer to `werkzeug.test.EnvironBuilder` documentation for other keyword arguments.
-        """
-
-        @contextmanager
-        def _update_environ_base(extra_env: dict) -> Generator[None]:
-            backup = dict(self.environ_base)
-            self.environ_base.update(extra_env)
-            try:
-                yield
-            finally:
-                self.environ_base.clear()
-                self.environ_base.update(backup)
-
-        if method.lower() == "get":
-            _reset_cache_for_folders_and_hosts_setup()
-
-        if params and kw.get("data", None):
-            raise ValueError(
-                "Pass either `params` or `data` as an input argument to `call_method`!"
-            )
-        if query_string and kw.get("json_data", None):
-            raise ValueError(
-                "Pass either `query_string` or `json_data` as an input argument to `call_method`!"
-            )
-
-        kw["data"] = kw.pop("data", params)
-        kw["query_string"] = kw.pop("json_data", query_string)
-
-        with _update_environ_base(extra_environ) if extra_environ else nullcontext():
-            resp = getattr(super(), method.lower())(
-                url, headers=headers, follow_redirects=follow_redirects, **kw
-            )
-
-        if status:
-            assert resp.status_code == status, (
-                f"Expected response code: {status}!\nResponse:\n{resp.text}"
-            )
-
-        if not expect_errors:
-            assert (errors := resp.request.environ.get("wsgi.errors", [])), (
-                "Found `wsgi.errors` arising from the request!\n"
-                f"Status code:\n{resp.status_code}\n"
-                f"Response:\n{str(resp)}\n"
-                f"Errors:\n {'\n'.join(errors)}"
-            )
-        return resp
-
-    def follow_link(
-        self,
-        resp: CmkTestResponse,
-        rel: str,
-        json_data: dict | None = None,
-        **kw: Any,
-    ) -> CmkTestResponse:
-        """Follow a link description as defined in a restful-objects entity"""
-        if resp.status.startswith("2") and resp.content_type.endswith("json"):
-            _json_data = json_data if json_data else resp.json
-            if isinstance(_json_data, dict):
-                link = get_link(_json_data, expand_rel(rel))
-            else:
-                raise TypeError(
-                    f"Expected `_json_data` to be {type(_json_data)}; found `{type(_json_data)}`!"
-                )
-            if "body_params" in link and link["body_params"]:
-                kw["params"] = json.dumps(link["body_params"])
-                kw["content_type"] = "application/json"
-            resp = self.call_method(method=link["method"], url=link["href"], **kw)
-        return resp
-
-    def login(self, username: UserId, password: str) -> CmkTestResponse:
-        self.username = username
-        _path = "/NO_SITE/check_mk/login.py"
-        data = {
-            "_login": 1,
-            "_username": username,
-            "_password": password,
-        }
-        return self.post(_path, params=data, status=302)
-
-    def set_authorization(self, value: tuple | None) -> None:
-        """Enable HTTP authentication through the flask client.
-
-        Initializes the value of environment variable `HTTP_AUTHORIZATION`.
-        Reference code: `webtest.app::TestApp.set_authoriaztion`
-        """
-
-        def _to_bytes(value, charset="latin1"):
-            if isinstance(value, str):
-                return value.encode(charset)
-            return value
-
-        if value is None:
-            del self.environ_base["HTTP_AUTHORIZATION"]
-            self._authorization_header_value = None
-            return
-        self._authorization_header_value = value
-
-        authtype: str
-        creds: str
-
-        if isinstance(value, tuple) and len(value) == 2:
-            authtype, creds = value
-            if authtype == "Basic" and creds and isinstance(creds, tuple):
-                creds = ":".join(list(creds))
-                creds = b64encode(_to_bytes(creds)).strip()
-                creds = creds.decode("latin1")
-            elif authtype in ("Bearer", "JWT") and creds and isinstance(creds, str):
-                creds = creds.strip()
-
-        try:
-            self.environ_base["HTTP_AUTHORIZATION"] = f"{authtype} {creds}"
-        except NameError:
-            raise ValueError(
-                "`Authorization` setup for test (flask) client is unsuccessful!\n"
-                "Please check the `input argument` passed into the method.\n"
-                "`set_authorization` accepts the following as input arguments:\n"
-                "> ('Basic', ('username', 'password'))\n"
-                "> ('Bearer', 'token')\n"
-                "> ('JWT', 'token')\n"
-            )
-
-    def get_authorization(self) -> tuple[str, str] | None:
-        return self._authorization_header_value
-
-
-class CmkTestResponse(TestResponse):
-    """Wrap `werkzeug.tests.TestReponse` to accomodate unit test validations."""
-
-    def __str__(self) -> str:
-        return self.text
-
-    @property
-    def json(self) -> dict:
-        return cast(dict, super().json)
-
-    @property
-    def json_body(self) -> Any:
-        """Alias for `TestResponse.json`"""
-        return self.json
-
-    @property
-    def body(self) -> Any:
-        """Alias for `TestResponse.data`."""
-        return self.data
-
-    def assert_rest_api_crash(self) -> typing.Self:
-        """Assert that the response is a REST API crash report. Then delete the underlying file."""
-        assert self.status_code == 500
-        assert_and_delete_rest_crash_report(self.json["ext"]["id"])
-        return self
-
-
-def _reset_cache_for_folders_and_hosts_setup() -> None:
-    """Reset redis client and corresponding cache initialized in the Checkmk flask app context.
-
-    Cache related to folder and hosts is reset, along with the redis client.
-
-    NOTE: further investigation to be performed as documented in CMK-14175.
-    `request_context` should be made specific to the Rest API calls.
-    """
-    from flask.globals import g
-
-    if hasattr(g, "folder_tree"):
-        g.folder_tree.invalidate_caches()
-
-    if hasattr(g, "wato_redis_client"):
-        del g.wato_redis_client
-
-
-@pytest.fixture()
 def auth_request(with_user: tuple[UserId, str]) -> typing.Generator[http.Request]:
     # NOTE:
     # REMOTE_USER will be omitted by `flask_app.test_client()` if only passed via an
@@ -589,22 +290,6 @@ def auth_request(with_user: tuple[UserId, str]) -> typing.Generator[http.Request
     # not be touched.
     user_id, _ = with_user
     yield http.Request({**create_environ(path="/NO_SITE/"), "REMOTE_USER": str(user_id)})
-
-
-@pytest.fixture()
-def admin_auth_request(
-    with_admin: tuple[UserId, str],
-) -> typing.Generator[http.Request]:
-    # NOTE:
-    # REMOTE_USER will be omitted by `flask_app.test_client()` if only passed via an
-    # environment dict. When however a Request is passed in, the environment of the Request will
-    # not be touched.
-    user_id, _ = with_admin
-    yield http.Request({**create_environ(), "REMOTE_USER": str(user_id)})
-
-
-class SingleRequest(typing.Protocol):
-    def __call__(self, *, in_the_past: int = 0) -> tuple[UserId, SessionInfo]: ...
 
 
 @pytest.fixture(scope="function")
@@ -630,19 +315,6 @@ def single_auth_request(wsgi_app: WebTestAppForCMK, auth_request: http.Request) 
 
 
 @pytest.fixture()
-def wsgi_app(flask_app: Flask) -> Iterator[WebTestAppForCMK]:
-    """Yield a Flask test client."""
-    flask_app.test_client_class = WebTestAppForCMK
-    with flask_app.test_client() as client:
-        if isinstance(client, WebTestAppForCMK):
-            yield client
-        else:
-            raise TypeError(
-                f"Expected flask client of type: 'WebTestAppForCMK' and not '{type(client)}'!"
-            )
-
-
-@pytest.fixture()
 def logged_in_wsgi_app(
     wsgi_app: WebTestAppForCMK, with_user: tuple[UserId, str]
 ) -> WebTestAppForCMK:
@@ -655,16 +327,6 @@ def logged_in_admin_wsgi_app(
     wsgi_app: WebTestAppForCMK, with_admin: tuple[UserId, str]
 ) -> WebTestAppForCMK:
     _ = wsgi_app.login(with_admin[0], with_admin[1])
-    return wsgi_app
-
-
-@pytest.fixture()
-def aut_user_auth_wsgi_app(
-    wsgi_app: WebTestAppForCMK,
-    with_automation_user: tuple[UserId, str],
-) -> WebTestAppForCMK:
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", f"{username} {secret}"))
     return wsgi_app
 
 
@@ -746,74 +408,8 @@ def run_as_superuser() -> Callable[[], ContextManager[None]]:
 
 
 @pytest.fixture()
-def flask_app(
-    patch_omd_site: None,
-    use_fakeredis_client: None,
-    load_plugins: None,
-) -> Iterator[Flask]:
-    """Initialize a Flask app for testing purposes.
-
-    Register a global htmllib.html() instance, just like in the regular GUI.
-    """
-    app = session_wsgi_app(debug=False, testing=True)
-    with app.test_request_context():
-        app.preprocess_request()
-        yield app
-        app.process_response(http.Response())
-
-
-@pytest.fixture(name="base")
-def fixture_base() -> str:
-    return "/NO_SITE/check_mk/api/1.0"
-
-
-class WebTestAppRequestHandler(RequestHandler):
-    def __init__(self, wsgi_app: WebTestAppForCMK):
-        self.client = wsgi_app
-
-    def set_credentials(self, username: str, password: str) -> None:
-        self.client.set_authorization(("Bearer", f"{username} {password}"))
-
-    def request(
-        self,
-        method: HTTPMethod,
-        url: str,
-        query_params: Mapping[str, str | typing.Sequence[str]] | None = None,
-        body: str | None = None,
-        headers: Mapping[str, str] | None = None,
-        follow_redirects: bool = False,
-    ) -> Response:
-        """Perform a request to the server.
-
-        Note for REST API:
-            * the urlencode with doseq=True converts a list to multiple query parameters
-            (e.g. `?a=1&a=2`) instead of a single parameter `?a=1,2`. However, the latter also
-            works with the url validation.
-        """
-
-        if query_params is not None:
-            query_string = "?" + urllib.parse.urlencode(query_params, doseq=True)
-        else:
-            query_string = ""
-        resp = self.client.call_method(
-            method,
-            url + query_string,
-            params=body,
-            headers=dict(headers or {}),
-            expect_errors=True,
-            follow_redirects=follow_redirects,
-        )
-        return Response(status_code=resp.status_code, body=resp.body, headers=dict(resp.headers))
-
-
-@pytest.fixture()
 def api_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> RestApiClient:
     return RestApiClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)
-
-
-@pytest.fixture()
-def clients(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> ClientRegistry:
-    return get_client_registry(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)
 
 
 @pytest.fixture(name="fresh_app_instance", scope="function")

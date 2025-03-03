@@ -59,6 +59,7 @@ def test_registered_automation_commands() -> None:
         "fetch-agent-output-get-file",
         "fetch-agent-output-get-status",
         "fetch-agent-output-start",
+        "fetch-background-job-snapshot",
         "store-broker-certs",
         "network-scan",
         "ping",
@@ -74,6 +75,8 @@ def test_registered_automation_commands() -> None:
         "clear-site-changes",
         "hosts-for-auto-removal",
         "rename-hosts-uuid-link",
+        "start-quick-setup-stage-action",
+        "fetch-quick-setup-stage-action-result",
     ]
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
@@ -271,7 +274,6 @@ def test_registered_configvars() -> None:
             "dcd_max_activation_delay",
             "dcd_max_hosts_per_bulk_discovery",
             "dcd_prevent_unwanted_notification",
-            "dcd_use_inter_lock",
             "liveproxyd_default_connection_params",
             "liveproxyd_log_levels",
             "notification_spooler_config",

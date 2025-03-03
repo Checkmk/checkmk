@@ -27,7 +27,7 @@ regex = "*"
 reqwest = "*"
 openssl = { version = "0.10.57" }
 openssl-probe = "0.1.5"
-scrypt = "*"
+scrypt = { version = "*", default-features = false}
 time = "0.3.37"
 tokio = "*"
 tracing = "*"

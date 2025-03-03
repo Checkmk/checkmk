@@ -5,4 +5,4 @@
 
 from cmk.agent_based.v2 import equals
 
-DETECT_CISCO_SMA_SNMP = equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.15497.1.1")
+DETECT_CISCO_SMA = equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.15497.1.1")

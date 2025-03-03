@@ -382,8 +382,10 @@ hex_decode() {
     # We might not have xxd available, so we have to do it manually.
     # Be aware that this implementation is very slow and should not be used for large data.
     local hex="$1"
-    for ((i = 0; i < ${#hex}; i += 2)); do
+    local i=0
+    while [ $i -lt ${#hex} ]; do
         printf '%b' "\x${hex:i:2}"
+        i=$(expr $i + 2)
     done
 }
 
@@ -450,9 +452,9 @@ define_optionally_encrypt() {
                 # kdf: pbkdf2, 600.000 iterations
 
                 local salt_hex key_hex iv_hex
-                read -r salt_hex key_hex iv_hex <<<"$(
-                    parse_kdf_output "$(openssl enc -aes-256-cbc -md sha256 -pbkdf2 -iter 600000 -k "${1}" -P)"
-                )"
+                read -r salt_hex key_hex iv_hex << EOF
+$(parse_kdf_output "$(openssl enc -aes-256-cbc -md sha256 -pbkdf2 -iter 600000 -k "${1}" -P)")
+EOF
 
                 printf "05"
                 printf "%s" "${2}"
@@ -465,9 +467,9 @@ define_optionally_encrypt() {
                 # kdf: openssl custom kdf based on sha256
 
                 local salt_hex key_hex iv_hex
-                read -r salt_hex key_hex iv_hex <<<"$(
-                    parse_kdf_output "$(openssl enc -aes-256-cbc -md sha256 -k "${1}" -P)"
-                )"
+                read -r salt_hex key_hex iv_hex << EOF
+parse_kdf_output "$(openssl enc -aes-256-cbc -md sha256 -k "${1}" -P)"
+EOF
 
                 printf "04"
                 printf "%s" "${2}"
@@ -538,14 +540,17 @@ HERE
     #
 
     echo "OSType: linux"
-    while read -r line; do
-        raw_line="${line//\"/}"
-        case $line in
-            ID=*) echo "OSPlatform: ${raw_line##*=}" ;;
-            NAME=*) echo "OSName: ${raw_line##*=}" ;;
-            VERSION_ID=*) echo "OSVersion: ${raw_line##*=}" ;;
-        esac
-    done <<<"$(cat /etc/os-release 2>/dev/null)"
+    OS_Release=/etc/os-release
+    if [ -e "$OS_Release" ]; then
+        while read -r line; do
+            raw_line="${line//\"/}"
+            case $line in
+                ID=*) echo "OSPlatform: ${raw_line##*=}" ;;
+                NAME=*) echo "OSName: ${raw_line##*=}" ;;
+                VERSION_ID=*) echo "OSVersion: ${raw_line##*=}" ;;
+            esac
+        done < $OS_Release
+    fi
 
     #
     # BEGIN COMMON AGENT CODE

@@ -34,6 +34,8 @@ const detailedErrors = computed<Array<DetailedError>>(() => props.errors.filter(
     </div>
   </CmkAlertBox>
   <CmkAlertBox v-if="validationErrors.length > 0" variant="error">
-    <CmkHtml v-for="error in validationErrors" :key="error" :html="error" />
+    <div v-for="error in validationErrors" :key="error">
+      <CmkHtml :html="error" />
+    </div>
   </CmkAlertBox>
 </template>

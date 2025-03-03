@@ -205,6 +205,7 @@ def check_audiocodes_sip_calls_testable(
                 metric_name=metric_name,
                 label=label,
                 notice_only=True,
+                render_func=lambda x: f"{x:.1f}s",
             )
             continue
 
@@ -225,7 +226,7 @@ def check_audiocodes_sip_calls_testable(
 
 check_plugin_audiocodes_calls = CheckPlugin(
     name="audiocodes_sip_calls",
-    service_name="SIP Calls",
+    service_name="SIP calls",
     discovery_function=discover_audiocodes_sip_calls,
     check_function=check_audiocodes_sip_calls,
 )

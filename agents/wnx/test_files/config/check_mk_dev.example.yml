@@ -149,12 +149,12 @@ plugins:
     # duplicated files will be removed
     folders: ['$CUSTOM_PLUGINS_PATH$', '$BUILTIN_PLUGINS_PATH$' ]       # folder in ProgramData/checkmk/agent/plugins
 
-    # example: the windows_updates.vbs
+    # example: the windows_updates.ps1
     # plugin is executed asynchronous
     # and is only updated every 3600 seconds
     # it may fail (timeout / error) up to 3 times before the last known data is discarded
     execution:
-        # execution pattern for  windows-updates.vbs:
+        # execution pattern for  windows-updates.ps1:
         - pattern     : mk_inventory.vbs
           async       : yes
           timeout     : 120

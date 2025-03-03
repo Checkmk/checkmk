@@ -1,0 +1,70 @@
+diff --git a/cc/cc_toolchain_config.bzl b/cc/cc_toolchain_config.bzl
+new file mode 100644
+index 0000000..ae2269b
+--- /dev/null
++++ b/cc/cc_toolchain_config.bzl
+@@ -0,0 +1,11 @@
++"""cc_toolchain_config"""
++
++load(
++    # There's a lot of file generation using repository rules upstream so that
++    # it's difficult to find out whether this rule is available under another
++    # path than private.
++    "//cc/private/toolchain:unix_cc_toolchain_config.bzl",
++    _unix_cc_toolchain_config = "cc_toolchain_config",
++)
++
++unix_cc_toolchain_config = _unix_cc_toolchain_config
+diff --git a/cc/private/toolchain/unix_cc_toolchain_config.bzl b/cc/private/toolchain/unix_cc_toolchain_config.bzl
+index ee26a55..b40c5c6 100644
+--- a/cc/private/toolchain/unix_cc_toolchain_config.bzl
++++ b/cc/private/toolchain/unix_cc_toolchain_config.bzl
+@@ -360,6 +360,17 @@ def _impl(ctx):
+     static_link_cpp_runtimes_feature = feature(
+         name = "static_link_cpp_runtimes",
+         enabled = False,
++        flag_sets = [
++            flag_set(
++                actions = [
++                    ACTION_NAMES.cpp_link_executable,
++                    ACTION_NAMES.cpp_link_dynamic_library,
++                    ACTION_NAMES.lto_index_for_executable,
++                    ACTION_NAMES.lto_index_for_dynamic_library,
++                ],
++                flag_groups = [flag_group(flags = ["-static-libstdc++"])],
++            ),
++        ],
+     )
+ 
+     default_compile_flags_feature = feature(
+@@ -1266,6 +1277,7 @@ def _impl(ctx):
+         ],
+     )
+ 
++    cpp_runtimes = ["-lstdc++", "-lc++"]
+     default_link_libs_feature = feature(
+         name = "default_link_libs",
+         enabled = True,
+@@ -1273,6 +1285,22 @@ def _impl(ctx):
+             flag_set(
+                 actions = all_link_actions + lto_index_actions,
+                 flag_groups = [flag_group(flags = ctx.attr.link_libs)] if ctx.attr.link_libs else [],
++                with_features = [
++                    with_feature_set(not_features = ["static_link_cpp_runtimes"]),
++                ],
++            ),
++            flag_set(
++                actions = all_link_actions + lto_index_actions,
++                flag_groups = [flag_group(
++                    flags = [
++                        link_lib
++                        for link_lib in ctx.attr.link_libs
++                        if link_lib not in cpp_runtimes
++                    ],
++                )] if ctx.attr.link_libs else [],
++                with_features = [
++                    with_feature_set(features = ["static_link_cpp_runtimes"]),
++                ],
+             ),
+         ],
+     )

@@ -50,6 +50,12 @@ VARIABLES:
     - NAME: CHANGED_REQUIREMENTS_LOCK
       SH: "echo '${CHANGED_FILES_REL}' | grep '^requirements_.*_lock.txt' || true"
 
+    - NAME: CHANGED_PYTHON_REQUIREMENTS
+      SH: "echo '${CHANGED_FILES_REL}' | grep 'requirements.txt\\|requirements.in\\|constraints.txt' || true"
+
+    - NAME: CHANGED_BAZEL_MODULES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^MODULE.bazel' || true"
+
     - NAME: CHANGED_FIND_PYTHON_FILES_SCRIPT
       SH: "echo '${CHANGED_FILES_REL}' | grep '^scripts/find-python-files' || true"
 
@@ -60,7 +66,7 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^scripts/run-uvenv' || true"
 
     - NAME: CHANGED_BAZEL_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '\\.bzl$\\|BUILD' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '\\.bzl$\\|BUILD\\|WORKSPACE' || true"
 
     - NAME: CHANGED_CMK_BUILD_FILE
       SH: "echo '${CHANGED_FILES_REL}' | grep '^cmk/BUILD' || true"
@@ -86,7 +92,7 @@ VARIABLES:
       REPLACE_NEWLINES: true
 
     - NAME: CHANGED_WERK_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '.werks/' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^\\.werks/' || true"
       REPLACE_NEWLINES: true
 
     - NAME: CHANGED_WERK_CODE_FILES
@@ -219,14 +225,25 @@ STAGES:
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/python3-omdlib-junit.xml"
 
+    - NAME: "Python Doc Tests"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES,CHANGED_REQUIREMENTS_LOCK,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_UVENV_SCRIPT,CHANGED_CHECKMAN_FILES,CHANGED_CMK_BUILD_FILE,CHANGED_AGENT_FILES,CHANGED_CMK_TRACE_FILES,CHANGED_CMK_CCC_FILES
+      DIR: "tests"
+      COMMAND: "make test-doctest"
+      BAZEL_LOCKS_AMOUNT: 1
+      TEXT_ON_SKIP: "No Python files changed"
+      # TODO: Fix parsing of result files
+      # RESULT_CHECK_TYPE: "JUNIT"
+      RESULT_CHECK_FILE_PATTERN: "results/test-doctest.txt"
+
     - NAME: "Python Unit Tests"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES,CHANGED_REQUIREMENTS_LOCK,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_UVENV_SCRIPT,CHANGED_CHECKMAN_FILES,CHANGED_CMK_BUILD_FILE,CHANGED_AGENT_FILES,CHANGED_CMK_TRACE_FILES,CHANGED_CMK_CCC_FILES
       DIR: "tests"
       COMMAND: "make test-unit"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No Python files changed"
-      RESULT_CHECK_TYPE: "JUNIT"
-      RESULT_CHECK_FILE_PATTERN: "results/testlogs/unit/repo/test.xml"
+      # TODO: Fix parsing of result files
+      # RESULT_CHECK_TYPE: "JUNIT"
+      RESULT_CHECK_FILE_PATTERN: "results/test-unit.txt"
 
     - NAME: "Python License Headers Test"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES
@@ -608,3 +625,10 @@ STAGES:
       COMMAND: "./run --clean --all &> ${RESULTS}/cmk-frontend.txt"
       TEXT_ON_SKIP: "No cmk-frontend files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-frontend.txt"
+
+    - NAME: "Enforced package build"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_REQUIREMENTS,CHANGED_BAZEL_MODULES,CHANGED_BAZEL_FILES
+      DIR: ""
+      JENKINS_API_ACCESS: true
+      COMMAND: "scripts/run-uvenv ci-artifacts --credentials url_env=JENKINS_URL,username_env=JENKINS_USERNAME,password_env=JENKINS_PASSWORD --log-level info validate checkmk/master/builders/build-cmk-distro-package --params=DISTRO=ubuntu-22.04,VERSION=daily,EDITION=enterprise,CUSTOM_GIT_REF=${PATCHSET_REVISION}"
+      TEXT_ON_SKIP: "No package dependencies changed"

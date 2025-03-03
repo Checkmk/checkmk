@@ -9,6 +9,8 @@ import type {
   StageData
 } from '@/quick-setup/components/quick-setup/widgets/widget_types'
 import type { WizardMode } from '@/quick-setup/components/quick-setup/useWizard'
+import type { LogStep } from './components/BackgroundJobLog/useBackgroundJobLog'
+import type { Ref } from 'vue'
 
 /**
  * Quick setup application
@@ -39,4 +41,7 @@ export interface QuickSetupStageWidgetContentProps {
 
   /** @property {AllValidationMessages} formSpecErrors - Formspec validation errors  */
   formSpecErrors?: AllValidationMessages
+
+  /** @property {string[]} backgroundJobLog - Array of strings from the Quick Setup background job log */
+  backgroundJobLog?: Readonly<Ref<LogStep[]>>
 }

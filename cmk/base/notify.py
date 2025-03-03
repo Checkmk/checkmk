@@ -30,7 +30,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import suppress
 from functools import partial
 from pathlib import Path
-from typing import Any, cast, Literal
+from typing import cast, Literal
 
 import cmk.ccc.debug
 from cmk.ccc import store
@@ -1221,8 +1221,6 @@ def rbn_match_rule(
             rbn_match_host_event,
             rbn_match_service_event,
             rbn_match_notification_comment,
-            rbn_match_hostlabels,
-            rbn_match_servicelabels,
             rbn_match_event_console,
             rbn_match_timeperiod,
         ],
@@ -1531,50 +1529,6 @@ def rbn_match_notification_comment(
             return "The beginning of the notification comment '{}' is not matched by the regex '{}'".format(
                 notification_comment, rule["match_notification_comment"]
             )
-    return None
-
-
-def rbn_match_hostlabels(
-    rule: EventRule,
-    context: EventContext,
-    _analyse: bool,
-    _all_timeperiods: TimeperiodSpecs,
-) -> str | None:
-    if "match_hostlabels" in rule:
-        return _rbn_handle_labels(rule, context, "host")
-
-    return None
-
-
-def rbn_match_servicelabels(
-    rule: EventRule,
-    context: EventContext,
-    _analyse: bool,
-    _all_timeperiods: TimeperiodSpecs,
-) -> str | None:
-    if "match_servicelabels" in rule:
-        return _rbn_handle_labels(rule, context, "service")
-
-    return None
-
-
-def _rbn_handle_labels(
-    rule: EventRule, context: EventContext, what: Literal["host", "service"]
-) -> str | None:
-    labels: dict[str, Any] = {}
-    context_str = "%sLABEL" % what.upper()
-    labels = {
-        variable.replace("%s_" % context_str, ""): value
-        for variable, value in context.items()
-        if variable.startswith(context_str)
-    }
-
-    key: Literal["match_servicelabels", "match_hostlabels"] = (
-        "match_servicelabels" if what == "service" else "match_hostlabels"
-    )
-    if not set(labels.items()).issuperset(set(rule[key].items())):
-        return f"The {what} labels {rule[key]} did not match {labels}"
-
     return None
 
 

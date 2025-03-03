@@ -103,7 +103,7 @@ def test_manager_get_autochecks_of(
     ts.add_host(HostName("host"))
     config_cache = ts.apply(monkeypatch)
 
-    manager = config_cache._autochecks_manager
+    manager = config_cache.autochecks_manager
 
     result = manager.get_autochecks(HostName("host"))
     assert result == expected_result

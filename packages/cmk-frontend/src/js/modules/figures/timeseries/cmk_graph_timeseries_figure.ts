@@ -66,8 +66,11 @@ export class CmkGraphTimeseriesFigure extends TimeseriesFigure {
             const curve_tag = "metric_" + idx;
             const stack_tag = "stack_" + curve_tag;
             const use_stack =
+                (curve.type == "area" ||
+                    curve.type == "stack" ||
+                    curve.type == "-stack") &&
                 // @ts-ignore
-                curve.type == "area" && max(curve.points, d => d[0]) > 0;
+                max(curve.points, d => d[0]) > 0;
             curve.points.forEach(
                 (
                     point: [TimeSeriesValue, TimeSeriesValue] | TimeSeriesValue,

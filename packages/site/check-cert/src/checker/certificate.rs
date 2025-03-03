@@ -213,13 +213,10 @@ fn check_issuer_cn(issuer_cn: &str, expected: Option<String>) -> SimpleCheckResu
         if expected == issuer_cn {
             SimpleCheckResult::notice(&details)
         } else {
-            SimpleCheckResult::warn_with_details(
-                format!(
-                    "{name}: {} but expected {expected}",
-                    handle_empty(issuer_cn),
-                ),
-                &details,
-            )
+            SimpleCheckResult::warn(format!(
+                "{name}: {} but expected {expected}",
+                handle_empty(issuer_cn),
+            ))
         }
     })
 }

@@ -120,7 +120,7 @@ class ABCPackageManager(abc.ABC):
             os.unlink(package_path)
 
     def uninstall(self, version: str, edition: Edition) -> None:
-        package_name = self.package_name(edition, version)
+        package_name = self.installed_package_name(edition, version)
         self._uninstall_package(package_name)
 
     def _write_package_hash(self, version: str, edition: Edition, package_path: Path) -> None:
@@ -129,6 +129,10 @@ class ABCPackageManager(abc.ABC):
 
     @abc.abstractmethod
     def package_name(self, edition: Edition, version: str) -> str:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def installed_package_name(self, edition: Edition, version: str) -> str:
         raise NotImplementedError()
 
     def _build_system_package_path(self, version: str, package_name: str) -> Path:
@@ -168,8 +172,6 @@ class ABCPackageManager(abc.ABC):
         raise NotImplementedError()
 
     def _execute(self, cmd: list[str | Path]) -> None:
-        logger.debug("Executing: %s", subprocess.list2cmdline(list(map(str, cmd))))
-
         # Workaround to fix package installation issues
         # - systemctl in docker leads to: Failed to connect to bus: No such file or directory
         if Path("/.dockerenv").exists():
@@ -182,6 +184,7 @@ class ABCPackageManager(abc.ABC):
             cmd.insert(0, "sudo")
 
         try:
+            logger.info("Executing: %s", subprocess.list2cmdline(list(map(str, cmd))))
             subprocess.run(cmd, shell=False, close_fds=True, encoding="utf-8", check=True)
         except subprocess.CalledProcessError as excp:
             if excp.returncode >> 8 != 0:
@@ -192,6 +195,9 @@ class ABCPackageManager(abc.ABC):
 class PackageManagerDEB(ABCPackageManager):
     def package_name(self, edition: Edition, version: str) -> str:
         return f"check-mk-{edition.long}-{version.split('-rc')[0]}_0.{self.distro_name}_amd64.deb"
+
+    def installed_package_name(self, edition: Edition, version: str) -> str:
+        return f"check-mk-{edition.long}-{version.split('-rc')[0]}"
 
     def _install_package(self, package_path: Path) -> None:
         # all dependencies are installed via install-cmk-dependencies.sh in the Dockerfile
@@ -205,6 +211,9 @@ class PackageManagerDEB(ABCPackageManager):
 class ABCPackageManagerRPM(ABCPackageManager):
     def package_name(self, edition: Edition, version: str) -> str:
         return f"check-mk-{edition.long}-{version.split('-rc')[0]}-{self.distro_name}-38.x86_64.rpm"
+
+    def installed_package_name(self, edition: Edition, version: str) -> str:
+        return f"check-mk-{edition.long}-{version.split('-rc')[0]}"
 
 
 class PackageManagerSuSE(ABCPackageManagerRPM):
@@ -226,6 +235,9 @@ class PackageManagerRHEL(ABCPackageManagerRPM):
 class PackageManagerCMA(PackageManagerDEB):
     def package_name(self, edition: Edition, version: str) -> str:
         return f"check-mk-{edition.long}-{version.split('-rc')[0]}-{self.distro_name.split('-')[1]}-x86_64.cma"
+
+    def installed_package_name(self, edition: Edition, version: str) -> str:
+        return f"check-mk-{edition.long}-{version.split('-rc')[0]}"
 
 
 def _sha256_file(path: Path) -> str:

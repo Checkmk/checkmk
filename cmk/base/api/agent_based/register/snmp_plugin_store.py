@@ -17,9 +17,8 @@ from cmk.fetchers.snmp import (  # pylint: disable=cmk-module-layer-violation
     SNMPPluginStoreItem,
 )
 
-from ._config import (
-    AgentBasedPlugins,
-)
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
+
 from .utils import (
     filter_relevant_raw_sections,
 )

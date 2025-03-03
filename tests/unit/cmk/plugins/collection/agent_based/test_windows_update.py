@@ -8,15 +8,10 @@ from typing import Final
 import pytest
 from pytest_mock.plugin import MockerFixture
 
-from cmk.checkengine.checking import CheckPluginName
-
-from cmk.base.api.agent_based.plugin_classes import CheckFunction
-from cmk.base.api.agent_based.register import AgentBasedPlugins
-
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.collection.agent_based.windows_updates import parse_windows_updates, Section
+from cmk.plugins.collection.agent_based import windows_updates
 
-SECTION_OK: Final = Section(
+SECTION_OK: Final = windows_updates.Section(
     reboot_required=False,
     important_updates=[
         "Windows XP Service Pack 3 (KB936929)",
@@ -35,12 +30,12 @@ SECTION_OK: Final = Section(
 )
 
 
-SECTION_FAILED: Final = Section(
+SECTION_FAILED: Final = windows_updates.Section(
     reboot_required=False,
     important_updates=[],
     optional_updates=[],
     forced_reboot=None,
-    failed="The text from the windows_update.vbs, second line!",
+    failed="The text from the windows_update.ps1, second line!",
 )
 
 
@@ -52,37 +47,31 @@ Update f�r WMDRM-f�hige Medienplayer (KB891122); Windows Media Player 11; Wi
 
 OUTPUT_FAILED: Final = """<<<windows_updates>>>
 x x x
-The text from the windows_update.vbs, second line!
+The text from the windows_update.ps1, second line!
 """
 
 
 def test_parse_windows_updates_ok() -> None:
-    assert parse_windows_updates([x.split() for x in OUTPUT_OK.splitlines()[1:]]) == SECTION_OK
+    assert (
+        windows_updates.parse_windows_updates([x.split() for x in OUTPUT_OK.splitlines()[1:]])
+        == SECTION_OK
+    )
 
 
 def test_parse_windows_updates_failed() -> None:
     assert (
-        parse_windows_updates([x.split() for x in OUTPUT_FAILED.splitlines()[1:]]) == SECTION_FAILED
+        windows_updates.parse_windows_updates([x.split() for x in OUTPUT_FAILED.splitlines()[1:]])
+        == SECTION_FAILED
     )
 
 
-def test_discover_windows_updates(agent_based_plugins: AgentBasedPlugins) -> None:
-    discover_windows_updates = agent_based_plugins.check_plugins[
-        CheckPluginName("windows_updates")
-    ].discovery_function
-    assert list(discover_windows_updates(section=SECTION_OK)) == [Service()]
+def test_discover_windows_updates() -> None:
+    assert list(windows_updates.discover(section=SECTION_OK)) == [Service()]
 
 
-@pytest.fixture(name="check_windows_updates")
-def check_windows_updates_fixture(agent_based_plugins: AgentBasedPlugins) -> CheckFunction:
-    return agent_based_plugins.check_plugins[CheckPluginName("windows_updates")].check_function
-
-
-def test_check_windows_updates_ok(
-    check_windows_updates: CheckFunction,
-) -> None:
+def test_check_windows_updates_ok() -> None:
     assert list(
-        check_windows_updates(
+        windows_updates.check_windows_updates(
             params={
                 "levels_important": (1, 2),
                 "levels_optional": (1, 2),
@@ -102,9 +91,9 @@ def test_check_windows_updates_ok(
     ]
 
 
-def test_check_windows_updates_failed(check_windows_updates: CheckFunction) -> None:
+def test_check_windows_updates_failed() -> None:
     assert list(
-        check_windows_updates(
+        windows_updates.check_windows_updates(
             params={
                 "levels_important": (1, 2),
                 "levels_optional": (1, 2),
@@ -121,8 +110,8 @@ def test_check_windows_updates_failed(check_windows_updates: CheckFunction) -> N
     ]
 
 
-def test_reboot_required(check_windows_updates: CheckFunction) -> None:
-    section = Section(
+def test_reboot_required() -> None:
+    section = windows_updates.Section(
         reboot_required=True,
         important_updates=[],
         optional_updates=[],
@@ -130,7 +119,7 @@ def test_reboot_required(check_windows_updates: CheckFunction) -> None:
         failed=None,
     )
     assert list(
-        check_windows_updates(
+        windows_updates.check_windows_updates(
             params={
                 "levels_important": None,
                 "levels_optional": None,
@@ -181,14 +170,13 @@ def test_reboot_required(check_windows_updates: CheckFunction) -> None:
     ],
 )
 def test_time_until_force_reboot(
-    check_windows_updates: CheckFunction,
     mocker: MockerFixture,
     reboot_time: float,
     now: float,
     results: Sequence[Result | Metric],
 ) -> None:
     mocker.patch("time.time", return_value=now)
-    section = Section(
+    section = windows_updates.Section(
         reboot_required=True,
         important_updates=[],
         optional_updates=[],
@@ -197,7 +185,7 @@ def test_time_until_force_reboot(
     )
     assert (
         list(
-            check_windows_updates(
+            windows_updates.check_windows_updates(
                 params={
                     "levels_important": None,
                     "levels_optional": None,

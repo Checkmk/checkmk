@@ -89,6 +89,14 @@ rust_test_suite(
         "ROOTPATH": "$(location :cmk-agent-ctl)",
         "RUST_BACKTRACE": "1",
     },
+    env_inherit = [
+        "CMK_AGENT_CTL_LOG_TO_FILE",
+        "DEBUG_CONNECTION_TIMEOUT",
+        "DEBUG_HOME_DIR",
+        "DEBUG_MAX_CONNECTIONS",
+        "ENV_PROGRAM_DATA",
+        "MK_LOGDIR",
+    ],
     deps = all_crate_deps() + [
         ":cmk-agent-ctl",
         ":cmk-agent-ctl-lib",

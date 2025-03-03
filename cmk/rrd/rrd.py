@@ -26,7 +26,6 @@ from pathlib import Path
 from typing import assert_never, cast, Literal, NewType, Self
 
 import cmk.ccc.debug
-import cmk.ccc.version as cmk_version
 from cmk.ccc.crash_reporting import (
     ABCCrashReport,
     BaseDetails,
@@ -35,10 +34,9 @@ from cmk.ccc.crash_reporting import (
     CrashReportStore,
     VersionInfo,
 )
+from cmk.ccc.version import get_general_version_infos
 
-import cmk.utils
-import cmk.utils.paths
-from cmk.utils import tty
+from cmk.utils import paths, pnp_cleanup, tty
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
 from cmk.utils.metrics import MetricName
@@ -61,7 +59,7 @@ _default_rrd_format: _RRDFormat = "pnp_multiple"
 
 def _rrd_pnp_host_dir(hostname: HostName) -> str:
     # We need /opt here because of bug in rrdcached
-    return str(cmk.utils.paths.rrd_multiple_dir / cmk.utils.pnp_cleanup(hostname))
+    return str(paths.rrd_multiple_dir / pnp_cleanup(hostname))
 
 
 @dataclass(frozen=True)
@@ -142,7 +140,7 @@ def _get_rrd_conf(
 
 def _rrd_cmc_host_dir(hostname: HostName) -> str:
     # We need /opt here because of bug in rrdcached
-    return str(cmk.utils.paths.rrd_single_dir / cmk.utils.pnp_cleanup(hostname))
+    return str(paths.rrd_single_dir / pnp_cleanup(hostname))
 
 
 def _read_existing_metrics(info_file_path: str) -> list[MetricName]:
@@ -186,15 +184,11 @@ def _create_rrd(
         case "pnp_multiple":
             host_dir = _rrd_pnp_host_dir(spec.host)
             base_file_name = (
-                host_dir
-                + "/"
-                + cmk.utils.pnp_cleanup(spec.service)
-                + "_"
-                + cmk.utils.pnp_cleanup(spec.metric_names[0])
+                host_dir + "/" + pnp_cleanup(spec.service) + "_" + pnp_cleanup(spec.metric_names[0])
             )
         case "cmc_single":
             host_dir = _rrd_cmc_host_dir(spec.host)
-            base_file_name = host_dir + "/" + cmk.utils.pnp_cleanup(spec.service)
+            base_file_name = host_dir + "/" + pnp_cleanup(spec.service)
         case _:
             assert_never(spec.format)
 
@@ -249,7 +243,7 @@ def _create_rrd(
 # So we do it like PNP and use 1, 2, 3... as DS names and keep the
 # actual real names in a separate file with the extension ".info"
 def _create_cmc_rrd_info_file(spec: RRDSpec) -> None:
-    base_file_name = _rrd_cmc_host_dir(spec.host) + "/" + cmk.utils.pnp_cleanup(spec.service)
+    base_file_name = _rrd_cmc_host_dir(spec.host) + "/" + pnp_cleanup(spec.service)
     with open(base_file_name + ".info", "w") as fid:
         fid.write(
             f"HOST {spec.host}\nSERVICE {spec.service}\nMETRICS {';'.join(spec.metric_names)}\n"
@@ -344,7 +338,7 @@ class RRDConverter:
                     servicedesc,
                     host_dir,
                     xmlinfo,
-                    cmk.utils.pnp_cleanup(servicedesc),
+                    pnp_cleanup(servicedesc),
                     target_rrdconf,
                     split=split,
                 )
@@ -354,7 +348,7 @@ class RRDConverter:
         for servicedesc, existing_rrd_formats in existing_rrds.items():
             if "cmc_single" in existing_rrd_formats:
                 console.verbose_no_lf(f"  {servicedesc} ({tty.bold}{tty.bold}CMC{tty.normal})...")
-                base_path = host_dir + "/" + cmk.utils.pnp_cleanup(servicedesc)
+                base_path = host_dir + "/" + pnp_cleanup(servicedesc)
                 existing_metrics = _read_existing_metrics(base_path + ".info")
                 target_rrdconf = _get_rrd_conf(config, servicedesc)[1:]
                 rrd_file_path = base_path + ".rrd"
@@ -405,7 +399,7 @@ class RRDConverter:
         rra_config, step, heartbeat = _get_rrd_conf(config, servicedesc)[1:]
 
         host_dir = _rrd_cmc_host_dir(self._hostname)
-        base_file_name = host_dir + "/" + cmk.utils.pnp_cleanup(servicedesc)
+        base_file_name = host_dir + "/" + pnp_cleanup(servicedesc)
         rrd_file_name = base_file_name + ".rrd"
 
         args = [rrd_file_name, "--step", str(step)]
@@ -417,9 +411,9 @@ class RRDConverter:
             pnp_rrd_filename = (
                 _rrd_pnp_host_dir(self._hostname)
                 + "/"
-                + cmk.utils.pnp_cleanup(servicedesc)
+                + pnp_cleanup(servicedesc)
                 + "_"
-                + cmk.utils.pnp_cleanup(varname)
+                + pnp_cleanup(varname)
                 + ".rrd"
             )
 
@@ -461,7 +455,7 @@ class RRDConverter:
 
     def _xml_path_for(self, servicedesc: _RRDServiceName = "_HOST_") -> str:
         host_dir = _rrd_pnp_host_dir(self._hostname)
-        return host_dir + "/" + cmk.utils.pnp_cleanup(servicedesc) + ".xml"
+        return host_dir + "/" + pnp_cleanup(servicedesc) + ".xml"
 
     def _delete_rrds(self, servicedesc: _RRDServiceName, rrd_format: _RRDFormat) -> None:
         def try_delete(path: str) -> None:
@@ -473,15 +467,15 @@ class RRDConverter:
 
         if rrd_format == "cmc_single":
             host_dir = _rrd_cmc_host_dir(self._hostname)
-            base_file_name = host_dir + "/" + cmk.utils.pnp_cleanup(servicedesc)
+            base_file_name = host_dir + "/" + pnp_cleanup(servicedesc)
             try_delete(base_file_name + ".rrd")
             try_delete(base_file_name + ".info")
         else:
             host_dir = _rrd_pnp_host_dir(self._hostname)
-            base_file_name = host_dir + "/" + cmk.utils.pnp_cleanup(servicedesc)
+            base_file_name = host_dir + "/" + pnp_cleanup(servicedesc)
             try_delete(base_file_name + ".xml")
             for filename in sorted(os.listdir(host_dir)):
-                if filename.startswith(cmk.utils.pnp_cleanup(servicedesc) + "_"):
+                if filename.startswith(pnp_cleanup(servicedesc) + "_"):
                     try_delete(host_dir + "/" + filename)
 
     def _convert_pnp_rrds_of(
@@ -500,9 +494,7 @@ class RRDConverter:
             old_rrd_path = ds["rrdfile"]
             if old_rrd_path.startswith("/opt/omd/"):
                 old_rrd_path = old_rrd_path[4:]  # drop the /opt, otherwise conflict with new path
-            new_rrd_path = (
-                host_dir + "/" + file_prefix + "_" + cmk.utils.pnp_cleanup(ds["name"]) + ".rrd"
-            )
+            new_rrd_path = host_dir + "/" + file_prefix + "_" + pnp_cleanup(ds["name"]) + ".rrd"
 
             if not os.path.exists(old_rrd_path):
                 _write_line(
@@ -684,7 +676,7 @@ def _fixup_pnp_xml_file(xml_path: str) -> None:
         metric_name = _text_attr(metric, "NAME")
         if metric_name is None:
             raise TypeError()
-        ds_name = cmk.utils.pnp_cleanup(metric_name)
+        ds_name = pnp_cleanup(metric_name)
 
         orig_rrd_file = _text_attr(metric, "RRDFILE")
         if orig_rrd_file is None:
@@ -734,25 +726,19 @@ class RRDCreator:
     def create_rrds_keepalive(self, config_class: type[RRDConfig]) -> None:
         input_buffer = b""
         self._rrd_helper_output_buffer = b""
-
-        job_queue: list[bytes] = []
-
+        job_queue = list[bytes]()
         console.verbose("Started Check_MK RRD creator.")
         try:
             # We read asynchronously from stdin and put the jobs into a queue.
             # That way the cmc main process will not be blocked by IO wait.
             while True:
-                if job_queue:
-                    timeout: int | None = 0
-                else:
-                    timeout = None
+                readable, writeable = select.select(
+                    [0],
+                    [1] if self._rrd_helper_output_buffer else [],
+                    [],
+                    0 if job_queue else None,
+                )[:-1]
 
-                if self._rrd_helper_output_buffer:
-                    wait_for_write = [1]
-                else:
-                    wait_for_write = []
-
-                readable, writeable = select.select([0], wait_for_write, [], timeout)[:-1]
                 if 1 in writeable:
                     self._write_rrd_helper_response()
 
@@ -761,62 +747,22 @@ class RRDCreator:
                         new_bytes = os.read(0, 4096)
                     except Exception:
                         new_bytes = b""
-
                     if not new_bytes and not job_queue:
                         console.verbose("Core closed stdin, all jobs finished. Exiting.")
                         break
-
-                    input_buffer += new_bytes
-                    parts: list[bytes] = input_buffer.split(b"\n")
-                    if parts[-1] != b"":  # last job not terminated
-                        input_buffer = parts[-1]
-                    else:
-                        input_buffer = b""
-
-                    parts = parts[:-1]
-                    job_queue += parts
+                    parts = (input_buffer + new_bytes).split(b"\n")
+                    job_queue += parts[:-1]
+                    input_buffer = parts[-1]
 
                 # Create *one* RRD file
                 if job_queue:
-                    if job_queue[0] == b"*":
-                        # Obsolete. We can't reload the config explicitly, as this is done already
-                        # by core config generation.
-                        console.verbose("Reloading configuration.")
-                    else:
-                        spec = job_queue[0].decode("utf-8")
-                        parsed_spec = RRDSpec.parse(spec)
-                        config = config_class(parsed_spec.host)
-                        try:
-                            self._create_rrd_from_spec(config, parsed_spec)
-                        except self._rrd_interface.OperationalError as exc:
-                            self._queue_rrd_helper_response(f"Error creating RRD: {exc!s}")
-                        except OSError as exc:
-                            self._queue_rrd_helper_response(f"Error creating RRD: {exc.strerror}")
-                        except Exception as e:
-                            if cmk.ccc.debug.enabled():
-                                raise
-                            crash = CMKBaseCrashReport(
-                                cmk.utils.paths.crash_dir,
-                                CMKBaseCrashReport.make_crash_info(
-                                    cmk_version.get_general_version_infos(cmk.utils.paths.omd_root)
-                                ),
-                            )
-                            CrashReportStore().save(crash)
-                            self._queue_rrd_helper_response(
-                                f"Error creating RRD for {spec}: {str(e) or traceback.format_exc()}"
-                            )
+                    self._handle_job(job_queue[0].decode("utf-8"), config_class)
                     del job_queue[0]
 
         except Exception:
             if cmk.ccc.debug.enabled():
                 raise
-            crash = CMKBaseCrashReport(
-                cmk.utils.paths.crash_dir,
-                CMKBaseCrashReport.make_crash_info(
-                    cmk_version.get_general_version_infos(cmk.utils.paths.omd_root)
-                ),
-            )
-            CrashReportStore().save(crash)
+            create_crash_report()
             self._queue_rrd_helper_response(
                 f"Check_MK RRD creator failed: {traceback.format_exc()}"
             )
@@ -827,6 +773,23 @@ class RRDCreator:
         size = min(4096, len(self._rrd_helper_output_buffer))
         written = os.write(1, self._rrd_helper_output_buffer[:size])
         self._rrd_helper_output_buffer = self._rrd_helper_output_buffer[written:]
+
+    def _handle_job(self, spec: str, config_class: type[RRDConfig]) -> None:
+        parsed_spec = RRDSpec.parse(spec)
+        config = config_class(parsed_spec.host)
+        try:
+            self._create_rrd_from_spec(config, parsed_spec)
+        except self._rrd_interface.OperationalError as exc:
+            self._queue_rrd_helper_response(f"Error creating RRD: {exc!s}")
+        except OSError as exc:
+            self._queue_rrd_helper_response(f"Error creating RRD: {exc.strerror}")
+        except Exception as e:
+            if cmk.ccc.debug.enabled():
+                raise
+            create_crash_report()
+            self._queue_rrd_helper_response(
+                f"Error creating RRD for {spec}: {str(e) or traceback.format_exc()}"
+            )
 
     def _create_rrd_from_spec(self, config: RRDConfig, spec: RRDSpec) -> None:
         rrd_file_name = _create_rrd(
@@ -854,6 +817,15 @@ class RRDCreator:
 
     def _queue_rrd_helper_response(self, response: str) -> None:
         self._rrd_helper_output_buffer += (response + "\n").encode("utf-8")
+
+
+def create_crash_report() -> None:
+    CrashReportStore().save(
+        CMKBaseCrashReport(
+            paths.crash_dir,
+            CMKBaseCrashReport.make_crash_info(get_general_version_infos(paths.omd_root)),
+        )
+    )
 
 
 def _float_or_nan(s: str | None) -> str:

@@ -156,11 +156,7 @@ def send_request(
     request: requests.Request,
 ) -> requests.Response:
     prepared_request = request_client.prepare_request(request)
-    return request_client.send(
-        prepared_request,
-        verify=client_config.verify_cert_api,
-        timeout=client_config.requests_timeout(),
-    )
+    return request_client.send(prepared_request, timeout=client_config.requests_timeout())
 
 
 class CoreAPI(RawAPI):

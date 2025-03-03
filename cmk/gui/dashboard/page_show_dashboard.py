@@ -53,6 +53,7 @@ from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.watolib.activate_changes import get_pending_changes_tooltip, has_pending_changes
+from cmk.gui.watolib.users import get_enabled_remote_sites_for_logged_in_user
 
 from ._network_topology import get_topology_context_and_filters
 from .breadcrumb import dashboard_breadcrumb
@@ -195,7 +196,7 @@ def draw_dashboard(name: DashboardName, owner: UserId) -> None:
     )
 
     # replication is only needed if we have remote sites
-    if need_replication and user.authorized_login_sites():
+    if need_replication and get_enabled_remote_sites_for_logged_in_user(user):
         save_and_replicate_all_dashboards(
             makeuri(request, [("name", name), ("edit", "1" if mode == "edit" else "0")])
         )

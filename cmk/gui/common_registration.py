@@ -266,9 +266,14 @@ def register(
     logwatch.register(page_registry)
     prediction.register(page_registry)
     quick_setup_registration.register(
-        main_module_registry, mode_registry, quick_setup_registry, job_registry
+        automation_command_registry,
+        main_module_registry,
+        mode_registry,
+        quick_setup_registry,
+        job_registry,
     )
     background_job_registration.register(
+        automation_command_registry,
         page_registry,
         mode_registry,
         main_module_registry,

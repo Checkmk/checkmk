@@ -28,14 +28,14 @@ $argDetach = $false
 $argSkipSqlTest = $false
 
 $msbuild_exe = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" `
-                 -latest `
-                 -requires Microsoft.Component.MSBuild `
-                 -find MSBuild\**\Bin\MSBuild.exe
+    -latest `
+    -requires Microsoft.Component.MSBuild `
+    -find MSBuild\**\Bin\MSBuild.exe
 
 $repo_root = (get-item $pwd).parent.parent.FullName
-$arte = "$repo_root/artefacts"
-$build_dir = "$pwd/build"
-$ohm_dir = "$build_dir/ohm/"
+$arte = "$repo_root\artefacts"
+$build_dir = "$pwd\build"
+$ohm_dir = "$build_dir\ohm\"
 $env:ExternalCompilerOptions = "/DDECREASE_COMPILE_TIME"
 $hash_file = "$arte\windows_files_hashes.txt"
 $usbip_exe = "c:\common\usbip-win-0.3.6-dev\usbip.exe"
@@ -320,12 +320,20 @@ function Invoke-Attach($usbip, $addr, $port) {
         return
     }
     &$usbip attach -r $addr -b $port
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "Failed to attach USB token" $LASTEXITCODE -foreground Red
-        $argSign = $False
-        return
+    for ($i = 1; $i -le 3; $i++) {
+        if ($LASTEXITCODE -eq 0) {
+            break
+        }
+        Write-Host "Waiting 2 seconds for USB to attach" -ForegroundColor White
+        Start-Sleep -Seconds 2
     }
-    Write-Host "Attached USB" -ForegroundColor Green
+    if ($LASTEXITCODE -ne 0) {
+        $argSign = $False
+        Write-Host "Failed to attach USB token" $LASTEXITCODE -foreground Red
+        throw "Attach to the signing key is not possible. Signing can't be done"
+    }
+    Write-Host "Attached USB, waiting a bit" -ForegroundColor Green
+    Start-Sleep -Seconds 5
     return
 }
 
@@ -345,9 +353,9 @@ function Invoke-TestSigning($usbip) {
     }
 
     if (-not(Test-Path -Path $usbip -PathType Leaf)) {
-        Write-Host "$usbip doesn't exist" -ForegroundColor Red
         $argSign = $False
-        return
+        Write-Host "$usbip doesn't exist" -ForegroundColor Red
+        throw 
     }
 
     if (-not (Test-Administrator)) {
@@ -359,9 +367,9 @@ function Invoke-TestSigning($usbip) {
     Write-Host "check port"
     &$usbip port
     if ($LastExitCode -eq 3) {
-        Write-Host "No chance"
         $argSign = $False
-        return
+        Write-Host "No chance"
+        throw 
     }
     Write-Host "try to detach"
 
@@ -395,18 +403,20 @@ function Start-BinarySigning {
     Remove-Item $hash_file -Force
 
     $files_to_sign = @(
-        "$build_dir/check_mk_service/x64/Release/check_mk_service64.exe",
-        "$build_dir/check_mk_service/Win32/Release/check_mk_service32.exe",
-        "$arte/cmk-agent-ctl.exe",
-        "$arte/cmk-sql.exe",
-        "$ohm_dir/OpenHardwareMonitorLib.dll",
-        "$ohm_dir/OpenHardwareMonitorCLI.exe"
+        "$build_dir\check_mk_service\x64\Release\check_mk_service64.exe",
+        "$build_dir\check_mk_service\Win32\Release\check_mk_service32.exe",
+        "$arte\cmk-agent-ctl.exe",
+        "$arte\mk-sql.exe",
+        "$ohm_dir\OpenHardwareMonitorLib.dll",
+        "$ohm_dir\OpenHardwareMonitorCLI.exe"
     )
 
     foreach ($file in $files_to_sign) {
+        Write-Host "Signing $file" -ForegroundColor White
         & ./scripts/sign_code.cmd $file
         if ($LASTEXITCODE -ne 0) {
             Write-Error "Error Signing, error code is $LASTEXITCODE" -ErrorAction Stop
+            throw
         }
         Add-HashLine $file $hash_file
 
@@ -455,6 +465,7 @@ function Start-MsiPatching {
 
 function Invoke-Detach($argFlag) {
     if ($argFlag -ne $true) {
+        Write-Host "No need to detach"
         return
     }
     & $usbip_exe detach -p 00
@@ -475,22 +486,22 @@ function Start-MsiSigning {
     }
 
     Write-Host "MSI signing..." -ForegroundColor White
-    & ./scripts/sign_code.cmd $arte/check_mk_agent.msi
+    & ./scripts/sign_code.cmd $arte\check_mk_agent.msi
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Failed sign MSI " $LASTEXITCODE -foreground Red
-        return
+        throw
     }
     Add-HashLine $arte/check_mk_agent.msi $hash_file
     Invoke-Detach $argSign
     & ./scripts/call_signing_tests.cmd
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Failed test MSI " $LASTEXITCODE -foreground Red
-        return
+        throw
     }
     & py "-3" "./scripts/check_hashes.py" "$hash_file"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Failed hashing test " $LASTEXITCODE -foreground Red
-        return
+        throw
     }
     powershell Write-Host "MSI signing succeeded" -Foreground Green
 }
@@ -542,16 +553,20 @@ Invoke-CheckApp "is_crlf" "python .\scripts\check_crlf.py"
 $argAttached = $false
 $result = 1
 try {
+    # SETTING UP
     $mainStartTime = Get-Date
     Invoke-Detach $argDetach
     Update-ArtefactDirs
     Clear-Artifacts
     Clear-All
+
+    # BUILDING
     Build-Agent
     Build-Package $argCtl "host/cmk-agent-ctl" "Controller"
     if ($argSkipSqlTest -ne $true) {
         Build-Package $argSql "host/mk-sql" "MK-SQL"
-    } else {
+    }
+    else {
         Build-Package $argSql "host/mk-sql" "MK-SQL" --build
     }
     Build-Ohm
@@ -559,6 +574,8 @@ try {
     Build-MSI
     Set-Msi-Version
     Start-UnitTests
+
+    # SIGNING
     Invoke-TestSigning $usbip_exe
     Start-MsiControlBuild
     Invoke-Attach $usbip_exe "yubi-usbserver.lan.checkmk.net" "1-1.2"

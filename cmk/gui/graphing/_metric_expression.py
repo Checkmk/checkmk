@@ -1176,14 +1176,14 @@ def parse_expression_from_api(
                 MinimumOf(Metric(quantity.metric_name)),
                 color=parse_color_from_api(quantity.color),
                 line_type=line_type,
-                title=get_metric_spec(quantity.metric_name).title,
+                title=_("Minimum of %s") % get_metric_spec(quantity.metric_name).title,
             )
         case metrics_api.MaximumOf():
             return MetricExpression(
                 MaximumOf(Metric(quantity.metric_name)),
                 color=parse_color_from_api(quantity.color),
                 line_type=line_type,
-                title=get_metric_spec(quantity.metric_name).title,
+                title=_("Maximum of %s") % get_metric_spec(quantity.metric_name).title,
             )
         case metrics_api.Sum():
             return MetricExpression(

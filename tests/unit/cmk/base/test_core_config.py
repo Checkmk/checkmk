@@ -28,7 +28,7 @@ from cmk.checkengine.parameters import TimespecificParameters
 
 import cmk.base.nagios_utils
 from cmk.base import config, core_config
-from cmk.base.api.agent_based.register import AgentBasedPlugins
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.core_config import get_labels_from_attributes, get_tags_with_groups_from_attributes
 from cmk.base.core_factory import create_core
@@ -76,7 +76,7 @@ def test_do_create_config_nagios(
     core_config.do_create_config(
         create_core("nagios"),
         core_scenario,
-        AgentBasedPlugins({}, {}, {}, {}),
+        AgentBasedPlugins.empty(),
         discovery_rules={},
         ip_address_of=ip_address_of,
         all_hosts=[HostName("test-host")],
@@ -103,7 +103,7 @@ def test_do_create_config_nagios_collects_passwords(
     core_config.do_create_config(
         create_core("nagios"),
         core_scenario,
-        AgentBasedPlugins({}, {}, {}, {}),
+        AgentBasedPlugins.empty(),
         discovery_rules={},
         ip_address_of=ip_address_of,
         all_hosts=[HostName("test-host")],

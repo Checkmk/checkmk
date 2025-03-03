@@ -18,10 +18,12 @@ from tests.testlib.common.utils import wait_until
 
 from cmk.ccc.version import Version
 
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
+
 from cmk.automations.helper_api import AutomationPayload, AutomationResponse
 from cmk.automations.results import ABCAutomationResult, SerializedResult
 
-from cmk.base.api.agent_based.register import AgentBasedPlugins
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.automation_helper._app import (
     _reloader_task,
     _State,
@@ -32,7 +34,7 @@ from cmk.base.automation_helper._app import (
 from cmk.base.automation_helper._cache import Cache
 from cmk.base.automation_helper._config import ReloaderConfig
 from cmk.base.automations import AutomationError
-from cmk.base.config import LoadedConfigSentinel
+from cmk.base.config import ConfigCache, LoadedConfigFragment
 
 
 class _DummyAutomationResult(ABCAutomationResult):
@@ -50,7 +52,7 @@ class _DummyAutomationEngineSuccess:
         cmd: str,
         args: list[str],
         plugins: AgentBasedPlugins | None,
-        loaded_config: LoadedConfigSentinel | None,
+        loaded_config: LoadedConfigFragment | None,
     ) -> _DummyAutomationResult:
         sys.stdout.write("stdout_success")
         sys.stderr.write("stderr_success")
@@ -63,7 +65,7 @@ class _DummyAutomationEngineFailure:
         cmd: str,
         args: list[str],
         plugins: AgentBasedPlugins | None,
-        loaded_config: LoadedConfigSentinel | None,
+        loaded_config: LoadedConfigFragment | None,
     ) -> AutomationError:
         sys.stdout.write("stdout_failure")
         sys.stderr.write("stderr_failure")
@@ -76,7 +78,7 @@ class _DummyAutomationEngineSystemExit:
         cmd: str,
         args: list[str],
         plugins: AgentBasedPlugins | None,
-        loaded_config: LoadedConfigSentinel | None,
+        loaded_config: LoadedConfigFragment | None,
     ) -> AutomationError:
         sys.stdout.write("stdout_system_exit")
         sys.stderr.write("stderr_system_exit")
@@ -91,8 +93,8 @@ _EXAMPLE_AUTOMATION_PAYLOAD = AutomationPayload(
 def _make_test_client(
     engine: AutomationEngine,
     cache: Cache,
-    reload_config: Callable[[], LoadedConfigSentinel],
-    clear_caches_before_each_call: Callable[[], None],
+    reload_config: Callable[[AgentBasedPlugins], LoadedConfigFragment],
+    clear_caches_before_each_call: Callable[[RulesetMatcher], None],
     reloader_config: ReloaderConfig = ReloaderConfig(
         active=True,
         poll_interval=1.0,
@@ -116,7 +118,7 @@ def test_reloader_is_running(mocker: MockerFixture, cache: Cache) -> None:
         _DummyAutomationEngineSuccess(),
         cache,
         mock_reload_config,
-        lambda: None,
+        lambda ruleset_matcher: None,
         reloader_config=ReloaderConfig(
             active=True,
             poll_interval=0.0,
@@ -235,8 +237,8 @@ def test_health_check(cache: Cache) -> None:
     with _make_test_client(
         _DummyAutomationEngineSuccess(),
         cache,
-        LoadedConfigSentinel,
-        lambda: None,
+        lambda plugins: LoadedConfigFragment(discovery_rules={}, config_cache=ConfigCache()),
+        lambda ruleset_matcher: None,
     ) as client:
         resp = client.get("/health")
 

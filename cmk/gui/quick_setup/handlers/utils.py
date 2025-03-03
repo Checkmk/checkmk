@@ -2,7 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import enum
 from collections.abc import Iterable, Mapping, MutableMapping, MutableSequence, Sequence
 from dataclasses import asdict, dataclass, field
 from typing import Any, cast
@@ -19,7 +19,12 @@ from cmk.gui.form_specs.vue.form_spec_visitor import (
 from cmk.gui.form_specs.vue.visitors import DataOrigin, DEFAULT_VALUE
 from cmk.gui.log import logger
 from cmk.gui.quick_setup.private.widgets import ConditionalNotificationStageWidget
-from cmk.gui.quick_setup.v0_unstable.setups import CallableValidator, FormspecMap, ProgressLogger
+from cmk.gui.quick_setup.v0_unstable.setups import (
+    CallableValidator,
+    FormspecMap,
+    ProgressLogger,
+    StepStatus,
+)
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     ActionId,
     GeneralStageErrors,
@@ -45,18 +50,92 @@ NEXT_BUTTON_LABEL = _("Next")
 NEXT_BUTTON_ARIA_LABEL = _("Go to the next stage")
 
 
+@dataclass
+class ProgressStep:
+    title: str
+    status: StepStatus
+    index: int
+
+
+@dataclass
+class ProgressState:
+    steps: Sequence[ProgressStep]
+
+
 class InfoLogger:
     @staticmethod
-    def log_progress(message: str) -> None:
-        logger.info("[QuickSetup] %s", message)
+    def log_new_progress_step(
+        step_name: str, step_title: str, status: StepStatus = StepStatus.ACTIVE
+    ) -> None:
+        logger.info(f"[QuickSetup] {step_name} - {status}")
+
+    @staticmethod
+    def update_progress_step_status(step_name: str, status: StepStatus) -> None:
+        logger.info(f"[QuickSetup] {step_name} - {status}")
 
 
 class JobBasedProgressLogger:
+    """Class which makes use of the background job send_progress mechanism to log
+    Quick setup specific progress steps.
+
+    The logged Quick setup progress steps are visible to the user who triggered the Quick
+    setup (stage) action.
+
+    Notes:
+        * The Quick setup progress logged via this class will be distinguishable to other
+        background job update logs through a [QuickSetup] prefix
+
+    """
+
     def __init__(self, progress_interface: BackgroundProcessInterface):
         self._progress_interface = progress_interface
+        self._steps: dict[str, ProgressStep] = {}
 
-    def log_progress(self, message: str) -> None:
-        self._progress_interface.send_progress_update("[QuickSetup] %s" % message)
+    def log_new_progress_step(
+        self, step_name: str, step_title: str, status: StepStatus = StepStatus.ACTIVE
+    ) -> None:
+        """Log a new progress step which will be displayed to the user
+
+        Attributes:
+            step_name:
+                A unique identifier for the progress step
+            step_title:
+                The title of the progress step. This will be visible to the user who triggered
+                the Quick setup (stage) action
+            status:
+                The status determines the rendering of the progress step
+                Defaults to StepStatus.ACTIVE
+
+        Notes:
+            * A new progress step should be updated to StepStatus.COMPLETED at some point in the
+            Quick setup flow
+
+        Pseudo example:
+            cls.log_new_progress_step("test_connection", "Test connection to datasource")
+            # do test connection related stuff
+            cls.update_progress_step_status("test_connection", StepStatus.COMPLETED)
+        """
+        self._steps[step_name] = ProgressStep(
+            title=step_title, status=status, index=len(self._steps)
+        )
+        self._log_progress()
+
+    def update_progress_step_status(self, step_name: str, status: StepStatus) -> None:
+        self._steps[step_name].status = status
+        self._log_progress()
+
+    def _log_progress(self) -> None:
+        ordered_steps = sorted(self._steps.values(), key=lambda step: step.index)
+        state = ProgressState(steps=ordered_steps)
+        self._progress_interface.send_progress_update(
+            "[QuickSetup] %s"
+            % asdict(
+                state,
+                dict_factory=lambda x: {
+                    k: (v.value if isinstance(v, enum.Enum) else v) for k, v in x
+                },
+            )
+        )
 
 
 @dataclass

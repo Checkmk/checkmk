@@ -16,13 +16,14 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.cisco_sma.agent_based.detect import DETECT_CISCO_SMA_SNMP
 from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
+
+from .detect import DETECT_CISCO_SMA
 
 
 class Params(TypedDict):
-    levels_upper: SimpleLevelsConfigModel[float]
-    levels_lower: SimpleLevelsConfigModel[float]
+    levels_upper_total_threads: SimpleLevelsConfigModel[int]
+    levels_lower_total_threads: SimpleLevelsConfigModel[int]
 
 
 def _check_mail_transfer_threads(params: Params, section: int) -> CheckResult:
@@ -31,8 +32,8 @@ def _check_mail_transfer_threads(params: Params, section: int) -> CheckResult:
         label="Total",
         render_func=lambda x: str(int(x)),
         metric_name="cisco_sma_mail_transfer_threads",
-        levels_upper=params["levels_upper"],
-        levels_lower=params["levels_lower"],
+        levels_upper=params["levels_upper_total_threads"],
+        levels_lower=params["levels_lower_total_threads"],
     )
 
 
@@ -45,10 +46,10 @@ check_plugin_mail_transfer_threads = CheckPlugin(
     service_name="Mail transfer threads",
     discovery_function=_discover_mail_transfer_threads,
     check_function=_check_mail_transfer_threads,
-    check_ruleset_name="generic_numeric_value_without_item",
+    check_ruleset_name="cisco_sma_mail_transfer_threads",
     check_default_parameters=Params(
-        levels_upper=("fixed", (500.0, 1000.0)),
-        levels_lower=("no_levels", None),
+        levels_upper_total_threads=("fixed", (500, 1000)),
+        levels_lower_total_threads=("no_levels", None),
     ),
 )
 
@@ -63,7 +64,7 @@ def _parse_mail_transfer_threads(string_table: StringTable) -> int | None:
 snmp_section_mail_transfer_threads = SimpleSNMPSection(
     parsed_section_name="cisco_sma_mail_transfer_threads",
     name="cisco_sma_mail_transfer_threads",
-    detect=DETECT_CISCO_SMA_SNMP,
+    detect=DETECT_CISCO_SMA,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.15497.1.1.1",
         oids=["20"],

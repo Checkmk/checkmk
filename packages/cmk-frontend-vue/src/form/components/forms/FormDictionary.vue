@@ -74,7 +74,7 @@ function getDefaultValue(key: string): unknown {
   if (element === undefined) {
     return undefined
   }
-  return element.default_value
+  return JSON.parse(JSON.stringify(element.default_value))
 }
 
 immediateWatch(

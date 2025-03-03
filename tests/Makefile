@@ -289,7 +289,7 @@ test-integration-redfish:
 test-composition:
 	OTEL_RESOURCE_ATTRIBUTES=service.name=pytest \
 	    $(PYTEST) -T composition --export-traces $(PYTEST_SYSTEM_TEST_ARGS) \
-	    $(realpath composition) --session-timeout 5400
+	    $(realpath composition)
 
 test-extension-compatibility:
 	$(PYTEST) -vv -T extension_compatibility $(PYTEST_SYSTEM_TEST_ARGS) $(realpath extension_compatibility)
@@ -315,7 +315,9 @@ test-update-cross-edition-cme: # from CEE to CME
 	--latest-base-version --target-edition=CME --disable-interactive-mode --session-timeout 5400
 
 test-schemathesis-openapi:
-	$(PYTEST) -T schemathesis_openapi $(PYTEST_SYSTEM_TEST_ARGS) $(realpath schemathesis_openapi) -p schemathesis
+	SCHMATHESIS_PROFILE=ci $(PYTEST) -T schemathesis_openapi $(realpath schemathesis_openapi) \
+	$(PYTEST_SYSTEM_TEST_ARGS) -p schemathesis -k stateless \
+	--html="../results/schemathesis_openapi.html" --self-contained-html
 
 test-plugins:
 	$(PYTEST) -T plugins_integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration) \
@@ -416,14 +418,18 @@ test-unit-omdlib:
 		omd/packages/omd/ \
 		tests/unit/omdlib/
 
+test-doctest:
+	mkdir -p ../results; \
+	$(BAZEL_CMD) test //cmk:doctest | tee ../results/$@.txt; \
+	exit $${PIPESTATUS[0]}
+
 test-unit:
-	cd .. && \
-	    $(BAZEL_CMD) test //cmk:doctest
-	cd .. && \
-	    $(BAZEL_CMD) test --test_verbose_timeout_warnings //tests/unit:all \
+	mkdir -p ../results; \
+	$(BAZEL_CMD) test --test_verbose_timeout_warnings //tests/unit:all \
 	    --test_env=TZ=$(RANDOM_TZ) \
 	    --test_arg="-m" --test_arg="not slow" \
-	    --test_arg="--numprocesses=4"
+	    --test_arg="--numprocesses=4" | tee ../results/$@.txt; \
+	exit $${PIPESTATUS[0]}
 
 test-unit-docker:
 	../scripts/run-in-docker.sh '\
@@ -432,7 +438,7 @@ test-unit-docker:
 	    cp -Lr ../bazel-testlogs/tests/ ../results/testlogs ;\
 	    exit $$x'
 
-test-unit-all:
+test-unit-all: test-doctest
 	cd .. && \
 	    $(BAZEL_CMD) test --test_verbose_timeout_warnings //tests/unit:all \
 	    --test_env=TZ=$(RANDOM_TZ) \
@@ -450,8 +456,11 @@ test-unit-testlib:
 		-- \
 		tests/testlib/
 
+test-agent-plugin:
+	make $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker)
+
 test-agent-plugin-docker:
-	../scripts/run-in-docker.sh make $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker)
+	../scripts/run-in-docker.sh make test-agent-plugin
 
 test-unit-shell:
 	./unit-shell/runner.sh

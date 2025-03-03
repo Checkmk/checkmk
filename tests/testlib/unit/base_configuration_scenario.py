@@ -42,9 +42,10 @@ class Scenario:
 
     @staticmethod
     def _get_config_cache() -> ConfigCache:
-        cc = config.reset_config_cache()
-        assert isinstance(cc, ConfigCache)
-        return cc
+        # NOTE: just `return ConfigCache()` here will break some tests.
+        # It seems that we are subjected to some dark edition magic here
+        # that will make this sometimes return a CMEConfigCache instance
+        return config._create_config_cache()
 
     def __init__(self, site_id: str = "unit") -> None:
         super().__init__()
@@ -193,7 +194,7 @@ class Scenario:
         if self._autochecks_mocker.raw_autochecks:
             monkeypatch.setattr(
                 self.config_cache,
-                "_autochecks_manager",
+                "autochecks_manager",
                 self._autochecks_mocker,
                 raising=False,
             )
@@ -206,9 +207,7 @@ class CEEScenario(Scenario):
 
     @staticmethod
     def _get_config_cache() -> config.CEEConfigCache:
-        cc = config.reset_config_cache()
-        assert isinstance(cc, config.CEEConfigCache)
-        return cc
+        return config.CEEConfigCache()
 
     def apply(self, monkeypatch: MonkeyPatch) -> config.CEEConfigCache:
         cc = super().apply(monkeypatch)

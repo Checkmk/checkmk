@@ -338,8 +338,8 @@ just to signal that real build script was not called -->
             <Component Id="cmp3823AD91DED5D234942D302869EA2459" Guid="{9DB98C17-62EA-4F57-91E6-137BDC88F02D}">
                 <File Id="fil53CEAB102B917C0FF7143AA4E2BB5DB6" KeyPath="yes" Source="..\..\windows\plugins\netstat_an.bat" DiskId="1"  />
             </Component>
-            <Component Id="cmpF776CAE45639A529E8686CEDEF56DAA4" Guid="{3580B9B5-81D4-4C65-A8D3-F31EBB9B8DB0}">
-                <File Id="fil4552A185F3A06FE0B3543EA0C43708B9" KeyPath="yes" Source="..\..\windows\plugins\rds_licenses.vbs" DiskId="1"  />
+            <Component Id="cmpB18CE5A6AC9A49BB9022E4BE3321C54B" Guid="{C5EB0C29-A3DB-46B9-8C36-2399178A6C6F}">
+                <File Id="fil0071C3D02B87474E923658217B2F323B" KeyPath="yes" Source="..\..\windows\plugins\rds_licenses.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmpC5A956A870678ABFCA74D5813DD79858" Guid="{536A7F3B-ED66-412B-8688-E27521D31207}">
                 <File Id="fil939214DE697F4A3FEF7A1E5E8138BD31" KeyPath="yes" Source="..\..\windows\plugins\rstcli.bat" DiskId="1"  />
@@ -374,8 +374,8 @@ just to signal that real build script was not called -->
             <Component Id="cmp57F6981D839AA296FACB18CA0B80F385" Guid="{4E4D51FC-3829-4CE5-B26F-022DA372B3B0}">
                 <File Id="fil3C227A99C2CDD7FA84B1310AD2C5A01A" KeyPath="yes" Source="..\..\windows\plugins\windows_tasks.ps1" DiskId="1"  />
             </Component>
-            <Component Id="cmp61E0F87AE1301C873DCBE5B46E029A77" Guid="{A7BA9FFC-958B-45FF-A530-A6E3C9A5EBA3}">
-                <File Id="fil15C29091CE6AA9903FDCAF7095E86B15" KeyPath="yes" Source="..\..\windows\plugins\windows_updates.vbs" DiskId="1"  />
+            <Component Id="cmp23E4BF6C7C534A32BFE976FEA694B14F" Guid="{B79990AF-326A-4186-B942-F20F87331BDE}">
+                <File Id="fil2D476020F3EF4F4FA8E2AD8BCEBE0B3A" KeyPath="yes" Source="..\..\windows\plugins\windows_updates.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmp1C47F228C3994B4CAEF42FB94962ABD2" Guid="{B89DC847-FC4B-4868-A5D6-8F1B915D20CC}">
                 <File Id="fil22DEF483A73CED9FD288835C50E1B29E" KeyPath="yes" Source="..\..\windows\plugins\win_dhcp_pools.bat" DiskId="1"  />
@@ -425,7 +425,7 @@ just to signal that real build script was not called -->
             <ComponentRef Id="cmp2CF5BD4FBED2352573D1A8CEC68D99A8" />
             <ComponentRef Id="cmp44A5CA3D1E13BADB6759D3A42DE39C1E" />
             <ComponentRef Id="cmp3823AD91DED5D234942D302869EA2459" />
-            <ComponentRef Id="cmpF776CAE45639A529E8686CEDEF56DAA4" />
+            <ComponentRef Id="cmpB18CE5A6AC9A49BB9022E4BE3321C54B" />
             <ComponentRef Id="cmpC5A956A870678ABFCA74D5813DD79858" />
             <ComponentRef Id="cmpC7E325AEAF544AE491303C332363D403" />
             <ComponentRef Id="cmp616C56CB91563F336410622442A506DD" />
@@ -437,7 +437,7 @@ just to signal that real build script was not called -->
             <ComponentRef Id="cmp58B593286B37436B9B814D441B0350EE" />
             <ComponentRef Id="cmp10FDAC6C36BC91AC9660DCD519E0EBD3" />
             <ComponentRef Id="cmp57F6981D839AA296FACB18CA0B80F385" />
-            <ComponentRef Id="cmp61E0F87AE1301C873DCBE5B46E029A77" />
+            <ComponentRef Id="cmp23E4BF6C7C534A32BFE976FEA694B14F" />
             <ComponentRef Id="cmp1C47F228C3994B4CAEF42FB94962ABD2" />
             <ComponentRef Id="cmp96008BD5424F4E9D0BF1111A1E4EA3C3" />
             <ComponentRef Id="cmp8B610C872802BC16FE56FCA23BF098AD" />

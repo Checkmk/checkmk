@@ -357,6 +357,30 @@ result_type_registry.register(AnalyseHostResult)
 
 
 @dataclass
+class AnalyzeHostRuleMatchesResult(ABCAutomationResult):
+    results: dict[str, list[object]]
+
+    @staticmethod
+    def automation_call() -> str:
+        return "analyze-host-rule-matches"
+
+
+result_type_registry.register(AnalyzeHostRuleMatchesResult)
+
+
+@dataclass
+class AnalyzeServiceRuleMatchesResult(ABCAutomationResult):
+    results: dict[str, list[object]]
+
+    @staticmethod
+    def automation_call() -> str:
+        return "analyze-service-rule-matches"
+
+
+result_type_registry.register(AnalyzeServiceRuleMatchesResult)
+
+
+@dataclass
 class DeleteHostsResult(ABCAutomationResult):
     @staticmethod
     def automation_call() -> str:

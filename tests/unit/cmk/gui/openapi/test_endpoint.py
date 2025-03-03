@@ -19,7 +19,7 @@ import pytest
 
 from tests.testlib.unit.rest_api_client import ClientRegistry, RestApiClient
 
-from tests.unit.cmk.gui.conftest import SetConfig, WebTestAppForCMK
+from tests.unit.cmk.web_test_app import SetConfig, WebTestAppForCMK
 
 from cmk.utils.local_secrets import SiteInternalSecret
 

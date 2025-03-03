@@ -1021,9 +1021,7 @@ def _get_vue_data() -> Notifications:
             else None
         ),
         notification_stats=NotificationStats(
-            num_sent_notifications=total_send_notifications[0][0]
-            if total_send_notifications
-            else 0,
+            num_sent_notifications=total_send_notifications,
             num_failed_notifications=get_failed_notification_count(),
             sent_notification_link=makeuri_contextless(
                 request,
@@ -1086,7 +1084,7 @@ def _get_vue_data() -> Notifications:
     )
 
 
-def _get_total_sent_notifications_last_seven_days() -> LivestatusResponse:
+def _get_total_sent_notifications_last_seven_days() -> int:
     current_time = datetime.now()
     seven_days_ago = current_time - timedelta(days=7)
     from_timestamp = int(seven_days_ago.timestamp())
@@ -1720,7 +1718,7 @@ class ModeTestNotifications(ModeNotifications):
             )
         html.br()
         html.br()
-        html.write_text_permissive("View the following tables for more details.")
+        html.write_text_permissive("See the following tables for more details.")
         html.close_div()
         html.close_div()
 
@@ -1829,7 +1827,7 @@ class ModeTestNotifications(ModeNotifications):
         )
         html.buttonlink(
             makeuri_contextless(request, [("mode", "test_notifications")], filename="wato.py"),
-            _("Cancel"),
+            _("Reset"),
         )
 
     def _test_notification_ongoing(self) -> bool:

@@ -18,8 +18,11 @@ import cmk.ccc.version as cmk_version
 from cmk.utils import paths
 from cmk.utils.sectionname import SectionName
 
-from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin, SNMPSectionPlugin
-from cmk.base.api.agent_based.register import AgentBasedPlugins
+from cmk.base.api.agent_based.plugin_classes import (
+    AgentBasedPlugins,
+    AgentSectionPlugin,
+    SNMPSectionPlugin,
+)
 
 CRE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/azure/resource_group",

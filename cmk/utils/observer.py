@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import logging
 import sys
 from collections.abc import Callable
+from logging import DEBUG, Logger
 from typing import Final
 
 import cmk.utils.misc
@@ -25,9 +25,9 @@ __all__ = [
 class ABCResourceObserver(abc.ABC):
     __slots__ = ["_logger", "_num_check_cycles", "_hint"]
 
-    def __init__(self) -> None:
+    def __init__(self, logger: Logger) -> None:
         super().__init__()
-        self._logger = logging.getLogger("cmk.base")
+        self._logger = logger
         self._num_check_cycles = 0
         self._hint = "<unknown>"
 
@@ -58,7 +58,7 @@ class ABCResourceObserver(abc.ABC):
         return self._logger.isEnabledFor(VERBOSE)
 
     def _verbose_output_enabled(self) -> bool:
-        return self._logger.isEnabledFor(logging.DEBUG)
+        return self._logger.isEnabledFor(DEBUG)
 
 
 def vm_size() -> int:
@@ -79,10 +79,12 @@ class AbstractMemoryObserver(ABCResourceObserver):
         "_get_vm_size",
     ]
 
-    def __init__(self, allowed_growth: int, get_vm_size: Callable[[], int] = vm_size) -> None:
+    def __init__(
+        self, logger: Logger, allowed_growth: int, get_vm_size: Callable[[], int] = vm_size
+    ) -> None:
         """allowed_growth is the permitted increase of the VM size measured in percents.
         get_vm_size is callback returning the RAM size used by the fetcher"""
-        super().__init__()
+        super().__init__(logger)
         self._hard_limit_percentage: Final = allowed_growth
         self._steady_cycle_num: Final = 5  # checked in test as a business rule
         self._get_vm_size: Final = get_vm_size

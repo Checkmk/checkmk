@@ -61,6 +61,24 @@ rsync \
 # Transform required packages to namespace package
 grep -rl 'check_mk.make: do-not-deploy' "${ROOT}/lib/python3/cmk" | xargs rm -f
 
+# cse stuff is only in cse (not sure if this suffices to fake a "real" cse).
+if [ "$CMK_EDITION" != "cse" ]; then
+    rm -rf "$(find "${OMD_ROOT}/lib/python3" -regex '.*/cse*')"
+fi
+
+# cre < cee < cce < cme
+if [ "$CMK_EDITION" != "cme" ]; then
+    rm -rf "$(find "${OMD_ROOT}/lib/python3" -regex '.*/cme*')"
+
+    if [ "$CMK_EDITION" != "cce" ]; then
+        rm -rf "$(find "${OMD_ROOT}/lib/python3" -regex '.*/cce*')"
+
+        if [ "$CMK_EDITION" != "cee" ]; then
+            rm -rf "$(find "${OMD_ROOT}/lib/python3" -regex '.*/cee*')"
+        fi
+    fi
+fi
+
 # Restore site version after .f12
 # sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" "$ROOT"/lib/python3/cmk/ccc/version.py
 

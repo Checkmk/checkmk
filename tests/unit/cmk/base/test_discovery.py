@@ -20,7 +20,6 @@ from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.rulesets import RuleSetName
-from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib import SNMPRawData
@@ -70,6 +69,7 @@ from cmk.checkengine.sectionparser import (
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.checkers import (
     CMKFetcher,
     CMKParser,
@@ -1127,7 +1127,7 @@ def test__check_host_labels_changed() -> None:
 
 def test__find_candidates(
     monkeypatch: MonkeyPatch,
-    agent_based_plugins: agent_based_register.AgentBasedPlugins,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     # plugins have been loaded by the fixture. Better: load the ones we need for this test
     config_cache = Scenario().apply(monkeypatch)
@@ -1281,13 +1281,17 @@ _expected_host_labels = [
 @pytest.mark.usefixtures("patch_omd_site")
 def test_commandline_discovery(
     monkeypatch: MonkeyPatch,
-    agent_based_plugins: agent_based_register.AgentBasedPlugins,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     testhost = HostName("test-host")
     ts = Scenario()
     ts.add_host(testhost, ipaddress=HostAddress("127.0.0.1"))
     ts.fake_standard_linux_agent_output(testhost)
     config_cache = ts.apply(monkeypatch)
+
+    # damn you logwatch!!
+    config._globally_cache_config_cache(config_cache)
+
     file_cache_options = FileCacheOptions()
     parser = CMKParser(
         config_cache.parser_factory(),
@@ -1297,7 +1301,7 @@ def test_commandline_discovery(
     )
     fetcher = CMKFetcher(
         config_cache,
-        config_cache.fetcher_factory(),
+        config_cache.fetcher_factory(config_cache.make_service_configurer({})),
         agent_based_plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -1366,23 +1370,6 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
     ts.add_host(hostname, ipaddress=HostAddress("127.0.0.1"))
     config_cache = ts.apply(monkeypatch)
 
-    agent_based_register.set_discovery_ruleset(
-        RuleSetName("inventory_df_rules"),
-        list[RuleSpec[dict[str, list[str]]]](
-            [
-                {
-                    "id": "nobody-cares-about-the-id-in-this-test",
-                    "value": {
-                        "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
-                        "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
-                    },
-                    "condition": {
-                        "host_label_groups": [("and", [("and", "cmk/check_mk_server:yes")])]
-                    },
-                }
-            ]
-        ),
-    )
     DiscoveredHostLabelsStore(hostname).save(
         [
             HostLabel("existing_label", "bar", SectionName("foo")),
@@ -1470,23 +1457,6 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
     )
     config_cache = ts.apply(monkeypatch)
 
-    agent_based_register.set_discovery_ruleset(
-        RuleSetName("inventory_df_rules"),
-        list[RuleSpec[dict[str, list[str]]]](
-            [
-                {
-                    "id": "nobody-cares-about-the-id-in-this-test",
-                    "value": {
-                        "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
-                        "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
-                    },
-                    "condition": {
-                        "host_label_groups": [("and", [("and", "cmk/check_mk_server:yes")])]
-                    },
-                }
-            ]
-        ),
-    )
     DiscoveredHostLabelsStore(node1_hostname).save(
         [HostLabel("node1_existing_label", "true", SectionName("node1_plugin"))]
     )
@@ -1624,7 +1594,7 @@ def test__discovery_considers_host_labels(
     host_labels: tuple[HostLabel],
     expected_services: set[ServiceID],
     realhost_scenario: RealHostScenario,
-    agent_based_plugins: agent_based_register.AgentBasedPlugins,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     # this takes the detour via ruleset matcher :-(
     DiscoveredHostLabelsStore(realhost_scenario.hostname).save(host_labels)
@@ -1800,7 +1770,7 @@ _discovery_test_cases = [
 def test__discover_host_labels_and_services_on_realhost(
     realhost_scenario: RealHostScenario,
     discovery_test_case: DiscoveryTestCase,
-    agent_based_plugins: agent_based_register.AgentBasedPlugins,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     if discovery_test_case.only_host_labels:
         # check for consistency of the test case
@@ -1844,7 +1814,7 @@ def test__discover_host_labels_and_services_on_realhost(
 def test__perform_host_label_discovery_on_realhost(
     realhost_scenario: RealHostScenario,
     discovery_test_case: DiscoveryTestCase,
-    agent_based_plugins: agent_based_register.AgentBasedPlugins,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     scenario = realhost_scenario
 
@@ -1880,7 +1850,7 @@ def test__perform_host_label_discovery_on_realhost(
 
 def test__discover_services_on_cluster(
     cluster_scenario: ClusterScenario,
-    agent_based_plugins: agent_based_register.AgentBasedPlugins,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     assert discovery_by_host(
         cluster_scenario.config_cache.nodes(cluster_scenario.parent),
@@ -1924,7 +1894,7 @@ def test__discover_services_on_cluster(
 def test__perform_host_label_discovery_on_cluster(
     cluster_scenario: ClusterScenario,
     discovery_test_case: DiscoveryTestCase,
-    agent_based_plugins: agent_based_register.AgentBasedPlugins,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     scenario = cluster_scenario
     nodes = scenario.config_cache.nodes(scenario.parent)

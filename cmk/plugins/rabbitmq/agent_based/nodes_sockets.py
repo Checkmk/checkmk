@@ -3,9 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from typing import Literal, TypedDict
 
-from cmk.agent_based.v2 import check_levels, CheckPlugin, CheckResult, Metric, render, Result
+from cmk.agent_based.v2 import (
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    render,
+    Result,
+    State,
+)
 from cmk.plugins.lib.rabbitmq import discover_key, Section
 
 # <<<rabbitmq_nodes>>>
@@ -33,6 +43,24 @@ class Params(TypedDict):
         | tuple[Literal["fd_perc"], tuple[float, float]]
         | None
     )
+
+
+RMQ_IO_METRICS_DROPPED_VERSION = "4.0.1"
+
+
+def discover_rabbitmq_nodes_sockets(
+    section_rabbitmq_nodes: Section | None, section_rabbitmq_cluster: Mapping[str, _ItemData] | None
+) -> DiscoveryResult:
+    if section_rabbitmq_nodes is None:
+        return
+
+    if (
+        section_rabbitmq_cluster is None
+        or (cluster_version := section_rabbitmq_cluster.get("info", {}).get("rabbitmq_version"))
+        is None
+        or int(cluster_version.split(".")[0]) < int(RMQ_IO_METRICS_DROPPED_VERSION.split(".")[0])
+    ):
+        yield from discover_key("sockets")(section_rabbitmq_nodes)
 
 
 def _apply_check_levels(
@@ -82,9 +110,16 @@ def _handle_output(
             raise NotImplementedError(other)
 
 
-def check_rabbitmq_nodes_sockets(item: str, params: Params, section: Section) -> CheckResult:
-    socket_data = section.get(item, {}).get("sockets")
-    if not socket_data:
+def check_rabbitmq_nodes_sockets(
+    item: str,
+    params: Params,
+    section_rabbitmq_nodes: Section | None,
+    section_rabbitmq_cluster: Mapping[str, _ItemData] | None,
+) -> CheckResult:
+    if (
+        section_rabbitmq_nodes is None
+        or (socket_data := section_rabbitmq_nodes.get(item, {}).get("sockets")) is None
+    ):
         return
 
     used = socket_data.get("sockets_used")
@@ -95,17 +130,18 @@ def check_rabbitmq_nodes_sockets(item: str, params: Params, section: Section) ->
     if total is None:
         return
 
-    summary_prefix = "Sockets used"
-    metric_name = "sockets"
+    if total == 0:
+        yield Result(state=State.CRIT, summary="No available sockets")
+        return
 
-    yield from _handle_output(used, total, params.get("levels"), metric_name, summary_prefix)
+    yield from _handle_output(used, total, params.get("levels"), "sockets", "Sockets used")
 
 
 check_plugin_rabbitmq_nodes_proc = CheckPlugin(
     name="rabbitmq_nodes_sockets",
     service_name="RabbitMQ Node %s Sockets",
-    sections=["rabbitmq_nodes"],
-    discovery_function=discover_key("sockets"),
+    sections=["rabbitmq_nodes", "rabbitmq_cluster"],
+    discovery_function=discover_rabbitmq_nodes_sockets,
     check_function=check_rabbitmq_nodes_sockets,
     check_ruleset_name="rabbitmq_nodes_sockets",
     check_default_parameters={},

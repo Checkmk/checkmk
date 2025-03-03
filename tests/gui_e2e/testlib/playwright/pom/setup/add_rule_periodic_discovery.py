@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import re
+from typing import override
 from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator
@@ -23,6 +24,7 @@ class AddRulePeriodicServiceDiscovery(CmkPage):
 
     rule_name = "Periodic service discovery"
 
+    @override
     def navigate(self) -> None:
         service_rules_page = Ruleset(self.page, self.rule_name)
         logger.info("Navigate to 'Add rule: %s' page", self.rule_name)
@@ -33,12 +35,14 @@ class AddRulePeriodicServiceDiscovery(CmkPage):
         )
         self._validate_page()
 
+    @override
     def _validate_page(self) -> None:
         logger.info("Validate that current page is 'Add rule: %s' page", self.rule_name)
         self.main_area.check_page_title(f"Add rule: {self.rule_name}")
         expect(self.description_text_field).to_be_visible()
         expect(self.hours_text_field).to_be_visible()
 
+    @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
 

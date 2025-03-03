@@ -5,7 +5,7 @@
 
 import logging
 import re
-from typing import NamedTuple
+from typing import NamedTuple, override
 from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
@@ -34,18 +34,21 @@ class EditRole(CmkPage):
         self.page_title = f"Edit role {role_name}"
         super().__init__(page, navigate_to_page)
 
+    @override
     def navigate(self) -> None:
         roles_and_permissions_page = RolesAndPermissions(self.page)
         roles_and_permissions_page.role_properties_button(self.role_name).click()
         self.page.wait_for_url(url=re.compile(quote_plus("mode=edit_role")), wait_until="load")
         self._validate_page()
 
+    @override
     def _validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(self.internal_id_text_field).to_be_visible()
         expect(self.alias_text_field).to_be_visible()
 
+    @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
 

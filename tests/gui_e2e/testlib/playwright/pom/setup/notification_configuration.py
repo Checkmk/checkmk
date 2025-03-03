@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import re
-from typing import overload
+from typing import overload, override
 from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator
@@ -23,6 +23,7 @@ class NotificationConfiguration(CmkPage):
 
     page_title = "Notifications"
 
+    @override
     def navigate(self) -> None:
         logger.info("Navigate to '%s' page", self.page_title)
         self.main_menu.setup_menu("Notifications", exact=True).click()
@@ -31,11 +32,13 @@ class NotificationConfiguration(CmkPage):
         )
         self._validate_page()
 
+    @override
     def _validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(self.add_notification_rule_button).to_be_visible()
 
+    @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
 

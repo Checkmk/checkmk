@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import re
+from typing import override
 
 from playwright.sync_api import expect, Locator
 
@@ -18,16 +19,19 @@ class CombinedGraphsServiceSearch(CmkPage):
 
     page_title = "Combined graphs \\(.*\\) - Service search"
 
+    @override
     def navigate(self) -> None:
         raise NotImplementedError(
             f"Navigate method for '{self.page_title}' is not implemented. The navigation to "
             "this page can vary based on the filters applied on the 'Service Search' page.",
         )
 
+    @override
     def _validate_page(self) -> None:
         logger.info("Validate that current page is 'Combined graphs - Service search' page")
         self.main_area.check_page_title(re.compile(self.page_title))
 
+    @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
 

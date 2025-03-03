@@ -6,7 +6,7 @@
 import logging
 import re
 from abc import abstractmethod
-from typing import NamedTuple
+from typing import NamedTuple, override
 from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
@@ -30,16 +30,19 @@ class BaseUserPage(CmkPage):
 
     page_title: str = ""
 
+    @override
     @abstractmethod
     def navigate(self) -> None:
         pass
 
+    @override
     def _validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(self.username_text_field).to_be_visible()
         expect(self.full_name_text_field).to_be_visible()
 
+    @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
 
@@ -87,12 +90,14 @@ class AddUser(BaseUserPage):
 
     page_title = "Add user"
 
+    @override
     def navigate(self) -> None:
         users_page = Users(self.page)
         users_page.add_user_button.click()
         self.page.wait_for_url(url=re.compile(quote_plus("mode=edit_user")), wait_until="load")
         self._validate_page()
 
+    @override
     def _validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
@@ -130,12 +135,14 @@ class EditUser(BaseUserPage):
         self.page_title = f"Edit user {username}"
         super().__init__(page, navigate_to_page)
 
+    @override
     def navigate(self) -> None:
         users_page = Users(self.page)
         users_page.user_properties_button(self.username).click()
         self.page.wait_for_url(url=re.compile(quote_plus("mode=edit_user")), wait_until="load")
         self._validate_page()
 
+    @override
     def _validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)

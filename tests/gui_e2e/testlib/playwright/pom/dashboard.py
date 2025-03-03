@@ -40,18 +40,21 @@ class Dashboard(CmkPage):
 
     dropdown_buttons: list[str] = ["Dashboard", "Add", "Dashboards", "Display", "Help"]
 
+    @override
     def navigate(self) -> None:
         logger.info("Navigate to 'Main dashboard' page")
         self.main_menu.main_page.click()
         self.page.wait_for_url(url=re.compile("dashboard.py$"), wait_until="load")
         self._validate_page()
 
+    @override
     def _validate_page(self) -> None:
         logger.info("Validate that current page is 'Main dashboard' page")
         self.main_area.check_page_title(self.page_title)
         expect(self.dashlet("Host statistics")).to_be_visible()
         expect(self.menu_icon("Filter")).to_be_visible()
 
+    @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
 
@@ -84,14 +87,17 @@ class DashboardMobile(CmkPage):
         "Logout",
     ]
 
+    @override
     def navigate(self) -> None:
         """TODO: add navigation"""
 
+    @override
     def _validate_page(self) -> None:
         expect(self.page.get_by_role(role="heading", name=self.page_title)).to_have_count(1)
         expect(self.classical_web_gui).to_be_visible()
         expect(self.logout).to_be_visible()
 
+    @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
 
@@ -117,18 +123,21 @@ class ProblemDashboard(CmkPage):
 
     page_title: str = "Problem dashboard"
 
+    @override
     def navigate(self) -> None:
         logger.info("Navigate to '%s' page", self.page_title)
         self.main_menu.main_page.click()
         self.page.wait_for_url(url=re.compile("dashboard.py$"), wait_until="load")
         self._validate_page()
 
+    @override
     def _validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(self.dashlet("Host statistics")).to_be_visible()
         expect(self.dashlet("Events of recent 4 hours")).to_be_visible()
 
+    @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
 

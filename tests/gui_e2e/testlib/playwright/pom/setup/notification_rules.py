@@ -5,6 +5,7 @@
 import logging
 import re
 from abc import abstractmethod
+from typing import override
 from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
@@ -33,15 +34,18 @@ class BaseNotificationPage(QuickSetupPage):
 
     page_title = ""
 
+    @override
     @abstractmethod
     def navigate(self) -> None:
         pass
 
+    @override
     def _validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(self.overview_mode_button).to_be_visible()
 
+    @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
 
@@ -274,6 +278,7 @@ class EditNotificationRule(BaseNotificationPage):
         self.page_title = f"Edit notification rule {rule_position}"
         super().__init__(page, navigate_to_page)
 
+    @override
     def navigate(self) -> None:
         notification_configuration_page = NotificationConfiguration(self.page)
         # The scrollbar interrupts the interaction with rule edit button -> -> collapse overview
@@ -293,6 +298,7 @@ class AddNotificationRule(BaseNotificationPage):
 
     page_title = "Add notification rule"
 
+    @override
     def navigate(self) -> None:
         notification_configuration_page = NotificationConfiguration(self.page)
         notification_configuration_page.add_notification_rule_button.click()

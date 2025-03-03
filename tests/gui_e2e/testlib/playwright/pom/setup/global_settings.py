@@ -5,6 +5,7 @@
 
 import logging
 import re
+from typing import override
 from urllib.parse import quote_plus
 
 from playwright.sync_api import Locator
@@ -19,16 +20,19 @@ class GlobalSettings(CmkPage):
     page_title: str = "Global settings"
     dropdown_buttons: list[str] = ["Related", "Display", "Help"]
 
+    @override
     def navigate(self) -> None:
         logger.info("Navigate to 'Global settings' page")
         _url_pattern = quote_plus("wato.py?mode=globalvars")
         self.main_menu.setup_menu(self.page_title).click()
         self.page.wait_for_url(re.compile(f"{_url_pattern}$"), wait_until="load")
 
+    @override
     def _validate_page(self) -> None:
         logger.info("Validate that current page is 'Global settings' page")
         self.main_area.check_page_title(self.page_title)
 
+    @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
 

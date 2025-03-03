@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import re
+from typing import override
 from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator
@@ -25,6 +26,7 @@ class HostsDashboard(CmkPage):
 
     dashlets_list: list[str] = []
 
+    @override
     def navigate(self) -> None:
         logger.info("Navigate to '%s' page", self.page_title)
         self.main_menu.monitor_menu(self.page_title).click()
@@ -34,12 +36,14 @@ class HostsDashboard(CmkPage):
         self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
         self._validate_page()
 
+    @override
     def _validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(self.dashlet(self.chart_dashlets[0])).to_be_visible()
         expect(self.dashlet(self.table_dashlets[0])).to_be_visible()
 
+    @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         mapping = DropdownListNameToID()
         setattr(mapping, "Dashboard", "menu_dashboard")

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import re
+from typing import override
 
 from playwright.sync_api import Locator
 
@@ -17,16 +18,19 @@ class Werks(CmkPage):
     page_title: str = "Change log (Werks)"
     dropdown_buttons: list[str] = ["Werks", "Display", "Help"]
 
+    @override
     def navigate(self) -> None:
         logger.info("Navigate to 'Werks' page")
         self.main_menu.help_werks.click()
         self.page.wait_for_url(url=re.compile("change_log.py$"), wait_until="load")
         self._validate_page()
 
+    @override
     def _validate_page(self) -> None:
         logger.info("Validate that current page is 'Werks' page")
         self.main_area.check_page_title(self.page_title)
 
+    @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
 

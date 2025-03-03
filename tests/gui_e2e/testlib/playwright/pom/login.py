@@ -36,6 +36,7 @@ class LoginPage(CmkPage):
             timeout_navigation=timeout_navigation,
         )
 
+    @override
     def navigate(self) -> None:
         """Navigate to login page, like a Checkmk GUI user.
 
@@ -51,6 +52,7 @@ class LoginPage(CmkPage):
         else:
             raise ValueError("No site URL provided to navigate to login page.")
 
+    @override
     def _validate_page(self) -> None:
         """Check if the current page is the login page."""
         logger.info("Validate that current page is login page")
@@ -60,6 +62,7 @@ class LoginPage(CmkPage):
         expect(self.password_input).to_be_visible()
         expect(self.password_input).to_be_empty()
 
+    @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
 

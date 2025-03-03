@@ -6,7 +6,7 @@ import logging
 import re
 from abc import abstractmethod
 from re import Pattern
-from typing import Literal, overload
+from typing import Literal, overload, override
 from urllib.parse import urljoin
 
 from playwright.sync_api import expect, FrameLocator, Locator, Page, Response
@@ -67,6 +67,7 @@ class CmkPage(LocatorHelper):
         Using `menu ID` ensures that an instruction is executed from the desired `dropdown list`.
         """
 
+    @override
     def locator(self, selector: str = "xpath=.") -> Locator:
         return self.page.locator(selector)
 
@@ -153,6 +154,7 @@ class MainMenu(LocatorHelper):
     @overload
     def locator(self, selector: str) -> Locator: ...
 
+    @override
     def locator(self, selector: str | None = None) -> Locator:
         _loc = self.page.locator("#check_mk_navigation")
         if selector:
@@ -349,6 +351,7 @@ class MainArea(LocatorHelper):
     @overload
     def locator(self, selector: str) -> Locator: ...
 
+    @override
     def locator(self, selector: str | None = None) -> Locator | FrameLocator:
         _loc = self.page.frame_locator("iframe[name='main']")
         if selector is None:
@@ -400,6 +403,7 @@ class MainArea(LocatorHelper):
 class Sidebar(LocatorHelper):
     """functionality to find items from the sidebar"""
 
+    @override
     def locator(self, selector: str = "xpath=.") -> Locator:
         return self.page.locator("#check_mk_sidebar").locator(selector)
 
@@ -413,6 +417,7 @@ class FilterSidebar(LocatorHelper):
     @overload
     def locator(self, selector: str) -> Locator: ...
 
+    @override
     def locator(self, selector: str | None = None) -> Locator:
         _loc = self.page.frame_locator("iframe[name='main']").locator("div#popup_filters")
         if selector:

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
+from typing import override
 
 from playwright.sync_api import expect, Locator
 
@@ -17,18 +18,21 @@ class ElementTopList(CmkPage):
 
     page_title = ""
 
+    @override
     def navigate(self) -> None:
         raise NotImplementedError(
             f"Navigate method for '{self.page_title}' is not implemented. The navigation to "
             "this page can vary based on the dashboard and the specific element to be edited. ",
         )
 
+    @override
     def _validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(self._section("Context / Search Filters")).to_be_visible()
         expect(self._section("Properties")).to_be_visible()
 
+    @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
 

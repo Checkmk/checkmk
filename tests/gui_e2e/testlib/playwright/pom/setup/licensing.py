@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import re
+from typing import override
 from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Page
@@ -28,6 +29,7 @@ class Licensing(CmkPage):
         self.page_title = "Licensing"
         super().__init__(page, navigate_to_page)
 
+    @override
     def navigate(self) -> None:
         """Instructions to navigate to `setup -> Hosts` page.
 
@@ -39,10 +41,12 @@ class Licensing(CmkPage):
         self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
         self._validate_page()
 
+    @override
     def _validate_page(self) -> None:
         logger.info("Validate that current page is 'Licensing' page")
         expect(self.get_link("License usage")).to_be_visible()
 
+    @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
 

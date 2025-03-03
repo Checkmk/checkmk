@@ -324,9 +324,9 @@ class ChangesAPI(BaseAPI):
                     start_result = self.activate(sites, force_foreign_changes)
                 except NoActiveChanges:
                     return False
-
-                activation_id = start_result.activation_id
-                raise Redirect(start_result.redirect_url)
+                else:
+                    activation_id = start_result.activation_id
+                    raise Redirect(start_result.redirect_url)
         finally:
             if activation_id:
                 activation_status = self.get_activation_status(activation_id)

@@ -316,6 +316,7 @@ def test_diagnostics_element_filesize_content(tmp_path: PurePath) -> None:
 
     size_of = {}
     group_of = {}
+    last_row = {}
     with open(filepath, newline="") as csvfile:
         csvreader = csv.DictReader(csvfile, delimiter=";", quotechar="'")
         for row in csvreader:
@@ -562,9 +563,10 @@ def test_diagnostics_element_checkmk_overview_error(
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
 
+    inventory_dir = Path(cmk.utils.paths.inventory_output_dir)
+
     if host_tree:
         # Fake HW/SW Inventory tree
-        inventory_dir = Path(cmk.utils.paths.inventory_output_dir)
         inventory_dir.mkdir(parents=True, exist_ok=True)
         with inventory_dir.joinpath("checkmk-server-name").open("w") as f:
             f.write(repr(host_tree))
@@ -631,9 +633,10 @@ def test_diagnostics_element_checkmk_overview_content(
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
 
+    inventory_dir = Path(cmk.utils.paths.inventory_output_dir)
+
     if host_tree:
         # Fake HW/SW Inventory tree
-        inventory_dir = Path(cmk.utils.paths.inventory_output_dir)
         inventory_dir.mkdir(parents=True, exist_ok=True)
         with inventory_dir.joinpath("checkmk-server-name").open("w") as f:
             f.write(repr(host_tree))

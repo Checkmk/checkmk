@@ -139,7 +139,7 @@ def get_host_names(
     else:
         agent_host_names = []
         snmp_host_names = []
-        if not (dump_dir is not None and dump_dir.exists()):
+        if not dump_dir.exists():
             # need to skip here to abort the collection and return RC=5: "no tests collected"
             pytest.skip(f'Folder "{dump_dir}" not found; exiting!', allow_module_level=True)
         for dump_file_name in [
@@ -241,7 +241,7 @@ def _verify_check_result(
     ) as json_file:
         json.dump(canon_data, json_file, indent=4, sort_keys=True)
 
-    if result_data is None or len(result_data) == 0:
+    if not result_data:
         logger.error("[%s] No data returned!", check_id)
         return False, ""
 

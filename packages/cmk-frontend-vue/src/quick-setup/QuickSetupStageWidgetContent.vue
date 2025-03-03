@@ -27,7 +27,10 @@ const updateData = (id: string, value: object) => {
     :errors="formSpecErrors || {}"
     @update="updateData"
   />
-  <BackgroundJobLogDisplay v-if="props.backgroundJobLog" :steps="backgroundJobLog!" />
+  <BackgroundJobLogDisplay
+    v-if="props.backgroundJobLog && props.backgroundJobLog.value.length > 0"
+    :steps="backgroundJobLog!"
+  />
 </template>
 
 <style scoped>

@@ -70,6 +70,46 @@ def _vs_item_appearance(title, help_txt):
     )
 
 
+def _vs_labels_conditions():
+    return ListOf(
+        title=_("Generate service labels for discovered matching interfaces"),
+        help=_("Generate service labels based on matching conditions. All matching entries will add to the list of service labels."),
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "conditions",
+                    Dictionary(
+                        title=_("Matching conditions"),
+                        elements=[
+                            (
+                                 "match_index",
+                                _vs_regex_matching("index"),
+                            ),
+                            (
+                                "match_alias",
+                                _vs_regex_matching("alias"),
+                            ),
+                            (
+                                "match_desc",
+                                _vs_regex_matching("description"),
+                            ),
+                        ],
+                    ),
+                ),
+                (
+                    "labels",
+                    Labels(
+                        world=Labels.World.CONFIG,
+                        label_source=Labels.Source.RULESET,
+                        title=_("Generate service labels"),
+                    ),
+                ),
+            ],
+        ),
+    )
+
+
+
 def _vs_single_discovery():
     return CascadingDropdown(
         title=_("Configure discovery of single interfaces"),
@@ -114,6 +154,10 @@ def _vs_single_discovery():
                                 title=_("Generate service labels for discovered interfaces"),
                             ),
                         ),
+                        (
+                            "labels_conditions",
+                            _vs_labels_conditions(),
+                        )
                     ],
                     optional_keys=["labels"],
                 ),

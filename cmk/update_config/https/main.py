@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import sys
 
 from cmk.update_config.https.arguments import (
     Activate,
@@ -12,28 +13,24 @@ from cmk.update_config.https.arguments import (
     Migrate,
     parse_arguments,
 )
-from cmk.update_config.https.commands import (
-    activate_main,
-    deactivate_main,
-    delete_main,
-    finalize_main,
-    migrate_main,
-)
 
 
 def main() -> None:
     args = parse_arguments()
+    sys.stdout.write("Importing...\n")
+    from cmk.update_config.https import commands
+
     match args:
         case Migrate(write=write):
-            migrate_main(args, args, write)
+            commands.migrate_main(args, args, write)
         case Activate():
-            activate_main(args)
+            commands.activate_main(args)
         case Deactivate():
-            deactivate_main(args)
+            commands.deactivate_main(args)
         case Delete():
-            delete_main(args)
+            commands.delete_main(args)
         case Finalize():
-            finalize_main(args)
+            commands.finalize_main(args)
 
 
 if __name__ == "__main__":

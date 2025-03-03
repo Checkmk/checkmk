@@ -75,6 +75,7 @@ def migrate_main(search: SearchArgs, config: Config, write: bool) -> None:
         ruleset_v2 = all_rulesets.get("active_checks:httpv2")
         _new_migrated_rules(search, config, ruleset_v1, ruleset_v2)
         if write:
+            sys.stdout.write("Saving rulesets...\n")
             all_rulesets.save()
 
 
@@ -106,6 +107,7 @@ def finalize_main(search: SearchArgs) -> None:
                 ruleset_v2.edit_rule(rule_v2, new_rule_v2)
                 if rule_v1 is not None:
                     ruleset_v1.delete_rule(rule_v1)
+        sys.stdout.write("Saving rulesets...\n")
         all_rulesets.save()
 
 
@@ -116,6 +118,7 @@ def delete_main(search: SearchArgs) -> None:
             if _migrated_from(rule_v2) is not None:
                 sys.stdout.write(f"Deleting rule: {folder}, {rule_index}\n")
                 ruleset_v2.delete_rule(rule_v2)
+        sys.stdout.write("Saving rulesets...\n")
         all_rulesets.save()
 
 
@@ -128,6 +131,7 @@ def activate_main(search: SearchArgs) -> None:
                 new_rule_v2 = rule_v2.clone(preserve_id=True)
                 new_rule_v2.rule_options = dataclasses.replace(rule_v2.rule_options, disabled=False)
                 ruleset_v2.edit_rule(rule_v2, new_rule_v2)
+        sys.stdout.write("Saving rulesets...\n")
         all_rulesets.save()
 
 
@@ -140,4 +144,5 @@ def deactivate_main(search: SearchArgs) -> None:
                 new_rule_v2 = rule_v2.clone(preserve_id=True)
                 new_rule_v2.rule_options = dataclasses.replace(rule_v2.rule_options, disabled=True)
                 ruleset_v2.edit_rule(rule_v2, new_rule_v2)
+        sys.stdout.write("Saving rulesets...\n")
         all_rulesets.save()

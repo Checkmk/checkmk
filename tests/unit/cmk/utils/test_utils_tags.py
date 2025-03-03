@@ -160,7 +160,7 @@ def test_tag_groups_by_topic(test_cfg: TagConfig) -> None:
     assert sorted(actual_groups.keys()) == sorted(expected_groups.keys())
 
     for topic, tag_group_ids in expected_groups.items():
-        tg_ids = [tg.id for tg in actual_groups[topic] if tg.id is not None]
+        tg_ids = [tg.id for tg in actual_groups[topic]]
         assert sorted(tg_ids) == sorted(tag_group_ids)
 
 

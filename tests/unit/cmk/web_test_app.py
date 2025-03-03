@@ -198,7 +198,7 @@ class WebTestAppForCMK(FlaskClient):
         authtype: str
         creds: str
 
-        if isinstance(value, tuple) and len(value) == 2:
+        if len(value) == 2:
             authtype, creds = value
             if authtype == "Basic" and creds and isinstance(creds, tuple):
                 creds = ":".join(list(creds))

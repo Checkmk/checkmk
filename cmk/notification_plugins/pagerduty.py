@@ -27,6 +27,7 @@ def pagerduty_event_type(event: str) -> str:
         "RECOVERY": "resolve",
         "FLAPPINGSTART": "trigger",
         "FLAPPINGSTOP": "resolve",
+        "FLAPPINGDISABLED": "resolve",
     }[event]
 
 

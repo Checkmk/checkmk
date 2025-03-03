@@ -35,7 +35,7 @@ from cmk.checkengine.submitters import (
 )
 from cmk.checkengine.summarize import SummaryConfig
 
-from cmk.base.api.agent_based.register._config import AgentBasedPlugins
+from cmk.base.api.agent_based.register import AgentBasedPlugins
 from cmk.base.checkers import (
     CMKParser,
     CMKSummarizer,

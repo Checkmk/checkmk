@@ -293,8 +293,8 @@ just to signal that real build script was not called -->
             <Component Id="cmp61BBFBF9B8A5AB1F142A3B2EF7ACA7FF" Guid="{B212E12B-A293-47C3-9960-E1CD3CD1F3D6}">
                 <File Id="fil91D110DCF5FAEC3700A334A3D96D9774" KeyPath="yes" Source="..\..\windows\plugins\citrix_farm.ps1" DiskId="1" />
             </Component>
-            <Component Id="cmp010EC0D0C899D89CC77140C6643B04AC" Guid="{73CFBEA4-30B4-4211-9B77-6B1D6CA5263E}">
-                <File Id="fil133D59036043DA9F7A06816349E9C910" KeyPath="yes" Source="..\..\windows\plugins\citrix_licenses.vbs" DiskId="1"  />
+            <Component Id="cmp2DF2BCC24714445B8B3083E2D1DF9CC9" Guid="{B0EDC6E3-D8F0-4C3B-BF9E-E0E536B890DC}">
+                <File Id="filD3405C32F50F40E88CE956124F10B103" KeyPath="yes" Source="..\..\windows\plugins\citrix_licenses.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmpABBC9DF796FC09C181EC9B2D01A62525" Guid="{24BE0241-312F-45D9-B547-9C536CD69C12}">
                 <File Id="fil68F9AD67E8F26BC4712A85950742D48F" KeyPath="yes" Source="..\..\windows\plugins\citrix_xenapp.ps1" DiskId="1"  />
@@ -410,7 +410,7 @@ just to signal that real build script was not called -->
             <ComponentRef Id="cmp14A70A7296CB588F156BBC06BA51D2E3" />
             <ComponentRef Id="cmpBFADA0486A248D40B4365D85892EA124" />
             <ComponentRef Id="cmp61BBFBF9B8A5AB1F142A3B2EF7ACA7FF" />
-            <ComponentRef Id="cmp010EC0D0C899D89CC77140C6643B04AC" />
+            <ComponentRef Id="cmp2DF2BCC24714445B8B3083E2D1DF9CC9" />
             <ComponentRef Id="cmpABBC9DF796FC09C181EC9B2D01A62525" />
             <ComponentRef Id="cmp832B7FCA61C9CFF8F1CA5C6FA13B5454" />
             <ComponentRef Id="cmpE9245496997CBB452C7AB2DD036AA4DD" />

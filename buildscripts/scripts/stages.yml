@@ -235,8 +235,8 @@ STAGES:
       COMMAND: "make test-unit"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No Python files changed"
-        # TODO: Fix parsing of result files
-        # RESULT_CHECK_TYPE: "JUNIT"
+      # TODO: Fix parsing of result files
+      # RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/test-unit.txt"
 
     - NAME: "Python License Headers Test"

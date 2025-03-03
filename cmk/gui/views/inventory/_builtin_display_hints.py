@@ -395,6 +395,9 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
                 "firmware",
                 "type",
                 "location",
+                "ha_status",
+                "software_version",
+                "license_key_list",
             ],
             "view": "invmodule",
         },
@@ -409,6 +412,9 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".hardware.components.modules:*.firmware": {"title": _l("Firmware")},
         ".hardware.components.modules:*.type": {"title": _l("Type")},
         ".hardware.components.modules:*.location": {"title": _l("Location")},
+        ".hardware.components.modules:*.ha_status": {"title": _l("HA status")},
+        ".hardware.components.modules:*.software_version": {"title": _l("Software version")},
+        ".hardware.components.modules:*.license_key_list": {"title": _l("License key list")},
         ".hardware.components.stacks:": {
             "title": _l("Stacks"),
             "keyorder": [

@@ -15,7 +15,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-from .lib import DETECT_AUDIOCODES
+from .lib import DETECT_AUDIOCODES, parse_license_key_list
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -39,16 +39,9 @@ def parse_audiocodes_system_information(string_table: Sequence[StringTable]) -> 
         serial_number=string_table[1][0][1],
         type=string_table[1][0][2],
         software_version=string_table[1][0][3],
-        license_key_list=_parse_license_key_list(string_table[1][0][4]),
+        license_key_list=parse_license_key_list(string_table[1][0][4]),
         call_progress_tones=string_table[1][0][5],
     )
-
-
-def _parse_license_key_list(license_key_list: str) -> str:
-    try:
-        return bytes.fromhex(license_key_list.replace(" ", "")).decode("utf-8")
-    except ValueError:
-        return license_key_list
 
 
 snmp_section_audiocodes_system_information = SNMPSection(

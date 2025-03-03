@@ -62,6 +62,7 @@ def fixture_allrulesets_with_rules_in_multiple_files() -> AllRulesets:
             item_help=None,
             is_optional=False,
             is_deprecated=False,
+            deprecation_planned=False,
             is_cloud_and_managed_edition_only=False,
             is_for_services=False,
             is_binary_ruleset=False,

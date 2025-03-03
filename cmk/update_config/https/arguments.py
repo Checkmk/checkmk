@@ -10,7 +10,19 @@ from typing import Annotated, Literal
 import pydantic
 
 from cmk.update_config.https.conflict_options import add_migrate_parsing, Config
-from cmk.update_config.https.search import SearchArgs
+
+
+class SearchArgs(pydantic.BaseModel):
+    host: str | None
+    folder: str | None
+    folder_recursive: str | None
+
+    def rule_folder(self) -> tuple[str, bool] | None:
+        if self.folder is not None:
+            return self.folder, False
+        if self.folder_recursive is not None:
+            return self.folder_recursive, True
+        return None
 
 
 class Migrate(Config, SearchArgs):

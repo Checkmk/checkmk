@@ -9,8 +9,6 @@ from collections.abc import Sequence
 from contextlib import contextmanager
 from typing import Iterator, NamedTuple
 
-import pydantic
-
 from cmk.utils.redis import disable_redis
 
 from cmk.gui.main_modules import load_plugins
@@ -20,35 +18,11 @@ from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, Ruleset
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 
+from cmk.update_config.https.arguments import SearchArgs
+
 
 class _Error(NamedTuple):
     messages: Sequence[str]
-
-
-class SearchArgs(pydantic.BaseModel):
-    host: str | None
-    folder: str | None
-    folder_recursive: str | None
-
-    def rule_folder(self) -> tuple[str, bool] | _Error | None:
-        if self.folder is not None:
-            if (err := _validate_folder(self.folder)) is not None:
-                return err
-            return (self.folder, False)
-        if self.folder_recursive is not None:
-            if (err := _validate_folder(self.folder_recursive)) is not None:
-                return err
-            return (self.folder_recursive, True)
-        return None
-
-    def rule_host_list(self) -> None | _Error | str:
-        if self.host is None:
-            return None
-        try:
-            re.search(self.host, "", re.I)
-        except re.error as e:
-            return _Error([f"Invalid host argument, couldn't '{self.host}' regex: {e}"])
-        return self.host
 
 
 def _validate_folder(folder: str) -> None | _Error:
@@ -63,24 +37,26 @@ def _validate_folder(folder: str) -> None | _Error:
     return None
 
 
+def _validate_host(host: str) -> None | _Error:
+    try:
+        re.search(host, "", re.I)
+    except re.error as e:
+        return _Error([f"Invalid host argument, couldn't '{host}' regex: {e}"])
+    return None
+
+
 def select(ruleset: Ruleset, search_args: SearchArgs) -> Iterator[tuple[Folder, int, Rule]]:
     search: dict[str, str | tuple[str, bool]] = {}
-    match search_args.rule_folder():
-        case None:
-            pass
-        case _Error(errs):
-            sys.stdout.write("\n".join(errs) + "\n")
+    if (rule_folder := search_args.rule_folder()) is not None:
+        if (err := _validate_folder(rule_folder[0])) is not None:
+            sys.stdout.write("\n".join(err.messages) + "\n")
             return
-        case tuple(rule_folder):
-            search["rule_folder"] = rule_folder
-    match search_args.rule_host_list():
-        case None:
-            pass
-        case _Error(errs):
-            sys.stdout.write("\n".join(errs) + "\n")
+        search["rule_folder"] = rule_folder
+    if (rule_host_list := search_args.host) is not None:
+        if (err := _validate_host(rule_host_list)) is not None:
+            sys.stdout.write("\n".join(err.messages) + "\n")
             return
-        case str(rule_host_list):
-            search["rule_host_list"] = rule_host_list
+        search["rule_host_list"] = rule_host_list
     if not search:
         yield from ruleset.get_rules()
         return

@@ -9,11 +9,12 @@ import sys
 from cmk.gui.utils import gen_id
 from cmk.gui.watolib.rulesets import Rule, Ruleset
 
+from cmk.update_config.https.arguments import SearchArgs
 from cmk.update_config.https.conflict_options import Config
 from cmk.update_config.https.conflicts import Conflict, detect_conflicts, ForMigration
 from cmk.update_config.https.migrate import migrate
 from cmk.update_config.https.render import MIGRATE_POSTFIX
-from cmk.update_config.https.search import SearchArgs, select, with_allrulesets
+from cmk.update_config.https.search import select, with_allrulesets
 
 
 def _new_migrated_rules(

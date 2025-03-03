@@ -63,6 +63,7 @@ def test_registered_automation_commands() -> None:
         "network-scan",
         "ping",
         "get-config-sync-state",
+        "get-remote-omd-status",
         "receive-config-sync",
         "service-discovery-job",
         "service-discovery-job-snapshot",

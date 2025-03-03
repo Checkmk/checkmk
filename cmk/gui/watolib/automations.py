@@ -83,6 +83,8 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 ENV_VARIABLE_FORCE_CLI_INTERFACE: Final[str] = "_CMK_AUTOMATIONS_FORCE_CLI_INTERFACE"
 
+OMDStatus = Mapping[str, int]
+
 
 class MKAutomationException(MKGeneralException):
     pass
@@ -919,3 +921,32 @@ class LastKnownCentralSiteVersionStore(store.PydanticStore):
 @functools.cache
 def _automation_helper_enabled_in_omd_config() -> bool:
     return get_omd_config(paths.omd_root)["CONFIG_AUTOMATION_HELPER"] == "on"
+
+
+class AutomationGetRemoteOMDStatus(AutomationCommand[None]):
+    """Called to get the status of OMD services on the remote site"""
+
+    def command_name(self) -> str:
+        return "get-remote-omd-status"
+
+    def get_request(self) -> None:
+        pass
+
+    def _parse_omd_status(self, raw_status: str) -> OMDStatus:
+        status = {key: int(val) for key, val in (el.split(" ") for el in raw_status.splitlines())}
+        auto_logger.debug("OMD remote status: %s", status)
+        return status
+
+    def _get_omd_status(self) -> OMDStatus:
+        result = subprocess.run(
+            ["omd", "-v", "status", "--bare"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        return self._parse_omd_status(result.stdout)
+
+    def execute(self, api_request: None) -> OMDStatus:
+        auto_logger.debug("Executing AutomationGetRemoteOMDStatus")
+        return self._get_omd_status()

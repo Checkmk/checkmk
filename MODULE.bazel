@@ -21,6 +21,14 @@ git_override(
 )
 
 bazel_dep(name = "rules_cc", version = "0.1.1")
+single_version_override(
+    module_name = "rules_cc",
+    patch_strip = 1,
+    patches = [
+        "//bazel/patches:rules_cc-add_static_link_cpp_runtimes.patch",
+    ],
+)
+
 bazel_dep(name = "rules_multitool", version = "0.4.0")
 bazel_dep(name = "rules_rust", version = "0.54.1")
 bazel_dep(name = "rules_python", version = "1.1.0")
@@ -129,12 +137,6 @@ bazel_dep(
     version = "0.3.7",
 )
 bazel_dep(name = "rules_proto_grpc", version = "5.0.1")
-
-fork_cc_toolchain_config = use_repo_rule("//bazel/toolchains/cc:fork_cc_toolchain_config.bzl", "fork_cc_toolchain_config")
-
-fork_cc_toolchain_config(
-    name = "forked_cc_toolchain_config",
-)
 
 register_toolchains("//bazel/toolchains/cc:linux_gcc13")
 

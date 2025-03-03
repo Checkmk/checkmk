@@ -1,6 +1,6 @@
 load(
-    "@forked_cc_toolchain_config//:unix_cc_toolchain_config.bzl",
-    unix_cc_toolchain_config = "cc_toolchain_config",
+    "@rules_cc//cc:cc_toolchain_config.bzl",
+    "unix_cc_toolchain_config",
 )
 load("@rules_cc//cc:defs.bzl", "cc_toolchain")
 

@@ -1199,7 +1199,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "rabbitmq_cluster.stats",
         "rabbitmq_nodes",
         "rabbitmq_nodes.filedesc",
-        "rabbitmq_nodes.sockets",
         "rabbitmq_nodes.mem",
         "rabbitmq_nodes.uptime",
         "rabbitmq_nodes.gc",

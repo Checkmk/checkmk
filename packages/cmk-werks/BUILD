@@ -17,6 +17,7 @@ py_library(
         "cmk/werks/cli.py",
         "cmk/werks/collect.py",
         "cmk/werks/config.py",
+        "cmk/werks/constants.py",
         "cmk/werks/convert.py",
         "cmk/werks/error.py",
         "cmk/werks/format.py",

@@ -74,11 +74,11 @@ from cmk.checkengine.submitters import ServiceState
 from cmk.checkengine.summarize import summarize, SummaryConfig
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.api.agent_based.register._config as _api
 from cmk.base.api.agent_based import cluster_mode, value_store
 from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin as AgentSectionPluginAPI
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin as CheckPluginAPI
+from cmk.base.api.agent_based.plugin_classes import InventoryPlugin as InventoryPluginAPI
 from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin as SNMPSectionPluginAPI
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.config import (
@@ -592,10 +592,10 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
         )
 
     def __iter__(self) -> Iterator[CheckPluginName]:
-        return iter(_api.registered_check_plugins)
+        return iter(self.check_plugins)
 
     def __len__(self) -> int:
-        return len(_api.registered_check_plugins)
+        return len(self.check_plugins)
 
 
 def _compute_final_check_parameters(
@@ -1084,10 +1084,10 @@ class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
         )
 
     def __iter__(self) -> Iterator[CheckPluginName]:
-        return iter(_api.registered_check_plugins)
+        return iter(self._check_plugins)
 
     def __len__(self) -> int:
-        return len(_api.registered_check_plugins)
+        return len(self._check_plugins)
 
 
 def _make_discovery_parameters_getter(
@@ -1131,9 +1131,11 @@ def _make_discovery_parameters_getter(
 
 
 class InventoryPluginMapper(Mapping[InventoryPluginName, InventoryPlugin]):
-    # See comment to SectionPluginMapper.
+    def __init__(self, plugins: Mapping[InventoryPluginName, InventoryPluginAPI]) -> None:
+        self._plugins = plugins
+
     def __getitem__(self, __key: InventoryPluginName) -> InventoryPlugin:
-        plugin = _api.registered_inventory_plugins[__key]
+        plugin = self._plugins[__key]
         return InventoryPlugin(
             sections=plugin.sections,
             function=plugin.inventory_function,
@@ -1142,7 +1144,7 @@ class InventoryPluginMapper(Mapping[InventoryPluginName, InventoryPlugin]):
         )
 
     def __iter__(self) -> Iterator[InventoryPluginName]:
-        return iter(_api.registered_inventory_plugins)
+        return iter(self._plugins)
 
     def __len__(self) -> int:
-        return len(_api.registered_inventory_plugins)
+        return len(self._plugins)

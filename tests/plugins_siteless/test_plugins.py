@@ -38,7 +38,6 @@ from cmk.base import config
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.checkers import (
     CheckPluginMapper,
-    InventoryPluginMapper,
     SectionPluginMapper,
 )
 
@@ -105,7 +104,7 @@ def test_checks_executor(
             ),
             section_error_handling=lambda *a: "",
             check_plugins=check_plugins,
-            inventory_plugins=InventoryPluginMapper(),
+            inventory_plugins={},
             inventory_parameters=lambda host, plugin: plugin.defaults,
             params=HWSWInventoryParameters.from_raw({}),
             services=discovered_services,

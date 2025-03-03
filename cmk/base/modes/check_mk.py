@@ -2438,7 +2438,7 @@ def run_checking(
                     rtc_package=None,
                 ),
                 check_plugins=check_plugins,
-                inventory_plugins=InventoryPluginMapper(),
+                inventory_plugins=InventoryPluginMapper(plugins.inventory_plugins),
                 inventory_parameters=config_cache.inventory_parameters,
                 params=config_cache.hwsw_inventory_parameters(hostname),
                 services=config_cache.configured_services(
@@ -2611,7 +2611,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     store.makedirs(cmk.utils.paths.inventory_archive_dir)
 
     section_plugins = SectionPluginMapper({**plugins.agent_sections, **plugins.snmp_sections})
-    inventory_plugins = InventoryPluginMapper()
+    inventory_plugins = InventoryPluginMapper(plugins.inventory_plugins)
 
     for hostname in hostnames:
 
@@ -2885,7 +2885,7 @@ def mode_inventory_as_check(options: Mapping[str, object], hostname: HostName) -
                 section_plugins=SectionPluginMapper(
                     {**plugins.agent_sections, **plugins.snmp_sections}
                 ),
-                inventory_plugins=InventoryPluginMapper(),
+                inventory_plugins=InventoryPluginMapper(plugins.inventory_plugins),
                 inventory_parameters=config_cache.inventory_parameters,
                 parameters=parameters,
                 raw_intervals_from_config=config_cache.inv_retention_intervals(hostname),
@@ -3044,7 +3044,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
         process_hosts = EVERYTHING
 
     section_plugins = SectionPluginMapper({**plugins.agent_sections, **plugins.snmp_sections})
-    inventory_plugins = InventoryPluginMapper()
+    inventory_plugins = InventoryPluginMapper(plugins.inventory_plugins)
 
     start = time.monotonic()
     limit = 120

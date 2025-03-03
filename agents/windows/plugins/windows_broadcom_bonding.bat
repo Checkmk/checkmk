@@ -1,5 +1,5 @@
 @echo off
-set CMK_VERSION="2.3.0p28"
+set CMK_VERSION="2.3.0p29"
 echo ^<^<^<windows_broadcom_bonding^>^>^>
 
 rem Tested with BroadCom BASP v1.6.3

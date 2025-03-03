@@ -4,7 +4,7 @@ FROM ${IMAGE_CMK_BASE}
 LABEL maintainer="feedback@checkmk.com"
 
 # Pure build time variable declarations (docker build --build-arg KEY=val)
-ARG CMK_VERSION="2.3.0p28"
+ARG CMK_VERSION="2.3.0p29"
 ARG CMK_EDITION
 
 # The following variables can be set during container init (docker run -e KEY=val)

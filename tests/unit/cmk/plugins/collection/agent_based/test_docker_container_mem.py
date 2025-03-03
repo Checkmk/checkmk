@@ -5,14 +5,8 @@
 
 import pytest
 
-from cmk.utils.sectionname import SectionName
-
-from cmk.checkengine.checking import CheckPluginName
-
-from cmk.base.api.agent_based.register import AgentBasedPlugins
-
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State, StringTable
-from cmk.plugins.collection.agent_based.docker_container_mem import parse_docker_container_mem
+from cmk.plugins.collection.agent_based import docker_container_mem, mem_used
 
 # docker stats: 1007MiB / 4.347GiB
 PLUGIN_OUTPUT_MEM_NO_LIMIT = [
@@ -78,7 +72,7 @@ def test_parse_container_mem_docker_plugin() -> None:
     see if the output returned from mk_docker.py on a host with cgroup v1 can
     be parsed corretly
     """
-    result = parse_docker_container_mem(PLUGIN_OUTPUT_MEM_NO_LIMIT)
+    result = docker_container_mem.parse_docker_container_mem(PLUGIN_OUTPUT_MEM_NO_LIMIT)
     assert result is not None
     assert result == {"MemFree": 3611148288, "MemTotal": 4667232256}
     # compare to output of docker stats:
@@ -90,7 +84,7 @@ def test_parse_container_mem_docker_plugin_with_limit() -> None:
     """
     same as above, but with a 500MiB memory limit set via `-m` on `docker run`
     """
-    result = parse_docker_container_mem(PLUGIN_OUTPUT_MEM_LIMIT)
+    result = docker_container_mem.parse_docker_container_mem(PLUGIN_OUTPUT_MEM_LIMIT)
     assert result is not None
     assert result == {"MemFree": 119451648, "MemTotal": 524288000}
     # compare to output of docker stats:
@@ -108,7 +102,7 @@ def test_parse_container_mem_docker_plugin_with_no_version_and_empty_data() -> N
         ["total_inactive_file"],
         ["MemTotal:", "65660592", "kB"],
     ]
-    result = parse_docker_container_mem(partial_empty_output)
+    result = docker_container_mem.parse_docker_container_mem(partial_empty_output)
     assert result is None
 
 
@@ -121,7 +115,7 @@ def test_parse_container_mem_docker_plugin_with_no_version_and_incomplete_data()
         ["limit_in_bytes", "9223372036854771712"],
         ["MemTotal:", "65660592", "kB"],
     ]
-    result = parse_docker_container_mem(incomplete_output)
+    result = docker_container_mem.parse_docker_container_mem(incomplete_output)
     assert result is None
 
 
@@ -195,19 +189,8 @@ MK_DOCKER_CONTAINER_MEM_CGROUPV2 = [
     ],
 )
 def test_docker_container_diskstat(
-    agent_based_plugins: AgentBasedPlugins,
     string_table: StringTable,
     expected_result: CheckResult,
 ) -> None:
-    agent_section = agent_based_plugins.agent_sections[SectionName("docker_container_mem")]
-    plugin = agent_based_plugins.check_plugins[CheckPluginName("mem_used")]
-    parsed = agent_section.parse_function(string_table)
-    assert (
-        list(
-            plugin.check_function(
-                params={"levels": (80, 90)},
-                section=parsed,
-            )
-        )
-        == expected_result
-    )
+    assert (section := docker_container_mem.parse_docker_container_mem(string_table)) is not None
+    assert list(mem_used.check_mem_used({"levels": (80, 90)}, section)) == expected_result

@@ -164,7 +164,7 @@ def _migrate_url_params(
         case None:
             max_age_new: Mapping[str, object] = {}
         case max_age:
-            max_age_new = {"max_age": max_age}
+            max_age_new = {"max_age": float(max_age)}
     return (
         {
             **method,  # TODO: Proxy sets this to CONNECT.

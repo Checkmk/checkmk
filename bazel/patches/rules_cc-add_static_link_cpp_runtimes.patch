@@ -16,10 +16,24 @@ index 0000000..ae2269b
 +
 +unix_cc_toolchain_config = _unix_cc_toolchain_config
 diff --git a/cc/private/toolchain/unix_cc_toolchain_config.bzl b/cc/private/toolchain/unix_cc_toolchain_config.bzl
-index ee26a55..b40c5c6 100644
+index ee26a55..d9f812a 100644
 --- a/cc/private/toolchain/unix_cc_toolchain_config.bzl
 +++ b/cc/private/toolchain/unix_cc_toolchain_config.bzl
-@@ -360,6 +360,17 @@ def _impl(ctx):
+@@ -36,6 +36,13 @@ def _target_os_version(ctx):
+     xcode_config = ctx.attr._xcode_config[apple_common.XcodeVersionConfig]
+     return xcode_config.minimum_os_for_platform_type(platform_type)
+ 
++def _dynamic_to_static_cpp_runtime_lib(lib):
++    if lib == "-lstdc++":
++        return "-l:libstdc++.a"
++    if lib == "-lc++":
++        return "-l:c++.a"
++    return lib
++
+ def layering_check_features(compiler, extra_flags_per_feature, is_macos):
+     if compiler != "clang":
+         return []
+@@ -360,6 +367,17 @@ def _impl(ctx):
      static_link_cpp_runtimes_feature = feature(
          name = "static_link_cpp_runtimes",
          enabled = False,
@@ -37,7 +51,7 @@ index ee26a55..b40c5c6 100644
      )
  
      default_compile_flags_feature = feature(
-@@ -1266,6 +1277,7 @@ def _impl(ctx):
+@@ -1266,6 +1284,7 @@ def _impl(ctx):
          ],
      )
  
@@ -45,7 +59,7 @@ index ee26a55..b40c5c6 100644
      default_link_libs_feature = feature(
          name = "default_link_libs",
          enabled = True,
-@@ -1273,6 +1285,22 @@ def _impl(ctx):
+@@ -1273,6 +1292,21 @@ def _impl(ctx):
              flag_set(
                  actions = all_link_actions + lto_index_actions,
                  flag_groups = [flag_group(flags = ctx.attr.link_libs)] if ctx.attr.link_libs else [],
@@ -57,9 +71,8 @@ index ee26a55..b40c5c6 100644
 +                actions = all_link_actions + lto_index_actions,
 +                flag_groups = [flag_group(
 +                    flags = [
-+                        link_lib
++                        _dynamic_to_static_cpp_runtime_lib(link_lib)
 +                        for link_lib in ctx.attr.link_libs
-+                        if link_lib not in cpp_runtimes
 +                    ],
 +                )] if ctx.attr.link_libs else [],
 +                with_features = [

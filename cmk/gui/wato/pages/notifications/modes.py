@@ -1827,7 +1827,7 @@ class ModeTestNotifications(ModeNotifications):
         )
         html.buttonlink(
             makeuri_contextless(request, [("mode", "test_notifications")], filename="wato.py"),
-            _("Cancel"),
+            _("Reset"),
         )
 
     def _test_notification_ongoing(self) -> bool:

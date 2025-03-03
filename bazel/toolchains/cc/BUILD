@@ -67,12 +67,10 @@ linux_clang19_tool_paths = {
     "ar": "/usr/bin/llvm-ar-19",
     "cpp": "/usr/bin/clang-cpp-19",
     "gcc": "/usr/bin/clang-19",
-    "gcov": "/bin/false",
     "ld": "/usr/bin/ld",
     "nm": "/usr/bin/llvm-nm-19",
     "objdump": "/usr/bin/llvm-objdump-19",
     "strip": "/usr/bin/llvm-strip-19",
-    "llvm-cov": "/usr/bin/llvm-cov-19",
     "objcopy": "/usr/bin/llvm-objcopy-19",
 }
 
@@ -90,12 +88,10 @@ linux_gcc13_tool_paths = {
     "ar": "/usr/bin/gcc-ar-13",
     "cpp": "/usr/bin/cpp-13",
     "gcc": "/usr/bin/gcc-13",
-    "gcov": "/usr/bin/gcov-13",
     "ld": "/usr/bin/ld",
     "nm": "/usr/bin/gcc-nm-13",
     "objdump": "/usr/bin/objdump",
     "strip": "/usr/bin/strip",
-    "llvm-cov": "/bin/false",  # Optional on master.
     "objcopy": "/usr/bin/objcopy",
 }
 
@@ -111,12 +107,10 @@ ci_tool_paths = {
     "ar": "/opt/gcc-13.2.0/bin/gcc-ar-13",
     "cpp": "/opt/gcc-13.2.0/bin/cpp-13",
     "gcc": "/opt/gcc-13.2.0/bin/gcc-13",
-    "gcov": "/opt/gcc-13.2.0/bin/gcov-13",
     "ld": "/opt/gcc-13.2.0/bin/ld",
     "nm": "/opt/gcc-13.2.0/bin/gcc-nm-13",
     "objdump": "/opt/gcc-13.2.0/bin/objdump",
     "strip": "/opt/gcc-13.2.0/bin/strip",
-    "llvm-cov": "/bin/false",  # Optional on master.
     "objcopy": "/opt/gcc-13.2.0/bin/objcopy",
 }
 

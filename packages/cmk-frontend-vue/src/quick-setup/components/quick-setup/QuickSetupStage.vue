@@ -46,7 +46,7 @@ const onClickGoTo = computed(() =>
         <QuickSetupStageContent
           :index="index"
           :number-of-stages="numberOfStages"
-          :loading="loading"
+          :loading="loading || isCompleted"
           :mode="mode"
           :errors="errors"
           :actions="actions"

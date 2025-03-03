@@ -108,12 +108,12 @@ const nextStage = async (actionId: string) => {
       userInput,
       handleBackgroundJobLogUpdate
     )
-    loading.value = false
 
     if (actionResponse instanceof QuickSetupStageActionValidationResponse) {
       handleValidationError(actionResponse, thisStageNumber)
       handleBackgroundJobError(actionResponse)
       backgroundJobLogHook.setActiveTasksToError()
+      loading.value = false
       return
     }
     backgroundJobLogHook.clear()
@@ -123,9 +123,8 @@ const nextStage = async (actionId: string) => {
     stages.value[thisStageNumber]!.recap = actionResponse.stage_recap
   } catch (err: unknown) {
     handleExceptionError(err)
-    return
-  } finally {
     loading.value = false
+    return
   }
 
   //If we have not finished the quick setup yet, but still on the, regular step
@@ -175,6 +174,7 @@ const nextStage = async (actionId: string) => {
   }
 
   quickSetupHook.next()
+  loading.value = false
 }
 
 const prevStage = () => {

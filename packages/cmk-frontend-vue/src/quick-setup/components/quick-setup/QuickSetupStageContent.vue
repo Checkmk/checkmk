@@ -81,8 +81,8 @@ const waitIconEnabled = computed(() => {
           />{{ action.label }}
         </CmkButton>
       </div>
-      <div v-else class="qs-stage-content__loading">
-        <CmkIcon v-if="waitIconEnabled" name="load-graph" variant="inline" size="xlarge" />
+      <div v-else-if="waitIconEnabled" class="qs-stage-content__loading">
+        <CmkIcon name="load-graph" variant="inline" size="xlarge" />
         <span>{{ loadWaitLabel }}</span>
       </div>
     </div>

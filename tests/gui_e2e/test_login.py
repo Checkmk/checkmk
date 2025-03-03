@@ -14,7 +14,6 @@ from playwright.sync_api import BrowserContext, expect, Page
 from tests.gui_e2e.testlib.open_ldap import Group, OpenLDAPManager, User
 from tests.gui_e2e.testlib.playwright.helpers import CmkCredentials
 from tests.gui_e2e.testlib.playwright.pom.login import LoginPage
-
 from tests.testlib.site import Site
 
 

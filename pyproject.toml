@@ -98,7 +98,7 @@ section-order = [
 [tool.ruff.lint.isort.sections]
 werks = ["werks"]
 cmc_proto = ["cmc_proto"]
-testlib = ["tests.testlib"]
+testlib = ["tests.testlib", "tests.gui_e2e.testlib"]
 integrationtests = ["tests.agent_plugin_integration", "tests.integration"]
 compositiontests = ["tests.composition"]
 unittests = ["tests.unit", "tests.plugins_integration", "tests.update"]

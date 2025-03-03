@@ -16,7 +16,6 @@ from tests.gui_e2e.testlib.playwright.pom.setup.edit_role import EditRole, RoleD
 from tests.gui_e2e.testlib.playwright.pom.setup.roles_and_permissions import RolesAndPermissions
 from tests.gui_e2e.testlib.playwright.pom.setup.user import AddUser, EditUser, UserData
 from tests.gui_e2e.testlib.playwright.pom.setup.users import Users
-
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)

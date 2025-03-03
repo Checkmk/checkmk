@@ -403,6 +403,9 @@ def test_python_files_are_precompiled_pycs(package_path: str, cmk_version: str) 
 
 def test_bom(package_path: str, cmk_version: str) -> None:
     """Check that there is a BOM and it contains dependencies from various eco-systems"""
+    if package_path.endswith(".tar.gz"):
+        pytest.skip("%s is a source package" % os.path.basename(package_path))
+
     bom = json.loads(
         _get_file_from_package(package_path, cmk_version, "share/doc/bill-of-materials.json")
     )
@@ -420,6 +423,9 @@ def test_bom_csv_synchronous(package_path: str, cmk_version: str) -> None:
     """test that the csv and bom contain the same versions
 
     let's just check for certifi and openssl since I know they are updated constantly"""
+
+    if package_path.endswith(".tar.gz"):
+        pytest.skip("%s is a source package" % os.path.basename(package_path))
 
     bom = json.loads(
         _get_file_from_package(package_path, cmk_version, "share/doc/bill-of-materials.json")

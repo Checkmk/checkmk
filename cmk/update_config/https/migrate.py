@@ -165,6 +165,7 @@ def _migrate_url_params(
             max_age_new: Mapping[str, object] = {}
         case max_age:
             max_age_new = {"max_age": float(max_age)}
+    content = {**content_header, **body}
     return (
         {
             **method,  # TODO: Proxy sets this to CONNECT.
@@ -179,10 +180,7 @@ def _migrate_url_params(
         {
             **server_response,
             **response_time,
-            "content": {
-                **content_header,
-                **body,
-            },
+            **({"content": content} if content else {}),
             "document": {
                 **document_body,
                 **page_size_new,

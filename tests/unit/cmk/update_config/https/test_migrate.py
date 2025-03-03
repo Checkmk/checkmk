@@ -1399,7 +1399,6 @@ def test_migrate_method(rule_value: Mapping[str, object], config: Config, expect
 @pytest.mark.parametrize(
     "rule_value, config, expected",
     [
-        (EXAMPLE_27, DEFAULT, None),
         (
             EXAMPLE_47,
             DEFAULT,
@@ -1439,6 +1438,35 @@ def test_migrate_expect_regex(
     # Assert
     assert ssc_value[0].settings.content is not None
     assert ssc_value[0].settings.content.body == expected
+
+
+@pytest.mark.parametrize(
+    "rule_value, config",
+    [
+        (
+            EXAMPLE_27,
+            DEFAULT,
+        ),
+        (
+            EXAMPLE_74,
+            Config(expect_response_header=ExpectResponseHeader.ignore),
+        ),
+        (
+            EXAMPLE_88,
+            Config(expect_response_header=ExpectResponseHeader.ignore),
+        ),
+    ],
+)
+def test_migrate_content_is_none(rule_value: Mapping[str, object], config: Config) -> None:
+    # Assemble
+    for_migration = detect_conflicts(config, rule_value)
+    assert not isinstance(for_migration, Conflict)
+    # Act
+    migrated = migrate(for_migration)
+    # Assemble
+    ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
+    # Assert
+    assert ssc_value[0].settings.content is None
 
 
 @pytest.mark.parametrize(
@@ -1509,7 +1537,6 @@ def test_migrate_response_time(
 @pytest.mark.parametrize(
     "rule_value, config, expected",
     [
-        (EXAMPLE_27, DEFAULT, None),
         (EXAMPLE_46, DEFAULT, (MatchType.STRING, "example")),
         (
             EXAMPLE_49,
@@ -1790,19 +1817,8 @@ def test_migrate_cert(rule_value: Mapping[str, object], config: Config, expected
 @pytest.mark.parametrize(
     "rule_value, config, expected",
     [
-        (EXAMPLE_27, DEFAULT, None),
         (EXAMPLE_43, DEFAULT, (MatchType.STRING, HeaderSpec(header_name="yes", header_value="no"))),
         (EXAMPLE_73, DEFAULT, (MatchType.STRING, HeaderSpec(header_name="yes", header_value="no"))),
-        (
-            EXAMPLE_74,
-            Config(expect_response_header=ExpectResponseHeader.ignore),
-            None,
-        ),
-        (
-            EXAMPLE_88,
-            Config(expect_response_header=ExpectResponseHeader.ignore),
-            None,
-        ),
     ],
 )
 def test_migrate_expect_response_header(

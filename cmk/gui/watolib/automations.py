@@ -924,7 +924,9 @@ def _automation_helper_enabled_in_omd_config() -> bool:
 
 
 class AutomationGetRemoteOMDStatus(AutomationCommand[None]):
-    """Called to get the status of OMD services on the remote site"""
+    """Called to get the status of OMD services on the remote site
+    0: running, 1: stopped, 5: disabled
+    """
 
     def command_name(self) -> str:
         return "get-remote-omd-status"

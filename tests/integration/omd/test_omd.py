@@ -66,6 +66,7 @@ def test_run_omd_sites_bare(site: Site) -> None:
 def test_run_omd_status_bare(site: Site) -> None:
     """
     Test the 'omd status --bare' command for the current site.
+
     Verifies that each line in the output follows the expected format,
     which is a service name followed by a number representing its status.
     """
@@ -82,7 +83,10 @@ def test_run_omd_status_bare(site: Site) -> None:
     # check format of single line (e.g. "jaeger 5")
     # (used in AutomationGetRemoteOMDStatus()._parse_omd_status)
     service_state = services[-1].split(" ")
-    assert len(service_state) == 2, "The line is expected to have two parts separated by a space"
+    assert len(service_state) == 2, (
+        "The line is expected to have two parts in following format:"
+        "\n<servicename> <status-integer-code>"
+    )
 
     assert service_state[0] == "OVERALL", "The last line should be the overall status"
     try:

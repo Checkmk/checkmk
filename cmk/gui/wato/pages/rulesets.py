@@ -163,8 +163,6 @@ from cmk.rulesets.v1.form_specs import FormSpec
 from ._match_conditions import HostTagCondition
 from ._rule_conditions import DictHostTagCondition
 
-_DEPRECATION_WARNING = "<b>This feature will be deprecated in a future version of Checkmk.</b>"
-
 tracer = trace.get_tracer()
 
 
@@ -1131,9 +1129,6 @@ class ModeEditRuleset(WatoMode):
         ruleset = SingleRulesetRecursively.load_single_ruleset_recursively(self._name).get(
             self._name
         )
-
-        if self._rulespec.deprecation_planned:
-            forms.warning_message(_DEPRECATION_WARNING)
 
         html.help(ruleset.help())
         self._explain_match_type(ruleset.match_type())
@@ -2213,14 +2208,7 @@ class ABCEditRuleMode(WatoMode):
         call_hooks("rmk_ruleset_banner", self._ruleset.name)
 
         help_text = self._ruleset.help()
-
-        if self._rulespec.deprecation_planned:
-            forms.warning_message(
-                _DEPRECATION_WARNING + "<br>" + str(help_text)
-                if help_text
-                else _DEPRECATION_WARNING
-            )
-        elif help_text:
+        if help_text:
             html.div(help_text, class_="info")
 
         with html.form_context("rule_editor", method="POST"):

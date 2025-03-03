@@ -339,7 +339,6 @@ class Rulespec(abc.ABC):
         item_help: Callable[[], str] | None,
         is_optional: bool,
         is_deprecated: bool,
-        deprecation_planned: bool,
         is_cloud_and_managed_edition_only: bool,
         is_for_services: bool,
         is_binary_ruleset: bool,  # unused
@@ -363,7 +362,6 @@ class Rulespec(abc.ABC):
             (item_help, True, True),
             (is_optional, False, False),
             (is_deprecated, False, False),
-            (deprecation_planned, False, False),
             (is_for_services, False, False),
             (is_binary_ruleset, False, False),
             (factory_default, False, True),
@@ -383,7 +381,6 @@ class Rulespec(abc.ABC):
         self._item_help = item_help
         self._is_optional = is_optional
         self._is_deprecated = is_deprecated
-        self._deprecation_planned = deprecation_planned
         self._is_cloud_and_managed_edition_only = is_cloud_and_managed_edition_only
         self._is_binary_ruleset = is_binary_ruleset
         self._is_for_services = is_for_services
@@ -518,10 +515,6 @@ class Rulespec(abc.ABC):
         return self._is_deprecated
 
     @property
-    def deprecation_planned(self) -> bool:
-        return self._deprecation_planned
-
-    @property
     def is_cloud_and_managed_edition_only(self) -> bool:
         return self._is_cloud_and_managed_edition_only
 
@@ -544,7 +537,6 @@ class HostRulespec(Rulespec):
         match_type: MatchType = "first",
         is_optional: bool = False,
         is_deprecated: bool = False,
-        deprecation_planned: bool = False,
         is_binary_ruleset: bool = False,
         is_cloud_and_managed_edition_only: bool = False,
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
@@ -560,7 +552,6 @@ class HostRulespec(Rulespec):
             match_type=match_type,
             is_optional=is_optional,
             is_deprecated=is_deprecated,
-            deprecation_planned=deprecation_planned,
             is_cloud_and_managed_edition_only=is_cloud_and_managed_edition_only,
             is_binary_ruleset=is_binary_ruleset,
             factory_default=factory_default,
@@ -594,7 +585,6 @@ class ServiceRulespec(Rulespec):
         item_help: Callable[[], str] | None = None,
         is_optional: bool = False,
         is_deprecated: bool = False,
-        deprecation_planned: bool = False,
         is_cloud_and_managed_edition_only: bool = False,
         is_binary_ruleset: bool = False,
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
@@ -615,7 +605,6 @@ class ServiceRulespec(Rulespec):
             item_help=item_help,
             is_optional=is_optional,
             is_deprecated=is_deprecated,
-            deprecation_planned=deprecation_planned,
             is_cloud_and_managed_edition_only=is_cloud_and_managed_edition_only,
             factory_default=factory_default,
             help_func=help_func,

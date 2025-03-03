@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import argparse
 import re
 import sys
 from collections.abc import Sequence
@@ -22,7 +21,7 @@ from cmk.gui.watolib.rulesets import AllRulesets, Rule, Ruleset
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 
 
-class Error(NamedTuple):
+class _Error(NamedTuple):
     messages: Sequence[str]
 
 
@@ -31,7 +30,7 @@ class SearchArgs(pydantic.BaseModel):
     folder: str | None
     folder_recursive: str | None
 
-    def rule_folder(self) -> tuple[str, bool] | Error | None:
+    def rule_folder(self) -> tuple[str, bool] | _Error | None:
         if self.folder is not None:
             if (err := _validate_folder(self.folder)) is not None:
                 return err
@@ -42,20 +41,20 @@ class SearchArgs(pydantic.BaseModel):
             return (self.folder_recursive, True)
         return None
 
-    def rule_host_list(self) -> None | Error | str:
+    def rule_host_list(self) -> None | _Error | str:
         if self.host is None:
             return None
         try:
             re.search(self.host, "", re.I)
         except re.error as e:
-            return Error([f"Invalid host argument, couldn't '{self.host}' regex: {e}"])
+            return _Error([f"Invalid host argument, couldn't '{self.host}' regex: {e}"])
         return self.host
 
 
-def _validate_folder(folder: str) -> None | Error:
+def _validate_folder(folder: str) -> None | _Error:
     choices = folder_tree().root_folder().recursive_subfolder_choices(pretty=False)
     if all(folder != arg for arg, _title in choices):
-        return Error(
+        return _Error(
             [
                 "No folder found for the given argument. Available folders:",
                 *(f"'{arg}' > {title}" for arg, title in choices),
@@ -69,7 +68,7 @@ def select(ruleset: Ruleset, search_args: SearchArgs) -> Iterator[tuple[Folder, 
     match search_args.rule_folder():
         case None:
             pass
-        case Error(errs):
+        case _Error(errs):
             sys.stdout.write("\n".join(errs) + "\n")
             return
         case tuple(rule_folder):
@@ -77,7 +76,7 @@ def select(ruleset: Ruleset, search_args: SearchArgs) -> Iterator[tuple[Folder, 
     match search_args.rule_host_list():
         case None:
             pass
-        case Error(errs):
+        case _Error(errs):
             sys.stdout.write("\n".join(errs) + "\n")
             return
         case str(rule_host_list):
@@ -88,25 +87,6 @@ def select(ruleset: Ruleset, search_args: SearchArgs) -> Iterator[tuple[Folder, 
     for folder, rule_index, rule in ruleset.get_rules():
         if rule.matches_search(search):
             yield folder, rule_index, rule
-
-
-def add_search_arguments(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
-    parser.add_argument(
-        "--host",
-        help="restrict action to rules which have their explicit host condition set up in "
-        "such a way that it matches the given host (either by being unset or set)",
-    )
-    folder_group = parser.add_mutually_exclusive_group()
-    folder_group.add_argument(
-        "--folder",
-        help="restrict action to rules in this folder",
-    )
-    folder_group.add_argument(
-        "--folder-recursive",
-        metavar="FOLDER",
-        help="restrict action to rules in this folder, or one of its subfolders",
-    )
-    return parser
 
 
 @contextmanager

@@ -9,8 +9,6 @@ from typing import Iterable, Protocol
 
 from pydantic import BaseModel
 
-from cmk.update_config.https.search import add_search_arguments
-
 
 class ConflictType(enum.Enum):
     invalid_value = "invalid-value"
@@ -318,9 +316,8 @@ class Config(BaseModel):
     cant_have_regex_and_string: CantHaveRegexAndString = CantHaveRegexAndString.default()
 
 
-def add_migrate_parsing(parser: ArgumentParser) -> None:
+def add_migrate_parsing(parser: ArgumentParser) -> ArgumentParser:
     parser.add_argument("--write", action="store_true", help="persist changes on disk")
-    add_search_arguments(parser)
     _add_argument(parser, HTTP10NotSupported, HTTP10NotSupported.default())
     _add_argument(parser, SSLIncompatible, SSLIncompatible.default())
     _add_argument(parser, AdditionalHeaders, AdditionalHeaders.default())
@@ -332,6 +329,7 @@ def add_migrate_parsing(parser: ArgumentParser) -> None:
     _add_argument(parser, V1ChecksRedirectResponse, V1ChecksRedirectResponse.default())
     _add_argument(parser, CantConstructURL, CantConstructURL.default())
     _add_argument(parser, CantHaveRegexAndString, CantHaveRegexAndString.default())
+    return parser
 
 
 class Option(Protocol):

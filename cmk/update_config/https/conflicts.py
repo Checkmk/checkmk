@@ -27,13 +27,7 @@ from cmk.update_config.https.conflict_options import (
     SSLIncompatible,
     V1ChecksRedirectResponse,
 )
-from cmk.update_config.https.search import SearchArgs
 from cmk.update_config.https.v1_scheme import V1Cert, V1Host, V1Url, V1Value
-
-
-class Migrate(Config, SearchArgs):
-    command: Literal["migrate"]
-    write: bool = False
 
 
 def _migrate_header(header: str) -> dict[str, str] | None:

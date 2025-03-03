@@ -1475,23 +1475,25 @@ def validate_notification_count_values(values: tuple[object, ...]) -> None:
         case (_, int(upper_bound)) if upper_bound < 1:
             raise ValidationError(Message("The upper bound must be greater than 0."))
         case (int(lower_bound), int(upper_bound)) if lower_bound > upper_bound:
-            raise ValidationError(Message("Lower bound cannot be higher than upper bound."))
+            raise ValidationError(Message("The lower bound is greater than the upper bound."))
         case (int(_), int(_)):
             return
         case _:
-            raise ValidationError(Message("Unexpected notification count values passed."))
+            raise ValidationError(Message("Unexpected 'notification count' values passed to form."))
 
 
 def validate_throttling_values(values: tuple[object, ...]) -> None:
     match values:
         case (int(notification_number), _) if notification_number < 1:
-            raise ValidationError(Message("The notification number value must be greater than 0."))
+            raise ValidationError(
+                Message("The 'notification number' value must be greater than 0.")
+            )
         case (_, int(every_n_notification)) if every_n_notification < 1:
-            raise ValidationError(Message("The send every value must be greater than 0."))
+            raise ValidationError(Message("The 'send every' value must be greater than 0."))
         case (int(_), int(_)):
             return
         case _:
-            raise ValidationError(Message("Unexpected throttling values shape passed."))
+            raise ValidationError(Message("Unexpected 'throttling' values passed to form."))
 
 
 def sending_conditions() -> QuickSetupStage:

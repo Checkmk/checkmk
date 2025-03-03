@@ -5,21 +5,24 @@
 
 """Dynamic sorters based on the site configuration"""
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from functools import partial
 
-from cmk.utils.tags import TagGroup, TagGroupID
+from cmk.utils.tags import TagGroupID
 
 from cmk.gui.config import Config
+from cmk.gui.hooks import request_memoize
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.painter.v0.helpers import get_tag_groups
+from cmk.gui.painter.v0.host_tag_painters import HashableTagGroups
 from cmk.gui.type_defs import Row
 
 from .base import Sorter
 
 
-def host_tag_config_based_sorters(tag_groups: Sequence[TagGroup]) -> dict[str, Sorter]:
+@request_memoize()
+def host_tag_config_based_sorters(hashable_tag_groups: HashableTagGroups) -> dict[str, Sorter]:
     return {
         (ident := f"host_tag_{tag_group.id}"): Sorter(
             ident=ident,
@@ -28,7 +31,7 @@ def host_tag_config_based_sorters(tag_groups: Sequence[TagGroup]) -> dict[str, S
             load_inv=False,
             sort_function=partial(_cmp_host_tag, tag_group_id=tag_group.id),
         )
-        for tag_group in tag_groups
+        for tag_group in hashable_tag_groups.tag_groups
     }
 
 

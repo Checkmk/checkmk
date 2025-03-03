@@ -15,6 +15,7 @@ from cmk.gui.http import request, response
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0 import EmptyCell, painter_registry
 from cmk.gui.painter.v0.helpers import RenderLink
+from cmk.gui.painter.v0.host_tag_painters import HashableTagGroups
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import ColumnName, PainterName, SorterFunction
 from cmk.gui.utils.theme import theme
@@ -32,7 +33,9 @@ sorter_registry = SorterRegistry()
 
 
 def all_sorters(config: Config) -> dict[str, Sorter]:
-    return dict(sorter_registry.items()) | host_tag_config_based_sorters(config.tags.tag_groups)
+    return dict(sorter_registry.items()) | host_tag_config_based_sorters(
+        HashableTagGroups(config.tags.tag_groups)
+    )
 
 
 # Kept for pre 1.6 compatibility.

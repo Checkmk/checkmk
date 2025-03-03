@@ -287,7 +287,7 @@ test-integration-redfish:
 test-composition:
 	OTEL_RESOURCE_ATTRIBUTES=service.name=pytest \
 	    $(PYTEST) -T composition --export-traces $(PYTEST_SYSTEM_TEST_ARGS) \
-	    $(realpath composition) --session-timeout 5400
+	    $(realpath composition)
 
 test-extension-compatibility:
 	$(PYTEST) -vv -T extension_compatibility $(PYTEST_SYSTEM_TEST_ARGS) $(realpath extension_compatibility)

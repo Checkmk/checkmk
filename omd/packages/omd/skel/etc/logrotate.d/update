@@ -1,7 +1,7 @@
 ###ROOT###/var/log/update.log {
         missingok
-        rotate 7
+        rotate -1
+        size 100M
         compress
-        delaycompress
         create 640 ###SITE### ###SITE### 
 }

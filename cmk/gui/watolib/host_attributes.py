@@ -782,6 +782,8 @@ class _HashableCustomHostAttrs:
 
 def _make_hashable_object(obj: object) -> Hashable:
     try:
+        # Note: Class instances are always hashed by id() if not specified otherwise
+        #       So they have to be immutable
         hash(obj)
         return obj
     except TypeError:

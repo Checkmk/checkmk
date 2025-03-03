@@ -1223,7 +1223,7 @@ class ModeDistributedMonitoring(WatoMode):
     def _show_message_broker_connection(
         self, table: Table, site_id: SiteId, site: SiteConfiguration
     ) -> None:
-        table.cell("Message broker connection")
+        table.cell("Remote message broker")
         if is_replication_enabled(site):
             trigger_url = make_action_link(
                 [("mode", "sites"), ("_trigger_certs_creation", site_id)]
@@ -1235,11 +1235,11 @@ class ModeDistributedMonitoring(WatoMode):
             )
             html.icon_button(
                 url="javascript:void(0)",
-                title=_("Create remote broker certificates"),
+                title=_("Recreate certificates"),
                 icon="recreate_broker_certificate",
                 class_=["lockable"],
             )
-            html.write_text_permissive(_("Create remote broker certificates"))
+            html.write_text_permissive(_("Recreate certificates"))
             html.write_html(render_end_tag("div"))
 
         html.open_div(id_=f"message_broker_status_{site_id}", class_="connection_status")
@@ -1342,9 +1342,22 @@ class PageAjaxFetchSiteStatus(AjaxPage):
             message, style="vertical-align:middle"
         )
 
+    def _get_remote_broker_status(self, remote_site: SiteConfiguration) -> int:
+        remote_status = do_remote_automation(
+            remote_site,
+            "get-remote-omd-status",
+            (),
+            timeout=60,
+        )
+        if not isinstance(remote_status, Mapping):
+            raise MKUserError(None, _("Got invalid status of remote site %s") % remote_site)
+
+        logger.debug("Got status of remote site %s" % remote_status)
+        return remote_status["rabbitmq"]
+
     def _get_connection_status_icon_message(
         self, remote_site_id: SiteId, site: SiteConfiguration, local_site: SiteConfiguration
-    ) -> tuple[Literal["checkmark", "cross", "alert"], str]:
+    ) -> tuple[Literal["checkmark", "cross", "alert", "disabled"], str]:
         if (remote_host := urlparse(site["multisiteurl"]).hostname) is None:
             return "cross", _("Offline: No valid multisite URL configured")
 
@@ -1363,8 +1376,6 @@ class PageAjaxFetchSiteStatus(AjaxPage):
                 return "checkmark", _("Online")
             case ConnectionFailed(error):
                 return "cross", _("Failed to establish connection: %s") % (error,)
-            case ConnectionRefused.CLOSED:
-                return "cross", _("Connection to port %s refused") % (remote_port,)
             case ConnectionRefused.WRONG_SITE:
                 return "cross", _(
                     "Connection to port %s refused. You are probably connecting to the wrong site."
@@ -1375,6 +1386,14 @@ class PageAjaxFetchSiteStatus(AjaxPage):
                 ) % (remote_port,)
             case ConnectionRefused.CERTIFICATE_VERIFY_FAILED:
                 return "cross", _("Connection to port %s refused: Invalid certificate")
+            case ConnectionRefused.CLOSED:
+                match self._get_remote_broker_status(site):
+                    case 1:
+                        return "cross", _("Not available")
+                    case 5:
+                        return "disabled", _("Disabled")
+
+                return "cross", _("Connection to port %s refused") % (remote_port,)
             case _:
                 assert_never(_)
 

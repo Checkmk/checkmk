@@ -63,6 +63,37 @@ def test_run_omd_sites_bare(site: Site) -> None:
     assert site.id in sites
 
 
+def test_run_omd_status_bare(site: Site) -> None:
+    """
+    Test the 'omd status --bare' command for the current site.
+    Verifies that each line in the output follows the expected format,
+    which is a service name followed by a number representing its status.
+    """
+
+    p = site.run(
+        ["omd", "-v", "status", "--bare"],
+        text=True,
+        check=False,
+    )
+    assert p.returncode == 0, "The command should return status 0, 'running'"
+    assert p.stderr == "", "No error output expected"
+    services = p.stdout.splitlines()
+    assert len(services) > 1, "Expected at least one line of service status"
+    # check format of single line (e.g. "jaeger 5")
+    # (used in AutomationGetRemoteOMDStatus()._parse_omd_status)
+    service_state = services[-1].split(" ")
+    assert len(service_state) == 2, "The line is expected to have two parts separated by a space"
+
+    assert service_state[0] == "OVERALL", "The last line should be the overall status"
+    try:
+        assert int(service_state[1]) in (0, 1, 2), "The status should be one of 0, 1, 2"
+    except ValueError as excp:
+        # ValueError will be raised if service_state[1] can not
+        # be parsed as an integer.
+        excp.add_note("Expected status of service to be an integer!")
+        raise excp
+
+
 # TODO: Add tests for these modes (also check -h of each mode)
 # omd update                      Update site to other version of OMD
 # omd start      [SERVICE]        Start services of one or all sites

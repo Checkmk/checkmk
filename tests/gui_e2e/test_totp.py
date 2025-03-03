@@ -12,7 +12,6 @@ from playwright.sync_api import expect
 from tests.gui_e2e.testlib.playwright.helpers import CmkCredentials
 from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
 from tests.gui_e2e.testlib.playwright.pom.login import LoginPage
-
 from tests.testlib.site import Site
 
 from cmk.crypto.totp import TOTP

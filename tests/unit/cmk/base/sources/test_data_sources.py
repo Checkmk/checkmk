@@ -29,7 +29,7 @@ from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
 from cmk.checkengine.parser import NO_SELECTION
 
-from cmk.base.api.agent_based.register import AgentBasedPlugins
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.config import ConfigCache, ConfiguredIPLookup, handle_ip_lookup_failure
 from cmk.base.sources import make_sources, SNMPFetcherConfig, Source
 

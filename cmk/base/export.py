@@ -18,8 +18,8 @@ from cmk.utils.servicename import Item
 from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base import config
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.api.agent_based.register import (
-    AgentBasedPlugins,
     extract_known_discovery_rulesets,
 )
 

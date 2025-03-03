@@ -24,7 +24,7 @@ from cmk.snmplib import OID, SNMPBackend, SNMPBackendEnum, SNMPHostConfig, SNMPV
 import cmk.fetchers._snmpcache as snmp_cache
 import cmk.fetchers._snmpscan as snmp_scan
 
-from cmk.base.api.agent_based.register import AgentBasedPlugins
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 
 from cmk.agent_based.v2 import SimpleSNMPSection, SNMPSection
 from cmk.plugins.collection.agent_based import aironet_clients, brocade_info

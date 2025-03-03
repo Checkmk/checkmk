@@ -106,6 +106,7 @@ import cmk.base.dump_host
 import cmk.base.parent_scan
 from cmk.base import config, profiling, sources
 from cmk.base.api.agent_based.plugin_classes import (
+    AgentBasedPlugins,
     AgentSectionPlugin,
     CheckPlugin,
     SNMPSectionPlugin,
@@ -145,7 +146,7 @@ from ._localize import do_localize
 tracer = trace.get_tracer()
 
 
-def load_config(plugins: agent_based_register.AgentBasedPlugins) -> config.LoadedConfigFragment:
+def load_config(plugins: AgentBasedPlugins) -> config.LoadedConfigFragment:
     # Read the configuration files (main.mk, autochecks, etc.), but not for
     # certain operation modes that does not need them and should not be harmed
     # by a broken configuration
@@ -154,7 +155,7 @@ def load_config(plugins: agent_based_register.AgentBasedPlugins) -> config.Loade
     )
 
 
-def load_checks() -> agent_based_register.AgentBasedPlugins:
+def load_checks() -> AgentBasedPlugins:
     plugins = config.load_all_plugins(
         local_checks_dir=cmk.utils.paths.local_checks_dir,
         checks_dir=cmk.utils.paths.checks_dir,
@@ -2336,7 +2337,7 @@ def mode_check(options: _CheckingOptions, args: list[str]) -> ServiceState:
 
 # also used in precompiled host checks!
 def run_checking(
-    plugins: agent_based_register.AgentBasedPlugins,
+    plugins: AgentBasedPlugins,
     config_cache: ConfigCache,
     hosts_config: Hosts,
     options: _CheckingOptions,

@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
-from typing import Self
+from collections.abc import Sequence
 
 from cmk.utils.sectionname import SectionName
 
@@ -13,6 +11,7 @@ from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.inventory import InventoryPluginName
 
 from cmk.base.api.agent_based.plugin_classes import (
+    AgentBasedPlugins,
     AgentSectionPlugin,
     CheckPlugin,
     InventoryPlugin,
@@ -24,25 +23,6 @@ registered_agent_sections: dict[SectionName, AgentSectionPlugin] = {}
 registered_snmp_sections: dict[SectionName, SNMPSectionPlugin] = {}
 registered_check_plugins: dict[CheckPluginName, CheckPlugin] = {}
 registered_inventory_plugins: dict[InventoryPluginName, InventoryPlugin] = {}
-
-
-@dataclass(frozen=True, kw_only=True)
-class AgentBasedPlugins:
-    agent_sections: Mapping[SectionName, AgentSectionPlugin]
-    snmp_sections: Mapping[SectionName, SNMPSectionPlugin]
-    check_plugins: Mapping[CheckPluginName, CheckPlugin]
-    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin]
-    errors: Sequence[str]
-
-    @classmethod
-    def empty(cls) -> Self:
-        return cls(
-            agent_sections={},
-            snmp_sections={},
-            check_plugins={},
-            inventory_plugins={},
-            errors=(),
-        )
 
 
 def get_previously_loaded_plugins(errors: Sequence[str] = ()) -> AgentBasedPlugins:

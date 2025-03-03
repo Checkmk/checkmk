@@ -20,7 +20,7 @@ from cmk.automations.results import DiagHostResult
 from cmk.fetchers import PiggybackFetcher
 
 from cmk.base import config, core_config
-from cmk.base.api.agent_based.register import AgentBasedPlugins
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.automations import check_mk
 from cmk.base.config import ConfigCache
 

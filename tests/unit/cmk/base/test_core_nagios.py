@@ -30,8 +30,7 @@ from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import AutocheckEntry
 
 from cmk.base import config, core_nagios
-from cmk.base.api.agent_based.plugin_classes import CheckPlugin
-from cmk.base.api.agent_based.register import AgentBasedPlugins
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins, CheckPlugin
 
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig

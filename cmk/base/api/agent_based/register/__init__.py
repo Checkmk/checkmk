@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ._config import (
-    AgentBasedPlugins,
-)
 from ._discover import load_all_plugins, load_selected_plugins
 from .check_plugins import get_check_plugin
 from .utils import (
@@ -15,7 +12,6 @@ from .utils import (
 )
 
 __all__ = [
-    "AgentBasedPlugins",
     "extract_known_discovery_rulesets",
     "get_check_plugin",
     "filter_relevant_raw_sections",

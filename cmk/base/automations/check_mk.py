@@ -152,10 +152,7 @@ import cmk.base.core
 import cmk.base.nagios_utils
 import cmk.base.parent_scan
 from cmk.base import config, core_config, notify, sources
-from cmk.base.api.agent_based.plugin_classes import CheckPlugin
-from cmk.base.api.agent_based.register import (
-    AgentBasedPlugins,
-)
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins, CheckPlugin
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.automations import (
     Automation,
@@ -2575,7 +2572,7 @@ class AutomationDiagHost(Automation):
         self,
         config_cache: ConfigCache,
         service_configurer: ServiceConfigurer,
-        plugins: agent_based_register.AgentBasedPlugins,
+        plugins: AgentBasedPlugins,
         host_name: HostName,
         ipaddress: HostAddress,
         *,

@@ -23,7 +23,7 @@ from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
 from cmk.checkengine.fetcher import FetcherType
 
-import cmk.base.api.agent_based.register as agent_based_register
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.api.agent_based.register.snmp_plugin_store import make_plugin_store
 
 from cmk.server_side_calls_backend import SpecialAgentCommandLine
@@ -50,7 +50,7 @@ __all__ = ["make_sources"]
 class _Builder:
     def __init__(
         self,
-        plugins: agent_based_register.AgentBasedPlugins,
+        plugins: AgentBasedPlugins,
         host_name: HostName,
         ipaddress: HostAddress | None,
         ip_stack_config: IPStackConfig,
@@ -298,7 +298,7 @@ class _Builder:
 
 
 def make_sources(
-    plugins: agent_based_register.AgentBasedPlugins,
+    plugins: AgentBasedPlugins,
     host_name: HostName,
     ipaddress: HostAddress | None,
     address_family: IPStackConfig,

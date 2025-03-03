@@ -20,7 +20,7 @@ from cmk.automations.results import AnalyseHostResult, GetServicesLabelsResult
 
 import cmk.base.automations
 import cmk.base.automations.check_mk as automations
-from cmk.base.api.agent_based.register import AgentBasedPlugins
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.config import LoadedConfigFragment
 
 

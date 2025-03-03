@@ -10,8 +10,11 @@ import pytest
 from polyfactory.factories.pydantic_factory import ModelFactory
 from pydantic import ValidationError
 
-from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin, CheckPlugin
-from cmk.base.api.agent_based.register import AgentBasedPlugins
+from cmk.base.api.agent_based.plugin_classes import (
+    AgentBasedPlugins,
+    AgentSectionPlugin,
+    CheckPlugin,
+)
 
 from cmk.agent_based.v2 import CheckResult, render, Result, State, StringTable
 from cmk.plugins.collection.agent_based import kube_pod_conditions

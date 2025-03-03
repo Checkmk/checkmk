@@ -10,8 +10,11 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin, CheckPlugin
-from cmk.base.api.agent_based.register import AgentBasedPlugins
+from cmk.base.api.agent_based.plugin_classes import (
+    AgentBasedPlugins,
+    AgentSectionPlugin,
+    CheckPlugin,
+)
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State, StringTable
 from cmk.plugins.collection.agent_based import kube_node_container_count

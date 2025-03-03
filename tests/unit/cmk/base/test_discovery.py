@@ -69,6 +69,7 @@ from cmk.checkengine.sectionparser import (
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.checkers import (
     CMKFetcher,
     CMKParser,
@@ -1126,7 +1127,7 @@ def test__check_host_labels_changed() -> None:
 
 def test__find_candidates(
     monkeypatch: MonkeyPatch,
-    agent_based_plugins: agent_based_register.AgentBasedPlugins,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     # plugins have been loaded by the fixture. Better: load the ones we need for this test
     config_cache = Scenario().apply(monkeypatch)
@@ -1280,7 +1281,7 @@ _expected_host_labels = [
 @pytest.mark.usefixtures("patch_omd_site")
 def test_commandline_discovery(
     monkeypatch: MonkeyPatch,
-    agent_based_plugins: agent_based_register.AgentBasedPlugins,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     testhost = HostName("test-host")
     ts = Scenario()
@@ -1593,7 +1594,7 @@ def test__discovery_considers_host_labels(
     host_labels: tuple[HostLabel],
     expected_services: set[ServiceID],
     realhost_scenario: RealHostScenario,
-    agent_based_plugins: agent_based_register.AgentBasedPlugins,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     # this takes the detour via ruleset matcher :-(
     DiscoveredHostLabelsStore(realhost_scenario.hostname).save(host_labels)
@@ -1769,7 +1770,7 @@ _discovery_test_cases = [
 def test__discover_host_labels_and_services_on_realhost(
     realhost_scenario: RealHostScenario,
     discovery_test_case: DiscoveryTestCase,
-    agent_based_plugins: agent_based_register.AgentBasedPlugins,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     if discovery_test_case.only_host_labels:
         # check for consistency of the test case
@@ -1813,7 +1814,7 @@ def test__discover_host_labels_and_services_on_realhost(
 def test__perform_host_label_discovery_on_realhost(
     realhost_scenario: RealHostScenario,
     discovery_test_case: DiscoveryTestCase,
-    agent_based_plugins: agent_based_register.AgentBasedPlugins,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     scenario = realhost_scenario
 
@@ -1849,7 +1850,7 @@ def test__perform_host_label_discovery_on_realhost(
 
 def test__discover_services_on_cluster(
     cluster_scenario: ClusterScenario,
-    agent_based_plugins: agent_based_register.AgentBasedPlugins,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     assert discovery_by_host(
         cluster_scenario.config_cache.nodes(cluster_scenario.parent),
@@ -1893,7 +1894,7 @@ def test__discover_services_on_cluster(
 def test__perform_host_label_discovery_on_cluster(
     cluster_scenario: ClusterScenario,
     discovery_test_case: DiscoveryTestCase,
-    agent_based_plugins: agent_based_register.AgentBasedPlugins,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     scenario = cluster_scenario
     nodes = scenario.config_cache.nodes(scenario.parent)

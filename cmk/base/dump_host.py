@@ -41,7 +41,7 @@ from cmk.checkengine.parser import NO_SELECTION
 
 import cmk.base.core
 from cmk.base import sources
-from cmk.base.api.agent_based.register import AgentBasedPlugins
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.config import (
     ConfigCache,
     ConfiguredIPLookup,

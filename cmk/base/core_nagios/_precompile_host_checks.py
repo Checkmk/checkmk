@@ -40,6 +40,7 @@ from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.utils
 from cmk.base.api.agent_based.plugin_classes import (
+    AgentBasedPlugins,
     CheckPlugin,
     InventoryPlugin,
     LegacyPluginLocation,
@@ -114,7 +115,7 @@ class HostCheckStore:
 def precompile_hostchecks(
     config_path: VersionedConfigPath,
     config_cache: ConfigCache,
-    plugins: agent_based_register.AgentBasedPlugins,
+    plugins: AgentBasedPlugins,
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
     *,
     precompile_mode: PrecompileMode,
@@ -161,7 +162,7 @@ def dump_precompiled_hostcheck(
     config_cache: ConfigCache,
     config_path: VersionedConfigPath,
     hostname: HostName,
-    plugins: agent_based_register.AgentBasedPlugins,
+    plugins: AgentBasedPlugins,
     *,
     verify_site_python: bool = True,
     precompile_mode: PrecompileMode,
@@ -241,7 +242,7 @@ def dump_precompiled_hostcheck(
 def _make_needed_plugins_locations(
     config_cache: ConfigCache,
     hostname: HostName,
-    plugins: agent_based_register.AgentBasedPlugins,
+    plugins: AgentBasedPlugins,
 ) -> tuple[  # we need `list` for the weird template replacement technique
     list[PluginLocation],
     list[str],  # TODO: change this to `LegacyPluginLocation` once the special agents are migrated
@@ -275,7 +276,7 @@ def _make_needed_plugins_locations(
 def _get_needed_plugins(
     config_cache: ConfigCache,
     host_name: HostName,
-    agent_based_plugins: agent_based_register.AgentBasedPlugins,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> list[CheckPlugin | InventoryPlugin]:
     # Collect the needed check plug-in names using the host check table.
     # Even auto-migrated checks must be on the list of needed *agent based* plugins:

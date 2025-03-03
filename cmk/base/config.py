@@ -132,6 +132,7 @@ import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import default_config
 from cmk.base.api.agent_based.cluster_mode import ClusterMode
 from cmk.base.api.agent_based.plugin_classes import (
+    AgentBasedPlugins,
     AgentSectionPlugin,
     CheckPlugin,
     SNMPSectionPlugin,
@@ -1462,7 +1463,7 @@ def load_all_plugins(
     *,
     local_checks_dir: Path,
     checks_dir: str,
-) -> agent_based_register.AgentBasedPlugins:
+) -> AgentBasedPlugins:
     with tracer.span("load_legacy_check_plugins"):
         with tracer.span("discover_legacy_check_plugins"):
             filelist = find_plugin_files(str(local_checks_dir), checks_dir)
@@ -2078,7 +2079,7 @@ class ConfigCache:
 
     def make_checking_sections(
         self,
-        plugins: agent_based_register.AgentBasedPlugins,
+        plugins: AgentBasedPlugins,
         service_configurer: ServiceConfigurer,
         hostname: HostName,
         *,
@@ -4252,7 +4253,7 @@ class FetcherFactory:
 
     def make_snmp_fetcher(
         self,
-        plugins: agent_based_register.AgentBasedPlugins,
+        plugins: AgentBasedPlugins,
         host_name: HostName,
         ip_address: HostAddress,
         *,

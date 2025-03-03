@@ -20,6 +20,7 @@ from cmk.checkengine.inventory import InventoryPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 from cmk.base.api.agent_based.plugin_classes import (
+    AgentBasedPlugins,
     CheckPlugin,
     InventoryPlugin,
     SectionPlugin,
@@ -28,8 +29,6 @@ from cmk.base.api.agent_based.plugin_classes import (
 
 from cmk.agent_based.v1.register import RuleSetType
 from cmk.discover_plugins import PluginLocation
-
-from ._config import AgentBasedPlugins
 
 TypeLabel = Literal["check", "cluster_check", "discovery", "host_label", "inventory"]
 

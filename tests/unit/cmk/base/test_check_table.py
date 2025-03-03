@@ -21,14 +21,14 @@ from cmk.checkengine.parameters import TimespecificParameters, TimespecificParam
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config
-from cmk.base.api.agent_based.plugin_classes import CheckPlugin
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins, CheckPlugin
 from cmk.base.config import FilterMode, HostCheckTable
 
 from cmk.discover_plugins import PluginLocation
 
 
 def test_cluster_ignores_nodes_parameters(
-    monkeypatch: pytest.MonkeyPatch, agent_based_plugins: agent_based_register.AgentBasedPlugins
+    monkeypatch: pytest.MonkeyPatch, agent_based_plugins: AgentBasedPlugins
 ) -> None:
     node = HostName("node")
     cluster = HostName("cluster")
@@ -79,7 +79,7 @@ def test_cluster_ignores_nodes_parameters(
 
 
 def test_check_table_enforced_vs_discovered_precedence(
-    monkeypatch: pytest.MonkeyPatch, agent_based_plugins: agent_based_register.AgentBasedPlugins
+    monkeypatch: pytest.MonkeyPatch, agent_based_plugins: AgentBasedPlugins
 ) -> None:
     smart = CheckPluginName("smart_temp")
     node = HostName("node")
@@ -384,7 +384,7 @@ def test_check_table(
     hostname_str: str,
     filter_mode: FilterMode,
     expected_result: HostCheckTable,
-    agent_based_plugins: agent_based_register.AgentBasedPlugins,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     hostname = HostName(hostname_str)
 
@@ -577,7 +577,7 @@ def test_check_table_of_mgmt_boards(
 
 
 def test_check_table__static_checks_win(
-    monkeypatch: pytest.MonkeyPatch, agent_based_plugins: agent_based_register.AgentBasedPlugins
+    monkeypatch: pytest.MonkeyPatch, agent_based_plugins: AgentBasedPlugins
 ) -> None:
     hostname_str = "df_host"
     hostname = HostName(hostname_str)

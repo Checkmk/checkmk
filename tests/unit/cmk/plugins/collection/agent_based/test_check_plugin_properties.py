@@ -6,10 +6,10 @@
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 from cmk.base.api.agent_based.plugin_classes import (
+    AgentBasedPlugins,
     CheckPlugin,
     InventoryPlugin,
 )
-from cmk.base.api.agent_based.register import AgentBasedPlugins
 
 
 def test_no_plugins_with_trivial_sections(agent_based_plugins: AgentBasedPlugins) -> None:

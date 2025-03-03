@@ -25,11 +25,11 @@ from cmk.checkengine.inventory import (  # pylint: disable=cmk-module-layer-viol
 )
 
 from cmk.base.api.agent_based.plugin_classes import (  # pylint: disable=cmk-module-layer-violation
+    AgentBasedPlugins,
     CheckPlugin,
     InventoryPlugin,
 )
 from cmk.base.api.agent_based.register import (  # pylint: disable=cmk-module-layer-violation
-    AgentBasedPlugins,
     extract_known_discovery_rulesets,
 )
 from cmk.base.config import (  # pylint: disable=cmk-module-layer-violation

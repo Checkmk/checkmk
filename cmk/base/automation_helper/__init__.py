@@ -17,8 +17,8 @@ from cmk.utils.redis import get_redis_client
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 
 from cmk.base import config
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.api.agent_based.register import (
-    AgentBasedPlugins,
     extract_known_discovery_rulesets,
 )
 from cmk.base.automations import automations

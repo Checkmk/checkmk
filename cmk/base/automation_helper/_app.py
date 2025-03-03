@@ -27,9 +27,7 @@ from cmk.automations.helper_api import AutomationPayload, AutomationResponse
 from cmk.automations.results import ABCAutomationResult
 
 from cmk.base import config
-from cmk.base.api.agent_based.register import (
-    AgentBasedPlugins,
-)
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.automations import AutomationError
 
 from ._cache import Cache, CacheError

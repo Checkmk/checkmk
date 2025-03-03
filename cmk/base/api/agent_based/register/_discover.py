@@ -9,6 +9,9 @@ from importlib import import_module
 from typing import assert_never
 
 from cmk.base.api.agent_based.plugin_classes import (
+    AgentBasedPlugins,
+)
+from cmk.base.api.agent_based.plugin_classes import (
     AgentSectionPlugin as BackendAgentSectionPlugin,
 )
 from cmk.base.api.agent_based.plugin_classes import (
@@ -33,7 +36,6 @@ from ._config import (
     add_check_plugin,
     add_inventory_plugin,
     add_section_plugin,
-    AgentBasedPlugins,
     get_inventory_plugin,
     get_previously_loaded_plugins,
     get_section_plugin,

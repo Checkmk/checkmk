@@ -10,7 +10,7 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.api.agent_based.register import AgentBasedPlugins
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.plugins.mssql.agent_based.mssql_blocked_sessions import (

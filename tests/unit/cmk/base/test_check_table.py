@@ -645,20 +645,6 @@ def test_check_table__get_static_check_entries(
     ts.add_host(hostname)
     ts.set_option("static_checks", static_checks)
 
-    ts.set_option(
-        "checkgroup_parameters",
-        {
-            "ps": [
-                {
-                    "id": "02",
-                    "condition": {"service_description": [], "host_name": [hostname]},
-                    "options": {},
-                    "value": check_group_parameters,
-                }
-            ],
-        },
-    )
-
     config_cache = ts.apply(monkeypatch)
 
     monkeypatch.setattr(
@@ -691,6 +677,16 @@ def test_check_table__get_static_check_entries(
         "item",
         {},
         "ps",
+        {
+            "ps": [
+                {
+                    "id": "02",
+                    "condition": {"service_description": [], "host_name": [hostname]},
+                    "options": {},
+                    "value": check_group_parameters,
+                }
+            ],
+        },
     )
 
     assert len(entries) == 1

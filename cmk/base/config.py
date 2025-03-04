@@ -1544,6 +1544,7 @@ def load_and_convert_legacy_checks(
 def _make_compute_check_parameters_cb(
     matcher: RulesetMatcher,
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    parameter_rules: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]],
 ) -> Callable[
     [HostName, CheckPluginName, Item, Labels, Mapping[str, object]],
     TimespecificParameters,
@@ -1561,7 +1562,14 @@ def _make_compute_check_parameters_cb(
         params: Mapping[str, object],
     ) -> TimespecificParameters:
         return compute_check_parameters(
-            matcher, check_plugins, host_name, plugin_name, item, service_labels, params
+            matcher,
+            check_plugins,
+            host_name,
+            plugin_name,
+            item,
+            service_labels,
+            params,
+            parameter_rules,
         )
 
     return callback
@@ -1597,6 +1605,7 @@ def compute_check_parameters(
     item: Item,
     service_labels: Labels,
     params: Mapping[str, object],
+    parameter_rules: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]],
 ) -> TimespecificParameters:
     """Compute effective check parameters.
 
@@ -1615,6 +1624,7 @@ def compute_check_parameters(
         service_labels,
         ruleset_name=check_plugin.check_ruleset_name,
         item=item,
+        parameter_rules=parameter_rules,
     )
 
     return TimespecificParameters(
@@ -1633,6 +1643,7 @@ def _get_configured_parameters(
     *,  # the following are all the same type :-(
     ruleset_name: RuleSetName | None,
     item: Item,
+    parameter_rules: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]],
 ) -> TimespecificParameters:
     if ruleset_name is None:
         return TimespecificParameters()
@@ -1642,7 +1653,7 @@ def _get_configured_parameters(
             # parameters configured via checkgroup_parameters
             TimespecificParameterSet.from_parameters(p)
             for p in _get_checkgroup_parameters(
-                matcher, host_name, item, service_labels, str(ruleset_name)
+                matcher, host_name, item, service_labels, str(ruleset_name), parameter_rules
             )
         ]
     )
@@ -1654,8 +1665,9 @@ def _get_checkgroup_parameters(
     item: Item,
     service_labels: Labels,
     checkgroup: RulesetName,
+    parameter_rules: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]],
 ) -> Sequence[Mapping[str, object]]:
-    rules = checkgroup_parameters.get(checkgroup)
+    rules = parameter_rules.get(checkgroup)
     if rules is None:
         return []
 
@@ -1967,7 +1979,9 @@ class ConfigCache:
         # This function is not part of the checkengine, because it still has
         # hidden dependencies to the loaded config in the global scope of this module.
         return ServiceConfigurer(
-            _make_compute_check_parameters_cb(self.ruleset_matcher, check_plugins),
+            _make_compute_check_parameters_cb(
+                self.ruleset_matcher, check_plugins, checkgroup_parameters
+            ),
             _make_service_description_cb(self.ruleset_matcher, check_plugins),
             self.effective_host,
             self.ruleset_matcher.labels_of_service,

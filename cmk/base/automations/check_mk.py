@@ -67,7 +67,7 @@ from cmk.utils.paths import (
     tmp_dir,
     var_dir,
 )
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RuleSpec
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.timeout import Timeout
@@ -637,6 +637,7 @@ def _active_check_preview_rows(
 def _make_compute_check_parameters_of_autocheck(
     ruleset_matcher: RulesetMatcher,
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    parameter_rules: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]],
 ) -> Callable[[HostName, AutocheckEntry], TimespecificParameters]:
     def compute_check_parameters_of_autocheck(
         host_name: HostName, entry: AutocheckEntry
@@ -665,6 +666,7 @@ def _make_compute_check_parameters_of_autocheck(
             entry.item,
             ruleset_matcher.labels_of_service(host_name, service_name, entry.service_labels),
             entry.parameters,
+            parameter_rules,
         )
 
     return compute_check_parameters_of_autocheck
@@ -733,7 +735,7 @@ def _execute_discovery(
             ),
             check_plugins=check_plugins,
             compute_check_parameters=_make_compute_check_parameters_of_autocheck(
-                ruleset_matcher, plugins.check_plugins
+                ruleset_matcher, plugins.check_plugins, config.checkgroup_parameters
             ),
             discovery_plugins=DiscoveryPluginMapper(
                 ruleset_matcher=ruleset_matcher,

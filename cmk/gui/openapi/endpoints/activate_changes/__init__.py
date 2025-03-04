@@ -27,6 +27,7 @@ from cmk.gui.openapi.endpoints.activate_changes.request_schemas import ActivateC
 from cmk.gui.openapi.endpoints.activate_changes.response_schemas import (
     ActivationRunCollection,
     ActivationRunResponse,
+    ActivationStatusResponse,
     PendingChangesCollection,
 )
 from cmk.gui.openapi.endpoints.utils import may_fail
@@ -218,7 +219,7 @@ def activate_changes_wait_for_completion(params: Mapping[str, Any]) -> Response:
         404: "There is no running activation with this activation_id.",
     },
     permissions_required=PERMISSIONS,
-    response_schema=ActivationRunResponse,
+    response_schema=ActivationStatusResponse,
 )
 def show_activation(params: Mapping[str, Any]) -> Response:
     """Show the activation status

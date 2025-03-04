@@ -3227,6 +3227,15 @@ class ActivationChange:
 
 
 @dataclass
+class StatusPerSite:
+    site: SiteId
+    status_text: str
+    status_details: str
+    start_time: float
+    end_time: float
+
+
+@dataclass
 class ActivationRestAPIResponseExtensions:
     activation_id: str
     sites: Sequence[SiteId]
@@ -3234,6 +3243,7 @@ class ActivationRestAPIResponseExtensions:
     force_foreign_changes: bool
     time_started: float
     changes: Sequence[ActivationChange]
+    status_per_site: Sequence[StatusPerSite]
 
 
 def get_activation_ids() -> list[str]:
@@ -3281,6 +3291,17 @@ def activation_attributes_for_rest_api_response(
         force_foreign_changes=manager.activate_foreign,
         time_started=manager.time_started,
         changes=manager.persisted_changes,
+        status_per_site=[
+            StatusPerSite(
+                site=SiteId(site),
+                status_text=status_dict["_status_text"],
+                status_details=status_dict["_status_details"],
+                start_time=status_dict["_time_started"],
+                end_time=status_dict["_time_ended"],
+            )
+            for site, status_dict in manager.get_state()["sites"].items()
+            if status_dict
+        ],
     )
 
 

@@ -1,0 +1,12 @@
+Title: Don't preselect publish option on editing of pagetypes (part 2)
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1741072136
+Edition: cre
+Level: 1
+Version: 2.2.0p41
+
+Werk #17171 should already have fixed this issue but missed one code part.
+
+The mentioned issue is now fixed.

@@ -1282,6 +1282,8 @@ class EditPage(Page, Generic[_T_OverridableSpec, _Self]):
 
         html.begin_form("edit", method="POST")
         html.help(vs.help())
+        if page_dict.get("public", False) is False:
+            page_dict["public"] = None  # type: ignore[assignment]
         vs.render_input(varprefix, page_dict)
         # Should be ignored by hidden_fields, but I do not dare to change it there
         request.del_var("filled_in")

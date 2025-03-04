@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-02-27 21:50+0000\n"
+"PO-Revision-Date: 2025-03-03 23:50+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -11774,13 +11774,11 @@ msgstr "Einführung in das Check-Plugin-API"
 msgid "Check plug-in timeout"
 msgstr "Ablaufzeit für Check-Plugin"
 
-#, fuzzy
 msgid "Check plug-in uses the deprecated API"
-msgstr "Keine Check-Plugins, welche die veraltete API verwenden"
+msgstr "Das Check-Plugin verwendet die veraltete API"
 
-#, fuzzy
 msgid "Check plug-in uses the deprecated API (v1)"
-msgstr "Keine Check-Plugins, welche die veraltete API verwenden"
+msgstr "Das Check-Plugin verwendet die veraltete API (v1)"
 
 msgid "Check plug-ins matching"
 msgstr "Übereinstimmende Check-Plugins"
@@ -14778,12 +14776,11 @@ msgstr ""
 "Abkühlzeit vor dem erneuten Versuch einer fehlgeschlagenen Remote- oder "
 "lokalen Zustellung"
 
-#, fuzzy
 msgid "Cooldown time after processing cycle"
-msgstr "Über den Verarbeitungszyklus"
+msgstr "Abkühlzeit nach dem Verarbeitungszyklus"
 
 msgid "Cooldown time before trying to reconnect after failure"
-msgstr "Abklingzeit, bevor nach Abbruch Wiederverbindung versucht wird"
+msgstr "Abkühlzeit, bevor nach Abbruch Wiederverbindung versucht wird"
 
 msgid "Cooling device"
 msgstr "Kühleinrichtung"
@@ -19960,9 +19957,8 @@ msgstr "Phasen gleichen Zustands nicht zusammenfassen"
 msgid "Do not monitor"
 msgstr "Nicht überwachen"
 
-#, fuzzy
 msgid "Do not monitor hosts without discovered services"
-msgstr "Nicht in die zu entdeckenden Monitoring-Hosts einbeziehen"
+msgstr "Hosts ohne erkannte Services nicht überwachen"
 
 msgid "Do not monitor limits"
 msgstr "Grenzwerte nicht überwachen"
@@ -20609,10 +20605,10 @@ msgid "Dynamic levels"
 msgstr "Dynamische Level"
 
 msgid "Dynamic levels - lower bound"
-msgstr "Dynamische Level - untere Grenze"
+msgstr "Dynamische Level - Untergrenze"
 
 msgid "Dynamic levels - upper bound"
-msgstr "Dynamische Level - obere Grenze"
+msgstr "Dynamische Level - Obergrenze"
 
 msgid "DynamoDB"
 msgstr "DynamoDB"
@@ -21408,10 +21404,10 @@ msgid "Electrical Apparent Power"
 msgstr "Elektrische Scheinleistung"
 
 msgid "Electrical Current (Amperage)"
-msgstr "Elektrischer Widerstand (Amperezahl)"
+msgstr "Elektrische Stromstärke (Ampere)"
 
 msgid "Electrical Current of Overcurrent Protectors"
-msgstr "Elektrischer Widerstand von Überstromschutzvorrichtungen"
+msgstr "Elektrische Stromstärke der Überstromschutzeinrichtungen"
 
 msgid "Electrical Energy"
 msgstr "Elektrische Energie"
@@ -21429,7 +21425,7 @@ msgid "Electrical apparent power"
 msgstr "Elektrische Scheinleistung"
 
 msgid "Electrical current"
-msgstr "Elektrischer Widerstand"
+msgstr "Elektrische Stromstärke"
 
 msgid "Electrical energy"
 msgstr "Elektrische Energie"
@@ -25702,7 +25698,7 @@ msgid "Global default"
 msgstr "Globaler Standard"
 
 msgid "Global memory bound"
-msgstr "Globaler, gebundener Speicher"
+msgstr "Globale Speichergrenze"
 
 msgid "Global notification rule"
 msgstr "Globale Benachrichtigungsregel"
@@ -26393,9 +26389,8 @@ msgstr "HW-/SW-Inventur (Linux, Windows, Solaris, AIX)"
 msgid "HW/SW Inventory history"
 msgstr "Historie der HW-/SW-Inventur"
 
-#, fuzzy
 msgid "HW/SW Inventory plug-in uses the deprecated API"
-msgstr "Keine Check-Plugins, welche die veraltete API verwenden"
+msgstr "Das HW-/SW-Inventur Plugin verwendet die veraltete API"
 
 msgid "HW/SW Inventory rules"
 msgstr "Regeln der HW-/SW-Inventur"
@@ -32471,10 +32466,10 @@ msgid "Inactive sessions"
 msgstr "Inaktive Sessions"
 
 msgid "Inbound NAT rule"
-msgstr "Inbound NAT Regel"
+msgstr "Eingehende NAT-Regel"
 
 msgid "Inbound NAT rules"
-msgstr "Inbound NAT Regeln"
+msgstr "Eingehende NAT-Regeln"
 
 msgid "Inbound and Outbound Messages"
 msgstr "Eingehende und ausgehende Nachrichten"
@@ -37058,7 +37053,7 @@ msgid "Lower age levels for expire date"
 msgstr "Untergrenzen für das Ablaufdatum"
 
 msgid "Lower bound cannot be higher than upper bound."
-msgstr ""
+msgstr "Die Untergrenze kann nicht größer als die Obergrenze sein."
 
 msgid "Lower case User-IDs"
 msgstr "Kleinbuchstabige Benutzer-IDs"
@@ -38409,9 +38404,8 @@ msgstr "Maximale Größe der Logdatei"
 msgid "Maximal number of daemon threads"
 msgstr "Maximale Anzahl von Daemon Threads"
 
-#, fuzzy
 msgid "Maximal number of hosts per bulk discovery"
-msgstr "Maximale Anzahl an Hosts pro REST-API-Aufruf zur Massenerkennung"
+msgstr "Maximale Anzahl an Hosts pro Massenerkennung"
 
 msgid "Maximal number of log files to backup"
 msgstr "Maximale Anzahl der zu sichernden Logdateien"
@@ -41491,9 +41485,8 @@ msgstr "Kein Wörterbuch ValueSpec innerhalb von Migrate: %s"
 msgid "No GCP services found."
 msgstr "Keine GCP-Services gefunden."
 
-#, fuzzy
 msgid "No HW/SW Inventory plug-ins using the deprecated API"
-msgstr "Keine Check-Plugins, welche die veraltete API verwenden"
+msgstr "Keine HW-/SW-Inventur Plugins verwenden die veraltete API"
 
 msgid "No IP"
 msgstr "Keine IP"
@@ -41556,9 +41549,8 @@ msgstr "Kein Zertifikat"
 msgid "No check plug-ins using the deprecated API"
 msgstr "Keine Check-Plugins, welche die veraltete API verwenden"
 
-#, fuzzy
 msgid "No check plug-ins using the deprecated API (v1)"
-msgstr "Keine Check-Plugins, welche die veraltete API verwenden"
+msgstr "Keine Check-Plugins verwenden die veraltete API (v1)"
 
 msgid "No colon, slash or backslash is allowed in the filename."
 msgstr ""
@@ -57421,9 +57413,9 @@ msgid ""
 "Specify frequency ranges by the upper boundary of the range to which the "
 "voltage levels are to apply. The list is sorted automatically when saving."
 msgstr ""
-"Gegen Sie Frequenzbereiche anhand der oberen Schwelle des Bereichs an, für "
-"den die Spannungslevel gelten sollen. Die Liste wird beim Speichern "
-"automatisch sortiert."
+"Gegen Sie Frequenzbereiche anhand der oberen Grenze des Bereichs an, für den "
+"die Spannungslevel gelten sollen. Die Liste wird beim Speichern automatisch "
+"sortiert."
 
 msgid ""
 "Specify here whether the working directory of Robotmk (`/var/lib/"
@@ -61591,7 +61583,6 @@ msgstr ""
 "Pull-Modus arbeiten. Bitte beachten Sie: Im Legacy-Pull-Modus werden die "
 "übertragenen Daten nicht verschlüsselt."
 
-#, fuzzy
 msgid ""
 "The agent installation path configuration now simplifies to one single "
 "directory, which can be configured with the new <i>Customize agent package</"
@@ -61601,17 +61592,15 @@ msgid ""
 "agent update is done. The agent package will read the old installation paths "
 "to migrate your files to the new directory structure."
 msgstr ""
-"Dieser Regelsatz ist veraltet und wird in einer zukünftigen Checkmk-Version "
-"entfernt werden. Anstatt jedes Verzeichnis einzeln zu konfigurieren, "
-"verwenden Sie bitte das neue Agenten-Regelset \"Agenten-Paket anpassen\", in "
-"dem Sie ein Installationsverzeichnis konfigurieren können, das alle darunter "
-"liegenden Agenten-Dateien enthält.<br>Wenn Sie eine Regel \"Agenten-Paket "
-"anpassen\" konfigurieren, werden konfigurierte Verzeichnisse aus diesem "
-"Regelsatz ignoriert.<br><b>Hinweis</b>: Beim Update eines Agenten auf die "
-"neue Verzeichnisstruktur lassen Sie diesen Regelsatz bitte aktiviert, bis "
-"das Update abgeschlossen ist, da das Agenten-Paket die alten "
-"Installationspfade für die Migration Ihrer Laufzeitdateien in die neue "
-"Verzeichnisstruktur verwendet."
+"Die Konfiguration des Agenten-Installationspfads vereinfacht sich nun auf "
+"ein einziges Verzeichnis, das mit dem neuen Regelsatz <i>Agentenpaket "
+"anpassen</i> konfiguriert werden kann.<br>Wenn Sie <i>Agentenpaket anpassen</"
+"i> konfigurieren, werden übereinstimmende Regeln aus diesem Regelsatz "
+"ignoriert.<br><b>Hinweis</b>: Wenn Sie Agenten auf die neue "
+"Verzeichnisstruktur aktualisieren, behalten Sie bitte diesen Regelsatz bei, "
+"bis die Aktualisierung des Agenten abgeschlossen ist. Das Agentenpaket wird "
+"die alten Installationspfade lesen, um Ihre Dateien in die neue "
+"Verzeichnisstruktur zu migrieren."
 
 msgid ""
 "The agent plug-in <tt>mk_filestats</tt> monitors a configured set of files "
@@ -62504,6 +62493,12 @@ msgid ""
 "timely manner and allow changes to the config, which will then be activated "
 "as well. Default is 10 minutes."
 msgstr ""
+"Die dynamische Konfiguration unterbricht die Service-Erkennung und erzwingt "
+"eine Aktivierung nach dieser Zeit. Die Zeit wird vom Beginn des "
+"Verarbeitungszyklus an gezählt. Dies ist nützlich, um sicherzustellen, dass "
+"Änderungen rechtzeitig aktiviert werden und um Änderungen an der "
+"Konfiguration zu ermöglichen, die dann ebenfalls aktiviert werden. Der "
+"Standardwert ist 10 Minuten."
 
 msgid ""
 "The eWON router can act as a proxy to metrics from a secondary non-snmp "
@@ -63444,9 +63439,8 @@ msgstr "Die Log-Datei existiert in dieser Instanz nicht."
 msgid "The login is currently locked"
 msgstr "Dieses Login ist aktuell gesperrt"
 
-#, fuzzy
 msgid "The lower bound must be greater than 0."
-msgstr "Der erste Wert muss größer als 0 sein."
+msgstr "Die Untergrenze muss größer als 0 sein."
 
 #, python-format
 msgid ""
@@ -63591,6 +63585,9 @@ msgid ""
 "processing cycle will continue irregardless of the outcome of the bulk "
 "discovery. Default is 1 minute."
 msgstr ""
+"Die maximale Zeit für einen einzelnen Massenerkennungsvorgang. Danach wird "
+"der Verarbeitungszyklus ungeachtet des Ergebnisses der Massenerkennung "
+"fortgesetzt. Standardwert ist 1 Minute."
 
 msgid ""
 "The maximum time that the Robotmk scheduler allows for a single Robot "
@@ -63607,6 +63604,10 @@ msgid ""
 "be completed. After this, the processing cycle will continue or finish."
 "Default is 2 minutes."
 msgstr ""
+"Die maximale Zeit, welche die dynamische Konfiguration wartet, bis "
+"'Änderungen aktivieren' abgeschlossen ist. Danach wird der "
+"Verarbeitungszyklus fortgesetzt oder beendet. Die Standardeinstellung ist 2 "
+"Minuten."
 
 msgid "The maximum value length is 256 characters."
 msgstr "Die maximale Wertlänge beträgt 256 Zeichen."
@@ -63993,9 +63994,8 @@ msgstr ""
 msgid "The notification is being processed"
 msgstr "Die Benachrichtigung wird verarbeitet"
 
-#, fuzzy
 msgid "The notification number value must be greater than 0."
-msgstr "Der erste Wert muss größer als 0 sein."
+msgstr "Der Wert der Benachrichtigungsnummer muss größer als 0 sein."
 
 #, python-format
 msgid "The notification script %s does not allow bulking."
@@ -64877,9 +64877,8 @@ msgstr "Ausgewählten Hosts habe keine expliziten Merkmale"
 msgid "The selected icon does not exist."
 msgstr "Das ausgewählte Symbol ist nicht vorhanden."
 
-#, fuzzy
 msgid "The send every value must be greater than 0."
-msgstr "Der erste Wert muss größer als 0 sein."
+msgstr "Der Wert für \"sende alle\" muss größer als 0 sein."
 
 msgid "The sensor name"
 msgstr "Der Sensorname"
@@ -65004,6 +65003,14 @@ msgid ""
 "hosts typically being handled by dynamic configuration, where no network "
 "communication happens."
 msgstr ""
+"Die Services werden für eine große Anzahl von Hosts ermittelt, um die "
+"Leistung gegenüber der einzelnen Service-Erkennung zu erhöhen. Eine zu große "
+"Zahl hier kann die Zykluszeit der dynamischen Konfiguration verlängern, da "
+"eine Aktivierung nur dann erzwungen werden kann, wenn keine Service-"
+"Erkennung läuft. Verringern Sie diesen Wert, wenn lange Service-Erkennungen "
+"die erzwungene Aktivierung blockieren. Der Standardwert ist 50 und wurde für "
+"die Hosts optimiert, die typischerweise von der dynamischen Konfiguration "
+"behandelt werden und bei denen keine Netzwerkkommunikation stattfindet."
 
 msgid ""
 "The sidebar can be configured to regularly check for pending popup "
@@ -65468,9 +65475,8 @@ msgid "The uploaded file must be either a tar.gz or a zip file."
 msgstr ""
 "Die hochgeladene Datei muss entweder eine tar.gz- oder eine zip-Datei sein."
 
-#, fuzzy
 msgid "The upper bound must be greater than 0."
-msgstr "Der erste Wert muss größer als 0 sein."
+msgstr "Die Obergrenze muss größer als 0 sein."
 
 #, no-python-format
 msgid ""
@@ -65750,9 +65756,9 @@ msgstr ""
 "Berechtigung, um Regelsätze zu konfigurieren, in denen reine Befehlszeilen "
 "konfiguriert sind."
 
-#, fuzzy, python-format
+#, python-format
 msgid "There are issues with the following archive entries: %s"
-msgstr "Mit den folgenden Parametern aufrufen:"
+msgstr "Es gibt Probleme mit den folgenden Archiveinträgen: %s"
 
 msgid "There are no configured rules in this aggregation pack"
 msgstr "Es sind keine Regeln in diesem Aggregationspaket konfiguriert"
@@ -69714,6 +69720,13 @@ msgid ""
 "<i>Customize agent package</i>, matching rules from this ruleset will be "
 "ignored.<br>"
 msgstr ""
+"Dieser Regelsatz setzt nur den Benutzer des Agenten auf den konfigurierten "
+"Wert.<br>Er kümmert sich nicht um weitere benötigte Berechtigungen auf dem "
+"Zielsystem.<br>Bitte verwenden Sie stattdessen den neuen Regelsatz "
+"<i>Agentenpaket anpassen</i>, das eine ordnungsgemäße Nicht-Root-"
+"Agenteninstallation ermöglicht.<br>Bei der Konfiguration von <i>Agentenpaket "
+"anpassen</i> werden übereinstimmende Regeln aus diesem Regelsatz "
+"ignoriert.<br>"
 
 msgid "This rulespec is deprecated and will be removed in future versions."
 msgstr ""
@@ -70662,6 +70675,10 @@ msgid ""
 "This can reduce the load of the dynamic configuration on your system. "
 "Default is 30 seconds."
 msgstr ""
+"Zeit zwischen dem Ende eines Prozesszyklus und dem Start des nächsten. Sie "
+"können die Abkühlzeit erhöhen, um die Verarbeitung neuer Daten zu drosseln. "
+"Dies kann die Belastung Ihres Systems durch die dynamische Konfiguration "
+"verringern. Der Standardwert ist 30 Sekunden."
 
 msgid ""
 "Time between the last operation on primary's oplog and on secondary above"
@@ -71048,9 +71065,8 @@ msgstr ""
 msgid "Time until credentials expiration"
 msgstr "Verbleibende Zeit bis zum Ablauf der Berechtigungsnachweise"
 
-#, fuzzy
 msgid "Time until forced activation of changes after cycle start"
-msgstr "Kommentar für die Aktivierung von Änderungen"
+msgstr "Zeit bis zur erzwungenen Aktivierung von Änderungen nach Zyklusstart"
 
 msgid "Time until license expiration"
 msgstr "Verbleibende Zeit bis zum Ablauf der Lizenz"
@@ -73838,6 +73854,15 @@ msgid ""
 "exectued by the dynamic configuration. Only activate, if the dynamic "
 "configuration can not finish before a forced activation.Default is False."
 msgstr ""
+"Normalerweise sind Hosts ohne erkannte Services für die Überwachung von "
+"geringem Wert und können falsche Alarme verursachen. Im Falle einer "
+"erzwungenen Aktivierung oder einer gewaltsamen Unterbrechung der dynamischen "
+"Konfiguration kann es Hosts ohne erkannte Services geben. Mit dieser Option "
+"werden Hosts mit einem versteckten Attribut versehen, so dass sie nicht "
+"überwacht werden, bis die Service-Erkennung durch die dynamische "
+"Konfiguration ausgeführt wurde. Nur aktivieren, wenn die dynamische "
+"Konfiguration nicht vor einer erzwungenen Aktivierung beendet werden kann. "
+"Voreinstellung ist 'False'."
 
 msgid "U"
 msgstr "U"
@@ -74350,7 +74375,7 @@ msgid "Unblended costs"
 msgstr "Ungemischte Kosten"
 
 msgid "Unbound license: Skip request ID verification"
-msgstr "Ungebundene Lizenz: Anfrage der ID-Verifizierung überspringen"
+msgstr "Unbegrenzte Lizenz: Anfrage der ID-Verifizierung überspringen"
 
 msgid "Unclassified"
 msgstr "Nicht klassifiziert"
@@ -74399,9 +74424,8 @@ msgstr "Undo-Statistiken"
 msgid "Unevictable memory"
 msgstr "Unevictable-Speicher"
 
-#, fuzzy
 msgid "Unexpected notification count values passed."
-msgstr "Benachrichtigungsregel #%d löschen"
+msgstr ""
 
 msgid "Unexpected throttling values shape passed."
 msgstr ""
@@ -83277,9 +83301,8 @@ msgstr "diagFault"
 msgid "directly in the folder <b>%s</b>"
 msgstr "direkt im Ordner <b>%s</b>"
 
-#, fuzzy
 msgid "directory"
-msgstr "Datenverzeichnis"
+msgstr "Verzeichnis"
 
 msgid "disable"
 msgstr "deaktivieren"
@@ -84139,9 +84162,8 @@ msgstr "nicht verfügbar"
 msgid "not disabled"
 msgstr "nicht deaktiviert"
 
-#, fuzzy
 msgid "not found"
-msgstr "Nicht gefunden"
+msgstr "nicht gefunden"
 
 msgid "not installed"
 msgstr "nicht installiert"
@@ -84440,13 +84462,11 @@ msgstr "als Wartungszeit werten"
 msgid "regular expression, substring match"
 msgstr "Regulärer Ausdruck, Substring-Übereinstimmung"
 
-#, fuzzy
 msgid "regular file"
-msgstr "Datei ersetzen"
+msgstr "normale Datei"
 
-#, fuzzy
 msgid "regular file or directory"
-msgstr "Bereinigung des Arbeitsverzeichnisses"
+msgstr "normale Datei oder normales Verzeichnis"
 
 msgid "relative URI under which Jolokia is visible"
 msgstr "relative URL, unter der Jolokia sichtbar ist"
@@ -84582,7 +84602,7 @@ msgid "send notifications of contactgroup:"
 msgstr "Benachrichtigungen an Kontakt-Gruppen senden:"
 
 msgid "send only every"
-msgstr "Sende nur jede"
+msgstr "sende nur jede"
 
 msgid "serialNumber"
 msgstr "serialNumber"
@@ -84962,7 +84982,7 @@ msgstr "Umbrechen"
 
 #, python-format
 msgid "wrong type, expected %s"
-msgstr ""
+msgstr "falscher Typ, erwartet wurde %s"
 
 msgid "xinetd"
 msgstr "xinetd"

@@ -34,17 +34,14 @@ def main() {
     smart_stage(
         name: "Deploy to website",
     ) {
-        artifacts_helper.deploy_to_website(
-            cmk_version_rc_aware
-        );
+        artifacts_helper.deploy_to_website(cmk_version_rc_aware);
     }
+
     smart_stage(
         name: "Cleanup RC candicates",
         condition: params.CIPARAM_REMOVE_RC_CANDIDATES,
     ) {
-        artifacts_helper.cleanup_rc_candidates_of_version(
-           cmk_version_rc_aware
-        );
+        artifacts_helper.cleanup_rc_candidates_of_version(cmk_version_rc_aware);
     }
 }
 

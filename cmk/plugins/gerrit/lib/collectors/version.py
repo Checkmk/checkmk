@@ -23,10 +23,16 @@ class LatestVersions:
 
     @classmethod
     def build(cls, current: SemanticVersion, versions: Collection[SemanticVersion]) -> Self:
+        newer_versions = {v for v in versions if v > current}
+
+        majors = {v for v in newer_versions if v.major > current.major}
+        minors = {v for v in newer_versions if v.minor > current.minor} - majors
+        patches = {v for v in newer_versions if v.patch > current.patch} - majors - minors
+
         return cls(
-            major=str(max((v for v in versions if v.major > current.major), default="")) or None,
-            minor=str(max((v for v in versions if v.minor > current.minor), default="")) or None,
-            patch=str(max((v for v in versions if v.patch > current.patch), default="")) or None,
+            major=str(max(majors, default="")) or None,
+            minor=str(max(minors, default="")) or None,
+            patch=str(max(patches, default="")) or None,
         )
 
 

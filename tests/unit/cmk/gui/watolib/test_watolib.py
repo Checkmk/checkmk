@@ -33,7 +33,6 @@ def test_registered_config_domains() -> None:
         "multisite",
         "omd",
         "rrdcached",
-        "piggyback_hub",
     ]
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
@@ -153,7 +152,6 @@ def test_registered_configvars() -> None:
         "page_heading",
         "pagetitle_date_format",
         "password_policy",
-        "piggyback_hub_enabled",
         "piggyback_max_cachefile_age",
         "profile",
         "quicksearch_dropdown_limit",
@@ -326,7 +324,6 @@ def test_registered_configvar_groups() -> None:
         "User management",
         "Support",
         "Developer Tools",
-        "Distributed piggyback",
     ]
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:

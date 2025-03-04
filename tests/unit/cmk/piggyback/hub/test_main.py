@@ -17,7 +17,6 @@ from cmk.piggyback.hub._config import (
     PiggybackHubConfig,
 )
 from cmk.piggyback.hub._main import handle_received_config
-from cmk.piggyback.hub._paths import create_paths
 
 
 def test_handle_received_config(tmp_path: Path) -> None:
@@ -33,4 +32,4 @@ def test_handle_received_config(tmp_path: Path) -> None:
     on_message(Mock(), DeliveryTag(0), input_payload)
     assert reload_config.is_set()
 
-    assert load_config(create_paths(tmp_path)) == input_payload
+    assert load_config(tmp_path) == input_payload

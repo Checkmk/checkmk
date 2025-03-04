@@ -13,5 +13,6 @@ CMK_VERSION="2.3.0p29"
 
 if command -v sshd >/dev/null 2>&1; then
     echo "<<<sshd_config>>>"
-    sshd -T
+    # See https://man.openbsd.org/sshd.8 for the -G option
+    sshd -T || sshd -G
 fi

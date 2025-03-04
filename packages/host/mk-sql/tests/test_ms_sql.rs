@@ -503,7 +503,7 @@ async fn validate_transaction_logs(
     for l in lines[..lines.len() - 1].iter() {
         let values = l.split('|').collect::<Vec<&str>>();
         assert_eq!(values[0], instance.name.to_string(), "wrong: {l}");
-        if expected.contains(&values[1].to_string()) {
+        if expected.contains(values[1]) {
             found.insert(values[1].to_string());
         }
         assert!(values[2].to_lowercase().ends_with("log"), "wrong: {l}");
@@ -538,7 +538,7 @@ async fn validate_datafiles(instance: &SqlInstance, client: &mut UniClient, endp
         let values = l.split('|').collect::<Vec<&str>>();
         assert_eq!(values.len(), 8);
         assert_eq!(values[0], instance.name.to_string(), "wrong: {l}");
-        if expected.contains(&values[1].to_string()) {
+        if expected.contains(values[1]) {
             found.insert(values[1].to_string());
         }
         assert!(!values[2].to_lowercase().ends_with("log"), "wrong: {l}");
@@ -576,7 +576,7 @@ async fn validate_databases(instance: &SqlInstance, client: &mut UniClient) {
         let values = l.split('|').collect::<Vec<&str>>();
         assert_eq!(values.len(), 6);
         assert_eq!(values[0], instance.name.to_string(), "wrong: {l}");
-        if expected.contains(&values[1].to_string()) {
+        if expected.contains(values[1]) {
             found.insert(values[1].to_string());
         }
         assert_eq!(values[2], "ONLINE", "wrong: {l}");
@@ -614,7 +614,7 @@ async fn validate_databases_error(instance: &SqlInstance, client: &mut UniClient
         let values = l.split('|').collect::<Vec<&str>>();
         assert_eq!(values.len(), 6, "wrong: {l}");
         assert_eq!(values[0], instance.name.to_string(), "wrong: {l}");
-        if expected.contains(&values[1].to_string()) {
+        if expected.contains(values[1]) {
             found.insert(values[1].to_string());
         }
         assert!(values[2].contains(" error: "), "wrong: {l}");
@@ -644,7 +644,7 @@ async fn validate_connections(instance: &SqlInstance, client: &mut UniClient) {
         let values = l.split(' ').collect::<Vec<&str>>();
         assert_eq!(values.len(), 3);
         assert_eq!(values[0], instance.name.to_string(), "wrong: {l}");
-        if expected.contains(&values[1].to_string()) {
+        if expected.contains(values[1]) {
             found.insert(values[1].to_string());
         }
         assert!(values[2].parse::<u32>().is_ok(), "wrong: {l}");
@@ -1041,7 +1041,7 @@ fn test_no_ms_sql() {
     let file = tools::create_config_with_wrong_host();
     let r = tools::run_bin()
         .arg("-c")
-        .arg(&file.path().to_string_lossy().into_owned())
+        .arg(file.path().to_string_lossy().into_owned())
         .unwrap();
     let (stdout, code) = tools::get_good_results(&r).unwrap();
     assert_eq!(code, 0);
@@ -1054,7 +1054,7 @@ fn test_run_local() {
     let file = tools::create_local_config();
     let output = tools::run_bin()
         .arg("-c")
-        .arg(&file.path().to_string_lossy().into_owned())
+        .arg(file.path().to_string_lossy().into_owned())
         .unwrap();
     let (stdout, code) = tools::get_good_results(&output).unwrap();
     assert_eq!(code, 0);
@@ -1067,7 +1067,7 @@ fn test_run_local() {
     let file = tools::create_local_config();
     let code = tools::run_bin()
         .arg("-c")
-        .arg(&file.path().to_string_lossy().into_owned())
+        .arg(file.path().to_string_lossy().into_owned())
         .unwrap_err()
         .as_output()
         .unwrap()
@@ -1082,7 +1082,7 @@ fn test_run_remote() {
     let file = tools::create_remote_config(&tools::get_remote_sql_from_env_var().unwrap());
     assert!(tools::run_bin()
         .arg("-c")
-        .arg(&file.path().to_string_lossy().into_owned())
+        .arg(file.path().to_string_lossy().into_owned())
         .unwrap()
         .status
         .success());
@@ -1406,7 +1406,7 @@ async fn test_check_config_custom() {
     let r = tools::run_bin()
         .env("MK_CONFDIR", dir.path())
         .arg("-c")
-        .arg(&config.to_string_lossy().into_owned())
+        .arg(config.to_string_lossy().into_owned())
         .unwrap();
     let (stdout, code) = tools::get_good_results(&r).unwrap();
 

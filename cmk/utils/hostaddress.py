@@ -77,8 +77,11 @@ class HostAddress(str):
         if text in ("", "_", "_VANILLA"):
             return text
 
-        if len(text) > 254:
-            # ext4 and others allow filenames of up to 255 bytes
+        if len(text) > 240:
+            # Ext4 and others allow filenames of up to 255 bytes.
+            # As we add prefixes and/or suffixes, the number has to be way lower.
+            # 240 seems to be OK to still be able to delete a host if it causes
+            # trouble elsewhere
             raise ValueError(f"HostName too long: {text[:16]+'…'!r}")
 
         try:

@@ -117,7 +117,7 @@ class ACTestResult:
                     ACResultState.WARN: "ACResultWARN",
                     ACResultState.CRIT: "ACResultCRIT",
                 }[self.state],
-                "path": self.path,
+                "path": str(self.path) if self.path else None,
             }
         )
 

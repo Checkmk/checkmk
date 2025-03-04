@@ -100,11 +100,7 @@ impl Section {
     }
 
     pub fn cache_age(&self) -> u32 {
-        if let Some(v) = self.cache_age {
-            v
-        } else {
-            0
-        }
+        self.cache_age.unwrap_or_default()
     }
 
     pub fn first_line(&self, value: Option<&InstanceName>) -> String {

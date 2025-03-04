@@ -6,6 +6,7 @@
 from cmk.ccc.plugin_registry import Registry
 
 from cmk.gui.config import active_config, default_authorized_builtin_role_ids
+from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.permissions import declare_permission
 
@@ -30,6 +31,7 @@ class IconRegistry(Registry[type[Icon]]):
 icon_and_action_registry = IconRegistry()
 
 
+@request_memoize()
 def all_icons() -> dict[str, Icon]:
     return update_builtin_icons_from_config(
         {ident: cls() for ident, cls in icon_and_action_registry.items()},

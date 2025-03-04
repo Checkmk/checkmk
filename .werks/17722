@@ -1,0 +1,16 @@
+Title: Add Cisco Integrated Management Controller
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1741105361
+Edition: cre
+Level: 1
+Version: 2.2.0p41
+
+The following device is now supported:
+
+<em>Cisco Integrated Management Controller (Cisco IMC) SNS-3755-K9</em>
+
+OID: <code>.1.3.6.1.4.1.9.1.3100</code>
+
+Make sure to run service discovery post-upgrade.

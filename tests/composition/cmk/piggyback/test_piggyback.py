@@ -81,18 +81,13 @@ def _setup_piggyback_host_and_check(
 
 
 @pytest.fixture(name="prepare_piggyback_environment", scope="module")
-def _prepare_piggyback_environment(
-    central_site: Site,
-    remote_site: Site,
-    remote_site_2: Site,
-) -> Iterator[None]:
+def _prepare_piggyback_environment(central_site: Site, remote_site: Site) -> Iterator[None]:
     try:
         with (
             _setup_source_host(central_site, central_site.id, _HOSTNAME_SOURCE_CENTRAL),
             _setup_source_host(central_site, remote_site.id, _HOSTNAME_SOURCE_REMOTE),
             set_omd_config_piggyback_hub(central_site, "on"),
             set_omd_config_piggyback_hub(remote_site, "on"),
-            set_omd_config_piggyback_hub(remote_site_2, "on"),
         ):
             central_site.openapi.changes.activate_and_wait_for_completion()
             yield

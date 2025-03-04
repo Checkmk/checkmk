@@ -84,7 +84,6 @@ export function setupAutocompleter<OutputType>(getAutocompleter: () => Autocompl
         output.value = await fetchData<OutputType>(input.value, autocompleter.data)
       } catch (e: unknown) {
         const errorDescription = (e as AutoCompleterResponseError).response?.result
-        console.log('error!', errorDescription)
         error.value = errorDescription || ''
         output.value = undefined
       }

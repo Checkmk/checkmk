@@ -33,6 +33,7 @@ from cmk.gui import (
     notifications,
     pagetypes,
     painter_options,
+    piggyback_hub,
     prediction,
     user_message,
     valuespec,
@@ -216,6 +217,11 @@ def register(
         replication_path_registry,
         folder_validators_registry,
         cron_job_registry,
+    )
+    piggyback_hub.register(
+        config_domain_registry,
+        config_variable_group_registry,
+        config_variable_registry,
     )
 
     mobile.register(layout_registry)

@@ -114,8 +114,10 @@ class NotificationParameterRegistry(Registry[type[NotificationParameter]]):
             if not isinstance(value, dict):
                 return value
 
-            if parameter_properties := value.get("parameter_properties"):
-                if isinstance(parameter_properties, DefaultValue):
+            if "parameter_properties" in value:
+                if isinstance(
+                    (parameter_properties := value["parameter_properties"]), DefaultValue
+                ):
                     return value
                 if "method_parameters" not in parameter_properties:
                     value["parameter_properties"] = {"method_parameters": parameter_properties}

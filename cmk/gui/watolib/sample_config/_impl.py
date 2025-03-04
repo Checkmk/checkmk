@@ -131,7 +131,7 @@ def _create_default_notify_plugin() -> NotifyPlugin:
                     comment="",
                     docu_url="",
                 ),
-                parameter_properties={"method_parameters": MailPluginModel()},
+                parameter_properties=MailPluginModel(),
             )
         }
     }

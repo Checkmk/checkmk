@@ -12,10 +12,13 @@ from livestatus import SiteId
 
 from cmk.gui.deprecations import (
     _filter_non_ok_ac_test_results,
-    _format_ac_test_results,
+    _find_ac_test_result_problems,
+    _format_ac_test_result_problems,
     _MarkerFileStore,
 )
 from cmk.gui.watolib.analyze_configuration import ACResultState, ACTestResult
+
+from cmk.mkp_tool import Manifest, PackageName, PackagePart, PackageVersion
 
 
 def test__marker_file_store_save(tmp_path: Path) -> None:
@@ -156,7 +159,7 @@ def test__filter_non_ok_ac_test_results(
 
 
 @pytest.mark.parametrize(
-    "ac_test_results_by_site_id, result",
+    "ac_test_results_by_site_id, manifests_by_path, result",
     [
         pytest.param(
             {
@@ -185,7 +188,8 @@ def test__filter_non_ok_ac_test_results(
                     ),
                 ],
             },
-            "text: site_id_1, site_id_2",
+            {},
+            "text: sites: site_id_1, site_id_2",
             id="one-id",
         ),
         pytest.param(
@@ -215,13 +219,74 @@ def test__filter_non_ok_ac_test_results(
                     ),
                 ],
             },
-            "text_1: site_id_1\ntext_2: site_id_2",
+            {},
+            "text_1: sites: site_id_1\ntext_2: sites: site_id_2",
             id="different-ids",
+        ),
+        pytest.param(
+            {
+                SiteId("site_id"): [
+                    ACTestResult(
+                        ACResultState.WARN,
+                        "text",
+                        "test_id",
+                        "deprecations",
+                        "Title",
+                        "Help",
+                        SiteId("site_id"),
+                        Path("/omd/sites/site_id/local/share/check_mk/web/plugins/metrics/file.py"),
+                    ),
+                ],
+            },
+            {},
+            "Unpackaged files: text (file: /omd/sites/site_id/local/share/check_mk/web/plugins/metrics/file.py), sites: site_id",
+            id="mkp",
+        ),
+        pytest.param(
+            {
+                SiteId("site_id"): [
+                    ACTestResult(
+                        ACResultState.WARN,
+                        "text",
+                        "test_id",
+                        "deprecations",
+                        "Title",
+                        "Help",
+                        SiteId("site_id"),
+                        Path("/omd/sites/site_id/local/share/check_mk/web/plugins/metrics/file.py"),
+                    ),
+                ],
+            },
+            {
+                Path("local/share/check_mk/web/plugins/metrics/file.py"): Manifest(
+                    title="asd",
+                    name=PackageName("asd"),
+                    description="",
+                    version=PackageVersion("1.0.0"),
+                    version_packaged="2.4.0-2025.03.05",
+                    version_min_required="2.4.0-2025.03.05",
+                    version_usable_until=None,
+                    author="cmkadmin",
+                    download_url="",
+                    files={PackagePart("web"): [Path("plugins/metrics/file.py")]},
+                )
+            },
+            "MKP asd: text (file: /omd/sites/site_id/local/share/check_mk/web/plugins/metrics/file.py), sites: site_id",
+            id="mkp",
         ),
     ],
 )
-def test__format_ac_test_results(
+def test__format_ac_test_result_problems(
     ac_test_results_by_site_id: Mapping[SiteId, Sequence[ACTestResult]],
+    manifests_by_path: Mapping[Path, Manifest],
     result: str,
 ) -> None:
-    assert _format_ac_test_results(ac_test_results_by_site_id) == result
+    assert (
+        _format_ac_test_result_problems(
+            _find_ac_test_result_problems(
+                ac_test_results_by_site_id,
+                manifests_by_path,
+            )
+        )
+        == result
+    )

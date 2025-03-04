@@ -7,15 +7,17 @@ import datetime
 import json
 import time
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from livestatus import SiteConfigurations, SiteId
 
 from cmk.ccc import store
 
-from cmk.utils.paths import var_dir
+from cmk.utils import paths
 from cmk.utils.user import UserId
+
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 from cmk.gui.config import active_config
 from cmk.gui.cron import CronJob, CronJobRegistry
@@ -28,6 +30,9 @@ from cmk.gui.userdb import load_users
 from cmk.gui.utils import gen_id
 from cmk.gui.utils.roles import user_may
 from cmk.gui.watolib.analyze_configuration import ACResultState, ACTestResult, perform_tests
+
+from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
+from cmk.mkp_tool import get_stored_manifests, Manifest, PackageStore, PathConfig
 
 
 @dataclass(frozen=True)
@@ -70,21 +75,139 @@ def _filter_extension_managing_users(user_ids: Sequence[UserId]) -> Sequence[Use
     return [u for u in user_ids if user_may(u, "wato.manage_mkps")]
 
 
-def _format_ac_test_results(
-    ac_test_results_by_site_id: Mapping[SiteId, Sequence[ACTestResult]],
-) -> str:
-    by_problem: dict[str, list[SiteId]] = {}
-    for site_id, ac_test_results in ac_test_results_by_site_id.items():
+def _make_path_config() -> PathConfig | None:
+    local_path = plugins_local_path()
+    addons_path = addons_plugins_local_path()
+    if local_path is None:
+        return None
+    if addons_path is None:
+        return None
+    return PathConfig(
+        cmk_plugins_dir=local_path,
+        cmk_addons_plugins_dir=addons_path,
+        agent_based_plugins_dir=paths.local_agent_based_plugins_dir,
+        agents_dir=paths.local_agents_dir,
+        alert_handlers_dir=paths.local_alert_handlers_dir,
+        bin_dir=paths.local_bin_dir,
+        check_manpages_dir=paths.local_legacy_check_manpages_dir,
+        checks_dir=paths.local_checks_dir,
+        doc_dir=paths.local_doc_dir,
+        gui_plugins_dir=paths.local_gui_plugins_dir,
+        installed_packages_dir=paths.installed_packages_dir,
+        inventory_dir=paths.local_inventory_dir,
+        lib_dir=paths.local_lib_dir,
+        locale_dir=paths.local_locale_dir,
+        local_root=paths.local_root,
+        mib_dir=paths.local_mib_dir,
+        mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
+        notifications_dir=paths.local_notifications_dir,
+        pnp_templates_dir=paths.local_pnp_templates_dir,
+        manifests_dir=paths.tmp_dir,
+        web_dir=paths.local_web_dir,
+    )
+
+
+def _group_manifests_by_path(
+    path_config: PathConfig, manifests: Sequence[Manifest]
+) -> Mapping[Path, Manifest]:
+    manifests_by_path: dict[Path, Manifest] = {}
+    for manifest in manifests:
+        for part, files in manifest.files.items():
+            for file in files:
+                manifests_by_path[Path(path_config.get_path(part)).resolve() / file] = manifest
+    return manifests_by_path
+
+
+def _find_manifest(
+    manifests_by_path: Mapping[Path, Manifest], ac_test_result_path: Path
+) -> Manifest | None:
+    for path, manifest in manifests_by_path.items():
+        if str(ac_test_result_path).endswith(str(path)):
+            return manifest
+    return None
+
+
+@dataclass(frozen=True)
+class _ACTestResultProblem:
+    ident: str
+    title: str
+    _descriptions: list[str] = field(default_factory=list)
+    _site_ids: set[SiteId] = field(default_factory=set)
+
+    def __post_init__(self) -> None:
+        assert self.ident
+        assert self.title
+
+    @property
+    def descriptions(self) -> Sequence[str]:
+        return self._descriptions
+
+    def add_description(self, description: str) -> None:
+        self._descriptions.append(description)
+
+    @property
+    def site_ids(self) -> Sequence[SiteId]:
+        return sorted(self._site_ids)
+
+    def add_site_id(self, site_id: SiteId) -> None:
+        self._site_ids.add(site_id)
+
+    def __repr__(self) -> str:
+        infos = []
+        if self.descriptions:
+            infos.append(", ".join(self.descriptions))
+        if self.site_ids:
+            infos.append(f"sites: {', '.join(self.site_ids)}")
+        return f"{self.title}: {', '.join(infos)}" if infos else self.title
+
+
+def _find_ac_test_result_problems(
+    not_ok_ac_test_results: Mapping[SiteId, Sequence[ACTestResult]],
+    manifests_by_path: Mapping[Path, Manifest],
+) -> Sequence[_ACTestResultProblem]:
+    problem_by_ident: dict[str, _ACTestResultProblem] = {}
+    for site_id, ac_test_results in not_ok_ac_test_results.items():
         for ac_test_result in ac_test_results:
-            by_problem.setdefault(ac_test_result.text, []).append(site_id)
-    return "\n".join([f"{p}: {', '.join(sids)}" for p, sids in by_problem.items()])
+            if ac_test_result.path:
+                if manifest := _find_manifest(manifests_by_path, ac_test_result.path):
+                    problem = problem_by_ident.setdefault(
+                        manifest.name,
+                        _ACTestResultProblem(
+                            manifest.name,
+                            f"MKP {manifest.name}",
+                        ),
+                    )
+                else:
+                    problem = problem_by_ident.setdefault(
+                        str(ac_test_result.path),
+                        _ACTestResultProblem(
+                            str(ac_test_result.path),
+                            "Unpackaged files",
+                        ),
+                    )
+                problem.add_description(f"{ac_test_result.text} (file: {ac_test_result.path})")
+            else:
+                problem = problem_by_ident.setdefault(
+                    ac_test_result.text,
+                    _ACTestResultProblem(
+                        ac_test_result.text,
+                        ac_test_result.text,
+                    ),
+                )
+            problem.add_site_id(site_id)
+
+    return list(problem_by_ident.values())
+
+
+def _format_ac_test_result_problems(ac_test_result_problems: Sequence[_ACTestResultProblem]) -> str:
+    return "\n".join([repr(p) for p in ac_test_result_problems])
 
 
 def execute_deprecation_tests_and_notify_users() -> None:
     if is_wato_slave_site():
         return
 
-    marker_file_store = _MarkerFileStore(Path(var_dir) / "deprecations")
+    marker_file_store = _MarkerFileStore(Path(paths.var_dir) / "deprecations")
 
     site_versions_by_site_id = {
         site_id: site_version
@@ -117,9 +240,25 @@ def execute_deprecation_tests_and_notify_users() -> None:
         marker_file_store.save(site_id, site_versions_by_site_id[site_id], ac_test_results)
         marker_file_store.cleanup(site_id)
 
-    # TODO at the moment we use the text attr for identifying a 'problem', eg.:
-    # "Loading 'metrics/foo' failed: name 'perfometer_info' is not defined (!!)"
-    ac_test_results_message = _format_ac_test_results(not_ok_ac_test_results)
+    ac_test_results_message = _format_ac_test_result_problems(
+        _find_ac_test_result_problems(
+            not_ok_ac_test_results,
+            (
+                _group_manifests_by_path(
+                    path_config,
+                    get_stored_manifests(
+                        PackageStore(
+                            shipped_dir=paths.optional_packages_dir,
+                            local_dir=paths.local_optional_packages_dir,
+                            enabled_dir=paths.local_enabled_packages_dir,
+                        )
+                    ).local,
+                )
+                if (path_config := _make_path_config())
+                else {}
+            ),
+        )
+    )
 
     now = int(time.time())
     for user_id in _filter_extension_managing_users(list(load_users())):

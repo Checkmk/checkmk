@@ -70,7 +70,7 @@ def test_checks_executor(
 
     source_info = SourceInfo(HOSTNAME, None, "test_dump", FetcherType.PUSH_AGENT, SourceType.HOST)
     submitter = BasicSubmitter(HOSTNAME)
-    config_cache = config.ConfigCache().initialize()
+    config_cache = config.ConfigCache(config.LoadedConfigFragment()).initialize()
     # make sure logwatch doesn't crash
     config._globally_cache_config_cache(config_cache)
 

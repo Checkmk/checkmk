@@ -25,7 +25,7 @@ from cmk.utils.tags import TagGroupID, TagID
 from cmk.checkengine.discovery import AutocheckEntry, AutochecksManager
 
 from cmk.base import config
-from cmk.base.config import ConfigCache
+from cmk.base.config import ConfigCache, LoadedConfigFragment
 
 
 class _AutochecksMocker(AutochecksManager):
@@ -40,12 +40,13 @@ class _AutochecksMocker(AutochecksManager):
 class Scenario:
     """Helper class to modify the Check_MK base configuration for unit tests"""
 
-    @staticmethod
-    def _get_config_cache() -> ConfigCache:
+    def _get_config_cache(self) -> ConfigCache:
         # NOTE: just `return ConfigCache()` here will break some tests.
         # It seems that we are subjected to some dark edition magic here
         # that will make this sometimes return a CMEConfigCache instance
-        return config._create_config_cache()
+        return config._create_config_cache(
+            LoadedConfigFragment(checkgroup_parameters=self.config.get("checkgroup_parameters", {}))
+        )
 
     def __init__(self, site_id: str = "unit") -> None:
         super().__init__()
@@ -205,9 +206,10 @@ class Scenario:
 class CEEScenario(Scenario):
     """Helper class to modify the Check_MK base configuration for unit tests"""
 
-    @staticmethod
-    def _get_config_cache() -> config.CEEConfigCache:
-        return config.CEEConfigCache()
+    def _get_config_cache(self) -> config.CEEConfigCache:
+        return config.CEEConfigCache(
+            LoadedConfigFragment(checkgroup_parameters=self.config.get("checkgroup_parameters", {}))
+        )
 
     def apply(self, monkeypatch: MonkeyPatch) -> config.CEEConfigCache:
         cc = super().apply(monkeypatch)

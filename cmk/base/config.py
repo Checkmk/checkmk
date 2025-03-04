@@ -578,6 +578,9 @@ class LoadedConfigFragment:
     discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]] = dataclasses.field(
         default_factory=dict
     )
+    checkgroup_parameters: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]] = (
+        dataclasses.field(default_factory=dict)
+    )
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -663,10 +666,15 @@ def _perform_post_config_loading_actions(
     _transform_plugin_names_from_160_to_170(global_dict)
     _drop_invalid_ssc_rules(global_dict)
 
-    config_cache = _create_config_cache().initialize()
+    loaded_config = LoadedConfigFragment(
+        discovery_rules=discovery_settings,
+        checkgroup_parameters=checkgroup_parameters,
+    )
+
+    config_cache = _create_config_cache(loaded_config).initialize()
     _globally_cache_config_cache(config_cache)
     return LoadingResult(
-        loaded_config=LoadedConfigFragment(discovery_rules=discovery_settings),
+        loaded_config=loaded_config,
         config_cache=config_cache,
     )
 
@@ -1899,8 +1907,9 @@ class AutochecksConfigurer:
 
 
 class ConfigCache:
-    def __init__(self) -> None:
+    def __init__(self, loaded_config: LoadedConfigFragment) -> None:
         super().__init__()
+        self._loaded_config: Final = loaded_config
         self.hosts_config = Hosts(hosts=(), clusters=(), shadow_hosts=())
         self.__enforced_services_table: dict[
             HostName,
@@ -1992,7 +2001,7 @@ class ConfigCache:
         # hidden dependencies to the loaded config in the global scope of this module.
         return ServiceConfigurer(
             _make_compute_check_parameters_cb(
-                self.ruleset_matcher, check_plugins, checkgroup_parameters
+                self.ruleset_matcher, check_plugins, self._loaded_config.checkgroup_parameters
             ),
             _make_service_description_cb(self.ruleset_matcher, check_plugins),
             self.effective_host,
@@ -4112,13 +4121,13 @@ def _globally_cache_config_cache(config_cache: ConfigCache) -> None:
     cache_manager.obtain_cache("config_cache")["cache"] = config_cache
 
 
-def _create_config_cache() -> ConfigCache:
+def _create_config_cache(loaded_config: LoadedConfigFragment) -> ConfigCache:
     """create clean config cache"""
     if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE:
-        return ConfigCache()
+        return ConfigCache(loaded_config)
     if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CME:
-        return CMEConfigCache()
-    return CEEConfigCache()
+        return CMEConfigCache(loaded_config)
+    return CEEConfigCache(loaded_config)
 
 
 # TODO(au): Find a way to retreive the matchtype_information directly from the
@@ -4432,7 +4441,7 @@ class FetcherFactory:
 
 
 class CEEConfigCache(ConfigCache):
-    def __init__(self) -> None:
+    def __init__(self, loaded_config: LoadedConfigFragment) -> None:
         self.__rrd_config: dict[HostName, RRDObjectConfig | None] = {}
         self.__recuring_downtimes: dict[HostName, Sequence[RecurringDowntime]] = {}
         self.__flap_settings: dict[HostName, tuple[float, float, float]] = {}
@@ -4442,7 +4451,7 @@ class CEEConfigCache(ConfigCache):
         self.__lnx_remote_alert_handlers: dict[HostName, Sequence[Mapping[str, str]]] = {}
         self.__rtc_secret: dict[HostName, str | None] = {}
         self.__agent_config: dict[HostName, Mapping[str, Any]] = {}
-        super().__init__()
+        super().__init__(loaded_config)
 
     def invalidate_host_config(self) -> None:
         super().invalidate_host_config()

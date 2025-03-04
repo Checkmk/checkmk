@@ -98,7 +98,9 @@ DEFAULT_TEST_PARAMETERS = logwatch_.ParameterLogwatchEc(
 
 def _patch_config_cache(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        config, config.access_globally_cached_config_cache.__name__, config.ConfigCache
+        config,
+        config.access_globally_cached_config_cache.__name__,
+        lambda: config.ConfigCache(config.LoadedConfigFragment()),
     )
 
 

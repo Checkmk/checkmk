@@ -31,12 +31,13 @@ class TestModeDumpAgent:
 
     @pytest.fixture
     def patch_config_load(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        loaded_config = config.LoadedConfigFragment()
         monkeypatch.setattr(
             config,
             config.load.__name__,
             lambda *a, **kw: config.LoadingResult(
-                loaded_config=config.LoadedConfigFragment(),
-                config_cache=config.ConfigCache(),
+                loaded_config=loaded_config,
+                config_cache=config.ConfigCache(loaded_config),
             ),
         )
 

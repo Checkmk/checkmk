@@ -2743,7 +2743,7 @@ def test_get_config_file_paths_with_confd(folder_path_test_config: None) -> None
 
 
 def test_load_config_folder_paths(folder_path_test_config: None) -> None:
-    config_cache = config.ConfigCache()
+    config_cache = config.ConfigCache(config.LoadedConfigFragment())
 
     assert config_cache.host_path(HostName("main-host")) == "/"
     assert config_cache.host_path(HostName("lvl0-host")) == "/wato/"

@@ -234,11 +234,12 @@ def test_automation_reloads_if_necessary(mocker: MockerFixture, cache: Cache) ->
 
 
 def test_health_check(cache: Cache) -> None:
+    loaded_config = LoadedConfigFragment()
     with _make_test_client(
         _DummyAutomationEngineSuccess(),
         cache,
         lambda plugins: LoadingResult(
-            loaded_config=LoadedConfigFragment(), config_cache=ConfigCache()
+            loaded_config=loaded_config, config_cache=ConfigCache(loaded_config)
         ),
         lambda ruleset_matcher: None,
     ) as client:

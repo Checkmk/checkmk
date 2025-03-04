@@ -739,7 +739,7 @@ def _execute_discovery(
             ),
             check_plugins=check_plugins,
             compute_check_parameters=_make_compute_check_parameters_of_autocheck(
-                ruleset_matcher, plugins.check_plugins, config.checkgroup_parameters
+                ruleset_matcher, plugins.check_plugins, loaded_config.checkgroup_parameters
             ),
             discovery_plugins=DiscoveryPluginMapper(
                 ruleset_matcher=ruleset_matcher,

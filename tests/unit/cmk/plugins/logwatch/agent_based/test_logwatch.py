@@ -166,7 +166,9 @@ def test_check_single(
 ) -> None:
     monkeypatch.setattr(logwatch, "get_value_store", lambda: {})
     monkeypatch.setattr(
-        config, config.access_globally_cached_config_cache.__name__, config.ConfigCache
+        config,
+        config.access_globally_cached_config_cache.__name__,
+        lambda: config.ConfigCache(config.LoadedConfigFragment()),
     )
     monkeypatch.setattr(
         logwatch_,

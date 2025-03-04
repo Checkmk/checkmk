@@ -810,14 +810,15 @@ def piggyback_formatter_with_cluster_name(
             )
 
 
-def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSettings) -> None:
-    client_config = query.parse_api_session_config(arguments)
+def _collect_api_data(
+    api_session_config: query.APISessionConfig, query_kubelet_endpoints: bool
+) -> APIData:
     LOGGER.info("Collecting API data")
     try:
-        api_data = from_kubernetes(
-            client_config,
+        return from_kubernetes(
+            api_session_config,
             LOGGER,
-            query_kubelet_endpoints=MonitoredObject.pvcs in arguments.monitored_objects,
+            query_kubelet_endpoints,
         )
     except urllib3.exceptions.MaxRetryError as e:
         raise ClusterConnectionError(
@@ -830,6 +831,10 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
             ) from e
         raise ClusterConnectionError("Failed to establish a connection.") from e
 
+
+def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSettings) -> None:
+    client_config = query.parse_api_session_config(arguments)
+    api_data = _collect_api_data(client_config, MonitoredObject.pvcs in arguments.monitored_objects)
     # Namespaces are handled independently from the cluster object in order to improve
     # testability. The long term goal is to remove all objects from the cluster object
     composed_entities = ComposedEntities.from_api_resources(

@@ -483,9 +483,6 @@ $ ruff format [the_file.py]
 
 ```console
 $ ruff check --fix [the_file.py]
-
-# or with pre-commit installed
-$ pre-commit run ruff
 ```
 
 #### Integration with CI

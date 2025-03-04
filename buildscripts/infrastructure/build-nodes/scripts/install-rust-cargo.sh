@@ -14,14 +14,14 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 # define toolchain version explicitly
 # 'stable' is allowed only for main(master) branch
-DEFAULT_TOOLCHAIN_VERSION="1.78"
+DEFAULT_TOOLCHAIN_VERSION="1.79"
 # Some packages require specific toolchain versions.
 # These versions will be installed in addition to the default toolchain version.
 # List the versions separated by space, e.g. "1 2 3", and add a reason below.
 #
 # Reasons for added toolchains:
 # - 1.75: Currently used by all packages
-ADDITIONAL_TOOLCHAIN_VERSIONS="1.75"
+ADDITIONAL_TOOLCHAIN_VERSIONS="1.78"
 
 DEFAULT_TARGET="x86_64-unknown-linux-gnu"
 # List additional targets here, separated by space.

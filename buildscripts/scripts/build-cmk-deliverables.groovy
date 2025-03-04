@@ -249,11 +249,18 @@ def main() {
         name: "Upload artifacts",
         condition: upload_to_testbuilds,
     ) {
+        dir("${deliverables_dir}") {
+            /// BOM shall have a unique name, see CMK-16483
+            sh("""
+                cp omd/bill-of-materials.json check-mk-${params.EDITION}-${cmk_version_rc_aware}-bill-of-materials.json
+            """);
+        }
+
         /// File.eachFileRecurse works on Jenkins master node only, so we have to build it
         /// on our own..
         def files_to_upload = {
             dir("${deliverables_dir}") {
-                cmd_output("ls *.{deb,rpm,cma,tar.gz} || true").split().toList();
+                cmd_output("ls *.{deb,rpm,cma,tar.gz,json} || true").split().toList();
             }
         }();
         print("Found files to upload: ${files_to_upload}");

@@ -101,12 +101,6 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             site_path="etc/check_mk/apache.d/wato",
             excludes=[],
         ),
-        ReplicationPath(
-            ty="dir",
-            ident="piggyback_hub",
-            site_path="etc/check_mk/piggyback_hub.d/wato",
-            excludes=[],
-        ),
     ]
 
     if edition is not cmk_version.Edition.CRE:

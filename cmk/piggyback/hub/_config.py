@@ -14,7 +14,7 @@ from cmk.utils.hostaddress import HostName
 
 from cmk.messaging import Connection, QueueName, RoutingKey
 
-from ._paths import create_paths, PiggybackHubPaths
+from ._paths import RELATIVE_CONFIG_PATH
 from ._utils import APP_NAME
 
 CONFIG_ROUTE = RoutingKey("config")
@@ -42,17 +42,17 @@ class _PersistedPiggybackHubConfig(BaseModel):
 
 def save_config(omd_root: Path, config: PiggybackHubConfig) -> None:
     persisted = _PersistedPiggybackHubConfig(locations=config.locations)
-    paths = create_paths(omd_root)
-    paths.config.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
-    tmp_path = paths.config.with_suffix(f".{os.getpid()}.tmp")
+    path = omd_root / RELATIVE_CONFIG_PATH
+    path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
+    tmp_path = path.with_suffix(f".{os.getpid()}.tmp")
     tmp_path.write_text(f"{persisted.model_dump_json()}\n")
-    tmp_path.rename(paths.config)
+    tmp_path.rename(path)
 
 
-def load_config(paths: PiggybackHubPaths) -> PiggybackHubConfig:
+def load_config(omd_root: Path) -> PiggybackHubConfig:
     try:
         locations = _PersistedPiggybackHubConfig.model_validate_json(
-            paths.config.read_text()
+            (omd_root / RELATIVE_CONFIG_PATH).read_text()
         ).locations
     except FileNotFoundError:
         locations = {}

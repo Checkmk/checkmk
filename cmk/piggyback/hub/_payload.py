@@ -24,7 +24,6 @@ from cmk.piggyback.backend import (
 )
 
 from ._config import load_config, PiggybackHubConfig
-from ._paths import create_paths
 from ._utils import make_connection, make_log_and_exit
 
 
@@ -78,7 +77,6 @@ class SendingPayloadProcess(multiprocessing.Process):
         self.logger = logger
         self.omd_root = omd_root
         self.site = omd_root.name
-        self.paths = create_paths(omd_root)
         self.reload_config = reload_config
         self.crash_report_callback = crash_report_callback
         self.task_name = "publishing on queue 'payload'"
@@ -90,7 +88,7 @@ class SendingPayloadProcess(multiprocessing.Process):
             make_log_and_exit(self.logger.info, f"Terminating: {self.task_name}"),
         )
 
-        config = load_config(self.paths)
+        config = load_config(self.omd_root)
         self.logger.debug("Loaded configuration: %r", config)
 
         failed_message = None
@@ -141,7 +139,7 @@ class SendingPayloadProcess(multiprocessing.Process):
         if not self.reload_config.is_set():
             return current_config
         self.logger.info("Reloading configuration")
-        config = load_config(self.paths)
+        config = load_config(self.omd_root)
         self.reload_config.clear()
         return config
 

@@ -315,12 +315,6 @@ def register(replication_path_registry_: ReplicationPathRegistry) -> None:
             site_path="etc/check_mk/apache.d/wato",
             excludes=[],
         ),
-        ReplicationPath(
-            ty="dir",
-            ident="piggyback_hub",
-            site_path="etc/check_mk/piggyback_hub.d/wato",
-            excludes=[],
-        ),
     ]:
         replication_path_registry.register(repl_path)
 

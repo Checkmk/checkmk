@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import ast
 from collections.abc import Iterator, Sequence
+from pathlib import Path
 
 import pytest
 
@@ -194,3 +196,38 @@ class _FakeACTestMultiSite(ACTest):
 )
 def test_ac_test_run(ac_test: type[ACTest], test_result: Sequence[ACTestResult]) -> None:
     assert merge_tests({SiteId("foo"): list(ac_test().run())}) == {SiteId("foo"): test_result}
+
+
+@pytest.mark.parametrize(
+    "ac_test_result",
+    [
+        pytest.param(
+            ACTestResult(
+                state=ACResultState.OK,
+                text="Text",
+                site_id=SiteId("NO_SITE"),
+                test_id="test_id",
+                category="category",
+                title="Title",
+                help="Help",
+                path=Path("/path/to/file"),
+            ),
+            id="with-path",
+        ),
+        pytest.param(
+            ACTestResult(
+                state=ACResultState.OK,
+                text="Text",
+                site_id=SiteId("NO_SITE"),
+                test_id="test_id",
+                category="category",
+                title="Title",
+                help="Help",
+                path=None,
+            ),
+            id="without-path",
+        ),
+    ],
+)
+def test_ac_test_result_repr(ac_test_result: ACTestResult) -> None:
+    assert ACTestResult.from_repr(ast.literal_eval(repr(ac_test_result))) == ac_test_result

@@ -23,12 +23,12 @@ from cmk.base.api.agent_based.register import (
     extract_known_discovery_rulesets,
 )
 
-_config: config.LoadedConfigFragment | None = None
+_config: config.LoadingResult | None = None
 _plugins: AgentBasedPlugins | None = None
 
 
 # TODO: This should be solved in the config module / ConfigCache object
-def _load_config() -> config.LoadedConfigFragment:
+def _load_config() -> config.LoadingResult:
     global _config
     if _config is None:
         # not sure if we need the plugins here (probably not)

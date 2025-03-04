@@ -21,13 +21,11 @@ import livestatus
 import cmk.utils.paths
 
 from cmk.base import diagnostics
-from cmk.base.config import ConfigCache, LoadedConfigFragment
+from cmk.base.config import LoadedConfigFragment
 
 
 def _make_diagnostics_dump() -> diagnostics.DiagnosticsDump:
-    return diagnostics.DiagnosticsDump(
-        LoadedConfigFragment(discovery_rules={}, config_cache=ConfigCache())
-    )
+    return diagnostics.DiagnosticsDump(LoadedConfigFragment())
 
 
 @pytest.fixture(autouse=True)
@@ -147,9 +145,7 @@ def test_diagnostics_element_general_content(
 
 
 def test_diagnostics_element_perfdata() -> None:
-    diagnostics_element = diagnostics.PerfDataDiagnosticsElement(
-        LoadedConfigFragment(discovery_rules={}, config_cache=ConfigCache())
-    )
+    diagnostics_element = diagnostics.PerfDataDiagnosticsElement(LoadedConfigFragment())
     assert diagnostics_element.ident == "perfdata"
     assert diagnostics_element.title == "Performance data"
     assert diagnostics_element.description == (

@@ -34,7 +34,7 @@ from cmk.base.automation_helper._app import (
 from cmk.base.automation_helper._cache import Cache
 from cmk.base.automation_helper._config import ReloaderConfig
 from cmk.base.automations import AutomationError
-from cmk.base.config import ConfigCache, LoadedConfigFragment
+from cmk.base.config import ConfigCache, LoadedConfigFragment, LoadingResult
 
 
 class _DummyAutomationResult(ABCAutomationResult):
@@ -52,7 +52,7 @@ class _DummyAutomationEngineSuccess:
         cmd: str,
         args: list[str],
         plugins: AgentBasedPlugins | None,
-        loaded_config: LoadedConfigFragment | None,
+        loading_result: LoadingResult | None,
     ) -> _DummyAutomationResult:
         sys.stdout.write("stdout_success")
         sys.stderr.write("stderr_success")
@@ -65,7 +65,7 @@ class _DummyAutomationEngineFailure:
         cmd: str,
         args: list[str],
         plugins: AgentBasedPlugins | None,
-        loaded_config: LoadedConfigFragment | None,
+        loading_result: LoadingResult | None,
     ) -> AutomationError:
         sys.stdout.write("stdout_failure")
         sys.stderr.write("stderr_failure")
@@ -78,7 +78,7 @@ class _DummyAutomationEngineSystemExit:
         cmd: str,
         args: list[str],
         plugins: AgentBasedPlugins | None,
-        loaded_config: LoadedConfigFragment | None,
+        loading_result: LoadingResult | None,
     ) -> AutomationError:
         sys.stdout.write("stdout_system_exit")
         sys.stderr.write("stderr_system_exit")
@@ -93,7 +93,7 @@ _EXAMPLE_AUTOMATION_PAYLOAD = AutomationPayload(
 def _make_test_client(
     engine: AutomationEngine,
     cache: Cache,
-    reload_config: Callable[[AgentBasedPlugins], LoadedConfigFragment],
+    reload_config: Callable[[AgentBasedPlugins], LoadingResult],
     clear_caches_before_each_call: Callable[[RulesetMatcher], None],
     reloader_config: ReloaderConfig = ReloaderConfig(
         active=True,
@@ -237,7 +237,9 @@ def test_health_check(cache: Cache) -> None:
     with _make_test_client(
         _DummyAutomationEngineSuccess(),
         cache,
-        lambda plugins: LoadedConfigFragment(discovery_rules={}, config_cache=ConfigCache()),
+        lambda plugins: LoadingResult(
+            loaded_config=LoadedConfigFragment(), config_cache=ConfigCache()
+        ),
         lambda ruleset_matcher: None,
     ) as client:
         resp = client.get("/health")
@@ -253,7 +255,7 @@ async def test_reloader_single_change(mocker: MockerFixture, cache: Cache) -> No
         last_reload_at=1,
         automation_or_reload_lock=asyncio.Lock(),
         plugins=None,
-        loaded_config=None,
+        loading_result=None,
     )
     mock_delay_state = _MockDelayState(
         call_counter=0,
@@ -296,7 +298,7 @@ async def test_reloader_two_changes(mocker: MockerFixture, cache: Cache) -> None
         last_reload_at=1,
         automation_or_reload_lock=asyncio.Lock(),
         plugins=None,
-        loaded_config=None,
+        loading_result=None,
     )
     mock_delay_state = _MockDelayState(
         call_counter=0,
@@ -347,7 +349,7 @@ async def test_reloader_takes_state_into_account(mocker: MockerFixture, cache: C
         last_reload_at=1,
         automation_or_reload_lock=lock,
         plugins=None,
-        loaded_config=None,
+        loading_result=None,
     )
     mock_delay_state = _MockDelayState(
         call_counter=0,

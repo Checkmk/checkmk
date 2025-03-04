@@ -80,7 +80,7 @@ def main() -> int:
     return 0
 
 
-def _reload_automation_config(plugins: AgentBasedPlugins) -> config.LoadedConfigFragment:
+def _reload_automation_config(plugins: AgentBasedPlugins) -> config.LoadingResult:
     cache_manager.clear()
     discovery_rulesets = extract_known_discovery_rulesets(plugins)
     return config.load(discovery_rulesets, validate_hosts=False)

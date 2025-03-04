@@ -55,25 +55,25 @@ class Automations:
         cmd: str,
         args: list[str],
         plugins: AgentBasedPlugins | None = None,
-        loaded_config: config.LoadedConfigFragment | None = None,
+        loading_result: config.LoadingResult | None = None,
     ) -> ABCAutomationResult | AutomationError:
         remaining_args, timeout = self._extract_timeout_from_args(args)
         with nullcontext() if timeout is None else Timeout(timeout, message="Action timed out."):
-            return self._execute(cmd, remaining_args, plugins, loaded_config)
+            return self._execute(cmd, remaining_args, plugins, loading_result)
 
     def execute_and_write_serialized_result_to_stdout(
         self,
         cmd: str,
         args: list[str],
         plugins: AgentBasedPlugins | None = None,
-        loaded_config: config.LoadedConfigFragment | None = None,
+        loading_result: config.LoadingResult | None = None,
     ) -> int:
         try:
             result = self.execute(
                 cmd,
                 args,
                 plugins,
-                loaded_config,
+                loading_result,
             )
         finally:
             profiling.output_profile()
@@ -97,7 +97,7 @@ class Automations:
         cmd: str,
         args: list[str],
         plugins: AgentBasedPlugins | None,
-        loaded_config: config.LoadedConfigFragment | None,
+        loading_result: config.LoadingResult | None,
     ) -> ABCAutomationResult | AutomationError:
         try:
             try:
@@ -109,7 +109,7 @@ class Automations:
                 )
 
             with tracer.span(f"execute_automation[{cmd}]"):
-                result = automation.execute(args, plugins, loaded_config)
+                result = automation.execute(args, plugins, loading_result)
 
         except (MKGeneralException, MKTimeout) as e:
             console.error(f"{e}", file=sys.stderr)
@@ -146,7 +146,7 @@ def load_plugins() -> AgentBasedPlugins:
     return plugins
 
 
-def load_config(discovery_rulesets: Iterable[RuleSetName]) -> config.LoadedConfigFragment:
+def load_config(discovery_rulesets: Iterable[RuleSetName]) -> config.LoadingResult:
     with tracer.span("load_config"):
         return config.load(discovery_rulesets, validate_hosts=False)
 
@@ -159,7 +159,7 @@ class Automation(abc.ABC):
         self,
         args: list[str],
         plugins: AgentBasedPlugins | None,
-        loaded_config: config.LoadedConfigFragment | None,
+        loaded_config: config.LoadingResult | None,
     ) -> ABCAutomationResult: ...
 
 

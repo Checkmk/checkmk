@@ -42,7 +42,7 @@ class AutomationEngine(Protocol):
         cmd: str,
         args: list[str],
         plugins: AgentBasedPlugins | None,
-        loaded_config: config.LoadedConfigFragment | None,
+        loading_result: config.LoadingResult | None,
     ) -> ABCAutomationResult | AutomationError: ...
 
 
@@ -51,7 +51,7 @@ class _State:
     automation_or_reload_lock: asyncio.Lock
     last_reload_at: float
     plugins: AgentBasedPlugins | None
-    loaded_config: config.LoadedConfigFragment | None
+    loading_result: config.LoadingResult | None
 
 
 @dataclass(frozen=True)
@@ -59,7 +59,7 @@ class _ApplicationDependencies:
     automation_engine: AutomationEngine
     changes_cache: Cache
     reloader_config: ReloaderConfig
-    reload_config: Callable[[AgentBasedPlugins], config.LoadedConfigFragment]
+    reload_config: Callable[[AgentBasedPlugins], config.LoadingResult]
     clear_caches_before_each_call: Callable[[RulesetMatcher], None]
     state: _State
 
@@ -73,7 +73,7 @@ def make_application(
     engine: AutomationEngine,
     cache: Cache,
     reloader_config: ReloaderConfig,
-    reload_config: Callable[[AgentBasedPlugins], config.LoadedConfigFragment],
+    reload_config: Callable[[AgentBasedPlugins], config.LoadingResult],
     clear_caches_before_each_call: Callable[[RulesetMatcher], None],
 ) -> FastAPI:
     app = FastAPI(
@@ -92,7 +92,7 @@ def make_application(
             automation_or_reload_lock=asyncio.Lock(),
             last_reload_at=0,
             plugins=None,
-            loaded_config=None,
+            loading_result=None,
         ),
     )
 
@@ -120,7 +120,7 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     dependencies.state.plugins = plugins
 
     tty.reinit()
-    dependencies.state.loaded_config = dependencies.reload_config(plugins)
+    dependencies.state.loading_result = dependencies.reload_config(plugins)
 
     reloader_task = asyncio.create_task(
         _reloader_task(
@@ -141,7 +141,7 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 async def _reloader_task(
     config: ReloaderConfig,
     cache: Cache,
-    reload_callback: Callable[[], config.LoadedConfigFragment],
+    reload_callback: Callable[[], config.LoadingResult],
     state: _State,
     delayer_factory: Callable[[float], Awaitable[None]] = asyncio.sleep,
 ) -> None:
@@ -170,7 +170,7 @@ async def _reloader_task(
 
                     LOGGER.info("[reloader] Triggering reload")
                     state.last_reload_at = time.time()
-                    state.loaded_config = reload_callback()
+                    state.loading_result = reload_callback()
                     break
 
             else:
@@ -211,7 +211,7 @@ def _execute_automation_endpoint(
     payload: AutomationPayload,
     engine: AutomationEngine,
     cache: Cache,
-    reload_config: Callable[[AgentBasedPlugins], config.LoadedConfigFragment],
+    reload_config: Callable[[AgentBasedPlugins], config.LoadingResult],
     clear_caches_before_each_call: Callable[[RulesetMatcher], None],
     state: _State,
 ) -> AutomationResponse:
@@ -230,7 +230,7 @@ def _execute_automation_endpoint(
             # We could intialize the `state` with `AgentBasedPlugins.empty()` but that would
             # bare the risk of accidentally operating with the empty set of plugins.
             raise RuntimeError("Plugins are not loaded yet")
-        state.loaded_config = reload_config(state.plugins)
+        state.loading_result = reload_config(state.plugins)
         LOGGER.warning("[automation] configurations were reloaded due to a stale state.")
 
     buffer_stdout = io.StringIO()
@@ -248,15 +248,15 @@ def _execute_automation_endpoint(
         _redirect_stdin(io.StringIO(payload.stdin)),
         temporary_log_level(cmk_logger, payload.log_level),
     ):
-        if state.loaded_config:
-            clear_caches_before_each_call(state.loaded_config.config_cache.ruleset_matcher)
+        if state.loading_result:
+            clear_caches_before_each_call(state.loading_result.config_cache.ruleset_matcher)
         try:
             automation_start_time = time.time()
             result_or_error_code: ABCAutomationResult | int = engine.execute(
                 payload.name,
                 list(payload.args),
                 state.plugins,
-                state.loaded_config,
+                state.loading_result,
             )
             automation_end_time = time.time()
         except SystemExit as system_exit:

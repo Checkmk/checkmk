@@ -67,7 +67,9 @@ class TestAutomationDiagHost:
         assert check_mk.AutomationDiagHost().execute(
             args,
             AgentBasedPlugins.empty(),
-            config.LoadedConfigFragment(discovery_rules={}, config_cache=ConfigCache()),
+            config.LoadingResult(
+                loaded_config=config.LoadedConfigFragment(), config_cache=ConfigCache()
+            ),
         ) == DiagHostResult(
             0,
             raw_data,
@@ -204,7 +206,10 @@ def test_automation_active_check(
         active_check.execute(
             active_check_args,
             AgentBasedPlugins.empty(),
-            config.LoadedConfigFragment(discovery_rules={}, config_cache=config_cache),
+            config.LoadingResult(
+                loaded_config=config.LoadedConfigFragment(),
+                config_cache=config_cache,
+            ),
         )
         == expected_result
     )
@@ -270,7 +275,9 @@ def test_automation_active_check_invalid_args(
     active_check.execute(
         active_check_args,
         AgentBasedPlugins.empty(),
-        config.LoadedConfigFragment(discovery_rules={}, config_cache=config_cache),
+        config.LoadingResult(
+            loaded_config=config.LoadedConfigFragment(), config_cache=config_cache
+        ),
     )
 
     assert error_message == capsys.readouterr().err

@@ -34,8 +34,9 @@ class TestModeDumpAgent:
         monkeypatch.setattr(
             config,
             config.load.__name__,
-            lambda *a, **kw: config.LoadedConfigFragment(
-                discovery_rules={}, config_cache=config.ConfigCache()
+            lambda *a, **kw: config.LoadingResult(
+                loaded_config=config.LoadedConfigFragment(),
+                config_cache=config.ConfigCache(),
             ),
         )
 

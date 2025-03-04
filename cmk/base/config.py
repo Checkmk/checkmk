@@ -571,14 +571,23 @@ class LoadedConfigFragment:
     The config loading currently mostly manipulates a global state.
     Return an instance of this class, to indicate that the config has been loaded.
 
-    Someday (TM): return the actual loaded config!
+    Someday (TM): return the actual loaded config, at which point this class will be quite big
+    (compare cmk/base/default_config/base ...)
     """
 
-    discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]]
-    # Adding the config cache as an attribute here is the easiest way to (almost) remove the need
-    # to access a globally cached instance and make sure it is only created upon loading the config.
-    # But I think it actually should be the other way around: This class should be
-    # an argument needed to instantiate the ConfigCache.
+    discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]] = dataclasses.field(
+        default_factory=dict
+    )
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class LoadingResult:
+    """Return the result of the config loading process.
+
+    This is hopefully temporary, until ConfigCache is dissolved ...
+    """
+
+    loaded_config: LoadedConfigFragment
     config_cache: ConfigCache
 
 
@@ -588,21 +597,21 @@ def load(
     discovery_rulesets: Iterable[RuleSetName],
     with_conf_d: bool = True,
     validate_hosts: bool = True,
-) -> LoadedConfigFragment:
+) -> LoadingResult:
     _initialize_config()
 
     _changed_var_names = _load_config(with_conf_d)
 
     _initialize_derived_config_variables()
 
-    loaded_config = _perform_post_config_loading_actions(discovery_rulesets)
+    loading_result = _perform_post_config_loading_actions(discovery_rulesets)
 
     if validate_hosts:
-        hosts_config = loaded_config.config_cache.hosts_config
+        hosts_config = loading_result.config_cache.hosts_config
         if duplicates := sorted(
             hosts_config.duplicates(
-                lambda hn: loaded_config.config_cache.is_active(hn)
-                and loaded_config.config_cache.is_online(hn)
+                lambda hn: loading_result.config_cache.is_active(hn)
+                and loading_result.config_cache.is_online(hn)
             )
         ):
             # TODO: Raise an exception
@@ -612,14 +621,14 @@ def load(
             )
             sys.exit(3)
 
-    return loaded_config
+    return loading_result
 
 
 # This function still mostly manipulates a global state.
 # Passing the discovery rulesets as an argument is a first step to make it more functional.
 def load_packed_config(
     config_path: ConfigPath, discovery_rulesets: Iterable[RuleSetName]
-) -> LoadedConfigFragment:
+) -> LoadingResult:
     """Load the configuration for the CMK helpers of CMC
 
     These files are written by PackedConfig().
@@ -644,7 +653,7 @@ def _initialize_config() -> None:
 
 def _perform_post_config_loading_actions(
     discovery_rulesets: Iterable[RuleSetName],
-) -> LoadedConfigFragment:
+) -> LoadingResult:
     """These tasks must be performed after loading the Check_MK base configuration"""
     # First cleanup things (needed for e.g. reloading the config)
     cache_manager.clear_all()
@@ -656,7 +665,10 @@ def _perform_post_config_loading_actions(
 
     config_cache = _create_config_cache().initialize()
     _globally_cache_config_cache(config_cache)
-    return LoadedConfigFragment(discovery_rules=discovery_settings, config_cache=config_cache)
+    return LoadingResult(
+        loaded_config=LoadedConfigFragment(discovery_rules=discovery_settings),
+        config_cache=config_cache,
+    )
 
 
 class SetFolderPathAbstract:

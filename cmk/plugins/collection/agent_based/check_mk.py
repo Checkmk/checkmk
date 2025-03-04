@@ -103,6 +103,11 @@ def inventory_checkmk(section: CheckmkSection) -> InventoryResult:
             label: section[key]
             for key, label in (
                 ("version", "version"),
+                # Labels for single directory installation
+                ("installationdirectory", "installation_directory"),
+                ("packagedirectory", "package_directory"),
+                ("runtimedirectory", "runtime_directory"),
+                # Labels for multi directory installation
                 ("agentdirectory", "agent_directory"),
                 ("datadirectory", "data_directory"),
                 ("spooldirectory", "spool_directory"),

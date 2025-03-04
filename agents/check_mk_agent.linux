@@ -509,17 +509,22 @@ export_utility_functions() {
 }
 
 section_checkmk() {
-    cat <<HERE
-<<<check_mk>>>
-Version: 2.5.0b1
-AgentOS: linux
-Hostname: $(uname -n)
-AgentDirectory: ${MK_CONFDIR}
-DataDirectory: ${MK_VARDIR}
-SpoolDirectory: ${SPOOLDIR}
-PluginsDirectory: ${PLUGINSDIR}
-LocalDirectory: ${LOCALDIR}
-HERE
+    echo "<<<check_mk>>>"
+    echo "Version: 2.5.0b1"
+    echo "AgentOS: linux"
+    echo "Hostname: $(uname -n)"
+
+    if [ -n "${MK_INSTALLDIR}" ]; then
+        echo "InstallationDirectory: ${MK_INSTALLDIR}"
+        echo "PackageDirectory: ${MK_INSTALLDIR}/package"
+        echo "RuntimeDirectory: ${MK_VARDIR}"
+    else
+        echo "AgentDirectory: ${MK_CONFDIR}"
+        echo "DataDirectory: ${MK_VARDIR}"
+        echo "SpoolDirectory: ${SPOOLDIR}"
+        echo "PluginsDirectory: ${PLUGINSDIR}"
+        echo "LocalDirectory: ${LOCALDIR}"
+    fi
 
     # try to find only_from configuration
     if [ -n "${REMOTE_HOST}" ]; then # xinetd

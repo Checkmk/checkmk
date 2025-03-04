@@ -14,7 +14,18 @@ from cmk.rrd.convert_rrds import convert_rrds  # pylint: disable=cmk-module-laye
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(prog="cmk-convert-rrds")
+    parser = argparse.ArgumentParser(
+        prog="cmk-convert-rrds",
+        description=(
+            "Converts the internal structure of existing RRDs"
+            "to the new structure as configured via the rulesets"
+            "cmc_host_rrd_config and cmc_service_rrd_config. If you do not specify"
+            "hosts, then all RRDs will be converted. Conversion just takes place"
+            "if the configuration of the RRDs has changed. The option --split-rrd"
+            "will activate conversion from exising RRDs in PNP storage type SINGLE"
+            "to MULTIPLE."
+        ),
+    )
     parser.add_argument("--split-rrds", action="store_true")
     parser.add_argument("--delete-rrds", action="store_true")
     parser.add_argument(

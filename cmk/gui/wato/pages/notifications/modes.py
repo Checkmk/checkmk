@@ -3787,6 +3787,7 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
         )
 
     def page(self) -> None:
+        html.enable_help_toggle()
         # TODO temp. solution to provide flashed message after quick setup
         if message := request.var("result"):
             # TODO Add notification rule number

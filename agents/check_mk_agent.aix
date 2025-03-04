@@ -355,11 +355,19 @@ section_checkmk() {
     echo "Version: 2.4.0b1"
     echo "AgentOS: aix"
     echo "Hostname: $(hostname)"
-    echo "AgentDirectory: ${MK_CONFDIR}"
-    echo "DataDirectory: ${MK_VARDIR}"
-    echo "SpoolDirectory: ${SPOOLDIR}"
-    echo "PluginsDirectory: ${PLUGINSDIR}"
-    echo "LocalDirectory: ${LOCALDIR}"
+
+    if [ -n "${MK_INSTALLDIR}" ]; then
+        echo "InstallationDirectory: ${MK_INSTALLDIR}"
+        echo "PackageDirectory: ${MK_INSTALLDIR}/package"
+        echo "RuntimeDirectory: ${MK_VARDIR}"
+    else
+        echo "AgentDirectory: ${MK_CONFDIR}"
+        echo "DataDirectory: ${MK_VARDIR}"
+        echo "SpoolDirectory: ${SPOOLDIR}"
+        echo "PluginsDirectory: ${PLUGINSDIR}"
+        echo "LocalDirectory: ${LOCALDIR}"
+    fi
+
     echo "OSType: unix"
     echo "OSName: AIX"
     echo "OSVersion: $(oslevel -s)"

@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# Alias: Start daemon for the piggyback-hub
+# Menu: Addons
+# Description:
+#  This option enables the piggyback-hub.
+#  It will distribute piggybacked sections to other remote sites
+#  that are part of the same distributed setup.
+
+case "$1" in
+    default)
+        echo "on"
+        ;;
+    choices)
+        echo "on: enable"
+        echo "off: disable"
+        ;;
+esac

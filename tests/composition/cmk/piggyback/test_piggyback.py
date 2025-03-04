@@ -12,11 +12,10 @@ import pytest
 
 from tests.composition.cmk.piggyback.piggyback_test_helper import (
     create_local_check,
-    disable_piggyback_hub_globally,
-    disable_piggyback_hub_remote_site,
     get_piggybacked_service_time,
     piggybacked_data_gets_updated,
     piggybacked_service_discovered,
+    set_omd_config_piggyback_hub,
 )
 
 from tests.testlib.site import Site
@@ -87,6 +86,8 @@ def _prepare_piggyback_environment(central_site: Site, remote_site: Site) -> Ite
         with (
             _setup_source_host(central_site, central_site.id, _HOSTNAME_SOURCE_CENTRAL),
             _setup_source_host(central_site, remote_site.id, _HOSTNAME_SOURCE_REMOTE),
+            set_omd_config_piggyback_hub(central_site, "on"),
+            set_omd_config_piggyback_hub(remote_site, "on"),
         ):
             central_site.openapi.changes.activate_and_wait_for_completion()
             yield
@@ -247,7 +248,10 @@ def test_piggyback_hub_disabled_globally(
             central_site, remote_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
         )
 
-        with disable_piggyback_hub_globally(central_site, remote_site.id):
+        with (
+            set_omd_config_piggyback_hub(central_site, "off"),
+            set_omd_config_piggyback_hub(remote_site, "off"),
+        ):
             assert not _piggybacked_service_gets_updated(
                 central_site, remote_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
             )
@@ -280,7 +284,10 @@ def test_piggyback_hub_disabled_remote_site(
             central_site, remote_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
         )
 
-        with disable_piggyback_hub_remote_site(central_site, remote_site.id):
+        with (
+            set_omd_config_piggyback_hub(central_site, "off"),
+            set_omd_config_piggyback_hub(remote_site, "off"),
+        ):
             assert not _piggybacked_service_gets_updated(
                 central_site, remote_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
             )

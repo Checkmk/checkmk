@@ -388,6 +388,10 @@ def main() {
                 "all packages",
                 exclude_pattern,
             );
+            /// BOM shall have a unique name, see CMK-16483
+            sh("""
+                cp ${checkout_dir}/omd/bill-of-materials.json ${WORKSPACE}/versions/${cmk_version_rc_aware}/check-mk-${params.EDITION}-${cmk_version_rc_aware}-bill-of-materials.json
+            """);
             artifacts_helper.upload_version_dir(
                 "${WORKSPACE}/versions/${cmk_version_rc_aware}", WEB_DEPLOY_DEST, WEB_DEPLOY_PORT, EXCLUDE_PATTERN=exclude_pattern);
             if (deploy_to_website) {

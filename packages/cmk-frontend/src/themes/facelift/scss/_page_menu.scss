@@ -998,6 +998,7 @@ div#page_menu_popups div[id^="popup_add_to_"] > div.content > span {
         border: none;
         border-radius: 0px;
         border: 1px solid $line-color;
+        background-color: $bg-color;
 
         &.active,
         &:hover,

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Literal
+
 from cmk.gui.num_split import cmp_num_split as _cmp_num_split
 from cmk.gui.type_defs import ColumnName, Row, SorterFunction
 
@@ -47,13 +49,19 @@ def cmp_ip_address(column: ColumnName, r1: Row, r2: Row) -> int:
     return compare_ips(r1.get(column, ""), r2.get(column, ""))
 
 
-def compare_ips(ip1: str, ip2: str) -> int:
+def compare_ips(ip1: str, ip2: str, ipv: Literal["ipv4", "ipv6"] = "ipv4") -> int:
     def split_ip(ip: str) -> tuple:
-        try:
-            return tuple(int(part) for part in ip.split("."))
-        except ValueError:
-            # Make hostnames comparable with IPv4 address representations
-            return (255, 255, 255, 255, ip)
+        if ipv == "ipv4":
+            try:
+                return tuple(int(part) for part in ip.split("."))
+            except ValueError:
+                # Make hostnames comparable with IPv4 address representations
+                return (255, 255, 255, 255, ip)
+
+        # ipv == "ipv6"
+        if not ip:
+            return ("ffff",) * 8
+        return tuple(part for part in ip.split(":"))
 
     v1, v2 = split_ip(ip1), split_ip(ip2)
     return (v1 > v2) - (v1 < v2)

@@ -154,6 +154,10 @@ msgstr ""
 " Isto também inclui quaisquer alterações efectuadas desde a última ativação "
 "que não necessitaram de ativação manual (marcadas com "
 
+msgid ""
+" To view content, click on \"<b>Apply filters</b>\" in the \"Filters\" panel."
+msgstr ""
+
 #, python-format
 msgid " and %s '%s'"
 msgstr " e %s '%s'"
@@ -12530,9 +12534,6 @@ msgstr "Sites Checkmk"
 
 msgid "Checkmk sites of host"
 msgstr "Verificar os sítios do anfitrião"
-
-msgid "Checkmk specific"
-msgstr "Checkmk específico"
 
 msgid "Checkmk state"
 msgstr "Estado do checkmk"
@@ -37268,6 +37269,10 @@ msgstr "Limitar o número máximo de cpus utilizado"
 msgid "Limit notifications by count to"
 msgstr "última notificação"
 
+#, fuzzy
+msgid "Limit number of events with graphs per bulk notification (default: 5)"
+msgstr "Gráficos por notificação (padrão: 5)"
+
 msgid "Limit number of processed search results"
 msgstr "Número limite de resultados de pesquisa processados"
 
@@ -38439,9 +38444,6 @@ msgstr "Níveis de temperatura mais baixos"
 msgid "Lower age levels for expire date"
 msgstr "Níveis de idade mais baixos para a data de expiração"
 
-msgid "Lower bound cannot be higher than upper bound."
-msgstr ""
-
 msgid "Lower case User-IDs"
 msgstr "IDs de usuário em minúsculas"
 
@@ -39313,6 +39315,10 @@ msgstr "Página do manual para este tipo de verificação"
 
 msgid "Manual snapshots"
 msgstr "Instantâneos manuais"
+
+#, fuzzy
+msgid "Manually added"
+msgstr "Verificação manual"
 
 #, python-format
 msgid "Manually execute this %s"
@@ -44624,10 +44630,6 @@ msgid "Number of goroutines"
 msgstr "Número de tentativas"
 
 #, fuzzy
-msgid "Number of graphs per event (default: 5)"
-msgstr "Gráficos por notificação (padrão: 5)"
-
-#, fuzzy
 msgid "Number of graphs per notification (default: 5)"
 msgstr "Gráficos por notificação (padrão: 5)"
 
@@ -45822,6 +45824,10 @@ msgstr "Mostrar apenas serviços neste estado"
 #, python-format
 msgid "Only show the %s if show more is active"
 msgstr "Só mostrar as %s se mostrar mais está ativo"
+
+#, fuzzy
+msgid "Only simple tags like 'h1', 'b' or 'i' are allowed."
+msgstr "Somente letras maiúsculas são permitidas"
 
 msgid ""
 "Only start downtime if host/service goes DOWN/UNREACH during the defined "
@@ -59559,11 +59565,6 @@ msgid "Specifies whether password authentication is allowed"
 msgstr "Especifica se a autenticação por senha é permitida"
 
 msgid ""
-"Specifies whether to send a notification or to cancel all previous "
-"notifications for the same method"
-msgstr ""
-
-msgid ""
 "Specifiy time ranges during which no motion is expected. Outside these "
 "times, the motion detector will always be in state OK"
 msgstr ""
@@ -60528,6 +60529,9 @@ msgid ""
 msgstr ""
 "A partir da versão 1.6.0, este valor deve ser configurado. Leia o Werk #6646 "
 "para mais informações."
+
+msgid "Starting snapshot creation in process pool"
+msgstr ""
 
 msgid "Starting up"
 msgstr "Início de operação"
@@ -63112,6 +63116,14 @@ msgstr "As %s pararam de bater"
 #, python-format
 msgid "The %s you are trying to delete does not exist."
 msgstr "As %s que você está tentando apagar não existem."
+
+#, fuzzy
+msgid "The 'notification number' value must be greater than 0."
+msgstr "O agrupamento deve ter pelo menos um nó"
+
+#, fuzzy
+msgid "The 'send every' value must be greater than 0."
+msgstr "O agrupamento deve ter pelo menos um nó"
 
 msgid "The <i>from</i> time must not be later then the <i>until</i> time."
 msgstr "O tempo <i> de</i> não deve ser posterior, então o tempo <i> até</i>."
@@ -65783,6 +65795,10 @@ msgid "The login is currently locked"
 msgstr "O login está actualmente bloqueado"
 
 #, fuzzy
+msgid "The lower bound is greater than the upper bound."
+msgstr "O agrupamento deve ter pelo menos um nó"
+
+#, fuzzy
 msgid "The lower bound must be greater than 0."
 msgstr "O agrupamento deve ter pelo menos um nó"
 
@@ -66291,10 +66307,6 @@ msgstr ""
 
 msgid "The notification is being processed"
 msgstr "A notificação está sendo processada"
-
-#, fuzzy
-msgid "The notification number value must be greater than 0."
-msgstr "O agrupamento deve ter pelo menos um nó"
 
 #, python-format
 msgid "The notification script %s does not allow bulking."
@@ -67163,10 +67175,6 @@ msgstr "Os anfitriões seleccionados não têm atributos explícitos"
 
 msgid "The selected icon does not exist."
 msgstr "O ícone selecionado não existe."
-
-#, fuzzy
-msgid "The send every value must be greater than 0."
-msgstr "O agrupamento deve ter pelo menos um nó"
 
 msgid "The sensor name"
 msgstr "O nome do sensor"
@@ -70130,6 +70138,12 @@ msgstr "Esta página não fornece uma ajuda em linha."
 msgid "This page does not support cluster hosts."
 msgstr "Esta página não suporta alojamentos de cluster."
 
+#, python-format
+msgid ""
+"This page provides a comprehensive overview of the certificates Checkmk uses "
+"internally. Trusted CAs for TLS are managed in the <a href='%s'>settings</a>."
+msgstr ""
+
 msgid "This page was not found. Sorry."
 msgstr "Esta página não foi encontrada. Desculpe."
 
@@ -72153,12 +72167,6 @@ msgstr ""
 "de verificação padrão."
 
 msgid ""
-"This setting decides apply changes and discovery/activate are synctronized."
-"You may need to disable interlock if your system needs to process a lot of "
-"hosts in short time"
-msgstr ""
-
-msgid ""
 "This setting decides which types of messages to log into the daemon log of "
 "the Checkmk Micro Core. The object history (service alerts, events, etc.) is "
 "<b>not</b> affected by this setting."
@@ -73718,6 +73726,11 @@ msgstr "Alternar a barra lateral"
 
 msgid "Toggle the visibility of this metric"
 msgstr "Alternar a visibilidade desta métrica"
+
+msgid ""
+"Toggle to either send notifications or suppress all previous notifications "
+"for the method selected."
+msgstr ""
 
 msgid "Token"
 msgstr "Token"
@@ -77233,11 +77246,12 @@ msgid "Unevictable memory"
 msgstr "Memória irrecuperável"
 
 #, fuzzy
-msgid "Unexpected notification count values passed."
+msgid "Unexpected 'notification count' values passed to form."
 msgstr "Eliminar regra de notificação #%d"
 
-msgid "Unexpected throttling values shape passed."
-msgstr ""
+#, fuzzy
+msgid "Unexpected 'throttling' values passed to form."
+msgstr "Eliminar regra de notificação #%d"
 
 #, python-format
 msgid ""
@@ -78769,9 +78783,6 @@ msgstr "Utilização em notificações"
 
 msgid "Use index"
 msgstr "Use o índice"
-
-msgid "Use inter lock to syncronize host processing with discovery/activate"
-msgstr ""
 
 msgid "Use invertible C-style mangling"
 msgstr "Use o mangling invertível estilo C"
@@ -88047,6 +88058,13 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
+
+#~ msgid "Checkmk specific"
+#~ msgstr "Checkmk específico"
+
+#, fuzzy
+#~ msgid "Number of graphs per event (default: 5)"
+#~ msgstr "Gráficos por notificação (padrão: 5)"
 
 #, fuzzy, python-format
 #~ msgid "%d check plug-ins trying to use the removed API: %s"

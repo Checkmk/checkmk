@@ -151,6 +151,10 @@ msgstr ""
 " Aceasta include, de asemenea, orice modificări efectuate de la ultima "
 "activare care nu au necesitat activare manuală (marcate cu "
 
+msgid ""
+" To view content, click on \"<b>Apply filters</b>\" in the \"Filters\" panel."
+msgstr ""
+
 #, python-format
 msgid " and %s '%s'"
 msgstr " și %s '%s'"
@@ -12543,9 +12547,6 @@ msgstr "Site-uri Checkmk"
 
 msgid "Checkmk sites of host"
 msgstr "Verificați site-urile de gazdă"
-
-msgid "Checkmk specific"
-msgstr "Checkmk specific"
 
 msgid "Checkmk state"
 msgstr "Verificați starea Checkmk"
@@ -37353,6 +37354,10 @@ msgstr "Limitarea numărului maxim de cpu-uri utilizate"
 msgid "Limit notifications by count to"
 msgstr "Notificări de testare pe"
 
+#, fuzzy
+msgid "Limit number of events with graphs per bulk notification (default: 5)"
+msgstr "Grafice pe notificare (implicit: 5)"
+
 msgid "Limit number of processed search results"
 msgstr "Limitarea numărului de rezultate de căutare procesate"
 
@@ -38514,9 +38519,6 @@ msgstr "Niveluri mai scăzute de temperatură"
 msgid "Lower age levels for expire date"
 msgstr "Niveluri de vârstă mai mici pentru data de expirare"
 
-msgid "Lower bound cannot be higher than upper bound."
-msgstr ""
-
 msgid "Lower case User-IDs"
 msgstr "ID-uri de utilizator cu minuscule"
 
@@ -39382,6 +39384,10 @@ msgstr "Pagina de manual pentru acest tip de control"
 
 msgid "Manual snapshots"
 msgstr "Instantanee manuale"
+
+#, fuzzy
+msgid "Manually added"
+msgstr "Verificare manuală"
 
 #, python-format
 msgid "Manually execute this %s"
@@ -44711,10 +44717,6 @@ msgid "Number of goroutines"
 msgstr "Numărul de încercări repetate"
 
 #, fuzzy
-msgid "Number of graphs per event (default: 5)"
-msgstr "Grafice pe notificare (implicit: 5)"
-
-#, fuzzy
 msgid "Number of graphs per notification (default: 5)"
 msgstr "Grafice pe notificare (implicit: 5)"
 
@@ -45919,6 +45921,10 @@ msgstr "Afișați numai serviciile din aceste state"
 #, python-format
 msgid "Only show the %s if show more is active"
 msgstr "Afișează %s numai dacă este activată opțiunea \"Show more\"."
+
+#, fuzzy
+msgid "Only simple tags like 'h1', 'b' or 'i' are allowed."
+msgstr "Sunt permise doar literele majuscule"
 
 msgid ""
 "Only start downtime if host/service goes DOWN/UNREACH during the defined "
@@ -59700,11 +59706,6 @@ msgid "Specifies whether password authentication is allowed"
 msgstr "Specifică dacă este permisă autentificarea cu parolă"
 
 msgid ""
-"Specifies whether to send a notification or to cancel all previous "
-"notifications for the same method"
-msgstr ""
-
-msgid ""
 "Specifiy time ranges during which no motion is expected. Outside these "
 "times, the motion detector will always be in state OK"
 msgstr ""
@@ -60685,6 +60686,9 @@ msgid ""
 msgstr ""
 "Începând cu versiunea 1.6.0, această valoare trebuie să fie configurată. "
 "Citiți Werk #6646 pentru informații suplimentare."
+
+msgid "Starting snapshot creation in process pool"
+msgstr ""
 
 msgid "Starting up"
 msgstr "Pornirea"
@@ -63266,6 +63270,14 @@ msgstr "%s a încetat să mai bată din aripi"
 #, python-format
 msgid "The %s you are trying to delete does not exist."
 msgstr "%s pe care încercați să îl ștergeți nu există."
+
+#, fuzzy
+msgid "The 'notification number' value must be greater than 0."
+msgstr "Clusterul trebuie să aibă cel puțin un nod"
+
+#, fuzzy
+msgid "The 'send every' value must be greater than 0."
+msgstr "Clusterul trebuie să aibă cel puțin un nod"
 
 msgid "The <i>from</i> time must not be later then the <i>until</i> time."
 msgstr ""
@@ -65962,6 +65974,10 @@ msgid "The login is currently locked"
 msgstr "Conectarea este blocată în prezent"
 
 #, fuzzy
+msgid "The lower bound is greater than the upper bound."
+msgstr "Clusterul trebuie să aibă cel puțin un nod"
+
+#, fuzzy
 msgid "The lower bound must be greater than 0."
 msgstr "Clusterul trebuie să aibă cel puțin un nod"
 
@@ -66486,10 +66502,6 @@ msgstr ""
 
 msgid "The notification is being processed"
 msgstr "Notificarea este în curs de procesare"
-
-#, fuzzy
-msgid "The notification number value must be greater than 0."
-msgstr "Clusterul trebuie să aibă cel puțin un nod"
 
 #, python-format
 msgid "The notification script %s does not allow bulking."
@@ -67365,10 +67377,6 @@ msgstr "Gazdele selectate nu au atribute explicite"
 
 msgid "The selected icon does not exist."
 msgstr "Pictograma selectată nu există."
-
-#, fuzzy
-msgid "The send every value must be greater than 0."
-msgstr "Clusterul trebuie să aibă cel puțin un nod"
 
 msgid "The sensor name"
 msgstr "Numele senzorului"
@@ -70383,6 +70391,12 @@ msgstr "Această pagină nu oferă un ajutor în linie."
 msgid "This page does not support cluster hosts."
 msgstr "Această pagină nu acceptă gazde de cluster."
 
+#, python-format
+msgid ""
+"This page provides a comprehensive overview of the certificates Checkmk uses "
+"internally. Trusted CAs for TLS are managed in the <a href='%s'>settings</a>."
+msgstr ""
+
 msgid "This page was not found. Sorry."
 msgstr "Această pagină nu a fost găsită. Ne pare rău."
 
@@ -72438,12 +72452,6 @@ msgstr ""
 "intervalului de verificare implicit."
 
 msgid ""
-"This setting decides apply changes and discovery/activate are synctronized."
-"You may need to disable interlock if your system needs to process a lot of "
-"hosts in short time"
-msgstr ""
-
-msgid ""
 "This setting decides which types of messages to log into the daemon log of "
 "the Checkmk Micro Core. The object history (service alerts, events, etc.) is "
 "<b>not</b> affected by this setting."
@@ -74015,6 +74023,11 @@ msgstr "Comutați bara laterală"
 
 msgid "Toggle the visibility of this metric"
 msgstr "Comutați vizibilitatea acestei măsurători"
+
+msgid ""
+"Toggle to either send notifications or suppress all previous notifications "
+"for the method selected."
+msgstr ""
 
 msgid "Token"
 msgstr "Token"
@@ -77454,11 +77467,12 @@ msgid "Unevictable memory"
 msgstr "Memorie de neuitat"
 
 #, fuzzy
-msgid "Unexpected notification count values passed."
+msgid "Unexpected 'notification count' values passed to form."
 msgstr "Ștergerea regulii de notificare #%d"
 
-msgid "Unexpected throttling values shape passed."
-msgstr ""
+#, fuzzy
+msgid "Unexpected 'throttling' values passed to form."
+msgstr "Ștergerea regulii de notificare #%d"
 
 #, python-format
 msgid ""
@@ -78989,9 +79003,6 @@ msgstr "Utilizare în notificări"
 
 msgid "Use index"
 msgstr "Indice de utilizare"
-
-msgid "Use inter lock to syncronize host processing with discovery/activate"
-msgstr ""
 
 msgid "Use invertible C-style mangling"
 msgstr "Folosiți mangling inversabil în stil C"
@@ -88337,6 +88348,13 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#~ msgid "Checkmk specific"
+#~ msgstr "Checkmk specific"
+
+#, fuzzy
+#~ msgid "Number of graphs per event (default: 5)"
+#~ msgstr "Grafice pe notificare (implicit: 5)"
 
 #, fuzzy, python-format
 #~ msgid "%d check plug-ins trying to use the removed API: %s"

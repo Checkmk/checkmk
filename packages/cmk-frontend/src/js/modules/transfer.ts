@@ -103,11 +103,7 @@ function handle_report_error(
     } else {
         const tt = document.createElement("tt");
         tt.textContent = handler_data!["base_url"];
-        message_element.append(
-            "(",
-            tt,
-            "is not reachable. Does your browser block XMLHttpRequest requests?).",
-        );
+        message_element.append(" (", tt, " is currently not reachable)");
     }
 }
 

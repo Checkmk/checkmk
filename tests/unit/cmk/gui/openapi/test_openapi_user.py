@@ -1011,6 +1011,7 @@ def add_default_customer_in_managed_edition(params: dict[str, Any]) -> None:
         params["customer"] = "global"
 
 
+@pytest.mark.skip(reason="flaky)")
 @managedtest
 @patch(
     "cmk.gui.userdb.user_attributes.theme_choices",

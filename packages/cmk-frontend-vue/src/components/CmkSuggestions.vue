@@ -4,7 +4,9 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type Ref, nextTick, ref, watch } from 'vue'
+import { type Ref, useTemplateRef, ref } from 'vue'
+import { immediateWatch } from '@/lib/watch'
+
 import CmkScrollContainer from './CmkScrollContainer.vue'
 import CmkHtml from '@/components/CmkHtml.vue'
 
@@ -16,127 +18,166 @@ export interface Suggestion {
 const {
   error = '',
   noResultsHint = '',
-  onSelect,
   suggestions,
   showFilter,
   role
 } = defineProps<{
   suggestions: Suggestion[]
-  onSelect: (suggestion: Suggestion) => void
   showFilter: boolean
   role: 'suggestion' | 'option'
   noResultsHint?: string
   error?: string
 }>()
 
+const emit = defineEmits<{
+  select: [suggestion: Suggestion]
+}>()
+
+const suggestionRefs = useTemplateRef('suggestionRefs')
+const filterString = ref<string>('')
 const suggestionInputRef = ref<HTMLInputElement | null>(null)
-const suggestionRefs = ref<(HTMLLIElement | null)[]>([])
 
-const filterString = ref('')
-const filteredSuggestions = ref<number[]>(suggestions.map((_, index) => index))
-const selectedSuggestionIndex: Ref<number | null> = ref(suggestions.length > 0 ? 0 : null)
+const filteredSuggestions = ref<Array<Suggestion>>([])
+const currentlySelectedElement: Ref<Suggestion | null> = ref(null) // null means first element
 
-watch(filterString, (newFilterString) => {
-  filteredSuggestions.value = suggestions
+immediateWatch(
+  () => suggestions,
+  (newValue: Suggestion[]) => {
+    filteredSuggestions.value = newValue
+  }
+)
+function isSuggestionSelected(suggestion: Suggestion, index: number): boolean {
+  if (currentlySelectedElement.value === null && index === 0) {
+    return true
+  }
+  if (suggestion.name === currentlySelectedElement.value?.name) {
+    return true
+  }
+  return false
+}
+
+function scrollCurrentlySelectedIntoView(): void {
+  if (suggestionRefs.value === null) {
+    return
+  }
+  suggestionRefs.value[getCurrentlySelectedAsIndex()]?.scrollIntoView({ block: 'nearest' })
+}
+
+function getCurrentlySelectedAsIndex(): number {
+  let currentlySelected = currentlySelectedElement.value
+  if (currentlySelected === null) {
+    if (!filteredSuggestions.value[0]) {
+      throw new Error(
+        'Internal error: CmkSuggestions: should select first element, but element not available'
+      )
+    }
+    currentlySelected = filteredSuggestions.value[0]
+  }
+  const currentElement = filteredSuggestions.value
     .map((suggestion, index) => ({
-      suggestion,
-      index
+      name: suggestion.name,
+      index: index
     }))
-    .filter(({ suggestion }) =>
-      suggestion.title.toLowerCase().includes(newFilterString.toLowerCase())
-    )
-    .map(({ index }) => index)
-  selectedSuggestionIndex.value = filteredSuggestions.value[0] ?? null
-})
-
-function selectSuggestion(suggestionIndex: number): void {
-  const selection = suggestions[suggestionIndex]
-  if (selection) {
-    onSelect(selection)
+    .find(({ name }) => currentlySelected.name === name)
+  if (currentElement === undefined) {
+    throw new Error('Internal error: CmkSuggestions: Could not find current element')
   }
+  return currentElement.index
 }
 
-function setActiveSuggestion(filteredSuggestionIndex: number): void {
-  const suggestionIndex = filteredSuggestions.value[filteredSuggestionIndex]
-  if (suggestionIndex === undefined) {
-    throw new Error('Invalid filtered suggestion index')
-  }
-  selectedSuggestionIndex.value = suggestionIndex
-  // eslint-disable-next-line @typescript-eslint/no-floating-promises
-  nextTick(() => {
-    suggestionRefs.value[suggestionIndex]?.scrollIntoView({ block: 'nearest' })
-  })
+function filterUpdated(newFilterString: string) {
+  filterString.value = newFilterString
+  filteredSuggestions.value = suggestions.filter(({ title }) =>
+    title.toLowerCase().includes(newFilterString.toLowerCase())
+  )
 }
 
-function keyEnter(event: InputEvent): void {
+function onKeyEnter(event: InputEvent): void {
   event.stopPropagation()
-  if (selectedSuggestionIndex.value === null) {
+  if (currentlySelectedElement.value === null) {
+    selectSibilingElement(0)
+  }
+  if (currentlySelectedElement.value === null) {
     return
   }
-  selectSuggestion(selectedSuggestionIndex.value)
+  emit('select', currentlySelectedElement.value)
 }
 
-function moveSuggestion(amount: number): void {
-  if (selectedSuggestionIndex.value === null) {
+function onClickSuggestion(suggestion: Suggestion) {
+  emit('select', suggestion)
+}
+
+function selectSibilingElement(direction: number) {
+  if (!filteredSuggestions.value.length) {
     return
   }
-  const selectedFilteredSuggestionIndex = filteredSuggestions.value.findIndex(
-    (index) => index === selectedSuggestionIndex.value
-  )
-  if (selectedFilteredSuggestionIndex === -1) {
-    throw new Error('Selected suggestion suggestion index not found in filtered suggestions')
-  }
-  setActiveSuggestion(
-    wrap(selectedFilteredSuggestionIndex + amount, filteredSuggestions.value.length)
-  )
+
+  const currentIndex = getCurrentlySelectedAsIndex()
+
+  currentlySelectedElement.value =
+    filteredSuggestions.value[wrap(currentIndex + direction, filteredSuggestions.value.length)] ||
+    null
 }
 
 function wrap(index: number, length: number): number {
   return (index + length) % length
 }
 
+function selectNextElement() {
+  selectSibilingElement(+1)
+  scrollCurrentlySelectedIntoView()
+}
+function selectPreviousElement() {
+  selectSibilingElement(-1)
+  scrollCurrentlySelectedIntoView()
+}
+
 function focus(): void {
   if (showFilter) {
     suggestionInputRef.value?.focus()
-  } else if (suggestions.length > 0) {
-    suggestionRefs.value[0]?.focus()
+  } else if (filteredSuggestions.value.length > 0) {
+    if (suggestionRefs.value && suggestionRefs.value[0]) {
+      suggestionRefs.value[0].focus()
+    }
   }
-}
-
-function advance(): void {
-  moveSuggestion(1)
 }
 
 defineExpose({
   focus,
-  advance
+  selectNextElement,
+  selectPreviousElement
 })
 </script>
 
 <template>
   <ul
     class="cmk-suggestions"
-    @keydown.enter.prevent="keyEnter"
-    @keydown.down.prevent="() => moveSuggestion(1)"
-    @keydown.up.prevent="() => moveSuggestion(-1)"
+    @keydown.enter.prevent="onKeyEnter"
+    @keydown.down.prevent="selectNextElement"
+    @keydown.up.prevent="selectPreviousElement"
   >
     <span :class="{ hidden: !showFilter, input: true }">
-      <input ref="suggestionInputRef" v-model="filterString" type="text"
-    /></span>
+      <input
+        ref="suggestionInputRef"
+        v-model="filterString"
+        type="text"
+        @update:model-value="filterUpdated"
+      />
+    </span>
     <CmkScrollContainer :max-height="'200px'">
       <li v-if="error" class="cmk-suggestions--error"><CmkHtml :html="error" /></li>
-      <template v-for="(suggestion, index) in suggestions" :key="suggestion.name">
-        <li
-          v-show="filteredSuggestions.includes(index)"
-          :ref="(el) => (suggestionRefs[index] = el as HTMLLIElement)"
-          tabindex="-1"
-          :role="role"
-          :class="{ selected: index === selectedSuggestionIndex, selectable: true }"
-          @click.prevent="() => selectSuggestion(index)"
-        >
-          {{ suggestion.title }}
-        </li>
-      </template>
+      <li
+        v-for="(suggestion, index) in filteredSuggestions"
+        ref="suggestionRefs"
+        :key="suggestion.name"
+        tabindex="-1"
+        :role="role"
+        class="selectable"
+        :class="{ selected: isSuggestionSelected(suggestion, index) }"
+        @click.prevent="onClickSuggestion(suggestion)"
+      >
+        {{ suggestion.title }}
+      </li>
       <li v-if="filteredSuggestions.length === 0 && noResultsHint !== ''">
         {{ noResultsHint }}
       </li>

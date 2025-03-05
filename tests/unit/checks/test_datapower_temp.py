@@ -58,6 +58,14 @@ def test_discover_datapower_temp(datapower_temp_plugin: CheckPlugin) -> None:
             id="WARN",
         ),
         pytest.param(
+            "CPU3",
+            [
+                Result(state=State.OK, summary="70.0 °C"),
+                Metric("temp", 70.0),
+            ],
+            id="missing dev_warn_level",
+        ),
+        pytest.param(
             "CPU4",
             [Result(state=State.UNKNOWN, summary="device status: noReading")],
             id="no reading",
@@ -84,19 +92,3 @@ def test_check_datapower_temp(
         )
         == expected_result
     )
-
-
-def test_check_datapower_temp_no_dev_levels(
-    datapower_temp_plugin: CheckPlugin,
-) -> None:
-    with pytest.raises(ValueError):
-        assert (
-            list(
-                datapower_temp_plugin.check_function(
-                    item="CPU3",
-                    params={},
-                    section=_STRING_TABLE,
-                )
-            )
-            == []
-        )

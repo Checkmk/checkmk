@@ -1,0 +1,11 @@
+Title: datapower_temp: Fix 'ValueError (could not convert string to float '')
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1741191233
+Edition: cre
+Level: 1
+Version: 2.2.0p41
+
+When either 'dpStatusEnvironmentalSensorsUpperNonCriticalThreshold' or 'dpStatusEnvironmentalSensorsUpperCriticalThreshold' was not present in the walk, it caused the check to crash.
+This has now been fixed. If any of the values is missing, they will be ignored.

@@ -74,7 +74,7 @@ const catalog = ref<Catalog>({
 
 <template>
   <h2>With embedded Form</h2>
-  <CmkButton variant="tertiary" @click="open = !open">trigger button text</CmkButton>
+  <CmkButton @click="open = !open">trigger button text</CmkButton>
   <SlideIn :open="open" :header="{ title: 'some title', closeButton: true }" @close="open = false">
     <div style="margin-bottom: 1em">
       <CmkButtonSubmit>save</CmkButtonSubmit>

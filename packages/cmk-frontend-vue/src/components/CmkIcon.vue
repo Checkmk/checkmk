@@ -51,16 +51,16 @@ export interface CmkIconProps {
   name: string
 
   /** @property {undefined | CmkIconVariants['variant']} variant - Styling variant of the icon */
-  variant?: CmkIconVariants['variant']
+  variant?: CmkIconVariants['variant'] | undefined
 
   /** @property {undefined | CmkIconVariants['size']} size - Width and height of the icon */
-  size?: CmkIconVariants['size']
+  size?: CmkIconVariants['size'] | undefined
 
   /** @property {undefined | number} rotate - Transform rotate value in degrees */
-  rotate?: number
+  rotate?: number | undefined
 
   /** @property {undefined | string} title - Title to be displayed on hover */
-  title?: string
+  title?: string | undefined
 }
 
 const props = defineProps<CmkIconProps>()

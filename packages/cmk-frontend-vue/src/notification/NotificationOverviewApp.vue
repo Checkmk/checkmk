@@ -14,8 +14,7 @@ import NotificationStatsComponent from '@/notification/components/NotificationSt
 import CoreStatistics from '@/notification/components/CoreStats.vue'
 import NotificationRules from '@/notification/components/NotificationRules.vue'
 import FallbackWarningComponent from '@/notification/components/FallbackWarning.vue'
-import CmkButton from '@/components/CmkButton.vue'
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIconButton from '@/components/CmkIconButton.vue'
 import { ref, onMounted } from 'vue'
 
 const props = defineProps<{
@@ -58,9 +57,7 @@ function toggleContent() {
     :user_id="user_id"
   ></FallbackWarningComponent>
   <h3 class="table overview_header" @click.prevent="toggleContent()">
-    <CmkButton variant="transparent">
-      <CmkIcon name="tree_closed" size="xsmall" :rotate="isContentVisible ? 90 : 0" />
-    </CmkButton>
+    <CmkIconButton name="tree_closed" size="xsmall" :rotate="isContentVisible ? 90 : 0" />
     {{ overview_title_i18n }}
   </h3>
   <div v-if="isContentVisible" class="overview_container">

@@ -40,6 +40,9 @@
   /* Borders */
   --border-radius: 4px;
 
+  /* Dimensions */
+  --form-field-height: 21px;
+
   /* Icons that are only defined for facelift, so without dark variant */
   --icon-checkmark: url('~cmk-frontend/src/themes/facelift/images/icon_checkmark.svg');
   --icon-crit-problem: url('~cmk-frontend/src/themes/facelift/images/icon_crit_problem.svg');
@@ -61,6 +64,7 @@
   /* TODO: remove icno-info and replace it with icon-help-new (icon-help later)*/
   --icon-info: url('~cmk-frontend/src/themes/facelift/images/icon_info.svg');
   --icon-plus: url('~cmk-frontend/src/themes/facelift/images/icon_plus.svg');
+  --icon-edit: url('~cmk-frontend/src/themes/facelift/images/icon_edit.svg');
   --icon-load-graph: url('~cmk-frontend/src/themes/facelift/images/load_graph.png');
 
   --icon-help-activated: url('~cmk-frontend/src/themes/facelift/images/icon_help_activated.svg');
@@ -76,6 +80,9 @@
     --ux-theme-4: rgb(232, 232, 238);
     --ux-theme-5: rgb(224, 224, 228);
     --ux-theme-6: rgb(204, 207, 219);
+
+    --color-warning: rgb(255, 208, 0);
+    --color-danger: rgb(229, 63, 63);
 
     /* ATTENTION: No explicit rgb color definitions beyond this point. Reuse variables above */
 
@@ -127,6 +134,9 @@
     --ux-theme-4: rgb(38, 45, 52);
     --ux-theme-5: rgb(48, 57, 70);
     --ux-theme-6: rgb(53, 63, 74);
+
+    --color-warning: rgb(255, 215, 3);
+    --color-danger: rgb(180, 45, 45);
 
     /* ATTENTION: No explicit rgb color definitions beyond this point. Reuse variables above */
 

@@ -43,9 +43,7 @@ const componentId = useId()
       :aria-label="spec.title"
     />
     <div v-if="value.file_name" class="replace">
-      <CmkButton variant="secondary" size="small" @click="value.file_name = null">{{
-        spec.i18n.replace_file
-      }}</CmkButton>
+      <CmkButton @click="value.file_name = null">{{ spec.i18n.replace_file }}</CmkButton>
       <FormLabel class="filename"> {{ value.file_name }}</FormLabel>
     </div>
     <FormValidation :validation="validation"></FormValidation>

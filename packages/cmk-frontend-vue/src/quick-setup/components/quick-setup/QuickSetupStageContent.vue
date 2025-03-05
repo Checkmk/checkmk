@@ -81,7 +81,7 @@ const waitIconEnabled = computed(() => {
           :key="action.label"
           :aria-label="action.ariaLabel"
           :variant="
-            action.variant === 'next' || action.variant === 'save' ? 'primary' : 'secondary'
+            action.variant === 'next' || action.variant === 'save' ? 'secondary' : 'optional'
           "
           @click="invokeAction(action.waitLabel, action.action)"
         >

@@ -19,39 +19,47 @@ defineProps<{ screenshotMode: boolean }>()
     <dd>
       <CmkButton variant="primary">button</CmkButton>
     </dd>
+
+    <dt><code>&lt;CmkButton variant="secondary"&gt;button&lt;/CmkButton&gt;</code></dt>
+    <dd>
+      <CmkButton variant="secondary">button</CmkButton>
+    </dd>
+
     <dt><code>&lt;CmkButton&gt;button&lt;/CmkButton&gt;</code></dt>
     <dd>
       <CmkButton>button</CmkButton>
     </dd>
-    <dt><code>&lt;CmkButton variant="tertiary"&gt;button&lt;/CmkButton&gt;</code></dt>
+
+    <dt><code>&lt;CmkButton variant="success"&gt;button&lt;/CmkButton&gt;</code></dt>
     <dd>
-      <CmkButton variant="tertiary">button</CmkButton>
+      <CmkButton variant="success">button</CmkButton>
     </dd>
-    <dt>
-      <code
-        >&lt;CmkButton variant="transparent"&gt;&lt;CmkIcon name="plus"
-        /&gt;&lt;/CmkButton&gt;</code
-      >
-    </dt>
+
+    <dt><code>&lt;CmkButton variant="warning"&gt;button&lt;/CmkButton&gt;</code></dt>
     <dd>
-      <CmkButton variant="transparent"><CmkIcon name="plus" /></CmkButton>
+      <CmkButton variant="warning">button</CmkButton>
     </dd>
-    <dt><code>&lt;CmkButton variant="minimal"&gt;button&lt;/CmkButton&gt;</code></dt>
+
+    <dt><code>&lt;CmkButton variant="danger"&gt;button&lt;/CmkButton&gt;</code></dt>
     <dd>
-      <CmkButton variant="minimal">button</CmkButton>
+      <CmkButton variant="danger">button</CmkButton>
     </dd>
-    <dt><code>&lt;CmkButtonCancel&gt;button&lt;/CmkButtonCancel&gt;</code></dt>
+
+    <dt><code>&lt;CmkButton variant="info"&gt;info&lt;/CmkButton&gt;</code></dt>
     <dd>
-      <CmkButtonCancel>button</CmkButtonCancel>
+      <CmkButton variant="info">info</CmkButton>
     </dd>
+
     <dt><code>&lt;CmkButtonSubmit&gt;button&lt;/CmkButtonSubmit&gt;</code></dt>
     <dd>
       <CmkButtonSubmit>button</CmkButtonSubmit>
     </dd>
-    <dt><code>&lt;CmkButton size="small"&gt;button&lt;/CmkButton&gt;</code></dt>
+
+    <dt><code>&lt;CmkButtonCancel&gt;button&lt;/CmkButtonCancel&gt;</code></dt>
     <dd>
-      <CmkButton size="small">button</CmkButton>
+      <CmkButtonCancel>button</CmkButtonCancel>
     </dd>
+
     <dt>
       <code
         >&lt;CmkButton&gt;&lt;CmkIcon name="about_checkmk" variant="inline"
@@ -60,10 +68,6 @@ defineProps<{ screenshotMode: boolean }>()
     </dt>
     <dd>
       <CmkButton><CmkIcon name="about_checkmk" variant="inline" />button</CmkButton>
-    </dd>
-    <dt><code>&lt;CmkButton variant="info"&gt;info&lt;/CmkButton&gt;</code></dt>
-    <dd>
-      <CmkButton variant="info">info</CmkButton>
     </dd>
   </dl>
 </template>

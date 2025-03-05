@@ -6,8 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { ref } from 'vue'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/tooltip'
-import CmkButton from './CmkButton.vue'
-import CmkIcon from './CmkIcon.vue'
+import CmkIconButton from './CmkIconButton.vue'
 import CmkHtml from './CmkHtml.vue'
 import CmkScrollContainer from './CmkScrollContainer.vue'
 
@@ -16,7 +15,7 @@ const props = defineProps<{
 }>()
 
 const open = ref(false)
-const triggerRef = ref<InstanceType<typeof CmkIcon> | null>(null)
+const triggerRef = ref<InstanceType<typeof CmkIconButton> | null>(null)
 
 const checkClosing = (e: MouseEvent) => {
   e.preventDefault()
@@ -45,14 +44,13 @@ const closeHelp = () => {
         as-child
         @click="(e: MouseEvent) => triggerHelp(e)"
       >
-        <CmkButton :variant="'transparent'" aria-label="?">
-          <CmkIcon
-            ref="triggerRef"
-            :name="open ? 'icon_help_activated' : 'icon_info_circle'"
-            size="medium"
-            class="help-text__icon"
-          />
-        </CmkButton>
+        <CmkIconButton
+          ref="triggerRef"
+          :name="open ? 'icon_help_activated' : 'icon_info_circle'"
+          size="medium"
+          class="help-text__icon"
+          aria-label="?"
+        />
       </TooltipTrigger>
       <TooltipContent
         side="top"

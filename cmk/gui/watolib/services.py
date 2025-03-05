@@ -441,6 +441,9 @@ class Discovery:
         if self._action == DiscoveryAction.UPDATE_SERVICE_LABELS and self._update_target:
             return self._update_target
 
+        if self._action == DiscoveryAction.UPDATE_DISCOVERY_PARAMETERS and self._update_target:
+            return self._update_target
+
         if not self._update_target:
             return entry.check_source
 

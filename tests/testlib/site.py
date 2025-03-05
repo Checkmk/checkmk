@@ -1804,6 +1804,7 @@ class SiteFactory:
         conflict_mode: str = "keepold",
         logfile_path: str = "/tmp/sep.out",
         timeout: int = 60,
+        abort: bool = False,
     ) -> Site:
         """Update the test-site with the given target-package, if supported.
 
@@ -1867,6 +1868,9 @@ class SiteFactory:
             [PExpectDialog(expect="Wrong permission", send="d", count=0, optional=True)]
         )
 
+        if abort:
+            pexpect_dialogs.extend([PExpectDialog(expect="Abort the update process?", send="A\r")])
+
         rc = spawn_expect_process(
             [
                 "/usr/bin/sudo",
@@ -1881,6 +1885,16 @@ class SiteFactory:
             logfile_path=logfile_path,
             timeout=timeout,
         )
+
+        if abort:
+            assert rc == 0, (
+                f"Update process with aborted scenario failed.\n"
+                "Logfile content:\n"
+                f"{pprint.pformat(Path(logfile_path).read_text(), indent=4)}\n\n"
+            )
+
+            site.start()
+            return site
         if version_supported:
             assert rc == 0, (
                 f"Failed to interactively update the test-site!\n"

@@ -16,4 +16,4 @@ CMK_VERSION="2.3.0p29"
 # have an execution time complexity of at least O(n^2) on Linux.
 
 echo '<<<netstat>>>'
-netstat -ntua | grep -E '^(tcp|udp)' | sed -e 's/LISTEN/LISTENING/g'
+(netstat -ntua || ss -ntua) | grep -E '^(tcp|udp)' | sed -e 's/LISTEN/LISTENING/g'

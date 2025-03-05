@@ -243,7 +243,7 @@ def mock_service_context():
         "WHAT": "SERVICE",
         "PARAMETER_FROM_ADDRESS": "check_mk@myinstance.com",
         "PARAMETER_REPLY_TO_ADDRESS": "reply@myinstance.com",
-        "PARAMETER_URL_PREFIX_AUTOMATIC": "http",
+        "PARAMETER_URL_PREFIX_1": "automatic_http",
     }
 
 
@@ -384,7 +384,7 @@ def mock_host_context():
         "NOTIFICATIONTYPE": "RECOVERY",
         "OMD_ROOT": "/omd/sites/heute",
         "OMD_SITE": "heute",
-        "PARAMETER_URL_PREFIX_AUTOMATIC": "https",
+        "PARAMETER_URL_PREFIX_1": "automatic_https",
         "PREVIOUSHOSTHARDSHORTSTATE": "DOWN",
         "PREVIOUSHOSTHARDSTATE": "DOWN",
         "PREVIOUSHOSTHARDSTATEID": "1",

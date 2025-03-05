@@ -550,9 +550,6 @@ def construct_content(
 
 
 def extend_context(context: dict[str, str], is_bulk: bool = False) -> None:
-    if context.get("PARAMETER_2"):
-        context["PARAMETER_URL_PREFIX"] = context["PARAMETER_2"]
-
     context["LINKEDHOSTNAME"] = utils.format_link(
         '<a href="%s" style="color:#000000">%s</a>',
         utils.host_url_from_context(context),

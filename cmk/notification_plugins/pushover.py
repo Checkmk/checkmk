@@ -61,7 +61,7 @@ def get_text(context: dict[str, str]) -> str:
 
     s += "$@OUTPUT$"
 
-    if "PARAMETER_URL_PREFIX" in context:
+    if "PARAMETER_URL_PREFIX_1" in context:
         s += " <i>Link: </i>"
         s += utils.format_link(
             '<a href="%s">%s</a>', utils.host_url_from_context(context), context["HOSTNAME"]

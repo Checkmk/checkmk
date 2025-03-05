@@ -15,7 +15,7 @@ from cmk.notification_plugins.msteams import _msteams_msg
             {
                 "NOTIFICATIONTYPE": "PROBLEM",
                 "WHAT": "SERVICE",
-                "PARAMETER_URL_PREFIX_AUTOMATIC": "http",
+                "PARAMETER_URL_PREFIX_1": "automatic_http",
                 "MONITORING_HOST": "localhost",
                 "OMD_SITE": "testsite",
                 "HOSTNAME": "test-host",

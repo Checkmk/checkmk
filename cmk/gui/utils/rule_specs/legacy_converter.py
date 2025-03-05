@@ -259,7 +259,7 @@ def _convert_to_legacy_manual_check_parameter_rulespec(
         ),
         title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
         is_deprecated=False,
-        match_type="dict",
+        match_type="all",
         item_spec=item_spec,
         is_cloud_and_managed_edition_only=edition_only is Edition.CCE,
     )

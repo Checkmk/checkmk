@@ -1215,7 +1215,7 @@ def test_convert_to_legacy_rulespec_group(
                         ],
                     )
                 ),
-                match_type="dict",
+                match_type="all",
             ),
             id="EnforcedServiceRuleSpec with HostAndItemCondition",
         ),
@@ -1243,7 +1243,7 @@ def test_convert_to_legacy_rulespec_group(
                     validate=lambda x, y: None,  # text only checks it's not None.
                 ),
                 parameter_valuespec=None,
-                match_type="dict",
+                match_type="all",
             ),
             id="EnforcedServiceRuleSpec with HostAndItemCondition no parameters",
         ),
@@ -1279,7 +1279,7 @@ def test_convert_to_legacy_rulespec_group(
                         ],
                     )
                 ),
-                match_type="dict",
+                match_type="all",
             ),
             id="EnforcedServiceRuleSpec with HostCondition",
         ),
@@ -1297,7 +1297,7 @@ def test_convert_to_legacy_rulespec_group(
                 group=legacy_rulespec_groups.RulespecGroupEnforcedServicesApplications,
                 title=lambda: _("rulespec title"),
                 parameter_valuespec=None,
-                match_type="dict",
+                match_type="all",
             ),
             id="EnforcedServiceRuleSpec with HostCondition no parameters",
         ),

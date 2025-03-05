@@ -87,7 +87,6 @@ def execute_tests_in_container(
         stdin_open=True,
         tty=True,
     ) as container:
-        _prepare_testuser(container, _TESTUSER)
         _prepare_git_overlay(container, "/git-lowerdir", "/git", _TESTUSER)
         _cleanup_previous_virtual_environment(container, container_env)
         _reuse_persisted_virtual_environment(container, container_env, _TESTUSER)

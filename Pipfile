@@ -204,7 +204,6 @@ typing-extensions = "==4.9.0"
 xmltodict = "==0.13.0" # used for parsing robotmk test results
 netapp-ontap = "==9.14.1.0"  # used by netapp special agent
 redfish = "~= 3.2.2"  # used for management board monitoring via Redfish, used by optional MKP
-rpds-py = "==0.18.1"  # transitive dependency, update requires newer rustc, CMK-18354
 
 [requires]
 python_version = "3.12"

@@ -348,7 +348,6 @@ CEE_UNUSED_PACKAGES = [
     "pyrsistent",
     "redfish",  # used by optional MKP
     "requests-kerberos",
-    "rpds-py",  # transitive dependency temporarily pinned CMK-18354
     "s3transfer",
     "setuptools-scm",
     "snmpsim-lextudio",

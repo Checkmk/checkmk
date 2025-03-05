@@ -35,8 +35,8 @@ create_venv(
         #added here instead of above because of disappearing file
         "//omd/packages/Python:python_tar",
         "//omd/packages/heirloom-pkgtools",
-        "//omd/packages/mod_wsgi",
         "//omd/packages/mod_fcgid",
+        "//omd/packages/mod_wsgi",
         "//omd/packages/net-snmp:net-snmp_tar",
         "//omd/packages/openssl:openssl_tar_" + edition,
         "//omd/packages/perl-modules",
@@ -44,6 +44,7 @@ create_venv(
         "//omd/packages/rrdtool:rrdtool_perl_bindings",
         "//omd/packages/rrdtool:rrdtool_python_tar",
         "//omd/packages/rrdtool:rrdtool_tar",
+        "//omd/packages/stunnel",
         "//packages/cmk-agent-based:pkg_tar",
         "//packages/cmk-agent-receiver:pkg_tar",
         "//packages/cmk-ccc:pkg_tar",
@@ -74,18 +75,12 @@ create_venv(
     outs = ["skel.permissions_" + edition],
     cmd = "cat $(SRCS) > $@",
 ) for edition in [
+    "cre",
     "cce",
     "cee",
     "cme",
     "cse",
 ]]
-
-# Placeholder since we have no cre specfic skel.permissions so far (will come soon)
-write_file(
-    name = "skel_permissions_cre",
-    out = "skel.permissions_cre",
-    content = [],
-)
 
 write_file(
     name = "werks_utils",

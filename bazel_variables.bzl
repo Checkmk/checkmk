@@ -25,16 +25,23 @@ edition_deps = {
 }
 
 edition_skel_permissions = {
+    "cre": [
+        "//omd/packages/stunnel:skel.permissions",
+    ],
     "cce": [
+        "//omd/packages/stunnel:skel.permissions",
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
     ],
     "cee": [
+        "//omd/packages/stunnel:skel.permissions",
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
     ],
     "cme": [
+        "//omd/packages/stunnel:skel.permissions",
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
     ],
     "cse": [
+        "//omd/packages/stunnel:skel.permissions",
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
     ],
 }

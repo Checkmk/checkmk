@@ -35,7 +35,6 @@ PACKAGES := \
     xinetd \
     check_mk \
     mk-livestatus \
-    stunnel \
     nagios \
     monitoring-plugins \
     check-cert \

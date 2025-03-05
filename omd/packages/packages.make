@@ -183,7 +183,6 @@ include \
     packages/redis/redis.make \
     packages/apache-omd/apache-omd.make \
     packages/xinetd/xinetd.make \
-    packages/stunnel/stunnel.make \
     packages/cpp-libs/cpp-libs.make \
     packages/check_mk/check_mk.make \
     packages/libgsf/libgsf.make \

@@ -6,7 +6,7 @@
 import abc
 import time
 from collections.abc import Mapping, Sequence
-from typing import Any
+from typing import Any, Literal
 
 import cmk.gui.utils as utils
 from cmk.gui.config import active_config
@@ -56,6 +56,8 @@ def register_sorters(registry: SorterRegistry) -> None:
     registry.register(SorterSvcPerfVal10)
     registry.register(SorterCustomHostVariable)
     registry.register(SorterHostIpv4Address)
+    registry.register(SorterHostIpv6Address)
+    registry.register(SorterHostIpAddresses)
     registry.register(SorterNumProblems)
 
     declare_simple_sorter(
@@ -575,6 +577,25 @@ class SorterCustomHostVariable(ParameterizedSorter):
         return cmp_insensitive_string(_get_value(r1), _get_value(r2))
 
 
+def _sort_host_ip_addresses(
+    ip_versions: Sequence[Literal["ipv4", "ipv6"]],
+    r1: Row,
+    r2: Row,
+) -> int:
+    def get_address(row: Row, ipv: Literal["ipv4", "ipv6"]) -> str:
+        custom_vars = dict(
+            zip(row["host_custom_variable_names"], row["host_custom_variable_values"])
+        )
+        if ipv == "ipv4":
+            return custom_vars.get("ADDRESS_4", "")
+        return custom_vars.get("ADDRESS_6", "")
+
+    for ipv in ip_versions:
+        if (result := compare_ips(get_address(r1, ipv), get_address(r2, ipv), ipv)) != 0:
+            return result
+    return 0
+
+
 class SorterHostIpv4Address(Sorter):
     @property
     def ident(self) -> str:
@@ -589,13 +610,41 @@ class SorterHostIpv4Address(Sorter):
         return ["host_custom_variable_names", "host_custom_variable_values"]
 
     def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
-        def get_address(row):
-            custom_vars = dict(
-                zip(row["host_custom_variable_names"], row["host_custom_variable_values"])
-            )
-            return custom_vars.get("ADDRESS_4", "")
+        return _sort_host_ip_addresses(["ipv4"], r1, r2)
 
-        return compare_ips(get_address(r1), get_address(r2))
+
+class SorterHostIpv6Address(Sorter):
+    @property
+    def ident(self) -> str:
+        return "host_ipv6_address"
+
+    @property
+    def title(self) -> str:
+        return _("Host IPv6 address")
+
+    @property
+    def columns(self) -> Sequence[ColumnName]:
+        return ["host_custom_variable_names", "host_custom_variable_values"]
+
+    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
+        return _sort_host_ip_addresses(["ipv6"], r1, r2)
+
+
+class SorterHostIpAddresses(Sorter):
+    @property
+    def ident(self) -> str:
+        return "host_addresses"
+
+    @property
+    def title(self) -> str:
+        return _("Host addresses (IPv4/IPv6)")
+
+    @property
+    def columns(self) -> Sequence[ColumnName]:
+        return ["host_custom_variable_names", "host_custom_variable_values"]
+
+    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
+        return _sort_host_ip_addresses(["ipv4", "ipv6"], r1, r2)
 
 
 class SorterNumProblems(Sorter):

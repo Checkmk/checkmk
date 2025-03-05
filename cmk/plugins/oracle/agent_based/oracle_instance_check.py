@@ -110,7 +110,7 @@ def check_oracle_instance(item: str, params: _Params, section: Section) -> Check
     if instance.pdb and instance.ptotal_size is not None:
         yield from check_levels_v1(
             instance.ptotal_size,
-            metric_name="fs_size",
+            metric_name="oracle_pdb_total_size",
             render_func=render.bytes,
             label="PDB size",
         )

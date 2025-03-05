@@ -27,6 +27,7 @@ from cmk.utils.user import UserId
 
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.watolib.audit_log import log_audit
 
 from cmk import trace
@@ -108,7 +109,7 @@ def create_snapshot_in_concurrent_thread(
             )
 
     with ThreadPoolExecutor(max_workers=1) as pool:
-        yield pool.submit(create_snapshot_with_tracing)
+        yield pool.submit(copy_request_context(create_snapshot_with_tracing))
 
 
 def create_snapshot(

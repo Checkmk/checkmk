@@ -52,7 +52,7 @@ def test_notification_source_from_context(context: dict[str, str], result: str) 
     [
         pytest.param(
             {
-                "PARAMETER_URL_PREFIX_AUTOMATIC": "http",
+                "PARAMETER_URL_PREFIX_1": "automatic_http",
                 "PARAMETER_ROUTING_KEY_1": "cmk_postprocessed",
                 "PARAMETER_ROUTING_KEY_2": "explicit_password",
                 "PARAMETER_ROUTING_KEY_3": "uuidcdd72f8e-1b70-473e-9a5e-8abdb2c42580\tmypassword",
@@ -104,7 +104,7 @@ def test_notification_source_from_context(context: dict[str, str], result: str) 
                 "NOTIFICATIONTYPE": "RECOVERY",
                 "HOSTURL": "/check_mk/index.py?start_url=view.py%3Fview_name%3Dhoststatus%26host%3Dwin7vm%26site%3Dheute",
                 "HOSTNAME": "win7vm",
-                "PARAMETER_URL_PREFIX_AUTOMATIC": "http",
+                "PARAMETER_URL_PREFIX_1": "automatic_http",
                 "HOSTSTATE": "UP",
                 "OMD_SITE": "heute",
                 "MONITORING_HOST": "localhost",
@@ -142,7 +142,7 @@ def test_notification_source_from_context(context: dict[str, str], result: str) 
                 "NOTIFICATIONTYPE": "RECOVERY",
                 "HOSTURL": "/check_mk/index.py?start_url=view.py%3Fview_name%3Dhoststatus%26host%3Dwin7vm%26site%3Dheute",
                 "HOSTNAME": "win7vm",
-                "PARAMETER_URL_PREFIX_AUTOMATIC": "http",
+                "PARAMETER_URL_PREFIX_1": "automatic_http",
                 "HOSTSTATE": "UP",
                 "OMD_SITE": "heute",
                 "MONITORING_HOST": "localhost",

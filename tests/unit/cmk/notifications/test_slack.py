@@ -14,7 +14,7 @@ from cmk.notification_plugins.slack import _message
         (
             {
                 "PARAMETER_WEBHOOK_URL": "webhook_url\texample.slack.com/not-real",  # slack format
-                "PARAMETER_URL_PREFIX_AUTOMATIC": "http",
+                "PARAMETER_URL_PREFIX_1": "automatic_http",
                 "MONITORING_HOST": "localhost",
                 "OMD_SITE": "testsite",
                 "HOSTURL": "/view?key=val",
@@ -85,7 +85,7 @@ from cmk.notification_plugins.slack import _message
         (
             {
                 "PARAMETER_WEBHOOK_URL": "webhook_url\texample.mattermost.com/not-real",  # mattermost format
-                "PARAMETER_URL_PREFIX_AUTOMATIC": "http",
+                "PARAMETER_URL_PREFIX_1": "automatic_http",
                 "MONITORING_HOST": "localhost",
                 "OMD_SITE": "testsite",
                 "HOSTURL": "/view?key=val",
@@ -119,7 +119,7 @@ from cmk.notification_plugins.slack import _message
         (
             {
                 "PARAMETER_WEBHOOK_URL": "webhook_url\texample.slack.com/not-real",  # slack format
-                "PARAMETER_URL_PREFIX_AUTOMATIC": "https",
+                "PARAMETER_URL_PREFIX_1": "automatic_https",
                 "MONITORING_HOST": "localhost",
                 "OMD_SITE": "testsite",
                 "HOSTURL": "/view?key=val",
@@ -179,7 +179,7 @@ from cmk.notification_plugins.slack import _message
         (
             {
                 "PARAMETER_WEBHOOK_URL": "webhook_url\texample.mattermost.com/not-real",  # mattermost format
-                "PARAMETER_URL_PREFIX_AUTOMATIC": "https",
+                "PARAMETER_URL_PREFIX_1": "automatic_https",
                 "MONITORING_HOST": "localhost",
                 "OMD_SITE": "testsite",
                 "HOSTURL": "/view?key=val",

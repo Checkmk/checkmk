@@ -13,7 +13,7 @@ from cmk.notification_plugins.cisco_webex_teams import _cisco_webex_teams_msg
     [
         (
             {
-                "PARAMETER_URL_PREFIX_AUTOMATIC": "http",
+                "PARAMETER_URL_PREFIX_1": "automatic_http",
                 "MONITORING_HOST": "localhost",
                 "OMD_SITE": "testsite",
                 "HOSTURL": "/view?key=val",
@@ -41,7 +41,7 @@ from cmk.notification_plugins.cisco_webex_teams import _cisco_webex_teams_msg
         ),
         (
             {
-                "PARAMETER_URL_PREFIX_AUTOMATIC": "https",
+                "PARAMETER_URL_PREFIX_1": "automatic_https",
                 "MONITORING_HOST": "localhost",
                 "OMD_SITE": "testsite",
                 "HOSTURL": "/view?key=val",

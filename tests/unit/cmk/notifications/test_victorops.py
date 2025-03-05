@@ -13,7 +13,7 @@ from cmk.notification_plugins.victorops import _victorops_msg
     [
         (
             {
-                "PARAMETER_URL_PREFIX_AUTOMATIC": "http",
+                "PARAMETER_URL_PREFIX_1": "automatic_http",
                 "MONITORING_HOST": "localhost",
                 "OMD_SITE": "testsite",
                 "HOSTURL": "/view?key=val",
@@ -44,7 +44,7 @@ from cmk.notification_plugins.victorops import _victorops_msg
                 "NOTIFICATIONTYPE": "RECOVERY",
                 "HOSTURL": "/check_mk/index.py?start_url=view.py%3Fview_name%3Dhoststatus%26host%3Dwin7vm%26site%3Dheute",
                 "HOSTNAME": "win7vm",
-                "PARAMETER_URL_PREFIX_AUTOMATIC": "http",
+                "PARAMETER_URL_PREFIX_1": "automatic_http",
                 "HOSTSTATE": "UP",
                 "OMD_SITE": "heute",
                 "MONITORING_HOST": "localhost",

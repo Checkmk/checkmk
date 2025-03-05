@@ -448,7 +448,12 @@ class Discovery:
             return entry.check_source
 
         if self._action == DiscoveryAction.BULK_UPDATE:
-            if entry.check_source != self._update_source:
+            # actions that apply to monitored services are also applied to changed services,
+            # since these are a subset of monitored services, but are classified differently.
+            if entry.check_source != self._update_source and not (
+                entry.check_source == DiscoveryState.CHANGED
+                and self._update_source == DiscoveryState.MONITORED
+            ):
                 return entry.check_source
 
             if (entry.check_plugin_name, entry.item) in self._selected_services:

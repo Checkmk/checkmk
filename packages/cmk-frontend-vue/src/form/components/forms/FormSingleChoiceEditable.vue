@@ -6,7 +6,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import FormSingleChoiceEditableEditAsync from '@/form/components/forms/FormSingleChoiceEditableEditAsync.vue'
 import { useErrorBoundary } from '@/components/useErrorBoundary'
-import CmkButton from '@/components/CmkButton.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import SlideIn from '@/components/SlideIn.vue'
 import FormValidation from '@/form/components/FormValidation.vue'
@@ -16,6 +15,7 @@ import { ref, toRaw } from 'vue'
 import { configEntityAPI, type Payload } from '@/form/components/utils/configuration_entity'
 import type { ConfigEntityType } from 'cmk-shared-typing/typescript/configuration_entity'
 import CmkDropdown from '@/components/CmkDropdown.vue'
+import FormButton from './FormButton.vue'
 
 const props = defineProps<{
   spec: SingleChoiceEditable
@@ -120,18 +120,18 @@ const { ErrorBoundary, error } = useErrorBoundary()
       class="fsce__dropdown"
     />
     <template v-if="spec.allow_editing_existing_elements">
-      <CmkButton
+      <FormButton
         v-show="selectedObjectId !== null"
-        variant="tertiary"
+        icon="edit"
         @click="openSlideIn(selectedObjectId)"
       >
         {{ spec.i18n.edit }}
-      </CmkButton>
+      </FormButton>
       <CmkSpace v-show="selectedObjectId !== null" />
     </template>
-    <CmkButton variant="tertiary" @click="openSlideIn(null)">
+    <FormButton @click="openSlideIn(null)">
       {{ spec.i18n.create }}
-    </CmkButton>
+    </FormButton>
 
     <SlideIn
       :open="slideInOpen"

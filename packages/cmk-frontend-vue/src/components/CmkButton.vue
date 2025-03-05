@@ -6,27 +6,22 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 export interface ButtonProps {
   variant?: ButtonVariants['variant']
-  size?: ButtonVariants['size']
 }
 
 const buttonVariants = cva('', {
   variants: {
     variant: {
-      primary: 'cmk-button--variant-primary', // high emphasis
-      secondary: 'cmk-button--variant-secondary', // less prominent
-      tertiary: 'cmk-button--variant-tertiary', // heightened attention
-      transparent: 'cmk-button--variant-transparent', // used only with icons
-      minimal: 'cmk-button--variant-minimal', // subtle styling
+      primary: 'cmk-button--variant-primary', // high emphasis (colored background)
+      secondary: 'cmk-button--variant-secondary', // low emphasis (colored border)
+      optional: 'cmk-button--variant-optional', // default
+      success: 'cmk-button--variant-success',
+      warning: 'cmk-button--variant-warning',
+      danger: 'cmk-button--variant-danger',
       info: 'cmk-button--variant-info' // used only within info dialog
-    },
-    size: {
-      small: 'cmk-button--size-small',
-      medium: ''
     }
   },
   defaultVariants: {
-    variant: 'secondary',
-    size: 'medium'
+    variant: 'optional'
   }
 })
 
@@ -50,7 +45,7 @@ defineProps<ButtonProps>()
 </script>
 
 <template>
-  <button ref="buttonRef" class="cmk-button" :class="buttonVariants({ variant, size })">
+  <button ref="buttonRef" class="cmk-button" :class="buttonVariants({ variant })">
     <slot />
   </button>
 </template>
@@ -66,38 +61,23 @@ defineProps<ButtonProps>()
   letter-spacing: unset;
 }
 
-.cmk-button--variant-primary {
+.cmk-button--variant-primary,
+.cmk-button--variant-success {
+  background-color: var(--success-dimmed);
+}
+
+.cmk-button--variant-primary,
+.cmk-button--variant-secondary {
   border: 1px solid var(--default-submit-button-border-color);
 }
 
-.cmk-button--variant-tertiary {
-  text-underline-offset: 2px;
-  text-decoration: underline var(--default-button-emphasis-color);
-  text-decoration-thickness: 1px;
-
-  &:hover {
-    font-weight: 600;
-    text-decoration-thickness: 3px;
-  }
+.cmk-button--variant-warning {
+  background-color: var(--color-warning);
 }
 
-.cmk-button--variant-tertiary,
-.cmk-button--variant-transparent,
-.cmk-button--variant-minimal {
-  height: auto;
-  background: none;
-  border: none;
-  font-weight: normal;
-}
-
-.cmk-button--variant-tertiary,
-.cmk-button--variant-transparent {
-  padding: 0;
-  margin: 0;
-}
-
-.cmk-button--variant-minimal:hover {
-  color: var(--default-button-emphasis-color);
+.cmk-button--variant-danger {
+  background-color: var(--color-danger);
+  color: var(--white);
 }
 
 .cmk-button--variant-info {
@@ -106,11 +86,6 @@ defineProps<ButtonProps>()
 
   &:hover {
     background-color: var(--default-help-icon-bg-color-hover);
-    color: var(--white);
   }
-}
-
-.cmk-button--size-small {
-  height: 25px;
 }
 </style>

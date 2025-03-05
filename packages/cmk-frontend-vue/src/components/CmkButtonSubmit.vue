@@ -9,5 +9,5 @@ import CmkIcon from './CmkIcon.vue'
 </script>
 
 <template>
-  <CmkButton variant="primary"><CmkIcon variant="inline" name="save" /><slot /></CmkButton>
+  <CmkButton variant="secondary"><CmkIcon variant="inline" name="save" /><slot /></CmkButton>
 </template>

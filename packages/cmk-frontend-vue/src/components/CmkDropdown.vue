@@ -124,7 +124,6 @@ function selectOption(option: DropdownOption): void {
         no_choices: noChoiceAvailable,
         no_value: selectedOption === null
       }"
-      :variant="'transparent'"
       @click.prevent="showSuggestions"
     >
       {{ dropdownButtonLabel
@@ -155,11 +154,14 @@ function selectOption(option: DropdownOption): void {
 }
 
 .cmk-dropdown__button {
-  cursor: pointer;
-  background-color: var(--default-form-element-bg-color);
+  height: var(--form-field-height);
   margin: 0;
   padding: 3px 2.5em 4px 6px;
   vertical-align: baseline;
+  background-color: var(--default-form-element-bg-color);
+  border: none;
+  font-weight: var(--font-weight-default);
+  cursor: pointer;
 
   .cmk-dropdown__button_arrow {
     position: absolute;

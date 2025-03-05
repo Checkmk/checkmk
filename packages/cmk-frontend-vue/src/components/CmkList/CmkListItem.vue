@@ -5,8 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { type VariantProps, cva } from 'class-variance-authority'
-import CmkButton from '@/components/CmkButton.vue'
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIconButton from '@/components/CmkIconButton.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 
 const listItemVariants = cva('', {
@@ -41,26 +40,25 @@ const { buttonPadding = '16px' } = defineProps<{
     <div class="cmk-list-item__button-container">
       <div class="cmk-list-item__buttons">
         <template v-if="draggable!!">
-          <CmkButton
-            variant="transparent"
+          <CmkIconButton
+            name="drag"
+            size="small"
+            style="pointer-events: none"
             aria-label="Drag to reorder"
             :draggable="true"
             @dragstart="draggable?.dragStart"
             @drag="draggable?.dragging"
             @dragend="draggable?.dragEnd"
             @click.prevent="() => {}"
-          >
-            <CmkIcon name="drag" size="small" style="pointer-events: none" />
-          </CmkButton>
+          />
           <CmkSpace direction="horizontal" />
         </template>
-        <CmkButton
-          variant="transparent"
+        <CmkIconButton
+          name="close"
+          size="small"
           aria-label="Remove element"
           @click.prevent="() => removeElement()"
-        >
-          <CmkIcon name="close" size="small" />
-        </CmkButton>
+        />
       </div>
     </div>
     <div class="cmk-list-item__content">

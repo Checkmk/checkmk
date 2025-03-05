@@ -14,6 +14,7 @@ def main() {
         "VERSION",
         "DISABLE_CACHE",
         "FAKE_WINDOWS_ARTIFACTS",
+        "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",  // the docker tag to use for building and testing, forwarded to packages build job
     ]);
 
     check_environment_variables([
@@ -45,7 +46,7 @@ def main() {
     def fake_windows_artifacts = params.FAKE_WINDOWS_ARTIFACTS;
 
     def relative_job_name = "${branch_base_folder}/builders/build-cmk-distro-package";
-    def setup_values = single_tests.common_prepare(version: VERSION, make_target: make_target);
+    def setup_values = single_tests.common_prepare(version: VERSION, make_target: make_target, docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD);
 
     stage("Prepare workspace") {
         cleanup_directory("${package_dir}");
@@ -120,6 +121,7 @@ def main() {
                         CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
                         CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
                         CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
+                        CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: setup_values.docker_tag,
                     ],
                     no_remove_others: true, // do not delete other files in the dest dir
                     download: false,    // use copyArtifacts to avoid nested directories

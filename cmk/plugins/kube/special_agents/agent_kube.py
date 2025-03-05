@@ -18,7 +18,6 @@ from __future__ import annotations
 import argparse
 import contextlib
 import enum
-import functools
 import logging
 import sys
 from collections import defaultdict
@@ -1047,8 +1046,8 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
     composed_entities = ComposedEntities.from_api_resources(
         excluded_node_roles=arguments.roles or [], api_data=api_data
     )
-    piggyback_formatter = functools.partial(
-        piggyback_formatter_with_cluster_name, arguments.cluster
+    piggyback_formatter = lambda kube_obj: piggyback_formatter_with_cluster_name(
+        arguments.cluster, kube_obj
     )
     monitored_namespace_names = filter_monitored_namespaces(
         {namespace_name(namespace) for namespace in api_data.namespaces},

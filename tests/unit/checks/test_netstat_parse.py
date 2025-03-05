@@ -32,6 +32,17 @@ pytestmark = pytest.mark.checks
             [["udp", "-", "-", "*.*", "0.0.0.0:*"]],
             [("UDP", ["*", "*"], ["0.0.0.0", "*"], "LISTENING")],
         ),
+        # The ss command has a different order of columns
+        (
+            [
+                ["tcp", "LISTENING", "0", "4096", "127.0.0.1:8888", "0.0.0.0:*"],
+                ["udp", "UNCONN", "0", "0", "127.0.0.1:778", "0.0.0.0:*"],
+            ],
+            [
+                ("TCP", ["127.0.0.1", "8888"], ["0.0.0.0", "*"], "LISTENING"),
+                ("UDP", ["127.0.0.1", "778"], ["0.0.0.0", "*"], "LISTENING"),
+            ],
+        ),
     ],
 )
 def test_parse_netstat(

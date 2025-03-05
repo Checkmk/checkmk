@@ -9,10 +9,11 @@ import os
 import shutil
 import subprocess
 import tarfile
-import threading
 import time
 import traceback
-from collections.abc import Callable
+from collections.abc import Callable, Generator
+from concurrent.futures import Future, ThreadPoolExecutor
+from contextlib import contextmanager
 from hashlib import sha256
 from pathlib import Path
 from typing import IO, Literal, NotRequired, TypedDict, TypeVar
@@ -81,48 +82,33 @@ class SnapshotStatus(TypedDict):
     checksums: NotRequired[None | bool]
 
 
-class CreateSnapshotThread(threading.Thread):
-    def __init__(
-        self,
-        *,
-        comment: str | None,
-        created_by: Literal[""] | UserId,
-        secret: bytes,
-        max_snapshots: int,
-        use_git: bool,
-        debug: bool,
-        parent_span_context: trace.SpanContext,
-    ) -> None:
-        super().__init__()
-        self._comment = comment
-        self._created_by = created_by
-        self._secret = secret
-        self._max_snapshots = max_snapshots
-        self._use_git = use_git
-        self._debug = debug
-        self._parent_span_context = parent_span_context
-        self._error_caught_during_run: Exception | None = None
-
-    def run(self) -> None:
+@contextmanager
+def create_snapshot_in_concurrent_thread(
+    *,
+    comment: str | None,
+    created_by: Literal[""] | UserId,
+    secret: bytes,
+    max_snapshots: int,
+    use_git: bool,
+    debug: bool,
+    parent_span_context: trace.SpanContext,
+) -> Generator[Future]:
+    def create_snapshot_with_tracing() -> None:
         with trace.get_tracer().start_as_current_span(
             "create_backup_snapshot",
-            trace.set_span_in_context(trace.NonRecordingSpan(self._parent_span_context)),
+            trace.set_span_in_context(trace.NonRecordingSpan(parent_span_context)),
         ):
-            try:
-                create_snapshot(
-                    comment=self._comment,
-                    created_by=self._created_by,
-                    secret=self._secret,
-                    max_snapshots=self._max_snapshots,
-                    use_git=self._use_git,
-                    debug=self._debug,
-                )
-            except Exception as e:
-                self._error_caught_during_run = e
+            create_snapshot(
+                comment=comment,
+                created_by=created_by,
+                secret=secret,
+                max_snapshots=max_snapshots,
+                use_git=use_git,
+                debug=debug,
+            )
 
-    @property
-    def error_caught_during_run(self) -> Exception | None:
-        return self._error_caught_during_run
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        yield pool.submit(create_snapshot_with_tracing)
 
 
 def create_snapshot(

@@ -11,12 +11,17 @@ from cmk.base.config import check_info
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.datapower import DETECT
 
-#
-
 
 def inventory_datapower_temp(info):
     for name, _temp, _upper_warn, _status, _upper_crit in info:
         yield name.strip("Temperature "), {}
+
+
+def _create_dev_levels(warn: str, crit: str) -> tuple[float, float] | None:
+    try:
+        return (float(warn), float(crit))
+    except ValueError:
+        return None
 
 
 def check_datapower_temp(item, params, info):
@@ -35,7 +40,7 @@ def check_datapower_temp(item, params, info):
                 float(temp),
                 params,
                 "datapower_temp_%s" % item,
-                dev_levels=(float(upper_warn), float(upper_crit)),
+                dev_levels=_create_dev_levels(upper_warn, upper_crit),
             )
 
             return state, infotext, perfdata

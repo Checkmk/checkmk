@@ -45,6 +45,11 @@ def test_discover_datapower_temp() -> None:
             id="WARN",
         ),
         pytest.param(
+            "CPU3",
+            [0, "70.0 °C", [("temp", 70.0, None, None)]],
+            id="missing dev_warn_level",
+        ),
+        pytest.param(
             "CPU4",
             [3, "device status: noReading"],
             id="no reading",
@@ -70,14 +75,3 @@ def test_check_datapower_temp(
         )
         == expected_result
     )
-
-
-def test_check_datapower_temp_no_dev_levels() -> None:
-    with pytest.raises(ValueError):
-        assert not list(
-            check_datapower_temp(
-                item="CPU3",
-                params={},
-                info=parse_datapower_temp(_STRING_TABLE),
-            )
-        )

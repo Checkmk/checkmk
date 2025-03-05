@@ -8,7 +8,7 @@ def main() {
         ["DISTRO", true],  // the testees package distro string (e.g. 'ubuntu-22.04')
         ["FAKE_WINDOWS_ARTIFACTS", true],  // forwarded to package build job
         ["USE_CASE", false],
-        // "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD", // test base image tag (todo)
+        "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",  // the docker tag to use for building and testing, forwarded to packages build job
         // "DISABLE_CACHE",    // forwarded to package build job (todo)
     ]);
 
@@ -38,7 +38,7 @@ def main() {
     def make_target = "test-gui-e2e-${short_editions[edition]}-docker";
     def download_dir = "package_download";
 
-    def setup_values = single_tests.common_prepare(version: "daily", make_target: make_target);
+    def setup_values = single_tests.common_prepare(version: "daily", make_target: make_target, docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD);
 
     // todo: add upstream project to description
     // todo: add error to description
@@ -70,6 +70,7 @@ def main() {
                         download_dir: download_dir,
                         bisect_comment: params.CIPARAM_BISECT_COMMENT,
                         fake_windows_artifacts: fake_windows_artifacts,
+                        docker_tag: setup_values.docker_tag,
                     );
                 }
                 try {

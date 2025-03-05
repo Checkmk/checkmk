@@ -6,7 +6,7 @@ def main() {
     check_job_parameters([
         ["EDITION", true],  // the testees package long edition string (e.g. 'enterprise')
         ["DISTRO", true],  // the testees package distro string (e.g. 'ubuntu-22.04')
-        // "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD", // test base image tag (todo)
+        "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",  // the docker tag to use for building and testing, forwarded to packages build job
         // "DISABLE_CACHE",    // forwarded to package build job (todo)
         "FAKE_WINDOWS_ARTIFACTS",
     ]);
@@ -21,10 +21,6 @@ def main() {
     def safe_branch_name = versioning.safe_branch_name(scm);
     def branch_version = versioning.get_branch_version(checkout_dir);
     def cmk_version = versioning.get_cmk_version(safe_branch_name, branch_version, "daily");
-    def docker_tag = versioning.select_docker_tag(
-        "",                // 'build tag'
-        safe_branch_name,  // 'branch'
-    )
     def distro = params.DISTRO;
     def edition = params.EDITION;
     def fake_windows_artifacts = params.FAKE_WINDOWS_ARTIFACTS;
@@ -32,7 +28,7 @@ def main() {
     def make_target = "test-schemathesis-openapi-docker";
     def download_dir = "package_download";
 
-    def setup_values = single_tests.common_prepare(version: "daily", make_target: make_target);
+    def setup_values = single_tests.common_prepare(version: "daily", make_target: make_target, docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD);
 
     currentBuild.description += (
         """
@@ -40,7 +36,7 @@ def main() {
         |safe_branch_name: ${safe_branch_name}<br>
         |branch_version: ${branch_version}<br>
         |cmk_version: ${cmk_version}<br>
-        |docker_tag: ${docker_tag}<br>
+        |docker_tag: ${setup_values.docker_tag}<br>
         |edition: ${edition}<br>
         |distro: ${distro}<br>
         |make_target: ${make_target}<br>
@@ -52,7 +48,7 @@ def main() {
         |safe_branch_name:...... │${safe_branch_name}│
         |branch_version:........ │${branch_version}│
         |cmk_version:........... │${cmk_version}
-        |docker_tag:............ │${docker_tag}│
+        |docker_tag:............ │${setup_values.docker_tag}│
         |edition:............... │${edition}│
         |distro:................ │${distro}│
         |make_target:........... │${make_target}│
@@ -89,6 +85,7 @@ def main() {
                         download_dir: download_dir,
                         bisect_comment: params.CIPARAM_BISECT_COMMENT,
                         fake_windows_artifacts: fake_windows_artifacts,
+                        docker_tag: setup_values.docker_tag,
                     );
                 }
                 try {

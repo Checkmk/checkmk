@@ -10,7 +10,7 @@ def common_prepare(Map args) {
     def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, args.version);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
     def docker_tag = versioning.select_docker_tag(
-        "",                // 'build tag'
+        args.docker_tag,  // 'build tag'
         safe_branch_name,  // 'branch', returns '<BRANCH>-latest'
     );
 
@@ -85,6 +85,7 @@ def fetch_package(Map args) {
         build_params_no_check: [
             CIPARAM_OVERRIDE_BUILD_NODE: build_node,
             CIPARAM_BISECT_COMMENT: args.bisect_comment,
+            CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: args.docker_tag,
         ],
         dest: args.download_dir,
     );

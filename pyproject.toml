@@ -319,6 +319,7 @@ disallow_untyped_defs = false
 module = [
   "cmk.active_checks.check_sftp",
   "cmk.cee.bakery.*",
+  "cmk.cee.liveproxy.*",
   "cmk.gui.background_job.*",
   "cmk.gui.mobile.views",
   "cmk.gui.views.layout.*",

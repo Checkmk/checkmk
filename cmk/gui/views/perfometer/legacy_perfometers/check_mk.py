@@ -99,7 +99,6 @@ def register() -> None:
     perfometers["check_mk-uptime"] = perfometer_check_mk_uptime
     perfometers["check_mk-snmp_uptime"] = perfometer_check_mk_uptime
     perfometers["check_mk-esx_vsphere_counters.uptime"] = perfometer_check_mk_uptime
-    perfometers["check_mk-oracle_instance"] = perfometer_check_mk_uptime
     perfometers["check_mk-winperf_phydisk"] = perfometer_check_mk_diskstat
     perfometers["check_mk-hpux_lunstats"] = perfometer_check_mk_diskstat
     perfometers["check_mk-aix_diskiod"] = perfometer_check_mk_diskstat

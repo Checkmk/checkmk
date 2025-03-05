@@ -7,10 +7,15 @@ import typing
 from cmk.plugins.gcp.lib.gcp import AssetType, GCPAsset, Item
 
 RegionMap: typing.Final = {
-    # Download from:
-    # https://github.com/GoogleCloudPlatform/gcping/blob/main/tools/terraform/regions.json
+    # ATTENTION!
     # Changes to the right-hand side of this list cause an incompatible change to the service name
     # of the check `gcp_status`
+    #
+    # This is no longer a general purpose GCP-RegionMap, but tied to the incident.json
+    # as there are "Multi-Region" regions as us or europe.
+    #
+    # Source 1:
+    # https://github.com/GoogleCloudPlatform/gcping/blob/main/tools/terraform/regions.json
     "africa-south1": "Johannesburg",
     "asia-east1": "Taiwan",
     "asia-east2": "Hong Kong",
@@ -51,6 +56,14 @@ RegionMap: typing.Final = {
     "us-west2": "Los Angeles",
     "us-west3": "Salt Lake City",
     "us-west4": "Las Vegas",
+    # Source 2:
+    # curl https://status.cloud.google.com/incidents.json | \
+    #      jq '[.[].previously_affected_locations[] | "\(.id) -- \(.title)"] | unique | sort'
+    "asia": "Multi-Region Asia",
+    "eu": "Multi-Region EU",
+    "europe": "Multi-Region Europe",
+    "us": "Multi-Region US",
+    # Global is special: it can not be ignored. so its not part of this list.
 }
 
 # Known asset types that downstream checks can work with. Ignore others

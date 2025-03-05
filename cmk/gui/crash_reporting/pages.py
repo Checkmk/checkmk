@@ -282,7 +282,7 @@ class PageCrash(ABCCrashReportPage):
             html.show_error(
                 _(
                     "Failed to send the crash report. Please download it manually and send it "
-                    'to <a href="%s">%s</a>'
+                    'to <a href="%s">%s</a> or try again later.'
                 )
                 % (report_url, self._get_crash_report_target())
             )

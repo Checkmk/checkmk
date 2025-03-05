@@ -72,7 +72,10 @@ def register_sorters(registry: SorterRegistry) -> None:
     )
     declare_simple_sorter("site", _("Site"), "site", cmp_simple_string)
     declare_simple_sorter(
-        "stateage", _("Service state age"), "service_last_state_change", cmp_simple_number
+        "stateage",
+        _("Service state age"),
+        "service_last_state_change",
+        cmp_simple_number,
     )
     declare_simple_sorter(
         "servicegroup", _("Service group"), "servicegroup_alias", cmp_simple_string
@@ -181,16 +184,25 @@ def register_sorters(registry: SorterRegistry) -> None:
     declare_1to1_sorter("downtime_fixed", cmp_simple_number)
     declare_1to1_sorter("downtime_type", cmp_simple_number)
     declare_simple_sorter(
-        "downtime_what", _("Downtime for host/service"), "downtime_is_service", cmp_simple_number
+        "downtime_what",
+        _("Downtime for host/service"),
+        "downtime_is_service",
+        cmp_simple_number,
     )
     declare_simple_sorter(
-        "downtime_start_time", _("Downtime start"), "downtime_start_time", cmp_simple_number
+        "downtime_start_time",
+        _("Downtime start"),
+        "downtime_start_time",
+        cmp_simple_number,
     )
     declare_simple_sorter(
         "downtime_end_time", _("Downtime end"), "downtime_end_time", cmp_simple_number
     )
     declare_simple_sorter(
-        "downtime_entry_time", _("Downtime entry time"), "downtime_entry_time", cmp_simple_number
+        "downtime_entry_time",
+        _("Downtime entry time"),
+        "downtime_entry_time",
+        cmp_simple_number,
     )
 
     # Log
@@ -215,13 +227,22 @@ def register_sorters(registry: SorterRegistry) -> None:
         "alerts_warn", _("Number of warnings"), "log_alerts_warn", cmp_simple_number
     )
     declare_simple_sorter(
-        "alerts_crit", _("Number of critical alerts"), "log_alerts_crit", cmp_simple_number
+        "alerts_crit",
+        _("Number of critical alerts"),
+        "log_alerts_crit",
+        cmp_simple_number,
     )
     declare_simple_sorter(
-        "alerts_unknown", _("Number of unknown alerts"), "log_alerts_unknown", cmp_simple_number
+        "alerts_unknown",
+        _("Number of unknown alerts"),
+        "log_alerts_unknown",
+        cmp_simple_number,
     )
     declare_simple_sorter(
-        "alerts_problem", _("Number of problem alerts"), "log_alerts_problem", cmp_simple_number
+        "alerts_problem",
+        _("Number of problem alerts"),
+        "log_alerts_problem",
+        cmp_simple_number,
     )
 
     # Aggregations
@@ -251,7 +272,12 @@ def cmp_host_state_equiv(r):
 
 
 def _sort_service_state(
-    r1: Row, r2: Row, *, parameters: Mapping[str, Any] | None, config: Config, request: Request
+    r1: Row,
+    r2: Row,
+    *,
+    parameters: Mapping[str, Any] | None,
+    config: Config,
+    request: Request,
 ) -> int:
     return (cmp_state_equiv(r1) > cmp_state_equiv(r2)) - (cmp_state_equiv(r1) < cmp_state_equiv(r2))
 

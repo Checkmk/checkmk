@@ -137,9 +137,9 @@ function selectOption(option: DropdownOption): void {
       ref="suggestionsRef"
       role="option"
       :suggestions="options"
-      :on-select="selectOption"
       :no-results-hint="noResultsHint"
       :show-filter="showFilter"
+      @select="selectOption"
       @keydown.escape.prevent="hideSuggestions"
       @keydown.tab.prevent="hideSuggestions"
     />

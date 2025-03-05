@@ -102,6 +102,16 @@ const updateInput = (ev: Event) => {
   showSuggestions.value = true
 }
 
+function onInputKeyUpDown() {
+  suggestionsRef.value?.focus()
+  suggestionsRef.value?.selectPreviousElement()
+}
+
+function onInputKeyDownDown() {
+  suggestionsRef.value?.focus()
+  suggestionsRef.value?.selectNextElement()
+}
+
 const vClickOutside = useClickOutside()
 const componentId = useId()
 </script>
@@ -135,12 +145,8 @@ const componentId = useId()
           }
         "
         @input="updateInput"
-        @keydown.down.prevent="
-          () => {
-            suggestionsRef?.focus()
-            suggestionsRef?.advance()
-          }
-        "
+        @keydown.up.prevent="onInputKeyUpDown"
+        @keydown.down.prevent="onInputKeyDownDown"
       />
       <X
         :style="{
@@ -159,8 +165,8 @@ const componentId = useId()
       :suggestions="
         filteredSuggestions.map((suggestion) => ({ name: suggestion[0], title: suggestion[1] }))
       "
-      :on-select="(suggestion) => selectSuggestion([suggestion.name, suggestion.title])"
       :show-filter="false"
+      @select="(suggestion) => selectSuggestion([suggestion.name, suggestion.title])"
     />
   </div>
 </template>

@@ -6,7 +6,7 @@
 
 import FormAutocompleter from '@/form/private/FormAutocompleter.vue'
 import { ref, watch } from 'vue'
-import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
+import { fireEvent, render, screen, waitFor, waitForElementToBeRemoved } from '@testing-library/vue'
 import userEvent from '@testing-library/user-event'
 
 vi.mock('@/form/components/utils/autocompleter', () => ({
@@ -178,13 +178,22 @@ describe('FormAutocompleter', () => {
     })
 
     const input = screen.getByPlaceholderText('Add some labels')
-    await userEvent.type(input, 'os')
 
+    // set cursor into text input field
+    await userEvent.click(input)
+
+    // suggestions should show up
     await waitFor(() => {
       expect(screen.getByText('OS Windows')).toBeInTheDocument()
       expect(screen.getByText('OS Linux')).toBeInTheDocument()
     })
 
+    await userEvent.type(input, 'linux')
+
+    // suggestions are filtered, so windows should go away
+    await waitForElementToBeRemoved(() => screen.getByText('OS Windows'))
+
+    // lets choose the only element in the list
     await userEvent.keyboard('[ArrowDown][Enter]')
 
     await waitFor(() => {

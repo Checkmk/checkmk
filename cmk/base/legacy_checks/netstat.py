@@ -51,14 +51,24 @@ def parse_netstat(string_table: StringTable) -> Section:
             return ip_address.rsplit(":", 1)
         return ip_address.rsplit(".", 1)
 
+    try:
+        is_netstat_format = string_table[1][1].isdecimal()
+    except IndexError:
+        # Assuming that "old" netstat format should precedence
+        is_netstat_format = True
+
     connections = []
     for line in string_table:
         if len(line) == 6:
-            proto, _recv_q, _send_q, local, remote, connstate = line
+            if is_netstat_format:
+                proto, _recv_q, _send_q, local, remote, connstate = line
+            else:
+                proto, connstate, _recv_q, _send_q, local, remote = line
             if proto.startswith("tcp"):  # also tcp4 and tcp6
                 proto = "TCP"
             elif proto.startswith("udp"):
                 proto = "UDP"
+                connstate = "LISTENING"
             # Ubuntu recently deviced to use "LISTEN" instead of "LISTENING"
             if connstate == "LISTEN":
                 connstate = "LISTENING"

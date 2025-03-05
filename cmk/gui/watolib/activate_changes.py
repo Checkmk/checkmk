@@ -1650,7 +1650,10 @@ class ActivateChangesManager(ActivateChanges):
                     ),
                 )
 
-            backup_snapshot_thread = backup_snapshots.CreateSnapshotThread(
+            if self._activation_id is None:
+                raise Exception("activation ID is not set")
+
+            with backup_snapshots.create_snapshot_in_concurrent_thread(
                 comment=self._comment,
                 created_by=user.id or "",
                 secret=backup_snapshots.snapshot_secret(),
@@ -1658,33 +1661,31 @@ class ActivateChangesManager(ActivateChanges):
                 use_git=active_config.wato_use_git,
                 debug=active_config.debug,
                 parent_span_context=trace.get_current_span().get_span_context(),
-            )
-            backup_snapshot_thread.start()
+            ) as future_backup_snapshot_creation:
+                logger.debug("Start creating config sync snapshots")
+                start = time.time()
+                work_dir = os.path.join(ACTIVATION_TMP_BASE_DIR, self._activation_id)
 
-            if self._activation_id is None:
-                raise Exception("activation ID is not set")
+                # Do not create a snapshot for the local site. All files are already in place
+                site_snapshot_settings = self._site_snapshot_settings.copy()
+                try:
+                    del site_snapshot_settings[omd_site()]
+                except KeyError:
+                    pass
 
-            logger.debug("Start creating config sync snapshots")
-            start = time.time()
-            work_dir = os.path.join(ACTIVATION_TMP_BASE_DIR, self._activation_id)
+                snapshot_manager = snapshot_manager_factory(work_dir, site_snapshot_settings)
+                snapshot_manager.generate_snapshots()
+                logger.debug("Config sync snapshot creation took %.4f", time.time() - start)
 
-            # Do not create a snapshot for the local site. All files are already in place
-            site_snapshot_settings = self._site_snapshot_settings.copy()
-            try:
-                del site_snapshot_settings[omd_site()]
-            except KeyError:
-                pass
+                logger.debug("Waiting for backup snapshot creation to complete")
 
-            snapshot_manager = snapshot_manager_factory(work_dir, site_snapshot_settings)
-            snapshot_manager.generate_snapshots()
-            logger.debug("Config sync snapshot creation took %.4f", time.time() - start)
-
-            logger.debug("Waiting for backup snapshot creation to complete")
-            backup_snapshot_thread.join()
-            if backup_snapshot_thread.error_caught_during_run:
-                raise MKGeneralException(
-                    "Failed to create backup snapshot"
-                ) from backup_snapshot_thread.error_caught_during_run
+                if (
+                    exception_in_backup_snapshot_creation
+                    := future_backup_snapshot_creation.exception()
+                ):
+                    raise MKGeneralException(
+                        "Failed to create backup snapshot"
+                    ) from exception_in_backup_snapshot_creation
 
         logger.debug("Finished all snapshots")
 

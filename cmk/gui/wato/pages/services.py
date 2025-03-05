@@ -1804,7 +1804,9 @@ def service_page_menu(breadcrumb: Breadcrumb, host: Host, options: DiscoveryOpti
                         entries=list(_page_menu_service_configuration_entries(host, options)),
                     ),
                     PageMenuTopic(
-                        title=_("On selected services"),
+                        title=_("On selected services")
+                        if options.show_checkboxes
+                        else _("On all services"),
                         entries=list(_page_menu_selected_services_entries(host, options)),
                     ),
                     PageMenuTopic(

@@ -832,25 +832,19 @@ def _collect_api_data(
         raise ClusterConnectionError("Failed to establish a connection.") from e
 
 
-def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSettings) -> None:
-    client_config = query.parse_api_session_config(arguments)
-    api_data = _collect_api_data(client_config, MonitoredObject.pvcs in arguments.monitored_objects)
-    # Namespaces are handled independently from the cluster object in order to improve
-    # testability. The long term goal is to remove all objects from the cluster object
-    composed_entities = ComposedEntities.from_api_resources(
-        excluded_node_roles=arguments.roles or [], api_data=api_data
-    )
-
+def _write_sections_based_on_api_data(
+    piggyback_formatter: Callable[[PB_KUBE_OBJECT], str],
+    arguments: argparse.Namespace,
+    checkmk_host_settings: CheckmkHostSettings,
+    composed_entities: ComposedEntities,
+    monitored_namespace_names: set[api.NamespaceName],
+    monitored_api_namespaces: Sequence[api.Namespace],
+    api_data: APIData,
+) -> None:
     # Sections based on API server data
     LOGGER.info("Write cluster sections based on API data")
     common.write_sections(
         cluster_handler.create_api_sections(composed_entities.cluster, arguments.cluster)
-    )
-
-    monitored_namespace_names = filter_monitored_namespaces(
-        {namespace_name(namespace) for namespace in api_data.namespaces},
-        arguments.namespace_include_patterns,
-        arguments.namespace_exclude_patterns,
     )
 
     namespace_grouped_api_pvcs = group_parsed_pvcs_by_namespace(api_data.persistent_volume_claims)
@@ -864,10 +858,6 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
             filter_kubelet_volume_metrics(api_data.kubelet_open_metrics)
         )
     )
-    piggyback_formatter = functools.partial(
-        piggyback_formatter_with_cluster_name, arguments.cluster
-    )
-
     if MonitoredObject.nodes in arguments.monitored_objects:
         LOGGER.info("Write nodes sections based on API data")
         for api_node in composed_entities.nodes:
@@ -905,20 +895,6 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
                 )
             common.write_sections(sections)
 
-    resource_quotas = api_data.resource_quotas
-    # Namespaces are handled differently to other objects. Namespace piggyback hosts
-    # should only be created if at least one running or pending pod is found in the
-    # namespace.
-    running_pending_pods = [
-        pod for pod in api_data.pods if pod.status.phase in [api.Phase.RUNNING, api.Phase.PENDING]
-    ]
-    namespacenames_running_pending_pods = {
-        kube_object_namespace_name(pod) for pod in running_pending_pods
-    }
-    monitored_api_namespaces = namespaces_from_namespacenames(
-        api_data.namespaces,
-        monitored_namespace_names.intersection(namespacenames_running_pending_pods),
-    )
     if MonitoredObject.namespaces in arguments.monitored_objects:
         LOGGER.info("Write namespaces sections based on API data")
         for api_namespace in monitored_api_namespaces:
@@ -934,7 +910,7 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
             )
             if (
                 api_resource_quota := namespace_handler.filter_matching_namespace_resource_quota(
-                    namespace_name(api_namespace), resource_quotas
+                    namespace_name(api_namespace), api_data.resource_quotas
                 )
             ) is not None:
                 namespace_sections = chain(
@@ -1062,6 +1038,47 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
                 )
             common.write_sections(sections)
 
+
+def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSettings) -> None:
+    client_config = query.parse_api_session_config(arguments)
+    api_data = _collect_api_data(client_config, MonitoredObject.pvcs in arguments.monitored_objects)
+    # Namespaces are handled independently from the cluster object in order to improve
+    # testability. The long term goal is to remove all objects from the cluster object
+    composed_entities = ComposedEntities.from_api_resources(
+        excluded_node_roles=arguments.roles or [], api_data=api_data
+    )
+    piggyback_formatter = functools.partial(
+        piggyback_formatter_with_cluster_name, arguments.cluster
+    )
+    monitored_namespace_names = filter_monitored_namespaces(
+        {namespace_name(namespace) for namespace in api_data.namespaces},
+        arguments.namespace_include_patterns,
+        arguments.namespace_exclude_patterns,
+    )
+    # Namespaces are handled differently to other objects. Namespace piggyback hosts
+    # should only be created if at least one running or pending pod is found in the
+    # namespace.
+    running_pending_pods = [
+        pod for pod in api_data.pods if pod.status.phase in [api.Phase.RUNNING, api.Phase.PENDING]
+    ]
+    namespacenames_running_pending_pods = {
+        kube_object_namespace_name(pod) for pod in running_pending_pods
+    }
+    monitored_api_namespaces = namespaces_from_namespacenames(
+        api_data.namespaces,
+        monitored_namespace_names.intersection(namespacenames_running_pending_pods),
+    )
+
+    _write_sections_based_on_api_data(
+        piggyback_formatter,
+        arguments,
+        checkmk_host_settings,
+        composed_entities,
+        monitored_namespace_names,
+        monitored_api_namespaces,
+        api_data,
+    )
+
     usage_config = query.parse_session_config(arguments)
 
     # Skip machine & container sections when cluster agent endpoint not configured
@@ -1087,7 +1104,7 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
             monitored_objects=arguments.monitored_objects,
             monitored_namespaces=monitored_namespace_names,
             api_pods=api_data.pods,
-            resource_quotas=resource_quotas,
+            resource_quotas=api_data.resource_quotas,
             api_cron_jobs=api_data.cron_jobs,
             monitored_api_namespaces=monitored_api_namespaces,
             piggyback_formatter=piggyback_formatter,
@@ -1178,7 +1195,7 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
             monitored_objects=arguments.monitored_objects,
             monitored_namespaces=monitored_namespace_names,
             api_pods=api_data.pods,
-            resource_quotas=resource_quotas,
+            resource_quotas=api_data.resource_quotas,
             api_cron_jobs=api_data.cron_jobs,
             monitored_api_namespaces=monitored_api_namespaces,
             piggyback_formatter=piggyback_formatter,

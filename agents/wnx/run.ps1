@@ -40,6 +40,7 @@ $env:ExternalCompilerOptions = "/DDECREASE_COMPILE_TIME"
 $hash_file = "$arte\windows_files_hashes.txt"
 $usbip_exe = "c:\common\usbip-win-0.3.6-dev\usbip.exe"
 $make_exe = where.exe make | Out-String
+$signing_folder = "signed-files"
 
 
 if ("$env:arg_var_value" -ne "") {
@@ -424,6 +425,50 @@ function Start-BinarySigning {
     Write-Host "Success binary signing" -foreground Green
 }
 
+function Start-Ps1Signing {
+    if ($argSign -ne $true) {
+        Write-Host "Skipping Signing..." -ForegroundColor Yellow
+        return
+    }
+
+    Write-Host "Ps1 signing..." -ForegroundColor White
+
+    $source_folder = "$repo_root\agents\windows\plugins"
+    $target_folder = "$arte\$signing_folder"
+
+    $fileList = @("windows_tasks.ps1", "mk_msoffice.ps1")  # Modify as needed
+
+    if (Test-Path $target_folder) {
+        Remove-Item -Path $target_folder -Recurse -Force
+    }
+
+    New-Item -ItemType Directory -Path $target_folder | Out-Null
+
+    foreach ($file in $fileList) {
+        $sourcePath = Join-Path -Path $source_folder -ChildPath $file
+        $targetPath = Join-Path -Path $target_folder -ChildPath $file
+
+        if (Test-Path $sourcePath) {
+            Copy-Item -Path $sourcePath -Destination $targetPath -Force
+        }
+        else {
+            Write-Warning "File not found: $sourcePath"
+        }
+    }
+
+    Get-ChildItem -Path $target_folder | ForEach-Object {
+        $file = $($_.FullName)
+        Write-Host "Signing $file" -ForegroundColor White
+        "& ./scripts/sign_code.cmd $file"
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "Error Signing, error code is $LASTEXITCODE" -ErrorAction Stop
+            throw
+        }
+    }
+
+    Write-Host "Success PS1 signing" -foreground Green
+}
+
 
 function Start-ArtifactUploading {
     if ($argMsi -ne $true) {
@@ -583,6 +628,7 @@ try {
         $argAttached = $true
     }
     Start-BinarySigning
+    Start-Ps1Signing
     Start-ArtifactUploading
     Start-MsiPatching
     Start-MsiSigning

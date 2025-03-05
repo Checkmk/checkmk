@@ -459,7 +459,7 @@ function Start-Ps1Signing {
     Get-ChildItem -Path $target_folder | ForEach-Object {
         $file = $($_.FullName)
         Write-Host "Signing $file" -ForegroundColor White
-        "& ./scripts/sign_code.cmd $file"
+        & ./scripts/sign_code.cmd $file
         if ($LASTEXITCODE -ne 0) {
             Write-Error "Error Signing, error code is $LASTEXITCODE" -ErrorAction Stop
             throw

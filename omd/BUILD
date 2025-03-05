@@ -72,7 +72,7 @@ create_venv(
     name = "skel_permissions_" + edition,
     srcs = edition_skel_permissions[edition],
     outs = ["skel.permissions_" + edition],
-    cmd = "cat $< > $@",
+    cmd = "cat $(SRCS) > $@",
 ) for edition in [
     "cce",
     "cee",

@@ -122,8 +122,9 @@ def _check_kube_pod_status(
         value_store["duration_per_status"] = {status_message: 0.0}
     else:
         previous_status = value_store["previous_status"]
-        value_store["duration_per_status"][previous_status] += now - value_store["previous_time"]
-        value_store["duration_per_status"].setdefault(status_message, 0.0)
+        duration_per_status = value_store["duration_per_status"]
+        duration_per_status[previous_status] += now - value_store["previous_time"]
+        duration_per_status.setdefault(status_message, 0.0)
 
     value_store["previous_time"] = now
     value_store["previous_status"] = status_message

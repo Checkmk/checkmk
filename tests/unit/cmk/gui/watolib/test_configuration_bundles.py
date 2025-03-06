@@ -22,9 +22,8 @@ from cmk.utils.user import UserId
 from cmk.automations.results import DeleteHostsResult
 
 import cmk.gui.watolib.check_mk_automations
+from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundle
 from cmk.gui.watolib.configuration_bundles import (
-    BundleId,
-    ConfigBundle,
     create_config_bundle,
     CreateBundleEntities,
     CreateHost,

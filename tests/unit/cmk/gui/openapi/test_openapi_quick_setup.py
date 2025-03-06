@@ -33,7 +33,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     FormSpecId,
     FormSpecWrapper,
 )
-from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
+from cmk.gui.watolib.configuration_bundle_store import ConfigBundleStore
 
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (

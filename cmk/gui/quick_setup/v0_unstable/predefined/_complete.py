@@ -37,9 +37,8 @@ from cmk.gui.watolib.automations import (
     fetch_service_discovery_background_job_status,
 )
 from cmk.gui.watolib.changes import add_change
+from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundle
 from cmk.gui.watolib.configuration_bundles import (
-    BundleId,
-    ConfigBundle,
     create_config_bundle,
     CreateBundleEntities,
     CreateDCDConnection,

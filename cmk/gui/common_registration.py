@@ -76,7 +76,7 @@ from cmk.gui.visuals.filter import FilterRegistry
 from cmk.gui.visuals.info import VisualInfoRegistry
 from cmk.gui.visuals.type import VisualTypeRegistry
 from cmk.gui.watolib import broker_connections as broker_connections_config
-from cmk.gui.watolib import configuration_bundles, groups_io, password_store
+from cmk.gui.watolib import configuration_bundle_store, groups_io, password_store
 from cmk.gui.watolib import notifications as notifications_config
 from cmk.gui.watolib import registration as watolib_registration
 from cmk.gui.watolib import sites as sites_config
@@ -289,5 +289,5 @@ def register(
     broker_connections_config.register(config_file_registry)
     user_connections_config(config_file_registry)
     user_config.register(config_file_registry)
-    configuration_bundles.register(config_file_registry)
+    configuration_bundle_store.register(config_file_registry)
     deprecations.register(cron_job_registry)

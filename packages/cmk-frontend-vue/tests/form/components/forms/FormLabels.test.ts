@@ -7,33 +7,29 @@ import { fireEvent, render, screen, within } from '@testing-library/vue'
 import FormLabel from '@/form/components/forms/FormLabels.vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
-import { ref, watch } from 'vue'
+import { watch } from 'vue'
 import userEvent from '@testing-library/user-event'
+import { Response } from '@/form/components/utils/autocompleter'
 
 const EXISTING_LABEL_KEY = 'existing_key'
 const EXISTING_LABEL_VALUE = 'existing_value'
 const EXISTING_LABEL_CONCAT = `${EXISTING_LABEL_KEY}:${EXISTING_LABEL_VALUE}`
 
-vi.mock('@/form/components/utils/autocompleter', () => ({
-  setupAutocompleter: vi.fn(() => {
-    const input = ref('')
-    const output = ref()
-
-    watch(input, async (newVal) => {
-      if (newVal) {
-        await new Promise((resolve) => setTimeout(resolve, 100))
-        output.value = {
-          choices: [
-            [newVal, newVal],
-            [EXISTING_LABEL_CONCAT, EXISTING_LABEL_CONCAT]
-          ]
-        }
-      }
+vi.mock(import('@/form/components/utils/autocompleter'), async (importOriginal) => {
+  const mod = await importOriginal() // type is inferred
+  return {
+    ...mod,
+    fetchSuggestions: vi.fn(async (_config: unknown, value: string) => {
+      await new Promise((resolve) => setTimeout(resolve, 100))
+      return new Response([
+        { name: value, title: value },
+        ...[{ name: EXISTING_LABEL_CONCAT, title: EXISTING_LABEL_CONCAT }].filter((item) =>
+          item.name.includes(value)
+        )
+      ])
     })
-
-    return { input, output }
-  })
-}))
+  }
+})
 
 vitest.mock('@/form/components/utils/watch', () => ({
   immediateWatch: vitest.fn((source, callback) => {

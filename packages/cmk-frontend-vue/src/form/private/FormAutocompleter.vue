@@ -4,64 +4,64 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
-import { setupAutocompleter } from '@/form/components/utils/autocompleter'
+import { onMounted, ref } from 'vue'
 import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { X } from 'lucide-vue-next'
 import CmkSuggestions from '@/components/CmkSuggestions.vue'
 import useClickOutside from '@/lib/useClickOutside'
 import { useId } from '@/form/utils'
 
+import {
+  fetchSuggestions,
+  type Suggestion,
+  ErrorResponse
+} from '@/form/components/utils/autocompleter'
+
 const props = defineProps<{
   id?: string
   placeholder: string
-  autocompleter?: Autocompleter | null
+  autocompleter?: Autocompleter
   filterOn: string[]
   size: number
   resetInputOnAdd: boolean
   allowNewValueInput?: boolean
 }>()
 
-type Suggestion = [string, string]
 const inputValue = defineModel<string>()
 const visibleInputValue = ref<string>('')
 
-type AutocompleterResponse = Record<'choices', Suggestion[]>
-const {
-  input: autocompleterInput,
-  output: autocompleterOutput,
-  error: autocompleterError
-} = setupAutocompleter<AutocompleterResponse>(() => props.autocompleter || null)
+const autocompleterError = ref<string>('')
+
 const filteredSuggestions = ref<Suggestion[]>([])
 const suggestionsRef = ref<InstanceType<typeof CmkSuggestions> | null>(null)
 const showSuggestions = ref<boolean>(false)
 
-const selectFirstSuggestion = () => {
+const selectFirstSuggestion = async () => {
   if (filteredSuggestions.value.length > 0) {
     const suggestion = filteredSuggestions.value[0]
     if (suggestion) {
-      selectSuggestion(suggestion)
+      await selectSuggestion(suggestion)
     }
   }
 }
 
-const selectSuggestion = (suggestion: Suggestion) => {
-  inputValue.value = suggestion[0]
-  visibleInputValue.value = suggestion[1]
+const selectSuggestion = async (suggestion: Suggestion) => {
+  inputValue.value = suggestion.name
+  visibleInputValue.value = suggestion.title
   if (props.resetInputOnAdd) {
-    resetVisibleInput()
+    await resetVisibleInput()
   }
   showSuggestions.value = false
 }
 
-const deleteSelection = () => {
+const deleteSelection = async () => {
   inputValue.value = ''
-  resetVisibleInput()
+  await resetVisibleInput()
 }
 
-const resetVisibleInput = () => {
+const resetVisibleInput = async () => {
   visibleInputValue.value = ''
-  autocompleterInput.value = ''
+  await updateSuggestions('')
 }
 
 onMounted(() => {
@@ -70,8 +70,14 @@ onMounted(() => {
   }
 })
 
-watch(autocompleterOutput, (newValue) => {
-  if (newValue === undefined) {
+async function updateSuggestions(query: string) {
+  if (props.autocompleter === undefined) {
+    return
+  }
+  autocompleterError.value = ''
+  const newValue = await fetchSuggestions(props.autocompleter, query)
+  if (newValue instanceof ErrorResponse) {
+    autocompleterError.value = newValue.error
     return
   }
   filteredSuggestions.value = []
@@ -79,23 +85,24 @@ watch(autocompleterOutput, (newValue) => {
   // If new value input is allowed and the input is not the title to one of the given autocompleter
   // choices, add the input as a new choice
   if (props.allowNewValueInput && visibleInputValue.value.length > 0) {
-    filteredSuggestions.value = newValue.choices.find(
-      (choice) => choice[1] === visibleInputValue.value
-    )
-      ? []
-      : [[visibleInputValue.value, visibleInputValue.value]]
+    if (newValue.choices.find((choice) => choice.title === visibleInputValue.value)) {
+      filteredSuggestions.value = [
+        { name: visibleInputValue.value, title: visibleInputValue.value }
+      ]
+    }
   }
 
   filteredSuggestions.value.push(
     ...newValue.choices
-      .filter((element: Suggestion) => element[0].length > 0 && element[1].length > 0)
-      .filter((element: Suggestion) => !props.filterOn.includes(element[0]))
+      .filter((element: Suggestion) => element.name.length > 0 && element.title.length > 0)
+      .filter((element: Suggestion) => !props.filterOn.includes(element.name))
   )
-})
+}
 
-const updateInput = (ev: Event) => {
+// TODO: replace with vuejs update mechanism
+const updateInput = async (ev: Event) => {
   const value = (ev.target as HTMLInputElement).value
-  autocompleterInput.value = value
+  await updateSuggestions(value)
   if (props.allowNewValueInput) {
     inputValue.value = value
   }
@@ -139,8 +146,8 @@ const componentId = useId()
         :placeholder="props.placeholder"
         @keydown.enter.prevent="selectFirstSuggestion"
         @focus="
-          () => {
-            if (autocompleterInput === undefined) autocompleterInput = ''
+          async () => {
+            await updateSuggestions('')
             showSuggestions = true
           }
         "
@@ -162,11 +169,9 @@ const componentId = useId()
       ref="suggestionsRef"
       role="suggestion"
       :error="autocompleterError"
-      :suggestions="
-        filteredSuggestions.map((suggestion) => ({ name: suggestion[0], title: suggestion[1] }))
-      "
+      :suggestions="filteredSuggestions"
       :show-filter="false"
-      @select="(suggestion) => selectSuggestion([suggestion.name, suggestion.title])"
+      @select="(suggestion) => selectSuggestion(suggestion)"
     />
   </div>
 </template>

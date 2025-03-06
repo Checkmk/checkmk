@@ -2470,7 +2470,7 @@ class ABCEditRuleMode(WatoMode):
             )
         )
 
-        if is_locked_by_quick_setup(rule.locked_by):
+        if is_locked_by_quick_setup(rule.locked_by, check_reference_exists=False):
             elements.append(
                 (
                     "source",

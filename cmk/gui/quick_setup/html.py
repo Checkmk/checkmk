@@ -30,7 +30,7 @@ def quick_setup_render_link(ident: GlobalIdent) -> HTML:
 def quick_setup_source_cell(table: Table, ident: GlobalIdent | None) -> None:
     """Adds the source cell to the table."""
     table.cell(_("Source"), css=["source"])
-    if is_locked_by_quick_setup(ident):
+    if is_locked_by_quick_setup(ident, check_reference_exists=False):
         html.write_html(quick_setup_render_link(ident))
     else:
         html.write_text(None)

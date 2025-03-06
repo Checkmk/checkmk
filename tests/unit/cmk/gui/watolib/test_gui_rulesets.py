@@ -30,6 +30,8 @@ from cmk.gui.plugins.wato.check_parameters.local import _parameter_valuespec_loc
 from cmk.gui.plugins.wato.check_parameters.ps import _valuespec_inventory_processes_rules
 from cmk.gui.utils.rule_specs import legacy_converter
 from cmk.gui.watolib import rulesets
+from cmk.gui.watolib.configuration_bundle_store import BundleId
+from cmk.gui.watolib.configuration_bundles import create_config_bundle, CreateBundleEntities
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.gui.watolib.rulesets import Rule, RuleOptions, Ruleset, RuleValue
 
@@ -567,6 +569,19 @@ def test_rule_clone_locked() -> None:
 
 def _setup_rules(rule_a_locked: bool, rule_b_locked: bool) -> tuple[Ruleset, Folder, Rule]:
     ruleset = _ruleset(RuleGroup.CheckgroupParameters("local"))
+    bundle_id = BundleId("bundle_id")
+    program_id = PROGRAM_ID_QUICK_SETUP
+    create_config_bundle(
+        bundle_id=bundle_id,
+        bundle={
+            "title": "bundle_title",
+            "comment": "bundle_comment",
+            "group": "bundle_group",
+            "program_id": program_id,
+        },
+        entities=CreateBundleEntities(),
+    )
+
     folder = folder_tree().root_folder()
     ruleset.append_rule(
         folder,
@@ -583,8 +598,8 @@ def _setup_rules(rule_a_locked: bool, rule_b_locked: bool) -> tuple[Ruleset, Fol
                 "locked_by": (
                     {
                         "site_id": "heute",
-                        "program_id": PROGRAM_ID_QUICK_SETUP,
-                        "instance_id": "1",
+                        "program_id": program_id,
+                        "instance_id": bundle_id,
                     }
                     if rule_a_locked
                     else None
@@ -605,8 +620,8 @@ def _setup_rules(rule_a_locked: bool, rule_b_locked: bool) -> tuple[Ruleset, Fol
             "locked_by": (
                 {
                     "site_id": "heute",
-                    "program_id": PROGRAM_ID_QUICK_SETUP,
-                    "instance_id": "2",
+                    "program_id": program_id,
+                    "instance_id": bundle_id,
                 }
                 if rule_b_locked
                 else None

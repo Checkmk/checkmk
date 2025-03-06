@@ -24,6 +24,9 @@ from cmk.utils import paths
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
 from cmk.utils.rulesets.definition import RuleGroup
 
+from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundleStore
+from cmk.gui.watolib.configuration_bundles import create_config_bundle, CreateBundleEntities
+
 DEFAULT_VALUE_RAW = """{
     "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
     "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
@@ -500,6 +503,19 @@ def test_openapi_create_rule_label_groups_no_operator(clients: ClientRegistry) -
 
 @pytest.fixture(name="locked_rule_id")
 def fixture_locked_rule_id() -> Iterable[str]:
+    bundle_id = BundleId("bundle_id")
+    program_id = PROGRAM_ID_QUICK_SETUP
+    create_config_bundle(
+        bundle_id=bundle_id,
+        bundle={
+            "title": "bundle_title",
+            "comment": "bundle_comment",
+            "group": "bundle_group",
+            "program_id": program_id,
+        },
+        entities=CreateBundleEntities(),
+    )
+
     rules_mk = os.path.join(paths.omd_root, "etc", "check_mk", "conf.d", "wato", "rules.mk")
     content: str | None = None
     if os.path.exists(rules_mk):
@@ -517,13 +533,20 @@ def fixture_locked_rule_id() -> Iterable[str]:
                 "options": {"disabled": False},
                 "locked_by": {
                     "site_id": "heute",
-                    "program_id": PROGRAM_ID_QUICK_SETUP,
-                    "instance_id": "some-rule-id",
+                    "program_id": program_id,
+                    "instance_id": bundle_id,
                 },
             },
         ],
     )
     yield id_
+
+    # remove Quick setup config bundle
+    store = ConfigBundleStore()
+    all_bundles = store.load_for_modification()
+    all_bundles.pop(bundle_id)
+    store.save(all_bundles)
+
     if content is None:
         os.remove(rules_mk)
     else:

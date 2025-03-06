@@ -290,7 +290,7 @@ def _connection_args(connection: Connection, host_config: HostConfig) -> Iterato
     if (proxy := connection.proxy) is not None:
         yield from _proxy_args(proxy)
     if (address_family := connection.address_family) is not None:
-        yield from _address_family_args(address_family, host_config.primary_ip_config.family)
+        yield from _address_family_args(address_family, host_config)
     if (redirects := connection.redirects) is not None:
         yield from _redirect_args(redirects)
     if (http_versions := connection.http_versions) is not None:
@@ -346,10 +346,13 @@ def _proxy_args(proxy: EnvProxy | URLProxy | NoProxy) -> Iterator[str]:
             yield url
 
 
-def _address_family_args(
-    address_family: AddressFamily, primary_family: IPAddressFamily
-) -> Iterator[str]:
+def _address_family_args(address_family: AddressFamily, host_config: HostConfig) -> Iterator[str]:
     if address_family == AddressFamily.ANY:
+        return
+
+    try:
+        primary_family = host_config.primary_ip_config.family
+    except ValueError:
         return
 
     yield "--force-ip-version"

@@ -1,10 +1,58 @@
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+new_local_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:local.bzl", "new_local_repository")
 repo_license = use_repo_rule("//bazel/rules:repo_license.bzl", "detect_repo_license")
 
-repo_license(name = "repo_license")
-
+bazel_dep(name = "aspect_rules_lint", version = "1.2.0")
+bazel_dep(name = "aspect_rules_py", version = "0.7.4")
+bazel_dep(name = "bazel_clang_tidy", dev_dependency = True)
+bazel_dep(name = "bazel_skylib", version = "1.7.1")
+bazel_dep(
+    name = "buildifier_prebuilt",
+    version = "8.0.0",
+    dev_dependency = True,
+)
+bazel_dep(name = "gazelle", version = "0.42.0")
+bazel_dep(
+    # Transitive dependency for protobuf.
+    # Req anything with a version equal or greater than 1.64.0.
+    name = "grpc-java",
+    version = "1.64.0",
+)
+bazel_dep(
 # Hedron's Compile Commands Extractor for Bazel
 # https://github.com/hedronvision/bazel-compile-commands-extractor
-bazel_dep(name = "hedron_compile_commands", dev_dependency = True)
+name = "hedron_compile_commands", dev_dependency = True)
+bazel_dep(name = "protobuf", version = "29.3", repo_name = "com_google_protobuf")
+bazel_dep(name = "rules_cc", version = "0.1.1")
+bazel_dep(name = "rules_foreign_cc", version = "0.11.1")
+bazel_dep(name = "rules_go", version = "0.50.1")
+bazel_dep(name = "rules_multitool", version = "0.4.0")
+bazel_dep(name = "rules_mypy", version = "0.23.0")
+bazel_dep(name = "rules_proto_grpc", version = "5.0.1")
+bazel_dep(name = "rules_python", version = "1.1.0")
+bazel_dep(name = "rules_rust", version = "0.54.1")
+bazel_dep(name = "rules_uv", version = "0.44.0")
+bazel_dep(
+    # Transitive dep required because a dependency in the protobuf-python chain
+    # expects `@rules_proto//proto/private/rules:proto_toolchain_rule.bzl`.
+    # However, 7083178 removed the file from rules_proto.
+    name = "toolchains_protoc",
+    version = "0.3.7",
+)
+
+# TODO (TBC): Switch back to upstream as soon as https://github.com/aspect-build/rules_py/pull/428 is merged
+git_override(
+    module_name = "aspect_rules_py",
+    commit = "6a3242d016798c6892a848939e36cc7bff99d6c8",
+    remote = "https://github.com/TimotheusBachinger/rules_py",
+)
+git_override(
+    module_name = "bazel_clang_tidy",
+    # No tags, no releases.  Live on head.
+    commit = "db677011c7363509a288a9fb3bf0a50830bbf791",
+    remote = "https://github.com/erenon/bazel_clang_tidy.git",
+)
 git_override(
     module_name = "hedron_compile_commands",
     # No tags, no releases.  Let's go with today's head.
@@ -12,15 +60,11 @@ git_override(
     remote = "https://github.com/hedronvision/bazel-compile-commands-extractor.git",
 )
 
-bazel_dep(name = "bazel_clang_tidy", dev_dependency = True)
-git_override(
-    module_name = "bazel_clang_tidy",
-    # No tags, no releases.  Live on head.
-    commit = "db677011c7363509a288a9fb3bf0a50830bbf791",
-    remote = "https://github.com/erenon/bazel_clang_tidy.git",
+single_version_override(
+    module_name = "protobuf",
+    patch_strip = 1,
+    patches = ["//bazel/patches:protobuf-silence_build_warnings.patch"],
 )
-
-bazel_dep(name = "rules_cc", version = "0.1.1")
 single_version_override(
     module_name = "rules_cc",
     patch_strip = 1,
@@ -28,50 +72,11 @@ single_version_override(
         "//bazel/patches:rules_cc-add_static_link_cpp_runtimes.patch",
     ],
 )
-
-bazel_dep(name = "rules_multitool", version = "0.4.0")
-bazel_dep(name = "rules_rust", version = "0.54.1")
-bazel_dep(name = "rules_python", version = "1.1.0")
 single_version_override(
-    module_name = "rules_python",
+    module_name = "rules_foreign_cc",
     patch_strip = 1,
-    patches = [
-        "//bazel/patches:rules_python-py_wheel-package_pyi_files.patch",
-        "//bazel/patches:rules_python-py_wheel-filter_out_virtual_imports.patch",
-    ],
+    patches = ["//omd/packages/foreign_cc:symlink.patch"],
 )
-
-bazel_dep(name = "rules_uv", version = "0.44.0")
-single_version_override(
-    module_name = "rules_uv",
-    patch_strip = 1,
-    patches = [
-        "//bazel/patches:rules_uv_rm_venv.patch",
-        "//bazel/patches:rules_uv_quiet.patch",
-        "//bazel/patches:rules_uv_create_venv_whls.patch",
-        "//bazel/patches:rules_uv-requirements_in_info.patch",
-    ],
-)
-
-multitool = use_extension("@rules_multitool//multitool:extension.bzl", "multitool")
-use_repo(multitool, "multitool")
-
-# TODO: how to sync this with the PYTHON_VERSION in package_versions.bzl?
-PYTHON_VERSION = "3.12.3"
-
-# TODO: Duplicate from bazel_variables.bzl. won't be needed anymore when all omd packages are loaded via MODULE.bazel
-UPSTREAM_MIRROR_URL = "https://artifacts.lan.tribe29.com/repository/upstream-archives/"
-
-python = use_extension("@rules_python//python/extensions:python.bzl", "python")
-python.toolchain(
-    is_default = True,
-    # We can specify the exact version.
-    python_version = PYTHON_VERSION,
-)
-
-bazel_dep(name = "rules_mypy", version = "0.23.0")
-bazel_dep(name = "aspect_rules_py", version = "0.7.4")
-
 single_version_override(
     module_name = "rules_mypy",
     patch_strip = 1,
@@ -83,80 +88,68 @@ single_version_override(
         "//bazel/patches:rules_mypy-add_support_for_pyi_srcs.patch",
     ],
 )
-
-# TODO (TBC): Switch back to upstream as soon as https://github.com/aspect-build/rules_py/pull/428 is merged
-git_override(
-    module_name = "aspect_rules_py",
-    commit = "6a3242d016798c6892a848939e36cc7bff99d6c8",
-    remote = "https://github.com/TimotheusBachinger/rules_py",
-)
-
-bazel_dep(name = "aspect_rules_lint", version = "1.2.0")
-
-pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
-pip.parse(
-    environment = {
-        # Hack for building extensions from source.
-        # See also:  https://github.com/bazelbuild/rules_python/issues/1463
-        "CC": "gcc-13",
-    },
-    hub_name = "cmk_requirements",
-    python_version = PYTHON_VERSION,
-    requirements_by_platform = {
-        "@//:requirements.txt": "linux_*",
-    },
-)
-use_repo(pip, "cmk_requirements")
-
-types = use_extension("@rules_mypy//mypy:types.bzl", "types")
-types.requirements(
-    name = "cmk_types",
-    pip_requirements = "@cmk_requirements//:requirements.bzl",
-    requirements_txt = "//:requirements.txt",
-)
-use_repo(types, "cmk_types")
-
-bazel_dep(name = "protobuf", version = "29.3", repo_name = "com_google_protobuf")
 single_version_override(
-    module_name = "protobuf",
+    module_name = "rules_python",
     patch_strip = 1,
-    patches = ["//bazel/patches:protobuf-silence_build_warnings.patch"],
+    patches = [
+        "//bazel/patches:rules_python-py_wheel-package_pyi_files.patch",
+        "//bazel/patches:rules_python-py_wheel-filter_out_virtual_imports.patch",
+    ],
 )
-
-bazel_dep(
-    # Transitive dependency for protobuf.
-    # Req anything with a version equal or greater than 1.64.0.
-    name = "grpc-java",
-    version = "1.64.0",
-)
-bazel_dep(
-    # Transitive dep required because a dependency in the protobuf-python chain
-    # expects `@rules_proto//proto/private/rules:proto_toolchain_rule.bzl`.
-    # However, 7083178 removed the file from rules_proto.
-    name = "toolchains_protoc",
-    version = "0.3.7",
-)
-bazel_dep(name = "rules_proto_grpc", version = "5.0.1")
-
-register_toolchains("//bazel/toolchains/cc:linux_gcc13")
-
-# bazel_skylib: Required for setting up rules_foreign_cc
-bazel_dep(name = "bazel_skylib", version = "1.7.1")
-
 single_version_override(
-    module_name = "rules_foreign_cc",
+    module_name = "rules_uv",
     patch_strip = 1,
-    patches = ["//omd/packages/foreign_cc:symlink.patch"],
+    patches = [
+        "//bazel/patches:rules_uv_rm_venv.patch",
+        "//bazel/patches:rules_uv_quiet.patch",
+        "//bazel/patches:rules_uv_create_venv_whls.patch",
+        "//bazel/patches:rules_uv-requirements_in_info.patch",
+    ],
 )
 
-bazel_dep(name = "rules_foreign_cc", version = "0.11.1")
+new_local_repository(
+    name = "glib",
+    build_file = "@//omd/packages/glib:BUILD",
+    path = "/usr",
+)
+new_local_repository(
+    name = "libxml2",
+    build_file = "@//omd/packages/libxml2:BUILD",
+    path = "/usr",
+)
 
-http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+# TODO: Duplicate from bazel_variables.bzl. won't be needed anymore when all omd packages are loaded via MODULE.bazel
+UPSTREAM_MIRROR_URL = "https://artifacts.lan.tribe29.com/repository/upstream-archives/"
+
+OCB_VERSION = "0.113.0"
+http_file(
+    name = "otel_collector_custom_builder",
+    executable = True,
+    sha256 = "bbccc5ab73364a17d99b22f0c1d53fc0efecee5fa8f93000596b4cfbe9a73325",
+    url = "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fbuilder%2Fv" + OCB_VERSION + "/ocb_" + OCB_VERSION + "_linux_amd64",
+)
+SHFMT_VERSION = "v3.10.0"
+http_file(
+    name = "shfmt",
+    executable = True,
+    sha256 = "1f57a384d59542f8fac5f503da1f3ea44242f46dff969569e80b524d64b71dbc",
+    urls = [
+        "https://github.com/mvdan/sh/releases/download/" + SHFMT_VERSION + "/shfmt_" + SHFMT_VERSION + "_linux_amd64",
+        UPSTREAM_MIRROR_URL + "/shfmt_" + SHFMT_VERSION + "_linux_amd64",
+    ],
+)
+TAPLO_VERSION = "0.9.3"
+http_file(
+    name = "taplo.gz",
+    sha256 = "0cf7e0fbeb299e62cecd5b648d820a103decf2ed2d42a3aac4d6f6c930e88125",
+    urls = [
+        "https://github.com/tamasfe/taplo/releases/download/" + TAPLO_VERSION + "/taplo-full-linux-x86.gz",
+        UPSTREAM_MIRROR_URL + "/taplo-full-linux-x86-" + TAPLO_VERSION + ".gz",
+    ],
+)
 
 PATCH_VERSION = "2.7.6"
-
 PATCH_FILENAME = "patch-" + PATCH_VERSION + ".tar.gz"
-
 http_archive(
     name = "patch",
     build_file = "//omd/packages/patch:BUILD.patch.bazel",
@@ -180,9 +173,7 @@ http_archive(
         UPSTREAM_MIRROR_URL + PATCH_FILENAME,
     ],
 )
-
 SHELLCHECK_VERSION = "v0.10.0"
-
 http_archive(
     name = "shellcheck",
     build_file_content = """
@@ -198,64 +189,44 @@ exports_files([
     ],
 )
 
-SHFMT_VERSION = "v3.10.0"
+repo_license(name = "repo_license")
+register_toolchains("//bazel/toolchains/cc:linux_gcc13")
 
-http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+multitool = use_extension("@rules_multitool//multitool:extension.bzl", "multitool")
+use_repo(multitool, "multitool")
 
-http_file(
-    name = "shfmt",
-    executable = True,
-    sha256 = "1f57a384d59542f8fac5f503da1f3ea44242f46dff969569e80b524d64b71dbc",
-    urls = [
-        "https://github.com/mvdan/sh/releases/download/" + SHFMT_VERSION + "/shfmt_" + SHFMT_VERSION + "_linux_amd64",
-        UPSTREAM_MIRROR_URL + "/shfmt_" + SHFMT_VERSION + "_linux_amd64",
-    ],
+# TODO: how to sync this with the PYTHON_VERSION in package_versions.bzl?
+PYTHON_VERSION = "3.12.3"
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    is_default = True,
+    # We can specify the exact version.
+    python_version = PYTHON_VERSION,
 )
 
-TAPLO_VERSION = "0.9.3"
-
-http_file(
-    name = "taplo.gz",
-    sha256 = "0cf7e0fbeb299e62cecd5b648d820a103decf2ed2d42a3aac4d6f6c930e88125",
-    urls = [
-        "https://github.com/tamasfe/taplo/releases/download/" + TAPLO_VERSION + "/taplo-full-linux-x86.gz",
-        UPSTREAM_MIRROR_URL + "/taplo-full-linux-x86-" + TAPLO_VERSION + ".gz",
-    ],
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+pip.parse(
+    environment = {
+        # Hack for building extensions from source.
+        # See also:  https://github.com/bazelbuild/rules_python/issues/1463
+        "CC": "gcc-13",
+    },
+    hub_name = "cmk_requirements",
+    python_version = PYTHON_VERSION,
+    requirements_by_platform = {
+        "@//:requirements.txt": "linux_*",
+    },
 )
+use_repo(pip, "cmk_requirements")
 
-bazel_dep(
-    name = "buildifier_prebuilt",
-    version = "8.0.0",
-    dev_dependency = True,
+types = use_extension("@rules_mypy//mypy:types.bzl", "types")
+types.requirements(
+    name = "cmk_types",
+    pip_requirements = "@cmk_requirements//:requirements.bzl",
+    requirements_txt = "//:requirements.txt",
 )
-
-new_local_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:local.bzl", "new_local_repository")
-
-new_local_repository(
-    name = "glib",
-    build_file = "@//omd/packages/glib:BUILD",
-    path = "/usr",
-)
-
-new_local_repository(
-    name = "libxml2",
-    build_file = "@//omd/packages/libxml2:BUILD",
-    path = "/usr",
-)
-
-# Build custom OpenTelementry collector
-
-OCB_VERSION = "0.113.0"
-
-http_file(
-    name = "otel_collector_custom_builder",
-    executable = True,
-    sha256 = "bbccc5ab73364a17d99b22f0c1d53fc0efecee5fa8f93000596b4cfbe9a73325",
-    url = "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fbuilder%2Fv" + OCB_VERSION + "/ocb_" + OCB_VERSION + "_linux_amd64",
-)
-
-bazel_dep(name = "gazelle", version = "0.42.0")
-bazel_dep(name = "rules_go", version = "0.50.1")
+use_repo(types, "cmk_types")
 
 go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
 go_sdk.download(version = "1.22.10")

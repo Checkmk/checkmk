@@ -88,10 +88,11 @@ def check_netapp_ontap_cpu_utilization(
     if (data := section.get(item)) is None:
         return
 
+    value_store = get_value_store()
     yield from check_cpu_util(
-        util=data.cpu_utilization(),
+        util=data.cpu_utilization(value_store),
         params=params,
-        value_store=get_value_store(),
+        value_store=value_store,
         this_time=time.time(),
     )
 

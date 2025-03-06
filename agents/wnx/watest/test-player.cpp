@@ -147,7 +147,7 @@ TEST(PlayerTest, RealLifeInventory_Simulation) {
     using namespace cma::cfg;
     namespace fs = std::filesystem;
 
-    const wstring plugin = L"mk_inventory.vbs";
+    const wstring plugin = L"mk_inventory.ps1";
     const wstring plugin_state_file = L"mk_inventory.local";
 
     error_code ec;

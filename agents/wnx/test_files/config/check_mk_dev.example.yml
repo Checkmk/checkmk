@@ -155,7 +155,7 @@ plugins:
     # it may fail (timeout / error) up to 3 times before the last known data is discarded
     execution:
         # execution pattern for  windows-updates.ps1:
-        - pattern     : mk_inventory.vbs
+        - pattern     : mk_inventory.ps1
           async       : yes
           timeout     : 120
           cache_age   : 3600

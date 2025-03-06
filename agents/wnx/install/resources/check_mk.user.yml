@@ -273,7 +273,7 @@ plugins:
         # *********************************************************************************************
         # execution pattern for  windows-updates.ps1:
         # all parameters below are DEFAULT set for every entry
-        #- pattern     : '$CUSTOM_PLUGINS_PATH$\mk_inventory.vbs'  # Plugin name or absolute path . * and ? are allowed
+        #- pattern     : '$CUSTOM_PLUGINS_PATH$\mk_inventory.ps1'  # Plugin name or absolute path . * and ? are allowed
         #  run         : yes                 # execute this plugin if plugin found
         #  async       : yes                 # agent will not wait for async plugins. Normally you will get data later.
         #  timeout     : 120                 # after 120 seconds process will be killed.

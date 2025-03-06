@@ -317,8 +317,8 @@ just to signal that real build script was not called -->
             <Component Id="cmpC93DA459EC69F6EE0183382A29CB8174" Guid="{0935A7A0-51FB-4107-B610-F29391E93259}">
                 <File Id="fil683F1F5CE5408AC623A93394DFCEEE48" KeyPath="yes" Source="..\..\windows\plugins\mk_dhcp_enabled.bat" DiskId="1"  />
             </Component>
-            <Component Id="cmp657B6B6F132543FC84EC56F7B0DAB6ED" Guid="{1C2AEC02-1673-4B40-B147-0B001188DC5A}">
-                <File Id="filE5741C46E1FC38FBCAF8323A42CEC30F" KeyPath="yes" Source="..\..\windows\plugins\mk_inventory.vbs" DiskId="1"  />
+            <Component Id="cmpBEB2CB1913344D4A896BA271299F7998" Guid="{FF68F497-8DF7-4BC9-9B0C-777A17D6A91F}">
+                <File Id="filB97B2F57BA81438AA42B66E517D7B43B" KeyPath="yes" Source="..\..\windows\plugins\mk_inventory.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmp9DAE4EE702B9428A9A8FC7C22093867A" Guid="{80B17983-F7E7-45C5-8F3F-86035AD864F2}">
                 <File Id="fil8C84C09B518344F39B6A4AF606223161" KeyPath="yes" Source="..\..\windows\plugins\mk_mysql.ps1" DiskId="1"  />
@@ -418,7 +418,7 @@ just to signal that real build script was not called -->
             <ComponentRef Id="cmp7B7D687D53F2D4CECFA13EBE1BE3801E" />
             <ComponentRef Id="cmp2A9B7CC157BFEF8A29D75CC2F64A5A02" />
             <ComponentRef Id="cmpC93DA459EC69F6EE0183382A29CB8174" />
-            <ComponentRef Id="cmp657B6B6F132543FC84EC56F7B0DAB6ED" />
+            <ComponentRef Id="cmpBEB2CB1913344D4A896BA271299F7998" />
             <ComponentRef Id="cmp9DAE4EE702B9428A9A8FC7C22093867A" />
             <ComponentRef Id="cmp5ADA772C7BDFD80499DCC49F48A4D27D" />
             <ComponentRef Id="cmp06FAFC985397646477170C3A9EC578DF" />

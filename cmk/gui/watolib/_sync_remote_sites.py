@@ -78,30 +78,9 @@ class AutomationSyncRemoteSites(AutomationCommand[int]):
     def execute(self, api_request: int) -> str:
         site_id = omd_site()
 
+        # Note: This misses entries which are stored in the same second
         audit_logs = AuditLogStore().get_entries_since(timestamp=api_request)
-
-        # The sync (and later deletion with clear-site-changes) of the site changes was built to
-        # synchronize changes which would not be activated on the remote site (See SUP-9139). For
-        # automated processes which do an activation however, this mechanism introduces a race
-        # condition.
-        # When e.g. DiscoverRegisteredHostsJob creates a change and activates it, it may happen
-        # that the sync + deletion happens before the activation is finished. In this case the
-        # activation may not activate the change as intended, breaking the logic of the job.
-        #
-        # We could introduce a lock here, but it is not clear which parts of the system have
-        # a similar behavior as the DiscoverRegisteredHostsJob, so we don't know where to apply
-        # the lock.
-        # Another approach is to only sync not activated site changes which have a certain age.
-        # This reduces the probability to break the logic of automated processes. This has the
-        # advantage that we can do it in this central place. The disadvantage is that the changes
-        # are synced later to the central site, which seems to be acceptable.
         site_changes = SiteChanges(site_id).read()
-        # We could filter out the changes within the 600 seconds if clear-site-changes would only
-        # delete the synced changes. To deal with that we don't sync any change if there is a
-        # change within the last 600 seconds.
-        threshold = time.time() - 600
-        if any(c["time"] > threshold for c in site_changes):
-            site_changes = []
 
         return SyncRemoteSitesResult(audit_logs, site_changes).to_json()
 
@@ -109,16 +88,30 @@ class AutomationSyncRemoteSites(AutomationCommand[int]):
         return int(request.get_str_input_mandatory("last_audit_log_timestamp"))
 
 
-class AutomationClearSiteChanges(AutomationCommand[None]):
+class AutomationClearSiteChanges(AutomationCommand[None | str]):
     def command_name(self) -> str:
         return "clear-site-changes"
 
-    def execute(self, api_request: None) -> None:
+    def execute(self, api_request: None | str) -> None:
         site_id = omd_site()
-        SiteChanges(site_id).clear()
+        if api_request is None:
+            # Central site with version <2.4
+            SiteChanges(site_id).clear()
+        else:
+            with SiteChanges(site_id).mutable_view() as site_entries:
+                keep_idx = len(site_entries)
+                for idx, entry in enumerate(site_entries):
+                    if entry["id"] == api_request:
+                        keep_idx = idx + 1
+                        break
+                site_entries[:] = site_entries[keep_idx:]
 
-    def get_request(self) -> None:
-        pass
+    def get_request(self) -> None | str:
+        try:
+            # Central site with version <2.4 does not report this parameter
+            return request.get_str_input_mandatory("last_change_id")
+        except KeyError:
+            return None
 
 
 class LastAuditLogTimestampsStore:
@@ -181,7 +174,7 @@ class SyncRemoteSitesJob:
             logger.debug(
                 "Removing site changes from sites: %s.", ", ".join(site_changes_synced_sites)
             )
-            self._clear_site_changes_from_remote_sites(site_changes_synced_sites)
+            self._clear_site_changes_from_remote_sites(last_site_changes)
 
         with store.locked(self._last_audit_log_timestamps_path):
             self._last_audit_log_timestamps_store.write(last_timestamps)
@@ -285,9 +278,14 @@ class SyncRemoteSitesJob:
         for site_id, num_entries in counter.items():
             logger.debug("Wrote %s %s entries from site %s", num_entries, change_name, site_id)
 
-    def _clear_site_changes_from_remote_sites(self, site_changes_synced_sites: set[SiteId]) -> None:
-        for site_id in site_changes_synced_sites:
-            do_remote_automation(get_site_config(active_config, site_id), "clear-site-changes", [])
+    def _clear_site_changes_from_remote_sites(self, last_site_changes: LastSiteChanges) -> None:
+        for site_id, site_changes in last_site_changes.items():
+            if site_changes:
+                do_remote_automation(
+                    get_site_config(active_config, site_id),
+                    "clear-site-changes",
+                    [("last_change_id", str(site_changes[-1]["id"]))],
+                )
 
     def _get_result_message(
         self,

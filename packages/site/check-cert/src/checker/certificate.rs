@@ -3,7 +3,8 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::check::{
-    self, pretty_levels, Check, CheckResult, Levels, Metric, Real, SimpleCheckResult,
+    self, pretty_levels, Check, CheckResult, CheckResultLevelsText, Levels, Metric, Real,
+    SimpleCheckResult,
 };
 use std::collections::HashSet;
 use std::convert::AsRef;
@@ -328,22 +329,20 @@ fn check_validity_duration(
             .levels(levels.clone())
             .build()
             .map(|x| Real::from(x.whole_seconds() as isize));
+        let message = format!(
+            "Server certificate validity: {} day(s)",
+            time_to_expiration.whole_days()
+        );
         match levels {
-            None => CheckResult::notice(
-                format!(
-                    "Server certificate validity: {} day(s)",
-                    time_to_expiration.whole_days()
-                ),
-                metric.clone(),
-            ),
+            None => CheckResult::notice(message, metric.clone()),
             Some(levels) => CheckResult::from_levels(
-                pretty_levels(
-                    &format!(
-                        "Server certificate validity: {} day(s)",
-                        time_to_expiration.whole_days(),
+                CheckResultLevelsText::new(
+                    message.clone(),
+                    pretty_levels(
+                        &message,
+                        levels.clone().map(|x| Real::from(x.whole_days() as isize)),
+                        "day(s)",
                     ),
-                    levels.clone().map(|x| Real::from(x.whole_days() as isize)),
-                    "day(s)",
                 ),
                 metric.clone(),
             ),

@@ -194,7 +194,7 @@ class ModeEditPassword(SimpleEditMode[Password]):
     def _vs_mandatory_elements(self) -> list[DictionaryEntry]:
         elements = super()._vs_mandatory_elements()
         locked_by = None if self._new else self._entry.get("locked_by")
-        if is_locked_by_quick_setup(locked_by):
+        if is_locked_by_quick_setup(locked_by, check_reference_exists=False):
             elements.append(
                 (
                     "source",

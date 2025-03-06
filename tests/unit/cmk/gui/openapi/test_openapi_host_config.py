@@ -30,6 +30,11 @@ from cmk.automations.results import DeleteHostsResult
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.type_defs import CustomHostAttrSpec
+from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundleStore
+from cmk.gui.watolib.configuration_bundles import (
+    create_config_bundle,
+    CreateBundleEntities,
+)
 from cmk.gui.watolib.custom_attributes import (
     CustomAttrSpecs,
     save_custom_attrs_to_mk_file,
@@ -40,6 +45,27 @@ from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 managedtest = pytest.mark.skipif(
     version.edition(paths.omd_root) is not version.Edition.CME, reason="see #7213"
 )
+
+
+@pytest.fixture()
+def quick_setup_config_bundle() -> Iterator[tuple[BundleId, str]]:
+    bundle_id = BundleId("bundle_id")
+    program_id = PROGRAM_ID_QUICK_SETUP
+    create_config_bundle(
+        bundle_id=bundle_id,
+        bundle={
+            "title": "bundle_title",
+            "comment": "bundle_comment",
+            "group": "bundle_group",
+            "program_id": program_id,
+        },
+        entities=CreateBundleEntities(),
+    )
+    yield bundle_id, program_id
+    store = ConfigBundleStore()
+    all_bundles = store.load_for_modification()
+    all_bundles.pop(bundle_id)
+    store.save(all_bundles)
 
 
 def test_openapi_missing_host(clients: ClientRegistry) -> None:
@@ -707,18 +733,20 @@ def test_openapi_host_rename_on_invalid_hostname(
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_rename_locked_by_quick_setup(
     clients: ClientRegistry,
+    quick_setup_config_bundle: tuple[BundleId, str],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr("cmk.gui.openapi.endpoints.host_config.has_pending_changes", lambda: False)
 
+    bundle_id, program_id = quick_setup_config_bundle
     clients.HostConfig.create(
         host_name="foobar",
         folder="/",
         attributes={
             "locked_by": {
                 "site_id": "heute",
-                "program_id": PROGRAM_ID_QUICK_SETUP,
-                "instance_id": "some-rule",
+                "program_id": program_id,
+                "instance_id": bundle_id,
             }
         },
     )
@@ -732,16 +760,18 @@ def test_openapi_host_rename_locked_by_quick_setup(
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_delete_locked_by_quick_setup(
     clients: ClientRegistry,
+    quick_setup_config_bundle: tuple[BundleId, str],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    bundle_id, program_id = quick_setup_config_bundle
     clients.HostConfig.create(
         host_name="foobar",
         folder="/",
         attributes={
             "locked_by": {
                 "site_id": "heute",
-                "program_id": PROGRAM_ID_QUICK_SETUP,
-                "instance_id": "some-rule",
+                "program_id": program_id,
+                "instance_id": bundle_id,
             }
         },
     )
@@ -754,8 +784,10 @@ def test_openapi_host_delete_locked_by_quick_setup(
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_update_locked_by_quick_setup(
     clients: ClientRegistry,
+    quick_setup_config_bundle: tuple[BundleId, str],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    bundle_id, program_id = quick_setup_config_bundle
     clients.HostConfig.create(
         host_name="foobar",
         folder="/",
@@ -764,8 +796,8 @@ def test_openapi_host_update_locked_by_quick_setup(
             "locked_attributes": ["tag_address_family"],
             "locked_by": {
                 "site_id": "heute",
-                "program_id": PROGRAM_ID_QUICK_SETUP,
-                "instance_id": "some-rule",
+                "program_id": program_id,
+                "instance_id": bundle_id,
             },
         },
     )

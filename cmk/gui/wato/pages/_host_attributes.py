@@ -368,7 +368,7 @@ def configure_attributes(  # pylint: disable=too-many-branches
             topic_id == "basic"
             and single_edit_host
             and (locked_by := single_edit_host.locked_by())
-            and is_locked_by_quick_setup(locked_by)
+            and is_locked_by_quick_setup(locked_by, check_reference_exists=False)
         ):
             vs = FixedValue(
                 value=locked_by["instance_id"],

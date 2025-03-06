@@ -2,20 +2,45 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 from pathlib import Path
 from typing import Mapping, NewType, NotRequired, TypedDict, TypeGuard
 
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_QUICK_SETUP
 
+from cmk.gui.hooks import request_memoize
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.utils import multisite_dir
 
 BundleId = NewType("BundleId", str)
 
 
-def is_locked_by_quick_setup(ident: GlobalIdent | None) -> TypeGuard[GlobalIdent]:
-    return ident is not None and ident["program_id"] == PROGRAM_ID_QUICK_SETUP
+def is_locked_by_quick_setup(
+    ident: GlobalIdent | None, *, check_reference_exists: bool = True
+) -> TypeGuard[GlobalIdent]:
+    """Check if the given ident of a config object is locked by the quick setup program.
+
+    Args:
+        ident:
+            The locked_by ident of the config object.
+
+        check_reference_exists:
+            additionally checks if the reference exists. Normally the reference should point to
+            an existing configuration bundle. In some rare cases, the reference might point to a
+            non-existing bundle. This is possible due to partial deletion of the underlying objects
+            which can happen and is deemed ok, the user should be allowed to modify the object in
+            this case. We still want to show the user that the object is part of a bundle while
+            unlocking it. Defaults to True since the reference should normally exist.
+    """
+    if ident is None:
+        return False
+
+    if ident["program_id"] != PROGRAM_ID_QUICK_SETUP:
+        return False
+
+    if check_reference_exists and ident["instance_id"] not in load_configuration_bundles():
+        return False
+
+    return True
 
 
 class ConfigBundle(TypedDict):
@@ -53,6 +78,11 @@ def load_group_bundles(bundle_group: str) -> Mapping[BundleId, ConfigBundle]:
         for bundle_id, bundle in all_bundles.items()
         if bundle["group"] == bundle_group
     }
+
+
+@request_memoize()
+def load_configuration_bundles() -> Mapping[BundleId, ConfigBundle]:
+    return ConfigBundleStore().load_for_reading()
 
 
 def register(config_file_registry: ConfigFileRegistry) -> None:

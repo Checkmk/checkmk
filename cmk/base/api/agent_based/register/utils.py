@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import inspect
-import sys
 from collections import defaultdict
 from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
 from typing import Final, get_args, Literal, NoReturn, Union
@@ -28,35 +27,12 @@ from cmk.base.api.agent_based.plugin_classes import (
 )
 
 from cmk.agent_based.v1.register import RuleSetType
-from cmk.discover_plugins import PluginLocation
 
 TypeLabel = Literal["check", "cluster_check", "discovery", "host_label", "inventory"]
 
 ITEM_VARIABLE: Final = "%s"
 
 _ALLOWED_EDITION_FOLDERS: Final = {e.short for e in Edition}
-
-
-def get_validated_plugin_location() -> PluginLocation:
-    """Find out which module registered the plug-in and make sure its in the right place"""
-    # We used this before, but it was a performance killer. The method below is a lot faster.
-    # calling_from = inspect.stack()[2].filename
-    full_module_name = str(sys._getframe(2).f_globals["__name__"])
-
-    match full_module_name.split("."):
-        case ("cmk", "base", "plugins", "agent_based", _module):
-            return PluginLocation(full_module_name)
-        case (
-            "cmk",
-            "base",
-            "plugins",
-            "agent_based",
-            edition,
-            _module,
-        ) if edition in _ALLOWED_EDITION_FOLDERS:
-            return PluginLocation(full_module_name)
-
-    raise ImportError(f"do not register from {full_module_name!r}")
 
 
 def create_subscribed_sections(

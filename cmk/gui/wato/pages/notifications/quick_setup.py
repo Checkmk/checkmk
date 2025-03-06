@@ -482,6 +482,13 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 ),
                                                 editable_order=False,
                                                 prefill=DefaultValue([]),
+                                                custom_validate=[
+                                                    not_empty(
+                                                        error_msg=Message(
+                                                            "Please add at least one Rule ID."
+                                                        )
+                                                    )
+                                                ],
                                             ),
                                         ),
                                         "syslog_priority": DictElement(

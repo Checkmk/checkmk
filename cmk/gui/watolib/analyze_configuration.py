@@ -270,21 +270,21 @@ def _perform_tests_for_site(
     try:
         if site_is_local(active_config, site_id):
             automation = AutomationCheckAnalyzeConfig()
-            results_data = automation.execute(_TCheckAnalyzeConfig(categories=categories))
+            ac_test_results = automation.execute(_TCheckAnalyzeConfig(categories=categories))
         else:
-            raw_results_data = do_remote_automation(
+            raw_ac_test_results = do_remote_automation(
                 get_site_config(active_config, site_id),
                 "check-analyze-config",
                 [("categories", json.dumps(categories))],
                 timeout=request_.request_timeout - 10,
             )
-            assert isinstance(raw_results_data, list)
-            results_data = [ACTestResult.from_repr(r) for r in raw_results_data]
+            assert isinstance(raw_ac_test_results, list)
+            ac_test_results = [ACTestResult.from_repr(r) for r in raw_ac_test_results]
 
-        logger.error("[%s] Finished: %r", site_id, results_data)
+        logger.error("[%s] Finished: %r", site_id, ac_test_results)
         return _TestResult(
             state=0,
-            ac_test_results=results_data,
+            ac_test_results=ac_test_results,
             error="",
         )
 
@@ -322,7 +322,7 @@ def perform_tests(
     request_: Request,
     test_sites: SiteConfigurations,
     categories: Sequence[str] | None = None,  # 'None' means 'No filtering'
-) -> dict[SiteId, list[ACTestResult]]:
+) -> Mapping[SiteId, Sequence[ACTestResult]]:
     logger.debug("Executing tests for %d sites" % len(test_sites))
     pool = ThreadPool(processes=len(test_sites))
     active_tasks = {
@@ -334,7 +334,7 @@ def perform_tests(
         for site_id in test_sites
     }
 
-    results_by_site: dict[SiteId, list[ACTestResult]] = {}
+    results_by_site_id: dict[SiteId, list[ACTestResult]] = {}
     while active_tasks:
         time.sleep(0.1)
         for site_id, async_result in list(active_tasks.items()):
@@ -359,14 +359,14 @@ def perform_tests(
                                 site_id=site_id,
                             )
                         )
-                    results_by_site[site_id] = ac_test_results
+                    results_by_site_id[site_id] = ac_test_results
 
                 else:
                     raise NotImplementedError()
 
             except Exception as e:
                 if categories and "connectivity" in categories:
-                    results_by_site[site_id] = [
+                    results_by_site_id[site_id] = [
                         _connectivity_result(
                             state=ACResultState.CRIT,
                             text=str(e),
@@ -376,7 +376,7 @@ def perform_tests(
                 logger.exception("error analyzing configuration for site %s", site_id)
 
     logger.debug("Got test results")
-    return results_by_site
+    return results_by_site_id
 
 
 def _merge_test_results_of_site(

@@ -236,7 +236,14 @@ class CMKWebSession:
 
     def is_logged_in(self) -> bool:
         r = self.get("info.py", allow_redirect_to_login=True)
-        return all(x in r.text for x in ("About Checkmk", "Your IT monitoring platform"))
+        try:
+            return all(x in r.text for x in ("About Checkmk", "Your IT monitoring platform"))
+        except ConnectionError:
+            if version_from_env().is_saas_edition():
+                # with the auth provider running, the get request may fail
+                return self.get_auth_cookie() is not None
+            else:
+                raise
 
     def get_auth_cookie(self) -> Cookie | None:
         """return the auth cookie

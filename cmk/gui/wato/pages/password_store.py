@@ -5,7 +5,6 @@
 import copy
 from collections.abc import Collection
 
-from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.password_store import Password
 
 from cmk.gui.exceptions import MKUserError
@@ -38,6 +37,7 @@ from cmk.gui.wato.pages._simple_modes import (
 )
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainCore
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.password_store import PasswordStore

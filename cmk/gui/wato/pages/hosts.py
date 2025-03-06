@@ -12,7 +12,6 @@ from typing import Final, overload
 from cmk.ccc.exceptions import MKGeneralException
 
 import cmk.utils.tags
-from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
 
 import cmk.gui.watolib.sites as watolib_sites
@@ -56,6 +55,7 @@ from cmk.gui.watolib.hosts_and_folders import (
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 
+from ...watolib.configuration_bundle_store import is_locked_by_quick_setup
 from ._host_attributes import configure_attributes
 from ._status_links import make_host_status_link
 

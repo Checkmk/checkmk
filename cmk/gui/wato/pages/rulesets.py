@@ -18,7 +18,6 @@ from livestatus import SiteId
 
 from cmk.ccc.exceptions import MKGeneralException
 
-from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import LabelGroups
 from cmk.utils.regex import escape_regex_chars
@@ -118,6 +117,7 @@ from cmk.gui.watolib.check_mk_automations import (
     get_check_information,
 )
 from cmk.gui.watolib.config_hostname import ConfigHostname
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.host_label_sync import execute_host_label_sync
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,

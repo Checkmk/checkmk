@@ -11,7 +11,6 @@ from collections.abc import Mapping
 from typing import Any
 
 from cmk.utils.datastructures import denilled
-from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.labels import LabelGroups
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.rulesets.conditions import (
@@ -46,6 +45,7 @@ from cmk.gui.utils import gen_id
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.escaping import strip_tags
 from cmk.gui.watolib.changes import add_change
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.rulesets import (
     AllRulesets,

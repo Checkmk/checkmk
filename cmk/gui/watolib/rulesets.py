@@ -22,7 +22,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
-from cmk.utils.global_ident_type import GlobalIdent, is_locked_by_quick_setup
+from cmk.utils.global_ident_type import GlobalIdent
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import LabelGroups, Labels
 from cmk.utils.object_diff import make_diff, make_diff_text
@@ -53,6 +53,7 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import DropdownChoiceEntries, ValueSpec
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 
 from cmk import trace
 from cmk.server_side_calls_backend.config_processing import process_configuration_to_parameters

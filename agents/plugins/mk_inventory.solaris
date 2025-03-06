@@ -96,16 +96,12 @@ section_solaris_uname() {
     # because some users may override their PATH. If the underlying
     # binary is for whatever not there, the sections will not be
     # added to agent output.
-    uname -X &>/dev/null
-    if [ $? -eq 0]; then
+    if uname -X &>/dev/null; then
         echo "<<<solaris_uname:sep(61)>>>"
         uname -X
-    else
-        /usr/bin/uname -X &>/dev/null
-        if [ $? -eq 0 ]; then
-            echo "<<<solaris_uname:sep(61)>>>"
-            /usr/bin/uname -X
-        fi
+    elif /usr/bin/uname -X &>/dev/null; then
+        echo "<<<solaris_uname:sep(61)>>>"
+        /usr/bin/uname -X
     fi
 }
 

@@ -9,8 +9,13 @@ from typing import Any
 import pytest
 from polyfactory.factories.pydantic_factory import ModelFactory
 
-import cmk.plugins.netapp.agent_based.netapp_ontap_cpu as ontap_cpu
-from cmk.agent_based.v2 import CheckResult, Metric, Result, State
+from cmk.agent_based.v2 import (
+    CheckResult,
+    get_value_store,
+    Metric,
+    Result,
+    State,
+)
 from cmk.plugins.netapp.agent_based.netapp_ontap_cpu import (
     check_netapp_ontap_cpu_utilization,
     check_netapp_ontap_nvram_bat,
@@ -22,34 +27,93 @@ class NodeModelFactory(ModelFactory):
     __model__ = NodeModel
 
 
-@pytest.fixture(name="value_store_patch")
-def value_store_fixture(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(ontap_cpu, "get_value_store", lambda: {})
-
-
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
-    "params, expected_state",
+    "node_model, params, expected_state",
     [
         pytest.param(
+            NodeModelFactory.build(
+                name="cpu1",
+                processor_utilization_raw=30,
+                processor_utilization_base=100,
+                cpu_count=2,
+                version={"generation": 8, "major": 15, "minor": 1},
+            ),
             {"levels": (90.0, 95.0)},
             State.OK,
             id="cpu utilization status ok",
         ),
         pytest.param(
+            NodeModelFactory.build(
+                name="cpu1",
+                processor_utilization_raw=30,
+                processor_utilization_base=100,
+                cpu_count=2,
+                version={"generation": 8, "major": 15, "minor": 1},
+            ),
             {"levels": (30.0, 95.0)},
             State.WARN,
             id="cpu utilization status warn",
         ),
+        pytest.param(
+            NodeModelFactory.build(
+                name="cpu1",
+                processor_utilization_raw=45,
+                processor_utilization_base=160,
+                cpu_count=2,
+                version={
+                    "full": "NetApp Release 9.15.1P6: Fri Aug 04 00:26:53 UTC 2023",
+                    "generation": 9,
+                    "major": 15,
+                    "minor": 1,
+                },
+            ),
+            {"levels": (90.0, 95.0)},
+            State.OK,
+            id="cpu utilization status ok >= v.9.15.1",
+        ),
+        pytest.param(
+            NodeModelFactory.build(
+                name="cpu1",
+                processor_utilization_raw=45,
+                processor_utilization_base=160,
+                cpu_count=2,
+                version={
+                    "full": "NetApp Release 9.15.1P6: Fri Aug 04 00:26:53 UTC 2023",
+                    "generation": 9,
+                    "major": 15,
+                    "minor": 1,
+                },
+            ),
+            {"levels": (30.0, 95.0)},
+            State.WARN,
+            id="cpu utilization status warn >=  v.9.15.1",
+        ),
+        pytest.param(
+            NodeModelFactory.build(
+                name="cpu1",
+                processor_utilization_raw=30,
+                processor_utilization_base=100,
+                cpu_count=2,
+                version={
+                    "full": "NetApp Release 9.15.1P10: Fri Aug 04 00:26:53 UTC 2023",
+                    "generation": 8,
+                    "major": 15,
+                    "minor": 1,
+                },
+            ),
+            {"levels": (90.0, 95.0)},
+            State.OK,
+            id="cpu utilization status ok >= v.9.15.1P10",
+        ),
     ],
 )
 def test_check_netapp_ontap_cpu_utilization(
+    node_model: NodeModel,
     params: Mapping[str, Any],
     expected_state: State,
-    value_store_patch: None,
 ) -> None:
-    node_model = NodeModelFactory.build(
-        name="cpu1", processor_utilization_raw=30, processor_utilization_base=100, cpu_count=2
-    )
+    get_value_store().update({"netapp_cpu_util": (60, 15)})
     section = {node_model.name: node_model}
 
     result = list(check_netapp_ontap_cpu_utilization(item="cpu1", params=params, section=section))
@@ -61,7 +125,10 @@ def test_check_netapp_ontap_cpu_utilization(
     assert result[2] == Result(state=State.OK, summary="Number of CPUs: 2 CPUs")
 
 
-def test_check_netapp_ontap_cpu_utilization_not_present(value_store_patch: None) -> None:
+@pytest.mark.usefixtures("initialised_item_state")
+def test_check_netapp_ontap_cpu_utilization_not_present() -> None:
+    get_value_store().update({"netapp_cpu_util": (60, 15)})
+
     node_model = NodeModelFactory.build(name="cpu1")
     section = {node_model.name: node_model}
 

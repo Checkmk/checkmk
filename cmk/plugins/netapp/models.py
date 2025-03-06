@@ -15,10 +15,13 @@ Docs:
 """
 
 import datetime
-from collections.abc import Sequence
+import re
+from collections.abc import MutableMapping, Sequence
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
+
+from cmk.agent_based.v2 import get_rate
 
 MEGA = 1024.0 * 1024.0
 
@@ -456,7 +459,31 @@ class NodeModel(BaseModel):
     processor_utilization_raw: int
     processor_utilization_base: int
 
-    def cpu_utilization(self):
+    def cpu_utilization(self, value_store: MutableMapping[str, Any]) -> float:
+        def calculation_method_changed(version: Version) -> bool:
+            """Check if the version is affected by the calculation method change described in
+            CONTAP-377586 (see SUP-22760 and SUP-23825). Fixed in 9.16.1P3 and 9.15.1P10 according
+            to CONTAP-377586"""
+
+            match = re.search(r"\d+\.\d+\.\d+P(\d+)", version.full)
+            if not match:
+                return False  # no patch version found, assume version is not affected
+            patch = int(match.group(1))
+            return version.generation == 9 and (
+                (version.major == 15 and version.minor == 1 and patch < 10)
+                or (version.major == 16 and version.minor == 1 and patch < 3)
+            )
+
+        if calculation_method_changed(self.version):
+            return (
+                get_rate(
+                    value_store,
+                    "netapp_cpu_util",
+                    self.processor_utilization_base,
+                    self.processor_utilization_raw,
+                )
+                * 100
+            )
         return (self.processor_utilization_raw / self.processor_utilization_base) * 100
 
 

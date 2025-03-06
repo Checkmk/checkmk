@@ -461,6 +461,11 @@ def custom_recap_formspec_filter_for_hosts_and_services(
     )
 
 
+def validate_event_comment(event_comment: str) -> None:
+    if not event_comment.strip():
+        raise ValidationError(Message("Please add an event comment."))
+
+
 def filter_for_hosts_and_services() -> QuickSetupStage:
     def _components() -> Sequence[Widget]:
         return [
@@ -535,6 +540,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                             parameter_form=String(
                                                 title=Title("Event comment"),
                                                 field_size=FieldSize.LARGE,
+                                                custom_validate=[validate_event_comment],
                                             ),
                                         ),
                                     },

@@ -10444,12 +10444,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"By disabling this option, piggyback data won't be distributed to or received "
-"from other sites.Piggyback data received by a host from this site can still "
-"be used."
-msgstr ""
-
-msgid ""
 "By enabling this option notifications will be bulked only if the specified "
 "time period is active. When the time period ends a bulk containing all "
 "notifications that appeared during that time will be sent. If bulking should "
@@ -20229,11 +20223,6 @@ msgstr "Configurație de monitorizare distribuită"
 msgid "Distributed monitoring using multiple Checkmk sites"
 msgstr "Monitorizare distribuită folosind mai multe site-uri Checkmk"
 
-# georgem ##############
-#, fuzzy
-msgid "Distributed piggyback"
-msgstr "Monitorizare distribuită"
-
 #, fuzzy
 msgid "Do HW/SW Inventory"
 msgstr "Inventarul HW/SW"
@@ -22385,9 +22374,6 @@ msgstr "Activați controlerul"
 
 msgid "Enable debug mode"
 msgstr "Activați modul de depanare"
-
-msgid "Enable distributed piggyback"
-msgstr ""
 
 msgid ""
 "Enable encryption of the backed up files. The tar archives created by the "
@@ -45501,6 +45487,10 @@ msgstr "Pe %s (ora serverului)."
 msgid "On Hold"
 msgstr "În așteptare"
 
+#, fuzzy
+msgid "On all services"
+msgstr "Toate serviciile"
+
 msgid "On all sites"
 msgstr "Pe toate site-urile"
 
@@ -60687,8 +60677,9 @@ msgstr ""
 "Începând cu versiunea 1.6.0, această valoare trebuie să fie configurată. "
 "Citiți Werk #6646 pentru informații suplimentare."
 
-msgid "Starting snapshot creation in process pool"
-msgstr ""
+#, fuzzy
+msgid "Starting snapshot creation in thread pool"
+msgstr "Cheltuieli generale de pornire în pool partajat"
 
 msgid "Starting up"
 msgstr "Pornirea"
@@ -88348,6 +88339,11 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+# georgem ##############
+#, fuzzy
+#~ msgid "Distributed piggyback"
+#~ msgstr "Monitorizare distribuită"
 
 #~ msgid "Checkmk specific"
 #~ msgstr "Checkmk specific"

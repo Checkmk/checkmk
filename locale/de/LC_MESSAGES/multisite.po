@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-03-04 20:50+0000\n"
+"PO-Revision-Date: 2025-03-05 19:50+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -10079,15 +10079,6 @@ msgstr ""
 "auswirken"
 
 msgid ""
-"By disabling this option, piggyback data won't be distributed to or received "
-"from other sites.Piggyback data received by a host from this site can still "
-"be used."
-msgstr ""
-"Wenn Sie diese Option deaktivieren, werden Piggyback-Daten nicht an andere "
-"Instanzen weitergegeben oder von diesen empfangen. Piggyback-Daten, die ein "
-"Host von dieser Instanz erhält, können weiterhin verwendet werden."
-
-msgid ""
 "By enabling this option notifications will be bulked only if the specified "
 "time period is active. When the time period ends a bulk containing all "
 "notifications that appeared during that time will be sent. If bulking should "
@@ -19557,9 +19548,6 @@ msgstr "Konfiguration des verteilten Monitorings"
 msgid "Distributed monitoring using multiple Checkmk sites"
 msgstr "Verteiltes Monitoring mit Hilfe mehrerer Checkmk-Instanzen"
 
-msgid "Distributed piggyback"
-msgstr "Verteiltes Piggyback"
-
 msgid "Do HW/SW Inventory"
 msgstr "HW-/SW-Inventur ausführen"
 
@@ -21605,9 +21593,6 @@ msgstr "Controller aktivieren"
 
 msgid "Enable debug mode"
 msgstr "Debugmodus einschalten"
-
-msgid "Enable distributed piggyback"
-msgstr "Verteiltes Piggyback aktivieren"
 
 msgid ""
 "Enable encryption of the backed up files. The tar archives created by the "
@@ -37890,9 +37875,8 @@ msgstr "Dokumentation für diesen Check-Typ"
 msgid "Manual snapshots"
 msgstr "Manuelle Schnappschüsse"
 
-#, fuzzy
 msgid "Manually added"
-msgstr "Manueller Check"
+msgstr "Manuell hinzugefügt"
 
 #, python-format
 msgid "Manually execute this %s"
@@ -43756,6 +43740,10 @@ msgstr "Bei %s (Server-Zeit)."
 msgid "On Hold"
 msgstr "In Wartestellung"
 
+#, fuzzy
+msgid "On all services"
+msgstr "Alle Services"
+
 msgid "On all sites"
 msgstr "Auf allen Instanzen"
 
@@ -44163,9 +44151,8 @@ msgstr "Nur Services in diesen Zuständen anzeigen"
 msgid "Only show the %s if show more is active"
 msgstr "Die %s nur anzeigen, wenn mehr anzeigen aktiv ist"
 
-#, fuzzy
 msgid "Only simple tags like 'h1', 'b' or 'i' are allowed."
-msgstr "Es sind nur Großbuchstaben erlaubt"
+msgstr "Nur einfache Tags wie 'h1', 'b' oder 'i' sind zulässig."
 
 msgid ""
 "Only start downtime if host/service goes DOWN/UNREACH during the defined "
@@ -58238,8 +58225,9 @@ msgstr ""
 "Ab Version 1.6.0 muss dieser Wert konfiguriert werden. Lesen Sie das Werk "
 "#6646 für weitere Informationen."
 
-msgid "Starting snapshot creation in process pool"
-msgstr ""
+#, fuzzy
+msgid "Starting snapshot creation in thread pool"
+msgstr "Snapshot-Erstellung im Prozess-Pool starten"
 
 msgid "Starting up"
 msgstr "Startend"
@@ -67928,6 +67916,9 @@ msgid ""
 "This page provides a comprehensive overview of the certificates Checkmk uses "
 "internally. Trusted CAs for TLS are managed in the <a href='%s'>settings</a>."
 msgstr ""
+"Diese Seite bietet einen umfassenden Überblick über die von Checkmk intern "
+"verwendeten Zertifikate. Vertrauenswürdige CAs für TLS werden in den <a "
+"href='%s'>Einstellungen</a> verwaltet."
 
 msgid "This page was not found. Sorry."
 msgstr "Diese Seite konnte leider nicht gefunden werden."
@@ -71461,13 +71452,12 @@ msgstr "Umschalten der Seitenleiste"
 msgid "Toggle the visibility of this metric"
 msgstr "Sichtbarkeit dieser Metrik umschalten"
 
-#, fuzzy
 msgid ""
 "Toggle to either send notifications or suppress all previous notifications "
 "for the method selected."
 msgstr ""
-"Gibt an, ob eine Benachrichtigung gesendet oder alle vorherigen "
-"Benachrichtigungen für dieselbe Methode aufgehoben werden sollen"
+"Schalter, um entweder Benachrichtigungen zu senden oder alle vorherigen "
+"Benachrichtigungen für die ausgewählte Methode zu unterdrücken."
 
 msgid "Token"
 msgstr "Token"
@@ -78516,7 +78506,7 @@ msgstr "Warnung: Die Host-Konfiguration ist ungültig!"
 msgid "Warning: This host has an invalid configuration: "
 msgstr "Warnung: Die Host-Konfiguration ist ungültig: "
 
-#, fuzzy, no-python-format
+#, no-python-format
 msgid "Warning: You are over 90% of your service limit."
 msgstr "Warnung: Sie haben 90% Ihres Service-Limits überschritten."
 
@@ -85060,6 +85050,22 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid ""
+#~ "By disabling this option, piggyback data won't be distributed to or "
+#~ "received from other sites.Piggyback data received by a host from this "
+#~ "site can still be used."
+#~ msgstr ""
+#~ "Wenn Sie diese Option deaktivieren, werden Piggyback-Daten nicht an "
+#~ "andere Instanzen weitergegeben oder von diesen empfangen. Piggyback-"
+#~ "Daten, die ein Host von dieser Instanz erhält, können weiterhin verwendet "
+#~ "werden."
+
+#~ msgid "Distributed piggyback"
+#~ msgstr "Verteiltes Piggyback"
+
+#~ msgid "Enable distributed piggyback"
+#~ msgstr "Verteiltes Piggyback aktivieren"
 
 #~ msgid "Checkmk specific"
 #~ msgstr "Checkmk-spezifisch"

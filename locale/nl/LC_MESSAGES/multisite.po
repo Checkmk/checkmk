@@ -10425,12 +10425,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"By disabling this option, piggyback data won't be distributed to or received "
-"from other sites.Piggyback data received by a host from this site can still "
-"be used."
-msgstr ""
-
-msgid ""
 "By enabling this option notifications will be bulked only if the specified "
 "time period is active. When the time period ends a bulk containing all "
 "notifications that appeared during that time will be sent. If bulking should "
@@ -20197,10 +20191,6 @@ msgid "Distributed monitoring using multiple Checkmk sites"
 msgstr "Gedistribueerde monitoring met meerdere Checkmk-sites"
 
 #, fuzzy
-msgid "Distributed piggyback"
-msgstr "Gedistribueerde bewaking"
-
-#, fuzzy
 msgid "Do HW/SW Inventory"
 msgstr "HW/SW-inventaris"
 
@@ -22344,9 +22334,6 @@ msgstr "Controller inschakelen"
 
 msgid "Enable debug mode"
 msgstr "Debug modus inschakelen"
-
-msgid "Enable distributed piggyback"
-msgstr ""
 
 msgid ""
 "Enable encryption of the backed up files. The tar archives created by the "
@@ -45445,6 +45432,10 @@ msgstr "Server tijd"
 msgid "On Hold"
 msgstr "On Hold"
 
+#, fuzzy
+msgid "On all services"
+msgstr "Alle diensten"
+
 msgid "On all sites"
 msgstr "Op alle sites"
 
@@ -60529,8 +60520,9 @@ msgstr ""
 "Vanaf versie 1.6.0 moet deze waarde geconfigureerd worden. Lees Werk #6646 "
 "voor meer informatie."
 
-msgid "Starting snapshot creation in process pool"
-msgstr ""
+#, fuzzy
+msgid "Starting snapshot creation in thread pool"
+msgstr "Opstartoverhead in gedeelde pool"
 
 msgid "Starting up"
 msgstr "Opstarten"
@@ -88159,6 +88151,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy
+#~ msgid "Distributed piggyback"
+#~ msgstr "Gedistribueerde bewaking"
 
 #~ msgid "Checkmk specific"
 #~ msgstr "Checkmk specifiek"

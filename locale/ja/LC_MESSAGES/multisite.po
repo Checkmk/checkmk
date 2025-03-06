@@ -9857,12 +9857,6 @@ msgstr ""
 "ると、ntopng統合のパフォーマンスに良い影響を与えることがあります"
 
 msgid ""
-"By disabling this option, piggyback data won't be distributed to or received "
-"from other sites.Piggyback data received by a host from this site can still "
-"be used."
-msgstr ""
-
-msgid ""
 "By enabling this option notifications will be bulked only if the specified "
 "time period is active. When the time period ends a bulk containing all "
 "notifications that appeared during that time will be sent. If bulking should "
@@ -19189,10 +19183,6 @@ msgid "Distributed monitoring using multiple Checkmk sites"
 msgstr "複数のCheckmkサイトを使用した分散監視"
 
 #, fuzzy
-msgid "Distributed piggyback"
-msgstr "分散監視"
-
-#, fuzzy
 msgid "Do HW/SW Inventory"
 msgstr "HW/SWインベントリ"
 
@@ -21230,9 +21220,6 @@ msgstr "コントローラを有効化"
 
 msgid "Enable debug mode"
 msgstr "デバッグモードを有効にする"
-
-msgid "Enable distributed piggyback"
-msgstr "分散ピギーバックを有効にする"
 
 msgid ""
 "Enable encryption of the backed up files. The tar archives created by the "
@@ -43403,6 +43390,10 @@ msgstr "On %s(サーバー時間)。"
 msgid "On Hold"
 msgstr "保留"
 
+#, fuzzy
+msgid "On all services"
+msgstr "すべてのサービス"
+
 msgid "On all sites"
 msgstr "すべてのサイトで"
 
@@ -57877,8 +57868,9 @@ msgstr ""
 "バージョン1.6.0以降、この値を構成する必要があります。詳細については、Werk "
 "#6646をお読みください。"
 
-msgid "Starting snapshot creation in process pool"
-msgstr ""
+#, fuzzy
+msgid "Starting snapshot creation in thread pool"
+msgstr "共有プールの起動オーバーヘッド"
 
 msgid "Starting up"
 msgstr "起動"
@@ -83840,6 +83832,13 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用不可</b>"
+
+#, fuzzy
+#~ msgid "Distributed piggyback"
+#~ msgstr "分散監視"
+
+#~ msgid "Enable distributed piggyback"
+#~ msgstr "分散ピギーバックを有効にする"
 
 #~ msgid "Checkmk specific"
 #~ msgstr "Checkmk固有"

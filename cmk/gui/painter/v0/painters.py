@@ -416,7 +416,11 @@ def _paint_future_time(  # pylint: disable=redefined-outer-name
     request: Request,
     painter_options: PainterOptions,
 ) -> CellSpec:
-    if timestamp <= 0:
+    # NOTE: Nagios uses 0 to represent "never again" while the CMC uses a time far into the future
+    # (year 2262 or 0x7fffffffffffffff nanoseconds after 1970, but we leave some headroom below).
+    # Although this is inconsistent, the latter is arguably more correct. In any case, the usage of
+    # magic numbers is a quite a hack...
+    if not (0 < timestamp < 0x200000000):
         return "", "-"
     return paint_age(
         timestamp,

@@ -14,7 +14,7 @@ from cmk.ccc.version import Edition, edition
 
 from cmk.utils.paths import omd_root
 
-from cmk.gui.metrics import _load_graphing_plugins
+from cmk.gui.graphing_main import _load_graphing_plugins
 
 from cmk.discover_plugins import PluginLocation
 from cmk.graphing.v1 import graphs as graphs_api

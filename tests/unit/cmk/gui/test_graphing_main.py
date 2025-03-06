@@ -9,7 +9,7 @@ from cmk.gui.graphing._legacy import check_metrics
 from cmk.gui.graphing._metric_expression import CriticalOf, Metric, MetricExpression, WarningOf
 from cmk.gui.graphing._metrics import get_metric_spec
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
-from cmk.gui.metrics import _add_graphing_plugins, _load_graphing_plugins
+from cmk.gui.graphing_main import _add_graphing_plugins, _load_graphing_plugins
 
 
 def test_add_graphing_plugins() -> None:

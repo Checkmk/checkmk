@@ -1,0 +1,161 @@
+{
+  "Check_MK Agent": {
+    "expected_state": 0
+  },
+  "CPU load": {
+    "expected_state": 0
+  },
+  "Number of threads": {
+    "expected_state": 0
+  },
+  "IPMI Sensor Summary": {
+    "expected_state": 0
+  },
+  "CPU utilization": {
+    "expected_state": 0
+  },
+  "Interface 02": {
+    "expected_state": 0
+  },
+  "Interface 03": {
+    "expected_state": 0
+  },
+  "Interface 04": {
+    "expected_state": 0
+  },
+  "Interface 05": {
+    "expected_state": 0
+  },
+  "Interface 06": {
+    "expected_state": 0
+  },
+  "Interface 07": {
+    "expected_state": 0
+  },
+  "Interface 08": {
+    "expected_state": 0
+  },
+  "Interface 09": {
+    "expected_state": 0
+  },
+  "Interface 10": {
+    "expected_state": 0
+  },
+  "Interface 11": {
+    "expected_state": 0
+  },
+  "Interface 12": {
+    "expected_state": 0
+  },
+  "Interface 13": {
+    "expected_state": 0
+  },
+  "Interface 14": {
+    "expected_state": 0
+  },
+  "Interface 15": {
+    "expected_state": 0
+  },
+  "Interface 16": {
+    "expected_state": 0
+  },
+  "Interface 17": {
+    "expected_state": 0
+  },
+  "Interface 18": {
+    "expected_state": 0
+  },
+  "Interface 19": {
+    "expected_state": 0
+  },
+  "Interface 20": {
+    "expected_state": 0
+  },
+  "Interface 21": {
+    "expected_state": 0
+  },
+  "Interface 22": {
+    "expected_state": 0
+  },
+  "Interface 23": {
+    "expected_state": 0
+  },
+  "Interface 24": {
+    "expected_state": 0
+  },
+  "Interface 25": {
+    "expected_state": 0
+  },
+  "Log /var/log/MAP_Energy-monitor.log": {
+    "expected_state": 0
+  },
+  "Log /var/log/auth.log": {
+    "expected_state": 0
+  },
+  "Log /var/log/kern.log": {
+    "expected_state": 0
+  },
+  "Log /var/log/messages": {
+    "expected_state": 0
+  },
+  "Log /var/log/syslog": {
+    "expected_state": 0
+  },
+  "MD Softraid md0": {
+    "expected_state": 0
+  },
+  "MD Softraid md127": {
+    "expected_state": 0
+  },
+  "Memory": {
+    "expected_state": 0
+  },
+  "Mount options of /": {
+    "expected_state": 0
+  },
+  "Mount options of /boot": {
+    "expected_state": 0
+  },
+  "Mount options of /etc/pve": {
+    "expected_state": 0
+  },
+  "Mount options of /var/lib/vz": {
+    "expected_state": 0
+  },
+  "Check_Megafone_GW": {
+    "expected_state": 0
+  },
+  "Check_TTK_GW": {
+    "expected_state": 0
+  },
+  "Ping_pop3.rcom.ru": {
+    "expected_state": 0
+  },
+  "Multipath 3305945c154f57fe1": {
+    "expected_state": 0
+  },
+  "Multipath 33287912806dab8ab": {
+    "expected_state": 0
+  },
+  "Multipath 36589cfc00000013ccb22f515af521242": {
+    "expected_state": 0
+  },
+  "Multipath 36589cfc00000047fa145b34a8d89b48c": {
+    "expected_state": 0
+  },
+  "Multipath 36589cfc000000c64093a337ed2c8e1c7": {
+    "expected_state": 0
+  },
+  "NTP Time": {
+    "expected_state": 0
+  },
+  "Postfix Queue default": {
+    "expected_state": 0
+  },
+  "TCP Connections": {
+    "expected_state": 0
+  },
+  "Uptime": {
+    "expected_state": 0
+  }
+}

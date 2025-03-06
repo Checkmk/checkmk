@@ -1,0 +1,209 @@
+{
+  "Check_MK Agent": {
+    "expected_state": 0
+  },
+  "DotNet Memory Management _Global_": {
+    "expected_state": 0
+  },
+  "Log Application": {
+    "expected_state": 0
+  },
+  "Log HardwareEvents": {
+    "expected_state": 0
+  },
+  "Log Internet Explorer": {
+    "expected_state": 0
+  },
+  "Log Key Management Service": {
+    "expected_state": 0
+  },
+  "Log Security": {
+    "expected_state": 0
+  },
+  "Log System": {
+    "expected_state": 0
+  },
+  "Log Windows PowerShell": {
+    "expected_state": 0
+  },
+  "Memory": {
+    "expected_state": 1
+  },
+  "MSSQL MSSQL_MSSQLSERVER master Backup": {
+    "expected_state": 0
+  },
+  "MSSQL MSSQL_MSSQLSERVER model Backup": {
+    "expected_state": 1
+  },
+  "MSSQL MSSQL_MSSQLSERVER msdb Backup": {
+    "expected_state": 0
+  },
+  "MSSQL MSSQL_MSSQLSERVER tempdb Backup": {
+    "expected_state": 1
+  },
+  "MSSQL MSSQLSERVER Blocked Sessions": {
+    "expected_state": 0
+  },
+  "MSSQL Connections MSSQLSERVER master": {
+    "expected_state": 0
+  },
+  "MSSQL Connections MSSQLSERVER model": {
+    "expected_state": 0
+  },
+  "MSSQL Connections MSSQLSERVER msdb": {
+    "expected_state": 0
+  },
+  "MSSQL Connections MSSQLSERVER tempdb": {
+    "expected_state": 0
+  },
+  "MSSQL SQLServer:Buffer_Manager None buffer_cache_hit_ratio": {
+    "expected_state": 0
+  },
+  "MSSQL SQLServer:Catalog_Metadata _Total cache_hit_ratio": {
+    "expected_state": 0
+  },
+  "MSSQL SQLServer:Catalog_Metadata master cache_hit_ratio": {
+    "expected_state": 0
+  },
+  "MSSQL SQLServer:Catalog_Metadata model cache_hit_ratio": {
+    "expected_state": 0
+  },
+  "MSSQL SQLServer:Catalog_Metadata model_msdb cache_hit_ratio": {
+    "expected_state": 0
+  },
+  "MSSQL SQLServer:Catalog_Metadata model_replicatedmaster cache_hit_ratio": {
+    "expected_state": 0
+  },
+  "MSSQL SQLServer:Catalog_Metadata msdb cache_hit_ratio": {
+    "expected_state": 0
+  },
+  "MSSQL SQLServer:Catalog_Metadata mssqlsystemresource cache_hit_ratio": {
+    "expected_state": 0
+  },
+  "MSSQL SQLServer:Catalog_Metadata tempdb cache_hit_ratio": {
+    "expected_state": 0
+  },
+  "MSSQL SQLServer:Cursor_Manager_by_Type TSQL_Local_Cursor cache_hit_ratio": {
+    "expected_state": 0
+  },
+  "MSSQL SQLServer:Cursor_Manager_by_Type _Total cache_hit_ratio": {
+    "expected_state": 0
+  },
+  "MSSQL SQLServer:Plan_Cache Bound_Trees cache_hit_ratio": {
+    "expected_state": 0
+  },
+  "MSSQL SQLServer:Plan_Cache Extended_Stored_Procedures cache_hit_ratio": {
+    "expected_state": 0
+  },
+  "MSSQL SQLServer:Plan_Cache Object_Plans cache_hit_ratio": {
+    "expected_state": 0
+  },
+  "MSSQL SQLServer:Plan_Cache SQL_Plans cache_hit_ratio": {
+    "expected_state": 0
+  },
+  "MSSQL SQLServer:Plan_Cache Temporary_Tables_&_Table_Variables cache_hit_ratio": {
+    "expected_state": 0
+  },
+  "MSSQL SQLServer:Plan_Cache _Total cache_hit_ratio": {
+    "expected_state": 0
+  },
+  "MSSQL SQLServer _Total File Sizes": {
+    "expected_state": 0
+  },
+  "MSSQL SQLServer master File Sizes": {
+    "expected_state": 0
+  },
+  "MSSQL SQLServer model File Sizes": {
+    "expected_state": 0
+  },
+  "MSSQL SQLServer model_msdb File Sizes": {
+    "expected_state": 0
+  },
+  "MSSQL SQLServer model_replicatedmaster File Sizes": {
+    "expected_state": 0
+  },
+  "MSSQL SQLServer msdb File Sizes": {
+    "expected_state": 0
+  },
+  "MSSQL SQLServer mssqlsystemresource File Sizes": {
+    "expected_state": 0
+  },
+  "MSSQL SQLServer tempdb File Sizes": {
+    "expected_state": 0
+  },
+  "MSSQL SQLServer:Buffer_Manager page_life_expectancy": {
+    "expected_state": 0
+  },
+  "MSSQL SQLServer:Buffer_Node 000 page_life_expectancy": {
+    "expected_state": 0
+  },
+  "MSSQL MSSQLSERVER master Database": {
+    "expected_state": 0
+  },
+  "MSSQL MSSQLSERVER model Database": {
+    "expected_state": 0
+  },
+  "MSSQL MSSQLSERVER msdb Database": {
+    "expected_state": 0
+  },
+  "MSSQL MSSQLSERVER tempdb Database": {
+    "expected_state": 0
+  },
+  "MSSQL Datafile MSSQLSERVER.master.master": {
+    "expected_state": 0
+  },
+  "MSSQL Datafile MSSQLSERVER.model.modeldev": {
+    "expected_state": 0
+  },
+  "MSSQL Datafile MSSQLSERVER.msdb.MSDBData": {
+    "expected_state": 0
+  },
+  "MSSQL Datafile MSSQLSERVER.tempdb.temp2": {
+    "expected_state": 0
+  },
+  "MSSQL Datafile MSSQLSERVER.tempdb.tempdev": {
+    "expected_state": 0
+  },
+  "MSSQL MSSQLSERVER Instance": {
+    "expected_state": 0
+  },
+  "MSSQL MSSQL_MSSQLSERVER master Sizes": {
+    "expected_state": 0
+  },
+  "MSSQL MSSQL_MSSQLSERVER model Sizes": {
+    "expected_state": 0
+  },
+  "MSSQL MSSQL_MSSQLSERVER msdb Sizes": {
+    "expected_state": 0
+  },
+  "MSSQL MSSQL_MSSQLSERVER tempdb Sizes": {
+    "expected_state": 0
+  },
+  "MSSQL Transactionlog MSSQLSERVER.master.mastlog": {
+    "expected_state": 0
+  },
+  "MSSQL Transactionlog MSSQLSERVER.model.modellog": {
+    "expected_state": 0
+  },
+  "MSSQL Transactionlog MSSQLSERVER.msdb.MSDBLog": {
+    "expected_state": 0
+  },
+  "MSSQL Transactionlog MSSQLSERVER.tempdb.templog": {
+    "expected_state": 0
+  },
+  "Service Summary": {
+    "expected_state": 0
+  },
+  "System Time": {
+    "expected_state": 2
+  },
+  "Uptime": {
+    "expected_state": 0
+  },
+  "Interface 1": {
+    "expected_state": 0
+  },
+  "Processor Queue": {
+    "expected_state": 0
+  }
+}

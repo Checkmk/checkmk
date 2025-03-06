@@ -1,0 +1,44 @@
+{
+  "Check_MK Agent": {
+    "expected_state": 1
+  },
+  "NTP Time": {
+    "expected_state": 2
+  },
+  "CPU load": {
+    "expected_state": 0
+  },
+  "Number of threads": {
+    "expected_state": 0
+  },
+  "JVM myinstance\ufffdtomcat\ufffd10.1.28\ufffd2.0.3": {
+    "expected_state": 3
+  },
+  "CPU utilization": {
+    "expected_state": 0
+  },
+  "Interface 2": {
+    "expected_state": 0
+  },
+  "Memory": {
+    "expected_state": 1
+  },
+  "Mount options of /": {
+    "expected_state": 0
+  },
+  "Mount options of /boot/efi": {
+    "expected_state": 0
+  },
+  "Systemd Service Summary": {
+    "expected_state": 0
+  },
+  "Systemd Socket Summary": {
+    "expected_state": 0
+  },
+  "TCP Connections": {
+    "expected_state": 0
+  },
+  "Uptime": {
+    "expected_state": 0
+  }
+}

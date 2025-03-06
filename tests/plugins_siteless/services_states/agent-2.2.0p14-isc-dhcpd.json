@@ -1,0 +1,182 @@
+{
+  "Check_MK Agent": {
+    "expected_state": 0
+  },
+  "CPU load": {
+    "expected_state": 0
+  },
+  "Number of threads": {
+    "expected_state": 0
+  },
+  "DHCP Pool 127.0.0.1-127.0.0.1": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.16.11.240-172.16.11.250": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.16.12.240-172.16.12.250": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.16.13.245-172.16.13.254": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.16.132.31-172.16.135.99": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.16.136.11-172.16.139.199": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.16.140.10-172.16.140.200": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.16.141.21-172.16.141.200": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.16.143.200-172.16.143.240": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.16.15.10-172.16.15.200": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.16.16.200-172.16.16.250": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.16.17.101-172.16.17.130": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.16.18.101-172.16.18.250": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.16.192.10-172.16.192.250": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.16.193.10-172.16.193.250": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.16.194.10-172.16.194.250": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.16.195.10-172.16.195.250": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.16.196.10-172.16.196.250": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.16.197.10-172.16.197.250": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.16.2.30-172.16.2.49": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.16.227.111-172.16.227.200": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.16.244.100-172.16.244.200": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.16.252.101-172.16.252.253": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.16.27.20-172.16.27.250": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.16.31.100-172.16.31.199": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.16.36.200-172.16.36.252": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.16.40.200-172.16.40.205": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.16.41.111-172.16.41.250": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.16.65.129-172.16.65.199": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.16.67.30-172.16.67.99": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.16.74.100-172.16.74.199": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.16.77.200-172.16.77.252": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.18.0.10-172.18.3.250": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.18.12.10-172.18.15.250": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.18.16.10-172.18.19.250": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.18.20.10-172.18.23.250": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.18.24.10-172.18.27.250": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.18.28.10-172.18.31.250": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.18.32.10-172.18.35.250": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.18.36.10-172.18.39.250": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.18.4.10-172.18.7.250": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.18.40.100-172.18.43.250": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.18.44.100-172.18.47.250": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.18.48.10-172.18.51.250": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.18.52.10-172.18.55.250": {
+    "expected_state": 0
+  },
+  "DHCP Pool 172.18.8.10-172.18.11.250": {
+    "expected_state": 0
+  },
+  "DHCP Pool 192.168.251.230-192.168.251.253": {
+    "expected_state": 0
+  },
+  "CPU utilization": {
+    "expected_state": 0
+  },
+  "Interface 2": {
+    "expected_state": 0
+  },
+  "Memory": {
+    "expected_state": 0
+  },
+  "Mount options of /": {
+    "expected_state": 0
+  },
+  "Mount options of /boot/efi": {
+    "expected_state": 0
+  },
+  "Systemd Service Summary": {
+    "expected_state": 0
+  },
+  "Systemd Socket Summary": {
+    "expected_state": 0
+  },
+  "TCP Connections": {
+    "expected_state": 0
+  },
+  "Systemd Timesyncd Time": {
+    "expected_state": 2
+  },
+  "Uptime": {
+    "expected_state": 0
+  }
+}

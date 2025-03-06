@@ -1,0 +1,101 @@
+{
+  "Check_MK Agent": {
+    "expected_state": 0
+  },
+  "NTP Time": {
+    "expected_state": 2
+  },
+  "CPU load": {
+    "expected_state": 0
+  },
+  "Number of threads": {
+    "expected_state": 0
+  },
+  "IPMI Sensor Summary": {
+    "expected_state": 2
+  },
+  "CPU utilization": {
+    "expected_state": 0
+  },
+  "Interface 03": {
+    "expected_state": 0
+  },
+  "Interface 04": {
+    "expected_state": 0
+  },
+  "Interface 05": {
+    "expected_state": 0
+  },
+  "Interface 06": {
+    "expected_state": 0
+  },
+  "Interface 09": {
+    "expected_state": 0
+  },
+  "Interface 10": {
+    "expected_state": 0
+  },
+  "Interface 15": {
+    "expected_state": 0
+  },
+  "Interface 16": {
+    "expected_state": 0
+  },
+  "Interface 17": {
+    "expected_state": 0
+  },
+  "Interface 19": {
+    "expected_state": 0
+  },
+  "Interface 20": {
+    "expected_state": 0
+  },
+  "Interface 21": {
+    "expected_state": 0
+  },
+  "Interface 22": {
+    "expected_state": 0
+  },
+  "Interface 23": {
+    "expected_state": 0
+  },
+  "Memory": {
+    "expected_state": 0
+  },
+  "Mount options of /etc/pve": {
+    "expected_state": 0
+  },
+  "Postfix Queue default": {
+    "expected_state": 0
+  },
+  "Postfix status default": {
+    "expected_state": 0
+  },
+  "PVE Node PMX4 (local)": {
+    "expected_state": 0
+  },
+  "PVE Node PMX5": {
+    "expected_state": 0
+  },
+  "PVE Node PMX6": {
+    "expected_state": 0
+  },
+  "PVE Cluster State": {
+    "expected_state": 0
+  },
+  "Systemd Service Summary": {
+    "expected_state": 2
+  },
+  "Systemd Socket Summary": {
+    "expected_state": 0
+  },
+  "TCP Connections": {
+    "expected_state": 0
+  },
+  "Uptime": {
+    "expected_state": 0
+  },
+  "zpool status": {
+    "expected_state": 0
+  }
+}

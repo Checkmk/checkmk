@@ -1,0 +1,56 @@
+{
+  "Check_MK Agent": {
+    "expected_state": 0
+  },
+  "Log Application": {
+    "expected_state": 0
+  },
+  "Log HardwareEvents": {
+    "expected_state": 0
+  },
+  "Log Internet Explorer": {
+    "expected_state": 0
+  },
+  "Log Key Management Service": {
+    "expected_state": 0
+  },
+  "Log OAlerts": {
+    "expected_state": 0
+  },
+  "Log Security": {
+    "expected_state": 0
+  },
+  "Log Symantec Endpoint Protection Client": {
+    "expected_state": 0
+  },
+  "Log System": {
+    "expected_state": 0
+  },
+  "Log Windows PowerShell": {
+    "expected_state": 0
+  },
+  "Log novaPDF 10 Activation": {
+    "expected_state": 0
+  },
+  "Memory": {
+    "expected_state": 0
+  },
+  "Service Summary": {
+    "expected_state": 0
+  },
+  "System Time": {
+    "expected_state": 2
+  },
+  "Uptime": {
+    "expected_state": 0
+  },
+  "Interface 1": {
+    "expected_state": 0
+  },
+  "Interface 2": {
+    "expected_state": 0
+  },
+  "Processor Queue": {
+    "expected_state": 0
+  }
+}

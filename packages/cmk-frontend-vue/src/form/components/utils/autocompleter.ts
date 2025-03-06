@@ -3,8 +3,6 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { Ref } from 'vue'
-import { ref, watch } from 'vue'
 import type {
   Autocompleter,
   AutocompleterData
@@ -65,30 +63,44 @@ export async function fetchData<OutputType>(
   return ajaxResponse.result as OutputType
 }
 
-export function setupAutocompleter<OutputType>(getAutocompleter: () => Autocompleter | null): {
-  input: Ref<string | undefined>
-  output: Ref<OutputType | undefined>
-  error: Ref<string>
-} {
-  const input = ref<string>()
-  const output = ref<OutputType>()
-  const error = ref<string>('')
+export class ErrorResponse {
+  error: string
 
-  watch([input, getAutocompleter], async ([_, autocompleter]) => {
-    if (autocompleter === null) {
-      return
-    }
-    if (autocompleter.fetch_method === 'ajax_vs_autocomplete') {
-      error.value = ''
-      try {
-        output.value = await fetchData<OutputType>(input.value, autocompleter.data)
-      } catch (e: unknown) {
-        const errorDescription = (e as AutoCompleterResponseError).response?.result
-        error.value = errorDescription || ''
-        output.value = undefined
-      }
-    }
-  })
+  constructor(error: string) {
+    this.error = error
+  }
+}
 
-  return { input, output, error }
+export interface Suggestion {
+  name: string
+  title: string
+}
+
+export class Response {
+  choices: Array<Suggestion>
+
+  constructor(choices: Array<Suggestion>) {
+    this.choices = choices
+  }
+}
+
+type AjaxVsAutocompleterResponse = { choices: Array<[string, string]> }
+
+export async function fetchSuggestions(
+  autocompleter: Autocompleter,
+  query: string
+): Promise<Response | ErrorResponse> {
+  if (autocompleter.fetch_method === 'ajax_vs_autocomplete') {
+    try {
+      const result = await fetchData<AjaxVsAutocompleterResponse>(query, autocompleter.data)
+      return new Response(
+        result.choices.map((element) => ({ name: element[0], title: element[1] }))
+      )
+    } catch (e: unknown) {
+      const errorDescription = (e as AutoCompleterResponseError).response?.result
+      return new ErrorResponse(errorDescription || 'unknown error')
+    }
+  } else {
+    throw new Error(`Internal: Can not fetch data for autocompleter ${autocompleter.fetch_method}`)
+  }
 }

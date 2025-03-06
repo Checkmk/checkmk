@@ -5,35 +5,31 @@
  */
 
 import FormAutocompleter from '@/form/private/FormAutocompleter.vue'
-import { ref, watch } from 'vue'
 import { fireEvent, render, screen, waitFor, waitForElementToBeRemoved } from '@testing-library/vue'
+import { Response } from '@/form/components/utils/autocompleter'
 import userEvent from '@testing-library/user-event'
 
-vi.mock('@/form/components/utils/autocompleter', () => ({
-  setupAutocompleter: vi.fn(() => {
-    const input = ref()
-    const output = ref()
-
-    watch(input, async (newVal) => {
+vi.mock(import('@/form/components/utils/autocompleter'), async (importOriginal) => {
+  const mod = await importOriginal() // type is inferred
+  return {
+    ...mod,
+    fetchSuggestions: vi.fn(async (_config: unknown, value: string) => {
       await new Promise((resolve) => setTimeout(resolve, 100))
-      output.value = {
-        choices: [
-          ['os:windows', 'OS Windows'],
-          ['os:linux', 'OS Linux']
-        ].filter((item) => item[0]?.includes(newVal))
-      }
+      return new Response(
+        [
+          { name: 'os:windows', title: 'OS Windows' },
+          { name: 'os:linux', title: 'OS Linux' }
+        ].filter((item) => item.name.includes(value))
+      )
     })
-
-    return { input, output }
-  })
-}))
+  }
+})
 
 describe('FormAutocompleter', () => {
   test('should be rendered with placeholder', async () => {
     render(FormAutocompleter, {
       props: {
         placeholder: 'Search...',
-        autocompleter: null,
         filterOn: [],
         resetInputOnAdd: false,
         size: 7,
@@ -48,7 +44,7 @@ describe('FormAutocompleter', () => {
     render(FormAutocompleter, {
       props: {
         placeholder: 'Search...',
-        autocompleter: null,
+        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
         filterOn: [],
         resetInputOnAdd: false,
         size: 7,
@@ -61,6 +57,8 @@ describe('FormAutocompleter', () => {
 
     const input = screen.getByPlaceholderText('Search...')
     await fireEvent.update(input, 'os:windows')
+    // TODO: we probably should switch to user-event, see
+    // https://testing-library.com/docs/dom-testing-library/api-events/
 
     await waitFor(() => {
       expect(screen.getByText('OS Windows', { exact: false })).toBeInTheDocument()

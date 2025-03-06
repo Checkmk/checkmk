@@ -3,34 +3,28 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type {
-  Autocompleter,
-  Metric,
-  Validator
-} from 'cmk-shared-typing/typescript/vue_formspec_components'
+import type { Metric, Validator } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import { Response } from '@/form/components/utils/autocompleter'
 import FormMetric from '@/form/components/forms/FormMetric.vue'
 import { fireEvent, render, screen } from '@testing-library/vue'
 import { vi } from 'vitest'
-import { ref } from 'vue'
 import { renderFormWithData } from '../cmk-form-helper'
 
-vi.mock('@/form/components/utils/autocompleter', () => ({
-  setupAutocompleter: vi.fn((_: () => Autocompleter | null) => {
-    const autocompleterInput = ref('')
-
-    return [
-      autocompleterInput,
-      {
-        value: {
-          choices: [
-            ['choicea', 'Choice A'],
-            ['choiceb', 'Choice B']
-          ]
-        }
-      }
-    ]
-  })
-}))
+vi.mock(import('@/form/components/utils/autocompleter'), async (importOriginal) => {
+  const mod = await importOriginal() // type is inferred
+  return {
+    ...mod,
+    fetchSuggestions: vi.fn(async (_config: unknown, value: string) => {
+      await new Promise((resolve) => setTimeout(resolve, 100))
+      return new Response(
+        [
+          { name: 'choicea', title: 'Choice A' },
+          { name: 'choiceb', title: 'Choice B' }
+        ].filter((item) => item.name.includes(value))
+      )
+    })
+  }
+})
 
 const validators: Validator[] = [
   {

@@ -7,29 +7,25 @@ import { fireEvent, render, screen, within } from '@testing-library/vue'
 import FormLabel from '@/form/components/forms/FormLabels.vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
-import { ref, watch } from 'vue'
+import { watch } from 'vue'
 import userEvent from '@testing-library/user-event'
+import { Response } from '@/form/components/utils/autocompleter'
 
-vi.mock('@/form/components/utils/autocompleter', () => ({
-  setupAutocompleter: vi.fn(() => {
-    const input = ref('')
-    const output = ref()
-
-    watch(input, async (newVal) => {
-      if (newVal) {
-        await new Promise((resolve) => setTimeout(resolve, 100))
-        output.value = {
-          choices: [
-            [newVal, newVal],
-            ['key1:value1', 'key1:value1']
-          ]
-        }
-      }
+vi.mock(import('@/form/components/utils/autocompleter'), async (importOriginal) => {
+  const mod = await importOriginal() // type is inferred
+  return {
+    ...mod,
+    fetchSuggestions: vi.fn(async (_config: unknown, value: string) => {
+      await new Promise((resolve) => setTimeout(resolve, 100))
+      return new Response([
+        { name: value, title: value },
+        ...[{ name: 'key1:value1', title: 'key1:value1' }].filter((item) =>
+          item.name.includes(value)
+        )
+      ])
     })
-
-    return { input, output }
-  })
-}))
+  }
+})
 
 vitest.mock('@/form/components/utils/watch', () => ({
   immediateWatch: vitest.fn((source, callback) => {

@@ -25,6 +25,7 @@ done
 
 # Use the global .venv to have required modules available
 make -C ../.. .venv
+# shellcheck source=/dev/null
 source ../../.venv/bin/activate
 
 # Still test if the modules used in register.py are available before removing the folders

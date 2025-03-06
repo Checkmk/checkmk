@@ -8,18 +8,16 @@ checks and tells the user what could be improved."""
 # See https://github.com/pylint-dev/pylint/issues/3488
 from __future__ import annotations
 
-import ast
 import dataclasses
 import enum
 import json
 import logging
-import multiprocessing
-import queue
 import time
 import traceback
 from collections.abc import Iterable, Iterator, Mapping, Sequence
+from multiprocessing.pool import ThreadPool
 from pathlib import Path
-from typing import Any, assert_never, Self, TypedDict
+from typing import Any, assert_never, Literal, Self, TypedDict
 
 from livestatus import LocalConnection, SiteConfigurations, SiteId
 
@@ -36,6 +34,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local
 from cmk.gui.utils import escaping
+from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.sites import get_effective_global_setting
@@ -252,34 +251,23 @@ class AutomationCheckAnalyzeConfig(AutomationCommand[_TCheckAnalyzeConfig]):
         return results
 
 
+class _TestResult(TypedDict):
+    state: Literal[0, 1]
+    ac_test_results: Sequence[ACTestResult]
+    error: str
+
+
 def _perform_tests_for_site(
     logger: logging.Logger,
     active_config: Config,
     request_: Request,
     site_id: SiteId,
     categories: Sequence[str] | None,
-    result_queue: multiprocessing.JoinableQueue[tuple[SiteId, str]],
-) -> None:
+) -> _TestResult:
     # Executes the tests on the site. This method is executed in a dedicated
-    # subprocess (One per site)
+    # thread (One per site)
     logger.debug("[%s] Starting" % site_id)
-    result = None
     try:
-        # Would be better to clean all open fds that are not needed, but we don't
-        # know the FDs of the result_queue pipe. Can we find it out somehow?
-        # Cleanup resources of the apache
-        # for x in range(3, 256):
-        #    try:
-        #        os.close(x)
-        #    except OSError, e:
-        #        if e.errno == errno.EBADF:
-        #            pass
-        #        else:
-        #            raise
-
-        # Reinitialize logging targets
-        log.init_logging()  # NOTE: We run in a subprocess!
-
         if site_is_local(active_config, site_id):
             automation = AutomationCheckAnalyzeConfig()
             results_data = automation.execute(_TCheckAnalyzeConfig(categories=categories))
@@ -291,26 +279,22 @@ def _perform_tests_for_site(
                 timeout=request_.request_timeout - 10,
             )
             assert isinstance(raw_results_data, list)
-            results_data = raw_results_data
+            results_data = [ACTestResult.from_repr(r) for r in raw_results_data]
 
-        logger.debug("[%s] Finished" % site_id)
-
-        result = {
-            "state": 0,
-            "response": results_data,
-        }
+        logger.error("[%s] Finished: %r", site_id, results_data)
+        return _TestResult(
+            state=0,
+            ac_test_results=results_data,
+            error="",
+        )
 
     except Exception:
         logger.exception("[%s] Failed" % site_id)
-        result = {
-            "state": 1,
-            "response": "Traceback:<br>%s" % (traceback.format_exc().replace("\n", "<br>\n")),
-        }
-    finally:
-        result_queue.put((site_id, repr(result)))
-        result_queue.close()
-        result_queue.join_thread()
-        result_queue.join()
+        return _TestResult(
+            state=1,
+            ac_test_results=[],
+            error="Traceback:<br>%s" % (traceback.format_exc().replace("\n", "<br>\n")),
+        )
 
 
 def _connectivity_result(*, state: ACResultState, text: str, site_id: SiteId) -> ACTestResult:
@@ -326,6 +310,12 @@ def _connectivity_result(*, state: ACResultState, text: str, site_id: SiteId) ->
     )
 
 
+def _error_callback(error: BaseException) -> None:
+    # for exceptions that could not be handled within the function, e.g. calling with incorrect
+    # number of arguments
+    log.logger.error(str(error))
+
+
 def perform_tests(
     logger: logging.Logger,
     active_config: Config,
@@ -334,68 +324,56 @@ def perform_tests(
     categories: Sequence[str] | None = None,  # 'None' means 'No filtering'
 ) -> dict[SiteId, list[ACTestResult]]:
     logger.debug("Executing tests for %d sites" % len(test_sites))
-    results_by_site: dict[SiteId, list[ACTestResult]] = {}
-
-    # Results are fetched simultaneously from the remote sites
-    result_queue: multiprocessing.JoinableQueue[tuple[SiteId, str]] = (
-        multiprocessing.JoinableQueue()
-    )
-
-    processes = []
-    site_id = SiteId("unknown_site")
-    for site_id in test_sites:
-        process = multiprocessing.Process(
-            target=_perform_tests_for_site,
-            args=(logger, active_config, request_, site_id, categories, result_queue),
+    pool = ThreadPool(processes=len(test_sites))
+    active_tasks = {
+        site_id: pool.apply_async(
+            func=copy_request_context(_perform_tests_for_site),
+            args=(logger, active_config, request_, site_id, categories),
+            error_callback=_error_callback,
         )
-        process.start()
-        processes.append((site_id, process))
+        for site_id in test_sites
+    }
 
-    # Now collect the results from the queue until all processes are finished
-    while any(p.is_alive() for site_id, p in processes):
-        try:
-            site_id, results_data = result_queue.get_nowait()
-            result_queue.task_done()
-            result = ast.literal_eval(results_data)
+    results_by_site: dict[SiteId, list[ACTestResult]] = {}
+    while active_tasks:
+        time.sleep(0.1)
+        for site_id, async_result in list(active_tasks.items()):
+            try:
+                if not async_result.ready():
+                    continue
 
-            if result["state"] == 1:
-                raise MKGeneralException(result["response"])
+                active_tasks.pop(site_id)
+                result = async_result.get()
 
-            if result["state"] == 0:
-                test_results = []
-                for result_data in result["response"]:
-                    result = ACTestResult.from_repr(result_data)
-                    test_results.append(result)
+                if result["state"] == 1:
+                    raise MKGeneralException(result["error"])
 
+                if result["state"] == 0:
+                    ac_test_results = result["ac_test_results"]
+                    if categories and "connectivity" in categories:
+                        # Add general connectivity result
+                        ac_test_results.append(
+                            _connectivity_result(
+                                state=ACResultState.OK,
+                                text=_("No connectivity problems"),
+                                site_id=site_id,
+                            )
+                        )
+                    results_by_site[site_id] = ac_test_results
+
+                else:
+                    raise NotImplementedError()
+
+            except Exception as e:
                 if categories and "connectivity" in categories:
-                    # Add general connectivity result
-                    test_results.append(
+                    results_by_site[site_id] = [
                         _connectivity_result(
-                            state=ACResultState.OK,
-                            text=_("No connectivity problems"),
+                            state=ACResultState.CRIT,
+                            text=str(e),
                             site_id=site_id,
                         )
-                    )
-
-                results_by_site[site_id] = test_results
-
-            else:
-                raise NotImplementedError()
-
-        except queue.Empty:
-            time.sleep(0.5)  # wait some time to prevent CPU hogs
-
-        except Exception as e:
-            if categories and "connectivity" in categories:
-                results_by_site[site_id] = [
-                    _connectivity_result(
-                        state=ACResultState.CRIT,
-                        text=str(e),
-                        site_id=site_id,
-                    )
-                ]
-
-            logger.exception("error analyzing configuration for site %s", site_id)
+                    ]
+                logger.exception("error analyzing configuration for site %s", site_id)
 
     logger.debug("Got test results")
     return results_by_site

@@ -21,7 +21,7 @@ from cmk.gui.quick_setup.v0_unstable.definitions import (
 )
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, FormSpecWrapper
 from cmk.gui.user_sites import get_configured_site_choices, site_attribute_default_value
-from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
+from cmk.gui.watolib.configuration_bundle_store import ConfigBundleStore
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 
 from cmk.rulesets.v1 import Help, Message, Title

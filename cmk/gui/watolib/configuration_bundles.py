@@ -7,12 +7,10 @@ from collections.abc import Callable, Collection, Container, Iterable, Mapping, 
 from dataclasses import dataclass
 from itertools import groupby
 from operator import itemgetter
-from pathlib import Path
 from typing import (
     Any,
     get_args,
     Literal,
-    NewType,
     NotRequired,
     TypedDict,
     TypeVar,
@@ -28,15 +26,13 @@ from cmk.utils.rulesets.definition import RuleGroupType
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 
 from cmk.gui.watolib import check_mk_automations
+from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundle, ConfigBundleStore
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 from cmk.gui.watolib.passwords import load_passwords, remove_password, save_password
 from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Rule, SingleRulesetRecursively
-from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
-from cmk.gui.watolib.utils import multisite_dir
 
 _T = TypeVar("_T")
-BundleId = NewType("BundleId", str)
 IdentFinder = Callable[[GlobalIdent | None], str | None]
 Entity = Literal["host", "rule", "password", "dcd"]
 Permission = Literal["hosts", "rulesets", "passwords", "dcd_connections"]
@@ -199,7 +195,7 @@ def identify_single_bundle_references(
     return references[bundle_id]
 
 
-def read_config_bundle(bundle_id: BundleId) -> "ConfigBundle":
+def read_config_bundle(bundle_id: BundleId) -> ConfigBundle:
     store = ConfigBundleStore()
     all_bundles = store.load_for_reading()
     if bundle_id in all_bundles:
@@ -208,7 +204,7 @@ def read_config_bundle(bundle_id: BundleId) -> "ConfigBundle":
     raise MKGeneralException(f'Configuration bundle "{bundle_id}" does not exist.')
 
 
-def edit_config_bundle_configuration(bundle_id: BundleId, bundle: "ConfigBundle") -> None:
+def edit_config_bundle_configuration(bundle_id: BundleId, bundle: ConfigBundle) -> None:
     store = ConfigBundleStore()
     all_bundles = store.load_for_modification()
     if bundle_id not in all_bundles:
@@ -239,7 +235,7 @@ def _validate_and_prepare_create_calls(
 
 
 def create_config_bundle(
-    bundle_id: BundleId, bundle: "ConfigBundle", entities: CreateBundleEntities
+    bundle_id: BundleId, bundle: ConfigBundle, entities: CreateBundleEntities
 ) -> None:
     bundle_ident = GlobalIdent(
         site_id=omd_site(), program_id=bundle["program_id"], instance_id=bundle_id
@@ -513,44 +509,3 @@ def _prepare_id_finder(program_id: str, instance_ids: Container[str]) -> IdentFi
         return None
 
     return find_matching_id
-
-
-class ConfigBundle(TypedDict):
-    """
-    A configuration bundle is a collection of configs which are managed together by this bundle.
-    Each underlying config must have the locked_by attribute set to the id of the bundle. We
-    explicitly avoid double references (for now: but might have to be considered in the context
-    of performance restrictions) here to keep the data model simple. The group and program
-    combination should determine which configuration objects are potentially part of the bundle.
-    """
-
-    # General properties
-    title: str
-    comment: str
-
-    # Bundle specific properties
-    group: str  # e.g. rulespec_name    # special_agent:aws
-    program_id: str  # PROGRAM_ID_QUICK_SETUP
-    customer: NotRequired[str]  # CME specific
-
-
-class ConfigBundleStore(WatoSingleConfigFile[dict[BundleId, ConfigBundle]]):
-    def __init__(self) -> None:
-        super().__init__(
-            config_file_path=Path(multisite_dir()) / "configuration_bundles.mk",
-            config_variable="configuration_bundles",
-            spec_class=dict[BundleId, ConfigBundle],
-        )
-
-
-def load_group_bundles(bundle_group: str) -> Mapping[BundleId, ConfigBundle]:
-    all_bundles = ConfigBundleStore().load_for_reading()
-    return {
-        bundle_id: bundle
-        for bundle_id, bundle in all_bundles.items()
-        if bundle["group"] == bundle_group
-    }
-
-
-def register(config_file_registry: ConfigFileRegistry) -> None:
-    config_file_registry.register(ConfigBundleStore())

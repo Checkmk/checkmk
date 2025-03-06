@@ -49,17 +49,18 @@ from cmk.gui.wato._main_module_topics import MainModuleTopicQuickSetup
 from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.wato.pages.password_store import ModeEditPassword
 from cmk.gui.wato.pages.rulesets import ModeEditRule
-from cmk.gui.watolib.changes import add_change
-from cmk.gui.watolib.configuration_bundles import (
-    bundle_domains,
+from cmk.gui.watolib.configuration_bundle_store import (
     BundleId,
-    BundleReferences,
     ConfigBundle,
     ConfigBundleStore,
+    load_group_bundles,
+)
+from cmk.gui.watolib.configuration_bundles import (
+    bundle_domains,
+    BundleReferences,
     delete_config_bundle,
     edit_config_bundle_configuration,
     identify_bundle_references,
-    load_group_bundles,
     valid_special_agent_bundle,
 )
 from cmk.gui.watolib.hosts_and_folders import make_action_link
@@ -238,21 +239,6 @@ class ModeEditConfigurationBundles(WatoMode):
 
         self._bundles_listing(self._name)
 
-    def _delete_bundle(self, bundle_id: BundleId) -> None:
-        if self._bundle_group_type is RuleGroupType.SPECIAL_AGENTS:
-            # revert changes does not work correctly when a config sync to another site occurred
-            # for consistency reasons we always prevent the user from reverting the changes
-            prevent_discard_changes = True
-        else:
-            raise MKGeneralException("Not implemented")
-
-        delete_config_bundle(bundle_id)
-        add_change(
-            "delete-quick-setup",
-            _("Deleted Quick setup {bundle_id}").format(bundle_id=bundle_id),
-            prevent_discard_changes=prevent_discard_changes,
-        )
-
     def _bundles_listing(self, group_name: str) -> None:
         bundle_ids = set(load_group_bundles(group_name).keys())
         if not bundle_ids:
@@ -305,7 +291,7 @@ class ModeEditConfigurationBundles(WatoMode):
         bundle_id = BundleId(request.get_ascii_input_mandatory(self.VAR_BUNDLE_ID))
         action = request.get_ascii_input_mandatory(self.VAR_ACTION)
         if action == "delete":
-            self._delete_bundle(bundle_id)
+            delete_config_bundle(bundle_id)
 
         return redirect(self.mode_url(**{"mode": self.name(), self.VAR_NAME: self._name}))
 

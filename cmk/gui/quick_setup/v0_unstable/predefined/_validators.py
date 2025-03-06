@@ -32,7 +32,7 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
     QuickSetupId,
 )
 from cmk.gui.watolib.check_mk_automations import diag_special_agent
-from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
+from cmk.gui.watolib.configuration_bundle_store import ConfigBundleStore
 from cmk.gui.watolib.hosts_and_folders import Host
 
 from cmk.rulesets.v1.form_specs import Dictionary

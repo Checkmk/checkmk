@@ -17,6 +17,7 @@ from livestatus import (
     MultiSiteConnection,
     NetworkSocketDetails,
     NetworkSocketInfo,
+    sanitize_site_configuration,
     SiteConfiguration,
     SiteConfigurations,
     SiteId,
@@ -203,9 +204,19 @@ def _ensure_connected(user: LoggedInUser | None, force_authuser: UserId | None) 
     _connect_multiple_sites(user)
     _set_livestatus_auth(user, force_authuser)
 
-    site_states_to_log = g.site_status.copy()
-    site_states_to_log.update({"secret": "REDACTED"})
-    logger.debug("Site states: %r", site_states_to_log)
+    logger.debug(
+        "Site states: %r",
+        _redacted_site_states_for_logging(),
+    )
+
+
+def _redacted_site_states_for_logging() -> dict[SiteId, dict[str, object]]:
+    return {
+        site_id: {
+            k: sanitize_site_configuration(v) if k == "site" else v for k, v in site_status.items()
+        }
+        for site_id, site_status in g.site_status.items()
+    }
 
 
 def _edition_from_livestatus(livestatus_edition: str | None) -> Edition | None:

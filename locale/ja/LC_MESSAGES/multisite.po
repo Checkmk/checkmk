@@ -69624,7 +69624,7 @@ msgstr "警告:このホストの構成は無効です!"
 msgid "Warning: This host has an invalid configuration: "
 msgstr "警告: このホストの設定は無効です: "
 
-#, fuzzy, python-format
+#, fuzzy, no-python-format
 msgid "Warning: You are over 90% of your service limit."
 msgstr "警告：サービス利用限度を90％超えています。"
 

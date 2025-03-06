@@ -73568,7 +73568,7 @@ msgstr "Waarschuwing: Deze host heeft een ongeldige configuratie!"
 msgid "Warning: This host has an invalid configuration: "
 msgstr "Waarschuwing: Deze host heeft een ongeldige configuratie: "
 
-#, python-format
+#, no-python-format
 msgid "Warning: You are over 90% of your service limit."
 msgstr ""
 

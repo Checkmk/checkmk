@@ -74244,7 +74244,7 @@ msgstr "Advertencia: Este host tiene una configuración no válida!"
 msgid "Warning: This host has an invalid configuration: "
 msgstr "Advertencia: Este host tiene una configuración no válida: "
 
-#, python-format
+#, no-python-format
 msgid "Warning: You are over 90% of your service limit."
 msgstr ""
 

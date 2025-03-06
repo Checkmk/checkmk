@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-03-03 23:50+0000\n"
+"PO-Revision-Date: 2025-03-05 19:50+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -19780,7 +19780,7 @@ msgstr "Elektrische Energie"
 msgid "Electrical power"
 msgstr "Elektrische Leistung"
 
-#, fuzzy, no-python-format
+#, no-python-format
 msgid "Electrical tension in % of normal value"
 msgstr "Elektrische Spannung in % des Normwertes"
 
@@ -71675,7 +71675,7 @@ msgstr "Warnung: Die Host-Konfiguration ist ungültig!"
 msgid "Warning: This host has an invalid configuration: "
 msgstr "Warnung: Die Host-Konfiguration ist ungültig: "
 
-#, fuzzy, python-format
+#, no-python-format
 msgid "Warning: You are over 90% of your service limit."
 msgstr "Warnung: Sie haben 90% Ihres Service-Limits überschritten."
 

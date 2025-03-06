@@ -73704,7 +73704,7 @@ msgstr "Avertisment: Această gazdă are o configurație invalidă!"
 msgid "Warning: This host has an invalid configuration: "
 msgstr "Avertisment: Această gazdă are o configurație invalidă: "
 
-#, python-format
+#, no-python-format
 msgid "Warning: You are over 90% of your service limit."
 msgstr ""
 

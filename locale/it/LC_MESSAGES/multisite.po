@@ -72844,7 +72844,7 @@ msgstr "Attenzione: Questo host ha una configurazione non valida!"
 msgid "Warning: This host has an invalid configuration: "
 msgstr "Attenzione: Questo host ha una configurazione non valida: "
 
-#, python-format
+#, no-python-format
 msgid "Warning: You are over 90% of your service limit."
 msgstr ""
 

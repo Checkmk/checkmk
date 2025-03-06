@@ -74335,7 +74335,7 @@ msgstr "Avertissement : Cet hôte a une configuration invalide !"
 msgid "Warning: This host has an invalid configuration: "
 msgstr "Avertissement : Cet hôte a une configuration invalide : "
 
-#, python-format
+#, no-python-format
 msgid "Warning: You are over 90% of your service limit."
 msgstr ""
 

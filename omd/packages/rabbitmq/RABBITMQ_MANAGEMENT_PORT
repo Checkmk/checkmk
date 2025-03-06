@@ -7,7 +7,6 @@
 #  will expose its REST API. If the port isn't
 #  available, the next available port will be chosen.
 
-
 CONF_FILE="$OMD_ROOT/etc/rabbitmq/conf.d/02-management-port.conf"
 
 write_config() {

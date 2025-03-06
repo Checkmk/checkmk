@@ -40,7 +40,6 @@ distributed_piggyback_enabled() {
     [ "${CONFIG_PIGGYBACK_HUB:?}" = "on" ]
 }
 
-
 distributed_piggyback_enabled || exit 5
 
 case "$1" in

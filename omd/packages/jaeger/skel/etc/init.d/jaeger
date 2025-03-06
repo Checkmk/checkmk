@@ -32,7 +32,7 @@ fi
 case "$1" in
     start)
         echo -n 'Starting jaeger...'
-        if [ -n "$THE_PID" ] && process_is_running "$THE_PID" ; then
+        if [ -n "$THE_PID" ] && process_is_running "$THE_PID"; then
             echo 'already running.'
             exit 0
         fi
@@ -80,7 +80,7 @@ case "$1" in
         fi
         ;;
 
-    restart|reload)
+    restart | reload)
         $0 stop && $0 start
         ;;
 

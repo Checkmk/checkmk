@@ -145,7 +145,7 @@ bandit.ini:
 	( echo exclude: /tests >> bandit.ini )
 
 format-shell:
-	$(SHFMT) -w -i 4 -ci $(FIND_SHELL_FILES)
+	cd .. && $(SHFMT) -w -i 4 -ci $$($(FIND_SHELL_FILES))
 
 agent-plugin-unit/py2/test_%.py: agent-plugin-unit/test_%.py
 	mkdir -p "$(dir $@)"
@@ -237,7 +237,7 @@ test-format-python-format: ../pyproject.toml
 	exit $${PIPESTATUS[1]}
 
 test-format-shell:
-	$(SHFMT) -d -i 4 -ci $(FIND_SHELL_FILES)
+	cd .. && $(SHFMT) -d -i 4 -ci $$($(FIND_SHELL_FILES))
 
 format-toml:
 	$(TAPLO) format ../pyproject.toml
@@ -395,7 +395,7 @@ test-ruff:
 	cd ..; echo $$($(FIND_PYTHON_FILES)) | xargs $(MAX_CHARS:%=--max-chars=%) $(UVENV) ruff check
 
 test-shellcheck:
-	cd .. && $(SHELLCHECK) -x $(SHELLCHECK_OUTPUT_ARGS) $(FIND_SHELL_FILES)
+	cd .. && $(SHELLCHECK) -x $(SHELLCHECK_OUTPUT_ARGS) $$($(FIND_SHELL_FILES))
 
 test-cycles:
 	$(CYCLES) \

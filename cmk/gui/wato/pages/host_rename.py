@@ -15,7 +15,6 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.version import edition_supports_nagvis
 
 from cmk.utils import paths
-from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
 from cmk.utils.regex import regex
 
@@ -57,6 +56,7 @@ from cmk.gui.wato.pages._html_elements import wato_html_head
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.activate_changes import ActivateChanges
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.host_rename import (
     group_renamings_by_site,
     perform_rename_hosts,

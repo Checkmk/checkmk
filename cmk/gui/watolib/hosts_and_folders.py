@@ -33,7 +33,7 @@ from cmk.ccc.site import omd_site
 from cmk.ccc.version import edition
 
 import cmk.utils.paths
-from cmk.utils.global_ident_type import GlobalIdent, is_locked_by_quick_setup
+from cmk.utils.global_ident_type import GlobalIdent
 from cmk.utils.host_storage import (
     ABCHostsStorage,
     apply_hosts_file_to_object,
@@ -90,6 +90,7 @@ from cmk.gui.watolib.config_domain_name import (
 from cmk.gui.watolib.config_domain_name import (
     CORE as CORE_DOMAIN,
 )
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.host_attributes import (
     all_host_attributes,
     collect_attributes,

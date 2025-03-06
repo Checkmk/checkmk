@@ -20,7 +20,6 @@ from typing import Any, cast
 from cmk.ccc import version
 
 from cmk.utils import paths
-from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.password_store import Password
 
 from cmk.gui.http import Response
@@ -38,6 +37,7 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.utils import permission_verification as permissions
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.passwords import (
     load_password,
     load_password_to_modify,

@@ -9,7 +9,6 @@ import re
 from collections.abc import Collection, Iterator, Mapping, Sequence
 from typing import TypeVar
 
-from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
 from cmk.utils.tags import TagGroupID, TagID
@@ -73,6 +72,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.watolib.agent_registration import remove_tls_registration
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.check_mk_automations import delete_hosts
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.host_attributes import (
     all_host_attributes,

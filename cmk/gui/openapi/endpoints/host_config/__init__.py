@@ -46,7 +46,6 @@ from urllib.parse import urlparse
 
 from livestatus import SiteId
 
-from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
 
 from cmk.gui import fields as gui_fields
@@ -84,6 +83,7 @@ from cmk.gui.wato.pages.host_rename import rename_hosts_job_entry_point, RenameH
 from cmk.gui.watolib import bakery
 from cmk.gui.watolib.activate_changes import has_pending_changes
 from cmk.gui.watolib.check_mk_automations import delete_hosts
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.host_rename import RenameHostBackgroundJob, RenameHostsBackgroundJob
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host

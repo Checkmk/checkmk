@@ -4,12 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Mapping, NewType, NotRequired, TypedDict
+from typing import Mapping, NewType, NotRequired, TypedDict, TypeGuard
+
+from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_QUICK_SETUP
 
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.utils import multisite_dir
 
 BundleId = NewType("BundleId", str)
+
+
+def is_locked_by_quick_setup(ident: GlobalIdent | None) -> TypeGuard[GlobalIdent]:
+    return ident is not None and ident["program_id"] == PROGRAM_ID_QUICK_SETUP
 
 
 class ConfigBundle(TypedDict):

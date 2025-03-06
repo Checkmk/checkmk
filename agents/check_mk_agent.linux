@@ -383,9 +383,9 @@ hex_decode() {
     # Be aware that this implementation is very slow and should not be used for large data.
     local hex="$1"
     local i=0
-    while [ $i -lt ${#hex} ]; do
+    while [ "$i" -lt ${#hex} ]; do
         printf '%b' "\x${hex:i:2}"
-        i=$(expr $i + 2)
+        i=$(("$i" + 2))
     done
 }
 

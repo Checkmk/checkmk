@@ -94,6 +94,7 @@ _create_user() {
     fi
 
     printf "Creating %s user account ...\n" "${AGENT_USER}"
+    # shellcheck disable=SC2086
     useradd ${uid_argument} \
         ${group_argument} \
         --comment "${USER_COMMENT}" \
@@ -156,6 +157,7 @@ _update_user() {
         fi
 
         printf "Creating %s user account ...\n" "${AGENT_USER}"
+        # shellcheck disable=SC2086
         useradd ${uid_argument} \
             ${group_argument} \
             --comment "${USER_COMMENT}" \

@@ -470,7 +470,7 @@ section_checkmk() {
     echo "AgentOS: solaris"
     echo "Hostname: $(hostname)"
 
-    if [ -n ${MK_INSTALLDIR} ]; then
+    if [ -n "${MK_INSTALLDIR}" ]; then
         echo "InstallationDirectory: ${MK_INSTALLDIR}"
         echo "PackageDirectory: ${MK_INSTALLDIR}/package"
         echo "RuntimeDirectory: ${MK_VARDIR}"

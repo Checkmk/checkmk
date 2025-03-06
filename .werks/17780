@@ -1,0 +1,32 @@
+Title: Fix redaction of remote site secrets in log messages
+Class: security
+Compatible: compat
+Component: multisite
+Date: 1741768335
+Edition: cre
+Level: 1
+Version: 2.2.0p41
+
+If the log level for <em>Web</em> is set to debug and the site has remote sites, the secrets used to
+authenticate against the remote sites were logged to <code>var/log/web.log</code>.
+
+This issue was found during internal review.
+
+<em>Affected Versions</em>:
+
+LI: 2.3.0
+LI: 2.2.0
+LI: 2.1.0 (EOL)
+
+<em>Mitigations</em>:
+
+Change the log level to verbose or less.
+
+<em>Indicators of Compromise</em>:
+
+Check <code>var/log/web.log for messages beginning with</code>Site states: `
+
+<em>Vulnerability Management</em>:
+
+We have rated the issue with a CVSS Score of 7.1 High
+(<code>CVSS:4.0/AV:L/AC:L/AT:P/PR:L/UI:N/VC:H/VI:N/VA:N/SC:H/SI:H/SA:H</code>) and assigned <code>CVE-2025-2092</code>.

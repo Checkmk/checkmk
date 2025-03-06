@@ -976,7 +976,7 @@ def _get_packet_levels(
     params: Mapping[str, Any],
 ) -> tuple[GeneralPacketLevels, GeneralPacketLevels]:
     DIRECTIONS = ("in", "out")
-    PACKET_TYPES = ("errors", "multicast", "broadcast", "unicast", "discards")
+    PACKET_TYPES = ("errors", "multicast", "broadcast", "nucasts", "unicast", "discards")
 
     def none_levels() -> dict[str, dict[str, Any | None]]:
         return {name: {direction: None for direction in DIRECTIONS} for name in PACKET_TYPES}
@@ -1621,8 +1621,10 @@ _METRICS_TO_LEGACY_MAP = {
     "if_out_mcast": "outmcast",
     "if_out_bcast": "outbcast",
     "if_in_unicast": "inucast",
+    "if_in_nucast": "innucast",
     "if_in_non_unicast": "innucast",
     "if_out_unicast": "outucast",
+    "if_out_nucast": "outnucast",
     "if_out_non_unicast": "outnucast",
 }
 
@@ -1758,7 +1760,6 @@ def check_single_interface(
     yield from _output_packet_rates(
         abs_packet_levels=abs_packet_levels,
         perc_packet_levels=perc_packet_levels,
-        nucast_levels=params.get("nucasts"),
         rates=interface.rates_with_averages,
     )
 
@@ -2136,7 +2137,6 @@ def _output_packet_rates(
     *,
     abs_packet_levels: GeneralPacketLevels,
     perc_packet_levels: GeneralPacketLevels,
-    nucast_levels: tuple[float, float] | None,
     rates: RatesWithAverages,
 ) -> CheckResult:
     for direction, mrate, brate, urate, nurate, discrate, errorrate in [
@@ -2213,6 +2213,17 @@ def _output_packet_rates(
                 "unicast",
                 success_pacrate,
             ),
+            (
+                # non-unicast rate is all over the place.
+                # The valuespec in the GUI is called nucasts,
+                # the actual metric nucast
+                nurate,
+                abs_packet_levels["nucasts"][direction],
+                perc_packet_levels["nucasts"][direction],
+                "non-unicast",
+                "nucast",
+                success_pacrate,
+            ),
         ]:
             if rate is None:
                 continue
@@ -2225,20 +2236,6 @@ def _output_packet_rates(
                 display_name=display_name,
                 metric_name=metric_name,
                 reference_rate=reference_rate,
-            )
-
-        for display_name, metric_name, packets, levels in [
-            ("Non-unicast", "non_unicast", nurate, nucast_levels),
-        ]:
-            if packets is None:
-                continue
-            yield from check_levels_v1(
-                packets.rate,
-                levels_upper=levels,
-                metric_name=f"if_{direction}_{metric_name}",
-                render_func=partial(_render_floating_point, precision=2, unit=" packets/s"),
-                label=f"{display_name} {direction}",
-                notice_only=True,
             )
 
 

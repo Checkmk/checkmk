@@ -982,16 +982,18 @@ def _parameter_valuespec_if() -> Dictionary:
             ),
             (
                 "nucasts",
-                Tuple(
-                    title=_("Non-unicast packet rates"),
-                    help=_(
-                        "Setting levels on non-unicast packet rates is optional. This may help "
-                        "to detect broadcast storms and other unwanted traffic."
+                Migrate(
+                    valuespec=_vs_alternative_levels(
+                        title=_("Non-Unicast packet rates"),
+                        help=_(
+                            "Setting levels on non-unicast packet rates is optional. This may help "
+                            "to detect broadcast storms and other unwanted traffic."
+                        ),
+                        percent_levels=PERC_PKG_LEVELS,
+                        percent_detail=_(" (in relation to all successful packets)"),
+                        abs_detail=_(" (in packets per second)"),
                     ),
-                    elements=[
-                        Integer(title=_("Warning at"), unit=_("pkts / sec")),
-                        Integer(title=_("Critical at"), unit=_("pkts / sec")),
-                    ],
+                    migrate=_transform_discards,
                 ),
             ),
             (

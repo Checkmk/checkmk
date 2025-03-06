@@ -103,12 +103,14 @@ def _create_interfaces_with_counters(
             interfaces.Counters(
                 in_octets=346922243 + bandwidth_change,
                 in_ucast=244867,
+                in_nucast=0,
                 in_bcast=0,
                 in_mcast=0,
                 in_err=0,
                 in_disc=0,
                 out_octets=6570143 + 4 * bandwidth_change,
                 out_ucast=55994,
+                out_nucast=0,
                 out_bcast=0,
                 out_mcast=0,
                 out_err=0,
@@ -918,7 +920,7 @@ ITEM_PARAMS_RESULTS = (
             Metric("inbcast", 0.0),
             Result(state=State.OK, notice="Unicast in: 0 packets/s"),
             Metric("inucast", 0.0),
-            Result(state=State.OK, notice="Non-unicast in: 0 packets/s"),
+            Result(state=State.OK, notice="Non-Unicast in: 0 packets/s"),
             Metric("innucast", 0.0),
             Result(state=State.OK, notice="Errors out: 0 packets/s"),
             Metric("outerr", 0.0, levels=(10.0, 20.0)),
@@ -930,7 +932,7 @@ ITEM_PARAMS_RESULTS = (
             Metric("outbcast", 0.0),
             Result(state=State.OK, notice="Unicast out: 0 packets/s"),
             Metric("outucast", 0.0),
-            Result(state=State.OK, notice="Non-unicast out: 0 packets/s"),
+            Result(state=State.OK, notice="Non-Unicast out: 0 packets/s"),
             Metric("outnucast", 0.0),
         ],
     ),
@@ -941,7 +943,7 @@ ITEM_PARAMS_RESULTS = (
             "speed": 100000000,
             "traffic": [("both", ("perc", ("upper", (5.0, 20.0))))],
             "state": ["1"],
-            "nucasts": (1, 2),
+            "nucasts": {"both": ("abs", (1, 2))},
             "discards": {"both": ("abs", (1, 2))},
         },
         [
@@ -969,7 +971,7 @@ ITEM_PARAMS_RESULTS = (
             Metric("inbcast", 0.0),
             Result(state=State.OK, notice="Unicast in: 0 packets/s"),
             Metric("inucast", 0.0),
-            Result(state=State.OK, notice="Non-unicast in: 0 packets/s"),
+            Result(state=State.OK, notice="Non-Unicast in: 0 packets/s"),
             Metric("innucast", 0.0, levels=(1.0, 2.0)),
             Result(state=State.OK, notice="Errors out: 0 packets/s"),
             Metric("outerr", 0.0, levels=(10.0, 20.0)),
@@ -981,7 +983,7 @@ ITEM_PARAMS_RESULTS = (
             Metric("outbcast", 0.0),
             Result(state=State.OK, notice="Unicast out: 0 packets/s"),
             Metric("outucast", 0.0),
-            Result(state=State.OK, notice="Non-unicast out: 0 packets/s"),
+            Result(state=State.OK, notice="Non-Unicast out: 0 packets/s"),
             Metric("outnucast", 0.0, levels=(1.0, 2.0)),
         ],
     ),
@@ -1359,7 +1361,7 @@ def test_check_single_interface_bm_averaging() -> None:
         Metric("inbcast", 0.0),
         Result(state=State.OK, notice="Unicast in: 0 packets/s"),
         Metric("inucast", 0.0),
-        Result(state=State.OK, notice="Non-unicast in: 0 packets/s"),
+        Result(state=State.OK, notice="Non-Unicast in: 0 packets/s"),
         Metric("innucast", 0.0),
         Result(state=State.OK, notice="Errors out: 0 packets/s"),
         Metric("outerr", 0.0),
@@ -1371,7 +1373,7 @@ def test_check_single_interface_bm_averaging() -> None:
         Metric("outbcast", 0.0),
         Result(state=State.OK, notice="Unicast out: 0 packets/s"),
         Metric("outucast", 0.0),
-        Result(state=State.OK, notice="Non-unicast out: 0 packets/s"),
+        Result(state=State.OK, notice="Non-Unicast out: 0 packets/s"),
         Metric("outnucast", 0.0),
     ]
 
@@ -1497,7 +1499,10 @@ def test_check_single_interface_packet_levels() -> None:
                 "errors": {
                     "both": ("abs", (10, 20)),
                 },
-                "nucasts": (0, 5),
+                "nucasts": {
+                    "in": ("abs", (0.0, 5.0)),
+                    "out": ("abs", (0.0, 5.0)),
+                },
                 "unicast": {
                     "in": ("perc", (10.0, 20.0)),
                     "out": ("perc", (10.0, 20.0)),
@@ -1626,7 +1631,7 @@ def test_check_single_interface_packet_levels() -> None:
         ),
         Result(
             state=State.CRIT,
-            summary="Non-unicast in: 50 packets/s (warn/crit at 0 packets/s/5 packets/s)",
+            summary="Non-Unicast in: 50 packets/s (warn/crit at 0 packets/s/5 packets/s)",
         ),
         Metric(
             "innucast",
@@ -1680,7 +1685,7 @@ def test_check_single_interface_packet_levels() -> None:
         ),
         Result(
             state=State.CRIT,
-            summary="Non-unicast out: 150 packets/s (warn/crit at 0 packets/s/5 packets/s)",
+            summary="Non-Unicast out: 150 packets/s (warn/crit at 0 packets/s/5 packets/s)",
         ),
         Metric(
             "outnucast",
@@ -1961,7 +1966,7 @@ def test_check_multiple_interfaces_group_by_agent() -> None:
         Metric("inbcast", 0.0),
         Result(state=State.OK, notice="Unicast in: 0 packets/s"),
         Metric("inucast", 0.0),
-        Result(state=State.OK, notice="Non-unicast in: 0 packets/s"),
+        Result(state=State.OK, notice="Non-Unicast in: 0 packets/s"),
         Metric("innucast", 0.0),
         Result(state=State.OK, notice="Errors out: 0 packets/s"),
         Metric("outerr", 0.0, levels=(10.0, 20.0)),
@@ -1973,7 +1978,7 @@ def test_check_multiple_interfaces_group_by_agent() -> None:
         Metric("outbcast", 0.0),
         Result(state=State.OK, notice="Unicast out: 0 packets/s"),
         Metric("outucast", 0.0),
-        Result(state=State.OK, notice="Non-unicast out: 0 packets/s"),
+        Result(state=State.OK, notice="Non-Unicast out: 0 packets/s"),
         Metric("outnucast", 0.0),
     ]
 
@@ -2740,8 +2745,8 @@ def test_non_unicast_packets_handling() -> None:
         Result(state=State.OK, summary="(up)", details="Operational state: up"),
         Result(state=State.OK, summary="MAC: 00:00:00:00:00:00"),
         Result(state=State.OK, summary="Speed: unknown"),
-        Result(state=State.OK, notice="Non-unicast in: 0 packets/s"),
+        Result(state=State.OK, notice="Non-Unicast in: 0 packets/s"),
         Metric("innucast", 0.0),
-        Result(state=State.OK, notice="Non-unicast out: 0 packets/s"),
+        Result(state=State.OK, notice="Non-Unicast out: 0 packets/s"),
         Metric("outnucast", 0.0),
     ]

@@ -41,7 +41,7 @@ from cmk.checkengine.discovery import (
     DiscoveryCheckParameters,
     RediscoveryParameters,
 )
-from cmk.checkengine.inventory import InventoryPlugin
+from cmk.checkengine.inventory import InventoryPlugin, InventoryPluginName
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -1249,7 +1249,12 @@ def test_host_config_inventory_parameters(
         },
     )
     plugin = InventoryPlugin(
-        sections=(), function=lambda *args, **kw: (), ruleset_name=RuleSetName("if"), defaults={}
+        name=InventoryPluginName("lshb"),
+        sections=(),
+        function=lambda *args, **kw: (),
+        ruleset_name=RuleSetName("if"),
+        defaults={},
+        location=PluginLocation("foo", "bar"),
     )
     assert ts.apply(monkeypatch).inventory_parameters(hostname, plugin) == result
 

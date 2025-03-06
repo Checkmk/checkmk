@@ -11,6 +11,7 @@ from typing import assert_never
 from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.inventory import InventoryPlugin as BackendInventoryPlugin
 from cmk.checkengine.inventory import InventoryPluginName
 
 from cmk.base.api.agent_based import plugin_classes as backend
@@ -51,7 +52,7 @@ def load_all_plugins(
     registered_agent_sections: dict[SectionName, backend.AgentSectionPlugin] = {}
     registered_snmp_sections: dict[SectionName, backend.SNMPSectionPlugin] = {}
     registered_check_plugins: dict[CheckPluginName, backend.CheckPlugin] = {}
-    registered_inventory_plugins: dict[InventoryPluginName, backend.InventoryPlugin] = {}
+    registered_inventory_plugins: dict[InventoryPluginName, BackendInventoryPlugin] = {}
     errors = [
         *legacy_errors,
         *(f"Error in agent based plugin: {exc}" for exc in discovered_plugins.errors),
@@ -95,7 +96,7 @@ def load_selected_plugins(
     registered_agent_sections: dict[SectionName, backend.AgentSectionPlugin] = {}
     registered_snmp_sections: dict[SectionName, backend.SNMPSectionPlugin] = {}
     registered_check_plugins: dict[CheckPluginName, backend.CheckPlugin] = {}
-    registered_inventory_plugins: dict[InventoryPluginName, backend.InventoryPlugin] = {}
+    registered_inventory_plugins: dict[InventoryPluginName, BackendInventoryPlugin] = {}
     for location in locations:
         module = import_module(location.module)
         if location.name is not None:
@@ -125,7 +126,7 @@ def _register_plugin_by_type(
     registered_agent_sections: dict[SectionName, backend.AgentSectionPlugin],
     registered_snmp_sections: dict[SectionName, backend.SNMPSectionPlugin],
     registered_check_plugins: dict[CheckPluginName, backend.CheckPlugin],
-    registered_inventory_plugins: dict[InventoryPluginName, backend.InventoryPlugin],
+    registered_inventory_plugins: dict[InventoryPluginName, BackendInventoryPlugin],
     *,
     validate: bool,
 ) -> None:
@@ -217,7 +218,7 @@ def _register_check_plugin(
 def _register_inventory_plugin(
     inventory: InventoryPlugin,
     location: PluginLocation,
-    registered_inventory_plugins: dict[InventoryPluginName, backend.InventoryPlugin],
+    registered_inventory_plugins: dict[InventoryPluginName, BackendInventoryPlugin],
 ) -> None:
     plugin = create_inventory_plugin(
         name=inventory.name,

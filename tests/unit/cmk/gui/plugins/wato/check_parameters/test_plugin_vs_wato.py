@@ -11,7 +11,9 @@ from pprint import pformat
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets.definition import RuleGroup
 
-from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins, CheckPlugin, InventoryPlugin
+from cmk.checkengine.inventory import InventoryPlugin
+
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins, CheckPlugin
 
 from cmk.gui.inventory import RulespecGroupInventory
 from cmk.gui.plugins.wato.utils import RulespecGroupCheckParametersDiscovery
@@ -132,11 +134,11 @@ class PluginInventory(Plugin[InventoryPlugin]):
     type = "inventory"
 
     def get_merge_name(self) -> str:
-        assert self._element.inventory_ruleset_name
-        return str(self._element.inventory_ruleset_name)
+        assert self._element.ruleset_name
+        return str(self._element.ruleset_name)
 
     def get_default_parameters(self) -> t.Optional[ParametersTypeAlias]:
-        return self._element.inventory_default_parameters
+        return self._element.defaults
 
 
 class PluginCheck(Plugin[CheckPlugin]):
@@ -203,7 +205,7 @@ def load_plugin(agent_based_plugins: AgentBasedPlugins) -> t.Iterator[PluginProt
         if discovery_element.discovery_ruleset_name is not None:
             yield PluginDiscovery(discovery_element)
     for inventory_element in agent_based_plugins.inventory_plugins.values():
-        if inventory_element.inventory_ruleset_name is not None:
+        if inventory_element.ruleset_name is not None:
             yield PluginInventory(inventory_element)
 
 

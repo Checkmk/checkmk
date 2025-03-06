@@ -21,13 +21,13 @@ from cmk.checkengine.checkresults import (  # pylint: disable=cmk-module-layer-v
     ActiveCheckResult,
 )
 from cmk.checkengine.inventory import (  # pylint: disable=cmk-module-layer-violation
+    InventoryPlugin,
     InventoryPluginName,
 )
 
 from cmk.base.api.agent_based.plugin_classes import (  # pylint: disable=cmk-module-layer-violation
     AgentBasedPlugins,
     CheckPlugin,
-    InventoryPlugin,
 )
 from cmk.base.api.agent_based.register import (  # pylint: disable=cmk-module-layer-violation
     extract_known_discovery_rulesets,
@@ -319,9 +319,9 @@ def _validate_inventory_parameters_usage(
         raise_errors=False,
     )
     referenced_ruleset_names = {
-        str(plugin.inventory_ruleset_name)
+        str(plugin.ruleset_name)
         for plugin in inventory_plugins.values()
-        if plugin.inventory_ruleset_name is not None
+        if plugin.ruleset_name is not None
     }
     return _check_if_referenced(discovered_inventory_parameters, referenced_ruleset_names)
 

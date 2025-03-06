@@ -61,7 +61,6 @@ from cmk.checkengine.checkresults import (
 )
 from cmk.checkengine.discovery import AutocheckEntry, DiscoveryPlugin, HostLabelPlugin
 from cmk.checkengine.fetcher import HostKey, SourceInfo, SourceType
-from cmk.checkengine.inventory import InventoryPlugin, InventoryPluginName
 from cmk.checkengine.parameters import Parameters
 from cmk.checkengine.parser import HostSections, NO_SELECTION, parse_raw_data, SectionNameCollection
 from cmk.checkengine.sectionparser import ParsedSectionName, Provider, ResolvedResult, SectionPlugin
@@ -78,7 +77,6 @@ from cmk.base.api.agent_based import cluster_mode, value_store
 from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin as AgentSectionPluginAPI
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin as CheckPluginAPI
-from cmk.base.api.agent_based.plugin_classes import InventoryPlugin as InventoryPluginAPI
 from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin as SNMPSectionPluginAPI
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.config import (
@@ -116,7 +114,6 @@ __all__ = [
     "DiscoveryPluginMapper",
     "get_aggregated_result",
     "HostLabelPluginMapper",
-    "InventoryPluginMapper",
     "SectionPluginMapper",
     "SpecialAgentFetcher",
 ]
@@ -1128,23 +1125,3 @@ def _make_discovery_parameters_getter(
         return [Parameters({**p, "host_name": host_name}) for p in params]
 
     return get_discovery_parameters
-
-
-class InventoryPluginMapper(Mapping[InventoryPluginName, InventoryPlugin]):
-    def __init__(self, plugins: Mapping[InventoryPluginName, InventoryPluginAPI]) -> None:
-        self._plugins = plugins
-
-    def __getitem__(self, __key: InventoryPluginName) -> InventoryPlugin:
-        plugin = self._plugins[__key]
-        return InventoryPlugin(
-            sections=plugin.sections,
-            function=plugin.inventory_function,
-            ruleset_name=plugin.inventory_ruleset_name,
-            defaults=plugin.inventory_default_parameters,
-        )
-
-    def __iter__(self) -> Iterator[InventoryPluginName]:
-        return iter(self._plugins)
-
-    def __len__(self) -> int:
-        return len(self._plugins)

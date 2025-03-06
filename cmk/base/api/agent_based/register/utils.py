@@ -15,13 +15,12 @@ from cmk.utils.rulesets import RuleSetName
 from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.inventory import InventoryPluginName
+from cmk.checkengine.inventory import InventoryPlugin, InventoryPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 from cmk.base.api.agent_based.plugin_classes import (
     AgentBasedPlugins,
     CheckPlugin,
-    InventoryPlugin,
     SectionPlugin,
     SNMPSectionPlugin,
 )

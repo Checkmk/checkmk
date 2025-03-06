@@ -16,7 +16,7 @@ from cmk.utils.sectionname import SectionName
 from cmk.snmplib import SNMPDetectBaseType
 
 from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.inventory import InventoryPluginName
+from cmk.checkengine.inventory import InventoryPlugin, InventoryPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 from cmk.agent_based.v2 import (
@@ -113,15 +113,6 @@ class CheckPlugin(NamedTuple):
     check_ruleset_name: RuleSetName | None
     cluster_check_function: CheckFunction | None
     location: PluginLocation | LegacyPluginLocation
-
-
-class InventoryPlugin(NamedTuple):
-    name: InventoryPluginName
-    sections: list[ParsedSectionName]
-    inventory_function: InventoryFunction
-    inventory_default_parameters: ParametersTypeAlias
-    inventory_ruleset_name: RuleSetName | None
-    location: PluginLocation
 
 
 @dataclass(frozen=True, kw_only=True)

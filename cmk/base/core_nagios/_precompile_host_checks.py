@@ -37,12 +37,13 @@ from cmk.utils.log import console
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 
+from cmk.checkengine.inventory import InventoryPlugin
+
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.utils
 from cmk.base.api.agent_based.plugin_classes import (
     AgentBasedPlugins,
     CheckPlugin,
-    InventoryPlugin,
     LegacyPluginLocation,
     SectionPlugin,
 )

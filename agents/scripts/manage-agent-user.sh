@@ -118,7 +118,6 @@ _check_user() {
 
     [ -n "${AGENT_USER_UID}" ] || [ -n "${AGENT_USER_GID}" ] || return 0
 
-
     [ -n "${AGENT_USER_UID}" ] && [ ! "$(id -u "${AGENT_USER}")" = "${AGENT_USER_UID}" ] && {
         printf "Agent user %s doesn't have specified uid %s, aborting.\n" "${AGENT_USER}" "${AGENT_USER_UID}"
         exit 1

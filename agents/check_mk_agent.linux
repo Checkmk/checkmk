@@ -452,7 +452,7 @@ define_optionally_encrypt() {
                 # kdf: pbkdf2, 600.000 iterations
 
                 local salt_hex key_hex iv_hex
-                read -r salt_hex key_hex iv_hex << EOF
+                read -r salt_hex key_hex iv_hex <<EOF
 $(parse_kdf_output "$(openssl enc -aes-256-cbc -md sha256 -pbkdf2 -iter 600000 -k "${1}" -P)")
 EOF
 
@@ -467,7 +467,7 @@ EOF
                 # kdf: openssl custom kdf based on sha256
 
                 local salt_hex key_hex iv_hex
-                read -r salt_hex key_hex iv_hex << EOF
+                read -r salt_hex key_hex iv_hex <<EOF
 parse_kdf_output "$(openssl enc -aes-256-cbc -md sha256 -k "${1}" -P)"
 EOF
 
@@ -554,7 +554,7 @@ section_checkmk() {
                 NAME=*) echo "OSName: ${raw_line##*=}" ;;
                 VERSION_ID=*) echo "OSVersion: ${raw_line##*=}" ;;
             esac
-        done < $OS_Release
+        done <$OS_Release
     fi
 
     #

@@ -98,14 +98,14 @@ section_solaris_uname() {
     # added to agent output.
     uname -X &>/dev/null
     if [ $? -eq 0]; then
-      echo "<<<solaris_uname:sep(61)>>>"
-      uname -X
-    else
-      /usr/bin/uname -X &>/dev/null
-      if [ $? -eq 0 ]; then
         echo "<<<solaris_uname:sep(61)>>>"
-        /usr/bin/uname -X
-      fi
+        uname -X
+    else
+        /usr/bin/uname -X &>/dev/null
+        if [ $? -eq 0 ]; then
+            echo "<<<solaris_uname:sep(61)>>>"
+            /usr/bin/uname -X
+        fi
     fi
 }
 

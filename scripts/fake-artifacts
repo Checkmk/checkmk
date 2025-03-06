@@ -5,7 +5,7 @@
 
 REPO_PATH="$(git rev-parse --show-toplevel)"
 
-IFS=' ' read -ra artifacts <<< "$(make --no-print-directory -C "${REPO_PATH}" print-artifacts-SOURCE_BUILT_ARTIFACTS)"
+IFS=' ' read -ra artifacts <<<"$(make --no-print-directory -C "${REPO_PATH}" print-artifacts-SOURCE_BUILT_ARTIFACTS)"
 for f in "${artifacts[@]}"; do
     mkdir -p "$(dirname "${f}")"
     touch "${f}"

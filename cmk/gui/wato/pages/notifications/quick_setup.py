@@ -1044,6 +1044,11 @@ def notification_method() -> QuickSetupStage:
                                     string_spec=String(
                                         field_size=FieldSize.SMALL,
                                     ),
+                                    custom_validate=[
+                                        not_empty(
+                                            error_msg=Message("Please add at least one macro.")
+                                        ),
+                                    ],
                                 ),
                             ),
                             "ec_contact": DictElement(

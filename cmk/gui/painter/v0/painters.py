@@ -21,7 +21,8 @@ from cmk.utils.statename import short_host_state_name, short_service_state_name
 from cmk.gui import sites
 from cmk.gui.config import active_config, Config
 from cmk.gui.graphing._color import render_color_icon
-from cmk.gui.graphing._metrics import get_metric_spec, registered_metrics
+from cmk.gui.graphing._from_api import metrics_from_api, RegisteredMetric
+from cmk.gui.graphing._metrics import get_metric_spec, registered_metric_ids_and_titles
 from cmk.gui.graphing._translated_metrics import (
     parse_perf_data,
     translate_metrics,
@@ -744,7 +745,11 @@ class PainterSvcMetrics(Painter):
         perf_data, check_command = parse_perf_data(
             row["service_perf_data"], row["service_check_command"], config=self.config
         )
-        translated_metrics = translate_metrics(perf_data, check_command)
+        translated_metrics = translate_metrics(
+            perf_data,
+            check_command,
+            metrics_from_api,
+        )
 
         if row["service_perf_data"] and not translated_metrics:
             return "", _("Failed to parse performance data string: %s") % row["service_perf_data"]
@@ -5436,20 +5441,24 @@ class AbstractColumnSpecificMetric(Painter):
         raise NotImplementedError()
 
     def title(self, cell: Cell) -> str:
-        return self._title_with_parameters(cell.painter_parameters())
+        return self._title_with_parameters(cell.painter_parameters(), metrics_from_api)
 
     def short_title(self, cell: Cell) -> str:
-        return self._title_with_parameters(cell.painter_parameters())
+        return self._title_with_parameters(cell.painter_parameters(), metrics_from_api)
 
     def list_title(self, cell: Cell) -> str:
         return _("Metric")
 
-    def _title_with_parameters(self, parameters: PainterParameters | None) -> str:
+    def _title_with_parameters(
+        self,
+        parameters: PainterParameters | None,
+        registered_metrics: Mapping[str, RegisteredMetric],
+    ) -> str:
         try:
             if not parameters:
                 # Used in Edit-View
                 return _("Show single metric")
-            return get_metric_spec(parameters["metric"]).title
+            return get_metric_spec(parameters["metric"], registered_metrics).title
         except KeyError:
             return _("Metric not found")
 
@@ -5478,7 +5487,10 @@ class AbstractColumnSpecificMetric(Painter):
     @request_memoize()
     def _metric_choices(cls) -> list[tuple[str, str]]:
         return sorted(
-            ((metric_id, metric_title) for metric_id, metric_title in registered_metrics()),
+            (
+                (metric_id, metric_title)
+                for metric_id, metric_title in registered_metric_ids_and_titles(metrics_from_api)
+            ),
             key=lambda x: x[1],
         )
 
@@ -5492,7 +5504,11 @@ class AbstractColumnSpecificMetric(Painter):
         perf_data, check_command = parse_perf_data(
             perf_data_entries, check_command, config=self.config
         )
-        translated_metrics = translate_metrics(perf_data, check_command)
+        translated_metrics = translate_metrics(
+            perf_data,
+            check_command,
+            metrics_from_api,
+        )
 
         if show_metric not in translated_metrics:
             return "", ""

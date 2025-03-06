@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.graphing._formatter import StrictPrecision
+from cmk.gui.graphing._from_api import metrics_from_api
 from cmk.gui.graphing._graph_templates import get_graph_template_from_id, GraphTemplate
 from cmk.gui.graphing._legacy import check_metrics
 from cmk.gui.graphing._metric_expression import CriticalOf, Metric, MetricExpression, WarningOf
@@ -15,7 +16,7 @@ from cmk.gui.graphing_main import _add_graphing_plugins, _load_graphing_plugins
 def test_add_graphing_plugins() -> None:
     _add_graphing_plugins(_load_graphing_plugins())
 
-    idle_connections = get_metric_spec("idle_connections")
+    idle_connections = get_metric_spec("idle_connections", metrics_from_api)
     assert idle_connections.name == "idle_connections"
     assert idle_connections.title == "Idle connections"
     assert idle_connections.unit_spec == ConvertibleUnitSpecification(
@@ -24,7 +25,7 @@ def test_add_graphing_plugins() -> None:
     )
     assert idle_connections.color == "#b441f0"
 
-    active_connections = get_metric_spec("active_connections")
+    active_connections = get_metric_spec("active_connections", metrics_from_api)
     assert active_connections.name == "active_connections"
     assert active_connections.title == "Active connections"
     assert active_connections.unit_spec == ConvertibleUnitSpecification(
@@ -49,7 +50,7 @@ def test_add_graphing_plugins() -> None:
         "write_latency": {"scale": 0.001},
     }
 
-    graph_template = get_graph_template_from_id("db_connections")
+    graph_template = get_graph_template_from_id("db_connections", metrics_from_api)
     assert graph_template == GraphTemplate(
         id="db_connections",
         title="DB Connections",

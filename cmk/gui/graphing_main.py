@@ -198,6 +198,7 @@ class PageHostServiceGraphPopup(cmk.gui.pages.Page):
             SiteId(raw_site_id) if (raw_site_id := request.var("site")) else None,
             request.get_validated_type_input_mandatory(HostName, "host_name"),
             ServiceName(request.get_str_input_mandatory("service")),
+            metrics_from_api,
         )
         return None  # for mypy
 
@@ -224,5 +225,6 @@ class PageGraphDashlet(cmk.gui.pages.Page):
         return host_service_graph_dashlet_cmk(
             parse_raw_graph_specification(json.loads(request.get_str_input_mandatory("spec"))),
             GraphRenderConfig.model_validate_json(request.get_str_input_mandatory("config")),
+            metrics_from_api,
             graph_display_id=request.get_str_input_mandatory("id"),
         )

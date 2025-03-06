@@ -5,7 +5,7 @@
 
 import math
 import time
-from collections.abc import Callable, Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
@@ -24,6 +24,7 @@ from cmk.gui.logged_in import user
 
 from ._color import fade_color, parse_color, render_color
 from ._formatter import Label, NotationFormatter
+from ._from_api import RegisteredMetric
 from ._graph_specification import (
     FixedVerticalRange,
     GraphDataRange,
@@ -145,6 +146,7 @@ def compute_graph_artwork(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
     size: tuple[int, int],
+    registered_metrics: Mapping[str, RegisteredMetric],
     *,
     graph_display_id: str = "",
 ) -> GraphArtwork:
@@ -154,7 +156,7 @@ def compute_graph_artwork(
         active_config,
     )
 
-    curves = list(compute_graph_artwork_curves(graph_recipe, graph_data_range))
+    curves = list(compute_graph_artwork_curves(graph_recipe, graph_data_range, registered_metrics))
 
     pin_time = _load_graph_pin()
     _compute_scalars(unit_spec.formatter.render, curves, pin_time)
@@ -321,6 +323,7 @@ def _areastack(
 def _compute_graph_curves(
     graph_metrics: Sequence[GraphMetric],
     rrd_data: RRDData,
+    registered_metrics: Mapping[str, RegisteredMetric],
 ) -> Iterator[Curve]:
     def _parse_line_type(
         mirror_prefix: Literal["", "-"], ts_line_type: LineType | Literal["ref"]
@@ -337,7 +340,7 @@ def _compute_graph_curves(
         assert_never((mirror_prefix, ts_line_type))
 
     for graph_metric in graph_metrics:
-        time_series = graph_metric.operation.compute_time_series(rrd_data)
+        time_series = graph_metric.operation.compute_time_series(rrd_data, registered_metrics)
         if not time_series:
             continue
 
@@ -367,11 +370,12 @@ def _compute_graph_curves(
 def compute_graph_artwork_curves(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
+    registered_metrics: Mapping[str, RegisteredMetric],
 ) -> list[Curve]:
     # Fetch all raw RRD data
-    rrd_data = fetch_rrd_data_for_graph(graph_recipe, graph_data_range)
+    rrd_data = fetch_rrd_data_for_graph(graph_recipe, graph_data_range, registered_metrics)
 
-    curves = list(_compute_graph_curves(graph_recipe.metrics, rrd_data))
+    curves = list(_compute_graph_curves(graph_recipe.metrics, rrd_data, registered_metrics))
 
     if graph_recipe.omit_zero_metrics:
         curves = [curve for curve in curves if any(curve["rrddata"])]

@@ -27,6 +27,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import ColumnName
 
+from ._from_api import RegisteredMetric
 from ._graph_specification import GraphDataRange, GraphRecipe
 from ._legacy import (
     check_metrics,
@@ -48,12 +49,13 @@ from ._unit import user_specific_unit
 def fetch_rrd_data_for_graph(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
+    registered_metrics: Mapping[str, RegisteredMetric],
 ) -> RRDData:
     conversion = user_specific_unit(graph_recipe.unit_spec, user, active_config).conversion
     by_service = _group_needed_rrd_data_by_service(
         key
         for metric in graph_recipe.metrics
-        for key in metric.operation.keys()
+        for key in metric.operation.keys(registered_metrics)
         if isinstance(key, RRDDataKey)
     )
     rrd_data: dict[RRDDataKey, TimeSeries] = {}
@@ -290,6 +292,7 @@ def translate_and_merge_rrd_columns(
     target_metric: MetricName,
     rrd_columms: Iterable[tuple[str, TimeSeriesValues]],
     translations: Mapping[MetricName, TranslationSpec],
+    registered_metrics: Mapping[str, RegisteredMetric],
 ) -> TimeSeries:
     def scaler(scale: float) -> Callable[[float], float]:
         return lambda v: v * scale
@@ -331,6 +334,11 @@ def translate_and_merge_rrd_columns(
         step=timeseries.step,
         values=single_value_series,
         conversion=user_specific_unit(
-            get_metric_spec(metric_name).unit_spec, user, active_config
+            get_metric_spec(
+                metric_name,
+                registered_metrics,
+            ).unit_spec,
+            user,
+            active_config,
         ).conversion,
     )

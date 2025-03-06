@@ -5,13 +5,14 @@
 
 import copy
 import time
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Literal
 from uuid import uuid4
 
 from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
+from cmk.gui.graphing._from_api import metrics_from_api, RegisteredMetric
 from cmk.gui.graphing._graph_render_config import (
     GraphRenderConfig,
     GraphRenderOptions,
@@ -163,6 +164,7 @@ _GRAPH_VIEWS = {
 def paint_time_graph_cmk(
     row: Row,
     cell: Cell,
+    registered_metrics: Mapping[str, RegisteredMetric],
     *,
     user: LoggedInUser,
     request: Request,
@@ -244,6 +246,7 @@ def paint_time_graph_cmk(
         ),
         graph_data_range,
         graph_render_config,
+        registered_metrics,
         # Ideally, we would use 2-dim. coordinates: (row_idx, col_idx).
         # Unfortunately, we have no access to this information here. Regarding the rows, we could
         # use (site, host, service) as identifier, but for the columns, there does not seem to be
@@ -327,6 +330,7 @@ class PainterServiceGraphs(Painter):
         return paint_time_graph_cmk(
             row,
             cell,
+            metrics_from_api,
             user=self.user,
             request=self.request,
             response=response,
@@ -372,6 +376,7 @@ class PainterHostGraphs(Painter):
         return paint_time_graph_cmk(
             row,
             cell,
+            metrics_from_api,
             user=self.user,
             request=self.request,
             response=response,
@@ -450,6 +455,7 @@ class PainterSvcPnpgraph(Painter):
         return paint_time_graph_cmk(
             row,
             cell,
+            metrics_from_api,
             user=self.user,
             request=self.request,
             response=response,
@@ -497,6 +503,7 @@ class PainterHostPnpgraph(Painter):
         return paint_time_graph_cmk(
             row,
             cell,
+            metrics_from_api,
             user=self.user,
             request=self.request,
             response=response,

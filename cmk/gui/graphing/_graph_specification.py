@@ -20,6 +20,7 @@ from pydantic import (
 
 from cmk.ccc.plugin_registry import Registry
 
+from ._from_api import RegisteredMetric
 from ._graph_render_config import GraphRenderOptions
 from ._metric_operation import (
     GraphConsolidationFunction,
@@ -51,7 +52,10 @@ class GraphSpecification(BaseModel, ABC, frozen=True):
     def graph_type_name() -> str: ...
 
     @abstractmethod
-    def recipes(self) -> Sequence[GraphRecipe]: ...
+    def recipes(
+        self,
+        registered_metrics: Mapping[str, RegisteredMetric],
+    ) -> Sequence[GraphRecipe]: ...
 
     # mypy does not support other decorators on top of @property:
     # https://github.com/python/mypy/issues/14461

@@ -178,6 +178,7 @@ def test__matching_graph_templates(
                 graph_id=graph_id,
                 graph_index=graph_index,
                 translated_metrics={},
+                registered_metrics=metrics_from_api,
             )
         )
         == expected_result
@@ -191,6 +192,7 @@ def test_evaluate_title_ok() -> None:
             translate_metrics(
                 [PerfDataTuple("load1", "load1", 1, "", 120, 240, 0, 25)],
                 "check_mk-cpu_loads",
+                metrics_from_api,
             ),
         )
         == "CPU Load - 25 CPU Cores"
@@ -204,6 +206,7 @@ def test_evaluate_title_missing_scalar() -> None:
             translate_metrics(
                 [PerfDataTuple("load1", "load1", 1, "", None, None, None, None)],
                 "check_mk-cpu_loads",
+                metrics_from_api,
             ),
         )
         == "CPU Load"
@@ -248,7 +251,11 @@ def test_horizontal_rules_from_thresholds(
     perf_data_string: str, result: Sequence[HorizontalRule]
 ) -> None:
     perf_data, check_command = parse_perf_data(perf_data_string, None, config=active_config)
-    translated_metrics = translate_metrics(perf_data, check_command)
+    translated_metrics = translate_metrics(
+        perf_data,
+        check_command,
+        metrics_from_api,
+    )
     assert [
         HorizontalRule(
             value=e.value,
@@ -286,7 +293,11 @@ def test_horizontal_rules_from_thresholds(
 def test_duplicate_graph_templates(request_context: None) -> None:
     idents_by_metrics: dict[tuple[str, ...], list[str]] = {}
     for id_, plugin in _get_sorted_graph_plugins():
-        parsed = _parse_graph_plugin(id_, plugin)
+        parsed = _parse_graph_plugin(
+            id_,
+            plugin,
+            metrics_from_api,
+        )
         expressions = [m.base for m in parsed.metrics] + [s.base for s in parsed.scalars]
         if parsed.range:
             expressions.extend((parsed.range.min, parsed.range.max))
@@ -311,7 +322,7 @@ def test_graph_template_with_layered_areas(request_context: None) -> None:
 
     areas_by_ident: dict[str, _GraphTemplateArea] = {}
     for id_, plugin in _get_sorted_graph_plugins():
-        parsed = _parse_graph_plugin(id_, plugin)
+        parsed = _parse_graph_plugin(id_, plugin, metrics_from_api)
         for metric_expression in parsed.metrics:
             if metric_expression.line_type == "area":
                 areas_by_ident.setdefault(parsed.id, _GraphTemplateArea()).pos.append(
@@ -758,7 +769,14 @@ def test__parse_graph_from_api(
                 color="#000000",
             )
         )
-    assert _parse_graph_from_api(graph.name, graph) == expected_template
+    assert (
+        _parse_graph_from_api(
+            graph.name,
+            graph,
+            metrics_from_api,
+        )
+        == expected_template
+    )
 
 
 @pytest.mark.parametrize(
@@ -1018,7 +1036,14 @@ def test__parse_bidirectional_from_api(
                 color="#000000",
             )
         )
-    assert _parse_bidirectional_from_api(graph.name, graph) == expected_template
+    assert (
+        _parse_bidirectional_from_api(
+            graph.name,
+            graph,
+            metrics_from_api,
+        )
+        == expected_template
+    )
 
 
 @pytest.mark.parametrize(
@@ -1083,10 +1108,16 @@ def test__get_evaluated_graph_templates_1(
     request_context: None,
 ) -> None:
     perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
-    translated_metrics = translate_metrics(perfdata, check_command)
-    assert sorted([t.id for t in _get_evaluated_graph_templates(translated_metrics)]) == sorted(
-        graph_ids
-    )
+    translated_metrics = translate_metrics(perfdata, check_command, metrics_from_api)
+    assert sorted(
+        [
+            t.id
+            for t in _get_evaluated_graph_templates(
+                translated_metrics,
+                metrics_from_api,
+            )
+        ]
+    ) == sorted(graph_ids)
 
 
 @pytest.mark.parametrize(
@@ -1109,10 +1140,16 @@ def test__get_evaluated_graph_templates_2(
     request_context: None,
 ) -> None:
     perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", *warn_crit_min_max) for n in metric_names]
-    translated_metrics = translate_metrics(perfdata, check_command)
-    assert sorted([t.id for t in _get_evaluated_graph_templates(translated_metrics)]) == sorted(
-        graph_ids
-    )
+    translated_metrics = translate_metrics(perfdata, check_command, metrics_from_api)
+    assert sorted(
+        [
+            t.id
+            for t in _get_evaluated_graph_templates(
+                translated_metrics,
+                metrics_from_api,
+            )
+        ]
+    ) == sorted(graph_ids)
 
 
 @pytest.mark.parametrize(
@@ -1563,8 +1600,16 @@ def test__get_evaluated_graph_templates_with_predictive_metrics(
         + [PerfDataTuple(n, n[8:], 0, "", 1, 2, None, None) for n in predict_metric_names]
         + [PerfDataTuple(n, n[14:], 0, "", 3, 4, None, None) for n in predict_lower_metric_names]
     )
-    translated_metrics = translate_metrics(perfdata, check_command)
-    assert list(_get_evaluated_graph_templates(translated_metrics)) == graph_templates
+    translated_metrics = translate_metrics(perfdata, check_command, metrics_from_api)
+    assert (
+        list(
+            _get_evaluated_graph_templates(
+                translated_metrics,
+                metrics_from_api,
+            )
+        )
+        == graph_templates
+    )
 
 
 @pytest.mark.parametrize(
@@ -1902,7 +1947,13 @@ def test_conflicting_metrics(
     # 1. write test for expected metric names of a graph template if it has "conflicting_metrics"
     # 2. use metric names from (1) and conflicting metrics
     perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
-    translated_metrics = translate_metrics(perfdata, "check_command")
-    assert sorted([t.id for t in _get_evaluated_graph_templates(translated_metrics)]) == sorted(
-        graph_ids
-    )
+    translated_metrics = translate_metrics(perfdata, "check_command", metrics_from_api)
+    assert sorted(
+        [
+            t.id
+            for t in _get_evaluated_graph_templates(
+                translated_metrics,
+                metrics_from_api,
+            )
+        ]
+    ) == sorted(graph_ids)

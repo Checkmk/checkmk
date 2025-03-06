@@ -19,7 +19,7 @@ from cmk.graphing.v1 import metrics as metrics_api
 
 from ._color import mix_colors, parse_color, parse_color_from_api, render_color, scalar_colors
 from ._formatter import AutoPrecision, StrictPrecision
-from ._from_api import parse_unit_from_api
+from ._from_api import parse_unit_from_api, RegisteredMetric
 from ._metric_operation import GraphConsolidationFunction, line_type_mirror, LineType
 from ._metrics import get_metric_spec
 from ._translated_metrics import TranslatedMetric
@@ -735,13 +735,17 @@ def parse_expression_from_api(
         | metrics_api.Fraction
     ),
     line_type: Literal["line", "-line", "stack", "-stack"],
+    registered_metrics: Mapping[str, RegisteredMetric],
 ) -> MetricExpression:
     match quantity:
         case str():
             return MetricExpression(
                 Metric(quantity),
                 line_type=line_type,
-                title=get_metric_spec(quantity).title,
+                title=get_metric_spec(
+                    quantity,
+                    registered_metrics,
+                ).title,
             )
         case metrics_api.Constant():
             return MetricExpression(
@@ -755,27 +759,43 @@ def parse_expression_from_api(
             return MetricExpression(
                 WarningOf(Metric(quantity.metric_name)),
                 line_type=line_type,
-                title=_("Warning of %s") % get_metric_spec(quantity.metric_name).title,
+                title=_("Warning of %s")
+                % get_metric_spec(
+                    quantity.metric_name,
+                    registered_metrics,
+                ).title,
             )
         case metrics_api.CriticalOf():
             return MetricExpression(
                 CriticalOf(Metric(quantity.metric_name)),
                 line_type=line_type,
-                title=_("Critical of %s") % get_metric_spec(quantity.metric_name).title,
+                title=_("Critical of %s")
+                % get_metric_spec(
+                    quantity.metric_name,
+                    registered_metrics,
+                ).title,
             )
         case metrics_api.MinimumOf():
             return MetricExpression(
                 MinimumOf(Metric(quantity.metric_name)),
                 color=parse_color_from_api(quantity.color),
                 line_type=line_type,
-                title=_("Minimum of %s") % get_metric_spec(quantity.metric_name).title,
+                title=_("Minimum of %s")
+                % get_metric_spec(
+                    quantity.metric_name,
+                    registered_metrics,
+                ).title,
             )
         case metrics_api.MaximumOf():
             return MetricExpression(
                 MaximumOf(Metric(quantity.metric_name)),
                 color=parse_color_from_api(quantity.color),
                 line_type=line_type,
-                title=_("Maximum of %s") % get_metric_spec(quantity.metric_name).title,
+                title=_("Maximum of %s")
+                % get_metric_spec(
+                    quantity.metric_name,
+                    registered_metrics,
+                ).title,
             )
         case metrics_api.Sum():
             return MetricExpression(

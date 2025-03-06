@@ -16,6 +16,7 @@ from cmk.utils.metrics import MetricName
 
 from cmk.gui.config import active_config
 from cmk.gui.graphing._formatter import AutoPrecision
+from cmk.gui.graphing._from_api import metrics_from_api
 from cmk.gui.graphing._graph_specification import GraphDataRange, GraphMetric, GraphRecipe
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._legacy import CheckMetricEntry
@@ -102,7 +103,11 @@ def test_fetch_rrd_data_for_graph(
     request_context: None,
 ) -> None:
     with _setup_livestatus(mock_livestatus):
-        assert fetch_rrd_data_for_graph(_GRAPH_RECIPE, _GRAPH_DATA_RANGE) == {
+        assert fetch_rrd_data_for_graph(
+            _GRAPH_RECIPE,
+            _GRAPH_DATA_RANGE,
+            metrics_from_api,
+        ) == {
             RRDDataKey(
                 SiteId("NO_SITE"),
                 HostName("my-host"),
@@ -125,7 +130,11 @@ def test_fetch_rrd_data_for_graph_with_conversion(
 ) -> None:
     active_config.default_temperature_unit = TemperatureUnit.FAHRENHEIT.value
     with _setup_livestatus(mock_livestatus):
-        assert fetch_rrd_data_for_graph(_GRAPH_RECIPE, _GRAPH_DATA_RANGE) == {
+        assert fetch_rrd_data_for_graph(
+            _GRAPH_RECIPE,
+            _GRAPH_DATA_RANGE,
+            metrics_from_api,
+        ) == {
             RRDDataKey(
                 SiteId("NO_SITE"),
                 HostName("my-host"),
@@ -152,6 +161,7 @@ def test_translate_and_merge_rrd_columns() -> None:
             )
         ],
         {},
+        metrics_from_api,
     ) == TimeSeries(
         start=1682324400,
         end=1682497800,
@@ -181,6 +191,7 @@ def test_translate_and_merge_rrd_columns_with_translation() -> None:
                 deprecated="",
             )
         },
+        metrics_from_api,
     ) == TimeSeries(
         start=1682324400,
         end=1682497800,
@@ -299,6 +310,7 @@ def test_translate_and_merge_rrd_columns_unit_conversion(
             ("rrddata:temperature:temperature.average:1682324616:1682497416:60", [0, 0, 0]),
         ],
         {},
+        metrics_from_api,
     ) == TimeSeries(
         start=1682324400,
         end=1682497800,

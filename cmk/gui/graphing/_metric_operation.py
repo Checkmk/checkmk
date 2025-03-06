@@ -27,6 +27,7 @@ from cmk.utils.servicename import ServiceName
 from cmk.gui.i18n import _
 from cmk.gui.utils import escaping
 
+from ._from_api import RegisteredMetric
 from ._time_series import TimeSeries, TimeSeriesValues
 
 GraphConsolidationFunction = Literal["max", "min", "average"]
@@ -178,10 +179,17 @@ class MetricOperation(BaseModel, ABC, frozen=True):
     def operation_name() -> str: ...
 
     @abstractmethod
-    def keys(self) -> Iterator[TranslationKey | RRDDataKey]: ...
+    def keys(
+        self,
+        registered_metrics: Mapping[str, RegisteredMetric],
+    ) -> Iterator[TranslationKey | RRDDataKey]: ...
 
     @abstractmethod
-    def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]: ...
+    def compute_time_series(
+        self,
+        rrd_data: RRDData,
+        registered_metrics: Mapping[str, RegisteredMetric],
+    ) -> Sequence[AugmentedTimeSeries]: ...
 
     def fade_odd_color(self) -> bool:
         return True
@@ -222,10 +230,17 @@ class MetricOpConstant(MetricOperation, frozen=True):
     def operation_name() -> Literal["constant"]:
         return "constant"
 
-    def keys(self) -> Iterator[TranslationKey | RRDDataKey]:
+    def keys(
+        self,
+        registered_metrics: Mapping[str, RegisteredMetric],
+    ) -> Iterator[TranslationKey | RRDDataKey]:
         yield from ()
 
-    def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
+    def compute_time_series(
+        self,
+        rrd_data: RRDData,
+        registered_metrics: Mapping[str, RegisteredMetric],
+    ) -> Sequence[AugmentedTimeSeries]:
         num_points, start, end, step = _derive_num_points(rrd_data)
         return [
             AugmentedTimeSeries(
@@ -244,10 +259,17 @@ class MetricOpConstantNA(MetricOperation, frozen=True):
     def operation_name() -> Literal["constant_na"]:
         return "constant_na"
 
-    def keys(self) -> Iterator[TranslationKey | RRDDataKey]:
+    def keys(
+        self,
+        registered_metrics: Mapping[str, RegisteredMetric],
+    ) -> Iterator[TranslationKey | RRDDataKey]:
         yield from ()
 
-    def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
+    def compute_time_series(
+        self,
+        rrd_data: RRDData,
+        registered_metrics: Mapping[str, RegisteredMetric],
+    ) -> Sequence[AugmentedTimeSeries]:
         num_points, start, end, step = _derive_num_points(rrd_data)
         return [
             AugmentedTimeSeries(
@@ -302,16 +324,27 @@ class MetricOpOperator(MetricOperation, frozen=True):
     def operation_name() -> Literal["operator"]:
         return "operator"
 
-    def keys(self) -> Iterator[TranslationKey | RRDDataKey]:
-        yield from (k for o in self.operands for k in o.keys())
+    def keys(
+        self,
+        registered_metrics: Mapping[str, RegisteredMetric],
+    ) -> Iterator[TranslationKey | RRDDataKey]:
+        yield from (k for o in self.operands for k in o.keys(registered_metrics))
 
-    def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
+    def compute_time_series(
+        self,
+        rrd_data: RRDData,
+        registered_metrics: Mapping[str, RegisteredMetric],
+    ) -> Sequence[AugmentedTimeSeries]:
         if result := _time_series_math(
             self.operator_name,
             [
                 operand_evaluated.data
                 for operand_evaluated in chain.from_iterable(
-                    operand.compute_time_series(rrd_data) for operand in self.operands
+                    operand.compute_time_series(
+                        rrd_data,
+                        registered_metrics,
+                    )
+                    for operand in self.operands
                 )
             ],
         ):
@@ -334,7 +367,10 @@ class MetricOpRRDSource(MetricOperation, frozen=True):
     def operation_name() -> Literal["rrd"]:
         return "rrd"
 
-    def keys(self) -> Iterator[TranslationKey | RRDDataKey]:
+    def keys(
+        self,
+        registered_metrics: Mapping[str, RegisteredMetric],
+    ) -> Iterator[TranslationKey | RRDDataKey]:
         yield RRDDataKey(
             self.site_id,
             self.host_name,
@@ -344,7 +380,11 @@ class MetricOpRRDSource(MetricOperation, frozen=True):
             self.scale,
         )
 
-    def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
+    def compute_time_series(
+        self,
+        rrd_data: RRDData,
+        registered_metrics: Mapping[str, RegisteredMetric],
+    ) -> Sequence[AugmentedTimeSeries]:
         if (
             key := RRDDataKey(
                 self.site_id,

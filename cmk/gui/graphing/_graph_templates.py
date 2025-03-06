@@ -32,7 +32,7 @@ from cmk.gui.visuals import livestatus_query_bare
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.graphing.v1 import metrics as metrics_api
 
-from ._from_api import graphs_from_api
+from ._from_api import graphs_from_api, RegisteredMetric
 from ._graph_specification import (
     FixedVerticalRange,
     graph_specification_registry,
@@ -151,8 +151,19 @@ class GraphTemplate:
     metrics: Sequence[MetricExpression]
 
 
-def _parse_graph_from_api(id_: str, graph: graphs_api.Graph) -> GraphTemplate:
-    metrics = [parse_expression_from_api(l, "stack") for l in graph.compound_lines]
+def _parse_graph_from_api(
+    id_: str,
+    graph: graphs_api.Graph,
+    registered_metrics: Mapping[str, RegisteredMetric],
+) -> GraphTemplate:
+    metrics = [
+        parse_expression_from_api(
+            l,
+            "stack",
+            registered_metrics,
+        )
+        for l in graph.compound_lines
+    ]
     scalars: list[MetricExpression] = []
     for line in graph.simple_lines:
         match line:
@@ -162,9 +173,21 @@ def _parse_graph_from_api(id_: str, graph: graphs_api.Graph) -> GraphTemplate:
                 | metrics_api.MinimumOf()
                 | metrics_api.MaximumOf()
             ):
-                scalars.append(parse_expression_from_api(line, "line"))
+                scalars.append(
+                    parse_expression_from_api(
+                        line,
+                        "line",
+                        registered_metrics,
+                    )
+                )
             case _:
-                metrics.append(parse_expression_from_api(line, "line"))
+                metrics.append(
+                    parse_expression_from_api(
+                        line,
+                        "line",
+                        registered_metrics,
+                    )
+                )
     return GraphTemplate(
         id=id_,
         title=_parse_title(graph),
@@ -179,7 +202,9 @@ def _parse_graph_from_api(id_: str, graph: graphs_api.Graph) -> GraphTemplate:
 
 
 def _parse_bidirectional_from_api(
-    id_: str, bidirectional: graphs_api.Bidirectional
+    id_: str,
+    bidirectional: graphs_api.Bidirectional,
+    registered_metrics: Mapping[str, RegisteredMetric],
 ) -> GraphTemplate:
     ranges_min = []
     ranges_max = []
@@ -193,8 +218,20 @@ def _parse_bidirectional_from_api(
         ranges_max.append(lower_range.max)
 
     metrics = [
-        parse_expression_from_api(l, "stack") for l in bidirectional.upper.compound_lines
-    ] + [parse_expression_from_api(l, "-stack") for l in bidirectional.lower.compound_lines]
+        parse_expression_from_api(
+            l,
+            "stack",
+            registered_metrics,
+        )
+        for l in bidirectional.upper.compound_lines
+    ] + [
+        parse_expression_from_api(
+            l,
+            "-stack",
+            registered_metrics,
+        )
+        for l in bidirectional.lower.compound_lines
+    ]
     scalars: list[MetricExpression] = []
     for line in bidirectional.upper.simple_lines:
         match line:
@@ -204,9 +241,21 @@ def _parse_bidirectional_from_api(
                 | metrics_api.MinimumOf()
                 | metrics_api.MaximumOf()
             ):
-                scalars.append(parse_expression_from_api(line, "line"))
+                scalars.append(
+                    parse_expression_from_api(
+                        line,
+                        "line",
+                        registered_metrics,
+                    )
+                )
             case _:
-                metrics.append(parse_expression_from_api(line, "line"))
+                metrics.append(
+                    parse_expression_from_api(
+                        line,
+                        "line",
+                        registered_metrics,
+                    )
+                )
     for line in bidirectional.lower.simple_lines:
         match line:
             case (
@@ -215,9 +264,21 @@ def _parse_bidirectional_from_api(
                 | metrics_api.MinimumOf()
                 | metrics_api.MaximumOf()
             ):
-                scalars.append(parse_expression_from_api(line, "-line"))
+                scalars.append(
+                    parse_expression_from_api(
+                        line,
+                        "-line",
+                        registered_metrics,
+                    )
+                )
             case _:
-                metrics.append(parse_expression_from_api(line, "-line"))
+                metrics.append(
+                    parse_expression_from_api(
+                        line,
+                        "-line",
+                        registered_metrics,
+                    )
+                )
     return GraphTemplate(
         id=id_,
         title=_parse_title(bidirectional),
@@ -241,13 +302,23 @@ def _parse_bidirectional_from_api(
 
 
 def _parse_graph_plugin(
-    id_: str, template: graphs_api.Graph | graphs_api.Bidirectional
+    id_: str,
+    template: graphs_api.Graph | graphs_api.Bidirectional,
+    registered_metrics: Mapping[str, RegisteredMetric],
 ) -> GraphTemplate:
     match template:
         case graphs_api.Graph():
-            return _parse_graph_from_api(id_, template)
+            return _parse_graph_from_api(
+                id_,
+                template,
+                registered_metrics,
+            )
         case graphs_api.Bidirectional():
-            return _parse_bidirectional_from_api(id_, template)
+            return _parse_bidirectional_from_api(
+                id_,
+                template,
+                registered_metrics,
+            )
         case _:
             assert_never(template)
 
@@ -279,12 +350,15 @@ def _create_graph_template_from_name(name: str) -> GraphTemplate:
     )
 
 
-def get_graph_template_from_id(template_id: str) -> GraphTemplate:
+def get_graph_template_from_id(
+    template_id: str,
+    registered_metrics: Mapping[str, RegisteredMetric],
+) -> GraphTemplate:
     if template_id.startswith("METRIC_"):
         return _create_graph_template_from_name(template_id)
     for id_, graph_plugin in _get_sorted_graph_plugins():
         if template_id == id_:
-            return _parse_graph_plugin(id_, graph_plugin)
+            return _parse_graph_plugin(id_, graph_plugin, registered_metrics)
     raise MKGeneralException(_("There is no graph plug-in with the id '%s'") % template_id)
 
 
@@ -311,11 +385,12 @@ def evaluate_metrics(
 
 def graph_and_single_metric_template_choices_for_metrics(
     translated_metrics: Mapping[str, TranslatedMetric],
+    registered_metrics: Mapping[str, RegisteredMetric],
 ) -> tuple[list[GraphTemplateChoice], list[GraphTemplateChoice]]:
     graph_template_choices = []
     already_graphed_metrics = set()
     for id_, graph_plugin in _get_sorted_graph_plugins():
-        graph_template = _parse_graph_plugin(id_, graph_plugin)
+        graph_template = _parse_graph_plugin(id_, graph_plugin, registered_metrics)
         if evaluated_metrics := evaluate_metrics(
             conflicting_metrics=graph_template.conflicting_metrics,
             optional_metrics=graph_template.optional_metrics,
@@ -344,6 +419,7 @@ def graph_and_single_metric_template_choices_for_metrics(
 
 def graph_and_single_metric_templates_choices_for_context(
     context: VisualContext,
+    registered_metrics: Mapping[str, RegisteredMetric],
 ) -> tuple[list[GraphTemplateChoice], list[GraphTemplateChoice]]:
     graph_template_choices: list[GraphTemplateChoice] = []
     single_metric_template_choices: list[GraphTemplateChoice] = []
@@ -354,7 +430,13 @@ def graph_and_single_metric_templates_choices_for_context(
         ["service_check_command", "service_perf_data", "service_metrics"],
     ):
         graph_template_choices_for_row, single_metric_template_choices_for_row = (
-            graph_and_single_metric_template_choices_for_metrics(translated_metrics_from_row(row))
+            graph_and_single_metric_template_choices_for_metrics(
+                translated_metrics_from_row(
+                    row,
+                    registered_metrics,
+                ),
+                registered_metrics,
+            )
         )
         graph_template_choices.extend(graph_template_choices_for_row)
         single_metric_template_choices.extend(single_metric_template_choices_for_row)
@@ -762,6 +844,7 @@ def _create_evaluated_graph_template(
 
 def _get_evaluated_graph_templates(
     translated_metrics: Mapping[str, TranslatedMetric],
+    registered_metrics: Mapping[str, RegisteredMetric],
 ) -> Iterator[EvaluatedGraphTemplate]:
     if not translated_metrics:
         yield from ()
@@ -779,7 +862,13 @@ def _get_evaluated_graph_templates(
             translated_metrics,
         )
         for id_, graph_plugin in _get_sorted_graph_plugins()
-        for graph_template in [_parse_graph_plugin(id_, graph_plugin)]
+        for graph_template in [
+            _parse_graph_plugin(
+                id_,
+                graph_plugin,
+                registered_metrics,
+            )
+        ]
         if (
             evaluated_metrics := evaluate_metrics(
                 conflicting_metrics=graph_template.conflicting_metrics,
@@ -814,6 +903,7 @@ def _matching_graph_templates(
     graph_id: str | None,
     graph_index: int | None,
     translated_metrics: Mapping[str, TranslatedMetric],
+    registered_metrics: Mapping[str, RegisteredMetric],
 ) -> Iterable[tuple[int, EvaluatedGraphTemplate]]:
     # Performance graph dashlets already use graph_id, but for example in reports, we still use
     # graph_index. Therefore, this function needs to support both. We should switch to graph_id
@@ -845,7 +935,12 @@ def _matching_graph_templates(
 
     yield from (
         (index, graph_template)
-        for index, graph_template in enumerate(_get_evaluated_graph_templates(translated_metrics))
+        for index, graph_template in enumerate(
+            _get_evaluated_graph_templates(
+                translated_metrics,
+                registered_metrics,
+            )
+        )
         if (graph_index is None or index == graph_index)
         and (graph_id is None or graph_template.id == graph_id)
     )
@@ -894,15 +989,19 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
             ),
         )
 
-    def recipes(self) -> list[GraphRecipe]:
+    def recipes(
+        self,
+        registered_metrics: Mapping[str, RegisteredMetric],
+    ) -> list[GraphRecipe]:
         row = self._get_graph_data_from_livestatus()
-        translated_metrics = translated_metrics_from_row(row)
+        translated_metrics = translated_metrics_from_row(row, registered_metrics)
         return [
             recipe
             for index, graph_template in _matching_graph_templates(
                 graph_id=self.graph_id,
                 graph_index=self.graph_index,
                 translated_metrics=translated_metrics,
+                registered_metrics=registered_metrics,
             )
             if (
                 recipe := self._build_recipe_from_template(

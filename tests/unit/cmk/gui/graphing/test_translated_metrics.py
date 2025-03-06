@@ -13,6 +13,7 @@ from tests.unit.cmk.web_test_app import SetConfig
 from cmk.utils.metrics import MetricName
 
 from cmk.gui.config import active_config
+from cmk.gui.graphing._from_api import metrics_from_api
 from cmk.gui.graphing._legacy import check_metrics, CheckMetricEntry
 from cmk.gui.graphing._translated_metrics import (
     _parse_check_command,
@@ -301,7 +302,7 @@ def test_translate_metrics_with_predictive_metrics(
         PerfDataTuple(metric_name, metric_name, 0, "", None, None, None, None),
         PerfDataTuple(predictive_metric_name, metric_name, 0, "", None, None, None, None),
     ]
-    translated_metrics = translate_metrics(perfdata, "my-check-plugin")
+    translated_metrics = translate_metrics(perfdata, "my-check-plugin", metrics_from_api)
     assert translated_metrics[predictive_metric_name].title == expected_title
     assert (
         translated_metrics[predictive_metric_name].unit_spec
@@ -320,7 +321,7 @@ def test_translate_metrics_with_multiple_predictive_metrics() -> None:
             "predict_lower_messages_outbound", "messages_outbound", 0, "", None, None, None, None
         ),
     ]
-    translated_metrics = translate_metrics(perfdata, "my-check-plugin")
+    translated_metrics = translate_metrics(perfdata, "my-check-plugin", metrics_from_api)
     assert translated_metrics["predict_messages_outbound"].color == "#4b4b4b"
     assert translated_metrics["predict_lower_messages_outbound"].color == "#5a5a5a"
 
@@ -352,6 +353,7 @@ def test_translate_metrics(
     translated_metric = translate_metrics(
         [PerfDataTuple("temp", "temp", 59.05, "", 85.05, 85.05, None, None)],
         "check_mk-lnx_thermal",
+        metrics_from_api,
     )["temp"]
     assert translated_metric.value == expected_value
     assert translated_metric.scalar == expected_scalars

@@ -8,6 +8,7 @@ from livestatus import SiteId
 from cmk.utils.hostaddress import HostName
 
 from cmk.gui.graphing._formatter import AutoPrecision
+from cmk.gui.graphing._from_api import metrics_from_api
 from cmk.gui.graphing._graph_specification import GraphMetric, GraphRecipe, MinimalVerticalRange
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._metric_operation import MetricOpRRDSource
@@ -32,7 +33,7 @@ def test_template_recipes() -> None:
         site=SiteId("site_id"),
         host_name=HostName("host_name"),
         service_description="Service name",
-    ).recipes() == [
+    ).recipes(metrics_from_api) == [
         GraphRecipe(
             title="Size and used space",
             unit_spec=ConvertibleUnitSpecification(

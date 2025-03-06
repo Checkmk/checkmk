@@ -18,7 +18,7 @@ from ._metric_operation import (
     MetricOpOperator,
     MetricOpRRDSource,
 )
-from ._metrics import registered_metrics
+from ._metrics import registered_metric_ids_and_titles
 from ._perfometer import get_first_matching_perfometer
 from ._settings import ConfigVariableGraphTimeranges
 from ._valuespecs import PageVsAutocomplete
@@ -43,5 +43,5 @@ def register(
 __all__ = [
     "get_first_matching_perfometer",
     "register",
-    "registered_metrics",
+    "registered_metric_ids_and_titles",
 ]

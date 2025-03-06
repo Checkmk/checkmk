@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Literal
 
+from ._from_api import RegisteredMetric
 from ._graph_specification import (
     FixedVerticalRange,
     GraphMetric,
@@ -31,7 +32,10 @@ class ExplicitGraphSpecification(GraphSpecification, frozen=True):
     def graph_type_name() -> Literal["explicit"]:
         return "explicit"
 
-    def recipes(self) -> list[GraphRecipe]:
+    def recipes(
+        self,
+        registered_metrics: Mapping[str, RegisteredMetric],
+    ) -> list[GraphRecipe]:
         return [
             GraphRecipe(
                 title=self.title,

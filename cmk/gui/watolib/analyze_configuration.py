@@ -380,6 +380,7 @@ def perform_tests(
 
 
 def _merge_test_results_of_site(
+    site_id: SiteId,
     test_results_of_site: Sequence[ACTestResult],
 ) -> Iterator[ACTestResult]:
     test_results_by_test_id: dict[str, list[ACTestResult]] = {}
@@ -400,7 +401,7 @@ def _merge_test_results_of_site(
                 category=first.category,
                 title=first.title,
                 help=first.help,
-                site_id=omd_site(),
+                site_id=site_id,
                 path=None,
             )
 
@@ -411,5 +412,5 @@ def merge_tests(
     return {
         site_id: merged
         for site_id, test_results_of_site in test_results_by_site_id.items()
-        if (merged := list(_merge_test_results_of_site(test_results_of_site)))
+        if (merged := list(_merge_test_results_of_site(site_id, test_results_of_site)))
     }

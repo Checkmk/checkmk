@@ -70,7 +70,7 @@ def register(
     host_internal.register(endpoint_registry)
     host_tag_group.register(endpoint_registry)
     notification_rules.register(endpoint_registry)
-    password.register(endpoint_registry)
+    password.register(endpoint_family_registry, endpoint_registry)
     parent_scan.register(endpoint_registry)
     rule.register(endpoint_registry)
     ruleset.register(endpoint_registry)

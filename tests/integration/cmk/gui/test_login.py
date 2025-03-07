@@ -270,7 +270,6 @@ def test_failed_login_counter_human(site: Site) -> None:
         )
 
 
-@skip_if_saas_edition
 def test_failed_login_counter_automation(with_automation_user: tuple[str, str], site: Site) -> None:
     """test that the automation user does not get locked (see Werk #15198)"""
     session = CMKWebSession(site)

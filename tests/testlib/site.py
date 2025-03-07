@@ -1175,6 +1175,46 @@ class Site:
         # 2 -> partially running
         return self.omd("status") == 1
 
+    @contextmanager
+    def omd_stopped(self) -> Iterator[None]:
+        """Make sure the site is stopped in this context.
+
+        Start it afterwards in case it was running before.
+        Fails if the site is partially running to begin with.
+        """
+        # fail for partially running sites.
+        assert (omd_status := self.omd("status")) in (0, 1)
+
+        if omd_status == 1:  # stopped anyway
+            yield
+            return
+
+        assert self.omd("stop") == 0
+        try:
+            yield
+        finally:
+            assert self.omd("start") == 0
+
+    @contextmanager
+    def omd_config(self, setting: str, value: str) -> Iterator[None]:
+        """Set an omd config value for a context.
+
+        This context manager will leave the site with the omd config set to the value
+        it was before, in the state that it was before (running / stopped).
+        """
+        if (current_value := self.get_config(setting)) == value:
+            yield
+            return
+
+        with self.omd_stopped():
+            assert self.omd("config", "set", setting, value) == 0
+
+        try:
+            yield
+        finally:
+            with self.omd_stopped():
+                assert self.omd("config", "set", setting, current_value) == 0
+
     def set_config(self, key: str, val: str, with_restart: bool = False) -> None:
         if self.get_config(key) == val:
             logger.info("omd config: %s is already at %r", key, val)

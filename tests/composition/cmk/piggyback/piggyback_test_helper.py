@@ -77,40 +77,9 @@ def piggybacked_service_discovered(
 
 
 @contextmanager
-def set_omd_config_piggyback_hub(site: Site, setting: Literal["on", "off"]) -> Iterator[None]:
-    current_setting = site.run(["omd", "config", "show", "PIGGYBACK_HUB"]).stdout.strip()
-    assert current_setting in ("on", "off")
-
-    if current_setting == setting:
+def set_omd_config_piggyback_hub(site: Site, value: Literal["on", "off"]) -> Iterator[None]:
+    with site.omd_config("PIGGYBACK_HUB", value):
         yield
-        return
-
-    with _omd_stopped(site):
-        assert site.run(["omd", "config", "set", "PIGGYBACK_HUB", setting]).returncode == 0
-
-    try:
-        yield
-    finally:
-        with _omd_stopped(site):
-            assert (
-                site.run(["omd", "config", "set", "PIGGYBACK_HUB", current_setting]).returncode == 0
-            )
-
-
-@contextmanager
-def _omd_stopped(site: Site) -> Iterator[None]:
-    # fail for partially running sites.
-    assert (omd_status := site.omd("status")) in (0, 1)
-
-    if omd_status == 1:  # stopped anyway
-        yield
-        return
-
-    assert site.omd("stop") == 0
-    try:
-        yield
-    finally:
-        assert site.omd("start") == 0
 
 
 class Timeout(RuntimeError):

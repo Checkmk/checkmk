@@ -8,12 +8,14 @@ from livestatus import SiteId
 from cmk.utils.hostaddress import HostName
 
 from cmk.gui.graphing._formatter import AutoPrecision
-from cmk.gui.graphing._from_api import graphs_from_api, RegisteredMetric
+from cmk.gui.graphing._from_api import RegisteredMetric
 from cmk.gui.graphing._graph_specification import GraphMetric, GraphRecipe, MinimalVerticalRange
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._metric_operation import MetricOpRRDSource
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, IECNotation
 from cmk.gui.type_defs import Row
+
+from cmk.graphing.v1 import graphs, metrics, Title
 
 
 class FakeTemplateGraphSpecification(TemplateGraphSpecification):
@@ -72,7 +74,29 @@ def test_template_recipes() -> None:
                 color="#37fa37",
             ),
         },
-        graphs_from_api,
+        {
+            "fs_used": graphs.Graph(
+                name="fs_used",
+                title=Title("Size and used space"),
+                minimal_range=graphs.MinimalRange(
+                    0,
+                    metrics.MaximumOf(
+                        "fs_used",
+                        metrics.Color.GRAY,
+                    ),
+                ),
+                compound_lines=[
+                    "fs_used",
+                    "fs_free",
+                ],
+                simple_lines=[
+                    "fs_size",
+                    metrics.WarningOf("fs_used"),
+                    metrics.CriticalOf("fs_used"),
+                ],
+                conflicting=["reserved"],
+            ),
+        },
     ) == [
         GraphRecipe(
             title="Size and used space",

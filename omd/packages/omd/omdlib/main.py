@@ -17,6 +17,7 @@ import os
 import pty
 import pwd
 import re
+import shlex
 import shutil
 import signal
 import subprocess
@@ -3585,7 +3586,17 @@ def terminate_site_user_processes(site: SiteContext, global_opts: GlobalOptions)
         time.sleep(0.1)
 
     if processes:
-        bail_out("\nFailed to stop remaining site processes: %s" % ", ".join(map(str, processes)))
+        bail_out(
+            "\n".join(
+                [
+                    "\nFailed to stop remaining site processes:",
+                    *(
+                        f"{process.pid}, command line: `{shlex.join(process.cmdline())}`, status: {process.status()}"
+                        for process in processes
+                    ),
+                ]
+            )
+        )
     else:
         ok()
 

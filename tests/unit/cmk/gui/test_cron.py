@@ -21,6 +21,7 @@ def test_registered_jobs() -> None:
         "execute_host_removal_background_job",
         "cleanup_topology_layouts",
         "execute_autodiscovery",
+        "execute_deprecation_tests_and_notify_users",
     ]
 
     if cmk_version.edition() is not cmk_version.Edition.CRE:
@@ -35,5 +36,5 @@ def test_registered_jobs() -> None:
             "replace_builtin_signature_cert",
         ]
 
-    found_jobs = sorted([f.__name__ for f in cron.multisite_cronjobs])
+    found_jobs = sorted(set(f.__name__ for f in cron.multisite_cronjobs))
     assert found_jobs == sorted(expected)

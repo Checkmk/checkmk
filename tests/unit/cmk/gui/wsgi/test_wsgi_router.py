@@ -16,6 +16,7 @@ from werkzeug.test import create_environ
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 
@@ -165,8 +166,13 @@ def test_openapi_app_exception(
     assert "id" in resp.json["ext"]
 
 
-def test_cmk_run_cron(wsgi_app: WebTestAppForCMK) -> None:
-    wsgi_app.get("/NO_SITE/check_mk/run_cron.py", status=200)
+def test_cmk_run_cron(
+    wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    with mock_livestatus():
+        # 'execute_deprecation_tests_and_notify_users' connects via livestatus
+        wsgi_app.get("/NO_SITE/check_mk/run_cron.py", status=200)
 
 
 def test_cmk_automation(wsgi_app: WebTestAppForCMK) -> None:

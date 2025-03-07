@@ -10,6 +10,7 @@ import cmk.utils.version as cmk_version
 import cmk.gui.graphing._graph_images as graph_images
 import cmk.gui.graphing._html_render as html_render
 import cmk.gui.pages
+from cmk.gui import deprecations
 from cmk.gui.i18n import _
 from cmk.gui.metrics import page_graph_dashlet, page_host_service_graph_popup
 from cmk.gui.openapi.endpoints import host_config
@@ -58,3 +59,4 @@ def register() -> None:
 
     register_pages()
     register_painters()
+    deprecations.register()

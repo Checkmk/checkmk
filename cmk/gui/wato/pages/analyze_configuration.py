@@ -9,23 +9,17 @@ checks and tells the user what could be improved.
 
 from __future__ import annotations
 
-import ast
 import dataclasses
-import multiprocessing
-import queue
 import time
-import traceback
 from collections.abc import Collection
 
 from livestatus import SiteConfigurations, SiteId
 
 import cmk.utils.paths
-import cmk.utils.store as store
-from cmk.utils.exceptions import MKGeneralException
+from cmk.utils import store
 
-import cmk.gui.log as log
-import cmk.gui.utils.escaping as escaping
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -39,19 +33,19 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.user_sites import activation_sites
+from cmk.gui.utils import escaping
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, makeactionuri
 from cmk.gui.watolib.analyze_configuration import (
     ACResultState,
     ACTestCategories,
     ACTestResult,
-    AutomationCheckAnalyzeConfig,
+    merge_tests,
+    perform_tests,
 )
-from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 
 
@@ -150,7 +144,27 @@ class ModeAnalyzeConfig(WatoMode):
             )
             return
 
-        results_by_category = self._perform_tests()
+        # Group results by category in first instance and then then by test
+        results_by_category: dict[str, dict[str, _TestResult]] = {}
+        for _site_id, results in merge_tests(
+            perform_tests(
+                self._logger,
+                active_config,
+                request,
+                self._analyze_sites(),
+            )
+        ).items():
+            for result in results:
+                category_results = results_by_category.setdefault(result.category, {})
+                row_data = category_results.setdefault(
+                    result.test_id,
+                    _TestResult(
+                        results_by_site={},
+                        title=result.title,
+                        help=result.help,
+                    ),
+                )
+                row_data.results_by_site[result.site_id] = result
 
         site_ids = sorted(self._analyze_sites())
 
@@ -297,150 +311,8 @@ class ModeAnalyzeConfig(WatoMode):
         # This dummy row is needed for not destroying the odd/even row highlighting
         table.row(css=["hidden"])
 
-    def _perform_tests(self) -> dict[str, dict[str, _TestResult]]:
-        test_sites = self._analyze_sites()
-
-        self._logger.debug("Executing tests for %d sites" % len(test_sites))
-        results_by_site: dict[SiteId, list[ACTestResult]] = {}
-
-        # Results are fetched simultaneously from the remote sites
-        result_queue: multiprocessing.JoinableQueue[tuple[SiteId, str]] = (
-            multiprocessing.JoinableQueue()
-        )
-
-        processes = []
-        site_id = SiteId("unknown_site")
-        for site_id in test_sites:
-            process = multiprocessing.Process(
-                target=self._perform_tests_for_site, args=(site_id, result_queue)
-            )
-            process.start()
-            processes.append((site_id, process))
-
-        # Now collect the results from the queue until all processes are finished
-        while any(p.is_alive() for site_id, p in processes):
-            try:
-                site_id, results_data = result_queue.get_nowait()
-                result_queue.task_done()
-                result = ast.literal_eval(results_data)
-
-                if result["state"] == 1:
-                    raise MKGeneralException(result["response"])
-
-                if result["state"] == 0:
-                    test_results = []
-                    for result_data in result["response"]:
-                        result = ACTestResult.from_repr(result_data)
-                        test_results.append(result)
-
-                    # Add general connectivity result
-                    test_results.append(
-                        _connectivity_result(
-                            state=ACResultState.OK,
-                            text=_("No connectivity problems"),
-                            site_id=site_id,
-                        )
-                    )
-
-                    results_by_site[site_id] = test_results
-
-                else:
-                    raise NotImplementedError()
-
-            except queue.Empty:
-                time.sleep(0.5)  # wait some time to prevent CPU hogs
-
-            except Exception as e:
-                results_by_site[site_id] = [
-                    _connectivity_result(
-                        state=ACResultState.CRIT,
-                        text=str(e),
-                        site_id=site_id,
-                    )
-                ]
-
-                logger.exception("error analyzing configuration for site %s", site_id)
-
-        self._logger.debug("Got test results")
-
-        # Group results by category in first instance and then then by test
-        results_by_category: dict[str, dict[str, _TestResult]] = {}
-        for site_id, results in results_by_site.items():
-            for result in results:
-                category_results = results_by_category.setdefault(result.category, {})
-                row_data = category_results.setdefault(
-                    result.test_id,
-                    _TestResult(
-                        results_by_site={},
-                        title=result.title,
-                        help=result.help,
-                    ),
-                )
-
-                row_data.results_by_site[result.site_id] = result
-
-        return results_by_category
-
     def _analyze_sites(self) -> SiteConfigurations:
         return activation_sites()
-
-    # Executes the tests on the site. This method is executed in a dedicated
-    # subprocess (One per site)
-    def _perform_tests_for_site(
-        self,
-        site_id: SiteId,
-        result_queue: multiprocessing.JoinableQueue[tuple[SiteId, str]],
-    ) -> None:
-        self._logger.debug("[%s] Starting" % site_id)
-        result = None
-        try:
-            # Would be better to clean all open fds that are not needed, but we don't
-            # know the FDs of the result_queue pipe. Can we find it out somehow?
-            # Cleanup resources of the apache
-            # for x in range(3, 256):
-            #    try:
-            #        os.close(x)
-            #    except OSError, e:
-            #        if e.errno == errno.EBADF:
-            #            pass
-            #        else:
-            #            raise
-
-            # Reinitialize logging targets
-            log.init_logging()  # NOTE: We run in a subprocess!
-
-            if site_is_local(site_id):
-                automation = AutomationCheckAnalyzeConfig()
-                results_data = automation.execute(automation.get_request())
-
-            else:
-                raw_results_data = do_remote_automation(
-                    get_site_config(site_id),
-                    "check-analyze-config",
-                    [],
-                    timeout=request.request_timeout - 10,
-                )
-                assert isinstance(raw_results_data, list)
-                results_data = raw_results_data
-
-            self._logger.debug("[%s] Finished" % site_id)
-
-            result = {
-                "state": 0,
-                "response": results_data,
-            }
-
-        except Exception:
-            self._logger.exception("[%s] Failed" % site_id)
-            result = {
-                "state": 1,
-                "response": "Traceback:<br>%s" % (traceback.format_exc().replace("\n", "<br>\n")),
-            }
-        finally:
-            result_queue.put((site_id, repr(result)))
-            result_queue.close()
-            result_queue.join_thread()
-            result_queue.join()
 
     def _is_acknowledged(self, result: ACTestResult) -> bool:
         return (result.test_id, result.site_id, result.state.value) in self._acks
@@ -484,15 +356,3 @@ class _TestResult:
     results_by_site: dict[SiteId, ACTestResult]
     title: str
     help: str
-
-
-def _connectivity_result(*, state: ACResultState, text: str, site_id: SiteId) -> ACTestResult:
-    return ACTestResult(
-        state=state,
-        text=text,
-        site_id=site_id,
-        test_id="ACTestConnectivity",
-        category=ACTestCategories.connectivity,
-        title=_("Site connectivity"),
-        help=_("This check returns CRIT if the connection to the remote site failed."),
-    )

@@ -504,3 +504,14 @@ def youtube_reference_url(youtube_ref: YouTubeReference | None = None) -> str:
     if youtube_ref is None:
         return "https://youtube.com/@checkmk-channel"
     return "https://youtu.be/%s" % youtube_ref.value
+
+
+class WerkReference(Enum):
+    DECOMMISSION_V1_API = 17201
+
+    def ref(self) -> str:
+        return f"Werk #{self.value}"
+
+
+def werk_reference_url(werk: WerkReference) -> str:
+    return f"https://checkmk.com/werk/{werk.value}"

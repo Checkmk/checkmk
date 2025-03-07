@@ -454,6 +454,19 @@ div.really {
     margin: 0;
   }
 
+  ul {
+    margin: $spacing 0;
+  }
+
+  input.button {
+    margin-top: $spacing;
+    margin-left: 0;
+  }
+
+  ul + input.button {
+    margin: 0 $spacing;
+  }
+
   &.hidden {
     display: none;
   }

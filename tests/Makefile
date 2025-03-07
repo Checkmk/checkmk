@@ -8,7 +8,6 @@ FIND_PYTHON_FILES := $(SCRIPTS)/find-python-files
 FIND_SHELL_FILES := $(SCRIPTS)/find-shell-files
 UVENV := $(SCRIPTS)/run-uvenv
 PYTEST := $(UVENV) pytest $(PYTEST_ARGS)
-PYTEST_UV := $(UVENV) pytest $(PYTEST_ARGS)
 CYCLES := $(UVENV) py_import_cycles
 PYTEST_OPTS_UNIT_SKIP_SLOW = -m "not slow"
 PYTEST_OPTS_UNIT_SLOW_ONLY = -m "slow"
@@ -335,7 +334,7 @@ $(foreach TEST,$(DOCKERABLE_TESTS),$(TEST)-docker):
 
 test-license-headers:
 	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
-	xargs $(MAX_CHARS:%=--max-chars=%) --no-run-if-empty $(PYTEST_UV) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_license_headers.py) \
+	xargs $(MAX_CHARS:%=--max-chars=%) --no-run-if-empty $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_license_headers.py) \
 	--python-files;
 
 test-requirements:
@@ -343,13 +342,13 @@ test-requirements:
 
 test-file-content:
 	if test -z "$$CHANGED_FILES_REL_FILE"; then \
-	    $(PYTEST_UV) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content) --test-all-files ; \
+	    $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content) --test-all-files ; \
 	else \
-	    cat "$$CHANGED_FILES_REL_FILE" | xargs $(MAX_CHARS:%=--max-chars=%) --no-run-if-empty $(PYTEST_UV) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content) --changed-files ; \
+	    cat "$$CHANGED_FILES_REL_FILE" | xargs $(MAX_CHARS:%=--max-chars=%) --no-run-if-empty $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content) --changed-files ; \
 	fi \
 
 test-werks:
-	$(PYTEST_UV) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_werks.py);
+	$(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_werks.py);
 
 test-code-quality: test-license-headers test-requirements test-file-content test-werks
 
@@ -364,7 +363,7 @@ test-packaging:
 
 test-pylint: prepare-protobuf-files
 	cd ..; $(UVENV) pylint --disable=all --enable=$(PYLINT_CUSTOM_CHECKERS) --jobs=6 $(PYLINT_ARGS) $$($(FIND_PYTHON_FILES))
-	cd .. && $(PYTEST_UV) \
+	cd .. && $(PYTEST) \
 	    -T unit \
 	    --config-file=pyproject.toml \
 	    --override-ini="pythonpath=." \
@@ -391,7 +390,7 @@ test-cycles:
 		--verbose
 
 test-unit-omdlib:
-	cd .. && TZ=$(RANDOM_TZ) $(PYTEST_UV) \
+	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
 		-T unit \
 		--config-file=pyproject.toml \
 		--doctest-modules \
@@ -431,7 +430,7 @@ test-unit-all: test-doctest
 
 test-unit-testlib:
 	find -name '__pycache__' -exec rm -rf {} \; 2> /dev/null || true
-	cd .. && TZ=$(RANDOM_TZ) $(PYTEST_UV) \
+	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
 		-T testlib \
 		--config-file=pyproject.toml \
 		--doctest-modules \

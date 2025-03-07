@@ -44,6 +44,8 @@ from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import Timerange, TimerangeValue
 
+from cmk.graphing.v1 import graphs as graphs_api
+
 from ._artwork import (
     compute_curve_values_at_timestamp,
     compute_graph_artwork,
@@ -100,6 +102,7 @@ def host_service_graph_popup_cmk(
     host_name: HostName,
     service_description: ServiceName,
     registered_metrics: Mapping[str, RegisteredMetric],
+    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
 ) -> None:
     graph_render_config = GraphRenderConfig.from_user_context_and_options(
         user,
@@ -130,6 +133,7 @@ def host_service_graph_popup_cmk(
             graph_data_range,
             graph_render_config,
             registered_metrics,
+            registered_graphs,
             render_async=False,
         )
     )
@@ -722,9 +726,10 @@ class UserGraphDataRangeStore:
 def _resolve_graph_recipe_with_error_handling(
     graph_specification: GraphSpecification,
     registered_metrics: Mapping[str, RegisteredMetric],
+    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
 ) -> Sequence[GraphRecipe] | HTML:
     try:
-        return graph_specification.recipes(registered_metrics)
+        return graph_specification.recipes(registered_metrics, registered_graphs)
     except MKLivestatusNotFoundError:
         return render_graph_error_html(
             "%s\n\n%s: %r"
@@ -744,6 +749,7 @@ def render_graphs_from_specification_html(
     graph_data_range: GraphDataRange,
     graph_render_config: GraphRenderConfig,
     registered_metrics: Mapping[str, RegisteredMetric],
+    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     *,
     render_async: bool = True,
     graph_display_id: str = "",
@@ -751,6 +757,7 @@ def render_graphs_from_specification_html(
     graph_recipes = _resolve_graph_recipe_with_error_handling(
         graph_specification,
         registered_metrics,
+        registered_graphs,
     )
     if isinstance(graph_recipes, HTML):
         return graph_recipes  # This is to html.write the exception
@@ -1099,6 +1106,7 @@ def host_service_graph_dashlet_cmk(
     graph_specification: GraphSpecification,
     graph_render_config: GraphRenderConfig,
     registered_metrics: Mapping[str, RegisteredMetric],
+    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     *,
     graph_display_id: str = "",
 ) -> HTML | None:
@@ -1133,6 +1141,7 @@ def host_service_graph_dashlet_cmk(
     graph_recipes = _resolve_graph_recipe_with_error_handling(
         graph_specification,
         registered_metrics,
+        registered_graphs,
     )
     if isinstance(graph_recipes, HTML):
         return graph_recipes  # This is to html.write the exception

@@ -19,7 +19,7 @@ from cmk.utils.user import UserId
 from cmk.gui import sites
 from cmk.gui.dashboard.type_defs import DashletId, DashletSize
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
-from cmk.gui.graphing._from_api import metrics_from_api
+from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api
 from cmk.gui.graphing._graph_render_config import (
     GraphRenderConfig,
     GraphRenderOptions,
@@ -101,7 +101,11 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
             return list(self.choices())
         return [
             next(
-                ((c.id, c.title) for c in get_graph_template_choices() if c.id == value),
+                (
+                    (c.id, c.title)
+                    for c in get_graph_template_choices(graphs_from_api)
+                    if c.id == value
+                ),
                 (
                     value,
                     (
@@ -262,7 +266,10 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
         graph_specification = self.graph_specification(self.context if self.has_context() else {})
 
         try:
-            graph_recipes = graph_specification.recipes(metrics_from_api)
+            graph_recipes = graph_specification.recipes(
+                metrics_from_api,
+                graphs_from_api,
+            )
         except MKMissingDataError:
             raise
         except livestatus.MKLivestatusNotFoundError:
@@ -437,13 +444,14 @@ def graph_templates_autocompleter(value_entered_by_user: str, params: dict) -> C
     if not params.get("context") and params.get("show_independent_of_context") is True:
         _sorted_matching_graph_template_choices(
             value_entered_by_user,
-            get_graph_template_choices(),
+            get_graph_template_choices(graphs_from_api),
         )
 
     graph_template_choices, single_metric_template_choices = (
         graph_and_single_metric_templates_choices_for_context(
             params["context"],
             metrics_from_api,
+            graphs_from_api,
         )
     )
 

@@ -17,17 +17,17 @@ from cmk.utils.hostaddress import HostName
 from cmk.gui.config import active_config
 from cmk.gui.graphing import _graph_templates as gt
 from cmk.gui.graphing._formatter import AutoPrecision
-from cmk.gui.graphing._from_api import RegisteredMetric
+from cmk.gui.graphing._from_api import graphs_from_api, RegisteredMetric
 from cmk.gui.graphing._graph_specification import HorizontalRule
 from cmk.gui.graphing._graph_templates import (
     _evaluate_predictive_metrics,
     _evaluate_scalars,
     _get_evaluated_graph_templates,
-    _get_sorted_graph_plugins,
     _matching_graph_templates,
     _parse_bidirectional_from_api,
     _parse_graph_from_api,
     _parse_graph_plugin,
+    _sort_registered_graph_plugins,
     evaluate_metrics,
     EvaluatedGraphTemplate,
     GraphTemplate,
@@ -178,6 +178,7 @@ def test__matching_graph_templates(
                 graph_index=graph_index,
                 translated_metrics={},
                 registered_metrics={},
+                registered_graphs=graphs_from_api,
             )
         )
         == expected_result
@@ -305,7 +306,7 @@ def test_horizontal_rules_from_thresholds(
 
 def test_duplicate_graph_templates() -> None:
     idents_by_metrics: dict[tuple[str, ...], list[str]] = {}
-    for id_, plugin in _get_sorted_graph_plugins():
+    for id_, plugin in _sort_registered_graph_plugins(graphs_from_api):
         parsed = _parse_graph_plugin(
             id_,
             plugin,
@@ -334,7 +335,7 @@ def test_graph_template_with_layered_areas() -> None:
         neg: list[Literal["-area", "-stack"]] = field(default_factory=list)
 
     areas_by_ident: dict[str, _GraphTemplateArea] = {}
-    for id_, plugin in _get_sorted_graph_plugins():
+    for id_, plugin in _sort_registered_graph_plugins(graphs_from_api):
         parsed = _parse_graph_plugin(id_, plugin, {})
         for metric_expression in parsed.metrics:
             if metric_expression.line_type == "area":
@@ -1126,6 +1127,7 @@ def test__get_evaluated_graph_templates_1(
             for t in _get_evaluated_graph_templates(
                 translated_metrics,
                 {},
+                graphs_from_api,
             )
         ]
     ) == sorted(graph_ids)
@@ -1158,6 +1160,7 @@ def test__get_evaluated_graph_templates_2(
             for t in _get_evaluated_graph_templates(
                 translated_metrics,
                 {},
+                graphs_from_api,
             )
         ]
     ) == sorted(graph_ids)
@@ -1664,6 +1667,7 @@ def test__get_evaluated_graph_templates_with_predictive_metrics(
             _get_evaluated_graph_templates(
                 translated_metrics,
                 registered_metrics,
+                graphs_from_api,
             )
         )
         == graph_templates
@@ -2012,6 +2016,7 @@ def test_conflicting_metrics(
             for t in _get_evaluated_graph_templates(
                 translated_metrics,
                 {},
+                graphs_from_api,
             )
         ]
     ) == sorted(graph_ids)

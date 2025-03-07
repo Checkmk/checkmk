@@ -10,7 +10,7 @@ from cmk.gui.dashboard.dashlet.dashlets.graph import (
     TemplateGraphDashlet,
     TemplateGraphDashletConfig,
 )
-from cmk.gui.graphing._from_api import metrics_from_api
+from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api
 from cmk.gui.graphing._graph_templates import get_graph_template_from_id
 
 
@@ -21,4 +21,5 @@ def test_all_template_graph_dashlets_reference_known_graph_templates() -> None:
                 get_graph_template_from_id(
                     cast(TemplateGraphDashletConfig, dashlet_config)["source"],
                     metrics_from_api,
+                    graphs_from_api,
                 )

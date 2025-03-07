@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.graphing._formatter import StrictPrecision
-from cmk.gui.graphing._from_api import metrics_from_api
+from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api
 from cmk.gui.graphing._graph_templates import get_graph_template_from_id, GraphTemplate
 from cmk.gui.graphing._legacy import check_metrics
 from cmk.gui.graphing._metric_expression import CriticalOf, Metric, MetricExpression, WarningOf
@@ -50,7 +50,11 @@ def test_add_graphing_plugins() -> None:
         "write_latency": {"scale": 0.001},
     }
 
-    graph_template = get_graph_template_from_id("db_connections", metrics_from_api)
+    graph_template = get_graph_template_from_id(
+        "db_connections",
+        metrics_from_api,
+        graphs_from_api,
+    )
     assert graph_template == GraphTemplate(
         id="db_connections",
         title="DB Connections",

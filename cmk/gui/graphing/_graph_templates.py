@@ -32,7 +32,7 @@ from cmk.gui.visuals import livestatus_query_bare
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.graphing.v1 import metrics as metrics_api
 
-from ._from_api import graphs_from_api, RegisteredMetric
+from ._from_api import RegisteredMetric
 from ._graph_specification import (
     FixedVerticalRange,
     graph_specification_registry,
@@ -75,16 +75,16 @@ from ._unit import ConvertibleUnitSpecification
 from ._utils import get_graph_data_from_livestatus
 
 
-def _get_sorted_graph_plugins() -> Sequence[
-    tuple[str, graphs_api.Graph | graphs_api.Bidirectional]
-]:
+def _sort_registered_graph_plugins(
+    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
+) -> list[tuple[str, graphs_api.Graph | graphs_api.Bidirectional]]:
     def _by_index(graph_name: str) -> int:
         try:
             return GRAPHS_2_2.index(graph_name)
         except ValueError:
             return -1
 
-    return sorted(graphs_from_api.items(), key=lambda t: _by_index(t[0]))
+    return sorted(registered_graphs.items(), key=lambda t: _by_index(t[0]))
 
 
 def _parse_title(template: graphs_api.Graph | graphs_api.Bidirectional) -> str:
@@ -97,13 +97,13 @@ class GraphTemplateChoice:
     title: str
 
 
-def get_graph_template_choices() -> Sequence[GraphTemplateChoice]:
-    # TODO: v.get("title", k): Use same algorithm as used in
-    # GraphIdentificationTemplateBased._parse_template_metric()
+def get_graph_template_choices(
+    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
+) -> list[GraphTemplateChoice]:
     return sorted(
         [
             GraphTemplateChoice(graph.name, _parse_title(graph))
-            for graph in graphs_from_api.values()
+            for graph in registered_graphs.values()
         ],
         key=lambda c: c.title,
     )
@@ -353,10 +353,11 @@ def _create_graph_template_from_name(name: str) -> GraphTemplate:
 def get_graph_template_from_id(
     template_id: str,
     registered_metrics: Mapping[str, RegisteredMetric],
+    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
 ) -> GraphTemplate:
     if template_id.startswith("METRIC_"):
         return _create_graph_template_from_name(template_id)
-    for id_, graph_plugin in _get_sorted_graph_plugins():
+    for id_, graph_plugin in _sort_registered_graph_plugins(registered_graphs):
         if template_id == id_:
             return _parse_graph_plugin(id_, graph_plugin, registered_metrics)
     raise MKGeneralException(_("There is no graph plug-in with the id '%s'") % template_id)
@@ -386,10 +387,11 @@ def evaluate_metrics(
 def graph_and_single_metric_template_choices_for_metrics(
     translated_metrics: Mapping[str, TranslatedMetric],
     registered_metrics: Mapping[str, RegisteredMetric],
+    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
 ) -> tuple[list[GraphTemplateChoice], list[GraphTemplateChoice]]:
     graph_template_choices = []
     already_graphed_metrics = set()
-    for id_, graph_plugin in _get_sorted_graph_plugins():
+    for id_, graph_plugin in _sort_registered_graph_plugins(registered_graphs):
         graph_template = _parse_graph_plugin(id_, graph_plugin, registered_metrics)
         if evaluated_metrics := evaluate_metrics(
             conflicting_metrics=graph_template.conflicting_metrics,
@@ -420,6 +422,7 @@ def graph_and_single_metric_template_choices_for_metrics(
 def graph_and_single_metric_templates_choices_for_context(
     context: VisualContext,
     registered_metrics: Mapping[str, RegisteredMetric],
+    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
 ) -> tuple[list[GraphTemplateChoice], list[GraphTemplateChoice]]:
     graph_template_choices: list[GraphTemplateChoice] = []
     single_metric_template_choices: list[GraphTemplateChoice] = []
@@ -436,6 +439,7 @@ def graph_and_single_metric_templates_choices_for_context(
                     registered_metrics,
                 ),
                 registered_metrics,
+                registered_graphs,
             )
         )
         graph_template_choices.extend(graph_template_choices_for_row)
@@ -845,6 +849,7 @@ def _create_evaluated_graph_template(
 def _get_evaluated_graph_templates(
     translated_metrics: Mapping[str, TranslatedMetric],
     registered_metrics: Mapping[str, RegisteredMetric],
+    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
 ) -> Iterator[EvaluatedGraphTemplate]:
     if not translated_metrics:
         yield from ()
@@ -861,7 +866,7 @@ def _get_evaluated_graph_templates(
             ),
             translated_metrics,
         )
-        for id_, graph_plugin in _get_sorted_graph_plugins()
+        for id_, graph_plugin in _sort_registered_graph_plugins(registered_graphs)
         for graph_template in [
             _parse_graph_plugin(
                 id_,
@@ -904,6 +909,7 @@ def _matching_graph_templates(
     graph_index: int | None,
     translated_metrics: Mapping[str, TranslatedMetric],
     registered_metrics: Mapping[str, RegisteredMetric],
+    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
 ) -> Iterable[tuple[int, EvaluatedGraphTemplate]]:
     # Performance graph dashlets already use graph_id, but for example in reports, we still use
     # graph_index. Therefore, this function needs to support both. We should switch to graph_id
@@ -939,6 +945,7 @@ def _matching_graph_templates(
             _get_evaluated_graph_templates(
                 translated_metrics,
                 registered_metrics,
+                registered_graphs,
             )
         )
         if (graph_index is None or index == graph_index)
@@ -992,6 +999,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
     def recipes(
         self,
         registered_metrics: Mapping[str, RegisteredMetric],
+        registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     ) -> list[GraphRecipe]:
         row = self._get_graph_data_from_livestatus()
         translated_metrics = translated_metrics_from_row(row, registered_metrics)
@@ -1002,6 +1010,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
                 graph_index=self.graph_index,
                 translated_metrics=translated_metrics,
                 registered_metrics=registered_metrics,
+                registered_graphs=registered_graphs,
             )
             if (
                 recipe := self._build_recipe_from_template(

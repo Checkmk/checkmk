@@ -20,6 +20,8 @@ from pydantic import (
 
 from cmk.ccc.plugin_registry import Registry
 
+from cmk.graphing.v1 import graphs as graphs_api
+
 from ._from_api import RegisteredMetric
 from ._graph_render_config import GraphRenderOptions
 from ._metric_operation import (
@@ -55,6 +57,7 @@ class GraphSpecification(BaseModel, ABC, frozen=True):
     def recipes(
         self,
         registered_metrics: Mapping[str, RegisteredMetric],
+        registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     ) -> Sequence[GraphRecipe]: ...
 
     # mypy does not support other decorators on top of @property:

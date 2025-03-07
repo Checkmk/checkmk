@@ -12,7 +12,7 @@ from uuid import uuid4
 from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
-from cmk.gui.graphing._from_api import metrics_from_api, RegisteredMetric
+from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api, RegisteredMetric
 from cmk.gui.graphing._graph_render_config import (
     GraphRenderConfig,
     GraphRenderOptions,
@@ -55,6 +55,8 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.view_utils import CellSpec, CSVExportError, JSONExportError, PythonExportError
+
+from cmk.graphing.v1 import graphs as graphs_api
 
 
 def register(
@@ -165,6 +167,7 @@ def paint_time_graph_cmk(
     row: Row,
     cell: Cell,
     registered_metrics: Mapping[str, RegisteredMetric],
+    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     *,
     user: LoggedInUser,
     request: Request,
@@ -247,6 +250,7 @@ def paint_time_graph_cmk(
         graph_data_range,
         graph_render_config,
         registered_metrics,
+        registered_graphs,
         # Ideally, we would use 2-dim. coordinates: (row_idx, col_idx).
         # Unfortunately, we have no access to this information here. Regarding the rows, we could
         # use (site, host, service) as identifier, but for the columns, there does not seem to be
@@ -331,6 +335,7 @@ class PainterServiceGraphs(Painter):
             row,
             cell,
             metrics_from_api,
+            graphs_from_api,
             user=self.user,
             request=self.request,
             response=response,
@@ -377,6 +382,7 @@ class PainterHostGraphs(Painter):
             row,
             cell,
             metrics_from_api,
+            graphs_from_api,
             user=self.user,
             request=self.request,
             response=response,
@@ -456,6 +462,7 @@ class PainterSvcPnpgraph(Painter):
             row,
             cell,
             metrics_from_api,
+            graphs_from_api,
             user=self.user,
             request=self.request,
             response=response,
@@ -504,6 +511,7 @@ class PainterHostPnpgraph(Painter):
             row,
             cell,
             metrics_from_api,
+            graphs_from_api,
             user=self.user,
             request=self.request,
             response=response,

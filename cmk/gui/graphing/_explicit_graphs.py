@@ -6,6 +6,8 @@
 from collections.abc import Mapping, Sequence
 from typing import Literal
 
+from cmk.graphing.v1 import graphs as graphs_api
+
 from ._from_api import RegisteredMetric
 from ._graph_specification import (
     FixedVerticalRange,
@@ -35,6 +37,7 @@ class ExplicitGraphSpecification(GraphSpecification, frozen=True):
     def recipes(
         self,
         registered_metrics: Mapping[str, RegisteredMetric],
+        registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     ) -> list[GraphRecipe]:
         return [
             GraphRecipe(

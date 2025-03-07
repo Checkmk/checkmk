@@ -29,8 +29,10 @@ from cmk.gui.logged_in import LoggedInSuperUser, user
 from cmk.gui.pages import Page
 from cmk.gui.type_defs import SizePT
 
+from cmk.graphing.v1 import graphs as graphs_api
+
 from ._artwork import compute_graph_artwork, compute_graph_artwork_curves, GraphArtwork
-from ._from_api import metrics_from_api, RegisteredMetric
+from ._from_api import graphs_from_api, metrics_from_api, RegisteredMetric
 from ._graph_pdf import (
     compute_pdf_graph_data_range,
     get_mm_per_ex,
@@ -63,10 +65,13 @@ class AjaxGraphImagesForNotifications(Page):
             # Now we use the SiteInternalSecret for this.
             raise MKUnauthenticatedException(_("You are not allowed to access this page."))
 
-        _answer_graph_image_request(metrics_from_api)
+        _answer_graph_image_request(metrics_from_api, graphs_from_api)
 
 
-def _answer_graph_image_request(registered_metrics: Mapping[str, RegisteredMetric]) -> None:
+def _answer_graph_image_request(
+    registered_metrics: Mapping[str, RegisteredMetric],
+    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
+) -> None:
     try:
         host_name = request.get_validated_type_input_mandatory(HostName, "host")
 
@@ -108,7 +113,10 @@ def _answer_graph_image_request(registered_metrics: Mapping[str, RegisteredMetri
             service_name=service_description,
             graph_index=None,  # all graphs
             destination=GraphDestinations.notification,
-        ).recipes(registered_metrics)
+        ).recipes(
+            registered_metrics,
+            registered_graphs,
+        )
         num_graphs = request.get_integer_input("num_graphs") or len(graph_recipes)
 
         graphs = []
@@ -204,6 +212,7 @@ def render_graph_image(
 def graph_recipes_for_api_request(
     api_request: dict[str, Any],
     registered_metrics: Mapping[str, RegisteredMetric],
+    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
 ) -> tuple[GraphDataRange, Sequence[GraphRecipe]]:
     # Get and validate the specification
     if not (raw_graph_spec := api_request.get("specification")):
@@ -235,7 +244,10 @@ def graph_recipes_for_api_request(
     raw_graph_data_range["step"] = 60
 
     try:
-        graph_recipes = graph_specification.recipes(registered_metrics)
+        graph_recipes = graph_specification.recipes(
+            registered_metrics,
+            registered_graphs,
+        )
     except livestatus.MKLivestatusNotFoundError as e:
         raise MKUserError(None, _("Cannot calculate graph recipes: %s") % e)
 
@@ -251,11 +263,13 @@ def graph_recipes_for_api_request(
 def graph_spec_from_request(
     api_request: dict[str, Any],
     registered_metrics: Mapping[str, RegisteredMetric],
+    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
 ) -> dict[str, Any]:
     try:
         graph_data_range, graph_recipes = graph_recipes_for_api_request(
             api_request,
             registered_metrics,
+            registered_graphs,
         )
         graph_recipe = graph_recipes[0]
 

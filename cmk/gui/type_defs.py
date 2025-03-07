@@ -88,7 +88,6 @@ class WebAuthnActionState(TypedDict):
 
 SessionId = str
 AuthType = Literal[
-    "automation",
     "basic_auth",
     "bearer",
     "cognito",

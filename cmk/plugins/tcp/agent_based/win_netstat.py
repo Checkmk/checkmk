@@ -2,13 +2,15 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import cast
 
-
-from cmk.base.check_legacy_includes.netstat import check_netstat_generic
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-
-check_info = {}
+from cmk.agent_based.v2 import AgentSection, CheckPlugin, StringTable
+from cmk.plugins.tcp.lib.models import Connection, ConnectionState, Protocol, Section
+from cmk.plugins.tcp.lib.netstat import (
+    check_netstat_generic,
+    discover_netstat_never,
+    split_ip_address,
+)
 
 # Example output from agent (German Windows XP)
 # <<<win_netstat>>>
@@ -48,32 +50,33 @@ win_netstat_states = {
 }
 
 
-def parse_win_netstat(string_table):
+def parse_win_netstat(string_table: StringTable) -> Section:
     connections = []
     for line in string_table:
         if line[0] == "TCP":
             proto, local, remote, connstate = line
         elif line[0] == "UDP":
             proto, local, remote = line
-            connstate = "LISTEN"
+            connstate = "LISTENING"
         else:
             continue
         connections.append(
-            (
-                proto,
-                local.rsplit(":", 1),
-                remote.rsplit(":", 1),
-                win_netstat_states.get(connstate, connstate),
+            Connection(
+                proto=cast(Protocol, proto),
+                local_address=split_ip_address(local),
+                remote_address=split_ip_address(remote),
+                state=ConnectionState[win_netstat_states.get(connstate, connstate)],
             )
         )
     return connections
 
 
-check_info["win_netstat"] = LegacyCheckDefinition(
+agent_section_win_netstat = AgentSection(name="win_netstat", parse_function=parse_win_netstat)
+check_plugin_win_netstat = CheckPlugin(
     name="win_netstat",
-    parse_function=parse_win_netstat,
     service_name="TCP Connection %s",
     check_function=check_netstat_generic,
     check_ruleset_name="tcp_connections",
+    discovery_function=discover_netstat_never,
     check_default_parameters={"min_states": ("no_levels", None), "max_states": ("no_levels", None)},
 )

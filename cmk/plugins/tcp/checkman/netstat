@@ -4,7 +4,7 @@ catalog: os/networking
 license: GPLv2
 distribution: check_mk
 description:
- This check evaluates the output of the {netstat} command on Linux, AIX and Solaris
+ This check evaluates the output of the {netstat} and {ss} command on Linux, AIX and Solaris
  and checks if there are established connections or listeners matching a
  given criteria.
 

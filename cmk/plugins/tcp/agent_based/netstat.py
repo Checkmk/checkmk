@@ -2,14 +2,15 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import cast
 
-
-from cmk.base.check_legacy_includes.netstat import check_netstat_generic
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyDiscoveryResult
-from cmk.agent_based.v2 import StringTable
-
-check_info = {}
+from cmk.agent_based.v2 import AgentSection, CheckPlugin, StringTable
+from cmk.plugins.tcp.lib.models import Connection, ConnectionState, Protocol, Section
+from cmk.plugins.tcp.lib.netstat import (
+    check_netstat_generic,
+    discover_netstat_never,
+    split_ip_address,
+)
 
 # Example output from agent (Linux) - note missing LISTENING column for UDP
 # <<netstat>>>
@@ -38,19 +39,21 @@ check_info = {}
 # udp        0      0 10.1.2.160:137          0.0.0.0:*
 # udp        0      0 0.0.0.0:137             0.0.0.0:*
 
+# Example output from agent (Linux) - note different format of `ss` command
+# udp   UNCONN    0      0                    0.0.0.0:53403              0.0.0.0:*
+# udp   UNCONN    0      0                    0.0.0.0:54223              0.0.0.0:*
+# tcp   TIME-WAIT 0      0             10.230.254.109:8280            172.17.0.3:39484
+# tcp   LISTENING    0      64                      [::]:2049                  [::]:*
+
 # Example Output for AIX:
 # tcp4  0   0   127.0.0.1.1234  127.0.0.1.5678  ESTABLISHED
-
-
-Section = list[tuple[str, list[str], list[str], str]]
+STATE_TRANSLATIONS: dict[str, str] = {
+    "LISTEN": "LISTENING",  # for Ubuntu
+    "ESTAB": "ESTABLISHED",  # for Ubuntu
+}
 
 
 def parse_netstat(string_table: StringTable) -> Section:
-    def split_ip_address(ip_address: str) -> list[str]:
-        if ":" in ip_address:
-            return ip_address.rsplit(":", 1)
-        return ip_address.rsplit(".", 1)
-
     try:
         is_netstat_format = string_table[1][1].isdecimal()
     except IndexError:
@@ -72,23 +75,40 @@ def parse_netstat(string_table: StringTable) -> Section:
             # Ubuntu recently deviced to use "LISTEN" instead of "LISTENING"
             if connstate == "LISTEN":
                 connstate = "LISTENING"
+            if connstate == "ESTAB":
+                connstate = "ESTABLISHED"
 
         if len(line) == 5:
             proto, _recv_q, _send_q, local, remote = line
             proto = "UDP"
             connstate = "LISTENING"
 
-        connections.append((proto, split_ip_address(local), split_ip_address(remote), connstate))
+        if len(line) == 3:
+            # Solaris systems output a different format for udp (3 elements instead 5)
+            proto, local, remote = line
+            _recv_q, _send_q = "0", "0"
+            proto = "UDP"
+            connstate = "LISTENING"
+
+        # Translate special representations of state strings (e.g. abbreviations into full length)
+        connstate = STATE_TRANSLATIONS.get(connstate, connstate)
+        # The output of `ss` contains a "-" instead of "_" in state strings.
+        connstate = connstate.replace("-", "_")
+
+        connections.append(
+            Connection(
+                proto=cast(Protocol, proto),
+                local_address=split_ip_address(local),
+                remote_address=split_ip_address(remote),
+                state=ConnectionState[connstate],
+            )
+        )
     return connections
 
 
-def discover_netstat_never(section: Section) -> LegacyDiscoveryResult:
-    yield from ()  # can only be enforced
-
-
-check_info["netstat"] = LegacyCheckDefinition(
+agent_section_netstat = AgentSection(name="netstat", parse_function=parse_netstat)
+check_plugin_netstat = CheckPlugin(
     name="netstat",
-    parse_function=parse_netstat,
     service_name="TCP Connection %s",
     discovery_function=discover_netstat_never,
     check_function=check_netstat_generic,

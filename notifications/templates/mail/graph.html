@@ -40,15 +40,17 @@
         </td>
     </tr>
 </table>
+{% if data.PARAMETER_URL_PREFIX_1 | default(false) %}
 <table align="center"
        width="100%"
        style="min-width: 220px;
               max-width: 536px">
     <tr>
         <td>
-            <a href={{ data.GRAPH_URL }} class="view_graph" style=" color: black; display: block; height: 24px; font-size: 16px; color: #2c3843; line-height: 24px; ">
+            <a href="{{ data.GRAPH_URL }}" class="view_graph" style=" color: black; display: block; height: 24px; font-size: 16px; color: #2c3843; line-height: 24px; ">
                 View graph to inspect
             </a>
         </td>
     </tr>
 </table>
+{% endif %}

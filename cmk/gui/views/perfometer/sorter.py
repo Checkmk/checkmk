@@ -6,6 +6,7 @@
 from collections.abc import Mapping
 
 from cmk.gui.config import Config
+from cmk.gui.graphing._from_api import metrics_from_api
 from cmk.gui.http import Request
 from cmk.gui.i18n import _l
 from cmk.gui.log import logger
@@ -24,8 +25,20 @@ def sort_perfometer(
     request: Request,
 ) -> int:
     try:
-        v1 = tuple(-float("inf") if s is None else s for s in Perfometer(r1).sort_value())
-        v2 = tuple(-float("inf") if s is None else s for s in Perfometer(r2).sort_value())
+        v1 = tuple(
+            -float("inf") if s is None else s
+            for s in Perfometer(
+                r1,
+                metrics_from_api,
+            ).sort_value()
+        )
+        v2 = tuple(
+            -float("inf") if s is None else s
+            for s in Perfometer(
+                r2,
+                metrics_from_api,
+            ).sort_value()
+        )
         return (v1 > v2) - (v1 < v2)
     except Exception:
         logger.exception("error sorting perfometer values")

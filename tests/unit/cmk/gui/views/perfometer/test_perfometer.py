@@ -43,4 +43,4 @@ def test_cmp_of_missing_values(sort_values: Sequence[float | None], request_cont
         return SorterPerfometer.cmp(r1, r2, parameters=None, config=active_config, request=request)
 
     data.sort(key=functools.cmp_to_key(wrapped))
-    assert [Perfometer(r).sort_value()[1] for r in data] == [None, -1.0, 0.0, 1.0]
+    assert [Perfometer(r, {}).sort_value()[1] for r in data] == [None, -1.0, 0.0, 1.0]

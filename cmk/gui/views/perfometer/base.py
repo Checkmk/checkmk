@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.gui.graphing import get_first_matching_perfometer
-from cmk.gui.graphing._from_api import metrics_from_api
+from cmk.gui.graphing._from_api import RegisteredMetric
 from cmk.gui.graphing._translated_metrics import (
     parse_perf_data,
     translate_metrics,
@@ -23,12 +23,17 @@ from ...config import active_config
 
 
 class Perfometer:
-    def __init__(self, row: Row) -> None:
+    def __init__(
+        self,
+        row: Row,
+        registered_metrics: Mapping[str, RegisteredMetric],
+    ) -> None:
         self._row = row
 
         self._perf_data: Perfdata = []
         self._check_command: str = self._row["service_check_command"]
         self._translated_metrics: Mapping[str, TranslatedMetric] = {}
+        self._registered_metrics = registered_metrics
 
         self._parse_perf_data()
 
@@ -44,7 +49,7 @@ class Perfometer:
         self._translated_metrics = translate_metrics(
             self._perf_data,
             self._check_command,
-            metrics_from_api,
+            self._registered_metrics,
         )
 
     def render(self) -> tuple[str | None, HTML | None]:

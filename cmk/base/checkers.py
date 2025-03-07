@@ -59,7 +59,12 @@ from cmk.checkengine.checkresults import (
     SubmittableServiceCheckResult,
     UnsubmittableServiceCheckResult,
 )
-from cmk.checkengine.discovery import AutocheckEntry, DiscoveryPlugin, HostLabelPlugin
+from cmk.checkengine.discovery import (
+    AutocheckEntry,
+    DiscoveryPlugin,
+    get_plugin_parameters,
+    HostLabelPlugin,
+)
 from cmk.checkengine.fetcher import HostKey, SourceInfo, SourceType
 from cmk.checkengine.parameters import Parameters
 from cmk.checkengine.parser import HostSections, NO_SELECTION, parse_raw_data, SectionNameCollection
@@ -81,7 +86,6 @@ from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin as SNMPSec
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.config import (
     ConfigCache,
-    get_plugin_parameters,
     IPLookup,
     lookup_ip_address,
     lookup_mgmt_board_ip_address,

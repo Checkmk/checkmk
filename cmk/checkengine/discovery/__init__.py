@@ -25,7 +25,7 @@ from ._commandline import commandline_discovery
 from ._discovery import DiscoveryPlugin
 from ._filters import RediscoveryParameters
 from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabelPlugin
-from ._params import DiscoveryCheckParameters
+from ._params import DiscoveryCheckParameters, get_plugin_parameters
 from ._preview import CheckPreview, CheckPreviewEntry, get_check_preview
 from ._services import analyse_services, discover_services, find_plugins
 from ._utils import DiscoveryMode, DiscoverySettings, DiscoveryVsSettings, QualifiedDiscovery
@@ -53,6 +53,7 @@ __all__ = [
     "execute_check_discovery",
     "find_plugins",
     "get_check_preview",
+    "get_plugin_parameters",
     "get_host_services_by_host_name",
     "HostLabelPlugin",
     "QualifiedDiscovery",

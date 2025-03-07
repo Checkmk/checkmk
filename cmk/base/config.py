@@ -53,7 +53,7 @@ import cmk.utils.translations
 from cmk.utils import config_warnings, ip_lookup, password_store, tty
 from cmk.utils.agent_registration import connection_mode_from_host_config, HostAgentConnectionMode
 from cmk.utils.caching import cache_manager
-from cmk.utils.check_utils import maincheckify, ParametersTypeAlias, section_name_of
+from cmk.utils.check_utils import maincheckify, section_name_of
 from cmk.utils.config_path import ConfigPath
 from cmk.utils.host_storage import apply_hosts_file_to_object, get_host_storage_loaders
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
@@ -117,7 +117,7 @@ from cmk.checkengine.discovery import (
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetcher import FetcherType, SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin
-from cmk.checkengine.parameters import Parameters, TimespecificParameters, TimespecificParameterSet
+from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.parser import (
     AgentParser,
     AgentRawDataSectionElem,
@@ -1215,41 +1215,6 @@ _old_service_descriptions: Mapping[str, Callable[[Item], tuple[ServiceName, Item
     "prism_info": lambda item: ("Prism Cluster", None),
     "prism_storage_pools": lambda item: ("Storage Pool %s", item),
 }
-
-
-def get_plugin_parameters(
-    host_name: HostName,
-    matcher: RulesetMatcher,
-    *,
-    default_parameters: ParametersTypeAlias | None,
-    ruleset_name: RuleSetName | None,
-    ruleset_type: Literal["all", "merged"],
-    rules_getter_function: Callable[[RuleSetName], Sequence[RuleSpec]],
-) -> None | Parameters | list[Parameters]:
-    if default_parameters is None:
-        # This means the function will not accept any params.
-        return None
-    if ruleset_name is None:
-        # This means we have default params, but no rule set.
-        # Not very sensical for discovery functions, but not forbidden by the API either.
-        return Parameters(default_parameters)
-
-    rules = rules_getter_function(ruleset_name)
-
-    if ruleset_type == "all":
-        host_rules = matcher.get_host_values(host_name, rules)
-        return [Parameters(d) for d in itertools.chain(host_rules, (default_parameters,))]
-
-    if ruleset_type == "merged":
-        return Parameters(
-            {
-                **default_parameters,
-                **matcher.get_host_merged_dict(host_name, rules),
-            }
-        )
-
-    # validation should have prevented this
-    raise NotImplementedError(f"unknown discovery rule set type {ruleset_type!r}")
 
 
 def _make_service_description_cb(

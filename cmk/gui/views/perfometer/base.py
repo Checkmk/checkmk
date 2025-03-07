@@ -19,6 +19,8 @@ from cmk.gui.i18n import _
 from cmk.gui.type_defs import Perfdata, Row
 from cmk.gui.utils.html import HTML
 
+from cmk.graphing.v1 import perfometers as perfometers_api
+
 from ...config import active_config
 
 
@@ -27,6 +29,10 @@ class Perfometer:
         self,
         row: Row,
         registered_metrics: Mapping[str, RegisteredMetric],
+        registered_perfometers: Mapping[
+            str,
+            perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked,
+        ],
     ) -> None:
         self._row = row
 
@@ -34,6 +40,7 @@ class Perfometer:
         self._check_command: str = self._row["service_check_command"]
         self._translated_metrics: Mapping[str, TranslatedMetric] = {}
         self._registered_metrics = registered_metrics
+        self._registered_perfometers = registered_perfometers
 
         self._parse_perf_data()
 
@@ -70,7 +77,12 @@ class Perfometer:
         return None, None
 
     def _render_metrics_perfometer(self) -> tuple[str | None, HTML | None]:
-        if not (renderer := get_first_matching_perfometer(self._translated_metrics)):
+        if not (
+            renderer := get_first_matching_perfometer(
+                self._translated_metrics,
+                self._registered_perfometers,
+            )
+        ):
             return None, None
         return renderer.get_label(), _render_metricometer(renderer.get_stack())
 
@@ -84,7 +96,12 @@ class Perfometer:
         return self._get_metrics_sort_group(), self._get_metrics_sort_value()
 
     def _get_metrics_sort_group(self) -> int | None:
-        if not (renderer := get_first_matching_perfometer(self._translated_metrics)):
+        if not (
+            renderer := get_first_matching_perfometer(
+                self._translated_metrics,
+                self._registered_perfometers,
+            )
+        ):
             return None
         # The perfometer definitions had no ID until implementation of this sorting. We need to
         # care about this here. Since it is only for grouping perfometers of the same type, we
@@ -92,7 +109,12 @@ class Perfometer:
         return id(renderer.perfometer)
 
     def _get_metrics_sort_value(self) -> float | None:
-        if not (renderer := get_first_matching_perfometer(self._translated_metrics)):
+        if not (
+            renderer := get_first_matching_perfometer(
+                self._translated_metrics,
+                self._registered_perfometers,
+            )
+        ):
             return None
         return renderer.get_sort_value()
 

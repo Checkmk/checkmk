@@ -22,11 +22,22 @@ from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
 
 
+@pytest.mark.usefixtures("request_context")
 @pytest.mark.parametrize(
-    "translated_metrics, perfometer",
+    ("translated_metrics", "registered_perfometers", "perfometer"),
     [
         pytest.param(
             {"active_connections": {}},
+            {
+                "active_connections": perfometers_api.Perfometer(
+                    name="active_connections",
+                    focus_range=perfometers_api.FocusRange(
+                        perfometers_api.Closed(0),
+                        perfometers_api.Open(90),
+                    ),
+                    segments=["active_connections"],
+                )
+            },
             perfometers_api.Perfometer(
                 name="active_connections",
                 focus_range=perfometers_api.FocusRange(
@@ -41,12 +52,16 @@ from cmk.graphing.v1 import perfometers as perfometers_api
 )
 def test_get_first_matching_perfometer(
     translated_metrics: Mapping[str, TranslatedMetric],
+    registered_perfometers: Mapping[
+        str, perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
+    ],
     perfometer: (
         perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
     ),
-    request_context: None,
 ) -> None:
-    assert (first_renderer := get_first_matching_perfometer(translated_metrics)) is not None
+    assert (
+        first_renderer := get_first_matching_perfometer(translated_metrics, registered_perfometers)
+    ) is not None
     assert first_renderer.perfometer == perfometer
 
 

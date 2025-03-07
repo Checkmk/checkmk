@@ -6,7 +6,7 @@
 from collections.abc import Sequence
 
 from cmk.gui.display_options import display_options
-from cmk.gui.graphing._from_api import metrics_from_api
+from cmk.gui.graphing._from_api import metrics_from_api, perfometers_from_api
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import response
 from cmk.gui.i18n import _
@@ -54,7 +54,11 @@ class PainterPerfometer(Painter):
             classes.append("stale")
 
         try:
-            title, h = Perfometer(row, metrics_from_api).render()
+            title, h = Perfometer(
+                row,
+                metrics_from_api,
+                perfometers_from_api,
+            ).render()
             if title is None and h is None:
                 return "", ""
         except Exception as e:

@@ -21,7 +21,7 @@ from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
 
 from ._color import parse_color_from_api
-from ._from_api import parse_unit_from_api, perfometers_from_api
+from ._from_api import parse_unit_from_api
 from ._translated_metrics import TranslatedMetric
 from ._unit import ConvertibleUnitSpecification, user_specific_unit
 
@@ -747,6 +747,9 @@ def _get_renderer(
 
 def get_first_matching_perfometer(
     translated_metrics: Mapping[str, TranslatedMetric],
+    registered_perfometers: Mapping[
+        str, perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
+    ],
 ) -> (
     MetricometerRendererPerfometer
     | MetricometerRendererBidirectional
@@ -756,7 +759,7 @@ def get_first_matching_perfometer(
     if not translated_metrics:
         return None
 
-    for perfometer in perfometers_from_api.values():
+    for perfometer in registered_perfometers.values():
         if _perfometer_matches(perfometer, translated_metrics):
             return _get_renderer(perfometer, translated_metrics)
 

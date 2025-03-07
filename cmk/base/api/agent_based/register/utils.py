@@ -8,8 +8,6 @@ from collections import defaultdict
 from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
 from typing import Final, get_args, Literal, NoReturn, Union
 
-from cmk.ccc.version import Edition
-
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.sectionname import SectionName
@@ -30,8 +28,6 @@ from cmk.agent_based.v1.register import RuleSetType
 TypeLabel = Literal["check", "cluster_check", "discovery", "host_label", "inventory"]
 
 ITEM_VARIABLE: Final = "%s"
-
-_ALLOWED_EDITION_FOLDERS: Final = {e.short for e in Edition}
 
 
 def create_subscribed_sections(
@@ -159,10 +155,6 @@ def _validate_optional_section_annotation(
             lambda p: _is_optional(p.annotation),
             "multiple sections must be of type `<NodeSection> | None`",
         )
-
-
-def _value_type(annotation: inspect.Parameter) -> bytes:
-    return get_args(annotation)[1]
 
 
 def validate_ruleset_type(ruleset_type: RuleSetType) -> None:

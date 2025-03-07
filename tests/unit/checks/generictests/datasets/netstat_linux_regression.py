@@ -20,4 +20,4 @@ info = [
 
 discovery = {"": []}
 
-checks = {"": [("connections", {}, [(0, "Matching entries found: 4", [("connections", 4)])])]}
+checks = {"": [("connections", {"min_states": ("no_levels", None), "max_states": ("no_levels", None)}, [(0, "Matching entries found: 4", [("connections", 4)])])]}

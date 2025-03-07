@@ -75,4 +75,5 @@ check_info["win_netstat"] = LegacyCheckDefinition(
     service_name="TCP Connection %s",
     check_function=check_netstat_generic,
     check_ruleset_name="tcp_connections",
+    check_default_parameters={"min_states": ("no_levels", None), "max_states": ("no_levels", None)},
 )

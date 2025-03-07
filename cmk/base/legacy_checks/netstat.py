@@ -93,4 +93,5 @@ check_info["netstat"] = LegacyCheckDefinition(
     discovery_function=discover_netstat_never,
     check_function=check_netstat_generic,
     check_ruleset_name="tcp_connections",
+    check_default_parameters={"min_states": ("no_levels", None), "max_states": ("no_levels", None)},
 )

@@ -35,8 +35,10 @@ def check_netstat_generic(item, params, connections):
         if match:
             found += 1
 
-    warn_lower, crit_lower = params.get("min_states", (None, None))
-    warn_upper, crit_upper = params.get("max_states", (None, None))
+    lower_levels = params["min_states"]
+    upper_levels = params["max_states"]
+    warn_lower, crit_lower = (None, None) if lower_levels[0] == "no_levels" else lower_levels[1]
+    warn_upper, crit_upper = (None, None) if upper_levels[0] == "no_levels" else upper_levels[1]
     yield check_levels(
         found,
         "connections",

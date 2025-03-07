@@ -1,0 +1,11 @@
+Title: Fixed Livestatus connection statistics when using Nagios
+Class: fix
+Compatible: compat
+Component: livestatus
+Date: 1741353471
+Edition: cre
+Level: 1
+Version: 2.2.0p41
+
+Due to a regression in Checkmk 2.0, the statistics for the queued/active
+Livestatus connections was wrong. This has been fixed.

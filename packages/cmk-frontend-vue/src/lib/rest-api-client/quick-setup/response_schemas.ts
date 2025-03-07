@@ -50,7 +50,7 @@ export interface QuickSetupStageActionResponse {
   background_job_exception: BackgroundJobException | null
 }
 
-export class QuickSetupStageActionValidationResponse {
+export class QuickSetupStageActionErrorValidationResponse {
   validation_errors: Errors
   background_job_exception: BackgroundJobException | null
 

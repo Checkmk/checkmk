@@ -27,6 +27,9 @@ export interface WizardHook {
   disableStage: (index: number) => void
   setStageStatus: (index: number, enabled: boolean) => void
   isStageEnabled: (index: number) => boolean
+
+  nextStageIndex: () => number
+  previousStageIndex: () => number
 }
 
 /**
@@ -164,10 +167,16 @@ const useWizard = (stagesCount: number, mode: WizardMode = 'guided'): WizardHook
 
   const isStageEnabled = (index: number) => !disabledStages.has(index)
 
+  const nextStageIndex = () => _findNextEnabledStage(1)
+
+  const previousStageIndex = () => _findNextEnabledStage(-1)
+
   return {
     // Stage count and current stage
     stages: readonly(stages),
     stage: readonly(stage),
+    nextStageIndex,
+    previousStageIndex,
 
     // Wizard mode (guided or overview )
     mode: readonly(wizardMode),

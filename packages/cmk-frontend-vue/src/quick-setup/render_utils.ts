@@ -3,11 +3,9 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { h, markRaw, type Ref } from 'vue'
-
+import { h, markRaw } from 'vue'
 import CompositeWidget from '@/quick-setup/components/quick-setup/widgets/CompositeWidget.vue'
 import QuickSetupStageWidgetContent from './QuickSetupStageWidgetContent.vue'
-
 import type {
   AllValidationMessages,
   ComponentSpec,
@@ -35,7 +33,7 @@ export const renderRecap = (recap: ComponentSpec[]): VnodeOrNull => {
  * Renders a component for the content section of an active stage
  * @param {ComponentSpec[]} components - List of widgets to render in current stage
  * @param {UpdateCallback} onUpdate - Callback to update the stage data. It receives the whole stage data
- * @param {string[]}  bagckgroundJobLog - Array of strings from the Quick Setup background job log
+ * @param {LogStep[]} bagckgroundJobLog - Array of strings from the Quick Setup background job log
  * @param {AllValidationMessages} formSpecErrors - Formspec Validation Errors
  * @param {StageData} userInput - The data entered previously by the user
  * @returns
@@ -43,7 +41,7 @@ export const renderRecap = (recap: ComponentSpec[]): VnodeOrNull => {
 export const renderContent = (
   components: ComponentSpec[],
   onUpdate: UpdateCallback,
-  bagckgroundJobLog: Readonly<Ref<LogStep[]>>,
+  bagckgroundJobLog: LogStep[],
   formSpecErrors?: AllValidationMessages,
   userInput?: StageData
 ): VnodeOrNull => {

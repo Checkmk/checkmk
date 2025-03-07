@@ -16,7 +16,9 @@ export interface LogUpdate {
   steps: LogStep[]
 }
 
-interface BackgroundJobLog {
+export type BackgroundJobLogEntries = Readonly<Ref<LogStep[]>>
+
+export interface BackgroundJobLog {
   update: (newLog: LogUpdate | null) => void
   clear: () => void
   isEmpty: () => boolean
@@ -24,7 +26,7 @@ interface BackgroundJobLog {
   isTaskActive: () => boolean
   setActiveTasksToError: () => void
 
-  entries: Readonly<Ref<LogStep[]>>
+  entries: BackgroundJobLogEntries
 }
 
 export const useBackgroundJobLog = (): BackgroundJobLog => {
@@ -71,6 +73,6 @@ export const useBackgroundJobLog = (): BackgroundJobLog => {
     count,
     isTaskActive,
     setActiveTasksToError,
-    entries: entries
+    entries
   }
 }

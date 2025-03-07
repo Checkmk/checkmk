@@ -8,7 +8,7 @@ import type { StageData } from '../components/quick-setup/widgets/widget_types'
 import { wait } from '@/lib/utils'
 import {
   QuickSetupCompleteActionValidationResponse,
-  QuickSetupStageActionValidationResponse,
+  QuickSetupStageActionErrorValidationResponse,
   type QuickSetupCompleteResponse,
   type QuickSetupGuidedResponse,
   type QuickSetupOverviewResponse,
@@ -131,12 +131,12 @@ export const validateAndRecapStage = async (
   actionId: string,
   formData: StageData[],
   onLogUpdate?: LogWatcher
-): Promise<QuickSetupStageActionResponse | QuickSetupStageActionValidationResponse> => {
+): Promise<QuickSetupStageActionResponse | QuickSetupStageActionErrorValidationResponse> => {
   const stages = formData.map((stage) => ({ form_data: stage }))
 
   const data = await quickSetupClient.runStageAction(quickSetupId, actionId, stages)
 
-  if (data instanceof QuickSetupStageActionValidationResponse) {
+  if (data instanceof QuickSetupStageActionErrorValidationResponse) {
     return data
   } else if (isBackgroundJob(data)) {
     /*

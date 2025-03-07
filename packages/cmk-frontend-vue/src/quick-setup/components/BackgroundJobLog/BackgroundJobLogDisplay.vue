@@ -6,11 +6,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkIcon from '@/components/CmkIcon.vue'
 import type { LogStep, LogStepStatus } from './useBackgroundJobLog'
-import { type Ref } from 'vue'
 
 interface BackgroundJobLogDisplayProps {
-  /** @property {Readonly<Ref<LogStep[]>>} steps - List of steps*/
-  steps: Readonly<Ref<LogStep[]>>
+  /** @property {LogStep} steps - List of steps*/
+  steps: LogStep[]
 }
 
 const props = defineProps<BackgroundJobLogDisplayProps>()
@@ -27,7 +26,7 @@ const getIcon = (step: LogStep) => {
 </script>
 <template>
   <ul class="qs-background-job-log-display__list">
-    <li v-for="(item, idx) in props.steps.value" :key="idx">
+    <li v-for="(item, idx) in props.steps" :key="idx">
       <CmkIcon :name="getIcon(item)" variant="inline" size="medium" /> {{ item.title }}
     </li>
   </ul>

@@ -33,7 +33,7 @@ from cmk.gui.openapi.endpoints.user_config import (
 )
 from cmk.gui.openapi.endpoints.utils import complement_customer
 from cmk.gui.type_defs import CustomUserAttrSpec, UserObject
-from cmk.gui.userdb import ConnectorType, UserRole
+from cmk.gui.userdb import ConnectorType, user_attribute_registry, UserRole
 from cmk.gui.userdb._connections import Fixed, LDAPConnectionConfigFixed, LDAPUserConnectionConfig
 from cmk.gui.userdb.ldap_connector import LDAPUserConnector
 from cmk.gui.watolib.custom_attributes import (
@@ -1011,7 +1011,7 @@ def add_default_customer_in_managed_edition(params: dict[str, Any]) -> None:
         params["customer"] = "global"
 
 
-@pytest.mark.skip(reason="flaky)")
+@pytest.mark.skip(reason="flaky")
 @managedtest
 @patch(
     "cmk.gui.userdb.user_attributes.theme_choices",
@@ -1081,7 +1081,13 @@ def test_edit_custom_attributes_of_user(_mock: None, clients: ClientRegistry) ->
         }
     )
 
+    import pprint
+
     with custom_user_attributes_ctx([attr]):
+        print("User attribute registry items 1: ", len(user_attribute_registry.items()))
+        pprint.pprint(list(user_attribute_registry.items()))
+        print("wato user attr", id(active_config.wato_user_attrs))
+        pprint.pprint(active_config.wato_user_attrs)
         clients.User.create(
             username=username,
             fullname="Mathias Kettner",
@@ -1098,13 +1104,26 @@ def test_edit_custom_attributes_of_user(_mock: None, clients: ClientRegistry) ->
             },
         )
 
+        print("User attribute registry items 2: ", len(user_attribute_registry.items()))
+        pprint.pprint(list(user_attribute_registry.items()))
+        print("wato user attr", id(active_config.wato_user_attrs))
+        pprint.pprint(active_config.wato_user_attrs)
+
         resp = clients.User.get(username=username)
+        print("User attribute registry items 3: ", len(user_attribute_registry.items()))
+        pprint.pprint(list(user_attribute_registry.items()))
+        print("wato user attr", id(active_config.wato_user_attrs))
+        pprint.pprint(active_config.wato_user_attrs)
         assert resp.json["extensions"]["judas"] == "priest"
 
         resp2 = clients.User.edit(
             username=username,
             extra={"judas": "Iscariot"},
         )
+        print("User attribute registry items 4: ", len(user_attribute_registry.items()))
+        pprint.pprint(list(user_attribute_registry.items()))
+        print("wato user attr", id(active_config.wato_user_attrs))
+        pprint.pprint(active_config.wato_user_attrs)
         assert resp2.json["extensions"]["judas"] == "Iscariot"
 
 

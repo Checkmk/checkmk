@@ -17522,7 +17522,8 @@ msgstr ""
 msgid "Declare disabled services as undecided"
 msgstr "Dichiarare i servizi disabili come indecisi"
 
-msgid "Declare monitored services as undecided"
+#, fuzzy
+msgid "Declare monitored, including changed, services as undecided"
 msgstr "Dichiarare i servizi monitorati come indecisi"
 
 msgid "Declined reason"
@@ -19319,7 +19320,8 @@ msgstr "Disattivare in stato GUI"
 msgid "Disable locking"
 msgstr "Disattivare il bloccaggio"
 
-msgid "Disable monitored services"
+#, fuzzy
+msgid "Disable monitored, including changed, services"
 msgstr "Disattivare i servizi monitorati"
 
 msgid "Disable notifications"
@@ -48923,6 +48925,14 @@ msgstr ""
 "altri dispositivi"
 
 #, fuzzy
+msgid "Please add an event comment."
+msgstr "Si prega di aggiungere almeno un nodo figlio."
+
+#, fuzzy
+msgid "Please add at least one Rule ID."
+msgstr "Si prega di aggiungere almeno un nodo figlio."
+
+#, fuzzy
 msgid "Please add at least one check type."
 msgstr "Si prega di aggiungere almeno un nodo figlio."
 
@@ -48961,6 +48971,10 @@ msgstr "Si prega di aggiungere almeno un nodo figlio."
 
 #, fuzzy
 msgid "Please add at least one macro"
+msgstr "Si prega di aggiungere almeno un nodo figlio."
+
+#, fuzzy
+msgid "Please add at least one macro."
 msgstr "Si prega di aggiungere almeno un nodo figlio."
 
 #, fuzzy

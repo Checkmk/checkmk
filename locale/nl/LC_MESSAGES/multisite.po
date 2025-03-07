@@ -17695,7 +17695,8 @@ msgstr ""
 msgid "Declare disabled services as undecided"
 msgstr "Gehandicapte diensten opgeven als onbeslist"
 
-msgid "Declare monitored services as undecided"
+#, fuzzy
+msgid "Declare monitored, including changed, services as undecided"
 msgstr "Bewaakte diensten als onbeslist opgeven"
 
 msgid "Declined reason"
@@ -19498,7 +19499,8 @@ msgstr "Uitschakelen in status GUI"
 msgid "Disable locking"
 msgstr "Vergrendeling uitschakelen"
 
-msgid "Disable monitored services"
+#, fuzzy
+msgid "Disable monitored, including changed, services"
 msgstr "Schakel bewaakte diensten uit"
 
 msgid "Disable notifications"
@@ -49345,6 +49347,14 @@ msgstr ""
 "apparaten"
 
 #, fuzzy
+msgid "Please add an event comment."
+msgstr "Voeg ten minste één kindknooppunt toe."
+
+#, fuzzy
+msgid "Please add at least one Rule ID."
+msgstr "Voeg ten minste één kindknooppunt toe."
+
+#, fuzzy
 msgid "Please add at least one check type."
 msgstr "Voeg ten minste één kindknooppunt toe."
 
@@ -49384,6 +49394,10 @@ msgstr "Voeg ten minste één kindknooppunt toe."
 
 #, fuzzy
 msgid "Please add at least one macro"
+msgstr "Voeg ten minste één kindknooppunt toe."
+
+#, fuzzy
+msgid "Please add at least one macro."
 msgstr "Voeg ten minste één kindknooppunt toe."
 
 #, fuzzy

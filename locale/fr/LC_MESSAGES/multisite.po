@@ -17816,7 +17816,8 @@ msgstr ""
 msgid "Declare disabled services as undecided"
 msgstr "Déclarer les services désactivés comme non décidés"
 
-msgid "Declare monitored services as undecided"
+#, fuzzy
+msgid "Declare monitored, including changed, services as undecided"
 msgstr "Déclarer les services surveillés comme indécis"
 
 msgid "Declined reason"
@@ -19628,7 +19629,8 @@ msgstr "Désactiver dans le GUI d'état"
 msgid "Disable locking"
 msgstr "Désactiver le verrouillage"
 
-msgid "Disable monitored services"
+#, fuzzy
+msgid "Disable monitored, including changed, services"
 msgstr "Désactiver les services surveillés"
 
 msgid "Disable notifications"
@@ -49729,6 +49731,14 @@ msgstr ""
 "iOS ou autres appareils"
 
 #, fuzzy
+msgid "Please add an event comment."
+msgstr "Veuillez ajouter au moins un nœud enfant."
+
+#, fuzzy
+msgid "Please add at least one Rule ID."
+msgstr "Veuillez ajouter au moins un nœud enfant."
+
+#, fuzzy
 msgid "Please add at least one check type."
 msgstr "Veuillez ajouter au moins un nœud enfant."
 
@@ -49767,6 +49777,10 @@ msgstr "Veuillez ajouter au moins un nœud enfant."
 
 #, fuzzy
 msgid "Please add at least one macro"
+msgstr "Veuillez ajouter au moins un nœud enfant."
+
+#, fuzzy
+msgid "Please add at least one macro."
 msgstr "Veuillez ajouter au moins un nœud enfant."
 
 #, fuzzy

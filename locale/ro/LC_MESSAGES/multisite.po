@@ -17702,7 +17702,8 @@ msgstr ""
 msgid "Declare disabled services as undecided"
 msgstr "Declarați serviciile pentru persoane cu handicap ca fiind nehotărâte"
 
-msgid "Declare monitored services as undecided"
+#, fuzzy
+msgid "Declare monitored, including changed, services as undecided"
 msgstr "Declarați serviciile monitorizate ca fiind nehotărâte"
 
 msgid "Declined reason"
@@ -19517,7 +19518,8 @@ msgstr "Dezactivați în GUI de stare"
 msgid "Disable locking"
 msgstr "Dezactivarea blocării"
 
-msgid "Disable monitored services"
+#, fuzzy
+msgid "Disable monitored, including changed, services"
 msgstr "Dezactivarea serviciilor monitorizate"
 
 msgid "Disable notifications"
@@ -49399,6 +49401,14 @@ msgstr ""
 "Android, iOS sau alte dispozitive"
 
 #, fuzzy
+msgid "Please add an event comment."
+msgstr "Vă rugăm să adăugați cel puțin un nod copil."
+
+#, fuzzy
+msgid "Please add at least one Rule ID."
+msgstr "Vă rugăm să adăugați cel puțin un nod copil."
+
+#, fuzzy
 msgid "Please add at least one check type."
 msgstr "Vă rugăm să adăugați cel puțin un nod copil."
 
@@ -49437,6 +49447,10 @@ msgstr "Vă rugăm să adăugați cel puțin un nod copil."
 
 #, fuzzy
 msgid "Please add at least one macro"
+msgstr "Vă rugăm să adăugați cel puțin un nod copil."
+
+#, fuzzy
+msgid "Please add at least one macro."
 msgstr "Vă rugăm să adăugați cel puțin un nod copil."
 
 #, fuzzy

@@ -16818,7 +16818,8 @@ msgstr "記号付き10進数%s"
 msgid "Declare disabled services as undecided"
 msgstr "無効のサービスを未決定とする"
 
-msgid "Declare monitored services as undecided"
+#, fuzzy
+msgid "Declare monitored, including changed, services as undecided"
 msgstr "監視対象サービスを未決定とする"
 
 msgid "Declined reason"
@@ -18511,7 +18512,8 @@ msgstr "ステータスGUIで無効にする"
 msgid "Disable locking"
 msgstr "ロックを無効にする"
 
-msgid "Disable monitored services"
+#, fuzzy
+msgid "Disable monitored, including changed, services"
 msgstr "監視対象サービスを無効にする"
 
 msgid "Disable notifications"
@@ -47150,6 +47152,14 @@ msgstr ""
 "バイス"
 
 #, fuzzy
+msgid "Please add an event comment."
+msgstr "少なくとも1人のメンバーを追加してください。"
+
+#, fuzzy
+msgid "Please add at least one Rule ID."
+msgstr "少なくとも1人のユーザーを追加してください"
+
+#, fuzzy
 msgid "Please add at least one check type."
 msgstr "少なくとも1つの子ノードを追加してください。"
 
@@ -47181,6 +47191,10 @@ msgid "Please add at least one host."
 msgstr "少なくとも1人のホストを追加してください。"
 
 msgid "Please add at least one macro"
+msgstr "少なくとも1つのマクロを追加してください"
+
+#, fuzzy
+msgid "Please add at least one macro."
 msgstr "少なくとも1つのマクロを追加してください"
 
 msgid "Please add at least one member."

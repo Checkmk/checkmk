@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-03-05 19:50+0000\n"
+"PO-Revision-Date: 2025-03-06 19:50+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -17145,7 +17145,8 @@ msgstr "Dezimal mit Symbol %s"
 msgid "Declare disabled services as undecided"
 msgstr "Lege deaktivierte Services als noch nicht entschieden fest"
 
-msgid "Declare monitored services as undecided"
+#, fuzzy
+msgid "Declare monitored, including changed, services as undecided"
 msgstr "Lege überwachte Services als noch nicht entschieden fest"
 
 msgid "Declined reason"
@@ -18859,7 +18860,8 @@ msgstr "Deaktivieren im Status-GUI"
 msgid "Disable locking"
 msgstr "Schalte Sperren aus"
 
-msgid "Disable monitored services"
+#, fuzzy
+msgid "Disable monitored, including changed, services"
 msgstr "Überwachte Services deaktivieren"
 
 msgid "Disable notifications"
@@ -43740,9 +43742,8 @@ msgstr "Bei %s (Server-Zeit)."
 msgid "On Hold"
 msgstr "In Wartestellung"
 
-#, fuzzy
 msgid "On all services"
-msgstr "Alle Services"
+msgstr "Bei allen Services"
 
 msgid "On all sites"
 msgstr "Auf allen Instanzen"
@@ -47361,6 +47362,14 @@ msgstr ""
 "Bitte aktivieren Sie das Monitoring von mindestens einem Gerätetyp: Android, "
 "iOS oder andere Geräte"
 
+#, fuzzy
+msgid "Please add an event comment."
+msgstr "Bitte fügen Sie mindestens ein Mitglied hinzu."
+
+#, fuzzy
+msgid "Please add at least one Rule ID."
+msgstr "Bitte fügen Sie mindestens einen Benutzer hinzu."
+
 msgid "Please add at least one check type."
 msgstr "Bitte fügen Sie mindestens einen Check-Typ hinzu."
 
@@ -47392,6 +47401,10 @@ msgid "Please add at least one host."
 msgstr "Bitte fügen Sie mindestens einen Host hinzu."
 
 msgid "Please add at least one macro"
+msgstr "Bitte fügen Sie mindestens ein Makro hinzu."
+
+#, fuzzy
+msgid "Please add at least one macro."
 msgstr "Bitte fügen Sie mindestens ein Makro hinzu."
 
 msgid "Please add at least one member."
@@ -58225,9 +58238,8 @@ msgstr ""
 "Ab Version 1.6.0 muss dieser Wert konfiguriert werden. Lesen Sie das Werk "
 "#6646 für weitere Informationen."
 
-#, fuzzy
 msgid "Starting snapshot creation in thread pool"
-msgstr "Snapshot-Erstellung im Prozess-Pool starten"
+msgstr "Snapshot-Erstellung im Thread-Pool starten"
 
 msgid "Starting up"
 msgstr "Startend"

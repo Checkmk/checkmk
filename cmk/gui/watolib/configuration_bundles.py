@@ -68,9 +68,12 @@ def bundle_domains() -> Mapping[RuleGroupType, set[DomainDefinition]]:
     return {RuleGroupType.SPECIAL_AGENTS: domains}
 
 
-def _get_affected_entities(bundle_group: str) -> set[Entity]:
-    rule_group_type = RuleGroupType(bundle_group.split(":", maxsplit=1)[0])
-    bundle_domain = bundle_domains().get(rule_group_type, None)
+def _get_affected_entities(bundle_group: str | None) -> set[Entity]:
+    if bundle_group is None:
+        bundle_domain = None
+    else:
+        rule_group_type = RuleGroupType(bundle_group.split(":", maxsplit=1)[0])
+        bundle_domain = bundle_domains().get(rule_group_type, None)
     return {domain.entity for domain in bundle_domain} if bundle_domain else ALL_ENTITIES
 
 
@@ -142,7 +145,7 @@ def valid_special_agent_bundle(bundle: BundleReferences) -> bool:
 
 
 def identify_bundle_references(
-    bundle_group: str, bundle_ids: set[BundleId], *, rulespecs_hint: set[str] | None = None
+    bundle_group: str | None, bundle_ids: set[BundleId], *, rulespecs_hint: set[str] | None = None
 ) -> Mapping[BundleId, BundleReferences]:
     """Identify the configuration references of the configuration bundles."""
     bundle_id_finder = _prepare_id_finder(PROGRAM_ID_QUICK_SETUP, bundle_ids)
@@ -268,11 +271,14 @@ def delete_config_bundle(bundle_id: BundleId) -> None:
     if (bundle := all_bundles.pop(bundle_id, None)) is None:
         raise MKGeneralException(f'Configuration bundle "{bundle_id}" does not exist.')
 
-    references = identify_bundle_references(bundle["group"], {bundle_id})[bundle_id]
-
     # we have to delete the bundle itself first, so the overview page doesn't error out
     # when someone refreshes it while the deletion is in progress
     store.save(all_bundles)
+    delete_config_bundle_objects(bundle_id, bundle["group"])
+
+
+def delete_config_bundle_objects(bundle_id: BundleId, bundle_group: str | None) -> None:
+    references = identify_bundle_references(bundle_group, {bundle_id})[bundle_id]
 
     # delete resources in inverse order to create, as rules may reference hosts for example
     if references.rules:

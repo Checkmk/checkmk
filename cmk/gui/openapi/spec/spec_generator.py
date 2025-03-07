@@ -425,6 +425,7 @@ from cmk.gui.openapi.restful_objects.api_error import (
 from cmk.gui.openapi.restful_objects.code_examples import code_samples
 from cmk.gui.openapi.restful_objects.decorators import Endpoint
 from cmk.gui.openapi.restful_objects.documentation import table_definitions
+from cmk.gui.openapi.restful_objects.endpoint_family import endpoint_family_registry
 from cmk.gui.openapi.restful_objects.parameters import (
     ACCEPT_HEADER,
     CONTENT_TYPE,
@@ -847,19 +848,30 @@ def _to_operation_dict(
             endpoint, 428, DefaultStatusCodeDescription.Code428
         )
 
-    docstring_name = _docstring_name(module_obj.__doc__)
-    tag_obj: OpenAPITag = {
-        "name": docstring_name,
-        "x-displayName": docstring_name,
-    }
-    docstring_desc = _docstring_description(module_obj.__doc__)
-    if docstring_desc:
-        tag_obj["description"] = docstring_desc
+    family_name = None
+    tag_obj: OpenAPITag
+    if endpoint.family_name is not None:
+        family = endpoint_family_registry.get(endpoint.family_name)
+        if family is not None:
+            tag_obj = family.to_openapi_tag()
+            family_name = family.name
+            _add_tag(spec, tag_obj, tag_group=endpoint.tag_group)
+    else:
+        docstring_name = _docstring_name(module_obj.__doc__)
+        tag_obj = {
+            "name": docstring_name,
+            "x-displayName": docstring_name,
+        }
+        docstring_desc = _docstring_description(module_obj.__doc__)
+        if docstring_desc:
+            tag_obj["description"] = docstring_desc
 
-    _add_tag(spec, tag_obj, tag_group=endpoint.tag_group)
+        family_name = docstring_name
+        _add_tag(spec, tag_obj, tag_group=endpoint.tag_group)
 
+    assert family_name is not None
     operation_spec: OperationSpecType = {
-        "tags": [docstring_name],
+        "tags": [family_name],
         "description": "",
     }
     if werk_id:

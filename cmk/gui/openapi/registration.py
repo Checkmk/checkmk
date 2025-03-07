@@ -42,10 +42,15 @@ from cmk.gui.openapi.endpoints import (
 )
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 
+from .restful_objects.endpoint_family import EndpointFamilyRegistry
 from .spec import spec_generator_job
 
 
-def register(endpoint_registry: EndpointRegistry, job_registry: BackgroundJobRegistry) -> None:
+def register(
+    endpoint_registry: EndpointRegistry,
+    endpoint_family_registry: EndpointFamilyRegistry,
+    job_registry: BackgroundJobRegistry,
+) -> None:
     acknowledgement.register(endpoint_registry)
     activate_changes.register(endpoint_registry)
     agent.register(endpoint_registry)

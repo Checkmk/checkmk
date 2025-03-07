@@ -269,6 +269,11 @@ class Endpoint:
         internal_user_only:
             If set to True, then this endpoint is only accesible via InternalToken authentication method
 
+        family_name:
+            The name of the family this endpoint belongs to. This is used to group endpoints in the
+            OpenAPI spec. If not set, the endpoint will infer the spec information based on the
+            endpoint's module (legacy).
+
     """
 
     def __init__(
@@ -300,6 +305,7 @@ class Endpoint:
         sort: int = 0,
         accept: AcceptFieldType = "application/json",
         internal_user_only: bool = False,
+        family_name: str | None = None,
     ):
         self.path = path
         self.link_relation = link_relation
@@ -325,6 +331,7 @@ class Endpoint:
         self.sort = sort
         self.accept = accept if isinstance(accept, list) else [accept]
         self.internal_user_only = internal_user_only
+        self.family_name = family_name
 
         if deprecated_urls is not None:
             for url in deprecated_urls:

@@ -36,7 +36,7 @@ from cmk.gui.help_menu import (
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.mkeventd import registration as mkeventd_registration
 from cmk.gui.mkeventd.helpers import save_active_config
-from cmk.gui.openapi import endpoint_registry
+from cmk.gui.openapi import endpoint_family_registry, endpoint_registry
 from cmk.gui.openapi.endpoints import autocomplete
 from cmk.gui.openapi.endpoints import metric as metric_endpoint
 from cmk.gui.pages import page_registry
@@ -170,6 +170,7 @@ def register(edition: Edition) -> None:
         host_attribute_topic_registry,
         replication_path_registry,
         endpoint_registry,
+        endpoint_family_registry,
         user_connector_registry,
         layout_registry,
         config_file_registry,

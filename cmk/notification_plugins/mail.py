@@ -561,7 +561,8 @@ def extend_context(context: dict[str, str], is_bulk: bool = False) -> None:
         context.get("SERVICEDESC", ""),
     )
 
-    if "graph" in context.get("PARAMETER_ELEMENTSS", "").split():
+    # For "Additional details", graph is a default
+    if "graph" in context.get("PARAMETER_ELEMENTSS", "graph").split():
         context["GRAPH_URL"] = utils.graph_url_from_context(context)
 
     if is_bulk:

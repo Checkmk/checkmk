@@ -478,6 +478,7 @@ def setup_source_host_piggyback(
 
             hostnames = get_piggyback_hosts(site, source_host_name) + [source_host_name]
             for hostname in hostnames:
+                assert site.get_host_services(hostname)["Check_MK"].state == 0
                 logger.info("Scheduling checks & checking for pending services...")
                 pending_checks = []
                 for idx in range(3):

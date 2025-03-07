@@ -61,7 +61,10 @@ cc_library(
         "include/neb/TimeperiodsCache.h",
         "include/neb/nagios.h",
     ],
-    copts = ["-O3"],
+    copts = [
+        "-O3",
+        "-std=c++20",
+    ],
     strip_include_prefix = "include/",
     deps = [
         ":neb_nagios_headers",

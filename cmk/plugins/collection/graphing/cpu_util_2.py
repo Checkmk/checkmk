@@ -85,6 +85,12 @@ metric_util_numcpu_as_max = metrics.Metric(
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.GREEN,
 )
+metric_privileged = metrics.Metric(
+    name="privileged",
+    title=Title("Privileged"),
+    unit=UNIT_PERCENTAGE,
+    color=metrics.Color.CYAN,
+)
 
 perfometer_user_system_idle_nice = perfometers.Perfometer(
     name="user_system_idle_nice",
@@ -184,19 +190,17 @@ graph_cpu_utilization_numcpus = graphs.Graph(
     ),
     compound_lines=[
         "user",
-        metrics.Difference(
-            Title("Privileged"),
-            metrics.Color.ORANGE,
-            minuend="util_numcpu_as_max",
-            subtrahend="user",
-        ),
+        "privileged",
     ],
     simple_lines=[
         "util_numcpu_as_max",
         metrics.WarningOf("util_numcpu_as_max"),
         metrics.CriticalOf("util_numcpu_as_max"),
     ],
-    optional=["user"],
+    optional=[
+        "user",
+        "privileged",
+    ],
 )
 graph_cpu_utilization_simple = graphs.Graph(
     name="cpu_utilization_simple",

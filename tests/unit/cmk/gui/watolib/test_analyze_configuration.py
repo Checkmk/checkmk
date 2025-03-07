@@ -136,7 +136,7 @@ class _FakeACTestMultiSite(ACTest):
                 ACTestResult(
                     state=ACResultState.WARN,
                     text="single result 1, single result 2 (!)",
-                    site_id=SiteId("NO_SITE"),
+                    site_id=SiteId("site_id"),
                     test_id="_FakeACTestSingleSite",
                     category="category",
                     title="Fake AC test",
@@ -195,7 +195,9 @@ class _FakeACTestMultiSite(ACTest):
     ],
 )
 def test_ac_test_run(ac_test: type[ACTest], test_result: Sequence[ACTestResult]) -> None:
-    assert merge_tests({SiteId("foo"): list(ac_test().run())}) == {SiteId("foo"): test_result}
+    assert merge_tests({SiteId("site_id"): list(ac_test().run())}) == {
+        SiteId("site_id"): test_result
+    }
 
 
 @pytest.mark.parametrize(

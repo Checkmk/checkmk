@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Literal
 
@@ -18,7 +17,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.gui.config import active_config
 from cmk.gui.graphing import _graph_templates as gt
 from cmk.gui.graphing._formatter import AutoPrecision
-from cmk.gui.graphing._from_api import metrics_from_api, RegisteredMetric
+from cmk.gui.graphing._from_api import RegisteredMetric
 from cmk.gui.graphing._graph_specification import HorizontalRule
 from cmk.gui.graphing._graph_templates import (
     _evaluate_predictive_metrics,
@@ -178,7 +177,7 @@ def test__matching_graph_templates(
                 graph_id=graph_id,
                 graph_index=graph_index,
                 translated_metrics={},
-                registered_metrics=metrics_from_api,
+                registered_metrics={},
             )
         )
         == expected_result
@@ -192,7 +191,7 @@ def test_evaluate_title_ok() -> None:
             translate_metrics(
                 [PerfDataTuple("load1", "load1", 1, "", 120, 240, 0, 25)],
                 "check_mk-cpu_loads",
-                metrics_from_api,
+                {},
             ),
         )
         == "CPU Load - 25 CPU Cores"
@@ -206,7 +205,7 @@ def test_evaluate_title_missing_scalar() -> None:
             translate_metrics(
                 [PerfDataTuple("load1", "load1", 1, "", None, None, None, None)],
                 "check_mk-cpu_loads",
-                metrics_from_api,
+                {},
             ),
         )
         == "CPU Load"
@@ -214,15 +213,27 @@ def test_evaluate_title_missing_scalar() -> None:
 
 
 @pytest.mark.parametrize(
-    "perf_data_string, result",
+    ("perf_data_string", "registered_metrics", "result"),
     [
         pytest.param(
             "one=5;;;; power=5;;;; output=5;;;;",
+            {},
             [],
             id="Unknown thresholds from check",
         ),
         pytest.param(
             "one=5;7;6;; power=5;9;10;; output=5;2;3;;",
+            {
+                "power": RegisteredMetric(
+                    name="power",
+                    title_localizer=lambda _localizer: "Electrical power",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol="W"),
+                        precision=AutoPrecision(digits=3),
+                    ),
+                    color="",
+                ),
+            },
             [
                 HorizontalRule(
                     value=7.0,
@@ -248,13 +259,15 @@ def test_evaluate_title_missing_scalar() -> None:
     ],
 )
 def test_horizontal_rules_from_thresholds(
-    perf_data_string: str, result: Sequence[HorizontalRule]
+    perf_data_string: str,
+    registered_metrics: Mapping[str, RegisteredMetric],
+    result: Sequence[HorizontalRule],
 ) -> None:
     perf_data, check_command = parse_perf_data(perf_data_string, None, config=active_config)
     translated_metrics = translate_metrics(
         perf_data,
         check_command,
-        metrics_from_api,
+        registered_metrics,
     )
     assert [
         HorizontalRule(
@@ -290,13 +303,13 @@ def test_horizontal_rules_from_thresholds(
     ] == result
 
 
-def test_duplicate_graph_templates(request_context: None) -> None:
+def test_duplicate_graph_templates() -> None:
     idents_by_metrics: dict[tuple[str, ...], list[str]] = {}
     for id_, plugin in _get_sorted_graph_plugins():
         parsed = _parse_graph_plugin(
             id_,
             plugin,
-            metrics_from_api,
+            {},
         )
         expressions = [m.base for m in parsed.metrics] + [s.base for s in parsed.scalars]
         if parsed.range:
@@ -311,7 +324,7 @@ def test_duplicate_graph_templates(request_context: None) -> None:
     }
 
 
-def test_graph_template_with_layered_areas(request_context: None) -> None:
+def test_graph_template_with_layered_areas() -> None:
     # area, area, ... -> two layers
     # area, stack, ... -> one layer
     # stack, stack, ... -> one layer
@@ -322,7 +335,7 @@ def test_graph_template_with_layered_areas(request_context: None) -> None:
 
     areas_by_ident: dict[str, _GraphTemplateArea] = {}
     for id_, plugin in _get_sorted_graph_plugins():
-        parsed = _parse_graph_plugin(id_, plugin, metrics_from_api)
+        parsed = _parse_graph_plugin(id_, plugin, {})
         for metric_expression in parsed.metrics:
             if metric_expression.line_type == "area":
                 areas_by_ident.setdefault(parsed.id, _GraphTemplateArea()).pos.append(
@@ -757,23 +770,22 @@ COLOR_HEX = "#1e90ff"
 def test__parse_graph_from_api(
     graph: graphs_api.Graph, raw_metric_names: Sequence[str], expected_template: GraphTemplate
 ) -> None:
-    for r in raw_metric_names:
-        metrics_from_api.register(
-            RegisteredMetric(
-                name=r,
-                title_localizer=lambda _: "Title",
-                unit_spec=ConvertibleUnitSpecification(
-                    notation=DecimalNotation(symbol=""),
-                    precision=AutoPrecision(digits=2),
-                ),
-                color="#000000",
-            )
-        )
     assert (
         _parse_graph_from_api(
             graph.name,
             graph,
-            metrics_from_api,
+            {
+                r: RegisteredMetric(
+                    name=r,
+                    title_localizer=lambda _: "Title",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#000000",
+                )
+                for r in raw_metric_names
+            },
         )
         == expected_template
     )
@@ -1024,23 +1036,22 @@ def test__parse_bidirectional_from_api(
     raw_metric_names: Sequence[str],
     expected_template: GraphTemplate,
 ) -> None:
-    for r in raw_metric_names:
-        metrics_from_api.register(
-            RegisteredMetric(
-                name=r,
-                title_localizer=lambda _: "Title",
-                unit_spec=ConvertibleUnitSpecification(
-                    notation=DecimalNotation(symbol=""),
-                    precision=AutoPrecision(digits=2),
-                ),
-                color="#000000",
-            )
-        )
     assert (
         _parse_bidirectional_from_api(
             graph.name,
             graph,
-            metrics_from_api,
+            {
+                r: RegisteredMetric(
+                    name=r,
+                    title_localizer=lambda _: "Title",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#000000",
+                )
+                for r in raw_metric_names
+            },
         )
         == expected_template
     )
@@ -1108,13 +1119,13 @@ def test__get_evaluated_graph_templates_1(
     request_context: None,
 ) -> None:
     perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
-    translated_metrics = translate_metrics(perfdata, check_command, metrics_from_api)
+    translated_metrics = translate_metrics(perfdata, check_command, {})
     assert sorted(
         [
             t.id
             for t in _get_evaluated_graph_templates(
                 translated_metrics,
-                metrics_from_api,
+                {},
             )
         ]
     ) == sorted(graph_ids)
@@ -1140,13 +1151,13 @@ def test__get_evaluated_graph_templates_2(
     request_context: None,
 ) -> None:
     perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", *warn_crit_min_max) for n in metric_names]
-    translated_metrics = translate_metrics(perfdata, check_command, metrics_from_api)
+    translated_metrics = translate_metrics(perfdata, check_command, {})
     assert sorted(
         [
             t.id
             for t in _get_evaluated_graph_templates(
                 translated_metrics,
-                metrics_from_api,
+                {},
             )
         ]
     ) == sorted(graph_ids)
@@ -1331,7 +1342,14 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
 
 
 @pytest.mark.parametrize(
-    "metric_names, predict_metric_names, predict_lower_metric_names, check_command, graph_templates",
+    (
+        "metric_names",
+        "predict_metric_names",
+        "predict_lower_metric_names",
+        "check_command",
+        "registered_metrics",
+        "graph_templates",
+    ),
     [
         pytest.param(
             [
@@ -1347,6 +1365,26 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                 "predict_lower_messages_inbound",
             ],
             "check_mk-inbound_and_outbound_messages",
+            {
+                "messages_outbound": RegisteredMetric(
+                    name="messages_outbound",
+                    title_localizer=lambda _localizer: "Outbound messages",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol="/s"),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#1e90ff",
+                ),
+                "messages_inbound": RegisteredMetric(
+                    name="messages_inbound",
+                    title_localizer=lambda _localizer: "Inbound messages",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol="/s"),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#1ee6e6",
+                ),
+            },
             [
                 EvaluatedGraphTemplate(
                     id="inbound_and_outbound_messages",
@@ -1440,6 +1478,26 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                 "predict_lower_foo",
             ],
             "check_mk-inbound_and_outbound_messages",
+            {
+                "messages_outbound": RegisteredMetric(
+                    name="messages_outbound",
+                    title_localizer=lambda _localizer: "Outbound messages",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol="/s"),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#1e90ff",
+                ),
+                "messages_inbound": RegisteredMetric(
+                    name="messages_inbound",
+                    title_localizer=lambda _localizer: "Inbound messages",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol="/s"),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#1ee6e6",
+                ),
+            },
             [
                 EvaluatedGraphTemplate(
                     id="inbound_and_outbound_messages",
@@ -1592,20 +1650,20 @@ def test__get_evaluated_graph_templates_with_predictive_metrics(
     predict_metric_names: Sequence[str],
     predict_lower_metric_names: Sequence[str],
     check_command: str,
+    registered_metrics: Mapping[str, RegisteredMetric],
     graph_templates: Sequence[EvaluatedGraphTemplate],
-    request_context: None,
 ) -> None:
     perfdata: Perfdata = (
         [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
         + [PerfDataTuple(n, n[8:], 0, "", 1, 2, None, None) for n in predict_metric_names]
         + [PerfDataTuple(n, n[14:], 0, "", 3, 4, None, None) for n in predict_lower_metric_names]
     )
-    translated_metrics = translate_metrics(perfdata, check_command, metrics_from_api)
+    translated_metrics = translate_metrics(perfdata, check_command, registered_metrics)
     assert (
         list(
             _get_evaluated_graph_templates(
                 translated_metrics,
-                metrics_from_api,
+                registered_metrics,
             )
         )
         == graph_templates
@@ -1947,13 +2005,13 @@ def test_conflicting_metrics(
     # 1. write test for expected metric names of a graph template if it has "conflicting_metrics"
     # 2. use metric names from (1) and conflicting metrics
     perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
-    translated_metrics = translate_metrics(perfdata, "check_command", metrics_from_api)
+    translated_metrics = translate_metrics(perfdata, "check_command", {})
     assert sorted(
         [
             t.id
             for t in _get_evaluated_graph_templates(
                 translated_metrics,
-                metrics_from_api,
+                {},
             )
         ]
     ) == sorted(graph_ids)

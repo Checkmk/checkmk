@@ -16,7 +16,7 @@ from cmk.utils.metrics import MetricName
 
 from cmk.gui.config import active_config
 from cmk.gui.graphing._formatter import AutoPrecision
-from cmk.gui.graphing._from_api import metrics_from_api
+from cmk.gui.graphing._from_api import RegisteredMetric
 from cmk.gui.graphing._graph_specification import GraphDataRange, GraphMetric, GraphRecipe
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._legacy import CheckMetricEntry
@@ -106,7 +106,7 @@ def test_fetch_rrd_data_for_graph(
         assert fetch_rrd_data_for_graph(
             _GRAPH_RECIPE,
             _GRAPH_DATA_RANGE,
-            metrics_from_api,
+            {},
         ) == {
             RRDDataKey(
                 SiteId("NO_SITE"),
@@ -133,7 +133,7 @@ def test_fetch_rrd_data_for_graph_with_conversion(
         assert fetch_rrd_data_for_graph(
             _GRAPH_RECIPE,
             _GRAPH_DATA_RANGE,
-            metrics_from_api,
+            {},
         ) == {
             RRDDataKey(
                 SiteId("NO_SITE"),
@@ -161,7 +161,7 @@ def test_translate_and_merge_rrd_columns() -> None:
             )
         ],
         {},
-        metrics_from_api,
+        {},
     ) == TimeSeries(
         start=1682324400,
         end=1682497800,
@@ -191,7 +191,7 @@ def test_translate_and_merge_rrd_columns_with_translation() -> None:
                 deprecated="",
             )
         },
-        metrics_from_api,
+        {},
     ) == TimeSeries(
         start=1682324400,
         end=1682497800,
@@ -310,7 +310,17 @@ def test_translate_and_merge_rrd_columns_unit_conversion(
             ("rrddata:temperature:temperature.average:1682324616:1682497416:60", [0, 0, 0]),
         ],
         {},
-        metrics_from_api,
+        {
+            "temp": RegisteredMetric(
+                name="temp",
+                title_localizer=lambda _localizer: "Temperature",
+                unit_spec=ConvertibleUnitSpecification(
+                    notation=DecimalNotation(symbol="°C"),
+                    precision=AutoPrecision(digits=2),
+                ),
+                color="",
+            )
+        },
     ) == TimeSeries(
         start=1682324400,
         end=1682497800,

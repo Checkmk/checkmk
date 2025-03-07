@@ -13,7 +13,8 @@ from tests.unit.cmk.web_test_app import SetConfig
 from cmk.utils.metrics import MetricName
 
 from cmk.gui.config import active_config
-from cmk.gui.graphing._from_api import metrics_from_api
+from cmk.gui.graphing._formatter import AutoPrecision
+from cmk.gui.graphing._from_api import RegisteredMetric
 from cmk.gui.graphing._legacy import check_metrics, CheckMetricEntry
 from cmk.gui.graphing._translated_metrics import (
     _parse_check_command,
@@ -23,6 +24,7 @@ from cmk.gui.graphing._translated_metrics import (
     translate_metrics,
     TranslationSpec,
 )
+from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
@@ -302,7 +304,21 @@ def test_translate_metrics_with_predictive_metrics(
         PerfDataTuple(metric_name, metric_name, 0, "", None, None, None, None),
         PerfDataTuple(predictive_metric_name, metric_name, 0, "", None, None, None, None),
     ]
-    translated_metrics = translate_metrics(perfdata, "my-check-plugin", metrics_from_api)
+    translated_metrics = translate_metrics(
+        perfdata,
+        "my-check-plugin",
+        {
+            "messages_outbound": RegisteredMetric(
+                name="messages_outbound",
+                title_localizer=lambda _localizer: "Outbound messages",
+                unit_spec=ConvertibleUnitSpecification(
+                    notation=DecimalNotation(symbol="/s"),
+                    precision=AutoPrecision(digits=2),
+                ),
+                color="",
+            )
+        },
+    )
     assert translated_metrics[predictive_metric_name].title == expected_title
     assert (
         translated_metrics[predictive_metric_name].unit_spec
@@ -321,7 +337,7 @@ def test_translate_metrics_with_multiple_predictive_metrics() -> None:
             "predict_lower_messages_outbound", "messages_outbound", 0, "", None, None, None, None
         ),
     ]
-    translated_metrics = translate_metrics(perfdata, "my-check-plugin", metrics_from_api)
+    translated_metrics = translate_metrics(perfdata, "my-check-plugin", {})
     assert translated_metrics["predict_messages_outbound"].color == "#4b4b4b"
     assert translated_metrics["predict_lower_messages_outbound"].color == "#5a5a5a"
 
@@ -353,7 +369,17 @@ def test_translate_metrics(
     translated_metric = translate_metrics(
         [PerfDataTuple("temp", "temp", 59.05, "", 85.05, 85.05, None, None)],
         "check_mk-lnx_thermal",
-        metrics_from_api,
+        {
+            "temp": RegisteredMetric(
+                name="temp",
+                title_localizer=lambda _localizer: "Temperature",
+                unit_spec=ConvertibleUnitSpecification(
+                    notation=DecimalNotation(symbol="°C"),
+                    precision=AutoPrecision(digits=2),
+                ),
+                color="",
+            )
+        },
     )["temp"]
     assert translated_metric.value == expected_value
     assert translated_metric.scalar == expected_scalars

@@ -8,7 +8,7 @@ from livestatus import SiteId
 from cmk.utils.hostaddress import HostName
 
 from cmk.gui.graphing._formatter import AutoPrecision
-from cmk.gui.graphing._from_api import metrics_from_api
+from cmk.gui.graphing._from_api import RegisteredMetric
 from cmk.gui.graphing._graph_specification import GraphMetric, GraphRecipe, MinimalVerticalRange
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._metric_operation import MetricOpRRDSource
@@ -33,7 +33,46 @@ def test_template_recipes() -> None:
         site=SiteId("site_id"),
         host_name=HostName("host_name"),
         service_description="Service name",
-    ).recipes(metrics_from_api) == [
+    ).recipes(
+        {
+            "fs_growth": RegisteredMetric(
+                name="fs_growth",
+                title_localizer=lambda _localizer: "Growth",
+                unit_spec=ConvertibleUnitSpecification(
+                    notation=IECNotation(symbol="B/d"),
+                    precision=AutoPrecision(digits=2),
+                ),
+                color="#1ee6e6",
+            ),
+            "fs_used": RegisteredMetric(
+                name="fs_used",
+                title_localizer=lambda _localizer: "Used space",
+                unit_spec=ConvertibleUnitSpecification(
+                    notation=IECNotation(symbol="B"),
+                    precision=AutoPrecision(digits=2),
+                ),
+                color="#1e90ff",
+            ),
+            "fs_free": RegisteredMetric(
+                name="fs_free",
+                title_localizer=lambda _localizer: "Free space",
+                unit_spec=ConvertibleUnitSpecification(
+                    notation=IECNotation(symbol="B"),
+                    precision=AutoPrecision(digits=2),
+                ),
+                color="#d28df6",
+            ),
+            "fs_size": RegisteredMetric(
+                name="fs_size",
+                title_localizer=lambda _localizer: "Total size",
+                unit_spec=ConvertibleUnitSpecification(
+                    notation=IECNotation(symbol="B"),
+                    precision=AutoPrecision(digits=2),
+                ),
+                color="#37fa37",
+            ),
+        }
+    ) == [
         GraphRecipe(
             title="Size and used space",
             unit_spec=ConvertibleUnitSpecification(

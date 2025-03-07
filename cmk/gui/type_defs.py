@@ -109,6 +109,7 @@ AuthType = Literal[
     "automation",
     "basic_auth",
     "bearer",
+    "cognito",
     "cookie",
     "http_header",
     "internal_token",

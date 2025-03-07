@@ -8,7 +8,6 @@ from dataclasses import dataclass, field
 from typing import Literal
 
 import pytest
-from pytest import MonkeyPatch
 
 from livestatus import SiteId
 
@@ -589,95 +588,154 @@ _HEAP_MEM_GRAPH = {
     ),
 }
 
-
-_GRAPH_TEMPLATES = [
-    GraphTemplate(
-        id="1",
-        title="Graph 1",
-        scalars=[],
-        conflicting_metrics=[],
-        optional_metrics=[],
-        consolidation_function=None,
-        range=None,
-        omit_zero_metrics=False,
-        metrics=[],
+_TRANSLATED_METRICS = {
+    "metric1": TranslatedMetric(
+        originals=[Original("metric1", 1.0)],
+        value=1.0,
+        scalar={},
+        auto_graph=True,
+        title="",
+        unit_spec=ConvertibleUnitSpecification(
+            notation=DecimalNotation(symbol=""),
+            precision=AutoPrecision(digits=2),
+        ),
+        color="#0080c0",
     ),
-    GraphTemplate(
-        id="2",
-        title="Graph 2",
-        scalars=[],
-        conflicting_metrics=[],
-        optional_metrics=[],
-        consolidation_function=None,
-        range=None,
-        omit_zero_metrics=False,
-        metrics=[],
+    "metric2": TranslatedMetric(
+        originals=[Original("metric2", 1.0)],
+        value=1.0,
+        scalar={},
+        auto_graph=True,
+        title="",
+        unit_spec=ConvertibleUnitSpecification(
+            notation=DecimalNotation(symbol=""),
+            precision=AutoPrecision(digits=2),
+        ),
+        color="#0080c0",
     ),
-]
+}
 
+_REGISTERED_GRAPHS = {
+    "graph1": graphs_api.Graph(
+        name="graph1",
+        title=Title("Graph 1"),
+        simple_lines=["metric1"],
+    ),
+    "graph2": graphs_api.Graph(
+        name="graph2",
+        title=Title("Graph 2"),
+        simple_lines=["metric2"],
+    ),
+}
 
 _EVALUATED_GRAPH_TEMPLATES = [
     EvaluatedGraphTemplate(
-        id="1",
+        id="graph1",
         title="Graph 1",
         scalars=[],
         consolidation_function="max",
         range=None,
         omit_zero_metrics=False,
-        metrics=[],
+        metrics=[
+            Evaluated(
+                base=Metric(
+                    name="metric1",
+                    consolidation=None,
+                ),
+                value=1.0,
+                unit_spec=ConvertibleUnitSpecification(
+                    type="convertible",
+                    notation=DecimalNotation(type="decimal", symbol=""),
+                    precision=AutoPrecision(type="auto", digits=2),
+                ),
+                color="#0080c0",
+                line_type="line",
+                title="Metric1",
+            ),
+        ],
     ),
     EvaluatedGraphTemplate(
-        id="2",
+        id="graph2",
         title="Graph 2",
         scalars=[],
         consolidation_function="max",
         range=None,
         omit_zero_metrics=False,
-        metrics=[],
+        metrics=[
+            Evaluated(
+                base=Metric(
+                    name="metric2",
+                    consolidation=None,
+                ),
+                value=1.0,
+                unit_spec=ConvertibleUnitSpecification(
+                    type="convertible",
+                    notation=DecimalNotation(type="decimal", symbol=""),
+                    precision=AutoPrecision(type="auto", digits=2),
+                ),
+                color="#0080c0",
+                line_type="line",
+                title="Metric2",
+            ),
+        ],
     ),
 ]
 
 
 @pytest.mark.parametrize(
-    ("graph_id", "graph_index", "expected_result"),
+    ("translated_metrics", "registered_graphs", "graph_id", "graph_index", "expected_result"),
     [
         pytest.param(
+            _TRANSLATED_METRICS,
+            _REGISTERED_GRAPHS,
             None,
             None,
-            list(enumerate(_GRAPH_TEMPLATES)),
+            list(enumerate(_EVALUATED_GRAPH_TEMPLATES)),
             id="no index and no id",
         ),
         pytest.param(
+            _TRANSLATED_METRICS,
+            _REGISTERED_GRAPHS,
             None,
             0,
-            [(0, _GRAPH_TEMPLATES[0])],
+            [(0, _EVALUATED_GRAPH_TEMPLATES[0])],
             id="matching index and no id",
         ),
         pytest.param(
+            _TRANSLATED_METRICS,
+            _REGISTERED_GRAPHS,
             None,
             10,
             [],
             id="non-matching index and no id",
         ),
         pytest.param(
-            "2",
+            _TRANSLATED_METRICS,
+            _REGISTERED_GRAPHS,
+            "graph2",
             None,
-            [(1, _GRAPH_TEMPLATES[1])],
+            [(1, _EVALUATED_GRAPH_TEMPLATES[1])],
             id="no index and matching id",
         ),
         pytest.param(
+            _TRANSLATED_METRICS,
+            _REGISTERED_GRAPHS,
             "wrong",
             None,
             [],
             id="no index and non-matching id",
         ),
         pytest.param(
-            "1",
+            _TRANSLATED_METRICS,
+            _REGISTERED_GRAPHS,
+            "graph1",
             0,
-            [(0, _GRAPH_TEMPLATES[0])],
+            [(0, _EVALUATED_GRAPH_TEMPLATES[0])],
             id="matching index and matching id",
         ),
         pytest.param(
+            _TRANSLATED_METRICS,
+            _REGISTERED_GRAPHS,
             "2",
             0,
             [],
@@ -686,24 +744,20 @@ _EVALUATED_GRAPH_TEMPLATES = [
     ],
 )
 def test__matching_graph_templates(
-    monkeypatch: MonkeyPatch,
+    translated_metrics: Mapping[str, TranslatedMetric],
+    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     graph_id: str | None,
     graph_index: int | None,
     expected_result: Sequence[tuple[int, EvaluatedGraphTemplate]],
 ) -> None:
-    monkeypatch.setattr(
-        gt,
-        "_get_evaluated_graph_templates",
-        lambda *args, **kwargs: _GRAPH_TEMPLATES,
-    )
     assert (
         list(
             _matching_graph_templates(
                 graph_id=graph_id,
                 graph_index=graph_index,
-                translated_metrics={},
+                translated_metrics=translated_metrics,
                 registered_metrics={},
-                registered_graphs={},
+                registered_graphs=registered_graphs,
             )
         )
         == expected_result

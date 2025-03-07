@@ -206,8 +206,8 @@ test-bandit-nosec-markers:
 	$(UVENV) python bandit-nosec-markers/nosec_reason.py --doc bandit-nosec-markers/bandit-exclusions.md check $(realpath ..)
 
 prepare-playwright:
-	../scripts/run-uvenv playwright install-deps "chromium";
-	../scripts/run-uvenv playwright install "chromium";
+	$(UVENV) playwright install-deps "chromium";
+	$(UVENV) playwright install "chromium";
 
 test-docker-docker:
 	DOCKER_RUN_ADDOPTS="-v $$HOME/.docker/config.json:$$HOME/.docker/config.json -v $$HOME/.cmk-credentials:$$HOME/.cmk-credentials --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION" \
@@ -229,11 +229,11 @@ test-integration-agent-plugin:
 test-format-python: test-format-python-sort test-format-python-format
 
 test-format-python-sort: ../pyproject.toml
-	echo $$($(FIND_PYTHON_FILES)) | xargs $(MAX_CHARS:%=--max-chars=%) ../scripts/run-uvenv ruff check --select I --diff | tee -a ../ruff_check_and_format.txt;\
+	echo $$($(FIND_PYTHON_FILES)) | xargs $(MAX_CHARS:%=--max-chars=%) $(UVENV) ruff check --select I --diff | tee -a ../ruff_check_and_format.txt;\
 	exit $${PIPESTATUS[1]}
 
 test-format-python-format: ../pyproject.toml
-	echo $$($(FIND_PYTHON_FILES)) | xargs $(MAX_CHARS:%=--max-chars=%) ../scripts/run-uvenv ruff format --check --diff | tee -a ../ruff_check_and_format.txt;\
+	echo $$($(FIND_PYTHON_FILES)) | xargs $(MAX_CHARS:%=--max-chars=%) $(UVENV) ruff format --check --diff | tee -a ../ruff_check_and_format.txt;\
 	exit $${PIPESTATUS[1]}
 
 test-format-shell:
@@ -481,7 +481,7 @@ what-gerrit-makes:
 	WORKSPACE="$$(git rev-parse --show-toplevel)" ; \
 	cd "$$WORKSPACE" ; \
 	mkdir -p "$$WORKSPACE/results" ; \
-	scripts/run-uvenv buildscripts/scripts/validate_changes.py \
+	$(UVENV) buildscripts/scripts/validate_changes.py \
 	    -e BASE_COMMIT_ID=origin/master \
 	    -e WORKSPACE="$$WORKSPACE" \
 	    -e RESULTS="$$WORKSPACE/results"

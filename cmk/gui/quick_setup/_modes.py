@@ -59,6 +59,7 @@ from cmk.gui.watolib.configuration_bundles import (
     bundle_domains,
     BundleReferences,
     delete_config_bundle,
+    delete_config_bundle_objects,
     edit_config_bundle_configuration,
     identify_bundle_references,
     valid_special_agent_bundle,
@@ -481,6 +482,7 @@ class EditDCDConnection(Protocol):
 
 class ModeConfigurationBundle(WatoMode):
     FORM_PREFIX = "options"
+    VAR_ACTION = "action"
 
     @classmethod
     def name(cls) -> str:
@@ -495,26 +497,35 @@ class ModeConfigurationBundle(WatoMode):
         return []
 
     def ensure_permissions(self) -> None:
+        if not self._existing_bundle:
+            return
+
         self._ensure_static_permissions()
         for domain_definition in bundle_domains().get(self._rule_group_type, []):
             pname = domain_definition.permission
             user.need_permission(pname if "." in pname else ("wato." + pname))
 
     def title(self) -> str:
+        if not self._existing_bundle:
+            return _("Configuration: %s") % self._bundle_id
         return _("Edit configuration: %s") % self._bundle["title"]
 
     def breadcrumb(self) -> Breadcrumb:
+        if not self._existing_bundle:
+            return Breadcrumb()
+
         request.set_var(ModeEditConfigurationBundles.VAR_NAME, self._bundle_group)
         return super().breadcrumb()
 
     def _from_vars(self) -> None:
         self._bundle_id = request.get_validated_type_input_mandatory(BundleId, "bundle_id")
+
         bundle_store = ConfigBundleStore().load_for_reading()
+        self._existing_bundle = True
         if self._bundle_id not in bundle_store:
-            raise MKUserError(
-                "bundle_id",
-                _('The configuration "%s" does not exist.') % self._bundle_id,
-            )
+            self._existing_bundle = False
+            return
+
         self._bundle: ConfigBundle = bundle_store[self._bundle_id]
         self._bundle_group = self._bundle["group"]
         self._bundle_references = identify_bundle_references(self._bundle_group, {self._bundle_id})[
@@ -548,6 +559,25 @@ class ModeConfigurationBundle(WatoMode):
         )
 
     def page(self) -> None:
+        if not self._existing_bundle:
+            html.open_div(class_="really")
+            html.h3(_("The configuration bundle %s does not exist") % self._bundle_id)
+            html.br()
+            html.write_text_permissive(
+                _(
+                    "This can happen if the configuration bundle was deleted and some underlying "
+                    "objects were not properly cleaned up. By pressing the button 'Clean Up' you "
+                    "can remove all objects that reference the non-existing configuration."
+                )
+            )
+            html.br()
+            with html.form_context("edit_bundle", method="POST"):
+                html.button("_clean_up", _("Clean Up"), "")
+                html.hidden_fields(add_action_vars=True)
+
+            html.close_div()
+            return
+
         html.h1(_("Configuration"), class_=["edit_configuration_bundle_header"])
         match self._rule_group_type:
             case RuleGroupType.SPECIAL_AGENTS:
@@ -652,6 +682,10 @@ class ModeConfigurationBundle(WatoMode):
 
         if not transactions.check_transaction():
             return redirect(self.mode_url(bundle_id=self._bundle_id))
+
+        if request.has_var("_clean_up"):
+            delete_config_bundle_objects(self._bundle_id, None)
+            return redirect(mode_url("changelog"))
 
         if request.has_var("_save"):
             vs = self._configuration_vs(self._bundle_id)

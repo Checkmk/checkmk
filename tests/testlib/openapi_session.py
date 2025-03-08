@@ -330,6 +330,16 @@ class ChangesAPI(BaseAPI):
         finally:
             if activation_id:
                 activation_status = self.get_activation_status(activation_id)
+                if not_succeeded_sites := [
+                    status
+                    for status in activation_status["extensions"]["status_per_site"]
+                    # TODO: Use non display text field once it is available CMK-22256
+                    if status["status_text"] != "Success"
+                ]:
+                    raise RuntimeError(
+                        "Activation of the following sites did not succeed:\n"
+                        f"{pprint.pformat(not_succeeded_sites)}"
+                    )
                 logger.info("Activation status: %s", str(pprint.pformat(activation_status)))
 
         pending_changes_after = self.get_pending()

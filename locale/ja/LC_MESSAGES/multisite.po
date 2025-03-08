@@ -11130,6 +11130,22 @@ msgstr ""
 "使用するモデムを選択します。現在、対応しているのはTeltonika-TRB140のみです。"
 
 msgid ""
+"Choose what to do with the files under <tt>%PROGRAMDATA%\\checkmk</tt>:"
+"<ul><li><i>Do not remove anything</i>: Leave all files in place after "
+"uninstallation.<br><li><i>Remove data managed by the Checkmk agent</i>: "
+"Remove only files that got created on Checkmk agent installation. This "
+"includes files that came from bakery plugins, even if they have been edited "
+"by a user. Keep runtime files that have been created after installation, "
+"like state files, registration files, and logs.<li><i>Remove all files and "
+"subdirectories</i>: Remove all files regardless of their origin.</"
+"ul><b>Caution</b>: Uninstallation also happens on every agent update! As a "
+"consequence, this rule will break automatic agent updates and TLS encrypted "
+"agent communication on setting <i>Remove all files and subdirectories</i>, "
+"since the removed files also include your agent updater and agent controller "
+"registrations."
+msgstr ""
+
+msgid ""
 "Choose whether this rule gets prioritized over cache times that are "
 "configured in the plugin's dedicated rules. Please choose \"override\" only "
 "if you know what you're doing, because some plug-ins have minimum cache "
@@ -15556,13 +15572,6 @@ msgstr ""
 
 msgid "Defines what information to query."
 msgstr "クエリする情報を定義します。"
-
-msgid ""
-"Defines what information to query. Checks for cluster, indices and shard "
-"statistics follow soon."
-msgstr ""
-"クエリする情報を定義します。クラスター、インデックス、シャードの統計のチェッ"
-"クがすぐに続きます。"
 
 msgid ""
 "Defines what information to query. You can choose between the cluster, "
@@ -39002,6 +39011,10 @@ msgstr "On"
 msgid "On %s (server time)."
 msgstr "On %s(サーバー時間)。"
 
+#, fuzzy
+msgid "On Checkmk agent uninstallation"
+msgstr "Checkmkエージェントのインストール監査"
+
 msgid "On Hold"
 msgstr "保留"
 
@@ -40886,6 +40899,10 @@ msgstr "パターン(正規表現)"
 
 msgid "Pattern analyzer"
 msgstr "パターンアナライザー"
+
+#, fuzzy, python-format
+msgid "Pattern contains invalid characters: %s"
+msgstr "ホスト名に不正な文字が含まれています: %s"
 
 msgid "Patterns for each node"
 msgstr "各ノードのパターン"
@@ -44617,6 +44634,12 @@ msgstr "全てのダウンタイムを削除"
 msgid "Remove all files and subdirectories"
 msgstr "すべてのファイルとサブディレクトリを削除します"
 
+#, fuzzy
+msgid "Remove data managed by the Checkmk agent"
+msgstr ""
+"Checkmkエージェントによって管理されているファイルとサブディレクトリを削除しま"
+"す"
+
 msgid "Remove downtimes"
 msgstr "ダウンタイムを除く"
 
@@ -44628,11 +44651,6 @@ msgstr "明示的な属性設定を削除する"
 
 msgid "Remove explicit setting"
 msgstr "明示的な設定を削除する"
-
-msgid "Remove files and subdirectories managed by the Checkmk agent"
-msgstr ""
-"Checkmkエージェントによって管理されているファイルとサブディレクトリを削除しま"
-"す"
 
 msgid "Remove filter"
 msgstr "フィルタを取り外します"
@@ -61957,13 +61975,6 @@ msgstr ""
 "間内にサービスが再びOKの場合、通知は送信されません。"
 
 msgid ""
-"This setting determines additional actions during uninstallation of Checkmk "
-"agent."
-msgstr ""
-"この設定は、Checkmkエージェントのアンインストール中の追加のアクションを決定し"
-"ます。"
-
-msgid ""
 "This setting determines how detailed the log file of the Windows Agent will "
 "be."
 msgstr "この設定は、Windowsエージェントのログファイルの詳細度を決定します。"
@@ -70251,9 +70262,6 @@ msgstr ""
 "でCMCを使用する場合は、このオプションを<b>False</b>に切り替えることをお勧めし"
 "ます。"
 
-msgid "When the Agent to be uninstalled"
-msgstr "エージェントをアンインストールする場合"
-
 msgid ""
 "When the Event Console receives a message than the host name that is "
 "contained in that message will be translated using this configuration. This "
@@ -72362,6 +72370,13 @@ msgstr ""
 #, python-format
 msgid "You can specify at most %d entries"
 msgstr "最大 %d のエントリを指定できます"
+
+msgid ""
+"You can specify data streams, indices, and aliases used to limit the "
+"request. Supports wildcards (*). To target all data streams and indices use "
+"`*` or `_all`. The patterns will be combined to form the final url endpoint, "
+"e.g.: `pattern_1,pattern_2/_stats/store,docs?ignore_unavailable=true`"
+msgstr ""
 
 msgid ""
 "You can specify lists of VM names and a number of hosts, to make sure the "
@@ -75702,6 +75717,23 @@ msgid ""
 msgstr ""
 "サービス制限を下回るまで、「変更を有効にする」はブロックされます。利用限度額"
 "を上げたい場合、 "
+
+#~ msgid ""
+#~ "Defines what information to query. Checks for cluster, indices and shard "
+#~ "statistics follow soon."
+#~ msgstr ""
+#~ "クエリする情報を定義します。クラスター、インデックス、シャードの統計の"
+#~ "チェックがすぐに続きます。"
+
+#~ msgid ""
+#~ "This setting determines additional actions during uninstallation of "
+#~ "Checkmk agent."
+#~ msgstr ""
+#~ "この設定は、Checkmkエージェントのアンインストール中の追加のアクションを決"
+#~ "定します。"
+
+#~ msgid "When the Agent to be uninstalled"
+#~ msgstr "エージェントをアンインストールする場合"
 
 #~ msgid "Do you really want to move the selected rules?"
 #~ msgstr "選択したルールを本当に移動しますか?"

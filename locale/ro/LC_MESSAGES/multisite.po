@@ -11714,6 +11714,22 @@ msgstr ""
 "Alegeți ce modem este utilizat. În prezent, este acceptat doar Teltonika-"
 "TRB140."
 
+msgid ""
+"Choose what to do with the files under <tt>%PROGRAMDATA%\\checkmk</tt>:"
+"<ul><li><i>Do not remove anything</i>: Leave all files in place after "
+"uninstallation.<br><li><i>Remove data managed by the Checkmk agent</i>: "
+"Remove only files that got created on Checkmk agent installation. This "
+"includes files that came from bakery plugins, even if they have been edited "
+"by a user. Keep runtime files that have been created after installation, "
+"like state files, registration files, and logs.<li><i>Remove all files and "
+"subdirectories</i>: Remove all files regardless of their origin.</"
+"ul><b>Caution</b>: Uninstallation also happens on every agent update! As a "
+"consequence, this rule will break automatic agent updates and TLS encrypted "
+"agent communication on setting <i>Remove all files and subdirectories</i>, "
+"since the removed files also include your agent updater and agent controller "
+"registrations."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Choose whether this rule gets prioritized over cache times that are "
@@ -16341,14 +16357,6 @@ msgstr ""
 
 msgid "Defines what information to query."
 msgstr "Definește ce informații trebuie interogate."
-
-#, fuzzy
-msgid ""
-"Defines what information to query. Checks for cluster, indices and shard "
-"statistics follow soon."
-msgstr ""
-"Definește ce informații trebuie interogate. În curând vor urma verificări "
-"pentru statisticile Cluster, Indices și Shard."
 
 msgid ""
 "Defines what information to query. You can choose between the cluster, "
@@ -40953,6 +40961,10 @@ msgstr "Pe"
 msgid "On %s (server time)."
 msgstr "Pe %s (ora serverului)."
 
+#, fuzzy
+msgid "On Checkmk agent uninstallation"
+msgstr "Checkmk Audit de instalare a agentului Checkmk"
+
 msgid "On Hold"
 msgstr "În așteptare"
 
@@ -42964,6 +42976,10 @@ msgstr "Model (Regex)"
 
 msgid "Pattern analyzer"
 msgstr "Analizator de modele"
+
+#, fuzzy, python-format
+msgid "Pattern contains invalid characters: %s"
+msgstr "Numele gazdei conține caractere ilegale: %s."
 
 msgid "Patterns for each node"
 msgstr "Modele pentru fiecare nod"
@@ -46891,6 +46907,10 @@ msgstr "Eliminați toate timpii de nefuncționare"
 msgid "Remove all files and subdirectories"
 msgstr "Îndepărtați toate fișierele și subdirectoarele"
 
+#, fuzzy
+msgid "Remove data managed by the Checkmk agent"
+msgstr "Îndepărtați fișierele și subdirectoarele gestionate de agentul Checkmk"
+
 msgid "Remove downtimes"
 msgstr "Eliminați timpii de nefuncționare"
 
@@ -46902,9 +46922,6 @@ msgstr "Eliminarea setărilor explicite ale atributelor"
 
 msgid "Remove explicit setting"
 msgstr "Îndepărtați setarea explicită"
-
-msgid "Remove files and subdirectories managed by the Checkmk agent"
-msgstr "Îndepărtați fișierele și subdirectoarele gestionate de agentul Checkmk"
 
 msgid "Remove filter"
 msgstr "Eliminați filtrul"
@@ -65321,13 +65338,6 @@ msgstr ""
 "interval de timp, nu se va trimite nicio notificare."
 
 msgid ""
-"This setting determines additional actions during uninstallation of Checkmk "
-"agent."
-msgstr ""
-"Această setare determină acțiunile suplimentare în timpul dezinstalării "
-"agentului Checkmk."
-
-msgid ""
 "This setting determines how detailed the log file of the Windows Agent will "
 "be."
 msgstr ""
@@ -74384,9 +74394,6 @@ msgstr ""
 "odată ce utilizați CMC în producție, propunem să comutați această opțiune la "
 "<b>False</b>."
 
-msgid "When the Agent to be uninstalled"
-msgstr "Atunci când agentul care urmează să fie dezinstalat"
-
 msgid ""
 "When the Event Console receives a message than the host name that is "
 "contained in that message will be translated using this configuration. This "
@@ -76618,6 +76625,13 @@ msgstr ""
 #, python-format
 msgid "You can specify at most %d entries"
 msgstr "Puteți specifica cel mult %d intrări"
+
+msgid ""
+"You can specify data streams, indices, and aliases used to limit the "
+"request. Supports wildcards (*). To target all data streams and indices use "
+"`*` or `_all`. The patterns will be combined to form the final url endpoint, "
+"e.g.: `pattern_1,pattern_2/_stats/store,docs?ignore_unavailable=true`"
+msgstr ""
 
 msgid ""
 "You can specify lists of VM names and a number of hosts, to make sure the "
@@ -80036,6 +80050,24 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid ""
+#~ "Defines what information to query. Checks for cluster, indices and shard "
+#~ "statistics follow soon."
+#~ msgstr ""
+#~ "Definește ce informații trebuie interogate. În curând vor urma verificări "
+#~ "pentru statisticile Cluster, Indices și Shard."
+
+#~ msgid ""
+#~ "This setting determines additional actions during uninstallation of "
+#~ "Checkmk agent."
+#~ msgstr ""
+#~ "Această setare determină acțiunile suplimentare în timpul dezinstalării "
+#~ "agentului Checkmk."
+
+#~ msgid "When the Agent to be uninstalled"
+#~ msgstr "Atunci când agentul care urmează să fie dezinstalat"
 
 #~ msgid "Do you really want to move the selected rules?"
 #~ msgstr "Chiar doriți să mutați regulile selectate?"

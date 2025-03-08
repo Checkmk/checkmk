@@ -166,19 +166,17 @@ def discover_services(
         section_plugins=SectionPluginMapper(
             {**agent_based_plugins.agent_sections, **agent_based_plugins.snmp_sections}
         ),
-        section_error_handling=lambda *a: None,  # type: ignore[arg-type]
+        section_error_handling=lambda *a: "",
         host_label_plugins=HostLabelPluginMapper(
-            ruleset_matcher=config_cache.ruleset_matcher,
+            config_getter=lambda _hn, _rn, rt: [] if rt == "all" else {},
             sections={
                 **agent_based_plugins.agent_sections,
                 **agent_based_plugins.snmp_sections,
             },
-            discovery_rules={},
         ),
         plugins=DiscoveryPluginMapper(
-            ruleset_matcher=config_cache.ruleset_matcher,
+            config_getter=lambda _hn, _rn, rt: [] if rt == "all" else {},
             check_plugins=agent_based_plugins.check_plugins,
-            discovery_rules={},
         ),
         run_plugin_names=EVERYTHING,
         ignore_plugin=config_cache.check_plugin_ignored,

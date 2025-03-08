@@ -34,7 +34,6 @@ from cmk.utils.log import console
 from cmk.utils.misc import pnp_cleanup
 from cmk.utils.prediction import make_updated_predictions, PredictionStore
 from cmk.utils.rulesets import RuleSetName
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RuleSpec
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.timeperiod import timeperiod_active
@@ -61,6 +60,7 @@ from cmk.checkengine.checkresults import (
 )
 from cmk.checkengine.discovery import (
     AutocheckEntry,
+    ConfigGetter,
     DiscoveryPlugin,
     get_plugin_parameters,
     HostLabelPlugin,
@@ -500,14 +500,12 @@ class HostLabelPluginMapper(SectionMap[HostLabelPlugin]):
     def __init__(
         self,
         *,
-        ruleset_matcher: RulesetMatcher,
+        config_getter: ConfigGetter,
         sections: Mapping[SectionName, AgentSectionPluginAPI | SNMPSectionPluginAPI],
-        discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
     ) -> None:
         super().__init__()
-        self.ruleset_matcher: Final = ruleset_matcher
+        self._config_getter: Final = config_getter
         self._sections = sections
-        self._discovery_rules: Final = discovery_rules
 
     def __getitem__(self, __key: SectionName) -> HostLabelPlugin:
         plugin = self._sections.get(__key)
@@ -516,11 +514,10 @@ class HostLabelPluginMapper(SectionMap[HostLabelPlugin]):
                 function=plugin.host_label_function,
                 parameters=partial(
                     get_plugin_parameters,
-                    matcher=self.ruleset_matcher,
+                    config_getter=self._config_getter,
                     default_parameters=plugin.host_label_default_parameters,
                     ruleset_name=plugin.host_label_ruleset_name,
                     ruleset_type=plugin.host_label_ruleset_type,
-                    rules_getter_function=lambda n: self._discovery_rules.get(n, []),
                 ),
             )
             if plugin is not None
@@ -1040,14 +1037,12 @@ class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
     def __init__(
         self,
         *,
-        ruleset_matcher: RulesetMatcher,
+        config_getter: ConfigGetter,
         check_plugins: Mapping[CheckPluginName, CheckPluginAPI],
-        discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
     ) -> None:
         super().__init__()
-        self.ruleset_matcher: Final = ruleset_matcher
+        self._config_getter: Final = config_getter
         self._check_plugins: Final = check_plugins
-        self._discovery_rules: Final = discovery_rules
 
     def __getitem__(self, __key: CheckPluginName) -> DiscoveryPlugin:
         # `get_check_plugin()` is not an error.  Both check plug-ins and
@@ -1075,12 +1070,11 @@ class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
             service_name=plugin.service_name,
             function=__discovery_function,
             parameters=_make_discovery_parameters_getter(
-                matcher=self.ruleset_matcher,
+                config_getter=self._config_getter,
                 check_plugin_name=plugin.name,
                 default_parameters=plugin.discovery_default_parameters,
                 ruleset_name=plugin.discovery_ruleset_name,
                 ruleset_type=plugin.discovery_ruleset_type,
-                rules_getter_function=lambda n: self._discovery_rules.get(n, []),
             ),
         )
 
@@ -1092,22 +1086,20 @@ class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
 
 
 def _make_discovery_parameters_getter(
-    matcher: RulesetMatcher,
+    config_getter: ConfigGetter,
     check_plugin_name: CheckPluginName,
     *,
     default_parameters: ParametersTypeAlias | None,
     ruleset_name: RuleSetName | None,
     ruleset_type: Literal["all", "merged"],
-    rules_getter_function: Callable[[RuleSetName], Sequence[RuleSpec]],
 ) -> Callable[[HostName], None | Parameters | list[Parameters]]:
     def get_discovery_parameters(host_name: HostName) -> None | Parameters | list[Parameters]:
         params = get_plugin_parameters(
             host_name,
-            matcher,
+            config_getter,
             default_parameters=default_parameters,
             ruleset_name=ruleset_name,
             ruleset_type=ruleset_type,
-            rules_getter_function=rules_getter_function,
         )
 
         #

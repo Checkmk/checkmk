@@ -135,6 +135,7 @@ from cmk.base.api.agent_based.plugin_classes import (
     AgentBasedPlugins,
     AgentSectionPlugin,
     CheckPlugin,
+    RuleSetTypeName,
     SNMPSectionPlugin,
 )
 from cmk.base.api.agent_based.register.check_plugins_legacy import convert_legacy_check_plugins
@@ -1819,6 +1820,28 @@ def _make_clusters_nodes_maps() -> tuple[
             clusters_of_cache.setdefault(name, []).append(clustername)
         nodes_cache[clustername] = [HostName(h) for h in hosts]
     return clusters_of_cache, nodes_cache
+
+
+class DiscoveryConfigurer:
+    """Implementation of the discovery configuration"""
+
+    def __init__(
+        self,
+        matcher: RulesetMatcher,
+        rules: Mapping[RuleSetName, Sequence[RuleSpec[Mapping[str, object]]]],
+    ):
+        self._matcher: Final = matcher
+        self._rules: Final = rules
+
+    def __call__(
+        self, host_name: HostName, ruleset_name: RuleSetName, type_: RuleSetTypeName
+    ) -> Mapping[str, object] | Sequence[Mapping[str, object]]:
+        rule = self._rules.get(ruleset_name, [])
+        if type_ == "merged":
+            return self._matcher.get_host_merged_dict(host_name, rule)
+        elif type_ == "all":
+            return self._matcher.get_host_values(host_name, rule)
+        assert_never(type_)
 
 
 class AutochecksConfigurer:

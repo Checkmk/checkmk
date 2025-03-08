@@ -67,7 +67,6 @@ from cmk.checkengine.sectionparser import (
     SectionsParser,
 )
 
-import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config
 from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.checkers import (
@@ -1130,7 +1129,7 @@ def test__find_candidates(
     agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     # plugins have been loaded by the fixture. Better: load the ones we need for this test
-    config_cache = Scenario().apply(monkeypatch)
+    Scenario().apply(monkeypatch)
     providers = {
         # we just care about the keys here, content set to arbitrary values that can be parsed.
         # section names are chosen arbitrarily.
@@ -1183,14 +1182,7 @@ def test__find_candidates(
 
     assert find_plugins(
         providers,
-        [
-            (name, p.sections)
-            for name, p in DiscoveryPluginMapper(
-                ruleset_matcher=config_cache.ruleset_matcher,
-                check_plugins=agent_based_plugins.check_plugins,
-                discovery_rules={},
-            ).items()
-        ],
+        [(p.name, p.sections) for p in agent_based_plugins.check_plugins.values()],
     ) == {
         CheckPluginName("docker_container_status_uptime"),
         CheckPluginName("kernel"),
@@ -1315,7 +1307,7 @@ def test_commandline_discovery(
         snmp_backend_override=None,
         password_store_file=Path("/pw/store"),
     )
-    discovery_rulesets = agent_based_register.extract_known_discovery_rulesets(agent_based_plugins)
+
     commandline_discovery(
         host_name=testhost,
         ruleset_matcher=config_cache.ruleset_matcher,
@@ -1326,14 +1318,12 @@ def test_commandline_discovery(
         ),
         section_error_handling=lambda *args, **kw: "error",
         host_label_plugins=HostLabelPluginMapper(
-            ruleset_matcher=config_cache.ruleset_matcher,
+            config_getter=lambda hname, rname, type_: [] if type_ == "all" else {},
             sections={**agent_based_plugins.agent_sections, **agent_based_plugins.snmp_sections},
-            discovery_rules={r: [] for r in discovery_rulesets},
         ),
         plugins=DiscoveryPluginMapper(
-            ruleset_matcher=config_cache.ruleset_matcher,
+            config_getter=lambda hname, rname, type_: [] if type_ == "all" else {},
             check_plugins=agent_based_plugins.check_plugins,
-            discovery_rules={r: [] for r in discovery_rulesets},
         ),
         run_plugin_names=EVERYTHING,
         ignore_plugin=lambda *args, **kw: False,
@@ -1606,23 +1596,25 @@ def test__discovery_considers_host_labels(
 
     # arrange
     plugins = DiscoveryPluginMapper(
-        ruleset_matcher=config_cache.ruleset_matcher,
+        config_getter=config.DiscoveryConfigurer(
+            config_cache.ruleset_matcher,
+            rules={
+                RuleSetName("mssql_transactionlogs_discovery"): [],
+                RuleSetName("inventory_df_rules"): [
+                    {
+                        "id": "nobody-cares-about-the-id-in-this-test",
+                        "value": {
+                            "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
+                            "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
+                        },
+                        "condition": {
+                            "host_label_groups": [("and", [("and", "cmk/check_mk_server:yes")])]
+                        },
+                    }
+                ],
+            },
+        ),
         check_plugins=agent_based_plugins.check_plugins,
-        discovery_rules={
-            RuleSetName("mssql_transactionlogs_discovery"): [],
-            RuleSetName("inventory_df_rules"): [
-                {
-                    "id": "nobody-cares-about-the-id-in-this-test",
-                    "value": {
-                        "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
-                        "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
-                    },
-                    "condition": {
-                        "host_label_groups": [("and", [("and", "cmk/check_mk_server:yes")])]
-                    },
-                }
-            ],
-        },
     )
     plugin_names = find_plugins(
         providers,
@@ -1779,17 +1771,12 @@ def test__discover_host_labels_and_services_on_realhost(
 
     # unpack for readability
     host_name = realhost_scenario.hostname
-    config_cache = realhost_scenario.config_cache
     providers = realhost_scenario.providers
 
     # arrange
     plugins = DiscoveryPluginMapper(
-        ruleset_matcher=config_cache.ruleset_matcher,
+        config_getter=lambda hname, rname, type_: [] if type_ == "all" else {},
         check_plugins=agent_based_plugins.check_plugins,
-        discovery_rules={
-            RuleSetName("mssql_transactionlogs_discovery"): [],
-            RuleSetName("inventory_df_rules"): [],
-        },
     )
     plugin_names = find_plugins(
         providers,
@@ -1827,12 +1814,11 @@ def test__perform_host_label_discovery_on_realhost(
         current=discover_host_labels(
             scenario.hostname,
             HostLabelPluginMapper(
-                ruleset_matcher=scenario.config_cache.ruleset_matcher,
+                config_getter=lambda hname, rname, type_: [] if type_ == "all" else {},
                 sections={
                     **agent_based_plugins.agent_sections,
                     **agent_based_plugins.snmp_sections,
                 },
-                discovery_rules={},
             ),
             providers=scenario.providers,
             on_error=OnError.RAISE,
@@ -1856,12 +1842,8 @@ def test__discover_services_on_cluster(
         cluster_scenario.config_cache.nodes(cluster_scenario.parent),
         cluster_scenario.providers,
         DiscoveryPluginMapper(
-            ruleset_matcher=cluster_scenario.config_cache.ruleset_matcher,
+            config_getter=lambda hname, rname, type_: [] if type_ == "all" else {},
             check_plugins=agent_based_plugins.check_plugins,
-            discovery_rules={
-                RuleSetName("mssql_transactionlogs_discovery"): [],
-                RuleSetName("inventory_df_rules"): [],
-            },
         ),
         OnError.RAISE,
     ) == {
@@ -1907,12 +1889,11 @@ def test__perform_host_label_discovery_on_cluster(
             node: discover_host_labels(
                 node,
                 HostLabelPluginMapper(
-                    ruleset_matcher=scenario.config_cache.ruleset_matcher,
+                    config_getter=lambda *a: [],
                     sections={
                         **agent_based_plugins.agent_sections,
                         **agent_based_plugins.snmp_sections,
                     },
-                    discovery_rules={},
                 ),
                 providers=scenario.providers,
                 on_error=OnError.RAISE,

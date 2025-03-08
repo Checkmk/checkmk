@@ -292,6 +292,10 @@ class AutomationDiscovery(DiscoveryAutomation):
                 discovery_rulesets=agent_based_register.extract_known_discovery_rulesets(plugins)
             )
 
+        discovery_config = config.DiscoveryConfigurer(
+            loading_result.config_cache.ruleset_matcher,
+            loading_result.loaded_config.discovery_rules,
+        )
         config_cache = loading_result.config_cache
         ruleset_matcher = config_cache.ruleset_matcher
         autochecks_config = config.AutochecksConfigurer(config_cache, plugins.check_plugins)
@@ -359,14 +363,12 @@ class AutomationDiscovery(DiscoveryAutomation):
                 ),
                 section_error_handling=section_error_handling,
                 host_label_plugins=HostLabelPluginMapper(
-                    ruleset_matcher=ruleset_matcher,
+                    config_getter=discovery_config,
                     sections={**plugins.agent_sections, **plugins.snmp_sections},
-                    discovery_rules=loading_result.loaded_config.discovery_rules,
                 ),
                 plugins=DiscoveryPluginMapper(
-                    ruleset_matcher=ruleset_matcher,
+                    config_getter=discovery_config,
                     check_plugins=plugins.check_plugins,
-                    discovery_rules=loading_result.loaded_config.discovery_rules,
                 ),
                 autochecks_config=autochecks_config,
                 settings=settings,
@@ -682,6 +684,10 @@ def _execute_discovery(
     plugins: AgentBasedPlugins,
 ) -> CheckPreview:
     hosts_config = config.make_hosts_config()
+    discovery_config = config.DiscoveryConfigurer(
+        config_cache.ruleset_matcher,
+        loaded_config.discovery_rules,
+    )
     ruleset_matcher = config_cache.ruleset_matcher
     autochecks_config = config.AutochecksConfigurer(config_cache, plugins.check_plugins)
     parser = CMKParser(
@@ -727,18 +733,16 @@ def _execute_discovery(
                 rtc_package=None,
             ),
             host_label_plugins=HostLabelPluginMapper(
-                ruleset_matcher=ruleset_matcher,
+                config_getter=discovery_config,
                 sections={**plugins.agent_sections, **plugins.snmp_sections},
-                discovery_rules=loaded_config.discovery_rules,
             ),
             check_plugins=check_plugins,
             compute_check_parameters=_make_compute_check_parameters_of_autocheck(
                 ruleset_matcher, plugins.check_plugins, loaded_config.checkgroup_parameters
             ),
             discovery_plugins=DiscoveryPluginMapper(
-                ruleset_matcher=ruleset_matcher,
+                config_getter=discovery_config,
                 check_plugins=plugins.check_plugins,
-                discovery_rules=loaded_config.discovery_rules,
             ),
             autochecks_config=autochecks_config,
             enforced_services=config_cache.enforced_services_table(
@@ -796,6 +800,9 @@ def _execute_autodiscovery(
 
     config_cache = loading_result.config_cache
     service_configurer = config_cache.make_service_configurer(ab_plugins.check_plugins)
+    discovery_config = config.DiscoveryConfigurer(
+        config_cache.ruleset_matcher, loading_result.loaded_config.discovery_rules
+    )
     autochecks_config = config.AutochecksConfigurer(config_cache, ab_plugins.check_plugins)
     ip_address_of = config.ConfiguredIPLookup(
         config_cache,
@@ -830,14 +837,12 @@ def _execute_autodiscovery(
     )
     section_plugins = SectionPluginMapper({**ab_plugins.agent_sections, **ab_plugins.snmp_sections})
     host_label_plugins = HostLabelPluginMapper(
-        ruleset_matcher=ruleset_matcher,
+        config_getter=discovery_config,
         sections={**ab_plugins.agent_sections, **ab_plugins.snmp_sections},
-        discovery_rules=loading_result.loaded_config.discovery_rules,
     )
     plugins = DiscoveryPluginMapper(
-        ruleset_matcher=ruleset_matcher,
+        config_getter=discovery_config,
         check_plugins=ab_plugins.check_plugins,
-        discovery_rules=loading_result.loaded_config.discovery_rules,
     )
     on_error = OnError.IGNORE
 

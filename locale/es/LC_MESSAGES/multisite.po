@@ -13091,6 +13091,22 @@ msgid ""
 msgstr ""
 "Elija qué módem se utiliza. Actualmente sólo se admite el Teltonika-TRB140."
 
+msgid ""
+"Choose what to do with the files under <tt>%PROGRAMDATA%\\checkmk</tt>:"
+"<ul><li><i>Do not remove anything</i>: Leave all files in place after "
+"uninstallation.<br><li><i>Remove data managed by the Checkmk agent</i>: "
+"Remove only files that got created on Checkmk agent installation. This "
+"includes files that came from bakery plugins, even if they have been edited "
+"by a user. Keep runtime files that have been created after installation, "
+"like state files, registration files, and logs.<li><i>Remove all files and "
+"subdirectories</i>: Remove all files regardless of their origin.</"
+"ul><b>Caution</b>: Uninstallation also happens on every agent update! As a "
+"consequence, this rule will break automatic agent updates and TLS encrypted "
+"agent communication on setting <i>Remove all files and subdirectories</i>, "
+"since the removed files also include your agent updater and agent controller "
+"registrations."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Choose whether this rule gets prioritized over cache times that are "
@@ -18190,14 +18206,6 @@ msgstr ""
 
 msgid "Defines what information to query."
 msgstr "Define la información a consultar."
-
-#, fuzzy
-msgid ""
-"Defines what information to query. Checks for cluster, indices and shard "
-"statistics follow soon."
-msgstr ""
-"Define qué información consultar. Las comprobaciones de las estadísticas de "
-"clústeres, índices y fragmentos se realizarán próximamente."
 
 msgid ""
 "Defines what information to query. You can choose between the cluster, "
@@ -45802,6 +45810,10 @@ msgstr "O"
 msgid "On %s (server time)."
 msgstr "Tiempo del servidor"
 
+#, fuzzy
+msgid "On Checkmk agent uninstallation"
+msgstr "Auditoría de la instalación del agente Checkmk"
+
 msgid "On Hold"
 msgstr "En espera"
 
@@ -48878,6 +48890,10 @@ msgstr "Patrón (Regex)"
 
 msgid "Pattern analyzer"
 msgstr "Analizador de patrones"
+
+#, fuzzy, python-format
+msgid "Pattern contains invalid characters: %s"
+msgstr "El nombre de host contiene caracteres ilegales: %s"
 
 #, fuzzy
 msgid "Patterns"
@@ -53253,6 +53269,10 @@ msgstr "Eliminar todos los tiempos de inactividad"
 msgid "Remove all files and subdirectories"
 msgstr "Eliminar todos los archivos y subdirectorios"
 
+#, fuzzy
+msgid "Remove data managed by the Checkmk agent"
+msgstr "Eliminar archivos y subdirectorios gestionados por el agente Checkmk"
+
 msgid "Remove downtimes"
 msgstr "Eliminar los tiempos de inactividad"
 
@@ -53261,9 +53281,6 @@ msgstr "Eliminar la configuración explícita de atributos"
 
 msgid "Remove explicit setting"
 msgstr "Eliminar el ajuste explícito"
-
-msgid "Remove files and subdirectories managed by the Checkmk agent"
-msgstr "Eliminar archivos y subdirectorios gestionados por el agente Checkmk"
 
 msgid "Remove filter"
 msgstr "Eliminar el filtro"
@@ -72893,13 +72910,6 @@ msgstr ""
 "tiempo, no se enviará ninguna notificación."
 
 msgid ""
-"This setting determines additional actions during uninstallation of Checkmk "
-"agent."
-msgstr ""
-"Esta configuración determina las acciones adicionales durante la "
-"desinstalación del agente Checkmk."
-
-msgid ""
 "This setting determines how detailed the log file of the Windows Agent will "
 "be."
 msgstr ""
@@ -82973,9 +82983,6 @@ msgstr ""
 "vez que esté utilizando la CMC en producción, proponemos cambiar esta opción "
 "a <b>Falso</b>."
 
-msgid "When the Agent to be uninstalled"
-msgstr "Cuando el Agente que se va a desinstalar"
-
 msgid ""
 "When the Event Console receives a message than the host name that is "
 "contained in that message will be translated using this configuration. This "
@@ -85282,6 +85289,13 @@ msgstr ""
 #, python-format
 msgid "You can specify at most %d entries"
 msgstr "Puede especificar un máximo de %d entradas"
+
+msgid ""
+"You can specify data streams, indices, and aliases used to limit the "
+"request. Supports wildcards (*). To target all data streams and indices use "
+"`*` or `_all`. The patterns will be combined to form the final url endpoint, "
+"e.g.: `pattern_1,pattern_2/_stats/store,docs?ignore_unavailable=true`"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -88890,6 +88904,24 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usar SSL para la conexión."
+
+#, fuzzy
+#~ msgid ""
+#~ "Defines what information to query. Checks for cluster, indices and shard "
+#~ "statistics follow soon."
+#~ msgstr ""
+#~ "Define qué información consultar. Las comprobaciones de las estadísticas "
+#~ "de clústeres, índices y fragmentos se realizarán próximamente."
+
+#~ msgid ""
+#~ "This setting determines additional actions during uninstallation of "
+#~ "Checkmk agent."
+#~ msgstr ""
+#~ "Esta configuración determina las acciones adicionales durante la "
+#~ "desinstalación del agente Checkmk."
+
+#~ msgid "When the Agent to be uninstalled"
+#~ msgstr "Cuando el Agente que se va a desinstalar"
 
 #, fuzzy
 #~ msgid "Distributed piggyback"

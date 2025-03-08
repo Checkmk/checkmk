@@ -35,7 +35,7 @@ class _HashableCustomUserAttrs:
         return hash(self) == hash(other)
 
     def __hash__(self) -> int:
-        return hash(tuple(x.items()) for x in self.user_attrs)
+        return hash(tuple(tuple(x.items()) for x in self.user_attrs))
 
 
 def all_user_attributes() -> list[tuple[str, type[UserAttribute]]]:

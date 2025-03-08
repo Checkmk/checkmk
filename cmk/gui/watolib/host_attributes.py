@@ -777,7 +777,7 @@ class _HashableCustomHostAttrs:
         return self.host_attrs == other.host_attrs
 
     def __hash__(self) -> int:
-        return hash(tuple(x.items()) for x in self.host_attrs)
+        return hash(tuple(tuple(x.items()) for x in self.host_attrs))
 
 
 def _make_hashable_object(obj: object) -> Hashable:

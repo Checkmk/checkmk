@@ -33,9 +33,9 @@ from cmk.checkengine.checking import execute_checkmk_checks
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetcher import FetcherType, SourceInfo, SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters
+from cmk.checkengine.value_store import ValueStoreManager
 
 from cmk.base import config
-from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.checkers import (
     CheckPluginMapper,
     SectionPluginMapper,

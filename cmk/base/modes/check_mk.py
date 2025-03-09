@@ -97,6 +97,7 @@ from cmk.checkengine.parser import (
 from cmk.checkengine.sectionparser import SectionPlugin
 from cmk.checkengine.submitters import get_submitter, ServiceState
 from cmk.checkengine.summarize import summarize, SummarizerFunction
+from cmk.checkengine.value_store import ValueStoreManager
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.core
@@ -111,7 +112,6 @@ from cmk.base.api.agent_based.plugin_classes import (
     CheckPlugin,
     SNMPSectionPlugin,
 )
-from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.checkers import (
     CheckPluginMapper,
     CMKFetcher,

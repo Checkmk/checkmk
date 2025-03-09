@@ -147,6 +147,7 @@ from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.parser import NO_SELECTION, parse_raw_data
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 from cmk.checkengine.summarize import summarize
+from cmk.checkengine.value_store import ValueStoreManager
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.core
@@ -154,7 +155,6 @@ import cmk.base.nagios_utils
 import cmk.base.parent_scan
 from cmk.base import config, core_config, notify, sources
 from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins, CheckPlugin
-from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.automations import (
     Automation,
     automations,

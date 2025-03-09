@@ -76,14 +76,14 @@ from cmk.checkengine.sectionparserutils import (
 )
 from cmk.checkengine.submitters import ServiceState
 from cmk.checkengine.summarize import summarize, SummaryConfig
+from cmk.checkengine.value_store import ValueStoreManager
 
 import cmk.base.api.agent_based.register as agent_based_register
-from cmk.base.api.agent_based import cluster_mode, value_store
+from cmk.base.api.agent_based import cluster_mode
 from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin as AgentSectionPluginAPI
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin as CheckPluginAPI
 from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin as SNMPSectionPluginAPI
-from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.config import (
     ConfigCache,
     IPLookup,
@@ -645,7 +645,7 @@ def _get_check_function(
     config_cache: ConfigCache,
     host_name: HostName,
     service: ConfiguredService,
-    value_store_manager: value_store.ValueStoreManager,
+    value_store_manager: ValueStoreManager,
     *,
     clusters: Container[HostName],
 ) -> Callable[..., ServiceCheckResult]:

@@ -14,12 +14,11 @@ from cmk.ccc import store
 from cmk.utils.hostaddress import HostName
 
 from cmk.checkengine.checking import CheckPluginName, ServiceID
-
-from cmk.base.api.agent_based.value_store._api import (
+from cmk.checkengine.value_store._api import (
     _ValueStore,
     ValueStoreManager,
 )
-from cmk.base.api.agent_based.value_store._utils import (
+from cmk.checkengine.value_store._utils import (
     _DynamicDiskSyncedMapping,
     _StaticDiskSyncedMapping,
     DiskSyncedMapping,

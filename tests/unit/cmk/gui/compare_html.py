@@ -79,8 +79,8 @@ def compare_soup(html1: str, html2: str) -> None:
     s1 = BeautifulSoup(prettify(html1), "lxml")
     s2 = BeautifulSoup(prettify(html2), "lxml")
 
-    children_1 = list(s1.recursiveChildGenerator())
-    children_2 = list(s2.recursiveChildGenerator())
+    children_1 = list(s1.descendants)
+    children_2 = list(s2.descendants)
 
     def unify_attrs(x: str) -> str:
         return encode_attribute(undo_encode_attribute(subber(x)))

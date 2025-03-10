@@ -79,13 +79,10 @@ def compare_soup(html1: str, html2: str) -> None:
     s1 = BeautifulSoup(prettify(html1), "lxml")
     s2 = BeautifulSoup(prettify(html2), "lxml")
 
-    children_1 = list(s1.descendants)
-    children_2 = list(s2.descendants)
-
     def unify_attrs(x: str) -> str:
         return encode_attribute(undo_encode_attribute(subber(x)))
 
-    for d1, d2 in zip(children_1, children_2):
+    for d1, d2 in zip(s1.descendants, s2.descendants):
         if isinstance(d1, NavigableString) and isinstance(d2, NavigableString):
             set1 = {x for x in subber(d1).split(" ") if x}
             set2 = {x for x in subber(d2).split(" ") if x}

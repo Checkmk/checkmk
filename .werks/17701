@@ -1,0 +1,9 @@
+Title: Do not create 0 byte files if spoolfile is missing
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1741590663
+Edition: cee
+Level: 1
+Version: 2.2.0p41
+

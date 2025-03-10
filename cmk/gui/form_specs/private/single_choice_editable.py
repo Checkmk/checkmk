@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import dataclass
 
-from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1 import Label, Title
 from cmk.rulesets.v1.form_specs import DefaultValue, FormSpec, InputHint
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 
@@ -14,4 +14,5 @@ class SingleChoiceEditable(FormSpec[str]):
     entity_type: ConfigEntityType
     entity_type_specifier: str
     prefill: DefaultValue[str] | InputHint[Title] = InputHint(Title("Please select an element"))
+    create_element_label: Label = Label("Create")
     allow_editing_existing_elements: bool = True

@@ -121,7 +121,12 @@ def quick_setup_guided_mode(
         actions=[
             Action(
                 id=action.id,
-                button=Button(label=action.label, aria_label=COMPLETE_BUTTON_ARIA_LABEL),
+                button=Button(
+                    label=action.label,
+                    iconName=action.iconName,
+                    iconRotate=action.iconRotate,
+                    aria_label=COMPLETE_BUTTON_ARIA_LABEL,
+                ),
                 load_wait_label=LOAD_WAIT_LABEL,
             )
             for action in quick_setup.actions
@@ -193,6 +198,7 @@ def quick_setup_overview_mode(
                 id=action.id,
                 button=Button(
                     label=action.label,
+                    iconName=action.iconName,
                     aria_label=COMPLETE_BUTTON_ARIA_LABEL,
                 ),
                 load_wait_label=LOAD_WAIT_LABEL,

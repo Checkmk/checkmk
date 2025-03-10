@@ -80,6 +80,10 @@ export const processActionData = (
     ariaLabel: actionData.button.aria_label || actionData.button.label,
     waitLabel: actionData.load_wait_label,
     variant: actionType,
+    icon: {
+      name: actionData.button.iconName,
+      rotate: actionData.button.iconRotate
+    },
     action: clb
   }
 }

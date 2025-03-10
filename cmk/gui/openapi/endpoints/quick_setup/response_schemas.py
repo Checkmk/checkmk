@@ -72,6 +72,16 @@ class QuickSetupButton(BaseSchema):
         description="The aria label of the button",
         allow_none=True,
     )
+    iconName = fields.String(
+        example="next",
+        description="Icon name of the button",
+        allow_none=True,
+    )
+    iconRotate = fields.Integer(
+        example=90,
+        description="Rotation in degree for the button icon",
+        allow_none=True,
+    )
 
 
 class Action(BaseSchema):

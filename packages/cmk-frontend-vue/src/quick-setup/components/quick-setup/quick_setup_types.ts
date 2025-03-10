@@ -5,11 +5,18 @@
  */
 import type { Ref, VNode } from 'vue'
 import type { WizardMode } from './useWizard'
+
+export interface QuickSetupStageActionIcon {
+  name?: string | undefined
+  rotate?: number | undefined
+}
+
 export interface QuickSetupStageAction {
   label: string
   ariaLabel?: string | null
   waitLabel: string
   variant: string
+  icon: QuickSetupStageActionIcon
   action: () => void
 }
 

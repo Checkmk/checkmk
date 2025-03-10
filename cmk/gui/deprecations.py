@@ -179,9 +179,9 @@ def _find_ac_test_result_problems(
                     )
                 else:
                     problem = problem_by_ident.setdefault(
-                        str(ac_test_result.path),
+                        "unpackaged_files",
                         _ACTestResultProblem(
-                            str(ac_test_result.path),
+                            "unpackaged_files",
                             "Unpackaged files",
                         ),
                     )

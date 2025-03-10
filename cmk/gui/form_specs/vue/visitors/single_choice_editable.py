@@ -47,7 +47,7 @@ class SingleChoiceEditableVisitor(
         def _validate_not_none(value: str | None) -> None:
             if value is None:
                 raise ValidationError(
-                    Message('Please choose a parameter or click "Create" to add a new one.'),
+                    Message('Please choose parameters or click "Create" to add a new one.'),
                 )
 
         validators = [_validate_not_none]

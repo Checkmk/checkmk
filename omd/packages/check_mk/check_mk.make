@@ -30,12 +30,12 @@ include ../artifacts.make
 
 $(CHECK_MK_WERKS_PATH):
 	$(MKDIR) $(CHECK_MK_WORK_DIR)
-	$(BAZEL_CMD) build //omd:run_werks_precompile_cre
+	bazel build //omd:run_werks_precompile_cre
 	cp $(BAZEL_BIN)/omd/werks_precompiled_cre $@
 
 $(CHECK_MK_CHANGELOG_PATH):
 	$(MKDIR) $(CHECK_MK_WORK_DIR)
-	$(BAZEL_CMD) build //omd:run_changelog_cre
+	bazel build //omd:run_changelog_cre
 	cp $(BAZEL_BIN)/omd/changelog_cre $@
 
 # RPM/DEB build are currently working on the same working directory and would
@@ -188,7 +188,7 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 
 	# After installing all python modules, ensure they are compiled
 	# compile pyc files explicitly selecting `checked-hash` invalidation mode
-	$(BAZEL_CMD) run :venv
+	bazel run :venv
 	source .venv/bin/activate \
 	&& python3 -m compileall \
 	    -f \

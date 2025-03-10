@@ -14,10 +14,9 @@ PYTEST_OPTS_UNIT_SLOW_ONLY = -m "slow"
 THREE_TO_TWO := $(UVENV) 3to2
 BANDIT := $(UVENV) bandit
 SEMGREP := $(realpath semgrep)/run-semgrep
-BAZEL_CMD ?= $(realpath $(SCRIPTS)/run-bazel.sh)
-SHELLCHECK := $(BAZEL_CMD) run --ui_event_filters=-info,-stderr //bazel/tools:shellcheck_bin --
-SHFMT := $(BAZEL_CMD) run --ui_event_filters=-info,-stderr //bazel/tools:shfmt_bin --
-TAPLO := $(BAZEL_CMD) run --ui_event_filters=-info,-stderr //bazel/tools:taplo_bin --
+SHELLCHECK := bazel run --ui_event_filters=-info,-stderr //bazel/tools:shellcheck_bin --
+SHFMT := bazel run --ui_event_filters=-info,-stderr //bazel/tools:shfmt_bin --
+TAPLO := bazel run --ui_event_filters=-info,-stderr //bazel/tools:taplo_bin --
 ADDITIONAL_MYPY_ARGS := $(JUNIT_XML)
 # Please note: We can currently not include defines.make as it would override
 # the EDITIONS environment variable handed over by some jenkins test jobs.
@@ -369,7 +368,7 @@ test-mypy:
 	    $(ADDITIONAL_MYPY_ARGS) \
 	    --config-file="$(REPO_PATH)/pyproject.toml" \
 	    -- cmk/special_agents/agent_cisco_meraki.py
-	$(BAZEL_CMD) build --config=mypy //cmk:lib_cmk_repo_no_meraki
+	bazel build --config=mypy //cmk:lib_cmk_repo_no_meraki
 
 test-mypy-raw:
 	$(MAKE) test-mypy ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"
@@ -418,12 +417,12 @@ test-unit-omdlib:
 
 test-doctest:
 	mkdir -p ../results; \
-	$(BAZEL_CMD) test //cmk:doctest | tee ../results/$@.txt; \
+	bazel test //cmk:doctest | tee ../results/$@.txt; \
 	exit $${PIPESTATUS[0]}
 
 test-unit:
 	mkdir -p ../results; \
-	$(BAZEL_CMD) test --test_verbose_timeout_warnings //tests/unit:all \
+	bazel test --test_verbose_timeout_warnings //tests/unit:all \
 	    --test_env=TZ=$(RANDOM_TZ) \
 	    --test_arg="-m" --test_arg="not slow" \
 	    --test_arg="--numprocesses=4" | tee ../results/$@.txt; \
@@ -438,7 +437,7 @@ test-unit-docker:
 
 test-unit-all: test-doctest
 	cd .. && \
-	    $(BAZEL_CMD) test --test_verbose_timeout_warnings //tests/unit:all \
+	    bazel test --test_verbose_timeout_warnings //tests/unit:all \
 	    --test_env=TZ=$(RANDOM_TZ) \
 	    --test_arg="--numprocesses=4"
 

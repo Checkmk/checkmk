@@ -21,7 +21,7 @@ XINETD_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(XINETD_DIR)
 .PHONY: $(XINETD_BUILD)
 ifneq ($(filter sles% el9,$(DISTRO_CODE)),)
 $(XINETD_BUILD):
-	$(BAZEL_CMD) build @$(XINETD)//:$(XINETD)
+	bazel build @$(XINETD)//:$(XINETD)
 endif
 
 .PHONY: $(XINETD_INSTALL)

@@ -10,8 +10,8 @@ NAGIOS_INSTALL := $(BUILD_HELPER_DIR)/$(NAGIOS_DIR)-install
 
 .PHONY: $(NAGIOS_BUILD)
 $(NAGIOS_BUILD):
-	$(BAZEL_CMD) build @$(NAGIOS)//:$(NAGIOS)
-	$(BAZEL_CMD) build @$(NAGIOS)//:skel
+	bazel build @$(NAGIOS)//:$(NAGIOS)
+	bazel build @$(NAGIOS)//:skel
 
 .PHONY: $(NAGIOS_INSTALL)
 $(NAGIOS_INSTALL): $(NAGIOS_BUILD)

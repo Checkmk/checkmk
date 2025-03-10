@@ -6,7 +6,7 @@ PATCH_INSTALL := $(BUILD_HELPER_DIR)/$(PATCH_DIR)-install
 
 .PHONY: $(PATCH_BUILD)
 $(PATCH_BUILD):
-	$(BAZEL_CMD) build @$(PATCH)//:build
+	bazel build @$(PATCH)//:build
 
 .PHONY: $(PATCH_INSTALL)
 $(PATCH_INSTALL): $(PATCH_BUILD)

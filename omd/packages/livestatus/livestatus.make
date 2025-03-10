@@ -6,7 +6,7 @@ LIVESTATUS_INSTALL := $(BUILD_HELPER_DIR)/livestatus-install
 
 .PHONY: $(LIVESTATUS_BUILD)
 $(LIVESTATUS_BUILD):
-	$(BAZEL_CMD) build //$(LIVESTATUS_PACKAGE):$(LIVESTATUS)_shared
+	bazel build //$(LIVESTATUS_PACKAGE):$(LIVESTATUS)_shared
 
 $(LIVESTATUS_INSTALL): $(LIVESTATUS_BUILD)
 	install -m 644 $(BAZEL_BIN)/$(LIVESTATUS_PACKAGE)/liblivestatus.so $(DESTDIR)$(OMD_ROOT)/lib/liblivestatus.so.0.1

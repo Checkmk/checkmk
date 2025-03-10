@@ -6,8 +6,8 @@ JAEGER_BAZEL_OUT := $(BAZEL_BIN)/omd/packages/$(JAEGER)
 
 .PHONY: $(JAEGER_BUILD)
 $(JAEGER_BUILD):
-	$(BAZEL_CMD) build //omd/packages/$(JAEGER):extract_binary
-	$(BAZEL_CMD) build //omd/packages/$(JAEGER):hooks
+	bazel build //omd/packages/$(JAEGER):extract_binary
+	bazel build //omd/packages/$(JAEGER):hooks
 
 .PHONY: $(JAEGER_INSTALL)
 $(JAEGER_INSTALL): $(JAEGER_BUILD)

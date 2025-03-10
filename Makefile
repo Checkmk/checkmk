@@ -6,7 +6,6 @@
 include defines.make
 include artifacts.make
 
-BAZEL_CMD          ?= $(REPO_PATH)/scripts/run-bazel.sh
 DIST_ARCHIVE       := check-mk-$(EDITION)-$(OMD_VERSION).tar.gz
 TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
                       --exclude=.gitignore --exclude=*.swp --exclude=.f12 \

@@ -5,7 +5,6 @@
 
 set -e
 REPO_PATH="$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" >/dev/null 2>&1 && pwd)"
-readonly BAZEL_CMD=${BAZEL_CMD:-"${REPO_PATH}"/scripts/run-bazel.sh}
 
 get_bazel_files() {
 
@@ -32,4 +31,4 @@ get_bazel_files() {
         \) -print
 }
 
-get_bazel_files | xargs "${BAZEL_CMD}" run -- //bazel/tools:buildifier --warnings=-module-docstring "$@"
+get_bazel_files | xargs bazel run -- //bazel/tools:buildifier --warnings=-module-docstring "$@"

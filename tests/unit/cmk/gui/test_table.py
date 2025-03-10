@@ -24,10 +24,10 @@ def read_out_simple_table(text):
     assert isinstance(text, str)
     # Get the contents of the table as a list of lists
     data = []
-    for row in bs(text, "lxml").findAll("tr"):
-        columns = row.findAll("th")
+    for row in bs(text, "lxml").find_all("tr"):
+        columns = row.find_all("th")
         if not columns:
-            columns = row.findAll("td")
+            columns = row.find_all("td")
         row_data = []
         for cell in columns:
             cell = re.sub(r"\s", "", re.sub(r"<[^<]*>", "", cell.text))

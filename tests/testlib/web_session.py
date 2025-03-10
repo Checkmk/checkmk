@@ -179,7 +179,7 @@ class CMKWebSession:
     ) -> list:
         urls = []
 
-        for element in soup.findAll(tag):
+        for element in soup.find_all(tag):
             try:
                 skip = False
                 for attr, val in filters or []:

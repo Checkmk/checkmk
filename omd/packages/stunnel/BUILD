@@ -35,14 +35,11 @@ pkg_files(
 )
 
 pkg_files(
-    name = "skel_640_pkg",
+    name = "skel_pkg",
     srcs = [
         "skel/etc/logrotate.d/stunnel",
         "skel/etc/stunnel/server.conf",
     ],
-    attributes = pkg_attributes(
-        mode = "0640",
-    ),
     strip_prefix = strip_prefix.from_pkg(""),
 )
 
@@ -71,8 +68,8 @@ pkg_files(
 pkg_filegroup(
     name = "skel",
     srcs = [
-        "skel_640_pkg",
         "skel_755_pkg",
+        "skel_pkg",
         ":85-stunnel",
         ":conf.d",
     ],

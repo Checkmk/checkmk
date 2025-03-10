@@ -113,6 +113,7 @@ const nextStage = async (actionId: string) => {
 
   //If we have not finished the quick setup yet, but still on the, regular step
   if (nextStageNumber < numberOfStages.value - 1) {
+    followingStage.background_job_log.clear()
     let nextStageStructure: QuickSetupStageStructure
     try {
       nextStageStructure = await getStageStructure(

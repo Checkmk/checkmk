@@ -8,15 +8,12 @@ import logging
 from collections.abc import Generator
 from logging import Logger
 from pathlib import Path
-from typing import Final
 
-_LOGGER_NAME: Final = "automation-helper"
-
-LOGGER = logging.getLogger(_LOGGER_NAME)
+LOGGER = logging.getLogger()
 
 
 def configure_logger(log_directory: Path) -> None:
-    handler = logging.FileHandler(log_directory / f"{_LOGGER_NAME}.log", encoding="UTF-8")
+    handler = logging.FileHandler(log_directory / "automation-helper.log", encoding="UTF-8")
     formatter = logging.Formatter("%(asctime)s [%(levelno)s] [%(process)d] %(message)s")
     handler.setFormatter(formatter)
     LOGGER.addHandler(handler)

@@ -66,9 +66,12 @@ def _filter_selected_rows(view_spec: ViewSpec, rows: Rows, selected_ids: list[st
 
 
 def show_filter_form(view: View, show_filters: list[Filter]) -> None:
+    context = dict(view.context)
+    if "siteopt" in context and (site_id := request.var("site")):
+        context["siteopt"] = {"site": site_id}
     visuals.show_filter_form(
         info_list=view.datasource.infos,
-        context={f.ident: view.context.get(f.ident, {}) for f in show_filters if f.available()},
+        context={f.ident: context.get(f.ident, {}) for f in show_filters if f.available()},
         page_name=view.name,
         reset_ajax_page="ajax_initial_view_filters",
     )

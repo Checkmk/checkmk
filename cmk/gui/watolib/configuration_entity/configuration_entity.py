@@ -14,6 +14,9 @@ from cmk.gui.form_specs.vue.visitors import (
     VisitorOptions,
 )
 from cmk.gui.form_specs.vue.visitors._type_defs import DEFAULT_VALUE
+from cmk.gui.i18n import _
+from cmk.gui.watolib.configuration_entity._folder import get_folder_slidein_schema
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.notification_parameter import (
     get_list_of_notification_parameter,
     get_notification_parameter,
@@ -57,6 +60,8 @@ def save_configuration_entity(
             return ConfigurationEntityDescription(
                 ident=EntityId(value.ident), description=value.description
             )
+        case ConfigEntityType.folder:
+            raise NotImplementedError("Saving folders via config entity API is not yet supported.")
         case other:
             assert_never(other)
 
@@ -68,6 +73,8 @@ def _get_configuration_fs(
     match entity_type:
         case ConfigEntityType.notification_parameter:
             return notification_parameter_registry.form_spec(entity_type_specifier)
+        case ConfigEntityType.folder:
+            return get_folder_slidein_schema()
         case other:
             assert_never(other)
 
@@ -90,7 +97,9 @@ def get_configuration_entity_schema(
 def get_readable_entity_selection(entity_type: ConfigEntityType, entity_type_specifier: str) -> str:
     match entity_type:
         case ConfigEntityType.notification_parameter:
-            return notification_script_title(entity_type_specifier)
+            return _("%s parameter") % notification_script_title(entity_type_specifier)
+        case ConfigEntityType.folder:
+            return _("folder")
         case other:
             assert_never(other)
 
@@ -116,6 +125,8 @@ def get_configuration_entity(
                 NotificationParameterID(entity_id),
             )
             return ConfigurationEntity(description=entity.description, data=entity.data)
+        case ConfigEntityType.folder:
+            raise NotImplementedError("Editing folders via config entity API is not yet supported.")
         case other:
             assert_never(other)
 
@@ -133,6 +144,11 @@ def get_list_of_configuration_entities(
                 for obj in get_list_of_notification_parameter(
                     NotificationParameterMethod(entity_type_specifier),
                 )
+            ]
+        case ConfigEntityType.folder:
+            return [
+                ConfigurationEntityDescription(ident=EntityId(ident), description=description)
+                for ident, description in folder_tree().folder_choices_fulltitle()
             ]
         case other:
             assert_never(other)

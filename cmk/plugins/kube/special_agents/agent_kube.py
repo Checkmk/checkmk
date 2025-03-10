@@ -1025,9 +1025,12 @@ def _write_sections_based_on_api_data(
             common.write_sections(sections)
 
 
-def _write_sections_based_cluster_collector_meta(
+def _create_metadata_based_cluster_collector(
     debug: bool, usage_config: query.CollectorSessionConfig
-) -> bool:
+) -> (
+    tuple[section.ClusterCollectorMetadata, Sequence[section.NodeMetadata]]
+    | CollectorHandlingException
+):
     try:
         metadata = request_cluster_collector(
             query.CollectorPath.metadata,
@@ -1056,26 +1059,11 @@ def _write_sections_based_cluster_collector_meta(
                 detail=f"Following Nodes have unsupported components and should be "
                 f"downgraded: {', '.join(invalid_nodes)}",
             )
-
-        collector_metadata_log = section.CollectorHandlerLog(
-            status=section.CollectorState.OK,
-            title="Retrieved successfully",
-        )
+        return metadata.cluster_collector_metadata, nodes_metadata
     except CollectorHandlingException as e:
         if debug:
             raise
-        collector_metadata_log = e.to_section()
-
-    try:
-        write_cluster_collector_info_section(
-            processing_log=collector_metadata_log,
-            cluster_collector=metadata.cluster_collector_metadata,
-            node_collectors_metadata=nodes_metadata,
-        )
-    except UnboundLocalError:
-        write_cluster_collector_info_section(processing_log=collector_metadata_log)
-        return False
-    return True
+        return e
 
 
 def _create_sections_based_on_container_metrics(
@@ -1269,8 +1257,18 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
     # would discard all the API data. Special Agent failures of the Cluster Collector
     # components will not be highlighted in the usual Checkmk service but in a separate
     # service
-    if _write_sections_based_cluster_collector_meta(arguments.debug, usage_config):
+    metadata_or_err = _create_metadata_based_cluster_collector(arguments.debug, usage_config)
+    if isinstance(metadata_or_err, CollectorHandlingException):
+        write_cluster_collector_info_section(processing_log=metadata_or_err.to_section())
         return
+    cluster_collector_metadata, nodes_metadata = metadata_or_err
+    write_cluster_collector_info_section(
+        processing_log=section.CollectorHandlerLog(
+            status=section.CollectorState.OK, title="Retrieved successfully"
+        ),
+        cluster_collector=cluster_collector_metadata,
+        node_collectors_metadata=nodes_metadata,
+    )
 
     collector_container_log = _create_sections_based_on_container_metrics(
         arguments.debug,

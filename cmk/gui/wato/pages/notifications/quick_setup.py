@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping, Sequence
-from typing import Any, assert_never, cast, get_args, Literal
+from typing import Any, assert_never, cast, Final, get_args, Literal
 
 from cmk.utils.notify_types import HostEventType, ServiceEventType
 from cmk.utils.tags import AuxTag, TagGroup
@@ -461,9 +461,15 @@ def custom_recap_formspec_filter_for_hosts_and_services(
     )
 
 
-def validate_event_comment(event_comment: str) -> None:
-    if not event_comment.strip():
-        raise ValidationError(Message("Please add an event comment."))
+class NonEmptyString:
+    """Custom validator that ensures the string is not empty."""
+
+    def __init__(self, error_msg: Message | None = None) -> None:
+        self.error_msg: Final = error_msg or Message("Input cannot be empty")
+
+    def __call__(self, value: str) -> None:
+        if not value.strip():
+            raise ValidationError(self.error_msg)
 
 
 def filter_for_hosts_and_services() -> QuickSetupStage:
@@ -484,6 +490,11 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 title=Title("Rule IDs"),
                                                 element_template=String(
                                                     field_size=FieldSize.SMALL,
+                                                    custom_validate=[
+                                                        NonEmptyString(
+                                                            Message("Please add at a Rule ID.")
+                                                        )
+                                                    ],
                                                 ),
                                                 editable_order=False,
                                                 prefill=DefaultValue([]),
@@ -540,7 +551,11 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                             parameter_form=String(
                                                 title=Title("Event comment"),
                                                 field_size=FieldSize.LARGE,
-                                                custom_validate=[validate_event_comment],
+                                                custom_validate=[
+                                                    NonEmptyString(
+                                                        Message("Please add an event comment..")
+                                                    )
+                                                ],
                                             ),
                                         ),
                                     },

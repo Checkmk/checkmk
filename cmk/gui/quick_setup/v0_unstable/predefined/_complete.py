@@ -36,6 +36,7 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.automations import (
     fetch_service_discovery_background_job_status,
 )
+from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.configuration_bundles import (
     BundleId,
     ConfigBundle,
@@ -366,6 +367,14 @@ def _create_and_save_special_agent_bundle(
     except Exception as e:
         delete_config_bundle(BundleId(bundle_id))
         raise e
+
+    # revert changes does not work correctly when a config sync to another site occurred
+    # for consistency reasons we always prevent the user from reverting the changes
+    add_change(
+        "create-quick-setup",
+        _("Created Quick setup {bundle_id}").format(bundle_id=bundle_id),
+        prevent_discard_changes=True,
+    )
 
     return makeuri_contextless(
         request,

@@ -9,6 +9,18 @@ from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
 
 
+def _consume_down_interfaces(string_table: StringTable) -> tuple[list[str], int]:
+    interfaces_in_down_state: list[str] = []
+    assert len(string_table[1:]) > 0
+    idx = 0  # Just to make pylint happy... the assert above is not enoug
+    for idx, line in enumerate(string_table[1:]):
+        if line[0].startswith("["):
+            break
+        assert len(line) == 1, "Trying to parse 'if -ld' output but got multiple entries per line"
+        interfaces_in_down_state.append(line[0])
+    return interfaces_in_down_state, idx + 1
+
+
 def _parse_aix_common(
     string_table: StringTable,
 ) -> tuple[dict[str, interfaces.InterfaceWithCounters], dict[str, list[str]]]:
@@ -58,7 +70,18 @@ def _parse_aix_common(
     return ifaces, flags
 
 
-def parse_aix_if(
+def _parse_aix_if_ifconfig_augmented(
+    string_table: StringTable,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
+    interfaces_in_down_state, idx = _consume_down_interfaces(string_table)
+    ifaces, _ = _parse_aix_common(string_table[idx:])
+    for nic, iface in ifaces.items():
+        iface.attributes.oper_status = "2" if nic in interfaces_in_down_state else "1"
+        iface.attributes.finalize()
+    return list(ifaces.values())
+
+
+def _parse_aix_if_entstat_only(
     string_table: StringTable,
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     ifaces, flags = _parse_aix_common(string_table)
@@ -77,6 +100,14 @@ def parse_aix_if(
         iface.attributes.finalize()
 
     return list(ifaces.values())
+
+
+def parse_aix_if(
+    string_table: StringTable,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
+    if string_table[0][0] == "[interfaces_in_down_state]":
+        return _parse_aix_if_ifconfig_augmented(string_table)
+    return _parse_aix_if_entstat_only(string_table)
 
 
 register.agent_section(

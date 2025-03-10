@@ -454,7 +454,10 @@ section_cpu() {
 
 section_aix_if() {
     echo "<<<aix_if>>>"
-    for ent in $(ifconfig -a | grep '^en' | cut -d ":" -f 1); do
+    echo "[interfaces_in_down_state]"
+    pat="^en"
+    ifconfig -ld | grep "${pat}"
+    for ent in $(ifconfig -a | grep "${pat}" | cut -d ":" -f 1); do
         echo "[${ent}]"
         entstat "${ent}" | grep -E "(^Hardware|^Bytes:|^Packets:|^Transmit|^Broadcast:|^Multicast:)"
         entstat "${ent}" | grep -p "Driver Flags:"

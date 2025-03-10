@@ -75,7 +75,7 @@ class CMKWebSession:
         # Trying to workaround this by trying the problematic request a second time.
         try:
             response = self.session.request(method, url, **kwargs)
-        except requests.ConnectionError as e:
+        except requests.exceptions.ConnectionError as e:
             if "Connection aborted" in "%s" % e:
                 response = self.session.request(method, url, **kwargs)
             else:
@@ -238,7 +238,7 @@ class CMKWebSession:
         r = self.get("info.py", allow_redirect_to_login=True)
         try:
             return all(x in r.text for x in ("About Checkmk", "Your IT monitoring platform"))
-        except ConnectionError:
+        except requests.exceptions.ConnectionError:
             if version_from_env().is_saas_edition():
                 # with the auth provider running, the get request may fail
                 return self.get_auth_cookie() is not None

@@ -16,12 +16,11 @@ endpoints monitored by Checkmk must be provided.
 from __future__ import annotations
 
 import argparse
-import contextlib
 import enum
 import logging
 import sys
 from collections import defaultdict
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from itertools import chain
 from typing import TypeVar
@@ -745,22 +744,11 @@ class CollectorHandlingException(Exception):
     def __str__(self) -> str:
         return f"{self.title}: {self.detail}" if self.detail else self.title
 
-
-@contextlib.contextmanager
-def collector_exception_handler(
-    logs: list[section.CollectorHandlerLog], debug: bool = False
-) -> Iterator:
-    try:
-        yield
-    except CollectorHandlingException as e:
-        if debug:
-            raise e
-        logs.append(
-            section.CollectorHandlerLog(
-                status=section.CollectorState.ERROR,
-                title=e.title,
-                detail=e.detail,
-            )
+    def to_section(self) -> section.CollectorHandlerLog:
+        return section.CollectorHandlerLog(
+            status=section.CollectorState.ERROR,
+            title=self.title,
+            detail=self.detail,
         )
 
 
@@ -1041,8 +1029,7 @@ def _write_sections_based_on_api_data(
 def _write_sections_based_cluster_collector_meta(
     debug: bool, usage_config: query.CollectorSessionConfig
 ) -> bool:
-    collector_metadata_logs: list[section.CollectorHandlerLog] = []
-    with collector_exception_handler(logs=collector_metadata_logs, debug=debug):
+    try:
         metadata = request_cluster_collector(
             query.CollectorPath.metadata,
             usage_config,
@@ -1071,21 +1058,23 @@ def _write_sections_based_cluster_collector_meta(
                 f"downgraded: {', '.join(invalid_nodes)}",
             )
 
-        collector_metadata_logs.append(
-            section.CollectorHandlerLog(
-                status=section.CollectorState.OK,
-                title="Retrieved successfully",
-            )
+        collector_metadata_log = section.CollectorHandlerLog(
+            status=section.CollectorState.OK,
+            title="Retrieved successfully",
         )
+    except CollectorHandlingException as e:
+        if debug:
+            raise
+        collector_metadata_log = e.to_section()
 
     try:
         write_cluster_collector_info_section(
-            processing_log=collector_metadata_logs[-1],
+            processing_log=collector_metadata_log,
             cluster_collector=metadata.cluster_collector_metadata,
             node_collectors_metadata=nodes_metadata,
         )
     except UnboundLocalError:
-        write_cluster_collector_info_section(processing_log=collector_metadata_logs[-1])
+        write_cluster_collector_info_section(processing_log=collector_metadata_log)
         return False
     return True
 
@@ -1096,9 +1085,8 @@ def _create_sections_based_on_container_metrics(
     pods_to_host: PodsToHost,
     piggyback_formatter: PiggybackFormatter,
     usage_config: query.CollectorSessionConfig,
-) -> list[section.CollectorHandlerLog]:
-    collector_container_logs: list[section.CollectorHandlerLog] = []
-    with collector_exception_handler(logs=collector_container_logs, debug=debug):
+) -> section.CollectorHandlerLog:
+    try:
         LOGGER.info("Collecting container metrics from cluster collector")
         container_metrics = request_cluster_collector(
             query.CollectorPath.container_metrics,
@@ -1135,16 +1123,17 @@ def _create_sections_based_on_container_metrics(
                 detail="Metrics were successfully processed but Checkmk sections could not "
                 "be written out",
             ) from e
+    except CollectorHandlingException as e:
+        if debug:
+            raise
+        return e.to_section()
 
-        # Log when successfully queried and processed the metrics
-        collector_container_logs.append(
-            section.CollectorHandlerLog(
-                status=section.CollectorState.OK,
-                title="Processed successfully",
-                detail="Successfully queried and processed container metrics",
-            )
-        )
-    return collector_container_logs
+    # Log when successfully queried and processed the metrics
+    return section.CollectorHandlerLog(
+        status=section.CollectorState.OK,
+        title="Processed successfully",
+        detail="Successfully queried and processed container metrics",
+    )
 
 
 def _create_sections_based_on_machine_section(
@@ -1153,9 +1142,8 @@ def _create_sections_based_on_machine_section(
     composed_entities: ComposedEntities,
     piggyback_formatter: PiggybackFormatter,
     usage_config: query.CollectorSessionConfig,
-) -> list[section.CollectorHandlerLog]:
-    collector_machine_logs: list[section.CollectorHandlerLog] = []
-    with collector_exception_handler(logs=collector_machine_logs, debug=debug):
+) -> section.CollectorHandlerLog:
+    try:
         LOGGER.info("Collecting machine sections from cluster collector")
         machine_sections = request_cluster_collector(
             query.CollectorPath.machine_sections,
@@ -1182,16 +1170,17 @@ def _create_sections_based_on_machine_section(
                     detail="Metrics were successfully processed but Checkmk sections could "
                     "not be written out",
                 ) from e
+    except CollectorHandlingException as e:
+        if debug:
+            raise
+        return e.to_section()
 
-        # Log when successfully queried and processed the metrics
-        collector_machine_logs.append(
-            section.CollectorHandlerLog(
-                status=section.CollectorState.OK,
-                title="Processed successfully",
-                detail="Machine sections queried and processed successfully",
-            )
-        )
-    return collector_machine_logs
+    # Log when successfully queried and processed the metrics
+    return section.CollectorHandlerLog(
+        status=section.CollectorState.OK,
+        title="Processed successfully",
+        detail="Machine sections queried and processed successfully",
+    )
 
 
 def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSettings) -> None:
@@ -1284,7 +1273,7 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
     if _write_sections_based_cluster_collector_meta(arguments.debug, usage_config):
         return
 
-    collector_container_logs = _create_sections_based_on_container_metrics(
+    collector_container_log = _create_sections_based_on_container_metrics(
         arguments.debug,
         arguments.cluster,
         pods_to_host,
@@ -1292,7 +1281,7 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
         usage_config,
     )
 
-    collector_machine_logs = _create_sections_based_on_machine_section(
+    collector_machine_log = _create_sections_based_on_machine_section(
         arguments.debug,
         MonitoredObject.nodes in arguments.monitored_objects,
         composed_entities,
@@ -1303,8 +1292,8 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
     with SectionWriter("kube_collector_processing_logs_v1") as writer:
         writer.append(
             section.CollectorProcessingLogs(
-                container=collector_container_logs[-1],
-                machine=collector_machine_logs[-1],
+                container=collector_container_log,
+                machine=collector_machine_log,
             ).model_dump_json()
         )
 

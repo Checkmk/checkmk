@@ -78,7 +78,10 @@ def test_status_push(
         site=central_site,
         ctl_path=agent_ctl,
         hostname=HostName("push-host"),
-        host_attributes={"cmk_agent_connection": HostAgentConnectionMode.PUSH.value},
+        host_attributes={
+            "cmk_agent_connection": HostAgentConnectionMode.PUSH.value,
+            "ipaddress": "127.0.0.1",
+        },
     ) as controller_status:
         connection_details = controller_connection_json(controller_status, central_site)
         assert connection_details["remote"]["hostname"] == "push-host", (

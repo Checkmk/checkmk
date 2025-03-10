@@ -113,18 +113,18 @@ class BaseNotificationPage(QuickSetupPage):
 
     # stage 3
     @property
-    def stage_three(self) -> Locator:
+    def _stage_three(self) -> Locator:
         return self.main_area.locator("li").filter(has_text="Notification method (plug-in)")
 
     @property
     def select_email_parameter_dropdown(self) -> Locator:
-        return self.stage_three.get_by_role("combobox").nth(1)
+        return self._stage_three.get_by_role("combobox").nth(1)
 
     def notification_method_option(self, option: str) -> Locator:
-        return self.stage_three.get_by_role("option", name=option)
+        return self._stage_three.get_by_role("option", name=option)
 
     def create_parameter_button(self) -> Locator:
-        return self.stage_three.get_by_role("button", name="Create")
+        return self._stage_three.get_by_role("button", name="Create")
 
     # stage 4
     @property

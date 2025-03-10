@@ -15,7 +15,10 @@ from cmk.gui.form_specs.vue.visitors import (
 )
 from cmk.gui.form_specs.vue.visitors._type_defs import DEFAULT_VALUE
 from cmk.gui.i18n import _
-from cmk.gui.watolib.configuration_entity._folder import get_folder_slidein_schema
+from cmk.gui.watolib.configuration_entity._folder import (
+    get_folder_slidein_schema,
+    save_folder_from_slidein_schema,
+)
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.notification_parameter import (
     get_list_of_notification_parameter,
@@ -51,17 +54,20 @@ def save_configuration_entity(
     """
     match entity_type:
         case ConfigEntityType.notification_parameter:
-            value = save_notification_parameter(
+            param = save_notification_parameter(
                 notification_parameter_registry,
                 NotificationParameterMethod(entity_type_specifier),
                 data,
                 NotificationParameterID(object_id) if object_id else None,
             )
             return ConfigurationEntityDescription(
-                ident=EntityId(value.ident), description=value.description
+                ident=EntityId(param.ident), description=param.description
             )
         case ConfigEntityType.folder:
-            raise NotImplementedError("Saving folders via config entity API is not yet supported.")
+            folder = save_folder_from_slidein_schema(data)
+            return ConfigurationEntityDescription(
+                ident=EntityId(folder.path), description=folder.title
+            )
         case other:
             assert_never(other)
 

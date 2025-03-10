@@ -56,6 +56,7 @@
   --icon-save: url('~cmk-frontend/src/themes/facelift/images/icon_save.svg');
   --icon-cancel: url('~cmk-frontend/src/themes/facelift/images/icon_cancel.svg');
   --icon-pending-task: url('~cmk-frontend/src/themes/facelift/images/icon_pending_task.svg');
+  --icon-checkmark-plus: url('~cmk-frontend/src/themes/facelift/images/icon_checkmark_plus.svg');
 
   /* TODO: remove icno-info and replace it with icon-help-new (icon-help later)*/
   --icon-info: url('~cmk-frontend/src/themes/facelift/images/icon_info.svg');

@@ -424,6 +424,7 @@ quick_setup_aws = QuickSetup(
             id=ActionId("activate_changes"),
             label=_("Save & go to Activate changes"),
             action=action,
+            iconName="save-to-services",
             custom_validators=[qs_validators.validate_host_name_doesnt_exists],
         ),
     ],

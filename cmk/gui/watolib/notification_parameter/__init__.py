@@ -20,8 +20,5 @@ from ._utils import (
     get_notification_parameter as get_notification_parameter,
 )
 from ._utils import (
-    get_notification_parameter_schema as get_notification_parameter_schema,
-)
-from ._utils import (
     save_notification_parameter as save_notification_parameter,
 )

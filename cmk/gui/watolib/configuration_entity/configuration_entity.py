@@ -8,15 +8,21 @@ from typing import assert_never, NamedTuple, NewType
 
 from cmk.utils.notify_types import NotificationParameterID, NotificationParameterMethod
 
+from cmk.gui.form_specs.vue.visitors import (
+    DataOrigin,
+    get_visitor,
+    VisitorOptions,
+)
+from cmk.gui.form_specs.vue.visitors._type_defs import DEFAULT_VALUE
 from cmk.gui.watolib.notification_parameter import (
     get_list_of_notification_parameter,
     get_notification_parameter,
-    get_notification_parameter_schema,
     notification_parameter_registry,
     save_notification_parameter,
 )
 from cmk.gui.watolib.users import notification_script_title
 
+from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 
@@ -55,6 +61,17 @@ def save_configuration_entity(
             assert_never(other)
 
 
+def _get_configuration_fs(
+    entity_type: ConfigEntityType,
+    entity_type_specifier: str,
+) -> FormSpec:
+    match entity_type:
+        case ConfigEntityType.notification_parameter:
+            return notification_parameter_registry.form_spec(entity_type_specifier)
+        case other:
+            assert_never(other)
+
+
 class ConfigurationEntitySchema(NamedTuple):
     schema: shared_type_defs.FormSpec
     default_values: object
@@ -64,16 +81,10 @@ def get_configuration_entity_schema(
     entity_type: ConfigEntityType,
     entity_type_specifier: str,
 ) -> ConfigurationEntitySchema:
-    match entity_type:
-        case ConfigEntityType.notification_parameter:
-            return ConfigurationEntitySchema(
-                *get_notification_parameter_schema(
-                    notification_parameter_registry,
-                    NotificationParameterMethod(entity_type_specifier),
-                )
-            )
-        case other:
-            assert_never(other)
+    form_spec = _get_configuration_fs(entity_type, entity_type_specifier)
+    visitor = get_visitor(form_spec, VisitorOptions(DataOrigin.FRONTEND))
+    schema, default_values = visitor.to_vue(DEFAULT_VALUE)
+    return ConfigurationEntitySchema(schema=schema, default_values=default_values)
 
 
 def get_readable_entity_selection(entity_type: ConfigEntityType, entity_type_specifier: str) -> str:

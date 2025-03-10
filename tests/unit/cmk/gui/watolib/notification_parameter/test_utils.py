@@ -17,7 +17,6 @@ from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
 from cmk.gui.watolib.notification_parameter import (
     get_list_of_notification_parameter,
     get_notification_parameter,
-    get_notification_parameter_schema,
     NotificationParameter,
     NotificationParameterRegistry,
     save_notification_parameter,
@@ -33,7 +32,6 @@ from cmk.rulesets.v1.form_specs import (
     SingleChoiceElement,
     String,
 )
-from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 
 class DummyNotificationParams(NotificationParameter):
@@ -127,28 +125,6 @@ def test_validation_on_saving_notification_params(
     # WHEN
     with pytest.raises(FormSpecValidationError):
         save_notification_parameter(registry, "dummy_params", params)
-
-
-@pytest.mark.usefixtures("request_context")
-def test_get_notification_params_schema(registry: NotificationParameterRegistry) -> None:
-    # WHEN
-    schema, default_values = get_notification_parameter_schema(registry, "dummy_params")
-
-    # THEN
-    assert isinstance(default_values, dict)
-    assert isinstance(default_values["parameter_properties"], dict)
-    assert (
-        default_values["parameter_properties"]["method_parameters"]["test_param"]
-        == "some_default_value"
-    )
-    assert isinstance(schema, shared_type_defs.Catalog)
-    assert schema.elements[0].name == "general"
-    assert schema.elements[1].name == "parameter_properties"
-    assert schema.elements[1].elements[0].parameter_form.elements[0].name == "test_param"  # type: ignore[union-attr]
-    assert isinstance(
-        schema.elements[1].elements[0].parameter_form.elements[0].parameter_form,  # type: ignore[union-attr]
-        shared_type_defs.String,
-    )
 
 
 @pytest.mark.usefixtures("request_context")

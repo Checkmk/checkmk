@@ -18,14 +18,11 @@ from cmk.utils.notify_types import (
 from cmk.gui.form_specs.vue.form_spec_visitor import process_validation_messages
 from cmk.gui.form_specs.vue.visitors import (
     DataOrigin,
-    DEFAULT_VALUE,
     get_visitor,
     VisitorOptions,
 )
 from cmk.gui.watolib.notifications import NotificationParameterConfigFile
 from cmk.gui.watolib.sample_config import new_notification_parameter_id
-
-from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._registry import NotificationParameterRegistry
 
@@ -90,20 +87,6 @@ def save_notification_parameter(
     return NotificationParameterDescription(
         ident=parameter_id, description=item["general"]["description"]
     )
-
-
-class NotificationParameterSchema(NamedTuple):
-    schema: shared_type_defs.FormSpec
-    default_values: object
-
-
-def get_notification_parameter_schema(
-    registry: NotificationParameterRegistry, parameter_method: NotificationParameterMethod
-) -> NotificationParameterSchema:
-    form_spec = registry.form_spec(parameter_method)
-    visitor = get_visitor(form_spec, VisitorOptions(DataOrigin.FRONTEND))
-    schema, default_values = visitor.to_vue(DEFAULT_VALUE)
-    return NotificationParameterSchema(schema=schema, default_values=default_values)
 
 
 def get_list_of_notification_parameter(

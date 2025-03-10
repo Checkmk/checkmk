@@ -9,4 +9,4 @@
  * Do not edit manually.
  */
 
-export type ConfigEntityType = "notification_parameter";
+export type ConfigEntityType = "notification_parameter" | "folder";

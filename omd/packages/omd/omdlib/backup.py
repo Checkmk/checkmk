@@ -51,7 +51,7 @@ def backup_site_to_tarfile(
             # check a) the sitename and b) the version before reading
             # the whole tar archive. Important for streaming.
             # The file is added twice to get the first for validation
-            # and the second for excration during restore.
+            # and the second for extraction during restore.
             tar_add(
                 rrd_socket,
                 tar,

@@ -38,7 +38,7 @@ supports:
 
 .PP
 .\" TeX users may be more comfortable with the \fB<whatever>\fP and
-.\" \fI<whatever>\fP escape sequences to invode bold face and italics,
+.\" \fI<whatever>\fP escape sequences to invoke bold face and italics,
 .\" respectively.
 \fBomd\fP is the administration interface for creating and maintaining
 sites within OMD - the open monitoring distribution.
@@ -100,7 +100,7 @@ set this, the password will be generated automatically and printed after site cr
 \fB--no-init\fP Omits the population of the site's home directory and the integration into
 the system Apache (/omd/apache/SITE.conf will be empty).
 
-\fB--apache-reload\fP Issue a reaload of the apache process instead of the default restart
+\fB--apache-reload\fP Issue a reload of the apache process instead of the default restart
 
 \fB--no-tmpfs\fP Use this to set the omd config option TMPFS to off during site creation.
 This may be useful when sites are set-up where the use of temporary filesystems is not
@@ -121,7 +121,7 @@ the site is in the same state as after an \fBomd create\fP without \fB--no-init\
 
 The following options can be used:
 
-\fB--apache-reload\fP Issue a reaload of the apache process instead of the default restart
+\fB--apache-reload\fP Issue a reload of the apache process instead of the default restart
 
 .TP
 .B omd [-f, --force] rm [OPTIONS] SITE
@@ -135,7 +135,7 @@ The option \fB--kill\fP will automatically kill all processes that
 either use the temporary filesystem of the site or are running as site
 user. Otherwise the unmount and the removal of the site will fail.
 
-\fB--apache-reload\fP Issue a reaload of the apache process instead of the default restart
+\fB--apache-reload\fP Issue a reload of the apache process instead of the default restart
 
 .TP
 .B omd disable [--kill] SITE
@@ -201,7 +201,7 @@ maximum size of the tmpfs can be changed.
 .TP
 .B omd cp [OPTIONS] SITE NEWNAME
 Make a copy of a site. A new site with the name NEWSITE will be created
-as an exact copy of SITE. All occurrances of SITE will be replaced by
+as an exact copy of SITE. All occurrences of SITE will be replaced by
 NEWSITE in the sites configuration files.
 
 The following options can be used:
@@ -333,7 +333,7 @@ be displayed, that are set to {AUTOSTART} = {on}.
 This command is used to view and change the configuration of a site. Each
 site has a list of configuration variables. Those variables configure
 how the addons of the site should work together. Optional addons can be
-switched on and off. TCP portnumbers for externel access can be configured.
+switched on and off. TCP portnumbers for external access can be configured.
 
 \fBomd config\fP [SITE] \fBshow\fP outputs the current settings of
 all variables of a SITE. If you call this as root, you have to specify
@@ -364,7 +364,7 @@ KEY=value pairs via stdin, for example like this:
 
 \fBecho -e "CORE=cmc\\nAUTOSTART=on" | omd config change\fP
 
-The site is restarted automatically once in case it's currently runnig.
+The site is restarted automatically once in case it's currently running.
 
 Please note: Since 2.1.0p4 you will have to call
 \fBomd update-apache-config SITE\fP after changing one of the options
@@ -424,7 +424,7 @@ purposes.
 
 \fB--no-compression\fP Disable gzip compression of the backup. In case the size of the
 backup is not relevant and you want to reduce CPU performance during backup, you can
-disable the compression. Especiall when doing a backup/restore to another system across
+disable the compression. Especially when doing a backup/restore to another system across
 a LAN, this may be useful to reduce runtime of the backup.
 
 The site needs to be stopped to be able to create the backup. During the backup the

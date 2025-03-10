@@ -9,7 +9,9 @@ from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import DefaultValue
 
 
-def create_full_path_folder_choice(title: Title, help_text: Help) -> SingleChoiceExtended[str]:
+def create_full_path_folder_choice(
+    title: Title, help_text: Help | None
+) -> SingleChoiceExtended[str]:
     choices = folder_tree().folder_choices_fulltitle()
     return SingleChoiceExtended[str](
         title=title,

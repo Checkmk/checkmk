@@ -14,7 +14,6 @@ from .dictionary import DictionaryVisitor
 from .file_upload import FileUploadVisitor
 from .fixed_value import FixedValueVisitor
 from .float import FloatVisitor
-from .folder import FolderVisitor
 from .integer import IntegerVisitor
 from .labels import LabelsVisitor
 from .legacy_valuespec import LegacyValuespecVisitor
@@ -50,7 +49,6 @@ __all__ = [
     "FileUploadVisitor",
     "FixedValueVisitor",
     "FloatVisitor",
-    "FolderVisitor",
     "ConditionChoicesVisitor",
     "IntegerVisitor",
     "LegacyValuespecVisitor",

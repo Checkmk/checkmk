@@ -810,6 +810,466 @@ def piggyback_formatter_with_cluster_name(
             )
 
 
+def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSettings) -> None:
+    setup_logging(arguments.verbose)
+    LOGGER.debug("parsed arguments: %s\n", arguments)
+
+    with cmk.ccc.profile.Profile(enabled=bool(arguments.profile), profile_file=arguments.profile):
+        client_config = query.parse_api_session_config(arguments)
+        LOGGER.info("Collecting API data")
+        try:
+            api_data = from_kubernetes(
+                client_config,
+                LOGGER,
+                query_kubelet_endpoints=MonitoredObject.pvcs in arguments.monitored_objects,
+            )
+        except urllib3.exceptions.MaxRetryError as e:
+            raise ClusterConnectionError(
+                f"Failed to establish a connection to {e.pool.host}:{e.pool.port} at URL {e.url}"
+            ) from e
+        except requests.RequestException as e:
+            if e.request is not None:
+                raise ClusterConnectionError(
+                    f"Failed to establish a connection at URL {e.request.url} "
+                ) from e
+            raise ClusterConnectionError("Failed to establish a connection.") from e
+
+        # Namespaces are handled independently from the cluster object in order to improve
+        # testability. The long term goal is to remove all objects from the cluster object
+        composed_entities = ComposedEntities.from_api_resources(
+            excluded_node_roles=arguments.roles or [], api_data=api_data
+        )
+
+        # Sections based on API server data
+        LOGGER.info("Write cluster sections based on API data")
+        common.write_sections(
+            cluster_handler.create_api_sections(composed_entities.cluster, arguments.cluster)
+        )
+
+        monitored_namespace_names = filter_monitored_namespaces(
+            {namespace_name(namespace) for namespace in api_data.namespaces},
+            arguments.namespace_include_patterns,
+            arguments.namespace_exclude_patterns,
+        )
+
+        namespace_grouped_api_pvcs = group_parsed_pvcs_by_namespace(
+            api_data.persistent_volume_claims
+        )
+
+        api_persistent_volumes = {
+            pv.metadata.name: section.PersistentVolume(name=pv.metadata.name, spec=pv.spec)
+            for pv in api_data.persistent_volumes
+        }
+        namespaced_grouped_attached_volumes = group_serialized_volumes_by_namespace(
+            serialize_attached_volumes_from_kubelet_metrics(
+                filter_kubelet_volume_metrics(api_data.kubelet_open_metrics)
+            )
+        )
+        piggyback_formatter = functools.partial(
+            piggyback_formatter_with_cluster_name, arguments.cluster
+        )
+
+        if MonitoredObject.nodes in arguments.monitored_objects:
+            LOGGER.info("Write nodes sections based on API data")
+            for api_node in composed_entities.nodes:
+                sections = node_handler.create_api_sections(
+                    api_node,
+                    host_settings=checkmk_host_settings,
+                    piggyback_name=piggyback_formatter(api_node),
+                )
+                common.write_sections(sections)
+
+        if MonitoredObject.deployments in arguments.monitored_objects:
+            LOGGER.info("Write deployments sections based on API data")
+            for api_deployment in kube_objects_from_namespaces(
+                composed_entities.deployments, monitored_namespace_names
+            ):
+                deployment_piggyback_name = piggyback_formatter(api_deployment)
+                sections = deployment_handler.create_api_sections(
+                    api_deployment,
+                    host_settings=checkmk_host_settings,
+                    piggyback_name=deployment_piggyback_name,
+                )
+                if MonitoredObject.pvcs in arguments.monitored_objects:
+                    deployment_namespace = kube_object_namespace_name(api_deployment)
+                    sections = chain(
+                        sections,
+                        create_pvc_sections(
+                            piggyback_name=deployment_piggyback_name,
+                            attached_pvc_names=attached_pvc_names_from_pods(api_deployment.pods),
+                            api_pvcs=namespace_grouped_api_pvcs.get(deployment_namespace, {}),
+                            api_pvs=api_persistent_volumes,
+                            attached_volumes=namespaced_grouped_attached_volumes.get(
+                                deployment_namespace, {}
+                            ),
+                        ),
+                    )
+                common.write_sections(sections)
+
+        resource_quotas = api_data.resource_quotas
+        # Namespaces are handled differently to other objects. Namespace piggyback hosts
+        # should only be created if at least one running or pending pod is found in the
+        # namespace.
+        running_pending_pods = [
+            pod
+            for pod in api_data.pods
+            if pod.status.phase in [api.Phase.RUNNING, api.Phase.PENDING]
+        ]
+        namespacenames_running_pending_pods = {
+            kube_object_namespace_name(pod) for pod in running_pending_pods
+        }
+        monitored_api_namespaces = namespaces_from_namespacenames(
+            api_data.namespaces,
+            monitored_namespace_names.intersection(namespacenames_running_pending_pods),
+        )
+        if MonitoredObject.namespaces in arguments.monitored_objects:
+            LOGGER.info("Write namespaces sections based on API data")
+            for api_namespace in monitored_api_namespaces:
+                namespace_piggyback_name = piggyback_formatter(api_namespace)
+                api_pods_from_namespace = filter_pods_by_namespace(
+                    api_data.pods, namespace_name(api_namespace)
+                )
+                namespace_sections = namespace_handler.create_namespace_api_sections(
+                    api_namespace,
+                    api_pods_from_namespace,
+                    host_settings=checkmk_host_settings,
+                    piggyback_name=namespace_piggyback_name,
+                )
+                if (
+                    api_resource_quota
+                    := namespace_handler.filter_matching_namespace_resource_quota(
+                        namespace_name(api_namespace), resource_quotas
+                    )
+                ) is not None:
+                    namespace_sections = chain(
+                        namespace_sections,
+                        namespace_handler.create_resource_quota_api_sections(
+                            api_resource_quota, piggyback_name=namespace_piggyback_name
+                        ),
+                    )
+                common.write_sections(namespace_sections)
+
+        if MonitoredObject.daemonsets in arguments.monitored_objects:
+            LOGGER.info("Write daemon sets sections based on API data")
+            for api_daemonset in kube_objects_from_namespaces(
+                composed_entities.daemonsets, monitored_namespace_names
+            ):
+                daemonset_piggyback_name = piggyback_formatter(api_daemonset)
+                daemonset_sections = daemonset_handler.create_api_sections(
+                    api_daemonset,
+                    host_settings=checkmk_host_settings,
+                    piggyback_name=daemonset_piggyback_name,
+                )
+                if MonitoredObject.pvcs in arguments.monitored_objects:
+                    daemonset_namespace = kube_object_namespace_name(api_daemonset)
+                    daemonset_sections = chain(
+                        daemonset_sections,
+                        create_pvc_sections(
+                            piggyback_name=daemonset_piggyback_name,
+                            attached_pvc_names=attached_pvc_names_from_pods(api_daemonset.pods),
+                            api_pvcs=namespace_grouped_api_pvcs.get(daemonset_namespace, {}),
+                            api_pvs=api_persistent_volumes,
+                            attached_volumes=namespaced_grouped_attached_volumes.get(
+                                daemonset_namespace, {}
+                            ),
+                        ),
+                    )
+                common.write_sections(daemonset_sections)
+
+        if MonitoredObject.statefulsets in arguments.monitored_objects:
+            LOGGER.info("Write StatefulSets sections based on API data")
+            for api_statefulset in kube_objects_from_namespaces(
+                composed_entities.statefulsets, monitored_namespace_names
+            ):
+                statefulset_piggyback_name = piggyback_formatter(api_statefulset)
+                statefulset_sections = statefulset_handler.create_api_sections(
+                    api_statefulset,
+                    host_settings=checkmk_host_settings,
+                    piggyback_name=statefulset_piggyback_name,
+                )
+                if MonitoredObject.pvcs in arguments.monitored_objects:
+                    statefulset_namespace = kube_object_namespace_name(api_statefulset)
+                    statefulset_sections = chain(
+                        statefulset_sections,
+                        create_pvc_sections(
+                            piggyback_name=statefulset_piggyback_name,
+                            attached_pvc_names=attached_pvc_names_from_pods(api_statefulset.pods),
+                            api_pvcs=namespace_grouped_api_pvcs.get(statefulset_namespace, {}),
+                            api_pvs=api_persistent_volumes,
+                            attached_volumes=namespaced_grouped_attached_volumes.get(
+                                statefulset_namespace, {}
+                            ),
+                        ),
+                    )
+                common.write_sections(statefulset_sections)
+
+        api_cron_job_pods = [
+            api_pod
+            for cron_job in api_data.cron_jobs
+            for api_pod in api_data.pods
+            if api_pod.uid in cron_job.pod_uids
+        ]
+        if MonitoredObject.cronjobs in arguments.monitored_objects:
+            api_jobs = {job.uid: job for job in api_data.jobs}
+            for api_cron_job in kube_objects_from_namespaces(
+                api_data.cron_jobs, monitored_namespace_names
+            ):
+                sections = cronjob_handler.create_api_sections(
+                    api_cron_job,
+                    filter_pods_by_cron_job(api_cron_job_pods, api_cron_job),
+                    sorted(
+                        [api_jobs[uid] for uid in api_cron_job.job_uids],
+                        key=lambda job: job.metadata.creation_timestamp,
+                    ),
+                    host_settings=checkmk_host_settings,
+                    piggyback_name=piggyback_formatter(api_cron_job),
+                )
+                common.write_sections(sections)
+
+        if MonitoredObject.pods in arguments.monitored_objects:
+            LOGGER.info("Write pods sections based on API data")
+            pods_in_relevant_namespaces = kube_objects_from_namespaces(
+                api_data.pods, monitored_namespace_names
+            )
+            if MonitoredObject.cronjobs_pods in arguments.monitored_objects:
+                monitored_pods = pods_in_relevant_namespaces
+            else:
+                cronjob_pod_ids = {pod_lookup_from_api_pod(pod) for pod in api_cron_job_pods}
+                monitored_pods = [
+                    pod
+                    for pod in pods_in_relevant_namespaces
+                    if pod_lookup_from_api_pod(pod) not in cronjob_pod_ids
+                ]
+
+            for pod in monitored_pods:
+                pod_piggyback_name = piggyback_formatter(pod)
+                sections = pod_handler.create_api_sections(
+                    pod,
+                    checkmk_host_settings=checkmk_host_settings,
+                    piggyback_name=pod_piggyback_name,
+                )
+
+                if MonitoredObject.pvcs in arguments.monitored_objects:
+                    sections = chain(
+                        sections,
+                        create_pvc_sections(
+                            piggyback_name=pod_piggyback_name,
+                            attached_pvc_names=list(
+                                pod_attached_persistent_volume_claim_names(pod)
+                            ),
+                            api_pvcs=namespace_grouped_api_pvcs.get(
+                                kube_object_namespace_name(pod), {}
+                            ),
+                            api_pvs=api_persistent_volumes,
+                            attached_volumes=namespaced_grouped_attached_volumes.get(
+                                kube_object_namespace_name(pod), {}
+                            ),
+                        ),
+                    )
+                common.write_sections(sections)
+
+        usage_config = query.parse_session_config(arguments)
+
+        # Skip machine & container sections when cluster agent endpoint not configured
+        if isinstance(usage_config, query.NoUsageConfig):
+            return
+
+        if isinstance(usage_config, query.PrometheusSessionConfig):
+            cpu, memory = query.send_requests(
+                usage_config,
+                [
+                    query.Query.sum_rate_container_cpu_usage_seconds_total,
+                    query.Query.sum_container_memory_working_set_bytes,
+                ],
+                logger=LOGGER,
+            )
+
+            common.write_sections(
+                [prometheus_section.debug_section(usage_config.query_url(), cpu, memory)]
+            )
+            prometheus_selectors = prometheus_section.create_selectors(cpu[1], memory[1])
+            pods_to_host = determine_pods_to_host(
+                composed_entities=composed_entities,
+                monitored_objects=arguments.monitored_objects,
+                monitored_namespaces=monitored_namespace_names,
+                api_pods=api_data.pods,
+                resource_quotas=resource_quotas,
+                api_cron_jobs=api_data.cron_jobs,
+                monitored_api_namespaces=monitored_api_namespaces,
+                piggyback_formatter=piggyback_formatter,
+            )
+            common.write_sections(
+                common.create_sections(*prometheus_selectors, pods_to_host=pods_to_host)
+            )
+            write_machine_sections(
+                composed_entities,
+                machine_sections=prometheus_section.machine_sections(usage_config),
+                piggyback_formatter=piggyback_formatter,
+            )
+            return
+
+        assert isinstance(usage_config, query.CollectorSessionConfig)
+
+        # Sections based on cluster collector performance data
+
+        # Handling of any of the cluster components should not crash the special agent as this
+        # would discard all the API data. Special Agent failures of the Cluster Collector
+        # components will not be highlighted in the usual Checkmk service but in a separate
+        # service
+
+        collector_metadata_logs: list[section.CollectorHandlerLog] = []
+        with collector_exception_handler(logs=collector_metadata_logs, debug=arguments.debug):
+            metadata = request_cluster_collector(
+                query.CollectorPath.metadata,
+                usage_config,
+                section.Metadata.model_validate_json,
+            )
+
+            supported_collector_version = 1
+            if not _supported_cluster_collector_major_version(
+                metadata.cluster_collector_metadata.checkmk_kube_agent.project_version,
+                supported_max_major_version=supported_collector_version,
+            ):
+                raise CollectorHandlingException(
+                    title="Version Error",
+                    detail=f"Cluster Collector version {metadata.cluster_collector_metadata.checkmk_kube_agent.project_version} is not supported",
+                )
+
+            nodes_metadata = _group_metadata_by_node(metadata.node_collector_metadata)
+
+            if invalid_nodes := _identify_unsupported_node_collector_components(
+                nodes_metadata,
+                supported_max_major_version=supported_collector_version,
+            ):
+                raise CollectorHandlingException(
+                    title="Version Error",
+                    detail=f"Following Nodes have unsupported components and should be "
+                    f"downgraded: {', '.join(invalid_nodes)}",
+                )
+
+            collector_metadata_logs.append(
+                section.CollectorHandlerLog(
+                    status=section.CollectorState.OK,
+                    title="Retrieved successfully",
+                )
+            )
+
+        try:
+            write_cluster_collector_info_section(
+                processing_log=collector_metadata_logs[-1],
+                cluster_collector=metadata.cluster_collector_metadata,
+                node_collectors_metadata=nodes_metadata,
+            )
+        except UnboundLocalError:
+            write_cluster_collector_info_section(processing_log=collector_metadata_logs[-1])
+            return
+
+        collector_container_logs: list[section.CollectorHandlerLog] = []
+        with collector_exception_handler(logs=collector_container_logs, debug=arguments.debug):
+            LOGGER.info("Collecting container metrics from cluster collector")
+            container_metrics = request_cluster_collector(
+                query.CollectorPath.container_metrics,
+                usage_config,
+                performance.parse_performance_metrics,
+            )
+
+            if not container_metrics:
+                raise CollectorHandlingException(
+                    title="No data",
+                    detail="No container metrics were collected from the cluster collector",
+                )
+
+            pods_to_host = determine_pods_to_host(
+                composed_entities=composed_entities,
+                monitored_objects=arguments.monitored_objects,
+                monitored_namespaces=monitored_namespace_names,
+                api_pods=api_data.pods,
+                resource_quotas=resource_quotas,
+                api_cron_jobs=api_data.cron_jobs,
+                monitored_api_namespaces=monitored_api_namespaces,
+                piggyback_formatter=piggyback_formatter,
+            )
+            try:
+                collector_selectors = performance.create_selectors(
+                    cluster_name=arguments.cluster,
+                    container_metrics=container_metrics,
+                )
+            except Exception as e:
+                raise CollectorHandlingException(
+                    title="Processing Error",
+                    detail="Successfully queried and processed container metrics, but "
+                    "an error occurred while processing the data",
+                ) from e
+
+            try:
+                common.write_sections(
+                    common.create_sections(*collector_selectors, pods_to_host=pods_to_host)
+                )
+
+            except Exception as e:
+                raise CollectorHandlingException(
+                    title="Sections write out Error",
+                    detail="Metrics were successfully processed but Checkmk sections could not "
+                    "be written out",
+                ) from e
+
+            # Log when successfully queried and processed the metrics
+            collector_container_logs.append(
+                section.CollectorHandlerLog(
+                    status=section.CollectorState.OK,
+                    title="Processed successfully",
+                    detail="Successfully queried and processed container metrics",
+                )
+            )
+
+        # Sections based on cluster collector machine sections
+        collector_machine_logs: list[section.CollectorHandlerLog] = []
+        with collector_exception_handler(logs=collector_machine_logs, debug=arguments.debug):
+            LOGGER.info("Collecting machine sections from cluster collector")
+            machine_sections = request_cluster_collector(
+                query.CollectorPath.machine_sections,
+                usage_config,
+                _parse_raw_metrics,
+            )
+
+            if not machine_sections:
+                raise CollectorHandlingException(
+                    title="No data",
+                    detail="No machine sections were collected from the cluster collector",
+                )
+
+            if MonitoredObject.nodes in arguments.monitored_objects:
+                try:
+                    write_machine_sections(
+                        composed_entities,
+                        {s["node_name"]: s["sections"] for s in machine_sections},
+                        piggyback_formatter,
+                    )
+                except Exception as e:
+                    raise CollectorHandlingException(
+                        title="Sections write out Error",
+                        detail="Metrics were successfully processed but Checkmk sections could "
+                        "not be written out",
+                    ) from e
+
+            # Log when successfully queried and processed the metrics
+            collector_machine_logs.append(
+                section.CollectorHandlerLog(
+                    status=section.CollectorState.OK,
+                    title="Processed successfully",
+                    detail="Machine sections queried and processed successfully",
+                )
+            )
+
+        with SectionWriter("kube_collector_processing_logs_v1") as writer:
+            writer.append(
+                section.CollectorProcessingLogs(
+                    container=collector_container_logs[-1],
+                    machine=collector_machine_logs[-1],
+                ).model_dump_json()
+            )
+
+
 def main(args: list[str] | None = None) -> int:
     if args is None:
         cmk.utils.password_store.replace_passwords()
@@ -822,470 +1282,7 @@ def main(args: list[str] | None = None) -> int:
     )
 
     try:
-        setup_logging(arguments.verbose)
-        LOGGER.debug("parsed arguments: %s\n", arguments)
-
-        with cmk.ccc.profile.Profile(
-            enabled=bool(arguments.profile), profile_file=arguments.profile
-        ):
-            client_config = query.parse_api_session_config(arguments)
-            LOGGER.info("Collecting API data")
-            try:
-                api_data = from_kubernetes(
-                    client_config,
-                    LOGGER,
-                    query_kubelet_endpoints=MonitoredObject.pvcs in arguments.monitored_objects,
-                )
-            except urllib3.exceptions.MaxRetryError as e:
-                raise ClusterConnectionError(
-                    f"Failed to establish a connection to {e.pool.host}:{e.pool.port} "
-                    f"at URL {e.url}"
-                ) from e
-            except requests.RequestException as e:
-                if e.request is not None:
-                    raise ClusterConnectionError(
-                        f"Failed to establish a connection at URL {e.request.url} "
-                    ) from e
-                raise ClusterConnectionError("Failed to establish a connection.") from e
-
-            # Namespaces are handled independently from the cluster object in order to improve
-            # testability. The long term goal is to remove all objects from the cluster object
-            composed_entities = ComposedEntities.from_api_resources(
-                excluded_node_roles=arguments.roles or [], api_data=api_data
-            )
-
-            # Sections based on API server data
-            LOGGER.info("Write cluster sections based on API data")
-            common.write_sections(
-                cluster_handler.create_api_sections(composed_entities.cluster, arguments.cluster)
-            )
-
-            monitored_namespace_names = filter_monitored_namespaces(
-                {namespace_name(namespace) for namespace in api_data.namespaces},
-                arguments.namespace_include_patterns,
-                arguments.namespace_exclude_patterns,
-            )
-
-            namespace_grouped_api_pvcs = group_parsed_pvcs_by_namespace(
-                api_data.persistent_volume_claims
-            )
-
-            api_persistent_volumes = {
-                pv.metadata.name: section.PersistentVolume(name=pv.metadata.name, spec=pv.spec)
-                for pv in api_data.persistent_volumes
-            }
-            namespaced_grouped_attached_volumes = group_serialized_volumes_by_namespace(
-                serialize_attached_volumes_from_kubelet_metrics(
-                    filter_kubelet_volume_metrics(api_data.kubelet_open_metrics)
-                )
-            )
-            piggyback_formatter = functools.partial(
-                piggyback_formatter_with_cluster_name, arguments.cluster
-            )
-
-            if MonitoredObject.nodes in arguments.monitored_objects:
-                LOGGER.info("Write nodes sections based on API data")
-                for api_node in composed_entities.nodes:
-                    sections = node_handler.create_api_sections(
-                        api_node,
-                        host_settings=checkmk_host_settings,
-                        piggyback_name=piggyback_formatter(api_node),
-                    )
-                    common.write_sections(sections)
-
-            if MonitoredObject.deployments in arguments.monitored_objects:
-                LOGGER.info("Write deployments sections based on API data")
-                for api_deployment in kube_objects_from_namespaces(
-                    composed_entities.deployments, monitored_namespace_names
-                ):
-                    deployment_piggyback_name = piggyback_formatter(api_deployment)
-                    sections = deployment_handler.create_api_sections(
-                        api_deployment,
-                        host_settings=checkmk_host_settings,
-                        piggyback_name=deployment_piggyback_name,
-                    )
-                    if MonitoredObject.pvcs in arguments.monitored_objects:
-                        deployment_namespace = kube_object_namespace_name(api_deployment)
-                        sections = chain(
-                            sections,
-                            create_pvc_sections(
-                                piggyback_name=deployment_piggyback_name,
-                                attached_pvc_names=attached_pvc_names_from_pods(
-                                    api_deployment.pods
-                                ),
-                                api_pvcs=namespace_grouped_api_pvcs.get(deployment_namespace, {}),
-                                api_pvs=api_persistent_volumes,
-                                attached_volumes=namespaced_grouped_attached_volumes.get(
-                                    deployment_namespace, {}
-                                ),
-                            ),
-                        )
-                    common.write_sections(sections)
-
-            resource_quotas = api_data.resource_quotas
-            # Namespaces are handled differently to other objects. Namespace piggyback hosts
-            # should only be created if at least one running or pending pod is found in the
-            # namespace.
-            running_pending_pods = [
-                pod
-                for pod in api_data.pods
-                if pod.status.phase in [api.Phase.RUNNING, api.Phase.PENDING]
-            ]
-            namespacenames_running_pending_pods = {
-                kube_object_namespace_name(pod) for pod in running_pending_pods
-            }
-            monitored_api_namespaces = namespaces_from_namespacenames(
-                api_data.namespaces,
-                monitored_namespace_names.intersection(namespacenames_running_pending_pods),
-            )
-            if MonitoredObject.namespaces in arguments.monitored_objects:
-                LOGGER.info("Write namespaces sections based on API data")
-                for api_namespace in monitored_api_namespaces:
-                    namespace_piggyback_name = piggyback_formatter(api_namespace)
-                    api_pods_from_namespace = filter_pods_by_namespace(
-                        api_data.pods, namespace_name(api_namespace)
-                    )
-                    namespace_sections = namespace_handler.create_namespace_api_sections(
-                        api_namespace,
-                        api_pods_from_namespace,
-                        host_settings=checkmk_host_settings,
-                        piggyback_name=namespace_piggyback_name,
-                    )
-                    if (
-                        api_resource_quota
-                        := namespace_handler.filter_matching_namespace_resource_quota(
-                            namespace_name(api_namespace), resource_quotas
-                        )
-                    ) is not None:
-                        namespace_sections = chain(
-                            namespace_sections,
-                            namespace_handler.create_resource_quota_api_sections(
-                                api_resource_quota, piggyback_name=namespace_piggyback_name
-                            ),
-                        )
-                    common.write_sections(namespace_sections)
-
-            if MonitoredObject.daemonsets in arguments.monitored_objects:
-                LOGGER.info("Write daemon sets sections based on API data")
-                for api_daemonset in kube_objects_from_namespaces(
-                    composed_entities.daemonsets, monitored_namespace_names
-                ):
-                    daemonset_piggyback_name = piggyback_formatter(api_daemonset)
-                    daemonset_sections = daemonset_handler.create_api_sections(
-                        api_daemonset,
-                        host_settings=checkmk_host_settings,
-                        piggyback_name=daemonset_piggyback_name,
-                    )
-                    if MonitoredObject.pvcs in arguments.monitored_objects:
-                        daemonset_namespace = kube_object_namespace_name(api_daemonset)
-                        daemonset_sections = chain(
-                            daemonset_sections,
-                            create_pvc_sections(
-                                piggyback_name=daemonset_piggyback_name,
-                                attached_pvc_names=attached_pvc_names_from_pods(api_daemonset.pods),
-                                api_pvcs=namespace_grouped_api_pvcs.get(daemonset_namespace, {}),
-                                api_pvs=api_persistent_volumes,
-                                attached_volumes=namespaced_grouped_attached_volumes.get(
-                                    daemonset_namespace, {}
-                                ),
-                            ),
-                        )
-                    common.write_sections(daemonset_sections)
-
-            if MonitoredObject.statefulsets in arguments.monitored_objects:
-                LOGGER.info("Write StatefulSets sections based on API data")
-                for api_statefulset in kube_objects_from_namespaces(
-                    composed_entities.statefulsets, monitored_namespace_names
-                ):
-                    statefulset_piggyback_name = piggyback_formatter(api_statefulset)
-                    statefulset_sections = statefulset_handler.create_api_sections(
-                        api_statefulset,
-                        host_settings=checkmk_host_settings,
-                        piggyback_name=statefulset_piggyback_name,
-                    )
-                    if MonitoredObject.pvcs in arguments.monitored_objects:
-                        statefulset_namespace = kube_object_namespace_name(api_statefulset)
-                        statefulset_sections = chain(
-                            statefulset_sections,
-                            create_pvc_sections(
-                                piggyback_name=statefulset_piggyback_name,
-                                attached_pvc_names=attached_pvc_names_from_pods(
-                                    api_statefulset.pods
-                                ),
-                                api_pvcs=namespace_grouped_api_pvcs.get(statefulset_namespace, {}),
-                                api_pvs=api_persistent_volumes,
-                                attached_volumes=namespaced_grouped_attached_volumes.get(
-                                    statefulset_namespace, {}
-                                ),
-                            ),
-                        )
-                    common.write_sections(statefulset_sections)
-
-            api_cron_job_pods = [
-                api_pod
-                for cron_job in api_data.cron_jobs
-                for api_pod in api_data.pods
-                if api_pod.uid in cron_job.pod_uids
-            ]
-            if MonitoredObject.cronjobs in arguments.monitored_objects:
-                api_jobs = {job.uid: job for job in api_data.jobs}
-                for api_cron_job in kube_objects_from_namespaces(
-                    api_data.cron_jobs, monitored_namespace_names
-                ):
-                    sections = cronjob_handler.create_api_sections(
-                        api_cron_job,
-                        filter_pods_by_cron_job(api_cron_job_pods, api_cron_job),
-                        sorted(
-                            [api_jobs[uid] for uid in api_cron_job.job_uids],
-                            key=lambda job: job.metadata.creation_timestamp,
-                        ),
-                        host_settings=checkmk_host_settings,
-                        piggyback_name=piggyback_formatter(api_cron_job),
-                    )
-                    common.write_sections(sections)
-
-            if MonitoredObject.pods in arguments.monitored_objects:
-                LOGGER.info("Write pods sections based on API data")
-                pods_in_relevant_namespaces = kube_objects_from_namespaces(
-                    api_data.pods, monitored_namespace_names
-                )
-                if MonitoredObject.cronjobs_pods in arguments.monitored_objects:
-                    monitored_pods = pods_in_relevant_namespaces
-                else:
-                    cronjob_pod_ids = {pod_lookup_from_api_pod(pod) for pod in api_cron_job_pods}
-                    monitored_pods = [
-                        pod
-                        for pod in pods_in_relevant_namespaces
-                        if pod_lookup_from_api_pod(pod) not in cronjob_pod_ids
-                    ]
-
-                for pod in monitored_pods:
-                    pod_piggyback_name = piggyback_formatter(pod)
-                    sections = pod_handler.create_api_sections(
-                        pod,
-                        checkmk_host_settings=checkmk_host_settings,
-                        piggyback_name=pod_piggyback_name,
-                    )
-
-                    if MonitoredObject.pvcs in arguments.monitored_objects:
-                        sections = chain(
-                            sections,
-                            create_pvc_sections(
-                                piggyback_name=pod_piggyback_name,
-                                attached_pvc_names=list(
-                                    pod_attached_persistent_volume_claim_names(pod)
-                                ),
-                                api_pvcs=namespace_grouped_api_pvcs.get(
-                                    kube_object_namespace_name(pod), {}
-                                ),
-                                api_pvs=api_persistent_volumes,
-                                attached_volumes=namespaced_grouped_attached_volumes.get(
-                                    kube_object_namespace_name(pod), {}
-                                ),
-                            ),
-                        )
-                    common.write_sections(sections)
-
-            usage_config = query.parse_session_config(arguments)
-
-            # Skip machine & container sections when cluster agent endpoint not configured
-            if isinstance(usage_config, query.NoUsageConfig):
-                return 0
-
-            if isinstance(usage_config, query.PrometheusSessionConfig):
-                cpu, memory = query.send_requests(
-                    usage_config,
-                    [
-                        query.Query.sum_rate_container_cpu_usage_seconds_total,
-                        query.Query.sum_container_memory_working_set_bytes,
-                    ],
-                    logger=LOGGER,
-                )
-
-                common.write_sections(
-                    [prometheus_section.debug_section(usage_config.query_url(), cpu, memory)]
-                )
-                prometheus_selectors = prometheus_section.create_selectors(cpu[1], memory[1])
-                pods_to_host = determine_pods_to_host(
-                    composed_entities=composed_entities,
-                    monitored_objects=arguments.monitored_objects,
-                    monitored_namespaces=monitored_namespace_names,
-                    api_pods=api_data.pods,
-                    resource_quotas=resource_quotas,
-                    api_cron_jobs=api_data.cron_jobs,
-                    monitored_api_namespaces=monitored_api_namespaces,
-                    piggyback_formatter=piggyback_formatter,
-                )
-                common.write_sections(
-                    common.create_sections(*prometheus_selectors, pods_to_host=pods_to_host)
-                )
-                write_machine_sections(
-                    composed_entities,
-                    machine_sections=prometheus_section.machine_sections(usage_config),
-                    piggyback_formatter=piggyback_formatter,
-                )
-                return 0
-
-            assert isinstance(usage_config, query.CollectorSessionConfig)
-
-            # Sections based on cluster collector performance data
-
-            # Handling of any of the cluster components should not crash the special agent as this
-            # would discard all the API data. Special Agent failures of the Cluster Collector
-            # components will not be highlighted in the usual Checkmk service but in a separate
-            # service
-
-            collector_metadata_logs: list[section.CollectorHandlerLog] = []
-            with collector_exception_handler(logs=collector_metadata_logs, debug=arguments.debug):
-                metadata = request_cluster_collector(
-                    query.CollectorPath.metadata,
-                    usage_config,
-                    section.Metadata.model_validate_json,
-                )
-
-                supported_collector_version = 1
-                if not _supported_cluster_collector_major_version(
-                    metadata.cluster_collector_metadata.checkmk_kube_agent.project_version,
-                    supported_max_major_version=supported_collector_version,
-                ):
-                    raise CollectorHandlingException(
-                        title="Version Error",
-                        detail=f"Cluster Collector version {metadata.cluster_collector_metadata.checkmk_kube_agent.project_version} is not supported",
-                    )
-
-                nodes_metadata = _group_metadata_by_node(metadata.node_collector_metadata)
-
-                if invalid_nodes := _identify_unsupported_node_collector_components(
-                    nodes_metadata,
-                    supported_max_major_version=supported_collector_version,
-                ):
-                    raise CollectorHandlingException(
-                        title="Version Error",
-                        detail=f"Following Nodes have unsupported components and should be "
-                        f"downgraded: {', '.join(invalid_nodes)}",
-                    )
-
-                collector_metadata_logs.append(
-                    section.CollectorHandlerLog(
-                        status=section.CollectorState.OK,
-                        title="Retrieved successfully",
-                    )
-                )
-
-            try:
-                write_cluster_collector_info_section(
-                    processing_log=collector_metadata_logs[-1],
-                    cluster_collector=metadata.cluster_collector_metadata,
-                    node_collectors_metadata=nodes_metadata,
-                )
-            except UnboundLocalError:
-                write_cluster_collector_info_section(processing_log=collector_metadata_logs[-1])
-                return 0
-
-            collector_container_logs: list[section.CollectorHandlerLog] = []
-            with collector_exception_handler(logs=collector_container_logs, debug=arguments.debug):
-                LOGGER.info("Collecting container metrics from cluster collector")
-                container_metrics = request_cluster_collector(
-                    query.CollectorPath.container_metrics,
-                    usage_config,
-                    performance.parse_performance_metrics,
-                )
-
-                if not container_metrics:
-                    raise CollectorHandlingException(
-                        title="No data",
-                        detail="No container metrics were collected from the cluster collector",
-                    )
-
-                pods_to_host = determine_pods_to_host(
-                    composed_entities=composed_entities,
-                    monitored_objects=arguments.monitored_objects,
-                    monitored_namespaces=monitored_namespace_names,
-                    api_pods=api_data.pods,
-                    resource_quotas=resource_quotas,
-                    api_cron_jobs=api_data.cron_jobs,
-                    monitored_api_namespaces=monitored_api_namespaces,
-                    piggyback_formatter=piggyback_formatter,
-                )
-                try:
-                    collector_selectors = performance.create_selectors(
-                        cluster_name=arguments.cluster,
-                        container_metrics=container_metrics,
-                    )
-                except Exception as e:
-                    raise CollectorHandlingException(
-                        title="Processing Error",
-                        detail="Successfully queried and processed container metrics, but "
-                        "an error occurred while processing the data",
-                    ) from e
-
-                try:
-                    common.write_sections(
-                        common.create_sections(*collector_selectors, pods_to_host=pods_to_host)
-                    )
-
-                except Exception as e:
-                    raise CollectorHandlingException(
-                        title="Sections write out Error",
-                        detail="Metrics were successfully processed but Checkmk sections could not "
-                        "be written out",
-                    ) from e
-
-                # Log when successfully queried and processed the metrics
-                collector_container_logs.append(
-                    section.CollectorHandlerLog(
-                        status=section.CollectorState.OK,
-                        title="Processed successfully",
-                        detail="Successfully queried and processed container metrics",
-                    )
-                )
-
-            # Sections based on cluster collector machine sections
-            collector_machine_logs: list[section.CollectorHandlerLog] = []
-            with collector_exception_handler(logs=collector_machine_logs, debug=arguments.debug):
-                LOGGER.info("Collecting machine sections from cluster collector")
-                machine_sections = request_cluster_collector(
-                    query.CollectorPath.machine_sections,
-                    usage_config,
-                    _parse_raw_metrics,
-                )
-
-                if not machine_sections:
-                    raise CollectorHandlingException(
-                        title="No data",
-                        detail="No machine sections were collected from the cluster collector",
-                    )
-
-                if MonitoredObject.nodes in arguments.monitored_objects:
-                    try:
-                        write_machine_sections(
-                            composed_entities,
-                            {s["node_name"]: s["sections"] for s in machine_sections},
-                            piggyback_formatter,
-                        )
-                    except Exception as e:
-                        raise CollectorHandlingException(
-                            title="Sections write out Error",
-                            detail="Metrics were successfully processed but Checkmk sections could "
-                            "not be written out",
-                        ) from e
-
-                # Log when successfully queried and processed the metrics
-                collector_machine_logs.append(
-                    section.CollectorHandlerLog(
-                        status=section.CollectorState.OK,
-                        title="Processed successfully",
-                        detail="Machine sections queried and processed successfully",
-                    )
-                )
-
-            with SectionWriter("kube_collector_processing_logs_v1") as writer:
-                writer.append(
-                    section.CollectorProcessingLogs(
-                        container=collector_container_logs[-1],
-                        machine=collector_machine_logs[-1],
-                    ).model_dump_json()
-                )
+        _main(arguments, checkmk_host_settings)
     except Exception as e:
         if arguments.debug:
             raise

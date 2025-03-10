@@ -18,7 +18,9 @@ from ._base import FormSpecVisitor
 from ._type_defs import DefaultValue, InvalidValue
 from ._utils import (
     base_i18n_form_spec,
+    compute_title_input_hint,
     compute_validators,
+    get_prefill_default,
     get_title_and_help,
 )
 
@@ -33,10 +35,13 @@ class SingleChoiceEditableVisitor(
         if raw_value is None:
             return None
         if isinstance(raw_value, DefaultValue):
-            return InvalidValue[_FrontendModel](
-                reason=_("Value is default. Please provide a non-default value."),
-                fallback_value=None,
-            )
+            fallback_value: _FrontendModel = None
+            if isinstance(
+                prefill_default := get_prefill_default(self.form_spec.prefill, fallback_value),
+                InvalidValue,
+            ):
+                return prefill_default
+            raw_value = prefill_default
         if not isinstance(raw_value, str):
             return InvalidValue[_FrontendModel](
                 reason=_("Invalid data: value is not a string."), fallback_value=None
@@ -68,6 +73,9 @@ class SingleChoiceEditableVisitor(
         entity_selection = self.form_spec.entity_type_specifier
         entities = get_list_of_configuration_entities(entity_type, entity_selection)
         readable_entity_selection = get_readable_entity_selection(entity_type, entity_selection)
+        input_hint = compute_title_input_hint(self.form_spec.prefill) or _(
+            "Please select an element"
+        )
         return (
             shared_type_defs.SingleChoiceEditable(
                 # FormSpec
@@ -97,7 +105,7 @@ class SingleChoiceEditableVisitor(
                     fatal_error=_("An fatal error occured:"),
                     fatal_error_reload=_("reload"),
                     no_objects=_("No options available"),
-                    no_selection=_("Please select an element"),
+                    no_selection=input_hint,
                 ),
                 i18n_base=base_i18n_form_spec(),
             ),

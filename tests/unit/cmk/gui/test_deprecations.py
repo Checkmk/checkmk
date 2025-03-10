@@ -27,12 +27,12 @@ def test__marker_file_store_save(tmp_path: Path) -> None:
     assert marker_file_store.marker_file(SiteId("site_id"), "2.4.0").exists()
 
 
-def test__marker_file_store_cleanup(tmp_path: Path) -> None:
+def test__marker_file_store_cleanup_site_dir(tmp_path: Path) -> None:
     marker_file_store = _MarkerFileStore(tmp_path / "deprecations")
     for idx in range(10):
         marker_file_store.save(SiteId("site_id"), str(idx), [])
     assert len(list((marker_file_store.folder / "site_id").iterdir())) == 10
-    marker_file_store.cleanup(SiteId("site_id"))
+    marker_file_store.cleanup_site_dir(SiteId("site_id"))
     assert len(list((marker_file_store.folder / "site_id").iterdir())) == 5
 
 

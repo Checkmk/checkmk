@@ -49,6 +49,7 @@ from cmk.gui.form_specs.vue.visitors.metric import MetricVisitor
 from cmk.gui.form_specs.vue.visitors.recomposers import (
     recompose_cascading_single_choice,
     recompose_dictionary,
+    recompose_folder,
     recompose_host_state,
     recompose_levels,
     recompose_list,
@@ -120,7 +121,6 @@ from .visitors import (
     FileUploadVisitor,
     FixedValueVisitor,
     FloatVisitor,
-    FolderVisitor,
     get_visitor,
     IntegerVisitor,
     LabelsVisitor,
@@ -200,7 +200,6 @@ def register_form_specs():
     register_visitor_class(ConditionChoices, ConditionChoicesVisitor)
     register_visitor_class(ListOfStrings, ListOfStringsVisitor)
     register_visitor_class(MultipleChoiceExtended, MultipleChoiceVisitor)
-    register_visitor_class(Folder, FolderVisitor)
     register_visitor_class(Labels, LabelsVisitor)
     register_visitor_class(TimeSpecific, TimeSpecificVisitor)
     register_visitor_class(FileUpload, FileUploadVisitor)
@@ -213,6 +212,7 @@ def register_form_specs():
     register_recomposer_function(MonitoredHostExtended, recompose_monitored_host_extended)
     register_recomposer_function(MonitoredService, recompose_monitored_service)
     register_recomposer_function(String, recompose_string)
+    register_recomposer_function(Folder, recompose_folder)
     register_recomposer_function(HostState, recompose_host_state)
     register_recomposer_function(ServiceState, recompose_service_state)
     register_recomposer_function(SingleChoice, recompose_single_choice)

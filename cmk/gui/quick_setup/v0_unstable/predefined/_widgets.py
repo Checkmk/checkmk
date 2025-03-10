@@ -125,12 +125,8 @@ def _host_path_dict_element(title: Title = Title("Folder")) -> DictElement:
     return DictElement(
         parameter_form=Folder(
             title=title,
-            help_text=Help(
-                "Specify the location where the host will be created. If left empty, "
-                "the host will be created in the root folder."
-            ),
-            prefill=InputHint("(Enter or select folder path)"),
-            allow_new_folder_path=True,
+            help_text=Help("Specify the location where the host will be created."),
+            allow_new_folder_creation=True,
         ),
         required=True,
     )

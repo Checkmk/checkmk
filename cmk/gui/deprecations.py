@@ -161,12 +161,9 @@ class _ACTestResultProblem:
         self._site_ids.add(site_id)
 
     def __repr__(self) -> str:
-        infos = []
-        if self.descriptions:
-            infos.append(", ".join(self.descriptions))
-        if self.site_ids:
-            infos.append(f"sites: {', '.join(self.site_ids)}")
-        return f"{self.title}: {', '.join(infos)}" if infos else self.title
+        return (
+            f"{self.title}, sites: {', '.join(self.site_ids)}:<br>{',<br>'.join(self.descriptions)}"
+        )
 
 
 def _find_ac_test_result_problems(
@@ -180,35 +177,27 @@ def _find_ac_test_result_problems(
                 if manifest := _find_manifest(manifests_by_path, ac_test_result.path):
                     problem = problem_by_ident.setdefault(
                         manifest.name,
-                        _ACTestResultProblem(
-                            manifest.name,
-                            f"MKP {manifest.name}",
-                        ),
+                        _ACTestResultProblem(manifest.name, f"MKP {manifest.name}"),
                     )
                 else:
                     problem = problem_by_ident.setdefault(
                         "unpackaged_files",
-                        _ACTestResultProblem(
-                            "unpackaged_files",
-                            "Unpackaged files",
-                        ),
+                        _ACTestResultProblem("unpackaged_files", "Unpackaged files"),
                     )
                 problem.add_description(f"{ac_test_result.text} (file: {ac_test_result.path})")
             else:
                 problem = problem_by_ident.setdefault(
-                    ac_test_result.text,
-                    _ACTestResultProblem(
-                        ac_test_result.text,
-                        ac_test_result.text,
-                    ),
+                    "unsorted",
+                    _ACTestResultProblem("unsorted", "Unsorted"),
                 )
+                problem.add_description(ac_test_result.text)
             problem.add_site_id(site_id)
 
     return list(problem_by_ident.values())
 
 
 def _format_ac_test_result_problems(ac_test_result_problems: Sequence[_ACTestResultProblem]) -> str:
-    return "\n".join([repr(p) for p in ac_test_result_problems])
+    return "<br><br>".join([repr(p) for p in ac_test_result_problems])
 
 
 def execute_deprecation_tests_and_notify_users() -> None:

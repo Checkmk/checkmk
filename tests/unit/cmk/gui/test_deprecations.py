@@ -189,7 +189,7 @@ def test__filter_non_ok_ac_test_results(
                 ],
             },
             {},
-            "text: sites: site_id_1, site_id_2",
+            "Unsorted, sites: site_id_1, site_id_2:<br>text,<br>text",
             id="one-id",
         ),
         pytest.param(
@@ -220,7 +220,7 @@ def test__filter_non_ok_ac_test_results(
                 ],
             },
             {},
-            "text_1: sites: site_id_1\ntext_2: sites: site_id_2",
+            "Unsorted, sites: site_id_1, site_id_2:<br>text_1,<br>text_2",
             id="different-ids",
         ),
         pytest.param(
@@ -239,7 +239,7 @@ def test__filter_non_ok_ac_test_results(
                 ],
             },
             {},
-            "Unpackaged files: text (file: /omd/sites/site_id/local/share/check_mk/web/plugins/metrics/file.py), sites: site_id",
+            "Unpackaged files, sites: site_id:<br>text (file: /omd/sites/site_id/local/share/check_mk/web/plugins/metrics/file.py)",
             id="mkp",
         ),
         pytest.param(
@@ -271,7 +271,7 @@ def test__filter_non_ok_ac_test_results(
                     files={PackagePart("web"): [Path("plugins/metrics/file.py")]},
                 )
             },
-            "MKP asd: text (file: /omd/sites/site_id/local/share/check_mk/web/plugins/metrics/file.py), sites: site_id",
+            "MKP asd, sites: site_id:<br>text (file: /omd/sites/site_id/local/share/check_mk/web/plugins/metrics/file.py)",
             id="mkp",
         ),
     ],

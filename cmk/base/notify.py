@@ -1497,6 +1497,9 @@ def handle_spoolfile(spoolfile: str) -> int:
     logger.info("----------------------------------------------------------------------")
     data = None
     try:
+        if not Path(spoolfile).exists():
+            logger.warning("Skipping missing spoolfile %s.", notif_uuid[:8])
+            return 2
         data = store.load_object_from_file(spoolfile, default={}, lock=True)
         if not data:
             logger.warning("Skipping empty spool file %s", notif_uuid[:8])

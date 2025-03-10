@@ -60,7 +60,11 @@ class SingleChoiceVisitor(
                     reason=self._compute_invalid_value_display_message(raw_value),
                     fallback_value=NO_SELECTION,
                 )
-            raw_value = prefill_default
+            raw_value = (
+                self.option_id(prefill_default)
+                if self.options.data_origin == DataOrigin.FRONTEND
+                else prefill_default
+            )
 
         if self.options.data_origin == DataOrigin.FRONTEND:
             # Decode option send from frontend

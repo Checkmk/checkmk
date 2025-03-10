@@ -958,7 +958,7 @@ class ModeNotifications(ABCNotificationsMode):
                 table.row()
                 if contact.startswith("mailto:"):
                     contact = contact[7:]  # strip of fake-contact mailto:-prefix
-                table.cell(_("Recipient"), contact)
+                table.cell(_("Recipient"), contact.replace(",", ", "))
                 table.cell(_("Method"), self._vs_notification_scripts().value_to_html(plugin))
                 table.cell(_("Parameters"), ", ".join(list(parameters)))
                 table.cell(_("Bulking"))

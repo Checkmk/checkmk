@@ -10,11 +10,12 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.utils.user import UserId
 
 from cmk.gui.form_specs.vue.visitors import DataOrigin, get_visitor, SingleChoiceVisitor
-from cmk.gui.form_specs.vue.visitors._type_defs import VisitorOptions
+from cmk.gui.form_specs.vue.visitors._type_defs import DEFAULT_VALUE, VisitorOptions
 from cmk.gui.form_specs.vue.visitors.single_choice import NO_SELECTION
 
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
     InvalidElementMode,
     InvalidElementValidator,
     SingleChoice,
@@ -141,3 +142,22 @@ def test_single_choice_valid_value(
     assert len(validation_messages) == 0
 
     assert visitor.to_disk(raw_value) == "bar"
+
+
+@pytest.mark.parametrize("data_origin", [DataOrigin.DISK, DataOrigin.FRONTEND])
+def test_default_value_from_any_origin(
+    data_origin: DataOrigin,
+) -> None:
+    single_choice = SingleChoice(
+        elements=[
+            SingleChoiceElement(name="foo", title=Title("foo")),
+            SingleChoiceElement(name="bar", title=Title("bar")),
+        ],
+        prefill=DefaultValue("bar"),
+    )
+    to_frontend_visitor = get_visitor(single_choice, VisitorOptions(data_origin))
+    _, vue_value = to_frontend_visitor.to_vue(DEFAULT_VALUE)
+
+    to_disk_visitor = get_visitor(single_choice, VisitorOptions(DataOrigin.FRONTEND))
+    value = to_disk_visitor.to_disk(vue_value)
+    assert value == "bar"

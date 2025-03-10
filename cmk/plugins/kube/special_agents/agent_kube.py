@@ -1038,6 +1038,176 @@ def _write_sections_based_on_api_data(
             common.write_sections(sections)
 
 
+def _write_sections_based_cluster_collector_meta(
+    debug: bool, usage_config: query.CollectorSessionConfig
+) -> bool:
+    collector_metadata_logs: list[section.CollectorHandlerLog] = []
+    with collector_exception_handler(logs=collector_metadata_logs, debug=debug):
+        metadata = request_cluster_collector(
+            query.CollectorPath.metadata,
+            usage_config,
+            section.Metadata.model_validate_json,
+        )
+
+        supported_collector_version = 1
+        if not _supported_cluster_collector_major_version(
+            metadata.cluster_collector_metadata.checkmk_kube_agent.project_version,
+            supported_max_major_version=supported_collector_version,
+        ):
+            raise CollectorHandlingException(
+                title="Version Error",
+                detail=f"Cluster Collector version {metadata.cluster_collector_metadata.checkmk_kube_agent.project_version} is not supported",
+            )
+
+        nodes_metadata = _group_metadata_by_node(metadata.node_collector_metadata)
+
+        if invalid_nodes := _identify_unsupported_node_collector_components(
+            nodes_metadata,
+            supported_max_major_version=supported_collector_version,
+        ):
+            raise CollectorHandlingException(
+                title="Version Error",
+                detail=f"Following Nodes have unsupported components and should be "
+                f"downgraded: {', '.join(invalid_nodes)}",
+            )
+
+        collector_metadata_logs.append(
+            section.CollectorHandlerLog(
+                status=section.CollectorState.OK,
+                title="Retrieved successfully",
+            )
+        )
+
+    try:
+        write_cluster_collector_info_section(
+            processing_log=collector_metadata_logs[-1],
+            cluster_collector=metadata.cluster_collector_metadata,
+            node_collectors_metadata=nodes_metadata,
+        )
+    except UnboundLocalError:
+        write_cluster_collector_info_section(processing_log=collector_metadata_logs[-1])
+        return False
+    return True
+
+
+def _create_sections_based_on_container_metrics(
+    debug: bool,
+    cluster_name: str,
+    monitored_objects: Sequence[MonitoredObject],
+    monitored_api_namespaces: Sequence[api.Namespace],
+    monitored_namespaces: set[api.NamespaceName],
+    composed_entities: ComposedEntities,
+    api_data: APIData,
+    piggyback_formatter: PiggybackFormatter,
+    usage_config: query.CollectorSessionConfig,
+) -> list[section.CollectorHandlerLog]:
+    collector_container_logs: list[section.CollectorHandlerLog] = []
+    with collector_exception_handler(logs=collector_container_logs, debug=debug):
+        LOGGER.info("Collecting container metrics from cluster collector")
+        container_metrics = request_cluster_collector(
+            query.CollectorPath.container_metrics,
+            usage_config,
+            performance.parse_performance_metrics,
+        )
+
+        if not container_metrics:
+            raise CollectorHandlingException(
+                title="No data",
+                detail="No container metrics were collected from the cluster collector",
+            )
+
+        pods_to_host = determine_pods_to_host(
+            composed_entities=composed_entities,
+            monitored_objects=monitored_objects,
+            monitored_namespaces=monitored_namespaces,
+            api_pods=api_data.pods,
+            resource_quotas=api_data.resource_quotas,
+            api_cron_jobs=api_data.cron_jobs,
+            monitored_api_namespaces=monitored_api_namespaces,
+            piggyback_formatter=piggyback_formatter,
+        )
+        try:
+            collector_selectors = performance.create_selectors(
+                cluster_name=cluster_name,
+                container_metrics=container_metrics,
+            )
+        except Exception as e:
+            raise CollectorHandlingException(
+                title="Processing Error",
+                detail="Successfully queried and processed container metrics, but "
+                "an error occurred while processing the data",
+            ) from e
+
+        try:
+            common.write_sections(
+                common.create_sections(*collector_selectors, pods_to_host=pods_to_host)
+            )
+
+        except Exception as e:
+            raise CollectorHandlingException(
+                title="Sections write out Error",
+                detail="Metrics were successfully processed but Checkmk sections could not "
+                "be written out",
+            ) from e
+
+        # Log when successfully queried and processed the metrics
+        collector_container_logs.append(
+            section.CollectorHandlerLog(
+                status=section.CollectorState.OK,
+                title="Processed successfully",
+                detail="Successfully queried and processed container metrics",
+            )
+        )
+    return collector_container_logs
+
+
+def _create_sections_based_on_machine_section(
+    debug: bool,
+    monitor_nodes: bool,
+    composed_entities: ComposedEntities,
+    piggyback_formatter: PiggybackFormatter,
+    usage_config: query.CollectorSessionConfig,
+) -> list[section.CollectorHandlerLog]:
+    collector_machine_logs: list[section.CollectorHandlerLog] = []
+    with collector_exception_handler(logs=collector_machine_logs, debug=debug):
+        LOGGER.info("Collecting machine sections from cluster collector")
+        machine_sections = request_cluster_collector(
+            query.CollectorPath.machine_sections,
+            usage_config,
+            _parse_raw_metrics,
+        )
+
+        if not machine_sections:
+            raise CollectorHandlingException(
+                title="No data",
+                detail="No machine sections were collected from the cluster collector",
+            )
+
+        if monitor_nodes:
+            try:
+                write_machine_sections(
+                    composed_entities,
+                    {s["node_name"]: s["sections"] for s in machine_sections},
+                    piggyback_formatter,
+                )
+            except Exception as e:
+                raise CollectorHandlingException(
+                    title="Sections write out Error",
+                    detail="Metrics were successfully processed but Checkmk sections could "
+                    "not be written out",
+                ) from e
+
+        # Log when successfully queried and processed the metrics
+        collector_machine_logs.append(
+            section.CollectorHandlerLog(
+                status=section.CollectorState.OK,
+                title="Processed successfully",
+                detail="Machine sections queried and processed successfully",
+            )
+        )
+    return collector_machine_logs
+
+
 def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSettings) -> None:
     client_config = query.parse_api_session_config(arguments)
     api_data = _collect_api_data(client_config, MonitoredObject.pvcs in arguments.monitored_objects)
@@ -1120,156 +1290,32 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
 
     assert isinstance(usage_config, query.CollectorSessionConfig)
 
-    # Sections based on cluster collector performance data
-
     # Handling of any of the cluster components should not crash the special agent as this
     # would discard all the API data. Special Agent failures of the Cluster Collector
     # components will not be highlighted in the usual Checkmk service but in a separate
     # service
-
-    collector_metadata_logs: list[section.CollectorHandlerLog] = []
-    with collector_exception_handler(logs=collector_metadata_logs, debug=arguments.debug):
-        metadata = request_cluster_collector(
-            query.CollectorPath.metadata,
-            usage_config,
-            section.Metadata.model_validate_json,
-        )
-
-        supported_collector_version = 1
-        if not _supported_cluster_collector_major_version(
-            metadata.cluster_collector_metadata.checkmk_kube_agent.project_version,
-            supported_max_major_version=supported_collector_version,
-        ):
-            raise CollectorHandlingException(
-                title="Version Error",
-                detail=f"Cluster Collector version {metadata.cluster_collector_metadata.checkmk_kube_agent.project_version} is not supported",
-            )
-
-        nodes_metadata = _group_metadata_by_node(metadata.node_collector_metadata)
-
-        if invalid_nodes := _identify_unsupported_node_collector_components(
-            nodes_metadata,
-            supported_max_major_version=supported_collector_version,
-        ):
-            raise CollectorHandlingException(
-                title="Version Error",
-                detail=f"Following Nodes have unsupported components and should be "
-                f"downgraded: {', '.join(invalid_nodes)}",
-            )
-
-        collector_metadata_logs.append(
-            section.CollectorHandlerLog(
-                status=section.CollectorState.OK,
-                title="Retrieved successfully",
-            )
-        )
-
-    try:
-        write_cluster_collector_info_section(
-            processing_log=collector_metadata_logs[-1],
-            cluster_collector=metadata.cluster_collector_metadata,
-            node_collectors_metadata=nodes_metadata,
-        )
-    except UnboundLocalError:
-        write_cluster_collector_info_section(processing_log=collector_metadata_logs[-1])
+    if _write_sections_based_cluster_collector_meta(arguments.debug, usage_config):
         return
 
-    collector_container_logs: list[section.CollectorHandlerLog] = []
-    with collector_exception_handler(logs=collector_container_logs, debug=arguments.debug):
-        LOGGER.info("Collecting container metrics from cluster collector")
-        container_metrics = request_cluster_collector(
-            query.CollectorPath.container_metrics,
-            usage_config,
-            performance.parse_performance_metrics,
-        )
+    collector_container_logs = _create_sections_based_on_container_metrics(
+        arguments.debug,
+        arguments.cluster,
+        arguments.monitored_objects,
+        monitored_api_namespaces,
+        monitored_namespace_names,
+        composed_entities,
+        api_data,
+        piggyback_formatter,
+        usage_config,
+    )
 
-        if not container_metrics:
-            raise CollectorHandlingException(
-                title="No data",
-                detail="No container metrics were collected from the cluster collector",
-            )
-
-        pods_to_host = determine_pods_to_host(
-            composed_entities=composed_entities,
-            monitored_objects=arguments.monitored_objects,
-            monitored_namespaces=monitored_namespace_names,
-            api_pods=api_data.pods,
-            resource_quotas=api_data.resource_quotas,
-            api_cron_jobs=api_data.cron_jobs,
-            monitored_api_namespaces=monitored_api_namespaces,
-            piggyback_formatter=piggyback_formatter,
-        )
-        try:
-            collector_selectors = performance.create_selectors(
-                cluster_name=arguments.cluster,
-                container_metrics=container_metrics,
-            )
-        except Exception as e:
-            raise CollectorHandlingException(
-                title="Processing Error",
-                detail="Successfully queried and processed container metrics, but "
-                "an error occurred while processing the data",
-            ) from e
-
-        try:
-            common.write_sections(
-                common.create_sections(*collector_selectors, pods_to_host=pods_to_host)
-            )
-
-        except Exception as e:
-            raise CollectorHandlingException(
-                title="Sections write out Error",
-                detail="Metrics were successfully processed but Checkmk sections could not "
-                "be written out",
-            ) from e
-
-        # Log when successfully queried and processed the metrics
-        collector_container_logs.append(
-            section.CollectorHandlerLog(
-                status=section.CollectorState.OK,
-                title="Processed successfully",
-                detail="Successfully queried and processed container metrics",
-            )
-        )
-
-    # Sections based on cluster collector machine sections
-    collector_machine_logs: list[section.CollectorHandlerLog] = []
-    with collector_exception_handler(logs=collector_machine_logs, debug=arguments.debug):
-        LOGGER.info("Collecting machine sections from cluster collector")
-        machine_sections = request_cluster_collector(
-            query.CollectorPath.machine_sections,
-            usage_config,
-            _parse_raw_metrics,
-        )
-
-        if not machine_sections:
-            raise CollectorHandlingException(
-                title="No data",
-                detail="No machine sections were collected from the cluster collector",
-            )
-
-        if MonitoredObject.nodes in arguments.monitored_objects:
-            try:
-                write_machine_sections(
-                    composed_entities,
-                    {s["node_name"]: s["sections"] for s in machine_sections},
-                    piggyback_formatter,
-                )
-            except Exception as e:
-                raise CollectorHandlingException(
-                    title="Sections write out Error",
-                    detail="Metrics were successfully processed but Checkmk sections could "
-                    "not be written out",
-                ) from e
-
-        # Log when successfully queried and processed the metrics
-        collector_machine_logs.append(
-            section.CollectorHandlerLog(
-                status=section.CollectorState.OK,
-                title="Processed successfully",
-                detail="Machine sections queried and processed successfully",
-            )
-        )
+    collector_machine_logs = _create_sections_based_on_machine_section(
+        arguments.debug,
+        MonitoredObject.nodes in arguments.monitored_objects,
+        composed_entities,
+        piggyback_formatter,
+        usage_config,
+    )
 
     with SectionWriter("kube_collector_processing_logs_v1") as writer:
         writer.append(

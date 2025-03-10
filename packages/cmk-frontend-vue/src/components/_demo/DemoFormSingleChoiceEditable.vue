@@ -27,6 +27,7 @@ async function loadSpec() {
     elements: [],
     config_entity_type: 'notification_parameter',
     config_entity_type_specifier: 'mail',
+    allow_editing_existing_elements: true,
     i18n: {
       slidein_save_button: 'i18n slidein_save_button',
       slidein_cancel_button: 'i18n slidein_cancel_button',

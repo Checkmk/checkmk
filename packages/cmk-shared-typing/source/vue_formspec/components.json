@@ -1261,6 +1261,9 @@
                                 "$ref": "#/$defs/single_choice_element"
                             }
                         },
+                        "allow_editing_existing_elements": {
+                            "type": "boolean"
+                        },
                         "i18n": {
                             "title": "single_choice_editable_i18n",
                             "type": "object",
@@ -1331,6 +1334,7 @@
                         "config_entity_type",
                         "config_entity_type_specifier",
                         "elements",
+                        "allow_editing_existing_elements",
                         "i18n_base"
                     ]
                 }

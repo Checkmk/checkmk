@@ -422,6 +422,7 @@ function getSingleChoiceEditable(
     config_entity_type: 'config_entity_type',
     config_entity_type_specifier: 'config_entity_type_specifier',
     elements: [{ name: 'one', title: 'one title' }],
+    allow_editing_existing_elements: true,
     i18n_base: { required: 'i18n required' },
     i18n: {
       slidein_save_button: 'i18n slidein_save_button',

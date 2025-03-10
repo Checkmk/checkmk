@@ -1093,11 +1093,7 @@ def _write_sections_based_cluster_collector_meta(
 def _create_sections_based_on_container_metrics(
     debug: bool,
     cluster_name: str,
-    monitored_objects: Sequence[MonitoredObject],
-    monitored_api_namespaces: Sequence[api.Namespace],
-    monitored_namespaces: set[api.NamespaceName],
-    composed_entities: ComposedEntities,
-    api_data: APIData,
+    pods_to_host: PodsToHost,
     piggyback_formatter: PiggybackFormatter,
     usage_config: query.CollectorSessionConfig,
 ) -> list[section.CollectorHandlerLog]:
@@ -1116,16 +1112,6 @@ def _create_sections_based_on_container_metrics(
                 detail="No container metrics were collected from the cluster collector",
             )
 
-        pods_to_host = determine_pods_to_host(
-            composed_entities=composed_entities,
-            monitored_objects=monitored_objects,
-            monitored_namespaces=monitored_namespaces,
-            api_pods=api_data.pods,
-            resource_quotas=api_data.resource_quotas,
-            api_cron_jobs=api_data.cron_jobs,
-            monitored_api_namespaces=monitored_api_namespaces,
-            piggyback_formatter=piggyback_formatter,
-        )
         try:
             collector_selectors = performance.create_selectors(
                 cluster_name=cluster_name,
@@ -1254,6 +1240,17 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
     if isinstance(usage_config, query.NoUsageConfig):
         return
 
+    pods_to_host = determine_pods_to_host(
+        composed_entities=composed_entities,
+        monitored_objects=arguments.monitored_objects,
+        monitored_namespaces=monitored_namespace_names,
+        api_pods=api_data.pods,
+        resource_quotas=api_data.resource_quotas,
+        api_cron_jobs=api_data.cron_jobs,
+        monitored_api_namespaces=monitored_api_namespaces,
+        piggyback_formatter=piggyback_formatter,
+    )
+
     if isinstance(usage_config, query.PrometheusSessionConfig):
         cpu, memory = query.send_requests(
             usage_config,
@@ -1268,16 +1265,6 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
             [prometheus_section.debug_section(usage_config.query_url(), cpu, memory)]
         )
         prometheus_selectors = prometheus_section.create_selectors(cpu[1], memory[1])
-        pods_to_host = determine_pods_to_host(
-            composed_entities=composed_entities,
-            monitored_objects=arguments.monitored_objects,
-            monitored_namespaces=monitored_namespace_names,
-            api_pods=api_data.pods,
-            resource_quotas=api_data.resource_quotas,
-            api_cron_jobs=api_data.cron_jobs,
-            monitored_api_namespaces=monitored_api_namespaces,
-            piggyback_formatter=piggyback_formatter,
-        )
         common.write_sections(
             common.create_sections(*prometheus_selectors, pods_to_host=pods_to_host)
         )
@@ -1300,11 +1287,7 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
     collector_container_logs = _create_sections_based_on_container_metrics(
         arguments.debug,
         arguments.cluster,
-        arguments.monitored_objects,
-        monitored_api_namespaces,
-        monitored_namespace_names,
-        composed_entities,
-        api_data,
+        pods_to_host,
         piggyback_formatter,
         usage_config,
     )

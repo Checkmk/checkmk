@@ -25,6 +25,8 @@ interface QuickSetupButton {
   id: string
   label: string
   aria_label?: string | null
+  iconName?: string
+  iconRotate?: number
 }
 
 export interface Action {

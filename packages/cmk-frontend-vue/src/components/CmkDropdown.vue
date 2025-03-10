@@ -122,13 +122,13 @@ function selectOption(option: DropdownOption): void {
       :class="{
         disabled,
         no_choices: noChoiceAvailable,
-        no_value: !selectedOption
+        no_value: selectedOption === null
       }"
       :variant="'transparent'"
       @click.prevent="showSuggestions"
     >
       {{ dropdownButtonLabel
-      }}<template v-if="requiredText !== '' && !selectedOption!!">
+      }}<template v-if="requiredText !== '' && selectedOption === null">
         {{ ' '
         }}<FormRequired :show="true" :space="'before'" :i18n-required="requiredText" /></template
       ><ArrowDown class="cmk-dropdown__button_arrow" />

@@ -22,6 +22,7 @@ from ._utils import (
     compute_validators,
     get_prefill_default,
     get_title_and_help,
+    localize,
 )
 
 _ParsedValueModel = str | None
@@ -100,7 +101,7 @@ class SingleChoiceEditableVisitor(
                     slidein_new_title=_("New %s parameter") % readable_entity_selection,
                     slidein_edit_title=_("Edit %s parameter") % readable_entity_selection,
                     edit=_("Edit"),
-                    create=_("Create"),
+                    create=localize(self.form_spec.create_element_label),
                     loading=_("Loading ..."),
                     validation_error=_("Could not validate form, errors are shown in the form"),
                     fatal_error=_("An fatal error occured:"),

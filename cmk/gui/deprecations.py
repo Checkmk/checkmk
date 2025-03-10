@@ -49,7 +49,7 @@ class _MarkerFileStore:
         store.makedirs(marker_file.parent)
         store.save_text_to_file(marker_file, json.dumps([repr(r) for r in ac_test_results]))
 
-    def cleanup(self, site_id: SiteId) -> None:
+    def cleanup_site_dir(self, site_id: SiteId) -> None:
         for filepath, _mtime in sorted(
             [
                 (marker_file, marker_file.stat().st_mtime)
@@ -59,6 +59,14 @@ class _MarkerFileStore:
             reverse=True,
         )[5:]:
             filepath.unlink(missing_ok=True)
+
+    def cleanup_empty_dirs(self) -> None:
+        for path in self.folder.iterdir():
+            if path.is_dir() and not list(path.iterdir()):
+                try:
+                    path.rmdir()
+                except OSError:
+                    logger.error("Cannot remove %r", path)
 
 
 def _filter_non_ok_ac_test_results(
@@ -238,7 +246,9 @@ def execute_deprecation_tests_and_notify_users() -> None:
 
     for site_id, ac_test_results in not_ok_ac_test_results.items():
         marker_file_store.save(site_id, site_versions_by_site_id[site_id], ac_test_results)
-        marker_file_store.cleanup(site_id)
+        marker_file_store.cleanup_site_dir(site_id)
+
+    marker_file_store.cleanup_empty_dirs()
 
     ac_test_results_message = _format_ac_test_result_problems(
         _find_ac_test_result_problems(

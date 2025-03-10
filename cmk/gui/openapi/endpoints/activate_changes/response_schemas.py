@@ -83,9 +83,22 @@ class ActivationSiteStatus(BaseSchema):
         description="The site affected by this activation",
         example="heute",
     )
+    phase = fields.String(
+        enum=["initialized", "queued", "started", "sync", "activate", "finishing", "done"],
+        description="The phase",
+        example="done",
+        allow_none=True,
+    )
+    state = fields.String(
+        enum=["success", "error", "warning"],
+        description="The state",
+        example="success",
+        allow_none=True,
+    )
     status_text = fields.String(
         description="The status text",
         example="Activating",
+        allow_none=True,
     )
     status_details = fields.String(
         description="The status details",

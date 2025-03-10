@@ -25,17 +25,17 @@ class UserSelectionFilter(Enum):
     AUTOMATION = "automation"
 
     def to_legacy(self) -> LegacyFilter:
-        if self == UserSelectionFilter.ALL:
+        if self is UserSelectionFilter.ALL:
             return LegacyFilter(
                 only_contacts=False,
                 only_automation=False,
             )
-        if self == UserSelectionFilter.CONTACTS:
+        if self is UserSelectionFilter.CONTACTS:
             return LegacyFilter(
                 only_contacts=True,
                 only_automation=False,
             )
-        if self == UserSelectionFilter.AUTOMATION:
+        if self is UserSelectionFilter.AUTOMATION:
             return LegacyFilter(
                 only_contacts=False,
                 only_automation=True,

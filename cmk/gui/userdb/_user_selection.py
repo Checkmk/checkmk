@@ -8,6 +8,7 @@ from typing import Any
 
 from cmk.utils.user import UserId
 
+from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     DEF_VALUE,
     DropdownChoice,
@@ -60,6 +61,7 @@ class _UserSelection(DropdownChoice[UserId]):
             ),
             invalid_choice="complain",
             title=title,
+            empty_text=_("No valid users available"),
             help=help,
             default_value=default_value,
         )
@@ -78,7 +80,10 @@ def generate_wato_users_elements_function(
             (name, "{} - {}".format(name, us.get("alias", name)))
             for (name, us) in users.items()
             if (not only_contacts or us.get("contactgroups"))
-            and (not only_automation or us.get("is_automation_user"))
+            and (
+                not only_automation
+                or (us.get("store_automation_secret") and us.get("is_automation_user"))
+            )
         )
         return elements
 

@@ -12,9 +12,10 @@ from cmk.server_side_calls.v1 import HostConfig, Secret, SpecialAgentCommand, Sp
 from cmk.special_agents.agent_bi import (  # pylint: disable=cmk-module-layer-violation
     AgentBiAdditionalOptions,
     AgentBiAssignments,
-    AgentBiAuthentication,
+    AgentBiAutomationUserAuthentication,
     AgentBiConfig,
     AgentBiFilter,
+    AgentBiUserAuthentication,
 )
 
 
@@ -34,7 +35,7 @@ class _Password(TypedDict):
     password: Secret
 
 
-_Credentials = tuple[Literal["automation"], None] | tuple[Literal["configured"], _Password]
+_Credentials = tuple[Literal["automation"], str] | tuple[Literal["configured"], _Password]
 
 
 class _Filter(TypedDict):
@@ -44,27 +45,45 @@ class _Filter(TypedDict):
     aggr_groups: NotRequired[list[tuple[str, str]]]
 
 
+class _RemoteConfig(TypedDict):
+    url: str
+    credentials: _Credentials
+
+
 class _SiteConfig(TypedDict):
     """This is comming from the formspec"""
 
-    site: tuple[Literal["local"], None] | tuple[Literal["url"], str]
-    credentials: _Credentials
+    site: tuple[Literal["local"], None] | tuple[Literal["remote"], _RemoteConfig]
     filter: NotRequired[_Filter]
     options: NotRequired[AgentBiAdditionalOptions]
     assignments: NotRequired[_Assignments]
 
 
 def _transform_authentication(
-    credentials_config: _Credentials,
-) -> tuple[None, None] | tuple[AgentBiAuthentication, Secret]:
-    if credentials_config[0] == "automation":
+    site_config: tuple[Literal["local"], None] | tuple[Literal["remote"], _RemoteConfig],
+) -> (
+    tuple[None, None]
+    | tuple[AgentBiAutomationUserAuthentication, None]
+    | tuple[AgentBiUserAuthentication, Secret]
+):
+    # Internal user as local site will be None
+    if site_config[0] == "local":
         return None, None
-
+    remote_config = site_config[1]
+    if remote_config["credentials"][0] == "automation":
+        return (
+            AgentBiAutomationUserAuthentication(
+                username=remote_config["credentials"][1],
+            ),
+            None,
+        )
     return (
-        AgentBiAuthentication(
-            username=credentials_config[1]["username"],
+        AgentBiUserAuthentication(
+            username=remote_config["credentials"][1]["username"],
+            password_store_path=None,
+            password_store_identifier=None,
         ),
-        credentials_config[1]["password"],
+        remote_config["credentials"][1]["password"],
     )
 
 
@@ -108,11 +127,10 @@ def _site_config_to_agent_config(
     the secrets to something actionable if not transported via commandline. So we need to
     transport the secrets (if we have some) over the commandline...
     """
-
-    creds, secret = _transform_authentication(site_config["credentials"])
+    creds, secret = _transform_authentication(site_config["site"])
     return secret, AgentBiConfig(
         filter=_transform_filter(site_config.get("filter")),
-        site_url=None if site_config["site"][0] == "local" else site_config["site"][1],
+        site_url=None if site_config["site"][0] == "local" else site_config["site"][1]["url"],
         authentication=creds,
         options=site_config.get("options", {}),
         assignments=_transform_assignments(site_config.get("assignments")),

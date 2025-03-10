@@ -21,7 +21,7 @@ import cmk.ccc.site
 from cmk.ccc.exceptions import MKException
 from cmk.ccc.site import omd_site
 
-from cmk.utils.local_secrets import AutomationUserSecret
+from cmk.utils.local_secrets import AutomationUserSecret, SiteInternalSecret
 from cmk.utils.password_store import lookup
 from cmk.utils.paths import omd_root
 from cmk.utils.regex import regex
@@ -30,10 +30,10 @@ from cmk.utils.user import UserId
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-class AgentBiAuthentication(BaseModel):
+class AgentBiUserAuthentication(BaseModel):
     username: str
-    password_store_path: Path | None = None
-    password_store_identifier: str | None = None
+    password_store_path: Path | None
+    password_store_identifier: str | None
 
     def merge_arg(self, arg: str) -> None:
         pw_id, pw_file = arg.split(":", 1)
@@ -47,6 +47,13 @@ class AgentBiAuthentication(BaseModel):
             self.password_store_path,
             self.password_store_identifier,
         )
+
+
+class AgentBiAutomationUserAuthentication(BaseModel):
+    username: str
+
+    def lookup(self) -> str:
+        return AutomationUserSecret(UserId(self.username)).read()
 
 
 class AgentBiAdditionalOptions(TypedDict):
@@ -67,7 +74,7 @@ class AgentBiFilter(BaseModel):
 
 class AgentBiConfig(BaseModel):
     assignments: AgentBiAssignments | None = None
-    authentication: AgentBiAuthentication | None = None
+    authentication: AgentBiAutomationUserAuthentication | AgentBiUserAuthentication | None = None
     filter: AgentBiFilter = Field(default_factory=AgentBiFilter)
     # mypy sees here a dict[Any, Any] I could fix that with lambda but then pylint will complain
     # with unnecessary-lambda. I chose simple and I guess efficient way?
@@ -204,14 +211,11 @@ class AggregationRawdataGenerator:
         else:
             self._site_url = self._config.site_url
 
-    def _get_bearer_token(self) -> str:
+    def _get_authentication_token(self) -> str:
         if self._config.authentication is None:
-            username = "automation"
-            secret = AutomationUserSecret(UserId(username)).read()
-        else:
-            username = self._config.authentication.username
-            secret = self._config.authentication.lookup()
-        return f"Bearer {username} {secret.strip()}"
+            return f"InternalToken {SiteInternalSecret().secret.b64_str}"
+        secret = self._config.authentication.lookup()
+        return f"Bearer {self._config.authentication.username} {secret.strip()}"
 
     def generate_data(self) -> AggregationData:
         try:
@@ -230,7 +234,7 @@ class AggregationRawdataGenerator:
             f"{self._site_url}"
             + "/check_mk/api/1.0"
             + "/domain-types/bi_aggregation/actions/aggregation_state/invoke",
-            headers={"Authorization": self._get_bearer_token()},
+            headers={"Authorization": self._get_authentication_token()},
             params={
                 "filter_names": filter_query.names,
                 "filter_groups": filter_query.groups,
@@ -300,10 +304,10 @@ def merge_config(secrets: Sequence[str], raw_configs: Sequence[str]) -> list[Age
     configs = []
     for arg, config_j in zip(secrets, raw_configs):
         config = AgentBiConfig.model_validate_json(config_j)
-        if (config.authentication is None) is not (":" not in arg):
+        if isinstance(config.authentication, AgentBiUserAuthentication) is (":" not in arg):
             raise ValueError("Secrets and configs must match")
         configs.append(config)
-        if config.authentication is not None:
+        if isinstance(config.authentication, AgentBiUserAuthentication):
             config.authentication.merge_arg(arg)
     return configs
 

@@ -130,7 +130,7 @@ def _find_manifest(
     manifests_by_path: Mapping[Path, Manifest], ac_test_result_path: Path
 ) -> Manifest | None:
     for path, manifest in manifests_by_path.items():
-        if str(ac_test_result_path).endswith(str(path)):
+        if str(ac_test_result_path.resolve()).endswith(str(path)):
             return manifest
     return None
 

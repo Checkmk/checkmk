@@ -380,6 +380,8 @@ class Discovery:
             return DiscoveryState.MONITORED
 
         if self._action == DiscoveryAction.UPDATE_SERVICE_LABELS and self._update_target:
+            if entry.check_source == DiscoveryState.IGNORED:
+                return DiscoveryState.IGNORED
             return self._update_target
 
         if not self._update_target:

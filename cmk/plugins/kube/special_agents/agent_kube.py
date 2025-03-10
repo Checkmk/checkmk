@@ -828,7 +828,6 @@ def _write_sections_based_on_api_data(
     monitored_api_namespaces: Sequence[api.Namespace],
     api_data: APIData,
 ) -> None:
-    # Sections based on API server data
     LOGGER.info("Write cluster sections based on API data")
     common.write_sections(
         cluster_handler.create_api_sections(composed_entities.cluster, arguments.cluster)

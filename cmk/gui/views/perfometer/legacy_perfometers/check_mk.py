@@ -664,13 +664,12 @@ def perfometer_check_mk_printer_supply(
         left = left * 100.0 / maxi
 
     s = row["service_description"].lower()
-    service_description_tokens = set(s.split())
 
     # HACK: SUP-22762 - account for other common language colors in the service description.
-    black_in_description = {"black", "schwarz", "noir", "negra"} & service_description_tokens
-    magenta_in_description = {"magenta"} & service_description_tokens
-    yellow_in_description = {"yellow", "gelb", "jaune", "amarilla"} & service_description_tokens
-    cyan_in_description = {"cyan", "zyan", "cian"} & service_description_tokens
+    black_in_description = any(c in s for c in ("black", "schwarz", "noir", "negra"))
+    magenta_in_description = any(c in s for c in ("magenta",))
+    yellow_in_description = any(c in s for c in ("yellow", "gelb", "jaune", "amarilla"))
+    cyan_in_description = any(c in s for c in ("cyan", "zyan", "cian"))
 
     if black_in_description or ("ink" not in s and s[-1] == "k"):
         colors = ["#000000", "#6E6F00", "#6F0000"]

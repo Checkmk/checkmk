@@ -8,6 +8,7 @@ from collections.abc import Iterator
 import cmk.ccc.version as cmk_version
 
 from cmk.utils import paths
+from cmk.utils.user import UserId
 
 from cmk.gui import pagetypes, visuals
 from cmk.gui.bi import is_part_of_aggregation
@@ -124,6 +125,13 @@ def _get_context_page_menu_topics(
             host_name is not None
             and not is_part_of_aggregation(host_name, service_description or "")
         ):
+            continue
+
+        if (
+            visual.get("name", "").startswith("topology_")
+            and visual.get("owner", "") == UserId.builtin()
+        ):
+            # Don't show network topology views
             continue
 
         try:

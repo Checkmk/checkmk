@@ -1483,7 +1483,7 @@ def _register_builtin_views():
                 "link_from": {},
                 "mobile": False,
                 "mustsearch": False,
-                "name": "network_hover_service",
+                "name": "topology_hover_service",
                 "num_columns": 1,
                 "packaged": False,
                 "painters": [

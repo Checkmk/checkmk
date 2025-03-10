@@ -14,3 +14,4 @@ class SingleChoiceEditable(FormSpec[str]):
     entity_type: ConfigEntityType
     entity_type_specifier: str
     prefill: DefaultValue[str] | InputHint[Title] = InputHint(Title("Please select an element"))
+    allow_editing_existing_elements: bool = True

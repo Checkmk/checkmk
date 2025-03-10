@@ -538,6 +538,7 @@ class SingleChoiceEditable(FormSpec):
     config_entity_type: str
     config_entity_type_specifier: str
     elements: list[SingleChoiceElement]
+    allow_editing_existing_elements: bool
     i18n: SingleChoiceEditableI18n
     i18n_base: I18nFormSpecBase
     type: str = "single_choice_editable"

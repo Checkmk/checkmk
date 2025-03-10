@@ -206,6 +206,7 @@ export type SingleChoiceEditable = FormSpec & {
   config_entity_type: string;
   config_entity_type_specifier: string;
   elements: SingleChoiceElement[];
+  allow_editing_existing_elements: boolean;
   i18n: SingleChoiceEditableI18N;
   i18n_base: I18NFormSpecBase;
 };

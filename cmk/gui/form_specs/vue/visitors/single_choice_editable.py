@@ -91,6 +91,7 @@ class SingleChoiceEditableVisitor(
                     )
                     for entity in entities
                 ],
+                allow_editing_existing_elements=self.form_spec.allow_editing_existing_elements,
                 i18n=shared_type_defs.SingleChoiceEditableI18n(
                     # TODO: remove this once we have i18n in the frontend
                     slidein_save_button=_("Save"),

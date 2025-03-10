@@ -119,14 +119,16 @@ const { ErrorBoundary, error } = useErrorBoundary()
       :label="spec.title"
       class="fsce__dropdown"
     />
-    <CmkButton
-      v-show="selectedObjectId !== null"
-      variant="tertiary"
-      @click="openSlideIn(selectedObjectId)"
-    >
-      {{ spec.i18n.edit }}
-    </CmkButton>
-    <CmkSpace v-show="selectedObjectId !== null" />
+    <template v-if="spec.allow_editing_existing_elements">
+      <CmkButton
+        v-show="selectedObjectId !== null"
+        variant="tertiary"
+        @click="openSlideIn(selectedObjectId)"
+      >
+        {{ spec.i18n.edit }}
+      </CmkButton>
+      <CmkSpace v-show="selectedObjectId !== null" />
+    </template>
     <CmkButton variant="tertiary" @click="openSlideIn(null)">
       {{ spec.i18n.create }}
     </CmkButton>

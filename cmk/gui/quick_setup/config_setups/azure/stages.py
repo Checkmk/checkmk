@@ -345,6 +345,7 @@ quick_setup_azure = QuickSetup(
         QuickSetupBackgroundAction(
             id=ActionId("activate_changes"),
             label=_("Save & go to Activate changes"),
+            iconName="save-to-services",
             action=action,
         ),
     ],

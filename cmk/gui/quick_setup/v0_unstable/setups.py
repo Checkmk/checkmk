@@ -167,7 +167,7 @@ class QuickSetupAction:
     id: ActionId
     label: str
     action: CallableAction
-    iconName: str = "save-to-services"
+    iconName: str = "checkmark-plus"
     iconRotate: int = 0
     custom_validators: Iterable[CallableValidator] = ()
 

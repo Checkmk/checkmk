@@ -47,7 +47,7 @@ function getButtonConfig(
       }
     case 'save':
       return {
-        icon: { name: 'save-to-services', rotate: 0 }
+        icon: { name: 'checkmark-plus', rotate: 0 }
       }
   }
   return { icon: { name: '', rotate: 0 } }

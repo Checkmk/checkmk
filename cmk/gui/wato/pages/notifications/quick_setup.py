@@ -51,6 +51,7 @@ from cmk.gui.quick_setup.v0_unstable.setups import (
     ProgressLogger,
     QuickSetup,
     QuickSetupAction,
+    QuickSetupActionButtonIcon,
     QuickSetupActionMode,
     QuickSetupStage,
     QuickSetupStageAction,
@@ -1825,6 +1826,7 @@ quick_setup_notifications = QuickSetup(
         QuickSetupAction(
             id=ActionId("apply_and_create_new"),
             label=_("Apply & create another rule"),
+            icon=QuickSetupActionButtonIcon(name="checkmark-plus"),
             action=save_and_new_action,
         ),
     ],

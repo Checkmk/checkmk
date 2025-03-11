@@ -1528,7 +1528,7 @@ class AutomationGetServiceName(Automation):
         self,
         args: list[str],
         plugins: AgentBasedPlugins | None,
-        loaded_config: config.LoadedConfigFragment | None,
+        loaded_config: config.LoadingResult | None,
     ) -> GetServiceNameResult:
         if plugins is None:
             plugins = load_plugins()

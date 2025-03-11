@@ -194,7 +194,6 @@ include \
     packages/heirloom-mailx/heirloom-mailx.make \
     packages/navicli/navicli.make \
     packages/nrpe/nrpe.make \
-    packages/patch/patch.make \
     packages/pnp4nagios/pnp4nagios.make \
     packages/omd/omd.make \
     packages/mk-livestatus/mk-livestatus.make \

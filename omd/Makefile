@@ -43,7 +43,6 @@ PACKAGES := \
     navicli \
     pnp4nagios \
     maintenance \
-    patch \
     heirloom-mailx \
     snap7 \
     livestatus \

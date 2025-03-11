@@ -22,6 +22,7 @@ from cmk.gui.quick_setup.v0_unstable.predefined import validators as qs_validato
 from cmk.gui.quick_setup.v0_unstable.setups import (
     ProgressLogger,
     QuickSetup,
+    QuickSetupActionButtonIcon,
     QuickSetupActionMode,
     QuickSetupBackgroundAction,
     QuickSetupBackgroundStageAction,
@@ -345,7 +346,7 @@ quick_setup_azure = QuickSetup(
         QuickSetupBackgroundAction(
             id=ActionId("activate_changes"),
             label=_("Save & go to Activate changes"),
-            iconName="save-to-services",
+            icon=QuickSetupActionButtonIcon(name="save-to-services"),
             action=action,
         ),
     ],

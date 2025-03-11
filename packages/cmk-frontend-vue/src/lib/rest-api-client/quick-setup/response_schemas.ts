@@ -21,12 +21,16 @@ export interface Errors extends StageErrors {
   stage_index?: number | null
 }
 
+export interface QuickSetupButtonIcon {
+  name: string
+  rotate: number
+}
+
 interface QuickSetupButton {
   id: string
   label: string
   aria_label?: string | null
-  iconName?: string
-  iconRotate?: number
+  icon?: QuickSetupButtonIcon
 }
 
 export interface Action {

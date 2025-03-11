@@ -139,11 +139,16 @@ class JobBasedProgressLogger:
 
 
 @dataclass
+class ButtonIcon:
+    name: str
+    rotate: int
+
+
+@dataclass
 class Button:
     label: str
     aria_label: str
-    iconName: str | None = None
-    iconRotate: int | None = None
+    icon: ButtonIcon | None = None
 
 
 @dataclass

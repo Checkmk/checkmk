@@ -81,8 +81,8 @@ export const processActionData = (
     waitLabel: actionData.load_wait_label,
     variant: actionType,
     icon: {
-      name: actionData.button.iconName,
-      rotate: actionData.button.iconRotate
+      name: actionData.button.icon?.name,
+      rotate: actionData.button.icon?.rotate
     },
     action: clb
   }

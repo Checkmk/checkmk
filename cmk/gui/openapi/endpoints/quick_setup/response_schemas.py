@@ -57,6 +57,19 @@ class Errors(BaseSchema):
     )
 
 
+class QuickSetupButtonIcon(BaseSchema):
+    name = fields.String(
+        example="next",
+        description="Name of the icon.",
+        allow_none=False,
+    )
+    rotate = fields.Integer(
+        example=90,
+        description="Rotation in degrees for the icon",
+        allow_none=False,
+    )
+
+
 class QuickSetupButton(BaseSchema):
     id = fields.String(
         example="next",
@@ -67,19 +80,15 @@ class QuickSetupButton(BaseSchema):
         example="Next",
         description="The label of the button",
     )
+    icon = fields.Nested(
+        QuickSetupButtonIcon,
+        example={"name": "save-to-service", "rotate": 0},
+        description="Definition of the button icon",
+        allow_none=True,
+    )
     aria_label = fields.String(
         example="Next",
         description="The aria label of the button",
-        allow_none=True,
-    )
-    iconName = fields.String(
-        example="next",
-        description="Icon name of the button",
-        allow_none=True,
-    )
-    iconRotate = fields.Integer(
-        example=90,
-        description="Rotation in degree for the button icon",
         allow_none=True,
     )
 

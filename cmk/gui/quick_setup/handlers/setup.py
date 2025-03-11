@@ -32,6 +32,7 @@ from cmk.gui.quick_setup.handlers.utils import (
     Action,
     BackgroundJobException,
     Button,
+    ButtonIcon,
     form_spec_parse,
     get_stage_components_from_widget,
     InfoLogger,
@@ -123,8 +124,12 @@ def quick_setup_guided_mode(
                 id=action.id,
                 button=Button(
                     label=action.label,
-                    iconName=action.iconName,
-                    iconRotate=action.iconRotate,
+                    icon=ButtonIcon(
+                        name=action.icon.name,
+                        rotate=action.icon.rotate,
+                    )
+                    if action.icon
+                    else None,
                     aria_label=COMPLETE_BUTTON_ARIA_LABEL,
                 ),
                 load_wait_label=LOAD_WAIT_LABEL,
@@ -198,7 +203,12 @@ def quick_setup_overview_mode(
                 id=action.id,
                 button=Button(
                     label=action.label,
-                    iconName=action.iconName,
+                    icon=ButtonIcon(
+                        name=action.icon.name,
+                        rotate=action.icon.rotate,
+                    )
+                    if action.icon
+                    else None,
                     aria_label=COMPLETE_BUTTON_ARIA_LABEL,
                 ),
                 load_wait_label=LOAD_WAIT_LABEL,

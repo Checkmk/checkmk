@@ -140,6 +140,21 @@ class QuickSetupStage:
 
 
 @dataclass(frozen=True, kw_only=True)
+class QuickSetupActionButtonIcon:
+    """Dataclass representing an icon for a QuickSetupAction
+
+    Attributes:
+        name:
+            The icon name (kebab-case). Equals the css-variable --icon-<name>. Default "checkmark-plus"
+        rotate:
+            The rotation of the icon in degrees (0-360).
+    """
+
+    name: str = "checkmark-plus"
+    rotate: int = 0
+
+
+@dataclass(frozen=True, kw_only=True)
 class QuickSetupAction:
     """Dataclass representing an action that can be triggered at the end of the Quick setup flow.
 
@@ -150,6 +165,8 @@ class QuickSetupAction:
             The label of the action button
         action:
             The callable that is executed when the action is triggered
+        icon:
+            The icon to overwrite the default contextual icon. Default = None
         custom_validators:
             A list of custom validators that are executed before the action is executed.
             Prior to the custom validators, the formspecs of each stage are validated (again
@@ -167,8 +184,7 @@ class QuickSetupAction:
     id: ActionId
     label: str
     action: CallableAction
-    iconName: str = "checkmark-plus"
-    iconRotate: int = 0
+    icon: QuickSetupActionButtonIcon | None = None
     custom_validators: Iterable[CallableValidator] = ()
 
 

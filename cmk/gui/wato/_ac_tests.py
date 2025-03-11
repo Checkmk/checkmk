@@ -5,6 +5,7 @@
 
 import abc
 import multiprocessing
+import os
 import subprocess
 from collections.abc import Iterator, Sequence
 from pathlib import Path
@@ -17,7 +18,15 @@ from livestatus import LocalConnection, SiteConfiguration, SiteId
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
 
-from cmk.utils.paths import local_agent_based_plugins_dir, local_checks_dir, local_inventory_dir
+from cmk.utils.paths import (
+    local_agent_based_plugins_dir,
+    local_checks_dir,
+    local_gui_plugins_dir,
+    local_inventory_dir,
+    local_legacy_check_manpages_dir,
+    local_pnp_templates_dir,
+    local_web_dir,
+)
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.user import UserId
 
@@ -81,6 +90,10 @@ def register(ac_test_registry: ACTestRegistry) -> None:
     ac_test_registry.register(ACTestESXDatasources)
     ac_test_registry.register(ACTestDeprecatedCheckPlugins)
     ac_test_registry.register(ACTestDeprecatedInventoryPlugins)
+    ac_test_registry.register(ACTestDeprecatedCheckManpages)
+    ac_test_registry.register(ACTestDeprecatedGUIExtensions)
+    ac_test_registry.register(ACTestDeprecatedLegacyGUIExtensions)
+    ac_test_registry.register(ACTestDeprecatedPNPTemplates)
     ac_test_registry.register(ACTestUnexpectedAllowedIPRanges)
     ac_test_registry.register(ACTestCheckMKCheckerNumber)
 
@@ -1361,6 +1374,181 @@ class ACTestDeprecatedInventoryPlugins(ACTest):
         yield ACSingleResult(
             state=ACResultState.OK,
             text=_("No HW/SW Inventory plug-ins using the deprecated API"),
+            site_id=site_id,
+        )
+
+
+class ACTestDeprecatedCheckManpages(ACTest):
+    def category(self) -> str:
+        return ACTestCategories.deprecations
+
+    def title(self) -> str:
+        return _("Deprecated check man pages")
+
+    def help(self) -> str:
+        return _(
+            "Check man pages in <tt>'%s'</tt> are marked as 'deprecated'"
+            " and will be ignored in future Checkmk versions"
+            " (official deprecation timeline not decided yet)."
+        ) % str(local_legacy_check_manpages_dir)
+
+    def _get_files(self) -> Sequence[Path]:
+        try:
+            return list(local_legacy_check_manpages_dir.iterdir())
+        except FileNotFoundError:
+            return []
+
+    def is_relevant(self) -> bool:
+        return True
+
+    def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
+        if files := self._get_files():
+            for plugin_filepath in files:
+                yield ACSingleResult(
+                    state=ACResultState.CRIT,
+                    text=_("Check man page uses the deprecated API"),
+                    site_id=site_id,
+                    path=plugin_filepath,
+                )
+            return
+
+        yield ACSingleResult(
+            state=ACResultState.OK,
+            text=_("No check man pages using the deprecated API"),
+            site_id=site_id,
+        )
+
+
+def _walk(folder: Path) -> Iterator[Path]:
+    for root, _dirs, files in os.walk(folder):
+        for file in files:
+            if (path := Path(root, file)).is_file() and path.suffix == ".py":
+                yield path
+
+
+class ACTestDeprecatedGUIExtensions(ACTest):
+    def category(self) -> str:
+        return ACTestCategories.deprecations
+
+    def title(self) -> str:
+        return _("Deprecated GUI extensions")
+
+    def help(self) -> str:
+        return _(
+            "GUI extensions in <tt>'%s'</tt> are marked as 'deprecated'"
+            " and will be ignored in future Checkmk versions"
+            " (official deprecation timeline not decided yet)."
+        ) % str(local_gui_plugins_dir)
+
+    def _get_files(self) -> Sequence[Path]:
+        try:
+            return list(_walk(local_gui_plugins_dir))
+        except FileNotFoundError:
+            return []
+
+    def is_relevant(self) -> bool:
+        return True
+
+    def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
+        if files := self._get_files():
+            for plugin_filepath in files:
+                yield ACSingleResult(
+                    state=ACResultState.CRIT,
+                    text=_("GUI extension uses the deprecated API"),
+                    site_id=site_id,
+                    path=plugin_filepath,
+                )
+            return
+
+        yield ACSingleResult(
+            state=ACResultState.OK,
+            text=_("No GUI extensions using the deprecated API"),
+            site_id=site_id,
+        )
+
+
+class ACTestDeprecatedLegacyGUIExtensions(ACTest):
+    def category(self) -> str:
+        return ACTestCategories.deprecations
+
+    def title(self) -> str:
+        return _("Deprecated legacy GUI extensions")
+
+    def help(self) -> str:
+        return _(
+            "Legacy GUI extensions in <tt>'%s'</tt> are marked as 'deprecated'"
+            " and will be ignored in future Checkmk versions"
+            " (official deprecation timeline not decided yet)."
+        ) % str(local_web_dir)
+
+    def _get_files(self) -> Sequence[Path]:
+        try:
+            return list(_walk(local_web_dir))
+        except FileNotFoundError:
+            return []
+
+    def is_relevant(self) -> bool:
+        return True
+
+    def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
+        if files := self._get_files():
+            for plugin_filepath in files:
+                yield ACSingleResult(
+                    state=ACResultState.CRIT,
+                    text=_("Legacy GUI extension uses the deprecated API"),
+                    site_id=site_id,
+                    path=plugin_filepath,
+                )
+            return
+
+        yield ACSingleResult(
+            state=ACResultState.OK,
+            text=_("No legacy GUI extensions using the deprecated API"),
+            site_id=site_id,
+        )
+
+
+class ACTestDeprecatedPNPTemplates(ACTest):
+    def category(self) -> str:
+        return ACTestCategories.deprecations
+
+    def title(self) -> str:
+        return _("Deprecated PNP templates")
+
+    def help(self) -> str:
+        return _(
+            "PNP templates in <tt>'%s'</tt> are marked as 'deprecated'"
+            " and will be ignored in future Checkmk versions"
+            " (official deprecation timeline not decided yet)."
+        ) % str(local_pnp_templates_dir)
+
+    def _get_files(self) -> Sequence[Path]:
+        try:
+            return list(local_pnp_templates_dir.iterdir())
+        except FileNotFoundError:
+            return []
+
+    def is_relevant(self) -> bool:
+        return True
+
+    def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
+        if files := self._get_files():
+            for plugin_filepath in files:
+                yield ACSingleResult(
+                    state=ACResultState.CRIT,
+                    text=_("PNP template uses the deprecated API"),
+                    site_id=site_id,
+                    path=plugin_filepath,
+                )
+            return
+
+        yield ACSingleResult(
+            state=ACResultState.OK,
+            text=_("No PNP templates using the deprecated API"),
             site_id=site_id,
         )
 

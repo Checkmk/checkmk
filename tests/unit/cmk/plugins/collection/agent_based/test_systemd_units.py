@@ -1438,6 +1438,36 @@ def test_check_systemd_units_sockets(
         pytest.param(
             {
                 "else": 2,
+                "states": {"active": 0, "failed": 2, "inactive": 0},
+                "states_default": 2,
+                "ignored": [],
+                "activating_levels": (30, 60),
+                "deactivating_levels": (30, 60),
+                "reloading_levels": (30, 60),
+            },
+            Section(
+                sockets={},
+                services={
+                    "systemd-timesyncd.service": UnitEntry(
+                        name="systemd-timesyncd.service",
+                        loaded_status="loaded",
+                        active_status="failed",
+                        current_state="failed",
+                        description="Import ZFS pool fgprs\\x2dpbs02\\x2dpool1\\x2d100",
+                        enabled_status="disabled",
+                    ),
+                },
+            ),
+            [
+                Result(state=State.OK, summary="Total: 1"),
+                Result(state=State.OK, summary="Disabled: 1"),
+                Result(state=State.OK, summary="Failed: 1"),
+            ],
+            id="One failed, but disabled",
+        ),
+        pytest.param(
+            {
+                "else": 2,
                 "states": {"active": 0, "failed": 0, "inactive": 0},
                 "states_default": 2,
                 "ignored": [],

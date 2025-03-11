@@ -62,6 +62,10 @@ then
         exit 0
     elif [ "${VERSION:0:9}" = "AlmaLinux" ]
     then
+        if [[ "${VERSION:0:21}" =~ "AlmaLinux release 8" ]]; then
+            echo "ALMALINUX${SEP}8"
+            exit 0
+        fi
         if [[ "${VERSION:0:21}" =~ "AlmaLinux release 9."(0|2) ]]; then
             echo "ALMALINUX${SEP}9"
             exit 0

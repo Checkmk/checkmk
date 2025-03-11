@@ -4345,12 +4345,12 @@ class PainterLogDetailsHistory(Painter):
         # See werk #15523.
         is_ps_check = row["service_check_command"] == "check_mk-ps"
         # We can only display tables if they are complete.
-        displayable = long_output.endswith("</table>")
+        non_displayable_html = "<table>" in long_output and not long_output.endswith("</table>")
         # Only hand over relevant row to ensure correct escaping options in
         # case of ps_check. Otherwise "ESCAPE_PLUGIN_OUTPUT" would be used in
         # format_plugin_output()
         row_to_format = (
-            {"log_long_plugin_output": long_output} if is_ps_check and not displayable else row
+            {"log_long_plugin_output": long_output} if is_ps_check and non_displayable_html else row
         )
         content = format_plugin_output(
             output=long_output,
@@ -4361,7 +4361,7 @@ class PainterLogDetailsHistory(Painter):
         # escaping
         custom_vars = row.get("service_custom_variables", row.get("host_custom_variables", {}))
         escape_plugin_output = custom_vars.get("ESCAPE_PLUGIN_OUTPUT", "1") == "0"
-        if long_output_len > max_len and escape_plugin_output and not displayable:
+        if long_output_len > max_len and escape_plugin_output and not non_displayable_html:
             setting_url = makeuri_contextless(
                 request,
                 [

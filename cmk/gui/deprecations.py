@@ -214,6 +214,8 @@ def execute_deprecation_tests_and_notify_users() -> None:
     if is_wato_slave_site():
         return
 
+    last_run_path.touch()
+
     marker_file_store = _MarkerFileStore(deprecations_path)
 
     site_versions_by_site_id = {
@@ -280,8 +282,6 @@ def execute_deprecation_tests_and_notify_users() -> None:
                 acknowledged=False,
             ),
         )
-
-    last_run_path.touch()
 
 
 def register() -> None:

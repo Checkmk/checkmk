@@ -492,7 +492,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                     field_size=FieldSize.SMALL,
                                                     custom_validate=[
                                                         NonEmptyString(
-                                                            Message("Please add at a Rule ID.")
+                                                            Message("Please add a Rule ID.")
                                                         )
                                                     ],
                                                 ),

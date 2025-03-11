@@ -7,7 +7,6 @@ import abc
 import multiprocessing
 import subprocess
 from collections.abc import Iterator, Sequence
-from contextlib import suppress
 from pathlib import Path
 
 import requests
@@ -1296,13 +1295,19 @@ class ACTestDeprecatedCheckPlugins(ACTest):
             doc_reference_url(DocReference.DEVEL_CHECK_PLUGINS),
         )
 
+    def _get_files(self) -> Sequence[Path]:
+        try:
+            return list(local_checks_dir.iterdir())
+        except FileNotFoundError:
+            return []
+
     def is_relevant(self) -> bool:
         return True
 
     def execute(self) -> Iterator[ACSingleResult]:
         site_id = omd_site()
-        with suppress(FileNotFoundError):
-            for plugin_filepath in local_checks_dir.iterdir():
+        if files := self._get_files():
+            for plugin_filepath in files:
                 yield ACSingleResult(
                     state=ACResultState.CRIT,
                     text=_("Check plug-in uses the deprecated API"),
@@ -1332,13 +1337,19 @@ class ACTestDeprecatedInventoryPlugins(ACTest):
             " Please migrate the plug-ins to the new API."
         ) % str(local_inventory_dir)
 
+    def _get_files(self) -> Sequence[Path]:
+        try:
+            return list(local_inventory_dir.iterdir())
+        except FileNotFoundError:
+            return []
+
     def is_relevant(self) -> bool:
         return True
 
     def execute(self) -> Iterator[ACSingleResult]:
         site_id = omd_site()
-        with suppress(FileNotFoundError):
-            for plugin_filepath in local_inventory_dir.iterdir():
+        if files := self._get_files():
+            for plugin_filepath in files:
                 yield ACSingleResult(
                     state=ACResultState.CRIT,
                     text=_("HW/SW Inventory plug-in uses the deprecated API"),

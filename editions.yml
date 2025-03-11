@@ -4,6 +4,7 @@ common: &common
     - "debian-12"
     - "ubuntu-22.04"
     - "ubuntu-24.04"
+    - "almalinux-8"
     - "almalinux-9"
     - "sles-15sp3"
     - "sles-15sp4"

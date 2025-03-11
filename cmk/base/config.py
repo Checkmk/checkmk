@@ -4070,24 +4070,6 @@ class ConfigCache:
         settings = self.ruleset_matcher.get_host_values(host_name, agent_exclude_sections)
         return settings[0] if settings else {}
 
-    def agent_target_version(self, host_name: HostName) -> _AgentTargetVersion:
-        agent_target_versions = self.ruleset_matcher.get_host_values(
-            host_name, check_mk_agent_target_versions
-        )
-        if not agent_target_versions:
-            return None
-
-        spec = agent_target_versions[0]
-        if spec == "ignore":
-            return None
-        if spec == "site":
-            return cmk_version.__version__
-        if isinstance(spec, str):
-            # Compatibility to old value specification format (a single version string)
-            return spec
-        # return the whole spec in case of an "at least version" config
-        return spec[1] if spec[0] == "specific" else spec
-
     def only_from(self, host_name: HostName) -> None | list[str] | str:
         """The agent of a host may be configured to be accessible only from specific IPs"""
         ruleset = agent_config.get("only_from", [])

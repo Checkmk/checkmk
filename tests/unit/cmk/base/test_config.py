@@ -18,7 +18,6 @@ from pytest import MonkeyPatch
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
 import cmk.ccc.debug
-import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.version import Edition, edition
 
@@ -966,32 +965,6 @@ def test_symmetric_agent_encryption(
         )._symmetric_agent_encryption(hostname)
         is result
     )
-
-
-@pytest.mark.parametrize(
-    "hostname, result",
-    [
-        (HostName("testhost1"), None),
-        (HostName("testhost2"), cmk_version.__version__),
-    ],
-)
-def test_agent_target_version(
-    monkeypatch: MonkeyPatch, hostname: HostName, result: str | None
-) -> None:
-    ts = Scenario()
-    ts.add_host(hostname)
-    ts.set_ruleset(
-        "check_mk_agent_target_versions",
-        [
-            {
-                "id": "01",
-                "condition": {"host_name": ["testhost2"]},
-                "value": "site",
-            }
-        ],
-    )
-    config_cache = ts.apply(monkeypatch)
-    assert config_cache.agent_target_version(hostname) == result
 
 
 @pytest.mark.parametrize(

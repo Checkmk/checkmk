@@ -11,18 +11,21 @@
        cellpadding="0"
        border="0">
     <tr align="left" style=" background-color: #F1F1F1; height: 35px; ">
-        <th align="left" style=" border: 1px solid #DFDFDF; padding-left: 2%; ">Host</th>
+        <th align="left" style="border: 1px solid #DFDFDF; padding-left: 2%">Host</th>
         <th align="left"
             style="border: 1px solid #DFDFDF;
                    padding-left: 2%;
                    mso-line-height-rule: exactly">Service</th>
-        <th align="left" style=" border: 1px solid #DFDFDF; padding-left: 2%; ">Event</th>
-        <th align="left" style=" border: 1px solid #DFDFDF; padding-left: 2%; ">Event date</th>
+        <th align="left" style=" border: 1px solid #DFDFDF; padding-left: 2%">Event</th>
+        <th align="left" style=" border: 1px solid #DFDFDF; padding-left: 2%">Event date</th>
     </tr>
     {% for entry in bulk_summary %}
         {% set bulk_service_notification = entry.WHAT == 'SERVICE' %}
-        <tr style=" border: 1px solid #DFDFDF; height: 35px; ">
-            <td style=" border: 1px solid #DFDFDF; padding: 0% 2% 0 2%; width: 15%; ">{{ entry.LINKEDHOSTNAME | safe }}</td>
+        <tr style=" border: 1px solid #DFDFDF; height: 35px">
+            <td style="border: 1px solid #DFDFDF;
+                       padding: 0% 2% 0 2%;
+                       width: 15%;
+                       word-break: break-all">{{ entry.LINKEDHOSTNAME | safe }}</td>
             <td style=" border: 1px solid #DFDFDF; padding: 0% 2% 0 2%; ">
                 {% if bulk_service_notification %}{{ entry.LINKEDSERVICEDESC | safe }}{% endif %}
             </td>

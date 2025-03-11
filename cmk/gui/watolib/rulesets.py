@@ -39,14 +39,9 @@ from cmk.utils.rulesets.ruleset_matcher import (
 )
 from cmk.utils.tags import TagGroupID, TagID
 
-# Tolerate this for 1.6. Should be cleaned up in future versions,
-# e.g. by trying to move the common code to a common place
-import cmk.base.export  # pylint: disable=cmk-module-layer-violation
-
 from cmk.gui import hooks, utils
-from cmk.gui.config import active_config, register_post_config_load_hook
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
@@ -85,9 +80,6 @@ from .timeperiods import TimeperiodSelection, TimeperiodUsage
 from .utils import ALL_HOSTS, ALL_SERVICES, NEGATE, wato_root_dir
 
 tracer = trace.get_tracer()
-
-# Make the GUI config module reset the base config to always get the latest state of the config
-register_post_config_load_hook(cmk.base.export.reset_config)
 
 FolderPath = str
 SearchOptions = dict[str, Any]
@@ -1291,77 +1283,14 @@ class Rule:
     def _matches_host_conditions(self, hostname: HostName) -> bool:
         """Whether or not the given host matches this rule
         This only evaluates host related conditions, even if the ruleset is a service ruleset."""
-        return self._matches(
-            hostname,
-            svc_desc_or_item=None,
-            svc_desc=None,
-            only_host_conditions=True,
-            service_labels={},
+        return bool(
+            list(
+                analyze_host_rule_matches(
+                    hostname,
+                    [self.to_single_base_ruleset()],
+                ).results.values()
+            )[0]
         )
-
-    def _matches(
-        self,
-        hostname: HostName,
-        svc_desc_or_item: str | None,
-        svc_desc: str | None,
-        only_host_conditions: bool,
-        service_labels: Labels,
-    ) -> bool:
-        """Whether a given host or service/item matches this rule"""
-        with tracer.span(
-            "Rule_matches",
-            attributes={
-                "cmk.gui.host_name": hostname,
-                "cmk.gui.svc_desc_or_item": repr(svc_desc_or_item),
-                "cmk.gui.service_name": repr(svc_desc),
-                "cmk.gui.only_host_conditions": only_host_conditions,
-                "cmk.gui.service_labels": repr(service_labels),
-            },
-        ) as span:
-            matcher = _get_ruleset_matcher()
-            ruleset = self.to_single_base_ruleset()
-
-            span.set_attribute("cmk.gui.ruleset", repr(ruleset))
-
-            def bool_(rules: Sequence[object]) -> bool:
-                """Just for the signature, make sure we don't call `bool` on a generator"""
-                return bool(rules)
-
-            # BE AWARE: Depending on the service ruleset the service_description of
-            # the rules is only a check item or a full service name. For
-            # example the check parameters rulesets only use the item, and other
-            # service rulesets like disabled services ruleset use full service
-            # descriptions.
-            #
-            # The service_description attribute of the match_object must be set to
-            # either the item or the full service name, depending on the
-            # ruleset, but the labels of a service need to be gathered using the
-            # real service name.
-            if not self.ruleset.rulespec.is_for_services or only_host_conditions:
-                return bool_(matcher.get_host_values(hostname, ruleset))
-
-            match self.ruleset.item_type():
-                case "service":
-                    if svc_desc_or_item is None:
-                        raise TypeError("svc_desc_or_item must be set for service rulesets")
-                    return bool_(
-                        matcher.service_extra_conf(
-                            hostname,
-                            svc_desc_or_item,
-                            service_labels,
-                            ruleset,
-                        )
-                    )
-                case "item":
-                    return bool_(
-                        list(
-                            matcher.get_checkgroup_ruleset_values(
-                                hostname, svc_desc_or_item, service_labels, ruleset
-                            )
-                        )
-                    )
-                case None:
-                    return bool_(matcher.service_extra_conf(hostname, None, ruleset))
 
     def matches_search(
         self,
@@ -1737,11 +1666,6 @@ def find_timeperiod_usage_in_time_specific_parameters(
                 )
                 used_in.append((_("Time specific check parameter #%d") % (index + 1), edit_url))
     return used_in
-
-
-@request_memoize()
-def _get_ruleset_matcher():
-    return cmk.base.export.get_ruleset_matcher()
 
 
 class RuleConfigFile(WatoConfigFile[Mapping[RulesetName, Any]]):

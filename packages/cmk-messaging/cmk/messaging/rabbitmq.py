@@ -383,7 +383,6 @@ def update_and_activate_rabbitmq_definitions(omd_root: Path, logger: Logger) -> 
         return
 
     new_definitions_file.rename(definitions_file)
-
     if old_definitions == new_definitions:
         return
 

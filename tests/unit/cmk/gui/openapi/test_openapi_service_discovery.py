@@ -20,6 +20,7 @@ from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import ServiceName
 
 from cmk.automations.results import (
+    AnalyzeServiceRuleMatchesResult,
     GetServicesLabelsResult,
     ServiceDiscoveryPreviewResult,
     SetAutochecksInput,
@@ -1053,6 +1054,10 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
         # one would like to mock the call in the library and not the import. WHY????
         "cmk.gui.watolib.rulesets.get_services_labels",
         return_value=GetServicesLabelsResult(labels=defaultdict(dict)),
+    )
+    mocker.patch(
+        "cmk.gui.watolib.rulesets.analyze_service_rule_matches",
+        return_value=AnalyzeServiceRuleMatchesResult({}),
     )
     aut_user_auth_wsgi_app.call_method(
         "post",

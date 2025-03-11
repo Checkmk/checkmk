@@ -52,6 +52,10 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import DropdownChoiceEntries, ValueSpec
+from cmk.gui.watolib.check_mk_automations import (
+    analyze_host_rule_matches,
+    analyze_service_rule_matches,
+)
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 
 from cmk import trace
@@ -1014,15 +1018,24 @@ class Ruleset:
         effectiverules = []
 
         rules = self.get_rules()
-        rule_matches = {
-            rule.id: rule.matches_host_and_item(
-                hostname,
-                svc_desc_or_item,
-                svc_desc,
-                service_labels=service_labels,
-            )
-            for _folder, _rule_index, rule in rules
-        }
+        if self.rulespec.is_for_services:
+            rule_matches = {
+                rule_id: bool(matches)
+                for rule_id, matches in analyze_service_rule_matches(
+                    hostname,
+                    (svc_desc if self.rulespec.item_type == "service" else svc_desc_or_item) or "",
+                    service_labels,
+                    [r.to_single_base_ruleset() for _f, _i, r in rules],
+                ).results.items()
+            }
+        else:
+            rule_matches = {
+                rule_id: bool(matches)
+                for rule_id, matches in analyze_host_rule_matches(
+                    hostname,
+                    [r.to_single_base_ruleset() for _f, _i, r in rules],
+                ).results.items()
+            }
 
         for folder, rule_index, rule in rules:
             if rule.is_disabled():
@@ -1284,22 +1297,6 @@ class Rule:
             svc_desc=None,
             only_host_conditions=True,
             service_labels={},
-        )
-
-    def matches_host_and_item(
-        self,
-        hostname: HostName,
-        svc_desc_or_item: str | None,
-        svc_desc: str | None,
-        service_labels: Labels,
-    ) -> bool:
-        """Whether the given host and service/item matches this rule"""
-        return self._matches(
-            hostname,
-            svc_desc_or_item,
-            svc_desc,
-            only_host_conditions=False,
-            service_labels=service_labels,
         )
 
     def _matches(

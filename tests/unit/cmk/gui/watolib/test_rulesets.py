@@ -3,18 +3,55 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import sys
+from collections.abc import Sequence
+from io import StringIO
 from pathlib import Path
 
 import pytest
 
-from cmk.utils.hostaddress import HostName
-from cmk.utils.paths import default_config_dir
+from tests.testlib.unit.base_configuration_scenario import Scenario
 
+from cmk.utils.hostaddress import HostName
+from cmk.utils.labels import Labels
+from cmk.utils.paths import default_config_dir
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec
+
+from cmk.automations.results import AnalyzeHostRuleMatchesResult, AnalyzeServiceRuleMatchesResult
+
+from cmk.base.automations.check_mk import (
+    AutomationAnalyzeHostRuleMatches,
+    AutomationAnalyzeServiceRuleMatches,
+)
+
+from cmk.gui.watolib import rulesets
 from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree
 from cmk.gui.watolib.rulesets import FolderRulesets, Rule, RuleConditions, RuleOptions, Ruleset
 
 
-@pytest.mark.usefixtures("request_context", "with_admin_login")
+@pytest.fixture(name="mock_analyze_host_rule_matches_automation")
+def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Replace rule matching via automation call, which does not work in unit test context,
+    with a direct call to the automation"""
+
+    def analyze_with_matcher(
+        h: HostName, r: Sequence[Sequence[RuleSpec]]
+    ) -> AnalyzeHostRuleMatchesResult:
+        ts = Scenario()
+        ts.add_host(HostName("ding"))
+        ts.add_host(HostName("dong"))
+        ts.apply(monkeypatch)
+
+        with monkeypatch.context() as m:
+            m.setattr(sys, "stdin", StringIO(repr(r)))
+            return AutomationAnalyzeHostRuleMatches().execute([h], None, None)
+
+    monkeypatch.setattr(rulesets, "analyze_host_rule_matches", analyze_with_matcher)
+
+
+@pytest.mark.usefixtures(
+    "request_context", "with_admin_login", "mock_analyze_host_rule_matches_automation"
+)
 def test_analyse_host_ruleset() -> None:
     ruleset = _test_host_ruleset(folder := FolderTree().root_folder())
     _test_hosts(folder)
@@ -106,14 +143,40 @@ def _test_host_ruleset(folder: Folder) -> Ruleset:
     return ruleset
 
 
-@pytest.mark.usefixtures("request_context", "with_admin_login")
+@pytest.fixture(name="mock_analyze_service_rule_matches_automation")
+def fixture_mock_analyze_service_rule_matches_automation(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Replace rule matching via automation call, which does not work in unit test context,
+    with a direct call to the automation"""
+
+    def analyze_with_matcher(
+        host_name: HostName,
+        service_or_item: str,
+        service_labels: Labels,
+        rules: Sequence[Sequence[RuleSpec]],
+    ) -> AnalyzeServiceRuleMatchesResult:
+        ts = Scenario()
+        ts.add_host(HostName("ding"))
+        ts.apply(monkeypatch)
+
+        with monkeypatch.context() as m:
+            m.setattr(sys, "stdin", StringIO(repr((rules, service_labels))))
+            return AutomationAnalyzeServiceRuleMatches().execute(
+                [host_name, service_or_item], None, None
+            )
+
+    monkeypatch.setattr(rulesets, "analyze_service_rule_matches", analyze_with_matcher)
+
+
+@pytest.mark.usefixtures(
+    "request_context", "with_admin_login", "mock_analyze_service_rule_matches_automation"
+)
 def test_analyse_service_ruleset() -> None:
     ruleset = _test_service_ruleset(folder := FolderTree().root_folder())
     _test_hosts(folder)
     (Path(default_config_dir) / "main.mk").touch()
     FolderRulesets({ruleset.name: ruleset}, folder=folder).save_folder()
 
-    result = ruleset.analyse_ruleset(HostName("ding"), "Ding", None, {})
+    result = ruleset.analyse_ruleset(HostName("ding"), "Ding", "Ding", {})
     assert isinstance(result, tuple)
     assert len(result) == 2
 
@@ -125,7 +188,7 @@ def test_analyse_service_ruleset() -> None:
     assert entry[1] == 0  # index of rule in folder
     assert isinstance(entry[2], Rule)
 
-    result = ruleset.analyse_ruleset(HostName("ding"), "Not matching", None, {})
+    result = ruleset.analyse_ruleset(HostName("ding"), "Not matching", "Not matching", {})
     assert result == (None, [])
 
 

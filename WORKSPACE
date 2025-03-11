@@ -242,10 +242,10 @@ erlang_workspace()
 http_archive(
     name = "bazel_iwyu",
     patches = ["//bazel/tools:0001-Make-IWYU-executable-configurable.patch"],
-    sha256 = "058d2ba699c1a6ef15ffb8b6e98f056250bb6080e634037034099d10bff4d19f",
-    strip_prefix = "bazel_iwyu-bb102395e553215abd66603bcdeb6e93c66ca6d7",
+    sha256 = "89fbf9cad9d9e7a2aa8f5d9f7b285d3a879a4b28c63bf821b3a44e6a0168d322",
+    strip_prefix = "bazel_iwyu-1fe9048c30469ac506498c3c740ce47475ad3361",
     urls = [
-        "https://github.com/storypku/bazel_iwyu/archive/bb102395e553215abd66603bcdeb6e93c66ca6d7.tar.gz",
+        "https://github.com/storypku/bazel_iwyu/archive/1fe9048c30469ac506498c3c740ce47475ad3361.tar.gz",
     ],
 )
 

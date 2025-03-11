@@ -30,7 +30,6 @@ from tests.testlib.site import Site
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.xfail(reason="CMK-21678; investigate web-elements.")
 @pytest.mark.usefixtures("notification_user")
 def test_add_new_notification_rule(
     dashboard_page: Dashboard,

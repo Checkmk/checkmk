@@ -132,6 +132,12 @@ def _validate_hostname(value: str) -> None:
 
 def _migrate_instance_and_client_id(params: object) -> dict[str, object]:
     match params:
+        case {"instance-id": instance_value, "client-id": client_value, **rest}:
+            return {
+                "instance_id": instance_value,
+                "client_id": client_value,
+                **{str(k): v for k, v in rest.items()},
+            }
         case {"client-id": client_value, **rest}:
             return {
                 "client_id": client_value,
@@ -140,12 +146,6 @@ def _migrate_instance_and_client_id(params: object) -> dict[str, object]:
         case {"instance-id": instance_value, **rest}:
             return {
                 "instance_id": instance_value,
-                **{str(k): v for k, v in rest.items()},
-            }
-        case {"instance-id": instance_value, "client-id": client_value, **rest}:
-            return {
-                "instance_id": instance_value,
-                "client_id": client_value,
                 **{str(k): v for k, v in rest.items()},
             }
         case dict():

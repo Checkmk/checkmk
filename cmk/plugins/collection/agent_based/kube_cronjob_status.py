@@ -237,7 +237,8 @@ def _cron_job_status(
             state = result.state
             status_message = f"Running since {result.summary}"
         case JobStatusType.UNKNOWN:
-            raise ValueError("Unknown status type for latest job")
+            yield Result(state=State.UNKNOWN, summary="Unknown status type for latest job")
+            return
         case _:
             assert_never(job_status)
 

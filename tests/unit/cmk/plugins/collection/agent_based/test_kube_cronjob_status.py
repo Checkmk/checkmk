@@ -214,6 +214,21 @@ def test_cron_job_status_with_pending_job() -> None:
     assert result.state == State.WARN
 
 
+def test_cron_job_status_with_unknown_status() -> None:
+    """Test that check outputs WARN state when latest job is pending and crosses the threshold"""
+    result = list(
+        kube_cronjob_status._cron_job_status(
+            current_time=Timestamp(300.0),
+            pending_levels=(300, 600),
+            running_levels=None,
+            job_status=kube_cronjob_status.JobStatusType.UNKNOWN,
+            job_pod=JobPodFactory.build(),
+            job_start_time=Timestamp(0.0),
+        )
+    )[0]
+    assert result.state == State.UNKNOWN
+
+
 def test_kube_cron_job_with_running_params() -> None:
     current_time = 10.0
     elapsed_running_time = 8.0

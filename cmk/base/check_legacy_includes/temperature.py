@@ -256,8 +256,8 @@ def check_temperature_trend(
                     combiner(2, "%s until temp limit reached(!!)" % format_minutes(minutes_left))
                 elif minutes_left <= warn:
                     combiner(1, "%s until temp limit reached(!)" % format_minutes(minutes_left))
-    except IgnoreResultsError:
-        pass
+    except IgnoreResultsError as e:
+        combiner(3, str(e))
     return combiner.status, combiner.infotext  # type: ignore[attr-defined]
 
 

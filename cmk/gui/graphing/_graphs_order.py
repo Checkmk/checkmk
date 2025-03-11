@@ -31,6 +31,8 @@ GRAPHS_2_2 = [
     "buckets",
     "livestatus_requests_per_connection",
     "livestatus_usage",
+    "helper_usage",
+    "average_helper_latency",
     "helper_usage_cmk",
     "helper_usage_fetcher",
     "helper_usage_checker",

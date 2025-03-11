@@ -651,7 +651,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 1, Bus number: 0, Status: ok, Smart status: ok, Ref hours: 31597, Size: 4000786153472MB, Condition: ok",
+                    summary="Bay: 1, Bus number: 0, Status: ok, Smart status: ok, Ref hours: 31597, Size: 4.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -661,7 +661,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 2, Bus number: 0, Status: ok, Smart status: ok, Ref hours: 9050, Size: 6001174511616MB, Condition: ok",
+                    summary="Bay: 2, Bus number: 0, Status: ok, Smart status: ok, Ref hours: 9050, Size: 6.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -671,7 +671,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 3, Bus number: 0, Status: ok, Smart status: ok, Ref hours: 31597, Size: 4000786153472MB, Condition: ok",
+                    summary="Bay: 3, Bus number: 0, Status: ok, Smart status: ok, Ref hours: 31597, Size: 4.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -681,7 +681,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 4, Bus number: 0, Status: ok, Smart status: ok, Ref hours: 20322, Size: 4000786153472MB, Condition: ok",
+                    summary="Bay: 4, Bus number: 0, Status: ok, Smart status: ok, Ref hours: 20322, Size: 4.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -691,7 +691,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 5, Bus number: 0, Status: ok, Smart status: ok, Ref hours: 31597, Size: 4000786153472MB, Condition: ok",
+                    summary="Bay: 5, Bus number: 0, Status: ok, Smart status: ok, Ref hours: 31597, Size: 4.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -701,7 +701,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 6, Bus number: 0, Status: ok, Smart status: ok, Ref hours: 31597, Size: 4000786153472MB, Condition: ok",
+                    summary="Bay: 6, Bus number: 0, Status: ok, Smart status: ok, Ref hours: 31597, Size: 4.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -711,7 +711,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 7, Bus number: 0, Status: ok, Smart status: ok, Ref hours: 31597, Size: 4000786153472MB, Condition: ok",
+                    summary="Bay: 7, Bus number: 0, Status: ok, Smart status: ok, Ref hours: 31597, Size: 4.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -721,7 +721,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 8, Bus number: 0, Status: ok, Smart status: ok, Ref hours: 31597, Size: 4000786153472MB, Condition: ok",
+                    summary="Bay: 8, Bus number: 0, Status: ok, Smart status: ok, Ref hours: 31597, Size: 4.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -731,7 +731,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 9, Bus number: 0, Status: ok, Smart status: ok, Ref hours: 31597, Size: 4000786153472MB, Condition: ok",
+                    summary="Bay: 9, Bus number: 0, Status: ok, Smart status: ok, Ref hours: 31597, Size: 4.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -741,7 +741,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 10, Bus number: 0, Status: ok, Smart status: ok, Ref hours: 31597, Size: 4000786153472MB, Condition: ok",
+                    summary="Bay: 10, Bus number: 0, Status: ok, Smart status: ok, Ref hours: 31597, Size: 4.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -751,7 +751,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 11, Bus number: 0, Status: ok, Smart status: ok, Ref hours: 31597, Size: 4000786153472MB, Condition: ok",
+                    summary="Bay: 11, Bus number: 0, Status: ok, Smart status: ok, Ref hours: 31597, Size: 4.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -761,7 +761,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 12, Bus number: 0, Status: ok, Smart status: ok, Ref hours: 31597, Size: 4000786153472MB, Condition: ok",
+                    summary="Bay: 12, Bus number: 0, Status: ok, Smart status: ok, Ref hours: 31597, Size: 4.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -771,7 +771,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 13, Bus number: 0, Status: ok, Smart status: ok, Ref hours: 31597, Size: 299999690752MB, Condition: ok",
+                    summary="Bay: 13, Bus number: 0, Status: ok, Smart status: ok, Ref hours: 31597, Size: 300 GB, Condition: ok",
                 )
             ],
         ),
@@ -781,7 +781,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 14, Bus number: 0, Status: ok, Smart status: ok, Ref hours: 31597, Size: 299999690752MB, Condition: ok",
+                    summary="Bay: 14, Bus number: 0, Status: ok, Smart status: ok, Ref hours: 31597, Size: 300 GB, Condition: ok",
                 )
             ],
         ),
@@ -791,7 +791,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 1, Bus number: 2, Status: ok, Smart status: ok, Ref hours: 31597, Size: 3000592498688MB, Condition: ok",
+                    summary="Bay: 1, Bus number: 2, Status: ok, Smart status: ok, Ref hours: 31597, Size: 3.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -801,7 +801,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 2, Bus number: 2, Status: ok, Smart status: ok, Ref hours: 31597, Size: 3000592498688MB, Condition: ok",
+                    summary="Bay: 2, Bus number: 2, Status: ok, Smart status: ok, Ref hours: 31597, Size: 3.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -811,7 +811,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.CRIT,
-                    summary="Bay: 3, Bus number: 2, Status: failed, Smart status: ok, Ref hours: 31088, Size: 3000592498688MB, Condition: failed",
+                    summary="Bay: 3, Bus number: 2, Status: failed, Smart status: ok, Ref hours: 31088, Size: 3.00 TB, Condition: failed",
                 )
             ],
         ),
@@ -821,7 +821,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 4, Bus number: 2, Status: ok, Smart status: ok, Ref hours: 31597, Size: 3000592498688MB, Condition: ok",
+                    summary="Bay: 4, Bus number: 2, Status: ok, Smart status: ok, Ref hours: 31597, Size: 3.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -831,7 +831,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 5, Bus number: 2, Status: ok, Smart status: ok, Ref hours: 12884, Size: 3000592498688MB, Condition: ok",
+                    summary="Bay: 5, Bus number: 2, Status: ok, Smart status: ok, Ref hours: 12884, Size: 3.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -841,7 +841,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 6, Bus number: 2, Status: ok, Smart status: ok, Ref hours: 31597, Size: 3000592498688MB, Condition: ok",
+                    summary="Bay: 6, Bus number: 2, Status: ok, Smart status: ok, Ref hours: 31597, Size: 3.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -851,7 +851,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 7, Bus number: 2, Status: ok, Smart status: ok, Ref hours: 31597, Size: 3000592498688MB, Condition: ok",
+                    summary="Bay: 7, Bus number: 2, Status: ok, Smart status: ok, Ref hours: 31597, Size: 3.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -861,7 +861,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 8, Bus number: 2, Status: ok, Smart status: ok, Ref hours: 31597, Size: 3000592498688MB, Condition: ok",
+                    summary="Bay: 8, Bus number: 2, Status: ok, Smart status: ok, Ref hours: 31597, Size: 3.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -871,7 +871,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 9, Bus number: 2, Status: ok, Smart status: ok, Ref hours: 31597, Size: 3000592498688MB, Condition: ok",
+                    summary="Bay: 9, Bus number: 2, Status: ok, Smart status: ok, Ref hours: 31597, Size: 3.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -881,7 +881,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 10, Bus number: 2, Status: ok, Smart status: ok, Ref hours: 31597, Size: 3000592498688MB, Condition: ok",
+                    summary="Bay: 10, Bus number: 2, Status: ok, Smart status: ok, Ref hours: 31597, Size: 3.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -891,7 +891,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 11, Bus number: 2, Status: ok, Smart status: ok, Ref hours: 31597, Size: 3000592498688MB, Condition: ok",
+                    summary="Bay: 11, Bus number: 2, Status: ok, Smart status: ok, Ref hours: 31597, Size: 3.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -901,7 +901,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 12, Bus number: 2, Status: ok, Smart status: ok, Ref hours: 11467, Size: 3000592498688MB, Condition: ok",
+                    summary="Bay: 12, Bus number: 2, Status: ok, Smart status: ok, Ref hours: 11467, Size: 3.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -911,7 +911,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 1, Bus number: 3, Status: ok, Smart status: ok, Ref hours: 68592, Size: 2000398843904MB, Condition: ok",
+                    summary="Bay: 1, Bus number: 3, Status: ok, Smart status: ok, Ref hours: 68592, Size: 2.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -921,7 +921,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 2, Bus number: 3, Status: ok, Smart status: ok, Ref hours: 60070, Size: 2000398843904MB, Condition: ok",
+                    summary="Bay: 2, Bus number: 3, Status: ok, Smart status: ok, Ref hours: 60070, Size: 2.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -931,7 +931,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 3, Bus number: 3, Status: ok, Smart status: ok, Ref hours: 54960, Size: 2000398843904MB, Condition: ok",
+                    summary="Bay: 3, Bus number: 3, Status: ok, Smart status: ok, Ref hours: 54960, Size: 2.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -941,7 +941,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 4, Bus number: 3, Status: ok, Smart status: ok, Ref hours: 28027, Size: 2000398843904MB, Condition: ok",
+                    summary="Bay: 4, Bus number: 3, Status: ok, Smart status: ok, Ref hours: 28027, Size: 2.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -951,7 +951,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 5, Bus number: 3, Status: ok, Smart status: ok, Ref hours: 47413, Size: 2000398843904MB, Condition: ok",
+                    summary="Bay: 5, Bus number: 3, Status: ok, Smart status: ok, Ref hours: 47413, Size: 2.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -961,7 +961,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 6, Bus number: 3, Status: ok, Smart status: ok, Ref hours: 35954, Size: 2000398843904MB, Condition: ok",
+                    summary="Bay: 6, Bus number: 3, Status: ok, Smart status: ok, Ref hours: 35954, Size: 2.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -971,7 +971,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 7, Bus number: 3, Status: ok, Smart status: ok, Ref hours: 40846, Size: 2000398843904MB, Condition: ok",
+                    summary="Bay: 7, Bus number: 3, Status: ok, Smart status: ok, Ref hours: 40846, Size: 2.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -981,7 +981,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 8, Bus number: 3, Status: ok, Smart status: ok, Ref hours: 60070, Size: 2000398843904MB, Condition: ok",
+                    summary="Bay: 8, Bus number: 3, Status: ok, Smart status: ok, Ref hours: 60070, Size: 2.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -991,7 +991,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 9, Bus number: 3, Status: ok, Smart status: ok, Ref hours: 68592, Size: 2000398843904MB, Condition: ok",
+                    summary="Bay: 9, Bus number: 3, Status: ok, Smart status: ok, Ref hours: 68592, Size: 2.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -1001,7 +1001,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 10, Bus number: 3, Status: ok, Smart status: ok, Ref hours: 45208, Size: 2000398843904MB, Condition: ok",
+                    summary="Bay: 10, Bus number: 3, Status: ok, Smart status: ok, Ref hours: 45208, Size: 2.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -1011,7 +1011,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 11, Bus number: 3, Status: ok, Smart status: ok, Ref hours: 68592, Size: 2000398843904MB, Condition: ok",
+                    summary="Bay: 11, Bus number: 3, Status: ok, Smart status: ok, Ref hours: 68592, Size: 2.00 TB, Condition: ok",
                 )
             ],
         ),
@@ -1021,7 +1021,7 @@ def test_discover_hp_proliant_da_phydrv(
             [
                 Result(
                     state=State.OK,
-                    summary="Bay: 12, Bus number: 3, Status: ok, Smart status: ok, Ref hours: 68592, Size: 2000398843904MB, Condition: ok",
+                    summary="Bay: 12, Bus number: 3, Status: ok, Smart status: ok, Ref hours: 68592, Size: 2.00 TB, Condition: ok",
                 )
             ],
         ),

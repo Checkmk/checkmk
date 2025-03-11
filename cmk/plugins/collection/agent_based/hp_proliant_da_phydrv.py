@@ -12,6 +12,7 @@ from cmk.agent_based.v2 import (
     DiscoveryResult,
     InventoryPlugin,
     InventoryResult,
+    render,
     Result,
     Service,
     SimpleSNMPSection,
@@ -163,7 +164,7 @@ def check_hp_proliant_da_phydrv(item: str, section: Section) -> CheckResult:
     yield Result(
         state=state,
         summary=(
-            "Bay: %s, Bus number: %s, Status: %s, Smart status: %s, Ref hours: %s, Size: %sMB,"
+            "Bay: %s, Bus number: %s, Status: %s, Smart status: %s, Ref hours: %s, Size: %s,"
             " Condition: %s"
             % (
                 physical_drive.bay,
@@ -171,7 +172,7 @@ def check_hp_proliant_da_phydrv(item: str, section: Section) -> CheckResult:
                 physical_drive.status,
                 physical_drive.smart_status,
                 physical_drive.ref_hours,
-                physical_drive.size,
+                render.disksize(physical_drive.size),
                 physical_drive.condition,
             )
         ),

@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# We use the ordering of graphs from Checkmk 2.2 because the graphing API came with Checkmk 2.3
-GRAPHS_2_2 = [
+# Graph order from 2.2 but slightly adapted
+GRAPHS_ORDER = [
     "apache_status",
     "bufferpool_hitratios",
     "deadlocks_and_waits",

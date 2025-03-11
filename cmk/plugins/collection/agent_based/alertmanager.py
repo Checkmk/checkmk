@@ -123,16 +123,9 @@ def _get_mapping(rule: Rule, params: CheckParams) -> StateMapping | None:
             return mapping["map"]
     return None
 
-def _get_custom_severity_mapping(params: CheckParams) -> Severity | None:
-    """Returns remapping config if one exists"""
-    if mapping := params.get("severity_remapping"):
-        return {y:x for x, y in mapping.items()}
-    return None
-
-def _get_severity(params: CheckParams, severity: str):
+def _get_severity(params: CheckParams, severity: str) -> str:
     """ Get individual Severity """
-    mapping = _get_custom_severity_mapping(params)
-    if mapping:
+    if mapping := params.get("severity_remapping"):
         return Severity(mapping.get(severity, 'uknown')).value
     return Severity(severity).value
 

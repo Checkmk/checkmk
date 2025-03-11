@@ -37,7 +37,7 @@ from ._graph_specification import (
     HorizontalRule,
     MinimalVerticalRange,
 )
-from ._graphs_order import GRAPHS_2_2
+from ._graphs_order import GRAPHS_ORDER
 from ._legacy import get_render_function, graph_info, LegacyUnitSpecification, RawGraphTemplate
 from ._metric_expression import (
     Average,
@@ -92,7 +92,7 @@ def _get_sorted_graph_plugins() -> (
 ):
     def _by_index(graph_name: str) -> int:
         try:
-            return GRAPHS_2_2.index(graph_name)
+            return GRAPHS_ORDER.index(graph_name)
         except ValueError:
             return -1
 

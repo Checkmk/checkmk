@@ -8,15 +8,13 @@ from collections.abc import Iterable
 from importlib import import_module
 from typing import assert_never
 
-from cmk.base.api.agent_based.plugin_classes import (
-    AgentSectionPlugin as BackendAgentSectionPlugin,
-)
-from cmk.base.api.agent_based.plugin_classes import (
-    CheckPlugin as BackendCheckPlugin,
-)
-from cmk.base.api.agent_based.plugin_classes import (
-    SNMPSectionPlugin as BackendSNMPSectionPlugin,
-)
+from cmk.utils.sectionname import SectionName
+
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.inventory import InventoryPlugin as BackendInventoryPlugin
+from cmk.checkengine.inventory import InventoryPluginName
+
+from cmk.base.api.agent_based import plugin_classes as backend
 
 from cmk import trace
 from cmk.agent_based.v2 import (
@@ -29,16 +27,6 @@ from cmk.agent_based.v2 import (
 )
 from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup, PluginLocation
 
-from ._config import (
-    add_check_plugin,
-    add_inventory_plugin,
-    add_section_plugin,
-    get_inventory_plugin,
-    get_previously_loaded_plugins,
-    get_section_plugin,
-    is_registered_inventory_plugin,
-    is_registered_section_plugin,
-)
 from .check_plugins import create_check_plugin, get_check_plugin
 from .inventory_plugins import create_inventory_plugin
 from .section_plugins import create_agent_section_plugin, create_snmp_section_plugin
@@ -50,106 +38,160 @@ tracer = trace.get_tracer()
 
 @tracer.instrument("load_all_plugins")
 def load_all_plugins(
-    sections: Iterable[BackendSNMPSectionPlugin | BackendAgentSectionPlugin],
-    checks: Iterable[BackendCheckPlugin],
+    sections: Iterable[backend.SNMPSectionPlugin | backend.AgentSectionPlugin],
+    checks: Iterable[backend.CheckPlugin],
     *,
+    legacy_errors: Iterable[str],
     raise_errors: bool,
-) -> list[str]:
+) -> backend.AgentBasedPlugins:
     with tracer.span("discover_plugins"):
         discovered_plugins: DiscoveredPlugins[_ABPlugins] = discover_plugins(
             PluginGroup.AGENT_BASED, entry_point_prefixes(), raise_errors=raise_errors
         )
 
-    errors = [f"Error in agent based plugin: {exc}" for exc in discovered_plugins.errors]
+    registered_agent_sections: dict[SectionName, backend.AgentSectionPlugin] = {}
+    registered_snmp_sections: dict[SectionName, backend.SNMPSectionPlugin] = {}
+    registered_check_plugins: dict[CheckPluginName, backend.CheckPlugin] = {}
+    registered_inventory_plugins: dict[InventoryPluginName, BackendInventoryPlugin] = {}
+    errors = [
+        *legacy_errors,
+        *(f"Error in agent based plugin: {exc}" for exc in discovered_plugins.errors),
+    ]
 
     with tracer.span("load_discovered_plugins"):
         for location, plugin in discovered_plugins.plugins.items():
             try:
-                _register_plugin_by_type(location, plugin, validate=raise_errors)
+                _register_plugin_by_type(
+                    location,
+                    plugin,
+                    registered_agent_sections,
+                    registered_snmp_sections,
+                    registered_check_plugins,
+                    registered_inventory_plugins,
+                    validate=raise_errors,
+                )
             except Exception as exc:
                 if raise_errors:
                     raise
                 errors.append(f"Error in agent based plug-in {plugin.name} ({type(plugin)}): {exc}")
 
-    _add_sections_to_register(sections)
-    _add_checks_to_register(checks)
-    return errors
+    _add_sections_to_register(sections, registered_agent_sections, registered_snmp_sections)
+    _add_checks_to_register(checks, registered_check_plugins)
+    return backend.AgentBasedPlugins(
+        agent_sections=registered_agent_sections,
+        snmp_sections=registered_snmp_sections,
+        check_plugins=registered_check_plugins,
+        inventory_plugins=registered_inventory_plugins,
+        errors=errors,
+    )
 
 
 def load_selected_plugins(
     locations: Iterable[PluginLocation],
-    sections: Iterable[BackendSNMPSectionPlugin | BackendAgentSectionPlugin],
-    checks: Iterable[BackendCheckPlugin],
+    sections: Iterable[backend.SNMPSectionPlugin | backend.AgentSectionPlugin],
+    checks: Iterable[backend.CheckPlugin],
     *,
     validate: bool,
-) -> None:
+) -> backend.AgentBasedPlugins:
+    registered_agent_sections: dict[SectionName, backend.AgentSectionPlugin] = {}
+    registered_snmp_sections: dict[SectionName, backend.SNMPSectionPlugin] = {}
+    registered_check_plugins: dict[CheckPluginName, backend.CheckPlugin] = {}
+    registered_inventory_plugins: dict[InventoryPluginName, BackendInventoryPlugin] = {}
     for location in locations:
         module = import_module(location.module)
         if location.name is not None:
-            _register_plugin_by_type(location, getattr(module, location.name), validate=validate)
-    _add_sections_to_register(sections)
-    _add_checks_to_register(checks)
+            _register_plugin_by_type(
+                location,
+                getattr(module, location.name),
+                registered_agent_sections,
+                registered_snmp_sections,
+                registered_check_plugins,
+                registered_inventory_plugins,
+                validate=validate,
+            )
+    _add_sections_to_register(sections, registered_agent_sections, registered_snmp_sections)
+    _add_checks_to_register(checks, registered_check_plugins)
+    return backend.AgentBasedPlugins(
+        agent_sections=registered_agent_sections,
+        snmp_sections=registered_snmp_sections,
+        check_plugins=registered_check_plugins,
+        inventory_plugins=registered_inventory_plugins,
+        errors=(),
+    )
 
 
 def _register_plugin_by_type(
     location: PluginLocation,
     plugin: AgentSection | SimpleSNMPSection | SNMPSection | CheckPlugin | InventoryPlugin,
+    registered_agent_sections: dict[SectionName, backend.AgentSectionPlugin],
+    registered_snmp_sections: dict[SectionName, backend.SNMPSectionPlugin],
+    registered_check_plugins: dict[CheckPluginName, backend.CheckPlugin],
+    registered_inventory_plugins: dict[InventoryPluginName, BackendInventoryPlugin],
     *,
     validate: bool,
 ) -> None:
     match plugin:
         case AgentSection():
-            register_agent_section(plugin, location, validate=validate)
+            _register_agent_section(
+                plugin,
+                location,
+                registered_agent_sections,
+                registered_snmp_sections,
+                validate=validate,
+            )
         case SimpleSNMPSection() | SNMPSection():
-            register_snmp_section(plugin, location, validate=validate)
+            _register_snmp_section(
+                plugin,
+                location,
+                registered_agent_sections,
+                registered_snmp_sections,
+                validate=validate,
+            )
         case CheckPlugin():
-            register_check_plugin(plugin, location)
+            _register_check_plugin(plugin, location, registered_check_plugins)
         case InventoryPlugin():
-            register_inventory_plugin(plugin, location)
+            _register_inventory_plugin(plugin, location, registered_inventory_plugins)
         case unreachable:
             assert_never(unreachable)
 
 
-def register_agent_section(
-    section: AgentSection, location: PluginLocation, *, validate: bool
+def _register_agent_section(
+    section: AgentSection,
+    location: PluginLocation,
+    registered_agent_sections: dict[SectionName, backend.AgentSectionPlugin],
+    registered_snmp_sections: dict[SectionName, backend.SNMPSectionPlugin],
+    *,
+    validate: bool,
 ) -> None:
     section_plugin = create_agent_section_plugin(section, location, validate=validate)
 
-    if (existing_section := get_section_plugin(section_plugin.name)) is not None:
-        if existing_section.location == location:
-            # This is relevant if we're loading the plugins twice:
-            # Loading of v2 plugins is *not* a no-op the second time round.
-            # But since we're storing the plugins in a global variable,
-            # we must only raise, if this is not the *exact* same plugin.
-            # once we stop storing the plugins in a global variable, this
-            # special case can go.
-            return
-
+    if section_plugin.name in registered_agent_sections | registered_snmp_sections:
         raise ValueError(f"duplicate section definition: {section_plugin.name}")
 
-    add_section_plugin(section_plugin)
+    registered_agent_sections[section_plugin.name] = section_plugin
 
 
-def register_snmp_section(
-    section: SimpleSNMPSection | SNMPSection, location: PluginLocation, *, validate: bool
+def _register_snmp_section(
+    section: SimpleSNMPSection | SNMPSection,
+    location: PluginLocation,
+    registered_agent_sections: dict[SectionName, backend.AgentSectionPlugin],
+    registered_snmp_sections: dict[SectionName, backend.SNMPSectionPlugin],
+    *,
+    validate: bool,
 ) -> None:
     section_plugin = create_snmp_section_plugin(section, location, validate=validate)
 
-    if (existing_section := get_section_plugin(section_plugin.name)) is not None:
-        if existing_section.location == location:
-            # This is relevant if we're loading the plugins twice:
-            # Loading of v2 plugins is *not* a no-op the second time round.
-            # But since we're storing the plugins in a global variable,
-            # we must only raise, if this is not the *exact* same plugin.
-            # once we stop storing the plugins in a global variable, this
-            # special case can go.
-            return
+    if section_plugin.name in registered_agent_sections | registered_snmp_sections:
         raise ValueError(f"duplicate section definition: {section_plugin.name}")
 
-    add_section_plugin(section_plugin)
+    registered_snmp_sections[section_plugin.name] = section_plugin
 
 
-def register_check_plugin(check: CheckPlugin, location: PluginLocation) -> None:
+def _register_check_plugin(
+    check: CheckPlugin,
+    location: PluginLocation,
+    registered_check_plugins: dict[CheckPluginName, backend.CheckPlugin],
+) -> None:
     plugin = create_check_plugin(
         name=check.name,
         sections=check.sections,
@@ -167,22 +209,17 @@ def register_check_plugin(check: CheckPlugin, location: PluginLocation) -> None:
         validate_kwargs=check.name not in {"logwatch_ec", "logwatch_ec_single"},
     )
 
-    plugins_up_to_now = get_previously_loaded_plugins().check_plugins
-    if (present := get_check_plugin(plugin.name, plugins_up_to_now)) is not None:
-        if present.location == location:
-            # This is relevant if we're loading the plugins twice:
-            # Loading of v2 plugins is *not* a no-op the second time round.
-            # But since we're storing the plugins in a global variable,
-            # we must only raise, if this is not the *exact* same plugin.
-            # once we stop storing the plugins in a global variable, this
-            # special case can go.
-            return
+    if get_check_plugin(plugin.name, registered_check_plugins) is not None:
         raise ValueError(f"duplicate check plug-in definition: {plugin.name}")
 
-    add_check_plugin(plugin)
+    registered_check_plugins[plugin.name] = plugin
 
 
-def register_inventory_plugin(inventory: InventoryPlugin, location: PluginLocation) -> None:
+def _register_inventory_plugin(
+    inventory: InventoryPlugin,
+    location: PluginLocation,
+    registered_inventory_plugins: dict[InventoryPluginName, BackendInventoryPlugin],
+) -> None:
     plugin = create_inventory_plugin(
         name=inventory.name,
         sections=inventory.sections,
@@ -192,37 +229,32 @@ def register_inventory_plugin(inventory: InventoryPlugin, location: PluginLocati
         location=location,
     )
 
-    if is_registered_inventory_plugin(plugin.name):
-        if (
-            present := get_inventory_plugin(plugin.name)
-        ) is not None and present.location == location:
-            # This is relevant if we're loading the plugins twice:
-            # Loading of v2 plugins is *not* a no-op the second time round.
-            # But since we're storing the plugins in a global variable,
-            # we must only raise, if this is not the *exact* same plugin.
-            # once we stop storing the plugins in a global variable, this
-            # special case can go.
-            return
+    if plugin.name in registered_inventory_plugins:
         raise ValueError(f"duplicate inventory plug-in definition: {plugin.name}")
 
-    add_inventory_plugin(plugin)
+    registered_inventory_plugins[plugin.name] = plugin
 
 
 def _add_sections_to_register(
-    sections: Iterable[BackendSNMPSectionPlugin | BackendAgentSectionPlugin],
+    sections: Iterable[backend.SNMPSectionPlugin | backend.AgentSectionPlugin],
+    registered_agent_sections: dict[SectionName, backend.AgentSectionPlugin],
+    registered_snmp_sections: dict[SectionName, backend.SNMPSectionPlugin],
 ) -> None:
     for section in sections:
-        if is_registered_section_plugin(section.name):
+        if section.name in registered_agent_sections or section.name in registered_snmp_sections:
             continue
-        add_section_plugin(section)
+        if isinstance(section, backend.AgentSectionPlugin):
+            registered_agent_sections[section.name] = section
+        else:
+            registered_snmp_sections[section.name] = section
 
 
 def _add_checks_to_register(
-    checks: Iterable[BackendCheckPlugin],
+    checks: Iterable[backend.CheckPlugin],
+    registered_check_plugins: dict[CheckPluginName, backend.CheckPlugin],
 ) -> None:
-    existing_plugins = get_previously_loaded_plugins().check_plugins
     for check in checks:
-        present_plugin = existing_plugins.get(check.name)
+        present_plugin = registered_check_plugins.get(check.name)
         if present_plugin is not None and isinstance(present_plugin.location, PluginLocation):
             # location is PluginLocation => it's a new plug-in
             # (allow loading multiple times, e.g. update-config)
@@ -232,4 +264,4 @@ def _add_checks_to_register(
                 f"Legacy check plug-in still exists for check plug-in {check.name}. "
                 "Please remove legacy plug-in."
             )
-        add_check_plugin(check)
+        registered_check_plugins[check.name] = check

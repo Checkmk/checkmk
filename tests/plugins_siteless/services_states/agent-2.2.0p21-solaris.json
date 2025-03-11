@@ -1,0 +1,38 @@
+{
+  "Check_MK Agent": {
+    "expected_state": 0
+  },
+  "CPU load": {
+    "expected_state": 0
+  },
+  "Number of threads": {
+    "expected_state": 2
+  },
+  "NTP Time": {
+    "expected_state": 0
+  },
+  "FMD Status": {
+    "expected_state": 0
+  },
+  "Hardware Overall State": {
+    "expected_state": 0
+  },
+  "SMF Services Summary": {
+    "expected_state": 0
+  },
+  "CPU utilization": {
+    "expected_state": 0
+  },
+  "TCP Connections": {
+    "expected_state": 0
+  },
+  "Uptime": {
+    "expected_state": 0
+  },
+  "ZFS arc cache": {
+    "expected_state": 0
+  },
+  "zpool status": {
+    "expected_state": 0
+  }
+}

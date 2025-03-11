@@ -102,3 +102,10 @@ def check_audiocodes_operational_state(module: Module) -> CheckResult:
         state=module.ha_status.state,
         summary=f"HA status: {module.ha_status.name}",
     )
+
+
+def parse_license_key_list(license_key_list: str) -> str:
+    try:
+        return bytes.fromhex(license_key_list.replace(" ", "")).decode("utf-8")
+    except ValueError:
+        return license_key_list

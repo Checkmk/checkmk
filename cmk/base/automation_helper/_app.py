@@ -21,15 +21,13 @@ from cmk.ccc import version as cmk_version
 
 from cmk.utils import paths, tty
 from cmk.utils.log import logger as cmk_logger
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 
 from cmk.automations.helper_api import AutomationPayload, AutomationResponse
 from cmk.automations.results import ABCAutomationResult
 
 from cmk.base import config
-from cmk.base.api.agent_based.register import (
-    AgentBasedPlugins,
-    get_previously_loaded_plugins,
-)
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.automations import AutomationError
 
 from ._cache import Cache, CacheError
@@ -44,7 +42,7 @@ class AutomationEngine(Protocol):
         cmd: str,
         args: list[str],
         plugins: AgentBasedPlugins | None,
-        loaded_config: config.LoadedConfigSentinel | None,
+        loading_result: config.LoadingResult | None,
     ) -> ABCAutomationResult | AutomationError: ...
 
 
@@ -53,7 +51,7 @@ class _State:
     automation_or_reload_lock: asyncio.Lock
     last_reload_at: float
     plugins: AgentBasedPlugins | None
-    loaded_config: config.LoadedConfigSentinel | None
+    loading_result: config.LoadingResult | None
 
 
 @dataclass(frozen=True)
@@ -61,8 +59,8 @@ class _ApplicationDependencies:
     automation_engine: AutomationEngine
     changes_cache: Cache
     reloader_config: ReloaderConfig
-    reload_config: Callable[[], config.LoadedConfigSentinel]
-    clear_caches_before_each_call: Callable[[], None]
+    reload_config: Callable[[AgentBasedPlugins], config.LoadingResult]
+    clear_caches_before_each_call: Callable[[RulesetMatcher], None]
     state: _State
 
 
@@ -75,8 +73,8 @@ def make_application(
     engine: AutomationEngine,
     cache: Cache,
     reloader_config: ReloaderConfig,
-    reload_config: Callable[[], config.LoadedConfigSentinel],
-    clear_caches_before_each_call: Callable[[], None],
+    reload_config: Callable[[AgentBasedPlugins], config.LoadingResult],
+    clear_caches_before_each_call: Callable[[RulesetMatcher], None],
 ) -> FastAPI:
     app = FastAPI(
         lifespan=_lifespan,
@@ -94,7 +92,7 @@ def make_application(
             automation_or_reload_lock=asyncio.Lock(),
             last_reload_at=0,
             plugins=None,
-            loaded_config=None,
+            loading_result=None,
         ),
     )
 
@@ -115,16 +113,20 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     dependencies: _ApplicationDependencies = app.state.dependencies
     dependencies.state.last_reload_at = time.time()
-    config.load_all_plugins(local_checks_dir=paths.local_checks_dir, checks_dir=paths.checks_dir)
-    dependencies.state.plugins = get_previously_loaded_plugins()
+
+    plugins = config.load_all_plugins(
+        local_checks_dir=paths.local_checks_dir, checks_dir=paths.checks_dir
+    )
+    dependencies.state.plugins = plugins
+
     tty.reinit()
-    dependencies.state.loaded_config = dependencies.reload_config()
+    dependencies.state.loading_result = dependencies.reload_config(plugins)
 
     reloader_task = asyncio.create_task(
         _reloader_task(
             config=dependencies.reloader_config,
             cache=dependencies.changes_cache,
-            reload_callback=dependencies.reload_config,
+            reload_callback=lambda: dependencies.reload_config(plugins),
             state=dependencies.state,
         )
         if dependencies.reloader_config.active
@@ -139,7 +141,7 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 async def _reloader_task(
     config: ReloaderConfig,
     cache: Cache,
-    reload_callback: Callable[[], config.LoadedConfigSentinel],
+    reload_callback: Callable[[], config.LoadingResult],
     state: _State,
     delayer_factory: Callable[[float], Awaitable[None]] = asyncio.sleep,
 ) -> None:
@@ -168,7 +170,7 @@ async def _reloader_task(
 
                     LOGGER.info("[reloader] Triggering reload")
                     state.last_reload_at = time.time()
-                    state.loaded_config = reload_callback()
+                    state.loading_result = reload_callback()
                     break
 
             else:
@@ -209,8 +211,8 @@ def _execute_automation_endpoint(
     payload: AutomationPayload,
     engine: AutomationEngine,
     cache: Cache,
-    reload_config: Callable[[], config.LoadedConfigSentinel],
-    clear_caches_before_each_call: Callable[[], None],
+    reload_config: Callable[[AgentBasedPlugins], config.LoadingResult],
+    clear_caches_before_each_call: Callable[[RulesetMatcher], None],
     state: _State,
 ) -> AutomationResponse:
     LOGGER.info(
@@ -220,7 +222,15 @@ def _execute_automation_endpoint(
     )
     if cache.reload_required(state.last_reload_at):
         state.last_reload_at = time.time()
-        state.loaded_config = reload_config()
+        if not state.plugins:
+            # This should never happen. AFAICS, we have to make the plugins optional,
+            # because we don't want to load them when the `state` is first instantiated,
+            # but at a later point. This is a bit of a code smell, but I don't see a better
+            # way to do this right now.
+            # We could intialize the `state` with `AgentBasedPlugins.empty()` but that would
+            # bare the risk of accidentally operating with the empty set of plugins.
+            raise RuntimeError("Plugins are not loaded yet")
+        state.loading_result = reload_config(state.plugins)
         LOGGER.warning("[automation] configurations were reloaded due to a stale state.")
 
     buffer_stdout = io.StringIO()
@@ -238,14 +248,17 @@ def _execute_automation_endpoint(
         _redirect_stdin(io.StringIO(payload.stdin)),
         temporary_log_level(cmk_logger, payload.log_level),
     ):
-        clear_caches_before_each_call()
+        if state.loading_result:
+            clear_caches_before_each_call(state.loading_result.config_cache.ruleset_matcher)
         try:
+            automation_start_time = time.time()
             result_or_error_code: ABCAutomationResult | int = engine.execute(
                 payload.name,
                 list(payload.args),
                 state.plugins,
-                state.loaded_config,
+                state.loading_result,
             )
+            automation_end_time = time.time()
         except SystemExit as system_exit:
             LOGGER.error(
                 '[automation] Encountered SystemExit exception while processing automation "%s" with args: %s',
@@ -259,9 +272,10 @@ def _execute_automation_endpoint(
             )
         else:
             LOGGER.info(
-                '[automation] Processed automation command "%s" with args: %s',
+                '[automation] Processed automation command "%s" with args "%s" in %.2f seconds',
                 payload.name,
                 payload.args,
+                automation_end_time - automation_start_time,
             )
 
         match result_or_error_code:

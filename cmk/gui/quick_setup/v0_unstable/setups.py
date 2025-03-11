@@ -97,7 +97,17 @@ class QuickSetupBackgroundStageAction(QuickSetupStageAction):
 
     This should be used for actions that CAN take a long time to complete. This is necessary
     as the interface will run into a Gateway Timeout error after 120 seconds.
+
+        Attributes:
+            target_site_formspec_key:
+                The formspec key that references the target site selection. The background job will
+                bet executed on the configured site. If not set, the background action will be
+                executed on the current site. This is useful for actions that are site specific and
+                would require long-running remote automation calls as they can also run into a
+                timeout. In most cases, a local background job is sufficient.
     """
+
+    target_site_formspec_key: str | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -157,6 +167,8 @@ class QuickSetupAction:
     id: ActionId
     label: str
     action: CallableAction
+    iconName: str = "checkmark-plus"
+    iconRotate: int = 0
     custom_validators: Iterable[CallableValidator] = ()
 
 

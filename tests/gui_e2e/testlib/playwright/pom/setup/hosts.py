@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import re
+from typing import override
 from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
@@ -19,6 +20,7 @@ logger = logging.getLogger(__name__)
 class SetupHost(CmkPage):
     """Represent the page `setup -> Hosts`."""
 
+    @override
     def navigate(self) -> None:
         """Instructions to navigate to `setup -> Hosts` page.
 
@@ -30,11 +32,13 @@ class SetupHost(CmkPage):
         self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
         self._validate_page()
 
+    @override
     def _validate_page(self) -> None:
         logger.info("Validate that current page is 'Setup hosts' page")
         expect(self.get_link("Add host")).to_be_visible()
         expect(self.get_link("Add folder")).to_be_visible()
 
+    @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         mapping = DropdownListNameToID()
         setattr(mapping, "Hosts", "menu_hosts")
@@ -102,6 +106,7 @@ class AddHost(CmkPage):
         r"Management board",
     ]
 
+    @override
     def navigate(self) -> None:
         """Instructions to navigate to `Setup -> Hosts -> Add host` page."""
         setup_host_page = SetupHost(self.page)
@@ -112,6 +117,7 @@ class AddHost(CmkPage):
         )
         self._validate_page()
 
+    @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
 
@@ -127,6 +133,7 @@ class AddHost(CmkPage):
     def ipv4_address_text_field(self) -> Locator:
         return self.main_area.get_input("ipaddress")
 
+    @override
     def _validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
@@ -235,6 +242,7 @@ class HostProperties(CmkPage):
             timeout_navigation=timeout_navigation,
         )
 
+    @override
     def navigate(self) -> None:
         """Instructions to navigate to `setup -> Hosts -> <host name> properties` page.
 
@@ -251,6 +259,7 @@ class HostProperties(CmkPage):
         self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
         self._validate_page()
 
+    @override
     def _validate_page(self) -> None:
         logger.info("Validate that current page is 'Host properties' page")
         self.main_area.check_page_title(self.page_title)
@@ -258,6 +267,7 @@ class HostProperties(CmkPage):
         expect(self.main_area.get_text(text=HostProperties.links[0])).to_be_visible()
         expect(self.main_area.get_text(text=HostProperties.properties[0])).to_be_visible()
 
+    @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         mapping = DropdownListNameToID()
         setattr(mapping, "Host", "menu_host")

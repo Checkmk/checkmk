@@ -164,6 +164,11 @@ def _rendered_command_outputs_for_site(site_name: str) -> Generator[str]:
         substitute_user=site_name,
     )
     yield _render_command_output(
+        "cmk-ui-job-scheduler-health",
+        sudo=True,
+        substitute_user=site_name,
+    )
+    yield _render_command_output(
         "omd status",
         sudo=True,
         substitute_user=site_name,

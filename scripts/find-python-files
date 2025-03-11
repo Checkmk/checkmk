@@ -86,7 +86,7 @@ filter_for_python_files() {
     # use "-r" over "--no-run-if-empty" and "-0" over "--null" to work on alpine
     # Exclude files below packages: The package specific jobs deal with them
     grep --null --null-data -v -e "^$repo_path/packages/" -e "^$repo_path/non-free/packages/" |
-    sort --zero-terminated |
+        sort --zero-terminated |
         xargs -r -0 \
             grep --binary-files=without-match --files-with-matches '^#!.*python3$'
 }

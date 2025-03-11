@@ -549,10 +549,7 @@ def construct_content(
     )
 
 
-def extend_context(context: dict[str, str]) -> None:
-    if context.get("PARAMETER_2"):
-        context["PARAMETER_URL_PREFIX"] = context["PARAMETER_2"]
-
+def extend_context(context: dict[str, str], is_bulk: bool = False) -> None:
     context["LINKEDHOSTNAME"] = utils.format_link(
         '<a href="%s" style="color:#000000">%s</a>',
         utils.host_url_from_context(context),
@@ -564,8 +561,12 @@ def extend_context(context: dict[str, str]) -> None:
         context.get("SERVICEDESC", ""),
     )
 
+    # For "Additional details", graph is a default
     if "graph" in context.get("PARAMETER_ELEMENTSS", "graph").split():
         context["GRAPH_URL"] = utils.graph_url_from_context(context)
+
+    if is_bulk:
+        context["EVENTHISTORYURL"] = utils.eventhistory_url_from_context(context)
 
     if context["HOSTALIAS"] and context["HOSTNAME"] != context["HOSTALIAS"]:
         context["HOSTNAME_AND_ALIAS_TXT"] = "$HOSTNAME$ ($HOSTALIAS$)"
@@ -683,7 +684,7 @@ class BulkEmailContent(EmailContent):
         for single_context in contexts:
             single_context.update(parameters)
             escaped_context = utils.html_escape_context(single_context)
-            extend_context(escaped_context)
+            extend_context(escaped_context, is_bulk=True)
             all_contexts_updated.append(escaped_context)
 
         for i, c in enumerate(all_contexts_updated, 1):

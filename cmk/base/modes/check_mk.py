@@ -13,9 +13,8 @@ import sys
 import time
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from contextlib import suppress
-from functools import partial
 from pathlib import Path
-from typing import Final, Literal, NamedTuple, Protocol, TypedDict, TypeVar
+from typing import Final, Literal, NamedTuple, TypedDict, TypeVar
 
 import livestatus
 
@@ -45,7 +44,6 @@ from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.log import console, section
 from cmk.utils.paths import configuration_lockfile
-from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.structured_data import (
@@ -97,7 +95,7 @@ from cmk.checkengine.parser import (
     SectionNameCollection,
 )
 from cmk.checkengine.sectionparser import SectionPlugin
-from cmk.checkengine.submitters import get_submitter, ServiceState, Submitter
+from cmk.checkengine.submitters import get_submitter, ServiceState
 from cmk.checkengine.summarize import summarize, SummarizerFunction
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -108,11 +106,11 @@ import cmk.base.dump_host
 import cmk.base.parent_scan
 from cmk.base import config, profiling, sources
 from cmk.base.api.agent_based.plugin_classes import (
+    AgentBasedPlugins,
     AgentSectionPlugin,
     CheckPlugin,
     SNMPSectionPlugin,
 )
-from cmk.base.api.agent_based.plugin_classes import InventoryPlugin as InventoryPluginAPI
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.checkers import (
     CheckPluginMapper,
@@ -121,7 +119,6 @@ from cmk.base.checkers import (
     CMKSummarizer,
     DiscoveryPluginMapper,
     HostLabelPluginMapper,
-    InventoryPluginMapper,
     SectionPluginMapper,
 )
 from cmk.base.config import (
@@ -147,24 +144,24 @@ from ._localize import do_localize
 tracer = trace.get_tracer()
 
 
-def load_config(discovery_rulesets: Iterable[RuleSetName]) -> config.LoadedConfigSentinel:
+def load_config(plugins: AgentBasedPlugins) -> config.LoadingResult:
     # Read the configuration files (main.mk, autochecks, etc.), but not for
     # certain operation modes that does not need them and should not be harmed
     # by a broken configuration
-    return config.load(discovery_rulesets=discovery_rulesets)
+    return config.load(
+        discovery_rulesets=agent_based_register.extract_known_discovery_rulesets(plugins)
+    )
 
 
-def load_checks() -> agent_based_register.AgentBasedPlugins:
-    # At least in case the config is needed, the checks are needed too, because
-    # the configuration may refer to check config variable names.
-    errors = config.load_all_plugins(
+def load_checks() -> AgentBasedPlugins:
+    plugins = config.load_all_plugins(
         local_checks_dir=cmk.utils.paths.local_checks_dir,
         checks_dir=cmk.utils.paths.checks_dir,
     )
     if sys.stderr.isatty():
-        for error_msg in errors:
+        for error_msg in plugins.errors:
             console.error(error_msg, file=sys.stderr)
-    return agent_based_register.get_previously_loaded_plugins()
+    return plugins
 
 
 # .
@@ -355,8 +352,7 @@ _SNMP_BACKEND_OPTION: Final = Option(
 
 
 def mode_list_hosts(options: dict, args: list[str]) -> None:
-    config.load(discovery_rulesets=())
-    config_cache = config.get_config_cache()
+    config_cache = config.load(discovery_rulesets=()).config_cache
     hosts = _list_all_hosts(
         config_cache,
         args,
@@ -442,15 +438,16 @@ modes.register(
 
 
 def mode_list_tag(args: list[str]) -> None:
-    config.load(discovery_rulesets=())
-    hosts = _list_all_hosts_with_tags(tuple(TagID(_) for _ in args))
+    config_cache = config.load(discovery_rulesets=()).config_cache
+    hosts = _list_all_hosts_with_tags(tuple(TagID(_) for _ in args), config_cache)
     print_("\n".join(sorted(hosts)))
     if hosts:
         print_("\n")
 
 
-def _list_all_hosts_with_tags(tags: Sequence[TagID]) -> Sequence[HostName]:
-    config_cache = config.get_config_cache()
+def _list_all_hosts_with_tags(
+    tags: Sequence[TagID], config_cache: ConfigCache
+) -> Sequence[HostName]:
     hosts_config = config_cache.hosts_config
 
     if "offline" in tags:
@@ -620,9 +617,8 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
         raise MKBailOut("Unknown SNMP backend") from exc
 
     plugins = load_checks()
-    _loaded_config = load_config(agent_based_register.extract_known_discovery_rulesets(plugins))
+    config_cache = load_config(plugins).config_cache
     try:
-        config_cache = config.get_config_cache()
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
 
         hosts_config = config.make_hosts_config()
@@ -661,7 +657,9 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
             hostname,
             ipaddress,
             ip_stack_config,
-            fetcher_factory=config_cache.fetcher_factory(),
+            fetcher_factory=config_cache.fetcher_factory(
+                config_cache.make_service_configurer(plugins.check_plugins)
+            ),
             snmp_fetcher_config=SNMPFetcherConfig(
                 scan_config=snmp_scan_config,
                 selected_sections=NO_SELECTION,
@@ -781,8 +779,7 @@ modes.register(
 
 def mode_dump_hosts(hostlist: Iterable[HostName]) -> None:
     plugins = load_checks()
-    _loaded_config = load_config(agent_based_register.extract_known_discovery_rulesets(plugins))
-    config_cache = config.get_config_cache()
+    config_cache = load_config(plugins).config_cache
     hosts_config = config_cache.hosts_config
     all_hosts = {
         hn
@@ -895,8 +892,7 @@ modes.register(
 
 
 def mode_update_dns_cache() -> None:
-    config.load(discovery_rulesets=())
-    config_cache = config.get_config_cache()
+    config_cache = config.load(discovery_rulesets=()).config_cache
     hosts_config = config_cache.hosts_config
     ip_lookup.update_dns_cache(
         ip_lookup_configs=(
@@ -931,8 +927,8 @@ modes.register(
 
 
 def mode_cleanup_piggyback() -> None:
-    config.load(discovery_rulesets=())
-    max_age = config.get_config_cache().get_definitive_piggybacked_data_expiry_age()
+    config_cache = config.load(discovery_rulesets=()).config_cache
+    max_age = config_cache.get_definitive_piggybacked_data_expiry_age()
     piggyback_backend.cleanup_piggyback_files(
         cut_off_timestamp=time.time() - max_age, omd_root=cmk.utils.paths.omd_root
     )
@@ -1098,8 +1094,7 @@ def mode_snmpwalk(options: dict, hostnames: list[str]) -> None:
     if not hostnames:
         raise MKBailOut("Please specify host names to walk on.")
 
-    config.load(discovery_rulesets=())
-    config_cache = config.get_config_cache()
+    config_cache = config.load(discovery_rulesets=()).config_cache
     stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
 
     for hostname in (HostName(hn) for hn in hostnames):
@@ -1180,8 +1175,7 @@ def mode_snmpget(options: Mapping[str, object], args: Sequence[str]) -> None:
     except ValueError as exc:
         raise MKBailOut("Unknown SNMP backend") from exc
 
-    config.load(discovery_rulesets=())
-    config_cache = config.get_config_cache()
+    config_cache = config.load(discovery_rulesets=()).config_cache
     oid, *hostnames = args
 
     if not hostnames:
@@ -1245,8 +1239,7 @@ modes.register(
 
 def mode_flush(hosts: list[HostName]) -> None:
     plugins = load_checks()
-    _loaded_config = load_config(agent_based_register.extract_known_discovery_rulesets(plugins))
-    config_cache = config.get_config_cache()
+    config_cache = load_config(plugins).config_cache
     hosts_config = config_cache.hosts_config
 
     effective_host_callback = config.AutochecksConfigurer(
@@ -1370,7 +1363,7 @@ def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
     from cmk.base.core_nagios import create_config
 
     plugins = load_checks()
-    _loaded_config = load_config(agent_based_register.extract_known_discovery_rulesets(plugins))
+    config_cache = load_config(plugins).config_cache
 
     hostnames = args if args else None
 
@@ -1392,8 +1385,6 @@ def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
     if "service_period" in config.extra_service_conf:
         config.extra_service_conf["_SERVICE_PERIOD"] = config.extra_service_conf["service_period"]
         del config.extra_service_conf["service_period"]
-
-    config_cache = config.get_config_cache()
 
     if hostnames is None:
         hosts_config = config_cache.hosts_config
@@ -1455,26 +1446,25 @@ def mode_update() -> None:
     from cmk.base.core_config import do_create_config
 
     plugins = load_checks()
-    _loaded_config = load_config(agent_based_register.extract_known_discovery_rulesets(plugins))
-    discovery_rules = agent_based_register.get_previously_collected_discovery_rules()
+    loading_result = load_config(plugins)
 
-    config_cache = config.get_config_cache()
-    hosts_config = config_cache.hosts_config
+    hosts_config = loading_result.config_cache.hosts_config
     ip_address_of = config.ConfiguredIPLookup(
-        config_cache, error_handler=ip_lookup.CollectFailedHosts()
+        loading_result.config_cache, error_handler=ip_lookup.CollectFailedHosts()
     )
     try:
         with cmk.base.core.activation_lock(mode=config.restart_locking):
             do_create_config(
                 core=create_core(config.monitoring_core),
-                config_cache=config_cache,
+                config_cache=loading_result.config_cache,
                 plugins=plugins,
-                discovery_rules=discovery_rules,
+                discovery_rules=loading_result.loaded_config.discovery_rules,
                 ip_address_of=ip_address_of,
                 all_hosts=hosts_config.hosts,
                 duplicates=sorted(
                     hosts_config.duplicates(
-                        lambda hn: config_cache.is_active(hn) and config_cache.is_online(hn)
+                        lambda hn: loading_result.config_cache.is_active(hn)
+                        and loading_result.config_cache.is_online(hn)
                     )
                 ),
             )
@@ -1518,22 +1508,24 @@ modes.register(
 
 def mode_restart(args: Sequence[HostName]) -> None:
     plugins = load_checks()
-    _loaded_config = load_config(agent_based_register.extract_known_discovery_rulesets(plugins))
-    config_cache = config.get_config_cache()
-    hosts_config = config_cache.hosts_config
+    loading_result = load_config(plugins)
+    hosts_config = loading_result.config_cache.hosts_config
     ip_address_of = config.ConfiguredIPLookup(
-        config_cache, error_handler=ip_lookup.CollectFailedHosts()
+        loading_result.config_cache, error_handler=ip_lookup.CollectFailedHosts()
     )
     cmk.base.core.do_restart(
-        config_cache,
+        loading_result.config_cache,
         ip_address_of,
         create_core(config.monitoring_core),
+        plugins,
         hosts_to_update=set(args) if args else None,
         locking_mode=config.restart_locking,
         all_hosts=hosts_config.hosts,
+        discovery_rules=loading_result.loaded_config.discovery_rules,
         duplicates=sorted(
             hosts_config.duplicates(
-                lambda hn: config_cache.is_active(hn) and config_cache.is_online(hn)
+                lambda hn: loading_result.config_cache.is_active(hn)
+                and loading_result.config_cache.is_online(hn)
             )
         ),
     )
@@ -1571,22 +1563,24 @@ modes.register(
 
 def mode_reload(args: Sequence[HostName]) -> None:
     plugins = load_checks()
-    _loaded_config = load_config(agent_based_register.extract_known_discovery_rulesets(plugins))
-    config_cache = config.get_config_cache()
-    hosts_config = config_cache.hosts_config
+    loading_result = load_config(plugins)
+    hosts_config = loading_result.config_cache.hosts_config
     ip_address_of = config.ConfiguredIPLookup(
-        config_cache, error_handler=ip_lookup.CollectFailedHosts()
+        loading_result.config_cache, error_handler=ip_lookup.CollectFailedHosts()
     )
     cmk.base.core.do_reload(
-        config_cache,
+        loading_result.config_cache,
         ip_address_of,
         create_core(config.monitoring_core),
+        plugins,
         hosts_to_update=set(args) if args else None,
         locking_mode=config.restart_locking,
         all_hosts=hosts_config.hosts,
+        discovery_rules=loading_result.loaded_config.discovery_rules,
         duplicates=sorted(
             hosts_config.duplicates(
-                lambda hn: config_cache.is_active(hn) and config_cache.is_online(hn)
+                lambda hn: loading_result.config_cache.is_active(hn)
+                and loading_result.config_cache.is_online(hn)
             ),
         ),
     )
@@ -1783,7 +1777,7 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
     from cmk.base import notify
 
     with store.lock_checkmk_configuration(configuration_lockfile):
-        config.load(discovery_rulesets=(), with_conf_d=True, validate_hosts=False)
+        loaded_config = config.load(discovery_rulesets=(), with_conf_d=True, validate_hosts=False)
 
     def ensure_nagios(msg: str) -> None:
         if config.is_cmc():
@@ -1800,7 +1794,7 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
         args,
         define_servicegroups=config.define_servicegroups,
         host_parameters_cb=lambda hostname,
-        plugin: config.get_config_cache().notification_plugin_parameters(hostname, plugin),
+        plugin: loaded_config.config_cache.notification_plugin_parameters(hostname, plugin),
         rules=config.notification_rules,
         parameters=config.notification_parameter,
         get_http_proxy=config.get_http_proxy,
@@ -1852,13 +1846,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_check_discovery(
-    options: Mapping[str, object],
-    hostname: HostName,
-    *,
-    active_check_handler: Callable[[HostName, str], object],
-    keepalive: bool,
-) -> int:
+def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> int:
     file_cache_options = _handle_fetcher_options(options)
     try:
         snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
@@ -1866,9 +1854,9 @@ def mode_check_discovery(
         raise MKBailOut("Unknown SNMP backend") from exc
 
     plugins = load_checks()
-    _loaded_config = load_config(agent_based_register.extract_known_discovery_rulesets(plugins))
-    config_cache = config.get_config_cache()
-    discovery_rules = agent_based_register.get_previously_collected_discovery_rules()
+    loading_result = load_config(plugins)
+    config_cache = loading_result.config_cache
+
     ruleset_matcher = config_cache.ruleset_matcher
     ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
     autochecks_config = config.AutochecksConfigurer(config_cache, plugins.check_plugins)
@@ -1876,7 +1864,7 @@ def mode_check_discovery(
     discovery_file_cache_max_age = 1.5 * check_interval if file_cache_options.use_outdated else 0
     fetcher = CMKFetcher(
         config_cache,
-        config_cache.fetcher_factory(),
+        config_cache.fetcher_factory(config_cache.make_service_configurer(plugins.check_plugins)),
         plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -1913,7 +1901,7 @@ def mode_check_discovery(
         plugin_name="discover",
         is_cluster=hostname in config_cache.hosts_config.clusters,
         snmp_backend=config_cache.get_snmp_backend(hostname),
-        keepalive=keepalive,
+        keepalive=False,
     )
 
     check_results: Sequence[ActiveCheckResult] = []
@@ -1941,12 +1929,12 @@ def mode_check_discovery(
                 host_label_plugins=HostLabelPluginMapper(
                     ruleset_matcher=ruleset_matcher,
                     sections={**plugins.agent_sections, **plugins.snmp_sections},
-                    discovery_rules=discovery_rules,
+                    discovery_rules=loading_result.loaded_config.discovery_rules,
                 ),
                 plugins=DiscoveryPluginMapper(
                     ruleset_matcher=ruleset_matcher,
                     check_plugins=plugins.check_plugins,
-                    discovery_rules=discovery_rules,
+                    discovery_rules=loading_result.loaded_config.discovery_rules,
                 ),
                 autochecks_config=autochecks_config,
                 enforced_services=config_cache.enforced_services_table(
@@ -1966,43 +1954,29 @@ def mode_check_discovery(
         check_results = (error_handler.result,)
 
     check_result = ActiveCheckResult.from_subresults(*check_results)
-    active_check_handler(hostname, check_result.as_text())
-    if keepalive:
-        console.verbose_no_lf(check_result.as_text())
-    else:
-        with suppress(IOError):
-            sys.stdout.write(check_result.as_text() + "\n")
-            sys.stdout.flush()
+    with suppress(IOError):
+        sys.stdout.write(check_result.as_text() + "\n")
+        sys.stdout.flush()
     return check_result.state
 
 
-def register_mode_check_discovery(
-    *, active_check_handler: Callable[[HostName, str], object]
-) -> None:
-    modes.register(
-        Mode(
-            long_option="check-discovery",
-            handler_function=partial(
-                mode_check_discovery,
-                active_check_handler=active_check_handler,
-                keepalive=False,
-            ),
-            argument=True,
-            argument_descr="HOSTNAME",
-            short_help="Check for not yet monitored services",
-            long_help=[
-                "Make Check_MK behave as monitoring plug-ins that checks if an "
-                "inventory would find new or vanished services for the host. "
-                "If configured to do so, this will queue those hosts for automatic "
-                "autodiscovery"
-            ],
-            sub_options=[*_FETCHER_OPTIONS, _SNMP_BACKEND_OPTION],
-        )
+modes.register(
+    Mode(
+        long_option="check-discovery",
+        handler_function=mode_check_discovery,
+        argument=True,
+        argument_descr="HOSTNAME",
+        short_help="Check for not yet monitored services",
+        long_help=[
+            "Make Check_MK behave as monitoring plug-ins that checks if an "
+            "inventory would find new or vanished services for the host. "
+            "If configured to do so, this will queue those hosts for automatic "
+            "autodiscovery"
+        ],
+        sub_options=[*_FETCHER_OPTIONS, _SNMP_BACKEND_OPTION],
     )
+)
 
-
-if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE:
-    register_mode_check_discovery(active_check_handler=lambda *_: None)
 
 # .
 #   .--discover------------------------------------------------------------.
@@ -2076,8 +2050,8 @@ _PluginName = TypeVar("_PluginName", CheckPluginName, InventoryPluginName)
 
 
 def _lookup_plugin(
-    plugin_name: _PluginName, plugins: Mapping[_PluginName, CheckPlugin | InventoryPluginAPI]
-) -> CheckPlugin | InventoryPluginAPI:
+    plugin_name: _PluginName, plugins: Mapping[_PluginName, CheckPlugin | InventoryPlugin]
+) -> CheckPlugin | InventoryPlugin:
     try:
         return plugins[plugin_name]
     except KeyError as exc:
@@ -2086,7 +2060,7 @@ def _lookup_plugin(
 
 def _extract_plugin_selection(
     options: "_CheckingOptions | _DiscoveryOptions | _InventoryOptions",
-    plugins: Mapping[_PluginName, CheckPlugin | InventoryPluginAPI],
+    plugins: Mapping[_PluginName, CheckPlugin | InventoryPlugin],
     sections: Iterable[AgentSectionPlugin | SNMPSectionPlugin],
     type_: type[_PluginName],
 ) -> tuple[SectionNameCollection, Container]:
@@ -2167,9 +2141,8 @@ def _preprocess_hostnames(
 
 def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     plugins = load_checks()
-    _loaded_config = load_config(agent_based_register.extract_known_discovery_rulesets(plugins))
-    discovery_rules = agent_based_register.get_previously_collected_discovery_rules()
-    config_cache = config.get_config_cache()
+    loading_result = load_config(plugins)
+    config_cache = loading_result.config_cache
     hosts_config = config.make_hosts_config()
     hostnames = modes.parse_hostname_list(config_cache, hosts_config, args)
     if hostnames:
@@ -2188,7 +2161,6 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         raise MKBailOut("Unknown SNMP backend") from exc
 
     hostnames = modes.parse_hostname_list(config_cache, hosts_config, args)
-    config_cache = config.get_config_cache()
     if not hostnames:
         # In case of discovery without host restriction, use the cache file
         # by default. Otherwise Checkmk would have to connect to ALL hosts.
@@ -2203,7 +2175,6 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
         CheckPluginName,
     )
-    config_cache = config.get_config_cache()
     parser = CMKParser(
         config_cache.parser_factory(),
         selected_sections=selected_sections,
@@ -2212,7 +2183,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     )
     fetcher = CMKFetcher(
         config_cache,
-        config_cache.fetcher_factory(),
+        config_cache.fetcher_factory(config_cache.make_service_configurer(plugins.check_plugins)),
         plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -2263,12 +2234,12 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
             host_label_plugins=HostLabelPluginMapper(
                 ruleset_matcher=config_cache.ruleset_matcher,
                 sections={**plugins.agent_sections, **plugins.snmp_sections},
-                discovery_rules=discovery_rules,
+                discovery_rules=loading_result.loaded_config.discovery_rules,
             ),
             plugins=DiscoveryPluginMapper(
                 ruleset_matcher=config_cache.ruleset_matcher,
                 check_plugins=plugins.check_plugins,
-                discovery_rules=discovery_rules,
+                discovery_rules=loading_result.loaded_config.discovery_rules,
             ),
             run_plugin_names=run_plugin_names,
             ignore_plugin=config_cache.check_plugin_ignored,
@@ -2348,53 +2319,28 @@ _CheckingOptions = TypedDict(
 )
 
 
-class GetSubmitter(Protocol):
-    def __call__(
-        self,
-        check_submission: Literal["pipe", "file"],
-        monitoring_core: Literal["nagios", "cmc"],
-        host_name: HostName,
-        *,
-        dry_run: bool,
-        perfdata_format: Literal["pnp", "standard"],
-        show_perfdata: bool,
-        keepalive: bool,
-    ) -> Submitter: ...
-
-
-def mode_check(
-    get_submitter_: GetSubmitter,
-    options: _CheckingOptions,
-    args: list[str],
-    *,
-    active_check_handler: Callable[[HostName, str], object],
-) -> ServiceState:
+def mode_check(options: _CheckingOptions, args: list[str]) -> ServiceState:
     plugins = load_checks()
-    _loaded_config = load_config(agent_based_register.extract_known_discovery_rulesets(plugins))
-    config_cache = config.get_config_cache()
+    config_cache = load_config(plugins).config_cache
     hosts_config = config.make_hosts_config()
     return run_checking(
         plugins,
         config_cache,
         hosts_config,
-        get_submitter_,
         options,
         args,
-        active_check_handler=active_check_handler,
         password_store_file=cmk.utils.password_store.pending_password_store_path(),
     )
 
 
 # also used in precompiled host checks!
 def run_checking(
-    plugins: agent_based_register.AgentBasedPlugins,
+    plugins: AgentBasedPlugins,
     config_cache: ConfigCache,
     hosts_config: Hosts,
-    get_submitter_: GetSubmitter,
     options: _CheckingOptions,
     args: list[str],
     *,
-    active_check_handler: Callable[[HostName, str], object],
     password_store_file: Path,
 ) -> ServiceState:
     file_cache_options = _handle_fetcher_options(options)
@@ -2416,9 +2362,10 @@ def run_checking(
         itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
         CheckPluginName,
     )
+    service_configurer = config_cache.make_service_configurer(plugins.check_plugins)
     fetcher = CMKFetcher(
         config_cache,
-        config_cache.fetcher_factory(),
+        config_cache.fetcher_factory(service_configurer),
         plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -2489,23 +2436,24 @@ def run_checking(
                     rtc_package=None,
                 ),
                 check_plugins=check_plugins,
-                inventory_plugins=InventoryPluginMapper(),
+                inventory_plugins=plugins.inventory_plugins,
                 inventory_parameters=config_cache.inventory_parameters,
                 params=config_cache.hwsw_inventory_parameters(hostname),
-                services=config_cache.configured_services(hostname, plugins.check_plugins),
+                services=config_cache.configured_services(
+                    hostname, plugins.check_plugins, service_configurer
+                ),
                 run_plugin_names=run_plugin_names,
                 get_check_period=lambda service_name,
                 service_labels: config_cache.check_period_of_service(
                     hostname, service_name, service_labels
                 ),
-                submitter=get_submitter_(
+                submitter=get_submitter(
                     check_submission=config.check_submission,
                     monitoring_core=config.monitoring_core,
                     dry_run=dry_run,
                     host_name=hostname,
                     perfdata_format=("pnp" if config.perfdata_format == "pnp" else "standard"),
                     show_perfdata=options.get("perfdata", False),
-                    keepalive=False,
                 ),
                 exit_spec=config_cache.exit_code_spec(hostname),
             )
@@ -2523,68 +2471,53 @@ def run_checking(
         checks_result = (error_handler.result,)
 
     check_result = ActiveCheckResult.from_subresults(*checks_result)
-    active_check_handler(hostname, check_result.as_text())
-
     with suppress(IOError):
         sys.stdout.write(check_result.as_text() + "\n")
         sys.stdout.flush()
     return check_result.state
 
 
-def register_mode_check(
-    get_submitter_: GetSubmitter,
-    *,
-    active_check_handler: Callable[[HostName, str], object],
-) -> None:
-    modes.register(
-        Mode(
-            long_option="check",
-            handler_function=partial(
-                mode_check,
-                get_submitter_,
-                active_check_handler=active_check_handler,
+modes.register(
+    Mode(
+        long_option="check",
+        handler_function=mode_check,
+        argument=True,
+        argument_descr="HOST [IPADDRESS]",
+        argument_optional=True,
+        short_help="Check all services on the given HOST",
+        long_help=[
+            "Execute all checks on the given HOST. Optionally you can specify "
+            "a second argument, the IPADDRESS. If you don't set this, the "
+            "configured IP address of the HOST is used.",
+            "By default the check results are sent to the core. If you provide "
+            "the option '-n', the results will not be sent to the core and the "
+            "counters of the check will not be stored.",
+            "You can use '-v' to see the results of the checks. Add '-p' to "
+            "also see the performance data of the checks. "
+            "Can be restricted to certain check types. Write '--checks df -I' if "
+            "you just want to look for new filesystems. Use 'check_mk -L' for a "
+            "list of all check types. Use 'tcp' for all TCP based checks and "
+            "'snmp' for all SNMP based checks.",
+        ],
+        sub_options=[
+            *_FETCHER_OPTIONS,
+            _SNMP_BACKEND_OPTION,
+            Option(
+                long_option="no-submit",
+                short_option="n",
+                short_help="Do not submit results to core, do not save counters",
             ),
-            argument=True,
-            argument_descr="HOST [IPADDRESS]",
-            argument_optional=True,
-            short_help="Check all services on the given HOST",
-            long_help=[
-                "Execute all checks on the given HOST. Optionally you can specify "
-                "a second argument, the IPADDRESS. If you don't set this, the "
-                "configured IP address of the HOST is used.",
-                "By default the check results are sent to the core. If you provide "
-                "the option '-n', the results will not be sent to the core and the "
-                "counters of the check will not be stored.",
-                "You can use '-v' to see the results of the checks. Add '-p' to "
-                "also see the performance data of the checks. "
-                "Can be restricted to certain check types. Write '--checks df -I' if "
-                "you just want to look for new filesystems. Use 'check_mk -L' for a "
-                "list of all check types. Use 'tcp' for all TCP based checks and "
-                "'snmp' for all SNMP based checks.",
-            ],
-            sub_options=[
-                *_FETCHER_OPTIONS,
-                _SNMP_BACKEND_OPTION,
-                Option(
-                    long_option="no-submit",
-                    short_option="n",
-                    short_help="Do not submit results to core, do not save counters",
-                ),
-                Option(
-                    long_option="perfdata",
-                    short_option="p",
-                    short_help="Also show performance data (use with -v)",
-                ),
-                _option_sections,
-                _get_plugins_option(CheckPluginName),
-                _option_detect_plugins,
-            ],
-        )
+            Option(
+                long_option="perfdata",
+                short_option="p",
+                short_help="Also show performance data (use with -v)",
+            ),
+            _option_sections,
+            _get_plugins_option(CheckPluginName),
+            _option_detect_plugins,
+        ],
     )
-
-
-if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE:
-    register_mode_check(get_submitter, active_check_handler=lambda *_: None)
+)
 
 # .
 #   .--inventory-----------------------------------------------------------.
@@ -2620,8 +2553,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         raise MKBailOut("Unknown SNMP backend") from exc
 
     plugins = load_checks()
-    _loaded_config = load_config(agent_based_register.extract_known_discovery_rulesets(plugins))
-    config_cache = config.get_config_cache()
+    config_cache = load_config(plugins).config_cache
     hosts_config = config.make_hosts_config()
 
     if args:
@@ -2650,7 +2582,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     )
     fetcher = CMKFetcher(
         config_cache,
-        config_cache.fetcher_factory(),
+        config_cache.fetcher_factory(config_cache.make_service_configurer(plugins.check_plugins)),
         plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -2677,7 +2609,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     store.makedirs(cmk.utils.paths.inventory_archive_dir)
 
     section_plugins = SectionPluginMapper({**plugins.agent_sections, **plugins.snmp_sections})
-    inventory_plugins = InventoryPluginMapper()
+    inventory_plugins = plugins.inventory_plugins
 
     for hostname in hostnames:
 
@@ -2888,13 +2820,7 @@ def _get_save_tree_actions(
     )
 
 
-def mode_inventory_as_check(
-    options: Mapping[str, object],
-    hostname: HostName,
-    *,
-    active_check_handler: Callable[[HostName, str], object],
-    keepalive: bool,
-) -> ServiceState:
+def mode_inventory_as_check(options: Mapping[str, object], hostname: HostName) -> ServiceState:
     try:
         snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
     except ValueError as exc:
@@ -2903,15 +2829,14 @@ def mode_inventory_as_check(
     parameters = HWSWInventoryParameters.from_raw(options)
 
     plugins = load_checks()
-    _loaded_config = load_config(agent_based_register.extract_known_discovery_rulesets(plugins))
-    config_cache = config.get_config_cache()
+    config_cache = load_config(plugins).config_cache
     config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
     hosts_config = config.make_hosts_config()
     file_cache_options = _handle_fetcher_options(options)
 
     fetcher = CMKFetcher(
         config_cache,
-        config_cache.fetcher_factory(),
+        config_cache.fetcher_factory(config_cache.make_service_configurer(plugins.check_plugins)),
         plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -2943,7 +2868,7 @@ def mode_inventory_as_check(
         plugin_name="check_mk_active-cmk_inv",
         is_cluster=hostname in hosts_config.clusters,
         snmp_backend=config_cache.get_snmp_backend(hostname),
-        keepalive=keepalive,
+        keepalive=False,
     )
     check_results: Sequence[ActiveCheckResult] = []
     with error_handler:
@@ -2958,7 +2883,7 @@ def mode_inventory_as_check(
                 section_plugins=SectionPluginMapper(
                     {**plugins.agent_sections, **plugins.snmp_sections}
                 ),
-                inventory_plugins=InventoryPluginMapper(),
+                inventory_plugins=plugins.inventory_plugins,
                 inventory_parameters=config_cache.inventory_parameters,
                 parameters=parameters,
                 raw_intervals_from_config=config_cache.inv_retention_intervals(hostname),
@@ -2977,75 +2902,60 @@ def mode_inventory_as_check(
         check_results = (error_handler.result,)
 
     check_result = ActiveCheckResult.from_subresults(*check_results)
-    active_check_handler(hostname, check_result.as_text())
-    if keepalive:
-        console.verbose_no_lf(check_result.as_text())
-    else:
-        with suppress(IOError):
-            sys.stdout.write(check_result.as_text() + "\n")
-            sys.stdout.flush()
+    with suppress(IOError):
+        sys.stdout.write(check_result.as_text() + "\n")
+        sys.stdout.flush()
     return check_result.state
 
 
-def register_mode_inventory_as_check(
-    *, active_check_handler: Callable[[HostName, str], object]
-) -> None:
-    modes.register(
-        Mode(
-            long_option="inventory-as-check",
-            handler_function=partial(
-                mode_inventory_as_check,
-                active_check_handler=active_check_handler,
-                keepalive=False,
+modes.register(
+    Mode(
+        long_option="inventory-as-check",
+        handler_function=mode_inventory_as_check,
+        argument=True,
+        argument_descr="HOST",
+        short_help="Do HW/SW Inventory, behave like check plug-in",
+        sub_options=[
+            *_FETCHER_OPTIONS,
+            _SNMP_BACKEND_OPTION,
+            Option(
+                long_option="hw-changes",
+                argument=True,
+                argument_descr="S",
+                argument_conv=int,
+                short_help="Use monitoring state S for HW changes",
             ),
-            argument=True,
-            argument_descr="HOST",
-            short_help="Do HW/SW Inventory, behave like check plug-in",
-            sub_options=[
-                *_FETCHER_OPTIONS,
-                _SNMP_BACKEND_OPTION,
-                Option(
-                    long_option="hw-changes",
-                    argument=True,
-                    argument_descr="S",
-                    argument_conv=int,
-                    short_help="Use monitoring state S for HW changes",
-                ),
-                Option(
-                    long_option="sw-changes",
-                    argument=True,
-                    argument_descr="S",
-                    argument_conv=int,
-                    short_help="Use monitoring state S for SW changes",
-                ),
-                Option(
-                    long_option="sw-missing",
-                    argument=True,
-                    argument_descr="S",
-                    argument_conv=int,
-                    short_help="Use monitoring state S for missing SW packages info",
-                ),
-                Option(
-                    long_option="inv-fail-status",
-                    argument=True,
-                    argument_descr="S",
-                    argument_conv=int,
-                    short_help="Use monitoring state S in case of error",
-                ),
-                Option(
-                    long_option="nw-changes",
-                    argument=True,
-                    argument_descr="S",
-                    argument_conv=int,
-                    short_help="Use monitoring state S for NW changes",
-                ),
-            ],
-        )
+            Option(
+                long_option="sw-changes",
+                argument=True,
+                argument_descr="S",
+                argument_conv=int,
+                short_help="Use monitoring state S for SW changes",
+            ),
+            Option(
+                long_option="sw-missing",
+                argument=True,
+                argument_descr="S",
+                argument_conv=int,
+                short_help="Use monitoring state S for missing SW packages info",
+            ),
+            Option(
+                long_option="inv-fail-status",
+                argument=True,
+                argument_descr="S",
+                argument_conv=int,
+                short_help="Use monitoring state S in case of error",
+            ),
+            Option(
+                long_option="nw-changes",
+                argument=True,
+                argument_descr="S",
+                argument_conv=int,
+                short_help="Use monitoring state S for NW changes",
+            ),
+        ],
     )
-
-
-if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE:
-    register_mode_inventory_as_check(active_check_handler=lambda *_: None)
+)
 
 # .
 #   .--inventorize-marked-hosts--------------------------------------------.
@@ -3077,9 +2987,8 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
 
     plugins = load_checks()
     discovery_rulesets = agent_based_register.extract_known_discovery_rulesets(plugins)
-    config.load(discovery_rulesets)
+    config_cache = config.load(discovery_rulesets).config_cache
 
-    config_cache = config.get_config_cache()
     parser = CMKParser(
         config_cache.parser_factory(),
         selected_sections=NO_SELECTION,
@@ -3088,7 +2997,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
     )
     fetcher = CMKFetcher(
         config_cache,
-        config_cache.fetcher_factory(),
+        config_cache.fetcher_factory(config_cache.make_service_configurer(plugins.check_plugins)),
         plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -3133,7 +3042,6 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
         process_hosts = EVERYTHING
 
     section_plugins = SectionPluginMapper({**plugins.agent_sections, **plugins.snmp_sections})
-    inventory_plugins = InventoryPluginMapper()
 
     start = time.monotonic()
     limit = 120
@@ -3156,7 +3064,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
                     fetcher=fetcher,
                     summarizer=summarizer(host_name),
                     section_plugins=section_plugins,
-                    inventory_plugins=inventory_plugins,
+                    inventory_plugins=plugins.inventory_plugins,
                     inventory_parameters=config_cache.inventory_parameters,
                     parameters=config_cache.hwsw_inventory_parameters(host_name),
                     raw_intervals_from_config=config_cache.inv_retention_intervals(host_name),
@@ -3281,7 +3189,8 @@ def mode_create_diagnostics_dump(options: DiagnosticsModesParameters) -> None:
     # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
     log.logger.setLevel(logging.INFO)
     cmk.base.diagnostics.create_diagnostics_dump(
-        cmk.utils.diagnostics.deserialize_modes_parameters(options)
+        config.load(discovery_rulesets=()).loaded_config,
+        cmk.utils.diagnostics.deserialize_modes_parameters(options),
     )
 
 

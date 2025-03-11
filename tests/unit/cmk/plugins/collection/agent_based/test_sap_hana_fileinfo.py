@@ -10,7 +10,7 @@ import pytest
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.api.agent_based.register import AgentBasedPlugins
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 
 from cmk.agent_based.v2 import CheckResult, IgnoreResultsError, Metric, Result, State
 from cmk.plugins.lib.fileinfo import Fileinfo, FileinfoItem

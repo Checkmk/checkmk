@@ -15,7 +15,6 @@ from tests.gui_e2e.testlib.playwright.pom.change_password import ChangePassword
 from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
 from tests.gui_e2e.testlib.playwright.pom.login import LoginPage
 from tests.gui_e2e.testlib.playwright.pom.setup.global_settings import GlobalSettings
-
 from tests.testlib.site import ADMIN_USER, Site
 
 logger = logging.getLogger(__name__)

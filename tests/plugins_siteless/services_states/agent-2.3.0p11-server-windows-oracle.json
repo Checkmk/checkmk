@@ -1,0 +1,182 @@
+{
+  "Check_MK Agent": {
+    "expected_state": 1
+  },
+  "DotNet Memory Management _Global_": {
+    "expected_state": 0
+  },
+  "Log Amazon EC2Launch": {
+    "expected_state": 0
+  },
+  "Log Application": {
+    "expected_state": 0
+  },
+  "Log HardwareEvents": {
+    "expected_state": 0
+  },
+  "Log Internet Explorer": {
+    "expected_state": 0
+  },
+  "Log Key Management Service": {
+    "expected_state": 0
+  },
+  "Log Security": {
+    "expected_state": 0
+  },
+  "Log System": {
+    "expected_state": 0
+  },
+  "Log Windows PowerShell": {
+    "expected_state": 0
+  },
+  "Memory": {
+    "expected_state": 0
+  },
+  "ORA ORCL Instance": {
+    "expected_state": 1
+  },
+  "ORA ORCL.ORCLPDB Instance": {
+    "expected_state": 2
+  },
+  "ORA ORCL.PDB$SEED Instance": {
+    "expected_state": 0
+  },
+  "ORA ORCL Uptime": {
+    "expected_state": 0
+  },
+  "ORA ORCL.PDB$SEED Uptime": {
+    "expected_state": 0
+  },
+  "ORA ORCL.CDB$ROOT.ORACLE_OCM.MGMT_CONFIG_JOB Job": {
+    "expected_state": 1
+  },
+  "ORA ORCL.CDB$ROOT.ORACLE_OCM.MGMT_STATS_CONFIG_JOB Job": {
+    "expected_state": 1
+  },
+  "ORA ORCL.CDB$ROOT.SYS.BSLN_MAINTAIN_STATS_JOB Job": {
+    "expected_state": 0
+  },
+  "ORA ORCL.CDB$ROOT.SYS.CLEANUP_NON_EXIST_OBJ Job": {
+    "expected_state": 1
+  },
+  "ORA ORCL.CDB$ROOT.SYS.CLEANUP_ONLINE_IND_BUILD Job": {
+    "expected_state": 1
+  },
+  "ORA ORCL.CDB$ROOT.SYS.CLEANUP_ONLINE_PMO Job": {
+    "expected_state": 1
+  },
+  "ORA ORCL.CDB$ROOT.SYS.CLEANUP_TAB_IOT_PMO Job": {
+    "expected_state": 1
+  },
+  "ORA ORCL.CDB$ROOT.SYS.CLEANUP_TRANSIENT_PKG Job": {
+    "expected_state": 1
+  },
+  "ORA ORCL.CDB$ROOT.SYS.CLEANUP_TRANSIENT_TYPE Job": {
+    "expected_state": 1
+  },
+  "ORA ORCL.CDB$ROOT.SYS.DRA_REEVALUATE_OPEN_FAILURES Job": {
+    "expected_state": 1
+  },
+  "ORA ORCL.CDB$ROOT.SYS.FGR$AUTOPURGE_JOB Job": {
+    "expected_state": 1
+  },
+  "ORA ORCL.CDB$ROOT.SYS.FILE_SIZE_UPD Job": {
+    "expected_state": 1
+  },
+  "ORA ORCL.CDB$ROOT.SYS.FILE_WATCHER Job": {
+    "expected_state": 1
+  },
+  "ORA ORCL.CDB$ROOT.SYS.HM_CREATE_OFFLINE_DICTIONARY Job": {
+    "expected_state": 1
+  },
+  "ORA ORCL.CDB$ROOT.SYS.LOAD_OPATCH_INVENTORY Job": {
+    "expected_state": 1
+  },
+  "ORA ORCL.CDB$ROOT.SYS.ORA$AUTOTASK_CLEAN Job": {
+    "expected_state": 1
+  },
+  "ORA ORCL.CDB$ROOT.SYS.PMO_DEFERRED_GIDX_MAINT_JOB Job": {
+    "expected_state": 1
+  },
+  "ORA ORCL.CDB$ROOT.SYS.PURGE_LOG Job": {
+    "expected_state": 1
+  },
+  "ORA ORCL.CDB$ROOT.SYS.RSE$CLEAN_RECOVERABLE_SCRIPT Job": {
+    "expected_state": 0
+  },
+  "ORA ORCL.CDB$ROOT.SYS.SM$CLEAN_AUTO_SPLIT_MERGE Job": {
+    "expected_state": 0
+  },
+  "ORA ORCL.CDB$ROOT.SYS.XMLDB_NFS_CLEANUP_JOB Job": {
+    "expected_state": 1
+  },
+  "ORA ORCL Locks": {
+    "expected_state": 0
+  },
+  "ORA ORCL.CDB$ROOT Locks": {
+    "expected_state": 0
+  },
+  "ORA ORCL.ORCLPDB Locks": {
+    "expected_state": 0
+  },
+  "ORA ORCL Logswitches": {
+    "expected_state": 0
+  },
+  "ORA ORCL Long Active Sessions": {
+    "expected_state": 0
+  },
+  "ORA ORCL.CDB$ROOT Long Active Sessions": {
+    "expected_state": 0
+  },
+  "ORA ORCL.ORCLPDB Long Active Sessions": {
+    "expected_state": 0
+  },
+  "ORA ORCL Processes": {
+    "expected_state": 0
+  },
+  "ORA ORCL Recovery Status": {
+    "expected_state": 0
+  },
+  "ORA ORCL Sessions": {
+    "expected_state": 0
+  },
+  "ORA ORCL.CDB$ROOT Sessions": {
+    "expected_state": 0
+  },
+  "ORA ORCL.ORCLPDB Sessions": {
+    "expected_state": 0
+  },
+  "ORA ORCL.CDB$ROOT.TEMP Tablespace": {
+    "expected_state": 0
+  },
+  "ORA ORCL.SYSAUX Tablespace": {
+    "expected_state": 0
+  },
+  "ORA ORCL.SYSTEM Tablespace": {
+    "expected_state": 0
+  },
+  "ORA ORCL.UNDOTBS1 Tablespace": {
+    "expected_state": 0
+  },
+  "ORA ORCL.USERS Tablespace": {
+    "expected_state": 0
+  },
+  "ORA ORCL Undo Retention": {
+    "expected_state": 0
+  },
+  "Service Summary": {
+    "expected_state": 0
+  },
+  "System Time": {
+    "expected_state": 2
+  },
+  "Uptime": {
+    "expected_state": 0
+  },
+  "Interface 1": {
+    "expected_state": 0
+  },
+  "Processor Queue": {
+    "expected_state": 0
+  }
+}

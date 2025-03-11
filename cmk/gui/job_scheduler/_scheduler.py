@@ -60,7 +60,7 @@ def _run_scheduler(
                 crash_msg = crash_report_callback(exc)
                 logger.error("Exception in scheduler (Crash ID: %s)", crash_msg, exc_info=True)
 
-            if (sleep_time := 60 - (time.time() - cycle_start)) > 0:
+            if (sleep_time := 5 - (time.time() - cycle_start)) > 0:
                 state.next_cycle_start = int(time.time() + sleep_time)
                 stop_event.wait(sleep_time)
         finally:

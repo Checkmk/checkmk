@@ -91,8 +91,18 @@ sections_mk_inventory() {
 }
 
 section_solaris_uname() {
-    echo "<<<solaris_uname:sep(61)>>>"
-    uname -X
+    # SUP-22439: try and output the uname information from the uname
+    # found on the path. If not available, fallback to the full path
+    # because some users may override their PATH. If the underlying
+    # binary is for whatever not there, the sections will not be
+    # added to agent output.
+    if uname -X &>/dev/null; then
+        echo "<<<solaris_uname:sep(61)>>>"
+        uname -X
+    elif /usr/bin/uname -X &>/dev/null; then
+        echo "<<<solaris_uname:sep(61)>>>"
+        /usr/bin/uname -X
+    fi
 }
 
 section_solaris_prtdiag() {

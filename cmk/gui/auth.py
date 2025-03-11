@@ -11,14 +11,12 @@ import contextlib
 import hmac
 import re
 import uuid
-import warnings
 from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
 import cmk.utils.paths
-from cmk.utils import deprecation_warnings
 from cmk.utils.local_secrets import SiteInternalSecret
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.user import UserId
@@ -66,8 +64,6 @@ def check_auth() -> tuple[UserId | PseudoUserId, AuthType]:
         (_check_auth_by_bearer_header, "bearer"),
         (_check_internal_token, "internal_token"),
         (_check_remote_site, "remote_site"),
-        # Automation authentication via _username and _secret overrules everything else.
-        (_check_auth_by_automation_credentials_in_request_values, "automation"),
     ]
 
     selected: tuple[UserId | PseudoUserId, AuthType] | None = None
@@ -347,43 +343,6 @@ def _parse_bearer_token(token: str) -> tuple[str, str]:
     """
     user_id, password = token.strip().split(" ", 1)
     return user_id, password
-
-
-def _check_auth_by_automation_credentials_in_request_values() -> UserId | None:
-    """Check credentials either in query string or form encoded POST body
-
-    This is deprecated with Werk #16223 and should be removed with Checkmk 2.5
-    The config option will be introduced with Checkmk 2.3, in 2.4 the default
-    will change, and then we're going to finally remove this
-
-    Raises:
-        MKAuthException: whenever an illegal username is detected.
-    """
-    if not active_config.enable_deprecated_automation_user_authentication:
-        return None
-
-    if (username := request.values.get("_username")) and (
-        password := request.values.get("_secret")
-    ):
-        warnings.warn(
-            "Request authentication deprecated. See https://checkmk.com/werk/16223/ "
-            f"User: {username!r}.",
-            category=deprecation_warnings.DeprecatedSince23Warning,
-        )
-        # NOTE
-        # For now, we don't use logging.captureWarnings to log all warnings into the "py.warnings"
-        # logger. We should be doing it, but this needs some consideration. Also, probably not all
-        # warnings should be logged that way. For the meantime, we do both here.
-        logger.warning(
-            "Deprecated automation user login method was used for %s. See Werk #16223",
-            username,
-        )
-
-        user_id = _try_user_id(username)
-        if _verify_automation_login(user_id, password):
-            return user_id
-
-    return None
 
 
 def _check_cme_login(user_id: UserId) -> None:

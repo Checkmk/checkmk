@@ -5,11 +5,10 @@
 
 import pytest
 
-from cmk.checkengine.inventory import InventoryPluginName
+from cmk.checkengine.inventory import InventoryPlugin, InventoryPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
-from cmk.base.api.agent_based.plugin_classes import InventoryPlugin
-from cmk.base.api.agent_based.register import inventory_plugins
+from cmk.base.api.agent_based.register.inventory_plugins import create_inventory_plugin
 
 from cmk.discover_plugins import PluginLocation
 
@@ -20,10 +19,10 @@ def dummy_generator(section):
 
 def test_create_inventory_plugin_missing_kwarg() -> None:
     with pytest.raises(TypeError):
-        _ = inventory_plugins.create_inventory_plugin(name="norris")  # type: ignore[call-arg]
+        _ = create_inventory_plugin(name="norris")  # type: ignore[call-arg]
 
     with pytest.raises(TypeError):
-        _ = inventory_plugins.create_inventory_plugin(inventory_function=dummy_generator)  # type: ignore[call-arg]
+        _ = create_inventory_plugin(inventory_function=dummy_generator)  # type: ignore[call-arg]
 
 
 def test_create_inventory_plugin_not_a_generator() -> None:
@@ -31,7 +30,7 @@ def test_create_inventory_plugin_not_a_generator() -> None:
         pass
 
     with pytest.raises(TypeError):
-        _ = inventory_plugins.create_inventory_plugin(
+        _ = create_inventory_plugin(
             name="norris",
             inventory_function=dummy_function,
             location=PluginLocation("mymodule"),
@@ -44,7 +43,7 @@ def test_create_inventory_plugin_wrong_arg_name() -> None:
         yield
 
     with pytest.raises(TypeError):
-        _ = inventory_plugins.create_inventory_plugin(
+        _ = create_inventory_plugin(
             name="norris",
             inventory_function=dummy_generator,
             location=PluginLocation("mymodule"),
@@ -52,7 +51,7 @@ def test_create_inventory_plugin_wrong_arg_name() -> None:
 
 
 def test_create_inventory_plugin_minimal() -> None:
-    plugin = inventory_plugins.create_inventory_plugin(
+    plugin = create_inventory_plugin(
         name="norris",
         inventory_function=dummy_generator,
         location=PluginLocation("mymodule"),
@@ -61,10 +60,10 @@ def test_create_inventory_plugin_minimal() -> None:
     assert isinstance(plugin, InventoryPlugin)
     assert plugin.name == InventoryPluginName("norris")
     assert plugin.sections == [ParsedSectionName("norris")]
-    assert plugin.inventory_function.__name__ == "dummy_generator"
-    assert plugin.inventory_default_parameters == {}
-    assert plugin.inventory_ruleset_name is None
+    assert plugin.function.__name__ == "dummy_generator"
+    assert plugin.defaults == {}
+    assert plugin.ruleset_name is None
     assert plugin.location == PluginLocation("mymodule")
 
     with pytest.raises(TypeError):
-        _ = list(plugin.inventory_function(None))
+        _ = list(plugin.function(None))

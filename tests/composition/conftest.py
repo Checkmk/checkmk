@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
 import logging
 import os
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 from shutil import which
-from typing import Any, Literal
+from typing import Literal
 
 import pytest
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
@@ -36,44 +35,13 @@ site_factory = get_site_factory(prefix="comp_")
 logger = logging.getLogger(__name__)
 
 
-_TEST_SITES_LOGGING_LEVELS: Mapping[str, int] = {
-    "cmk.web.background-job": 10,
-    "cmk.web": 10,
-}
-
-
 @pytest.fixture(scope="session", autouse=True)
 def instrument_requests() -> None:
     RequestsInstrumentor().instrument()
 
 
-def _write_global_settings(site: Site, file_path: str, settings: dict[str, Any]) -> None:
-    new_global_settings = "".join(f"{key} = {repr(val)}\n" for key, val in settings.items())
-    site.write_text_file(file_path, new_global_settings)
-
-
-def _get_global_settings(site: Site, file_path: str) -> dict[str, Any]:
-    global_settings_text = site.read_file(file_path)
-    global_settings: dict[str, Any] = {}
-    exec(global_settings_text, {}, global_settings)
-    return global_settings
-
-
 @contextmanager
-def _increased_logging_level(site: Site) -> Iterator[None]:
-    global_settings_rel_path = "etc/check_mk/multisite.d/wato/global.mk"
-    global_setting = _get_global_settings(site, global_settings_rel_path)
-    ori_global_setting = copy.deepcopy(global_setting)
-    try:
-        global_setting["log_levels"] = _TEST_SITES_LOGGING_LEVELS
-        _write_global_settings(site, global_settings_rel_path, global_setting)
-        yield
-    finally:
-        _write_global_settings(site, global_settings_rel_path, ori_global_setting)
-
-
-@contextmanager
-def trace_broker_messages(site: Site) -> Iterator[None]:
+def _trace_broker_messages(site: Site) -> Iterator[None]:
     try:
         site.execute(["cmk-monitor-broker", "--enable_tracing"])
         yield
@@ -90,12 +58,22 @@ def _central_site(request: pytest.FixtureRequest, ensure_cron: None) -> Iterator
         tracing_config=tracing_config_from_env(os.environ),
         global_settings_updates=[
             GlobalSettingsUpdate(
+                relative_path=Path("etc") / "check_mk" / "multisite.d" / "wato" / "global.mk",
+                update={
+                    "log_levels": {
+                        "cmk.web": 10,
+                        "cmk.web.agent_registration": 10,
+                        "cmk.web.background-job": 10,
+                    }
+                },
+            ),
+            GlobalSettingsUpdate(
                 relative_path=Path("etc") / "check_mk" / "conf.d" / "wato" / "global.mk",
                 update={"agent_bakery_logging": 10},
             ),
         ],
     ) as central_site:
-        with _increased_logging_level(central_site), trace_broker_messages(central_site):
+        with _trace_broker_messages(central_site):
             yield central_site
 
 
@@ -126,7 +104,7 @@ def _make_connected_remote_site(
     ) as remote_site:
         with (
             _connection(central_site=central_site, remote_site=remote_site),
-            trace_broker_messages(remote_site),
+            _trace_broker_messages(remote_site),
         ):
             yield remote_site
 
@@ -194,15 +172,16 @@ def _connection(
         logger.info("Connection from '%s' to '%s' established", central_site.id, remote_site.id)
         yield
     finally:
-        logger.info("Remove site connection from '%s' to '%s'", central_site.id, remote_site.id)
-        logger.info("Hosts left: %s", central_site.openapi.hosts.get_all_names())
-        logger.info("Delete remote site connection '%s'", remote_site.id)
-        central_site.openapi.sites.delete(remote_site.id)
-        logger.info("Activating site removal changes")
-        central_site.openapi.changes.activate_and_wait_for_completion(
-            # this seems to be necessary to avoid sporadic CI failures
-            force_foreign_changes=True,
-        )
+        if os.environ.get("CLEANUP", "1") == "1":
+            logger.info("Remove site connection from '%s' to '%s'", central_site.id, remote_site.id)
+            logger.info("Hosts left: %s", central_site.openapi.hosts.get_all_names())
+            logger.info("Delete remote site connection '%s'", remote_site.id)
+            central_site.openapi.sites.delete(remote_site.id)
+            logger.info("Activating site removal changes")
+            central_site.openapi.changes.activate_and_wait_for_completion(
+                # this seems to be necessary to avoid sporadic CI failures
+                force_foreign_changes=True,
+            )
 
 
 @pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="function")

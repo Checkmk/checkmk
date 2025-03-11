@@ -11,7 +11,7 @@ import axios, { isAxiosError } from 'axios'
 import { API_ROOT } from '../constants'
 import {
   QuickSetupCompleteActionValidationResponse,
-  QuickSetupStageActionValidationResponse,
+  QuickSetupStageActionErrorValidationResponse,
   type QuickSetupCompleteResponse,
   type QuickSetupResponse,
   type QuickSetupStageActionResponse,
@@ -84,7 +84,7 @@ export const getStageStructure = async (
  * @param actionId string
  * @param stages QuickSetupStageActionRequest[]
  * @param objectId? string | null
- * @returns Promise<QuickSetupStageActionResponse | BackgroundJobSpawnResponse | QuickSetupStageActionValidationResponse>
+ * @returns Promise<QuickSetupStageActionResponse | BackgroundJobSpawnResponse | QuickSetupStageActionErrorValidationResponse>
  */
 export const runStageAction = async (
   quickSetupId: string,
@@ -93,7 +93,7 @@ export const runStageAction = async (
 ): Promise<
   | QuickSetupStageActionResponse
   | BackgroundJobSpawnResponse
-  | QuickSetupStageActionValidationResponse
+  | QuickSetupStageActionErrorValidationResponse
 > => {
   const url = `${API_ROOT}/objects/${API_DOMAIN}/${quickSetupId}/actions/run-stage-action/invoke`
 
@@ -105,7 +105,7 @@ export const runStageAction = async (
       isAxiosError<QuickSetupStageActionResponse, unknown>(error) &&
       error.response?.data?.validation_errors
     ) {
-      return new QuickSetupStageActionValidationResponse(error.response.data)
+      return new QuickSetupStageActionErrorValidationResponse(error.response.data)
     }
     throw argumentError(error as Error)
   }
@@ -223,18 +223,21 @@ export const fetchBackgroundJobResult = async (
 /**
  * Fetch the quick setup stage action background job result
  * @param jobId string
- * @returns Promise<QuickSetupStageActionResponse | QuickSetupStageActionValidationResponse>
+ * @returns Promise<QuickSetupStageActionResponse | QuickSetupStageActionErrorValidationResponse>
  */
 export const fetchStageBackgroundJobResult = async (
-  jobId: string
-): Promise<QuickSetupStageActionResponse | QuickSetupStageActionValidationResponse> => {
+  jobId: string,
+  siteId?: string
+): Promise<QuickSetupStageActionResponse | QuickSetupStageActionErrorValidationResponse> => {
+  const suffix = siteId ? `?site_id=${siteId}` : ''
+
   try {
     const { data } = await axios.get(
-      `${API_ROOT}/objects/${API_DOMAIN}_stage_action_result/${jobId}`
+      `${API_ROOT}/objects/${API_DOMAIN}_stage_action_result/${jobId}${suffix}`
     )
 
     if (data?.validation_errors || data?.background_job_exception) {
-      return new QuickSetupStageActionValidationResponse(data)
+      return new QuickSetupStageActionErrorValidationResponse(data)
     }
 
     return data

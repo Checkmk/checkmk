@@ -5,6 +5,7 @@
 import logging
 import re
 from abc import abstractmethod
+from typing import override
 from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
@@ -33,15 +34,18 @@ class BaseNotificationPage(QuickSetupPage):
 
     page_title = ""
 
+    @override
     @abstractmethod
     def navigate(self) -> None:
         pass
 
+    @override
     def _validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(self.overview_mode_button).to_be_visible()
 
+    @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
 
@@ -109,37 +113,35 @@ class BaseNotificationPage(QuickSetupPage):
 
     # stage 3
     @property
-    def stage_three_locator(self) -> Locator:
+    def _stage_three(self) -> Locator:
         return self.main_area.locator("li").filter(has_text="Notification method (plug-in)")
 
     @property
     def select_email_parameter_dropdown(self) -> Locator:
-        return self.stage_three_locator.get_by_role("combobox").nth(1)
+        return self._stage_three.get_by_role("combobox").nth(1)
 
     def notification_method_option(self, option: str) -> Locator:
-        return self.stage_three_locator.get_by_role("option", name=option)
+        return self._stage_three.get_by_role("option", name=option)
 
     def create_parameter_button(self) -> Locator:
-        return self.stage_three_locator.get_by_role("button", name="Create")
+        return self._stage_three.get_by_role("button", name="Create")
 
     # stage 4
     @property
-    def _stage_four_locator(self) -> Locator:
+    def _stage_four(self) -> Locator:
         return self.main_area.locator("li").filter(has_text="Recipient")
 
     @property
     def _add_recipient_button(self) -> Locator:
-        return self._stage_four_locator.get_by_role("button", name="Add recipient")
+        return self._stage_four.get_by_role("button", name="Add recipient")
 
     @property
     def _recipients_rows(self) -> Locator:
-        return self._stage_four_locator.get_by_role("group", name="Select recipient").locator(
-            "table > tr"
-        )
+        return self._stage_four.get_by_role("group", name="Select recipient").locator("table > tr")
 
     @property
     def _recipient_group(self) -> Locator:
-        return self._stage_four_locator.get_by_role("group")
+        return self._stage_four.get_by_role("group")
 
     def delete_recipient_button(self, index: int = 0) -> Locator:
         return self._recipients_rows.nth(index).get_by_role("button", name="Remove element")
@@ -274,6 +276,7 @@ class EditNotificationRule(BaseNotificationPage):
         self.page_title = f"Edit notification rule {rule_position}"
         super().__init__(page, navigate_to_page)
 
+    @override
     def navigate(self) -> None:
         notification_configuration_page = NotificationConfiguration(self.page)
         # The scrollbar interrupts the interaction with rule edit button -> -> collapse overview
@@ -293,6 +296,7 @@ class AddNotificationRule(BaseNotificationPage):
 
     page_title = "Add notification rule"
 
+    @override
     def navigate(self) -> None:
         notification_configuration_page = NotificationConfiguration(self.page)
         notification_configuration_page.add_notification_rule_button.click()

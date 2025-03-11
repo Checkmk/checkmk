@@ -26,6 +26,7 @@ from cmk.gui.dashboard import (
 )
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.features import Features, features_registry
+from cmk.gui.graphing_main import PageGraphDashlet, PageHostServiceGraphPopup
 from cmk.gui.help_menu import (
     default_about_checkmk_items,
     default_developer_items,
@@ -33,7 +34,6 @@ from cmk.gui.help_menu import (
     default_learning_items,
 )
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.metrics import PageGraphDashlet, PageHostServiceGraphPopup
 from cmk.gui.mkeventd import registration as mkeventd_registration
 from cmk.gui.mkeventd.helpers import save_active_config
 from cmk.gui.openapi import endpoint_registry

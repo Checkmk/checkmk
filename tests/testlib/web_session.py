@@ -75,7 +75,7 @@ class CMKWebSession:
         # Trying to workaround this by trying the problematic request a second time.
         try:
             response = self.session.request(method, url, **kwargs)
-        except requests.ConnectionError as e:
+        except requests.exceptions.ConnectionError as e:
             if "Connection aborted" in "%s" % e:
                 response = self.session.request(method, url, **kwargs)
             else:
@@ -179,7 +179,7 @@ class CMKWebSession:
     ) -> list:
         urls = []
 
-        for element in soup.findAll(tag):
+        for element in soup.find_all(tag):
             try:
                 skip = False
                 for attr, val in filters or []:
@@ -236,7 +236,14 @@ class CMKWebSession:
 
     def is_logged_in(self) -> bool:
         r = self.get("info.py", allow_redirect_to_login=True)
-        return all(x in r.text for x in ("About Checkmk", "Your IT monitoring platform"))
+        try:
+            return all(x in r.text for x in ("About Checkmk", "Your IT monitoring platform"))
+        except requests.exceptions.ConnectionError:
+            if version_from_env().is_saas_edition():
+                # with the auth provider running, the get request may fail
+                return self.get_auth_cookie() is not None
+            else:
+                raise
 
     def get_auth_cookie(self) -> Cookie | None:
         """return the auth cookie

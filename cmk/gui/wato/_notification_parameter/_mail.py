@@ -171,6 +171,7 @@ def _content_elements() -> dict[str, DictElement[Any]]:
                 title=Title("Custom HTML section (e.g. title, description…)"),
                 prefill=DefaultValue("<HTMLTAG>CONTENT</HTMLTAG>"),
                 macro_support=True,
+                help_text=Help("Only simple tags like 'h1', 'b' or 'i' are allowed."),
             ),
         ),
         # TODO should be old ListChoice style
@@ -301,7 +302,9 @@ def _bulk_elements() -> dict[str, DictElement[Any]]:
                 layout=DictionaryGroupLayout.vertical,
             ),
             parameter_form=Integer(
-                title=Title("Number of graphs per event (default: 5)"),
+                title=Title(
+                    "Limit number of events with graphs per bulk notification (default: 5)"
+                ),
                 label=Label("Show graphs for the first"),
                 unit_symbol="notifications",
                 prefill=DefaultValue(5),

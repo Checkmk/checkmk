@@ -13,7 +13,7 @@ import pytest
 from flask import request
 from werkzeug.test import create_environ
 
-from tests.unit.cmk.gui.conftest import CmkTestResponse, WebTestAppForCMK
+from tests.unit.cmk.web_test_app import CmkTestResponse, WebTestAppForCMK
 
 from cmk.ccc.site import omd_site
 

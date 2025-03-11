@@ -16,6 +16,7 @@ from cmk.utils.metrics import MetricName
 
 from cmk.gui.config import active_config
 from cmk.gui.graphing._formatter import AutoPrecision
+from cmk.gui.graphing._from_api import RegisteredMetric
 from cmk.gui.graphing._graph_specification import GraphDataRange, GraphMetric, GraphRecipe
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._legacy import CheckMetricEntry
@@ -25,9 +26,9 @@ from cmk.gui.graphing._rrd_fetch import (
     fetch_rrd_data_for_graph,
     translate_and_merge_rrd_columns,
 )
+from cmk.gui.graphing._time_series import TimeSeries, TimeSeriesValues
 from cmk.gui.graphing._translated_metrics import TranslationSpec
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
-from cmk.gui.time_series import TimeSeries, TimeSeriesValues
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 
@@ -72,7 +73,9 @@ _GRAPH_RECIPE = GraphRecipe(
                 scale=1,
             ),
             color="#ffa000",
-            unit="c",
+            unit=ConvertibleUnitSpecification(
+                notation=DecimalNotation(symbol="°C"), precision=AutoPrecision(digits=2)
+            ),
         )
     ],
     unit_spec=ConvertibleUnitSpecification(
@@ -100,7 +103,11 @@ def test_fetch_rrd_data_for_graph(
     request_context: None,
 ) -> None:
     with _setup_livestatus(mock_livestatus):
-        assert fetch_rrd_data_for_graph(_GRAPH_RECIPE, _GRAPH_DATA_RANGE) == {
+        assert fetch_rrd_data_for_graph(
+            _GRAPH_RECIPE,
+            _GRAPH_DATA_RANGE,
+            {},
+        ) == {
             RRDDataKey(
                 SiteId("NO_SITE"),
                 HostName("my-host"),
@@ -109,8 +116,10 @@ def test_fetch_rrd_data_for_graph(
                 "max",
                 1,
             ): TimeSeries(
-                [4, 5, None],
-                time_window=(1, 2, 3),
+                start=1,
+                end=2,
+                step=3,
+                values=[4, 5, None],
             )
         }
 
@@ -121,7 +130,11 @@ def test_fetch_rrd_data_for_graph_with_conversion(
 ) -> None:
     active_config.default_temperature_unit = TemperatureUnit.FAHRENHEIT.value
     with _setup_livestatus(mock_livestatus):
-        assert fetch_rrd_data_for_graph(_GRAPH_RECIPE, _GRAPH_DATA_RANGE) == {
+        assert fetch_rrd_data_for_graph(
+            _GRAPH_RECIPE,
+            _GRAPH_DATA_RANGE,
+            {},
+        ) == {
             RRDDataKey(
                 SiteId("NO_SITE"),
                 HostName("my-host"),
@@ -130,8 +143,10 @@ def test_fetch_rrd_data_for_graph_with_conversion(
                 "max",
                 1,
             ): TimeSeries(
-                [39.2, 41.0, None],
-                time_window=(1, 2, 3),
+                start=1,
+                end=2,
+                step=3,
+                values=[39.2, 41.0, None],
             )
         }
 
@@ -146,9 +161,12 @@ def test_translate_and_merge_rrd_columns() -> None:
             )
         ],
         {},
+        {},
     ) == TimeSeries(
-        [1, 2, 3, 4],
-        time_window=(1682324400, 1682497800, 600),
+        start=1682324400,
+        end=1682497800,
+        step=600,
+        values=[1, 2, 3, 4],
     )
 
 
@@ -173,9 +191,12 @@ def test_translate_and_merge_rrd_columns_with_translation() -> None:
                 deprecated="",
             )
         },
+        {},
     ) == TimeSeries(
-        [10, 20, 3, 4],
-        time_window=(1682324400, 1682497800, 600),
+        start=1682324400,
+        end=1682497800,
+        step=600,
+        values=[10, 20, 3, 4],
     )
 
 
@@ -289,9 +310,22 @@ def test_translate_and_merge_rrd_columns_unit_conversion(
             ("rrddata:temperature:temperature.average:1682324616:1682497416:60", [0, 0, 0]),
         ],
         {},
+        {
+            "temp": RegisteredMetric(
+                name="temp",
+                title_localizer=lambda _localizer: "Temperature",
+                unit_spec=ConvertibleUnitSpecification(
+                    notation=DecimalNotation(symbol="°C"),
+                    precision=AutoPrecision(digits=2),
+                ),
+                color="",
+            )
+        },
     ) == TimeSeries(
-        expected_data_points,
-        time_window=(1682324400, 1682497800, 600),
+        start=1682324400,
+        end=1682497800,
+        step=600,
+        values=expected_data_points,
     )
 
 

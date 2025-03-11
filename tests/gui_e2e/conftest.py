@@ -27,7 +27,6 @@ from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard, DashboardM
 from tests.gui_e2e.testlib.playwright.pom.login import LoginPage
 from tests.gui_e2e.testlib.playwright.pom.setup.fixtures import notification_user
 from tests.gui_e2e.testlib.playwright.pom.setup.hosts import AddHost, SetupHost
-
 from tests.testlib.common.repo import repo_path
 from tests.testlib.common.utils import run
 from tests.testlib.emails import EmailManager

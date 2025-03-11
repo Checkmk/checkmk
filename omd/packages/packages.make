@@ -16,7 +16,6 @@ TAR_GZ := $(shell which tar) xzf
 TEST := $(shell which test)
 TOUCH := $(shell which touch)
 UNZIP := $(shell which unzip) -o
-BAZEL_CMD ?= $(realpath ../scripts/run-bazel.sh)
 
 # Intermediate Install Target
 # intermediate_install used to be necessary to link external dependecies with each other.
@@ -32,7 +31,7 @@ $(DEPS_INSTALL_BAZEL):
 	# NOTE: this might result in unexpected build behavior, when dependencies of //omd:intermediate_install
 	#       are built somewhere else without --define git-ssl-no-verify=true being specified, likely
 	#       resulting in different builds
-	$(BAZEL_CMD) build --cmk_version=$(VERSION) \
+	bazel build --cmk_version=$(VERSION) \
 	    $(if $(filter sles15%,$(DISTRO_CODE)),--define git-ssl-no-verify=true) \
 	    //omd:deps_install_$(EDITION_SHORT)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)
@@ -183,13 +182,10 @@ include \
     packages/redis/redis.make \
     packages/apache-omd/apache-omd.make \
     packages/xinetd/xinetd.make \
-    packages/stunnel/stunnel.make \
-    packages/check_mk/check_mk.make \
-    packages/heirloom-pkgtools/heirloom-pkgtools.make \
     packages/cpp-libs/cpp-libs.make \
+    packages/check_mk/check_mk.make \
     packages/libgsf/libgsf.make \
     packages/maintenance/maintenance.make \
-    packages/mod_fcgid/mod_fcgid.make \
     packages/monitoring-plugins/monitoring-plugins.make \
     packages/check-cert/check-cert.make \
     packages/lcab/lcab.make \
@@ -201,7 +197,6 @@ include \
     packages/patch/patch.make \
     packages/pnp4nagios/pnp4nagios.make \
     packages/omd/omd.make \
-    packages/mod_wsgi/mod_wsgi.make \
     packages/mk-livestatus/mk-livestatus.make \
     packages/snap7/snap7.make \
     packages/appliance/appliance.make \

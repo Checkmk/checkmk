@@ -9,13 +9,13 @@ UNIT_SECOND = metrics.Unit(metrics.TimeNotation())
 
 metric_audiocodes_tel2ip_total_duration = metrics.Metric(
     name="audiocodes_tel2ip_total_duration",
-    title=Title("Total duration of SIP/H323 calls"),
+    title=Title("Tel2IP Total duration of SIP/H323 calls"),
     unit=UNIT_SECOND,
     color=metrics.Color.GREEN,
 )
 metric_audiocodes_ip2tel_total_duration = metrics.Metric(
     name="audiocodes_ip2tel_total_duration",
-    title=Title("Total duration of SIP/H323 calls"),
+    title=Title("IP2Tel Total duration of SIP/H323 calls"),
     unit=UNIT_SECOND,
     color=metrics.Color.PURPLE,
 )

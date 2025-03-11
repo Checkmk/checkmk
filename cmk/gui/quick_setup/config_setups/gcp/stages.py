@@ -222,13 +222,14 @@ def recap_found_services(
     _quick_setup_id: QuickSetupId,
     _stage_index: StageIndex,
     parsed_data: ParsedFormData,
-    _progress_logger: ProgressLogger,
+    progress_logger: ProgressLogger,
 ) -> Sequence[Widget]:
     service_discovery_result = utils.get_service_discovery_preview(
         rulespec_name=RuleGroup.SpecialAgents("gcp"),
         all_stages_form_data=parsed_data,
         parameter_form=gcp.form_spec(),
         collect_params=gcp_collect_params,
+        progress_logger=progress_logger,
     )
     gcp_service_interest = ServiceInterest("gcp_.*", "services")
     filtered_groups_of_services, _other_services = utils.group_services_by_interest(
@@ -311,6 +312,7 @@ quick_setup_gcp = QuickSetup(
         QuickSetupBackgroundAction(
             id=ActionId("activate_changes"),
             label=_("Save & go to Activate changes"),
+            iconName="save-to-services",
             action=action,
         ),
     ],

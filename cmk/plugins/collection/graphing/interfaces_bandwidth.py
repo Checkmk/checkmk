@@ -5,7 +5,7 @@
 
 from cmk.graphing.v1 import graphs, metrics, perfometers, Title
 
-UNIT_BITS_PER_SECOND = metrics.Unit(metrics.IECNotation("bits/s"))
+UNIT_BITS_PER_SECOND = metrics.Unit(metrics.SINotation("bits/s"))
 
 metric_if_in_bps = metrics.Metric(
     name="if_in_bps",

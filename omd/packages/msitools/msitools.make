@@ -10,7 +10,7 @@ $(MSITOOLS_BUILD):
 	# NOTE: this might result in unexpected build behavior, when dependencies of @$(MSITOOLS)//:$(MSITOOLS)
 	#       are built somewhere else without --define git-ssl-no-verify=true being specified, likely
 	#       resulting in different builds
-	$(BAZEL_CMD) build \
+	bazel build \
 	    $(if $(filter sles15%,$(DISTRO_CODE)),--define omd-libgsf=true) \
 	    @$(MSITOOLS)//:$(MSITOOLS)
 

@@ -56,7 +56,7 @@ def check_audiocodes_operational_state_redundant(
 
 check_plugin_audiocodes_operational_state_redundant = CheckPlugin(
     name="audiocodes_operational_state_redundant",
-    service_name="AudioCodes Operational State Redundant Module %s",
+    service_name="Operational state redundant module %s",
     discovery_function=discover_audiocodes_operational_state_redundant,
     check_function=check_audiocodes_operational_state_redundant,
 )

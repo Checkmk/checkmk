@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Literal
 
@@ -18,7 +17,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.gui.config import active_config
 from cmk.gui.graphing import _graph_templates as gt
 from cmk.gui.graphing._formatter import AutoPrecision
-from cmk.gui.graphing._from_api import metrics_from_api, RegisteredMetric
+from cmk.gui.graphing._from_api import RegisteredMetric
 from cmk.gui.graphing._graph_specification import HorizontalRule
 from cmk.gui.graphing._graph_templates import (
     _evaluate_predictive_metrics,
@@ -34,7 +33,6 @@ from cmk.gui.graphing._graph_templates import (
     GraphTemplate,
     MinimalGraphTemplateRange,
 )
-from cmk.gui.graphing._legacy import get_render_function, RawGraphTemplate
 from cmk.gui.graphing._metric_expression import (
     BaseMetricExpression,
     Constant,
@@ -59,7 +57,8 @@ from cmk.gui.graphing._translated_metrics import (
     translate_metrics,
     TranslatedMetric,
 )
-from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
+from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation, user_specific_unit
+from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 
 from cmk.graphing.v1 import graphs as graphs_api
@@ -178,42 +177,63 @@ def test__matching_graph_templates(
                 graph_id=graph_id,
                 graph_index=graph_index,
                 translated_metrics={},
+                registered_metrics={},
             )
         )
         == expected_result
     )
 
 
-def test__evaluate_title() -> None:
-    perfdata: Perfdata = [PerfDataTuple(n, n, len(n), "", 120, 240, 0, 25) for n in ["load1"]]
-    translated_metrics = translate_metrics(perfdata, "check_mk-cpu.loads")
+def test_evaluate_title_ok() -> None:
     assert (
-        gt._evaluate_title("CPU Load - %(load1:max@count) CPU Cores", translated_metrics)
+        gt._evaluate_title(
+            'CPU Load - _EXPRESSION:{"metric":"load1","scalar":"max"} CPU Cores',
+            translate_metrics(
+                [PerfDataTuple("load1", "load1", 1, "", 120, 240, 0, 25)],
+                "check_mk-cpu_loads",
+                {},
+            ),
+        )
         == "CPU Load - 25 CPU Cores"
     )
 
 
-def test__evaluate_title_missing_scalars() -> None:
-    perfdata: Perfdata = [
-        PerfDataTuple(n, n, len(n), "", None, None, None, None) for n in ["load1"]
-    ]
-    translated_metrics = translate_metrics(perfdata, "check_mk-cpu.loads")
+def test_evaluate_title_missing_scalar() -> None:
     assert (
-        gt._evaluate_title("CPU Load - %(load1:max@count) CPU Cores", translated_metrics)
+        gt._evaluate_title(
+            'CPU Load - _EXPRESSION:{"metric":"load1","scalar":"max"} CPU Cores',
+            translate_metrics(
+                [PerfDataTuple("load1", "load1", 1, "", None, None, None, None)],
+                "check_mk-cpu_loads",
+                {},
+            ),
+        )
         == "CPU Load"
     )
 
 
 @pytest.mark.parametrize(
-    "perf_data_string, result",
+    ("perf_data_string", "registered_metrics", "result"),
     [
         pytest.param(
             "one=5;;;; power=5;;;; output=5;;;;",
+            {},
             [],
             id="Unknown thresholds from check",
         ),
         pytest.param(
             "one=5;7;6;; power=5;9;10;; output=5;2;3;;",
+            {
+                "power": RegisteredMetric(
+                    name="power",
+                    title_localizer=lambda _localizer: "Electrical power",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol="W"),
+                        precision=AutoPrecision(digits=3),
+                    ),
+                    color="",
+                ),
+            },
             [
                 HorizontalRule(
                     value=7.0,
@@ -239,14 +259,24 @@ def test__evaluate_title_missing_scalars() -> None:
     ],
 )
 def test_horizontal_rules_from_thresholds(
-    perf_data_string: str, result: Sequence[HorizontalRule]
+    perf_data_string: str,
+    registered_metrics: Mapping[str, RegisteredMetric],
+    result: Sequence[HorizontalRule],
 ) -> None:
     perf_data, check_command = parse_perf_data(perf_data_string, None, config=active_config)
-    translated_metrics = translate_metrics(perf_data, check_command)
+    translated_metrics = translate_metrics(
+        perf_data,
+        check_command,
+        registered_metrics,
+    )
     assert [
         HorizontalRule(
             value=e.value,
-            rendered_value=get_render_function(e.unit_spec)(e.value),
+            rendered_value=user_specific_unit(
+                e.unit_spec,
+                user,
+                active_config,
+            ).formatter.render(e.value),
             color=e.color,
             title=e.title,
         )
@@ -273,10 +303,14 @@ def test_horizontal_rules_from_thresholds(
     ] == result
 
 
-def test_duplicate_graph_templates(request_context: None) -> None:
+def test_duplicate_graph_templates() -> None:
     idents_by_metrics: dict[tuple[str, ...], list[str]] = {}
     for id_, plugin in _get_sorted_graph_plugins():
-        parsed = _parse_graph_plugin(id_, plugin)
+        parsed = _parse_graph_plugin(
+            id_,
+            plugin,
+            {},
+        )
         expressions = [m.base for m in parsed.metrics] + [s.base for s in parsed.scalars]
         if parsed.range:
             expressions.extend((parsed.range.min, parsed.range.max))
@@ -290,7 +324,7 @@ def test_duplicate_graph_templates(request_context: None) -> None:
     }
 
 
-def test_graph_template_with_layered_areas(request_context: None) -> None:
+def test_graph_template_with_layered_areas() -> None:
     # area, area, ... -> two layers
     # area, stack, ... -> one layer
     # stack, stack, ... -> one layer
@@ -301,7 +335,7 @@ def test_graph_template_with_layered_areas(request_context: None) -> None:
 
     areas_by_ident: dict[str, _GraphTemplateArea] = {}
     for id_, plugin in _get_sorted_graph_plugins():
-        parsed = _parse_graph_plugin(id_, plugin)
+        parsed = _parse_graph_plugin(id_, plugin, {})
         for metric_expression in parsed.metrics:
             if metric_expression.line_type == "area":
                 areas_by_ident.setdefault(parsed.id, _GraphTemplateArea()).pos.append(
@@ -498,13 +532,13 @@ COLOR_HEX = "#1e90ff"
                     MetricExpression(
                         MinimumOf(Metric("metric-name-4")),
                         line_type="stack",
-                        title="Title",
+                        title="Minimum of Title",
                         color=COLOR_HEX,
                     ),
                     MetricExpression(
                         MaximumOf(Metric("metric-name-5")),
                         line_type="stack",
-                        title="Title",
+                        title="Maximum of Title",
                         color=COLOR_HEX,
                     ),
                     MetricExpression(
@@ -615,13 +649,13 @@ COLOR_HEX = "#1e90ff"
                     MetricExpression(
                         MinimumOf(Metric("metric-name-4")),
                         line_type="line",
-                        title="Title",
+                        title="Minimum of Title",
                         color=COLOR_HEX,
                     ),
                     MetricExpression(
                         MaximumOf(Metric("metric-name-5")),
                         line_type="line",
-                        title="Title",
+                        title="Maximum of Title",
                         color=COLOR_HEX,
                     ),
                 ],
@@ -736,19 +770,25 @@ COLOR_HEX = "#1e90ff"
 def test__parse_graph_from_api(
     graph: graphs_api.Graph, raw_metric_names: Sequence[str], expected_template: GraphTemplate
 ) -> None:
-    for r in raw_metric_names:
-        metrics_from_api.register(
-            RegisteredMetric(
-                name=r,
-                title_localizer=lambda _: "Title",
-                unit_spec=ConvertibleUnitSpecification(
-                    notation=DecimalNotation(symbol=""),
-                    precision=AutoPrecision(digits=2),
-                ),
-                color="#000000",
-            )
+    assert (
+        _parse_graph_from_api(
+            graph.name,
+            graph,
+            {
+                r: RegisteredMetric(
+                    name=r,
+                    title_localizer=lambda _: "Title",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#000000",
+                )
+                for r in raw_metric_names
+            },
         )
-    assert _parse_graph_from_api(graph.name, graph) == expected_template
+        == expected_template
+    )
 
 
 @pytest.mark.parametrize(
@@ -807,48 +847,64 @@ def test__parse_graph_from_api(
                 range=None,
                 scalars=[
                     MetricExpression(
-                        WarningOf(Metric("metric-name-l3")),
-                        line_type="-line",
-                        title="Warning of Title",
-                    ),
-                    MetricExpression(
-                        CriticalOf(Metric("metric-name-l4")),
-                        line_type="-line",
-                        title="Critical of Title",
-                    ),
-                    MetricExpression(
-                        MinimumOf(Metric("metric-name-l5")),
-                        line_type="-line",
-                        title="Title",
-                        color=COLOR_HEX,
-                    ),
-                    MetricExpression(
-                        MaximumOf(Metric("metric-name-l6")),
-                        line_type="-line",
-                        title="Title",
-                        color=COLOR_HEX,
-                    ),
-                    MetricExpression(
-                        WarningOf(Metric("metric-name-u3")),
+                        WarningOf(
+                            Metric("metric-name-u3"),
+                        ),
                         line_type="line",
                         title="Warning of Title",
                     ),
                     MetricExpression(
-                        CriticalOf(Metric("metric-name-u4")),
+                        CriticalOf(
+                            Metric("metric-name-u4"),
+                        ),
                         line_type="line",
                         title="Critical of Title",
                     ),
                     MetricExpression(
-                        MinimumOf(Metric("metric-name-u5")),
-                        line_type="line",
-                        title="Title",
+                        MinimumOf(
+                            Metric("metric-name-u5"),
+                        ),
                         color=COLOR_HEX,
+                        line_type="line",
+                        title="Minimum of Title",
                     ),
                     MetricExpression(
-                        MaximumOf(Metric("metric-name-u6")),
-                        line_type="line",
-                        title="Title",
+                        MaximumOf(
+                            Metric("metric-name-u6"),
+                        ),
                         color=COLOR_HEX,
+                        line_type="line",
+                        title="Maximum of Title",
+                    ),
+                    MetricExpression(
+                        WarningOf(
+                            Metric("metric-name-l3"),
+                        ),
+                        line_type="-line",
+                        title="Warning of Title",
+                    ),
+                    MetricExpression(
+                        CriticalOf(
+                            Metric("metric-name-l4"),
+                        ),
+                        line_type="-line",
+                        title="Critical of Title",
+                    ),
+                    MetricExpression(
+                        MinimumOf(
+                            Metric("metric-name-l5"),
+                        ),
+                        color=COLOR_HEX,
+                        line_type="-line",
+                        title="Minimum of Title",
+                    ),
+                    MetricExpression(
+                        MaximumOf(
+                            Metric("metric-name-l6"),
+                        ),
+                        color=COLOR_HEX,
+                        line_type="-line",
+                        title="Maximum of Title",
                     ),
                 ],
                 conflicting_metrics=["metric-name-confl-l", "metric-name-confl-u"],
@@ -856,10 +912,10 @@ def test__parse_graph_from_api(
                 consolidation_function=None,
                 omit_zero_metrics=False,
                 metrics=[
-                    MetricExpression(Metric("metric-name-l1"), line_type="-stack", title="Title"),
                     MetricExpression(Metric("metric-name-u1"), line_type="stack", title="Title"),
-                    MetricExpression(Metric("metric-name-l2"), line_type="-line", title="Title"),
+                    MetricExpression(Metric("metric-name-l1"), line_type="-stack", title="Title"),
                     MetricExpression(Metric("metric-name-u2"), line_type="line", title="Title"),
+                    MetricExpression(Metric("metric-name-l2"), line_type="-line", title="Title"),
                 ],
             ),
             id="lower-upper",
@@ -886,8 +942,8 @@ def test__parse_graph_from_api(
                 id="name",
                 title="Title",
                 range=MinimalGraphTemplateRange(
-                    min=Minimum([Constant(1), Constant(2)]),
-                    max=Maximum([Constant(10), Constant(11)]),
+                    min=Minimum([Constant(2), Constant(1)]),
+                    max=Maximum([Constant(11), Constant(10)]),
                 ),
                 scalars=[],
                 conflicting_metrics=[],
@@ -895,8 +951,8 @@ def test__parse_graph_from_api(
                 consolidation_function=None,
                 omit_zero_metrics=False,
                 metrics=[
-                    MetricExpression(Metric("metric-name-l"), line_type="-line", title="Title"),
                     MetricExpression(Metric("metric-name-u"), line_type="line", title="Title"),
+                    MetricExpression(Metric("metric-name-l"), line_type="-line", title="Title"),
                 ],
             ),
             id="range-both",
@@ -931,8 +987,8 @@ def test__parse_graph_from_api(
                 consolidation_function=None,
                 omit_zero_metrics=False,
                 metrics=[
-                    MetricExpression(Metric("metric-name-l"), line_type="-line", title="Title"),
                     MetricExpression(Metric("metric-name-u"), line_type="line", title="Title"),
+                    MetricExpression(Metric("metric-name-l"), line_type="-line", title="Title"),
                 ],
             ),
             id="range-only-lower",
@@ -967,8 +1023,8 @@ def test__parse_graph_from_api(
                 consolidation_function=None,
                 omit_zero_metrics=False,
                 metrics=[
-                    MetricExpression(Metric("metric-name-l"), line_type="-line", title="Title"),
                     MetricExpression(Metric("metric-name-u"), line_type="line", title="Title"),
+                    MetricExpression(Metric("metric-name-l"), line_type="-line", title="Title"),
                 ],
             ),
             id="range-only-upper",
@@ -980,141 +1036,25 @@ def test__parse_bidirectional_from_api(
     raw_metric_names: Sequence[str],
     expected_template: GraphTemplate,
 ) -> None:
-    for r in raw_metric_names:
-        metrics_from_api.register(
-            RegisteredMetric(
-                name=r,
-                title_localizer=lambda _: "Title",
-                unit_spec=ConvertibleUnitSpecification(
-                    notation=DecimalNotation(symbol=""),
-                    precision=AutoPrecision(digits=2),
-                ),
-                color="#000000",
-            )
+    assert (
+        _parse_bidirectional_from_api(
+            graph.name,
+            graph,
+            {
+                r: RegisteredMetric(
+                    name=r,
+                    title_localizer=lambda _: "Title",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#000000",
+                )
+                for r in raw_metric_names
+            },
         )
-    assert _parse_bidirectional_from_api(graph.name, graph) == expected_template
-
-
-@pytest.mark.parametrize(
-    "raw, expected_graph_template",
-    [
-        pytest.param(
-            RawGraphTemplate(
-                metrics=[],
-                scalars=["metric", "metric:warn", "metric:crit"],
-            ),
-            GraphTemplate(
-                id="ident",
-                title="",
-                scalars=[
-                    MetricExpression(
-                        Metric("metric"),
-                        line_type="line",
-                        title="metric",
-                    ),
-                    MetricExpression(
-                        WarningOf(Metric("metric")),
-                        line_type="line",
-                        title="Warning",
-                    ),
-                    MetricExpression(
-                        CriticalOf(Metric("metric")),
-                        line_type="line",
-                        title="Critical",
-                    ),
-                ],
-                conflicting_metrics=[],
-                optional_metrics=[],
-                consolidation_function=None,
-                range=None,
-                omit_zero_metrics=False,
-                metrics=[],
-            ),
-            id="scalar str",
-        ),
-        pytest.param(
-            RawGraphTemplate(
-                metrics=[],
-                scalars=[("metric", "Title"), ("metric:warn", "Warn"), ("metric:crit", "Crit")],
-            ),
-            GraphTemplate(
-                id="ident",
-                title="",
-                scalars=[
-                    MetricExpression(
-                        Metric("metric"),
-                        line_type="line",
-                        title="Title",
-                    ),
-                    MetricExpression(
-                        WarningOf(Metric("metric")),
-                        line_type="line",
-                        title="Warn",
-                    ),
-                    MetricExpression(
-                        CriticalOf(Metric("metric")),
-                        line_type="line",
-                        title="Crit",
-                    ),
-                ],
-                conflicting_metrics=[],
-                optional_metrics=[],
-                consolidation_function=None,
-                range=None,
-                omit_zero_metrics=False,
-                metrics=[],
-            ),
-            id="scalar tuple",
-        ),
-        pytest.param(
-            RawGraphTemplate(
-                metrics=[("metric", "line")],
-            ),
-            GraphTemplate(
-                id="ident",
-                title="",
-                scalars=[],
-                conflicting_metrics=[],
-                optional_metrics=[],
-                consolidation_function=None,
-                range=None,
-                omit_zero_metrics=False,
-                metrics=[
-                    MetricExpression(Metric("metric"), line_type="line"),
-                ],
-            ),
-            id="metrics 2-er tuple",
-        ),
-        pytest.param(
-            RawGraphTemplate(
-                metrics=[("metric", "line", "Title")],
-            ),
-            GraphTemplate(
-                id="ident",
-                title="",
-                scalars=[],
-                conflicting_metrics=[],
-                optional_metrics=[],
-                consolidation_function=None,
-                range=None,
-                omit_zero_metrics=False,
-                metrics=[
-                    MetricExpression(
-                        Metric("metric"),
-                        line_type="line",
-                        title="Title",
-                    ),
-                ],
-            ),
-            id="metrics 3-er tuple",
-        ),
-    ],
-)
-def test__parse_graph_plugin(
-    raw: RawGraphTemplate,
-    expected_graph_template: GraphTemplate,
-) -> None:
-    assert _parse_graph_plugin("ident", raw) == expected_graph_template
+        == expected_template
+    )
 
 
 @pytest.mark.parametrize(
@@ -1179,10 +1119,16 @@ def test__get_evaluated_graph_templates_1(
     request_context: None,
 ) -> None:
     perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
-    translated_metrics = translate_metrics(perfdata, check_command)
-    assert sorted([t.id for t in _get_evaluated_graph_templates(translated_metrics)]) == sorted(
-        graph_ids
-    )
+    translated_metrics = translate_metrics(perfdata, check_command, {})
+    assert sorted(
+        [
+            t.id
+            for t in _get_evaluated_graph_templates(
+                translated_metrics,
+                {},
+            )
+        ]
+    ) == sorted(graph_ids)
 
 
 @pytest.mark.parametrize(
@@ -1205,10 +1151,16 @@ def test__get_evaluated_graph_templates_2(
     request_context: None,
 ) -> None:
     perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", *warn_crit_min_max) for n in metric_names]
-    translated_metrics = translate_metrics(perfdata, check_command)
-    assert sorted([t.id for t in _get_evaluated_graph_templates(translated_metrics)]) == sorted(
-        graph_ids
-    )
+    translated_metrics = translate_metrics(perfdata, check_command, {})
+    assert sorted(
+        [
+            t.id
+            for t in _get_evaluated_graph_templates(
+                translated_metrics,
+                {},
+            )
+        ]
+    ) == sorted(graph_ids)
 
 
 @pytest.mark.parametrize(
@@ -1390,7 +1342,14 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
 
 
 @pytest.mark.parametrize(
-    "metric_names, predict_metric_names, predict_lower_metric_names, check_command, graph_templates",
+    (
+        "metric_names",
+        "predict_metric_names",
+        "predict_lower_metric_names",
+        "check_command",
+        "registered_metrics",
+        "graph_templates",
+    ),
     [
         pytest.param(
             [
@@ -1406,6 +1365,26 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                 "predict_lower_messages_inbound",
             ],
             "check_mk-inbound_and_outbound_messages",
+            {
+                "messages_outbound": RegisteredMetric(
+                    name="messages_outbound",
+                    title_localizer=lambda _localizer: "Outbound messages",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol="/s"),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#1e90ff",
+                ),
+                "messages_inbound": RegisteredMetric(
+                    name="messages_inbound",
+                    title_localizer=lambda _localizer: "Inbound messages",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol="/s"),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#1ee6e6",
+                ),
+            },
             [
                 EvaluatedGraphTemplate(
                     id="inbound_and_outbound_messages",
@@ -1499,6 +1478,26 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                 "predict_lower_foo",
             ],
             "check_mk-inbound_and_outbound_messages",
+            {
+                "messages_outbound": RegisteredMetric(
+                    name="messages_outbound",
+                    title_localizer=lambda _localizer: "Outbound messages",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol="/s"),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#1e90ff",
+                ),
+                "messages_inbound": RegisteredMetric(
+                    name="messages_inbound",
+                    title_localizer=lambda _localizer: "Inbound messages",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol="/s"),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#1ee6e6",
+                ),
+            },
             [
                 EvaluatedGraphTemplate(
                     id="inbound_and_outbound_messages",
@@ -1651,16 +1650,24 @@ def test__get_evaluated_graph_templates_with_predictive_metrics(
     predict_metric_names: Sequence[str],
     predict_lower_metric_names: Sequence[str],
     check_command: str,
+    registered_metrics: Mapping[str, RegisteredMetric],
     graph_templates: Sequence[EvaluatedGraphTemplate],
-    request_context: None,
 ) -> None:
     perfdata: Perfdata = (
         [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
         + [PerfDataTuple(n, n[8:], 0, "", 1, 2, None, None) for n in predict_metric_names]
         + [PerfDataTuple(n, n[14:], 0, "", 3, 4, None, None) for n in predict_lower_metric_names]
     )
-    translated_metrics = translate_metrics(perfdata, check_command)
-    assert list(_get_evaluated_graph_templates(translated_metrics)) == graph_templates
+    translated_metrics = translate_metrics(perfdata, check_command, registered_metrics)
+    assert (
+        list(
+            _get_evaluated_graph_templates(
+                translated_metrics,
+                registered_metrics,
+            )
+        )
+        == graph_templates
+    )
 
 
 @pytest.mark.parametrize(
@@ -1883,7 +1890,7 @@ def test__get_evaluated_graph_templates_with_predictive_metrics(
         ),
         # fs.py
         pytest.param(
-            ["fs_used", "fs_size"],
+            ["fs_used", "fs_free", "fs_size"],
             ["fs_used"],
             id="fs_used",
         ),
@@ -1972,15 +1979,6 @@ def test__get_evaluated_graph_templates_with_predictive_metrics(
             id="active_and_inactive_memory",
         ),
         pytest.param(
-            ["mem_lnx_active", "mem_lnx_inactive", "mem_lnx_active_anon"],
-            [
-                "METRIC_mem_lnx_active",
-                "METRIC_mem_lnx_active_anon",
-                "METRIC_mem_lnx_inactive",
-            ],
-            id="active_and_inactive_memory_conflicting_metrics",
-        ),
-        pytest.param(
             ["mem_used"],
             ["ram_used"],
             id="ram_used",
@@ -2007,7 +2005,13 @@ def test_conflicting_metrics(
     # 1. write test for expected metric names of a graph template if it has "conflicting_metrics"
     # 2. use metric names from (1) and conflicting metrics
     perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
-    translated_metrics = translate_metrics(perfdata, "check_command")
-    assert sorted([t.id for t in _get_evaluated_graph_templates(translated_metrics)]) == sorted(
-        graph_ids
-    )
+    translated_metrics = translate_metrics(perfdata, "check_command", {})
+    assert sorted(
+        [
+            t.id
+            for t in _get_evaluated_graph_templates(
+                translated_metrics,
+                {},
+            )
+        ]
+    ) == sorted(graph_ids)

@@ -908,8 +908,14 @@ div#page_menu_popups div.side_popup {
     &.active {
       display: block;
     }
+    div.filter_group {
+      margin-top: 8px;
+    }
     div.filter_group:last-child {
       margin-bottom: 10px;
+    }
+    div.filter_group > div {
+      margin-left: 8px;
     }
     a.filter_group_title {
       display: block;
@@ -922,6 +928,7 @@ div#page_menu_popups div.side_popup {
       position: absolute;
       top: 8px;
       right: 6px;
+      z-index: +1;
     }
     ul {
       padding: 0 20px;
@@ -991,6 +998,7 @@ div#page_menu_popups div[id^="popup_add_to_"] > div.content > span {
         border: none;
         border-radius: 0px;
         border: 1px solid $line-color;
+        background-color: $bg-color;
 
         &.active,
         &:hover,

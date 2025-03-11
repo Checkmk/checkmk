@@ -75,6 +75,18 @@ class InfoLogger:
 
 
 class JobBasedProgressLogger:
+    """Class which makes use of the background job send_progress mechanism to log
+    Quick setup specific progress steps.
+
+    The logged Quick setup progress steps are visible to the user who triggered the Quick
+    setup (stage) action.
+
+    Notes:
+        * The Quick setup progress logged via this class will be distinguishable to other
+        background job update logs through a [QuickSetup] prefix
+
+    """
+
     def __init__(self, progress_interface: BackgroundProcessInterface):
         self._progress_interface = progress_interface
         self._steps: dict[str, ProgressStep] = {}
@@ -82,6 +94,27 @@ class JobBasedProgressLogger:
     def log_new_progress_step(
         self, step_name: str, step_title: str, status: StepStatus = StepStatus.ACTIVE
     ) -> None:
+        """Log a new progress step which will be displayed to the user
+
+        Attributes:
+            step_name:
+                A unique identifier for the progress step
+            step_title:
+                The title of the progress step. This will be visible to the user who triggered
+                the Quick setup (stage) action
+            status:
+                The status determines the rendering of the progress step
+                Defaults to StepStatus.ACTIVE
+
+        Notes:
+            * A new progress step should be updated to StepStatus.COMPLETED at some point in the
+            Quick setup flow
+
+        Pseudo example:
+            cls.log_new_progress_step("test_connection", "Test connection to datasource")
+            # do test connection related stuff
+            cls.update_progress_step_status("test_connection", StepStatus.COMPLETED)
+        """
         self._steps[step_name] = ProgressStep(
             title=step_title, status=status, index=len(self._steps)
         )
@@ -109,6 +142,8 @@ class JobBasedProgressLogger:
 class Button:
     label: str
     aria_label: str
+    iconName: str | None = None
+    iconRotate: int | None = None
 
 
 @dataclass

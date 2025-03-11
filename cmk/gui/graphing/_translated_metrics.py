@@ -16,11 +16,13 @@ from cmk.utils.metrics import MetricName
 
 from cmk.gui.config import active_config, Config
 from cmk.gui.log import logger
+from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Perfdata, PerfDataTuple, Row
 
-from ._legacy import check_metrics, CheckMetricEntry, get_conversion_function, UnitInfo
+from ._from_api import RegisteredMetric
+from ._legacy import check_metrics, CheckMetricEntry
 from ._metrics import get_metric_spec_with_color
-from ._unit import ConvertibleUnitSpecification
+from ._unit import ConvertibleUnitSpecification, user_specific_unit
 
 
 def _parse_perf_values(
@@ -208,7 +210,7 @@ class TranslatedMetric:
     scalar: ScalarBounds
     auto_graph: bool
     title: str
-    unit_spec: UnitInfo | ConvertibleUnitSpecification
+    unit_spec: ConvertibleUnitSpecification
     color: str
 
 
@@ -230,7 +232,10 @@ def _translated_scalar(
 
 
 def translate_metrics(
-    perf_data: Perfdata, check_command: str, explicit_color: str = ""
+    perf_data: Perfdata,
+    check_command: str,
+    registered_metrics: Mapping[str, RegisteredMetric],
+    explicit_color: str = "",
 ) -> Mapping[str, TranslatedMetric]:
     """Convert Ascii-based performance data as output from a check plug-in
     into floating point numbers, do scaling if necessary.
@@ -255,8 +260,8 @@ def translate_metrics(
             metric_name = translation_spec.name
 
         originals = [Original(perf_data_tuple.metric_name, translation_spec.scale)]
-        mi = get_metric_spec_with_color(metric_name, color_counter)
-        conversion = get_conversion_function(mi.unit_spec)
+        mi = get_metric_spec_with_color(metric_name, color_counter, registered_metrics)
+        conversion = user_specific_unit(mi.unit_spec, user, active_config).conversion
         translated_metrics[metric_name] = TranslatedMetric(
             originals=(
                 list(translated_metrics[metric_name].originals) + originals
@@ -282,6 +287,7 @@ def available_metrics_translated(
     perf_data_string: str,
     rrd_metrics: list[MetricName],
     check_command: str,
+    registered_metrics: Mapping[str, RegisteredMetric],
     explicit_color: str = "",
 ) -> Mapping[str, TranslatedMetric]:
     # If we have no RRD files then we cannot paint any graph :-(
@@ -308,16 +314,18 @@ def available_metrics_translated(
     for p in rrd_perf_data:
         if p.metric_name not in current_variables:
             perf_data.append(p)
-    return translate_metrics(perf_data, check_command, explicit_color)
+    return translate_metrics(perf_data, check_command, registered_metrics, explicit_color)
 
 
 def translated_metrics_from_row(
-    row: Row, explicit_color: str = ""
+    row: Row,
+    registered_metrics: Mapping[str, RegisteredMetric],
+    explicit_color: str = "",
 ) -> Mapping[str, TranslatedMetric]:
     what = "service" if "service_check_command" in row else "host"
     perf_data_string = row[what + "_perf_data"]
     rrd_metrics = row[what + "_metrics"]
     check_command = row[what + "_check_command"]
     return available_metrics_translated(
-        perf_data_string, rrd_metrics, check_command, explicit_color
+        perf_data_string, rrd_metrics, check_command, registered_metrics, explicit_color
     )

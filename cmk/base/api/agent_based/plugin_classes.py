@@ -5,9 +5,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Literal, NamedTuple, Protocol
+from typing import Any, Literal, NamedTuple, Protocol, Self
 
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets import RuleSetName
@@ -16,10 +16,10 @@ from cmk.utils.sectionname import SectionName
 from cmk.snmplib import SNMPDetectBaseType
 
 from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.inventory import InventoryPluginName
+from cmk.checkengine.inventory import InventoryPlugin, InventoryPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
-from cmk.agent_based.v1.type_defs import (
+from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
     HostLabelGenerator,
@@ -115,10 +115,20 @@ class CheckPlugin(NamedTuple):
     location: PluginLocation | LegacyPluginLocation
 
 
-class InventoryPlugin(NamedTuple):
-    name: InventoryPluginName
-    sections: list[ParsedSectionName]
-    inventory_function: InventoryFunction
-    inventory_default_parameters: ParametersTypeAlias
-    inventory_ruleset_name: RuleSetName | None
-    location: PluginLocation
+@dataclass(frozen=True, kw_only=True)
+class AgentBasedPlugins:
+    agent_sections: Mapping[SectionName, AgentSectionPlugin]
+    snmp_sections: Mapping[SectionName, SNMPSectionPlugin]
+    check_plugins: Mapping[CheckPluginName, CheckPlugin]
+    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin]
+    errors: Sequence[str]
+
+    @classmethod
+    def empty(cls) -> Self:
+        return cls(
+            agent_sections={},
+            snmp_sections={},
+            check_plugins={},
+            inventory_plugins={},
+            errors=(),
+        )

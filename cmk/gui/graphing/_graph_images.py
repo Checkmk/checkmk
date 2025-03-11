@@ -9,7 +9,7 @@ import base64
 import json
 import time
 import traceback
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 from pydantic import ValidationError as PydanticValidationError
@@ -30,6 +30,7 @@ from cmk.gui.pages import Page
 from cmk.gui.type_defs import SizePT
 
 from ._artwork import compute_graph_artwork, compute_graph_artwork_curves, GraphArtwork
+from ._from_api import metrics_from_api, RegisteredMetric
 from ._graph_pdf import (
     compute_pdf_graph_data_range,
     get_mm_per_ex,
@@ -62,10 +63,10 @@ class AjaxGraphImagesForNotifications(Page):
             # Now we use the SiteInternalSecret for this.
             raise MKUnauthenticatedException(_("You are not allowed to access this page."))
 
-        _answer_graph_image_request()
+        _answer_graph_image_request(metrics_from_api)
 
 
-def _answer_graph_image_request() -> None:
+def _answer_graph_image_request(registered_metrics: Mapping[str, RegisteredMetric]) -> None:
     try:
         host_name = request.get_validated_type_input_mandatory(HostName, "host")
 
@@ -79,12 +80,15 @@ def _answer_graph_image_request() -> None:
         try:
             row = get_graph_data_from_livestatus(site, host_name, service_description)
         except livestatus.MKLivestatusNotFoundError:
+            logger.debug(
+                "Cannot fetch graph data: site: %s, host %s, service %s",
+                site,
+                host_name,
+                service_description,
+            )
             if active_config.debug:
                 raise
-            raise Exception(
-                _("Cannot render graph: host %s, service %s not found.")
-                % (host_name, service_description)
-            ) from None
+            return
 
         site = row["site"]
 
@@ -104,7 +108,7 @@ def _answer_graph_image_request() -> None:
             service_name=service_description,
             graph_index=None,  # all graphs
             destination=GraphDestinations.notification,
-        ).recipes()
+        ).recipes(registered_metrics)
         num_graphs = request.get_integer_input("num_graphs") or len(graph_recipes)
 
         graphs = []
@@ -113,6 +117,7 @@ def _answer_graph_image_request() -> None:
                 graph_recipe,
                 graph_data_range,
                 graph_render_config.size,
+                registered_metrics,
             )
             graph_png = render_graph_image(graph_artwork, graph_render_config)
 
@@ -121,7 +126,9 @@ def _answer_graph_image_request() -> None:
         response.set_data(json.dumps(graphs))
 
     except Exception as e:
-        logger.error("Call to ajax_graph_images.py failed: %s\n%s", e, traceback.format_exc())
+        logger.error(
+            "Call to ajax_graph_images.py failed: %s\n%s", e, "".join(traceback.format_stack())
+        )
         if active_config.debug:
             raise
 
@@ -196,6 +203,7 @@ def render_graph_image(
 
 def graph_recipes_for_api_request(
     api_request: dict[str, Any],
+    registered_metrics: Mapping[str, RegisteredMetric],
 ) -> tuple[GraphDataRange, Sequence[GraphRecipe]]:
     # Get and validate the specification
     if not (raw_graph_spec := api_request.get("specification")):
@@ -227,7 +235,7 @@ def graph_recipes_for_api_request(
     raw_graph_data_range["step"] = 60
 
     try:
-        graph_recipes = graph_specification.recipes()
+        graph_recipes = graph_specification.recipes(registered_metrics)
     except livestatus.MKLivestatusNotFoundError as e:
         raise MKUserError(None, _("Cannot calculate graph recipes: %s") % e)
 
@@ -240,9 +248,15 @@ def graph_recipes_for_api_request(
     return GraphDataRange.model_validate(raw_graph_data_range), graph_recipes
 
 
-def graph_spec_from_request(api_request: dict[str, Any]) -> dict[str, Any]:
+def graph_spec_from_request(
+    api_request: dict[str, Any],
+    registered_metrics: Mapping[str, RegisteredMetric],
+) -> dict[str, Any]:
     try:
-        graph_data_range, graph_recipes = graph_recipes_for_api_request(api_request)
+        graph_data_range, graph_recipes = graph_recipes_for_api_request(
+            api_request,
+            registered_metrics,
+        )
         graph_recipe = graph_recipes[0]
 
     except PydanticValidationError as e:
@@ -251,20 +265,21 @@ def graph_spec_from_request(api_request: dict[str, Any]) -> dict[str, Any]:
     except IndexError:
         raise MKUserError(None, _("The requested graph does not exist"))
 
-    curves = compute_graph_artwork_curves(graph_recipe, graph_data_range)
+    curves = compute_graph_artwork_curves(graph_recipe, graph_data_range, registered_metrics)
 
     api_curves = []
-    (start_time, end_time), step = graph_data_range.time_range, 60  # empty graph
+    (start, end), step = graph_data_range.time_range, 60  # empty graph
 
     for c in curves:
-        start_time, end_time, step = c["rrddata"].twindow
+        time_series = c["rrddata"]
+        start, end, step = time_series.start, time_series.end, time_series.step
         api_curve: dict[str, Any] = dict(c)
         api_curve["rrddata"] = c["rrddata"].values
         api_curves.append(api_curve)
 
     return {
-        "start_time": start_time,
-        "end_time": end_time,
+        "start_time": start,
+        "end_time": end,
         "step": step,
         "curves": api_curves,
     }

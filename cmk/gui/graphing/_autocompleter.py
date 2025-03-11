@@ -5,7 +5,8 @@
 
 from cmk.gui.type_defs import Choices
 
-from ._metrics import registered_metrics
+from ._from_api import metrics_from_api
+from ._metrics import registered_metric_ids_and_titles
 from ._valuespecs import metrics_of_query
 
 
@@ -17,9 +18,9 @@ def metrics_autocompleter(value: str, params: dict) -> Choices:
         return []
 
     if context:
-        metrics = set(metrics_of_query(context))
+        metrics = set(metrics_of_query(context, metrics_from_api))
     else:
-        metrics = set(registered_metrics())
+        metrics = set(registered_metric_ids_and_titles(metrics_from_api))
 
     return sorted(
         (v for v in metrics if _matches_id_or_title(value, v)),

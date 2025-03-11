@@ -35,7 +35,7 @@ def _mail_transfer_memory_form() -> Dictionary:
 
 rule_spec_dns_requests = CheckParameters(
     name="cisco_sma_mail_transfer_memory",
-    title=Title("Cisco SMA Mail Transfer Memory"),
+    title=Title("Cisco SMA mail transfer memory"),
     topic=Topic.APPLICATIONS,
     parameter_form=_mail_transfer_memory_form,
     condition=HostCondition(),

@@ -92,7 +92,7 @@ def main() {
                         EDITION: edition,
                         VERSION: version,
                         CROSS_EDITION_TARGET: cross_edition_target,
-                        CUSTOM_GIT_REF: CUSTOM_GIT_REF,
+                        CUSTOM_GIT_REF: effective_git_ref,
                         FAKE_WINDOWS_ARTIFACTS: params.FAKE_WINDOWS_ARTIFACTS,
                     ],
                     build_params_no_check: [

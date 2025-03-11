@@ -841,9 +841,14 @@ class Site:
                         f"Version {self.version.version} could not be uninstalled!"
                     ) from excp
                 raise excp
-            assert not self.version.is_installed(), (
+            output = run(["ls", "-laR", self.version.version_path()], check=False, sudo=True).stdout
+            remaining_files = (
+                [_ for _ in output.strip().split("\n") if _] if isinstance(output, str) else []
+            )
+            assert not remaining_files, (
                 f"Version {self.version.version} is still installed, "
                 "even though the uninstallation was completed with RC=0!"
+                f"Remaining files: {remaining_files}"
             )
 
     @tracer.instrument("Site.create")
@@ -1169,6 +1174,46 @@ class Site:
         # 1 -> fully stopped
         # 2 -> partially running
         return self.omd("status") == 1
+
+    @contextmanager
+    def omd_stopped(self) -> Iterator[None]:
+        """Make sure the site is stopped in this context.
+
+        Start it afterwards in case it was running before.
+        Fails if the site is partially running to begin with.
+        """
+        # fail for partially running sites.
+        assert (omd_status := self.omd("status")) in (0, 1)
+
+        if omd_status == 1:  # stopped anyway
+            yield
+            return
+
+        assert self.omd("stop") == 0
+        try:
+            yield
+        finally:
+            assert self.omd("start") == 0
+
+    @contextmanager
+    def omd_config(self, setting: str, value: str) -> Iterator[None]:
+        """Set an omd config value for a context.
+
+        This context manager will leave the site with the omd config set to the value
+        it was before, in the state that it was before (running / stopped).
+        """
+        if (current_value := self.get_config(setting)) == value:
+            yield
+            return
+
+        with self.omd_stopped():
+            assert self.omd("config", "set", setting, value) == 0
+
+        try:
+            yield
+        finally:
+            with self.omd_stopped():
+                assert self.omd("config", "set", setting, current_value) == 0
 
     def set_config(self, key: str, val: str, with_restart: bool = False) -> None:
         if self.get_config(key) == val:
@@ -1823,7 +1868,9 @@ class SiteFactory:
             assert rc == 0, (
                 f"Failed to interactively update the test-site!\n"
                 "Logfile content:\n"
-                f"{pprint.pformat(site.read_file('var/log/update.log'), indent=4)}"
+                f"{pprint.pformat(Path(logfile_path).read_text(), indent=4)}\n\n"
+                f"You might want to consider modifying {min_version=} to adapt it to the current "
+                f"minimal supported version."
             )
         else:
             assert rc == 256, f"Executed command returned {rc} exit status. Expected: 256"

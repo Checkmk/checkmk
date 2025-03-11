@@ -16,7 +16,7 @@ from cmk.gui.theme.current_theme import theme
 
 from .base import Painter
 from .helpers import RenderLink
-from .host_tag_painters import host_tag_config_based_painters
+from .host_tag_painters import HashableTagGroups, host_tag_config_based_painters
 
 
 class PainterRegistry(Registry[type[Painter]]):
@@ -35,7 +35,9 @@ painter_registry = PainterRegistry()
 
 
 def all_painters(config: Config) -> dict[str, type[Painter]]:
-    return dict(painter_registry.items()) | host_tag_config_based_painters(config)
+    return dict(painter_registry.items()) | host_tag_config_based_painters(
+        HashableTagGroups(config.tags.tag_groups)
+    )
 
 
 # Kept for pre 1.6 compatibility.

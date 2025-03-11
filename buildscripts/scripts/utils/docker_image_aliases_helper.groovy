@@ -61,13 +61,12 @@ inside_container = {Map arg1=[:], Closure arg2 ->
      """);
 
     def image = args.image ?: docker_reference_image();
-    def privileged = args.get("priviliged", false).asBoolean();
+    def privileged = args.get("privileged", false).asBoolean();
     def init = args.get("init", false).asBoolean();
     def pull = args.get("pull", false).asBoolean();
     def mount_reference_repo = args.get("mount_reference_repo", true).asBoolean();
     def mount_credentials = args.get("mount_credentials", false).asBoolean();
     def set_docker_group_id = args.get("set_docker_group_id", false).asBoolean();
-    def create_cache_folder = args.get("create_cache_folder", true).asBoolean();
     def mount_host_user_files = args.get("mount_host_user_files", true).asBoolean();
     def run_args = args.args == null ? [] : args.args;
 
@@ -90,10 +89,10 @@ inside_container = {Map arg1=[:], Closure arg2 ->
             + (args.ulimit_nofile ? ["--ulimit nofile=${args.ulimit_nofile}:${args.ulimit_nofile}"] : [])
             + (privileged ? ["-v /var/run/docker.sock:/var/run/docker.sock"] : [])
             + ["-v \"${container_shadow_workspace}/home:${env.HOME}\""]
+            + "--tmpfs ${env.HOME}/.cache:exec,size=15g,mode=777" // use different size locally vs in CI, 15GB locally is to much, but 10GB not enough on CI
             + (mount_credentials ? ["-v ${env.HOME}/.cmk-credentials:${env.HOME}/.cmk-credentials"] : [])
             + (mount_host_user_files ? ["-v /etc/passwd:/etc/passwd:ro -v /etc/group:/etc/group:ro"] : [])
             + ((mount_reference_repo && reference_repo_dir) ? ["-v ${reference_repo_dir}:${reference_repo_dir}:ro"] : [])
-            + (create_cache_folder ? ["-v \"${container_shadow_workspace}/home_cache:${env.HOME}/.cache\""] : [])
             + ["-v \"${container_shadow_workspace}/checkout_cache:${checkout_dir}/.cache\""]
         ).join(" ");
         /// We have to make sure both, the source directory and (if applicable) the target
@@ -117,6 +116,8 @@ inside_container = {Map arg1=[:], Closure arg2 ->
 
             # create mount dirs for $HOME/.cache (not to confuse with <checkout_dir>/.cache)
             mkdir -p "${container_shadow_workspace}/home_cache"
+            mkdir -p "${container_shadow_workspace}/home_cache/bazel"
+
             mkdir -p "${container_shadow_workspace}/home/.cache"
 
             # create mount dirs for <checkout_dir>/.cache

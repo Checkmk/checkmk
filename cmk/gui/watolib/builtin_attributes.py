@@ -20,6 +20,7 @@ from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecompose
 from cmk.gui.form_specs.generators.host_address import create_host_address
 from cmk.gui.form_specs.generators.setup_site_choice import create_setup_site_choice
 from cmk.gui.form_specs.generators.snmp_credentials import create_snmp_credentials
+from cmk.gui.form_specs.private import labels as fs_labels
 from cmk.gui.form_specs.private import ListOfStrings as FSListOfStrings
 from cmk.gui.form_specs.private import (
     OptionalChoice,
@@ -1589,6 +1590,11 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
 
     def valuespec(self) -> ValueSpec:
         return Labels(world=Labels.World.CONFIG, label_source=Labels.Source.EXPLICIT)
+
+    def form_spec(self) -> fs_labels.Labels:
+        return fs_labels.Labels(
+            world=fs_labels.World.CONFIG, label_source=fs_labels.Source.EXPLICIT
+        )
 
     def openapi_field(self) -> gui_fields.Field:
         return fields.Dict(

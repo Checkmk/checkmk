@@ -284,8 +284,8 @@ def test_install(
         _make_mkp_bytes(installer, path_config, package_store),
         path_config,
         {},
-        allow_outdated=False,
         site_version="3.14",
+        version_check=True,
         parse_version=float,
     )
     assert installer.is_installed(PackageName("aaa")) is True

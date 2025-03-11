@@ -16,7 +16,7 @@ use crate::checking_types::{
     check_lower_levels, check_upper_levels, notice, Bounds, CheckResult, LowerLevels, State,
     UpperLevels,
 };
-use crate::http::{Body, OnRedirect, ProcessedResponse, Server};
+use crate::http::{Body, OnRedirect, ProcessedResponse};
 
 pub struct RequestInformation {
     pub request_url: Url,
@@ -24,7 +24,7 @@ pub struct RequestInformation {
     pub user_agent: String,
     pub onredirect: OnRedirect,
     pub timeout: Duration,
-    pub server: Option<Server>,
+    pub server: Option<String>,
 }
 
 pub struct CheckParameters {
@@ -127,7 +127,7 @@ pub fn collect_response_checks(
     .collect()
 }
 
-fn check_urls(url: Url, final_url: Url, server: Option<Server>) -> Vec<Option<CheckResult>> {
+fn check_urls(url: Url, final_url: Url, server: Option<String>) -> Vec<Option<CheckResult>> {
     let url_text = format!("URL to test: {}", url);
     let mut results = vec![CheckResult::details(State::Ok, &url_text)];
     // If we end up with a different final_url, we obviously got redirected.

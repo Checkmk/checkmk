@@ -33,6 +33,7 @@ from typing import (
     Literal,
     NamedTuple,
     overload,
+    TypeGuard,
     TypeVar,
 )
 
@@ -131,6 +132,7 @@ import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import default_config
 from cmk.base.api.agent_based.cluster_mode import ClusterMode
 from cmk.base.api.agent_based.plugin_classes import (
+    AgentBasedPlugins,
     AgentSectionPlugin,
     CheckPlugin,
     SNMPSectionPlugin,
@@ -279,7 +281,11 @@ def _aggregate_check_table_services(
             )
         else:
             yield from (
-                s for s in config_cache.get_discovered_services(host_name) if sfilter.keep(s)
+                s
+                for s in configure_autochecks(
+                    host_name, config_cache.autochecks_manager.get_autochecks(host_name)
+                )
+                if sfilter.keep(s)
             )
 
     yield from (
@@ -558,17 +564,34 @@ def register(name: str, default_value: Any) -> None:
 #   '----------------------------------------------------------------------'
 
 
-class LoadedConfigSentinel:
-    """Indicate that a config loading function has been called.
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class LoadedConfigFragment:
+    """Return *some of* the values that have been loaded as part of the config loading process.
 
     The config loading currently mostly manipulates a global state.
     Return an instance of this class, to indicate that the config has been loaded.
 
-    Someday (TM): return the actual loaded config!
+    Someday (TM): return the actual loaded config, at which point this class will be quite big
+    (compare cmk/base/default_config/base ...)
     """
 
-    def __bool__(self) -> Literal[True]:
-        return True
+    discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]] = dataclasses.field(
+        default_factory=dict
+    )
+    checkgroup_parameters: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]] = (
+        dataclasses.field(default_factory=dict)
+    )
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class LoadingResult:
+    """Return the result of the config loading process.
+
+    This is hopefully temporary, until ConfigCache is dissolved ...
+    """
+
+    loaded_config: LoadedConfigFragment
+    config_cache: ConfigCache
 
 
 # This function still mostly manipulates a global state.
@@ -577,21 +600,21 @@ def load(
     discovery_rulesets: Iterable[RuleSetName],
     with_conf_d: bool = True,
     validate_hosts: bool = True,
-) -> LoadedConfigSentinel:
+) -> LoadingResult:
     _initialize_config()
 
     _changed_var_names = _load_config(with_conf_d)
 
     _initialize_derived_config_variables()
 
-    _perform_post_config_loading_actions(discovery_rulesets)
+    loading_result = _perform_post_config_loading_actions(discovery_rulesets)
 
     if validate_hosts:
-        config_cache = get_config_cache()
-        hosts_config = config_cache.hosts_config
+        hosts_config = loading_result.config_cache.hosts_config
         if duplicates := sorted(
             hosts_config.duplicates(
-                lambda hn: config_cache.is_active(hn) and config_cache.is_online(hn)
+                lambda hn: loading_result.config_cache.is_active(hn)
+                and loading_result.config_cache.is_online(hn)
             )
         ):
             # TODO: Raise an exception
@@ -601,12 +624,14 @@ def load(
             )
             sys.exit(3)
 
-    return LoadedConfigSentinel()
+    return loading_result
 
 
 # This function still mostly manipulates a global state.
 # Passing the discovery rulesets as an argument is a first step to make it more functional.
-def load_packed_config(config_path: ConfigPath, discovery_rulesets: Iterable[RuleSetName]) -> None:
+def load_packed_config(
+    config_path: ConfigPath, discovery_rulesets: Iterable[RuleSetName]
+) -> LoadingResult:
     """Load the configuration for the CMK helpers of CMC
 
     These files are written by PackedConfig().
@@ -622,23 +647,36 @@ def load_packed_config(config_path: ConfigPath, discovery_rulesets: Iterable[Rul
     """
     _initialize_config()
     globals().update(PackedConfigStore.from_serial(config_path).read())
-    _perform_post_config_loading_actions(discovery_rulesets)
+    return _perform_post_config_loading_actions(discovery_rulesets)
 
 
 def _initialize_config() -> None:
     load_default_config()
 
 
-def _perform_post_config_loading_actions(discovery_rulesets: Iterable[RuleSetName]) -> None:
+def _perform_post_config_loading_actions(
+    discovery_rulesets: Iterable[RuleSetName],
+) -> LoadingResult:
     """These tasks must be performed after loading the Check_MK base configuration"""
     # First cleanup things (needed for e.g. reloading the config)
     cache_manager.clear_all()
 
     global_dict = globals()
-    _collect_parameter_rulesets_from_globals(global_dict, discovery_rulesets)
+    discovery_settings = _collect_parameter_rulesets_from_globals(global_dict, discovery_rulesets)
     _transform_plugin_names_from_160_to_170(global_dict)
+    _drop_invalid_ssc_rules(global_dict)
 
-    get_config_cache().initialize()
+    loaded_config = LoadedConfigFragment(
+        discovery_rules=discovery_settings,
+        checkgroup_parameters=checkgroup_parameters,
+    )
+
+    config_cache = _create_config_cache(loaded_config).initialize()
+    _globally_cache_config_cache(config_cache)
+    return LoadingResult(
+        loaded_config=loaded_config,
+        config_cache=config_cache,
+    )
 
 
 class SetFolderPathAbstract:
@@ -780,12 +818,32 @@ def _transform_plugin_names_from_160_to_170(global_dict: dict[str, Any]) -> None
         }
 
 
+def _is_mapping_rulespec(rs: RuleSpec[object]) -> TypeGuard[RuleSpec[Mapping[str, object]]]:
+    return isinstance(rs["value"], dict) and all(isinstance(k, str) for k in rs["value"])
+
+
+def _drop_invalid_ssc_rules(global_dict: dict[str, Any]) -> None:
+    """Drop all SSC rules whos values are not Mapping[str, object]s
+
+    These days, we rely on all values of these type of rules to be Mappings.
+    This is ensured by the new ruleset types, but users could have old
+    configurations flying around.
+    """
+    for ssc_rule_type in ("active_checks", "special_agents"):
+        if ssc_rule_type not in global_dict:
+            continue
+        global_dict[ssc_rule_type] = {
+            k: [rs for rs in rulespecs if _is_mapping_rulespec(rs)]
+            for k, rulespecs in global_dict[ssc_rule_type].items()
+        }
+
+
 def _collect_parameter_rulesets_from_globals(
     global_dict: dict[str, Any], discovery_rulesets: Iterable[RuleSetName]
-) -> None:
-    for ruleset_name in discovery_rulesets:
-        if (var_name := str(ruleset_name)) in global_dict:
-            agent_based_register.set_discovery_ruleset(ruleset_name, global_dict.pop(var_name))
+) -> Mapping[RuleSetName, Sequence[RuleSpec]]:
+    return {
+        ruleset_name: global_dict.pop(str(ruleset_name), []) for ruleset_name in discovery_rulesets
+    }
 
 
 # Create list of all files to be included during configuration loading
@@ -1446,20 +1504,19 @@ def load_all_plugins(
     *,
     local_checks_dir: Path,
     checks_dir: str,
-) -> list[str]:
+) -> AgentBasedPlugins:
     with tracer.span("load_legacy_check_plugins"):
         with tracer.span("discover_legacy_check_plugins"):
             filelist = find_plugin_files(str(local_checks_dir), checks_dir)
 
         legacy_errors, sections, checks = load_and_convert_legacy_checks(filelist)
 
-    errors = agent_based_register.load_all_plugins(
+    return agent_based_register.load_all_plugins(
         sections=sections,
         checks=checks,
+        legacy_errors=legacy_errors,
         raise_errors=cmk.ccc.debug.enabled(),
     )
-
-    return errors + legacy_errors
 
 
 @tracer.instrument("load_and_convert_legacy_checks")
@@ -1507,6 +1564,7 @@ def load_and_convert_legacy_checks(
 def _make_compute_check_parameters_cb(
     matcher: RulesetMatcher,
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    parameter_rules: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]],
 ) -> Callable[
     [HostName, CheckPluginName, Item, Labels, Mapping[str, object]],
     TimespecificParameters,
@@ -1524,10 +1582,39 @@ def _make_compute_check_parameters_cb(
         params: Mapping[str, object],
     ) -> TimespecificParameters:
         return compute_check_parameters(
-            matcher, check_plugins, host_name, plugin_name, item, service_labels, params, None
+            matcher,
+            check_plugins,
+            host_name,
+            plugin_name,
+            item,
+            service_labels,
+            params,
+            parameter_rules,
         )
 
     return callback
+
+
+def compute_enforced_service_parameters(
+    plugins: Mapping[CheckPluginName, CheckPlugin],
+    plugin_name: CheckPluginName,
+    configured_parameters: TimespecificParameterSet,
+) -> TimespecificParameters:
+    """Compute effective check parameters for enforced services.
+
+    Honoring (in order of precedence):
+     * the configured parameters
+     * the plugins defaults
+    """
+    defaults = (
+        {}
+        if (check_plugin := agent_based_register.get_check_plugin(plugin_name, plugins)) is None
+        else check_plugin.check_default_parameters or {}
+    )
+
+    return TimespecificParameters(
+        [configured_parameters, TimespecificParameterSet.from_parameters(defaults)]
+    )
 
 
 def compute_check_parameters(
@@ -1538,7 +1625,7 @@ def compute_check_parameters(
     item: Item,
     service_labels: Labels,
     params: Mapping[str, object],
-    configured_parameters: TimespecificParameters | None = None,
+    parameter_rules: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]],
 ) -> TimespecificParameters:
     """Compute effective check parameters.
 
@@ -1551,15 +1638,14 @@ def compute_check_parameters(
     if check_plugin is None:  # handle vanished check plug-in
         return TimespecificParameters()
 
-    if configured_parameters is None:
-        configured_parameters = _get_configured_parameters(
-            matcher,
-            host_name,
-            plugin_name,
-            service_labels,
-            ruleset_name=check_plugin.check_ruleset_name,
-            item=item,
-        )
+    configured_parameters = _get_configured_parameters(
+        matcher,
+        host_name,
+        service_labels,
+        ruleset_name=check_plugin.check_ruleset_name,
+        item=item,
+        parameter_rules=parameter_rules,
+    )
 
     return TimespecificParameters(
         [
@@ -1573,11 +1659,11 @@ def compute_check_parameters(
 def _get_configured_parameters(
     matcher: RulesetMatcher,
     host_name: HostName,
-    plugin_name: CheckPluginName,
     service_labels: Labels,
     *,  # the following are all the same type :-(
     ruleset_name: RuleSetName | None,
     item: Item,
+    parameter_rules: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]],
 ) -> TimespecificParameters:
     if ruleset_name is None:
         return TimespecificParameters()
@@ -1587,7 +1673,7 @@ def _get_configured_parameters(
             # parameters configured via checkgroup_parameters
             TimespecificParameterSet.from_parameters(p)
             for p in _get_checkgroup_parameters(
-                matcher, host_name, item, service_labels, str(ruleset_name)
+                matcher, host_name, item, service_labels, str(ruleset_name), parameter_rules
             )
         ]
     )
@@ -1599,8 +1685,9 @@ def _get_checkgroup_parameters(
     item: Item,
     service_labels: Labels,
     checkgroup: RulesetName,
+    parameter_rules: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]],
 ) -> Sequence[Mapping[str, object]]:
-    rules = checkgroup_parameters.get(checkgroup)
+    rules = parameter_rules.get(checkgroup)
     if rules is None:
         return []
 
@@ -1796,14 +1883,17 @@ class AutochecksConfigurer:
         return self._config_cache.effective_host(host_name, service_name, service_labels)
 
     def service_description(self, host_name: HostName, entry: AutocheckEntry) -> ServiceName:
-        plugins = agent_based_register.get_previously_loaded_plugins().check_plugins
         return service_description(
             self._config_cache.ruleset_matcher,
             host_name,
             entry.check_plugin_name,
             service_name_template=(
                 None
-                if (p := agent_based_register.get_check_plugin(entry.check_plugin_name, plugins))
+                if (
+                    p := agent_based_register.get_check_plugin(
+                        entry.check_plugin_name, self._check_plugins
+                    )
+                )
                 is None
                 else p.service_name
             ),
@@ -1817,8 +1907,9 @@ class AutochecksConfigurer:
 
 
 class ConfigCache:
-    def __init__(self) -> None:
+    def __init__(self, loaded_config: LoadedConfigFragment) -> None:
         super().__init__()
+        self._loaded_config: Final = loaded_config
         self.hosts_config = Hosts(hosts=(), clusters=(), shadow_hosts=())
         self.__enforced_services_table: dict[
             HostName,
@@ -1859,7 +1950,10 @@ class ConfigCache:
             self._nodes_cache,
         ) = _make_clusters_nodes_maps()
 
-        self._autochecks_manager = AutochecksManager()
+        # TODO: remove this from the config cache. It is a completely
+        # self-contained object that should be passed around (if it really
+        # has to exist at all).
+        self.autochecks_manager = AutochecksManager()
         self._effective_host_cache: dict[
             tuple[HostName, ServiceName, tuple[tuple[str, str], ...], tuple[HostName, ...]],
             HostName,
@@ -1898,20 +1992,24 @@ class ConfigCache:
                 if self.is_active(hn) and self.is_online(hn)
             }
         )
+        return self
 
-        check_plugins = agent_based_register.get_previously_loaded_plugins().check_plugins
-
-        self._service_configurer = ServiceConfigurer(
-            _make_compute_check_parameters_cb(self.ruleset_matcher, check_plugins),
+    def make_service_configurer(
+        self, check_plugins: Mapping[CheckPluginName, CheckPlugin]
+    ) -> ServiceConfigurer:
+        # This function is not part of the checkengine, because it still has
+        # hidden dependencies to the loaded config in the global scope of this module.
+        return ServiceConfigurer(
+            _make_compute_check_parameters_cb(
+                self.ruleset_matcher, check_plugins, self._loaded_config.checkgroup_parameters
+            ),
             _make_service_description_cb(self.ruleset_matcher, check_plugins),
             self.effective_host,
             self.ruleset_matcher.labels_of_service,
         )
 
-        return self
-
-    def fetcher_factory(self) -> FetcherFactory:
-        return FetcherFactory(self, self.ruleset_matcher)
+    def fetcher_factory(self, service_configurer: ServiceConfigurer) -> FetcherFactory:
+        return FetcherFactory(self, self.ruleset_matcher, service_configurer)
 
     def parser_factory(self) -> ParserFactory:
         return ParserFactory(self, self.ruleset_matcher)
@@ -2042,7 +2140,8 @@ class ConfigCache:
 
     def make_checking_sections(
         self,
-        plugins: agent_based_register.AgentBasedPlugins,
+        plugins: AgentBasedPlugins,
+        service_configurer: ServiceConfigurer,
         hostname: HostName,
         *,
         selected_sections: SectionNameCollection,
@@ -2057,6 +2156,7 @@ class ConfigCache:
                         for n in self.check_table(
                             hostname,
                             plugins.check_plugins,
+                            service_configurer,
                             filter_mode=FilterMode.INCLUDE_CLUSTERED,
                             skip_ignored=True,
                         ).needed_check_names()
@@ -2106,6 +2206,7 @@ class ConfigCache:
         self,
         hostname: HostName,
         plugins: Mapping[CheckPluginName, CheckPlugin],
+        service_configurer: ServiceConfigurer,
         *,
         use_cache: bool = True,
         filter_mode: FilterMode = FilterMode.NONE,
@@ -2123,8 +2224,8 @@ class ConfigCache:
                 config_cache=self,
                 skip_ignored=skip_ignored,
                 filter_mode=filter_mode,
-                get_autochecks=self._autochecks_manager.get_autochecks,
-                configure_autochecks=self._service_configurer.configure_autochecks,
+                get_autochecks=self.autochecks_manager.get_autochecks,
+                configure_autochecks=service_configurer.configure_autochecks,
                 plugins=plugins,
             )
         )
@@ -2135,18 +2236,24 @@ class ConfigCache:
         return host_check_table
 
     def _sorted_services(
-        self, hostname: HostName, plugins: Mapping[CheckPluginName, CheckPlugin]
+        self,
+        hostname: HostName,
+        plugins: Mapping[CheckPluginName, CheckPlugin],
+        service_configurer: ServiceConfigurer,
     ) -> Sequence[ConfiguredService]:
         # This method is only useful for the monkeypatching orgy of the "unit"-tests.
         return sorted(
-            self.check_table(hostname, plugins).values(),
+            self.check_table(hostname, plugins, service_configurer).values(),
             key=lambda service: service.description,
         )
 
     def configured_services(
-        self, hostname: HostName, plugins: Mapping[CheckPluginName, CheckPlugin]
+        self,
+        hostname: HostName,
+        plugins: Mapping[CheckPluginName, CheckPlugin],
+        service_configurer: ServiceConfigurer,
     ) -> Sequence[ConfiguredService]:
-        services = self._sorted_services(hostname, plugins)
+        services = self._sorted_services(hostname, plugins, service_configurer)
         if is_cmc():
             return services
 
@@ -2191,42 +2298,32 @@ class ConfigCache:
         with contextlib.suppress(KeyError):
             return self.__enforced_services_table[hostname]
 
-        table = {}
-        for checkgroup_name, ruleset in static_checks.items():
-            for check_plugin_name, item, params in (
-                ConfigCache._sanitize_enforced_entry(*entry)
-                for entry in reversed(self.ruleset_matcher.get_host_values(hostname, ruleset))
-            ):
-                descr = service_description(
-                    self.ruleset_matcher,
-                    hostname,
-                    check_plugin_name,
-                    service_name_template=(
-                        None
-                        if (p := agent_based_register.get_check_plugin(check_plugin_name, plugins))
-                        is None
-                        else p.service_name
-                    ),
-                    item=item,
-                )
-                labels = self.ruleset_matcher.labels_of_service(
-                    hostname, descr, discovered_labels={}
-                )
-                table[ServiceID(check_plugin_name, item)] = (
+        return self.__enforced_services_table.setdefault(
+            hostname,
+            {
+                ServiceID(check_plugin_name, item): (
                     RulesetName(checkgroup_name),
                     ConfiguredService(
                         check_plugin_name=check_plugin_name,
                         item=item,
-                        description=descr,
-                        parameters=compute_check_parameters(
+                        description=service_description(
                             self.ruleset_matcher,
-                            plugins,
-                            self.effective_host(hostname, descr, labels),
+                            hostname,
                             check_plugin_name,
-                            item,
-                            labels,
-                            {},
-                            configured_parameters=TimespecificParameters((params,)),
+                            service_name_template=(
+                                None
+                                if (
+                                    p := agent_based_register.get_check_plugin(
+                                        check_plugin_name, plugins
+                                    )
+                                )
+                                is None
+                                else p.service_name
+                            ),
+                            item=item,
+                        ),
+                        parameters=compute_enforced_service_parameters(
+                            plugins, check_plugin_name, params
                         ),
                         discovered_parameters={},
                         discovered_labels={},
@@ -2234,8 +2331,13 @@ class ConfigCache:
                         is_enforced=True,
                     ),
                 )
-
-        return table
+                for checkgroup_name, ruleset in static_checks.items()
+                for check_plugin_name, item, params in (
+                    ConfigCache._sanitize_enforced_entry(*entry)
+                    for entry in reversed(self.ruleset_matcher.get_host_values(hostname, ruleset))
+                )
+            },
+        )
 
     @staticmethod
     def _sanitize_enforced_entry(
@@ -2551,7 +2653,7 @@ class ConfigCache:
 
         def make_active_checks() -> Sequence[SSCRules]:
             configured_checks: list[SSCRules] = []
-            for plugin_name, ruleset in sorted(active_checks.items(), key=lambda x: x[0]):
+            for plugin_name, ruleset in sorted(active_checks.items()):
                 # Skip Check_MK HW/SW Inventory for all ping hosts, even when the
                 # user has enabled the inventory for ping only hosts
                 if plugin_name == "cmk_inv" and self.is_ping_host(host_name):
@@ -2741,18 +2843,18 @@ class ConfigCache:
         # consider making the hosts an argument. Sometimes we only need one.
 
         def _compose_filtered_ssc_rules(
-            ssc_config: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]],
+            ssc_config: Iterable[tuple[str, Sequence[RuleSpec[Mapping[str, object]]]]],
         ) -> Sequence[tuple[str, Sequence[Mapping[str, object]]]]:
             """Get _all_ configured rulesets (not only the ones matching any host)"""
-            return [(name, [r["value"] for r in ruleset]) for name, ruleset in ssc_config.items()]
+            return [(name, [r["value"] for r in ruleset]) for name, ruleset in ssc_config]
 
         return {
             **password_store.load(password_store.password_store_path()),
             **PreprocessingResult.from_config(
-                _compose_filtered_ssc_rules(active_checks)
+                _compose_filtered_ssc_rules(active_checks.items())
             ).ad_hoc_secrets,
             **PreprocessingResult.from_config(
-                _compose_filtered_ssc_rules(special_agents)
+                _compose_filtered_ssc_rules(special_agents.items())
             ).ad_hoc_secrets,
         }
 
@@ -3507,11 +3609,6 @@ class ConfigCache:
         except KeyError:
             return {}
 
-    def get_discovered_services(self, hostname: HostName) -> Sequence[ConfiguredService]:
-        return self._service_configurer.configure_autochecks(
-            hostname, self._autochecks_manager.get_autochecks(hostname)
-        )
-
     def section_name_of(self, section: str) -> str:
         try:
             return self._cache_section_name_of[section]
@@ -3833,31 +3930,6 @@ class ConfigCache:
         """Returns the nodes of a cluster. Returns () if no match."""
         return self._nodes_cache.get(hostname, ())
 
-    def effective_host_of_autocheck(self, node_name: HostName, entry: AutocheckEntry) -> HostName:
-        plugins = agent_based_register.get_previously_loaded_plugins().check_plugins
-        return self.effective_host(
-            node_name,
-            (
-                service_name := service_description(
-                    self.ruleset_matcher,
-                    node_name,
-                    entry.check_plugin_name,
-                    service_name_template=(
-                        None
-                        if (
-                            p := agent_based_register.get_check_plugin(
-                                entry.check_plugin_name, plugins
-                            )
-                        )
-                        is None
-                        else p.service_name
-                    ),
-                    item=entry.item,
-                )
-            ),
-            self.ruleset_matcher.labels_of_service(node_name, service_name, entry.service_labels),
-        )
-
     def effective_host(
         self,
         host_name: HostName,
@@ -4039,28 +4111,23 @@ class ConfigCache:
         return list(set(self.ruleset_matcher.get_host_values(host_name, host_icons_and_actions)))
 
 
-def get_config_cache() -> ConfigCache:
-    """get current or create clean config cache using cache manager"""
-    config_cache = cache_manager.obtain_cache("config_cache")
-    if not config_cache:
-        config_cache["cache"] = _create_config_cache()
-    return config_cache["cache"]
+def access_globally_cached_config_cache() -> ConfigCache:
+    """Get the global config cache"""
+    return cache_manager.obtain_cache("config_cache")["cache"]
 
 
-def reset_config_cache() -> ConfigCache:
-    """clean config cache using cache manager"""
-    config_cache = cache_manager.obtain_cache("config_cache")
-    config_cache["cache"] = _create_config_cache()
-    return config_cache["cache"]
+def _globally_cache_config_cache(config_cache: ConfigCache) -> None:
+    """Create a new ConfigCache and set it in the cache manager"""
+    cache_manager.obtain_cache("config_cache")["cache"] = config_cache
 
 
-def _create_config_cache() -> ConfigCache:
+def _create_config_cache(loaded_config: LoadedConfigFragment) -> ConfigCache:
     """create clean config cache"""
     if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE:
-        return ConfigCache()
+        return ConfigCache(loaded_config)
     if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CME:
-        return CMEConfigCache()
-    return CEEConfigCache()
+        return CMEConfigCache(loaded_config)
+    return CEEConfigCache(loaded_config)
 
 
 # TODO(au): Find a way to retreive the matchtype_information directly from the
@@ -4184,9 +4251,15 @@ class ParserFactory:
 
 class FetcherFactory:
     # TODO: better and clearer separation between ConfigCache and this class.
-    def __init__(self, config_cache: ConfigCache, ruleset_matcher_: RulesetMatcher) -> None:
+    def __init__(
+        self,
+        config_cache: ConfigCache,
+        ruleset_matcher_: RulesetMatcher,
+        service_configurer: ServiceConfigurer,
+    ) -> None:
         self._config_cache: Final = config_cache
         self._ruleset_matcher: Final = ruleset_matcher_
+        self._service_configurer: Final = service_configurer
         self.__disabled_snmp_sections: dict[HostName, frozenset[SectionName]] = {}
 
     def clear(self) -> None:
@@ -4234,7 +4307,7 @@ class FetcherFactory:
 
     def make_snmp_fetcher(
         self,
-        plugins: agent_based_register.AgentBasedPlugins,
+        plugins: AgentBasedPlugins,
         host_name: HostName,
         ip_address: HostAddress,
         *,
@@ -4251,7 +4324,10 @@ class FetcherFactory:
             sections=self._make_snmp_sections(
                 host_name,
                 checking_sections=self._config_cache.make_checking_sections(
-                    plugins, host_name, selected_sections=fetcher_config.selected_sections
+                    plugins,
+                    self._service_configurer,
+                    host_name,
+                    selected_sections=fetcher_config.selected_sections,
                 ),
                 sections=plugins.snmp_sections.values(),
             ),
@@ -4365,7 +4441,7 @@ class FetcherFactory:
 
 
 class CEEConfigCache(ConfigCache):
-    def __init__(self) -> None:
+    def __init__(self, loaded_config: LoadedConfigFragment) -> None:
         self.__rrd_config: dict[HostName, RRDObjectConfig | None] = {}
         self.__recuring_downtimes: dict[HostName, Sequence[RecurringDowntime]] = {}
         self.__flap_settings: dict[HostName, tuple[float, float, float]] = {}
@@ -4375,7 +4451,7 @@ class CEEConfigCache(ConfigCache):
         self.__lnx_remote_alert_handlers: dict[HostName, Sequence[Mapping[str, str]]] = {}
         self.__rtc_secret: dict[HostName, str | None] = {}
         self.__agent_config: dict[HostName, Mapping[str, Any]] = {}
-        super().__init__()
+        super().__init__(loaded_config)
 
     def invalidate_host_config(self) -> None:
         super().invalidate_host_config()

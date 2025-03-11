@@ -3,7 +3,8 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::check::{
-    self, pretty_levels, Check, CheckResult, Levels, Metric, Real, SimpleCheckResult,
+    self, pretty_levels, Check, CheckResult, CheckResultLevelsText, Levels, Metric, Real,
+    SimpleCheckResult,
 };
 use std::collections::HashSet;
 use std::convert::AsRef;
@@ -171,9 +172,9 @@ pub fn check(der: &[u8], config: Config) -> Check {
         check_pubkey_size(cert.public_key(), config.pubkey_size),
         check_validity_not_after(
             cert.validity().time_to_expiration(),
-            config.not_after,
             cert.validity().not_after,
         ),
+        check_validity_duration(cert.validity().time_to_expiration(), config.not_after,),
         check_max_validity(cert.validity(), config.max_validity),
     ))
 }
@@ -213,13 +214,10 @@ fn check_issuer_cn(issuer_cn: &str, expected: Option<String>) -> SimpleCheckResu
         if expected == issuer_cn {
             SimpleCheckResult::notice(&details)
         } else {
-            SimpleCheckResult::warn_with_details(
-                format!(
-                    "{name}: {} but expected {expected}",
-                    handle_empty(issuer_cn),
-                ),
-                &details,
-            )
+            SimpleCheckResult::warn(format!(
+                "{name}: {} but expected {expected}",
+                handle_empty(issuer_cn),
+            ))
         }
     })
 }
@@ -311,28 +309,44 @@ fn check_pubkey_size(
 
 fn check_validity_not_after(
     time_to_expiration: Option<Duration>,
-    levels: Option<Levels<Duration>>,
     not_after: ASN1Time,
 ) -> Option<CheckResult<Real>> {
-    levels.map(|levels| match time_to_expiration {
-        None => SimpleCheckResult::crit(format!("Certificate expired ({not_after})")).into(),
-        Some(time_to_expiration) => CheckResult::from_levels(
-            pretty_levels(
-                &format!(
-                    "Server certificate validity: {} day(s)",
-                    time_to_expiration.whole_days(),
+    if time_to_expiration.is_some() {
+        return None;
+    };
+    Some(SimpleCheckResult::crit(format!("Certificate expired ({not_after})")).into())
+}
+
+fn check_validity_duration(
+    time_to_expiration: Option<Duration>,
+    levels: Option<Levels<Duration>>,
+) -> Option<CheckResult<Real>> {
+    time_to_expiration.map(|time_to_expiration| {
+        let metric = Metric::builder()
+            .label("certificate_remaining_validity")
+            .value(time_to_expiration)
+            .uom("s".parse().unwrap())
+            .levels(levels.clone())
+            .build()
+            .map(|x| Real::from(x.whole_seconds() as isize));
+        let message = format!(
+            "Server certificate validity: {} day(s)",
+            time_to_expiration.whole_days()
+        );
+        match levels {
+            None => CheckResult::notice(message, metric.clone()),
+            Some(levels) => CheckResult::from_levels(
+                CheckResultLevelsText::new(
+                    message.clone(),
+                    pretty_levels(
+                        &message,
+                        levels.clone().map(|x| Real::from(x.whole_days() as isize)),
+                        "day(s)",
+                    ),
                 ),
-                levels.clone().map(|x| Real::from(x.whole_days() as isize)),
-                "day(s)",
+                metric.clone(),
             ),
-            Metric::builder()
-                .label("certificate_remaining_validity")
-                .value(time_to_expiration)
-                .uom("s".parse().unwrap())
-                .levels(Some(levels))
-                .build()
-                .map(|x| Real::from(x.whole_seconds() as isize)),
-        ),
+        }
     })
 }
 

@@ -36,6 +36,7 @@ from cmk.utils.structured_data import (
 from cmk.utils.validatedstr import ValidatedString
 
 from cmk.agent_based.v1 import Attributes, TableRow
+from cmk.discover_plugins import PluginLocation
 
 from .checkresults import ActiveCheckResult
 from .fetcher import FetcherFunction, HostKey, SourceType
@@ -86,10 +87,12 @@ class InventoryPluginName(ValidatedString):
 
 @dataclass(frozen=True)
 class InventoryPlugin:
+    name: InventoryPluginName
     sections: Sequence[ParsedSectionName]
     function: Callable[..., Iterable[Attributes | TableRow]]
     ruleset_name: RuleSetName | None
     defaults: Mapping[str, object]
+    location: PluginLocation
 
 
 @dataclass(frozen=True)

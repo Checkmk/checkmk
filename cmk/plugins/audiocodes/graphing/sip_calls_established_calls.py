@@ -9,13 +9,13 @@ UNIT_PER_SECOND = metrics.Unit(metrics.DecimalNotation("/s"))
 
 metric_audiocodes_tel2ip_established_calls = metrics.Metric(
     name="audiocodes_tel2ip_established_calls",
-    title=Title("Number of established (connected and voice activated) SIP/H323 calls"),
+    title=Title("Tel2IP Number of established (connected and voice activated) SIP/H323 calls"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.GREEN,
 )
 metric_audiocodes_ip2tel_established_calls = metrics.Metric(
     name="audiocodes_ip2tel_established_calls",
-    title=Title("Number of established (connected and voice activated) SIP/H323 calls"),
+    title=Title("IP2Tel Number of established (connected and voice activated) SIP/H323 calls"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.PURPLE,
 )

@@ -24,7 +24,6 @@ from tests.gui_e2e.testlib.playwright.pom.setup.notification_rules import (
     STAGE_TRIGGERING_EVENTS,
 )
 from tests.gui_e2e.testlib.playwright.pom.setup.ruleset import Ruleset
-
 from tests.testlib.emails import EmailManager
 from tests.testlib.site import Site
 

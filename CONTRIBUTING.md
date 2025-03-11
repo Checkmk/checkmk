@@ -476,16 +476,13 @@ Those are individual project settings for our own python packages and may differ
 #### Manual ruff formatting invocation: Single file
 
 ```console
-ruff format [the_file.py]
+$ ruff format [the_file.py]
 ```
 
-#### Manual ruff import sorting invocation: Single file
+#### Manual ruff linting invocation (also import sorting): Single file
 
 ```console
-$ run ruff check --select I --fix [the_file.py]
-
-# or with pre-commit installed
-$ pre-commit run ruff
+$ ruff check --fix [the_file.py]
 ```
 
 #### Integration with CI

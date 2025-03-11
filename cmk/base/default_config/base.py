@@ -190,11 +190,10 @@ checkgroup_parameters: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
 inv_parameters: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
 
 
-# WATO variant for fully formalized checks
-# WATOs active check configurations are demanded to be Mapping[str, object] by the new ruleset API.
+# WATO variant for fully formalized checks / special agents.
+# The typing here is a lie, we cannot know what customers have configred (in the past)
+# There's a parsing step later that ensures this.
 active_checks: dict[str, list[RuleSpec[SSCConfigSet]]] = {}
-# WATO variant for datasource_programs
-# WATOs special agent configurations are demanded to be Mapping[str, object] by the new ruleset API.
 special_agents: dict[str, list[RuleSpec[SSCConfigSet]]] = {}
 
 

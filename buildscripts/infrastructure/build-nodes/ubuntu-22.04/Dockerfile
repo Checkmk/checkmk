@@ -180,13 +180,26 @@ RUN /opt/install-cmk-dependencies.sh
 COPY install-patchelf.sh /opt/
 RUN /opt/install-patchelf.sh
 
+ENV RUSTUP_HOME=/opt/rust/rustup
+
 COPY ci.bazelrc /etc/
-RUN echo "common:ci --@//:filesystem_layout=lsb" >> /etc/ci.bazelrc
+RUN <<EOF cat >> /etc/ci.bazelrc
+common:ci --@//:filesystem_layout=lsb
+common:ci --action_env=DISTRO=${DISTRO}
+common:ci --action_env=BRANCH_VERSION=${BRANCH_VERSION}
+common:ci --action_env=RUSTUP_HOME=${RUSTUP_HOME}
+# We encountered false cache hits with remote caching due to environment variables
+# not being propagated to external dependeny builds
+# In that case `--host_action_env=...` (in addition to `--action_env`) might help
+# Currently we don't use any external dependencies though.
+common:ci --host_action_env=DISTRO=${DISTRO}
+common:ci --host_action_env=BRANCH_VERSION=${BRANCH_VERSION}
+common:ci --host_action_env=RUSTUP_HOME=${RUSTUP_HOME}
+EOF
 
 ARG VERS_TAG
 RUN echo "${VERS_TAG}" > /version.txt
 
-ENV RUSTUP_HOME=/opt/rust/rustup
 LABEL \
     com.checkmk.image_type="build-image"
 

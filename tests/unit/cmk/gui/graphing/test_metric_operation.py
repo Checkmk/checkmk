@@ -10,7 +10,7 @@ import pytest
 from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.gui.graphing._metric_operation import _time_series_math, Operators
-from cmk.gui.time_series import TimeSeries
+from cmk.gui.graphing._time_series import TimeSeries
 
 
 @pytest.mark.parametrize(
@@ -26,5 +26,10 @@ def test__time_series_math_exc_symbol(args: tuple[Literal["%"], list[TimeSeries]
 
 @pytest.mark.parametrize("operator", ["+", "*", "MAX", "MIN", "AVERAGE", "MERGE"])
 def test__time_series_math_stable_singles(operator: Operators) -> None:
-    test_ts = TimeSeries([0, 180, 60, 6, 5, 10, None, -2, -3.14])
+    test_ts = TimeSeries(
+        start=0,
+        end=180,
+        step=60,
+        values=[6, 5, 10, None, -2, -3.14],
+    )
     assert _time_series_math(operator, [test_ts]) == test_ts

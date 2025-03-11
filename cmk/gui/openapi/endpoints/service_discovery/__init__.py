@@ -33,7 +33,7 @@ from cmk.gui.openapi.restful_objects.constructors import domain_object, link_rel
 from cmk.gui.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject, LinkType
-from cmk.gui.openapi.utils import problem, ProblemException, serve_json
+from cmk.gui.openapi.utils import EXT, problem, ProblemException, serve_json
 from cmk.gui.site_config import site_is_local
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.automations import (
@@ -60,6 +60,8 @@ from cmk.gui.watolib.services import (
 )
 
 from cmk import fields
+
+from ._response_schemas import ServiceDiscoveryResultSchema, ServiceDiscoveryRunSchema
 
 DISCOVERY_PERMISSIONS = permissions.AllPerm(
     [
@@ -151,7 +153,7 @@ DISCOVERY_ACTION = {
     constructors.object_href("service_discovery", "{host_name}"),
     "cmk/list",
     method="get",
-    response_schema=response_schemas.DomainObject,
+    response_schema=ServiceDiscoveryResultSchema,
     tag_group="Setup",
     path_params=[
         {
@@ -171,13 +173,35 @@ def show_service_discovery_result(params: Mapping[str, Any]) -> Response:
     try:
         discovery_result = get_check_table(host, DiscoveryAction.NONE, raise_errors=False)
     except MKAutomationException:
+        pass
+    else:
+        return serve_json(serialize_discovery_result(host, discovery_result))
+
+    try:
+        snapshot = _job_snapshot(host)
+    except MKAutomationException:
         return problem(
             status=400,
             title="Error running automation",
-            detail="Please run `Show the last service discovery background job on a host` in order to get details about the error",
+            detail="Could not retrieve the service discovery result",
         )
-
-    return serve_json(serialize_discovery_result(host, discovery_result))
+    logs = snapshot.status.loginfo
+    return problem(
+        status=400,
+        title="Error running automation",
+        detail="Could not retrieve the service discovery result",
+        ext=EXT(
+            {
+                "job_id": snapshot.job_id,
+                "state": snapshot.status.state,
+                "logs": {
+                    "result": logs["JobResult"],
+                    "progress": logs["JobProgressUpdate"],
+                    "exception": logs["JobException"],
+                },
+            }
+        ),
+    )
 
 
 class UpdateDiscoveryPhase(BaseSchema):
@@ -272,7 +296,7 @@ def _update_single_service_phase(
     method="get",
     tag_group="Setup",
     path_params=[HOST_NAME],
-    response_schema=response_schemas.DomainObject,
+    response_schema=ServiceDiscoveryRunSchema,
 )
 def show_service_discovery_run(params: Mapping[str, Any]) -> Response:
     """Show the last service discovery background job on a host"""

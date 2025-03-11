@@ -11,7 +11,6 @@ import subprocess
 import time
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
-from dataclasses import dataclass
 from enum import IntEnum
 from pathlib import Path
 from typing import Any
@@ -26,67 +25,60 @@ logger = logging.getLogger(__name__)
 dump_path_site = Path("var/check_mk/dumps")
 
 
-@dataclass
-class SkippedDumps:
-    SKIPPED_DUMPS = []  # type: ignore[var-annotated]
-
-
-@dataclass
-class SkippedChecks:
-    SKIPPED_CHECKS = []  # type: ignore[var-annotated]
-
-
 class CheckModes(IntEnum):
     DEFAULT = 0
     ADD = 1
     UPDATE = 2
 
 
-@dataclass
 class CheckConfig:
-    mode: CheckModes = CheckModes.DEFAULT
-    skip_cleanup: bool = False
-    dump_types: list[str] | None = None
-    data_dir_integration: str | None = None
-    dump_dir_integration: str | None = None
-    response_dir_integration: str | None = None
-    data_dir_siteless: str | None = None
-    dump_dir_siteless: str | None = None
-    response_dir_siteless: str | None = None
-    diff_dir: str | None = None
-    host_names: list[str] | None = None
-    check_names: list[str] | None = None
-    api_services_cols: list[str] | None = None
+    def __init__(
+        self,
+        mode: CheckModes = CheckModes.DEFAULT,
+        skip_cleanup: bool = False,
+        dump_types: list[str] | None = None,
+        data_dir_integration: Path | None = None,
+        dump_dir_integration: Path | None = None,
+        response_dir_integration: Path | None = None,
+        data_dir_siteless: Path | None = None,
+        dump_dir_siteless: Path | None = None,
+        response_dir_siteless: str | None = None,
+        diff_dir: Path | None = None,
+        host_names: list[str] | None = None,
+        check_names: list[str] | None = None,
+        api_services_cols: list[str] | None = None,
+    ) -> None:
+        self.skipped_dumps: list[str] = []
+        self.skipped_checks: list[str] = []
 
-    def load(self):
-        self.data_dir_integration = str(qa_test_data_path() / "plugins_integration")
-        self.dump_dir_integration = f"{self.data_dir_integration}/dumps"
-        self.response_dir_integration = f"{self.data_dir_integration}/responses"
+        self.mode = mode
+        self.skip_cleanup = skip_cleanup
+        self.data_dir_integration = data_dir_integration or (
+            qa_test_data_path() / "plugins_integration"
+        )
+        self.dump_dir_integration = dump_dir_integration or (self.data_dir_integration / "dumps")
+        self.response_dir_integration = response_dir_integration or (
+            self.data_dir_integration / "responses"
+        )
 
-        self.data_dir_siteless = str(qa_test_data_path() / "plugins_siteless")
-        self.dump_dir_siteless = f"{self.data_dir_siteless}/agent_data"
-        self.response_dir_siteless = f"{self.data_dir_siteless}/responses"
+        self.data_dir_siteless = data_dir_siteless or (qa_test_data_path() / "plugins_siteless")
+        self.dump_dir_siteless = dump_dir_siteless or (self.data_dir_siteless / "agent_data")
+        self.response_dir_siteless = response_dir_siteless or (self.data_dir_siteless / "responses")
 
-        self.diff_dir = str(self.diff_dir or os.getenv("DIFF_DIR", "/tmp"))
-        self.host_names = (
-            [_.strip() for _ in str(os.getenv("HOST_NAMES", "")).split(",") if _.strip()]
-            if not self.host_names
-            else self.host_names
-        )
-        self.check_names = (
-            [_.strip() for _ in str(os.getenv("CHECK_NAMES", "")).split(",") if _.strip()]
-            if not self.check_names
-            else self.check_names
-        )
-        self.dump_types = (
-            [_.strip() for _ in str(os.getenv("DUMP_TYPES", "agent,snmp")).split(",") if _.strip()]
-            if not self.dump_types
-            else self.dump_types
-        )
+        self.diff_dir = diff_dir or Path(os.getenv("DIFF_DIR", "/tmp"))
+        self.host_names = host_names or [
+            _.strip() for _ in str(os.getenv("HOST_NAMES", "")).split(",") if _.strip()
+        ]
+        self.check_names = check_names or [
+            _.strip() for _ in str(os.getenv("CHECK_NAMES", "")).split(",") if _.strip()
+        ]
+        self.dump_types = dump_types or [
+            _.strip() for _ in str(os.getenv("DUMP_TYPES", "agent,snmp")).split(",") if _.strip()
+        ]
 
         # these SERVICES table columns will be returned via the get_host_services() openapi call
         # NOTE: extending this list will require an update of the check output (--update-checks)
-        self.api_services_cols = [
+        self.api_services_cols = api_services_cols or [
             "host_name",
             "check_command",
             "check_command_expanded",
@@ -133,11 +125,11 @@ def get_check_results(site: Site, host_name: str) -> dict[str, Any]:
 
 
 def get_host_names(
-    site: Site | None = None, dump_dir: str | None = None, piggyback: bool = False
+    site: Site | None = None, dump_dir: Path | None = None, piggyback: bool = False
 ) -> list[str]:
     """Return the list of agent/snmp hosts via filesystem or site.openapi."""
     host_names = []
-    dump_dir = str(dump_dir or config.dump_dir_integration) + ("/piggyback" if piggyback else "")
+    dump_dir = (dump_dir or config.dump_dir_integration) / ("piggyback" if piggyback else "")
     if site:
         hosts = [_ for _ in site.openapi.hosts.get_all() if _.get("id") not in (None, "", site.id)]
         agent_host_names = [
@@ -147,17 +139,17 @@ def get_host_names(
     else:
         agent_host_names = []
         snmp_host_names = []
-        if not (dump_dir and os.path.exists(dump_dir)):
+        if not dump_dir.exists():
             # need to skip here to abort the collection and return RC=5: "no tests collected"
             pytest.skip(f'Folder "{dump_dir}" not found; exiting!', allow_module_level=True)
         for dump_file_name in [
             _
             for _ in os.listdir(dump_dir)
-            if (not _.startswith(".") and _ not in SkippedDumps.SKIPPED_DUMPS)
+            if (not _.startswith(".") and _ not in config.skipped_dumps)
             and os.path.isfile(os.path.join(dump_dir, _))
         ]:
             try:
-                dump_file_path = f"{dump_dir}/{dump_file_name}"
+                dump_file_path = dump_dir / dump_file_name
                 with open(dump_file_path, encoding="utf-8") as dump_file:
                     if re.match(r"^snmp-", dump_file_name) and dump_file.read(1) == ".":
                         snmp_host_names.append(dump_file_name)
@@ -249,7 +241,7 @@ def _verify_check_result(
     ) as json_file:
         json.dump(canon_data, json_file, indent=4, sort_keys=True)
 
-    if result_data is None or len(result_data) == 0:
+    if not result_data:
         logger.error("[%s] No data returned!", check_id)
         return False, ""
 
@@ -271,20 +263,13 @@ def _verify_check_result(
     return False, diff
 
 
-def process_raw_data(site: Site, host_name: str) -> tuple[str, str]:
-    """Return both the cmk dump and the disk dump."""
-    disk_dump = read_disk_dump(host_name)
-    dump_type = "snmp" if disk_dump[0] == "." else "agent"
-    return disk_dump, read_cmk_dump(host_name, site, dump_type)
-
-
 def process_check_output(
     site: Site,
     host_name: str,
     output_dir: Path,
 ) -> dict[str, str]:
     """Process the check output and either dump or compare it."""
-    if host_name in SkippedDumps.SKIPPED_DUMPS:
+    if host_name in config.skipped_dumps:
         pytest.skip(reason=f"{host_name} dumps currently skipped.")
 
     logger.info('> Processing agent host "%s"...', host_name)
@@ -302,7 +287,7 @@ def process_check_output(
         _: item.get("extensions") for _, item in get_check_results(site, host_name).items()
     }
     for check_id, results in check_results.items():
-        if check_id in SkippedChecks.SKIPPED_CHECKS:
+        if check_id in (config.skipped_checks or []):
             logger.info("Check %s currently skipped", check_id)
             passed = True
             continue
@@ -334,7 +319,7 @@ def process_check_output(
         diffs[check_id] = diff
 
     if diffs:
-        os.makedirs(config.diff_dir, exist_ok=True)  # type: ignore[arg-type]
+        os.makedirs(config.diff_dir, exist_ok=True)
         with open(
             f"{config.diff_dir}/{host_name}.json",
             mode="a",
@@ -353,13 +338,13 @@ def process_check_output(
     return diffs
 
 
-def setup_site(site: Site, dump_path: str, dump_dirs: Sequence[str] | None = None) -> None:
-    dump_dirs = dump_dirs or [str(config.dump_dir_integration)]
+def setup_site(site: Site, dump_path: Path, dump_dirs: Sequence[Path] | None = None) -> None:
+    dump_dirs = dump_dirs or [config.dump_dir_integration]
     # NOTE: the snmpwalks folder cannot be changed!
     walk_path = site.path("var/check_mk/snmpwalks")
     # create dump folder in the test site
     logger.info('Creating folder "%s"...', dump_path)
-    _ = site.run(["mkdir", "-p", dump_path])
+    _ = site.run(["mkdir", "-p", dump_path.as_posix()])
 
     logger.info("Injecting agent-output...")
     for dump_dir in dump_dirs:
@@ -381,7 +366,7 @@ def setup_site(site: Site, dump_path: str, dump_dirs: Sequence[str] | None = Non
                 == 0
             )
 
-    for dump_type in config.dump_types:  # type: ignore[union-attr]
+    for dump_type in config.dump_types:
         host_folder = f"/{dump_type}"
         if site.openapi.folders.get(host_folder):
             logger.info('Host folder "%s" already exists!', host_folder)
@@ -455,11 +440,14 @@ def setup_host(site: Site, host_name: str, skip_cleanup: bool = False) -> Iterat
 
 
 @contextmanager
-def setup_source_host_piggyback(site: Site, source_host_name: str) -> Iterator:
+def setup_source_host_piggyback(
+    site: Site, source_host_name: str, folder_name: str = "/"
+) -> Iterator:
     logger.info('Creating source host "%s"...', source_host_name)
     host_attributes = {"ipaddress": "127.0.0.1", "tag_agent": "cmk-agent"}
     site.openapi.hosts.create(
         hostname=source_host_name,
+        folder=folder_name,
         attributes=host_attributes,
         bake_agent=False,
     )
@@ -490,6 +478,7 @@ def setup_source_host_piggyback(site: Site, source_host_name: str) -> Iterator:
 
             hostnames = get_piggyback_hosts(site, source_host_name) + [source_host_name]
             for hostname in hostnames:
+                assert site.get_host_services(hostname)["Check_MK"].state == 0
                 logger.info("Scheduling checks & checking for pending services...")
                 pending_checks = []
                 for idx in range(3):
@@ -623,7 +612,7 @@ def _wait_for_piggyback_hosts_discovery(site: Site, source_host: str, strict: bo
         time.sleep(1)
         count += 1
     if strict:
-        assert piggyback_hosts, "No piggyback hosts found."
+        assert piggyback_hosts, f'No piggyback hosts found for source host "{source_host}".'
 
 
 def _wait_for_piggyback_hosts_deletion(site: Site, source_host: str, strict: bool = True) -> None:

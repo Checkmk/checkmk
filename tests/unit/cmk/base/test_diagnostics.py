@@ -21,6 +21,11 @@ import livestatus
 import cmk.utils.paths
 
 from cmk.base import diagnostics
+from cmk.base.config import LoadedConfigFragment
+
+
+def _make_diagnostics_dump() -> diagnostics.DiagnosticsDump:
+    return diagnostics.DiagnosticsDump(LoadedConfigFragment())
 
 
 @pytest.fixture(autouse=True)
@@ -55,13 +60,13 @@ def test_diagnostics_dump_elements() -> None:
     fixed_element_classes = {
         diagnostics.GeneralDiagnosticsElement,
     }
-    element_classes = {type(e) for e in diagnostics.DiagnosticsDump().elements}
+    element_classes = {type(e) for e in _make_diagnostics_dump().elements}
     assert fixed_element_classes.issubset(element_classes)
 
 
 @pytest.mark.usefixtures("mock_livestatus")
 def test_diagnostics_dump_create() -> None:
-    diagnostics_dump = diagnostics.DiagnosticsDump()
+    diagnostics_dump = _make_diagnostics_dump()
     diagnostics_dump._create_dump_folder()
 
     assert isinstance(diagnostics_dump.dump_folder, Path)
@@ -77,7 +82,7 @@ def test_diagnostics_dump_create() -> None:
 
 
 def test_diagnostics_cleanup_dump_folder() -> None:
-    diagnostics_dump = diagnostics.DiagnosticsDump()
+    diagnostics_dump = _make_diagnostics_dump()
     diagnostics_dump._create_dump_folder()
 
     # Fake existing tarfiles
@@ -140,7 +145,7 @@ def test_diagnostics_element_general_content(
 
 
 def test_diagnostics_element_perfdata() -> None:
-    diagnostics_element = diagnostics.PerfDataDiagnosticsElement()
+    diagnostics_element = diagnostics.PerfDataDiagnosticsElement(LoadedConfigFragment())
     assert diagnostics_element.ident == "perfdata"
     assert diagnostics_element.title == "Performance data"
     assert diagnostics_element.description == (
@@ -307,6 +312,7 @@ def test_diagnostics_element_filesize_content(tmp_path: PurePath) -> None:
 
     size_of = {}
     group_of = {}
+    last_row = {}
     with open(filepath, newline="") as csvfile:
         csvreader = csv.DictReader(csvfile, delimiter=";", quotechar="'")
         for row in csvreader:
@@ -553,9 +559,10 @@ def test_diagnostics_element_checkmk_overview_error(
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
 
+    inventory_dir = Path(cmk.utils.paths.inventory_output_dir)
+
     if host_tree:
         # Fake HW/SW Inventory tree
-        inventory_dir = Path(cmk.utils.paths.inventory_output_dir)
         inventory_dir.mkdir(parents=True, exist_ok=True)
         with inventory_dir.joinpath("checkmk-server-name").open("w") as f:
             f.write(repr(host_tree))
@@ -622,9 +629,10 @@ def test_diagnostics_element_checkmk_overview_content(
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
 
+    inventory_dir = Path(cmk.utils.paths.inventory_output_dir)
+
     if host_tree:
         # Fake HW/SW Inventory tree
-        inventory_dir = Path(cmk.utils.paths.inventory_output_dir)
         inventory_dir.mkdir(parents=True, exist_ok=True)
         with inventory_dir.joinpath("checkmk-server-name").open("w") as f:
             f.write(repr(host_tree))

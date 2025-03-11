@@ -5,12 +5,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { computed } from 'vue'
+
 import CmkCollapsible from '@/components/CmkCollapsible.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
 
 import QuickSetupStageContent from './QuickSetupStageContent.vue'
-import { useErrorBoundary } from '@/components/useErrorBoundary'
-
 import type { QuickSetupStageProps } from './quick_setup_types'
 
 const props = defineProps<QuickSetupStageProps>()
@@ -21,8 +20,6 @@ const isOpen = computed(() => isSelectedStage.value || props.mode === 'overview'
 const onClickGoTo = computed(() =>
   !!props.goToThisStage && props.currentStage > props.index ? () => props.goToThisStage!() : null
 )
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const { ErrorBoundary } = useErrorBoundary()
 </script>
 
 <template>
@@ -36,21 +33,25 @@ const { ErrorBoundary } = useErrorBoundary()
   >
     <div class="qs-stage__content">
       <CmkLabel variant="title" :on-click="onClickGoTo">{{ title }}</CmkLabel>
-      <CmkLabel v-if="!isCompleted && sub_title" variant="subtitle">{{ sub_title }}</CmkLabel>
 
-      <ErrorBoundary v-if="isCompleted && recapContent">
+      <CmkCollapsible :open="isCompleted && !!recapContent">
         <component :is="recapContent" />
-      </ErrorBoundary>
+      </CmkCollapsible>
+
+      <CmkCollapsible :open="!isCompleted && !!sub_title">
+        <CmkLabel variant="subtitle">{{ sub_title }}</CmkLabel>
+      </CmkCollapsible>
 
       <CmkCollapsible :open="isOpen">
         <QuickSetupStageContent
           :index="index"
           :number-of-stages="numberOfStages"
-          :loading="loading"
+          :loading="loading || isCompleted"
           :mode="mode"
           :errors="errors"
           :actions="actions"
           :content="content || null"
+          :hide-wait-icon="!!hideWaitIcon"
         />
       </CmkCollapsible>
     </div>
@@ -105,15 +106,11 @@ const { ErrorBoundary } = useErrorBoundary()
   }
 
   &.qs-stage--complete {
-    pointer-events: none;
-
     &:before {
       background-image: var(--icon-check);
       background-repeat: no-repeat;
       background-position: center;
       content: '';
-      cursor: pointer;
-      pointer-events: all;
     }
 
     &:after {

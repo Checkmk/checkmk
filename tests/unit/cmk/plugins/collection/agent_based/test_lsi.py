@@ -9,7 +9,7 @@ import pytest
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.api.agent_based.register import AgentBasedPlugins
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State
 from cmk.plugins.collection.agent_based.lsi import parse_lsi

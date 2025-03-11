@@ -1,0 +1,84 @@
+3to2  # used for converting agent plugins from py3 to 2
+astroid  # used by testlib.pylint_checker_localization
+azure-mgmt-resource  # used by the release process to publish the azure image to the marketplace
+azure-mgmt-compute  # used by the release process to add a new image version
+bandit  # used by test/Makefile's test-bandit target
+beautifulsoup4  # used by the GUI crawler and various tests
+boto3-stubs[logs]  # used for type checking, keep version in sync with boto3
+botocore-stubs  # used for type checking, keep version in sync with botocore
+bson  # used by test_mk_mongodb unit test
+checkmk-dev-tools  # provides tooling for build artifacts
+datamodel-code-generator  # used for cmk-shared-typing generation
+devpi-client # Managing the devpi server
+dill
+docker  # used by test_docker test and mk_docker agent plugin
+dockerpty  # used by dockerized tests for opening debug shells
+fakeredis[lua]  # used for testing code which uses Redis (lua is needed for faking features like "lock")
+furo  # sphinx theme
+grequests  # redfixh server mocker for integration tests
+hypothesis    # used by unit tests
+hypothesis-jsonschema  # used by unit tests
+jsonschema
+libcst # concrete syntax trees for plugin migration helpers
+msrest
+multipart  # redfixh server mocker for integration tests
+mypy # used by test/Makefile's test-mypy target
+mypy-protobuf # for mypy
+networkx # needed for py-import-cycles
+pexpect # used for update testing
+pipfile # for generating import names during int tests
+playwright  # used for in-browser testing
+polyfactory # used for generating mock data for unit tests
+pre-commit  # used to fix / find issues before committing changes
+py-import-cycles  # used in tests/Makefile
+pylint  # used by test/Makefile's test-pylint target
+pylint-pydantic
+pylsp-mypy  # mypy plugin for python-lsp-server
+pymongo  # used by mk_mongodb agent plugin
+pytest
+pytest-asyncio  # faciliate testing of async code
+pytest-html  # used to generate HTML reports for test suites
+pytest-mock  # used by quite a few unit/integration tests via the mocker fixture
+pytest-random-order  # used to test resiliency
+pytest-xdist # used to limit number of procs in e2e tests
+pytest-check # used to queue failed assertions and continue test execution
+pytest-opentelemetry # instrument pytest runs
+python-lsp-server  # Note: There are extras, but the default seems sensible.
+requirements-parser # used to parse requirements.txt file for testing
+responses  # used for unit tests
+ruff
+schemathesis  # used for openapi tests
+semver
+sphinx  # used for the plugin API documentation
+sphinx-autoapi  # used for automatically generating plugin API documentation
+sphinx-autodoc-typehints  # used for the plugin API documentation
+sphinx-rtd-theme  # used for the plugin API documentation
+sphinxcontrib-plantuml  # used for the API and architecture
+sphinxcontrib-spelling
+svglib  # license csv pdf generating
+telnetlib3  # used by Windows Agent tests
+time-machine # used by various unit tests. Substitute for freezegun
+twine # used to upload packages to internal PyPi mirror
+types-beautifulsoup4  # used for type checking
+types-docutils  # used for type checking
+types-jsonschema  # used for type checking
+types-lxml  # used for type checking
+types-mypy-extensions  # used for type checking
+types-oauthlib  # used for type checking
+types-paho-mqtt  # used for type checking
+types-paramiko  # used for type checking
+types-pillow  # used for type checking
+types-protobuf  # used for type checking
+types-psutil  # used for type checking
+types-pyasn1  # used for type checking
+types-pymssql  # used for type checking
+types-pymysql  # used for type checking
+types-pyopenssl  # used for type checking
+types-pysaml2  # used for type checking
+types-python-dateutil  # used for type checking
+types-pyyaml  # used for type checking
+types-redis  # used for type checking
+types-requests  # used for type checking
+types-setuptools  # used for type checking
+types-simplejson  # used for type checking
+types-urllib3  # used for type checking

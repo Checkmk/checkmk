@@ -16,6 +16,7 @@ from git.repo import Repo
 
 from cmk.werks import load_werk, parse_werk
 
+from .constants import NON_WERK_FILES_IN_WERK_FOLDER
 from .models import AllWerks, WebsiteWerk
 
 logger = logging.getLogger(__name__)
@@ -108,14 +109,7 @@ def main(config: Config, repo_path: Path, branches: Mapping[str, str]) -> None:
             try:
                 werk_id = int(werk_id_str)
             except ValueError as e:
-                if werk_file.name in {
-                    "config",
-                    "config.json",
-                    "first_free",
-                    ".f12",
-                    ".gitignore",
-                    "README.md",
-                }:
+                if werk_file.name in NON_WERK_FILES_IN_WERK_FOLDER:
                     continue
                 raise RuntimeError(
                     f"Found unexpected file {werk_file.name!r} in branch {branch_name!r}"

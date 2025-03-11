@@ -192,7 +192,8 @@ def parse_mssql_jobs(string_table: StringTable) -> Mapping[str, JobSpec]:
 
 def discover_mssql_jobs(section: Mapping[str, JobSpec]) -> DiscoveryResult:
     for job_name in section:
-        yield Service(item=job_name)
+        if job_name:
+            yield Service(item=job_name)
 
 
 def check_mssql_jobs(

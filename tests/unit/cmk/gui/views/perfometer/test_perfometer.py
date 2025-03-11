@@ -14,6 +14,8 @@ from cmk.gui.type_defs import Row
 from cmk.gui.views.perfometer.base import Perfometer
 from cmk.gui.views.perfometer.sorter import SorterPerfometer
 
+from cmk.graphing.v1 import perfometers
+
 
 @pytest.mark.parametrize(
     "sort_values",
@@ -43,4 +45,20 @@ def test_cmp_of_missing_values(sort_values: Sequence[float | None], request_cont
         return SorterPerfometer.cmp(r1, r2, parameters=None, config=active_config, request=request)
 
     data.sort(key=functools.cmp_to_key(wrapped))
-    assert [Perfometer(r).sort_value()[1] for r in data] == [None, -1.0, 0.0, 1.0]
+    assert [
+        Perfometer(
+            r,
+            {},
+            {
+                "kube_memory_usage": perfometers.Perfometer(
+                    name="kube_memory_usage",
+                    focus_range=perfometers.FocusRange(
+                        perfometers.Closed(0),
+                        perfometers.Open(1000000000),
+                    ),
+                    segments=["kube_memory_usage"],
+                )
+            },
+        ).sort_value()[1]
+        for r in data
+    ] == [None, -1.0, 0.0, 1.0]

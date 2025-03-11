@@ -513,6 +513,7 @@ def discover_ps(
     section_ps: Section | None,
     section_mem: memory.SectionMem | None,
     section_mem_used: dict[str, memory.SectionMem] | None,
+    section_mem_total: memory.SectionMemTotal | None,
     section_cpu: cpu.Section | None,
 ) -> DiscoveryResult:
     if not section_ps:

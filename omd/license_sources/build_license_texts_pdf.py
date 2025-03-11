@@ -6,6 +6,7 @@
 """Python module for generating a PDF containing all license texts that can be
 found under ./license_texts/"""
 
+import argparse
 import csv
 import html
 import re
@@ -230,13 +231,21 @@ def used_licenses(dependencies: list[Dependency]) -> list[str]:
     )
 
 
-def main():
-    path_omd = Path(__file__).resolve().parent.parent
+def _parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--csv", type=Path, required=True)
+    parser.add_argument("--pdf", type=Path, required=True)
+    return parser.parse_args()
 
+
+def main():
+    args = _parse_args()
+
+    path_omd = Path(__file__).resolve().parent.parent
     path_license_texts = path_omd / "license_sources/license_texts/"
-    path_pdf = path_omd / "License_texts.pdf"
+    path_pdf = args.pdf
     path_logo = path_omd / "license_sources/checkmk_logo.svg"
-    path_licenses_csv = path_omd / "Licenses.csv"
+    path_licenses_csv = args.csv
 
     dependencies = read_license_csv(path_licenses_csv)
 
@@ -263,7 +272,7 @@ def main():
     story.append(heading("Licenses", "libraries", h1))
 
     for used_license in used_licenses(dependencies):
-        file_path = path_license_texts / ("%s.txt" % used_license.lower())
+        file_path = path_license_texts / ("%s.txt" % used_license.lower().replace(" ", "_"))
         if file_path.is_file():
             with file_path.open(encoding="utf-8") as txt_file:
                 headline = f"<b>{txt_file.readline().strip()} ({used_license})</b>"

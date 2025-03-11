@@ -6,7 +6,6 @@
 set -e
 
 JOBS=6
-readonly BAZEL_CMD=${BAZEL_CMD:-bazel}
 readonly ALL_LINTERS=mypy,ruff,bandit,semgrep
 
 failure() {
@@ -116,7 +115,7 @@ setup_venv() {
     test "${SETUP_VENV_RAN}" = "yes" && return
     # TODO: Let rules_uv know about our toolchain... https://github.com/theoremlp/rules_uv/issues/163
     # Further: uv seems to fall back to clang, see https://github.com/astral-sh/uv/issues/8036
-    CC="gcc" ${BAZEL_CMD} run //:create_venv
+    CC="gcc" bazel run //:create_venv
     # shellcheck source=/dev/null
     source "$(bazel info workspace)"/.venv/bin/activate
     SETUP_VENV_RAN=yes
@@ -128,29 +127,29 @@ run_clean() {
 }
 
 run_unit_tests() {
-    "${BAZEL_CMD}" test :all
+    bazel test :all
 }
 
 run_check_format() {
-    ${BAZEL_CMD} run \
+    bazel run \
         --ui_event_filters=-info,-stderr \
         --action_env=RUST_LOG=warn //bazel/tools:taplo_bin -- \
         format --check --diff pyproject.toml
-    "${BAZEL_CMD}" lint \
+    bazel lint \
         --aspect:interactive=false \
         --aspect:config="$(bazel info workspace)"/.aspect/cli/config.yaml \
         --diff \
         --machine \
         :all
-    "${BAZEL_CMD}" run :format.check "$(realpath cmk)" "$(realpath tests)"
+    bazel run :format.check "$(realpath cmk)" "$(realpath tests)"
 }
 
 run_mypy() {
-    "${BAZEL_CMD}" build --config=mypy :all
+    bazel build --config=mypy :all
 }
 
 run_ruff() {
-    "${BAZEL_CMD}" lint :all
+    bazel lint :all
 }
 
 run_bandit() {
@@ -178,16 +177,16 @@ run_semgrep() {
 }
 
 run_format() {
-    ${BAZEL_CMD} run \
+    bazel run \
         --ui_event_filters=-info,-stderr \
         --action_env=RUST_LOG=warn //bazel/tools:taplo_bin -- \
         format pyproject.toml
-    "${BAZEL_CMD}" lint \
+    bazel lint \
         --aspect:interactive=false \
         --aspect:config="$(bazel info workspace)"/.aspect/cli/config.yaml \
         --fix \
         :all
-    "${BAZEL_CMD}" run :format "$(realpath cmk)" "$(realpath tests)"
+    bazel run :format "$(realpath cmk)" "$(realpath tests)"
 }
 
 run_documentation() {

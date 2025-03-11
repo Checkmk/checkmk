@@ -33,7 +33,6 @@ def test_registered_config_domains() -> None:
         "multisite",
         "omd",
         "rrdcached",
-        "piggyback_hub",
     ]
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
@@ -64,6 +63,7 @@ def test_registered_automation_commands() -> None:
         "network-scan",
         "ping",
         "get-config-sync-state",
+        "get-remote-omd-status",
         "receive-config-sync",
         "service-discovery-job",
         "service-discovery-job-snapshot",
@@ -75,6 +75,8 @@ def test_registered_automation_commands() -> None:
         "clear-site-changes",
         "hosts-for-auto-removal",
         "rename-hosts-uuid-link",
+        "start-quick-setup-stage-action",
+        "fetch-quick-setup-stage-action-result",
     ]
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
@@ -151,7 +153,6 @@ def test_registered_configvars() -> None:
         "page_heading",
         "pagetitle_date_format",
         "password_policy",
-        "piggyback_hub_enabled",
         "piggyback_max_cachefile_age",
         "profile",
         "quicksearch_dropdown_limit",
@@ -272,7 +273,6 @@ def test_registered_configvars() -> None:
             "dcd_max_activation_delay",
             "dcd_max_hosts_per_bulk_discovery",
             "dcd_prevent_unwanted_notification",
-            "dcd_use_inter_lock",
             "liveproxyd_default_connection_params",
             "liveproxyd_log_levels",
             "notification_spooler_config",
@@ -325,7 +325,6 @@ def test_registered_configvar_groups() -> None:
         "User management",
         "Support",
         "Developer Tools",
-        "Distributed piggyback",
     ]
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:

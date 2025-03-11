@@ -14,7 +14,6 @@ from cmk.gui import sites, visuals
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.graphing._formatter import AutoPrecision, IECFormatter, StrictPrecision
-from cmk.gui.graphing._legacy import UnitInfo
 from cmk.gui.graphing._metrics import MetricSpec
 from cmk.gui.graphing._translated_metrics import TranslatedMetric
 from cmk.gui.graphing._unit import (
@@ -98,23 +97,16 @@ def purge_translated_metric_for_js(translated_metric: TranslatedMetric) -> dict[
 
 
 def _purge_unit_spec_for_js(
-    unit_spec: UnitInfo | ConvertibleUnitSpecification,
+    unit_spec: ConvertibleUnitSpecification,
 ) -> dict[str, object]:
     return {
-        "unit": (
-            {
-                "js_render": unit_spec.js_render,
-                "stepping": unit_spec.stepping,
-            }
-            if isinstance(unit_spec, UnitInfo)
-            else _transform_user_specific_unit_for_js(
-                user_specific_unit(
-                    unit_spec,
-                    user,
-                    active_config,
-                )
+        "unit": _transform_user_specific_unit_for_js(
+            user_specific_unit(
+                unit_spec,
+                user,
+                active_config,
             )
-        ),
+        )
     }
 
 

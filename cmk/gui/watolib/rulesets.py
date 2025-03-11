@@ -436,26 +436,29 @@ class RulesetCollection:
             self.replace_folder_ruleset_config(folder, ruleset_config, varname)
 
     @staticmethod
+    def _update_password_file() -> None:
+        subprocess.check_call(
+            ["cmk", "--automation", "update-passwords-merged-file"], stdout=subprocess.DEVNULL
+        )
+
+    @staticmethod
     def _save_folder(
         folder: Folder,
         rulesets: Mapping[RulesetName, Ruleset],
         unknown_rulesets: Mapping[str, Mapping[str, Sequence[RuleSpec[object]]]],
-    ) -> None:
+    ) -> bool:
         RuleConfigFile(Path(folder.rules_file_path())).save_rulesets_and_unknown_rulesets(
             rulesets, unknown_rulesets
         )
 
-        # check if this contains a password. If so, update the password file
-        if any(
+        # check if this contains a password. If so, the password file must be updated
+        return any(
             process_configuration_to_parameters(rule.value).found_secrets
             for name, rules in rulesets.items()
             if RuleGroup.is_active_checks_rule(name) or RuleGroup.is_special_agents_rule(name)
             for rule in rules.get_folder_rules(folder)
             if isinstance(rule.value, dict)  # this is true for all _FormSpec_ SSC rules.
-        ):
-            subprocess.check_call(
-                ["cmk", "--automation", "update-passwords-merged-file"], stdout=subprocess.DEVNULL
-            )
+        )
 
     def exists(self, name: RulesetName) -> bool:
         return name in self._rulesets
@@ -522,16 +525,22 @@ class AllRulesets(RulesetCollection):
 
     def save(self) -> None:
         """Save all rulesets of all folders recursively"""
-        self._save_rulesets_recursively(folder_tree().root_folder())
+        if self._save_rulesets_recursively(folder_tree().root_folder()):
+            self._update_password_file()
 
     def save_folder(self, folder: Folder) -> None:
-        self._save_folder(folder, self._rulesets, self._unknown_rulesets)
+        if self._save_folder(folder, self._rulesets, self._unknown_rulesets):
+            self._update_password_file()
 
-    def _save_rulesets_recursively(self, folder: Folder) -> None:
+    def _save_rulesets_recursively(self, folder: Folder) -> bool:
+        needs_password_file_updating = False
         for subfolder in folder.subfolders():
-            self._save_rulesets_recursively(subfolder)
+            needs_password_file_updating |= self._save_rulesets_recursively(subfolder)
 
-        self._save_folder(folder, self._rulesets, self._unknown_rulesets)
+        needs_password_file_updating |= self._save_folder(
+            folder, self._rulesets, self._unknown_rulesets
+        )
+        return needs_password_file_updating
 
 
 def visible_rulesets(rulesets: Mapping[RulesetName, Ruleset]) -> Mapping[RulesetName, Ruleset]:
@@ -615,7 +624,8 @@ class FolderRulesets(RulesetCollection):
         return self
 
     def save_folder(self) -> None:
-        RulesetCollection._save_folder(self._folder, self._rulesets, self._unknown_rulesets)
+        if RulesetCollection._save_folder(self._folder, self._rulesets, self._unknown_rulesets):
+            RulesetCollection._update_password_file()
 
 
 class Ruleset:
@@ -1260,14 +1270,14 @@ class Rule:
         too expensive."""
         hosts = Host.all()
         for host_name in hosts.keys():
-            if self.matches_host_conditions(host_name):
+            if self._matches_host_conditions(host_name):
                 return False
         return True
 
-    def matches_host_conditions(self, hostname: HostName) -> bool:
+    def _matches_host_conditions(self, hostname: HostName) -> bool:
         """Whether or not the given host matches this rule
         This only evaluates host related conditions, even if the ruleset is a service ruleset."""
-        return self.matches(
+        return self._matches(
             hostname,
             svc_desc_or_item=None,
             svc_desc=None,
@@ -1283,7 +1293,7 @@ class Rule:
         service_labels: Labels,
     ) -> bool:
         """Whether the given host and service/item matches this rule"""
-        return self.matches(
+        return self._matches(
             hostname,
             svc_desc_or_item,
             svc_desc,
@@ -1291,7 +1301,7 @@ class Rule:
             service_labels=service_labels,
         )
 
-    def matches(
+    def _matches(
         self,
         hostname: HostName,
         svc_desc_or_item: str | None,

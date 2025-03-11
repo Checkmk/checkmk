@@ -22,17 +22,16 @@ from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
 from cmk.gui import sites
+from cmk.gui.config import active_config
 from cmk.gui.i18n import _
-from cmk.gui.time_series import TimeSeries, TimeSeriesValues
+from cmk.gui.logged_in import user
 from cmk.gui.type_defs import ColumnName
 
+from ._from_api import RegisteredMetric
 from ._graph_specification import GraphDataRange, GraphRecipe
 from ._legacy import (
     check_metrics,
     CheckMetricEntry,
-    get_conversion_function,
-    get_unit_info,
-    LegacyUnitSpecification,
 )
 from ._metric_operation import (
     GraphConsolidationFunction,
@@ -42,28 +41,32 @@ from ._metric_operation import (
     time_series_operators,
 )
 from ._metrics import get_metric_spec
+from ._time_series import TimeSeries, TimeSeriesValues
 from ._translated_metrics import find_matching_translation, TranslationSpec
+from ._unit import user_specific_unit
 
 
 def fetch_rrd_data_for_graph(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
+    registered_metrics: Mapping[str, RegisteredMetric],
 ) -> RRDData:
-    conversion = get_conversion_function(
-        get_unit_info(graph_recipe.unit_spec.id)
-        if isinstance(graph_recipe.unit_spec, LegacyUnitSpecification)
-        else graph_recipe.unit_spec
-    )
+    conversion = user_specific_unit(graph_recipe.unit_spec, user, active_config).conversion
     by_service = _group_needed_rrd_data_by_service(
         key
         for metric in graph_recipe.metrics
-        for key in metric.operation.keys()
+        for key in metric.operation.keys(registered_metrics)
         if isinstance(key, RRDDataKey)
     )
     rrd_data: dict[RRDDataKey, TimeSeries] = {}
     for (site, host_name, service_description), metrics in by_service.items():
         with contextlib.suppress(livestatus.MKLivestatusNotFoundError):
-            for (metric_name, consolidation_function, scale), data in _fetch_rrd_data(
+            for (metric_name, consolidation_function, scale), (
+                start,
+                end,
+                step,
+                values,
+            ) in _fetch_rrd_data(
                 site,
                 host_name,
                 service_description,
@@ -81,7 +84,10 @@ def fetch_rrd_data_for_graph(
                         scale,
                     )
                 ] = TimeSeries(
-                    data,
+                    start=start,
+                    end=end,
+                    step=step,
+                    values=values,
                     conversion=conversion,
                 )
     _align_and_resample_rrds(rrd_data, graph_recipe.consolidation_function)
@@ -106,15 +112,21 @@ def _align_and_resample_rrds(
             raise MKGeneralException(_("Cannot get RRD data for %s") % spec_title)
 
         if time_window is None:
-            time_window = time_series.twindow
-        elif time_window != time_series.twindow:
+            time_window = (time_series.start, time_series.end, time_series.step)
+        elif time_window != (time_series.start, time_series.end, time_series.step):
             time_series.values = (
                 time_series.downsample(
-                    time_window,
-                    key.consolidation_function or consolidation_function,
+                    start=time_window[0],
+                    end=time_window[1],
+                    step=time_window[2],
+                    cf=key.consolidation_function or consolidation_function,
                 )
-                if time_window[2] >= time_series.twindow[2]
-                else time_series.forward_fill_resample(time_window)
+                if time_window[2] >= time_series.step
+                else time_series.forward_fill_resample(
+                    start=time_window[0],
+                    end=time_window[1],
+                    step=time_window[2],
+                )
             )
 
 
@@ -130,7 +142,7 @@ def _chop_last_empty_step(graph_data_range: GraphDataRange, rrd_data: RRDData) -
         return
 
     sample_data = next(iter(rrd_data.values()))
-    step = sample_data.twindow[2]
+    step = sample_data.step
     # Disable graph chop for graphs which do not end within the current step
     if abs(time.time() - graph_data_range.time_range[1]) > step:
         return
@@ -175,7 +187,7 @@ def _fetch_rrd_data(
     metrics: set[MetricProperties],
     consolidation_function: GraphConsolidationFunction | None,
     graph_data_range: GraphDataRange,
-) -> list[tuple[MetricProperties, TimeSeriesValues]]:
+) -> list[tuple[MetricProperties, tuple[int, int, int, TimeSeriesValues]]]:
     start_time, end_time = graph_data_range.time_range
 
     step = graph_data_range.step
@@ -188,7 +200,9 @@ def _fetch_rrd_data(
     query = livestatus_lql([host_name], lql_columns, service_description)
 
     with sites.only_sites(site):
-        return list(zip(metrics, sites.live().query_row(query)))
+        data = sites.live().query_row(query)
+
+    return list(zip(metrics, [(int(d[0]), int(d[1]), int(d[2]), d[3:]) for d in data]))
 
 
 def rrd_columns(
@@ -278,6 +292,7 @@ def translate_and_merge_rrd_columns(
     target_metric: MetricName,
     rrd_columms: Iterable[tuple[str, TimeSeriesValues]],
     translations: Mapping[MetricName, TranslationSpec],
+    registered_metrics: Mapping[str, RegisteredMetric],
 ) -> TimeSeries:
     def scaler(scale: float) -> Callable[[float], float]:
         return lambda v: v * scale
@@ -294,16 +309,36 @@ def translate_and_merge_rrd_columns(
         metric_translation = find_matching_translation(metric_name, translations)
 
         if metric_translation.name == target_metric:
-            relevant_ts.append(TimeSeries(data, conversion=scaler(metric_translation.scale)))
+            if not data or data[0] is None or data[1] is None or data[2] is None:
+                raise ValueError(data)
+            relevant_ts.append(
+                TimeSeries(
+                    start=int(data[0]),
+                    end=int(data[1]),
+                    step=int(data[2]),
+                    values=data[3:],
+                    conversion=scaler(metric_translation.scale),
+                )
+            )
 
     if not relevant_ts:
-        return TimeSeries([0, 0, 0])
+        return TimeSeries(start=0, end=0, step=0, values=[])
 
+    timeseries = relevant_ts[0]
     _op_title, op_func = time_series_operators()["MERGE"]
     single_value_series = [op_func_wrapper(op_func, list(tsp)) for tsp in zip(*relevant_ts)]
 
     return TimeSeries(
-        single_value_series,
-        time_window=relevant_ts[0].twindow,
-        conversion=get_conversion_function(get_metric_spec(metric_name).unit_spec),
+        start=timeseries.start,
+        end=timeseries.end,
+        step=timeseries.step,
+        values=single_value_series,
+        conversion=user_specific_unit(
+            get_metric_spec(
+                metric_name,
+                registered_metrics,
+            ).unit_spec,
+            user,
+            active_config,
+        ).conversion,
     )

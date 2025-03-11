@@ -35,7 +35,7 @@ from cmk.checkengine.submitters import (
 )
 from cmk.checkengine.summarize import SummaryConfig
 
-from cmk.base.api.agent_based.register._config import AgentBasedPlugins
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.checkers import (
     CMKParser,
     CMKSummarizer,
@@ -46,9 +46,8 @@ from cmk.base.checkers import (
 from cmk.base.config import ConfigCache, ParserFactory
 
 LOGGER = logging.getLogger(__name__)
-DATA_DIR = qa_test_data_path() / "plugins_siteless"
-DUMPS_DIR = DATA_DIR / "agent_data"
-SERVICES_STATES_DIR = DATA_DIR / "services_states"
+DUMPS_DIR = qa_test_data_path() / "plugins_siteless" / "agent_data"
+SERVICES_STATES_DIR = Path(__file__).parent.resolve() / "services_states"
 
 
 class BasicSubmitter(Submitter):
@@ -139,7 +138,14 @@ def compare_services_states(
     LOGGER.debug(
         "Services' details:\n%s", pprint.pformat({s.name: s.details for s in checks_result})
     )
-    assert actual_states == expected_services_states
+    assert actual_states == expected_services_states, (
+        f"\nActual-states\n:"
+        f"{pprint.pformat(actual_states)}\n"
+        f"\nExpected-states:\n"
+        f"{pprint.pformat(expected_services_states)}\n"
+        f"\nDiff:\n"
+        f"{pprint.pformat(set(actual_states.items()) ^ set(expected_services_states.items()))}\n"
+    )
 
 
 def discover_services(

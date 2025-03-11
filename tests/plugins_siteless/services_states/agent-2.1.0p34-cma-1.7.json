@@ -1,0 +1,65 @@
+{
+  "Check_MK Agent": {
+    "expected_state": 0
+  },
+  "CPU load": {
+    "expected_state": 0
+  },
+  "Number of threads": {
+    "expected_state": 0
+  },
+  "CPU utilization": {
+    "expected_state": 0
+  },
+  "Interface 2": {
+    "expected_state": 0
+  },
+  "User_Memory": {
+    "expected_state": 1
+  },
+  "Logins": {
+    "expected_state": 0
+  },
+  "Log /omd/sites/asd/var/log/cmc.log": {
+    "expected_state": 0
+  },
+  "Memory": {
+    "expected_state": 0
+  },
+  "OMD asd Notification Spooler": {
+    "expected_state": 0
+  },
+  "Mount options of /omd": {
+    "expected_state": 0
+  },
+  "Mount options of /ro": {
+    "expected_state": 0
+  },
+  "Mount options of /rw": {
+    "expected_state": 0
+  },
+  "NTP Time": {
+    "expected_state": 0
+  },
+  "Nullmailer Queue": {
+    "expected_state": 0
+  },
+  "OMD asd apache": {
+    "expected_state": 0
+  },
+  "OMD asd status": {
+    "expected_state": 0
+  },
+  "Systemd Service Summary": {
+    "expected_state": 0
+  },
+  "Systemd Socket Summary": {
+    "expected_state": 0
+  },
+  "TCP Connections": {
+    "expected_state": 0
+  },
+  "Uptime": {
+    "expected_state": 0
+  }
+}

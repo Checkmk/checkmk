@@ -8,7 +8,8 @@ Don't add new stuff here!
 """
 
 import logging
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from contextlib import contextmanager
 from itertools import groupby
 from pathlib import Path
 from stat import filemode
@@ -42,6 +43,14 @@ def format_file_name(package_id: PackageID) -> str:
     return f"{package_id.name}-{package_id.version}.mkp"
 
 
+@contextmanager
+def _log_exception(m: Manifest, name: str) -> Iterator[None]:
+    try:
+        yield
+    except Exception as e:
+        _logger.error("[%s %s]: Error in post %s hook: %s", m.name, m.version, name, e)
+
+
 def release(
     installer: Installer,
     pacname: PackageName,
@@ -57,7 +66,8 @@ def release(
             _logger.info("    %s", f)
 
     for part in set(manifest.files) & set(callbacks):
-        callbacks[part].release(manifest.files[part])
+        with _log_exception(manifest, "release"):
+            callbacks[part].release(manifest.files[part])
 
     installer.remove_installed_manifest(pacname)
 
@@ -72,7 +82,8 @@ def _uninstall(
         raise PackageError(", ".join(err))
 
     for part in set(manifest.files) & set(callbacks):
-        callbacks[part].uninstall(manifest.files[part])
+        with _log_exception(manifest, "uninstall"):
+            callbacks[part].uninstall(manifest.files[part])
 
     installer.remove_installed_manifest(manifest.name)
 
@@ -287,7 +298,7 @@ def install(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     *,
     site_version: str,
-    allow_outdated: bool = True,
+    version_check: bool,
     parse_version: Callable[[str], ComparableVersion],
 ) -> Manifest:
     try:
@@ -297,7 +308,7 @@ def install(
             path_config,
             callbacks,
             site_version=site_version,
-            allow_outdated=allow_outdated,
+            version_check=version_check,
             parse_version=parse_version,
         )
     finally:
@@ -313,11 +324,7 @@ def _install(
     *,
     site_version: str,
     parse_version: Callable[[str], ComparableVersion],
-    # I am not sure whether we should install outdated packages by default -- but
-    #  a) this is the compatible way to go
-    #  b) users cannot even modify packages without installing them
-    # Reconsider!
-    allow_outdated: bool,
+    version_check: bool,
 ) -> Manifest:
     manifest = extract_manifest(mkp)
 
@@ -337,7 +344,7 @@ def _install(
         manifest,
         old_manifest,
         site_version,
-        allow_outdated,
+        version_check,
         parse_version,
     )
 
@@ -346,7 +353,8 @@ def _install(
     _fix_files_permissions(manifest, path_config)
 
     for part in set(manifest.files) & set(callbacks):
-        callbacks[part].install(manifest.files[part])
+        with _log_exception(manifest, "install"):
+            callbacks[part].install(manifest.files[part])
 
     # In case of an update remove files from old_package not present in new one
     if old_manifest is not None:
@@ -355,7 +363,10 @@ def _install(
 
         for part in set(old_manifest.files) & set(callbacks):
             new_files = set(manifest.files.get(part, []))
-            callbacks[part].uninstall([f for f in old_manifest.files[part] if f not in new_files])
+            with _log_exception(old_manifest, "uninstall"):
+                callbacks[part].uninstall(
+                    [f for f in old_manifest.files[part] if f not in new_files]
+                )
 
     # Last but not least install package file
     installer.add_installed_manifest(manifest)
@@ -388,12 +399,12 @@ def _raise_for_installability(
     package: Manifest,
     old_package: Manifest | None,
     site_version: str,
-    allow_outdated: bool,
+    version_check: bool,
     parse_version: Callable[[str], ComparableVersion],
 ) -> None:
     """Raise a `PackageException` if we should not install this package"""
-    _raise_for_too_old_cmk_version(parse_version, package.version_min_required, site_version)
-    if not allow_outdated:
+    if version_check:
+        _raise_for_too_old_cmk_version(parse_version, package.version_min_required, site_version)
         _raise_for_too_new_cmk_version(parse_version, package.version_usable_until, site_version)
     _raise_for_conflicts(package, old_package, installer, path_config)
 
@@ -482,15 +493,16 @@ def _raise_for_too_old_cmk_version(
     If the sites version can not be parsed, the check is simply passing without error.
     """
     try:
-        too_old = parse_version(site_version) < parse_version(min_version)
+        if parse_version(min_version) <= parse_version(site_version):
+            return
     except Exception:
         # Be compatible: When a version can not be parsed, then skip this check
         return
 
-    if too_old:
-        raise PackageError(
-            f"Package requires Checkmk version {min_version} (this is {site_version})"
-        )
+    raise PackageError(
+        f"Package requires a Checkmk version {min_version} or higher (this is {site_version})."
+        f" You can skip all version checks by using the `--force-install` flag on the commandline."
+    )
 
 
 def _raise_for_too_new_cmk_version(
@@ -506,15 +518,16 @@ def _raise_for_too_new_cmk_version(
         return
 
     try:
-        too_new = parse_version(site_version) >= parse_version(until_version)
+        if parse_version(site_version) < parse_version(until_version):
+            return
     except Exception:
         # Be compatible: When a version can not be parsed, then skip this check
         return
 
-    if too_new:
-        raise PackageError(
-            f"Package requires Checkmk version below {until_version} (this is {site_version})"
-        )
+    raise PackageError(
+        f"Package requires a Checkmk version below {until_version} (this is {site_version})."
+        f" You can skip all version checks by using the `--force-install` flag on the commandline."
+    )
 
 
 class StoredManifests(BaseModel):
@@ -632,7 +645,7 @@ def _deinstall_inapplicable_active_packages(
                 manifest,
                 manifest,
                 site_version,
-                allow_outdated=False,
+                version_check=True,
                 parse_version=parse_version,
             )
         except PackageError as exc:
@@ -669,8 +682,8 @@ def _install_applicable_inactive_packages(
                         manifest.id,
                         path_config,
                         callbacks,
-                        allow_outdated=False,
                         site_version=site_version,
+                        version_check=True,
                         parse_version=parse_version,
                     )
                 )

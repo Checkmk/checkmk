@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import re
+from typing import override
 
 from playwright.sync_api import expect, Locator
 
@@ -18,6 +19,7 @@ class ChangePassword(CmkPage):
 
     page_title: str = "Change password"
 
+    @override
     def navigate(self) -> None:
         """Navigate to change password page, like a Checkmk GUI user."""
         logger.info("Navigate to 'Change password' page")
@@ -25,12 +27,14 @@ class ChangePassword(CmkPage):
         self.page.wait_for_url(url=re.compile("user_change_pw.py$"), wait_until="load")
         self._validate_page()
 
+    @override
     def _validate_page(self) -> None:
         logger.info("Validate that current page is 'Change password' page")
         self.main_area.check_page_title(self.page_title)
         expect(self.current_password_input).to_be_visible()
         expect(self.new_password_input).to_be_visible()
 
+    @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
 

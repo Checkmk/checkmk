@@ -22,7 +22,7 @@ const labelVariants = cva('', {
 })
 type LabelVariants = VariantProps<typeof labelVariants>
 
-interface LabelProps {
+export interface LabelProps {
   variant?: LabelVariants['variant']
   onClick?: (() => void) | null
 }
@@ -66,7 +66,6 @@ label {
 
   &.cmk-label--clickable {
     cursor: pointer;
-    pointer-events: all;
   }
 }
 </style>

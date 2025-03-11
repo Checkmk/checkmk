@@ -8,7 +8,7 @@ import pytest
 
 from cmk.utils.sectionname import SectionName
 
-from cmk.base.api.agent_based.register import AgentBasedPlugins
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 
 from cmk.agent_based.v2 import StringTable
 

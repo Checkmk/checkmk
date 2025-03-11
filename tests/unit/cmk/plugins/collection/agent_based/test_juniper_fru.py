@@ -13,7 +13,7 @@ from tests.unit.cmk.plugins.collection.agent_based.snmp import (
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.api.agent_based.register import AgentBasedPlugins
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 
 from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.juniper.agent_based.juniper_fru_section import snmp_section_juniper_fru

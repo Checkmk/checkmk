@@ -66,10 +66,12 @@ def main():
         version.branch,
     )
 
-    if version.is_installed():
-        logger.info("Already installed. Terminating.")
+    if version.is_installed() != args.uninstall:
+        logger.info(
+            f"Can not {operation} {version.edition} {version.version} is %s. Terminating.",
+            ("not installed" if args.uninstall else "already installed"),
+        )
         return CMK_OK
-
     manager = ABCPackageManager.factory()
     try:
         if args.uninstall:

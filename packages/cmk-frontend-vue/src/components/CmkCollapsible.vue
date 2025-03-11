@@ -15,9 +15,11 @@ defineProps<CmkCollapsibleProps>()
 
 <template>
   <CollapsibleRoot v-slot="{ open: openSlot }" :open="open" class="cmk-collapsible">
-    <CollapsibleContent :open="openSlot" class="cmk-collapsible__content">
-      <slot />
-    </CollapsibleContent>
+    <Transition name="content">
+      <CollapsibleContent v-show="open" :open="openSlot" class="cmk-collapsible__content">
+        <slot />
+      </CollapsibleContent>
+    </Transition>
   </CollapsibleRoot>
 </template>
 
@@ -26,24 +28,24 @@ defineProps<CmkCollapsibleProps>()
   padding-top: 2px;
 }
 
-.cmk-collapsible__content {
-  &[data-state='open'] {
-    animation: slideDown 300ms ease-out;
-  }
+.content-enter-active {
+  animation: slideDown 300ms ease-out;
+  overflow: hidden;
+}
 
-  &[data-state='closed'] {
-    animation: slideUp 300ms ease-out;
-  }
+.content-leave-active {
+  animation: slideUp 300ms ease-out;
+  overflow: hidden;
 }
 
 @mixin zero-height {
-  overflow: hidden;
   height: 0;
+  opacity: 0;
 }
 
 @mixin full-height {
-  overflow: hidden;
   height: var(--radix-collapsible-content-height);
+  opacity: 1;
 }
 
 @keyframes slideDown {

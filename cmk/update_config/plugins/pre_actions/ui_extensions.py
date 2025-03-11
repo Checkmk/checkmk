@@ -3,16 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
 from collections.abc import Mapping
 from logging import Logger
 from pathlib import Path
 
-from cmk.ccc.exceptions import MKGeneralException
-
 from cmk.gui import main_modules
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.graphing import parse_perfometer, perfometer_info
 from cmk.gui.utils import get_failed_plugins, remove_failed_plugin
 
 from cmk.mkp_tool import Manifest, PackageID
@@ -82,12 +78,6 @@ class PreUpdateUIExtensions(PreUpdateAction):
                 continue
 
             raise MKUserError(None, "incompatible extension package")
-
-        for perfometer in perfometer_info:
-            try:
-                parse_perfometer(perfometer)
-            except MKGeneralException as e:
-                sys.stderr.write(f"{e}\n")
 
 
 def _continue_on_incomp_local_file(conflict_mode: ConflictMode) -> Resume:

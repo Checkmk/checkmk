@@ -35,10 +35,6 @@ from cmk.utils.redis import disable_redis
 # to a specific layer in the future, but for the the moment we need to deal
 # with it.
 from cmk.base import config as base_config
-from cmk.base.api.agent_based.register import (
-    extract_known_discovery_rulesets,
-    get_previously_loaded_plugins,
-)
 
 from cmk.gui import main_modules
 from cmk.gui.exceptions import MKUserError
@@ -198,6 +194,11 @@ def _load_plugins(logger: logging.Logger) -> None:
             if edition(paths.omd_root) is Edition.CRE
             else load_plugins_with_exceptions("cmk.update_config.cee.plugins.actions")
         ),
+        (
+            load_plugins_with_exceptions("cmk.update_config.cme.plugins.actions")
+            if edition(paths.omd_root) is Edition.CME
+            else []
+        ),
     ):
         logger.error("Error in action plug-in %s: %s\n", plugin, exc)
         if debug.enabled():
@@ -296,14 +297,7 @@ def _check_failed_gui_plugins(logger: logging.Logger) -> None:
 
 
 def _initialize_base_environment() -> None:
-    base_config.load_all_plugins(
-        local_checks_dir=paths.local_checks_dir,
-        checks_dir=paths.checks_dir,
-    )
-    plugins = get_previously_loaded_plugins()
-    # Watch out: always load the plugins before loading the config.
-    # The validation step will not be executed otherwise.
-    base_config.load(extract_known_discovery_rulesets(plugins))
+    base_config.load(discovery_rulesets=())
 
 
 @contextmanager

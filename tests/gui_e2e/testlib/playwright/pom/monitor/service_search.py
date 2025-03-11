@@ -5,6 +5,7 @@
 
 import logging
 import re
+from typing import override
 from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
@@ -30,17 +31,20 @@ class ServiceSearchPage(CmkPage):
     ) -> None:
         super().__init__(page=page, navigate_to_page=navigate_to_page, contain_filter_sidebar=True)
 
+    @override
     def navigate(self) -> None:
         logger.info("Navigate to Monitor >> Overview >> %s", self.page_title)
         self.main_menu.monitor_menu("Service search").click()
         self.page.wait_for_url(url=re.compile(quote_plus("view_name=searchsvc")), wait_until="load")
         self._validate_page()
 
+    @override
     def _validate_page(self) -> None:
         logger.info("Validate that current page is %s page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(self.filter_sidebar.locator()).to_be_visible(timeout=5000)
 
+    @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         mapping = DropdownListNameToID()
         setattr(mapping, "Services", "menu_service_multiple")

@@ -6,7 +6,6 @@
 set -e
 
 JOBS=6
-readonly BAZEL_CMD=${BAZEL_CMD:-bazel}
 
 PYTHON_DESTINATION=../../cmk/shared_typing
 
@@ -97,7 +96,7 @@ setup_venv() {
     test "${SETUP_VENV_RAN}" = "yes" && return
     # TODO: Let rules_uv know about our toolchain... https://github.com/theoremlp/rules_uv/issues/163
     # Further: uv seems to fall back to clang, see https://github.com/astral-sh/uv/issues/8036
-    CC="gcc" ${BAZEL_CMD} run //:create_venv
+    CC="gcc" bazel run //:create_venv
     # shellcheck source=/dev/null
     source "$(bazel info workspace)"/.venv/bin/activate
     SETUP_VENV_RAN=yes

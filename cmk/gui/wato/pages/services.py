@@ -967,7 +967,7 @@ class DiscoveryPageRenderer:
             return
 
         match table_source:
-            case DiscoveryState.MONITORED:
+            case DiscoveryState.MONITORED | DiscoveryState.CHANGED:
                 if has_modification_specific_permissions(UpdateType.UNDECIDED):
                     self._enable_bulk_button(table_source, DiscoveryState.UNDECIDED)
                 if has_modification_specific_permissions(UpdateType.IGNORED):
@@ -1804,7 +1804,9 @@ def service_page_menu(breadcrumb: Breadcrumb, host: Host, options: DiscoveryOpti
                         entries=list(_page_menu_service_configuration_entries(host, options)),
                     ),
                     PageMenuTopic(
-                        title=_("On selected services"),
+                        title=_("On selected services")
+                        if options.show_checkboxes
+                        else _("On all services"),
                         entries=list(_page_menu_selected_services_entries(host, options)),
                     ),
                     PageMenuTopic(
@@ -2101,7 +2103,7 @@ def _page_menu_selected_services_entries(
             True,
             DiscoveryState.MONITORED,
             DiscoveryState.UNDECIDED,
-            _("Declare monitored services as undecided"),
+            _("Declare monitored, including changed, services as undecided"),
             None,
         ),
         BulkEntry(
@@ -2109,7 +2111,7 @@ def _page_menu_selected_services_entries(
             True,
             DiscoveryState.MONITORED,
             DiscoveryState.IGNORED,
-            _("Disable monitored services"),
+            _("Disable monitored, including changed, services"),
             None,
         ),
         BulkEntry(

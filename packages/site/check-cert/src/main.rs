@@ -130,20 +130,16 @@ struct Args {
     pubkey_size: Option<usize>,
 
     /// Certificate expiration levels in seconds [WARN CRIT]
-    #[arg(long, num_args = 2, default_values_t = [30 * 24 * 3600, 0])]
-    not_after: Vec<u32>,
+    #[arg(long, num_args = 2)]
+    not_after: Option<Vec<u32>>,
 
     /// Max allowed validity (difference between not_before and not_after, in days)
     #[arg(long)]
     max_validity: Option<u32>,
 
     /// Overall response time levels in seconds [WARN CRIT]
-    #[arg(
-        long,
-        num_args = 2,
-        default_values_t = [60.0, 90.0]
-    )]
-    response_time: Vec<f64>,
+    #[arg(long, num_args = 2)]
+    response_time: Option<Vec<f64>>,
 
     /// Load CA store at this location in place of the default one
     #[arg(long)]
@@ -180,12 +176,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     info("start check-cert");
 
-    let not_after = parse_levels(LevelsStrategy::Lower, args.not_after, Duration::seconds);
-    let response_time = parse_levels(
-        LevelsStrategy::Upper,
-        args.response_time,
-        StdDuration::from_secs_f64,
-    );
+    let response_time = args
+        .response_time
+        .map(|rt| parse_levels(LevelsStrategy::Upper, rt, StdDuration::from_secs_f64));
+    let not_after: Option<Levels<Duration>> = args
+        .not_after
+        .map(|na| parse_levels(LevelsStrategy::Lower, na, Duration::seconds));
 
     info("load trust store...");
     let Ok(trust_store) = (match args.ca_store {
@@ -233,7 +229,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     check.join(&mut fetcher_check::check(
         elapsed,
         FetcherChecks::builder()
-            .response_time(Some(response_time))
+            .response_time(response_time)
             .build(),
     ));
     info(" 2/3 - verify certificate with trust store");
@@ -261,7 +257,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .signature_algorithm(args.signature_algorithm)
             .pubkey_algorithm(args.pubkey_algorithm.map(|sig| String::from(sig.as_str())))
             .pubkey_size(args.pubkey_size)
-            .not_after(Some(not_after))
+            .not_after(not_after)
             .max_validity(args.max_validity.map(|x| Duration::days(x.into())))
             .build(),
     ));

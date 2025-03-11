@@ -4,38 +4,55 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 
+import pytest
+
 from tests.testlib.common.utils import get_services_with_status
 from tests.testlib.site import Site, SiteFactory
 
-from tests.plugins_integration import checks
 from tests.plugins_integration.checks import (
+    config,
     get_host_names,
     setup_host,
 )
 
 logger = logging.getLogger(__name__)
 
-# * Arista dumps containing several checks that have been removed after 2.3.0.
-# * BIG-IP cluster containing several checks remaining in PEND state, leading to assertion-error
-#   after update. See CMK-19103.
-# * Ceph dump containing "Systemd Service Summary" changing between 2.3.0 and 2.4.0. SUP-21093.
-# * Proxmox dump containing "Systemd Service Summary" changing between versions. SUP-22010.
-SKIPPED_DUMPS = [
-    "snmp-sw-arista.demo.checkmk.com_2_2_p12",
-    "snmp-f5-bigip-failover-cluster",
-    "agent-2.2.0p8-ceph-17.2.6",
-    "agent-2.2.0p14-proxmox",
-]
 
-# * The 'Postfix status' service has been renamed into 'Postfix status default'.
-#   Related: CMK-13774
-# * The 'Postfix Queue' has been renamed into 'Postfix Queue default'
-#   See Werk #16377 or commit daf9d3ab9a5e9d698733f0af345d88120de863f0
-# * The 'Power x' (x=1,2,...) services have been renamed into 'Power supply'
-#   See Werk 16905.
-SKIPPED_CHECKS = ["Postfix status", "Postfix Queue", "Power 1"]
+@pytest.fixture(name="skip_dumps", scope="module")
+def _skip_dumps():
+    # * Arista dumps containing several checks that have been removed after 2.3.0.
+    # * BIG-IP cluster containing several checks remaining in PEND state, leading to assertion-error
+    #   after update. See CMK-19103.
+    # * Ceph dump containing "Systemd Service Summary" changing between 2.3.0 and 2.4.0. SUP-21093.
+    # * Proxmox dump containing "Systemd Service Summary" changing between versions. SUP-22010.
+    config.skipped_dumps = [
+        "snmp-sw-arista.demo.checkmk.com_2_2_p12",
+        "snmp-f5-bigip-failover-cluster",
+        "agent-2.2.0p8-ceph-17.2.6",
+        "agent-2.2.0p14-proxmox",
+    ]
+    try:
+        yield
+    finally:
+        config.skipped_dumps = []
 
 
+@pytest.fixture(name="skip_checks", scope="module")
+def _skip_checks():
+    # * The 'Postfix status' service has been renamed into 'Postfix status default'.
+    #   Related: CMK-13774
+    # * The 'Postfix Queue' has been renamed into 'Postfix Queue default'
+    #   See Werk #16377 or commit daf9d3ab9a5e9d698733f0af345d88120de863f0
+    # * The 'Power x' (x=1,2,...) services have been renamed into 'Power supply'
+    #   See Werk 16905.
+    config.skipped_checks = ["Postfix status", "Postfix Queue", "Power 1"]
+    try:
+        yield
+    finally:
+        config.skipped_checks = []
+
+
+@pytest.mark.usefixtures("skip_checks", "skip_dumps")
 def test_plugin_update(
     test_site_update: Site,
     site_factory_update: SiteFactory,
@@ -53,14 +70,14 @@ def test_plugin_update(
     psd_rules_base = test_site_update.openapi.rules.get_all("periodic_discovery")
     base_data = {}
     base_data_status_0 = {}
-    hostnames = get_host_names(dump_dir=checks.config.dump_dir_integration) + get_host_names(
-        dump_dir=checks.config.dump_dir_siteless
+    hostnames = get_host_names(dump_dir=config.dump_dir_integration) + get_host_names(
+        dump_dir=config.dump_dir_siteless
     )
-    for host_name in (_ for _ in hostnames if _ not in SKIPPED_DUMPS):
+    for host_name in (_ for _ in hostnames if _ not in config.skipped_dumps):
         with setup_host(test_site_update, host_name, skip_cleanup=True):
             base_data[host_name] = test_site_update.get_host_services(host_name)
 
-            for skipped_check in SKIPPED_CHECKS:
+            for skipped_check in config.skipped_checks:
                 if skipped_check in base_data[host_name]:
                     base_data[host_name].pop(skipped_check)
 
@@ -73,7 +90,7 @@ def test_plugin_update(
     for host_name in get_host_names(test_site_update):
         target_data[host_name] = test_site_update.get_host_services(host_name)
 
-        for skipped_check in SKIPPED_CHECKS:
+        for skipped_check in config.skipped_checks:
             if skipped_check in target_data[host_name]:
                 target_data[host_name].pop(skipped_check)
 

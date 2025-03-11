@@ -5,12 +5,13 @@
 
 from logging import Logger
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from cmk.utils import tty
 from cmk.utils.notify_types import (
     EventRule,
     NotificationParameterGeneralInfos,
+    NotificationParameterID,
     NotificationParameterItem,
     NotificationParameterMethod,
     NotificationParameterSpecs,
@@ -33,6 +34,12 @@ from cmk.gui.watolib.notifications import (
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
+# We're dealing with both the legacy and migrated representation of the "notify_plugin" parameter
+# field. So, we need a type to account for both regresentations.
+type LegacyParameter = dict[str, object] | list[object]
+type MigratedParameter = NotificationParameterID | None
+type Parameter = LegacyParameter | MigratedParameter
+
 
 class MigrateNotifications(UpdateAction):
     def __init__(self, name: str, title: str, sort_index: int) -> None:
@@ -42,9 +49,8 @@ class MigrateNotifications(UpdateAction):
 
     def __call__(self, logger: Logger) -> None:
         notification_rules = NotificationRuleConfigFile().load_for_reading()
-        if all(
-            isinstance(event_rule["notify_plugin"][1], str) for event_rule in notification_rules
-        ):
+        notification_rule_params = (rule["notify_plugin"][1] for rule in notification_rules)
+        if all(params is None or isinstance(params, str) for params in notification_rule_params):
             logger.debug("       Already migrated")
             return
 
@@ -55,42 +61,35 @@ class MigrateNotifications(UpdateAction):
         parameters_per_method: NotificationParameterSpecs = {}
         updated_notification_rules: list[EventRule] = []
         for nr, rule in enumerate(notification_rules):
-            method, parameter = rule["notify_plugin"]
+            method = rule["notify_plugin"][0]
+            parameter = cast(Parameter, rule["notify_plugin"][1])
 
-            if parameter is None:
+            if parameter is None or isinstance(parameter, str):
                 rule["notify_plugin"] = (method, parameter)
                 updated_notification_rules.append(rule)
                 continue
 
-            parameters_per_method.setdefault(
-                NotificationParameterMethod(method),
-                {},
+            parameters_per_method.setdefault(method, {})
+
+            parameter_id = next(
+                (
+                    param_id
+                    for param_id, params in parameters_per_method[method].items()
+                    if params["parameter_properties"] == parameter
+                ),
+                None,
             )
 
-            parameter_id = [
-                param_id
-                for param_id, params in parameters_per_method[method].items()
-                if params["parameter_properties"] == parameter  # type: ignore[comparison-overlap]
-            ]
-
-            if not parameter_id:
-                parameter_id = [sample_config.new_notification_parameter_id()]
-
-                # Call with the following parameter...
+            if parameter_id is None:
+                # Special handling for custom plugins whose parameter values may be a list.
                 if isinstance(parameter, list):
                     parameter = {"params": parameter}
 
-                parameters_per_method[method].update(
-                    {
-                        parameter_id[0]: self._get_data_for_disk(
-                            method=method,
-                            parameter=parameter,  # type: ignore[arg-type]
-                            nr=nr,
-                        )
-                    }
-                )
+                parameter_id = sample_config.new_notification_parameter_id()
+                data_for_disk = self._get_data_for_disk(method=method, parameter=parameter, nr=nr)
+                parameters_per_method[method].update({parameter_id: data_for_disk})
 
-            rule["notify_plugin"] = (method, parameter_id[0])
+            rule["notify_plugin"] = (method, parameter_id)
             updated_notification_rules.append(rule)
 
         NotificationParameterConfigFile().save(parameters_per_method)

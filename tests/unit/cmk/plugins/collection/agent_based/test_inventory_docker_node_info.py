@@ -6,7 +6,7 @@
 
 import pytest
 
-from cmk.base.api.agent_based.register import AgentBasedPlugins
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 
 from cmk.agent_based.v2 import Attributes, InventoryResult, TableRow
 from cmk.plugins.collection.agent_based.docker_node_info import inventory_docker_node_info

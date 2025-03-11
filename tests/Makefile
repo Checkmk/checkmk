@@ -8,23 +8,22 @@ FIND_PYTHON_FILES := $(SCRIPTS)/find-python-files
 FIND_SHELL_FILES := $(SCRIPTS)/find-shell-files
 UVENV := $(SCRIPTS)/run-uvenv
 PYTEST := $(UVENV) pytest $(PYTEST_ARGS)
-PYTEST_UV := $(UVENV) pytest $(PYTEST_ARGS)
 CYCLES := $(UVENV) py_import_cycles
 PYTEST_OPTS_UNIT_SKIP_SLOW = -m "not slow"
 PYTEST_OPTS_UNIT_SLOW_ONLY = -m "slow"
 THREE_TO_TWO := $(UVENV) 3to2
 BANDIT := $(UVENV) bandit
 SEMGREP := $(realpath semgrep)/run-semgrep
-BAZEL_CMD ?= $(realpath $(SCRIPTS)/run-bazel.sh)
-SHELLCHECK := $(BAZEL_CMD) run --ui_event_filters=-info,-stderr //bazel/tools:shellcheck_bin --
-SHFMT := $(BAZEL_CMD) run --ui_event_filters=-info,-stderr //bazel/tools:shfmt_bin --
-TAPLO := $(BAZEL_CMD) run --ui_event_filters=-info,-stderr //bazel/tools:taplo_bin --
+SHELLCHECK := bazel run --ui_event_filters=-info,-stderr //bazel/tools:shellcheck_bin --
+SHFMT := bazel run --ui_event_filters=-info,-stderr //bazel/tools:shfmt_bin --
+TAPLO := bazel run --ui_event_filters=-info,-stderr //bazel/tools:taplo_bin --
 ADDITIONAL_MYPY_ARGS := $(JUNIT_XML)
 # Please note: We can currently not include defines.make as it would override
 # the EDITIONS environment variable handed over by some jenkins test jobs.
 # Looks like we need to cleanup the EDITION handling here.
 AGENT_PLUGIN_PYTHON_VERSIONS := $(shell make --no-print-directory --file=../defines.make print-AGENT_PLUGIN_PYTHON_VERSIONS)
 REPO_PATH := $(shell make --no-print-directory --file=../defines.make print-REPO_PATH)
+MAX_CHARS := 1500000
 
 # A random time zone between UTC-11...UTC+14. Note the recursively expanded
 # variable assignment to get a new time zone on every access.
@@ -144,7 +143,7 @@ bandit.ini:
 	( echo exclude: /tests >> bandit.ini )
 
 format-shell:
-	$(SHFMT) -w -i 4 -ci $(FIND_SHELL_FILES)
+	cd .. && $(SHFMT) -w -i 4 -ci $$($(FIND_SHELL_FILES))
 
 agent-plugin-unit/py2/test_%.py: agent-plugin-unit/test_%.py
 	mkdir -p "$(dir $@)"
@@ -205,8 +204,8 @@ test-bandit-nosec-markers:
 	$(UVENV) python bandit-nosec-markers/nosec_reason.py --doc bandit-nosec-markers/bandit-exclusions.md check $(realpath ..)
 
 prepare-playwright:
-	../scripts/run-uvenv playwright install-deps "chromium";
-	../scripts/run-uvenv playwright install "chromium";
+	$(UVENV) playwright install-deps "chromium";
+	$(UVENV) playwright install "chromium";
 
 test-docker-docker:
 	DOCKER_RUN_ADDOPTS="-v $$HOME/.docker/config.json:$$HOME/.docker/config.json -v $$HOME/.cmk-credentials:$$HOME/.cmk-credentials --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION" \
@@ -228,17 +227,15 @@ test-integration-agent-plugin:
 test-format-python: test-format-python-sort test-format-python-format
 
 test-format-python-sort: ../pyproject.toml
-	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
-	xargs ../scripts/run-uvenv ruff check --select I --diff | tee -a ../ruff_check_and_format.txt;\
+	echo $$($(FIND_PYTHON_FILES)) | xargs $(MAX_CHARS:%=--max-chars=%) $(UVENV) ruff check --select I --diff | tee -a ../ruff_check_and_format.txt;\
 	exit $${PIPESTATUS[1]}
 
 test-format-python-format: ../pyproject.toml
-	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
-	xargs ../scripts/run-uvenv ruff format --check --diff | tee -a ../ruff_check_and_format.txt;\
+	echo $$($(FIND_PYTHON_FILES)) | xargs $(MAX_CHARS:%=--max-chars=%) $(UVENV) ruff format --check --diff | tee -a ../ruff_check_and_format.txt;\
 	exit $${PIPESTATUS[1]}
 
 test-format-shell:
-	$(SHFMT) -d -i 4 -ci $(FIND_SHELL_FILES)
+	cd .. && $(SHFMT) -d -i 4 -ci $$($(FIND_SHELL_FILES))
 
 format-toml:
 	$(TAPLO) format ../pyproject.toml
@@ -289,7 +286,7 @@ test-integration-redfish:
 test-composition:
 	OTEL_RESOURCE_ATTRIBUTES=service.name=pytest \
 	    $(PYTEST) -T composition --export-traces $(PYTEST_SYSTEM_TEST_ARGS) \
-	    $(realpath composition) --session-timeout 5400
+	    $(realpath composition)
 
 test-extension-compatibility:
 	$(PYTEST) -vv -T extension_compatibility $(PYTEST_SYSTEM_TEST_ARGS) $(realpath extension_compatibility)
@@ -315,7 +312,9 @@ test-update-cross-edition-cme: # from CEE to CME
 	--latest-base-version --target-edition=CME --disable-interactive-mode --session-timeout 5400
 
 test-schemathesis-openapi:
-	$(PYTEST) -T schemathesis_openapi $(PYTEST_SYSTEM_TEST_ARGS) $(realpath schemathesis_openapi) -p schemathesis
+	SCHMATHESIS_PROFILE=ci $(PYTEST) -T schemathesis_openapi $(realpath schemathesis_openapi) \
+	$(PYTEST_SYSTEM_TEST_ARGS) -p schemathesis -k stateless \
+	--html="../results/schemathesis_openapi.html" --self-contained-html
 
 test-plugins:
 	$(PYTEST) -T plugins_integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration) \
@@ -340,7 +339,7 @@ $(foreach TEST,$(DOCKERABLE_TESTS),$(TEST)-docker):
 
 test-license-headers:
 	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
-	xargs --no-run-if-empty $(PYTEST_UV) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_license_headers.py) \
+	xargs $(MAX_CHARS:%=--max-chars=%) --no-run-if-empty $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_license_headers.py) \
 	--python-files;
 
 test-requirements:
@@ -348,13 +347,13 @@ test-requirements:
 
 test-file-content:
 	if test -z "$$CHANGED_FILES_REL_FILE"; then \
-	    $(PYTEST_UV) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content) --test-all-files ; \
+	    $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content) --test-all-files ; \
 	else \
-	    cat "$$CHANGED_FILES_REL_FILE" | xargs --no-run-if-empty $(PYTEST_UV) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content) --changed-files ; \
+	    cat "$$CHANGED_FILES_REL_FILE" | xargs $(MAX_CHARS:%=--max-chars=%) --no-run-if-empty $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content) --changed-files ; \
 	fi \
 
 test-werks:
-	$(PYTEST_UV) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_werks.py);
+	$(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_werks.py);
 
 test-code-quality: test-license-headers test-requirements test-file-content test-werks
 
@@ -369,7 +368,7 @@ test-mypy:
 	    $(ADDITIONAL_MYPY_ARGS) \
 	    --config-file="$(REPO_PATH)/pyproject.toml" \
 	    -- cmk/special_agents/agent_cisco_meraki.py
-	$(BAZEL_CMD) build --config=mypy //cmk:lib_cmk_repo_no_meraki
+	bazel build --config=mypy //cmk:lib_cmk_repo_no_meraki
 
 test-mypy-raw:
 	$(MAKE) test-mypy ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"
@@ -379,7 +378,7 @@ test-packaging:
 
 test-pylint:
 	cd ..; $(UVENV) pylint --disable=all --enable=$(PYLINT_CUSTOM_CHECKERS) --jobs=6 $(PYLINT_ARGS) $$($(FIND_PYTHON_FILES))
-	cd .. && $(PYTEST_UV) \
+	cd .. && $(PYTEST) \
 	    -T unit \
 	    --config-file=pyproject.toml \
 	    --override-ini="pythonpath=." \
@@ -391,10 +390,10 @@ test-pylint:
 	    tests/unit/test_pylint_checker_localization.py
 
 test-ruff:
-	cd ..; echo $$($(FIND_PYTHON_FILES)) | xargs $(UVENV) ruff check
+	cd ..; echo $$($(FIND_PYTHON_FILES)) | xargs $(MAX_CHARS:%=--max-chars=%) $(UVENV) ruff check
 
 test-shellcheck:
-	cd .. && $(SHELLCHECK) -x $(SHELLCHECK_OUTPUT_ARGS) $(FIND_SHELL_FILES)
+	cd .. && $(SHELLCHECK) -x $(SHELLCHECK_OUTPUT_ARGS) $$($(FIND_SHELL_FILES))
 
 test-cycles:
 	$(CYCLES) \
@@ -406,7 +405,7 @@ test-cycles:
 		--verbose
 
 test-unit-omdlib:
-	cd .. && TZ=$(RANDOM_TZ) $(PYTEST_UV) \
+	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
 		-T unit \
 		--config-file=pyproject.toml \
 		--doctest-modules \
@@ -416,14 +415,18 @@ test-unit-omdlib:
 		omd/packages/omd/ \
 		tests/unit/omdlib/
 
+test-doctest:
+	mkdir -p ../results; \
+	bazel test //cmk:doctest | tee ../results/$@.txt; \
+	exit $${PIPESTATUS[0]}
+
 test-unit:
-	cd .. && \
-	    $(BAZEL_CMD) test //cmk:doctest
-	cd .. && \
-	    $(BAZEL_CMD) test --test_verbose_timeout_warnings //tests/unit:all \
+	mkdir -p ../results; \
+	bazel test --test_verbose_timeout_warnings //tests/unit:all \
 	    --test_env=TZ=$(RANDOM_TZ) \
 	    --test_arg="-m" --test_arg="not slow" \
-	    --test_arg="--numprocesses=4"
+	    --test_arg="--numprocesses=4" | tee ../results/$@.txt; \
+	exit $${PIPESTATUS[0]}
 
 test-unit-docker:
 	../scripts/run-in-docker.sh '\
@@ -432,15 +435,15 @@ test-unit-docker:
 	    cp -Lr ../bazel-testlogs/tests/ ../results/testlogs ;\
 	    exit $$x'
 
-test-unit-all:
+test-unit-all: test-doctest
 	cd .. && \
-	    $(BAZEL_CMD) test --test_verbose_timeout_warnings //tests/unit:all \
+	    bazel test --test_verbose_timeout_warnings //tests/unit:all \
 	    --test_env=TZ=$(RANDOM_TZ) \
 	    --test_arg="--numprocesses=4"
 
 test-unit-testlib:
 	find -name '__pycache__' -exec rm -rf {} \; 2> /dev/null || true
-	cd .. && TZ=$(RANDOM_TZ) $(PYTEST_UV) \
+	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
 		-T testlib \
 		--config-file=pyproject.toml \
 		--doctest-modules \
@@ -450,8 +453,11 @@ test-unit-testlib:
 		-- \
 		tests/testlib/
 
+test-agent-plugin:
+	make $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker)
+
 test-agent-plugin-docker:
-	../scripts/run-in-docker.sh make $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker)
+	../scripts/run-in-docker.sh make test-agent-plugin
 
 test-unit-shell:
 	./unit-shell/runner.sh
@@ -473,7 +479,7 @@ what-gerrit-makes:
 	WORKSPACE="$$(git rev-parse --show-toplevel)" ; \
 	cd "$$WORKSPACE" ; \
 	mkdir -p "$$WORKSPACE/results" ; \
-	scripts/run-uvenv buildscripts/scripts/validate_changes.py \
+	$(UVENV) buildscripts/scripts/validate_changes.py \
 	    -e BASE_COMMIT_ID=origin/master \
 	    -e WORKSPACE="$$WORKSPACE" \
 	    -e RESULTS="$$WORKSPACE/results"

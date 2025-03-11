@@ -11,7 +11,7 @@ from collections.abc import Iterator
 import pytest
 from pytest import MonkeyPatch
 
-from tests.unit.cmk.gui.conftest import SetConfig
+from tests.unit.cmk.web_test_app import SetConfig
 
 import cmk.gui.main
 from cmk.gui.http import request

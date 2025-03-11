@@ -6,7 +6,7 @@
 import time
 from collections.abc import Mapping, Sequence
 from functools import partial
-from typing import Any
+from typing import Any, Literal
 
 from cmk.gui import utils
 from cmk.gui.config import Config
@@ -54,6 +54,8 @@ def register_sorters(registry: SorterRegistry) -> None:
     registry.register(SorterSvcPerfVal10)
     registry.register(SorterCustomHostVariable)
     registry.register(SorterHostIpv4Address)
+    registry.register(SorterHostIpv6Address)
+    registry.register(SorterHostIpAddresses)
     registry.register(SorterNumProblems)
 
     declare_simple_sorter("svcdescr", _("Service name"), "service_description", cmp_service_name)
@@ -72,7 +74,10 @@ def register_sorters(registry: SorterRegistry) -> None:
     )
     declare_simple_sorter("site", _("Site"), "site", cmp_simple_string)
     declare_simple_sorter(
-        "stateage", _("Service state age"), "service_last_state_change", cmp_simple_number
+        "stateage",
+        _("Service state age"),
+        "service_last_state_change",
+        cmp_simple_number,
     )
     declare_simple_sorter(
         "servicegroup", _("Service group"), "servicegroup_alias", cmp_simple_string
@@ -181,16 +186,25 @@ def register_sorters(registry: SorterRegistry) -> None:
     declare_1to1_sorter("downtime_fixed", cmp_simple_number)
     declare_1to1_sorter("downtime_type", cmp_simple_number)
     declare_simple_sorter(
-        "downtime_what", _("Downtime for host/service"), "downtime_is_service", cmp_simple_number
+        "downtime_what",
+        _("Downtime for host/service"),
+        "downtime_is_service",
+        cmp_simple_number,
     )
     declare_simple_sorter(
-        "downtime_start_time", _("Downtime start"), "downtime_start_time", cmp_simple_number
+        "downtime_start_time",
+        _("Downtime start"),
+        "downtime_start_time",
+        cmp_simple_number,
     )
     declare_simple_sorter(
         "downtime_end_time", _("Downtime end"), "downtime_end_time", cmp_simple_number
     )
     declare_simple_sorter(
-        "downtime_entry_time", _("Downtime entry time"), "downtime_entry_time", cmp_simple_number
+        "downtime_entry_time",
+        _("Downtime entry time"),
+        "downtime_entry_time",
+        cmp_simple_number,
     )
 
     # Log
@@ -215,13 +229,22 @@ def register_sorters(registry: SorterRegistry) -> None:
         "alerts_warn", _("Number of warnings"), "log_alerts_warn", cmp_simple_number
     )
     declare_simple_sorter(
-        "alerts_crit", _("Number of critical alerts"), "log_alerts_crit", cmp_simple_number
+        "alerts_crit",
+        _("Number of critical alerts"),
+        "log_alerts_crit",
+        cmp_simple_number,
     )
     declare_simple_sorter(
-        "alerts_unknown", _("Number of unknown alerts"), "log_alerts_unknown", cmp_simple_number
+        "alerts_unknown",
+        _("Number of unknown alerts"),
+        "log_alerts_unknown",
+        cmp_simple_number,
     )
     declare_simple_sorter(
-        "alerts_problem", _("Number of problem alerts"), "log_alerts_problem", cmp_simple_number
+        "alerts_problem",
+        _("Number of problem alerts"),
+        "log_alerts_problem",
+        cmp_simple_number,
     )
 
     # Aggregations
@@ -251,7 +274,12 @@ def cmp_host_state_equiv(r):
 
 
 def _sort_service_state(
-    r1: Row, r2: Row, *, parameters: Mapping[str, Any] | None, config: Config, request: Request
+    r1: Row,
+    r2: Row,
+    *,
+    parameters: Mapping[str, Any] | None,
+    config: Config,
+    request: Request,
 ) -> int:
     return (cmp_state_equiv(r1) > cmp_state_equiv(r2)) - (cmp_state_equiv(r1) < cmp_state_equiv(r2))
 
@@ -552,7 +580,8 @@ SorterCustomHostVariable = ParameterizedSorter(
 )
 
 
-def _sort_host_ipv4_address(
+def _sort_host_ip_addresses(
+    ip_versions: Sequence[Literal["ipv4", "ipv6"]],
     r1: Row,
     r2: Row,
     *,
@@ -560,20 +589,41 @@ def _sort_host_ipv4_address(
     config: Config,
     request: Request,
 ) -> int:
-    def get_address(row):
+    def get_address(row: Row, ipv: Literal["ipv4", "ipv6"]) -> str:
         custom_vars = dict(
             zip(row["host_custom_variable_names"], row["host_custom_variable_values"])
         )
-        return custom_vars.get("ADDRESS_4", "")
+        if ipv == "ipv4":
+            return custom_vars.get("ADDRESS_4", "")
+        return custom_vars.get("ADDRESS_6", "")
 
-    return compare_ips(get_address(r1), get_address(r2))
+    for ipv in ip_versions:
+        if (result := compare_ips(get_address(r1, ipv), get_address(r2, ipv), ipv)) != 0:
+            return result
+    return 0
 
 
 SorterHostIpv4Address = Sorter(
     ident="host_ipv4_address",
     title=_l("Host IPv4 address"),
     columns=["host_custom_variable_names", "host_custom_variable_values"],
-    sort_function=_sort_host_ipv4_address,
+    sort_function=partial(_sort_host_ip_addresses, ["ipv4"]),
+)
+
+
+SorterHostIpv6Address = Sorter(
+    ident="host_ipv6_address",
+    title=_l("Host IPv6 address"),
+    columns=["host_custom_variable_names", "host_custom_variable_values"],
+    sort_function=partial(_sort_host_ip_addresses, ["ipv6"]),
+)
+
+
+SorterHostIpAddresses = Sorter(
+    ident="host_addresses",
+    title=_l("Host addresses (IPv4/IPv6)"),
+    columns=["host_custom_variable_names", "host_custom_variable_values"],
+    sort_function=partial(_sort_host_ip_addresses, ["ipv4", "ipv6"]),
 )
 
 

@@ -20,7 +20,8 @@ from cmk.notification_plugins import utils
     [
         (  # host context with url parameter
             {
-                "PARAMETER_URL_PREFIX": "https://host/site/check_mk",
+                "PARAMETER_URL_PREFIX_1": "manual",
+                "PARAMETER_URL_PREFIX_2": "https://host/site/check_mk",
                 "HOSTURL": "/check_mk/index.py?start_url=view.py?view_name=hoststatus&host=test&site=heute",
                 "WHAT": "HOST",
             },
@@ -28,7 +29,7 @@ from cmk.notification_plugins import utils
         ),
         (  # service context with url parameter
             {
-                "PARAMETER_URL_PREFIX_AUTOMATIC": "https",
+                "PARAMETER_URL_PREFIX_1": "automatic_https",
                 "MONITORING_HOST": "localhost",
                 "OMD_SITE": "testsite",
                 "HOSTURL": "/view?key=val",
@@ -60,14 +61,15 @@ def test_host_url_from_context(context: dict[str, str], result: str) -> None:
     [
         (  # host context with url parameter
             {
-                "PARAMETER_URL_PREFIX": "https://host/site/check_mk",
+                "PARAMETER_URL_PREFIX_1": "manual",
+                "PARAMETER_URL_PREFIX_2": "https://host/site/check_mk",
                 "WHAT": "HOST",
             },
             "",
         ),
         (  # service context with url parameter
             {
-                "PARAMETER_URL_PREFIX_AUTOMATIC": "http",
+                "PARAMETER_URL_PREFIX_1": "automatic_http",
                 "MONITORING_HOST": "localhost",
                 "OMD_SITE": "testsite",
                 "SERVICEURL": "/check_mk/index.py?start_url=view.py?view_name=service&host=test&service=foos&site=heute",

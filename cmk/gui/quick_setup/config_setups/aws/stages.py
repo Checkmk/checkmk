@@ -14,6 +14,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.quick_setup.config_setups.aws import form_specs as aws
 from cmk.gui.quick_setup.config_setups.aws.form_specs import quick_setup_aws_form_spec
+from cmk.gui.quick_setup.v0_unstable.definitions import QSSiteSelection
 from cmk.gui.quick_setup.v0_unstable.predefined import (
     collect_params_from_form_data,
     collect_params_with_defaults_from_form_data,
@@ -31,6 +32,7 @@ from cmk.gui.quick_setup.v0_unstable.setups import (
     QuickSetupBackgroundStageAction,
     QuickSetupStage,
     QuickSetupStageAction,
+    StepStatus,
 )
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     ActionId,
@@ -242,19 +244,24 @@ def recap_found_services(
     _quick_setup_id: QuickSetupId,
     _stage_index: StageIndex,
     parsed_data: ParsedFormData,
-    _progress_logger: ProgressLogger,
+    progress_logger: ProgressLogger,
 ) -> Sequence[Widget]:
     service_discovery_result = utils.get_service_discovery_preview(
         rulespec_name=RuleGroup.SpecialAgents("aws"),
         all_stages_form_data=parsed_data,
         parameter_form=quick_setup_aws_form_spec(),
         collect_params=aws_collect_params_with_defaults,
+        progress_logger=progress_logger,
+    )
+    progress_logger.log_new_progress_step(
+        "identify_relevant_services", "Search for AWS related services"
     )
     aws_service_interest = ServiceInterest(r"(?i).*aws.*", "services")
     filtered_groups_of_services, _other_services = utils.group_services_by_interest(
         services_of_interest=[aws_service_interest],
         service_discovery_result=service_discovery_result,
     )
+    progress_logger.update_progress_step_status("identify_relevant_services", StepStatus.COMPLETED)
     if len(filtered_groups_of_services[aws_service_interest]):
         return _save_and_activate_recap(_("AWS services found!"), parsed_data)
     return [
@@ -281,6 +288,7 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
                 ],
                 load_wait_label=_("This process may take several minutes, please wait..."),
                 next_button_label=_("Test configuration"),
+                target_site_formspec_key=QSSiteSelection,
             ),
             QuickSetupStageAction(
                 id=ActionId("skip_configuration_test"),
@@ -416,6 +424,7 @@ quick_setup_aws = QuickSetup(
             id=ActionId("activate_changes"),
             label=_("Save & go to Activate changes"),
             action=action,
+            iconName="save-to-services",
             custom_validators=[qs_validators.validate_host_name_doesnt_exists],
         ),
     ],

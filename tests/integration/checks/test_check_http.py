@@ -31,6 +31,7 @@ def _check_http(site: Site) -> Iterator[tuple[str, dict[str, ServiceInfo]]]:
         },
     )
     site.activate_changes_and_wait_for_core_reload()
+    rule_id = None
     try:
         rule_id = site.openapi.rules.create(
             ruleset_name="active_checks:http",
@@ -47,7 +48,8 @@ def _check_http(site: Site) -> Iterator[tuple[str, dict[str, ServiceInfo]]]:
         logger.error("Failed to create check_http rule.")
         raise
     finally:
-        site.openapi.rules.delete(rule_id)
+        if rule_id:
+            site.openapi.rules.delete(rule_id)
         site.openapi.hosts.delete(hostname)
         site.activate_changes_and_wait_for_core_reload()
 
@@ -81,6 +83,7 @@ def _check_https(site: Site, tmp_path: Path) -> Iterator[tuple[str, dict[str, Se
         },
     )
     site.activate_changes_and_wait_for_core_reload()
+    rule_id = None
     try:
         rule_id = site.openapi.rules.create(
             ruleset_name="active_checks:http",
@@ -97,7 +100,8 @@ def _check_https(site: Site, tmp_path: Path) -> Iterator[tuple[str, dict[str, Se
         logger.error("Failed to create check_https rule.")
         raise
     finally:
-        site.openapi.rules.delete(rule_id)
+        if rule_id:
+            site.openapi.rules.delete(rule_id)
         site.openapi.hosts.delete(hostname)
         site.activate_changes_and_wait_for_core_reload()
         httpss.stop()

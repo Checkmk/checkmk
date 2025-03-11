@@ -25,6 +25,7 @@ def _names(space: ModuleType) -> set[str]:
 def test_v2() -> None:
     expected = {
         "entry_point_prefixes",
+        "AgentParseFunction",
         "AgentSection",
         "SimpleSNMPSection",
         "SNMPSection",

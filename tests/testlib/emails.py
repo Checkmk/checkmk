@@ -62,7 +62,7 @@ class EmailManager:
         logger.info("Setting up postfix...")
 
         run([str(self.setup_postfix_script), self._username], sudo=True)
-        logger.info("Postfix is set up")
+        logger.info("Postfix is set up. Unread email folder: %s", self.unread_folder)
 
     def teardown_postfix(self) -> None:
         """Uninstall Postfix and delete all related files."""

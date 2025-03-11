@@ -25,7 +25,7 @@ from cmk.utils.tags import TagGroupID, TagID
 from cmk.checkengine.discovery import AutocheckEntry, AutochecksManager
 
 from cmk.base import config
-from cmk.base.config import ConfigCache
+from cmk.base.config import ConfigCache, LoadedConfigFragment
 
 
 class _AutochecksMocker(AutochecksManager):
@@ -40,11 +40,13 @@ class _AutochecksMocker(AutochecksManager):
 class Scenario:
     """Helper class to modify the Check_MK base configuration for unit tests"""
 
-    @staticmethod
-    def _get_config_cache() -> ConfigCache:
-        cc = config.reset_config_cache()
-        assert isinstance(cc, ConfigCache)
-        return cc
+    def _get_config_cache(self) -> ConfigCache:
+        # NOTE: just `return ConfigCache()` here will break some tests.
+        # It seems that we are subjected to some dark edition magic here
+        # that will make this sometimes return a CMEConfigCache instance
+        return config._create_config_cache(
+            LoadedConfigFragment(checkgroup_parameters=self.config.get("checkgroup_parameters", {}))
+        )
 
     def __init__(self, site_id: str = "unit") -> None:
         super().__init__()
@@ -193,7 +195,7 @@ class Scenario:
         if self._autochecks_mocker.raw_autochecks:
             monkeypatch.setattr(
                 self.config_cache,
-                "_autochecks_manager",
+                "autochecks_manager",
                 self._autochecks_mocker,
                 raising=False,
             )
@@ -204,11 +206,10 @@ class Scenario:
 class CEEScenario(Scenario):
     """Helper class to modify the Check_MK base configuration for unit tests"""
 
-    @staticmethod
-    def _get_config_cache() -> config.CEEConfigCache:
-        cc = config.reset_config_cache()
-        assert isinstance(cc, config.CEEConfigCache)
-        return cc
+    def _get_config_cache(self) -> config.CEEConfigCache:
+        return config.CEEConfigCache(
+            LoadedConfigFragment(checkgroup_parameters=self.config.get("checkgroup_parameters", {}))
+        )
 
     def apply(self, monkeypatch: MonkeyPatch) -> config.CEEConfigCache:
         cc = super().apply(monkeypatch)

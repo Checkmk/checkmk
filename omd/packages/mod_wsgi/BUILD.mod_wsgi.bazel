@@ -42,3 +42,10 @@ configure_make(
     visibility = ["//visibility:public"],
     deps = ["@python"],
 )
+
+filegroup(
+    name = "mod_wsgi.so",
+    srcs = [":mod_wsgi"],
+    output_group = "mod_wsgi.so",
+    visibility = ["//visibility:public"],
+)

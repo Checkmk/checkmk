@@ -191,6 +191,7 @@ def run_crud_test(
     logger.info('Retrieving "%s" object...', object_type)
     get_response = get_case.call_and_validate(allow_redirects=settings.allow_redirects)
     get_done = get_response.status_code == 200
+    put_response = None
     if get_done:
         logger.info('Retrieved "%s" object: %s', object_type, _response_json(get_response))
         put_case = _init_case(
@@ -257,7 +258,7 @@ def run_crud_test(
             f'Failed to retrieve "{object_type}" object "{object_id}"!'
             f" Reason: {_response_reason(get_response)}"
         )
-    if put_done:
+    if put_done and put_response:
         assert put_response.status_code in (
             200,
             204,

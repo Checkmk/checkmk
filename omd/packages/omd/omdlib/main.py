@@ -17,6 +17,7 @@ import os
 import pty
 import pwd
 import re
+import shlex
 import shutil
 import signal
 import subprocess
@@ -3558,91 +3559,86 @@ def terminate_site_user_processes(site: SiteContext, global_opts: GlobalOptions)
     the current OMD call terminate.
     """
 
-    pids = site_user_processes(site, exclude_current_and_parents=True)
-    if not pids:
+    processes = site_user_processes(site, exclude_current_and_parents=True)
+    if not processes:
         return
 
-    sys.stdout.write("Stopping %d remaining site processes..." % len(pids))
+    sys.stdout.write("Stopping %d remaining site processes..." % len(processes))
 
     timeout_at = time.time() + 5
     sent_terminate = False
-    while pids and time.time() < timeout_at:
-        for pid in pids[:]:
+    while processes and time.time() < timeout_at:
+        for process in processes[:]:
             try:
                 if not sent_terminate:
                     if global_opts.verbose:
-                        sys.stdout.write("%d..." % pid)
-                    os.kill(pid, signal.SIGTERM)
+                        sys.stdout.write("%d..." % process.pid)
+                    os.kill(process.pid, signal.SIGTERM)
                 else:
-                    os.kill(pid, signal.SIG_DFL)
+                    os.kill(process.pid, signal.SIG_DFL)
             except OSError as e:
                 if e.errno == errno.ESRCH:  # No such process
-                    pids.remove(pid)
+                    processes.remove(process)
                 else:
                     raise
 
         sent_terminate = True
         time.sleep(0.1)
 
-    if pids:
-        bail_out("\nFailed to stop remaining site processes: %s" % ", ".join(map(str, pids)))
+    if processes:
+        bail_out(
+            "\n".join(
+                [
+                    "\nFailed to stop remaining site processes:",
+                    *(
+                        f"{process.pid}, command line: `{shlex.join(process.cmdline())}`, status: {process.status()}"
+                        for process in processes
+                    ),
+                ]
+            )
+        )
     else:
         ok()
 
 
 def kill_site_user_processes(site: SiteContext, exclude_current_and_parents: bool = False) -> None:
-    pids = site_user_processes(site, exclude_current_and_parents)
+    processes = site_user_processes(site, exclude_current_and_parents)
     tries = 5
-    while tries > 0 and pids:
-        for pid in pids[:]:
+    while tries > 0 and processes:
+        for process in processes[:]:
             try:
-                logger.log(VERBOSE, "Killing process %d...", pid)
-                os.kill(pid, signal.SIGKILL)
+                logger.log(VERBOSE, "Killing process %d...", process.pid)
+                os.kill(process.pid, signal.SIGKILL)
             except OSError as e:
                 if e.errno == errno.ESRCH:
-                    pids.remove(pid)  # No such process
+                    processes.remove(process)  # No such process
                 else:
                     raise
         time.sleep(1)
         tries -= 1
 
-    if pids:
-        bail_out("Failed to kill site processes: %s" % ", ".join(map(str, pids)))
+    if processes:
+        bail_out("Failed to kill site processes: %s" % ", ".join(map(str, processes)))
 
 
-def get_current_and_parent_pids() -> list[int]:
-    """Return list of PIDs of the current process and parent process tree till pid 0"""
-    pids = []
+def get_current_and_parent_processes() -> list[psutil.Process]:
+    """Return list of the current process and parent process tree till pid 0"""
+    processes = []
     process: psutil.Process | None = psutil.Process()
     while process and process.pid != 0:
-        pids.append(process.pid)
+        processes.append(process)
         process = process.parent()
-    return pids
+    return processes
 
 
-def site_user_processes(site: SiteContext, exclude_current_and_parents: bool) -> list[int]:
-    """Return list of PIDs of all running site user processes (that are not excluded)"""
-    exclude: list[int] = []
-    if exclude_current_and_parents:
-        exclude = get_current_and_parent_pids()
-    with subprocess.Popen(
-        ["ps", "-U", site.name, "-o", "pid", "--no-headers"],
-        close_fds=True,
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        encoding="utf-8",
-    ) as user_process:
-        exclude.append(user_process.pid)
-        pids = []
-        for l in user_process.communicate()[0].split("\n"):
-            line = l.strip()
-            if not line:
-                continue
-            pid = int(line)
-            if pid in exclude:
-                continue
-            pids.append(pid)
-    return pids
+def site_user_processes(
+    site: SiteContext, exclude_current_and_parents: bool
+) -> list[psutil.Process]:
+    """Return list of all running site user processes (that are not excluded)"""
+    exclude = set(get_current_and_parent_processes()) if exclude_current_and_parents else set()
+    return list(
+        {process for process in psutil.process_iter() if process.username() == site.name} - exclude
+    )
 
 
 def postprocess_restore_as_root(

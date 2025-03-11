@@ -1,0 +1,23 @@
+{
+  "Check_MK Agent": {
+    "expected_state": 0
+  },
+  "Docker disk usage - buildcache": {
+    "expected_state": 0
+  },
+  "Docker disk usage - containers": {
+    "expected_state": 0
+  },
+  "Docker disk usage - images": {
+    "expected_state": 0
+  },
+  "Docker disk usage - volumes": {
+    "expected_state": 0
+  },
+  "Docker node info": {
+    "expected_state": 0
+  },
+  "Docker containers": {
+    "expected_state": 0
+  }
+}

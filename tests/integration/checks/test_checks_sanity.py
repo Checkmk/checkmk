@@ -133,9 +133,9 @@ def test_shipped_ps_disocvery(host_services: dict[str, ServiceInfo], site: Site)
         f"Process {site.id} apache",
         f"Process {site.id} automation helpers",
         f"Process {site.id} event console",
-        # jaeger is not enabled in this test
+        # jaeger and piggyback-hub are not enabled in this test
         # f"Process {site.id} jaeger",
-        f"Process {site.id} piggyback hub",
+        # f"Process {site.id} piggyback hub",
         f"Process {site.id} rabbitmq",
         f"Process {site.id} redis-server",
         f"Process {site.id} rrdcached",

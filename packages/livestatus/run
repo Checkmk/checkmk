@@ -7,7 +7,6 @@ set -e
 
 JOBS=6
 readonly CLANG_VERSION=${CLANG_VERSION:-19}
-readonly BAZEL_CMD=${BAZEL_CMD:-bazel}
 readonly ALL_LINTERS=iwyu,clang-tidy
 
 failure() {
@@ -131,32 +130,32 @@ run_clang_format() {
 }
 
 run_build() {
-    "${BAZEL_CMD}" build :all
+    bazel build :all
 }
 
 run_unit_tests() {
     if test -z ${VALGRIND+x} && command -v valgrind >/dev/null; then
         VALGRIND="$(which valgrind) --quiet --num-callers=30 --error-exitcode=42"
     fi
-    "${BAZEL_CMD}" test ${VALGRIND:+--run_under="${VALGRIND}"} :all
+    bazel test ${VALGRIND:+--run_under="${VALGRIND}"} :all
 }
 
 run_check_format() {
     run_clang_format --dry-run -Werror
-    "${BAZEL_CMD}" run -- //bazel/tools:buildifier -mode=check -lint=warn "$(realpath BUILD)"
+    bazel run -- //bazel/tools:buildifier -mode=check -lint=warn "$(realpath BUILD)"
 }
 
 run_iwyu() {
-    "${BAZEL_CMD}" build --config iwyu :all
+    bazel build --config iwyu :all
 }
 
 run_clang_tidy() {
-    "${BAZEL_CMD}" build --config clang-tidy :all
+    bazel build --config clang-tidy :all
 }
 
 run_format() {
     run_clang_format -i
-    "${BAZEL_CMD}" run -- //bazel/tools:buildifier -mode=fix -lint=fix "$(realpath BUILD)"
+    bazel run -- //bazel/tools:buildifier -mode=fix -lint=fix "$(realpath BUILD)"
 }
 
 run_documentation() {

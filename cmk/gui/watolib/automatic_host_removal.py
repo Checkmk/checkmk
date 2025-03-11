@@ -19,8 +19,6 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import log_dir
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 
-from cmk.base.export import get_ruleset_matcher  # pylint: disable=cmk-module-layer-violation
-
 import cmk.gui.log
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -30,7 +28,7 @@ from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_loc
 from cmk.gui.watolib.activate_changes import ActivateChangesManager
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation, MKAutomationException
-from cmk.gui.watolib.check_mk_automations import delete_hosts
+from cmk.gui.watolib.check_mk_automations import analyze_host_rule_matches, delete_hosts
 from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
 from cmk.gui.watolib.rulesets import SingleRulesetRecursively, UseHostFolder
 
@@ -131,26 +129,45 @@ def _hosts_to_be_removed_for_site(site_id: SiteId) -> list[Host]:
 
 def _hosts_to_be_removed_local() -> Iterator[HostName]:
     if not (automatic_host_removal_ruleset := _load_automatic_host_removal_ruleset()):
+        _LOGGER.debug("No cleanup rule configured: Terminating.")
         return  # small 'optimization'
-    ruleset_matcher = get_ruleset_matcher()
     now = time.time()
 
     for hostname, check_mk_service_crit_since in _livestatus_query_local_candidates():
-        try:
-            rule_value = next(
-                iter(
-                    ruleset_matcher.get_host_values(
-                        hostname, ruleset=automatic_host_removal_ruleset
-                    )
-                )
-            )
-        except StopIteration:
+        _LOGGER.debug("Found '%s' to be CRIT since %0.2fs", hostname, check_mk_service_crit_since)
+        if not (
+            matches := list(
+                analyze_host_rule_matches(
+                    hostname, [automatic_host_removal_ruleset]
+                ).results.values()
+            )[0]
+        ):
+            _LOGGER.debug("No matched rule: Skipping")
             continue
+
+        # Unfortunately we don't get specific typing of the value out of analyze_host_rule_matches.
+        # So reconstruct the original value to help mypy with typing.
+        first_match = matches[0]
+        _LOGGER.debug("Matching rule: %r", first_match)
+        matched_value: (
+            tuple[Literal["enabled"], _RemovalConditions] | tuple[Literal["disabled"], None]
+        )
+        match first_match:
+            case ("enabled", {"checkmk_service_crit": int(crit)}):
+                matched_value = ("enabled", _RemovalConditions({"checkmk_service_crit": crit}))
+            case ("disabled", _):
+                matched_value = ("disabled", None)
+            case _:
+                raise ValueError("Unexpected match")
+
         if _should_delete_host(
-            rule_value=rule_value,
+            rule_value=matched_value,
             check_mk_service_crit_for=now - check_mk_service_crit_since,
         ):
+            _LOGGER.debug("Shall be removed")
             yield hostname
+        else:
+            _LOGGER.debug("Shall not be removed")
 
 
 def _load_automatic_host_removal_ruleset() -> Sequence[RuleSpec]:

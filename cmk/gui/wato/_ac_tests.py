@@ -221,6 +221,7 @@ class ACTestLivestatusUsage(ACTest):
         return True
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         local_connection = LocalConnection()
         site_status = local_connection.query_row(
             "GET status\n"
@@ -247,10 +248,12 @@ class ACTestLivestatusUsage(ACTest):
         yield ACSingleResult(
             state=state,
             text=_("The current livestatus usage is %.2f%%") % usage_perc,
+            site_id=site_id,
         )
         yield ACSingleResult(
             state=state,
             text=_("%d of %d connections used") % (active_connections, threads),
+            site_id=site_id,
         )
 
         # Only available with Micro Core
@@ -258,6 +261,7 @@ class ACTestLivestatusUsage(ACTest):
             yield ACSingleResult(
                 state=state,
                 text=_("you have a connection overflow rate of %.2f/s") % overflows_rate,
+                site_id=site_id,
             )
 
 
@@ -281,9 +285,12 @@ class ACTestTmpfs(ACTest):
         return True
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         if self._tmpfs_mounted(omd_site()):
             yield ACSingleResult(
-                state=ACResultState.OK, text=_("The temporary filesystem is mounted")
+                state=ACResultState.OK,
+                text=_("The temporary filesystem is mounted"),
+                site_id=site_id,
             )
         else:
             yield ACSingleResult(
@@ -292,6 +299,7 @@ class ACTestTmpfs(ACTest):
                     "The temporary filesystem is not mounted. Your installation "
                     "may work with degraded performance."
                 ),
+                site_id=site_id,
             )
 
     def _tmpfs_mounted(self, site_id):
@@ -332,6 +340,7 @@ class ACTestLDAPSecured(ACTest):
         return bool([c for _cid, c in active_connections_() if c.type() == "ldap"])
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         for connection_id, connection in active_connections_():
             if connection.type() != "ldap":
                 continue
@@ -339,13 +348,18 @@ class ACTestLDAPSecured(ACTest):
             assert isinstance(connection, ldap.LDAPUserConnector)
 
             if connection.use_ssl():
-                yield ACSingleResult(state=ACResultState.OK, text=_("%s: Uses SSL") % connection_id)
+                yield ACSingleResult(
+                    state=ACResultState.OK,
+                    text=_("%s: Uses SSL") % connection_id,
+                    site_id=site_id,
+                )
 
             else:
                 yield ACSingleResult(
                     state=ACResultState.WARN,
                     text=_("%s: Not using SSL. Consider enabling it in the connection settings.")
                     % connection_id,
+                    site_id=site_id,
                 )
 
 
@@ -372,16 +386,21 @@ class ACTestLivestatusSecured(ACTest):
         return bool(cfg["site_livestatus_tcp"])
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         cfg = ConfigDomainOMD().default_globals()
         if not cfg["site_livestatus_tcp"]:
             yield ACSingleResult(
-                state=ACResultState.OK, text=_("Livestatus network traffic is encrypted")
+                state=ACResultState.OK,
+                text=_("Livestatus network traffic is encrypted"),
+                site_id=site_id,
             )
             return
 
         if not cfg["site_livestatus_tcp"]["tls"]:
             yield ACSingleResult(
-                state=ACResultState.CRIT, text=_("Livestatus network traffic is unencrypted")
+                state=ACResultState.CRIT,
+                text=_("Livestatus network traffic is unencrypted"),
+                site_id=site_id,
             )
 
 
@@ -405,13 +424,16 @@ class ACTestNumberOfUsers(ACTest):
         return True
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         users = userdb.load_users()
         num_users = len(users)
         user_warn_threshold = 500
 
         if num_users <= user_warn_threshold:
             yield ACSingleResult(
-                state=ACResultState.OK, text=_("You have %d users configured") % num_users
+                state=ACResultState.OK,
+                text=_("You have %d users configured") % num_users,
+                site_id=site_id,
             )
         else:
             yield ACSingleResult(
@@ -421,6 +443,7 @@ class ACTestNumberOfUsers(ACTest):
                     "users you have configured in Checkmk."
                 )
                 % num_users,
+                site_id=site_id,
             )
 
 
@@ -451,12 +474,18 @@ class ACTestHTTPSecured(ACTest):
         return True
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         if request.is_ssl_request:
-            yield ACSingleResult(state=ACResultState.OK, text=_("Site is using HTTPS"))
+            yield ACSingleResult(
+                state=ACResultState.OK,
+                text=_("Site is using HTTPS"),
+                site_id=site_id,
+            )
         else:
             yield ACSingleResult(
                 state=ACResultState.WARN,
                 text=_("Site is using plain HTTP. Consider enabling HTTPS."),
+                site_id=site_id,
             )
 
 
@@ -479,6 +508,7 @@ class ACTestOldDefaultCredentials(ACTest):
         return userdb.user_exists(UserId("omdadmin"))
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         if (
             htpasswd.HtpasswdUserConnector(
                 {
@@ -495,10 +525,13 @@ class ACTestOldDefaultCredentials(ACTest):
                     "Found <tt>omdadmin</tt> with default password. "
                     "It is highly recommended to change this password."
                 ),
+                site_id=site_id,
             )
         else:
             yield ACSingleResult(
-                state=ACResultState.OK, text=_("Found <tt>omdadmin</tt> using custom password.")
+                state=ACResultState.OK,
+                text=_("Found <tt>omdadmin</tt> using custom password."),
+                site_id=site_id,
             )
 
 
@@ -525,15 +558,19 @@ class ACTestBackupConfigured(ACTest):
         return True
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         n_configured_jobs = len(BackupConfig.load().jobs)
         if n_configured_jobs:
             yield ACSingleResult(
                 state=ACResultState.OK,
                 text=_("You have configured %d backup jobs") % n_configured_jobs,
+                site_id=site_id,
             )
         else:
             yield ACSingleResult(
-                state=ACResultState.WARN, text=_("There is no backup job configured")
+                state=ACResultState.WARN,
+                text=_("There is no backup job configured"),
+                site_id=site_id,
             )
 
 
@@ -556,14 +593,19 @@ class ACTestBackupNotEncryptedConfigured(ACTest):
         return True
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         for job in BackupConfig.load().jobs.values():
             if job.is_encrypted():
                 yield ACSingleResult(
-                    state=ACResultState.OK, text=_('The job "%s" is encrypted') % job.title
+                    state=ACResultState.OK,
+                    text=_('The job "%s" is encrypted') % job.title,
+                    site_id=site_id,
                 )
             else:
                 yield ACSingleResult(
-                    state=ACResultState.WARN, text=_('There job "%s" is not encrypted') % job.title
+                    state=ACResultState.WARN,
+                    text=_('There job "%s" is not encrypted') % job.title,
+                    site_id=site_id,
                 )
 
 
@@ -592,6 +634,7 @@ class ACTestEscapeHTMLDisabled(ACTest):
         return True
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         if not self._get_effective_global_setting("escape_plugin_output"):
             yield ACSingleResult(
                 state=ACResultState.CRIT,
@@ -606,12 +649,14 @@ class ACTestEscapeHTMLDisabled(ACTest):
                     "wato.py?mode=edit_ruleset&varname=extra_host_conf:_ESCAPE_PLUGIN_OUTPUT",
                     "wato.py?mode=edit_configvar&varname=escape_plugin_output",
                 ),
+                site_id=site_id,
             )
         else:
             yield ACSingleResult(
                 state=ACResultState.OK,
                 text=_('Escaping is <a href="%s">enabled globally</a>')
                 % "wato.py?mode=edit_configvar&varname=escape_plugin_output",
+                site_id=site_id,
             )
 
 
@@ -693,6 +738,7 @@ class ACTestApacheNumberOfProcesses(ABCACApacheTest):
                 cmk.utils.render.fmt_bytes(average_process_size),
                 cmk.utils.render.fmt_bytes(estimated_memory_size),
             ),
+            site_id=omd_site(),
         )
 
     def _get_average_process_size(self):
@@ -777,6 +823,7 @@ class ACTestApacheProcessUsage(ABCACApacheTest):
                 "%d of the configured maximum of %d processes have been started. This is a usage of %0.2f %%."
             )
             % (used_slots, total_slots, usage),
+            site_id=omd_site(),
         )
 
 
@@ -836,6 +883,7 @@ class ACTestCheckMKHelperUsage(ACTest):
                 "The current checker usage is %.2f%%. The checkers have an average latency of %.3fs."
             )
             % (helper_usage_checker_percent, average_latency_checker),
+            site_id=omd_site(),
         )
 
 
@@ -872,6 +920,7 @@ class ACTestCheckMKFetcherUsage(ACTest):
         return self._uses_microcore()
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         local_connection = LocalConnection()
         row = local_connection.query_row(
             "GET status\nColumns: helper_usage_fetcher average_latency_fetcher\n"
@@ -895,6 +944,7 @@ class ACTestCheckMKFetcherUsage(ACTest):
                 " The checks have an average check latency of %.3fs."
             )
             % (fetcher_usage_perc, fetcher_latency),
+            site_id=site_id,
         )
 
         # Only report this as warning in case the user increased the default helper configuration
@@ -910,6 +960,7 @@ class ACTestCheckMKFetcherUsage(ACTest):
                     "The fetcher usage is below 50%, you may decrease the number of "
                     "fetchers to reduce the memory consumption."
                 ),
+                site_id=site_id,
             )
 
 
@@ -947,6 +998,7 @@ class ACTestCheckMKCheckerUsage(ACTest):
         return self._uses_microcore()
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         local_connection = LocalConnection()
         row = local_connection.query_row(
             "GET status\nColumns: helper_usage_checker average_latency_fetcher\n"
@@ -970,6 +1022,7 @@ class ACTestCheckMKCheckerUsage(ACTest):
                 "The checks have an average check latency of %.3fs."
             )
             % (checker_usage_perc, fetcher_latency),
+            site_id=site_id,
         )
 
         # Only report this as warning in case the user increased the default helper configuration
@@ -985,6 +1038,7 @@ class ACTestCheckMKCheckerUsage(ACTest):
                     "The checker usage is below 50%, you may decrease the number of "
                     "checkers to reduce the memory consumption."
                 ),
+                site_id=site_id,
             )
 
 
@@ -1015,6 +1069,7 @@ class ACTestGenericCheckHelperUsage(ACTest):
         return self._uses_microcore()
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         local_connection = LocalConnection()
         row = local_connection.query_row(
             "GET status\nColumns: helper_usage_generic average_latency_generic\n"
@@ -1033,6 +1088,7 @@ class ACTestGenericCheckHelperUsage(ACTest):
         yield ACSingleResult(
             state=state,
             text=_("The current check helper usage is %.2f%%") % helper_usage_perc,
+            site_id=site_id,
         )
 
         if check_latency_generic > 1:
@@ -1043,6 +1099,7 @@ class ACTestGenericCheckHelperUsage(ACTest):
             state=state,
             text=_("The active check services have an average check latency of %.3fs.")
             % (check_latency_generic),
+            site_id=site_id,
         )
 
 
@@ -1079,6 +1136,7 @@ class ACTestSizeOfExtensions(ACTest):
         yield ACSingleResult(
             state=state,
             text=_("Your extensions have a size of %s.") % cmk.utils.render.fmt_bytes(size),
+            site_id=omd_site(),
         )
 
     def _size_of_extensions(self):
@@ -1105,14 +1163,21 @@ class ACTestBrokenGUIExtension(ACTest):
         return True
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         errors = cmk.gui.utils.get_failed_plugins()
         if not errors:
-            yield ACSingleResult(state=ACResultState.OK, text=_("No broken extensions were found."))
+            yield ACSingleResult(
+                state=ACResultState.OK,
+                text=_("No broken extensions were found."),
+                site_id=site_id,
+            )
 
-        for _path, gui_part, plugin_file, error in errors:
+        for plugin_filepath, gui_part, plugin_file, error in errors:
             yield ACSingleResult(
                 state=ACResultState.CRIT,
                 text=_('Loading "%s/%s" failed: %s') % (gui_part, plugin_file, error),
+                site_id=site_id,
+                path=plugin_filepath,
             )
 
 
@@ -1143,6 +1208,7 @@ class ACTestESXDatasources(ACTest):
         return self._get_rules()
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         all_rules_ok = True
         for folder, rule_index, rule in self._get_rules():
             vsphere_queries_agent = rule.value.get("direct") in ["agent", "hostsystem_agent"]
@@ -1151,10 +1217,15 @@ class ACTestESXDatasources(ACTest):
                 yield ACSingleResult(
                     state=ACResultState.CRIT,
                     text=_("Rule %d in Folder %s is affected") % (rule_index + 1, folder.title()),
+                    site_id=site_id,
                 )
 
         if all_rules_ok:
-            yield ACSingleResult(state=ACResultState.OK, text=_("No configured rules are affected"))
+            yield ACSingleResult(
+                state=ACResultState.OK,
+                text=_("No configured rules are affected"),
+                site_id=site_id,
+            )
 
 
 class ACTestDeprecatedV1CheckPlugins(ACTest):
@@ -1189,16 +1260,21 @@ class ACTestDeprecatedV1CheckPlugins(ACTest):
         return bool(self._get_files())
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         if plugin_files := self._get_files():
-            yield ACSingleResult(
-                state=ACResultState.CRIT,
-                text=_("%d check plug-ins trying to use the removed API: %s")
-                % (len(plugin_files), ", ".join(f.name for f in plugin_files)),
-            )
+            for plugin_filepath in plugin_files:
+                yield ACSingleResult(
+                    state=ACResultState.CRIT,
+                    text=_("Check plug-in uses the deprecated API (v1)"),
+                    site_id=site_id,
+                    path=plugin_filepath,
+                )
             return
 
         yield ACSingleResult(
-            state=ACResultState.OK, text=_("No check plug-ins trying to use the removed API")
+            state=ACResultState.OK,
+            text=_("No check plug-ins using the deprecated API (v1)"),
+            site_id=site_id,
         )
 
 
@@ -1224,17 +1300,21 @@ class ACTestDeprecatedCheckPlugins(ACTest):
         return True
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         with suppress(FileNotFoundError):
-            if plugin_files := list(local_checks_dir.iterdir()):
+            for plugin_filepath in local_checks_dir.iterdir():
                 yield ACSingleResult(
                     state=ACResultState.CRIT,
-                    text=_("%d check plug-ins using the deprecated API: %s")
-                    % (len(plugin_files), ", ".join(f.name for f in plugin_files)),
+                    text=_("Check plug-in uses the deprecated API"),
+                    site_id=site_id,
+                    path=plugin_filepath,
                 )
-                return
+            return
 
         yield ACSingleResult(
-            state=ACResultState.OK, text=_("No check plug-ins using the deprecated API")
+            state=ACResultState.OK,
+            text=_("No check plug-ins using the deprecated API"),
+            site_id=site_id,
         )
 
 
@@ -1256,17 +1336,21 @@ class ACTestDeprecatedInventoryPlugins(ACTest):
         return True
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         with suppress(FileNotFoundError):
-            if plugin_files := list(local_inventory_dir.iterdir()):
+            for plugin_filepath in local_inventory_dir.iterdir():
                 yield ACSingleResult(
                     state=ACResultState.CRIT,
-                    text=_("%d ignored HW/SW Inventory plug-ins found: %s")
-                    % (len(plugin_files), ", ".join(f.name for f in plugin_files)),
+                    text=_("HW/SW Inventory plug-in uses the deprecated API"),
+                    site_id=site_id,
+                    path=plugin_filepath,
                 )
-                return
+            return
 
         yield ACSingleResult(
-            state=ACResultState.OK, text=_("No ignored HW/SW Inventory plug-ins found")
+            state=ACResultState.OK,
+            text=_("No HW/SW Inventory plug-ins using the deprecated API"),
+            site_id=site_id,
         )
 
 
@@ -1302,6 +1386,7 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
         return bool(self._get_rules())
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         rules = self._get_rules()
         if not rules:
             yield ACSingleResult(
@@ -1309,6 +1394,7 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
                 text=_(
                     "No ruleset <b>State in case of restricted address mismatch</b> is configured"
                 ),
+                site_id=site_id,
             )
             return
 
@@ -1316,6 +1402,7 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
             yield ACSingleResult(
                 state=ACResultState.CRIT,
                 text=f"Rule in <b>{folder_title}</b> has value <b>{rule_state}</b>",
+                site_id=site_id,
             )
 
     def _get_rules(self):
@@ -1350,12 +1437,14 @@ class ACTestCheckMKCheckerNumber(ACTest):
         return self._uses_microcore()
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         try:
             num_cpu = multiprocessing.cpu_count()
         except NotImplementedError:
             yield ACSingleResult(
                 state=ACResultState.OK,
                 text=_("Cannot test. Unable to determine the number of CPUs on target system."),
+                site_id=site_id,
             )
             return
 
@@ -1367,9 +1456,12 @@ class ACTestCheckMKCheckerNumber(ACTest):
                     "a detrimental effect, since they are not IO bound."
                 )
                 % num_cpu,
+                site_id=site_id,
             )
             return
 
         yield ACSingleResult(
-            state=ACResultState.OK, text=_("Number of Checkmk checkers is less than number of CPUs")
+            state=ACResultState.OK,
+            text=_("Number of Checkmk checkers is less than number of CPUs"),
+            site_id=site_id,
         )

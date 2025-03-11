@@ -316,6 +316,20 @@ impl SimpleCheckResult {
     }
 }
 
+pub struct CheckResultLevelsText {
+    ok: String,
+    not_ok: String,
+}
+
+impl CheckResultLevelsText {
+    pub fn new(ok: impl Into<String>, not_ok: impl Into<String>) -> Self {
+        Self {
+            ok: ok.into(),
+            not_ok: not_ok.into(),
+        }
+    }
+}
+
 pub struct CheckResult<T>
 where
     T: Clone,
@@ -373,24 +387,28 @@ where
         Self::new(State::Unknown, as_option(summary), None, Some(metrics))
     }
 
-    pub fn notice_from_levels(notice: impl Into<String>, metrics: Metric<T>) -> Self {
+    pub fn notice_from_levels(notice: CheckResultLevelsText, metrics: Metric<T>) -> Self {
         let state = metrics
             .levels
             .as_ref()
             .map_or(State::Unknown, |levels| levels.evaluate(&metrics.value));
         match state {
-            State::Ok => Self::notice(notice, metrics),
-            _ => Self::new(state, as_option(notice), None, Some(metrics)),
+            State::Ok => Self::notice(notice.ok, metrics),
+            _ => Self::new(state, as_option(notice.not_ok), None, Some(metrics)),
         }
     }
 
-    pub fn from_levels(summary: impl Into<String>, metrics: Metric<T>) -> Self {
+    pub fn from_levels(summary: CheckResultLevelsText, metrics: Metric<T>) -> Self {
+        let state = metrics
+            .levels
+            .as_ref()
+            .map_or(State::Unknown, |levels| levels.evaluate(&metrics.value));
         Self::new(
-            metrics
-                .levels
-                .as_ref()
-                .map_or(State::Unknown, |levels| levels.evaluate(&metrics.value)),
-            as_option(summary),
+            state,
+            match state {
+                State::Ok => as_option(summary.ok),
+                _ => as_option(summary.not_ok),
+            },
             None,
             Some(metrics),
         )
@@ -1061,7 +1079,8 @@ mod test_checker_format {
 #[cfg(test)]
 mod test_from_levels_format {
     use super::{
-        pretty_levels, Check, CheckResult, Levels, LevelsStrategy, Metric, Real, State, Uom,
+        pretty_levels, Check, CheckResult, CheckResultLevelsText, Levels, LevelsStrategy, Metric,
+        Real, State, Uom,
     };
 
     #[test]
@@ -1074,15 +1093,15 @@ mod test_from_levels_format {
             .levels(Some(levels.clone()))
             .build();
         let check = CheckResult::from_levels(
-            pretty_levels("summary", levels.map(|x| x.into()), "ms"),
+            CheckResultLevelsText::new(
+                "summary",
+                pretty_levels("unused", levels.map(|x| x.into()), "ms"),
+            ),
             metric.map(Real::from),
         );
         let check = Check::from(&mut vec![check]);
         assert_eq!(check.state, State::Ok);
-        assert_eq!(
-            format!("{}", check),
-            "summary (warn/crit at 10 ms/20 ms) | label=5ms;10;20;;\nsummary (warn/crit at 10 ms/20 ms)"
-        );
+        assert_eq!(format!("{}", check), "summary | label=5ms;10;20;;\nsummary");
     }
 
     #[test]
@@ -1095,15 +1114,15 @@ mod test_from_levels_format {
             .levels(Some(levels.clone()))
             .build();
         let check = CheckResult::notice_from_levels(
-            pretty_levels("notice", levels.map(|x| x.into()), "ms"),
+            CheckResultLevelsText::new(
+                "notice",
+                pretty_levels("unused", levels.map(|x| x.into()), "ms"),
+            ),
             metric.map(Real::from),
         );
         let check = Check::from(&mut vec![check]);
         assert_eq!(check.state, State::Ok);
-        assert_eq!(
-            format!("{}", check),
-            "OK | label=5ms;10;20;;\nnotice (warn/crit at 10 ms/20 ms)"
-        );
+        assert_eq!(format!("{}", check), "OK | label=5ms;10;20;;\nnotice");
     }
 
     #[test]
@@ -1116,7 +1135,10 @@ mod test_from_levels_format {
             .levels(Some(levels.clone()))
             .build();
         let check = CheckResult::notice_from_levels(
-            pretty_levels("notice", levels.map(|x| x.into()), "ms"),
+            CheckResultLevelsText::new(
+                "unused",
+                pretty_levels("notice", levels.map(|x| x.into()), "ms"),
+            ),
             metric.map(Real::from),
         );
         let check = Check::from(&mut vec![check]);
@@ -1137,7 +1159,10 @@ mod test_from_levels_format {
             .levels(Some(levels.clone()))
             .build();
         let check = CheckResult::notice_from_levels(
-            pretty_levels("notice", levels.map(|x| x.into()), "ms"),
+            CheckResultLevelsText::new(
+                "unused",
+                pretty_levels("notice", levels.map(|x| x.into()), "ms"),
+            ),
             metric.map(Real::from),
         );
         let check = Check::from(&mut vec![check]);

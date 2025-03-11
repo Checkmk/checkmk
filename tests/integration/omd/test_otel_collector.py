@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
+import yaml
 
+from tests.testlib.common.repo import repo_path
 from tests.testlib.site import Site
 from tests.testlib.version import version_from_env
 
@@ -27,15 +28,10 @@ def test_otel_collector_exists(site: Site) -> None:
     assert Path(site.root, "bin", "otelcol").exists()
 
 
-@pytest.mark.skipif(
-    os.environ.get("DISTRO") == "sles-15sp5",
-    reason="No GLIBC_2.32 found, see CMK-20960",
-)
 @pytest.mark.parametrize(
     "command",
     [
         ["otelcol", "--help"],
-        ["otelcol", "components"],
     ],
 )
 def test_otel_collector_command_availability(site: Site, command: list[str]) -> None:
@@ -43,16 +39,18 @@ def test_otel_collector_command_availability(site: Site, command: list[str]) -> 
     site.check_output(command)
 
 
-@pytest.mark.skipif(
-    os.environ.get("DISTRO") == "sles-15sp5",
-    reason="No GLIBC_2.32 found, see CMK-20960",
-)
-def test_otel_collector_version(site: Site) -> None:
-    cmd = [
-        "otelcol",
-        "--version",
-    ]
-    assert "0.113.0" in site.check_output(cmd)
+def test_otel_collector_build_configuration(site: Site) -> None:
+    with open(
+        repo_path() / "non-free" / "packages" / "otel-collector" / "builder-config.yaml"
+    ) as f:
+        expected_config = yaml.safe_load(f)
+    actual_config = yaml.safe_load(site.check_output(["otelcol", "components"]))
+
+    assert actual_config["buildinfo"]["description"] == expected_config["dist"]["description"]
+
+    for comp_type in ("exporters", "receivers", "processors", "extensions"):
+        for a, e in zip(actual_config[comp_type], expected_config[comp_type]):
+            assert a["module"] == e["gomod"]
 
 
 @contextmanager
@@ -88,10 +86,6 @@ def _modify_test_site(site: Site, hostname: str) -> Iterator[None]:
         site.set_config("OPENTELEMETRY_COLLECTOR", "off", with_restart=True)
 
 
-@pytest.mark.skipif(
-    os.environ.get("DISTRO") == "sles-15sp5",
-    reason="No GLIBC_2.32 found, see CMK-20960",
-)
 def test_otel_collector_self_monitoring(site: Site) -> None:
     hostname = "otelhost"
     with _modify_test_site(site, hostname):

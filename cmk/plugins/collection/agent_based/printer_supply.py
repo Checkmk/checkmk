@@ -58,6 +58,35 @@ class PrinterSupply:
     supply_class: SupplyClass
     color: str
 
+    @property
+    def capacity_unrestricted(self) -> bool:
+        return self.max_capacity == -1
+
+    @property
+    def capacity_unknown(self) -> bool:
+        return self.max_capacity == -2
+
+    @property
+    def level_unrestricted(self) -> bool:
+        return self.level == -1
+
+    @property
+    def level_unknown(self) -> bool:
+        return self.level == -2
+
+    @property
+    def some_level_remains(self) -> bool:
+        return self.level == -3
+
+    @property
+    def has_partial_data(self) -> bool:
+        return (
+            self.capacity_unknown
+            or self.level_unrestricted
+            or self.level_unknown
+            or self.some_level_remains
+        )
+
 
 Section = dict[str, PrinterSupply]
 
@@ -180,23 +209,22 @@ def check_printer_supply(item: str, params: Mapping[str, Any], section: Section)
 
     warn, crit = params["levels"]
 
-    # handle cases with partial data
-    if supply.max_capacity == -2 or supply.level in [-3, -2, -1]:  # no percentage possible
-        if supply.level == -1 or supply.max_capacity == -1:
+    if supply.has_partial_data:  # no percentage possible
+        if supply.level_unrestricted or supply.capacity_unrestricted:
             yield Result(
                 state=State.OK, summary="%sThere are no restrictions on this supply" % color_info
             )
             return
 
-        if supply.level == -3:
+        if supply.some_level_remains:
             yield _check_some_remaining(supply, params, color_info)
             return
 
-        if supply.level == -2:
+        if supply.level_unknown:
             yield Result(state=State.UNKNOWN, summary="%s Unknown level" % color_info)
             return
 
-        if supply.max_capacity == -2:
+        if supply.capacity_unknown:
             # no percentage possible. We compare directly against levels
             yield Result(state=State.OK, summary="%sLevel: %d" % (color_info, supply.level))
             yield Metric("pages", supply.level)

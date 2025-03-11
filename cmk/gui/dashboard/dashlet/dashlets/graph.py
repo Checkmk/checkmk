@@ -19,6 +19,7 @@ from cmk.utils.user import UserId
 from cmk.gui import sites
 from cmk.gui.dashboard.type_defs import DashletId, DashletSize
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
+from cmk.gui.graphing._from_api import metrics_from_api
 from cmk.gui.graphing._graph_render_config import (
     GraphRenderConfig,
     GraphRenderOptions,
@@ -106,7 +107,7 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
                     (
                         _("Deprecated choice, please re-select")
                         if value == self._MARKER_DEPRECATED_CHOICE
-                        else str(get_metric_spec(value).title)
+                        else str(get_metric_spec(value, metrics_from_api).title)
                     ),
                 ),
             )
@@ -261,7 +262,7 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
         graph_specification = self.graph_specification(self.context if self.has_context() else {})
 
         try:
-            graph_recipes = graph_specification.recipes()
+            graph_recipes = graph_specification.recipes(metrics_from_api)
         except MKMissingDataError:
             raise
         except livestatus.MKLivestatusNotFoundError:
@@ -440,8 +441,12 @@ def graph_templates_autocompleter(value_entered_by_user: str, params: dict) -> C
         )
 
     graph_template_choices, single_metric_template_choices = (
-        graph_and_single_metric_templates_choices_for_context(params["context"])
+        graph_and_single_metric_templates_choices_for_context(
+            params["context"],
+            metrics_from_api,
+        )
     )
+
     return _sorted_matching_graph_template_choices(
         value_entered_by_user,
         graph_template_choices,

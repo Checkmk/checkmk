@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { type Ref, nextTick, ref, watch } from 'vue'
 import CmkScrollContainer from './CmkScrollContainer.vue'
+import CmkHtml from '@/components/CmkHtml.vue'
 
 export interface Suggestion {
   name: string
@@ -13,6 +14,7 @@ export interface Suggestion {
 }
 
 const {
+  error = '',
   noResultsHint = '',
   onSelect,
   suggestions,
@@ -24,6 +26,7 @@ const {
   showFilter: boolean
   role: 'suggestion' | 'option'
   noResultsHint?: string
+  error?: string
 }>()
 
 const suggestionInputRef = ref<HTMLInputElement | null>(null)
@@ -53,11 +56,7 @@ function selectSuggestion(suggestionIndex: number): void {
   }
 }
 
-function setActiveSuggestion(filteredSuggestionIndex: number | null): void {
-  if (filteredSuggestionIndex === null) {
-    selectedSuggestionIndex.value = null
-    return
-  }
+function setActiveSuggestion(filteredSuggestionIndex: number): void {
   const suggestionIndex = filteredSuggestions.value[filteredSuggestionIndex]
   if (suggestionIndex === undefined) {
     throw new Error('Invalid filtered suggestion index')
@@ -88,9 +87,7 @@ function moveSuggestion(amount: number): void {
     throw new Error('Selected suggestion suggestion index not found in filtered suggestions')
   }
   setActiveSuggestion(
-    filteredSuggestions.value[
-      wrap(selectedFilteredSuggestionIndex + amount, filteredSuggestions.value.length)
-    ] ?? null
+    wrap(selectedFilteredSuggestionIndex + amount, filteredSuggestions.value.length)
   )
 }
 
@@ -127,6 +124,7 @@ defineExpose({
       <input ref="suggestionInputRef" v-model="filterString" type="text"
     /></span>
     <CmkScrollContainer :max-height="'200px'">
+      <li v-if="error" class="cmk-suggestions--error"><CmkHtml :html="error" /></li>
       <template v-for="(suggestion, index) in suggestions" :key="suggestion.name">
         <li
           v-show="filteredSuggestions.includes(index)"
@@ -192,5 +190,8 @@ defineExpose({
       }
     }
   }
+}
+.cmk-suggestions--error {
+  background-color: var(--error-msg-bg-color);
 }
 </style>

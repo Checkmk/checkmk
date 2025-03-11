@@ -8,10 +8,6 @@ import pytest
 
 from tests.unit.cmk.plugins.oracle.agent_based.utils_inventory import sort_inventory_result
 
-from cmk.checkengine.checking import CheckPluginName
-
-from cmk.base.api.agent_based.register import AgentBasedPlugins
-
 from cmk.agent_based.v2 import CheckResult, InventoryResult, Result, Service, State, TableRow
 from cmk.plugins.oracle.agent_based import oracle_instance_check
 from cmk.plugins.oracle.agent_based.libinstance import GeneralError, Instance, InvalidData
@@ -155,9 +151,9 @@ def test_parse_oracle_instance_invalid() -> None:
     }
 
 
-def test_discover_oracle_instance(agent_based_plugins: AgentBasedPlugins) -> None:
+def test_discover_oracle_instance() -> None:
     assert list(
-        agent_based_plugins.check_plugins[CheckPluginName("oracle_instance")].discovery_function(
+        oracle_instance_check.discover_oracle_instance(
             {
                 "a": InvalidData("a", "This is an error"),
                 "b": GeneralError("b", "something went wrong"),
@@ -346,13 +342,12 @@ def test_discover_oracle_instance(agent_based_plugins: AgentBasedPlugins) -> Non
     ],
 )
 def test_check_oracle_instance(
-    agent_based_plugins: AgentBasedPlugins,
     agent_line: list[str],
     expected_result: CheckResult,
 ) -> None:
     assert (
         list(
-            agent_based_plugins.check_plugins[CheckPluginName("oracle_instance")].check_function(
+            oracle_instance_check.check_oracle_instance(
                 item="IC731",
                 params={
                     "logins": 2,
@@ -369,15 +364,17 @@ def test_check_oracle_instance(
     )
 
 
-def test_check_oracle_instance_empty_section(agent_based_plugins: AgentBasedPlugins) -> None:
+def test_check_oracle_instance_empty_section() -> None:
     assert list(
-        agent_based_plugins.check_plugins[CheckPluginName("oracle_instance")].check_function(
+        oracle_instance_check.check_oracle_instance(
             item="item",
             params={
                 "logins": 2,
                 "noforcelogging": 1,
                 "noarchivelog": 1,
                 "primarynotopen": 2,
+                "archivelog": 0,
+                "forcelogging": 0,
             },
             section={},
         )

@@ -160,6 +160,9 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
                 "device_number",
                 "description",
                 "mac_address",
+                "type",
+                "software_version",
+                "license_key_list",
             ],
         },
         ".hardware.system.product": {"title": _l("Product"), "is_show_more": False},
@@ -173,6 +176,9 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".hardware.system.device_number": {"title": _l("Device number")},
         ".hardware.system.description": {"title": _l("Description")},
         ".hardware.system.mac_address": {"title": _l("MAC address")},
+        ".hardware.system.type": {"title": _l("Type")},
+        ".hardware.system.software_version": {"title": _l("Software version")},
+        ".hardware.system.license_key_list": {"title": _l("License key list")},
         # Legacy ones. Kept to not break existing views - DON'T use these values for new plugins
         ".hardware.system.serial_number": {"title": _l("Serial number - LEGACY, don't use")},
         ".hardware.system.model_name": {"title": _l("Model name - LEGACY, don't use")},
@@ -191,6 +197,13 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".hardware.system.nodes:*.model": {"title": _l("Model name")},
         ".hardware.system.nodes:*.product": {"title": _l("Product")},
         ".hardware.system.nodes:*.serial": {"title": _l("Serial number")},
+        ".hardware.uploaded_files.": {
+            "title": _l("Uploaded files"),
+            "keyorder": [
+                "call_progress_tones",
+            ],
+        },
+        ".hardware.uploaded_files.call_progress_tones": {"title": _l("Call progress tones")},
         ".hardware.components.": {"title": _l("Physical components")},
         ".hardware.components.others:": {
             "title": _l("Other entities"),
@@ -382,6 +395,9 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
                 "firmware",
                 "type",
                 "location",
+                "ha_status",
+                "software_version",
+                "license_key_list",
             ],
             "view": "invmodule",
         },
@@ -396,6 +412,9 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".hardware.components.modules:*.firmware": {"title": _l("Firmware")},
         ".hardware.components.modules:*.type": {"title": _l("Type")},
         ".hardware.components.modules:*.location": {"title": _l("Location")},
+        ".hardware.components.modules:*.ha_status": {"title": _l("HA status")},
+        ".hardware.components.modules:*.software_version": {"title": _l("Software version")},
+        ".hardware.components.modules:*.license_key_list": {"title": _l("License key list")},
         ".hardware.components.stacks:": {
             "title": _l("Stacks"),
             "keyorder": [

@@ -10,8 +10,6 @@ from cmk.utils.hostaddress import HostAddress
 
 from cmk.gui.watolib.piggyback_hub import compute_new_config
 
-from cmk.piggyback.hub.config import PiggybackHubConfig
-
 
 def test_update_sites_with_hub_config() -> None:
     global_settings = {"piggyback_hub_enabled": True}
@@ -26,7 +24,7 @@ def test_update_sites_with_hub_config() -> None:
         HostAddress("host3"): SiteId("site3"),
     }
 
-    assert compute_new_config(global_settings, configured_sites, hosts_sites) == {
-        SiteId("site1"): PiggybackHubConfig(targets={HostAddress("host3"): SiteId("site3")}),
-        SiteId("site3"): PiggybackHubConfig(targets={HostAddress("host1"): SiteId("site1")}),
-    }
+    assert list(compute_new_config(global_settings, configured_sites, hosts_sites)) == [
+        ("site1", {HostAddress("host3"): "site3"}),
+        ("site3", {HostAddress("host1"): "site1"}),
+    ]

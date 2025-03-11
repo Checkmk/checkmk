@@ -1,5 +1,5 @@
 {
-    "command_line": "BAZEL_CMD=../../scripts/run-bazel.sh ./run --clean --all",
+    "command_line": "./run --clean --all",
     "maintainers": ["team-main@checkmk.com"],
     "dependencies": ["packages/neb/", "packages/livestatus/"]
 }

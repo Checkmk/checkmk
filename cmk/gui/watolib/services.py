@@ -438,13 +438,25 @@ class Discovery:
             return DiscoveryState.MONITORED
 
         if self._action == DiscoveryAction.UPDATE_SERVICE_LABELS and self._update_target:
+            if entry.check_source == DiscoveryState.IGNORED:
+                return DiscoveryState.IGNORED
+            return self._update_target
+
+        if self._action == DiscoveryAction.UPDATE_DISCOVERY_PARAMETERS and self._update_target:
+            if entry.check_source == DiscoveryState.IGNORED:
+                return DiscoveryState.IGNORED
             return self._update_target
 
         if not self._update_target:
             return entry.check_source
 
         if self._action == DiscoveryAction.BULK_UPDATE:
-            if entry.check_source != self._update_source:
+            # actions that apply to monitored services are also applied to changed services,
+            # since these are a subset of monitored services, but are classified differently.
+            if entry.check_source != self._update_source and not (
+                entry.check_source == DiscoveryState.CHANGED
+                and self._update_source == DiscoveryState.MONITORED
+            ):
                 return entry.check_source
 
             if (entry.check_plugin_name, entry.item) in self._selected_services:

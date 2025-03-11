@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 #
 
-import json
-from collections import Counter, defaultdict
-from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from collections import Counter
+from collections.abc import Sequence
+from typing import Any
 
 from cmk.agent_based.v1 import Result, State
 from cmk.agent_based.v2 import (
@@ -18,55 +17,39 @@ from cmk.agent_based.v2 import (
     DiscoveryResult,
     render,
     Service,
-    StringTable,
 )
 
-from .libbroker import node_to_site, Queue, SectionQueues
+from .libbroker import (
+    BrokerStatus,
+    node_to_site,
+    Parser,
+    Queue,
+    SectionQueues,
+    SectionShovels,
+    SectionStatus,
+    Shovel,
+)
 
 
-@dataclass(frozen=True)
-class BrokerStatus:
-    memory: int
-
-
-@dataclass(frozen=True)
-class Shovel:
-    name: str
-    state: str
-
-
-SectionStatus = Mapping[str, BrokerStatus]
-SectionShovels = Mapping[str, Sequence[Shovel]]
-
-
-def parse_omd_broker_status(string_table: StringTable) -> SectionStatus:
-    return {
-        node_to_site(str(node["name"])): BrokerStatus(memory=int(node["mem_used"]))
-        for (word,) in string_table
-        for node in json.loads(word)
-    }
+def parse_omd_broker_status(node: dict[str, Any]) -> tuple[str, BrokerStatus]:
+    return node_to_site(str(node["name"])), BrokerStatus(memory=int(node["mem_used"]))
 
 
 agent_section_omd_broker_status = AgentSection(
     name="omd_broker_status",
-    parse_function=parse_omd_broker_status,
+    parse_function=Parser[SectionStatus](callback=parse_omd_broker_status, aggregate=False),
 )
 
 
-def parse_omd_broker_shovels(string_table: StringTable) -> SectionShovels:
-    parsed: dict[str, list[Shovel]] = defaultdict(list)
-    for (word,) in string_table:
-        for raw_shovel in json.loads(word):
-            parsed[node_to_site(str(raw_shovel["node"]))].append(
-                Shovel(name=str(raw_shovel["name"]), state=str(raw_shovel["state"]))
-            )
-
-    return parsed
+def parse_omd_broker_shovels(raw_shovel: dict[str, Any]) -> tuple[str, Shovel]:
+    return node_to_site(str(raw_shovel["node"])), Shovel(
+        name=str(raw_shovel["name"]), state=str(raw_shovel["state"])
+    )
 
 
 agent_section_omd_broker_shovels = AgentSection(
     name="omd_broker_shovels",
-    parse_function=parse_omd_broker_shovels,
+    parse_function=Parser[SectionShovels](callback=parse_omd_broker_shovels, aggregate=True),
 )
 
 

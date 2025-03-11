@@ -12,11 +12,11 @@ import pytest
 
 from tests.testlib.common.repo import repo_path
 
-from tests.unit.conftest import FixPluginLegacy
+from tests.unit.mocks_and_helpers import FixPluginLegacy
 
 from cmk.utils import man_pages
 
-from cmk.base.api.agent_based.register import AgentBasedPlugins
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 
 from cmk.agent_based.v2 import CheckPlugin
 from cmk.discover_plugins import discover_families, discover_plugins, PluginGroup

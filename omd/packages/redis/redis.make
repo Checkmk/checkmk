@@ -7,8 +7,8 @@ REDIS_INSTALL := $(BUILD_HELPER_DIR)/$(REDIS_DIR)-install
 
 .PHONY: $(REDIS_BUILD)
 $(REDIS_BUILD):
-	$(BAZEL_CMD) build @$(REDIS)//:build
-	$(BAZEL_CMD) build @$(REDIS)//:skel
+	bazel build @$(REDIS)//:build
+	bazel build @$(REDIS)//:skel
 
 .PHONY: $(REDIS_INSTALL)
 $(REDIS_INSTALL): $(REDIS_BUILD)

@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
+from typing import Any
 
-from cmk.rulesets.v1 import Help, Label, Title
+from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
     DefaultValue,
@@ -14,23 +15,40 @@ from cmk.rulesets.v1.form_specs import (
     Integer,
     List,
     migrate_to_password,
-    MultipleChoice,
-    MultipleChoiceElement,
     Password,
     SingleChoice,
     SingleChoiceElement,
     String,
 )
-from cmk.rulesets.v1.form_specs.validators import LengthInRange, NetworkPort
+from cmk.rulesets.v1.form_specs.validators import LengthInRange, NetworkPort, ValidationError
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 
-def _migrate_element_names(value: object) -> Mapping[str, object]:
+def _migrate(value: object) -> Mapping[str, object]:
     if not isinstance(value, dict):
         raise ValueError(f"Invalid value {value} for Elasticsearch")
     if "no-cert-check" in value:
         value["no_cert_check"] = value.pop("no-cert-check")
+
+    if "infos" in value:
+        value["cluster_health"] = "cluster_health" in value["infos"]
+        value["nodes"] = "nodes" in value["infos"]
+        value["stats"] = ["*-*"] if "stats" in value["infos"] else []
+        del value["infos"]
+
     return value
+
+
+def _validate_index_patterns(value: Any) -> None:
+    # Based on index name criteria:
+    # https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-create-index.html
+
+    invalid_chars = r"\\/?\"<>|, #"
+    if invalid := set(value) & set(invalid_chars):
+        raise ValidationError(
+            Message("Pattern contains invalid characters: %s")
+            % ",".join(f"'{el}'" for el in invalid)
+        )
 
 
 def _parameter_form() -> Dictionary:
@@ -99,34 +117,44 @@ def _parameter_form() -> Dictionary:
                 ),
                 required=False,
             ),
-            "infos": DictElement(
-                parameter_form=MultipleChoice(
-                    title=Title("Informations to query"),
-                    help_text=Help(
-                        "Defines what information to query. "
-                        "Checks for cluster, indices and shard statistics follow soon."
-                    ),
-                    elements=[
-                        MultipleChoiceElement(
-                            name="cluster_health",
-                            title=Title("Cluster health"),
-                        ),
-                        MultipleChoiceElement(
-                            name="nodes",
-                            title=Title("Node statistics"),
-                        ),
-                        MultipleChoiceElement(
-                            name="stats",
-                            title=Title("Cluster, indices and shard statistics"),
-                        ),
-                    ],
-                    custom_validate=(LengthInRange(min_value=1),),
-                    prefill=DefaultValue(["cluster_health", "nodes", "stats"]),
+            "cluster_health": DictElement(
+                parameter_form=BooleanChoice(
+                    label=Label("Cluster health"),
+                    prefill=DefaultValue(False),
                 ),
                 required=True,
             ),
+            "nodes": DictElement(
+                parameter_form=BooleanChoice(
+                    label=Label("Node statistics"),
+                    prefill=DefaultValue(False),
+                ),
+                required=True,
+            ),
+            "stats": DictElement(
+                parameter_form=List(
+                    element_template=String(
+                        label=Label("Pattern"),
+                        prefill=DefaultValue("*"),
+                        custom_validate=(LengthInRange(min_value=1), _validate_index_patterns),
+                    ),
+                    title=Title("Cluster, indices and shard statistics"),
+                    help_text=Help(
+                        "You can specify data streams, indices, and aliases "
+                        "used to limit the request. "
+                        "Supports wildcards (*). "
+                        "To target all data streams and indices use `*` or `_all`. "
+                        "The patterns will be combined to form the final url endpoint, e.g.: "
+                        "`pattern_1,pattern_2/_stats/store,docs?ignore_unavailable=true`"
+                    ),
+                    add_element_label=Label("Add new pattern"),
+                    editable_order=False,
+                    custom_validate=(LengthInRange(min_value=1),),
+                ),
+                required=False,
+            ),
         },
-        migrate=_migrate_element_names,
+        migrate=_migrate,
     )
 
 

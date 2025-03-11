@@ -324,12 +324,23 @@ class ChangesAPI(BaseAPI):
                     start_result = self.activate(sites, force_foreign_changes)
                 except NoActiveChanges:
                     return False
-
-                activation_id = start_result.activation_id
-                raise Redirect(start_result.redirect_url)
+                else:
+                    activation_id = start_result.activation_id
+                    raise Redirect(start_result.redirect_url)
         finally:
             if activation_id:
                 activation_status = self.get_activation_status(activation_id)
+                if "status_per_site" in activation_status["extensions"]:
+                    if not_succeeded_sites := [
+                        status
+                        for status in activation_status["extensions"]["status_per_site"]
+                        # TODO: Use non display text field once it is available CMK-22256
+                        if status["status_text"] != "Success"
+                    ]:
+                        raise RuntimeError(
+                            "Activation of the following sites did not succeed:\n"
+                            f"{pprint.pformat(not_succeeded_sites)}"
+                        )
                 logger.info("Activation status: %s", str(pprint.pformat(activation_status)))
 
         pending_changes_after = self.get_pending()
@@ -1040,20 +1051,22 @@ class DcdAPI(BaseAPI):
                 "comment": comment,
                 "disabled": disabled,
                 "site": self.session.site,
-                "connector_type": "piggyback",
-                "restrict_source_hosts": restrict_source_hosts or [],
-                "interval": interval,
-                "creation_rules": [
-                    {
-                        "folder_path": "/",
-                        "host_attributes": host_attributes or {},
-                        "delete_hosts": delete_hosts,
-                    }
-                ],
-                "discover_on_creation": discover_on_creation,
-                "no_deletion_time_after_init": no_deletion_time_after_init,
-                "max_cache_age": max_cache_age,
-                "validity_period": validity_period,
+                "connector": {
+                    "connector_type": "piggyback",
+                    "restrict_source_hosts": restrict_source_hosts or [],
+                    "interval": interval,
+                    "creation_rules": [
+                        {
+                            "folder_path": "/",
+                            "host_attributes": host_attributes or {},
+                            "delete_hosts": delete_hosts,
+                        }
+                    ],
+                    "discover_on_creation": discover_on_creation,
+                    "no_deletion_time_after_init": no_deletion_time_after_init,
+                    "max_cache_age": max_cache_age,
+                    "validity_period": validity_period,
+                },
             },
         )
         if resp.status_code != 200:

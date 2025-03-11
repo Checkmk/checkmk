@@ -23,7 +23,6 @@ clean:
 	rm -f $(_PWD)/debian/preinst
 	rm -f $(_PWD)/debian/prerm
 	rm -f $(_PWD)/debian/postrm
-	rm -f $(_PWD)/debian/init
 	rm -f $(_PWD)/debian/links
 	rm -f $(_PWD)/debian/*.debhelper
 	rm -rf $(_PWD)/debian/check-mk-*-[0-9].[0-9.]*
@@ -78,8 +77,6 @@ install:
 	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/g' \
 	   $(_PWD)/debian/postrm.in > $(_PWD)/debian/postrm
 	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/g' \
-	   $(_PWD)/debian/init.in > $(_PWD)/debian/init
-	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/g' \
 	   $(_PWD)/debian/links.in > $(_PWD)/debian/links
 
 binary-indep:
@@ -104,7 +101,7 @@ binary-arch:
 #	dh_installcatalogs
 #	dh_installpam
 #	dh_installmime
-	dh_installinit
+#	dh_installinit
 #	dh_installcron
 #	dh_installinfo
 #	dh_installwm

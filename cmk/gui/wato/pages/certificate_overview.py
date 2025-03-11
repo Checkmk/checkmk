@@ -15,9 +15,18 @@ from cmk.utils.paths import (
     site_cert_file,
 )
 
+from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.cert_info import cert_info_registry, CertificateInfo
 from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
+from cmk.gui.page_menu import (
+    make_simple_link,
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuEntry,
+    PageMenuTopic,
+)
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.html import HTML
@@ -96,6 +105,16 @@ class ModeCertificateOverview(WatoMode):
         return []
 
     def page(self) -> None:
+        html.div(
+            HTML.without_escaping(
+                _(
+                    "This page provides a comprehensive overview of the certificates Checkmk uses internally. "
+                    "Trusted CAs for TLS are managed in the <a href='%s'>settings</a>."
+                )
+                % "wato.py?mode=edit_configvar&varname=trusted_certificate_authorities"
+            ),
+            class_="info",
+        )
         certificates = self._load_certificates()
         self._render_table(certificates)
 
@@ -113,3 +132,28 @@ class ModeCertificateOverview(WatoMode):
             for path, purpose in cert_info_registry[topic].get_certs().items()
             if path.exists()
         ]
+
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Global"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Trusted certificate authorities for SSL"),
+                                    icon_name="configuration",
+                                    item=make_simple_link(
+                                        "wato.py?mode=edit_configvar&varname=trusted_certificate_authorities"
+                                    ),
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )

@@ -26,9 +26,17 @@ const filteredActions = computed(() => {
   return props.actions.filter((b) => !isSaveOverview.value || b.variant === 'save')
 })
 
-function getButtonConfig(variant: 'next' | 'prev' | 'save' | unknown): {
+function getButtonConfig(
+  variant: 'next' | 'prev' | 'save' | unknown,
+  iconName: string = '',
+  iconRotate: number = 0
+): {
   icon: { name: string; rotate: number }
 } {
+  if (iconName) {
+    return { icon: { name: iconName, rotate: iconRotate } }
+  }
+
   switch (variant) {
     case 'prev':
       return { icon: { name: 'back', rotate: 90 } }
@@ -39,7 +47,7 @@ function getButtonConfig(variant: 'next' | 'prev' | 'save' | unknown): {
       }
     case 'save':
       return {
-        icon: { name: 'save-to-services', rotate: 0 }
+        icon: { name: 'checkmark-plus', rotate: 0 }
       }
   }
   return { icon: { name: '', rotate: 0 } }
@@ -49,6 +57,10 @@ const invokeAction = (waitLabel: string, action: () => void) => {
   loadWaitLabel.value = waitLabel
   action()
 }
+
+const waitIconEnabled = computed(() => {
+  return typeof props.hideWaitIcon === 'undefined' || !props.hideWaitIcon
+})
 </script>
 
 <template>
@@ -61,7 +73,10 @@ const invokeAction = (waitLabel: string, action: () => void) => {
       <div v-if="!loading" class="qs-stage-content__action">
         <CmkButton
           v-for="{ action, buttonConfig } in filteredActions.map((act) => {
-            return { action: act, buttonConfig: getButtonConfig(act.variant) }
+            return {
+              action: act,
+              buttonConfig: getButtonConfig(act.variant, act.icon.name, act.icon.rotate)
+            }
           })"
           :key="action.label"
           :aria-label="action.ariaLabel"
@@ -77,7 +92,7 @@ const invokeAction = (waitLabel: string, action: () => void) => {
           />{{ action.label }}
         </CmkButton>
       </div>
-      <div v-else class="qs-stage-content__loading">
+      <div v-else-if="waitIconEnabled" class="qs-stage-content__loading">
         <CmkIcon name="load-graph" variant="inline" size="xlarge" />
         <span>{{ loadWaitLabel }}</span>
       </div>
@@ -98,6 +113,8 @@ const invokeAction = (waitLabel: string, action: () => void) => {
 .qs-stage-content__loading {
   display: flex;
   align-items: center;
+  box-sizing: border-box;
+  height: 40px;
   padding-top: 12px;
 }
 </style>

@@ -12,7 +12,7 @@ import pytest
 import time_machine
 from pytest_mock import MockerFixture
 
-from tests.unit.cmk.gui.conftest import SetConfig
+from tests.unit.cmk.web_test_app import SetConfig
 
 import cmk.ccc.version as cmk_version
 

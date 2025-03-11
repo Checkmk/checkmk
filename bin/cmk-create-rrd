@@ -4,12 +4,28 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # NOTE: rrdtool is missing type hints
+import argparse
+import logging
+
 import rrdtool  # type: ignore[import-not-found]
 
-from cmk.rrd.create_rrd import create_rrd  # pylint: disable=cmk-module-layer-violation
+from cmk.utils.log import verbosity_to_log_level
+
+from cmk.rrd.create_rrd import create_rrd
+
+
+def _set_log_level(verbosity: int) -> None:
+    logging.getLogger().setLevel(verbosity_to_log_level(verbosity))
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(
+        prog="cmk-create-rrd",
+    )
+    parser.add_argument("-v", "--verbose", action="count", default=0)
+    args = parser.parse_args()
+    _set_log_level(args.verbose)
+
     create_rrd(rrdtool)
 
 

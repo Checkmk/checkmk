@@ -670,14 +670,41 @@ def add_changes_after_editing_site_connection(
         else _("Modified site connection %s") % site_id
     )
 
-    # Don't know exactly what have been changed, so better issue a change
-    # affecting all domains
     sites_to_update = list((connected_sites or set()) | {site_id})
     add_change(
         "edit-sites",
         change_message,
         sites=sites_to_update,
-        domains=ABCConfigDomain.enabled_domains(),
+        # This was ABCConfigDomain.enabled_domains() before. Since e.g. apache config domain takes
+        # significant more time to restart than the other domains, we now try to be more specific
+        # and mention potentially affected domains instead. The idea here is to first hard code
+        # the list of config domains produced by enabled_domains and then reduce it step by step.
+        #
+        # One the list is minimized, we can turn it into an explicit positive list.
+        #
+        # If you extend this, please also check the other "add_change" calls triggered by the site
+        # management.
+        domains=[
+            d
+            for d in ABCConfigDomain.enabled_domains()
+            if d.ident()
+            not in {
+                "apache",
+                "ca-certificates",
+                "check_mk",
+                "diskspace",
+                "ec",
+                "omd",
+                "otel_collector",
+                "rrdcached",
+                # Can we remove more here? Investigate further to minimize the domains:
+                # "liveproxyd",
+                # "multisite",
+                # "piggyback_hub",
+                # "dcd",
+                # "mknotifyd",
+            }
+        ],
     )
 
     # In case a site is not being replicated anymore, confirm all changes for this site!

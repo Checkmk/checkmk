@@ -145,7 +145,7 @@ fi
 # SLES: make sure apache modules are activated
 if which a2enmod >/dev/null 2>&1
 then
-    echo "Makeing sure that Apache modules proxy, http_proxy and rewrite are activated."
+    echo "Making sure that Apache modules proxy, http_proxy and rewrite are activated."
     a2enmod proxy 2>/dev/null || true
     a2enmod proxy_http 2>/dev/null || true
     a2enmod rewrite 2>/dev/null || true

@@ -10,7 +10,7 @@ LIBGSF_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(LIBGSF)
 .PHONY: $(LIBGSF_BUILD)
 $(LIBGSF_BUILD):
 ifneq ($(filter sles15%,$(DISTRO_CODE)),)
-	$(BAZEL_CMD) build @$(LIBGSF)//:$(LIBGSF)
+	bazel build @$(LIBGSF)//:$(LIBGSF)
 endif
 
 .PHONY: $(LIBGSF_INTERMEDIATE_INSTALL)

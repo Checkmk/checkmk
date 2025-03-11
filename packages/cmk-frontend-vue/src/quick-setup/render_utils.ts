@@ -4,10 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { h, markRaw } from 'vue'
-
 import CompositeWidget from '@/quick-setup/components/quick-setup/widgets/CompositeWidget.vue'
 import QuickSetupStageWidgetContent from './QuickSetupStageWidgetContent.vue'
-
 import type {
   AllValidationMessages,
   ComponentSpec,
@@ -15,6 +13,7 @@ import type {
 } from '@/quick-setup/components/quick-setup/widgets/widget_types'
 import type { QuickSetupStageAction, VnodeOrNull } from './components/quick-setup/quick_setup_types'
 import type { Action } from '@/lib/rest-api-client/quick-setup/response_schemas'
+import type { LogStep } from './components/BackgroundJobLog/useBackgroundJobLog'
 
 export type UpdateCallback = (value: StageData) => void
 
@@ -34,6 +33,7 @@ export const renderRecap = (recap: ComponentSpec[]): VnodeOrNull => {
  * Renders a component for the content section of an active stage
  * @param {ComponentSpec[]} components - List of widgets to render in current stage
  * @param {UpdateCallback} onUpdate - Callback to update the stage data. It receives the whole stage data
+ * @param {LogStep[]} bagckgroundJobLog - Array of strings from the Quick Setup background job log
  * @param {AllValidationMessages} formSpecErrors - Formspec Validation Errors
  * @param {StageData} userInput - The data entered previously by the user
  * @returns
@@ -41,19 +41,17 @@ export const renderRecap = (recap: ComponentSpec[]): VnodeOrNull => {
 export const renderContent = (
   components: ComponentSpec[],
   onUpdate: UpdateCallback,
+  bagckgroundJobLog: LogStep[],
   formSpecErrors?: AllValidationMessages,
   userInput?: StageData
 ): VnodeOrNull => {
-  if (!components || components.length === 0) {
-    return null
-  }
-
   return markRaw(
     h(QuickSetupStageWidgetContent, {
       components,
       formSpecErrors: formSpecErrors || {},
       userInput: userInput || {},
-      onUpdate: onUpdate
+      onUpdate: onUpdate,
+      backgroundJobLog: bagckgroundJobLog
     })
   )
 }
@@ -82,6 +80,10 @@ export const processActionData = (
     ariaLabel: actionData.button.aria_label || actionData.button.label,
     waitLabel: actionData.load_wait_label,
     variant: actionType,
+    icon: {
+      name: actionData.button.iconName,
+      rotate: actionData.button.iconRotate
+    },
     action: clb
   }
 }

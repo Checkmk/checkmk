@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from typing import Literal, TypedDict
 
 from cmk.agent_based.v2 import CheckResult, Metric, render, Result, State
@@ -20,6 +21,17 @@ class SectionMemUsed(TypedDict, total=False):
     MemTotal: int
     SwapFree: int
     SwapTotal: int
+
+
+@dataclass
+class SectionMemTotal:
+    memory_total: int
+
+    def get(self, key: Literal["MemTotal"]) -> int:
+        # this is a compatibility layer with the mem and mem_used sections
+        # which makes it a bit easiert to work with this in the ps check
+        # you should never call this method in another context!
+        return self.memory_total
 
 
 def is_linux_section(section: SectionMem) -> bool:

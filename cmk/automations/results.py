@@ -344,6 +344,18 @@ result_type_registry.register(GetServicesLabelsResult)
 
 
 @dataclass
+class GetServiceNameResult(ABCAutomationResult):
+    service_name: str
+
+    @staticmethod
+    def automation_call() -> str:
+        return "get-service-name"
+
+
+result_type_registry.register(GetServiceNameResult)
+
+
+@dataclass
 class AnalyseHostResult(ABCAutomationResult):
     labels: Labels
     label_sources: LabelSources
@@ -354,6 +366,30 @@ class AnalyseHostResult(ABCAutomationResult):
 
 
 result_type_registry.register(AnalyseHostResult)
+
+
+@dataclass
+class AnalyzeHostRuleMatchesResult(ABCAutomationResult):
+    results: dict[str, list[object]]
+
+    @staticmethod
+    def automation_call() -> str:
+        return "analyze-host-rule-matches"
+
+
+result_type_registry.register(AnalyzeHostRuleMatchesResult)
+
+
+@dataclass
+class AnalyzeServiceRuleMatchesResult(ABCAutomationResult):
+    results: dict[str, list[object]]
+
+    @staticmethod
+    def automation_call() -> str:
+        return "analyze-service-rule-matches"
+
+
+result_type_registry.register(AnalyzeServiceRuleMatchesResult)
 
 
 @dataclass

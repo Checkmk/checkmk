@@ -9,7 +9,7 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, State
+from cmk.agent_based.v2 import CheckResult, Metric, Result, State
 from cmk.plugins.collection.agent_based.kube_pod_resources import (
     _check_kube_pod_resources,
     _POD_RESOURCES_FIELDS,
@@ -469,6 +469,7 @@ def test_check_kube_pod_resources_overall_look(
     expected_result: Sequence[Result | Metric],
 ) -> None:
     value_store: ValueStore = {}
+    result: CheckResult = tuple()
     for time, pod_names, params in zip(
         itertools.count(0.1, 60.1), pending_pods_in_each_check_call, params_in_each_check_call
     ):
@@ -494,6 +495,7 @@ def test_check_kube_pod_resources_with_capacity_overall_look(
     expected_result: Sequence[Result | Metric],
 ) -> None:
     value_store: ValueStore = {}
+    result: CheckResult = tuple()
     for time, pod_names, params in zip(
         itertools.count(0.1, 60.1), pending_pods_in_each_check_call, params_in_each_check_call
     ):

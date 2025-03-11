@@ -21,17 +21,16 @@ from cmk.checkengine.checkresults import (  # pylint: disable=cmk-module-layer-v
     ActiveCheckResult,
 )
 from cmk.checkengine.inventory import (  # pylint: disable=cmk-module-layer-violation
+    InventoryPlugin,
     InventoryPluginName,
 )
 
 from cmk.base.api.agent_based.plugin_classes import (  # pylint: disable=cmk-module-layer-violation
+    AgentBasedPlugins,
     CheckPlugin,
-    InventoryPlugin,
 )
 from cmk.base.api.agent_based.register import (  # pylint: disable=cmk-module-layer-violation
-    AgentBasedPlugins,
     extract_known_discovery_rulesets,
-    get_previously_loaded_plugins,
 )
 from cmk.base.config import (  # pylint: disable=cmk-module-layer-violation
     load_all_plugins,
@@ -91,13 +90,12 @@ def to_result(step: ValidationStep, errors: Sequence[str]) -> ActiveCheckResult:
     )
 
 
-def _validate_agent_based_plugin_loading() -> ActiveCheckResult:
-    errors = load_all_plugins(
+def _validate_agent_based_plugin_loading() -> tuple[AgentBasedPlugins, ActiveCheckResult]:
+    plugins = load_all_plugins(
         local_checks_dir=paths.local_checks_dir,
         checks_dir=paths.checks_dir,
     )
-
-    return to_result(ValidationStep.AGENT_BASED_PLUGINS, errors)
+    return plugins, to_result(ValidationStep.AGENT_BASED_PLUGINS, plugins.errors)
 
 
 def _validate_active_checks_loading() -> ActiveCheckResult:
@@ -298,15 +296,16 @@ def _validate_check_parameters_usage(check_plugins: Iterable[CheckPlugin]) -> Se
     return _check_if_referenced(discovered_check_parameters, referenced_ruleset_names)
 
 
-def _validate_discovery_parameters_usage() -> Sequence[str]:
+def _validate_discovery_parameters_usage(
+    plugins: AgentBasedPlugins,
+) -> Sequence[str]:
     discovered_discovery_parameters: DiscoveredPlugins[RuleSpec] = discover_plugins(
         PluginGroup.RULESETS,
         {DiscoveryParameters: entry_point_prefixes()[DiscoveryParameters]},
         raise_errors=False,
     )
     referenced_ruleset_names = {
-        str(ruleset_name)
-        for ruleset_name in extract_known_discovery_rulesets(get_previously_loaded_plugins())
+        str(ruleset_name) for ruleset_name in extract_known_discovery_rulesets(plugins)
     }
     return _check_if_referenced(discovered_discovery_parameters, referenced_ruleset_names)
 
@@ -320,9 +319,9 @@ def _validate_inventory_parameters_usage(
         raise_errors=False,
     )
     referenced_ruleset_names = {
-        str(plugin.inventory_ruleset_name)
+        str(plugin.ruleset_name)
         for plugin in inventory_plugins.values()
-        if plugin.inventory_ruleset_name is not None
+        if plugin.ruleset_name is not None
     }
     return _check_if_referenced(discovered_inventory_parameters, referenced_ruleset_names)
 
@@ -356,7 +355,7 @@ def _validate_rule_spec_usage(plugins: AgentBasedPlugins) -> ActiveCheckResult:
     errors: list[str] = []
 
     errors.extend(_validate_check_parameters_usage(plugins.check_plugins.values()))
-    errors.extend(_validate_discovery_parameters_usage())
+    errors.extend(_validate_discovery_parameters_usage(plugins))
     errors.extend(_validate_inventory_parameters_usage(plugins.inventory_plugins))
     errors.extend(_validate_active_check_usage())
     errors.extend(_validate_special_agent_usage())
@@ -365,8 +364,7 @@ def _validate_rule_spec_usage(plugins: AgentBasedPlugins) -> ActiveCheckResult:
 
 
 def validate_plugins() -> ActiveCheckResult:
-    loading_subresult = _validate_agent_based_plugin_loading()
-    loaded_plugins = get_previously_loaded_plugins()
+    plugins, loading_subresult = _validate_agent_based_plugin_loading()
     sub_results = [
         loading_subresult,
         _validate_active_checks_loading(),
@@ -374,7 +372,7 @@ def validate_plugins() -> ActiveCheckResult:
         _validate_rule_spec_loading(),
         _validate_rule_spec_form_creation(),
         _validate_referenced_rule_spec(),
-        _validate_rule_spec_usage(loaded_plugins),
+        _validate_rule_spec_usage(plugins),
     ]
     return ActiveCheckResult.from_subresults(*sub_results)
 

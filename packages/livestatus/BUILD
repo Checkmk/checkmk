@@ -13,7 +13,10 @@ cc_library(
         "include/livestatus/POSIXUtils.h",
         "include/livestatus/Poller.h",
     ],
-    copts = ["-O3"],
+    copts = [
+        "-O3",
+        "-std=c++20",
+    ],
     strip_include_prefix = "include/",
     visibility = ["//visibility:public"],
 )
@@ -21,6 +24,7 @@ cc_library(
 cc_library(
     name = "livestatus_headers",
     hdrs = glob(["include/livestatus/*.h"]),
+    copts = ["-std=c++20"],
     strip_include_prefix = "include/",
     visibility = ["//visibility:public"],
     deps = ["@asio"],
@@ -35,7 +39,10 @@ cc_library(
             "src/POSIXUtils.cc",
         ],
     ),
-    copts = ["-O3"],
+    copts = [
+        "-O3",
+        "-std=c++20",
+    ],
     local_defines = [
         "HAVE_RE2",
         "ASIO_DISABLE_CONCEPTS",
@@ -64,6 +71,7 @@ cc_test(
     name = "test",
     size = "small",
     srcs = glob(["test/*.cc"]),
+    copts = ["-std=c++20"],
     deps = [
         ":livestatus_base",
         "@gtest//:gtest_main",

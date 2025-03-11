@@ -5,6 +5,7 @@
 
 import logging
 import re
+from typing import override
 from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
@@ -47,6 +48,7 @@ class HostStatus(CmkPage):
         self.page_title = f"Status of host {host.name}"
         super().__init__(page, navigate_to_page)
 
+    @override
     def navigate(self) -> None:
         """Navigate to 'Status of host <host name>' page.
         This method assumes that the host is already created.
@@ -70,12 +72,14 @@ class HostStatus(CmkPage):
         self.page.wait_for_url(url=re.compile(status_of_host_url_pattern), wait_until="load")
         self._validate_page()
 
+    @override
     def _validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(self._table_cell("Host name")).to_be_visible()
         expect(self._table_cell("Host state")).to_be_visible()
 
+    @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         mapping = DropdownListNameToID()
         setattr(mapping, "Host", "menu_host_single")

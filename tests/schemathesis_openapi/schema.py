@@ -110,11 +110,7 @@ def add_links(
             trg_schema = raw_schema["paths"][endpoint["target"]][method.lower()]
             parameter_pattern = trg_schema["parameters"][0]["schema"].get("pattern", None)
 
-            if (
-                parameter_pattern
-                and not property_pattern
-                and "CMK-12182" not in settings.suppressed_issues
-            ):
+            if parameter_pattern and not property_pattern:
                 logger.error(
                     '%s %s: Parameter pattern "%s" defined while POST %s object property'
                     ' "%s" has no pattern!',
@@ -348,7 +344,7 @@ def update_schema(
         )
 
     upd_values = {key: val for key, val in patch.items() if val is not None}
-    del_values = (key for key in patch.keys() if key is None) if delete_nulls else ()
+    del_values = patch.keys() if delete_nulls else ()
     keys = [key for key in raw_schema if isinstance(raw_schema[key], dict)]
     for key in keys:
         key_path = f"{path}/{key}"

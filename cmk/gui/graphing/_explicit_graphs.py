@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Literal
 
+from ._from_api import RegisteredMetric
 from ._graph_specification import (
     FixedVerticalRange,
     GraphMetric,
@@ -13,14 +14,13 @@ from ._graph_specification import (
     GraphSpecification,
     HorizontalRule,
 )
-from ._legacy import LegacyUnitSpecification
 from ._metric_operation import GraphConsolidationFunction
 from ._unit import ConvertibleUnitSpecification
 
 
 class ExplicitGraphSpecification(GraphSpecification, frozen=True):
     title: str
-    unit: str | ConvertibleUnitSpecification
+    unit: ConvertibleUnitSpecification
     consolidation_function: GraphConsolidationFunction | None
     explicit_vertical_range: tuple[float | None, float | None]
     omit_zero_metrics: bool
@@ -32,15 +32,14 @@ class ExplicitGraphSpecification(GraphSpecification, frozen=True):
     def graph_type_name() -> Literal["explicit"]:
         return "explicit"
 
-    def recipes(self) -> list[GraphRecipe]:
+    def recipes(
+        self,
+        registered_metrics: Mapping[str, RegisteredMetric],
+    ) -> list[GraphRecipe]:
         return [
             GraphRecipe(
                 title=self.title,
-                unit_spec=(
-                    LegacyUnitSpecification(id=self.unit)
-                    if isinstance(self.unit, str)
-                    else self.unit
-                ),
+                unit_spec=self.unit,
                 consolidation_function=self.consolidation_function,
                 explicit_vertical_range=FixedVerticalRange(
                     min=self.explicit_vertical_range[0],

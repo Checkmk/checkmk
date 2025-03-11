@@ -114,6 +114,7 @@ from . import clusterize, render
 from ._check_levels import check_levels, FixedLevelsT, LevelsT, NoLevelsT, PredictiveLevelsT
 from ._get_average import get_average
 from ._plugins import (
+    AgentParseFunction,
     AgentSection,
     CheckPlugin,
     entry_point_prefixes,
@@ -130,6 +131,7 @@ __all__ = [
     "entry_point_prefixes",
     # the order is relevant for the sphinx doc!
     "AgentSection",
+    "AgentParseFunction",
     "CheckPlugin",
     "SNMPSection",
     "SimpleSNMPSection",

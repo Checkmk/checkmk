@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import re
+from typing import override
 from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
@@ -42,6 +43,7 @@ class HostEffectiveParameters(CmkPage):
         self.page_title = f"Effective parameters of {host.name}"
         super().__init__(page, navigate_to_page)
 
+    @override
     def navigate(self) -> None:
         """Navigate to 'Effective parameters of <host name>' page.
 
@@ -56,11 +58,13 @@ class HostEffectiveParameters(CmkPage):
         )
         self._validate_page()
 
+    @override
     def _validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(self.section_title(HostEffectiveParameters.sections[0])).to_be_visible()
 
+    @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
 

@@ -20,17 +20,13 @@ from cmk.automations.results import DiagHostResult
 from cmk.fetchers import PiggybackFetcher
 
 from cmk.base import config, core_config
-from cmk.base.api.agent_based.register import AgentBasedPlugins
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.automations import check_mk
-from cmk.base.config import ConfigCache
+from cmk.base.config import ConfigCache, LoadedConfigFragment
 
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, replace_macros
 from cmk.server_side_calls_backend import load_active_checks
-
-_NO_PLUGINS_FOR_TEST = AgentBasedPlugins({}, {}, {}, {})
-
-_CLAIM_CONFIG_WAS_LOADED = config.LoadedConfigSentinel()
 
 
 class TestAutomationDiagHost:
@@ -68,8 +64,14 @@ class TestAutomationDiagHost:
     @pytest.mark.usefixtures("patch_fetch")
     def test_execute(self, hostname: str, ipaddress: str, raw_data: str) -> None:
         args = [hostname, "agent", ipaddress, "", "6557", "10", "5", "5", ""]
+        loaded_config = LoadedConfigFragment()
         assert check_mk.AutomationDiagHost().execute(
-            args, _NO_PLUGINS_FOR_TEST, _CLAIM_CONFIG_WAS_LOADED
+            args,
+            AgentBasedPlugins.empty(),
+            config.LoadingResult(
+                loaded_config=loaded_config,
+                config_cache=ConfigCache(loaded_config),
+            ),
         ) == DiagHostResult(
             0,
             raw_data,
@@ -198,12 +200,19 @@ def test_automation_active_check(
     monkeypatch.setattr(core_config, "get_service_attributes", lambda *a, **kw: service_attrs)
     monkeypatch.setattr(config, "get_resource_macros", lambda *a, **kw: {})
 
-    config_cache = config.reset_config_cache()
+    config_cache = config.ConfigCache(config.LoadedConfigFragment())
     monkeypatch.setattr(config_cache, "active_checks", lambda *a, **kw: active_checks)
 
     active_check = AutomationActiveCheckTestable()
     assert (
-        active_check.execute(active_check_args, _NO_PLUGINS_FOR_TEST, _CLAIM_CONFIG_WAS_LOADED)
+        active_check.execute(
+            active_check_args,
+            AgentBasedPlugins.empty(),
+            config.LoadingResult(
+                loaded_config=config.LoadedConfigFragment(),
+                config_cache=config_cache,
+            ),
+        )
         == expected_result
     )
 
@@ -259,12 +268,17 @@ def test_automation_active_check_invalid_args(
     monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda *a, **kw: host_attrs)
     monkeypatch.setattr(config, "get_resource_macros", lambda *a, **kw: {})
 
-    config_cache = config.reset_config_cache()
+    loaded_config = LoadedConfigFragment()
+    config_cache = config.ConfigCache(loaded_config)
     monkeypatch.setattr(config_cache, "active_checks", lambda *a, **kw: active_checks)
 
     monkeypatch.setattr(cmk.ccc.debug, "enabled", lambda: False)
 
     active_check = check_mk.AutomationActiveCheck()
-    active_check.execute(active_check_args, _NO_PLUGINS_FOR_TEST, _CLAIM_CONFIG_WAS_LOADED)
+    active_check.execute(
+        active_check_args,
+        AgentBasedPlugins.empty(),
+        config.LoadingResult(loaded_config=loaded_config, config_cache=config_cache),
+    )
 
     assert error_message == capsys.readouterr().err

@@ -9,14 +9,13 @@ from __future__ import annotations
 from base64 import b64encode
 from collections.abc import Generator, Iterator
 from http.cookies import SimpleCookie
-from unittest.mock import patch
 
 import flask
 import pytest
 from werkzeug.test import create_environ
 
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 from tests.unit.cmk.gui.users import create_and_destroy_user
+from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.user import UserId
@@ -29,7 +28,6 @@ from cmk.gui.session import session
 from cmk.gui.type_defs import UserSpec, WebAuthnCredential
 from cmk.gui.userdb.session import auth_cookie_name, auth_cookie_value, generate_auth_hash
 from cmk.gui.utils.script_helpers import application_and_request_context
-from cmk.gui.utils.transaction_manager import transactions
 
 
 @pytest.fixture(name="user_id")
@@ -287,23 +285,3 @@ def test_auth_session_times(wsgi_app: WebTestAppForCMK, auth_request: http.Reque
     assert session.session_info.started_at == started_at
     # tried it with time.sleep and ">".
     assert session.session_info.last_activity >= last_activity
-
-
-# the url auth for the automationuser is disabled by default so it must be enabled for this test
-@patch("cmk.gui.auth.active_config")
-def test_ignore_transaction_ids(
-    request_context: Iterator[None],
-    with_automation_user: tuple[UserId, str],
-    flask_app: flask.Flask,
-) -> None:
-    user_id, password = with_automation_user
-    env = create_environ(
-        path="/NO_SITE/check_mk/index.py",
-        query_string={"_username": user_id, "_secret": password},
-        method="GET",
-    )
-    with flask_app.request_context(env):
-        flask_app.preprocess_request()
-        with login.authenticate():
-            assert transactions._ignore_transids
-        assert transactions._ignore_transids is False

@@ -5,6 +5,7 @@
 def main() {
     check_job_parameters([
         ["EDITION", true],  // the testees package long edition string (e.g. 'enterprise')
+        "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",  // the docker tag to use for building and testing, forwarded to packages build job
         "VERSION",
     ]);
 
@@ -26,7 +27,7 @@ def main() {
 
     def make_target = "test-integration-agent-plugin-docker";
 
-    def setup_values = single_tests.common_prepare(version: version, make_target: make_target);
+    def setup_values = single_tests.common_prepare(version: version, make_target: make_target, docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD);
 
     currentBuild.description += (
         """
@@ -49,6 +50,7 @@ def main() {
         |edition:............... │${edition}│
         |checkout_dir:.......... │${checkout_dir}│
         |make_target:........... │${make_target}│
+        |docker_tag:............ │${setup_values.docker_tag}│
         |===================================================
         """.stripMargin());
 
@@ -68,7 +70,7 @@ def main() {
             set_docker_group_id: true,
             ulimit_nofile: 1024,
             mount_credentials: true,
-            priviliged: true,
+            privileged: true,
         ) {
             single_tests.prepare_workspace(
                 cleanup: [

@@ -11,13 +11,13 @@ metric_normal_updates = metrics.Metric(
     name="normal_updates",
     title=Title("Pending normal updates"),
     unit=UNIT_COUNTER,
-    color=metrics.Color.BLUE,
+    color=metrics.Color.YELLOW,
 )
 metric_security_updates = metrics.Metric(
     name="security_updates",
     title=Title("Pending security updates"),
     unit=UNIT_COUNTER,
-    color=metrics.Color.GREEN,
+    color=metrics.Color.RED,
 )
 
 perfometer_security_updates_normal_updates = perfometers.Stacked(

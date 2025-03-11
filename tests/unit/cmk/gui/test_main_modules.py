@@ -23,7 +23,6 @@ def _plugin_path(main_module_name: str) -> Path:
     name="main_module_name",
     params=[
         "dashboard",
-        "metrics",
         "sidebar",
         "userdb",
         "views",
@@ -80,7 +79,6 @@ def test_load_local_plugin(main_module_name: str) -> None:
         "bi",
         "views",
         "views/icons",
-        "metrics",
     ],
 )
 def fixture_plugin_module_dir(request):
@@ -92,16 +90,13 @@ def test_plugins_loaded(plugin_module_dir: str) -> None:
         raise pytest.skip("No plug-in at the moment")
 
     loaded_module_names = [
-        name  #
-        for name, module in sys.modules.items()
+        module_name
+        for module_name in sys.modules
         # None entries are only an import optimization of cPython and can be removed:
         # https://www.python.org/dev/peps/pep-0328/#relative-imports-and-indirection-entries-in-sys-modules
-        if module is not None
-        and (
-            name.startswith("cmk.gui.plugins.")
-            or name.startswith("cmk.gui.cee.plugins.")  #
-            or name.startswith("cmk.gui.cme.plugins.")  #
-        )
+        if module_name.startswith("cmk.gui.plugins.")
+        or module_name.startswith("cmk.gui.cee.plugins.")
+        or module_name.startswith("cmk.gui.cme.plugins.")
     ]
 
     plugin_module_name = plugin_module_dir.replace("/", ".")

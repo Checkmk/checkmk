@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping, Sequence
-from typing import Any, assert_never, cast, get_args, Literal
+from typing import Any, assert_never, cast, Final, get_args, Literal
 
 from cmk.utils.notify_types import HostEventType, ServiceEventType
 from cmk.utils.tags import AuxTag, TagGroup
@@ -262,13 +262,9 @@ def _event_choices(
     ]
 
 
-def _validate_at_least_one_event(triggering_events: Mapping) -> None:
-    if not triggering_events:
-        raise ValidationError(
-            Message(
-                "No triggering events selected. Please select at least one event to trigger the notification."
-            )
-        )
+def _validate_at_least_one_event(trigger_events: Mapping) -> None:
+    if not trigger_events:
+        raise ValidationError(Message("At least one triggering event must be selected."))
 
 
 def triggering_events() -> QuickSetupStage:
@@ -390,7 +386,7 @@ def custom_recap_formspec_triggering_events(
 def _validate_empty_selection(selections: Sequence[Sequence[str | None]]) -> None:
     # TODO validation seems not to be possible for a single empty element of
     # the Tuple
-    if ["", None] in selections:
+    if ["", None] in selections or not selections:
         raise ValidationError(
             Message("At least one selection is missing."),
         )
@@ -465,6 +461,17 @@ def custom_recap_formspec_filter_for_hosts_and_services(
     )
 
 
+class NonEmptyString:
+    """Custom validator that ensures the string is not empty."""
+
+    def __init__(self, error_msg: Message | None = None) -> None:
+        self.error_msg: Final = error_msg or Message("Input cannot be empty")
+
+    def __call__(self, value: str) -> None:
+        if not value.strip():
+            raise ValidationError(self.error_msg)
+
+
 def filter_for_hosts_and_services() -> QuickSetupStage:
     def _components() -> Sequence[Widget]:
         return [
@@ -483,9 +490,21 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 title=Title("Rule IDs"),
                                                 element_template=String(
                                                     field_size=FieldSize.SMALL,
+                                                    custom_validate=[
+                                                        NonEmptyString(
+                                                            Message("Please add a Rule ID.")
+                                                        )
+                                                    ],
                                                 ),
                                                 editable_order=False,
                                                 prefill=DefaultValue([]),
+                                                custom_validate=[
+                                                    not_empty(
+                                                        error_msg=Message(
+                                                            "Please add at least one Rule ID."
+                                                        )
+                                                    )
+                                                ],
                                             ),
                                         ),
                                         "syslog_priority": DictElement(
@@ -532,6 +551,11 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                             parameter_form=String(
                                                 title=Title("Event comment"),
                                                 field_size=FieldSize.LARGE,
+                                                custom_validate=[
+                                                    NonEmptyString(
+                                                        Message("Please add an event comment..")
+                                                    )
+                                                ],
                                             ),
                                         ),
                                     },
@@ -574,6 +598,13 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                             "Use this condition to select hosts based on the configured host labels."
                                         ),
                                         world=World.CORE,
+                                        custom_validate=[
+                                            not_empty(
+                                                error_msg=Message(
+                                                    "Please add at least one host label."
+                                                )
+                                            )
+                                        ],
                                     )
                                 ),
                                 "match_host_groups": DictElement(
@@ -588,6 +619,13 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                         ],
                                         show_toggle_all=True,
                                         layout=MultipleChoiceExtendedLayout.dual_list,
+                                        custom_validate=[
+                                            not_empty(
+                                                error_msg=Message(
+                                                    "Please add at least one host group."
+                                                )
+                                            )
+                                        ],
                                     ),
                                 ),
                                 "match_hosts": DictElement(
@@ -601,6 +639,11 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 ),
                                             ),
                                         ),
+                                        custom_validate=[
+                                            not_empty(
+                                                error_msg=Message("Please add at least one host.")
+                                            )
+                                        ],
                                     ),
                                 ),
                                 "exclude_hosts": DictElement(
@@ -614,6 +657,11 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 ),
                                             ),
                                         ),
+                                        custom_validate=[
+                                            not_empty(
+                                                error_msg=Message("Please add at least one host.")
+                                            )
+                                        ],
                                     ),
                                 ),
                             },
@@ -638,7 +686,14 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                     "Use this condition to select services based on the configured service labels."
                                                 ),
                                                 world=World.CORE,
-                                            )
+                                                custom_validate=[
+                                                    not_empty(
+                                                        error_msg=Message(
+                                                            "Please add at least one service label."
+                                                        )
+                                                    )
+                                                ],
+                                            ),
                                         ),
                                         "match_service_groups": DictElement(
                                             parameter_form=MultipleChoiceExtended(
@@ -652,6 +707,13 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 ],
                                                 show_toggle_all=True,
                                                 layout=MultipleChoiceExtendedLayout.dual_list,
+                                                custom_validate=[
+                                                    not_empty(
+                                                        error_msg=Message(
+                                                            "Please add at least one service group."
+                                                        )
+                                                    )
+                                                ],
                                             ),
                                         ),
                                         "exclude_service_groups": DictElement(
@@ -666,6 +728,13 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 ],
                                                 show_toggle_all=True,
                                                 layout=MultipleChoiceExtendedLayout.dual_list,
+                                                custom_validate=[
+                                                    not_empty(
+                                                        error_msg=Message(
+                                                            "Please add at least one service group."
+                                                        )
+                                                    )
+                                                ],
                                             ),
                                         ),
                                         "match_services": DictElement(
@@ -674,6 +743,13 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 string_spec=String(
                                                     field_size=FieldSize.MEDIUM,
                                                 ),
+                                                custom_validate=[
+                                                    not_empty(
+                                                        error_msg=Message(
+                                                            "Please add at least one service."
+                                                        )
+                                                    )
+                                                ],
                                             ),
                                         ),
                                         "exclude_services": DictElement(
@@ -682,6 +758,13 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 string_spec=String(
                                                     field_size=FieldSize.MEDIUM,
                                                 ),
+                                                custom_validate=[
+                                                    not_empty(
+                                                        error_msg=Message(
+                                                            "Please add at least one service."
+                                                        )
+                                                    )
+                                                ],
                                             ),
                                         ),
                                     },
@@ -715,6 +798,13 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                         ],
                                         show_toggle_all=True,
                                         layout=MultipleChoiceExtendedLayout.dual_list,
+                                        custom_validate=[
+                                            not_empty(
+                                                error_msg=Message(
+                                                    "Please add at least one contact group."
+                                                )
+                                            )
+                                        ],
                                     ),
                                 ),
                                 "users": DictElement(
@@ -740,6 +830,11 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                             ],
                                         ),
                                         prefill=DefaultValue([]),
+                                        custom_validate=[
+                                            not_empty(
+                                                error_msg=Message("Please add at least one member.")
+                                            )
+                                        ],
                                     ),
                                 ),
                             },
@@ -816,6 +911,11 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                         ],
                                         show_toggle_all=True,
                                         layout=MultipleChoiceExtendedLayout.dual_list,
+                                        custom_validate=[
+                                            not_empty(
+                                                error_msg=Message("Please add at least one site.")
+                                            )
+                                        ],
                                     ),
                                 ),
                                 "check_type_plugin": DictElement(
@@ -829,6 +929,13 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                         ),
                                         show_toggle_all=True,
                                         layout=MultipleChoiceExtendedLayout.dual_list,
+                                        custom_validate=[
+                                            not_empty(
+                                                error_msg=Message(
+                                                    "Please add at least one check type."
+                                                )
+                                            )
+                                        ],
                                     ),
                                 ),
                             },
@@ -952,6 +1059,11 @@ def notification_method() -> QuickSetupStage:
                                     string_spec=String(
                                         field_size=FieldSize.SMALL,
                                     ),
+                                    custom_validate=[
+                                        not_empty(
+                                            error_msg=Message("Please add at least one macro.")
+                                        ),
+                                    ],
                                 ),
                             ),
                             "ec_contact": DictElement(
@@ -1057,7 +1169,7 @@ def notification_method() -> QuickSetupStage:
                                 layout=CascadingSingleChoiceLayout.button_group,
                                 title=Title("Notification effect"),
                                 help_text=Help(
-                                    "Specifies whether to send a notification or to cancel all previous notifications for the same method"
+                                    "Toggle to either send notifications or suppress all previous notifications for the method selected."
                                 ),
                                 elements=[
                                     CascadingSingleChoiceElement(
@@ -1094,7 +1206,6 @@ def notification_method() -> QuickSetupStage:
                                                 )
                                                 for script_name, title in notification_script_choices()
                                             ],
-                                            custom_validate=[_validate_parameter_choice],
                                             layout=CascadingSingleChoiceLayout.vertical,
                                             prefill=DefaultValue("mail"),
                                         ),
@@ -1139,15 +1250,6 @@ def notification_method() -> QuickSetupStage:
     )
 
 
-def _validate_parameter_choice(script_config: tuple[str, object]) -> None:
-    parameter_choice = script_config[1]
-    assert isinstance(parameter_choice, dict)
-    if parameter_choice.get("parameter_id") is None:
-        raise ValidationError(
-            Message("Please choose a notification parameter or create one."),
-        )
-
-
 def _get_sorted_users() -> list[tuple[UserId, str]]:
     return sorted(
         (name, f"{name} - {user.get('alias', name)}") for name, user in load_users().items()
@@ -1164,6 +1266,16 @@ def _contact_group_choice() -> Sequence[UniqueSingleChoiceElement]:
         )
         for ident, title in sorted_contact_group_choices()
     ]
+
+
+def custom_macros_cannot_be_empty(custom_macros: Sequence[tuple[str, str]]) -> None:
+    for name, match in custom_macros:
+        if not name.strip() and not match.strip():
+            raise ValidationError(Message("A macro name and a regular expression are required"))
+        if not name.strip():
+            raise ValidationError(Message("A macro name is required"))
+        if not match.strip():
+            raise ValidationError(Message("A regular expression is required"))
 
 
 def recipient() -> QuickSetupStage:
@@ -1326,11 +1438,25 @@ def recipient() -> QuickSetupStage:
                                                     elements=[
                                                         String(
                                                             title=Title("Name of the macro"),
+                                                            custom_validate=[
+                                                                not_empty(
+                                                                    error_msg=Message(
+                                                                        "Please enter a name."
+                                                                    )
+                                                                )
+                                                            ],
                                                         ),
                                                         String(
                                                             title=Title(
                                                                 "Required match (regular expression)"
                                                             ),
+                                                            custom_validate=[
+                                                                not_empty(
+                                                                    error_msg=Message(
+                                                                        "Please enter a required match."
+                                                                    )
+                                                                )
+                                                            ],
                                                         ),
                                                     ],
                                                 ),
@@ -1342,6 +1468,7 @@ def recipient() -> QuickSetupStage:
                                                             "Please add at least one macro"
                                                         ),
                                                     ),
+                                                    custom_macros_cannot_be_empty,
                                                 ],
                                             ),
                                         ),
@@ -1372,6 +1499,34 @@ def recipient() -> QuickSetupStage:
 
 def _get_time_periods() -> list[tuple[TimeperiodName, str]]:
     return sorted((name, f"{name} - {spec['alias']}") for name, spec in load_timeperiods().items())
+
+
+def validate_notification_count_values(values: tuple[object, ...]) -> None:
+    match values:
+        case (int(lower_bound), _) if lower_bound < 1:
+            raise ValidationError(Message("The lower bound must be greater than 0."))
+        case (_, int(upper_bound)) if upper_bound < 1:
+            raise ValidationError(Message("The upper bound must be greater than 0."))
+        case (int(lower_bound), int(upper_bound)) if lower_bound > upper_bound:
+            raise ValidationError(Message("The lower bound is greater than the upper bound."))
+        case (int(_), int(_)):
+            return
+        case _:
+            raise ValidationError(Message("Unexpected 'notification count' values passed to form."))
+
+
+def validate_throttling_values(values: tuple[object, ...]) -> None:
+    match values:
+        case (int(notification_number), _) if notification_number < 1:
+            raise ValidationError(
+                Message("The 'notification number' value must be greater than 0.")
+            )
+        case (_, int(every_n_notification)) if every_n_notification < 1:
+            raise ValidationError(Message("The 'send every' value must be greater than 0."))
+        case (int(_), int(_)):
+            return
+        case _:
+            raise ValidationError(Message("Unexpected 'throttling' values passed to form."))
 
 
 def sending_conditions() -> QuickSetupStage:
@@ -1414,6 +1569,7 @@ def sending_conditions() -> QuickSetupStage:
                                                 ),
                                             ],
                                             layout="horizontal",
+                                            custom_validate=[validate_notification_count_values],
                                         )
                                     ),
                                     "throttle_periodic": DictElement(
@@ -1436,6 +1592,7 @@ def sending_conditions() -> QuickSetupStage:
                                                 ),
                                             ],
                                             layout="horizontal",
+                                            custom_validate=[validate_throttling_values],
                                         )
                                     ),
                                 },
@@ -1464,6 +1621,13 @@ def sending_conditions() -> QuickSetupStage:
                                             help_text=Help(
                                                 "Only applies to notifications triggered by the command `Custom notifications`"
                                             ),
+                                            custom_validate=[
+                                                not_empty(
+                                                    error_msg=Message(
+                                                        "Please enter a comment to filter for."
+                                                    )
+                                                )
+                                            ],
                                         )
                                     ),
                                 },

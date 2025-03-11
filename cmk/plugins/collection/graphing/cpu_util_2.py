@@ -177,7 +177,9 @@ graph_util_average_1 = graphs.Graph(
 )
 graph_cpu_utilization_numcpus = graphs.Graph(
     name="cpu_utilization_numcpus",
-    title=Title("CPU utilization (%(util_numcpu_as_max:max@count) CPU Threads)"),
+    title=Title(
+        'CPU utilization (_EXPRESSION:{"metric":"util_numcpu_as_max","scalar":"max"} CPU Threads)'
+    ),
     minimal_range=graphs.MinimalRange(
         0,
         100,

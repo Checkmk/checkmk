@@ -17,7 +17,7 @@ from pytest_mock import MockerFixture
 
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
-from tests.unit.cmk.gui.conftest import SetConfig
+from tests.unit.cmk.web_test_app import SetConfig
 
 from cmk.ccc import version
 

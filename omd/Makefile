@@ -33,11 +33,8 @@ PACKAGES := \
     msitools \
     apache-omd \
     xinetd \
-    mod_fcgid \
-    mod_wsgi \
     check_mk \
     mk-livestatus \
-    stunnel \
     nagios \
     monitoring-plugins \
     check-cert \
@@ -49,7 +46,6 @@ PACKAGES := \
     patch \
     heirloom-mailx \
     snap7 \
-    heirloom-pkgtools \
     livestatus \
     unixcat \
     neb \
@@ -131,7 +127,7 @@ BOM := bill-of-materials.json
 
 # Called while building the .rpm/.deb packages
 install: $(INSTALL_GLOBAL) $(DEPS_INSTALL_BAZEL)
-	$(BAZEL_CMD) run :venv
+	bazel run :venv
 	source .venv/bin/activate \
 	&& python3 ./strip_binaries --exclude cmk-agent-ctl --exclude mk-sql --exclude cmc --exclude waitmax --exclude agent_modbus $(DESTDIR)$(OMD_ROOT)/ \
 	&& deactivate
@@ -220,10 +216,6 @@ $(INSTALL_GLOBAL): $(SKEL_PERMISSIONS) $(BOM)
 	# Install ChangeLog created from all werks
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc
 	ln -sfn check_mk/ChangeLog $(DESTDIR)$(OMD_ROOT)/share/doc/ChangeLog
-	install -m 644 Licenses.csv $(DESTDIR)$(OMD_ROOT)/share/doc/Licenses.csv
-	install -m 644 Licenses.README.txt $(DESTDIR)$(OMD_ROOT)/share/doc/Licenses.README.txt
-	install -m 644 License_texts.pdf $(DESTDIR)$(OMD_ROOT)/share/doc/License_texts.pdf
-	install -m 644 $(BOM) $(DESTDIR)$(OMD_ROOT)/share/doc/$(BOM)
 
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/share
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/share/man

@@ -23,6 +23,18 @@ DEFINITIONS_PATH = "etc/rabbitmq/definitions.d"
 ACTIVE_DEFINITIONS_FILE_PATH = f"{DEFINITIONS_PATH}/{ACTIVE_DEFINITIONS_FILE_NAME}"
 NEW_DEFINITIONS_FILE_PATH = f"{DEFINITIONS_PATH}/definitions.next.json"
 
+# this defines the default message ttl for all the messages in the queue
+# we opted for this instead of per-message TTL because when setting per-message TTL
+# expired messages can queue up behind non-expired ones until the latter are consumed or expired.
+# Hence resources used by such expired messages will not be freed.
+# see https://www.rabbitmq.com/docs/ttl
+QUEUE_DEFAULT_MESSAGE_TTL = {"x-message-ttl": 60000}
+
+# maximum dimension of the queue in bytes
+# the queue will drop old messages when the size exceeds this value
+# see https://www.rabbitmq.com/docs/maxlength
+QUEUE_DEFAULT_MAX_LENGTH_BYTES = {"x-max-length-bytes": 1073741824}  # 1GB
+
 
 class User(BaseModel):
     name: str
@@ -98,7 +110,7 @@ class Queue(BaseModel):
     vhost: str
     durable: bool
     auto_delete: bool
-    arguments: Mapping[str, str]
+    arguments: Mapping[str, str | int]
 
 
 class Definitions(BaseModel):
@@ -143,7 +155,7 @@ def make_default_remote_user_permission(user_name: str) -> Permission:
     return Permission(
         user=user_name,
         vhost=DEFAULT_VHOST_NAME,
-        configure="^$",
+        configure="cmk.intersite..*",
         write=INTERSITE_EXCHANGE,
         read="cmk.intersite..*",
     )
@@ -282,7 +294,7 @@ def add_connecter_definitions(connection: Connection, definition: Definitions) -
     permission = Permission(
         user=user.name,
         vhost=vhost_name,
-        configure="^$",
+        configure="cmk.intersite..*",
         write=INTERSITE_EXCHANGE,
         read="cmk.intersite..*",
     )
@@ -291,7 +303,7 @@ def add_connecter_definitions(connection: Connection, definition: Definitions) -
         vhost=vhost_name,
         durable=True,
         auto_delete=False,
-        arguments={},
+        arguments={**QUEUE_DEFAULT_MESSAGE_TTL, **QUEUE_DEFAULT_MAX_LENGTH_BYTES},
     )
     binding = Binding(
         source=INTERSITE_EXCHANGE,
@@ -337,7 +349,7 @@ def add_connectee_definitions(connection: Connection, definition: Definitions) -
         vhost=DEFAULT_VHOST_NAME,
         durable=True,
         auto_delete=False,
-        arguments={},
+        arguments={**QUEUE_DEFAULT_MESSAGE_TTL, **QUEUE_DEFAULT_MAX_LENGTH_BYTES},
     )
 
     # only add binding on default vhost if the connection is within the same customer
@@ -375,6 +387,10 @@ def update_and_activate_rabbitmq_definitions(omd_root: Path, logger: Logger) -> 
     if old_definitions == new_definitions:
         return
 
+    # also return if rabbitmq is not running at all. This might be fine.
+    if rabbitmqctl_process(("ping",), wait=False).wait() != 0:
+        return
+
     # run in parallel
     for process in [
         *_start_cleanup_unused_definitions(old_definitions, new_definitions),
@@ -382,17 +398,22 @@ def update_and_activate_rabbitmq_definitions(omd_root: Path, logger: Logger) -> 
     ]:
         (logger.info if process.wait() == 0 else logger.error)(_format_process(process))
 
+    if set(old_definitions.parameters) - set(new_definitions.parameters):
+        # avoid zombie shovels
+        rabbitmqctl_process(("stop_app",), wait=True)
+        rabbitmqctl_process(("start_app",), wait=True)
+
 
 def _start_cleanup_unused_definitions(
     old_definitions: Definitions, new_definitions: Definitions
 ) -> Iterator[subprocess.Popen[str]]:
-    for user in {u.name for u in old_definitions.users} - {u.name for u in new_definitions.users}:
-        yield rabbitmqctl_process(("delete_user", user), wait=False)
-
-    for vhost in {v.name for v in old_definitions.vhosts} - {
-        v.name for v in new_definitions.vhosts
-    }:
-        yield rabbitmqctl_process(("delete_vhost", vhost), wait=False)
+    # currently only shovels, but we don't have to care here
+    # delete shovels before deleting e.g. users to avoid shovels trying to connect using deleted
+    # resources
+    for param in set(old_definitions.parameters) - set(new_definitions.parameters):
+        yield rabbitmqctl_process(
+            ("clear_parameter", "-p", param.vhost, param.component, param.name), wait=False
+        )
 
     for queue in set(
         binding.destination
@@ -403,11 +424,13 @@ def _start_cleanup_unused_definitions(
         # we delete the queue to remove the bindings
         yield rabbitmqctl_process(("delete_queue", queue), wait=False)
 
-    # currently only shovels, but we don't have to care here
-    for param in set(old_definitions.parameters) - set(new_definitions.parameters):
-        yield rabbitmqctl_process(
-            ("clear_parameter", "-p", param.vhost, param.component, param.name), wait=False
-        )
+    for vhost in {v.name for v in old_definitions.vhosts} - {
+        v.name for v in new_definitions.vhosts
+    }:
+        yield rabbitmqctl_process(("delete_vhost", vhost), wait=False)
+
+    for user in {u.name for u in old_definitions.users} - {u.name for u in new_definitions.users}:
+        yield rabbitmqctl_process(("delete_user", user), wait=False)
 
 
 def _start_import_new_definitions(definitions_file: Path) -> subprocess.Popen[str]:

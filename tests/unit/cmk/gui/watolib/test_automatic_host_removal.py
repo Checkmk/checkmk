@@ -5,6 +5,8 @@
 
 
 import datetime
+from collections.abc import Sequence
+from io import StringIO
 from pathlib import Path
 from unittest.mock import MagicMock
 from zoneinfo import ZoneInfo
@@ -13,9 +15,16 @@ import pytest
 import time_machine
 from pytest_mock import MockerFixture
 
+from tests.testlib.unit.base_configuration_scenario import Scenario
+
 from cmk.utils.hostaddress import HostName
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.paths import default_config_dir
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec
+
+from cmk.automations.results import AnalyzeHostRuleMatchesResult
+
+from cmk.base.automations.check_mk import AutomationAnalyzeHostRuleMatches
 
 from cmk.gui.watolib import automatic_host_removal
 from cmk.gui.watolib.hosts_and_folders import folder_tree
@@ -44,20 +53,18 @@ def test_remove_hosts_no_rules_early_return(
     activate_changes_mock.assert_not_called()
 
 
+TEST_HOSTS = [
+    HostName("host_crit_remove"),
+    HostName("host_crit_keep"),
+    HostName("host_ok"),
+    HostName("host_removal_disabled"),
+    HostName("host_no_rule_match"),
+]
+
+
 @pytest.fixture(name="setup_hosts")
 def fixture_setup_hosts() -> None:
-    folder_tree().root_folder().create_hosts(
-        [
-            (hostname, {}, None)
-            for hostname in (
-                HostName("host_crit_remove"),
-                HostName("host_crit_keep"),
-                HostName("host_ok"),
-                HostName("host_removal_disabled"),
-                HostName("host_no_rule_match"),
-            )
-        ],
-    )
+    folder_tree().root_folder().create_hosts([(hostname, {}, None) for hostname in TEST_HOSTS])
 
 
 @pytest.fixture(name="setup_rules")
@@ -93,7 +100,7 @@ def fixture_setup_rules() -> None:
     ruleset.append_rule(
         root_folder,
         Rule(
-            id_="1",
+            id_="2",
             folder=root_folder,
             ruleset=ruleset,
             conditions=RuleConditions(
@@ -169,10 +176,33 @@ def fixture_mock_delete_hosts_automation(mocker: MockerFixture) -> MagicMock:
     )
 
 
+@pytest.fixture(name="mock_analyze_host_rule_matches_automation")
+def fixture_mock_analyze_host_rule_matches_automation(
+    mocker: MockerFixture, monkeypatch: pytest.MonkeyPatch
+) -> MagicMock:
+    """Replace rule matching via automation call, which does not work in unit test context,
+    with a direct call to the automation"""
+    ts = Scenario()
+    for host_name in TEST_HOSTS:
+        ts.add_host(host_name)
+    ts.apply(monkeypatch)
+
+    def analyze_with_matcher(
+        h: HostName, r: Sequence[Sequence[RuleSpec]]
+    ) -> AnalyzeHostRuleMatchesResult:
+        with mocker.patch("sys.stdin", StringIO(repr(r))):
+            return AutomationAnalyzeHostRuleMatches().execute([h], None, None)
+
+    return mocker.patch.object(
+        automatic_host_removal, "analyze_host_rule_matches", analyze_with_matcher
+    )
+
+
 @pytest.mark.usefixtures("setup_hosts")
 @pytest.mark.usefixtures("setup_rules")
 @pytest.mark.usefixtures("setup_livestatus_mock")
 @pytest.mark.usefixtures("with_admin_login")
+@pytest.mark.usefixtures("mock_analyze_host_rule_matches_automation")
 def test_execute_host_removal_job(
     mock_livestatus: MockLiveStatusConnection,
     activate_changes_mock: MagicMock,

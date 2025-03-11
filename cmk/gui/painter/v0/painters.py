@@ -19,20 +19,22 @@ from cmk.utils.render import approx_age
 from cmk.utils.statename import short_host_state_name, short_service_state_name
 
 from cmk.gui import sites
-from cmk.gui.config import Config
+from cmk.gui.config import active_config, Config
 from cmk.gui.graphing._color import render_color_icon
-from cmk.gui.graphing._legacy import get_render_function
-from cmk.gui.graphing._metrics import get_metric_spec, registered_metrics
+from cmk.gui.graphing._from_api import metrics_from_api, RegisteredMetric
+from cmk.gui.graphing._metrics import get_metric_spec, registered_metric_ids_and_titles
 from cmk.gui.graphing._translated_metrics import (
     parse_perf_data,
     translate_metrics,
     TranslatedMetric,
 )
+from cmk.gui.graphing._unit import user_specific_unit
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.painter_options import (
     paint_age,
     paint_age_or_never,
@@ -416,7 +418,11 @@ def _paint_future_time(
     request: Request,
     painter_options: PainterOptions,
 ) -> CellSpec:
-    if timestamp <= 0:
+    # NOTE: Nagios uses 0 to represent "never again" while the CMC uses a time far into the future
+    # (year 2262 or 0x7fffffffffffffff nanoseconds after 1970, but we leave some headroom below).
+    # Although this is inconsistent, the latter is arguably more correct. In any case, the usage of
+    # magic numbers is a quite a hack...
+    if not (0 < timestamp < 0x200000000):
         return "", "-"
     return paint_age(
         timestamp,
@@ -739,7 +745,11 @@ class PainterSvcMetrics(Painter):
         perf_data, check_command = parse_perf_data(
             row["service_perf_data"], row["service_check_command"], config=self.config
         )
-        translated_metrics = translate_metrics(perf_data, check_command)
+        translated_metrics = translate_metrics(
+            perf_data,
+            check_command,
+            metrics_from_api,
+        )
 
         if row["service_perf_data"] and not translated_metrics:
             return "", _("Failed to parse performance data string: %s") % row["service_perf_data"]
@@ -774,7 +784,11 @@ class PainterSvcMetrics(Painter):
             html.td(render_color_icon(translated_metric.color), class_="color")
             html.td(f"{translated_metric.title}{optional_metric_id}:")
             html.td(
-                get_render_function(translated_metric.unit_spec)(translated_metric.value),
+                user_specific_unit(
+                    translated_metric.unit_spec,
+                    user,
+                    active_config,
+                ).formatter.render(translated_metric.value),
                 class_="value",
             )
             if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE:
@@ -5427,20 +5441,24 @@ class AbstractColumnSpecificMetric(Painter):
         raise NotImplementedError()
 
     def title(self, cell: Cell) -> str:
-        return self._title_with_parameters(cell.painter_parameters())
+        return self._title_with_parameters(cell.painter_parameters(), metrics_from_api)
 
     def short_title(self, cell: Cell) -> str:
-        return self._title_with_parameters(cell.painter_parameters())
+        return self._title_with_parameters(cell.painter_parameters(), metrics_from_api)
 
     def list_title(self, cell: Cell) -> str:
         return _("Metric")
 
-    def _title_with_parameters(self, parameters: PainterParameters | None) -> str:
+    def _title_with_parameters(
+        self,
+        parameters: PainterParameters | None,
+        registered_metrics: Mapping[str, RegisteredMetric],
+    ) -> str:
         try:
             if not parameters:
                 # Used in Edit-View
                 return _("Show single metric")
-            return get_metric_spec(parameters["metric"]).title
+            return get_metric_spec(parameters["metric"], registered_metrics).title
         except KeyError:
             return _("Metric not found")
 
@@ -5469,7 +5487,10 @@ class AbstractColumnSpecificMetric(Painter):
     @request_memoize()
     def _metric_choices(cls) -> list[tuple[str, str]]:
         return sorted(
-            ((metric_id, metric_title) for metric_id, metric_title in registered_metrics()),
+            (
+                (metric_id, metric_title)
+                for metric_id, metric_title in registered_metric_ids_and_titles(metrics_from_api)
+            ),
             key=lambda x: x[1],
         )
 
@@ -5483,13 +5504,25 @@ class AbstractColumnSpecificMetric(Painter):
         perf_data, check_command = parse_perf_data(
             perf_data_entries, check_command, config=self.config
         )
-        translated_metrics = translate_metrics(perf_data, check_command)
+        translated_metrics = translate_metrics(
+            perf_data,
+            check_command,
+            metrics_from_api,
+        )
 
         if show_metric not in translated_metrics:
             return "", ""
 
         translated_metric = translated_metrics[show_metric]
-        return "", get_render_function(translated_metric.unit_spec)(translated_metric.value)
+
+        return (
+            "",
+            user_specific_unit(
+                translated_metric.unit_spec,
+                user,
+                active_config,
+            ).formatter.render(translated_metric.value),
+        )
 
 
 class PainterHostSpecificMetric(AbstractColumnSpecificMetric):

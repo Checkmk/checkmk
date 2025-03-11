@@ -244,11 +244,11 @@ void *client_thread(void *data) {
     tl_info = static_cast<ThreadInfo *>(data);
     auto *logger = fl_core->loggerLivestatus();
     while (!shouldTerminate()) {
-        g_num_queued_connections--;
-        g_livestatus_active_connections++;
         if (auto &&elem =
                 fl_client_queue->pop(queue_pop_strategy::blocking, {})) {
             auto &&[fd, size] = *elem;
+            g_num_queued_connections--;
+            g_livestatus_active_connections++;
             Debug(logger) << "accepted client connection on fd " << fd;
             InputBuffer input_buffer{fd, [] { return shouldTerminate(); },
                                      logger, fl_query_timeout, fl_idle_timeout};

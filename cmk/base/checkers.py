@@ -61,7 +61,6 @@ from cmk.checkengine.checkresults import (
 )
 from cmk.checkengine.discovery import AutocheckEntry, DiscoveryPlugin, HostLabelPlugin
 from cmk.checkengine.fetcher import HostKey, SourceInfo, SourceType
-from cmk.checkengine.inventory import InventoryPlugin, InventoryPluginName
 from cmk.checkengine.parameters import Parameters
 from cmk.checkengine.parser import HostSections, NO_SELECTION, parse_raw_data, SectionNameCollection
 from cmk.checkengine.sectionparser import ParsedSectionName, Provider, ResolvedResult, SectionPlugin
@@ -74,8 +73,8 @@ from cmk.checkengine.submitters import ServiceState
 from cmk.checkengine.summarize import summarize, SummaryConfig
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.api.agent_based.register._config as _api
 from cmk.base.api.agent_based import cluster_mode, value_store
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin as AgentSectionPluginAPI
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin as CheckPluginAPI
 from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin as SNMPSectionPluginAPI
@@ -115,7 +114,6 @@ __all__ = [
     "DiscoveryPluginMapper",
     "get_aggregated_result",
     "HostLabelPluginMapper",
-    "InventoryPluginMapper",
     "SectionPluginMapper",
     "SpecialAgentFetcher",
 ]
@@ -323,7 +321,7 @@ class CMKFetcher:
         self,
         config_cache: ConfigCache,
         factory: FetcherFactory,
-        plugins: agent_based_register.AgentBasedPlugins,
+        plugins: AgentBasedPlugins,
         *,
         # alphabetically sorted
         file_cache_options: FileCacheOptions,
@@ -591,10 +589,10 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
         )
 
     def __iter__(self) -> Iterator[CheckPluginName]:
-        return iter(_api.registered_check_plugins)
+        return iter(self.check_plugins)
 
     def __len__(self) -> int:
-        return len(_api.registered_check_plugins)
+        return len(self.check_plugins)
 
 
 def _compute_final_check_parameters(
@@ -1083,10 +1081,10 @@ class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
         )
 
     def __iter__(self) -> Iterator[CheckPluginName]:
-        return iter(_api.registered_check_plugins)
+        return iter(self._check_plugins)
 
     def __len__(self) -> int:
-        return len(_api.registered_check_plugins)
+        return len(self._check_plugins)
 
 
 def _make_discovery_parameters_getter(
@@ -1127,21 +1125,3 @@ def _make_discovery_parameters_getter(
         return [Parameters({**p, "host_name": host_name}) for p in params]
 
     return get_discovery_parameters
-
-
-class InventoryPluginMapper(Mapping[InventoryPluginName, InventoryPlugin]):
-    # See comment to SectionPluginMapper.
-    def __getitem__(self, __key: InventoryPluginName) -> InventoryPlugin:
-        plugin = _api.registered_inventory_plugins[__key]
-        return InventoryPlugin(
-            sections=plugin.sections,
-            function=plugin.inventory_function,
-            ruleset_name=plugin.inventory_ruleset_name,
-            defaults=plugin.inventory_default_parameters,
-        )
-
-    def __iter__(self) -> Iterator[InventoryPluginName]:
-        return iter(_api.registered_inventory_plugins)
-
-    def __len__(self) -> int:
-        return len(_api.registered_inventory_plugins)

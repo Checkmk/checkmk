@@ -13,31 +13,31 @@ UNIT_SECOND = metrics.Unit(metrics.TimeNotation())
 
 metric_audiocodes_active_calls_in = metrics.Metric(
     name="audiocodes_ipgroup_active_calls_in",
-    title=Title("IP Group Active Calls In"),
+    title=Title("IP group active calls in"),
     unit=UNIT_COUNT,
     color=metrics.Color.GREEN,
 )
 
 metric_audiocodes_active_calls_out = metrics.Metric(
     name="audiocodes_ipgroup_active_calls_out",
-    title=Title("IP Group Active Calls Out"),
+    title=Title("IP group active calls out"),
     unit=UNIT_COUNT,
     color=metrics.Color.LIGHT_GREEN,
 )
 
 graph_audiocodes_ipgroup_calls_in_out = graphs.Bidirectional(
     name="audiocodes_ipgroup_calls_in_out",
-    title=Title("IP Group Calls In/Out"),
+    title=Title("IP group calls in/out"),
     lower=graphs.Graph(
         name="audiocodes_ipgroup_calls_out",
-        title=Title("IP Group Calls Out"),
+        title=Title("IP group calls out"),
         compound_lines=[
             "audiocodes_ipgroup_active_calls_out",
         ],
     ),
     upper=graphs.Graph(
         name="audiocodes_ipgroup_calls_in",
-        title=Title("IP Group Calls In"),
+        title=Title("IP group calls in"),
         compound_lines=[
             "audiocodes_ipgroup_active_calls_in",
         ],

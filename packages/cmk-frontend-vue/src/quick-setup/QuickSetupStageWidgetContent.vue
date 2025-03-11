@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CompositeWidget from './components/quick-setup/widgets/CompositeWidget.vue'
 import type { QuickSetupStageWidgetContentProps } from './types'
 import type { StageData } from '@/quick-setup/components/quick-setup/widgets/widget_types'
+import { BackgroundJobLogDisplay } from '@/quick-setup/components/BackgroundJobLog'
 
 const props = defineProps<QuickSetupStageWidgetContentProps>()
 const emit = defineEmits(['update'])
@@ -20,11 +21,20 @@ const updateData = (id: string, value: object) => {
 
 <template>
   <CompositeWidget
+    v-if="components.length > 0"
     :items="components"
     :data="internalUserInput"
     :errors="formSpecErrors || {}"
     @update="updateData"
   />
+  <BackgroundJobLogDisplay
+    v-if="props.backgroundJobLog && props.backgroundJobLog.length > 0"
+    :steps="backgroundJobLog!"
+  />
 </template>
 
-<style scoped></style>
+<style scoped>
+.qs-stage-widget-content__background-job-list {
+  padding-top: 20px;
+}
+</style>

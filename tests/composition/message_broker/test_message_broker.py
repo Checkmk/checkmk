@@ -8,7 +8,9 @@ from typing import IO
 import pytest
 
 from tests.composition.message_broker.utils import (
+    assert_message_exchange_not_working,
     assert_message_exchange_working,
+    await_broker_ready,
     broker_pong,
     broker_stopped,
     check_broker_ping,
@@ -90,6 +92,7 @@ class TestMessageBroker:
         remote_site_2: Site,
     ) -> None:
         with rabbitmq_info_on_failure([central_site, remote_site, remote_site_2]):
+            await_broker_ready(central_site, remote_site, remote_site_2)
             with broker_pong(remote_site):
                 # test complement: should not work without the central site running:
                 with broker_stopped(central_site):
@@ -102,9 +105,32 @@ class TestMessageBroker:
         self, central_site: Site, remote_site: Site, remote_site_2: Site
     ) -> None:
         with rabbitmq_info_on_failure([central_site, remote_site, remote_site_2]):
-            with (
-                p2p_connection(central_site, remote_site, remote_site_2),
-                broker_pong(remote_site),
-                broker_stopped(central_site),
-            ):
-                check_broker_ping(remote_site_2, remote_site.id)
+            with p2p_connection(central_site, remote_site, remote_site_2):
+                await_broker_ready(central_site, remote_site, remote_site_2)
+                with (
+                    broker_pong(remote_site),
+                    broker_stopped(central_site),
+                ):
+                    check_broker_ping(remote_site_2, remote_site.id)
+
+    def test_rabbitmq_port_change(self, central_site: Site, remote_site: Site) -> None:
+        """Ensure that sites can still communicate after the message broker port is changed"""
+        with rabbitmq_info_on_failure([central_site, remote_site, remote_site]):
+            site_connection = central_site.openapi.sites.show(remote_site.id)["extensions"]
+            site_connection_port = int(
+                site_connection["configuration_connection"]["message_broker_port"]
+            )
+            assert site_connection_port == remote_site.message_broker_port
+            next_port = _next_free_port(remote_site, "RABBITMQ_PORT", str(site_connection_port + 1))
+
+            remote_site.set_config("RABBITMQ_PORT", str(next_port), with_restart=True)
+            await_broker_ready(central_site, remote_site)
+
+            site_connection["configuration_connection"]["message_broker_port"] = str(next_port)
+            central_site.openapi.sites.update(remote_site.id, site_connection)
+
+            # ensure changes are not in effect before activated
+            assert_message_exchange_not_working(central_site, remote_site)
+
+            central_site.openapi.changes.activate_and_wait_for_completion()
+            assert_message_exchange_working(central_site, remote_site)

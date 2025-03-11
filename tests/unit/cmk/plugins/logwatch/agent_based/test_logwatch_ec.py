@@ -14,6 +14,8 @@ import pytest
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 
+from cmk.base import config
+
 import cmk.ec.export as ec
 
 from cmk.agent_based.v2 import (
@@ -92,6 +94,14 @@ DEFAULT_TEST_PARAMETERS = logwatch_.ParameterLogwatchEc(
         "host_name": "test-host",
     }
 )
+
+
+def _patch_config_cache(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        config,
+        config.access_globally_cached_config_cache.__name__,
+        lambda: config.ConfigCache(config.LoadedConfigFragment()),
+    )
 
 
 @pytest.mark.parametrize(
@@ -277,7 +287,9 @@ def test_check_logwatch_ec_common_single_node(
     params: logwatch_.ParameterLogwatchEc,
     parsed: logwatch_.ClusterSection,
     expected_result: CheckResult,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    _patch_config_cache(monkeypatch)
     assert (
         list(
             logwatch_ec.check_logwatch_ec_common(
@@ -308,7 +320,8 @@ def test_check_logwatch_ec_common_single_node_item_missing() -> None:
     )
 
 
-def test_check_logwatch_ec_common_single_node_log_missing() -> None:
+def test_check_logwatch_ec_common_single_node_log_missing(monkeypatch: pytest.MonkeyPatch) -> None:
+    _patch_config_cache(monkeypatch)
     actual_result = list(
         logwatch_ec.check_logwatch_ec_common(
             "log3",
@@ -378,7 +391,9 @@ def test_check_logwatch_ec_common_single_node_log_missing() -> None:
 def test_check_logwatch_ec_common_multiple_nodes_grouped(
     cluster_section: logwatch_.ClusterSection,
     expected_result: CheckResult,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    _patch_config_cache(monkeypatch)
     assert (
         list(
             logwatch_ec.check_logwatch_ec_common(
@@ -512,7 +527,10 @@ def test_check_logwatch_ec_common_multiple_nodes_item_completely_missing() -> No
     )
 
 
-def test_check_logwatch_ec_common_multiple_nodes_item_partially_missing() -> None:
+def test_check_logwatch_ec_common_multiple_nodes_item_partially_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _patch_config_cache(monkeypatch)
     assert list(
         logwatch_ec.check_logwatch_ec_common(
             "log1",
@@ -531,7 +549,10 @@ def test_check_logwatch_ec_common_multiple_nodes_item_partially_missing() -> Non
     ]
 
 
-def test_check_logwatch_ec_common_multiple_nodes_logfile_missing() -> None:
+def test_check_logwatch_ec_common_multiple_nodes_logfile_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _patch_config_cache(monkeypatch)
     assert list(
         logwatch_ec.check_logwatch_ec_common(
             "log3",
@@ -560,6 +581,7 @@ def test_check_logwatch_ec_common_multiple_nodes_logfile_missing() -> None:
 
 
 def test_check_logwatch_ec_common_spool(monkeypatch: pytest.MonkeyPatch) -> None:
+    _patch_config_cache(monkeypatch)
     monkeypatch.setattr(logwatch_ec, "_MAX_SPOOL_SIZE", 32)
     assert list(
         logwatch_ec.check_logwatch_ec_common(
@@ -825,11 +847,13 @@ def test_logwatch_spool_path_is_escaped() -> None:
     assert get_spool_path(HostName("short"), "..").name == "item_.."
 
 
-def test_check_logwatch_ec_common_batch_stored() -> None:
+def test_check_logwatch_ec_common_batch_stored(monkeypatch: pytest.MonkeyPatch) -> None:
     """Multiple logfiles with different batches. All must be remembered as "seen_batches".
 
     Failing to do so leads to messages being processed multiple times.
     """
+    _patch_config_cache(monkeypatch)
+
     value_store: dict = {}
 
     _result = list(

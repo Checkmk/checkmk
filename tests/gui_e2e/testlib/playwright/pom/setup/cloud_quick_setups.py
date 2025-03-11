@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import re
-from typing import Literal, NamedTuple
+from typing import Literal, NamedTuple, override
 from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator
@@ -35,6 +35,7 @@ class AWSAddNewConfiguration(CmkPage):
     suffix = "aws"
     page_title = "Add Amazon Web Services (AWS) configuration"
 
+    @override
     def navigate(self) -> None:
         logger.info("Navigate to 'AWS Quick setup > Add Amazon Web Services configuration' page")
         quick_setup_aws = AWSConfigurationList(self.page)
@@ -48,9 +49,11 @@ class AWSAddNewConfiguration(CmkPage):
         )
         self._validate_page()
 
+    @override
     def _validate_page(self) -> None:
         self.main_area.check_page_title(self.page_title)
 
+    @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
 
@@ -182,6 +185,7 @@ class AWSConfigurationList(CmkPage):
     suffix = "aws"
     page_title = "Amazon Web Services (AWS)"
 
+    @override
     def navigate(self) -> None:
         logger.info("Navigate to '%s' page", self.page_title)
         self.main_menu.setup_menu("Amazon Web Service (AWS)").click()
@@ -194,10 +198,12 @@ class AWSConfigurationList(CmkPage):
         )
         self._validate_page()
 
+    @override
     def _validate_page(self) -> None:
         self.main_area.check_page_title(self.page_title)
         expect(self.add_configuration_button).to_be_visible()
 
+    @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
 

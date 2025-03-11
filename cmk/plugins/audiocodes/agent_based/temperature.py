@@ -91,7 +91,7 @@ def check_audiocodes_temperature(
 
 check_plugin_audiocodes_temperature = CheckPlugin(
     name="audiocodes_temperature",
-    service_name="AudioCodes Temperature %s",
+    service_name="Temperature %s",
     sections=["audiocodes_module_names", "audiocodes_temperature"],
     discovery_function=discover_audiocodes_temperature,
     check_function=check_audiocodes_temperature,

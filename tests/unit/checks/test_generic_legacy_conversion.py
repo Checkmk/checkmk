@@ -5,11 +5,11 @@
 
 import pytest
 
-from tests.unit.conftest import FixPluginLegacy
+from tests.unit.mocks_and_helpers import FixPluginLegacy
 
 from cmk.utils.sectionname import SectionName
 
-from cmk.base.api.agent_based.register import AgentBasedPlugins
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.discover_plugins import PluginLocation
@@ -966,7 +966,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "rabbitmq_cluster_stats",
         "rabbitmq_nodes",
         "rabbitmq_nodes_filedesc",
-        "rabbitmq_nodes_sockets",
         "rabbitmq_nodes_mem",
         "rabbitmq_nodes_uptime",
         "rabbitmq_nodes_gc",

@@ -10,11 +10,8 @@ from collections.abc import Collection, Iterable, Sequence
 from livestatus import SiteId
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.servicename import Item, ServiceName
 
-# Tolerate this for 1.6. Should be cleaned up in future versions,
-# e.g. by trying to move the common code to a common place
-import cmk.base.export  # pylint: disable=cmk-module-layer-violation
+from cmk.checkengine.checking import CheckPluginName
 
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
@@ -35,7 +32,11 @@ from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.wato.pages.rulesets import ModeEditRuleset
-from cmk.gui.watolib.check_mk_automations import analyse_service
+from cmk.gui.watolib.check_mk_automations import (
+    analyse_service,
+    analyze_service_rule_matches,
+    get_service_name,
+)
 from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.hosts_and_folders import folder_from_request, folder_preserving_link
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
@@ -343,9 +344,9 @@ class ModePatternEditor(WatoMode):
                     html.icon_button(edit_url, _("Edit this rule"), "edit")
 
     def _analyze_rule_matches(
-        self, site_id: SiteId, host_name: HostName, item: Item, rules: Sequence[Rule]
+        self, site_id: SiteId, host_name: HostName, item: str, rules: Sequence[Rule]
     ) -> dict[str, bool]:
-        service_desc = self._get_service_description(host_name, item)
+        service_desc = get_service_name(host_name, CheckPluginName("logwatch"), item).service_name
         service_labels = analyse_service(
             site_id,
             host_name,
@@ -353,17 +354,15 @@ class ModePatternEditor(WatoMode):
         ).labels
 
         return {
-            rule.id: rule.matches_host_and_item(
+            rule_id: bool(matches)
+            for rule_id, matches in analyze_service_rule_matches(
                 host_name,
                 item,
-                service_desc,
-                service_labels=service_labels,
-            )
+                service_labels,
+                [r.to_single_base_ruleset() for r in rules],
+            ).results.items()
             for rule in rules
         }
-
-    def _get_service_description(self, hostname: HostName, item: Item) -> ServiceName:
-        return cmk.base.export.logwatch_service_description(hostname, item)
 
 
 class MatchItemGeneratorLogfilePatternAnalyzer(ABCMatchItemGenerator):

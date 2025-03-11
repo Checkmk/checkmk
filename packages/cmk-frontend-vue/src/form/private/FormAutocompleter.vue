@@ -27,8 +27,11 @@ const inputValue = defineModel<string>()
 const visibleInputValue = ref<string>('')
 
 type AutocompleterResponse = Record<'choices', Suggestion[]>
-const { input: autocompleterInput, output: autocompleterOutput } =
-  setupAutocompleter<AutocompleterResponse>(() => props.autocompleter || null)
+const {
+  input: autocompleterInput,
+  output: autocompleterOutput,
+  error: autocompleterError
+} = setupAutocompleter<AutocompleterResponse>(() => props.autocompleter || null)
 const filteredSuggestions = ref<Suggestion[]>([])
 const suggestionsRef = ref<InstanceType<typeof CmkSuggestions> | null>(null)
 const showSuggestions = ref<boolean>(false)
@@ -149,9 +152,10 @@ const componentId = useId()
       />
     </span>
     <CmkSuggestions
-      v-if="filteredSuggestions.length > 0 && !!showSuggestions"
+      v-if="(filteredSuggestions.length > 0 || autocompleterError) && !!showSuggestions"
       ref="suggestionsRef"
       role="suggestion"
+      :error="autocompleterError"
       :suggestions="
         filteredSuggestions.map((suggestion) => ({ name: suggestion[0], title: suggestion[1] }))
       "

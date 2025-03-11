@@ -20,14 +20,16 @@ from cmk.automations.results import AnalyseHostResult, GetServicesLabelsResult
 
 import cmk.base.automations
 import cmk.base.automations.check_mk as automations
-from cmk.base.api.agent_based.register import AgentBasedPlugins
-from cmk.base.config import LoadedConfigSentinel
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
+from cmk.base.config import LoadedConfigFragment, LoadingResult
 
 
 def test_registered_automations() -> None:
     needed_automations = [
         "active-check",
         "analyse-host",
+        "analyze-host-rule-matches",
+        "analyze-service-rule-matches",
         "get-services-labels",
         "analyse-service",
         "create-diagnostics-dump",
@@ -43,6 +45,7 @@ def test_registered_automations() -> None:
         "get-check-information",
         "get-configuration",
         "get-section-information",
+        "get-service-name",
         "inventory",
         "notification-analyse",
         "notification-get-bulks",
@@ -87,14 +90,16 @@ def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
             },
         },
     )
-    ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch)
 
     label_sources: dict[str, LabelSource] = {
         "cmk/site": "discovered",
         "explicit": "explicit",
     }
     assert automation.execute(
-        ["test-host"], AgentBasedPlugins({}, {}, {}, {}), LoadedConfigSentinel()
+        ["test-host"],
+        AgentBasedPlugins.empty(),
+        LoadingResult(loaded_config=LoadedConfigFragment(), config_cache=config_cache),
     ) == AnalyseHostResult(
         label_sources=label_sources | additional_label_sources,
         labels={
@@ -132,12 +137,12 @@ def test_service_labels(monkeypatch):
             ]
         ),
     )
-    ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch)
 
     assert automation.execute(
         ["test-host", "CPU load", "CPU temp"],
-        AgentBasedPlugins({}, {}, {}, {}),
-        LoadedConfigSentinel(),
+        AgentBasedPlugins.empty(),
+        LoadingResult(loaded_config=LoadedConfigFragment(), config_cache=config_cache),
     ) == GetServicesLabelsResult(
         {
             "CPU load": {"label1": "val1", "label2": "val2"},

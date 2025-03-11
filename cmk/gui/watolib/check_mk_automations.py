@@ -13,8 +13,9 @@ import cmk.ccc.version as cmk_version
 
 from cmk.utils.diagnostics import DiagnosticsCLParameters
 from cmk.utils.hostaddress import HostName
-from cmk.utils.labels import HostLabel
-from cmk.utils.servicename import ServiceName
+from cmk.utils.labels import HostLabel, Labels
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec
+from cmk.utils.servicename import Item, ServiceName
 
 from cmk.events.event_context import EventContext
 
@@ -284,6 +285,17 @@ def get_services_labels(
     )
 
 
+def get_service_name(
+    host_name: HostName, check_plugin_name: CheckPluginName, item: Item
+) -> results.GetServiceNameResult:
+    return _deserialize(
+        _automation_serialized(
+            "get-service-name", args=[host_name, str(check_plugin_name), repr(item)]
+        ),
+        results.GetServiceNameResult,
+    )
+
+
 def analyse_service(
     site_id: SiteId,
     host_name: HostName,
@@ -310,6 +322,31 @@ def analyse_host(
             args=[host_name],
         ),
         results.AnalyseHostResult,
+    )
+
+
+def analyze_host_rule_matches(
+    host_name: HostName, rules: Sequence[Sequence[RuleSpec]]
+) -> results.AnalyzeHostRuleMatchesResult:
+    return _deserialize(
+        _automation_serialized("analyze-host-rule-matches", args=[host_name], indata=rules),
+        results.AnalyzeHostRuleMatchesResult,
+    )
+
+
+def analyze_service_rule_matches(
+    host_name: HostName,
+    service_or_item: str,
+    service_labels: Labels,
+    rules: Sequence[Sequence[RuleSpec]],
+) -> results.AnalyzeServiceRuleMatchesResult:
+    return _deserialize(
+        _automation_serialized(
+            "analyze-service-rule-matches",
+            args=[host_name, service_or_item],
+            indata=(rules, service_labels),
+        ),
+        results.AnalyzeServiceRuleMatchesResult,
     )
 
 

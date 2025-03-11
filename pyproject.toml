@@ -113,7 +113,7 @@ section-order = [
 
 [tool.ruff.lint.isort.sections]
 cmc_proto = ["cmc_proto"]
-testlib = ["tests.testlib"]
+testlib = ["tests.testlib", "tests.gui_e2e.testlib"]
 integrationtests = ["tests.agent_plugin_integration", "tests.integration"]
 compositiontests = ["tests.composition"]
 unittests = [
@@ -149,13 +149,7 @@ cmk_werks = ["cmk.werks"]
 explicit_package_bases = true
 # TODO: `mypy_path` shouldn't be required with Bazel.
 mypy_path = """\
-    $MYPY_CONFIG_FILE_DIR:\
-    $MYPY_CONFIG_FILE_DIR/non-free/cmk-update-agent:\
-    $MYPY_CONFIG_FILE_DIR/non-free/packages/cmk-otel-collector:\
-    $MYPY_CONFIG_FILE_DIR/livestatus/api/python:\
     $MYPY_CONFIG_FILE_DIR/omd/packages/omd:\
-    $MYPY_CONFIG_FILE_DIR/tests/typeshed:\
-    $MYPY_CONFIG_FILE_DIR/packages/cmk-trace\
     """
 plugins = ["pydantic.mypy"]
 python_version = "3.12"
@@ -325,6 +319,7 @@ disallow_untyped_defs = false
 module = [
   "cmk.active_checks.check_sftp",
   "cmk.cee.bakery.*",
+  "cmk.cee.liveproxy.*",
   "cmk.gui.background_job.*",
   "cmk.gui.mobile.views",
   "cmk.gui.views.layout.*",

@@ -355,11 +355,19 @@ section_checkmk() {
     echo "Version: 2.5.0b1"
     echo "AgentOS: aix"
     echo "Hostname: $(hostname)"
-    echo "AgentDirectory: ${MK_CONFDIR}"
-    echo "DataDirectory: ${MK_VARDIR}"
-    echo "SpoolDirectory: ${SPOOLDIR}"
-    echo "PluginsDirectory: ${PLUGINSDIR}"
-    echo "LocalDirectory: ${LOCALDIR}"
+
+    if [ -n "${MK_INSTALLDIR}" ]; then
+        echo "InstallationDirectory: ${MK_INSTALLDIR}"
+        echo "PackageDirectory: ${MK_INSTALLDIR}/package"
+        echo "RuntimeDirectory: ${MK_VARDIR}"
+    else
+        echo "AgentDirectory: ${MK_CONFDIR}"
+        echo "DataDirectory: ${MK_VARDIR}"
+        echo "SpoolDirectory: ${SPOOLDIR}"
+        echo "PluginsDirectory: ${PLUGINSDIR}"
+        echo "LocalDirectory: ${LOCALDIR}"
+    fi
+
     echo "OSType: unix"
     echo "OSName: AIX"
     echo "OSVersion: $(oslevel -s)"
@@ -504,7 +512,10 @@ section_cpu() {
 
 section_aix_if() {
     echo "<<<aix_if>>>"
-    for ent in $(ifconfig -a | grep '^en' | cut -d ":" -f 1); do
+    echo "[interfaces_in_down_state]"
+    pat="^en"
+    ifconfig -ld | grep "${pat}"
+    for ent in $(ifconfig -a | grep "${pat}" | cut -d ":" -f 1); do
         echo "[${ent}]"
         entstat "${ent}" | grep -E "(^Hardware|^Bytes:|^Packets:|^Transmit|^Broadcast:|^Multicast:)"
         entstat "${ent}" | grep -p "Driver Flags:"

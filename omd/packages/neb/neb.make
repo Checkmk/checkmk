@@ -7,7 +7,7 @@ NEB_INSTALL := $(BUILD_HELPER_DIR)/neb-install
 
 .PHONY: $(NEB_BUILD)
 $(NEB_BUILD):
-	$(BAZEL_CMD) build //$(NEB_PACKAGE):$(NEB)_shared --cmk_version="$(VERSION)"
+	bazel build //$(NEB_PACKAGE):$(NEB)_shared --cmk_version="$(VERSION)"
 
 $(NEB_INSTALL): $(NEB_BUILD)
 	$(MKDIR) -p $(DESTDIR)$(OMD_ROOT)/lib/mk-livestatus

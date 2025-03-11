@@ -8,9 +8,9 @@ else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
-CMK_VERSION=$(basename "$(readlink "$ROOT"/version)")
-CMK_VERSION=${CMK_VERSION%.*}
-CMK_EDITION=${CMK_VERSION##*.}
+CMK_VERSION_DIR=$(basename "$(readlink "$ROOT"/version)")
+# CMK_VERSION=${CMK_VERSION_DIR%.*}
+CMK_EDITION=${CMK_VERSION_DIR##*.}
 
 echo "Update site $SITE..."
 
@@ -44,7 +44,7 @@ rsync \
     --exclude ".mypy_cache" \
     --delete-after "base/legacy_checks/" \
     "${TARGET}"
-find "${TARGET}" -iname "*.py" -type f | sed -e 'p;s/.py$//' | xargs -n2 mv
+find "${TARGET}" -iname "*.py" -type f | sed -e 'p;s/.py$//' | xargs --max-args=2 mv
 
 echo "Copy files..."
 rsync \
@@ -59,7 +59,23 @@ rsync \
     "$ROOT"/lib/python3/cmk/
 
 # Transform required packages to namespace package
-grep -rl 'check_mk.make: do-not-deploy' "${ROOT}/lib/python3/cmk" | xargs rm -f
+grep --recursive --files-with-matches --null 'check_mk.make: do-not-deploy' "${ROOT}/lib/python3/cmk" | xargs --null rm -f
+
+# cse stuff is only in cse (not sure if this suffices to fake a "real" cse).
+if [ "$CMK_EDITION" != "cse" ]; then
+    find "${ROOT}/lib/python3" -regex '.*/cse*' -print0 | xargs --null rm -rf
+fi
+
+# cre < cee < cce < cme
+if [ "$CMK_EDITION" != "cme" ]; then
+    find "${ROOT}/lib/python3" -regex '.*/cme*' -print0 | xargs --null rm -rf
+    if [ "$CMK_EDITION" != "cce" ]; then
+        find "${ROOT}/lib/python3" -regex '.*/cce*' -print0 | xargs --null rm -rf
+        if [ "$CMK_EDITION" != "cee" ]; then
+            find "${ROOT}/lib/python3" -regex '.*/cee*' -print0 | xargs --null rm -rf
+        fi
+    fi
+fi
 
 # Restore site version after .f12
 # sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" "$ROOT"/lib/python3/cmk/ccc/version.py

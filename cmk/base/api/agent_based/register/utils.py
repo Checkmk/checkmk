@@ -4,57 +4,34 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import inspect
-import sys
 from collections import defaultdict
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
 from typing import Final, get_args, Literal, NoReturn, Union
 
 from cmk.ccc.version import Edition
 
 from cmk.utils.check_utils import ParametersTypeAlias
+from cmk.utils.rulesets import RuleSetName
 from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.inventory import InventoryPluginName
+from cmk.checkengine.inventory import InventoryPlugin, InventoryPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 from cmk.base.api.agent_based.plugin_classes import (
+    AgentBasedPlugins,
     CheckPlugin,
-    InventoryPlugin,
     SectionPlugin,
     SNMPSectionPlugin,
 )
 
 from cmk.agent_based.v1.register import RuleSetType
-from cmk.discover_plugins import PluginLocation
 
 TypeLabel = Literal["check", "cluster_check", "discovery", "host_label", "inventory"]
 
 ITEM_VARIABLE: Final = "%s"
 
 _ALLOWED_EDITION_FOLDERS: Final = {e.short for e in Edition}
-
-
-def get_validated_plugin_location() -> PluginLocation:
-    """Find out which module registered the plug-in and make sure its in the right place"""
-    # We used this before, but it was a performance killer. The method below is a lot faster.
-    # calling_from = inspect.stack()[2].filename
-    full_module_name = str(sys._getframe(2).f_globals["__name__"])
-
-    match full_module_name.split("."):
-        case ("cmk", "base", "plugins", "agent_based", _module):
-            return PluginLocation(full_module_name)
-        case (
-            "cmk",
-            "base",
-            "plugins",
-            "agent_based",
-            edition,
-            _module,
-        ) if edition in _ALLOWED_EDITION_FOLDERS:
-            return PluginLocation(full_module_name)
-
-    raise ImportError(f"do not register from {full_module_name!r}")
 
 
 def create_subscribed_sections(
@@ -244,4 +221,16 @@ def sections_needing_redetection(
         for section_names in sections_by_parsed_name.values()
         if len(section_names) > 1
         for section_name in section_names
+    }
+
+
+def extract_known_discovery_rulesets(plugins: AgentBasedPlugins) -> Collection[RuleSetName]:
+    return {
+        r
+        for r in (
+            *(p.discovery_ruleset_name for p in plugins.check_plugins.values()),
+            *(p.host_label_ruleset_name for p in plugins.agent_sections.values()),
+            *(p.host_label_ruleset_name for p in plugins.snmp_sections.values()),
+        )
+        if r is not None
     }

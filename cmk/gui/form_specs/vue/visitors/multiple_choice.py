@@ -18,6 +18,7 @@ from cmk.gui.form_specs.vue.visitors._utils import (
     get_title_and_help,
 )
 from cmk.gui.i18n import _, translate_to_current_language
+from cmk.gui.valuespec import autocompleter_registry
 
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
@@ -28,16 +29,16 @@ _FrontendModel = Sequence[str]
 class MultipleChoiceVisitor(
     FormSpecVisitor[MultipleChoiceExtended, _ParsedValueModel, _FrontendModel]
 ):
-    def _is_valid_choice(self, value: str) -> bool:
+    def _get_valid_choices(self) -> set[str]:
         if isinstance(self.form_spec.elements, shared_type_defs.Autocompleter):
-            return True
-        return value in [x.name for x in self.form_spec.elements]
+            autocompleter_ident = self.form_spec.elements.data.ident
+            autocompleter_fn = autocompleter_registry[autocompleter_ident]
+            return {str(choice) for choice, _ in autocompleter_fn("", {})}
 
-    def _strip_invalid_choices(self, raw_value: list[str]) -> list[str]:
-        if isinstance(self.form_spec.elements, shared_type_defs.Autocompleter):
-            return raw_value
-        valid_choices = {x.name for x in self.form_spec.elements}
-        return list(set(raw_value) & valid_choices)
+        return {element.name for element in self.form_spec.elements}
+
+    def _filter_out_invalid_choices(self, raw_values: set[str]) -> set[str]:
+        return raw_values & self._get_valid_choices()
 
     def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
         if isinstance(raw_value, DefaultValue):
@@ -53,7 +54,7 @@ class MultipleChoiceVisitor(
             return InvalidValue(reason=_("Invalid data"), fallback_value=[])
 
         # Filter out invalid choices without warning
-        return sorted(self._strip_invalid_choices(raw_value))
+        return sorted(self._filter_out_invalid_choices(set(raw_value)))
 
     def _to_vue(
         self, raw_value: object, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]

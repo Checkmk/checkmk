@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from tests.testlib.pytest_helpers.marks import skip_if_raw_edition, skip_if_saas_edition
+from tests.testlib.pytest_helpers.marks import skip_if_raw_edition
 from tests.testlib.site import Site
 from tests.testlib.web_session import CMKWebSession
 
@@ -149,7 +149,6 @@ def test_options_disabled(site: Site) -> None:
     web.request("OPTIONS", "/", expected_code=405)
 
 
-@skip_if_saas_edition  # CMK-21865
 def test_content_security_policy_header(site: Site) -> None:
     """The CSP can now be manipulated by the wsgi app. therefore and thanks to
     https://bz.apache.org/bugzilla/show_bug.cgi?id=62380 to set the CSP is now

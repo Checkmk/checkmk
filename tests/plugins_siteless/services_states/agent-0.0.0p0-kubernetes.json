@@ -1,0 +1,29 @@
+{
+  "CPU resources": {
+    "expected_state": 0
+  },
+  "Memory resources": {
+    "expected_state": 0
+  },
+  "Condition": {
+    "expected_state": 0
+  },
+  "Container machine-sections-collector": {
+    "expected_state": 0
+  },
+  "Info": {
+    "expected_state": 0
+  },
+  "Phase": {
+    "expected_state": 0
+  },
+  "Restarts": {
+    "expected_state": 0
+  },
+  "Status": {
+    "expected_state": 0
+  },
+  "Uptime": {
+    "expected_state": 0
+  }
+}

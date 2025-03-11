@@ -20,6 +20,7 @@ from cmk.gui import (
     crash_handler,
     crash_reporting,
     default_permissions,
+    deprecations,
     graphing,
     gui_background_job,
     help_menu,
@@ -33,7 +34,6 @@ from cmk.gui import (
     notifications,
     pagetypes,
     painter_options,
-    piggyback_hub,
     prediction,
     user_message,
     valuespec,
@@ -218,11 +218,6 @@ def register(
         folder_validators_registry,
         cron_job_registry,
     )
-    piggyback_hub.register(
-        config_domain_registry,
-        config_variable_group_registry,
-        config_variable_registry,
-    )
 
     mobile.register(layout_registry)
     userdb_registration.register(
@@ -266,7 +261,11 @@ def register(
     logwatch.register(page_registry)
     prediction.register(page_registry)
     quick_setup_registration.register(
-        main_module_registry, mode_registry, quick_setup_registry, job_registry
+        automation_command_registry,
+        main_module_registry,
+        mode_registry,
+        quick_setup_registry,
+        job_registry,
     )
     background_job_registration.register(
         automation_command_registry,
@@ -291,3 +290,4 @@ def register(
     user_connections_config(config_file_registry)
     user_config.register(config_file_registry)
     configuration_bundles.register(config_file_registry)
+    deprecations.register(cron_job_registry)

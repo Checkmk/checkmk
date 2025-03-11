@@ -101,10 +101,6 @@ def TransactionIdContext(user_id: UserId) -> Iterator[None]:
 
     """
     with UserContext(user_id):
-        # Auth with automation secret succeeded before - mark transid as
-        # unneeded in this case
-        if session.session_info.auth_type == "automation":
-            transactions.ignore()
         try:
             yield
         finally:

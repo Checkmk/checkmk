@@ -29,7 +29,7 @@ from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
 from cmk.checkengine.parser import NO_SELECTION
 
-from cmk.base.api.agent_based.register import AgentBasedPlugins
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.config import ConfigCache, ConfiguredIPLookup, handle_ip_lookup_failure
 from cmk.base.sources import make_sources, SNMPFetcherConfig, Source
 
@@ -54,11 +54,11 @@ def _make_sources(
     # to test.
     ipaddress = HostAddress("127.0.0.1")
     return make_sources(
-        AgentBasedPlugins({}, {}, {}, {}),
+        AgentBasedPlugins.empty(),
         hostname,
         ipaddress,
         IPStackConfig.IPv4,
-        fetcher_factory=config_cache.fetcher_factory(),
+        fetcher_factory=config_cache.fetcher_factory(config_cache.make_service_configurer({})),
         snmp_fetcher_config=SNMPFetcherConfig(
             scan_config=SNMPScanConfig(
                 on_error=OnError.RAISE,

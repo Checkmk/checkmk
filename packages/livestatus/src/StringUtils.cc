@@ -47,8 +47,9 @@ std::tuple<std::string, std::string> splitCompositeKey2(
     auto semicolon = composite_key.find(';');
     return semicolon == std::string::npos
                ? mk::nextField(composite_key)
-               : make_tuple(mk::rstrip(composite_key.substr(0, semicolon)),
-                            mk::rstrip(composite_key.substr(semicolon + 1)));
+               : std::make_pair(
+                     mk::rstrip(composite_key.substr(0, semicolon)),
+                     mk::rstrip(composite_key.substr(semicolon + 1)));
 }
 
 std::string join(const std::vector<std::string> &values,

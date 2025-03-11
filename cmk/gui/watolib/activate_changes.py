@@ -12,7 +12,6 @@ import enum
 import hashlib
 import io
 import logging
-import multiprocessing
 import os
 import re
 import shutil
@@ -314,12 +313,6 @@ def register(replication_path_registry_: ReplicationPathRegistry) -> None:
             ty="dir",
             ident="apache_proccess_tuning",
             site_path="etc/check_mk/apache.d/wato",
-            excludes=[],
-        ),
-        ReplicationPath(
-            ty="dir",
-            ident="piggyback_hub",
-            site_path="etc/check_mk/piggyback_hub.d/wato",
             excludes=[],
         ),
     ]:
@@ -1657,19 +1650,16 @@ class ActivateChangesManager(ActivateChanges):
                     ),
                 )
 
-            backup_snapshot_proc = multiprocessing.Process(
-                target=backup_snapshots.create_snapshot_subprocess,
-                args=(
-                    self._comment,
-                    user.id or "",
-                    backup_snapshots.snapshot_secret(),
-                    active_config.wato_max_snapshots,
-                    active_config.wato_use_git,
-                    active_config.debug,
-                    trace.get_current_span().get_span_context(),
-                ),
+            backup_snapshot_thread = backup_snapshots.CreateSnapshotThread(
+                comment=self._comment,
+                created_by=user.id or "",
+                secret=backup_snapshots.snapshot_secret(),
+                max_snapshots=active_config.wato_max_snapshots,
+                use_git=active_config.wato_use_git,
+                debug=active_config.debug,
+                parent_span_context=trace.get_current_span().get_span_context(),
             )
-            backup_snapshot_proc.start()
+            backup_snapshot_thread.start()
 
             if self._activation_id is None:
                 raise Exception("activation ID is not set")
@@ -1690,9 +1680,11 @@ class ActivateChangesManager(ActivateChanges):
             logger.debug("Config sync snapshot creation took %.4f", time.time() - start)
 
             logger.debug("Waiting for backup snapshot creation to complete")
-            backup_snapshot_proc.join()
-            if backup_snapshot_proc.exitcode != 0:
-                raise MKGeneralException("Failed to create backup snapshot")
+            backup_snapshot_thread.join()
+            if backup_snapshot_thread.error_caught_during_run:
+                raise MKGeneralException(
+                    "Failed to create backup snapshot"
+                ) from backup_snapshot_thread.error_caught_during_run
 
         logger.debug("Finished all snapshots")
 
@@ -3234,6 +3226,17 @@ class ActivationChange:
 
 
 @dataclass
+class StatusPerSite:
+    site: SiteId
+    phase: Literal["initialized", "queued", "started", "sync", "activate", "finishing", "done"]
+    state: Literal["success", "error", "warning"]
+    status_text: str
+    status_details: str
+    start_time: float
+    end_time: float
+
+
+@dataclass
 class ActivationRestAPIResponseExtensions:
     activation_id: str
     sites: Sequence[SiteId]
@@ -3241,6 +3244,7 @@ class ActivationRestAPIResponseExtensions:
     force_foreign_changes: bool
     time_started: float
     changes: Sequence[ActivationChange]
+    status_per_site: Sequence[StatusPerSite]
 
 
 def get_activation_ids() -> list[str]:
@@ -3288,6 +3292,19 @@ def activation_attributes_for_rest_api_response(
         force_foreign_changes=manager.activate_foreign,
         time_started=manager.time_started,
         changes=manager.persisted_changes,
+        status_per_site=[
+            StatusPerSite(
+                site=SiteId(site),
+                phase=status_dict["_phase"],
+                state=status_dict["_state"],
+                status_text=status_dict["_status_text"],
+                status_details=status_dict["_status_details"],
+                start_time=status_dict["_time_started"],
+                end_time=status_dict["_time_ended"],
+            )
+            for site, status_dict in manager.get_state()["sites"].items()
+            if status_dict
+        ],
     )
 
 

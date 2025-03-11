@@ -203,10 +203,11 @@ def _is_listening(process_def: ProcessDef) -> bool:
         logger.error("Did not detect actual snmpsim-command process")
         return False
 
+    num_sockets = 0
+
     if not snmpsimd_died:
         pid = process.pid  # type: ignore[union-attr]
         # Wait for snmpsimd to initialize the UDP sockets
-        num_sockets = 0
         try:
             logger.debug("============================================= %d", pid)
             os.system("ls -al /proc/%d/fd" % pid)

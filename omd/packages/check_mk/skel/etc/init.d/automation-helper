@@ -5,6 +5,7 @@
 
 unset LANG
 
+# shellcheck source=/dev/null
 . "${OMD_ROOT}/etc/omd/site.conf"
 if [ "${CONFIG_AUTOMATION_HELPER}" != "on" ]; then
     exit 5

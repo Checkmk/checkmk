@@ -41,10 +41,10 @@ from cmk.gui.visuals import livestatus_query_bare
 
 from ..config import active_config
 from ._formatter import AutoPrecision, NotationFormatter, StrictPrecision, TimeFormatter
-from ._from_api import metrics_from_api
+from ._from_api import metrics_from_api, RegisteredMetric
 from ._graph_render_config import GraphRenderConfigBase
-from ._legacy import check_metrics, unit_info, UnitInfo
-from ._metrics import get_metric_spec, registered_metrics
+from ._legacy import check_metrics
+from ._metrics import get_metric_spec, registered_metric_ids_and_titles
 from ._translated_metrics import (
     find_matching_translation,
     lookup_metric_translations_for_check_command,
@@ -281,7 +281,7 @@ class ValuesWithUnits(CascadingDropdown):
                         validate_value_elements,
                     ),
                 )
-                for choice in _sorted_unit_choices()
+                for choice in _sorted_unit_choices(metrics_from_api)
             ],
             help=help,
             sorted=False,
@@ -333,19 +333,9 @@ _FALLBACK_UNIT_SPEC = ConvertibleUnitSpecification(
 )
 
 
-def _sorted_unit_choices() -> list[_UnitChoice]:
-    return _sorted_api_and_fallback_unit_choices() + sorted(
-        (
-            _unit_choice_from_unit_info(registered_unit_info)
-            for _id, registered_unit_info in unit_info.items()
-        ),
-        key=lambda choice: choice.title,
-    )
-
-
-def _sorted_api_and_fallback_unit_choices() -> list[_UnitChoice]:
+def _sorted_unit_choices(registered_metrics: Mapping[str, RegisteredMetric]) -> list[_UnitChoice]:
     return sorted(
-        {_unit_choice_from_unit_spec(metric.unit_spec) for metric in metrics_from_api.values()}
+        {_unit_choice_from_unit_spec(metric.unit_spec) for metric in registered_metrics.values()}
         | {_unit_choice_from_unit_spec(_FALLBACK_UNIT_SPEC)},
         key=lambda choice: choice.title,
     )
@@ -419,35 +409,22 @@ def _vs_type_from_formatter(
     return Float
 
 
-def _unit_choice_from_unit_info(unit_info_: UnitInfo) -> _UnitChoice:
-    return _UnitChoice(
-        id=unit_info_.id,
-        title=unit_info_.description or unit_info_.title,
-        symbol=unit_info_.symbol,
-        vs_type=unit_info_.valuespec or Float,
-    )
-
-
 class PageVsAutocomplete(AjaxPage):
     def page(self) -> PageResult:
         if metric_name := self.webapi_request()["metric"]:
-            metric_spec = get_metric_spec(metric_name)
-            unit_choice_for_metric = (
-                _unit_choice_from_unit_spec(metric_spec.unit_spec)
-                if isinstance(metric_spec.unit_spec, ConvertibleUnitSpecification)
-                else _unit_choice_from_unit_info(metric_spec.unit_spec)
-            )
+            metric_spec = get_metric_spec(metric_name, metrics_from_api)
+            unit_choice_for_metric = _unit_choice_from_unit_spec(metric_spec.unit_spec)
         else:
             unit_choice_for_metric = _unit_choice_from_unit_spec(_FALLBACK_UNIT_SPEC)
 
-        for idx, choice in enumerate(_sorted_unit_choices()):
+        for idx, choice in enumerate(_sorted_unit_choices(metrics_from_api)):
             if choice == unit_choice_for_metric:
                 return {
                     "unit_choice_index": idx,
                 }
 
         fallback_choice = _unit_choice_from_unit_spec(_FALLBACK_UNIT_SPEC)
-        for idx, choice in enumerate(_sorted_unit_choices()):
+        for idx, choice in enumerate(_sorted_unit_choices(metrics_from_api)):
             if choice == fallback_choice:
                 return {
                     "unit_choice_index": idx,
@@ -498,7 +475,9 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
             next(
                 (
                     (metric_id, metric_title)
-                    for metric_id, metric_title in registered_metrics()
+                    for metric_id, metric_title in registered_metric_ids_and_titles(
+                        metrics_from_api
+                    )
                     if metric_id == value
                 ),
                 (value, value.title()),
@@ -506,17 +485,28 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
         ]
 
 
-def _metric_choices(check_command: str, perfvars: tuple[MetricName_, ...]) -> Iterator[Choice]:
+def _metric_choices(
+    check_command: str,
+    perfvars: tuple[MetricName_, ...],
+    registered_metrics: Mapping[str, RegisteredMetric],
+) -> Iterator[Choice]:
     for perfvar in perfvars:
         metric_name = find_matching_translation(
             MetricName_(perfvar),
             lookup_metric_translations_for_check_command(check_metrics, check_command),
         ).name
-        yield metric_name, get_metric_spec(metric_name).title
+        yield (
+            metric_name,
+            get_metric_spec(
+                metric_name,
+                registered_metrics,
+            ).title,
+        )
 
 
 def metrics_of_query(
     context: VisualContext,
+    registered_metrics: Mapping[str, RegisteredMetric],
 ) -> Iterator[Choice]:
     # Fetch host data with the *same* query. This saves one round trip. And head
     # host has at least one service
@@ -535,9 +525,15 @@ def metrics_of_query(
             row["service_perf_data"], row["service_check_command"], config=active_config
         )
         known_metrics = set([p.metric_name for p in perf_data] + row["service_metrics"])
-        yield from _metric_choices(str(check_command), tuple(map(str, known_metrics)))
+        yield from _metric_choices(
+            str(check_command),
+            tuple(map(str, known_metrics)),
+            registered_metrics,
+        )
 
     if row.get("host_check_command"):
         yield from _metric_choices(
-            str(row["host_check_command"]), tuple(map(str, row["host_metrics"]))
+            str(row["host_check_command"]),
+            tuple(map(str, row["host_metrics"])),
+            registered_metrics,
         )

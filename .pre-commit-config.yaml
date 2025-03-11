@@ -16,14 +16,6 @@ default_stages:
     - push
     - manual
 repos:
-    - repo: https://github.com/charliermarsh/ruff-pre-commit
-      rev: "v0.8.3"
-      hooks:
-          - id: ruff
-          - id: ruff-format
-          # Run ruff import sorting
-          - id: ruff
-            args: [--select, I, --fix]
     - repo: https://github.com/pre-commit/pre-commit-hooks
       rev: v4.6.0
       hooks:
@@ -58,12 +50,6 @@ repos:
             entry: scripts/check-cmk-namespace
             types: [file, python]
             require_serial: true
-          - id: remove-stale-imports
-            name: Remove stale imports
-            language: script
-            entry: scripts/run-autoflake
-            types: [file, python]
-            require_serial: true
           - id: bandit
             name: Run bandit
             # -l level low -ll = level medium -lll level high
@@ -92,6 +78,18 @@ repos:
             language: script
             types: [file, python]
             verbose: true
+            require_serial: true
+          - id: ruff-lint
+            name: Lint code with ruff
+            entry: scripts/run-uvenv ruff check --fix
+            language: script
+            types: [file, python]
+            require_serial: true
+          - id: ruff-format
+            name: Format code with ruff
+            entry: scripts/run-uvenv ruff format
+            language: script
+            types: [file, python]
             require_serial: true
           - id: mypy
             name: Check types with mypy

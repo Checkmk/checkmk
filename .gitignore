@@ -52,7 +52,6 @@ clang-analyzer/
 cmc-*.tar.gz
 cme-*.tar.gz
 agents/linux/*
-agents/windows/*
 doc/plugin-api/build/
 doc/plugin-api/source/apidoc/
 doc/documentation/*.png

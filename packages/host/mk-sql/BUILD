@@ -90,6 +90,9 @@ rust_test_suite(
         "tests/files/test-mini.yml",
     ],
     crate_features = ["build_system_bazel"],
+    env_inherit = [
+        "CI_TEST_SQL_DB_ENDPOINT",
+    ],
     deps = all_crate_deps() + [
         ":mk-sql",
         ":mk-sql-lib",

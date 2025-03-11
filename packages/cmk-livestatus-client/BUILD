@@ -7,7 +7,7 @@ load("//bazel/rules:package_wheel.bzl", "package_wheel")
 
 exports_files([
     "pyproject.toml",
-    "requirements.txt",
+    "requirements.in",
 ])
 
 py_library(

@@ -30,8 +30,7 @@ from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import AutocheckEntry
 
 from cmk.base import config, core_nagios
-from cmk.base.api.agent_based.plugin_classes import CheckPlugin
-from cmk.base.api.agent_based.register import AgentBasedPlugins
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins, CheckPlugin
 
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig
@@ -394,6 +393,7 @@ def _make_plugins_for_test() -> AgentBasedPlugins:
             )
         },
         inventory_plugins={},
+        errors=(),
     )
 
 
@@ -527,7 +527,7 @@ def test_create_nagios_servicedefs_active_check(
     monkeypatch.setattr(config, "get_resource_macros", lambda: {})
 
     hostname = HostName("my_host")
-    config_cache = config._create_config_cache()
+    config_cache = config._create_config_cache(config.LoadedConfigFragment())
     monkeypatch.setattr(config_cache, "alias", lambda hn: {hostname: host_attrs["alias"]}[hn])
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
@@ -640,7 +640,7 @@ def test_create_nagios_servicedefs_with_warnings(
     _patch_plugin_loading(monkeypatch, loaded_active_checks)
     monkeypatch.setattr(config, "get_resource_macros", lambda: {})
 
-    config_cache = config._create_config_cache()
+    config_cache = config._create_config_cache(config.LoadedConfigFragment())
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
     hostname = HostName("my_host")
@@ -705,7 +705,7 @@ def test_create_nagios_servicedefs_omit_service(
     _patch_plugin_loading(monkeypatch, loaded_active_checks)
     monkeypatch.setattr(config, "get_resource_macros", lambda: {})
 
-    config_cache = config._create_config_cache()
+    config_cache = config._create_config_cache(config.LoadedConfigFragment())
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
     monkeypatch.setattr(config_cache, "service_ignored", lambda *_: True)
 
@@ -764,7 +764,7 @@ def test_create_nagios_servicedefs_invalid_args(
 ) -> None:
     _patch_plugin_loading(monkeypatch, loaded_active_checks)
 
-    config_cache = config._create_config_cache()
+    config_cache = config._create_config_cache(config.LoadedConfigFragment())
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
     monkeypatch.setattr(cmk.ccc.debug, "enabled", lambda: False)
@@ -844,7 +844,7 @@ def test_create_nagios_config_commands(
     )
     monkeypatch.setattr(config, "get_resource_macros", lambda: {})
 
-    config_cache = config._create_config_cache()
+    config_cache = config._create_config_cache(config.LoadedConfigFragment())
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
     ip_address_of = config.ConfiguredIPLookup(

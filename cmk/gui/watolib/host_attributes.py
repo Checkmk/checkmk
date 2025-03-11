@@ -12,7 +12,7 @@ import abc
 import functools
 import re
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any, Literal, NotRequired, TypedDict
+from typing import Any, Hashable, Literal, NotRequired, TypedDict
 
 from marshmallow import fields
 
@@ -33,6 +33,7 @@ from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
 from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
+from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
@@ -703,11 +704,12 @@ def _declare_host_attribute_topic(
     return topic_class
 
 
+@request_memoize()
 def config_based_tag_group_attributes(
-    tag_groups_by_topic: Sequence[tuple[str, Sequence[TagGroup]]],
+    hashable_tag_groups_by_topic: _HashableTagGroupsByTopic,
 ) -> dict[str, ABCHostAttribute]:
     attributes: dict[str, ABCHostAttribute] = {}
-    for topic_spec, tag_groups in tag_groups_by_topic:
+    for topic_spec, tag_groups in hashable_tag_groups_by_topic.tag_groups_by_topic:
         for tag_group in tag_groups:
             # Try to translate the title to a built-in topic ID. In case this is not possible mangle the given
             # custom topic to an internal ID and create the topic on demand.
@@ -764,11 +766,58 @@ def _tag_attribute_sort_index(tag_group: TagGroup) -> int | None:
     return None
 
 
+class _HashableCustomHostAttrs:
+    def __init__(self, host_attrs: Sequence[CustomHostAttrSpec]) -> None:
+        self.host_attrs = host_attrs
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, _HashableCustomHostAttrs):
+            return False
+        return self.host_attrs == other.host_attrs
+
+    def __hash__(self) -> int:
+        return hash(tuple(tuple(x.items()) for x in self.host_attrs))
+
+
+def _make_hashable_object(obj: object) -> Hashable:
+    try:
+        # Note: Class instances are always hashed by id() if not specified otherwise
+        #       So they have to be immutable
+        hash(obj)
+        return obj
+    except TypeError:
+        pass
+
+    if isinstance(obj, dict):
+        new_obj = {}
+        for key, value in obj.items():
+            new_obj[key] = _make_hashable_object(value)
+        return frozenset(new_obj)
+    if isinstance(obj, (list, tuple)):
+        return tuple(_make_hashable_object(item) for item in obj)
+
+    raise TypeError("Unsupported type for hashable object")
+
+
+class _HashableTagGroupsByTopic:
+    def __init__(self, tag_groups_by_topic: Sequence[tuple[str, Sequence[TagGroup]]]) -> None:
+        self.tag_groups_by_topic = tag_groups_by_topic
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, _HashableTagGroupsByTopic):
+            return False
+        return hash(self) == hash(other)
+
+    def __hash__(self) -> int:
+        return hash(_make_hashable_object(self.tag_groups_by_topic))
+
+
+@request_memoize()
 def config_based_custom_host_attribute_sync_plugins(
-    host_attributes: Sequence[CustomHostAttrSpec],
+    hashable_host_attrs: _HashableCustomHostAttrs,
 ) -> dict[str, ABCHostAttribute]:
     attributes: dict[str, ABCHostAttribute] = {}
-    for attr in host_attributes:
+    for attr in hashable_host_attrs.host_attrs:
         vs = TextInput(
             title=attr["title"],
             help=attr["help"],
@@ -825,11 +874,16 @@ def transform_attribute_topic_title_to_id(topic_title: str) -> str | None:
 
 
 def all_host_attributes(config: Config) -> dict[str, ABCHostAttribute]:
-    return (
+    result = (
         {ident: cls() for ident, cls in host_attribute_registry.items()}
-        | config_based_tag_group_attributes(config.tags.get_tag_groups_by_topic())
-        | config_based_custom_host_attribute_sync_plugins(config.wato_host_attrs)
+        | config_based_tag_group_attributes(
+            _HashableTagGroupsByTopic(config.tags.get_tag_groups_by_topic())
+        )
+        | config_based_custom_host_attribute_sync_plugins(
+            _HashableCustomHostAttrs(config.wato_host_attrs)
+        )
     )
+    return result
 
 
 def host_attribute(name: str) -> ABCHostAttribute:

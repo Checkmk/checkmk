@@ -28,6 +28,7 @@ def main() {
     check_job_parameters([
         ["EDITION", true],  // the testees package long edition string (e.g. 'enterprise')
         ["DISTRO", true],  // the testees package distro string (e.g. 'ubuntu-22.04')
+        "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",  // the docker tag to use for building and testing, forwarded to packages build job
         "FAKE_WINDOWS_ARTIFACTS",
         "VERSION",
     ]);
@@ -54,7 +55,7 @@ def main() {
     def make_target = build_make_target(edition, cross_edition_target);
     def download_dir = "package_download";
 
-    def setup_values = single_tests.common_prepare(version: params.VERSION, make_target: make_target);
+    def setup_values = single_tests.common_prepare(version: params.VERSION, make_target: make_target, docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD);
 
     // todo: add upstream project to description
     // todo: add error to description
@@ -68,7 +69,7 @@ def main() {
             set_docker_group_id: true,
             ulimit_nofile: 1024,
             mount_credentials: true,
-            priviliged: true,
+            privileged: true,
         ) {
             single_tests.prepare_workspace(
                 cleanup: [
@@ -86,6 +87,7 @@ def main() {
                         download_dir: download_dir,
                         bisect_comment: params.CIPARAM_BISECT_COMMENT,
                         fake_windows_artifacts: fake_windows_artifacts,
+                        docker_tag: setup_values.docker_tag,
                     );
                 }
                 try {

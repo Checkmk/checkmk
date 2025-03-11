@@ -8,7 +8,7 @@ from typing import Any, Literal
 
 import pytest
 
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
 from livestatus import SiteId
 
@@ -513,13 +513,16 @@ def test_registered_display_hints() -> None:
         ".hardware.components.modules:*.bootloader",
         ".hardware.components.modules:*.description",
         ".hardware.components.modules:*.firmware",
+        ".hardware.components.modules:*.ha_status",
         ".hardware.components.modules:*.index",
+        ".hardware.components.modules:*.license_key_list",
         ".hardware.components.modules:*.location",
         ".hardware.components.modules:*.manufacturer",
         ".hardware.components.modules:*.model",
         ".hardware.components.modules:*.name",
         ".hardware.components.modules:*.serial",
         ".hardware.components.modules:*.software",
+        ".hardware.components.modules:*.software_version",
         ".hardware.components.modules:*.type",
         ".hardware.components.others:",
         ".hardware.components.others:*.description",
@@ -663,6 +666,11 @@ def test_registered_display_hints() -> None:
         ".hardware.system.product",
         ".hardware.system.serial",
         ".hardware.system.serial_number",
+        ".hardware.system.type",
+        ".hardware.system.software_version",
+        ".hardware.system.license_key_list",
+        ".hardware.uploaded_files.",
+        ".hardware.uploaded_files.call_progress_tones",
         ".hardware.video:",
         ".hardware.video:*.",
         ".hardware.video:*.driver",

@@ -640,6 +640,14 @@ span.tagify__tag-text {
   white-space: pre;
 }
 
+.tagify__dropdown__item {
+  color: $font-color;
+}
+
+.tagify__dropdown__item--active {
+  color: $font-color-green;
+}
+
 .wato table.data.ruleset {
   td.rulebuttons a.disabled img {
     opacity: 0.5;

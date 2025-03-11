@@ -85,14 +85,16 @@ _create_user() {
     }
 
     if [ -n "${AGENT_USER_GID}" ]; then
-        # If we have an explicit gid, we must add it before, because we can't choose on user creation
-        groupadd --gid "${AGENT_USER_GID}" "${AGENT_USER}" || exit 1
+        # If we have an explicit gid and want to create the group, we must do it before user creation,
+        # because we can't choose it on user creation
+        getent group "${AGENT_USER_GID}" >/dev/null 2>&1 || groupadd --gid "${AGENT_USER_GID}" "${AGENT_USER}" || exit 1
         group_argument="--no-user-group --gid ${AGENT_USER_GID}"
     else
         group_argument="--user-group"
     fi
 
     printf "Creating %s user account ...\n" "${AGENT_USER}"
+    # shellcheck disable=SC2086
     useradd ${uid_argument} \
         ${group_argument} \
         --comment "${USER_COMMENT}" \
@@ -116,7 +118,6 @@ _check_user() {
     }
 
     [ -n "${AGENT_USER_UID}" ] || [ -n "${AGENT_USER_GID}" ] || return 0
-
 
     [ -n "${AGENT_USER_UID}" ] && [ ! "$(id -u "${AGENT_USER}")" = "${AGENT_USER_UID}" ] && {
         printf "Agent user %s doesn't have specified uid %s, aborting.\n" "${AGENT_USER}" "${AGENT_USER_UID}"
@@ -156,6 +157,7 @@ _update_user() {
         fi
 
         printf "Creating %s user account ...\n" "${AGENT_USER}"
+        # shellcheck disable=SC2086
         useradd ${uid_argument} \
             ${group_argument} \
             --comment "${USER_COMMENT}" \

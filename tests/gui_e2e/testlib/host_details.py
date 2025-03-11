@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 from enum import Enum
+from typing import override
 
 logger = logging.getLogger(__name__)
 
@@ -13,6 +14,7 @@ class Property(Enum):
         self._ui_name = ui_name
         self._api_name = api_name
 
+    @override
     def __str__(self) -> str:
         return str(self._ui_name)
 

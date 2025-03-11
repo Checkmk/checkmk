@@ -24,9 +24,5 @@ defineProps<TextWidgetProps>()
 <style scoped>
 .qs-text-widget {
   margin-bottom: var(--spacing);
-
-  ::v-deep(a) {
-    pointer-events: all;
-  }
 }
 </style>

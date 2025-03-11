@@ -18,7 +18,6 @@ info = [
 discovery = {
     "": [("rabbit@my-rabbit", {})],
     "filedesc": [("rabbit@my-rabbit", {})],
-    "sockets": [("rabbit@my-rabbit", {})],
     "proc": [("rabbit@my-rabbit", {})],
     "mem": [("rabbit@my-rabbit", {})],
     "uptime": [("rabbit@my-rabbit", {})],
@@ -49,13 +48,6 @@ checks = {
                     [("file_descriptors_open_attempts", 11, None, None, None, None)],
                 ),
             ],
-        )
-    ],
-    "sockets": [
-        (
-            "rabbit@my-rabbit",
-            {},
-            [(0, "Sockets used: 0 of 943629, 0%", [("sockets", 0, None, None, 0, 943629)])],
         )
     ],
     "mem": [

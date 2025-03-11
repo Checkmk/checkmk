@@ -63,16 +63,15 @@ def format_address(display_name: str, email_address: str) -> str:
 
 
 def _base_url(context: PluginNotificationContext) -> str:
-    if context.get("PARAMETER_URL_PREFIX"):
-        url_prefix = context["PARAMETER_URL_PREFIX"]
-    elif context.get("PARAMETER_URL_PREFIX_MANUAL"):
-        url_prefix = context["PARAMETER_URL_PREFIX_MANUAL"]
-    elif context.get("PARAMETER_URL_PREFIX_AUTOMATIC") == "http":
-        url_prefix = "http://{}/{}".format(context["MONITORING_HOST"], context["OMD_SITE"])
-    elif context.get("PARAMETER_URL_PREFIX_AUTOMATIC") == "https":
-        url_prefix = "https://{}/{}".format(context["MONITORING_HOST"], context["OMD_SITE"])
-    else:
-        url_prefix = ""
+    match context.get("PARAMETER_URL_PREFIX_1"):
+        case "automatic_http":
+            url_prefix = f"http://{context['MONITORING_HOST']}/{context['OMD_SITE']}"
+        case "automatic_https":
+            url_prefix = f"https://{context['MONITORING_HOST']}/{context['OMD_SITE']}"
+        case "manual":
+            url_prefix = context.get("PARAMETER_URL_PREFIX_2", "")
+        case _:
+            return ""
 
     return re.sub("/check_mk/?", "", url_prefix, count=1)
 
@@ -99,6 +98,21 @@ def graph_url_from_context(context: PluginNotificationContext) -> str:
     return (
         view_url + f"siteopt={context['OMD_SITE']}&"
         f"view_name=service_graphs&"
+        f"host={context['HOSTNAME']}&"
+        f"service={context['SERVICEDESC']}"
+    )
+
+
+def eventhistory_url_from_context(context: PluginNotificationContext) -> str:
+    base = _base_url(context)
+    view_url = base + "/check_mk/view.py?"
+    if context["WHAT"] == "HOST":
+        return (
+            view_url + f"siteopt={context['OMD_SITE']}&view_name=events&host={context['HOSTNAME']}"
+        )
+    return (
+        view_url + f"siteopt={context['OMD_SITE']}&"
+        f"view_name=events&"
         f"host={context['HOSTNAME']}&"
         f"service={context['SERVICEDESC']}"
     )

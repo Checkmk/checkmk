@@ -92,13 +92,7 @@ default_check_parameters = CheckParams(
     alert_remapping=[
         AlertRemapping(
             rule_names=["Watchdog"],
-            map={
-                "inactive": 2,
-                "pending": 2,
-                "firing": 0,
-                "none": 2,
-                "not_applicable": 2,
-            },
+            map={"inactive": 2, "pending": 2, "firing": 0, "none": 2, "not_applicable": 2},
         )
     ]
 )

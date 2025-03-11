@@ -288,7 +288,8 @@ class SiteManagement:
     ) -> bool:
         return (
             is_replication_enabled(old_config) != is_replication_enabled(current_config)
-            or old_config["message_broker_port"] != current_config["message_broker_port"]
+            or old_config.get("message_broker_port", 5672)
+            != current_config.get("message_broker_port", 5672)
             or old_config["multisiteurl"] != current_config["multisiteurl"]
         )
 

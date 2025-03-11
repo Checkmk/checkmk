@@ -80,7 +80,7 @@ def test_status_push(
         hostname=HostName("push-host"),
         host_attributes={
             "cmk_agent_connection": HostAgentConnectionMode.PUSH.value,
-            "ipaddress": "127.0.0.1",
+            "tag_address_family": "no-ip",
         },
     ) as controller_status:
         connection_details = controller_connection_json(controller_status, central_site)

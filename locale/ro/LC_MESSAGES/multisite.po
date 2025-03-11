@@ -15999,10 +15999,6 @@ msgid "Create regular time-schedule for this report"
 msgstr "Creați un orar regulat pentru acest raport"
 
 #, fuzzy
-msgid "Create remote broker certificates"
-msgstr "Nu s-a reușit să se obțină certificatul peer (%s)"
-
-#, fuzzy
 msgid "Create robot"
 msgstr "Creați gazde"
 
@@ -26683,6 +26679,10 @@ msgstr "Google Compute Engine (GCE)"
 msgid "Got invalid data"
 msgstr "Am primit date invalide"
 
+#, fuzzy, python-format
+msgid "Got invalid status of remote site %s"
+msgstr "Deconectat de pe site-ul de la distanță %s"
+
 msgid "Got no data from any site"
 msgstr "Nu am primit date de pe niciun site"
 
@@ -29728,6 +29728,10 @@ msgid "Host IP"
 msgstr "IP gazdă"
 
 msgid "Host IPv4 address"
+msgstr "Adresa IPv4 a gazdei"
+
+#, fuzzy
+msgid "Host IPv6 address"
 msgstr "Adresa IPv4 a gazdei"
 
 #, python-format
@@ -52269,6 +52273,10 @@ msgstr "Zona de recuperare"
 #, fuzzy
 msgid "Recovery status"
 msgstr "Starea de recuperare"
+
+#, fuzzy
+msgid "Recreate certificates"
+msgstr "Certificate de agent"
 
 msgid "Recurring"
 msgstr "Recurent"
@@ -88367,6 +88375,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, fuzzy
+#~ msgid "Create remote broker certificates"
+#~ msgstr "Nu s-a reușit să se obțină certificatul peer (%s)"
 
 #, fuzzy
 #~ msgid ""

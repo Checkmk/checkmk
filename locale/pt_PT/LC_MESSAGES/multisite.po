@@ -15989,10 +15989,6 @@ msgid "Create regular time-schedule for this report"
 msgstr "Criar um cronograma regular para este relatório"
 
 #, fuzzy
-msgid "Create remote broker certificates"
-msgstr "Falha na obtenção do certificado do par (%s)"
-
-#, fuzzy
 msgid "Create robot"
 msgstr "Criar anfitriões"
 
@@ -26647,6 +26643,10 @@ msgstr "Google Compute Engine (GCE)"
 msgid "Got invalid data"
 msgstr "Tenho dados inválidos"
 
+#, fuzzy, python-format
+msgid "Got invalid status of remote site %s"
+msgstr "Saiu do site remoto %s"
+
 msgid "Got no data from any site"
 msgstr "Não tenho dados de nenhum site"
 
@@ -29696,6 +29696,10 @@ msgid "Host IP"
 msgstr "Host IP"
 
 msgid "Host IPv4 address"
+msgstr "Hospedar endereço IPv4"
+
+#, fuzzy
+msgid "Host IPv6 address"
 msgstr "Hospedar endereço IPv4"
 
 #, python-format
@@ -52169,6 +52173,10 @@ msgstr "Área de Recuperação"
 #, fuzzy
 msgid "Recovery status"
 msgstr "Estado da recuperação"
+
+#, fuzzy
+msgid "Recreate certificates"
+msgstr "Certificados de agente"
 
 msgid "Recurring"
 msgstr "Recorrentes"
@@ -88078,6 +88086,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
+
+#, fuzzy
+#~ msgid "Create remote broker certificates"
+#~ msgstr "Falha na obtenção do certificado do par (%s)"
 
 #, fuzzy
 #~ msgid ""

@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-03-04 06:00+0000\n"
+"PO-Revision-Date: 2025-03-11 09:00+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/dev/"
 "ja/>\n"
 "Language: ja\n"
@@ -15170,10 +15170,6 @@ msgid "Create regular time-schedule for this report"
 msgstr "このレポートの定期的なタイムスケジュールを作成します"
 
 #, fuzzy
-msgid "Create remote broker certificates"
-msgstr "ピア証明書のフェッチに失敗しました(%s)"
-
-#, fuzzy
 msgid "Create robot"
 msgstr "ホストを作成する"
 
@@ -25370,6 +25366,10 @@ msgstr "Google Compute Engine (GCE)"
 msgid "Got invalid data"
 msgstr "無効なデータを取得しました"
 
+#, fuzzy, python-format
+msgid "Got invalid status of remote site %s"
+msgstr "リモートサイト %s からログアウトしました"
+
 msgid "Got no data from any site"
 msgstr "どのサイトからもデータを取得していません"
 
@@ -28328,6 +28328,10 @@ msgstr "ホストIP"
 msgid "Host IPv4 address"
 msgstr "ホストIPv4アドレス"
 
+#, fuzzy
+msgid "Host IPv6 address"
+msgstr "ホストIPv4アドレス"
+
 #, python-format
 msgid "Host Name %s"
 msgstr "ホスト名 %s"
@@ -28875,7 +28879,7 @@ msgid "Host state (first character)"
 msgstr "ホストの状態(最初の文字)"
 
 msgid "Host state summary"
-msgstr "ホスト状態概要"
+msgstr "ホスト状態サマリー"
 
 msgid "Host state translation"
 msgstr "ホスト状態の変換"
@@ -49875,6 +49879,10 @@ msgstr "リカバリエリア"
 msgid "Recovery status"
 msgstr "リカバリ状況"
 
+#, fuzzy
+msgid "Recreate certificates"
+msgstr "エージェント証明書"
+
 msgid "Recurring"
 msgstr "繰り返し"
 
@@ -54472,7 +54480,7 @@ msgid "Service state percentage display options"
 msgstr "サービス状態のパーセンテージ表示オプション"
 
 msgid "Service state summary"
-msgstr "サービス状態経過日数"
+msgstr "サービス状態サマリー"
 
 msgid "Service state translation"
 msgstr "サービス状態の変換"
@@ -83861,6 +83869,10 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用不可</b>"
+
+#, fuzzy
+#~ msgid "Create remote broker certificates"
+#~ msgstr "ピア証明書のフェッチに失敗しました(%s)"
 
 #~ msgid ""
 #~ "Defines what information to query. Checks for cluster, indices and shard "

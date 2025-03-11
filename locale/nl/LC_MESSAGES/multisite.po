@@ -15991,10 +15991,6 @@ msgid "Create regular time-schedule for this report"
 msgstr "Maak een tijdschema voor dit rapport"
 
 #, fuzzy
-msgid "Create remote broker certificates"
-msgstr "Kan peer-certificaat niet ophalen (%s)"
-
-#, fuzzy
 msgid "Create robot"
 msgstr "Maak hosts"
 
@@ -26645,6 +26641,10 @@ msgstr "Google Compute Engine (GCE)"
 msgid "Got invalid data"
 msgstr "Ongeldige gegevens"
 
+#, fuzzy, python-format
+msgid "Got invalid status of remote site %s"
+msgstr "Afgemeld van externe site %s"
+
 msgid "Got no data from any site"
 msgstr "Ik heb geen gegevens van geen enkele site"
 
@@ -29693,6 +29693,10 @@ msgid "Host IP"
 msgstr "Host IP"
 
 msgid "Host IPv4 address"
+msgstr "IPv4-adres van de gastheer"
+
+#, fuzzy
+msgid "Host IPv6 address"
 msgstr "IPv4-adres van de gastheer"
 
 #, python-format
@@ -52196,6 +52200,10 @@ msgstr "Herstelgebied"
 #, fuzzy
 msgid "Recovery status"
 msgstr "Herstelstatus"
+
+#, fuzzy
+msgid "Recreate certificates"
+msgstr "Agent Certificaten"
 
 msgid "Recurring"
 msgstr "Terugkerend"
@@ -88179,6 +88187,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy
+#~ msgid "Create remote broker certificates"
+#~ msgstr "Kan peer-certificaat niet ophalen (%s)"
 
 #, fuzzy
 #~ msgid ""

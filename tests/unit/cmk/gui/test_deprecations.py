@@ -271,7 +271,7 @@ def test__filter_non_ok_ac_test_results(
                     files={PackagePart("web"): [Path("plugins/metrics/file.py")]},
                 )
             },
-            "MKP asd, sites: site_id:<br>text (file: /omd/sites/site_id/local/share/check_mk/web/plugins/metrics/file.py)",
+            "Extension package 'asd', sites: site_id:<br>text (file: /omd/sites/site_id/local/share/check_mk/web/plugins/metrics/file.py)",
             id="mkp",
         ),
     ],

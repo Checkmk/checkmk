@@ -374,10 +374,6 @@ msgstr "%d schimbări"
 msgid "%d chaotic state changes from %s until %s (%s)"
 msgstr "%d schimbări de stare haotică de la %s până la %s (%s)"
 
-#, fuzzy, python-format
-msgid "%d check plug-ins using the deprecated API: %s"
-msgstr "%d verificați plugin-urile care utilizează API-ul depreciat: %s."
-
 #, python-format
 msgid "%d columns"
 msgstr "%d coloane"
@@ -421,10 +417,6 @@ msgstr "%d pictograme și acțiuni"
 #, python-format
 msgid "%d icons customized"
 msgstr "%d pictograme personalizate"
-
-#, fuzzy, python-format
-msgid "%d ignored HW/SW inventory plug-ins found: %s"
-msgstr "%d ignorate plugin-uri de inventar HW/SW găsite: %s."
 
 #, python-format
 msgid "%d incompatible Werks have been acknowledged."
@@ -10917,6 +10909,14 @@ msgid "Check plug-in timeout"
 msgstr "Verificați timeout-ul plugin-ului"
 
 #, fuzzy
+msgid "Check plug-in uses the deprecated API"
+msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
+
+#, fuzzy
+msgid "Check plug-in uses the deprecated API (v1)"
+msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
+
+#, fuzzy
 msgid "Check plug-ins matching"
 msgstr "Verificați plugin-urile care se potrivesc"
 
@@ -17287,11 +17287,15 @@ msgid "Deprecated"
 msgstr "Depreciat"
 
 #, fuzzy
-msgid "Deprecated HW/SW inventory plug-ins"
+msgid "Deprecated HW/SW Inventory plug-ins"
 msgstr "Plugin-uri de inventar HW/SW depășite"
 
 #, fuzzy
 msgid "Deprecated check plug-ins"
+msgstr "Plugin-uri de verificare depreciate"
+
+#, fuzzy
+msgid "Deprecated check plug-ins (v1)"
 msgstr "Plugin-uri de verificare depreciate"
 
 msgid "Deprecated choice, please re-select"
@@ -24972,6 +24976,10 @@ msgstr "Informații hardware ale serverului Checkmk"
 msgid "HW containers"
 msgstr "Containere HW"
 
+#, fuzzy
+msgid "HW/SW Inventory plug-in uses the deprecated API"
+msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
+
 msgid "HW/SW inventory"
 msgstr "Inventarul HW/SW"
 
@@ -26373,6 +26381,10 @@ msgid "Host IP"
 msgstr "IP gazdă"
 
 msgid "Host IPv4 address"
+msgstr "Adresa IPv4 a gazdei"
+
+#, fuzzy
+msgid "Host IPv6 address"
 msgstr "Adresa IPv4 a gazdei"
 
 #, python-format
@@ -38817,6 +38829,10 @@ msgstr "Fără condiții"
 msgid "No Forecast graph with the name <tt>%s</tt>"
 msgstr "Nu există niciun grafic de prognoză cu numele <tt>%s</tt>."
 
+#, fuzzy
+msgid "No HW/SW Inventory plug-ins using the deprecated API"
+msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
+
 msgid "No IP"
 msgstr "Fără IP"
 
@@ -38883,6 +38899,10 @@ msgstr "Fără certificat"
 
 #, fuzzy
 msgid "No check plug-ins using the deprecated API"
+msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
+
+#, fuzzy
+msgid "No check plug-ins using the deprecated API (v1)"
 msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
 
 msgid "No colon, slash or backslash is allowed in the filename."
@@ -39003,10 +39023,6 @@ msgstr "Nu există gazde care să fie descoperite"
 
 msgid "No hosts/services found."
 msgstr "Nu s-au găsit gazde/servicii."
-
-#, fuzzy
-msgid "No ignored HW/SW inventory plug-ins found"
-msgstr "Nu s-au găsit plugin-uri de inventar HW/SW ignorate"
 
 msgid "No influence on element display"
 msgstr "Nicio influență asupra afișării elementelor"
@@ -57661,6 +57677,15 @@ msgstr ""
 "în considerare, dar API-ul pe care îl folosesc se poate schimba în orice "
 "moment fără notificare. Vă rugăm să migrați pluginurile la noul API. Mai "
 "multe informații pot fi găsite în Ghidul utilizatorului <a href='%s'></a> ."
+
+#, python-format
+msgid ""
+"The check plug-in API for plug-ins in <tt>%s</tt> was deprecated in Checkmk "
+"2.3 and will be removed in Checkmk 2.4. To ensure compatibility with Checkmk "
+"2.4 and avoid future issues, please update the plug-ins to use the new API "
+"as soon as possible. For more details on how to adapt your plug-ins, refer "
+"to the <a href='%s'>Werk #%s</a> and the <a href='%s'>user guide</a>."
+msgstr ""
 
 msgid ""
 "The check takes this state in case the inventory cannot be updated because "
@@ -80050,6 +80075,18 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy, python-format
+#~ msgid "%d check plug-ins using the deprecated API: %s"
+#~ msgstr "%d verificați plugin-urile care utilizează API-ul depreciat: %s."
+
+#, fuzzy, python-format
+#~ msgid "%d ignored HW/SW inventory plug-ins found: %s"
+#~ msgstr "%d ignorate plugin-uri de inventar HW/SW găsite: %s."
+
+#, fuzzy
+#~ msgid "No ignored HW/SW inventory plug-ins found"
+#~ msgstr "Nu s-au găsit plugin-uri de inventar HW/SW ignorate"
 
 #, fuzzy
 #~ msgid ""

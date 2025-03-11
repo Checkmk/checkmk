@@ -372,10 +372,6 @@ msgstr "%d modifiche"
 msgid "%d chaotic state changes from %s until %s (%s)"
 msgstr "%d cambiamenti di stato caotici da %s fino a %s (%s)"
 
-#, fuzzy, python-format
-msgid "%d check plug-ins using the deprecated API: %s"
-msgstr "%d controllare i plugin che utilizzano l'API deprecata: %s"
-
 #, python-format
 msgid "%d columns"
 msgstr "%d colonne"
@@ -419,10 +415,6 @@ msgstr "%d icone e azioni"
 #, python-format
 msgid "%d icons customized"
 msgstr "%d icone personalizzate"
-
-#, fuzzy, python-format
-msgid "%d ignored HW/SW inventory plug-ins found: %s"
-msgstr "%d ignorati i plugin dell'inventario HW/SW trovati: %s"
 
 #, python-format
 msgid "%d incompatible Werks have been acknowledged."
@@ -10790,6 +10782,14 @@ msgid "Check plug-in timeout"
 msgstr "Controllare il timeout del plugin"
 
 #, fuzzy
+msgid "Check plug-in uses the deprecated API"
+msgstr "Nessun plugin di controllo che utilizza l'API deprecata"
+
+#, fuzzy
+msgid "Check plug-in uses the deprecated API (v1)"
+msgstr "Nessun plugin di controllo che utilizza l'API deprecata"
+
+#, fuzzy
 msgid "Check plug-ins matching"
 msgstr "Controllare la corrispondenza dei plugin"
 
@@ -17093,11 +17093,15 @@ msgid "Deprecated"
 msgstr "Deprecato"
 
 #, fuzzy
-msgid "Deprecated HW/SW inventory plug-ins"
+msgid "Deprecated HW/SW Inventory plug-ins"
 msgstr "Plugin di inventario HW/SW deprecati"
 
 #, fuzzy
 msgid "Deprecated check plug-ins"
+msgstr "Plugin di controllo deprecati"
+
+#, fuzzy
+msgid "Deprecated check plug-ins (v1)"
 msgstr "Plugin di controllo deprecati"
 
 msgid "Deprecated choice, please re-select"
@@ -24722,6 +24726,10 @@ msgstr "Informazioni sull'hardware del server Checkmk"
 msgid "HW containers"
 msgstr "Contenitori HW"
 
+#, fuzzy
+msgid "HW/SW Inventory plug-in uses the deprecated API"
+msgstr "Nessun plugin di controllo che utilizza l'API deprecata"
+
 msgid "HW/SW inventory"
 msgstr "Inventario HW/SW"
 
@@ -26111,6 +26119,10 @@ msgid "Host IP"
 msgstr "IP ospite"
 
 msgid "Host IPv4 address"
+msgstr "Indirizzo IPv4 dell'host"
+
+#, fuzzy
+msgid "Host IPv6 address"
 msgstr "Indirizzo IPv4 dell'host"
 
 #, python-format
@@ -38393,6 +38405,10 @@ msgstr "Nessuna condizione"
 msgid "No Forecast graph with the name <tt>%s</tt>"
 msgstr "Nessun grafico di previsione con il nome <tt>%s</tt>"
 
+#, fuzzy
+msgid "No HW/SW Inventory plug-ins using the deprecated API"
+msgstr "Nessun plugin di controllo che utilizza l'API deprecata"
+
 msgid "No IP"
 msgstr "Nessun IP"
 
@@ -38459,6 +38475,10 @@ msgstr "Nessun certificato"
 
 #, fuzzy
 msgid "No check plug-ins using the deprecated API"
+msgstr "Nessun plugin di controllo che utilizza l'API deprecata"
+
+#, fuzzy
+msgid "No check plug-ins using the deprecated API (v1)"
 msgstr "Nessun plugin di controllo che utilizza l'API deprecata"
 
 msgid "No colon, slash or backslash is allowed in the filename."
@@ -38577,10 +38597,6 @@ msgstr "Nessun host da scoprire"
 
 msgid "No hosts/services found."
 msgstr "Nessun host/servizio trovato."
-
-#, fuzzy
-msgid "No ignored HW/SW inventory plug-ins found"
-msgstr "Nessun plugin di inventario HW/SW ignorato trovato"
 
 msgid "No influence on element display"
 msgstr "Nessuna influenza sulla visualizzazione degli elementi"
@@ -56992,6 +57008,15 @@ msgstr ""
 "cambiare in qualsiasi momento senza preavviso. Si prega di migrare i plugin "
 "alla nuova API. Ulteriori informazioni sono disponibili nella Guida all'uso "
 "<a href='%s'></a> ."
+
+#, python-format
+msgid ""
+"The check plug-in API for plug-ins in <tt>%s</tt> was deprecated in Checkmk "
+"2.3 and will be removed in Checkmk 2.4. To ensure compatibility with Checkmk "
+"2.4 and avoid future issues, please update the plug-ins to use the new API "
+"as soon as possible. For more details on how to adapt your plug-ins, refer "
+"to the <a href='%s'>Werk #%s</a> and the <a href='%s'>user guide</a>."
+msgstr ""
 
 msgid ""
 "The check takes this state in case the inventory cannot be updated because "
@@ -79127,6 +79152,18 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy, python-format
+#~ msgid "%d check plug-ins using the deprecated API: %s"
+#~ msgstr "%d controllare i plugin che utilizzano l'API deprecata: %s"
+
+#, fuzzy, python-format
+#~ msgid "%d ignored HW/SW inventory plug-ins found: %s"
+#~ msgstr "%d ignorati i plugin dell'inventario HW/SW trovati: %s"
+
+#, fuzzy
+#~ msgid "No ignored HW/SW inventory plug-ins found"
+#~ msgstr "Nessun plugin di inventario HW/SW ignorato trovato"
 
 #, fuzzy
 #~ msgid ""

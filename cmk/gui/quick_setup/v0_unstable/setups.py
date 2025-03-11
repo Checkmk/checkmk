@@ -150,7 +150,7 @@ class QuickSetupActionButtonIcon:
             The rotation of the icon in degrees (0-360).
     """
 
-    name: str = "checkmark-plus"
+    name: str = "checkmark"
     rotate: int = 0
 
 

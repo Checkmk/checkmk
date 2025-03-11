@@ -2512,12 +2512,18 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 except IndexError:
                     raise MKUserError(None, _("This %s does not exist.") % "notification rule")
             else:
-                self._rule = get_default_notification_rule()
+                # For user notifications, we still need the old way to load the
+                # default rule. Parameters are stored within the rule
+                # (contacts.mk) so no need for a parameter ID here.
+                self._rule = self._get_default_notification_rule()  # type: ignore[assignment]
         else:
             try:
                 self._rule = self._rules[self._edit_nr]
             except IndexError:
                 raise MKUserError(None, _("This %s does not exist.") % "notification rule")
+
+    def _get_default_notification_rule(self) -> EventRule | dict:
+        return get_default_notification_rule()
 
     def _valuespec(self) -> Dictionary:
         return self._vs_notification_rule(self._user_id())
@@ -3154,6 +3160,12 @@ class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):
         if self._new:
             return _("Create new notification rule")
         return _("Edit notification rule %d") % self._edit_nr
+
+    def _get_default_notification_rule(self) -> EventRule | dict:
+        # For user notifications, we still need the old way to load the
+        # default rule. Parameters are stored within the rule
+        # (contacts.mk) so no need for a parameter ID here.
+        return {}
 
 
 class ModeNotificationParametersOverview(WatoMode):

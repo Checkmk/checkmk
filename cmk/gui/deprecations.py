@@ -177,7 +177,7 @@ def _find_ac_test_result_problems(
                 if manifest := _find_manifest(manifests_by_path, ac_test_result.path):
                     problem = problem_by_ident.setdefault(
                         manifest.name,
-                        _ACTestResultProblem(manifest.name, f"MKP {manifest.name}"),
+                        _ACTestResultProblem(manifest.name, f"Extension package {manifest.name!r}"),
                     )
                 else:
                     problem = problem_by_ident.setdefault(

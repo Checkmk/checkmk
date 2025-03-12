@@ -110,7 +110,7 @@ def get_gui_messages(user_id: UserId | None = None) -> MutableSequence[Message]:
 def delete_gui_message(msg_id: str) -> None:
     messages = get_gui_messages()
     for index, msg in enumerate(messages):
-        if msg["id"] == msg_id and "security" not in msg:
+        if msg["id"] == msg_id and not msg.get("security"):
             messages.pop(index)
     save_gui_messages(messages)
 

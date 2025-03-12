@@ -170,9 +170,10 @@ pub fn check(der: &[u8], config: Config) -> Check {
         }),
         check_pubkey_algorithm(cert.public_key(), config.pubkey_algorithm),
         check_pubkey_size(cert.public_key(), config.pubkey_size),
-        check_validity_not_after(
-            cert.validity().time_to_expiration(),
-            cert.validity().not_after,
+        check_validity(
+            ASN1Time::now(),
+            cert.validity().not_before,
+            cert.validity().not_after
         ),
         check_validity_duration(cert.validity().time_to_expiration(), config.not_after,),
         check_max_validity(cert.validity(), config.max_validity),
@@ -307,14 +308,27 @@ fn check_pubkey_size(
     })
 }
 
-fn check_validity_not_after(
-    time_to_expiration: Option<Duration>,
+fn check_validity(
+    now: ASN1Time,
+    not_before: ASN1Time,
     not_after: ASN1Time,
-) -> Option<CheckResult<Real>> {
-    if time_to_expiration.is_some() {
-        return None;
-    };
-    Some(SimpleCheckResult::crit(format!("Certificate expired ({not_after})")).into())
+) -> Option<SimpleCheckResult> {
+    // The validity period for a certificate is the period of time from
+    // notBefore through notAfter, inclusive.
+    // RFC 5280, Section 4.1.2.5. Validity
+    if not_before > now {
+        return Some(SimpleCheckResult::crit(format!(
+            "Certificate not yet valid until {0}",
+            not_before
+        )));
+    }
+    if now > not_after {
+        return Some(SimpleCheckResult::crit(format!(
+            "Certificate expired ({0})",
+            not_after
+        )));
+    }
+    None
 }
 
 fn check_validity_duration(
@@ -371,6 +385,52 @@ fn check_max_validity(
             SimpleCheckResult::crit("Invalid certificate validity")
         }
     })
+}
+
+#[cfg(test)]
+mod test_check_validity {
+    use super::{check_validity, SimpleCheckResult};
+    use x509_parser::time::ASN1Time;
+
+    #[test]
+    fn test_now_less_than_not_before() {
+        assert_eq!(
+            check_validity(
+                ASN1Time::from_timestamp(0).unwrap(),
+                ASN1Time::from_timestamp(100).unwrap(),
+                ASN1Time::from_timestamp(200).unwrap()
+            ),
+            Some(SimpleCheckResult::crit(
+                "Certificate not yet valid until Jan  1 00:01:40 1970 +00:00"
+            ))
+        );
+    }
+
+    #[test]
+    fn test_now_bigger_than_not_after() {
+        assert_eq!(
+            check_validity(
+                ASN1Time::from_timestamp(200).unwrap(),
+                ASN1Time::from_timestamp(0).unwrap(),
+                ASN1Time::from_timestamp(100).unwrap()
+            ),
+            Some(SimpleCheckResult::crit(
+                "Certificate expired (Jan  1 00:01:40 1970 +00:00)"
+            ))
+        );
+    }
+
+    #[test]
+    fn test_valid() {
+        assert_eq!(
+            check_validity(
+                ASN1Time::from_timestamp(100).unwrap(),
+                ASN1Time::from_timestamp(0).unwrap(),
+                ASN1Time::from_timestamp(200).unwrap()
+            ),
+            None
+        );
+    }
 }
 
 #[cfg(test)]

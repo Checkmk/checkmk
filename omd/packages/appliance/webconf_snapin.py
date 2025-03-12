@@ -25,8 +25,8 @@ def nav_modules_path() -> Path:
 
 
 class SidebarSnapinCMAWebconf(SidebarSnapin):
-    @staticmethod
-    def type_name() -> str:
+    @classmethod
+    def type_name(cls) -> str:
         return "webconf"
 
     @classmethod

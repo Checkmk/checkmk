@@ -6,7 +6,7 @@
 import socket
 import sys
 from pathlib import Path
-from typing import assert_never
+from typing import assert_never, override
 
 import requests
 from pydantic import BaseModel, RootModel
@@ -37,6 +37,7 @@ class _LocalAutomationConnection(HTTPConnection):
         super().__init__("localhost")
         self._socket_path = socket_path
 
+    @override
     def connect(self) -> None:
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self.sock.connect(str(self._socket_path))
@@ -56,6 +57,7 @@ class _LocalAutomationAdapter(HTTPAdapter):
         super().__init__()
         self._socket_path = socket_path
 
+    @override
     def get_connection_with_tls_context(self, request, verify, proxies=None, cert=None):
         return _LocalAutomationConnectionPool(self._socket_path)
 

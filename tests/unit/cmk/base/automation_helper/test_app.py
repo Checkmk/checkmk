@@ -9,6 +9,7 @@ import sys
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 import pytest
 from fastapi.testclient import TestClient
@@ -39,9 +40,11 @@ from cmk.base.config import ConfigCache, LoadedConfigFragment, LoadingResult
 
 class _DummyAutomationResult(ABCAutomationResult):
     @staticmethod
+    @override
     def automation_call() -> str:
         return "dummy"
 
+    @override
     def serialize(self, for_cmk_version: Version) -> SerializedResult:
         return SerializedResult("dummy_serialized")
 
@@ -412,6 +415,7 @@ class _LockWithCounter(asyncio.Lock):
         super().__init__()
         self.counter = 0
 
+    @override
     async def __aenter__(self) -> None:
         self.counter += 1
         return await super().__aenter__()

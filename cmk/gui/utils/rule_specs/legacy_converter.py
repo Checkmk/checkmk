@@ -39,11 +39,11 @@ from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import Transform
 from cmk.gui.wato import _check_mk_configuration as legacy_cmk_config_groups
 from cmk.gui.wato import _rulespec_groups as legacy_wato_groups
-from cmk.gui.wato import pages as legacy_page_groups
 from cmk.gui.watolib import config_domains as legacy_config_domains
 from cmk.gui.watolib import rulespec_groups as legacy_rulespec_groups
 from cmk.gui.watolib import rulespecs as legacy_rulespecs
 from cmk.gui.watolib import timeperiods as legacy_timeperiods
+from cmk.gui.watolib.password_store import IndividualOrStoredPassword
 from cmk.gui.watolib.rulespecs import (
     CheckParameterRulespecWithItem,
     CheckParameterRulespecWithoutItem,
@@ -2347,7 +2347,7 @@ def _convert_to_legacy_individual_or_stored_password(
     to_convert: ruleset_api_v1.form_specs.Password, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.Transform:
     return Transform(
-        legacy_page_groups.IndividualOrStoredPassword(
+        IndividualOrStoredPassword(
             title=_localize_optional(to_convert.title, localizer),
             help=_localize_optional(to_convert.help_text, localizer),
             allow_empty=False,

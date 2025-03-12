@@ -388,18 +388,24 @@ def _discovery_diskstat(
 
 def discover_diskstat(
     params: Sequence[Mapping[str, Any]],
-    section_diskstat: diskstat.Section | None,
+    section_diskstat: diskstat.Section | diskstat.NoIOSection | None,
     section_multipath: multipath.Section | None,
 ) -> DiscoveryResult:
-    if section_diskstat is None:
-        return
-    yield from _discovery_diskstat(
-        params,
-        diskstat_convert_info(
-            section_diskstat,
-            section_multipath,
-        ),
-    )
+    match section_diskstat:
+        case None:
+            return
+        case diskstat.NoIOSection():
+            if params[0]["summary"]:
+                yield Service(item="SUMMARY")
+                return
+        case _:
+            yield from _discovery_diskstat(
+                params,
+                diskstat_convert_info(
+                    section_diskstat,
+                    section_multipath,
+                ),
+            )
 
 
 def _compute_rates_single_disk(
@@ -475,13 +481,15 @@ def _compute_rates_single_disk(
 def check_diskstat(
     item: str,
     params: Mapping[str, Any],
-    section_diskstat: diskstat.Section | None,
+    section_diskstat: diskstat.Section | diskstat.NoIOSection | None,
     section_multipath: multipath.Section | None,
 ) -> CheckResult:
     # Unfortunately, summarizing the disks does not commute with computing the rates for this check.
     # Therefore, we have to compute the rates first.
     if section_diskstat is None:
         return
+    if isinstance(section_diskstat, diskstat.NoIOSection):
+        raise IgnoreResultsError(section_diskstat.message)
 
     converted_disks = diskstat_convert_info(
         section_diskstat,

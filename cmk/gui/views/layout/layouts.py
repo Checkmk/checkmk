@@ -7,7 +7,7 @@ import abc
 import re
 from collections.abc import Hashable, Iterator, Sequence
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 from cmk.ccc.exceptions import MKGeneralException
 
@@ -72,17 +72,21 @@ class LayoutSingleDataset(Layout):
     more than on dataset however."""
 
     @property
+    @override
     def ident(self) -> str:
         return "dataset"
 
     @property
+    @override
     def title(self) -> str:
         return _("Single dataset")
 
     @property
+    @override
     def can_display_checkboxes(self) -> bool:
         return False
 
+    @override
     def render(
         self,
         rows: Rows,
@@ -128,6 +132,7 @@ class GroupedBoxesLayout(Layout):
     def _css_class(self) -> str | None:
         raise NotImplementedError()
 
+    @override
     def render(
         self,
         rows: Rows,
@@ -431,21 +436,26 @@ class LayoutBalancedBoxes(GroupedBoxesLayout):
     stacked in columns and can have different sizes."""
 
     @property
+    @override
     def ident(self) -> str:
         return "boxed"
 
     @property
+    @override
     def title(self) -> str:
         return _("Balanced boxes")
 
     @property
+    @override
     def can_display_checkboxes(self) -> bool:
         return True
 
+    @override
     def _css_class(self) -> str | None:
         return None
 
     @property
+    @override
     def hide_entries_per_row(self) -> bool:
         return True
 
@@ -454,17 +464,21 @@ class LayoutBalancedGraphBoxes(GroupedBoxesLayout):
     """Same as balanced boxes layout but adds a CSS class graph to the box"""
 
     @property
+    @override
     def ident(self) -> str:
         return "boxed_graph"
 
     @property
+    @override
     def title(self) -> str:
         return _("Balanced graph boxes")
 
     @property
+    @override
     def can_display_checkboxes(self) -> bool:
         return True
 
+    @override
     def _css_class(self) -> str | None:
         return "graph"
 
@@ -473,17 +487,21 @@ class LayoutTiled(Layout):
     """The tiled layout puts each dataset into one box with a fixed size"""
 
     @property
+    @override
     def ident(self) -> str:
         return "tiled"
 
     @property
+    @override
     def title(self) -> str:
         return _("Tiles")
 
     @property
+    @override
     def can_display_checkboxes(self) -> bool:
         return True
 
+    @override
     def render(
         self,
         rows: Rows,
@@ -614,17 +632,21 @@ class LayoutTable(Layout):
     width of the columns."""
 
     @property
+    @override
     def ident(self) -> str:
         return "table"
 
     @property
+    @override
     def title(self) -> str:
         return _("Table")
 
     @property
+    @override
     def can_display_checkboxes(self) -> bool:
         return True
 
+    @override
     def render(
         self,
         rows: Rows,
@@ -815,21 +837,26 @@ class LayoutMatrix(Layout):
     The columns are hosts and the rows are services."""
 
     @property
+    @override
     def ident(self) -> str:
         return "matrix"
 
     @property
+    @override
     def title(self) -> str:
         return _("Matrix")
 
     @property
+    @override
     def can_display_checkboxes(self) -> bool:
         return False
 
     @property
+    @override
     def has_individual_csv_export(self) -> bool:
         return True
 
+    @override
     def csv_export(
         self, rows: Rows, view: ViewSpec, group_cells: Sequence[Cell], cells: Sequence[Cell]
     ) -> None:
@@ -877,6 +904,7 @@ class LayoutMatrix(Layout):
                                 html.write_text_permissive(",")
                             html.write_text_permissive(content)
 
+    @override
     def render(
         self,
         rows: Rows,
@@ -1015,6 +1043,7 @@ class LayoutMatrix(Layout):
         return counts, majorities
 
     @property
+    @override
     def painter_options(self) -> list[str]:
         return ["matrix_omit_uniform"]
 

@@ -3,12 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import override
+
 from cmk.ccc.plugin_registry import Registry
 
 from .base import Layout
 
 
 class LayoutRegistry(Registry[type[Layout]]):
+    @override
     def plugin_name(self, instance: type[Layout]) -> str:
         return instance().ident
 

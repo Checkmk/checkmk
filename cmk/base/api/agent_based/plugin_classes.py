@@ -23,7 +23,6 @@ from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
     HostLabelGenerator,
-    InventoryResult,
     StringByteTable,
     StringTable,
 )
@@ -34,8 +33,6 @@ from cmk.discover_plugins import PluginLocation
 class LegacyPluginLocation:
     file_name: str
 
-
-InventoryFunction = Callable[..., InventoryResult]
 
 CheckFunction = Callable[..., CheckResult]
 DiscoveryFunction = Callable[..., DiscoveryResult]

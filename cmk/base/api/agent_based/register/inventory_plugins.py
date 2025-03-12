@@ -12,20 +12,19 @@ from cmk.utils.rulesets import RuleSetName
 
 from cmk.checkengine.inventory import InventoryPlugin, InventoryPluginName
 
-from cmk.base.api.agent_based.plugin_classes import InventoryFunction
 from cmk.base.api.agent_based.register.utils import (
     create_subscribed_sections,
     validate_default_parameters,
     validate_function_arguments,
 )
 
-from cmk.agent_based.v1 import Attributes, TableRow
+from cmk.agent_based.v2 import Attributes, InventoryResult, TableRow
 from cmk.discover_plugins import PluginLocation
 
 
 def _filter_inventory(
     generator: Callable[..., Iterable],
-) -> InventoryFunction:
+) -> Callable[..., InventoryResult]:
     """Only let Attributes and TableRow instances through
 
     This allows for better typing in base code.

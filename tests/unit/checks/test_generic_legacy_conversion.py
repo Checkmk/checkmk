@@ -312,7 +312,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "datapower_cpu",
         "datapower_fs",
         "datapower_mem",
-        "datapower_temp",
         "db2_backup",
         "db2_bp_hitratios",
         "db2_connections",

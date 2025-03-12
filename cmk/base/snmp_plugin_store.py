@@ -4,15 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.snmplib import (
-    BackendSNMPTree,  # pylint: disable=cmk-module-layer-violation
-    SNMPDetectSpec,  # pylint: disable=cmk-module-layer-violation
-)
+from cmk.snmplib import BackendSNMPTree, SNMPDetectSpec
 
-from cmk.fetchers.snmp import (  # pylint: disable=cmk-module-layer-violation
-    SNMPPluginStore,
-    SNMPPluginStoreItem,
-)
+from cmk.fetchers.snmp import SNMPPluginStore, SNMPPluginStoreItem
 
 from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 

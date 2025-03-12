@@ -24,7 +24,7 @@ from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.checkengine.fetcher import FetcherType
 
 from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
-from cmk.base.api.agent_based.register.snmp_plugin_store import make_plugin_store
+from cmk.base.snmp_plugin_store import make_plugin_store
 
 from cmk.server_side_calls_backend import SpecialAgentCommandLine
 

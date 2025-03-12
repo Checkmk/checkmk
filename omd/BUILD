@@ -45,6 +45,7 @@ create_venv(
         "//omd/packages/rrdtool:rrdtool_perl_bindings",
         "//omd/packages/rrdtool:rrdtool_python_tar",
         "//omd/packages/rrdtool:rrdtool_tar",
+        "//omd/packages/snap7",
         "//omd/packages/stunnel",
         "//packages/cmk-agent-based:pkg_tar",
         "//packages/cmk-agent-receiver:pkg_tar",

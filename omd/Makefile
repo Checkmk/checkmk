@@ -44,7 +44,6 @@ PACKAGES := \
     pnp4nagios \
     maintenance \
     heirloom-mailx \
-    snap7 \
     livestatus \
     unixcat \
     neb \

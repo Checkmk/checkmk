@@ -197,7 +197,6 @@ include \
     packages/pnp4nagios/pnp4nagios.make \
     packages/omd/omd.make \
     packages/mk-livestatus/mk-livestatus.make \
-    packages/snap7/snap7.make \
     packages/appliance/appliance.make \
     packages/livestatus/livestatus.make \
     packages/neb/neb.make \

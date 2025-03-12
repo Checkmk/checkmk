@@ -25,3 +25,10 @@ make(
     ],
     visibility = ["//visibility:public"],
 )
+
+filegroup(
+    name = "libsnap7.so",
+    srcs = [":snap7"],
+    output_group = "libsnap7.so",
+    visibility = ["//visibility:public"],
+)

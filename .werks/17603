@@ -1,0 +1,13 @@
+Title: Check logged_out on single user session mode on session init
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1741790492
+Edition: cre
+Level: 1
+Version: 2.2.0p41
+
+When single user session mode was enabled, it was not possible to log in again before the session timeout expired.
+This behavior was caused by ignoring the status "logged_out"=True in the session_info.mk file.
+
+This status is now checked correctly, allowing immediate re-login without waiting for the session timeout.

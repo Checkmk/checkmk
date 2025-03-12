@@ -23,6 +23,7 @@ from cmk.gui.graphing._perfometer import (
     LegacyPerfometer,
     MetricometerRendererLegacyLinear,
     MetricometerRendererPerfometer,
+    MetricometerRendererStacked,
     MetricRendererStack,
     parse_perfometer,
 )
@@ -1054,3 +1055,64 @@ def test_parse_dual_or_stacked_perfometer_errors(
 ) -> None:
     with pytest.raises(MKGeneralException):
         parse_perfometer(legacy_perfometer)
+
+
+def test_metricometer_renderer_stacked() -> None:
+    metricometer = MetricometerRendererStacked(
+        perfometers.Stacked(
+            name="stacked",
+            lower=perfometers.Perfometer(
+                name="lower",
+                focus_range=perfometers.FocusRange(
+                    lower=perfometers.Closed(0),
+                    upper=perfometers.Open(10),
+                ),
+                segments=["metric_1"],
+            ),
+            upper=perfometers.Perfometer(
+                name="upper",
+                focus_range=perfometers.FocusRange(
+                    lower=perfometers.Closed(0),
+                    upper=perfometers.Open(10),
+                ),
+                segments=["metric_2"],
+            ),
+        ),
+        {
+            "metric_1": TranslatedMetric(
+                orig_name=["metric_1"],
+                value=2.0,
+                scalar=ScalarBounds(),
+                scale=[1.0],
+                auto_graph=True,
+                title="Metric 1",
+                unit=UnitInfo(
+                    title="Title",
+                    symbol="",
+                    render=lambda v: f"{v}",
+                    js_render="v => v",
+                ),
+                color="#111111",
+            ),
+            "metric_2": TranslatedMetric(
+                orig_name=["metric_2"],
+                value=7.0,
+                scalar=ScalarBounds(),
+                scale=[1.0],
+                auto_graph=True,
+                title="Metric 1",
+                unit=UnitInfo(
+                    title="Title",
+                    symbol="",
+                    render=lambda v: f"{v}",
+                    js_render="v => v",
+                ),
+                color="#111111",
+            ),
+        },
+    )
+    assert metricometer.get_stack() == [
+        [(59.5, "#111111"), (40.5, "#bdbdbd")],
+        [(17.0, "#111111"), (83.0, "#bdbdbd")],
+    ]
+    assert metricometer.get_label() == "7.0 / 2.0"

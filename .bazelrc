@@ -23,6 +23,7 @@ common --enable_bzlmod
 # Do not upload artifacts other than from CI, see below, CMK-18656
 common --remote_upload_local_results=false
 common --lockfile_mode=error
+common --test_summary=detailed
 
 ## For specific commands
 # Always require debug info.

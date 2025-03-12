@@ -105,6 +105,7 @@ class AddUser(BaseUserPage):
         expect(self.full_name_text_field).to_be_visible()
 
     @property
+    @override
     def username_text_field(self) -> Locator:
         return self.main_area.get_input("user_id")
 

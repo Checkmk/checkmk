@@ -5,6 +5,7 @@
 import logging
 import time
 from abc import abstractmethod
+from typing import override
 
 from playwright.sync_api import expect, Locator
 
@@ -22,6 +23,7 @@ class QuickSetupPage(CmkPage):
     page_title = ""
 
     @abstractmethod
+    @override
     def navigate(self) -> None:
         pass
 

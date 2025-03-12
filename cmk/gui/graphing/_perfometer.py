@@ -693,26 +693,26 @@ class MetricometerRendererStacked(MetricometerRenderer):
     def get_stack(self) -> MetricRendererStack:
         projections: list[Sequence[tuple[float, str]]] = []
 
-        if lower_projections := _get_renderer(
-            self.perfometer.lower, self.translated_metrics
-        ).get_stack():
-            projections.append(lower_projections[0])
-
         if upper_projections := _get_renderer(
             self.perfometer.upper, self.translated_metrics
         ).get_stack():
             projections.append(upper_projections[0])
+
+        if lower_projections := _get_renderer(
+            self.perfometer.lower, self.translated_metrics
+        ).get_stack():
+            projections.append(lower_projections[0])
 
         return projections if projections else []
 
     def get_label(self) -> str:
         labels = []
 
-        if lower_label := _get_renderer(self.perfometer.lower, self.translated_metrics).get_label():
-            labels.append(lower_label)
-
         if upper_label := _get_renderer(self.perfometer.upper, self.translated_metrics).get_label():
             labels.append(upper_label)
+
+        if lower_label := _get_renderer(self.perfometer.lower, self.translated_metrics).get_label():
+            labels.append(lower_label)
 
         return " / ".join(labels)
 

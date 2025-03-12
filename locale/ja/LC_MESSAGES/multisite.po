@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2025-03-11 09:00+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/dev/"
@@ -12466,6 +12466,9 @@ msgstr "クラシックチェック"
 msgid "Classical web GUI"
 msgstr "従来のWeb GUI"
 
+msgid "Clean Up"
+msgstr ""
+
 msgid "Cleanup Checkmk agent Program Data directory on uninstall"
 msgstr ""
 "アンインストール時にCheckmkエージェントのプログラムデータディレクトリをクリー"
@@ -13462,6 +13465,10 @@ msgid ""
 msgstr ""
 "CMC（Checkmk Microcore）のコンフィグレーション、ステータス、ステータス履歴の"
 "データ。ステータスとコンフィグをcmcdumpで出力。"
+
+#, fuzzy, python-format
+msgid "Configuration: %s"
+msgstr "コンフィギュレーション"
 
 #, fuzzy
 msgid "Configurations"
@@ -15229,6 +15236,10 @@ msgstr ""
 
 msgid "Created"
 msgstr "作成した"
+
+#, python-brace-format
+msgid "Created Quick setup {bundle_id}"
+msgstr ""
 
 msgid "Created at"
 msgstr "作成"
@@ -32554,6 +32565,10 @@ msgstr "入力帯域幅"
 msgid "Input broadcast packets"
 msgstr "入力ブロードキャストパケット"
 
+#, fuzzy
+msgid "Input cannot be empty"
+msgstr "秘密鍵"
+
 msgid "Input channel"
 msgstr "入力チャネル"
 
@@ -47173,7 +47188,11 @@ msgstr ""
 "バイス"
 
 #, fuzzy
-msgid "Please add an event comment."
+msgid "Please add a Rule ID."
+msgstr "少なくとも1人のユーザーを追加してください"
+
+#, fuzzy
+msgid "Please add an event comment.."
 msgstr "少なくとも1人のメンバーを追加してください。"
 
 #, fuzzy
@@ -47287,10 +47306,6 @@ msgstr "PNG画像を選択してください。"
 msgid "Please choose a file to upload."
 msgstr "アップロードするファイルを選択してください。"
 
-#, fuzzy
-msgid "Please choose a parameter or click \"Create\" to add a new one."
-msgstr "通知パラメータを選択するか、作成してください。"
-
 msgid "Please choose a report to schedule"
 msgstr "スケジュールするレポートを選択してください"
 
@@ -47302,6 +47317,10 @@ msgstr "有効なPNG画像を選択してください。"
 
 msgid "Please choose an audit log to view:"
 msgstr "表示する監査ログを選択してください："
+
+#, fuzzy
+msgid "Please choose parameters or click \"Create\" to add a new one."
+msgstr "通知パラメータを選択するか、作成してください。"
 
 msgid "Please choose the check plug-in"
 msgstr "チェックプラグインを選択してください"
@@ -61594,7 +61613,7 @@ msgid "The complete hardware- and software inventory of a host"
 msgstr "ホストの完全なハードウェアおよびソフトウェアインベントリ"
 
 #, fuzzy, python-format
-msgid "The configuration \"%s\" does not exist."
+msgid "The configuration bundle %s does not exist"
 msgstr "サイト\"%s\"は存在しません。"
 
 #, python-format
@@ -65824,6 +65843,12 @@ msgstr ""
 "してネットワーク共有にバックアップを保存する場合にも、このオプションを使用で"
 "きます。ただし、ネットワーク共有のマウントについては、注意する必要がありま"
 "す。"
+
+msgid ""
+"This can happen if the configuration bundle was deleted and some underlying "
+"objects were not properly cleaned up. By pressing the button 'Clean Up' you "
+"can remove all objects that reference the non-existing configuration."
+msgstr ""
 
 msgid ""
 "This catalog of check plug-ins gives you a complete listing of all plug-ins "

@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2025-03-11 08:27+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
@@ -12748,6 +12748,9 @@ msgstr "Klassischer Check"
 msgid "Classical web GUI"
 msgstr "Klassische Web GUI"
 
+msgid "Clean Up"
+msgstr ""
+
 msgid "Cleanup Checkmk agent Program Data directory on uninstall"
 msgstr ""
 "Checkmk-Agenten-Programmdatenverzeichnis bei der Deinstallation bereinigen"
@@ -13751,6 +13754,10 @@ msgid ""
 msgstr ""
 "Konfiguration, Zustand und Zustands-Historie des CMC (Checkmk Micro Core); "
 "cmcdump-Ausgabe des Zustands und der Konfiguration."
+
+#, fuzzy, python-format
+msgid "Configuration: %s"
+msgstr "Konfigurationen"
 
 msgid "Configurations"
 msgstr "Konfigurationen"
@@ -15572,6 +15579,10 @@ msgstr ""
 
 msgid "Created"
 msgstr "Erzeugt"
+
+#, python-brace-format
+msgid "Created Quick setup {bundle_id}"
+msgstr ""
 
 msgid "Created at"
 msgstr "Erstellt am"
@@ -32914,6 +32925,10 @@ msgstr "Eingehende Bandbreite"
 msgid "Input broadcast packets"
 msgstr "Eingehende Broadcastpakete"
 
+#, fuzzy
+msgid "Input cannot be empty"
+msgstr "%s darf nicht leer sein"
+
 msgid "Input channel"
 msgstr "Eingangskanal"
 
@@ -47393,7 +47408,12 @@ msgstr ""
 "Bitte aktivieren Sie das Monitoring von mindestens einem Gerätetyp: Android, "
 "iOS oder andere Geräte"
 
-msgid "Please add an event comment."
+#, fuzzy
+msgid "Please add a Rule ID."
+msgstr "Bitte fügen Sie mindestens eine Regel-ID hinzu."
+
+#, fuzzy
+msgid "Please add an event comment.."
 msgstr "Bitte fügen Sie einen Kommentar zum Ereignis hinzu."
 
 msgid "Please add at least one Rule ID."
@@ -47509,11 +47529,6 @@ msgstr "Bitte wählen Sie ein PNG-Bild."
 msgid "Please choose a file to upload."
 msgstr "Bitte wählen Sie eine Datei zum Hochladen."
 
-msgid "Please choose a parameter or click \"Create\" to add a new one."
-msgstr ""
-"Bitte wählen Sie einen Parameter aus oder klicken Sie auf „Erstellen“, um "
-"einen neuen hinzuzufügen."
-
 msgid "Please choose a report to schedule"
 msgstr "Bitte wählen Sie einen Bericht für den Planeintrag aus"
 
@@ -47527,6 +47542,12 @@ msgstr "Bitte wählen Sie ein gültiges PNG-Bild."
 
 msgid "Please choose an audit log to view:"
 msgstr "Bitte wählen Sie ein Audit Log für die Anzeige aus:"
+
+#, fuzzy
+msgid "Please choose parameters or click \"Create\" to add a new one."
+msgstr ""
+"Bitte wählen Sie einen Parameter aus oder klicken Sie auf „Erstellen“, um "
+"einen neuen hinzuzufügen."
 
 msgid "Please choose the check plug-in"
 msgstr "Bitte Check-Plugin auswählen"
@@ -62060,8 +62081,8 @@ msgstr "Der Kommentar, der bei Ad-hoc-Wartungszeiten automatisch gesendet wird"
 msgid "The complete hardware- and software inventory of a host"
 msgstr "Das vollständige Hardware- und Softwareinventar eines Hosts"
 
-#, python-format
-msgid "The configuration \"%s\" does not exist."
+#, fuzzy, python-format
+msgid "The configuration bundle %s does not exist"
 msgstr "Die Konfiguration \"%s\" existiert nicht."
 
 #, python-format
@@ -66595,6 +66616,12 @@ msgstr ""
 "ebenfalls nutzen, wenn Sie Ihre Sicherung auf einer Netzwerkfreigabe, wie "
 "NFS, Samba oder ähnlichem ablegen wollen. Allerdings müssen Sie den "
 "Netzwerkfreigabe selbstständig unter dem gewählten Pfad einbinden."
+
+msgid ""
+"This can happen if the configuration bundle was deleted and some underlying "
+"objects were not properly cleaned up. By pressing the button 'Clean Up' you "
+"can remove all objects that reference the non-existing configuration."
+msgstr ""
 
 msgid ""
 "This catalog of check plug-ins gives you a complete listing of all plug-ins "
@@ -86189,10 +86216,6 @@ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 #~ msgstr ""
 #~ "Diese Einstellung legt fest, wie spät Ihre Änderungen aktiviert werden. "
 #~ "Standard ist 10 Minuten."
-
-#, python-format
-#~ msgid "%s cannot be empty"
-#~ msgstr "%s darf nicht leer sein"
 
 #~ msgid "Access key ID cannot be empty"
 #~ msgstr "ID des Zugriffsschlüssels darf nicht leer sein"

@@ -13258,6 +13258,9 @@ msgstr "Contrôle classique"
 msgid "Classical web GUI"
 msgstr "Interface graphique web classique"
 
+msgid "Clean Up"
+msgstr ""
+
 msgid "Cleanup Checkmk agent Program Data directory on uninstall"
 msgstr ""
 "Nettoyer le répertoire Program Data de l'agent Checkmk lors de la "
@@ -14293,6 +14296,10 @@ msgid ""
 msgstr ""
 "Données de configuration, d'état et d'historique de l'état du CMC (Checkmk "
 "Microcore) ; sortie cmcdump de l'état et de la configuration."
+
+#, fuzzy, python-format
+msgid "Configuration: %s"
+msgstr "Configuration"
 
 #, fuzzy
 msgid "Configurations"
@@ -16159,6 +16166,10 @@ msgstr ""
 
 msgid "Created"
 msgstr "Créé"
+
+#, python-brace-format
+msgid "Created Quick setup {bundle_id}"
+msgstr ""
 
 msgid "Created at"
 msgstr "Créé à"
@@ -34428,6 +34439,10 @@ msgstr "Largeur de bande d'entrée"
 msgid "Input broadcast packets"
 msgstr "Paquets de diffusion d'entrée"
 
+#, fuzzy
+msgid "Input cannot be empty"
+msgstr "Clé secrète"
+
 msgid "Input channel"
 msgstr "Canal d'entrée"
 
@@ -49751,7 +49766,11 @@ msgstr ""
 "iOS ou autres appareils"
 
 #, fuzzy
-msgid "Please add an event comment."
+msgid "Please add a Rule ID."
+msgstr "Veuillez ajouter au moins un nœud enfant."
+
+#, fuzzy
+msgid "Please add an event comment.."
 msgstr "Veuillez ajouter au moins un nœud enfant."
 
 #, fuzzy
@@ -49885,10 +49904,6 @@ msgstr "Veuillez choisir une image PNG."
 msgid "Please choose a file to upload."
 msgstr "Veuillez choisir un fichier à télécharger."
 
-#, fuzzy
-msgid "Please choose a parameter or click \"Create\" to add a new one."
-msgstr "Supprimer cette règle de notification"
-
 msgid "Please choose a report to schedule"
 msgstr "Veuillez choisir un rapport à programmer"
 
@@ -49901,6 +49916,10 @@ msgstr "Veuillez choisir une image PNG valide."
 
 msgid "Please choose an audit log to view:"
 msgstr ""
+
+#, fuzzy
+msgid "Please choose parameters or click \"Create\" to add a new one."
+msgstr "Supprimer cette règle de notification"
 
 #, fuzzy
 msgid "Please choose the check plug-in"
@@ -65037,7 +65056,7 @@ msgid "The complete hardware- and software inventory of a host"
 msgstr "L'inventaire complet du matériel et des logiciels d'un hôte"
 
 #, fuzzy, python-format
-msgid "The configuration \"%s\" does not exist."
+msgid "The configuration bundle %s does not exist"
 msgstr "Le site \"%s\" n'existe pas."
 
 #, python-format
@@ -69487,6 +69506,12 @@ msgstr ""
 "utiliser cette option si vous souhaitez enregistrer votre sauvegarde sur un "
 "partage réseau en utilisant NFS, Samba ou similaire. Mais vous devrez vous "
 "occuper vous-même du montage du partage réseau."
+
+msgid ""
+"This can happen if the configuration bundle was deleted and some underlying "
+"objects were not properly cleaned up. By pressing the button 'Clean Up' you "
+"can remove all objects that reference the non-existing configuration."
+msgstr ""
 
 #, fuzzy
 msgid ""

@@ -13183,6 +13183,9 @@ msgstr "Klassieke controle"
 msgid "Classical web GUI"
 msgstr "Klassieke web GUI"
 
+msgid "Clean Up"
+msgstr ""
+
 msgid "Cleanup Checkmk agent Program Data directory on uninstall"
 msgstr "Opschonen Checkmk agent Program Data directory bij de-installatie"
 
@@ -14204,6 +14207,10 @@ msgid ""
 msgstr ""
 "Configuratie, status en statusgeschiedenisgegevens van de CMC (Checkmk "
 "Microcore); cmcdump uitvoer van de status en configuratie."
+
+#, fuzzy, python-format
+msgid "Configuration: %s"
+msgstr "Configuratie"
 
 #, fuzzy
 msgid "Configurations"
@@ -16055,6 +16062,10 @@ msgstr ""
 
 msgid "Created"
 msgstr "Gemaakt"
+
+#, python-brace-format
+msgid "Created Quick setup {bundle_id}"
+msgstr ""
 
 msgid "Created at"
 msgstr "Gemaakt op"
@@ -34144,6 +34155,10 @@ msgstr "Invoerbandbreedte"
 msgid "Input broadcast packets"
 msgstr "Input broadcast pakketten"
 
+#, fuzzy
+msgid "Input cannot be empty"
+msgstr "Geheime sleutel"
+
 msgid "Input channel"
 msgstr "Ingangskanaal"
 
@@ -49367,7 +49382,11 @@ msgstr ""
 "apparaten"
 
 #, fuzzy
-msgid "Please add an event comment."
+msgid "Please add a Rule ID."
+msgstr "Voeg ten minste één kindknooppunt toe."
+
+#, fuzzy
+msgid "Please add an event comment.."
 msgstr "Voeg ten minste één kindknooppunt toe."
 
 #, fuzzy
@@ -49498,10 +49517,6 @@ msgstr "Kies een PNG afbeelding."
 msgid "Please choose a file to upload."
 msgstr "Kies een bestand om te uploaden."
 
-#, fuzzy
-msgid "Please choose a parameter or click \"Create\" to add a new one."
-msgstr "Verwijder deze meldingsregel"
-
 msgid "Please choose a report to schedule"
 msgstr "Kies een rapport om te plannen"
 
@@ -49514,6 +49529,10 @@ msgstr "Kies een geldige PNG afbeelding."
 #, fuzzy
 msgid "Please choose an audit log to view:"
 msgstr "Kies een bestand om te uploaden."
+
+#, fuzzy
+msgid "Please choose parameters or click \"Create\" to add a new one."
+msgstr "Verwijder deze meldingsregel"
 
 #, fuzzy
 msgid "Please choose the check plug-in"
@@ -64470,7 +64489,7 @@ msgid "The complete hardware- and software inventory of a host"
 msgstr "De volledige hardware- en software-inventaris van een host"
 
 #, fuzzy, python-format
-msgid "The configuration \"%s\" does not exist."
+msgid "The configuration bundle %s does not exist"
 msgstr "De site \"%s\" bestaat niet."
 
 #, python-format
@@ -68885,6 +68904,12 @@ msgstr ""
 "gebruiken als u uw backup wilt opslaan op een netwerkshare met NFS, Samba of "
 "iets dergelijks. Maar dan moet u zelf zorgen voor het mounten van het "
 "netwerkshare."
+
+msgid ""
+"This can happen if the configuration bundle was deleted and some underlying "
+"objects were not properly cleaned up. By pressing the button 'Clean Up' you "
+"can remove all objects that reference the non-existing configuration."
+msgstr ""
 
 #, fuzzy
 msgid ""

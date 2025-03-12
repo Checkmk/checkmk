@@ -239,16 +239,6 @@ load("//omd/packages/erlang:erlang_http.bzl", "erlang_workspace")
 
 erlang_workspace()
 
-http_archive(
-    name = "bazel_iwyu",
-    patches = ["//bazel/tools:0001-Make-IWYU-executable-configurable.patch"],
-    sha256 = "89fbf9cad9d9e7a2aa8f5d9f7b285d3a879a4b28c63bf821b3a44e6a0168d322",
-    strip_prefix = "bazel_iwyu-1fe9048c30469ac506498c3c740ce47475ad3361",
-    urls = [
-        "https://github.com/storypku/bazel_iwyu/archive/1fe9048c30469ac506498c3c740ce47475ad3361.tar.gz",
-    ],
-)
-
 load("//omd/packages/rabbitmq:rabbitmq_http.bzl", "rabbitmq_workspace")
 
 rabbitmq_workspace()

@@ -6,6 +6,7 @@ repo_license = use_repo_rule("//bazel/rules:repo_license.bzl", "detect_repo_lice
 bazel_dep(name = "aspect_rules_lint", version = "1.2.0")
 bazel_dep(name = "aspect_rules_py", version = "0.7.4")
 bazel_dep(name = "bazel_clang_tidy", dev_dependency = True)
+bazel_dep(name = "bazel_iwyu", dev_dependency = True)
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
 bazel_dep(
     name = "buildifier_prebuilt",
@@ -52,6 +53,14 @@ git_override(
     # No tags, no releases.  Live on head.
     commit = "db677011c7363509a288a9fb3bf0a50830bbf791",
     remote = "https://github.com/erenon/bazel_clang_tidy.git",
+)
+git_override(
+    module_name = "bazel_iwyu",
+    # Live on head because of https://github.com/storypku/bazel_iwyu/issues/5
+    # even if using master doesn't solve the issue.
+    commit = "1fe9048c30469ac506498c3c740ce47475ad3361",
+    remote = "https://github.com/storypku/bazel_iwyu.git",
+    patches = ["//bazel/patches:bazel_iwyu-make_IWYU_executable_configurable.patch"],
 )
 git_override(
     module_name = "hedron_compile_commands",

@@ -235,8 +235,8 @@ class CMKWebSession:
         assert 'action="login.py"' in r.text
 
     def is_logged_in(self) -> bool:
-        r = self.get("info.py", allow_redirect_to_login=True)
         try:
+            r = self.get("info.py", allow_redirect_to_login=True)
             return all(x in r.text for x in ("About Checkmk", "Your IT monitoring platform"))
         except requests.exceptions.ConnectionError:
             if edition_from_env().is_saas_edition():

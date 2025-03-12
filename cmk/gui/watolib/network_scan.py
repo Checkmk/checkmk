@@ -212,6 +212,7 @@ def register(
             name="execute_network_scan_job",
             callable=execute_network_scan_job,
             interval=timedelta(minutes=1),
+            run_in_thread=True,
         )
     )
 

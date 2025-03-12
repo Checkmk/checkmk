@@ -489,3 +489,53 @@ def test_check_group_order_matters() -> None:
         ):
             assert isinstance(summary_result, Result)
             assert summary_result.state == State.OK
+
+
+def test_check_params_change() -> None:
+    """Test that verifies correct behavior when params change between cycles"""
+    value_store: ValueStore = {}
+
+    params_cycles = (
+        kube_pod_status.Params(groups=[]),
+        kube_pod_status.Params(groups=[(("levels", (60, 120)), ["Pending", "Running"])]),
+    )
+
+    pod_lifecycles = (
+        PodLifeCycle(phase=Phase.PENDING),
+        PodLifeCycle(phase=Phase.RUNNING),
+    )
+    section_kube_pod_containers = None
+
+    time_one = 0.0
+    first_cycle_result = list(
+        _check_kube_pod_status(
+            time_one,
+            value_store,
+            params_cycles[0],
+            section_kube_pod_containers,
+            None,
+            pod_lifecycles[0],
+        )
+    )
+
+    assert len(first_cycle_result) == 1
+    assert isinstance(first_cycle_result[0], Result)
+    assert value_store["previous_status"] == "Pending"
+    assert set(value_store["duration_per_status"].keys()) == {"Pending"}
+
+    time_two = 60.0
+    second_cycle_result = list(
+        _check_kube_pod_status(
+            time_two,
+            value_store,
+            params_cycles[1],
+            section_kube_pod_containers,
+            None,
+            pod_lifecycles[1],
+        )
+    )
+
+    assert len(second_cycle_result) == 1
+    assert isinstance(second_cycle_result[0], Result)
+    assert value_store["previous_status"] == "Running"
+    assert set(value_store["duration_per_status"].keys()) == {"Running"}

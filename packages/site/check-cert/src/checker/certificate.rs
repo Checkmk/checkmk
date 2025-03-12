@@ -193,7 +193,7 @@ fn check_serial(serial: String, expected: Option<String>) -> Option<SimpleCheckR
 fn check_subject_cn(subject_cn: &str, expected: Option<String>) -> SimpleCheckResult {
     let name = "Subject CN";
     expected.map_or(
-        SimpleCheckResult::ok(format!("{name}: {subject_cn}")),
+        SimpleCheckResult::ok(format!("{name}: {}", handle_empty(subject_cn))),
         |expected| {
             if expected == subject_cn {
                 SimpleCheckResult::ok(format!("{name}: {}", handle_empty(subject_cn)))

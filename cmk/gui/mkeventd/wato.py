@@ -5591,7 +5591,7 @@ class NotificationParameterMKEventDaemon(NotificationParameter):
     def _form_spec(self) -> DictionaryExtended:
         # TODO register CSE specific version
         return DictionaryExtended(
-            title=Title("Create notification with the following parameters"),
+            title=Title("Forward to EC parameters"),
             elements={
                 "facility": DictElement(
                     parameter_form=SingleChoiceExtended(

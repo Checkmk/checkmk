@@ -39,7 +39,7 @@ class NotificationParameterSlack(NotificationParameter):
 
     def _form_spec(self) -> Dictionary:
         return Dictionary(
-            title=Title("Create notification with the following parameters"),
+            title=Title("Slack or Mattermost parameters"),
             elements={
                 "webhook_url": DictElement(
                     required=True,

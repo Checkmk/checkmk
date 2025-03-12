@@ -85,12 +85,11 @@ class NotificationParameterASCIIMail(NotificationParameter):
     @property
     def spec(self) -> ValueSpecDictionary:
         # TODO needed because of mixed Form Spec and old style setup
-        # return recompose(self._form_spec()).valuespec  # type: ignore[return-value]
         return recompose(self._form_spec()).valuespec  # type: ignore[return-value]
 
     def _form_spec(self) -> DictionaryExtended:
         return DictionaryExtended(
-            title=Title("Create notification with the following parameters"),
+            title=Title("ASCII Email parameters"),
             elements=_elements_ascii(is_cse=edition(paths.omd_root) == Edition.CSE),
         )
 

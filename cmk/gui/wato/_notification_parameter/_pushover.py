@@ -42,7 +42,7 @@ class NotificationParameterPushover(NotificationParameter):
 
     def _form_spec(self) -> Dictionary:
         return Dictionary(
-            title=Title("Create notification with the following parameters"),
+            title=Title("Push notification parameters"),
             elements={
                 "api_key": DictElement(
                     parameter_form=String(

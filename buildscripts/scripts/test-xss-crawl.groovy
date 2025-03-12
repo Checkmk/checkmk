@@ -82,6 +82,7 @@ def main() {
                     single_tests.fetch_package(
                         edition: edition,
                         distro: distro,
+                        docker_tag: setup_values.docker_tag,
                         download_dir: download_dir,
                         bisect_comment: params.CIPARAM_BISECT_COMMENT,
                         fake_windows_artifacts: fake_windows_artifacts,

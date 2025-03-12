@@ -20,6 +20,7 @@ from cmk.gui.graphing._artwork import (
     _VAxisMinMax,
     Curve,
     LayoutedCurve,
+    LayoutedCurveArea,
     LayoutedCurveLine,
     LayoutedCurveStack,
     order_graph_curves_for_legend_and_mouse_hover,
@@ -107,7 +108,7 @@ from cmk.gui.graphing._utils import SizeEx
                     color="",
                     title="",
                     scalars={},
-                    type="line",
+                    line_type="line",
                     points=[-5.0, 10.0],
                 )
             ],
@@ -123,7 +124,7 @@ from cmk.gui.graphing._utils import SizeEx
                     color="",
                     title="",
                     scalars={},
-                    type="line",
+                    line_type="line",
                     points=[-5.0, 10.0],
                 )
             ],
@@ -179,7 +180,7 @@ def test__compute_v_axis_min_max(
                     color="",
                     title="",
                     scalars={},
-                    type="line",
+                    line_type="line",
                     points=[-600.0, 2000.0],
                 )
             ],
@@ -194,7 +195,7 @@ def test__compute_v_axis_min_max(
                     color="",
                     title="",
                     scalars={},
-                    type="line",
+                    line_type="line",
                     points=[-250.0, 500.0],
                 )
             ],
@@ -209,7 +210,7 @@ def test__compute_v_axis_min_max(
                     color="",
                     title="",
                     scalars={},
-                    type="line",
+                    line_type="line",
                     points=[-1000.0, 2000.0],
                 )
             ],
@@ -224,7 +225,7 @@ def test__compute_v_axis_min_max(
                     color="",
                     title="",
                     scalars={},
-                    type="line",
+                    line_type="line",
                     points=[1000.0, 2000.0],
                 )
             ],
@@ -246,7 +247,7 @@ def test__compute_v_axis_min_max(
                     color="",
                     title="",
                     scalars={},
-                    type="line",
+                    line_type="line",
                     points=[-500.0, 1000.0],
                 )
             ],
@@ -745,94 +746,196 @@ def test_order_graph_curves_for_legend_and_mouse_hover_curves() -> None:
         )
     ) == [
         Curve(
+            color="",
             line_type="line",
-            color="",
+            rrddata=rrd_data,
             title="1",
-            rrddata=rrd_data,
         ),
         Curve(
-            line_type="ref",
             color="",
-            title="2",
-            rrddata=rrd_data,
-        ),
-        Curve(
-            line_type="-area",
-            color="",
-            title="3",
-            rrddata=rrd_data,
-        ),
-        Curve(
             line_type="stack",
-            color="",
+            rrddata=rrd_data,
             title="7",
-            rrddata=rrd_data,
         ),
         Curve(
+            color="",
             line_type="area",
-            color="",
+            rrddata=rrd_data,
             title="5",
-            rrddata=rrd_data,
         ),
         Curve(
-            line_type="-stack",
             color="",
-            title="6",
-            rrddata=rrd_data,
-        ),
-        Curve(
             line_type="stack",
-            color="",
-            title="4",
             rrddata=rrd_data,
+            title="4",
+        ),
+        Curve(
+            color="",
+            line_type="-area",
+            rrddata=rrd_data,
+            title="3",
+        ),
+        Curve(
+            color="",
+            line_type="-stack",
+            rrddata=rrd_data,
+            title="6",
+        ),
+        Curve(
+            color="",
+            line_type="ref",
+            rrddata=rrd_data,
+            title="2",
         ),
     ]
 
 
-def test_order_graph_curves_for_legend_and_mouse_hover_layouted_curves() -> None:
-    layouted_curves: list[LayoutedCurve] = [
-        LayoutedCurveStack(
-            type="stack",
-            color="",
-            title="1",
-            scalars={},
-            points=[],
+@pytest.mark.parametrize(
+    "curves, result",
+    [
+        pytest.param(
+            [
+                LayoutedCurveStack(
+                    line_type="stack",
+                    color="",
+                    title="1",
+                    scalars={},
+                    points=[],
+                ),
+                LayoutedCurveStack(
+                    line_type="stack",
+                    color="",
+                    title="2",
+                    scalars={},
+                    points=[],
+                ),
+                LayoutedCurveLine(
+                    line_type="line",
+                    color="",
+                    title="3",
+                    scalars={},
+                    points=[],
+                ),
+            ],
+            [
+                LayoutedCurveLine(
+                    line_type="line",
+                    color="",
+                    title="3",
+                    scalars={},
+                    points=[],
+                ),
+                LayoutedCurveStack(
+                    line_type="stack",
+                    color="",
+                    title="2",
+                    scalars={},
+                    points=[],
+                ),
+                LayoutedCurveStack(
+                    line_type="stack",
+                    color="",
+                    title="1",
+                    scalars={},
+                    points=[],
+                ),
+            ],
+            id="stack-and-line",
         ),
-        LayoutedCurveStack(
-            type="stack",
-            color="",
-            title="2",
-            scalars={},
-            points=[],
+        pytest.param(
+            [
+                LayoutedCurveStack(
+                    line_type="-stack",
+                    color="",
+                    title="1",
+                    scalars={},
+                    points=[],
+                ),
+                LayoutedCurveArea(
+                    line_type="-area",
+                    color="",
+                    title="2",
+                    scalars={},
+                    points=[],
+                ),
+                LayoutedCurveLine(
+                    line_type="-line",
+                    color="",
+                    title="3",
+                    scalars={},
+                    points=[],
+                ),
+                LayoutedCurveStack(
+                    line_type="stack",
+                    color="",
+                    title="4",
+                    scalars={},
+                    points=[],
+                ),
+                LayoutedCurveArea(
+                    line_type="area",
+                    color="",
+                    title="5",
+                    scalars={},
+                    points=[],
+                ),
+                LayoutedCurveLine(
+                    line_type="line",
+                    color="",
+                    title="6",
+                    scalars={},
+                    points=[],
+                ),
+            ],
+            [
+                LayoutedCurveLine(
+                    line_type="line",
+                    color="",
+                    title="6",
+                    scalars={},
+                    points=[],
+                ),
+                LayoutedCurveArea(
+                    line_type="area",
+                    color="",
+                    title="5",
+                    scalars={},
+                    points=[],
+                ),
+                LayoutedCurveStack(
+                    line_type="stack",
+                    color="",
+                    title="4",
+                    scalars={},
+                    points=[],
+                ),
+                LayoutedCurveStack(
+                    line_type="-stack",
+                    color="",
+                    title="1",
+                    scalars={},
+                    points=[],
+                ),
+                LayoutedCurveArea(
+                    line_type="-area",
+                    color="",
+                    title="2",
+                    scalars={},
+                    points=[],
+                ),
+                LayoutedCurveLine(
+                    line_type="-line",
+                    color="",
+                    title="3",
+                    scalars={},
+                    points=[],
+                ),
+            ],
+            id="lower-and-upper",
         ),
-        LayoutedCurveLine(
-            type="line",
-            color="",
-            title="3",
-            scalars={},
-            points=[],
-        ),
-    ]
-    assert list(order_graph_curves_for_legend_and_mouse_hover(layouted_curves)) == [
-        LayoutedCurveStack(
-            type="stack",
-            color="",
-            title="2",
-            scalars={},
-            points=[],
-        ),
-        LayoutedCurveStack(
-            type="stack",
-            color="",
-            title="1",
-            scalars={},
-            points=[],
-        ),
-        LayoutedCurveLine(
-            type="line",
-            color="",
-            title="3",
-            scalars={},
-            points=[],
-        ),
-    ]
+    ],
+)
+def test_order_graph_curves_for_legend_and_mouse_hover_layouted_curves(
+    curves: Sequence[LayoutedCurve], result: Sequence[LayoutedCurve]
+) -> None:
+    assert list(order_graph_curves_for_legend_and_mouse_hover(curves)) == result

@@ -8,10 +8,11 @@ import time
 from collections.abc import Mapping, Sequence
 from typing import Any, Literal
 
-import cmk.gui.utils as utils
+from cmk.gui import utils
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.painter.v0.helpers import get_tag_groups
+from cmk.gui.painter.v0.painters import _get_docker_container_status_outputs
 from cmk.gui.painter.v1.helpers import get_perfdata_nth_value
 from cmk.gui.site_config import get_site_config
 from cmk.gui.type_defs import ColumnName, ColumnSpec, Row
@@ -56,6 +57,7 @@ def register_sorters(registry: SorterRegistry) -> None:
     registry.register(SorterHostIpv6Address)
     registry.register(SorterHostIpAddresses)
     registry.register(SorterNumProblems)
+    registry.register(SorterHostDockerNode)
 
     declare_simple_sorter(
         "svcdescr", _("Service description"), "service_description", cmp_service_name
@@ -698,3 +700,36 @@ def cmp_date(column, r1, r2):
     r1_date = get_day_start_timestamp(r1[column])
     r2_date = get_day_start_timestamp(r2[column])
     return (r2_date > r1_date) - (r2_date < r1_date)
+
+
+def _get_docker_nodes(row: Row) -> str:
+    if row.get("host_labels", {}).get("cmk/docker_object") != "container":
+        return ""
+
+    docker_nodes = _get_docker_container_status_outputs()
+    output = docker_nodes.get(row["host_name"])
+    # Output with node: "Container running on node mynode2"
+    # Output without node: "Container running"
+    if output is None or "node" not in output:
+        return ""
+
+    return output.split()[-1]
+
+
+class SorterHostDockerNode(Sorter):
+    @property
+    def ident(self) -> str:
+        return "host_docker_node"
+
+    @property
+    def title(self) -> str:
+        return _("Node name")
+
+    @property
+    def columns(self) -> Sequence[ColumnName]:
+        return ["host_labels", "host_label_sources"]
+
+    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
+        val1 = _get_docker_nodes(row=r1)
+        val2 = _get_docker_nodes(row=r2)
+        return cmp_insensitive_string(val1, val2)

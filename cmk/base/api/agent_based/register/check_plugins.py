@@ -8,7 +8,6 @@ import functools
 from collections.abc import Callable, Generator, Mapping
 from typing import Any
 
-from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets import RuleSetName
 
 from cmk.checkengine.checking import CheckPluginName
@@ -108,11 +107,11 @@ def _validate_kwargs(
     service_name: str,
     requires_item: bool,
     discovery_function: Callable,
-    discovery_default_parameters: ParametersTypeAlias | None,
+    discovery_default_parameters: Mapping[str, object] | None,
     discovery_ruleset_name: str | None,
     discovery_ruleset_type: RuleSetType,
     check_function: Callable,
-    check_default_parameters: ParametersTypeAlias | None,
+    check_default_parameters: Mapping[str, object] | None,
     check_ruleset_name: str | None,
     cluster_check_function: Callable | None,
 ) -> None:
@@ -164,11 +163,11 @@ def create_check_plugin(
     sections: list[str] | None = None,
     service_name: str,
     discovery_function: Callable,
-    discovery_default_parameters: ParametersTypeAlias | None = None,
+    discovery_default_parameters: Mapping[str, object] | None = None,
     discovery_ruleset_name: str | None = None,
     discovery_ruleset_type: RuleSetType = RuleSetType.MERGED,
     check_function: Callable,
-    check_default_parameters: ParametersTypeAlias | None = None,
+    check_default_parameters: Mapping[str, object] | None = None,
     check_ruleset_name: str | None = None,
     cluster_check_function: Callable | None = None,
     location: PluginLocation | LegacyPluginLocation,

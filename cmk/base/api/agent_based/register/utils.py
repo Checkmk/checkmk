@@ -8,7 +8,6 @@ from collections import defaultdict
 from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
 from typing import Final, get_args, Literal, NoReturn, Union
 
-from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.sectionname import SectionName
 
@@ -48,7 +47,7 @@ def validate_function_arguments(
     type_label: TypeLabel,
     function: Callable,
     has_item: bool,
-    default_params: ParametersTypeAlias | None,
+    default_params: Mapping[str, object] | None,
     sections: list[ParsedSectionName],
 ) -> None:
     """Validate the functions signature and type"""
@@ -166,7 +165,7 @@ def validate_ruleset_type(ruleset_type: RuleSetType) -> None:
 def validate_default_parameters(
     params_type: Literal["check", "discovery", "host_label", "inventory"],
     ruleset_name: str | None,
-    default_parameters: ParametersTypeAlias | None,
+    default_parameters: Mapping[str, object] | None,
 ) -> None:
     if default_parameters is None:
         if ruleset_name is None:

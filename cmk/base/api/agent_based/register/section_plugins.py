@@ -7,12 +7,11 @@
 import functools
 import inspect
 import itertools
-from collections.abc import Generator, Sequence
+from collections.abc import Generator, Mapping, Sequence
 from typing import Any
 
 from cmk.ccc.exceptions import MKGeneralException
 
-from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.regex import regex
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.sectionname import SectionName
@@ -100,7 +99,7 @@ def validate_parse_function(
 def _validate_host_label_kwargs(
     *,
     host_label_function: HostLabelFunction,
-    host_label_default_parameters: ParametersTypeAlias | None,
+    host_label_default_parameters: Mapping[str, object] | None,
     host_label_ruleset_name: str | None,
     host_label_ruleset_type: RuleSetType,
 ) -> None:

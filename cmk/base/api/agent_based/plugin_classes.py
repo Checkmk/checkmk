@@ -9,7 +9,6 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, Literal, NamedTuple, Protocol, Self
 
-from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.sectionname import SectionName
 
@@ -53,7 +52,7 @@ class AgentSectionPlugin(NamedTuple):
     parsed_section_name: ParsedSectionName
     parse_function: AgentParseFunction
     host_label_function: HostLabelFunction
-    host_label_default_parameters: ParametersTypeAlias | None
+    host_label_default_parameters: Mapping[str, object] | None
     host_label_ruleset_name: RuleSetName | None
     host_label_ruleset_type: RuleSetTypeName
     supersedes: set[SectionName]
@@ -85,7 +84,7 @@ class SNMPSectionPlugin(NamedTuple):
     parsed_section_name: ParsedSectionName
     parse_function: SNMPParseFunction
     host_label_function: HostLabelFunction
-    host_label_default_parameters: ParametersTypeAlias | None
+    host_label_default_parameters: Mapping[str, object] | None
     host_label_ruleset_name: RuleSetName | None
     host_label_ruleset_type: RuleSetTypeName
     detect_spec: SNMPDetectBaseType
@@ -102,11 +101,11 @@ class CheckPlugin(NamedTuple):
     sections: list[ParsedSectionName]
     service_name: str
     discovery_function: DiscoveryFunction
-    discovery_default_parameters: ParametersTypeAlias | None
+    discovery_default_parameters: Mapping[str, object] | None
     discovery_ruleset_name: RuleSetName | None
     discovery_ruleset_type: RuleSetTypeName
     check_function: CheckFunction
-    check_default_parameters: ParametersTypeAlias | None
+    check_default_parameters: Mapping[str, object] | None
     check_ruleset_name: RuleSetName | None
     cluster_check_function: CheckFunction | None
     location: PluginLocation | LegacyPluginLocation

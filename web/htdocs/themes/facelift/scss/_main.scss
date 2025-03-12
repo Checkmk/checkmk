@@ -1293,6 +1293,20 @@ tr.hidden {
   display: none;
 }
 
+// In the case of both scrollbars being visible, the padding of #main_page_content doesn't work
+// in views, so we need additional padding on the within #data_container.
+// We need this "> .simplebar-*" chain to make sure to only select the direct child div of
+// #main_page_content
+#main_page_content.simplebar-scrollable-x.simplebar-scrollable-y
+  > .simplebar-wrapper
+  > .simplebar-mask
+  > .simplebar-offset
+  > .simplebar-content-wrapper
+  > .simplebar-content
+  > div#data_container {
+  padding-right: $simplebar-track-width;
+}
+
 .simplebar-scrollbar::before {
   background: $simplebar-scrollbar-color;
   border-radius: 2px;
@@ -1311,7 +1325,7 @@ tr.hidden {
   &.simplebar-horizontal {
     height: $spacing-double;
 
-    div.simplebar-scrollbar {
+    div.simplebar-scrollbar:before {
       top: $spacing-half;
       height: $simplebar-scrollbar-width;
     }

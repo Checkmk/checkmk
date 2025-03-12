@@ -7,7 +7,7 @@
 body.dashboard {
   overflow: hidden;
 
-  &.main div#main_page_content {
+  &.main div#main_page_content:not(.simplebar-scrollable-x) {
     padding-bottom: 0;
   }
 
@@ -193,6 +193,22 @@ body.main.dashlet {
     div#dashlet_content_wrapper[data-simplebar="init"] {
       height: 100%;
       overflow: auto;
+
+      &.simplebar-scrollable-x div#data_container {
+        padding-bottom: $simplebar-track-width;
+      }
+
+      &.simplebar-scrollable-y div#data_container {
+        padding-right: $simplebar-track-width;
+      }
+
+      > div.simplebar-track.simplebar-horizontal {
+        height: $simplebar-track-width;
+
+        div.simplebar-scrollbar:before {
+          top: 3px;
+        }
+      }
     }
   }
 }

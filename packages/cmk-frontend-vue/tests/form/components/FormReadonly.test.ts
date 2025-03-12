@@ -368,7 +368,10 @@ test('FormReadonly renders dual list choice', () => {
     props: {
       spec: dualListChoiceFormSpec,
       backendValidation: [],
-      data: ['choice1', 'choice2']
+      data: [
+        { name: 'choice1', title: 'Choice 1' },
+        { name: 'choice2', title: 'Choice 2' }
+      ]
     }
   })
   screen.getByText('Choice 1')

@@ -31,7 +31,8 @@ import type {
   TimeSpecific,
   FileUpload,
   DictionaryElement,
-  DictionaryGroup
+  DictionaryGroup,
+  MultipleChoiceElement
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import {
   groupNestedValidations,
@@ -44,6 +45,7 @@ import {
   type Operator,
   type OperatorI18n
 } from './forms/FormConditionChoices/utils'
+import type { DualListChoiceElement } from '@/form/components/forms/FormDualListChoice.vue'
 
 function renderForm(
   formSpec: FormSpec,
@@ -90,9 +92,9 @@ function renderForm(
     case 'catalog':
       return h('div', 'Catalog does not support readonly')
     case 'dual_list_choice':
-      return renderMultipleChoice(formSpec as DualListChoice, value as string[])
+      return renderDualListChoice(formSpec as DualListChoice, value as DualListChoiceElement[])
     case 'checkbox_list_choice':
-      return renderMultipleChoice(formSpec as CheckboxListChoice, value as string[])
+      return renderCheckboxListChoice(formSpec as CheckboxListChoice, value as string[])
     case 'password':
       return renderPassword(formSpec as Password, value as (string | boolean)[])
     case 'tuple':
@@ -179,12 +181,29 @@ function renderTuple(
   )
 }
 
+function renderDualListChoice(formSpec: DualListChoice, value: DualListChoiceElement[]): VNode {
+  let localElements: MultipleChoiceElement[] = formSpec.elements
+  if (formSpec.autocompleter) {
+    localElements = [...localElements, ...value]
+  }
+  return renderMultipleChoice(
+    formSpec,
+    localElements,
+    value.map((element) => element.name)
+  )
+}
+
+function renderCheckboxListChoice(formSpec: CheckboxListChoice, value: string[]): VNode {
+  return renderMultipleChoice(formSpec, formSpec.elements, value)
+}
+
 function renderMultipleChoice(
   formSpec: DualListChoice | CheckboxListChoice,
+  elements: MultipleChoiceElement[],
   value: string[]
 ): VNode {
   const nameToTitle: Record<string, string> = {}
-  for (const element of formSpec.elements) {
+  for (const element of elements) {
     nameToTitle[element.name] = element.title
   }
 

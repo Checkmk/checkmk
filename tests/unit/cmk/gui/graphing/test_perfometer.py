@@ -21,6 +21,7 @@ from cmk.gui.graphing._perfometer import (
     MetricometerRendererLegacyLinear,
     MetricometerRendererLegacyLogarithmic,
     MetricometerRendererPerfometer,
+    MetricometerRendererStacked,
     MetricRendererStack,
     parse_perfometer,
 )
@@ -1066,3 +1067,58 @@ def test_parse_perfometer(
 def test_parse_dual_or_stacked_perfometer_errors(legacy_perfometer: LegacyPerfometer) -> None:
     with pytest.raises(MKGeneralException):
         parse_perfometer(legacy_perfometer)
+
+
+def test_metricometer_renderer_stacked(request_context: None, patch_theme: None) -> None:
+    metricometer = MetricometerRendererStacked(
+        perfometers_api.Stacked(
+            name="stacked",
+            lower=perfometers_api.Perfometer(
+                name="lower",
+                focus_range=perfometers_api.FocusRange(
+                    lower=perfometers_api.Closed(0),
+                    upper=perfometers_api.Open(10),
+                ),
+                segments=["metric_1"],
+            ),
+            upper=perfometers_api.Perfometer(
+                name="upper",
+                focus_range=perfometers_api.FocusRange(
+                    lower=perfometers_api.Closed(0),
+                    upper=perfometers_api.Open(10),
+                ),
+                segments=["metric_2"],
+            ),
+        ),
+        {
+            "metric_1": TranslatedMetric(
+                originals=[Original("metric_1", 1.0)],
+                value=2.0,
+                scalar={},
+                auto_graph=True,
+                title="Metric name 1",
+                unit_spec=ConvertibleUnitSpecification(
+                    notation=DecimalNotation(symbol=""),
+                    precision=AutoPrecision(digits=2),
+                ),
+                color="#111111",
+            ),
+            "metric_2": TranslatedMetric(
+                originals=[Original("metric_2", 1.0)],
+                value=7.0,
+                scalar={},
+                auto_graph=True,
+                title="Metric name 2",
+                unit_spec=ConvertibleUnitSpecification(
+                    notation=DecimalNotation(symbol=""),
+                    precision=AutoPrecision(digits=2),
+                ),
+                color="#111111",
+            ),
+        },
+    )
+    assert metricometer.get_stack() == [
+        [(59.5, "#111111"), (40.5, "#bdbdbd")],
+        [(17.0, "#111111"), (83.0, "#bdbdbd")],
+    ]
+    assert metricometer.get_label() == "7 / 2"

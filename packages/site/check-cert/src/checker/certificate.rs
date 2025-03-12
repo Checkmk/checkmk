@@ -334,7 +334,7 @@ fn check_validity_duration(
             time_to_expiration.whole_days()
         );
         match levels {
-            None => CheckResult::notice(message, metric.clone()),
+            None => CheckResult::ok(message, metric.clone()),
             Some(levels) => CheckResult::from_levels(
                 CheckResultLevelsText::new(
                     message.clone(),

@@ -7,7 +7,7 @@ from collections.abc import Collection, Iterable, Mapping
 
 from livestatus import SiteConfiguration, SiteId
 
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import get_omd_config, omd_site
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import omd_root
@@ -81,3 +81,7 @@ def _filter_for_enabled_piggyback_hub(
         for site_id, site_config in configured_sites.items()
         if _piggyback_hub_enabled(site_config, global_settings) is True
     }
+
+
+def local_piggyback_hub_enabled() -> bool:
+    return get_omd_config(omd_root).get("PIGGYBACK_HUB_ENABLED", "off") == "on"

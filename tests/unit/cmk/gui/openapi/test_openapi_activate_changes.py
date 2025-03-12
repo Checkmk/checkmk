@@ -74,9 +74,7 @@ def test_activate_changes(
                 sync_file_filter_func=orig_features.sync_file_filter_func,
                 snapshot_manager_factory=orig_features.snapshot_manager_factory,
                 get_rabbitmq_definitions=orig_features.get_rabbitmq_definitions,
-                distribute_piggyback_hub_configs=(
-                    distribute_piggyback_config := mocker.MagicMock()
-                ),
+                distribute_piggyback_hub_configs=mocker.MagicMock(),
             ),
         )
 
@@ -85,7 +83,6 @@ def test_activate_changes(
             resp = clients.ActivateChanges.activate_changes()
 
     # activation_start.assert_called_once()
-    distribute_piggyback_config.assert_called_once()
     restart_rabbitmq_when_changed.assert_called_once()
     assert set(resp.json["extensions"]) == {
         "sites",
@@ -152,16 +149,13 @@ def test_list_activate_changes_star_etag(
                 sync_file_filter_func=orig_features.sync_file_filter_func,
                 snapshot_manager_factory=orig_features.snapshot_manager_factory,
                 get_rabbitmq_definitions=orig_features.get_rabbitmq_definitions,
-                distribute_piggyback_hub_configs=(
-                    distribute_piggyback_config := mocker.MagicMock()
-                ),
+                distribute_piggyback_hub_configs=mocker.MagicMock(),
             ),
         )
 
         with mock_livestatus(expect_status_query=True):
             clients.ActivateChanges.activate_changes(etag="star")
     activation_start.assert_called_once()
-    distribute_piggyback_config.assert_called_once()
     restart_rabbitmq_when_changed.assert_called_once()
 
 
@@ -187,13 +181,10 @@ def test_list_activate_changes_valid_etag(
                 sync_file_filter_func=orig_features.sync_file_filter_func,
                 snapshot_manager_factory=orig_features.snapshot_manager_factory,
                 get_rabbitmq_definitions=orig_features.get_rabbitmq_definitions,
-                distribute_piggyback_hub_configs=(
-                    distribute_piggyback_config := mocker.MagicMock()
-                ),
+                distribute_piggyback_hub_configs=mocker.MagicMock(),
             ),
         )
         with mock_livestatus(expect_status_query=True):
             clients.ActivateChanges.activate_changes(etag="valid_etag")
     activation_start.assert_called_once()
-    distribute_piggyback_config.assert_called_once()
     restart_rabbitmq_when_changed.assert_called_once()

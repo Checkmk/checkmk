@@ -130,7 +130,10 @@ from cmk.gui.watolib.hosts_and_folders import (
     validate_all_hosts,
 )
 from cmk.gui.watolib.paths import wato_var_dir
-from cmk.gui.watolib.piggyback_hub import has_piggyback_hub_relevant_changes
+from cmk.gui.watolib.piggyback_hub import (
+    has_piggyback_hub_relevant_changes,
+    local_piggyback_hub_enabled,
+)
 from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
 from cmk.gui.watolib.snapshots import SnapshotManager
 
@@ -1473,7 +1476,9 @@ class ActivateChangesManager(ActivateChanges):
             create_rabbitmq_new_definitions_file(paths.omd_root, rabbitmq_definitions[omd_site()])
             rabbitmq.update_and_activate_rabbitmq_definitions(paths.omd_root, logger)
 
-        if has_piggyback_hub_relevant_changes([change for _, change in self._pending_changes]):
+        if local_piggyback_hub_enabled() and has_piggyback_hub_relevant_changes(
+            [change for _, change in self._pending_changes]
+        ):
             with (
                 tracer.span("distribute_piggyback_hub_configs"),
                 _debug_log_message("Starting piggyback hub config distribution"),

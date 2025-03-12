@@ -59,7 +59,6 @@
   --icon-save: url('~cmk-frontend/src/themes/facelift/images/icon_save.svg');
   --icon-cancel: url('~cmk-frontend/src/themes/facelift/images/icon_cancel.svg');
   --icon-pending-task: url('~cmk-frontend/src/themes/facelift/images/icon_pending_task.svg');
-  --icon-checkmark-plus: url('~cmk-frontend/src/themes/facelift/images/icon_checkmark_plus.svg');
 
   /* TODO: remove icno-info and replace it with icon-help-new (icon-help later)*/
   --icon-info: url('~cmk-frontend/src/themes/facelift/images/icon_info.svg');
@@ -99,6 +98,7 @@
     --icon-info-circle: url('~cmk-frontend/src/themes/facelift/images/icon_info_circle.svg');
     --icon-tree-closed: url('~cmk-frontend/src/themes/facelift/images/tree_closed.svg');
     --icon-search: url('~cmk-frontend/src/themes/facelift/images/icon_search_action.svg');
+    --icon-checkmark-plus: url('~cmk-frontend/src/themes/facelift/images/icon_checkmark_plus.svg');
 
     /* Colors */
     --default-submit-button-border-color: var(--success-dimmed);
@@ -153,6 +153,7 @@
     --icon-info-circle: url('~cmk-frontend/src/themes/modern-dark/images/icon_info_circle.svg');
     --icon-tree-closed: url('~cmk-frontend/src/themes/modern-dark/images/tree_closed.svg');
     --icon-search: url('~cmk-frontend/src/themes/modern-dark/images/icon_search_action.svg');
+    --icon-checkmark-plus: url('~cmk-frontend/src/themes/modern-dark/images/icon_checkmark_plus.svg');
 
     /* Colors */
     --default-submit-button-border-color: rgb(8 94 61);

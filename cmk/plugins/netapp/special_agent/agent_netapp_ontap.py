@@ -53,7 +53,9 @@ def _collect_netapp_resource_volume(connection: HostConnection, is_constituent: 
     )
 
     yield from NetAppResource.Volume.get_collection(
-        connection=connection, is_constituent=is_constituent, fields=",".join(field_query)
+        connection=connection,
+        is_constituent=is_constituent,
+        fields=",".join(field_query),
     )
 
 
@@ -537,7 +539,7 @@ def fetch_alerts(connection: HostConnection, args: Args) -> Iterable[models.Aler
         url=f"{connection.origin}/api/private/support/alerts",
         headers=connection.headers,
         verify=False if args.no_cert_check else True,
-        auth=(connection.username, connection.password),
+        auth=(connection.username, connection.password),  # type: ignore[arg-type]
         timeout=args.timeout,
     )
 
@@ -580,7 +582,13 @@ def fetch_vs_traffic_counters(
             "iscsi_read_ops",
             "iscsi_write_ops",
         ),
-        "svm_nfs_v3": ("read_throughput", "write_throughput", "read_ops", "write_ops", "ops"),
+        "svm_nfs_v3": (
+            "read_throughput",
+            "write_throughput",
+            "read_ops",
+            "write_ops",
+            "ops",
+        ),
         "svm_nfs_v4": (
             "total.read_throughput",
             "total.write_throughput",
@@ -681,7 +689,9 @@ def fetch_environment(connection):
     )
 
     for element in NetAppResource.Sensors.get_collection(
-        connection=connection, fields=",".join(field_query), type="thermal|fan|voltage|current"
+        connection=connection,
+        fields=",".join(field_query),
+        type="thermal|fan|voltage|current",
     ):
         element_data = element.to_dict()
         yield models.EnvironmentThresholdSensorModel(

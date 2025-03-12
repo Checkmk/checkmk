@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from snap7.types import Areas
+from snap7.type import Areas
 
 from cmk.special_agents.agent_siemens_plc import (
     _addresses_from_area_values,

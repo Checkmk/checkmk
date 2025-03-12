@@ -303,7 +303,9 @@ def packagenames_to_libnames(
 
 
 @cache
-def get_requirements_libs(repopath: Path) -> dict[PackageName, list[NormalizedPackageName]]:
+def get_requirements_libs(
+    repopath: Path,
+) -> dict[PackageName, list[NormalizedPackageName]]:
     """Collect info from requirement files with additions from site-packages
 
     The dict has as key the requirement file package name and as value a list with all import names
@@ -398,6 +400,7 @@ def test_dependencies_are_declared() -> None:
         "ibm_db_dbi",  # active_checks/check_sql
         "sqlanydb",  # active_checks/check_sql
         "libcst",  # doc/treasures/migration_helpers
+        "tests",  # buildscripts/scripts/assert_build_artifactsa.py and buildscripts/scripts/lib/registry.py
     }
 
     assert undeclared_dependencies_str >= known_undeclared_dependencies, (

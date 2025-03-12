@@ -10,10 +10,7 @@ from typing import Any, Unpack
 
 import pytest
 from mypy_boto3_logs.client import CloudWatchLogsClient
-from mypy_boto3_logs.type_defs import (
-    GetQueryResultsRequestRequestTypeDef,
-    GetQueryResultsResponseTypeDef,
-)
+from mypy_boto3_logs.type_defs import GetQueryResultsRequestTypeDef, GetQueryResultsResponseTypeDef
 
 from cmk.special_agents.agent_aws import (
     _create_lamdba_sections,
@@ -291,12 +288,16 @@ def test_lambda_cloudwatch_insights_query_results_timeout() -> None:
             pass
 
         def get_query_results(
-            self, **kwargs: Unpack[GetQueryResultsRequestRequestTypeDef]
+            self, **kwargs: Unpack[GetQueryResultsRequestTypeDef]
         ) -> GetQueryResultsResponseTypeDef:
             return {
                 "queryLanguage": "CWLI",
                 "results": [[]],
-                "statistics": {"recordsMatched": 2.0, "recordsScanned": 6.0, "bytesScanned": 710.0},
+                "statistics": {
+                    "recordsMatched": 2.0,
+                    "recordsScanned": 6.0,
+                    "bytesScanned": 710.0,
+                },
                 "status": "Running",
                 "encryptionKey": "I made this up to make mypy happy",
                 "ResponseMetadata": {

@@ -1,3 +1,10 @@
 datamodel-code-generator==0.26.1  # Locked to 0.26.1 since 0.26.3 handled const strings differently which broke inheritance.
 pymongo<4.9  # 4.9 has no pymongo.database.Database anymore
 setuptools <=70.3.0  # See https://github.com/pypa/setuptools/issues/4487#issuecomment-2237487845 for context
+# TODO: replace pysnmp-lextudio with the non-suffix pysnmp package. pysnmp-lextudio is deprecated:
+# https://pypi.org/project/pysnmp-lextudio/
+# All *-lextudio packages and pyasn1 are pinned due to their dependencies.
+pyasn1==0.6.0
+pysmi-lextudio==1.4.3
+pysnmp-lextudio==6.1.2
+snmpsim-lextudio==1.1.0

@@ -262,9 +262,16 @@ class PushUserProfilesToSite(AutomationCommand[PushUserProfilesRequest]):
         return "push-profiles"
 
     def get_request(self) -> PushUserProfilesRequest:
+        if user_visuals := request.get_str_input("visuals"):
+            # Visuals are only synced if they changed or central is also on 2.4
+            return PushUserProfilesRequest(
+                ast.literal_eval(request.get_str_input_mandatory("profiles")),
+                ast.literal_eval(user_visuals),
+            )
+
         return PushUserProfilesRequest(
-            ast.literal_eval(request.get_str_input_mandatory("profiles")),
-            ast.literal_eval(request.get_str_input_mandatory("visuals", None)),
+            user_profiles=ast.literal_eval(request.get_str_input_mandatory("profiles")),
+            user_visuals=None,
         )
 
     def execute(self, api_request: PushUserProfilesRequest) -> Literal[True]:

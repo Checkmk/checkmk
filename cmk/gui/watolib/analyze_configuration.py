@@ -281,7 +281,7 @@ def _perform_tests_for_site(
             assert isinstance(raw_ac_test_results, list)
             ac_test_results = [ACTestResult.from_repr(r) for r in raw_ac_test_results]
 
-        logger.error("[%s] Finished: %r", site_id, ac_test_results)
+        logger.debug("[%s] Finished: %r", site_id, ac_test_results)
         return _TestResult(
             state=0,
             ac_test_results=ac_test_results,

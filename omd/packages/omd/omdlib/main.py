@@ -28,7 +28,7 @@ import traceback
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from enum import auto, Enum
 from pathlib import Path
-from typing import assert_never, BinaryIO, cast, Final, IO, Literal, NamedTuple, NoReturn
+from typing import assert_never, BinaryIO, cast, Final, IO, Literal, NamedTuple, NoReturn, override
 from uuid import uuid4
 
 import psutil
@@ -179,6 +179,7 @@ class Log(io.StringIO):
 
         self.color_replace = re.compile("\033\\[\\d{1,2}m", re.UNICODE)
 
+    @override
     def __del__(self) -> None:
         if self.fd == 1:
             sys.stdout = self.orig
@@ -187,12 +188,14 @@ class Log(io.StringIO):
         self.log.close()
 
     # TODO: Ensure we get Text here
+    @override
     def write(self, data: str) -> int:
         text = data
         self.orig.write(text)
         self.log.write(self.color_replace.sub("", text))
         return len(text)
 
+    @override
     def flush(self) -> None:
         self.log.flush()
         self.orig.flush()
@@ -3809,9 +3812,11 @@ class PackageManager(abc.ABC):
 
 
 class PackageManagerDEB(PackageManager):
+    @override
     def uninstall(self, package_name: str) -> None:
         self._execute_uninstall(["apt-get", "-y", "purge", package_name])
 
+    @override
     def get_all_installed_packages(self) -> list[str]:
         p = self._execute(["dpkg", "-l"])
         output = p.communicate()[0]

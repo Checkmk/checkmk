@@ -17,7 +17,7 @@ import tarfile
 from collections.abc import Callable, Iterator
 from pathlib import Path
 from types import TracebackType
-from typing import BinaryIO
+from typing import BinaryIO, override
 
 from omdlib.contexts import SiteContext
 from omdlib.type_defs import CommandOptions
@@ -214,6 +214,7 @@ class RRDSocket(contextlib.AbstractContextManager):
         ):
             raise Exception(f"Error while processing rrdcached command ({cmd}): {msg}")
 
+    @override
     def __exit__(
         self,
         exc_type: type[BaseException] | None,

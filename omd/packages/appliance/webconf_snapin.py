@@ -7,6 +7,7 @@ import ast
 import json
 import subprocess
 from pathlib import Path
+from typing import override
 
 import cmk.ccc.version as cmk_version
 
@@ -26,21 +27,26 @@ def nav_modules_path() -> Path:
 
 class SidebarSnapinCMAWebconf(SidebarSnapin):
     @classmethod
+    @override
     def type_name(cls) -> str:
         return "webconf"
 
     @classmethod
+    @override
     def title(cls) -> str:
         return _("Checkmk Appliance")
 
     @classmethod
+    @override
     def description(cls) -> str:
         return _("Access to the Checkmk Appliance Web Configuration")
 
     @classmethod
+    @override
     def allowed_roles(cls) -> list[str]:
         return ["admin"]
 
+    @override
     def show(self) -> None:
         if not cmk_version.is_cma():
             return

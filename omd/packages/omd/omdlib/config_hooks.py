@@ -24,7 +24,7 @@ from collections.abc import Iterable
 from ipaddress import ip_network, IPv4Address, IPv6Address
 from pathlib import Path
 from re import Pattern
-from typing import TYPE_CHECKING
+from typing import override, TYPE_CHECKING
 
 import pydantic
 
@@ -61,6 +61,7 @@ ConfigHooks = dict[str, ConfigHook]
 
 
 class IpAddressListHasError(ConfigChoiceHasError):
+    @override
     def __call__(self, value: str) -> result.Result[None, str]:
         ip_addresses = value.split()
         if not ip_addresses:
@@ -74,6 +75,7 @@ class IpAddressListHasError(ConfigChoiceHasError):
 
 
 class IpListenAddressHasError(ConfigChoiceHasError):
+    @override
     def __call__(self, value: str) -> result.Result[None, str]:
         if not value:
             return result.Error("Empty address")
@@ -94,6 +96,7 @@ class IpListenAddressHasError(ConfigChoiceHasError):
 
 
 class NetworkPortHasError(ConfigChoiceHasError):
+    @override
     def __call__(self, value: str) -> result.Result[None, str]:
         try:
             port = int(value)
@@ -107,6 +110,7 @@ class NetworkPortHasError(ConfigChoiceHasError):
 
 
 class ApacheTCPAddrHasError(ConfigChoiceHasError):
+    @override
     def __call__(self, value: str) -> result.Result[None, str]:
         class _Parser(pydantic.RootModel):
             root: pydantic.HttpUrl

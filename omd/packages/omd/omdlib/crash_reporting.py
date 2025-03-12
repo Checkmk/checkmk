@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from typing import override
+
 from cmk.ccc import version
 from cmk.ccc.crash_reporting import ABCCrashReport, CrashReportStore, VersionInfo
 
@@ -12,6 +14,7 @@ from cmk.utils.paths import crash_dir, omd_root
 
 class _OMDCrashReport(ABCCrashReport[VersionInfo]):
     @classmethod
+    @override
     def type(cls) -> str:
         return "omd"
 

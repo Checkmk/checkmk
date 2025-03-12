@@ -7,6 +7,7 @@
 import abc
 import os
 from pathlib import Path
+from typing import override
 
 from omdlib.init_scripts import check_status
 from omdlib.skel_permissions import (
@@ -102,10 +103,12 @@ class SiteContext(AbstractSiteContext):
             "###EDITION###": Edition[version.split(".")[-1].upper()].long,
         }
 
+    @override
     def set_config(self, config: Config) -> None:
         self._config = config
         self._config_loaded = True
 
+    @override
     def is_empty(self) -> bool:
         for entry in os.listdir(self.dir):
             if entry not in [".", ".."]:
@@ -161,20 +164,25 @@ class SiteContext(AbstractSiteContext):
 
 class RootContext(AbstractSiteContext):
     @property
+    @override
     def tmp_dir(self) -> str:
         return "/tmp"  # nosec B108 # BNS:13b2c8
 
     @property
+    @override
     def real_dir(self) -> str:
         """Absolute base path (without trailing slash)"""
         return "/"
 
     @property
+    @override
     def real_tmp_dir(self) -> str:
         return "%s/tmp" % self.real_dir
 
+    @override
     def set_config(self, config: Config) -> None:
         pass
 
+    @override
     def is_empty(self) -> bool:
         return False

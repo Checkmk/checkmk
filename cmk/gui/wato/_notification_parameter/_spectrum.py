@@ -34,7 +34,7 @@ class NotificationParameterSpectrum(NotificationParameter):
 
     def _form_spec(self):
         return Dictionary(
-            title=Title("Create notification with the following parameters"),
+            title=Title("Spectrum Server parameters"),
             elements={
                 "destination": DictElement(
                     required=True,

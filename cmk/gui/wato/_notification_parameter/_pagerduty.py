@@ -39,7 +39,7 @@ class NotificationParameterPagerDuty(NotificationParameter):
     def _form_spec(self) -> DictionaryExtended:
         # TODO register CSE specific version
         return DictionaryExtended(
-            title=Title("Create notification with the following parameters"),
+            title=Title("PagerDuty parameters"),
             elements={
                 "routing_key": DictElement(
                     parameter_form=Password(

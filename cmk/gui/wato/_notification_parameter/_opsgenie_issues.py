@@ -46,7 +46,7 @@ class NotificationParameterOpsgenie(NotificationParameter):
 
     def _form_spec(self):
         return Dictionary(
-            title=Title("Create notification with the following parameters"),
+            title=Title("Opsgenie parameters"),
             elements={
                 "password": DictElement(
                     required=True,

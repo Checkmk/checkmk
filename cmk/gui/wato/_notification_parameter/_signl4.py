@@ -35,7 +35,7 @@ class NotificationParameterSIGNL4(NotificationParameter):
 
     def _form_spec(self) -> Dictionary:
         return Dictionary(
-            title=Title("Create notification with the following parameters"),
+            title=Title("SIGNL4 Alerting parameters"),
             elements={
                 "password": DictElement(
                     required=True,

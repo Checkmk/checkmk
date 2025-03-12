@@ -55,7 +55,7 @@ class NotificationParameterMsTeams(NotificationParameter):
 
     def _form_spec(self):
         return Dictionary(
-            title=Title("Create notification with the following parameters"),
+            title=Title("Microsoft Teams parameters"),
             elements={
                 "webhook_url": DictElement(
                     required=True,

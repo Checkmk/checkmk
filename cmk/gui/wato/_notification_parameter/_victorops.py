@@ -40,7 +40,7 @@ class NotificationParameterVictorOPS(NotificationParameter):
 
     def _form_spec(self):
         return Dictionary(
-            title=Title("Create notification with the following parameters"),
+            title=Title("Splunk On-Call parameters"),
             elements={
                 "webhook_url": DictElement(
                     required=True,

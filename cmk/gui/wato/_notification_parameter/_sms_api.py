@@ -37,7 +37,7 @@ class NotificationParameterSMSviaIP(NotificationParameter):
 
     def _form_spec(self) -> Dictionary:
         return Dictionary(
-            title=Title("Create notification with the following parameters"),
+            title=Title("SMS (using modem API) parameters"),
             elements={
                 "modem_type": DictElement(
                     required=True,

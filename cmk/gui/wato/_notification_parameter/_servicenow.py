@@ -45,7 +45,7 @@ class NotificationParameterServiceNow(NotificationParameter):
 
     def _form_spec(self) -> Dictionary:
         return Dictionary(
-            title=Title("Create notification with the following parameters"),
+            title=Title("ServiceNow parameters"),
             migrate=_migrate_auth_section,
             elements={
                 "url": DictElement(

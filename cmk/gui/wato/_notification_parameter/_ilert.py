@@ -43,7 +43,7 @@ class NotificationParameterILert(NotificationParameter):
     def _form_spec(self) -> Dictionary:
         return Dictionary(
             # optional_keys=["ignore_ssl", "proxy_url"],
-            title=Title("Create notification with the following parameters"),
+            title=Title("iLert parameters"),
             elements={
                 "ilert_api_key": DictElement(
                     parameter_form=Password(

@@ -38,7 +38,7 @@ class NotificationParameterCiscoWebexTeams(NotificationParameter):
 
     def _form_spec(self) -> Dictionary:
         return Dictionary(
-            title=Title("Create notification with the following parameters"),
+            title=Title("Cisco Webex Teams parameters"),
             elements={
                 "webhook_url": DictElement(
                     parameter_form=CascadingSingleChoice(

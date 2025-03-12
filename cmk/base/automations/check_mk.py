@@ -30,7 +30,7 @@ from typing import Any
 import livestatus
 
 import cmk.ccc.debug
-from cmk.ccc import store, version
+from cmk.ccc import version
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKSNMPError, MKTimeout, OnError
 from cmk.ccc.version import edition_supports_nagvis
 
@@ -71,7 +71,7 @@ from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RuleSpec
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.timeout import Timeout
-from cmk.utils.timeperiod import builtin_timeperiods, timeperiod_active, TimeperiodSpecs
+from cmk.utils.timeperiod import load_timeperiods, timeperiod_active
 
 from cmk.automations.results import (
     ActiveCheckResult,
@@ -198,13 +198,6 @@ from cmk.server_side_calls_backend import (
 
 HistoryFile = str
 HistoryFilePair = tuple[HistoryFile, HistoryFile]
-
-
-def load_timeperiods() -> TimeperiodSpecs:
-    path = Path(cmk.utils.paths.check_mk_config_dir, "wato", "timeperiods.mk")
-    timeperiods = store.load_from_mk_file(path, "timeperiods", {})
-    timeperiods.update(builtin_timeperiods())
-    return timeperiods
 
 
 def _schedule_discovery_check(host_name: HostName) -> None:

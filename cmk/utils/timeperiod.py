@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from datetime import datetime
+from pathlib import Path
 from typing import NotRequired, TypeAlias, TypedDict, TypeGuard
 
 from dateutil.tz import tzlocal
@@ -14,10 +15,12 @@ import livestatus
 import cmk.ccc.debug
 from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.i18n import _
+from cmk.ccc.store import load_from_mk_file
 
 import cmk.utils.cleanup
 from cmk.utils.caching import cache_manager
 from cmk.utils.dateutils import Weekday, weekday_ids
+from cmk.utils.paths import check_mk_config_dir
 
 __all__ = [
     "TimeperiodName",
@@ -50,7 +53,15 @@ class TimeperiodSpec(TypedDict):
     exclude: NotRequired[list[TimeperiodName]]
 
 
-TimeperiodSpecs = dict[TimeperiodName, TimeperiodSpec]
+TimeperiodSpecs = Mapping[TimeperiodName, TimeperiodSpec]
+
+
+# NOTE: This is a variation of cmk.gui.watolib.timeperiods.load_timeperiods(). Can we somehow unify this?
+def load_timeperiods() -> TimeperiodSpecs:
+    return {
+        **load_from_mk_file(Path(check_mk_config_dir, "wato", "timeperiods.mk"), "timeperiods", {}),
+        **builtin_timeperiods(),
+    }
 
 
 def _is_time_range(obj: object) -> TypeGuard[DayTimeFrame]:

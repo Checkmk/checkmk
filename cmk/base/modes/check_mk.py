@@ -57,7 +57,7 @@ from cmk.utils.structured_data import (
 )
 from cmk.utils.tags import TagID
 from cmk.utils.timeout import Timeout
-from cmk.utils.timeperiod import builtin_timeperiods, TimeperiodSpecs
+from cmk.utils.timeperiod import load_timeperiods
 
 from cmk.snmplib import (
     get_single_oid,
@@ -179,13 +179,6 @@ def load_checks() -> AgentBasedPlugins:
 #   '----------------------------------------------------------------------'
 
 _verbosity = 0
-
-
-def load_timeperiods() -> TimeperiodSpecs:
-    path = Path(cmk.utils.paths.check_mk_config_dir, "wato", "timeperiods.mk")
-    timeperiods = store.load_from_mk_file(path, "timeperiods", {})
-    timeperiods.update(builtin_timeperiods())
-    return timeperiods
 
 
 def print_(txt: str) -> None:

@@ -101,7 +101,7 @@ def _run_and_evaluate_validation(
 
 def validate_timeperiods(time_periods: TimeperiodSpecs) -> None:
     # No performance impact - only called during cmk-update-config
-    validator = TypeAdapter(TimeperiodSpecs)  # nosemgrep: type-adapter-detected
+    validator = TypeAdapter[TimeperiodSpecs](TimeperiodSpecs)  # nosemgrep: type-adapter-detected
     validator.validate_python(time_periods, strict=True)
 
     invalid_timeperiods = []

@@ -41,16 +41,15 @@ class TimePeriodsConfigFile(WatoSimpleConfigFile[TimeperiodSpec]):
         )
 
 
-def _filter_builtin_timeperiods(timeperiods: TimeperiodSpecs) -> TimeperiodSpecs:
+def _filter_builtin_timeperiods(timeperiods: TimeperiodSpecs) -> dict[str, TimeperiodSpec]:
     builtin_keys = set(builtin_timeperiods().keys())
     return {k: v for k, v in timeperiods.items() if k not in builtin_keys}
 
 
+# NOTE: This is a variation of cmk.utils.timeperiod.load_timeperiods(). Can we somehow unify this?
 @request_memoize()
 def load_timeperiods() -> TimeperiodSpecs:
-    timeperiods = TimePeriodsConfigFile().load_for_reading()
-    timeperiods.update(builtin_timeperiods())
-    return timeperiods
+    return {**TimePeriodsConfigFile().load_for_reading(), **builtin_timeperiods()}
 
 
 def save_timeperiods(timeperiods: TimeperiodSpecs) -> None:

@@ -19,7 +19,6 @@ import FormDictionary from '@/form/components/forms/FormDictionary.vue'
 import FormDualListChoice from '@/form/components/forms/FormDualListChoice.vue'
 import FormFixedValue from '@/form/components/forms/FormFixedValue.vue'
 import FormFloat from '@/form/components/forms/FormFloat.vue'
-import FormFolder from '@/form/components/forms/FormFolder.vue'
 import FormInteger from '@/form/components/forms/FormInteger.vue'
 import FormLabels from '@/form/components/forms/FormLabels.vue'
 import FormLegacyValueSpec from '@/form/components/forms/FormLegacyValueSpec.vue'
@@ -52,7 +51,6 @@ const components: Record<Components['type'], Component> = {
   file_upload: FormFileUpload,
   fixed_value: FormFixedValue,
   float: FormFloat,
-  folder: FormFolder,
   integer: FormInteger,
   labels: FormLabels,
   legacy_valuespec: FormLegacyValueSpec,

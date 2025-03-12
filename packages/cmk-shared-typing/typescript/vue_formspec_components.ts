@@ -35,7 +35,6 @@ export type Components =
   | OptionalChoice
   | SimplePassword
   | ListOfStrings
-  | Folder
   | ConditionChoices
   | Labels
   | FileUpload
@@ -233,12 +232,6 @@ export type ListOfStrings = FormSpec & {
   layout: ListOfStringsLayout;
 };
 export type ListOfStringsLayout = "horizontal" | "vertical";
-export type Folder = FormSpec & {
-  type: "folder";
-  input_hint: string | null;
-  autocompleter: Autocompleter;
-  allow_new_folder_path: boolean;
-};
 export type ConditionChoices = FormSpec & {
   type: "condition_choices";
   condition_groups: {

@@ -211,10 +211,12 @@ pub fn check(der: &[u8], config: Config) -> Collection {
         }),
         check_pubkey_algorithm(cert.public_key(), config.pubkey_algorithm),
         check_pubkey_size(cert.public_key(), config.pubkey_size),
-        check_validity_not_after(
+        check_validity(
             cert.validity().time_to_expiration(),
-            config.not_after,
+            ASN1Time::now(),
+            cert.validity().not_before,
             cert.validity().not_after,
+            config.not_after,
         )
         .map(|cr: CheckResult<Duration>| cr.map(|x| Real::from(x.whole_seconds() as isize))),
         check_max_validity(cert.validity(), config.max_validity),
@@ -316,13 +318,27 @@ fn check_pubkey_size(
     })
 }
 
-fn check_validity_not_after(
+fn check_validity(
     time_to_expiration: Option<Duration>,
-    levels: Option<LevelsChecker<Duration>>,
+    now: ASN1Time,
+    not_before: ASN1Time,
     not_after: ASN1Time,
+    levels: Option<LevelsChecker<Duration>>,
 ) -> Option<CheckResult<Duration>> {
     levels.map(|levels| match time_to_expiration {
-        None => SimpleCheckResult::crit(format!("Certificate expired ({})", not_after)).into(),
+        None => {
+            // The validity period for a certificate is the period of time from
+            // notBefore through notAfter, inclusive.
+            // RFC 5280, Section 4.1.2.5. Validity
+            if not_before > now {
+                return SimpleCheckResult::crit(format!(
+                    "Certificate not yet valid until {0}",
+                    not_before
+                ))
+                .into();
+            }
+            SimpleCheckResult::crit(format!("Certificate expired ({0})", not_after)).into()
+        }
         Some(time_to_expiration) => levels.check(
             time_to_expiration,
             OutputType::Summary(format!(

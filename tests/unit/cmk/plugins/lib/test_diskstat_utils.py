@@ -23,9 +23,17 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.lib import diskstat
 
+SECTION: Mapping[str, Mapping] = {
+    "disk1": {},
+    "disk2": {},
+    "LVM disk": {},
+    "VxVM disk": {},
+    "xsd0 disk": {},
+}
+
 
 @pytest.mark.parametrize(
-    "params,exp_res",
+    "params,section,exp_res",
     [
         (
             [
@@ -36,6 +44,7 @@ from cmk.plugins.lib import diskstat
                     "diskless": False,
                 },
             ],
+            SECTION,
             [
                 Service(item="SUMMARY"),
             ],
@@ -50,6 +59,7 @@ from cmk.plugins.lib import diskstat
                     "diskless": False,
                 },
             ],
+            SECTION,
             [
                 Service(item="SUMMARY"),
                 Service(item="disk1"),
@@ -66,6 +76,7 @@ from cmk.plugins.lib import diskstat
                     "diskless": True,
                 },
             ],
+            SECTION,
             [
                 Service(item="SUMMARY"),
                 Service(item="disk1"),
@@ -77,22 +88,8 @@ from cmk.plugins.lib import diskstat
         ),
     ],
 )
-def test_discovery_diskstat_generic(params, exp_res) -> None:  # type: ignore[no-untyped-def]
-    assert (
-        list(
-            diskstat.discovery_diskstat_generic(
-                params,
-                {
-                    "disk1": {},
-                    "disk2": {},
-                    "LVM disk": {},
-                    "VxVM disk": {},
-                    "xsd0 disk": {},
-                },
-            )
-        )
-        == exp_res
-    )
+def test_discovery_diskstat_generic(params, section, exp_res) -> None:  # type: ignore[no-untyped-def]
+    assert list(diskstat.discovery_diskstat_generic(params, section)) == exp_res
 
 
 DISK = {

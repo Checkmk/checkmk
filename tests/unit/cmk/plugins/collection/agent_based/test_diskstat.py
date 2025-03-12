@@ -10,6 +10,7 @@ import pytest
 
 from cmk.agent_based.v2 import get_value_store, IgnoreResultsError, Metric, Result, Service, State
 from cmk.plugins.collection.agent_based import diskstat
+from cmk.plugins.lib.diskstat import NoIOSection
 from cmk.plugins.lib.multipath import Group
 
 
@@ -1685,3 +1686,13 @@ def test_discovery_diskstat_generic(
         )
         == expected
     )
+
+
+def test_diskstat_discovery_noiosection() -> None:
+    assert list(
+        diskstat.discover_diskstat(
+            [{"summary": True}],
+            section_diskstat=NoIOSection(),
+            section_multipath=None,
+        ),
+    ) == [Service(item="SUMMARY")]

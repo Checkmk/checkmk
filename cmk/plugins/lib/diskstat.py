@@ -6,6 +6,7 @@
 import re
 from collections import defaultdict
 from collections.abc import Callable, Generator, Iterable, Mapping, MutableMapping, Sequence
+from dataclasses import dataclass
 from typing import Any, DefaultDict, TypedDict
 
 from cmk.agent_based.v2 import (
@@ -32,6 +33,11 @@ DISKSTAT_DEFAULT_PARAMS = {
     "vxvm": False,
     "diskless": False,
 }
+
+
+@dataclass
+class NoIOSection:
+    message: str = ""
 
 
 def discovery_diskstat_generic(

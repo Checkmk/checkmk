@@ -34,6 +34,7 @@ def __parse_docker_api(data, docker_key_name):
 def _parse_docker_container_diskstat_plugin(info: StringTable) -> diskstat.Section:
     raw = docker.parse(info).data
 
+    metrics_to_be_considered = ("io_service_bytes_recursive", "io_serviced_recursive")
     devices_by_name: dict[str, dict[str, float]] = {}
     devices_by_number: dict[str, dict[str, float]] = {}
     for major_minor, name in raw["names"].items():
@@ -42,8 +43,7 @@ def _parse_docker_container_diskstat_plugin(info: StringTable) -> diskstat.Secti
         }
 
     for major_minor, docker_key_name, docker_op, value in chain(
-        __parse_docker_api(raw, "io_service_bytes_recursive"),
-        __parse_docker_api(raw, "io_serviced_recursive"),
+        *[__parse_docker_api(raw, m) for m in metrics_to_be_considered]
     ):
         diskstat_key = MAPPING.get((docker_key_name, docker_op.lower()))
         if diskstat_key is not None:

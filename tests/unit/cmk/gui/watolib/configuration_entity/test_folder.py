@@ -18,6 +18,7 @@ from cmk.gui.watolib.hosts_and_folders import folder_tree
 
 MAIN_FOLDER = ""
 SUB_FOLDER = "sub-folder"
+SUB_FOLDER_TITLE = "Sub Folder"
 
 
 @pytest.fixture(autouse=True)
@@ -25,12 +26,24 @@ def create_folder_test_environment(with_admin_login: None, load_config: None) ->
     tree = folder_tree()
     tree.invalidate_caches()
 
-    tree.root_folder().create_subfolder(SUB_FOLDER, SUB_FOLDER, {})
+    tree.root_folder().create_subfolder(name=SUB_FOLDER, title=SUB_FOLDER_TITLE, attributes={})
 
     yield
 
     shutil.rmtree(tree.root_folder().filesystem_path(), ignore_errors=True)
     os.makedirs(tree.root_folder().filesystem_path())
+
+
+def test_folder_save_returns_full_title(create_folder_test_environment: None) -> None:
+    # GIVEN
+    visitor = get_visitor(get_folder_slidein_schema(), VisitorOptions(DataOrigin.DISK))
+    _, data = visitor.to_vue({"general": {"title": "foo", "parent_folder": SUB_FOLDER}})
+
+    # WHEN
+    description = save_folder_from_slidein_schema(data)
+
+    # THEN
+    assert description.title == f"{SUB_FOLDER_TITLE}/foo"
 
 
 @pytest.mark.parametrize(

@@ -9,7 +9,7 @@ UNIT_NUMBER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(
 
 metric_cmk_services_ok = metrics.Metric(
     name="cmk_services_ok",
-    title=Title("OK services"),
+    title=Title("Ok services"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_CYAN,
 )
@@ -27,19 +27,19 @@ metric_cmk_services_on_down_hosts = metrics.Metric(
 )
 metric_cmk_services_warning = metrics.Metric(
     name="cmk_services_warning",
-    title=Title("WARNING services"),
+    title=Title("Warning services"),
     unit=UNIT_NUMBER,
     color=metrics.Color.YELLOW,
 )
 metric_cmk_services_unknown = metrics.Metric(
     name="cmk_services_unknown",
-    title=Title("UNKNOWN services"),
+    title=Title("Unknown services"),
     unit=UNIT_NUMBER,
     color=metrics.Color.ORANGE,
 )
 metric_cmk_services_critical = metrics.Metric(
     name="cmk_services_critical",
-    title=Title("CRITICAL services"),
+    title=Title("Critical services"),
     unit=UNIT_NUMBER,
     color=metrics.Color.RED,
 )

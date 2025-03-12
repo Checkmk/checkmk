@@ -185,5 +185,5 @@ def test_content_security_policy_header(site: Site) -> None:
     assert response.headers["Content-Security-Policy"] == default_csp
 
     # CSP for successful pages
-    response = web.get("/%s/check_mk/login.py?_origtarget=index.py" % site.id)
+    response = web.get("/%s/check_mk/info.py" % site.id)
     assert response.headers["Content-Security-Policy"] == default_csp

@@ -229,6 +229,15 @@ MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_CGROUPV2_60 = [
         'e": 1641207226.9843512, "names": {"11:0": "sr0", "8:0": "sda"}}'
     ],
 ]
+MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_NO_DISKIO = [
+    [
+        "@docker_version_info",
+        '{"PluginVersion": "0.1", "DockerPyVersion": "5.0.3", "ApiVersion": "1.47"}',
+    ],
+    [
+        '{"io_service_bytes_recursive": null, "io_serviced_recursive": null, "io_queue_recursive": null, "io_service_time_recursive": null, "io_wait_time_recursive": null, "io_merged_recursive": null, "io_time_recursive": null, "sectors_recursive": null, "time": 1735809729.685249, "names": {"7:1": "loop1", "7:6": "loop6", "7:4": "loop4", "11:0": "sr0", "7:2": "loop2", "7:0": "loop0", "7:7": "loop7", "8:0": "sda", "7:5": "loop5", "7:3": "loop3"}}'
+    ],
+]
 
 
 def test_parser() -> None:
@@ -339,6 +348,23 @@ def test_docker_container_diskstat(
             Metric("disk_write_ios", write_ops),
         ]
     assert result == expected_result
+
+
+def test_docker_container_diskstat_section_empty(fix_register):
+    agent_section = fix_register.agent_sections[SectionName("docker_container_diskstat")]
+    plugin = fix_register.check_plugins[CheckPluginName("diskstat")]
+
+    with pytest.raises(IgnoreResultsError):
+        list(
+            plugin.check_function(
+                params={},
+                section_multipath=None,
+                section_diskstat=agent_section.parse_function(
+                    MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_NO_DISKIO
+                ),
+                item="SUMMARY",
+            )
+        )
 
 
 @pytest.mark.parametrize(

@@ -13,6 +13,7 @@ from collections.abc import (
     MutableMapping,
     Sequence,
 )
+from dataclasses import dataclass
 from typing import Any, DefaultDict, TypedDict
 
 from cmk.agent_based.v1 import check_levels, check_levels_predictive
@@ -33,6 +34,11 @@ Disk = Mapping[str, float]
 Section = Mapping[str, Disk]
 
 DISKSTAT_DISKLESS_PATTERN = re.compile("x?[shv]d[a-z]*[0-9]+")
+
+
+@dataclass
+class NoIOSection:
+    message: str = ""
 
 
 def discovery_diskstat_generic(

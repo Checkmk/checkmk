@@ -22,6 +22,8 @@ from cmk.agent_based.prediction_backend import (
     PredictionInfo,
     PredictionParameters,
 )
+from cmk.agent_based.v2 import Service
+from cmk.plugins.lib.diskstat import NoIOSection
 from cmk.plugins.lib.multipath import Group
 
 
@@ -1630,3 +1632,13 @@ def test_check_latency_calculation() -> None:
             notice="Latency: 4 milliseconds (warn/crit at 3 milliseconds/5 milliseconds)",
         ),
     ]
+
+
+def test_diskstat_discovery_noiosection() -> None:
+    assert list(
+        diskstat.discover_diskstat(
+            [{"SUMMARY": True}],
+            section_diskstat=NoIOSection(),
+            section_multipath=None,
+        ),
+    ) == [Service(item="SUMMARY")]

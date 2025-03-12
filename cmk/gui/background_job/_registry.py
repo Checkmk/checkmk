@@ -4,12 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from typing import override
+
 from cmk.ccc.plugin_registry import Registry
 
 from ._base import BackgroundJob
 
 
 class BackgroundJobRegistry(Registry[type[BackgroundJob]]):
+    @override
     def plugin_name(self, instance: type[BackgroundJob]) -> str:
         return instance.__name__
 

@@ -17,7 +17,7 @@ from collections.abc import Callable, Iterator
 from contextlib import contextmanager, nullcontext
 from logging import Formatter, Logger, StreamHandler
 from pathlib import Path
-from typing import ContextManager, IO
+from typing import ContextManager, IO, override
 
 from setproctitle import setthreadtitle
 
@@ -236,5 +236,6 @@ class ThreadLogFilter(logging.Filter):
         super().__init__()
         self.thread_name = thread_name
 
+    @override
     def filter(self, record: logging.LogRecord) -> bool:
         return record.threadName == self.thread_name

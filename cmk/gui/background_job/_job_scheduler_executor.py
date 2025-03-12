@@ -7,7 +7,7 @@
 
 import logging
 import socket
-from typing import Final
+from typing import Final, override
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -43,6 +43,7 @@ class JobSchedulerExecutor(JobExecutor):
         self._session = requests.Session()
         self._session.mount(JOB_SCHEDULER_BASE_URL, _JobSchedulerAdapter())
 
+    @override
     def start(
         self,
         type_id: str,
@@ -82,6 +83,7 @@ class JobSchedulerExecutor(JobExecutor):
 
         return result.OK(None)
 
+    @override
     def terminate(self, job_id: str) -> result.Result[None, StartupError]:
         r = self._post(
             JOB_SCHEDULER_BASE_URL + "/terminate",
@@ -91,6 +93,7 @@ class JobSchedulerExecutor(JobExecutor):
             return result.Error(r.error)
         return result.OK(None)
 
+    @override
     def is_alive(self, job_id: str) -> result.Result[bool, StartupError]:
         r = self._post(
             JOB_SCHEDULER_BASE_URL + "/is_alive",
@@ -108,9 +111,11 @@ class JobSchedulerExecutor(JobExecutor):
         response_data = r.ok.json()
         return HealthResponse.model_validate(response_data)
 
+    @override
     def all_running_jobs(self) -> dict[str, int]:
         return self.health().background_jobs.running_jobs
 
+    @override
     def job_executions(self) -> dict[str, int]:
         return self.health().background_jobs.job_executions
 
@@ -156,6 +161,7 @@ class _JobSchedulerConnection(HTTPConnection):
     def __init__(self) -> None:
         super().__init__(JOB_SCHEDULER_HOST)
 
+    @override
     def connect(self) -> None:
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self.sock.connect(str(paths.omd_root.joinpath(JOB_SCHEDULER_SOCKET)))
@@ -170,5 +176,6 @@ class _JobSchedulerConnectionPool(HTTPConnectionPool):
 
 
 class _JobSchedulerAdapter(HTTPAdapter):
+    @override
     def get_connection_with_tls_context(self, request, verify, proxies=None, cert=None):  # type: ignore[no-untyped-def]
         return _JobSchedulerConnectionPool()

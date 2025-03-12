@@ -12,7 +12,7 @@ import time
 from collections import Counter
 from contextlib import suppress
 from dataclasses import dataclass
-from typing import Protocol
+from typing import override, Protocol
 
 import cmk.utils.resulttype as result
 
@@ -72,6 +72,7 @@ class ThreadedJobExecutor(JobExecutor):
         self._start_lock = threading.Lock()
 
     @tracer.instrument()
+    @override
     def start(
         self,
         type_id: str,
@@ -153,6 +154,7 @@ class ThreadedJobExecutor(JobExecutor):
             )
         )
 
+    @override
     def terminate(self, job_id: str) -> result.Result[None, StartupError]:
         try:
             self._logger.debug("Stop job %s using stop event", job_id)
@@ -164,12 +166,14 @@ class ThreadedJobExecutor(JobExecutor):
             pass
         return result.OK(None)
 
+    @override
     def is_alive(self, job_id: str) -> result.Result[bool, StartupError]:
         try:
             return result.OK(bool(ThreadedJobExecutor.running_jobs[job_id].thread.is_alive()))
         except KeyError:
             return result.OK(False)
 
+    @override
     def all_running_jobs(self) -> dict[str, int]:
         ThreadedJobExecutor.clean_up_finished_jobs()
         return {job_id: job.started_at for job_id, job in ThreadedJobExecutor.running_jobs.items()}
@@ -180,5 +184,6 @@ class ThreadedJobExecutor(JobExecutor):
             if not job.thread.is_alive():
                 del cls.running_jobs[job_id]
 
+    @override
     def job_executions(self) -> dict[str, int]:
         return dict(ThreadedJobExecutor._job_executions)

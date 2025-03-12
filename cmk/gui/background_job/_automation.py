@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from typing import override
 
 from cmk.gui.background_job import BackgroundJob
 from cmk.gui.http import request
@@ -15,12 +16,15 @@ JOB_ID = str
 class AutomationBackgroundJobSnapshot(AutomationCommand[JOB_ID]):
     """Fetch the background job snapshot from a remote site"""
 
+    @override
     def command_name(self) -> str:
         return "fetch-background-job-snapshot"
 
+    @override
     def get_request(self) -> str:
         return request.get_validated_type_input_mandatory(str, "job_id")
 
+    @override
     def execute(self, api_request: JOB_ID) -> str:
         job = BackgroundJob(api_request)
         return json.dumps(job.get_status_snapshot().to_dict())

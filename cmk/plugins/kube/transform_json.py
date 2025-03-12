@@ -156,7 +156,7 @@ def _statefulset_spec_from_json(spec: JSONStatefulSetSpec) -> api.StatefulSetSpe
     )
 
 
-def _statefulset_from_json(
+def statefulset_from_json(
     statefulset: JSONStatefulSet,
     pod_uids: Sequence[api.PodUID],
 ) -> api.StatefulSet:
@@ -166,18 +166,6 @@ def _statefulset_from_json(
         status=api.StatefulSetStatus.model_validate(statefulset["status"]),
         pods=pod_uids,
     )
-
-
-def statefulset_list_from_json(
-    statefulset_list: JSONStatefulSetList,
-    controller_to_pods: Mapping[str, Sequence[api.PodUID]],
-) -> Sequence[api.StatefulSet]:
-    return [
-        _statefulset_from_json(
-            statefulset, controller_to_pods.get(dependent_object_uid_from_json(statefulset), [])
-        )
-        for statefulset in statefulset_list["items"]
-    ]
 
 
 def dependent_object_uid_from_json(

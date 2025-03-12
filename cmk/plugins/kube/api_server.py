@@ -35,7 +35,7 @@ from kubernetes.client import (  # type: ignore[attr-defined]
 )
 
 from cmk.plugins.kube import query
-from cmk.plugins.kube.controllers import map_controllers, map_controllers_top_to_down
+from cmk.plugins.kube.controllers import ControllerGraph
 from cmk.plugins.kube.schemata import api
 from cmk.plugins.kube.transform import (
     cron_job_from_client,
@@ -50,10 +50,11 @@ from cmk.plugins.kube.transform import (
 )
 from cmk.plugins.kube.transform_any import parse_open_metric_samples
 from cmk.plugins.kube.transform_json import (
+    dependent_object_uid_from_json,
     JSONNodeList,
     JSONStatefulSetList,
     node_list_from_json,
-    statefulset_list_from_json,
+    statefulset_from_json,
 )
 
 LOGGER = logging.getLogger()
@@ -426,23 +427,20 @@ def parse_api_data(
     raw_persistent_volumes: Sequence[V1PersistentVolume],
     node_to_kubelet_health: Mapping[str, api.HealthZ | api.NodeConnectionError],
     api_health: api.APIHealth,
-    controller_to_pods: Mapping[str, Sequence[api.PodUID]],
-    pod_to_controllers: Mapping[api.PodUID, Sequence[api.Controller]],
-    controllers_to_dependents: Mapping[str, Sequence[str]],
+    controller_graph: ControllerGraph,
     git_version: api.GitVersion,
     kubelet_open_metrics_dumps: Sequence[str],
 ) -> APIData:
     """Parses the Kubernetes API to the format used"""
     job_uids = {raw_job.metadata.uid for raw_job in raw_jobs}
-    pod_uids = {raw_pod.metadata.uid for raw_pod in raw_pods}
 
     cron_jobs = [
         cron_job_from_client(
             raw_cron_job,
-            pod_uids=controller_to_pods.get(raw_cron_job.metadata.uid, []),
+            pod_uids=controller_graph.pods_controlled_by(raw_cron_job.metadata.uid),
             job_uids=[
                 api.JobUID(dependent_uid)
-                for dependent_uid in controllers_to_dependents.get(raw_cron_job.metadata.uid, [])
+                for dependent_uid in controller_graph.dependents_owned_by(raw_cron_job.metadata.uid)
                 if dependent_uid in job_uids
             ],
         )
@@ -450,29 +448,38 @@ def parse_api_data(
     ]
     deployments = [
         deployment_from_client(
-            raw_deployment, controller_to_pods.get(raw_deployment.metadata.uid, [])
+            raw_deployment,
+            pod_uids=controller_graph.pods_controlled_by(raw_deployment.metadata.uid),
         )
         for raw_deployment in raw_deployments
     ]
     daemonsets = [
-        daemonset_from_client(raw_daemonset, controller_to_pods.get(raw_daemonset.metadata.uid, []))
+        daemonset_from_client(
+            raw_daemonset, pod_uids=controller_graph.pods_controlled_by(raw_daemonset.metadata.uid)
+        )
         for raw_daemonset in raw_daemonsets
     ]
     jobs = [
         job_from_client(
             raw_job,
-            pod_uids=[
-                api.PodUID(dependent_uid)
-                for dependent_uid in controllers_to_dependents.get(raw_job.metadata.uid, [])
-                if dependent_uid in pod_uids
-            ],
+            pod_uids=controller_graph.pods_controlled_by(raw_job.metadata.uid),
         )
         for raw_job in raw_jobs
     ]
-    statefulsets = statefulset_list_from_json(raw_statefulsets, controller_to_pods)
+    statefulsets = [
+        statefulset_from_json(
+            statefulset,
+            controller_graph.pods_controlled_by(dependent_object_uid_from_json(statefulset)),
+        )
+        for statefulset in raw_statefulsets["items"]
+    ]
+
     namespaces = [namespace_from_client(raw_namespace) for raw_namespace in raw_namespaces]
     nodes = node_list_from_json(raw_nodes, node_to_kubelet_health)
-    pods = [pod_from_client(pod, pod_to_controllers.get(pod.metadata.uid, [])) for pod in raw_pods]
+    pods = [
+        pod_from_client(pod, controller_graph.pod_to_control_chain(pod.metadata.uid))
+        for pod in raw_pods
+    ]
     persistent_volume_claims = [
         persistent_volume_claim_from_client(pvc) for pvc in raw_persistent_volume_claims
     ]
@@ -542,10 +549,7 @@ def create_api_data_v2(
         ),
         workload_resources_json=raw_api_data.raw_statefulsets["items"],
     )
-    controller_to_pods, pod_to_controllers = map_controllers(
-        raw_api_data.raw_pods,
-        object_to_owners=object_to_owners,
-    )
+    controller_graph = ControllerGraph(raw_api_data.raw_pods, object_to_owners=object_to_owners)
 
     return parse_api_data(
         raw_api_data.raw_cron_jobs,
@@ -561,9 +565,7 @@ def create_api_data_v2(
         raw_api_data.raw_persistent_volumes,
         raw_api_data.node_to_kubelet_health,
         raw_api_data.api_health,
-        controller_to_pods,
-        pod_to_controllers,
-        map_controllers_top_to_down(object_to_owners),
+        controller_graph,
         git_version,
         kubelet_open_metrics_dumps=raw_api_data.raw_kubelet_open_metrics_dumps,
     )

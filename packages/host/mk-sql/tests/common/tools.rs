@@ -8,28 +8,39 @@ use flexi_logger::{self, DeferredNow, FileSpec, LogSpecification, Record};
 use mk_sql::config::ms_sql::{Authentication, Connection, Endpoint};
 use mk_sql::ms_sql::client::UniClient;
 use mk_sql::ms_sql::query;
+use std::ffi::OsString;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::process::Output;
+use std::sync::OnceLock;
 use tempfile::Builder;
 use tempfile::NamedTempFile;
 pub use tempfile::TempDir;
 use yaml_rust2::YamlLoader;
 
+static CONTROLLER_COMMAND_PATH: OnceLock<OsString> = OnceLock::new();
+
 #[cfg(not(feature = "build_system_bazel"))]
-pub fn run_bin() -> Command {
-    Command::cargo_bin("mk-sql").unwrap()
+fn controller_command_path_impl() -> OsString {
+    let path = assert_cmd::cargo::cargo_bin("mk-sql");
+    assert!(path.is_file());
+    path.into()
 }
 
 #[cfg(feature = "build_system_bazel")]
-pub fn run_bin() -> Command {
-    let mut path = std::env::current_dir().unwrap();
-    path.push("packages");
-    path.push("host");
-    path.push("mk-sql");
-    path.push("mk-sql");
+fn controller_command_path_impl() -> OsString {
+    let cwd = std::env::current_dir().unwrap();
+    // Binary has same name as parent directory
+    let relative_path: std::path::PathBuf =
+        ["packages", "host", "mk-sql", "mk-sql"].iter().collect();
+    let path = cwd.join(relative_path);
     assert!(path.is_file());
-    Command::new(&path)
+    path.into()
+}
+
+pub fn run_bin() -> Command {
+    let controller_command_path = CONTROLLER_COMMAND_PATH.get_or_init(controller_command_path_impl);
+    Command::new(controller_command_path)
 }
 
 pub fn run_bin_error() -> Output {

@@ -32,6 +32,12 @@ STRING_TABLE: Final = [
     ["Predictive", "Failure", "Count:", "19"],
     ["Firmware", "state:", "Failed"],
     ["Inquiry", "Data:", "FUJITSU", "MBB2147RC", "5204BS04P9104BSC"],
+    ["Enclosure", "Device", "ID:", "13"],
+    ["Slot", "Number:", "3"],
+    ["Device", "Id:", "7"],
+    ["Raw", "Size:", "140014MB", "[0x11177330", "Sectors]"],
+    ["Firmware", "state:", "Online,", "Spun", "Up"],
+    ["Inquiry", "Data:", "FUJITSU", "MBB2147RC", "5204BS04P9105BSC"],
 ]
 
 
@@ -45,6 +51,14 @@ def test_discovery(section: megaraid.SectionPDisks) -> None:
         Service(item="/c0/e10/s0"),
         Service(item="/c0/e11/s1"),
         Service(item="/c0/e12/s2"),
+        Service(item="/c0/e13/s3"),
+    ]
+
+
+def test_check_long_state(section: megaraid.SectionPDisks) -> None:
+    assert list(megaraid_pdisks.check_megaraid_pdisks("/c0/e13/s3", {"Online": 0}, section)) == [
+        Result(state=State.OK, summary="Online"),
+        Result(state=State.OK, summary="Name: FUJITSU MBB2147RC 5204BS04P9105BSC"),
     ]
 
 

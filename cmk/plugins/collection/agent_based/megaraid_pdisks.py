@@ -89,7 +89,7 @@ def parse_megaraid_pdisks(
                 slot = int(data[-1])
             case ["Predictive", "Failure", "Count:", pfc]:
                 predictive_failure_count = int(pfc)
-            case ["Firmware", "state:", firmware_state]:
+            case ["Firmware", "state:", firmware_state, *_]:
                 state = firmware_state.rstrip(",")
             case ["Inquiry", "Data:", *inquiry_data]:
                 name = " ".join(inquiry_data)

@@ -20,7 +20,6 @@ import type {
   FileUpload,
   FixedValue,
   Float,
-  Folder,
   FormSpec,
   Integer,
   Labels,
@@ -496,23 +495,6 @@ function getListOfStrings(
   }
 }
 
-function getFolder(name: string, options?: Partial<Omit<Folder, 'type'>>): Folder {
-  return {
-    type: 'folder',
-    ...getFormSpecDefaults(name),
-    input_hint: `input hint ${name}`,
-    autocompleter: {
-      fetch_method: 'ajax_vs_autocomplete',
-      data: {
-        ident: 'wato_folder_choices',
-        params: {}
-      }
-    },
-    allow_new_folder_path: true,
-    ...options
-  }
-}
-
 function getConditionChoices(
   name: string,
   options?: Partial<Omit<ConditionChoices, 'type'>>
@@ -622,7 +604,6 @@ const forms: Array<[string, (name: string) => Components, unknown]> = [
   ],
   ['FixedValue', getFixedValue, undefined],
   ['Float', getFloat, 0],
-  ['Folder', getFolder, 'default'],
   ['Integer', getInteger, 0],
   ['Labels', getLabels, { some: 'thing' }],
   ['List', getList, []],

@@ -24,7 +24,6 @@ import type {
   ListOfStrings,
   DualListChoice,
   CheckboxListChoice,
-  Folder,
   Labels,
   ConditionChoices,
   ConditionChoicesValue,
@@ -102,8 +101,6 @@ function renderForm(
       return renderOptionalChoice(formSpec as OptionalChoice, value as unknown[])
     case 'simple_password':
       return renderSimplePassword()
-    case 'folder':
-      return renderFolder(formSpec as Folder, value as string, backendValidation)
     case 'labels':
       return renderLabels(formSpec as Labels, value as Record<string, string>)
     case 'time_specific':
@@ -560,13 +557,6 @@ function renderConditionChoices(formSpec: ConditionChoices, value: ConditionChoi
   ])
 }
 
-function renderFolder(
-  formSpec: Folder,
-  value: string,
-  backendValidation: ValidationMessages
-): VNode {
-  return renderSimpleValue(formSpec, `Main/${value}`, backendValidation)
-}
 function renderLabels(formSpec: Labels, value: Record<string, string>): VNode {
   let bgColor = 'var(--tag-color)'
   let color = 'var(--black)'

@@ -1416,38 +1416,6 @@
                 }
             ]
         },
-        "folder": {
-            "type": "object",
-            "allOf": [
-                {
-                    "$ref": "#/$defs/form_spec"
-                },
-                {
-                    "type": "object",
-                    "properties": {
-                        "type": {
-                            "const": "folder",
-                            "default": "folder"
-                        },
-                        "input_hint": {
-                            "type": ["string", "null"]
-                        },
-                        "autocompleter": {
-                            "$ref": "#/$defs/autocompleter"
-                        },
-                        "allow_new_folder_path": {
-                            "type": "boolean"
-                        }
-                    },
-                    "required": [
-                        "type",
-                        "input_hint",
-                        "autocompleter",
-                        "allow_new_folder_path"
-                    ]
-                }
-            ]
-        },
         "condition_choices": {
             "type": "object",
             "allOf": [
@@ -1748,9 +1716,6 @@
                 },
                 {
                     "$ref": "#/$defs/list_of_strings"
-                },
-                {
-                    "$ref": "#/$defs/folder"
                 },
                 {
                     "$ref": "#/$defs/condition_choices"

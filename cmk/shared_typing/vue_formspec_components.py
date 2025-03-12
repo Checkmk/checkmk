@@ -553,14 +553,6 @@ class ListOfStrings(FormSpec):
 
 
 @dataclass(kw_only=True)
-class Folder(FormSpec):
-    input_hint: Optional[str]
-    autocompleter: Autocompleter
-    allow_new_folder_path: bool
-    type: str = "folder"
-
-
-@dataclass(kw_only=True)
 class ConditionChoices(FormSpec):
     condition_groups: dict[str, ConditionGroup]
     i18n: ConditionChoicesI18n
@@ -645,7 +637,6 @@ Components = Union[
     OptionalChoice,
     SimplePassword,
     ListOfStrings,
-    Folder,
     ConditionChoices,
     Labels,
     FileUpload,

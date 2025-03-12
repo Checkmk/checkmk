@@ -41,7 +41,6 @@ PACKAGES := \
     omd \
     navicli \
     pnp4nagios \
-    maintenance \
     heirloom-mailx \
     livestatus \
     unixcat \

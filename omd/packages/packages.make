@@ -184,7 +184,6 @@ include \
     packages/cpp-libs/cpp-libs.make \
     packages/check_mk/check_mk.make \
     packages/libgsf/libgsf.make \
-    packages/maintenance/maintenance.make \
     packages/monitoring-plugins/monitoring-plugins.make \
     packages/check-cert/check-cert.make \
     packages/lcab/lcab.make \

@@ -17,14 +17,10 @@ genrule(
     srcs = [
         ":package_source_files",
         ":package_root",
-        ":skel",
     ],
     outs = [
         "bin/redis-benchmark",
-        "bin/redis-check-aof",
-        "bin/redis-check-rdb",
         "bin/redis-cli",
-        "bin/redis-sentinel",
         "bin/redis-server",
     ],
     cmd = """
@@ -32,21 +28,4 @@ genrule(
         make -C $$(dirname $(execpath :package_root)) PREFIX=$$(realpath $(RULEDIR)) install
     """,
     visibility = ["//visibility:public"],
-)
-
-genrule(
-    name = "skel",
-    srcs = [
-        "@omd_packages//omd/packages/redis/skeleton:skel",
-        "@omd_packages//omd/packages/redis/skeleton:skel_root",
-    ],
-    outs = [
-        "skeleton/etc/init.d/redis",
-        "skeleton/etc/logrotate.d/redis",
-        "skeleton/etc/rc.d/40-redis",
-        "skeleton/etc/redis/redis.conf",
-    ],
-    cmd = """
-        cp -r --dereference $$(dirname $(execpath @omd_packages//omd/packages/redis/skeleton:skel_root)) $$(realpath $(RULEDIR))
-    """,
 )

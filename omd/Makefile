@@ -26,7 +26,6 @@ include $(BUILD_BASE_DIR)/build-helper-files.make
 
 PACKAGES := \
     erlang \
-    redis \
     libgsf \
     cpp-libs \
     lcab \

@@ -42,6 +42,7 @@ create_venv(
         "//omd/packages/patch",
         "//omd/packages/perl-modules",
         "//omd/packages/python3-modules:python3-modules.tar",
+        "//omd/packages/redis",
         "//omd/packages/rrdtool:rrdtool_perl_bindings",
         "//omd/packages/rrdtool:rrdtool_python_tar",
         "//omd/packages/rrdtool:rrdtool_tar",

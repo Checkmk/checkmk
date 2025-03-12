@@ -85,7 +85,7 @@ export interface AjaxGraph {
 }
 
 interface LayoutedCurveArea {
-    type: "area";
+    line_type: "area" | "-area";
     points: [TimeSeriesValue, TimeSeriesValue][];
     //dynamic
     title?: string;
@@ -93,7 +93,7 @@ interface LayoutedCurveArea {
 }
 
 interface LayoutedCurveStack {
-    type: "stack" | "-stack";
+    line_type: "stack" | "-stack";
     points: [TimeSeriesValue, TimeSeriesValue][];
     //dynamic
     title?: string;
@@ -101,7 +101,7 @@ interface LayoutedCurveStack {
 }
 
 interface LayoutedCurveLine {
-    type: "line";
+    line_type: "line" | "-line";
     points: TimeSeriesValue[];
     //dynamic
     title?: string;
@@ -687,9 +687,10 @@ function render_graph(graph: GraphArtwork) {
         }
 
         if (
-            curve["type"] == "area" ||
-            curve["type"] == "stack" ||
-            curve["type"] == "-stack"
+            curve["line_type"] == "area" ||
+            curve["line_type"] == "-area" ||
+            curve["line_type"] == "stack" ||
+            curve["line_type"] == "-stack"
         ) {
             const corner_markers = points as [
                 TimeSeriesValue,
@@ -720,8 +721,10 @@ function render_graph(graph: GraphArtwork) {
                 corner_markers,
                 ctx,
             );
-        } else {
-            // "line"
+        } else if (
+            curve["line_type"] == "line" ||
+            curve["line_type"] == "-line"
+        ) {
             ctx.strokeStyle = color;
             ctx.lineWidth = curve_line_width;
             render_curve(

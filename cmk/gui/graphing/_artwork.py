@@ -63,17 +63,17 @@ class _LayoutedCurveBase(TypedDict):
 
 
 class LayoutedCurveLine(_LayoutedCurveBase):
-    type: Literal["line"]
+    line_type: Literal["line", "-line"]
     points: Sequence[TimeSeriesValue]
 
 
 class LayoutedCurveArea(_LayoutedCurveBase):
-    type: Literal["area"]
+    line_type: Literal["area", "-area"]
     points: Sequence[tuple[TimeSeriesValue, TimeSeriesValue]]
 
 
 class LayoutedCurveStack(_LayoutedCurveBase):
-    type: Literal["stack"] | Literal["-stack"]
+    line_type: Literal["stack"] | Literal["-stack"]
     points: Sequence[tuple[TimeSeriesValue, TimeSeriesValue]]
 
 
@@ -268,7 +268,7 @@ def _layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], 
         match line_type:
             case "line" | "-line":
                 layouted_curve: LayoutedCurve = LayoutedCurveLine(
-                    type="line",
+                    line_type=line_type,
                     points=raw_points,
                     color=curve["color"],
                     title=curve["title"],
@@ -276,7 +276,7 @@ def _layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], 
                 )
             case "area" | "-area":
                 layouted_curve = LayoutedCurveArea(
-                    type="area",
+                    line_type=line_type,
                     points=_areastack(raw_points, []),
                     color=curve["color"],
                     title=curve["title"],
@@ -285,7 +285,7 @@ def _layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], 
                 stacks[stack_nr] = [x[stack_nr] for x in layouted_curve["points"]]
             case "stack" | "-stack":
                 layouted_curve = LayoutedCurveStack(
-                    type=line_type,
+                    line_type=line_type,
                     points=_areastack(raw_points, stacks[stack_nr] or []),
                     color=curve["color"],
                     title=curve["title"],
@@ -417,26 +417,82 @@ def order_graph_curves_for_legend_and_mouse_hover(
     curves: Sequence[_TCurveType],
 ) -> list[_TCurveType]:
     """
-    Positive stack curves are rendered st. the first metric is at the bottom and the last one at the
-    top. Therefore, we want to reverse the order of metrics rendered as a positive stack in the
-    legend and the mouse hover, st. it corresponds to the order in the graph. At the same time, we
-    want to leave other curves untouched. Of course, mixing different types of curves quickly
-    results in a useless graph.
-    """
-
-    def is_positive_stack_curve(curve: _TCurveType) -> bool:
-        return curve.get("line_type", curve.get("type")) == "stack"
-
-    positive_stack_curves_in_reverse_order = reversed(
-        [curve for curve in curves if is_positive_stack_curve(curve)]
+    CMK-22181
+    Graph(
+        compound_lines = [
+            "compound-1",
+            "compound-2",
+        ],
+        simple_lines = [
+            "simple-1",
+            "simple-2",
+            Sum(["compound-1", "compound-2"]),
+        ],
     )
+    Legend:
+    - Sum of compound-1 & compound-2
+    - simple-2
+    - simple-1
+    - compound-2
+    - compound-1
 
-    return [
-        next(positive_stack_curves_in_reverse_order, curve)
-        if is_positive_stack_curve(curve)
-        else curve
-        for curve in curves
-    ]
+    Bidirectional(
+        lower = Graph(
+            compound_lines = [
+                "lower-compound-1",
+                "lower-compound-2",
+            ],
+            simple_lines = [
+                "lower-simple-1",
+                "lower-simple-2",
+                Sum(["lower-compound-1", "lower-compound-2"]),
+            ],
+        ),
+        upper = Graph(
+            compound_lines = [
+                "upper-compound-1",
+                "upper-compound-2",
+            ],
+            simple_lines = [
+                "upper-simple-1",
+                "upper-simple-2",
+                Sum(["upper-compound-1", "upper-compound-2"]),
+            ],
+        ),
+    )
+    Legend:
+    - Sum of upper-compound-1 & upper-compound-2
+    - upper-simple-2
+    - upper-simple-1
+    - upper-compound-2
+    - upper-compound-1
+    - lower-compound-1
+    - lower-compound-2
+    - lower-simple-1
+    - lower-simple-2
+    - Sum of lower-compound-1 & lower-compound-2
+    """
+    lines: list[_TCurveType] = []
+    areas: list[_TCurveType] = []
+    mirrored_lines: list[_TCurveType] = []
+    mirrored_areas: list[_TCurveType] = []
+    refs: list[_TCurveType] = []
+    for curve in curves:
+        match line_type := curve["line_type"]:
+            case "line":
+                target = lines
+            case "-line":
+                target = mirrored_lines
+            case "area" | "stack":
+                target = areas
+            case "-area" | "-stack":
+                target = mirrored_areas
+            case "ref":
+                target = refs
+            case _:
+                raise ValueError(line_type)
+        target.append(curve)
+    return lines[::-1] + areas[::-1] + mirrored_areas + mirrored_lines + refs
 
 
 # .

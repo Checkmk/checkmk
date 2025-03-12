@@ -66,9 +66,10 @@ export class CmkGraphTimeseriesFigure extends TimeseriesFigure {
             const curve_tag = "metric_" + idx;
             const stack_tag = "stack_" + curve_tag;
             const use_stack =
-                (curve.type == "area" ||
-                    curve.type == "stack" ||
-                    curve.type == "-stack") &&
+                (curve.line_type == "area" ||
+                    curve.line_type == "-area" ||
+                    curve.line_type == "stack" ||
+                    curve.line_type == "-stack") &&
                 // @ts-ignore
                 max(curve.points, d => d[0]) > 0;
             curve.points.forEach(
@@ -79,7 +80,7 @@ export class CmkGraphTimeseriesFigure extends TimeseriesFigure {
                     const timestamp = start_time + idx * step;
                     let value: TimeSeriesValue = 0;
                     let base_value: TimeSeriesValue = 0;
-                    if (curve.type == "line")
+                    if (curve.line_type == "line" || curve.line_type == "-line")
                         value = (point as TimeSeriesValue)!;
                     else {
                         base_value = (
@@ -108,7 +109,7 @@ export class CmkGraphTimeseriesFigure extends TimeseriesFigure {
             const plot_definition: SubPlotPlotDefinition = {
                 hidden: false,
                 label: curve.title || "",
-                plot_type: curve.type,
+                plot_type: curve.line_type,
                 color: curve.color,
                 id: curve_tag,
                 is_scalar: false,

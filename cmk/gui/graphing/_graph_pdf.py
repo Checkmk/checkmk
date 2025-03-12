@@ -398,7 +398,7 @@ def render_graph_pdf(  # pylint: disable=too-many-branches
 def _is_area_or_stacked_layouted_curve(
     curve: LayoutedCurve,
 ) -> TypeGuard[LayoutedCurveArea | LayoutedCurveStack]:
-    return curve["type"] in ("area", "stack", "-stack")
+    return curve["line_type"] in ("area", "-area", "stack", "-stack")
 
 
 def compute_pdf_graph_data_range(width: SizeMM, start_time: int, end_time: int) -> GraphDataRange:

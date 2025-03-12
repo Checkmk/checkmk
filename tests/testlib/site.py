@@ -112,8 +112,6 @@ class Site:
         site_id: str,
         reuse: bool = True,
         admin_password: str = "cmk",
-        update: bool = False,
-        update_conflict_mode: str = "install",
         enforce_english_gui: bool = True,
         check_wait_timeout: int = 20,
     ) -> None:
@@ -136,8 +134,6 @@ class Site:
         self.admin_password = admin_password
         self._automation_secret: Password | None = None
 
-        self.update = update
-        self.update_conflict_mode = update_conflict_mode
         self.enforce_english_gui = enforce_english_gui
 
         self.check_wait_timeout = check_wait_timeout
@@ -873,24 +869,14 @@ class Site:
     def create(self) -> None:
         self.install_cmk()
 
-        if not (self.reuse or self.update) and self.exists():
+        if not self.reuse and self.exists():
             raise Exception("The site %s already exists." % self.id)
 
-        if self.update or not self.exists():
-            logger.info('Updating site "%s"' if self.update else 'Creating site "%s"', self.id)
+        if not self.exists():
+            logger.info('Creating site "%s"', self.id)
             completed_process = run(
                 (
                     [
-                        "omd",
-                        "-f",
-                        "-V",
-                        self._package.version_directory(),
-                        "update",
-                        f"--conflict={self.update_conflict_mode}",
-                        self.id,
-                    ]
-                    if self.update
-                    else [
                         "omd",
                         "-V",
                         self._package.version_directory(),
@@ -2128,7 +2114,6 @@ class SiteFactory:
             package=self._package,
             site_id=site_id,
             reuse=False,
-            update=self._update,
             enforce_english_gui=self._enforce_english_gui,
             check_wait_timeout=check_wait_timeout,
         )

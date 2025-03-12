@@ -6,6 +6,10 @@
 from collections.abc import Callable, Mapping
 
 from cmk.gui import bi  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.form_specs.private import (  # pylint: disable=cmk-module-layer-violation
+    SingleChoiceElementExtended,
+    SingleChoiceExtended,
+)
 from cmk.gui.form_specs.private.user_selection import (  # pylint: disable=cmk-module-layer-violation
     UserSelection,
     UserSelectionFilter,
@@ -139,14 +143,13 @@ def _bi_aggregate() -> Dictionary:
                         "aggr_group_prefix": DictElement(
                             required=False,
                             parameter_form=List(
-                                element_template=CascadingSingleChoice(
+                                element_template=SingleChoiceExtended(
                                     elements=[
-                                        CascadingSingleChoiceElement(
-                                            name=name,
-                                            title=Title(name),  # pylint: disable=localization-of-non-literal-string
-                                            parameter_form=FixedValue(value=value),
+                                        SingleChoiceElementExtended(
+                                            name=value,
+                                            title=Title(title),  # pylint: disable=localization-of-non-literal-string
                                         )
-                                        for name, value in bi.aggregation_group_choices()
+                                        for value, title in bi.aggregation_group_choices()
                                     ],
                                 ),
                                 title=Title("By aggregation group prefix"),

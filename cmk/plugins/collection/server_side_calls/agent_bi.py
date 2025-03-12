@@ -41,8 +41,8 @@ _Credentials = tuple[Literal["automation"], str] | tuple[Literal["configured"], 
 class _Filter(TypedDict):
     aggr_name: NotRequired[list[str]]
     aggr_name_regex: NotRequired[list[str]]
-    aggr_group_prefix: NotRequired[list[tuple[str, str]]]
-    aggr_groups: NotRequired[list[tuple[str, str]]]
+    aggr_group_prefix: NotRequired[list[str]]
+    aggr_groups: NotRequired[list[str]]
 
 
 class _RemoteConfig(TypedDict):
@@ -113,7 +113,7 @@ def _transform_filter(filter_dict: _Filter | None) -> AgentBiFilter:
     return AgentBiFilter(
         names=filter_dict.get("aggr_name", filter_dict.get("aggr_name_regex", [])),
         groups=[
-            x[0] for x in filter_dict.get("aggr_group_prefix", filter_dict.get("aggr_groups", []))
+            x for x in filter_dict.get("aggr_group_prefix", filter_dict.get("aggr_groups", []))
         ],
     )
 

@@ -16,6 +16,7 @@ It's implementation is still a bit rudimentary but supports most necessary conce
 from __future__ import annotations
 
 import abc
+from typing import override
 
 Primitives = str | int | bool | float | list[str] | tuple[str, ...]
 
@@ -73,6 +74,7 @@ class NothingExpression(QueryExpression):
 
     """
 
+    @override
     def render(self) -> RenderIntermediary:
         return []
 
@@ -98,10 +100,12 @@ class UnaryExpression(abc.ABC):
             other_expr = LiteralExpression(str(other))
         return BinaryExpression(self, other_expr, operator)
 
+    @override
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} {self.value} 0x{id(self):x}>"
 
     @abc.abstractmethod
+    @override
     def __eq__(self, other: Primitives) -> BinaryExpression:  # type: ignore[override]
         raise NotImplementedError()
 
@@ -117,6 +121,7 @@ class UnaryExpression(abc.ABC):
     def __ge__(self, other: Primitives) -> BinaryExpression:
         return self.op(">=", other)
 
+    @override
     def __ne__(self, other: Primitives) -> Not:  # type: ignore[override]
         return Not(self.__eq__(other))
 
@@ -157,24 +162,29 @@ class ScalarExpression(UnaryExpression):
     >= 	Larger or equal 	Lexicographically larger or equal
     """
 
+    @override
     def __eq__(self, other: Primitives) -> BinaryExpression:  # type: ignore[override]
         return self.op("=", other)
 
+    @override
     def equals(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
         if ignore_case:
             return self.op("=~", other)
 
         return self.op("=", other)
 
+    @override
     def contains(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
         if ignore_case:
             return self.op("~~", other)
 
         return self.op("~", other)
 
+    @override
     def empty(self) -> BinaryExpression:
         raise NotImplementedError("Not implemented for this type.")
 
+    @override
     def disparity(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
         raise NotImplementedError("Not implemented for this type.")
 
@@ -194,9 +204,11 @@ class ListExpression(UnaryExpression):
 
     """
 
+    @override
     def __eq__(self, other: Primitives) -> BinaryExpression:  # type: ignore[override]
         return self.equals(other)
 
+    @override
     def equals(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
         if not other:
             # Check for empty list
@@ -209,6 +221,7 @@ class ListExpression(UnaryExpression):
             op = ">="
         return self.op(op, other)
 
+    @override
     def disparity(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
         if ignore_case:
             op = ">"
@@ -216,9 +229,11 @@ class ListExpression(UnaryExpression):
             op = "<"
         return self.op(op, other)
 
+    @override
     def contains(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
         return self.op("~~", other)
 
+    @override
     def empty(self) -> BinaryExpression:
         return self.op("=", LiteralExpression(""))
 
@@ -226,9 +241,11 @@ class ListExpression(UnaryExpression):
 class LiteralExpression(ScalarExpression):
     """A literal value to be rendered in a Filter"""
 
+    @override
     def disparity(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:
         raise NotImplementedError("Not implemented for this type.")
 
+    @override
     def empty(self) -> BinaryExpression:
         raise NotImplementedError("Not implemented for this type.")
 
@@ -282,12 +299,15 @@ class BinaryExpression(QueryExpression):
         self.operator = operator
         self._header = header
 
+    @override
     def __repr__(self) -> str:
         return f"{self._header}({self.left.value} {self.operator} {self.right.value})"
 
+    @override
     def __str__(self) -> str:
         return f"{self.left.value} {self.operator} {self.right.value}"
 
+    @override
     def render(self) -> RenderIntermediary:
         return [(self._header, str(self))]
 
@@ -302,9 +322,11 @@ class BoolExpression(QueryExpression):
             # to have empty arguments, though we'd have to decide on an actual use-case to be sure.
             raise ValueError("Need at least one parameter.")
 
+    @override
     def __repr__(self) -> str:
         return f"{self.expr}{self.args!r}"
 
+    @override
     def render(self) -> RenderIntermediary:
         # This is necessarily a bit ugly, due to some unavoidable edge-cases
         # in combination with NothingExpression().
@@ -359,8 +381,10 @@ class Not(QueryExpression):
     def __init__(self, other: QueryExpression) -> None:
         self.other = other
 
+    @override
     def __repr__(self) -> str:
         return f"Not({self.other!r})"
 
+    @override
     def render(self) -> RenderIntermediary:
         return self.other.render() + [("Negate", "1")]

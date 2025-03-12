@@ -5,7 +5,7 @@
 
 from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Any, NoReturn
+from typing import Any, NoReturn, override
 
 from livestatus import LivestatusResponse, MultiSiteConnection, OnlySites, SiteId
 
@@ -83,9 +83,11 @@ class ResultRow(dict):
         except KeyError as exc:
             raise AttributeError(str(exc))
 
+    @override
     def __setitem__(self, key: object, value: object) -> NoReturn:
         raise KeyError(f"{key}: Setting of keys not allowed.")
 
+    @override
     def __setattr__(self, key: object, value: object) -> NoReturn:
         raise AttributeError(f"{key}: Setting of attributes not allowed.")
 
@@ -229,6 +231,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         This will return a new `Query` instance. The original one is left untouched."""
         return Query(self.columns, And(self.filter_expr, filter_expr))
 
+    @override
     def __str__(self) -> str:
         return self.compile()
 

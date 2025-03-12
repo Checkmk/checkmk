@@ -24,7 +24,7 @@ import time
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
 from contextlib import contextmanager
 from types import TracebackType
-from typing import Any, Literal
+from typing import Any, Literal, override
 from unittest import mock
 
 from livestatus import LivestatusTestingError, MultiSiteConnection, SiteConfigurations, SiteId
@@ -643,6 +643,7 @@ class MockSingleSiteConnection:
             f"\n\nThe following queries were sent to site {self._site_name}:\n {formatted_queries}"
         )
 
+    @override
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} id={id(self)} site={self._site_name}>"
 

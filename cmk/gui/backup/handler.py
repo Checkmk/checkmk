@@ -1893,7 +1893,7 @@ def show_key_download_warning(keys: dict[int, Key]) -> None:
             _(
                 "To be able to restore your encrypted backups, you need to "
                 "download and keep the backup encryption keys in a safe place. "
-                "If you loose your keys or the keys passphrases, your backup "
+                "If you lose your keys or the keys passphrases, your backup "
                 "can not be restored.<br>"
                 "The following keys have not been downloaded yet: %s"
             )

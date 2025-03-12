@@ -22,14 +22,19 @@ const props = defineProps<{
   backendValidation: ValidationMessages
 }>()
 
-const data = defineModel<string[]>('data', { required: true })
-const [validation, value] = useValidation<string[]>(
+export interface DualListChoiceElement {
+  name: string
+  title: string
+}
+
+const data = defineModel<DualListChoiceElement[]>('data', { required: true })
+const [validation, value] = useValidation<DualListChoiceElement[]>(
   data,
   props.spec.validators,
   () => props.backendValidation
 )
 
-const localElements = ref<{ name: string; title: string }[]>(props.spec.elements)
+const localElements = ref<DualListChoiceElement[]>(props.spec.elements)
 const loading: Ref<boolean> = ref(false) // Loading flag
 
 onMounted(async () => {
@@ -61,7 +66,7 @@ const items = computed(() => {
     return !search || element.title.toLowerCase().includes(search.toLowerCase())
   }
   localElements.value.forEach((element) => {
-    if (value.value.includes(element.name)) {
+    if (value.value.map((element) => element.name).includes(element.name)) {
       if (matchesSearch(element, searchActive.value)) {
         active.push(element)
       }
@@ -78,10 +83,13 @@ const availableSelected = ref<string[]>([])
 const activeSelected = ref<string[]>([])
 
 function addSelected() {
-  const newEntries: string[] = []
+  const newEntries: DualListChoiceElement[] = []
   availableSelected.value.forEach((entry) => {
-    if (!value.value.includes(entry)) {
-      newEntries.push(entry)
+    if (!value.value.map((element) => element.name).includes(entry)) {
+      const element = localElements.value.find((element) => element.name === entry)
+      if (element) {
+        newEntries.push(element)
+      }
     }
   })
   if (newEntries.length === 0) {
@@ -92,11 +100,14 @@ function addSelected() {
 }
 
 function removeSelected() {
-  const removedEntries: string[] = []
+  const removedEntries: DualListChoiceElement[] = []
   activeSelected.value.forEach((entry) => {
-    const index = value.value.indexOf(entry)
+    const index = value.value.map((element) => element.name).indexOf(entry)
     if (index !== -1) {
-      removedEntries.push(entry)
+      const element = localElements.value.find((element) => element.name === entry)
+      if (element) {
+        removedEntries.push(element)
+      }
     }
   })
   if (removedEntries.length === 0) {
@@ -108,10 +119,10 @@ function removeSelected() {
 
 function toggleAll(allActive: boolean) {
   if (allActive) {
-    value.value = [...value.value, ...items.value.inactive.map((element) => element.name)]
+    value.value = [...value.value, ...items.value.inactive.map((element) => element)]
   } else {
     value.value = value.value.filter(
-      (entry) => !items.value.active.map((element) => element.name).includes(entry)
+      (entry) => !items.value.active.map((element) => element.name).includes(entry.name)
     )
   }
   cleanSelection()
@@ -143,15 +154,15 @@ const cleanSelection = () => {
 
 const componentId = useId()
 
-const handleDoubleClickToAddItem = (elementName: string) => {
-  if (!value.value.includes(elementName)) {
-    value.value = [...value.value, elementName]
+const handleDoubleClickToAddItem = (element: DualListChoiceElement) => {
+  if (!value.value.map((element) => element.name).includes(element.name)) {
+    value.value = [...value.value, element]
   }
   cleanSelection()
 }
 
-const handleDoubleClickToRemoveItem = (elementName: string) => {
-  const index = value.value.indexOf(elementName)
+const handleDoubleClickToRemoveItem = (element: DualListChoiceElement) => {
+  const index = value.value.map((element) => element.name).indexOf(element.name)
   if (index !== -1) {
     value.value = value.value.filter((_, i) => i !== index)
   }
@@ -236,7 +247,7 @@ const handleDoubleClickToRemoveItem = (elementName: string) => {
                   v-for="element in items.inactive"
                   :key="JSON.stringify(element.name)"
                   :value="element.name"
-                  @dblclick="() => handleDoubleClickToAddItem(element.name)"
+                  @dblclick="() => handleDoubleClickToAddItem(element)"
                 >
                   {{ element.title }}
                 </option>
@@ -279,7 +290,7 @@ const handleDoubleClickToRemoveItem = (elementName: string) => {
                   v-for="element in items.active"
                   :key="JSON.stringify(element.name)"
                   :value="element.name"
-                  @dblclick="() => handleDoubleClickToRemoveItem(element.name)"
+                  @dblclick="() => handleDoubleClickToRemoveItem(element)"
                 >
                   {{ element.title }}
                 </option>

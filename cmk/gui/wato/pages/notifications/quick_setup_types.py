@@ -101,7 +101,7 @@ class AlwaysBulk(CommonBulk):
 
 
 class TimeperiodBulk(CommonBulk):
-    bulking_outside_timeperiod: NotRequired[AlwaysBulk]
+    bulk_outside_timeperiod: NotRequired[AlwaysBulk]
 
 
 AlwaysBulkTuple = tuple[Literal["always"], AlwaysBulk]

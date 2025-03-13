@@ -12,7 +12,7 @@ import time
 import traceback
 from collections.abc import Sequence
 from datetime import timedelta
-from typing import Literal, NamedTuple, TypeGuard
+from typing import Literal, NamedTuple, override, TypeGuard
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
@@ -185,15 +185,18 @@ def _save_network_scan_result(folder: Folder, result: NetworkScanResult) -> None
 
 
 class AutomationNetworkScan(AutomationCommand[NetworkScanRequest]):
+    @override
     def command_name(self) -> str:
         return "network-scan"
 
+    @override
     def get_request(self) -> NetworkScanRequest:
         folder_path = request.var("folder")
         if folder_path is None:
             raise MKGeneralException(_("Folder path is missing"))
         return NetworkScanRequest(folder_path=folder_path)
 
+    @override
     def execute(self, api_request: NetworkScanRequest) -> list[tuple[HostName, HostAddress]]:
         folder = folder_tree().folder(api_request.folder_path)
         return _do_network_scan(folder)

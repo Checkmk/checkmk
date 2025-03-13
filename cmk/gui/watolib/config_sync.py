@@ -7,7 +7,7 @@
 import abc
 import os
 from pathlib import Path
-from typing import NamedTuple
+from typing import NamedTuple, override
 
 from livestatus import SiteConfiguration, SiteGlobals, SiteId
 
@@ -57,6 +57,7 @@ class ReplicationPath(_BaseReplicationPath):
 
 
 class ReplicationPathRegistry(Registry[ReplicationPath]):
+    @override
     def plugin_name(self, instance: ReplicationPath) -> str:
         return instance.ident
 

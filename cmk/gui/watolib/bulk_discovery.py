@@ -5,7 +5,7 @@
 import multiprocessing as mp
 import threading
 from collections.abc import Sequence
-from typing import NamedTuple, NewType
+from typing import NamedTuple, NewType, override
 
 from pydantic import BaseModel
 
@@ -243,6 +243,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
     lock_file = tmp_run_dir / "bulk_discovery.lock"
 
     @classmethod
+    @override
     def gui_title(cls) -> str:
         return _("Bulk Discovery")
 
@@ -250,6 +251,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         job_id = f"{self.job_prefix}-{gen_id()}"
         super().__init__(job_id)
 
+    @override
     def _back_url(self) -> str:
         return disk_or_search_folder_from_request(
             request.var("folder"), request.get_ascii_input("host")

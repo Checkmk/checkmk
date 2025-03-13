@@ -6,7 +6,7 @@
 import abc
 import re
 from collections.abc import Iterable, Sequence
-from typing import NamedTuple
+from typing import NamedTuple, override
 
 import cmk.ccc.plugin_registry
 
@@ -84,6 +84,7 @@ class MenuItem:
             return mode_or_url
         return makeuri_contextless(request, [("mode", mode_or_url)], filename="wato.py")
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(mode_or_url={self.mode_or_url!r}, title={self.title!r}, icon={self.icon!r}, permission={self.permission!r}, description={self.description!r}, sort_index={self.sort_index!r})"
 
@@ -96,6 +97,7 @@ class MainModuleTopic(NamedTuple):
 
 
 class MainModuleTopicRegistry(cmk.ccc.plugin_registry.Registry[MainModuleTopic]):
+    @override
     def plugin_name(self, instance: MainModuleTopic) -> str:
         return instance.name
 
@@ -121,31 +123,37 @@ class ABCMainModule(MenuItem, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @override
     def mode_or_url(self) -> str:
         raise NotImplementedError()
 
     @property
     @abc.abstractmethod
+    @override
     def title(self) -> str:
         raise NotImplementedError()
 
     @property
     @abc.abstractmethod
+    @override
     def icon(self) -> Icon:
         raise NotImplementedError()
 
     @property
     @abc.abstractmethod
+    @override
     def permission(self) -> None | str:
         raise NotImplementedError()
 
     @property
     @abc.abstractmethod
+    @override
     def description(self) -> str:
         raise NotImplementedError()
 
     @property
     @abc.abstractmethod
+    @override
     def sort_index(self) -> int:
         raise NotImplementedError()
 
@@ -167,6 +175,7 @@ class ABCMainModule(MenuItem, abc.ABC):
 
 
 class MainModuleRegistry(cmk.ccc.plugin_registry.Registry[type[ABCMainModule]]):
+    @override
     def plugin_name(self, instance: type[ABCMainModule]) -> str:
         return instance().mode_or_url
 

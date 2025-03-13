@@ -421,12 +421,10 @@ test-doctest:
 	exit $${PIPESTATUS[0]}
 
 test-unit:
-	mkdir -p ../results; \
 	bazel test --test_verbose_timeout_warnings //tests/unit:all \
 	    --test_env=TZ=$(RANDOM_TZ) \
 	    --test_arg="-m" --test_arg="not slow" \
-	    --test_arg="--numprocesses=4" | tee ../results/$@.txt; \
-	exit $${PIPESTATUS[0]}
+	    --test_arg="--numprocesses=4"
 
 test-unit-docker:
 	../scripts/run-in-docker.sh '\

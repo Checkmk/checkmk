@@ -51,8 +51,8 @@ def test_discovery_function() -> None:
             _DEFAULT_PARAMS,
             _STRING_TABLE,
             [
-                Result(state=State.OK, summary="Critical alarms: 1, Warning alarms: 1"),
-                Result(state=State.OK, summary="Archived alarms: 10"),
+                Result(state=State.OK, summary="Critical alarms: 1, Warnings: 1"),
+                Result(state=State.OK, summary="Archived: 10"),
                 Result(
                     state=State.CRIT,
                     summary="Alarm #1: Name: Alarm1, Severity: critical, Sysuptime: 5 days 22 hours, Description: Description1, Source: Source1, Date and Time: 2021-08-02 20:40:56",
@@ -77,8 +77,8 @@ def test_discovery_function() -> None:
             },
             _STRING_TABLE,
             [
-                Result(state=State.OK, summary="Critical alarms: 0, Warning alarms: 0"),
-                Result(state=State.OK, summary="Archived alarms: 10"),
+                Result(state=State.OK, summary="Critical alarms: 0, Warnings: 0"),
+                Result(state=State.OK, summary="Archived: 10"),
                 Result(
                     state=State.OK,
                     notice="Alarm #1: Name: Alarm1, Severity: critical, Sysuptime: 5 days 22 hours, Description: Description1, Source: Source1, Date and Time: 2021-08-02 20:40:56",
@@ -94,8 +94,8 @@ def test_discovery_function() -> None:
             _DEFAULT_PARAMS,
             _STRING_TABLE_WITH_BYTES,
             [
-                Result(state=State.OK, summary="Critical alarms: 1, Warning alarms: 0"),
-                Result(state=State.OK, summary="Archived alarms: 10"),
+                Result(state=State.OK, summary="Critical alarms: 1, Warnings: 0"),
+                Result(state=State.OK, summary="Archived: 10"),
                 Result(
                     state=State.CRIT,
                     summary="Alarm #1: Name: name, Severity: critical, Sysuptime: 5 days 22 hours, Description: description, Source: source, Date and Time: 2021-08-02 20:40:56",

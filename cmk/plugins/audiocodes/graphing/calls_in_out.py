@@ -10,31 +10,31 @@ UNIT_COUNT = metrics.Unit(metrics.DecimalNotation(""))
 
 metric_audiocodes_active_calls_in = metrics.Metric(
     name="audiocodes_active_calls_in",
-    title=Title("Active Calls In"),
+    title=Title("Active calls in"),
     unit=UNIT_COUNT,
     color=metrics.Color.GREEN,
 )
 
 metric_audiocodes_active_calls_out = metrics.Metric(
     name="audiocodes_active_calls_out",
-    title=Title("Active Calls Out"),
+    title=Title("Active calls out"),
     unit=UNIT_COUNT,
     color=metrics.Color.LIGHT_GREEN,
 )
 
 graph_audiocodes_calls_in_out = graphs.Bidirectional(
     name="audiocodes_calls_in_out",
-    title=Title("Calls In/Out"),
+    title=Title("Calls in/out"),
     lower=graphs.Graph(
         name="audiocodes_calls_out",
-        title=Title("Calls Out"),
+        title=Title("Calls out"),
         compound_lines=[
             "audiocodes_active_calls_out",
         ],
     ),
     upper=graphs.Graph(
         name="audiocodes_calls_in",
-        title=Title("Calls In"),
+        title=Title("Calls in"),
         compound_lines=[
             "audiocodes_active_calls_in",
         ],

@@ -172,13 +172,13 @@ def check_audiocodes_system_events(
     yield Result(
         state=State.OK,
         summary=(
-            f"Critical alarms: {number_of_critical_alarms}, Warning alarms: {number_of_warning_alarms}"
+            f"Critical alarms: {number_of_critical_alarms}, Warnings: {number_of_warning_alarms}"
         ),
     )
 
     yield Result(
         state=State.OK,
-        summary="Archived alarms: %d" % section.archived_alarm_history_sequence_number,
+        summary=f"Archived: {section.archived_alarm_history_sequence_number}",
     )
 
     yield from results

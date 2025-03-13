@@ -15,6 +15,7 @@ from logging.handlers import WatchedFileHandler
 from multiprocessing import Event as make_event
 from multiprocessing.synchronize import Event
 from pathlib import Path
+from types import FrameType
 
 from cmk.ccc.daemon import daemonize, pid_file_lock
 
@@ -156,9 +157,14 @@ def run_piggyback_hub(
             p.terminate()
         return 0
 
+    def schedule_config_reload(signum: int, frame: FrameType | None) -> None:
+        logger.info("Received %s: scheduling config reload", signal.Signals(signum).name)
+        reload_config.set()
+
     signal.signal(
         signal.SIGTERM, lambda signum, frame: sys.exit(terminate_all_processes("received SIGTERM"))
     )
+    signal.signal(signal.SIGHUP, schedule_config_reload)
 
     # All processes should run forever. Die if either finishes.
     for proc in cycle(processes):

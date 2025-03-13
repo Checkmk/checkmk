@@ -39,7 +39,6 @@ def load_plugins() -> None:
     inventory.register_inv_paint_functions(globals())
 
     utils.load_web_plugins("icons", globals())
-    utils.load_web_plugins("perfometer", globals())
 
     register_legacy_icons()
 

@@ -18,8 +18,8 @@ from typing import Self
 from .v0_unstable import LegacyCheckDefinition
 
 
-def find_plugin_files(*dirs: str) -> tuple[str, ...]:
-    return tuple(file for directory in dirs for file in _plugin_pathnames_in_directory(directory))
+def find_plugin_files(directory: str) -> tuple[str, ...]:
+    return tuple(_plugin_pathnames_in_directory(directory))
 
 
 def _plugin_pathnames_in_directory(path: str) -> Iterable[str]:
@@ -55,11 +55,8 @@ class _PYCHeader:
 
 
 class FileLoader:
-    def __init__(
-        self, *, precomile_path: str, local_path: str, makedirs: Callable[[str], None]
-    ) -> None:
+    def __init__(self, *, precomile_path: str, makedirs: Callable[[str], None]) -> None:
         self._precompile_path = precomile_path
-        self._local_path = local_path
         self._makedirs = makedirs
 
     def load_into(self, path: str, check_context: dict[str, object]) -> bool:
@@ -107,12 +104,7 @@ class FileLoader:
         return int(os.stat(path).st_mtime) == header.origin_mtime
 
     def _precompiled_plugin_path(self, path: str) -> str:
-        is_local = path.startswith(self._local_path)
-        return os.path.join(
-            self._precompile_path,
-            "local" if is_local else "builtin",
-            os.path.basename(path),
-        )
+        return os.path.join(self._precompile_path, "builtin", os.path.basename(path))
 
 
 @dataclasses.dataclass

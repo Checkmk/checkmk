@@ -36,7 +36,6 @@ class Check:
             find_plugin_files(str(repo_path() / "cmk/base/legacy_checks")),
             FileLoader(
                 precomile_path=cmk.utils.paths.precompiled_checks_dir,
-                local_path="/not_relevant_for_test",
                 makedirs=store.makedirs,
             ),
             raise_errors=True,

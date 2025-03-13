@@ -285,10 +285,7 @@ def agent_based_plugins() -> AgentBasedPlugins:
         config,
     )
 
-    plugins = config.load_all_plugins(
-        local_checks_dir=repo_path() / "no-such-path-but-thats-ok",
-        checks_dir=str(repo_path() / "cmk/base/legacy_checks"),
-    )
+    plugins = config.load_all_plugins(str(repo_path() / "cmk/base/legacy_checks"))
     assert not plugins.errors
     return plugins
 

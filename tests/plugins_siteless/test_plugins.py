@@ -61,16 +61,14 @@ def _setup_dirs() -> Iterator[None]:
 def test_checks_executor(
     agent_data_filename: str, request: pytest.FixtureRequest, setup_dirs: Iterator[None]
 ) -> None:
-    agent_based_plugins = config.load_all_plugins(
-        local_checks_dir=Path(__file__).parent,  # dummy path, not really needed for this test
-        checks_dir=str(repo_path() / "cmk/base/legacy_checks"),
-    )
+    agent_based_plugins = config.load_all_plugins(str(repo_path() / "cmk/base/legacy_checks"))
     assert not agent_based_plugins.errors
     assert agent_based_plugins.agent_sections
 
     source_info = SourceInfo(HOSTNAME, None, "test_dump", FetcherType.PUSH_AGENT, SourceType.HOST)
     submitter = BasicSubmitter(HOSTNAME)
     config_cache = config.ConfigCache(config.LoadedConfigFragment()).initialize()
+
     # make sure logwatch doesn't crash
     config._globally_cache_config_cache(config_cache)
 

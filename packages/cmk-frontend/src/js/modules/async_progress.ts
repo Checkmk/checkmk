@@ -20,6 +20,9 @@ import {add_class, remove_class, time} from "./utils";
 //#   | the service discovery dialogs                                      |
 //#   '--------------------------------------------------------------------'
 
+// How long to wait before showing an error message when the site is restarting.
+const siteRestartWaitTime = 30;
+
 interface AsyncProgressHandlerData {
     update_url: string;
     error_function: (arg0: any) => void;
@@ -72,9 +75,12 @@ function handle_error(
     status_code: string | number,
     error_msg: string,
 ) {
-    if (time() - handler_data.start_time! <= 10 && status_code == 503) {
+    if (
+        time() - handler_data.start_time! <= siteRestartWaitTime &&
+        status_code == 503
+    ) {
         show_info(
-            "Failed to fetch state. This may be normal for a period of some seconds.",
+            "Fetching site state... This may take up to 30 seconds when a site restart is required.",
         );
     } else if (status_code == 0) {
         return; // not really an error. Reached when navigating away from the page

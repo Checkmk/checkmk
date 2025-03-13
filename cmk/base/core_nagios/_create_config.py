@@ -352,12 +352,12 @@ def create_nagios_host_spec(
     hostgroups = config_cache.hostgroups(hostname)
     if config.define_hostgroups or hostgroups == [config.default_host_group]:
         cfg.hostgroups_to_define.update(hostgroups)
-    host_spec["hostgroups"] = ",".join(hostgroups)
+    host_spec["hostgroups"] = ",".join(sorted(hostgroups))
 
     # Contact groups
     contactgroups = config_cache.contactgroups(hostname)
     if contactgroups:
-        host_spec["contact_groups"] = ",".join(contactgroups)
+        host_spec["contact_groups"] = ",".join(sorted(contactgroups))
         cfg.contactgroups_to_define.update(contactgroups)
 
     if hostname not in config_cache.hosts_config.clusters:
@@ -368,11 +368,11 @@ def create_nagios_host_spec(
         if not attrs.get("parents", []):
             parents_list = config_cache.parents(hostname)
             if parents_list:
-                host_spec["parents"] = ",".join(parents_list)
+                host_spec["parents"] = ",".join(sorted(parents_list))
 
     elif hostname in config_cache.hosts_config.clusters:
         # Special handling of clusters
-        host_spec["parents"] = ",".join(nodes)
+        host_spec["parents"] = ",".join(sorted(nodes))
 
     # Custom configuration last -> user may override all other values
     # TODO: Find a generic mechanism for CMC and Nagios
@@ -912,7 +912,7 @@ def _create_nagios_config_contactgroups(cfg: NagiosConfig) -> None:
             "alias": config.define_contactgroups.get(name, name),
         }
         if members := config.contactgroup_members.get(name):
-            contactgroup_spec["members"] = ",".join(members)
+            contactgroup_spec["members"] = ",".join(sorted(members))
         cfg.write(format_nagios_object("contactgroup", contactgroup_spec))
 
 
@@ -921,7 +921,7 @@ def create_nagios_config_commands(cfg: NagiosConfig) -> None:
         cfg.write("\n# ------------------------------------------------------------\n")
         cfg.write("# Dummy check commands and active check commands\n")
         cfg.write("# ------------------------------------------------------------\n\n")
-        for checkname in cfg.checknames_to_define:
+        for checkname in sorted(cfg.checknames_to_define):
             cfg.write(
                 format_nagios_object(
                     "command",
@@ -933,7 +933,7 @@ def create_nagios_config_commands(cfg: NagiosConfig) -> None:
             )
 
     # active_checks
-    for acttype, detected_executable in cfg.active_checks_to_define.items():
+    for acttype, detected_executable in sorted(cfg.active_checks_to_define.items()):
         cfg.write(
             format_nagios_object(
                 "command",
@@ -945,7 +945,7 @@ def create_nagios_config_commands(cfg: NagiosConfig) -> None:
         )
 
     # custom_checks
-    for command_name in cfg.custom_commands_to_define:
+    for command_name in sorted(cfg.custom_commands_to_define):
         cfg.write(
             format_nagios_object(
                 "command",
@@ -957,7 +957,7 @@ def create_nagios_config_commands(cfg: NagiosConfig) -> None:
         )
 
     # custom host checks
-    for command_name, command_line in cfg.hostcheck_commands_to_define:
+    for command_name, command_line in sorted(cfg.hostcheck_commands_to_define):
         cfg.write(
             format_nagios_object(
                 "command",
@@ -1053,7 +1053,7 @@ def _create_nagios_config_contacts(cfg: NagiosConfig, hostnames: Sequence[HostNa
 
                 contact_spec.update(
                     {
-                        "%s_notification_options" % what: ",".join(no),
+                        "%s_notification_options" % what: ",".join(sorted(no)),
                         "%s_notification_period" % what: contact.get("notification_period", "24X7"),
                         "%s_notification_commands" % what: contact.get(
                             "%s_notification_commands" % what, "check-mk-notify"
@@ -1064,7 +1064,7 @@ def _create_nagios_config_contacts(cfg: NagiosConfig, hostnames: Sequence[HostNa
             # Add custom macros
             contact_spec.update({key: val for key, val in contact.items() if key.startswith("_")})
 
-            contact_spec["contactgroups"] = ", ".join(cgrs)
+            contact_spec["contactgroups"] = ", ".join(sorted(cgrs))
             cfg.write(format_nagios_object("contact", contact_spec))
 
     if hostnames:
@@ -1110,12 +1110,12 @@ def _extra_service_conf_of(
     # the Nagios core and not defined by the user.
     sercgr = config_cache.contactgroups_of_service(host_name, service_name, service_labels)
     if sercgr != ["check-mk-notify"]:
-        service_spec["contact_groups"] = ",".join(sercgr)
+        service_spec["contact_groups"] = ",".join(sorted(sercgr))
         cfg.contactgroups_to_define.update(sercgr)
 
     sergr = config_cache.servicegroups_of_service(host_name, service_name, service_labels)
     if sergr:
-        service_spec["service_groups"] = ",".join(sergr)
+        service_spec["service_groups"] = ",".join(sorted(sergr))
         if config.define_servicegroups:
             cfg.servicegroups_to_define.update(sergr)
 

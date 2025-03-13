@@ -18,8 +18,8 @@ from typing import Self
 from .v0_unstable import LegacyCheckDefinition
 
 
-def find_plugin_files(*dirs: str) -> tuple[str, ...]:
-    return tuple(file for directory in dirs for file in _plugin_pathnames_in_directory(directory))
+def find_plugin_files(directory: str) -> tuple[str, ...]:
+    return tuple(_plugin_pathnames_in_directory(directory))
 
 
 def _plugin_pathnames_in_directory(path: str) -> Iterable[str]:

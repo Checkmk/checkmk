@@ -1414,7 +1414,7 @@ def load_all_plugins(
 ) -> list[str]:
     with tracer.start_as_current_span("load_legacy_check_plugins"):
         with tracer.start_as_current_span("discover_legacy_check_plugins"):
-            filelist = find_plugin_files(str(local_checks_dir), checks_dir)
+            filelist = find_plugin_files(checks_dir)
 
         legacy_errors, sections, checks = load_and_convert_legacy_checks(filelist)
 

@@ -86,8 +86,6 @@ http_proxies: dict[str, dict[str, str]] = {}
 
 # Global config for SNMP Backend
 snmp_backend_default: Literal["inline", "classic"] = "inline"
-# Deprecated: Replaced by snmp_backend_hosts
-use_inline_snmp: bool = True
 
 # Ruleset to enable specific SNMP Backend for each host.
 snmp_backend_hosts: list[RuleSpec[object]] = []

@@ -211,7 +211,6 @@ def register(
     config_variable_registry.register(ConfigVariableCheckMKPerfdataWithTimes)
     config_variable_registry.register(ConfigVariableUseDNSCache)
     config_variable_registry.register(ConfigVariableChooseSNMPBackend)
-    config_variable_registry.register(ConfigVariableUseInlineSNMP)
     config_variable_registry.register(ConfigVariableHTTPProxies)
     config_variable_group_registry.register(ConfigVariableGroupServiceDiscovery)
     config_variable_registry.register(ConfigVariableInventoryCheckInterval)
@@ -3299,38 +3298,6 @@ class ConfigVariableChooseSNMPBackend(ConfigVariable):
             ),
             to_valuespec=transform_snmp_backend_hosts_to_valuespec,
             from_valuespec=transform_snmp_backend_from_valuespec,
-        )
-
-
-class ConfigVariableUseInlineSNMP(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
-        return ConfigVariableGroupCheckExecution
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainCore()
-
-    def ident(self) -> str:
-        return "use_inline_snmp"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("Use Inline SNMP (deprecated)"),
-            label=_("Enable inline SNMP (directly use net-snmp libraries) (deprecated)"),
-            help=_(
-                "By default Checkmk uses command line calls of Net-SNMP tools like snmpget or "
-                "snmpwalk to gather SNMP information. For each request a new command line "
-                "program is being executed. It is now possible to use the inline SNMP implementation "
-                "which calls the net-snmp libraries directly via its python bindings. This "
-                "should increase the performance of SNMP checks in a significant way. The inline "
-                "SNMP mode is a feature which improves the performance for large installations and "
-                "only available via our subscription."
-                "<b>Note:</b> This option is deprecated and has been replaced by '%s'. "
-                "Changes to this option will have no effect to the behaviour of "
-                "Checkmk"
-            )
-            % cmk_version.mark_edition_only(
-                _("Choose SNMP backend"), [cmk_version.Edition.CME, cmk_version.Edition.CEE]
-            ),
         )
 
 

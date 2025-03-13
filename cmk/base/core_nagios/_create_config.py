@@ -12,7 +12,7 @@ from collections import Counter
 from collections.abc import Mapping, Sequence
 from contextlib import suppress
 from io import StringIO
-from typing import Any, cast, Final, IO, Literal
+from typing import Any, Final, IO, Literal
 
 import cmk.ccc.debug
 from cmk.ccc import store
@@ -31,6 +31,7 @@ from cmk.utils.notify import NotificationHostConfig, write_notify_host_file
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.servicename import MAX_SERVICE_NAME_LEN, ServiceName
+from cmk.utils.timeperiod import add_builtin_timeperiods
 
 from cmk.checkengine.checking import CheckPluginName
 
@@ -970,37 +971,22 @@ def create_nagios_config_commands(cfg: NagiosConfig) -> None:
 
 
 def _create_nagios_config_timeperiods(cfg: NagiosConfig) -> None:
-    if len(config.timeperiods) > 0:
-        cfg.write("\n# ------------------------------------------------------------\n")
-        cfg.write("# Timeperiod definitions (controlled by variable 'timeperiods')\n")
-        cfg.write("# ------------------------------------------------------------\n\n")
-        tpnames = sorted(config.timeperiods)
-        for name in tpnames:
-            tp = config.timeperiods[name]
-            timeperiod_spec = {
-                "timeperiod_name": name,
-            }
-
-            if "alias" in tp:
-                alias = tp["alias"]
-                assert isinstance(alias, str)
-                timeperiod_spec["alias"] = alias
-
-            for key, value in tp.items():
-                if key not in ["alias", "exclude"]:
-                    # TODO: We should *really* improve TimeperiodSpec: We have no way to use assert
-                    # below to distinguish between a list of TimeperiodNames for "exclude" and the
-                    # list of tuples for the time ranges.
-                    times = ",".join(
-                        (f"{fr}-{to}") for (fr, to) in cast(list[tuple[str, str]], value)
-                    )
-                    if times:
-                        timeperiod_spec[key] = times
-
-            if "exclude" in tp:
-                timeperiod_spec["exclude"] = ",".join(tp["exclude"])
-
-            cfg.write(format_nagios_object("timeperiod", timeperiod_spec))
+    timeperiods = add_builtin_timeperiods(config.timeperiods)
+    cfg.write("\n# ------------------------------------------------------------\n")
+    cfg.write("# Timeperiod definitions (controlled by variable 'timeperiods')\n")
+    cfg.write("# ------------------------------------------------------------\n\n")
+    for name in sorted(timeperiods):
+        tp = timeperiods[name]
+        timeperiod_spec = {
+            "timeperiod_name": name,
+            "alias": tp["alias"],
+        }
+        for key in ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"):
+            if key in tp and (times := ",".join((f"{fr}-{to}") for fr, to in tp[key])):
+                timeperiod_spec[key] = times
+        if exclude := tp.get("exclude", []):
+            timeperiod_spec["exclude"] = ",".join(sorted(exclude))
+        cfg.write(format_nagios_object("timeperiod", timeperiod_spec))
 
 
 def _create_nagios_config_contacts(cfg: NagiosConfig, hostnames: Sequence[HostName]) -> None:

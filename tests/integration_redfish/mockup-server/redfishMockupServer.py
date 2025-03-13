@@ -174,71 +174,67 @@ class RfMockupServer(BaseHTTPRequestHandler):
         if not success:
             # Eventing not supported
             return 404
+        # Check if all of the parameters are given
+        elif (
+            ("EventType" not in data_received)
+            or ("EventId" not in data_received)
+            or ("EventTimestamp" not in data_received)
+            or ("Severity" not in data_received)
+            or ("Message" not in data_received)
+            or ("MessageId" not in data_received)
+            or ("MessageArgs" not in data_received)
+            or ("OriginOfCondition" not in data_received)
+        ):
+            return 400
         else:
-            # Check if all of the parameters are given
-            if (
-                ("EventType" not in data_received)
-                or ("EventId" not in data_received)
-                or ("EventTimestamp" not in data_received)
-                or ("Severity" not in data_received)
-                or ("Message" not in data_received)
-                or ("MessageId" not in data_received)
-                or ("MessageArgs" not in data_received)
-                or ("OriginOfCondition" not in data_received)
-            ):
-                return 400
-            else:
-                # Need to reformat to make Origin Of Condition a proper link
-                origin_of_cond = data_received["OriginOfCondition"]
-                data_received["OriginOfCondition"] = {}
-                data_received["OriginOfCondition"]["@odata.id"] = origin_of_cond
-                event_payload = {}
-                event_payload["@odata.type"] = "#Event.v1_2_1.Event"
-                event_payload["Name"] = "Test Event"
-                event_payload["Id"] = str(self.event_id)
-                event_payload["Events"] = []
-                event_payload["Events"].append(data_received)
+            # Need to reformat to make Origin Of Condition a proper link
+            origin_of_cond = data_received["OriginOfCondition"]
+            data_received["OriginOfCondition"] = {}
+            data_received["OriginOfCondition"]["@odata.id"] = origin_of_cond
+            event_payload = {}
+            event_payload["@odata.type"] = "#Event.v1_2_1.Event"
+            event_payload["Name"] = "Test Event"
+            event_payload["Id"] = str(self.event_id)
+            event_payload["Events"] = []
+            event_payload["Events"].append(data_received)
 
-                # Go through each subscriber
-                events = []
-                for member in sub_payload.get("Members", []):
-                    entry = member["@odata.id"]
-                    entrypath = self.construct_path(entry, "index.json")
-                    success, subscription = self.get_cached_link(entrypath)
-                    if not success:
-                        logger.info("No such resource")
+            # Go through each subscriber
+            events = []
+            for member in sub_payload.get("Members", []):
+                entry = member["@odata.id"]
+                entrypath = self.construct_path(entry, "index.json")
+                success, subscription = self.get_cached_link(entrypath)
+                if not success:
+                    logger.info("No such resource")
+                # Sanity check the subscription for required properties
+                elif ("Destination" in subscription) and ("EventTypes" in subscription):
+                    logger.info(("Target", subscription["Destination"]))
+                    logger.info((data_received["EventType"], subscription["EventTypes"]))
+
+                    # If the EventType in the request is one of interest to the subscriber, build an event payload
+                    if data_received["EventType"] in subscription["EventTypes"]:
+                        http_headers = {}
+                        http_headers["Content-Type"] = "application/json"
+
+                        event_payload["Context"] = subscription.get("Context", "Default Context")
+
+                        # Send the event
+                        events.append(
+                            grequests.post(
+                                subscription["Destination"],
+                                timeout=20,
+                                data=json.dumps(event_payload),
+                                headers=http_headers,
+                            )
+                        )
                     else:
-                        # Sanity check the subscription for required properties
-                        if ("Destination" in subscription) and ("EventTypes" in subscription):
-                            logger.info(("Target", subscription["Destination"]))
-                            logger.info((data_received["EventType"], subscription["EventTypes"]))
-
-                            # If the EventType in the request is one of interest to the subscriber, build an event payload
-                            if data_received["EventType"] in subscription["EventTypes"]:
-                                http_headers = {}
-                                http_headers["Content-Type"] = "application/json"
-
-                                event_payload["Context"] = subscription.get(
-                                    "Context", "Default Context"
-                                )
-
-                                # Send the event
-                                events.append(
-                                    grequests.post(
-                                        subscription["Destination"],
-                                        timeout=20,
-                                        data=json.dumps(event_payload),
-                                        headers=http_headers,
-                                    )
-                                )
-                            else:
-                                logger.info("event not in eventtypes")
-                try:
-                    threading.Thread(target=grequests.map, args=(events,)).start()
-                except Exception as e:
-                    logger.info("post error {}".format(str(e)))
-                return 204
-                self.event_id = self.event_id + 1
+                        logger.info("event not in eventtypes")
+            try:
+                threading.Thread(target=grequests.map, args=(events,)).start()
+            except Exception as e:
+                logger.info("post error {}".format(str(e)))
+            return 204
+            self.event_id = self.event_id + 1
 
     def handle_telemetry(self, data_received):
         sub_path = self.construct_path("/redfish/v1/EventService/Subscriptions", "index.json")
@@ -247,115 +243,113 @@ class RfMockupServer(BaseHTTPRequestHandler):
         if not success:
             # Eventing not supported
             return 404
-        else:
-            # Check if all of the parameters are given
-            if (
-                (("MetricReportName" in data_received) and ("MetricReportValues" in data_received))
-                or (
-                    ("MetricReportName" in data_received)
-                    and ("GeneratedMetricReportValues" in data_received)
+        # Check if all of the parameters are given
+        elif (
+            (("MetricReportName" in data_received) and ("MetricReportValues" in data_received))
+            or (
+                ("MetricReportName" in data_received)
+                and ("GeneratedMetricReportValues" in data_received)
+            )
+            or (("MetricName" in data_received) and ("MetricValues" in data_received))
+        ):
+            # If the EventType in the request is one of interest to the subscriber, build an event payload
+            expected_keys = [
+                "MetricId",
+                "MetricValue",
+                "Timestamp",
+                "MetricProperty",
+                "MetricDefinition",
+            ]
+            my_name = data_received.get("MetricName", data_received.get("MetricReportName"))
+            my_data = data_received.get(
+                "MetricValues",
+                data_received.get(
+                    "MetricReportValues", data_received.get("GeneratedMetricReportValues")
+                ),
+            )
+            event_payload = {}
+            value_list = []
+            # event_payload['@Redfish.Copyright'] = 'Copyright 2014-2016 Distributed Management Task Force, Inc. (DMTF). All rights reserved.'
+            event_payload["@odata.context"] = "/redfish/v1/$metadata#MetricReport.MetricReport"
+            event_payload["@odata.type"] = "#MetricReport.v1_0_0.MetricReport"
+            event_payload["@odata.id"] = "/redfish/v1/TelemetryService/MetricReports/" + my_name
+            event_payload["Id"] = my_name
+            event_payload["Name"] = my_name
+            event_payload["MetricReportDefinition"] = {
+                "@odata.id": "/redfish/v1/TelemetryService/MetricReportDefinitions/" + my_name
+            }
+            now = datetime.datetime.now()
+            event_payload["Timestamp"] = now.strftime("%Y-%m-%dT%H:%M:%S") + (
+                "-%02d" % (now.microsecond / 10000)
+            )
+
+            for tup in my_data:
+                if all(x in tup for x in expected_keys):
+                    # uncomment for stricter payload check
+                    # ex: if all(x in expected_keys + other_keys for x in tup):
+                    value_list.append(tup)
+            event_payload["MetricValues"] = value_list
+            logger.info(event_payload)
+
+            # construct path "mockdir/path/to/resource/<filename>"
+            event_fpath = self.construct_path(event_payload["@odata.id"], "index.json")
+            self.patchedLinks[event_fpath] = event_payload
+
+            report_path = "/redfish/v1/TelemetryService/MetricReports"
+            report_path = self.construct_path(report_path, "index.json")
+            success, collection_payload = self.get_cached_link(report_path)
+
+            if not success:
+                collection_payload = {"Members": []}
+                collection_payload["@odata.context"] = (
+                    "/redfish/v1/$metadata#MetricReportCollection.MetricReportCollection"
                 )
-                or (("MetricName" in data_received) and ("MetricValues" in data_received))
-            ):
-                # If the EventType in the request is one of interest to the subscriber, build an event payload
-                expected_keys = [
-                    "MetricId",
-                    "MetricValue",
-                    "Timestamp",
-                    "MetricProperty",
-                    "MetricDefinition",
-                ]
-                my_name = data_received.get("MetricName", data_received.get("MetricReportName"))
-                my_data = data_received.get(
-                    "MetricValues",
-                    data_received.get(
-                        "MetricReportValues", data_received.get("GeneratedMetricReportValues")
-                    ),
+                collection_payload["@odata.type"] = (
+                    "#MetricReportCollection.v1_0_0.MetricReportCollection"
                 )
-                event_payload = {}
-                value_list = []
-                # event_payload['@Redfish.Copyright'] = 'Copyright 2014-2016 Distributed Management Task Force, Inc. (DMTF). All rights reserved.'
-                event_payload["@odata.context"] = "/redfish/v1/$metadata#MetricReport.MetricReport"
-                event_payload["@odata.type"] = "#MetricReport.v1_0_0.MetricReport"
-                event_payload["@odata.id"] = "/redfish/v1/TelemetryService/MetricReports/" + my_name
-                event_payload["Id"] = my_name
-                event_payload["Name"] = my_name
-                event_payload["MetricReportDefinition"] = {
-                    "@odata.id": "/redfish/v1/TelemetryService/MetricReportDefinitions/" + my_name
-                }
-                now = datetime.datetime.now()
-                event_payload["Timestamp"] = now.strftime("%Y-%m-%dT%H:%M:%S") + (
-                    "-%02d" % (now.microsecond / 10000)
-                )
+                collection_payload["@odata.id"] = "/redfish/v1/TelemetryService/MetricReports"
+                collection_payload["Name"] = "MetricReports"
 
-                for tup in my_data:
-                    if all(x in tup for x in expected_keys):
-                        # uncomment for stricter payload check
-                        # ex: if all(x in expected_keys + other_keys for x in tup):
-                        value_list.append(tup)
-                event_payload["MetricValues"] = value_list
-                logger.info(event_payload)
+            if event_payload["@odata.id"] not in [
+                member.get("@odata.id") for member in collection_payload["Members"]
+            ]:
+                collection_payload["Members"].append({"@odata.id": event_payload["@odata.id"]})
+            collection_payload["Members@odata.count"] = len(collection_payload["Members"])
+            self.patchedLinks[report_path] = collection_payload
 
-                # construct path "mockdir/path/to/resource/<filename>"
-                event_fpath = self.construct_path(event_payload["@odata.id"], "index.json")
-                self.patchedLinks[event_fpath] = event_payload
-
-                report_path = "/redfish/v1/TelemetryService/MetricReports"
-                report_path = self.construct_path(report_path, "index.json")
-                success, collection_payload = self.get_cached_link(report_path)
-
+            # Go through each subscriber
+            events = []
+            for member in sub_payload.get("Members", []):
+                entry = member["@odata.id"]
+                entrypath = self.construct_path(entry, "index.json")
+                success, subscription = self.get_cached_link(entrypath)
                 if not success:
-                    collection_payload = {"Members": []}
-                    collection_payload["@odata.context"] = (
-                        "/redfish/v1/$metadata#MetricReportCollection.MetricReportCollection"
+                    logger.info("No such resource")
+                # Sanity check the subscription for required properties
+                elif ("Destination" in subscription) and ("EventTypes" in subscription):
+                    logger.info(("Target", subscription["Destination"]))
+                    http_headers = {}
+                    http_headers["Content-Type"] = "application/json"
+
+                    # Send the event
+                    events.append(
+                        grequests.post(
+                            subscription["Destination"],
+                            timeout=20,
+                            data=json.dumps(event_payload),
+                            headers=http_headers,
+                        )
                     )
-                    collection_payload["@odata.type"] = (
-                        "#MetricReportCollection.v1_0_0.MetricReportCollection"
-                    )
-                    collection_payload["@odata.id"] = "/redfish/v1/TelemetryService/MetricReports"
-                    collection_payload["Name"] = "MetricReports"
-
-                if event_payload["@odata.id"] not in [
-                    member.get("@odata.id") for member in collection_payload["Members"]
-                ]:
-                    collection_payload["Members"].append({"@odata.id": event_payload["@odata.id"]})
-                collection_payload["Members@odata.count"] = len(collection_payload["Members"])
-                self.patchedLinks[report_path] = collection_payload
-
-                # Go through each subscriber
-                events = []
-                for member in sub_payload.get("Members", []):
-                    entry = member["@odata.id"]
-                    entrypath = self.construct_path(entry, "index.json")
-                    success, subscription = self.get_cached_link(entrypath)
-                    if not success:
-                        logger.info("No such resource")
-                    else:
-                        # Sanity check the subscription for required properties
-                        if ("Destination" in subscription) and ("EventTypes" in subscription):
-                            logger.info(("Target", subscription["Destination"]))
-                            http_headers = {}
-                            http_headers["Content-Type"] = "application/json"
-
-                            # Send the event
-                            events.append(
-                                grequests.post(
-                                    subscription["Destination"],
-                                    timeout=20,
-                                    data=json.dumps(event_payload),
-                                    headers=http_headers,
-                                )
-                            )
-                        else:
-                            logger.info("event not in eventtypes")
-                try:
-                    threading.Thread(target=grequests.map, args=(events,)).start()
-                except Exception as e:
-                    logger.info("post error {}".format(str(e)))
-                self.event_id = self.event_id + 1
-                return 204
-            else:
-                return 400
+                else:
+                    logger.info("event not in eventtypes")
+            try:
+                threading.Thread(target=grequests.map, args=(events,)).start()
+            except Exception as e:
+                logger.info("post error {}".format(str(e)))
+            self.event_id = self.event_id + 1
+            return 204
+        else:
+            return 400
 
     server_version = "RedfishMockupHTTPD_v" + tool_version
     event_id = 1
@@ -692,37 +686,34 @@ class RfMockupServer(BaseHTTPRequestHandler):
             lenn = int(self.headers["content-length"])
             if lenn == 0:
                 data_received = {}
+            elif ctype == "multipart/form-data":
+                data_received = None
+                boundary = pdict.get("boundary", "")
+                if not boundary:
+                    # TODO: return error ?
+                    print("No boundary for multipart/form-data.")
+                # Redfish specification requires two parts:
+                # (1) UpdateParameters (JSON formatted,
+                #     adhering to the UpdateService Schema)
+                # (2) UpdateFile (binary file to use for this update)
+                #
+                # The third part is optional: OemXXX
+                for part in multipart.MultipartParser(self.rfile, boundary, lenn):
+                    logger.info(
+                        "   POST: MULTIPART: name={} and file={}".format(part.name, part.filename)
+                    )
+                    if part.filename:
+                        with tempfile.TemporaryDirectory() as tmpdir:
+                            part.save_as(os.path.join(tmpdir, part.filename))
+                    else:
+                        data_received = json.loads(part.value)
+                    part.close()
             else:
-                if ctype == "multipart/form-data":
+                try:
+                    data_received = json.loads(self.rfile.read(lenn).decode("utf-8"))
+                except ValueError:
+                    print("Decoding JSON has failed, sending 400")
                     data_received = None
-                    boundary = pdict.get("boundary", "")
-                    if not boundary:
-                        # TODO: return error ?
-                        print("No boundary for multipart/form-data.")
-                    # Redfish specification requires two parts:
-                    # (1) UpdateParameters (JSON formatted,
-                    #     adhering to the UpdateService Schema)
-                    # (2) UpdateFile (binary file to use for this update)
-                    #
-                    # The third part is optional: OemXXX
-                    for part in multipart.MultipartParser(self.rfile, boundary, lenn):
-                        logger.info(
-                            "   POST: MULTIPART: name={} and file={}".format(
-                                part.name, part.filename
-                            )
-                        )
-                        if part.filename:
-                            with tempfile.TemporaryDirectory() as tmpdir:
-                                part.save_as(os.path.join(tmpdir, part.filename))
-                        else:
-                            data_received = json.loads(part.value)
-                        part.close()
-                else:
-                    try:
-                        data_received = json.loads(self.rfile.read(lenn).decode("utf-8"))
-                    except ValueError:
-                        print("Decoding JSON has failed, sending 400")
-                        data_received = None
         else:
             self.send_response(411)
             self.end_headers()
@@ -768,50 +759,46 @@ class RfMockupServer(BaseHTTPRequestHandler):
                     self.end_headers()
 
             # Actions framework
-            else:
-                # SubmitTestEvent
-                if "EventService/Actions/EventService.SubmitTestEvent" in self.path:
-                    r_code = self.handle_eventing(data_received)
-                    self.send_response(r_code)
-                # SubmitTestMetricReport
-                elif (
-                    "TelemetryService/Actions/TelemetryService.SubmitTestMetricReport" in self.path
-                ):
-                    r_code = self.handle_telemetry(data_received)
-                    self.send_response(r_code)
-                # UpdateService (SimpleUpdate is handled part of the Actions, so only multipart is here)
-                elif "UpdateService/update-multipart" in self.path:
-                    logger.info("TBD: handle multipart")
-                    self.send_response(204)
-                # All other actions (no data checking or response data)
-                elif "/Actions/" in self.path:
-                    fpath = self.construct_path(self.path.split("/Actions/", 1)[0], "index.json")
-                    success, payload = self.get_cached_link(fpath)
-                    if success:
-                        action_found = False
-                        try:
-                            for action in payload["Actions"]:
-                                if action == "Oem":
-                                    for oem_action in payload["Actions"][action]:
-                                        if (
-                                            payload["Actions"][action][oem_action]["target"]
-                                            == self.path
-                                        ):
-                                            action_found = True
-                                else:
-                                    if payload["Actions"][action]["target"] == self.path:
+            # SubmitTestEvent
+            elif "EventService/Actions/EventService.SubmitTestEvent" in self.path:
+                r_code = self.handle_eventing(data_received)
+                self.send_response(r_code)
+            # SubmitTestMetricReport
+            elif "TelemetryService/Actions/TelemetryService.SubmitTestMetricReport" in self.path:
+                r_code = self.handle_telemetry(data_received)
+                self.send_response(r_code)
+            # UpdateService (SimpleUpdate is handled part of the Actions, so only multipart is here)
+            elif "UpdateService/update-multipart" in self.path:
+                logger.info("TBD: handle multipart")
+                self.send_response(204)
+            # All other actions (no data checking or response data)
+            elif "/Actions/" in self.path:
+                fpath = self.construct_path(self.path.split("/Actions/", 1)[0], "index.json")
+                success, payload = self.get_cached_link(fpath)
+                if success:
+                    action_found = False
+                    try:
+                        for action in payload["Actions"]:
+                            if action == "Oem":
+                                for oem_action in payload["Actions"][action]:
+                                    if (
+                                        payload["Actions"][action][oem_action]["target"]
+                                        == self.path
+                                    ):
                                         action_found = True
-                        except Exception:
-                            pass
-                        if action_found:
-                            self.send_response(204)
-                        else:
-                            self.send_response(404)
+                            elif payload["Actions"][action]["target"] == self.path:
+                                action_found = True
+                    except Exception:
+                        pass
+                    if action_found:
+                        self.send_response(204)
                     else:
                         self.send_response(404)
-                # Not found
                 else:
                     self.send_response(404)
+            # Not found
+            else:
+                self.send_response(404)
         else:
             self.send_response(400)
         self.end_headers()

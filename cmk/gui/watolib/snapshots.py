@@ -26,6 +26,7 @@ from cmk.gui.log import logger
 from cmk.gui.watolib.config_sync import (
     ABCSnapshotDataCollector,
     create_distributed_wato_files,
+    create_piggyback_hub_new_config_file,
     create_rabbitmq_new_definitions_file,
     get_site_globals,
     replication_path_registry,
@@ -141,6 +142,10 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
                 create_rabbitmq_new_definitions_file(
                     Path(snapshot_settings.work_dir), snapshot_settings.rabbitmq_definition
                 )
+                if snapshot_settings.piggyback_hub_config:
+                    create_piggyback_hub_new_config_file(
+                        Path(snapshot_settings.work_dir), snapshot_settings.piggyback_hub_config
+                    )
 
     def _prepare_site_config_directory(self, site_id: SiteId) -> None:
         """

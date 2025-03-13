@@ -73,8 +73,7 @@ def _central_site(request: pytest.FixtureRequest, ensure_cron: None) -> Iterator
             ),
         ],
     ) as central_site:
-        with _trace_broker_messages(central_site):
-            yield central_site
+        yield central_site
 
 
 @pytest.fixture(name="remote_site", scope="session")
@@ -102,10 +101,7 @@ def _make_connected_remote_site(
         auto_restart_httpd=True,
         tracing_config=tracing_config_from_env(os.environ),
     ) as remote_site:
-        with (
-            _connection(central_site=central_site, remote_site=remote_site),
-            _trace_broker_messages(remote_site),
-        ):
+        with _connection(central_site=central_site, remote_site=remote_site):
             yield remote_site
 
 

@@ -74,6 +74,12 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             excludes=[],
         ),
         ReplicationPath(
+            ty="file",
+            ident="piggyback_hub",
+            site_path="etc/check_mk/piggyback_hub.conf",
+            excludes=[],
+        ),
+        ReplicationPath(
             ty="dir", ident="omd", site_path="etc/omd", excludes=["site.conf", "instance_id"]
         ),
         ReplicationPath(

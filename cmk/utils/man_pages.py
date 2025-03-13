@@ -26,14 +26,7 @@ import cmk.ccc.debug
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
 
-import cmk.utils.paths
 from cmk.utils import tty
-
-# remove with 2.4 / after 2.3 is released
-_LEGACY_MAN_PAGE_PATHS = (
-    str(cmk.utils.paths.local_legacy_check_manpages_dir),
-    cmk.utils.paths.legacy_check_manpages_dir,
-)
 
 
 @dataclass
@@ -339,12 +332,7 @@ def make_man_page_path_map(
     group_subdir: str,
 ) -> Mapping[str, Path]:
     families_man_paths = [
-        *(
-            os.path.join(p, group_subdir)
-            for _family, paths in plugin_families.items()
-            for p in paths
-        ),
-        *_LEGACY_MAN_PAGE_PATHS,
+        os.path.join(p, group_subdir) for _family, paths in plugin_families.items() for p in paths
     ]
     return {
         name: Path(dir, name)

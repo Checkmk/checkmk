@@ -27,7 +27,7 @@ from collections.abc import (
     MutableMapping,
     Sequence,
 )
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from itertools import filterfalse
@@ -2107,7 +2107,7 @@ def _prepare_for_activation_tasks(
             _handle_activation_changes_exception(
                 logger.getChild(f"site[{site_id}]"), str(e), site_activation_state
             )
-            _cleanup_activation(site_id, activation_id, source)
+            _finalize_activation(site_id, activation_id, source)
     return central_file_infos_per_site, site_activation_states_per_site
 
 
@@ -2257,7 +2257,7 @@ def sync_and_activate(
         handle_exception_as_gui_crash_report(fail_silently=True)
     finally:
         for activation_site_id in site_activation_states:
-            _cleanup_activation(activation_site_id, activation_id, source)
+            _finalize_activation(activation_site_id, activation_id, source)
 
 
 def create_broker_certificates(
@@ -2340,15 +2340,16 @@ def _create_broker_certificates_for_remote_sites(
     return site_activation_states_certs_synced
 
 
-def _cleanup_activation(
+def _finalize_activation(
     site_id: SiteId, activation_id: ActivationId, source: ActivationSource
 ) -> None:
     _unlock_activation(site_id, activation_id, source)
-    # Create a copy of last result in the persisted dir
-    shutil.copy(
-        ActivateChangesManager.site_state_path(activation_id, site_id),
-        ActivateChangesManager.persisted_site_state_path(site_id),
-    )
+    with suppress(FileNotFoundError):
+        # Create a copy of last result in the persisted dir
+        shutil.copy(
+            ActivateChangesManager.site_state_path(activation_id, site_id),
+            ActivateChangesManager.persisted_site_state_path(site_id),
+        )
 
 
 def _handle_active_tasks(

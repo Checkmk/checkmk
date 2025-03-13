@@ -660,8 +660,7 @@ def _show_output_box(title: str, content: bytes) -> None:
 def _show_agent_output(row: CrashReportRow) -> None:
     agent_output = row.get("agent_output")
     if agent_output:
-        assert isinstance(agent_output, bytes)
-        _show_output_box(_("Agent output"), agent_output)
+        _show_output_box(_("Agent output"), agent_output.encode())
 
 
 class PageDownloadCrashReport(ABCCrashReportPage):

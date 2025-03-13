@@ -67,7 +67,6 @@ def main() {
                 inside_container_minimal(safe_branch_name: safe_branch_name) {
                     /// Generate list of stages to be added - save them locally for reference
                     sh("""python buildscripts/scripts/validate_changes.py \
-                          -vv \
                           --env "RESULTS=${result_dir}" \
                           --env "WORKSPACE=${checkout_dir}" \
                           --env "PATCHSET_REVISION=${GERRIT_PATCHSET_REVISION}" \

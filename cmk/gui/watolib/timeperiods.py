@@ -9,8 +9,10 @@ from pathlib import Path
 from cmk.ccc.plugin_registry import Registry
 
 from cmk.utils.timeperiod import (
-    builtin_timeperiods,
+    add_builtin_timeperiods,
     cleanup_timeperiod_caches,
+    is_builtin_timeperiod,
+    remove_builtin_timeperiods,
     timeperiod_spec_alias,
     TimeperiodSpec,
     TimeperiodSpecs,
@@ -41,19 +43,14 @@ class TimePeriodsConfigFile(WatoSimpleConfigFile[TimeperiodSpec]):
         )
 
 
-def _filter_builtin_timeperiods(timeperiods: TimeperiodSpecs) -> dict[str, TimeperiodSpec]:
-    builtin_keys = set(builtin_timeperiods().keys())
-    return {k: v for k, v in timeperiods.items() if k not in builtin_keys}
-
-
 # NOTE: This is a variation of cmk.utils.timeperiod.load_timeperiods(). Can we somehow unify this?
 @request_memoize()
 def load_timeperiods() -> TimeperiodSpecs:
-    return {**TimePeriodsConfigFile().load_for_reading(), **builtin_timeperiods()}
+    return add_builtin_timeperiods(TimePeriodsConfigFile().load_for_reading())
 
 
 def save_timeperiods(timeperiods: TimeperiodSpecs) -> None:
-    TimePeriodsConfigFile().save(_filter_builtin_timeperiods(timeperiods))
+    TimePeriodsConfigFile().save(dict(remove_builtin_timeperiods(timeperiods)))
     cleanup_timeperiod_caches()
     load_timeperiods.cache_clear()  # type: ignore[attr-defined]
 
@@ -93,7 +90,7 @@ def load_timeperiod(name: str) -> TimeperiodSpec:
 
 
 def delete_timeperiod(name: str) -> None:
-    if name in builtin_timeperiods():
+    if is_builtin_timeperiod(name):
         raise TimePeriodBuiltInError()
     time_periods = TimePeriodsConfigFile().load_for_modification()
     if name not in time_periods:
@@ -106,7 +103,7 @@ def delete_timeperiod(name: str) -> None:
 
 
 def modify_timeperiod(name: str, timeperiod: TimeperiodSpec) -> None:
-    if name in builtin_timeperiods():
+    if is_builtin_timeperiod(name):
         raise TimePeriodBuiltInError()
 
     existing_timeperiods = TimePeriodsConfigFile().load_for_modification()
@@ -119,7 +116,7 @@ def modify_timeperiod(name: str, timeperiod: TimeperiodSpec) -> None:
 
 
 def create_timeperiod(name: str, timeperiod: TimeperiodSpec) -> None:
-    if name in builtin_timeperiods():
+    if is_builtin_timeperiod(name):
         raise TimePeriodBuiltInError()
 
     existing_timeperiods = TimePeriodsConfigFile().load_for_modification()

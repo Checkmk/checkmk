@@ -56,12 +56,38 @@ class TimeperiodSpec(TypedDict):
 TimeperiodSpecs = Mapping[TimeperiodName, TimeperiodSpec]
 
 
+def add_builtin_timeperiods(timeperiods: TimeperiodSpecs) -> TimeperiodSpecs:
+    return {**timeperiods, **_builtin_timeperiods()}
+
+
+def remove_builtin_timeperiods(timeperiods: TimeperiodSpecs) -> TimeperiodSpecs:
+    return {k: timeperiods[k] for k in timeperiods.keys() - _builtin_timeperiods().keys()}
+
+
+def is_builtin_timeperiod(name: str) -> bool:
+    return name in _builtin_timeperiods()
+
+
+def _builtin_timeperiods() -> TimeperiodSpecs:
+    return {
+        "24X7": TimeperiodSpec(
+            alias=_("Always"),
+            monday=[("00:00", "24:00")],
+            tuesday=[("00:00", "24:00")],
+            wednesday=[("00:00", "24:00")],
+            thursday=[("00:00", "24:00")],
+            friday=[("00:00", "24:00")],
+            saturday=[("00:00", "24:00")],
+            sunday=[("00:00", "24:00")],
+        )
+    }
+
+
 # NOTE: This is a variation of cmk.gui.watolib.timeperiods.load_timeperiods(). Can we somehow unify this?
 def load_timeperiods() -> TimeperiodSpecs:
-    return {
-        **load_from_mk_file(Path(check_mk_config_dir, "wato", "timeperiods.mk"), "timeperiods", {}),
-        **builtin_timeperiods(),
-    }
+    return add_builtin_timeperiods(
+        load_from_mk_file(Path(check_mk_config_dir, "wato", "timeperiods.mk"), "timeperiods", {})
+    )
 
 
 def _is_time_range(obj: object) -> TypeGuard[DayTimeFrame]:
@@ -133,21 +159,6 @@ def cleanup_timeperiod_caches() -> None:
 
 
 cmk.utils.cleanup.register_cleanup(cleanup_timeperiod_caches)
-
-
-def builtin_timeperiods() -> TimeperiodSpecs:
-    return {
-        "24X7": {
-            "alias": _("Always"),
-            "monday": [("00:00", "24:00")],
-            "tuesday": [("00:00", "24:00")],
-            "wednesday": [("00:00", "24:00")],
-            "thursday": [("00:00", "24:00")],
-            "friday": [("00:00", "24:00")],
-            "saturday": [("00:00", "24:00")],
-            "sunday": [("00:00", "24:00")],
-        }
-    }
 
 
 def _is_time_in_timeperiod(

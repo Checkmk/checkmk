@@ -18,7 +18,7 @@ from icalendar.prop import vDDDTypes
 
 from cmk.utils import dateutils
 from cmk.utils.timeperiod import (
-    builtin_timeperiods,
+    is_builtin_timeperiod,
     timeperiod_spec_alias,
     TimeperiodName,
     TimeperiodSpec,
@@ -289,7 +289,7 @@ class ModeTimeperiods(WatoMode):
 
                 table.cell(_("Actions"), css=["buttons"])
                 alias = timeperiod_spec_alias(timeperiod)
-                if name in builtin_timeperiods():
+                if is_builtin_timeperiod(name):
                     html.i(_("(built-in)"))
                 else:
                     self._action_buttons(name, alias)
@@ -516,7 +516,7 @@ class ModeEditTimeperiod(WatoMode):
         # TODO: Nuke the field below? It effectively hides facts about _name for mypy.
         self._new = self._name is None
 
-        if self._name in builtin_timeperiods():
+        if self._name is not None and is_builtin_timeperiod(self._name):
             raise MKUserError("edit", _("Built-in time periods can not be modified"))
         if self._new:
             clone_name = request.var("clone")

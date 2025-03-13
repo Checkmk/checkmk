@@ -75,7 +75,7 @@
 import re
 import time
 from collections.abc import Mapping, MutableMapping, Sequence
-from typing import Any, TypeVar
+from typing import Any, Iterable, TypeVar
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -87,6 +87,7 @@ from cmk.agent_based.v2 import (
     IgnoreResultsError,
     Result,
     RuleSetType,
+    Service,
     State,
     StringTable,
 )
@@ -346,6 +347,45 @@ def diskstat_convert_info(
     return converted_disks
 
 
+def _discovery_diskstat(
+    params: Sequence[Mapping[str, Any]],
+    section: Iterable[str],
+) -> DiscoveryResult:
+    item_candidates = list(section)
+    # Skip over on empty data
+    if not item_candidates:
+        return
+
+    modes = params[0]
+
+    if modes["summary"]:
+        yield Service(item="SUMMARY")
+
+    for name in item_candidates:
+        if (
+            (physical := modes.get("physical"))
+            and " " not in name
+            and not diskstat.DISKSTAT_DISKLESS_PATTERN.match(name)
+        ):
+            if ":" in name:
+                device, wwn = name.split(":")
+                item = wwn if physical == "wwn" else device
+                yield Service(item=item)
+            else:
+                yield Service(item=name)
+
+        if modes["lvm"] and name.startswith("LVM "):
+            yield Service(item=name)
+
+        if modes["vxvm"] and name.startswith("VxVM "):
+            yield Service(item=name)
+
+        if modes["diskless"] and diskstat.DISKSTAT_DISKLESS_PATTERN.match(name):
+            # Sort of partitions with disks - typical in XEN virtual setups.
+            # Eg. there are xvda1, xvda2, but no xvda...
+            yield Service(item=name)
+
+
 def discover_diskstat(
     params: Sequence[Mapping[str, Any]],
     section_diskstat: diskstat.Section | None,
@@ -353,7 +393,7 @@ def discover_diskstat(
 ) -> DiscoveryResult:
     if section_diskstat is None:
         return
-    yield from diskstat.discovery_diskstat_generic(
+    yield from _discovery_diskstat(
         params,
         diskstat_convert_info(
             section_diskstat,

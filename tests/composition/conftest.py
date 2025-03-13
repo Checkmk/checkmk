@@ -40,15 +40,6 @@ def instrument_requests() -> None:
     RequestsInstrumentor().instrument()
 
 
-@contextmanager
-def _trace_broker_messages(site: Site) -> Iterator[None]:
-    try:
-        site.execute(["cmk-monitor-broker", "--enable_tracing"])
-        yield
-    finally:
-        site.execute(["cmk-monitor-broker", "--disable_tracing"])
-
-
 @pytest.fixture(name="central_site", scope="session")
 def _central_site(request: pytest.FixtureRequest, ensure_cron: None) -> Iterator[Site]:
     with site_factory.get_test_site_ctx(

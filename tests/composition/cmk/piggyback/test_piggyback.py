@@ -80,6 +80,15 @@ def _setup_piggyback_host_and_check(
         yield
 
 
+@contextmanager
+def _trace_broker_messages(site: Site) -> Iterator[None]:
+    try:
+        site.execute(["cmk-monitor-broker", "--enable_tracing"])
+        yield
+    finally:
+        site.execute(["cmk-monitor-broker", "--disable_tracing"])
+
+
 @pytest.fixture(name="prepare_piggyback_environment", scope="module")
 def _prepare_piggyback_environment(
     central_site: Site,
@@ -93,6 +102,9 @@ def _prepare_piggyback_environment(
             set_omd_config_piggyback_hub(central_site, "on"),
             set_omd_config_piggyback_hub(remote_site, "on"),
             set_omd_config_piggyback_hub(remote_site_2, "on"),
+            _trace_broker_messages(central_site),
+            _trace_broker_messages(remote_site),
+            _trace_broker_messages(remote_site_2),
         ):
             central_site.openapi.changes.activate_and_wait_for_completion()
             yield

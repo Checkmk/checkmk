@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from logging import Logger
+from typing import override
 
 from cmk.gui.watolib.rulesets import AllRulesets
 
@@ -11,6 +12,7 @@ from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
 class MigrateAzureDatabases(UpdateAction):
+    @override
     def __call__(self, logger: Logger) -> None:
         migration = AzureDatabaseMigration(
             logger=logger, all_rulesets=AllRulesets.load_all_rulesets()

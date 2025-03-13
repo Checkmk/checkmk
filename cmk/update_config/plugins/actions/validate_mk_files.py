@@ -4,12 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from logging import Logger
+from typing import override
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.validate_config import validate_mk_files
 
 
 class ValidateConfigFiles(UpdateAction):
+    @override
     def __call__(self, logger: Logger) -> None:
         result = validate_mk_files()
         if result.logs_invalid:

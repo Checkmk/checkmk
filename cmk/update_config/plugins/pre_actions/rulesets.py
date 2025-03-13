@@ -6,6 +6,7 @@
 
 from dataclasses import dataclass
 from logging import Logger
+from typing import override
 
 from cmk.ccc import version
 
@@ -33,6 +34,7 @@ from cmk.update_config.registry import pre_update_action_registry, PreUpdateActi
 class PreUpdateRulesets(PreUpdateAction):
     """Load all rulesets before the real update happens"""
 
+    @override
     def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
         try:
             with disable_redis(), gui_context(), SuperUserContext():

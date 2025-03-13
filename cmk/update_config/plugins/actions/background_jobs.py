@@ -7,7 +7,7 @@ import hashlib
 import json
 import os
 from logging import Logger
-from typing import Literal
+from typing import Literal, override
 
 from cmk.utils import tty
 
@@ -17,6 +17,7 @@ from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
 class UpdateBackgroundJobs(UpdateAction):
+    @override
     def __call__(self, logger: Logger) -> None:
         _rename_background_job_dirs(logger)
 

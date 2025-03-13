@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from logging import Logger
+from typing import override
 
 from cmk.gui.type_defs import CustomHostAttrSpec
 from cmk.gui.watolib.custom_attributes import (
@@ -20,6 +21,7 @@ from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
 class UpdateHostAttributeTopics(UpdateAction):
+    @override
     def __call__(self, logger: Logger) -> None:
         all_attributes = load_custom_attrs_from_mk_file(lock=True)
         save_custom_attrs_to_mk_file(_update_attributes(logger, all_attributes))

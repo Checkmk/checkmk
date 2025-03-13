@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from logging import Logger
+from typing import override
 
 from cmk.gui.watolib.rulesets import AllRulesets
 
@@ -11,6 +12,7 @@ from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
 class CheckHTTPRules(UpdateAction):
+    @override
     def __call__(self, logger: Logger) -> None:
         http_ruleset = AllRulesets.load_all_rulesets().get("active_checks:http")
         if http_ruleset is not None:

@@ -6,6 +6,7 @@
 import pprint
 from logging import Logger
 from pathlib import Path
+from typing import override
 
 from pydantic import BaseModel
 
@@ -69,6 +70,7 @@ diskspace_cleanup = {pprint.pformat(config.model_dump(exclude_none=True))}
 
 
 class MigrateDiskSpaceConf(UpdateAction):
+    @override
     def __call__(self, logger: Logger) -> None:
         migrate(omd_root / "etc/diskspace.conf", diskspace_config_dir, logger)
 

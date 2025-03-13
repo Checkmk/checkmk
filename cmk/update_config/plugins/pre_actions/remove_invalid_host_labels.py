@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from logging import Logger
+from typing import override
 
 from cmk.utils.log import VERBOSE
 
@@ -53,6 +54,7 @@ def _find_invalid_labels() -> dict[Host, set[str]]:
 
 
 class RemoveInvalidHostLabels(PreUpdateAction):
+    @override
     def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
         hosts_to_fix = _find_invalid_labels()
 

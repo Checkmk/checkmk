@@ -5,6 +5,7 @@
 
 from logging import Logger
 from pathlib import Path
+from typing import override
 
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
 
@@ -15,6 +16,7 @@ from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
 class UpdateECHistory(UpdateAction):
+    @override
     def __call__(self, logger: Logger) -> None:
         self.history_files_to_sqlite(cmk.utils.paths.omd_root, logger)
 

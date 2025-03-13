@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from logging import Logger
+from typing import override
 
 from cmk.gui.crash_handler import create_gui_crash_report
 from cmk.gui.exceptions import MKUserError
@@ -16,6 +17,7 @@ from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
 class UpdateRulesets(UpdateAction):
+    @override
     def __call__(self, logger: Logger) -> None:
         all_rulesets = load_and_transform(logger)
         validate_rule_values(logger, all_rulesets)

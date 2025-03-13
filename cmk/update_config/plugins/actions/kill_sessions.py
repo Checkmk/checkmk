@@ -5,6 +5,7 @@
 
 from datetime import datetime
 from logging import Logger
+from typing import override
 
 from cmk.gui import userdb
 
@@ -20,6 +21,7 @@ class TerminateUserSessions(UpdateAction):
     session to be alive after the update. So we terminate all sessions on update.
     """
 
+    @override
     def __call__(self, logger: Logger) -> None:
         for user_id in userdb.load_users(lock=False):
             session_infos = userdb.session.active_sessions(

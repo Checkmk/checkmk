@@ -8,6 +8,7 @@ import json
 from collections.abc import Sequence
 from logging import Logger
 from pathlib import Path
+from typing import override
 
 import cmk.utils.paths
 
@@ -30,6 +31,7 @@ def _ls(counters_path: Path) -> Sequence[Path]:
 
 
 class ConvertCounters(UpdateAction):
+    @override
     def __call__(self, logger: Logger) -> None:
         self.convert_counter_files(Path(cmk.utils.paths.counters_dir), logger)
 

@@ -6,6 +6,7 @@
 from collections.abc import Mapping
 from logging import Logger
 from pathlib import Path
+from typing import override
 
 from cmk.gui import main_modules
 from cmk.gui.exceptions import MKUserError
@@ -39,6 +40,7 @@ def _get_package_manifest(package_map: Mapping[Path, Manifest], rel_path: str) -
 class PreUpdateUIExtensions(PreUpdateAction):
     """Load all web plugins before the real update happens"""
 
+    @override
     def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
         main_modules.load_plugins()
         path_config = get_path_config()

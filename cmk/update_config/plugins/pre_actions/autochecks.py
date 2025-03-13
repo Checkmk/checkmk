@@ -6,6 +6,7 @@
 
 import itertools
 from logging import Logger
+from typing import override
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
@@ -39,6 +40,7 @@ def _continue_per_users_choice(conflict_mode: ConflictMode, msg: str) -> bool:
 class PreUpdateAgentBasedPlugins(PreUpdateAction):
     """Load all agent based plugins before the real update happens"""
 
+    @override
     def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
         plugin_errors: dict[CheckPluginName, dict[HostName, list[str]]] = {}
 

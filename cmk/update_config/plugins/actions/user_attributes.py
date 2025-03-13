@@ -5,6 +5,7 @@
 
 from datetime import datetime
 from logging import Logger
+from typing import override
 
 from cmk.utils.local_secrets import AutomationUserSecret
 from cmk.utils.user import UserId
@@ -17,6 +18,7 @@ from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
 class UpdateUserAttributes(UpdateAction):
+    @override
     def __call__(self, logger: Logger) -> None:
         users = load_users(lock=True)
         save_users(

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from logging import Logger
-from typing import Final, Generic, Protocol, TypeVar
+from typing import Final, Generic, override, Protocol, TypeVar
 
 from cmk.utils.user import UserId
 
@@ -44,6 +44,7 @@ class UpdatePagetypes(UpdateAction, Generic[_TOverridable_co]):
         )
         self._updater = updater
 
+    @override
     def __call__(self, logger: Logger) -> None:
         updated_raw_page_dicts = {
             instance_id: self._updater.update_raw_page_dict(raw_page_dict)

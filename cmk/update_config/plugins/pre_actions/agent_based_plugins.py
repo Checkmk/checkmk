@@ -6,6 +6,7 @@
 from collections.abc import Sequence
 from logging import Logger
 from pathlib import Path
+from typing import override
 
 from cmk.utils.paths import local_agent_based_plugins_dir
 
@@ -36,6 +37,7 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
         except FileNotFoundError:
             return ()
 
+    @override
     def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
         path_config = get_path_config()
         # In this case we have no mkp plugins available so bail out early

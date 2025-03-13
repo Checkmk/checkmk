@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from logging import Logger
+from typing import override
 
 from cmk.gui.userdb import LDAPUserConnectionConfig, UserConnectionConfigFile
 
@@ -11,6 +12,7 @@ from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
 class UpdateLDAPConnections(UpdateAction):
+    @override
     def __call__(self, logger: Logger) -> None:
         # These changes were actually made a long time ago. The migrations were just only be done
         # during runtime and never persisted, so the we can not be sure that the migration was done for

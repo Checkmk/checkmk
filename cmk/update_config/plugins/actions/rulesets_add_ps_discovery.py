@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from logging import Logger
+from typing import override
 
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, Ruleset, RulesetCollection
@@ -15,6 +16,7 @@ PS_DISCOVERY_RULE_NAME = "inventory_processes_rules"
 
 
 class UpdatePSDiscovery(UpdateAction):
+    @override
     def __call__(self, logger: Logger) -> None:
         all_rulesets = AllRulesets.load_all_rulesets()
         add_ps_discovery_rules(logger, all_rulesets)

@@ -9,7 +9,7 @@ from ast import literal_eval
 from collections.abc import Iterator
 from logging import Logger
 from pathlib import Path
-from typing import NamedTuple
+from typing import NamedTuple, override
 
 from livestatus import SiteId
 
@@ -38,6 +38,7 @@ class MigrateParentsMK(UpdateAction):
         r"(?:all_hosts \+= (.*)$)|(?:ipaddresses\.update\((.*?)\))|(?:parents \+= (.*?)$)"
     )
 
+    @override
     def __call__(self, logger: Logger) -> None:
         results: dict[Path, ParentsMKResult] = {}
         for path in Path(cmk.utils.paths.check_mk_config_dir).glob("*.mk"):

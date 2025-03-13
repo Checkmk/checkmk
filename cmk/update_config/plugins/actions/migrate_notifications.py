@@ -5,7 +5,7 @@
 
 from logging import Logger
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, cast, override
 
 from cmk.utils import tty
 from cmk.utils.notify_types import (
@@ -47,6 +47,7 @@ class MigrateNotifications(UpdateAction):
         self._notifications_mk_path: Path = Path(check_mk_config_dir, "wato/notifications.mk")
         self._notifications_mk_backup_path: Path = omd_root / "notifications_backup.mk"
 
+    @override
     def __call__(self, logger: Logger) -> None:
         notification_rules = NotificationRuleConfigFile().load_for_reading()
         notification_rule_params = (rule["notify_plugin"][1] for rule in notification_rules)

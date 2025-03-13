@@ -5,6 +5,7 @@
 
 from collections.abc import Mapping, Sequence
 from logging import Logger
+from typing import override
 
 from cmk.utils.log import VERBOSE
 
@@ -32,6 +33,7 @@ _REMOVED_OPTIONS: Sequence[str] = []
 
 
 class UpdateGlobalSettings(UpdateAction):
+    @override
     def __call__(self, logger: Logger) -> None:
         _update_installation_wide_global_settings(logger)
         _update_site_specific_global_settings(logger)

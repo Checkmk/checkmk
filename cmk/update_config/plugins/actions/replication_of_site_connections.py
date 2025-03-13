@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from logging import Logger
+from typing import override
 
 from cmk.gui.watolib.sites import site_management_registry
 
@@ -11,6 +12,7 @@ from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
 class UpdateMessageBrokerPort(UpdateAction):
+    @override
     def __call__(self, logger: Logger) -> None:
         site_mgmt = site_management_registry["site_management"]
         configured_sites = site_mgmt.load_sites()

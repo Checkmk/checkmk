@@ -6,7 +6,7 @@
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from logging import Logger
-from typing import cast
+from typing import cast, override
 
 from cmk.utils.user import UserId
 
@@ -23,6 +23,7 @@ from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
 class UpdateDashboards(UpdateAction):
+    @override
     def __call__(self, logger: Logger) -> None:
         dashboards = get_all_dashboards()
         with save_user_dashboards(dashboards) as affected_users:

@@ -336,7 +336,7 @@ def registry_credentials_id(edition) {
         case "saas":
             return "nexus";
         default:
-            throw new Exception("Cannot provide registry credentials id for edition '${edition}'");
+            throw new Exception("Cannot provide registry credentials id for edition '${edition}'");     // groovylint-disable ThrowException
     }
 }
 

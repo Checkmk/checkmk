@@ -5,7 +5,6 @@
 
 import abc
 import ast
-import os
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from pathlib import Path
@@ -58,52 +57,54 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
     def exists(self) -> bool:
         return self._path.exists()
 
-    def __read(self) -> list[_VT]:
-        """Parse the file and return the entries"""
+    def __read_bytes(self) -> list[bytes]:
         try:
             with self._path.open("rb") as f:
-                return [
-                    self._deserialize(ast.literal_eval(entry.decode("utf-8")))
-                    for entry in f.read().split(self.separator)
-                    if entry
-                ]
+                return [entry for entry in f.read().split(self.separator) if entry]
         except FileNotFoundError:
             return []
-        except SyntaxError as e:
-            raise MKUserError(
-                None,
-                _(
-                    "The audit log can not be shown because of "
-                    "a syntax error in %s.<br><br>Please review and fix the file "
-                    "content or remove the file before you visit this page "
-                    "again.<br><br>The problematic entry is:<br>%s"
-                )
-                % (f.name, e.text),
-            )
+
+    def __write_bytes(self, entries: Sequence[bytes]) -> None:
+        try:
+            content = self.separator.join(entry for entry in entries)
+            store.save_bytes_to_file(self._path, content)
+        except Exception as e:
+            raise MKGeneralException(_('Cannot write file "%s": %s') % (self._path, e))
+
+    def __to_bytes(self, entry: _VT) -> bytes:
+        return repr(self._serialize(entry)).encode("utf-8")
 
     def read(self) -> Sequence[_VT]:
+        """Parse the file and return the entries"""
         with store.locked(self._path):
-            return self.__read()
+            try:
+                return [
+                    self._deserialize(ast.literal_eval(entry.decode("utf-8")))
+                    for entry in self.__read_bytes()
+                ]
+            except SyntaxError as e:
+                raise MKUserError(
+                    None,
+                    _(
+                        "The audit log can not be shown because of "
+                        "a syntax error in %s.<br><br>Please review and fix the file "
+                        "content or remove the file before you visit this page "
+                        "again.<br><br>The problematic entry is:<br>%s"
+                    )
+                    % (self._path, e.text),
+                )
 
     def append(self, entry: _VT) -> None:
         with store.locked(self._path):
-            try:
-                with self._path.open("ab+") as f:
-                    f.write(repr(self._serialize(entry)).encode("utf-8") + self.separator)
-                    f.flush()
-                    os.fsync(f.fileno())
-                self._path.chmod(0o660)
-            except Exception as e:
-                raise MKGeneralException(_('Cannot write file "%s": %s') % (self._path, e))
+            entries = self.__read_bytes()
+            entries.append(self.__to_bytes(entry))
+            self.__write_bytes(entries)
 
     @contextmanager
     def mutable_view(self) -> Iterator[list[_VT]]:
         with store.locked(self._path):
-            entries = self.__read()
+            entries = list(self.read())
             try:
                 yield entries
             finally:
-                with self._path.open("wb"):  # truncate the file
-                    pass
-                for entry in entries:
-                    self.append(entry)
+                self.__write_bytes([self.__to_bytes(entry) for entry in entries])

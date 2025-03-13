@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { X } from 'lucide-vue-next'
 import CmkSuggestions from '@/components/CmkSuggestions.vue'
@@ -99,15 +99,13 @@ async function updateSuggestions(query: string) {
   )
 }
 
-// TODO: replace with vuejs update mechanism
-const updateInput = async (ev: Event) => {
-  const value = (ev.target as HTMLInputElement).value
+watch(visibleInputValue, async (value) => {
   await updateSuggestions(value)
   if (props.allowNewValueInput) {
     inputValue.value = value
   }
   showSuggestions.value = true
-}
+})
 
 function onInputKeyUpDown() {
   suggestionsRef.value?.focus()
@@ -151,7 +149,6 @@ const componentId = useId()
             showSuggestions = true
           }
         "
-        @input="updateInput"
         @keydown.up.prevent="onInputKeyUpDown"
         @keydown.down.prevent="onInputKeyDownDown"
       />

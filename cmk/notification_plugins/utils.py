@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from email.utils import formataddr
 from http.client import responses as http_responses
 from quopri import encodestring
-from typing import Any, NamedTuple, NoReturn
+from typing import Any, NamedTuple, NoReturn, override
 
 import requests
 from requests import JSONDecodeError
@@ -381,9 +381,11 @@ class ResponseMatcher(ABC):
 class CombinedMatcher(ResponseMatcher):
     matchers: list[ResponseMatcher]
 
+    @override
     def matches(self, response: requests.Response, body: JsonOrText) -> bool:
         return all(matcher.matches(response, body) for matcher in self.matchers)
 
+    @override
     def and_(self, other: "ResponseMatcher") -> "CombinedMatcher":
         return CombinedMatcher(matchers=[*self.matchers, other])
 
@@ -396,6 +398,7 @@ class StatusCodeMatcher(ResponseMatcher):
         if self.range[0] > self.range[1]:
             raise ValueError(f"Invalid range: {self.range[0]} - {self.range[1]}")
 
+    @override
     def matches(self, response: requests.Response, body: JsonOrText) -> bool:
         return self.range[0] <= response.status_code <= self.range[1]
 
@@ -405,6 +408,7 @@ class JsonFieldMatcher(ResponseMatcher):
     field: str
     value: Any
 
+    @override
     def matches(self, response: requests.Response, body: JsonOrText) -> bool:
         return isinstance(body, dict) and _get_details_from_json(body, self.field) == self.value
 

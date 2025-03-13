@@ -230,13 +230,12 @@ def _get_notification_method(event_rule: EventRule) -> NotificationMethod:
                 combine=float(always_bulk_params["interval"]),
                 bulking_parameters=cast(
                     BulkingParameters,
-                    {
-                        "custom_macro": always_bulk_params["groupby_custom"],
-                        **{k: None for k in always_bulk_params["groupby"]},
-                    },
+                    {k: None for k in always_bulk_params["groupby"]},
                 ),
                 max_notifications=always_bulk_params["count"],
             )
+            if custom_macro := always_bulk_params.get("groupby_custom"):
+                always_bulk["bulking_parameters"]["custom_macro"] = custom_macro
             if "bulk_subject" in always_bulk_params:
                 always_bulk["subject"] = always_bulk_params["bulk_subject"]
 
@@ -248,13 +247,12 @@ def _get_notification_method(event_rule: EventRule) -> NotificationMethod:
             timeperiod_bulk = TimeperiodBulk(
                 bulking_parameters=cast(
                     BulkingParameters,
-                    {
-                        "custom_macro": timeperiod_bulk_params["groupby_custom"],
-                        **{k: None for k in timeperiod_bulk_params["groupby"]},
-                    },
+                    {k: None for k in timeperiod_bulk_params["groupby"]},
                 ),
                 max_notifications=timeperiod_bulk_params["count"],
             )
+            if custom_macro := timeperiod_bulk_params.get("groupby_custom"):
+                timeperiod_bulk["bulking_parameters"]["custom_macro"] = custom_macro
 
             if "bulk_subject" in timeperiod_bulk_params:
                 timeperiod_bulk["subject"] = timeperiod_bulk_params["bulk_subject"]
@@ -536,8 +534,9 @@ def _set_notification_effect_parameters(
                 list[GroupBy],
                 [k for k in always_bulk["bulking_parameters"] if k != "custom_macro"],
             ),
-            groupby_custom=always_bulk["bulking_parameters"].get("custom_macro", []),
         )
+        if custom_macro := always_bulk["bulking_parameters"].get("custom_macro"):
+            always_bulk_params["groupby_custom"] = custom_macro
         if "subject" in always_bulk:
             always_bulk_params["bulk_subject"] = always_bulk["subject"]
         return always_bulk_params
@@ -552,8 +551,10 @@ def _set_notification_effect_parameters(
                 list[GroupBy],
                 [k for k in time_period_bulk["bulking_parameters"] if k != "custom_macro"],
             ),
-            groupby_custom=time_period_bulk["bulking_parameters"].get("custom_macro", []),
         )
+
+        if custom_macro := time_period_bulk["bulking_parameters"].get("custom_macro"):
+            time_period_bulk_params["groupby_custom"] = custom_macro
 
         if "subject" in time_period_bulk:
             time_period_bulk_params["bulk_subject"] = time_period_bulk["subject"]

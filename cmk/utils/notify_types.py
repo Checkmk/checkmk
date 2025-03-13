@@ -75,7 +75,7 @@ GroupBy = Literal[
 class BulkBaseParameters(TypedDict):
     count: int
     groupby: list[GroupBy]
-    groupby_custom: list[str]
+    groupby_custom: NotRequired[list[str]]
     bulk_subject: NotRequired[str]
 
 

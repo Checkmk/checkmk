@@ -277,7 +277,17 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
     auto [ptr, ec] =
         std::from_chars(dsname_view.begin(), dsname_view.end(), dsname);
     if (ec != std::errc{}) {
-        Warning(logger)
+        // Due to our metric translations, the UI sometimes intentionally
+        // queries historic values of non-existing metrics because they
+        // would translate into the metric the UI is currently interested
+        // in. Avoiding this would result in additional livestatus queries
+        // to first find out the metrics that the service in question has,
+        // which might impact performance in certain scenarios. Therefore,
+        // we log at a level that is not visible by default. In the long
+        // term, we must rework our metric translation system to avoid
+        // this. If the translations happend right when a metric is
+        // recorded, we wouldn't have this problem.
+        Informational(logger)
             << "cannot locate an RRD containing the metric of the RPN expression '"
             << args_.rpn << "' for the "
             << (service_description == dummy_service_description()

@@ -62,6 +62,7 @@ def fixture_aws_qs_config_page(
         aws_config_list_page.activate_changes()
 
 
+@pytest.mark.skip(reason="CMK-22388; changes corresponding to UI-improvements.")
 def test_minimal_configuration(
     aws_qs_config_page: tuple[AWSAddNewConfiguration, str], test_site: Site
 ) -> None:

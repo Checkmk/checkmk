@@ -59,7 +59,10 @@ class BaseQuickSetupConfigurationList(CmkPage):
     @override
     def _validate_page(self) -> None:
         self.main_area.check_page_title(self.page_title)
-        expect(self.add_configuration_button).to_be_visible()
+        expect(
+            self.add_configuration_button,
+            message="Expected 'Add configuration' button to be visible!",
+        ).to_be_visible()
 
     @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
@@ -83,7 +86,10 @@ class BaseQuickSetupConfigurationList(CmkPage):
             .click()
         )
         self.main_area.locator().get_by_role("button", name="Delete").click()
-        expect(self.configuration_row(configuration_name)).not_to_be_visible()
+        expect(
+            self.configuration_row(configuration_name),
+            message=f"Expected the configuration '{configuration_name}' to be deleted!",
+        ).not_to_be_visible()
 
 
 class BaseQuickSetupAddNewConfiguration(CmkPage):
@@ -156,7 +162,7 @@ class BaseQuickSetupAddNewConfiguration(CmkPage):
         return self.main_area.locator().get_by_role("button", name="Save")
 
     def save_quick_setup(self) -> None:
-        logger.info("Save AWS configuration.")
+        logger.info("Save Quick setup configuration.")
         self.save_and_go_to_activate_changes_button.click()
         self.activate_selected()
         self.expect_success_state()
@@ -333,3 +339,83 @@ class AWSAddNewConfiguration(BaseQuickSetupAddNewConfiguration):
             self.check_global_service(entry, True)
         for entry in global_services.to_activate:
             self.check_global_service(entry, False)
+
+
+class GCPConfigurationList(BaseQuickSetupConfigurationList):
+    """Represent the page 'Google Cloud Platform (GCP)', which lists the configuration setup.
+
+    Accessible at,
+    Setup > Quick Setup > Google Cloud Platform (GCP)
+    """
+
+    suffix = "gcp"
+    page_title = "Google Cloud Platform (GCP)"
+
+
+class GCPAddNewConfiguration(BaseQuickSetupAddNewConfiguration):
+    """Represent the page 'Add Google Cloud Platform (GCP) configuration' to add a GCP
+    configuration.
+
+    Accessible at,
+    Setup > Quick Setup > Google Cloud Platform (GCP)
+        > Add Google Cloud Platform (GCP) configuration
+    """
+
+    suffix = "gcp"
+    page_title = "Add Google Cloud Platform (GCP) configuration"
+
+    @override
+    def list_configuration_page(self) -> GCPConfigurationList:
+        return GCPConfigurationList(self.page)
+
+    @property
+    def button_proceed_from_stage_one(self) -> Locator:
+        return self._button_proceed_from_stage("Configure host")
+
+    @property
+    def button_proceed_from_stage_two(self) -> Locator:
+        return self._button_proceed_from_stage("Configure services to monitor")
+
+    @property
+    def button_proceed_from_stage_three(self) -> Locator:
+        return self._button_proceed_from_stage("Review and test configuration")
+
+    @property
+    def button_proceed_from_stage_four(self) -> Locator:
+        return self._button_proceed_from_stage("Test configuration")
+
+    # stage-3
+    def check_service(self, service: str, check: bool) -> None:
+        service_checkbox = self._get_row("GCP services to monitor").get_by_text(service)
+        if service_checkbox.is_checked() != check:
+            service_checkbox.click()
+
+    # ----
+
+    def specify_stage_one_details(self, project_id: str, json_credentials: str) -> None:
+        logger.info("Initialize stage-1 details.")
+        main_area = self.main_area.locator()
+        main_area.get_by_role("textbox", name="Configuration name").fill(self.configuration_name)
+        main_area.get_by_role("textbox", name="Project ID").fill(project_id)
+        main_area.get_by_role("combobox", name="Choose password type").click()
+        main_area.get_by_role("option", name="Explicit").click()
+        main_area.get_by_role("textbox", name="explicit password").fill(json_credentials)
+
+    def specify_stage_two_details(self, host_name: str, site_name: str) -> None:
+        logger.info("Initialize stage-2 details.")
+        main_area = self.main_area.locator()
+        main_area.get_by_role("textbox", name="Host name").fill(host_name)
+        self._handle_folder_selection(
+            folder_name=self.folder_details.name,
+            parent_path=self.folder_details.parent,
+            create_new=self.folder_details.create_new,
+        )
+        main_area.get_by_role("combobox", name="Site selection").click()
+        main_area.get_by_role("option", name=f"{site_name} - Local site").click()
+
+    def specify_stage_three_details(self, services: QuickSetupMultiChoice) -> None:
+        logger.info("Initialize stage-3 details.")
+        for entry in services.to_activate:
+            self.check_service(entry, True)
+        for entry in services.to_deactivate:
+            self.check_service(entry, False)

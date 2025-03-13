@@ -1809,7 +1809,7 @@ class CommandScheduleDowntimesForm:
             seen = set()
             host_action_rows = []
             for action_row in action_rows:
-                if row["host_name"] not in seen:
+                if action_row["host_name"] not in seen:
                     seen.add(action_row["host_name"])
                     host_action_rows.append(action_row)
             action_rows = host_action_rows

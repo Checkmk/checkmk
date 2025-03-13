@@ -28,10 +28,10 @@ def _get_project_workflow(
 ) -> list[str]:
     options = []
     for project in project_values:
-        options.append("--%s-project" % prefix)
+        options.append("--%s-key" % prefix)
         assert isinstance(project["project"], str)
         options.append(project["project"])
-        options.append("--%s-workflows" % prefix)
+        options.append("--%s-values" % prefix)
         options += project["workflows"]
     return options
 

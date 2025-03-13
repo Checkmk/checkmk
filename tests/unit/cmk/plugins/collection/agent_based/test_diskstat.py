@@ -6,9 +6,11 @@
 # pylint: disable=protected-access
 
 
+from collections.abc import Mapping, Sequence
+
 import pytest
 
-from cmk.agent_based.v2 import get_value_store, IgnoreResultsError, Metric, Result, State
+from cmk.agent_based.v2 import get_value_store, IgnoreResultsError, Metric, Result, Service, State
 from cmk.plugins.collection.agent_based import diskstat
 from cmk.plugins.lib.multipath import Group
 
@@ -1610,3 +1612,78 @@ def test_check_latency_calculation() -> None:
         ),
         Metric("disk_latency", 0.004, levels=(0.003, 0.005)),
     ]
+
+
+@pytest.mark.parametrize(
+    "params, expected",
+    [
+        (
+            [
+                {
+                    "summary": True,
+                    "lvm": False,
+                    "vxvm": False,
+                    "diskless": False,
+                },
+            ],
+            [
+                Service(item="SUMMARY"),
+            ],
+        ),
+        (
+            [
+                {
+                    "summary": True,
+                    "physical": "name",
+                    "lvm": False,
+                    "vxvm": False,
+                    "diskless": False,
+                },
+            ],
+            [
+                Service(item="SUMMARY"),
+                Service(item="disk1"),
+                Service(item="disk2"),
+            ],
+        ),
+        (
+            [
+                {
+                    "summary": True,
+                    "physical": "wwn",
+                    "lvm": True,
+                    "vxvm": True,
+                    "diskless": True,
+                },
+            ],
+            [
+                Service(item="SUMMARY"),
+                Service(item="wwn1"),
+                Service(item="wwn2"),
+                Service(item="LVM disk"),
+                Service(item="VxVM disk"),
+                Service(item="xsd0 disk"),
+            ],
+        ),
+    ],
+)
+def test_discovery_diskstat_generic(
+    params: Sequence[Mapping[str, object]],
+    expected: list[Service],
+) -> None:
+    assert (
+        list(
+            diskstat.discover_diskstat(
+                params,
+                {
+                    "disk1:wwn1": {},
+                    "disk2:wwn2": {},
+                    "LVM disk": {},
+                    "VxVM disk": {},
+                    "xsd0 disk": {},
+                },
+                None,
+            )
+        )
+        == expected
+    )

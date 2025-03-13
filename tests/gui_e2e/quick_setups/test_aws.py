@@ -3,13 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
+import os
 import re
 from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 from playwright.sync_api import expect
-from playwright.sync_api import TimeoutError as PWTimeoutError
 
 from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
 from tests.gui_e2e.testlib.playwright.pom.setup.cloud_quick_setups import (
@@ -38,7 +38,7 @@ def fixture_fake_aws_dump(test_site: Site) -> Iterator[None]:
     run(["cp", str(aws_agent), backup_agent], sudo=True)
     fake_aws_process = run(["cp", str(fake_agent_aws), str(aws_agent)], sudo=True)
     yield
-    if fake_aws_process.returncode == 0:
+    if fake_aws_process.returncode == 0 and os.getenv("CLEANUP", "1") == "1":
         run(["cp", str(backup_agent), str(aws_agent)], sudo=True)
         run(["rm", str(backup_agent)], sudo=True)
 
@@ -46,73 +46,83 @@ def fixture_fake_aws_dump(test_site: Site) -> Iterator[None]:
 @pytest.fixture(name="aws_qs_config_page")
 def fixture_aws_qs_config_page(
     fake_aws_dump: None, dashboard_page: Dashboard
-) -> Iterator[tuple[AWSAddNewConfiguration, str]]:
+) -> Iterator[AWSAddNewConfiguration]:
     """Navigate to the AWS Quick setup page and add new configuration page"""
     configuration_name = "my_aws_account"
-    aws_qs_config_page = AWSAddNewConfiguration(dashboard_page.page)
-    yield aws_qs_config_page, configuration_name
+    folder_details = AWSAddNewConfiguration.FolderDetails(
+        name="aws_folder",
+        parent="Main",
+        create_new=True,
+    )
+    aws_qs_config_page = AWSAddNewConfiguration(
+        dashboard_page.page,
+        configuration_name=configuration_name,
+        folder_details=folder_details,
+    )
+    yield aws_qs_config_page
     aws_config_list_page = AWSConfigurationList(aws_qs_config_page.page)
-    try:
-        expect(aws_config_list_page.configuration_row(configuration_name)).to_be_visible()
-    except (PWTimeoutError, AssertionError):
-        pass
-    else:
-        # no exception found; configuration exists
+    activate = False
+    # quick check; validation is performed in the test
+    if aws_config_list_page.configuration_row(configuration_name).count() > 0:
         aws_config_list_page.delete_configuration(configuration_name)
-        aws_config_list_page.activate_changes()
+        activate = True
+
+    list_hosts_page = SetupHost(aws_config_list_page.page)
+    # the quick setup could have failed before the folder gets created
+    if list_hosts_page.folder_icon(folder_details.name).count() > 0:
+        list_hosts_page.delete_folder(folder_details.name)
+        activate = True
+
+    if activate:  # only activate if we deleted the quick setup or folder
+        list_hosts_page.activate_changes()
 
 
-@pytest.mark.skip(reason="CMK-22388; changes corresponding to UI-improvements.")
-def test_minimal_configuration(
-    aws_qs_config_page: tuple[AWSAddNewConfiguration, str], test_site: Site
-) -> None:
+def test_minimal_configuration(aws_qs_config_page: AWSAddNewConfiguration, test_site: Site) -> None:
     """Validate setup of an AWS configuration using 'Quick setup: AWS'"""
-    aws_qs_config_page_, config_name = aws_qs_config_page
+    config_name = aws_qs_config_page.configuration_name
     host_name = "aws_host"
-    host_path = "aws_folder"
 
-    aws_qs_config_page_.specify_stage_one_details(
-        configuration_name=config_name,
+    aws_qs_config_page.specify_stage_one_details(
         access_key="my_aws_access_key",
         access_password="my_aws_access_password",
     )
-    aws_qs_config_page_.button_proceed_from_stage_one.click()
-    expect(aws_qs_config_page_.button_proceed_from_stage_two).to_be_enabled()
-    expect(aws_qs_config_page_.button_proceed_from_stage_one).not_to_be_visible()
+    aws_qs_config_page.button_proceed_from_stage_one.click()
+    expect(aws_qs_config_page.button_proceed_from_stage_two).to_be_enabled()
+    expect(aws_qs_config_page.button_proceed_from_stage_one).not_to_be_visible()
 
-    aws_qs_config_page_.specify_stage_two_details(
+    aws_qs_config_page.specify_stage_two_details(
         host_name,
-        host_path,
         regions_to_monitor=["ap-south-1", "eu-central-1"],
         site_name=test_site.id,
     )
-    aws_qs_config_page_.button_proceed_from_stage_two.click()
-    expect(aws_qs_config_page_.button_proceed_from_stage_three).to_be_enabled()
-    expect(aws_qs_config_page_.button_proceed_from_stage_two).not_to_be_visible()
+    aws_qs_config_page.button_proceed_from_stage_two.click()
+    expect(aws_qs_config_page.button_proceed_from_stage_three).to_be_enabled()
+    expect(aws_qs_config_page.button_proceed_from_stage_two).not_to_be_visible()
 
-    aws_qs_config_page_.specify_stage_three_details(
+    aws_qs_config_page.specify_stage_three_details(
         services_per_region=QuickSetupMultiChoice([], ["Elastic Compute Cloud"]),
         global_services=QuickSetupMultiChoice(["Costs and usage"], []),
     )
-    aws_qs_config_page_.button_proceed_from_stage_three.click()
-    expect(aws_qs_config_page_.button_proceed_from_stage_four).to_be_enabled()
-    expect(aws_qs_config_page_.button_proceed_from_stage_three).not_to_be_visible()
+    aws_qs_config_page.button_proceed_from_stage_three.click()
+    expect(aws_qs_config_page.button_proceed_from_stage_four).to_be_enabled()
+    expect(aws_qs_config_page.button_proceed_from_stage_three).not_to_be_visible()
 
-    aws_qs_config_page_.button_proceed_from_stage_four.click()
+    aws_qs_config_page.button_proceed_from_stage_four.click()
     # TODO: change to new text once available
     expect(
-        aws_qs_config_page_.main_area.locator().get_by_text("AWS services found!")
+        aws_qs_config_page.main_area.locator().get_by_text("AWS services found!")
     ).to_be_visible()
-    aws_qs_config_page_.save_quick_setup()
+    aws_qs_config_page.save_quick_setup()
 
     logger.info("Validate AWS configuration is listed.")
-    aws_config_list_page_ = AWSConfigurationList(aws_qs_config_page_.page)
-    expect(aws_config_list_page_.configuration_row(config_name)).to_be_visible()
+    qs_list_page = aws_qs_config_page.list_configuration_page()
+    expect(qs_list_page.configuration_row(config_name)).to_be_visible()
 
     logger.info("Validate AWS folder and host is setup.")
-    list_hosts_page = SetupHost(aws_config_list_page_.page)
+    list_hosts_page = SetupHost(qs_list_page.page)
     list_hosts_page.click_and_wait(
-        list_hosts_page.get_link(host_path), expected_locator=list_hosts_page.get_link(host_name)
+        list_hosts_page.get_link(aws_qs_config_page.folder_details.name),
+        expected_locator=list_hosts_page.get_link(host_name),
     )
 
     logger.info("Validate AWS rule is setup.")

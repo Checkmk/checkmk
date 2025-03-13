@@ -192,7 +192,6 @@ def test_registered_configvars() -> None:
         "ui_theme",
         "use_dns_cache",
         "snmp_backend_default",
-        "use_inline_snmp",
         "use_new_descriptions_for",
         "user_downtime_timeranges",
         "user_icons_and_actions",

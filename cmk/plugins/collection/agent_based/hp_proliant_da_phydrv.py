@@ -84,7 +84,7 @@ def parse_hp_proliant_da_phydrv(string_table: StringTable) -> Section:
             bay=bay,
             status=_map(_MAP_STATUS, status),
             ref_hours=ref_hours,
-            size=int(size) * 1024**2,
+            size=int(size),
             condition=_map(_MAP_CONDITION, condition),
             bus_number=bus_number,
             smart_status=_map(_MAP_SMART_STATUS, smart_status),

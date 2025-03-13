@@ -90,7 +90,10 @@ from cmk.gui.watolib.hosts_and_folders import folder_validators_registry
 from cmk.gui.watolib.main_menu import main_module_registry, main_module_topic_registry
 from cmk.gui.watolib.mode import mode_registry
 from cmk.gui.watolib.notification_parameter import notification_parameter_registry
-from cmk.gui.watolib.piggyback_hub import distribute_piggyback_hub_configs
+from cmk.gui.watolib.piggyback_hub import (
+    distribute_piggyback_hub_configs,
+    get_piggyback_hub_configs,
+)
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
 from cmk.gui.watolib.sample_config import SampleConfigGeneratorGroups
 from cmk.gui.watolib.search import match_item_generator_registry
@@ -242,6 +245,7 @@ def register(edition: Edition) -> None:
             snapshot_manager_factory=make_cre_snapshot_manager,
             get_rabbitmq_definitions=default_rabbitmq_definitions,
             distribute_piggyback_hub_configs=distribute_piggyback_hub_configs,
+            get_piggyback_hub_configs=get_piggyback_hub_configs,
         )
     )
     broker_certificate_sync_registry.register(DefaultBrokerCertificateSync())

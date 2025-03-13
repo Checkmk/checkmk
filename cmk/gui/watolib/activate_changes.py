@@ -116,6 +116,7 @@ from cmk.gui.watolib.config_domain_name import (
 )
 from cmk.gui.watolib.config_domain_name import OMD as OMDDomainName
 from cmk.gui.watolib.config_sync import (
+    create_piggyback_hub_new_config_file,
     create_rabbitmq_new_definitions_file,
     replication_path_registry,
     ReplicationPath,
@@ -130,7 +131,10 @@ from cmk.gui.watolib.hosts_and_folders import (
     validate_all_hosts,
 )
 from cmk.gui.watolib.paths import wato_var_dir
-from cmk.gui.watolib.piggyback_hub import has_piggyback_hub_relevant_changes
+from cmk.gui.watolib.piggyback_hub import (
+    has_piggyback_hub_relevant_changes,
+    local_piggyback_hub_enabled,
+)
 from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
 from cmk.gui.watolib.snapshots import SnapshotManager
 
@@ -139,6 +143,7 @@ from cmk.bi.type_defs import frozen_aggregations_dir
 from cmk.crypto.certificate import PersistedCertificateWithPrivateKey
 from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
 from cmk.messaging import rabbitmq
+from cmk.piggyback.hub import PiggybackHubConfig
 
 # TODO: Make private
 Phase = str  # TODO: Make dedicated type
@@ -280,6 +285,12 @@ def register(replication_path_registry_: ReplicationPathRegistry) -> None:
             ty="file",
             ident="distributed_wato",
             site_path="etc/check_mk/conf.d/distributed_wato.mk",
+            excludes=[],
+        ),
+        ReplicationPath(
+            ty="file",
+            ident="piggyback_hub",
+            site_path="etc/check_mk/piggyback_hub.conf",
             excludes=[],
         ),
         ReplicationPath(
@@ -1444,9 +1455,29 @@ class ActivateChangesManager(ActivateChanges):
                 BrokerConnectionsConfigFile().load_for_reading()
             )
 
+        # TODO: check for relevant changes?
+        with _debug_log_message("Compute piggyback-hub configs"):
+            piggyback_hub_config = None
+            if has_piggyback_hub_relevant_changes([change for _, change in self._pending_changes]):
+                piggyback_hub_config = activation_features.get_piggyback_hub_configs(
+                    load_configuration_settings(),
+                    configured_sites(),
+                    {site_id for site_id, _site_config in self.dirty_sites()},
+                    {
+                        host_name: host.site_id()
+                        for host_name, host in folder_tree()
+                        .root_folder()
+                        .all_hosts_recursively()
+                        .items()
+                    },
+                )
+
         with _debug_log_message("Preparing site snapshot settings"):
             self._site_snapshot_settings = self._get_site_snapshot_settings(
-                self._activation_id, self._sites, rabbitmq_definitions
+                self._activation_id,
+                self._sites,
+                rabbitmq_definitions,
+                piggyback_hub_config,
             )
         self._activate_until = (
             self._get_last_change_id() if activate_until is None else activate_until
@@ -1474,7 +1505,17 @@ class ActivateChangesManager(ActivateChanges):
             create_rabbitmq_new_definitions_file(paths.omd_root, rabbitmq_definitions[omd_site()])
             rabbitmq.update_and_activate_rabbitmq_definitions(paths.omd_root, logger)
 
-        if has_piggyback_hub_relevant_changes([change for _, change in self._pending_changes]):
+        with _debug_log_message("Update central piggyback-hub config"):
+            if piggyback_hub_config:
+                create_piggyback_hub_new_config_file(
+                    paths.omd_root, piggyback_hub_config[omd_site()]
+                )
+
+        # TODO: Remove this code block once the previous ("get_piggyback_hub_configs")
+        #  has been proved working properly
+        if local_piggyback_hub_enabled() and has_piggyback_hub_relevant_changes(
+            [change for _, change in self._pending_changes]
+        ):
             with (
                 tracer.start_as_current_span("distribute_piggyback_hub_configs"),
                 _debug_log_message("Starting piggyback hub config distribution"),
@@ -1695,6 +1736,7 @@ class ActivateChangesManager(ActivateChanges):
         activation_id: ActivationId,
         sites: list[SiteId],
         rabbitmq_definitions: Mapping[str, rabbitmq.Definitions],
+        piggyback_hub_config: Mapping[str, PiggybackHubConfig] | None,
     ) -> dict[SiteId, SnapshotSettings]:
         snapshot_settings = {}
 
@@ -1716,6 +1758,9 @@ class ActivateChangesManager(ActivateChanges):
                 component_names=component_names,
                 site_config=site_config,
                 rabbitmq_definition=rabbitmq_definitions[site_id],
+                piggyback_hub_config=piggyback_hub_config[site_id]
+                if piggyback_hub_config
+                else None,
             )
 
         return snapshot_settings
@@ -3430,6 +3475,15 @@ class ActivationFeatures:
             Mapping[HostName, SiteId],
         ],
         None,
+    ]
+    get_piggyback_hub_configs: Callable[
+        [
+            GlobalSettings,
+            Mapping[SiteId, SiteConfiguration],
+            Collection[SiteId],
+            Mapping[HostName, SiteId],
+        ],
+        Mapping[str, PiggybackHubConfig],
     ]
 
 

@@ -71,7 +71,7 @@ def _get_section() -> Section:
 def test_discover_default(section: Section) -> None:
     assert list(
         discovery_diskstat_generic(
-            [{"summary": True, "physical": {}, "lvm": False, "vxvm": False, "diskless": False}],
+            [{"summary": True, "lvm": False, "vxvm": False, "diskless": False}],
             section,
         )
     ) == [

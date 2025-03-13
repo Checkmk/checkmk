@@ -207,7 +207,6 @@ def test_parse_winperf_phydisk_real_life() -> None:
     ]
 
 
-@pytest.mark.xfail(strict=True)
 def test_discover_winperf_phydisk() -> None:
     params: list[Mapping[str, object]] = [
         {"diskless": True, "lvm": True, "physical": "name", "summary": True, "vxvm": True},

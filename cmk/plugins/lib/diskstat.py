@@ -49,17 +49,8 @@ def discovery_diskstat_generic(
         yield Service(item="SUMMARY")
 
     for name in item_candidates:
-        if (
-            (physical := modes.get("physical"))
-            and " " not in name
-            and not DISKSTAT_DISKLESS_PATTERN.match(name)
-        ):
-            if ":" in name:
-                device, wwn = name.split(":")
-                item = wwn if physical == "wwn" else device
-                yield Service(item=item)
-            else:
-                yield Service(item=name)
+        if "physical" in modes and " " not in name and not DISKSTAT_DISKLESS_PATTERN.match(name):
+            yield Service(item=name)
 
         if modes["lvm"] and name.startswith("LVM "):
             yield Service(item=name)

@@ -60,7 +60,7 @@ from cmk.plugins.lib import diskstat
             [
                 {
                     "summary": True,
-                    "physical": "wwn",
+                    "physical": "wwn",  # This has no effect on discovery_diskstat_generic, see the diskstat plugin, if you need this functionality.
                     "lvm": True,
                     "vxvm": True,
                     "diskless": True,
@@ -68,8 +68,8 @@ from cmk.plugins.lib import diskstat
             ],
             [
                 Service(item="SUMMARY"),
-                Service(item="wwn1"),
-                Service(item="wwn2"),
+                Service(item="disk1"),
+                Service(item="disk2"),
                 Service(item="LVM disk"),
                 Service(item="VxVM disk"),
                 Service(item="xsd0 disk"),
@@ -83,8 +83,8 @@ def test_discovery_diskstat_generic(params, exp_res) -> None:  # type: ignore[no
             diskstat.discovery_diskstat_generic(
                 params,
                 {
-                    "disk1:wwn1": {},
-                    "disk2:wwn2": {},
+                    "disk1": {},
+                    "disk2": {},
                     "LVM disk": {},
                     "VxVM disk": {},
                     "xsd0 disk": {},

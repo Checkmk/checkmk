@@ -10859,6 +10859,17 @@ msgstr "Verificați grupurile de fișiere jurnal"
 msgid "Check logfiles for relevant new messages"
 msgstr "Verificați fișierele jurnal pentru mesaje noi relevante"
 
+#, fuzzy
+msgid "Check man page uses the deprecated API"
+msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
+
+#, python-format
+msgid ""
+"Check man pages in <tt>'%s'</tt> are marked as 'deprecated' and will be "
+"ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
+
 msgid "Check manual (for Checkmk based checks)"
 msgstr "Manual de verificare (pentru verificările bazate pe Checkmk)"
 
@@ -17287,8 +17298,20 @@ msgid "Deprecated"
 msgstr "Depreciat"
 
 #, fuzzy
+msgid "Deprecated GUI extensions"
+msgstr "Replicați extensiile"
+
+#, fuzzy
 msgid "Deprecated HW/SW Inventory plug-ins"
 msgstr "Plugin-uri de inventar HW/SW depășite"
+
+#, fuzzy
+msgid "Deprecated PNP templates"
+msgstr "Seturi de reguli depreciate"
+
+#, fuzzy
+msgid "Deprecated check man pages"
+msgstr "Plugin-uri de verificare depreciate"
 
 #, fuzzy
 msgid "Deprecated check plug-ins"
@@ -17300,6 +17323,10 @@ msgstr "Plugin-uri de verificare depreciate"
 
 msgid "Deprecated choice, please re-select"
 msgstr "Alegere depășită, vă rugăm să selectați din nou"
+
+#, fuzzy
+msgid "Deprecated legacy GUI extensions"
+msgstr "Replicați extensiile"
 
 msgid "Deprecated rulesets"
 msgstr "Seturi de reguli depreciate"
@@ -24109,8 +24136,19 @@ msgstr "GUI"
 msgid "GUI design"
 msgstr "Proiectare GUI"
 
+#, fuzzy
+msgid "GUI extension uses the deprecated API"
+msgstr "Extensii GUI (depreciat)"
+
 msgid "GUI extensions (deprecated)"
 msgstr "Extensii GUI (depreciat)"
+
+#, python-format
+msgid ""
+"GUI extensions in <tt>'%s'</tt> are marked as 'deprecated' and will be "
+"ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
 
 msgid ""
 "Gain a complete view of your entire IT infrastructure: from public cloud "
@@ -32603,8 +32641,19 @@ msgstr ""
 "dezactivați gruparea notificărilor, fie să alegeți un alt plugin de "
 "notificare care permite gruparea."
 
+#, fuzzy
+msgid "Legacy GUI extension uses the deprecated API"
+msgstr "Extensii GUI vechi (depreciate)"
+
 msgid "Legacy GUI extensions (deprecated)"
 msgstr "Extensii GUI vechi (depreciate)"
+
+#, python-format
+msgid ""
+"Legacy GUI extensions in <tt>'%s'</tt> are marked as 'deprecated' and will "
+"be ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
 
 msgid "Legacy agent management"
 msgstr "Gestionarea agenților vechi"
@@ -38830,6 +38879,10 @@ msgid "No Forecast graph with the name <tt>%s</tt>"
 msgstr "Nu există niciun grafic de prognoză cu numele <tt>%s</tt>."
 
 #, fuzzy
+msgid "No GUI extensions using the deprecated API"
+msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
+
+#, fuzzy
 msgid "No HW/SW Inventory plug-ins using the deprecated API"
 msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
 
@@ -38841,6 +38894,10 @@ msgstr "Nu este configurat niciun interval IP"
 
 msgid "No Levels"
 msgstr "Nu există niveluri"
+
+#, fuzzy
+msgid "No PNP templates using the deprecated API"
+msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
 
 msgid "No SNMP"
 msgstr "Nu SNMP"
@@ -38896,6 +38953,10 @@ msgstr "Nu au fost găsite extensii rupte."
 
 msgid "No certificate"
 msgstr "Fără certificat"
+
+#, fuzzy
+msgid "No check man pages using the deprecated API"
+msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
 
 #, fuzzy
 msgid "No check plug-ins using the deprecated API"
@@ -39029,6 +39090,10 @@ msgstr "Nicio influență asupra afișării elementelor"
 
 msgid "No information available"
 msgstr "Nu există informații disponibile"
+
+#, fuzzy
+msgid "No legacy GUI extensions using the deprecated API"
+msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
 
 msgid "No levels"
 msgstr "Nu există niveluri"
@@ -42420,6 +42485,17 @@ msgstr "Parametrii de verificare PING și gazdă"
 
 msgid "PLL lock voltages by freqency"
 msgstr "Tensiuni de blocare PLL în funcție de frecvență"
+
+#, fuzzy
+msgid "PNP template uses the deprecated API"
+msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
+
+#, python-format
+msgid ""
+"PNP templates in <tt>'%s'</tt> are marked as 'deprecated' and will be "
+"ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
 
 msgid ""
 "PNP4Nagios needs meta information about hosts and services. These "

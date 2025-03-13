@@ -10731,6 +10731,17 @@ msgstr "Controllare i gruppi di logfile"
 msgid "Check logfiles for relevant new messages"
 msgstr "Controllare i file di log per nuovi messaggi rilevanti"
 
+#, fuzzy
+msgid "Check man page uses the deprecated API"
+msgstr "Nessun plugin di controllo che utilizza l'API deprecata"
+
+#, python-format
+msgid ""
+"Check man pages in <tt>'%s'</tt> are marked as 'deprecated' and will be "
+"ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
+
 msgid "Check manual (for Checkmk based checks)"
 msgstr "Manuale dei controlli (per i controlli basati su Checkmk)"
 
@@ -17093,8 +17104,20 @@ msgid "Deprecated"
 msgstr "Deprecato"
 
 #, fuzzy
+msgid "Deprecated GUI extensions"
+msgstr "Replicare le estensioni"
+
+#, fuzzy
 msgid "Deprecated HW/SW Inventory plug-ins"
 msgstr "Plugin di inventario HW/SW deprecati"
+
+#, fuzzy
+msgid "Deprecated PNP templates"
+msgstr "Set di regole deprecate"
+
+#, fuzzy
+msgid "Deprecated check man pages"
+msgstr "Plugin di controllo deprecati"
 
 #, fuzzy
 msgid "Deprecated check plug-ins"
@@ -17106,6 +17129,10 @@ msgstr "Plugin di controllo deprecati"
 
 msgid "Deprecated choice, please re-select"
 msgstr "Scelta deprecata, si prega di riselezionare"
+
+#, fuzzy
+msgid "Deprecated legacy GUI extensions"
+msgstr "Replicare le estensioni"
 
 msgid "Deprecated rulesets"
 msgstr "Set di regole deprecate"
@@ -23863,8 +23890,19 @@ msgstr "GUI"
 msgid "GUI design"
 msgstr "Progettazione GUI"
 
+#, fuzzy
+msgid "GUI extension uses the deprecated API"
+msgstr "Estensioni della GUI (deprecate)"
+
 msgid "GUI extensions (deprecated)"
 msgstr "Estensioni della GUI (deprecate)"
+
+#, python-format
+msgid ""
+"GUI extensions in <tt>'%s'</tt> are marked as 'deprecated' and will be "
+"ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
 
 msgid ""
 "Gain a complete view of your entire IT infrastructure: from public cloud "
@@ -32244,8 +32282,19 @@ msgstr ""
 "raggruppamento delle notifiche o scegliere un altro plugin di notifica che "
 "permetta il raggruppamento."
 
+#, fuzzy
+msgid "Legacy GUI extension uses the deprecated API"
+msgstr "Estensioni dell'interfaccia grafica legacy (deprecate)"
+
 msgid "Legacy GUI extensions (deprecated)"
 msgstr "Estensioni dell'interfaccia grafica legacy (deprecate)"
+
+#, python-format
+msgid ""
+"Legacy GUI extensions in <tt>'%s'</tt> are marked as 'deprecated' and will "
+"be ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
 
 msgid "Legacy agent management"
 msgstr "Gestione degli agenti legacy"
@@ -38406,6 +38455,10 @@ msgid "No Forecast graph with the name <tt>%s</tt>"
 msgstr "Nessun grafico di previsione con il nome <tt>%s</tt>"
 
 #, fuzzy
+msgid "No GUI extensions using the deprecated API"
+msgstr "Nessun plugin di controllo che utilizza l'API deprecata"
+
+#, fuzzy
 msgid "No HW/SW Inventory plug-ins using the deprecated API"
 msgstr "Nessun plugin di controllo che utilizza l'API deprecata"
 
@@ -38417,6 +38470,10 @@ msgstr "Nessun intervallo IP configurato"
 
 msgid "No Levels"
 msgstr "Nessun livello"
+
+#, fuzzy
+msgid "No PNP templates using the deprecated API"
+msgstr "Nessun plugin di controllo che utilizza l'API deprecata"
 
 msgid "No SNMP"
 msgstr "No SNMP"
@@ -38472,6 +38529,10 @@ msgstr "Non sono state trovate estensioni rotte."
 
 msgid "No certificate"
 msgstr "Nessun certificato"
+
+#, fuzzy
+msgid "No check man pages using the deprecated API"
+msgstr "Nessun plugin di controllo che utilizza l'API deprecata"
 
 #, fuzzy
 msgid "No check plug-ins using the deprecated API"
@@ -38603,6 +38664,10 @@ msgstr "Nessuna influenza sulla visualizzazione degli elementi"
 
 msgid "No information available"
 msgstr "Nessuna informazione disponibile"
+
+#, fuzzy
+msgid "No legacy GUI extensions using the deprecated API"
+msgstr "Nessun plugin di controllo che utilizza l'API deprecata"
 
 msgid "No levels"
 msgstr "Nessun livello"
@@ -41956,6 +42021,17 @@ msgstr "PING e parametri di controllo dell'host"
 
 msgid "PLL lock voltages by freqency"
 msgstr "Tensioni di blocco PLL per frequenza"
+
+#, fuzzy
+msgid "PNP template uses the deprecated API"
+msgstr "Nessun plugin di controllo che utilizza l'API deprecata"
+
+#, python-format
+msgid ""
+"PNP templates in <tt>'%s'</tt> are marked as 'deprecated' and will be "
+"ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
 
 msgid ""
 "PNP4Nagios needs meta information about hosts and services. These "

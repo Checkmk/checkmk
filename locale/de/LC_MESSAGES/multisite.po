@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-03-11 08:27+0000\n"
+"PO-Revision-Date: 2025-03-12 20:50+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -10656,6 +10656,17 @@ msgstr "Überprüfe Log-Dateigruppen"
 msgid "Check logfiles for relevant new messages"
 msgstr "Log-Dateien auf relevante Meldungen hin überwachen"
 
+#, fuzzy
+msgid "Check man page uses the deprecated API"
+msgstr "Das Check-Plugin verwendet die veraltete API"
+
+#, python-format
+msgid ""
+"Check man pages in <tt>'%s'</tt> are marked as 'deprecated' and will be "
+"ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
+
 msgid "Check manual (for Checkmk based checks)"
 msgstr "Check-Dokumentation (für Checkmk basierte Checks)"
 
@@ -16905,8 +16916,20 @@ msgstr "Verteilungen"
 msgid "Deprecated"
 msgstr "Veraltet"
 
+#, fuzzy
+msgid "Deprecated GUI extensions"
+msgstr "Erweiterungen replizieren"
+
 msgid "Deprecated HW/SW Inventory plug-ins"
 msgstr "Veraltete Plugins der HW-/SW-Inventur"
+
+#, fuzzy
+msgid "Deprecated PNP templates"
+msgstr "Veraltete Regelsätze"
+
+#, fuzzy
+msgid "Deprecated check man pages"
+msgstr "Veraltete Check-Plugins"
 
 msgid "Deprecated check plug-ins"
 msgstr "Veraltete Check-Plugins"
@@ -16916,6 +16939,10 @@ msgstr "Veraltete Check-Plugins (v1)"
 
 msgid "Deprecated choice, please re-select"
 msgstr "Veraltete Auswahl, bitte neu auswählen"
+
+#, fuzzy
+msgid "Deprecated legacy GUI extensions"
+msgstr "Erweiterungen replizieren"
 
 msgid "Deprecated rulesets"
 msgstr "Veraltete Regelsätze"
@@ -23577,8 +23604,19 @@ msgstr "GUI"
 msgid "GUI design"
 msgstr "GUI-Design"
 
+#, fuzzy
+msgid "GUI extension uses the deprecated API"
+msgstr "GUI-Erweiterungen (veraltet)"
+
 msgid "GUI extensions (deprecated)"
 msgstr "GUI-Erweiterungen (veraltet)"
+
+#, python-format
+msgid ""
+"GUI extensions in <tt>'%s'</tt> are marked as 'deprecated' and will be "
+"ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
 
 msgid ""
 "Gain a complete view of your entire IT infrastructure: from public cloud "
@@ -31863,8 +31901,19 @@ msgstr ""
 "Bulking von Benachrichtigungen deaktivieren oder ein anderes "
 "Benachrichtigungs-Plugin wählen, das Bulking erlaubt."
 
+#, fuzzy
+msgid "Legacy GUI extension uses the deprecated API"
+msgstr "Legacy GUI-Erweiterungen (veraltet)"
+
 msgid "Legacy GUI extensions (deprecated)"
 msgstr "Legacy GUI-Erweiterungen (veraltet)"
+
+#, python-format
+msgid ""
+"Legacy GUI extensions in <tt>'%s'</tt> are marked as 'deprecated' and will "
+"be ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
 
 msgid "Legacy agent management"
 msgstr "Verwaltung von Legacy-Agenten"
@@ -37937,6 +37986,10 @@ msgstr "Keine Bedingungen"
 msgid "No Forecast graph with the name <tt>%s</tt>"
 msgstr "Kein Forecast-Diagramm mit dem Namen <tt>%s</tt>"
 
+#, fuzzy
+msgid "No GUI extensions using the deprecated API"
+msgstr "Keine Check-Plugins, welche die veraltete API verwenden"
+
 msgid "No HW/SW Inventory plug-ins using the deprecated API"
 msgstr "Keine HW-/SW-Inventur Plugins, welche die veraltete API verwenden"
 
@@ -37948,6 +38001,10 @@ msgstr "Kein IP-Bereich definiert"
 
 msgid "No Levels"
 msgstr "Keine Level"
+
+#, fuzzy
+msgid "No PNP templates using the deprecated API"
+msgstr "Keine Check-Plugins, welche die veraltete API verwenden"
 
 msgid "No SNMP"
 msgstr "Kein SNMP"
@@ -38003,6 +38060,10 @@ msgstr "Es wurden keine defekten Erweiterungen gefunden."
 
 msgid "No certificate"
 msgstr "Kein Zertifikat"
+
+#, fuzzy
+msgid "No check man pages using the deprecated API"
+msgstr "Keine Check-Plugins, welche die veraltete API verwenden"
 
 msgid "No check plug-ins using the deprecated API"
 msgstr "Keine Check-Plugins, welche die veraltete API verwenden"
@@ -38137,6 +38198,10 @@ msgstr "Kein Einfluss auf Anzeige des Elements"
 
 msgid "No information available"
 msgstr "Keine Informationen vorhanden"
+
+#, fuzzy
+msgid "No legacy GUI extensions using the deprecated API"
+msgstr "Keine Check-Plugins, welche die veraltete API verwenden"
 
 msgid "No levels"
 msgstr "Keine Level"
@@ -41419,6 +41484,17 @@ msgstr "PING und Host Check-Parameter"
 
 msgid "PLL lock voltages by freqency"
 msgstr "PLL Verriegelungsspannung nach Frequenz"
+
+#, fuzzy
+msgid "PNP template uses the deprecated API"
+msgstr "Das Check-Plugin verwendet die veraltete API"
+
+#, python-format
+msgid ""
+"PNP templates in <tt>'%s'</tt> are marked as 'deprecated' and will be "
+"ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
 
 msgid ""
 "PNP4Nagios needs meta information about hosts and services. These "
@@ -75229,8 +75305,8 @@ msgid ""
 "You have selected <b>%d</b> hosts for bulk edit. You can now change host "
 "attributes for all selected hosts at once. "
 msgstr ""
-"Sie haben <b>%d</b> Hosts für Massen-Bearbeitung ausgewählt. Sie können für "
-"alle gewählen Hosts die Eigenschaften auf einmal verändern. "
+"Sie haben <b>%d</b> Hosts für Massen-Bearbeitung ausgewählt. Sie können nun "
+"Host-Attribute für alle ausgewählten Hosts gleichzeitig ändern. "
 
 #, python-format
 msgid "You have selected <b>%d</b> hosts for parent scan. "

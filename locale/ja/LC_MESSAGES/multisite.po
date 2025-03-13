@@ -10347,6 +10347,17 @@ msgstr "ログファイルグループを確認する"
 msgid "Check logfiles for relevant new messages"
 msgstr "ログファイルで関連する新しいメッセージを確認する"
 
+#, fuzzy
+msgid "Check man page uses the deprecated API"
+msgstr "非推奨のAPIを使用するプラグインをチェックしない"
+
+#, python-format
+msgid ""
+"Check man pages in <tt>'%s'</tt> are marked as 'deprecated' and will be "
+"ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
+
 msgid "Check manual (for Checkmk based checks)"
 msgstr "マニュアル確認する(Checkmkベースのチェック用)"
 
@@ -16420,8 +16431,20 @@ msgid "Deprecated"
 msgstr "非推奨"
 
 #, fuzzy
+msgid "Deprecated GUI extensions"
+msgstr "拡張機能を複製する"
+
+#, fuzzy
 msgid "Deprecated HW/SW Inventory plug-ins"
 msgstr "非推奨のHW/SWインベントリプラグイン"
+
+#, fuzzy
+msgid "Deprecated PNP templates"
+msgstr "非推奨のルールセット"
+
+#, fuzzy
+msgid "Deprecated check man pages"
+msgstr "非推奨のチェックプラグイン"
 
 msgid "Deprecated check plug-ins"
 msgstr "非推奨のチェックプラグイン"
@@ -16432,6 +16455,10 @@ msgstr "非推奨のチェックプラグイン"
 
 msgid "Deprecated choice, please re-select"
 msgstr "非推奨の選択、再選択してください"
+
+#, fuzzy
+msgid "Deprecated legacy GUI extensions"
+msgstr "拡張機能を複製する"
 
 msgid "Deprecated rulesets"
 msgstr "非推奨のルールセット"
@@ -22946,8 +22973,19 @@ msgstr "GUI"
 msgid "GUI design"
 msgstr "GUIデザイン"
 
+#, fuzzy
+msgid "GUI extension uses the deprecated API"
+msgstr "GUI拡張機能（非推奨）"
+
 msgid "GUI extensions (deprecated)"
 msgstr "GUI拡張機能（非推奨）"
+
+#, python-format
+msgid ""
+"GUI extensions in <tt>'%s'</tt> are marked as 'deprecated' and will be "
+"ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
 
 msgid ""
 "Gain a complete view of your entire IT infrastructure: from public cloud "
@@ -30995,8 +31033,19 @@ msgstr ""
 "従来のASCIIメールは一括送信をサポートしていません。通知の一括送信を無効にする"
 "か、一括送信を許可する別の通知プラグインを選択できます。"
 
+#, fuzzy
+msgid "Legacy GUI extension uses the deprecated API"
+msgstr "レガシーGUI拡張機能（非推奨）"
+
 msgid "Legacy GUI extensions (deprecated)"
 msgstr "レガシーGUI拡張機能（非推奨）"
+
+#, python-format
+msgid ""
+"Legacy GUI extensions in <tt>'%s'</tt> are marked as 'deprecated' and will "
+"be ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
 
 msgid "Legacy agent management"
 msgstr "レガシーエージェント管理"
@@ -36971,6 +37020,10 @@ msgid "No Forecast graph with the name <tt>%s</tt>"
 msgstr "<tt>%s </tt>という名前の予測グラフはありません"
 
 #, fuzzy
+msgid "No GUI extensions using the deprecated API"
+msgstr "非推奨のAPIを使用するプラグインをチェックしない"
+
+#, fuzzy
 msgid "No HW/SW Inventory plug-ins using the deprecated API"
 msgstr "非推奨のAPIを使用するプラグインをチェックしない"
 
@@ -36982,6 +37035,10 @@ msgstr "IP範囲が構成されていません"
 
 msgid "No Levels"
 msgstr "レベルなし"
+
+#, fuzzy
+msgid "No PNP templates using the deprecated API"
+msgstr "非推奨のAPIを使用するプラグインをチェックしない"
 
 msgid "No SNMP"
 msgstr "SNMPなし"
@@ -37037,6 +37094,10 @@ msgstr "壊れた拡張機能は見つかりませんでした。"
 
 msgid "No certificate"
 msgstr "証明書なし"
+
+#, fuzzy
+msgid "No check man pages using the deprecated API"
+msgstr "非推奨のAPIを使用するプラグインをチェックしない"
 
 msgid "No check plug-ins using the deprecated API"
 msgstr "非推奨のAPIを使用するプラグインをチェックしない"
@@ -37165,6 +37226,10 @@ msgstr "エレメントの表示に影響を与えません"
 
 msgid "No information available"
 msgstr "利用可能な情報はありません"
+
+#, fuzzy
+msgid "No legacy GUI extensions using the deprecated API"
+msgstr "非推奨のAPIを使用するプラグインをチェックしない"
 
 msgid "No levels"
 msgstr "レベルなし"
@@ -40363,6 +40428,17 @@ msgstr "PINGおよびホストチェックパラメータ"
 
 msgid "PLL lock voltages by freqency"
 msgstr "周波数によるPLLロック電圧"
+
+#, fuzzy
+msgid "PNP template uses the deprecated API"
+msgstr "非推奨のAPIを使用するプラグインをチェックしない"
+
+#, python-format
+msgid ""
+"PNP templates in <tt>'%s'</tt> are marked as 'deprecated' and will be "
+"ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
 
 msgid ""
 "PNP4Nagios needs meta information about hosts and services. These "

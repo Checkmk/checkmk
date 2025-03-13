@@ -10849,6 +10849,17 @@ msgstr "Controleer logfile groepen"
 msgid "Check logfiles for relevant new messages"
 msgstr "Controleer logfiles op relevante nieuwe berichten"
 
+#, fuzzy
+msgid "Check man page uses the deprecated API"
+msgstr "Geen controleplugins die de verouderde API gebruiken"
+
+#, python-format
+msgid ""
+"Check man pages in <tt>'%s'</tt> are marked as 'deprecated' and will be "
+"ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
+
 msgid "Check manual (for Checkmk based checks)"
 msgstr "Controlehandleiding (voor controles op basis van Checkmk)"
 
@@ -17272,8 +17283,20 @@ msgid "Deprecated"
 msgstr "Afgeschreven"
 
 #, fuzzy
+msgid "Deprecated GUI extensions"
+msgstr "Verlengingen repliceren"
+
+#, fuzzy
 msgid "Deprecated HW/SW Inventory plug-ins"
 msgstr "Afgeschreven HW/SW inventaris plugins"
+
+#, fuzzy
+msgid "Deprecated PNP templates"
+msgstr "Afgeschreven regelsets"
+
+#, fuzzy
+msgid "Deprecated check man pages"
+msgstr "Verouderde controleplugins"
 
 #, fuzzy
 msgid "Deprecated check plug-ins"
@@ -17285,6 +17308,10 @@ msgstr "Verouderde controleplugins"
 
 msgid "Deprecated choice, please re-select"
 msgstr "Afgeschafte keuze, gelieve opnieuw te selecteren"
+
+#, fuzzy
+msgid "Deprecated legacy GUI extensions"
+msgstr "Verlengingen repliceren"
 
 msgid "Deprecated rulesets"
 msgstr "Afgeschreven regelsets"
@@ -24089,8 +24116,19 @@ msgid "GUI design"
 msgstr "GUI-ontwerp"
 
 #, fuzzy
+msgid "GUI extension uses the deprecated API"
+msgstr "GUI-uitbreidingen"
+
+#, fuzzy
 msgid "GUI extensions (deprecated)"
 msgstr "GUI-uitbreidingen"
+
+#, python-format
+msgid ""
+"GUI extensions in <tt>'%s'</tt> are marked as 'deprecated' and will be "
+"ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
 
 msgid ""
 "Gain a complete view of your entire IT infrastructure: from public cloud "
@@ -32547,8 +32585,19 @@ msgstr ""
 "of een andere plugin kiezen die bulking toestaat."
 
 #, fuzzy
+msgid "Legacy GUI extension uses the deprecated API"
+msgstr "Verouderde GUI-uitbreidingen"
+
+#, fuzzy
 msgid "Legacy GUI extensions (deprecated)"
 msgstr "Verouderde GUI-uitbreidingen"
+
+#, python-format
+msgid ""
+"Legacy GUI extensions in <tt>'%s'</tt> are marked as 'deprecated' and will "
+"be ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
 
 msgid "Legacy agent management"
 msgstr "Beheer van oudere agenten"
@@ -38788,6 +38837,10 @@ msgid "No Forecast graph with the name <tt>%s</tt>"
 msgstr "Geen voorspel grafiek met de naam <tt>%s</tt>"
 
 #, fuzzy
+msgid "No GUI extensions using the deprecated API"
+msgstr "Geen controleplugins die de verouderde API gebruiken"
+
+#, fuzzy
 msgid "No HW/SW Inventory plug-ins using the deprecated API"
 msgstr "Geen controleplugins die de verouderde API gebruiken"
 
@@ -38799,6 +38852,10 @@ msgstr "Geen IP-bereik geconfigureerd"
 
 msgid "No Levels"
 msgstr "Geen niveaus"
+
+#, fuzzy
+msgid "No PNP templates using the deprecated API"
+msgstr "Geen controleplugins die de verouderde API gebruiken"
 
 msgid "No SNMP"
 msgstr "Geen SNMP"
@@ -38855,6 +38912,10 @@ msgstr "Er werden geen gebroken extensies gevonden."
 
 msgid "No certificate"
 msgstr "Geen certificaat"
+
+#, fuzzy
+msgid "No check man pages using the deprecated API"
+msgstr "Geen controleplugins die de verouderde API gebruiken"
 
 #, fuzzy
 msgid "No check plug-ins using the deprecated API"
@@ -38991,6 +39052,10 @@ msgstr "Geen invloed op elementweergave"
 
 msgid "No information available"
 msgstr "Geen informatie beschikbaar"
+
+#, fuzzy
+msgid "No legacy GUI extensions using the deprecated API"
+msgstr "Geen controleplugins die de verouderde API gebruiken"
 
 msgid "No levels"
 msgstr "Geen niveaus"
@@ -42380,6 +42445,17 @@ msgstr "PING en host check parameters"
 
 msgid "PLL lock voltages by freqency"
 msgstr "PLL lockspanningen per freqentie"
+
+#, fuzzy
+msgid "PNP template uses the deprecated API"
+msgstr "Geen controleplugins die de verouderde API gebruiken"
+
+#, python-format
+msgid ""
+"PNP templates in <tt>'%s'</tt> are marked as 'deprecated' and will be "
+"ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
 
 msgid ""
 "PNP4Nagios needs meta information about hosts and services. These "

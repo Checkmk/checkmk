@@ -11,7 +11,7 @@ def main() {
             cmd: "GROOVYLINT_OUTPUT_ARGS='-o groovy-lint.txt' make -C tests test-lint-groovy-docker",
         ]);
 
-        test_jenkins_helper.analyse_issues("GROOVY", "groovy-lint.txt");
+        test_jenkins_helper.analyse_issues("GROOVY", "packages/cmk-frontend/groovy-lint.txt");
     }
 }
 

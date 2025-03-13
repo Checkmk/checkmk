@@ -741,6 +741,10 @@ msgstr "%s de %s"
 msgid "%s of %s%%"
 msgstr "%s de %s%%"
 
+#, fuzzy, python-format
+msgid "%s parameter"
+msgstr "Parámetros del modelo"
+
 #, python-format
 msgid "%s properties"
 msgstr "%s propiedades"
@@ -2747,6 +2751,10 @@ msgstr "Actualizaciones de APT"
 
 msgid "APT normal and security updates (Linux)"
 msgstr "APT normal y actualizaciones de seguridad (Linux)"
+
+#, fuzzy
+msgid "ASCII Email parameters"
+msgstr "Parámetros del modelo"
 
 #, fuzzy
 msgid "ASCII email"
@@ -12215,6 +12223,17 @@ msgstr "Comprobar los grupos de archivos de registro"
 msgid "Check logfiles for relevant new messages"
 msgstr "Compruebe los archivos de registro para los nuevos mensajes relevantes"
 
+#, fuzzy
+msgid "Check man page uses the deprecated API"
+msgstr "No comprobar los plugins que utilizan la API obsoleta"
+
+#, python-format
+msgid ""
+"Check man pages in <tt>'%s'</tt> are marked as 'deprecated' and will be "
+"ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
+
 msgid "Check manual (for Checkmk based checks)"
 msgstr "Manual de comprobación (para comprobaciones basadas en Checkmk)"
 
@@ -13205,6 +13224,10 @@ msgstr "Sesiones VPN de Cisco"
 
 msgid "Cisco WLAN AP"
 msgstr "AP WLAN de Cisco"
+
+#, fuzzy
+msgid "Cisco Webex Teams parameters"
+msgstr "Esta comprobación no tiene parámetros."
 
 #, fuzzy
 msgid "Cisco memory usage"
@@ -16046,6 +16069,10 @@ msgstr "Crear hosts en"
 msgid "Create hosts in"
 msgstr "Crear hosts en"
 
+#, fuzzy
+msgid "Create new"
+msgstr "Crear nuevo %s"
+
 #, python-format
 msgid "Create new %s"
 msgstr "Crear nuevo %s"
@@ -16081,9 +16108,6 @@ msgstr "Crear nodos a partir de una búsqueda de hosts"
 
 msgid "Create nodes based on a service search"
 msgstr "Crear nodos basados en una búsqueda de servicios"
-
-msgid "Create notification with the following parameters"
-msgstr "Crear una notificación con los siguientes parámetros"
 
 msgid "Create one service per alert rule"
 msgstr "Crear un servicio por regla de alerta"
@@ -19205,8 +19229,20 @@ msgid "Deprecated"
 msgstr "Desaprobado"
 
 #, fuzzy
+msgid "Deprecated GUI extensions"
+msgstr "Replicar extensiones"
+
+#, fuzzy
 msgid "Deprecated HW/SW Inventory plug-ins"
 msgstr "Plugins de inventario HW/SW obsoletos"
+
+#, fuzzy
+msgid "Deprecated PNP templates"
+msgstr "Juegos de reglas obsoletos"
+
+#, fuzzy
+msgid "Deprecated check man pages"
+msgstr "Plugins de comprobación obsoletos"
 
 #, fuzzy
 msgid "Deprecated check plug-ins (legacy)"
@@ -19218,6 +19254,10 @@ msgstr "Plugins de comprobación obsoletos"
 
 msgid "Deprecated choice, please re-select"
 msgstr "Opción obsoleta, vuelva a seleccionarla"
+
+#, fuzzy
+msgid "Deprecated legacy GUI extensions"
+msgstr "Replicar extensiones"
 
 msgid "Deprecated rulesets"
 msgstr "Juegos de reglas obsoletos"
@@ -21794,10 +21834,6 @@ msgstr "Editar %s"
 #, fuzzy, python-format
 msgid "Edit %s notification parameter #%s"
 msgstr "Editar regla de notificación %d"
-
-#, fuzzy, python-format
-msgid "Edit %s parameter"
-msgstr "Parámetros del modelo"
 
 #, python-format
 msgid "Edit %s: %s"
@@ -24708,10 +24744,10 @@ msgstr ""
 msgid "Failed to send %s messages to the following users:"
 msgstr "Ha fallado el envío de mensajes %s a los siguientes usuarios:"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Failed to send the crash report. Please download it manually and send it to "
-"<a href=\"%s\">%s</a>"
+"<a href=\"%s\">%s</a> or try again later."
 msgstr ""
 "Ha fallado el envío del informe de accidente. Por favor, descárguelo "
 "manualmente y envíelo a <a href=\"%s\">%s</a>"
@@ -26038,6 +26074,10 @@ msgstr "Reenviar mensajes a la consola de eventos"
 msgid "Forward mails as events to Event Console"
 msgstr "Reenviar los correos como eventos a la Consola de Eventos"
 
+#, fuzzy
+msgid "Forward to EC parameters"
+msgstr "Parámetros del modelo"
+
 msgid "Forward to remote site by notification spooler"
 msgstr "Reenvío a sitio remoto mediante spooler de notificaciones"
 
@@ -26532,8 +26572,19 @@ msgid "GUI design"
 msgstr "Diseño de la interfaz gráfica de usuario"
 
 #, fuzzy
+msgid "GUI extension uses the deprecated API"
+msgstr "Extensiones de la interfaz gráfica de usuario"
+
+#, fuzzy
 msgid "GUI extensions (deprecated)"
 msgstr "Extensiones de la interfaz gráfica de usuario"
+
+#, python-format
+msgid ""
+"GUI extensions in <tt>'%s'</tt> are marked as 'deprecated' and will be "
+"ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
 
 msgid ""
 "Gain a complete view of your entire IT infrastructure: from public cloud "
@@ -34895,10 +34946,6 @@ msgstr "Certificado no válido"
 msgid "Invalid certificate file: %s"
 msgstr "Archivo de certificado inválido: %s"
 
-#, fuzzy, python-format
-msgid "Invalid characters in %s"
-msgstr "Parámetro inválido %r: %s"
-
 msgid "Invalid check parameter"
 msgstr "Parámetro de comprobación no válido"
 
@@ -35846,6 +35893,10 @@ msgstr "Servicio personalizado de Jira"
 msgid "Jira instance to query"
 msgstr "Instancia de Jira a consultar"
 
+#, fuzzy
+msgid "Jira parameters"
+msgstr "Parámetros opcionales"
+
 msgid "Jira statistics"
 msgstr "Estadísticas de Jira"
 
@@ -36678,8 +36729,19 @@ msgstr ""
 "notificaciones que permita la acumulación."
 
 #, fuzzy
+msgid "Legacy GUI extension uses the deprecated API"
+msgstr "Extensiones de la interfaz gráfica de usuario heredada"
+
+#, fuzzy
 msgid "Legacy GUI extensions (deprecated)"
 msgstr "Extensiones de la interfaz gráfica de usuario heredada"
+
+#, python-format
+msgid ""
+"Legacy GUI extensions in <tt>'%s'</tt> are marked as 'deprecated' and will "
+"be ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
 
 msgid "Legacy agent management"
 msgstr "Gestión de agentes heredados"
@@ -41149,6 +41211,10 @@ msgstr "Microsoft SQL Server (Windows)"
 msgid "Microsoft SQL Server (deprecated)"
 msgstr "Microsoft SQL Server (Windows)"
 
+#, fuzzy
+msgid "Microsoft Teams parameters"
+msgstr "Parámetros del sistema"
+
 msgid "Migrate"
 msgstr "Migrar"
 
@@ -43254,8 +43320,8 @@ msgid "New"
 msgstr "Nuevo"
 
 #, fuzzy, python-format
-msgid "New %s parameter"
-msgstr "Parámetros del modelo"
+msgid "New %s"
+msgstr "Estado del trabajo: %s"
 
 msgid "New Action"
 msgstr "Nueva acción"
@@ -43457,6 +43523,10 @@ msgid "No GCP services found."
 msgstr "No se han encontrado hosts/servicios."
 
 #, fuzzy
+msgid "No GUI extensions using the deprecated API"
+msgstr "No comprobar los plugins que utilizan la API obsoleta"
+
+#, fuzzy
 msgid "No HW/SW Inventory plug-ins using the deprecated API"
 msgstr "No comprobar los plugins que utilizan la API obsoleta"
 
@@ -43468,6 +43538,10 @@ msgstr "No hay rango de IP configurado"
 
 msgid "No Levels"
 msgstr "Sin niveles"
+
+#, fuzzy
+msgid "No PNP templates using the deprecated API"
+msgstr "No comprobar los plugins que utilizan la API obsoleta"
 
 msgid "No SNMP"
 msgstr "No SNMP"
@@ -43519,6 +43593,10 @@ msgstr "No se han encontrado extensiones rotas."
 
 msgid "No certificate"
 msgstr "Sin certificado"
+
+#, fuzzy
+msgid "No check man pages using the deprecated API"
+msgstr "No comprobar los plugins que utilizan la API obsoleta"
 
 #, fuzzy
 msgid "No check plug-ins using the deprecated API"
@@ -43662,6 +43740,10 @@ msgstr "No influye en la visualización de los elementos"
 
 msgid "No information available"
 msgstr "No hay información disponible"
+
+#, fuzzy
+msgid "No legacy GUI extensions using the deprecated API"
+msgstr "No comprobar los plugins que utilizan la API obsoleta"
 
 msgid "No levels"
 msgstr "Sin niveles"
@@ -46462,6 +46544,10 @@ msgstr "Operación sobre las métricas seleccionadas"
 msgid "Operations per second"
 msgstr "Operaciones por segundo"
 
+#, fuzzy
+msgid "Opsgenie parameters"
+msgstr "Parámetros opcionales"
+
 msgid "Optical Signal Power"
 msgstr "Potencia de la señal óptica"
 
@@ -48272,6 +48358,17 @@ msgstr "Parámetros de comprobación de PING y de host"
 msgid "PLL lock voltages by freqency"
 msgstr "Tensiones de bloqueo del PLL por frecuencia"
 
+#, fuzzy
+msgid "PNP template uses the deprecated API"
+msgstr "No comprobar los plugins que utilizan la API obsoleta"
+
+#, python-format
+msgid ""
+"PNP templates in <tt>'%s'</tt> are marked as 'deprecated' and will be "
+"ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
+
 msgid ""
 "PNP4Nagios needs meta information about hosts and services. These "
 "information is stored in XML files. Updating these files for each new check "
@@ -48535,6 +48632,10 @@ msgstr "Dirección del bíper"
 msgid "PagerDuty Service Integration Key"
 msgstr "Clave de integración del servicio PagerDuty"
 
+#, fuzzy
+msgid "PagerDuty parameters"
+msgstr "Parámetros del modelo"
+
 msgid "Pages"
 msgstr "Páginas"
 
@@ -48708,6 +48809,10 @@ msgstr "Topología padre/hijo"
 
 msgid "Parent definition"
 msgstr "Definición de los padres"
+
+#, fuzzy
+msgid "Parent folder"
+msgstr "Carpeta principal"
 
 msgid "Parent scan"
 msgstr "Escaneo de los padres"
@@ -51662,6 +51767,10 @@ msgstr ""
 
 msgid "Push configuration to this site"
 msgstr "Configuración de empuje a este sitio"
+
+#, fuzzy
+msgid "Push notification parameters"
+msgstr "Fase de notificación"
 
 msgid "Push: Checkmk agent contacts the server"
 msgstr "Empuje: El agente Checkmk se pone en contacto con el servidor"
@@ -55362,6 +55471,10 @@ msgid "SID"
 msgstr "SID"
 
 #, fuzzy
+msgid "SIGNL4 Alerting parameters"
+msgstr "Parámetros del modelo"
+
+#, fuzzy
 msgid "SIP - Authentication errors"
 msgstr "SIP - Errores de autenticación"
 
@@ -55470,6 +55583,10 @@ msgstr "SMB Share fileinfo"
 
 msgid "SMB share to check"
 msgstr "Compartir SMB para comprobar"
+
+#, fuzzy
+msgid "SMS (using modem API) parameters"
+msgstr "Falta el parámetro %s necesario."
 
 msgid "SMS spending"
 msgstr "Gasto en SMS"
@@ -56608,6 +56725,10 @@ msgstr ""
 "las notificaciones de servicio.<br>Nota: Sólo puede coincidir con los tipos "
 "de eventos <a href=\"%s\">creados por el núcleo</a>."
 
+#, fuzzy
+msgid "Select the parent folder"
+msgstr "(seleccione carpeta de destino)"
+
 msgid ""
 "Select the range in between which the values are displayed. This only "
 "affects the dashlet if 'Show historic values' is selected"
@@ -57515,6 +57636,10 @@ msgstr "Servicio: "
 
 msgid "ServiceNow URL"
 msgstr "URL de ServiceNow"
+
+#, fuzzy
+msgid "ServiceNow parameters"
+msgstr "Ejemplo de parámetros"
 
 msgid "Services"
 msgstr "Servicios"
@@ -59549,6 +59674,10 @@ msgstr "Skype para empresas XMPP"
 msgid "Slab (Various smaller caches)"
 msgstr "Slab (Varios cachés más pequeños)"
 
+#, fuzzy
+msgid "Slack or Mattermost parameters"
+msgstr "Niveles para los parámetros de la batería"
+
 msgid "Slave usage bytes across all pools"
 msgstr "Bytes de uso de esclavos en todos los grupos"
 
@@ -60564,10 +60693,11 @@ msgstr ""
 "tanto, no se puede calcular el uso medio para estas tablas si no se "
 "especifica este valor."
 
-msgid ""
-"Specify the location where the host will be created. If left empty, the host "
-"will be created in the root folder."
+#, fuzzy
+msgid "Specify the location where the host will be created."
 msgstr ""
+"Especifica en qué periodo de tiempo se creará un nuevo archivo para el "
+"historial de eventos."
 
 #, fuzzy
 msgid ""
@@ -60837,6 +60967,10 @@ msgstr ""
 "con más de un usuario - de lo contrario crearía servicios duplicados con la "
 "misma descripción."
 
+#, fuzzy
+msgid "Spectrum Server parameters"
+msgstr "Ejemplo de parámetros"
+
 msgid "Speed"
 msgstr "Velocidad"
 
@@ -60864,6 +60998,10 @@ msgstr "Uso de la licencia de Splunk"
 #, fuzzy
 msgid "Splunk On-Call REST endpoint"
 msgstr "Splunk On-Call REST Endpoint"
+
+#, fuzzy
+msgid "Splunk On-Call parameters"
+msgstr "Parámetros opcionales"
 
 msgid "Splunk instance to query."
 msgstr "Instancia de Splunk a consultar."
@@ -74261,10 +74399,10 @@ msgstr ""
 "frase de contraseña. Esto sólo se hace para verificar que está autorizado a "
 "descargar la clave. La clave se descargará de forma encriptada."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "To be able to restore your encrypted backups, you need to download and keep "
-"the backup encryption keys in a safe place. If you loose your keys or the "
+"the backup encryption keys in a safe place. If you lose your keys or the "
 "keys passphrases, your backup can not be restored.<br>The following keys "
 "have not been downloaded yet: %s"
 msgstr ""
@@ -81354,9 +81492,6 @@ msgstr "El valor %r no está permitido aquí."
 msgid "Value Type"
 msgstr "Tipo de valor"
 
-msgid "Value is default. Please provide a non-default value."
-msgstr ""
-
 #, fuzzy, python-format
 msgid "Value must be one of '%s'"
 msgstr "debe ser igual a '%s'"
@@ -87542,6 +87677,10 @@ msgstr "Discos físicos"
 msgid "iLert alert source API key"
 msgstr "Clave API de la fuente de alertas de iLert"
 
+#, fuzzy
+msgid "iLert parameters"
+msgstr "Parámetros del modelo"
+
 msgid "iOS version regular expression"
 msgstr "Expresión regular de la versión de iOS"
 
@@ -88938,6 +89077,17 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usar SSL para la conexión."
 
+#~ msgid "Create notification with the following parameters"
+#~ msgstr "Crear una notificación con los siguientes parámetros"
+
+#, fuzzy, python-format
+#~ msgid "Edit %s parameter"
+#~ msgstr "Parámetros del modelo"
+
+#, fuzzy, python-format
+#~ msgid "Invalid characters in %s"
+#~ msgstr "Parámetro inválido %r: %s"
+
 #, fuzzy
 #~ msgid "Create remote broker certificates"
 #~ msgstr "Fallo en la obtención del certificado de pares (%s)"
@@ -89891,10 +90041,6 @@ msgstr "Usar SSL para la conexión."
 
 #~ msgid "Ignore certificate errors (unsecure)"
 #~ msgstr "Ignorar los errores de los certificados (no seguros)"
-
-#, fuzzy
-#~ msgid "New notification parameter"
-#~ msgstr "Fase de notificación"
 
 #, python-brace-format
 #~ msgid ""

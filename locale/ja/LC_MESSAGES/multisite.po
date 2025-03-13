@@ -724,6 +724,10 @@ msgstr "%s の %s"
 msgid "%s of %s%%"
 msgstr "%s of %s%%"
 
+#, fuzzy, python-format
+msgid "%s parameter"
+msgstr "新しい%s パラメーター"
+
 #, python-format
 msgid "%s properties"
 msgstr "%s プロパティ"
@@ -2619,6 +2623,10 @@ msgstr "APTアップデート"
 
 msgid "APT normal and security updates (Linux)"
 msgstr "APTの通常のアップデートとセキュリティアップデート(Linux)"
+
+#, fuzzy
+msgid "ASCII Email parameters"
+msgstr "モデルパラメータ"
 
 msgid "ASCII email"
 msgstr "ASCII Eメール"
@@ -11493,6 +11501,17 @@ msgstr "ログファイルグループを確認する"
 msgid "Check logfiles for relevant new messages"
 msgstr "ログファイルで関連する新しいメッセージを確認する"
 
+#, fuzzy
+msgid "Check man page uses the deprecated API"
+msgstr "非推奨のAPIを使用するプラグインをチェックしない"
+
+#, python-format
+msgid ""
+"Check man pages in <tt>'%s'</tt> are marked as 'deprecated' and will be "
+"ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
+
 msgid "Check manual (for Checkmk based checks)"
 msgstr "マニュアル確認する(Checkmkベースのチェック用)"
 
@@ -12395,6 +12414,10 @@ msgstr "Cisco VPNセッション"
 
 msgid "Cisco WLAN AP"
 msgstr "Cisco WLAN AP"
+
+#, fuzzy
+msgid "Cisco Webex Teams parameters"
+msgstr "このチェックにはパラメータがありません。"
 
 msgid "Cisco memory usage"
 msgstr "Ciscoのメモリ使用量"
@@ -15114,6 +15137,10 @@ msgstr "ホストを作成する"
 msgid "Create hosts in"
 msgstr "ホストを作成する"
 
+#, fuzzy
+msgid "Create new"
+msgstr "新しい%sを作成する"
+
 #, python-format
 msgid "Create new %s"
 msgstr "新しい%sを作成する"
@@ -15149,9 +15176,6 @@ msgstr "ホスト検索に基づいてノードを作成する"
 
 msgid "Create nodes based on a service search"
 msgstr "サービス検索に基づいてノードを作成する"
-
-msgid "Create notification with the following parameters"
-msgstr "次のパラメータを使用して通知を作成します"
 
 msgid "Create one service per alert rule"
 msgstr "1つのアラートルールに対しサービスを作成する"
@@ -18095,8 +18119,20 @@ msgid "Deprecated"
 msgstr "非推奨"
 
 #, fuzzy
+msgid "Deprecated GUI extensions"
+msgstr "拡張機能を複製する"
+
+#, fuzzy
 msgid "Deprecated HW/SW Inventory plug-ins"
 msgstr "非推奨のHW/SWインベントリプラグイン"
+
+#, fuzzy
+msgid "Deprecated PNP templates"
+msgstr "非推奨のルールセット"
+
+#, fuzzy
+msgid "Deprecated check man pages"
+msgstr "非推奨のチェックプラグイン"
 
 #, fuzzy
 msgid "Deprecated check plug-ins (legacy)"
@@ -18108,6 +18144,10 @@ msgstr "非推奨のチェックプラグイン"
 
 msgid "Deprecated choice, please re-select"
 msgstr "非推奨の選択、再選択してください"
+
+#, fuzzy
+msgid "Deprecated legacy GUI extensions"
+msgstr "拡張機能を複製する"
 
 msgid "Deprecated rulesets"
 msgstr "非推奨のルールセット"
@@ -20527,10 +20567,6 @@ msgstr "%sを編集する"
 #, python-format
 msgid "Edit %s notification parameter #%s"
 msgstr "%s 通知パラメータの編集 #%s"
-
-#, python-format
-msgid "Edit %s parameter"
-msgstr "%s パラメーターの編集"
 
 #, python-format
 msgid "Edit %s: %s"
@@ -23322,10 +23358,10 @@ msgstr "ルールセット '%s' ルの検索に失敗しましたフォルダ内
 msgid "Failed to send %s messages to the following users:"
 msgstr "次のユーザーに%sメッセージを送信できませんでした:"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Failed to send the crash report. Please download it manually and send it to "
-"<a href=\"%s\">%s</a>"
+"<a href=\"%s\">%s</a> or try again later."
 msgstr ""
 "クラッシュレポートの送信に失敗しました。手動でダウンロードし、<a href=\"%s\">"
 "%s</a>まで送信してください"
@@ -24591,6 +24627,10 @@ msgstr "メッセージをイベントコンソールに転送する"
 msgid "Forward mails as events to Event Console"
 msgstr "メールをイベントとしてイベントコンソールに転送する"
 
+#, fuzzy
+msgid "Forward to EC parameters"
+msgstr "モデルパラメータ"
+
 msgid "Forward to remote site by notification spooler"
 msgstr "通知スプーラでリモートサイトに転送する"
 
@@ -25058,8 +25098,19 @@ msgstr "GUI"
 msgid "GUI design"
 msgstr "GUIデザイン"
 
+#, fuzzy
+msgid "GUI extension uses the deprecated API"
+msgstr "GUI拡張機能（非推奨）"
+
 msgid "GUI extensions (deprecated)"
 msgstr "GUI拡張機能（非推奨）"
+
+#, python-format
+msgid ""
+"GUI extensions in <tt>'%s'</tt> are marked as 'deprecated' and will be "
+"ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
 
 msgid ""
 "Gain a complete view of your entire IT infrastructure: from public cloud "
@@ -33021,10 +33072,6 @@ msgstr "無効な証明書"
 msgid "Invalid certificate file: %s"
 msgstr "無効な証明書ファイル: %s"
 
-#, python-format
-msgid "Invalid characters in %s"
-msgstr "の無効な文字%s"
-
 msgid "Invalid check parameter"
 msgstr "チェックパラメータが無効です"
 
@@ -33936,6 +33983,10 @@ msgstr "Jiraカスタムサービス"
 msgid "Jira instance to query"
 msgstr "クエリするJiraインスタンス"
 
+#, fuzzy
+msgid "Jira parameters"
+msgstr "オプションのパラメータ"
+
 msgid "Jira statistics"
 msgstr "Jira統計"
 
@@ -34733,8 +34784,19 @@ msgstr ""
 "従来のASCIIメールは一括送信をサポートしていません。通知の一括送信を無効にする"
 "か、一括送信を許可する別の通知プラグインを選択できます。"
 
+#, fuzzy
+msgid "Legacy GUI extension uses the deprecated API"
+msgstr "レガシーGUI拡張機能（非推奨）"
+
 msgid "Legacy GUI extensions (deprecated)"
 msgstr "レガシーGUI拡張機能（非推奨）"
+
+#, python-format
+msgid ""
+"Legacy GUI extensions in <tt>'%s'</tt> are marked as 'deprecated' and will "
+"be ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
 
 msgid "Legacy agent management"
 msgstr "レガシーエージェント管理"
@@ -38951,6 +39013,10 @@ msgstr "Microsoft SQL サーバー (Linux, Windows)"
 msgid "Microsoft SQL Server (deprecated)"
 msgstr "Microsoft SQL サーバー(非推奨)"
 
+#, fuzzy
+msgid "Microsoft Teams parameters"
+msgstr "システムパラメータ"
+
 msgid "Migrate"
 msgstr "移行"
 
@@ -40978,9 +41044,9 @@ msgstr "ピギーバックデータは絶対に使用しないでください"
 msgid "New"
 msgstr "新しい"
 
-#, python-format
-msgid "New %s parameter"
-msgstr "新しい%s パラメーター"
+#, fuzzy, python-format
+msgid "New %s"
+msgstr "新しい状態: %s"
 
 msgid "New Action"
 msgstr "新しいアクション"
@@ -41176,6 +41242,10 @@ msgid "No GCP services found."
 msgstr "ホスト/サービスが見つかりません。"
 
 #, fuzzy
+msgid "No GUI extensions using the deprecated API"
+msgstr "非推奨のAPIを使用するプラグインをチェックしない"
+
+#, fuzzy
 msgid "No HW/SW Inventory plug-ins using the deprecated API"
 msgstr "非推奨のAPIを使用するプラグインをチェックしない"
 
@@ -41187,6 +41257,10 @@ msgstr "IP範囲が構成されていません"
 
 msgid "No Levels"
 msgstr "レベルなし"
+
+#, fuzzy
+msgid "No PNP templates using the deprecated API"
+msgstr "非推奨のAPIを使用するプラグインをチェックしない"
 
 msgid "No SNMP"
 msgstr "SNMPなし"
@@ -41236,6 +41310,10 @@ msgstr "壊れた拡張機能は見つかりませんでした。"
 
 msgid "No certificate"
 msgstr "証明書なし"
+
+#, fuzzy
+msgid "No check man pages using the deprecated API"
+msgstr "非推奨のAPIを使用するプラグインをチェックしない"
 
 msgid "No check plug-ins using the deprecated API"
 msgstr "非推奨のAPIを使用するプラグインをチェックしない"
@@ -41371,6 +41449,10 @@ msgstr "エレメントの表示に影響を与えません"
 
 msgid "No information available"
 msgstr "利用可能な情報はありません"
+
+#, fuzzy
+msgid "No legacy GUI extensions using the deprecated API"
+msgstr "非推奨のAPIを使用するプラグインをチェックしない"
 
 msgid "No levels"
 msgstr "レベルなし"
@@ -44027,6 +44109,10 @@ msgstr "選択したメトリックの操作"
 msgid "Operations per second"
 msgstr "1秒あたりの操作数"
 
+#, fuzzy
+msgid "Opsgenie parameters"
+msgstr "オプションのパラメータ"
+
 msgid "Optical Signal Power"
 msgstr "光信号パワー"
 
@@ -45758,6 +45844,17 @@ msgstr "PINGおよびホストチェックパラメータ"
 msgid "PLL lock voltages by freqency"
 msgstr "周波数によるPLLロック電圧"
 
+#, fuzzy
+msgid "PNP template uses the deprecated API"
+msgstr "非推奨のAPIを使用するプラグインをチェックしない"
+
+#, python-format
+msgid ""
+"PNP templates in <tt>'%s'</tt> are marked as 'deprecated' and will be "
+"ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
+
 msgid ""
 "PNP4Nagios needs meta information about hosts and services. These "
 "information is stored in XML files. Updating these files for each new check "
@@ -46008,6 +46105,10 @@ msgstr "ページャーアドレス"
 msgid "PagerDuty Service Integration Key"
 msgstr "PagerDutyサービス統合キー"
 
+#, fuzzy
+msgid "PagerDuty parameters"
+msgstr "デフォルトパラメータ"
+
 msgid "Pages"
 msgstr "ページ"
 
@@ -46176,6 +46277,10 @@ msgstr "親/子トポロジー"
 
 msgid "Parent definition"
 msgstr "親の定義"
+
+#, fuzzy
+msgid "Parent folder"
+msgstr "メインフォルダ"
 
 msgid "Parent scan"
 msgstr "親スキャン"
@@ -48942,6 +49047,10 @@ msgstr ""
 
 msgid "Push configuration to this site"
 msgstr "このサイトに設定をプッシュする"
+
+#, fuzzy
+msgid "Push notification parameters"
+msgstr "通知フェーズ"
 
 msgid "Push: Checkmk agent contacts the server"
 msgstr "プッシュ: Checkmkエージェントがサーバーに連絡"
@@ -52471,6 +52580,10 @@ msgstr ""
 msgid "SID"
 msgstr "SID"
 
+#, fuzzy
+msgid "SIGNL4 Alerting parameters"
+msgstr "デフォルトパラメータ"
+
 msgid "SIP - Authentication errors"
 msgstr "SIP - 認証エラー"
 
@@ -52569,6 +52682,10 @@ msgstr "SMB共有ファイル情報"
 
 msgid "SMB share to check"
 msgstr "チェックするSMB共有"
+
+#, fuzzy
+msgid "SMS (using modem API) parameters"
+msgstr "必要な %s パラメータがありません。"
 
 msgid "SMS spending"
 msgstr "SMSの利用"
@@ -53678,6 +53795,10 @@ msgstr ""
 "はサービス通知に適用されません。<br>注意:一致できるのは、<a href=\"%s\">コア"
 "によって作成された</a>イベントタイプのみです。"
 
+#, fuzzy
+msgid "Select the parent folder"
+msgstr "(対象フォルダを選択)"
+
 msgid ""
 "Select the range in between which the values are displayed. This only "
 "affects the dashlet if 'Show historic values' is selected"
@@ -54542,6 +54663,10 @@ msgstr "サービス: "
 
 msgid "ServiceNow URL"
 msgstr "ServiceNow URL"
+
+#, fuzzy
+msgid "ServiceNow parameters"
+msgstr "パラメータの例"
 
 msgid "Services"
 msgstr "サービス"
@@ -56450,6 +56575,10 @@ msgstr "Skype for Business XMPP"
 msgid "Slab (Various smaller caches)"
 msgstr "スラブ(さまざまな小さなキャッシュ)"
 
+#, fuzzy
+msgid "Slack or Mattermost parameters"
+msgstr "バッテリーパラメータのレベル"
+
 msgid "Slave usage bytes across all pools"
 msgstr "すべてのプールにわたるスレーブ使用バイト"
 
@@ -57408,10 +57537,9 @@ msgstr ""
 "できません。したがって、この値が指定されていない場合、これらのテーブルの平均"
 "使用量は計算されません。"
 
-msgid ""
-"Specify the location where the host will be created. If left empty, the host "
-"will be created in the root folder."
-msgstr ""
+#, fuzzy
+msgid "Specify the location where the host will be created."
+msgstr "イベント履歴の新しいファイルが作成される期間を指定します。"
 
 msgid ""
 "Specify the logical name, e.g. the host name, of the PLC. This name is used "
@@ -57644,6 +57772,10 @@ msgstr ""
 "のユーザー名に置き換えられます。ルールが複数のユーザーに一致する可能性がある"
 "場合は、それ以外の場合は同じ説明で重複するサービスを作成する必要があります。"
 
+#, fuzzy
+msgid "Spectrum Server parameters"
+msgstr "パラメータの例"
+
 msgid "Speed"
 msgstr "速度"
 
@@ -57671,6 +57803,10 @@ msgstr "Splunkライセンスの使用"
 #, fuzzy
 msgid "Splunk On-Call REST endpoint"
 msgstr "Splunk On-Call REST エンドポイント"
+
+#, fuzzy
+msgid "Splunk On-Call parameters"
+msgstr "オプションのパラメータ"
 
 msgid "Splunk instance to query."
 msgstr "クエリするSplunkインスタンス。"
@@ -70275,10 +70411,10 @@ msgstr ""
 "解除する必要があります。これは、キーのダウンロードが許可されていることを確認"
 "するためにのみ行われます。キーは暗号化された形式でダウンロードされます。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "To be able to restore your encrypted backups, you need to download and keep "
-"the backup encryption keys in a safe place. If you loose your keys or the "
+"the backup encryption keys in a safe place. If you lose your keys or the "
 "keys passphrases, your backup can not be restored.<br>The following keys "
 "have not been downloaded yet: %s"
 msgstr ""
@@ -76641,9 +76777,6 @@ msgstr "ここでは値 %r は許可されていません。"
 msgid "Value Type"
 msgstr "値型"
 
-msgid "Value is default. Please provide a non-default value."
-msgstr ""
-
 #, python-format
 msgid "Value must be one of '%s'"
 msgstr "値は '%s' のいずれかでなければならない"
@@ -82529,6 +82662,10 @@ msgstr "物理ディスク"
 msgid "iLert alert source API key"
 msgstr "iLertアラートソースAPIキー"
 
+#, fuzzy
+msgid "iLert parameters"
+msgstr "デフォルトパラメータ"
+
 msgid "iOS version regular expression"
 msgstr "iOSバージョン正規表現"
 
@@ -83895,6 +84032,17 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用不可</b>"
 
+#~ msgid "Create notification with the following parameters"
+#~ msgstr "次のパラメータを使用して通知を作成します"
+
+#, python-format
+#~ msgid "Edit %s parameter"
+#~ msgstr "%s パラメーターの編集"
+
+#, python-format
+#~ msgid "Invalid characters in %s"
+#~ msgstr "の無効な文字%s"
+
 #, fuzzy
 #~ msgid "Create remote broker certificates"
 #~ msgstr "ピア証明書のフェッチに失敗しました(%s)"
@@ -84857,10 +85005,6 @@ msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用
 
 #~ msgid "Ignore certificate errors (unsecure)"
 #~ msgstr "証明書エラーを無視する(安全でない)"
-
-#, fuzzy
-#~ msgid "New notification parameter"
-#~ msgstr "通知フェーズ"
 
 #, python-brace-format
 #~ msgid ""

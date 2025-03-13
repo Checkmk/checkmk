@@ -748,6 +748,10 @@ msgstr "%s din %s"
 msgid "%s of %s%%"
 msgstr "%s de %s%%"
 
+#, fuzzy, python-format
+msgid "%s parameter"
+msgstr "Parametrii modelului"
+
 #, python-format
 msgid "%s properties"
 msgstr "%s proprietăți"
@@ -2759,6 +2763,10 @@ msgstr "Actualizări APT"
 
 msgid "APT normal and security updates (Linux)"
 msgstr "APT normal și actualizări de securitate (Linux)"
+
+#, fuzzy
+msgid "ASCII Email parameters"
+msgstr "Parametrii modelului"
 
 #, fuzzy
 msgid "ASCII email"
@@ -12143,6 +12151,17 @@ msgstr "Verificați grupurile de fișiere jurnal"
 msgid "Check logfiles for relevant new messages"
 msgstr "Verificați fișierele jurnal pentru mesaje noi relevante"
 
+#, fuzzy
+msgid "Check man page uses the deprecated API"
+msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
+
+#, python-format
+msgid ""
+"Check man pages in <tt>'%s'</tt> are marked as 'deprecated' and will be "
+"ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
+
 msgid "Check manual (for Checkmk based checks)"
 msgstr "Manual de verificare (pentru verificările bazate pe Checkmk)"
 
@@ -13125,6 +13144,10 @@ msgstr "Sesiuni Cisco VPN"
 
 msgid "Cisco WLAN AP"
 msgstr "Cisco WLAN AP"
+
+#, fuzzy
+msgid "Cisco Webex Teams parameters"
+msgstr "Această verificare nu are parametri."
 
 #, fuzzy
 msgid "Cisco memory usage"
@@ -15941,6 +15964,10 @@ msgstr "Creați gazde"
 msgid "Create hosts in"
 msgstr "Creați gazde în"
 
+#, fuzzy
+msgid "Create new"
+msgstr "Creați un nou %s."
+
 #, python-format
 msgid "Create new %s"
 msgstr "Creați un nou %s."
@@ -15976,9 +16003,6 @@ msgstr "Creați noduri pe baza unei căutări de gazde"
 
 msgid "Create nodes based on a service search"
 msgstr "Creați noduri pe baza unei căutări de servicii"
-
-msgid "Create notification with the following parameters"
-msgstr "Creați o notificare cu următorii parametri"
 
 msgid "Create one service per alert rule"
 msgstr "Creați un serviciu pentru fiecare regulă de alertă"
@@ -19088,8 +19112,20 @@ msgid "Deprecated"
 msgstr "Depreciat"
 
 #, fuzzy
+msgid "Deprecated GUI extensions"
+msgstr "Replicați extensiile"
+
+#, fuzzy
 msgid "Deprecated HW/SW Inventory plug-ins"
 msgstr "Plugin-uri de inventar HW/SW depășite"
+
+#, fuzzy
+msgid "Deprecated PNP templates"
+msgstr "Seturi de reguli depreciate"
+
+#, fuzzy
+msgid "Deprecated check man pages"
+msgstr "Plugin-uri de verificare depreciate"
 
 #, fuzzy
 msgid "Deprecated check plug-ins (legacy)"
@@ -19101,6 +19137,10 @@ msgstr "Plugin-uri de verificare depreciate"
 
 msgid "Deprecated choice, please re-select"
 msgstr "Alegere depășită, vă rugăm să selectați din nou"
+
+#, fuzzy
+msgid "Deprecated legacy GUI extensions"
+msgstr "Replicați extensiile"
 
 msgid "Deprecated rulesets"
 msgstr "Seturi de reguli depreciate"
@@ -21666,10 +21706,6 @@ msgstr "Editare %s"
 #, fuzzy, python-format
 msgid "Edit %s notification parameter #%s"
 msgstr "Editarea regulii de notificare %d"
-
-#, fuzzy, python-format
-msgid "Edit %s parameter"
-msgstr "Parametrii modelului"
 
 #, python-format
 msgid "Edit %s: %s"
@@ -24558,10 +24594,10 @@ msgstr ""
 msgid "Failed to send %s messages to the following users:"
 msgstr "Nu s-a reușit trimiterea mesajelor %s către următorii utilizatori:"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Failed to send the crash report. Please download it manually and send it to "
-"<a href=\"%s\">%s</a>"
+"<a href=\"%s\">%s</a> or try again later."
 msgstr ""
 "Nu s-a reușit trimiterea raportului de accident. Vă rugăm să îl descărcați "
 "manual și să îl trimiteți la <a href=\"%s\">%s</a>."
@@ -25877,6 +25913,10 @@ msgstr "Redirecționarea mesajelor către consola de evenimente"
 msgid "Forward mails as events to Event Console"
 msgstr "Transmiteți e-mailurile ca evenimente către Consola de evenimente"
 
+#, fuzzy
+msgid "Forward to EC parameters"
+msgstr "Parametrii modelului"
+
 msgid "Forward to remote site by notification spooler"
 msgstr "Redirecționarea către site-ul la distanță prin spooler de notificare"
 
@@ -26360,8 +26400,19 @@ msgstr "GUI"
 msgid "GUI design"
 msgstr "Proiectare GUI"
 
+#, fuzzy
+msgid "GUI extension uses the deprecated API"
+msgstr "Extensii GUI (depreciat)"
+
 msgid "GUI extensions (deprecated)"
 msgstr "Extensii GUI (depreciat)"
+
+#, python-format
+msgid ""
+"GUI extensions in <tt>'%s'</tt> are marked as 'deprecated' and will be "
+"ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
 
 msgid ""
 "Gain a complete view of your entire IT infrastructure: from public cloud "
@@ -34705,10 +34756,6 @@ msgstr "Certificat invalid"
 msgid "Invalid certificate file: %s"
 msgstr "Fișier de certificat invalid: %s"
 
-#, fuzzy, python-format
-msgid "Invalid characters in %s"
-msgstr "Parametru nevalabil %r: %s"
-
 msgid "Invalid check parameter"
 msgstr "Parametru de control invalid"
 
@@ -35654,6 +35701,10 @@ msgstr "Serviciul personalizat Jira"
 msgid "Jira instance to query"
 msgstr "Instanța Jira de interogat"
 
+#, fuzzy
+msgid "Jira parameters"
+msgstr "Parametrii opționali"
+
 msgid "Jira statistics"
 msgstr "Statistici Jira"
 
@@ -36482,8 +36533,19 @@ msgstr ""
 "dezactivați gruparea notificărilor, fie să alegeți un alt plugin de "
 "notificare care permite gruparea."
 
+#, fuzzy
+msgid "Legacy GUI extension uses the deprecated API"
+msgstr "Extensii GUI vechi (depreciate)"
+
 msgid "Legacy GUI extensions (deprecated)"
 msgstr "Extensii GUI vechi (depreciate)"
+
+#, python-format
+msgid ""
+"Legacy GUI extensions in <tt>'%s'</tt> are marked as 'deprecated' and will "
+"be ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
 
 msgid "Legacy agent management"
 msgstr "Gestionarea agenților vechi"
@@ -40872,6 +40934,10 @@ msgstr "Microsoft SQL Server (Windows)"
 msgid "Microsoft SQL Server (deprecated)"
 msgstr "Microsoft SQL Server (Windows)"
 
+#, fuzzy
+msgid "Microsoft Teams parameters"
+msgstr "Parametrii sistemului"
+
 msgid "Migrate"
 msgstr "Migrați"
 
@@ -42978,8 +43044,8 @@ msgid "New"
 msgstr "Nou"
 
 #, fuzzy, python-format
-msgid "New %s parameter"
-msgstr "Parametrii modelului"
+msgid "New %s"
+msgstr "Stat nou: %s"
 
 msgid "New Action"
 msgstr "Acțiune nouă"
@@ -43181,6 +43247,10 @@ msgid "No GCP services found."
 msgstr "Nu s-au găsit gazde/servicii."
 
 #, fuzzy
+msgid "No GUI extensions using the deprecated API"
+msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
+
+#, fuzzy
 msgid "No HW/SW Inventory plug-ins using the deprecated API"
 msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
 
@@ -43192,6 +43262,10 @@ msgstr "Nu este configurat niciun interval IP"
 
 msgid "No Levels"
 msgstr "Nu există niveluri"
+
+#, fuzzy
+msgid "No PNP templates using the deprecated API"
+msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
 
 msgid "No SNMP"
 msgstr "Nu SNMP"
@@ -43241,6 +43315,10 @@ msgstr "Nu au fost găsite extensii rupte."
 
 msgid "No certificate"
 msgstr "Fără certificat"
+
+#, fuzzy
+msgid "No check man pages using the deprecated API"
+msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
 
 #, fuzzy
 msgid "No check plug-ins using the deprecated API"
@@ -43381,6 +43459,10 @@ msgstr "Nicio influență asupra afișării elementelor"
 
 msgid "No information available"
 msgstr "Nu există informații disponibile"
+
+#, fuzzy
+msgid "No legacy GUI extensions using the deprecated API"
+msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
 
 msgid "No levels"
 msgstr "Nu există niveluri"
@@ -46154,6 +46236,10 @@ msgstr "Operațiunea privind metricele selectate"
 msgid "Operations per second"
 msgstr "Operațiuni pe secundă"
 
+#, fuzzy
+msgid "Opsgenie parameters"
+msgstr "Parametrii opționali"
+
 msgid "Optical Signal Power"
 msgstr "Puterea semnalului optic"
 
@@ -47954,6 +48040,17 @@ msgstr "Parametrii de verificare PING și gazdă"
 msgid "PLL lock voltages by freqency"
 msgstr "Tensiuni de blocare PLL în funcție de frecvență"
 
+#, fuzzy
+msgid "PNP template uses the deprecated API"
+msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
+
+#, python-format
+msgid ""
+"PNP templates in <tt>'%s'</tt> are marked as 'deprecated' and will be "
+"ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
+
 msgid ""
 "PNP4Nagios needs meta information about hosts and services. These "
 "information is stored in XML files. Updating these files for each new check "
@@ -48216,6 +48313,10 @@ msgstr "Adresa pagerului"
 msgid "PagerDuty Service Integration Key"
 msgstr "Cheia de integrare a serviciului PagerDuty"
 
+#, fuzzy
+msgid "PagerDuty parameters"
+msgstr "Parametrii impliciți"
+
 msgid "Pages"
 msgstr "Pagini"
 
@@ -48386,6 +48487,10 @@ msgstr "Topologie părinte / copil"
 
 msgid "Parent definition"
 msgstr "Definiția părinților"
+
+#, fuzzy
+msgid "Parent folder"
+msgstr "Dosarul principal"
 
 msgid "Parent scan"
 msgstr "Scanarea parintilor"
@@ -51307,6 +51412,10 @@ msgstr ""
 
 msgid "Push configuration to this site"
 msgstr "Configurație push către acest site"
+
+#, fuzzy
+msgid "Push notification parameters"
+msgstr "Faza de notificare"
 
 msgid "Push: Checkmk agent contacts the server"
 msgstr "Împingeți: Agentul Checkmk contactează serverul"
@@ -54958,6 +55067,10 @@ msgid "SID"
 msgstr "SID"
 
 #, fuzzy
+msgid "SIGNL4 Alerting parameters"
+msgstr "Parametrii impliciți"
+
+#, fuzzy
 msgid "SIP - Authentication errors"
 msgstr "SIP - Erori de autentificare"
 
@@ -55065,6 +55178,10 @@ msgstr "SMB Share fileinfo"
 
 msgid "SMB share to check"
 msgstr "Share SMB de verificat"
+
+#, fuzzy
+msgid "SMS (using modem API) parameters"
+msgstr "Lipsește parametrul necesar %s."
 
 msgid "SMS spending"
 msgstr "Cheltuieli pentru SMS"
@@ -56217,6 +56334,10 @@ msgstr ""
 "serviciu!<br>Notă: Puteți să vă potriviți numai cu tipurile de evenimente <a "
 "href=\"%s\">create de nucleu</a>."
 
+#, fuzzy
+msgid "Select the parent folder"
+msgstr "(selectați folderul țintă)"
+
 msgid ""
 "Select the range in between which the values are displayed. This only "
 "affects the dashlet if 'Show historic values' is selected"
@@ -57134,6 +57255,10 @@ msgstr "Serviciu: "
 
 msgid "ServiceNow URL"
 msgstr "URL-ul ServiceNow"
+
+#, fuzzy
+msgid "ServiceNow parameters"
+msgstr "Exemplu pentru parametri"
 
 msgid "Services"
 msgstr "Servicii"
@@ -59163,6 +59288,10 @@ msgstr "Skype pentru afaceri XMPP"
 msgid "Slab (Various smaller caches)"
 msgstr "Slab (Diverse ascunzători mai mici)"
 
+#, fuzzy
+msgid "Slack or Mattermost parameters"
+msgstr "Niveluri pentru parametrii bateriei"
+
 msgid "Slave usage bytes across all pools"
 msgstr "Octeți de utilizare a sclavilor în toate grupurile"
 
@@ -60180,10 +60309,11 @@ msgstr ""
 "urmare, nu se poate calcula consumul mediu pentru aceste tabele dacă nu se "
 "specifică această valoare."
 
-msgid ""
-"Specify the location where the host will be created. If left empty, the host "
-"will be created in the root folder."
+#, fuzzy
+msgid "Specify the location where the host will be created."
 msgstr ""
+"Specificați la ce perioadă de timp va fi creat un nou fișier pentru "
+"istoricul evenimentelor."
 
 #, fuzzy
 msgid ""
@@ -60453,6 +60583,10 @@ msgstr ""
 "în care regula dvs. ar putea să se potrivească pentru mai mult de un "
 "utilizator - altfel ați crea servicii duplicate cu aceeași descriere."
 
+#, fuzzy
+msgid "Spectrum Server parameters"
+msgstr "Exemplu pentru parametri"
+
 msgid "Speed"
 msgstr "Viteză"
 
@@ -60480,6 +60614,10 @@ msgstr "Utilizarea licenței Splunk"
 #, fuzzy
 msgid "Splunk On-Call REST endpoint"
 msgstr "Splunk On-Call REST Endpoint"
+
+#, fuzzy
+msgid "Splunk On-Call parameters"
+msgstr "Parametrii opționali"
 
 msgid "Splunk instance to query."
 msgstr "Instanța Splunk de interogat."
@@ -73876,10 +74014,10 @@ msgstr ""
 "frazei de acces. Acest lucru se face doar pentru a verifica dacă vi se "
 "permite să descărcați cheia. Cheia va fi descărcată în formă criptată."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "To be able to restore your encrypted backups, you need to download and keep "
-"the backup encryption keys in a safe place. If you loose your keys or the "
+"the backup encryption keys in a safe place. If you lose your keys or the "
 "keys passphrases, your backup can not be restored.<br>The following keys "
 "have not been downloaded yet: %s"
 msgstr ""
@@ -80857,9 +80995,6 @@ msgstr "Valoarea %r nu este permisă aici."
 msgid "Value Type"
 msgstr "Tip de valoare"
 
-msgid "Value is default. Please provide a non-default value."
-msgstr ""
-
 #, fuzzy, python-format
 msgid "Value must be one of '%s'"
 msgstr "trebuie să fie egală cu '%s'"
@@ -87012,6 +87147,10 @@ msgstr "Discuri fizice"
 msgid "iLert alert source API key"
 msgstr "Cheia API a sursei de alertă iLert"
 
+#, fuzzy
+msgid "iLert parameters"
+msgstr "Parametrii impliciți"
+
 msgid "iOS version regular expression"
 msgstr "Expresie regulată pentru versiunea iOS"
 
@@ -88401,6 +88540,17 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
 
+#~ msgid "Create notification with the following parameters"
+#~ msgstr "Creați o notificare cu următorii parametri"
+
+#, fuzzy, python-format
+#~ msgid "Edit %s parameter"
+#~ msgstr "Parametrii modelului"
+
+#, fuzzy, python-format
+#~ msgid "Invalid characters in %s"
+#~ msgstr "Parametru nevalabil %r: %s"
+
 #, fuzzy
 #~ msgid "Create remote broker certificates"
 #~ msgstr "Nu s-a reușit să se obțină certificatul peer (%s)"
@@ -89372,10 +89522,6 @@ msgstr "Utilizați SSL pentru conexiune."
 
 #~ msgid "Ignore certificate errors (unsecure)"
 #~ msgstr "Ignoră erorile de certificat (nesigur)"
-
-#, fuzzy
-#~ msgid "New notification parameter"
-#~ msgstr "Faza de notificare"
 
 #, python-brace-format
 #~ msgid ""

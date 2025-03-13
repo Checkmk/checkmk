@@ -742,6 +742,10 @@ msgstr "%s van %s"
 msgid "%s of %s%%"
 msgstr "%s van %s%%"
 
+#, fuzzy, python-format
+msgid "%s parameter"
+msgstr "Modelparameters"
+
 #, python-format
 msgid "%s properties"
 msgstr "%s eigenschappen"
@@ -2733,6 +2737,10 @@ msgstr "APT-updates"
 
 msgid "APT normal and security updates (Linux)"
 msgstr "APT normaal en beveiligingsupdates (Linux)"
+
+#, fuzzy
+msgid "ASCII Email parameters"
+msgstr "Modelparameters"
 
 #, fuzzy
 msgid "ASCII email"
@@ -12128,6 +12136,17 @@ msgstr "Controleer logfile groepen"
 msgid "Check logfiles for relevant new messages"
 msgstr "Controleer logfiles op relevante nieuwe berichten"
 
+#, fuzzy
+msgid "Check man page uses the deprecated API"
+msgstr "Geen controleplugins die de verouderde API gebruiken"
+
+#, python-format
+msgid ""
+"Check man pages in <tt>'%s'</tt> are marked as 'deprecated' and will be "
+"ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
+
 msgid "Check manual (for Checkmk based checks)"
 msgstr "Controlehandleiding (voor controles op basis van Checkmk)"
 
@@ -13110,6 +13129,10 @@ msgstr "Cisco VPN Sessies"
 
 msgid "Cisco WLAN AP"
 msgstr "Cisco WLAN AP"
+
+#, fuzzy
+msgid "Cisco Webex Teams parameters"
+msgstr "Deze controle heeft geen parameters."
 
 #, fuzzy
 msgid "Cisco memory usage"
@@ -15933,6 +15956,10 @@ msgstr "Maak hosts"
 msgid "Create hosts in"
 msgstr "Maak hosts in"
 
+#, fuzzy
+msgid "Create new"
+msgstr "Maak nieuwe %s"
+
 #, python-format
 msgid "Create new %s"
 msgstr "Maak nieuwe %s"
@@ -15968,9 +15995,6 @@ msgstr "Maak knooppunten gebaseerd op een host zoekopdracht"
 
 msgid "Create nodes based on a service search"
 msgstr "Maak knooppunten op basis van een dienst zoekopdracht"
-
-msgid "Create notification with the following parameters"
-msgstr "Maak een melding met de volgende parameters"
 
 msgid "Create one service per alert rule"
 msgstr "Maak een dienst per waarschuwingsregel"
@@ -19063,8 +19087,20 @@ msgid "Deprecated"
 msgstr "Afgeschreven"
 
 #, fuzzy
+msgid "Deprecated GUI extensions"
+msgstr "Verlengingen repliceren"
+
+#, fuzzy
 msgid "Deprecated HW/SW Inventory plug-ins"
 msgstr "Afgeschreven HW/SW inventaris plugins"
+
+#, fuzzy
+msgid "Deprecated PNP templates"
+msgstr "Afgeschreven regelsets"
+
+#, fuzzy
+msgid "Deprecated check man pages"
+msgstr "Verouderde controleplugins"
 
 #, fuzzy
 msgid "Deprecated check plug-ins (legacy)"
@@ -19076,6 +19112,10 @@ msgstr "Verouderde controleplugins"
 
 msgid "Deprecated choice, please re-select"
 msgstr "Afgeschafte keuze, gelieve opnieuw te selecteren"
+
+#, fuzzy
+msgid "Deprecated legacy GUI extensions"
+msgstr "Verlengingen repliceren"
 
 msgid "Deprecated rulesets"
 msgstr "Afgeschreven regelsets"
@@ -21629,10 +21669,6 @@ msgstr "Bewerk %s"
 #, fuzzy, python-format
 msgid "Edit %s notification parameter #%s"
 msgstr "Wijzig notificatie regel %d"
-
-#, fuzzy, python-format
-msgid "Edit %s parameter"
-msgstr "Modelparameters"
 
 #, python-format
 msgid "Edit %s: %s"
@@ -24510,10 +24546,10 @@ msgstr "Regel van regelset '%s' in map '%s' (%r) zoeken mislukt: %s"
 msgid "Failed to send %s messages to the following users:"
 msgstr "Mislukt in het verzenden van %s berichten naar de volgende gebruikers:"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Failed to send the crash report. Please download it manually and send it to "
-"<a href=\"%s\">%s</a>"
+"<a href=\"%s\">%s</a> or try again later."
 msgstr ""
 "Het is niet gelukt om het crashrapport te versturen. Download het "
 "alstublieft handmatig en stuur het naar <a href=\"%s\">%s</a>"
@@ -25835,6 +25871,10 @@ msgstr "Berichten doorsturen naar gebeurtenissen Console"
 msgid "Forward mails as events to Event Console"
 msgstr "Mails doorsturen als gebeurtenissen naar Event Console"
 
+#, fuzzy
+msgid "Forward to EC parameters"
+msgstr "Modelparameters"
+
 msgid "Forward to remote site by notification spooler"
 msgstr "Doorsturen naar externe site door notificatie spooler"
 
@@ -26322,8 +26362,19 @@ msgid "GUI design"
 msgstr "GUI-ontwerp"
 
 #, fuzzy
+msgid "GUI extension uses the deprecated API"
+msgstr "GUI-uitbreidingen"
+
+#, fuzzy
 msgid "GUI extensions (deprecated)"
 msgstr "GUI-uitbreidingen"
+
+#, python-format
+msgid ""
+"GUI extensions in <tt>'%s'</tt> are marked as 'deprecated' and will be "
+"ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
 
 msgid ""
 "Gain a complete view of your entire IT infrastructure: from public cloud "
@@ -34623,10 +34674,6 @@ msgstr "Ongeldig certificaat"
 msgid "Invalid certificate file: %s"
 msgstr "Ongeldig certificaatbestand: %s"
 
-#, fuzzy, python-format
-msgid "Invalid characters in %s"
-msgstr "Ongeldige parameter %r: %s"
-
 msgid "Invalid check parameter"
 msgstr "Ongeldige controleparameter"
 
@@ -35574,6 +35621,10 @@ msgstr "Jira aangepaste dienst"
 msgid "Jira instance to query"
 msgstr "Jira instantie om te bevragen"
 
+#, fuzzy
+msgid "Jira parameters"
+msgstr "Optionele parameters"
+
 msgid "Jira statistics"
 msgstr "Jira statistieken"
 
@@ -36405,8 +36456,19 @@ msgstr ""
 "of een andere plugin kiezen die bulking toestaat."
 
 #, fuzzy
+msgid "Legacy GUI extension uses the deprecated API"
+msgstr "Verouderde GUI-uitbreidingen"
+
+#, fuzzy
 msgid "Legacy GUI extensions (deprecated)"
 msgstr "Verouderde GUI-uitbreidingen"
+
+#, python-format
+msgid ""
+"Legacy GUI extensions in <tt>'%s'</tt> are marked as 'deprecated' and will "
+"be ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
 
 msgid "Legacy agent management"
 msgstr "Beheer van oudere agenten"
@@ -40822,6 +40884,10 @@ msgstr "Microsoft SQL Server (Windows)"
 msgid "Microsoft SQL Server (deprecated)"
 msgstr "Microsoft SQL Server (Windows)"
 
+#, fuzzy
+msgid "Microsoft Teams parameters"
+msgstr "Systeem Parameters"
+
 msgid "Migrate"
 msgstr "Migreren"
 
@@ -42906,8 +42972,8 @@ msgid "New"
 msgstr "Nieuw"
 
 #, fuzzy, python-format
-msgid "New %s parameter"
-msgstr "Modelparameters"
+msgid "New %s"
+msgstr "Job staat: %s"
 
 msgid "New Action"
 msgstr "Nieuwe Actie"
@@ -43109,6 +43175,10 @@ msgid "No GCP services found."
 msgstr "Geen hosts/services gevonden."
 
 #, fuzzy
+msgid "No GUI extensions using the deprecated API"
+msgstr "Geen controleplugins die de verouderde API gebruiken"
+
+#, fuzzy
 msgid "No HW/SW Inventory plug-ins using the deprecated API"
 msgstr "Geen controleplugins die de verouderde API gebruiken"
 
@@ -43120,6 +43190,10 @@ msgstr "Geen IP-bereik geconfigureerd"
 
 msgid "No Levels"
 msgstr "Geen niveaus"
+
+#, fuzzy
+msgid "No PNP templates using the deprecated API"
+msgstr "Geen controleplugins die de verouderde API gebruiken"
 
 msgid "No SNMP"
 msgstr "Geen SNMP"
@@ -43170,6 +43244,10 @@ msgstr "Er werden geen gebroken extensies gevonden."
 
 msgid "No certificate"
 msgstr "Geen certificaat"
+
+#, fuzzy
+msgid "No check man pages using the deprecated API"
+msgstr "Geen controleplugins die de verouderde API gebruiken"
 
 #, fuzzy
 msgid "No check plug-ins using the deprecated API"
@@ -43313,6 +43391,10 @@ msgstr "Geen invloed op elementweergave"
 
 msgid "No information available"
 msgstr "Geen informatie beschikbaar"
+
+#, fuzzy
+msgid "No legacy GUI extensions using the deprecated API"
+msgstr "Geen controleplugins die de verouderde API gebruiken"
 
 msgid "No levels"
 msgstr "Geen niveaus"
@@ -46085,6 +46167,10 @@ msgstr "Werking op geselecteerde metriek"
 msgid "Operations per second"
 msgstr "Bewerkingen per seconde"
 
+#, fuzzy
+msgid "Opsgenie parameters"
+msgstr "Optionele parameters"
+
 msgid "Optical Signal Power"
 msgstr "Optisch Signaal Vermogen"
 
@@ -47884,6 +47970,17 @@ msgstr "PING en host check parameters"
 msgid "PLL lock voltages by freqency"
 msgstr "PLL lockspanningen per freqentie"
 
+#, fuzzy
+msgid "PNP template uses the deprecated API"
+msgstr "Geen controleplugins die de verouderde API gebruiken"
+
+#, python-format
+msgid ""
+"PNP templates in <tt>'%s'</tt> are marked as 'deprecated' and will be "
+"ignored in future Checkmk versions (official deprecation timeline not "
+"decided yet)."
+msgstr ""
+
 msgid ""
 "PNP4Nagios needs meta information about hosts and services. These "
 "information is stored in XML files. Updating these files for each new check "
@@ -48146,6 +48243,10 @@ msgstr "Pager adres"
 msgid "PagerDuty Service Integration Key"
 msgstr "PagerDuty Service Integratie Sleutel"
 
+#, fuzzy
+msgid "PagerDuty parameters"
+msgstr "Modelparameters"
+
 msgid "Pages"
 msgstr "Pagina's"
 
@@ -48319,6 +48420,10 @@ msgstr "Ouder/kind topologie"
 
 msgid "Parent definition"
 msgstr "Ouderlijke definitie"
+
+#, fuzzy
+msgid "Parent folder"
+msgstr "Hoofdmap"
 
 msgid "Parent scan"
 msgstr "Ouder scan"
@@ -51238,6 +51343,10 @@ msgstr ""
 
 msgid "Push configuration to this site"
 msgstr "Push configuratie naar deze site"
+
+#, fuzzy
+msgid "Push notification parameters"
+msgstr "Kennisgevingsfase"
 
 msgid "Push: Checkmk agent contacts the server"
 msgstr "Push: Checkmk agent neemt contact op met de server"
@@ -54882,6 +54991,10 @@ msgid "SID"
 msgstr "SID"
 
 #, fuzzy
+msgid "SIGNL4 Alerting parameters"
+msgstr "Modelparameters"
+
+#, fuzzy
 msgid "SIP - Authentication errors"
 msgstr "SIP - Authenticatie Fouten"
 
@@ -54990,6 +55103,10 @@ msgstr "SMB-bestandsinfo delen"
 
 msgid "SMB share to check"
 msgstr "SMB share om te controleren"
+
+#, fuzzy
+msgid "SMS (using modem API) parameters"
+msgstr "Ontbrekende benodigde %s parameter."
 
 msgid "SMS spending"
 msgstr "SMS-uitgaven"
@@ -56123,6 +56240,10 @@ msgstr ""
 "afhandelen.<br>Note: U kunt alleen overeenkomen met typen gebeurtenissen <a "
 "href=\"%s\">aangemaakt door de kern</a>."
 
+#, fuzzy
+msgid "Select the parent folder"
+msgstr "(selecteer doel map)"
+
 msgid ""
 "Select the range in between which the values are displayed. This only "
 "affects the dashlet if 'Show historic values' is selected"
@@ -57026,6 +57147,10 @@ msgstr "Service: "
 
 msgid "ServiceNow URL"
 msgstr "ServiceNow URL"
+
+#, fuzzy
+msgid "ServiceNow parameters"
+msgstr "Voorbeeld voor parameters"
 
 msgid "Services"
 msgstr "Diensten"
@@ -59028,6 +59153,10 @@ msgstr "Skype voor bedrijven XMPP"
 msgid "Slab (Various smaller caches)"
 msgstr "Slab (diverse kleinere caches)"
 
+#, fuzzy
+msgid "Slack or Mattermost parameters"
+msgstr "Niveaus voor batterijparameters"
+
 msgid "Slave usage bytes across all pools"
 msgstr "Slaafgebruik bytes over alle pools"
 
@@ -60021,10 +60150,11 @@ msgstr ""
 "demand tabellen. Daarom kan voor deze tabellen geen gemiddeld gebruik worden "
 "berekend als deze waarde niet wordt opgegeven."
 
-msgid ""
-"Specify the location where the host will be created. If left empty, the host "
-"will be created in the root folder."
+#, fuzzy
+msgid "Specify the location where the host will be created."
 msgstr ""
+"Geef aan op welk tijdstip een nieuw bestand voor de voorvalgeschiedenis "
+"wordt aangemaakt."
 
 #, fuzzy
 msgid ""
@@ -60292,6 +60422,10 @@ msgstr ""
 "meer dan één gebruiker - je zou anders dubbele diensten maken met dezelfde "
 "beschrijving."
 
+#, fuzzy
+msgid "Spectrum Server parameters"
+msgstr "Voorbeeld voor parameters"
+
 msgid "Speed"
 msgstr "Snelheid"
 
@@ -60319,6 +60453,10 @@ msgstr "Splunk Licentie Gebruik"
 #, fuzzy
 msgid "Splunk On-Call REST endpoint"
 msgstr "Splunk Op afroep REST Eindpunt"
+
+#, fuzzy
+msgid "Splunk On-Call parameters"
+msgstr "Optionele parameters"
 
 msgid "Splunk instance to query."
 msgstr "Splunk instantie om te bevragen."
@@ -73629,10 +73767,10 @@ msgstr ""
 "passphrase in te voeren. Dit wordt alleen gedaan om te controleren of u de "
 "sleutel mag downloaden. De sleutel zal in gecodeerde vorm worden gedownload."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "To be able to restore your encrypted backups, you need to download and keep "
-"the backup encryption keys in a safe place. If you loose your keys or the "
+"the backup encryption keys in a safe place. If you lose your keys or the "
 "keys passphrases, your backup can not be restored.<br>The following keys "
 "have not been downloaded yet: %s"
 msgstr ""
@@ -80671,9 +80809,6 @@ msgstr "De waarde %r is hier niet toegestaan."
 msgid "Value Type"
 msgstr "Waarde Type"
 
-msgid "Value is default. Please provide a non-default value."
-msgstr ""
-
 #, fuzzy, python-format
 msgid "Value must be one of '%s'"
 msgstr "moet gelijk zijn aan '%s'"
@@ -86825,6 +86960,10 @@ msgstr "Fysieke schijven"
 msgid "iLert alert source API key"
 msgstr "iLert waarschuwings bron API sleutel"
 
+#, fuzzy
+msgid "iLert parameters"
+msgstr "Modelparameters"
+
 msgid "iOS version regular expression"
 msgstr "iOS versie reguliere expressie"
 
@@ -88213,6 +88352,17 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
 
+#~ msgid "Create notification with the following parameters"
+#~ msgstr "Maak een melding met de volgende parameters"
+
+#, fuzzy, python-format
+#~ msgid "Edit %s parameter"
+#~ msgstr "Modelparameters"
+
+#, fuzzy, python-format
+#~ msgid "Invalid characters in %s"
+#~ msgstr "Ongeldige parameter %r: %s"
+
 #, fuzzy
 #~ msgid "Create remote broker certificates"
 #~ msgstr "Kan peer-certificaat niet ophalen (%s)"
@@ -89158,10 +89308,6 @@ msgstr "Gebruik SSL voor de verbinding."
 
 #~ msgid "Ignore certificate errors (unsecure)"
 #~ msgstr "Negeer certificaatfouten (onveilig)"
-
-#, fuzzy
-#~ msgid "New notification parameter"
-#~ msgstr "Kennisgevingsfase"
 
 #, python-brace-format
 #~ msgid ""

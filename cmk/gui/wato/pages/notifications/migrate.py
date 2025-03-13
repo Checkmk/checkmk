@@ -260,7 +260,7 @@ def _get_notification_method(event_rule: EventRule) -> NotificationMethod:
                 timeperiod_bulk["subject"] = timeperiod_bulk_params["bulk_subject"]
 
             if "bulk_outside" in timeperiod_bulk_params:
-                timeperiod_bulk["bulking_outside_timeperiod"] = _get_always_bulk(
+                timeperiod_bulk["bulk_outside_timeperiod"] = _get_always_bulk(
                     timeperiod_bulk_params["bulk_outside"]
                 )
 
@@ -558,9 +558,9 @@ def _set_notification_effect_parameters(
         if "subject" in time_period_bulk:
             time_period_bulk_params["bulk_subject"] = time_period_bulk["subject"]
 
-        if "bulking_outside_timeperiod" in time_period_bulk:
+        if "bulk_outside_timeperiod" in time_period_bulk:
             time_period_bulk_params["bulk_outside"] = _get_always_bulk_parameters(
-                time_period_bulk["bulking_outside_timeperiod"],
+                time_period_bulk["bulk_outside_timeperiod"],
             )
         return time_period_bulk_params
 

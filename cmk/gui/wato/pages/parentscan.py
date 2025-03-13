@@ -6,7 +6,7 @@
 
 from collections.abc import Collection
 from dataclasses import dataclass
-from typing import cast, Literal
+from typing import cast, Literal, override
 
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
@@ -64,20 +64,25 @@ def register(mode_registry: ModeRegistry) -> None:
 
 class ModeParentScan(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "parentscan"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "parentscan"]
 
+    @override
     def title(self) -> str:
         return _("Parent scan")
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
+    @override
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(_("Parent scan"), breadcrumb)
         menu.dropdowns.insert(
@@ -105,6 +110,7 @@ class ModeParentScan(WatoMode):
 
         return menu
 
+    @override
     def _from_vars(self) -> None:
         self._start = bool(request.var("_start"))
         # 'all' not set -> only scan checked hosts in current folder, no recursion
@@ -140,6 +146,7 @@ class ModeParentScan(WatoMode):
             request.var("folder"), request.get_ascii_input("host")
         )
 
+    @override
     def action(self) -> ActionResult:
         check_csrf_token()
 
@@ -197,6 +204,7 @@ class ModeParentScan(WatoMode):
                 entries += self._recurse_hosts(subfolder, recurse, select)
         return entries
 
+    @override
     def page(self) -> None:
         if self._job.is_active():
             html.show_message(

@@ -7,7 +7,7 @@
 import abc
 import re
 from collections.abc import Collection, Iterator, Mapping, Sequence
-from typing import TypeVar
+from typing import override, TypeVar
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
@@ -147,10 +147,12 @@ def make_folder_breadcrumb(folder: Folder | SearchFolder) -> Breadcrumb:
 
 class ModeFolder(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "folder"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["hosts"]
 
@@ -166,12 +168,15 @@ class ModeFolder(WatoMode):
         if request.has_var("_show_explicit_labels"):
             user.wato_folders_show_labels = request.get_ascii_input("_show_explicit_labels") == "1"
 
+    @override
     def title(self) -> str:
         return self._folder.title()
 
+    @override
     def breadcrumb(self) -> Breadcrumb:
         return make_folder_breadcrumb(self._folder)
 
+    @override
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         if not self._folder.is_disk_folder():
             return self._search_folder_page_menu(breadcrumb)
@@ -586,6 +591,7 @@ class ModeFolder(WatoMode):
                 ),
             )
 
+    @override
     def action(self) -> ActionResult:
         check_csrf_token()
 
@@ -696,6 +702,7 @@ class ModeFolder(WatoMode):
 
         return None
 
+    @override
     def page(self) -> None:
         if not self._folder.permissions.may("read"):
             reason = self._folder.permissions.reason_why_may_not("read")
@@ -1222,6 +1229,7 @@ class ModeFolder(WatoMode):
 class PageAjaxPopupMoveToFolder(AjaxPage):
     """Renders the popup menu contents for either moving a host or a folder to another folder"""
 
+    @override
     def _from_vars(self) -> None:
         self._what = request.var("what")
         if self._what not in ["host", "folder"]:
@@ -1235,9 +1243,11 @@ class PageAjaxPopupMoveToFolder(AjaxPage):
 
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
+    @override
     def handle_page(self) -> None:
         self._handle_exc(self.page)
 
+    @override
     def page(self) -> PageResult:
         html.span(self._move_title())
 
@@ -1282,6 +1292,7 @@ class PageAjaxPopupMoveToFolder(AjaxPage):
 
 class ABCFolderMode(WatoMode, abc.ABC):
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
@@ -1300,6 +1311,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
     def _save(self, title: str, attributes: HostAttributes) -> None:
         raise NotImplementedError()
 
+    @override
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         is_enabled = (
             self._is_new
@@ -1323,6 +1335,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
             save_is_enabled=is_enabled,
         )
 
+    @override
     def action(self) -> ActionResult:
         check_csrf_token()
 
@@ -1345,6 +1358,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
         return redirect(mode_url("folder", folder=folder.path()))
 
     # TODO: Clean this method up! Split new/edit handling to sub classes
+    @override
     def page(self) -> None:
         new = self._is_new
         folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
@@ -1406,44 +1420,54 @@ class ABCFolderMode(WatoMode, abc.ABC):
 
 class ModeEditFolder(ABCFolderMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "editfolder"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["hosts"]
 
     def __init__(self) -> None:
         super().__init__(is_new=False)
 
+    @override
     def _init_folder(self) -> Folder:
         return folder_from_request(request.var("folder"), request.get_ascii_input("host"))
 
+    @override
     def title(self) -> str:
         return _("Folder properties")
 
+    @override
     def _save(self, title: str, attributes: HostAttributes) -> None:
         self._folder.edit(title, attributes)
 
 
 class ModeCreateFolder(ABCFolderMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "newfolder"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "manage_folders"]
 
     def __init__(self) -> None:
         super().__init__(is_new=True)
 
+    @override
     def _init_folder(self) -> Folder:
         return folder_tree().root_folder()
 
+    @override
     def title(self) -> str:
         return _("Add folder")
 
+    @override
     def _save(self, title: str, attributes: HostAttributes) -> None:
         parent_folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
         if not active_config.wato_hide_filenames:
@@ -1456,6 +1480,7 @@ class ModeCreateFolder(ABCFolderMode):
 
 
 class PageAjaxSetFoldertree(AjaxPage):
+    @override
     def page(self) -> PageResult:
         check_csrf_token()
         api_request = self.webapi_request()

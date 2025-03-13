@@ -81,6 +81,27 @@ class SetupHost(CmkPage):
                 e.add_note(error_msg)
             raise e
 
+    def folder_icon(self, folder_id: str) -> Locator:
+        return self.main_area.locator(f"#folder_{folder_id}")
+
+    def delete_folder(self, folder_id: str) -> None:
+        """Delete a folder by its id.
+
+        Deleting a folder requires the user to hover over the top part of the folder to reveal the
+        action buttons. The user then clicks on the delete button and confirms the deletion.
+        The folder ID is in most cases the folder name.
+        """
+        logger.info("Delete folder: %s", folder_id)
+        # All folders have an id of the form `folder_<folder_id>`
+        # The div with the hoverarea class contains the action buttons (and reacts to hover)
+        buttons = self.folder_icon(folder_id).locator("div.hoverarea")
+        expect(
+            buttons, message=f"Expected folder ID '{folder_id}' to be uniquely present"
+        ).to_have_count(1)
+        buttons.hover()
+        buttons.get_by_role("link", name="Delete this folder").click()
+        self.main_area.locator().get_by_role("button", name="Delete").click()
+
 
 class AddHost(CmkPage):
     """Represents page `setup -> Hosts -> Add host`."""

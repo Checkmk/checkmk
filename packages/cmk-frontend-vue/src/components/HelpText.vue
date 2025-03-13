@@ -20,7 +20,11 @@ const triggerRef = ref<InstanceType<typeof CmkIconButton> | null>(null)
 const checkClosing = (e: MouseEvent) => {
   e.preventDefault()
   e.stopPropagation()
-  if (triggerRef.value && (e.target as HTMLElement) !== triggerRef.value.$el) {
+  if (
+    triggerRef.value &&
+    triggerRef.value.$el !== (e.target as HTMLElement) &&
+    !triggerRef.value.$el.contains(e.target as HTMLElement)
+  ) {
     open.value = false
   }
 }

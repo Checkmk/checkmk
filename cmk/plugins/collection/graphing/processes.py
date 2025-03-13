@@ -82,7 +82,7 @@ graph_size_per_process = graphs.Graph(
     compound_lines=[
         metrics.Fraction(
             Title("Average resident size per process"),
-            UNIT_NUMBER,
+            UNIT_BYTES,
             metrics.Color.BLUE,
             dividend="process_resident_size",
             divisor=metrics.Sum(
@@ -103,7 +103,7 @@ graph_size_per_process = graphs.Graph(
     simple_lines=[
         metrics.Fraction(
             Title("Average virtual size per process"),
-            UNIT_NUMBER,
+            UNIT_BYTES,
             metrics.Color.GREEN,
             dividend="process_virtual_size",
             divisor=metrics.Sum(

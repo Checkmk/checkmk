@@ -5,6 +5,7 @@
 
 
 import logging
+from typing import override
 
 import pytest
 from pytest_mock import MockerFixture
@@ -27,15 +28,19 @@ def test_update_global_config_transform_values(
     )
 
     class ConfigVariableKey(ConfigVariable):
+        @override
         def group(self) -> type[ConfigVariableGroupUserInterface]:
             return ConfigVariableGroupUserInterface
 
+        @override
         def domain(self) -> ConfigDomainGUI:
             return ConfigDomainGUI()
 
+        @override
         def ident(self) -> str:
             return "key"
 
+        @override
         def valuespec(self) -> Transform:
             return Transform(TextInput(), forth=lambda x: "new" if x == "old" else x)
 

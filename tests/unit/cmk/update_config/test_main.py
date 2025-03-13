@@ -7,6 +7,7 @@
 import logging
 from collections.abc import Iterator
 from pathlib import Path
+from typing import override
 
 import pytest
 from pytest_mock import MockerFixture
@@ -70,6 +71,7 @@ class MockUpdateAction(registry.UpdateAction):
         super().__init__(name=name, title=title, sort_index=sort_index)
         self.calls = 0
 
+    @override
     def __call__(self, logger: logging.Logger) -> None:
         self.calls += 1
 

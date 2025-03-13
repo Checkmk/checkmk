@@ -6,7 +6,7 @@
 import ast
 import socket
 import time
-from typing import Any
+from typing import Any, override
 
 from cmk.utils.hostaddress import HostName
 
@@ -20,6 +20,7 @@ class FakeStatusSocket(socket.socket):
         self._sent = False
         self._response = b""
 
+    @override
     def recv(self, buflen: int, flags: int = 4711) -> bytes:
         if self._sent:
             return b""
@@ -27,9 +28,11 @@ class FakeStatusSocket(socket.socket):
         self._sent = True
         return self._query
 
+    @override
     def sendall(self, b: Any, flags: int = 4711) -> None:
         self._response += b
 
+    @override
     def close(self) -> None:
         pass
 

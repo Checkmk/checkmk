@@ -513,12 +513,7 @@ class ModeEditTimeperiod(WatoMode):
     def _from_vars(self) -> None:
         self._timeperiods = load_timeperiods()
         self._name = request.var("edit")  # missing -> new group
-        # TODO: Nuke the field below? It effectively hides facts about _name for mypy.
-        self._new = self._name is None
-
-        if self._name is not None and is_builtin_timeperiod(self._name):
-            raise MKUserError("edit", _("Built-in time periods can not be modified"))
-        if self._new:
+        if self._name is None:
             clone_name = request.var("clone")
             if request.var("mode") == "import_ical":
                 self._timeperiod: TimeperiodSpec = {"alias": request.var("timeperiod_p_alias", "")}
@@ -531,7 +526,8 @@ class ModeEditTimeperiod(WatoMode):
                 for day in dateutils.weekday_ids():
                     self._timeperiod[day] = [("00:00", "24:00")]
         else:
-            assert self._name is not None
+            if is_builtin_timeperiod(self._name):
+                raise MKUserError("edit", _("Built-in time periods can not be modified"))
             self._timeperiod = self._get_timeperiod(self._name)
 
     def _get_timeperiod(self, name: str) -> TimeperiodSpec:
@@ -541,9 +537,7 @@ class ModeEditTimeperiod(WatoMode):
             raise MKUserError(None, _("This time period does not exist."))
 
     def title(self) -> str:
-        if self._new:
-            return _("Add time period")
-        return _("Edit time period")
+        return _("Add time period") if self._name is None else _("Edit time period")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
@@ -551,7 +545,7 @@ class ModeEditTimeperiod(WatoMode):
         )
 
     def _valuespec(self) -> Dictionary:
-        if self._new:
+        if self._name is None:
             # Cannot use ID() here because old versions of the GUI allowed time periods to start
             # with numbers and so on. The ID() valuespec does not allow it.
             name_element: ValueSpec = TextInput(
@@ -740,13 +734,10 @@ class ModeEditTimeperiod(WatoMode):
         vs.validate_value(vs_spec, "timeperiod")
         self._timeperiod = self._from_valuespec(vs_spec)
 
-        if self._new:
+        if self._name is None:
             self._name = vs_spec["name"]
-            assert self._name is not None
             watolib.timeperiods.create_timeperiod(self._name, self._timeperiod)
-
         else:
-            assert self._name is not None
             watolib.timeperiods.modify_timeperiod(self._name, self._timeperiod)
 
         self._timeperiods = load_timeperiods()

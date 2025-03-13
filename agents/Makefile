@@ -71,9 +71,9 @@ setversion:
 	-e 's/^$$CMK_VERSION = ".*/$$CMK_VERSION = "$(NEW_VERSION)"/' \
 	$(shell find plugins/ -maxdepth 1 -type f ! -name \*_2.py ! -name \*.checksum) ; \
 	sed -i 's/say "Version: .*"/say "Version: $(NEW_VERSION)"/' check_mk_agent.openvms
-	sed -i 's/^Version: .*/Version: $(NEW_VERSION)/' check_mk_agent.linux
 	sed -i 's/echo "Version: [0-9.a-z-]*"/echo "Version: $(NEW_VERSION)"/g' \
 	    check_mk_agent.aix \
+	    check_mk_agent.linux \
 	    check_mk_agent.freebsd \
 	    check_mk_agent.hpux \
 	    check_mk_agent.macosx \

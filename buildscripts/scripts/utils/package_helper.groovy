@@ -10,7 +10,6 @@
 /// values which should not be here. If that gets on `master`, it should be gotten
 /// rid of as soon as possible
 
-
 /// Returns the Jenkins 'branch folder' of the currently running job, either with or without
 /// the 'Testing/..' prefix
 /// So "Testing/bla.blubb/checkmk/2.4.0/some_job" will result in
@@ -23,7 +22,6 @@ def branch_base_folder(with_testing_prefix) {
     }
     return project_name_components[checkmk_index..checkmk_index + 1].join('/');
 }
-
 
 def provide_agent_binaries(version, edition, disable_cache, bisect_comment) {
     // This _should_ go to an externally maintained file (single point of truth), see
@@ -151,7 +149,6 @@ def provide_agent_binaries(version, edition, disable_cache, bisect_comment) {
     """);
 }
 
-
 def sign_package(source_dir, package_path) {
     print("FN sign_package(source_dir=${source_dir}, package_path=${package_path})");
     withCredentials([file(
@@ -179,7 +176,7 @@ def test_package(package_path, name, workspace, source_dir, cmk_version) {
             make -C '${source_dir}/tests' VERSION=${cmk_version} test-packaging
         """);
     } finally {
-            step([
+        step([
             $class: "JUnitResultArchiver",
             testResults: junit_file,
         ]);

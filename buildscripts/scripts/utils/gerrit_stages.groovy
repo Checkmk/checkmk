@@ -59,7 +59,11 @@ def create_stage(Map args, time_stage_started) {
                     dir(args.DIR) {
                         // be very carefull here. Setting quantity to 0 or null, takes all available resources
                         if (args.BAZEL_LOCKS_AMOUNT >= 1) {
-                            lock(label: 'bzl_lock_' + env.NODE_NAME.split("\\.")[0].split("-")[-1], quantity: args.BAZEL_LOCKS_AMOUNT, resource : null) {
+                            lock(
+                                label: 'bzl_lock_' + env.NODE_NAME.split("\\.")[0].split("-")[-1],
+                                quantity: args.BAZEL_LOCKS_AMOUNT,
+                                resource : null,
+                            ) {
                                 cmd_status = sh(script: args.COMMAND, returnStatus: true);
                             }
                         } else {

@@ -38,7 +38,7 @@ image_distro = { image ->
         docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' ${image.id} | grep '^DISTRO=' | cut -d'=' -f2
     """);
     if (! result) {
-        throw new Exception("Could not read .Config.Env from ${image.id}");
+        throw new Exception("Could not read .Config.Env from ${image.id}");     // groovylint-disable ThrowException
     }
     return result;
 }
@@ -89,7 +89,8 @@ inside_container = {Map arg1=[:], Closure arg2 ->
             + (args.ulimit_nofile ? ["--ulimit nofile=${args.ulimit_nofile}:${args.ulimit_nofile}"] : [])
             + (privileged ? ["-v /var/run/docker.sock:/var/run/docker.sock"] : [])
             + ["-v \"${container_shadow_workspace}/home:${env.HOME}\""]
-            + "--tmpfs ${env.HOME}/.cache:exec,size=15g,mode=777" // use different size locally vs in CI, 15GB locally is to much, but 10GB not enough on CI
+            // use different size locally vs in CI, 15GB locally is to much, but 10GB not enough on CI
+            + "--tmpfs ${env.HOME}/.cache:exec,size=30g,mode=777"
             + (mount_credentials ? ["-v ${env.HOME}/.cmk-credentials:${env.HOME}/.cmk-credentials"] : [])
             + (mount_host_user_files ? ["-v /etc/passwd:/etc/passwd:ro -v /etc/group:/etc/group:ro"] : [])
             + ((mount_reference_repo && reference_repo_dir) ? ["-v ${reference_repo_dir}:${reference_repo_dir}:ro"] : [])
@@ -99,6 +100,7 @@ inside_container = {Map arg1=[:], Closure arg2 ->
         /// directory inside an already mounted parent directory (here: /home/<USER>)
         /// exist, since otherwise they will be created with root ownership by
         /// poor Docker daemon.
+        /* groovylint-disable LineLength */
         sh("""
             # BEGIN COMMON CODE with run-in-docker.sh
 
@@ -130,6 +132,8 @@ inside_container = {Map arg1=[:], Closure arg2 ->
 
             # END COMMON CODE with run-in-docker.sh
         """);
+        /* groovylint-enable LineLength */
+
         println("inside_container(image=${image} docker_args: ${run_args_str})");
         image.inside(run_args_str) {
             body();

@@ -38,6 +38,11 @@ def _parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         metavar="CERT-SERVER-NAME",
         help="Use this server name for TLS certificate validation",
     )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Be more verbose",
+    )
     return parser.parse_args(argv)
 
 

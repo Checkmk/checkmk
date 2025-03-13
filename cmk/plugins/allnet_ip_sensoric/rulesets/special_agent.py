@@ -16,6 +16,13 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 
+def _migrate_to_float(value: object) -> float:
+    match value:
+        case float() | int():
+            return float(value)
+    raise TypeError(f"Invalid value: {value!r}")
+
+
 def parameter_form() -> Dictionary:
     return Dictionary(
         title=Title("ALLNET IP Sensoric Devices"),
@@ -40,6 +47,7 @@ def parameter_form() -> Dictionary:
                         ),
                     ),
                     displayed_magnitudes=[TimeMagnitude.SECOND],
+                    migrate=_migrate_to_float,
                 ),
             )
         },

@@ -31,6 +31,13 @@ _migrate_runtime_dir() {
 _migrate_controller_registration() {
     old_homedir="$1"
     new_homedir="$2"
+
+    old_legacy_pull_marker="${old_homedir}/allow-legacy-pull"
+    new_legacy_pull_marker="${new_homedir}/allow-legacy-pull"
+    [ -e "${old_legacy_pull_marker}" ] && [ ! -e "${new_legacy_pull_marker}" ] && {
+        mv "${old_legacy_pull_marker}" "${new_legacy_pull_marker}"
+    }
+
     old_registry="${old_homedir}/registered_connections.json"
     new_registry="${new_homedir}/registered_connections.json"
     [ -e "${old_registry}" ] && [ ! -e "${new_registry}" ] && {

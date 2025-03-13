@@ -334,3 +334,44 @@ test('FormReadonly renders labels', () => {
   screen.getByText('key2: value2')
   expect(screen.queryByText('key3: value3')).toBeNull()
 })
+
+const dualListChoiceFormSpec: FormSpec.DualListChoice = {
+  type: 'dual_list_choice',
+  title: 'fooTitle',
+  help: 'fooHelp',
+  show_toggle_all: true,
+  i18n: {
+    add: 'add',
+    remove: 'remove',
+    add_all: 'add_all',
+    remove_all: 'remove_all',
+    available_options: 'available_options',
+    selected_options: 'selected_options',
+    selected: 'selected',
+    no_elements_available: 'no_elements_available',
+    no_elements_selected: 'no_elements_selected',
+    autocompleter_loading: 'autocompleter_loading',
+    search_available_options: 'search_available_options',
+    search_selected_options: 'search_selected_options',
+    and_x_more: 'and_x_more'
+  },
+  validators: [],
+  elements: [
+    { name: 'choice1', title: 'Choice 1' },
+    { name: 'choice2', title: 'Choice 2' },
+    { name: 'choice3', title: 'Choice 3' }
+  ]
+}
+
+test('FormReadonly renders dual list choice', () => {
+  render(FormReadonly, {
+    props: {
+      spec: dualListChoiceFormSpec,
+      backendValidation: [],
+      data: ['choice1', 'choice2']
+    }
+  })
+  screen.getByText('Choice 1')
+  screen.getByText('Choice 2')
+  expect(screen.queryByText('Choice 3')).toBeNull()
+})

@@ -115,7 +115,7 @@ rabbimq_enabled() {
     [ "${CONFIG_PIGGYBACK_HUB:?}" = "on" ]
 }
 
-rabbimq_enabled | exit 5
+rabbimq_enabled || exit 5
 
 case "$1" in
 

@@ -13,7 +13,6 @@ from copy import deepcopy
 from dataclasses import asdict
 from datetime import datetime, timedelta
 from typing import Any, cast, Literal, NamedTuple, overload
-from urllib.parse import urlencode
 
 from livestatus import LivestatusResponse, SiteId
 
@@ -3517,10 +3516,16 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
         self._render_notification_parameters(method_parameters)
 
     def _render_related_rule_error(self, related_rules: list[EventRule]) -> None:
-        notifications_url = self.breadcrumb()[-3].url
-
         def build_href(query: str) -> str:
-            return f"{notifications_url}&{urlencode({'search': query})}"
+            return makeuri(
+                request,
+                [
+                    ("mode", "notifications"),
+                    ("search", query),
+                    ("filled_in", "inpage_search_form"),
+                ],
+                filename="wato.py",
+            )
 
         links_to_related_rules = HTML.with_escaping("").join(
             html.render_li(html.render_a(rule["description"], href=build_href(rule["description"])))

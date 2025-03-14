@@ -50,6 +50,18 @@ class BackgroundJobManager:
         try:
             for job_class in job_classes:
                 job_ids = self.get_all_job_ids(job_class)
+
+                # We always keep at least one job (if present), so there is nothing to do in this
+                # case. Also note that there is a race condition here: The file locking in
+                # BackgroundJob.get_status creates the status file if it is missing. But when
+                # starting a new job, we remove and re-create its working directory. The latter
+                # operation can fail if the status file is re-created by the housekeeping job before
+                # the removal is complete. Only jobs that re-use the same working directory every
+                # time are prone to this (since there is nothing to remove otherwise). Such jobs are
+                # excluded by the condition below.
+                if len(job_ids) < 2:
+                    continue
+
                 max_age = job_class.housekeeping_max_age_sec
                 max_count = job_class.housekeeping_max_count
                 all_jobs: list[tuple[str, JobStatusSpec]] = []

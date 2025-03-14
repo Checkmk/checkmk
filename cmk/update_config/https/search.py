@@ -69,7 +69,7 @@ def select(ruleset: Ruleset, search_args: SearchArgs) -> Iterator[tuple[Folder, 
 def with_allrulesets() -> Iterator[AllRulesets]:
     sys.stdout.write("Loading plugins...\n")
     load_plugins()
-    sys.stdout.write("Loading rulesets...\n")
+    sys.stdout.write("Loading rule sets...\n")
     with disable_redis(), gui_context(), SuperUserContext():
         set_global_vars()
         yield AllRulesets.load_all_rulesets()

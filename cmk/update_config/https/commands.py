@@ -80,7 +80,7 @@ def migrate_main(search: SearchArgs, config: Config, write: bool) -> None:
         ruleset_v2 = all_rulesets.get("active_checks:httpv2")
         _new_migrated_rules(search, config, ruleset_v1, ruleset_v2)
         if write:
-            sys.stdout.write("Saving rulesets...\n")
+            sys.stdout.write("Saving rule sets...\n")
             all_rulesets.save()
 
 
@@ -115,7 +115,7 @@ def finalize_main(search: SearchArgs) -> None:
                     sys.stdout.write(f"Deleted v1 counter-part #{rule_v1.index()}.\n")
                     ruleset_v1.delete_rule(rule_v1)
                 sys.stdout.write("Finalized v2 rule #{rule_index}.\n")
-        sys.stdout.write("Saving rulesets...\n")
+        sys.stdout.write("Saving rule sets...\n")
         all_rulesets.save()
 
 
@@ -128,7 +128,7 @@ def delete_main(search: SearchArgs) -> None:
                 sys.stdout.write(f"{rule_str}\n")
                 sys.stdout.write("Deleting rule.\n")
                 ruleset_v2.delete_rule(rule_v2)
-        sys.stdout.write("Saving rulesets...\n")
+        sys.stdout.write("Saving rule sets...\n")
         all_rulesets.save()
 
 

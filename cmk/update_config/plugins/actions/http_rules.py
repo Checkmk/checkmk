@@ -25,7 +25,7 @@ class CheckHTTPRules(UpdateAction):
                     "Rules must therefore be migrated to the new ruleset of the check_httpv2 plugin."
                 )
                 logger.info(
-                    "Rule migration can be done manually or by calling migrate_httpv2 as site user. See migrate_httpv2 --help for more information "
+                    "Rule migration can be done manually or by calling `cmk-migrate-http` as site user. See `cmk-migrate-http -h --help` for more information "
                     "to this helper script. For additional information please see the werk #17665."
                 )
 
@@ -33,7 +33,7 @@ class CheckHTTPRules(UpdateAction):
 update_action_registry.register(
     CheckHTTPRules(
         name="check_http_rules",
-        title="Check for check_http plug-in rules",
+        title="Check for deprecated check_http plug-in rules",
         sort_index=997,
     )
 )

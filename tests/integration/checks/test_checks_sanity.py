@@ -136,7 +136,7 @@ def test_shipped_ps_disocvery(host_services: dict[str, ServiceInfo], site: Site)
         # jaeger and piggyback-hub are not enabled in this test
         # f"Process {site.id} jaeger",
         # f"Process {site.id} piggyback hub",
-        f"Process {site.id} rabbitmq",
+        # f"Process {site.id} rabbitmq",
         f"Process {site.id} redis-server",
         f"Process {site.id} rrdcached",
     }

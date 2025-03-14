@@ -134,30 +134,25 @@ def _find_manifest(
     return None
 
 
+def _try_rel_path(site_id: SiteId, abs_path: Path) -> Path:
+    try:
+        return abs_path.relative_to(Path("/omd/sites", site_id))
+    except ValueError:
+        # Not a subpath, should not happen
+        return abs_path
+
+
 @dataclass(frozen=True)
 class _ACTestResultProblem:
     ident: str
     type: Literal["mkp", "file", "unsorted"]
-    _descriptions: list[str] = field(default_factory=list)
-    _site_ids: set[SiteId] = field(default_factory=set)
+    _ac_test_results: dict[SiteId, list[ACTestResult]] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         assert self.ident
 
-    @property
-    def descriptions(self) -> Sequence[str]:
-        return self._descriptions
-
-    def add_description(self, description: str) -> None:
-        if description not in self._descriptions:
-            self._descriptions.append(description)
-
-    @property
-    def site_ids(self) -> Sequence[SiteId]:
-        return sorted(self._site_ids)
-
-    def add_site_id(self, site_id: SiteId) -> None:
-        self._site_ids.add(site_id)
+    def add_ac_test_result(self, site_id: SiteId, ac_test_result: ACTestResult) -> None:
+        self._ac_test_results.setdefault(site_id, []).append(ac_test_result)
 
     def __str__(self) -> str:
         match self.type:
@@ -167,7 +162,13 @@ class _ACTestResultProblem:
                 title = _("Unpackaged file %r") % self.ident
             case "unsorted":
                 title = _("Unsorted")
-        return f"{title}, sites: {', '.join(self.site_ids)}:<br>{',<br>'.join(self.descriptions)}"
+        site_ids = sorted(self._ac_test_results)
+        details = [
+            f"{r.text} (file: {_try_rel_path(sid, r.path)})" if r.path else r.text
+            for sid, rs in self._ac_test_results.items()
+            for r in rs
+        ]
+        return f"{title}, sites: {', '.join(site_ids)}:<br>{',<br>'.join(details)}"
 
 
 def _find_ac_test_result_problems(
@@ -178,11 +179,7 @@ def _find_ac_test_result_problems(
     for site_id, ac_test_results in not_ok_ac_test_results.items():
         for ac_test_result in ac_test_results:
             if ac_test_result.path:
-                try:
-                    path = ac_test_result.path.relative_to(Path("/omd/sites", site_id))
-                except ValueError:
-                    # Not a subpath, should not happen
-                    path = ac_test_result.path
+                path = _try_rel_path(site_id, ac_test_result.path)
 
                 if manifest := _find_manifest(manifests_by_path, ac_test_result.path):
                     problem = problem_by_ident.setdefault(
@@ -194,16 +191,14 @@ def _find_ac_test_result_problems(
                         str(path),
                         _ACTestResultProblem(str(path), "file"),
                     )
-                problem.add_description(f"{ac_test_result.text} (file: {path})")
 
             else:
                 problem = problem_by_ident.setdefault(
                     "unsorted",
                     _ACTestResultProblem("unsorted", "unsorted"),
                 )
-                problem.add_description(ac_test_result.text)
 
-            problem.add_site_id(site_id)
+            problem.add_ac_test_result(site_id, ac_test_result)
 
     return list(problem_by_ident.values())
 

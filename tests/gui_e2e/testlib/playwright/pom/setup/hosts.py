@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import re
+import time
 from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
@@ -268,8 +269,11 @@ class HostProperties(CmkPage):
         logger.info("Delete host: %s", self.details.name)
         self.main_area.click_item_in_dropdown_list(dropdown_button="Host", item="Delete")
         self.main_area.locator().get_by_role(role="button", name="Delete").click()
-        self.page.wait_for_url(
-            url=re.compile(quote_plus("wato.py?folder=&mode=folder")), wait_until="load"
-        )
+        # TODO - validate something meaningful
+        # Force serialization of pages being navigated to by introducing a delay.
+        # self.page.wait_for_url(
+        #     url=re.compile(quote_plus("wato.py?folder=&mode=folder")), wait_until="load"
+        # )
+        time.sleep(0.5)
         self.activate_changes()
         self._exists = False

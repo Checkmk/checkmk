@@ -39,7 +39,11 @@ test('CmkFormCheckboxListChoice renders value', async () => {
   render(CheckboxListChoice, {
     props: {
       spec,
-      data: ['choice1', 'choice3', 'choice4'],
+      data: [
+        { name: 'choice1', title: 'Choice 1' },
+        { name: 'choice3', title: 'Choice 3' },
+        { name: 'choice4', title: 'Choice 4' }
+      ],
       backendValidation: []
     }
   })

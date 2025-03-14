@@ -181,7 +181,7 @@ main() {
     # TODO: We actually want to call '"bazel" build :all' instead of
     # Cargo below, but we need a statically linked executable, and our Bazel
     # machinery for Rust doesn't handle this yet.
-    test ${RUN_BUILD} = yes && "bazel" build --config=clippy :all
+    test ${RUN_BUILD} = yes && "bazel" build :all
     test ${RUN_UNIT_TESTS} = yes && "bazel" test :all
     test ${RUN_CHECK_FORMAT} = yes && run_check_format
     test ${RUN_CLIPPY} = yes && "bazel" build --config=clippy :all

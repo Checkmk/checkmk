@@ -11,6 +11,7 @@ import pytest
 from livestatus import SiteId
 
 from cmk.gui.deprecations import (
+    _ACTestResultProblem,
     _filter_non_ok_ac_test_results,
     _find_ac_test_result_problems,
     _MarkerFileStore,
@@ -158,7 +159,7 @@ def test__filter_non_ok_ac_test_results(
 
 
 @pytest.mark.parametrize(
-    "ac_test_results_by_site_id, manifests_by_path, result",
+    "ac_test_results_by_site_id, manifests_by_path, problems",
     [
         pytest.param(
             {
@@ -188,7 +189,14 @@ def test__filter_non_ok_ac_test_results(
                 ],
             },
             {},
-            "Unsorted, sites: site_id_1, site_id_2:<br>text,<br>text",
+            [
+                _ACTestResultProblem(
+                    ident="unsorted",
+                    type="unsorted",
+                    _descriptions=["text"],
+                    _site_ids={SiteId("site_id_1"), SiteId("site_id_2")},
+                ),
+            ],
             id="one-id",
         ),
         pytest.param(
@@ -219,27 +227,57 @@ def test__filter_non_ok_ac_test_results(
                 ],
             },
             {},
-            "Unsorted, sites: site_id_1, site_id_2:<br>text_1,<br>text_2",
+            [
+                _ACTestResultProblem(
+                    ident="unsorted",
+                    type="unsorted",
+                    _descriptions=["text_1", "text_2"],
+                    _site_ids={SiteId("site_id_1"), SiteId("site_id_2")},
+                ),
+            ],
             id="different-ids",
         ),
         pytest.param(
             {
-                SiteId("site_id"): [
+                SiteId("site_id_1"): [
                     ACTestResult(
                         ACResultState.WARN,
                         "text",
-                        "test_id",
+                        "test_id_1",
                         "deprecations",
                         "Title",
                         "Help",
-                        SiteId("site_id"),
-                        Path("/omd/sites/site_id/local/share/check_mk/web/plugins/metrics/file.py"),
+                        SiteId("site_id_1"),
+                        Path(
+                            "/omd/sites/site_id_1/local/share/check_mk/web/plugins/metrics/file.py"
+                        ),
+                    ),
+                ],
+                SiteId("site_id_2"): [
+                    ACTestResult(
+                        ACResultState.WARN,
+                        "text",
+                        "test_id_2",
+                        "deprecations",
+                        "Title",
+                        "Help",
+                        SiteId("site_id_2"),
+                        Path(
+                            "/omd/sites/site_id_2/local/share/check_mk/web/plugins/metrics/file.py"
+                        ),
                     ),
                 ],
             },
             {},
-            "Unpackaged files, sites: site_id:<br>text (file: /omd/sites/site_id/local/share/check_mk/web/plugins/metrics/file.py)",
-            id="mkp",
+            [
+                _ACTestResultProblem(
+                    ident="local/share/check_mk/web/plugins/metrics/file.py",
+                    type="file",
+                    _descriptions=["text (file: local/share/check_mk/web/plugins/metrics/file.py)"],
+                    _site_ids={SiteId("site_id_1"), SiteId("site_id_2")},
+                ),
+            ],
+            id="file",
         ),
         pytest.param(
             {
@@ -270,19 +308,27 @@ def test__filter_non_ok_ac_test_results(
                     files={PackagePart("web"): [Path("plugins/metrics/file.py")]},
                 )
             },
-            "Extension package 'asd', sites: site_id:<br>text (file: /omd/sites/site_id/local/share/check_mk/web/plugins/metrics/file.py)",
+            [
+                _ACTestResultProblem(
+                    ident="asd",
+                    type="mkp",
+                    _descriptions=["text (file: local/share/check_mk/web/plugins/metrics/file.py)"],
+                    _site_ids={SiteId("site_id")},
+                ),
+            ],
             id="mkp",
         ),
     ],
 )
-def test__format_ac_test_result_problem(
+def test__find_ac_test_result_problems(
     ac_test_results_by_site_id: Mapping[SiteId, Sequence[ACTestResult]],
     manifests_by_path: Mapping[Path, Manifest],
-    result: str,
+    problems: Sequence[_ACTestResultProblem],
 ) -> None:
-    problems = _find_ac_test_result_problems(
-        ac_test_results_by_site_id,
-        manifests_by_path,
+    assert (
+        _find_ac_test_result_problems(
+            ac_test_results_by_site_id,
+            manifests_by_path,
+        )
+        == problems
     )
-    assert len(problems) == 1
-    assert str(problems[0]) == result

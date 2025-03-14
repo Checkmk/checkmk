@@ -28,9 +28,9 @@ def _new_migrated_rules(
             if isinstance(for_migration, Conflict):
                 sys.stdout.write(f"Can't migrate: {for_migration.type_.value}\n")
                 continue
-            sys.stdout.write("Migrated, new.\n")
             rule_v2 = _construct_v2_rule(rule_v1, for_migration, ruleset_v2)
-            ruleset_v2.append_rule(rule_v1.folder, rule_v2)
+            index = ruleset_v2.append_rule(rule_v1.folder, rule_v2)
+            sys.stdout.write(f"Migrated to v2 rule with index #{index}.\n")
 
 
 def _render_rule(folder_title: str, rule_index: int) -> str:
@@ -101,11 +101,10 @@ def finalize_main(search: SearchArgs) -> None:
                 sys.stdout.write(f"{rule_str}\n")
                 rule_v1 = _from_v1(rule_v1_id, ruleset_v1)
                 if rule_v1 is None:
-                    sys.stdout.write(f"Could find counter-part: {folder}, {rule_index}\n")
+                    sys.stdout.write("Could find v1 counter-part.\n")
                     comment = ""
                 else:
                     comment = rule_v1.rule_options.comment
-                sys.stdout.write("Migrated, edited exiting rule.\n")
                 new_rule_v2 = rule_v2.clone(preserve_id=True)
                 new_rule_v2.rule_options = dataclasses.replace(
                     rule_v2.rule_options, comment=comment
@@ -113,7 +112,9 @@ def finalize_main(search: SearchArgs) -> None:
                 _strip_postfix(new_rule_v2.value)
                 ruleset_v2.edit_rule(rule_v2, new_rule_v2)
                 if rule_v1 is not None:
+                    sys.stdout.write(f"Deleted v1 counter-part #{rule_v1.index()}.\n")
                     ruleset_v1.delete_rule(rule_v1)
+                sys.stdout.write("Finalized v2 rule #{rule_index}.\n")
         sys.stdout.write("Saving rulesets...\n")
         all_rulesets.save()
 

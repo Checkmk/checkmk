@@ -10,13 +10,14 @@ import os
 import time
 import traceback
 from collections.abc import Sequence
+from typing import Final
 
 from cmk.gui import log
 
 from ._base import BackgroundJob
 from ._defines import BackgroundJobDefines
 from ._registry import job_registry
-from ._status import JobId, JobStatusSpec, JobStatusStates
+from ._status import JobId, JobStatusStates
 
 
 class BackgroundJobManager:
@@ -64,22 +65,26 @@ class BackgroundJobManager:
 
                 max_age = job_class.housekeeping_max_age_sec
                 max_count = job_class.housekeeping_max_count
-                all_jobs: list[tuple[str, JobStatusSpec]] = []
+                job_records_by_id = {
+                    job_id: _HousekeepingJobRecord(job_id, self._logger) for job_id in job_ids
+                }
 
-                job_instances = {}
-                for job_id in job_ids:
-                    job_instances[job_id] = BackgroundJob(job_id, logger=self._logger)
-                    all_jobs.append((job_id, job_instances[job_id].get_status()))
-                all_jobs.sort(key=lambda x: x[1].started, reverse=True)
-
-                for entry in all_jobs[-1:0:-1]:
-                    job_id, job_status = entry
-                    if job_status.state in (JobStatusStates.INITIALIZED, JobStatusStates.RUNNING):
+                for job_record in sorted(
+                    job_records_by_id.values(),
+                    key=lambda job_record: job_record.status.started,
+                )[:-1]:
+                    if job_record.status.state in (
+                        JobStatusStates.INITIALIZED,
+                        JobStatusStates.RUNNING,
+                    ):
                         continue
 
-                    if len(all_jobs) > max_count or (time.time() - job_status.started > max_age):
-                        job_instances[job_id].delete()
-                        all_jobs.remove(entry)
+                    if len(job_records_by_id) > max_count or (
+                        time.time() - job_record.status.started > max_age
+                    ):
+                        job_record.job.delete()
+                        del job_records_by_id[job_record.job.get_job_id()]
+
         except Exception:
             self._logger.error(traceback.format_exc())
 
@@ -87,3 +92,9 @@ class BackgroundJobManager:
 def execute_housekeeping_job() -> None:
     housekeep_classes = list(job_registry.values())
     BackgroundJobManager(log.logger).do_housekeeping(housekeep_classes)
+
+
+class _HousekeepingJobRecord:
+    def __init__(self, job_id: JobId, logger: logging.Logger):
+        self.job: Final = BackgroundJob(job_id, logger=logger)
+        self.status: Final = self.job.get_status()

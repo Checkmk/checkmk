@@ -43,7 +43,7 @@ def _new_migrated_rules(
             sys.stdout.write(f"{rule_str}\n")
             if isinstance(for_migration, Conflict):
                 conflict_count += 1
-                sys.stdout.write(f"Can't migrate: {for_migration.type_.value}\n")
+                sys.stdout.write(f"Can't migrate: {for_migration.render()}\n")
                 continue
             rule_v2 = _construct_v2_rule(rule_v1, for_migration, ruleset_v2)
             index = ruleset_v2.append_rule(rule_v1.folder, rule_v2)

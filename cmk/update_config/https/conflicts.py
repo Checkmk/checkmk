@@ -185,6 +185,12 @@ class Conflict:
     disable_sni: bool = False
     cant_load: bool = False
 
+    def render(self) -> str:
+        name = self.type_.value
+        if self.type_ in (ConflictType.cant_migrate_proxy, ConflictType.cant_have_regex_and_string):
+            return f"{name}, no automatic migration possible."
+        return name
+
 
 class UrlType(enum.Enum):
     VALID = "valid"

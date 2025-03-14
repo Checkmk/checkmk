@@ -17,13 +17,8 @@ const props = defineProps<{
   backendValidation: ValidationMessages
 }>()
 
-export interface CheckboxListChoiceElement {
-  name: string
-  title: string
-}
-
-const data = defineModel<CheckboxListChoiceElement[]>('data', { required: true })
-const [validation, value] = useValidation<CheckboxListChoiceElement[]>(
+const data = defineModel<string[]>('data', { required: true })
+const [validation, value] = useValidation<string[]>(
   data,
   props.spec.validators,
   () => props.backendValidation
@@ -31,9 +26,9 @@ const [validation, value] = useValidation<CheckboxListChoiceElement[]>(
 
 function change(element: MultipleChoiceElement, newValue: boolean) {
   if (newValue) {
-    value.value = [...value.value, element]
+    value.value = [...value.value, element.name]
   } else {
-    value.value = value.value.filter((entry) => entry.name !== element.name)
+    value.value = value.value.filter((entry) => entry !== element.name)
   }
 }
 </script>
@@ -44,7 +39,7 @@ function change(element: MultipleChoiceElement, newValue: boolean) {
       <CmkCheckbox
         role="option"
         :label="element.title"
-        :model-value="value.map((v) => v.name).includes(element.name)"
+        :model-value="value.includes(element.name)"
         @update:model-value="(newValue) => change(element, newValue)"
       />
     </div>

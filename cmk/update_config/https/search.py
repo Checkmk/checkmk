@@ -30,8 +30,8 @@ def _validate_folder(folder: str) -> None | _Error:
     if all(folder != arg for arg, _title in choices):
         return _Error(
             [
-                "No folder found for the given argument. Available folders:",
-                *(f"'{arg}' > {title}" for arg, title in choices),
+                "No folder found for the given argument. Use the ‘script_folder_key’ for the desired folder. Available folders:",
+                *(f"{title} > '{arg}'" for arg, title in choices),
             ]
         )
     return None

@@ -529,11 +529,11 @@ function renderConditionChoiceGroup(
   const conditionList = condition instanceof Array ? condition : [condition]
   const operator = translateOperator(i18n, Object.keys(value.value)[0] as Operator)
   return h('tr', [
-    h('td', group.title),
+    h('td', group.title.concat(':')),
     h('td', [
-      h('table', [
+      h('table', { class: 'force-inline-th' }, [
         h('tbody', [
-          h('th', h('b', operator)),
+          h('th', h('b', { class: 'font-weight-normal' }, operator)),
           ...conditionList.map((cValue) =>
             h('tr', h('td', group.conditions.find((cGroup) => cGroup.name === cValue)?.title))
           )
@@ -606,23 +606,38 @@ export default defineComponent({
 }
 
 table.form-readonly__table {
-  margin-top: 3px;
+  margin-top: 0px;
   border-collapse: collapse;
 
-  td,
-  th {
-    background: var(--default-table-th-color);
-  }
-
   td {
-    height: 14px;
-    padding: 1px 5px;
-    border: 1px solid grey;
+    vertical-align: top;
+    padding: 0px 5px 0px 0px;
   }
 
   table {
     border-collapse: collapse;
-    padding: 1px 5px;
+
+    &.force-inline-th > tbody {
+      & > tr {
+        display: inline-block;
+        margin-top: -1px;
+
+        & > td {
+          display: inline-block !important;
+          vertical-align: top;
+          padding: 0px 5px 0px 0px;
+        }
+      }
+
+      & > th {
+        display: inline-block;
+        padding-right: 5px;
+      }
+    }
+  }
+
+  .font-weight-normal {
+    font-weight: normal;
   }
 }
 
@@ -634,7 +649,7 @@ table.form-readonly__table {
   display: inline-table;
   border-spacing: 0px;
 
-  > tr:not(:first-child) {
+  > tr {
     > td.dict_title {
       min-width: 20ch;
       max-width: 70ch;

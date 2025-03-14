@@ -23,13 +23,18 @@ def _new_migrated_rules(
     for folder, rule_index, rule_v1 in select(ruleset_v1, search):
         if _migrated_rule(rule_v1.id, ruleset_v2) is None:
             for_migration = detect_conflicts(config, rule_v1.value)
-            sys.stdout.write(f"Rule: {folder}, {rule_index}\n")
+            rule_str = _render_rule(folder.title(), rule_index)
+            sys.stdout.write(f"{rule_str}\n")
             if isinstance(for_migration, Conflict):
                 sys.stdout.write(f"Can't migrate: {for_migration.type_.value}\n")
                 continue
             sys.stdout.write("Migrated, new.\n")
             rule_v2 = _construct_v2_rule(rule_v1, for_migration, ruleset_v2)
             ruleset_v2.append_rule(rule_v1.folder, rule_v2)
+
+
+def _render_rule(folder_title: str, rule_index: int) -> str:
+    return f"Folder: {folder_title}, Rule: #{rule_index}"
 
 
 def _from_v1(rule_v1_id: str, ruleset_v1: Ruleset) -> Rule | None:

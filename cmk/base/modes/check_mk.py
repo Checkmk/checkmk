@@ -2652,18 +2652,8 @@ modes.register(
     )
 )
 
-# .
-#   .--inventory-as-check--------------------------------------------------.
-#   | _                      _                              _     _        |
-#   |(_)_ ____   _____ _ __ | |_ ___  _ __ _   _        ___| |__ | | __    |
-#   || | '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |_____ / __| '_ \| |/ /    |
-#   || | | | \ V /  __/ | | | || (_) | |  | |_| |_____| (__| | | |   < _   |
-#   ||_|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |      \___|_| |_|_|\_(_)  |
-#   |                                      |___/                           |
-#   '----------------------------------------------------------------------'
 
-
-def _execute_active_check_inventory(
+def execute_active_check_inventory(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
@@ -2769,142 +2759,6 @@ def _get_save_tree_actions(
     )
 
 
-def mode_inventory_as_check(options: Mapping[str, object], hostname: HostName) -> ServiceState:
-    config_cache = config.get_config_cache()
-    config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
-    hosts_config = config.make_hosts_config()
-    file_cache_options = _handle_fetcher_options(options)
-    try:
-        snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
-    except ValueError as exc:
-        raise MKBailOut("Unknown SNMP backend") from exc
-
-    parameters = HWSWInventoryParameters.from_raw(options)
-    plugins = agent_based_register.get_previously_loaded_plugins()
-
-    fetcher = CMKFetcher(
-        config_cache,
-        config_cache.fetcher_factory(),
-        plugins,
-        file_cache_options=file_cache_options,
-        force_snmp_cache_refresh=False,
-        ip_address_of=config.ConfiguredIPLookup(
-            config_cache, error_handler=config.handle_ip_lookup_failure
-        ),
-        mode=FetchMode.INVENTORY,
-        on_error=OnError.RAISE,
-        selected_sections=NO_SELECTION,
-        simulation_mode=config.simulation_mode,
-        snmp_backend_override=snmp_backend_override,
-        password_store_file=cmk.utils.password_store.core_password_store_path(LATEST_CONFIG),
-    )
-    parser = CMKParser(
-        config_cache.parser_factory(),
-        selected_sections=NO_SELECTION,
-        keep_outdated=file_cache_options.keep_outdated,
-        logger=logging.getLogger("cmk.base.inventory"),
-    )
-    summarizer = CMKSummarizer(
-        hostname,
-        config_cache.summary_config,
-        override_non_ok_state=parameters.fail_status,
-    )
-    error_handler = CheckResultErrorHandler(
-        exit_spec=config_cache.exit_code_spec(hostname),
-        host_name=hostname,
-        service_name="Check_MK HW/SW Inventory",
-        plugin_name="check_mk_active-cmk_inv",
-        is_cluster=hostname in hosts_config.clusters,
-        snmp_backend=config_cache.get_snmp_backend(hostname),
-        keepalive=False,
-    )
-    check_results: Sequence[ActiveCheckResult] = []
-    with error_handler:
-        with CPUTracker(console.debug) as tracker:
-            check_results = _execute_active_check_inventory(
-                hostname,
-                config_cache=config_cache,
-                hosts_config=hosts_config,
-                fetcher=fetcher,
-                parser=parser,
-                summarizer=summarizer,
-                section_plugins=SectionPluginMapper(
-                    {**plugins.agent_sections, **plugins.snmp_sections}
-                ),
-                inventory_plugins=InventoryPluginMapper(),
-                inventory_parameters=config_cache.inventory_parameters,
-                parameters=parameters,
-                raw_intervals_from_config=config_cache.inv_retention_intervals(hostname),
-            )
-        check_results = [
-            *check_results,
-            make_timing_results(
-                tracker.duration,
-                # FIXME: This is inconsistent with the other two calls.
-                (),  # nothing to add here, b/c fetching is triggered further down the call stack.
-                perfdata_with_times=config.check_mk_perfdata_with_times,
-            ),
-        ]
-
-    if error_handler.result is not None:
-        check_results = (error_handler.result,)
-
-    check_result = ActiveCheckResult.from_subresults(*check_results)
-    with suppress(IOError):
-        sys.stdout.write(check_result.as_text() + "\n")
-        sys.stdout.flush()
-    return check_result.state
-
-
-modes.register(
-    Mode(
-        long_option="inventory-as-check",
-        handler_function=mode_inventory_as_check,
-        argument=True,
-        argument_descr="HOST",
-        short_help="Do HW/SW Inventory, behave like check plug-in",
-        sub_options=[
-            *_FETCHER_OPTIONS,
-            _SNMP_BACKEND_OPTION,
-            Option(
-                long_option="hw-changes",
-                argument=True,
-                argument_descr="S",
-                argument_conv=int,
-                short_help="Use monitoring state S for HW changes",
-            ),
-            Option(
-                long_option="sw-changes",
-                argument=True,
-                argument_descr="S",
-                argument_conv=int,
-                short_help="Use monitoring state S for SW changes",
-            ),
-            Option(
-                long_option="sw-missing",
-                argument=True,
-                argument_descr="S",
-                argument_conv=int,
-                short_help="Use monitoring state S for missing SW packages info",
-            ),
-            Option(
-                long_option="inv-fail-status",
-                argument=True,
-                argument_descr="S",
-                argument_conv=int,
-                short_help="Use monitoring state S in case of error",
-            ),
-            Option(
-                long_option="nw-changes",
-                argument=True,
-                argument_descr="S",
-                argument_conv=int,
-                short_help="Use monitoring state S for NW changes",
-            ),
-        ],
-    )
-)
-
 # .
 #   .--inventorize-marked-hosts--------------------------------------------.
 #   |           _                      _             _                     |
@@ -3004,7 +2858,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
                 if host_name not in process_hosts:
                     continue
 
-                _execute_active_check_inventory(
+                execute_active_check_inventory(
                     host_name,
                     config_cache=config_cache,
                     hosts_config=hosts_config,

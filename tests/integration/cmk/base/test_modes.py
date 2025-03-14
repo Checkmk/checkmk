@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-import re
 import subprocess
 from collections.abc import Callable, Iterator
 from typing import NamedTuple
@@ -472,31 +471,6 @@ def test_inventory_verbose(execute: Execute) -> None:
         for expected_word in ("check_mk:", "lnx_if:", "mem:"):
             assert expected_word in stdout_words
             assert stdout_words[stdout_words.index(expected_word) + 1] == "ok"
-
-
-# .
-#   .--inventory-as-check--------------------------------------------------.
-#   | _                      _                              _     _        |
-#   |(_)_ ____   _____ _ __ | |_ ___  _ __ _   _        ___| |__ | | __    |
-#   || | '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |_____ / __| '_ \| |/ /    |
-#   || | | | \ V /  __/ | | | || (_) | |  | |_| |_____| (__| | | |   < _   |
-#   ||_|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |      \___|_| |_|_|\_(_)  |
-#   |                                      |___/                           |
-#   '----------------------------------------------------------------------'
-
-
-def test_inventory_as_check_unknown_host(execute: Execute) -> None:
-    p = execute(["cmk", "--inventory-as-check", "xyz."])
-    assert p.returncode == 2, on_failure(p)
-    assert p.stdout.startswith("Failed to lookup IPv4 address of")
-    assert p.stderr == ""
-
-
-def test_inventory_as_check(execute: Execute) -> None:
-    p = execute(["cmk", "--inventory-as-check", "modes-test-host"])
-    assert p.returncode == 0, on_failure(p)
-    assert re.match(r"Found \d+ inventory entries", p.stdout)
-    assert p.stderr == ""
 
 
 # .

@@ -115,7 +115,6 @@ is being checked. This is useful for testing and debugging a check plugin.
  cmk --compress-history FILES...      optimize monitoring history files for CMC
  cmk --handle-alerts                  alert handling, always in keepalive mode (only CEE)
  cmk -i, --inventory [HOST1 HOST2...] Do a HW/SW Inventory of some ar all hosts
- cmk --inventory-as-check HOST        Do HW/SW Inventory, behave like check plugin
  cmk -A, --bake-agents [-f] [H1 H2..] Bake agents for hosts (not in all versions)
  cmk --cap pack|unpack|list FILE.cap  Pack/unpack agent packages (not in all versions)
  cmk --show-snmp-stats                Analyzes recorded Inline SNMP statistics
@@ -147,9 +146,6 @@ OPTIONS:
                  You can specify this option multiple times.
   --oid A        Do --snmpwalk on this OID instead of mib-2 and enterprises.
                  You can specify this option multiple times.
-  --hw-changes=S --inventory-as-check: Use monitoring state S for HW changes
-  --sw-changes=S --inventory-as-check: Use monitoring state S for SW changes
-  --nw-changes=S --inventory-as-check: Use monitoring state S for NW changes
 
 NOTES:
   -I can be restricted to certain check types. Write '--checks df -I' if you

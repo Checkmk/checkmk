@@ -4,9 +4,42 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import argparse
-import subprocess
+import logging
 import sys
 from collections.abc import Sequence
+from contextlib import suppress
+
+import cmk.ccc.debug
+from cmk.ccc.exceptions import OnError
+
+import cmk.utils.cleanup
+import cmk.utils.password_store
+import cmk.utils.paths
+from cmk.utils.config_path import LATEST_CONFIG
+from cmk.utils.cpu_tracking import CPUTracker
+from cmk.utils.hostaddress import HostName
+from cmk.utils.log import console
+
+from cmk.fetchers import Mode as FetchMode
+from cmk.fetchers.filecache import FileCacheOptions
+
+from cmk.checkengine.checking import make_timing_results
+from cmk.checkengine.checkresults import ActiveCheckResult
+from cmk.checkengine.inventory import HWSWInventoryParameters
+from cmk.checkengine.parser import NO_SELECTION
+from cmk.checkengine.submitters import ServiceState
+
+import cmk.base.api.agent_based.register as agent_based_register
+from cmk.base import config
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
+from cmk.base.checkers import (
+    CMKFetcher,
+    CMKParser,
+    CMKSummarizer,
+    SectionPluginMapper,
+)
+from cmk.base.errorhandling import CheckResultErrorHandler
+from cmk.base.modes.check_mk import execute_active_check_inventory
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -77,14 +110,107 @@ def main(
     argv: Sequence[str] | None = None,
 ) -> int:
     args = parse_arguments(argv or sys.argv[1:])
-    cmd = get_command(args)
+    parameters = HWSWInventoryParameters(
+        hw_changes=args.hw_changes,
+        sw_changes=args.sw_changes,
+        sw_missing=args.sw_missing,
+        nw_changes=args.nw_changes,
+        fail_status=args.inv_fail_status,
+        status_data_inventory=False,
+    )
 
-    completed_process = subprocess.run(cmd, capture_output=True, encoding="utf8", check=False)
+    return inventory_as_check(parameters, args.hostname)
 
-    if completed_process.stderr:
-        sys.stderr.write(completed_process.stderr + "\n")
 
-    if completed_process.stdout:
-        sys.stdout.write(completed_process.stdout + "\n")
+def inventory_as_check(parameters: HWSWInventoryParameters, hostname: HostName) -> ServiceState:
+    plugins = load_checks()
+    config_cache = config.load(
+        discovery_rulesets=agent_based_register.extract_known_discovery_rulesets(plugins)
+    ).config_cache
+    config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
+    hosts_config = config.make_hosts_config()
+    file_cache_options = FileCacheOptions()
 
-    return completed_process.returncode
+    fetcher = CMKFetcher(
+        config_cache,
+        config_cache.fetcher_factory(config_cache.make_service_configurer(plugins.check_plugins)),
+        plugins,
+        file_cache_options=file_cache_options,
+        force_snmp_cache_refresh=False,
+        ip_address_of=config.ConfiguredIPLookup(
+            config_cache, error_handler=config.handle_ip_lookup_failure
+        ),
+        mode=FetchMode.INVENTORY,
+        on_error=OnError.RAISE,
+        selected_sections=NO_SELECTION,
+        simulation_mode=config.simulation_mode,
+        snmp_backend_override=None,
+        password_store_file=cmk.utils.password_store.core_password_store_path(LATEST_CONFIG),
+    )
+    parser = CMKParser(
+        config_cache.parser_factory(),
+        selected_sections=NO_SELECTION,
+        keep_outdated=file_cache_options.keep_outdated,
+        logger=logging.getLogger("cmk.base.inventory"),
+    )
+    summarizer = CMKSummarizer(
+        hostname,
+        config_cache.summary_config,
+        override_non_ok_state=parameters.fail_status,
+    )
+    error_handler = CheckResultErrorHandler(
+        exit_spec=config_cache.exit_code_spec(hostname),
+        host_name=hostname,
+        service_name="Check_MK HW/SW Inventory",
+        plugin_name="check_mk_active-cmk_inv",
+        is_cluster=hostname in hosts_config.clusters,
+        snmp_backend=config_cache.get_snmp_backend(hostname),
+        keepalive=False,
+    )
+    check_results: Sequence[ActiveCheckResult] = []
+    with error_handler:
+        with CPUTracker(console.debug) as tracker:
+            check_results = execute_active_check_inventory(
+                hostname,
+                config_cache=config_cache,
+                hosts_config=hosts_config,
+                fetcher=fetcher,
+                parser=parser,
+                summarizer=summarizer,
+                section_plugins=SectionPluginMapper(
+                    {**plugins.agent_sections, **plugins.snmp_sections}
+                ),
+                inventory_plugins=plugins.inventory_plugins,
+                inventory_parameters=config_cache.inventory_parameters,
+                parameters=parameters,
+                raw_intervals_from_config=config_cache.inv_retention_intervals(hostname),
+            )
+        check_results = [
+            *check_results,
+            make_timing_results(
+                tracker.duration,
+                # FIXME: This is inconsistent with the other two calls.
+                (),  # nothing to add here, b/c fetching is triggered further down the call stack.
+                perfdata_with_times=config.check_mk_perfdata_with_times,
+            ),
+        ]
+
+    if error_handler.result is not None:
+        check_results = (error_handler.result,)
+
+    check_result = ActiveCheckResult.from_subresults(*check_results)
+    with suppress(IOError):
+        sys.stdout.write(check_result.as_text() + "\n")
+        sys.stdout.flush()
+    return check_result.state
+
+
+def load_checks() -> AgentBasedPlugins:
+    plugins = config.load_all_plugins(
+        local_checks_dir=cmk.utils.paths.local_checks_dir,
+        checks_dir=cmk.utils.paths.checks_dir,
+    )
+    if sys.stderr.isatty():
+        for error_msg in plugins.errors:
+            console.error(error_msg, file=sys.stderr)
+    return plugins

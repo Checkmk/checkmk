@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-03-12 20:50+0000\n"
+"PO-Revision-Date: 2025-03-14 01:50+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -1226,11 +1226,11 @@ msgid ""
 "encrypted, can not be decrypted without access to this key. So please be "
 "sure that you either have a backup or don't need this key anymore."
 msgstr ""
-"<b>Achtung:</b> Diesen Schlüssel zu löschen bedeutet, dass Sie keine "
-"Sicherungen mit diesem Schlüssel mehr erstellen können. Bereits mit diesem "
-"Schlüssel verschlüsselte Sicherungen können ohne den Schlüssel nicht "
-"entschlüsselt werden. Bitte stellen Sie Sicher, dass Sie diesen Schlüssel "
-"entweder gesichert haben oder wirklich nicht mehr benötigen."
+"<b>Achtung:</b> Diesen Schlüssel zu löschen bedeutet, dass Sie keine Backups "
+"mit diesem Schlüssel mehr erstellen können. Bereits mit diesem Schlüssel "
+"verschlüsselte Backups können ohne den Schlüssel nicht entschlüsselt werden. "
+"Bitte stellen Sie sicher, dass Sie diesen Schlüssel entweder gesichert haben "
+"oder wirklich nicht mehr benötigen."
 
 #, python-format
 msgid ""
@@ -2264,8 +2264,8 @@ msgid ""
 "A restore is currently running. You can only delete backups while no restore "
 "is running."
 msgstr ""
-"Eine Wiederherstellung läuft gerade. Sie können Sicherungen nur löschen, "
-"wenn keine Wiederherstellung läuft."
+"Eine Wiederherstellung läuft gerade. Sie können Backups nur löschen, wenn "
+"keine Wiederherstellung läuft."
 
 msgid "A rule pack with this ID already exists."
 msgstr "Ein Regelpaket mit dieser ID existiert bereits."
@@ -4633,28 +4633,28 @@ msgid "Age of OS build version"
 msgstr "Alter der OS-Build-Version"
 
 msgid "Age of last database backup"
-msgstr "Alter der letzten Datenbanksicherung"
+msgstr "Alter des letzten Datenbank-Backups"
 
 msgid "Age of last differential database backup"
-msgstr "Alter der letzten differenziellen Datenbanksicherung"
+msgstr "Alter des letzten differenziellen Datenbank-Backups"
 
 msgid "Age of last differential file backup"
-msgstr "Alter der letzten differenziellen Dateisicherung"
+msgstr "Alter des letzten differenziellen Datei-Backups"
 
 msgid "Age of last differential partial backup"
-msgstr "Alter der letzten differenziellen partiellen Datenbanksicherung"
+msgstr "Alter des letzten differenziellen partiellen Backups"
 
 msgid "Age of last file or filegroup backup"
-msgstr "Alter der letzten Datei- oder Dateigruppensicherung"
+msgstr "Alter des letzten Datei- oder Dateigruppen-Backups"
 
 msgid "Age of last log backup"
-msgstr "Alter der letzten Log-Sicherung"
+msgstr "Alter des letzten Log-Backups"
 
 msgid "Age of last operation"
 msgstr "Alter der letzten Operation"
 
 msgid "Age of last partial backup"
-msgstr "Alter der letzten Teilsicherung"
+msgstr "Alter des letzten partiellen Backups"
 
 msgid "Age of never analyzed/vacuumed tables"
 msgstr "Alter der niemals ausgewerteten/vakuumierten Tabellen"
@@ -7464,7 +7464,7 @@ msgid "Average size growth"
 msgstr "Durschnittliches Größenwachstum"
 
 msgid "Average speed of backup"
-msgstr "Durchschnittliche Geschwindigkeit der Sicherung"
+msgstr "Durchschnittliche Geschwindigkeit des Backups"
 
 msgid ""
 "Average the CPU utilization over the specified time period before levels are "
@@ -7818,31 +7818,31 @@ msgid "Backup codes left:"
 msgstr "Verbleibende Backup-Codes:"
 
 msgid "Backup configured"
-msgstr "Datensicherung konfiguriert"
+msgstr "Backup konfiguriert"
 
 msgid "Backup encryption keys"
 msgstr "Backup-Kodierungschlüssel"
 
 msgid "Backup job"
-msgstr "Sicherungs-Job"
+msgstr "Backup-Job"
 
 msgid "Backup modes"
 msgstr "Backup-Modi"
 
 msgid "Backup size"
-msgstr "Backupgröße"
+msgstr "Backup-Größe"
 
 msgid "Backup target"
-msgstr "Sicherungsziel"
+msgstr "Backup-Ziel"
 
 msgid "Backup targets"
 msgstr "Backup-Ziele"
 
 msgid "Backup time"
-msgstr "Sicherungsdauer"
+msgstr "Backup-Dauer"
 
 msgid "Backup-ID"
-msgstr "Sicherungs-ID"
+msgstr "Backup-ID"
 
 msgid "Backups"
 msgstr "Backups"
@@ -10656,9 +10656,8 @@ msgstr "Überprüfe Log-Dateigruppen"
 msgid "Check logfiles for relevant new messages"
 msgstr "Log-Dateien auf relevante Meldungen hin überwachen"
 
-#, fuzzy
 msgid "Check man page uses the deprecated API"
-msgstr "Das Check-Plugin verwendet die veraltete API"
+msgstr "Die Check Manpage verwendet die veraltete API"
 
 #, python-format
 msgid ""
@@ -10666,6 +10665,9 @@ msgid ""
 "ignored in future Checkmk versions (official deprecation timeline not "
 "decided yet)."
 msgstr ""
+"Check Manpages in <tt>'%s'</tt> sind als 'veraltet' markiert und werden in "
+"zukünftigen Checkmk-Versionen ignoriert (offizieller Zeitplan für die "
+"Abschaffung ist noch nicht entschieden)."
 
 msgid "Check manual (for Checkmk based checks)"
 msgstr "Check-Dokumentation (für Checkmk basierte Checks)"
@@ -11253,7 +11255,7 @@ msgid "Checks via SSH. "
 msgstr "Checks über SSH. "
 
 msgid "Checks' man pages (deprecated)"
-msgstr "Handbuch-Seiten der Checks (veraltet)"
+msgstr "Manpages der Checks (veraltet)"
 
 msgid "Child Node Generation"
 msgstr "Child-Knoten generieren"
@@ -11600,7 +11602,7 @@ msgid "Cisco Prime WLAN Controller Clients"
 msgstr "Clients des Cisco Prime WLAN Controllers"
 
 msgid "Cisco Prime WLAN Controller Last Backup"
-msgstr "Letzte Cisco Prime WLAN Controller Sicherung"
+msgstr "Letztes Cisco Prime WLAN Controller Backup"
 
 msgid "Cisco Prime WiFi Access Points"
 msgstr "Cisco Prime WiFi Zugangspunkte"
@@ -14055,7 +14057,7 @@ msgid "Create an annotation for this period"
 msgstr "Eine Anmerkung für diese Zeitspanne erzeugen"
 
 msgid "Create backup key"
-msgstr "Sicherungsschlüssel erzeugen"
+msgstr "Backup-Schlüssel erzeugen"
 
 msgid "Create bookmark list"
 msgstr "Lesezeichenliste erzeugen"
@@ -15033,7 +15035,7 @@ msgid "DB2 Tablespaces"
 msgstr "DB2-Tablespaces"
 
 msgid "DB2 Time since last database Backup"
-msgstr "DB2 Zeit seit dem letzten Backup"
+msgstr "DB2 Zeit seit dem letzten Datenbank-Backup"
 
 msgid "DB2 instance followed by database name, e.g db2taddm:CMDBS1"
 msgstr "DB2-Instanz gefolgt vom Datenbanknamen, z.B. db2taddm:CMDBS1"
@@ -15434,7 +15436,7 @@ msgid "Database apply lag"
 msgstr "Datenbank-Applylag"
 
 msgid "Database backup"
-msgstr "Datenbank Backup"
+msgstr "Datenbank-Backup"
 
 msgid "Database changed to emergency"
 msgstr "Datenbank in Notlage geraten"
@@ -16387,13 +16389,13 @@ msgid "Delete this auxiliary tag"
 msgstr "Lösche Hilfsmerkmal"
 
 msgid "Delete this backup"
-msgstr "Dieses Sicherung löschen"
+msgstr "Dieses Backup löschen"
 
 msgid "Delete this backup job"
-msgstr "Diesen Sicherungs-Job löschen"
+msgstr "Diesen Backup-Job löschen"
 
 msgid "Delete this backup target"
-msgstr "Dieses Sicherungsziel löschen"
+msgstr "Dieses Backup-Ziel löschen"
 
 msgid "Delete this connection"
 msgstr "Diese Verbindung löschen"
@@ -16916,20 +16918,17 @@ msgstr "Verteilungen"
 msgid "Deprecated"
 msgstr "Veraltet"
 
-#, fuzzy
 msgid "Deprecated GUI extensions"
-msgstr "Erweiterungen replizieren"
+msgstr "Veraltete GUI-Erweiterungen"
 
 msgid "Deprecated HW/SW Inventory plug-ins"
 msgstr "Veraltete Plugins der HW-/SW-Inventur"
 
-#, fuzzy
 msgid "Deprecated PNP templates"
-msgstr "Veraltete Regelsätze"
+msgstr "Veraltete PNP-Vorlagen"
 
-#, fuzzy
 msgid "Deprecated check man pages"
-msgstr "Veraltete Check-Plugins"
+msgstr "Veraltete Check Manpages"
 
 msgid "Deprecated check plug-ins"
 msgstr "Veraltete Check-Plugins"
@@ -16940,9 +16939,8 @@ msgstr "Veraltete Check-Plugins (v1)"
 msgid "Deprecated choice, please re-select"
 msgstr "Veraltete Auswahl, bitte neu auswählen"
 
-#, fuzzy
 msgid "Deprecated legacy GUI extensions"
-msgstr "Erweiterungen replizieren"
+msgstr "Veraltete Legacy GUI-Erweiterungen"
 
 msgid "Deprecated rulesets"
 msgstr "Veraltete Regelsätze"
@@ -17286,7 +17284,7 @@ msgstr ""
 "TMPDIR)"
 
 msgid "Directory to save the backup to"
-msgstr "Zielverzeichnis für Sicherung"
+msgstr "Zielverzeichnis für Backup"
 
 msgid "Directory type"
 msgstr "Verzeichnistyp"
@@ -18092,13 +18090,13 @@ msgid "Do not ask for a comment"
 msgstr "Frage nicht nach einem Kommentar"
 
 msgid "Do not backup historical data"
-msgstr "Keine Sicherung historischer Daten durchführen"
+msgstr "Kein Backup historischer Daten durchführen"
 
 msgid ""
 "Do not backup metric data (RRD files), the monitoring history and log files"
 msgstr ""
-"Keine Sicherungskopien von metrischen Daten (RRD-Dateien), der Monitoring-"
-"Historie und Protokolldateien erstellen"
+"Keine Backups von metrischen Daten (RRD-Dateien), der Monitoring-Historie "
+"und Protokolldateien erstellen"
 
 msgid "Do not bake a generic agent package for this folder."
 msgstr "Backen Sie kein allgemeines Agentenpaket für diesen Ordner."
@@ -18381,7 +18379,7 @@ msgid "Do not display the host name"
 msgstr "Keinen Host-Namen anzeigen"
 
 msgid "Do not encrypt the backup"
-msgstr "Die Sicherung nicht verschlüsseln"
+msgstr "Das Backup nicht verschlüsseln"
 
 msgid ""
 "Do not forget to activate the plug-in (i.e., deploy with or without "
@@ -18727,7 +18725,7 @@ msgid "Download agent signature key"
 msgstr "Agenten-Signaturschlüssel herunterladen"
 
 msgid "Download backup key"
-msgstr "Sicherungsschlüssel herunterladen"
+msgstr "Backup-Schlüssel herunterladen"
 
 msgid "Download filename"
 msgstr "Download-Dateiname"
@@ -18975,7 +18973,7 @@ msgid "Duration of Lambda functions"
 msgstr "Dauer der Lambda-Funktionen"
 
 msgid "Duration of backup"
-msgstr "Dauer der Sicherung"
+msgstr "Dauer des Backups"
 
 msgid "Duration of last build"
 msgstr "Dauer des letzten Builds"
@@ -19388,11 +19386,11 @@ msgstr "Hilfsmerkmal bearbeiten"
 
 #, python-format
 msgid "Edit backup job: %s"
-msgstr "Sicherungs-Job editieren: %s"
+msgstr "Backup-Job editieren: %s"
 
 #, python-format
 msgid "Edit backup target: %s"
-msgstr "Sicherungsziel bearbeiten: %s"
+msgstr "Backup-Ziel bearbeiten: %s"
 
 msgid "Edit bookmark list"
 msgstr "Lesezeichenliste editieren"
@@ -19597,10 +19595,10 @@ msgid "Edit this auxiliary tag"
 msgstr "Bearbeite Hilfsmerkmal"
 
 msgid "Edit this backup job"
-msgstr "Diesen Sicherungs-Job bearbeiten"
+msgstr "Diesen Backup-Job bearbeiten"
 
 msgid "Edit this backup target"
-msgstr "Diese Sicherungsziel bearbeiten"
+msgstr "Dieses Backup-Ziel bearbeiten"
 
 msgid "Edit this connection"
 msgstr "Diese Verbindung bearbeiten"
@@ -19976,10 +19974,10 @@ msgid ""
 "backup are encrypted using the specified key during backup. You will need "
 "the private key and the passphrase to decrypt the backup."
 msgstr ""
-"Verschlüsselung der gesicherten Dateien aktivieren. Die Tar-Archive der "
-"Sicherung werden während des Backups mit dem gewählten Schlüssel "
-"verschlüsselt. Zur Wiederherstellung benötigen Sie den privaten Schlüssel "
-"und das Passwort des Schlüssels."
+"Verschlüsselung der gesicherten Dateien aktivieren. Die Tar-Archive, die "
+"durch das Backup erstellt wurden, werden während des Backups mit dem "
+"gewählten Schlüssel verschlüsselt. Zur Wiederherstellung benötigen Sie den "
+"privaten Schlüssel und das Passwort des Schlüssels."
 
 msgid "Enable flap detection"
 msgstr "Flap-Erkennung ein"
@@ -19994,8 +19992,8 @@ msgid ""
 "Enable gzip compression of the backed up files. The tar archives created by "
 "the backup are gzipped during backup."
 msgstr ""
-"GZIP-Komprimierung des Backups aktivieren. Alle Tar-Archive der Sicherung "
-"werden während der Sicherung mit GZIP gepackt."
+"GZIP-Komprimierung des Backups aktivieren. Die Tar-Archive, die durch das "
+"Backup erstellt wurden, werden während dem Backup mit GZIP gepackt."
 
 msgid "Enable handling of real-time checks"
 msgstr "Bearbeitung von Echtzeit-Checks einschalten"
@@ -20226,7 +20224,7 @@ msgid "Encrypt TCP Livestatus connections"
 msgstr "Verschlüsseln von TCP Livestatus-Verbindungen"
 
 msgid "Encrypt backups"
-msgstr "Sicherungen verschlüsseln"
+msgstr "Backups verschlüsseln"
 
 msgid "Encrypt communication"
 msgstr "Kommunikation verschlüsseln"
@@ -20241,7 +20239,7 @@ msgid "Encrypt notification daemon communication"
 msgstr "Kommunikation des Benachrichtigungs-Daemon verschlüsseln"
 
 msgid "Encrypt the backup using the key:"
-msgstr "Die Sicherung mit diesem Schlüssel verschlüsseln:"
+msgstr "Das Backup mit diesem Schlüssel verschlüsseln:"
 
 msgid "Encrypt the network connection using SSL."
 msgstr "Verschlüssle die Netzwerkverbindung mit SSL."
@@ -22281,7 +22279,7 @@ msgid "File opened"
 msgstr "Datei geöffnet"
 
 msgid "File or filegroup backup"
-msgstr "Datei oder Dateigruppen Backup"
+msgstr "Datei- oder Dateigruppen-Backup"
 
 msgid "File patterns"
 msgstr "Datei-Patterns"
@@ -23604,9 +23602,8 @@ msgstr "GUI"
 msgid "GUI design"
 msgstr "GUI-Design"
 
-#, fuzzy
 msgid "GUI extension uses the deprecated API"
-msgstr "GUI-Erweiterungen (veraltet)"
+msgstr "GUI-Erweiterung verwendet die veraltete API"
 
 msgid "GUI extensions (deprecated)"
 msgstr "GUI-Erweiterungen (veraltet)"
@@ -23617,6 +23614,9 @@ msgid ""
 "ignored in future Checkmk versions (official deprecation timeline not "
 "decided yet)."
 msgstr ""
+"GUI-Erweiterungen in <tt>'%s'</tt> sind als 'veraltet' markiert und werden "
+"in zukünftigen Checkmk-Versionen ignoriert (offizieller Zeitplan für die "
+"Abschaffung ist noch nicht entschieden)."
 
 msgid ""
 "Gain a complete view of your entire IT infrastructure: from public cloud "
@@ -30347,7 +30347,7 @@ msgid "Interval at which to <b>send</b> regular heart beats"
 msgstr "Intervall, in dem regelmäßig Lebenszeichen <b>geschickt</b> werden"
 
 msgid "Interval for checking Plesk backups:"
-msgstr "Intervall für die Prüfung von Plesk-Sicherungen:"
+msgstr "Intervall für die Prüfung von Plesk-Backups:"
 
 msgid "Interval for checking for ripe bulk notifications"
 msgstr "Intervall, um auf fällige Sammelbenachrichtigungen zu prüfen"
@@ -30570,7 +30570,7 @@ msgid "Invalid login credentials."
 msgstr "Login-Daten sind ungültig."
 
 msgid "Invalid man page: Failed to get the title"
-msgstr "Ungültige Check-Manpage: Konnte Titel nicht auslesen"
+msgstr "Ungültige Manpage: Konnte Titel nicht auslesen"
 
 msgid "Invalid messaging method selected."
 msgstr "Ungültige Benachrichtigungsmethode ausgewählt."
@@ -31334,7 +31334,7 @@ msgid "Keys"
 msgstr "Schlüssel"
 
 msgid "Keys for backups"
-msgstr "Sicherungsschlüssel"
+msgstr "Schlüssel für Backups"
 
 msgid "Keyword"
 msgstr "Stichwort"
@@ -31901,9 +31901,8 @@ msgstr ""
 "Bulking von Benachrichtigungen deaktivieren oder ein anderes "
 "Benachrichtigungs-Plugin wählen, das Bulking erlaubt."
 
-#, fuzzy
 msgid "Legacy GUI extension uses the deprecated API"
-msgstr "Legacy GUI-Erweiterungen (veraltet)"
+msgstr "Legacy GUI-Erweiterung verwendet die veraltete API"
 
 msgid "Legacy GUI extensions (deprecated)"
 msgstr "Legacy GUI-Erweiterungen (veraltet)"
@@ -31914,6 +31913,9 @@ msgid ""
 "be ignored in future Checkmk versions (official deprecation timeline not "
 "decided yet)."
 msgstr ""
+"Legacy GUI-Erweiterungen in <tt>'%s'</tt> sind als 'veraltet' markiert und "
+"werden in zukünftigen Checkmk-Versionen ignoriert (offizieller Zeitplan für "
+"die Abschaffung ist noch nicht entschieden)."
 
 msgid "Legacy agent management"
 msgstr "Verwaltung von Legacy-Agenten"
@@ -32120,7 +32122,7 @@ msgid "Levels for disk usage"
 msgstr "Level für genutzten Speicherplatz"
 
 msgid "Levels for duration of backup job"
-msgstr "Level für die Dauer des Sicherungsjobs"
+msgstr "Level für die Dauer des Backup-Jobs"
 
 msgid "Levels for erlang process usage"
 msgstr "Level für Erlang-Prozessbenutzung"
@@ -34469,7 +34471,9 @@ msgstr ""
 "veröffentlichende Benutzer ausgewählt hat."
 
 msgid "Make backups of your whole site and restore previous backups."
-msgstr "Sichern Sie Ihre Instanzen und stellen diese wieder her."
+msgstr ""
+"Erstellen Sie Backups von Ihrer gesamten Instanz und stellen Sie frühere "
+"Backups wieder her."
 
 msgid "Make changes, perform actions"
 msgstr "Änderungen vornehmen, Aktionen durchführen"
@@ -34681,7 +34685,7 @@ msgid "Manually specify list of LDAP servers"
 msgstr "LDAP-Server manuell konfigurieren"
 
 msgid "Manually start this backup"
-msgstr "Die Sicherung manuell starten"
+msgstr "Das Backup manuell starten"
 
 msgid "Manually submit check results for host and service checks"
 msgstr "Resultate von Host-/Service-Checks manuell übermitteln"
@@ -35267,7 +35271,7 @@ msgid "Maximum age of latest backup"
 msgstr "Maximales Alter für letztes Backup"
 
 msgid "Maximum age of latest timemachine backup"
-msgstr "Maximales Alter für letzte Timemachine-Sicherung"
+msgstr "Maximales Alter für letzte Timemachine-Backup"
 
 msgid "Maximum age of passwords"
 msgstr "Maximales Alter von Passwörtern"
@@ -35524,7 +35528,7 @@ msgid "Maximum size"
 msgstr "Maximale Größe"
 
 msgid "Maximum size of all files on backup space"
-msgstr "Maximale Größe aller Dateien am Sicherungsspeicherplatz"
+msgstr "Maximale Größe aller Dateien am Backup-Speicherplatz"
 
 msgid "Maximum speed"
 msgstr "Maximale Geschwindigkeit"
@@ -37986,9 +37990,8 @@ msgstr "Keine Bedingungen"
 msgid "No Forecast graph with the name <tt>%s</tt>"
 msgstr "Kein Forecast-Diagramm mit dem Namen <tt>%s</tt>"
 
-#, fuzzy
 msgid "No GUI extensions using the deprecated API"
-msgstr "Keine Check-Plugins, welche die veraltete API verwenden"
+msgstr "Keine GUI-Erweiterungen, welche die veraltete API verwenden"
 
 msgid "No HW/SW Inventory plug-ins using the deprecated API"
 msgstr "Keine HW-/SW-Inventur Plugins, welche die veraltete API verwenden"
@@ -38002,9 +38005,8 @@ msgstr "Kein IP-Bereich definiert"
 msgid "No Levels"
 msgstr "Keine Level"
 
-#, fuzzy
 msgid "No PNP templates using the deprecated API"
-msgstr "Keine Check-Plugins, welche die veraltete API verwenden"
+msgstr "Keine PNP-Vorlagen, welche die veraltete API verwenden"
 
 msgid "No SNMP"
 msgstr "Kein SNMP"
@@ -38061,9 +38063,8 @@ msgstr "Es wurden keine defekten Erweiterungen gefunden."
 msgid "No certificate"
 msgstr "Kein Zertifikat"
 
-#, fuzzy
 msgid "No check man pages using the deprecated API"
-msgstr "Keine Check-Plugins, welche die veraltete API verwenden"
+msgstr "Keine Check Manpages, welche die veraltete API verwenden"
 
 msgid "No check plug-ins using the deprecated API"
 msgstr "Keine Check-Plugins, welche die veraltete API verwenden"
@@ -38199,9 +38200,8 @@ msgstr "Kein Einfluss auf Anzeige des Elements"
 msgid "No information available"
 msgstr "Keine Informationen vorhanden"
 
-#, fuzzy
 msgid "No legacy GUI extensions using the deprecated API"
-msgstr "Keine Check-Plugins, welche die veraltete API verwenden"
+msgstr "Keine Legacy GUI-Erweiterungen, welche die veraltete API verwenden"
 
 msgid "No levels"
 msgstr "Keine Level"
@@ -41485,9 +41485,8 @@ msgstr "PING und Host Check-Parameter"
 msgid "PLL lock voltages by freqency"
 msgstr "PLL Verriegelungsspannung nach Frequenz"
 
-#, fuzzy
 msgid "PNP template uses the deprecated API"
-msgstr "Das Check-Plugin verwendet die veraltete API"
+msgstr "PNP-Vorlage verwendet die veraltete API"
 
 #, python-format
 msgid ""
@@ -41495,6 +41494,9 @@ msgid ""
 "ignored in future Checkmk versions (official deprecation timeline not "
 "decided yet)."
 msgstr ""
+"PNP-Vorlagen in <tt>'%s'</tt> sind als 'veraltet' markiert und werden in "
+"zukünftigen Checkmk-Versionen ignoriert (offizieller Zeitplan für die "
+"Abschaffung ist noch nicht entschieden)."
 
 msgid ""
 "PNP4Nagios needs meta information about hosts and services. These "
@@ -42901,11 +42903,11 @@ msgid ""
 "secure enough without extra backup encryption. But in some cases it may be a "
 "good idea to store the backup encrypted."
 msgstr ""
-"Bitte prüfen Sie, ob Ihre Sicherungskopien sicher gespeichert sind oder "
-"nicht. Wenn Sie Ihre Sicherungskopie auf einem Speichersystem speichern, ist "
-"die Speicherung möglicherweise auch ohne zusätzliche Verschlüsselung der "
-"Sicherungskopie sicher genug. In manchen Fällen kann es jedoch sinnvoll "
-"sein, das Backup verschlüsselt zu speichern."
+"Bitte prüfen Sie, ob Ihre Backups sicher gespeichert sind oder nicht. Wenn "
+"Sie Ihr Backup auf einem Speichersystem speichern, ist die Speicherung "
+"möglicherweise auch ohne zusätzliche Verschlüsselung des Backups sicher "
+"genug. In manchen Fällen kann es jedoch sinnvoll sein, das Backup "
+"verschlüsselt zu speichern."
 
 msgid "Please choose"
 msgstr "Bitte wählen Sie"
@@ -43469,7 +43471,7 @@ msgid "Plesk Backups"
 msgstr "Plesk Backups"
 
 msgid "Plesk backups and domains (Linux)"
-msgstr "Plesk-Sicherungen und Domänen (Linux)"
+msgstr "Plesk-Backups und Domänen (Linux)"
 
 msgid "Plug is OFF"
 msgstr "Steckdose ist ausgeschaltet"
@@ -46725,14 +46727,14 @@ msgid "Restore"
 msgstr "Wiederherstellen"
 
 msgid "Restore from backup"
-msgstr "Vom Sicherungsziel wiederherstellen"
+msgstr "Vom Backup wiederherstellen"
 
 #, python-format
 msgid "Restore from target: %s"
 msgstr "Von Sicherungsziel wiederherstellen: %s"
 
 msgid "Restore from this backup target"
-msgstr "Von diesem Sicherungsziel wiederherstellen"
+msgstr "Von diesem Backup-Ziel wiederherstellen"
 
 msgid "Restore job"
 msgstr "Job wiederherstellen"
@@ -52178,8 +52180,8 @@ msgstr ""
 "teilweise zu überschreiben, indem Sie nur den neuen Monitoring-Zustand "
 "angeben. Der Standardtext wird dann als Zusammenfassung beibehalten.\n"
 "\n"
-" Die Standardeinstellungen sind in der Dokumentation der Checks aufgeführt "
-"(siehe <i>%s</i>)."
+" Die Standardeinstellungen sind in der Manpage der Checks aufgeführt (siehe "
+"<i>%s</i>)."
 
 msgid "Specify input state evaluation"
 msgstr "Legen Sie die Auswertung des Eingangszustands fest"
@@ -52835,7 +52837,7 @@ msgid "Start restore of backup"
 msgstr "Wiederherstellung dieses Backups starten"
 
 msgid "Start restore of this backup"
-msgstr "Die Wiederherstellung dieser Sicherung starten"
+msgstr "Die Wiederherstellung dieses Backups starten"
 
 msgid "Start time of process"
 msgstr "Startzeit des Prozesses"
@@ -53137,7 +53139,7 @@ msgid "State if mode is Disabled"
 msgstr "Zustand, wenn Modus deaktiviert ist"
 
 msgid "State if no backup found"
-msgstr "Zustand, wenn bestimmte Sektionen fehlen"
+msgstr "Zustand, wenn kein Backup gefunden wurde"
 
 msgid "State if no entry matches"
 msgstr "Zustand, wenn kein Eintrag passt"
@@ -53505,10 +53507,10 @@ msgid "State when missing"
 msgstr "Zustand wenn fehlend"
 
 msgid "State when no backup can be found"
-msgstr "Zustand wenn kein Backup gefunden wird"
+msgstr "Zustand, wenn kein Backup gefunden werden kann"
 
 msgid "State when no backup is configured"
-msgstr "Zustand wenn kein Backup konfiguriert ist"
+msgstr "Zustand, wenn kein Backup konfiguriert ist"
 
 msgid "State when no enterprise license is installed"
 msgstr "Zustand, wenn keine Unternehmenslizenz installiert ist"
@@ -55754,7 +55756,7 @@ msgid ""
 "The MSSQL instance name, the tablespace name and the backup type, each "
 "separated by a space."
 msgstr ""
-"Der MSSQL Instanzname, der Tablespacename und der Backuptyp, jeweils "
+"Der MSSQL Instanzname, der Tablespace-Name und der Backup-Typ, jeweils "
 "getrennt durch ein Leerzeichen."
 
 msgid "The Multisite URL must end with /check_mk/"
@@ -56219,13 +56221,13 @@ msgstr ""
 "das Limit ganz aufgehoben."
 
 msgid "The backup has been deleted."
-msgstr "Die Sicherung wurde gelöscht."
+msgstr "Das Backup wurde gelöscht."
 
 msgid "The backup has been started."
-msgstr "Die Sicherung wurde gestartet."
+msgstr "Das Backup wurde gestartet."
 
 msgid "The backup has been stopped."
-msgstr "Die Sicherung wurde gestoppt."
+msgstr "Das Backup wurde gestoppt."
 
 msgid ""
 "The backup key will be stored encrypted using this passphrase on your disk. "
@@ -56234,12 +56236,12 @@ msgid ""
 "you will need the private key part together with the passphrase to decrypt "
 "the backup."
 msgstr ""
-"Der Schlüssel wird mit dem hier angegebenen Passwort verschlüsselt auf der "
-"Festplatte gespeichert. Das Passwort wird nirgends gespeichert. Die "
-"Sicherung nutzt den Public-Key-Teil des Schlüssels um die Sicherung zu "
-"verschlüsseln. Wenn Sie eine Sicherung verschlüsseln, werden Sie den "
-"privaten Schlüssel und das Passwort des privaten Schlüssels benötigen um das "
-"Backup wiederherstellen zu können."
+"Der Backup-Schlüssel wird mit dem hier angegebenen Passwort verschlüsselt "
+"auf der Festplatte gespeichert. Das Passwort wird nirgends gespeichert. Das "
+"Backup nutzt den Public-Key-Teil des Schlüssels um das Backup zu "
+"verschlüsseln. Wenn Sie ein Backup verschlüsseln, werden Sie den privaten "
+"Schlüssel und das Passwort des privaten Schlüssels benötigen, um das Backup "
+"wiederherstellen zu können."
 
 msgid "The base OID for the trap content"
 msgstr "Die Basis-OID für den Inhalt der Trap"
@@ -57471,7 +57473,7 @@ msgid "The instance name"
 msgstr "Name der Instanz"
 
 msgid "The instance name and backup type"
-msgstr "Der Instanzname und der Backuptyp"
+msgstr "Der Instanzname und der Backup-Typ"
 
 msgid ""
 "The instance name, the database name and the tablespace name combined like "
@@ -57551,8 +57553,8 @@ msgid ""
 "The key with the fingerprint %s which is needed to decrypt the backup is "
 "misssing."
 msgstr ""
-"Der Schlüssel mit dem Fingerprint %s wird zur Wiederherstellung benötigt, "
-"fehlt aber."
+"Der Schlüssel mit dem Fingerprint %s wird zur Wiederherstellung des Backups "
+"benötigt, fehlt aber."
 
 #, python-format
 msgid "The label '%s' does not exist but is required."
@@ -57783,7 +57785,7 @@ msgstr ""
 "Ausgangshost."
 
 msgid "The maximum age of the last backup."
-msgstr "Maximales Alter für letzte Sicherung."
+msgstr "Das maximale Alter des letzten Backups."
 
 #, python-format
 msgid "The maximum allowed length is %s."
@@ -60005,7 +60007,7 @@ msgid "There is no Setup snapshot to be restored."
 msgstr "Es gibt keine Setup-Sicherung, die wiederhergestellt werden könnte."
 
 msgid "There is no backup job configured"
-msgstr "Es ist kein Sicherungs-Job konfiguriert"
+msgstr "Es ist kein Backup-Job konfiguriert"
 
 #, python-format
 msgid "There is no graph template with the id '%s'"
@@ -60040,8 +60042,8 @@ msgid ""
 "These backup targets can not be edited here. You need to open the device "
 "backup management."
 msgstr ""
-"Diese Sicherungsziele können hier nicht editiert werden. Sie müssen dafür "
-"die Geräte-Sicherungsverwaltung öffnen."
+"Diese Backup-Ziele können hier nicht editiert werden. Sie müssen dafür die "
+"Geräte-Backup-Verwaltung öffnen."
 
 msgid "These codes are only displayed now."
 msgstr "Diese Codes werden nur jetzt angezeigt."
@@ -60429,10 +60431,10 @@ msgid "This ID is already in use. Please choose another one."
 msgstr "Diese ID wird bereits verwendet. Bitte wählen Sie eine andere."
 
 msgid "This ID is already used by another backup job."
-msgstr "Die ID wird bereits von einem anderen Sicherungs-Job verwendet."
+msgstr "Die ID wird bereits von einem anderen Backup-Job verwendet."
 
 msgid "This ID is already used by another backup target."
-msgstr "Die ID wird bereits von einem anderen Sicherungsziel verwendet."
+msgstr "Die ID wird bereits von einem anderen Backup-Ziel verwendet."
 
 msgid "This ID is used as it's unique identifier. It cannot be changed later."
 msgstr ""
@@ -60654,13 +60656,13 @@ msgstr ""
 "automatische System nicht die Nutzeraktivitäten stört."
 
 msgid "This backup does not exist."
-msgstr "Diese Sicherung existiert nicht."
+msgstr "Dieses Backup existiert nicht."
 
 msgid "This backup job does not exist."
-msgstr "Dieser Sicherungs-Job existiert nicht."
+msgstr "Dieser Backup-Job existiert nicht."
 
 msgid "This backup target does not exist."
-msgstr "Dieses Sicherungsziel existiert nicht."
+msgstr "Dieses Backup-Ziel existiert nicht."
 
 msgid ""
 "This boolean variable allows you to bring Checkmk into a dry run mode. No "
@@ -60681,8 +60683,8 @@ msgid ""
 "own."
 msgstr ""
 "Dies kann ein lokales Verzeichnis Ihrer wahl sein. SIe können diese Option "
-"ebenfalls nutzen, wenn Sie Ihre Sicherung auf einer Netzwerkfreigabe, wie "
-"NFS, Samba oder ähnlichem ablegen wollen. Allerdings müssen Sie den "
+"ebenfalls nutzen, wenn Sie Ihr Backup auf einer Netzwerkfreigabe, wie NFS, "
+"Samba oder ähnlichem ablegen wollen. Allerdings müssen Sie den "
 "Netzwerkfreigabe selbstständig unter dem gewählten Pfad einbinden."
 
 msgid ""
@@ -60711,7 +60713,7 @@ msgid ""
 msgstr ""
 "Dieser Check stellt eine Verbindung zur angegebenen Datenbank her, sendet "
 "eine benutzerdefinierte SQL-Anweisung oder startet eine Prozedur und "
-"überprüft das Ergebnis. Bitte lesen Sie die Handbuchseite des aktiven Checks "
+"überprüft das Ergebnis. Bitte lesen Sie die Manpage des aktiven Checks "
 "<tt>check_sql</tt> für Details."
 
 msgid ""
@@ -64667,7 +64669,7 @@ msgid "Time of day to create report at"
 msgstr "Uhrzeit für die Erzeugung des Berichtes"
 
 msgid "Time of day to start the backup at"
-msgstr "Uhrzeit für die Erzeugung der Sicherung"
+msgstr "Uhrzeit für den Start des Backups"
 
 msgid "Time of entry in event history"
 msgstr "Zeitstempel des Eintrags in der Ereignishistorie"
@@ -64781,7 +64783,7 @@ msgid "Time series graph"
 msgstr "Zeitreihen-Graph"
 
 msgid "Time since end of last backup"
-msgstr "Zeit seit der letzten Sicherung"
+msgstr "Zeit seit Ende des letzten Backups"
 
 msgid "Time since last AD Connect sync"
 msgstr "Zeit seit der letzten AD Connect-Synchronisation"
@@ -64796,7 +64798,7 @@ msgid "Time since last UPS selftest"
 msgstr "Zeit seit letztem UPS-Selbsttest"
 
 msgid "Time since last backup"
-msgstr "Zeit seit der letzten Sicherung"
+msgstr "Zeit seit dem letzten Backup"
 
 msgid "Time since last build"
 msgstr "Zeit seit dem letzten Build"
@@ -64984,7 +64986,7 @@ msgid "Timeline of %s"
 msgstr "Zeitleiste von %s"
 
 msgid "Timemachine backup age"
-msgstr "Alter der Timemachine-Sicherung"
+msgstr "Alter des Timemachine-Backups"
 
 msgid "Timeout"
 msgstr "Timeout"
@@ -65125,9 +65127,9 @@ msgid ""
 "To be able to decrypt and restore the encrypted backup, you need to enter "
 "the passphrase of the encryption key."
 msgstr ""
-"Um die Sicherung entschlüsseln und wiederherstellen zu können, müssen Sie "
-"das Passwort des privaten Schlüssels eingeben, der zur Verschlüsselung "
-"genutzt wurde."
+"Um das Backup entschlüsseln und wiederherstellen zu können, müssen Sie das "
+"Passwort des privaten Schlüssels eingeben, der zur Verschlüsselung genutzt "
+"wurde."
 
 msgid ""
 "To be able to download the key, you need to unlock the key by entering the "
@@ -68665,7 +68667,7 @@ msgid "Upload agent signature key"
 msgstr "Agenten-Signaturschlüssel hochladen"
 
 msgid "Upload backup key"
-msgstr "Sicherungsschlüssel hochladen"
+msgstr "Backup-Schlüssel hochladen"
 
 msgid "Upload custom logos"
 msgstr "Benutzerdefinierte Logos hochladen"
@@ -69142,7 +69144,7 @@ msgid "Upper levels for the age of the update"
 msgstr "Obergrenzen für das Alter des Updates"
 
 msgid "Upper levels for the backup age"
-msgstr "Obergrenzen für das Backupalter"
+msgstr "Obergrenzen für das Backup-Alter"
 
 msgid "Upper levels for the bucket size"
 msgstr "Obergrenzen für die Bucket-Größe"
@@ -71015,7 +71017,7 @@ msgid "Veeam Backup Status (Windows)"
 msgstr "Veeam Backup Zustand (Windows)"
 
 msgid "Veeam: Time since last Backup"
-msgstr "Veeam: Zeit seit der letzten Sicherung"
+msgstr "Veeam: Zeit seit dem letzten Backup"
 
 msgid "Veeam: Time since last CDP run"
 msgstr "Veeam: Zeit seit dem letzten CDP-Lauf"
@@ -74426,8 +74428,8 @@ msgstr ""
 msgid ""
 "You can not delete this target because it is used by these backup jobs: %s"
 msgstr ""
-"Sie können dieses Sicherungszuel nicht löschen, das es von diesen Sicherungs-"
-"Jobs verwendet wird: %s"
+"Sie können dieses Ziel nicht löschen, das es von diesen Backup-Jobs "
+"verwendet wird: %s"
 
 #, python-format
 msgid "You can not override the builtin auxiliary tag \"%s\"."
@@ -75163,7 +75165,7 @@ msgstr ""
 
 #, python-format
 msgid "You have configured %d backup jobs"
-msgstr "Sie haben %d Sicherungs-Aufträge konfiguriert"
+msgstr "Sie haben %d Backup-Jobs konfiguriert"
 
 #, python-format
 msgid ""
@@ -75463,7 +75465,7 @@ msgstr ""
 msgid ""
 "You may use this option to create a much smaller partial backup of the site."
 msgstr ""
-"Sie können diese Option verwenden, um eine viel kleinere Teilsicherung der "
+"Sie können diese Option verwenden, um eine viel kleinere Teil-Backups der "
 "Instanz zu erstellen."
 
 msgid ""
@@ -75645,7 +75647,7 @@ msgid "You need to set the \"%s\" parameter."
 msgstr "Sie müssen den Parameter \"%s\" angeben."
 
 msgid "You need to specify a backup job."
-msgstr "Sie müssen einen Sicherungs-Job auswählen."
+msgstr "Sie müssen einen Backup-Job auswählen."
 
 msgid "You need to specify a host name to test file matching."
 msgstr ""

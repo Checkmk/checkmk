@@ -7,7 +7,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 // TODO: move this file CMK-19774
 import { ref } from 'vue'
 import type { CheckboxListChoice } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import FormCheckboxListChoice from '@/form/components/forms/FormCheckboxListChoice.vue'
+import FormCheckboxListChoice, {
+  type CheckboxListChoiceElement
+} from '@/form/components/forms/FormCheckboxListChoice.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -43,7 +45,12 @@ const spec: CheckboxListChoice = {
   }
 }
 
-const data = ref<Array<string>>(['some_name_1'])
+const data = ref<Array<CheckboxListChoiceElement>>([
+  {
+    name: 'some_name_1',
+    title: 'some title 1'
+  }
+])
 </script>
 
 <template>

@@ -46,7 +46,6 @@ import {
   type OperatorI18n
 } from './forms/FormConditionChoices/utils'
 import type { DualListChoiceElement } from '@/form/components/forms/FormDualListChoice.vue'
-import type { CheckboxListChoiceElement } from '@/form/components/forms/FormCheckboxListChoice.vue'
 
 function renderForm(
   formSpec: FormSpec,
@@ -95,10 +94,7 @@ function renderForm(
     case 'dual_list_choice':
       return renderDualListChoice(formSpec as DualListChoice, value as DualListChoiceElement[])
     case 'checkbox_list_choice':
-      return renderCheckboxListChoice(
-        formSpec as CheckboxListChoice,
-        value as CheckboxListChoiceElement[]
-      )
+      return renderCheckboxListChoice(formSpec as CheckboxListChoice, value as string[])
     case 'password':
       return renderPassword(formSpec as Password, value as (string | boolean)[])
     case 'tuple':
@@ -197,15 +193,8 @@ function renderDualListChoice(formSpec: DualListChoice, value: DualListChoiceEle
   )
 }
 
-function renderCheckboxListChoice(
-  formSpec: CheckboxListChoice,
-  value: CheckboxListChoiceElement[]
-): VNode {
-  return renderMultipleChoice(
-    formSpec,
-    formSpec.elements,
-    value.map((element) => element.name)
-  )
+function renderCheckboxListChoice(formSpec: CheckboxListChoice, value: string[]): VNode {
+  return renderMultipleChoice(formSpec, formSpec.elements, value)
 }
 
 function renderMultipleChoice(

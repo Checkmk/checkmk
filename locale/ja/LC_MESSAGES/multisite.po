@@ -9415,28 +9415,6 @@ msgstr ""
 "ドは、大規模なインストールのパフォーマンスを向上させる機能であり、サブスクリ"
 "プションを介してのみ使用できます。"
 
-#, python-format
-msgid ""
-"By default Checkmk uses command line calls of Net-SNMP tools like snmpget or "
-"snmpwalk to gather SNMP information. For each request a new command line "
-"program is being executed. It is now possible to use the inline SNMP "
-"implementation which calls the net-snmp libraries directly via its python "
-"bindings. This should increase the performance of SNMP checks in a "
-"significant way. The inline SNMP mode is a feature which improves the "
-"performance for large installations and only available via our subscription."
-"<b>Note:</b> This option is deprecated and has been replaced by '%s'. "
-"Changes to this option will have no effect to the behaviour of Checkmk"
-msgstr ""
-"デフォルトでは、CheckmkはsnmpgetやsnmpwalkなどのNet-SNMPツールのコマンドライ"
-"ン呼び出しを使用してSNMP情報を収集します。リクエストごとに、新しいコマンドラ"
-"インプログラムが実行されています。Pythonバインディングを介してnet-snmpライブ"
-"ラリを直接呼び出すインラインSNMP実装を使用できるようになりました。これによ"
-"り、SNMPチェックのパフォーマンスが大幅に向上するはずです。インラインSNMPモー"
-"ドは、大規模なインストールのパフォーマンスを向上させる機能であり、サブスクリ"
-"プションを介してのみ使用できます。<b>注意:</b>このオプションは廃止され、 "
-"'%s'に置き換えられました。このオプションを変更しても、Checkmkの動作には影響し"
-"ません"
-
 msgid ""
 "By default Checkmk uses the community \"public\" to contact hosts via SNMP "
 "v1/v2. This rule can be used to customize the credentials to be used when "
@@ -10423,9 +10401,6 @@ msgstr "サイトのCRITサービス"
 
 msgid "CRITICAL"
 msgstr "クリティカル"
-
-msgid "CRITICAL services"
-msgstr "重要なサービス"
 
 msgid "CRT/PEM File"
 msgstr "CRT/PEMファイル"
@@ -15557,6 +15532,10 @@ msgstr "最大でもクリティカルレベルです"
 msgid "Critical of %s"
 msgstr "%sクリティカル"
 
+#, fuzzy
+msgid "Critical services"
+msgstr "重要なイベント"
+
 msgid "Critical threshold"
 msgstr "クリティカルしきい値"
 
@@ -16321,9 +16300,6 @@ msgstr "DNSの成功した応答"
 
 msgid "DOWN"
 msgstr "ダウン"
-
-msgid "DOWN hosts"
-msgstr "DOWNホスト"
 
 msgid "DPI"
 msgstr "DPI"
@@ -19926,6 +19902,10 @@ msgid "Down"
 msgstr "ダウン"
 
 #, fuzzy
+msgid "Down hosts"
+msgstr "ホスト %sで"
+
+#, fuzzy
 msgid "Down only"
 msgstr "カウントのみ"
 
@@ -21308,10 +21288,6 @@ msgstr "ホスト通知を有効にする"
 
 msgid "Enable in-memory cache for availability"
 msgstr "可用性のためにメモリ内キャッシュを有効にする"
-
-msgid "Enable inline SNMP (directly use net-snmp libraries) (deprecated)"
-msgstr ""
-"インライン SNMP を有効にする (直接 net-snmp ライブラリを使用するのは非推奨)"
 
 msgid "Enable logging of logon failures"
 msgstr "ログオン失敗のロギングを有効にする"
@@ -26427,12 +26403,8 @@ msgstr ""
 "は、他のすべての色付けより優先します。"
 
 #, fuzzy
-msgid ""
-"Here you can configure the credentials to be used. Keep in mind that the "
-"<tt>automation</tt> user needs to exist if you choose this option"
-msgstr ""
-"ここで、使用する資格情報を構成できます。このオプションを選択する場合は、<tt>"
-"自動化</tt>ユーザーが存在する必要があることに注意してください"
+msgid "Here you can configure the credentials to be used."
+msgstr "ここでは、タイムアウト設定を秒単位で構成できます。"
 
 msgid ""
 "Here you can configure the list of possible service levels for hosts, "
@@ -41688,6 +41660,10 @@ msgstr "有効なターゲットフォルダがありません。"
 msgid "No valid theme directories found."
 msgstr "有効なテーマディレクトリがありません。"
 
+#, fuzzy
+msgid "No valid users available"
+msgstr "利用可能なポート"
+
 msgid "No values defined"
 msgstr "値が定義されていない"
 
@@ -43287,9 +43263,6 @@ msgstr "OKエリア"
 msgid "OK if standby count is zero or equals active paths."
 msgstr "待機回数がゼロまたはアクティブパスと等しい場合はOKです。"
 
-msgid "OK services"
-msgstr "OKサービス"
-
 msgid "OK services of host"
 msgstr "ホストのOKサービス"
 
@@ -43445,6 +43418,10 @@ msgstr "オフセット"
 
 msgid "Ok"
 msgstr "OK"
+
+#, fuzzy
+msgid "Ok services"
+msgstr "OKサービス"
 
 msgid "Old setting"
 msgstr "無題の設定"
@@ -43727,6 +43704,11 @@ msgstr ""
 "通知が特定のタイプのチェックプラグインから発信されている場合にのみ、ルールを"
 "適用してください。注意:このオプションが使用されている場合、ホスト通知がこの"
 "ルールに一致することはありません。"
+
+msgid ""
+"Only automation users with passwords that are currently stored in cleartext "
+"will be displayed here."
+msgstr ""
 
 msgid "Only bulk notifications during the following time period"
 msgstr "次の期間中の一括通知のみ"
@@ -73085,9 +73067,6 @@ msgstr "UNKN"
 msgid "UNKNOWN"
 msgstr "不明"
 
-msgid "UNKNOWN services"
-msgstr "不明なサービス"
-
 msgid "UNKNOWN services of host"
 msgstr "ホストのUNKNOWN サービス"
 
@@ -73108,9 +73087,6 @@ msgstr "到達不能"
 
 msgid "UP"
 msgstr "アップ"
-
-msgid "UP hosts"
-msgstr "UPホスト"
 
 msgid "UPS Capacity"
 msgstr "UPS容量"
@@ -73698,6 +73674,10 @@ msgstr "不明なサイト%s"
 msgid "Unknown service"
 msgstr "不明なサービス"
 
+#, fuzzy
+msgid "Unknown services"
+msgstr "不明なサービス"
+
 #, python-format
 msgid "Unknown site %s"
 msgstr "不明なサイト%s"
@@ -73826,6 +73806,10 @@ msgstr "ダウン"
 
 msgid "Up Down (long)"
 msgstr "アップダウン(ロング)"
+
+#, fuzzy
+msgid "Up hosts"
+msgstr "UPホスト"
 
 #, fuzzy
 msgid "Up only"
@@ -74815,9 +74799,6 @@ msgstr "ハードステートを使用する"
 msgid "Use IPMItool"
 msgstr "IPMItoolを使用する"
 
-msgid "Use Inline SNMP (deprecated)"
-msgstr "インラインSNMPを使用する(非推奨)"
-
 msgid "Use Inline SNMP Backend"
 msgstr "インラインSNMPバックエンドを使用する"
 
@@ -75198,6 +75179,10 @@ msgstr "DNS名/IPアドレスとしてエイリアスを使用します"
 
 msgid "Use the catalog of check plug-ins."
 msgstr "チェックプラグインのカタログを使用します。"
+
+#, fuzzy
+msgid "Use the credentials of an automation user"
+msgstr "automationユーザーの認証情報を使用する"
 
 msgid "Use the credentials of the 'automation' user"
 msgstr "automationユーザーの認証情報を使用する"
@@ -77399,9 +77384,6 @@ msgstr "警告/クリティカル"
 msgid "WARNING"
 msgstr "警告"
 
-msgid "WARNING services"
-msgstr "警告サービス"
-
 msgid ""
 "WARNING: This Event Console is currently running as a remote replication. "
 "The rules edited here will not be used. Instead a copy of the rules of the "
@@ -77714,6 +77696,10 @@ msgstr "タイムオフセットの警告レベル"
 #, python-format
 msgid "Warning of %s"
 msgstr "%s警告"
+
+#, fuzzy
+msgid "Warning services"
+msgstr "保留中のサービス"
 
 msgid "Warning threshold"
 msgstr "警告しきい値"
@@ -84032,6 +84018,57 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用不可</b>"
 
+#, python-format
+#~ msgid ""
+#~ "By default Checkmk uses command line calls of Net-SNMP tools like snmpget "
+#~ "or snmpwalk to gather SNMP information. For each request a new command "
+#~ "line program is being executed. It is now possible to use the inline SNMP "
+#~ "implementation which calls the net-snmp libraries directly via its python "
+#~ "bindings. This should increase the performance of SNMP checks in a "
+#~ "significant way. The inline SNMP mode is a feature which improves the "
+#~ "performance for large installations and only available via our "
+#~ "subscription.<b>Note:</b> This option is deprecated and has been replaced "
+#~ "by '%s'. Changes to this option will have no effect to the behaviour of "
+#~ "Checkmk"
+#~ msgstr ""
+#~ "デフォルトでは、CheckmkはsnmpgetやsnmpwalkなどのNet-SNMPツールのコマンドラ"
+#~ "イン呼び出しを使用してSNMP情報を収集します。リクエストごとに、新しいコマン"
+#~ "ドラインプログラムが実行されています。Pythonバインディングを介してnet-snmp"
+#~ "ライブラリを直接呼び出すインラインSNMP実装を使用できるようになりました。こ"
+#~ "れにより、SNMPチェックのパフォーマンスが大幅に向上するはずです。インライン"
+#~ "SNMPモードは、大規模なインストールのパフォーマンスを向上させる機能であり、"
+#~ "サブスクリプションを介してのみ使用できます。<b>注意:</b>このオプションは廃"
+#~ "止され、 '%s'に置き換えられました。このオプションを変更しても、Checkmkの動"
+#~ "作には影響しません"
+
+#~ msgid "CRITICAL services"
+#~ msgstr "重要なサービス"
+
+#~ msgid "DOWN hosts"
+#~ msgstr "DOWNホスト"
+
+#~ msgid "Enable inline SNMP (directly use net-snmp libraries) (deprecated)"
+#~ msgstr ""
+#~ "インライン SNMP を有効にする (直接 net-snmp ライブラリを使用するのは非推"
+#~ "奨)"
+
+#, fuzzy
+#~ msgid ""
+#~ "Here you can configure the credentials to be used. Keep in mind that the "
+#~ "<tt>automation</tt> user needs to exist if you choose this option"
+#~ msgstr ""
+#~ "ここで、使用する資格情報を構成できます。このオプションを選択する場合は、"
+#~ "<tt>自動化</tt>ユーザーが存在する必要があることに注意してください"
+
+#~ msgid "UNKNOWN services"
+#~ msgstr "不明なサービス"
+
+#~ msgid "Use Inline SNMP (deprecated)"
+#~ msgstr "インラインSNMPを使用する(非推奨)"
+
+#~ msgid "WARNING services"
+#~ msgstr "警告サービス"
+
 #~ msgid "Create notification with the following parameters"
 #~ msgstr "次のパラメータを使用して通知を作成します"
 
@@ -84530,10 +84567,6 @@ msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用
 #~ msgstr "無効なセクション"
 
 #, fuzzy
-#~ msgid "Here you can configured the credentials to be used."
-#~ msgstr "ここでは、タイムアウト設定を秒単位で構成できます。"
-
-#, fuzzy
 #~ msgid "If there are problems please use disabled sections."
 #~ msgstr ""
 #~ "<br>権限に問題がある場合は、サイトユーザーに書き込み権限があることを確認し"
@@ -84613,10 +84646,6 @@ msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用
 
 #~ msgid "Site base URL"
 #~ msgstr "サイトベースURL"
-
-#, fuzzy
-#~ msgid "Use the credentials of an automation user"
-#~ msgstr "automationユーザーの認証情報を使用する"
 
 #~ msgid ""
 #~ "Use this setting to tell the dynamic configuration to which Checkmk REST "

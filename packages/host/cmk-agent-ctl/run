@@ -178,9 +178,6 @@ main() {
     test ${RUN_SETUP_ENVIRONMENT} = yes && run_setup_environment
     test ${RUN_CLEAN} = yes && run_cargo_cmd_with_explicit_package clean
     # TODO: Re-evaluate usage of --all-targets below
-    # TODO: We actually want to call 'bazel build :all' instead of
-    # Cargo below, but we need a statically linked executable, and our Bazel
-    # machinery for Rust doesn't handle this yet.
     test ${RUN_BUILD} = yes && bazel build :all
     test ${RUN_UNIT_TESTS} = yes && bazel test :all
     test ${RUN_CHECK_FORMAT} = yes && run_check_format

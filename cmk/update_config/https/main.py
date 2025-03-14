@@ -7,6 +7,7 @@ import sys
 
 from cmk.update_config.https.arguments import (
     Activate,
+    Args,
     Deactivate,
     Delete,
     Finalize,
@@ -15,8 +16,19 @@ from cmk.update_config.https.arguments import (
 )
 
 
+def _preamble(args: Args) -> None:
+    if isinstance(args, Finalize):
+        continue_ = input(
+            "This action will delete existing v1 rules and remove any references from the newly created v2 rules. After that, no action (e.g., activating or deleting) can be taken on the v2 rules by the script. It cannot be undone. Proceed by typing 'Yes': "
+        )
+        if continue_.strip().lower() != "yes":
+            sys.stdout.write("Aborted.\n")
+            sys.exit(0)
+
+
 def main() -> None:
     args = parse_arguments()
+    _preamble(args)
     sys.stdout.write("Importing...\n")
     from cmk.update_config.https import commands
 

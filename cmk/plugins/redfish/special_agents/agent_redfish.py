@@ -531,7 +531,7 @@ def get_information(redfishobj: RedfishData) -> Literal[0]:  # pylint: disable=t
         "cmk/os_type": "redfish",
         "cmk/os_version": vendor_data.firmware_version,
     }
-    sys.stdout.write("<<<labels:sep(0)>>>\n" f"{json.dumps(labels)}\n")
+    sys.stdout.write(f"<<<labels:sep(0)>>>\n{json.dumps({k: v for k, v in labels.items() if v})}\n")
 
     # fetch systems
     systems_col = fetch_data(redfishobj.redfish_connection, systems_url, "System")

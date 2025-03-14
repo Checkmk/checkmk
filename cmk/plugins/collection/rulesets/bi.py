@@ -290,15 +290,20 @@ def _migrate_to_internal_user(
     if params is None:
         return {}
     assert isinstance(params, dict)
-    if params["site"] is None or params["site"][0] != "url":
+
+    if "credentials" not in params:
         return params
 
     credentials = params.pop("credentials")
     credentials = (
-        ("automation", "automation") if credentials == ("automation", None) else credentials
+        ("automation", "automation")
+        if credentials == ("automation", None)
+        else ("configured", {"username": credentials[1][0], "password": credentials[1][1]})
     )
     url = params["site"][1]
-    params["site"] = ("remote", {"url": url, "credentials": credentials})
+    params["site"] = (
+        ("remote", {"url": url, "credentials": credentials}) if url is not None else ("local", None)
+    )
     return params
 
 

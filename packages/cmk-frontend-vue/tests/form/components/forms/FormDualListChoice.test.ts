@@ -41,11 +41,7 @@ describe('FormDualListChoice', () => {
     render(FormDualListChoiceComponent, {
       props: {
         spec,
-        data: [
-          { name: 'choice1', title: 'Choice 1' },
-          { name: 'choice3', title: 'Choice 3' },
-          { name: 'choice4', title: 'Choice 4' }
-        ],
+        data: ['choice1', 'choice3', 'choice4'],
         backendValidation: []
       }
     })
@@ -71,11 +67,7 @@ describe('FormDualListChoice', () => {
     render(FormDualListChoiceComponent, {
       props: {
         spec,
-        data: [
-          { name: 'choice1', title: 'Choice 1' },
-          { name: 'choice3', title: 'Choice 3' },
-          { name: 'choice4', title: 'Choice 4' }
-        ],
+        data: ['choice1', 'choice3', 'choice4'],
         backendValidation: []
       }
     })
@@ -100,10 +92,7 @@ describe('FormDualListChoice', () => {
     render(FormDualListChoiceComponent, {
       props: {
         spec,
-        data: [
-          { name: 'choice3', title: 'Choice 3' },
-          { name: 'choice4', title: 'Choice 4' }
-        ],
+        data: ['choice3', 'choice4'],
         backendValidation: []
       }
     })
@@ -123,11 +112,7 @@ describe('FormDualListChoice', () => {
     render(FormDualListChoiceComponent, {
       props: {
         spec,
-        data: [
-          { name: 'choice1', title: 'Choice 1' },
-          { name: 'choice3', title: 'Choice 3' },
-          { name: 'choice4', title: 'Choice 4' }
-        ],
+        data: ['choice1', 'choice3', 'choice4'],
         backendValidation: []
       }
     })
@@ -149,11 +134,7 @@ describe('FormDualListChoice', () => {
     render(FormDualListChoiceComponent, {
       props: {
         spec,
-        data: [
-          { name: 'choice1', title: 'Choice 1' },
-          { name: 'choice3', title: 'Choice 3' },
-          { name: 'choice4', title: 'Choice 4' }
-        ],
+        data: ['choice1', 'choice3', 'choice4'],
         backendValidation: []
       }
     })
@@ -169,11 +150,7 @@ describe('FormDualListChoice', () => {
     render(FormDualListChoiceComponent, {
       props: {
         spec,
-        data: [
-          { name: 'choice1', title: 'Choice 1' },
-          { name: 'choice3', title: 'Choice 3' },
-          { name: 'choice4', title: 'Choice 4' }
-        ],
+        data: ['choice1', 'choice3', 'choice4'],
         backendValidation: []
       }
     })
@@ -203,11 +180,7 @@ describe('FormDualListChoice', () => {
               { name: 'choice9', title: 'Choice 9' }
             ]
           },
-          data: [
-            { name: 'choice1', title: 'Choice 1' },
-            { name: 'choice3', title: 'Choice 3' },
-            { name: 'choice4', title: 'Choice 4' }
-          ],
+          data: ['choice1', 'choice3', 'choice4'],
           backendValidation: []
         }
       })
@@ -235,11 +208,7 @@ describe('FormDualListChoice', () => {
               { name: 'choice11', title: 'Choice 11' }
             ]
           },
-          data: [
-            { name: 'choice1', title: 'Choice 1' },
-            { name: 'choice3', title: 'Choice 3' },
-            { name: 'choice4', title: 'Choice 4' }
-          ],
+          data: ['choice1', 'choice3', 'choice4'],
           backendValidation: []
         }
       })
@@ -285,11 +254,7 @@ describe('FormDualListChoice', () => {
               { name: 'choice30', title: 'Choice 30' }
             ]
           },
-          data: [
-            { name: 'choice1', title: 'Choice 1' },
-            { name: 'choice3', title: 'Choice 3' },
-            { name: 'choice4', title: 'Choice 4' }
-          ],
+          data: ['choice1', 'choice3', 'choice4'],
           backendValidation: []
         }
       })

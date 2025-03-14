@@ -123,7 +123,7 @@ class ThreadedJobExecutor(JobExecutor):
                 stop_event=stop_event,
                 started_at=int(time.time()),
             )
-        p.start()
+            p.start()
         return result.OK(None)
 
     def _initialize_work_dir(self, work_dir: str, initial_status_args: InitialStatusArgs) -> None:

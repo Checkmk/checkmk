@@ -1230,9 +1230,10 @@ section_omd() {
         ${MK_RUN_SYNC_PARTS} || return
 
         for sitedir in /omd/sites/*; do
+            site_version="$(basename "$(realpath "${sitedir}/version")")"
             site=${sitedir#/omd/sites/}
-            for script in "${sitedir}"/bin/cmk-monitor-*; do
-                [ -e "${script}" ] && su - "${site}" -c "${script}"
+            for script in /omd/versions/"${site_version}"/bin/cmk-monitor-*; do
+                [ -e "${script}" ] && [ "$(stat "${script}" -c '%U')" = "root" ] && sudo_as_root OMD_SITE="${site}" "${script}"
             done
         done
 

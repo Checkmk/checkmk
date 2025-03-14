@@ -3,6 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+[ "$(whoami)" = "root" ] && {
+    # Don't accept further arguments when called as root, since we would put them after an 'su' unseen.
+    su - "${OMD_SITE:?}" -c "${0}"
+    exit
+}
+
 MANAGEMENT_API_PORT="$(grep "^CONFIG_RABBITMQ_MANAGEMENT_PORT=" ~/etc/omd/site.conf | cut -d"'" -f2)"
 MONITORING_USER="cmk-internal-monitoring"
 MONITORING_ROLE="monitoring"

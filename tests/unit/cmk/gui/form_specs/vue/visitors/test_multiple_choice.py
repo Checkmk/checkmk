@@ -25,75 +25,50 @@ def spec() -> MultipleChoice:
     )
 
 
-SORTED_GOOD_CHOICES_FRONTEND = sorted(
-    [{"name": "foo", "title": "foo"}, {"name": "bar", "title": "bar"}], key=lambda x: x["name"]
-)
-SORTED_GOOD_CHOICES_DISK = sorted(["foo", "bar"])
-
-
-@pytest.mark.parametrize(
-    "data_origin, sorted_good_choices",
-    [
-        (DataOrigin.DISK, SORTED_GOOD_CHOICES_DISK),
-        (DataOrigin.FRONTEND, SORTED_GOOD_CHOICES_FRONTEND),
-    ],
-)
+@pytest.mark.parametrize("data_origin", [DataOrigin.DISK, DataOrigin.FRONTEND])
 def test_multiple_choice(
     request_context: None,
     patch_theme: None,
     with_user: tuple[UserId, str],
     data_origin: DataOrigin,
-    sorted_good_choices: list,
     multiple_choice_spec: MultipleChoice,
 ) -> None:
     # Note: custom sorting will be implemented with MultipleChoiceExpanded
+    good_choices = ["foo", "bar"]
+    sorted_good_choices = sorted(good_choices)
     visitor = get_visitor(multiple_choice_spec, VisitorOptions(data_origin=data_origin))
-    _vue_spec, vue_value = visitor.to_vue(sorted_good_choices)
+    _vue_spec, vue_value = visitor.to_vue(good_choices)
     # Send good choice to vue
-    assert vue_value == SORTED_GOOD_CHOICES_FRONTEND
+    assert vue_value == sorted_good_choices
 
     # No validation problems
-    validation_messages = visitor.validate(sorted_good_choices)
+    validation_messages = visitor.validate(good_choices)
     assert len(validation_messages) == 0
 
     # Write choice back to disk
-    assert visitor.to_disk(sorted_good_choices) == SORTED_GOOD_CHOICES_DISK
+    assert visitor.to_disk(good_choices) == sorted_good_choices
 
 
-SOME_BAD_CHOICE_FRONTEND = [
-    {"name": "foo", "title": "foo"},
-    {"name": "bar", "title": "bar"},
-    {"name": "unknown_value", "title": "unknown_value"},
-]
-SOME_BAD_CHOICE_DISK = ["foo", "bar", "unknown_value"]
-SORTED_SOME_BAD_CHOICE_FILTERED_FRONTEND = sorted(
-    [{"name": "foo", "title": "foo"}, {"name": "bar", "title": "bar"}], key=lambda x: x["name"]
-)
-SORTED_SOME_BAD_CHOICE_FILTERED_DISK = sorted(["foo", "bar"])
-
-
-@pytest.mark.parametrize(
-    "data_origin, some_bad_choice",
-    [(DataOrigin.DISK, SOME_BAD_CHOICE_DISK), (DataOrigin.FRONTEND, SOME_BAD_CHOICE_FRONTEND)],
-)
+@pytest.mark.parametrize("data_origin", [DataOrigin.DISK, DataOrigin.FRONTEND])
 def test_multiple_choice_with_invalid_key(
     request_context: None,
     patch_theme: None,
     with_user: tuple[UserId, str],
     data_origin: DataOrigin,
-    some_bad_choice: list,
     multiple_choice_spec: MultipleChoice,
 ) -> None:
     # Note: custom sorting will be implemented with MultipleChoiceExpanded
     # Check behaviour: Invalid keys are filtered out during parsing
+    some_bad_choice = ["foo", "bar", "unknown_value"]
+    some_bad_choice_filtered = ["bar", "foo"]
     visitor = get_visitor(multiple_choice_spec, VisitorOptions(data_origin=data_origin))
     _vue_spec, vue_value = visitor.to_vue(some_bad_choice)
     # Send good choice to vue
-    assert vue_value == SORTED_SOME_BAD_CHOICE_FILTERED_FRONTEND
+    assert vue_value == some_bad_choice_filtered
 
     # No validation problems
     validation_messages = visitor.validate(some_bad_choice)
     assert len(validation_messages) == 0
 
     # Write choice back to disk
-    assert visitor.to_disk(some_bad_choice) == SORTED_SOME_BAD_CHOICE_FILTERED_DISK
+    assert visitor.to_disk(some_bad_choice) == some_bad_choice_filtered

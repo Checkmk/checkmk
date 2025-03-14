@@ -226,6 +226,40 @@ SECTION_WITH_DEFERRED_CORRUPTED_NEW = MkNotifySection(
     timestamp=1571212738.0,
 )
 
+INFO_TIMESTAMP_PER_SITE = [
+    ["[heute]"],
+    ["1571212728"],
+    ["Version:         2019.10.14"],
+    ["Updated:         1571212726 (2019-10-16 09:58:46)"],
+    ["Started:         1571143926 (2019-10-15 14:52:06, 68800 sec ago)"],
+    ["Configuration:   1571143926 (2019-10-15 14:52:06, 68800 sec ago)"],
+    ["Listening FD:    5"],
+    ["[morgen]"],
+    ["1571212730"],
+    ["Version:         2019.10.14"],
+    ["Updated:         1571212726 (2019-10-16 09:58:46)"],
+    ["Started:         1571143926 (2019-10-15 14:52:06, 68800 sec ago)"],
+    ["Configuration:   1571143926 (2019-10-15 14:52:06, 68800 sec ago)"],
+    ["Listening FD:    5"],
+]
+SECTION_TIMESTAMP_PER_SITE = MkNotifySection(
+    sites={
+        "heute": Site(
+            updated=1571212726,
+            version="2019.10.14",
+            spools={},
+            connections={},
+        ),
+        "morgen": Site(
+            updated=1571212726,
+            version="2019.10.14",
+            spools={},
+            connections={},
+        ),
+    },
+    timestamp=1571212728.0,
+)
+
 
 @pytest.mark.parametrize(
     "info, section",
@@ -234,6 +268,7 @@ SECTION_WITH_DEFERRED_CORRUPTED_NEW = MkNotifySection(
         pytest.param(INFO_STANDARD, SECTION_STANDARD),
         pytest.param(INFO_WITH_DEFERRED_CORRUPTED_NEW, SECTION_WITH_DEFERRED_CORRUPTED_NEW),
         pytest.param(INFO_CONNECTION_COOLDOWN, SECTION_CONNECTION_COOLDOWN),
+        pytest.param(INFO_TIMESTAMP_PER_SITE, SECTION_TIMESTAMP_PER_SITE),
     ],
 )
 def test_parse_mknotifyd(info: StringTable, section: MkNotifySection) -> None:
@@ -250,6 +285,7 @@ def test_parse_mknotifyd(info: StringTable, section: MkNotifySection) -> None:
         pytest.param(SECTION_STANDARD, [Service(item="heute")]),
         pytest.param(SECTION_WITH_DEFERRED_CORRUPTED_NEW, [Service(item="heute")]),
         pytest.param(SECTION_CONNECTION_COOLDOWN, [Service(item="heute")]),
+        pytest.param(SECTION_TIMESTAMP_PER_SITE, [Service(item="heute"), Service(item="morgen")]),
     ],
 )
 def test_discover_mknotifyd(section: MkNotifySection, services: Sequence[Service]) -> None:

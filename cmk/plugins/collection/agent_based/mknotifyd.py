@@ -186,7 +186,14 @@ def _get_spool(index: int, data: list[list[str]]) -> tuple[int, Spool]:
 def parse_mknotifyd(  # pylint: disable=too-many-branches
     string_table: StringTable,
 ) -> MkNotifySection:
-    timestamp, data = float(string_table[0][0]), string_table[1:]
+    timestamp: float | None = None
+
+    # Starting with Checkmk 2.4, the timestamp doesn't come once for all sites, but per site.
+    # Hence we only expect it on line one when there's no "[site]" header.
+    if not string_table[0][0].startswith("["):
+        timestamp, data = float(string_table[0][0]), string_table[1:]
+    else:
+        data = string_table
 
     sites: dict[str, Site] = {}
 
@@ -196,6 +203,15 @@ def parse_mknotifyd(  # pylint: disable=too-many-branches
 
         if line.startswith("["):
             site_name = line[1:-1]
+
+            if ":" not in data[index + 1][0]:
+                # If the line following the header is not a key-value pair, expect it to be a
+                # timestamp. Increase the index to either read or step over it.
+                index += 1
+                if timestamp is None:
+                    # Use the first ocurring timestamp
+                    timestamp = float(data[index][0])
+
             spools: dict[str, Spool] = {}
             connections: dict[str, Connection] = {}
             index, version, updated = _parse_site_data(index, data)
@@ -207,6 +223,7 @@ def parse_mknotifyd(  # pylint: disable=too-many-branches
                 updated=updated,
             )
             sites[site_name] = site_entry
+
         elif ":" in line:
             varname, value = _get_varname_value(line)
 
@@ -222,6 +239,9 @@ def parse_mknotifyd(  # pylint: disable=too-many-branches
                 site_entry.connections[value] = connection
 
         index += 1
+
+    if timestamp is None:
+        raise ValueError("Missing timestamp")
 
     # Fixup names of the connections. For incoming connections the remote
     # port is irrelevant. It changes randomly. But there might anyway be

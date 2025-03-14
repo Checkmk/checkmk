@@ -535,7 +535,7 @@ class PainterEventHost(Painter):
         return False
 
     def render(self, row: Row, cell: "Cell") -> CellSpec:
-        host_name = row.get("host_name", row["event_host"])
+        host_name = row.get("event_host", row["host_name"])
 
         return "", HTML(html.render_a(host_name, _get_event_host_link(host_name, row, cell)))
 

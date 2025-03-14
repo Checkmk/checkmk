@@ -1,0 +1,12 @@
+Title: Show proper Host value in the Events view
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1741949665
+Edition: cre
+Level: 1
+Version: 2.2.0p41
+
+The underling UI component was displaying the wrong value for the event host. Now
+the column should display the event host value, and fallback to the host name if
+the value is not present.

@@ -24,6 +24,8 @@ def _preamble(args: Args) -> None:
         if continue_.strip().lower() != "yes":
             sys.stdout.write("Aborted.\n")
             sys.exit(0)
+    if isinstance(args, Migrate) and not args.write:
+        sys.stdout.write("Starting dry run.\n")
 
 
 def main() -> None:

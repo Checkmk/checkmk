@@ -160,7 +160,7 @@ class _ACTestResultProblem:
     def add_site_id(self, site_id: SiteId) -> None:
         self._site_ids.add(site_id)
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         return (
             f"{self.title}, sites: {', '.join(self.site_ids)}:<br>{',<br>'.join(self.descriptions)}"
         )
@@ -197,7 +197,7 @@ def _find_ac_test_result_problems(
 
 
 def _format_ac_test_result_problems(ac_test_result_problems: Sequence[_ACTestResultProblem]) -> str:
-    return "<br><br>".join([repr(p) for p in ac_test_result_problems])
+    return "<br><br>".join([str(p) for p in ac_test_result_problems])
 
 
 def execute_deprecation_tests_and_notify_users() -> None:
@@ -239,40 +239,40 @@ def execute_deprecation_tests_and_notify_users() -> None:
 
     marker_file_store.cleanup_empty_dirs()
 
-    ac_test_results_message = _format_ac_test_result_problems(
-        _find_ac_test_result_problems(
-            not_ok_ac_test_results,
-            (
-                _group_manifests_by_path(
-                    path_config,
-                    get_stored_manifests(
-                        PackageStore(
-                            shipped_dir=paths.optional_packages_dir,
-                            local_dir=paths.local_optional_packages_dir,
-                            enabled_dir=paths.local_enabled_packages_dir,
-                        )
-                    ).local,
+    manifests_by_path = (
+        _group_manifests_by_path(
+            path_config,
+            get_stored_manifests(
+                PackageStore(
+                    shipped_dir=paths.optional_packages_dir,
+                    local_dir=paths.local_optional_packages_dir,
+                    enabled_dir=paths.local_enabled_packages_dir,
                 )
-                if (path_config := _make_path_config())
-                else {}
-            ),
+            ).local,
         )
+        if (path_config := _make_path_config())
+        else {}
     )
+
+    ac_test_results_messages = [
+        repr(p) for p in _find_ac_test_result_problems(not_ok_ac_test_results, manifests_by_path)
+    ]
 
     now = int(time.time())
     for user_id in _filter_extension_managing_users(list(load_users())):
-        message_gui(
-            user_id,
-            Message(
-                dest=("list", [user_id]),
-                methods=["gui_hint"],
-                text=ac_test_results_message,
-                id=gen_id(),
-                time=now,
-                security=False,
-                acknowledged=False,
-            ),
-        )
+        for ac_test_results_message in ac_test_results_messages:
+            message_gui(
+                user_id,
+                Message(
+                    dest=("list", [user_id]),
+                    methods=["gui_hint"],
+                    text=ac_test_results_message,
+                    id=gen_id(),
+                    time=now,
+                    security=False,
+                    acknowledged=False,
+                ),
+            )
 
 
 def register(cron_job_registry: CronJobRegistry) -> None:

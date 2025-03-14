@@ -1226,19 +1226,6 @@ section_omd() {
             find -L "/omd/versions/${site_version}/bin" -type f -user "root" -name "cmk-monitor-*" -exec sudo --non-interactive --user="${site}" {} \;
         done
 
-        echo '<<<omd_apache:sep(124)>>>'
-        for statsfile in /omd/sites/*/var/log/apache/stats; do
-            if [ -e "${statsfile}" ]; then
-                site=${statsfile%/var/log*}
-                site=${site#/omd/sites/}
-                echo "[${site}]"
-                cat "${statsfile}"
-                : >"${statsfile}"
-                # prevent next section to fail caused by a missing newline at the end of the statsfile
-                echo
-            fi
-        done
-
         _du_no_errors() {
             if [ -e "${1}" ]; then
                 output=$(du -bs "$1") && printf "%s\n" "${output}"

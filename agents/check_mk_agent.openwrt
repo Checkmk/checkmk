@@ -935,15 +935,10 @@ section_mknotify() {
 
 section_omd_apache() {
     if inpath omd; then
-        echo '<<<omd_apache:sep(124)>>>'
-        for statsfile in /omd/sites/*/var/log/apache/stats; do
-            if [ -e "${statsfile}" ]; then
-                site=${statsfile%/var/log*}
-                site=${site#/omd/sites/}
-                echo "[${site}]"
-                cat "${statsfile}"
-                : >"${statsfile}"
-            fi
+        for sitedir in /omd/sites/*; do
+            site=${sitedir#/omd/sites/}
+            script="$(realpath "${sitedir}/bin/cmk-monitor-omd_apache")"
+            [ -e "${script}" ] && [ "$(stat "${script}" -c '%U')" = "root" ] && sudo_as_root OMD_SITE="${site}" "${script}"
         done
     fi
 }

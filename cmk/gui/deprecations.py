@@ -196,10 +196,6 @@ def _find_ac_test_result_problems(
     return list(problem_by_ident.values())
 
 
-def _format_ac_test_result_problems(ac_test_result_problems: Sequence[_ACTestResultProblem]) -> str:
-    return "<br><br>".join([str(p) for p in ac_test_result_problems])
-
-
 def execute_deprecation_tests_and_notify_users() -> None:
     if is_wato_slave_site():
         return

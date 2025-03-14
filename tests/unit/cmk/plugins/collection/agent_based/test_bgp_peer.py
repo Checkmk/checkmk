@@ -74,6 +74,21 @@ DATA_CISCO_PEER_2: StringByteTable = [
     ],
 ]
 
+DATA_IPV6_WITH_ZONE_INDEX: StringByteTable = [
+    [
+        [254, 128, 1, 2, 0, 0, 0, 0, 194, 213, 130, 253, 254, 123, 34, 167],
+        [10, 193, 50, 12],
+        "4253354123",
+        [10, 192, 50, 53],
+        "2",
+        "6",
+        "None/",
+        "426354",
+        "",
+        "1.4.20.254.128.1.2.0.5.6.7.42.189.21.255.254.199.233.193.0.0.14.132",
+    ],
+]
+
 
 @pytest.mark.parametrize(
     "data, result",
@@ -110,6 +125,23 @@ DATA_CISCO_PEER_2: StringByteTable = [
                     remote_as_number=65007,
                     remote_identifier="0.0.0.0",
                 ),
+            },
+        ),
+        (
+            DATA_IPV6_WITH_ZONE_INDEX,
+            {
+                "[fe80:102:5:607:2abd:15ff:fec7:e9c1]%0.0.14.132": bgp_peer.BGPData(
+                    local_address="[fe80:102::c2d5:82fd:fe7b:22a7]",
+                    local_identifier="10.193.50.12",
+                    remote_as_number=4253354123,
+                    remote_identifier="10.192.50.53",
+                    admin_state="running",
+                    peer_state="established",
+                    last_received_error="None/",
+                    established_time=426354,
+                    description="",
+                    bgp_version=4,
+                )
             },
         ),
     ],

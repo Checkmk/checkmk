@@ -260,7 +260,7 @@ def execute_deprecation_tests_and_notify_users() -> None:
     )
 
     ac_test_results_messages = [
-        repr(p) for p in _find_ac_test_result_problems(not_ok_ac_test_results, manifests_by_path)
+        str(p) for p in _find_ac_test_result_problems(not_ok_ac_test_results, manifests_by_path)
     ]
 
     now = int(time.time())

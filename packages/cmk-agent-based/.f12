@@ -12,7 +12,7 @@ else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 
 BAZEL_TARGET=":wheel"
-../../scripts/run-bazel.sh build "${BAZEL_TARGET}"
+bazel build "${BAZEL_TARGET}"
 
 WHEEL=$(bazel info workspace)/$(bazel cquery :wheel --output=starlark --starlark:expr="target.files.to_list()[0].path")
 

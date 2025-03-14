@@ -11,7 +11,7 @@ SITE=${SITE:-$(until [ "$PWD" == / ]; do if [ -e .site ]; then
 else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 
-../../scripts/run-bazel.sh build ":cmk-livestatus-client_whl" ":livestatus_whl"
+bazel build ":cmk-livestatus-client_whl" ":livestatus_whl"
 
 # pip installs the package in the user directory in case of missing permissions
 # this might be surprising and hard to spot, so we force the global installation

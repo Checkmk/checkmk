@@ -13,7 +13,6 @@ from livestatus import SiteId
 from cmk.gui.deprecations import (
     _filter_non_ok_ac_test_results,
     _find_ac_test_result_problems,
-    _format_ac_test_result_problems,
     _MarkerFileStore,
 )
 from cmk.gui.watolib.analyze_configuration import ACResultState, ACTestResult
@@ -276,17 +275,14 @@ def test__filter_non_ok_ac_test_results(
         ),
     ],
 )
-def test__format_ac_test_result_problems(
+def test__format_ac_test_result_problem(
     ac_test_results_by_site_id: Mapping[SiteId, Sequence[ACTestResult]],
     manifests_by_path: Mapping[Path, Manifest],
     result: str,
 ) -> None:
-    assert (
-        _format_ac_test_result_problems(
-            _find_ac_test_result_problems(
-                ac_test_results_by_site_id,
-                manifests_by_path,
-            )
-        )
-        == result
+    problems = _find_ac_test_result_problems(
+        ac_test_results_by_site_id,
+        manifests_by_path,
     )
+    assert len(problems) == 1
+    assert str(problems[0]) == result

@@ -520,6 +520,9 @@ class ABCNotificationsMode(ABCEventsMode):
             mode = "user_notification_rule"
         else:
             mode = "notification_rule"
+        search_vars = []
+        if query := request.var("search"):
+            search_vars.append(("search", query))
 
         delete_url = make_confirm_delete_link(
             url=make_action_link(
@@ -528,6 +531,7 @@ class ABCNotificationsMode(ABCEventsMode):
                     ("user", userid),
                     ("_delete", nr),
                 ]
+                + search_vars
             ),
             title=_("Delete notification rule #%d") % nr,
             suffix=rule.get("description", ""),
@@ -539,6 +543,7 @@ class ABCNotificationsMode(ABCEventsMode):
                 ("user", userid),
                 ("_move", nr),
             ]
+            + search_vars
         )
         edit_url = folder_preserving_link(
             [
@@ -546,6 +551,7 @@ class ABCNotificationsMode(ABCEventsMode):
                 ("edit", nr),
                 ("user", userid),
             ]
+            + search_vars
         )
         clone_url = folder_preserving_link(
             [
@@ -553,6 +559,7 @@ class ABCNotificationsMode(ABCEventsMode):
                 ("clone", nr),
                 ("user", userid),
             ]
+            + search_vars
         )
 
         return NotificationRuleLinks(
@@ -749,6 +756,10 @@ class ModeNotifications(ABCNotificationsMode):
                 _("notification rule"),
                 save_notification_rules,
             )
+
+        if query := request.var("search"):
+            return redirect(self.mode_url(search=query, filled_in="inpage_search_form"))
+
         return redirect(self.mode_url())
 
     def _test_notification_ongoing(self) -> bool:
@@ -2286,6 +2297,11 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         check_csrf_token()
 
         if not transactions.check_transaction():
+            if query := request.var("search"):
+                return redirect(
+                    mode_url("notifications", search=query, filled_in="inpage_search_form")
+                )
+
             return self._back_mode()
 
         vs = self._valuespec()
@@ -2303,6 +2319,9 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
 
         log_what = "new-notification-rule" if self._new else "edit-notification-rule"
         self._add_change(log_what, self._log_text(self._edit_nr))
+
+        if query := request.var("search"):
+            return redirect(mode_url("notifications", search=query, filled_in="inpage_search_form"))
 
         return self._back_mode()
 

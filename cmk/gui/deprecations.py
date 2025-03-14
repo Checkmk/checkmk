@@ -9,6 +9,7 @@ import time
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Literal
 
 from livestatus import SiteConfigurations, SiteId
 
@@ -22,6 +23,7 @@ import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.config import active_config
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.http import request
+from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.message import Message, message_gui
 from cmk.gui.site_config import get_site_config, is_wato_slave_site
@@ -138,20 +140,20 @@ def _find_manifest(
 @dataclass(frozen=True)
 class _ACTestResultProblem:
     ident: str
-    title: str
+    type: Literal["mkp", "file", "unsorted"]
     _descriptions: list[str] = field(default_factory=list)
     _site_ids: set[SiteId] = field(default_factory=set)
 
     def __post_init__(self) -> None:
         assert self.ident
-        assert self.title
 
     @property
     def descriptions(self) -> Sequence[str]:
         return self._descriptions
 
     def add_description(self, description: str) -> None:
-        self._descriptions.append(description)
+        if description not in self._descriptions:
+            self._descriptions.append(description)
 
     @property
     def site_ids(self) -> Sequence[SiteId]:
@@ -161,9 +163,14 @@ class _ACTestResultProblem:
         self._site_ids.add(site_id)
 
     def __str__(self) -> str:
-        return (
-            f"{self.title}, sites: {', '.join(self.site_ids)}:<br>{',<br>'.join(self.descriptions)}"
-        )
+        match self.type:
+            case "mkp":
+                title = _("Extension package %r") % self.ident
+            case "file":
+                title = _("Unpackaged file %r") % self.ident
+            case "unsorted":
+                title = _("Unsorted")
+        return f"{title}, sites: {', '.join(self.site_ids)}:<br>{',<br>'.join(self.descriptions)}"
 
 
 def _find_ac_test_result_problems(
@@ -174,23 +181,31 @@ def _find_ac_test_result_problems(
     for site_id, ac_test_results in not_ok_ac_test_results.items():
         for ac_test_result in ac_test_results:
             if ac_test_result.path:
+                try:
+                    path = ac_test_result.path.relative_to(Path("/omd/sites", site_id))
+                except ValueError:
+                    # Not a subpath, should not happen
+                    path = ac_test_result.path
+
                 if manifest := _find_manifest(manifests_by_path, ac_test_result.path):
                     problem = problem_by_ident.setdefault(
                         manifest.name,
-                        _ACTestResultProblem(manifest.name, f"Extension package {manifest.name!r}"),
+                        _ACTestResultProblem(manifest.name, "mkp"),
                     )
                 else:
                     problem = problem_by_ident.setdefault(
-                        "unpackaged_files",
-                        _ACTestResultProblem("unpackaged_files", "Unpackaged files"),
+                        str(path),
+                        _ACTestResultProblem(str(path), "file"),
                     )
-                problem.add_description(f"{ac_test_result.text} (file: {ac_test_result.path})")
+                problem.add_description(f"{ac_test_result.text} (file: {path})")
+
             else:
                 problem = problem_by_ident.setdefault(
                     "unsorted",
-                    _ACTestResultProblem("unsorted", "Unsorted"),
+                    _ACTestResultProblem("unsorted", "unsorted"),
                 )
                 problem.add_description(ac_test_result.text)
+
             problem.add_site_id(site_id)
 
     return list(problem_by_ident.values())

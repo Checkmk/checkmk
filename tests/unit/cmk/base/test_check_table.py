@@ -19,7 +19,6 @@ from cmk.checkengine.checking import CheckPluginName, ConfiguredService, Service
 from cmk.checkengine.discovery import AutocheckEntry
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 
-import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config
 from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins, CheckPlugin
 from cmk.base.config import FilterMode, HostCheckTable
@@ -647,10 +646,8 @@ def test_check_table__get_static_check_entries(
 
     config_cache = ts.apply(monkeypatch)
 
-    monkeypatch.setattr(
-        agent_based_register,
-        "get_check_plugin",
-        lambda _cpn, _plugins: CheckPlugin(
+    plugins = {
+        CheckPluginName("ps"): CheckPlugin(
             CheckPluginName("ps"),
             [],
             "Process item",
@@ -663,12 +660,12 @@ def test_check_table__get_static_check_entries(
             RuleSetName("ps"),
             None,
             PluginLocation(module="module", name="name"),
-        ),
-    )
+        )
+    }
 
     static_check_parameters = [
         service.parameters
-        for _, service in config_cache.enforced_services_table(hostname, {}).values()
+        for _, service in config_cache.enforced_services_table(hostname, plugins).values()
     ]
 
     entries = config._get_checkgroup_parameters(

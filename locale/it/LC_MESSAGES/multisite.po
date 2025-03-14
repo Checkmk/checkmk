@@ -9892,30 +9892,6 @@ msgstr ""
 "le modalità SNMP sono caratteristiche che migliorano le prestazioni per "
 "grandi installazioni e sono disponibili solo tramite il nostro abbonamento."
 
-#, python-format
-msgid ""
-"By default Checkmk uses command line calls of Net-SNMP tools like snmpget or "
-"snmpwalk to gather SNMP information. For each request a new command line "
-"program is being executed. It is now possible to use the inline SNMP "
-"implementation which calls the net-snmp libraries directly via its python "
-"bindings. This should increase the performance of SNMP checks in a "
-"significant way. The inline SNMP mode is a feature which improves the "
-"performance for large installations and only available via our subscription."
-"<b>Note:</b> This option is deprecated and has been replaced by '%s'. "
-"Changes to this option will have no effect to the behaviour of Checkmk"
-msgstr ""
-"Di default Checkmk usa le chiamate alla linea di comando di strumenti Net-"
-"SNMP come snmpget o snmpwalk per raccogliere informazioni SNMP. Per ogni "
-"richiesta viene eseguito un nuovo programma da linea di comando. Ora è "
-"possibile utilizzare l'implementazione SNMP inline che chiama le librerie "
-"net-snmp direttamente tramite i suoi binding python. Questo dovrebbe "
-"aumentare le prestazioni dei controlli SNMP in modo significativo. La "
-"modalità SNMP inline è una caratteristica che migliora le prestazioni per "
-"grandi installazioni ed è disponibile solo tramite il nostro abbonamento."
-"<b>Nota:</b> Questa opzione è deprecata ed è stata sostituita da '%s'. Le "
-"modifiche a questa opzione non avranno alcun effetto sul comportamento di "
-"Checkmk"
-
 msgid ""
 "By default Checkmk uses the community \"public\" to contact hosts via SNMP "
 "v1/v2. This rule can be used to customize the credentials to be used when "
@@ -10907,9 +10883,6 @@ msgstr "Servizi CRIT del sito"
 
 msgid "CRITICAL"
 msgstr "CRITICA"
-
-msgid "CRITICAL services"
-msgstr "Servizi CRITICI"
 
 msgid "CRT/PEM File"
 msgstr "File CRT/PEM"
@@ -16235,6 +16208,10 @@ msgstr "Il livello critico è al massimo"
 msgid "Critical of %s"
 msgstr "Critico se %s"
 
+#, fuzzy
+msgid "Critical services"
+msgstr "Eventi critici"
+
 msgid "Critical threshold"
 msgstr "Soglia critica"
 
@@ -17011,9 +16988,6 @@ msgstr "Risposte DNS di successo"
 
 msgid "DOWN"
 msgstr "GIÙ"
-
-msgid "DOWN hosts"
-msgstr "Ospiti DOWN"
 
 msgid "DPI"
 msgstr "DPI"
@@ -20842,6 +20816,10 @@ msgid "Down"
 msgstr "Giù"
 
 #, fuzzy
+msgid "Down hosts"
+msgstr "su host %s"
+
+#, fuzzy
 msgid "Down only"
 msgstr "Conta solo"
 
@@ -22235,10 +22213,6 @@ msgstr "Abilitare le notifiche dell'host"
 
 msgid "Enable in-memory cache for availability"
 msgstr "Abilitare la cache in-memory per la disponibilità"
-
-msgid "Enable inline SNMP (directly use net-snmp libraries) (deprecated)"
-msgstr ""
-"Abilita SNMP in linea (usa direttamente le librerie net-snmp) (deprecato)"
 
 msgid "Enable logging of logon failures"
 msgstr "Abilita la registrazione dei fallimenti di accesso"
@@ -27505,12 +27479,8 @@ msgstr ""
 "colorazioni."
 
 #, fuzzy
-msgid ""
-"Here you can configure the credentials to be used. Keep in mind that the "
-"<tt>automation</tt> user needs to exist if you choose this option"
-msgstr ""
-"Qui potete configurare le credenziali da utilizzare. Tieni presente che "
-"l'utente <tt>automation</tt> deve esistere se scegli questa opzione"
+msgid "Here you can configure the credentials to be used."
+msgstr "Qui potete configurare le impostazioni di timeout in secondi."
 
 msgid ""
 "Here you can configure the list of possible service levels for hosts, "
@@ -43260,6 +43230,10 @@ msgid "No valid theme directories found."
 msgstr "Non sono state trovate directory di temi valide."
 
 #, fuzzy
+msgid "No valid users available"
+msgstr "Porte disponibili"
+
+#, fuzzy
 msgid "No values defined"
 msgstr "Nessuna fonte di dati definita."
 
@@ -44921,9 +44895,6 @@ msgstr "Area OK"
 msgid "OK if standby count is zero or equals active paths."
 msgstr "OK se il conteggio dello standby è zero o uguale ai percorsi attivi."
 
-msgid "OK services"
-msgstr "Servizi OK"
-
 #, fuzzy
 msgid "OK services of host"
 msgstr "OK Servizi dell'host"
@@ -45085,6 +45056,10 @@ msgstr "Offset"
 
 msgid "Ok"
 msgstr "Ok"
+
+#, fuzzy
+msgid "Ok services"
+msgstr "Servizi OK"
 
 msgid "Old setting"
 msgstr "Vecchia impostazione"
@@ -45381,6 +45356,11 @@ msgstr ""
 "Applica la regola solo se la notifica proviene da certi tipi di plugin di "
 "controllo. Nota: le notifiche dell'host non corrispondono mai a questa "
 "regola se si usa questa opzione."
+
+msgid ""
+"Only automation users with passwords that are currently stored in cleartext "
+"will be displayed here."
+msgstr ""
 
 msgid "Only bulk notifications during the following time period"
 msgstr "Solo notifiche di massa nel seguente periodo di tempo"
@@ -76304,9 +76284,6 @@ msgstr "UNKN"
 msgid "UNKNOWN"
 msgstr "SCONOSCIUTO"
 
-msgid "UNKNOWN services"
-msgstr "Servizi sconosciuti"
-
 #, fuzzy
 msgid "UNKNOWN services of host"
 msgstr "SCONOSCIUTO Servizi dell'ospite"
@@ -76329,9 +76306,6 @@ msgstr "IRRAGGIUNGIBILE"
 
 msgid "UP"
 msgstr "SU"
-
-msgid "UP hosts"
-msgstr "Padroni di casa UP"
 
 msgid "UPS Capacity"
 msgstr "Capacità UPS"
@@ -76950,6 +76924,10 @@ msgstr "Sito sconosciuto %s"
 msgid "Unknown service"
 msgstr "Servizio sconosciuto"
 
+#, fuzzy
+msgid "Unknown services"
+msgstr "Servizio sconosciuto"
+
 #, python-format
 msgid "Unknown site %s"
 msgstr "Sito sconosciuto %s"
@@ -77079,6 +77057,10 @@ msgstr "Giù"
 
 msgid "Up Down (long)"
 msgstr "Su Giù (lungo)"
+
+#, fuzzy
+msgid "Up hosts"
+msgstr "Padroni di casa UP"
 
 #, fuzzy
 msgid "Up only"
@@ -78095,9 +78077,6 @@ msgstr "Usare gli stati duri"
 msgid "Use IPMItool"
 msgstr "Utilizzare IPMItool"
 
-msgid "Use Inline SNMP (deprecated)"
-msgstr "Utilizzare SNMP in linea (deprecato)"
-
 msgid "Use Inline SNMP Backend"
 msgstr "Utilizzare il backend SNMP in linea"
 
@@ -78494,6 +78473,10 @@ msgstr "Utilizzare l'alias come nome DNS / indirizzo IP"
 #, fuzzy
 msgid "Use the catalog of check plug-ins."
 msgstr "Utilizzare il catalogo dei plugin di controllo."
+
+#, fuzzy
+msgid "Use the credentials of an automation user"
+msgstr "Usa le credenziali dell'utente 'automazione'"
 
 msgid "Use the credentials of the 'automation' user"
 msgstr "Usa le credenziali dell'utente 'automazione'"
@@ -80770,9 +80753,6 @@ msgstr "WARN/CRIT"
 msgid "WARNING"
 msgstr "ATTENZIONE"
 
-msgid "WARNING services"
-msgstr "Servizi di ATTENZIONE"
-
 msgid ""
 "WARNING: This Event Console is currently running as a remote replication. "
 "The rules edited here will not be used. Instead a copy of the rules of the "
@@ -81085,6 +81065,10 @@ msgstr "Livelli di avvertimento per Time Offset"
 #, fuzzy, python-format
 msgid "Warning of %s"
 msgstr "Attenzione se %s"
+
+#, fuzzy
+msgid "Warning services"
+msgstr "Servizi in attesa"
 
 msgid "Warning threshold"
 msgstr "Soglia di avvertimento"
@@ -87589,6 +87573,58 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usa SSL per la connessione."
 
+#, python-format
+#~ msgid ""
+#~ "By default Checkmk uses command line calls of Net-SNMP tools like snmpget "
+#~ "or snmpwalk to gather SNMP information. For each request a new command "
+#~ "line program is being executed. It is now possible to use the inline SNMP "
+#~ "implementation which calls the net-snmp libraries directly via its python "
+#~ "bindings. This should increase the performance of SNMP checks in a "
+#~ "significant way. The inline SNMP mode is a feature which improves the "
+#~ "performance for large installations and only available via our "
+#~ "subscription.<b>Note:</b> This option is deprecated and has been replaced "
+#~ "by '%s'. Changes to this option will have no effect to the behaviour of "
+#~ "Checkmk"
+#~ msgstr ""
+#~ "Di default Checkmk usa le chiamate alla linea di comando di strumenti Net-"
+#~ "SNMP come snmpget o snmpwalk per raccogliere informazioni SNMP. Per ogni "
+#~ "richiesta viene eseguito un nuovo programma da linea di comando. Ora è "
+#~ "possibile utilizzare l'implementazione SNMP inline che chiama le librerie "
+#~ "net-snmp direttamente tramite i suoi binding python. Questo dovrebbe "
+#~ "aumentare le prestazioni dei controlli SNMP in modo significativo. La "
+#~ "modalità SNMP inline è una caratteristica che migliora le prestazioni per "
+#~ "grandi installazioni ed è disponibile solo tramite il nostro abbonamento."
+#~ "<b>Nota:</b> Questa opzione è deprecata ed è stata sostituita da '%s'. Le "
+#~ "modifiche a questa opzione non avranno alcun effetto sul comportamento di "
+#~ "Checkmk"
+
+#~ msgid "CRITICAL services"
+#~ msgstr "Servizi CRITICI"
+
+#~ msgid "DOWN hosts"
+#~ msgstr "Ospiti DOWN"
+
+#~ msgid "Enable inline SNMP (directly use net-snmp libraries) (deprecated)"
+#~ msgstr ""
+#~ "Abilita SNMP in linea (usa direttamente le librerie net-snmp) (deprecato)"
+
+#, fuzzy
+#~ msgid ""
+#~ "Here you can configure the credentials to be used. Keep in mind that the "
+#~ "<tt>automation</tt> user needs to exist if you choose this option"
+#~ msgstr ""
+#~ "Qui potete configurare le credenziali da utilizzare. Tieni presente che "
+#~ "l'utente <tt>automation</tt> deve esistere se scegli questa opzione"
+
+#~ msgid "UNKNOWN services"
+#~ msgstr "Servizi sconosciuti"
+
+#~ msgid "Use Inline SNMP (deprecated)"
+#~ msgstr "Utilizzare SNMP in linea (deprecato)"
+
+#~ msgid "WARNING services"
+#~ msgstr "Servizi di ATTENZIONE"
+
 #~ msgid "Create notification with the following parameters"
 #~ msgstr "Crea una notifica con i seguenti parametri"
 
@@ -88068,10 +88104,6 @@ msgstr "Usa SSL per la connessione."
 #~ msgstr "Sezioni disabili"
 
 #, fuzzy
-#~ msgid "Here you can configured the credentials to be used."
-#~ msgstr "Qui potete configurare le impostazioni di timeout in secondi."
-
-#, fuzzy
 #~ msgid "If there are problems please use disabled sections."
 #~ msgstr ""
 #~ "<br>Se ci sono problemi di permessi, assicurati che l'utente del sito "
@@ -88147,10 +88179,6 @@ msgstr "Usa SSL per la connessione."
 
 #~ msgid "Site base URL"
 #~ msgstr "URL di base del sito"
-
-#, fuzzy
-#~ msgid "Use the credentials of an automation user"
-#~ msgstr "Usa le credenziali dell'utente 'automazione'"
 
 #~ msgid ""
 #~ "Use this setting to tell the dynamic configuration to which Checkmk REST "

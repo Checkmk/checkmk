@@ -9966,30 +9966,6 @@ msgstr ""
 "îmbunătățesc performanța pentru instalațiile mari și sunt disponibile numai "
 "prin intermediul abonamentului nostru."
 
-#, python-format
-msgid ""
-"By default Checkmk uses command line calls of Net-SNMP tools like snmpget or "
-"snmpwalk to gather SNMP information. For each request a new command line "
-"program is being executed. It is now possible to use the inline SNMP "
-"implementation which calls the net-snmp libraries directly via its python "
-"bindings. This should increase the performance of SNMP checks in a "
-"significant way. The inline SNMP mode is a feature which improves the "
-"performance for large installations and only available via our subscription."
-"<b>Note:</b> This option is deprecated and has been replaced by '%s'. "
-"Changes to this option will have no effect to the behaviour of Checkmk"
-msgstr ""
-"În mod implicit, Checkmk utilizează apelurile din linia de comandă ale "
-"instrumentelor Net-SNMP, cum ar fi snmpget sau snmpwalk, pentru a colecta "
-"informații SNMP. Pentru fiecare solicitare, se execută un nou program de "
-"linie de comandă. Acum este posibilă utilizarea implementării SNMP în linie, "
-"care apelează bibliotecile net-snmp direct prin intermediul legăturilor sale "
-"python. Acest lucru ar trebui să crească performanța verificărilor SNMP într-"
-"un mod semnificativ. Modul SNMP inline este o caracteristică care "
-"îmbunătățește performanța pentru instalațiile mari și este disponibilă numai "
-"prin intermediul abonamentului nostru.<b>Nota:</b> Această opțiune este "
-"depășită și a fost înlocuită cu '%s'. Modificările aduse acestei opțiuni nu "
-"vor avea niciun efect asupra comportamentului Checkmk"
-
 msgid ""
 "By default Checkmk uses the community \"public\" to contact hosts via SNMP "
 "v1/v2. This rule can be used to customize the credentials to be used when "
@@ -11035,9 +11011,6 @@ msgstr "Serviciile CRIT de pe site"
 
 msgid "CRITICAL"
 msgstr "CRITICAL"
-
-msgid "CRITICAL services"
-msgstr "Servicii CRITICE"
 
 msgid "CRT/PEM File"
 msgstr "Fișier CRT/PEM"
@@ -16403,6 +16376,10 @@ msgstr "Nivelul critic este de cel mult"
 msgid "Critical of %s"
 msgstr "Critic dacă %s"
 
+#, fuzzy
+msgid "Critical services"
+msgstr "Evenimente critice"
+
 msgid "Critical threshold"
 msgstr "Pragul critic"
 
@@ -17181,9 +17158,6 @@ msgstr "Răspunsuri DNS reușite"
 
 msgid "DOWN"
 msgstr "DOWN"
-
-msgid "DOWN hosts"
-msgstr "Gazde DOWN"
 
 msgid "DPI"
 msgstr "DPI"
@@ -21049,6 +21023,10 @@ msgid "Down"
 msgstr "Jos"
 
 #, fuzzy
+msgid "Down hosts"
+msgstr "pe gazda %s"
+
+#, fuzzy
 msgid "Down only"
 msgstr "Doar numărătoarea"
 
@@ -22463,10 +22441,6 @@ msgstr "Activați notificările gazdă"
 
 msgid "Enable in-memory cache for availability"
 msgstr "Activați memoria cache în memorie pentru disponibilitate"
-
-msgid "Enable inline SNMP (directly use net-snmp libraries) (deprecated)"
-msgstr ""
-"Activează SNMP în linie (utilizează direct bibliotecile net-snmp) (depreciat)"
 
 msgid "Enable logging of logon failures"
 msgstr "Activați jurnalizarea eșecurilor de logare"
@@ -27775,13 +27749,8 @@ msgstr ""
 "celorlalte culori."
 
 #, fuzzy
-msgid ""
-"Here you can configure the credentials to be used. Keep in mind that the "
-"<tt>automation</tt> user needs to exist if you choose this option"
-msgstr ""
-"Aici puteți configura acreditările care urmează să fie utilizate. Rețineți "
-"că utilizatorul <tt>automation</tt> trebuie să existe dacă alegeți această "
-"opțiune"
+msgid "Here you can configure the credentials to be used."
+msgstr "Aici puteți configura setările de temporizare în secunde."
 
 msgid ""
 "Here you can configure the list of possible service levels for hosts, "
@@ -43703,6 +43672,10 @@ msgid "No valid theme directories found."
 msgstr "Nu s-au găsit directoare de teme valide."
 
 #, fuzzy
+msgid "No valid users available"
+msgstr "Porturi disponibile"
+
+#, fuzzy
 msgid "No values defined"
 msgstr "Nu este definită nicio sursă de date."
 
@@ -45375,9 +45348,6 @@ msgid "OK if standby count is zero or equals active paths."
 msgstr ""
 "OK dacă numărul de standby este zero sau este egal cu cel al căilor active."
 
-msgid "OK services"
-msgstr "Servicii OK"
-
 # georgem ##############
 #, fuzzy
 msgid "OK services of host"
@@ -45541,6 +45511,10 @@ msgstr "Offset"
 
 msgid "Ok"
 msgstr "Ok"
+
+#, fuzzy
+msgid "Ok services"
+msgstr "Servicii OK"
 
 msgid "Old setting"
 msgstr "Vechea setare"
@@ -45839,6 +45813,11 @@ msgstr ""
 "Aplicați regula numai dacă notificarea provine de la anumite tipuri de fișe "
 "de verificare. Notă: Notificările gazdelor nu se potrivesc niciodată cu "
 "această regulă dacă se utilizează această opțiune."
+
+msgid ""
+"Only automation users with passwords that are currently stored in cleartext "
+"will be displayed here."
+msgstr ""
 
 msgid "Only bulk notifications during the following time period"
 msgstr "Numai notificări în masă în următoarea perioadă de timp"
@@ -77145,9 +77124,6 @@ msgstr "UNKN"
 msgid "UNKNOWN"
 msgstr "NECUNOSCUT"
 
-msgid "UNKNOWN services"
-msgstr "Servicii NECUNOSCUTE"
-
 #, fuzzy
 msgid "UNKNOWN services of host"
 msgstr "Necunoscut Servicii ale gazdei"
@@ -77170,9 +77146,6 @@ msgstr "UNREACHABLE"
 
 msgid "UP"
 msgstr "UP"
-
-msgid "UP hosts"
-msgstr "Gazde UP"
 
 msgid "UPS Capacity"
 msgstr "Capacitate UPS"
@@ -77785,6 +77758,10 @@ msgstr "Site necunoscut %s"
 msgid "Unknown service"
 msgstr "Serviciu necunoscut"
 
+#, fuzzy
+msgid "Unknown services"
+msgstr "Serviciu necunoscut"
+
 #, python-format
 msgid "Unknown site %s"
 msgstr "Site necunoscut %s"
@@ -77914,6 +77891,10 @@ msgstr "Jos"
 
 msgid "Up Down (long)"
 msgstr "Sus Jos (lung)"
+
+#, fuzzy
+msgid "Up hosts"
+msgstr "Gazde UP"
 
 #, fuzzy
 msgid "Up only"
@@ -78946,9 +78927,6 @@ msgstr "Utilizați stări dure"
 msgid "Use IPMItool"
 msgstr "Utilizați IPMItool"
 
-msgid "Use Inline SNMP (deprecated)"
-msgstr "Utilizați SNMP în linie (depreciat)"
-
 msgid "Use Inline SNMP Backend"
 msgstr "Utilizarea backend-ului SNMP în linie"
 
@@ -79351,6 +79329,10 @@ msgstr "Utilizați aliasul ca nume DNS / adresă IP"
 #, fuzzy
 msgid "Use the catalog of check plug-ins."
 msgstr "Utilizați catalogul de pluginuri de verificare."
+
+#, fuzzy
+msgid "Use the credentials of an automation user"
+msgstr "Utilizați acreditările utilizatorului 'automation'."
 
 msgid "Use the credentials of the 'automation' user"
 msgstr "Utilizați acreditările utilizatorului 'automation'."
@@ -81643,9 +81625,6 @@ msgstr "AVERTISMENT/CRIT"
 msgid "WARNING"
 msgstr "AVERTISMENT"
 
-msgid "WARNING services"
-msgstr "Servicii de AVERTISMENT"
-
 msgid ""
 "WARNING: This Event Console is currently running as a remote replication. "
 "The rules edited here will not be used. Instead a copy of the rules of the "
@@ -81961,6 +81940,10 @@ msgstr "Niveluri de avertizare pentru decalajul de timp"
 #, fuzzy, python-format
 msgid "Warning of %s"
 msgstr "Avertisment dacă %s"
+
+#, fuzzy
+msgid "Warning services"
+msgstr "Servicii în așteptare"
 
 msgid "Warning threshold"
 msgstr "Prag de avertizare"
@@ -88540,6 +88523,61 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
 
+#, python-format
+#~ msgid ""
+#~ "By default Checkmk uses command line calls of Net-SNMP tools like snmpget "
+#~ "or snmpwalk to gather SNMP information. For each request a new command "
+#~ "line program is being executed. It is now possible to use the inline SNMP "
+#~ "implementation which calls the net-snmp libraries directly via its python "
+#~ "bindings. This should increase the performance of SNMP checks in a "
+#~ "significant way. The inline SNMP mode is a feature which improves the "
+#~ "performance for large installations and only available via our "
+#~ "subscription.<b>Note:</b> This option is deprecated and has been replaced "
+#~ "by '%s'. Changes to this option will have no effect to the behaviour of "
+#~ "Checkmk"
+#~ msgstr ""
+#~ "În mod implicit, Checkmk utilizează apelurile din linia de comandă ale "
+#~ "instrumentelor Net-SNMP, cum ar fi snmpget sau snmpwalk, pentru a colecta "
+#~ "informații SNMP. Pentru fiecare solicitare, se execută un nou program de "
+#~ "linie de comandă. Acum este posibilă utilizarea implementării SNMP în "
+#~ "linie, care apelează bibliotecile net-snmp direct prin intermediul "
+#~ "legăturilor sale python. Acest lucru ar trebui să crească performanța "
+#~ "verificărilor SNMP într-un mod semnificativ. Modul SNMP inline este o "
+#~ "caracteristică care îmbunătățește performanța pentru instalațiile mari și "
+#~ "este disponibilă numai prin intermediul abonamentului nostru.<b>Nota:</b> "
+#~ "Această opțiune este depășită și a fost înlocuită cu '%s'. Modificările "
+#~ "aduse acestei opțiuni nu vor avea niciun efect asupra comportamentului "
+#~ "Checkmk"
+
+#~ msgid "CRITICAL services"
+#~ msgstr "Servicii CRITICE"
+
+#~ msgid "DOWN hosts"
+#~ msgstr "Gazde DOWN"
+
+#~ msgid "Enable inline SNMP (directly use net-snmp libraries) (deprecated)"
+#~ msgstr ""
+#~ "Activează SNMP în linie (utilizează direct bibliotecile net-snmp) "
+#~ "(depreciat)"
+
+#, fuzzy
+#~ msgid ""
+#~ "Here you can configure the credentials to be used. Keep in mind that the "
+#~ "<tt>automation</tt> user needs to exist if you choose this option"
+#~ msgstr ""
+#~ "Aici puteți configura acreditările care urmează să fie utilizate. "
+#~ "Rețineți că utilizatorul <tt>automation</tt> trebuie să existe dacă "
+#~ "alegeți această opțiune"
+
+#~ msgid "UNKNOWN services"
+#~ msgstr "Servicii NECUNOSCUTE"
+
+#~ msgid "Use Inline SNMP (deprecated)"
+#~ msgstr "Utilizați SNMP în linie (depreciat)"
+
+#~ msgid "WARNING services"
+#~ msgstr "Servicii de AVERTISMENT"
+
 #~ msgid "Create notification with the following parameters"
 #~ msgstr "Creați o notificare cu următorii parametri"
 
@@ -89030,10 +89068,6 @@ msgstr "Utilizați SSL pentru conexiune."
 #~ msgstr "Secțiuni pentru persoane cu handicap"
 
 #, fuzzy
-#~ msgid "Here you can configured the credentials to be used."
-#~ msgstr "Aici puteți configura setările de temporizare în secunde."
-
-#, fuzzy
 #~ msgid "If there are problems please use disabled sections."
 #~ msgstr ""
 #~ "<br>În cazul în care există probleme cu permisiunile, asigurați-vă că "
@@ -89115,10 +89149,6 @@ msgstr "Utilizați SSL pentru conexiune."
 
 #~ msgid "Site base URL"
 #~ msgstr "URL-ul de bază al site-ului"
-
-#, fuzzy
-#~ msgid "Use the credentials of an automation user"
-#~ msgstr "Utilizați acreditările utilizatorului 'automation'."
 
 #~ msgid ""
 #~ "Use this setting to tell the dynamic configuration to which Checkmk REST "

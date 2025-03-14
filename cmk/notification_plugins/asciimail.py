@@ -142,6 +142,9 @@ def main() -> NoReturn:
         if len(contexts) > 1:
             subject = utils.get_bulk_notification_subject(contexts, hosts)
 
+        # Take last context as all contexts share the same key/value pairs needed for sending mail.
+        context = contexts.pop()
+
     else:
         # gather all options from env
         context = utils.collect_context()

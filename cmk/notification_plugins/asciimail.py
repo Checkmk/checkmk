@@ -126,33 +126,27 @@ def construct_content(context: dict[str, str]) -> str:
 
 def main() -> NoReturn:
     if bulk_mode:
-        content_txt = ""
         parameters, contexts = utils.read_bulk_contexts()
-        hosts = set()
-        mailto = ""
-        subject = ""
-        for context in contexts:
-            context.update(parameters)
-            content_txt += construct_content(context)
-            mailto = context["CONTACTEMAIL"]  # Assume the same in each context
-            subject = context["SUBJECT"]
-            hosts.add(context["HOSTNAME"])
-
-        # Use the single context subject in case there is only one context in the bulk
-        if len(contexts) > 1:
-            subject = utils.get_bulk_notification_subject(contexts, hosts)
+        content_txt = "".join(construct_content(context) for context in contexts)
+        hosts = {context["HOSTNAME"] for context in contexts}
 
         # Take last context as all contexts share the same key/value pairs needed for sending mail.
         context = contexts.pop()
+        context.update(parameters)
+
+        # Use the single context subject in case there is only one context in the bulk
+        if len(hosts) > 1:
+            subject = utils.get_bulk_notification_subject(contexts, hosts)
+        else:
+            subject = context["SUBJECT"]
 
     else:
         # gather all options from env
         context = utils.collect_context()
         content_txt = construct_content(context)
-        mailto = context["CONTACTEMAIL"]
         subject = context["SUBJECT"]
 
-    if not mailto:  # e.g. empty field in user database
+    if not (mailto := context["CONTACTEMAIL"]):  # e.g. empty field in user database
         sys.stdout.write("Cannot send ASCII email: empty destination email address\n")
         sys.exit(2)
 

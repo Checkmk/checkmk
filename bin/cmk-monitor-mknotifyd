@@ -1,0 +1,19 @@
+#!/bin/sh
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+usage() {
+    cat <<HERE >&2
+Used for internal monitoring of mknotifyd.
+HERE
+    return 1
+}
+
+echo '<<<mknotifyd:sep(0)>>>'
+statefile=~/var/log/mknotifyd.state
+[ -e "${statefile}" ] && {
+    echo "[$(whoami)]"
+    date +%s
+    grep -v '^#' <"${statefile}"
+}

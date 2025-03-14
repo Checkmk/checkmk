@@ -1,4 +1,4 @@
-$CMK_VERSION = "2.4.0b1"
+$CMK_VERSION = "2.4.0b2"
 
 Write-Host "<<<windows_tasks:sep(58):encoding(cp437)>>>"
 $oldPreference = $ErrorActionPreference

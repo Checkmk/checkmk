@@ -38,7 +38,7 @@ from cmk.special_agents.v0_unstable.request_helper import HostnameValidationAdap
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-__version__ = "2.4.0b1"
+__version__ = "2.4.0b2"
 
 USER_AGENT = f"checkmk-special-vsphere-{__version__}"
 

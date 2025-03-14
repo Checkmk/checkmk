@@ -74,7 +74,7 @@ class BackgroundJobManager:
 
                 for entry in all_jobs[-1:0:-1]:
                     job_id, job_status = entry
-                    if job_status.state == JobStatusStates.RUNNING:
+                    if job_status.state in (JobStatusStates.INITIALIZED, JobStatusStates.RUNNING):
                         continue
 
                     if len(all_jobs) > max_count or (time.time() - job_status.started > max_age):

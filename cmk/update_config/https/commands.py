@@ -97,6 +97,8 @@ def finalize_main(search: SearchArgs) -> None:
         ruleset_v2 = all_rulesets.get("active_checks:httpv2")
         for folder, rule_index, rule_v2 in select(ruleset_v2, search):
             if (rule_v1_id := _migrated_from(rule_v2)) is not None:
+                rule_str = _render_rule(folder.title(), rule_index)
+                sys.stdout.write(f"{rule_str}\n")
                 rule_v1 = _from_v1(rule_v1_id, ruleset_v1)
                 if rule_v1 is None:
                     sys.stdout.write(f"Could find counter-part: {folder}, {rule_index}\n")
@@ -121,7 +123,9 @@ def delete_main(search: SearchArgs) -> None:
         ruleset_v2 = all_rulesets.get("active_checks:httpv2")
         for folder, rule_index, rule_v2 in select(ruleset_v2, search):
             if _migrated_from(rule_v2) is not None:
-                sys.stdout.write(f"Deleting rule: {folder}, {rule_index}\n")
+                rule_str = _render_rule(folder.title(), rule_index)
+                sys.stdout.write(f"{rule_str}\n")
+                sys.stdout.write("Deleting rule.\n")
                 ruleset_v2.delete_rule(rule_v2)
         sys.stdout.write("Saving rulesets...\n")
         all_rulesets.save()
@@ -132,7 +136,9 @@ def activate_main(search: SearchArgs) -> None:
         ruleset_v2 = all_rulesets.get("active_checks:httpv2")
         for folder, rule_index, rule_v2 in select(ruleset_v2, search):
             if _migrated_from(rule_v2) is not None:
-                sys.stdout.write(f"Activating rule: {folder}, {rule_index}\n")
+                rule_str = _render_rule(folder.title(), rule_index)
+                sys.stdout.write(f"{rule_str}\n")
+                sys.stdout.write("Activating rule.\n")
                 new_rule_v2 = rule_v2.clone(preserve_id=True)
                 new_rule_v2.rule_options = dataclasses.replace(rule_v2.rule_options, disabled=False)
                 ruleset_v2.edit_rule(rule_v2, new_rule_v2)
@@ -145,7 +151,9 @@ def deactivate_main(search: SearchArgs) -> None:
         ruleset_v2 = all_rulesets.get("active_checks:httpv2")
         for folder, rule_index, rule_v2 in select(ruleset_v2, search):
             if _migrated_from(rule_v2) is not None:
-                sys.stdout.write(f"Deactivating rule: {folder}, {rule_index}\n")
+                rule_str = _render_rule(folder.title(), rule_index)
+                sys.stdout.write(f"{rule_str}\n")
+                sys.stdout.write("Deactivating rule.\n")
                 new_rule_v2 = rule_v2.clone(preserve_id=True)
                 new_rule_v2.rule_options = dataclasses.replace(rule_v2.rule_options, disabled=True)
                 ruleset_v2.edit_rule(rule_v2, new_rule_v2)

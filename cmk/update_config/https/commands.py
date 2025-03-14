@@ -141,7 +141,7 @@ def finalize_main(search: SearchArgs) -> None:
                     rulecount_v1 += 1
                     sys.stdout.write(f"Deleted v1 counter-part #{rule_v1.index()}.\n")
                     ruleset_v1.delete_rule(rule_v1)
-                sys.stdout.write("Finalized v2 rule #{rule_index}.\n")
+                sys.stdout.write(f"Finalized v2 rule #{rule_index}.\n")
         print_summary_finalize(rulecount_v1, rulecount_v2)
         sys.stdout.write("Saving rule sets...\n")
         all_rulesets.save()

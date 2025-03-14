@@ -272,7 +272,7 @@ class CantConstructURL(enum.Enum):
 
     @classmethod
     def help_header(cls) -> str:
-        return "the migration uses a simple scheme consisting of various parts of the URL"
+        return "URL can not be properly constructed in v2"
 
 
 class CantHaveRegexAndString(enum.Enum):
@@ -293,13 +293,13 @@ class CantHaveRegexAndString(enum.Enum):
             case CantHaveRegexAndString.skip:
                 return "do not migrate rule"
             case CantHaveRegexAndString.string:
-                return "create rule choosing string, if two options are available"
+                return "create rule choosing string"
             case CantHaveRegexAndString.regex:
-                return "create rule choosing regex, if two options are available"
+                return "create rule choosing regex"
 
     @classmethod
     def help_header(cls) -> str:
-        return "must choose `Fixed string to expect in the content` or `Regular expression to expect in the content`"
+        return "must choose `Fixed string to expect in the content` or `Regular expression to expect in the content`, but not both"
 
 
 class Config(BaseModel):
@@ -317,7 +317,11 @@ class Config(BaseModel):
 
 
 def add_migrate_parsing(parser: ArgumentParser) -> ArgumentParser:
-    parser.add_argument("--write", action="store_true", help="persist changes on disk")
+    parser.add_argument(
+        "--write",
+        action="store_true",
+        help="Persist changes on disk, v2 rules are created as deactivated, will have ‘migrated’ suffix in the service name and a reference to the original v1 rule in the description, use Finalize to clean this up.",
+    )
     _add_argument(parser, HTTP10NotSupported, HTTP10NotSupported.default())
     _add_argument(parser, SSLIncompatible, SSLIncompatible.default())
     _add_argument(parser, AdditionalHeaders, AdditionalHeaders.default())
@@ -353,7 +357,7 @@ def _help(option: Option, default: Option) -> str:
 
 def _add_argument(parser: ArgumentParser, option_set: Iterable[Option], default: Option) -> None:
     help_ = [
-        f"conflict: {default.help_header()}",
+        f"Conflict: {default.help_header()}",
         *(_help(option, default) for option in option_set),
     ]
     parser.add_argument(

@@ -4,3 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 """Runs and observes regular jobs in the cmk.gui context"""
+
+from ._scheduler import load_last_job_runs, save_last_job_runs
+
+__all__ = [
+    "load_last_job_runs",
+    "save_last_job_runs",
+]

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
+import os
 import re
 from collections.abc import Iterator
 from urllib.parse import quote_plus
@@ -32,8 +33,9 @@ def fixture_host(dashboard_page: Dashboard) -> Iterator[HostProperties]:
         HostDetails(name=f"test_host_{Faker().first_name()}", ip="127.0.0.1"),
     )
     yield _host
-    _host.navigate()
-    _host.delete_host()
+    if int(os.getenv("CLEANUP", "1")) == 1:
+        _host.navigate()
+        _host.delete_host()
 
 
 def test_navigate_to_host_properties(host: HostProperties) -> None:

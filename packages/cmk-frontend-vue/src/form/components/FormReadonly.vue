@@ -479,7 +479,7 @@ function renderCascadingSingleChoice(
         'div',
         h('div', { class: `form-readonly__cascading-single-choice__layout-${formSpec.layout}` }, [
           // notification explicitly defines empty string title:
-          h('div', { style: 'vertical-align: top;' }, element.title),
+          h('div', { style: 'vertical-align: top;' }, element.title.concat(':')),
           h('div', [renderForm(element.parameter_form, value[1], backendValidation)])
         ])
       )
@@ -689,8 +689,12 @@ table.form-readonly__table {
   list-style-position: inside;
   list-style-type: circle;
   > li {
-    display: list-item !important;
+    display: flex;
     padding-left: 0px !important;
+
+    ul {
+      margin-left: 5px;
+    }
   }
 }
 
@@ -731,10 +735,14 @@ table.form-readonly__table {
 }
 
 .form-readonly__tuple__layout-horizontal > span {
-  margin-right: 5px;
+  margin: 5px;
 }
 
-.form-readonly__tuple__layout-vertical > span {
-  display: block;
+.form-readonly__tuple__layout-vertical {
+  padding: 3px 0;
+
+  > span {
+    display: block;
+  }
 }
 </style>

@@ -212,7 +212,7 @@ test('FormReadonly renders cascading/string, 1st choice', () => {
     }
   })
   // Title of element choice
-  screen.getByText('stringChoiceTitle')
+  screen.getByText('stringChoiceTitle:')
   // Value of element
   screen.getByText('baz')
 })
@@ -226,7 +226,7 @@ test('FormReadonly renders cascading/integer, 2nd choice', () => {
     }
   })
   // Title of element choice
-  screen.getByText('integerChoiceTitle')
+  screen.getByText('integerChoiceTitle:')
   // Value of element
   screen.getByText(23)
 })

@@ -193,49 +193,35 @@ def test__filter_non_ok_ac_test_results(
                 _ACTestResultProblem(
                     ident="unsorted",
                     type="unsorted",
-                    _descriptions=["text"],
-                    _site_ids={SiteId("site_id_1"), SiteId("site_id_2")},
+                    _ac_test_results={
+                        SiteId("site_id_1"): [
+                            ACTestResult(
+                                ACResultState.WARN,
+                                "text",
+                                "test_id_1_2",
+                                "deprecations",
+                                "Title",
+                                "Help",
+                                SiteId("site_id_1"),
+                                None,
+                            ),
+                        ],
+                        SiteId("site_id_2"): [
+                            ACTestResult(
+                                ACResultState.CRIT,
+                                "text",
+                                "test_id_2_2",
+                                "deprecations",
+                                "Title",
+                                "Help",
+                                SiteId("site_id_2"),
+                                None,
+                            ),
+                        ],
+                    },
                 ),
             ],
-            id="one-id",
-        ),
-        pytest.param(
-            {
-                SiteId("site_id_1"): [
-                    ACTestResult(
-                        ACResultState.WARN,
-                        "text_1",
-                        "test_id_1_2",
-                        "deprecations",
-                        "Title",
-                        "Help",
-                        SiteId("site_id_1"),
-                        None,
-                    ),
-                ],
-                SiteId("site_id_2"): [
-                    ACTestResult(
-                        ACResultState.CRIT,
-                        "text_2",
-                        "test_id_2_2",
-                        "deprecations",
-                        "Title",
-                        "Help",
-                        SiteId("site_id_2"),
-                        None,
-                    ),
-                ],
-            },
-            {},
-            [
-                _ACTestResultProblem(
-                    ident="unsorted",
-                    type="unsorted",
-                    _descriptions=["text_1", "text_2"],
-                    _site_ids={SiteId("site_id_1"), SiteId("site_id_2")},
-                ),
-            ],
-            id="different-ids",
+            id="unsorted",
         ),
         pytest.param(
             {
@@ -267,30 +253,122 @@ def test__filter_non_ok_ac_test_results(
                         ),
                     ),
                 ],
+                SiteId("site_id_3"): [
+                    ACTestResult(
+                        ACResultState.WARN,
+                        "text",
+                        "test_id_3",
+                        "deprecations",
+                        "Title",
+                        "Help",
+                        SiteId("site_id_3"),
+                        Path(
+                            "/omd/sites/site_id_3/local/share/check_mk/web/plugins/metrics/file3.py"
+                        ),
+                    ),
+                ],
             },
             {},
             [
                 _ACTestResultProblem(
                     ident="local/share/check_mk/web/plugins/metrics/file.py",
                     type="file",
-                    _descriptions=["text (file: local/share/check_mk/web/plugins/metrics/file.py)"],
-                    _site_ids={SiteId("site_id_1"), SiteId("site_id_2")},
+                    _ac_test_results={
+                        SiteId("site_id_1"): [
+                            ACTestResult(
+                                ACResultState.WARN,
+                                "text",
+                                "test_id_1",
+                                "deprecations",
+                                "Title",
+                                "Help",
+                                SiteId("site_id_1"),
+                                Path(
+                                    "/omd/sites/site_id_1/local/share/check_mk/web/plugins/metrics/file.py"
+                                ),
+                            ),
+                        ],
+                        SiteId("site_id_2"): [
+                            ACTestResult(
+                                ACResultState.WARN,
+                                "text",
+                                "test_id_2",
+                                "deprecations",
+                                "Title",
+                                "Help",
+                                SiteId("site_id_2"),
+                                Path(
+                                    "/omd/sites/site_id_2/local/share/check_mk/web/plugins/metrics/file.py"
+                                ),
+                            ),
+                        ],
+                    },
+                ),
+                _ACTestResultProblem(
+                    ident="local/share/check_mk/web/plugins/metrics/file3.py",
+                    type="file",
+                    _ac_test_results={
+                        SiteId("site_id_3"): [
+                            ACTestResult(
+                                ACResultState.WARN,
+                                "text",
+                                "test_id_3",
+                                "deprecations",
+                                "Title",
+                                "Help",
+                                SiteId("site_id_3"),
+                                Path(
+                                    "/omd/sites/site_id_3/local/share/check_mk/web/plugins/metrics/file3.py"
+                                ),
+                            ),
+                        ],
+                    },
                 ),
             ],
             id="file",
         ),
         pytest.param(
             {
-                SiteId("site_id"): [
+                SiteId("site_id_1"): [
                     ACTestResult(
                         ACResultState.WARN,
                         "text",
-                        "test_id",
+                        "test_id_1",
                         "deprecations",
                         "Title",
                         "Help",
-                        SiteId("site_id"),
-                        Path("/omd/sites/site_id/local/share/check_mk/web/plugins/metrics/file.py"),
+                        SiteId("site_id_1"),
+                        Path(
+                            "/omd/sites/site_id_1/local/share/check_mk/web/plugins/metrics/file.py"
+                        ),
+                    ),
+                ],
+                SiteId("site_id_2"): [
+                    ACTestResult(
+                        ACResultState.WARN,
+                        "text",
+                        "test_id_2",
+                        "deprecations",
+                        "Title",
+                        "Help",
+                        SiteId("site_id_2"),
+                        Path(
+                            "/omd/sites/site_id_2/local/share/check_mk/web/plugins/metrics/file.py"
+                        ),
+                    ),
+                ],
+                SiteId("site_id_3"): [
+                    ACTestResult(
+                        ACResultState.WARN,
+                        "text",
+                        "test_id_3",
+                        "deprecations",
+                        "Title",
+                        "Help",
+                        SiteId("site_id_3"),
+                        Path(
+                            "/omd/sites/site_id_3/local/share/check_mk/web/plugins/metrics/file3.py"
+                        ),
                     ),
                 ],
             },
@@ -306,14 +384,74 @@ def test__filter_non_ok_ac_test_results(
                     author="cmkadmin",
                     download_url="",
                     files={PackagePart("web"): [Path("plugins/metrics/file.py")]},
-                )
+                ),
+                Path("local/share/check_mk/web/plugins/metrics/file3.py"): Manifest(
+                    title="asd3",
+                    name=PackageName("asd3"),
+                    description="",
+                    version=PackageVersion("1.0.0"),
+                    version_packaged="2.4.0-2025.03.05",
+                    version_min_required="2.4.0-2025.03.05",
+                    version_usable_until=None,
+                    author="cmkadmin",
+                    download_url="",
+                    files={PackagePart("web"): [Path("plugins/metrics/file3.py")]},
+                ),
             },
             [
                 _ACTestResultProblem(
                     ident="asd",
                     type="mkp",
-                    _descriptions=["text (file: local/share/check_mk/web/plugins/metrics/file.py)"],
-                    _site_ids={SiteId("site_id")},
+                    _ac_test_results={
+                        SiteId("site_id_1"): [
+                            ACTestResult(
+                                ACResultState.WARN,
+                                "text",
+                                "test_id_1",
+                                "deprecations",
+                                "Title",
+                                "Help",
+                                SiteId("site_id_1"),
+                                Path(
+                                    "/omd/sites/site_id_1/local/share/check_mk/web/plugins/metrics/file.py"
+                                ),
+                            ),
+                        ],
+                        SiteId("site_id_2"): [
+                            ACTestResult(
+                                ACResultState.WARN,
+                                "text",
+                                "test_id_2",
+                                "deprecations",
+                                "Title",
+                                "Help",
+                                SiteId("site_id_2"),
+                                Path(
+                                    "/omd/sites/site_id_2/local/share/check_mk/web/plugins/metrics/file.py"
+                                ),
+                            ),
+                        ],
+                    },
+                ),
+                _ACTestResultProblem(
+                    ident="asd3",
+                    type="mkp",
+                    _ac_test_results={
+                        SiteId("site_id_3"): [
+                            ACTestResult(
+                                ACResultState.WARN,
+                                "text",
+                                "test_id_3",
+                                "deprecations",
+                                "Title",
+                                "Help",
+                                SiteId("site_id_3"),
+                                Path(
+                                    "/omd/sites/site_id_3/local/share/check_mk/web/plugins/metrics/file3.py"
+                                ),
+                            ),
+                        ],
+                    },
                 ),
             ],
             id="mkp",
@@ -332,3 +470,82 @@ def test__find_ac_test_result_problems(
         )
         == problems
     )
+
+
+@pytest.mark.parametrize(
+    "problem, result",
+    [
+        pytest.param(
+            _ACTestResultProblem(
+                ident="ident",
+                type="unsorted",
+                _ac_test_results={
+                    SiteId("site_id"): [
+                        ACTestResult(
+                            ACResultState.WARN,
+                            "text",
+                            "test_id",
+                            "deprecations",
+                            "Title",
+                            "Help",
+                            SiteId("site_id"),
+                            None,
+                        ),
+                    ],
+                },
+            ),
+            "Unsorted, sites: site_id:<br>text",
+            id="unsorted",
+        ),
+        pytest.param(
+            _ACTestResultProblem(
+                ident="ident",
+                type="file",
+                _ac_test_results={
+                    SiteId("site_id"): [
+                        ACTestResult(
+                            ACResultState.WARN,
+                            "text",
+                            "test_id",
+                            "deprecations",
+                            "Title",
+                            "Help",
+                            SiteId("site_id"),
+                            Path(
+                                "/omd/sites/site_id/local/share/check_mk/web/plugins/metrics/file.py"
+                            ),
+                        ),
+                    ],
+                },
+            ),
+            "Unpackaged file 'ident', sites: site_id:<br>text (file: local/share/check_mk/web/plugins/metrics/file.py)",
+            id="file",
+        ),
+        pytest.param(
+            _ACTestResultProblem(
+                ident="ident",
+                type="mkp",
+                _ac_test_results={
+                    SiteId("site_id"): [
+                        ACTestResult(
+                            ACResultState.WARN,
+                            "text",
+                            "test_id",
+                            "deprecations",
+                            "Title",
+                            "Help",
+                            SiteId("site_id"),
+                            Path(
+                                "/omd/sites/site_id/local/share/check_mk/web/plugins/metrics/file.py"
+                            ),
+                        ),
+                    ],
+                },
+            ),
+            "Extension package 'ident', sites: site_id:<br>text (file: local/share/check_mk/web/plugins/metrics/file.py)",
+            id="mkp",
+        ),
+    ],
+)
+def test_render_problem(problem: _ACTestResultProblem, result: str) -> None:
+    assert str(problem) == result

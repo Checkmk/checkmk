@@ -8,6 +8,7 @@ from collections.abc import MutableMapping, Sequence
 from dataclasses import asdict, dataclass
 from typing import Any
 
+from cmk.agent_based.v1 import GetRateError, IgnoreResults
 from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
@@ -209,12 +210,17 @@ def check_audiocodes_sip_calls_testable(
             )
             continue
 
-        rate = get_rate(
-            value_store=value_store,
-            key=f"{section.metric_prefix}_{key}",
-            time=now,
-            value=value,
-        )
+        try:
+            rate = get_rate(
+                value_store=value_store,
+                key=f"{section.metric_prefix}_{key}",
+                time=now,
+                value=value,
+            )
+        except GetRateError:
+            yield IgnoreResults("Initializing counters")
+            continue
+
         yield from check_levels(
             value=rate,
             metric_name=metric_name,

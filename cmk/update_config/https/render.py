@@ -38,5 +38,5 @@ def print_summary_finalize(rulecount_v1: int, rulecount_v2: int) -> None:
         sys.stdout.write("Migrated v1 rule(s) have been deleted.\n")
     if rulecount_v2:
         sys.stdout.write(
-            f"The v2 rule(s) have now been edited so that the ‘{MIGRATE_POSTFIX}’ suffix is removed from the service name and the reference to the v1 rule has been deleted from the description. \n"
+            f"The v2 rule(s) have now been edited so that the ‘{MIGRATE_POSTFIX}’ suffix is removed from the service name and the reference to the v1 rule has been deleted from the description.\n"
         )

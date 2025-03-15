@@ -8,7 +8,6 @@ import os
 import sys
 from collections.abc import Generator
 from contextlib import contextmanager
-from typing import NamedTuple
 
 from cmk.gui.utils import gen_id
 from cmk.gui.watolib.automations import ENV_VARIABLE_FORCE_CLI_INTERFACE
@@ -27,7 +26,8 @@ from cmk.update_config.https.render import (
 from cmk.update_config.https.search import select, with_allrulesets
 
 
-class _Count(NamedTuple):
+@dataclasses.dataclass(frozen=True)
+class _Count:
     conflicts: int
     rules: int
     skipped: int

@@ -22217,6 +22217,10 @@ msgstr "Données de perforation étendues"
 msgid "Extension"
 msgstr "Extension"
 
+#, fuzzy, python-format
+msgid "Extension package %r"
+msgstr "Paquets d'extension"
+
 msgid "Extension package files"
 msgstr "Fichiers d'extension"
 
@@ -70967,6 +70971,10 @@ msgstr "Non surveillé"
 msgid "Unoptimized connections"
 msgstr "Connexions non optimisées"
 
+#, fuzzy, python-format
+msgid "Unpackaged file %r"
+msgstr "Fichiers non emballés"
+
 msgid "Unpackaged files"
 msgstr "Fichiers non emballés"
 
@@ -70991,6 +70999,10 @@ msgstr "Exécutions simultanées non réservées en pourcentage"
 
 msgid "Unset user attributes on migration"
 msgstr "Désactivation des attributs de l'utilisateur lors de la migration"
+
+#, fuzzy
+msgid "Unsorted"
+msgstr "Action non prise en charge"
 
 msgid "Unspecific backup"
 msgstr "Sauvegarde non spécifique"

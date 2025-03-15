@@ -21999,6 +21999,10 @@ msgstr "Perfdados ampliados"
 msgid "Extension"
 msgstr "Extensão"
 
+#, fuzzy, python-format
+msgid "Extension package %r"
+msgstr "Pacotes de extensão"
+
 msgid "Extension package files"
 msgstr "Ficheiros de pacotes de extensão"
 
@@ -70202,6 +70206,10 @@ msgstr "Não montado"
 msgid "Unoptimized connections"
 msgstr "Conexões não otimizadas"
 
+#, fuzzy, python-format
+msgid "Unpackaged file %r"
+msgstr "Arquivos descompactados"
+
 msgid "Unpackaged files"
 msgstr "Arquivos descompactados"
 
@@ -70226,6 +70234,10 @@ msgstr "Execuções simultâneas sem reservas, em percentagem"
 
 msgid "Unset user attributes on migration"
 msgstr "Desactivar atributos de utilizador na migração"
+
+#, fuzzy
+msgid "Unsorted"
+msgstr "Acção não suportada"
 
 msgid "Unspecific backup"
 msgstr "Backup não específico"

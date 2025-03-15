@@ -20958,6 +20958,10 @@ msgstr "拡張perfdata"
 msgid "Extension"
 msgstr "拡張"
 
+#, fuzzy, python-format
+msgid "Extension package %r"
+msgstr "拡張パッケージ"
+
 msgid "Extension package files"
 msgstr "拡張パッケージファイル"
 
@@ -66468,6 +66472,10 @@ msgstr "マウントなし"
 msgid "Unoptimized connections"
 msgstr "最適化されていない接続"
 
+#, fuzzy, python-format
+msgid "Unpackaged file %r"
+msgstr "パッケージ化されていないファイル"
+
 msgid "Unpackaged files"
 msgstr "パッケージ化されていないファイル"
 
@@ -66491,6 +66499,10 @@ msgstr "未消化の同時死刑執行率(%)"
 
 msgid "Unset user attributes on migration"
 msgstr "移行時のユーザー属性設定解除"
+
+#, fuzzy
+msgid "Unsorted"
+msgstr "未対応のアクション"
 
 msgid "Unspecific backup"
 msgstr "不特定多数へのバックアップ"

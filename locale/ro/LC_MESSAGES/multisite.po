@@ -22042,6 +22042,10 @@ msgstr "Date de performanță extinse"
 msgid "Extension"
 msgstr "Extensie"
 
+#, fuzzy, python-format
+msgid "Extension package %r"
+msgstr "Pachete de extensie"
+
 msgid "Extension package files"
 msgstr "Fișiere de pachete de extensie"
 
@@ -70390,6 +70394,10 @@ msgstr "Nemontat"
 msgid "Unoptimized connections"
 msgstr "Conexiuni neoptimizate"
 
+#, fuzzy, python-format
+msgid "Unpackaged file %r"
+msgstr "Fișiere neambalate"
+
 msgid "Unpackaged files"
 msgstr "Fișiere neambalate"
 
@@ -70414,6 +70422,10 @@ msgstr "Execuții concomitente nerezervate în procente"
 
 msgid "Unset user attributes on migration"
 msgstr "Anulare atribute de utilizator la migrare"
+
+#, fuzzy
+msgid "Unsorted"
+msgstr "Acțiune neacceptată"
 
 msgid "Unspecific backup"
 msgstr "Backup nespecific"

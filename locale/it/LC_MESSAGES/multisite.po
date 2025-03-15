@@ -21806,6 +21806,10 @@ msgstr "Perfdata estesi"
 msgid "Extension"
 msgstr "Estensione"
 
+#, fuzzy, python-format
+msgid "Extension package %r"
+msgstr "Pacchetti di estensione"
+
 msgid "Extension package files"
 msgstr "File del pacchetto di estensione"
 
@@ -69573,6 +69577,10 @@ msgstr "Non montato"
 msgid "Unoptimized connections"
 msgstr "Connessioni non ottimizzate"
 
+#, fuzzy, python-format
+msgid "Unpackaged file %r"
+msgstr "File non confezionati"
+
 msgid "Unpackaged files"
 msgstr "File non confezionati"
 
@@ -69597,6 +69605,10 @@ msgstr "Esecuzioni concorrenti non riservate in percentuale"
 
 msgid "Unset user attributes on migration"
 msgstr "Attributi utente non impostati durante la migrazione"
+
+#, fuzzy
+msgid "Unsorted"
+msgstr "Azione non supportata"
 
 msgid "Unspecific backup"
 msgstr "Backup non specifico"

@@ -52,7 +52,7 @@ def check_smart_nvme_temp(item: str, params: TempParamType, section: Section) ->
 check_plugin_smart_nvme_temp = CheckPlugin(
     name="smart_nvme_temp",
     sections=["smart_posix_all"],
-    service_name="SMART %s Temp",
+    service_name="Temperature SMART %s",
     discovery_function=discovery_smart_nvme_temp,
     check_function=check_smart_nvme_temp,
     check_ruleset_name="temperature",

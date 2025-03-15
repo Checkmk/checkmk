@@ -50,7 +50,7 @@ def check_smart_ata_temp(item: str, params: TempParamType, section: Section) -> 
 check_plugin_smart_ata_temp = CheckPlugin(
     name="smart_ata_temp",
     sections=["smart_posix_all"],
-    service_name="SMART %s Temp",
+    service_name="Temperature SMART %s",
     discovery_function=discovery_smart_ata_temp,
     check_function=check_smart_ata_temp,
     check_ruleset_name="temperature",

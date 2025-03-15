@@ -24256,6 +24256,10 @@ msgstr "Datos de rendimiento ampliados"
 msgid "Extension"
 msgstr "Extensión"
 
+#, fuzzy, python-format
+msgid "Extension package %r"
+msgstr "Paquetes de extensión"
+
 msgid "Extension package files"
 msgstr "Ficheros de paquetes de extensión"
 
@@ -78295,6 +78299,10 @@ msgstr "Sin control"
 msgid "Unoptimized connections"
 msgstr "Conexiones no optimizadas"
 
+#, fuzzy, python-format
+msgid "Unpackaged file %r"
+msgstr "Archivos sin empaquetar"
+
 msgid "Unpackaged files"
 msgstr "Archivos sin empaquetar"
 
@@ -78319,6 +78327,10 @@ msgstr "Ejecuciones concurrentes no reservadas en porcentaje"
 
 msgid "Unset user attributes on migration"
 msgstr "Desactivar atributos de usuario en la migración"
+
+#, fuzzy
+msgid "Unsorted"
+msgstr "Acción no admitida"
 
 msgid "Unspecific backup"
 msgstr "Copia de seguridad no específica"

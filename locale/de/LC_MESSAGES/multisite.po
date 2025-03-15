@@ -23311,6 +23311,10 @@ msgstr "Erweiterte Metriken"
 msgid "Extension"
 msgstr "Erweiterung"
 
+#, fuzzy, python-format
+msgid "Extension package %r"
+msgstr "Erweiterungspakete"
+
 msgid "Extension package files"
 msgstr "Erweiterungspaketdateien"
 
@@ -74779,6 +74783,10 @@ msgstr "Nicht montiert"
 msgid "Unoptimized connections"
 msgstr "Nicht optimierte Verbindungen"
 
+#, fuzzy, python-format
+msgid "Unpackaged file %r"
+msgstr "Unpaketierte Dateien"
+
 msgid "Unpackaged files"
 msgstr "Unpaketierte Dateien"
 
@@ -74802,6 +74810,10 @@ msgstr "Unbeschränkte gleichzeitige Ausführungen in Prozent"
 
 msgid "Unset user attributes on migration"
 msgstr "Benutzerattribute bei der Migration zurücksetzen"
+
+#, fuzzy
+msgid "Unsorted"
+msgstr "Nicht unterstützte Aktion"
 
 msgid "Unspecific backup"
 msgstr "Unspezifisches Backup"

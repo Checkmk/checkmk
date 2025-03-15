@@ -24064,6 +24064,10 @@ msgstr "Uitgebreide perfagegevens"
 msgid "Extension"
 msgstr "Uitbreiding"
 
+#, fuzzy, python-format
+msgid "Extension package %r"
+msgstr "Uitbreidingspakketten"
+
 msgid "Extension package files"
 msgstr "Uitbreiding pakketbestanden"
 
@@ -77654,6 +77658,10 @@ msgstr "Ongecontroleerd"
 msgid "Unoptimized connections"
 msgstr "Niet-geoptimaliseerde verbindingen"
 
+#, fuzzy, python-format
+msgid "Unpackaged file %r"
+msgstr "Uitgepakte bestanden"
+
 msgid "Unpackaged files"
 msgstr "Uitgepakte bestanden"
 
@@ -77678,6 +77686,10 @@ msgstr "Niet gereserveerde gelijktijdige executies in procenten"
 
 msgid "Unset user attributes on migration"
 msgstr "Gebruikersattributen verwijderen bij migratie"
+
+#, fuzzy
+msgid "Unsorted"
+msgstr "Niet-ondersteunde actie"
 
 msgid "Unspecific backup"
 msgstr "Niet-specifieke back-up"

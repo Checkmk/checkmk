@@ -25,7 +25,7 @@ from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.message import Message, message_gui
+from cmk.gui.message import get_gui_messages, Message, message_gui
 from cmk.gui.site_config import get_site_config, is_wato_slave_site
 from cmk.gui.sites import states
 from cmk.gui.userdb import load_users
@@ -39,15 +39,12 @@ from cmk.mkp_tool import get_stored_manifests, Manifest, PackageStore, PathConfi
 
 @dataclass(frozen=True)
 class _MarkerFileStore:
-    folder: Path
-
-    def marker_file(self, site_id: SiteId, site_version: str) -> Path:
-        return self.folder / str(site_id) / site_version
+    _folder: Path
 
     def save(
         self, site_id: SiteId, site_version: str, ac_test_results: Sequence[ACTestResult]
     ) -> None:
-        marker_file = self.marker_file(site_id, site_version)
+        marker_file = self._folder / str(site_id) / site_version
         store.makedirs(marker_file.parent)
         store.save_text_to_file(marker_file, json.dumps([repr(r) for r in ac_test_results]))
 
@@ -55,7 +52,7 @@ class _MarkerFileStore:
         for filepath, _mtime in sorted(
             [
                 (marker_file, marker_file.stat().st_mtime)
-                for marker_file in list((self.folder / site_id).iterdir())
+                for marker_file in list((self._folder / site_id).iterdir())
             ],
             key=lambda t: t[1],
             reverse=True,
@@ -63,7 +60,7 @@ class _MarkerFileStore:
             filepath.unlink(missing_ok=True)
 
     def cleanup_empty_dirs(self) -> None:
-        for path in self.folder.iterdir():
+        for path in self._folder.iterdir():
             if path.is_dir() and not list(path.iterdir()):
                 try:
                     path.rmdir()
@@ -215,10 +212,7 @@ def execute_deprecation_tests_and_notify_users() -> None:
     site_versions_by_site_id = {
         site_id: site_version
         for site_id, site_state in states().items()
-        if (
-            (site_version := site_state.get("program_version"))
-            and not (marker_file_store.marker_file(site_id, site_version)).exists()
-        )
+        if (site_version := site_state.get("program_version"))
     }
 
     if not (
@@ -266,7 +260,10 @@ def execute_deprecation_tests_and_notify_users() -> None:
 
     now = int(time.time())
     for user_id in _filter_extension_managing_users(list(load_users())):
+        sent_messages = [m["text"] for m in get_gui_messages(user_id)]
         for ac_test_results_message in ac_test_results_messages:
+            if ac_test_results_message in sent_messages:
+                continue
             message_gui(
                 user_id,
                 Message(

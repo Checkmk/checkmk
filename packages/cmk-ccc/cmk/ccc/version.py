@@ -677,6 +677,11 @@ _REQUIRED_PATCH_RELEASES_MAP: Final = {
             Version.from_str("2.3.0p26"),  # CMK-19258 - \n separated audit log
         ),
     ),
+    _BaseVersion(2, 5, 0): max(
+        (
+            Version.from_str("2.4.0p2"),  # copy acknowledged werks from version to site
+        ),
+    ),
 }
 
 

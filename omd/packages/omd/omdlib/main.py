@@ -134,7 +134,7 @@ from cmk.utils.certs import cert_dir, CN_TEMPLATE, root_cert_path, RootCA
 from cmk.utils.licensing.helper import get_instance_id_file_path, save_instance_id
 from cmk.utils.log import VERBOSE
 from cmk.utils.resulttype import Error, OK, Result
-from cmk.utils.werks.acknowledgement import unacknowledged_incompatible_werks
+from cmk.utils.werks import unacknowledged_incompatible_werks
 
 from cmk.crypto.password import Password
 from cmk.crypto.password_hashing import hash_password

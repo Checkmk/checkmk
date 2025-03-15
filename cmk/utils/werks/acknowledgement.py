@@ -3,18 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Sequence
-from functools import cache
+from pathlib import Path
 
 from cmk.ccc import store
 
 import cmk.utils.paths
 
-from cmk.werks.models import Compatibility, Werk
-
-from . import load
+from cmk.werks.models import Werk
+from cmk.werks.utils import write_precompiled_werks
 
 ACKNOWLEDGEMENT_PATH = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
+UNACKNOWLEDGED_WERKS_JSON = Path(cmk.utils.paths.var_dir, "unacknowledged_werks.json")
 
 
 def is_acknowledged(werk: Werk, acknowledged_werk_ids: set[int]) -> bool:
@@ -33,21 +32,5 @@ def version_is_pre_127(version: str) -> bool:
     return version.startswith("1.2.5") or version.startswith("1.2.6")
 
 
-def sort_by_date(werks: Iterable[Werk]) -> list[Werk]:
-    return sorted(werks, key=lambda werk: werk.date, reverse=True)
-
-
-def unacknowledged_incompatible_werks() -> list[Werk]:
-    acknowledged_werk_ids = load_acknowledgements()
-    return sort_by_date(
-        werk
-        for werk in load_werk_entries()
-        if werk.compatible == Compatibility.NOT_COMPATIBLE
-        and not is_acknowledged(werk, acknowledged_werk_ids)
-    )
-
-
-@cache
-def load_werk_entries() -> Sequence[Werk]:
-    werks_raw = load()
-    return list(werks_raw.values())
+def write_unacknowledged_werks(werks: dict[int, Werk]) -> None:
+    write_precompiled_werks(UNACKNOWLEDGED_WERKS_JSON, werks)

@@ -12,14 +12,16 @@ from collections.abc import Callable, Container, Iterable, Iterator
 from functools import partial
 from typing import Any, cast, Literal, override, TypedDict
 
-from cmk.ccc.version import __version__, Edition, Version
+from cmk.ccc.version import Edition
 
 from cmk.utils.man_pages import make_man_page_path_map
-from cmk.utils.werks.acknowledgement import (
-    is_acknowledged,
+from cmk.utils.werks import (
     load_werk_entries,
     sort_by_date,
     unacknowledged_incompatible_werks,
+)
+from cmk.utils.werks.acknowledgement import (
+    is_acknowledged,
 )
 from cmk.utils.werks.acknowledgement import load_acknowledgements as werks_load_acknowledgements
 from cmk.utils.werks.acknowledgement import save_acknowledgements as werks_save_acknowledgements
@@ -491,7 +493,7 @@ def _werk_table_option_entries() -> list[tuple[_WerkTableOptionColumns, str, Val
                     TextInput(label=_("to:"), size=12),
                 ],
             ),
-            (Version.from_str(__version__).version_base, ""),
+            ("", ""),
         ),
         (
             "grouping",

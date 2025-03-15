@@ -5,6 +5,9 @@
 
 from collections.abc import Iterable, Sequence
 from functools import cache
+from pathlib import Path
+
+from pydantic import TypeAdapter
 
 from cmk.ccc import store
 
@@ -15,6 +18,7 @@ from cmk.werks.models import Compatibility, Werk
 from . import load
 
 ACKNOWLEDGEMENT_PATH = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
+UNACKNOWLEDGED_WERKS_JSON = Path(cmk.utils.paths.var_dir, "unacknowledged_werks.json")
 
 
 def is_acknowledged(werk: Werk, acknowledged_werk_ids: set[int]) -> bool:
@@ -51,3 +55,8 @@ def unacknowledged_incompatible_werks() -> list[Werk]:
 def load_werk_entries() -> Sequence[Werk]:
     werks_raw = load()
     return list(werks_raw.values())
+
+
+def write_unacknowledged_werks(werks: dict[int, Werk]) -> None:
+    adapter = TypeAdapter(dict[int, Werk])  # nosemgrep: type-adapter-detected
+    UNACKNOWLEDGED_WERKS_JSON.write_bytes(adapter.dump_json(werks, by_alias=True))

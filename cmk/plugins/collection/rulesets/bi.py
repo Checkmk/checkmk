@@ -295,14 +295,22 @@ def _migrate_to_internal_user(
         return params
 
     credentials = params.pop("credentials")
-    credentials = (
+    if params["site"] == "local" or params["site"] == ("local", None):
+        params["site"] = ("local", None)
+        return params
+
+    migrated_credentials = (
         ("automation", "automation")
-        if credentials == ("automation", None)
-        else ("configured", {"username": credentials[1][0], "password": credentials[1][1]})
+        if credentials in {"automation", ("automation", None)}
+        else (
+            "configured",
+            {"username": credentials[1][0], "password": credentials[1][1]},
+        )
     )
-    url = params["site"][1]
+
     params["site"] = (
-        ("remote", {"url": url, "credentials": credentials}) if url is not None else ("local", None)
+        "remote",
+        {"url": params["site"][1], "credentials": migrated_credentials},
     )
     return params
 

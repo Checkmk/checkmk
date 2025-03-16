@@ -67,7 +67,7 @@ from cmk.utils.paths import (
     tmp_dir,
     var_dir,
 )
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RuleSpec
+from cmk.utils.rulesets.ruleset_matcher import LabelManager, RulesetMatcher, RuleSpec
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.timeout import Timeout
@@ -294,6 +294,7 @@ class AutomationDiscovery(DiscoveryAutomation):
 
         discovery_config = config.DiscoveryConfigurer(
             loading_result.config_cache.ruleset_matcher,
+            loading_result.config_cache.label_manager,
             loading_result.loaded_config.discovery_rules,
         )
         config_cache = loading_result.config_cache
@@ -636,6 +637,7 @@ def _active_check_preview_rows(
 
 def _make_compute_check_parameters_of_autocheck(
     ruleset_matcher: RulesetMatcher,
+    label_manager: LabelManager,
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     parameter_rules: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]],
 ) -> Callable[[HostName, AutocheckEntry], TimespecificParameters]:
@@ -644,6 +646,7 @@ def _make_compute_check_parameters_of_autocheck(
     ) -> TimespecificParameters:
         service_name = config.service_description(
             ruleset_matcher,
+            label_manager,
             host_name,
             entry.check_plugin_name,
             service_name_template=(
@@ -660,11 +663,14 @@ def _make_compute_check_parameters_of_autocheck(
         )
         return config.compute_check_parameters(
             ruleset_matcher,
+            label_manager,
             check_plugins,
             host_name,
             entry.check_plugin_name,
             entry.item,
-            ruleset_matcher.labels_of_service(host_name, service_name, entry.service_labels),
+            ruleset_matcher.labels_of_service(
+                host_name, service_name, entry.service_labels, label_manager
+            ),
             entry.parameters,
             parameter_rules,
         )
@@ -686,6 +692,7 @@ def _execute_discovery(
     hosts_config = config.make_hosts_config()
     discovery_config = config.DiscoveryConfigurer(
         config_cache.ruleset_matcher,
+        config_cache.label_manager,
         loaded_config.discovery_rules,
     )
     ruleset_matcher = config_cache.ruleset_matcher
@@ -738,7 +745,10 @@ def _execute_discovery(
             ),
             check_plugins=check_plugins,
             compute_check_parameters=_make_compute_check_parameters_of_autocheck(
-                ruleset_matcher, plugins.check_plugins, loaded_config.checkgroup_parameters
+                ruleset_matcher,
+                config_cache.label_manager,
+                plugins.check_plugins,
+                loaded_config.checkgroup_parameters,
             ),
             discovery_plugins=DiscoveryPluginMapper(
                 config_getter=discovery_config,
@@ -801,7 +811,9 @@ def _execute_autodiscovery(
     config_cache = loading_result.config_cache
     service_configurer = config_cache.make_service_configurer(ab_plugins.check_plugins)
     discovery_config = config.DiscoveryConfigurer(
-        config_cache.ruleset_matcher, loading_result.loaded_config.discovery_rules
+        config_cache.ruleset_matcher,
+        config_cache.label_manager,
+        loading_result.loaded_config.discovery_rules,
     )
     autochecks_config = config.AutochecksConfigurer(config_cache, ab_plugins.check_plugins)
     ip_address_of = config.ConfiguredIPLookup(
@@ -1009,6 +1021,7 @@ def _make_get_effective_host_of_autocheck_callback(
             (host, entry.check_plugin_name, entry.item)
         ) or config.service_description(
             config_cache.ruleset_matcher,
+            config_cache.label_manager,
             host,
             entry.check_plugin_name,
             service_name_template=(
@@ -1027,7 +1040,7 @@ def _make_get_effective_host_of_autocheck_callback(
             host,
             service_name,
             config_cache.ruleset_matcher.labels_of_service(
-                host, service_name, entry.service_labels
+                host, service_name, entry.service_labels, config_cache.label_manager
             ),
         )
 
@@ -1509,7 +1522,10 @@ class AutomationGetServicesLabels(Automation):
         return GetServicesLabelsResult(
             {
                 service: loading_result.config_cache.ruleset_matcher.labels_of_service(
-                    host_name, service, discovered_labels.get(service, {})
+                    host_name,
+                    service,
+                    discovered_labels.get(service, {}),
+                    loading_result.config_cache.label_manager,
                 )
                 for service in services
             }
@@ -1544,6 +1560,7 @@ class AutomationGetServiceName(Automation):
         return GetServiceNameResult(
             config.service_description(
                 ruleset_matcher,
+                loaded_config.config_cache.label_manager,
                 host_name,
                 check_plugin_name,
                 service_name_template=(
@@ -1596,10 +1613,16 @@ class AutomationAnalyseServices(Automation):
             AnalyseServiceResult(
                 service_info=found.service_info,
                 labels=loading_result.config_cache.ruleset_matcher.labels_of_service(
-                    host_name, servicedesc, found.discovered_labels
+                    host_name,
+                    servicedesc,
+                    found.discovered_labels,
+                    loading_result.config_cache.label_manager,
                 ),
                 label_sources=loading_result.config_cache.ruleset_matcher.label_sources_of_service(
-                    host_name, servicedesc, found.discovered_labels
+                    host_name,
+                    servicedesc,
+                    found.discovered_labels,
+                    loading_result.config_cache.label_manager,
                 ),
             )
             if (
@@ -1835,7 +1858,11 @@ class AutomationAnalyzeHostRuleMatches(Automation):
 
         return AnalyzeHostRuleMatchesResult(
             {
-                rules[0]["id"]: list(ruleset_matcher.get_host_values(host_name, rules))
+                rules[0]["id"]: list(
+                    ruleset_matcher.get_host_values(
+                        host_name, rules, loading_result.config_cache.label_manager
+                    )
+                )
                 # The caller needs to get one result per rule. For this reason we can not just use
                 # the list of rules with the ruleset matching functions but have to execute rule
                 # matching for the rules individually. If we would use the provided list of rules,
@@ -1881,6 +1908,7 @@ class AutomationAnalyzeServiceRuleMatches(Automation):
                         service_or_item,
                         service_labels,
                         rules,
+                        loading_result.config_cache.label_manager,
                     )
                 )
                 # The caller needs to get one result per rule. For this reason we can not just
@@ -2963,7 +2991,7 @@ class AutomationActiveCheck(Automation):
                 host_name,
                 service_data.description,
                 config_cache.ruleset_matcher.labels_of_service(
-                    host_name, service_data.description, {}
+                    host_name, service_data.description, {}, config_cache.label_manager
                 ),
                 " ".join(service_data.command),
                 config_cache=config_cache,
@@ -2998,7 +3026,7 @@ class AutomationActiveCheck(Automation):
             hostname,
             service_desc,
             config_cache.ruleset_matcher.labels_of_service(
-                hostname, service_desc, discovered_labels
+                hostname, service_desc, discovered_labels, config_cache.label_manager
             ),
             extra_icon=None,
         )

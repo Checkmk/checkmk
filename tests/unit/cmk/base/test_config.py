@@ -2736,27 +2736,35 @@ def test_load_config_folder_paths(folder_path_test_config: None) -> None:
     assert "host_folder" not in config.cmc_host_rrd_config[4]["condition"]
 
     ruleset_matcher = config_cache.ruleset_matcher
-    assert ruleset_matcher.get_host_values(HostName("main-host"), config.cmc_host_rrd_config) == [
+    assert ruleset_matcher.get_host_values(
+        HostName("main-host"), config.cmc_host_rrd_config, config_cache.label_manager
+    ) == [
         "LVL0",
         "MAIN",
     ]
-    assert ruleset_matcher.get_host_values(HostName("lvl0-host"), config.cmc_host_rrd_config) == [
+    assert ruleset_matcher.get_host_values(
+        HostName("lvl0-host"), config.cmc_host_rrd_config, config_cache.label_manager
+    ) == [
         "LVL0",
         "MAIN",
     ]
-    assert ruleset_matcher.get_host_values(HostName("lvl1-host"), config.cmc_host_rrd_config) == [
+    assert ruleset_matcher.get_host_values(
+        HostName("lvl1-host"), config.cmc_host_rrd_config, config_cache.label_manager
+    ) == [
         "LVL1",
         "LVL0",
         "MAIN",
     ]
     assert ruleset_matcher.get_host_values(
-        HostName("lvl1aaa-host"), config.cmc_host_rrd_config
+        HostName("lvl1aaa-host"), config.cmc_host_rrd_config, config_cache.label_manager
     ) == [
         "LVL1aaa",
         "LVL0",
         "MAIN",
     ]
-    assert ruleset_matcher.get_host_values(HostName("lvl2-host"), config.cmc_host_rrd_config) == [
+    assert ruleset_matcher.get_host_values(
+        HostName("lvl2-host"), config.cmc_host_rrd_config, config_cache.label_manager
+    ) == [
         "LVL2",
         "LVL1",
         "LVL0",

@@ -151,7 +151,7 @@ class RulesetAccess:
         *, host_name: str, plugin: CheckPlugin, logfile: str
     ) -> Sequence[ParameterLogwatchRules]:
         host_name = HostName(host_name)
-        matcher = cmk.base.config.access_globally_cached_config_cache().ruleset_matcher
+        cc = cmk.base.config.access_globally_cached_config_cache()
         # We're using the logfile to match the ruleset, not necessarily the "item"
         # (which might be the group). However: the ruleset matcher expects this to be the item.
         # As a result, the following will all fail (hidden in `service_extra_conf`):
@@ -163,7 +163,8 @@ class RulesetAccess:
         # Fail #2: Compute the correct service description
         # This will be wrong if the logfile is grouped.
         service_description = cmk.base.config.service_description(
-            matcher,
+            cc.ruleset_matcher,
+            cc.label_manager,
             host_name,
             CheckPluginName(plugin.name),
             service_name_template=plugin.service_name,
@@ -172,26 +173,27 @@ class RulesetAccess:
 
         # Fail #3: Retrieve the configured labels for this service.
         # This might be wrong as a result of #2.
-        service_labels = matcher.labels_of_service(
-            host_name, service_description, discovered_labels
+        service_labels = cc.ruleset_matcher.labels_of_service(
+            host_name, service_description, discovered_labels, cc.label_manager
         )
         # => Matching this rule agains service labels will most likely fail.
-        return matcher.get_checkgroup_ruleset_values(
+        return cc.ruleset_matcher.get_checkgroup_ruleset_values(
             host_name,
             logfile,
             service_labels,
             cmk.base.config.logwatch_rules,  # type: ignore[arg-type]
+            cc.label_manager,
         )
 
     # This is only wishful typing -- but lets assume this is what we get.
     @staticmethod
     def logwatch_ec_all(host_name: str) -> Sequence[ParameterLogwatchEc]:
         """Isolate the remaining API violation w.r.t. parameters"""
-        return (
-            cmk.base.config.access_globally_cached_config_cache().ruleset_matcher.get_host_values(
-                HostName(host_name),
-                cmk.base.config.checkgroup_parameters.get("logwatch_ec", []),  # type: ignore[arg-type]
-            )
+        cc = cmk.base.config.access_globally_cached_config_cache()
+        return cc.ruleset_matcher.get_host_values(
+            HostName(host_name),
+            cmk.base.config.checkgroup_parameters.get("logwatch_ec", []),  # type: ignore[arg-type]
+            cc.label_manager,
         )
 
 

@@ -62,7 +62,7 @@ $(SOURCE_BUILT_OHM) $(SOURCE_BUILT_WINDOWS):
 # is currently not used by most distros
 # Would also use --exclude-vcs, but this is also not available
 # And --transform is also missing ...
-dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) cmk-frontend frontend-vue
+dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) cmk-frontend-build frontend-vue-build
 	$(MAKE) -C agents/plugins
 	set -e -o pipefail ; EXCLUDES= ; \
 	if [ -d .git ]; then \
@@ -98,11 +98,11 @@ dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) cmk-frontend frontend
 	    check-mk-$(EDITION)-$(OMD_VERSION)
 	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
 
-cmk-frontend:
-	packages/cmk-frontend/run --clean --all
+cmk-frontend-build:
+	packages/cmk-frontend/run --clean --build
 
-frontend-vue:
-	packages/cmk-frontend-vue/run --clean --all
+frontend-vue-build:
+	packages/cmk-frontend-vue/run --clean --build
 
 announcement:
 	mkdir -p $(CHECK_MK_ANNOUNCE_FOLDER)

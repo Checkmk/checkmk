@@ -680,10 +680,11 @@ class SingleSiteConnection(Helpers):
 
     def _close_socket(self) -> None:
         if self.socket is not None:
-            try:
+            if isinstance(self.socket, ssl.SSLSocket):
+                self.socket.unwrap()
+
+            with contextlib.suppress(OSError):
                 self.socket.close()
-            except OSError:
-                pass
 
             self.socket = None
 

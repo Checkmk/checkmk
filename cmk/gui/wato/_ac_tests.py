@@ -29,7 +29,7 @@ from cmk.utils.paths import (
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
-from cmk.utils.version import Edition, edition
+from cmk.utils.version import __version__, Edition, edition, Version
 
 import cmk.gui.userdb as userdb
 import cmk.gui.userdb.ldap_connector as ldap
@@ -1339,36 +1339,88 @@ class ACTestESXDatasources(ACTest):
             )
 
 
-def _deprecated_result(
-    *, title_entity: str, title_api: str, remove_version: str, site_id: SiteId, path: Path
+def _compute_deprecation_result(
+    *,
+    version: str,
+    deprecated_version: str,
+    removed_version: str,
+    title_entity: str,
+    title_api: str,
+    site_id: SiteId,
+    path: Path,
 ) -> ACSingleResult:
-    return ACSingleResult(
-        state=ACResultState.WARN,
-        text=_(
-            "%s uses an API (%s) which is marked as deprecated in"
-            " Checkmk 2.3.0 and will be removed in Checkmk %s."
+    base = Version.from_str(version).version_base
+    deprecated_base = Version.from_str(deprecated_version).version_base
+    removed_base = Version.from_str(removed_version).version_base
+    assert removed_base > deprecated_base
+
+    if base > removed_base:
+        return ACSingleResult(
+            state=ACResultState.CRIT,
+            text=_("%s uses an API (%s) which was removed in Checkmk %s.")
+            % (
+                title_entity,
+                title_api,
+                removed_version,
+            ),
+            site_id=site_id,
+            path=path,
         )
-        % (
-            title_entity,
-            title_api,
-            remove_version,
-        ),
-        site_id=site_id,
-        path=path,
-    )
 
+    if base == removed_base:
+        return ACSingleResult(
+            state=ACResultState.CRIT,
+            text=_(
+                "%s uses an API (%s) which was marked as deprecated in"
+                " Checkmk %s and is removed in Checkmk %s."
+            )
+            % (
+                title_entity,
+                title_api,
+                deprecated_version,
+                removed_version,
+            ),
+            site_id=site_id,
+            path=path,
+        )
 
-def _removed_result(
-    *, title_entity: str, title_api: str, removed_version: str, site_id: SiteId, path: Path
-) -> ACSingleResult:
+    if base > deprecated_base:
+        return ACSingleResult(
+            state=ACResultState.WARN,
+            text=_(
+                "%s uses an API (%s) which was marked as deprecated in"
+                " Checkmk %s and will be removed in Checkmk %s."
+            )
+            % (
+                title_entity,
+                title_api,
+                deprecated_version,
+                removed_version,
+            ),
+            site_id=site_id,
+            path=path,
+        )
+
+    if base == deprecated_base:
+        return ACSingleResult(
+            state=ACResultState.WARN,
+            text=_(
+                "%s uses an API (%s) which is marked as deprecated in"
+                " Checkmk %s and will be removed in Checkmk %s."
+            )
+            % (
+                title_entity,
+                title_api,
+                deprecated_version,
+                removed_version,
+            ),
+            site_id=site_id,
+            path=path,
+        )
+
     return ACSingleResult(
-        state=ACResultState.CRIT,
-        text=_("%s uses an API (%s) which was removed in Checkmk %s.")
-        % (
-            title_entity,
-            title_api,
-            removed_version,
-        ),
+        state=ACResultState.OK,
+        text="",
         site_id=site_id,
         path=path,
     )
@@ -1408,10 +1460,12 @@ class ACTestDeprecatedV1CheckPlugins(ACTest):
         site_id = omd_site()
         if plugin_files := self._get_files():
             for plugin_filepath in plugin_files:
-                yield _deprecated_result(
+                yield _compute_deprecation_result(
+                    version=__version__,
+                    deprecated_version="2.3.0",
+                    removed_version="2.4.0",
                     title_entity=_("Check plug-in"),
                     title_api="v1",
-                    remove_version="2.4.0",
                     site_id=site_id,
                     path=plugin_filepath,
                 )
@@ -1455,10 +1509,12 @@ class ACTestDeprecatedCheckPlugins(ACTest):
         site_id = omd_site()
         if files := self._get_files():
             for plugin_filepath in files:
-                yield _deprecated_result(
+                yield _compute_deprecation_result(
+                    version=__version__,
+                    deprecated_version="2.3.0",
+                    removed_version="2.4.0",
                     title_entity=_("Check plug-in"),
                     title_api=_("legacy"),
-                    remove_version="2.4.0",
                     site_id=site_id,
                     path=plugin_filepath,
                 )
@@ -1498,10 +1554,12 @@ class ACTestDeprecatedInventoryPlugins(ACTest):
         site_id = omd_site()
         if files := self._get_files():
             for plugin_filepath in files:
-                yield _removed_result(
+                yield _compute_deprecation_result(
+                    version=__version__,
+                    deprecated_version="2.1.0",
+                    removed_version="2.2.0",
                     title_entity=_("HW/SW Inventory plug-in"),
                     title_api=_("legacy"),
-                    removed_version="2.2.0",
                     site_id=site_id,
                     path=plugin_filepath,
                 )
@@ -1541,10 +1599,12 @@ class ACTestDeprecatedCheckManpages(ACTest):
         site_id = omd_site()
         if files := self._get_files():
             for plugin_filepath in files:
-                yield _deprecated_result(
+                yield _compute_deprecation_result(
+                    version=__version__,
+                    deprecated_version="2.3.0",
+                    removed_version="2.4.0",
                     title_entity=_("Check man page"),
                     title_api=_("legacy"),
-                    remove_version="2.4.0",
                     site_id=site_id,
                     path=plugin_filepath,
                 )
@@ -1641,12 +1701,14 @@ class ACTestDeprecatedLegacyGUIExtensions(ACTest):
             for plugin_filepath in files:
                 match plugin_filepath.parent.name:
                     case "metrics" | "perfometer":
-                        yield _deprecated_result(
+                        yield _compute_deprecation_result(
+                            version=__version__,
+                            deprecated_version="2.3.0",
+                            removed_version="2.4.0",
                             title_entity=(
                                 _("Legacy GUI extension in %r") % plugin_filepath.parent.name
                             ),
                             title_api=_("legacy"),
-                            remove_version="2.4.0",
                             site_id=site_id,
                             path=plugin_filepath,
                         )

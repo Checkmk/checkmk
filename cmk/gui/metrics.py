@@ -28,7 +28,6 @@ from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
 import cmk.gui.pages
-from cmk.gui import utils
 from cmk.gui.graphing import _color as graphing_color
 from cmk.gui.graphing import _legacy as graphing_legacy
 from cmk.gui.graphing import _utils as graphing_utils
@@ -183,7 +182,6 @@ def _add_graphing_plugins(
 def load_plugins() -> None:
     """Plug-in initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     _register_pre_21_plugin_api()
-    utils.load_web_plugins("metrics", globals())
     _add_graphing_plugins(_load_graphing_plugins())
 
 

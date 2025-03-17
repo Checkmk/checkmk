@@ -24,7 +24,6 @@ def _plugin_path(main_module_name: str) -> Path:
     name="main_module_name",
     params=[
         "dashboard",
-        "metrics",
         "sidebar",
         "userdb",
         "views",

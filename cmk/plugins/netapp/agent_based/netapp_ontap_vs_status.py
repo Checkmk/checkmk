@@ -44,6 +44,11 @@ def discover_netapp_ontap_vs_status(section: Section) -> DiscoveryResult:
 
 
 def check_netapp_ontap_vs_status(item: str, section: Section) -> CheckResult:
+    """
+    As per SUP-22707 and SUP-22904
+    svm of subtype "sync_destination" are always in state "stopped" and should be considered as OK.
+    """
+
     if not (data := section.get(item)) or data.state is None:
         return
 
@@ -51,7 +56,7 @@ def check_netapp_ontap_vs_status(item: str, section: Section) -> CheckResult:
         State.OK
         if (
             data.state == "running"
-            or (data.state == "stopped" and data.subtype == "dp_destination")
+            or (data.state == "stopped" and data.subtype in ["dp_destination", "sync_destination"])
         )
         else State.CRIT
     )

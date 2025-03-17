@@ -36,7 +36,15 @@ class SvmModelFactory(ModelFactory):
                 Result(state=State.OK, summary="State: stopped"),
                 Result(state=State.OK, summary="Subtype: dp_destination"),
             ],
-            id="Svm stopped",
+            id="Svm stopped dp_destination",
+        ),
+        pytest.param(
+            [SvmModelFactory.build(name="svm_name", state="stopped", subtype="sync_destination")],
+            [
+                Result(state=State.OK, summary="State: stopped"),
+                Result(state=State.OK, summary="Subtype: sync_destination"),
+            ],
+            id="Svm stopped sync_destination",
         ),
         pytest.param(
             [SvmModelFactory.build(name="svm_name", state="stopped", subtype="other_subtype")],

@@ -464,7 +464,7 @@ export_utility_functions() {
 section_checkmk() {
     cat <<HERE
 <<<check_mk>>>
-Version: 2.3.0p29
+Version: 2.3.0p30
 AgentOS: linux
 Hostname: $(uname -n)
 AgentDirectory: ${MK_CONFDIR}

@@ -95,11 +95,11 @@ class AzureDatabaseMigration:
         try:
             old_ruleset = self.all_rulesets.get(self.old_ruleset_name)
         except KeyError:
-            self.logger.info("No Azure Databases ruleset to migrate.")
+            self.logger.debug("No Azure Databases ruleset to migrate.")
             return None
 
         if old_ruleset.is_empty():
-            self.logger.info("Azure Databases ruleset has no rules.")
+            self.logger.debug("Azure Databases ruleset has no rules.")
             return None
 
         for rule_param, migration_detail in self.rule_mapping.items():

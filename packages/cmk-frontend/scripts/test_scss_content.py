@@ -78,9 +78,9 @@ def test_unused_scss_variables() -> None:
     if not is_enterprise_repo():
         expected.append("$ntop-protocol-painter-padding-top")
 
-    assert sorted(unused) == sorted(
-        expected
-    ), f"Found unused SCSS variables {unused}, expected to be unused are only: {expected}"
+    assert sorted(unused) == sorted(expected), (
+        f"Found unused SCSS variables {unused}, expected to be unused are only: {expected}"
+    )
 
 
 def test_rgb_color_codes() -> None:

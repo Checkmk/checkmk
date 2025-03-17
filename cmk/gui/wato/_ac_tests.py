@@ -1248,7 +1248,7 @@ def _deprecated_result(
         state=ACResultState.WARN,
         text=_(
             "%s uses an API (%s) which is marked as deprecated in"
-            " Checkmk 2.3.0 and will be removed in Checkmk %s."
+            " Checkmk 2.4.0 and will be removed in Checkmk %s."
         )
         % (
             title_entity,

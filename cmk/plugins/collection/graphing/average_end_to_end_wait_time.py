@@ -22,15 +22,15 @@ metric_disk_average_write_request_size = metrics.Metric(
 
 graph_average_request_size = graphs.Bidirectional(
     name="average_request_size",
-    title=Title("Average request size"),
+    title=Title("Average read and write request size"),
     lower=graphs.Graph(
         name="disk_average_write_request_size",
-        title=Title("Average request size"),
+        title=Title("Average write request size"),
         compound_lines=["disk_average_write_request_size"],
     ),
     upper=graphs.Graph(
         name="disk_average_read_request_size",
-        title=Title("Average request size"),
+        title=Title("Average read request size"),
         compound_lines=["disk_average_read_request_size"],
     ),
 )

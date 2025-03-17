@@ -11,13 +11,12 @@ which then has to be dumped into the checkmk.yaml file.
 
 from __future__ import annotations
 
-import contextlib
 import functools
 import http.client
 import json
 import logging
 import warnings
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Final, TypeVar
 
 from marshmallow import Schema, ValidationError
@@ -27,14 +26,9 @@ from cmk.ccc import store
 
 from cmk.utils.paths import configuration_lockfile
 
-from cmk.gui import hooks
 from cmk.gui import http as cmk_http
 from cmk.gui.config import active_config
 from cmk.gui.http import HTTPMethod, request
-from cmk.gui.openapi.permission_tracking import (
-    enable_permission_tracking,
-    is_permission_tracking_enabled,
-)
 from cmk.gui.openapi.restful_objects.api_error import ApiError
 from cmk.gui.openapi.restful_objects.content_decoder import KnownContentType
 from cmk.gui.openapi.restful_objects.parameters import CONTENT_TYPE
@@ -60,7 +54,6 @@ from cmk.gui.openapi.utils import (
     FIELDS,
     problem,
     ProblemException,
-    RestAPIPermissionException,
     RestAPIWatoDisabledException,
 )
 from cmk.gui.utils import permission_verification as permissions
@@ -346,44 +339,6 @@ class Endpoint:
     def error_schema(self, status_code: ErrorStatusCodeInt) -> ApiError:
         schema: type[ApiError] = self.error_schemas.get(status_code, ApiError)
         return schema()
-
-    @contextlib.contextmanager
-    def register_permission_tracking(self) -> Iterator[None]:
-        hooks.register_builtin("permission-checked", self._on_permission_checked)
-        try:
-            with enable_permission_tracking():
-                yield
-        finally:
-            hooks.unregister("permission-checked", self._on_permission_checked)
-
-    def _on_permission_checked(self, pname: str) -> None:
-        """Collect all checked permissions during execution
-
-        We need to remember this, in oder to later check if the set of required permissions
-        actually fits the declared permission schema.
-        """
-        if not is_permission_tracking_enabled():
-            return
-
-        self.remember_checked_permission(pname)
-        permission_not_declared = (
-            self.permissions_required is not None and pname not in self.permissions_required
-        )
-        if permission_not_declared:
-            _logger.error(
-                "Permission mismatch: Endpoint %r Use of undeclared permission %s",
-                self,
-                pname,
-            )
-
-            if request.environ.get("paste.testing"):
-                raise RestAPIPermissionException(
-                    title=f"Required permissions ({pname}) not declared for this endpoint.",
-                    detail=f"Endpoint: {self}\n"
-                    f"Permission: {pname}\n"
-                    f"Used permission: {self._used_permissions}\n"
-                    f"Declared: {self.permissions_required}\n",
-                )
 
     def remember_checked_permission(self, permission: str) -> None:
         """Remember that a permission has been required (used)

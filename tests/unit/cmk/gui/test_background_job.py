@@ -51,7 +51,6 @@ def test_registered_background_jobs() -> None:
         "OMDConfigChangeBackgroundJob",
         "BulkDiscoveryBackgroundJob",
         "UserSyncBackgroundJob",
-        "UserProfileCleanupBackgroundJob",
         "ServiceDiscoveryBackgroundJob",
         "CheckmkAutomationBackgroundJob",
         "DiagnosticsDumpBackgroundJob",

@@ -5,6 +5,7 @@
 
 from logging import Logger
 from pathlib import Path
+from shutil import rmtree
 from typing import override
 
 from cmk.utils.paths import var_dir
@@ -16,6 +17,7 @@ class RemoveLeftoversUserProfileCleanup(UpdateAction):
     @override
     def __call__(self, logger: Logger) -> None:
         Path(var_dir, "wato", "last_user_profile_cleanup.mk").unlink(missing_ok=True)
+        rmtree(Path(var_dir, "background_jobs", "user_profile_cleanup"), ignore_errors=True)
 
 
 update_action_registry.register(

@@ -99,6 +99,7 @@ def main() {
                         download_dir: download_dir,
                         bisect_comment: params.CIPARAM_BISECT_COMMENT,
                         fake_windows_artifacts: fake_windows_artifacts,
+                        docker_tag: setup_values.docker_tag,
                     );
                 }
             }

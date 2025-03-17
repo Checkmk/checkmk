@@ -1332,6 +1332,9 @@ class CommandScheduleDowntimes(Command):
             tables=["host", "service", "aggr"],
             render=CommandScheduleDowntimesForm(recurring_downtimes).render,
             action=CommandScheduleDowntimesForm(recurring_downtimes).action,
+            confirm_dialog_additions=CommandScheduleDowntimesForm(
+                recurring_downtimes
+            ).confirm_dialog_additions,
         )
 
     def user_confirm_options(

@@ -324,6 +324,9 @@ def perform_tests(
     categories: Sequence[str] | None = None,  # 'None' means 'No filtering'
 ) -> Mapping[SiteId, Sequence[ACTestResult]]:
     logger.debug("Executing tests for %d sites" % len(test_sites))
+    if not test_sites:
+        return {}
+
     pool = ThreadPool(processes=len(test_sites))
     active_tasks = {
         site_id: pool.apply_async(

@@ -167,6 +167,12 @@ class CheckmkFileBasedSession(dict, SessionMixin):
             userdb.session.load_session_infos(self.user.ident, lock=True),
             datetime.now(),
         )
+
+        # Check if the latest session persist was a logout, then keep the logged_out state
+        if self.session_info.session_id in session_infos:
+            if session_infos[self.session_info.session_id].logged_out is True:
+                self.session_info.logged_out = True
+
         session_infos[self.session_info.session_id] = self.session_info
         userdb.session.save_session_infos(self.user.ident, session_infos)
 

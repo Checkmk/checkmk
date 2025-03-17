@@ -1,0 +1,35 @@
+Title: Prevent session from loosing logged out state
+Class: security
+Compatible: compat
+Component: multisite
+Date: 1742224746
+Edition: cre
+Level: 1
+Version: 2.2.0p41
+
+At the beginning of an authenticated request we load the session information for that session from disk and at the end of the session these information (maybe modified) are written back to disk again.
+If a request takes more time and in that time the session was logged out (e.g. Other browser tab) the long lasting request will overwrite the logout again.
+
+An attacker that got access to a valid session could therefore circumvent logout attempts from the victim.
+Though sessions have a default maximum lifetime (24h) so the session will eventually be destroyed after some time.
+
+This issue was reported externally to us.
+
+<em>Affected Versions</em>:
+
+LI: 2.4.0 (beta)
+LI: 2.3.0
+LI: 2.2.0
+LI: 2.1.0 (EOL)
+
+<em>Mitigations</em>:
+
+If you cannot update in time we recommend to decrease the <em>Maximum session duration</em>.
+
+<em>Indicators of Compromise</em>:
+
+None.
+
+<em>Vulnerability Management</em>:
+
+We have rated the issue with a CVSS Score of 2.3 Low (<code>CVSS:4.0/AV:N/AC:H/AT:P/PR:L/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N</code>) and assigned <code>CVE-2025-2596</code>.

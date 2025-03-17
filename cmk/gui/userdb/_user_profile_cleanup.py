@@ -5,20 +5,15 @@
 
 import shutil
 from datetime import datetime, timedelta
-from logging import Logger
 
 import cmk.utils.paths
 
 from cmk.gui.background_job import (
     BackgroundJob,
-    BackgroundProcessInterface,
-    InitialStatusArgs,
-    NoArgs,
-    simple_job_target,
 )
 from cmk.gui.i18n import _
+from cmk.gui.log import logger
 
-from ..logged_in import user
 from .store import load_users
 
 
@@ -26,19 +21,7 @@ def execute_user_profile_cleanup_job() -> None:
     """This function is called by the GUI cron job once a minute.
 
     Errors are logged to var/log/web.log."""
-    job = UserProfileCleanupBackgroundJob()
-    if (
-        result := job.start(
-            simple_job_target(user_profile_cleanup_entry_point),
-            InitialStatusArgs(
-                title=job.gui_title(),
-                lock_wato=False,
-                stoppable=False,
-                user=str(user.id) if user.id else None,
-            ),
-        )
-    ).is_error():
-        raise result.error
+    cleanup_abandoned_profiles(datetime.now(), timedelta(days=30))
 
 
 class UserProfileCleanupBackgroundJob(BackgroundJob):
@@ -52,15 +35,7 @@ class UserProfileCleanupBackgroundJob(BackgroundJob):
         super().__init__(self.job_prefix)
 
 
-def user_profile_cleanup_entry_point(
-    job_interface: BackgroundProcessInterface, args: NoArgs
-) -> None:
-    with job_interface.gui_context():
-        cleanup_abandoned_profiles(job_interface.get_logger(), datetime.now(), timedelta(days=30))
-        job_interface.send_result_message(_("Job finished"))
-
-
-def cleanup_abandoned_profiles(logger: Logger, now: datetime, max_age: timedelta) -> None:
+def cleanup_abandoned_profiles(now: datetime, max_age: timedelta) -> None:
     """Cleanup abandoned profile directories
 
     The cleanup is done like this:

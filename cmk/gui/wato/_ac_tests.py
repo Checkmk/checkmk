@@ -1339,6 +1339,41 @@ class ACTestESXDatasources(ACTest):
             )
 
 
+def _deprecated_result(
+    *, title_entity: str, title_api: str, remove_version: str, site_id: SiteId, path: Path
+) -> ACSingleResult:
+    return ACSingleResult(
+        state=ACResultState.WARN,
+        text=_(
+            "%s uses an API (%s) which is marked as deprecated in"
+            " Checkmk 2.3.0 and will be removed in Checkmk %s."
+        )
+        % (
+            title_entity,
+            title_api,
+            remove_version,
+        ),
+        site_id=site_id,
+        path=path,
+    )
+
+
+def _removed_result(
+    *, title_entity: str, title_api: str, removed_version: str, site_id: SiteId, path: Path
+) -> ACSingleResult:
+    return ACSingleResult(
+        state=ACResultState.CRIT,
+        text=_("%s uses an API (%s) which was removed in Checkmk %s.")
+        % (
+            title_entity,
+            title_api,
+            removed_version,
+        ),
+        site_id=site_id,
+        path=path,
+    )
+
+
 class ACTestDeprecatedV1CheckPlugins(ACTest):
     def category(self) -> str:
         return ACTestCategories.deprecations
@@ -1373,9 +1408,10 @@ class ACTestDeprecatedV1CheckPlugins(ACTest):
         site_id = omd_site()
         if plugin_files := self._get_files():
             for plugin_filepath in plugin_files:
-                yield ACSingleResult(
-                    state=ACResultState.CRIT,
-                    text=_("Check plug-in uses the deprecated API (v1)"),
+                yield _deprecated_result(
+                    title_entity=_("Check plug-in"),
+                    title_api="v1",
+                    remove_version="2.4.0",
                     site_id=site_id,
                     path=plugin_filepath,
                 )
@@ -1419,9 +1455,10 @@ class ACTestDeprecatedCheckPlugins(ACTest):
         site_id = omd_site()
         if files := self._get_files():
             for plugin_filepath in files:
-                yield ACSingleResult(
-                    state=ACResultState.CRIT,
-                    text=_("Check plug-in uses the deprecated API"),
+                yield _deprecated_result(
+                    title_entity=_("Check plug-in"),
+                    title_api=_("legacy"),
+                    remove_version="2.4.0",
                     site_id=site_id,
                     path=plugin_filepath,
                 )
@@ -1461,9 +1498,10 @@ class ACTestDeprecatedInventoryPlugins(ACTest):
         site_id = omd_site()
         if files := self._get_files():
             for plugin_filepath in files:
-                yield ACSingleResult(
-                    state=ACResultState.CRIT,
-                    text=_("HW/SW Inventory plug-in uses the deprecated API"),
+                yield _removed_result(
+                    title_entity=_("HW/SW Inventory plug-in"),
+                    title_api=_("legacy"),
+                    removed_version="2.2.0",
                     site_id=site_id,
                     path=plugin_filepath,
                 )
@@ -1503,9 +1541,10 @@ class ACTestDeprecatedCheckManpages(ACTest):
         site_id = omd_site()
         if files := self._get_files():
             for plugin_filepath in files:
-                yield ACSingleResult(
-                    state=ACResultState.CRIT,
-                    text=_("Check man page uses the deprecated API"),
+                yield _deprecated_result(
+                    title_entity=_("Check man page"),
+                    title_api=_("legacy"),
+                    remove_version="2.4.0",
                     site_id=site_id,
                     path=plugin_filepath,
                 )
@@ -1553,8 +1592,14 @@ class ACTestDeprecatedGUIExtensions(ACTest):
         if files := self._get_files():
             for plugin_filepath in files:
                 yield ACSingleResult(
-                    state=ACResultState.CRIT,
-                    text=_("GUI extension uses the deprecated API"),
+                    state=ACResultState.WARN,
+                    text=(
+                        _(
+                            "GUI extension in %r uses an API which is marked as deprecated and may"
+                            " not work anymore due to unknown imports or objects."
+                        )
+                        % plugin_filepath.parent.name
+                    ),
                     site_id=site_id,
                     path=plugin_filepath,
                 )
@@ -1594,12 +1639,31 @@ class ACTestDeprecatedLegacyGUIExtensions(ACTest):
         site_id = omd_site()
         if files := self._get_files():
             for plugin_filepath in files:
-                yield ACSingleResult(
-                    state=ACResultState.CRIT,
-                    text=_("Legacy GUI extension uses the deprecated API"),
-                    site_id=site_id,
-                    path=plugin_filepath,
-                )
+                match plugin_filepath.parent.name:
+                    case "metrics" | "perfometer":
+                        yield _deprecated_result(
+                            title_entity=(
+                                _("Legacy GUI extension in %r") % plugin_filepath.parent.name
+                            ),
+                            title_api=_("legacy"),
+                            remove_version="2.4.0",
+                            site_id=site_id,
+                            path=plugin_filepath,
+                        )
+                    case _:
+                        yield ACSingleResult(
+                            state=ACResultState.WARN,
+                            text=(
+                                _(
+                                    "Legacy GUI extension in %r uses an API which is marked as"
+                                    " deprecated and may not work anymore due to unknown imports or"
+                                    " objects."
+                                )
+                                % plugin_filepath.parent.name
+                            ),
+                            site_id=site_id,
+                            path=plugin_filepath,
+                        )
             return
 
         yield ACSingleResult(
@@ -1638,7 +1702,9 @@ class ACTestDeprecatedPNPTemplates(ACTest):
             for plugin_filepath in files:
                 yield ACSingleResult(
                     state=ACResultState.CRIT,
-                    text=_("PNP template uses the deprecated API"),
+                    text=_(
+                        "PNP template uses an API which was removed in an ealier Checkmk version."
+                    ),
                     site_id=site_id,
                     path=plugin_filepath,
                 )

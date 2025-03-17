@@ -46,6 +46,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import TrustedCertificateAuthorities
 from cmk.gui.userdb import load_users, save_users
+from cmk.gui.utils.html import HTML
 from cmk.gui.watolib import config_domain_name
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.config_domain_name import (
@@ -574,6 +575,14 @@ class ConfigDomainOMD(ABCConfigDomain):
     @classmethod
     def ident(cls) -> ConfigDomainName:
         return config_domain_name.OMD
+
+    @classmethod
+    def hint(cls) -> HTML:
+        return HTML.without_escaping(
+            _(
+                "Changing this setting triggers a restart of all affected sites during activate changes."
+            )
+        )
 
     def config_dir(self):
         return self.omd_config_dir

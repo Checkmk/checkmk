@@ -6,7 +6,6 @@
 import shutil
 from datetime import datetime, timedelta
 from logging import Logger
-from pathlib import Path
 
 import cmk.utils.paths
 
@@ -45,10 +44,6 @@ def execute_user_profile_cleanup_job() -> None:
 class UserProfileCleanupBackgroundJob(BackgroundJob):
     job_prefix = "user_profile_cleanup"
 
-    @staticmethod
-    def last_run_path() -> Path:
-        return Path(cmk.utils.paths.var_dir, "wato", "last_user_profile_cleanup.mk")
-
     @classmethod
     def gui_title(cls) -> str:
         return _("User profile cleanup")
@@ -61,13 +56,8 @@ def user_profile_cleanup_entry_point(
     job_interface: BackgroundProcessInterface, args: NoArgs
 ) -> None:
     with job_interface.gui_context():
-        try:
-            cleanup_abandoned_profiles(
-                job_interface.get_logger(), datetime.now(), timedelta(days=30)
-            )
-            job_interface.send_result_message(_("Job finished"))
-        finally:
-            UserProfileCleanupBackgroundJob.last_run_path().touch(exist_ok=True)
+        cleanup_abandoned_profiles(job_interface.get_logger(), datetime.now(), timedelta(days=30))
+        job_interface.send_result_message(_("Job finished"))
 
 
 def cleanup_abandoned_profiles(logger: Logger, now: datetime, max_age: timedelta) -> None:

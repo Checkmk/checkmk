@@ -11,7 +11,7 @@ from pathlib import Path
 from textwrap import indent
 from typing import Literal
 
-PROJECT_ROOT = Path(__file__).parent
+PROJECT_ROOT = Path(__file__).parent.parent
 GIT_ROOT = PROJECT_ROOT / "../../../"
 
 
@@ -36,6 +36,8 @@ def _scss_variables(_scss_files: Iterable[Path]) -> tuple[set[str], set[str]]:
                 after_colon: str = l.split(":", 1)[-1]
                 if usage := variable_usage.findall(after_colon):
                     usages.update(usage)
+    assert definitions
+    assert usages
     return definitions, usages
 
 

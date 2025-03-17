@@ -40,7 +40,7 @@ describe('FormAutocompleter', () => {
   })
 
   test('shoud emit entered item on pressing enter key on input without selecting any item from dropdown list', async () => {
-    let selectedValue: string | null = ''
+    let selectedValue: string | undefined = ''
     render(FormAutocompleter, {
       props: {
         placeholder: 'Search...',
@@ -49,7 +49,7 @@ describe('FormAutocompleter', () => {
         resetInputOnAdd: false,
         size: 7,
         id: 'test',
-        'onUpdate:modelValue': (option: string | null) => {
+        'onUpdate:modelValue': (option: string | undefined) => {
           selectedValue = option
         }
       }
@@ -133,7 +133,7 @@ describe('FormAutocompleter', () => {
   })
 
   test('on click on item from dropdown list should emit selected item', async () => {
-    let selectedValue: string | null = ''
+    let selectedValue: string | undefined = ''
     render(FormAutocompleter, {
       props: {
         placeholder: 'Add some labels',
@@ -142,7 +142,7 @@ describe('FormAutocompleter', () => {
         resetInputOnAdd: false,
         size: 7,
         id: 'test',
-        'onUpdate:modelValue': (option: string | null) => {
+        'onUpdate:modelValue': (option: string | undefined) => {
           selectedValue = option
         }
       }
@@ -160,7 +160,7 @@ describe('FormAutocompleter', () => {
   })
 
   test('should emit selected item on pressing enter key on input after selecting item from dropdown list', async () => {
-    let selectedValue: string | null = ''
+    let selectedValue: string | undefined = ''
     render(FormAutocompleter, {
       props: {
         placeholder: 'Add some labels',
@@ -169,7 +169,7 @@ describe('FormAutocompleter', () => {
         resetInputOnAdd: false,
         size: 7,
         id: 'test',
-        'onUpdate:modelValue': (option: string | null) => {
+        'onUpdate:modelValue': (option: string | undefined) => {
           selectedValue = option
         }
       }

@@ -9,4 +9,4 @@ from cmk.gui import main_modules
 from cmk.gui.plugins.wato.utils import rulespec_registry
 
 main_modules.load_plugins()
-sys.stdout.write(f"{"test" in rulespec_registry}\n")
+sys.stdout.write(f"{'checkgroup_parameters:test' in rulespec_registry}\n")

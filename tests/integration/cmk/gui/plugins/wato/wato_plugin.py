@@ -3,23 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    rulespec_registry,
-    RulespecGroupHostsMonitoringRulesVarious,
-)
-from cmk.gui.valuespec import Dictionary
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import Dictionary, String
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
-
-def _valuespec_host_groups():
-    return Dictionary(elements=[])
-
-
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupHostsMonitoringRulesVarious,
-        match_type="dict",
-        name="test",
-        valuespec=_valuespec_host_groups,
-    )
+rule_spec_mytest = CheckParameters(
+    name="test",
+    title=Title("Test"),
+    topic=Topic.SERVER_HARDWARE,
+    parameter_form=lambda: Dictionary(elements={}),
+    condition=HostAndItemCondition(
+        item_title=Title("Item"),
+        item_form=String(),
+    ),
 )

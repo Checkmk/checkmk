@@ -7,7 +7,9 @@ from tests.testlib.site import Site
 
 
 def test_load_wato_plugin(site: Site) -> None:
-    with site.copy_file("wato_plugin.py", "local/lib/check_mk/gui/plugins/wato/test_plugin.py"):
+    with site.copy_file(
+        "wato_plugin.py", "local/lib/python3/cmk/plugins/mytest/rulesets/test_plugin.py"
+    ):
         assert (
             site.python_helper("helper_test_load_wato_plugin.py").check_output().rstrip() == "True"
         )
@@ -18,5 +20,5 @@ def test_load_legacy_wato_plugin(site: Site) -> None:
         "legacy_wato_plugin.py", "local/share/check_mk/web/plugins/wato/test_plugin.py"
     ):
         assert (
-            site.python_helper("helper_test_load_wato_plugin.py").check_output().rstrip() == "True"
+            site.python_helper("helper_test_load_wato_plugin.py").check_output().rstrip() == "False"
         )

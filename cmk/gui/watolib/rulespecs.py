@@ -8,9 +8,10 @@
 
 import abc
 import re
+import sys
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Literal, NamedTuple
+from typing import Any, Literal, NamedTuple, Never
 
 import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKGeneralException
@@ -27,6 +28,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.log import logger
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import (
@@ -64,6 +66,9 @@ from .search import ABCMatchItemGenerator, MatchItem, MatchItems
 from .timeperiods import TimeperiodSelection
 
 MatchType = Literal["first", "all", "list", "dict", "varies"]
+
+
+_LOCAL_ROOT = str(paths.local_root)  # `Path`s are slow.
 
 
 class AllowAll:
@@ -1253,6 +1258,31 @@ def _rulespec_class_for(varname: str, has_valuespec: bool, has_itemtype: bool) -
     return BinaryHostRulespec
 
 
+def _registration_should_be_skipped(instance: object) -> bool:
+    # We used this before, but it was a performance killer. The method below is a lot faster.
+    # calling_from = inspect.stack()[2].filename
+    caller_file = str(sys._getframe(2).f_globals["__file__"])
+    if not caller_file.startswith(_LOCAL_ROOT):
+        return False
+
+    # We are in a local file, so we can skip the registration for all
+    # objects that can be specified using the new API.
+    return isinstance(
+        instance,
+        (
+            CheckParameterRulespecWithItem,
+            CheckParameterRulespecWithoutItem,
+            ManualCheckParameterRulespec,
+            HostRulespec,
+            ServiceRulespec,
+        ),
+    )
+
+
+def _log_ignored_local_registration(name: str) -> None:
+    logger.info(f"Ignoring deprecated rulespec from local path: {name!r}")
+
+
 class RulespecRegistry(cmk.ccc.plugin_registry.Registry[Rulespec]):
     def __init__(self, group_registry: RulespecGroupRegistry) -> None:
         super().__init__()
@@ -1280,6 +1310,10 @@ class RulespecRegistry(cmk.ccc.plugin_registry.Registry[Rulespec]):
         return list({gc.group_name for gc in self.values()})
 
     def register(self, instance: Any) -> Any:
+        if _registration_should_be_skipped(instance):
+            _log_ignored_local_registration(instance.name)
+            return instance
+
         # not-yet-a-type: (Rulespec) -> None
         if not isinstance(instance, Rulespec):
             raise MKGeneralException(_("Tried to register incompatible rulespec: %r") % instance)
@@ -1297,14 +1331,10 @@ class RulespecRegistry(cmk.ccc.plugin_registry.Registry[Rulespec]):
 
         return super().register(instance)
 
-    def register_without_manual_check_rulespec(self, instance: Rulespec) -> None:
-        """Use this register method to prevent adding a manual check rulespec"""
-        if not isinstance(instance, Rulespec):
-            raise MKGeneralException(
-                _("!!! Error: Received class in RulespecRegistry:register_manual_check_rulespec %r")
-                % instance
-            )
-        super().register(instance)
+    def register_without_manual_check_rulespec(self, instance: Never) -> None:
+        """Deprecated!"""
+        # TODO: Remove this with checkmk 2.5
+        _log_ignored_local_registration(instance.name)  # type: ignore[attr-defined]
 
 
 class CheckTypeGroupSelection(ElementSelection):

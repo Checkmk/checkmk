@@ -210,7 +210,11 @@ class Url:  # pylint: disable=too-few-public-methods
         )
 
     def __call__(self, value: str) -> None:
-        parts = urlparse(value)
+        try:
+            parts = urlparse(value)
+        except ValueError as exc:
+            raise ValidationError(Message("%s") % str(exc))  # pylint: disable=raise-missing-from
+
         if not parts.scheme or not parts.netloc or parts.scheme not in self.protocols:
             raise ValidationError(self.error_msg)
 

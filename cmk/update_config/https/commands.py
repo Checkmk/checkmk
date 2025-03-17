@@ -4,10 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
+import os
 import sys
+from collections.abc import Generator
+from contextlib import contextmanager
 from typing import NamedTuple
 
 from cmk.gui.utils import gen_id
+from cmk.gui.watolib.automations import ENV_VARIABLE_FORCE_CLI_INTERFACE
 from cmk.gui.watolib.rulesets import Rule, Ruleset
 
 from cmk.update_config.https.arguments import SearchArgs
@@ -95,7 +99,7 @@ def _construct_v2_rule(rule_v1: Rule, for_migration: ForMigration, ruleset_v2: R
 
 
 def migrate_main(search: SearchArgs, config: Config, write: bool) -> None:
-    with with_allrulesets() as all_rulesets:
+    with _force_automations_cli_interface(), with_allrulesets() as all_rulesets:
         ruleset_v1 = all_rulesets.get("active_checks:http")
         ruleset_v2 = all_rulesets.get("active_checks:httpv2")
         count = _new_migrated_rules(search, config, ruleset_v1, ruleset_v2)
@@ -115,7 +119,7 @@ def _strip_postfix(value: dict) -> None:
 
 
 def finalize_main(search: SearchArgs) -> None:
-    with with_allrulesets() as all_rulesets:
+    with _force_automations_cli_interface(), with_allrulesets() as all_rulesets:
         ruleset_v1 = all_rulesets.get("active_checks:http")
         ruleset_v2 = all_rulesets.get("active_checks:httpv2")
         rulecount_v1 = 0
@@ -148,7 +152,7 @@ def finalize_main(search: SearchArgs) -> None:
 
 
 def delete_main(search: SearchArgs) -> None:
-    with with_allrulesets() as all_rulesets:
+    with _force_automations_cli_interface(), with_allrulesets() as all_rulesets:
         ruleset_v2 = all_rulesets.get("active_checks:httpv2")
         for folder, rule_index, rule_v2 in select(ruleset_v2, search):
             if _migrated_from(rule_v2) is not None:
@@ -161,7 +165,7 @@ def delete_main(search: SearchArgs) -> None:
 
 
 def activate_main(search: SearchArgs) -> None:
-    with with_allrulesets() as all_rulesets:
+    with _force_automations_cli_interface(), with_allrulesets() as all_rulesets:
         ruleset_v2 = all_rulesets.get("active_checks:httpv2")
         for folder, rule_index, rule_v2 in select(ruleset_v2, search):
             if _migrated_from(rule_v2) is not None:
@@ -176,7 +180,7 @@ def activate_main(search: SearchArgs) -> None:
 
 
 def deactivate_main(search: SearchArgs) -> None:
-    with with_allrulesets() as all_rulesets:
+    with _force_automations_cli_interface(), with_allrulesets() as all_rulesets:
         ruleset_v2 = all_rulesets.get("active_checks:httpv2")
         for folder, rule_index, rule_v2 in select(ruleset_v2, search):
             if _migrated_from(rule_v2) is not None:
@@ -188,3 +192,12 @@ def deactivate_main(search: SearchArgs) -> None:
                 ruleset_v2.edit_rule(rule_v2, new_rule_v2)
         sys.stdout.write("Saving rulesets...\n")
         all_rulesets.save()
+
+
+@contextmanager
+def _force_automations_cli_interface() -> Generator[None]:
+    try:
+        os.environ[ENV_VARIABLE_FORCE_CLI_INTERFACE] = "True"
+        yield
+    finally:
+        os.environ.pop(ENV_VARIABLE_FORCE_CLI_INTERFACE, None)

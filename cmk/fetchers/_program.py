@@ -64,38 +64,20 @@ class ProgramFetcher(Fetcher[AgentRawData]):
                 len(self.stdin),
             )
 
-        if self.is_cmc:
-            # Warning:
-            # The preexec_fn parameter is not safe to use in the presence of threads in your
-            # application. The child process could deadlock before exec is called. If you
-            # must use it, keep it trivial! Minimize the number of libraries you call into.
-            #
-            # Note:
-            # If you need to modify the environment for the child use the env parameter
-            # rather than doing it in a preexec_fn. The start_new_session parameter can take
-            # the place of a previously common use of preexec_fn to call os.setsid() in the
-            # child.
-            self._process = subprocess.Popen(  # nosec 602 # BNS:b00359
-                self.cmdline,
-                shell=True,
-                stdin=subprocess.PIPE if self.stdin else subprocess.DEVNULL,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                start_new_session=True,
-                close_fds=True,
-            )
-        else:
-            # We can not create a separate process group when running Nagios
-            # Upon reaching the service_check_timeout Nagios only kills the process
-            # group of the active check.
-            self._process = subprocess.Popen(  # nosec 602 # BNS:b00359
-                self.cmdline,
-                shell=True,
-                stdin=subprocess.PIPE if self.stdin else subprocess.DEVNULL,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                close_fds=True,
-            )
+        # We can not create a separate process group when running Nagios
+        # Upon reaching the service_check_timeout Nagios only kills the process
+        # group of the active check.
+        start_new_session = self.is_cmc
+
+        self._process = subprocess.Popen(  # nosec 602 # BNS:b00359
+            self.cmdline,
+            shell=True,
+            stdin=subprocess.PIPE if self.stdin else subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            start_new_session=start_new_session,
+            close_fds=True,
+        )
 
     def close(self):
         if self._process is None:

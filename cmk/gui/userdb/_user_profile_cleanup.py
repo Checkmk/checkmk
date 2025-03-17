@@ -8,10 +8,6 @@ from datetime import datetime, timedelta
 
 import cmk.utils.paths
 
-from cmk.gui.background_job import (
-    BackgroundJob,
-)
-from cmk.gui.i18n import _
 from cmk.gui.log import logger
 
 from .store import load_users
@@ -22,17 +18,6 @@ def execute_user_profile_cleanup_job() -> None:
 
     Errors are logged to var/log/web.log."""
     cleanup_abandoned_profiles(datetime.now(), timedelta(days=30))
-
-
-class UserProfileCleanupBackgroundJob(BackgroundJob):
-    job_prefix = "user_profile_cleanup"
-
-    @classmethod
-    def gui_title(cls) -> str:
-        return _("User profile cleanup")
-
-    def __init__(self) -> None:
-        super().__init__(self.job_prefix)
 
 
 def cleanup_abandoned_profiles(now: datetime, max_age: timedelta) -> None:

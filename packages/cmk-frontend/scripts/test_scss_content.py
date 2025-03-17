@@ -15,10 +15,6 @@ PROJECT_ROOT = Path(__file__).parent
 GIT_ROOT = PROJECT_ROOT / "../../../"
 
 
-def is_enterprise_repo() -> bool:
-    return (GIT_ROOT / "omd" / "packages" / "enterprise").exists()
-
-
 def scss_files() -> Iterable[Path]:
     return (PROJECT_ROOT / "src/themes").glob("**/*.scss")
 
@@ -74,14 +70,8 @@ def _get_regex_matches_in_scss_files(
 def test_unused_scss_variables() -> None:
     definitions, usages = _scss_variables(scss_files())
     unused = [var for var in definitions if var not in usages]
-    expected = []
 
-    if not is_enterprise_repo():
-        expected.append("$ntop-protocol-painter-padding-top")
-
-    assert sorted(unused) == sorted(
-        expected
-    ), f"Found unused SCSS variables {unused}, expected to be unused are only: {expected}"
+    assert not unused, f"Found unused SCSS variables {unused}"
 
 
 def test_rgb_color_codes() -> None:

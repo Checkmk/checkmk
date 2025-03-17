@@ -363,6 +363,14 @@ def test_network_port(
             "My own message",
             id="url without scheme with custom message",
         ),
+        pytest.param(
+            [UrlProtocol.HTTP, UrlProtocol.HTTPS],
+            {},
+            "https://[$HOSTNAME$]",
+            pytest.raises(ValidationError),
+            "'$HOSTNAME$' does not appear to be an IPv4 or IPv6 address",
+            id="macros not allowed in this url",
+        ),
     ],
 )
 def test_url(

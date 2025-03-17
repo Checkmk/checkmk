@@ -46,6 +46,7 @@ def register(
             name="execute_user_profile_cleanup_job",
             callable=execute_user_profile_cleanup_job,
             interval=timedelta(hours=1),
+            run_in_thread=True,
         )
     )
     job_registry.register(UserProfileCleanupBackgroundJob)

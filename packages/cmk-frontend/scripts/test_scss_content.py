@@ -9,6 +9,7 @@ import traceback
 from collections.abc import Callable, Iterable
 from pathlib import Path
 from textwrap import indent
+from typing import Literal
 
 PROJECT_ROOT = Path(__file__).parent
 GIT_ROOT = PROJECT_ROOT / "../../../"
@@ -98,18 +99,29 @@ def test_hex_color_codes() -> None:
     assert not matches, f"Hex color codes found {matches}"
 
 
-def test(function: Callable) -> None:
+def test(function: Callable) -> Literal["FAILED", "OK"]:
     sys.stdout.write(function.__name__ + "\n")
     try:
         function()
     except Exception:
         sys.stdout.write(indent(traceback.format_exc().rstrip("\n"), "  ") + "\n")
         sys.stdout.write("  FAIL\n")
-    else:
-        sys.stdout.write("  OK\n")
+        return "FAILED"
+    sys.stdout.write("  OK\n")
+    return "OK"
+
+
+def test_all() -> Iterable[Literal["FAILED", "OK"]]:
+    yield test(test_unused_scss_variables)
+    yield test(test_rgb_color_codes)
+    yield test(test_hex_color_codes)
+
+
+def main() -> int:
+    if not all(t == "OK" for t in test_all()):
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
-    test(test_unused_scss_variables)
-    test(test_rgb_color_codes)
-    test(test_hex_color_codes)
+    sys.exit(main())

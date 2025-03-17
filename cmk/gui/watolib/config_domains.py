@@ -580,7 +580,7 @@ class ConfigDomainOMD(ABCConfigDomain):
     def hint(cls) -> HTML:
         return HTML.without_escaping(
             _(
-                "Changing this setting triggers a restart of all affected sites during activate changes."
+                "Changing this setting triggers a full restart of all affected sites during activate changes."
             )
         )
 

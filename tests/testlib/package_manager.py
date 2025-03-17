@@ -271,6 +271,9 @@ def _get_omd_distro_name() -> str:
         content = rh.read_text()
         if content.startswith("AlmaLinux release 9"):
             return "el9"
+        if content.startswith("AlmaLinux release 8"):
+            return "el8"
+
         raise NotImplementedError()
 
     os_spec = _read_os_release()

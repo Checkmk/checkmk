@@ -164,7 +164,7 @@ class RulesetAccess:
         # This will be wrong if the logfile is grouped.
         service_description = cmk.base.config.service_description(
             cc.ruleset_matcher,
-            cc.label_manager,
+            cc.label_manager.labels_of_host,
             host_name,
             CheckPluginName(plugin.name),
             service_name_template=plugin.service_name,
@@ -173,8 +173,8 @@ class RulesetAccess:
 
         # Fail #3: Retrieve the configured labels for this service.
         # This might be wrong as a result of #2.
-        service_labels = cc.ruleset_matcher.labels_of_service(
-            host_name, service_description, discovered_labels, cc.label_manager
+        service_labels = cc.label_manager.labels_of_service(
+            host_name, service_description, discovered_labels
         )
         # => Matching this rule agains service labels will most likely fail.
         return cc.ruleset_matcher.get_checkgroup_ruleset_values(
@@ -182,7 +182,7 @@ class RulesetAccess:
             logfile,
             service_labels,
             cmk.base.config.logwatch_rules,  # type: ignore[arg-type]
-            cc.label_manager,
+            cc.label_manager.labels_of_host,
         )
 
     # This is only wishful typing -- but lets assume this is what we get.
@@ -193,7 +193,7 @@ class RulesetAccess:
         return cc.ruleset_matcher.get_host_values(
             HostName(host_name),
             cmk.base.config.checkgroup_parameters.get("logwatch_ec", []),  # type: ignore[arg-type]
-            cc.label_manager,
+            cc.label_manager.labels_of_host,
         )
 
 

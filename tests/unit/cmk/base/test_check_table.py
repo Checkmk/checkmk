@@ -673,7 +673,7 @@ def test_check_table__get_static_check_entries(
 
     entries = config._get_checkgroup_parameters(
         config_cache.ruleset_matcher,
-        config_cache.label_manager,
+        lambda hn: {},
         hostname,
         "item",
         {},

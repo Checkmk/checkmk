@@ -1852,7 +1852,7 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
     autochecks_config = config.AutochecksConfigurer(config_cache, plugins.check_plugins)
     discovery_config = config.DiscoveryConfigurer(
         ruleset_matcher,
-        loading_result.config_cache.label_manager,
+        loading_result.config_cache.label_manager.labels_of_host,
         loading_result.loaded_config.discovery_rules,
     )
     check_interval = config_cache.check_mk_check_interval(hostname)
@@ -2138,7 +2138,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     config_cache = loading_result.config_cache
     discovery_config = config.DiscoveryConfigurer(
         loading_result.config_cache.ruleset_matcher,
-        loading_result.config_cache.label_manager,
+        loading_result.config_cache.label_manager.labels_of_host,
         loading_result.loaded_config.discovery_rules,
     )
     hosts_config = config.make_hosts_config()

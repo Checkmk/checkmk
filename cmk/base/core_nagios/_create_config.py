@@ -410,8 +410,8 @@ def create_nagios_servicedefs(
     license_counter: Counter,
     ip_address_of: config.IPLookup,
 ) -> dict[ServiceName, Labels]:
-    check_mk_labels = config_cache.ruleset_matcher.labels_of_service(
-        hostname, "Check_MK", _NO_DISCOVERED_LABELS, config_cache.label_manager
+    check_mk_labels = config_cache.label_manager.labels_of_service(
+        hostname, "Check_MK", _NO_DISCOVERED_LABELS
     )
     check_mk_attrs = core_config.get_service_attributes(
         config_cache, hostname, "Check_MK", check_mk_labels, extra_icon=None
@@ -538,8 +538,8 @@ def create_nagios_servicedefs(
         stored_passwords,
         password_store.core_password_store_path(LATEST_CONFIG),
     ):
-        active_service_labels = config_cache.ruleset_matcher.labels_of_service(
-            hostname, service_data.description, _NO_DISCOVERED_LABELS, config_cache.label_manager
+        active_service_labels = config_cache.label_manager.labels_of_service(
+            hostname, service_data.description, _NO_DISCOVERED_LABELS
         )
         if do_omit_service(hostname, service_data.description, active_service_labels):
             continue
@@ -602,7 +602,7 @@ def create_nagios_servicedefs(
     custchecks = config_cache.custom_checks(hostname)
     translations = config.get_service_translations(
         config_cache.ruleset_matcher,
-        config_cache.label_manager,
+        config_cache.label_manager.labels_of_host,
         hostname,
     )
     if custchecks:
@@ -668,8 +668,8 @@ def create_nagios_servicedefs(
 
             command = f"{command_name}!{command_line}"
 
-            labels = config_cache.ruleset_matcher.labels_of_service(
-                hostname, description, _NO_DISCOVERED_LABELS, config_cache.label_manager
+            labels = config_cache.label_manager.labels_of_service(
+                hostname, description, _NO_DISCOVERED_LABELS
             )
 
             service_spec = {
@@ -698,8 +698,8 @@ def create_nagios_servicedefs(
 
     # Inventory checks - if user has configured them.
     if not (disco_params := config_cache.discovery_check_parameters(hostname)).commandline_only:
-        labels = config_cache.ruleset_matcher.labels_of_service(
-            hostname, service_discovery_name, _NO_DISCOVERED_LABELS, config_cache.label_manager
+        labels = config_cache.label_manager.labels_of_service(
+            hostname, service_discovery_name, _NO_DISCOVERED_LABELS
         )
         service_spec = {
             "use": config.inventory_check_template,
@@ -748,9 +748,7 @@ def create_nagios_servicedefs(
             config_cache,
             hostname,
             "PING",
-            config_cache.ruleset_matcher.labels_of_service(
-                hostname, "PING", _NO_DISCOVERED_LABELS, config_cache.label_manager
-            ),
+            config_cache.label_manager.labels_of_service(hostname, "PING", _NO_DISCOVERED_LABELS),
             host_attrs["address"],
             config_cache.default_address_family(hostname),
             host_attrs.get("_NODEIPS"),
@@ -765,8 +763,8 @@ def create_nagios_servicedefs(
                     config_cache,
                     hostname,
                     "PING IPv4",
-                    config_cache.ruleset_matcher.labels_of_service(
-                        hostname, "PING IPv4", _NO_DISCOVERED_LABELS, config_cache.label_manager
+                    config_cache.label_manager.labels_of_service(
+                        hostname, "PING IPv4", _NO_DISCOVERED_LABELS
                     ),
                     host_attrs["address"],
                     socket.AF_INET,
@@ -779,8 +777,8 @@ def create_nagios_servicedefs(
                 config_cache,
                 hostname,
                 "PING IPv6",
-                config_cache.ruleset_matcher.labels_of_service(
-                    hostname, "PING IPv6", _NO_DISCOVERED_LABELS, config_cache.label_manager
+                config_cache.label_manager.labels_of_service(
+                    hostname, "PING IPv6", _NO_DISCOVERED_LABELS
                 ),
                 host_attrs["address"],
                 socket.AF_INET6,

@@ -107,7 +107,7 @@ def test_service_extra_conf(ts: Scenario) -> None:
     matcher = ts.config_cache.ruleset_matcher
     label_manager = ts.config_cache.label_manager
     assert matcher.service_extra_conf(
-        HostName("host1"), "service1", {}, ruleset, label_manager
+        HostName("host1"), "service1", {}, ruleset, label_manager.labels_of_host
     ) == [
         "1",
         "2",
@@ -119,7 +119,9 @@ def test_service_extra_conf(ts: Scenario) -> None:
         "12",
     ]
 
-    assert matcher.service_extra_conf(HostName("host1"), "serv", {}, ruleset, label_manager) == [
+    assert matcher.service_extra_conf(
+        HostName("host1"), "serv", {}, ruleset, label_manager.labels_of_host
+    ) == [
         "1",
         "2",
         "3",
@@ -131,7 +133,7 @@ def test_service_extra_conf(ts: Scenario) -> None:
     ]
 
     assert matcher.service_extra_conf(
-        HostName("host2"), "service1", {}, ruleset, label_manager
+        HostName("host2"), "service1", {}, ruleset, label_manager.labels_of_host
     ) == [
         "1",
         "2",
@@ -194,7 +196,9 @@ HOST_RULESET: Final[Sequence[RuleSpec[Mapping[str, bool]]]] = [
 def test_get_host_values(ts: Scenario) -> None:
     ruleset_matcher = ts.config_cache.ruleset_matcher
     label_manager = ts.config_cache.label_manager
-    assert ruleset_matcher.get_host_values(HostName("host1"), HOST_RULESET, label_manager) == [
+    assert ruleset_matcher.get_host_values(
+        HostName("host1"), HOST_RULESET, label_manager.labels_of_host
+    ) == [
         {"1": True},
         {"2": True},
         {"3": True},
@@ -204,7 +208,9 @@ def test_get_host_values(ts: Scenario) -> None:
         {"9": True},
     ]
 
-    assert ruleset_matcher.get_host_values(HostName("host2"), HOST_RULESET, label_manager) == [
+    assert ruleset_matcher.get_host_values(
+        HostName("host2"), HOST_RULESET, label_manager.labels_of_host
+    ) == [
         {"1": True},
         {"2": True},
         {"8": True},
@@ -214,7 +220,9 @@ def test_get_host_values(ts: Scenario) -> None:
 def test_get_host_merged_dict(ts: Scenario) -> None:
     ruleset_matcher = ts.config_cache.ruleset_matcher
     label_manager = ts.config_cache.label_manager
-    assert ruleset_matcher.get_host_merged_dict(HostName("host1"), HOST_RULESET, label_manager) == {
+    assert ruleset_matcher.get_host_merged_dict(
+        HostName("host1"), HOST_RULESET, label_manager.labels_of_host
+    ) == {
         "1": True,
         "2": True,
         "3": True,
@@ -224,7 +232,9 @@ def test_get_host_merged_dict(ts: Scenario) -> None:
         "9": True,
     }
 
-    assert ruleset_matcher.get_host_merged_dict(HostName("host2"), HOST_RULESET, label_manager) == {
+    assert ruleset_matcher.get_host_merged_dict(
+        HostName("host2"), HOST_RULESET, label_manager.labels_of_host
+    ) == {
         "1": True,
         "2": True,
         "8": True,
@@ -393,11 +403,15 @@ def test_get_service_bool_value(
     label_manager = ts.config_cache.label_manager
 
     assert (
-        matcher.get_service_bool_value(HostName("host1"), "service1", {}, ruleset, label_manager)
+        matcher.get_service_bool_value(
+            HostName("host1"), "service1", {}, ruleset, label_manager.labels_of_host
+        )
         == outcome_host1
     )
     assert (
-        matcher.get_service_bool_value(HostName("host2"), "service2", {}, ruleset, label_manager)
+        matcher.get_service_bool_value(
+            HostName("host2"), "service2", {}, ruleset, label_manager.labels_of_host
+        )
         == outcome_host2
     )
 
@@ -408,32 +422,32 @@ def test_all_matching_hosts(ts: Scenario) -> None:
     assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         {"host_tags": {TagGroupID("agent"): TagID("no-agent")}},
         with_foreign_hosts=False,
-        label_manager=label_manager,
+        labels_of_host=label_manager.labels_of_host,
     ) == {"host1", "host2"}
 
     assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         {"host_tags": {TagGroupID("criticality"): TagID("test")}},
         with_foreign_hosts=False,
-        label_manager=label_manager,
+        labels_of_host=label_manager.labels_of_host,
     ) == {"host1"}
 
     assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         {"host_tags": {TagGroupID("criticality"): {"$ne": TagID("test")}}},
         with_foreign_hosts=False,
-        label_manager=label_manager,
+        labels_of_host=label_manager.labels_of_host,
     ) == {"host2"}
 
     assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         {"host_tags": {TagGroupID("criticality"): {"$ne": TagID("test")}}},
         with_foreign_hosts=True,
-        label_manager=label_manager,
+        labels_of_host=label_manager.labels_of_host,
     ) == {"host2", "host3"}
 
     assert (
         ruleset_matcher.ruleset_optimizer._all_matching_hosts(
             {"host_tags": {TagGroupID("agent"): TagID("no-agent")}, "host_name": []},
             with_foreign_hosts=True,
-            label_manager=label_manager,
+            labels_of_host=label_manager.labels_of_host,
         )
         == set()
     )
@@ -441,7 +455,7 @@ def test_all_matching_hosts(ts: Scenario) -> None:
     assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         {"host_tags": {TagGroupID("agent"): TagID("no-agent")}, "host_name": ["host1"]},
         with_foreign_hosts=True,
-        label_manager=label_manager,
+        labels_of_host=label_manager.labels_of_host,
     ) == {"host1"}
 
     assert (
@@ -451,7 +465,7 @@ def test_all_matching_hosts(ts: Scenario) -> None:
                 "host_name": ["host1"],
             },
             with_foreign_hosts=False,
-            label_manager=label_manager,
+            labels_of_host=label_manager.labels_of_host,
         )
         == set()
     )
@@ -459,26 +473,26 @@ def test_all_matching_hosts(ts: Scenario) -> None:
     assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         {"host_tags": {TagGroupID("agent"): TagID("no-agent")}, "host_name": [{"$regex": "h"}]},
         with_foreign_hosts=False,
-        label_manager=label_manager,
+        labels_of_host=label_manager.labels_of_host,
     ) == {"host1", "host2"}
 
     assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         {"host_tags": {TagGroupID("agent"): TagID("no-agent")}, "host_name": [{"$regex": ".*2"}]},
         with_foreign_hosts=False,
-        label_manager=label_manager,
+        labels_of_host=label_manager.labels_of_host,
     ) == {"host2"}
 
     assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         {"host_tags": {TagGroupID("agent"): TagID("no-agent")}, "host_name": [{"$regex": ".*2$"}]},
         with_foreign_hosts=False,
-        label_manager=label_manager,
+        labels_of_host=label_manager.labels_of_host,
     ) == {"host2"}
 
     assert (
         ruleset_matcher.ruleset_optimizer._all_matching_hosts(
             {"host_tags": {TagGroupID("agent"): TagID("no-agent")}, "host_name": [{"$regex": "2"}]},
             with_foreign_hosts=False,
-            label_manager=label_manager,
+            labels_of_host=label_manager.labels_of_host,
         )
         == set()
     )

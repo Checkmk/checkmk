@@ -1598,7 +1598,7 @@ def test__discovery_considers_host_labels(
     plugins = DiscoveryPluginMapper(
         config_getter=config.DiscoveryConfigurer(
             config_cache.ruleset_matcher,
-            config_cache.label_manager,
+            config_cache.label_manager.labels_of_host,
             rules={
                 RuleSetName("mssql_transactionlogs_discovery"): [],
                 RuleSetName("inventory_df_rules"): [

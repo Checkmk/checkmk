@@ -2737,33 +2737,33 @@ def test_load_config_folder_paths(folder_path_test_config: None) -> None:
 
     ruleset_matcher = config_cache.ruleset_matcher
     assert ruleset_matcher.get_host_values(
-        HostName("main-host"), config.cmc_host_rrd_config, config_cache.label_manager
+        HostName("main-host"), config.cmc_host_rrd_config, lambda hn: {}
     ) == [
         "LVL0",
         "MAIN",
     ]
     assert ruleset_matcher.get_host_values(
-        HostName("lvl0-host"), config.cmc_host_rrd_config, config_cache.label_manager
+        HostName("lvl0-host"), config.cmc_host_rrd_config, lambda hn: {}
     ) == [
         "LVL0",
         "MAIN",
     ]
     assert ruleset_matcher.get_host_values(
-        HostName("lvl1-host"), config.cmc_host_rrd_config, config_cache.label_manager
+        HostName("lvl1-host"), config.cmc_host_rrd_config, lambda hn: {}
     ) == [
         "LVL1",
         "LVL0",
         "MAIN",
     ]
     assert ruleset_matcher.get_host_values(
-        HostName("lvl1aaa-host"), config.cmc_host_rrd_config, config_cache.label_manager
+        HostName("lvl1aaa-host"), config.cmc_host_rrd_config, lambda hn: {}
     ) == [
         "LVL1aaa",
         "LVL0",
         "MAIN",
     ]
     assert ruleset_matcher.get_host_values(
-        HostName("lvl2-host"), config.cmc_host_rrd_config, config_cache.label_manager
+        HostName("lvl2-host"), config.cmc_host_rrd_config, lambda hn: {}
     ) == [
         "LVL2",
         "LVL1",

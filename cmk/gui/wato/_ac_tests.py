@@ -88,6 +88,7 @@ def register(ac_test_registry: ACTestRegistry) -> None:
     ac_test_registry.register(ACTestSizeOfExtensions)
     ac_test_registry.register(ACTestBrokenGUIExtension)
     ac_test_registry.register(ACTestESXDatasources)
+    ac_test_registry.register(ACTestDeprecatedV1CheckPlugins)
     ac_test_registry.register(ACTestDeprecatedCheckPlugins)
     ac_test_registry.register(ACTestDeprecatedInventoryPlugins)
     ac_test_registry.register(ACTestDeprecatedCheckManpages)

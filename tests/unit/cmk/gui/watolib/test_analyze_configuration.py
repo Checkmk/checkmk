@@ -36,6 +36,7 @@ def test_registered_ac_tests() -> None:
         "ACTestCheckMKFetcherUsage",
         "ACTestCheckMKCheckerNumber",
         "ACTestCheckMKCheckerUsage",
+        "ACTestDeprecatedV1CheckPlugins",
         "ACTestDeprecatedCheckPlugins",
         "ACTestDeprecatedInventoryPlugins",
         "ACTestDeprecatedCheckManpages",

@@ -426,7 +426,10 @@ class ABCEditGlobalSettingMode(WatoMode):
         value = self._current_settings.get(
             self._varname, self._global_settings.get(self._varname, defvalue)
         )
+        domain_hint = self._config_variable.domain_hint()
 
+        if domain_hint:
+            html.show_warning(domain_hint)
         hint = self._config_variable.hint()
         if hint:
             html.show_warning(hint)

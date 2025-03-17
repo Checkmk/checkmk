@@ -177,6 +177,10 @@ class ABCConfigDomain(abc.ABC):
     def get_domain_request(cls, settings: list[SerializedSettings]) -> DomainRequest:
         return DomainRequest(cls.ident())
 
+    @classmethod
+    def hint(cls) -> HTML:
+        return HTML.empty()
+
 
 @request_memoize()
 def _get_all_default_globals() -> GlobalSettings:
@@ -327,6 +331,9 @@ class ConfigVariable:
 
     def hint(self) -> HTML:
         return HTML.empty()
+
+    def domain_hint(self) -> HTML:
+        return self.domain().hint()
 
 
 class ConfigVariableRegistry(cmk.ccc.plugin_registry.Registry[type[ConfigVariable]]):

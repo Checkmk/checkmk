@@ -72,7 +72,7 @@ query='[ .[] | {
 }] | {
   overallTargets: length,
   cacheHits: map(select(.cacheHit == true)) | length,
-  percentRemoteCacheHits: ((map(select(.cacheHit == true)) | length) / length * 100 | round ),
+  percentRemoteCacheHits: ((map(select(.cacheHit == true)) | length) / (length | select(. != 0)) * 100 | round ),
   targetsWithMissedCache: map(select(.cacheHit == false) | .targetLabel),
   numberUncacheableTargets: map(select(.cacheable == false)) | length,
   numberRemotableTargets: map(select(.remoteable == true)) | length,

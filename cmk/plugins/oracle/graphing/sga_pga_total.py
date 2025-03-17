@@ -11,7 +11,7 @@ metric_oracle_sga_size = metrics.Metric(
     name="oracle_sga_size",
     title=Title("Oracle maximum SGA size"),
     unit=UNIT_BYTES,
-    color=metrics.Color.BROWN,
+    color=metrics.Color.GRAY,
 )
 metric_oracle_pga_total_pga_allocated = metrics.Metric(
     name="oracle_pga_total_pga_allocated",

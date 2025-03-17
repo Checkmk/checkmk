@@ -11,7 +11,7 @@ metric_oracle_physical_reads = metrics.Metric(
     name="oracle_physical_reads",
     title=Title("Oracle physical reads"),
     unit=UNIT_PER_SECOND,
-    color=metrics.Color.BLUE,
+    color=metrics.Color.GREEN,
 )
 metric_oracle_physical_writes = metrics.Metric(
     name="oracle_physical_writes",

@@ -18,19 +18,19 @@ metric_docker_paused_containers = metrics.Metric(
     name="docker_paused_containers",
     title=Title("Paused containers"),
     unit=UNIT_COUNTER,
-    color=metrics.Color.GREEN,
+    color=metrics.Color.YELLOW,
 )
 metric_docker_running_containers = metrics.Metric(
     name="docker_running_containers",
     title=Title("Running containers"),
     unit=UNIT_COUNTER,
-    color=metrics.Color.BLUE,
+    color=metrics.Color.CYAN,
 )
 metric_docker_stopped_containers = metrics.Metric(
     name="docker_stopped_containers",
     title=Title("Stopped containers"),
     unit=UNIT_COUNTER,
-    color=metrics.Color.PURPLE,
+    color=metrics.Color.ORANGE,
 )
 
 perfometer_docker_running_containers_docker_paused_containers_docker_stopped_containers = (

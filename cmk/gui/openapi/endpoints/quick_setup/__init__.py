@@ -25,9 +25,11 @@ from cmk.ccc.i18n import _
 
 from cmk.utils.encoding import json_encode
 
+from cmk.gui import i18n
 from cmk.gui.background_job import AlreadyRunningError
 from cmk.gui.config import active_config
 from cmk.gui.http import Response
+from cmk.gui.logged_in import user
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.constructors import (
     object_action_href,
@@ -152,6 +154,10 @@ JOB_ID = {
 )
 def get_guided_stages_or_overview_stages(params: Mapping[str, Any]) -> Response:
     """Get guided stages or overview stages"""
+    # TODO (localization): localization is currently unavailable on VueJS and therefore needs to be done on the
+    #  API side which is not ideal. This should be removed once the localization mechanism is
+    #  available on the VueJS side
+    i18n.localize(user.language)
     quick_setup_id = params["quick_setup_id"]
     quick_setup = quick_setup_registry.get(quick_setup_id)
     if quick_setup is None:
@@ -202,6 +208,8 @@ def get_guided_stages_or_overview_stages(params: Mapping[str, Any]) -> Response:
 )
 def quick_setup_get_stage_structure(params: Mapping[str, Any]) -> Response:
     """Get a Quick setup stage structure"""
+    # TODO: see TODO (localization) comment above
+    i18n.localize(user.language)
     quick_setup_id = params["quick_setup_id"]
     object_id = params.get("object_id")
     stage_index = int(params["stage_index"])
@@ -245,6 +253,7 @@ def quick_setup_get_stage_structure(params: Mapping[str, Any]) -> Response:
 )
 def quicksetup_run_stage_action(params: Mapping[str, Any]) -> Response:
     """Run a Quick setup stage validation and recap action"""
+    language = user.language
     body = params["body"]
     quick_setup_id = params["quick_setup_id"]
     stage_action_id = body["stage_action_id"]
@@ -291,6 +300,7 @@ def quicksetup_run_stage_action(params: Mapping[str, Any]) -> Response:
                 action_id=stage_action_id,
                 stage_index=stage_index,
                 user_input_stages=body["stages"],
+                language=language,
             )
         else:
             background_job_id = start_quick_setup_stage_job(
@@ -298,6 +308,7 @@ def quicksetup_run_stage_action(params: Mapping[str, Any]) -> Response:
                 action_id=stage_action_id,
                 stage_index=stage_index,
                 user_input_stages=body["stages"],
+                language=language,
             )
 
         background_job_status_link = constructors.link_endpoint(
@@ -312,6 +323,8 @@ def quicksetup_run_stage_action(params: Mapping[str, Any]) -> Response:
         response.location = url
         return response
 
+    # TODO: see TODO (localization) note above
+    i18n.localize(language)
     result = verify_custom_validators_and_recap_stage(
         quick_setup=quick_setup,
         stage_index=stage_index,

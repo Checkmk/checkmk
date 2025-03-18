@@ -789,6 +789,8 @@ class Site:
                 )
             except subprocess.CalledProcessError as excp:
                 excp.add_note("Execute 'tests/scripts/install-cmk.py' manually to debug the issue.")
+                excp.add_note(excp.stdout)
+                excp.add_note(excp.stderr)
                 if excp.returncode == 22:
                     raise RuntimeError(
                         f"Version {self.version.version} could not be installed!"

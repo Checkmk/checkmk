@@ -1194,7 +1194,11 @@ def command_add_comment_render(what: str) -> None:
 
     html.open_div(class_="group")
     html.button("_add_comment", _("Add comment"), cssclass="hot")
-    html.button("_cancel", _("Cancel"))
+    html.jsbutton(
+        "_cancel",
+        _("Cancel"),
+        onclick="cmk.page_menu.close_popup(this);document.getElementById('comment').value=''",
+    )
     html.close_div()
 
 

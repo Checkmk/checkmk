@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, MutableSequence
 from dataclasses import dataclass
-from typing import Any, NewType
+from typing import Any, Literal, NewType
 
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
 
@@ -23,3 +23,36 @@ GeneralStageErrors = MutableSequence[str]
 class ServiceInterest:
     check_plugin_name_pattern: str
     label: str
+
+
+IconName = Literal[
+    "about-checkmk",
+    "alert-crit",
+    "alert-up",
+    "alert-warn",
+    "back",
+    "cancel",
+    "check",
+    "checkmark",
+    "checkmark-plus",
+    "close",
+    "continue",
+    "crit-problem",
+    "cross",
+    "drag",
+    "edit",
+    "folder-blue",
+    "help-activated",
+    "info",
+    "info-circle",
+    "insertdate",
+    "load-graph",
+    "main-help",
+    "pending-task",
+    "plus",
+    "save",
+    "save-to-services",
+    "search",
+    "tree-closed",
+]
+"""Maps to a related css variable, i.e. --icon-save-to-services."""

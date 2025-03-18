@@ -34,6 +34,17 @@ from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
 from cmk.mkp_tool import get_stored_manifests, Manifest, PackageStore, PathConfig
 
 
+@dataclass(frozen=True, kw_only=True)
+class Paths:
+    markers: Path
+    last_run: Path
+
+
+def create_paths(omd_root: Path) -> Paths:
+    markers = omd_root / Path("var/check_mk/deprecations")
+    return Paths(markers=markers, last_run=markers / ".last_run")
+
+
 @dataclass(frozen=True)
 class _MarkerFileStore:
     _folder: Path
@@ -201,13 +212,12 @@ def _find_ac_test_result_problems(
 
 
 def execute_deprecation_tests_and_notify_users() -> None:
-    deprecations_path = Path(paths.var_dir) / "deprecations"
-    deprecations_path.mkdir(parents=True, exist_ok=True)
-    last_run_path = deprecations_path / ".last_run"
+    deprecation_paths = create_paths(paths.omd_root)
+    deprecation_paths.markers.mkdir(parents=True, exist_ok=True)
     now = time.time()
 
     try:
-        last_run_ts = last_run_path.stat().st_mtime
+        last_run_ts = deprecation_paths.last_run.stat().st_mtime
     except FileNotFoundError:
         last_run_ts = 0
 
@@ -217,9 +227,9 @@ def execute_deprecation_tests_and_notify_users() -> None:
     if is_wato_slave_site():
         return
 
-    last_run_path.touch()
+    deprecation_paths.last_run.touch()
 
-    marker_file_store = _MarkerFileStore(deprecations_path)
+    marker_file_store = _MarkerFileStore(deprecation_paths.markers)
 
     site_versions_by_site_id = {
         site_id: site_version

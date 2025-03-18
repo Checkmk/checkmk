@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from logging import Logger
-from pathlib import Path
 
 import cmk.utils.paths
+
+from cmk.gui import deprecations
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.update_config.update_state import UpdateActionState
@@ -14,7 +15,7 @@ from cmk.update_config.update_state import UpdateActionState
 
 class ResetDeprecationsScheduling(UpdateAction):  # pylint: disable=too-few-public-methods
     def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
-        Path(cmk.utils.paths.var_dir, "deprecations", ".last_run").unlink(missing_ok=True)
+        deprecations.create_paths(cmk.utils.paths.omd_root).last_run.unlink(missing_ok=True)
 
 
 update_action_registry.register(

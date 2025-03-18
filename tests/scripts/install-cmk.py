@@ -52,11 +52,11 @@ def main():
     try:
         manager.install(version.version_rc_aware, version.edition)
     except subprocess.CalledProcessError as excp:
-        excp.add_note(f"Failed to install {version.edition} {version.version}!")
+        excp.add_note(f"Failed to install {version.version}.{version.edition.short}!")
         logger.exception(excp)
         return CMK_INSTALL_ERROR
     except requests.exceptions.HTTPError as excp:
-        excp.add_note(f"Failed to download {version.edition} {version.version}!")
+        excp.add_note(f"Failed to download {version.version}.{version.edition.short}!")
         logger.exception(excp)
         return CMK_DOWNLOAD_ERROR
 

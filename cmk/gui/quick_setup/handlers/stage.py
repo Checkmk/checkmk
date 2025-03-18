@@ -31,6 +31,7 @@ from cmk.gui.form_specs.vue.form_spec_visitor import (
     validate_value_from_frontend,
 )
 from cmk.gui.http import request
+from cmk.gui.i18n import localize
 from cmk.gui.logged_in import user
 from cmk.gui.quick_setup.config_setups import register as register_config_setups
 from cmk.gui.quick_setup.handlers.utils import (
@@ -312,16 +313,24 @@ class QuickSetupStageActionBackgroundJob(BackgroundJob):
         action_id: ActionId,
         stage_index: StageIndex,
         user_input_stages: Sequence[dict],
+        language: str,
     ) -> None:
         self._quick_setup_id = quick_setup_id
         self._action_id = action_id
         self._stage_index = stage_index
         self._user_input_stages = user_input_stages
+        # TODO (localization): localization is currently unavailable on VueJS and therefore needs
+        #  to be done inside the Background job which is not ideal. This should be removed here (as
+        #  as well as the call instances) once the localization mechanism is available on the VueJS
+        #  side. This approach saves the Quick setup progress steps in the translated language which
+        #  is also not ideal
+        self._language = language
         super().__init__(job_id=self.create_job_id(quick_setup_id, stage_index, job_uuid))
 
     def run_quick_setup_stage_action(self, job_interface: BackgroundProcessInterface) -> None:
         job_interface.get_logger().debug("Running Quick setup stage action finally")
         with job_interface.gui_context():
+            localize(self._language)
             try:
                 self._run_quick_setup_stage_action(job_interface)
             except Exception as e:
@@ -365,6 +374,7 @@ def start_quick_setup_stage_job(
     action_id: ActionId,
     stage_index: StageIndex,
     user_input_stages: Sequence[dict],
+    language: str,
     job_uuid: str | None = None,
 ) -> str:
     if job_uuid is None:
@@ -375,6 +385,7 @@ def start_quick_setup_stage_job(
         action_id=action_id,
         stage_index=stage_index,
         user_input_stages=user_input_stages,
+        language=language,
     )
 
     job_start = job.start(
@@ -386,6 +397,7 @@ def start_quick_setup_stage_job(
                 action_id=action_id,
                 stage_index=stage_index,
                 user_input_stages=user_input_stages,
+                language=language,
             ),
         ),
         InitialStatusArgs(
@@ -406,6 +418,7 @@ class QuickSetupStageActionJobArgs(BaseModel, frozen=True):
     action_id: ActionId
     stage_index: StageIndex
     user_input_stages: Sequence[dict]
+    language: str
 
 
 def quick_setup_stage_action_job_entry_point(
@@ -417,6 +430,7 @@ def quick_setup_stage_action_job_entry_point(
         action_id=args.action_id,
         stage_index=args.stage_index,
         user_input_stages=args.user_input_stages,
+        language=args.language,
     ).run_quick_setup_stage_action(job_interface)
 
 
@@ -459,6 +473,7 @@ def start_quick_setup_stage_action_job_on_remote(
     action_id: ActionId,
     stage_index: StageIndex,
     user_input_stages: Sequence[dict],
+    language: str,
 ) -> str:
     job_uuid = str(uuid.uuid4())
     args = QuickSetupStageActionJobArgs(
@@ -467,6 +482,7 @@ def start_quick_setup_stage_action_job_on_remote(
         action_id=action_id,
         stage_index=stage_index,
         user_input_stages=user_input_stages,
+        language=language,
     )
     job_id = str(
         do_remote_automation(
@@ -497,6 +513,7 @@ class AutomationQuickSetupStageAction(AutomationCommand[QuickSetupStageActionJob
             stage_index=api_request.stage_index,
             user_input_stages=api_request.user_input_stages,
             job_uuid=api_request.job_uuid,
+            language=api_request.language,
         )
 
 

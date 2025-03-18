@@ -194,7 +194,7 @@ class ABCPackageManager(abc.ABC):
             logger.info("Executing: %s", subprocess.list2cmdline(list(map(str, cmd))))
             subprocess.run(cmd, shell=False, close_fds=True, encoding="utf-8", check=True)
         except subprocess.CalledProcessError as excp:
-            if excp.returncode >> 8 != 0:
+            if excp.returncode != 0:
                 excp.add_note("Failed to install package!")
                 raise excp
 

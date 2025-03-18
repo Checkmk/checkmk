@@ -5,11 +5,10 @@
 
 from collections.abc import Mapping, Sequence
 
-from cmk.ccc.i18n import _
-
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
+from cmk.gui.i18n import _
 from cmk.gui.quick_setup.v0_unstable.predefined import (
     collect_params_from_form_data,
     collect_params_with_defaults_from_form_data,

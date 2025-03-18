@@ -6,13 +6,12 @@
 from collections.abc import Mapping, Sequence
 from typing import Callable
 
-from cmk.ccc.i18n import _
-
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
+from cmk.gui.i18n import _
 from cmk.gui.quick_setup.config_setups.aws import form_specs as aws
 from cmk.gui.quick_setup.config_setups.aws.form_specs import quick_setup_aws_form_spec
 from cmk.gui.quick_setup.v0_unstable.definitions import QSSiteSelection

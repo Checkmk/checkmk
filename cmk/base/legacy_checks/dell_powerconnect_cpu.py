@@ -17,7 +17,7 @@
 
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import contains, IgnoreResultsError, render, SNMPTree, StringTable
+from cmk.agent_based.v2 import IgnoreResultsError, render
 
 check_info = {}
 
@@ -64,18 +64,8 @@ def check_dell_powerconnect_cpu(item, params, info):
     )
 
 
-def parse_dell_powerconnect_cpu(string_table: StringTable) -> StringTable:
-    return string_table
-
-
 check_info["dell_powerconnect_cpu"] = LegacyCheckDefinition(
     name="dell_powerconnect_cpu",
-    parse_function=parse_dell_powerconnect_cpu,
-    detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.674.10895"),
-    fetch=SNMPTree(
-        base=".1.3.6.1.4.1.89.1",
-        oids=["6", "7", "8", "9"],
-    ),
     service_name="CPU utilization",
     discovery_function=inventory_dell_powerconnect_cpu,
     check_function=check_dell_powerconnect_cpu,

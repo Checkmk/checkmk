@@ -13,8 +13,12 @@ from cmk.automations.results import DiagSpecialAgentHostConfig, DiagSpecialAgent
 
 from cmk.checkengine.discovery import CheckPreviewEntry
 
-from cmk.gui.form_specs.vue.form_spec_visitor import serialize_data_for_frontend
+from cmk.gui.form_specs.vue.form_spec_visitor import (
+    serialize_data_for_frontend,
+    transform_to_disk_model,
+)
 from cmk.gui.form_specs.vue.visitors import DataOrigin
+from cmk.gui.form_specs.vue.visitors._type_defs import DiskModel
 from cmk.gui.quick_setup.private.widgets import ConditionalNotificationStageWidget
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupStage
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, ServiceInterest
@@ -128,13 +132,23 @@ def _collect_params_from_form_data(
     }
 
 
-def _get_rule_defaults(parameter_form: Dictionary) -> dict[str, object]:
-    return serialize_data_for_frontend(
-        form_spec=parameter_form,
-        field_id="rule_id",
-        origin=DataOrigin.DISK,
-        do_validate=False,
-    ).data
+def _get_rule_defaults(parameter_form: Dictionary) -> DiskModel:
+    # We need to create a valid default ruleset configuration that adheres to the form spec.
+    # This two-step process:
+    # 1.  First serialize the form to the frontend format, which automatically fills in
+    #     any missing values with appropriate defaults (including fallback values for invalid entries)
+    # 1a. Invalid entries exist since we have required dictelements without a DefaultValue prefill
+    # 2.  Then convert this valid structure back to disk format so it can be properly merged
+    #     with the actual configuration data from the quick setup stages
+    return transform_to_disk_model(
+        parameter_form,
+        serialize_data_for_frontend(
+            form_spec=parameter_form,
+            field_id="rule_id",
+            origin=DataOrigin.DISK,
+            do_validate=False,
+        ).data,
+    )
 
 
 def _match_service_interest(

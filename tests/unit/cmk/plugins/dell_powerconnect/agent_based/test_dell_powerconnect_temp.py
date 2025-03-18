@@ -19,6 +19,7 @@ from cmk.base.api.agent_based.register import AgentBasedPlugins
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
 from cmk.plugins.dell_powerconnect.agent_based.dell_powerconnect_temp import (
+    Section,
     snmp_section_dell_powerconnect_temp,
 )
 
@@ -36,7 +37,9 @@ def test_temp_parse(
 
     assert snmp_is_detected(snmp_section_dell_powerconnect_temp, snmp_walk)
 
-    assert get_parsed_snmp_section(snmp_section_dell_powerconnect_temp, snmp_walk) == (42.0, "OK")
+    assert get_parsed_snmp_section(snmp_section_dell_powerconnect_temp, snmp_walk) == Section(
+        42.0, "OK"
+    )
 
 
 def test_temp_discover(agent_based_plugins: AgentBasedPlugins) -> None:
@@ -44,7 +47,7 @@ def test_temp_discover(agent_based_plugins: AgentBasedPlugins) -> None:
     assert (
         list(
             plugin.discovery_function(
-                (42.0, "OK"),
+                Section(42.0, "OK"),
             )
         )
     ) == [
@@ -56,37 +59,45 @@ def test_temp_discover(agent_based_plugins: AgentBasedPlugins) -> None:
     "section, result",
     [
         (
-            (None, "OK"),
+            Section(None, "OK"),
             [
                 Result(state=State.OK, summary="Status: OK"),
             ],
         ),
         (
-            (41.0, "OK"),
+            Section(41.0, "OK"),
             [
-                Result(state=State.OK, summary="41.0 °C"),
                 Metric("temp", 41.0),
+                Result(state=State.OK, summary="Temperature: 41.0 °C"),
+                Result(state=State.OK, notice="State on device: OK"),
+                Result(state=State.OK, notice="Configuration: only use device levels"),
             ],
         ),
         (
-            (41.0, "unavailable"),
+            Section(41.0, "unavailable"),
             [
-                Result(state=State.WARN, summary="41.0 °C, State on device: unavailable"),
                 Metric("temp", 41.0),
+                Result(state=State.OK, summary="Temperature: 41.0 °C"),
+                Result(state=State.WARN, summary="State on device: unavailable"),
+                Result(state=State.OK, notice="Configuration: only use device levels"),
             ],
         ),
         (
-            (41.0, "non operational"),
+            Section(41.0, "non operational"),
             [
-                Result(state=State.CRIT, summary="41.0 °C, State on device: non operational"),
                 Metric("temp", 41.0),
+                Result(state=State.OK, summary="Temperature: 41.0 °C"),
+                Result(state=State.CRIT, summary="State on device: non operational"),
+                Result(state=State.OK, notice="Configuration: only use device levels"),
             ],
         ),
         (
-            (41.0, "something"),
+            Section(41.0, "something"),
             [
-                Result(state=State.UNKNOWN, summary="41.0 °C, State on device: something"),
                 Metric("temp", 41.0),
+                Result(state=State.OK, summary="Temperature: 41.0 °C"),
+                Result(state=State.UNKNOWN, summary="State on device: something"),
+                Result(state=State.OK, notice="Configuration: only use device levels"),
             ],
         ),
     ],
@@ -96,4 +107,13 @@ def test_temp_check(
 ) -> None:
     plugin = agent_based_plugins.check_plugins[CheckPluginName("dell_powerconnect_temp")]
 
-    assert list(plugin.check_function(item="Ambient", params={}, section=section)) == result
+    assert (
+        list(
+            plugin.check_function(
+                item="Ambient",
+                params={"levels": (80, 90), "device_levels_handling": "dev"},
+                section=section,
+            )
+        )
+        == result
+    )

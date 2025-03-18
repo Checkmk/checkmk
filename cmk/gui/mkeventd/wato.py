@@ -3104,16 +3104,13 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
         return [
             g
             for g in sorted(
-                [g_class() for g_class in config_variable_group_registry.values()],
-                key=lambda grp: grp.sort_index(),
+                config_variable_group_registry.values(), key=lambda grp: grp.sort_index()
             )
-            if isinstance(
-                g,
-                (
-                    ConfigVariableGroupEventConsoleGeneric,
-                    ConfigVariableGroupEventConsoleLogging,
-                    ConfigVariableGroupEventConsoleSNMP,
-                ),
+            if g
+            in (
+                ConfigVariableGroupEventConsoleGeneric,
+                ConfigVariableGroupEventConsoleLogging,
+                ConfigVariableGroupEventConsoleSNMP,
             )
         ]
 
@@ -3185,28 +3182,22 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
         self._show_configuration_variables()
 
 
-class ConfigVariableGroupEventConsoleGeneric(ConfigVariableGroup):
-    def title(self) -> str:
-        return _("Event Console: Generic")
-
-    def sort_index(self) -> int:
-        return 18
+ConfigVariableGroupEventConsoleGeneric = ConfigVariableGroup(
+    title=_l("Event Console: Generic"),
+    sort_index=18,
+)
 
 
-class ConfigVariableGroupEventConsoleLogging(ConfigVariableGroup):
-    def title(self) -> str:
-        return _("Event Console: Logging & diagnose")
-
-    def sort_index(self) -> int:
-        return 19
+ConfigVariableGroupEventConsoleLogging = ConfigVariableGroup(
+    title=_l("Event Console: Logging & diagnose"),
+    sort_index=19,
+)
 
 
-class ConfigVariableGroupEventConsoleSNMP(ConfigVariableGroup):
-    def title(self) -> str:
-        return _("Event Console: SNMP traps")
-
-    def sort_index(self) -> int:
-        return 20
+ConfigVariableGroupEventConsoleSNMP = ConfigVariableGroup(
+    title=_l("Event Console: SNMP traps"),
+    sort_index=20,
+)
 
 
 class ModeEventConsoleEditGlobalSetting(ABCEditGlobalSettingMode):
@@ -3829,7 +3820,7 @@ class MainModuleEventConsole(ABCMainModule):
 
 
 class ConfigVariableEventConsole(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupSiteManagement
 
     def domain(self) -> ABCConfigDomain:
@@ -3864,7 +3855,7 @@ class ConfigVariableEventConsole(ConfigVariable):
 
 
 class ConfigVariableEventConsoleRemoteStatus(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> ABCConfigDomain:
@@ -3930,7 +3921,7 @@ class ConfigVariableEventConsoleRemoteStatus(ConfigVariable):
 
 
 class ConfigVariableEventConsoleReplication(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> ABCConfigDomain:
@@ -4053,7 +4044,7 @@ class ConfigVariableEventConsoleReplication(ConfigVariable):
 
 
 class ConfigVariableEventConsoleRetentionInterval(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> ABCConfigDomain:
@@ -4074,7 +4065,7 @@ class ConfigVariableEventConsoleRetentionInterval(ConfigVariable):
 
 
 class ConfigVariableEventConsoleHousekeepingInterval(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> ABCConfigDomain:
@@ -4096,7 +4087,7 @@ class ConfigVariableEventConsoleHousekeepingInterval(ConfigVariable):
 
 
 class ConfigVariableEventConsoleSqliteHousekeepingInterval(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> ABCConfigDomain:
@@ -4118,7 +4109,7 @@ class ConfigVariableEventConsoleSqliteHousekeepingInterval(ConfigVariable):
 
 
 class ConfigVariableEventConsoleSqliteFreelistSize(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> ABCConfigDomain:
@@ -4140,7 +4131,7 @@ class ConfigVariableEventConsoleSqliteFreelistSize(ConfigVariable):
 
 
 class ConfigVariableEventConsoleStatisticsInterval(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> ABCConfigDomain:
@@ -4162,7 +4153,7 @@ class ConfigVariableEventConsoleStatisticsInterval(ConfigVariable):
 
 
 class ConfigVariableEventConsoleLogMessages(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> ABCConfigDomain:
@@ -4186,7 +4177,7 @@ class ConfigVariableEventConsoleLogMessages(ConfigVariable):
 
 
 class ConfigVariableEventConsoleRuleOptimizer(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> ABCConfigDomain:
@@ -4204,7 +4195,7 @@ class ConfigVariableEventConsoleRuleOptimizer(ConfigVariable):
 
 
 class ConfigVariableEventConsoleActions(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> ABCConfigDomain:
@@ -4342,7 +4333,7 @@ class ConfigVariableEventConsoleActions(ConfigVariable):
 
 
 class ConfigVariableEventConsoleArchiveOrphans(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> ABCConfigDomain:
@@ -4365,7 +4356,7 @@ class ConfigVariableEventConsoleArchiveOrphans(ConfigVariable):
 
 
 class ConfigVariableHostnameTranslation(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> ABCConfigDomain:
@@ -4465,7 +4456,7 @@ def vs_ec_host_limit(title: str) -> Dictionary:
 
 
 class ConfigVariableEventConsoleEventLimit(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> ABCConfigDomain:
@@ -4519,7 +4510,7 @@ class ConfigVariableEventConsoleEventLimit(ConfigVariable):
 
 
 class ConfigVariableEventConsoleHistoryRotation(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> ABCConfigDomain:
@@ -4539,7 +4530,7 @@ class ConfigVariableEventConsoleHistoryRotation(ConfigVariable):
 
 
 class ConfigVariableEventConsoleHistoryLifetime(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> ABCConfigDomain:
@@ -4558,7 +4549,7 @@ class ConfigVariableEventConsoleHistoryLifetime(ConfigVariable):
 
 
 class ConfigVariableEventConsoleSocketQueueLength(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> ABCConfigDomain:
@@ -4584,7 +4575,7 @@ class ConfigVariableEventConsoleSocketQueueLength(ConfigVariable):
 
 
 class ConfigVariableEventConsoleEventSocketQueueLength(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupEventConsoleGeneric
 
     def domain(self) -> ABCConfigDomain:
@@ -4610,7 +4601,7 @@ class ConfigVariableEventConsoleEventSocketQueueLength(ConfigVariable):
 
 
 class ConfigVariableEventConsoleTranslateSNMPTraps(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupEventConsoleSNMP
 
     def domain(self) -> ABCConfigDomain:
@@ -4651,7 +4642,7 @@ class ConfigVariableEventConsoleTranslateSNMPTraps(ConfigVariable):
 
 
 class ConfigVariableEventConsoleSNMPCredentials(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupEventConsoleSNMP
 
     def domain(self) -> ABCConfigDomain:
@@ -4711,7 +4702,7 @@ class ConfigVariableEventConsoleSNMPCredentials(ConfigVariable):
 
 
 class ConfigVariableEventConsoleDebugRules(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupEventConsoleLogging
 
     def domain(self) -> ABCConfigDomain:
@@ -4734,7 +4725,7 @@ class ConfigVariableEventConsoleDebugRules(ConfigVariable):
 
 
 class ConfigVariableEventConsoleLogLevel(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupEventConsoleLogging
 
     def domain(self) -> ABCConfigDomain:
@@ -4809,7 +4800,7 @@ class ConfigVariableEventConsoleLogLevel(ConfigVariable):
 
 
 class ConfigVariableEventLogRuleHits(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupEventConsoleLogging
 
     def domain(self) -> ABCConfigDomain:
@@ -4833,7 +4824,7 @@ class ConfigVariableEventLogRuleHits(ConfigVariable):
 
 # TODO: Isn't this variable deprecated since 1.5? Investigate and drop/mark as deprecated
 class ConfigVariableEventConsoleConnectTimeout(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -4857,7 +4848,7 @@ class ConfigVariableEventConsoleConnectTimeout(ConfigVariable):
 
 
 class ConfigVariableEventConsolePrettyPrintRules(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupWATO
 
     def domain(self) -> ABCConfigDomain:
@@ -4882,7 +4873,7 @@ class ConfigVariableEventConsolePrettyPrintRules(ConfigVariable):
 
 
 class ConfigVariableEventConsoleNotifyContactgroup(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupNotifications
 
     def domain(self) -> ABCConfigDomain:
@@ -4911,7 +4902,7 @@ class ConfigVariableEventConsoleNotifyContactgroup(ConfigVariable):
 
 
 class ConfigVariableEventConsoleNotifyRemoteHost(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupNotifications
 
     def domain(self) -> ABCConfigDomain:
@@ -4943,7 +4934,7 @@ class ConfigVariableEventConsoleNotifyRemoteHost(ConfigVariable):
 
 
 class ConfigVariableEventConsoleNotifyFacility(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupNotifications
 
     def domain(self) -> ABCConfigDomain:
@@ -4968,7 +4959,7 @@ class ConfigVariableEventConsoleNotifyFacility(ConfigVariable):
 
 
 class ConfigVariableEventConsoleServiceLevels(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupNotifications
 
     def domain(self) -> ABCConfigDomain:

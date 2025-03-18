@@ -24,6 +24,7 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.watolib.site_changes import ChangeSpec
 
@@ -256,6 +257,13 @@ sample_config_generator_registry = SampleConfigGeneratorRegistry()
 
 
 class ConfigVariableGroup:
+    def __init__(
+        self, *, title: LazyString, sort_index: int, warning: LazyString | None = None
+    ) -> None:
+        self._title = title
+        self._sort_index = sort_index
+        self._warning = warning
+
     # TODO: The identity of a configuration variable group should be a pure
     # internal unique key and it should not be localized. The title of a
     # group was always used as identity. Check all call sites and introduce
@@ -263,36 +271,36 @@ class ConfigVariableGroup:
     # effects.
     def ident(self) -> str:
         """Unique internal key of this group"""
-        return self.title()
+        return str(self._title)
 
     def title(self) -> str:
         """Human readable title of this group"""
-        raise NotImplementedError()
+        return str(self._title)
 
     def sort_index(self) -> int:
         """Returns an integer to control the sorting of the groups in lists"""
-        raise NotImplementedError()
-
-    def config_variables(self) -> list[type[ConfigVariable]]:
-        """Returns a list of configuration variable classes that belong to this group"""
-        return [v for v in config_variable_registry.values() if v().group() == self.__class__]
+        return self._sort_index
 
     def warning(self) -> str | None:
         """Return a string if you want to show a warning at the top of this group"""
-        return None
+        return str(self._warning)
+
+    def config_variables(self) -> list[type[ConfigVariable]]:
+        """Returns a list of configuration variable classes that belong to this group"""
+        return [v for v in config_variable_registry.values() if v().group() == self]
 
 
-class ConfigVariableGroupRegistry(cmk.ccc.plugin_registry.Registry[type[ConfigVariableGroup]]):
-    def plugin_name(self, instance):
-        return instance().ident()
+class ConfigVariableGroupRegistry(cmk.ccc.plugin_registry.Registry[ConfigVariableGroup]):
+    def plugin_name(self, instance: ConfigVariableGroup) -> str:
+        return instance.ident()
 
 
 config_variable_group_registry = ConfigVariableGroupRegistry()
 
 
 class ConfigVariable:
-    def group(self) -> type[ConfigVariableGroup]:
-        """Returns the class of the configuration variable group this configuration variable belongs to"""
+    def group(self) -> ConfigVariableGroup:
+        """Returns the the configuration variable group this configuration variable belongs to"""
         raise NotImplementedError()
 
     def ident(self) -> str:

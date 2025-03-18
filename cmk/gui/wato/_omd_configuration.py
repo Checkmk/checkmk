@@ -87,7 +87,7 @@ def register(
 
 
 class ConfigVariableSiteAutostart(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupSiteManagement
 
     def domain(self) -> ABCConfigDomain:
@@ -106,7 +106,7 @@ class ConfigVariableSiteAutostart(ConfigVariable):
 
 
 class ConfigVariableSiteCore(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupSiteManagement
 
     def domain(self) -> ABCConfigDomain:
@@ -196,7 +196,7 @@ def _migrate_tcp_only_from(livestatus_tcp: dict[str, object]) -> dict[str, objec
 
 
 class ConfigVariableSiteLivestatusTCP(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupSiteManagement
 
     def domain(self) -> ABCConfigDomain:
@@ -254,7 +254,7 @@ class ConfigDomainDiskspace(ABCConfigDomain):
 
 
 class ConfigVariableSiteDiskspaceCleanup(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupSiteManagement
 
     def domain(self) -> ABCConfigDomain:
@@ -440,7 +440,7 @@ class ConfigDomainApache(ABCConfigDomain):
 
 
 class ConfigVariableSiteApacheProcessTuning(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupSiteManagement
 
     def domain(self) -> ABCConfigDomain:
@@ -564,7 +564,7 @@ class ConfigDomainRRDCached(ABCConfigDomain):
 
 
 class ConfigVariableSiteRRDCachedTuning(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupSiteManagement
 
     def domain(self) -> ABCConfigDomain:

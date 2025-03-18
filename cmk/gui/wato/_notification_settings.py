@@ -38,7 +38,7 @@ def register(config_variable_registry: ConfigVariableRegistry) -> None:
 
 
 class ConfigVariableNotificationFallbackEmail(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupNotifications
 
     def domain(self) -> ABCConfigDomain:
@@ -64,7 +64,7 @@ class ConfigVariableNotificationFallbackEmail(ConfigVariable):
 
 
 class ConfigVariableNotificationFallbackFormat(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupNotifications
 
     def domain(self) -> ABCConfigDomain:
@@ -92,7 +92,7 @@ class ConfigVariableNotificationFallbackFormat(ConfigVariable):
 
 
 class ConfigVariableNotificationBacklog(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupNotifications
 
     def domain(self) -> ABCConfigDomain:
@@ -117,7 +117,7 @@ class ConfigVariableNotificationBacklog(ConfigVariable):
 
 
 class ConfigVariableNotificationBulkInterval(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupNotifications
 
     def domain(self) -> ABCConfigDomain:
@@ -143,7 +143,7 @@ class ConfigVariableNotificationBulkInterval(ConfigVariable):
 
 
 class ConfigVariableNotificationPluginTimeout(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupNotifications
 
     def domain(self) -> ABCConfigDomain:
@@ -161,7 +161,7 @@ class ConfigVariableNotificationPluginTimeout(ConfigVariable):
 
 
 class ConfigVariableNotificationLogging(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupNotifications
 
     def domain(self) -> ABCConfigDomain:
@@ -188,7 +188,7 @@ class ConfigVariableNotificationLogging(ConfigVariable):
 
 
 class ConfigVariableFailedNotificationHorizon(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupNotifications
 
     def domain(self) -> ABCConfigDomain:

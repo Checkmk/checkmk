@@ -12,7 +12,7 @@ from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupSupport
 
 
 class ConfigVariableCrashReportURL(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupSupport
 
     def domain(self) -> ABCConfigDomain:
@@ -30,7 +30,7 @@ class ConfigVariableCrashReportURL(ConfigVariable):
 
 
 class ConfigVariableCrashReportTarget(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupSupport
 
     def domain(self) -> ABCConfigDomain:

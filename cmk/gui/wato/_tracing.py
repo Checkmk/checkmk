@@ -31,7 +31,7 @@ def register(config_variable_registry: ConfigVariableRegistry) -> None:
 
 
 class ConfigVariableSiteTraceSend(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupSupport
 
     def domain(self) -> ABCConfigDomain:
@@ -78,7 +78,7 @@ class ConfigVariableSiteTraceSend(ConfigVariable):
 
 
 class ConfigVariableSiteTraceReceive(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupSupport
 
     def domain(self) -> ABCConfigDomain:

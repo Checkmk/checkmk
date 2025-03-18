@@ -100,8 +100,7 @@ class ABCGlobalSettingsMode(WatoMode):
     def _get_groups(show_all: bool) -> Iterable[ConfigVariableGroup]:
         groups = []
 
-        for group_class in config_variable_group_registry.values():
-            group = group_class()
+        for group in config_variable_group_registry.values():
             add = False
             for config_variable_class in group.config_variables():
                 config_variable = config_variable_class()

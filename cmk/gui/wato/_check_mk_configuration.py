@@ -22,7 +22,7 @@ from cmk.gui.exceptions import MKConfigError, MKUserError
 from cmk.gui.groups import GroupName
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
-from cmk.gui.i18n import _, get_languages
+from cmk.gui.i18n import _, _l, get_languages
 from cmk.gui.logged_in import user
 from cmk.gui.theme.choices import theme_choices
 from cmk.gui.type_defs import GlobalSettings
@@ -316,7 +316,7 @@ def register(
 
 
 class ConfigVariableUITheme(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -334,7 +334,7 @@ class ConfigVariableUITheme(ConfigVariable):
 
 
 class ConfigVariableEnableCommunityTranslations(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -361,7 +361,7 @@ class ConfigVariableEnableCommunityTranslations(ConfigVariable):
 
 
 class ConfigVariableDefaultLanguage(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -378,7 +378,7 @@ class ConfigVariableDefaultLanguage(ConfigVariable):
 
 
 class ConfigVariableShowMoreMode(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -403,7 +403,7 @@ class ConfigVariableShowMoreMode(ConfigVariable):
 
 
 class ConfigVariableBulkDiscoveryDefaultSettings(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -439,7 +439,7 @@ def _add_job_scheduler_log_level(params: dict[str, int]) -> dict[str, int]:
 
 
 class ConfigVariableLogLevels(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -564,7 +564,7 @@ class ConfigVariableLogLevels(ConfigVariable):
 
 
 class ConfigVariableSlowViewsDurationThreshold(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -585,7 +585,7 @@ class ConfigVariableSlowViewsDurationThreshold(ConfigVariable):
 
 
 class ConfigVariableDebug(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -607,7 +607,7 @@ class ConfigVariableDebug(ConfigVariable):
 
 
 class ConfigVariableGUIProfile(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -638,7 +638,7 @@ class ConfigVariableGUIProfile(ConfigVariable):
 
 
 class ConfigVariableDebugLivestatusQueries(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -659,7 +659,7 @@ class ConfigVariableDebugLivestatusQueries(ConfigVariable):
 
 
 class ConfigVariableSelectionLivetime(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -682,7 +682,7 @@ class ConfigVariableSelectionLivetime(ConfigVariable):
 
 
 class ConfigVariableShowLivestatusErrors(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -704,7 +704,7 @@ class ConfigVariableShowLivestatusErrors(ConfigVariable):
 
 
 class ConfigVariableEnableSounds(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -727,7 +727,7 @@ class ConfigVariableEnableSounds(ConfigVariable):
 
 
 class ConfigVariableSoftQueryLimit(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -749,7 +749,7 @@ class ConfigVariableSoftQueryLimit(ConfigVariable):
 
 
 class ConfigVariableHardQueryLimit(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -772,7 +772,7 @@ class ConfigVariableHardQueryLimit(ConfigVariable):
 
 
 class ConfigVariableQuicksearchDropdownLimit(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -795,7 +795,7 @@ class ConfigVariableQuicksearchDropdownLimit(ConfigVariable):
 
 
 class ConfigVariableQuicksearchSearchOrder(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -843,7 +843,7 @@ class ConfigVariableQuicksearchSearchOrder(ConfigVariable):
 
 
 class ConfigVariableExperimentalFeatures(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupDeveloperTools
 
     def domain(self) -> ABCConfigDomain:
@@ -879,7 +879,7 @@ class ConfigVariableExperimentalFeatures(ConfigVariable):
 
 
 class ConfigVariableInjectJsProfiling(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupDeveloperTools
 
     def domain(self) -> ABCConfigDomain:
@@ -896,7 +896,7 @@ class ConfigVariableInjectJsProfiling(ConfigVariable):
 
 
 class ConfigVariableLoadFrontendVue(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupDeveloperTools
 
     def domain(self) -> ABCConfigDomain:
@@ -920,7 +920,7 @@ class ConfigVariableLoadFrontendVue(ConfigVariable):
 
 
 class ConfigVariableTableRowLimit(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -943,7 +943,7 @@ class ConfigVariableTableRowLimit(ConfigVariable):
 
 
 class ConfigVariableStartURL(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -967,7 +967,7 @@ class ConfigVariableStartURL(ConfigVariable):
 
 
 class ConfigVariablePageHeading(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -988,7 +988,7 @@ class ConfigVariablePageHeading(ConfigVariable):
 
 
 class ConfigVariableBIDefaultLayout(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -1038,7 +1038,7 @@ class ConfigVariableBIDefaultLayout(ConfigVariable):
 
 
 class ConfigVariablePagetitleDateFormat(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -1063,7 +1063,7 @@ class ConfigVariablePagetitleDateFormat(ConfigVariable):
 
 
 class ConfigVariableEscapePluginOutput(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -1094,7 +1094,7 @@ class ConfigVariableEscapePluginOutput(ConfigVariable):
 
 
 class ConfigVariableDrawRuleIcon(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -1116,7 +1116,7 @@ class ConfigVariableDrawRuleIcon(ConfigVariable):
 
 
 class ConfigVariableVirtualHostTrees(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -1234,7 +1234,7 @@ class ConfigVariableVirtualHostTrees(ConfigVariable):
 
 
 class ConfigVariableRescheduleTimeout(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -1259,7 +1259,7 @@ class ConfigVariableRescheduleTimeout(ConfigVariable):
 
 
 class ConfigVariableSidebarUpdateInterval(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -1284,7 +1284,7 @@ class ConfigVariableSidebarUpdateInterval(ConfigVariable):
 
 
 class ConfigVariableSidebarNotifyInterval(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -1310,7 +1310,7 @@ class ConfigVariableSidebarNotifyInterval(ConfigVariable):
 
 
 class ConfigVariableiAdHocDowntime(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -1358,7 +1358,7 @@ class ConfigVariableiAdHocDowntime(ConfigVariable):
 
 
 class ConfigVariableAuthByHTTPHeader(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -1406,7 +1406,7 @@ class ConfigVariableAuthByHTTPHeader(ConfigVariable):
 
 
 class EnableLoginViaGet(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -1430,7 +1430,7 @@ class EnableLoginViaGet(ConfigVariable):
 class EnableDeprecatedAutomationuserAuthentication(ConfigVariable):
     """See Werk #16223"""
 
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -1454,7 +1454,7 @@ class EnableDeprecatedAutomationuserAuthentication(ConfigVariable):
 
 
 class ConfigVariableStalenessThreshold(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -1477,7 +1477,7 @@ class ConfigVariableStalenessThreshold(ConfigVariable):
 
 
 class ConfigVariableLoginScreen(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -1540,7 +1540,7 @@ class ConfigVariableLoginScreen(ConfigVariable):
 
 
 class ConfigVariableUserLocalizations(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -1574,7 +1574,7 @@ class ConfigVariableUserLocalizations(ConfigVariable):
 
 
 class ConfigVariableUserIconsAndActions(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -1694,7 +1694,7 @@ class ConfigVariableUserIconsAndActions(ConfigVariable):
 
 
 class ConfigVariableCustomServiceAttributes(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -1835,7 +1835,7 @@ def _service_tag_rules_tag_group_choices():
 
 
 class ConfigVariableUserDowntimeTimeranges(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -1887,7 +1887,7 @@ class ConfigVariableUserDowntimeTimeranges(ConfigVariable):
 
 
 class ConfigVariableBuiltinIconVisibility(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -1959,7 +1959,7 @@ class ConfigVariableBuiltinIconVisibility(ConfigVariable):
 
 
 class ConfigVariableServiceViewGrouping(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -2020,7 +2020,7 @@ class ConfigVariableServiceViewGrouping(ConfigVariable):
 
 
 class ConfigVariableAcknowledgeProblems(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -2076,7 +2076,7 @@ class ConfigVariableAcknowledgeProblems(ConfigVariable):
 
 
 class ConfigVariableDefaultTemperatureUnit(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserInterface
 
     def domain(self) -> ABCConfigDomain:
@@ -2097,7 +2097,7 @@ class ConfigVariableDefaultTemperatureUnit(ConfigVariable):
 
 
 class ConfigVariableTrustedCertificateAuthorities(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupSiteManagement
 
     def domain(self) -> ABCConfigDomain:
@@ -2148,7 +2148,7 @@ class ConfigVariableTrustedCertificateAuthorities(ConfigVariable):
 
 
 class ConfigVariableAgentControllerCertificates(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupSiteManagement
 
     def domain(self) -> ABCConfigDomain:
@@ -2191,7 +2191,7 @@ class ConfigVariableAgentControllerCertificates(ConfigVariable):
 
 
 class RestAPIETagLocking(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupSiteManagement
 
     def domain(self) -> ABCConfigDomain:
@@ -2229,7 +2229,7 @@ class RestAPIETagLocking(ConfigVariable):
 
 
 class ConfigVariableWATOMaxSnapshots(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupWATO
 
     def domain(self) -> ABCConfigDomain:
@@ -2251,7 +2251,7 @@ class ConfigVariableWATOMaxSnapshots(ConfigVariable):
 
 
 class ConfigVariableWATOActivateChangesCommentMode(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupWATO
 
     def domain(self) -> ABCConfigDomain:
@@ -2276,7 +2276,7 @@ class ConfigVariableWATOActivateChangesCommentMode(ConfigVariable):
 
 
 class ConfigVariableWATOActivationMethod(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupWATO
 
     def domain(self) -> ABCConfigDomain:
@@ -2297,7 +2297,7 @@ class ConfigVariableWATOActivationMethod(ConfigVariable):
 
 
 class ConfigVariableWATOHideFilenames(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupWATO
 
     def domain(self) -> ABCConfigDomain:
@@ -2320,7 +2320,7 @@ class ConfigVariableWATOHideFilenames(ConfigVariable):
 
 
 class ConfigVariableWATOHideHosttags(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupWATO
 
     def domain(self) -> ABCConfigDomain:
@@ -2338,7 +2338,7 @@ class ConfigVariableWATOHideHosttags(ConfigVariable):
 
 
 class ConfigVariableWATOHideVarnames(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupWATO
 
     def domain(self) -> ABCConfigDomain:
@@ -2359,7 +2359,7 @@ class ConfigVariableWATOHideVarnames(ConfigVariable):
 
 
 class ConfigVariableWATOUseGit(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupWATO
 
     def domain(self) -> ABCConfigDomain:
@@ -2384,7 +2384,7 @@ class ConfigVariableWATOUseGit(ConfigVariable):
 
 
 class ConfigVariableWATOPrettyPrintConfig(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupWATO
 
     def domain(self) -> ABCConfigDomain:
@@ -2406,7 +2406,7 @@ class ConfigVariableWATOPrettyPrintConfig(ConfigVariable):
 
 
 class ConfigVariableWATOHideFoldersWithoutReadPermissions(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupWATO
 
     def domain(self) -> ABCConfigDomain:
@@ -2428,7 +2428,7 @@ class ConfigVariableWATOHideFoldersWithoutReadPermissions(ConfigVariable):
 
 
 class ConfigVariableWATOIconCategories(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupWATO
 
     def domain(self) -> ABCConfigDomain:
@@ -2472,16 +2472,14 @@ class ConfigVariableWATOIconCategories(ConfigVariable):
 #   '----------------------------------------------------------------------'
 
 
-class ConfigVariableGroupUserManagement(ConfigVariableGroup):
-    def title(self) -> str:
-        return _("User management")
-
-    def sort_index(self) -> int:
-        return 40
+ConfigVariableGroupUserManagement = ConfigVariableGroup(
+    title=_l("User management"),
+    sort_index=40,
+)
 
 
 class ConfigVariableDefaultDynamicVisualsPermission(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserManagement
 
     def domain(self) -> ABCConfigDomain:
@@ -2512,7 +2510,7 @@ class ConfigVariableDefaultDynamicVisualsPermission(ConfigVariable):
 
 
 class ConfigVariableLogLogonFailures(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserManagement
 
     def domain(self) -> ABCConfigDomain:
@@ -2534,7 +2532,7 @@ class ConfigVariableLogLogonFailures(ConfigVariable):
 
 
 class ConfigVariableRequireTwoFactorAllUsers(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserManagement
 
     def domain(self) -> ABCConfigDomain:
@@ -2555,7 +2553,7 @@ class ConfigVariableRequireTwoFactorAllUsers(ConfigVariable):
 
 
 class ConfigVariableLockOnLogonFailures(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserManagement
 
     def domain(self) -> ABCConfigDomain:
@@ -2585,7 +2583,7 @@ class ConfigVariableLockOnLogonFailures(ConfigVariable):
 
 
 class ConfigVariablePasswordPolicy(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserManagement
 
     def domain(self) -> ABCConfigDomain:
@@ -2644,7 +2642,7 @@ class ConfigVariablePasswordPolicy(ConfigVariable):
 
 
 class ConfigVariableSessionManagement(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserManagement
 
     def domain(self) -> ABCConfigDomain:
@@ -2715,7 +2713,7 @@ class ConfigVariableSessionManagement(ConfigVariable):
 
 
 class ConfigVariableSingleUserSession(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserManagement
 
     def domain(self) -> ABCConfigDomain:
@@ -2746,7 +2744,7 @@ class ConfigVariableSingleUserSession(ConfigVariable):
 
 
 class ConfigVariableUserSecurityNotifications(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserManagement
 
     def domain(self) -> ABCConfigDomain:
@@ -2798,7 +2796,7 @@ class ConfigVariableUserSecurityNotifications(ConfigVariable):
 
 
 class ConfigVariableDefaultUserProfile(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupUserManagement
 
     def domain(self) -> ABCConfigDomain:
@@ -2895,16 +2893,14 @@ def find_usages_of_contact_group_in_default_user_profile(
 #   '----------------------------------------------------------------------'
 
 
-class ConfigVariableGroupCheckExecution(ConfigVariableGroup):
-    def title(self) -> str:
-        return _("Execution of checks")
-
-    def sort_index(self) -> int:
-        return 10
+ConfigVariableGroupCheckExecution = ConfigVariableGroup(
+    title=_l("Execution of checks"),
+    sort_index=10,
+)
 
 
 class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupCheckExecution
 
     def domain(self) -> ABCConfigDomain:
@@ -3055,7 +3051,7 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
 
 
 class ConfigVariableTCPConnectTimeout(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupCheckExecution
 
     def domain(self) -> ABCConfigDomain:
@@ -3079,7 +3075,7 @@ class ConfigVariableTCPConnectTimeout(ConfigVariable):
 
 
 class ConfigVariableSimulationMode(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupCheckExecution
 
     def domain(self) -> ABCConfigDomain:
@@ -3102,7 +3098,7 @@ class ConfigVariableSimulationMode(ConfigVariable):
 
 
 class ConfigVariableRestartLocking(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupCheckExecution
 
     def domain(self) -> ABCConfigDomain:
@@ -3129,7 +3125,7 @@ class ConfigVariableRestartLocking(ConfigVariable):
 
 
 class ConfigVariableDelayPrecompile(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupCheckExecution
 
     def domain(self) -> ABCConfigDomain:
@@ -3154,7 +3150,7 @@ class ConfigVariableDelayPrecompile(ConfigVariable):
 
 
 class ConfigVariableClusterMaxCachefileAge(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupCheckExecution
 
     def domain(self) -> ABCConfigDomain:
@@ -3178,7 +3174,7 @@ class ConfigVariableClusterMaxCachefileAge(ConfigVariable):
 
 
 class ConfigVariablePiggybackMaxCachefileAge(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupCheckExecution
 
     def domain(self) -> ABCConfigDomain:
@@ -3199,7 +3195,7 @@ class ConfigVariablePiggybackMaxCachefileAge(ConfigVariable):
 
 
 class ConfigVariableCheckMKPerfdataWithTimes(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupCheckExecution
 
     def domain(self) -> ABCConfigDomain:
@@ -3222,7 +3218,7 @@ class ConfigVariableCheckMKPerfdataWithTimes(ConfigVariable):
 
 
 class ConfigVariableUseDNSCache(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupCheckExecution
 
     def domain(self) -> ABCConfigDomain:
@@ -3268,7 +3264,7 @@ def transform_snmp_backend_from_valuespec(backend: SNMPBackendEnum) -> Literal["
 
 
 class ConfigVariableChooseSNMPBackend(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupCheckExecution
 
     def domain(self) -> ABCConfigDomain:
@@ -3303,7 +3299,7 @@ class ConfigVariableChooseSNMPBackend(ConfigVariable):
 
 
 class ConfigVariableHTTPProxies(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupCheckExecution
 
     def domain(self) -> ABCConfigDomain:
@@ -3374,16 +3370,14 @@ class ConfigVariableHTTPProxies(ConfigVariable):
             seen_titles.append(http_proxy["title"])
 
 
-class ConfigVariableGroupServiceDiscovery(ConfigVariableGroup):
-    def title(self) -> str:
-        return _("Service discovery")
-
-    def sort_index(self) -> int:
-        return 4
+ConfigVariableGroupServiceDiscovery = ConfigVariableGroup(
+    title=_l("Service discovery"),
+    sort_index=4,
+)
 
 
 class ConfigVariableInventoryCheckInterval(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupServiceDiscovery
 
     def domain(self) -> ABCConfigDomain:
@@ -3415,7 +3409,7 @@ class ConfigVariableInventoryCheckInterval(ConfigVariable):
 
 
 class ConfigVariableInventoryCheckSeverity(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupServiceDiscovery
 
     def domain(self) -> ABCConfigDomain:
@@ -3441,7 +3435,7 @@ class ConfigVariableInventoryCheckSeverity(ConfigVariable):
 
 
 class ConfigVariableInventoryCheckAutotrigger(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
+    def group(self) -> ConfigVariableGroup:
         return ConfigVariableGroupServiceDiscovery
 
     def domain(self) -> ABCConfigDomain:

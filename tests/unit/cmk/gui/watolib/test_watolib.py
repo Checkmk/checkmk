@@ -9,15 +9,12 @@ import cmk.ccc.version as cmk_version
 
 from cmk.utils import paths
 
-from cmk.gui.valuespec import ValueSpec
 from cmk.gui.watolib.automation_commands import automation_command_registry
 from cmk.gui.watolib.config_domain_name import (
-    ABCConfigDomain,
     config_domain_registry,
     config_variable_group_registry,
     config_variable_registry,
     configvar_order,
-    ConfigVariableGroup,
 )
 from cmk.gui.watolib.utils import format_php
 
@@ -298,16 +295,6 @@ def test_registered_configvars() -> None:
 
     registered = sorted(config_variable_registry.keys())
     assert registered == sorted(expected_vars)
-
-
-# Can be removed once we use mypy there
-def test_registered_configvars_types(request_context: None) -> None:
-    for var_class in config_variable_registry.values():
-        var = var_class()
-        assert issubclass(var.group(), ConfigVariableGroup)
-        assert isinstance(var.domain(), ABCConfigDomain)
-        assert isinstance(var.ident(), str)
-        assert isinstance(var.valuespec(), ValueSpec)
 
 
 def test_registered_configvar_groups() -> None:

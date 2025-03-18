@@ -12,7 +12,11 @@ from pytest_mock import MockerFixture
 
 from cmk.gui.plugins.wato.utils import ConfigVariableGroupUserInterface
 from cmk.gui.valuespec import TextInput, Transform
-from cmk.gui.watolib.config_domain_name import ConfigVariable, ConfigVariableRegistry
+from cmk.gui.watolib.config_domain_name import (
+    ConfigVariable,
+    ConfigVariableGroup,
+    ConfigVariableRegistry,
+)
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 
 from cmk.update_config.plugins.actions import global_settings
@@ -29,7 +33,7 @@ def test_update_global_config_transform_values(
 
     class ConfigVariableKey(ConfigVariable):
         @override
-        def group(self) -> type[ConfigVariableGroupUserInterface]:
+        def group(self) -> ConfigVariableGroup:
             return ConfigVariableGroupUserInterface
 
         @override

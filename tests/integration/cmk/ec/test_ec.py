@@ -319,6 +319,7 @@ def test_ec_rule_no_match_events_pipe(site: Site, setup_ec: Iterator) -> None:
     assert not queried_event_messages
 
 
+@pytest.mark.skip(reason="Test currently flaky. See CMK-22451.")
 @skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
 def test_ec_rule_match_snmp_trap(site: Site, setup_ec: Iterator, enable_receivers: None) -> None:
     """Generate a message via SNMP trap matching an EC rule and assert an event is created"""

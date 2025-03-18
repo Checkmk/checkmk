@@ -59,3 +59,12 @@ class Werks(CmkPage):
 
     def werk(self, werk_id: int) -> Locator:
         return self.get_link(f"#{werk_id}")
+
+    def tables_of_listed_versions(self) -> Locator:
+        """Return web-elements of tables corresponding to the versions mentioned on the page.
+
+        Each table corresponds to a Checkmk version and,
+        each table is used to collect and list werks.
+        In this manner, each table collects and lists werks corresponding to a Checkmk version.
+        """
+        return self.main_area.locator("div[class='wato'] > h3[class='table']")

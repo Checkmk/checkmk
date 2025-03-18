@@ -49,11 +49,12 @@ def test_navigate_to_werks(werks_page: Werks) -> None:
     expect(werks_page.reset_filter).to_have_count(1)
 
     # validate 'Acnowledge all' button is disabled
+    # NOTE: expect(...).to_be_enabled() does not work for web-element.
     with pytest.raises(PWTimeoutError):
         werks_page.get_link("Acknowledge all").click()
 
     # validate presence of Werks
-    max_number_of_werks_displayed = 100
+    max_number_of_werks_displayed = 100 * werks_page.tables_of_listed_versions().count()
     number_of_werks_displayed = werks_page.get_link("#", exact=False).count()
     assert number_of_werks_displayed > 0, "Checkmk site does not display any werks!"
     assert number_of_werks_displayed <= max_number_of_werks_displayed, (

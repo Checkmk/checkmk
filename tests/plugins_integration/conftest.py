@@ -11,7 +11,7 @@ import pytest
 from tests.testlib.common.utils import run
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.site import get_site_factory, Site, SiteFactory
-from tests.testlib.version import CMKEdition, CMKPackageInfo, CMKVersion
+from tests.testlib.version import CMKEdition, CMKPackageInfo, get_min_version
 
 from tests.plugins_integration import checks
 
@@ -206,10 +206,7 @@ def _get_site_piggyback(request: pytest.FixtureRequest) -> Iterator[Site]:
 
 @pytest.fixture(name="site_factory_update", scope="session")
 def _get_sf_update():
-    # Todo: Use the 2.4.0 stable release once available. CMK-21382.
-    base_package = CMKPackageInfo(
-        CMKVersion(CMKVersion.DAILY, "2.4.0", "2.4.0"), CMKEdition(CMKEdition.CEE)
-    )
+    base_package = CMKPackageInfo(get_min_version(), CMKEdition(CMKEdition.CEE))
     return get_site_factory(prefix="update_", package=base_package)
 
 

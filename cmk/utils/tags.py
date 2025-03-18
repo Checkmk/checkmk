@@ -198,7 +198,10 @@ class AuxTagList:
         return response
 
     def get_choices(self) -> Sequence[tuple[str, str]]:
-        return [(aux_tag.id, aux_tag.title) for aux_tag in self._tags]
+        return [
+            (aux_tag.id, aux_tag.title)
+            for aux_tag in sorted(self._tags, key=lambda t: t.title.lower())
+        ]
 
 
 class GroupedTag:

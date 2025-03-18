@@ -1,0 +1,12 @@
+Title: Ensure sorted auxiliary tags on edit tag group
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1742302631
+Edition: cre
+Level: 1
+Version: 2.2.0p41
+
+When editing tag groups, the auxiliary tags were offered unsorted for selection.
+
+This list is now sorted by tag title.

@@ -334,8 +334,7 @@ class ChangesAPI(BaseAPI):
                     if not_succeeded_sites := [
                         status
                         for status in activation_status["extensions"]["status_per_site"]
-                        # TODO: Use non display text field once it is available CMK-22256
-                        if status["status_text"] != "Success"
+                        if status["state"] != "success"
                     ]:
                         raise RuntimeError(
                             "Activation of the following sites did not succeed:\n"

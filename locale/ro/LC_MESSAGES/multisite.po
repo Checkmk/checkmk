@@ -686,6 +686,28 @@ msgid "%s traffic"
 msgstr "%s trafic"
 
 #, python-format
+msgid ""
+"%s uses an API (%s) which is marked as deprecated in Checkmk %s and will be "
+"removed in Checkmk %s."
+msgstr ""
+
+#, python-format
+msgid ""
+"%s uses an API (%s) which was marked as deprecated in Checkmk %s and is "
+"removed in Checkmk %s."
+msgstr ""
+
+#, python-format
+msgid ""
+"%s uses an API (%s) which was marked as deprecated in Checkmk %s and will be "
+"removed in Checkmk %s."
+msgstr ""
+
+#, python-format
+msgid "%s uses an API (%s) which was removed in Checkmk %s."
+msgstr ""
+
+#, python-format
 msgid "%s was stopped after %s at %s."
 msgstr "%s a fost oprit după %s la %s."
 
@@ -10860,8 +10882,8 @@ msgid "Check logfiles for relevant new messages"
 msgstr "Verificați fișierele jurnal pentru mesaje noi relevante"
 
 #, fuzzy
-msgid "Check man page uses the deprecated API"
-msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
+msgid "Check man page"
+msgstr "Verificați pagina de manual"
 
 #, python-format
 msgid ""
@@ -10918,14 +10940,6 @@ msgstr "Verificați introducerea plugin-ului API"
 #, fuzzy
 msgid "Check plug-in timeout"
 msgstr "Verificați timeout-ul plugin-ului"
-
-#, fuzzy
-msgid "Check plug-in uses the deprecated API"
-msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
-
-#, fuzzy
-msgid "Check plug-in uses the deprecated API (v1)"
-msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
 
 #, fuzzy
 msgid "Check plug-ins matching"
@@ -24140,9 +24154,11 @@ msgstr "GUI"
 msgid "GUI design"
 msgstr "Proiectare GUI"
 
-#, fuzzy
-msgid "GUI extension uses the deprecated API"
-msgstr "Extensii GUI (depreciat)"
+#, python-format
+msgid ""
+"GUI extension in %r uses an API which is marked as deprecated and may not "
+"work anymore due to unknown imports or objects."
+msgstr ""
 
 msgid "GUI extensions (deprecated)"
 msgstr "Extensii GUI (depreciat)"
@@ -25019,8 +25035,8 @@ msgid "HW containers"
 msgstr "Containere HW"
 
 #, fuzzy
-msgid "HW/SW Inventory plug-in uses the deprecated API"
-msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
+msgid "HW/SW Inventory plug-in"
+msgstr "Plugin-uri de inventar HW/SW depășite"
 
 msgid "HW/SW inventory"
 msgstr "Inventarul HW/SW"
@@ -32645,9 +32661,15 @@ msgstr ""
 "dezactivați gruparea notificărilor, fie să alegeți un alt plugin de "
 "notificare care permite gruparea."
 
-#, fuzzy
-msgid "Legacy GUI extension uses the deprecated API"
+#, fuzzy, python-format
+msgid "Legacy GUI extension in %r"
 msgstr "Extensii GUI vechi (depreciate)"
+
+#, python-format
+msgid ""
+"Legacy GUI extension in %r uses an API which is marked as deprecated and may "
+"not work anymore due to unknown imports or objects."
+msgstr ""
 
 msgid "Legacy GUI extensions (deprecated)"
 msgstr "Extensii GUI vechi (depreciate)"
@@ -41804,6 +41826,10 @@ msgstr "Logswitch-uri Oracle"
 msgid "Oracle Memory"
 msgstr "Memorie cache"
 
+#, fuzzy
+msgid "Oracle PDB Total Size"
+msgstr "ORACLE Total așteptat"
+
 msgid "Oracle PGA info"
 msgstr "Informații Oracle PGA"
 
@@ -42490,9 +42516,9 @@ msgstr "Parametrii de verificare PING și gazdă"
 msgid "PLL lock voltages by freqency"
 msgstr "Tensiuni de blocare PLL în funcție de frecvență"
 
-#, fuzzy
-msgid "PNP template uses the deprecated API"
-msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
+msgid ""
+"PNP template uses an API which was removed in an ealier Checkmk version."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -79058,6 +79084,10 @@ msgstr "latin1"
 msgid "left"
 msgstr "stânga"
 
+#, fuzzy
+msgid "legacy"
+msgstr "execuție moștenită"
+
 msgid "legacy run"
 msgstr "execuție moștenită"
 
@@ -80163,6 +80193,34 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "Check man page uses the deprecated API"
+#~ msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
+
+#, fuzzy
+#~ msgid "Check plug-in uses the deprecated API"
+#~ msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
+
+#, fuzzy
+#~ msgid "Check plug-in uses the deprecated API (v1)"
+#~ msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
+
+#, fuzzy
+#~ msgid "GUI extension uses the deprecated API"
+#~ msgstr "Extensii GUI (depreciat)"
+
+#, fuzzy
+#~ msgid "HW/SW Inventory plug-in uses the deprecated API"
+#~ msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
+
+#, fuzzy
+#~ msgid "Legacy GUI extension uses the deprecated API"
+#~ msgstr "Extensii GUI vechi (depreciate)"
+
+#, fuzzy
+#~ msgid "PNP template uses the deprecated API"
+#~ msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
 
 #, fuzzy, python-format
 #~ msgid "%d check plug-ins using the deprecated API: %s"

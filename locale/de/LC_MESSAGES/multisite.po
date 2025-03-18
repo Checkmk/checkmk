@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-03-14 01:50+0000\n"
+"PO-Revision-Date: 2025-03-18 03:50+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -684,6 +684,28 @@ msgstr "Diesen Kunden %s"
 #, python-format
 msgid "%s traffic"
 msgstr "%s Verkehr"
+
+#, python-format
+msgid ""
+"%s uses an API (%s) which is marked as deprecated in Checkmk %s and will be "
+"removed in Checkmk %s."
+msgstr ""
+
+#, python-format
+msgid ""
+"%s uses an API (%s) which was marked as deprecated in Checkmk %s and is "
+"removed in Checkmk %s."
+msgstr ""
+
+#, python-format
+msgid ""
+"%s uses an API (%s) which was marked as deprecated in Checkmk %s and will be "
+"removed in Checkmk %s."
+msgstr ""
+
+#, python-format
+msgid "%s uses an API (%s) which was removed in Checkmk %s."
+msgstr ""
 
 #, python-format
 msgid "%s was stopped after %s at %s."
@@ -10656,8 +10678,9 @@ msgstr "Überprüfe Log-Dateigruppen"
 msgid "Check logfiles for relevant new messages"
 msgstr "Log-Dateien auf relevante Meldungen hin überwachen"
 
-msgid "Check man page uses the deprecated API"
-msgstr "Die Check Manpage verwendet die veraltete API"
+#, fuzzy
+msgid "Check man page"
+msgstr "Check Handbuchseite"
 
 #, python-format
 msgid ""
@@ -10714,12 +10737,6 @@ msgstr "Einführung in das Check-Plugin-API"
 
 msgid "Check plug-in timeout"
 msgstr "Ablaufzeit für Check-Plugin"
-
-msgid "Check plug-in uses the deprecated API"
-msgstr "Das Check-Plugin verwendet die veraltete API"
-
-msgid "Check plug-in uses the deprecated API (v1)"
-msgstr "Das Check-Plugin verwendet die veraltete API (v1)"
 
 msgid "Check plug-ins matching"
 msgstr "Übereinstimmende Check-Plugins"
@@ -21548,9 +21565,9 @@ msgstr "Erweiterte Metriken"
 msgid "Extension"
 msgstr "Erweiterung"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Extension package %r"
-msgstr "Erweiterungspakete"
+msgstr "Erweiterungspaket %r"
 
 msgid "Extension package files"
 msgstr "Erweiterungspaketdateien"
@@ -23606,8 +23623,11 @@ msgstr "GUI"
 msgid "GUI design"
 msgstr "GUI-Design"
 
-msgid "GUI extension uses the deprecated API"
-msgstr "GUI-Erweiterung verwendet die veraltete API"
+#, python-format
+msgid ""
+"GUI extension in %r uses an API which is marked as deprecated and may not "
+"work anymore due to unknown imports or objects."
+msgstr ""
 
 msgid "GUI extensions (deprecated)"
 msgstr "GUI-Erweiterungen (veraltet)"
@@ -24473,8 +24493,9 @@ msgstr "Informationen zum Hardware-Anbieter vom Checkmk-Server"
 msgid "HW containers"
 msgstr "HW-Container"
 
-msgid "HW/SW Inventory plug-in uses the deprecated API"
-msgstr "Das HW-/SW-Inventur Plugin verwendet die veraltete API"
+#, fuzzy
+msgid "HW/SW Inventory plug-in"
+msgstr "Veraltete Plugins der HW-/SW-Inventur"
 
 msgid "HW/SW inventory"
 msgstr "HW/SW-Inventur"
@@ -31905,8 +31926,15 @@ msgstr ""
 "Bulking von Benachrichtigungen deaktivieren oder ein anderes "
 "Benachrichtigungs-Plugin wählen, das Bulking erlaubt."
 
-msgid "Legacy GUI extension uses the deprecated API"
-msgstr "Legacy GUI-Erweiterung verwendet die veraltete API"
+#, fuzzy, python-format
+msgid "Legacy GUI extension in %r"
+msgstr "Legacy GUI-Erweiterungen (veraltet)"
+
+#, python-format
+msgid ""
+"Legacy GUI extension in %r uses an API which is marked as deprecated and may "
+"not work anymore due to unknown imports or objects."
+msgstr ""
 
 msgid "Legacy GUI extensions (deprecated)"
 msgstr "Legacy GUI-Erweiterungen (veraltet)"
@@ -40854,6 +40882,10 @@ msgstr "Oracle Log-Umschalter"
 msgid "Oracle Memory"
 msgstr "Oracle-Speicher"
 
+#, fuzzy
+msgid "Oracle PDB Total Size"
+msgstr "Oracle Gesamtwartezeit"
+
 msgid "Oracle PGA info"
 msgstr "Oracle PGA-Info"
 
@@ -41489,8 +41521,9 @@ msgstr "PING und Host Check-Parameter"
 msgid "PLL lock voltages by freqency"
 msgstr "PLL Verriegelungsspannung nach Frequenz"
 
-msgid "PNP template uses the deprecated API"
-msgstr "PNP-Vorlage verwendet die veraltete API"
+msgid ""
+"PNP template uses an API which was removed in an ealier Checkmk version."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -68452,9 +68485,9 @@ msgstr "Nicht montiert"
 msgid "Unoptimized connections"
 msgstr "Nicht optimierte Verbindungen"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Unpackaged file %r"
-msgstr "Unpaketierte Dateien"
+msgstr "Unpaketierte Datei %r"
 
 msgid "Unpackaged files"
 msgstr "Unpaketierte Dateien"
@@ -68480,9 +68513,8 @@ msgstr "Unbeschränkte gleichzeitige Ausführungen in Prozent"
 msgid "Unset user attributes on migration"
 msgstr "Benutzerattribute bei der Migration zurücksetzen"
 
-#, fuzzy
 msgid "Unsorted"
-msgstr "Nicht unterstützte Aktion"
+msgstr "Unsortiert"
 
 msgid "Unspecific backup"
 msgstr "Unspezifisches Backup"
@@ -77062,6 +77094,10 @@ msgstr "latin1"
 msgid "left"
 msgstr "links"
 
+#, fuzzy
+msgid "legacy"
+msgstr "Legacy-Lauf"
+
 msgid "legacy run"
 msgstr "Legacy-Lauf"
 
@@ -78169,6 +78205,27 @@ msgid ""
 msgstr ""
 "\"Änderungen aktivieren\" ist blockiert, bis Sie Ihr Service-Limit "
 "unterschritten haben. Wenn Sie Ihr Service-Limit erhöhen möchten, "
+
+#~ msgid "Check man page uses the deprecated API"
+#~ msgstr "Die Check Manpage verwendet die veraltete API"
+
+#~ msgid "Check plug-in uses the deprecated API"
+#~ msgstr "Das Check-Plugin verwendet die veraltete API"
+
+#~ msgid "Check plug-in uses the deprecated API (v1)"
+#~ msgstr "Das Check-Plugin verwendet die veraltete API (v1)"
+
+#~ msgid "GUI extension uses the deprecated API"
+#~ msgstr "GUI-Erweiterung verwendet die veraltete API"
+
+#~ msgid "HW/SW Inventory plug-in uses the deprecated API"
+#~ msgstr "Das HW-/SW-Inventur Plugin verwendet die veraltete API"
+
+#~ msgid "Legacy GUI extension uses the deprecated API"
+#~ msgstr "Legacy GUI-Erweiterung verwendet die veraltete API"
+
+#~ msgid "PNP template uses the deprecated API"
+#~ msgstr "PNP-Vorlage verwendet die veraltete API"
 
 #, python-format
 #~ msgid "%d check plug-ins using the deprecated API: %s"

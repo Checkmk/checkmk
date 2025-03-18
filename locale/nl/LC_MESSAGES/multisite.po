@@ -686,6 +686,28 @@ msgid "%s traffic"
 msgstr "%s verkeer"
 
 #, python-format
+msgid ""
+"%s uses an API (%s) which is marked as deprecated in Checkmk %s and will be "
+"removed in Checkmk %s."
+msgstr ""
+
+#, python-format
+msgid ""
+"%s uses an API (%s) which was marked as deprecated in Checkmk %s and is "
+"removed in Checkmk %s."
+msgstr ""
+
+#, python-format
+msgid ""
+"%s uses an API (%s) which was marked as deprecated in Checkmk %s and will be "
+"removed in Checkmk %s."
+msgstr ""
+
+#, python-format
+msgid "%s uses an API (%s) which was removed in Checkmk %s."
+msgstr ""
+
+#, python-format
 msgid "%s was stopped after %s at %s."
 msgstr "%s is gestopt na %s om %s."
 
@@ -10850,8 +10872,8 @@ msgid "Check logfiles for relevant new messages"
 msgstr "Controleer logfiles op relevante nieuwe berichten"
 
 #, fuzzy
-msgid "Check man page uses the deprecated API"
-msgstr "Geen controleplugins die de verouderde API gebruiken"
+msgid "Check man page"
+msgstr "Zie handleiding pagina"
 
 #, python-format
 msgid ""
@@ -10908,14 +10930,6 @@ msgstr "Controleer plugin API introductie"
 #, fuzzy
 msgid "Check plug-in timeout"
 msgstr "Controleer plugin timeout"
-
-#, fuzzy
-msgid "Check plug-in uses the deprecated API"
-msgstr "Geen controleplugins die de verouderde API gebruiken"
-
-#, fuzzy
-msgid "Check plug-in uses the deprecated API (v1)"
-msgstr "Geen controleplugins die de verouderde API gebruiken"
 
 #, fuzzy
 msgid "Check plug-ins matching"
@@ -24119,9 +24133,11 @@ msgstr "GUI"
 msgid "GUI design"
 msgstr "GUI-ontwerp"
 
-#, fuzzy
-msgid "GUI extension uses the deprecated API"
-msgstr "GUI-uitbreidingen"
+#, python-format
+msgid ""
+"GUI extension in %r uses an API which is marked as deprecated and may not "
+"work anymore due to unknown imports or objects."
+msgstr ""
 
 #, fuzzy
 msgid "GUI extensions (deprecated)"
@@ -25016,8 +25032,8 @@ msgid "HW containers"
 msgstr "HW containers"
 
 #, fuzzy
-msgid "HW/SW Inventory plug-in uses the deprecated API"
-msgstr "Geen controleplugins die de verouderde API gebruiken"
+msgid "HW/SW Inventory plug-in"
+msgstr "Afgeschreven HW/SW inventaris plugins"
 
 msgid "HW/SW inventory"
 msgstr "HW/SW-inventaris"
@@ -32588,9 +32604,15 @@ msgstr ""
 "Oude ASCII E-mails ondersteunen bulking niet. Je kunt bulking uitschakelen "
 "of een andere plugin kiezen die bulking toestaat."
 
-#, fuzzy
-msgid "Legacy GUI extension uses the deprecated API"
+#, fuzzy, python-format
+msgid "Legacy GUI extension in %r"
 msgstr "Verouderde GUI-uitbreidingen"
+
+#, python-format
+msgid ""
+"Legacy GUI extension in %r uses an API which is marked as deprecated and may "
+"not work anymore due to unknown imports or objects."
+msgstr ""
 
 #, fuzzy
 msgid "Legacy GUI extensions (deprecated)"
@@ -41767,6 +41789,10 @@ msgstr "Oracle Logswitches"
 msgid "Oracle Memory"
 msgstr "Geheugen"
 
+#, fuzzy
+msgid "Oracle PDB Total Size"
+msgstr "ORACLE Totaal gewacht"
+
 msgid "Oracle PGA info"
 msgstr "Oracle PGA info"
 
@@ -42450,9 +42476,9 @@ msgstr "PING en host check parameters"
 msgid "PLL lock voltages by freqency"
 msgstr "PLL lockspanningen per freqentie"
 
-#, fuzzy
-msgid "PNP template uses the deprecated API"
-msgstr "Geen controleplugins die de verouderde API gebruiken"
+msgid ""
+"PNP template uses an API which was removed in an ealier Checkmk version."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -78915,6 +78941,10 @@ msgstr "latin1"
 msgid "left"
 msgstr "links"
 
+#, fuzzy
+msgid "legacy"
+msgstr "erfenis run"
+
 msgid "legacy run"
 msgstr "erfenis run"
 
@@ -80028,6 +80058,34 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "Check man page uses the deprecated API"
+#~ msgstr "Geen controleplugins die de verouderde API gebruiken"
+
+#, fuzzy
+#~ msgid "Check plug-in uses the deprecated API"
+#~ msgstr "Geen controleplugins die de verouderde API gebruiken"
+
+#, fuzzy
+#~ msgid "Check plug-in uses the deprecated API (v1)"
+#~ msgstr "Geen controleplugins die de verouderde API gebruiken"
+
+#, fuzzy
+#~ msgid "GUI extension uses the deprecated API"
+#~ msgstr "GUI-uitbreidingen"
+
+#, fuzzy
+#~ msgid "HW/SW Inventory plug-in uses the deprecated API"
+#~ msgstr "Geen controleplugins die de verouderde API gebruiken"
+
+#, fuzzy
+#~ msgid "Legacy GUI extension uses the deprecated API"
+#~ msgstr "Verouderde GUI-uitbreidingen"
+
+#, fuzzy
+#~ msgid "PNP template uses the deprecated API"
+#~ msgstr "Geen controleplugins die de verouderde API gebruiken"
 
 #, fuzzy, python-format
 #~ msgid "%d check plug-ins using the deprecated API: %s"

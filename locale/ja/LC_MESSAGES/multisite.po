@@ -679,6 +679,28 @@ msgid "%s traffic"
 msgstr "%sトラフィック"
 
 #, python-format
+msgid ""
+"%s uses an API (%s) which is marked as deprecated in Checkmk %s and will be "
+"removed in Checkmk %s."
+msgstr ""
+
+#, python-format
+msgid ""
+"%s uses an API (%s) which was marked as deprecated in Checkmk %s and is "
+"removed in Checkmk %s."
+msgstr ""
+
+#, python-format
+msgid ""
+"%s uses an API (%s) which was marked as deprecated in Checkmk %s and will be "
+"removed in Checkmk %s."
+msgstr ""
+
+#, python-format
+msgid "%s uses an API (%s) which was removed in Checkmk %s."
+msgstr ""
+
+#, python-format
 msgid "%s was stopped after %s at %s."
 msgstr "%s は %s後に%sで停止しました。"
 
@@ -10348,8 +10370,8 @@ msgid "Check logfiles for relevant new messages"
 msgstr "ログファイルで関連する新しいメッセージを確認する"
 
 #, fuzzy
-msgid "Check man page uses the deprecated API"
-msgstr "非推奨のAPIを使用するプラグインをチェックしない"
+msgid "Check man page"
+msgstr "マニュアルページを確認する"
 
 #, python-format
 msgid ""
@@ -10403,14 +10425,6 @@ msgstr "プラグインのAPI導入を確認する"
 
 msgid "Check plug-in timeout"
 msgstr "プラグインのタイムアウトを確認する"
-
-#, fuzzy
-msgid "Check plug-in uses the deprecated API"
-msgstr "非推奨のAPIを使用するプラグインをチェックしない"
-
-#, fuzzy
-msgid "Check plug-in uses the deprecated API (v1)"
-msgstr "非推奨のAPIを使用するプラグインをチェックしない"
 
 msgid "Check plug-ins matching"
 msgstr "一致するプラグインを確認する"
@@ -22977,9 +22991,11 @@ msgstr "GUI"
 msgid "GUI design"
 msgstr "GUIデザイン"
 
-#, fuzzy
-msgid "GUI extension uses the deprecated API"
-msgstr "GUI拡張機能（非推奨）"
+#, python-format
+msgid ""
+"GUI extension in %r uses an API which is marked as deprecated and may not "
+"work anymore due to unknown imports or objects."
+msgstr ""
 
 msgid "GUI extensions (deprecated)"
 msgstr "GUI拡張機能（非推奨）"
@@ -23828,8 +23844,8 @@ msgid "HW containers"
 msgstr "HWコンテナ"
 
 #, fuzzy
-msgid "HW/SW Inventory plug-in uses the deprecated API"
-msgstr "非推奨のAPIを使用するプラグインをチェックしない"
+msgid "HW/SW Inventory plug-in"
+msgstr "非推奨のHW/SWインベントリプラグイン"
 
 msgid "HW/SW inventory"
 msgstr "HW/SWインベントリ"
@@ -31037,9 +31053,15 @@ msgstr ""
 "従来のASCIIメールは一括送信をサポートしていません。通知の一括送信を無効にする"
 "か、一括送信を許可する別の通知プラグインを選択できます。"
 
-#, fuzzy
-msgid "Legacy GUI extension uses the deprecated API"
+#, fuzzy, python-format
+msgid "Legacy GUI extension in %r"
 msgstr "レガシーGUI拡張機能（非推奨）"
+
+#, python-format
+msgid ""
+"Legacy GUI extension in %r uses an API which is marked as deprecated and may "
+"not work anymore due to unknown imports or objects."
+msgstr ""
 
 msgid "Legacy GUI extensions (deprecated)"
 msgstr "レガシーGUI拡張機能（非推奨）"
@@ -39821,6 +39843,10 @@ msgstr "Oracle Logswitches"
 msgid "Oracle Memory"
 msgstr "Oracleメモリ"
 
+#, fuzzy
+msgid "Oracle PDB Total Size"
+msgstr "Oracle合計待機"
+
 msgid "Oracle PGA info"
 msgstr "Oracle PGA info"
 
@@ -40433,9 +40459,9 @@ msgstr "PINGおよびホストチェックパラメータ"
 msgid "PLL lock voltages by freqency"
 msgstr "周波数によるPLLロック電圧"
 
-#, fuzzy
-msgid "PNP template uses the deprecated API"
-msgstr "非推奨のAPIを使用するプラグインをチェックしない"
+msgid ""
+"PNP template uses an API which was removed in an ealier Checkmk version."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -74735,6 +74761,10 @@ msgstr "latin1"
 msgid "left"
 msgstr "左"
 
+#, fuzzy
+msgid "legacy"
+msgstr "レガシーラン"
+
 msgid "legacy run"
 msgstr "レガシーラン"
 
@@ -75832,6 +75862,34 @@ msgid ""
 msgstr ""
 "サービス制限を下回るまで、「変更を有効にする」はブロックされます。利用限度額"
 "を上げたい場合、 "
+
+#, fuzzy
+#~ msgid "Check man page uses the deprecated API"
+#~ msgstr "非推奨のAPIを使用するプラグインをチェックしない"
+
+#, fuzzy
+#~ msgid "Check plug-in uses the deprecated API"
+#~ msgstr "非推奨のAPIを使用するプラグインをチェックしない"
+
+#, fuzzy
+#~ msgid "Check plug-in uses the deprecated API (v1)"
+#~ msgstr "非推奨のAPIを使用するプラグインをチェックしない"
+
+#, fuzzy
+#~ msgid "GUI extension uses the deprecated API"
+#~ msgstr "GUI拡張機能（非推奨）"
+
+#, fuzzy
+#~ msgid "HW/SW Inventory plug-in uses the deprecated API"
+#~ msgstr "非推奨のAPIを使用するプラグインをチェックしない"
+
+#, fuzzy
+#~ msgid "Legacy GUI extension uses the deprecated API"
+#~ msgstr "レガシーGUI拡張機能（非推奨）"
+
+#, fuzzy
+#~ msgid "PNP template uses the deprecated API"
+#~ msgstr "非推奨のAPIを使用するプラグインをチェックしない"
 
 #, python-format
 #~ msgid "%d check plug-ins using the deprecated API: %s"

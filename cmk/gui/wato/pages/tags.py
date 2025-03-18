@@ -35,7 +35,7 @@ from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import DocReference, make_confirm_delete_link
+from cmk.gui.utils.urls import DocReference, make_confirm_delete_link, makeuri
 from cmk.gui.valuespec import (
     Dictionary,
     FixedValue,
@@ -173,7 +173,7 @@ class ModeTags(ABCTagMode):
 
     def action(self) -> ActionResult:
         if not transactions.check_transaction():
-            return redirect(mode_url("tags"))
+            return redirect(makeuri(request, []))
 
         if request.has_var("_delete"):
             return self._delete_tag_group()
@@ -184,7 +184,7 @@ class ModeTags(ABCTagMode):
         if request.var("_move"):
             return self._move_tag_group()
 
-        return redirect(mode_url("tags"))
+        return redirect(makeuri(request, []))
 
     def _delete_tag_group(self) -> ActionResult:
         del_id = TagGroupID(
@@ -212,7 +212,7 @@ class ModeTags(ABCTagMode):
             _changes.add_change("edit-tags", _("Removed tag group %s (%s)") % (message, del_id))
             if isinstance(message, str):
                 flash(message)
-        return redirect(mode_url("tags"))
+        return redirect(makeuri(request, [], delvars=["_delete"]))
 
     def _is_cleaning_up_user_tag_group_to_builtin(self, del_id: TagGroupID) -> bool:
         """The "Agent type" tag group was user defined in previous versions
@@ -273,7 +273,7 @@ class ModeTags(ABCTagMode):
             _changes.add_change("edit-tags", _("Removed auxiliary tag %s (%s)") % (message, del_id))
             if isinstance(message, str):
                 flash(message)
-        return redirect(mode_url("tags"))
+        return redirect(makeuri(request, [], delvars=["_del_aux"]))
 
     # Mypy wants the explicit return, pylint does not like it.
     def _move_tag_group(self) -> ActionResult:  # pylint: disable=useless-return
@@ -361,7 +361,6 @@ class ModeTags(ABCTagMode):
             ),
             empty_text=_("You haven't defined any tag groups yet."),
             searchable=False,
-            sortable=False,
         ) as table:
             for nr, tag_group in enumerate(self._effective_config.tag_groups):
                 table.row()
@@ -413,7 +412,7 @@ class ModeTags(ABCTagMode):
                 "your hosts easier."
             ),
             empty_text=_("You haven't defined any auxiliary tags."),
-            searchable=False,
+            searchable=True,
         ) as table:
             for aux_tag in self._effective_config.aux_tag_list.get_tags():
                 table.row()
@@ -668,7 +667,7 @@ class ModeEditAuxtag(ABCEditTagMode):
 
     def action(self) -> ActionResult:
         if not transactions.check_transaction():
-            return redirect(mode_url("tags"))
+            return redirect(makeuri(request, []))
 
         vs = self._valuespec()
         aux_tag_spec = vs.from_html_vars("aux_tag")
@@ -692,7 +691,7 @@ class ModeEditAuxtag(ABCEditTagMode):
 
         update_tag_config(changed_hosttags_config)
 
-        return redirect(mode_url("tags"))
+        return redirect(makeuri(request, []))
 
     def page(self) -> None:
         with html.form_context("aux_tag"):
@@ -759,7 +758,7 @@ class ModeEditTagGroup(ABCEditTagMode):
         check_csrf_token()
 
         if not transactions.check_transaction():
-            return redirect(mode_url("tags"))
+            return redirect(makeuri(request, []))
 
         vs = self._valuespec()
         tag_group_spec = vs.from_html_vars("tag_group")
@@ -813,7 +812,7 @@ class ModeEditTagGroup(ABCEditTagMode):
         if isinstance(message, str):
             flash(message)
 
-        return redirect(mode_url("tags"))
+        return redirect(makeuri(request, [], delvars=["_delete"]))
 
     def page(self) -> None:
         with html.form_context("tag_group", method="POST"):

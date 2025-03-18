@@ -8,7 +8,7 @@ from typing import Any, Generic, TypeVar
 
 from cmk.shared_typing.vue_formspec_components import ValidationMessage
 
-DataForDisk = Any
+DiskModel = Any
 FrontendModel = TypeVar("FrontendModel")
 ParsedValueModel = TypeVar("ParsedValueModel")
 

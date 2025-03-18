@@ -8,8 +8,8 @@ from typing import Any, Callable, final, Generic, Sequence, TypeVar
 from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.gui.form_specs.vue.visitors._type_defs import (
-    DataForDisk,
     DataOrigin,
+    DiskModel,
     FrontendModel,
     InvalidValue,
     ParsedValueModel,
@@ -58,7 +58,7 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, ParsedValueModel, Frontend
         )
 
     @final
-    def to_disk(self, raw_value: object) -> DataForDisk:
+    def to_disk(self, raw_value: object) -> DiskModel:
         parsed_value = self._parse_value(self._migrate_disk_value(raw_value))
         if isinstance(parsed_value, InvalidValue):
             raise MKGeneralException(
@@ -88,7 +88,7 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, ParsedValueModel, Frontend
     ) -> tuple[shared_type_defs.FormSpec, FrontendModel]:
         """Returns frontend representation of the FormSpec schema and its data value."""
 
-    def _validators(self) -> Sequence[Callable[[DataForDisk], object]]:
+    def _validators(self) -> Sequence[Callable[[DiskModel], object]]:
         return compute_validators(self.form_spec)
 
     def _validate(
@@ -98,5 +98,5 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, ParsedValueModel, Frontend
         return []
 
     @abc.abstractmethod
-    def _to_disk(self, raw_value: object, parsed_value: ParsedValueModel) -> DataForDisk:
+    def _to_disk(self, raw_value: object, parsed_value: ParsedValueModel) -> DiskModel:
         """Transforms the value into a serializable format for disk storage."""

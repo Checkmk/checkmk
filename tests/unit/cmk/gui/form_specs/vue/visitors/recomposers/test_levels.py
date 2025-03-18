@@ -10,8 +10,8 @@ import pytest
 from cmk.utils.user import UserId
 
 from cmk.gui.form_specs.vue.form_spec_visitor import (
-    parse_value_from_frontend,
     serialize_data_for_frontend,
+    transform_to_disk_model,
 )
 from cmk.gui.form_specs.vue.visitors import DataOrigin, DEFAULT_VALUE
 from cmk.gui.session import UserContext
@@ -213,7 +213,7 @@ def test_levels_recompose(
 
         assert len(vue_app_config.validation) == 0
         frontend_data = vue_app_config.data
-        disk_data = parse_value_from_frontend(spec, frontend_data)
+        disk_data = transform_to_disk_model(spec, frontend_data)
         assert frontend_data == expected_frontend_data
         assert disk_data == expected_disk_data
 

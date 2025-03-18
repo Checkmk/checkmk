@@ -15,7 +15,7 @@ from cmk.utils.log import VERBOSE
 from cmk.utils.paths import omd_root
 
 from cmk.piggyback.backend import Config as PiggybackConfig
-from cmk.piggyback.backend import get_messages_for, PiggybackMessage
+from cmk.piggyback.backend import get_messages_for, PiggybackMessage, PiggybackTimeSettings
 
 from ._abstract import Fetcher, Mode
 
@@ -26,7 +26,7 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
         *,
         hostname: HostName,
         address: HostAddress | None,
-        time_settings: Sequence[tuple[str | None, str, int]],
+        time_settings: PiggybackTimeSettings,
     ) -> None:
         super().__init__()
         self.hostname: Final = hostname

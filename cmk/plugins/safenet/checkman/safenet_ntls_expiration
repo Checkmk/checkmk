@@ -1,0 +1,14 @@
+title: Safenet HSM: NTLS Expiration Date
+agents: snmp
+catalog: hw/network/safenet
+license: GPLv2
+distribution: check_mk
+description:
+ This check displays the NTLS server certificate's expiration date.
+ It show a warning if the certificate is about to expire in 90 days and
+ critical if the certificate is expired.
+
+ Returns OK if the date format is not like: Nov 17 11:38:50 2024 GMT
+
+discovery:
+ One service is created for each device.

@@ -14,6 +14,7 @@ from typing import Protocol
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     ActionId,
     GeneralStageErrors,
+    IconName,
     ParsedFormData,
     QuickSetupId,
     StageIndex,
@@ -145,12 +146,12 @@ class QuickSetupActionButtonIcon:
 
     Attributes:
         name:
-            The icon name (kebab-case). Equals the css-variable --icon-<name>. Default "checkmark-plus"
+            The icon name dervied from a related css class.
         rotate:
             The rotation of the icon in degrees (0-360).
     """
 
-    name: str = "checkmark"
+    name: IconName = "checkmark"
     rotate: int = 0
 
 

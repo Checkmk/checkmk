@@ -12,6 +12,13 @@ The things in this module specify the old Check_MK (<- see? Old!) check API
 +---------------------------------------------------------------------------+
 |             THIS API IS OLD, AND NO LONGER MAINTAINED.                    |
 |                                                                           |
+| Plugins programmed against this API are only considered, if they reside   |
+| in the checks_dir (share/check_mk/checks).                                |
+|                                                                           |
+|       !!   Files in the local hierarchy are NOT CONSIDERED     !!         |
+|                                                                           |
+| This implies that these plugins can not be distributed in an MKP!         |
+|                                                                           |
 | All new plugins should be programmed against the new API, please refer to |
 | the online user manual for details!                                       |
 |                                                                           |

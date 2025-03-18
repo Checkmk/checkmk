@@ -2,15 +2,18 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import re
 from collections.abc import Iterable, Sequence
 from contextlib import suppress
 from functools import lru_cache
-from typing import Final
+from typing import Final, Literal
 
 from cmk.utils.hostaddress import HostAddress
 
-_HostCondition = str | None
+_HostCondition = (
+    tuple[Literal["exact_match"], str] | tuple[Literal["regular_expression"], str] | None
+)
 _KeyName = str  # 'max_cache_age', 'validity_period', 'validity_state'
 _Value = int
 
@@ -44,26 +47,28 @@ class Config:
         self.piggybacked: Final = piggybacked_hostname
         self._expanded_settings = {
             (host, key): value
-            for expr, key, value in reversed(time_settings)
-            for host in self._normalize_pattern(expr, piggybacked_hostname)
+            for condition, key, value in reversed(time_settings)
+            for host in self._normalize_pattern(condition, piggybacked_hostname)
         }
 
     @staticmethod
     def _normalize_pattern(
-        expr: str | None, piggybacked: HostAddress
+        condition: tuple[Literal["exact_match"], str]
+        | tuple[Literal["regular_expression"], str]
+        | None,
+        piggybacked: HostAddress,
     ) -> Iterable[HostAddress | None]:
-        # expr may be
-        #   - None (global settings) or
-        #   - 'source-hostname' or
-        #   - 'piggybacked-hostname' or
-        #   - '~piggybacked-[hH]ostname'
-        # the first entry ('piggybacked-hostname' vs '~piggybacked-[hH]ostname') wins
-        if expr is None:
-            yield None
-        elif not expr.startswith("~"):
-            yield HostAddress(expr)
-        elif _compile(expr[1:]).match(piggybacked):
-            yield piggybacked
+        match condition:
+            case None:
+                yield None
+            case ("exact_match", raw_hostname):
+                yield HostAddress(raw_hostname)
+            case ("regular_expression", hostname_expr):
+                if _compile(hostname_expr).match(piggybacked):
+                    yield piggybacked
+            case _:
+                # assert_never(condition) is not understood by mypy here
+                raise TypeError(condition)
 
     def _match(self, key: str, source_hostname: HostAddress) -> int:
         with suppress(KeyError):

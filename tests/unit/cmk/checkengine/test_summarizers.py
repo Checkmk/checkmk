@@ -53,7 +53,7 @@ class TestPiggybackSummarizer:
             host_sections=HostSections({}),
             hostname=HostName("hostname"),
             ipaddress=HostAddress("1.2.3.4"),
-            time_settings=[("", "", 0)],
+            time_settings=[(("regular_expression", ""), "", 0)],
             expect_data=False,
         ) == [ActiveCheckResult(0, "Success (but no data found for this host)")]
 
@@ -62,7 +62,7 @@ class TestPiggybackSummarizer:
             host_sections=HostSections({}),
             hostname=HostName("hostname"),
             ipaddress=HostAddress("1.2.3.4"),
-            time_settings=[("", "", 0)],
+            time_settings=[(("regular_expression", ""), "", 0)],
             expect_data=True,
         ) == [ActiveCheckResult(1, "Missing data")]
 

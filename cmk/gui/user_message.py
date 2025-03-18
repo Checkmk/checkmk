@@ -24,6 +24,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.table import table_element
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.html import HTML
 
 
 def register(page_registry: PageRegistry) -> None:
@@ -92,7 +93,6 @@ def render_user_message_table(what: str) -> None:
 
             msg_id = entry["id"]
             datetime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(entry["time"]))
-            msg = entry["text"].replace("\n", " ")
 
             table.cell(_("Actions"), css=["buttons"], sortable=False)
             onclick = (
@@ -107,7 +107,12 @@ def render_user_message_table(what: str) -> None:
                 onclick=onclick,
             )
 
-            table.cell(_("Message"), msg)
+            msg_text = entry["text"]
+            match msg_text["content_type"]:
+                case "text":
+                    table.cell(_("Message"), msg_text["content"].replace("\n", " "))
+                case "html":
+                    table.cell(_("Message"), HTML(msg_text["content"]))
             table.cell(_("Date"), datetime)
 
     html.close_div()

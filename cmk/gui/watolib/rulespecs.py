@@ -10,7 +10,7 @@ import re
 import sys
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Literal, NamedTuple, Never
+from typing import Any, Literal, NamedTuple
 
 import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKGeneralException
@@ -1340,11 +1340,6 @@ class RulespecRegistry(cmk.ccc.plugin_registry.Registry[Rulespec]):
                 super().register(manual_instance)
 
         return super().register(instance)
-
-    def register_without_manual_check_rulespec(self, instance: Never) -> None:
-        """Deprecated!"""
-        # TODO: Remove this with checkmk 2.5
-        _log_ignored_local_registration(instance.name)  # type: ignore[attr-defined]
 
 
 class CheckTypeGroupSelection(ElementSelection):

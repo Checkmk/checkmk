@@ -496,6 +496,24 @@ class SectionPluginMapper(SectionMap[SectionPlugin]):
         return len(self._sections)
 
 
+def _make_parameters_getter(
+    config_getter: ConfigGetter,
+    plugin: AgentSectionPluginAPI | SNMPSectionPluginAPI,
+) -> Callable[[HostName], Sequence[Parameters] | Parameters | None]:
+    """wrapper for partial, which is not supported by mypy"""
+
+    def get_parameters(host_name: HostName) -> Sequence[Parameters] | Parameters | None:
+        return get_plugin_parameters(
+            host_name,
+            config_getter,
+            default_parameters=plugin.host_label_default_parameters,
+            ruleset_name=plugin.host_label_ruleset_name,
+            ruleset_type=plugin.host_label_ruleset_type,
+        )
+
+    return get_parameters
+
+
 class HostLabelPluginMapper(SectionMap[HostLabelPlugin]):
     def __init__(
         self,
@@ -512,13 +530,7 @@ class HostLabelPluginMapper(SectionMap[HostLabelPlugin]):
         return (
             HostLabelPlugin(
                 function=plugin.host_label_function,
-                parameters=partial(
-                    get_plugin_parameters,
-                    config_getter=self._config_getter,
-                    default_parameters=plugin.host_label_default_parameters,
-                    ruleset_name=plugin.host_label_ruleset_name,
-                    ruleset_type=plugin.host_label_ruleset_type,
-                ),
+                parameters=_make_parameters_getter(self._config_getter, plugin),
             )
             if plugin is not None
             else HostLabelPlugin.trivial()

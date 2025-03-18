@@ -473,7 +473,7 @@ def test__find_ac_test_result_problems(
 
 
 @pytest.mark.parametrize(
-    "problem, result",
+    "problem, title, box",
     [
         pytest.param(
             _ACTestResultProblem(
@@ -494,8 +494,32 @@ def test__find_ac_test_result_problems(
                     ],
                 },
             ),
-            "Unsorted, sites: site_id:<br>text",
-            id="unsorted",
+            "Unsorted",
+            "This may partially work in Checkmk 2.3.0 but will stop working from the next major version onwards.",
+            id="unsorted-warn",
+        ),
+        pytest.param(
+            _ACTestResultProblem(
+                ident="ident",
+                type="unsorted",
+                _ac_test_results={
+                    SiteId("site_id"): [
+                        ACTestResult(
+                            ACResultState.CRIT,
+                            "text",
+                            "test_id",
+                            "deprecations",
+                            "Title",
+                            "Help",
+                            SiteId("site_id"),
+                            None,
+                        ),
+                    ],
+                },
+            ),
+            "Unsorted",
+            "This does not work in Checkmk 2.3.0.",
+            id="unsorted-crit",
         ),
         pytest.param(
             _ACTestResultProblem(
@@ -518,8 +542,34 @@ def test__find_ac_test_result_problems(
                     ],
                 },
             ),
-            "Unpackaged file 'ident', sites: site_id:<br>text (file: local/share/check_mk/web/plugins/metrics/file.py)",
-            id="file",
+            "Deprecated plug-in: ident",
+            "This may partially work in Checkmk 2.3.0 but will stop working from the next major version onwards.",
+            id="file-warn",
+        ),
+        pytest.param(
+            _ACTestResultProblem(
+                ident="ident",
+                type="file",
+                _ac_test_results={
+                    SiteId("site_id"): [
+                        ACTestResult(
+                            ACResultState.CRIT,
+                            "text",
+                            "test_id",
+                            "deprecations",
+                            "Title",
+                            "Help",
+                            SiteId("site_id"),
+                            Path(
+                                "/omd/sites/site_id/local/share/check_mk/web/plugins/metrics/file.py"
+                            ),
+                        ),
+                    ],
+                },
+            ),
+            "Deprecated plug-in: ident",
+            "This does not work in Checkmk 2.3.0.",
+            id="file-crit",
         ),
         pytest.param(
             _ACTestResultProblem(
@@ -542,10 +592,38 @@ def test__find_ac_test_result_problems(
                     ],
                 },
             ),
-            "Extension package 'ident', sites: site_id:<br>text (file: local/share/check_mk/web/plugins/metrics/file.py)",
-            id="mkp",
+            "Deprecated extension package: ident",
+            "This may partially work in Checkmk 2.3.0 but will stop working from the next major version onwards.",
+            id="mkp-warn",
+        ),
+        pytest.param(
+            _ACTestResultProblem(
+                ident="ident",
+                type="mkp",
+                _ac_test_results={
+                    SiteId("site_id"): [
+                        ACTestResult(
+                            ACResultState.CRIT,
+                            "text",
+                            "test_id",
+                            "deprecations",
+                            "Title",
+                            "Help",
+                            SiteId("site_id"),
+                            Path(
+                                "/omd/sites/site_id/local/share/check_mk/web/plugins/metrics/file.py"
+                            ),
+                        ),
+                    ],
+                },
+            ),
+            "Deprecated extension package: ident",
+            "This does not work in Checkmk 2.3.0.",
+            id="mkp-crit",
         ),
     ],
 )
-def test_render_problem(problem: _ACTestResultProblem, result: str) -> None:
-    assert str(problem) == result
+def test_render_problem(problem: _ACTestResultProblem, title: str, box: str) -> None:
+    rendered_problem = problem.render("2.3.0")
+    assert title in rendered_problem
+    assert box in rendered_problem

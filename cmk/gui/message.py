@@ -54,6 +54,15 @@ from cmk.gui.valuespec import (
 MessageMethod = Literal["gui_hint", "gui_popup", "mail", "dashlet"]
 
 
+class MessageV0(TypedDict):
+    text: str
+    dest: tuple[str, list[UserId]]
+    methods: list[MessageMethod]
+    valid_till: int | None
+    id: NotRequired[str]
+    time: NotRequired[int]
+
+
 class MessageFromVS(TypedDict):
     text: str
     dest: tuple[str, list[UserId]]
@@ -61,8 +70,13 @@ class MessageFromVS(TypedDict):
     valid_till: int | None
 
 
+class MessageText(TypedDict):
+    content_type: Literal["text", "html"]
+    content: str
+
+
 class Message(TypedDict):
-    text: str
+    text: MessageText
     dest: tuple[str, list[UserId]]
     methods: list[MessageMethod]
     valid_till: int | None
@@ -77,11 +91,26 @@ def register(page_registry: PageRegistry) -> None:
     page_registry.register_page_handler("message", page_message)
 
 
+def _parse_message(message: Message | MessageV0) -> Message:
+    return Message(
+        text=(
+            MessageText(content_type="text", content=t)
+            if isinstance(t := message["text"], str)
+            else t
+        ),
+        dest=message["dest"],
+        methods=message["methods"],
+        valid_till=message.get("valid_till"),
+        id=message["id"],
+        time=message["time"],
+    )
+
+
 def get_gui_messages(user_id: UserId | None = None) -> MutableSequence[Message]:
     if user_id is None:
         user_id = user.ident
     path = cmk.utils.paths.profile_dir / user_id / "messages.mk"
-    messages = store.load_object_from_file(path, default=[])
+    messages = [_parse_message(m) for m in store.load_object_from_file(path, default=[])]
 
     # Delete too old messages and update security message durations
     updated = False
@@ -90,13 +119,20 @@ def get_gui_messages(user_id: UserId | None = None) -> MutableSequence[Message]:
         valid_till = message.get("valid_till")
         valid_from = message.get("time")
         if valid_till is not None:
-            if message.get("security") and active_config.user_security_notification_duration.get(
-                "update_existing_duration"
-            ):
-                message["valid_till"] = (
-                    valid_from
-                    + active_config.user_security_notification_duration.get("max_duration")
+            if (
+                message.get("security")
+                and active_config.user_security_notification_duration.get(
+                    "update_existing_duration"
                 )
+                and valid_from is not None
+                and (
+                    max_duration := active_config.user_security_notification_duration.get(
+                        "max_duration"
+                    )
+                )
+                is not None
+            ):
+                message["valid_till"] = valid_from + max_duration
                 updated = True
             if valid_till < now:
                 messages.pop(index)
@@ -339,7 +375,7 @@ def _validate_msg(msg: DictionaryModel, _varprefix: str) -> None:
 
 def _process_message(msg_from_vs: MessageFromVS) -> None:  # pylint: disable=too-many-branches
     msg = Message(
-        text=msg_from_vs["text"],
+        text=MessageText(content_type="text", content=msg_from_vs["text"]),
         dest=msg_from_vs["dest"],
         methods=msg_from_vs["methods"],
         valid_till=msg_from_vs["valid_till"],

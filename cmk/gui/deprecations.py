@@ -15,23 +15,27 @@ from livestatus import SiteConfigurations, SiteId
 
 from cmk.ccc import store
 from cmk.ccc.site import omd_site
+from cmk.ccc.version import __version__, Version
 
 from cmk.utils import paths
+from cmk.utils.html import replace_state_markers
 from cmk.utils.user import UserId
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 from cmk.gui.config import active_config
 from cmk.gui.cron import CronJob, CronJobRegistry
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.job_scheduler import load_last_job_runs, save_last_job_runs
 from cmk.gui.log import logger
-from cmk.gui.message import get_gui_messages, Message, message_gui
+from cmk.gui.message import get_gui_messages, Message, message_gui, MessageText
 from cmk.gui.site_config import get_site_config, is_wato_slave_site
 from cmk.gui.sites import states
 from cmk.gui.userdb import load_users
 from cmk.gui.utils import gen_id
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import user_may
 from cmk.gui.watolib.analyze_configuration import ACResultState, ACTestResult, perform_tests
 
@@ -159,23 +163,118 @@ class _ACTestResultProblem:
     def add_ac_test_result(self, site_id: SiteId, ac_test_result: ACTestResult) -> None:
         self._ac_test_results.setdefault(site_id, []).append(ac_test_result)
 
-    def __str__(self) -> str:
+    def render(self, version: str) -> str:
+        if not self._ac_test_results:
+            return ""
+
+        match ACResultState.worst(r.state for rs in self._ac_test_results.values() for r in rs):
+            case ACResultState.CRIT:
+                error = _("This does not work in Checkmk %s.") % version
+            case ACResultState.WARN:
+                error = (
+                    _(
+                        "This may partially work in Checkmk %s but will stop working from the"
+                        " next major version onwards."
+                    )
+                    % version
+                )
+            case _:
+                return ""
+
         match self.type:
             case "mkp":
-                title = _("Extension package %r") % self.ident
+                title = _("Deprecated extension package: %s") % self.ident
+                info = (
+                    _(
+                        "The extension package uses APIs which are deprecated or removed in"
+                        " Checkmk %s so that this extension will not work anymore once you upgrade"
+                        " your site to next major version."
+                    )
+                    % version
+                )
+                recommendation = _(
+                    "We highly recommend solving this issue already in your installation by"
+                    " updating the extension package. Otherwise the extension package will be"
+                    " deactivated after an upgrade."
+                )
             case "file":
-                title = _("Unpackaged file %r") % self.ident
+                title = _("Deprecated plug-in: %s") % self.ident
+                info = (
+                    _(
+                        "The plug-in uses APIs which are deprecated or removed in"
+                        " Checkmk %s, so that this extension will not work anymore once you upgrade"
+                        " your site to next major version."
+                    )
+                    % version
+                )
+                recommendation = _(
+                    "We highly recommend solving this issue already in your installation either"
+                    " by migrating or removing this plug-in."
+                )
             case "unsorted":
                 title = _("Unsorted")
-        site_ids = sorted(self._ac_test_results)
-        details = sorted(
-            set(
-                f"{r.text} (file: {_try_rel_path(sid, r.path)})" if r.path else r.text
-                for sid, rs in self._ac_test_results.items()
-                for r in rs
-            )
+
+                info = ""
+                recommendation = _(
+                    "We highly recommend solving this issue already in your installation."
+                )
+
+        html_code = HTMLWriter.render_h2(title)
+        html_code += HTMLWriter.render_div(error, class_="error")
+        if info:
+            html_code += HTMLWriter.render_p(info)
+        html_code += HTMLWriter.render_p(recommendation)
+        html_code += HTMLWriter.render_p(
+            _("Affected sites: %s") % ", ".join(sorted(self._ac_test_results))
         )
-        return f"{title}, sites: {', '.join(site_ids)}:<br>{',<br>'.join(details)}"
+        html_code += HTMLWriter.render_p(_("Details:"))
+
+        table_content = HTML("", escape=False)
+        for idx, (state, text, rel_path) in enumerate(
+            sorted(
+                set(
+                    (
+                        r.state,
+                        r.text,
+                        _try_rel_path(s, r.path) if r.path else None,
+                    )
+                    for s, rs in self._ac_test_results.items()
+                    for r in rs
+                )
+            )
+        ):
+            match state:
+                case ACResultState.CRIT:
+                    state_td = HTMLWriter.render_td(
+                        HTML(replace_state_markers("(!!)"), escape=False),
+                        rowspan="2",
+                        class_="state svcstate",
+                    )
+                case ACResultState.WARN:
+                    state_td = HTMLWriter.render_td(
+                        HTML(replace_state_markers("(!)"), escape=False),
+                        rowspan="2",
+                        class_="state svcstate",
+                    )
+                case _:
+                    state_td = HTMLWriter.render_td("")
+
+            class_ = "even0" if idx % 2 == 0 else "odd0"
+            table_content += HTMLWriter.render_tr(
+                HTMLWriter.render_td(text) + state_td,
+                class_=class_,
+            )
+            table_content += HTMLWriter.render_tr(
+                (
+                    HTMLWriter.render_td(f"File: {rel_path}")
+                    if rel_path
+                    else HTMLWriter.render_td("")
+                ),
+                class_=class_,
+            )
+
+        html_code += HTMLWriter.render_table(table_content, class_="data table")
+        return str(html_code)
 
 
 def _find_ac_test_result_problems(
@@ -263,12 +362,14 @@ def execute_deprecation_tests_and_notify_users() -> None:
     )
 
     ac_test_results_messages = [
-        str(p) for p in _find_ac_test_result_problems(not_ok_ac_test_results, manifests_by_path)
+        r
+        for p in _find_ac_test_result_problems(not_ok_ac_test_results, manifests_by_path)
+        if (r := p.render(Version.from_str(__version__).version_base))
     ]
 
     now = int(time.time())
     for user_id in _filter_extension_managing_users(list(load_users())):
-        sent_messages = [m["text"] for m in get_gui_messages(user_id)]
+        sent_messages = [m["text"]["content"] for m in get_gui_messages(user_id)]
         for ac_test_results_message in ac_test_results_messages:
             if ac_test_results_message in sent_messages:
                 continue
@@ -277,7 +378,7 @@ def execute_deprecation_tests_and_notify_users() -> None:
                 Message(
                     dest=("list", [user_id]),
                     methods=["gui_hint"],
-                    text=ac_test_results_message,
+                    text=MessageText(content_type="html", content=ac_test_results_message),
                     valid_till=None,
                     id=gen_id(),
                     time=now,

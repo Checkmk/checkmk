@@ -991,8 +991,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "rms200_temp",
         "rstcli",
         "rstcli_pdisks",
-        "safenet_hsm_events",
-        "safenet_hsm",
         "salesforce_instances",
         "sansymphony_alerts",
         "sansymphony_ports",

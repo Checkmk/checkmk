@@ -774,6 +774,7 @@ def fetch_snapmirror(
 ) -> Iterable[models.SnapMirrorModel]:
     field_query = (
         "state",
+        "transfer.state",
         "policy.name",
         "policy.type",
         "source.svm.name",
@@ -793,6 +794,7 @@ def fetch_snapmirror(
             policy_name=element_data["policy"]["name"],
             policy_type=element_data["policy"]["type"],
             state=element_data.get("state"),
+            transfer_state=element_data.get("transfer", {}).get("state"),
             source_svm_name=element_data["source"]["svm"]["name"],
             lag_time=element_data.get("lag_time"),
             destination=element_data["destination"]["path"],

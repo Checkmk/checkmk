@@ -67,6 +67,7 @@ common:ci --@//:filesystem_layout=FILESYSTEM_LAYOUT_INVALID
 # TODO: this should be the overall default, see discussions in
 # https://tribe29.slack.com/archives/C03PW9280U9/p1728303949973099
 build:ci --@rules_python//python/config_settings:bootstrap_impl=script
+build:ci --noshow_progress
 
 # clean:ci ...
 # run:ci ...

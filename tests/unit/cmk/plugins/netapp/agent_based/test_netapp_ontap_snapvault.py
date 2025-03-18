@@ -22,6 +22,7 @@ def test_check_netapp_ontap_snapvault_data() -> None:
         policy_name="policy_name",
         state=None,
         lag_time=None,
+        transfer_state="transferring",
     )
 
     section = {snapmirror_model.destination: snapmirror_model}
@@ -32,6 +33,7 @@ def test_check_netapp_ontap_snapvault_data() -> None:
         Result(state=State.OK, summary="Source-system: svm_name"),
         Result(state=State.OK, summary="Destination-system: snapmirror_destination"),
         Result(state=State.OK, summary="Policy: policy_name"),
+        Result(state=State.OK, summary="Transfer State: transferring"),
     ]
 
 
@@ -42,6 +44,7 @@ def test_check_netapp_ontap_snapvault_metrics_ok() -> None:
         policy_name=None,
         state=None,
         lag_time="P1D",  # 86400 seconds
+        transfer_state=None,
     )
 
     section = {snapmirror_model.destination: snapmirror_model}
@@ -65,6 +68,7 @@ def test_check_netapp_ontap_snapvault_metrics_crit() -> None:
         policy_name=None,
         state=None,
         lag_time="P1D",  # 86400 seconds
+        transfer_state=None,
     )
 
     section = {snapmirror_model.destination: snapmirror_model}

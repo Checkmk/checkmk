@@ -145,3 +145,41 @@ class HostUpdateAttribute(BaseSchema):
     locked_by = HostAttributeLockedBy().openapi_field()
     locked_attributes = HostAttributeLockedAttributes().openapi_field()
     inventory_failed = HostAttributeDiscoveryFailed().openapi_field()
+
+
+class ClusterCreateAttribute(BaseSchema):
+    alias = HostAttributeAlias().openapi_field()
+    site = HostAttributeSite().openapi_field()
+
+    contactgroups = fields.Nested(
+        HostContactGroup,
+        description=HostAttributeContactGroups().help(),
+    )
+
+    parents = HostAttributeParents().openapi_field()
+
+    ipaddress = HostAttributeIPv4Address().openapi_field()
+    ipv6address = HostAttributeIPv6Address().openapi_field()
+    additional_ipv4addresses = HostAttributeAdditionalIPv4Addresses().openapi_field()
+    additional_ipv6addresses = HostAttributeAdditionalIPv6Addresses().openapi_field()
+
+    # TODO: CEE specific host attribute must be added without violating the import structure
+    #  the registration should be edition specific instead (temporarily it would also be fine
+    #  to do something like the customer attribute to keep simplicity
+    # bake_agent_package = HostAttributeBakeAgentPackage().openapi_field()
+
+    snmp_community = HostAttributeSNMPCommunity().openapi_field()
+
+    labels = HostAttributeLabels().openapi_field()
+    waiting_for_discovery = HostAttributeWaitingForDiscovery().openapi_field()
+
+    network_scan = HostAttributeNetworkScan().openapi_field()
+
+    management_protocol = HostAttributeManagementProtocol().openapi_field()
+    management_address = HostAttributeManagementAddress().openapi_field()
+    management_snmp_community = HostAttributeManagementSNMPCommunity().openapi_field()
+    management_ipmi_credentials = HostAttributeManagementIPMICredentials().openapi_field()
+
+    locked_by = HostAttributeLockedBy().openapi_field()
+    locked_attributes = HostAttributeLockedAttributes().openapi_field()
+    inventory_failed = HostAttributeDiscoveryFailed().openapi_field()

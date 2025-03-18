@@ -5,7 +5,7 @@
 
 import logging
 import re
-from collections.abc import Mapping, Sequence
+from collections.abc import Generator, Iterable, Mapping, Sequence
 from typing import Any, Literal
 
 import cmk.ccc.version as cmk_version
@@ -41,6 +41,7 @@ from cmk.gui.valuespec import (
     DualListChoice,
     FixedValue,
     Float,
+    HostAddress,
     IconSelector,
     ID,
     Integer,
@@ -6397,9 +6398,9 @@ def _validate_max_cache_ages_and_validity_periods(params, varprefix):
     global_period = params.get("global_validity", {}).get("period")
     _validate_max_cache_age_and_validity_period(global_max_cache_age, global_period, varprefix)
 
-    for exception in params.get("per_piggybacked_host", []):
-        max_cache_age = exception.get("max_cache_age")
-        period = exception.get("validity", {}).get("period", global_period)
+    for exemption in params.get("per_piggybacked_host", []):
+        max_cache_age = exemption.get("max_cache_age")
+        period = exemption.get("validity", {}).get("period", global_period)
         if max_cache_age == "global":
             _validate_max_cache_age_and_validity_period(global_max_cache_age, period, varprefix)
         else:
@@ -6426,53 +6427,74 @@ def _valuespec_piggybacked_host_files():
         % global_max_cache_age_uri
     )
 
-    return Dictionary(
-        title=_("Processing of piggybacked host data"),
-        optional_keys=[],
-        elements=[
-            ("global_max_cache_age", _vs_max_cache_age(global_max_cache_age_title)),
-            ("global_validity", _vs_validity()),
-            (
-                "per_piggybacked_host",
-                ListOf(
-                    valuespec=Dictionary(
-                        optional_keys=[],
-                        elements=[
-                            (
-                                "piggybacked_hostname_expressions",
-                                ListOfStrings(
-                                    title=_("Piggybacked host name expressions"),
-                                    orientation="horizontal",
-                                    valuespec=RegExp(
-                                        size=30,
-                                        mode=RegExp.prefix,
-                                    ),
-                                    allow_empty=False,
-                                    help=_(
-                                        "Here you can specify explicit piggybacked host names or "
-                                        "regex patterns to match specific piggybacked host names."
+    return Migrate(
+        valuespec=Dictionary(
+            title=_("Processing of piggybacked host data"),
+            optional_keys=[],
+            elements=[
+                ("global_max_cache_age", _vs_max_cache_age(global_max_cache_age_title)),
+                ("global_validity", _vs_validity()),
+                (
+                    "per_piggybacked_host",
+                    ListOf(
+                        valuespec=Dictionary(
+                            optional_keys=[],
+                            elements=[
+                                (
+                                    "piggybacked_hostname_conditions",
+                                    ListOf(
+                                        title=_("Piggybacked host name conditions"),
+                                        valuespec=CascadingDropdown(
+                                            choices=(
+                                                (
+                                                    "exact_match",
+                                                    _("Exact match"),
+                                                    HostAddress(
+                                                        allow_ipv4_address=False,
+                                                        allow_ipv6_address=False,
+                                                        size=40,
+                                                        allow_empty=False,
+                                                    ),
+                                                ),
+                                                (
+                                                    "regular_expression",
+                                                    _("Regular expression"),
+                                                    RegExp(
+                                                        mode=RegExp.prefix,
+                                                        size=40,
+                                                    ),
+                                                ),
+                                            ),
+                                            orientation="horizontal",
+                                        ),
+                                        allow_empty=False,
+                                        help=_(
+                                            "Here you can specify explicit piggybacked host names or "
+                                            "regex patterns to match specific piggybacked host names."
+                                        ),
                                     ),
                                 ),
-                            ),
-                            ("max_cache_age", _vs_max_cache_age(max_cache_age_title)),
-                            ("validity", _vs_validity()),
-                        ],
+                                ("max_cache_age", _vs_max_cache_age(max_cache_age_title)),
+                                ("validity", _vs_validity()),
+                            ],
+                        ),
+                        title=_("Exemptions for piggybacked hosts (VMs, ...)"),
+                        add_label=_("Add exemption"),
                     ),
-                    title=_("Exceptions for piggybacked hosts (VMs, ...)"),
-                    add_label=_("Add exception"),
                 ),
+            ],
+            help=_(
+                "We assume that a source host is sending piggyback data every check interval "
+                "by default. If this is not the case for some source hosts then the <b>Check_MK</b> "
+                "and <b>Check_MK Discovery</b> services of the piggybacked hosts report "
+                "<b>Got no information from host</b> resp. <b>vanished services</b> if the piggybacked "
+                "data is missing within a check interval. "
+                "This rule helps you to get more control over the piggybacked host data handling. "
+                "The source host names have to be set in the condition field <i>Explicit hosts</i>."
             ),
-        ],
-        help=_(
-            "We assume that a source host is sending piggyback data every check interval "
-            "by default. If this is not the case for some source hosts then the <b>Check_MK</b> "
-            "and <b>Check_MK Discovery</b> services of the piggybacked hosts report "
-            "<b>Got no information from host</b> resp. <b>vanished services</b> if the piggybacked "
-            "data is missing within a check interval. "
-            "This rule helps you to get more control over the piggybacked host data handling. "
-            "The source host names have to be set in the condition field <i>Explicit hosts</i>."
+            validate=_validate_max_cache_ages_and_validity_periods,
         ),
-        validate=_validate_max_cache_ages_and_validity_periods,
+        migrate=_migrate_piggybacked_host_files,
     )
 
 
@@ -6520,6 +6542,63 @@ def _vs_validity():
             "hosts can be specified for this period."
         ),
     )
+
+
+def _migrate_piggybacked_host_files(value: object) -> dict[str, object]:
+    if not isinstance(value, dict):
+        raise TypeError(value)
+
+    migrated_per_piggybacked_host_entries = []
+
+    for per_piggybacked_host_entry in value["per_piggybacked_host"]:
+        if "piggybacked_hostname_conditions" in per_piggybacked_host_entry:
+            migrated_per_piggybacked_host_entries.append(per_piggybacked_host_entry)
+            continue
+        if migrated_piggybacked_hostname_conditions := list(
+            _migrate_legacy_piggybacked_hostname_conditions(
+                per_piggybacked_host_entry["piggybacked_hostname_expressions"]
+            )
+        ):
+            migrated_per_piggybacked_host_entries.append(
+                {
+                    k: v
+                    for k, v in per_piggybacked_host_entry.items()
+                    if k != "piggybacked_hostname_expressions"
+                }
+                | {"piggybacked_hostname_conditions": migrated_piggybacked_hostname_conditions}
+            )
+
+    return value | {
+        "per_piggybacked_host": migrated_per_piggybacked_host_entries,
+    }
+
+
+def _migrate_legacy_piggybacked_hostname_conditions(
+    legacy_conditions: Iterable[object],
+) -> Generator[tuple[Literal["exact_match"], str] | tuple[Literal["regular_expression"], str]]:
+    for legacy_condition in legacy_conditions:
+        try:
+            yield _migrate_legacy_piggybacked_hostname_condition(legacy_condition)
+        # we can skip such entries because they anyway never matched any hostname
+        except MKUserError:
+            continue
+
+
+def _migrate_legacy_piggybacked_hostname_condition(
+    legacy_condition: object,
+) -> tuple[Literal["exact_match"], str] | tuple[Literal["regular_expression"], str]:
+    if not isinstance(legacy_condition, str):
+        raise TypeError(legacy_condition)
+    # see werk 10491 regarding the "~"
+    if legacy_condition.startswith("~"):
+        return "regular_expression", legacy_condition[1:]
+    HostAddress(
+        allow_ipv4_address=False,
+        allow_ipv6_address=False,
+        size=40,
+        allow_empty=False,
+    ).validate_value(legacy_condition, "")
+    return "exact_match", legacy_condition
 
 
 PiggybackedHostFiles = HostRulespec(

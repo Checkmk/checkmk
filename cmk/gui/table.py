@@ -13,8 +13,7 @@ from contextlib import contextmanager, nullcontext
 from enum import auto, Enum
 from typing import Any, ContextManager, Final, Literal, NamedTuple
 
-import cmk.gui.utils.escaping as escaping
-import cmk.gui.weblib as weblib
+from cmk.gui import weblib
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -25,12 +24,12 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.num_split import key_num_split
 from cmk.gui.type_defs import CSSSpec
+from cmk.gui.utils import escaping
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.rendering import set_inpage_search_result_info
-from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeactionuri, makeuri, requested_file_name
+from cmk.gui.utils.urls import makeuri, requested_file_name
 
 
 class TableHeader(NamedTuple):
@@ -645,11 +644,7 @@ class Table:
                     if sort_col == nr:
                         reverse = 1 if sort_reverse == 0 else 0
 
-                action_uri = makeactionuri(
-                    request,
-                    transactions,
-                    [("_%s_sort" % table_id, "%d,%d" % (nr, reverse))],
-                )
+                action_uri = makeuri(request, [("_%s_sort" % table_id, "%d,%d" % (nr, reverse))])
                 html.open_th(
                     class_=css_class,
                     title=_("Sort by %s") % header.title,

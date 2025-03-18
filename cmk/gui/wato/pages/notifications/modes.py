@@ -806,9 +806,7 @@ class ModeNotifications(ABCNotificationsMode):
                 title=_("Toggle elements"),
                 entries=[
                     PageMenuEntry(
-                        title=(
-                            _("Hide user rules") if self._show_user_rules else _("Show user rules")
-                        ),
+                        title=_("Show user rules"),
                         icon_name="toggle_on" if self._show_user_rules else "toggle_off",
                         item=make_simple_link(
                             makeactionuri(
@@ -1268,9 +1266,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
                         is_suggested=True,
                     ),
                     PageMenuEntry(
-                        title=(
-                            _("Hide user rules") if self._show_user_rules else _("Show user rules")
-                        ),
+                        title=_("Show user rules"),
                         icon_name="toggle_on" if self._show_user_rules else "toggle_off",
                         item=make_simple_link(
                             makeactionuri(

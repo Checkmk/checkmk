@@ -719,7 +719,7 @@ class ServiceDiscoveryAPI(BaseAPI):
         status = self.get_bulk_discovery_job_status(job_id)
 
         is_new_version = self.session.site_version >= CMKVersion(
-            "2.4.0", self.session.site_version.edition
+            "2.4.0b1", self.session.site_version.edition
         )
         state = (
             status["extensions"]["status"]["state"]
@@ -746,7 +746,7 @@ class ServiceDiscoveryAPI(BaseAPI):
     def get_bulk_discovery_status(self, job_id: str) -> str:
         job_status_response = self.get_bulk_discovery_job_status(job_id)
         status: str
-        if self.session.site_version >= CMKVersion("2.4.0", self.session.site_version.edition):
+        if self.session.site_version >= CMKVersion("2.4.0b1", self.session.site_version.edition):
             status = job_status_response["extensions"]["status"]["state"]
         else:
             status = job_status_response["extensions"]["state"]
@@ -755,7 +755,7 @@ class ServiceDiscoveryAPI(BaseAPI):
     def get_bulk_discovery_job_status(self, job_id: str) -> dict:
         domain_type = (
             "background_job"
-            if self.session.site_version >= CMKVersion("2.4.0", self.session.site_version.edition)
+            if self.session.site_version >= CMKVersion("2.4.0b1", self.session.site_version.edition)
             else "discovery_run"
         )
         response = self.session.get(f"/objects/{domain_type}/{job_id}")

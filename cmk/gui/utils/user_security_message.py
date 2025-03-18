@@ -12,7 +12,7 @@ from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail,
 from cmk.utils.user import UserId
 
 from cmk.gui import config, userdb, utils
-from cmk.gui.message import Message, message_gui
+from cmk.gui.message import Message, message_gui, MessageText
 
 
 class SecurityNotificationEvent(Enum):
@@ -75,7 +75,7 @@ def _send_gui(user_id: UserId, event: SecurityNotificationEvent, event_time: dat
     message_gui(
         user_id,
         Message(
-            text=str(event.value),
+            text=MessageText(content_type="text", content=str(event.value)),
             dest=("list", [user_id]),
             methods=["gui_hint"],
             valid_till=timestamp + duration,  # 1 week

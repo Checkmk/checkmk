@@ -25,6 +25,7 @@ from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.table import table_element
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri
 
@@ -168,7 +169,6 @@ def render_user_message_table(what: str) -> None:
                 if "valid_till" in entry
                 else "-"
             )
-            msg = entry["text"].replace("\n", " ")
 
             table.cell(_("Actions"), css=["buttons"], sortable=False)
             if entry.get("acknowledged"):
@@ -200,7 +200,12 @@ def render_user_message_table(what: str) -> None:
                     onclick=onclick,
                 )
 
-            table.cell(_("Message"), msg)
+            msg_text = entry["text"]
+            match msg_text["content_type"]:
+                case "text":
+                    table.cell(_("Message"), msg_text["content"].replace("\n", " "))
+                case "html":
+                    table.cell(_("Message"), HTML(msg_text["content"], escape=False))
             table.cell(_("Date sent"), datetime)
             table.cell(_("Expires on"), expiretime)
 

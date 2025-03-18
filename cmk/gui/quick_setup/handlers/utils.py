@@ -13,8 +13,8 @@ from cmk.ccc.i18n import _
 
 from cmk.gui.background_job import BackgroundProcessInterface
 from cmk.gui.form_specs.vue.form_spec_visitor import (
-    parse_value_from_frontend,
     serialize_data_for_frontend,
+    transform_to_disk_model,
 )
 from cmk.gui.form_specs.vue.visitors import DataOrigin, DEFAULT_VALUE
 from cmk.gui.log import logger
@@ -163,7 +163,7 @@ def form_spec_parse(
     expected_formspecs_map: Mapping[FormSpecId, FormSpec],
 ) -> ParsedFormData:
     return {
-        form_spec_id: parse_value_from_frontend(expected_formspecs_map[form_spec_id], form_data)
+        form_spec_id: transform_to_disk_model(expected_formspecs_map[form_spec_id], form_data)
         for current_stage_form_data in all_stages_form_data
         for form_spec_id, form_data in current_stage_form_data.items()
     }

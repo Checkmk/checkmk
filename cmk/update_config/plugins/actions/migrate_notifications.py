@@ -24,7 +24,7 @@ from cmk.gui.form_specs.vue.visitors import (
     get_visitor,
     VisitorOptions,
 )
-from cmk.gui.form_specs.vue.visitors._type_defs import DataForDisk
+from cmk.gui.form_specs.vue.visitors._type_defs import DiskModel
 from cmk.gui.watolib import sample_config
 from cmk.gui.watolib.notification_parameter import notification_parameter_registry
 from cmk.gui.watolib.notifications import (
@@ -116,7 +116,7 @@ class MigrateNotifications(UpdateAction):
         method: NotificationParameterMethod,
         parameter: dict[str, Any],
         nr: int,
-    ) -> DataForDisk:
+    ) -> DiskModel:
         data = NotificationParameterItem(
             general=NotificationParameterGeneralInfos(
                 description="Migrated from notification rule #%d" % nr,

@@ -34,7 +34,6 @@ from cmk.gui.utils.urls import (
     get_confirm_link_title,
     makeuri,
     makeuri_contextless,
-    requested_file_with_query,
     youtube_reference_url,
     YouTubeReference,
 )
@@ -877,7 +876,7 @@ def inpage_search_form(mode: str | None = None, default_value: str = "") -> None
         if mode:
             html.hidden_field("mode", mode, add_var=True)
         reset_url = request.get_ascii_input_mandatory(
-            "reset_url", requested_file_with_query(request)
+            "reset_url", makeuri(request, [], delvars=["filled_in", "search"])
         )
         html.hidden_field("reset_url", reset_url, add_var=True)
         html.buttonlink(reset_url, "", obj_id=reset_button_id, title=_("Reset"))

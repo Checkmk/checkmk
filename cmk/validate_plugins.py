@@ -46,7 +46,7 @@ from cmk.gui.watolib.rulespecs import (  # pylint: disable=cmk-module-layer-viol
 )
 
 from cmk.agent_based import v2 as agent_based_v2
-from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup
+from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
 from cmk.rulesets.v1 import entry_point_prefixes
 from cmk.rulesets.v1.rule_specs import (
     ActiveCheck,
@@ -205,7 +205,7 @@ def _validate_referenced_rule_spec() -> ActiveCheckResult:
         )
 
     # only for check API v2
-    discovered_plugins: DiscoveredPlugins[_AgentBasedPlugins] = discover_plugins(
+    discovered_plugins: DiscoveredPlugins[_AgentBasedPlugins] = discover_all_plugins(
         PluginGroup.AGENT_BASED,
         agent_based_v2.entry_point_prefixes(),
         raise_errors=False,  # already raised during loading validation if enabled
@@ -284,7 +284,7 @@ def _check_if_referenced(
 
 
 def _validate_check_parameters_usage(check_plugins: Iterable[CheckPlugin]) -> Sequence[str]:
-    discovered_check_parameters: DiscoveredPlugins[RuleSpec] = discover_plugins(
+    discovered_check_parameters: DiscoveredPlugins[RuleSpec] = discover_all_plugins(
         PluginGroup.RULESETS,
         {CheckParameters: entry_point_prefixes()[CheckParameters]},
         raise_errors=False,
@@ -299,7 +299,7 @@ def _validate_check_parameters_usage(check_plugins: Iterable[CheckPlugin]) -> Se
 
 
 def _validate_discovery_parameters_usage() -> Sequence[str]:
-    discovered_discovery_parameters: DiscoveredPlugins[RuleSpec] = discover_plugins(
+    discovered_discovery_parameters: DiscoveredPlugins[RuleSpec] = discover_all_plugins(
         PluginGroup.RULESETS,
         {DiscoveryParameters: entry_point_prefixes()[DiscoveryParameters]},
         raise_errors=False,
@@ -311,7 +311,7 @@ def _validate_discovery_parameters_usage() -> Sequence[str]:
 def _validate_inventory_parameters_usage(
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
 ) -> Sequence[str]:
-    discovered_inventory_parameters: DiscoveredPlugins[RuleSpec] = discover_plugins(
+    discovered_inventory_parameters: DiscoveredPlugins[RuleSpec] = discover_all_plugins(
         PluginGroup.RULESETS,
         {InventoryParameters: entry_point_prefixes()[InventoryParameters]},
         raise_errors=False,
@@ -325,7 +325,7 @@ def _validate_inventory_parameters_usage(
 
 
 def _validate_active_check_usage() -> Sequence[str]:
-    discovered_active_checks: DiscoveredPlugins[RuleSpec] = discover_plugins(
+    discovered_active_checks: DiscoveredPlugins[RuleSpec] = discover_all_plugins(
         PluginGroup.RULESETS,
         {ActiveCheck: entry_point_prefixes()[ActiveCheck]},
         raise_errors=False,
@@ -337,7 +337,7 @@ def _validate_active_check_usage() -> Sequence[str]:
 
 
 def _validate_special_agent_usage() -> Sequence[str]:
-    discovered_special_agents: DiscoveredPlugins[RuleSpec] = discover_plugins(
+    discovered_special_agents: DiscoveredPlugins[RuleSpec] = discover_all_plugins(
         PluginGroup.RULESETS,
         {SpecialAgent: entry_point_prefixes()[SpecialAgent]},
         raise_errors=False,

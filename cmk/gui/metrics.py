@@ -49,7 +49,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.pages import PageResult
 
-from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup
+from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
 from cmk.graphing.v1 import entry_point_prefixes
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.graphing.v1 import metrics as metrics_api
@@ -87,7 +87,7 @@ def _load_graphing_plugins() -> (
         | graphs_api.Graph
         | graphs_api.Bidirectional
         | translations_api.Translation
-    ] = discover_plugins(
+    ] = discover_all_plugins(
         PluginGroup.GRAPHING,
         entry_point_prefixes(),
         raise_errors=cmk.ccc.debug.enabled(),

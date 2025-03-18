@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 from cmk.ccc.version import Edition
 
-from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup
+from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
 from cmk.rulesets.v1 import entry_point_prefixes
 from cmk.rulesets.v1.rule_specs import (
     ActiveCheck,
@@ -50,7 +50,7 @@ class LoadedRuleSpec:
 def load_api_v1_rule_specs(
     raise_errors: bool,
 ) -> tuple[Sequence[Exception], Sequence[LoadedRuleSpec]]:
-    discovered_plugins: DiscoveredPlugins[RuleSpec] = discover_plugins(
+    discovered_plugins: DiscoveredPlugins[RuleSpec] = discover_all_plugins(
         PluginGroup.RULESETS, entry_point_prefixes(), raise_errors=raise_errors
     )
 

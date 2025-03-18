@@ -27,7 +27,12 @@ from cmk.agent_based.v2 import (
     SimpleSNMPSection,
     SNMPSection,
 )
-from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup, PluginLocation
+from cmk.discover_plugins import (
+    discover_all_plugins,
+    DiscoveredPlugins,
+    PluginGroup,
+    PluginLocation,
+)
 
 from ._config import (
     add_check_plugin,
@@ -59,7 +64,7 @@ def load_all_plugins(
     raise_errors: bool,
 ) -> list[str]:
     with tracer.start_as_current_span("discover_plugins"):
-        discovered_plugins: DiscoveredPlugins[_ABPlugins] = discover_plugins(
+        discovered_plugins: DiscoveredPlugins[_ABPlugins] = discover_all_plugins(
             PluginGroup.AGENT_BASED, entry_point_prefixes(), raise_errors=raise_errors
         )
 

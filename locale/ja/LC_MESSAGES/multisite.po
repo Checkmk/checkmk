@@ -753,6 +753,28 @@ msgid "%s this customer"
 msgstr "%s この顧客"
 
 #, python-format
+msgid ""
+"%s uses an API (%s) which is marked as deprecated in Checkmk %s and will be "
+"removed in Checkmk %s."
+msgstr ""
+
+#, python-format
+msgid ""
+"%s uses an API (%s) which was marked as deprecated in Checkmk %s and is "
+"removed in Checkmk %s."
+msgstr ""
+
+#, python-format
+msgid ""
+"%s uses an API (%s) which was marked as deprecated in Checkmk %s and will be "
+"removed in Checkmk %s."
+msgstr ""
+
+#, python-format
+msgid "%s uses an API (%s) which was removed in Checkmk %s."
+msgstr ""
+
+#, python-format
 msgid "%s was stopped after %s at %s."
 msgstr "%s は %s後に%sで停止しました。"
 
@@ -7639,6 +7661,10 @@ msgstr "保留中のタスクの平均デルタ"
 msgid "Average processor speed"
 msgstr "平均プロセッサ速度"
 
+#, fuzzy
+msgid "Average read and write request size"
+msgstr "書き込みリクエストの平均サイズ"
+
 msgid "Average read request size"
 msgstr "読み取り要求の平均サイズ"
 
@@ -11256,6 +11282,11 @@ msgstr "アクティベートされたことがない"
 msgid "Changes since last dump"
 msgstr "前回ダンプ時からの変更点"
 
+msgid ""
+"Changing this setting triggers a restart of all affected sites during "
+"activate changes."
+msgstr ""
+
 msgid "Channel"
 msgstr "チャネル"
 
@@ -11477,8 +11508,8 @@ msgid "Check logfiles for relevant new messages"
 msgstr "ログファイルで関連する新しいメッセージを確認する"
 
 #, fuzzy
-msgid "Check man page uses the deprecated API"
-msgstr "非推奨のAPIを使用するプラグインをチェックしない"
+msgid "Check man page"
+msgstr "マニュアルページを確認する"
 
 #, python-format
 msgid ""
@@ -11532,14 +11563,6 @@ msgstr "プラグインのAPI導入を確認する"
 
 msgid "Check plug-in timeout"
 msgstr "プラグインのタイムアウトを確認する"
-
-#, fuzzy
-msgid "Check plug-in uses the deprecated API"
-msgstr "非推奨のAPIを使用するプラグインをチェックしない"
-
-#, fuzzy
-msgid "Check plug-in uses the deprecated API (v1)"
-msgstr "非推奨のAPIを使用するプラグインをチェックしない"
 
 msgid "Check plug-ins matching"
 msgstr "一致するプラグインを確認する"
@@ -25078,9 +25101,11 @@ msgstr "GUI"
 msgid "GUI design"
 msgstr "GUIデザイン"
 
-#, fuzzy
-msgid "GUI extension uses the deprecated API"
-msgstr "GUI拡張機能（非推奨）"
+#, python-format
+msgid ""
+"GUI extension in %r uses an API which is marked as deprecated and may not "
+"work anymore due to unknown imports or objects."
+msgstr ""
 
 msgid "GUI extensions (deprecated)"
 msgstr "GUI拡張機能（非推奨）"
@@ -26009,8 +26034,8 @@ msgid "HW/SW Inventory history"
 msgstr "ホストのインベントリ履歴"
 
 #, fuzzy
-msgid "HW/SW Inventory plug-in uses the deprecated API"
-msgstr "非推奨のAPIを使用するプラグインをチェックしない"
+msgid "HW/SW Inventory plug-in"
+msgstr "非推奨のHW/SWインベントリプラグイン"
 
 #, fuzzy
 msgid "HW/SW Inventory rules"
@@ -33996,9 +34021,6 @@ msgstr "ジョブの詳細"
 msgid "Job duration"
 msgstr "仕事の期間"
 
-msgid "Job finished"
-msgstr "ジョブ終了"
-
 msgid "Job name"
 msgstr "ジョブ名"
 
@@ -34760,9 +34782,15 @@ msgstr ""
 "従来のASCIIメールは一括送信をサポートしていません。通知の一括送信を無効にする"
 "か、一括送信を許可する別の通知プラグインを選択できます。"
 
-#, fuzzy
-msgid "Legacy GUI extension uses the deprecated API"
+#, fuzzy, python-format
+msgid "Legacy GUI extension in %r"
 msgstr "レガシーGUI拡張機能（非推奨）"
+
+#, python-format
+msgid ""
+"Legacy GUI extension in %r uses an API which is marked as deprecated and may "
+"not work anymore due to unknown imports or objects."
+msgstr ""
 
 msgid "Legacy GUI extensions (deprecated)"
 msgstr "レガシーGUI拡張機能（非推奨）"
@@ -44384,6 +44412,10 @@ msgstr "Oracle Locks"
 msgid "Oracle Logswitches"
 msgstr "Oracle Logswitches"
 
+#, fuzzy
+msgid "Oracle PDB Total Size"
+msgstr "Oracle DB"
+
 msgid "Oracle PGA info"
 msgstr "Oracle PGA info"
 
@@ -45830,9 +45862,9 @@ msgstr "PINGおよびホストチェックパラメータ"
 msgid "PLL lock voltages by freqency"
 msgstr "周波数によるPLLロック電圧"
 
-#, fuzzy
-msgid "PNP template uses the deprecated API"
-msgstr "非推奨のAPIを使用するプラグインをチェックしない"
+msgid ""
+"PNP template uses an API which was removed in an ealier Checkmk version."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -75832,9 +75864,6 @@ msgstr "ユーザーパスワード"
 msgid "User profile"
 msgstr "ユーザープロファイル"
 
-msgid "User profile cleanup"
-msgstr "ユーザープロファイルのクリーンアップ"
-
 msgid "User profiles can not be edited (Setup is disabled)."
 msgstr ""
 "ユーザープロファイルは編集できません(セットアップは無効になっています)。"
@@ -82880,6 +82909,10 @@ msgstr "latin1"
 msgid "left"
 msgstr "左"
 
+#, fuzzy
+msgid "legacy"
+msgstr "レガシーラン"
+
 msgid "legacy run"
 msgstr "レガシーラン"
 
@@ -84029,6 +84062,40 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用不可</b>"
+
+#, fuzzy
+#~ msgid "Check man page uses the deprecated API"
+#~ msgstr "非推奨のAPIを使用するプラグインをチェックしない"
+
+#, fuzzy
+#~ msgid "Check plug-in uses the deprecated API"
+#~ msgstr "非推奨のAPIを使用するプラグインをチェックしない"
+
+#, fuzzy
+#~ msgid "Check plug-in uses the deprecated API (v1)"
+#~ msgstr "非推奨のAPIを使用するプラグインをチェックしない"
+
+#, fuzzy
+#~ msgid "GUI extension uses the deprecated API"
+#~ msgstr "GUI拡張機能（非推奨）"
+
+#, fuzzy
+#~ msgid "HW/SW Inventory plug-in uses the deprecated API"
+#~ msgstr "非推奨のAPIを使用するプラグインをチェックしない"
+
+#~ msgid "Job finished"
+#~ msgstr "ジョブ終了"
+
+#, fuzzy
+#~ msgid "Legacy GUI extension uses the deprecated API"
+#~ msgstr "レガシーGUI拡張機能（非推奨）"
+
+#, fuzzy
+#~ msgid "PNP template uses the deprecated API"
+#~ msgstr "非推奨のAPIを使用するプラグインをチェックしない"
+
+#~ msgid "User profile cleanup"
+#~ msgstr "ユーザープロファイルのクリーンアップ"
 
 #, python-format
 #~ msgid ""

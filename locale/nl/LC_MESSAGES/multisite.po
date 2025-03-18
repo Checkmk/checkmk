@@ -771,6 +771,28 @@ msgid "%s this customer"
 msgstr "%s deze klant"
 
 #, python-format
+msgid ""
+"%s uses an API (%s) which is marked as deprecated in Checkmk %s and will be "
+"removed in Checkmk %s."
+msgstr ""
+
+#, python-format
+msgid ""
+"%s uses an API (%s) which was marked as deprecated in Checkmk %s and is "
+"removed in Checkmk %s."
+msgstr ""
+
+#, python-format
+msgid ""
+"%s uses an API (%s) which was marked as deprecated in Checkmk %s and will be "
+"removed in Checkmk %s."
+msgstr ""
+
+#, python-format
+msgid "%s uses an API (%s) which was removed in Checkmk %s."
+msgstr ""
+
+#, python-format
 msgid "%s was stopped after %s at %s."
 msgstr "%s is gestopt na %s om %s."
 
@@ -8066,6 +8088,10 @@ msgstr "Gemiddelde delta in afwachting van taken"
 msgid "Average processor speed"
 msgstr "Gemiddelde processorsnelheid"
 
+#, fuzzy
+msgid "Average read and write request size"
+msgstr "Gemiddelde grootte schrijfverzoek"
+
 msgid "Average read request size"
 msgstr "Gemiddelde grootte leesverzoek"
 
@@ -11867,6 +11893,11 @@ msgstr "Is nooit geactiveerd geweest"
 msgid "Changes since last dump"
 msgstr "Veranderingen sinds de laatste dump"
 
+msgid ""
+"Changing this setting triggers a restart of all affected sites during "
+"activate changes."
+msgstr ""
+
 msgid "Channel"
 msgstr "Kanaal"
 
@@ -12111,8 +12142,8 @@ msgid "Check logfiles for relevant new messages"
 msgstr "Controleer logfiles op relevante nieuwe berichten"
 
 #, fuzzy
-msgid "Check man page uses the deprecated API"
-msgstr "Geen controleplugins die de verouderde API gebruiken"
+msgid "Check man page"
+msgstr "Zie handleiding pagina"
 
 #, python-format
 msgid ""
@@ -12169,14 +12200,6 @@ msgstr "Controleer plugin API introductie"
 #, fuzzy
 msgid "Check plug-in timeout"
 msgstr "Controleer plugin timeout"
-
-#, fuzzy
-msgid "Check plug-in uses the deprecated API"
-msgstr "Geen controleplugins die de verouderde API gebruiken"
-
-#, fuzzy
-msgid "Check plug-in uses the deprecated API (v1)"
-msgstr "Geen controleplugins die de verouderde API gebruiken"
 
 #, fuzzy
 msgid "Check plug-ins matching"
@@ -26340,9 +26363,11 @@ msgstr "GUI"
 msgid "GUI design"
 msgstr "GUI-ontwerp"
 
-#, fuzzy
-msgid "GUI extension uses the deprecated API"
-msgstr "GUI-uitbreidingen"
+#, python-format
+msgid ""
+"GUI extension in %r uses an API which is marked as deprecated and may not "
+"work anymore due to unknown imports or objects."
+msgstr ""
 
 #, fuzzy
 msgid "GUI extensions (deprecated)"
@@ -27315,8 +27340,8 @@ msgid "HW/SW Inventory history"
 msgstr "Inventarisatie geschiedenis van host"
 
 #, fuzzy
-msgid "HW/SW Inventory plug-in uses the deprecated API"
-msgstr "Geen controleplugins die de verouderde API gebruiken"
+msgid "HW/SW Inventory plug-in"
+msgstr "Afgeschreven HW/SW inventaris plugins"
 
 #, fuzzy
 msgid "HW/SW Inventory rules"
@@ -35633,9 +35658,6 @@ msgstr "Job details"
 msgid "Job duration"
 msgstr "Duur van de baan"
 
-msgid "Job finished"
-msgstr "Klus geklaard"
-
 msgid "Job name"
 msgstr "Naam van de baan"
 
@@ -36430,9 +36452,15 @@ msgstr ""
 "Oude ASCII E-mails ondersteunen bulking niet. Je kunt bulking uitschakelen "
 "of een andere plugin kiezen die bulking toestaat."
 
-#, fuzzy
-msgid "Legacy GUI extension uses the deprecated API"
+#, fuzzy, python-format
+msgid "Legacy GUI extension in %r"
 msgstr "Verouderde GUI-uitbreidingen"
+
+#, python-format
+msgid ""
+"Legacy GUI extension in %r uses an API which is marked as deprecated and may "
+"not work anymore due to unknown imports or objects."
+msgstr ""
 
 #, fuzzy
 msgid "Legacy GUI extensions (deprecated)"
@@ -46448,6 +46476,10 @@ msgstr "Oracle Sloten"
 msgid "Oracle Logswitches"
 msgstr "Oracle Logswitches"
 
+#, fuzzy
+msgid "Oracle PDB Total Size"
+msgstr "Oracle DB"
+
 msgid "Oracle PGA info"
 msgstr "Oracle PGA info"
 
@@ -47955,9 +47987,9 @@ msgstr "PING en host check parameters"
 msgid "PLL lock voltages by freqency"
 msgstr "PLL lockspanningen per freqentie"
 
-#, fuzzy
-msgid "PNP template uses the deprecated API"
-msgstr "Geen controleplugins die de verouderde API gebruiken"
+msgid ""
+"PNP template uses an API which was removed in an ealier Checkmk version."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -79846,9 +79878,6 @@ msgstr "Wachtwoord gebruiker"
 msgid "User profile"
 msgstr "Gebruikersprofiel"
 
-msgid "User profile cleanup"
-msgstr "Opschonen gebruikersprofiel"
-
 msgid "User profiles can not be edited (Setup is disabled)."
 msgstr ""
 "Gebruikersprofielen kunnen niet worden bewerkt (Setup is uitgeschakeld)."
@@ -87180,6 +87209,10 @@ msgstr "latin1"
 msgid "left"
 msgstr "links"
 
+#, fuzzy
+msgid "legacy"
+msgstr "erfenis run"
+
 msgid "legacy run"
 msgstr "erfenis run"
 
@@ -88348,6 +88381,40 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy
+#~ msgid "Check man page uses the deprecated API"
+#~ msgstr "Geen controleplugins die de verouderde API gebruiken"
+
+#, fuzzy
+#~ msgid "Check plug-in uses the deprecated API"
+#~ msgstr "Geen controleplugins die de verouderde API gebruiken"
+
+#, fuzzy
+#~ msgid "Check plug-in uses the deprecated API (v1)"
+#~ msgstr "Geen controleplugins die de verouderde API gebruiken"
+
+#, fuzzy
+#~ msgid "GUI extension uses the deprecated API"
+#~ msgstr "GUI-uitbreidingen"
+
+#, fuzzy
+#~ msgid "HW/SW Inventory plug-in uses the deprecated API"
+#~ msgstr "Geen controleplugins die de verouderde API gebruiken"
+
+#~ msgid "Job finished"
+#~ msgstr "Klus geklaard"
+
+#, fuzzy
+#~ msgid "Legacy GUI extension uses the deprecated API"
+#~ msgstr "Verouderde GUI-uitbreidingen"
+
+#, fuzzy
+#~ msgid "PNP template uses the deprecated API"
+#~ msgstr "Geen controleplugins die de verouderde API gebruiken"
+
+#~ msgid "User profile cleanup"
+#~ msgstr "Opschonen gebruikersprofiel"
 
 #, python-format
 #~ msgid ""

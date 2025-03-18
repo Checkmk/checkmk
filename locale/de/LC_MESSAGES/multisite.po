@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-03-14 01:50+0000\n"
+"PO-Revision-Date: 2025-03-18 03:50+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -767,6 +767,28 @@ msgstr "%s Server"
 #, python-format
 msgid "%s this customer"
 msgstr "Diesen Kunden %s"
+
+#, python-format
+msgid ""
+"%s uses an API (%s) which is marked as deprecated in Checkmk %s and will be "
+"removed in Checkmk %s."
+msgstr ""
+
+#, python-format
+msgid ""
+"%s uses an API (%s) which was marked as deprecated in Checkmk %s and is "
+"removed in Checkmk %s."
+msgstr ""
+
+#, python-format
+msgid ""
+"%s uses an API (%s) which was marked as deprecated in Checkmk %s and will be "
+"removed in Checkmk %s."
+msgstr ""
+
+#, python-format
+msgid "%s uses an API (%s) which was removed in Checkmk %s."
+msgstr ""
 
 #, python-format
 msgid "%s was stopped after %s at %s."
@@ -7875,6 +7897,10 @@ msgstr "Durchschnittliches Delta anstehender Aufgaben"
 msgid "Average processor speed"
 msgstr "Durchschnittliche Prozessor Gescwindigkeit"
 
+#, fuzzy
+msgid "Average read and write request size"
+msgstr "Größe der durchschnittlichen Schreibanfrage"
+
 msgid "Average read request size"
 msgstr "Durchschnittliche Lese-Request-Größe"
 
@@ -11483,6 +11509,11 @@ msgstr "Änderungen wurden aktiviert am"
 msgid "Changes since last dump"
 msgstr "Anzahl der Änderungen seit dem letzten Dump"
 
+msgid ""
+"Changing this setting triggers a restart of all affected sites during "
+"activate changes."
+msgstr ""
+
 msgid "Channel"
 msgstr "Kanal"
 
@@ -11705,8 +11736,9 @@ msgstr "Überprüfe Log-Dateigruppen"
 msgid "Check logfiles for relevant new messages"
 msgstr "Log-Dateien auf relevante Meldungen hin überwachen"
 
-msgid "Check man page uses the deprecated API"
-msgstr "Die Check Manpage verwendet die veraltete API"
+#, fuzzy
+msgid "Check man page"
+msgstr "Check Handbuchseite"
 
 #, python-format
 msgid ""
@@ -11763,12 +11795,6 @@ msgstr "Einführung in das Check-Plugin-API"
 
 msgid "Check plug-in timeout"
 msgstr "Ablaufzeit für Check-Plugin"
-
-msgid "Check plug-in uses the deprecated API"
-msgstr "Das Check-Plugin verwendet die veraltete API"
-
-msgid "Check plug-in uses the deprecated API (v1)"
-msgstr "Das Check-Plugin verwendet die veraltete API (v1)"
 
 msgid "Check plug-ins matching"
 msgstr "Übereinstimmende Check-Plugins"
@@ -15876,9 +15902,8 @@ msgstr "Kritisches Level liegt bei höchstens"
 msgid "Critical of %s"
 msgstr "Kritisch ab %s"
 
-#, fuzzy
 msgid "Critical services"
-msgstr "Kritische Ereignisse"
+msgstr "Kritische Services"
 
 msgid "Critical threshold"
 msgstr "Kritischer Schwellwert"
@@ -20265,9 +20290,8 @@ msgstr "Doppelklick für weiteres Wachstum"
 msgid "Down"
 msgstr "Down"
 
-#, fuzzy
 msgid "Down hosts"
-msgstr "auf Host %s"
+msgstr "Hosts im Zustand DOWN"
 
 msgid "Down only"
 msgstr "Nur Status DOWN"
@@ -23311,9 +23335,9 @@ msgstr "Erweiterte Metriken"
 msgid "Extension"
 msgstr "Erweiterung"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Extension package %r"
-msgstr "Erweiterungspakete"
+msgstr "Erweiterungspaket %r"
 
 msgid "Extension package files"
 msgstr "Erweiterungspaketdateien"
@@ -25512,8 +25536,11 @@ msgstr "GUI"
 msgid "GUI design"
 msgstr "GUI-Design"
 
-msgid "GUI extension uses the deprecated API"
-msgstr "GUI-Erweiterung verwendet die veraltete API"
+#, python-format
+msgid ""
+"GUI extension in %r uses an API which is marked as deprecated and may not "
+"work anymore due to unknown imports or objects."
+msgstr ""
 
 msgid "GUI extensions (deprecated)"
 msgstr "GUI-Erweiterungen (veraltet)"
@@ -26439,8 +26466,9 @@ msgstr "HW-/SW-Inventur (Linux, Windows, Solaris, AIX)"
 msgid "HW/SW Inventory history"
 msgstr "Historie der HW-/SW-Inventur"
 
-msgid "HW/SW Inventory plug-in uses the deprecated API"
-msgstr "Das HW-/SW-Inventur Plugin verwendet die veraltete API"
+#, fuzzy
+msgid "HW/SW Inventory plug-in"
+msgstr "Veraltete Plugins der HW-/SW-Inventur"
 
 msgid "HW/SW Inventory rules"
 msgstr "Regeln der HW-/SW-Inventur"
@@ -26845,7 +26873,6 @@ msgstr ""
 "Die Einfärbung für Host in der Wartungszeit überschreibt alle anderen "
 "Einfärbungen."
 
-#, fuzzy
 msgid "Here you can configure the credentials to be used."
 msgstr "Hier können Sie die zu verwendenden Anmeldedaten konfigurieren."
 
@@ -34327,9 +34354,6 @@ msgstr "Job-Details"
 msgid "Job duration"
 msgstr "Jobdauer"
 
-msgid "Job finished"
-msgstr "Auftrag beendet"
-
 msgid "Job name"
 msgstr "Jobname"
 
@@ -35092,8 +35116,15 @@ msgstr ""
 "Bulking von Benachrichtigungen deaktivieren oder ein anderes "
 "Benachrichtigungs-Plugin wählen, das Bulking erlaubt."
 
-msgid "Legacy GUI extension uses the deprecated API"
-msgstr "Legacy GUI-Erweiterung verwendet die veraltete API"
+#, fuzzy, python-format
+msgid "Legacy GUI extension in %r"
+msgstr "Legacy GUI-Erweiterungen (veraltet)"
+
+#, python-format
+msgid ""
+"Legacy GUI extension in %r uses an API which is marked as deprecated and may "
+"not work anymore due to unknown imports or objects."
+msgstr ""
 
 msgid "Legacy GUI extensions (deprecated)"
 msgstr "Legacy GUI-Erweiterungen (veraltet)"
@@ -42000,9 +42031,8 @@ msgstr "Ungültiger Zielordner."
 msgid "No valid theme directories found."
 msgstr "Keine gültigen Themenverzeichnisse gefunden."
 
-#, fuzzy
 msgid "No valid users available"
-msgstr "Keine Benutzer verfügbar"
+msgstr "Keine gültigen Benutzer verfügbar"
 
 msgid "No values defined"
 msgstr "Keine Werte definiert"
@@ -43775,9 +43805,8 @@ msgstr "Offset"
 msgid "Ok"
 msgstr "Ok"
 
-#, fuzzy
 msgid "Ok services"
-msgstr "OK Services"
+msgstr "Services im Zustand OK"
 
 msgid "Old setting"
 msgstr "Alte Einstellung"
@@ -44072,6 +44101,8 @@ msgid ""
 "Only automation users with passwords that are currently stored in cleartext "
 "will be displayed here."
 msgstr ""
+"Hier werden nur Automationsbenutzer mit Passwörtern angezeigt, die derzeit "
+"im Klartext gespeichert sind."
 
 msgid "Only bulk notifications during the following time period"
 msgstr "Nur Sammelbenachrichtigungen während der folgenden Zeitperiode"
@@ -44734,6 +44765,10 @@ msgstr "Oracle Locks"
 
 msgid "Oracle Logswitches"
 msgstr "Oracle Log-Umschalter"
+
+#, fuzzy
+msgid "Oracle PDB Total Size"
+msgstr "Oracle DB Zeit"
 
 msgid "Oracle PGA info"
 msgstr "Oracle PGA-Info"
@@ -46042,8 +46077,9 @@ msgstr "PING und Host Check-Parameter"
 msgid "PLL lock voltages by freqency"
 msgstr "PLL Verriegelungsspannung nach Frequenz"
 
-msgid "PNP template uses the deprecated API"
-msgstr "PNP-Vorlage verwendet die veraltete API"
+msgid ""
+"PNP template uses an API which was removed in an ealier Checkmk version."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -74717,9 +74753,8 @@ msgstr "Unbekannte Regel mit der ID %s"
 msgid "Unknown service"
 msgstr "Unbekannter Service"
 
-#, fuzzy
 msgid "Unknown services"
-msgstr "Unbekannter Service"
+msgstr "Services im Zustand UNKNOWN"
 
 #, python-format
 msgid "Unknown site %s"
@@ -74783,9 +74818,9 @@ msgstr "Nicht montiert"
 msgid "Unoptimized connections"
 msgstr "Nicht optimierte Verbindungen"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Unpackaged file %r"
-msgstr "Unpaketierte Dateien"
+msgstr "Unpaketierte Datei %r"
 
 msgid "Unpackaged files"
 msgstr "Unpaketierte Dateien"
@@ -74811,9 +74846,8 @@ msgstr "Unbeschränkte gleichzeitige Ausführungen in Prozent"
 msgid "Unset user attributes on migration"
 msgstr "Benutzerattribute bei der Migration zurücksetzen"
 
-#, fuzzy
 msgid "Unsorted"
-msgstr "Nicht unterstützte Aktion"
+msgstr "Unsortiert"
 
 msgid "Unspecific backup"
 msgstr "Unspezifisches Backup"
@@ -74857,9 +74891,8 @@ msgstr "UP & DOWN"
 msgid "Up Down (long)"
 msgstr "Auf und ab (lang)"
 
-#, fuzzy
 msgid "Up hosts"
-msgstr "UP Hosts"
+msgstr "Hosts im Zustand UP"
 
 msgid "Up only"
 msgstr "Nur UP"
@@ -76894,9 +76927,6 @@ msgstr "Benutzerpasswort"
 msgid "User profile"
 msgstr "Benutzerprofil"
 
-msgid "User profile cleanup"
-msgstr "Bereinigung von Benutzerprofilen"
-
 msgid "User profiles can not be edited (Setup is disabled)."
 msgstr "Benutzerprofile können nicht geändert werden (Setup ist deaktiviert)."
 
@@ -78654,9 +78684,8 @@ msgstr "Warnungschwellen für die Zeitversatz"
 msgid "Warning of %s"
 msgstr "Warnung ab %s"
 
-#, fuzzy
 msgid "Warning services"
-msgstr "Services im Zustand PENDING"
+msgstr "Services im Zustand WARNING"
 
 msgid "Warning threshold"
 msgstr "Warnungs-Schwellwert"
@@ -84082,6 +84111,10 @@ msgstr "latin1"
 msgid "left"
 msgstr "links"
 
+#, fuzzy
+msgid "legacy"
+msgstr "Legacy-Lauf"
+
 msgid "legacy run"
 msgstr "Legacy-Lauf"
 
@@ -85234,6 +85267,33 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid "Check man page uses the deprecated API"
+#~ msgstr "Die Check Manpage verwendet die veraltete API"
+
+#~ msgid "Check plug-in uses the deprecated API"
+#~ msgstr "Das Check-Plugin verwendet die veraltete API"
+
+#~ msgid "Check plug-in uses the deprecated API (v1)"
+#~ msgstr "Das Check-Plugin verwendet die veraltete API (v1)"
+
+#~ msgid "GUI extension uses the deprecated API"
+#~ msgstr "GUI-Erweiterung verwendet die veraltete API"
+
+#~ msgid "HW/SW Inventory plug-in uses the deprecated API"
+#~ msgstr "Das HW-/SW-Inventur Plugin verwendet die veraltete API"
+
+#~ msgid "Job finished"
+#~ msgstr "Auftrag beendet"
+
+#~ msgid "Legacy GUI extension uses the deprecated API"
+#~ msgstr "Legacy GUI-Erweiterung verwendet die veraltete API"
+
+#~ msgid "PNP template uses the deprecated API"
+#~ msgstr "PNP-Vorlage verwendet die veraltete API"
+
+#~ msgid "User profile cleanup"
+#~ msgstr "Bereinigung von Benutzerprofilen"
 
 #, python-format
 #~ msgid ""

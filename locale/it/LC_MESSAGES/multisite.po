@@ -765,6 +765,28 @@ msgid "%s this customer"
 msgstr "%s questo cliente"
 
 #, python-format
+msgid ""
+"%s uses an API (%s) which is marked as deprecated in Checkmk %s and will be "
+"removed in Checkmk %s."
+msgstr ""
+
+#, python-format
+msgid ""
+"%s uses an API (%s) which was marked as deprecated in Checkmk %s and is "
+"removed in Checkmk %s."
+msgstr ""
+
+#, python-format
+msgid ""
+"%s uses an API (%s) which was marked as deprecated in Checkmk %s and will be "
+"removed in Checkmk %s."
+msgstr ""
+
+#, python-format
+msgid "%s uses an API (%s) which was removed in Checkmk %s."
+msgstr ""
+
+#, python-format
 msgid "%s was stopped after %s at %s."
 msgstr "%s è stato fermato dopo %s a %s."
 
@@ -8001,6 +8023,10 @@ msgstr "Delta medio dei compiti in sospeso"
 msgid "Average processor speed"
 msgstr "Velocità media del processore"
 
+#, fuzzy
+msgid "Average read and write request size"
+msgstr "Dimensione media della richiesta di scrittura"
+
 msgid "Average read request size"
 msgstr "Dimensione media della richiesta di lettura"
 
@@ -11761,6 +11787,11 @@ msgstr "Non è mai stato attivato"
 msgid "Changes since last dump"
 msgstr "Cambiamenti dall'ultimo dump"
 
+msgid ""
+"Changing this setting triggers a restart of all affected sites during "
+"activate changes."
+msgstr ""
+
 msgid "Channel"
 msgstr "Canale"
 
@@ -11991,8 +12022,8 @@ msgid "Check logfiles for relevant new messages"
 msgstr "Controllare i file di log per nuovi messaggi rilevanti"
 
 #, fuzzy
-msgid "Check man page uses the deprecated API"
-msgstr "Nessun plugin di controllo che utilizza l'API deprecata"
+msgid "Check man page"
+msgstr "Controlla la pagina del manuale"
 
 #, python-format
 msgid ""
@@ -12050,14 +12081,6 @@ msgstr "Controllare l'introduzione dell'API del plugin"
 #, fuzzy
 msgid "Check plug-in timeout"
 msgstr "Controllare il timeout del plugin"
-
-#, fuzzy
-msgid "Check plug-in uses the deprecated API"
-msgstr "Nessun plugin di controllo che utilizza l'API deprecata"
-
-#, fuzzy
-msgid "Check plug-in uses the deprecated API (v1)"
-msgstr "Nessun plugin di controllo che utilizza l'API deprecata"
 
 #, fuzzy
 msgid "Check plug-ins matching"
@@ -26120,9 +26143,11 @@ msgstr "GUI"
 msgid "GUI design"
 msgstr "Progettazione GUI"
 
-#, fuzzy
-msgid "GUI extension uses the deprecated API"
-msgstr "Estensioni della GUI (deprecate)"
+#, python-format
+msgid ""
+"GUI extension in %r uses an API which is marked as deprecated and may not "
+"work anymore due to unknown imports or objects."
+msgstr ""
 
 msgid "GUI extensions (deprecated)"
 msgstr "Estensioni della GUI (deprecate)"
@@ -27074,8 +27099,8 @@ msgid "HW/SW Inventory history"
 msgstr "Storia dell'inventario dell'host"
 
 #, fuzzy
-msgid "HW/SW Inventory plug-in uses the deprecated API"
-msgstr "Nessun plugin di controllo che utilizza l'API deprecata"
+msgid "HW/SW Inventory plug-in"
+msgstr "Plugin di inventario HW/SW deprecati"
 
 #, fuzzy
 msgid "HW/SW Inventory rules"
@@ -35342,9 +35367,6 @@ msgstr "Dettagli del lavoro"
 msgid "Job duration"
 msgstr "Durata del lavoro"
 
-msgid "Job finished"
-msgstr "Lavoro finito"
-
 msgid "Job name"
 msgstr "Nome del lavoro"
 
@@ -36134,9 +36156,15 @@ msgstr ""
 "raggruppamento delle notifiche o scegliere un altro plugin di notifica che "
 "permetta il raggruppamento."
 
-#, fuzzy
-msgid "Legacy GUI extension uses the deprecated API"
+#, fuzzy, python-format
+msgid "Legacy GUI extension in %r"
 msgstr "Estensioni dell'interfaccia grafica legacy (deprecate)"
+
+#, python-format
+msgid ""
+"Legacy GUI extension in %r uses an API which is marked as deprecated and may "
+"not work anymore due to unknown imports or objects."
+msgstr ""
 
 msgid "Legacy GUI extensions (deprecated)"
 msgstr "Estensioni dell'interfaccia grafica legacy (deprecate)"
@@ -46042,6 +46070,10 @@ msgstr "Serrature Oracle"
 msgid "Oracle Logswitches"
 msgstr "Interruttori di log Oracle"
 
+#, fuzzy
+msgid "Oracle PDB Total Size"
+msgstr "Oracle DB"
+
 msgid "Oracle PGA info"
 msgstr "Info su Oracle PGA"
 
@@ -47547,9 +47579,9 @@ msgstr "PING e parametri di controllo dell'host"
 msgid "PLL lock voltages by freqency"
 msgstr "Tensioni di blocco PLL per frequenza"
 
-#, fuzzy
-msgid "PNP template uses the deprecated API"
-msgstr "Nessun plugin di controllo che utilizza l'API deprecata"
+msgid ""
+"PNP template uses an API which was removed in an ealier Checkmk version."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -79163,9 +79195,6 @@ msgstr "Password utente"
 msgid "User profile"
 msgstr "Profilo utente"
 
-msgid "User profile cleanup"
-msgstr "Pulizia del profilo utente"
-
 msgid "User profiles can not be edited (Setup is disabled)."
 msgstr ""
 "I profili utente non possono essere modificati (l'impostazione è "
@@ -86432,6 +86461,10 @@ msgstr "latino1"
 msgid "left"
 msgstr "sinistra"
 
+#, fuzzy
+msgid "legacy"
+msgstr "corsa di eredità"
+
 msgid "legacy run"
 msgstr "corsa di eredità"
 
@@ -87584,6 +87617,40 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usa SSL per la connessione."
+
+#, fuzzy
+#~ msgid "Check man page uses the deprecated API"
+#~ msgstr "Nessun plugin di controllo che utilizza l'API deprecata"
+
+#, fuzzy
+#~ msgid "Check plug-in uses the deprecated API"
+#~ msgstr "Nessun plugin di controllo che utilizza l'API deprecata"
+
+#, fuzzy
+#~ msgid "Check plug-in uses the deprecated API (v1)"
+#~ msgstr "Nessun plugin di controllo che utilizza l'API deprecata"
+
+#, fuzzy
+#~ msgid "GUI extension uses the deprecated API"
+#~ msgstr "Estensioni della GUI (deprecate)"
+
+#, fuzzy
+#~ msgid "HW/SW Inventory plug-in uses the deprecated API"
+#~ msgstr "Nessun plugin di controllo che utilizza l'API deprecata"
+
+#~ msgid "Job finished"
+#~ msgstr "Lavoro finito"
+
+#, fuzzy
+#~ msgid "Legacy GUI extension uses the deprecated API"
+#~ msgstr "Estensioni dell'interfaccia grafica legacy (deprecate)"
+
+#, fuzzy
+#~ msgid "PNP template uses the deprecated API"
+#~ msgstr "Nessun plugin di controllo che utilizza l'API deprecata"
+
+#~ msgid "User profile cleanup"
+#~ msgstr "Pulizia del profilo utente"
 
 #, python-format
 #~ msgid ""

@@ -770,6 +770,28 @@ msgid "%s this customer"
 msgstr "%s este cliente"
 
 #, python-format
+msgid ""
+"%s uses an API (%s) which is marked as deprecated in Checkmk %s and will be "
+"removed in Checkmk %s."
+msgstr ""
+
+#, python-format
+msgid ""
+"%s uses an API (%s) which was marked as deprecated in Checkmk %s and is "
+"removed in Checkmk %s."
+msgstr ""
+
+#, python-format
+msgid ""
+"%s uses an API (%s) which was marked as deprecated in Checkmk %s and will be "
+"removed in Checkmk %s."
+msgstr ""
+
+#, python-format
+msgid "%s uses an API (%s) which was removed in Checkmk %s."
+msgstr ""
+
+#, python-format
 msgid "%s was stopped after %s at %s."
 msgstr "%s se detuvo después de %s en %s."
 
@@ -8136,6 +8158,10 @@ msgstr "Promedio de tareas pendientes delta"
 msgid "Average processor speed"
 msgstr "Velocidad media del procesador"
 
+#, fuzzy
+msgid "Average read and write request size"
+msgstr "Tamaño medio de las solicitudes de escritura"
+
 msgid "Average read request size"
 msgstr "Tamaño medio de las solicitudes de lectura"
 
@@ -11954,6 +11980,11 @@ msgstr "Nunca se ha activado"
 msgid "Changes since last dump"
 msgstr "Cambios desde el último volcado"
 
+msgid ""
+"Changing this setting triggers a restart of all affected sites during "
+"activate changes."
+msgstr ""
+
 msgid "Channel"
 msgstr "Canal"
 
@@ -12198,8 +12229,8 @@ msgid "Check logfiles for relevant new messages"
 msgstr "Compruebe los archivos de registro para los nuevos mensajes relevantes"
 
 #, fuzzy
-msgid "Check man page uses the deprecated API"
-msgstr "No comprobar los plugins que utilizan la API obsoleta"
+msgid "Check man page"
+msgstr "Consultar la página del manual"
 
 #, python-format
 msgid ""
@@ -12257,14 +12288,6 @@ msgstr "Comprobar la introducción de la API del plugin"
 #, fuzzy
 msgid "Check plug-in timeout"
 msgstr "Comprobar el tiempo de espera del plugin"
-
-#, fuzzy
-msgid "Check plug-in uses the deprecated API"
-msgstr "No comprobar los plugins que utilizan la API obsoleta"
-
-#, fuzzy
-msgid "Check plug-in uses the deprecated API (v1)"
-msgstr "No comprobar los plugins que utilizan la API obsoleta"
 
 #, fuzzy
 msgid "Check plug-ins matching"
@@ -26549,9 +26572,11 @@ msgstr "GUI"
 msgid "GUI design"
 msgstr "Diseño de la interfaz gráfica de usuario"
 
-#, fuzzy
-msgid "GUI extension uses the deprecated API"
-msgstr "Extensiones de la interfaz gráfica de usuario"
+#, python-format
+msgid ""
+"GUI extension in %r uses an API which is marked as deprecated and may not "
+"work anymore due to unknown imports or objects."
+msgstr ""
 
 #, fuzzy
 msgid "GUI extensions (deprecated)"
@@ -27533,8 +27558,8 @@ msgid "HW/SW Inventory history"
 msgstr "Historial de inventario del host"
 
 #, fuzzy
-msgid "HW/SW Inventory plug-in uses the deprecated API"
-msgstr "No comprobar los plugins que utilizan la API obsoleta"
+msgid "HW/SW Inventory plug-in"
+msgstr "Plugins de inventario HW/SW obsoletos"
 
 #, fuzzy
 msgid "HW/SW Inventory rules"
@@ -35904,9 +35929,6 @@ msgstr "Detalles del trabajo"
 msgid "Job duration"
 msgstr "Duración del trabajo"
 
-msgid "Job finished"
-msgstr "Trabajo finalizado"
-
 msgid "Job name"
 msgstr "Nombre del trabajo"
 
@@ -36702,9 +36724,15 @@ msgstr ""
 "desactivar la acumulación de notificaciones o elegir otro complemento de "
 "notificaciones que permita la acumulación."
 
-#, fuzzy
-msgid "Legacy GUI extension uses the deprecated API"
+#, fuzzy, python-format
+msgid "Legacy GUI extension in %r"
 msgstr "Extensiones de la interfaz gráfica de usuario heredada"
+
+#, python-format
+msgid ""
+"Legacy GUI extension in %r uses an API which is marked as deprecated and may "
+"not work anymore due to unknown imports or objects."
+msgstr ""
 
 #, fuzzy
 msgid "Legacy GUI extensions (deprecated)"
@@ -46825,6 +46853,10 @@ msgstr "Cerraduras Oracle"
 msgid "Oracle Logswitches"
 msgstr "Interruptores de registro de Oracle"
 
+#, fuzzy
+msgid "Oracle PDB Total Size"
+msgstr "BD Oracle"
+
 msgid "Oracle PGA info"
 msgstr "Oracle PGA info"
 
@@ -48342,9 +48374,9 @@ msgstr "Parámetros de comprobación de PING y de host"
 msgid "PLL lock voltages by freqency"
 msgstr "Tensiones de bloqueo del PLL por frecuencia"
 
-#, fuzzy
-msgid "PNP template uses the deprecated API"
-msgstr "No comprobar los plugins que utilizan la API obsoleta"
+msgid ""
+"PNP template uses an API which was removed in an ealier Checkmk version."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -80524,9 +80556,6 @@ msgstr "Contraseña del usuario"
 msgid "User profile"
 msgstr "Perfil del usuario"
 
-msgid "User profile cleanup"
-msgstr "Limpieza del perfil del usuario"
-
 msgid "User profiles can not be edited (Setup is disabled)."
 msgstr ""
 "Los perfiles de usuario no se pueden editar (la configuración está "
@@ -87896,6 +87925,10 @@ msgstr "latin1"
 msgid "left"
 msgstr "a la izquierda"
 
+#, fuzzy
+msgid "legacy"
+msgstr "carrera heredada"
+
 msgid "legacy run"
 msgstr "carrera heredada"
 
@@ -89072,6 +89105,40 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usar SSL para la conexión."
+
+#, fuzzy
+#~ msgid "Check man page uses the deprecated API"
+#~ msgstr "No comprobar los plugins que utilizan la API obsoleta"
+
+#, fuzzy
+#~ msgid "Check plug-in uses the deprecated API"
+#~ msgstr "No comprobar los plugins que utilizan la API obsoleta"
+
+#, fuzzy
+#~ msgid "Check plug-in uses the deprecated API (v1)"
+#~ msgstr "No comprobar los plugins que utilizan la API obsoleta"
+
+#, fuzzy
+#~ msgid "GUI extension uses the deprecated API"
+#~ msgstr "Extensiones de la interfaz gráfica de usuario"
+
+#, fuzzy
+#~ msgid "HW/SW Inventory plug-in uses the deprecated API"
+#~ msgstr "No comprobar los plugins que utilizan la API obsoleta"
+
+#~ msgid "Job finished"
+#~ msgstr "Trabajo finalizado"
+
+#, fuzzy
+#~ msgid "Legacy GUI extension uses the deprecated API"
+#~ msgstr "Extensiones de la interfaz gráfica de usuario heredada"
+
+#, fuzzy
+#~ msgid "PNP template uses the deprecated API"
+#~ msgstr "No comprobar los plugins que utilizan la API obsoleta"
+
+#~ msgid "User profile cleanup"
+#~ msgstr "Limpieza del perfil del usuario"
 
 #, python-format
 #~ msgid ""

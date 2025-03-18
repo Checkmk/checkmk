@@ -777,6 +777,28 @@ msgid "%s this customer"
 msgstr "%s acest client"
 
 #, python-format
+msgid ""
+"%s uses an API (%s) which is marked as deprecated in Checkmk %s and will be "
+"removed in Checkmk %s."
+msgstr ""
+
+#, python-format
+msgid ""
+"%s uses an API (%s) which was marked as deprecated in Checkmk %s and is "
+"removed in Checkmk %s."
+msgstr ""
+
+#, python-format
+msgid ""
+"%s uses an API (%s) which was marked as deprecated in Checkmk %s and will be "
+"removed in Checkmk %s."
+msgstr ""
+
+#, python-format
+msgid "%s uses an API (%s) which was removed in Checkmk %s."
+msgstr ""
+
+#, python-format
 msgid "%s was stopped after %s at %s."
 msgstr "%s a fost oprit după %s la %s."
 
@@ -8063,6 +8085,10 @@ msgstr "Delta medie a sarcinilor în așteptare"
 msgid "Average processor speed"
 msgstr "Viteza medie a procesorului"
 
+#, fuzzy
+msgid "Average read and write request size"
+msgstr "Dimensiunea medie a cererii de scriere"
+
 msgid "Average read request size"
 msgstr "Dimensiunea medie a cererii de citire"
 
@@ -11893,6 +11919,11 @@ msgstr "Nu a fost niciodată activat"
 msgid "Changes since last dump"
 msgstr "Modificări de la ultima descărcare de gestiune"
 
+msgid ""
+"Changing this setting triggers a restart of all affected sites during "
+"activate changes."
+msgstr ""
+
 msgid "Channel"
 msgstr "Canal"
 
@@ -12125,8 +12156,8 @@ msgid "Check logfiles for relevant new messages"
 msgstr "Verificați fișierele jurnal pentru mesaje noi relevante"
 
 #, fuzzy
-msgid "Check man page uses the deprecated API"
-msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
+msgid "Check man page"
+msgstr "Verificați pagina de manual"
 
 #, python-format
 msgid ""
@@ -12183,14 +12214,6 @@ msgstr "Verificați introducerea plugin-ului API"
 #, fuzzy
 msgid "Check plug-in timeout"
 msgstr "Verificați timeout-ul plugin-ului"
-
-#, fuzzy
-msgid "Check plug-in uses the deprecated API"
-msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
-
-#, fuzzy
-msgid "Check plug-in uses the deprecated API (v1)"
-msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
 
 #, fuzzy
 msgid "Check plug-ins matching"
@@ -26378,9 +26401,11 @@ msgstr "GUI"
 msgid "GUI design"
 msgstr "Proiectare GUI"
 
-#, fuzzy
-msgid "GUI extension uses the deprecated API"
-msgstr "Extensii GUI (depreciat)"
+#, python-format
+msgid ""
+"GUI extension in %r uses an API which is marked as deprecated and may not "
+"work anymore due to unknown imports or objects."
+msgstr ""
 
 msgid "GUI extensions (deprecated)"
 msgstr "Extensii GUI (depreciat)"
@@ -27337,8 +27362,8 @@ msgid "HW/SW Inventory history"
 msgstr "Istoricul de inventariere a gazdei"
 
 #, fuzzy
-msgid "HW/SW Inventory plug-in uses the deprecated API"
-msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
+msgid "HW/SW Inventory plug-in"
+msgstr "Plugin-uri de inventar HW/SW depășite"
 
 #, fuzzy
 msgid "HW/SW Inventory rules"
@@ -35711,9 +35736,6 @@ msgstr "Detaliile postului"
 msgid "Job duration"
 msgstr "Durata postului"
 
-msgid "Job finished"
-msgstr "Lucru terminat"
-
 msgid "Job name"
 msgstr "Numele postului"
 
@@ -36506,9 +36528,15 @@ msgstr ""
 "dezactivați gruparea notificărilor, fie să alegeți un alt plugin de "
 "notificare care permite gruparea."
 
-#, fuzzy
-msgid "Legacy GUI extension uses the deprecated API"
+#, fuzzy, python-format
+msgid "Legacy GUI extension in %r"
 msgstr "Extensii GUI vechi (depreciate)"
+
+#, python-format
+msgid ""
+"Legacy GUI extension in %r uses an API which is marked as deprecated and may "
+"not work anymore due to unknown imports or objects."
+msgstr ""
 
 msgid "Legacy GUI extensions (deprecated)"
 msgstr "Extensii GUI vechi (depreciate)"
@@ -46513,6 +46541,10 @@ msgstr "Blocaje Oracle"
 msgid "Oracle Logswitches"
 msgstr "Logswitch-uri Oracle"
 
+#, fuzzy
+msgid "Oracle PDB Total Size"
+msgstr "Oracle DB"
+
 msgid "Oracle PGA info"
 msgstr "Informații Oracle PGA"
 
@@ -48023,9 +48055,9 @@ msgstr "Parametrii de verificare PING și gazdă"
 msgid "PLL lock voltages by freqency"
 msgstr "Tensiuni de blocare PLL în funcție de frecvență"
 
-#, fuzzy
-msgid "PNP template uses the deprecated API"
-msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
+msgid ""
+"PNP template uses an API which was removed in an ealier Checkmk version."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -80026,9 +80058,6 @@ msgstr "Parola utilizatorului"
 msgid "User profile"
 msgstr "Profilul utilizatorului"
 
-msgid "User profile cleanup"
-msgstr "Curățarea profilului de utilizator"
-
 msgid "User profiles can not be edited (Setup is disabled)."
 msgstr ""
 "Profilurile utilizatorilor nu pot fi editate (Configurarea este dezactivată)."
@@ -87363,6 +87392,10 @@ msgstr "latin1"
 msgid "left"
 msgstr "stânga"
 
+#, fuzzy
+msgid "legacy"
+msgstr "execuție moștenită"
+
 msgid "legacy run"
 msgstr "execuție moștenită"
 
@@ -88534,6 +88567,40 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, fuzzy
+#~ msgid "Check man page uses the deprecated API"
+#~ msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
+
+#, fuzzy
+#~ msgid "Check plug-in uses the deprecated API"
+#~ msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
+
+#, fuzzy
+#~ msgid "Check plug-in uses the deprecated API (v1)"
+#~ msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
+
+#, fuzzy
+#~ msgid "GUI extension uses the deprecated API"
+#~ msgstr "Extensii GUI (depreciat)"
+
+#, fuzzy
+#~ msgid "HW/SW Inventory plug-in uses the deprecated API"
+#~ msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
+
+#~ msgid "Job finished"
+#~ msgstr "Lucru terminat"
+
+#, fuzzy
+#~ msgid "Legacy GUI extension uses the deprecated API"
+#~ msgstr "Extensii GUI vechi (depreciate)"
+
+#, fuzzy
+#~ msgid "PNP template uses the deprecated API"
+#~ msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
+
+#~ msgid "User profile cleanup"
+#~ msgstr "Curățarea profilului de utilizator"
 
 #, python-format
 #~ msgid ""

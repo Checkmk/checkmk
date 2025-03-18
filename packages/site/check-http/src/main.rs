@@ -25,29 +25,7 @@ const DEFAULT_USER_AGENT: &str = "checkmk-active-httpv2/2.4.0";
 
 #[tokio::main]
 async fn main() {
-    let args = match Cli::try_parse() {
-        Ok(args) => args,
-        Err(e) => {
-            let error_message = e
-                .to_string()
-                .lines()
-                .filter(|line| !line.trim().is_empty() && !line.contains("For more information"))
-                .map(|line| {
-                    line.split("'--server <SERVER>':")
-                        .nth(1)
-                        .unwrap_or(line)
-                        .trim()
-                })
-                .collect::<Vec<&str>>()
-                .join("\n");
-            let output = Output::from_check_results(vec![
-                CheckResult::summary(State::Crit, "Error parsing arguments").unwrap(),
-                CheckResult::details(State::Crit, error_message.as_str()).unwrap(),
-            ]);
-            println!("{}", output);
-            std::process::exit(output.worst_state.into());
-        }
-    };
+    let args = Cli::parse();
 
     init_tracing(args.logging_level(), args.debug_headers, args.debug_content);
 

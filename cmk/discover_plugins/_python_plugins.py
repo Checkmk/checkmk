@@ -42,15 +42,25 @@ class DiscoveredPlugins(Generic[_PluginType]):
     plugins: Mapping[PluginLocation, _PluginType]
 
 
-def discover_plugins(
+def discover_all_plugins(
     plugin_group: PluginGroup,
     plugin_prefixes: Mapping[type[_PluginType], str],
     raise_errors: bool,
 ) -> DiscoveredPlugins[_PluginType]:
     """Collect all plugins from well-known locations"""
+    return discover_plugins_from_modules(
+        plugin_prefixes,
+        discover_modules(plugin_group, raise_errors=raise_errors),
+        raise_errors=raise_errors,
+    )
 
-    module_names_by_priority = discover_modules(plugin_group, raise_errors=raise_errors)
 
+def discover_plugins_from_modules(
+    plugin_prefixes: Mapping[type[_PluginType], str],
+    module_names_by_priority: Iterable[str],
+    raise_errors: bool,
+) -> DiscoveredPlugins[_PluginType]:
+    """Collect all plugins from the provided modules"""
     collector = Collector(plugin_prefixes, raise_errors=raise_errors)
     for mod_name in module_names_by_priority:
         collector.add_from_module(mod_name, _import_optionally)

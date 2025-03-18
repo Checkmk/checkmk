@@ -19,7 +19,7 @@ from cmk.utils import man_pages
 from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 
 from cmk.agent_based.v2 import CheckPlugin
-from cmk.discover_plugins import discover_families, discover_plugins, PluginGroup
+from cmk.discover_plugins import discover_all_plugins, discover_families, PluginGroup
 from cmk.server_side_calls_backend import load_active_checks
 
 _IF64_MAN_PAGE = man_pages.ManPage(
@@ -159,7 +159,7 @@ def test_cmk_plugins_families_manpages() -> None:
     man_page_path_map = man_pages.make_man_page_path_map(
         discover_families(raise_errors=True), PluginGroup.CHECKMAN.value
     )
-    check_plugins = discover_plugins(
+    check_plugins = discover_all_plugins(
         PluginGroup.AGENT_BASED, {CheckPlugin: "check_plugin_"}, raise_errors=True
     )
     assert not {

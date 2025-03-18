@@ -3002,7 +3002,7 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
 
     monkeypatch.setattr(
         agent_based_register._discover,
-        "discover_plugins",
+        "discover_all_plugins",
         lambda *a, **kw: DiscoveredPlugins(
             errors=(), plugins={PluginLocation(module="module", name="name"): new_style_plugin}
         ),
@@ -3043,7 +3043,7 @@ def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:
 
     monkeypatch.setattr(
         agent_based_register._discover,
-        "discover_plugins",
+        "discover_all_plugins",
         lambda *a, **kw: DiscoveredPlugins(
             errors=(), plugins={PluginLocation(module="module", name="name"): new_style_section}
         ),

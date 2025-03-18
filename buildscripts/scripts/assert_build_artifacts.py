@@ -75,7 +75,7 @@ def build_docker_image_name_and_registry(
 
 def build_package_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str, bool]]:
     for edition in loaded_yaml["editions"]:
-        for distro in flatten(loaded_yaml["editions"][edition]["release"]):
+        for distro in flatten(loaded_yaml["editions"][edition][args.use_case]):
             package_name = ABCPackageManager.factory(code_name(distro)).package_name(
                 Edition.from_long_edition(edition), version=args.version
             )
@@ -150,6 +150,7 @@ def parse_arguments() -> Args:
     sub_assert_build_artifacts = subparsers.add_parser("assert_build_artifacts")
     sub_assert_build_artifacts.set_defaults(func=assert_build_artifacts)
     sub_assert_build_artifacts.add_argument("--version", required=True, default=False)
+    sub_assert_build_artifacts.add_argument("--use_case", required=False, default="release")
 
     return parser.parse_args()
 

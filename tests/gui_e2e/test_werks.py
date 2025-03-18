@@ -35,6 +35,7 @@ def test_werks_available(werks_page: Werks) -> None:
         werks_page.page.go_back(wait_until="load")
 
 
+@pytest.mark.skip(reason="CMK-22461; incomplete validation.")
 def test_navigate_to_werks(werks_page: Werks) -> None:
     # validate presence of dropdown buttons
     for button_name in werks_page.dropdown_buttons:

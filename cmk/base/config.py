@@ -3586,7 +3586,7 @@ class ConfigCache:
         out = self.ruleset_matcher.service_extra_conf(
             host_name, service_name, service_labels, check_periods
         )
-        return out[0] if out and out[0] != "24X7" else None
+        return TimeperiodName(out[0]) if out and out[0] != "24X7" else None
 
     @staticmethod
     def get_explicit_service_custom_variables(

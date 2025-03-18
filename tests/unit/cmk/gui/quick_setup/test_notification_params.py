@@ -9,6 +9,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from cmk.utils.notify_types import EventRule, NotificationParameterID, NotificationRuleID
+from cmk.utils.timeperiod import TimeperiodName
 
 from cmk.gui.wato.pages.notifications.migrate import (
     migrate_to_event_rule,
@@ -104,7 +105,7 @@ def set_quick_setup_params(triggering_events: TriggeringEvents) -> NotificationQ
         },
         "sending_conditions": {
             "frequency_and_timing": {
-                "restrict_timeperiod": "24X7",
+                "restrict_timeperiod": TimeperiodName("24X7"),
                 "limit_by_count": (2, 4),
                 "throttle_periodic": (3, 5),
             },
@@ -134,7 +135,7 @@ def get_expected_event_rule(
         notify_plugin=("mail", NotificationParameterID("61736d07-326a-4fb9-affd-201e3bd2a637")),
         match_escalation=(2, 4),
         match_escalation_throttle=(3, 5),
-        match_timeperiod="24X7",
+        match_timeperiod=TimeperiodName("24X7"),
         match_plugin_output="some_plugin_output",
         match_notification_comment="some_comment",
         match_checktype=["check_mk", "local"],

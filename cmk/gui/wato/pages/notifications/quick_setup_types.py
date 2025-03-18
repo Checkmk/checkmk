@@ -13,6 +13,7 @@ from cmk.utils.notify_types import (
 )
 from cmk.utils.rulesets.ruleset_matcher import TagCondition
 from cmk.utils.tags import TagGroupID
+from cmk.utils.timeperiod import TimeperiodName
 
 HostIntState = Literal[-1, 0, 1, 2]
 ServiceIntState = Literal[-1, 0, 1, 2, 3]
@@ -105,7 +106,7 @@ class TimeperiodBulk(CommonBulk):
 
 
 AlwaysBulkTuple = tuple[Literal["always"], AlwaysBulk]
-TimeperiodBulkTuple = tuple[Literal["timeperiod"], tuple[str, TimeperiodBulk]]
+TimeperiodBulkTuple = tuple[Literal["timeperiod"], tuple[TimeperiodName, TimeperiodBulk]]
 BulkNotificatons = AlwaysBulkTuple | TimeperiodBulkTuple
 
 
@@ -145,7 +146,7 @@ class Recipient(TypedDict):
 
 
 class FrequencyAndTiming(TypedDict):
-    restrict_timeperiod: NotRequired[str]
+    restrict_timeperiod: NotRequired[TimeperiodName]
     limit_by_count: NotRequired[tuple[int, int]]
     throttle_periodic: NotRequired[tuple[int, int]]
 

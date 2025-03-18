@@ -9,6 +9,7 @@ from typing import Any, Literal, TypeAlias, TypedDict
 
 from cmk.ccc.exceptions import MKException
 
+from cmk.utils.timeperiod import TimeperiodName
 from cmk.utils.translations import TranslationOptions
 
 TextPattern = str | Pattern[str]
@@ -175,7 +176,7 @@ class Rule(TypedDict, total=False):
     match_priority: tuple[int, int]
     match_site: Collection[str]
     match_sl: tuple[int, int]
-    match_timeperiod: str
+    match_timeperiod: TimeperiodName
     pack: str
     set_application: str
     set_comment: str

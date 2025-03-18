@@ -65,7 +65,12 @@ from cmk.utils.notify_types import (
 )
 from cmk.utils.regex import regex
 from cmk.utils.timeout import MKTimeout, Timeout
-from cmk.utils.timeperiod import is_timeperiod_active, timeperiod_active, TimeperiodSpecs
+from cmk.utils.timeperiod import (
+    is_timeperiod_active,
+    timeperiod_active,
+    TimeperiodName,
+    TimeperiodSpecs,
+)
 
 from cmk.events.event_context import EnrichedEventContext, EventContext
 from cmk.events.log_to_history import (
@@ -2186,8 +2191,9 @@ def find_bulks(only_ripe: bool, *, bulk_interval: int) -> NotifyBulks:
 
                     bulks.append((bulk_dir, age, interval, "n.a.", count, uuids))
                 else:
+                    assert timeperiod is not None  # TODO: Improve typing of bulk_parts()
                     try:
-                        active = timeperiod_active(str(timeperiod))
+                        active = timeperiod_active(TimeperiodName(timeperiod))
                     except Exception:
                         # This prevents sending bulk notifications if a
                         # livestatus connection error appears. It also implies

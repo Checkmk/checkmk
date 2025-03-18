@@ -6,7 +6,7 @@
 from collections.abc import Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
-from typing import NotRequired, TypeAlias, TypedDict, TypeGuard
+from typing import NewType, NotRequired, TypeAlias, TypedDict, TypeGuard
 
 from dateutil.tz import tzlocal
 
@@ -29,7 +29,7 @@ __all__ = [
     "timeperiod_spec_alias",
 ]
 
-TimeperiodName: TypeAlias = str
+TimeperiodName = NewType("TimeperiodName", str)
 DayTimeFrame: TypeAlias = tuple[str, str]
 
 
@@ -64,13 +64,13 @@ def remove_builtin_timeperiods(timeperiods: TimeperiodSpecs) -> TimeperiodSpecs:
     return {k: timeperiods[k] for k in timeperiods.keys() - _builtin_timeperiods().keys()}
 
 
-def is_builtin_timeperiod(name: str) -> bool:
+def is_builtin_timeperiod(name: TimeperiodName) -> bool:
     return name in _builtin_timeperiods()
 
 
 def _builtin_timeperiods() -> TimeperiodSpecs:
     return {
-        "24X7": TimeperiodSpec(
+        TimeperiodName("24X7"): TimeperiodSpec(
             alias=_("Always"),
             monday=[("00:00", "24:00")],
             tuesday=[("00:00", "24:00")],

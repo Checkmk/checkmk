@@ -73,6 +73,7 @@ class WatoConfigFile(ABC, Generic[_G]):
         self.validate(cfg)
 
 
+# NOTE: Variance is wrong, we confuse list <=> Sequence below.
 class WatoListConfigFile(WatoConfigFile[list[_G]], Generic[_G]):
     """Manage simple .mk config file containing a list of objects."""
 
@@ -103,6 +104,8 @@ class WatoListConfigFile(WatoConfigFile[list[_G]], Generic[_G]):
         )
 
 
+# NOTE: This should actually have *two* type parameters, one for the key and one for the mapped
+# value. Furthermore, the variance should be fixed, so we don't confuse dict <=> Mapping.
 class WatoSingleConfigFile(WatoConfigFile[_D], Generic[_D]):
     """Manage simple .mk config file containing a single dict variable which represents
     the overall configuration. The 1st level dict represents the configuration
@@ -137,6 +140,8 @@ class WatoSingleConfigFile(WatoConfigFile[_D], Generic[_D]):
         )
 
 
+# NOTE: This should actually have *two* type parameters, one for the key and one for the mapped
+# value. Furthermore, the variance should be fixed, so we don't confuse dict <=> Mapping.
 class WatoSimpleConfigFile(WatoSingleConfigFile[dict[str, _T]], Generic[_T]):
     """Manage simple .mk config file containing a single dict variable
     with nested entries. The 1st level dict encompasses those entries where each entry

@@ -19,6 +19,7 @@ from cmk.utils.notify_types import (
     ServiceEventType,
     TimeperiodBulkParameters,
 )
+from cmk.utils.timeperiod import TimeperiodName
 
 from cmk.gui.wato.pages.notifications.quick_setup_types import (
     AlwaysBulk,
@@ -266,7 +267,10 @@ def _get_notification_method(event_rule: EventRule) -> NotificationMethod:
 
         if notifybulk[0] == "always":
             return "always", _get_always_bulk(notifybulk[1])
-        return "timeperiod", (notifybulk[1]["timeperiod"], _get_timeperiod_bulk(notifybulk[1]))
+        return "timeperiod", (
+            TimeperiodName(notifybulk[1]["timeperiod"]),
+            _get_timeperiod_bulk(notifybulk[1]),
+        )
 
     notify_plugin = event_rule["notify_plugin"]
     if notify_plugin[1] is None:
@@ -542,7 +546,7 @@ def _set_notification_effect_parameters(
         return always_bulk_params
 
     def _get_timeperiod_bulk_parameters(
-        timeperiod: str, time_period_bulk: TimeperiodBulk
+        timeperiod: TimeperiodName, time_period_bulk: TimeperiodBulk
     ) -> TimeperiodBulkParameters:
         time_period_bulk_params = TimeperiodBulkParameters(
             timeperiod=timeperiod,

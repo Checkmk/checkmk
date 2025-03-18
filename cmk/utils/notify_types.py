@@ -84,7 +84,7 @@ class AlwaysBulkParameters(BulkBaseParameters):
 
 
 class TimeperiodBulkParameters(BulkBaseParameters):
-    timeperiod: str
+    timeperiod: TimeperiodName
     bulk_outside: NotRequired[AlwaysBulkParameters]
 
 

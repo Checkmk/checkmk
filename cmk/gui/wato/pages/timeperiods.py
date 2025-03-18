@@ -262,7 +262,7 @@ class ModeTimeperiods(WatoMode):
             return redirect(mode_url("timeperiods"))
 
         try:
-            watolib.timeperiods.delete_timeperiod(delname)
+            watolib.timeperiods.delete_timeperiod(TimeperiodName(delname))
             self._timeperiods = load_timeperiods()
 
         except watolib.timeperiods.TimePeriodBuiltInError:
@@ -512,9 +512,11 @@ class ModeEditTimeperiod(WatoMode):
 
     def _from_vars(self) -> None:
         self._timeperiods = load_timeperiods()
-        self._name = request.var("edit")  # missing -> new group
+        self._name = (
+            None if (n := request.var("edit")) is None else TimeperiodName(n)
+        )  # missing -> new group
         if self._name is None:
-            clone_name = request.var("clone")
+            clone_name = None if (c := request.var("clone")) is None else TimeperiodName(c)
             if request.var("mode") == "import_ical":
                 self._timeperiod: TimeperiodSpec = {"alias": request.var("timeperiod_p_alias", "")}
             elif clone_name:
@@ -530,7 +532,7 @@ class ModeEditTimeperiod(WatoMode):
                 raise MKUserError("edit", _("Built-in time periods can not be modified"))
             self._timeperiod = self._get_timeperiod(self._name)
 
-    def _get_timeperiod(self, name: str) -> TimeperiodSpec:
+    def _get_timeperiod(self, name: TimeperiodName) -> TimeperiodSpec:
         try:
             return self._timeperiods[name]
         except KeyError:

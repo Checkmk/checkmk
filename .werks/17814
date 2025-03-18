@@ -1,0 +1,11 @@
+Title: Enable sorting for tag groups and preserve sorting settings on page actions
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1742306726
+Edition: cre
+Level: 1
+Version: 2.2.0p41
+
+The table view for tag groups was not sortable.
+Sorting has now been activated for this table and it is ensured that the sort settings are preserved for all page actions.

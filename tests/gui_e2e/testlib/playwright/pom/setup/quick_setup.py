@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
+import re
 import time
 from abc import abstractmethod
 from typing import override
@@ -38,9 +39,11 @@ class QuickSetupPage(CmkPage):
     @property
     def is_guided_mode(self) -> bool:
         try:
-            expect(self.guided_mode_button).to_have_class(
-                r"cmk-button cmk-button--variant-secondary toggle_option selected"
-            )
+            expect(
+                self.guided_mode_button,
+                message="The class of the 'guided mode' button doesn't match "
+                "the pattern '.*selected.*'",
+            ).to_have_class(re.compile(".*selected.*"))
         except ():
             return False
 

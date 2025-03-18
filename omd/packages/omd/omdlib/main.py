@@ -2913,11 +2913,8 @@ def main_update(
         mu.prepare_and_populate_tmpfs(version_info, site)
 
         additional_update_env = {
-            "OMD_CONFLICT_MODE": conflict_mode,
             "OMD_TO_EDITION": to_edition,
-            "OMD_FROM_VERSION": from_version,
             "OMD_TO_VERSION": to_version,
-            "OMD_FROM_EDITION": from_edition,
         }
         command = ["cmk-update-config", "--conflict", conflict_mode, "--dry-run"]
         sys.stdout.write(f"Executing '{subprocess.list2cmdline(command)}'")

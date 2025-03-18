@@ -6,12 +6,11 @@
 
 from __future__ import annotations
 
-import contextlib
 import http.client
 import json
 import logging
 from collections.abc import Sequence
-from typing import Any, Callable, Iterator
+from typing import Any
 from urllib import parse
 
 from marshmallow import fields as ma_fields
@@ -19,14 +18,9 @@ from marshmallow import Schema, ValidationError
 from werkzeug.datastructures import MIMEAccept, MultiDict
 from werkzeug.http import parse_options_header
 
-from cmk.gui import hooks
 from cmk.gui import http as cmk_http
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import HTTPMethod, Request
-from cmk.gui.openapi.permission_tracking import (
-    enable_permission_tracking,
-    is_permission_tracking_enabled,
-)
 from cmk.gui.openapi.restful_objects.content_decoder import decode
 from cmk.gui.openapi.restful_objects.params import path_parameters
 from cmk.gui.openapi.restful_objects.type_defs import StatusCodeInt
@@ -52,80 +46,6 @@ _logger = logging.getLogger(__name__)
 
 
 ArgDict = dict[str, str | list[str]]
-
-
-class PermissionValidator:
-    @staticmethod
-    @contextlib.contextmanager
-    def register_permission_tracking(
-        on_permission_checked_callback: Callable[[str], None],
-    ) -> Iterator[None]:
-        """Register permission tracking and enable it for the duration of the context.
-
-        Args:
-            on_permission_checked_callback: Function to call when a permission is checked
-        """
-        hooks.register_builtin("permission-checked", on_permission_checked_callback)
-        try:
-            with enable_permission_tracking():
-                yield
-        finally:
-            hooks.unregister("permission-checked", on_permission_checked_callback)
-
-    @staticmethod
-    def create_permission_checker(
-        permissions_required: permissions.BasePerm | None,
-        register_permission: Callable[[str], None],
-        endpoint_repr: str,
-        is_testing_context: bool,
-    ) -> Callable[[str], None]:
-        """Create a permission checker function
-
-        Args:
-            permissions_required:
-                The endpoint's declared required permissions
-
-            register_permission:
-                A function to add a permission name to a storage
-
-            endpoint_repr:
-                A string representation of the endpoint.
-
-            is_testing_context:
-                Whether the endpoint is executed in a testing context.
-        """
-
-        def on_permission_checked(pname: str) -> None:
-            """Collect all checked permissions during execution"""
-            if not is_permission_tracking_enabled():
-                return
-
-            # TODO: This can be considered a design flaw where the used_permissions need to be
-            #  stored in the endpoint again. However, changing this would require changing the
-            #  validation flow
-            register_permission(pname)
-
-            permission_not_declared = (
-                permissions_required is not None and pname not in permissions_required
-            )
-
-            if permission_not_declared:
-                _logger.error(
-                    "Permission mismatch: Endpoint %r Use of undeclared permission %s",
-                    endpoint_repr,
-                    pname,
-                )
-
-                if is_testing_context:
-                    raise RestAPIPermissionException(
-                        title=f"Required permissions ({pname}) not declared for this endpoint.",
-                        detail=f"Endpoint: {endpoint_repr}\n"
-                        f"Permission: {pname}\n"
-                        f"Used permission: {pname}\n"
-                        f"Declared: {permissions_required}\n",
-                    )
-
-        return on_permission_checked
 
 
 class ContentTypeValidator:

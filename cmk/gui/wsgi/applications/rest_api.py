@@ -41,7 +41,6 @@ from cmk.gui.openapi.restful_objects.parameters import (
     HEADER_CHECKMK_EDITION,
     HEADER_CHECKMK_VERSION,
 )
-from cmk.gui.openapi.restful_objects.validators import PermissionValidator
 from cmk.gui.openapi.spec.utils import spec_path
 from cmk.gui.openapi.utils import (
     EXT,
@@ -180,15 +179,8 @@ class EndpointAdapter(AbstractWSGIApp):
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         path_args = environ[ARGS_KEY]
 
-        # Create the permission checker
-        permission_checker = PermissionValidator.create_permission_checker(
-            permissions_required=self.endpoint.permissions_required,
-            register_permission=self.endpoint.remember_checked_permission,
-            endpoint_repr=str(self.endpoint),
-            is_testing_context=bool(request.environ.get("paste.testing", "False")),
-        )
         # Create the response
-        with PermissionValidator.register_permission_tracking(permission_checker):
+        with self.endpoint.register_permission_tracking():
             wsgi_app = self.endpoint.wrapped(ParameterDict(path_args))
 
         wsgi_app.headers[_get_header_name(HEADER_CHECKMK_VERSION)] = cmk_version.__version__

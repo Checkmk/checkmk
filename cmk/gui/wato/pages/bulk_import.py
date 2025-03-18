@@ -238,8 +238,9 @@ class ModeBulkImport(WatoMode):
 
             def _check_duplicates(_names: list[str | None]) -> None:
                 _attrs_seen = set()
-                for _name in _attr_names:
-                    if _name in _attrs_seen:
+                for _name in _names:
+                    # "-" is the value set for "Don't import"
+                    if _name != "-" and _name in _attrs_seen:
                         raise MKUserError(
                             None,
                             _(

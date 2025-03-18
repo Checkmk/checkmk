@@ -3190,9 +3190,13 @@ class ConfigCache:
     def _host_has_piggyback_data_right_now(self, host_name: HostAddress) -> bool:
         # This duplicates logic and should be kept in sync with what the fetcher does.
         # Can we somehow instanciate the hypothetical fetcher here, and just let it fetch?
-        time_settings: list[tuple[str | None, str, int]] = self._piggybacked_host_files(host_name)
-        time_settings.append((None, "max_cache_age", piggyback_max_cachefile_age))
-        piggy_config = piggyback_backend.Config(host_name, time_settings)
+        piggy_config = piggyback_backend.Config(
+            host_name,
+            [
+                *self._piggybacked_host_files(host_name),
+                (None, "max_cache_age", piggyback_max_cachefile_age),
+            ],
+        )
 
         now = time.time()
 
@@ -3203,14 +3207,16 @@ class ConfigCache:
             map(_is_usable, piggyback_backend.get_messages_for(host_name, cmk.utils.paths.omd_root))
         )
 
-    def _piggybacked_host_files(self, host_name: HostName) -> list[tuple[str | None, str, int]]:
+    def _piggybacked_host_files(
+        self, host_name: HostName
+    ) -> piggyback_backend.PiggybackTimeSettings:
         if rules := self.ruleset_matcher.get_host_values(host_name, piggybacked_host_files):
             return self._flatten_piggybacked_host_files_rule(host_name, rules[0])
         return []
 
     def _flatten_piggybacked_host_files_rule(
         self, host_name: HostName, rule: Mapping[str, Any]
-    ) -> list[tuple[str | None, str, int]]:
+    ) -> piggyback_backend.PiggybackTimeSettings:
         """This rule is a first match rule.
 
         Max cache age, validity period and state are configurable wihtin this
@@ -3842,7 +3848,7 @@ class ConfigCache:
 
     def get_piggybacked_hosts_time_settings(
         self, piggybacked_hostname: HostName | None = None
-    ) -> Sequence[tuple[str | None, str, int]]:
+    ) -> piggyback_backend.PiggybackTimeSettings:
         all_sources = piggyback_backend.get_piggybacked_host_with_sources(
             cmk.utils.paths.omd_root, piggybacked_hostname
         )

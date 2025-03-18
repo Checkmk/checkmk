@@ -27,8 +27,7 @@ from cmk.gui.type_defs import CSSSpec
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
-from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeactionuri, makeuri, requested_file_name
+from cmk.gui.utils.urls import makeuri, requested_file_name
 
 
 class TableHeader(NamedTuple):
@@ -203,7 +202,13 @@ class Table:
     ) -> None:
         self._finish_previous()
         self.next_func = lambda: self._add_row(
-            [] if css is None else css, state, collect_headers, fixed, id_, onmouseover, onmouseout
+            [] if css is None else css,
+            state,
+            collect_headers,
+            fixed,
+            id_,
+            onmouseover,
+            onmouseout,
         )
 
     def cell(
@@ -365,7 +370,6 @@ class Table:
                 num_rows_unlimited = self.limit_hint
 
             if limit and num_rows_unlimited > limit:
-
                 html.show_message(
                     _(
                         "This table is limited to show only %d of %d rows. "
@@ -375,7 +379,11 @@ class Table:
                 )
 
             self._write_table(
-                rows, num_rows_unlimited, self._show_action_row(), actions_visible, search_term
+                rows,
+                num_rows_unlimited,
+                self._show_action_row(),
+                actions_visible,
+                search_term,
             )
 
         if self.title and self.options["foldable"] in [
@@ -512,7 +520,10 @@ class Table:
                 class_.append(row.css)
 
             html.open_tr(
-                class_=class_, id_=row.id_, onmouseover=row.onmouseover, onmouseout=row.onmouseout
+                class_=class_,
+                id_=row.id_,
+                onmouseover=row.onmouseover,
+                onmouseout=row.onmouseout,
             )
             for col_index, cell in enumerate(row.cells):
                 if self.options["omit_empty_columns"] and empty_columns[col_index]:
@@ -523,7 +534,10 @@ class Table:
 
         if not rows and search_term:
             html.open_tr(class_=["data", "odd0", "no_match"])
-            html.td(_("Found no matching rows. Please try another search term."), colspan=num_cols)
+            html.td(
+                _("Found no matching rows. Please try another search term."),
+                colspan=num_cols,
+            )
             html.close_tr()
 
         html.close_table()
@@ -617,9 +631,7 @@ class Table:
                     if sort_col == nr:
                         reverse = 1 if sort_reverse == 0 else 0
 
-                action_uri = makeactionuri(
-                    request, transactions, [("_%s_sort" % table_id, "%d,%d" % (nr, reverse))]
-                )
+                action_uri = makeuri(request, [("_%s_sort" % table_id, "%d,%d" % (nr, reverse))])
                 html.open_th(
                     class_=css_class,
                     title=_("Sort by %s") % header.title,

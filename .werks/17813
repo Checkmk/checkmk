@@ -1,0 +1,13 @@
+Title: Remove transaction id & csrf token from sorting url
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1742306347
+Edition: cre
+Level: 1
+Version: 2.2.0p41
+
+The sort links of tables and views were generated with a transaction id and a csrf token.
+This is not required for the pure sorting of a table/view and sometimes led to unforeseen redirects when sorting tables or views.
+
+These GET parameters have now been removed from all sort links.

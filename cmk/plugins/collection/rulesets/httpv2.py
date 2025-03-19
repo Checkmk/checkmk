@@ -615,9 +615,11 @@ def _migrate_to_cascading(params: object) -> tuple[str, object]:
             return "validate", value
         case "no_validation", None:
             return "no_validation", None
-        case str(level_type), tuple(value):
-            return "validate", (level_type, value)
-    raise ValueError(f"Invalid value {params!r} for certificate levels")
+        case "fixed", tuple(value):
+            return "validate", ("fixed", value)
+        case "no_levels", None:
+            return "validate", ("no_levels", None)
+    raise TypeError(f"Invalid certificate levels: {params!r}")
 
 
 # This could change later, so we need to distinct between standard settings and

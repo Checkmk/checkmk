@@ -22,6 +22,7 @@ RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS="+S 2:2 +MIscs 32"
 # Control the number of arenas that the erlang memory allocator can use for multi-threaded applications
 MALLOC_ARENA_MAX="1"
 INITLOG="${RABBITMQ_LOG_BASE}/init.log"
+REMOTE_PIGGYBACK_HUB_STATES_FILE="${OMD_ROOT}/etc/check_mk/remote_piggyback_hub_status"
 
 getpid() {
     cat "${1}" 2>/dev/null
@@ -110,12 +111,17 @@ stop_process() {
     kill "${1}" 2>/dev/null
 }
 
-rabbimq_enabled() {
+local_rabbimq_enabled() {
     # only enable rabbitmq if there's at least one service that needs it
+    # on the local or remote sites
     [ "${CONFIG_PIGGYBACK_HUB:?}" = "on" ]
 }
 
-rabbimq_enabled || exit 5
+remote_rabbimq_enabled() {
+    cut -d' ' -f2 "${REMOTE_PIGGYBACK_HUB_STATES_FILE}" 2>/dev/null | grep -q "on"
+}
+
+local_rabbimq_enabled || remote_rabbimq_enabled || exit 5
 
 case "$1" in
 

@@ -19,8 +19,9 @@ from cmk.base.api.agent_based.plugin_classes import (
     AgentBasedPlugins,
 )
 
-from cmk.agent_based.v2 import CheckResult, IgnoreResultsError, Metric, Result, Service, State
+from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
 from cmk.plugins.dell_powerconnect.agent_based.dell_powerconnect_cpu import (
+    Section,
     snmp_section_dell_powerconnect_cpu,
 )
 
@@ -40,20 +41,14 @@ def test_cpu_parse(
 
     assert snmp_is_detected(snmp_section_dell_powerconnect_cpu, snmp_walk)
 
-    assert get_parsed_snmp_section(snmp_section_dell_powerconnect_cpu, snmp_walk) == [
-        ["1", "91", "10", "4"]
-    ]
+    assert get_parsed_snmp_section(snmp_section_dell_powerconnect_cpu, snmp_walk) == Section(
+        True, 91, 10, 4
+    )
 
 
 def test_cpu_discover(agent_based_plugins: AgentBasedPlugins) -> None:
     plugin = agent_based_plugins.check_plugins[CheckPluginName("dell_powerconnect_cpu")]
-    assert (
-        list(
-            plugin.discovery_function(
-                [["1", "91", "10", "4"]],
-            )
-        )
-    ) == [
+    assert (list(plugin.discovery_function(Section(True, 91, 10, 4)))) == [
         Service(),
     ]
 
@@ -62,7 +57,7 @@ def test_cpu_discover(agent_based_plugins: AgentBasedPlugins) -> None:
     "section, result",
     [
         (
-            [["1", "91", "10", "4"]],
+            Section(True, 91, 10, 4),
             [
                 Result(
                     state=State.CRIT, summary="CPU utilization: 91.00% (warn/crit at 80.00%/90.00%)"
@@ -73,15 +68,15 @@ def test_cpu_discover(agent_based_plugins: AgentBasedPlugins) -> None:
             ],
         ),
         (
-            [["0", "91", "10", "4"]],
+            Section(False, 91, 10, 4),
             [],
         ),
         (
-            [["1", "-10", "10", "4"]],
+            Section(True, -10, 10, 4),
             [],
         ),
         (
-            [["1", "999", "10", "4"]],
+            Section(True, 999, 10, 4),
             [],
         ),
     ],
@@ -94,7 +89,6 @@ def test_cpu_check(
     assert (
         list(
             plugin.check_function(
-                item=None,
                 params={"levels": (80.0, 90.0)},
                 section=section,
             )
@@ -103,14 +97,17 @@ def test_cpu_check(
     )
 
 
-def test_cpu_check_ignore(agent_based_plugins: AgentBasedPlugins) -> None:
-    plugin = agent_based_plugins.check_plugins[CheckPluginName("dell_powerconnect_cpu")]
+def test_cpu_check_ignore(
+    as_path: Callable[[str], Path], agent_based_plugins: AgentBasedPlugins
+) -> None:
+    snmp_walk = as_path("""
+.1.3.6.1.2.1.1.2.0 .1.3.6.1.4.1.674.10895
+.1.3.6.1.4.1.89.1.6 1
+.1.3.6.1.4.1.89.1.7
+.1.3.6.1.4.1.89.1.8
+.1.3.6.1.4.1.89.1.9
+    """)
 
-    with pytest.raises(IgnoreResultsError, match="Ignoring empty data"):
-        list(
-            plugin.check_function(
-                item=None,
-                params={"levels": (80.0, 90.0)},
-                section=[["something"]],
-            )
-        )
+    assert snmp_is_detected(snmp_section_dell_powerconnect_cpu, snmp_walk)
+
+    assert get_parsed_snmp_section(snmp_section_dell_powerconnect_cpu, snmp_walk) is None

@@ -123,7 +123,17 @@ export function register() {
             if (response.ok) {
                 show_info("Registration successful");
                 response.text().then(function (text) {
-                    if (JSON.parse(text).redirect) {
+                    if (JSON.parse(text).replicate) {
+                        if (JSON.parse(text).redirect) {
+                            window.location.href =
+                                "user_profile_replicate.py?back=index.py";
+                        } else {
+                            window.location.href =
+                                "user_profile_replicate.py?back=user_two_factor_overview.py";
+                        }
+                        window.location.href =
+                            "user_profile_replicate.py?back=user_two_factor_overview.py";
+                    } else if (JSON.parse(text).redirect) {
                         window.location.href = "index.py";
                     } else {
                         window.location.href = "user_two_factor_overview.py";

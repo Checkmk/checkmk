@@ -24,8 +24,7 @@ from tests.testlib.unit.utils import import_module_hack
 import cmk.ccc.debug
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.store import ObjectStore, TextSerializer
-from cmk.ccc.store._file import FileIo, RealIo
+from cmk.ccc.store import FileIo, ObjectStore, RealIo, TextSerializer
 
 
 class FakeIo:

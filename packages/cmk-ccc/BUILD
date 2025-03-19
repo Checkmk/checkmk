@@ -34,7 +34,6 @@ py_library(
     deps = [
         "//packages/cmk-livestatus-client:py_livestatus",
         "//packages/cmk-trace",
-        requirement("pydantic"),  # store/_file.py
     ],
 )
 

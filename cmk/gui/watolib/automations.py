@@ -16,7 +16,8 @@ import re
 import subprocess
 import time
 import uuid
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from contextlib import contextmanager
 from io import BytesIO
 from pathlib import Path
 from typing import Final, NamedTuple
@@ -28,9 +29,10 @@ from pydantic import BaseModel, field_validator
 from livestatus import sanitize_site_configuration, SiteConfiguration, SiteId
 
 import cmk.ccc.version as cmk_version
-from cmk.ccc import store
+from cmk.ccc import store  # Some braindead "unit" test monkeypatch this like hell :-/
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import get_omd_config
+from cmk.ccc.store import RealIo
 
 from cmk.utils import paths
 from cmk.utils.licensing.handler import LicenseState
@@ -909,13 +911,23 @@ class LastKnownCentralSiteVersion(BaseModel):
         return v
 
 
-class LastKnownCentralSiteVersionStore(store.PydanticStore):
+class LastKnownCentralSiteVersionStore:
     def __init__(self) -> None:
-        super().__init__(self.get_path(), model=LastKnownCentralSiteVersion)
+        self._io: Final = RealIo(Path(paths.var_dir) / "last_known_site_version.json")
 
-    @staticmethod
-    def get_path() -> Path:
-        return Path(paths.var_dir) / "last_known_site_version.json"
+    @contextmanager
+    def locked(self) -> Iterator[None]:
+        yield from self._io.locked()
+
+    def write_obj(self, obj: LastKnownCentralSiteVersion) -> None:
+        return self._io.write(obj.model_dump_json().encode())
+
+    def read_obj(self) -> LastKnownCentralSiteVersion | None:
+        return (
+            LastKnownCentralSiteVersion.model_validate_json(raw.decode())
+            if (raw := self._io.read())
+            else None
+        )
 
 
 @functools.cache

@@ -1767,7 +1767,6 @@ pydantic==2.10.3 \
     # via
     #   -r _requirements_runtime.txt
     #   -r packages/cmk-agent-based/requirements.txt
-    #   -r packages/cmk-ccc/requirements.txt
     #   -r packages/cmk-messaging/requirements.txt
     #   -r packages/cmk-mkp-tool/requirements.txt
     #   -r packages/cmk-werks/requirements.txt

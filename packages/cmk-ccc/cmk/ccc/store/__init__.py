@@ -21,9 +21,10 @@ from cmk.ccc.i18n import _
 from cmk.ccc.store._file import (
     BytesSerializer,
     DimSerializer,
+    FileIo,
     ObjectStore,
     PickleSerializer,
-    PydanticStore,
+    RealIo,
     Serializer,
     TextSerializer,
 )
@@ -44,10 +45,11 @@ from cmk.ccc.store._locks import leave_locked_unless_exception as _leave_locked_
 __all__ = [
     "BytesSerializer",
     "DimSerializer",
+    "FileIo",
     "ObjectStore",
     "PickleSerializer",
+    "RealIo",
     "Serializer",
-    "PydanticStore",
     "TextSerializer",
     "acquire_lock",
     "cleanup_locks",

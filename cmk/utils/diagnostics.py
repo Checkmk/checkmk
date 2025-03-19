@@ -39,6 +39,7 @@ class DiagnosticsParameters(TypedDict):
     checkmk_server_host: str
 
 
+OPT_BI_RUNTIME_DATA = "bi-runtime-data"
 OPT_LOCAL_FILES = "local-files"
 OPT_OMD_CONFIG = "omd-config"
 OPT_CHECKMK_OVERVIEW = "checkmk-overview"
@@ -65,6 +66,7 @@ _OPTS_WITH_HOST = [
 ]
 
 _BOOLEAN_CONFIG_OPTS = [
+    OPT_BI_RUNTIME_DATA,
     OPT_LOCAL_FILES,
     OPT_OMD_CONFIG,
     OPT_CHECKMK_CRASH_REPORTS,
@@ -78,7 +80,7 @@ _FILES_OPTS = [
 ]
 
 
-def serialize_wato_parameters(  # pylint: disable=too-many-branches
+def serialize_wato_parameters(  # pylint: disable=R0912
     wato_parameters: DiagnosticsParameters,
 ) -> list[DiagnosticsCLParameters]:
     # TODO: reduce the number of branches and do the whole procedure in a more generic/elegant way
@@ -89,13 +91,18 @@ def serialize_wato_parameters(  # pylint: disable=too-many-branches
     if opt_info_parameters is not None:
         parameters |= opt_info_parameters
 
+    boolean_opts: list[str] = [
+        k for k in sorted(parameters.keys()) if k in _BOOLEAN_CONFIG_OPTS and parameters[k]
+    ]
+
     comp_specific_parameters = wato_parameters.get("comp_specific")
     if comp_specific_parameters is not None:
         parameters.update(comp_specific_parameters)
 
-    boolean_opts: list[str] = [
-        k for k in sorted(parameters.keys()) if k in _BOOLEAN_CONFIG_OPTS and parameters[k]
-    ]
+        if comp_specific_parameters.get(OPT_COMP_BUSINESS_INTELLIGENCE, {}).pop(
+            OPT_BI_RUNTIME_DATA, None
+        ):
+            boolean_opts.append(OPT_BI_RUNTIME_DATA)
 
     opt_checkmk_server_host = wato_parameters.get("checkmk_server_host", "")
 

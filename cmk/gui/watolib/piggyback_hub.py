@@ -7,7 +7,7 @@ from collections.abc import Collection, Iterable, Mapping
 
 from livestatus import SiteConfiguration, SiteId
 
-from cmk.ccc.site import get_omd_config, omd_site
+from cmk.ccc.site import omd_site
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import omd_root
@@ -15,12 +15,7 @@ from cmk.utils.paths import omd_root
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.site_changes import ChangeSpec
 
-from cmk.piggyback.hub import (
-    HostLocations,
-    PiggybackHubConfig,
-    PiggybackHubConfigType,
-    publish_persisted_locations,
-)
+from cmk.piggyback.hub import HostLocations, publish_persisted_locations
 
 _HOST_CHANGES = (
     "edit-host",
@@ -55,22 +50,6 @@ def distribute_piggyback_hub_configs(
         publish_persisted_locations(destination_site, locations, omd_root, omd_site())
 
 
-def get_piggyback_hub_configs(
-    global_settings: GlobalSettings,
-    configured_sites: Mapping[SiteId, SiteConfiguration],
-    dirty_sites: Collection[SiteId],
-    hosts_sites: Mapping[HostName, SiteId],
-) -> Mapping[str, PiggybackHubConfig]:
-    return {
-        destination_site: PiggybackHubConfig(
-            type=PiggybackHubConfigType.PERSISTED, locations=locations
-        )
-        for destination_site, locations in compute_new_config(
-            global_settings, configured_sites, hosts_sites
-        )
-    }
-
-
 def compute_new_config(
     global_settings: GlobalSettings,
     configured_sites: Mapping[SiteId, SiteConfiguration],
@@ -102,7 +81,3 @@ def _filter_for_enabled_piggyback_hub(
         for site_id, site_config in configured_sites.items()
         if _piggyback_hub_enabled(site_config, global_settings) is True
     }
-
-
-def local_piggyback_hub_enabled() -> bool:
-    return get_omd_config(omd_root).get("CONFIG_PIGGYBACK_HUB", "off") == "on"

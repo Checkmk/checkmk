@@ -14,18 +14,20 @@ import socket
 import sys
 from collections.abc import Callable, Sequence
 from email.message import Message
-from email.mime.application import MIMEApplication
-from email.mime.image import MIMEImage
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from typing import Literal, NamedTuple, NoReturn
+from typing import NoReturn
 
 from jinja2 import Environment, FileSystemLoader
 
 from cmk.ccc.exceptions import MKException
 
 from cmk.utils.escaping import escape_permissive
-from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail, set_mail_headers
+from cmk.utils.mail import (
+    Attachment,
+    default_from_address,
+    MailString,
+    multipart_mail,
+    send_mail_sendmail,
+)
 from cmk.utils.paths import omd_root, web_dir
 
 from cmk.notification_plugins import utils
@@ -266,13 +268,6 @@ class GraphException(MKException):
     pass
 
 
-class Attachment(NamedTuple):
-    what: Literal["img"]
-    name: str
-    contents: bytes | str
-    how: str
-
-
 class TemplateRenderer:
     def __init__(self) -> None:
         self.env = Environment(
@@ -283,50 +278,6 @@ class TemplateRenderer:
     def render_template(self, template_file: str, data: dict[str, object]) -> str:
         template = self.env.get_template(template_file)
         return template.render(data)
-
-
-# TODO: Just use a single EmailContent parameter.
-def multipart_mail(
-    target: str,
-    subject: str,
-    from_address: str,
-    reply_to: str,
-    content_txt: str,
-    content_html: str,
-    attach: Sequence[Attachment] | None = None,
-) -> MIMEMultipart:
-    if attach is None:
-        attach = []
-
-    m = MIMEMultipart("related", _charset="utf-8")
-
-    alt = MIMEMultipart("alternative")
-
-    # The plain text part
-    txt = MIMEText(content_txt, "plain", _charset="utf-8")
-    alt.attach(txt)
-
-    # The html text part
-    html = MIMEText(content_html, "html", _charset="utf-8")
-    alt.attach(html)
-
-    m.attach(alt)
-
-    # Add all attachments
-    for what, name, contents, how in attach:
-        part = (
-            MIMEImage(contents, name=name)
-            if what == "img"
-            else MIMEApplication(contents, name=name)
-        )
-        part.add_header("Content-ID", "<%s>" % name)
-        # how must be inline or attachment
-        part.add_header("Content-Disposition", how, filename=name)
-        m.attach(part)
-
-    return set_mail_headers(
-        MailString(target), MailString(subject), MailString(from_address), MailString(reply_to), m
-    )
 
 
 def send_mail_smtp(  # pylint: disable=too-many-branches

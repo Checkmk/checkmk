@@ -33,7 +33,7 @@ MINIMAL_CREATION_KWARGS: dict[str, Any] = {
     "service_name": "Norris Device",
     "discovery_function": dummy_generator,
     "check_function": dummy_generator,
-    "location": PluginLocation(""),
+    "location": PluginLocation("", ""),
 }
 
 

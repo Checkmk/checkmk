@@ -28,7 +28,7 @@ def test_get_registered_check_plugins(monkeypatch: MonkeyPatch) -> None:
         None,
         None,
         None,
-        PluginLocation(module="not-relevant"),
+        PluginLocation("not", "relevant"),
     )
 
     monkeypatch.setattr(

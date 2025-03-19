@@ -1,0 +1,11 @@
+Title: Support Diagnostics: Include BI cache data
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1742382429
+Edition: cre
+Level: 1
+Version: 2.2.0p41
+
+With this werk, there's a new option "BI runtime data" in the Support Diagnostic
+that allows to include the cached data of Business Intelligence.

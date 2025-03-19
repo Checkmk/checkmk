@@ -44,6 +44,7 @@ from cmk.utils.diagnostics import (
     get_checkmk_core_files_map,
     get_checkmk_licensing_files_map,
     get_checkmk_log_files_map,
+    OPT_BI_RUNTIME_DATA,
     OPT_CHECKMK_CONFIG_FILES,
     OPT_CHECKMK_CORE_FILES,
     OPT_CHECKMK_CRASH_REPORTS,
@@ -186,6 +187,9 @@ class DiagnosticsDump:
 
         if parameters.get(OPT_CHECKMK_CRASH_REPORTS):
             optional_elements.append(CrashDumpsDiagnosticsElement())
+
+        if parameters.get(OPT_BI_RUNTIME_DATA):
+            optional_elements.append(BIDataDiagnosticsElement())
 
         rel_checkmk_config_files = parameters.get(OPT_CHECKMK_CONFIG_FILES)
         if rel_checkmk_config_files:
@@ -1139,6 +1143,31 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
         )
         with automation_secret_filepath.open("r", encoding="utf-8") as f:
             return f.read().strip()
+
+
+class BIDataDiagnosticsElement(ABCDiagnosticsElement):
+    @property
+    def ident(self) -> str:
+        return "bi_runtime_data"
+
+    @property
+    def title(self) -> str:
+        return _("Business Intelligence runtime data")
+
+    @property
+    def description(self) -> str:
+        return _(
+            "Cached data from Business Intelligence. "
+            "contains states, downtimes, acknowledgements and service periods "
+            "for all hosts/services included in a BI aggregation."
+        )
+
+    def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
+        tmpdir = tmp_dump_folder.joinpath("tmp/check_mk/bi_cache")
+        tmpdir.mkdir(parents=True, exist_ok=True)
+
+        shutil.copytree(cmk.utils.paths.tmp_dir.joinpath("bi_cache"), tmpdir, dirs_exist_ok=True)
+        yield tmpdir
 
 
 class CrashDumpsDiagnosticsElement(ABCDiagnosticsElement):

@@ -1623,6 +1623,14 @@ systemd-user-sessions.service loaded active exited Permit User Sessions
         pytest.param("1min 13s", 73.0, id="1min 13s"),
         pytest.param("3d 1s", 259_201.0, id="3d 1s"),
         pytest.param("3w 3d 1s", 2_073_601.0, id="3w 3d 1s"),
+        pytest.param(
+            "1month 4w 2d 3h 38min 41.898s", 5_234_921.898, id="1month 4w 2d 3h 38min 41.898s"
+        ),
+        pytest.param(
+            "5y 1month 4w 2d 3h 38min 41.898s",
+            163_022_921.898,
+            id="5y 1month 4w 2d 3h 38min 41.898s",
+        ),
     ],
 )
 def test_cputimeseconds_parse(raw_string: str, expected: float) -> None:

@@ -10,11 +10,12 @@ import time
 from collections.abc import Collection, Iterator, Mapping
 from copy import deepcopy
 from datetime import datetime
-from typing import Any, Literal, NamedTuple, overload
+from typing import Any, cast, Literal, NamedTuple, overload
 
-from livestatus import LivestatusResponse
+from livestatus import LivestatusResponse, SiteId
 
 import cmk.utils.store as store
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import Labels
 from cmk.utils.notify import NotificationContext
 from cmk.utils.notify_types import EventRule, is_always_bulk, NotifyAnalysisInfo
@@ -50,7 +51,12 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.site_config import has_wato_slave_sites, site_is_local, wato_slave_sites
+from cmk.gui.site_config import (
+    get_site_config,
+    has_wato_slave_sites,
+    site_is_local,
+    wato_slave_sites,
+)
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
@@ -102,6 +108,8 @@ from cmk.gui.wato.pages.user_profile.async_replication import (
 )
 from cmk.gui.wato.pages.user_profile.page_menu import page_menu_dropdown_user_related
 from cmk.gui.wato.pages.users import ModeEditUser
+from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
+from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import (
     notification_analyse,
     notification_get_bulks,
@@ -128,13 +136,17 @@ from .._group_selection import ContactGroupSelection
 from .._notification_parameter import notification_parameter_registry
 
 
-def register(mode_registry: ModeRegistry) -> None:
+def register(
+    mode_registry: ModeRegistry,
+    automation_command_registry: AutomationCommandRegistry,
+) -> None:
     mode_registry.register(ModeNotifications)
     mode_registry.register(ModeUserNotifications)
     mode_registry.register(ModePersonalUserNotifications)
     mode_registry.register(ModeEditNotificationRule)
     mode_registry.register(ModeEditUserNotificationRule)
     mode_registry.register(ModeEditPersonalNotificationRule)
+    automation_command_registry.register(AutomationNotificationTest)
 
 
 class ABCNotificationsMode(ABCEventsMode):
@@ -574,6 +586,31 @@ class NotificationRuleLinks(NamedTuple):
     clone: str
 
 
+class NotificationTestRequest(NamedTuple):
+    context: str
+    dispatch: str
+
+
+class AutomationNotificationTest(AutomationCommand):
+    def command_name(self) -> str:
+        return "notification-test"
+
+    def get_request(self) -> NotificationTestRequest:
+        if (context := request.var("context")) is None:
+            raise MKGeneralException(_("Context is missing"))
+
+        return NotificationTestRequest(
+            context=context,
+            dispatch=request.var("dispatch", ""),
+        )
+
+    def execute(self, api_request: NotificationTestRequest) -> NotifyAnalysisInfo | None:
+        return notification_test(
+            raw_context=json.loads(api_request.context),
+            dispatch=api_request.dispatch,
+        ).result
+
+
 class ModeNotifications(ABCNotificationsMode):
     @classmethod
     def name(cls) -> str:
@@ -878,24 +915,43 @@ class ModeNotifications(ABCNotificationsMode):
             if context["WHAT"] == "SERVICE":
                 self._add_missing_service_context(context)
 
-            return (
-                context,
-                notification_test(
-                    raw_context=context, dispatch=bool(request.var("dispatch"))
-                ).result,
+            if site_is_local(site_id := SiteId(context["SITEOFHOST"])):
+                return (
+                    context,
+                    notification_test(
+                        raw_context=context,
+                        dispatch=request.var("dispatch", ""),
+                    ).result,
+                )
+
+            remote_result = cast(
+                NotifyAnalysisInfo,
+                do_remote_automation(
+                    get_site_config(site_id),
+                    "notification-test",
+                    [
+                        ("context", json.dumps(context)),
+                        ("dispatch", request.var("dispatch", "")),
+                    ],
+                ),
             )
+
+            return context, remote_result
+
         return None, None
 
     def _add_missing_host_context(self, context: NotificationContext) -> None:
         """We don't want to transport all possible informations via HTTP vars
         so we enrich the context after fetching all user defined options"""
         hostname = context["HOSTNAME"]
-        resp = sites.live().query(
-            "GET hosts\n"
-            "Columns: custom_variable_names custom_variable_values groups "
-            "contact_groups labels host_alias\n"
-            f"Filter: host_name = {hostname}\n"
-        )
+        with sites.prepend_site():
+            resp = sites.live().query(
+                "GET hosts\n"
+                "Columns: custom_variable_names custom_variable_values groups "
+                "contact_groups labels host_alias host_address\n"
+                f"Filter: host_name = {hostname}\n"
+            )
+
         if len(resp) < 1:
             raise MKUserError(
                 None,
@@ -903,10 +959,13 @@ class ModeNotifications(ABCNotificationsMode):
             )
 
         self._set_custom_variables(context, resp, "HOST")
-        context["HOSTGROUPNAMES"] = ",".join(resp[0][2])
-        context["HOSTCONTACTGROUPNAMES"] = ",".join(resp[0][3])
-        self._set_labels(context, resp[0][4], "HOST")
-        context["HOSTALIAS"] = resp[0][5]
+        # we can not use OMD_SITE here because it's used for processing in some
+        # cases. See cmk.base.events.complete_raw_context
+        context["SITEOFHOST"] = resp[0][0]
+        context["HOSTGROUPNAMES"] = ",".join(resp[0][3])
+        context["HOSTCONTACTGROUPNAMES"] = ",".join(resp[0][4])
+        self._set_labels(context, resp[0][5], "HOST")
+        context["HOSTALIAS"] = resp[0][6]
 
     def _set_custom_variables(
         self,
@@ -914,7 +973,7 @@ class ModeNotifications(ABCNotificationsMode):
         resp: LivestatusResponse,
         prefix: Literal["HOST", "SERVICE"],
     ) -> None:
-        custom_vars = dict(zip(resp[0][0], resp[0][1]))
+        custom_vars = dict(zip(resp[0][1], resp[0][2]))
         for key, value in custom_vars.items():
             # Special case for service level
             if key == "EC_SL":

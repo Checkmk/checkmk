@@ -88,7 +88,7 @@ def register(
     host_rename.register(mode_registry)
     hosts.register(mode_registry)
     not_implemented.register(mode_registry)
-    notifications.register(mode_registry)
+    notifications.register(mode_registry, automation_command_registry)
     object_parameters.register(mode_registry)
     parentscan.register(mode_registry)
     password_store.register(mode_registry)

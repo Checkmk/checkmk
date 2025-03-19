@@ -1063,7 +1063,7 @@ def test_migrate_mixed_notification_parameters() -> None:
         "mkeventd": {
             "<uuid-4>": {
                 "general": {
-                    "description": "Migrated from notification rule #3",
+                    "description": "Migrated from notification rules #3, #4",
                     "comment": "Auto migrated on update",
                     "docu_url": "",
                 },

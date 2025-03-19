@@ -89,6 +89,15 @@ class MigrateNotifications(UpdateAction):
                 data_for_disk = self._get_data_for_disk(method=method, parameter=parameter, nr=nr)
                 parameters_per_method[method].update({parameter_id: data_for_disk})
 
+            else:
+                description = (
+                    parameters_per_method[method][parameter_id]["general"]["description"].replace(
+                        "rule", "rules"
+                    )
+                    + f", #{nr}"
+                )
+                parameters_per_method[method][parameter_id]["general"]["description"] = description
+
             rule["notify_plugin"] = (method, parameter_id)
             updated_notification_rules.append(rule)
 

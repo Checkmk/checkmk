@@ -9,14 +9,13 @@ from typing import Any, cast
 
 from pydantic import BaseModel
 
-from cmk.ccc.i18n import _
-
 from cmk.gui.background_job import BackgroundProcessInterface
 from cmk.gui.form_specs.vue.form_spec_visitor import (
     serialize_data_for_frontend,
     transform_to_disk_model,
 )
 from cmk.gui.form_specs.vue.visitors import DataOrigin, DEFAULT_VALUE
+from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.log import logger
 from cmk.gui.quick_setup.private.widgets import ConditionalNotificationStageWidget
 from cmk.gui.quick_setup.v0_unstable.setups import (
@@ -115,8 +114,13 @@ class JobBasedProgressLogger:
             # do test connection related stuff
             cls.update_progress_step_status("test_connection", StepStatus.COMPLETED)
         """
+        # TODO: this is currently a workaround since the progress logs during a
+        #  Quick setup (stage) action are shown to the user and the localization mechanism is
+        #  unavailable on the VueJS side. The step_title should be a normal string once the
+        #  mechanism becomes available.
+        translated_title = translate_to_current_language(step_title)
         self._steps[step_name] = ProgressStep(
-            title=step_title, status=status, index=len(self._steps)
+            title=translated_title, status=status, index=len(self._steps)
         )
         self._log_progress()
 

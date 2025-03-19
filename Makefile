@@ -93,7 +93,6 @@ dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) cmk-frontend-build fr
 	if [ -f COMMIT ]; then \
 	    rm COMMIT ; \
 	fi
-	bazel build //omd:license_info && tar xf "$$(bazel cquery --output=files //omd:license_info)" -C check-mk-$(EDITION)-$(OMD_VERSION)/omd/
 	tar -cz --wildcards -f $(DIST_ARCHIVE) \
 	    $(TAROPTS) \
 	    check-mk-$(EDITION)-$(OMD_VERSION)

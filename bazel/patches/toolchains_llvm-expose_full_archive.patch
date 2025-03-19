@@ -1,0 +1,16 @@
+diff --git a/toolchain/BUILD.llvm_repo b/toolchain/BUILD.llvm_repo
+index f2bbc76..963c772 100644
+--- a/toolchain/BUILD.llvm_repo
++++ b/toolchain/BUILD.llvm_repo
+@@ -25,6 +25,11 @@ exports_files(glob(
+     allow_empty = True,
+ ))
+ 
++filegroup(
++    name = "srcs",
++    srcs = glob(["**"]),
++)
++
+ ## LLVM toolchain files
+ 
+ filegroup(

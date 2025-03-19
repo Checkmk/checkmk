@@ -30,7 +30,6 @@ from cmk.gui.watolib import activate_changes, config_sync
 from cmk import trace
 from cmk.bi.type_defs import frozen_aggregations_dir
 from cmk.messaging import rabbitmq
-from cmk.piggyback.hub import PiggybackHubConfig, PiggybackHubConfigType
 
 
 @pytest.fixture(name="mocked_responses")
@@ -257,7 +256,6 @@ def _generate_sync_snapshot(
         activation_manager._activation_id,
         activation_manager._sites,
         {remote_site: rabbitmq.Definitions()},
-        {remote_site: PiggybackHubConfig(type=PiggybackHubConfigType.PERSISTED, locations={})},
     )
     snapshot_settings = site_snapshot_settings[remote_site]
 
@@ -326,7 +324,6 @@ def _get_expected_paths(
         "etc/check_mk/rrdcached.d",
         "etc/check_mk/rrdcached.d/wato",
         "etc/check_mk/rrdcached.d/wato/sitespecific.mk",
-        "etc/check_mk/piggyback_hub.conf",
         "etc/omd",
         "etc/omd/distributed.mk",
         "etc/omd/sitespecific.mk",

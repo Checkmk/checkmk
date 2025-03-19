@@ -22,7 +22,6 @@ from cmk.gui.userdb import user_sync_default_config
 from cmk.gui.watolib.config_domain_name import wato_fileheader
 
 from cmk.messaging import rabbitmq
-from cmk.piggyback.hub import PiggybackHubConfig, save_piggyback_hub_config
 
 Command = list[str]
 
@@ -76,7 +75,6 @@ class SnapshotSettings(NamedTuple):
     component_names: set[str]
     site_config: SiteConfiguration
     rabbitmq_definition: rabbitmq.Definitions
-    piggyback_hub_config: PiggybackHubConfig | None
 
 
 class ABCSnapshotDataCollector(abc.ABC):
@@ -170,7 +168,3 @@ def _create_distributed_wato_file_for_omd(base_dir: Path, is_remote: bool) -> No
 
 def create_rabbitmq_new_definitions_file(base_dir: Path, definition: rabbitmq.Definitions) -> None:
     store.save_text_to_file(base_dir / rabbitmq.NEW_DEFINITIONS_FILE_PATH, definition.dumps())
-
-
-def create_piggyback_hub_new_config_file(base_dir: Path, config: PiggybackHubConfig) -> None:
-    save_piggyback_hub_config(base_dir, config)

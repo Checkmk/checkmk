@@ -13,6 +13,8 @@ import cmk.ccc.version as cmk_version
 
 from cmk.utils import paths
 from cmk.utils.hostaddress import HostName
+from cmk.utils.livestatus_helpers.queries import Query
+from cmk.utils.livestatus_helpers.tables.hosts import Hosts
 from cmk.utils.servicename import ServiceName
 
 from cmk.gui import sites
@@ -1264,6 +1266,16 @@ PermissionRemoveAllDowntimes = Permission(
 )
 
 
+def hosts_user_can_see(users_sites: list[livestatus.SiteId] | None = None) -> Sequence[str]:
+    """Returns a list of hostnames that the logged in user can see filtering
+    on the action rows sites if they are provided."""
+    hosts_query_result = Query([Hosts.name]).fetchall(
+        sites=sites.live(),
+        only_sites=users_sites,
+    )
+    return list({host["name"] for host in hosts_query_result})
+
+
 class CommandGroupDowntimes(CommandGroup):
     @property
     def ident(self) -> str:
@@ -1544,11 +1556,12 @@ class CommandScheduleDowntimesForm:
             html.close_div()
 
         open_submit_button_container_div(tooltip=tooltip_submission_disabled)
-        html.button(
-            "_down_host",
-            _("On host: Schedule downtime"),
-            cssclass="disabled" + ("" if is_service else " hot"),
-        )
+        if what == "host" or user.may("general.see_all") or hosts_user_can_see():
+            html.button(
+                "_down_host",
+                _("On host: Schedule downtime"),
+                cssclass="disabled" + ("" if is_service else " hot"),
+            )
         html.close_div()
 
         html.buttonlink(makeuri(request, [], delvars=["filled_in"]), _("Cancel"))
@@ -1812,6 +1825,14 @@ class CommandScheduleDowntimesForm:
             # We do not want to count the services but the affected hosts in this case.
             # Since we can not get actual host rows here, we use one row per affected host
             # as an approximation. This is good enough to count the affected hosts.
+
+            if not user.may("general.see_all"):
+                user_hosts = hosts_user_can_see(
+                    users_sites=list({livestatus.SiteId(row["site"]) for row in action_rows})
+                )
+                specs = [spec for spec in specs if spec in user_hosts]
+                action_rows = [ar for ar in action_rows if ar["host_name"] in user_hosts]
+
             seen = set()
             host_action_rows = []
             for action_row in action_rows:

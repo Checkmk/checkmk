@@ -14,10 +14,9 @@ import cmk.ccc.version as cmk_version
 from cmk.utils.diagnostics import DiagnosticsCLParameters
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel, Labels
+from cmk.utils.notify import NotificationContext
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.servicename import Item, ServiceName
-
-from cmk.events.event_context import EventContext
 
 from cmk.automations import results
 from cmk.automations.results import SetAutochecksInput
@@ -530,7 +529,9 @@ def notification_analyse(notification_number: int) -> results.NotificationAnalys
     )
 
 
-def notification_test(raw_context: EventContext, dispatch: str) -> results.NotificationTestResult:
+def notification_test(
+    raw_context: NotificationContext, dispatch: str
+) -> results.NotificationTestResult:
     return _deserialize(
         _automation_serialized(
             "notification-test",

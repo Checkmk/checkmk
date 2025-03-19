@@ -267,7 +267,7 @@ def register(replication_path_registry_: ReplicationPathRegistry) -> None:
             "dir",
             "usersettings",
             os.path.relpath(cmk.utils.paths.var_dir + "/web", cmk.utils.paths.omd_root),
-            ["report-thumbnails", "session_info.mk"],
+            ["last_login.mk", "report-thumbnails", "session_info.mk"],
         ),
         ReplicationPath(
             "dir",

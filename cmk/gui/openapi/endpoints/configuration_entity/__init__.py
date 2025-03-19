@@ -10,10 +10,14 @@ Which entities can be configured like this is defined by the configuration entit
 
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict
-from typing import Any, assert_never
+from typing import Any
 
 from cmk.gui.form_specs.vue.form_spec_visitor import FormSpecValidationError
 from cmk.gui.http import Response
+from cmk.gui.openapi.endpoints.configuration_entity import (
+    notification_parameter as notification_parameter_endpoints,
+)
+from cmk.gui.openapi.endpoints.configuration_entity._common import ENTITY_TYPE_SPECIFIER_FIELD
 from cmk.gui.openapi.endpoints.configuration_entity.request_schemas import (
     CreateConfigurationEntity,
     UpdateConfigurationEntity,
@@ -21,38 +25,19 @@ from cmk.gui.openapi.endpoints.configuration_entity.request_schemas import (
 from cmk.gui.openapi.endpoints.configuration_entity.response_schemas import (
     EditConfigurationEntityResponse,
 )
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_schemas, type_defs
+from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_schemas
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import EXT, FIELDS, problem, serve_json
 from cmk.gui.watolib.configuration_entity.configuration_entity import (
     ConfigurationEntityDescription,
     EntityId,
-    get_configuration_entity,
     get_configuration_entity_schema,
-    get_list_of_configuration_entities,
     save_configuration_entity,
 )
 
 from cmk import fields
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 from cmk.shared_typing.configuration_entity import ConfigEntityType
-
-ENTITY_ID_FIELD = {
-    "entity_id": fields.String(
-        required=True,
-        description="Object id of the configuration entity",
-        example="b43b060b-3b8c-41cf-8405-dddc6dd02575",
-    )
-}
-
-ENTITY_TYPE_SPECIFIER_FIELD = {
-    "entity_type_specifier": fields.String(
-        required=True,
-        description="Entity type specifier of the configuration entity",
-        example="mail",
-    )
-}
-
 
 ENTITY_TYPE = {
     "entity_type": fields.String(
@@ -62,16 +47,6 @@ ENTITY_TYPE = {
         example=ConfigEntityType.notification_parameter.value,
     )
 }
-
-
-def _to_domain_type(entity_type: ConfigEntityType) -> type_defs.DomainType:
-    match entity_type:
-        case ConfigEntityType.notification_parameter:
-            return "notification_parameter"
-        case ConfigEntityType.folder:
-            return "folder_config"
-        case other:
-            assert_never(other)
 
 
 def _serve_validations(data: Sequence[shared_type_defs.ValidationMessage]) -> Response:
@@ -154,75 +129,6 @@ def _update_configuration_entity(params: Mapping[str, Any]) -> Response:
 
 
 @Endpoint(
-    constructors.collection_href(
-        _to_domain_type(ConfigEntityType.notification_parameter), "{entity_type_specifier}"
-    ),
-    "cmk/list",
-    tag_group="Checkmk Internal",
-    path_params=[ENTITY_TYPE_SPECIFIER_FIELD],
-    method="get",
-    response_schema=response_schemas.DomainObjectCollection,
-)
-def _list_configuration_entities(params: Mapping[str, Any]) -> Response:
-    """List existing notification parameter"""
-    entity_type_specifier = params["entity_type_specifier"]
-
-    entity_descriptions = get_list_of_configuration_entities(
-        ConfigEntityType.notification_parameter, entity_type_specifier
-    )
-
-    return serve_json(
-        constructors.collection_object(
-            domain_type=_to_domain_type(ConfigEntityType.notification_parameter),
-            value=[
-                constructors.domain_object(
-                    domain_type=_to_domain_type(ConfigEntityType.notification_parameter),
-                    identifier=entry.ident,
-                    title=entry.description,
-                    include_links=False,
-                    editable=False,
-                    deletable=False,
-                )
-                for entry in entity_descriptions
-            ],
-        )
-    )
-
-
-@Endpoint(
-    constructors.object_href(
-        _to_domain_type(ConfigEntityType.notification_parameter), "{entity_id}"
-    ),
-    "cmk/show",
-    tag_group="Checkmk Internal",
-    path_params=[ENTITY_ID_FIELD],
-    method="get",
-    response_schema=response_schemas.DomainObject,
-)
-def _get_configuration_entity(params: Mapping[str, Any]) -> Response:
-    """Get a notification parameter"""
-    entity_id = EntityId(params["entity_id"])
-
-    try:
-        entity = get_configuration_entity(ConfigEntityType.notification_parameter, entity_id)
-    except KeyError:
-        return problem(
-            404, title="Not found", detail=f"Configuration entity {entity_id} not found."
-        )
-
-    return serve_json(
-        constructors.domain_object(
-            domain_type=_to_domain_type(ConfigEntityType.notification_parameter),
-            identifier=entity_id,
-            title=entity.description,
-            extensions=dict(entity.data),
-            editable=False,
-            deletable=False,
-        )
-    )
-
-
-@Endpoint(
     constructors.collection_href("form_spec", "{entity_type}"),
     "cmk/show",
     tag_group="Checkmk Internal",
@@ -253,6 +159,5 @@ def _get_configuration_entity_form_spec_schema(params: Mapping[str, Any]) -> Res
 def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(_create_configuration_entity)
     endpoint_registry.register(_update_configuration_entity)
-    endpoint_registry.register(_list_configuration_entities)
-    endpoint_registry.register(_get_configuration_entity)
     endpoint_registry.register(_get_configuration_entity_form_spec_schema)
+    notification_parameter_endpoints.register(endpoint_registry)

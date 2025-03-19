@@ -13,6 +13,7 @@ from typing import Literal
 from livestatus import SiteConfigurations, SiteId
 
 from cmk.utils import paths, store
+from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
@@ -122,24 +123,17 @@ def _make_path_config() -> PathConfig | None:
     )
 
 
-def _group_manifests_by_path(
-    path_config: PathConfig, manifests: Sequence[Manifest]
+def _group_manifests_by_rel_path(
+    site_id: SiteId, path_config: PathConfig, manifests: Sequence[Manifest]
 ) -> Mapping[Path, Manifest]:
     manifests_by_path: dict[Path, Manifest] = {}
     for manifest in manifests:
         for part, files in manifest.files.items():
             for file in files:
-                manifests_by_path[Path(path_config.get_path(part)).resolve() / file] = manifest
+                manifests_by_path[
+                    _try_rel_path(site_id, Path(path_config.get_path(part)) / file)
+                ] = manifest
     return manifests_by_path
-
-
-def _find_manifest(
-    manifests_by_path: Mapping[Path, Manifest], ac_test_result_path: Path
-) -> Manifest | None:
-    for path, manifest in manifests_by_path.items():
-        if str(ac_test_result_path.resolve()).endswith(str(path)):
-            return manifest
-    return None
 
 
 def _try_rel_path(site_id: SiteId, abs_path: Path) -> Path:
@@ -171,11 +165,13 @@ class _ACTestResultProblem:
             case "unsorted":
                 title = _("Unsorted")
         site_ids = sorted(self._ac_test_results)
-        details = [
-            f"{r.text} (file: {_try_rel_path(sid, r.path)})" if r.path else r.text
-            for sid, rs in self._ac_test_results.items()
-            for r in rs
-        ]
+        details = sorted(
+            set(
+                f"{r.text} (file: {_try_rel_path(sid, r.path)})" if r.path else r.text
+                for sid, rs in self._ac_test_results.items()
+                for r in rs
+            )
+        )
         return f"{title}, sites: {', '.join(site_ids)}:<br>{',<br>'.join(details)}"
 
 
@@ -189,7 +185,7 @@ def _find_ac_test_result_problems(
             if ac_test_result.path:
                 path = _try_rel_path(site_id, ac_test_result.path)
 
-                if manifest := _find_manifest(manifests_by_path, ac_test_result.path):
+                if manifest := manifests_by_path.get(path):
                     problem = problem_by_ident.setdefault(
                         manifest.name,
                         _ACTestResultProblem(manifest.name, "mkp"),
@@ -259,7 +255,8 @@ def execute_deprecation_tests_and_notify_users() -> None:
     marker_file_store.cleanup_empty_dirs()
 
     manifests_by_path = (
-        _group_manifests_by_path(
+        _group_manifests_by_rel_path(
+            omd_site(),
             path_config,
             get_stored_manifests(
                 PackageStore(

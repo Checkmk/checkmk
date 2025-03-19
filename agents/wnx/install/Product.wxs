@@ -305,8 +305,8 @@ just to signal that real build script was not called -->
             <Component Id="cmpE9245496997CBB452C7AB2DD036AA4DD" Guid="{B53B231C-FFFF-405C-AAC4-88BE73233A66}">
                 <File Id="fil1DAD57269AB73A084B862EC3C5DE5A71" KeyPath="yes" Source="..\..\windows\plugins\hyperv_vms_guestinfos.ps1" DiskId="1"  />
             </Component>
-            <Component Id="cmp9A6397189697490FEDA525CB1466EFAA" Guid="{06A9C936-E99E-4041-B75D-0B663C1F45A4}">
-                <File Id="fil9FC37D392CCD6754BAC8051683D40DD1" KeyPath="yes" Source="..\..\windows\plugins\kaspersky_av_client.vbs" DiskId="1"  />
+            <Component Id="cmp139D49E9FB5840048B28A161D1AC903D" Guid="{1CE43602-C0DC-4A8D-A6BD-93E7B0146E65}">
+                <File Id="fil8E8D55BD121B46CE8FEADE51980298A8" KeyPath="yes" Source="..\..\windows\plugins\kaspersky_av_client.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmp7B7D687D53F2D4CECFA13EBE1BE3801E" Guid="{DEA3C541-D345-4147-8A46-8FF86DAEE966}">
                 <File Id="fil6C23EA1FD057C5625D316AB8C9864258" KeyPath="yes" Source="..\..\windows\plugins\mcafee_av_client.bat" DiskId="1"  />
@@ -414,7 +414,7 @@ just to signal that real build script was not called -->
             <ComponentRef Id="cmpABBC9DF796FC09C181EC9B2D01A62525" />
             <ComponentRef Id="cmp832B7FCA61C9CFF8F1CA5C6FA13B5454" />
             <ComponentRef Id="cmpE9245496997CBB452C7AB2DD036AA4DD" />
-            <ComponentRef Id="cmp9A6397189697490FEDA525CB1466EFAA" />
+            <ComponentRef Id="cmp139D49E9FB5840048B28A161D1AC903D" />
             <ComponentRef Id="cmp7B7D687D53F2D4CECFA13EBE1BE3801E" />
             <ComponentRef Id="cmp2A9B7CC157BFEF8A29D75CC2F64A5A02" />
             <ComponentRef Id="cmpC93DA459EC69F6EE0183382A29CB8174" />

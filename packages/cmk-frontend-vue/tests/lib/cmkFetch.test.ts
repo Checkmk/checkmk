@@ -68,11 +68,9 @@ test('raiseForStatus for an known error', async () => {
   const result = await cmkFetch('some_endpoint_with_crashreport_response', {})
   await expect(async () => await result.raiseForStatus()).rejects.toThrowError(
     expect.objectContaining({
-      // this is a bug, it should contain information about the crash report
-      // and the title and details!
-      message: 'Error in fetch response',
+      message: 'some_title: some_detail',
       context:
-        'GET http://localhost:3000/some_endpoint_with_crashreport_response\nSTATUS 500: Internal Server Error'
+        'GET http://localhost:3000/some_endpoint_with_crashreport_response\nSTATUS 500: Internal Server Error\n\nCrash report: random_href'
     })
   )
 })

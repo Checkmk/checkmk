@@ -26,6 +26,7 @@ export class CmkFetchResponse {
   jsonReturned: null | unknown = null
   status: Response['status']
   requestOptions: FetchParams[1]
+  jsonConsumed: boolean = false
 
   constructor(response: Response, requestOptions: FetchParams[1]) {
     this.response = response
@@ -47,7 +48,7 @@ export class CmkFetchResponse {
   }
 
   async getError(cause: Error | null): Promise<CmkFetchError> {
-    // tries to extract intresting context from a response, and packs this as a CmkError
+    // tries to extract interesting context from a response, and packs this as a CmkError
     const context: Array<string> = []
 
     let message = 'Error in fetch response'
@@ -55,6 +56,24 @@ export class CmkFetchResponse {
     context.push(
       `${this.requestOptions?.method || 'GET'} ${this.response.url}\nSTATUS ${this.response.status}: ${this.response.statusText}`
     )
+
+    // you normally use raiseForStatus before you consume the json document
+    // but then we can not display the detailed error information,
+    // so we consume the json here manually to indirectly set this.jsonReturned
+    if (!this.jsonConsumed) {
+      try {
+        await this.json()
+      } catch (e: unknown) {
+        // we want to ignore the CmkError resulting from this call: maybe the
+        // original request did not call json(), and this additional error
+        // would be quite confusing.
+        if (e instanceof CmkError) {
+          console.info('cmkFetch: tried to parse response as json but failed')
+        } else {
+          throw e
+        }
+      }
+    }
 
     if (this.jsonReturned !== null) {
       const crashReportUrl = (this.jsonReturned as MaybeRestApiCrashReport).ext?.details
@@ -75,6 +94,9 @@ export class CmkFetchResponse {
   // we keep the json definition of original fetch
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async json(): Promise<any> {
+    // technically we set this variable too soon, but otherwise we could land
+    // in a infinite recursion via this.getError
+    this.jsonConsumed = true
     try {
       // we want a detailed error message in getError, but can only consume json once.
       this.jsonReturned = await this.response.json()

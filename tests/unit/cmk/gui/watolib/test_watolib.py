@@ -61,6 +61,7 @@ def test_registered_automation_commands() -> None:
         "fetch-background-job-snapshot",
         "store-broker-certs",
         "network-scan",
+        "notification-test",
         "ping",
         "get-config-sync-state",
         "get-remote-omd-status",

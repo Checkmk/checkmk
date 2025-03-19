@@ -14,6 +14,7 @@ from typing import Any
 
 from cmk.gui.form_specs.vue.form_spec_visitor import FormSpecValidationError
 from cmk.gui.http import Response
+from cmk.gui.openapi.endpoints.configuration_entity import folder as folder_endpoints
 from cmk.gui.openapi.endpoints.configuration_entity import (
     notification_parameter as notification_parameter_endpoints,
 )
@@ -161,3 +162,4 @@ def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(_update_configuration_entity)
     endpoint_registry.register(_get_configuration_entity_form_spec_schema)
     notification_parameter_endpoints.register(endpoint_registry)
+    folder_endpoints.register(endpoint_registry)

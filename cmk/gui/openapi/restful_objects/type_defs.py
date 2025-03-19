@@ -30,6 +30,7 @@ DomainType = Literal[
     "downtime",
     "event_console",
     "form_spec",
+    "folder",
     "folder_config",
     "host",
     "host_config",

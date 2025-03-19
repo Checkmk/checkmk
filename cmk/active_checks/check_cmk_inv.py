@@ -93,19 +93,6 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def get_command(args: argparse.Namespace) -> Sequence[str]:
-    return [
-        "cmk",
-        f"--inv-fail-status={args.inv_fail_status}",
-        f"--hw-changes={args.hw_changes}",
-        f"--sw-changes={args.sw_changes}",
-        f"--sw-missing={args.sw_missing}",
-        f"--nw-changes={args.nw_changes}",
-        "--inventory-as-check",
-        args.hostname,
-    ]
-
-
 def main(
     argv: Sequence[str] | None = None,
 ) -> int:

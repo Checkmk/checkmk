@@ -2644,11 +2644,11 @@ class VSExplicitConditions(Transform):
         return (
             _("Note that:")
             + html.render_ul(
-                html.render_li(_('"not" is the abbreviation for "and not",'))
+                (html.render_li(_("<tt>not</tt> is the abbreviation for <tt>and not</tt>")))
                 + html.render_li(
                     _(
-                        'the operators are processed in the priority: "not", "and", "or" - according '
-                        "to the Boolean algebra standards."
+                        "the operators are processed in the priority: <tt>not</tt>, <tt>and</tt>, "
+                        "<tt>or</tt> - according to the Boolean algebra standards."
                     )
                 )
             )

@@ -243,10 +243,8 @@ def formspec_aws_proxy_details() -> Mapping[str, DictElement]:
                         parameter_form=String(
                             title=Title("Proxy host"),
                             custom_validate=[
-                                validators.LengthInRange(
-                                    min_value=1,
-                                    max_value=255,
-                                    error_msg=Message("Proxy host is required but not specified."),
+                                validators.HostAddress(
+                                    error_msg=Message("Invalid hostname or IP address."),
                                 )
                             ],
                         ),

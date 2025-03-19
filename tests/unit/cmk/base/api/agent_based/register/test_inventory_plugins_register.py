@@ -33,7 +33,7 @@ def test_create_inventory_plugin_not_a_generator() -> None:
         _ = create_inventory_plugin(
             name="norris",
             inventory_function=dummy_function,
-            location=PluginLocation("mymodule"),
+            location=PluginLocation("mymodule", "myname"),
         )
 
 
@@ -46,7 +46,7 @@ def test_create_inventory_plugin_wrong_arg_name() -> None:
         _ = create_inventory_plugin(
             name="norris",
             inventory_function=dummy_generator,
-            location=PluginLocation("mymodule"),
+            location=PluginLocation("mymodule", "myname"),
         )
 
 
@@ -54,7 +54,7 @@ def test_create_inventory_plugin_minimal() -> None:
     plugin = create_inventory_plugin(
         name="norris",
         inventory_function=dummy_generator,
-        location=PluginLocation("mymodule"),
+        location=PluginLocation("mymodule", "myname"),
     )
 
     assert isinstance(plugin, InventoryPlugin)
@@ -63,7 +63,7 @@ def test_create_inventory_plugin_minimal() -> None:
     assert plugin.function.__name__ == "dummy_generator"
     assert plugin.defaults == {}
     assert plugin.ruleset_name is None
-    assert plugin.location == PluginLocation("mymodule")
+    assert plugin.location == PluginLocation("mymodule", "myname")
 
     with pytest.raises(TypeError):
         _ = list(plugin.function(None))

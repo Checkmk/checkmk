@@ -45,7 +45,7 @@ SNMP_HOST_CONFIG: Final = SNMPHostConfig(
 
 def snmp_is_detected(section: SNMPSection | SimpleSNMPSection, snmp_walk: Path) -> bool:
     section_plugin = create_snmp_section_plugin(
-        section, PluginLocation(module="not-relevant"), validate=True
+        section, PluginLocation("not", "relevant"), validate=True
     )
 
     backend = StoredWalkSNMPBackend(SNMP_HOST_CONFIG, logging.getLogger("test"), snmp_walk)
@@ -69,7 +69,7 @@ def get_parsed_snmp_section(
     backend = StoredWalkSNMPBackend(SNMP_HOST_CONFIG, logger, snmp_walk)
 
     section_plugin = create_snmp_section_plugin(
-        section, PluginLocation(module="not-relevant"), validate=True
+        section, PluginLocation("not", "relevant"), validate=True
     )
 
     table = []

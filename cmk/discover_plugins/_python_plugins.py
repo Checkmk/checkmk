@@ -10,7 +10,7 @@ from collections.abc import Callable, Hashable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
-from typing import Final, Generic, Protocol, TypeVar
+from typing import Final, Generic, Protocol, Self, TypeVar
 
 from ._wellknown import CMK_ADDONS_PLUGINS, CMK_PLUGINS, PluginGroup
 
@@ -30,10 +30,14 @@ class _ImporterProtocol(Protocol):
 @dataclass(frozen=True)
 class PluginLocation:
     module: str
-    name: str | None = None
+    name: str
 
     def __str__(self) -> str:
         return f"{self.module}:{self.name}"
+
+    @classmethod
+    def from_str(cls, raw: str) -> Self:
+        return cls(*raw.split(":", 1))
 
 
 @dataclass(frozen=True)

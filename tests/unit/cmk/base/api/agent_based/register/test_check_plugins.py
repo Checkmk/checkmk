@@ -33,7 +33,7 @@ MINIMAL_CREATION_KWARGS: dict[str, Any] = {
     "service_name": "Norris Device",
     "discovery_function": dummy_generator,
     "check_function": dummy_generator,
-    "location": PluginLocation(""),
+    "location": PluginLocation("", ""),
 }
 
 
@@ -240,7 +240,7 @@ TEST_PLUGIN = CheckPlugin(
     None,
     None,
     None,
-    PluginLocation(module="not-relevant"),
+    PluginLocation("not", "relevant"),
 )
 
 TEST_PLUGINS = {TEST_PLUGIN.name: TEST_PLUGIN}

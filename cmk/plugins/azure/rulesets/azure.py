@@ -198,11 +198,7 @@ def _migrate(value: object) -> Mapping[str, object]:
 
     value.pop("sequential", None)
 
-    # Migrate from 2.3 valuespec to 2.4 formspec
-    if import_tags := value.get("import_tags"):
-        if import_tags == "all_tags":
-            value["import_tags"] = (import_tags, None)
-
+    value.pop("import_tags", None)
     return value
 
 
@@ -337,9 +333,9 @@ def configuration_advanced() -> Mapping[str, DictElement]:
                 prefill=DefaultValue("grouphost"),
             ),
         ),
-        "import_tags": DictElement(
+        "filter_tags": DictElement(
             parameter_form=CascadingSingleChoice(
-                title=Title("Import tags as host/service labels"),
+                title=Title("Filter tags imported as host/service labels"),
                 help_text=Help(
                     "By default, Checkmk imports all Azure tags as host/service labels. "
                     "The imported tags are added as host labels for resource groups and "
@@ -355,11 +351,6 @@ def configuration_advanced() -> Mapping[str, DictElement]:
                 ),
                 elements=[
                     CascadingSingleChoiceElement(
-                        name="all_tags",
-                        title=Title("Import all valid tags"),
-                        parameter_form=FixedValue(value=None),
-                    ),
-                    CascadingSingleChoiceElement(
                         name="filter_tags",
                         title=Title("Filter valid tags by key pattern"),
                         parameter_form=RegularExpression(
@@ -367,8 +358,13 @@ def configuration_advanced() -> Mapping[str, DictElement]:
                             predefined_help_text=MatchingScope.INFIX,
                         ),
                     ),
+                    CascadingSingleChoiceElement(
+                        name="dont_import_tags",
+                        title=Title("Do not import tags"),
+                        parameter_form=FixedValue(value=None),
+                    ),
                 ],
-                prefill=DefaultValue("all_tags"),
+                prefill=DefaultValue("filter_tags"),
             ),
         ),
     }

@@ -19,7 +19,7 @@ from cmk.ccc import version
 from cmk.utils import paths
 
 from cmk.gui.http import HTTPMethod
-from cmk.gui.openapi.endpoints.configuration_entity import _to_domain_type
+from cmk.gui.openapi.endpoints.configuration_entity._common import to_domain_type
 from cmk.gui.openapi.endpoints.contact_group_config.common import APIInventoryPaths
 from cmk.gui.rest_api_types.notifications_rule_types import APINotificationRule
 from cmk.gui.rest_api_types.site_connection import SiteConfig
@@ -3043,7 +3043,7 @@ class ConfigurationEntityClient(RestApiClient):
     ) -> Response:
         return self.request(
             "get",
-            url=f"/domain-types/{_to_domain_type(entity_type)}/collections/{entity_type_specifier}",
+            url=f"/domain-types/{to_domain_type(entity_type)}/collections/{entity_type_specifier}",
             expect_ok=expect_ok,
         )
 
@@ -3055,7 +3055,7 @@ class ConfigurationEntityClient(RestApiClient):
     ) -> Response:
         return self.request(
             "get",
-            url=f"/objects/{_to_domain_type(entity_type)}/{entity_id}",
+            url=f"/objects/{to_domain_type(entity_type)}/{entity_id}",
             expect_ok=expect_ok,
         )
 
@@ -3067,7 +3067,7 @@ class ConfigurationEntityClient(RestApiClient):
     ) -> Response:
         return self.request(
             "get",
-            url=f"/domain-types/form_spec/collections/{_to_domain_type(entity_type)}?entity_type_specifier={entity_type_specifier}",
+            url=f"/domain-types/form_spec/collections/{to_domain_type(entity_type)}?entity_type_specifier={entity_type_specifier}",
             expect_ok=expect_ok,
         )
 

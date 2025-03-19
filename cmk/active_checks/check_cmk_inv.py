@@ -206,10 +206,7 @@ def inventory_as_check(parameters: HWSWInventoryParameters, hostname: HostName) 
 
 
 def load_checks() -> AgentBasedPlugins:
-    plugins = config.load_all_plugins(
-        local_checks_dir=cmk.utils.paths.local_checks_dir,
-        checks_dir=cmk.utils.paths.checks_dir,
-    )
+    plugins = config.load_all_plugins(cmk.utils.paths.checks_dir)
     if sys.stderr.isatty():
         for error_msg in plugins.errors:
             console.error(error_msg, file=sys.stderr)

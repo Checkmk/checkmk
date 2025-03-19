@@ -32,7 +32,6 @@ def test_migrate_azure_rule_vs_already_migrated():
     assert migrated_data == {
         "services": ["ad_connect", "Microsoft.Compute/virtualMachines"],
         "authority": "global",
-        "import_tags": "all_tags",
     }
 
 

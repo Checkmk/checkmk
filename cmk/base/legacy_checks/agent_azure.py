@@ -62,6 +62,13 @@ def agent_azure_arguments(  # pylint: disable=too-many-branches
         elif isinstance(requirement, tuple) and requirement[0] == "value":
             args += ["--require-tag-value", tag, requirement[1]]
 
+    if (filter_tags := params.get("filter_tags")) is not None:
+        match filter_tags[1]:
+            case str(tag_key_pattern):
+                args += ["--import-matching-tags-as-labels", tag_key_pattern]
+            case None:
+                args += ["--ignore-all-tags"]
+
     args += [
         "--cache-id",
         hostname,

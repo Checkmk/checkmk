@@ -125,10 +125,7 @@ def _migrate_azure_rule_vs(data):
         # Services selection was introduced after Azure monitoring so we want that the users with an
         # older version will have all services enabled as it was before this change
         data["services"] = [service_id for service_id, _service_name in get_azure_services()]
-    if "import_tags" not in data:
-        # Set the new option "import_tags" to import all Azure tags by default
-        # This is removed in 2.4.0
-        data["import_tags"] = "all_tags"
+    data.pop("import_tags", None)
     data.pop("sequential", None)
     return data
 
@@ -249,15 +246,10 @@ def _valuespec_special_agents_azure():
                     ),
                 ),
                 (
-                    "import_tags",
+                    "filter_tags",
                     CascadingDropdown(
-                        title=("Import tags as host/service labels"),
+                        title=("Filter tags as host/service labels"),
                         choices=[
-                            (
-                                "all_tags",
-                                _("Import all valid tags"),
-                                None,
-                            ),
                             (
                                 "filter_tags",
                                 _("Filter valid tags by key pattern"),
@@ -266,6 +258,11 @@ def _valuespec_special_agents_azure():
                                     allow_empty=False,
                                     size=50,
                                 ),
+                            ),
+                            (
+                                "dont_import_tags",
+                                _("Do not import tags"),
+                                None,
                             ),
                         ],
                         orientation="horizontal",
@@ -291,7 +288,6 @@ def _valuespec_special_agents_azure():
                 "import_tags",
                 "piggyback_vms",
             ],
-            default_keys=["import_tags"],
         ),
         migrate=_migrate_azure_rule_vs,
     )

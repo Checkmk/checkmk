@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -289,4 +290,24 @@ TEST(StringUtilTest, NextArgumentMissingQuote) {
 TEST(StringUtilTest, NextArgumentMissingQuote2) {
     auto str = "  'foo''s blah'' bar"sv;
     EXPECT_THROW(mk::next_argument(str), std::runtime_error);
+}
+
+namespace {
+double from_chars(std::string_view str) {
+    double number = 0.0;
+    // NOLINTNEXTLINE(bugprone-suspicious-stringview-data-usage)
+    auto [ptr, ec] = mk::from_chars(str.data(), nullptr, number);
+    if (ec == std::errc{}) {
+        return number;
+    }
+    throw std::runtime_error{"conversion failed"};
+}
+}  // namespace
+
+TEST(StringUtilsTest, FromChars) {
+    EXPECT_DOUBLE_EQ(2.0, from_chars("2.0"sv));
+    EXPECT_DOUBLE_EQ(2.0, from_chars("2abc"sv));
+    EXPECT_DOUBLE_EQ(2.0, from_chars("2.0abc"sv));
+    EXPECT_DOUBLE_EQ(2.0, from_chars("2abc"sv));
+    EXPECT_THROW(from_chars("abc2.0"sv), std::runtime_error);
 }

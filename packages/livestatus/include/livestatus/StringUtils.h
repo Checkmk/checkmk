@@ -14,6 +14,7 @@
 #include <ostream>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -85,6 +86,11 @@ void skip_whitespace(std::string_view &str);
 // the next whitespace character. Optionally, the argument can be in single
 // quotes, where 2 consecutive quotes are treated as a verbatim quote.
 std::string next_argument(std::string_view &str);
+
+// TODO: Switch to std::from_chars after with llvm 20
+std::pair<char *, std::error_code> from_chars(const char *first,
+                                              const char * /* last */,
+                                              double &value);
 }  // namespace mk
 
 template <size_t N>

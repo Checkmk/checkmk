@@ -5,9 +5,10 @@
 
 #include "livestatus/RRDRPN.h"
 
-#include <charconv>
 #include <stdexcept>
 #include <system_error>
+
+#include "livestatus/StringUtils.h"
 
 using namespace std::string_literals;
 
@@ -51,7 +52,7 @@ void detail::RPN::eval(const std::string &x) {
     }
     double number = 0.0;
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-    auto [ptr, ec] = std::from_chars(x.data(), x.data() + x.size(), number);
+    auto [ptr, ec] = mk::from_chars(x.data(), x.data() + x.size(), number);
     if (ec == std::errc{}) {
         _stack.emplace_back(number);
     } else {

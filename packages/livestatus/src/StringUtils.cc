@@ -10,6 +10,8 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cerrno>
+#include <cstdlib>
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
@@ -274,4 +276,18 @@ std::string next_argument(std::string_view &str) {
     }
 }
 
+std::pair<char *, std::error_code> from_chars(const char *first,
+                                              const char * /* last */,
+                                              double &value) {
+    errno = 0;
+    char dummy = '\0';
+    char *end = &dummy;  // must not be nullptr
+    value = strtod(first, &end);
+    if (end == first) {
+        // any non-zero error will do for now
+        return std::make_pair(
+            end, std::make_error_code(std::errc::illegal_byte_sequence));
+    }
+    return std::make_pair(end, std::make_error_code(std::errc{errno}));
+}
 }  // namespace mk

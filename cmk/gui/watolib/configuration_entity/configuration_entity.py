@@ -95,7 +95,7 @@ def get_configuration_entity_schema(
     entity_type_specifier: str,
 ) -> ConfigurationEntitySchema:
     form_spec = _get_configuration_fs(entity_type, entity_type_specifier)
-    visitor = get_visitor(form_spec, VisitorOptions(DataOrigin.FRONTEND))
+    visitor = get_visitor(form_spec, VisitorOptions(DataOrigin.DISK))
     schema, default_values = visitor.to_vue(DEFAULT_VALUE)
     return ConfigurationEntitySchema(schema=schema, default_values=default_values)
 

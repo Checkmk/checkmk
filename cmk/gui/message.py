@@ -54,18 +54,13 @@ from cmk.gui.valuespec import (
 MessageMethod = Literal["gui_hint", "gui_popup", "mail", "dashlet"]
 
 
-class MessageMandatory(TypedDict):
-    """From dictionary valuespec"""
-
+class Message(TypedDict):
+    # From dictionary valuespec
     text: str
     dest: tuple[str, list[UserId]]
     methods: list[MessageMethod]
-
-
-class Message(MessageMandatory):
-    """Later added by _process_message"""
-
-    valid_till: NotRequired[int]
+    valid_till: int | None
+    # Later added by _process_message
     id: NotRequired[str]
     time: NotRequired[int]
     security: NotRequired[bool]
@@ -192,12 +187,14 @@ def page_message() -> None:
         try:
             msg = vs_message.from_html_vars("_message")
             vs_message.validate_value(msg, "_message")
-            message = Message(
-                text=msg["text"],
-                dest=msg["dest"],
-                methods=msg["methods"],
+            _process_message(
+                Message(
+                    text=msg["text"],
+                    dest=msg["dest"],
+                    methods=msg["methods"],
+                    valid_till=msg["valid_till"],
+                )
             )
-            _process_message(message)
         except MKUserError as e:
             html.user_error(e)
 

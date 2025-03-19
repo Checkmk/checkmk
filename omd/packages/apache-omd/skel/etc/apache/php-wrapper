@@ -1,6 +1,7 @@
 #!/bin/sh
 
 . "###ROOT###/.profile"
+. "###ROOT###/etc/omd/site.conf"
 
 export PHP_FCGI_MAX_REQUESTS=1000
 

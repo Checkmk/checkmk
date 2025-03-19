@@ -672,11 +672,15 @@ class Site:
             stderr=subprocess.STDOUT,
             check=check,
         )
-        logger.debug("Exit code: %d", completed_process.returncode)
+        logger.info("Exit code: %d", completed_process.returncode)
         if completed_process.stdout:
-            logger.debug("Output:")
-        for line in completed_process.stdout.strip().split("\n"):
-            logger.debug("> %s", line)
+            logger.debug("Stdout:")
+            for line in completed_process.stdout.strip().split("\n"):
+                logger.debug("> %s", line)
+        if completed_process.stderr:
+            logger.info("Stderr:")
+            for line in completed_process.stderr.strip().split("\n"):
+                logger.info("> %s", line)
 
         if mode == "status":
             logger.info(

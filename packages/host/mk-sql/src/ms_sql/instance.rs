@@ -464,7 +464,7 @@ impl SqlInstance {
         if self.tcp {
             create_tcp_client(endpoint, database, self.port()).await
         } else {
-            create_odbc_client(&self.name, database)
+            create_odbc_client(&endpoint.conn().hostname(), &self.name, database)
         }
     }
 
@@ -1362,15 +1362,21 @@ pub async fn create_tcp_client(
 }
 
 pub fn create_odbc_client(
+    hostname: &HostName,
     instance_name: &InstanceName,
     database: Option<String>,
 ) -> Result<UniClient> {
     #[cfg(unix)]
-    anyhow::bail!("ODBC Not supported `{}` db:`{:?}`", instance_name, database);
+    anyhow::bail!(
+        "ODBC Not supported `{}` `{}` db:`{:?}`",
+        hostname,
+        instance_name,
+        database
+    );
     #[cfg(windows)]
     {
         let connection_string =
-            odbc::make_connection_string(instance_name, database.as_deref(), None);
+            odbc::make_connection_string(Some(hostname), instance_name, database.as_deref(), None);
         Ok(UniClient::Odbc(OdbcClient::new(connection_string)))
     }
 }
@@ -2184,7 +2190,7 @@ async fn get_custom_instance_builder(
     let auth = endpoint.auth();
     let conn = endpoint.conn();
     if is_local_endpoint(auth, conn) && !is_use_tcp(instance_name, auth, conn) {
-        if let Ok(mut client) = create_odbc_client(instance_name, None) {
+        if let Ok(mut client) = create_odbc_client(&conn.hostname(), instance_name, None) {
             log::debug!("Trying to connect to `{instance_name}` using ODBC");
             let b = obtain_properties(&mut client, instance_name)
                 .await

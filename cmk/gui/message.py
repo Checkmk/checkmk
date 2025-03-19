@@ -7,7 +7,7 @@ import subprocess
 import time
 from collections.abc import MutableSequence
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal, NotRequired, TypedDict
 
 from six import ensure_str
 
@@ -53,7 +53,18 @@ from cmk.gui.valuespec import (
     TextAreaUnicode,
 )
 
-Message = DictionaryModel
+MessageMethod = Literal["gui_hint", "gui_popup", "mail", "dashlet"]
+
+
+class Message(TypedDict):
+    # From dictionary VS
+    text: str
+    dest: tuple[str, list[UserId]]
+    methods: list[MessageMethod]
+    valid_till: int | None
+    # Later added by _process_message
+    id: NotRequired[str]
+    time: NotRequired[int]
 
 
 def register(page_registry: PageRegistry) -> None:
@@ -151,7 +162,14 @@ def page_message() -> None:
         try:
             msg = vs_message.from_html_vars("_message")
             vs_message.validate_value(msg, "_message")
-            _process_message_message(msg)
+            _process_message(
+                Message(
+                    text=msg["text"],
+                    dest=msg["dest"],
+                    methods=msg["methods"],
+                    valid_till=msg["valid_till"],
+                )
+            )
         except MKUserError as e:
             html.user_error(e)
 
@@ -271,7 +289,7 @@ def _vs_message() -> Dictionary:
     )
 
 
-def _validate_msg(msg: Message, _varprefix: str) -> None:
+def _validate_msg(msg: DictionaryModel, _varprefix: str) -> None:
     if not msg.get("methods"):
         raise MKUserError("methods", _("Please select at least one messaging method."))
 
@@ -288,9 +306,9 @@ def _validate_msg(msg: Message, _varprefix: str) -> None:
                 raise MKUserError("dest", _('A user with the id "%s" does not exist.') % user_id)
 
 
-def _process_message_message(msg: Message) -> None:  # pylint: disable=too-many-branches
+def _process_message(msg: Message) -> None:  # pylint: disable=too-many-branches
     msg["id"] = utils.gen_id()
-    msg["time"] = time.time()
+    msg["time"] = int(time.time())
 
     if isinstance(msg["dest"], str):
         dest_what = msg["dest"]
@@ -313,7 +331,7 @@ def _process_message_message(msg: Message) -> None:  # pylint: disable=too-many-
         num_success[method] = 0
 
     # Now loop all messaging methods to send the messages
-    errors: dict[str, list[tuple]] = {}
+    errors: dict[MessageMethod, list[tuple]] = {}
     for user_id in recipients:
         for method in msg["methods"]:
             try:

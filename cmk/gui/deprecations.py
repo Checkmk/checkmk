@@ -286,10 +286,9 @@ def execute_deprecation_tests_and_notify_users() -> None:
                     dest=("list", [user_id]),
                     methods=["gui_hint"],
                     text=ac_test_results_message,
+                    valid_till=None,
                     id=gen_id(),
                     time=now,
-                    security=False,
-                    acknowledged=False,
                 ),
             )
 

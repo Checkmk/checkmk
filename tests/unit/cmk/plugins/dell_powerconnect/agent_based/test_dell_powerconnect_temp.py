@@ -13,12 +13,10 @@ from tests.unit.cmk.plugins.collection.agent_based.snmp import (
     snmp_is_detected,
 )
 
-from cmk.checkengine.checking import CheckPluginName
-
-from cmk.base.api.agent_based.register import AgentBasedPlugins
-
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
 from cmk.plugins.dell_powerconnect.agent_based.dell_powerconnect_temp import (
+    check_dell_powerconnect_temp,
+    discover_dell_powerconnect_temp,
     Section,
     snmp_section_dell_powerconnect_temp,
 )
@@ -42,11 +40,10 @@ def test_temp_parse(
     )
 
 
-def test_temp_discover(agent_based_plugins: AgentBasedPlugins) -> None:
-    plugin = agent_based_plugins.check_plugins[CheckPluginName("dell_powerconnect_temp")]
+def test_temp_discover() -> None:
     assert (
         list(
-            plugin.discovery_function(
+            discover_dell_powerconnect_temp(
                 Section(42.0, "OK"),
             )
         )
@@ -102,14 +99,10 @@ def test_temp_discover(agent_based_plugins: AgentBasedPlugins) -> None:
         ),
     ],
 )
-def test_temp_check(
-    agent_based_plugins: AgentBasedPlugins, section: object, result: CheckResult
-) -> None:
-    plugin = agent_based_plugins.check_plugins[CheckPluginName("dell_powerconnect_temp")]
-
+def test_temp_check(section: Section, result: CheckResult) -> None:
     assert (
         list(
-            plugin.check_function(
+            check_dell_powerconnect_temp(
                 item="Ambient",
                 params={"levels": (80, 90), "device_levels_handling": "dev"},
                 section=section,

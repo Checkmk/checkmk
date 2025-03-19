@@ -20,9 +20,10 @@ from cmk.ccc.i18n import _
 from cmk.ccc.store._file import (
     BytesSerializer,
     DimSerializer,
+    FileIo,
     ObjectStore,
     PickleSerializer,
-    PydanticStore,
+    RealIo,
     Serializer,
     TextSerializer,
 )
@@ -44,10 +45,11 @@ from cmk import trace
 __all__ = [
     "BytesSerializer",
     "DimSerializer",
+    "FileIo",
     "ObjectStore",
     "PickleSerializer",
+    "RealIo",
     "Serializer",
-    "PydanticStore",
     "TextSerializer",
     "acquire_lock",
     "cleanup_locks",

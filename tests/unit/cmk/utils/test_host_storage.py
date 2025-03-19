@@ -3,12 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from pathlib import Path
-
 import pytest
-from pydantic import BaseModel
-
-from cmk.ccc import store
 
 from cmk.utils.host_storage import (
     get_hosts_file_variables,
@@ -96,23 +91,3 @@ def tests_standard_format_loader():
     variables = get_hosts_file_variables()
     standard_loader.apply(_hosts_mk_test_data, variables)
     assert variables["all_hosts"] == ["test"]
-
-
-def test_pydantic_store_serialization(tmp_path: Path) -> None:
-    store_path = tmp_path / "MyModel"
-
-    class MyModel(BaseModel):
-        unit: str
-        test: int
-
-    my_store = store.PydanticStore(store_path, MyModel)
-    with my_store.locked():
-        my_store.write_obj(MyModel(unit="bar", test=42))
-    assert store_path.read_text() == '{"unit":"bar","test":42}'
-
-    other_store = store.PydanticStore(store_path, MyModel)
-    with other_store.locked():
-        deserialized_object = other_store.read_obj(default=MyModel(unit="foo", test=0))
-    assert isinstance(deserialized_object, MyModel)
-    assert deserialized_object.unit == "bar"
-    assert deserialized_object.test == 42

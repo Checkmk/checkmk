@@ -107,7 +107,6 @@ py_library(
         "exceptions",
         "i18n",
         "//packages/cmk-trace",
-        requirement("pydantic"),
     ],
 )
 

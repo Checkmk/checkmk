@@ -2491,7 +2491,6 @@ pydantic==2.10.6 \
     # via
     #   -r cmk/requirements.in
     #   -r packages/cmk-agent-based/requirements.in
-    #   -r packages/cmk-ccc/requirements.in
     #   -r packages/cmk-messaging/requirements.in
     #   -r packages/cmk-mkp-tool/requirements.in
     #   -r packages/cmk-werks/requirements.in
@@ -2505,7 +2504,6 @@ pydantic[email]==2.10.6 \
     # via
     #   -r cmk/requirements.in
     #   -r packages/cmk-agent-based/requirements.in
-    #   -r packages/cmk-ccc/requirements.in
     #   -r packages/cmk-messaging/requirements.in
     #   -r packages/cmk-mkp-tool/requirements.in
     #   -r packages/cmk-werks/requirements.in

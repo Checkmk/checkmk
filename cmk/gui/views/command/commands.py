@@ -1264,13 +1264,6 @@ PermissionRemoveAllDowntimes = Permission(
 )
 
 
-@request_memoize()
-def hosts_user_can_see() -> Sequence[str]:
-    return livestatus.LocalConnection().query_column(
-        query=f"GET hosts\nColumns: name\nAuthUser: {user.ident}"
-    )
-
-
 class CommandGroupDowntimes(CommandGroup):
     @property
     def ident(self) -> str:
@@ -1551,12 +1544,11 @@ class CommandScheduleDowntimesForm:
             html.close_div()
 
         open_submit_button_container_div(tooltip=tooltip_submission_disabled)
-        if user.may("general.see_all") or hosts_user_can_see():
-            html.button(
-                "_down_host",
-                _("On host: Schedule downtime"),
-                cssclass="disabled" + ("" if is_service else " hot"),
-            )
+        html.button(
+            "_down_host",
+            _("On host: Schedule downtime"),
+            cssclass="disabled" + ("" if is_service else " hot"),
+        )
         html.close_div()
 
         html.buttonlink(makeuri(request, [], delvars=["filled_in"]), _("Cancel"))
@@ -1822,10 +1814,6 @@ class CommandScheduleDowntimesForm:
             # as an approximation. This is good enough to count the affected hosts.
             seen = set()
             host_action_rows = []
-
-            if not user.may("general.see_all"):
-                action_rows = [ar for ar in action_rows if ar["host_name"] in hosts_user_can_see()]
-
             for action_row in action_rows:
                 if action_row["host_name"] not in seen:
                     seen.add(action_row["host_name"])

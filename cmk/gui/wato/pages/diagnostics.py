@@ -28,6 +28,7 @@ from cmk.utils.diagnostics import (
     get_checkmk_file_sensitivity_for_humans,
     get_checkmk_licensing_files_map,
     get_checkmk_log_files_map,
+    OPT_BI_RUNTIME_DATA,
     OPT_CHECKMK_CONFIG_FILES,
     OPT_CHECKMK_CRASH_REPORTS,
     OPT_CHECKMK_LOG_FILES,
@@ -501,7 +502,8 @@ class ModeDiagnostics(WatoMode):
                     % _CHECKMK_FILES_NOTE,
                     elements=self._get_component_specific_checkmk_files_elements(
                         OPT_COMP_BUSINESS_INTELLIGENCE,
-                    ),
+                    )
+                    + self._get_bi_runtime_data(),
                     default_keys=["config_files"],
                 ),
             ),
@@ -540,6 +542,23 @@ class ModeDiagnostics(WatoMode):
                 )
             )
         return elements
+
+    def _get_bi_runtime_data(self) -> list[tuple[str, ValueSpec]]:
+        return [
+            (
+                OPT_BI_RUNTIME_DATA,
+                FixedValue(
+                    value=True,
+                    totext="",
+                    title=_("BI runtime data"),
+                    help=_(
+                        "Cached data from Business Intelligence. "
+                        "Contains states, downtimes, acknowledgements and service periods "
+                        "for all hosts/services included in a BI aggregation."
+                    ),
+                ),
+            )
+        ]
 
     def _get_cs_elements_for(
         self, component: str, element_id: str, element_title: str, files_map: CheckmkFilesMap

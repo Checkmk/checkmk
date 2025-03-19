@@ -1,0 +1,14 @@
+Title: downtimes: Prevent users from setting host downtimes if only permitted on services
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1742391079
+Edition: cre
+Level: 1
+Version: 2.2.0p41
+
+Previously, when a user assigned to a contact group that was in turn
+assigned to services via a rule, they could create a downtime on the
+host the services belonged to but then didn't have permission to
+remove the downtime.  This werk addresses this issue by not allowing
+the user to set the downtime if they do not have persmission to do so.

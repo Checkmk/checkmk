@@ -9,6 +9,8 @@ from typing import Any, Literal
 
 import livestatus
 
+from cmk.utils.livestatus_helpers.queries import Query
+from cmk.utils.livestatus_helpers.tables.hosts import Hosts
 from cmk.utils.render import SecondsRenderer
 from cmk.utils.type_defs import HostName, ServiceName
 
@@ -916,6 +918,16 @@ permission_registry.register(
 )
 
 
+def hosts_user_can_see(users_sites: list[livestatus.SiteId] | None = None) -> Sequence[str]:
+    """Returns a list of hostnames that the logged in user can see filtering
+    on the action rows sites if they are provided."""
+    hosts_query_result = Query([Hosts.name]).fetchall(
+        sites=sites.live(),
+        only_sites=users_sites,
+    )
+    return list({host["name"] for host in hosts_query_result})
+
+
 class CommandGroupDowntimes(CommandGroup):
     @property
     def ident(self) -> str:
@@ -978,14 +990,17 @@ class CommandScheduleDowntimes(Command):
         self, len_rows: int, cmdtag: Literal["HOST", "SVC"]
     ) -> list[tuple[str, str]]:
         if cmdtag == "SVC" and not request.var("_down_remove"):
-            return [
+            buttons = [
                 (
                     _("Schedule downtime for %d %s")
                     % (len_rows, ungettext("service", "services", len_rows)),
                     "_do_confirm_service_downtime",
                 ),
-                (_("Schedule downtime on host"), "_do_confirm_host_downtime"),
             ]
+            if user.may("general.see_all") or hosts_user_can_see():
+                buttons += [(_("Schedule downtime on host"), "_do_confirm_host_downtime")]
+            return buttons
+
         return super().user_confirm_options(len_rows, cmdtag)
 
     def render(self, what) -> None:  # type:ignore[no-untyped-def]
@@ -1274,6 +1289,8 @@ class CommandScheduleDowntimes(Command):
             specs = [spec.split(";")[0]]
             title += " the hosts of"
             cmdtag = "HOST"
+            if not user.may("general.see_all"):
+                specs = [s for s in specs if s in hosts_user_can_see()]
         else:
             specs = [spec]
         return cmdtag, specs, title

@@ -13,14 +13,10 @@ from tests.unit.cmk.plugins.collection.agent_based.snmp import (
     snmp_is_detected,
 )
 
-from cmk.checkengine.checking import CheckPluginName
-
-from cmk.base.api.agent_based.plugin_classes import (
-    AgentBasedPlugins,
-)
-
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
 from cmk.plugins.dell_powerconnect.agent_based.dell_powerconnect_cpu import (
+    check_dell_powerconnect_cpu,
+    discover_dell_powerconnect_cpu,
     Section,
     snmp_section_dell_powerconnect_cpu,
 )
@@ -46,9 +42,8 @@ def test_cpu_parse(
     )
 
 
-def test_cpu_discover(agent_based_plugins: AgentBasedPlugins) -> None:
-    plugin = agent_based_plugins.check_plugins[CheckPluginName("dell_powerconnect_cpu")]
-    assert (list(plugin.discovery_function(Section(True, 91, 10, 4)))) == [
+def test_cpu_discover() -> None:
+    assert (list(discover_dell_powerconnect_cpu(Section(True, 91, 10, 4)))) == [
         Service(),
     ]
 
@@ -81,14 +76,10 @@ def test_cpu_discover(agent_based_plugins: AgentBasedPlugins) -> None:
         ),
     ],
 )
-def test_cpu_check(
-    agent_based_plugins: AgentBasedPlugins, section: object, result: CheckResult
-) -> None:
-    plugin = agent_based_plugins.check_plugins[CheckPluginName("dell_powerconnect_cpu")]
-
+def test_cpu_check(section: Section, result: CheckResult) -> None:
     assert (
         list(
-            plugin.check_function(
+            check_dell_powerconnect_cpu(
                 params={"levels": (80.0, 90.0)},
                 section=section,
             )
@@ -97,9 +88,7 @@ def test_cpu_check(
     )
 
 
-def test_cpu_check_ignore(
-    as_path: Callable[[str], Path], agent_based_plugins: AgentBasedPlugins
-) -> None:
+def test_cpu_check_ignore(as_path: Callable[[str], Path]) -> None:
     snmp_walk = as_path("""
 .1.3.6.1.2.1.1.2.0 .1.3.6.1.4.1.674.10895
 .1.3.6.1.4.1.89.1.6 1

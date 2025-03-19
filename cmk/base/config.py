@@ -2666,6 +2666,19 @@ class ConfigCache:
         password_store_file: Path,
         single_plugin: str | None = None,
     ) -> Iterator[ActiveServiceData]:
+        plugin_configs = (
+            self.active_checks(host_name)
+            if single_plugin is None
+            else [
+                (single_plugin, plugin_params)
+                for plugin_name, plugin_params in self.active_checks(host_name)
+                if plugin_name == single_plugin
+            ]
+        )
+
+        if not plugin_configs:
+            return
+
         additional_addresses_ipv4, additional_addresses_ipv6 = self.additional_ipaddresses(
             host_name
         )
@@ -2695,16 +2708,6 @@ class ConfigCache:
                 cmk.utils.paths.local_nagios_plugins_dir, cmk.utils.paths.nagios_plugins_dir
             ),
             ip_lookup_failed=ip_lookup.is_fallback_ip(host_attrs["address"]),
-        )
-
-        plugin_configs = (
-            self.active_checks(host_name)
-            if single_plugin is None
-            else [
-                (single_plugin, plugin_params)
-                for plugin_name, plugin_params in self.active_checks(host_name)
-                if plugin_name == single_plugin
-            ]
         )
 
         for plugin_name, plugin_params in plugin_configs:

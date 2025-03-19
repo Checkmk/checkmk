@@ -70,7 +70,7 @@ case "$1" in
             exit_with_code 0 "not running (PID file orphaned)"
         fi
 
-        echo -n "killing $PID ..."
+        echo -n "killing $PID..."
 
         if ! kill "$PID" 2>/dev/null; then
             rm "$PIDFILE"
@@ -92,24 +92,13 @@ case "$1" in
         exit_with_code 1 "failed"
         ;;
 
-    restart)
+    restart | reload)
         $0 stop
         $0 start
         ;;
 
-    reload)
-        echo -n 'Reloading piggyback-hub ...'
-        if [ -z "$PID" ]; then
-            echo 'not running.'
-            exit 1
-        else
-            echo "sending SIGHUP to $PID ..."
-            kill -HUP "$PID"
-        fi
-        ;;
-
     status)
-        printf 'Checking status of piggyback-hub ...'
+        printf 'Checking status of piggyback-hub...'
 
         if [ -z "$PID" ]; then
             exit_with_code 1 "not running"

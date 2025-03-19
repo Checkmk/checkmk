@@ -63,7 +63,10 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
         ReplicationPath("file", "auth.serials", "etc/auth.serials", []),
         ReplicationPath("file", "stored_passwords", "var/check_mk/stored_passwords", []),
         ReplicationPath(
-            "dir", "usersettings", "var/check_mk/web", ["report-thumbnails", "session_info.mk"]
+            "dir",
+            "usersettings",
+            "var/check_mk/web",
+            ["last_login.mk", "report-thumbnails", "session_info.mk"],
         ),
         ReplicationPath("dir", "mkps", "var/check_mk/packages", []),
         ReplicationPath("dir", "local", "local", []),

@@ -9,6 +9,8 @@ from marshmallow import post_dump
 
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import attr_openapi_schema, BaseSchema
+from cmk.gui.openapi.endpoints._common.folder_attribute_schemas import FolderViewAttribute
+from cmk.gui.openapi.endpoints._common.host_attribute_schemas import HostViewAttribute
 from cmk.gui.openapi.restful_objects.response_schemas import (
     DomainObject,
     DomainObjectCollection,
@@ -37,10 +39,9 @@ class FolderExtensions(BaseSchema):
     path = fields.String(
         description="The full path of this folder, slash delimited.",
     )
-    attributes = gui_fields.host_attributes_field(
-        "folder",
-        "view",
-        "outbound",
+
+    attributes = fields.Nested(
+        FolderViewAttribute,
         description=(
             "The folder's attributes. Hosts placed in this folder will inherit these attributes."
         ),
@@ -100,10 +101,8 @@ class HostExtensions(BaseSchema):
     folder = gui_fields.FolderField(
         description="The folder, in which this host resides.",
     )
-    attributes = gui_fields.host_attributes_field(
-        "host",
-        "view",
-        "outbound",
+    attributes = fields.Nested(
+        HostViewAttribute,
         description="Attributes of this host.",
         example={"ipaddress": "192.168.0.123"},
     )

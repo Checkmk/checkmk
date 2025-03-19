@@ -12,10 +12,11 @@ import re
 import typing
 import uuid
 import warnings
-from collections.abc import Callable, Collection, Mapping
+from collections.abc import Callable, Collection, Mapping, MutableMapping
 from datetime import datetime, timezone
 from typing import Any, Literal
 
+import marshmallow
 from cryptography.x509 import CertificateSigningRequest, load_pem_x509_csr
 from cryptography.x509.oid import NameOID
 from marshmallow import fields as _fields
@@ -32,11 +33,11 @@ from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hostgroups, Hosts, Servicegroups
 from cmk.utils.livestatus_helpers.types import Column, Table
 from cmk.utils.regex import regex, REGEX_ID
-from cmk.utils.tags import TagGroupID, TagID
+from cmk.utils.tags import TagConfig, TagGroup, TagGroupID, TagID
 from cmk.utils.user import UserId
 
 from cmk.gui import sites
-from cmk.gui.config import builtin_role_ids
+from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.customer import customer_api, SCOPE_GLOBAL
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields.base import BaseSchema, MultiNested, ValueTypedDictSchema
@@ -48,11 +49,11 @@ from cmk.gui.site_config import configured_sites
 from cmk.gui.userdb import load_users
 from cmk.gui.watolib import userroles
 from cmk.gui.watolib.groups_io import load_group_information
-from cmk.gui.watolib.host_attributes import host_attribute
+from cmk.gui.watolib.host_attributes import ABCHostAttribute, all_host_attributes, host_attribute
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 from cmk.gui.watolib.sites import site_management_registry
-from cmk.gui.watolib.tags import load_tag_group
+from cmk.gui.watolib.tags import load_tag_config_read_only, load_tag_group
 
 from cmk.fields import base, Boolean, DateTime, validators
 
@@ -734,6 +735,90 @@ def validate_custom_host_attributes(
     return host_attributes
 
 
+class CustomHostAttributesAndTagGroups(BaseSchema):
+    class Meta:
+        unknown = marshmallow.INCLUDE
+
+    # Set it to true on create and update schemas to raise an error if a readonly attribute is passed
+    _raise_error_if_attribute_is_readonly = False
+
+    @marshmallow.post_load(pass_original=True)
+    def _validate_extra_attributes(
+        self,
+        result_data: dict[str, Any],
+        original_data: MutableMapping[str, Any],
+        **_unused_args: Any,
+    ) -> dict[str, Any]:
+        for field in self.fields:
+            original_data.pop(field, None)
+
+        if not original_data:
+            return result_data
+
+        host_attributes = all_host_attributes(active_config)
+        tag_group_config = load_tag_config_read_only()
+
+        for name, value in original_data.items():
+            if tag_group := self._get_custom_tag_group(name, tag_group_config):
+                self._validate_tag_group(tag_group, value)
+
+            elif host_attribute := self._get_custom_host_attribute(name, host_attributes):
+                self._validate_attribute(host_attribute, value)
+
+            else:
+                self._raise_error(f"Unknown Attribute: {name!r}: {value!r}")
+
+            result_data[name] = value
+        return result_data
+
+    @marshmallow.post_dump(pass_original=True)
+    def _add_tags_and_custom_attributes_back(
+        self, dump_data: dict[str, Any], original_data: dict[str, Any], **_kwargs: Any
+    ) -> dict[str, Any]:
+        # Custom attributes and tags are thrown away during validation as they have no field in the schema.
+        # So we dump them back in here.
+        # TODO: This code complies with the behavior enforced by the test_openapi_host_has_deleted_custom_attributes
+        #       test. However more research is needed to determine if it should change.
+        original_data.update(dump_data)
+        return original_data
+
+    def _get_custom_tag_group(self, tag_name: str, tag_config: TagConfig) -> TagGroup | None:
+        return tag_config.get_tag_group(TagGroupID(tag_name[4:]))
+
+    def _get_custom_host_attribute(
+        self, attribute_name: str, attributes: dict[str, ABCHostAttribute]
+    ) -> ABCHostAttribute | None:
+        try:
+            attribute = attributes[attribute_name]
+            if not attribute.from_config():
+                return None
+
+            return attribute
+
+        except KeyError:
+            return None
+
+    def _validate_attribute(self, host_attribute: ABCHostAttribute, value: object) -> None:
+        if self._raise_error_if_attribute_is_readonly and not host_attribute.editable():
+            self._raise_error(f"Attribute {host_attribute.name()!r} is readonly.")
+
+        if not isinstance(value, str):
+            self._raise_error(f"Attribute {host_attribute.name()!r} must be a string.")
+
+        try:
+            host_attribute.validate_input(value, "")
+
+        except MKUserError as exc:
+            self._raise_error(f"{host_attribute.name()}: {str(exc)}")
+
+    def _validate_tag_group(self, tag_group: TagGroup, value: object) -> None:
+        if value not in tag_group.get_tag_ids():
+            self._raise_error(f"Invalid value for tag-group {tag_group.title!r}: {value!r}")
+
+    def _raise_error(self, message: str) -> None:
+        raise ValidationError(message)
+
+
 def ensure_string(value):
     if not isinstance(value, str):
         raise ValidationError(f"Not a string, but a {type(value).__name__}")
@@ -1067,7 +1152,7 @@ class SiteField(base.String):
         if (
             self.presence == "might_not_exist_on_view"
             and self.context is not None
-            and self.context["object_context"] == "view"
+            and self.context.get("object_context") == "view"
         ):
             return
 

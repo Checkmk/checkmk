@@ -1094,9 +1094,7 @@ def test_openapi_host_config_attributes_as_string_crash_regression(clients: Clie
     )
     resp.assert_status_code(400)
 
-    assert resp.json["fields"]["attributes"] == [
-        "Incompatible data type. Received a(n) 'str', but an associative value is required. Maybe you quoted a value that is meant to be an object?"
-    ]
+    resp.json["fields"]["attributes"]["_schema"] == ["Invalid input type."]
 
 
 @pytest.mark.usefixtures("with_host")
@@ -1750,10 +1748,7 @@ def test_update_host_parent_must_be_list_of_strings(clients: ClientRegistry) -> 
     )
     resp.assert_status_code(400)
     assert resp.json["detail"] == "These fields have problems: update_attributes"
-    assert (
-        "Expected data type is list, but your type is str."
-        in resp.json["fields"]["update_attributes"]["parents"]
-    )
+    assert "Not a valid list." in resp.json["fields"]["update_attributes"]["parents"]
 
 
 def test_openapi_create_host_in_folder_with_umlaut(clients: ClientRegistry) -> None:

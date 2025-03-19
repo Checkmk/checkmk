@@ -721,38 +721,22 @@ def test_openapi_folder_config_collections_recursive_list(
     version.edition(paths.omd_root) is version.Edition.CRE, reason="Tested Attribute is not in RAW"
 )
 def test_bake_agent_package_attribute_regression(
-    base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
+    clients: ClientRegistry, base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
 ) -> None:
     folder_name = "blablabla"
 
-    aut_user_auth_wsgi_app.post(
-        url=base + "/domain-types/folder_config/collections/all",
-        params=json.dumps(
-            {
-                "name": folder_name,
-                "title": folder_name,
-                "parent": "~",
-                "attributes": {"bake_agent_package": True},
-            }
-        ),
-        headers={"Accept": "application/json"},
-        content_type="application/json",
-        status=200,
-    )
+    clients.Folder.create(
+        folder_name=folder_name,
+        title=folder_name,
+        parent="~",
+        attributes={"bake_agent_package": True},
+    ).assert_status_code(200)
 
     # see if we get an outbound validation error on a single folder
-    aut_user_auth_wsgi_app.get(
-        url=base + "/objects/folder_config/~" + folder_name,
-        headers={"Accept": "application/json"},
-        status=200,
-    )
+    clients.Folder.get(folder_name=f"~{folder_name}").assert_status_code(200)
 
     # see if we get an outbound validation error on all folders
-    aut_user_auth_wsgi_app.get(
-        url=base + "/domain-types/folder_config/collections/all",
-        headers={"Accept": "application/json"},
-        status=200,
-    )
+    clients.Folder.get_all().assert_status_code(200)
 
 
 def test_delete_root_folder(

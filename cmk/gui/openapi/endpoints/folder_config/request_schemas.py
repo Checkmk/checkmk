@@ -11,6 +11,10 @@ from cmk.utils.regex import WATO_FOLDER_PATH_NAME_REGEX
 
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
+from cmk.gui.openapi.endpoints._common.folder_attribute_schemas import (
+    FolderCreateAttribute,
+    FolderUpdateAttribute,
+)
 from cmk.gui.openapi.endpoints.common_fields import EXISTING_FOLDER, EXISTING_FOLDER_PATTERN
 
 from cmk import fields
@@ -56,15 +60,15 @@ class CreateFolder(BaseSchema):
         example="/",
         pattern=EXISTING_FOLDER_PATTERN,
     )
-    attributes = gui_fields.host_attributes_field(
-        "folder",
-        "create",
-        "inbound",
+
+    attributes = fields.Nested(
+        FolderCreateAttribute,
         required=False,
         description=(
-            "Specific attributes to apply for all hosts in this folder (among other things)."
+            "Specific attributes to apply for all hosts in this folder (among other things). Built-in and custom attributes and tag groups can be set here."
         ),
         example={"tag_criticality": "prod"},
+        load_default=dict(),
     )
 
 
@@ -92,10 +96,9 @@ class UpdateFolder(BaseSchema):
         required=False,
         description="The title of the folder. Used in the GUI.",
     )
-    attributes = gui_fields.host_attributes_field(
-        "folder",
-        "update",
-        "inbound",
+
+    attributes = fields.Nested(
+        FolderUpdateAttribute,
         description=(
             "Replace all attributes with the ones given in this field. Already set"
             "attributes, not given here, will be removed. Can't be used together with "
@@ -103,12 +106,10 @@ class UpdateFolder(BaseSchema):
         ),
         example={"tag_networking": "wan"},
         required=False,
-        load_default=None,
     )
-    update_attributes = gui_fields.host_attributes_field(
-        "folder",
-        "update",
-        "inbound",
+
+    update_attributes = fields.Nested(
+        FolderUpdateAttribute,
         description=(
             "Just update the folder attributes with these attributes. The previously set "
             "attributes will be overwritten. Can't be used together with attributes or "
@@ -116,8 +117,8 @@ class UpdateFolder(BaseSchema):
         ),
         example={"tag_criticality": "prod"},
         required=False,
-        load_default=None,
     )
+
     remove_attributes = fields.List(
         fields.String(),
         description=(

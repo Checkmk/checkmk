@@ -9,6 +9,11 @@ from marshmallow import validates_schema, ValidationError
 
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
+from cmk.gui.openapi.endpoints._common.host_attribute_schemas import (
+    ClusterCreateAttribute,
+    HostCreateAttribute,
+    HostUpdateAttribute,
+)
 from cmk.gui.openapi.endpoints.common_fields import EXISTING_FOLDER
 
 from cmk import fields
@@ -26,14 +31,17 @@ class CreateClusterHost(BaseSchema):
         required=True,
         should_exist=False,
     )
+
     folder = EXISTING_FOLDER
-    attributes = gui_fields.host_attributes_field(
-        "cluster",
-        "create",
-        "inbound",
-        description="Attributes to set on the newly created host.",
+
+    attributes = fields.Nested(
+        ClusterCreateAttribute,
+        description="Attributes to set on the newly created host. You can specify custom attributes and tag groups in addition to the built-in ones listed below.",
+        required=False,
         example={"ipaddress": "192.168.0.123"},
+        load_default=dict(),
     )
+
     nodes = fields.List(
         EXISTING_HOST_NAME,
         description="Nodes where the newly created host should be the cluster-container of.",
@@ -57,13 +65,15 @@ class CreateHost(BaseSchema):
         required=True,
         should_exist=False,
     )
+
     folder = EXISTING_FOLDER
-    attributes = gui_fields.host_attributes_field(
-        "host",
-        "create",
-        "inbound",
-        description="Attributes to set on the newly created host.",
+
+    attributes = fields.Nested(
+        HostCreateAttribute,
+        description="Attributes to set on the newly created host. You can specify custom attributes and tag groups in addition to the built-in ones listed below.",
+        required=False,
         example={"ipaddress": "192.168.0.123"},
+        load_default=dict(),
     )
 
 
@@ -101,10 +111,8 @@ class UpdateHost(BaseSchema):
 
     schema_example = {"attributes": {"ipaddress": "192.168.0.123"}}
 
-    attributes = gui_fields.host_attributes_field(
-        "host",
-        "update",
-        "inbound",
+    attributes = fields.Nested(
+        HostUpdateAttribute,
         description=(
             "Replace all currently set attributes on the host, with these attributes. "
             "Any previously set attributes which are not given here will be removed. "
@@ -112,12 +120,10 @@ class UpdateHost(BaseSchema):
         ),
         example={"ipaddress": "192.168.0.123"},
         required=False,
-        load_default=None,
     )
-    update_attributes = gui_fields.host_attributes_field(
-        "host",
-        "update",
-        "inbound",
+
+    update_attributes = fields.Nested(
+        HostUpdateAttribute,
         description=(
             "Just update the hosts attributes with these attributes. The previously set "
             "attributes will be overwritten. Can't be used together with attributes or "
@@ -125,8 +131,8 @@ class UpdateHost(BaseSchema):
         ),
         example={"ipaddress": "192.168.0.123"},
         required=False,
-        load_default=None,
     )
+
     remove_attributes = fields.List(
         fields.String(),
         description=(

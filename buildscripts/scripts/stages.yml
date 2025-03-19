@@ -20,6 +20,9 @@ VARIABLES:
     - NAME: CHANGED_FILES_REL
       SH: "git diff-tree --no-commit-id --name-only -r ${BASE_COMMIT_ID}..HEAD | sort"
 
+    - NAME: CHANGED_FILES_REL_WITHOUT_DELETED_FILES
+      SH: "git --no-pager diff --name-only --diff-filter=d ${BASE_COMMIT_ID}..HEAD | sort"
+
     - NAME: CHANGED_MAKEFILE
       SH: "echo '${CHANGED_FILES_REL}' | grep '^Makefile' || true"
 
@@ -90,6 +93,10 @@ VARIABLES:
 
     - NAME: CHANGED_WERK_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^\\.werks/' || true"
+      REPLACE_NEWLINES: true
+
+    - NAME: CHANGED_WERK_FILES_WITHOUT_DELETED_WERKS
+      SH: "echo '${CHANGED_FILES_REL_WITHOUT_DELETED_FILES}' | grep '^\\.werks/' || true"
       REPLACE_NEWLINES: true
 
     - NAME: CHANGED_WERK_CODE_FILES
@@ -294,10 +301,10 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/python3-werks-junit.xml"
 
     - NAME: "Python Werks validate"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_WERK_FILES,CHANGED_RUN_UVENV_SCRIPT
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_WERK_FILES_WITHOUT_DELETED_WERKS,CHANGED_RUN_UVENV_SCRIPT
       DIR: ""
       ENV_VARS:
-          CHANGED_WERK_FILES: "${CHANGED_WERK_FILES}"
+          CHANGED_WERK_FILES: "${CHANGED_WERK_FILES_WITHOUT_DELETED_WERKS}"
       COMMAND: "./scripts/run-uvenv python -m cmk.werks.validate &> ${RESULTS}/werk_validate.txt"
       TEXT_ON_SKIP: "No Werk files changed"
       RESULT_CHECK_FILE_PATTERN: "results/werk_validate.txt"

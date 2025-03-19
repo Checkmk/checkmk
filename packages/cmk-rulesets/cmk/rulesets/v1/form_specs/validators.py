@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import enum
+import ipaddress
 import re
 from collections.abc import Sequence, Sized
 from typing import Final
@@ -259,3 +260,56 @@ class EmailAddress:
         )
         if not email_regex.match(value):
             raise ValidationError(self.error_msg)
+
+
+class HostAddress:
+    """Validator that ensures the validated value is a hostname or IP address.
+
+    It does not resolve the hostname or check if the IP address is reachable.
+    """
+
+    def __init__(self, error_msg: Message | None = None) -> None:
+        self.error_msg: Final = error_msg or (
+            Message("Your input is not a valid hostname or IP address.")
+        )
+
+    def _validate_ipaddress(self, value: str) -> None:
+        ipaddress.ip_address(value)
+
+    def _validate_hostname(self, value: str) -> None:
+        total_length = len(value)
+        if value.endswith("."):
+            value = value[:-1]
+            total_length -= 1
+
+        if total_length > 253:
+            raise ValidationError(self.error_msg)
+
+        labels = value.split(".")
+
+        if any(len(label) > 63 for label in labels):
+            raise ValidationError(self.error_msg)
+
+        pattern = r"(?!-)[a-z0-9-]{1,63}(?<!-)$"
+        allowed = re.compile(pattern, re.IGNORECASE)
+
+        # TLD must not be all numeric
+        if re.match(r"[0-9]+$", labels[-1]):
+            raise ValidationError(self.error_msg)
+
+        # Check each label
+        for label in labels:
+            if (not label) or (not allowed.match(label)):
+                raise ValidationError(self.error_msg)
+
+    def __call__(self, value: str) -> None:
+        if not value:
+            raise ValidationError(self.error_msg)
+
+        try:
+            self._validate_ipaddress(value)
+            return
+        except ValueError:
+            pass
+
+        self._validate_hostname(value)

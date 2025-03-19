@@ -414,6 +414,7 @@ class EngineeringScientificFormatter(NotationFormatter):
         return [a * factor for a in _BASIC_DECIMAL_ATOMS]
 
 
+_ONE_YEAR: Final = 31536000  # We use always 365 * 86400
 _ONE_DAY: Final = 86400
 _ONE_HOUR: Final = 3600
 _ONE_MINUTE: Final = 60
@@ -443,12 +444,20 @@ _BASIC_TIME_ATOMS: Final = [
     20 * _ONE_DAY,
     50 * _ONE_DAY,
     100 * _ONE_DAY,
+    _ONE_YEAR,
+    2 * _ONE_YEAR,
+    5 * _ONE_YEAR,
+    10 * _ONE_YEAR,
+    20 * _ONE_YEAR,
+    50 * _ONE_YEAR,
+    100 * _ONE_YEAR,
 ]
 _TIME_SMALL_PREFIXES: Final = [
     (-6, 2, "μ"),
     (-3, 1, "m"),
 ]
 _TIME_LARGE_SYMBOLS: Final = [
+    (_ONE_YEAR, "y"),
     (_ONE_DAY, "d"),
     (_ONE_HOUR, "h"),
     (_ONE_MINUTE, "min"),
@@ -482,6 +491,11 @@ class TimeFormatter(NotationFormatter):
         rounded_value = round(value)
         formatted_parts = []
         match use_symbol:
+            case "y":
+                years = int(rounded_value // _ONE_YEAR)
+                formatted_parts.append(Preformatted(years, "", "y"))
+                if days := round((rounded_value - years * _ONE_YEAR) / _ONE_DAY):
+                    formatted_parts.append(Preformatted(days, "", "d"))
             case "d":
                 days = int(rounded_value // _ONE_DAY)
                 formatted_parts.append(Preformatted(days, "", "d"))
@@ -509,13 +523,15 @@ class TimeFormatter(NotationFormatter):
         return [a * factor for a in _BASIC_DECIMAL_ATOMS]
 
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
-        if max_y >= _ONE_DAY:
-            if (q := int(max_y // _ONE_DAY)) < 2:
-                return _BASIC_TIME_ATOMS[15:]
+        if max_y >= _ONE_YEAR:
+            if (q := int(max_y // _ONE_YEAR)) < 5:
+                return _BASIC_TIME_ATOMS[22:]
             exponent = math.floor(math.log10(q))
-            return _BASIC_TIME_ATOMS[15:] + [
-                _ONE_DAY * a * pow(10, exponent - 1) for a in _BASIC_DECIMAL_ATOMS
+            return _BASIC_TIME_ATOMS[22:] + [
+                _ONE_YEAR * a * pow(10, exponent - 1) for a in _BASIC_DECIMAL_ATOMS
             ]
+        if max_y >= _ONE_DAY:
+            return _BASIC_TIME_ATOMS[15:]
         if max_y >= _ONE_HOUR:
             return _BASIC_TIME_ATOMS[9:18]
         if max_y >= _ONE_MINUTE:

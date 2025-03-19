@@ -115,7 +115,7 @@ def _list_hosts(params: Mapping[str, Any]) -> Response:
     result = q.iterate(live)
 
     # We have to special case the inventory column, as it is a dict stored as bytes in livestatus
-    if contains_an_inventory_colum(columns):
+    if contains_inventory_column(columns):
         result = fixup_inventory_column(result)
 
     return serve_json(
@@ -214,7 +214,7 @@ def _host_object(host_name: str, host: dict) -> DomainObject:
 INVENTORY_COLUMN = "mk_inventory"
 
 
-def contains_an_inventory_colum(columns: Sequence[str]) -> bool:
+def contains_inventory_column(columns: Sequence[str]) -> bool:
     return INVENTORY_COLUMN in columns
 
 

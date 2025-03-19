@@ -11,7 +11,7 @@ import SlideIn from '@/components/SlideIn.vue'
 import FormValidation from '@/form/components/FormValidation.vue'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import type { SingleChoiceEditable } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { ref, toRaw } from 'vue'
+import { onMounted, ref, toRaw } from 'vue'
 import { configEntityAPI, type Payload } from '@/form/components/utils/configuration_entity'
 import type { ConfigEntityType } from 'cmk-shared-typing/typescript/configuration_entity'
 import CmkDropdown from '@/components/CmkDropdown.vue'
@@ -38,6 +38,17 @@ const choices = ref<Array<{ title: string; name: string }>>(
 
 const slideInObjectId = ref<OptionId | null>(null)
 const slideInOpen = ref<boolean>(false)
+
+onMounted(async () => {
+  const entities = await configEntityAPI.listEntities(
+    props.spec.config_entity_type as ConfigEntityType,
+    props.spec.config_entity_type_specifier
+  )
+  choices.value = entities.map((entity) => ({
+    name: entity.ident,
+    title: entity.description
+  }))
+})
 
 const slideInAPI = {
   getSchema: async () => {

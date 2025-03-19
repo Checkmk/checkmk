@@ -28,7 +28,7 @@ def recompose(form_spec: FormSpec[Any]) -> FormSpec[Any]:
             custom_validate=form_spec.custom_validate,
             # SingleChoiceEditable
             entity_type=ConfigEntityType.folder,
-            entity_type_specifier="",
+            entity_type_specifier="all",  # must not be empty, unused
             prefill=DefaultValue(""),
             create_element_label=Label("Create new"),
             allow_editing_existing_elements=False,

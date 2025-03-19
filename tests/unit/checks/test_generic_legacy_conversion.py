@@ -350,7 +350,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "dell_om_fans",
         "dell_om_sensors",
         "dell_om_vdisks",
-        "dell_powerconnect_cpu",
         "dell_poweredge_amperage",
         "dell_poweredge_amperage_power",
         "dell_poweredge_amperage_current",

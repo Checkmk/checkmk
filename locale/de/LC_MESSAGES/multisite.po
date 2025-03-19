@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-03-18 03:50+0000\n"
+"PO-Revision-Date: 2025-03-19 04:50+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -10678,7 +10678,6 @@ msgstr "Überprüfe Log-Dateigruppen"
 msgid "Check logfiles for relevant new messages"
 msgstr "Log-Dateien auf relevante Meldungen hin überwachen"
 
-#, fuzzy
 msgid "Check man page"
 msgstr "Check Handbuchseite"
 
@@ -24493,9 +24492,8 @@ msgstr "Informationen zum Hardware-Anbieter vom Checkmk-Server"
 msgid "HW containers"
 msgstr "HW-Container"
 
-#, fuzzy
 msgid "HW/SW Inventory plug-in"
-msgstr "Veraltete Plugins der HW-/SW-Inventur"
+msgstr "Plugin der HW-/SW-Inventur"
 
 msgid "HW/SW inventory"
 msgstr "HW/SW-Inventur"
@@ -31926,9 +31924,9 @@ msgstr ""
 "Bulking von Benachrichtigungen deaktivieren oder ein anderes "
 "Benachrichtigungs-Plugin wählen, das Bulking erlaubt."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Legacy GUI extension in %r"
-msgstr "Legacy GUI-Erweiterungen (veraltet)"
+msgstr "Legacy GUI-Erweiterung in %r"
 
 #, python-format
 msgid ""
@@ -40882,9 +40880,8 @@ msgstr "Oracle Log-Umschalter"
 msgid "Oracle Memory"
 msgstr "Oracle-Speicher"
 
-#, fuzzy
 msgid "Oracle PDB Total Size"
-msgstr "Oracle Gesamtwartezeit"
+msgstr "Gesamtgröße von Oracle PDB"
 
 msgid "Oracle PGA info"
 msgstr "Oracle PGA-Info"
@@ -77094,9 +77091,8 @@ msgstr "latin1"
 msgid "left"
 msgstr "links"
 
-#, fuzzy
 msgid "legacy"
-msgstr "Legacy-Lauf"
+msgstr "Legacy"
 
 msgid "legacy run"
 msgstr "Legacy-Lauf"

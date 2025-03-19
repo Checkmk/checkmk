@@ -13,8 +13,6 @@ import cmk.ccc.version as cmk_version
 
 from cmk.utils import paths
 from cmk.utils.hostaddress import HostName
-from cmk.utils.livestatus_helpers.queries import Query
-from cmk.utils.livestatus_helpers.tables.hosts import Hosts
 from cmk.utils.servicename import ServiceName
 
 from cmk.gui import sites
@@ -1266,14 +1264,11 @@ PermissionRemoveAllDowntimes = Permission(
 )
 
 
-def hosts_user_can_see(users_sites: list[livestatus.SiteId] | None = None) -> Sequence[str]:
-    """Returns a list of hostnames that the logged in user can see filtering
-    on the action rows sites if they are provided."""
-    hosts_query_result = Query([Hosts.name]).fetchall(
-        sites=sites.live(),
-        only_sites=users_sites,
+@request_memoize()
+def hosts_user_can_see() -> Sequence[str]:
+    return livestatus.LocalConnection().query_column(
+        query=f"GET hosts\nColumns: name\nAuthUser: {user.ident}"
     )
-    return list({host["name"] for host in hosts_query_result})
 
 
 class CommandGroupDowntimes(CommandGroup):
@@ -1556,7 +1551,7 @@ class CommandScheduleDowntimesForm:
             html.close_div()
 
         open_submit_button_container_div(tooltip=tooltip_submission_disabled)
-        if what == "host" or user.may("general.see_all") or hosts_user_can_see():
+        if user.may("general.see_all") or hosts_user_can_see():
             html.button(
                 "_down_host",
                 _("On host: Schedule downtime"),
@@ -1829,14 +1824,7 @@ class CommandScheduleDowntimesForm:
             host_action_rows = []
 
             if not user.may("general.see_all"):
-                action_rows = [
-                    ar
-                    for ar in action_rows
-                    if ar["host_name"]
-                    in hosts_user_can_see(
-                        users_sites=list({livestatus.SiteId(row["site"]) for row in action_rows})
-                    )
-                ]
+                action_rows = [ar for ar in action_rows if ar["host_name"] in hosts_user_can_see()]
 
             for action_row in action_rows:
                 if action_row["host_name"] not in seen:

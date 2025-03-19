@@ -387,7 +387,7 @@ def update_and_activate_rabbitmq_definitions(omd_root: Path, logger: Logger) -> 
         return
 
     # also return if rabbitmq is not running at all. This might be fine.
-    if rabbitmqctl_process(("ping",), wait=False).wait() != 0:
+    if not rabbitmqctl_running():
         return
 
     # run in parallel
@@ -434,6 +434,10 @@ def _start_cleanup_unused_definitions(
 
 def _start_import_new_definitions(definitions_file: Path) -> subprocess.Popen[str]:
     return rabbitmqctl_process(("import_definitions", str(definitions_file)), wait=False)
+
+
+def rabbitmqctl_running() -> bool:
+    return rabbitmqctl_process(("ping",), wait=False).wait() == 0
 
 
 def rabbitmqctl_process(cmd: tuple[str, ...], /, *, wait: bool) -> subprocess.Popen[str]:

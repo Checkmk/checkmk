@@ -1473,7 +1473,11 @@ class ActivateChangesManager(ActivateChanges):
             create_rabbitmq_new_definitions_file(paths.omd_root, rabbitmq_definitions[omd_site()])
             rabbitmq.update_and_activate_rabbitmq_definitions(paths.omd_root, logger)
 
-        if has_piggyback_hub_relevant_changes([change for _, change in self._pending_changes]):
+        # rabbitmq must be running on the central site if one of the remote sites
+        # has piggyback-hub running
+        if rabbitmq.rabbitmqctl_running() and has_piggyback_hub_relevant_changes(
+            [change for _, change in self._pending_changes]
+        ):
             with (
                 tracer.span("distribute_piggyback_hub_configs"),
                 _debug_log_message("Starting piggyback hub config distribution"),

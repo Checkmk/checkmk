@@ -124,6 +124,7 @@ from cmk.gui.watolib.global_settings import (
 )
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree, make_action_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.piggyback_hub import changed_remote_piggyback_hub_status
 from cmk.gui.watolib.site_management import (
     add_changes_after_editing_broker_connection,
     add_changes_after_editing_site_connection,
@@ -1264,16 +1265,42 @@ class PageAjaxFetchSiteStatus(AjaxPage):
         ]
         replication_status = ReplicationStatusFetcher().fetch(replication_sites)
 
-        local_site = sites[omd_site()]
+        remote_piggyback_hub_status = {}
         for site_id, site in sites.items():
             site_id_str: str = site_id
+
             site_states[site_id_str] = {
                 "livestatus": self._render_status_connection_status(site_id, site),
                 "replication": self._render_configuration_connection_status(
                     site_id, site, replication_status
                 ),
-                "message_broker": self._render_message_broker_status(site_id, site, local_site),
+                "message_broker": "",
             }
+
+            if is_replication_enabled(site):
+                remote_omd_status = self._get_remote_omd_status(site)
+                remote_piggyback_hub_status[SiteId(site_id_str)] = remote_omd_status[
+                    "piggyback-hub"
+                ]
+                site_states[site_id_str].update(
+                    {
+                        "message_broker": self._render_message_broker_status(
+                            site_id, site, remote_omd_status["rabbitmq"]
+                        )
+                    }
+                )
+
+        # if piggyback-hub has been turned on on the remote site
+        # we need to sync changes to send the piggyback-hub configuration
+        turned_on = changed_remote_piggyback_hub_status(remote_piggyback_hub_status)
+        for site_id in turned_on:
+            _changes.add_change(
+                "piggyback-hub-turned-on",
+                _("Piggyback-hub turned on on remote site"),
+                domains=[ConfigDomainGUI()],
+                sites=[site_id],
+            )
+
         return site_states
 
     def _render_configuration_connection_status(
@@ -1329,17 +1356,22 @@ class PageAjaxFetchSiteStatus(AjaxPage):
         )
 
     def _render_message_broker_status(
-        self, site_id: SiteId, site: SiteConfiguration, local_site: SiteConfiguration
+        self,
+        site_id: SiteId,
+        site: SiteConfiguration,
+        remote_broker_status: int,
     ) -> str | HTML:
         if not is_replication_enabled(site):
             return ""
 
-        icon, message = self._get_connection_status_icon_message(site_id, site, local_site)
+        icon, message = self._get_connection_status_icon_message(
+            site_id, site, remote_broker_status
+        )
         return html.render_icon(icon, title=message) + HTMLWriter.render_span(
             message, style="vertical-align:middle"
         )
 
-    def _get_remote_broker_status(self, remote_site: SiteConfiguration) -> int:
+    def _get_remote_omd_status(self, remote_site: SiteConfiguration) -> Mapping[str, int]:
         remote_status = do_remote_automation(
             remote_site,
             "get-remote-omd-status",
@@ -1350,10 +1382,13 @@ class PageAjaxFetchSiteStatus(AjaxPage):
             raise MKUserError(None, _("Got invalid status of remote site %s") % remote_site)
 
         logger.debug("Got status of remote site %s" % remote_status)
-        return remote_status["rabbitmq"]
+        return remote_status
 
     def _get_connection_status_icon_message(
-        self, remote_site_id: SiteId, site: SiteConfiguration, local_site: SiteConfiguration
+        self,
+        remote_site_id: SiteId,
+        site: SiteConfiguration,
+        remote_broker_status: int,
     ) -> tuple[Literal["checkmark", "cross", "alert", "disabled"], str]:
         if (remote_host := urlparse(site["multisiteurl"]).hostname) is None:
             return "cross", _("Offline: No valid multisite URL configured")
@@ -1384,7 +1419,7 @@ class PageAjaxFetchSiteStatus(AjaxPage):
             case ConnectionRefused.CERTIFICATE_VERIFY_FAILED:
                 return "cross", _("Connection to port %s refused: Invalid certificate")
             case ConnectionRefused.CLOSED:
-                match self._get_remote_broker_status(site):
+                match remote_broker_status:
                     case 1:
                         return "cross", _("Not available")
                     case 5:

@@ -134,7 +134,7 @@ class EngineeringScientificNotation:
 class TimeNotation:
     """
     A unit with the time notation formats a number with the following magnitudes:
-    µs, ms, s, min, h, d.
+    µs, ms, s, min, h, d, y.
     """
 
     @property

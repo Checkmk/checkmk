@@ -1940,8 +1940,6 @@ class ConfigCache:
         self.__contactgroups: dict[HostName, Sequence[_ContactgroupName]] = {}
         self.__explicit_check_command: dict[HostName, HostCheckCommand] = {}
         self.__snmp_fetch_interval: dict[HostName, Mapping[SectionName, int | None]] = {}
-        self.__labels: dict[HostName, Labels] = {}
-        self.__label_sources: dict[HostName, LabelSources] = {}
         self.__notification_plugin_parameters: dict[tuple[HostName, str], Mapping[str, object]] = {}
         self.__snmp_backend: dict[HostName, SNMPBackendEnum] = {}
         self.initialize()
@@ -2207,8 +2205,6 @@ class ConfigCache:
         self.__contactgroups.clear()
         self.__explicit_check_command.clear()
         self.__snmp_fetch_interval.clear()
-        self.__labels.clear()
-        self.__label_sources.clear()
         self.__notification_plugin_parameters.clear()
         self.__snmp_backend.clear()
 
@@ -3166,21 +3162,6 @@ class ConfigCache:
 
         return self.__notification_plugin_parameters.setdefault((host_name, plugin_name), _impl())
 
-    def labels(self, host_name: HostName) -> Labels:
-        with contextlib.suppress(KeyError):
-            # TODO(ml): Also cached in `RulesetOptimizer.labels_of_host(HostName) -> Labels`.
-            return self.__labels[host_name]
-
-        return self.__labels.setdefault(host_name, self.label_manager.labels_of_host(host_name))
-
-    def label_sources(self, host_name: HostName) -> LabelSources:
-        with contextlib.suppress(KeyError):
-            return self.__label_sources[host_name]
-
-        return self.__label_sources.setdefault(
-            host_name, self.label_manager.label_sources_of_host(host_name)
-        )
-
     def max_cachefile_age(self, hostname: HostName) -> MaxAge:
         check_interval = self.check_mk_check_interval(hostname)
         return MaxAge(
@@ -3785,8 +3766,14 @@ class ConfigCache:
         # "__TAG_" instead. We may deprecate this is one day.
         attrs["_TAGS"] = " ".join(sorted(self.tag_list(hostname)))
         attrs.update(ConfigCache._get_tag_attributes(self.tags(hostname), "TAG"))
-        attrs.update(ConfigCache._get_tag_attributes(self.labels(hostname), "LABEL"))
-        attrs.update(ConfigCache._get_tag_attributes(self.label_sources(hostname), "LABELSOURCE"))
+        attrs.update(
+            ConfigCache._get_tag_attributes(self.label_manager.labels_of_host(hostname), "LABEL")
+        )
+        attrs.update(
+            ConfigCache._get_tag_attributes(
+                self.label_manager.label_sources_of_host(hostname), "LABELSOURCE"
+            )
+        )
 
         if "alias" not in attrs:
             attrs["alias"] = self.alias(hostname)

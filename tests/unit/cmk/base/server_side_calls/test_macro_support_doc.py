@@ -174,7 +174,7 @@ def test_active_checks_macros(config_cache: ConfigCache, resource_cfg_file: None
 
     documented = DOCUMENTED_ACTIVE_CHECK_MACROS
 
-    label_sources = config_cache.label_sources(host_name).keys()
+    label_sources = config_cache.label_manager.label_sources_of_host(host_name).keys()
     custom_attrs = [
         attr[1:].upper() for attr in config_cache.explicit_host_attributes(host_name).keys()
     ]
@@ -182,7 +182,11 @@ def test_active_checks_macros(config_cache: ConfigCache, resource_cfg_file: None
     expected_macros = (
         documented["required"]
         + list(_iter_macros(documented["per_tag"], config_cache.tags(host_name).keys()))
-        + list(_iter_macros(documented["per_label"], config_cache.labels(host_name).keys()))
+        + list(
+            _iter_macros(
+                documented["per_label"], config_cache.label_manager.labels_of_host(host_name).keys()
+            )
+        )
         + list(_iter_macros(documented["per_label_source"], label_sources))
         + list(_iter_macros(documented["per_custom_host_attribute"], custom_attrs))
         + list(_iter_macros(documented["per_custom_macro"], ["CUSTOM_MACRO"]))
@@ -225,7 +229,7 @@ def test_special_agent_macros(
 
     documented = DOCUMENTED_SPECIAL_AGENT_MACROS
 
-    label_sources = config_cache.label_sources(host_name).keys()
+    label_sources = config_cache.label_manager.label_sources_of_host(host_name).keys()
     custom_attrs = [
         attr[1:].upper() for attr in config_cache.explicit_host_attributes(host_name).keys()
     ]
@@ -233,7 +237,11 @@ def test_special_agent_macros(
     expected_macros = (
         documented["required"]
         + list(_iter_macros(documented["per_tag"], config_cache.tags(host_name).keys()))
-        + list(_iter_macros(documented["per_label"], config_cache.labels(host_name).keys()))
+        + list(
+            _iter_macros(
+                documented["per_label"], config_cache.label_manager.labels_of_host(host_name).keys()
+            )
+        )
         + list(_iter_macros(documented["per_label_source"], label_sources))
         + list(_iter_macros(documented["per_custom_host_attribute"], custom_attrs))
     )

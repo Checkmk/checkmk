@@ -2096,16 +2096,16 @@ def test_labels(monkeypatch: MonkeyPatch) -> None:
     ts.add_host(xyz_host)
 
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.labels(xyz_host) == {
+    assert config_cache.label_manager.labels_of_host(xyz_host) == {
         "cmk/site": "NO_SITE",
     } | {k: v["value"] for k, v in additional_labels.items()}
-    assert config_cache.labels(test_host) == {
+    assert config_cache.label_manager.labels_of_host(test_host) == {
         "cmk/site": "NO_SITE",
         "explicit": "ding",
         "from-rule": "rule1",
         "from-rule2": "rule2",
     } | {k: v["value"] for k, v in additional_labels.items()}
-    assert config_cache.label_sources(test_host) == {
+    assert config_cache.label_manager.label_sources_of_host(test_host) == {
         "cmk/site": "discovered",
         "explicit": "explicit",
         "from-rule": "ruleset",
@@ -2127,11 +2127,11 @@ def test_host_labels_of_host_discovered_labels(monkeypatch: MonkeyPatch, tmp_pat
         f.write(repr({"äzzzz": {"value": "eeeeez", "plugin_name": "ding123"}}) + "\n")
 
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.labels(test_host) == {
+    assert config_cache.label_manager.labels_of_host(test_host) == {
         "cmk/site": "NO_SITE",
         "äzzzz": "eeeeez",
     } | {k: v["value"] for k, v in additional_labels.items()}
-    assert config_cache.label_sources(test_host) == {
+    assert config_cache.label_manager.label_sources_of_host(test_host) == {
         "cmk/site": "discovered",
         "äzzzz": "discovered",
     } | {k: v["source"] for k, v in additional_labels.items()}

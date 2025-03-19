@@ -133,6 +133,7 @@ def dump_host(
     simulation_mode: bool,
 ) -> None:
     print_("\n")
+    label_manager = config_cache.label_manager
     hosts_config = config_cache.hosts_config
     if hostname in hosts_config.clusters:
         assert config_cache.nodes(hostname)
@@ -189,7 +190,9 @@ def dump_host(
     tags = [(tag_template % ":".join(t)) for t in sorted(config_cache.tags(hostname).items())]
     print_(tty.yellow + "Tags:                   " + tty.normal + ", ".join(tags) + "\n")
 
-    labels = [tag_template % ":".join(l) for l in sorted(config_cache.labels(hostname).items())]
+    labels = [
+        tag_template % ":".join(l) for l in sorted(label_manager.labels_of_host(hostname).items())
+    ]
     print_(tty.yellow + "Labels:                 " + tty.normal + ", ".join(labels) + "\n")
 
     if hostname in hosts_config.clusters:

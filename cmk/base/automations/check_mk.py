@@ -1821,8 +1821,8 @@ class AutomationAnalyseHost(Automation):
             {host_name}
         )
         return AnalyseHostResult(
-            loading_result.config_cache.labels(host_name),
-            loading_result.config_cache.label_sources(host_name),
+            loading_result.config_cache.label_manager.labels_of_host(host_name),
+            loading_result.config_cache.label_manager.label_sources_of_host(host_name),
         )
 
 

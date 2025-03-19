@@ -77,11 +77,13 @@ export const configEntityAPI = {
       LIST_CONFIG_ENTITIES(entityType, entityTypeSpecifier),
       'GET'
     )
-    const data = await response.json()
-    return data.value.map((entity: { id: string; title: string }) => ({
+    const values: { id: string; title: string }[] = await response.json()
+    await response.raiseForStatus()
+    const entities = values.map((entity) => ({
       ident: entity.id,
       description: entity.title
     }))
+    return entities
   },
   createEntity: async (
     entityType: ConfigEntityType,

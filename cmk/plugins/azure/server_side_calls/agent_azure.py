@@ -45,7 +45,9 @@ class AzureParams(BaseModel):
     services: list[str]
     config: Config
     piggyback_vms: str | None = None
-    import_tags: tuple[str, str | None] | None = None
+    filter_tags: (
+        tuple[Literal["filter_tags"], str] | tuple[Literal["dont_import_tags"], None] | None
+    ) = None
     connection_test: bool = False  # only used by quick setup
 
 
@@ -121,6 +123,13 @@ def agent_azure_arguments(
         "--cache-id",
         host_config.name,
     ]
+
+    if params.filter_tags is not None:
+        match params.filter_tags[1]:
+            case str(tag_key_pattern):
+                args += ["--import-matching-tags-as-labels", tag_key_pattern]
+            case None:
+                args += ["--ignore-all-tags"]
 
     yield SpecialAgentCommand(command_arguments=args)
 

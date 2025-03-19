@@ -89,7 +89,7 @@ def test_vs_to_fs_update() -> None:
     assert value["proxy"] == AZURE_FS_RULESET_VALUE["proxy"]
     assert value["config"] == AZURE_FS_RULESET_VALUE["config"]
     assert value["piggyback_vms"] == AZURE_FS_RULESET_VALUE["piggyback_vms"]
-    assert value["import_tags"] == AZURE_FS_RULESET_VALUE["import_tags"]
+    assert "import_tags" not in value
 
 
 def test_migrate_keeps_values() -> None:

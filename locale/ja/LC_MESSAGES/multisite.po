@@ -11283,7 +11283,7 @@ msgid "Changes since last dump"
 msgstr "前回ダンプ時からの変更点"
 
 msgid ""
-"Changing this setting triggers a restart of all affected sites during "
+"Changing this setting triggers a full restart of all affected sites during "
 "activate changes."
 msgstr ""
 
@@ -27167,9 +27167,6 @@ msgstr "モニターメニューでこの%sを非表示にします"
 #, fuzzy
 msgid "Hide title"
 msgstr "ページタイトル"
-
-msgid "Hide user rules"
-msgstr "ユーザールールを非表示にする"
 
 msgid "Hierarchical layout"
 msgstr "階層レイアウト"
@@ -84062,6 +84059,9 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用不可</b>"
+
+#~ msgid "Hide user rules"
+#~ msgstr "ユーザールールを非表示にする"
 
 #, fuzzy
 #~ msgid "Check man page uses the deprecated API"

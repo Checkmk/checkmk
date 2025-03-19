@@ -11788,7 +11788,7 @@ msgid "Changes since last dump"
 msgstr "Cambiamenti dall'ultimo dump"
 
 msgid ""
-"Changing this setting triggers a restart of all affected sites during "
+"Changing this setting triggers a full restart of all affected sites during "
 "activate changes."
 msgstr ""
 
@@ -28285,9 +28285,6 @@ msgstr "Nascondi questo %s nel menu del monitor"
 #, fuzzy
 msgid "Hide title"
 msgstr "Titolo della pagina"
-
-msgid "Hide user rules"
-msgstr "Nascondere le regole dell'utente"
 
 msgid "Hierarchical layout"
 msgstr "Layout gerarchico"
@@ -87617,6 +87614,9 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usa SSL per la connessione."
+
+#~ msgid "Hide user rules"
+#~ msgstr "Nascondere le regole dell'utente"
 
 #, fuzzy
 #~ msgid "Check man page uses the deprecated API"

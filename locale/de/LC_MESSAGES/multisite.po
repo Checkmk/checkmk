@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-03-18 03:50+0000\n"
+"PO-Revision-Date: 2025-03-19 04:50+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -7897,9 +7897,8 @@ msgstr "Durchschnittliches Delta anstehender Aufgaben"
 msgid "Average processor speed"
 msgstr "Durchschnittliche Prozessor Gescwindigkeit"
 
-#, fuzzy
 msgid "Average read and write request size"
-msgstr "Größe der durchschnittlichen Schreibanfrage"
+msgstr "Durchschnittliche Größe der Lese- und Schreibanfragen"
 
 msgid "Average read request size"
 msgstr "Durchschnittliche Lese-Request-Größe"
@@ -11510,7 +11509,7 @@ msgid "Changes since last dump"
 msgstr "Anzahl der Änderungen seit dem letzten Dump"
 
 msgid ""
-"Changing this setting triggers a restart of all affected sites during "
+"Changing this setting triggers a full restart of all affected sites during "
 "activate changes."
 msgstr ""
 
@@ -11736,7 +11735,6 @@ msgstr "Überprüfe Log-Dateigruppen"
 msgid "Check logfiles for relevant new messages"
 msgstr "Log-Dateien auf relevante Meldungen hin überwachen"
 
-#, fuzzy
 msgid "Check man page"
 msgstr "Check Handbuchseite"
 
@@ -26466,9 +26464,8 @@ msgstr "HW-/SW-Inventur (Linux, Windows, Solaris, AIX)"
 msgid "HW/SW Inventory history"
 msgstr "Historie der HW-/SW-Inventur"
 
-#, fuzzy
 msgid "HW/SW Inventory plug-in"
-msgstr "Veraltete Plugins der HW-/SW-Inventur"
+msgstr "Plugin der HW-/SW-Inventur"
 
 msgid "HW/SW Inventory rules"
 msgstr "Regeln der HW-/SW-Inventur"
@@ -27642,9 +27639,6 @@ msgstr "%s im Monitor-Menü ausblenden"
 
 msgid "Hide title"
 msgstr "Titel verbergen"
-
-msgid "Hide user rules"
-msgstr "Benutzerregeln zu"
 
 msgid "Hierarchical layout"
 msgstr "Hierarchisches Layout"
@@ -35116,9 +35110,9 @@ msgstr ""
 "Bulking von Benachrichtigungen deaktivieren oder ein anderes "
 "Benachrichtigungs-Plugin wählen, das Bulking erlaubt."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Legacy GUI extension in %r"
-msgstr "Legacy GUI-Erweiterungen (veraltet)"
+msgstr "Legacy GUI-Erweiterung in %r"
 
 #, python-format
 msgid ""
@@ -44766,9 +44760,8 @@ msgstr "Oracle Locks"
 msgid "Oracle Logswitches"
 msgstr "Oracle Log-Umschalter"
 
-#, fuzzy
 msgid "Oracle PDB Total Size"
-msgstr "Oracle DB Zeit"
+msgstr "Gesamtgröße von Oracle PDB"
 
 msgid "Oracle PGA info"
 msgstr "Oracle PGA-Info"
@@ -84111,9 +84104,8 @@ msgstr "latin1"
 msgid "left"
 msgstr "links"
 
-#, fuzzy
 msgid "legacy"
-msgstr "Legacy-Lauf"
+msgstr "Legacy"
 
 msgid "legacy run"
 msgstr "Legacy-Lauf"
@@ -85267,6 +85259,9 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid "Hide user rules"
+#~ msgstr "Benutzerregeln zu"
 
 #~ msgid "Check man page uses the deprecated API"
 #~ msgstr "Die Check Manpage verwendet die veraltete API"

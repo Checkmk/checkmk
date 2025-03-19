@@ -11920,7 +11920,7 @@ msgid "Changes since last dump"
 msgstr "Modificări de la ultima descărcare de gestiune"
 
 msgid ""
-"Changing this setting triggers a restart of all affected sites during "
+"Changing this setting triggers a full restart of all affected sites during "
 "activate changes."
 msgstr ""
 
@@ -28560,9 +28560,6 @@ msgstr "Ascundeți acest %s în meniul monitorului"
 #, fuzzy
 msgid "Hide title"
 msgstr "Titlul paginii"
-
-msgid "Hide user rules"
-msgstr "Ascundeți regulile utilizatorului"
 
 msgid "Hierarchical layout"
 msgstr "Dispunere ierarhică"
@@ -88567,6 +88564,9 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#~ msgid "Hide user rules"
+#~ msgstr "Ascundeți regulile utilizatorului"
 
 #, fuzzy
 #~ msgid "Check man page uses the deprecated API"

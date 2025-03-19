@@ -5,7 +5,7 @@
 
 import tarfile
 import uuid
-from collections.abc import Collection, Sequence
+from collections.abc import Collection, Iterator, Sequence
 from pathlib import Path
 
 from pydantic import BaseModel
@@ -19,6 +19,7 @@ import cmk.utils.paths
 from cmk.utils.diagnostics import (
     CheckmkFileInfo,
     CheckmkFileSensitivity,
+    CheckmkFilesMap,
     DiagnosticsParameters,
     get_checkmk_config_files_map,
     get_checkmk_core_files_map,
@@ -540,69 +541,43 @@ class ModeDiagnostics(WatoMode):
             )
         return elements
 
+    def _get_cs_elements_for(
+        self, component: str, element_id: str, element_title: str, files_map: CheckmkFilesMap
+    ) -> Iterator[tuple[str, ValueSpec]]:
+        files = [
+            (f, fi)
+            for f in files_map
+            for fi in [get_checkmk_file_info(f, component)]
+            if component in fi.components
+        ]
+
+        if not files:
+            return
+
+        yield (
+            element_id,
+            self._get_component_specific_checkmk_files_choices(element_title, files),
+        )
+
     def _get_component_specific_checkmk_files_elements(
         self, component: str
     ) -> list[tuple[str, ValueSpec]]:
-        elements = []
-        config_files = [
-            (f, fi)
-            for f in self._checkmk_config_files_map
-            for fi in [get_checkmk_file_info(f, component)]
-            if component in fi.components
-        ]
-        if config_files:
-            elements.append(
-                (
-                    "config_files",
-                    self._get_component_specific_checkmk_files_choices(
-                        _("Configuration files"), config_files
-                    ),
-                )
-            )
+        elements: list[tuple[str, ValueSpec]] = []
+        for filetype in [
+            ("config_files", _("Configuration files"), self._checkmk_config_files_map),
+            ("core_files", _("Core files"), self._checkmk_core_files_map),
+            ("licensing_files", _("Licensing files"), self._checkmk_licensing_files_map),
+            ("log_files", _("Log files"), self._checkmk_log_files_map),
+        ]:
+            element_id, element_title, files_map = filetype
+            for cs_element in self._get_cs_elements_for(
+                component,
+                element_id,
+                element_title,
+                files_map,
+            ):
+                elements.append(cs_element)
 
-        core_files = [
-            (f, fi)
-            for f in self._checkmk_core_files_map
-            for fi in [get_checkmk_file_info(f, component)]
-            if component in fi.components
-        ]
-        if core_files:
-            elements.append(
-                (
-                    "core_files",
-                    self._get_component_specific_checkmk_files_choices(_("Core files"), core_files),
-                )
-            )
-
-        licensing_files = [
-            (f, fi)
-            for f in self._checkmk_licensing_files_map
-            for fi in [get_checkmk_file_info(f, component)]
-            if component in fi.components
-        ]
-        if licensing_files:
-            elements.append(
-                (
-                    "licensing_files",
-                    self._get_component_specific_checkmk_files_choices(
-                        _("Licensing files"), licensing_files
-                    ),
-                )
-            )
-
-        log_files = [
-            (f, fi)
-            for f in self._checkmk_log_files_map
-            for fi in [get_checkmk_file_info(f, component)]
-            if component in fi.components
-        ]
-        if log_files:
-            elements.append(
-                (
-                    "log_files",
-                    self._get_component_specific_checkmk_files_choices(_("Log files"), log_files),
-                )
-            )
         return elements
 
     def _get_component_specific_checkmk_files_choices(

@@ -54,8 +54,14 @@ from cmk.gui.valuespec import (
 MessageMethod = Literal["gui_hint", "gui_popup", "mail", "dashlet"]
 
 
+class MessageFromVS(TypedDict):
+    text: str
+    dest: tuple[str, list[UserId]]
+    methods: list[MessageMethod]
+    valid_till: int | None
+
+
 class Message(TypedDict):
-    # From dictionary valuespec
     text: str
     dest: tuple[str, list[UserId]]
     methods: list[MessageMethod]
@@ -188,7 +194,7 @@ def page_message() -> None:
             msg = vs_message.from_html_vars("_message")
             vs_message.validate_value(msg, "_message")
             _process_message(
-                Message(
+                MessageFromVS(
                     text=msg["text"],
                     dest=msg["dest"],
                     methods=msg["methods"],
@@ -331,10 +337,15 @@ def _validate_msg(msg: DictionaryModel, _varprefix: str) -> None:
                 raise MKUserError("dest", _('A user with the id "%s" does not exist.') % user_id)
 
 
-def _process_message(msg: Message) -> None:  # pylint: disable=R0912
-    msg["id"] = utils.gen_id()
-    msg["time"] = int(time.time())
-    msg["acknowledged"] = False
+def _process_message(msg_from_vs: MessageFromVS) -> None:  # pylint: disable=too-many-branches
+    msg = Message(
+        text=msg_from_vs["text"],
+        dest=msg_from_vs["dest"],
+        methods=msg_from_vs["methods"],
+        valid_till=msg_from_vs["valid_till"],
+        id=utils.gen_id(),
+        time=int(time.time()),
+    )
 
     if isinstance(msg["dest"], str):
         dest_what = msg["dest"]

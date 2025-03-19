@@ -5,7 +5,7 @@
 
 import sys
 
-from cmk.active_checks.check_cmk_inv import main
+from cmk.plugins.checkmk.libinventory.check_cmk_inv import main
 
 if __name__ == "__main__":
     sys.exit(main())

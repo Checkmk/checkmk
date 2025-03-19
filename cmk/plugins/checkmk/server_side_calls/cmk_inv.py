@@ -33,6 +33,7 @@ def generate_cmk_inv_commands(
     yield ActiveCheckCommand(
         service_description="Check_MK HW/SW Inventory",
         command_arguments=[
+            "--use-indexed-plugins",
             f"--inv-fail-status={params.fail_status}",
             f"--hw-changes={params.hw_changes}",
             f"--sw-changes={params.sw_changes}",

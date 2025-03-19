@@ -7,10 +7,11 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.plugins.collection.server_side_calls.cmk_inv import CmkInvParams, generate_cmk_inv_commands
+from cmk.plugins.checkmk.server_side_calls.cmk_inv import CmkInvParams, generate_cmk_inv_commands
 from cmk.server_side_calls.v1 import HostConfig, IPv4Config
 
 ARGS = [
+    "--use-indexed-plugins",
     "--inv-fail-status=1",
     "--hw-changes=0",
     "--sw-changes=0",

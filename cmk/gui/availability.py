@@ -1897,8 +1897,10 @@ def layout_availability_table(  # pylint: disable=too-many-branches
         # regardless of timeformat the percentage value should be taken for summary levels
         # verification since the percentage value takes the considered duration as reference duration
         if show_summary and av_levels:
-            summary["ok_level"] += (
-                float(entry["states"].get("ok", 0)) / entry["considered_duration"]
+            summary["ok_level"] += float(entry["states"].get("ok", 0)) / (
+                entry["considered_duration"]
+                if entry["considered_duration"]
+                else entry["total_duration"]
             )
 
     # Summary line. It has the same format as each entry in cells

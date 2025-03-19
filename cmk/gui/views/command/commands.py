@@ -11,6 +11,8 @@ import livestatus
 
 import cmk.utils.version as cmk_version
 from cmk.utils.hostaddress import HostName
+from cmk.utils.livestatus_helpers.queries import Query
+from cmk.utils.livestatus_helpers.tables.hosts import Hosts
 from cmk.utils.render import SecondsRenderer
 from cmk.utils.servicename import ServiceName
 
@@ -1463,6 +1465,16 @@ PermissionRemoveAllDowntimes = Permission(
 )
 
 
+def hosts_user_can_see(users_sites: list[livestatus.SiteId] | None = None) -> Sequence[str]:
+    """Returns a list of hostnames that the logged in user can see filtering
+    on the action rows sites if they are provided."""
+    hosts_query_result = Query([Hosts.name]).fetchall(
+        sites=sites.live(),
+        only_sites=users_sites,
+    )
+    return list({host["name"] for host in hosts_query_result})
+
+
 class CommandGroupDowntimes(CommandGroup):
     @property
     def ident(self) -> str:
@@ -1770,11 +1782,12 @@ class CommandScheduleDowntimes(Command):
             html.close_div()
 
         open_submit_button_container_div(tooltip=tooltip_submission_disabled)
-        html.button(
-            "_down_host",
-            _("On host: Schedule downtime"),
-            cssclass="disabled" + ("" if is_service else " hot"),
-        )
+        if what == "host" or user.may("general.see_all") or hosts_user_can_see():
+            html.button(
+                "_down_host",
+                _("On host: Schedule downtime"),
+                cssclass="disabled" + ("" if is_service else " hot"),
+            )
         html.close_div()
 
         html.buttonlink(makeuri(request, [], delvars=["filled_in"]), _("Cancel"))
@@ -2064,6 +2077,13 @@ class CommandScheduleDowntimes(Command):
         elif request.var("_down_host"):  # set on hosts instead of services
             specs = [spec.split(";")[0]]
             cmdtag = "HOST"
+            if not user.may("general.see_all"):
+                user_hosts = hosts_user_can_see(
+                    users_sites=list({livestatus.SiteId(row["site"]) for row in action_rows})
+                )
+                specs = [spec for spec in specs if spec in user_hosts]
+                action_rows = [ar for ar in action_rows if ar["host_name"] in user_hosts]
+
             len_action_rows = len({row["host_name"] for row in action_rows})
         else:
             specs = [spec]

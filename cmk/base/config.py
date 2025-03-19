@@ -2786,6 +2786,9 @@ class ConfigCache:
         password_store_file: Path,
         ip_address_of: IPLookup,
     ) -> Iterable[tuple[str, SpecialAgentCommandLine]]:
+        if not (host_special_agents := self.special_agents(host_name)):
+            return
+
         host_attrs = self.get_host_attributes(host_name, ip_address_of)
         special_agent = SpecialAgent(
             load_special_agents(raise_errors=cmk.ccc.debug.enabled()),
@@ -2812,7 +2815,7 @@ class ConfigCache:
                 cmk.utils.paths.local_special_agents_dir, cmk.utils.paths.special_agents_dir
             ),
         )
-        for agentname, params_seq in self.special_agents(host_name):
+        for agentname, params_seq in host_special_agents:
             for params in params_seq:
                 try:
                     for agent_data in special_agent.iter_special_agent_commands(agentname, params):

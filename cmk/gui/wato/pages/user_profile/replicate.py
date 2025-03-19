@@ -15,7 +15,6 @@ from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.user_async_replication import user_profile_async_replication_page
-from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.utils.urls import requested_file_name
 from cmk.gui.wato.pages.user_profile.page_menu import page_menu_dropdown_user_related
 
@@ -48,9 +47,6 @@ class UserProfileReplicate(Page):
         title = _("Replicate user profile")
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), title)
         make_header(html, title, breadcrumb, self._page_menu(breadcrumb))
-
-        for message in get_flashed_messages():
-            html.show_message(message.msg)
 
         # Now, if in distributed environment where users can login to remote sites, set the trigger for
         # pushing the new user profile to the remote sites asynchronously

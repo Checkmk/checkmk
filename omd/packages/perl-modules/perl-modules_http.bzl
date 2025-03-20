@@ -352,8 +352,8 @@ def perl_modules():
         http_file(
             name = module,
             urls = [
-                PERL_MODULES_LIST.get(module).get("url"),
                 UPSTREAM_MIRROR_URL + module,
+                PERL_MODULES_LIST.get(module).get("url"),
             ],
             sha256 = PERL_MODULES_LIST.get(module).get("sha256"),
         )

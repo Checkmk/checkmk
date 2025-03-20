@@ -74,8 +74,8 @@ def load_all_plugins(
                     raise
                 errors.append(f"Error in agent based plug-in {plugin.name} ({type(plugin)}): {exc}")
 
-    _add_sections_to_register(sections)
-    _add_checks_to_register(checks)
+    _add_legacy_sections(sections)
+    _add_legacy_checks(checks)
     return errors
 
 
@@ -90,8 +90,8 @@ def load_selected_plugins(
         module = import_module(location.module)
         if location.name is not None:
             _register_plugin_by_type(location, getattr(module, location.name), validate=validate)
-    _add_sections_to_register(sections)
-    _add_checks_to_register(checks)
+    _add_legacy_sections(sections)
+    _add_legacy_checks(checks)
 
 
 def _register_plugin_by_type(
@@ -216,7 +216,7 @@ def register_inventory_plugin(inventory: InventoryPlugin, location: PluginLocati
     add_inventory_plugin(plugin)
 
 
-def _add_sections_to_register(
+def _add_legacy_sections(
     sections: Iterable[BackendSNMPSectionPlugin | BackendAgentSectionPlugin],
 ) -> None:
     for section in sections:
@@ -225,7 +225,7 @@ def _add_sections_to_register(
         add_section_plugin(section)
 
 
-def _add_checks_to_register(
+def _add_legacy_checks(
     checks: Iterable[BackendCheckPlugin],
 ) -> None:
     for check in checks:

@@ -192,11 +192,8 @@ class DiscoveredHostLabelsStore:
         self._store.write_obj({l.name: l.to_dict() for l in labels})
 
 
-class BuiltinHostLabelsStore:
-    def load(self) -> Mapping[str, HostLabelValueDict]:
-        return {
-            "cmk/site": {"value": omd_site(), "plugin_name": "builtin"},
-        }
+def get_builtin_host_labels() -> Labels:
+    return {"cmk/site": omd_site()}
 
 
 # Label group specific types

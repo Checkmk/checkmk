@@ -13,7 +13,6 @@ from pytest import MonkeyPatch
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.labels import BuiltinHostLabelsStore
 from cmk.utils.rulesets.ruleset_matcher import (
     LabelManager,
     matches_tag_condition,
@@ -154,7 +153,7 @@ def test_ruleset_matcher_get_host_values_labels(
         },
         host_label_rules=(),
         service_label_rules=(),
-        builtin_host_labels_store=BuiltinHostLabelsStore(),
+        get_builtin_host_labels=lambda: {},
     )
     assert (
         list(
@@ -199,7 +198,7 @@ def test_labels_of_service() -> None:
                 "value": {"label2": "val2"},
             },
         ],
-        builtin_host_labels_store=BuiltinHostLabelsStore(),
+        get_builtin_host_labels=lambda: {},
     )
 
     assert not label_manager.labels_of_service(xyz_host, "CPU load", {})
@@ -232,7 +231,7 @@ def test_labels_of_service_discovered_labels() -> None:
         explicit_host_labels={},
         host_label_rules=(),
         service_label_rules=(),
-        builtin_host_labels_store=BuiltinHostLabelsStore(),
+        get_builtin_host_labels=lambda: {},
     )
 
     service_description = "CPU load"
@@ -477,7 +476,7 @@ def test_basic_host_ruleset_get_host_bool_value() -> None:
         explicit_host_labels={},
         host_label_rules=(),
         service_label_rules=(),
-        builtin_host_labels_store=BuiltinHostLabelsStore(),
+        get_builtin_host_labels=lambda: {},
     )
 
     assert (

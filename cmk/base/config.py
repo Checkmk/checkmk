@@ -23,7 +23,6 @@ import time
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from enum import Enum
 from pathlib import Path
-from types import ModuleType
 from typing import (
     Any,
     AnyStr,
@@ -59,7 +58,7 @@ from cmk.utils.host_storage import apply_hosts_file_to_object, get_host_storage_
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
 from cmk.utils.ip_lookup import IPStackConfig
-from cmk.utils.labels import BuiltinHostLabelsStore, Labels, LabelSources
+from cmk.utils.labels import Labels, LabelSources
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.regex import regex
@@ -163,13 +162,12 @@ from cmk.server_side_calls_backend import (
 )
 from cmk.server_side_calls_backend.config_processing import PreprocessingResult
 
-cme_labels: ModuleType | None
 try:
-    from cmk.utils.cme import (  # type: ignore[import-not-found, import-untyped, no-redef, unused-ignore]
-        labels as cme_labels,
+    from cmk.utils.cme.labels import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
+        get_builtin_host_labels,
     )
 except ModuleNotFoundError:
-    cme_labels = None
+    from cmk.utils.labels import get_builtin_host_labels
 
 
 tracer = trace.get_tracer()
@@ -1991,7 +1989,7 @@ class ConfigCache:
             host_labels,
             host_label_rules,
             service_label_rules,
-            builtin_host_labels_store=BuiltinHostLabelsStore(),
+            get_builtin_host_labels=get_builtin_host_labels,
         )
 
         self.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(
@@ -4954,8 +4952,4 @@ class CEEConfigCache(ConfigCache):
 
 
 class CMEConfigCache(CEEConfigCache):
-    def initialize(self) -> ConfigCache:
-        super().initialize()
-        if cme_labels:
-            self.label_manager.set_builtin_host_labels_store(cme_labels.CMEBuiltinHostLabelsStore())
-        return self
+    pass

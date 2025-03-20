@@ -23,7 +23,6 @@ from cmk.utils.global_ident_type import GlobalIdent
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import (
     AndOrNotLiteral,
-    BuiltinHostLabelsStore,
     DiscoveredHostLabelsStore,
     HostLabel,
     LabelGroups,
@@ -371,19 +370,16 @@ class LabelManager:
         explicit_host_labels: Mapping[HostName, Labels],
         host_label_rules: Sequence[RuleSpec[Mapping[str, str]]],
         service_label_rules: Sequence[RuleSpec[Mapping[str, str]]],
-        builtin_host_labels_store: BuiltinHostLabelsStore,
+        get_builtin_host_labels: Callable[[], Labels],
     ) -> None:
         self._matcher: Final = matcher
         self._nodes_of: Final = nodes_of
-        self._builtin_host_labels_store = builtin_host_labels_store  # NOT Final!
+        self._get_builtin_host_labels: Final = get_builtin_host_labels
         self.explicit_host_labels: Mapping[HostName, Labels] = explicit_host_labels
         self.host_label_rules: Sequence[RuleSpec[Mapping[str, str]]] = host_label_rules
         self.service_label_rules: Sequence[RuleSpec[Mapping[str, str]]] = service_label_rules
 
         self.__labels_of_host: dict[HostName, Labels] = {}
-
-    def set_builtin_host_labels_store(self, store: BuiltinHostLabelsStore) -> None:
-        self._builtin_host_labels_store = store
 
     def labels_of_host(self, hostname: HostName) -> Labels:
         """Returns the effective set of host labels from all available sources
@@ -404,7 +400,7 @@ class LabelManager:
             {
                 **self._discovered_labels_of_host(hostname),
                 **self._ruleset_labels_of_host(hostname),
-                **self._builtin_labels_of_host(),
+                **self._get_builtin_host_labels(),
                 **self.explicit_host_labels.get(hostname, {}),
             },
         )
@@ -415,7 +411,7 @@ class LabelManager:
         _get_host_labels()"""
         labels: LabelSources = {}
         labels.update({k: "discovered" for k in self._discovered_labels_of_host(hostname).keys()})
-        labels.update({k: "discovered" for k in self._builtin_labels_of_host()})
+        labels.update({k: "discovered" for k in self._get_builtin_host_labels()})
         labels.update({k: "ruleset" for k in self._ruleset_labels_of_host(hostname)})
         labels.update({k: "explicit" for k in self.explicit_host_labels.get(hostname, {}).keys()})
         return labels
@@ -435,12 +431,6 @@ class LabelManager:
             else merge_cluster_labels([DiscoveredHostLabelsStore(node).load() for node in nodes])
         )
         return {l.name: l.value for l in host_labels}
-
-    def _builtin_labels_of_host(self) -> Labels:
-        return {
-            label_id: label["value"]
-            for label_id, label in self._builtin_host_labels_store.load().items()
-        }
 
     def labels_of_service(
         self,

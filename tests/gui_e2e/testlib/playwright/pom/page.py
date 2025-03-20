@@ -112,7 +112,7 @@ class CmkPage(LocatorHelper):
 
     def activate_changes(self) -> None:
         logger.info("Activate changes")
-        self.get_link(re.compile("^[1-9][0-9]* changes?$"), exact=False).click()
+        self.get_link(re.compile(r"^[1-9][0-9]*\+? changes?$"), exact=False).click()
         self.activate_selected()
         self.expect_success_state()
 

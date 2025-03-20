@@ -82,20 +82,3 @@ assert_no_dirty_files = { repo_root ->
         assert sh(script: "make -C tests/ test-find-dirty-files-in-git", returnStatus: true) == 0;
     }
 }
-
-provide_clone = { repo_name, credentials_id ->
-    dir("${WORKSPACE}/${repo_name}") {
-        checkout([$class: "GitSCM",
-            userRemoteConfigs: [[
-                credentialsId: credentials_id,
-                url: "ssh://jenkins@review.lan.tribe29.com:29418/${repo_name}",
-            ]],
-            branches: [new hudson.plugins.git.BranchSpec("FETCH_HEAD")],
-            extensions: [
-                [$class: 'CloneOption',
-                 // reference: "${reference_clone}",
-                 timeout: 20,
-            ]],
-        ]);
-    }
-}

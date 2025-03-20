@@ -57,7 +57,7 @@ def create_validation_error(
         error_message = error_message.localize(translate_to_current_language)
     return [
         shared_type_defs.ValidationMessage(
-            location=location or [], message=error_message, invalid_value=value
+            location=location or [], message=error_message, replacement_value=value
         )
     ]
 
@@ -68,7 +68,7 @@ def compute_validation_errors(
     raw_value: Any,
 ) -> list[shared_type_defs.ValidationMessage]:
     return [
-        shared_type_defs.ValidationMessage(location=[], message=x, invalid_value=parsed_value)
+        shared_type_defs.ValidationMessage(location=[], message=x, replacement_value=parsed_value)
         for x in optional_validation(validators, raw_value)
         if x is not None
     ]

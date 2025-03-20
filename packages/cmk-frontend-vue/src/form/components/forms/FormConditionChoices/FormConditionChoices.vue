@@ -30,7 +30,7 @@ immediateWatch(
   (newValidation: ValidationMessages) => {
     validation.value = newValidation.map((m) => m.message)
     newValidation.forEach((message) => {
-      data.value = message.invalid_value as typing.ConditionChoicesValue[]
+      data.value = message.replacement_value as typing.ConditionChoicesValue[]
     })
   }
 )

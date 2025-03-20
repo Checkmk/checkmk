@@ -458,7 +458,7 @@ export interface TimeSpecificI18N {
 export interface ValidationMessage {
   location: string[];
   message: string;
-  invalid_value: unknown;
+  replacement_value: unknown;
 }
 export interface ConditionChoicesValue {
   group_name: string;

@@ -118,7 +118,7 @@ test('FormTimeSpecific: check embedded validation message', async () => {
         {
           location: ['tp_default_value'],
           message: 'Backend error message',
-          invalid_value: 'other_value'
+          replacement_value: 'other_value'
         }
       ]
     }
@@ -136,7 +136,7 @@ test('FormTimeSpecific: check time specific validation message', async () => {
         {
           location: [],
           message: 'TimeSpecific problems',
-          invalid_value: '42'
+          replacement_value: '42'
         }
       ]
     }

@@ -158,7 +158,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _
                         shared_type_defs.ValidationMessage(
                             location=[key_name],
                             message=_("Required field missing"),
-                            invalid_value=element_visitor.to_vue(DEFAULT_VALUE)[1],
+                            replacement_value=element_visitor.to_vue(DEFAULT_VALUE)[1],
                         )
                     )
                 continue
@@ -168,7 +168,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _
                     shared_type_defs.ValidationMessage(
                         location=[key_name] + validation.location,
                         message=validation.message,
-                        invalid_value=validation.invalid_value,
+                        replacement_value=validation.replacement_value,
                     )
                 )
 

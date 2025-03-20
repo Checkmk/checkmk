@@ -53,7 +53,7 @@ test('FormConditionChoices shows backendValidation', async () => {
         {
           location: [],
           message: 'some message',
-          invalid_value: [
+          replacement_value: [
             {
               group_name: 'group1',
               value: { oper_eq: 'condition1' }

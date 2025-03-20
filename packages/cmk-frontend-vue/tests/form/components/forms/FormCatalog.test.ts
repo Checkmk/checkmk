@@ -253,12 +253,12 @@ test('FormCatalog backend validation', async () => {
       {
         location: ['topic_name', 'ut_topic_element_1', 'ut_topic_1_dict_1'],
         message: 'ut_error_1',
-        invalid_value: ''
+        replacement_value: ''
       },
       {
         location: ['topic_name', 'ut_topic_element_2', 'ut_topic_2_dict_1'],
         message: 'ut_error_2',
-        invalid_value: ''
+        replacement_value: ''
       }
     ]
   }

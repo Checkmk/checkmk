@@ -43,7 +43,7 @@ test('FormListOfStrings renders backend validation messages', async () => {
     props: {
       spec,
       data: [],
-      backendValidation: [{ location: [], message: 'Backend error message', invalid_value: '' }]
+      backendValidation: [{ location: [], message: 'Backend error message', replacement_value: '' }]
     }
   })
 
@@ -65,7 +65,7 @@ test('FormListOfStrings updated backend child validation shows validation error'
     spec,
     data: ['some value'],
     backendValidation: [
-      { location: ['0'], message: 'Backend error message', invalid_value: 'other value' }
+      { location: ['0'], message: 'Backend error message', replacement_value: 'other value' }
     ]
   })
 
@@ -80,7 +80,7 @@ test('FormListOfStrings local child validation overwrites backend validation', a
       spec,
       data: ['some value'],
       backendValidation: [
-        { location: ['0'], message: 'Backend error message', invalid_value: 'other value' }
+        { location: ['0'], message: 'Backend error message', replacement_value: 'other value' }
       ]
     }
   })

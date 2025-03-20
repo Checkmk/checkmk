@@ -14,9 +14,9 @@
                 "message": {
                     "type": "string"
                 },
-                "invalid_value": {}
+                "replacement_value": {}
             },
-            "required": ["location", "message", "invalid_value"]
+            "required": ["location", "message", "replacement_value"]
         }
     }
 }

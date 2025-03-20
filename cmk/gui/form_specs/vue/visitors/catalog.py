@@ -183,7 +183,7 @@ class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FrontendModel]
                         shared_type_defs.ValidationMessage(
                             location=[topic_name, element_name] + validation.location,
                             message=validation.message,
-                            invalid_value=validation.invalid_value,
+                            replacement_value=validation.replacement_value,
                         )
                     )
         return element_validations

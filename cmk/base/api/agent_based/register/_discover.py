@@ -27,7 +27,7 @@ from cmk.agent_based.v2 import (
 )
 from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup, PluginLocation
 
-from .check_plugins import create_check_plugin, get_check_plugin
+from .check_plugins import create_check_plugin
 from .inventory_plugins import create_inventory_plugin
 from .section_plugins import create_agent_section_plugin, create_snmp_section_plugin
 
@@ -209,7 +209,7 @@ def _register_check_plugin(
         validate_kwargs=check.name not in {"logwatch_ec", "logwatch_ec_single"},
     )
 
-    if get_check_plugin(plugin.name, registered_check_plugins) is not None:
+    if plugin.name in registered_check_plugins:
         raise ValueError(f"duplicate check plug-in definition: {plugin.name}")
 
     registered_check_plugins[plugin.name] = plugin

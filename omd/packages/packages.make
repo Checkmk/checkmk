@@ -31,7 +31,7 @@ $(DEPS_INSTALL_BAZEL):
 	# NOTE: this might result in unexpected build behavior, when dependencies of //omd:intermediate_install
 	#       are built somewhere else without --define git-ssl-no-verify=true being specified, likely
 	#       resulting in different builds
-	bazel build --cmk_version=$(VERSION) \
+	bazel build --cmk_version=$(VERSION) --cmk_edition=$(EDITION_SHORT) \
 	    $(if $(filter sles15%,$(DISTRO_CODE)),--define git-ssl-no-verify=true) \
 	    --execution_log_json_file="$(REPO_PATH)/deps_install.json" \
 	    //omd:deps_install_$(EDITION_SHORT)
@@ -191,7 +191,6 @@ include \
     packages/msitools/msitools.make \
     packages/nagios/nagios.make \
     packages/heirloom-mailx/heirloom-mailx.make \
-    packages/navicli/navicli.make \
     packages/nrpe/nrpe.make \
     packages/pnp4nagios/pnp4nagios.make \
     packages/omd/omd.make \

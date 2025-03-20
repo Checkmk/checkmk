@@ -38,7 +38,6 @@ PACKAGES := \
     check-cert \
     nrpe \
     omd \
-    navicli \
     pnp4nagios \
     heirloom-mailx \
     livestatus \

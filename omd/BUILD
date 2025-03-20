@@ -39,6 +39,7 @@ create_venv(
         "//omd/packages/mk-livestatus",
         "//omd/packages/mod_fcgid",
         "//omd/packages/mod_wsgi",
+        "//omd/packages/navicli",
         "//omd/packages/net-snmp:net-snmp_tar",
         "//omd/packages/openssl:openssl_tar_" + edition,
         "//omd/packages/patch",

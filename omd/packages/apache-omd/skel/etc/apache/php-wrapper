@@ -4,6 +4,8 @@
 . "###ROOT###/etc/omd/site.conf"
 
 export PHP_FCGI_MAX_REQUESTS=1000
+export CONFIG_APACHE_TCP_PORT
+export CONFIG_APACHE_TCP_ADDR
 
 # If you change this, you also have to change etc/init.d/apache
 php_cgi_bin() {

@@ -162,6 +162,45 @@ def test_piggyback_services_remote_remote(
 
 
 @contextmanager
+def _turn_off_piggyback_hub(site: Site) -> Iterator[None]:
+    try:
+        with site.omd_config("PIGGYBACK_HUB", "off"):
+            yield
+    finally:
+        site.omd_config("PIGGYBACK_HUB", "on")
+
+
+def test_piggyback_services_remote_remote_central_ph_off(
+    central_site: Site,
+    remote_site: Site,
+    remote_site_2: Site,
+    prepare_piggyback_environment: None,
+) -> None:
+    """
+    Service for host _HOSTNAME_PIGGYBACKED, generated on site remote_site, is monitored on remote_site2
+    with the central site's piggyback hub disabled
+    """
+    _HOSTNAME_PIGGYBACKED = "piggybacked_host_remote_remote"
+    with (
+        _turn_off_piggyback_hub(central_site),
+        create_local_check(
+            central_site,
+            [_HOSTNAME_SOURCE_REMOTE],
+            [_HOSTNAME_PIGGYBACKED],
+        ),
+        _setup_piggyback_host(central_site, remote_site_2.id, _HOSTNAME_PIGGYBACKED),
+    ):
+        remote_site.schedule_check(_HOSTNAME_SOURCE_REMOTE, "Check_MK")
+        central_site.openapi.service_discovery.run_discovery_and_wait_for_completion(
+            _HOSTNAME_PIGGYBACKED
+        )
+
+        assert piggybacked_service_discovered(
+            central_site, _HOSTNAME_SOURCE_REMOTE, _HOSTNAME_PIGGYBACKED
+        )
+
+
+@contextmanager
 def _create_and_rename_host(
     source_site: Site, site_id_target: str, hostname_piggyback: str
 ) -> Iterator[None]:

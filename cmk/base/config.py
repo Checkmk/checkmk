@@ -582,6 +582,7 @@ class LoadedConfigFragment:
     checkgroup_parameters: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]] = (
         dataclasses.field(default_factory=dict)
     )
+    service_rule_groups: set[str] = dataclasses.field(default_factory=set)
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -670,6 +671,7 @@ def _perform_post_config_loading_actions(
     loaded_config = LoadedConfigFragment(
         discovery_rules=discovery_settings,
         checkgroup_parameters=checkgroup_parameters,
+        service_rule_groups=service_rule_groups,
     )
 
     config_cache = _create_config_cache(loaded_config).initialize()
@@ -1528,10 +1530,8 @@ def load_and_convert_legacy_checks(
 
 
 def _make_compute_check_parameters_cb(
-    matcher: RulesetMatcher,
-    labels_of_host: Callable[[HostName], Labels],
+    checking_config: CheckingConfig,
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
-    parameter_rules: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]],
 ) -> Callable[
     [HostName, CheckPluginName, Item, Labels, Mapping[str, object]],
     TimespecificParameters,
@@ -1549,15 +1549,13 @@ def _make_compute_check_parameters_cb(
         params: Mapping[str, object],
     ) -> TimespecificParameters:
         return compute_check_parameters(
-            matcher,
-            labels_of_host,
+            checking_config,
             check_plugins,
             host_name,
             plugin_name,
             item,
             service_labels,
             params,
-            parameter_rules,
         )
 
     return callback
@@ -1586,15 +1584,13 @@ def compute_enforced_service_parameters(
 
 
 def compute_check_parameters(
-    matcher: RulesetMatcher,
-    labels_of_host: Callable[[HostName], Labels],
+    checking_config: CheckingConfig,
     plugins: Mapping[CheckPluginName, CheckPlugin],
     host_name: HostName,
     plugin_name: CheckPluginName,
     item: Item,
     service_labels: Labels,
     params: Mapping[str, object],
-    parameter_rules: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]],
 ) -> TimespecificParameters:
     """Compute effective check parameters.
 
@@ -1608,13 +1604,11 @@ def compute_check_parameters(
         return TimespecificParameters()
 
     configured_parameters = _get_configured_parameters(
-        matcher,
-        labels_of_host,
+        checking_config,
         host_name,
         service_labels,
         ruleset_name=check_plugin.check_ruleset_name,
         item=item,
-        parameter_rules=parameter_rules,
     )
 
     return TimespecificParameters(
@@ -1627,14 +1621,12 @@ def compute_check_parameters(
 
 
 def _get_configured_parameters(
-    matcher: RulesetMatcher,
-    labels_of_host: Callable[[HostName], Labels],
+    checking_config: CheckingConfig,
     host_name: HostName,
     service_labels: Labels,
     *,  # the following are all the same type :-(
     ruleset_name: RuleSetName | None,
     item: Item,
-    parameter_rules: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]],
 ) -> TimespecificParameters:
     if ruleset_name is None:
         return TimespecificParameters()
@@ -1643,42 +1635,41 @@ def _get_configured_parameters(
         [
             # parameters configured via checkgroup_parameters
             TimespecificParameterSet.from_parameters(p)
-            for p in _get_checkgroup_parameters(
-                matcher,
-                labels_of_host,
-                host_name,
-                item,
-                service_labels,
-                str(ruleset_name),
-                parameter_rules,
-            )
+            for p in checking_config(host_name, item, service_labels, str(ruleset_name))
         ]
     )
 
 
-def _get_checkgroup_parameters(
-    matcher: RulesetMatcher,
-    labels_of_host: Callable[[HostName], Labels],
-    host_name: HostName,
-    item: Item,
-    service_labels: Labels,
-    checkgroup: RulesetName,
-    parameter_rules: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]],
-) -> Sequence[Mapping[str, object]]:
-    rules = parameter_rules.get(checkgroup)
-    if rules is None:
-        return []
+class CheckingConfig:
+    def __init__(
+        self,
+        matcher: RulesetMatcher,
+        labels_of_host: Callable[[HostName], Labels],
+        parameter_rules: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]],
+        service_rule_names: Container[str],
+    ) -> None:
+        self._matcher = matcher
+        self._parameter_rules = parameter_rules
+        self._labels_of_host = labels_of_host
+        self._service_rule_names = service_rule_names
 
-    try:
-        if item is None and checkgroup not in service_rule_groups:
-            return matcher.get_host_values(host_name, rules, labels_of_host)
+    def __call__(
+        self, host_name: HostName, item: Item, service_labels: Labels, ruleset_name: RulesetName
+    ) -> Sequence[Mapping[str, object]]:
+        rules = self._parameter_rules.get(ruleset_name)
+        if not rules:
+            return []
 
-        # checks with an item need service-specific rules
-        return matcher.get_checkgroup_ruleset_values(
-            host_name, item, service_labels, rules, labels_of_host
-        )
-    except MKGeneralException as e:
-        raise MKGeneralException(f"{e} (on host {host_name}, checkgroup {checkgroup})")
+        try:
+            if item is None and ruleset_name not in self._service_rule_names:
+                return self._matcher.get_host_values(host_name, rules, self._labels_of_host)
+
+            # checks with an item need service-specific rules
+            return self._matcher.get_checkgroup_ruleset_values(
+                host_name, item, service_labels, rules, self._labels_of_host
+            )
+        except MKGeneralException as e:
+            raise MKGeneralException(f"{e} (on host {host_name}, checkgroup {ruleset_name})")
 
 
 def lookup_mgmt_board_ip_address(
@@ -2044,10 +2035,13 @@ class ConfigCache:
         # hidden dependencies to the loaded config in the global scope of this module.
         return ServiceConfigurer(
             _make_compute_check_parameters_cb(
-                self.ruleset_matcher,
-                self.label_manager.labels_of_host,
+                CheckingConfig(
+                    self.ruleset_matcher,
+                    self.label_manager.labels_of_host,
+                    self._loaded_config.checkgroup_parameters,
+                    service_rule_groups,
+                ),
                 check_plugins,
-                self._loaded_config.checkgroup_parameters,
             ),
             _make_service_description_cb(
                 self.ruleset_matcher, self.label_manager.labels_of_host, check_plugins

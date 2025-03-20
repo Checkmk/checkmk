@@ -4,22 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Mapping
-
 import pytest
 
 # No stub file
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.rulesets import RuleSetName
 from cmk.utils.tags import TagGroupID, TagID
 
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     AutocheckEntry,
-    CheckPlugin,
     CheckPluginName,
     ConfiguredService,
     ServiceID,
@@ -27,8 +23,6 @@ from cmk.checkengine.plugins import (
 
 from cmk.base import config
 from cmk.base.config import FilterMode, HostCheckTable
-
-from cmk.discover_plugins import PluginLocation
 
 
 def test_cluster_ignores_nodes_parameters(
@@ -617,89 +611,3 @@ def test_check_table__static_checks_win(
     # assert static checks won
     effective_params = chk_table[ServiceID(plugin_name, item)].parameters.evaluate(lambda _: True)
     assert effective_params["source"] == "static"
-
-
-@pytest.mark.parametrize(
-    "check_group_parameters",
-    [
-        {},
-        {
-            "levels": (4, 5, 6, 7),
-        },
-    ],
-)
-def test_check_table__get_static_check_entries(
-    monkeypatch: pytest.MonkeyPatch, check_group_parameters: Mapping[str, object]
-) -> None:
-    hostname = HostName("hostname")
-
-    static_parameters_default = {"levels": (1, 2, 3, 4)}
-    static_checks: dict[str, list] = {
-        "ps": [
-            {
-                "id": "01",
-                "condition": {"service_description": [], "host_name": [hostname]},
-                "options": {},
-                "value": ("ps", "item", static_parameters_default),
-            }
-        ],
-    }
-
-    ts = Scenario()
-    ts.add_host(hostname)
-    ts.set_option("static_checks", static_checks)
-
-    config_cache = ts.apply(monkeypatch)
-
-    plugins = {
-        CheckPluginName("ps"): CheckPlugin(
-            CheckPluginName("ps"),
-            [],
-            "Process item",
-            lambda: [],
-            None,
-            None,
-            "merged",
-            lambda: [],
-            {},
-            RuleSetName("ps"),
-            None,
-            PluginLocation(module="module", name="name"),
-        )
-    }
-
-    static_check_parameters = [
-        service.parameters
-        for _, service in config_cache.enforced_services_table(hostname, plugins).values()
-    ]
-
-    entries = config._get_checkgroup_parameters(
-        config_cache.ruleset_matcher,
-        lambda hn: {},
-        hostname,
-        "item",
-        {},
-        "ps",
-        {
-            "ps": [
-                {
-                    "id": "02",
-                    "condition": {"service_description": [], "host_name": [hostname]},
-                    "options": {},
-                    "value": check_group_parameters,
-                }
-            ],
-        },
-    )
-
-    assert len(entries) == 1
-    assert entries[0] == check_group_parameters
-
-    assert len(static_check_parameters) == 1
-    static_check_parameter = static_check_parameters[0]
-    assert static_check_parameter == TimespecificParameters(
-        (
-            TimespecificParameterSet(static_parameters_default, ()),
-            TimespecificParameterSet({}, ()),
-        )
-    )

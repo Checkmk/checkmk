@@ -3309,28 +3309,64 @@ class TestLabelsConfig:
         config = LabelConfig(
             ruleset_matcher,
             host_label_rules=(),
-            service_label_rules=[
+            service_label_rules=(
                 {
                     "condition": {
-                        "service_description": [{"$regex": "CPU load$"}],
-                        "host_tags": {TagGroupID("agent"): TagID("no-agent")},
+                        "host_name": [str(xyz_host)],
                     },
                     "id": "01",
-                    "value": {"label1": "val1"},
+                    "value": {"label": "val1"},
                 },
                 {
                     "condition": {
-                        "service_description": [{"$regex": "CPU load$"}],
                         "host_tags": {TagGroupID("agent"): TagID("no-agent")},
                     },
                     "id": "02",
-                    "value": {"label2": "val2"},
+                    "value": {"label": "val2"},
                 },
-            ],
+            ),
         )
-
-        assert not config.service_labels(xyz_host, "CPU load", lambda h: {})
+        assert config.service_labels(xyz_host, "CPU load", lambda h: {}) == {"label": "val1"}
         assert config.service_labels(test_host, "CPU load", lambda h: {}) == {
-            "label1": "val1",
-            "label2": "val2",
+            "label": "val2",
         }
+
+
+@pytest.mark.parametrize(
+    "check_group_parameters",
+    [
+        {},
+        {
+            "levels": (4, 5, 6, 7),
+        },
+    ],
+)
+def test_checking_config(
+    monkeypatch: MonkeyPatch, check_group_parameters: Mapping[str, object]
+) -> None:
+    hostname = HostName("hostname")
+
+    ts = Scenario()
+    ts.add_host(hostname)
+    config_cache = ts.apply(monkeypatch)
+
+    config_getter = config.CheckingConfig(
+        config_cache.ruleset_matcher,
+        lambda hn: {},
+        {
+            "ps": [
+                {
+                    "id": "02",
+                    "condition": {"service_description": [], "host_name": [hostname]},
+                    "options": {},
+                    "value": check_group_parameters,
+                }
+            ],
+        },
+        ("ps",),
+    )
+
+    entries = config_getter(hostname, "item", {}, "ps")
+
+    assert len(entries) == 1
+    assert entries[0] == check_group_parameters

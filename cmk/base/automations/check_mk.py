@@ -67,7 +67,7 @@ from cmk.utils.paths import (
     tmp_dir,
     var_dir,
 )
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RuleSpec
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.timeout import Timeout
@@ -641,10 +641,10 @@ def _active_check_preview_rows(
 
 
 def _make_compute_check_parameters_of_autocheck(
+    checking_config: config.CheckingConfig,
     ruleset_matcher: RulesetMatcher,
     label_manager: LabelManager,
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
-    parameter_rules: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]],
 ) -> Callable[[HostName, AutocheckEntry], TimespecificParameters]:
     def compute_check_parameters_of_autocheck(
         host_name: HostName, entry: AutocheckEntry
@@ -662,15 +662,13 @@ def _make_compute_check_parameters_of_autocheck(
             item=entry.item,
         )
         return config.compute_check_parameters(
-            ruleset_matcher,
-            label_manager.labels_of_host,
+            checking_config,
             check_plugins,
             host_name,
             entry.check_plugin_name,
             entry.item,
             label_manager.labels_of_service(host_name, service_name, entry.service_labels),
             entry.parameters,
-            parameter_rules,
         )
 
     return compute_check_parameters_of_autocheck
@@ -692,6 +690,12 @@ def _execute_discovery(
         config_cache.ruleset_matcher,
         config_cache.label_manager.labels_of_host,
         loaded_config.discovery_rules,
+    )
+    checking_config = config.CheckingConfig(
+        config_cache.ruleset_matcher,
+        config_cache.label_manager.labels_of_host,
+        loaded_config.checkgroup_parameters,
+        loaded_config.service_rule_groups,
     )
     ruleset_matcher = config_cache.ruleset_matcher
     autochecks_config = config.AutochecksConfigurer(config_cache, plugins.check_plugins)
@@ -746,10 +750,10 @@ def _execute_discovery(
             ),
             check_plugins=check_plugins,
             compute_check_parameters=_make_compute_check_parameters_of_autocheck(
+                checking_config,
                 ruleset_matcher,
                 config_cache.label_manager,
                 plugins.check_plugins,
-                loaded_config.checkgroup_parameters,
             ),
             discovery_plugins=DiscoveryPluginMapper(
                 config_getter=discovery_config,

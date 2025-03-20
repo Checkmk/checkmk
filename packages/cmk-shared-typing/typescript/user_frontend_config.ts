@@ -11,4 +11,5 @@
 
 export interface UserFrontendConfig {
   hide_contextual_help_icon: boolean | null;
+  dismissed_warnings?: string[] | null;
 }

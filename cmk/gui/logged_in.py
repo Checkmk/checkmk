@@ -10,7 +10,7 @@ import logging
 import os
 import time
 from collections.abc import Container, Sequence
-from typing import Any, Final
+from typing import Any, Final, TypedDict
 
 from livestatus import SiteConfigurations, SiteId
 
@@ -25,7 +25,7 @@ from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import session_attr
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import UserSpec
+from cmk.gui.type_defs import DismissableWarning, UserSpec
 from cmk.gui.utils.permission_verification import BasePerm
 from cmk.gui.utils.roles import may_with_roles, roles_of_user
 from cmk.gui.utils.transaction_manager import TransactionManager
@@ -34,6 +34,10 @@ from cmk.shared_typing.user_frontend_config import UserFrontendConfig
 
 _logger = logging.getLogger(__name__)
 _ContactgroupName = str
+
+
+class UserUIConfig(TypedDict, total=False):
+    dismissed_warnings: set[DismissableWarning]
 
 
 class LoggedInUser:
@@ -63,6 +67,7 @@ class LoggedInUser:
         self._button_counts: dict[str, float] = {}
         self._stars: set[str] = set()
         self._tree_states: dict = {}
+        self._ui_config: UserUIConfig = self.load_file("ui_config", {})
         self._bi_assumptions: dict[tuple[str, str] | tuple[str, str, str], int] = {}
         self._tableoptions: dict[str, dict[str, Any]] = {}
 
@@ -158,11 +163,28 @@ class LoggedInUser:
 
     @property
     def frontend_config(self) -> UserFrontendConfig:
+        warnings = self.dismissed_warnings
         return UserFrontendConfig(
             hide_contextual_help_icon=(
                 self.get_attribute("contextual_help_icon") == "hide_icon" or None
-            )
+            ),
+            dismissed_warnings=[str(w) for w in warnings] if warnings else None,
         )
+
+    @property
+    def dismissed_warnings(self) -> set[DismissableWarning] | None:
+        return self._ui_config.get("dismissed_warnings", set())
+
+    @dismissed_warnings.setter
+    def dismissed_warnings(self, values: set[DismissableWarning] | None) -> None:
+        if not values:
+            if "dismissed_warnings" in self._ui_config:
+                del self._ui_config["dismissed_warnings"]
+            if len(self._ui_config.keys()) == 0:
+                self.remove_file("ui_config")
+        else:
+            self._ui_config["dismissed_warnings"] = values
+            self.save_file("ui_config", self._ui_config)
 
     @property
     def acknowledged_notifications(self) -> int:
@@ -417,6 +439,11 @@ class LoggedInUser:
     def save_file(self, name: str, content: Any) -> None:
         assert self.id is not None
         save_user_file(name, content, self.id)
+
+    def remove_file(self, name: str) -> None:
+        assert self.id is not None
+        path = cmk.utils.paths.profile_dir.joinpath(self.id, name + ".mk")
+        path.unlink(missing_ok=True)
 
     def file_modified(self, name: str) -> float:
         if self.confdir is None:

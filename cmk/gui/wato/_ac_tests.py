@@ -1252,9 +1252,12 @@ def _compute_deprecation_result(
     site_id: SiteId,
     path: Path,
 ) -> ACSingleResult:
-    base = Version.from_str(version).version_base
-    deprecated_base = Version.from_str(deprecated_version).version_base
-    removed_base = Version.from_str(removed_version).version_base
+    base = Version.from_str(version).base
+    deprecated_base = Version.from_str(deprecated_version).base
+    removed_base = Version.from_str(removed_version).base
+    assert base is not None
+    assert removed_base is not None
+    assert deprecated_base is not None
     assert removed_base > deprecated_base
 
     if base > removed_base:

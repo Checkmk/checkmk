@@ -230,14 +230,6 @@ msgid " waiting for the "
 msgstr " dans l'attente de "
 
 #, python-format
-msgid ""
-"!!! Error: Received class in RulespecRegistry:register_manual_check_rulespec "
-"%r"
-msgstr ""
-"!!!Erreur : Classe reçue dans RulespecRegistry:"
-"register_manual_check_rulespec %r"
-
-#, python-format
 msgid "\"%s\" is not a valid host name"
 msgstr "\"%s\" ; n'est pas un nom d'hôte valide"
 
@@ -257,9 +249,6 @@ msgstr ""
 "découverte, car les processus sont instanciés pour chaque groupe "
 "correspondant. Il faut donc appliquer les délimiteurs à l'extérieur du "
 "groupe."
-
-msgid "\"not\" is the abbreviation for \"and not\","
-msgstr ""
 
 #, fuzzy, python-format
 msgid "# %s - Cycle details"
@@ -2110,6 +2099,9 @@ msgid ""
 msgstr ""
 "<tt>TNS_ADMIN</tt> à utiliser pour <tt>sqlnet.ora</tt> et <tt>tnsnames.ora</"
 "tt> %s"
+
+msgid "<tt>not</tt> is the abbreviation for <tt>and not</tt>"
+msgstr ""
 
 msgid ""
 "<tt>robot.yaml</tt> is the main RCC configuration file. It is specified "
@@ -4079,11 +4071,12 @@ msgstr "Ajouter des éléments à votre barre latérale"
 msgid "Add event"
 msgstr "Ajouter un élément"
 
-msgid "Add exception"
-msgstr "Ajouter une exception"
-
 msgid "Add exclusion"
 msgstr "Ajouter l'exclusion"
+
+#, fuzzy
+msgid "Add exemption"
+msgstr "Ajouter une exception"
 
 msgid "Add expression"
 msgstr "Ajouter une expression"
@@ -18713,6 +18706,10 @@ msgstr "Règle BI supprimée avec ID %s"
 msgid "Deleted MIB %s"
 msgstr "MIB supprimée %s"
 
+#, python-brace-format
+msgid "Deleted Quick setup {bundle_id}"
+msgstr ""
+
 #, python-format
 msgid "Deleted attribute %s"
 msgstr "Suppression de l'attribut %s"
@@ -23742,9 +23739,6 @@ msgstr "Exceptions"
 msgid "Exceptions (from weekdays)"
 msgstr "Exceptions (à partir des jours de la semaine)"
 
-msgid "Exceptions for piggybacked hosts (VMs, ...)"
-msgstr "Exceptions pour les hôtes en ferroutage (VMs, ...)"
-
 msgid "Exchanges"
 msgstr "Échanges"
 
@@ -23948,6 +23942,10 @@ msgstr "Exécutif"
 
 msgid "Executors"
 msgstr "Exécuteurs testamentaires"
+
+#, fuzzy
+msgid "Exemptions for piggybacked hosts (VMs, ...)"
+msgstr "Exceptions pour les hôtes en ferroutage (VMs, ...)"
 
 msgid "Exists"
 msgstr "Existe"
@@ -49771,7 +49769,8 @@ msgstr "Les services de piggyback pour surveiller"
 msgid "Piggybacked docker containers"
 msgstr "Conteneurs docker piggybacked"
 
-msgid "Piggybacked host name expressions"
+#, fuzzy
+msgid "Piggybacked host name conditions"
 msgstr "Expressions de nom d'hôte en ferroutage"
 
 msgid "Ping"
@@ -88884,8 +88883,8 @@ msgid "the log file %s on host %s"
 msgstr "le fichier journal %s sur l'hôte %s"
 
 msgid ""
-"the operators are processed in the priority: \"not\", \"and\", \"or\" - "
-"according to the Boolean algebra standards."
+"the operators are processed in the priority: <tt>not</tt>, <tt>and</tt>, "
+"<tt>or</tt> - according to the Boolean algebra standards."
 msgstr ""
 
 msgid ""
@@ -89191,6 +89190,14 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
+
+#, python-format
+#~ msgid ""
+#~ "!!! Error: Received class in RulespecRegistry:"
+#~ "register_manual_check_rulespec %r"
+#~ msgstr ""
+#~ "!!!Erreur : Classe reçue dans RulespecRegistry:"
+#~ "register_manual_check_rulespec %r"
 
 #~ msgid "Hide user rules"
 #~ msgstr "Masquer les règles d'utilisation"

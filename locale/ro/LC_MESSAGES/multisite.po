@@ -233,14 +233,6 @@ msgid " waiting for the "
 msgstr "Un titlu pentru view"
 
 #, python-format
-msgid ""
-"!!! Error: Received class in RulespecRegistry:register_manual_check_rulespec "
-"%r"
-msgstr ""
-"!!! Eroare: Received class in RulespecRegistry:"
-"register_manual_check_rulespec %r."
-
-#, python-format
 msgid "\"%s\" is not a valid host name"
 msgstr "\"%s\" nu este un nume de gazdă valid"
 
@@ -259,9 +251,6 @@ msgstr ""
 "Caracterele de delimitare din interiorul grupurilor vor dispărea după "
 "descoperire, deoarece procesele sunt instanțiate pentru fiecare grup care "
 "corespunde. Prin urmare, impuneți delimitatori în afara grupului."
-
-msgid "\"not\" is the abbreviation for \"and not\","
-msgstr ""
 
 #, fuzzy, python-format
 msgid "# %s - Cycle details"
@@ -2102,6 +2091,9 @@ msgid ""
 msgstr ""
 "<tt>TNS_ADMIN</tt> de folosit pentru <tt>sqlnet.ora</tt> și <tt>tnsnames."
 "ora</tt> %s."
+
+msgid "<tt>not</tt> is the abbreviation for <tt>and not</tt>"
+msgstr ""
 
 msgid ""
 "<tt>robot.yaml</tt> is the main RCC configuration file. It is specified "
@@ -4062,11 +4054,12 @@ msgstr "Adăugați elemente la bara laterală"
 msgid "Add event"
 msgstr "Adaugă element"
 
-msgid "Add exception"
-msgstr "Adăugați o excepție"
-
 msgid "Add exclusion"
 msgstr "Adăugați excluderea"
+
+#, fuzzy
+msgid "Add exemption"
+msgstr "Adăugați o excepție"
 
 msgid "Add expression"
 msgstr "Adăugați expresia"
@@ -18601,6 +18594,10 @@ msgstr "Regulă BI ștearsă cu ID-ul %s"
 msgid "Deleted MIB %s"
 msgstr "MIB șters %s"
 
+#, python-brace-format
+msgid "Deleted Quick setup {bundle_id}"
+msgstr ""
+
 #, python-format
 msgid "Deleted attribute %s"
 msgstr "Atribut eliminat %s."
@@ -23603,9 +23600,6 @@ msgstr "Excepții"
 msgid "Exceptions (from weekdays)"
 msgstr "Excepții (din zilele lucrătoare)"
 
-msgid "Exceptions for piggybacked hosts (VMs, ...)"
-msgstr "Excepții pentru gazdele cu suport de tip piggyback (VM, ...)"
-
 msgid "Exchanges"
 msgstr "Schimburi"
 
@@ -23811,6 +23805,10 @@ msgstr "Executiv"
 
 msgid "Executors"
 msgstr "Executori testamentari"
+
+#, fuzzy
+msgid "Exemptions for piggybacked hosts (VMs, ...)"
+msgstr "Excepții pentru gazdele cu suport de tip piggyback (VM, ...)"
 
 msgid "Exists"
 msgstr "Există"
@@ -49441,7 +49439,8 @@ msgstr "Servicii Piggyback pentru a monitoriza"
 msgid "Piggybacked docker containers"
 msgstr "Containere docker cu porțelanuri"
 
-msgid "Piggybacked host name expressions"
+#, fuzzy
+msgid "Piggybacked host name conditions"
 msgstr "Expresii ale numelui de gazdă cu rol de porc"
 
 msgid "Ping"
@@ -88253,8 +88252,8 @@ msgid "the log file %s on host %s"
 msgstr "fișierul jurnal %s pe gazda %s."
 
 msgid ""
-"the operators are processed in the priority: \"not\", \"and\", \"or\" - "
-"according to the Boolean algebra standards."
+"the operators are processed in the priority: <tt>not</tt>, <tt>and</tt>, "
+"<tt>or</tt> - according to the Boolean algebra standards."
 msgstr ""
 
 msgid ""
@@ -88564,6 +88563,14 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, python-format
+#~ msgid ""
+#~ "!!! Error: Received class in RulespecRegistry:"
+#~ "register_manual_check_rulespec %r"
+#~ msgstr ""
+#~ "!!! Eroare: Received class in RulespecRegistry:"
+#~ "register_manual_check_rulespec %r."
 
 #~ msgid "Hide user rules"
 #~ msgstr "Ascundeți regulile utilizatorului"

@@ -225,14 +225,6 @@ msgid " waiting for the "
 msgstr " 待機 "
 
 #, python-format
-msgid ""
-"!!! Error: Received class in RulespecRegistry:register_manual_check_rulespec "
-"%r"
-msgstr ""
-"エラー: RulespecRegistry:register_manual_check_rulespec %r でクラスを受信しま"
-"した"
-
-#, python-format
 msgid "\"%s\" is not a valid host name"
 msgstr "\"%s\"は有効なホスト名ではありません"
 
@@ -250,9 +242,6 @@ msgstr ""
 "\"%s\" は正規表現グループ %s内では許可されていません。プロセスは一致するすべ"
 "てのグループに対してインスタンス化されるため、グループ内の境界文字は検出後に"
 "消えます。したがって、グループ外で区切り文字を適用します。"
-
-msgid "\"not\" is the abbreviation for \"and not\","
-msgstr "「not」は「そして〜でない」という意味です、"
 
 #, python-format
 msgid "# %s - Cycle details"
@@ -2002,6 +1991,10 @@ msgid ""
 "%s"
 msgstr ""
 "<tt>sqlnet.ora</tt> と <tt>tnsnames.ora</tt> %sに使用する<tt>TNS_ADMIN</tt>"
+
+#, fuzzy
+msgid "<tt>not</tt> is the abbreviation for <tt>and not</tt>"
+msgstr "「not」は「そして〜でない」という意味です、"
 
 msgid ""
 "<tt>robot.yaml</tt> is the main RCC configuration file. It is specified "
@@ -3857,11 +3850,12 @@ msgstr "サイドバーに要素を追加する"
 msgid "Add event"
 msgstr "イベント追加"
 
-msgid "Add exception"
-msgstr "例外を追加"
-
 msgid "Add exclusion"
 msgstr "除外を追加"
+
+#, fuzzy
+msgid "Add exemption"
+msgstr "例外を追加"
 
 msgid "Add expression"
 msgstr "式を追加する"
@@ -17687,6 +17681,10 @@ msgstr "ID%sのBIルールを削除しました"
 msgid "Deleted MIB %s"
 msgstr "削除されたMIB%s"
 
+#, python-brace-format
+msgid "Deleted Quick setup {bundle_id}"
+msgstr ""
+
 #, python-format
 msgid "Deleted attribute %s"
 msgstr "属性 %sを削除しました"
@@ -22407,9 +22405,6 @@ msgstr "例外"
 msgid "Exceptions (from weekdays)"
 msgstr "例外(平日から)"
 
-msgid "Exceptions for piggybacked hosts (VMs, ...)"
-msgstr "ピギーバックホスト(VM、...)の例外"
-
 msgid "Exchanges"
 msgstr "Exchanges"
 
@@ -22605,6 +22600,10 @@ msgstr "エグゼクティブ"
 
 msgid "Executors"
 msgstr "遺言執行者"
+
+#, fuzzy
+msgid "Exemptions for piggybacked hosts (VMs, ...)"
+msgstr "ピギーバックホスト(VM、...)の例外"
 
 msgid "Exists"
 msgstr "存在する"
@@ -47202,7 +47201,8 @@ msgstr "監視するピギーバックサービス"
 msgid "Piggybacked docker containers"
 msgstr "ピギーバックdockerコンテナ"
 
-msgid "Piggybacked host name expressions"
+#, fuzzy
+msgid "Piggybacked host name conditions"
 msgstr "ピギーバックされたホスト名式"
 
 msgid "Ping"
@@ -83747,9 +83747,10 @@ msgstr "最初のノード"
 msgid "the log file %s on host %s"
 msgstr "ホスト %s のログファイル %s"
 
+#, fuzzy
 msgid ""
-"the operators are processed in the priority: \"not\", \"and\", \"or\" - "
-"according to the Boolean algebra standards."
+"the operators are processed in the priority: <tt>not</tt>, <tt>and</tt>, "
+"<tt>or</tt> - according to the Boolean algebra standards."
 msgstr ""
 "演算子は優先的に処理される： \"not\"、\"and\"、\"or\" - ブール代数の標準に従"
 "う。"
@@ -84059,6 +84060,14 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用不可</b>"
+
+#, python-format
+#~ msgid ""
+#~ "!!! Error: Received class in RulespecRegistry:"
+#~ "register_manual_check_rulespec %r"
+#~ msgstr ""
+#~ "エラー: RulespecRegistry:register_manual_check_rulespec %r でクラスを受信"
+#~ "しました"
 
 #~ msgid "Hide user rules"
 #~ msgstr "ユーザールールを非表示にする"

@@ -232,19 +232,6 @@ def main() {
         currentBuild.result = parallel(stages).values().every { it } ? "SUCCESS" : "FAILURE";
     }
 
-    smart_stage(name: "Archive artifacts") {
-        dir("${deliverables_dir}") {
-            bazel_logs.try_plot_cache_hits("${bazel_log_prefix}", selected_distros);
-
-            show_duration("archiveArtifacts") {
-                archiveArtifacts(
-                    artifacts: "*.deb, *.rpm, *.cma, *.tar.gz, ${bazel_log_prefix}*, **/*.json",
-                    fingerprint: true,
-                );
-            }
-        }
-    }
-
     smart_stage(
         name: "Upload artifacts",
         condition: upload_to_testbuilds,
@@ -317,9 +304,26 @@ def main() {
         );
     }
 
+    smart_stage(name: "Plot cache hits") {
+        dir("${deliverables_dir}") {
+            bazel_logs.try_plot_cache_hits("${bazel_log_prefix}", selected_distros);
+        }
+    }
+
     smart_stage(name: "Cleanup leftovers") {
         dir("${deliverables_dir}") {
             sh("rm -rf *.deb *.rpm *.cma *.tar.gz *.hash");
+        }
+    }
+
+    smart_stage(name: "Archive artifacts") {
+        dir("${deliverables_dir}") {
+            show_duration("archiveArtifacts") {
+                archiveArtifacts(
+                    artifacts: "${bazel_log_prefix}*, **/*.json",
+                    fingerprint: true,
+                );
+            }
         }
     }
 }

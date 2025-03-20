@@ -110,18 +110,25 @@ def _create_rules(pw: LoginPage) -> dict[str, list[str]]:
     return created_rules
 
 
+@contextmanager
+def _host_group(site: Site, host_group_name: str) -> Iterator[None]:
+    """Set up a host group and tear it down at the end."""
+    try:
+        site.openapi.create_host_group(host_group_name, host_group_name)
+        yield
+    finally:
+        site.openapi.delete_host_group(host_group_name)
+
+
 def test_create_rules(
     test_site: Site, logged_in_page: LoginPage, pytestconfig: pytest.Config
 ) -> None:
     with (
         _write_rules_to_disk(test_site)
         if pytestconfig.getoption("--update-rules")
-        else nullcontext()
+        else nullcontext(),
+        _host_group(test_site, "test-rules"),
     ):
-        # set up a host group
-        host_group_name = "test-rules"
-        test_site.openapi.create_host_group(host_group_name, host_group_name)
-
         # set up "Custom icons and actions"
         logged_in_page.main_menu.setup_searchbar.fill("Custom icons and actions")
         logged_in_page.click_and_wait(
@@ -130,32 +137,35 @@ def test_create_rules(
             ),
             navigate=True,
         )
-        logged_in_page.main_area.locator().get_by_role(
-            role="button", name="Add new element"
-        ).click()
 
         # Locator corresponding to (added) elements for 'current settings'.
         current_setting = (
             logged_in_page.main_area.locator()
             .get_by_role("row")
             .filter(has=logged_in_page.main_area.locator().get_by_title("Current setting"))
-            .locator("td[class='content']")
         )
 
-        current_setting.get_by_role("textbox").fill("test")
-        current_setting.get_by_role("link", name="Choose another icon").click()
-        current_setting.locator("a[class='icon']").get_by_title("2fa", exact=True).click()
-        logged_in_page.click_and_wait(
-            logged_in_page.main_area.get_suggestion("Save"), navigate=True
-        )
+        current_setting_content = current_setting.locator("td[class='content']")
+        if current_setting_content.count() == 0:
+            logged_in_page.main_area.locator().get_by_role(
+                role="button", name="Add new element"
+            ).click()
+            current_setting_content.get_by_role("textbox").fill("test")
+            current_setting_content.get_by_role("link", name="Choose another icon").click()
+            current_setting_content.locator("a[class='icon']").get_by_title(
+                "2fa", exact=True
+            ).click()
+            logged_in_page.click_and_wait(
+                logged_in_page.main_area.get_suggestion("Save"), navigate=True
+            )
 
-        existing_rules = {
-            ruleset_title: len(test_site.openapi.get_rules(ruleset.get("id", "")))
-            for ruleset in test_site.openapi.get_rulesets()
-            if (ruleset_title := ruleset.get("title"))
-        }
-        for ruleset_name, rule_count in existing_rules.items():
-            logger.info('Existing rules for ruleset "%s": %s', ruleset_name, rule_count)
+            existing_rules = {
+                ruleset_title: len(test_site.openapi.get_rules(ruleset.get("id", "")))
+                for ruleset in test_site.openapi.get_rulesets()
+                if (ruleset_title := ruleset.get("title"))
+            }
+            for ruleset_name, rule_count in existing_rules.items():
+                logger.info('Existing rules for ruleset "%s": %s', ruleset_name, rule_count)
 
         logger.info("Create all rules...")
         try:

@@ -45,7 +45,7 @@ watch(
         elementValidation.value.push({
           location: msg.location.slice(1),
           message: msg.message,
-          invalid_value: msg.invalid_value
+          replacement_value: msg.replacement_value
         })
       }
     })

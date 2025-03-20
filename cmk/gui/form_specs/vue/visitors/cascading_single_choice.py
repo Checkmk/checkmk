@@ -108,7 +108,7 @@ class CascadingSingleChoiceVisitor(
                     shared_type_defs.ValidationMessage(
                         location=[element.name] + validation.location,
                         message=validation.message,
-                        invalid_value=validation.invalid_value,
+                        replacement_value=validation.replacement_value,
                     )
                 )
 

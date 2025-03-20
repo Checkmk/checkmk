@@ -47,7 +47,7 @@ test('FormPassword renders validation message', async () => {
     props: {
       spec,
       data: ['explicit_password', '', '', true],
-      backendValidation: [{ location: [], message: 'Invalid password', invalid_value: '' }]
+      backendValidation: [{ location: [], message: 'Invalid password', replacement_value: '' }]
     }
   })
 
@@ -85,7 +85,7 @@ test('FormPassword updates validation but dont touch value', async () => {
       {
         location: [],
         message: 'Backend error message',
-        invalid_value: ''
+        replacement_value: ''
       }
     ]
   })

@@ -58,7 +58,7 @@ def test_invalid_single_choice_validator_keep(
     # Create validation message
     validation_messages = visitor.validate(invalid_choice)
     assert len(validation_messages) == 1
-    assert validation_messages[0].invalid_value == NO_SELECTION
+    assert validation_messages[0].replacement_value == NO_SELECTION
 
     # Invalid value is sent back to disk
     if data_origin == DataOrigin.FRONTEND:
@@ -87,7 +87,7 @@ def test_invalid_single_choice_validator_complain(
     # Create validation message
     validation_messages = visitor.validate(invalid_choice)
     assert len(validation_messages) == 1
-    assert validation_messages[0].invalid_value == NO_SELECTION
+    assert validation_messages[0].replacement_value == NO_SELECTION
 
     # Invalid value causes exception
     with pytest.raises(MKGeneralException):
@@ -111,7 +111,7 @@ def test_invalid_single_choice_validator_none(
     # Create validation message
     validation_messages = visitor.validate(invalid_choice)
     assert len(validation_messages) == 1
-    assert validation_messages[0].invalid_value == NO_SELECTION
+    assert validation_messages[0].replacement_value == NO_SELECTION
 
     # Invalid value causes exception
     with pytest.raises(MKGeneralException):

@@ -135,7 +135,7 @@ provide(dispatcherKey, FormEditDispatcher)
         <option :value="[]">No error</option>
         <option
           :value="[
-            { location: ['element_name'], message: 'error message!', invalid_value: 'dafuck' }
+            { location: ['element_name'], message: 'error message!', replacement_value: 'dafuck' }
           ]"
         >
           One error

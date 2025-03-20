@@ -131,7 +131,7 @@ class PasswordVisitor(FormSpecVisitor[Password, ParsedPassword, VuePassword]):
     ) -> list[VueComponents.ValidationMessage]:
         if parsed_value[1] == "explicit_password":
             return [
-                VueComponents.ValidationMessage(location=[], message=x, invalid_value="")
+                VueComponents.ValidationMessage(location=[], message=x, replacement_value="")
                 for x in optional_validation(compute_validators(self.form_spec), parsed_value[2][1])
                 if x is not None
             ]

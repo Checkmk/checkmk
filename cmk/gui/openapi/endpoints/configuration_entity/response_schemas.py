@@ -18,7 +18,7 @@ class ValidationMessage(BaseSchema):
         example="",
         description="Error message",
     )
-    invalid_value = fields.String(
+    replacement_value = fields.String(
         example="",
         description="Invalid value",
     )

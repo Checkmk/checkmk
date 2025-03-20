@@ -132,7 +132,7 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, _ParsedValueModel,
             except MKUserError as e:
                 return [
                     shared_type_defs.ValidationMessage(
-                        location=[e.varname or ""], message=str(e), invalid_value=None
+                        location=[e.varname or ""], message=str(e), replacement_value=None
                     )
                 ]
             finally:

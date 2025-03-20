@@ -128,7 +128,7 @@ test('FormDictionary render backend validation message of children', async () =>
       spec,
       data: { bar: 'some_value' },
       backendValidation: [
-        { location: ['bar'], message: 'Backend error message', invalid_value: 'other_value' }
+        { location: ['bar'], message: 'Backend error message', replacement_value: 'other_value' }
       ]
     }
   })
@@ -143,7 +143,9 @@ test('FormDictionary renders its own backend validation message', async () => {
     props: {
       spec,
       data: { bar: 'some_value' },
-      backendValidation: [{ location: [], message: 'Backend error message', invalid_value: null }]
+      backendValidation: [
+        { location: [], message: 'Backend error message', replacement_value: null }
+      ]
     }
   })
 
@@ -262,7 +264,7 @@ test.skip('FormDictionary enable element, render backend validation message', as
       spec,
       data: {},
       backendValidation: [
-        { location: ['bar'], message: 'Backend error message', invalid_value: '' }
+        { location: ['bar'], message: 'Backend error message', replacement_value: '' }
       ]
     }
   })

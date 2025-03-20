@@ -90,7 +90,7 @@ test('FormInteger renders backend validation messages', async () => {
         {
           location: [],
           message: 'Backend error message',
-          invalid_value: 12
+          replacement_value: 12
         }
       ]
     }

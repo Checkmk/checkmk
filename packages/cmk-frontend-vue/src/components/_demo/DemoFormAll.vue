@@ -630,7 +630,7 @@ const validation = computed(() => {
       return {
         location: [name],
         message: 'some validation problem',
-        invalid_value: defaultValue
+        replacement_value: defaultValue
       }
     })
   } else {

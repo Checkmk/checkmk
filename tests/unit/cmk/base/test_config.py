@@ -3011,7 +3011,7 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
 
     new_style_plugin = CheckPlugin(
         name="duplicate_plugin",
-        service_name="Duplicate Plug-in",
+        service_name="Duplicate Plug-in new style",
         discovery_function=_noop_disco,
         check_function=_noop_check,
     )
@@ -3032,12 +3032,12 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
         raise_errors=True,
     )[1]
     assert converted_legacy_checks
-    with pytest.raises(ValueError):
-        agent_based_register.load_all_plugins(
-            sections=(),
-            checks=converted_legacy_checks,
-            raise_errors=False,  # we still expect the error to be raised
-        )
+    # new check plugins should win silently:
+    agent_based_register.load_all_plugins(
+        sections=(),
+        checks=converted_legacy_checks,
+        raise_errors=True,
+    )
 
 
 def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:

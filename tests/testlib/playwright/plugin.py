@@ -86,7 +86,9 @@ def _context(
     request: pytest.FixtureRequest,
 ) -> t.Generator[BrowserContext, None, None]:
     pages: t.List[Page] = []
-    context = browser.new_context(locale=pytestconfig.getoption("--locale"))
+    context = browser.new_context(
+        locale=pytestconfig.getoption("--locale"), viewport={"width": 1920, "height": 1080}
+    )
     context.on("page", lambda page: pages.append(page))  # pylint: disable=unnecessary-lambda
     yield context
     try:

@@ -173,6 +173,11 @@ class CMKVersion:
         self.version_spec: Final = version_spec
         self.version_rc_aware: Final = self._version(version_spec, branch, branch_version)
         self.version: Final = re.sub(r"-rc(\d+)", "", self.version_rc_aware)
+        self.semantic: Final = (
+            _semantic_match.group(0)
+            if (_semantic_match := re.match(r"\d+\.\d+\.\d+", self.version))
+            else branch_version
+        )
         self.branch: Final = branch
         self.branch_version: Final = branch_version
 

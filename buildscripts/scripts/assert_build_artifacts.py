@@ -154,6 +154,10 @@ def build_source_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str,
 
 def build_docker_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str, bool]]:
     for edition in loaded_yaml["editions"]:
+        if edition == "managed":
+            # For CME we don't build any container images
+            continue
+
         file_name = f"check-mk-{edition}-docker-{args.version}.tar.gz"
         internal_only = edition in loaded_yaml["internal_editions"]
         yield file_name, internal_only

@@ -146,7 +146,7 @@ rule_spec_lnx_bonding = CheckParameters(
 
 rule_spec_ovs_bonding = CheckParameters(
     name="ovs_bonding",
-    title=Title("Linux bonding interface status"),
+    title=Title("Open vSwitch (ovs) bonding interface status"),
     topic=Topic.NETWORKING,
     parameter_form=_make_ovs_parameter_form,
     condition=HostAndItemCondition(item_title=Title("Name of the bonding interface")),

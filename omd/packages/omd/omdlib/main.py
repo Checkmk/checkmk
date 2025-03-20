@@ -2945,21 +2945,33 @@ def main_update(  # pylint: disable=too-many-branches
     ):
         unack_werks = unacknowledged_incompatible_werks()
         if len(unack_werks):
-            note_list_is_clipped = ""
-            werks_list = "\n".join(f"  * {werk.id} {werk.title}" for werk in unack_werks[:50])
-            if len(unack_werks) > 50:
-                note_list_is_clipped = "(Only showing the first 50 unacknowledged werks here, check the changelog in Checkmk for the whole list.)\n\n"
-            if not dialog_yesno(
+            werk_text = (
                 f"The current site contains {len(unack_werks)} unacknowledged werks.\n\n"
                 "It is recommended to review these werks for changes you need to make to your sites configuration. "
                 "If you continue, those werks will be automatically acknowledged and "
-                f"the list of unacknowledged werks is replaced with the ones of the new version.\n\n{note_list_is_clipped}"
-                f"{werks_list}",
-                "Acknowledge werks and continue",
-                "Abort",
-                scrollbar=True,
-            ):
-                bail_out("Aborted.")
+                f"the list of unacknowledged werks is replaced with the ones of the new version.\n\n"
+            )
+            if conflict_mode in ["install", "keepold", "abort"]:
+                werks_list = "\n".join(f"  * {werk.id} {werk.title}" for werk in unack_werks)
+                sys.stdout.write(werk_text + "\n")
+                if conflict_mode == "abort":
+                    bail_out("Aborted.")
+                else:
+                    sys.stdout.write(
+                        "Automatically acknowledging werks due to non-interactive conflict mode.\n"
+                    )
+            else:
+                note_list_is_clipped = ""
+                werks_list = "\n".join(f"  * {werk.id} {werk.title}" for werk in unack_werks[:50])
+                if len(unack_werks) > 50:
+                    note_list_is_clipped = "(Only showing the first 50 unacknowledged werks here, check the changelog in Checkmk for the whole list.)\n\n"
+                if not dialog_yesno(
+                    werk_text + note_list_is_clipped + werks_list,
+                    "Acknowledge werks and continue",
+                    "Abort",
+                    scrollbar=True,
+                ):
+                    bail_out("Aborted.")
 
     # This line is reached, if the version of the OMD binary (the target)
     # is different from the current version of the site.

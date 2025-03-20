@@ -203,7 +203,7 @@ def render_user_message_table(what: str) -> None:
             msg_text = entry["text"]
             match msg_text["content_type"]:
                 case "text":
-                    table.cell(_("Message"), msg_text["content"].replace("\n", " "))
+                    table.cell(_("Message"), msg_text["content"].replace("\n", "<br>"))
                 case "html":
                     table.cell(_("Message"), HTML(msg_text["content"], escape=False))
             table.cell(_("Date sent"), datetime)

@@ -75,8 +75,8 @@ def load_all_plugins(
                     raise
                 errors.append(f"Error in agent based plug-in {plugin.name} ({type(plugin)}): {exc}")
 
-    _add_sections_to_register(sections, registered_agent_sections, registered_snmp_sections)
-    _add_checks_to_register(checks, registered_check_plugins)
+    _add_legacy_sections(sections, registered_agent_sections, registered_snmp_sections)
+    _add_legacy_checks(checks, registered_check_plugins)
     return backend.AgentBasedPlugins(
         agent_sections=registered_agent_sections,
         snmp_sections=registered_snmp_sections,
@@ -109,8 +109,8 @@ def load_selected_plugins(
                 registered_inventory_plugins,
                 validate=validate,
             )
-    _add_sections_to_register(sections, registered_agent_sections, registered_snmp_sections)
-    _add_checks_to_register(checks, registered_check_plugins)
+    _add_legacy_sections(sections, registered_agent_sections, registered_snmp_sections)
+    _add_legacy_checks(checks, registered_check_plugins)
     return backend.AgentBasedPlugins(
         agent_sections=registered_agent_sections,
         snmp_sections=registered_snmp_sections,
@@ -235,7 +235,7 @@ def _register_inventory_plugin(
     registered_inventory_plugins[plugin.name] = plugin
 
 
-def _add_sections_to_register(
+def _add_legacy_sections(
     sections: Iterable[backend.SNMPSectionPlugin | backend.AgentSectionPlugin],
     registered_agent_sections: dict[SectionName, backend.AgentSectionPlugin],
     registered_snmp_sections: dict[SectionName, backend.SNMPSectionPlugin],
@@ -249,7 +249,7 @@ def _add_sections_to_register(
             registered_snmp_sections[section.name] = section
 
 
-def _add_checks_to_register(
+def _add_legacy_checks(
     checks: Iterable[backend.CheckPlugin],
     registered_check_plugins: dict[CheckPluginName, backend.CheckPlugin],
 ) -> None:

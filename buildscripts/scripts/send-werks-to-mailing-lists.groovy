@@ -37,6 +37,10 @@ def was_timer_triggered() {
 }
 
 def main() {
+    if (params.CUSTOM_GIT_REF == "") {
+       raise Exception("The werk jobs are not meant to be triggered with a custom git ref to no miss any werks.");
+    }
+
     check_job_parameters([
         "SEND_WERK_MAILS_OF_BRANCHES",
         "SEND_WERK_MAILS",
@@ -81,6 +85,17 @@ def main() {
         |===================================================
         """.stripMargin());
 
+    stage("Checkout repositories") {
+        // this will checkout the repo at "${WORKSPACE}/${repo_name}"
+        // but check again if you modify it here
+        provide_clone("check_mk", "ssh-git-gerrit-jenkins");
+
+        // check_mk has to be on master
+        dir("${WORKSPACE}/check_mk") {
+            sh("git checkout master");
+        }
+    }
+
     stage("Send mails") {
         inside_container(args: docker_args) {
             withCredentials([
@@ -93,7 +108,7 @@ def main() {
                                 git config --add user.name ${user};
                                 git config --add user.email ${JENKINS_MAIL};
                                 scripts/run-uvenv python3 -m cmk.utils.werks mail \
-                                . origin/${branch} werk_mail ${cmd_line};
+                                ${WORKSPACE}/check_mk origin/${branch} werk_mail ${cmd_line};
                             """);
                         }
                     }

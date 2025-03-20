@@ -3,6 +3,10 @@
 /// file: compile-all-werks.groovy
 
 def main() {
+    if (params.CUSTOM_GIT_REF == "") {
+       raise Exception("The werk jobs are not meant to be triggered with a custom git ref to no miss any werks.");
+    }
+
     def target_path = "/home/mkde/werks/all_werks_v2.json";
     def targets_credentials = [
         [env.WEB_STAGING, "web-staging"],
@@ -20,8 +24,14 @@ def main() {
     stage("Checkout repositories") {
         // this will checkout the repo at "${WORKSPACE}/${repo_name}"
         // but check again if you modify it here
+        provide_clone("check_mk", "ssh-git-gerrit-jenkins");
         provide_clone("checkmk_kube_agent", "ssh-git-gerrit-jenkins");
         provide_clone("cma", "ssh-git-gerrit-jenkins");
+
+        // check_mk has to be on master
+        dir("${WORKSPACE}/check_mk") {
+            sh("git checkout master");
+        }
     }
 
     stage("Compile werks") {
@@ -30,7 +40,7 @@ def main() {
                 /* groovylint-disable LineLength */
                 sh("""
                     scripts/run-uvenv echo build venv...
-                    scripts/run-uvenv python3 -m cmk.werks.utils collect cmk ./ > cmk.json
+                    scripts/run-uvenv python3 -m cmk.werks.utils collect cmk ${WORKSPACE}/check_mk > cmk.json
                     scripts/run-uvenv python3 -m cmk.werks.utils collect cma ${WORKSPACE}/cma > cma.json
                     scripts/run-uvenv python3 -m cmk.werks.utils collect checkmk_kube_agent ${WORKSPACE}/checkmk_kube_agent > kube.json
 

@@ -17,7 +17,7 @@ def main() {
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
 
     def cmk_version_rc_aware = versioning.get_cmk_version_deploy(
-        versioning.safe_branch_name(scm),
+        versioning.safe_branch_name(),
         versioning.get_branch_version(checkout_dir),
         params.VERSION
     );

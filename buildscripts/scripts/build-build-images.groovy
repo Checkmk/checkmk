@@ -31,8 +31,8 @@ def main() {
     // and thereby no longer building images on daily base, only for release built images might be deleted automatically
     // therefore now alway build all images
     def distros = versioning.configured_or_overridden_distros("enterprise", OVERRIDE_DISTROS, "release");
-    def vers_tag = versioning.get_docker_tag(scm, checkout_dir);
-    def safe_branch_name = versioning.safe_branch_name(scm);
+    def vers_tag = versioning.get_docker_tag(checkout_dir);
+    def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
     def publish_images = PUBLISH_IMAGES=='true';  // FIXME should be case sensitive
 

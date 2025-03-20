@@ -66,7 +66,7 @@ def main() {
 
     def agent_list = get_agent_list(EDITION);
 
-    def safe_branch_name = versioning.safe_branch_name(scm);
+    def safe_branch_name = versioning.safe_branch_name();
 
     def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);

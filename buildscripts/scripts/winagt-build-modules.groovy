@@ -4,15 +4,13 @@
 
 /// builds python module for windows agent
 
-// TODO: pipelineTriggers([pollSCM('H/15 * * * *')]),
-
 def main() {
     check_job_parameters(["VERSION"]);
 
     def windows = load("${checkout_dir}/buildscripts/scripts/utils/windows.groovy");
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
-    def safe_branch_name = versioning.safe_branch_name(scm);
+    def safe_branch_name = versioning.safe_branch_name();
     def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware)
 

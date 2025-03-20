@@ -65,7 +65,7 @@ def branch_name_is_branch_version(String git_dir=".") {
     }
 }
 
-def branch_name(scm) {
+def branch_name() {
     if (params.CUSTOM_GIT_REF) {
         if (branch_name_is_branch_version("${checkout_dir}")) {
             // this is only required as "master" is called "stable branch + 0.1.0"
@@ -75,12 +75,13 @@ def branch_name(scm) {
             return env.GERRIT_BRANCH ?: "master"
         }
     } else {
-        return env.GERRIT_BRANCH ?: scm.branches[0].name;
+        // defined in global-defaults.yml
+        return env.GERRIT_BRANCH ?: branches_str;
     }
 }
 
-def safe_branch_name(scm) {
-    return branch_name(scm).replaceAll("/", "-");
+def safe_branch_name() {
+    return branch_name().replaceAll("/", "-");
 }
 
 /* groovylint-disable DuplicateListLiteral */
@@ -174,8 +175,8 @@ distro_package_type = { distro ->
       raise("Cannot associate distro ${distro}"));
 }
 
-def get_docker_tag(scm, String git_dir=".") {
-    return "${safe_branch_name(scm)}-${build_date}-${get_git_hash(git_dir)}";
+def get_docker_tag(String git_dir=".") {
+    return "${safe_branch_name()}-${build_date}-${get_git_hash(git_dir)}";
 }
 
 def get_docker_artifact_name(edition, cmk_version) {

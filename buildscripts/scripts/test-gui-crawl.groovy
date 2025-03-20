@@ -5,7 +5,7 @@
 def main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");
-    def safe_branch_name = versioning.safe_branch_name(scm);
+    def safe_branch_name = versioning.safe_branch_name();
     def cmk_version = versioning.get_cmk_version(safe_branch_name, "daily");
     def docker_group_id = get_docker_group_id();
     def docker_tag = versioning.select_docker_tag(

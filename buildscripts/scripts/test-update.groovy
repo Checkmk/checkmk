@@ -12,7 +12,7 @@ def main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");
 
-    def safe_branch_name = versioning.safe_branch_name(scm);
+    def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
     // When building from a git tag (VERSION != "daily"), we cannot get the branch name from the scm so used defines.make instead.
     // this is save on master as there are no tags/versions built other than daily

@@ -1,0 +1,11 @@
+{
+    "$schema": "https://json-schema.org/draft/2019-09/schema",
+    "type": "object",
+    "title": "UserFrontendConfig",
+    "properties": {
+        "hide_contextual_help_icon": {
+            "type": ["boolean", "null"]
+        }
+    },
+    "required": ["hide_contextual_help_icon"]
+}

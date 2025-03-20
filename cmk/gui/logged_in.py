@@ -30,6 +30,8 @@ from cmk.gui.utils.permission_verification import BasePerm
 from cmk.gui.utils.roles import may_with_roles, roles_of_user
 from cmk.gui.utils.transaction_manager import TransactionManager
 
+from cmk.shared_typing.user_frontend_config import UserFrontendConfig
+
 _logger = logging.getLogger(__name__)
 _ContactgroupName = str
 
@@ -153,6 +155,14 @@ class LoggedInUser:
     @inline_help_as_text.setter
     def inline_help_as_text(self, value: bool) -> None:
         self.save_file("help", value)
+
+    @property
+    def frontend_config(self) -> UserFrontendConfig:
+        return UserFrontendConfig(
+            hide_contextual_help_icon=(
+                self.get_attribute("contextual_help_icon") == "hide_icon" or None
+            )
+        )
 
     @property
     def acknowledged_notifications(self) -> int:

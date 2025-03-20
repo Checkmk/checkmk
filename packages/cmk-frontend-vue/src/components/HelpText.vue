@@ -9,6 +9,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import CmkIconButton from './CmkIconButton.vue'
 import CmkHtml from './CmkHtml.vue'
 import CmkScrollContainer from './CmkScrollContainer.vue'
+import { getUserFrontendConfig } from '@/lib/userConfig'
 
 const props = defineProps<{
   help: string
@@ -38,10 +39,12 @@ const triggerHelp = (e: MouseEvent) => {
 const closeHelp = () => {
   open.value = false
 }
+
+const hideHelpIcon = getUserFrontendConfig()?.hide_contextual_help_icon ?? false
 </script>
 
 <template>
-  <TooltipProvider v-if="!!props.help">
+  <TooltipProvider v-if="!!props.help && !hideHelpIcon">
     <Tooltip :open="open" disable-closing-trigger>
       <TooltipTrigger
         class="help-text__trigger"
@@ -75,8 +78,6 @@ const closeHelp = () => {
 </template>
 
 <style scoped>
-body.inline_help_hide_icon .help-text__trigger,
-body.inline_help_hide_icon .help-text__icon,
 body.inline_help_as_text .help-text__trigger,
 body.inline_help_as_text .help-text__icon {
   display: none;

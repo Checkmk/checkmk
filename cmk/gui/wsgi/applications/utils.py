@@ -30,6 +30,7 @@ from cmk.gui.session import session
 from cmk.gui.utils.language_cookie import set_language_cookie
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
+from cmk.gui.utils.user_frontend_settings_cookie import set_user_frontend_config_cookie
 from cmk.gui.wsgi.type_defs import WSGIResponse
 
 from cmk import trace
@@ -124,6 +125,8 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
             theme.set(
                 cmk.gui.userdb.load_custom_attr(user_id=user.id, key="ui_theme", parser=lambda x: x)
             )
+
+            set_user_frontend_config_cookie(request, response, user.frontend_config)
 
             func()
 

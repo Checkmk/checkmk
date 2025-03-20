@@ -72308,7 +72308,7 @@ msgstr "Dit zal de agent plugin <tt>mk_mongodb.py</tt> implementeren."
 #, fuzzy
 msgid ""
 "This will deploy the agent plug-in <tt>mk_mysql</tt> on linux systems and "
-"<tt>mk_mysql.vbs</tt> on windows systems for monitoring several aspects of "
+"<tt>mk_mysql.ps1</tt> on windows systems for monitoring several aspects of "
 "MySQL databases. On Windows, the plug-in will look for service names "
 "containing the strings <tt>MySQL</tt> or <tt>MariaDB</tt>"
 msgstr ""

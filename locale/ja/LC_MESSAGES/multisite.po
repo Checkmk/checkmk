@@ -70403,12 +70403,12 @@ msgstr "エージェントプラグイン<tt>mk_mongodb</tt>をデプロイし�
 #, fuzzy
 msgid ""
 "This will deploy the agent plug-in <tt>mk_mysql</tt> on linux systems and "
-"<tt>mk_mysql.vbs</tt> on windows systems for monitoring several aspects of "
+"<tt>mk_mysql.ps1</tt> on windows systems for monitoring several aspects of "
 "MySQL databases. On Windows, the plug-in will look for service names "
 "containing the strings <tt>MySQL</tt> or <tt>MariaDB</tt>"
 msgstr ""
 "これにより、エージェントプラグイン<tt>mk_mysql</tt>がLinuxシステムにデプロイ"
-"され、<tt>mk_mysql.vbs</tt>がWindowsシステムにデプロイされてMySQLデータベース"
+"され、<tt>mk_mysql.ps1</tt>がWindowsシステムにデプロイされてMySQLデータベース"
 "のいくつかの側面が監視されます。Windowsでは、<tt>MySQL</tt>または"
 "<tt>MariaDB</tt>という文字列を含むサービス名を探します"
 

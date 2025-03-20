@@ -320,8 +320,8 @@ just to signal that real build script was not called -->
             <Component Id="cmp657B6B6F132543FC84EC56F7B0DAB6ED" Guid="{1C2AEC02-1673-4B40-B147-0B001188DC5A}">
                 <File Id="filE5741C46E1FC38FBCAF8323A42CEC30F" KeyPath="yes" Source="..\..\windows\plugins\mk_inventory.vbs" DiskId="1"  />
             </Component>
-            <Component Id="cmpDD7387A69094F0C08D755786377BE916" Guid="{3477B066-6AC0-4031-A8AF-3C79571E4C39}">
-                <File Id="fil4184D51F5A0121840C425BBCB6B53F42" KeyPath="yes" Source="..\..\windows\plugins\mk_mysql.vbs" DiskId="1"  />
+            <Component Id="cmp9DAE4EE702B9428A9A8FC7C22093867A" Guid="{80B17983-F7E7-45C5-8F3F-86035AD864F2}">
+                <File Id="fil8C84C09B518344F39B6A4AF606223161" KeyPath="yes" Source="..\..\windows\plugins\mk_mysql.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmp5ADA772C7BDFD80499DCC49F48A4D27D" Guid="{EDC7B756-0182-48BA-85D5-9016B4797E7E}">
                 <File Id="fil8D6029E4806FCF205FE8D37573EDFBA4" KeyPath="yes" Source="..\..\windows\plugins\mk_oracle.ps1" DiskId="1"  />
@@ -419,7 +419,7 @@ just to signal that real build script was not called -->
             <ComponentRef Id="cmp2A9B7CC157BFEF8A29D75CC2F64A5A02" />
             <ComponentRef Id="cmpC93DA459EC69F6EE0183382A29CB8174" />
             <ComponentRef Id="cmp657B6B6F132543FC84EC56F7B0DAB6ED" />
-            <ComponentRef Id="cmpDD7387A69094F0C08D755786377BE916" />
+            <ComponentRef Id="cmp9DAE4EE702B9428A9A8FC7C22093867A" />
             <ComponentRef Id="cmp5ADA772C7BDFD80499DCC49F48A4D27D" />
             <ComponentRef Id="cmp06FAFC985397646477170C3A9EC578DF" />
             <ComponentRef Id="cmp2CF5BD4FBED2352573D1A8CEC68D99A8" />

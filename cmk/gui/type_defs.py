@@ -100,6 +100,8 @@ AuthType = Literal[
     "web_server",
 ]
 
+DismissableWarning = Literal["notification_fallback"]
+
 
 @dataclass
 class SessionInfo:

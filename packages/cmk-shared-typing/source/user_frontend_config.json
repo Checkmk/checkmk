@@ -5,6 +5,12 @@
     "properties": {
         "hide_contextual_help_icon": {
             "type": ["boolean", "null"]
+        },
+        "dismissed_warnings": {
+            "type": ["array", "null"],
+            "items": {
+                "type": "string"
+            }
         }
     },
     "required": ["hide_contextual_help_icon"]

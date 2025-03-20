@@ -18,3 +18,4 @@ from typing import Optional
 @dataclass(kw_only=True)
 class UserFrontendConfig:
     hide_contextual_help_icon: Optional[bool]
+    dismissed_warnings: Optional[list[str]] = None

@@ -461,7 +461,7 @@ class RRDConverter:
         def try_delete(path: str) -> None:
             try:
                 os.remove(path)
-                console.verbose("Deleted {path}")
+                console.verbose(f"Deleted {path}")
             except OSError:
                 pass
 

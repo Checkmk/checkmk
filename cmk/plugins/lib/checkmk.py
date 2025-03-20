@@ -181,6 +181,9 @@ class CMKAgentUpdateSection(BaseModel):
     # Added with 2.2
     trusted_certs: dict[int, CertInfo] | None = Field(None)
 
+    # Added with 2.5
+    host_name: str | None = Field(None)
+
     @classmethod
     def parse_checkmk_section(cls, section: CheckmkSection | None) -> CMKAgentUpdateSection | None:
         if section is None or not (raw_string := section.get("agentupdate")):

@@ -405,6 +405,9 @@ def _check_cmk_agent_update(
         # is disabled explicitly in cmk.gui.view_utils:format_plugin_output
         yield Result(state=State.OK, notice=f"Update URL: {update_url}")
 
+    if host_name := section.host_name:
+        yield Result(state=State.OK, notice=f"Hostname used by cmk-update-agent: {host_name}")
+
     if aghash := section.aghash:
         yield Result(state=State.OK, notice=f"Agent configuration: {aghash}")
 

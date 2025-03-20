@@ -19,7 +19,6 @@ so both can be handled with a common interface.
 """
 
 from pathlib import Path
-from typing import Protocol, TypeVar
 
 import cmk.utils.paths
 
@@ -27,14 +26,6 @@ from cmk.werks.models import Werk
 from cmk.werks.utils import (
     load_precompiled_werks_file,
 )
-
-
-class GuiWerkProtocol(Protocol):
-    werk: Werk
-    acknowledged: bool
-
-
-GWP = TypeVar("GWP", bound=GuiWerkProtocol)
 
 
 def _compiled_werks_dir() -> Path:

@@ -3190,14 +3190,7 @@ class ModeNewRule(ABCEditRuleMode):
     def _save_rule(self) -> None:
         index = self._ruleset.append_rule(self._folder, self._rule)
         self._rulesets.save_folder()
-        _changes.add_change(
-            "new-rule",
-            _('Created new rule #%d in ruleset "%s" in folder "%s"')
-            % (index, self._ruleset.title(), self._folder.alias_path()),
-            sites=self._folder.all_site_ids(),
-            diff_text=self._ruleset.diff_rules(None, self._rule),
-            object_ref=self._rule.object_ref(),
-        )
+        self._ruleset.add_new_rule_change(index, self._folder, self._rule)
 
     def _success_message(self) -> str:
         return _('Created new rule in ruleset "%s" in folder "%s"') % (

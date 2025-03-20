@@ -12,7 +12,6 @@ from typing import Any
 
 from cmk.utils.datastructures import denilled
 from cmk.utils.labels import LabelGroups
-from cmk.utils.object_diff import make_diff_text
 from cmk.utils.rulesets.conditions import (
     allow_host_label_conditions,
     allow_service_label_conditions,
@@ -229,16 +228,7 @@ def create_rule(param):
 
     index = ruleset.append_rule(folder, rule)
     rulesets.save_folder()
-    # TODO Duplicated code is in pages/rulesets.py:2670-
-    # TODO Move to
-    add_change(
-        "new-rule",
-        _l('Created new rule #%d in ruleset "%s" in folder "%s"')
-        % (index, ruleset.title(), folder.alias_path()),
-        sites=folder.all_site_ids(),
-        diff_text=make_diff_text({}, rule.to_log()),
-        object_ref=rule.object_ref(),
-    )
+    ruleset.add_new_rule_change(index, folder, rule)
     rule_entry = _get_rule_by_id(rule.id)
     return serve_json(_serialize_rule(rule_entry))
 

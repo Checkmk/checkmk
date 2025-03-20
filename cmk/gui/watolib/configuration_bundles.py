@@ -441,7 +441,8 @@ def _prepare_create_rules(bundle_ident: GlobalIdent, rules: Iterable[CreateRule]
     def create() -> None:
         for f, rulesets, new_rules in validated_data:
             for rule in new_rules:
-                rule.ruleset.append_rule(f, rule)
+                index = rule.ruleset.append_rule(f, rule)
+                rule.ruleset.add_new_rule_change(index, f, rule)
 
             rulesets.save_folder()
 

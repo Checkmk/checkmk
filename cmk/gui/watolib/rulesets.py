@@ -755,6 +755,16 @@ class Ruleset:
         self._on_change()
         return index
 
+    def add_new_rule_change(self, index: int, folder: Folder, rule: Rule) -> None:
+        add_change(
+            "new-rule",
+            _('Created new rule #%d in ruleset "%s" in folder "%s"')
+            % (index, self.title(), folder.alias_path()),
+            sites=folder.all_site_ids(),
+            diff_text=self.diff_rules(None, rule),
+            object_ref=rule.object_ref(),
+        )
+
     def insert_rule_after(self, rule: Rule, after: Rule) -> None:
         rules = self._rules[rule.folder.path()]
         index = self.get_index_for_move(rule.folder, rule, rules.index(after) + 1)

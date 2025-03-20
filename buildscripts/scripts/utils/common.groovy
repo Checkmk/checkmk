@@ -26,15 +26,6 @@ on_dry_run_omit = { level, title, fn ->
     if (("${global_dry_run_level}" == "0" && level <= 2) ||
         ("${global_dry_run_level}" == "1" && level <= 1) ||
         ("${global_dry_run_level}" == "2" && level <= 0)) {
-        /*
-        print(
-            """
-            |==========================================================================================
-            | RUN (level=${level} DRY_RUN_LEVEL=${global_dry_run_level}): "${title}"
-            |==========================================================================================
-            """.stripMargin());
-        // return;
-        */
         return fn();
     }
     print(

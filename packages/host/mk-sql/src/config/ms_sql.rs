@@ -399,6 +399,40 @@ impl TryFrom<&str> for AuthType {
 }
 
 #[derive(PartialEq, Debug, Clone)]
+pub enum Backend {
+    Auto,
+    Tcp,
+    #[cfg(windows)]
+    Odbc,
+}
+
+impl Default for Backend {
+    #[cfg(unix)]
+    fn default() -> Self {
+        Self::Tcp
+    }
+    #[cfg(windows)]
+    fn default() -> Self {
+        Self::Auto
+    }
+}
+
+impl Backend {
+    fn from_string<T>(value: T) -> Option<Self>
+    where
+        T: AsRef<str>,
+    {
+        match value.as_ref() {
+            "auto" => Some(Self::Auto),
+            "tcp" => Some(Self::Tcp),
+            #[cfg(windows)]
+            "odbc" => Some(Self::Odbc),
+            _ => None,
+        }
+    }
+}
+
+#[derive(PartialEq, Debug, Clone)]
 pub struct Connection {
     hostname: HostName,
     fail_over_partner: Option<String>,
@@ -407,6 +441,7 @@ pub struct Connection {
     trust_server_certificate: bool,
     tls: Option<ConnectionTls>,
     timeout: u64,
+    backend: Backend,
 }
 
 impl Connection {
@@ -444,6 +479,13 @@ impl Connection {
                     log::debug!("no timeout specified, using default");
                     defaults::CONNECTION_TIMEOUT
                 }),
+                backend: {
+                    let value: String = conn.get_string(keys::BACKEND).unwrap_or_default();
+                    Backend::from_string(value.as_str()).unwrap_or_else(|| {
+                        log::error!("Unknown backend '{}'", &value);
+                        Backend::default()
+                    })
+                },
             }
             .ensure(auth),
         ))
@@ -472,6 +514,9 @@ impl Connection {
     pub fn timeout(&self) -> Duration {
         Duration::from_secs(self.timeout)
     }
+    pub fn backend(&self) -> &Backend {
+        &self.backend
+    }
 
     fn ensure(mut self, auth: Option<&Authentication>) -> Self {
         match auth {
@@ -495,6 +540,7 @@ impl Default for Connection {
             trust_server_certificate: defaults::TRUST_SERVER_CERTIFICATE,
             tls: None,
             timeout: defaults::CONNECTION_TIMEOUT,
+            backend: Backend::default(),
         }
     }
 }
@@ -842,7 +888,7 @@ mod tests {
     use self::data::TEST_CONFIG;
 
     use super::*;
-    use crate::config::{section::SectionKind, yaml::test_tools::create_yaml};
+    use crate::config::{ms_sql::Backend, section::SectionKind, yaml::test_tools::create_yaml};
     use crate::constants::tests::expected_instances_in_config;
     mod data {
         /// copied from tests/files/test-config.yaml
@@ -899,6 +945,7 @@ mssql:
       - sid: "INST1" # mandatory
         authentication: # optional, same as above
         connection: # optional,  same as above
+          backend: odbc
         alias: "someApplicationName" # optional
         piggyback: # optional
           hostname: "myPiggybackHost" # mandatory
@@ -912,6 +959,7 @@ mssql:
         connection:
           hostname: "local"
           port: 500
+          backend: tcp
   configs:
     - main:
         options:
@@ -1147,6 +1195,38 @@ authentication:
             tls.client_certificate(),
             &r"C:\path\to\file_client".to_owned().into()
         );
+        assert_eq!(c.backend(), &Backend::default());
+    }
+
+    #[test]
+    fn test_connection_backend() {
+        let test: Vec<(&str, Backend)> = vec![
+            ("auto", Backend::Auto),
+            ("tcp", Backend::Tcp),
+            #[cfg(Unix)]
+            ("odbc", Backend::default()),
+            #[cfg(windows)]
+            ("odbc", Backend::Odbc),
+            ("unknown", Backend::default()),
+            ("", Backend::default()),
+        ];
+        for (value, expected) in test {
+            let config_text = create_full_connection_with_backend(value);
+            let c = Connection::from_yaml(&create_yaml(&config_text), None)
+                .unwrap()
+                .unwrap();
+            assert_eq!(c.backend(), &expected);
+        }
+    }
+
+    fn create_full_connection_with_backend(value: &str) -> String {
+        format!(
+            r#"{}
+  backend: {}
+"#,
+            data::CONNECTION_FULL,
+            value
+        )
     }
 
     #[cfg(windows)]
@@ -1454,6 +1534,11 @@ connection:
             "myPiggybackHost"
         );
         assert_eq!(c.instances()[0].name().to_string(), "INST1");
+        let inst1 = &c.instances()[0];
+        #[cfg(unix)]
+        assert_eq!(inst1.conn().backend(), &Backend::default());
+        #[cfg(windows)]
+        assert_eq!(inst1.conn().backend(), &Backend::Odbc);
         let inst2 = &c.instances()[1];
 
         assert_eq!(inst2.name().to_string(), "INST2");
@@ -1462,6 +1547,7 @@ connection:
         assert_eq!(inst2.auth().auth_type, AuthType::SqlServer);
         assert_eq!(inst2.conn().hostname, HostName::from("local".to_string()));
         assert_eq!(inst2.conn().port, Port(500));
+        assert_eq!(inst2.conn().backend(), &Backend::Tcp);
         assert_eq!(c.mode(), &Mode::Socket);
         assert_eq!(
             c.discovery().include(),

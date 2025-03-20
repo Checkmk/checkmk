@@ -254,14 +254,6 @@ def _add_legacy_checks(
     registered_check_plugins: dict[CheckPluginName, backend.CheckPlugin],
 ) -> None:
     for check in checks:
-        present_plugin = registered_check_plugins.get(check.name)
-        if present_plugin is not None and isinstance(present_plugin.location, PluginLocation):
-            # location is PluginLocation => it's a new plug-in
-            # (allow loading multiple times, e.g. update-config)
-            # implemented here instead of the agent based register so that new API code does not
-            # need to include any handling of legacy cases
-            raise ValueError(
-                f"Legacy check plug-in still exists for check plug-in {check.name}. "
-                "Please remove legacy plug-in."
-            )
+        if check.name in registered_check_plugins:
+            continue
         registered_check_plugins[check.name] = check

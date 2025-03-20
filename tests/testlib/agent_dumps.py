@@ -22,15 +22,13 @@ from tests.testlib.version import CMKVersion, get_min_version
 def _dumps_up_to_date(dumps_dir: Path, min_version: CMKVersion) -> None:
     """Check if the dumps are up-to-date with the minimum-version branch."""
     dumps = list(dumps_dir.glob("*"))
-    min_version_str = min_version.version
-    min_version_branch = min_version_str[: min_version_str.find("p")]
     if not dumps:
         raise FileNotFoundError("No dumps found!")
     for dump in dumps:
-        if str(min_version_branch) not in dump.name:
+        if str(min_version.semantic) not in dump.name:
             raise ValueError(
                 f"Dump '{dump.name}' is outdated! "
-                f"Please regenerate it using an agent with version {min_version_branch}."
+                f"Please regenerate it using an agent with version {min_version.semantic}."
             )
 
 

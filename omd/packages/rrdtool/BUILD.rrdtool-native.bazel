@@ -72,8 +72,11 @@ cc_library(
         "src/rrd_format.h",
     ],
     copts = [
+        "-Wno-implicit-const-int-float-conversion",
         "-Wno-int-conversion",
         "-Wno-stringop-truncation",
+        "-Wno-unknown-warning-option",
+        "-Wno-unused-but-set-variable",
         "-O2",
     ],
     deps = [
@@ -100,7 +103,7 @@ cc_library(
     ],
     copts = [
         "-std=gnu99",
-        "-Wformat-truncation=0",  # false positive in src/rrd_list.c
+        "-Wno-format-truncation",  # false positive in src/rrd_list.c
         "-O2",  # maybe O3?
     ],
     local_defines = [
@@ -129,9 +132,12 @@ cc_library(
         "-I/usr/include/cairo",
         "-I/usr/include/pango-1.0",
         "-I/usr/include/harfbuzz",
-        "-Wno-implicit-function-declaration",
         "-Wno-format-truncation",
+        "-Wno-implicit-const-int-float-conversion",
+        "-Wno-implicit-function-declaration",
         "-Wno-strict-aliasing",
+        "-Wno-unknown-warning-option",
+        "-Wno-unused-but-set-variable",
         "-O2",
     ],
     linkopts = [
@@ -215,6 +221,9 @@ cc_library(
     ],
     copts = [
         "-Wno-discarded-qualifiers",
+        "-Wno-ignored-qualifiers",
+        "-Wno-incompatible-pointer-types-discards-qualifiers",
+        "-Wno-unknown-warning-option",
         "-O2",
     ],
     deps = [

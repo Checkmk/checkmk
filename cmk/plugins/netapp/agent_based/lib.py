@@ -20,6 +20,7 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.lib import interfaces
 from cmk.plugins.lib.df import df_check_filesystem_single
+from cmk.plugins.netapp import models
 
 Instance = dict[str, str]
 SectionSingleInstance = Mapping[str, Instance]
@@ -569,3 +570,20 @@ def check_netapp_qtree_quota(
         inodes_avail=inodes_avail,
         params=params,
     )
+
+
+def filter_metrocluster_items(
+    section_netapp_ontap_volumes: Mapping[str, models.VolumeModel],
+    section_netapp_ontap_vs_status: Mapping[str, models.SvmModel],
+) -> Mapping[str, models.VolumeModel]:
+    """
+    As per SUP-22707 and SUP-22904
+    volumes and snapshots of SVMs of subtype "sync_destination" (metrocluster)
+    should not be discovered.
+    """
+    return {
+        volume_id: volume
+        for volume_id, volume in section_netapp_ontap_volumes.items()
+        if (svm := section_netapp_ontap_vs_status.get(volume.svm_name))
+        and svm.subtype != "sync_destination"
+    }

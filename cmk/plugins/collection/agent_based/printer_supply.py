@@ -104,6 +104,18 @@ def _get_supply_unit(raw_unit: str) -> Unit:
     return Unit(unit) if unit in {"", "%"} else Unit(f" {unit}")
 
 
+def _get_supply_class(raw_supply_class: str) -> SupplyClass:
+    # When unit type is
+    # 1 = other
+    # 3 = supplyThatIsConsumed
+    # 4 = supplyThatIsFilled
+    # the value is contains the current level if this supply is a container
+    # but when the remaining space if this supply is a receptacle
+    #
+    # This table can be missing on some devices. Assume type 3 in this case.
+    return SupplyClass.RECEPTACLE if raw_supply_class == "4" else SupplyClass.CONTAINER
+
+
 def parse_printer_supply(string_table: Sequence[StringTable]) -> Section:
     if len(string_table) < 2:
         return {}
@@ -150,22 +162,9 @@ def parse_printer_supply(string_table: Sequence[StringTable]) -> Section:
         color = color.rstrip("\0")
 
         unit = _get_supply_unit(raw_unit)
+        supply_class = _get_supply_class(raw_supply_class)
 
-        parsed[description] = PrinterSupply(
-            unit,
-            max_capacity,
-            level,
-            # When unit type is
-            # 1 = other
-            # 3 = supplyThatIsConsumed
-            # 4 = supplyThatIsFilled
-            # the value is contains the current level if this supply is a container
-            # but when the remaining space if this supply is a receptacle
-            #
-            # This table can be missing on some devices. Assume type 3 in this case.
-            SupplyClass.RECEPTACLE if raw_supply_class == "4" else SupplyClass.CONTAINER,
-            color,
-        )
+        parsed[description] = PrinterSupply(unit, max_capacity, level, supply_class, color)
 
     return parsed
 

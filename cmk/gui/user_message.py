@@ -159,16 +159,6 @@ def render_user_message_table(what: str) -> None:
             table.row()
 
             msg_id = entry["id"]
-            datetime = (
-                time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(entry["time"]))
-                if "time" in entry
-                else "-"
-            )
-            expiretime = (
-                time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(entry["valid_till"]))
-                if "valid_till" in entry
-                else "-"
-            )
 
             table.cell(_("Actions"), css=["buttons"], sortable=False)
             if entry.get("acknowledged"):
@@ -206,8 +196,17 @@ def render_user_message_table(what: str) -> None:
                     table.cell(_("Message"), msg_text["content"].replace("\n", "<br>"))
                 case "html":
                     table.cell(_("Message"), HTML(msg_text["content"], escape=False))
-            table.cell(_("Date sent"), datetime)
-            table.cell(_("Expires on"), expiretime)
+
+            table.cell(
+                _("Sent on"),
+                time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(entry["time"])),
+            )
+            table.cell(
+                _("Expires on"),
+                "-"
+                if (valid_till := entry["valid_till"]) is None
+                else time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(valid_till)),
+            )
 
     html.close_div()
 

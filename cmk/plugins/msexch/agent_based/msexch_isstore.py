@@ -12,7 +12,7 @@ from cmk.agent_based.v2 import (
     LevelsT,
     render,
 )
-from cmk.plugins.lib.wmi import (
+from cmk.plugins.windows.agent_based.libwmi import (
     check_wmi_raw_average,
     discover_wmi_table_instances,
     parse_wmi_table,

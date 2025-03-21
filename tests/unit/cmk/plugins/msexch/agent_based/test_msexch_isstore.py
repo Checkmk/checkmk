@@ -14,12 +14,12 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.wmi import parse_wmi_table
 from cmk.plugins.msexch.agent_based.msexch_isstore import (
     check_msexch_isstore,
     discover_msexch_isstore,
     Params,
 )
+from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table
 
 _AGENT_OUTPUT = [
     [

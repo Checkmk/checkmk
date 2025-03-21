@@ -13,7 +13,7 @@ from cmk.agent_based.v2 import (
     LevelsT,
     render,
 )
-from cmk.plugins.lib.wmi import (
+from cmk.plugins.windows.agent_based.libwmi import (
     check_wmi_raw_counter,
     check_wmi_raw_persec,
     discover_wmi_table_total,

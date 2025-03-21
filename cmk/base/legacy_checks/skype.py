@@ -18,7 +18,7 @@ from cmk.base.check_legacy_includes.wmi import (
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
-from cmk.plugins.lib.wmi import WMISection
+from cmk.plugins.windows.agent_based.libwmi import WMISection
 
 check_info = {}
 

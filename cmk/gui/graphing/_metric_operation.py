@@ -303,9 +303,12 @@ class MetricOpOperator(MetricOperation, frozen=True):
 MetricOpOperator.model_rebuild()
 
 
+AnnotatedHostName = Annotated[HostName, PlainValidator(HostName.parse)]
+
+
 class MetricOpRRDSource(MetricOperation, frozen=True):
     site_id: SiteId
-    host_name: HostName
+    host_name: AnnotatedHostName
     service_name: ServiceName
     metric_name: MetricName
     consolidation_func_name: GraphConsolidationFunction | None

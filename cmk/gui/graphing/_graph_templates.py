@@ -62,6 +62,7 @@ from ._metric_expression import (
     WarningOf,
 )
 from ._metric_operation import (
+    AnnotatedHostName,
     GraphConsolidationFunction,
     LineType,
     MetricOpConstant,
@@ -881,7 +882,7 @@ def _matching_graph_templates(
 
 class TemplateGraphSpecification(GraphSpecification, frozen=True):
     site: SiteId | None
-    host_name: HostName
+    host_name: AnnotatedHostName
     service_description: ServiceName
     graph_index: int | None = None
     graph_id: str | None = None

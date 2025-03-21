@@ -34,7 +34,7 @@ from cmk.gui.utils.urls import makeuri
 from ..config import active_config
 from .audit_log import log_audit
 from .automation_commands import AutomationCommand
-from .automations import do_remote_automation
+from .automations import AnnotatedHostName, do_remote_automation
 from .changes import add_change
 from .check_mk_automations import rename_hosts
 from .hosts_and_folders import call_hook_hosts_changed, Folder, folder_tree, Host
@@ -405,7 +405,7 @@ def _rename_host_in_uuid_link_manager(
 
 
 class _RenameHostsUUIDLinkRequest(BaseModel):
-    renamings: Sequence[tuple[HostName, HostName]]
+    renamings: Sequence[tuple[AnnotatedHostName, AnnotatedHostName]]
 
 
 class AutomationRenameHostsUUIDLink(AutomationCommand[_RenameHostsUUIDLinkRequest]):

@@ -23,13 +23,13 @@ from cmk.piggyback.backend import (
     watch_new_messages,
 )
 
-from ._config import load_config, PiggybackHubConfig
+from ._config import AnnotatedHostName, load_config, PiggybackHubConfig
 from ._utils import make_connection, make_log_and_exit
 
 
 class PiggybackPayload(BaseModel):
-    source_host: HostName
-    raw_data: Mapping[HostName, Sequence[bytes]]
+    source_host: AnnotatedHostName
+    raw_data: Mapping[AnnotatedHostName, Sequence[bytes]]
     message_timestamp: int
     contact_timestamp: int | None
 

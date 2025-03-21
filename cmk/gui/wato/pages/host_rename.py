@@ -56,6 +56,7 @@ from cmk.gui.wato.pages._html_elements import wato_html_head
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.activate_changes import ActivateChanges
+from cmk.gui.watolib.automations import AnnotatedHostName
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.host_rename import (
     group_renamings_by_site,
@@ -432,7 +433,7 @@ def _confirm(html_title, message):
 
 
 class RenameHostsJobArgs(BaseModel, frozen=True):
-    renamings: Sequence[tuple[str, HostName, HostName]]
+    renamings: Sequence[tuple[str, AnnotatedHostName, AnnotatedHostName]]
 
 
 def rename_hosts_job_entry_point(

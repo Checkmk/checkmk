@@ -328,8 +328,8 @@ def notification_script_choices() -> list[tuple[str, str]]:
 
     choices: list[tuple[str, str]] = []
     for choice in user_script_choices("notifications"):
-        notificaton_plugin_name, _notification_plugin_title = choice
-        if user.may("notification_plugin.%s" % notificaton_plugin_name):
+        notification_plugin_name, _notification_plugin_title = choice
+        if user.may("notification_plugin.%s" % notification_plugin_name):
             choices.append(choice)
     return choices
 

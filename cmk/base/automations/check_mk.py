@@ -695,11 +695,12 @@ def _execute_discovery(
     )
     ruleset_matcher = config_cache.ruleset_matcher
     autochecks_config = config.AutochecksConfigurer(config_cache, plugins.check_plugins)
+    logger = logging.getLogger("cmk.base.discovery")
     parser = CMKParser(
         config_cache.parser_factory(),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
-        logger=logging.getLogger("cmk.base.discovery"),
+        logger=logger,
     )
 
     with (
@@ -712,6 +713,7 @@ def _execute_discovery(
             config_cache,
             plugins.check_plugins,
             value_store_manager,
+            logger=logger,
             clusters=hosts_config.clusters,
             rtc_package=None,
         )

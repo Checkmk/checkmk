@@ -86,6 +86,7 @@ def test_checks_executor(
             config_cache,
             agent_based_plugins.check_plugins,
             value_store_manager,
+            logger=LOGGER,
             clusters=(),
             rtc_package=None,
         )

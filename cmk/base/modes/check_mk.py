@@ -2350,6 +2350,7 @@ def run_checking(
         CheckPluginName,
     )
     service_configurer = config_cache.make_service_configurer(plugins.check_plugins)
+    logger = logging.getLogger("cmk.base.checking")
     fetcher = CMKFetcher(
         config_cache,
         config_cache.fetcher_factory(service_configurer),
@@ -2372,7 +2373,7 @@ def run_checking(
         config_cache.parser_factory(),
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
-        logger=logging.getLogger("cmk.base.checking"),
+        logger=logger,
     )
     summarizer = CMKSummarizer(
         hostname,
@@ -2403,6 +2404,7 @@ def run_checking(
             config_cache,
             plugins.check_plugins,
             value_store_manager,
+            logger=logger,
             clusters=hosts_config.clusters,
             rtc_package=None,
         )

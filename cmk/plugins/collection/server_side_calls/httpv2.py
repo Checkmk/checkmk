@@ -2,6 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import re
 from collections.abc import Iterator, Mapping, Sequence
 from enum import StrEnum
 from typing import Final, Literal
@@ -258,11 +259,23 @@ def generate_http_services(
         )
 
 
+IPV6_PATTERN = re.compile(
+    r"(?:\[)?(?<![:.\w])(?:[a-fA-F0-9]{1,4}:){2,7}[a-fA-F0-9]{1,4}(?!\d|[a-fA-F0-9]:)(?:\])?"
+)
+
+
 def _command_arguments(endpoint: HttpEndpoint, host_config: HostConfig) -> Iterator[str | Secret]:
     macros = host_config.macros
 
     yield "--url"
-    yield replace_macros(endpoint.url, macros)
+
+    def wrap_ipv6(match: re.Match) -> str:
+        """Wrap IPv6 addresses in square brackets if they don't already have them."""
+        if not match.group(0).startswith("[") and not match.group(0).endswith("]"):
+            return f"[{match.group(0)}]"
+        return match.group(0)
+
+    yield IPV6_PATTERN.sub(wrap_ipv6, replace_macros(endpoint.url, macros))
 
     if (server := endpoint.settings.server) is not None:
         yield "--server"

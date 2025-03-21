@@ -620,17 +620,20 @@ def _set_result(
 
 
 def _handle_activation_changes_exception(
-    exc_logger: logging.Logger, exc_msg: str, site_activation_status: SiteActivationState
+    exc_logger: logging.Logger, exception: Exception, site_activation_status: SiteActivationState
 ) -> None:
-    crash = handle_exception_as_gui_crash_report(fail_silently=True)
+    if isinstance(exception, (MKGeneralException, MKUserError)):
+        exc_logger.exception("error activating changes")
+        message = str(exception)
+    else:
+        crash = handle_exception_as_gui_crash_report(fail_silently=True)
+        message = crash_dump_message(crash, user.may("general.see_crash_reports"))
     # The text of following exception will be rendered in the GUI and the error message may
     # contain some remotely-fetched data (including HTML) so we are escaping it to avoid
     # executing arbitrary HTML code.
     # The escape function does not escape some simple tags used for formatting.
     # SUP-9840
-    escaped_details = escaping.escape_text(
-        crash_dump_message(crash, user.may("general.see_crash_reports"))
-    )
+    escaped_details = escaping.escape_text(message)
     _set_result(
         site_activation_status,
         PHASE_DONE,
@@ -757,7 +760,7 @@ def fetch_sync_state(
         except Exception as e:
             duration = time.time() - sync_start
             update_activation_time(site_id, ACTIVATION_TIME_SYNC, duration)
-            _handle_activation_changes_exception(site_logger, str(e), site_activation_state)
+            _handle_activation_changes_exception(site_logger, e, site_activation_state)
             return None
 
 
@@ -787,7 +790,7 @@ def calc_sync_delta(
         except Exception as e:
             duration = time.time() - sync_start
             update_activation_time(site_id, ACTIVATION_TIME_SYNC, duration)
-            _handle_activation_changes_exception(site_logger, str(e), site_activation_state)
+            _handle_activation_changes_exception(site_logger, e, site_activation_state)
             return None
 
 
@@ -834,7 +837,7 @@ def synchronize_files(
             site_logger.debug("Finished config sync")
             return site_activation_state
         except Exception as e:
-            _handle_activation_changes_exception(site_logger, str(e), site_activation_state)
+            _handle_activation_changes_exception(site_logger, e, site_activation_state)
             return None
         finally:
             duration = time.time() - sync_start
@@ -1003,7 +1006,7 @@ def activate_site_changes(
             _set_done_result(configuration_warnings, site_activation_state)
             return site_activation_state
         except Exception as e:
-            _handle_activation_changes_exception(site_logger, str(e), site_activation_state)
+            _handle_activation_changes_exception(site_logger, e, site_activation_state)
             return None
 
 
@@ -1942,9 +1945,10 @@ def _handle_distributed_sites_in_free(
         site_id for site_id in site_snapshot_settings if site_id != omd_site()
     ]
     for start_site_id in distributed_sites_in_free:
+        exc = MKUserError(None, get_free_message())
         _handle_activation_changes_exception(
             logger.getChild(f"site[{start_site_id}]"),
-            get_free_message(),
+            exc,
             {"_site_id": start_site_id, "_time_started": time_started},
         )
     return any(distributed_sites_in_free)
@@ -2064,7 +2068,7 @@ def _prepare_for_activation_tasks(
                 )
         except Exception as e:
             _handle_activation_changes_exception(
-                logger.getChild(f"site[{site_id}]"), str(e), site_activation_state
+                logger.getChild(f"site[{site_id}]"), e, site_activation_state
             )
             _finalize_activation(site_id, activation_id, source)
     return central_file_infos_per_site, site_activation_states_per_site
@@ -2244,7 +2248,7 @@ def create_broker_certificates(
         except Exception as e:
             duration = time.time() - sync_start
             update_activation_time(site_id, ACTIVATION_TIME_SYNC, duration)
-            _handle_activation_changes_exception(site_logger, str(e), site_activation_state)
+            _handle_activation_changes_exception(site_logger, e, site_activation_state)
             return None
 
 

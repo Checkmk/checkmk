@@ -6,7 +6,7 @@
 import pytest
 from polyfactory.factories.pydantic_factory import ModelFactory
 
-from cmk.agent_based.v2 import Metric, Result, State
+from cmk.agent_based.v2 import DiscoveryResult, Metric, Result, Service, State
 from cmk.plugins.lib.df import (
     FILESYSTEM_DEFAULT_LEVELS,
     INODES_DEFAULT_PARAMS,
@@ -17,9 +17,10 @@ from cmk.plugins.netapp.agent_based.netapp_ontap_volumes import (
     _generate_volume_metrics,
     _serialize_volumes,
     check_volumes,
+    discover_netapp_ontap_volumes,
     VolumesCountersSection,
 )
-from cmk.plugins.netapp.models import VolumeCountersModel, VolumeModel
+from cmk.plugins.netapp.models import SvmModel, VolumeCountersModel, VolumeModel
 
 
 class VolumeModelFactory(ModelFactory):
@@ -28,6 +29,10 @@ class VolumeModelFactory(ModelFactory):
 
 class VolumeCountersModelFactory(ModelFactory):
     __model__ = VolumeCountersModel
+
+
+class SvmModelFactory(ModelFactory):
+    __model__ = SvmModel
 
 
 LAST_EVALUATION_SECONDS = 0
@@ -54,6 +59,46 @@ _COUNTER = VolumeCountersModelFactory.build(
     fcp_read_ops=1000,
     fcp_read_data=1000,
 )
+
+_SVM_SECTION = {
+    "svm1": SvmModelFactory.build(name="svm1", state=None, subtype="other"),
+    "svm_metrocluster": SvmModelFactory.build(
+        name="svm_metrocluster", state=None, subtype="sync_destination"
+    ),
+}
+
+
+@pytest.mark.parametrize(
+    "volume_model, expected_result",
+    [
+        pytest.param(
+            VolumeModelFactory.build(
+                name="volume1",
+                state="offline",
+                svm_name="svm1",
+            ),
+            [Service(item="svm1:volume1")],
+            id="Volume discovered",
+        ),
+        pytest.param(
+            VolumeModelFactory.build(
+                name="volume1",
+                state="offline",
+                svm_name="svm_metrocluster",
+            ),
+            [],
+            id="Volume not discovered",
+        ),
+    ],
+)
+def test_discover_netapp_ontap_volumes(
+    volume_model: VolumeModel, expected_result: DiscoveryResult
+) -> None:
+    volumes_section = {volume_model.item_name(): volume_model}
+
+    result = list(discover_netapp_ontap_volumes([], volumes_section, None, _SVM_SECTION))
+
+    assert result == expected_result
 
 
 def test_generate_volume_metrics_no_data_to_monitor() -> None:

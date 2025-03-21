@@ -9,15 +9,61 @@ from typing import Any
 import pytest
 from polyfactory.factories.pydantic_factory import ModelFactory
 
-from cmk.agent_based.v2 import CheckResult, Metric, Result, State
+from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Metric, Result, Service, State
 from cmk.plugins.netapp.agent_based.netapp_ontap_snapshots import (
     check_netapp_ontap_snapshots,
+    discover_netapp_ontap_snapshots,
 )
-from cmk.plugins.netapp.models import VolumeModel
+from cmk.plugins.netapp.models import SvmModel, VolumeModel
 
 
 class VolumeModelFactory(ModelFactory):
     __model__ = VolumeModel
+
+
+class SvmModelFactory(ModelFactory):
+    __model__ = SvmModel
+
+
+_SVM_SECTION = {
+    "svm1": SvmModelFactory.build(name="svm1", state=None, subtype="other"),
+    "svm_metrocluster": SvmModelFactory.build(
+        name="svm_metrocluster", state=None, subtype="sync_destination"
+    ),
+}
+
+
+@pytest.mark.parametrize(
+    "volume_model, expected_result",
+    [
+        pytest.param(
+            VolumeModelFactory.build(
+                name="volume1",
+                state="offline",
+                svm_name="svm1",
+            ),
+            [Service(item="svm1:volume1")],
+            id="Snapshot discovered",
+        ),
+        pytest.param(
+            VolumeModelFactory.build(
+                name="volume1",
+                state="offline",
+                svm_name="svm_metrocluster",
+            ),
+            [],
+            id="Snapshot not discovered",
+        ),
+    ],
+)
+def test_discover_netapp_ontap_snapshots(
+    volume_model: VolumeModel, expected_result: DiscoveryResult
+) -> None:
+    snapshot_section = {volume_model.item_name(): volume_model}
+
+    result = list(discover_netapp_ontap_snapshots(snapshot_section, _SVM_SECTION))
+
+    assert result == expected_result
 
 
 @pytest.mark.parametrize(
@@ -95,7 +141,7 @@ def test_check_netapp_ontap_snapshots_no_metrics(
 ) -> None:
     section = {volume_model.item_name(): volume_model}
 
-    result = list(check_netapp_ontap_snapshots("svm1:volume1", params, section))
+    result = list(check_netapp_ontap_snapshots("svm1:volume1", params, section, _SVM_SECTION))
 
     assert result == expected_result
 
@@ -113,7 +159,7 @@ def test_check_netapp_ontap_snapshots_with_metrics() -> None:
 
     section = {volume_model.item_name(): volume_model}
 
-    result = list(check_netapp_ontap_snapshots("svm1:volume1", {}, section))
+    result = list(check_netapp_ontap_snapshots("svm1:volume1", {}, section, _SVM_SECTION))
 
     assert result == [
         Result(state=State.OK, summary="Reserve used: 50.0% (2.44 KiB)"),

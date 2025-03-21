@@ -30,9 +30,11 @@ from cmk.plugins.lib.df import (
 )
 from cmk.plugins.lib.netapp_api import combine_netapp_api_volumes, single_volume_metrics
 from cmk.plugins.netapp import models
+from cmk.plugins.netapp.agent_based.lib import filter_metrocluster_items
 
 VolumesSection = Mapping[str, models.VolumeModel]
 VolumesCountersSection = Mapping[str, models.VolumeCountersModel]
+SvmSection = Mapping[str, models.SvmModel]
 
 
 # <<<netapp_ontap_volumes:sep(0)>>>
@@ -141,9 +143,13 @@ def discover_netapp_ontap_volumes(
     params: Sequence[Mapping[str, Any]],
     section_netapp_ontap_volumes: VolumesSection | None,
     section_netapp_ontap_volumes_counters: VolumesCountersSection | None,
+    section_netapp_ontap_vs_status: SvmSection | None,
 ) -> DiscoveryResult:
-    if section_netapp_ontap_volumes:
-        yield from df_discovery(params, section_netapp_ontap_volumes)
+    if section_netapp_ontap_volumes and section_netapp_ontap_vs_status:
+        monitorable_volumes = filter_metrocluster_items(
+            section_netapp_ontap_volumes, section_netapp_ontap_vs_status
+        )
+        yield from df_discovery(params, monitorable_volumes)
 
 
 def _check_single_netapp_volume(
@@ -333,6 +339,7 @@ def check_netapp_ontap_volumes(
     params: Mapping[str, Any],
     section_netapp_ontap_volumes: VolumesSection | None,
     section_netapp_ontap_volumes_counters: VolumesCountersSection | None,
+    section_netapp_ontap_vs_status: SvmSection | None,
 ) -> CheckResult:
     """
     The Netapp API is responding with no counters for some online volumes.
@@ -358,7 +365,7 @@ check_plugin_netapp_ontap_volumes = CheckPlugin(
     discovery_ruleset_name="filesystem_groups",
     discovery_ruleset_type=RuleSetType.ALL,
     check_function=check_netapp_ontap_volumes,
-    sections=["netapp_ontap_volumes", "netapp_ontap_volumes_counters"],
+    sections=["netapp_ontap_volumes", "netapp_ontap_volumes_counters", "netapp_ontap_vs_status"],
     check_default_parameters={
         **FILESYSTEM_DEFAULT_LEVELS,
         **MAGIC_FACTOR_DEFAULT_PARAMS,

@@ -1,0 +1,13 @@
+Title: sap_hana_status: Always discover the Status service
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1742555639
+Edition: cre
+Level: 1
+Version: 2.2.0p41
+
+The service "SAP HANA Status &lt;instance&gt;" was not always discovered.
+This would lead to cases where the service was not discovered while
+OK, but only once it turned into a CRIT state.
+We now always discover it.

@@ -21,6 +21,13 @@ config_setting(
 configure_make(
     name = "msitools",
     args = ["-j4"],
+    copts = [
+        "-Wno-cast-align",
+        "-Wno-incompatible-pointer-types-discards-qualifiers",
+        "-Wno-sometimes-uninitialized",
+        "-Wno-unknown-warning-option",
+        "-Wno-unused-but-set-variable",
+    ],
     env = {
         "PKG_CONFIG_PATH": ":".join([
             "/usr/lib/pkgconfig",

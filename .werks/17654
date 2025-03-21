@@ -1,0 +1,11 @@
+Title: Agent registration: Fix TLS registration removal
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1742801294
+Edition: cce
+Level: 1
+Version: 2.2.0p42
+
+When the TLS registration removal was triggered it could have happened that not all TLS entries of
+host of different sites were removed.

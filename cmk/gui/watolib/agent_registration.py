@@ -26,7 +26,7 @@ def remove_tls_registration(hosts_by_site: Mapping[SiteId, Sequence[HostName]]) 
 
         if site_is_local(site_id):
             _remove_tls_registration(host_names)
-            return
+            continue
 
         do_remote_automation(
             get_site_config(site_id),

@@ -140,19 +140,21 @@ class AutochecksStore:
 
 def merge_cluster_autochecks(
     autochecks: Mapping[HostName, Sequence[AutocheckEntry]],
+    active_nodes: Sequence[HostName],
     appears_on_cluster: Callable[[HostName, AutocheckEntry], bool],
 ) -> Sequence[AutocheckEntry]:
     # filter for cluster and flatten:
-    entries = [
-        e
+    entries = {
+        node_name: e
         for node_name, entries in autochecks.items()
         for e in entries
         if appears_on_cluster(node_name, e)
-    ]
+    }
 
     # group by service id and reverse order to make the first node win in merging
+    # but prioritize the current active nodes
     entries_by_id: dict[ServiceID, list[AutocheckEntry]] = defaultdict(list)
-    for entry in entries:
+    for node_name, entry in sorted(entries.items(), key=lambda x: x[0] not in active_nodes):
         entries_by_id[entry.id()].insert(0, entry)
 
     return [
@@ -397,6 +399,7 @@ class DiscoveredLabelsCache:
             ): autocheck_entry.service_labels
             for autocheck_entry in merge_cluster_autochecks(
                 {node: self._get_autochecks(node) for node in nodes},
+                nodes,
                 lambda node_name, entry: (get_effective_host(node_name, entry) == cluster_name),
             )
         }

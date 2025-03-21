@@ -112,10 +112,10 @@ index 570b61bec..6f4ce35f3 100644
 +#pragma GCC diagnostic ignored "-Wdeprecated"
      const auto loop = [=](auto destroy_node) {
 +#ifdef __clang__
-+#pragma clang diagnostic ignored "-Wdeprecated-this-capture"
++#pragma GCC diagnostic ignored "-Wdeprecated-this-capture"
 +#endif
        const TableEntryPtr* table = table_;
-+#pragma clang diagnostic pop
++#pragma GCC diagnostic pop
        for (map_index_t b = index_of_first_non_null_, end = num_buckets_;
             b < end; ++b) {
          NodeBase* node =

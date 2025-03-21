@@ -252,17 +252,8 @@ def check_printer_supply(item: str, params: Mapping[str, Any], section: Section)
             yield Metric("pages", supply.level)
             return
 
-    leftperc = 100.0 * supply.level / supply.max_capacity
-    if supply.supply_class is SupplyClass.RECEPTACLE:
-        leftperc = 100 - leftperc
-
-    # Some printers handle the used / remaining material differently
-    # With the upturn option we can toggle the point of view (again)
-    if params["upturn_toner"]:
-        leftperc = 100 - leftperc
-
     yield from check_levels_v1(
-        leftperc,
+        _get_fill_level_percentage(supply, params["upturn_toner"]),
         levels_lower=(warn, crit),
         label=f"{color_info}Remaining",
         render_func=render.percent,
@@ -280,6 +271,17 @@ def check_printer_supply(item: str, params: Mapping[str, Any], section: Section)
 
 def _get_supply_color_info(item: str, color: Color | None) -> str:
     return f"[{color}] " if color and color not in item.lower() else ""
+
+
+def _get_fill_level_percentage(supply: PrinterSupply, upturn_toner: bool) -> float:
+    fill_level_percentage = 100.0 * supply.level / supply.max_capacity
+
+    # Some printers handle the used / remaining material differently
+    # With the upturn option we can toggle the point of view (again)
+    if supply.supply_class is SupplyClass.RECEPTACLE or upturn_toner:
+        return 100 - fill_level_percentage
+
+    return fill_level_percentage
 
 
 def _check_some_remaining(

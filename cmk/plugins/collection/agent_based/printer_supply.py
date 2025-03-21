@@ -6,7 +6,7 @@
 import enum
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Final, NewType
+from typing import Any, Final, Literal, NewType
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
@@ -47,6 +47,8 @@ MAP_UNIT: Final = {
 
 Unit = NewType("Unit", str)
 
+type Color = Literal["black", "cyan", "magenta", "yellow"]
+
 
 class SupplyClass(enum.Enum):
     CONTAINER = enum.auto()
@@ -59,7 +61,7 @@ class PrinterSupply:
     max_capacity: int
     level: int
     supply_class: SupplyClass
-    color: str
+    color: Color | None
 
     @property
     def capacity_unrestricted(self) -> bool:
@@ -102,6 +104,24 @@ def _get_oid_end_last_index(oid_end: str) -> str:
 def _get_supply_unit(raw_unit: str) -> Unit:
     unit = MAP_UNIT.get(raw_unit, "")
     return Unit(unit) if unit in {"", "%"} else Unit(f" {unit}")
+
+
+def _get_supply_color(raw_color: str) -> Color | None:
+    color = raw_color.lower()
+
+    if color == "black":
+        return "black"
+
+    if color == "cyan":
+        return "cyan"
+
+    if color == "magenta":
+        return "magenta"
+
+    if color == "yellow":
+        return "yellow"
+
+    return None
 
 
 def _get_supply_class(raw_supply_class: str) -> SupplyClass:
@@ -147,21 +167,22 @@ def parse_printer_supply(string_table: Sequence[StringTable]) -> Section:
         if max_capacity == 0:
             max_capacity = 100
 
-        color = color_mapping.get(color_id, "")
+        raw_color = color_mapping.get(color_id, "")
         # For toners or drum units add the color (if available)
         if name.startswith("Toner Cartridge") or name.startswith("Image Drum Unit"):
-            if color:
-                colors += [color]
-            elif color == "" and colors:
-                color = colors[index - len(colors)]
-            if color:
-                name = f"{color.title()} {name}"
+            if raw_color:
+                colors += [raw_color]
+            elif raw_color == "" and colors:
+                raw_color = colors[index - len(colors)]
+            if raw_color:
+                name = f"{raw_color.title()} {name}"
 
         # fix trailing zero bytes (seen on HP Jetdirect 143 and 153)
         description = name.split(" S/N:")[0].strip("\0")
-        color = color.rstrip("\0")
+        raw_color = raw_color.rstrip("\0")
 
         unit = _get_supply_unit(raw_unit)
+        color = _get_supply_color(raw_color)
         supply_class = _get_supply_class(raw_supply_class)
 
         parsed[description] = PrinterSupply(unit, max_capacity, level, supply_class, color)

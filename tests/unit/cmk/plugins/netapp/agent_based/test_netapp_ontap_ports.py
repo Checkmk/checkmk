@@ -45,10 +45,9 @@ _PORT_MODELS = [
             {"ignored_ports": []},
             [
                 Service(item="Lag port node_name.port1"),
-                Service(item="Vlan port node_name.port2"),
                 Service(item="Physical port node_name.port3"),
             ],
-            id="discovery all ports",
+            id="discovery all ports but down",
         ),
         pytest.param(
             {"ignored_ports": ["vlan", "physical"]},

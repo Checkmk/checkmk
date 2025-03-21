@@ -69,7 +69,9 @@ def discover_netapp_ontap_ports(
     ignored_ports = params["ignored_ports"]
 
     yield from (
-        Service(item=item) for item, port in section.items() if port.port_type not in ignored_ports
+        Service(item=item)
+        for item, port in section.items()
+        if port.state != "down" and port.port_type not in ignored_ports
     )
 
 

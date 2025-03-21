@@ -28,6 +28,7 @@ from cmk.plugins.netapp import models
 #     "policy_type": "async",
 #     "source_svm_name": "mcc_darz_b_svm01_FC",
 #     "state": "snapmirrored",
+#     "transfer_state":"success",
 # }
 # {
 #     "destination": "mcc_darz_a_svm02_FC:vol_data1vg_dest",
@@ -36,6 +37,7 @@ from cmk.plugins.netapp import models
 #     "policy_type": "async",
 #     "source_svm_name": "mcc_darz_b_svm01_FC",
 #     "state": "snapmirrored",
+#     "transfer_state":"transferring",
 # }
 
 Section = Mapping[str, models.SnapMirrorModel]
@@ -88,6 +90,8 @@ def check_netapp_ontap_snapvault(
         yield Result(state=State.OK, summary=f"Destination-system: {snapvault.destination}")
     if snapvault.policy_name:
         yield Result(state=State.OK, summary=f"Policy: {snapvault.policy_name}")
+    if snapvault.transfer_state:
+        yield Result(state=State.OK, summary=f"Transfer State: {snapvault.transfer_state}")
     if snapvault.state:
         yield Result(state=State.OK, summary=f"State: {snapvault.state}")
 

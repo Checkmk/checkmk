@@ -13,7 +13,6 @@ import logging
 import time
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from functools import partial
 from pathlib import Path
 from typing import Final, Literal
 
@@ -32,7 +31,7 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.log import console
 from cmk.utils.misc import pnp_cleanup
-from cmk.utils.prediction import make_updated_predictions, PredictionStore
+from cmk.utils.prediction import make_updated_predictions, MetricRecord, PredictionStore
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RuleSpec
 from cmk.utils.sectionname import SectionMap, SectionName
@@ -508,7 +507,7 @@ class HostLabelPluginMapper(SectionMap[HostLabelPlugin]):
         return (
             HostLabelPlugin(
                 function=plugin.host_label_function,
-                parameters=partial(
+                parameters=functools.partial(
                     get_plugin_parameters,
                     matcher=self.ruleset_matcher,
                     default_parameters=plugin.host_label_default_parameters,
@@ -591,6 +590,19 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
         return len(_api.registered_check_plugins)
 
 
+def _make_rrd_data_getter(
+    host_name: HostAddress, service_name: ServiceName
+) -> Callable[[str, int, int], MetricRecord | None]:
+    """Replacement for `partial` which is not supported by mypy"""
+
+    def get_rrd_data(rpn: str, fromtime: int, untiltime: int) -> MetricRecord | None:
+        return livestatus.get_rrd_data(
+            livestatus.LocalConnection(), host_name, service_name, rpn, fromtime, untiltime
+        )
+
+    return get_rrd_data
+
+
 def _compute_final_check_parameters(
     host_name: HostName, service: ConfiguredService, config_cache: ConfigCache
 ) -> Parameters:
@@ -613,12 +625,7 @@ def _compute_final_check_parameters(
             meta_file_path_template=prediction_store.meta_file_path_template,
             predictions=make_updated_predictions(
                 prediction_store,
-                partial(
-                    livestatus.get_rrd_data,
-                    livestatus.LocalConnection(),
-                    host_name,
-                    service.description,
-                ),
+                _make_rrd_data_getter(host_name, service.description),
                 time.time(),
             ),
         )

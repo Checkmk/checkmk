@@ -6,13 +6,14 @@
 
 from ._grouping import PREDICTION_PERIODS, Timegroup, timezone_at
 from ._plugin_interface import estimate_levels, make_updated_predictions
-from ._prediction import DataStat, PredictionData, PredictionStore
+from ._prediction import DataStat, MetricRecord, PredictionData, PredictionStore
 from ._query import PredictionQuerier
 
 __all__ = [
     "DataStat",
     "estimate_levels",
     "make_updated_predictions",
+    "MetricRecord",
     "PredictionData",
     "PREDICTION_PERIODS",
     "PredictionQuerier",

@@ -227,9 +227,7 @@ def check_printer_supply(item: str, params: Mapping[str, Any], section: Section)
     if supply is None:
         return
 
-    color_info = ""
-    if supply.color and supply.color.lower() not in item.lower():
-        color_info = "[%s] " % supply.color
+    color_info = _get_supply_color_info(item, supply.color)
 
     warn, crit = params["levels"]
 
@@ -278,6 +276,10 @@ def check_printer_supply(item: str, params: Mapping[str, Any], section: Section)
         levels=(0.01 * warn * supply.max_capacity, 0.01 * crit * supply.max_capacity),
         boundaries=(0, supply.max_capacity),
     )
+
+
+def _get_supply_color_info(item: str, color: Color | None) -> str:
+    return f"[{color}] " if color and color not in item.lower() else ""
 
 
 def _check_some_remaining(

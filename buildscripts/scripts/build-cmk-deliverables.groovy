@@ -46,7 +46,7 @@ def main() {
         edition: params.EDITION,
         use_case: params.USE_CASE,
         override: params.OVERRIDE_DISTROS);
-    def safe_branch_name = versioning.safe_branch_name(scm);
+    def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
 
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"

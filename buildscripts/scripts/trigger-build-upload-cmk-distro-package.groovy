@@ -21,7 +21,7 @@ def main() {
     def edition = params.EDITION;
     def fake_windows_artifacts = params.FAKE_WINDOWS_ARTIFACTS;
 
-    def safe_branch_name = versioning.safe_branch_name(scm);
+    def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
     def branch_name = safe_branch_name;
     def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, VERSION);

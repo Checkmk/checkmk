@@ -59,8 +59,10 @@ class MessageV0(TypedDict):
     dest: tuple[str, list[UserId]]
     methods: list[MessageMethod]
     valid_till: int | None
-    id: NotRequired[str]
-    time: NotRequired[int]
+    id: str
+    time: int
+    security: NotRequired[bool]
+    acknowledged: NotRequired[bool]
 
 
 class MessageFromVS(TypedDict):
@@ -81,10 +83,10 @@ class Message(TypedDict):
     methods: list[MessageMethod]
     valid_till: int | None
     # Later added by _process_message
-    id: NotRequired[str]
-    time: NotRequired[int]
-    security: NotRequired[bool]
-    acknowledged: NotRequired[bool]
+    id: str
+    time: int
+    security: bool
+    acknowledged: bool
 
 
 def register(page_registry: PageRegistry) -> None:
@@ -92,6 +94,10 @@ def register(page_registry: PageRegistry) -> None:
 
 
 def _parse_message(message: Message | MessageV0) -> Message:
+    if not isinstance(security := message.get("security"), bool):
+        security = False
+    if not isinstance(acknowledged := message.get("acknowledged"), bool):
+        acknowledged = False
     return Message(
         text=(
             MessageText(content_type="text", content=t)
@@ -103,6 +109,8 @@ def _parse_message(message: Message | MessageV0) -> Message:
         valid_till=message.get("valid_till"),
         id=message["id"],
         time=message["time"],
+        security=security,
+        acknowledged=acknowledged,
     )
 
 
@@ -381,6 +389,8 @@ def _process_message(msg_from_vs: MessageFromVS) -> None:  # pylint: disable=too
         valid_till=msg_from_vs["valid_till"],
         id=utils.gen_id(),
         time=int(time.time()),
+        security=False,
+        acknowledged=False,
     )
 
     if isinstance(msg["dest"], str):

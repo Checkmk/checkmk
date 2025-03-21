@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 
 import pytest
 
@@ -18,13 +18,20 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.collection.agent_based.printer_supply import (
     check_printer_supply,
-    DEFAULT_PARAMETERS,
+    CheckParams,
     discovery_printer_supply,
     parse_printer_supply,
     PrinterSupply,
     Section,
     SupplyClass,
     Unit,
+)
+
+DEFAULT_PARAMETERS = CheckParams(
+    levels=(20.0, 10.0),
+    upturn_toner=False,
+    some_remaining_ink=State.WARN.value,
+    some_remaining_space=State.WARN.value,
 )
 
 
@@ -350,7 +357,7 @@ def test_inventory_printer_supply(
 )
 def test_check_printer_supply(
     item: str,
-    params: Mapping[str, object],
+    params: CheckParams,
     info: Sequence[StringTable],
     expected_result: CheckResult,
 ) -> None:

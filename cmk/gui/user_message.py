@@ -175,12 +175,10 @@ def show_user_messages() -> None:
         html.write_text(
             _("Sent on: %s, Expires on: %s")
             % (
-                time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(entry["time"]))
-                if "time" in entry
-                else "-",
-                time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(entry["valid_till"]))
-                if "valid_till" in entry
-                else _("Does not expire"),
+                time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(entry["time"])),
+                "-"
+                if (valid_till := entry["valid_till"]) is None
+                else time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(valid_till)),
             )
         )
         html.close_div()

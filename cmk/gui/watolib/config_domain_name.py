@@ -283,7 +283,7 @@ class ConfigVariableGroup:
 
     def warning(self) -> str | None:
         """Return a string if you want to show a warning at the top of this group"""
-        return str(self._warning)
+        return str(self._warning) if self._warning else None
 
     def config_variables(self) -> list[type[ConfigVariable]]:
         """Returns a list of configuration variable classes that belong to this group"""

@@ -6,7 +6,7 @@
 import time
 from collections.abc import Iterator
 
-from cmk.gui import message
+from cmk.gui import forms, message
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -22,7 +22,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import Page, PageRegistry
-from cmk.gui.table import table_element
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
@@ -40,7 +39,7 @@ def register(page_registry: PageRegistry) -> None:
 
 class PageUserMessage(Page):
     def title(self) -> str:
-        return _("User messages")
+        return _("Your messages")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
@@ -78,8 +77,8 @@ class PageUserMessage(Page):
 
         _handle_ack_all()
 
-        html.open_div(class_="wato")
-        render_user_message_table("gui_hint")
+        html.open_div(class_="wato user_messages")
+        show_user_messages()
         html.close_div()
 
         html.footer()
@@ -144,72 +143,84 @@ def _page_menu_entries_related() -> Iterator[PageMenuEntry]:
         )
 
 
-def render_user_message_table(what: str) -> None:
+def show_user_messages() -> None:
     html.open_div()
-    with table_element(
-        "user_messages",
-        sortable=False,
-        searchable=False,
-        empty_text=_("Currently you have no recieved messages"),
-    ) as table:
-        for entry in sorted(message.get_gui_messages(), key=lambda e: e["time"], reverse=True):
-            if what not in entry["methods"]:
-                continue
 
-            table.row()
+    if not (messages := [m for m in message.get_gui_messages() if "gui_hint" in m["methods"]]):
+        html.show_message(_("Currently you have no received messages"))
+        return
 
-            msg_id = entry["id"]
-            datetime = (
+    for num, entry in enumerate(sorted(messages, key=lambda e: e["time"], reverse=True)):
+        forms.header(_("Message #%d") % (num + 1))
+        forms.container()
+        html.open_div(class_="container")
+        msg_text = entry["text"]
+        match msg_text["content_type"]:
+            case "text":
+                html.div(msg_text["content"].replace("\n", "<br>"), class_="text")
+            case "html":
+                html.div(HTML(msg_text["content"], escape=False), class_="text")
+
+        html.open_div(class_="footer")
+        html.open_div(class_="actions")
+        show_message_actions(
+            "gui_hint",
+            entry["id"],
+            is_acknowledged=bool(entry.get("acknowledged")),
+            must_expire=bool(entry.get("security")),
+        )
+        html.close_div()
+
+        html.open_div(class_="details")
+        html.write_text(
+            _("Sent on: %s, Expires on: %s")
+            % (
                 time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(entry["time"]))
                 if "time" in entry
-                else "-"
-            )
-            expiretime = (
+                else "-",
                 time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(entry["valid_till"]))
                 if "valid_till" in entry
-                else "-"
+                else _("Does not expire"),
             )
-
-            table.cell(_("Actions"), css=["buttons"], sortable=False)
-            if entry.get("acknowledged"):
-                html.icon("checkmark", _("Acknowledged"))
-            else:
-                html.icon_button(
-                    "",
-                    _("Acknowledge message"),
-                    "werk_ack",
-                    onclick="cmk.utils.acknowledge_user_message('%s');cmk.utils.reload_whole_page();"
-                    % msg_id,
-                )
-
-            if entry.get("security"):
-                html.icon(
-                    "delete", _("Cannot be deleted manually, must expire"), cssclass="colorless"
-                )
-            else:
-                onclick = (
-                    "cmk.utils.delete_user_message('%s', this);cmk.utils.reload_whole_page();"
-                    % msg_id
-                    if what == "gui_hint"
-                    else "cmk.utils.delete_user_message('%s', this);" % msg_id
-                )
-                html.icon_button(
-                    "",
-                    _("Delete"),
-                    "delete",
-                    onclick=onclick,
-                )
-
-            msg_text = entry["text"]
-            match msg_text["content_type"]:
-                case "text":
-                    table.cell(_("Message"), msg_text["content"].replace("\n", "<br>"))
-                case "html":
-                    table.cell(_("Message"), HTML(msg_text["content"], escape=False))
-            table.cell(_("Date sent"), datetime)
-            table.cell(_("Expires on"), expiretime)
+        )
+        html.close_div()
+        html.close_div()
+        forms.end()
 
     html.close_div()
+
+
+def show_message_actions(
+    what: str,
+    msg_id: str,
+    is_acknowledged: bool,
+    must_expire: bool,
+) -> None:
+    if is_acknowledged:
+        html.icon("checkmark", _("Acknowledged"))
+    else:
+        html.icon_button(
+            "",
+            _("Acknowledge message"),
+            "werk_ack",
+            onclick="cmk.utils.acknowledge_user_message('%s');cmk.utils.reload_whole_page();"
+            % msg_id,
+        )
+
+    if must_expire:
+        html.icon("delete", _("Cannot be deleted manually, must expire"), cssclass="colorless")
+    else:
+        onclick = (
+            "cmk.utils.delete_user_message('%s', this);cmk.utils.reload_whole_page();" % msg_id
+            if what == "gui_hint"
+            else "cmk.utils.delete_user_message('%s', this);" % msg_id
+        )
+        html.icon_button(
+            "",
+            _("Delete"),
+            "delete",
+            onclick=onclick,
+        )
 
 
 def ajax_delete_user_message() -> None:

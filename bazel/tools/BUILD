@@ -16,9 +16,9 @@ alias(
     actual = "@llvm_toolchain//:clang-format",
 )
 
-sh_binary(
+alias(
     name = "clangtidy_bin",
-    srcs = ["run-clang-tidy"],
+    actual = "@llvm_toolchain//:clang-tidy",
 )
 
 filegroup(

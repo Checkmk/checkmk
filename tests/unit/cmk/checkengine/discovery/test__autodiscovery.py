@@ -41,6 +41,24 @@ AUTOCHECK_2 = AutocheckEntry(
     {"parameter_common": "2", "parameter_2": "2"},
     {"label_common": "2", "label_2": "2"},
 )
+AUTOCHECK_3A = AutocheckEntry(
+    CheckPluginName("check_plugin_3"),
+    "Item",
+    {"parameter_common": "a"},
+    {"label_common": "a"},
+)
+AUTOCHECK_3B = AutocheckEntry(
+    CheckPluginName("check_plugin_3"),
+    "Item",
+    {"parameter_common": "b"},
+    {"label_common": "b"},
+)
+AUTOCHECK_3_MERGED_B_ACTIVE = AutocheckEntry(
+    CheckPluginName("check_plugin_3"),
+    "Item",
+    {"parameter_common": "b"},
+    {"label_common": "b"},
+)
 
 
 class _AutochecksConfigDummy:
@@ -266,6 +284,33 @@ def test_get_host_services_by_host_name_swaps_on_cluster() -> None:
         "unchanged": [
             AutocheckServiceWithNodes(
                 service=DiscoveredItem(previous=AUTOCHECK_1A, new=AUTOCHECK_1A),
+                nodes=[NODE_2],
+            )
+        ],
+    }
+
+
+def test_get_host_services_by_host_name_params_prio_on_active_nodes() -> None:
+    assert get_host_services_by_host_name(
+        CLUSTER,
+        existing_services={
+            NODE_1: [AUTOCHECK_3A],
+            NODE_2: [AUTOCHECK_3B],
+        },
+        discovered_services={
+            NODE_1: [],
+            NODE_2: [AUTOCHECK_3B],
+        },
+        is_cluster=True,
+        cluster_nodes=(NODE_1, NODE_2),
+        autochecks_config=_AutochecksConfigDummy(effective_host=CLUSTER),
+        enforced_services={},
+    )[CLUSTER] == {
+        "unchanged": [
+            AutocheckServiceWithNodes(
+                service=DiscoveredItem(
+                    previous=AUTOCHECK_3_MERGED_B_ACTIVE, new=AUTOCHECK_3_MERGED_B_ACTIVE
+                ),
                 nodes=[NODE_2],
             )
         ],

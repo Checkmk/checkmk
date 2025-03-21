@@ -12,7 +12,6 @@ def msitools_workspace():
             "//omd/packages/msitools/patches:0001-configure_remove_wixl.dif",
             "//omd/packages/msitools/patches:0002-msibuild_argc_fix.dif",
             "//omd/packages/msitools/patches:0003-configure_remove_libxml.dif",
-            "//omd/packages/msitools/patches:0004-compile-on-sles11.dif",
         ],
         patch_args = ["-p1"],
         patch_tool = "patch",

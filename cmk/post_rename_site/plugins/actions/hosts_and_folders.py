@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from logging import Logger
+from typing import Sequence
 
 from livestatus import SiteId
 
@@ -26,11 +27,18 @@ def update_hosts_and_folders(old_site_id: SiteId, new_site_id: SiteId, logger: L
             logger.debug("Folder %s: Update explicitly set site", folder.alias_path())
             folder.attributes["site"] = new_site_id
 
-        # 2. Update explicitly set site in hosts
         for host in folder.hosts().values():
+            # 2. Update explicitly set site in hosts
             if host.attributes.get("site") == old_site_id:
                 logger.debug("Host %s: Update explicitly set site", host.name())
                 host.attributes["site"] = new_site_id
+
+            # 3. Update the locked_by attribute in hosts
+            if locked_by := _update_locked_by(
+                old_site_id, new_site_id, host.attributes.get("locked_by")
+            ):
+                logger.debug("Host %s: Update dynamic site configuration", host.name())
+                host.update_attributes({"locked_by": locked_by})
 
         # Always rewrite the host config: The host_tags need to be updated, even in case there is no
         # site_id explicitly set. Just to be sure everything is fine we also rewrite the folder
@@ -38,6 +46,18 @@ def update_hosts_and_folders(old_site_id: SiteId, new_site_id: SiteId, logger: L
         logger.debug("Folder %s: Saving config", folder.alias_path())
         folder.save()
         folder.save_hosts()
+
+
+def _update_locked_by(
+    old_site_id: SiteId, new_site_id: SiteId, locked_by: Sequence[str] | None
+) -> Sequence[str] | None:
+    if not locked_by:
+        return None
+
+    if locked_by[0] != old_site_id:
+        return None
+
+    return (new_site_id, *locked_by[1:])
 
 
 rename_action_registry.register(

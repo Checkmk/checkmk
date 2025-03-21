@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, Final, Literal, NewType
+from typing import Final, Literal, NewType, TypedDict
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
@@ -222,7 +222,14 @@ def discovery_printer_supply(section: Section) -> DiscoveryResult:
         yield Service(item=key)
 
 
-def check_printer_supply(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+class CheckParams(TypedDict):
+    levels: tuple[float, float]
+    upturn_toner: bool
+    some_remaining_ink: int
+    some_remaining_space: int
+
+
+def check_printer_supply(item: str, params: CheckParams, section: Section) -> CheckResult:
     supply = section.get(item)
     if supply is None:
         return
@@ -284,9 +291,7 @@ def _get_fill_level_percentage(supply: PrinterSupply, upturn_toner: bool) -> flo
     return fill_level_percentage
 
 
-def _check_some_remaining(
-    supply: PrinterSupply, params: Mapping[str, Any], color_info: str
-) -> Result:
+def _check_some_remaining(supply: PrinterSupply, params: CheckParams, color_info: str) -> Result:
     match supply.supply_class:
         case SupplyClass.CONTAINER:
             return Result(
@@ -300,19 +305,16 @@ def _check_some_remaining(
             )
 
 
-DEFAULT_PARAMETERS = {
-    "levels": (20.0, 10.0),
-    "upturn_toner": False,
-    "some_remaining_ink": 1,
-    "some_remaining_space": 1,
-}
-
-
 check_plugin_printer_supply = CheckPlugin(
     name="printer_supply",
     service_name="Supply %s",
     discovery_function=discovery_printer_supply,
     check_function=check_printer_supply,
     check_ruleset_name="printer_supply",
-    check_default_parameters=DEFAULT_PARAMETERS,
+    check_default_parameters=CheckParams(
+        levels=(20.0, 10.0),
+        upturn_toner=False,
+        some_remaining_ink=State.WARN.value,
+        some_remaining_space=State.WARN.value,
+    ),
 )

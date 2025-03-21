@@ -6,7 +6,7 @@
 import enum
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import Any, Final, NewType
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
@@ -45,6 +45,9 @@ MAP_UNIT: Final = {
 }
 
 
+Unit = NewType("Unit", str)
+
+
 class SupplyClass(enum.Enum):
     CONTAINER = enum.auto()
     RECEPTACLE = enum.auto()
@@ -52,7 +55,7 @@ class SupplyClass(enum.Enum):
 
 @dataclass(frozen=True)
 class PrinterSupply:
-    unit: str
+    unit: Unit
     max_capacity: int
     level: int
     supply_class: SupplyClass
@@ -96,9 +99,9 @@ def _get_oid_end_last_index(oid_end: str) -> str:
     return oid_end.split(".")[-1]
 
 
-def get_unit(unit_info: str) -> str:
-    unit = MAP_UNIT.get(unit_info, "")
-    return unit if unit in ("", "%") else f" {unit}"
+def _get_supply_unit(raw_unit: str) -> Unit:
+    unit = MAP_UNIT.get(raw_unit, "")
+    return Unit(unit) if unit in {"", "%"} else Unit(f" {unit}")
 
 
 def parse_printer_supply(string_table: Sequence[StringTable]) -> Section:
@@ -112,7 +115,7 @@ def parse_printer_supply(string_table: Sequence[StringTable]) -> Section:
 
     for index, (
         name,
-        unit_info,
+        raw_unit,
         raw_max_capacity,
         raw_level,
         raw_supply_class,
@@ -145,7 +148,8 @@ def parse_printer_supply(string_table: Sequence[StringTable]) -> Section:
         # fix trailing zero bytes (seen on HP Jetdirect 143 and 153)
         description = name.split(" S/N:")[0].strip("\0")
         color = color.rstrip("\0")
-        unit = get_unit(unit_info)
+
+        unit = _get_supply_unit(raw_unit)
 
         parsed[description] = PrinterSupply(
             unit,

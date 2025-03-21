@@ -24,6 +24,7 @@ from cmk.plugins.collection.agent_based.printer_supply import (
     PrinterSupply,
     Section,
     SupplyClass,
+    Unit,
 )
 
 
@@ -46,7 +47,7 @@ from cmk.plugins.collection.agent_based.printer_supply import (
             ],
             {
                 "Patrone Schwarz 508A HP CF360A": PrinterSupply(
-                    "%", 100, 9, SupplyClass.CONTAINER, "black"
+                    Unit("%"), 100, 9, SupplyClass.CONTAINER, "black"
                 ),
             },
             id="with null bytes",

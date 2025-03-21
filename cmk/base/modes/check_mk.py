@@ -2305,6 +2305,7 @@ def mode_check(
         itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
         CheckPluginName,
     )
+    logger = logging.getLogger("cmk.base.checking")
     fetcher = CMKFetcher(
         config_cache,
         config_cache.fetcher_factory(),
@@ -2331,7 +2332,7 @@ def mode_check(
         config_cache.parser_factory(),
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
-        logger=logging.getLogger("cmk.base.checking"),
+        logger=logger,
     )
     summarizer = CMKSummarizer(
         hostname,
@@ -2361,6 +2362,7 @@ def mode_check(
         check_plugins = CheckPluginMapper(
             config_cache,
             value_store_manager,
+            logger=logger,
             clusters=hosts_config.clusters,
             rtc_package=None,
         )

@@ -533,12 +533,14 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
         self,
         config_cache: ConfigCache,
         value_store_manager: ValueStoreManager,
+        logger: logging.Logger,
         *,
         clusters: Container[HostName],
         rtc_package: AgentRawData | None,
     ):
         self.config_cache: Final = config_cache
         self.value_store_manager: Final = value_store_manager
+        self._logger: Final = logger
         self.clusters: Final = clusters
         self.rtc_package: Final = rtc_package
 
@@ -572,7 +574,9 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
                 rtc_package=self.rtc_package,
                 get_effective_host=self.config_cache.effective_host,
                 snmp_backend=self.config_cache.get_snmp_backend(host_name),
-                parameters=_compute_final_check_parameters(host_name, service, self.config_cache),
+                parameters=_compute_final_check_parameters(
+                    host_name, service, self.config_cache, self._logger
+                ),
             )
 
         return CheckPlugin(
@@ -591,20 +595,34 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
 
 
 def _make_rrd_data_getter(
-    host_name: HostAddress, service_name: ServiceName
+    host_name: HostAddress, service_name: ServiceName, logger: logging.Logger
 ) -> Callable[[str, int, int], MetricRecord | None]:
     """Replacement for `partial` which is not supported by mypy"""
 
     def get_rrd_data(rpn: str, fromtime: int, untiltime: int) -> MetricRecord | None:
-        return livestatus.get_rrd_data(
-            livestatus.LocalConnection(), host_name, service_name, rpn, fromtime, untiltime
-        )
+        try:
+            return livestatus.get_rrd_data(
+                livestatus.LocalConnection(), host_name, service_name, rpn, fromtime, untiltime
+            )
+        except (
+            ()
+            if cmk.ccc.debug.enabled()
+            else (
+                livestatus.MKLivestatusSocketError,
+                livestatus.MKLivestatusNotFoundError,
+            )
+        ) as e:
+            logger.warning(f"Cannot get historic metrics via Livestatus: {e}")
+        return None
 
     return get_rrd_data
 
 
 def _compute_final_check_parameters(
-    host_name: HostName, service: ConfiguredService, config_cache: ConfigCache
+    host_name: HostName,
+    service: ConfiguredService,
+    config_cache: ConfigCache,
+    logger: logging.Logger,
 ) -> Parameters:
     params = service.parameters.evaluate(timeperiod_active)
     if not _needs_postprocessing(params):
@@ -625,7 +643,7 @@ def _compute_final_check_parameters(
             meta_file_path_template=prediction_store.meta_file_path_template,
             predictions=make_updated_predictions(
                 prediction_store,
-                _make_rrd_data_getter(host_name, service.description),
+                _make_rrd_data_getter(host_name, service.description, logger),
                 time.time(),
             ),
         )

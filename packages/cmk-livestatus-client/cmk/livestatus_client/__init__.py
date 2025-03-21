@@ -1574,13 +1574,10 @@ def get_rrd_data(
     step = 1
     point_range = ":".join(lqencode(str(x)) for x in (fromtime, untiltime, step, max_entries))
     column = f"rrddata:m1:{rpn}:{point_range}"
-
     lql = livestatus_lql([host_name], [column], service_description) + "OutputFormat: python\n"
 
-    try:
-        response = connection.query_value(lql)
-    except MKLivestatusNotFoundError:
-        return None
+    # This can raise, but let the caller deal with it.
+    response = connection.query_value(lql)
 
     if not response:
         # Appending nonsense to the column will give you None.

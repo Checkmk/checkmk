@@ -627,11 +627,12 @@ def _execute_discovery(
     plugins = agent_based_register.get_previously_loaded_plugins()
     ruleset_matcher = config_cache.ruleset_matcher
     autochecks_config = config.AutochecksConfigurer(config_cache)
+    logger = logging.getLogger("cmk.base.discovery")
     parser = CMKParser(
         config_cache.parser_factory(),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
-        logger=logging.getLogger("cmk.base.discovery"),
+        logger=logger,
     )
 
     with (
@@ -643,6 +644,7 @@ def _execute_discovery(
         check_plugins = CheckPluginMapper(
             config_cache,
             value_store_manager,
+            logger=logger,
             clusters=hosts_config.clusters,
             rtc_package=None,
         )

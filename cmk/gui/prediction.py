@@ -14,6 +14,7 @@ from livestatus import (
     get_rrd_data,
     lqencode,
     MKLivestatusNotFoundError,
+    MKLivestatusSocketError,
     SingleSiteConnection,
     SiteId,
 )
@@ -311,7 +312,10 @@ def _get_observed_data(
             from_time,
             until_time,
         )
-    except MKLivestatusNotFoundError as e:
+    except (
+        MKLivestatusSocketError,
+        MKLivestatusNotFoundError,
+    ) as e:
         if cmk.ccc.debug.enabled():
             raise
         raise MKGeneralException(f"Cannot get historic metrics via Livestatus: {e}")

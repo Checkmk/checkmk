@@ -122,6 +122,9 @@ cc_test(
         "test/test_DictFilter.cc",
         "test/test_MacroExpander.cc",
     ],
+    copts = [
+        "-std=c++20",
+    ],
     deps = [
         ":dummy_nagios",
         ":test_utilities",

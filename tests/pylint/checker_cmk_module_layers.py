@@ -4,10 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Checker to prevent disallowed imports of modules"""
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from pathlib import Path
 
 from astroid.nodes import Import, ImportFrom  # type: ignore[import-untyped]
+from mypy_extensions import NamedArg
 from pylint.checkers import BaseChecker
 from pylint.checkers.utils import only_required_for_messages
 from pylint.lint.pylinter import PyLinter
@@ -85,6 +86,21 @@ def _is_package(node: ImportFrom) -> bool:
         return bool(parent.package)
     except AttributeError:  # could be a try/except block, for instance.
         return _is_package(parent)
+
+
+def _allow(
+    *modules: str,
+) -> Callable[[NamedArg(ModuleName, "imported"), NamedArg(Component, "component")], bool]:
+    def _is_allowed(
+        *,
+        imported: ModuleName,
+        component: Component,
+    ) -> bool:
+        return imported.in_component(component) or any(
+            imported.in_component(Component(m)) for m in modules
+        )
+
+    return _is_allowed
 
 
 def _is_allowed_import(imported: ModuleName) -> bool:
@@ -697,6 +713,20 @@ _COMPONENTS = (
     (
         Component("cmk.plugins.robotmk.rulesets.cee"),
         _is_allowed_for_robotmk_rulesets_cee_plugins,
+    ),
+    (
+        Component("cmk.plugins.checkmk"),
+        _allow(
+            "cmk.agent_based.v2",
+            "cmk.rulesets.v1",
+            "cmk.graphing.v1",
+            "cmk.server_side_calls.v1",
+            "cmk.base",
+            "cmk.fetchers",
+            "cmk.checkengine",
+            "cmk.utils",
+            "cmk.ccc",
+        ),
     ),
     (Component("cmk.plugins"), _is_allowed_for_plugins),
     (Component("cmk.server_side_calls_backend"), _is_default_allowed_import),

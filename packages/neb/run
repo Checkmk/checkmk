@@ -124,9 +124,9 @@ run_clean() {
 run_clang_format() {
     # NOTE: FILES_TO_USE contains no headers, so we format everything when FILES
     # is not given. This is fast enough while maintaining correctness.
-    # shellcheck disable=SC2068 # Yes, we want splitting for FILES.
-    find ${FILES[@]:-src test include} -type f \( -name "*.h" -o -name "*.cc" \) -print0 |
-        xargs --no-run-if-empty --null "clang-format-${CLANG_VERSION}" -style=file "$@"
+    # shellcheck disable=SC2046,SC2068 # Yes, we want splitting for FILES.
+    find $(realpath ${FILES[@]:-src test include}) -type f \( -name "*.h" -o -name "*.cc" \) -print0 |
+        xargs --no-run-if-empty --null bazel run //bazel/tools:clang-format -- -style=file "$@"
 }
 
 run_build() {

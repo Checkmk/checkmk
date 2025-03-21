@@ -11,6 +11,11 @@ mypy_cli(
     ],
 )
 
+alias(
+    name = "clang-format",
+    actual = "@llvm_toolchain//:clang-format",
+)
+
 sh_binary(
     name = "clangtidy_bin",
     srcs = ["run-clang-tidy"],

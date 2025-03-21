@@ -239,25 +239,8 @@ def check_printer_supply(item: str, params: CheckParams, section: Section) -> Ch
     warn, crit = params["levels"]
 
     if supply.has_partial_data:  # no percentage possible
-        if supply.level_unrestricted or supply.capacity_unrestricted:
-            yield Result(
-                state=State.OK, summary="%sThere are no restrictions on this supply" % color_info
-            )
-            return
-
-        if supply.some_level_remains:
-            yield _check_some_remaining(supply, params, color_info)
-            return
-
-        if supply.level_unknown:
-            yield Result(state=State.UNKNOWN, summary="%s Unknown level" % color_info)
-            return
-
-        if supply.capacity_unknown:
-            # no percentage possible. We compare directly against levels
-            yield Result(state=State.OK, summary="%sLevel: %d" % (color_info, supply.level))
-            yield Metric("pages", supply.level)
-            return
+        yield from _get_partial_data_results(supply, params, color_info)
+        return
 
     yield from check_levels_v1(
         _get_fill_level_percentage(supply, params["upturn_toner"]),
@@ -280,6 +263,34 @@ def _get_supply_color_info(item: str, color: Color | None) -> str:
     return f"[{color}] " if color and color not in item.lower() else ""
 
 
+def _get_partial_data_results(
+    supply: PrinterSupply, params: CheckParams, color_info: str
+) -> CheckResult:
+    if supply.level_unrestricted or supply.capacity_unrestricted:
+        summary = "%sThere are no restrictions on this supply" % color_info
+        yield Result(state=State.OK, summary=summary)
+
+    elif supply.some_level_remains:
+        match supply.supply_class:
+            case SupplyClass.CONTAINER:
+                yield Result(
+                    state=State(params["some_remaining_ink"]),
+                    summary=f"{color_info}Some ink remaining",
+                )
+            case SupplyClass.RECEPTACLE:
+                yield Result(
+                    state=State(params["some_remaining_space"]),
+                    summary=f"{color_info}Some space remaining",
+                )
+
+    elif supply.level_unknown:
+        yield Result(state=State.UNKNOWN, summary="%s Unknown level" % color_info)
+
+    elif supply.capacity_unknown:
+        yield Result(state=State.OK, summary="%sLevel: %d" % (color_info, supply.level))
+        yield Metric("pages", supply.level)
+
+
 def _get_fill_level_percentage(supply: PrinterSupply, upturn_toner: bool) -> float:
     fill_level_percentage = 100.0 * supply.level / supply.max_capacity
 
@@ -289,20 +300,6 @@ def _get_fill_level_percentage(supply: PrinterSupply, upturn_toner: bool) -> flo
         return 100 - fill_level_percentage
 
     return fill_level_percentage
-
-
-def _check_some_remaining(supply: PrinterSupply, params: CheckParams, color_info: str) -> Result:
-    match supply.supply_class:
-        case SupplyClass.CONTAINER:
-            return Result(
-                state=State(params["some_remaining_ink"]),
-                summary=f"{color_info}Some ink remaining",
-            )
-        case SupplyClass.RECEPTACLE:
-            return Result(
-                state=State(params["some_remaining_space"]),
-                summary=f"{color_info}Some space remaining",
-            )
 
 
 check_plugin_printer_supply = CheckPlugin(

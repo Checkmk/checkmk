@@ -1426,3 +1426,22 @@ h3.table.dcd_about_cycle {
 table.dcd_host_processing {
   margin-bottom: 20px;
 }
+
+div.user_messages {
+  div.container {
+    div.text {
+      margin: 0 10px 10px 10px;
+    }
+
+    div.footer {
+      display: flex;
+      justify-content: space-between;
+      padding: 0 10px;
+
+      div.details {
+        display: flex;
+        align-items: center;
+      }
+    }
+  }
+}

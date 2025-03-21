@@ -42,7 +42,7 @@ def main() {
     def version = params.VERSION;
     def disable_cache = params.DISABLE_CACHE;
 
-    def safe_branch_name = versioning.safe_branch_name(scm);
+    def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
 
     // FIXME
@@ -165,7 +165,7 @@ def main() {
         dir("${checkout_dir}") {
             setCustomBuildProperty(
                 key: "path_hashes",
-                value: scm_directory_hashes(scm.extensions)
+                value: versioning.path_hashes(["."])
             );
             show_duration("archiveArtifacts") {
                 archiveArtifacts(

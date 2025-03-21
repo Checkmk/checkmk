@@ -11,7 +11,7 @@ def main() {
     def result_dir = "${checkout_dir}/results";
     def time_job_started = new Date();
     def time_stage_started = time_job_started;
-    def safe_branch_name = versioning.safe_branch_name(scm);
+    def safe_branch_name = versioning.safe_branch_name();
 
     print(
         """

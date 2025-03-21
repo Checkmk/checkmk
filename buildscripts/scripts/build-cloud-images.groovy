@@ -29,7 +29,7 @@ def main() {
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy")
     def branch_version = versioning.get_branch_version(checkout_dir);
-    def cmk_version = versioning.get_cmk_version(versioning.safe_branch_name(scm), branch_version, VERSION)
+    def cmk_version = versioning.get_cmk_version(versioning.safe_branch_name(), branch_version, VERSION)
     if (cmk_version != versioning.strip_rc_number_from_version(cmk_version)) {
         error("You may try to build a release candidate (${cmk_version}) for the cloud images but " +
             "this is currently not supported. During a release, we will build the cloud images when a package rc was " +

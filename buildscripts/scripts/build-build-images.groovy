@@ -29,8 +29,8 @@ def main() {
     def all_distros = versioning.get_distros(override: "all")
     def distros = versioning.get_distros(edition: "all", use_case: "all", override: OVERRIDE_DISTROS);
 
-    def vers_tag = versioning.get_docker_tag(scm, checkout_dir);
-    def safe_branch_name = versioning.safe_branch_name(scm);
+    def vers_tag = versioning.get_docker_tag(checkout_dir);
+    def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
     def publish_images = PUBLISH_IMAGES=='true';  // FIXME should be case sensitive
 

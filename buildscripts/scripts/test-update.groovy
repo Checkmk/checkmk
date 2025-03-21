@@ -35,7 +35,7 @@ def main() {
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
     def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
 
-    def safe_branch_name = versioning.safe_branch_name(scm);
+    def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
     // When building from a git tag (VERSION != "daily"), we cannot get the branch name from the scm so used defines.make instead.
     // this is save on master as there are no tags/versions built other than daily

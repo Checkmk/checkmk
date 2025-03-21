@@ -73,7 +73,9 @@ def _vs_item_appearance(title, help_txt):
 def _vs_labels_conditions():
     return ListOf(
         title=_("Generate service labels for discovered matching interfaces"),
-        help=_("Generate service labels based on matching conditions. All matching entries will add to the list of service labels."),
+        help=_(
+            "Generate service labels based on matching conditions. All matching entries will add to the list of service labels."
+        ),
         valuespec=Dictionary(
             elements=[
                 (
@@ -82,7 +84,7 @@ def _vs_labels_conditions():
                         title=_("Matching conditions"),
                         elements=[
                             (
-                                 "match_index",
+                                "match_index",
                                 _vs_regex_matching("index"),
                             ),
                             (
@@ -107,7 +109,6 @@ def _vs_labels_conditions():
             ],
         ),
     )
-
 
 
 def _vs_single_discovery():

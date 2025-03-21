@@ -1216,10 +1216,20 @@ def discover_interfaces(
             if labels_conditions := single_interface_settings.get("labels_conditions"):
                 for labels_condition in labels_conditions:
                     conditions = labels_condition.get("conditions", {})
-                    if check_regex_match_conditions(interface.attributes.index, conditions.get("match_index")) and check_regex_match_conditions(interface.attributes.alias, conditions.get("match_alias")) and check_regex_match_conditions(interface.attributes.descr, conditions.get("match_desc")):
-                        for k,v in labels_condition.get("labels").items():
+                    if (
+                        check_regex_match_conditions(
+                            interface.attributes.index, conditions.get("match_index")
+                        )
+                        and check_regex_match_conditions(
+                            interface.attributes.alias, conditions.get("match_alias")
+                        )
+                        and check_regex_match_conditions(
+                            interface.attributes.descr, conditions.get("match_desc")
+                        )
+                    ):
+                        for k, v in labels_condition.get("labels").items():
                             labels[k] = v
-            for k,v in single_interface_settings.get("labels", {}).items():
+            for k, v in single_interface_settings.get("labels", {}).items():
                 labels[k] = v
 
             pre_inventory.append(

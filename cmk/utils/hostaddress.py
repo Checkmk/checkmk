@@ -13,9 +13,6 @@ from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from typing import Final, Self, TypeAlias
 
-from pydantic import GetCoreSchemaHandler
-from pydantic_core import core_schema, CoreSchema
-
 __all__ = ["HostAddress", "Hosts", "HostName"]
 
 
@@ -38,26 +35,6 @@ class HostAddress(str):
     _ALLOWED_CHARS_CLASS: Final = r"-0-9a-zA-Z_."
     REGEX_HOST_NAME: Final = re.compile(rf"^\w[{_ALLOWED_CHARS_CLASS}]*$", re.ASCII)
     REGEX_INVALID_CHAR: Final = re.compile(rf"[^{_ALLOWED_CHARS_CLASS}]")
-
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls, _source_type: object, handler: GetCoreSchemaHandler
-    ) -> CoreSchema:
-        return core_schema.no_info_after_validator_function(cls, handler(str))
-
-    @classmethod
-    def project_valid(cls, text: str) -> Self:
-        """Create a valid host name from input.
-
-        This is a projection in the sense that the function is not injective.
-        Different input might be projected onto the same output.
-
-        Raises:
-            - ValueError: whenever the given text is not a valid HostAddress
-            even after replacing invalid characters.
-
-        """
-        return cls(cls.REGEX_INVALID_CHAR.sub("_", text))
 
     def __new__(cls, text: str) -> Self:
         """Construct a new HostAddress object
@@ -96,6 +73,28 @@ class HostAddress(str):
                 raise ValueError(f"invalid host address: {text!r}")
 
         return super().__new__(cls, text)
+
+    @classmethod
+    def parse(cls, x: object) -> Self:
+        if isinstance(x, cls):
+            return x
+        if isinstance(x, str):
+            return cls(x)
+        raise ValueError(f"invalid host address: {x!r}")
+
+    @classmethod
+    def project_valid(cls, text: str) -> Self:
+        """Create a valid host name from input.
+
+        This is a projection in the sense that the function is not injective.
+        Different input might be projected onto the same output.
+
+        Raises:
+            - ValueError: whenever the given text is not a valid HostAddress
+            even after replacing invalid characters.
+
+        """
+        return cls(cls.REGEX_INVALID_CHAR.sub("_", text))
 
 
 # Let us be honest here, we do not actually make a difference

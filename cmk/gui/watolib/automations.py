@@ -20,11 +20,11 @@ from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from io import BytesIO
 from pathlib import Path
-from typing import Final, NamedTuple
+from typing import Annotated, Final, NamedTuple
 
 import requests
 import urllib3
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, PlainValidator
 
 from livestatus import sanitize_site_configuration, SiteConfiguration, SiteId
 
@@ -35,6 +35,7 @@ from cmk.ccc.site import get_omd_config
 from cmk.ccc.store import RealIo
 
 from cmk.utils import paths
+from cmk.utils.hostaddress import HostName
 from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import get_license_state
 from cmk.utils.user import UserId
@@ -928,6 +929,9 @@ class LastKnownCentralSiteVersionStore:
             if (raw := self._io.read())
             else None
         )
+
+
+AnnotatedHostName = Annotated[HostName, PlainValidator(HostName.parse)]
 
 
 @functools.cache

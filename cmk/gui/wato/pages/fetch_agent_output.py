@@ -43,7 +43,7 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.view_breadcrumbs import make_host_breadcrumb
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
-from cmk.gui.watolib.automations import do_remote_automation
+from cmk.gui.watolib.automations import AnnotatedHostName, do_remote_automation
 from cmk.gui.watolib.check_mk_automations import get_agent_output
 from cmk.gui.watolib.hosts_and_folders import folder_from_request, Host
 
@@ -288,7 +288,7 @@ def get_fetch_agent_job_status(api_request: FetchAgentOutputRequest) -> JobStatu
 
 class FetchAgentOutputJobArgs(BaseModel, frozen=True):
     site_id: SiteId
-    host_name: HostName
+    host_name: AnnotatedHostName
     agent_type: str
 
 

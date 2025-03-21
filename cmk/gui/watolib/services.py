@@ -50,7 +50,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.watolib.activate_changes import sync_changes_before_remote_automation
-from cmk.gui.watolib.automations import do_remote_automation
+from cmk.gui.watolib.automations import AnnotatedHostName, do_remote_automation
 from cmk.gui.watolib.check_mk_automations import (
     local_discovery,
     local_discovery_preview,
@@ -984,7 +984,7 @@ def get_check_table(host: Host, action: DiscoveryAction, *, raise_errors: bool) 
 
 
 class ServiceDiscoveryJobArgs(BaseModel, frozen=True):
-    host_name: HostName
+    host_name: AnnotatedHostName
     action: DiscoveryAction
     raise_errors: bool
 

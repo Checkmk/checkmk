@@ -33,6 +33,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.watolib import bakery
+from cmk.gui.watolib.automations import AnnotatedHostName
 from cmk.gui.watolib.check_mk_automations import scan_parents
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import (
@@ -48,7 +49,7 @@ from cmk.gui.watolib.hosts_and_folders import (
 class ParentScanTask:
     site_id: SiteId
     host_folder_path: str
-    host_name: HostName
+    host_name: AnnotatedHostName
 
 
 # 'nowhere'     -> no new hosts are created

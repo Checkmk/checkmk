@@ -7,8 +7,9 @@ import enum
 import os
 from collections.abc import Mapping
 from pathlib import Path
+from typing import Annotated
 
-from pydantic import BaseModel
+from pydantic import BaseModel, PlainValidator
 
 from cmk.utils.hostaddress import HostName
 
@@ -22,7 +23,10 @@ CONFIG_ROUTE = RoutingKey("config")
 CONFIG_QUEUE = QueueName("config")
 
 
-type HostLocations = Mapping[HostName, str]
+AnnotatedHostName = Annotated[HostName, PlainValidator(HostName.parse)]
+
+
+type HostLocations = Mapping[AnnotatedHostName, str]
 """A map of host names to the sites they are monitored on."""
 
 
@@ -37,7 +41,7 @@ class PiggybackHubConfig(BaseModel):
 
 
 class _PersistedPiggybackHubConfig(BaseModel):
-    locations: Mapping[HostName, str] = {}
+    locations: Mapping[AnnotatedHostName, str] = {}
 
 
 def save_config(omd_root: Path, config: PiggybackHubConfig) -> None:

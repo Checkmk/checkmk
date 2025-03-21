@@ -43,10 +43,7 @@ class HostAddress(str):
     def __get_pydantic_core_schema__(
         cls, _source_type: object, handler: GetCoreSchemaHandler
     ) -> CoreSchema:
-        return core_schema.no_info_after_validator_function(
-            cls.validate_hostname,
-            handler(str),
-        )
+        return core_schema.no_info_after_validator_function(cls, handler(str))
 
     @staticmethod
     def validate(text: str) -> None:

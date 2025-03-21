@@ -35,6 +35,8 @@ def parse_sap_hana_status(string_table: StringTable) -> sap_hana.ParsedSection:
                     "instance": sid_instance,
                     "version": line[2],
                 }
+            # always discover "Status", even if we don't have an error now
+            section[f"Status {sid_instance}"] = item_data
             section[f"{item_name} {sid_instance}"] = item_data
 
     return section

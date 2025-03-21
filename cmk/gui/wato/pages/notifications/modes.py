@@ -65,6 +65,7 @@ from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
     PageMenuEntry,
+    PageMenuEntryCEEOnly,
     PageMenuSearch,
     PageMenuTopic,
 )
@@ -794,8 +795,7 @@ class ModeNotifications(ABCNotificationsMode):
             ),
         )
 
-        # TODO this should be CEE only?!
-        yield PageMenuEntry(
+        yield PageMenuEntryCEEOnly(
             title=_("Logging of the notification mechanics"),
             icon_name="configuration",
             item=make_simple_link(
@@ -1568,7 +1568,7 @@ class ModeTestNotifications(ModeNotifications):
                                         )
                                     ),
                                 ),
-                                PageMenuEntry(
+                                PageMenuEntryCEEOnly(
                                     title=_("Logging of the notification mechanics"),
                                     icon_name="configuration",
                                     item=make_simple_link(

@@ -17,6 +17,10 @@ import json
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 
+import cmk.ccc.version as cmk_version
+
+from cmk.utils import paths
+
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -232,6 +236,14 @@ class PageMenuEntry:
     css_classes: list[str | None] = field(default_factory=list)
     disabled_tooltip: str | None = None
     sort_index: int = 1
+
+
+@dataclass
+class PageMenuEntryCEEOnly(PageMenuEntry):
+    def __post_init__(self) -> None:
+        if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE:
+            self.is_enabled = False
+            self.disabled_tooltip = _("Enterprise feature")
 
 
 @dataclass

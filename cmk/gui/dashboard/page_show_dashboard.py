@@ -11,7 +11,6 @@ import copy
 import json
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
-from dataclasses import dataclass
 from typing import Literal
 
 import cmk.ccc.version as cmk_version
@@ -40,6 +39,7 @@ from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
     PageMenuEntry,
+    PageMenuEntryCEEOnly,
     PageMenuLink,
     PageMenuSidePopup,
     PageMenuTopic,
@@ -778,14 +778,6 @@ class AjaxInitialDashboardFilters(ABCAjaxInitialFilters):
             }
 
         return _minimal_context(_get_mandatory_filters(board, set()), board["context"])
-
-
-@dataclass
-class PageMenuEntryCEEOnly(PageMenuEntry):
-    def __post_init__(self) -> None:
-        if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE:
-            self.is_enabled = False
-            self.disabled_tooltip = _("Enterprise feature")
 
 
 def _dashboard_add_dashlet_back_http_var() -> tuple[str, str]:

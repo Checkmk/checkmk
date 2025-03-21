@@ -5,8 +5,8 @@ load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
 file_from_flag(
     name = "version.rs",
     out = "src/version.rs",
-    content = ["pub const VERSION: &str = %r;"],
-    value = "//:cmk_version",
+    content = ['pub const VERSION: &str = "{VERSION}";'],
+    replace_labels = {"VERSION": "//:cmk_version"},
     visibility = ["//visibility:private"],
 )
 

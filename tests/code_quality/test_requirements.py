@@ -398,7 +398,6 @@ def test_dependencies_are_declared() -> None:
         "ibm_db_dbi",  # active_checks/check_sql
         "sqlanydb",  # active_checks/check_sql
         "libcst",  # doc/treasures/migration_helpers
-        "pypsrp",  # doc/treasures/alert_handler/windows
     }
 
     assert undeclared_dependencies_str >= known_undeclared_dependencies, (

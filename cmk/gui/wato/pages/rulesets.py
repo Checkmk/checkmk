@@ -187,13 +187,8 @@ def _group_rulesets(
     for main_group_name, sub_groups in grouped_dict.items():
         sub_group_list = []
 
-        for group_name, group_rulesets in sorted(sub_groups.items(), key=lambda x: x[0]):
-            sub_group_list.append(
-                (
-                    group_name,
-                    sorted(group_rulesets, key=lambda x: str(x.title())),
-                )
-            )
+        for group_name, group_rulesets in sub_groups.items():
+            sub_group_list.append((group_name, group_rulesets))
 
         grouped.append((main_group_name, sub_group_list))
 
@@ -324,7 +319,7 @@ class ABCRulesetMode(WatoMode):
                 )
                 forms.container()
 
-                for ruleset in group_rulesets:
+                for ruleset in sorted(group_rulesets, key=lambda x: str(x.title())):
                     html.open_div(class_=["ruleset"], title=strip_tags(ruleset.help() or ""))
                     html.open_div(class_="text")
 

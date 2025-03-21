@@ -18,8 +18,10 @@ from cmk.agent_based.v2 import (
     State,
 )
 from cmk.plugins.netapp import models
+from cmk.plugins.netapp.agent_based.lib import filter_metrocluster_items
 
 VolumesSection = Mapping[str, models.VolumeModel]
+SvmSection = Mapping[str, models.SvmModel]
 
 
 # <<<netapp_ontap_volumes:sep(0)>>>
@@ -60,15 +62,26 @@ VolumesSection = Mapping[str, models.VolumeModel]
 
 
 def discover_netapp_ontap_snapshots(
-    section: VolumesSection,
+    section_netapp_ontap_volumes: VolumesSection | None,
+    section_netapp_ontap_vs_status: SvmSection | None,
 ) -> DiscoveryResult:
-    yield from (Service(item=item) for item in section)
+    if section_netapp_ontap_volumes and section_netapp_ontap_vs_status:
+        section_netapp_ontap_volumes = filter_metrocluster_items(
+            section_netapp_ontap_volumes, section_netapp_ontap_vs_status
+        )
+        yield from (Service(item=item) for item in section_netapp_ontap_volumes)
 
 
 def check_netapp_ontap_snapshots(
-    item: str, params: Mapping[str, Any], section: VolumesSection
+    item: str,
+    params: Mapping[str, Any],
+    section_netapp_ontap_volumes: VolumesSection | None,
+    section_netapp_ontap_vs_status: SvmSection | None,
 ) -> CheckResult:
-    volume = section.get(item)
+    if not section_netapp_ontap_volumes:
+        return
+
+    volume = section_netapp_ontap_volumes.get(item)
 
     if not volume:
         return
@@ -114,7 +127,7 @@ def check_netapp_ontap_snapshots(
 check_plugin_netapp_ontap_shanpshots = CheckPlugin(
     name="netapp_ontap_snapshots",
     service_name="Snapshots Volume %s",
-    sections=["netapp_ontap_volumes"],
+    sections=["netapp_ontap_volumes", "netapp_ontap_vs_status"],
     discovery_function=discover_netapp_ontap_snapshots,
     check_function=check_netapp_ontap_snapshots,
     check_ruleset_name="netapp_snapshots",

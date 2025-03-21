@@ -78,9 +78,14 @@ def check_apc_ats_status(_no_item: Any, params: dict, parsed: Status) -> Iterabl
     for powersource in parsed.powersources:
         if powersource is None:
             continue
-        if powersource.status != PowerSupplyStatus.OK:
-            state = 2
-            messages.append(f"{powersource.name} power supply failed(!!)")
+        match powersource.status:
+            case PowerSupplyStatus.Failure:
+                state = 2
+                messages.append(f"{powersource.name} power supply failed(!!)")
+            case PowerSupplyStatus.NotAvailable:
+                # The MIB only defines two valid values "1" and "2". But in reality, the SNMP file
+                # may contain a value of "0", too. According to SUP-22815 this case is OK, too.
+                messages.append(f"{powersource.name} power supply not available")
 
     return state, ", ".join(messages)
 

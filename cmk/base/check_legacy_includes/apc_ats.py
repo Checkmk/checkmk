@@ -30,6 +30,9 @@ class OverCurrentStatus(enum.Enum):
 
 
 class PowerSupplyStatus(enum.Enum):
+    # The MIB only defines two valid values "1" and "2". But in reality, the SNMP file may contain
+    # a value of "0", too. According to SUP-22815 this case is OK, too.
+    NotAvailable = 0
     Failure = 1
     OK = 2
 

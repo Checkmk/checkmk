@@ -22,6 +22,7 @@ STRING_TABLE_2 = [["1", "2", "1", "2", "1", "2", "", ""]]
 STRING_TABLE_exceeded_output_current = [["2", "2", "2", "1", "2", "2", "", ""]]
 STRING_TABLE_no_5V = [["2", "2", "1", "2", "", "2", "2", "2"]]
 STRING_TABLE_no_5V_all_crit = [["2", "2", "1", "2", "", "1", "1", "1"]]
+STRING_TABLE_not_avail_powersupply = [["2", "2", "2", "2", "2", "0", "", ""]]
 CHECK = "apc_ats_status"
 
 
@@ -65,6 +66,19 @@ CHECK = "apc_ats_status"
                     PowerSource(name="24V", status=PowerSupplyStatus.OK),
                     PowerSource(name="3.3V", status=PowerSupplyStatus.OK),
                     PowerSource(name="1.0V", status=PowerSupplyStatus.OK),
+                ],
+            ),
+        ),
+        (
+            STRING_TABLE_not_avail_powersupply,
+            Status(
+                CommunictionStatus.Established,
+                Source.B,
+                RedunandancyStatus.Redundant,
+                OverCurrentStatus.OK,
+                [
+                    PowerSource(name="5V", status=PowerSupplyStatus.OK),
+                    PowerSource(name="24V", status=PowerSupplyStatus.NotAvailable),
                 ],
             ),
         ),
@@ -145,6 +159,14 @@ def test_apc_ats_status_discovery(info, expected):
                 "3.3V power supply failed(!!), 1.0V power supply failed(!!)",
             ),
             id="No 5V power supply, all other power supplies are critical",
+        ),
+        pytest.param(
+            STRING_TABLE_not_avail_powersupply,
+            {"power_source": 2},
+            (
+                0,
+                "Power source B selected, Device fully redundant, 24V power supply not available",
+            ),
         ),
     ],
 )

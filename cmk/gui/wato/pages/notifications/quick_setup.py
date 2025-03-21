@@ -1156,6 +1156,14 @@ def notification_method() -> QuickSetupStage:
 
     def _components() -> Sequence[Widget]:
         notification_scripts = load_notification_scripts()
+        default_method_choice: DefaultValue[str] | InputHint[Title] = InputHint(
+            Title("Please choose")
+        )
+        if script_choices := notification_script_choices():
+            if "mail" in (name for name, title in script_choices):
+                default_method_choice = DefaultValue("mail")
+            else:
+                default_method_choice = DefaultValue(script_choices[0][0])
 
         return [
             FormSpecWrapper(
@@ -1205,10 +1213,10 @@ def notification_method() -> QuickSetupStage:
                                                         )
                                                     ),
                                                 )
-                                                for script_name, title in notification_script_choices()
+                                                for script_name, title in script_choices
                                             ],
                                             layout=CascadingSingleChoiceLayout.vertical,
-                                            prefill=DefaultValue("mail"),
+                                            prefill=default_method_choice,
                                         ),
                                     ),
                                     CascadingSingleChoiceElement(
@@ -1222,9 +1230,9 @@ def notification_method() -> QuickSetupStage:
                                                     name=script_name,
                                                     parameter_form=FixedValue(value=None),
                                                 )
-                                                for script_name, title in notification_script_choices()
+                                                for script_name, title in script_choices
                                             ],
-                                            prefill=DefaultValue("mail"),
+                                            prefill=default_method_choice,
                                         ),
                                     ),
                                 ],

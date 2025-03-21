@@ -114,7 +114,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "allnet_ip_sensoric_temp",
         "allnet_ip_sensoric_humidity",
         "allnet_ip_sensoric_pressure",
-        "apc_ats_status",
         "apc_humidity",
         "apc_inrow_airflow",
         "apc_inrow_temp",

@@ -2,10 +2,20 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Iterable
-from typing import Any
+from collections.abc import Mapping
 
-from cmk.base.check_legacy_includes.apc_ats import (
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
+from cmk.plugins.apc.lib.apc_ats import (
     CommunictionStatus,
     OverCurrentStatus,
     PowerSupplyStatus,
@@ -13,12 +23,7 @@ from cmk.base.check_legacy_includes.apc_ats import (
     Source,
     Status,
 )
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.apc import DETECT_ATS
-
-check_info = {}
 
 
 def parse_apc_ats_status(info: StringTable) -> Status | None:
@@ -27,79 +32,74 @@ def parse_apc_ats_status(info: StringTable) -> Status | None:
     return None
 
 
-def inventory_apc_ats_status(parsed: Status) -> Iterable[tuple[None, dict]]:
-    if parsed and parsed.selected_source:
-        yield None, {"power_source": parsed.selected_source.value}
+def discover_apc_ats_status(section: Status) -> DiscoveryResult:
+    if section and section.selected_source:
+        yield Service(parameters={"power_source": section.selected_source.value})
 
 
-def check_apc_ats_status(_no_item: Any, params: dict, parsed: Status) -> Iterable:
+def check_apc_ats_status(params: Mapping[str, object], section: Status) -> CheckResult:
     source = params["power_source"]
-    state = 0
-    messages = []
 
     # current source of power
     source_parsed = Source(source)
-    if source_parsed != parsed.selected_source:
-        state = 2
-        assert parsed.selected_source is not None
-        messages.append(
-            "Power source Changed from %s to %s(!!)"
-            % (source_parsed.name, parsed.selected_source.name)
+    if source_parsed != section.selected_source:
+        assert section.selected_source is not None
+        yield Result(
+            state=State.CRIT,
+            summary=f"Power source Changed from {source_parsed.name} to {section.selected_source.name}",
         )
     else:
-        messages.append("Power source %s selected" % source_parsed.name)
+        yield Result(state=State.OK, summary=f"Power source {source_parsed.name} selected")
 
     # current communication status of the Automatic Transfer Switch.
-    if parsed.com_status == CommunictionStatus.NeverDiscovered:
-        state = max(1, state)
-        messages.append("Communication Status: never Discovered(!)")
-    elif parsed.com_status == CommunictionStatus.Lost:
-        state = 2
-        messages.append("Communication Status: lost(!!)")
+    if section.com_status == CommunictionStatus.NeverDiscovered:
+        yield Result(state=State.WARN, summary="Communication Status: never Discovered")
+    elif section.com_status == CommunictionStatus.Lost:
+        yield Result(state=State.CRIT, summary="Communication Status: lost")
 
     # current redundancy state of the ATS.
     # Lost(1) indicates that the ATS is unable to switch over to the alternate power source
     # if the current source fails. Redundant(2) indicates that the ATS will switch
     # over to the alternate power source if the current source fails.
-    if parsed.redundancy == RedunandancyStatus.Lost:
-        state = 2
-        messages.append("redundancy lost(!!)")
+    if section.redundancy == RedunandancyStatus.Lost:
+        yield Result(state=State.CRIT, summary="redundancy lost")
     else:
-        messages.append("Device fully redundant")
+        yield Result(state=State.OK, summary="Device fully redundant")
 
     # current state of the ATS. atsOverCurrent(1) indicates that the ATS has i
     # exceeded the output current threshold and will not allow a switch
     # over to the alternate power source if the current source fails.
     # atsCurrentOK(2) indicates that the output current is below the output current threshold.
-    if parsed.overcurrent == OverCurrentStatus.Exceeded:
-        state = 2
-        messages.append("exceeded ouput current threshold(!!)")
+    if section.overcurrent == OverCurrentStatus.Exceeded:
+        yield Result(state=State.CRIT, summary="exceeded output current threshold")
 
-    for powersource in parsed.powersources:
+    for powersource in section.powersources:
         if powersource is None:
             continue
         match powersource.status:
             case PowerSupplyStatus.Failure:
-                state = 2
-                messages.append(f"{powersource.name} power supply failed(!!)")
+                yield Result(state=State.CRIT, summary=f"{powersource.name} power supply failed")
             case PowerSupplyStatus.NotAvailable:
                 # The MIB only defines two valid values "1" and "2". But in reality, the SNMP file
                 # may contain a value of "0", too. According to SUP-22815 this case is OK, too.
-                messages.append(f"{powersource.name} power supply not available")
+                yield Result(
+                    state=State.OK, summary=f"{powersource.name} power supply not available"
+                )
 
-    return state, ", ".join(messages)
 
-
-check_info["apc_ats_status"] = LegacyCheckDefinition(
+snmp_section_apc_ats_status = SimpleSNMPSection(
     name="apc_ats_status",
-    parse_function=parse_apc_ats_status,
     detect=DETECT_ATS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.8.5.1",
         oids=["1.0", "2.0", "3.0", "4.0", "5.0", "6.0", "17.0", "18.0"],
     ),
+    parse_function=parse_apc_ats_status,
+)
+check_plugin_apc_ats_status = CheckPlugin(
+    name="apc_ats_status",
     service_name="ATS Status",
-    discovery_function=inventory_apc_ats_status,
+    discovery_function=discover_apc_ats_status,
     check_function=check_apc_ats_status,
     check_default_parameters={},
 )

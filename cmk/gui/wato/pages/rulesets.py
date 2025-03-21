@@ -314,7 +314,10 @@ class ABCRulesetMode(WatoMode):
         for main_group_name, sub_groups in grouped_rulesets:
             main_group_title = get_rulegroup(main_group_name).title
 
-            for group_name, group_rulesets in sub_groups:
+            for group_name, group_rulesets in sorted(
+                sub_groups,
+                key=lambda k_v: get_rulegroup(k_v[0]).title,
+            ):
                 group_title = get_rulegroup(group_name).title
                 forms.header(
                     title=(

@@ -180,6 +180,10 @@ def build_docker_image_name_and_registry(
                 raise RuntimeError(f"Unknown edition {ed}")
 
     for edition in loaded_yaml["editions"]:
+        if edition == "managed":
+            # For CME we don't build any container images
+            continue
+
         registry = edition_to_registry(edition, registries)
         yield (
             DockerImage(

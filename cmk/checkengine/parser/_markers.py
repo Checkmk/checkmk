@@ -48,7 +48,13 @@ class PiggybackMarker(NamedTuple):
             return cls(None)
 
     def should_be_ignored(self) -> bool:
-        return self.hostname is None or not HostAddress.is_valid(self.hostname)
+        if self.hostname is not None:
+            try:
+                HostAddress(self.hostname)
+                return False
+            except ValueError:
+                pass
+        return True
 
 
 # option values of the form "FOO(BAR, BAZ)"

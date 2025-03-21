@@ -235,7 +235,7 @@ def _api_endpoint() -> Dictionary:
 
 def _validate_hostname(hostname: str) -> None:
     try:
-        HostAddress.validate(hostname)
+        HostAddress(hostname)
     except ValueError as exception:
         raise validators.ValidationError(
             Message(

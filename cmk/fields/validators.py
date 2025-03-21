@@ -197,7 +197,7 @@ class HostNameValidator(Validator):
 class ValidateHostName(Validator):
     def __call__(self, value, **kwargs):
         try:
-            HostAddress.validate(value)
+            HostAddress(value)
             return True
         except ValueError as exception:
             raise ValidationError(str(exception)) from exception

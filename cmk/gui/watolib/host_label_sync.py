@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import ast
 import os
+import time
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from datetime import timedelta
 from multiprocessing.pool import ThreadPool
@@ -33,10 +35,13 @@ from cmk.gui.site_config import get_site_config, has_wato_slave_sites, wato_slav
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation, MKAutomationException
-from cmk.gui.watolib.hosts_and_folders import Host
+from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
 from cmk.gui.watolib.paths import wato_var_dir
 
 UpdatedHostLabelsEntry = tuple[str, float, str]
+
+_PATH_LAST_CLEANUP_TIMESTAMP = wato_var_dir() / "last_discovered_host_labels_cleanup.mk"
+_MINIMUM_CLEANUP_INTERVAL = 60 * 60
 
 
 @dataclass
@@ -128,6 +133,19 @@ def execute_host_label_sync_job() -> None:
         return
 
     DiscoveredHostLabelSyncJob().do_sync()
+
+    now = time.time()
+    if (
+        now - _load_and_parse_timestamp_last_cleanup_defensive(_PATH_LAST_CLEANUP_TIMESTAMP)
+        < _MINIMUM_CLEANUP_INTERVAL
+    ):
+        return
+
+    _cleanup_discovered_host_labels(
+        cmk.utils.paths.discovered_host_labels_dir,
+        folder_tree().root_folder().all_hosts_recursively(),
+    )
+    store.save_text_to_file(_PATH_LAST_CLEANUP_TIMESTAMP, str(now))
 
 
 class DiscoveredHostLabelSyncJob:
@@ -300,3 +318,30 @@ class AutomationDiscoveredHostLabelSync(AutomationCommand[SiteRequest]):
             )
 
         return asdict(response)
+
+
+def _load_and_parse_timestamp_last_cleanup_defensive(path: Path) -> float:
+    try:
+        raw_timestamp_last_cleanup = path.read_text()
+    except FileNotFoundError:
+        raw_timestamp_last_cleanup = str(0.0)
+    try:
+        return float(raw_timestamp_last_cleanup)
+    except ValueError:
+        return 0.0
+
+
+def _cleanup_discovered_host_labels(
+    discovered_host_labels_dir: Path,
+    all_known_hosts: Iterable[str],
+) -> None:
+    hosts_with_stored_discovered_host_labels = set(
+        p.stem for p in discovered_host_labels_dir.iterdir()
+    )
+    for removed_host_with_still_stored_discovered_host_labels in (
+        hosts_with_stored_discovered_host_labels - set(all_known_hosts)
+    ):
+        (
+            discovered_host_labels_dir
+            / f"{removed_host_with_still_stored_discovered_host_labels}.mk"
+        ).unlink(missing_ok=True)

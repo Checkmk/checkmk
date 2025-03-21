@@ -1681,7 +1681,7 @@ def test_create_host_with_too_long_of_a_name(
         expect_ok=False,
     )
     resp.assert_status_code(400)
-    assert resp.json["fields"]["host_name"][0] == f"HostName too long: {16 * 'a' + '…'!r}"
+    assert resp.json["fields"]["host_name"][0] == f"host address too long: {16 * 'a' + '…'!r}"
 
 
 @managedtest

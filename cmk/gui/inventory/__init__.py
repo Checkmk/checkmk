@@ -166,15 +166,16 @@ def _check_for_valid_hostname(hostname: str) -> None:
     Traceback (most recent call last):
     cmk.gui.exceptions.MKUserError: You need to provide a valid "host name". Only letters, digits, dash, underscore and dot are allowed.
     """
-    if HostAddress.is_valid(hostname):
-        return
-    raise MKUserError(
-        None,
-        _(
-            'You need to provide a valid "host name". '
-            "Only letters, digits, dash, underscore and dot are allowed.",
-        ),
-    )
+    try:
+        HostAddress(hostname)
+    except ValueError:
+        raise MKUserError(
+            None,
+            _(
+                'You need to provide a valid "host name". '
+                "Only letters, digits, dash, underscore and dot are allowed.",
+            ),
+        )
 
 
 class _HostInvAPIResponse(TypedDict):

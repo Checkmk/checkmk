@@ -30,8 +30,8 @@ def test_duplicate_hosts() -> None:
         "domain",
     ],
 )
-def test_is_valid_hostname_positive(hostaddress: str) -> None:
-    assert HostAddress.is_valid(hostaddress)
+def test_valid_hostaddress(hostaddress: str) -> None:
+    HostAddress(hostaddress)
 
 
 @pytest.mark.parametrize(
@@ -46,5 +46,6 @@ def test_is_valid_hostname_positive(hostaddress: str) -> None:
         "@subdomain.domain.com",
     ],
 )
-def test_is_valid_hostname_negative(hostaddress: str) -> None:
-    assert not HostAddress.is_valid(hostaddress)
+def test_invalid_hostaddress(hostaddress: str) -> None:
+    with pytest.raises(ValueError):
+        HostAddress(hostaddress)

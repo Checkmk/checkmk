@@ -2726,7 +2726,7 @@ class VSExplicitConditions(Transform):
         if value.startswith("~"):
             return
         try:
-            HostName.validate(value)
+            HostName(value)
         except ValueError as e:
             raise MKUserError(varprefix, str(e))
 

@@ -45,56 +45,6 @@ class HostAddress(str):
     ) -> CoreSchema:
         return core_schema.no_info_after_validator_function(cls, handler(str))
 
-    @staticmethod
-    def validate(text: str) -> None:
-        """Check if it is a HostAddress/HostName
-
-        >>> HostAddress.validate(".")
-        Traceback (most recent call last):
-            ...
-        ValueError: Invalid hostaddress: '.'
-
-        >>> HostAddress.validate("checkmk.com")
-        >>> HostAddress.validate("::1")
-
-        >>> HostAddress.validate("Â")
-        Traceback (most recent call last):
-            ...
-        ValueError: Invalid hostaddress: 'Â'
-        """
-        HostAddress.validate_hostname(text)
-
-    @staticmethod
-    def validate_hostname(text: str) -> str:
-        if text in ("", "_", "_VANILLA"):
-            return text
-
-        if len(text) > 240:
-            # Ext4 and others allow filenames of up to 255 bytes.
-            # As we add prefixes and/or suffixes, the number has to be way lower.
-            # 240 seems to be OK to still be able to delete a host if it causes
-            # trouble elsewhere
-            raise ValueError(f"HostName too long: {text[:16] + '…'!r}")
-
-        try:
-            ipaddress.ip_address(text)
-            return text
-        except ValueError:
-            pass
-
-        if not HostAddress.REGEX_HOST_NAME.match(text):
-            raise ValueError(f"Invalid hostaddress: {text!r}")
-
-        return text
-
-    @staticmethod
-    def is_valid(text: str) -> bool:
-        try:
-            HostAddress.validate(text)
-            return True
-        except ValueError:
-            return False
-
     @classmethod
     def project_valid(cls, text: str) -> Self:
         """Create a valid host name from input.
@@ -114,8 +64,37 @@ class HostAddress(str):
 
         Raises:
             - ValueError: whenever the given text is not a valid HostAddress
+
+        >>> HostAddress("checkmk.com")
+        'checkmk.com'
+
+        >>> HostAddress("::1")
+        '::1'
+
+        >>> HostAddress("Â")
+        Traceback (most recent call last):
+            ...
+        ValueError: invalid host address: 'Â'
+
+        >>> HostAddress(".")
+        Traceback (most recent call last):
+            ...
+        ValueError: invalid host address: '.'
         """
-        cls.validate(text)
+        if len(text) > 240:
+            # Ext4 and others allow filenames of up to 255 bytes.
+            # As we add prefixes and/or suffixes, the number has to be way lower.
+            # 240 seems to be OK to still be able to delete a host if it causes
+            # trouble elsewhere
+            raise ValueError(f"host address too long: {text[:16] + '…'!r}")
+
+        try:
+            ipaddress.ip_address(text)
+        except ValueError:
+            # TODO: Why do we want to allow empty host names?
+            if text and not HostAddress.REGEX_HOST_NAME.match(text):
+                raise ValueError(f"invalid host address: {text!r}")
+
         return super().__new__(cls, text)
 
 

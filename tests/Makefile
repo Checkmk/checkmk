@@ -36,6 +36,7 @@ SYSTEM_TESTS := \
     test-update-cre \
     test-update-cee \
     test-update-cce \
+    test-update-cme \
     test-update-cse \
     test-update-cross-edition-cee-to-cce \
     test-update-cross-edition-cee-to-cme \
@@ -301,6 +302,10 @@ test-update-cee:
 
 test-update-cce:
 	EDITION=cce $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cce \
+	--session-timeout 5400
+
+test-update-cme:
+	EDITION=cme $(PYTEST) $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cme \
 	--session-timeout 5400
 
 test-update-cse:

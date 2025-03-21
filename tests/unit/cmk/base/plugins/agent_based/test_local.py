@@ -31,6 +31,25 @@ def test_invalid_metric_name_does_not_crash() -> None:
     ]
 
 
+def test_error_does_not_raise() -> None:
+    assert list(
+        local.check_local(
+            "MyService",
+            {},
+            local.parse_local([["ARGL", "MyService", "-", "Whopwhop"]]),
+        )
+    ) == [
+        Result(
+            state=State.UNKNOWN,
+            summary="Invalid data: 'ARGL MyService - Whopwhop'",
+            details=(
+                "The monitoring site got invalid data from a local check on the monitored host.\n"
+                "Invalid data: 'ARGL MyService - Whopwhop'\nReason: Invalid plugin status ARGL."
+            ),
+        )
+    ]
+
+
 @pytest.mark.parametrize(
     "check_line,expected_components",
     [

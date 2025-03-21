@@ -1,0 +1,13 @@
+Title: local: Don't create crash reports for invalid user data
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1742560138
+Edition: cre
+Level: 1
+Version: 2.2.0p41
+
+The check plugin dealing with the output of local checks (deployed on the monitored host) created crash reports in case it encountered invalid data.
+These crash reports are not actionable for Checkmk.
+
+The service now goes to an UNKNOWN state, providing some details in the service page.

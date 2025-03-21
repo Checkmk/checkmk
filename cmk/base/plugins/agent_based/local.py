@@ -400,9 +400,17 @@ def discover_local(section: LocalSection) -> DiscoveryResult:
 
 def check_local(item: str, params: Mapping[str, Any], section: LocalSection) -> LocalCheckResult:
     if (local_error := section.errors.get(item)) is not None:
-        raise ValueError(
-            (f'Invalid local check line: "{local_error.output}". Reason: {local_error.reason}')
+        # Do *not* raise an exception here. Users will send us crash reports if we do.
+        yield Result(
+            state=State.UNKNOWN,
+            summary=f"Invalid data: {local_error.output!r}",
+            details=(
+                "The monitoring site got invalid data from a local check on the monitored host.\n"
+                f"Invalid data: {local_error.output!r}\n"
+                f"Reason: {local_error.reason}"
+            ),
         )
+        return
 
     local_result = section.data.get(item)
     if local_result is None:

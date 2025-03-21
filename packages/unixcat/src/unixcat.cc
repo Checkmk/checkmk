@@ -86,6 +86,7 @@ void *copy_thread(void *info) {
 }
 }  // namespace
 
+// NOLINTNEXTLINE(bugprone-exception-escape)
 int main(int argc, char *argv[]) {
     std::vector<std::string> arguments{argv, argv + argc};
     if (argc != 2) {

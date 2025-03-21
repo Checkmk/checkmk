@@ -210,6 +210,7 @@ std::unique_ptr<StringColumn<row_type>> ECRow::makeStringColumn(
     const ColumnOffsets &offsets) {
     return std::make_unique<StringColumn<row_type>>(
         name, description, offsets,
+        // NOLINTNEXTLINE(bugprone-exception-escape)
         [name](const row_type &row) { return row.getString(name); });
 }
 
@@ -219,6 +220,7 @@ std::unique_ptr<IntColumn<row_type>> ECRow::makeIntColumn(
     const ColumnOffsets &offsets) {
     return std::make_unique<IntColumn<row_type>>(
         name, description, offsets,
+        // NOLINTNEXTLINE(bugprone-exception-escape)
         [name](const row_type &row) { return row.getInt(name); });
 }
 
@@ -228,6 +230,7 @@ std::unique_ptr<DoubleColumn<row_type>> ECRow::makeDoubleColumn(
     const ColumnOffsets &offsets) {
     return std::make_unique<DoubleColumn<row_type>>(
         name, description, offsets,
+        // NOLINTNEXTLINE(bugprone-exception-escape)
         [name](const row_type &row) { return row.getDouble(name); });
 }
 
@@ -236,6 +239,7 @@ std::unique_ptr<TimeColumn<row_type>> ECRow::makeTimeColumn(
     const std::string &name, const std::string &description,
     const ColumnOffsets &offsets) {
     return std::make_unique<TimeColumn<row_type>>(
+        // NOLINTNEXTLINE(bugprone-exception-escape)
         name, description, offsets, [name](const row_type &row) {
             return std::chrono::system_clock::from_time_t(
                 static_cast<std::time_t>(row.getDouble(name)));
@@ -247,6 +251,7 @@ std::unique_ptr<ListColumn<row_type>> ECRow::makeListColumn(
     const std::string &name, const std::string &description,
     const ColumnOffsets &offsets) {
     return std::make_unique<ListColumn<row_type>>(
+        // NOLINTNEXTLINE(bugprone-exception-escape)
         name, description, offsets, [name](const row_type &row) {
             return mk::ec::split_list(row.getString(name));
         });

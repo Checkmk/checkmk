@@ -40,7 +40,8 @@ std::string b16encode(const std::string &str) {
 }
 
 struct DictFilterTest : public ::testing::Test {
-    bool accepts(AttributeKind kind, const std::string &value) const {
+    [[nodiscard]] bool accepts(AttributeKind kind,
+                               const std::string &value) const {
         DictStrValueColumn<IHost> cvdc{
             "name", "description", ColumnOffsets{},
             [kind](const IHost &r) { return r.attributes(kind); }};

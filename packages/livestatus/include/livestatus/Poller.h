@@ -94,7 +94,7 @@ public:
         _pollfds.push_back({fd, toMask(e), 0});
     }
 
-    bool isFileDescriptorSet(int fd, PollEvents e) const {
+    [[nodiscard]] bool isFileDescriptorSet(int fd, PollEvents e) const {
         auto it = _fd_to_pollfd.find(fd);
         return it != _fd_to_pollfd.end() &&
                (_pollfds[it->second].revents & toMask(e)) != 0;

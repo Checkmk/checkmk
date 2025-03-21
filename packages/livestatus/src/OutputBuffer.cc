@@ -26,6 +26,7 @@ OutputBuffer::OutputBuffer(int fd, std::function<bool()> should_terminate,
     , _response_header(ResponseHeader::off)
     , _response_code(ResponseCode::ok) {}
 
+// NOLINTNEXTLINE(bugprone-exception-escape)
 OutputBuffer::~OutputBuffer() { flush(); }
 
 void OutputBuffer::flush() {

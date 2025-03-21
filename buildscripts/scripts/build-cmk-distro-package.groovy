@@ -38,7 +38,7 @@ def main() {
         "NEXUS_BUILD_CACHE_URL=",
         ] : []);
 
-    def safe_branch_name = versioning.safe_branch_name(scm);
+    def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
     def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: false);
 
@@ -226,7 +226,7 @@ def main() {
         dir("${checkout_dir}") {
             setCustomBuildProperty(
                 key: "path_hashes",
-                value: scm_directory_hashes(scm.extensions)
+                value: versioning.path_hashes(["."])
             );
             show_duration("archiveArtifacts") {
                 archiveArtifacts(

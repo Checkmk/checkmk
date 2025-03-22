@@ -8,6 +8,7 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class GlobalOptions:
+    version: str | None = None
     verbose: bool = False
     force: bool = False
     interactive: bool = False

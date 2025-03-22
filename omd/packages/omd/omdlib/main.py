@@ -4390,15 +4390,13 @@ Usage:\n\
 def handle_global_option(
     global_opts: GlobalOptions, main_args: Arguments, opt: str, orig: str
 ) -> tuple[GlobalOptions, Arguments]:
+    version = global_opts.version
     verbose = global_opts.verbose
     force = global_opts.force
     interactive = global_opts.interactive
 
     if opt in ["V", "version"]:
-        # Switch to other version of bin/omd
         version, main_args = _opt_arg(main_args, opt)
-        if version != omdlib.__version__:
-            exec_other_omd(version)
     elif opt in ["f", "force"]:
         force = True
         interactive = False
@@ -4411,6 +4409,7 @@ def handle_global_option(
         bail_out("Invalid global option %s.\nCall omd help for available options." % orig)
 
     new_global_opts = GlobalOptions(
+        version=version,
         verbose=verbose,
         force=force,
         interactive=interactive,
@@ -4701,6 +4700,9 @@ def main() -> None:
         else:
             for c in opt[1:]:
                 global_opts, main_args = handle_global_option(global_opts, main_args, c, opt)
+    if global_opts.version is not None and global_opts.version != omdlib.__version__:
+        # Switch to other version of bin/omd
+        exec_other_omd(global_opts.version)
 
     if len(main_args) < 1:
         main_help()

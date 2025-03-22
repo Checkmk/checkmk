@@ -315,10 +315,13 @@ def call_hook(site: "SiteContext", hook_name: str, args: list[str]) -> ConfigHoo
         env=hook_env,
         close_fds=True,
         shell=False,
-        stdout=subprocess.PIPE,
         encoding="utf-8",
         check=False,
+        capture_output=True,
     )
+    # `sys.stderr` is a magically replaced during `omd update`. During all other situations just
+    # removing `stderr=subprocess.PIPE` and the line below should be completely equivalent.
+    sys.stderr.write(completed_process.stderr)
     content = completed_process.stdout.strip()
 
     if completed_process.returncode and args[0] != "depends":

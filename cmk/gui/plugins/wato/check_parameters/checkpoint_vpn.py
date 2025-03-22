@@ -4,15 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import Levels, RulespecGroupCheckParametersNetworking
-from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
-from cmk.gui.wato import register_check_parameters
-
-register_check_parameters(
+from cmk.gui.plugins.wato.utils import (
+    CheckParameterRulespecWithItem,
+    CheckParameterRulespecWithoutItem,
+    Levels,
+    rulespec_registry,
     RulespecGroupCheckParametersNetworking,
-    "checkpoint_packets",
-    _("Check Point Firewall Packet Rates"),
-    Dictionary(
+)
+from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
+
+
+def _parameter_valuespec_checkpoint_packets() -> Dictionary:
+    return Dictionary(
         elements=[
             (
                 "accepted",
@@ -69,16 +72,21 @@ register_check_parameters(
                 ),
             ),
         ]
-    ),
-    None,
-    "dict",
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="checkpoint_packets",
+        group=RulespecGroupCheckParametersNetworking,
+        parameter_valuespec=_parameter_valuespec_checkpoint_packets,
+        title=lambda: _("Check Point Firewall Packet Rates"),
+    )
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersNetworking,
-    "checkpoint_tunnels",
-    _("Check Point Tunnel Status"),
-    Dictionary(
+
+def _parameter_valuespec_checkpoint_tunnels() -> Dictionary:
+    return Dictionary(
         elements=[
             (
                 "Active",
@@ -123,10 +131,18 @@ register_check_parameters(
                 ),
             ),
         ]
-    ),
-    TextInput(
-        title=_("Name of VPN tunnel"),
-        allow_empty=True,
-    ),
-    match_type="dict",
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="checkpoint_tunnels",
+        group=RulespecGroupCheckParametersNetworking,
+        item_spec=lambda: TextInput(
+            title=_("Name of VPN tunnel"),
+            allow_empty=True,
+        ),
+        parameter_valuespec=_parameter_valuespec_checkpoint_tunnels,
+        title=lambda: _("Check Point Tunnel Status"),
+    )
 )

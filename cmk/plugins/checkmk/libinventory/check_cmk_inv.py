@@ -8,6 +8,7 @@ import logging
 import sys
 from collections.abc import Sequence
 from contextlib import suppress
+from pathlib import Path
 
 import cmk.ccc.debug
 from cmk.ccc.exceptions import OnError
@@ -31,6 +32,7 @@ from cmk.checkengine.submitters import ServiceState
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config
+from cmk.base.api.agent_based import plugin_index
 from cmk.base.api.agent_based.register import AgentBasedPlugins
 from cmk.base.checkers import (
     CMKFetcher,
@@ -54,6 +56,12 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         type=str,
         metavar="HOSTNAME",
         help="Host for which the HW/SW Inventory is executed",
+    )
+
+    parser.add_argument(
+        "--use-indexed-plugins",
+        action="store_true",
+        help="Precompiled plugin index file",
     )
 
     parser.add_argument(
@@ -107,11 +115,16 @@ def main(
         status_data_inventory=False,
     )
 
-    return inventory_as_check(parameters, args.hostname)
+    return inventory_as_check(
+        parameters,
+        args.hostname,
+        load_plugins_from_index(Path(LATEST_CONFIG)) if args.use_indexed_plugins else load_checks(),
+    )
 
 
-def inventory_as_check(parameters: HWSWInventoryParameters, hostname: HostName) -> ServiceState:
-    plugins = load_checks()
+def inventory_as_check(
+    parameters: HWSWInventoryParameters, hostname: HostName, plugins: AgentBasedPlugins
+) -> ServiceState:
     config.load()
     config_cache = config.get_config_cache()
     config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
@@ -200,4 +213,13 @@ def load_checks() -> AgentBasedPlugins:
     if sys.stderr.isatty():
         for error_msg in errors:
             console.error(error_msg, file=sys.stderr)
+    return agent_based_register.get_previously_loaded_plugins()
+
+
+def load_plugins_from_index(config_path: Path) -> AgentBasedPlugins:
+    plugin_idx = plugin_index.load_plugin_index(config_path)
+    _errors, sections, checks = config.load_and_convert_legacy_checks(plugin_idx.legacy)
+    agent_based_register.load_selected_plugins(
+        plugin_idx.locations, sections, checks, validate=False
+    )
     return agent_based_register.get_previously_loaded_plugins()

@@ -12,6 +12,7 @@ from collections import Counter
 from collections.abc import Mapping, Sequence
 from contextlib import suppress
 from io import StringIO
+from pathlib import Path
 from typing import Any, cast, IO, Literal
 
 import cmk.ccc.debug
@@ -34,6 +35,7 @@ from cmk.checkengine.checking import CheckPluginName
 
 import cmk.base.utils
 from cmk.base import config, core_config
+from cmk.base.api.agent_based import plugin_index
 from cmk.base.api.agent_based.register import AgentBasedPlugins, get_check_plugin
 from cmk.base.config import ConfigCache, HostgroupName, ObjectAttributes, ServicegroupName
 from cmk.base.core_config import (
@@ -73,6 +75,10 @@ class NagiosCore(core_config.MonitoringCore):
     ) -> None:
         self._config_cache = config_cache
         self._create_core_config(config_path, licensing_handler, passwords, ip_address_of)
+        store.save_text_to_file(
+            plugin_index.make_index_file(Path(config_path)),
+            plugin_index.create_plugin_index(plugins),
+        )
         self._precompile_hostchecks(
             config_path,
             plugins,

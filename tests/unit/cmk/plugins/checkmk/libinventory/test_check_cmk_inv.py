@@ -8,7 +8,7 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.active_checks.check_cmk_inv import parse_arguments
+from cmk.plugins.checkmk.libinventory.check_cmk_inv import parse_arguments
 
 
 @pytest.mark.parametrize(
@@ -18,6 +18,7 @@ from cmk.active_checks.check_cmk_inv import parse_arguments
             ["test_host"],
             argparse.Namespace(
                 hostname="test_host",
+                use_indexed_plugins=False,
                 inv_fail_status=1,
                 hw_changes=0,
                 sw_changes=0,
@@ -36,6 +37,27 @@ from cmk.active_checks.check_cmk_inv import parse_arguments
             ],
             argparse.Namespace(
                 hostname="test_host",
+                use_indexed_plugins=False,
+                inv_fail_status=2,
+                hw_changes=1,
+                sw_changes=1,
+                sw_missing=1,
+                nw_changes=1,
+            ),
+        ),
+        (
+            [
+                "test_host",
+                "--use-indexed-plugins",
+                "--inv-fail-status=2",
+                "--hw-changes=1",
+                "--sw-changes=1",
+                "--sw-missing=1",
+                "--nw-changes=1",
+            ],
+            argparse.Namespace(
+                hostname="test_host",
+                use_indexed_plugins=True,
                 inv_fail_status=2,
                 hw_changes=1,
                 sw_changes=1,

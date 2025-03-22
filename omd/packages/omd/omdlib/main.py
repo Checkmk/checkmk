@@ -2714,6 +2714,8 @@ def main_update(
     from_version = version_from_site_dir(Path(site.dir))
     if from_version is None:
         bail_out("Failed to determine site version")
+    if from_version == global_opts.version:
+        bail_out(f"Site already has version {global_opts.version}.")
 
     # Target version: the version of the OMD binary
     to_version = omdlib.__version__

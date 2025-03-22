@@ -14,6 +14,7 @@ from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
     DropdownChoice,
+    FixedValue,
     ListChoice,
     ListOf,
     ListOfStrings,
@@ -248,7 +249,7 @@ def _valuespec_special_agents_azure():
                 (
                     "filter_tags",
                     CascadingDropdown(
-                        title=("Filter tags as host/service labels"),
+                        title=("Filter tags imported as host/service labels"),
                         choices=[
                             (
                                 "filter_tags",
@@ -262,7 +263,7 @@ def _valuespec_special_agents_azure():
                             (
                                 "dont_import_tags",
                                 _("Do not import tags"),
-                                None,
+                                FixedValue(None, totext=""),
                             ),
                         ],
                         orientation="horizontal",
@@ -285,7 +286,7 @@ def _valuespec_special_agents_azure():
             optional_keys=[
                 "subscription",
                 "proxy",
-                "import_tags",
+                "filter_tags",
                 "piggyback_vms",
             ],
         ),

@@ -2559,22 +2559,18 @@ def main_diff(
     # one file is specified, we directly show the unified diff.
     # This behaviour can also be forced by the OMD option -v.
 
+    verbose = global_opts.verbose
     if len(args) == 0:
         args = ["."]
     elif len(args) == 1 and os.path.isfile(args[0]):
-        global_opts = GlobalOptions(
-            verbose=True,
-            force=global_opts.force,
-            interactive=global_opts.interactive,
-            orig_working_directory=global_opts.orig_working_directory,
-        )
+        verbose = True
 
     for arg in args:
-        diff_list(global_opts, options, site, from_skelroot, arg)
+        diff_list(verbose, options, site, from_skelroot, arg)
 
 
 def diff_list(
-    global_opts: GlobalOptions,
+    verbose: bool,
     options: CommandOptions,
     site: SiteContext,
     from_skelroot: str,
@@ -2617,18 +2613,18 @@ def diff_list(
         bail_out("Sorry, 'omd diff' only works for files in the site's directory.")
 
     if not os.path.isdir(abs_path):
-        print_diff(rel_path, global_opts, options, site, from_skelroot, site.dir, old_perms)
+        print_diff(rel_path, verbose, options, site, from_skelroot, site.dir, old_perms)
     else:
         if not rel_path:
             rel_path = "."
 
         for file_path in walk_skel(from_skelroot, depth_first=False, relbase=rel_path):
-            print_diff(file_path, global_opts, options, site, from_skelroot, site.dir, old_perms)
+            print_diff(file_path, verbose, options, site, from_skelroot, site.dir, old_perms)
 
 
 def print_diff(
     rel_path: str,
-    global_opts: GlobalOptions,
+    verbose: bool,
     options: CommandOptions,
     site: SiteContext,
     source_path: str,
@@ -2657,7 +2653,7 @@ def print_diff(
     def print_status(color: str, f: str, status: str, long_out: str) -> None:
         if "bare" in options:
             sys.stdout.write(f"{status} {f}\n")
-        elif not global_opts.verbose:
+        elif not verbose:
             sys.stdout.write(color + f" {long_out} {f}\n")
         else:
             arrow = tty.magenta + "->" + tty.normal
@@ -2717,6 +2713,8 @@ def main_update(  # pylint: disable=too-many-branches
     from_version = version_from_site_dir(Path(site.dir))
     if from_version is None:
         bail_out("Failed to determine site version")
+    if from_version == global_opts.version:
+        bail_out(f"Site already has version {global_opts.version}.")
 
     # Target version: the version of the OMD binary
     to_version = omdlib.__version__
@@ -3304,6 +3302,7 @@ def main_backup(
     global_opts: GlobalOptions,
     args: Arguments,
     options: CommandOptions,
+    orig_working_directory: str,
 ) -> None:
     if len(args) == 0:
         bail_out(
@@ -3317,7 +3316,7 @@ def main_backup(
         _try_backup_site_to_tarfile(sys.stdout.buffer, "w|", options, site, global_opts)
     else:
         if not (dest_path := Path(dest)).is_absolute():
-            dest_path = global_opts.orig_working_directory / dest_path
+            dest_path = orig_working_directory / dest_path
         with dest_path.open(mode="wb") as fh:
             _try_backup_site_to_tarfile(fh, "w:", options, site, global_opts)
 
@@ -4408,15 +4407,13 @@ Usage:\n\
 def handle_global_option(
     global_opts: GlobalOptions, main_args: Arguments, opt: str, orig: str
 ) -> tuple[GlobalOptions, Arguments]:
+    version = global_opts.version
     verbose = global_opts.verbose
     force = global_opts.force
     interactive = global_opts.interactive
 
     if opt in ["V", "version"]:
-        # Switch to other version of bin/omd
         version, main_args = _opt_arg(main_args, opt)
-        if version != omdlib.__version__:
-            exec_other_omd(version)
     elif opt in ["f", "force"]:
         force = True
         interactive = False
@@ -4429,10 +4426,10 @@ def handle_global_option(
         bail_out("Invalid global option %s.\n" "Call omd help for available options." % orig)
 
     new_global_opts = GlobalOptions(
+        version=version,
         verbose=verbose,
         force=force,
         interactive=interactive,
-        orig_working_directory=global_opts.orig_working_directory,
     )
 
     return new_global_opts, main_args
@@ -4611,6 +4608,7 @@ def _run_command(
     global_opts: GlobalOptions,
     args: Arguments,
     command_options: CommandOptions,
+    orig_working_directory: str,
 ) -> None:
     try:
         match command.command:
@@ -4678,7 +4676,9 @@ def _run_command(
                 main_umount(object(), site, object(), object(), command_options)
             case "backup":
                 assert command.needs_site == 1 and isinstance(site, SiteContext)
-                main_backup(object(), site, global_opts, args, command_options)
+                main_backup(
+                    object(), site, global_opts, args, command_options, orig_working_directory
+                )
             case "restore":
                 main_restore(version_info, object(), global_opts, args, command_options)
             case "cleanup":
@@ -4703,7 +4703,12 @@ def main() -> None:  # pylint: disable=too-many-branches
     version_info = VersionInfo(omdlib.__version__)
     version_info.load()
 
-    global_opts = GlobalOptions.default()
+    try:
+        orig_working_directory = os.getcwd()
+    except FileNotFoundError:
+        orig_working_directory = "/"
+
+    global_opts = GlobalOptions()
     while len(main_args) >= 1 and main_args[0].startswith("-"):
         opt = main_args[0]
         main_args = main_args[1:]
@@ -4712,6 +4717,9 @@ def main() -> None:  # pylint: disable=too-many-branches
         else:
             for c in opt[1:]:
                 global_opts, main_args = handle_global_option(global_opts, main_args, c, opt)
+    if global_opts.version is not None and global_opts.version != omdlib.__version__:
+        # Switch to other version of bin/omd
+        exec_other_omd(global_opts.version)
 
     if len(main_args) < 1:
         main_help()
@@ -4762,7 +4770,9 @@ def main() -> None:  # pylint: disable=too-many-branches
         if answer in ["", "no"]:
             bail_out(tty.normal + "Aborted.")
 
-    _run_command(command, version_info, site, global_opts, args, command_options)
+    _run_command(
+        command, version_info, site, global_opts, args, command_options, orig_working_directory
+    )
 
 
 def _get_command(command_arg: str) -> Command:

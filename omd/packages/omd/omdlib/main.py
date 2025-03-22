@@ -3301,6 +3301,7 @@ def main_backup(
     global_opts: GlobalOptions,
     args: Arguments,
     options: CommandOptions,
+    orig_working_directory: str,
 ) -> None:
     if len(args) == 0:
         bail_out(
@@ -3313,7 +3314,7 @@ def main_backup(
         _try_backup_site_to_tarfile(sys.stdout.buffer, "w|", options, site, global_opts)
     else:
         if not (dest_path := Path(dest)).is_absolute():
-            dest_path = global_opts.orig_working_directory / dest_path
+            dest_path = orig_working_directory / dest_path
         with dest_path.open(mode="wb") as fh:
             _try_backup_site_to_tarfile(fh, "w:", options, site, global_opts)
 
@@ -4413,7 +4414,6 @@ def handle_global_option(
         verbose=verbose,
         force=force,
         interactive=interactive,
-        orig_working_directory=global_opts.orig_working_directory,
     )
 
     return new_global_opts, main_args
@@ -4592,6 +4592,7 @@ def _run_command(
     global_opts: GlobalOptions,
     args: Arguments,
     command_options: CommandOptions,
+    orig_working_directory: str,
 ) -> None:
     try:
         match command.command:
@@ -4659,7 +4660,9 @@ def _run_command(
                 main_umount(object(), site, object(), object(), command_options)
             case "backup":
                 assert command.needs_site == 1 and isinstance(site, SiteContext)
-                main_backup(object(), site, global_opts, args, command_options)
+                main_backup(
+                    object(), site, global_opts, args, command_options, orig_working_directory
+                )
             case "restore":
                 main_restore(version_info, object(), global_opts, args, command_options)
             case "cleanup":
@@ -4684,7 +4687,12 @@ def main() -> None:
     version_info = VersionInfo(omdlib.__version__)
     version_info.load()
 
-    global_opts = GlobalOptions.default()
+    try:
+        orig_working_directory = os.getcwd()
+    except FileNotFoundError:
+        orig_working_directory = "/"
+
+    global_opts = GlobalOptions()
     while len(main_args) >= 1 and main_args[0].startswith("-"):
         opt = main_args[0]
         main_args = main_args[1:]
@@ -4743,7 +4751,9 @@ def main() -> None:
         if answer in ["", "no"]:
             bail_out(tty.normal + "Aborted.")
 
-    _run_command(command, version_info, site, global_opts, args, command_options)
+    _run_command(
+        command, version_info, site, global_opts, args, command_options, orig_working_directory
+    )
 
 
 def _get_command(command_arg: str) -> Command:

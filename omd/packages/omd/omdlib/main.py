@@ -2560,22 +2560,18 @@ def main_diff(
     # one file is specified, we directly show the unified diff.
     # This behaviour can also be forced by the OMD option -v.
 
+    verbose = global_opts.verbose
     if len(args) == 0:
         args = ["."]
     elif len(args) == 1 and os.path.isfile(args[0]):
-        global_opts = GlobalOptions(
-            verbose=True,
-            force=global_opts.force,
-            interactive=global_opts.interactive,
-            orig_working_directory=global_opts.orig_working_directory,
-        )
+        verbose = True
 
     for arg in args:
-        diff_list(global_opts, options, site, from_skelroot, arg)
+        diff_list(verbose, options, site, from_skelroot, arg)
 
 
 def diff_list(
-    global_opts: GlobalOptions,
+    verbose: bool,
     options: CommandOptions,
     site: SiteContext,
     from_skelroot: str,
@@ -2618,18 +2614,18 @@ def diff_list(
         bail_out("Sorry, 'omd diff' only works for files in the site's directory.")
 
     if not os.path.isdir(abs_path):
-        print_diff(rel_path, global_opts, options, site, from_skelroot, site.dir, old_perms)
+        print_diff(rel_path, verbose, options, site, from_skelroot, site.dir, old_perms)
     else:
         if not rel_path:
             rel_path = "."
 
         for file_path in walk_skel(from_skelroot, depth_first=False, relbase=rel_path):
-            print_diff(file_path, global_opts, options, site, from_skelroot, site.dir, old_perms)
+            print_diff(file_path, verbose, options, site, from_skelroot, site.dir, old_perms)
 
 
 def print_diff(
     rel_path: str,
-    global_opts: GlobalOptions,
+    verbose: bool,
     options: CommandOptions,
     site: SiteContext,
     source_path: str,
@@ -2658,7 +2654,7 @@ def print_diff(
     def print_status(color: str, f: str, status: str, long_out: str) -> None:
         if "bare" in options:
             sys.stdout.write(f"{status} {f}\n")
-        elif not global_opts.verbose:
+        elif not verbose:
             sys.stdout.write(color + f" {long_out} {f}\n")
         else:
             arrow = tty.magenta + "->" + tty.normal

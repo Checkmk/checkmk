@@ -85,6 +85,10 @@ msgstr " (ernstigste status: %s)"
 msgid " - Broken"
 msgstr " - Defect"
 
+#, fuzzy
+msgid " - Checkmk Security Notice"
+msgstr "Checkmk specifiek"
+
 #, python-format
 msgid ""
 " <b>Note</b>: To restrict this rule to hosts created via <a href=\"%s\">auto-"
@@ -4841,6 +4845,10 @@ msgstr "Getroffen hosts bevatten"
 msgid "Affected sites"
 msgstr "Betrokken sites"
 
+#, fuzzy, python-format
+msgid "Affected sites: %s"
+msgstr "Betrokken sites"
+
 #, fuzzy
 msgid ""
 "After a battery diagnostics the battery capacity is reduced until the "
@@ -5655,6 +5663,10 @@ msgstr "Alle toepassingen"
 
 #, fuzzy
 msgid "All backup codes have been deleted"
+msgstr "De backup is verwijderd."
+
+#, fuzzy
+msgid "All backup codes have been revoked"
 msgstr "De backup is verwijderd."
 
 msgid "All but first page"
@@ -7607,6 +7619,14 @@ msgid "Authenticator app"
 msgstr "Authenticatie"
 
 #, fuzzy
+msgid "Authenticator app has been added"
+msgstr "Authenticatie"
+
+#, fuzzy
+msgid "Authenticator app removed"
+msgstr "Authenticatie"
+
+#, fuzzy
 msgid "Authenticator apps"
 msgstr "Authenticatie"
 
@@ -8911,6 +8931,10 @@ msgstr "BI-regel of aggregatie"
 msgid "BI rules %s from BI pack '%s'"
 msgstr "BI-regels %s van BI-pakket '%s'"
 
+#, fuzzy
+msgid "BI runtime data"
+msgstr "Procesruntime"
+
 msgid "BI service details"
 msgstr "Details BI-dienst"
 
@@ -9041,6 +9065,10 @@ msgstr "Back-up code"
 
 msgid "Backup codes"
 msgstr "Back-up codes"
+
+#, fuzzy
+msgid "Backup codes have been regenerated"
+msgstr "De backup is verwijderd."
 
 #, fuzzy
 msgid "Backup codes left:"
@@ -9721,6 +9749,10 @@ msgstr "Business Intelligence Administratie"
 #, fuzzy
 msgid "Business Intelligence rules and aggregations"
 msgstr "Business Intelligence Regels en Aggregaties"
+
+#, fuzzy
+msgid "Business Intelligence runtime data"
+msgstr "Business Intelligence"
 
 msgid "Business reporting"
 msgstr "Bedrijfsrapportage"
@@ -11087,6 +11119,18 @@ msgstr "Cached"
 
 msgid "Cached agent data"
 msgstr "Opgehaalde agentgegevens"
+
+msgid ""
+"Cached data from Business Intelligence. Contains states, downtimes, "
+"acknowledgements and service periods for all hosts/services included in a BI "
+"aggregation."
+msgstr ""
+
+msgid ""
+"Cached data from Business Intelligence. contains states, downtimes, "
+"acknowledgements and service periods for all hosts/services included in a BI "
+"aggregation."
+msgstr ""
 
 msgid "Cached memory"
 msgstr "Geheugen"
@@ -15218,6 +15262,10 @@ msgstr "Contextinformatie over deze regel"
 msgid "Context information about this rule"
 msgstr "Contextinformatie over deze regel"
 
+#, fuzzy
+msgid "Context is missing"
+msgstr "Site ontbreekt"
+
 msgid "Context sensitive help"
 msgstr "Contextgevoelige hulp"
 
@@ -16558,6 +16606,10 @@ msgstr ""
 "Momenteel zijn er geen niet-verzonden kennisgevingsbulken in behandeling."
 
 #, fuzzy
+msgid "Currently you have no received messages"
+msgstr "Momenteel lopende processen"
+
+#, fuzzy
 msgid "Currently you have no recieved messages"
 msgstr "Momenteel lopende processen"
 
@@ -17571,10 +17623,6 @@ msgstr "Datum moet een getalswaarde zijn"
 
 msgid "Date range"
 msgstr "Datumbereik"
-
-#, fuzzy
-msgid "Date sent"
-msgstr "Verzonden gegevens"
 
 #, fuzzy
 msgid "Date/time"
@@ -19108,9 +19156,17 @@ msgstr "Verouderde controleplugins"
 msgid "Deprecated choice, please re-select"
 msgstr "Afgeschafte keuze, gelieve opnieuw te selecteren"
 
+#, fuzzy, python-format
+msgid "Deprecated extension package: %s"
+msgstr "Nieuw uitbreidingspakket %s aangemaakt"
+
 #, fuzzy
 msgid "Deprecated legacy GUI extensions"
 msgstr "Verlengingen repliceren"
+
+#, fuzzy, python-format
+msgid "Deprecated plug-in: %s"
+msgstr "Verouderde controleplugins"
 
 msgid "Deprecated rulesets"
 msgstr "Afgeschreven regelsets"
@@ -19216,6 +19272,10 @@ msgstr "Details voor hostmeldingen"
 
 msgid "Details for service notifications"
 msgstr "Details voor servicemeldingen"
+
+#, fuzzy
+msgid "Details:"
+msgstr "Details"
 
 msgid "Detect and use proxies configured on the target system"
 msgstr ""
@@ -24084,10 +24144,6 @@ msgstr "Uitgebreide perfagegevens"
 
 msgid "Extension"
 msgstr "Uitbreiding"
-
-#, fuzzy, python-format
-msgid "Extension package %r"
-msgstr "Uitbreidingspakketten"
 
 msgid "Extension package files"
 msgstr "Uitbreiding pakketbestanden"
@@ -34817,6 +34873,10 @@ msgstr "Ongeldig host- of netwerkadres. IPv4: %s, IPv6: %s"
 msgid "Invalid host or network address. IPv4: %s, IPv6: %s"
 msgstr "Ongeldig host- of netwerkadres. IPv4: %s, IPv6: %s"
 
+#, fuzzy
+msgid "Invalid hostname or IP address."
+msgstr "Opgevraagde hostnaam of IP-adres"
+
 msgid "Invalid ident"
 msgstr "Ongeldige ident"
 
@@ -38418,6 +38478,9 @@ msgstr "Login masker logo"
 msgid "Login mode"
 msgstr "Inlogmodus"
 
+msgid "Login performed with backup code - Checkmk Security Notice"
+msgstr ""
+
 msgid "Login possible"
 msgstr "Inloggen mogelijk"
 
@@ -40688,6 +40751,10 @@ msgid "Merker"
 msgstr "Merker"
 
 msgid "Message"
+msgstr "Bericht"
+
+#, fuzzy, python-format
+msgid "Message #%d"
 msgstr "Bericht"
 
 msgid "Message Age of newest messages"
@@ -46083,6 +46150,10 @@ msgstr "Open de lokale web-gebruikersinterface van deze site"
 msgid "Open this table for filtering / sorting"
 msgstr "Open deze tabel om te filteren / sorteren"
 
+#, fuzzy
+msgid "Open vSwitch (ovs) bonding interface status"
+msgstr "Koppelvlakken"
+
 msgid "Open/close this element"
 msgstr "Openen/sluiten van dit element"
 
@@ -49384,6 +49455,10 @@ msgstr "Piggyback namen"
 msgid "Piggyback services to monitor"
 msgstr "Piggyback-diensten om toezicht te houden op"
 
+#, fuzzy
+msgid "Piggyback-hub turned on on remote site"
+msgstr "Piggyback informatie van andere gastheer"
+
 msgid "Piggybacked docker containers"
 msgstr "Piggybacked docker containers"
 
@@ -51264,9 +51339,6 @@ msgstr "Proxy URL"
 
 msgid "Proxy host"
 msgstr "Proxy host"
-
-msgid "Proxy host is required but not specified."
-msgstr ""
 
 msgid "Proxy server"
 msgstr "Proxyserver"
@@ -56558,6 +56630,14 @@ msgstr "Sensoren"
 
 msgid "Sent"
 msgstr "Verzonden"
+
+#, fuzzy
+msgid "Sent on"
+msgstr "Verzonden"
+
+#, fuzzy, python-format
+msgid "Sent on: %s, Expires on: %s"
+msgstr "Versie: %s, Editie: %s"
 
 msgid "Sent vs Received Traffic Breakdown"
 msgstr "Verzonden vs ontvangen verkeer Breakdown"
@@ -65201,6 +65281,13 @@ msgstr "Het verwachte aantal knooppunten in het cluster"
 msgid "The expected number of resources in the cluster"
 msgstr "Het verwachte aantal hulpbronnen in het cluster"
 
+#, python-format
+msgid ""
+"The extension package uses APIs which are deprecated or removed in Checkmk "
+"%s so that this extension will not work anymore once you upgrade your site "
+"to next major version."
+msgstr ""
+
 msgid ""
 "The fall back option tries to establish an encrypted TLS connection. If the "
 "other site does not supports it, plain text is used."
@@ -66928,6 +67015,13 @@ msgid ""
 msgstr ""
 "De plugin <tt>isc_dhcpd</tt> verzamelt informatie over een DHCP server "
 "daemon op Linux."
+
+#, python-format
+msgid ""
+"The plug-in uses APIs which are deprecated or removed in Checkmk %s, so that "
+"this extension will not work anymore once you upgrade your site to next "
+"major version."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -69383,6 +69477,10 @@ msgstr ""
 msgid "This does not affect hosts in subfolders."
 msgstr "Dit heeft geen invloed op hosts in submappen."
 
+#, fuzzy, python-format
+msgid "This does not work in Checkmk %s."
+msgstr "Deze host heeft geen Checkmk agenten."
+
 msgid "This element is currently in a scheduled downtime."
 msgstr "Dit element bevindt zich momenteel in een geplande downtime."
 
@@ -69847,6 +69945,12 @@ msgstr ""
 "worden getoond en sommige gegevens eronder. Als u deze optie inschakelt, "
 "worden de eerstgenoemde gegevens onder de as getoond en de laatstgenoemde "
 "gegevens erboven."
+
+#, python-format
+msgid ""
+"This may partially work in Checkmk %s but will stop working from the next "
+"major version onwards."
+msgstr ""
 
 #, python-format
 msgid "This message has been created at %s and is valid till %s."
@@ -76833,6 +76937,14 @@ msgstr "Twee uur"
 msgid "Two-factor authentication"
 msgstr "Twee-factor authenticatie"
 
+#, fuzzy
+msgid "Two-factor authentication has been added"
+msgstr "Twee-factor authenticatie niet ingeschakeld"
+
+#, fuzzy
+msgid "Two-factor authentication has been removed"
+msgstr "Twee-factor authenticatie niet ingeschakeld"
+
 msgid "Two-factor authentication not enabled"
 msgstr "Twee-factor authenticatie niet ingeschakeld"
 
@@ -77685,10 +77797,6 @@ msgstr "Ongecontroleerd"
 
 msgid "Unoptimized connections"
 msgstr "Niet-geoptimaliseerde verbindingen"
-
-#, fuzzy, python-format
-msgid "Unpackaged file %r"
-msgstr "Uitgepakte bestanden"
 
 msgid "Unpackaged files"
 msgstr "Uitgepakte bestanden"
@@ -81868,6 +81976,20 @@ msgstr ""
 "data afhandeling. De bron host namen moeten worden ingesteld in het conditie "
 "veld <i>Explicit hosts</i>."
 
+msgid ""
+"We highly recommend solving this issue already in your installation by "
+"updating the extension package. Otherwise the extension package will be "
+"deactivated after an upgrade."
+msgstr ""
+
+msgid ""
+"We highly recommend solving this issue already in your installation either "
+"by migrating or removing this plug-in."
+msgstr ""
+
+msgid "We highly recommend solving this issue already in your installation."
+msgstr ""
+
 msgid "Weak"
 msgstr "Zwakke"
 
@@ -85768,6 +85890,10 @@ msgstr "Uw %s is verwijderd."
 msgid "Your %s has been saved."
 msgstr "Uw %s is opgeslagen."
 
+#, fuzzy
+msgid "Your Checkmk Password has been changed"
+msgstr "Uw planningstaak is opgeslagen."
+
 #, python-format
 msgid "Your Checkmk license expires %s"
 msgstr "Uw Checkmk licentie verloopt %s"
@@ -85871,6 +85997,10 @@ msgstr ""
 msgid "Your input is not a valid email address."
 msgstr "alle gebruikers met en emailadres"
 
+#, fuzzy
+msgid "Your input is not a valid hostname or IP address."
+msgstr "alle gebruikers met en emailadres"
+
 #, python-format
 msgid ""
 "Your license has been suspended. Please contact the Checkmk sales team at %s."
@@ -85915,6 +86045,10 @@ msgid "Your logo has been uploaded."
 msgid_plural "Your logos have been uploaded"
 msgstr[0] "Uw logo is geüpload."
 msgstr[1] "Uw logo's zijn geüpload"
+
+#, fuzzy
+msgid "Your messages"
+msgstr "logboekberichten"
 
 msgid "Your modifications affect some objects"
 msgstr "Uw wijzigingen beïnvloeden sommige objecten"
@@ -88378,6 +88512,18 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
 
+#, fuzzy
+#~ msgid "Date sent"
+#~ msgstr "Verzonden gegevens"
+
+#, fuzzy, python-format
+#~ msgid "Extension package %r"
+#~ msgstr "Uitbreidingspakketten"
+
+#, fuzzy, python-format
+#~ msgid "Unpackaged file %r"
+#~ msgstr "Uitgepakte bestanden"
+
 #, python-format
 #~ msgid ""
 #~ "!!! Error: Received class in RulespecRegistry:"
@@ -88511,9 +88657,6 @@ msgstr "Gebruik SSL voor de verbinding."
 #, fuzzy
 #~ msgid "Distributed piggyback"
 #~ msgstr "Gedistribueerde bewaking"
-
-#~ msgid "Checkmk specific"
-#~ msgstr "Checkmk specifiek"
 
 #, fuzzy
 #~ msgid "Number of graphs per event (default: 5)"
@@ -89612,10 +89755,6 @@ msgstr "Gebruik SSL voor de verbinding."
 #, fuzzy
 #~ msgid "Schedule downtime?"
 #~ msgstr "Uitvaltijden plannen"
-
-#, fuzzy
-#~ msgid "OVS bonding interface status"
-#~ msgstr "Koppelvlakken"
 
 #~ msgid "Common Name"
 #~ msgstr "Gebruikelijke naam"

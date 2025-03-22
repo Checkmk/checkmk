@@ -83,6 +83,10 @@ msgstr " (starea cea mai proastă: %s)"
 msgid " - Broken"
 msgstr " - Rupt"
 
+#, fuzzy
+msgid " - Checkmk Security Notice"
+msgstr "Checkmk specific"
+
 #, python-format
 msgid ""
 " <b>Note</b>: To restrict this rule to hosts created via <a href=\"%s\">auto-"
@@ -4844,6 +4848,10 @@ msgstr "Gazdele afectate conțin"
 msgid "Affected sites"
 msgstr "Situri afectate"
 
+#, fuzzy, python-format
+msgid "Affected sites: %s"
+msgstr "Situri afectate"
+
 msgid ""
 "After a battery diagnostics the battery capacity is reduced until the "
 "battery is fully charged again. Here you can specify an alternative lower "
@@ -5659,6 +5667,10 @@ msgid "All applications"
 msgstr "Toate aplicațiile"
 
 msgid "All backup codes have been deleted"
+msgstr "Toate codurile de rezervă au fost șterse"
+
+#, fuzzy
+msgid "All backup codes have been revoked"
 msgstr "Toate codurile de rezervă au fost șterse"
 
 msgid "All but first page"
@@ -7607,6 +7619,14 @@ msgstr "Autentificare cu TLS"
 msgid "Authenticator app"
 msgstr "Aplicația Authenticator"
 
+#, fuzzy
+msgid "Authenticator app has been added"
+msgstr "Aplicații de autentificare"
+
+#, fuzzy
+msgid "Authenticator app removed"
+msgstr "Aplicația Authenticator"
+
 msgid "Authenticator apps"
 msgstr "Aplicații de autentificare"
 
@@ -8905,6 +8925,10 @@ msgstr "Regulă BI sau agregare"
 msgid "BI rules %s from BI pack '%s'"
 msgstr "Reguli BI %s din pachetul BI '%s'"
 
+#, fuzzy
+msgid "BI runtime data"
+msgstr "Timpul de execuție a testului"
+
 msgid "BI service details"
 msgstr "Detalii despre serviciul BI"
 
@@ -9034,6 +9058,10 @@ msgstr "Cod de rezervă"
 
 msgid "Backup codes"
 msgstr "Coduri de rezervă"
+
+#, fuzzy
+msgid "Backup codes have been regenerated"
+msgstr "Toate codurile de rezervă au fost șterse"
 
 msgid "Backup codes left:"
 msgstr "Codurile de rezervă au rămas:"
@@ -9705,6 +9733,10 @@ msgstr "Administrare Business Intelligence"
 
 msgid "Business Intelligence rules and aggregations"
 msgstr "Reguli și agregări Business Intelligence"
+
+#, fuzzy
+msgid "Business Intelligence runtime data"
+msgstr "Informații de afaceri"
 
 msgid "Business reporting"
 msgstr "Raportarea afacerilor"
@@ -11113,6 +11145,18 @@ msgstr "În cache"
 
 msgid "Cached agent data"
 msgstr "Date ale agentului stocate în memoria cache"
+
+msgid ""
+"Cached data from Business Intelligence. Contains states, downtimes, "
+"acknowledgements and service periods for all hosts/services included in a BI "
+"aggregation."
+msgstr ""
+
+msgid ""
+"Cached data from Business Intelligence. contains states, downtimes, "
+"acknowledgements and service periods for all hosts/services included in a BI "
+"aggregation."
+msgstr ""
 
 msgid "Cached memory"
 msgstr "Memorie cache"
@@ -15223,6 +15267,10 @@ msgstr "Informații contextuale despre această regulă"
 msgid "Context information about this rule"
 msgstr "Informații contextuale despre această regulă"
 
+#, fuzzy
+msgid "Context is missing"
+msgstr "Site-ul lipsește"
+
 msgid "Context sensitive help"
 msgstr "Ajutor sensibil la context"
 
@@ -16569,6 +16617,10 @@ msgid "Currently there are no unsent notification bulks pending."
 msgstr "În prezent, nu există pachete de notificări neexpediate în așteptare."
 
 #, fuzzy
+msgid "Currently you have no received messages"
+msgstr "Procesele care rulează în prezent"
+
+#, fuzzy
 msgid "Currently you have no recieved messages"
 msgstr "Procesele care rulează în prezent"
 
@@ -17575,10 +17627,6 @@ msgstr "Data trebuie să fie o valoare numerică"
 
 msgid "Date range"
 msgstr "Intervalul de date"
-
-#, fuzzy
-msgid "Date sent"
-msgstr "Date trimise"
 
 #, fuzzy
 msgid "Date/time"
@@ -19132,9 +19180,17 @@ msgstr "Plugin-uri de verificare depreciate"
 msgid "Deprecated choice, please re-select"
 msgstr "Alegere depășită, vă rugăm să selectați din nou"
 
+#, fuzzy, python-format
+msgid "Deprecated extension package: %s"
+msgstr "A fost creat un nou pachet de extensii %s."
+
 #, fuzzy
 msgid "Deprecated legacy GUI extensions"
 msgstr "Replicați extensiile"
+
+#, fuzzy, python-format
+msgid "Deprecated plug-in: %s"
+msgstr "Plugin-uri de verificare depreciate"
 
 msgid "Deprecated rulesets"
 msgstr "Seturi de reguli depreciate"
@@ -19239,6 +19295,10 @@ msgstr "Detalii pentru notificările gazdei"
 
 msgid "Details for service notifications"
 msgstr "Detalii pentru notificările de serviciu"
+
+#, fuzzy
+msgid "Details:"
+msgstr "Detalii"
 
 msgid "Detect and use proxies configured on the target system"
 msgstr "Detectarea și utilizarea proxy-urilor configurate pe sistemul țintă"
@@ -24129,10 +24189,6 @@ msgstr "Date de performanță extinse"
 
 msgid "Extension"
 msgstr "Extensie"
-
-#, fuzzy, python-format
-msgid "Extension package %r"
-msgstr "Pachete de extensie"
 
 msgid "Extension package files"
 msgstr "Fișiere de pachete de extensie"
@@ -34897,6 +34953,10 @@ msgstr "Gazdă sau adresă IP invalidă. IPv4: %s, IPv6: %s"
 msgid "Invalid host or network address. IPv4: %s, IPv6: %s"
 msgstr "Adresa de gazdă sau de rețea invalidă. IPv4: %s, IPv6: %s."
 
+#, fuzzy
+msgid "Invalid hostname or IP address."
+msgstr "Numele de gazdă sau adresa IP interogată"
+
 msgid "Invalid ident"
 msgstr "Identificator invalid"
 
@@ -38468,6 +38528,9 @@ msgstr "Logo-ul masca de autentificare"
 msgid "Login mode"
 msgstr "Modul de conectare"
 
+msgid "Login performed with backup code - Checkmk Security Notice"
+msgstr ""
+
 msgid "Login possible"
 msgstr "Autentificare posibilă"
 
@@ -40734,6 +40797,10 @@ msgid "Merker"
 msgstr "Merker"
 
 msgid "Message"
+msgstr "Mesaj"
+
+#, fuzzy, python-format
+msgid "Message #%d"
 msgstr "Mesaj"
 
 msgid "Message Age of newest messages"
@@ -46150,6 +46217,10 @@ msgstr ""
 msgid "Open this table for filtering / sorting"
 msgstr "Deschideți acest tabel pentru filtrare / sortare"
 
+#, fuzzy
+msgid "Open vSwitch (ovs) bonding interface status"
+msgstr "Starea interfeței de conectare OVS"
+
 msgid "Open/close this element"
 msgstr "Deschideți/închideți acest element"
 
@@ -49436,6 +49507,10 @@ msgstr "Nume Piggyback"
 msgid "Piggyback services to monitor"
 msgstr "Servicii Piggyback pentru a monitoriza"
 
+#, fuzzy
+msgid "Piggyback-hub turned on on remote site"
+msgstr "Informații Piggyback de la altă gazdă"
+
 msgid "Piggybacked docker containers"
 msgstr "Containere docker cu porțelanuri"
 
@@ -51335,9 +51410,6 @@ msgstr "URL-ul Proxy"
 
 msgid "Proxy host"
 msgstr "Gazdă proxy"
-
-msgid "Proxy host is required but not specified."
-msgstr ""
 
 msgid "Proxy server"
 msgstr "Server Proxy"
@@ -56652,6 +56724,14 @@ msgstr "Senzori"
 
 msgid "Sent"
 msgstr "Trimis"
+
+#, fuzzy
+msgid "Sent on"
+msgstr "Trimis"
+
+#, fuzzy, python-format
+msgid "Sent on: %s, Expires on: %s"
+msgstr "Versiunea: %s, Ediție: %s"
 
 msgid "Sent vs Received Traffic Breakdown"
 msgstr "Defalcarea traficului trimis vs. primit"
@@ -65356,6 +65436,13 @@ msgstr "Numărul preconizat de noduri din cluster"
 msgid "The expected number of resources in the cluster"
 msgstr "Numărul preconizat de resurse din cluster"
 
+#, python-format
+msgid ""
+"The extension package uses APIs which are deprecated or removed in Checkmk "
+"%s so that this extension will not work anymore once you upgrade your site "
+"to next major version."
+msgstr ""
+
 msgid ""
 "The fall back option tries to establish an encrypted TLS connection. If the "
 "other site does not supports it, plain text is used."
@@ -67095,6 +67182,13 @@ msgid ""
 msgstr ""
 "Plugin-ul <tt>isc_dhcpd</tt> colectează informații despre un daemon server "
 "DHCP pe Linux."
+
+#, python-format
+msgid ""
+"The plug-in uses APIs which are deprecated or removed in Checkmk %s, so that "
+"this extension will not work anymore once you upgrade your site to next "
+"major version."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -69578,6 +69672,10 @@ msgstr ""
 msgid "This does not affect hosts in subfolders."
 msgstr "Acest lucru nu afectează gazdele din subfoldere."
 
+#, fuzzy, python-format
+msgid "This does not work in Checkmk %s."
+msgstr "Această gazdă nu are agenți Checkmk."
+
 msgid "This element is currently in a scheduled downtime."
 msgstr "Acest element se află în prezent într-o perioadă de oprire programată."
 
@@ -70038,6 +70136,12 @@ msgstr ""
 "axei timpului și unele date sub axa timpului. În cazul în care activați "
 "această opțiune, primele date de sus sunt afișate sub axă, iar cele de jos "
 "sunt afișate deasupra acesteia."
+
+#, python-format
+msgid ""
+"This may partially work in Checkmk %s but will stop working from the next "
+"major version onwards."
+msgstr ""
 
 #, python-format
 msgid "This message has been created at %s and is valid till %s."
@@ -77006,6 +77110,14 @@ msgstr "Două ore"
 msgid "Two-factor authentication"
 msgstr "Autentificare cu doi factori"
 
+#, fuzzy
+msgid "Two-factor authentication has been added"
+msgstr "Autentificarea cu doi factori nu este activată"
+
+#, fuzzy
+msgid "Two-factor authentication has been removed"
+msgstr "Autentificarea cu doi factori nu este activată"
+
 msgid "Two-factor authentication not enabled"
 msgstr "Autentificarea cu doi factori nu este activată"
 
@@ -77855,10 +77967,6 @@ msgstr "Nemontat"
 
 msgid "Unoptimized connections"
 msgstr "Conexiuni neoptimizate"
-
-#, fuzzy, python-format
-msgid "Unpackaged file %r"
-msgstr "Fișiere neambalate"
 
 msgid "Unpackaged files"
 msgstr "Fișiere neambalate"
@@ -82044,6 +82152,20 @@ msgstr ""
 "asupra gestionării datelor gazdelor piggybacked. Numele gazdelor sursă "
 "trebuie să fie setate în câmpul de condiție <i>Explicit hosts</i>."
 
+msgid ""
+"We highly recommend solving this issue already in your installation by "
+"updating the extension package. Otherwise the extension package will be "
+"deactivated after an upgrade."
+msgstr ""
+
+msgid ""
+"We highly recommend solving this issue already in your installation either "
+"by migrating or removing this plug-in."
+msgstr ""
+
+msgid "We highly recommend solving this issue already in your installation."
+msgstr ""
+
 msgid "Weak"
 msgstr "Slabă"
 
@@ -85946,6 +86068,10 @@ msgstr "%s a fost șters."
 msgid "Your %s has been saved."
 msgstr "%s a fost salvat."
 
+#, fuzzy
+msgid "Your Checkmk Password has been changed"
+msgstr "Sarcina de planificare a fost salvată."
+
 #, python-format
 msgid "Your Checkmk license expires %s"
 msgstr "Licența dumneavoastră Checkmk expiră %s"
@@ -86048,6 +86174,10 @@ msgstr ""
 msgid "Your input is not a valid email address."
 msgstr "Datele introduse nu sunt o adresă de e-mail validă."
 
+#, fuzzy
+msgid "Your input is not a valid hostname or IP address."
+msgstr "Datele introduse nu sunt o adresă de e-mail validă."
+
 #, python-format
 msgid ""
 "Your license has been suspended. Please contact the Checkmk sales team at %s."
@@ -86103,6 +86233,10 @@ msgid_plural "Your logos have been uploaded"
 msgstr[0] "Logo-ul dvs. a fost încărcat."
 msgstr[1] ""
 msgstr[2] ""
+
+#, fuzzy
+msgid "Your messages"
+msgstr "Mesaje de jurnal"
 
 msgid "Your modifications affect some objects"
 msgstr "Modificările dumneavoastră afectează unele obiecte"
@@ -88564,6 +88698,18 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
 
+#, fuzzy
+#~ msgid "Date sent"
+#~ msgstr "Date trimise"
+
+#, fuzzy, python-format
+#~ msgid "Extension package %r"
+#~ msgstr "Pachete de extensie"
+
+#, fuzzy, python-format
+#~ msgid "Unpackaged file %r"
+#~ msgstr "Fișiere neambalate"
+
 #, python-format
 #~ msgid ""
 #~ "!!! Error: Received class in RulespecRegistry:"
@@ -88701,9 +88847,6 @@ msgstr "Utilizați SSL pentru conexiune."
 #, fuzzy
 #~ msgid "Distributed piggyback"
 #~ msgstr "Monitorizare distribuită"
-
-#~ msgid "Checkmk specific"
-#~ msgstr "Checkmk specific"
 
 #, fuzzy
 #~ msgid "Number of graphs per event (default: 5)"
@@ -89838,9 +89981,6 @@ msgstr "Utilizați SSL pentru conexiune."
 
 #~ msgid "Schedule downtime?"
 #~ msgstr "Programarea timpilor morți?"
-
-#~ msgid "OVS bonding interface status"
-#~ msgstr "Starea interfeței de conectare OVS"
 
 #~ msgid "Common Name"
 #~ msgstr "Denumire comună"

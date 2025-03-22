@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-03-11 09:00+0000\n"
+"PO-Revision-Date: 2025-03-21 06:00+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/dev/"
 "ja/>\n"
 "Language: ja\n"
@@ -81,6 +81,10 @@ msgstr " (最悪の状態: %s)"
 
 msgid " - Broken"
 msgstr " - 壊れた"
+
+#, fuzzy
+msgid " - Checkmk Security Notice"
+msgstr "Checkmk固有"
 
 #, python-format
 msgid ""
@@ -4596,6 +4600,10 @@ msgstr "影響を受けるホストには次のものが含まれます"
 msgid "Affected sites"
 msgstr "影響を受けるサイト"
 
+#, fuzzy, python-format
+msgid "Affected sites: %s"
+msgstr "影響を受けるサイト"
+
 msgid ""
 "After a battery diagnostics the battery capacity is reduced until the "
 "battery is fully charged again. Here you can specify an alternative lower "
@@ -5355,6 +5363,10 @@ msgid "All applications"
 msgstr "すべてのアプリケーション"
 
 msgid "All backup codes have been deleted"
+msgstr "すべてのバックアップコードが削除されました"
+
+#, fuzzy
+msgid "All backup codes have been revoked"
 msgstr "すべてのバックアップコードが削除されました"
 
 msgid "All but first page"
@@ -7202,6 +7214,14 @@ msgstr "TLS認証"
 msgid "Authenticator app"
 msgstr "認証App"
 
+#, fuzzy
+msgid "Authenticator app has been added"
+msgstr "認証アプリ"
+
+#, fuzzy
+msgid "Authenticator app removed"
+msgstr "認証App"
+
 msgid "Authenticator apps"
 msgstr "認証アプリ"
 
@@ -8409,6 +8429,10 @@ msgstr "BIルールまたは集計"
 msgid "BI rules %s from BI pack '%s'"
 msgstr "BIルール %s BIパックからの '%s'"
 
+#, fuzzy
+msgid "BI runtime data"
+msgstr "テストランタイム"
+
 msgid "BI service details"
 msgstr "BIサービスの詳細"
 
@@ -8534,6 +8558,10 @@ msgstr "バックアップコード"
 
 msgid "Backup codes"
 msgstr "バックアップコード"
+
+#, fuzzy
+msgid "Backup codes have been regenerated"
+msgstr "すべてのバックアップコードが削除されました"
 
 msgid "Backup codes left:"
 msgstr "バックアップコード残り:"
@@ -9180,6 +9208,10 @@ msgstr "ビジネスインテリジェンス(BI)の管理"
 
 msgid "Business Intelligence rules and aggregations"
 msgstr "ビジネスインテリジェンスルールと集計"
+
+#, fuzzy
+msgid "Business Intelligence runtime data"
+msgstr "ビジネス・インテリジェンス"
 
 msgid "Business reporting"
 msgstr "ビジネスレポーティング"
@@ -10502,6 +10534,18 @@ msgstr "キャッシュされた"
 
 msgid "Cached agent data"
 msgstr "キャッシュされたエージェントデータ"
+
+msgid ""
+"Cached data from Business Intelligence. Contains states, downtimes, "
+"acknowledgements and service periods for all hosts/services included in a BI "
+"aggregation."
+msgstr ""
+
+msgid ""
+"Cached data from Business Intelligence. contains states, downtimes, "
+"acknowledgements and service periods for all hosts/services included in a BI "
+"aggregation."
+msgstr ""
 
 msgid "Cached memory"
 msgstr "キャッシュされたメモリ"
@@ -14421,6 +14465,10 @@ msgstr "このルールに関するコンテキスト情報"
 msgid "Context information about this rule"
 msgstr "このルールに関するコンテキスト情報"
 
+#, fuzzy
+msgid "Context is missing"
+msgstr "サイトがありません"
+
 msgid "Context sensitive help"
 msgstr "状況依存ヘルプ"
 
@@ -15717,6 +15765,10 @@ msgstr "現在、アクティブ化する変更はありません。"
 msgid "Currently there are no unsent notification bulks pending."
 msgstr "現在、保留中の未送信の通知バルクはありません。"
 
+#, fuzzy
+msgid "Currently you have no received messages"
+msgstr "現在、受信したメッセージはありません"
+
 msgid "Currently you have no recieved messages"
 msgstr "現在、受信したメッセージはありません"
 
@@ -16701,10 +16753,6 @@ msgstr "日付は数値である必要があります"
 
 msgid "Date range"
 msgstr "日付範囲"
-
-#, fuzzy
-msgid "Date sent"
-msgstr "送信データ"
 
 #, fuzzy
 msgid "Date/time"
@@ -18142,9 +18190,17 @@ msgstr "非推奨のチェックプラグイン"
 msgid "Deprecated choice, please re-select"
 msgstr "非推奨の選択、再選択してください"
 
+#, fuzzy, python-format
+msgid "Deprecated extension package: %s"
+msgstr "新しい拡張パッケージ %s を作成しました"
+
 #, fuzzy
 msgid "Deprecated legacy GUI extensions"
 msgstr "拡張機能を複製する"
+
+#, fuzzy, python-format
+msgid "Deprecated plug-in: %s"
+msgstr "非推奨のチェックプラグイン"
 
 msgid "Deprecated rulesets"
 msgstr "非推奨のルールセット"
@@ -18247,6 +18303,10 @@ msgstr "ホスト通知詳細"
 
 msgid "Details for service notifications"
 msgstr "サービス通知詳細"
+
+#, fuzzy
+msgid "Details:"
+msgstr "詳細"
 
 msgid "Detect and use proxies configured on the target system"
 msgstr "ターゲットシステム上に設定されたプロキシを検出し、使用する"
@@ -22915,10 +22975,6 @@ msgstr "拡張perfdata"
 
 msgid "Extension"
 msgstr "拡張"
-
-#, fuzzy, python-format
-msgid "Extension package %r"
-msgstr "拡張パッケージ"
 
 msgid "Extension package files"
 msgstr "拡張パッケージファイル"
@@ -33211,6 +33267,10 @@ msgstr "無効なホストまたはIPアドレス。IPv4: %s、 IPv6: %s"
 msgid "Invalid host or network address. IPv4: %s, IPv6: %s"
 msgstr "無効なホストまたはネットワークアドレス。IPv4: %s、 IPv6: %s"
 
+#, fuzzy
+msgid "Invalid hostname or IP address."
+msgstr "照会されたホスト名またはIPアドレス"
+
 msgid "Invalid ident"
 msgstr "無効なID"
 
@@ -36652,6 +36712,9 @@ msgstr "ログインマスクのロゴ"
 msgid "Login mode"
 msgstr "ログインモード"
 
+msgid "Login performed with backup code - Checkmk Security Notice"
+msgstr ""
+
 msgid "Login possible"
 msgstr "ログイン可能"
 
@@ -38824,6 +38887,10 @@ msgid "Merker"
 msgstr "マーカー"
 
 msgid "Message"
+msgstr "メッセージ"
+
+#, fuzzy, python-format
+msgid "Message #%d"
 msgstr "メッセージ"
 
 msgid "Message Age of newest messages"
@@ -44031,6 +44098,10 @@ msgstr "このサイトのローカルWebユーザーインターフェイスを
 msgid "Open this table for filtering / sorting"
 msgstr "この表を開いてフィルタリング/ソートする"
 
+#, fuzzy
+msgid "Open vSwitch (ovs) bonding interface status"
+msgstr "ボンディングインターフェース"
+
 msgid "Open/close this element"
 msgstr "この要素を開く/閉じる"
 
@@ -45642,7 +45713,7 @@ msgid ""
 msgstr ""
 
 msgid "PEND"
-msgstr "保留"
+msgstr "PEND"
 
 msgid "PEND services of host group"
 msgstr "ホストグループのPENDサービス"
@@ -47197,6 +47268,10 @@ msgstr "ピギーバック名"
 
 msgid "Piggyback services to monitor"
 msgstr "監視するピギーバックサービス"
+
+#, fuzzy
+msgid "Piggyback-hub turned on on remote site"
+msgstr "他のホストからのピギーバック情報"
 
 msgid "Piggybacked docker containers"
 msgstr "ピギーバックdockerコンテナ"
@@ -48974,9 +49049,6 @@ msgstr "プロキシURL"
 
 msgid "Proxy host"
 msgstr "プロキシホスト"
-
-msgid "Proxy host is required but not specified."
-msgstr ""
 
 msgid "Proxy server"
 msgstr "プロキシサーバー"
@@ -54101,6 +54173,14 @@ msgstr "センサー"
 
 msgid "Sent"
 msgstr "送信済み"
+
+#, fuzzy
+msgid "Sent on"
+msgstr "送信済み"
+
+#, fuzzy, python-format
+msgid "Sent on: %s, Expires on: %s"
+msgstr "バージョン: %s、エディション: %s"
 
 msgid "Sent vs Received Traffic Breakdown"
 msgstr "送信済みトラフィックと受信済みトラフィックの内訳"
@@ -62293,6 +62373,13 @@ msgstr "クラスター内の予想されるノード数"
 msgid "The expected number of resources in the cluster"
 msgstr "クラスター内の予想されるリソース数"
 
+#, python-format
+msgid ""
+"The extension package uses APIs which are deprecated or removed in Checkmk "
+"%s so that this extension will not work anymore once you upgrade your site "
+"to next major version."
+msgstr ""
+
 msgid ""
 "The fall back option tries to establish an encrypted TLS connection. If the "
 "other site does not supports it, plain text is used."
@@ -63930,6 +64017,13 @@ msgid ""
 msgstr ""
 "プラグイン <tt>isc_dhcpd</tt> は、Linux 上の DHCP サーバデーモンに関する情報"
 "を収集します。"
+
+#, python-format
+msgid ""
+"The plug-in uses APIs which are deprecated or removed in Checkmk %s, so that "
+"this extension will not work anymore once you upgrade your site to next "
+"major version."
+msgstr ""
 
 msgid ""
 "The plug-in will process anything that is matched by this globbing pattern. "
@@ -66304,6 +66398,10 @@ msgstr ""
 msgid "This does not affect hosts in subfolders."
 msgstr "サブフォルダー内のホストには影響しません。"
 
+#, fuzzy, python-format
+msgid "This does not work in Checkmk %s."
+msgstr "このホストにはCheckmkエージェントがありません。"
+
 msgid "This element is currently in a scheduled downtime."
 msgstr "この要素は現在、スケジュールされたダウンタイムにあります。"
 
@@ -66734,6 +66832,12 @@ msgstr ""
 "これは、時間軸の上にいくつかのデータを表示し、その下にいくつかのデータを表示"
 "するグラフに役立つ場合があります。このオプションを有効にすると、前の上のデー"
 "タが軸の下に表示され、下のデータがその上に表示されます。"
+
+#, python-format
+msgid ""
+"This may partially work in Checkmk %s but will stop working from the next "
+"major version onwards."
+msgstr ""
 
 #, python-format
 msgid "This message has been created at %s and is valid till %s."
@@ -72953,6 +73057,14 @@ msgstr "2時間"
 msgid "Two-factor authentication"
 msgstr "2要素認証"
 
+#, fuzzy
+msgid "Two-factor authentication has been added"
+msgstr "2要素認証が無効"
+
+#, fuzzy
+msgid "Two-factor authentication has been removed"
+msgstr "2要素認証が無効"
+
 msgid "Two-factor authentication not enabled"
 msgstr "2要素認証が無効"
 
@@ -73772,10 +73884,6 @@ msgstr "マウントなし"
 
 msgid "Unoptimized connections"
 msgstr "最適化されていない接続"
-
-#, fuzzy, python-format
-msgid "Unpackaged file %r"
-msgstr "パッケージ化されていないファイル"
 
 msgid "Unpackaged files"
 msgstr "パッケージ化されていないファイル"
@@ -77797,6 +77905,20 @@ msgstr ""
 "クされたホストデータの処理をより細かく制御するのに役立ちます。ソースホスト名"
 "は、条件フィールド<i>明示的ホスト</i>で設定する必要があります。"
 
+msgid ""
+"We highly recommend solving this issue already in your installation by "
+"updating the extension package. Otherwise the extension package will be "
+"deactivated after an upgrade."
+msgstr ""
+
+msgid ""
+"We highly recommend solving this issue already in your installation either "
+"by migrating or removing this plug-in."
+msgstr ""
+
+msgid "We highly recommend solving this issue already in your installation."
+msgstr ""
+
 msgid "Weak"
 msgstr "Weak"
 
@@ -81502,6 +81624,10 @@ msgstr "%s が削除されました。"
 msgid "Your %s has been saved."
 msgstr "%s が保存されました。"
 
+#, fuzzy
+msgid "Your Checkmk Password has been changed"
+msgstr "スケジュールタスクが保存されました。"
+
 #, python-format
 msgid "Your Checkmk license expires %s"
 msgstr "Checkmkライセンスの有効期限は%sです"
@@ -81600,6 +81726,10 @@ msgstr ""
 msgid "Your input is not a valid email address."
 msgstr "入力されたメールアドレスは有効ではありません。"
 
+#, fuzzy
+msgid "Your input is not a valid hostname or IP address."
+msgstr "入力されたメールアドレスは有効ではありません。"
+
 #, python-format
 msgid ""
 "Your license has been suspended. Please contact the Checkmk sales team at %s."
@@ -81651,6 +81781,10 @@ msgstr ""
 msgid "Your logo has been uploaded."
 msgid_plural "Your logos have been uploaded"
 msgstr[0] "ロゴをアップロードしました。"
+
+#, fuzzy
+msgid "Your messages"
+msgstr "ログメッセージ"
 
 msgid "Your modifications affect some objects"
 msgstr "変更は一部のオブジェクトに影響します"
@@ -84061,6 +84195,18 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用不可</b>"
 
+#, fuzzy
+#~ msgid "Date sent"
+#~ msgstr "送信データ"
+
+#, fuzzy, python-format
+#~ msgid "Extension package %r"
+#~ msgstr "拡張パッケージ"
+
+#, fuzzy, python-format
+#~ msgid "Unpackaged file %r"
+#~ msgstr "パッケージ化されていないファイル"
+
 #, python-format
 #~ msgid ""
 #~ "!!! Error: Received class in RulespecRegistry:"
@@ -84195,9 +84341,6 @@ msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用
 
 #~ msgid "Enable distributed piggyback"
 #~ msgstr "分散ピギーバックを有効にする"
-
-#~ msgid "Checkmk specific"
-#~ msgstr "Checkmk固有"
 
 #, fuzzy
 #~ msgid "Number of graphs per event (default: 5)"
@@ -85323,10 +85466,6 @@ msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用
 
 #~ msgid "Schedule downtime?"
 #~ msgstr "ダウンタイムをスケジュールしますか?"
-
-#, fuzzy
-#~ msgid "OVS bonding interface status"
-#~ msgstr "ボンディングインターフェース"
 
 #~ msgid "Common Name"
 #~ msgstr "コモンネーム"

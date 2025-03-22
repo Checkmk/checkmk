@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2025-03-21 00:54+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
@@ -81,6 +81,10 @@ msgstr " (schlechtester Zustand: %s)"
 
 msgid " - Broken"
 msgstr " - Kaputt"
+
+#, fuzzy
+msgid " - Checkmk Security Notice"
+msgstr "Checkmk-spezifisch"
 
 #, python-format
 msgid ""
@@ -4730,6 +4734,10 @@ msgstr "Betroffene Hosts enthalten"
 msgid "Affected sites"
 msgstr "Betroffene Instanzen"
 
+#, fuzzy, python-format
+msgid "Affected sites: %s"
+msgstr "Betroffene Instanzen"
+
 msgid ""
 "After a battery diagnostics the battery capacity is reduced until the "
 "battery is fully charged again. Here you can specify an alternative lower "
@@ -5510,6 +5518,10 @@ msgid "All applications"
 msgstr "Alle Anwendungen"
 
 msgid "All backup codes have been deleted"
+msgstr "Alle Backup-Codes wurden gelöscht"
+
+#, fuzzy
+msgid "All backup codes have been revoked"
 msgstr "Alle Backup-Codes wurden gelöscht"
 
 msgid "All but first page"
@@ -7430,6 +7442,14 @@ msgstr "Authentifizierung mit TLS"
 msgid "Authenticator app"
 msgstr "Authenticator-App"
 
+#, fuzzy
+msgid "Authenticator app has been added"
+msgstr "Authenticator-Apps"
+
+#, fuzzy
+msgid "Authenticator app removed"
+msgstr "Authenticator-App"
+
 msgid "Authenticator apps"
 msgstr "Authenticator-Apps"
 
@@ -8576,6 +8596,10 @@ msgstr "BI-Regel oder Aggregationen"
 msgid "BI rules %s from BI pack '%s'"
 msgstr "BI-Regeln %s aus BI-Paket '%s'"
 
+#, fuzzy
+msgid "BI runtime data"
+msgstr "Schlüsselkennzahl (KPI) Laufzeit"
+
 msgid "BI service details"
 msgstr "BI Servicedetails"
 
@@ -8692,6 +8716,10 @@ msgstr "Backup-Code"
 
 msgid "Backup codes"
 msgstr "Backup-Codes"
+
+#, fuzzy
+msgid "Backup codes have been regenerated"
+msgstr "Alle Backup-Codes wurden gelöscht"
 
 msgid "Backup codes left:"
 msgstr "Verbleibende Backup-Codes:"
@@ -9336,6 +9364,10 @@ msgstr "Business Intelligence Administration"
 
 msgid "Business Intelligence rules and aggregations"
 msgstr "Business Intelligence Regeln und Aggregate"
+
+#, fuzzy
+msgid "Business Intelligence runtime data"
+msgstr "Business Intelligence"
 
 msgid "Business reporting"
 msgstr "Business Bericht"
@@ -10703,6 +10735,18 @@ msgstr "Zwischengespeichert"
 
 msgid "Cached agent data"
 msgstr "Gecachte Agentendaten"
+
+msgid ""
+"Cached data from Business Intelligence. Contains states, downtimes, "
+"acknowledgements and service periods for all hosts/services included in a BI "
+"aggregation."
+msgstr ""
+
+msgid ""
+"Cached data from Business Intelligence. contains states, downtimes, "
+"acknowledgements and service periods for all hosts/services included in a BI "
+"aggregation."
+msgstr ""
 
 msgid "Cached memory"
 msgstr "gecachter Speicher"
@@ -14741,6 +14785,10 @@ msgstr "Kontextinformationen zu diesem Parameter"
 msgid "Context information about this rule"
 msgstr "Kontext zu dieser Regel"
 
+#, fuzzy
+msgid "Context is missing"
+msgstr "Instanz fehlt"
+
 msgid "Context sensitive help"
 msgstr "Kontextsensitive Hilfe"
 
@@ -16060,6 +16108,10 @@ msgstr "Im Moment gibt es keine offenen Konfigurationsänderungen."
 msgid "Currently there are no unsent notification bulks pending."
 msgstr "Im Moment gibt es keine ausstehenden Sammelbenachrichtigungen."
 
+#, fuzzy
+msgid "Currently you have no received messages"
+msgstr "Sie haben derzeit keine erhaltenen Nachrichten"
+
 msgid "Currently you have no recieved messages"
 msgstr "Sie haben derzeit keine erhaltenen Nachrichten"
 
@@ -17029,9 +17081,6 @@ msgstr "Datum muss Zahl sein"
 
 msgid "Date range"
 msgstr "Datumsbereich"
-
-msgid "Date sent"
-msgstr "Gesendetes Datum"
 
 msgid "Date/time"
 msgstr "Datum/Zeit"
@@ -18489,8 +18538,16 @@ msgstr "Veraltete Check-Plugins (v1)"
 msgid "Deprecated choice, please re-select"
 msgstr "Veraltete Auswahl, bitte neu auswählen"
 
+#, fuzzy, python-format
+msgid "Deprecated extension package: %s"
+msgstr "Neues Erweiterungspaket %s erzeugt"
+
 msgid "Deprecated legacy GUI extensions"
 msgstr "Veraltete Legacy GUI-Erweiterungen"
+
+#, fuzzy, python-format
+msgid "Deprecated plug-in: %s"
+msgstr "Veraltete Check-Plugins (v1)"
 
 msgid "Deprecated rulesets"
 msgstr "Veraltete Regelsätze"
@@ -18593,6 +18650,10 @@ msgstr "Details für Host-Benachrichtigungen"
 
 msgid "Details for service notifications"
 msgstr "Details für Service-Benachrichtigungen"
+
+#, fuzzy
+msgid "Details:"
+msgstr "Details"
 
 msgid "Detect and use proxies configured on the target system"
 msgstr "Proxies, die auf dem Zielsystem konfiguriert sind, erkennen und nutzen"
@@ -23328,10 +23389,6 @@ msgstr "Erweiterte Metriken"
 
 msgid "Extension"
 msgstr "Erweiterung"
-
-#, python-format
-msgid "Extension package %r"
-msgstr "Erweiterungspaket %r"
 
 msgid "Extension package files"
 msgstr "Erweiterungspaketdateien"
@@ -33560,6 +33617,10 @@ msgstr "Ungültige Host- oder IP-Adresse. IPv4: %s, IPv6: %s"
 msgid "Invalid host or network address. IPv4: %s, IPv6: %s"
 msgstr "Ungültige Host- oder Netzwerkadresse. IPv4: %s, IPv6: %s"
 
+#, fuzzy
+msgid "Invalid hostname or IP address."
+msgstr "Abgefragter Host-Name oder IP-Adresse"
+
 msgid "Invalid ident"
 msgstr "Ungültiger Schlüssel"
 
@@ -37020,6 +37081,9 @@ msgstr "Logo der Login-Maske"
 msgid "Login mode"
 msgstr "Login-Modus"
 
+msgid "Login performed with backup code - Checkmk Security Notice"
+msgstr ""
+
 msgid "Login possible"
 msgstr "Login ist möglich"
 
@@ -39207,6 +39271,10 @@ msgid "Merker"
 msgstr "Merker"
 
 msgid "Message"
+msgstr "Nachricht"
+
+#, fuzzy, python-format
+msgid "Message #%d"
 msgstr "Nachricht"
 
 msgid "Message Age of newest messages"
@@ -44388,6 +44456,10 @@ msgstr "Lokale Web-Benutzeroberfläche dieser Instanz öffnen"
 msgid "Open this table for filtering / sorting"
 msgstr "Diese Tabelle zum Filtern/Sortieren öffnen"
 
+#, fuzzy
+msgid "Open vSwitch (ovs) bonding interface status"
+msgstr "Status der OVS Bonding-Schnittstelle"
+
 msgid "Open/close this element"
 msgstr "Dieses Element öffnen/schließen"
 
@@ -47411,6 +47483,10 @@ msgstr "Piggyback-Namen"
 msgid "Piggyback services to monitor"
 msgstr "Zu überwachende Piggyback-Services"
 
+#, fuzzy
+msgid "Piggyback-hub turned on on remote site"
+msgstr "Piggyback-Informationen von einem anderen Host"
+
 msgid "Piggybacked docker containers"
 msgstr "Piggyback Docker Container"
 
@@ -49222,9 +49298,6 @@ msgstr "Proxy-URL"
 
 msgid "Proxy host"
 msgstr "Proxy Host"
-
-msgid "Proxy host is required but not specified."
-msgstr "Ein Proxy-Host wird benötigt, ist aber nicht angegeben."
 
 msgid "Proxy server"
 msgstr "Proxy-Server"
@@ -54328,6 +54401,14 @@ msgstr "Sensoren"
 
 msgid "Sent"
 msgstr "Gesendet"
+
+#, fuzzy
+msgid "Sent on"
+msgstr "Gesendet"
+
+#, fuzzy, python-format
+msgid "Sent on: %s, Expires on: %s"
+msgstr "Version: %s, Edition: %s"
 
 msgid "Sent vs Received Traffic Breakdown"
 msgstr "Vergleich versendeter und empfangener Traffic"
@@ -62790,6 +62871,13 @@ msgstr "Erwartete Anzahl von Knoten im Cluster"
 msgid "The expected number of resources in the cluster"
 msgstr "Die erwartete Anzahl von Ressourcen im Cluster"
 
+#, python-format
+msgid ""
+"The extension package uses APIs which are deprecated or removed in Checkmk "
+"%s so that this extension will not work anymore once you upgrade your site "
+"to next major version."
+msgstr ""
+
 msgid ""
 "The fall back option tries to establish an encrypted TLS connection. If the "
 "other site does not supports it, plain text is used."
@@ -64566,6 +64654,13 @@ msgid ""
 msgstr ""
 "Das Plugin <tt>isc_dhcpd</tt> sammelt Informationen über einen DHCP Server "
 "Daemon auf Linux."
+
+#, python-format
+msgid ""
+"The plug-in uses APIs which are deprecated or removed in Checkmk %s, so that "
+"this extension will not work anymore once you upgrade your site to next "
+"major version."
+msgstr ""
 
 msgid ""
 "The plug-in will process anything that is matched by this globbing pattern. "
@@ -67071,6 +67166,10 @@ msgstr ""
 msgid "This does not affect hosts in subfolders."
 msgstr "Hosts in Unterordnern sind davon nicht betroffen."
 
+#, fuzzy, python-format
+msgid "This does not work in Checkmk %s."
+msgstr "Dieser Host hat keine Checkmk-Agenten."
+
 msgid "This element is currently in a scheduled downtime."
 msgstr "Dieses Element ist momentan in einer Wartungszeit."
 
@@ -67543,6 +67642,12 @@ msgstr ""
 "Diese Option ist für Graphen sinnvoll, die über und unter der Zeitachse "
 "Werte darstellen. Wenn Sie diese Option aktivieren, werden die Werte des "
 "Standardgraphen invertiert."
+
+#, python-format
+msgid ""
+"This may partially work in Checkmk %s but will stop working from the next "
+"major version onwards."
+msgstr ""
 
 #, python-format
 msgid "This message has been created at %s and is valid till %s."
@@ -73968,6 +74073,14 @@ msgstr "Zwei Stunden"
 msgid "Two-factor authentication"
 msgstr "Zwei-Faktor-Authentifizierung"
 
+#, fuzzy
+msgid "Two-factor authentication has been added"
+msgstr "Zwei-Faktor-Authentifizierung nicht aktiviert"
+
+#, fuzzy
+msgid "Two-factor authentication has been removed"
+msgstr "Zwei-Faktor-Authentifizierung nicht aktiviert"
+
 msgid "Two-factor authentication not enabled"
 msgstr "Zwei-Faktor-Authentifizierung nicht aktiviert"
 
@@ -74806,10 +74919,6 @@ msgstr "Nicht montiert"
 
 msgid "Unoptimized connections"
 msgstr "Nicht optimierte Verbindungen"
-
-#, python-format
-msgid "Unpackaged file %r"
-msgstr "Unpaketierte Datei %r"
 
 msgid "Unpackaged files"
 msgstr "Unpaketierte Dateien"
@@ -78737,6 +78846,20 @@ msgstr ""
 "Kontrolle über die Verarbeitung der Piggyback-Host-Daten zu erhalten. Die "
 "Quell-Host-Namen müssen im Bedingungsfeld <i>Explizite Hosts</i> gesetzt "
 "werden."
+
+msgid ""
+"We highly recommend solving this issue already in your installation by "
+"updating the extension package. Otherwise the extension package will be "
+"deactivated after an upgrade."
+msgstr ""
+
+msgid ""
+"We highly recommend solving this issue already in your installation either "
+"by migrating or removing this plug-in."
+msgstr ""
+
+msgid "We highly recommend solving this issue already in your installation."
+msgstr ""
 
 msgid "Weak"
 msgstr "Schwach"
@@ -82684,6 +82807,10 @@ msgstr "Ihr %s wurde gelöscht."
 msgid "Your %s has been saved."
 msgstr "Ihr %s wurde gespeichert."
 
+#, fuzzy
+msgid "Your Checkmk Password has been changed"
+msgstr "Ihr Planeintrag wurde gespeichert."
+
 #, python-format
 msgid "Your Checkmk license expires %s"
 msgstr "Ihre Checkmk-Lizenz läuft ab: %s"
@@ -82789,6 +82916,10 @@ msgstr ""
 msgid "Your input is not a valid email address."
 msgstr "Ihre Eingabe ist keine gültige E-Mail-Adresse."
 
+#, fuzzy
+msgid "Your input is not a valid hostname or IP address."
+msgstr "Ihre Eingabe ist keine gültige E-Mail-Adresse."
+
 #, python-format
 msgid ""
 "Your license has been suspended. Please contact the Checkmk sales team at %s."
@@ -82846,6 +82977,10 @@ msgid "Your logo has been uploaded."
 msgid_plural "Your logos have been uploaded"
 msgstr[0] "Ihr Logo wurde hochgeladen."
 msgstr[1] "Ihre Logos wurden hochgeladen"
+
+#, fuzzy
+msgid "Your messages"
+msgstr "Log-Meldungen"
 
 msgid "Your modifications affect some objects"
 msgstr "Ihre Veränderungen betreffen mehrere Objekte"
@@ -85256,6 +85391,20 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 
+#~ msgid "Date sent"
+#~ msgstr "Gesendetes Datum"
+
+#~ msgid "Proxy host is required but not specified."
+#~ msgstr "Ein Proxy-Host wird benötigt, ist aber nicht angegeben."
+
+#, python-format
+#~ msgid "Extension package %r"
+#~ msgstr "Erweiterungspaket %r"
+
+#, python-format
+#~ msgid "Unpackaged file %r"
+#~ msgstr "Unpaketierte Datei %r"
+
 #, python-format
 #~ msgid ""
 #~ "!!! Error: Received class in RulespecRegistry:"
@@ -85401,9 +85550,6 @@ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 
 #~ msgid "Enable distributed piggyback"
 #~ msgstr "Verteiltes Piggyback aktivieren"
-
-#~ msgid "Checkmk specific"
-#~ msgstr "Checkmk-spezifisch"
 
 #~ msgid ""
 #~ "This setting decides apply changes and discovery/activate are "
@@ -86778,9 +86924,6 @@ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 
 #~ msgid "Schedule downtime?"
 #~ msgstr "Wartungszeit planen?"
-
-#~ msgid "OVS bonding interface status"
-#~ msgstr "Status der OVS Bonding-Schnittstelle"
 
 #~ msgid "Common Name"
 #~ msgstr "Common Name"

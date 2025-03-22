@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-03-11 09:00+0000\n"
+"PO-Revision-Date: 2025-03-21 06:05+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -4331,6 +4331,10 @@ msgstr "影響を受けるホストには次のものが含まれます"
 msgid "Affected sites"
 msgstr "影響を受けるサイト"
 
+#, fuzzy, python-format
+msgid "Affected sites: %s"
+msgstr "影響を受けるサイト"
+
 msgid ""
 "After a battery diagnostics the battery capacity is reduced until the "
 "battery is fully charged again. Here you can specify an alternative lower "
@@ -7519,6 +7523,9 @@ msgstr "BIルールまたは集計"
 msgid "BI rules %s from BI pack '%s'"
 msgstr "BIルール %s BIパックからの '%s'"
 
+msgid "BI runtime data"
+msgstr ""
+
 msgid "BI service details"
 msgstr "BIサービスの詳細"
 
@@ -8233,6 +8240,10 @@ msgstr "ビジネスインテリジェンス(BI)の管理"
 
 msgid "Business Intelligence rules and aggregations"
 msgstr "ビジネスインテリジェンスルールと集計"
+
+#, fuzzy
+msgid "Business Intelligence runtime data"
+msgstr "ビジネス・インテリジェンス"
 
 msgid "Business reporting"
 msgstr "ビジネスレポーティング"
@@ -9474,6 +9485,18 @@ msgstr "キャッシュされた"
 
 msgid "Cached agent data"
 msgstr "キャッシュされたエージェントデータ"
+
+msgid ""
+"Cached data from Business Intelligence. Contains states, downtimes, "
+"acknowledgements and service periods for all hosts/services included in a BI "
+"aggregation."
+msgstr ""
+
+msgid ""
+"Cached data from Business Intelligence. contains states, downtimes, "
+"acknowledgements and service periods for all hosts/services included in a BI "
+"aggregation."
+msgstr ""
 
 msgid "Cached memory"
 msgstr "キャッシュされたメモリ"
@@ -13067,6 +13090,10 @@ msgstr "この接続に関するコンテキスト情報"
 msgid "Context information about this rule"
 msgstr "このルールに関するコンテキスト情報"
 
+#, fuzzy
+msgid "Context is missing"
+msgstr "サイトがありません"
+
 msgid "Context sensitive help"
 msgstr "状況依存ヘルプ"
 
@@ -16470,9 +16497,17 @@ msgstr "非推奨のチェックプラグイン"
 msgid "Deprecated choice, please re-select"
 msgstr "非推奨の選択、再選択してください"
 
+#, fuzzy, python-format
+msgid "Deprecated extension package: %s"
+msgstr "新しい拡張パッケージ %s を作成しました"
+
 #, fuzzy
 msgid "Deprecated legacy GUI extensions"
 msgstr "拡張機能を複製する"
+
+#, fuzzy, python-format
+msgid "Deprecated plug-in: %s"
+msgstr "非推奨のチェックプラグイン"
 
 msgid "Deprecated rulesets"
 msgstr "非推奨のルールセット"
@@ -16572,6 +16607,10 @@ msgstr "ホスト通知詳細"
 
 msgid "Details for service notifications"
 msgstr "サービス通知詳細"
+
+#, fuzzy
+msgid "Details:"
+msgstr "詳細"
 
 msgid "Detect and use proxies configured on the target system"
 msgstr "ターゲットシステム上に設定されたプロキシを検出し、使用する"
@@ -17918,6 +17957,10 @@ msgstr "インデックスをグループ化しない"
 
 msgid "Do not group interfaces"
 msgstr "インターフェイスをグループ化しないでください"
+
+#, fuzzy
+msgid "Do not import tags"
+msgstr "インポートしない"
 
 msgid "Do not impose levels"
 msgstr "レベルを課さないでください"
@@ -20971,10 +21014,6 @@ msgstr "拡張perfdata"
 
 msgid "Extension"
 msgstr "拡張"
-
-#, fuzzy, python-format
-msgid "Extension package %r"
-msgstr "拡張パッケージ"
 
 msgid "Extension package files"
 msgstr "拡張パッケージファイル"
@@ -28266,9 +28305,6 @@ msgstr "インポート"
 
 msgid "Import all valid annotations"
 msgstr "有効なアノテーションをすべてインポートする"
-
-msgid "Import all valid tags"
-msgstr "有効なタグをすべてインポートする"
 
 msgid "Import hosts"
 msgstr "ホストのインポート"
@@ -40439,7 +40475,7 @@ msgid "PEM File"
 msgstr "PEM ファイル"
 
 msgid "PEND"
-msgstr "保留"
+msgstr "PEND"
 
 msgid "PEND services of host group"
 msgstr "ホストグループのPENDサービス"
@@ -55507,6 +55543,13 @@ msgstr "クラスター内の予想されるノード数"
 msgid "The expected number of resources in the cluster"
 msgstr "クラスター内の予想されるリソース数"
 
+#, python-format
+msgid ""
+"The extension package uses APIs which are deprecated or removed in Checkmk "
+"%s so that this extension will not work anymore once you upgrade your site "
+"to next major version."
+msgstr ""
+
 msgid ""
 "The fall back option tries to establish an encrypted TLS connection. If the "
 "other site does not supports it, plain text is used."
@@ -57057,6 +57100,13 @@ msgid ""
 msgstr ""
 "プラグイン <tt>isc_dhcpd</tt> は、Linux 上の DHCP サーバデーモンに関する情報"
 "を収集します。"
+
+#, python-format
+msgid ""
+"The plug-in uses APIs which are deprecated or removed in Checkmk %s, so that "
+"this extension will not work anymore once you upgrade your site to next "
+"major version."
+msgstr ""
 
 msgid ""
 "The plug-in will process anything that is matched by this globbing pattern. "
@@ -59302,6 +59352,10 @@ msgstr ""
 msgid "This does not affect hosts in subfolders."
 msgstr "サブフォルダー内のホストには影響しません。"
 
+#, fuzzy, python-format
+msgid "This does not work in Checkmk %s."
+msgstr "このホストにはCheckmkエージェントがありません。"
+
 msgid "This element is currently in a scheduled downtime."
 msgstr "この要素は現在、スケジュールされたダウンタイムにあります。"
 
@@ -59715,6 +59769,12 @@ msgstr ""
 "これは、時間軸の上にいくつかのデータを表示し、その下にいくつかのデータを表示"
 "するグラフに役立つ場合があります。このオプションを有効にすると、前の上のデー"
 "タが軸の下に表示され、下のデータがその上に表示されます。"
+
+#, python-format
+msgid ""
+"This may partially work in Checkmk %s but will stop working from the next "
+"major version onwards."
+msgstr ""
 
 #, python-format
 msgid "This message has been created at %s and is valid till %s."
@@ -66498,10 +66558,6 @@ msgstr "マウントなし"
 msgid "Unoptimized connections"
 msgstr "最適化されていない接続"
 
-#, fuzzy, python-format
-msgid "Unpackaged file %r"
-msgstr "パッケージ化されていないファイル"
-
 msgid "Unpackaged files"
 msgstr "パッケージ化されていないファイル"
 
@@ -69815,6 +69871,20 @@ msgstr ""
 "たデータが欠落している場合、<b>消滅したサービス</b>。このルールは、ピギーバッ"
 "クされたホストデータの処理をより細かく制御するのに役立ちます。ソースホスト名"
 "は、条件フィールド<i>明示的ホスト</i>で設定する必要があります。"
+
+msgid ""
+"We highly recommend solving this issue already in your installation by "
+"updating the extension package. Otherwise the extension package will be "
+"deactivated after an upgrade."
+msgstr ""
+
+msgid ""
+"We highly recommend solving this issue already in your installation either "
+"by migrating or removing this plug-in."
+msgstr ""
+
+msgid "We highly recommend solving this issue already in your installation."
+msgstr ""
 
 msgid "Weak"
 msgstr "Weak"
@@ -75862,6 +75932,17 @@ msgid ""
 msgstr ""
 "サービス制限を下回るまで、「変更を有効にする」はブロックされます。利用限度額"
 "を上げたい場合、 "
+
+#~ msgid "Import all valid tags"
+#~ msgstr "有効なタグをすべてインポートする"
+
+#, fuzzy, python-format
+#~ msgid "Extension package %r"
+#~ msgstr "拡張パッケージ"
+
+#, fuzzy, python-format
+#~ msgid "Unpackaged file %r"
+#~ msgstr "パッケージ化されていないファイル"
 
 #, fuzzy
 #~ msgid "Check man page uses the deprecated API"

@@ -4559,6 +4559,10 @@ msgstr "Les hôtes affectés contiennent"
 msgid "Affected sites"
 msgstr "Sites affectés"
 
+#, fuzzy, python-format
+msgid "Affected sites: %s"
+msgstr "Sites affectés"
+
 msgid ""
 "After a battery diagnostics the battery capacity is reduced until the "
 "battery is fully charged again. Here you can specify an alternative lower "
@@ -7954,6 +7958,9 @@ msgstr "Règle de BI ou agrégation"
 msgid "BI rules %s from BI pack '%s'"
 msgstr "Règles BI %s du pack BI '%s'"
 
+msgid "BI runtime data"
+msgstr ""
+
 msgid "BI service details"
 msgstr "Détails du service BI"
 
@@ -8710,6 +8717,10 @@ msgstr "Administration de l'intelligence économique"
 #, fuzzy
 msgid "Business Intelligence rules and aggregations"
 msgstr "Règles et agrégations de Business Intelligence"
+
+#, fuzzy
+msgid "Business Intelligence runtime data"
+msgstr "Intelligence économique"
 
 msgid "Business reporting"
 msgstr "Rapports d'activité"
@@ -10004,6 +10015,18 @@ msgstr "En cachette"
 
 msgid "Cached agent data"
 msgstr "Données de l'agent en cache"
+
+msgid ""
+"Cached data from Business Intelligence. Contains states, downtimes, "
+"acknowledgements and service periods for all hosts/services included in a BI "
+"aggregation."
+msgstr ""
+
+msgid ""
+"Cached data from Business Intelligence. contains states, downtimes, "
+"acknowledgements and service periods for all hosts/services included in a BI "
+"aggregation."
+msgstr ""
 
 msgid "Cached memory"
 msgstr "Mémoire cache"
@@ -13852,6 +13875,10 @@ msgstr "Informations contextuelles sur cette connexion"
 msgid "Context information about this rule"
 msgstr "Informations contextuelles sur cette règle"
 
+#, fuzzy
+msgid "Context is missing"
+msgstr "Le site est absent"
+
 msgid "Context sensitive help"
 msgstr "Aide contextuelle"
 
@@ -17469,9 +17496,17 @@ msgstr "Plugins de contrôle obsolètes"
 msgid "Deprecated choice, please re-select"
 msgstr "Choix déprécié, veuillez re-sélectionner"
 
+#, fuzzy, python-format
+msgid "Deprecated extension package: %s"
+msgstr "Création d'un nouveau paquet d'extension %s"
+
 #, fuzzy
 msgid "Deprecated legacy GUI extensions"
 msgstr "Reproduire les extensions"
+
+#, fuzzy, python-format
+msgid "Deprecated plug-in: %s"
+msgstr "Plugins de contrôle obsolètes"
 
 msgid "Deprecated rulesets"
 msgstr "Jeux de règles obsolètes"
@@ -17573,6 +17608,10 @@ msgstr "Détails des notifications d'accueil"
 
 msgid "Details for service notifications"
 msgstr "Détails des notifications de service"
+
+#, fuzzy
+msgid "Details:"
+msgstr "Détails"
 
 msgid "Detect and use proxies configured on the target system"
 msgstr "Détecter et utiliser les proxies configurés sur le système cible"
@@ -19054,6 +19093,10 @@ msgstr "Ne pas regrouper les indices"
 
 msgid "Do not group interfaces"
 msgstr "Ne pas grouper les interfaces"
+
+#, fuzzy
+msgid "Do not import tags"
+msgstr "Ne pas importer"
 
 msgid "Do not impose levels"
 msgstr "Ne pas imposer de niveaux"
@@ -22230,10 +22273,6 @@ msgstr "Données de perforation étendues"
 
 msgid "Extension"
 msgstr "Extension"
-
-#, fuzzy, python-format
-msgid "Extension package %r"
-msgstr "Paquets d'extension"
 
 msgid "Extension package files"
 msgstr "Fichiers d'extension"
@@ -29994,10 +30033,6 @@ msgid "Import"
 msgstr "Importation"
 
 msgid "Import all valid annotations"
-msgstr "Importer toutes les annotations valides"
-
-#, fuzzy
-msgid "Import all valid tags"
 msgstr "Importer toutes les annotations valides"
 
 #, fuzzy
@@ -58877,6 +58912,13 @@ msgstr "Le nombre attendu de nœuds dans le cluster"
 msgid "The expected number of resources in the cluster"
 msgstr "Le nombre attendu de ressources dans le cluster"
 
+#, python-format
+msgid ""
+"The extension package uses APIs which are deprecated or removed in Checkmk "
+"%s so that this extension will not work anymore once you upgrade your site "
+"to next major version."
+msgstr ""
+
 msgid ""
 "The fall back option tries to establish an encrypted TLS connection. If the "
 "other site does not supports it, plain text is used."
@@ -60530,6 +60572,13 @@ msgid ""
 msgstr ""
 "Le plugin <tt>isc_dhcpd</tt> collecte des informations sur un démon serveur "
 "DHCP sous Linux."
+
+#, python-format
+msgid ""
+"The plug-in uses APIs which are deprecated or removed in Checkmk %s, so that "
+"this extension will not work anymore once you upgrade your site to next "
+"major version."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -62888,6 +62937,10 @@ msgstr ""
 msgid "This does not affect hosts in subfolders."
 msgstr "Cela n'affecte pas les hôtes dans les sous-dossiers."
 
+#, fuzzy, python-format
+msgid "This does not work in Checkmk %s."
+msgstr "Cet hôte n'a pas d'agents Checkmk."
+
 msgid "This element is currently in a scheduled downtime."
 msgstr "Cet élément est actuellement en arrêt programmé."
 
@@ -63347,6 +63400,12 @@ msgstr ""
 "dessus de l'axe du temps et d'autres en dessous. Si vous activez cette "
 "option, les anciennes données supérieures sont alors affichées sous l'axe et "
 "les données inférieures sont affichées au-dessus."
+
+#, python-format
+msgid ""
+"This may partially work in Checkmk %s but will stop working from the next "
+"major version onwards."
+msgstr ""
 
 #, python-format
 msgid "This message has been created at %s and is valid till %s."
@@ -70997,10 +71056,6 @@ msgstr "Non surveillé"
 msgid "Unoptimized connections"
 msgstr "Connexions non optimisées"
 
-#, fuzzy, python-format
-msgid "Unpackaged file %r"
-msgstr "Fichiers non emballés"
-
 msgid "Unpackaged files"
 msgstr "Fichiers non emballés"
 
@@ -74527,6 +74582,20 @@ msgstr ""
 "sur le traitement des données des hôtes piggybacked. Les noms des hôtes "
 "sources doivent être définis dans le champ de condition <i>Hôtes explicites</"
 "i>."
+
+msgid ""
+"We highly recommend solving this issue already in your installation by "
+"updating the extension package. Otherwise the extension package will be "
+"deactivated after an upgrade."
+msgstr ""
+
+msgid ""
+"We highly recommend solving this issue already in your installation either "
+"by migrating or removing this plug-in."
+msgstr ""
+
+msgid "We highly recommend solving this issue already in your installation."
+msgstr ""
 
 msgid "Weak"
 msgstr "Faible"
@@ -80906,6 +80975,18 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "Import all valid tags"
+#~ msgstr "Importer toutes les annotations valides"
+
+#, fuzzy, python-format
+#~ msgid "Extension package %r"
+#~ msgstr "Paquets d'extension"
+
+#, fuzzy, python-format
+#~ msgid "Unpackaged file %r"
+#~ msgstr "Fichiers non emballés"
 
 #, fuzzy
 #~ msgid "Check man page uses the deprecated API"

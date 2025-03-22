@@ -4516,6 +4516,10 @@ msgstr "Gazdele afectate conțin"
 msgid "Affected sites"
 msgstr "Situri afectate"
 
+#, fuzzy, python-format
+msgid "Affected sites: %s"
+msgstr "Situri afectate"
+
 msgid ""
 "After a battery diagnostics the battery capacity is reduced until the "
 "battery is fully charged again. Here you can specify an alternative lower "
@@ -7878,6 +7882,9 @@ msgstr "Regulă BI sau agregare"
 msgid "BI rules %s from BI pack '%s'"
 msgstr "Reguli BI %s din pachetul BI '%s'"
 
+msgid "BI runtime data"
+msgstr ""
+
 msgid "BI service details"
 msgstr "Detalii despre serviciul BI"
 
@@ -8621,6 +8628,10 @@ msgstr "Administrare Business Intelligence"
 
 msgid "Business Intelligence rules and aggregations"
 msgstr "Reguli și agregări Business Intelligence"
+
+#, fuzzy
+msgid "Business Intelligence runtime data"
+msgstr "Informații de afaceri"
 
 msgid "Business reporting"
 msgstr "Raportarea afacerilor"
@@ -9954,6 +9965,18 @@ msgstr "În cache"
 
 msgid "Cached agent data"
 msgstr "Date ale agentului stocate în memoria cache"
+
+msgid ""
+"Cached data from Business Intelligence. Contains states, downtimes, "
+"acknowledgements and service periods for all hosts/services included in a BI "
+"aggregation."
+msgstr ""
+
+msgid ""
+"Cached data from Business Intelligence. contains states, downtimes, "
+"acknowledgements and service periods for all hosts/services included in a BI "
+"aggregation."
+msgstr ""
 
 msgid "Cached memory"
 msgstr "Memorie cache"
@@ -13745,6 +13768,10 @@ msgstr "Informații contextuale despre această conexiune"
 msgid "Context information about this rule"
 msgstr "Informații contextuale despre această regulă"
 
+#, fuzzy
+msgid "Context is missing"
+msgstr "Site-ul lipsește"
+
 msgid "Context sensitive help"
 msgstr "Ajutor sensibil la context"
 
@@ -17338,9 +17365,17 @@ msgstr "Plugin-uri de verificare depreciate"
 msgid "Deprecated choice, please re-select"
 msgstr "Alegere depășită, vă rugăm să selectați din nou"
 
+#, fuzzy, python-format
+msgid "Deprecated extension package: %s"
+msgstr "A fost creat un nou pachet de extensii %s."
+
 #, fuzzy
 msgid "Deprecated legacy GUI extensions"
 msgstr "Replicați extensiile"
+
+#, fuzzy, python-format
+msgid "Deprecated plug-in: %s"
+msgstr "Plugin-uri de verificare depreciate"
 
 msgid "Deprecated rulesets"
 msgstr "Seturi de reguli depreciate"
@@ -17441,6 +17476,10 @@ msgstr "Detalii pentru notificările gazdei"
 
 msgid "Details for service notifications"
 msgstr "Detalii pentru notificările de serviciu"
+
+#, fuzzy
+msgid "Details:"
+msgstr "Detalii"
 
 msgid "Detect and use proxies configured on the target system"
 msgstr "Detectarea și utilizarea proxy-urilor configurate pe sistemul țintă"
@@ -18912,6 +18951,10 @@ msgstr "Nu grupați indicii"
 
 msgid "Do not group interfaces"
 msgstr "Nu grupați interfețele"
+
+#, fuzzy
+msgid "Do not import tags"
+msgstr "Nu importați"
 
 msgid "Do not impose levels"
 msgstr "Nu impuneți niveluri"
@@ -22055,10 +22098,6 @@ msgstr "Date de performanță extinse"
 
 msgid "Extension"
 msgstr "Extensie"
-
-#, fuzzy, python-format
-msgid "Extension package %r"
-msgstr "Pachete de extensie"
 
 msgid "Extension package files"
 msgstr "Fișiere de pachete de extensie"
@@ -29746,9 +29785,6 @@ msgstr "Import"
 
 msgid "Import all valid annotations"
 msgstr "Importați toate adnotările valide"
-
-msgid "Import all valid tags"
-msgstr "Importați toate etichetele valide"
 
 #, fuzzy
 msgid "Import hosts"
@@ -58406,6 +58442,13 @@ msgstr "Numărul preconizat de noduri din cluster"
 msgid "The expected number of resources in the cluster"
 msgstr "Numărul preconizat de resurse din cluster"
 
+#, python-format
+msgid ""
+"The extension package uses APIs which are deprecated or removed in Checkmk "
+"%s so that this extension will not work anymore once you upgrade your site "
+"to next major version."
+msgstr ""
+
 msgid ""
 "The fall back option tries to establish an encrypted TLS connection. If the "
 "other site does not supports it, plain text is used."
@@ -60054,6 +60097,13 @@ msgid ""
 msgstr ""
 "Plugin-ul <tt>isc_dhcpd</tt> colectează informații despre un daemon server "
 "DHCP pe Linux."
+
+#, python-format
+msgid ""
+"The plug-in uses APIs which are deprecated or removed in Checkmk %s, so that "
+"this extension will not work anymore once you upgrade your site to next "
+"major version."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -62420,6 +62470,10 @@ msgstr ""
 msgid "This does not affect hosts in subfolders."
 msgstr "Acest lucru nu afectează gazdele din subfoldere."
 
+#, fuzzy, python-format
+msgid "This does not work in Checkmk %s."
+msgstr "Această gazdă nu are agenți Checkmk."
+
 msgid "This element is currently in a scheduled downtime."
 msgstr "Acest element se află în prezent într-o perioadă de oprire programată."
 
@@ -62863,6 +62917,12 @@ msgstr ""
 "axei timpului și unele date sub axa timpului. În cazul în care activați "
 "această opțiune, primele date de sus sunt afișate sub axă, iar cele de jos "
 "sunt afișate deasupra acesteia."
+
+#, python-format
+msgid ""
+"This may partially work in Checkmk %s but will stop working from the next "
+"major version onwards."
+msgstr ""
 
 #, python-format
 msgid "This message has been created at %s and is valid till %s."
@@ -70420,10 +70480,6 @@ msgstr "Nemontat"
 msgid "Unoptimized connections"
 msgstr "Conexiuni neoptimizate"
 
-#, fuzzy, python-format
-msgid "Unpackaged file %r"
-msgstr "Fișiere neambalate"
-
 msgid "Unpackaged files"
 msgstr "Fișiere neambalate"
 
@@ -73894,6 +73950,20 @@ msgstr ""
 "de verificare. Această regulă vă ajută să obțineți un control mai mare "
 "asupra gestionării datelor gazdelor piggybacked. Numele gazdelor sursă "
 "trebuie să fie setate în câmpul de condiție <i>Explicit hosts</i>."
+
+msgid ""
+"We highly recommend solving this issue already in your installation by "
+"updating the extension package. Otherwise the extension package will be "
+"deactivated after an upgrade."
+msgstr ""
+
+msgid ""
+"We highly recommend solving this issue already in your installation either "
+"by migrating or removing this plug-in."
+msgstr ""
+
+msgid "We highly recommend solving this issue already in your installation."
+msgstr ""
 
 msgid "Weak"
 msgstr "Slabă"
@@ -80193,6 +80263,17 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#~ msgid "Import all valid tags"
+#~ msgstr "Importați toate etichetele valide"
+
+#, fuzzy, python-format
+#~ msgid "Extension package %r"
+#~ msgstr "Pachete de extensie"
+
+#, fuzzy, python-format
+#~ msgid "Unpackaged file %r"
+#~ msgstr "Fișiere neambalate"
 
 #, fuzzy
 #~ msgid "Check man page uses the deprecated API"

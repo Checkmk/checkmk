@@ -136,7 +136,6 @@ from cmk.utils import tty
 from cmk.utils.certs import cert_dir, CN_TEMPLATE, root_cert_path, RootCA
 from cmk.utils.licensing.helper import get_instance_id_file_path, save_instance_id
 from cmk.utils.log import VERBOSE
-from cmk.utils.paths import mkbackup_lock_dir
 from cmk.utils.resulttype import Error, OK, Result
 from cmk.utils.werks.acknowledgement import unacknowledged_incompatible_werks
 
@@ -4473,23 +4472,6 @@ def exec_other_omd(version: str) -> NoReturn:
     bail_out("Cannot run bin/omd of version %s." % version)
 
 
-def ensure_mkbackup_lock_dir_rights() -> None:
-    try:
-        mkbackup_lock_dir.mkdir(mode=0o0770, exist_ok=True)
-        shutil.chown(mkbackup_lock_dir, group="omd")
-        mkbackup_lock_dir.chmod(0o0770)
-    except PermissionError:
-        logger.log(
-            VERBOSE,
-            "Unable to create %s needed for mkbackup. "
-            "This may be due to the fact that your SITE "
-            "User isn't allowed to create the backup directory. "
-            "You could resolve this issue by running 'sudo omd start' as root "
-            "(and not as SITE user).",
-            mkbackup_lock_dir,
-        )
-
-
 # .
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
@@ -4642,7 +4624,7 @@ def _run_command(
 # TODO: Refactor these global variables
 # TODO: Refactor to argparse. Be aware of the pitfalls of the OMD command line scheme
 def main() -> None:
-    ensure_mkbackup_lock_dir_rights()
+    omdlib.backup.ensure_mkbackup_lock_dir_rights()
 
     main_args = sys.argv[1:]
 

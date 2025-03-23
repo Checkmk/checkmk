@@ -61,7 +61,7 @@ from omdlib.dialog import (
     dialog_yesno,
     user_confirms,
 )
-from omdlib.global_options import GlobalOptions
+from omdlib.global_options import GlobalOptions, parse_global_opts
 from omdlib.init_scripts import call_init_scripts, check_status
 from omdlib.site_name import site_name_from_uid, sitename_must_be_valid
 from omdlib.site_paths import SitePaths
@@ -4389,45 +4389,6 @@ Usage:\n\
 ]
 
 
-def handle_global_option(
-    global_opts: GlobalOptions, main_args: Arguments, opt: str, orig: str
-) -> tuple[GlobalOptions, Arguments]:
-    version = global_opts.version
-    verbose = global_opts.verbose
-    force = global_opts.force
-    interactive = global_opts.interactive
-
-    if opt in ["V", "version"]:
-        version, main_args = _opt_arg(main_args, opt)
-    elif opt in ["f", "force"]:
-        force = True
-        interactive = False
-    elif opt in ["i", "interactive"]:
-        force = False
-        interactive = True
-    elif opt in ["v", "verbose"]:
-        verbose = True
-    else:
-        bail_out("Invalid global option %s.\nCall omd help for available options." % orig)
-
-    new_global_opts = GlobalOptions(
-        version=version,
-        verbose=verbose,
-        force=force,
-        interactive=interactive,
-    )
-
-    return new_global_opts, main_args
-
-
-def _opt_arg(main_args: Arguments, opt: str) -> tuple[str, Arguments]:
-    if len(main_args) < 1:
-        bail_out("Option %s needs an argument." % opt)
-    arg = main_args[0]
-    main_args = main_args[1:]
-    return arg, main_args
-
-
 def _parse_command_options(
     args: Arguments, options: list[Option]
 ) -> tuple[Arguments, CommandOptions]:
@@ -4693,15 +4654,7 @@ def main() -> None:
     except FileNotFoundError:
         orig_working_directory = "/"
 
-    global_opts = GlobalOptions()
-    while len(main_args) >= 1 and main_args[0].startswith("-"):
-        opt = main_args[0]
-        main_args = main_args[1:]
-        if opt.startswith("--"):
-            global_opts, main_args = handle_global_option(global_opts, main_args, opt[2:], opt)
-        else:
-            for c in opt[1:]:
-                global_opts, main_args = handle_global_option(global_opts, main_args, c, opt)
+    global_opts, main_args = parse_global_opts(main_args)
     if global_opts.version is not None and global_opts.version != omdlib.__version__:
         # Switch to other version of bin/omd
         exec_other_omd(global_opts.version)

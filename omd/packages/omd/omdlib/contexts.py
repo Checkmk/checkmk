@@ -72,7 +72,7 @@ class SiteContext(AbstractSiteContext):
 
     @property
     def dir(self) -> str:
-        return os.path.join("/omd/sites", self._sitename)
+        return str(Path("/omd/") / f"sites/{self._sitename}")
 
     @property
     def tmp_dir(self) -> str:

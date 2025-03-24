@@ -358,6 +358,7 @@ def test_registered_painters() -> None:
         "inv_software_applications_docker_containers",
         "inv_software_applications_docker_images",
         "inv_software_applications_docker_networks",
+        "inv_software_applications_docker_networks_containers",
         "inv_software_applications_docker_node_labels",
         "inv_software_applications_docker_num_containers_paused",
         "inv_software_applications_docker_num_containers_running",

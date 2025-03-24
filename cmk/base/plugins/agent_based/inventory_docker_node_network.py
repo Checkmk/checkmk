@@ -6,7 +6,7 @@ from typing import Any
 
 from cmk.plugins.lib import docker
 
-from .agent_based_api.v1 import Attributes, register, TableRow
+from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
 Section = dict[str, Any]
@@ -25,8 +25,7 @@ register.agent_section(
 
 def inventory_docker_node_network(section: Section) -> InventoryResult:
     for network_id, network in section.items():
-        network_name = network["Name"]
-        network_path = ["software", "applications", "docker", "networks", network_name]
+        network_path = ["software", "applications", "docker", "networks"]
         container_path = network_path + ["containers"]
 
         for container_id, container in sorted(network["Containers"].items()):
@@ -36,6 +35,7 @@ def inventory_docker_node_network(section: Section) -> InventoryResult:
                     "id": docker.get_short_id(container_id),
                 },
                 status_columns={
+                    "network_id": network_id,
                     "name": container["Name"],
                     "ipv4_address": container["IPv4Address"],
                     "ipv6_address": container["IPv6Address"],
@@ -43,22 +43,23 @@ def inventory_docker_node_network(section: Section) -> InventoryResult:
                 },
             )
 
-        network_inventory_attributes = {
-            "name": network_name,
-            "network_id": docker.get_short_id(network_id),
+        network_inventory_columns = {
+            "name": network["Name"],
+            "short_id": docker.get_short_id(network_id),
             "scope": network["Scope"],
             "labels": docker.format_labels(network.get("Labels", {})),
         }
         try:
-            network_inventory_attributes.update(
+            network_inventory_columns.update(
                 host_ifname=network["Options"]["com.docker.network.bridge.name"]
             )
         except KeyError:
             pass
 
-        yield Attributes(
+        yield TableRow(
             path=network_path,
-            inventory_attributes=network_inventory_attributes,
+            key_columns={"network_id": network_id},
+            inventory_columns=network_inventory_columns,
         )
 
 

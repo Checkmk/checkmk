@@ -792,20 +792,21 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         },
         ".software.applications.docker.containers:*.status": {"title": _l("Status")},
         ".software.applications.docker.containers:*.image": {"title": _l("Image")},
-        ".software.applications.docker.networks.": {"title": "Networks"},
-        ".software.applications.docker.networks.*.": {
-            "title": "Network %s",
+        ".software.applications.docker.networks:": {
+            "title": _l("Docker networks"),
             "keyorder": [
                 "network_id",
+                "short_id",
                 "name",
                 "scope",
                 "labels",
             ],
         },
-        ".software.applications.docker.networks.*.network_id": {"title": "Network ID"},
-        ".software.applications.docker.networks.*.name": {"title": "Name"},
-        ".software.applications.docker.networks.*.scope": {"title": "Scope"},
-        ".software.applications.docker.networks.*.labels": {
+        ".software.applications.docker.networks:*.network_id": {"title": "Network ID"},
+        ".software.applications.docker.networks:*.short_id": {"title": "Short ID"},
+        ".software.applications.docker.networks:*.name": {"title": "Name"},
+        ".software.applications.docker.networks:*.scope": {"title": "Scope"},
+        ".software.applications.docker.networks:*.labels": {
             "title": "Labels",
             "paint": "csv_labels",
         },
@@ -848,19 +849,20 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.docker.container.networks:*.network_id": {
             "title": _l("Network ID")
         },
-        ".software.applications.docker.networks.*.containers:": {
-            "title": _l("Containers"),
-            "keyorder": ["name", "id", "ipv4_address", "ipv6_address", "mac_address"],
+        ".software.applications.docker.networks.containers:": {
+            "title": _l("Network containers"),
+            "keyorder": ["network_id", "id", "name", "ipv4_address", "ipv6_address", "mac_address"],
         },
-        ".software.applications.docker.networks.*.containers:*.name": {"title": _l("Name")},
-        ".software.applications.docker.networks.*.containers:*.id": {"title": _l("ID")},
-        ".software.applications.docker.networks.*.containers:*.ipv4_address": {
+        ".software.applications.docker.networks.containers:*.network_id": {"title": _l("Network ID")},
+        ".software.applications.docker.networks.containers:*.id": {"title": _l("Container ID")},
+        ".software.applications.docker.networks.containers:*.name": {"title": _l("Name")},
+        ".software.applications.docker.networks.containers:*.ipv4_address": {
             "title": _l("IPv4 address"),
         },
-        ".software.applications.docker.networks.*.containers:*.ipv6_address": {
+        ".software.applications.docker.networks.containers:*.ipv6_address": {
             "title": _l("IPv6 address"),
         },
-        ".software.applications.docker.networks.*.containers:*.mac_address": {
+        ".software.applications.docker.networks.containers:*.mac_address": {
             "title": _l("MAC address"),
         },
         ".software.applications.fortinet.": {"title": _l("Fortinet")},

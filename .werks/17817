@@ -11,5 +11,5 @@ In previous versions of Checkmk, when attempting to login with
 an invalid userid, a profile directory was created <a href="https://checkmk.com/werk/16389">(Werk #16389)</a>.
 However, this could cause problems when updating to 2.2, as these
 profile directory names could contain invalid characters.
-This werk addresses this issues by first deleting any invlaid user
+This werk addresses this issues by first deleting any invalid user
 profile from disk that isn't also a valid Checkmk user.

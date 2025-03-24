@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import StringTable
-from cmk.plugins.lib.netapp_api import Qtree
+from cmk.plugins.netapp.agent_based.lib import Qtree
 from cmk.plugins.netapp.agent_based.netapp_ontap_qtree_quota import (
     parse_netapp_ontap_qtree_quota,
     Section,

@@ -28,8 +28,8 @@ from cmk.plugins.lib.df import (
     mountpoints_in_group,
     TREND_DEFAULT_PARAMS,
 )
-from cmk.plugins.lib.netapp_api import combine_netapp_api_volumes, single_volume_metrics
 from cmk.plugins.netapp import models
+from cmk.plugins.netapp.agent_based.lib import combine_netapp_api_volumes, single_volume_metrics
 
 VolumesSection = Mapping[str, models.VolumeModel]
 VolumesCountersSection = Mapping[str, models.VolumeCountersModel]

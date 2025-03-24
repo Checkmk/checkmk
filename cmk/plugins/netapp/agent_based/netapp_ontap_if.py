@@ -19,13 +19,13 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.lib import interfaces
-from cmk.plugins.lib.netapp_api import (
+from cmk.plugins.netapp import models
+from cmk.plugins.netapp.agent_based.lib import (
     check_netapp_interfaces,
     IfSection,
     MACList,
     merge_if_sections,
 )
-from cmk.plugins.netapp import models
 from cmk.plugins.netapp.agent_based.netapp_ontap_ports import Section as PortsSection
 
 InterfacesSection = Mapping[str, models.IpInterfaceModel]

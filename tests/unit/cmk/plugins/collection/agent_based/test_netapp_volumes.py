@@ -7,7 +7,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.plugins.collection.agent_based.netapp_volumes import check, discover, parse_netapp_volumes
+from cmk.plugins.netapp.agent_based.netapp_volumes import check, discover, parse_netapp_volumes
 
 STRING_TABLE_FILER_NETAPP_8_1_1 = [
     ["vol0", "23465813", "1", "online", "raid_dp, 64-bit, rlw_on"],

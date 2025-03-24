@@ -5,7 +5,7 @@
 
 import sys
 
-from cmk.special_agents.agent_netapp_ontap import main
+from cmk.plugins.netapp.special_agents.agent_netapp_ontap import main
 
 if __name__ == "__main__":
     sys.exit(main())

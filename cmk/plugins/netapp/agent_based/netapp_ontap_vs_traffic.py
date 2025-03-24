@@ -16,8 +16,8 @@ from cmk.agent_based.v2 import (
     Service,
     StringTable,
 )
-from cmk.plugins.lib.netapp_api import check_netapp_vs_traffic
 from cmk.plugins.netapp import models
+from cmk.plugins.netapp.agent_based.lib import check_netapp_vs_traffic
 
 # <<<netapp_ontap_vs_traffic:sep(0)>>>
 # {

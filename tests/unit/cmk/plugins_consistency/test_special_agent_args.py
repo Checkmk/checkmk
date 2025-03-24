@@ -19,6 +19,7 @@ from cmk.plugins.gcp.special_agents import agent_gcp, agent_gcp_status
 from cmk.plugins.gerrit.lib import agent as agent_gerrit
 from cmk.plugins.jenkins.lib import jenkins as agent_jenkins
 from cmk.plugins.kube.special_agents import agent_kube
+from cmk.plugins.netapp.special_agent import agent_netapp_ontap
 from cmk.plugins.prometheus.special_agents import agent_prometheus
 from cmk.plugins.redfish.special_agents import agent_redfish, agent_redfish_power
 from cmk.server_side_calls_backend import load_special_agents
@@ -41,7 +42,6 @@ from cmk.special_agents import (
     agent_jira,
     agent_mobileiron,
     agent_mqtt,
-    agent_netapp_ontap,
     agent_proxmox_ve,
     agent_pure_storage_fa,
     agent_rabbitmq,

@@ -6,8 +6,8 @@
 from collections.abc import Mapping
 
 from cmk.agent_based.v2 import AgentSection, CheckPlugin, CheckResult, StringTable
-from cmk.plugins.lib import netapp_api
 from cmk.plugins.netapp import models
+from cmk.plugins.netapp.agent_based import lib as netapp_api
 
 Section = Mapping[str, models.ShelfFanModel]
 

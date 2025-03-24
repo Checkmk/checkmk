@@ -30,9 +30,13 @@ from cmk.agent_based.v2 import (
     get_value_store,
     StringTable,
 )
-from cmk.plugins.lib import df, netapp_api
-from cmk.plugins.lib.netapp_api import Qtree
+from cmk.plugins.lib import df
 from cmk.plugins.netapp import models
+from cmk.plugins.netapp.agent_based.lib import (
+    check_netapp_qtree_quota,
+    discover_netapp_qtree_quota,
+    Qtree,
+)
 
 Section = Mapping[str, Qtree]
 
@@ -68,7 +72,7 @@ agent_section_netapp_ontap_qtree_quota = AgentSection(
 def discover_netapp_ontap_qtree_quota(
     params: Mapping[str, Any], section: Section
 ) -> DiscoveryResult:
-    yield from netapp_api.discover_netapp_qtree_quota(params, section)
+    yield from discover_netapp_qtree_quota(params, section)
 
 
 def check_netapp_ontap_qtree_quota(
@@ -78,7 +82,7 @@ def check_netapp_ontap_qtree_quota(
     if not qtree:
         return
 
-    yield from netapp_api.check_netapp_qtree_quota(item, qtree, params, get_value_store())
+    yield from check_netapp_qtree_quota(item, qtree, params, get_value_store())
 
 
 check_plugin_netapp_ontap_qtree_quota = CheckPlugin(

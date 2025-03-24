@@ -23,8 +23,8 @@ from cmk.plugins.lib.df import (
     MAGIC_FACTOR_DEFAULT_PARAMS,
     TREND_DEFAULT_PARAMS,
 )
-from cmk.plugins.lib.netapp_api import check_netapp_luns
 from cmk.plugins.netapp import models
+from cmk.plugins.netapp.agent_based.lib import check_netapp_luns
 
 Section = Mapping[str, models.LunModel]
 

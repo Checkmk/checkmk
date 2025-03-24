@@ -13,7 +13,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Metric, render, Result, Service, State
-from cmk.plugins.lib.netapp_api import (
+from cmk.plugins.netapp.agent_based.lib import (
     check_netapp_luns,
     check_netapp_qtree_quota,
     check_netapp_vs_traffic,

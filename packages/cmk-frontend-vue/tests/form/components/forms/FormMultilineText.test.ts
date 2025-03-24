@@ -79,7 +79,7 @@ test('FormMultilineText renders backend validation messages', async () => {
         {
           location: [],
           message: 'Backend error message',
-          replacement_value: ''
+          invalid_value: ''
         }
       ]
     }

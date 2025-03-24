@@ -190,7 +190,7 @@ def test_failing_validate(clients: ClientRegistry) -> None:
                 {
                     "location": [UniqueBundleIDStr],
                     "message": "Invalid string",
-                    "replacement_value": "",
+                    "invalid_value": "",
                 },
             ],
         },
@@ -247,7 +247,7 @@ def test_failing_validate_host_path(clients: ClientRegistry) -> None:
                 {
                     "location": ["host_path"],
                     "message": "Your input does not match the required format '^(?:(?:[~\\\\\\/]|(?:[~\\\\\\/][-_ a-zA-Z0-9.]+)+[~\\\\\\/]?)|[0-9a-fA-F]{32})$'.",
-                    "replacement_value": "#invalid_host_path#",
+                    "invalid_value": "#invalid_host_path#",
                 },
             ],
         },
@@ -513,7 +513,7 @@ def test_quick_setup_edit(clients: ClientRegistry) -> None:
                         "id_1": [
                             {
                                 "message": "The minimum allowed length is 10.",
-                                "replacement_value": "too_short",
+                                "invalid_value": "too_short",
                                 "location": [],
                             }
                         ],
@@ -526,7 +526,7 @@ def test_quick_setup_edit(clients: ClientRegistry) -> None:
                         "id_2": [
                             {
                                 "message": "The maximum allowed length is 10.",
-                                "replacement_value": "this_is_too_long",
+                                "invalid_value": "this_is_too_long",
                                 "location": [],
                             }
                         ]

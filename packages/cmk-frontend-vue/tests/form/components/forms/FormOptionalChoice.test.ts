@@ -46,7 +46,7 @@ test('FormOptionalChoice renders element validation message', async () => {
       spec,
       data: 42,
       backendValidation: [
-        { location: ['parameter_form'], message: 'Backend error message', replacement_value: 23 }
+        { location: ['parameter_form'], message: 'Backend error message', invalid_value: 23 }
       ]
     }
   })
@@ -59,7 +59,7 @@ test('FormOptionalChoice renders own validation message', async () => {
     props: {
       spec,
       data: 42,
-      backendValidation: [{ location: [], message: 'Backend error message', replacement_value: 23 }]
+      backendValidation: [{ location: [], message: 'Backend error message', invalid_value: 23 }]
     }
   })
 
@@ -112,7 +112,7 @@ test('FormOptionalChoice updates validation', async () => {
       {
         location: ['parameter_form'],
         message: 'Backend error message',
-        replacement_value: 66
+        invalid_value: 66
       }
     ]
   })

@@ -81,7 +81,7 @@ class OptionalChoiceVisitor(FormSpecVisitor[OptionalChoice, _ParsedValueModel, _
                     shared_type_defs.ValidationMessage(
                         location=["parameter_form"],
                         message=validation_error.message,
-                        replacement_value=validation_error.replacement_value,
+                        invalid_value=validation_error.invalid_value,
                     )
                 )
 

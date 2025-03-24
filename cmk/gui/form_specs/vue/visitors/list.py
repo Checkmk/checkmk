@@ -89,7 +89,7 @@ class ListVisitor(
                     shared_type_defs.ValidationMessage(
                         location=[str(idx)] + validation.location,
                         message=validation.message,
-                        replacement_value=validation.replacement_value,
+                        invalid_value=validation.invalid_value,
                     )
                 )
         return element_validations

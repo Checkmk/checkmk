@@ -124,7 +124,7 @@ const components: Array<[unknown, string]> = [
   <FormReadonly
     :spec="getTupleSpec('horizontal', true, 'string')"
     :data="['one', 'two']"
-    :backend-validation="[{ location: ['1'], message: 'error', replacement_value: 'smth' }]"
+    :backend-validation="[{ location: ['1'], message: 'error', invalid_value: 'smth' }]"
   />
 </template>
 

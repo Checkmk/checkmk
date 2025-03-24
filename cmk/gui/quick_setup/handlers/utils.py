@@ -202,7 +202,7 @@ def get_stage_components_from_widget(widget: Widget, prefill_data: ParsedFormDat
 @dataclass
 class QuickSetupValidationError:
     message: str
-    replacement_value: Any
+    invalid_value: Any
     location: Sequence[str] = field(default_factory=list)
 
 

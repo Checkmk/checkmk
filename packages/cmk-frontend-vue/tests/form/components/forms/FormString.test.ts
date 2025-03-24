@@ -80,7 +80,7 @@ test('FormString renders backend validation messages', async () => {
         {
           location: [],
           message: 'Backend error message',
-          replacement_value: 'some_replacement_value'
+          invalid_value: 'some_invalid_value'
         }
       ]
     }
@@ -88,7 +88,7 @@ test('FormString renders backend validation messages', async () => {
 
   await screen.findByText('Backend error message')
   const element = screen.getByRole<HTMLInputElement>('textbox', { name: 'fooLabel' })
-  expect(element.value).toBe('some_replacement_value')
+  expect(element.value).toBe('some_invalid_value')
 })
 
 test('FormString displays required', async () => {

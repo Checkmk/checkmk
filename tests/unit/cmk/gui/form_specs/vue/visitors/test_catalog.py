@@ -45,7 +45,7 @@ def test_catalog_validation_simple(
                 "key",
             ],
             message="The minimum allowed length is 5.",
-            replacement_value="",
+            invalid_value="",
         )
     ]
 

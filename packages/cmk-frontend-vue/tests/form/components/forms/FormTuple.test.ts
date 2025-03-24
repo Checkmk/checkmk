@@ -47,7 +47,7 @@ test('FormTuple renders element validation message', async () => {
       spec,
       data: ['foo', 'bar'],
       backendValidation: [
-        { location: ['0'], message: 'Backend error message', replacement_value: '23' }
+        { location: ['0'], message: 'Backend error message', invalid_value: '23' }
       ]
     }
   })
@@ -60,7 +60,7 @@ test('FormTuple renders own validation message', async () => {
     props: {
       spec,
       data: ['foo', 'bar'],
-      backendValidation: [{ location: [], message: 'Backend error message', replacement_value: '' }]
+      backendValidation: [{ location: [], message: 'Backend error message', invalid_value: '' }]
     }
   })
 
@@ -96,7 +96,7 @@ test('FormTuple renders updated validation', async () => {
     spec,
     data: ['changed value', 'other value'],
     backendValidation: [
-      { location: ['0'], message: 'Backend error message', replacement_value: 'new_error_value' }
+      { location: ['0'], message: 'Backend error message', invalid_value: 'new_error_value' }
     ]
   })
 

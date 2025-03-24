@@ -27,7 +27,7 @@ test('FormSimplePassword renders validation message', async () => {
     props: {
       spec,
       data: ['encrypted_pw', false],
-      backendValidation: [{ location: [], message: 'Invalid password', replacement_value: '' }]
+      backendValidation: [{ location: [], message: 'Invalid password', invalid_value: '' }]
     }
   })
 
@@ -67,7 +67,7 @@ test('FormSimplePassword updates validation', async () => {
       {
         location: [],
         message: 'Backend error message',
-        replacement_value: ''
+        invalid_value: ''
       }
     ]
   })

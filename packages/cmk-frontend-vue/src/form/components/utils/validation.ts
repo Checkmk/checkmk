@@ -25,7 +25,7 @@ export function useValidation<Type>(
   immediateWatch(getBackendValidation, (newValidation: ValidationMessages) => {
     validation.value = newValidation.map((m) => m.message)
     newValidation.forEach((message) => {
-      data.value = message.replacement_value as Type
+      data.value = message.invalid_value as Type
     })
   })
 
@@ -128,7 +128,7 @@ export function groupNestedValidations(
     elementMessages.push({
       location: msg.location.slice(1),
       message: msg.message,
-      replacement_value: msg.replacement_value
+      invalid_value: msg.invalid_value
     })
     elementValidations[msgElementIdent] = elementMessages
   })
@@ -156,7 +156,7 @@ export function groupIndexedValidations(
     elementMessages.push({
       location: msg.location.slice(1),
       message: msg.message,
-      replacement_value: msg.replacement_value
+      invalid_value: msg.invalid_value
     })
     elementValidations[index] = elementMessages
   })

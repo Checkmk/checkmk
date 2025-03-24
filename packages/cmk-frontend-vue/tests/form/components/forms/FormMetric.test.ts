@@ -138,7 +138,7 @@ test.skip('FormMetric renders backend validation messages', async () => {
         {
           location: [],
           message: 'Backend error message',
-          replacement_value: 'some_replacement_value'
+          invalid_value: 'some_invalid_value'
         }
       ]
     }
@@ -146,5 +146,5 @@ test.skip('FormMetric renders backend validation messages', async () => {
 
   await screen.findByText('Backend error message')
   const element = screen.getByPlaceholderText<HTMLInputElement>('(Select metric)')
-  expect(element.value).toBe('some_replacement_value')
+  expect(element.value).toBe('some_invalid_value')
 })

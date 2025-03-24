@@ -140,7 +140,7 @@ function renderOptionalChoice(
       embeddedMessages.push({
         location: msg.location.slice(1),
         message: msg.message,
-        replacement_value: msg.replacement_value
+        invalid_value: msg.invalid_value
       })
     } else {
       localMessages.push(msg)
@@ -371,7 +371,7 @@ function computeUsedValue(
   backendValidation: ValidationMessages = []
 ): [string, boolean, string] {
   if (backendValidation.length > 0) {
-    return [backendValidation[0]!.replacement_value as string, true, backendValidation[0]!.message]
+    return [backendValidation[0]!.invalid_value as string, true, backendValidation[0]!.message]
   }
   return [value as string, false, '']
 }

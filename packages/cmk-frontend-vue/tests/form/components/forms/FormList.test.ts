@@ -81,7 +81,7 @@ test('FormList renders backend validation messages', async () => {
     props: {
       spec,
       data: [],
-      backendValidation: [{ location: [], message: 'Backend error message', replacement_value: '' }]
+      backendValidation: [{ location: [], message: 'Backend error message', invalid_value: '' }]
     }
   })
 
@@ -103,7 +103,7 @@ test.skip('FormList updated backend child validation shows validation error', as
     spec,
     data: ['some value'],
     backendValidation: [
-      { location: ['0'], message: 'Backend error message', replacement_value: 'other value' }
+      { location: ['0'], message: 'Backend error message', invalid_value: 'other value' }
     ]
   })
 
@@ -118,7 +118,7 @@ test('FormList local child validation overwrites backend validation', async () =
       spec,
       data: ['some value'],
       backendValidation: [
-        { location: ['0'], message: 'Backend error message', replacement_value: 'other value' }
+        { location: ['0'], message: 'Backend error message', invalid_value: 'other value' }
       ]
     }
   })

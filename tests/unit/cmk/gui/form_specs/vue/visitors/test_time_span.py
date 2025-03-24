@@ -40,7 +40,7 @@ def test_time_span_validator() -> None:
         shared_type_defs.ValidationMessage(
             location=[],
             message="Allowed values range from 1 hours to 7 days.",
-            replacement_value=1.0,
+            invalid_value=1.0,
         ),
     ]
 
@@ -64,6 +64,6 @@ def test_time_span_validator_custom_message() -> None:
             location=[],
             # custom error_msg from above is overwritten :-(
             message="The minimum allowed value is 1 hours.",
-            replacement_value=1.0,
+            invalid_value=1.0,
         ),
     ]

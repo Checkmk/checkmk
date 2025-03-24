@@ -149,7 +149,7 @@ test('FormListUniqueSelection local child validation overwrites backend validati
       spec: listCascadingSpec,
       data: [['stringChoice', 'some value']],
       backendValidation: [
-        { location: ['0', '1'], message: 'Backend error message', replacement_value: 'other value' }
+        { location: ['0', '1'], message: 'Backend error message', invalid_value: 'other value' }
       ]
     }
   })
@@ -184,7 +184,7 @@ test('FormListUniqueSelection shows backend validation pointing to list', async 
     props: {
       spec: listSpec,
       data: [],
-      backendValidation: [{ location: [], message: 'Backend error message', replacement_value: [] }]
+      backendValidation: [{ location: [], message: 'Backend error message', invalid_value: [] }]
     }
   })
   screen.getByText('Backend error message')

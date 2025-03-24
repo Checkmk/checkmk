@@ -101,6 +101,6 @@ def test_non_empty_validation() -> None:
         ValidationMessage(
             location=[],
             message="An empty value is not allowed here",
-            replacement_value=[],
+            invalid_value=[],
         ),
     ]

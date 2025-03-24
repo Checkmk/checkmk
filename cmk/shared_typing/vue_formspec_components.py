@@ -281,7 +281,7 @@ class TimeSpecificI18n:
 class ValidationMessage:
     location: list[str]
     message: str
-    replacement_value: Any
+    invalid_value: Any
 
 
 @dataclass(kw_only=True)

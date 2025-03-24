@@ -68,7 +68,7 @@ class SimplePasswordVisitor(FormSpecVisitor[SimplePassword, _ParsedValueModel, _
         self, raw_value: object, parsed_value: _ParsedValueModel
     ) -> list[shared_type_defs.ValidationMessage]:
         return [
-            shared_type_defs.ValidationMessage(location=[], message=x, replacement_value="")
+            shared_type_defs.ValidationMessage(location=[], message=x, invalid_value="")
             for x in optional_validation(self._validators(), parsed_value)
             if x is not None
         ]

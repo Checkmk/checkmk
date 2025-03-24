@@ -44,6 +44,12 @@ MAP_UNIT: Final = {
     "19": "%",
 }
 
+# Supported languages: English, German, French, and Spanish.
+VALID_BLACK_WORDS = ("black", "schwarz", "noir", "negra")
+VALID_CYAN_WORDS = ("cyan", "zyan", "cian")
+VALID_MAGENTA_WORDS = ("magenta",)
+VALID_YELLOW_WORDS = ("yellow", "gelb", "jaune", "amarilla")
+
 
 Unit = NewType("Unit", str)
 
@@ -106,19 +112,20 @@ def _get_supply_unit(raw_unit: str) -> Unit:
     return Unit(unit) if unit in {"", "%"} else Unit(f" {unit}")
 
 
-def _get_supply_color(raw_color: str) -> Color | None:
+def _get_supply_color(raw_color: str, raw_description: str) -> Color | None:
     color = raw_color.lower()
+    description = raw_description.lower()
 
-    if color == "black":
+    if color == "black" or any(word in description for word in VALID_BLACK_WORDS):
         return "black"
 
-    if color == "cyan":
+    if color == "cyan" or any(word in description for word in VALID_CYAN_WORDS):
         return "cyan"
 
-    if color == "magenta":
+    if color == "magenta" or any(word in description for word in VALID_MAGENTA_WORDS):
         return "magenta"
 
-    if color == "yellow":
+    if color == "yellow" or any(word in description for word in VALID_YELLOW_WORDS):
         return "yellow"
 
     return None
@@ -182,7 +189,7 @@ def parse_printer_supply(string_table: Sequence[StringTable]) -> Section:
         raw_color = raw_color.rstrip("\0")
 
         unit = _get_supply_unit(raw_unit)
-        color = _get_supply_color(raw_color)
+        color = _get_supply_color(raw_color, description)
         supply_class = _get_supply_class(raw_supply_class)
 
         parsed[description] = PrinterSupply(unit, max_capacity, level, supply_class, color)

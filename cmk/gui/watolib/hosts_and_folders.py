@@ -94,6 +94,7 @@ from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.host_attributes import (
     all_host_attributes,
     collect_attributes,
+    get_host_attribute_default_value,
     HostAttributes,
     HostContactGroupSpec,
     mask_attributes,
@@ -1908,7 +1909,7 @@ class Folder(FolderProtocol):
         for attrname, host_attribute in all_host_attributes(active_config).items():
             if attrname not in effective:
                 # Mypy can not help here with the dynamic key
-                effective.setdefault(attrname, host_attribute.default_value())  # type: ignore[misc]
+                effective.setdefault(attrname, get_host_attribute_default_value(host_attribute))  # type: ignore[misc]
 
         return effective
 

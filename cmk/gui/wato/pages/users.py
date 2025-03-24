@@ -951,9 +951,10 @@ class ModeEditUser(WatoMode):
 
             if password:
                 verify_password_policy(password, password_field_name)
+                if "password" in user_attrs:
+                    send_security_message(self._user_id, SecurityNotificationEvent.password_change)
                 user_attrs["password"] = hash_password(password)
                 user_attrs["last_pw_change"] = int(time.time())
-                send_security_message(self._user_id, SecurityNotificationEvent.password_change)
                 increase_serial = True  # password changed, reflect in auth serial
 
             # PW change enforcement

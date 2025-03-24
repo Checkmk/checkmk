@@ -73,7 +73,7 @@ py_wheel(
     distribution = "cmk-crypto",
     strip_path_prefixes = ["packages/cmk-crypto"],
     # TODO: Duplicated from pyproject.toml
-    version = "0.9.0",
+    version = "1.0.0",
     deps = [":cmk-crypto"],
 )
 

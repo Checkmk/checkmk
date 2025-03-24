@@ -66,16 +66,14 @@ class MessageUsersDashlet(Dashlet[MessageUsersDashletConfig]):
                     case "html":
                         table.cell(_("Message"), HTML(msg_text["content"], escape=False))
                 table.cell(
-                    _("Date sent"),
-                    time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(entry["time"]))
-                    if "time" in entry
-                    else "-",
+                    _("Sent on"),
+                    time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(entry["time"])),
                 )
                 table.cell(
                     _("Expires on"),
-                    time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(entry["valid_till"]))
-                    if "valid_till" in entry
-                    else "-",
+                    "-"
+                    if (valid_till := entry["valid_till"]) is None
+                    else time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(valid_till)),
                 )
 
         html.close_div()

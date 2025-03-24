@@ -68,6 +68,7 @@ node_modules/
 omd/bazel-*
 omd/pkgs_by_bzl/
 bazel_execution_log*.json
+deps_install.json
 pip-mirror-tmp
 RemoteSystemsTempFiles
 requirements-no-dev.txt

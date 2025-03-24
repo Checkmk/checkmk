@@ -8,7 +8,7 @@ show_help() {
     echo
     echo "Options:"
     echo "  -d, --execution_logs_root      Directory containing the Bazel execution logs (default: current directory)"
-    echo "  -p, --bazel_log_file_pattern   glob pattern of log files in execution_logs_root (default bazel_execution_log*.json)"
+    echo "  -p, --bazel_log_file_pattern   glob pattern of log files in execution_logs_root (default deps_install.json)"
     echo "  -s, --summary_file    File to write the summary JSON to (default: summary.json)"
     echo "  -t, --distro          Distro name or identifier (default: unset)"
     echo "  -c, --cachehit_csv File to append the cache hits percentage to (default: cache.csv)"
@@ -20,7 +20,7 @@ execution_logs_root=$(pwd)
 summary_file="summary.json"
 distro="default distro value"
 cachehit_csv="cache.csv"
-bazel_log_file_pattern="bazel_execution_log*.json"
+bazel_log_file_pattern="deps_install.json"
 
 # Parse command line arguments
 while [[ "$#" -gt 0 ]]; do

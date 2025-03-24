@@ -10,7 +10,7 @@ def try_parse_bazel_execution_log(distro, distro_dir, bazel_log_prefix) {
             sh("""bash \
                 buildscripts/scripts/bazel_execution_log_parser.sh \
                 --execution_logs_root "${distro_dir}" \
-                --bazel_log_file_pattern "bazel_execution_log*" \
+                --bazel_log_file_pattern "deps_install.json" \
                 --summary_file "${summary_file}" \
                 --cachehit_csv "${cache_hits_file}" \
                 --distro "${distro}"

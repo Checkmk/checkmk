@@ -25,7 +25,8 @@ import sys
 import tarfile
 import time
 import traceback
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Generator, Iterable, Iterator, Mapping, Sequence
+from contextlib import suppress
 from enum import auto, Enum
 from pathlib import Path
 from typing import assert_never, BinaryIO, cast, Final, IO, Literal, NamedTuple, NoReturn, override
@@ -3586,15 +3587,12 @@ def terminate_site_user_processes(site: SiteContext, global_opts: GlobalOptions)
         sent_terminate = True
         time.sleep(0.1)
 
-    if processes:
+    if remaining_processes_descriptions := list(_descriptions_of_remaining_processes(processes)):
         bail_out(
             "\n".join(
                 [
                     "\nFailed to stop remaining site processes:",
-                    *(
-                        f"{process.pid}, command line: `{shlex.join(process.cmdline())}`, status: {process.status()}"
-                        for process in processes
-                    ),
+                    *remaining_processes_descriptions,
                 ]
             )
         )
@@ -3618,8 +3616,23 @@ def kill_site_user_processes(site: SiteContext, exclude_current_and_parents: boo
         time.sleep(1)
         tries -= 1
 
-    if processes:
-        bail_out("Failed to kill site processes: %s" % ", ".join(map(str, processes)))
+    if remaining_processes_descriptions := list(_descriptions_of_remaining_processes(processes)):
+        bail_out(
+            "\n".join(
+                [
+                    "\nFailed to kill site processes:",
+                    *remaining_processes_descriptions,
+                ]
+            )
+        )
+
+
+def _descriptions_of_remaining_processes(
+    remaining_processes: Iterable[psutil.Process],
+) -> Generator[str]:
+    for process in remaining_processes:
+        with suppress(psutil.NoSuchProcess):
+            yield f"{process.pid}, command line: `{shlex.join(process.cmdline())}`, status: {process.status()}"
 
 
 def get_current_and_parent_processes() -> list[psutil.Process]:
@@ -3637,9 +3650,15 @@ def site_user_processes(
 ) -> list[psutil.Process]:
     """Return list of all running site user processes (that are not excluded)"""
     exclude = set(get_current_and_parent_processes()) if exclude_current_and_parents else set()
-    return list(
-        {process for process in psutil.process_iter() if process.username() == site.name} - exclude
-    )
+    processes_of_site_user = set()
+    for process in psutil.process_iter():
+        try:
+            process_owner = process.username()
+        except psutil.NoSuchProcess:
+            continue
+        if process_owner == site.name:
+            processes_of_site_user.add(process)
+    return list(processes_of_site_user - exclude)
 
 
 def postprocess_restore_as_root(

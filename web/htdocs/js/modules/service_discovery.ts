@@ -295,6 +295,7 @@ export function register_delayed_active_check(
 ) {
     // Register event listeners on first call
     if (g_delayed_active_checks.length == 0) {
+        //@ts-ignore
         utils
             //@ts-ignore
             .content_scrollbar()!

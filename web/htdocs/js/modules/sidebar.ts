@@ -6,6 +6,7 @@
 
 import * as ajax from "ajax";
 import * as quicksearch from "quicksearch";
+import SimpleBar from "simplebar";
 import Swal from "sweetalert2";
 import {CMKAjaxReponse} from "types";
 import * as utils from "utils";
@@ -34,7 +35,7 @@ export function initialize_sidebar(
     execute_sidebar_scheduler();
 
     g_scrollbar = utils.add_simplebar_scrollbar("side_content");
-    g_scrollbar?.getScrollElement().addEventListener(
+    g_scrollbar?.getScrollElement()!.addEventListener(
         "scroll",
         function () {
             store_scroll_position();
@@ -745,13 +746,13 @@ export function initialize_scroll_position() {
     const scrollPos: number = scrollPosFromCookie
         ? parseInt(scrollPosFromCookie)
         : 0;
-    g_scrollbar!.getScrollElement().scrollTop = scrollPos;
+    g_scrollbar!.getScrollElement()!.scrollTop = scrollPos;
 }
 
 function store_scroll_position() {
     setCookie(
         "sidebarScrollPos",
-        g_scrollbar!.getScrollElement().scrollTop,
+        g_scrollbar!.getScrollElement()!.scrollTop,
         null
     );
 }

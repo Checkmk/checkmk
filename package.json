@@ -109,7 +109,7 @@
     "ms": "^2.0.0",
     "qrcode": "^1.5.3",
     "select2": "^4.0.13",
-    "simplebar": "^5.3.6",
+    "simplebar": "^6.2.7",
     "sweetalert2": "^11.2.1",
     "vnu-jar": "^23.4.11",
     "yargs-parser": "^20.2.9"

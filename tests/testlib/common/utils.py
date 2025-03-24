@@ -36,6 +36,8 @@ from cmk import trace
 logger = logging.getLogger(__name__)
 tracer = trace.get_tracer()
 
+DISTROS_MISSING_WHITELIST_ENVIRONMENT_FOR_SU = ["almalinux-8"]
+
 
 def verbose_called_process_error(excp: subprocess.CalledProcessError) -> str:
     """Return a verbose message containing debug information of a `CalledProcessError` exception."""
@@ -262,6 +264,10 @@ def execute(
 def _add_trace_context(
     kwargs: dict, preserve_env: list[str] | None, sudo: bool
 ) -> tuple[list[str] | None, dict]:
+    current_distro = os.environ.get("DISTRO")
+    if current_distro in DISTROS_MISSING_WHITELIST_ENVIRONMENT_FOR_SU:
+        logger.info(f"Don't add trace context for {current_distro}")
+        return preserve_env, kwargs
     if trace_env := trace.context_for_environment():
         orig_env = kwargs["env"] if kwargs.get("env") else dict(os.environ)
         kwargs["env"] = {**orig_env, **trace_env}
@@ -332,6 +338,12 @@ def _cmd_as_user(
     if shell:
         base_cmd += ["--shell", shell]
     if preserve_env:
+        current_distro = os.environ.get("DISTRO")
+        if current_distro in DISTROS_MISSING_WHITELIST_ENVIRONMENT_FOR_SU:
+            raise RuntimeError(
+                f"Calling 'su' with '--whitelist-environment' is not supported under {current_distro}. "
+                f"Fix the callsites."
+            )
         base_cmd += ["--whitelist-environment", ",".join(preserve_env)]
     base_cmd += ["-c"]
     return base_cmd

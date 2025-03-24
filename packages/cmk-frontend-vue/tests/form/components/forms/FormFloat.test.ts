@@ -87,9 +87,7 @@ test('FormFloat renders backend validation messages', async () => {
     props: {
       spec,
       data: 42.0,
-      backendValidation: [
-        { location: [], message: 'Backend error message', replacement_value: 12.5 }
-      ]
+      backendValidation: [{ location: [], message: 'Backend error message', replacement_value: 12.5 }]
     }
   })
 

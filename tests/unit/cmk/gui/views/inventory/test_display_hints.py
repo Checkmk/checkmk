@@ -50,6 +50,7 @@ _IGNORED_KEYS_BY_PATH = {
         "type",
         "vendor",
     ],
+    ("software", "applications", "vmwareesx"): ["clusters"],
 }
 
 
@@ -103,6 +104,7 @@ def test_related_display_hints() -> None:
 def test_missing_table_keyorder() -> None:
     ignore_paths = [
         ".hardware.memory.arrays:",  # Has no table
+        ".software.applications.vmwareesx:",
     ]
 
     missing_keyorders = [

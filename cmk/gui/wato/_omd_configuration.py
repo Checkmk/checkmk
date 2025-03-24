@@ -338,7 +338,10 @@ class ConfigVariableSiteDiskspaceCleanup(ConfigVariable):
                             "site to another or deleting a host manually from the configuration.<br>"
                             "The performance data (RRDs) and HW/SW Inventory archive are never deleted "
                             "during host deletion. They are only deleted automatically when you enable "
-                            "this option and after the configured period."
+                            "this option and after the configured period. "
+                            "This option also affects the retention of `Agent update status` files. "
+                            "These files can be created without a corresponding host, but should "
+                            "be cleaned up after a grace period if the user never creates the host."
                         ),
                     ),
                 ),

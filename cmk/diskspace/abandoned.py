@@ -118,6 +118,20 @@ def _do_cleanup_central_site(
         )
     )
 
+    # The invocation `cmk-update-agent register --hostname myhost ...` will unconditionally create
+    # these files, and they can be used afterwards by creating the host. So, a user might first do
+    # the registration and then the site configuration. However, its is unlikely this file is useful
+    # after more than a day.
+    # Note: All these files only exist on the central site. If a host is deleted, then these files
+    # are deleted via the `delete-host` automation. If a host is moved between sites, then these
+    # files remain where they are, so diskspace does not need special logic for those cases.
+    _cleanup_host_directories(
+        time.time(),
+        retention_time,
+        all_hosts,
+        f"{omd_root}/var/check_mk/agent_deployment/",
+    )
+
     if cleaned_up_deleted_hosts := cleaned_up - all_hosts:
         _do_automation_call(cleaned_up_deleted_hosts, "delete-hosts")
     if cleaned_up_remote_hosts := cleaned_up & (all_hosts - local_site_hosts):

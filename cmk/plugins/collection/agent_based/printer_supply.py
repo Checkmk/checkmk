@@ -241,28 +241,25 @@ def check_printer_supply(item: str, params: CheckParams, section: Section) -> Ch
         return
 
     color_info = _get_supply_color_info(item, supply.color)
-
-    warn, crit = params["levels"]
+    metric_name = f"supply_toner_{supply.color or 'other'}"
 
     if supply.has_partial_data:  # no percentage possible
-        yield from _get_partial_data_results(supply, params, color_info)
+        yield from _get_partial_data_results(supply, params, color_info, metric_name)
         return
 
     yield from check_levels_v1(
         _get_fill_level_percentage(supply, params["upturn_toner"]),
-        levels_lower=(warn, crit),
-        label=f"{color_info}Remaining",
+        metric_name=metric_name,
+        levels_lower=params["levels"],
+        label="Supply level remaining",
         render_func=render.percent,
     )
 
-    summary = f"Supply: {supply.level} of max. {supply.max_capacity}{supply.unit}"
-    yield Result(state=State.OK, summary=summary)
-    yield Metric(
-        "pages",
-        supply.level,
-        levels=(0.01 * warn * supply.max_capacity, 0.01 * crit * supply.max_capacity),
-        boundaries=(0, supply.max_capacity),
-    )
+    if supply.unit not in {"", "%"}:
+        yield Result(
+            state=State.OK,
+            summary=f"Supply: {supply.level} of max. {supply.max_capacity}{supply.unit}",
+        )
 
 
 def _get_supply_color_info(item: str, color: Color | None) -> str:
@@ -270,7 +267,7 @@ def _get_supply_color_info(item: str, color: Color | None) -> str:
 
 
 def _get_partial_data_results(
-    supply: PrinterSupply, params: CheckParams, color_info: str
+    supply: PrinterSupply, params: CheckParams, color_info: str, metric_name: str
 ) -> CheckResult:
     if supply.level_unrestricted or supply.capacity_unrestricted:
         summary = "%sThere are no restrictions on this supply" % color_info
@@ -293,8 +290,8 @@ def _get_partial_data_results(
         yield Result(state=State.UNKNOWN, summary="%s Unknown level" % color_info)
 
     elif supply.capacity_unknown:
-        yield Result(state=State.OK, summary="%sLevel: %d" % (color_info, supply.level))
-        yield Metric("pages", supply.level)
+        yield Result(state=State.OK, summary="Supply: %d%s" % (supply.level, supply.unit))
+        yield Metric(metric_name, supply.level)
 
 
 def _get_fill_level_percentage(supply: PrinterSupply, upturn_toner: bool) -> float:

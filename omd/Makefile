@@ -67,7 +67,6 @@ PACKAGES += enterprise
 PACKAGES += cloud
 PACKAGES += saas
 else
-PACKAGES += jaeger
 PACKAGES += nagvis
 endif
 

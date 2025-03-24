@@ -321,6 +321,38 @@ def test_create_nagios_host_spec(
     assert host_spec == result
 
 
+def test_create_nagios_host_spec_service_period(monkeypatch: MonkeyPatch) -> None:
+    ts = Scenario()
+    ts.add_host(hostname := HostName("localhost"))
+    ts.set_option(
+        "extra_host_conf",
+        {
+            "service_period": [
+                {
+                    "id": "fb112216-e458-474f-86d2-fee4d6cfec91",
+                    "value": "24X7",
+                    "condition": {},
+                    "options": {"disabled": False},
+                },
+            ],
+        },
+    )
+
+    config_cache = ts.apply(monkeypatch)
+    ip_address_of = config.ConfiguredIPLookup(
+        config_cache, error_handler=config.handle_ip_lookup_failure
+    )
+
+    host_attrs = config_cache.get_host_attributes(hostname, ip_address_of)
+
+    cfg = core_nagios.NagiosConfig(io.StringIO(), [hostname])
+    host_spec = core_nagios.create_nagios_host_spec(
+        cfg, config_cache, hostname, host_attrs, ip_address_of
+    )
+    assert host_spec["_SERVICE_PERIOD"] == "24X7"
+    assert "service_period" not in host_spec
+
+
 @pytest.fixture(name="config_path")
 def fixture_config_path() -> VersionedConfigPath:
     return VersionedConfigPath(42)
@@ -540,6 +572,38 @@ def test_create_nagios_servicedefs_active_check(
 
     assert outfile.getvalue() == expected_result
     assert license_counter["services"] == 1
+
+
+def test_create_nagios_servicedefs_service_period(monkeypatch: MonkeyPatch) -> None:
+    ts = Scenario()
+    ts.add_host(hostname := HostName("localhost"))
+    ts.set_option(
+        "extra_service_conf",
+        {
+            "service_period": [
+                {
+                    "id": "fb112216-e458-474f-86d2-fee4d6cfec92",
+                    "value": "24X7",
+                    "condition": {},
+                    "options": {"disabled": False},
+                },
+            ],
+        },
+    )
+
+    config_cache = ts.apply(monkeypatch)
+
+    host_attrs = config_cache.get_host_attributes(hostname, ip_address_of_return_local)
+    outfile = io.StringIO()
+    cfg = core_nagios.NagiosConfig(outfile, [hostname])
+    license_counter = Counter("services")
+    core_nagios.create_nagios_servicedefs(
+        cfg, config_cache, {}, hostname, host_attrs, {}, license_counter, ip_address_of_return_local
+    )
+
+    config_snippet = outfile.getvalue()
+    assert "service_period" not in config_snippet
+    assert "_SERVICE_PERIOD" in config_snippet
 
 
 @pytest.mark.parametrize(

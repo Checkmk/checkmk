@@ -230,8 +230,7 @@ class CheckParams(TypedDict):
 
 
 def check_printer_supply(item: str, params: CheckParams, section: Section) -> CheckResult:
-    supply = section.get(item)
-    if supply is None:
+    if (supply := section.get(item)) is None:
         return
 
     color_info = _get_supply_color_info(item, supply.color)

@@ -498,12 +498,14 @@ def get_agent_output(
     site_id: SiteId,
     host_name: HostName,
     agent_type: str,
+    timeout: int | None = None,
 ) -> results.GetAgentOutputResult:
     return _deserialize(
         _automation_serialized(
             "get-agent-output",
             siteid=site_id,
             args=[host_name, agent_type],
+            timeout=timeout,
         ),
         results.GetAgentOutputResult,
     )

@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from livestatus import SiteId
 
 from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.ccc.site import omd_site
 
 from cmk.utils.hostaddress import HostName
@@ -329,12 +329,22 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
     def _fetch_agent_output(self, job_interface: BackgroundProcessInterface) -> None:
         job_interface.send_progress_update(_("Fetching '%s'...") % self._agent_type)
 
-        agent_output_result = get_agent_output(self._site_id, self._host_name, self._agent_type)
+        agent_output_result = get_agent_output(
+            self._site_id,
+            self._host_name,
+            self._agent_type,
+            timeout=int(active_config.reschedule_timeout)
+            if self._agent_type == "agent"
+            else (15 * 60),  # 15 minutes for snmp walks
+        )
 
         if not agent_output_result.success:
             job_interface.send_progress_update(
                 _("Failed: %s") % agent_output_result.service_details
             )
+            if agent_output_result.service_details.find("timed out"):
+                raise MKTimeout
+            raise MKGeneralException()
 
         preview_filepath = os.path.join(
             job_interface.get_work_dir(),

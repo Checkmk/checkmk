@@ -66,7 +66,7 @@ def test_fetch_agent_job(host: Host, mocker: MockerFixture) -> None:
     start_fetch_agent_job(request := FetchAgentOutputRequest(host, "agent"))
 
     # THEN
-    get_agent_output_mock.assert_called_once_with("site1", "host1", "agent")
+    get_agent_output_mock.assert_called_once_with("site1", "host1", "agent", timeout=10)
     job_status = get_fetch_agent_job_status(request)
     assert job_status.state == "finished", job_status
     assert get_fetch_agent_output_file(request) == b"y"

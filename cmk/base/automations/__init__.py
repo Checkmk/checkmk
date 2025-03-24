@@ -59,7 +59,11 @@ class Automations:
         loading_result: config.LoadingResult | None = None,
     ) -> ABCAutomationResult | AutomationError:
         remaining_args, timeout = self._extract_timeout_from_args(args)
-        with nullcontext() if timeout is None else Timeout(timeout, message="Action timed out."):
+        with (
+            nullcontext()
+            if timeout is None
+            else Timeout(timeout, message="Action timed out after %s seconds." % timeout)
+        ):
             return self._execute(cmd, remaining_args, plugins, loading_result)
 
     def execute_and_write_serialized_result_to_stdout(

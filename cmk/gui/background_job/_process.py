@@ -22,7 +22,7 @@ from typing import ContextManager, IO, override
 from setproctitle import setthreadtitle
 
 from cmk.ccc import store
-from cmk.ccc.exceptions import MKTerminate
+from cmk.ccc.exceptions import MKTerminate, MKTimeout
 from cmk.ccc.version import edition
 
 from cmk.utils import paths
@@ -136,6 +136,9 @@ def run_process(job_parameters: JobParameters) -> None:
     except MKTerminate:
         logger.warning("Job was stopped")
         final_status_update = {"state": JobStatusStates.STOPPED}
+    except MKTimeout:
+        logger.warning("Job stopped due to timeout")
+        final_status_update = {"state": JobStatusStates.STOPPED}
     except Exception:
         crash = create_gui_crash_report()
         logger.error(
@@ -185,6 +188,10 @@ def _execute_function(
     try:
         target.callable(job_interface, target.args)
     except MKTerminate:
+        raise
+    except MKTimeout:
+        crash = create_gui_crash_report()
+        logger.exception("Background job timed out (Crash ID: %s)", crash.ident_to_text())
         raise
     except Exception as e:
         crash = create_gui_crash_report()

@@ -2735,7 +2735,7 @@
           "@@rules_python~//tools/publish/requirements_linux.txt": "d576e0d8542df61396a9b38deeaa183c24135ed5e8e73bb9622f298f2671811e",
           "@@grpc~//requirements.bazel.txt": "95a27c3f9a46b8114d464c70ba93cda18cfe8c02004db81028f9306b2691701e",
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
-          "@@//requirements.txt": "7689222febecafdd64c86f2914a5ebe15fbdd501c79eda339eef2ff1f38d8335",
+          "@@//requirements.txt": "c100ab683a540ca6835b92ae782a50ada842733eb738e07f0d106c3d6024db5e",
           "@@rules_python~//tools/publish/requirements_windows.txt": "d18538a3982beab378fd5687f4db33162ee1ece69801f9a451661b1b64286b76",
           "@@protobuf~//python/requirements.txt": "983be60d3cec4b319dcab6d48aeb3f5b2f7c3350f26b3a9e97486c37967c73c5",
           "@@rules_mypy~//mypy/private/requirements.txt": "5fef4723b02210e3f231d2b55e4894e43d669077b30e91e4303f5c14115af981",
@@ -7046,6 +7046,23 @@
               "python_interpreter_target": "@@rules_python~~python~python_3_12_3_host//:python",
               "repo": "cmk_requirements_312",
               "requirement": "pytest-random-order==1.1.1 --hash=sha256:4472d7d34f1f1c5f3a359c4ffc5c13ed065232f31eca19c8844c1ab406e79080 --hash=sha256:882727a8b597ecd06ede28654ffeb8a6d511a1e4abe1054cca7982f2e42008cd"
+            }
+          },
+          "cmk_requirements_312_pytest_repeat": {
+            "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "dep_template": "@cmk_requirements//{name}:{target}",
+              "environment": {
+                "CC": "gcc-13"
+              },
+              "extra_pip_args": [
+                "--index-url",
+                "https://pypi.org/simple"
+              ],
+              "python_interpreter_target": "@@rules_python~~python~python_3_12_3_host//:python",
+              "repo": "cmk_requirements_312",
+              "requirement": "pytest-repeat==0.9.3 --hash=sha256:26ab2df18226af9d5ce441c858f273121e92ff55f5bb311d25755b8d7abdd8ed --hash=sha256:ffd3836dfcd67bb270bec648b330e20be37d2966448c4148c4092d1e8aba8185"
             }
           },
           "cmk_requirements_312_pytest_subtests": {
@@ -13411,6 +13428,7 @@
                 "pytest_mock": "{\"cmk_requirements_312_pytest_mock\":[{\"version\":\"3.12\"}]}",
                 "pytest_opentelemetry": "{\"cmk_requirements_312_pytest_opentelemetry\":[{\"version\":\"3.12\"}]}",
                 "pytest_random_order": "{\"cmk_requirements_312_pytest_random_order\":[{\"version\":\"3.12\"}]}",
+                "pytest_repeat": "{\"cmk_requirements_312_pytest_repeat\":[{\"version\":\"3.12\"}]}",
                 "pytest_subtests": "{\"cmk_requirements_312_pytest_subtests\":[{\"version\":\"3.12\"}]}",
                 "pytest_xdist": "{\"cmk_requirements_312_pytest_xdist\":[{\"version\":\"3.12\"}]}",
                 "python_active_directory": "{\"cmk_requirements_312_python_active_directory\":[{\"version\":\"3.12\"}]}",
@@ -13797,6 +13815,7 @@
                 "pytest_mock",
                 "pytest_opentelemetry",
                 "pytest_random_order",
+                "pytest_repeat",
                 "pytest_subtests",
                 "pytest_xdist",
                 "python_active_directory",

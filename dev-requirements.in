@@ -43,6 +43,7 @@ pytest-random-order  # used to test resiliency
 pytest-xdist # used to limit number of procs in e2e tests
 pytest-check # used to queue failed assertions and continue test execution
 pytest-opentelemetry # instrument pytest runs
+pytest-repeat # used to rerun system tests
 python-lsp-server  # Note: There are extras, but the default seems sensible.
 requirements-parser # used to parse requirements.txt file for testing
 responses  # used for unit tests

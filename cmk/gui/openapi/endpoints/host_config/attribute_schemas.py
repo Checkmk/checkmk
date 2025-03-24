@@ -2,6 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from cmk.gui import fields as gui_fields
 from cmk.gui.fields.attributes import HostContactGroup
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.watolib.builtin_attributes import (
@@ -48,10 +49,7 @@ class BaseHostAttribute(BaseSchema):
     additional_ipv4addresses = HostAttributeAdditionalIPv4Addresses().openapi_field()
     additional_ipv6addresses = HostAttributeAdditionalIPv6Addresses().openapi_field()
 
-    # TODO: CEE specific host attribute must be added without violating the import structure
-    #  the registration should be edition specific instead (temporarily it would also be fine
-    #  to do something like the customer attribute to keep simplicity
-    # bake_agent_package = HostAttributeBakeAgentPackage().openapi_field()
+    bake_agent_package = gui_fields.bake_agent_field()
     snmp_community = HostAttributeSNMPCommunity().openapi_field()
 
     labels = HostAttributeLabels().openapi_field()

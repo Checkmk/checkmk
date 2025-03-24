@@ -54,7 +54,7 @@ from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 from cmk.gui.watolib.sites import site_management_registry
 from cmk.gui.watolib.tags import load_tag_group
 
-from cmk.fields import base, DateTime, validators
+from cmk.fields import base, Boolean, DateTime, validators
 
 _logger = logging.getLogger(__name__)
 _CONNECTION_ID_PATTERN = "^[-a-z0-9A-Z_]+$"
@@ -1144,6 +1144,20 @@ def customer_field_response(**kw: Any) -> _CustomerField | None:
     if "description" not in kw:
         kw["description"] = "The customer for which the object is configured."
     return customer_field(**kw)
+
+
+def bake_agent_field() -> Boolean | None:
+    """Enterprise specific implementation of host attribute field
+
+    Notes:
+        * takes inspiration of the customer field implementation (which is not the best) but
+        deemed acceptable as the intention is to move away from the marshmallow implementation
+    """
+    if version.edition(paths.omd_root) is not version.Edition.CRE:
+        return Boolean(
+            description="Bake agent packages for this folder even if it is empty.",
+        )
+    return None
 
 
 def verify_group_exists(group_type: GroupType, name: GroupName) -> bool:

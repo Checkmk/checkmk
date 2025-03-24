@@ -73,8 +73,9 @@ def _valuespec_validity() -> Dictionary:
             "self_signed": DictElement[bool](
                 parameter_form=BooleanChoice(
                     help_text=Help(
-                        "The service will not warn if self-signed certificates are used "
-                        "if this option is checked."
+                        "Checking this option allows self-signed certificates by ignoring OpenSSL "
+                        "error 18 (self signed certificate), and the service will not warn when "
+                        "this error is returned. Other errors will still trigger an alert."
                     ),
                     label=Label("Allow self-signed certificates"),
                 ),

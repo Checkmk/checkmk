@@ -479,13 +479,13 @@ def restart_httpd() -> None:
     the beginning of the test. This ensures consistency across distributions.
     """
 
-    almalinux_9 = "almalinux-9"
-    assert almalinux_9 in get_supported_distros(), (
-        f"{almalinux_9} is not supported anymore. " f"Please adapt the code below."
-    )
+    almalinux_prefix = "almalinux"
+    assert any(
+        distro for distro in get_supported_distros() if distro.startswith(almalinux_prefix)
+    ), "We dropped support for almalinux, please adapt the code below."
 
     # When executed locally and un-dockerized, DISTRO may not be set
-    if os.environ.get("DISTRO") == almalinux_9:
+    if os.environ.get("DISTRO", "").startswith(almalinux_prefix):
         run(["httpd", "-k", "restart"], sudo=True)
 
 

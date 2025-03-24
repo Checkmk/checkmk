@@ -1320,3 +1320,8 @@ def EnumAttribute(
             "_enumlist": enumlist,
         },
     )
+
+
+@request_memoize(maxsize=1024)
+def get_host_attribute_default_value(host_attribute: ABCHostAttribute) -> Any:
+    return host_attribute.default_value()

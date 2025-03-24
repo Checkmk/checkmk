@@ -37,8 +37,8 @@ def was_timer_triggered() {
 }
 
 def main() {
-    if (params.CUSTOM_GIT_REF == "") {
-       raise Exception("The werk jobs are not meant to be triggered with a custom git ref to no miss any werks.");
+    if (params.CUSTOM_GIT_REF != "") {
+       raise("The werk jobs are not meant to be triggered with a custom git ref to no miss any werks.");
     }
 
     check_job_parameters([

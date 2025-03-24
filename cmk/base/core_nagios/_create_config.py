@@ -365,7 +365,9 @@ def create_nagios_host_spec(  # pylint: disable=too-many-branches
 
     # Custom configuration last -> user may override all other values
     # TODO: Find a generic mechanism for CMC and Nagios
-    for key, value in config_cache.extra_host_attributes(hostname).items():
+    for key, value in _to_nagios_core_attributes(
+        config_cache.extra_host_attributes(hostname)
+    ).items():
         if key == "cmk_agent_connection":
             continue
         if hostname in config_cache.hosts_config.clusters and key == "parents":
@@ -397,8 +399,8 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
     license_counter: Counter,
     ip_address_of: config.IPLookup,
 ) -> dict[ServiceName, Labels]:
-    check_mk_attrs = core_config.get_service_attributes(
-        hostname, "Check_MK", config_cache, extra_icon=None
+    check_mk_attrs = _to_nagios_core_attributes(
+        core_config.get_service_attributes(hostname, "Check_MK", config_cache, extra_icon=None)
     )
 
     #   _____
@@ -470,14 +472,16 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
         }
 
         plugin = get_check_plugin(service.check_plugin_name)
-        passive_service_attributes = core_config.get_cmk_passive_service_attributes(
-            config_cache,
-            hostname,
-            service,
-            check_mk_attrs,
-            extra_icon=None
-            if plugin is None
-            else config_cache.make_extra_icon(plugin.check_ruleset_name, service.parameters),
+        passive_service_attributes = _to_nagios_core_attributes(
+            core_config.get_cmk_passive_service_attributes(
+                config_cache,
+                hostname,
+                service,
+                check_mk_attrs,
+                extra_icon=None
+                if plugin is None
+                else config_cache.make_extra_icon(plugin.check_ruleset_name, service.parameters),
+            )
         )
 
         service_labels[service.description] = {
@@ -544,8 +548,10 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
             "active_checks_enabled": str(1),
         }
         service_spec.update(
-            core_config.get_service_attributes(
-                hostname, service_data.description, config_cache, extra_icon=None
+            _to_nagios_core_attributes(
+                core_config.get_service_attributes(
+                    hostname, service_data.description, config_cache, extra_icon=None
+                )
             )
         )
         service_spec.update(
@@ -647,8 +653,10 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
             }
             service_spec.update(freshness)
             service_spec.update(
-                core_config.get_service_attributes(
-                    hostname, description, config_cache, extra_icon=None
+                _to_nagios_core_attributes(
+                    core_config.get_service_attributes(
+                        hostname, description, config_cache, extra_icon=None
+                    )
                 )
             )
             service_spec.update(_extra_service_conf_of(cfg, config_cache, hostname, description))
@@ -668,8 +676,10 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
             "service_description": service_discovery_name,
         }
         service_spec.update(
-            core_config.get_service_attributes(
-                hostname, service_discovery_name, config_cache, extra_icon=None
+            _to_nagios_core_attributes(
+                core_config.get_service_attributes(
+                    hostname, service_discovery_name, config_cache, extra_icon=None
+                )
             )
         )
 
@@ -768,7 +778,9 @@ def _add_ping_service(
         "check_command": f"{ping_command}!{arguments}",
     }
     service_spec.update(
-        core_config.get_service_attributes(host_name, descr, config_cache, extra_icon=None)
+        _to_nagios_core_attributes(
+            core_config.get_service_attributes(host_name, descr, config_cache, extra_icon=None)
+        )
     )
     service_spec.update(_extra_service_conf_of(cfg, config_cache, host_name, descr))
     cfg.write(format_nagios_object("service", service_spec))
@@ -1042,6 +1054,14 @@ def _quote_nagios_string(s: str) -> str:
     """Quote string for use in a nagios command execution.  Please note that also
     quoting for ! and backslash for Nagios itself takes place here."""
     return "'" + s.replace("\\", "\\\\").replace("'", "'\"'\"'").replace("!", "\\!") + "'"
+
+
+def _to_nagios_core_attributes(attrs: ObjectAttributes) -> ObjectAttributes:
+    # The field service_period does not exist in Nagios while it exists natively in the CMC. To
+    # make it available in the Nagios configuration, we add a custom macro _SERVICE_PERIOD.
+    return {
+        "_SERVICE_PERIOD" if key == "service_period" else key: value for key, value in attrs.items()
+    }
 
 
 def _extra_service_conf_of(

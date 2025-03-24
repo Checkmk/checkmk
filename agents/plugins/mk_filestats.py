@@ -87,7 +87,7 @@ You should find an example configuration file at
 '../cfg_examples/filestats.cfg' relative to this file.
 """
 
-__version__ = "2.4.0b2"
+__version__ = "2.4.0b3"
 
 import collections
 import configparser

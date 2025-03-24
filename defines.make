@@ -41,7 +41,7 @@ else
 SAAS              := no
 endif
 
-VERSION            := 2.4.0b2
+VERSION            := 2.4.0b3
 OMD_VERSION        := $(VERSION).$(EDITION_SHORT)
 # Do not use the the ".c?e" EDITION_SHORT suffix, the edition is part of the package name
 PKG_VERSION        := $(VERSION)

@@ -244,6 +244,13 @@ class Test_ValueStore:
         with pytest.raises(ValueError):
             _ = s_store["key"]  # deserialization failes here, not upon loading the store.
 
+    @pytest.mark.xfail(strict=True)
+    def test_changes_in_values_are_visible_by_name(self) -> None:
+        s_store = self._get_store()
+        s_store["dict"] = {}
+        s_store["dict"]["key"] = "value"
+        assert s_store["dict"].get("key") == "value"
+
 
 class TestValueStoreManager:
     @staticmethod

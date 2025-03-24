@@ -143,7 +143,9 @@ test('FormDictionary renders its own backend validation message', async () => {
     props: {
       spec,
       data: { bar: 'some_value' },
-      backendValidation: [{ location: [], message: 'Backend error message', replacement_value: null }]
+      backendValidation: [
+        { location: [], message: 'Backend error message', replacement_value: null }
+      ]
     }
   })
 

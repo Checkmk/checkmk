@@ -1,0 +1,20 @@
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# Component: windows monitoring
+#
+# These plugins are specific for windows monitoring
+# and need to be kept in sync with the windows agent.
+# Code ownership should be assigned to the developers
+# that own that component.
+#
+# Currently we just put that info here, without any
+# indirection or sophisticated include mechanism.
+# We rather aim to have a close connection between
+# component and package, and have one OWNERS file
+# per package.
+#
+
+set noparent
+sergey.kipnis@checkmk.com

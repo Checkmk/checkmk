@@ -214,4 +214,5 @@ rule_spec_active_check_bi_aggr = ActiveCheck(
     title=Title("Check State of BI Aggregation"),
     topic=Topic.APPLICATIONS,
     parameter_form=_form_spec_active_checks_bi_aggr,
+    is_deprecated=True,
 )

@@ -147,7 +147,7 @@ def _generate_message_via_syslog(
 def _wait_for_queried_column(
     site: Site,
     query: str,
-    sleep_time: float = 1,
+    sleep_time: float = 2,
     max_count: int = 20,
     strict: bool = True,
 ) -> list[str]:

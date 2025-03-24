@@ -126,18 +126,20 @@ from cmk.plugins.collection.agent_based.inventory_dmidecode import (
                 ["", "Size", "4 b"],
             ],
             [
-                Attributes(
-                    path=["hardware", "memory", "arrays", "1"],
-                    inventory_attributes={
+                TableRow(
+                    path=["hardware", "memory", "arrays"],
+                    key_columns={"array_id": "1"},
+                    inventory_columns={
                         "location": "Foo",
                         "use": "Bar",
                         "error_correction": "Baz",
                         "maximum_capacity": 1,
                     },
+                    status_columns={},
                 ),
                 TableRow(
-                    path=["hardware", "memory", "arrays", "1", "devices"],
-                    key_columns={"index": 1, "set": "S"},
+                    path=["hardware", "memory", "arrays", "devices"],
+                    key_columns={"array_id": "1", "index": 1, "set": "S"},
                     inventory_columns={
                         "total_width": "1",
                         "data_width": "2",
@@ -150,9 +152,10 @@ from cmk.plugins.collection.agent_based.inventory_dmidecode import (
                         "serial": "123",
                         "asset_tag": "AT",
                         "part_number": "PN",
-                        "speed": 3,
+                        "speed": 3.0,
                         "size": 4,
                     },
+                    status_columns={},
                 ),
             ],
             id="memory-array-devices",

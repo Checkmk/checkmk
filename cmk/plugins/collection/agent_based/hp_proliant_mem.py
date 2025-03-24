@@ -178,8 +178,9 @@ check_plugin_hp_proliant_mem = CheckPlugin(
 def inventory_hp_proliant_mem(section: Section) -> InventoryResult:
     for module in section.values():
         yield TableRow(
-            path=["hardware", "memory", "arrays", str(module.cpu_num), "devices"],
+            path=["hardware", "memory", "arrays", "devices"],
             key_columns={
+                "array_id": str(module.cpu_num),
                 "set": module.number,
             },
             inventory_columns={

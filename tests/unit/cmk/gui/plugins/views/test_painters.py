@@ -269,6 +269,7 @@ def test_registered_painters() -> None:
         "inv_hardware_firmware_redfish",
         "inv_hardware_memory",
         "inv_hardware_memory_arrays",
+        "inv_hardware_memory_arrays_devices",
         "inv_hardware_memory_total_ram_usable",
         "inv_hardware_memory_total_swap",
         "inv_hardware_memory_total_vmalloc",

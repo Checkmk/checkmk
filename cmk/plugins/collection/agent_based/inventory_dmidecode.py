@@ -463,14 +463,10 @@ def inventory_dmidecode(
                         },
                     )
             case PhysicalMemoryArray():
-                yield Attributes(
-                    path=[
-                        "hardware",
-                        "memory",
-                        "arrays",
-                        str(entity.index),
-                    ],
-                    inventory_attributes={
+                yield TableRow(
+                    path=["hardware", "memory", "arrays"],
+                    key_columns={"array_id": str(entity.index)},
+                    inventory_columns={
                         "location": entity.location,
                         "use": entity.use,
                         "error_correction": entity.error_correction_type,
@@ -480,14 +476,9 @@ def inventory_dmidecode(
             case MemoryDevice():
                 if entity.size is not None:
                     yield TableRow(
-                        path=[
-                            "hardware",
-                            "memory",
-                            "arrays",
-                            str(entity.physical_memory_array),
-                            "devices",
-                        ],
+                        path=["hardware", "memory", "arrays", "devices"],
                         key_columns={
+                            "array_id": str(entity.physical_memory_array),
                             "index": entity.index,
                             "set": entity.set,  # None
                         },

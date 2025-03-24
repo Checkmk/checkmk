@@ -109,7 +109,6 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
             "title": _l("Virtual addresses for mapping"),
             "paint": "bytes_rounded",
         },
-        # FIXME Cleanup: This path has no table.
         ".hardware.memory.arrays:": {
             "title": _l("Arrays (Controllers)"),
             "keyorder": ["maximum_capacity"],
@@ -118,8 +117,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
             "title": _l("Maximum capacity"),
             "paint": "bytes",
         },
-        ".hardware.memory.arrays:*.": {"title": _l("Controller %d")},
-        ".hardware.memory.arrays:*.devices:": {
+        ".hardware.memory.arrays.devices:": {
             "title": _l("Devices"),
             "keyorder": [
                 "index",
@@ -135,17 +133,17 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
                 "size",
             ],
         },
-        ".hardware.memory.arrays:*.devices:*.index": {"title": _l("Index")},
-        ".hardware.memory.arrays:*.devices:*.locator": {"title": _l("Locator")},
-        ".hardware.memory.arrays:*.devices:*.bank_locator": {"title": _l("Bank locator")},
-        ".hardware.memory.arrays:*.devices:*.type": {"title": _l("Type")},
-        ".hardware.memory.arrays:*.devices:*.form_factor": {"title": _l("Form factor")},
-        ".hardware.memory.arrays:*.devices:*.speed": {"title": _l("Speed"), "paint": "hz"},
-        ".hardware.memory.arrays:*.devices:*.data_width": {"title": _l("Data width")},
-        ".hardware.memory.arrays:*.devices:*.total_width": {"title": _l("Total width")},
-        ".hardware.memory.arrays:*.devices:*.manufacturer": {"title": _l("Manufacturer")},
-        ".hardware.memory.arrays:*.devices:*.serial": {"title": _l("Serial")},
-        ".hardware.memory.arrays:*.devices:*.size": {"title": _l("Size"), "paint": "bytes"},
+        ".hardware.memory.arrays.devices:*.index": {"title": _l("Index")},
+        ".hardware.memory.arrays.devices:*.locator": {"title": _l("Locator")},
+        ".hardware.memory.arrays.devices:*.bank_locator": {"title": _l("Bank locator")},
+        ".hardware.memory.arrays.devices:*.type": {"title": _l("Type")},
+        ".hardware.memory.arrays.devices:*.form_factor": {"title": _l("Form factor")},
+        ".hardware.memory.arrays.devices:*.speed": {"title": _l("Speed"), "paint": "hz"},
+        ".hardware.memory.arrays.devices:*.data_width": {"title": _l("Data width")},
+        ".hardware.memory.arrays.devices:*.total_width": {"title": _l("Total width")},
+        ".hardware.memory.arrays.devices:*.manufacturer": {"title": _l("Manufacturer")},
+        ".hardware.memory.arrays.devices:*.serial": {"title": _l("Serial")},
+        ".hardware.memory.arrays.devices:*.size": {"title": _l("Size"), "paint": "bytes"},
         ".hardware.system.": {
             "title": _l("System"),
             "keyorder": [

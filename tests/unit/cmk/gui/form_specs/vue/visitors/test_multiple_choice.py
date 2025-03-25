@@ -8,10 +8,15 @@ import pytest
 from cmk.utils.user import UserId
 
 from cmk.gui.form_specs.vue.visitors import DataOrigin, get_visitor
-from cmk.gui.form_specs.vue.visitors._type_defs import VisitorOptions
+from cmk.gui.form_specs.vue.visitors._type_defs import (
+    DefaultValue as FormSpecDefaultValue,
+)
+from cmk.gui.form_specs.vue.visitors._type_defs import (
+    VisitorOptions,
+)
 
 from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import MultipleChoice, MultipleChoiceElement
+from cmk.rulesets.v1.form_specs import DefaultValue, MultipleChoice, MultipleChoiceElement
 
 
 @pytest.fixture(scope="module", name="multiple_choice_spec")
@@ -22,6 +27,7 @@ def spec() -> MultipleChoice:
             MultipleChoiceElement(name="bar", title=Title("bar")),
             MultipleChoiceElement(name="baz", title=Title("baz")),
         ],
+        prefill=DefaultValue(["foo", "bar"]),
     )
 
 
@@ -97,3 +103,13 @@ def test_multiple_choice_with_invalid_key(
 
     # Write choice back to disk
     assert visitor.to_disk(some_bad_choice) == SORTED_SOME_BAD_CHOICE_FILTERED_DISK
+
+
+def test_parse_default_value(
+    request_context: None,
+    patch_theme: None,
+    with_user: tuple[UserId, str],
+    multiple_choice_spec: MultipleChoice,
+) -> None:
+    visitor = get_visitor(multiple_choice_spec, VisitorOptions(data_origin=DataOrigin.DISK))
+    assert visitor._parse_value(FormSpecDefaultValue()) == SORTED_GOOD_CHOICES_FRONTEND

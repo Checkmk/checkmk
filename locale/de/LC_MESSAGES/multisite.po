@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-03-21 00:54+0000\n"
+"PO-Revision-Date: 2025-03-24 22:50+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -82,9 +82,8 @@ msgstr " (schlechtester Zustand: %s)"
 msgid " - Broken"
 msgstr " - Kaputt"
 
-#, fuzzy
 msgid " - Checkmk Security Notice"
-msgstr "Checkmk-spezifisch"
+msgstr " - Checkmk Sicherheitshinweis"
 
 #, python-format
 msgid ""
@@ -766,22 +765,28 @@ msgid ""
 "%s uses an API (%s) which is marked as deprecated in Checkmk %s and will be "
 "removed in Checkmk %s."
 msgstr ""
+"%s verwendet eine API (%s), die in Checkmk %s als veraltet markiert ist und "
+"in Checkmk %s entfernt werden wird."
 
 #, python-format
 msgid ""
 "%s uses an API (%s) which was marked as deprecated in Checkmk %s and is "
 "removed in Checkmk %s."
 msgstr ""
+"%s verwendet eine API (%s), die in Checkmk %s als veraltet markiert wurde "
+"und in Checkmk %s entfernt wird."
 
 #, python-format
 msgid ""
 "%s uses an API (%s) which was marked as deprecated in Checkmk %s and will be "
 "removed in Checkmk %s."
 msgstr ""
+"%s verwendet eine API (%s), die in Checkmk %s als veraltet markiert wurde "
+"und in Checkmk %s entfernt werden wird."
 
 #, python-format
 msgid "%s uses an API (%s) which was removed in Checkmk %s."
-msgstr ""
+msgstr "%s verwendet eine API (%s), die in Checkmk %s entfernt wurde."
 
 #, python-format
 msgid "%s was stopped after %s at %s."
@@ -4734,9 +4739,9 @@ msgstr "Betroffene Hosts enthalten"
 msgid "Affected sites"
 msgstr "Betroffene Instanzen"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Affected sites: %s"
-msgstr "Betroffene Instanzen"
+msgstr "Betroffene Instanzen: %s"
 
 msgid ""
 "After a battery diagnostics the battery capacity is reduced until the "
@@ -5520,9 +5525,8 @@ msgstr "Alle Anwendungen"
 msgid "All backup codes have been deleted"
 msgstr "Alle Backup-Codes wurden gelöscht"
 
-#, fuzzy
 msgid "All backup codes have been revoked"
-msgstr "Alle Backup-Codes wurden gelöscht"
+msgstr "Alle Backup-Codes wurden widerrufen"
 
 msgid "All but first page"
 msgstr "Alle Seiten bis auf Seite 1"
@@ -7442,13 +7446,11 @@ msgstr "Authentifizierung mit TLS"
 msgid "Authenticator app"
 msgstr "Authenticator-App"
 
-#, fuzzy
 msgid "Authenticator app has been added"
-msgstr "Authenticator-Apps"
+msgstr "Authenticator-App wurde hinzugefügt"
 
-#, fuzzy
 msgid "Authenticator app removed"
-msgstr "Authenticator-App"
+msgstr "Authenticator-App entfernt"
 
 msgid "Authenticator apps"
 msgstr "Authenticator-Apps"
@@ -8596,9 +8598,8 @@ msgstr "BI-Regel oder Aggregationen"
 msgid "BI rules %s from BI pack '%s'"
 msgstr "BI-Regeln %s aus BI-Paket '%s'"
 
-#, fuzzy
 msgid "BI runtime data"
-msgstr "Schlüsselkennzahl (KPI) Laufzeit"
+msgstr "BI Laufzeitdaten"
 
 msgid "BI service details"
 msgstr "BI Servicedetails"
@@ -8717,9 +8718,8 @@ msgstr "Backup-Code"
 msgid "Backup codes"
 msgstr "Backup-Codes"
 
-#, fuzzy
 msgid "Backup codes have been regenerated"
-msgstr "Alle Backup-Codes wurden gelöscht"
+msgstr "Backup-Codes wurden neu generiert"
 
 msgid "Backup codes left:"
 msgstr "Verbleibende Backup-Codes:"
@@ -9365,9 +9365,8 @@ msgstr "Business Intelligence Administration"
 msgid "Business Intelligence rules and aggregations"
 msgstr "Business Intelligence Regeln und Aggregate"
 
-#, fuzzy
 msgid "Business Intelligence runtime data"
-msgstr "Business Intelligence"
+msgstr "Business Intelligence Laufzeitdaten"
 
 msgid "Business reporting"
 msgstr "Business Bericht"
@@ -10741,12 +10740,18 @@ msgid ""
 "acknowledgements and service periods for all hosts/services included in a BI "
 "aggregation."
 msgstr ""
+"Im Cache gespeicherte Daten aus der Business Intelligence. Enthält Zustände, "
+"Wartungszeiten, Quittierungen und Serviceoerioden für alle in einem BI-"
+"Aggregat enthaltenen Hosts/Services."
 
 msgid ""
 "Cached data from Business Intelligence. contains states, downtimes, "
 "acknowledgements and service periods for all hosts/services included in a BI "
 "aggregation."
 msgstr ""
+"Im Cache gespeicherte Daten aus Business Intelligence. Enthält Zustände, "
+"Wartungszeiten, Quittierungen und Serviceperioden für alle in einer BI-"
+"Aggregation enthaltenen Hosts/Services."
 
 msgid "Cached memory"
 msgstr "gecachter Speicher"
@@ -11548,6 +11553,8 @@ msgid ""
 "Changing this setting triggers a full restart of all affected sites during "
 "activate changes."
 msgstr ""
+"Wenn Sie diese Einstellung ändern, wird während dem \"Änderungen aktivieren"
+"\" ein vollständiger Neustart aller betroffenen Instanzen ausgelöst."
 
 msgid "Channel"
 msgstr "Kanal"
@@ -14785,9 +14792,8 @@ msgstr "Kontextinformationen zu diesem Parameter"
 msgid "Context information about this rule"
 msgstr "Kontext zu dieser Regel"
 
-#, fuzzy
 msgid "Context is missing"
-msgstr "Instanz fehlt"
+msgstr "Kontext fehlt"
 
 msgid "Context sensitive help"
 msgstr "Kontextsensitive Hilfe"
@@ -16108,7 +16114,6 @@ msgstr "Im Moment gibt es keine offenen Konfigurationsänderungen."
 msgid "Currently there are no unsent notification bulks pending."
 msgstr "Im Moment gibt es keine ausstehenden Sammelbenachrichtigungen."
 
-#, fuzzy
 msgid "Currently you have no received messages"
 msgstr "Sie haben derzeit keine erhaltenen Nachrichten"
 
@@ -18538,16 +18543,16 @@ msgstr "Veraltete Check-Plugins (v1)"
 msgid "Deprecated choice, please re-select"
 msgstr "Veraltete Auswahl, bitte neu auswählen"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Deprecated extension package: %s"
-msgstr "Neues Erweiterungspaket %s erzeugt"
+msgstr "Veraltetes Erweiterungspaket: %s"
 
 msgid "Deprecated legacy GUI extensions"
 msgstr "Veraltete Legacy GUI-Erweiterungen"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Deprecated plug-in: %s"
-msgstr "Veraltete Check-Plugins (v1)"
+msgstr "Veraltetes Plugin: %s"
 
 msgid "Deprecated rulesets"
 msgstr "Veraltete Regelsätze"
@@ -18651,9 +18656,8 @@ msgstr "Details für Host-Benachrichtigungen"
 msgid "Details for service notifications"
 msgstr "Details für Service-Benachrichtigungen"
 
-#, fuzzy
 msgid "Details:"
-msgstr "Details"
+msgstr "Details:"
 
 msgid "Detect and use proxies configured on the target system"
 msgstr "Proxies, die auf dem Zielsystem konfiguriert sind, erkennen und nutzen"
@@ -20047,6 +20051,10 @@ msgstr "Indices nicht gruppieren"
 
 msgid "Do not group interfaces"
 msgstr "Schnittstellen nicht gruppieren"
+
+#, fuzzy
+msgid "Do not import tags"
+msgstr "Nicht importieren"
 
 msgid "Do not impose levels"
 msgstr "Keine Level anwenden"
@@ -24383,6 +24391,10 @@ msgstr "Auswahl nach Host-Name filtern:"
 msgid "Filter selection by service:"
 msgstr "Auswahl nach Service filtern:"
 
+#, fuzzy
+msgid "Filter tags imported as host/service labels"
+msgstr "Merkmale als Host-/Service-Label importieren"
+
 msgid "Filter valid annotations by key pattern"
 msgstr "Gültige Annotations nach Key Pattern filtern"
 
@@ -25592,6 +25604,9 @@ msgid ""
 "GUI extension in %r uses an API which is marked as deprecated and may not "
 "work anymore due to unknown imports or objects."
 msgstr ""
+"Die GUI-Erweiterung in %r verwendet eine API, die als veraltet "
+"gekennzeichnet ist und aufgrund von unbekannten Importen oder Objekten "
+"möglicherweise nicht mehr funktioniert."
 
 msgid "GUI extensions (deprecated)"
 msgstr "GUI-Erweiterungen (veraltet)"
@@ -31997,9 +32012,6 @@ msgstr "Importieren"
 msgid "Import all valid annotations"
 msgstr "Alle gültigen Annotations importieren"
 
-msgid "Import all valid tags"
-msgstr "Alle gültigen Merkmale importieren"
-
 msgid "Import annotations as host labels"
 msgstr "Anmerkungen als Host-Label importieren"
 
@@ -32020,9 +32032,6 @@ msgstr "iCalender-Datei importieren, um eine Zeitperiode zu definieren"
 
 msgid "Import state from Nagios core"
 msgstr "Zustand von Nagios-Kern übernehmen"
-
-msgid "Import tags as host/service labels"
-msgstr "Merkmale als Host-/Service-Label importieren"
 
 msgid ""
 "Important! This check is only for monitoring datafiles which were left in "
@@ -33617,9 +33626,8 @@ msgstr "Ungültige Host- oder IP-Adresse. IPv4: %s, IPv6: %s"
 msgid "Invalid host or network address. IPv4: %s, IPv6: %s"
 msgstr "Ungültige Host- oder Netzwerkadresse. IPv4: %s, IPv6: %s"
 
-#, fuzzy
 msgid "Invalid hostname or IP address."
-msgstr "Abgefragter Host-Name oder IP-Adresse"
+msgstr "Ungültiger Host-Name oder ungültige IP-Adresse."
 
 msgid "Invalid ident"
 msgstr "Ungültiger Schlüssel"
@@ -35176,6 +35184,9 @@ msgid ""
 "Legacy GUI extension in %r uses an API which is marked as deprecated and may "
 "not work anymore due to unknown imports or objects."
 msgstr ""
+"Die Legacy GUI-Erweiterung in %r verwendet eine API, die als veraltet "
+"gekennzeichnet ist und aufgrund unbekannter Importe oder Objekte "
+"möglicherweise nicht mehr funktioniert."
 
 msgid "Legacy GUI extensions (deprecated)"
 msgstr "Legacy GUI-Erweiterungen (veraltet)"
@@ -37082,7 +37093,7 @@ msgid "Login mode"
 msgstr "Login-Modus"
 
 msgid "Login performed with backup code - Checkmk Security Notice"
-msgstr ""
+msgstr "Login mit Backup-Code durchgeführt - Checkmk Sicherheitshinweis"
 
 msgid "Login possible"
 msgstr "Login ist möglich"
@@ -39273,9 +39284,9 @@ msgstr "Merker"
 msgid "Message"
 msgstr "Nachricht"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Message #%d"
-msgstr "Nachricht"
+msgstr "Meldung #%d"
 
 msgid "Message Age of newest messages"
 msgstr "Nachrichtenalter der neuesten Nachrichten"
@@ -44456,9 +44467,8 @@ msgstr "Lokale Web-Benutzeroberfläche dieser Instanz öffnen"
 msgid "Open this table for filtering / sorting"
 msgstr "Diese Tabelle zum Filtern/Sortieren öffnen"
 
-#, fuzzy
 msgid "Open vSwitch (ovs) bonding interface status"
-msgstr "Status der OVS Bonding-Schnittstelle"
+msgstr "Status der Bonding-Schnittstelle von Open vSwitch (ovs)"
 
 msgid "Open/close this element"
 msgstr "Dieses Element öffnen/schließen"
@@ -46141,6 +46151,8 @@ msgstr "PLL Verriegelungsspannung nach Frequenz"
 msgid ""
 "PNP template uses an API which was removed in an ealier Checkmk version."
 msgstr ""
+"Die PNP-Vorlage verwendet eine API, die in einer früheren Checkmk-Version "
+"entfernt wurde."
 
 #, python-format
 msgid ""
@@ -47483,9 +47495,8 @@ msgstr "Piggyback-Namen"
 msgid "Piggyback services to monitor"
 msgstr "Zu überwachende Piggyback-Services"
 
-#, fuzzy
 msgid "Piggyback-hub turned on on remote site"
-msgstr "Piggyback-Informationen von einem anderen Host"
+msgstr "Piggyback-Hub auf Remote-Instanz eingeschaltet"
 
 msgid "Piggybacked docker containers"
 msgstr "Piggyback Docker Container"
@@ -54402,13 +54413,12 @@ msgstr "Sensoren"
 msgid "Sent"
 msgstr "Gesendet"
 
-#, fuzzy
 msgid "Sent on"
-msgstr "Gesendet"
+msgstr "Gesendet am"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Sent on: %s, Expires on: %s"
-msgstr "Version: %s, Edition: %s"
+msgstr "Gesendet am: %s, läuft ab am: %s"
 
 msgid "Sent vs Received Traffic Breakdown"
 msgstr "Vergleich versendeter und empfangener Traffic"
@@ -62877,6 +62887,10 @@ msgid ""
 "%s so that this extension will not work anymore once you upgrade your site "
 "to next major version."
 msgstr ""
+"Das Erweiterungspaket verwendet APIs, die in Checkmk %s veraltet sind oder "
+"entfernt wurden, so dass diese Erweiterung nicht mehr funktionieren wird, "
+"sobald Sie für Ihre Instanz das Upgrade auf die nächste Hauptversion "
+"durchführen."
 
 msgid ""
 "The fall back option tries to establish an encrypted TLS connection. If the "
@@ -64661,6 +64675,9 @@ msgid ""
 "this extension will not work anymore once you upgrade your site to next "
 "major version."
 msgstr ""
+"Das Plug-in verwendet APIs, die in Checkmk %s veraltet sind oder entfernt "
+"wurden, so dass diese Erweiterung nicht mehr funktionieren wird, sobald Sie "
+"für Ihre Instanz das Upgrade auf die nächste Hauptversion durchführen."
 
 msgid ""
 "The plug-in will process anything that is matched by this globbing pattern. "
@@ -67166,9 +67183,9 @@ msgstr ""
 msgid "This does not affect hosts in subfolders."
 msgstr "Hosts in Unterordnern sind davon nicht betroffen."
 
-#, fuzzy, python-format
+#, python-format
 msgid "This does not work in Checkmk %s."
-msgstr "Dieser Host hat keine Checkmk-Agenten."
+msgstr "Dies funktioniert nicht in Checkmk %s."
 
 msgid "This element is currently in a scheduled downtime."
 msgstr "Dieses Element ist momentan in einer Wartungszeit."
@@ -67648,6 +67665,8 @@ msgid ""
 "This may partially work in Checkmk %s but will stop working from the next "
 "major version onwards."
 msgstr ""
+"Dies könnte teilweise in Checkmk %s funktionieren, wird aber ab der nächsten "
+"Hauptversion nicht mehr funktionieren."
 
 #, python-format
 msgid "This message has been created at %s and is valid till %s."
@@ -74073,13 +74092,11 @@ msgstr "Zwei Stunden"
 msgid "Two-factor authentication"
 msgstr "Zwei-Faktor-Authentifizierung"
 
-#, fuzzy
 msgid "Two-factor authentication has been added"
-msgstr "Zwei-Faktor-Authentifizierung nicht aktiviert"
+msgstr "Zwei-Faktor-Authentifizierung wurde hinzugefügt"
 
-#, fuzzy
 msgid "Two-factor authentication has been removed"
-msgstr "Zwei-Faktor-Authentifizierung nicht aktiviert"
+msgstr "Zwei-Faktor-Authentifizierung wurde entfernt"
 
 msgid "Two-factor authentication not enabled"
 msgstr "Zwei-Faktor-Authentifizierung nicht aktiviert"
@@ -78852,14 +78869,21 @@ msgid ""
 "updating the extension package. Otherwise the extension package will be "
 "deactivated after an upgrade."
 msgstr ""
+"Wir empfehlen dringend, dieses Problem bereits in Ihrer Installation zu "
+"lösen, indem Sie das Erweiterungspaket aktualisieren. Andernfalls wird das "
+"Erweiterungspaket nach einem Upgrade deaktiviert."
 
 msgid ""
 "We highly recommend solving this issue already in your installation either "
 "by migrating or removing this plug-in."
 msgstr ""
+"Wir empfehlen dringend, dieses Problem bereits in Ihrer Installation zu "
+"lösen, indem Sie dieses Plugin entweder migrieren oder entfernen."
 
 msgid "We highly recommend solving this issue already in your installation."
 msgstr ""
+"Wir empfehlen dringend, dieses Problem bereits in Ihrer Installation zu "
+"lösen."
 
 msgid "Weak"
 msgstr "Schwach"
@@ -82807,9 +82831,8 @@ msgstr "Ihr %s wurde gelöscht."
 msgid "Your %s has been saved."
 msgstr "Ihr %s wurde gespeichert."
 
-#, fuzzy
 msgid "Your Checkmk Password has been changed"
-msgstr "Ihr Planeintrag wurde gespeichert."
+msgstr "Ihr Checkmk-Passwort wurde geändert"
 
 #, python-format
 msgid "Your Checkmk license expires %s"
@@ -82916,9 +82939,9 @@ msgstr ""
 msgid "Your input is not a valid email address."
 msgstr "Ihre Eingabe ist keine gültige E-Mail-Adresse."
 
-#, fuzzy
 msgid "Your input is not a valid hostname or IP address."
-msgstr "Ihre Eingabe ist keine gültige E-Mail-Adresse."
+msgstr ""
+"Ihre Eingabe ist weder gültiger Host-Name noch eine gültige IP-Adresse."
 
 #, python-format
 msgid ""
@@ -82978,9 +83001,8 @@ msgid_plural "Your logos have been uploaded"
 msgstr[0] "Ihr Logo wurde hochgeladen."
 msgstr[1] "Ihre Logos wurden hochgeladen"
 
-#, fuzzy
 msgid "Your messages"
-msgstr "Log-Meldungen"
+msgstr "Ihre Meldungen"
 
 msgid "Your modifications affect some objects"
 msgstr "Ihre Veränderungen betreffen mehrere Objekte"
@@ -85390,6 +85412,9 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid "Import all valid tags"
+#~ msgstr "Alle gültigen Merkmale importieren"
 
 #~ msgid "Date sent"
 #~ msgstr "Gesendetes Datum"

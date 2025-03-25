@@ -20928,6 +20928,10 @@ msgstr "No agrupar índices"
 msgid "Do not group interfaces"
 msgstr "No agrupar interfaces"
 
+#, fuzzy
+msgid "Do not import tags"
+msgstr "No importes"
+
 msgid "Do not impose levels"
 msgstr "No imponer niveles"
 
@@ -25385,6 +25389,10 @@ msgstr "Filtrar la selección de %s por nombre de host: "
 #, fuzzy
 msgid "Filter selection by service:"
 msgstr "Filtrar la selección de %s por servicio: "
+
+#, fuzzy
+msgid "Filter tags imported as host/service labels"
+msgstr "Utilizar el nombre del puerto como nombre del servicio"
 
 msgid "Filter valid annotations by key pattern"
 msgstr "Filtrar las anotaciones válidas por patrón de clave"
@@ -33499,10 +33507,6 @@ msgid "Import all valid annotations"
 msgstr "Importar todas las anotaciones válidas"
 
 #, fuzzy
-msgid "Import all valid tags"
-msgstr "Importar todas las anotaciones válidas"
-
-#, fuzzy
 msgid "Import annotations as host labels"
 msgstr "Utilizar el nombre del puerto como nombre del servicio"
 
@@ -33524,10 +33528,6 @@ msgstr "Importar un archivo de iCalendar para crear un período de tiempo"
 
 msgid "Import state from Nagios core"
 msgstr "Importar el estado del núcleo de Nagios"
-
-#, fuzzy
-msgid "Import tags as host/service labels"
-msgstr "Utilizar el nombre del puerto como nombre del servicio"
 
 #, fuzzy
 msgid ""
@@ -89236,6 +89236,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usar SSL para la conexión."
+
+#, fuzzy
+#~ msgid "Import all valid tags"
+#~ msgstr "Importar todas las anotaciones válidas"
 
 #, fuzzy
 #~ msgid "Date sent"

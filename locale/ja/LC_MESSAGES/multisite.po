@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-03-21 06:00+0000\n"
+"PO-Revision-Date: 2025-03-24 22:50+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/dev/"
 "ja/>\n"
 "Language: ja\n"
@@ -4502,10 +4502,9 @@ msgid ""
 "plug-in adds the user only to existing contact groups while the name of the "
 "contact group must match the common name (cn) of the LDAP group."
 msgstr ""
-"LDAPのグループメンバーシップに基づいて、ユーザーをコンタクトグループに追加し"
-"ます。このプラグインは、既存のコンタクトグループにのみユーザーを追加します。"
-"コンタクトグループの名前は、LDAPグループの共通名（cn）と一致する必要がありま"
-"す。"
+"LDAPのグループメンバーシップに基づいて、ユーザーを連絡先グループに追加しま"
+"す。このプラグインは、既存の連絡先グループにのみユーザーを追加します。連絡先"
+"グループの名前は、LDAPグループの共通名（cn）と一致する必要があります。"
 
 msgid "Admin"
 msgstr "管理者"
@@ -5975,8 +5974,8 @@ msgid ""
 "a contact for"
 msgstr ""
 "ユーザーがビュー内のホストやサービスに対し、コマンドの実行を許可します。それ"
-"以上のパーミッションが与えられていない場合、アクションは自分がコンタクトであ"
-"るオブジェクトに対してのみ実行できます"
+"以上のパーミッションが与えられていない場合、アクションは自分が連絡先であるオ"
+"ブジェクトに対してのみ実行できます"
 
 msgid ""
 "Allows you to delete jobs of other users. Note: some jobs cannot be deleted"
@@ -9248,7 +9247,7 @@ msgid "But you are allowed to make changes anyway. "
 msgstr "ただし、変更を加えることは許可されています "
 
 msgid "But you are not a member of any contact group."
-msgstr "しかし、あなたはどのコンタクトグループにも属していません。"
+msgstr "しかし、あなたはどの連絡先グループにも属していません。"
 
 msgid ""
 "Buttons for globally switching states such as enabling checks and "
@@ -14303,7 +14302,7 @@ msgid "Contact group (effective)"
 msgstr "連絡先グループ(有効)"
 
 msgid "Contact group claim name"
-msgstr "コンタクトグループ請求名"
+msgstr "連絡先グループ請求名"
 
 #, fuzzy
 msgid "Contact group filters"
@@ -14351,10 +14350,10 @@ msgid "Contact information"
 msgstr "連絡先"
 
 msgid "Contact person"
-msgstr "コンタクトパーソン"
+msgstr "連絡先パーソン"
 
 msgid "Contact person (regex)"
-msgstr "コンタクトパーソン（正規表現）"
+msgstr "連絡先パーソン（正規表現）"
 
 msgid "Contact selection"
 msgstr "連絡先の選択"
@@ -19679,6 +19678,10 @@ msgstr "インデックスをグループ化しない"
 msgid "Do not group interfaces"
 msgstr "インターフェイスをグループ化しないでください"
 
+#, fuzzy
+msgid "Do not import tags"
+msgstr "インポートしない"
+
 msgid "Do not impose levels"
 msgstr "レベルを課さないでください"
 
@@ -19760,7 +19763,7 @@ msgid "Do not status data inventory"
 msgstr "データインベントリのステータスを設定しない"
 
 msgid "Do not synchronize contact group memberships"
-msgstr "コンタクトグループのメンバーシップを同期しない"
+msgstr "連絡先グループのメンバーシップを同期しない"
 
 msgid "Do not transfer context"
 msgstr "コンテキストを転送しない"
@@ -21801,9 +21804,9 @@ msgid ""
 "contact group with the identical name must exist in Checkmk. Otherwise they "
 "can't be mapped."
 msgstr ""
-"属性値が識別名（DN）であり、コンタクトグループとして使用したいコモ ンネーム"
-"（CN）を持つ要求名を入力します。同じ名前のコンタクトグループがCheckmkに存在す"
-"る必要があります。そうでない場合はマッピングできません。"
+"属性値が識別名（DN）であり、連絡先グループとして使用したいコモ ンネーム（CN）"
+"を持つ要求名を入力します。同じ名前の連絡先グループがCheckmkに存在する必要があ"
+"ります。そうでない場合はマッピングできません。"
 
 msgid ""
 "Enter the claim name whose attribute value you want to use to map your "
@@ -21820,7 +21823,7 @@ msgid ""
 "attribute match value and the returned claim attribute value."
 msgstr ""
 "属性値を使用したい要求名を入力します。指定された属性一致値と返された要求属性"
-"値が一致した場合のみ、ユーザーはコンタクトグループに割り当てられます。"
+"値が一致した場合のみ、ユーザーは連絡先グループに割り当てられます。"
 
 msgid "Enter the exit code as 10-digit, lower case hex value, e.g. 0x00000000."
 msgstr "終了コードを10桁の小文字の16進値(0x00000000など)で入力します。"
@@ -23980,6 +23983,10 @@ msgstr "ホスト名によるフィルタリング選択："
 
 msgid "Filter selection by service:"
 msgstr "サービスによるフィルター選択："
+
+#, fuzzy
+msgid "Filter tags imported as host/service labels"
+msgstr "サービス名としてポート名を使用する"
 
 msgid "Filter valid annotations by key pattern"
 msgstr "キーパターンによる有効なアノテーションのフィルタリング"
@@ -28955,7 +28962,7 @@ msgid "Host properties of: %s"
 msgstr "ホストプロパティ: %s"
 
 msgid "Host properties, such as labels or contact groups, are inherited."
-msgstr "ラベルやコンタクトグループなどのホストプロパティは継承されます。"
+msgstr "ラベルや連絡先グループなどのホストプロパティは継承されます。"
 
 msgid "Host related aggregations"
 msgstr "ホスト関連の集計"
@@ -31683,9 +31690,6 @@ msgstr "インポート"
 msgid "Import all valid annotations"
 msgstr "有効なアノテーションをすべてインポートする"
 
-msgid "Import all valid tags"
-msgstr "有効なタグをすべてインポートする"
-
 #, fuzzy
 msgid "Import annotations as host labels"
 msgstr "サービス名としてポート名を使用する"
@@ -31707,10 +31711,6 @@ msgstr "iCalendarファイルをインポートしてtime periodを作成しま�
 
 msgid "Import state from Nagios core"
 msgstr "Nagiosコアから状態をインポートします"
-
-#, fuzzy
-msgid "Import tags as host/service labels"
-msgstr "サービス名としてポート名を使用する"
 
 msgid ""
 "Important! This check is only for monitoring datafiles which were left in "
@@ -36789,8 +36789,7 @@ msgstr "Loose - 少なくとも1人のメンバーが表示されている場合
 
 msgid "Loose - Visible if user is contact for the service or its host"
 msgstr ""
-"Loose - ユーザがサービスまたはそのホストに対するコンタクトである場合に表示さ"
-"れる"
+"Loose - ユーザがサービスまたはそのホストに対する連絡先である場合に表示される"
 
 msgid "Loss of signal errors"
 msgstr "シグナル損失エラー"
@@ -38683,10 +38682,10 @@ msgid "Members "
 msgstr "メンバー "
 
 msgid "Members of contact groups"
-msgstr "コンタクトグループのメンバー"
+msgstr "連絡先グループのメンバー"
 
 msgid "Members of the contact group:"
-msgstr "コンタクトグループのメンバー:"
+msgstr "連絡先グループのメンバー:"
 
 msgid "Memory"
 msgstr "記憶"
@@ -43973,7 +43972,7 @@ msgid "Only show current value"
 msgstr "現在の値のみを表示"
 
 msgid "Only show hosts and services the user is a contact for"
-msgstr "そのユーザーがコンタクトしているホストとサービスのみを表示"
+msgstr "そのユーザーが連絡をとっているホストとサービスのみを表示"
 
 msgid "Only show objects with outages"
 msgstr "停止しているオブジェクトのみを表示する"
@@ -44301,7 +44300,7 @@ msgid "Optional selection of host group"
 msgstr "オプション ホストグループの選択"
 
 msgid "Optional selection of service contact group"
-msgstr "サービスコンタクトグループのオプション選択"
+msgstr "サービス連絡先グループのオプション選択"
 
 msgid "Optional selection of service group"
 msgstr "オプション サービスグループの選択"
@@ -47116,7 +47115,7 @@ msgid "Permits the user to logout."
 msgstr "ユーザーのログアウトを許可します。"
 
 msgid "Permits to delete all maps the user is contact for."
-msgstr "ユーザーがコンタクトしている全てのマップの削除を許可します。"
+msgstr "ユーザーが連絡している全てのマップの削除を許可します。"
 
 msgid "Permits to delete all maps."
 msgstr "すべてのマップの削除を許可する。"
@@ -67425,8 +67424,7 @@ msgstr "この権限により、イベント相関ルールの作成、変更、
 msgid ""
 "This permission allows the registration of any existing host the user is a "
 "contact of."
-msgstr ""
-"この権限は、ユーザーがコンタクトしている既存のホストの登録を許可します。"
+msgstr "この権限は、ユーザーが連絡している既存のホストの登録を許可します。"
 
 msgid "This permission allows the registration of any existing host."
 msgstr "この権限は、任意の既存ホストの登録を許可する。"
@@ -67435,8 +67433,8 @@ msgid ""
 "This permission allows the registration of any new host in a folder the user "
 "is a contact of."
 msgstr ""
-"この権限は、そのユーザーがコンタクトしているフォルダーに新しいホストを登録す"
-"ることを許可します。"
+"この権限は、そのユーザーが連絡先としているフォルダーに新しいホストを登録する"
+"ことを許可します。"
 
 msgid "This permission allows the registration of any new host."
 msgstr "この権限は新規ホストの登録を許可します。"
@@ -68242,7 +68240,7 @@ msgstr ""
 
 #, python-format
 msgid "This rule attaches contact group(s) to the events: %s"
-msgstr "このルールはイベントにコンタクト・グループ (複数可) を追加します。%s"
+msgstr "このルールはイベントに連絡先グループ (複数可) を追加します。%s"
 
 msgid ""
 "This rule can be used to configure the discovery of the Solaris services "
@@ -79286,10 +79284,10 @@ msgid ""
 "Parameters</i>. As long as you do not have any such rule a service always "
 "inherits all contact groups from its host."
 msgstr ""
-"このオプションでは、ホストに追加されたコンタクトグループは常にサービスにも追"
-"加されます。これは<i>ホストとサービスのパラメータ</i>のルールで他のコンタクト"
-"グループをサービスに割り当てている場合のみ違いが生じます。そのようなルールが"
-"ない限り、サービスは常にホストからすべてのコンタクトグループを継承します。"
+"このオプションでは、ホストに追加された連絡先グループは常にサービスにも追加さ"
+"れます。これは<i>ホストとサービスのパラメータ</i>のルールで他の連絡先グループ"
+"をサービスに割り当てている場合のみ違いが生じます。そのようなルールがない限"
+"り、サービスは常にホストからすべての連絡先グループを継承します。"
 
 msgid ""
 "With this option enabled, the Agent Bakery will log details about baking "
@@ -81465,8 +81463,8 @@ msgid ""
 "You need to be member of at least one contact group to be able to create a "
 "predefined condition."
 msgstr ""
-"定義済み条件を作成するには、少なくとも１つのコンタクトグループのメンバーであ"
-"る必要があります。"
+"定義済み条件を作成するには、少なくとも１つの連絡先グループのメンバーである必"
+"要があります。"
 
 msgid "You need to change your password."
 msgstr "パスワードを変更する必要があります。"
@@ -83739,7 +83737,7 @@ msgid "send every"
 msgstr "すべてを送信する"
 
 msgid "send notifications of contactgroup:"
-msgstr "コンタクトグループの通知を送信します。"
+msgstr "連絡先グループの通知を送信します。"
 
 msgid "send only every"
 msgstr "すべてを送信する"
@@ -84194,6 +84192,9 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用不可</b>"
+
+#~ msgid "Import all valid tags"
+#~ msgstr "有効なタグをすべてインポートする"
 
 #, fuzzy
 #~ msgid "Date sent"

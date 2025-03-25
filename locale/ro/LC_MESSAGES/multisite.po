@@ -20795,6 +20795,10 @@ msgstr "Nu grupați indicii"
 msgid "Do not group interfaces"
 msgstr "Nu grupați interfețele"
 
+#, fuzzy
+msgid "Do not import tags"
+msgstr "Nu importați"
+
 msgid "Do not impose levels"
 msgstr "Nu impuneți niveluri"
 
@@ -25231,6 +25235,10 @@ msgstr "Filtrați selecția %s după numele de gazdă: "
 #, fuzzy
 msgid "Filter selection by service:"
 msgstr "Filtrați selecția %s în funcție de serviciu: "
+
+#, fuzzy
+msgid "Filter tags imported as host/service labels"
+msgstr "Utilizați numele portului ca nume de serviciu"
 
 msgid "Filter valid annotations by key pattern"
 msgstr "Filtrarea adnotărilor valide după modelul de cheie"
@@ -33295,9 +33303,6 @@ msgstr "Import"
 msgid "Import all valid annotations"
 msgstr "Importați toate adnotările valide"
 
-msgid "Import all valid tags"
-msgstr "Importați toate etichetele valide"
-
 #, fuzzy
 msgid "Import annotations as host labels"
 msgstr "Utilizați numele portului ca nume de serviciu"
@@ -33320,10 +33325,6 @@ msgstr "Importați un fișier iCalendar pentru a crea o perioadă de timp"
 
 msgid "Import state from Nagios core"
 msgstr "Importați starea din nucleul Nagios"
-
-#, fuzzy
-msgid "Import tags as host/service labels"
-msgstr "Utilizați numele portului ca nume de serviciu"
 
 #, fuzzy
 msgid ""
@@ -88697,6 +88698,9 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#~ msgid "Import all valid tags"
+#~ msgstr "Importați toate etichetele valide"
 
 #, fuzzy
 #~ msgid "Date sent"

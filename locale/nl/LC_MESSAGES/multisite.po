@@ -20761,6 +20761,10 @@ msgstr "Indexen niet groeperen"
 msgid "Do not group interfaces"
 msgstr "Groepeer geen interfaces"
 
+#, fuzzy
+msgid "Do not import tags"
+msgstr "Niet importeren"
+
 msgid "Do not impose levels"
 msgstr "Geen niveaus opleggen"
 
@@ -25185,6 +25189,10 @@ msgstr "Filter %s selectie op hostnaam: "
 #, fuzzy
 msgid "Filter selection by service:"
 msgstr "Filter %s selectie op dienst: "
+
+#, fuzzy
+msgid "Filter tags imported as host/service labels"
+msgstr "Gebruik poortnaam als dienstnaam"
 
 msgid "Filter valid annotations by key pattern"
 msgstr "Geldige annotaties filteren op sleutelpatroon"
@@ -33242,10 +33250,6 @@ msgid "Import all valid annotations"
 msgstr "Alle geldige annotaties importeren"
 
 #, fuzzy
-msgid "Import all valid tags"
-msgstr "Alle geldige annotaties importeren"
-
-#, fuzzy
 msgid "Import annotations as host labels"
 msgstr "Gebruik poortnaam als dienstnaam"
 
@@ -33267,10 +33271,6 @@ msgstr "Importeer iCalendar bestand om een tijdsperiode aan te maken"
 
 msgid "Import state from Nagios core"
 msgstr "Importeer toestand van Nagios core"
-
-#, fuzzy
-msgid "Import tags as host/service labels"
-msgstr "Gebruik poortnaam als dienstnaam"
 
 #, fuzzy
 msgid ""
@@ -88511,6 +88511,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy
+#~ msgid "Import all valid tags"
+#~ msgstr "Alle geldige annotaties importeren"
 
 #, fuzzy
 #~ msgid "Date sent"

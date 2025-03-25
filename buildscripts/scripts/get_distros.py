@@ -140,6 +140,10 @@ def edition_to_registry(ed: str, registries: list[Registry]) -> Registry:
 
 def build_source_artifacts(arguments: argparse.Namespace, loaded_yaml: dict) -> Iterator[str]:
     for edition in loaded_yaml["editions"]:
+        if edition in ("cloud", "managed"):
+            # For CCE and CME we don't build any source artifacts
+            continue
+
         file_name = f"check-mk-{edition}-{arguments.version}.{Edition.from_long_edition(edition).short}.tar.gz"
         yield file_name
         yield hash_file(file_name)
@@ -147,6 +151,10 @@ def build_source_artifacts(arguments: argparse.Namespace, loaded_yaml: dict) -> 
 
 def build_docker_artifacts(arguments: argparse.Namespace, loaded_yaml: dict) -> Iterator[str]:
     for edition in loaded_yaml["editions"]:
+        if edition in ("cloud", "managed"):
+            # For CCE and CME we don't build any container images
+            continue
+
         file_name = f"check-mk-{edition}-docker-{arguments.version}.tar.gz"
         yield file_name
         yield hash_file(file_name)
@@ -166,6 +174,10 @@ def build_docker_image_name_and_registry(
                 raise RuntimeError(f"Unknown edition {ed}")
 
     for edition in loaded_yaml["editions"]:
+        if edition in ("cloud", "managed"):
+            # For CCE and CME we don't build any container images
+            continue
+
         registry = edition_to_registry(edition, registries)
         yield (
             DockerImage(

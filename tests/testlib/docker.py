@@ -368,7 +368,10 @@ class CheckmkApp:
                 c.remove(force=True)
                 raise docker.errors.NotFound(self.name)
         except (docker.errors.NotFound, docker.errors.NullResource):
-            c = self.client.containers.run(image=_image.id, detach=True, **kwargs)
+            try:
+                c = self.client.containers.run(image=_image.id, detach=True, **kwargs)
+            except Exception as e:
+                raise Exception(f"Failed to start container from image {_image.short_id}!") from e
             logger.info("Starting container %s from image %s", c.short_id, _image.short_id)
 
             try:

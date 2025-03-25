@@ -282,6 +282,9 @@ class TagGroup:
     def get_tag_choices(self) -> Sequence[tuple[TagID | None, str]]:
         return [(tag.id, tag.title) for tag in self.tags]
 
+    def get_non_empty_tag_choices(self) -> Sequence[tuple[TagID, str]]:
+        return [(tag.id, tag.title) for tag in self.tags if tag.id is not None]
+
     def get_tag_group_config(self, value: TagID | None) -> Mapping[TagGroupID, TagID]:
         """Return the set of tag groups which should be set for a host based on the given value"""
         tag_groups: dict[TagGroupID, TagID] = {}

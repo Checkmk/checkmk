@@ -434,7 +434,10 @@ def _get_condition_choices() -> dict[str, ConditionGroup]:
             case TagGroup():
                 choices[tag.id] = ConditionGroup(
                     title=tag.choice_title,
-                    conditions=[Condition(name=t.id or "", title=t.title) for t in tag.tags],
+                    conditions=[
+                        Condition(name=tag_id, title=tag_title)
+                        for tag_id, tag_title in tag.get_non_empty_tag_choices()
+                    ],
                 )
             case AuxTag():
                 choices[tag.id] = ConditionGroup(

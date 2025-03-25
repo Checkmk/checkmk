@@ -83,7 +83,7 @@ def _validate_tag_list(
 
 
 def _get_tag_group_choice(tag_group: TagGroup) -> tuple[TagGroupID, Tuple | CascadingDropdown]:
-    tag_choices = tag_group.get_tag_choices()
+    tag_choices = tag_group.get_non_empty_tag_choices()
 
     if len(tag_choices) == 1:
         return _single_tag_choice(

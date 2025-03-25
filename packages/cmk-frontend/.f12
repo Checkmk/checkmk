@@ -19,7 +19,7 @@ npm run build
 echo "Update site $SITE..."
 
 echo "Copy files..."
-rsync -ax --delete \
+rsync -rlD --delete \
     --filter "protect /cmk-frontend-vue/" \
     ./dist/ \
     "$ROOT/share/check_mk/web/htdocs"

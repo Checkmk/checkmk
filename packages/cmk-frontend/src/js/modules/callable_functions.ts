@@ -4,10 +4,11 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import {render_stats_table} from "@/modules/tracking_display";
-import {render_qr_code} from "@/modules/qrcode_rendering";
+import {fix_simplebar_scroll_to_id_in_chrome} from "@/modules/utils";
 import {insert_before} from "@/modules/layout";
 import {lock_and_redirect} from "@/modules/sites";
+import {render_qr_code} from "@/modules/qrcode_rendering";
+import {render_stats_table} from "@/modules/tracking_display";
 
 type CallableFunctionArguments = {[key: string]: string};
 type CallableFunction = (
@@ -21,6 +22,7 @@ const callable_functions: {[name: string]: CallableFunction} = {
     render_qr_code: render_qr_code,
     insert_before: insert_before,
     lock_and_redirect: lock_and_redirect,
+    fix_simplebar_scroll_to_id_in_chrome: fix_simplebar_scroll_to_id_in_chrome,
 };
 
 export function init_callable_ts_functions(element: Element | Document) {

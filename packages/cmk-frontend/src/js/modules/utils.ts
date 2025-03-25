@@ -843,6 +843,28 @@ export function content_scrollbar(scrollable_id: string) {
     return g_content_scrollbar;
 }
 
+export async function fix_simplebar_scroll_to_id_in_chrome(
+    container: HTMLElement,
+    _options: Record<string, string>,
+) {
+    container.addEventListener(
+        "click",
+        event => {
+            event.preventDefault();
+            const id = container.getAttribute("href")?.substring(1);
+            if (id === undefined) return;
+            const element = document.getElementById(id);
+            if (element) {
+                const scrollElement = g_content_scrollbar!.getScrollElement();
+                if (scrollElement) {
+                    scrollElement.scrollTop = element.offsetTop;
+                }
+            }
+        },
+        false,
+    );
+}
+
 export function set_focus_by_name(
     form_name: string | undefined,
     field_name: number,

@@ -17,6 +17,7 @@ import {
     time,
     update_pending_changes,
 } from "./utils";
+import {init_callable_ts_functions} from "@/modules/callable_functions";
 
 //#   +--------------------------------------------------------------------+
 //#   | Handling of the asynchronous service discovery dialog              |
@@ -232,6 +233,7 @@ function update(
     /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     fixall_container.innerHTML = response.fixall;
     execute_javascript_by_object(fixall_container);
+    init_callable_ts_functions(fixall_container);
 
     // Update the content table
     const container = document.getElementById("service_container")!;

@@ -58,6 +58,9 @@ def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeObjectParameters)
 
 
+NOTDISPLAYABLE = ["logwatch_ec_single"]
+
+
 class ModeObjectParameters(WatoMode):
     _PARAMETERS_UNKNOWN: list = []
     _PARAMETERS_OMIT: list = []
@@ -229,6 +232,12 @@ class ModeObjectParameters(WatoMode):
     ) -> None:
         # First case: discovered checks. They come from var/check_mk/autochecks/HOST.
         checkgroup = serviceinfo["checkgroup"]
+
+        if (checktype := serviceinfo["checktype"]) in NOTDISPLAYABLE:
+            reason = _("Check parameters for checktype '%s' can not be displayed") % checktype
+        else:
+            reason = _("This check is not configurable via Setup")
+
         not_configurable_render = functools.partial(
             self._render_rule_reason,
             _("Parameters"),
@@ -236,7 +245,7 @@ class ModeObjectParameters(WatoMode):
             "",
             "",
             True,
-            _("This check is not configurable via Setup"),
+            reason,
         )
         if not checkgroup or checkgroup == "None":
             not_configurable_render()

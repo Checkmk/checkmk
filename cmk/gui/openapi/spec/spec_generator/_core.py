@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -408,19 +408,14 @@ from cmk.ccc.site import omd_site
 from cmk.utils.paths import omd_root
 
 from cmk.gui import main_modules
-from cmk.gui.openapi.restful_objects.decorators import Endpoint
+from cmk.gui.openapi import endpoint_registry
+from cmk.gui.openapi.restful_objects import Endpoint
 from cmk.gui.openapi.restful_objects.documentation import table_definitions
-from cmk.gui.openapi.restful_objects.parameters import (
-    ACCEPT_HEADER,
-)
+from cmk.gui.openapi.restful_objects.parameters import ACCEPT_HEADER
 from cmk.gui.openapi.restful_objects.params import to_openapi
-from cmk.gui.openapi.restful_objects.registry import endpoint_registry
-from cmk.gui.openapi.restful_objects.type_defs import (
-    EndpointTarget,
-    OperationObject,
-)
+from cmk.gui.openapi.restful_objects.type_defs import EndpointTarget, OperationObject
 from cmk.gui.openapi.spec.plugin_marshmallow import CheckmkMarshmallowPlugin
-from cmk.gui.openapi.spec.spec_generate._operations import _add_cookie_auth, _operation_dicts
+from cmk.gui.openapi.spec.spec_generator._operations import _add_cookie_auth, _operation_dicts
 from cmk.gui.openapi.spec.utils import spec_path
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils import get_failed_plugins

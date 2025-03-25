@@ -42,7 +42,7 @@ from cmk.gui.openapi.restful_objects.type_defs import (
     ResponseType,
     StatusCodeInt,
 )
-from cmk.gui.openapi.spec.spec_generate._documentation import (
+from cmk.gui.openapi.spec.spec_generator._documentation import (
     _add_once,
     _build_description,
     _coalesce_schemas,

@@ -269,8 +269,10 @@ def _restore_tmpfs_dump(site_dir: str, site_tmp_dir: str) -> None:
     Silently skipping over in case there is no dump available."""
     if not Path(site_dir, "var/omd/tmpfs-dump.tar").exists():
         return
-    with tarfile.TarFile(Path(site_dir, "var/omd/tmpfs-dump.tar")) as tar:
+    tmpfs_dump = Path(site_dir, "var/omd/tmpfs-dump.tar")
+    with tarfile.TarFile(tmpfs_dump) as tar:
         tar.extractall(site_tmp_dir, filter="data")  # nosec B202 # BNS:a7d6b8
+    tmpfs_dump.unlink()
 
 
 def prepare_and_populate_tmpfs(version_info: VersionInfo, site: SiteContext, skelroot: str) -> None:

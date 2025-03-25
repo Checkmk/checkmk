@@ -21,6 +21,7 @@ import * as availability from "./modules/availability";
 import * as background_job from "./modules/background_job";
 import * as backup from "./modules/backup";
 import * as bi from "./modules/bi";
+import * as callable_functions from "@/modules/callable_functions";
 import * as dashboard from "./modules/dashboard";
 import * as element_dragging from "./modules/element_dragging";
 import * as cmk_figures from "./modules/figures/cmk_figures";
@@ -34,8 +35,6 @@ import * as help from "./modules/help";
 import * as host_diagnose from "./modules/host_diagnose";
 import * as hover from "./modules/hover";
 import * as keyboard_shortcuts from "./modules/keyboard_shortcuts";
-import {insert_before} from "./modules/layout";
-import {lock_and_redirect} from "./modules/sites";
 import * as license_usage_timeseries_graph from "./modules/license_usage/license_usage_timeseries_graph";
 import * as nodevis from "./modules/nodevis/main";
 import * as ntop_alerts from "./modules/ntop/ntop_alerts";
@@ -49,7 +48,6 @@ import {initPasswordStrength} from "./modules/password_meter";
 import * as popup_menu from "./modules/popup_menu";
 import * as prediction from "./modules/prediction";
 import * as profile_replication from "./modules/profile_replication";
-import {render_qr_code} from "./modules/qrcode_rendering";
 import * as quicksearch from "./modules/quicksearch";
 import * as reload_pause from "./modules/reload_pause";
 import * as selection from "./modules/selection";
@@ -69,21 +67,6 @@ import * as webauthn from "./modules/webauthn";
 
 register();
 
-type CallableFunctionArguments = {[key: string]: string};
-type CallableFunction = (
-    node: HTMLElement,
-    options: CallableFunctionArguments,
-) => Promise<void>;
-
-// See cmk.gui.htmllib.generator:KnownTSFunction
-// The type on the Python side and the available keys in this dictionary MUST MATCH.
-const callable_functions: {[name: string]: CallableFunction} = {
-    render_stats_table: render_stats_table,
-    render_qr_code: render_qr_code,
-    insert_before: insert_before,
-    lock_and_redirect: lock_and_redirect,
-};
-
 $(() => {
     utils.update_header_timer();
     forms.enable_dynamic_form_elements();
@@ -91,23 +74,7 @@ $(() => {
     element_dragging.register_event_handlers();
     keyboard_shortcuts.register_shortcuts();
     // add a confirmation popup for each for that has a valid confirmation text
-
-    // See cmk.gui.htmllib.generator:HTMLWriter.call_ts_function
-    document
-        .querySelectorAll<HTMLElement>("*[data-cmk_call_ts_function]")
-        .forEach((container, _) => {
-            const data = container.dataset;
-            const function_name: string = data.cmk_call_ts_function!;
-            let args: CallableFunctionArguments; // arguments is a restricted name in JavaScript
-            if (data.cmk_call_ts_arguments) {
-                args = JSON.parse(data.cmk_call_ts_arguments);
-            } else {
-                args = {};
-            }
-            const ts_function = callable_functions[function_name];
-            // The function has the responsibility to take the container and do it's thing with it.
-            ts_function(container, args);
-        });
+    callable_functions.init_callable_ts_functions(document);
 
     document
         .querySelectorAll<HTMLFormElement>("form[data-cmk_form_confirmation]")

@@ -320,9 +320,6 @@ def call_hook(site: "SiteContext", hook_name: str, args: list[str]) -> ConfigHoo
         close_fds=True,
         shell=False,
         stdout=subprocess.PIPE,
-        # `sys.stderr` is a magically replaced during `omd update`. During all other situations just
-        # removing `stderr=subprocess.PIPE` and the line below should be completely equivalent.
-        stderr=sys.stderr,
         encoding="utf-8",
         check=False,
     )

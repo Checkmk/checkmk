@@ -343,8 +343,9 @@ def test_update(client: docker.DockerClient) -> None:
     assert update_compatibility.is_compatible, f"Version {old_version} and {update_version} are incompatible, reason: {update_compatibility}"
 
     # 1. create container with old version and add a file to mark the pre-update state
+    container_volumes = [f"{container_name}:/omd/sites"]
     with CheckmkApp(
-        client, version=old_version, name=container_name, volumes=["/omd/sites"]
+        client, version=old_version, name=container_name, volumes=container_volumes
     ) as cmk_orig:
         assert (
             cmk_orig.container.exec_run(
@@ -365,7 +366,7 @@ def test_update(client: docker.DockerClient) -> None:
             version=update_version,
             is_update=True,
             name=container_name,
-            volumes_from=cmk_orig.container.id,
+            volumes=container_volumes,
         ) as cmk_new:
             # 5. verify result
             cmk_new.container.exec_run(["omd", "version"], user="cmk")[1].decode("utf-8").endswith(

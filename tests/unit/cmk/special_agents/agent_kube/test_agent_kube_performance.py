@@ -51,7 +51,7 @@ def test_selector_one_metric_per_pod(size: int) -> None:
     )
 
     assert len(sections) == 1
-    assert sections[0].section == size
+    assert sections[0].section == size  # type: ignore[comparison-overlap]
 
 
 def test_selector_no_metrics() -> None:

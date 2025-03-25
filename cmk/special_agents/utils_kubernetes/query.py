@@ -140,8 +140,8 @@ _AllConfigs = CollectorSessionConfig | PrometheusSessionConfig | NoUsageConfig
 
 
 def parse_session_config(arguments: argparse.Namespace) -> _AllConfigs:
-    adapter = TypeAdapter(_AllConfigs)
-    return adapter.validate_python(arguments.__dict__)  # type: ignore[arg-type, return-value]
+    adapter: TypeAdapter[_AllConfigs] = TypeAdapter(_AllConfigs)
+    return adapter.validate_python(arguments.__dict__)
 
 
 def parse_api_session_config(arguments: argparse.Namespace) -> APISessionConfig:

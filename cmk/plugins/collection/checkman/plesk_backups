@@ -10,12 +10,13 @@ description:
 
  This check checks the FTP backups and backup space of Plesk domains.
 
- To make this check work you need to install the agent plugin
- {plesk_backups} on the host wich runs Plesk in the
- directory {/usr/lib/check_mk_agent/plugins}.
+ To make this check work you need to install:
+
+ * the agent plugin {plesk_backups} on the host which runs Plesk in the directory {/usr/lib/check_mk_agent/plugins}.
+ * the Python package MySQLdb (e.g. via `pip install mysqlclient` or `apt install python3-mysqldb`).
 
 item:
-  The domain name of the domain backuped.
+  The domain name of the domain backed up.
 
 discovery:
  One service is created for each plesk domain.

@@ -92,6 +92,7 @@ from cmk.gui.watolib.config_domain_name import (
 )
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.host_attributes import (
+    ABCHostAttribute,
     all_host_attributes,
     collect_attributes,
     get_host_attribute_default_value,
@@ -943,6 +944,7 @@ class FolderTree:
 
     def __init__(self, root_dir: str | None = None) -> None:
         self._root_dir = _ensure_trailing_slash(root_dir) if root_dir else wato_root_dir()
+        self._all_host_attributes: dict[str, ABCHostAttribute] | None = None
 
     def all_folders(self) -> Mapping[PathWithoutSlash, Folder]:
         if "wato_folders" not in g:
@@ -1002,6 +1004,12 @@ class FolderTree:
         g.pop("wato_folders", {})
         for cache_id in ["folder_choices", "folder_choices_full_title"]:
             g.pop(cache_id, None)
+        self._all_host_attributes = None
+
+    def all_host_attributes(self) -> dict[str, ABCHostAttribute]:
+        if self._all_host_attributes is None:
+            self._all_host_attributes = all_host_attributes(active_config)
+        return self._all_host_attributes
 
     def _by_id(self, identifier: str) -> Folder:
         """Return the Folder instance of this particular identifier.
@@ -1353,6 +1361,7 @@ class Folder(FolderProtocol):
             ("management_protocol", "management_protocol", {}),
         ]
 
+        host_attributes = self.tree.all_host_attributes()
         for hostname, host in sorted(self.hosts().items()):
             effective = host.effective_attributes()
             cleaned_hosts[hostname] = update_metadata(host.attributes, created_by=user.id)
@@ -1407,7 +1416,7 @@ class Folder(FolderProtocol):
                         )
                     group_rules_list.append((group_rules, cgconfig["use_for_services"]))
 
-            for attrname, attr in all_host_attributes(active_config).items():
+            for attrname, attr in host_attributes.items():
                 if attrname in effective:
                     custom_varname = attr.nagios_name()
                     if custom_varname:
@@ -1906,7 +1915,7 @@ class Folder(FolderProtocol):
         effective.update(self.attributes)
 
         # now add default values of attributes for all missing values
-        for attrname, host_attribute in all_host_attributes(active_config).items():
+        for attrname, host_attribute in self.tree.all_host_attributes().items():
             if attrname not in effective:
                 # Mypy can not help here with the dynamic key
                 effective.setdefault(attrname, get_host_attribute_default_value(host_attribute))  # type: ignore[misc]
@@ -3018,6 +3027,7 @@ class SearchFolder(FolderProtocol):
             return {}
 
         found = {}
+        host_attributes = self.tree.all_host_attributes()
         for host_name, host in in_folder.hosts().items():
             if self._criteria[".name"] and not host_attribute_matches(
                 self._criteria[".name"], host_name
@@ -3029,7 +3039,7 @@ class SearchFolder(FolderProtocol):
 
             # Check attributes
             dont_match = False
-            for attrname, attr in all_host_attributes(active_config).items():
+            for attrname, attr in host_attributes.items():
                 if attrname in self._criteria and not attr.filter_matches(
                     self._criteria[attrname], effective.get(attrname), host_name
                 ):
@@ -3172,8 +3182,10 @@ class Host:
 
         tag_groups: dict[TagGroupID, TagID] = {}
         effective = self.effective_attributes()
-        for attr in all_host_attributes(active_config).values():
+        for attr in self._folder.tree.all_host_attributes().values():
             value = effective.get(attr.name())
+            # from cmk.gui.log import logger
+            # logger.warning(f"check attr {value} {attr}")
             tag_groups.update(attr.get_tag_groups(value))
 
         # When a host as been configured not to use the agent and not to use

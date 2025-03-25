@@ -1068,7 +1068,7 @@ class ModeFolder(WatoMode):
         html.a(hostname, href=host.edit_url())
 
         # Show attributes
-        for attr in all_host_attributes(active_config).values():
+        for attr in folder_tree().all_host_attributes().values():
             if attr.show_in_table():
                 attrname = attr.name()
                 if attrname in host.attributes:

@@ -1441,13 +1441,13 @@ class ACTestDeprecatedV1CheckPlugins(ACTest):
         return _(
             "The check plug-in API for plug-ins in <tt>%s</tt> was deprecated in Checkmk 2.3 and"
             " will be removed in Checkmk 2.4. To ensure compatibility with Checkmk 2.4 and avoid"
-            " future issues, please update the plug-ins to use the new API as soon as possible. For"
-            " more details on how to adapt your plug-ins, refer to the <a href='%s'>Werk #%s</a> and"
-            " the <a href='%s'>user guide</a>."
+            " future issues, please update the plug-ins to use the new API as soon as possible."
+            " For more details on how to adapt your plug-ins, refer to the <a href='%s'>%s</a>"
+            " and the <a href='%s'>user guide</a>."
         ) % (
+            "/".join(local_agent_based_plugins_dir.parts[-4:]),
             werk_reference_url(WerkReference.DECOMMISSION_V1_API),
             WerkReference.DECOMMISSION_V1_API.ref(),
-            "/".join(local_agent_based_plugins_dir.parts[-4:]),
             doc_reference_url(DocReference.DEVEL_CHECK_PLUGINS),
         )
 

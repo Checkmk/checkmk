@@ -21,7 +21,7 @@ def test_import_module(capfd: CaptureFixture) -> None:
     out = out.replace("'", "")
     assert (
         out
-        == "<<<plesk_domains>>>\nNo module named MySQLdb. Please install missing module via pip install <module>."
+        == "<<<plesk_domains>>>\nNo module named MySQLdb. Please install missing module via `pip install mysqlclient`.\n"
     )
     assert pytest_wrapped_e.type is SystemExit
     assert pytest_wrapped_e.value.code == 0

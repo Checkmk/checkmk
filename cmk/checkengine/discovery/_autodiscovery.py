@@ -25,9 +25,9 @@ from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import ServiceName
 
-from cmk.checkengine.checking import CheckPluginName, ServiceID
 from cmk.checkengine.fetcher import FetcherFunction, HostKey
 from cmk.checkengine.parser import group_by_host, ParserFunction
+from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName, DiscoveryPlugin, ServiceID
 from cmk.checkengine.sectionparser import (
     make_providers,
     Provider,
@@ -37,7 +37,6 @@ from cmk.checkengine.sectionparser import (
 from cmk.checkengine.summarize import SummarizerFunction
 
 from ._autochecks import (
-    AutocheckEntry,
     AutochecksConfig,
     AutocheckServiceWithNodes,
     AutochecksStore,
@@ -46,7 +45,6 @@ from ._autochecks import (
     set_autochecks_of_cluster,
     set_autochecks_of_real_hosts,
 )
-from ._discovery import DiscoveryPlugin
 from ._filters import RediscoveryParameters
 from ._filters import ServiceFilters as _ServiceFilters
 from ._host_labels import discover_host_labels, HostLabelPlugin

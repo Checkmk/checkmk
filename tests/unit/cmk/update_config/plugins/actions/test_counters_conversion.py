@@ -8,7 +8,7 @@ from pathlib import Path
 
 from cmk.utils.hostaddress import HostAddress
 
-from cmk.checkengine.checking import CheckPluginName, ServiceID
+from cmk.checkengine.plugins import CheckPluginName, ServiceID
 from cmk.checkengine.value_store import ValueStoreManager
 
 from cmk.update_config.plugins.actions.counters_conversion import ConvertCounters

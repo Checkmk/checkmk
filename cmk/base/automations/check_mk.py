@@ -129,9 +129,8 @@ from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.fetchers.snmp import make_backend as make_snmp_backend
 
-from cmk.checkengine.checking import CheckPluginName, ServiceConfigurer
+from cmk.checkengine.checking import ServiceConfigurer
 from cmk.checkengine.discovery import (
-    AutocheckEntry,
     autodiscovery,
     automation_discovery,
     CheckPreview,
@@ -145,6 +144,10 @@ from cmk.checkengine.discovery import (
 from cmk.checkengine.fetcher import FetcherFunction, FetcherType, SourceType
 from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.parser import NO_SELECTION, parse_raw_data
+from cmk.checkengine.plugins import (
+    AutocheckEntry,
+    CheckPluginName,
+)
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 from cmk.checkengine.summarize import summarize
 from cmk.checkengine.value_store import ValueStoreManager

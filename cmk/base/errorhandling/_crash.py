@@ -23,7 +23,7 @@ from cmk.utils.servicename import ServiceName
 
 from cmk.snmplib import SNMPBackendEnum
 
-from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.plugins import CheckPluginName
 
 from cmk.piggyback.backend import get_messages_for
 

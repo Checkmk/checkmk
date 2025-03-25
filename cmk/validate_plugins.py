@@ -20,7 +20,7 @@ from cmk.utils.rulesets.definition import RuleGroup
 from cmk.checkengine.checkresults import (  # pylint: disable=cmk-module-layer-violation
     ActiveCheckResult,
 )
-from cmk.checkengine.inventory import (  # pylint: disable=cmk-module-layer-violation
+from cmk.checkengine.plugins import (  # pylint: disable=cmk-module-layer-violation
     InventoryPlugin,
     InventoryPluginName,
 )

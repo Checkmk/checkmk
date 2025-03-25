@@ -11,7 +11,7 @@ from pprint import pformat
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets.definition import RuleGroup
 
-from cmk.checkengine.inventory import InventoryPlugin
+from cmk.checkengine.plugins import InventoryPlugin
 
 from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins, CheckPlugin
 

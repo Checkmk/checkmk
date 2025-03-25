@@ -43,12 +43,6 @@ from cmk.fetchers import Fetcher, get_raw_data, Mode, SNMPScanConfig, TLSConfig
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 
-from cmk.checkengine.checking import (
-    AggregatedResult,
-    CheckPlugin,
-    CheckPluginName,
-    ConfiguredService,
-)
 from cmk.checkengine.checkresults import (
     ActiveCheckResult,
     MetricTuple,
@@ -58,15 +52,21 @@ from cmk.checkengine.checkresults import (
     UnsubmittableServiceCheckResult,
 )
 from cmk.checkengine.discovery import (
-    AutocheckEntry,
     ConfigGetter,
-    DiscoveryPlugin,
     get_plugin_parameters,
     HostLabelPlugin,
 )
 from cmk.checkengine.fetcher import HostKey, SourceInfo, SourceType
 from cmk.checkengine.parameters import Parameters
 from cmk.checkengine.parser import HostSections, NO_SELECTION, parse_raw_data, SectionNameCollection
+from cmk.checkengine.plugins import (
+    AggregatedResult,
+    AutocheckEntry,
+    CheckPlugin,
+    CheckPluginName,
+    ConfiguredService,
+    DiscoveryPlugin,
+)
 from cmk.checkengine.sectionparser import ParsedSectionName, Provider, ResolvedResult, SectionPlugin
 from cmk.checkengine.sectionparserutils import (
     get_cache_info,

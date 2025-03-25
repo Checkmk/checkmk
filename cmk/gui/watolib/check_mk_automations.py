@@ -21,7 +21,7 @@ from cmk.utils.servicename import Item, ServiceName
 from cmk.automations import results
 from cmk.automations.results import SetAutochecksInput
 
-from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.plugins import CheckPluginName
 
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize

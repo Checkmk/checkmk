@@ -8,10 +8,10 @@ from collections.abc import Mapping
 
 from cmk.utils.hostaddress import HostAddress, HostName
 
-from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.discovery._autochecks import AutocheckEntry, AutocheckServiceWithNodes
+from cmk.checkengine.discovery._autochecks import AutocheckServiceWithNodes
 from cmk.checkengine.discovery._autodiscovery import get_host_services_by_host_name
 from cmk.checkengine.discovery._utils import DiscoveredItem
+from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
 
 NODE_1 = HostAddress("node1")
 NODE_2 = HostAddress("node2")

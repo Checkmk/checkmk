@@ -34,7 +34,7 @@ from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.servicename import MAX_SERVICE_NAME_LEN, ServiceName
 from cmk.utils.timeperiod import add_builtin_timeperiods
 
-from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.plugins import CheckPluginName
 
 import cmk.base.utils
 from cmk.base import config, core_config

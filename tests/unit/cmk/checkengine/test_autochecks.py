@@ -14,11 +14,11 @@ from tests.testlib.unit.base_configuration_scenario import Scenario
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 
-from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.discovery import AutocheckEntry, AutocheckServiceWithNodes, AutochecksStore
+from cmk.checkengine.discovery import AutocheckServiceWithNodes, AutochecksStore
 from cmk.checkengine.discovery._autochecks import _AutochecksSerializer as AutochecksSerializer
 from cmk.checkengine.discovery._autochecks import _consolidate_autochecks_of_real_hosts
 from cmk.checkengine.discovery._utils import DiscoveredItem
+from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
 
 
 @pytest.fixture(autouse=True)

@@ -22,22 +22,20 @@ from cmk.utils.servicename import ServiceName
 
 from cmk.snmplib import SNMPRawData
 
-from cmk.checkengine.checking import CheckPluginName, ServiceID
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.fetcher import HostKey, SourceInfo
 from cmk.checkengine.parser import group_by_host, ParserFunction
+from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName, DiscoveryPlugin, ServiceID
 from cmk.checkengine.sectionparser import make_providers, SectionPlugin, store_piggybacked_sections
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.summarize import SummarizerFunction
 
 from ._autochecks import (
-    AutocheckEntry,
     AutochecksConfig,
     AutocheckServiceWithNodes,
     AutochecksStore,
 )
 from ._autodiscovery import discovery_by_host, get_host_services_by_host_name, ServicesByTransition
-from ._discovery import DiscoveryPlugin
 from ._filters import ServiceFilter as _ServiceFilter
 from ._filters import ServiceFilters as _ServiceFilters
 from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabelPlugin

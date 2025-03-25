@@ -37,7 +37,7 @@ from cmk.utils.log import console
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 
-from cmk.checkengine.inventory import InventoryPlugin
+from cmk.checkengine.plugins import InventoryPlugin
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.utils

@@ -11,7 +11,7 @@ from typing import override
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
 
-from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.plugins import CheckPluginName
 
 from cmk.gui.exceptions import MKUserError
 

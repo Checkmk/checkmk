@@ -11,7 +11,7 @@ import pytest
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.checkengine.checking import CheckPluginName, ServiceID
+from cmk.checkengine.plugins import CheckPluginName, ServiceID
 from cmk.checkengine.value_store import ValueStoreManager
 
 from cmk.base.api.agent_based import cluster_mode

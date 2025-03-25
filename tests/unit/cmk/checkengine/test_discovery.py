@@ -12,15 +12,14 @@ import pytest
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.labels import HostLabel
 
-from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import (
     _filters,
     analyse_services,
-    AutocheckEntry,
     DiscoveryMode,
     QualifiedDiscovery,
 )
 from cmk.checkengine.discovery._utils import DiscoveredItem
+from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
 
 
 def _service(plugin_name: str, item: str) -> AutocheckEntry:

@@ -20,7 +20,6 @@ from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import Item
 from cmk.utils.timeperiod import timeperiod_active
 
-from cmk.checkengine.checking import CheckPlugin, CheckPluginName, ConfiguredService, ServiceID
 from cmk.checkengine.checkresults import (
     ActiveCheckResult,
     MetricTuple,
@@ -29,6 +28,14 @@ from cmk.checkengine.checkresults import (
 from cmk.checkengine.fetcher import FetcherFunction, HostKey
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParametersPreview
 from cmk.checkengine.parser import group_by_host, ParserFunction
+from cmk.checkengine.plugins import (
+    AutocheckEntry,
+    CheckPlugin,
+    CheckPluginName,
+    ConfiguredService,
+    DiscoveryPlugin,
+    ServiceID,
+)
 from cmk.checkengine.sectionparser import (
     make_providers,
     Provider,
@@ -38,9 +45,8 @@ from cmk.checkengine.sectionparser import (
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.summarize import SummarizerFunction
 
-from ._autochecks import AutocheckEntry, AutochecksConfig, AutochecksStore
+from ._autochecks import AutochecksConfig, AutochecksStore
 from ._autodiscovery import _Transition, discovery_by_host, get_host_services_by_host_name
-from ._discovery import DiscoveryPlugin
 from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabelPlugin
 from ._utils import QualifiedDiscovery
 

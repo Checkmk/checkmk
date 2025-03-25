@@ -10,7 +10,7 @@ from typing import Any
 
 from cmk.utils.rulesets import RuleSetName
 
-from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.plugins import CheckPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 from cmk.base.api.agent_based.plugin_classes import (

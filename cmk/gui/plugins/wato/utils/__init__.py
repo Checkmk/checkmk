@@ -24,7 +24,7 @@ from cmk.ccc.version import Edition, edition
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.definition import RuleGroup
 
-from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.plugins import CheckPluginName
 
 import cmk.gui.watolib.rulespecs as _rulespecs
 from cmk.gui import forms, hooks, userdb, weblib

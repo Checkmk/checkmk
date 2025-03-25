@@ -5,7 +5,6 @@
 
 from ._active_check import execute_check_discovery
 from ._autochecks import (
-    AutocheckEntry,
     AutocheckServiceWithNodes,
     AutochecksManager,
     AutochecksStore,
@@ -22,7 +21,6 @@ from ._autodiscovery import (
     get_host_services_by_host_name,
 )
 from ._commandline import commandline_discovery
-from ._discovery import DiscoveryPlugin
 from ._filters import RediscoveryParameters
 from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabelPlugin
 from ._params import ConfigGetter, DiscoveryCheckParameters, get_plugin_parameters
@@ -34,7 +32,6 @@ __all__ = [
     "analyse_cluster_labels",
     "analyse_services",
     "AutocheckServiceWithNodes",
-    "AutocheckEntry",
     "AutochecksManager",
     "AutochecksStore",
     "autodiscovery",
@@ -50,7 +47,6 @@ __all__ = [
     "DiscoverySettings",
     "DiscoveryVsSettings",
     "DiscoveryResult",
-    "DiscoveryPlugin",
     "execute_check_discovery",
     "find_plugins",
     "get_check_preview",

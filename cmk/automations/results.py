@@ -26,10 +26,11 @@ from cmk.utils.notify_types import NotifyAnalysisInfo, NotifyBulks
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
 from cmk.utils.servicename import Item, ServiceName
 
-from cmk.checkengine.discovery import AutocheckEntry, CheckPreviewEntry
+from cmk.checkengine.discovery import CheckPreviewEntry
 from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResult
 from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters
+from cmk.checkengine.plugins import AutocheckEntry
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 
 DiscoveredHostLabelsDict = dict[str, HostLabelValueDict]

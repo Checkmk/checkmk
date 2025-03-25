@@ -21,7 +21,7 @@ from typing import Any, Literal, NamedTuple, Never, NotRequired, TypedDict
 
 from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
 
-from cmk.checkengine.checking import CheckPluginName  # pylint: disable=cmk-module-layer-violation
+from cmk.checkengine.plugins import CheckPluginName  # pylint: disable=cmk-module-layer-violation
 
 # from cmk.base.config import logwatch_rule will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation

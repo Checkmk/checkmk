@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping
 
-from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.plugins import CheckPluginName
 
 # Please keep this functionality even if we currently don't have any replaced check plugins!
 _REPLACED_CHECK_PLUGINS: dict[CheckPluginName, CheckPluginName] = {

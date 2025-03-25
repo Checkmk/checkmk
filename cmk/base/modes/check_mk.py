@@ -76,7 +76,6 @@ from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
 from cmk.checkengine import inventory
 from cmk.checkengine.checking import (
-    CheckPluginName,
     execute_checkmk_checks,
     make_timing_results,
 )
@@ -87,13 +86,14 @@ from cmk.checkengine.discovery import (
     remove_autochecks_of_host,
 )
 from cmk.checkengine.fetcher import FetcherFunction, FetcherType, SourceType
-from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin, InventoryPluginName
+from cmk.checkengine.inventory import HWSWInventoryParameters
 from cmk.checkengine.parser import (
     NO_SELECTION,
     parse_raw_data,
     ParserFunction,
     SectionNameCollection,
 )
+from cmk.checkengine.plugins import CheckPluginName, InventoryPlugin, InventoryPluginName
 from cmk.checkengine.sectionparser import SectionPlugin
 from cmk.checkengine.submitters import get_submitter, ServiceState
 from cmk.checkengine.summarize import summarize, SummarizerFunction

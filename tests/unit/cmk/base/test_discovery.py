@@ -27,11 +27,9 @@ from cmk.snmplib import SNMPRawData
 from cmk.fetchers import Mode
 from cmk.fetchers.filecache import FileCacheOptions
 
-from cmk.checkengine.checking import CheckPluginName, ServiceID
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.discovery import (
     analyse_cluster_labels,
-    AutocheckEntry,
     AutocheckServiceWithNodes,
     AutochecksStore,
     commandline_discovery,
@@ -59,6 +57,7 @@ from cmk.checkengine.discovery._filters import RediscoveryParameters, ServiceFil
 from cmk.checkengine.discovery._utils import DiscoveredItem
 from cmk.checkengine.fetcher import HostKey, SourceType
 from cmk.checkengine.parser import AgentRawDataSection, HostSections, NO_SELECTION
+from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName, ServiceID
 from cmk.checkengine.sectionparser import (
     ParsedSectionName,
     ParsedSectionsResolver,

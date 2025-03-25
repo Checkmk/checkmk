@@ -10,9 +10,8 @@ from typing import assert_never
 
 from cmk.utils.sectionname import SectionName
 
-from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.inventory import InventoryPlugin as BackendInventoryPlugin
-from cmk.checkengine.inventory import InventoryPluginName
+from cmk.checkengine.plugins import CheckPluginName, InventoryPluginName
+from cmk.checkengine.plugins import InventoryPlugin as BackendInventoryPlugin
 
 from cmk.base.api.agent_based import plugin_classes as backend
 

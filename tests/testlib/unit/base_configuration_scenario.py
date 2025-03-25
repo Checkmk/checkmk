@@ -22,7 +22,8 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.tags import TagGroupID, TagID
 
-from cmk.checkengine.discovery import AutocheckEntry, AutochecksManager
+from cmk.checkengine.discovery import AutochecksManager
+from cmk.checkengine.plugins import AutocheckEntry
 
 from cmk.base import config
 from cmk.base.config import ConfigCache, LoadedConfigFragment

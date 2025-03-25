@@ -34,14 +34,19 @@ from cmk.snmplib import SNMPBackendEnum
 
 from cmk.fetchers import Mode, TCPEncryptionHandling
 
-from cmk.checkengine.checking import CheckPluginName, ConfiguredService, ServiceID
 from cmk.checkengine.discovery import (
-    AutocheckEntry,
     DiscoveryCheckParameters,
     RediscoveryParameters,
 )
-from cmk.checkengine.inventory import InventoryPlugin, InventoryPluginName
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
+from cmk.checkengine.plugins import (
+    AutocheckEntry,
+    CheckPluginName,
+    ConfiguredService,
+    InventoryPlugin,
+    InventoryPluginName,
+    ServiceID,
+)
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config

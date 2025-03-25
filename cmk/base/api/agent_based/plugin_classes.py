@@ -14,8 +14,7 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib import SNMPDetectBaseType
 
-from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.inventory import InventoryPlugin, InventoryPluginName
+from cmk.checkengine.plugins import CheckPluginName, InventoryPlugin, InventoryPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 from cmk.agent_based.v2 import (

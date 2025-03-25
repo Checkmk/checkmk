@@ -16,10 +16,10 @@ from tests.testlib.unit.base_configuration_scenario import Scenario
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
-from cmk.checkengine.checking import CheckPluginName, ConfiguredService
 from cmk.checkengine.checkresults import ServiceCheckResult, SubmittableServiceCheckResult
 from cmk.checkengine.fetcher import HostKey, SourceType
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
+from cmk.checkengine.plugins import CheckPluginName, ConfiguredService
 
 from cmk.base import checkers, config
 

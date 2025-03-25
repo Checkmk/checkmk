@@ -11,8 +11,8 @@ from typing import Any, Final, Literal, NamedTuple, Protocol
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.checkengine.checking import ServiceID
 from cmk.checkengine.checkresults import state_markers
+from cmk.checkengine.plugins import ServiceID
 from cmk.checkengine.value_store import ValueStoreManager
 
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin

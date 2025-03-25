@@ -23,8 +23,8 @@ from cmk.automations.results import (
     SetAutochecksV2Result,
 )
 
-from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.discovery import AutocheckEntry, CheckPreviewEntry
+from cmk.checkengine.discovery import CheckPreviewEntry
+from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
 
 from cmk.gui.utils import transaction_manager
 from cmk.gui.watolib.audit_log import AuditLogStore

@@ -10,7 +10,7 @@ from typing import Any
 
 from cmk.utils.rulesets import RuleSetName
 
-from cmk.checkengine.inventory import InventoryPlugin, InventoryPluginName
+from cmk.checkengine.plugins import InventoryPlugin, InventoryPluginName
 
 from cmk.base.api.agent_based.register.utils import (
     create_subscribed_sections,

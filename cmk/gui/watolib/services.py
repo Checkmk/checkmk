@@ -33,8 +33,8 @@ from cmk.automations.results import (
     SetAutochecksInput,
 )
 
-from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.discovery import AutocheckEntry, CheckPreviewEntry
+from cmk.checkengine.discovery import CheckPreviewEntry
+from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
 
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.background_job import (

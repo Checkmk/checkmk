@@ -23,12 +23,12 @@ from cmk.utils.resulttype import OK
 from cmk.fetchers import Mode
 from cmk.fetchers.filecache import AgentFileCache, FileCacheMode, MaxAge
 
-from cmk.checkengine.checking import ConfiguredService
 from cmk.checkengine.discovery import commandline_discovery
 from cmk.checkengine.discovery._autochecks import AutochecksStore
 from cmk.checkengine.fetcher import SourceInfo
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.parser import NO_SELECTION
+from cmk.checkengine.plugins import ConfiguredService
 from cmk.checkengine.submitters import (
     FormattedSubmittee,
     Submitter,

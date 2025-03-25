@@ -10,17 +10,19 @@ from cmk.utils.hostaddress import HostAddress
 from cmk.utils.servicename import ServiceName
 
 from cmk.checkengine.checking import (
-    AggregatedResult,
     check_plugins_missing_data,
-    CheckPluginName,
-    ConfiguredService,
     merge_enforced_services,
     ServiceConfigurer,
-    ServiceID,
 )
 from cmk.checkengine.checkresults import UnsubmittableServiceCheckResult
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
+from cmk.checkengine.plugins import (
+    AggregatedResult,
+    CheckPluginName,
+    ConfiguredService,
+    ServiceID,
+)
 
 
 def _service(plugin: str, item: str | None) -> ConfiguredService:

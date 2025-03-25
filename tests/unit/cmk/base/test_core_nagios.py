@@ -26,8 +26,7 @@ from cmk.utils import paths
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.hostaddress import HostAddress, HostName
 
-from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.discovery import AutocheckEntry
+from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
 
 from cmk.base import config, core_nagios
 from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins, CheckPlugin

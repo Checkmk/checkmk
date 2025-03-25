@@ -28,10 +28,16 @@ from cmk.checkengine.fetcher import HostKey, SourceInfo
 from cmk.checkengine.inventory import (
     HWSWInventoryParameters,
     inventorize_status_data_of_real_host,
+)
+from cmk.checkengine.parser import group_by_host, ParserFunction
+from cmk.checkengine.plugins import (
+    AggregatedResult,
+    CheckPlugin,
+    CheckPluginName,
+    ConfiguredService,
     InventoryPlugin,
     InventoryPluginName,
 )
-from cmk.checkengine.parser import group_by_host, ParserFunction
 from cmk.checkengine.sectionparser import (
     make_providers,
     Provider,
@@ -41,8 +47,6 @@ from cmk.checkengine.sectionparser import (
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.submitters import Submittee, Submitter
 from cmk.checkengine.summarize import SummarizerFunction
-
-from ._plugin import AggregatedResult, CheckPlugin, CheckPluginName, ConfiguredService
 
 __all__ = ["execute_checkmk_checks", "check_host_services", "check_plugins_missing_data"]
 

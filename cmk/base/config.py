@@ -100,14 +100,10 @@ from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
 
 from cmk.checkengine.checking import (
-    CheckPluginName,
-    ConfiguredService,
     merge_enforced_services,
     ServiceConfigurer,
-    ServiceID,
 )
 from cmk.checkengine.discovery import (
-    AutocheckEntry,
     AutochecksManager,
     CheckPreviewEntry,
     DiscoveryCheckParameters,
@@ -115,7 +111,7 @@ from cmk.checkengine.discovery import (
 )
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetcher import FetcherType, SourceType
-from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin
+from cmk.checkengine.inventory import HWSWInventoryParameters
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.parser import (
     AgentParser,
@@ -124,6 +120,13 @@ from cmk.checkengine.parser import (
     SectionNameCollection,
     SectionStore,
     SNMPParser,
+)
+from cmk.checkengine.plugins import (
+    AutocheckEntry,
+    CheckPluginName,
+    ConfiguredService,
+    InventoryPlugin,
+    ServiceID,
 )
 from cmk.checkengine.summarize import SummaryConfig
 

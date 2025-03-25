@@ -8,8 +8,7 @@ from collections.abc import MutableMapping
 
 from cmk.utils.servicename import ServiceName
 
-from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.discovery import AutocheckEntry
+from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
 
 from cmk.gui.watolib.services import _apply_state_change, DiscoveryState
 

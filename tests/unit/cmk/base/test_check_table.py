@@ -15,9 +15,8 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.tags import TagGroupID, TagID
 
-from cmk.checkengine.checking import CheckPluginName, ConfiguredService, ServiceID
-from cmk.checkengine.discovery import AutocheckEntry
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
+from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName, ConfiguredService, ServiceID
 
 from cmk.base import config
 from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins, CheckPlugin

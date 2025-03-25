@@ -20,9 +20,9 @@ from cmk.utils.servicename import ServiceName
 from cmk.automations import results
 from cmk.automations.results import SetAutochecksInput
 
-from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import DiscoveryResult
-from cmk.checkengine.discovery._autochecks import _AutochecksSerializer, AutocheckEntry
+from cmk.checkengine.discovery._autochecks import _AutochecksSerializer
+from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
 
 logger = logging.getLogger(__name__)
 

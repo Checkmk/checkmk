@@ -19,7 +19,6 @@ import cmk.utils.paths
 from cmk.utils import tty
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console, section
-from cmk.utils.rulesets import RuleSetName
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.structured_data import (
     ImmutableTree,
@@ -33,14 +32,13 @@ from cmk.utils.structured_data import (
     SDValue,
     UpdateResult,
 )
-from cmk.utils.validatedstr import ValidatedString
 
 from cmk.agent_based.v1 import Attributes, TableRow
-from cmk.discover_plugins import PluginLocation
 
 from .checkresults import ActiveCheckResult
 from .fetcher import FetcherFunction, HostKey, SourceType
 from .parser import group_by_host, HostSections, ParserFunction
+from .plugins import InventoryPlugin, InventoryPluginName
 from .sectionparser import (
     make_providers,
     ParsedSectionName,
@@ -53,12 +51,10 @@ from .sectionparserutils import check_parsing_errors, get_cache_info, get_sectio
 from .summarize import SummarizerFunction
 
 __all__ = [
-    "InventoryPluginName",
     "HWSWInventoryParameters",
     "inventorize_cluster",
     "inventorize_host",
     "inventorize_status_data_of_real_host",
-    "InventoryPlugin",
 ]
 
 
@@ -79,20 +75,6 @@ _SDPATH_CLUSTER_NODES = (
     SDNodeName("cluster"),
     SDNodeName("nodes"),
 )
-
-
-class InventoryPluginName(ValidatedString):
-    pass
-
-
-@dataclass(frozen=True)
-class InventoryPlugin:
-    name: InventoryPluginName
-    sections: Sequence[ParsedSectionName]
-    function: Callable[..., Iterable[Attributes | TableRow]]
-    ruleset_name: RuleSetName | None
-    defaults: Mapping[str, object]
-    location: PluginLocation
 
 
 @dataclass(frozen=True)

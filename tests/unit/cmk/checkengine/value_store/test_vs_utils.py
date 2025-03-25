@@ -13,7 +13,7 @@ from cmk.ccc import store
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.checkengine.checking import CheckPluginName, ServiceID
+from cmk.checkengine.plugins import CheckPluginName, ServiceID
 from cmk.checkengine.value_store._api import (
     _ValueStore,
     ValueStoreManager,

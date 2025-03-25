@@ -23,8 +23,8 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import Labels, LabelSources
 from cmk.utils.tags import TagGroupID, TagID
 
-from cmk.checkengine.checking import CheckPluginName, ConfiguredService
 from cmk.checkengine.parameters import TimespecificParameters
+from cmk.checkengine.plugins import CheckPluginName, ConfiguredService
 
 import cmk.base.nagios_utils
 from cmk.base import config, core_config

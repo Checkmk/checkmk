@@ -14,9 +14,9 @@ from cmk.utils import paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.definition import RuleGroup
 
-from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.discovery import AutocheckEntry, AutochecksStore
+from cmk.checkengine.discovery import AutochecksStore
 from cmk.checkengine.legacy import LegacyCheckParameters
+from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
 
 from cmk.base.api.agent_based import register
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin

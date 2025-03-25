@@ -2,8 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Sequence
-from typing import Any, TypeVar
+from collections.abc import Mapping, Sequence
+from typing import Any, override, TypeVar
 
 from cmk.utils.tags import AuxTag, TagGroup, TagGroupID, TagID
 
@@ -21,6 +21,7 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+from cmk.gui.valuespec.definitions import ValueSpec
 
 _TagChoiceID = TypeVar("_TagChoiceID", TagGroupID, TagID)
 
@@ -211,5 +212,6 @@ class DictHostTagCondition(Transform):
 
 
 class PageAjaxDictHostTagConditionGetChoice(ABCPageListOfMultipleGetChoice):
-    def _get_choices(self, api_request):
+    @override
+    def _get_choices(self, api_request: Mapping[str, str]) -> Sequence[tuple[str, ValueSpec]]:
         return _get_tag_group_choices()

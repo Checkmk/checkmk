@@ -19,13 +19,13 @@ XINETD_INSTALL := $(BUILD_HELPER_DIR)/$(XINETD_DIR)-install
 XINETD_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(XINETD_DIR)
 
 .PHONY: $(XINETD_BUILD)
-ifneq ($(filter sles% el9,$(DISTRO_CODE)),)
+ifneq ($(filter sles% el8 el9,$(DISTRO_CODE)),)
 $(XINETD_BUILD):
 	$(BAZEL_CMD) build @$(XINETD)//:$(XINETD)
 endif
 
 .PHONY: $(XINETD_INSTALL)
-ifneq ($(filter sles% el9,$(DISTRO_CODE)),)
+ifneq ($(filter sles% el8 el9,$(DISTRO_CODE)),)
 $(XINETD_INSTALL): $(XINETD_BUILD)
 	$(RSYNC) --chmod=u+w $(BAZEL_BIN_EXT)/$(XINETD)/$(XINETD)/ $(DESTDIR)$(OMD_ROOT)/
 	chmod 644 $(DESTDIR)$(OMD_ROOT)/share/doc/xinetd/*

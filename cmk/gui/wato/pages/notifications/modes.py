@@ -1222,7 +1222,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
                                         )
                                     ),
                                 ),
-                                PageMenuEntry(
+                                PageMenuEntryCEEOnly(
                                     title=_("Logging of the notification mechanics"),
                                     icon_name="configuration",
                                     item=make_simple_link(

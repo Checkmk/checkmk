@@ -1345,12 +1345,12 @@ class ACTestDeprecatedV1CheckPlugins(ACTest):
             " Plug-in files in this folder are ignored."
             " Please migrate the plug-ins to the new API."
             " More information can be found in"
-            " <a href='%s'>Werk #%d</a> and our"
+            " <a href='%s'>%s</a> and our"
             " <a href='%s'>User Guide</a>."
         ) % (
+            "/".join(local_agent_based_plugins_dir.parts[-4:]),
             werk_reference_url(WerkReference.DECOMMISSION_V1_API),
             WerkReference.DECOMMISSION_V1_API.ref(),
-            "/".join(local_agent_based_plugins_dir.parts[-4:]),
             doc_reference_url(DocReference.DEVEL_CHECK_PLUGINS),
         )
 

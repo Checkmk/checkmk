@@ -108,7 +108,7 @@ requests = {version = "==2.31.0",extras = ["security"]}  # needed by DCD, connex
 pykerberos = "==1.2.1"  # needed by check_bi_aggr
 requests-kerberos = "==0.12.0"  # needed by check_bi_aggr, versions >=0.13.0 depend on pyspnego, which pulls in gssapi, which in turn fails on SLES because of https://github.com/pythongssapi/python-gssapi/issues/212
 isoduration = "==20.11.0"  # used by netapp ontap agent
-Jinja2 = "==3.1.5"  # needed by Flask
+Jinja2 = "==3.1.6"  # needed by Flask
 more-itertools = "==9.0.0"  # needed by connexion through zipp, pytest
 attrs = "==22.2.0"  # needed by jsonschema
 importlib_metadata = "==5.2.0"  # needed by jsonschema

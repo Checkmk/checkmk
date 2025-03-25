@@ -55,6 +55,7 @@ KnownTSFunction = typing.Literal[
     "render_stats_table",
     "insert_before",
     "lock_and_redirect",
+    "fix_simplebar_scroll_to_id_in_chrome",
 ]
 
 
@@ -690,6 +691,7 @@ class HTMLWriter:
         container: str,
         function_name: KnownTSFunction,
         arguments: dict[str, str] | None = None,
+        **kwargs: Any,
     ) -> None:
         json_arguments: str
         if arguments is None:
@@ -701,6 +703,7 @@ class HTMLWriter:
                 container,
                 data_cmk_call_ts_function=function_name,
                 data_cmk_call_ts_arguments=json_arguments,
+                **kwargs,
             )
         )
 

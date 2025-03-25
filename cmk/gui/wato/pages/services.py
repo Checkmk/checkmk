@@ -819,7 +819,12 @@ class DiscoveryPageRenderer:
 
     def _render_fix_all_element(self, title: str, count: int, href: str) -> None:
         html.open_li()
-        html.open_a(href=href)
+        html.open_ts_container(
+            container="a",
+            href=href,
+            function_name="fix_simplebar_scroll_to_id_in_chrome",
+            arguments=None,
+        )
         html.span(title)
         html.span(str(count), class_="changed" if count else "")
         html.close_a()
@@ -866,17 +871,17 @@ class DiscoveryPageRenderer:
         self._render_fix_all_element(
             ungettext("Changed service: ", "Changed services: ", changed_services),
             changed_services,
-            "#tree.table.checks_changed",
+            "#form_checks_changed",
         )
         self._render_fix_all_element(
             ungettext("Undecided service: ", "Undecided services: ", undecided_services),
             undecided_services,
-            "#tree.table.checks_new",
+            "#form_checks_new",
         )
         self._render_fix_all_element(
             ungettext("Vanished service: ", "Vanished services: ", vanished_services),
             vanished_services,
-            "#tree.table.checks_vanished",
+            "#form_checks_vanished",
         )
         self._render_fix_all_element(
             ungettext("New host label: ", "New host labels: ", new_host_labels),

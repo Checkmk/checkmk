@@ -35,18 +35,6 @@ def _is_or_is_not(label: str | None = None) -> DropdownChoice:
     )
 
 
-def _tag_choice(tag_group: TagGroup) -> Tuple:
-    return Tuple(
-        title=_u(tag_group.choice_title),
-        elements=[
-            _is_or_is_not(),
-            DropdownChoice(choices=tag_group.get_tag_choices()),
-        ],
-        show_titles=False,
-        orientation="horizontal",
-    )
-
-
 def _single_tag_choice(
     tag_group_id: _TagChoiceID, choice_title: str, tag_id: TagID | None, title: str
 ) -> tuple[_TagChoiceID, Tuple]:

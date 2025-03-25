@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-03-21 00:55+0000\n"
+"PO-Revision-Date: 2025-03-24 22:50+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -690,22 +690,28 @@ msgid ""
 "%s uses an API (%s) which is marked as deprecated in Checkmk %s and will be "
 "removed in Checkmk %s."
 msgstr ""
+"%s verwendet eine API (%s), die in Checkmk %s als veraltet markiert ist und "
+"in Checkmk %s entfernt werden wird."
 
 #, python-format
 msgid ""
 "%s uses an API (%s) which was marked as deprecated in Checkmk %s and is "
 "removed in Checkmk %s."
 msgstr ""
+"%s verwendet eine API (%s), die in Checkmk %s als veraltet markiert wurde "
+"und in Checkmk %s entfernt wird."
 
 #, python-format
 msgid ""
 "%s uses an API (%s) which was marked as deprecated in Checkmk %s and will be "
 "removed in Checkmk %s."
 msgstr ""
+"%s verwendet eine API (%s), die in Checkmk %s als veraltet markiert wurde "
+"und in Checkmk %s entfernt werden wird."
 
 #, python-format
 msgid "%s uses an API (%s) which was removed in Checkmk %s."
-msgstr ""
+msgstr "%s verwendet eine API (%s), die in Checkmk %s entfernt wurde."
 
 #, python-format
 msgid "%s was stopped after %s at %s."
@@ -4452,9 +4458,9 @@ msgstr "Betroffene Hosts enthalten"
 msgid "Affected sites"
 msgstr "Betroffene Instanzen"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Affected sites: %s"
-msgstr "Betroffene Instanzen"
+msgstr "Betroffene Instanzen: %s"
 
 msgid ""
 "After a battery diagnostics the battery capacity is reduced until the "
@@ -7743,7 +7749,7 @@ msgid "BI rules %s from BI pack '%s'"
 msgstr "BI-Regeln %s aus BI-Paket '%s'"
 
 msgid "BI runtime data"
-msgstr ""
+msgstr "BI Laufzeitdaten"
 
 msgid "BI service details"
 msgstr "BI Servicedetails"
@@ -8466,9 +8472,8 @@ msgstr "Business Intelligence Administration"
 msgid "Business Intelligence rules and aggregations"
 msgstr "Business Intelligence Regeln und Aggregate"
 
-#, fuzzy
 msgid "Business Intelligence runtime data"
-msgstr "Business Intelligence"
+msgstr "Business Intelligence Laufzeitdaten"
 
 msgid "Business reporting"
 msgstr "Business Bericht"
@@ -9775,12 +9780,18 @@ msgid ""
 "acknowledgements and service periods for all hosts/services included in a BI "
 "aggregation."
 msgstr ""
+"Im Cache gespeicherte Daten aus der Business Intelligence. Enthält Zustände, "
+"Wartungszeiten, Quittierungen und Serviceoerioden für alle in einem BI-"
+"Aggregat enthaltenen Hosts/Services."
 
 msgid ""
 "Cached data from Business Intelligence. contains states, downtimes, "
 "acknowledgements and service periods for all hosts/services included in a BI "
 "aggregation."
 msgstr ""
+"Im Cache gespeicherte Daten aus Business Intelligence. Enthält Zustände, "
+"Wartungszeiten, Quittierungen und Serviceperioden für alle in einer BI-"
+"Aggregation enthaltenen Hosts/Services."
 
 msgid "Cached memory"
 msgstr "gecachter Speicher"
@@ -13516,9 +13527,8 @@ msgstr "Kontextinformation zu dieser Verbindung"
 msgid "Context information about this rule"
 msgstr "Kontext zu dieser Regel"
 
-#, fuzzy
 msgid "Context is missing"
-msgstr "Instanz fehlt"
+msgstr "Kontext fehlt"
 
 msgid "Context sensitive help"
 msgstr "Kontextsensitive Hilfe"
@@ -16982,16 +16992,16 @@ msgstr "Veraltete Check-Plugins (v1)"
 msgid "Deprecated choice, please re-select"
 msgstr "Veraltete Auswahl, bitte neu auswählen"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Deprecated extension package: %s"
-msgstr "Neues Erweiterungspaket %s erzeugt"
+msgstr "Veraltetes Erweiterungspaket: %s"
 
 msgid "Deprecated legacy GUI extensions"
 msgstr "Veraltete Legacy GUI-Erweiterungen"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Deprecated plug-in: %s"
-msgstr "Veraltete Check-Plugins"
+msgstr "Veraltetes Plugin: %s"
 
 msgid "Deprecated rulesets"
 msgstr "Veraltete Regelsätze"
@@ -17092,9 +17102,8 @@ msgstr "Details für Host-Benachrichtigungen"
 msgid "Details for service notifications"
 msgstr "Details für Service-Benachrichtigungen"
 
-#, fuzzy
 msgid "Details:"
-msgstr "Details"
+msgstr "Details:"
 
 msgid "Detect and use proxies configured on the target system"
 msgstr "Proxies, die auf dem Zielsystem konfiguriert sind, erkennen und nutzen"
@@ -23666,6 +23675,9 @@ msgid ""
 "GUI extension in %r uses an API which is marked as deprecated and may not "
 "work anymore due to unknown imports or objects."
 msgstr ""
+"Die GUI-Erweiterung in %r verwendet eine API, die als veraltet "
+"gekennzeichnet ist und aufgrund von unbekannten Importen oder Objekten "
+"möglicherweise nicht mehr funktioniert."
 
 msgid "GUI extensions (deprecated)"
 msgstr "GUI-Erweiterungen (veraltet)"
@@ -31969,6 +31981,9 @@ msgid ""
 "Legacy GUI extension in %r uses an API which is marked as deprecated and may "
 "not work anymore due to unknown imports or objects."
 msgstr ""
+"Die Legacy GUI-Erweiterung in %r verwendet eine API, die als veraltet "
+"gekennzeichnet ist und aufgrund unbekannter Importe oder Objekte "
+"möglicherweise nicht mehr funktioniert."
 
 msgid "Legacy GUI extensions (deprecated)"
 msgstr "Legacy GUI-Erweiterungen (veraltet)"
@@ -41557,6 +41572,8 @@ msgstr "PLL Verriegelungsspannung nach Frequenz"
 msgid ""
 "PNP template uses an API which was removed in an ealier Checkmk version."
 msgstr ""
+"Die PNP-Vorlage verwendet eine API, die in einer früheren Checkmk-Version "
+"entfernt wurde."
 
 #, python-format
 msgid ""
@@ -57045,6 +57062,10 @@ msgid ""
 "%s so that this extension will not work anymore once you upgrade your site "
 "to next major version."
 msgstr ""
+"Das Erweiterungspaket verwendet APIs, die in Checkmk %s veraltet sind oder "
+"entfernt wurden, so dass diese Erweiterung nicht mehr funktionieren wird, "
+"sobald Sie für Ihre Instanz das Upgrade auf die nächste Hauptversion "
+"durchführen."
 
 msgid ""
 "The fall back option tries to establish an encrypted TLS connection. If the "
@@ -58705,6 +58726,9 @@ msgid ""
 "this extension will not work anymore once you upgrade your site to next "
 "major version."
 msgstr ""
+"Das Plug-in verwendet APIs, die in Checkmk %s veraltet sind oder entfernt "
+"wurden, so dass diese Erweiterung nicht mehr funktionieren wird, sobald Sie "
+"für Ihre Instanz das Upgrade auf die nächste Hauptversion durchführen."
 
 msgid ""
 "The plug-in will process anything that is matched by this globbing pattern. "
@@ -61074,9 +61098,9 @@ msgstr ""
 msgid "This does not affect hosts in subfolders."
 msgstr "Hosts in Unterordnern sind davon nicht betroffen."
 
-#, fuzzy, python-format
+#, python-format
 msgid "This does not work in Checkmk %s."
-msgstr "Dieser Host hat keine Checkmk-Agenten."
+msgstr "Dies funktioniert nicht in Checkmk %s."
 
 msgid "This element is currently in a scheduled downtime."
 msgstr "Dieses Element ist momentan in einer Wartungszeit."
@@ -61531,6 +61555,8 @@ msgid ""
 "This may partially work in Checkmk %s but will stop working from the next "
 "major version onwards."
 msgstr ""
+"Dies könnte teilweise in Checkmk %s funktionieren, wird aber ab der nächsten "
+"Hauptversion nicht mehr funktionieren."
 
 #, python-format
 msgid "This message has been created at %s and is valid till %s."
@@ -71941,14 +71967,21 @@ msgid ""
 "updating the extension package. Otherwise the extension package will be "
 "deactivated after an upgrade."
 msgstr ""
+"Wir empfehlen dringend, dieses Problem bereits in Ihrer Installation zu "
+"lösen, indem Sie das Erweiterungspaket aktualisieren. Andernfalls wird das "
+"Erweiterungspaket nach einem Upgrade deaktiviert."
 
 msgid ""
 "We highly recommend solving this issue already in your installation either "
 "by migrating or removing this plug-in."
 msgstr ""
+"Wir empfehlen dringend, dieses Problem bereits in Ihrer Installation zu "
+"lösen, indem Sie dieses Plugin entweder migrieren oder entfernen."
 
 msgid "We highly recommend solving this issue already in your installation."
 msgstr ""
+"Wir empfehlen dringend, dieses Problem bereits in Ihrer Installation zu "
+"lösen."
 
 msgid "Weak"
 msgstr "Schwach"

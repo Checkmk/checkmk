@@ -17,7 +17,8 @@ try:
     import MySQLdb  # type: ignore[import-untyped] # pylint: disable=import-error
 except ImportError as e:
     sys.stdout.write(
-        "<<<plesk_domains>>>\n%s. Please install missing module via pip install <module>." % e
+        "<<<plesk_domains>>>\n%s. Please install missing module via `pip install mysqlclient`.\n"
+        % e
     )
     sys.exit(0)
 

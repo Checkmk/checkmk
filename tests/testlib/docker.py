@@ -294,9 +294,10 @@ class CheckmkApp:
         )
         self.is_update = is_update
         self.ports = ports
-        self.volumes = volumes or []
+        _volumes = volumes or []
         if self.package_info.edition.is_saas_edition():
-            self.volumes += self._get_cse_volumes(cse_config_root)
+            _volumes += self._get_cse_volumes(cse_config_root)
+        self.volumes = _volumes if _volumes else None
         self.volumes_from = volumes_from
 
         self.container = self._setup()

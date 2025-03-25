@@ -156,7 +156,7 @@ def build_checkmk(
     client: docker.client.DockerClient,
     version: CMKVersion,
     prepare_pkg: bool = True,
-) -> tuple[docker.models.containers.Image, Iterator[Mapping[str, Any]]]:
+) -> tuple[docker.models.images.Image, Iterator[Mapping[str, Any]]]:
     """Builds (or reuses) and verifies a docker image for a given Checkmk version.
 
     Args:
@@ -165,7 +165,7 @@ def build_checkmk(
         prepare_pkg (bool, optional): Also pull CMK packages; see prepare_package. Defaults to True.
 
     Returns:
-        tuple[docker.models.containers.Image, Iterator[Mapping[str, Any]]]: the docker image and
+        tuple[docker.models.images.Image, Iterator[Mapping[str, Any]]]: the docker image and
             the docker build logs
     """
     prepare_build()

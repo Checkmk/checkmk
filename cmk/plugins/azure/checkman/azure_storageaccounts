@@ -7,7 +7,7 @@ description:
  This check reports the kind and location of an Azure storage account.
  Additionally the tags are displayed and the used capacity in bytes.
  You can configure levels for used capacity using the rule "Azure Storage".
- In order to use this check, you need to onfigure the Azure special agent.
+ In order to use this check, you need to configure the Azure special agent.
 
 item:
  The name of the resource.

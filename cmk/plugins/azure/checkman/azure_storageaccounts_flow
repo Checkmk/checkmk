@@ -8,7 +8,7 @@ description:
  azure storage accounts.
  You can configure levels for ingress, egress and transaction
  count.
- In order to use this check, you need to onfigure the Azure special agent.
+ In order to use this check, you need to configure the Azure special agent.
 
 item:
  The name of the resource.

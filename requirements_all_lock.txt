@@ -3068,6 +3068,7 @@ pytest==8.3.4 \
     #   pytest-mock
     #   pytest-opentelemetry
     #   pytest-random-order
+    #   pytest-repeat
     #   pytest-subtests
     #   pytest-xdist
     #   schemathesis
@@ -3100,6 +3101,10 @@ pytest-opentelemetry==1.0.1 \
 pytest-random-order==1.1.1 \
     --hash=sha256:4472d7d34f1f1c5f3a359c4ffc5c13ed065232f31eca19c8844c1ab406e79080 \
     --hash=sha256:882727a8b597ecd06ede28654ffeb8a6d511a1e4abe1054cca7982f2e42008cd
+    # via -r requirements_dev.txt
+pytest-repeat==0.9.3 \
+    --hash=sha256:26ab2df18226af9d5ce441c858f273121e92ff55f5bb311d25755b8d7abdd8ed \
+    --hash=sha256:ffd3836dfcd67bb270bec648b330e20be37d2966448c4148c4092d1e8aba8185
     # via -r requirements_dev.txt
 pytest-subtests==0.13.1 \
     --hash=sha256:989e38f0f1c01bc7c6b2e04db7d9fd859db35d77c2c1a430c831a70cbf3fde2d \

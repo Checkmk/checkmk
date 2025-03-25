@@ -47,6 +47,7 @@ pytest-random-order==1.1.1 # used to test resiliency
 pytest-xdist==3.6.1 # used to limit number of procs in e2e tests
 pytest-check==2.5.2 # used to queue failed assertions and continue test execution
 pytest-opentelemetry==1.0.1 # instrument pytest runs
+pytest-repeat==0.9.3 # used to rerun system tests
 python-lsp-server==1.12.0 # Note: There are extras, but the default seems sensible.
 requirements-parser==0.11.0 # used to parse requirements.txt file for testing
 responses==0.25.3 # used for unit tests

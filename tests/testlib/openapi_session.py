@@ -353,8 +353,13 @@ class ChangesAPI(BaseAPI):
             ).intersection(pending_changes_ids_before)
             assert not pending_changes_intersection_ids, (
                 f"There are pending changes that were not activated: "
-                f"{(_ for _ in pending_changes_after if _.get('id') in
-                     pending_changes_intersection_ids)}"
+                f"{
+                    (
+                        _
+                        for _ in pending_changes_after
+                        if _.get('id') in pending_changes_intersection_ids
+                    )
+                }"
             )
 
         return True
@@ -904,6 +909,9 @@ class RulesAPI(BaseAPI):
         value: list[dict[str, Any]] = response.json()["value"]
         return value
 
+    def get_all_names(self, ruleset_name: str) -> list[str]:
+        return [_.get("id") for _ in self.get_all(ruleset_name)]
+
 
 class RulesetsAPI(BaseAPI):
     def get_all(self) -> list[dict[str, Any]]:
@@ -914,6 +922,9 @@ class RulesetsAPI(BaseAPI):
             raise UnexpectedResponse.from_response(response)
         value: list[dict[str, Any]] = response.json()["value"]
         return value
+
+    def get_all_names(self) -> list[str]:
+        return [_.get("id") for _ in self.get_all()]
 
 
 class BrokerConnectionsAPI(BaseAPI):

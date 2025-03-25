@@ -71,7 +71,9 @@ class MultipleChoiceVisitor(
                 InvalidValue,
             ):
                 return prefill_default
-            raw_value = prefill_default
+            return sorted(
+                self._build_data_format_from_names(prefill_default), key=lambda v: v["name"]
+            )
 
         if not isinstance(raw_value, list):
             return InvalidValue(reason=_("Invalid data"), fallback_value=[])

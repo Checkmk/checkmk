@@ -5,9 +5,10 @@
 from collections.abc import Mapping, Sequence
 from typing import Final
 
+from cmk.ccc.version import Edition, edition
+
 from cmk.utils import paths
 
-from cmk.ccc.version import edition, Edition
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
@@ -35,8 +36,8 @@ from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 # Note: the first element of the tuple should match the id of the metric specified in ALL_SERVICES
 # in the azure special agent
 RAW_AZURE_SERVICES: Final = [
-    ("users_count", Title("Users in the Active Directory")),
-    ("ad_connect", Title("AD Connect Sync")),
+    ("users_count", Title("Users in Entra ID")),
+    ("ad_connect", Title("Entra Connect Sync")),
     ("app_registrations", Title("App Registrations")),
     ("usage_details", Title("Usage Details")),
     ("Microsoft.Compute/virtualMachines", Title("Virtual Machines")),
@@ -45,8 +46,18 @@ RAW_AZURE_SERVICES: Final = [
     ("Microsoft.Storage/storageAccounts", Title("Storage")),
     ("Microsoft.Web/sites", Title("Web Servers (IIS)")),
     ("Microsoft.DBforMySQL/servers", Title("Database for MySQL single server")),
-    ("Microsoft.DBforMySQL/flexibleServers", Title("Database for MySQL flexible server")),
-    ("Microsoft.DBforPostgreSQL/servers", Title("Database for PostgreSQL")),
+    (
+        "Microsoft.DBforMySQL/flexibleServers",
+        Title("Database for MySQL flexible server"),
+    ),
+    (
+        "Microsoft.DBforPostgreSQL/servers",
+        Title("Database for PostgreSQL single server"),
+    ),
+    (
+        "Microsoft.DBforPostgreSQL/flexibleServers",
+        Title("Database for PostgreSQL flexible server"),
+    ),
     ("Microsoft.Network/trafficmanagerprofiles", Title("Traffic Manager")),
     ("Microsoft.Network/loadBalancers", Title("Load Balancer")),
 ]
@@ -57,6 +68,10 @@ CCE_AZURE_SERVICES: Final = [
 ]
 
 
+def _azure_service_name_to_valid_formspec(azure_service_name: str) -> str:
+    return azure_service_name.replace("Microsoft.", "Microsoft_").replace("/", "_slash_")
+
+
 def get_azure_services() -> Sequence[tuple[str, Title]]:
     if edition(paths.omd_root) in (Edition.CME, Edition.CCE, Edition.CSE):
         return RAW_AZURE_SERVICES + CCE_AZURE_SERVICES
@@ -65,7 +80,7 @@ def get_azure_services() -> Sequence[tuple[str, Title]]:
 
 def get_azure_service_prefill() -> list[str]:
     return [
-        s[0].replace("Microsoft.", "Microsoft_").replace("/", "_slash_")
+        _azure_service_name_to_valid_formspec(s[0])
         for s in get_azure_services()
         if s[0] not in {"users_count", "ad_connect", "app_registrations"}
     ]
@@ -74,7 +89,7 @@ def get_azure_service_prefill() -> list[str]:
 def get_azure_services_elements() -> Sequence[MultipleChoiceElement]:
     return [
         MultipleChoiceElement(
-            name=service_id.replace("Microsoft.", "Microsoft_").replace("/", "_slash_"),
+            name=_azure_service_name_to_valid_formspec(service_id),
             title=service_name,
         )
         for service_id, service_name in get_azure_services()
@@ -105,7 +120,7 @@ def _special_agents_azure_explicit_config():
                     ),
                 },
             ),
-            title=Title("explicitly specified groups"),
+            title=Title("Explicitly specified groups"),
             add_element_label=Label("Add resource group"),
         )
     )
@@ -160,7 +175,7 @@ def _special_agents_azure_tag_based_config():
                     ),
                 },
             ),
-            title=Title("resources matching tag based criteria"),
+            title=Title("Resources matching tag based criteria"),
             add_element_label=Label("Add resource tag"),
         )
     )
@@ -168,17 +183,94 @@ def _special_agents_azure_tag_based_config():
 
 def _migrate_services_to_monitor(values: object) -> list[str]:
     if isinstance(values, list):
-        valid_choices = {s[0] for s in get_azure_services()}
+        valid_choices = {_azure_service_name_to_valid_formspec(s[0]) for s in get_azure_services()}
+        # migrate from names that contain / and . to valid formspec names
+        values_migrated = [_azure_service_name_to_valid_formspec(value) for value in values]
         # silently drop values that are only valid in CCE if we're CEE now.
-        valid_values = [value for value in values if value in valid_choices]
-        return [
-            value.replace("Microsoft.", "Microsoft_").replace("/", "_slash_")
-            for value in valid_values
-        ]
+        result = [value for value in valid_choices if value in values_migrated]
+        return result
     raise TypeError(values)
 
 
-def _get_services_fs() -> Mapping[str, DictElement]:
+def _migrate(value: object) -> Mapping[str, object]:
+    if not isinstance(value, dict):
+        raise TypeError(value)
+
+    value.pop("sequential", None)
+
+    value.pop("import_tags", None)
+    return value
+
+
+def _migrate_authority(value: object) -> str:
+    if value == "global":
+        return "global_"
+    if isinstance(value, str):
+        return value
+    raise TypeError(value)
+
+
+def configuration_authentication() -> Mapping[str, DictElement]:
+    return {
+        "subscription": DictElement(
+            parameter_form=String(
+                title=Title("Subscription ID"),
+                custom_validate=(validators.LengthInRange(min_value=1),),
+            )
+        ),
+        "tenant": DictElement(
+            parameter_form=String(
+                title=Title("Tenant ID / Directory ID"),
+                custom_validate=(validators.LengthInRange(min_value=1),),
+            ),
+            required=True,
+        ),
+        "client": DictElement(
+            parameter_form=String(
+                title=Title("Client ID / Application ID"),
+                custom_validate=(validators.LengthInRange(min_value=1),),
+            ),
+            required=True,
+        ),
+        "secret": DictElement(
+            parameter_form=Password(
+                migrate=migrate_to_password,
+                title=Title("Client Secret"),
+                custom_validate=(validators.LengthInRange(min_value=1),),
+            ),
+            required=True,
+        ),
+        "authority": DictElement(
+            parameter_form=SingleChoice(
+                title=Title("Authority"),
+                migrate=_migrate_authority,
+                elements=[
+                    SingleChoiceElement(name="global_", title=Title("Global")),
+                    SingleChoiceElement(name="china", title=Title("China")),
+                ],
+                prefill=DefaultValue("global_"),
+                help_text=Help(
+                    "Specify the authority you want to connect to:"
+                    "<ul>"
+                    "<li>Global: Login into 'https://login.microsoftonline.com',"
+                    " get data from 'https://graph.microsoft.com'</li>"
+                    "<li>China: Login into 'https://login.partner.microsoftonline.cn',"
+                    " get data from 'https://microsoftgraph.chinacloudapi.cn'</li>"
+                    "</ul>"
+                ),
+            ),
+            required=True,
+        ),
+        "proxy": DictElement(
+            parameter_form=Proxy(
+                title=Title("HTTP proxy"),
+                migrate=migrate_to_proxy,
+            ),
+        ),
+    }
+
+
+def configuration_services() -> Mapping[str, DictElement]:
     return {
         "services": DictElement(
             parameter_form=MultipleChoice(
@@ -200,166 +292,92 @@ def _get_services_fs() -> Mapping[str, DictElement]:
     }
 
 
-def _migrate_authority(value: object) -> str:
-    if value == "global":
-        return "global_"
-    if isinstance(value, str):
-        return value
-    raise TypeError(value)
-
-
-def _formspec() -> Dictionary:
-    return Dictionary(
-        elements={
-            "authority": DictElement(
-                parameter_form=SingleChoice(
-                    title=Title("Authority"),
-                    migrate=_migrate_authority,
-                    elements=[
-                        SingleChoiceElement(name="global_", title=Title("Global")),
-                        SingleChoiceElement(name="china", title=Title("China")),
-                    ],
-                    prefill=DefaultValue("global_"),
-                    help_text=Help(
-                        "Specify the authority you want to connect to:"
-                        "<ul>"
-                        "<li>Global: Login into 'https://login.microsoftonline.com',"
-                        " get data from 'https://graph.microsoft.com'</li>"
-                        "<li>China: Login into 'https://login.partner.microsoftonline.cn',"
-                        " get data from 'https://microsoftgraph.chinacloudapi.cn'</li>"
-                        "</ul>"
-                    ),
-                ),
-                required=True,
-            ),
-            "subscription": DictElement(
-                parameter_form=String(
-                    title=Title("Subscription ID"),
+def configuration_advanced() -> Mapping[str, DictElement]:
+    return {
+        "config": DictElement(
+            parameter_form=Dictionary(
+                title=Title("Retrieve information"),
+                # Since we introduced this, Microsoft has already reduced the number
+                # of allowed API requests. At the time of this writing (11/2018)
+                # you can find the number here:
+                # https://docs.microsoft.com/de-de/azure/azure-resource-manager/resource-manager-request-limits
+                help_text=Help(
+                    "By default, all resources associated to the configured tenant ID"
+                    " will be monitored. "
+                    "However, since Microsoft limits API calls to %s per hour"
+                    " (%s per minute), you can restrict the monitoring to individual"
+                    " resource groups and resources."
                 )
+                % ("12000", "200"),
+                elements={
+                    "explicit": _special_agents_azure_explicit_config(),
+                    "tag_based": _special_agents_azure_tag_based_config(),
+                },
             ),
-            "tenant": DictElement(
-                parameter_form=String(
-                    title=Title("Tenant ID / Directory ID"),
-                    custom_validate=(validators.LengthInRange(min_value=1),),
+            required=True,
+        ),
+        "piggyback_vms": DictElement(
+            parameter_form=SingleChoice(
+                title=Title("Map data relating to VMs"),
+                help_text=Help(
+                    "By default, data relating to a VM is sent to the group host"
+                    " corresponding to the resource group of the VM, the same way"
+                    " as for any other resource. If the VM is present in your"
+                    " monitoring as a separate host, you can choose to send the data"
+                    " to the VM itself."
                 ),
-                required=True,
+                elements=[
+                    SingleChoiceElement(name="grouphost", title=Title("Map data to group host")),
+                    SingleChoiceElement(name="self", title=Title("Map data to the VM itself")),
+                ],
+                prefill=DefaultValue("grouphost"),
             ),
-            "client": DictElement(
-                parameter_form=String(
-                    title=Title("Client ID / Application ID"),
-                    custom_validate=(validators.LengthInRange(min_value=1),),
+        ),
+        "filter_tags": DictElement(
+            parameter_form=CascadingSingleChoice(
+                title=Title("Filter tags imported as host/service labels"),
+                help_text=Help(
+                    "Enable this option to import Azure tags as host/service labels. "
+                    "The imported tags are added as host labels for resource groups and "
+                    "VMs monitored as hosts and as service labels for resources monitored "
+                    "as services. The label syntax is 'cmk/azure/tag/{key}:{value}'.<br>"
+                    "Additionally, each host representing a resource group is given the "
+                    "host label 'cmk/azure/resource_group:{rg_name}', and VMs monitored as "
+                    "hosts are given the host label 'cmk/azure/vm:instance', which is done "
+                    "independent of this option.<br>"
+                    "You can further restrict the imported tags by specifying a pattern "
+                    "which Checkmk searches for in the key of the Azure tag, or you can "
+                    "disable the import of Azure tags altogether."
                 ),
-                required=True,
-            ),
-            "secret": DictElement(
-                parameter_form=Password(
-                    migrate=migrate_to_password,
-                    title=Title("Client Secret"),
-                    custom_validate=(validators.LengthInRange(min_value=1),),
-                ),
-                required=True,
-            ),
-            "proxy": DictElement(
-                parameter_form=Proxy(
-                    migrate=migrate_to_proxy,
-                ),
-            ),
-            **_get_services_fs(),
-            "config": DictElement(
-                parameter_form=Dictionary(
-                    title=Title("Retrieve information about..."),
-                    # Since we introduced this, Microsoft has already reduced the number
-                    # of allowed API requests. At the time of this writing (11/2018)
-                    # you can find the number here:
-                    # https://docs.microsoft.com/de-de/azure/azure-resource-manager/resource-manager-request-limits
-                    help_text=Help(
-                        "By default, all resources associated to the configured tenant ID"
-                        " will be monitored. "
-                        "However, since Microsoft limits API calls to %s per hour"
-                        " (%s per minute), you can restrict the monitoring to individual"
-                        " resource groups and resources."
-                    )
-                    % ("12000", "200"),
-                    elements={
-                        "explicit": _special_agents_azure_explicit_config(),
-                        "tag_based": _special_agents_azure_tag_based_config(),
-                    },
-                ),
-                required=True,
-            ),
-            "piggyback_vms": DictElement(
-                parameter_form=SingleChoice(
-                    title=Title("Map data relating to VMs"),
-                    help_text=Help(
-                        "By default, data relating to a VM is sent to the group host"
-                        " corresponding to the resource group of the VM, the same way"
-                        " as for any other resource. If the VM is present in your"
-                        " monitoring as a separate host, you can choose to send the data"
-                        " to the VM itself."
+                elements=[
+                    CascadingSingleChoiceElement(
+                        name="filter_tags",
+                        title=Title("Filter valid tags by key pattern"),
+                        parameter_form=RegularExpression(
+                            custom_validate=(validators.LengthInRange(min_value=1),),
+                            predefined_help_text=MatchingScope.INFIX,
+                        ),
                     ),
-                    elements=[
-                        SingleChoiceElement(
-                            name="grouphost", title=Title("Map data to group host")
-                        ),
-                        SingleChoiceElement(name="self", title=Title("Map data to the VM itself")),
-                    ],
-                    prefill=DefaultValue("grouphost"),
-                ),
-            ),
-            "sequential": DictElement(
-                parameter_form=SingleChoice(
-                    migrate=lambda value: "singlethreaded" if value else "multithreaded",
-                    title=Title("Force agent to run in single thread"),
-                    help_text=Help(
-                        "Check this to turn off multiprocessing."
-                        " Recommended for debugging purposes only."
+                    CascadingSingleChoiceElement(
+                        name="dont_import_tags",
+                        title=Title("Do not import tags"),
+                        parameter_form=FixedValue(value=None),
                     ),
-                    elements=[
-                        SingleChoiceElement(
-                            name="multithreaded", title=Title("Run agent multithreaded")
-                        ),
-                        SingleChoiceElement(
-                            name="singlethreaded", title=Title("Run agent in single thread")
-                        ),
-                    ],
-                    prefill=DefaultValue("multithreaded"),
-                ),
+                ],
+                prefill=DefaultValue("filter_tags"),
             ),
-            "import_tags": DictElement(
-                parameter_form=CascadingSingleChoice(
-                    title=Title("Import tags as host/service labels"),
-                    help_text=Help(
-                        "By default, Checkmk imports all Azure tags as host/service labels. "
-                        "The imported tags are added as host labels for resource groups and "
-                        "VMs monitored as hosts and as service labels for resources monitored "
-                        "as services. The label syntax is 'cmk/azure/tag/{key}:{value}'.<br>"
-                        "Additionally, each host representing a resource group is given the "
-                        "host label 'cmk/azure/resource_group:{rg_name}', and VMs monitored as "
-                        "hosts are given the host label 'cmk/azure/vm:instance', which is done "
-                        "independent of this option.<br>"
-                        "You can further restrict the imported tags by specifying a pattern "
-                        "which Checkmk searches for in the key of the Azure tag, or you can "
-                        "disable the import of Azure tags altogether."
-                    ),
-                    elements=[
-                        CascadingSingleChoiceElement(
-                            name="all_tags",
-                            title=Title("Import all valid tags"),
-                            parameter_form=FixedValue(value=None),
-                        ),
-                        CascadingSingleChoiceElement(
-                            name="filter_tags",
-                            title=Title("Filter valid tags by key pattern"),
-                            parameter_form=RegularExpression(
-                                custom_validate=(validators.LengthInRange(min_value=1),),
-                                predefined_help_text=MatchingScope.INFIX,
-                            ),
-                        ),
-                    ],
-                    prefill=DefaultValue("all_tags"),
-                ),
-            ),
-        }
+        ),
+    }
+
+
+def formspec() -> Dictionary:
+    return Dictionary(
+        migrate=_migrate,
+        elements={
+            **configuration_authentication(),
+            **configuration_services(),
+            **configuration_advanced(),
+        },
     )
 
 
@@ -374,5 +392,5 @@ rule_spec_azure = SpecialAgent(
         "service of the host owning the datasource program."
     ),
     topic=Topic.CLOUD,
-    parameter_form=_formspec,
+    parameter_form=formspec,
 )

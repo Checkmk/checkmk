@@ -20,7 +20,7 @@ Checkmk git base directory.
 After this is done, you may use, depending on your distribution, one of the
 following targets to build a package for the current git:
 
-- `make rpm`: Create a RPM package for RedHat/CentOS/SLES. Each build starts
+- `make rpm`: Create a RPM package for RedHat/SLES. Each build starts
   building th
 - `make deb`: Create a DEB package for Debian/Ubuntu
 - `make cma`: Create a CMA package for the appliance
@@ -37,7 +37,7 @@ When these files are not existing previous to the packaging of Checkmk,
 the build will fail.
 
 For the moment there is an internal helper script
-`scripts/fake-windows-artifacts` that creates empty stub files at the required
+`scripts/fake-artifacts` that creates empty stub files at the required
 locations to prevent the packaging issues. Obviously the Windows agent and
 related features in your built package will not be usable when building with
 these faked artifacts.
@@ -55,12 +55,8 @@ following environment variables before executing the package build targets:
 - `NEXUS_USERNAME=nexus-user`
 - `NEXUS_PASSWORD=nexus-password`
 
-For Bazel the cache is configured to be read-only for users, but read-write for
-Jenkins using the following environment variables
-
-- `BAZEL_CACHE_URL=[BAZEL_CACHE_URL]:[BAZEL_PORT]`
-- `BAZEL_CACHE_PASSWORD=bazel-user`
-- `BAZEL_CACHE_USER=bazel-password`
+In case you want to use the (internal) bazel remote cache, add a `remote.bazelrc`
+to the repository root (see `.bazelrc` for more information)
 
 Once this is configured correctly the first build will produce build artifacts
 and upload them to the nexus/bazel server. On the next run, either the locally
@@ -75,12 +71,12 @@ the master branch.
 Clone from the Checkmk Git, then execute the following commands:
 
 ```bash
-# Run everything in our pre-built docker images. 
+# Run everything in our pre-built docker images.
 # This may take a while as it's pulling the image from the registry
 scripts/run-in-docker.sh bash
 
 # Fake the windows artifacts - they need to be built on a windows node
-scripts/fake-windows-artifacts
+scripts/fake-artifacts
 
 # Enable using the omd build cache
 NEXUS_BUILD_CACHE_URL=https://artifacts.lan.tribe29.com/repository/omd-build-cache \
@@ -151,7 +147,7 @@ commands inside the build container
 ```sh
 cd omd
 
-../scripts/run-bazel.sh build @nrpe//:nrpe
+bazel build @nrpe//:nrpe
 # or
 make nrpe-build
 
@@ -239,7 +235,7 @@ Step by step:
 a package to be added.
 2. Create a corresponding directory with name of the package in the
 `omd/packages` subdir, i.e. `omd/packages/[name]`.
-3. Create in the directory from p.2 the file having name of the package and 
+3. Create in the directory from p.2 the file having name of the package and
 extension make, i.e. `omd/packages/[name]/[name].make`
 4. Add `omd/packages/[name]/[name].make` to the rule include in the file
 `omd/packages/package.make`

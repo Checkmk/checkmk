@@ -8,41 +8,54 @@ from cmk.agent_based.v2 import AgentSection, StringTable
 from cmk.plugins.lib import bonding
 
 
+class InvalidOvsBondingStringTable(Exception):
+    """Raised when the structure of the string table is invalid."""
+
+
 def parse_ovs_bonding(string_table: StringTable) -> bonding.Section:
     bonds: dict[str, dict[str, str]] = {}
     bonds_interfaces: dict[str, dict[str, bonding.Interface]] = {}
+    current_bond: str | None = None
+    last_interface: str | None = None
+
     for line in string_table:
-        if line[0][0] == "[":
-            bond = line[0][1:-1]
-            bonds[bond] = {}
-        elif len(line) == 2:
-            left = line[0]
-            right = line[1].strip()
-            if left.startswith("slave"):
-                eth = left.split()[1]
-                bonds_interfaces.setdefault(bond, {})[eth] = {
-                    "status": right == "enabled" and "up" or right,
-                }
+        match line:
+            case ["active slave"] if current_bond and last_interface:
+                bonds[current_bond]["active"] = last_interface
+
+            case [raw_bond] if raw_bond.startswith("[") and raw_bond.endswith("]"):
+                current_bond = raw_bond.lstrip("[").rstrip("]")
+                bonds[current_bond] = {}
+                last_interface = None  # reset when handling new bond section
+
+            case [key, value] if current_bond and key.startswith("slave"):
+                _, eth = key.split()
+                stripped_status = value.strip()
+                status = "up" if stripped_status == "enabled" else stripped_status
+                bonds_interfaces.setdefault(current_bond, {})[eth] = {"status": status}
                 last_interface = eth
-            else:
-                bonds[bond][left] = right
-        elif line[0] == "active slave":
-            bonds[bond]["active"] = last_interface
+
+            case [key, value] if current_bond:
+                bonds[current_bond][key] = value.strip()
+
+            case _ if not current_bond:
+                raise InvalidOvsBondingStringTable("Missing bond value.")
+
+            case _ if not last_interface:
+                raise InvalidOvsBondingStringTable("Missing slave inteface value.")
 
     parsed: dict[str, bonding.Bond] = {}
-    for bond, status in bonds.items():
-        all_down = True
-        if not status.get("active"):
+
+    for bond, status_map in bonds.items():
+        if status_map.get("active") is None:
             continue
-        for st in bonds_interfaces[bond].values():
-            if st["status"] == "up":
-                all_down = False
-                break
+
+        is_running = any(itf.get("status") == "up" for itf in bonds_interfaces[bond].values())
 
         parsed[bond] = {
-            "status": all_down and "down" or "up",
-            "active": status["active"],
-            "mode": status["bond_mode"],
+            "status": is_running and "up" or "down",
+            "active": status_map["active"],
+            "mode": status_map["bond_mode"],
             "interfaces": bonds_interfaces[bond],
         }
 

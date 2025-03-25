@@ -33,11 +33,11 @@
 
 import datetime
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.apc import DETECT
+
+check_info = {}
 
 
 def _days_difference(date: str, today: datetime.date) -> int:
@@ -115,6 +115,7 @@ def parse_apc_symmetra_test(string_table: StringTable) -> StringTable:
 
 
 check_info["apc_symmetra_test"] = LegacyCheckDefinition(
+    name="apc_symmetra_test",
     parse_function=parse_apc_symmetra_test,
     detect=DETECT,
     fetch=SNMPTree(

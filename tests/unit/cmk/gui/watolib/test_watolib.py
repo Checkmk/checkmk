@@ -5,21 +5,18 @@
 
 import pytest
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
 
-from cmk.gui.valuespec import ValueSpec
 from cmk.gui.watolib.automation_commands import automation_command_registry
 from cmk.gui.watolib.config_domain_name import (
-    ABCConfigDomain,
     config_domain_registry,
     config_variable_group_registry,
     config_variable_registry,
     configvar_order,
-    ConfigVariableGroup,
 )
 from cmk.gui.watolib.utils import format_php
-
-import cmk.ccc.version as cmk_version
 
 
 def test_registered_config_domains() -> None:
@@ -33,7 +30,6 @@ def test_registered_config_domains() -> None:
         "multisite",
         "omd",
         "rrdcached",
-        "piggyback_hub",
     ]
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
@@ -41,6 +37,9 @@ def test_registered_config_domains() -> None:
             "dcd",
             "mknotifyd",
         ]
+
+    if cmk_version.edition(paths.omd_root) in [cmk_version.Edition.CCE, cmk_version.Edition.CME]:
+        expected_config_domains.append("otel_collector")
 
     registered = sorted(config_domain_registry.keys())
     assert registered == sorted(expected_config_domains)
@@ -51,13 +50,18 @@ def test_registered_automation_commands() -> None:
         "activate-changes",
         "push-profiles",
         "check-analyze-config",
+        "create-broker-certs",
         "diagnostics-dump-get-file",
         "fetch-agent-output-get-file",
         "fetch-agent-output-get-status",
         "fetch-agent-output-start",
+        "fetch-background-job-snapshot",
+        "store-broker-certs",
         "network-scan",
+        "notification-test",
         "ping",
         "get-config-sync-state",
+        "get-remote-omd-status",
         "receive-config-sync",
         "service-discovery-job",
         "service-discovery-job-snapshot",
@@ -69,6 +73,8 @@ def test_registered_automation_commands() -> None:
         "clear-site-changes",
         "hosts-for-auto-removal",
         "rename-hosts-uuid-link",
+        "start-quick-setup-stage-action",
+        "fetch-quick-setup-stage-action-result",
     ]
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
@@ -102,6 +108,7 @@ def test_registered_configvars() -> None:
         "debug_rules",
         "default_user_profile",
         "default_bi_layout",
+        "default_dynamic_visual_permission",
         "delay_precompile",
         "diskspace_cleanup",
         "enable_sounds",
@@ -144,19 +151,18 @@ def test_registered_configvars() -> None:
         "page_heading",
         "pagetitle_date_format",
         "password_policy",
-        "piggyback_hub_enabled",
         "piggyback_max_cachefile_age",
         "profile",
         "quicksearch_dropdown_limit",
         "quicksearch_search_order",
         "remote_status",
         "replication",
+        "require_two_factor_all_users",
         "reschedule_timeout",
         "restart_locking",
         "retention_interval",
         "rrdcached_tuning",
         "rule_optimizer",
-        "ruleset_matching_stats",
         "selection_livetime",
         "service_view_grouping",
         "session_mgmt",
@@ -184,7 +190,6 @@ def test_registered_configvars() -> None:
         "ui_theme",
         "use_dns_cache",
         "snmp_backend_default",
-        "use_inline_snmp",
         "use_new_descriptions_for",
         "user_downtime_timeranges",
         "user_icons_and_actions",
@@ -195,7 +200,6 @@ def test_registered_configvars() -> None:
         "wato_activate_changes_comment_mode",
         "wato_hide_filenames",
         "wato_hide_folders_without_read_permissions",
-        "wato_hide_help_in_lists",
         "wato_hide_hosttags",
         "wato_hide_varnames",
         "wato_icon_categories",
@@ -210,7 +214,7 @@ def test_registered_configvars() -> None:
         "enable_community_translations",
         "default_language",
         "default_temperature_unit",
-        "experimental_features",
+        "vue_experimental_features",
         "inject_js_profiling_code",
         "load_frontend_vue",
         "site_trace_send",
@@ -263,7 +267,9 @@ def test_registered_configvars() -> None:
             "dcd_bulk_discovery_timeout",
             "dcd_log_levels",
             "dcd_site_update_interval",
-            "dcd_web_api_connection",
+            "dcd_max_activation_delay",
+            "dcd_max_hosts_per_bulk_discovery",
+            "dcd_prevent_unwanted_notification",
             "liveproxyd_default_connection_params",
             "liveproxyd_log_levels",
             "notification_spooler_config",
@@ -292,16 +298,6 @@ def test_registered_configvars() -> None:
     assert registered == sorted(expected_vars)
 
 
-# Can be removed once we use mypy there
-def test_registered_configvars_types(request_context: None) -> None:
-    for var_class in config_variable_registry.values():
-        var = var_class()
-        assert issubclass(var.group(), ConfigVariableGroup)
-        assert issubclass(var.domain(), ABCConfigDomain)
-        assert isinstance(var.ident(), str)
-        assert isinstance(var.valuespec(), ValueSpec)
-
-
 def test_registered_configvar_groups() -> None:
     expected_groups = [
         "Setup",
@@ -316,7 +312,6 @@ def test_registered_configvar_groups() -> None:
         "User management",
         "Support",
         "Developer Tools",
-        "Distributed piggyback",
     ]
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:

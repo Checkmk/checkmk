@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from collections import OrderedDict
 from typing import Any
 
 from cmk.utils.hostaddress import HostName
@@ -122,8 +123,9 @@ class BIAggregation:
 
 
 class BIAggregationSchema(Schema):
-    class Meta:
-        ordered = True
+    @property
+    def dict_class(self) -> type:
+        return OrderedDict
 
     id = ReqString(
         dump_default="",

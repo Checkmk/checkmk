@@ -46,9 +46,7 @@ class ActiveCheckCommand:
     command_arguments: Sequence[str | Secret]
 
 
-class ActiveCheckConfig(
-    Generic[_ParsedParameters]
-):  # pylint: disable=too-few-public-methods,duplicate-code
+class ActiveCheckConfig(Generic[_ParsedParameters]):
     """
     Defines an active check
 

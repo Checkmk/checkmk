@@ -53,6 +53,7 @@ PERMISSIONS = permissions.Perm("wato.timeperiods")
 RW_PERMISSIONS = permissions.AllPerm(
     [
         permissions.Perm("wato.edit"),
+        permissions.Optional(permissions.Perm("wato.edit_all_passwords")),
         PERMISSIONS,
     ]
 )
@@ -68,13 +69,13 @@ def time_period_not_found_problem(time_period_id: str) -> Response:
 
 def _get_time_period_domain_object(
     name: str,
-    api_format: dict[str, Any],
+    time_period: TimeperiodSpec,
 ) -> DomainObject:
     return constructors.domain_object(
         domain_type="time_period",
         identifier=name,
-        title=api_format["alias"],
-        extensions=api_format,
+        title=time_period["alias"],
+        extensions=_to_api_format(time_period, name == "24X7"),
         deletable=True,
         editable=True,
     )
@@ -101,7 +102,7 @@ def create_timeperiod(params: Mapping[str, Any]) -> Response:
         alias=body["alias"], periods=periods, exceptions=exceptions, exclude=body.get("exclude", [])
     )
     _create_timeperiod(name, time_period)
-    return _serve_time_period(_get_time_period_domain_object(name, _to_api_format(time_period)))
+    return _serve_time_period(_get_time_period_domain_object(name, time_period))
 
 
 @Endpoint(
@@ -149,9 +150,8 @@ def update_timeperiod(params: Mapping[str, Any]) -> Response:
         exceptions=_format_exceptions(body.get("exceptions", parsed_time_period["exceptions"])),
         exclude=body.get("exclude", parsed_time_period["exclude"]),
     )
-    api_format_response = _to_api_format(updated_time_period)
     modify_timeperiod(name, updated_time_period)
-    return _serve_time_period(_get_time_period_domain_object(name, api_format_response))
+    return _serve_time_period(_get_time_period_domain_object(name, updated_time_period))
 
 
 @Endpoint(
@@ -208,8 +208,7 @@ def show_time_period(params: Mapping[str, Any]) -> Response:
     except TimePeriodNotFoundError:
         return time_period_not_found_problem(name)
 
-    api_format = _to_api_format(time_period, name == "24X7")
-    return _serve_time_period(_get_time_period_domain_object(name, api_format))
+    return _serve_time_period(_get_time_period_domain_object(name, time_period))
 
 
 @Endpoint(
@@ -226,7 +225,7 @@ def list_time_periods(params: Mapping[str, Any]) -> Response:
         constructors.collection_object(
             domain_type="time_period",
             value=[
-                _get_time_period_domain_object(name, _to_api_format(time_period, name == "24X7"))
+                _get_time_period_domain_object(name, time_period)
                 for name, time_period in load_timeperiods().items()
             ],
         )
@@ -262,12 +261,12 @@ def _to_api_format(time_period: TimeperiodSpec, builtin_period: bool = False) ->
         time_period_readable["exclude"] = time_period.get("exclude", [])
 
     active_time_ranges = _active_time_ranges_readable(
-        {key: time_period[key] for key in time_period if key in dateutils.weekday_ids()}
+        {key: value for key, value in time_period.items() if key in dateutils.weekday_ids()}
     )
     exceptions = _exceptions_readable(
         {
-            key: time_period[key]
-            for key in time_period
+            key: value
+            for key, value in time_period.items()
             if key not in ["alias", "exclude", *dateutils.weekday_ids()]
         }
     )
@@ -422,8 +421,7 @@ def _to_checkmk_format(
     time_period: dict[str, Any] = {"alias": alias, "exclude": [] if exclude is None else exclude}
     time_period.update(exceptions)
     time_period.update(periods)
-
-    return time_period
+    return cast(TimeperiodSpec, time_period)
 
 
 def _is_alias_in_use(alias: str | None, name: str) -> bool:

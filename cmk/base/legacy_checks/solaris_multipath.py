@@ -14,10 +14,10 @@
 # and we check agains that later.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def inventory_solaris_multipath(info):
@@ -26,7 +26,7 @@ def inventory_solaris_multipath(info):
         yield item, {"levels": int(operational)}
 
 
-def check_solaris_multipath(item, params, info):  # pylint: disable=too-many-branches
+def check_solaris_multipath(item, params, info):
     for device, total, operational in info:
         if item == device.split("/")[-1]:
             operational = int(operational)
@@ -73,6 +73,7 @@ def parse_solaris_multipath(string_table: StringTable) -> StringTable:
 
 
 check_info["solaris_multipath"] = LegacyCheckDefinition(
+    name="solaris_multipath",
     parse_function=parse_solaris_multipath,
     service_name="Multipath %s",
     discovery_function=inventory_solaris_multipath,

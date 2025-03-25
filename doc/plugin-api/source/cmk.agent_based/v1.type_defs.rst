@@ -1,7 +1,7 @@
 ============================
-agent_based_api.v1.type_defs
+cmk.agent_based.v1.type_defs
 ============================
 
-.. automodule:: cmk.base.plugins.agent_based.agent_based_api.v1.type_defs
+.. automodule:: cmk.agent_based.v1.type_defs
    :members:
    :show-inheritance:

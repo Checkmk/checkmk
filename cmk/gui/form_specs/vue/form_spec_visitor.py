@@ -5,98 +5,250 @@
 
 import json
 import pprint
-import traceback
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
-from typing import Any, Literal, TypeVar
+from enum import Enum
+from typing import Any, TypeVar
 
-import cmk.gui.form_specs.vue.autogen_type_defs.vue_formspec_components as VueComponents
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.i18n import _
+
+import cmk.gui.form_specs.private.validators as private_form_specs_validators
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.private.definitions import LegacyValueSpec, UnknownFormSpec
-from cmk.gui.form_specs.vue.form_spec_recomposers.percentage import (
-    recompose as recompose_percentage,
+from cmk.gui.form_specs.converter import (
+    SimplePassword,
+    TransformDataForLegacyFormatOrRecomposeFunction,
+    Tuple,
 )
-from cmk.gui.form_specs.vue.form_spec_recomposers.regular_expression import (
-    recompose as recompose_regular_expression,
+from cmk.gui.form_specs.private import (
+    CascadingSingleChoiceExtended,
+    Catalog,
+    CommentTextArea,
+    ConditionChoices,
+    DictionaryExtended,
+    Folder,
+    Labels,
+    LegacyValueSpec,
+    ListExtended,
+    ListOfStrings,
+    ListUniqueSelection,
+    MetricExtended,
+    MonitoredHostExtended,
+    MultipleChoiceExtended,
+    OptionalChoice,
+    SingleChoiceEditable,
+    SingleChoiceExtended,
+    StringAutocompleter,
+    TimeSpecific,
+    UnknownFormSpec,
+    UserSelection,
 )
-from cmk.gui.form_specs.vue.form_spec_recomposers.unknown_form_spec import (
-    recompose as recompose_unknown_form_spec,
+from cmk.gui.form_specs.vue.visitors.condition_choices import ConditionChoicesVisitor
+from cmk.gui.form_specs.vue.visitors.metric import MetricVisitor
+from cmk.gui.form_specs.vue.visitors.recomposers import (
+    recompose_cascading_single_choice,
+    recompose_dictionary,
+    recompose_folder,
+    recompose_host_state,
+    recompose_levels,
+    recompose_list,
+    recompose_metric,
+    recompose_monitored_host,
+    recompose_monitored_host_extended,
+    recompose_monitored_service,
+    recompose_multiple_choice,
+    recompose_percentage,
+    recompose_proxy,
+    recompose_regular_expression,
+    recompose_service_state,
+    recompose_single_choice,
+    recompose_string,
+    recompose_time_period,
+    recompose_unknown_form_spec,
+    recompose_user_selection,
 )
-from cmk.gui.form_specs.vue.type_defs import DataOrigin, DEFAULT_VALUE, RenderMode, VisitorOptions
-from cmk.gui.form_specs.vue.utils import get_visitor, register_visitor_class
-from cmk.gui.form_specs.vue.visitors.boolean_choice import BooleanChoiceVisitor
-from cmk.gui.form_specs.vue.visitors.cascading_single_choice import CascadingSingleChoiceVisitor
-from cmk.gui.form_specs.vue.visitors.data_size import DataSizeVisitor
-from cmk.gui.form_specs.vue.visitors.dictionary import DictionaryVisitor
-from cmk.gui.form_specs.vue.visitors.fixed_value import FixedValueVisitor
-from cmk.gui.form_specs.vue.visitors.float import FloatVisitor
-from cmk.gui.form_specs.vue.visitors.integer import IntegerVisitor
-from cmk.gui.form_specs.vue.visitors.legacy_valuespec import LegacyValuespecVisitor
-from cmk.gui.form_specs.vue.visitors.list import ListVisitor
-from cmk.gui.form_specs.vue.visitors.multiline_text import MultilineTextVisitor
-from cmk.gui.form_specs.vue.visitors.single_choice import SingleChoiceVisitor
-from cmk.gui.form_specs.vue.visitors.string import StringVisitor
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.log import logger
 
-from cmk.ccc.exceptions import MKGeneralException
+import cmk.rulesets.v1.form_specs.validators as formspec_validators
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
     CascadingSingleChoice,
     DataSize,
     Dictionary,
+    FileUpload,
     FixedValue,
     Float,
     FormSpec,
+    HostState,
     Integer,
+    Levels,
     List,
+    Metric,
+    MonitoredHost,
+    MonitoredService,
     MultilineText,
+    MultipleChoice,
+    Password,
     Percentage,
+    Proxy,
     RegularExpression,
+    ServiceState,
+    SimpleLevels,
     SingleChoice,
     String,
+    TimePeriod,
+    TimeSpan,
 )
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
+
+from .validators import (
+    build_float_validator,
+    build_in_range_validator,
+    build_integer_validator,
+    build_length_in_range_validator,
+    register_validator,
+)
+from .visitors import (
+    BooleanChoiceVisitor,
+    CascadingSingleChoiceVisitor,
+    CatalogVisitor,
+    CommentTextAreaVisitor,
+    DataSizeVisitor,
+    DictionaryVisitor,
+    FileUploadVisitor,
+    FixedValueVisitor,
+    FloatVisitor,
+    get_visitor,
+    IntegerVisitor,
+    LabelsVisitor,
+    LegacyValuespecVisitor,
+    ListOfStringsVisitor,
+    ListUniqueSelectionVisitor,
+    ListVisitor,
+    MultilineTextVisitor,
+    MultipleChoiceVisitor,
+    OptionalChoiceVisitor,
+    PasswordVisitor,
+    register_recomposer_function,
+    register_visitor_class,
+    SimplePasswordVisitor,
+    SingleChoiceEditableVisitor,
+    SingleChoiceVisitor,
+    StringVisitor,
+    TimeSpanVisitor,
+    TimeSpecificVisitor,
+    TransformVisitor,
+    TupleVisitor,
+)
+from .visitors._type_defs import (
+    DataOrigin,
+    DEFAULT_VALUE,
+    DefaultValue,
+    DiskModel,
+    FrontendModel,
+    VisitorOptions,
+)
+from .visitors._type_defs import FormSpecValidationError as FormSpecValidationError
 
 T = TypeVar("T")
+
+
+class DisplayMode(Enum):
+    EDIT = "edit"
+    READONLY = "readonly"
+    BOTH = "both"
+
+
+class RenderMode(Enum):
+    BACKEND = "backend"
+    FRONTEND = "frontend"
+    BACKEND_AND_FRONTEND = "backend_and_frontend"
 
 
 @dataclass(kw_only=True)
 class VueAppConfig:
     id: str
-    app_name: str
-    spec: VueComponents.FormSpec
+    spec: shared_type_defs.FormSpec
     data: Any
     validation: Any
-    render_mode: Literal["edit", "readonly", "both"]
+    display_mode: str
 
 
 def register_form_specs():
     # TODO: add test which checks if all available FormSpecs have a visitor
     # Native rendering
     register_visitor_class(Integer, IntegerVisitor)
-    register_visitor_class(Dictionary, DictionaryVisitor)
+    register_visitor_class(DictionaryExtended, DictionaryVisitor)
     register_visitor_class(String, StringVisitor)
     register_visitor_class(Float, FloatVisitor)
-    register_visitor_class(SingleChoice, SingleChoiceVisitor)
-    register_visitor_class(CascadingSingleChoice, CascadingSingleChoiceVisitor)
-    register_visitor_class(List, ListVisitor)
+    register_visitor_class(SingleChoiceExtended, SingleChoiceVisitor)
+    register_visitor_class(SingleChoiceEditable, SingleChoiceEditableVisitor)
+    register_visitor_class(Password, PasswordVisitor)
+    register_visitor_class(CascadingSingleChoiceExtended, CascadingSingleChoiceVisitor)
     register_visitor_class(LegacyValueSpec, LegacyValuespecVisitor)
     register_visitor_class(FixedValue, FixedValueVisitor)
     register_visitor_class(BooleanChoice, BooleanChoiceVisitor)
+    register_visitor_class(MetricExtended, MetricVisitor)
     register_visitor_class(MultilineText, MultilineTextVisitor)
-    register_visitor_class(RegularExpression, StringVisitor, recompose_regular_expression)
+    register_visitor_class(CommentTextArea, CommentTextAreaVisitor)
     register_visitor_class(DataSize, DataSizeVisitor)
+    register_visitor_class(Catalog, CatalogVisitor)
+    register_visitor_class(ListExtended, ListVisitor)
+    register_visitor_class(ListUniqueSelection, ListUniqueSelectionVisitor)
+    register_visitor_class(TimeSpan, TimeSpanVisitor)
+    register_visitor_class(TransformDataForLegacyFormatOrRecomposeFunction, TransformVisitor)
+    register_visitor_class(Tuple, TupleVisitor)
+    register_visitor_class(OptionalChoice, OptionalChoiceVisitor)
+    register_visitor_class(SimplePassword, SimplePasswordVisitor)
+    register_visitor_class(StringAutocompleter, StringVisitor)
+    register_visitor_class(ConditionChoices, ConditionChoicesVisitor)
+    register_visitor_class(ListOfStrings, ListOfStringsVisitor)
+    register_visitor_class(MultipleChoiceExtended, MultipleChoiceVisitor)
+    register_visitor_class(Labels, LabelsVisitor)
+    register_visitor_class(TimeSpecific, TimeSpecificVisitor)
+    register_visitor_class(FileUpload, FileUploadVisitor)
 
     # Recomposed
-    register_visitor_class(Percentage, FloatVisitor, recompose_percentage)
-    register_visitor_class(UnknownFormSpec, LegacyValuespecVisitor, recompose_unknown_form_spec)
+    register_recomposer_function(RegularExpression, recompose_regular_expression)
+    register_recomposer_function(MultipleChoice, recompose_multiple_choice)
+    register_recomposer_function(Metric, recompose_metric)
+    register_recomposer_function(MonitoredHost, recompose_monitored_host)
+    register_recomposer_function(MonitoredHostExtended, recompose_monitored_host_extended)
+    register_recomposer_function(MonitoredService, recompose_monitored_service)
+    register_recomposer_function(String, recompose_string)
+    register_recomposer_function(Folder, recompose_folder)
+    register_recomposer_function(HostState, recompose_host_state)
+    register_recomposer_function(ServiceState, recompose_service_state)
+    register_recomposer_function(SingleChoice, recompose_single_choice)
+    register_recomposer_function(Levels, recompose_levels)
+    register_recomposer_function(SimpleLevels, recompose_levels)
+    register_recomposer_function(List, recompose_list)
+    register_recomposer_function(Percentage, recompose_percentage)
+    register_recomposer_function(UnknownFormSpec, recompose_unknown_form_spec)
+    register_recomposer_function(UserSelection, recompose_user_selection)
+    register_recomposer_function(Dictionary, recompose_dictionary)
+    register_recomposer_function(CascadingSingleChoice, recompose_cascading_single_choice)
+    register_recomposer_function(Proxy, recompose_proxy)
+    register_recomposer_function(TimePeriod, recompose_time_period)
+
+
+def register_validators():
+    register_validator(formspec_validators.NumberInRange, build_in_range_validator)
+    register_validator(formspec_validators.LengthInRange, build_length_in_range_validator)
+    register_validator(private_form_specs_validators.IsInteger, build_integer_validator)
+    register_validator(private_form_specs_validators.IsFloat, build_float_validator)
 
 
 register_form_specs()
+register_validators()
 
 
-def _process_validation_errors(validation_errors: list[VueComponents.ValidationMessage]) -> None:
+def _process_validation_errors(
+    validation_errors: list[shared_type_defs.ValidationMessage],
+) -> None:
     """This functions introduces validation errors from the vue-world into the CheckMK-GUI-world
     The CheckMK-GUI works with a global parameter user_errors.
     These user_errors include the field_id of the broken input field and the error text
@@ -108,8 +260,24 @@ def _process_validation_errors(validation_errors: list[VueComponents.ValidationM
 
     first_error = validation_errors[0]
     raise MKUserError(
-        "" if not first_error.location else first_error.location[-1], first_error.message
+        "" if not first_error.location else first_error.location[-1],
+        _("Cannot save the form because it contains errors."),
     )
+
+
+def process_validation_messages(
+    validation_messages: list[shared_type_defs.ValidationMessage],
+) -> None:
+    """Helper function to process validation errors in general use cases.
+
+    Args:
+        validation_messages: Validation messages returned by Visitor.validate
+
+    Raises:
+        FormSpecValidationError: An error storing the validation messages
+    """
+    if validation_messages:
+        raise FormSpecValidationError(validation_messages)
 
 
 def get_vue_value(field_id: str, fallback_value: Any) -> Any:
@@ -125,19 +293,19 @@ def render_form_spec(
     value: Any,
     origin: DataOrigin,
     do_validate: bool,
-    display_mode: RenderMode = RenderMode.EDIT,
+    display_mode: DisplayMode = DisplayMode.EDIT,
 ) -> None:
     """Renders the valuespec via vue within a div"""
-    try:
-        vue_app_config = serialize_data_for_frontend(
-            form_spec, field_id, origin, do_validate, value, display_mode
+    vue_app_config = serialize_data_for_frontend(
+        form_spec, field_id, origin, do_validate, value, display_mode
+    )
+    if active_config.load_frontend_vue == "inject":
+        logger.warning(
+            "Vue app config:\n%s", pprint.pformat(asdict(vue_app_config), width=220, indent=2)
         )
-        logger.warning("Vue app config:\n%s", pprint.pformat(vue_app_config, width=220, indent=2))
         logger.warning("Vue value:\n%s", pprint.pformat(vue_app_config.data, width=220))
         logger.warning("Vue validation:\n%s", pprint.pformat(vue_app_config.validation, width=220))
-        html.div("", data_cmk_vue_app=json.dumps(asdict(vue_app_config)))
-    except Exception as e:
-        logger.warning("".join(traceback.format_exception(e)))
+    html.vue_app(app_name="form_spec", data=asdict(vue_app_config))
 
 
 def parse_data_from_frontend(form_spec: FormSpec[T], field_id: str) -> Any:
@@ -152,12 +320,14 @@ def parse_data_from_frontend(form_spec: FormSpec[T], field_id: str) -> Any:
 
 def validate_value_from_frontend(
     form_spec: FormSpec[T], value_from_frontend: Any
-) -> Sequence[VueComponents.ValidationMessage]:
+) -> Sequence[shared_type_defs.ValidationMessage]:
     visitor = get_visitor(form_spec, VisitorOptions(data_origin=DataOrigin.FRONTEND))
     return visitor.validate(value_from_frontend)
 
 
-def parse_value_from_frontend(form_spec: FormSpec[T], value_from_frontend: Any) -> Any:
+def transform_to_disk_model(
+    form_spec: FormSpec[T], value_from_frontend: FrontendModel | DefaultValue = DEFAULT_VALUE
+) -> DiskModel:
     visitor = get_visitor(form_spec, VisitorOptions(data_origin=DataOrigin.FRONTEND))
     return visitor.to_disk(value_from_frontend)
 
@@ -168,21 +338,20 @@ def serialize_data_for_frontend(
     origin: DataOrigin,
     do_validate: bool,
     value: Any = DEFAULT_VALUE,
-    render_mode: RenderMode = RenderMode.EDIT,
+    display_mode: DisplayMode = DisplayMode.EDIT,
 ) -> VueAppConfig:
     """Serializes backend value to vue app compatible config."""
     visitor = get_visitor(form_spec, VisitorOptions(data_origin=origin))
     vue_component, vue_value = visitor.to_vue(value)
 
-    validation: list[VueComponents.ValidationMessage] = []
+    validation: list[shared_type_defs.ValidationMessage] = []
     if do_validate:
         validation = visitor.validate(value)
 
     return VueAppConfig(
         id=field_id,
-        app_name="form_spec",
         spec=vue_component,
         data=vue_value,
         validation=validation,
-        render_mode=render_mode.value,
+        display_mode=display_mode.value,
     )

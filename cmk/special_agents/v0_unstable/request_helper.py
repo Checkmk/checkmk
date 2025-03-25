@@ -9,9 +9,9 @@ import base64
 import json
 import ssl
 from collections.abc import Mapping
-from functools import reduce
 from http.client import HTTPConnection, HTTPResponse, HTTPSConnection
 from typing import Any, Literal, TypedDict
+from urllib.parse import urljoin
 from urllib.request import build_opener, HTTPSHandler, Request
 
 from requests import Response, Session
@@ -73,7 +73,7 @@ class HTTPSAuthHandler(HTTPSHandler):
         super().__init__()
         self.__ca_file = ca_file
 
-    def https_open(self, req: Request) -> HTTPResponse:  # pylint: disable=arguments-differ
+    def https_open(self, req: Request) -> HTTPResponse:
         # TODO: Slightly interesting things in the typeshed here, investigate...
         return self.do_open(self.get_connection, req)  # type: ignore[arg-type]
 
@@ -147,11 +147,29 @@ class ApiSession:
         else:
             self.verify = tls_cert_verification
 
-    def request(self, method: str, url: str, **kwargs: object) -> Response:
-        return self._session.request(method, urljoin(self._base_url, url, **kwargs))
+    def request(
+        self,
+        method: str,
+        url: str,
+        params: Mapping[str, str] | None = None,
+    ) -> Response:
+        return self._session.request(
+            method,
+            urljoin(self._base_url, url),
+            params=params,
+            verify=self.verify,
+        )
 
-    def get(self, url: str, **kwargs: object) -> Response:
-        return self.request("get", url, **kwargs)
+    def get(
+        self,
+        url: str,
+        params: Mapping[str, str] | None = None,
+    ) -> Response:
+        return self.request(
+            "get",
+            url,
+            params=params,
+        )
 
 
 def parse_api_url(
@@ -238,22 +256,3 @@ def parse_api_custom_url(
 
     """
     return f"{protocol}://{url_custom}/{api_path}"
-
-
-def urljoin(*args):
-    """Join two urls without stripping away any parts
-
-    >>> urljoin("http://127.0.0.1:8080", "api/v2")
-    'http://127.0.0.1:8080/api/v2'
-
-    >>> urljoin("http://127.0.0.1:8080/prometheus", "api/v2")
-    'http://127.0.0.1:8080/prometheus/api/v2'
-
-    >>> urljoin("http://127.0.0.1:8080/", "api/v2/")
-    'http://127.0.0.1:8080/api/v2/'
-    """
-
-    def join_slash(base, part):
-        return base.rstrip("/") + "/" + part.lstrip("/")
-
-    return reduce(join_slash, args) if args else ""

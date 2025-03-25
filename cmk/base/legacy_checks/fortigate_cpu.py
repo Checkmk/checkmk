@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import (
     all_of,
     contains,
@@ -18,6 +17,8 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
+
+check_info = {}
 
 
 def parse_fortigate_cpu(string_table: StringTable) -> StringTable | None:
@@ -41,6 +42,7 @@ def check_fortigate_cpu(item, params, info):
 
 
 check_info["fortigate_cpu_base"] = LegacyCheckDefinition(
+    name="fortigate_cpu_base",
     parse_function=parse_fortigate_cpu,
     detect=all_of(
         contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1"),
@@ -59,6 +61,7 @@ check_info["fortigate_cpu_base"] = LegacyCheckDefinition(
 )
 
 check_info["fortigate_cpu"] = LegacyCheckDefinition(
+    name="fortigate_cpu",
     parse_function=parse_fortigate_cpu,
     detect=all_of(
         contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1"),

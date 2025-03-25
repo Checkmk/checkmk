@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
 
 from collections.abc import Mapping
 
@@ -91,15 +90,15 @@ legacy_response_example = {
                                 {
                                     "host": ("heute", "heute"),
                                     "reqhosts": [("heute", "heute")],
-                                    "service": "BI " "Datasource " "Connection",
-                                    "title": "heute - BI " "Datasource " "Connection",
+                                    "service": "BI Datasource Connection",
+                                    "title": "heute - BI Datasource Connection",
                                     "type": 1,
                                 },
                                 {
                                     "host": ("heute", "heute"),
                                     "reqhosts": [("heute", "heute")],
-                                    "service": "Aggr Host " "heute",
-                                    "title": "heute - Aggr " "Host heute",
+                                    "service": "Aggr Host heute",
+                                    "title": "heute - Aggr Host heute",
                                     "type": 1,
                                 },
                             ],
@@ -180,15 +179,15 @@ legacy_response_example = {
                                     {
                                         "host": ("heute", "heute"),
                                         "reqhosts": [("heute", "heute")],
-                                        "service": "BI " "Datasource " "Connection",
-                                        "title": "heute " "- BI " "Datasource " "Connection",
+                                        "service": "BI Datasource Connection",
+                                        "title": "heute - BI Datasource Connection",
                                         "type": 1,
                                     },
                                     {
                                         "host": ("heute", "heute"),
                                         "reqhosts": [("heute", "heute")],
-                                        "service": "Aggr " "Host " "heute",
-                                        "title": "heute " "- Aggr " "Host " "heute",
+                                        "service": "Aggr Host heute",
+                                        "title": "heute - Aggr Host heute",
                                         "type": 1,
                                     },
                                 ],
@@ -260,7 +259,7 @@ legacy_response_example = {
                                         "acknowledged": False,
                                         "in_downtime": False,
                                         "in_service_period": True,
-                                        "output": "Packet received via " "smart PING",
+                                        "output": "Packet received via smart PING",
                                         "state": 0,
                                     },
                                     None,
@@ -293,7 +292,7 @@ legacy_response_example = {
                                                 "host": ("heute", "heute"),
                                                 "reqhosts": [("heute", "heute")],
                                                 "service": "Check_MK",
-                                                "title": "heute - " "Check_MK",
+                                                "title": "heute - Check_MK",
                                                 "type": 1,
                                             },
                                         ],
@@ -365,15 +364,15 @@ legacy_response_example = {
                                     {
                                         "host": ("heute", "heute"),
                                         "reqhosts": [("heute", "heute")],
-                                        "service": "BI Datasource " "Connection",
-                                        "title": "heute - BI " "Datasource " "Connection",
+                                        "service": "BI Datasource Connection",
+                                        "title": "heute - BI Datasource Connection",
                                         "type": 1,
                                     },
                                     {
                                         "host": ("heute", "heute"),
                                         "reqhosts": [("heute", "heute")],
-                                        "service": "Aggr Host " "heute",
-                                        "title": "heute - Aggr " "Host heute",
+                                        "service": "Aggr Host heute",
+                                        "title": "heute - Aggr Host heute",
                                         "type": 1,
                                     },
                                 ],
@@ -389,15 +388,15 @@ legacy_response_example = {
                                         "acknowledged": False,
                                         "in_downtime": False,
                                         "in_service_period": True,
-                                        "output": "OK - No connection " "problems",
+                                        "output": "OK - No connection problems",
                                         "state": 0,
                                     },
                                     None,
                                     {
                                         "host": ("heute", "heute"),
                                         "reqhosts": [("heute", "heute")],
-                                        "service": "BI Datasource " "Connection",
-                                        "title": "heute - BI Datasource " "Connection",
+                                        "service": "BI Datasource Connection",
+                                        "title": "heute - BI Datasource Connection",
                                         "type": 1,
                                     },
                                 ),
@@ -480,15 +479,15 @@ legacy_response_example = {
                                 {
                                     "host": ("heute", "heute"),
                                     "reqhosts": [("heute", "heute")],
-                                    "service": "BI Datasource " "Connection",
-                                    "title": "heute - BI " "Datasource " "Connection",
+                                    "service": "BI Datasource Connection",
+                                    "title": "heute - BI Datasource Connection",
                                     "type": 1,
                                 },
                                 {
                                     "host": ("heute", "heute"),
                                     "reqhosts": [("heute", "heute")],
                                     "service": "Aggr Host heute",
-                                    "title": "heute - Aggr Host " "heute",
+                                    "title": "heute - Aggr Host heute",
                                     "type": 1,
                                 },
                             ],

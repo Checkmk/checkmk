@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from tests.testlib.repo import is_enterprise_repo
+from tests.testlib.common.repo import is_enterprise_repo
 
 from cmk.gui.valuespec import autocompleter_registry
 
@@ -13,8 +13,9 @@ def test_builtin_autocompleters_registered() -> None:
     expected = [
         "add_to_dashboard_choices",
         "allgroups",
-        "available_graphs",
+        "available_graph_templates",
         "check_cmd",
+        "check_types",
         "config_hostname",
         "kubernetes_labels",
         "label",
@@ -30,7 +31,9 @@ def test_builtin_autocompleters_registered() -> None:
     ]
 
     if is_enterprise_repo():
-        expected.append("combined_graphs")
-        expected.append("add_to_report_choices")
+        expected += [
+            "add_to_report_choices",
+            "graph_template_for_combined_graph",
+        ]
 
     assert sorted(registered) == sorted(expected)

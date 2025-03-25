@@ -54,7 +54,7 @@ def _parameter_valuespec_mtr() -> Dictionary:
                         ),
                     ],
                     help=_(
-                        "The maximum standard deviation on the roundtrip time in ms before this service goes into"
+                        "The maximum standard deviation on the roundtrip time in ms before this service goes into "
                         "warning/critical. This alarm only applies to the target host, not the hops in between."
                     ),
                 ),

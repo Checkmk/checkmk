@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_mq import ibm_mq_check_version
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 # <<<ibm_mq_plugin:sep(58)>>>
 # version|2.0.4
@@ -50,6 +52,7 @@ def check_ibm_mq_plugin(_no_item, params, parsed):
 
 
 check_info["ibm_mq_plugin"] = LegacyCheckDefinition(
+    name="ibm_mq_plugin",
     parse_function=parse_ibm_mq_plugin,
     service_name="IBM MQ Plugin",
     discovery_function=inventory_ibm_mq_plugin,

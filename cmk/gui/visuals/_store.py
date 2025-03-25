@@ -5,10 +5,15 @@
 
 import os
 import pickle
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from contextlib import suppress
 from pathlib import Path
 from typing import Any, cast, Final, Generic, get_args, TypeVar
+
+import cmk.ccc.version as cmk_version
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.store import save_object_to_file
 
 import cmk.utils
 import cmk.utils.paths
@@ -22,14 +27,10 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import save_user_file, user
 from cmk.gui.permissions import declare_permission, permission_registry
-from cmk.gui.type_defs import PermissionName, Visual, VisualName, VisualTypeName
+from cmk.gui.type_defs import PermissionName, RoleName, Visual, VisualName, VisualTypeName
 from cmk.gui.utils.roles import user_may
 from cmk.gui.utils.speaklater import LazyString
 
-import cmk.ccc.version as cmk_version
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.store import save_object_to_file
 from cmk.mkp_tool import id_to_mkp, Installer, PackageName, PackagePart
 
 TVisual = TypeVar("TVisual", bound=Visual)
@@ -96,22 +97,21 @@ def load(
 
 def _fix_lazy_strings(obj: TVisual) -> TVisual:
     """
-    Recursively evaluate all LazyStrings in the object to fixed strings by running them through
-    str()
+    Recursively evaluate all LazyStrings in the object to fixed strings by running them through str()
     """
 
-    match obj:
-        case dict():
-            # cast is needed for the TypedDicts
-            return cast(TVisual, {attr: _fix_lazy_strings(value) for (attr, value) in obj.items()})
-        case list():
-            return list(map(_fix_lazy_strings, obj))
-        case tuple():
-            return tuple(map(_fix_lazy_strings, obj))
-        case LazyString():
-            return str(obj)
+    def _fix(value: object) -> object:
+        if isinstance(value, dict):
+            return {attr: _fix(element) for attr, element in value.items()}
+        if isinstance(value, list):
+            return [_fix(element) for element in value]
+        if isinstance(value, tuple):
+            return tuple(_fix(element) for element in value)
+        if isinstance(value, LazyString):
+            return str(value)
+        return value
 
-    return obj
+    return cast(TVisual, {attr: _fix(value) for attr, value in obj.items()})
 
 
 class _CombinedVisualsCache(Generic[TVisual]):
@@ -384,6 +384,12 @@ def _get_local_path(visual_type: VisualTypeName) -> Path:
     raise MKUserError(None, _("This package type is not supported."))
 
 
+def _get_dynamic_visual_default_permissions() -> Sequence[RoleName]:
+    if active_config.default_dynamic_visual_permission == "yes":
+        return default_authorized_builtin_role_ids
+    return ["admin"]
+
+
 def declare_visual_permission(what: VisualTypeName, name: str, visual: TVisual) -> None:
     permname = PermissionName(f"{what[:-1]}.{name}")
     if published_to_user(visual) and permname not in permission_registry:
@@ -391,7 +397,7 @@ def declare_visual_permission(what: VisualTypeName, name: str, visual: TVisual) 
             permname,
             f"{visual['title']} ({visual['name']})",
             visual["description"],
-            default_authorized_builtin_role_ids,
+            _get_dynamic_visual_default_permissions(),
         )
 
 
@@ -402,7 +408,7 @@ def declare_packaged_visual_permission(what: VisualTypeName, name: str, visual: 
             permname,
             f"{visual['title']} ({visual['name']}, {_('packaged)')}",
             visual["description"],
-            default_authorized_builtin_role_ids,
+            _get_dynamic_visual_default_permissions(),
         )
 
 
@@ -464,7 +470,7 @@ def available(
 
 # Get the list of visuals which are available to the user
 # (which could be retrieved with get_visual)
-def available_by_owner(  # pylint: disable=too-many-branches
+def available_by_owner(
     what: VisualTypeName,
     all_visuals: dict[tuple[UserId, VisualName], TVisual],
 ) -> dict[VisualName, dict[UserId, TVisual]]:

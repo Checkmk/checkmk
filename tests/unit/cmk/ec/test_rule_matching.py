@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import re
 
@@ -208,7 +207,7 @@ def test_match_priority(
         rule["match_priority"] = match_priority
     if cancel_priority is not None:
         rule["cancel_priority"] = cancel_priority
-    event: ec.Event = {"priority": priority}
+    event = ec.Event(priority=priority)
     assert m.event_rule_determine_match_priority(rule, event) == expected
 
 

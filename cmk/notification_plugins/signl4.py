@@ -6,11 +6,9 @@
 # SIGNL4: Mobile alerting and incident response.
 
 import base64
-from os import environ
 
-from cmk.notification_plugins.utils import post_request, process_by_matchers
-from cmk.notification_plugins.utils import retrieve_from_passwordstore as passwords
-from cmk.notification_plugins.utils import StateInfo
+from cmk.notification_plugins.utils import get_password_from_env_or_context as passwords
+from cmk.notification_plugins.utils import post_request, process_by_matchers, StateInfo
 
 RESULT_MATCHER = [
     ((200, 299), StateInfo(0, "json", "eventId")),
@@ -20,7 +18,7 @@ RESULT_MATCHER = [
 
 
 def _signl4_url() -> str:
-    password = passwords(environ["NOTIFY_PARAMETER_PASSWORD"])
+    password = passwords(key="NOTIFY_PARAMETER_PASSWORD")
     return f"https://connect.signl4.com/webhook/{password}"
 
 

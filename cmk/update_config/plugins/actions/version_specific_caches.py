@@ -6,6 +6,7 @@
 import errno
 from logging import Logger
 from pathlib import Path
+from typing import override
 
 from cmk.utils import paths as paths_utils
 
@@ -15,6 +16,7 @@ from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
 class VersionSpecificCachesCleaner(UpdateAction):
+    @override
     def __call__(self, logger: Logger) -> None:
         paths = [
             Path(paths_utils.include_cache_dir, "builtin"),

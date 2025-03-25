@@ -4,20 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Any
 
-from .agent_based_api.v1 import (  # type: ignore[import-untyped] # pylint: disable=import-error
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
     HostLabel,
-    register,
+    HostLabelGenerator,
     Result,
     RuleSetType,
     Service,
     State,
-)
-from .agent_based_api.v1.type_defs import (  # type: ignore[import-untyped] # pylint: disable=import-error
-    CheckResult,
-    DiscoveryResult,
-    HostLabelGenerator,
     StringTable,
 )
 
@@ -27,7 +25,7 @@ class Section:
     pass
 
 
-def parse_norris(string_table: StringTable) -> Section:
+def parse_norris(_string_table: StringTable) -> Section:
     """
     >>> parse_norris([
     ... # Example output from agent:
@@ -38,38 +36,35 @@ def parse_norris(string_table: StringTable) -> Section:
     return Section()
 
 
-def host_labels_norris(section: Section) -> HostLabelGenerator:
-    yield HostLabel(...)
+def host_labels_norris(_section: Section) -> HostLabelGenerator:
+    yield HostLabel("name", "value")
 
 
-register.snmp_section(
+agent_section_norris = AgentSection(
     name="norris",
     # Don't use this unless you known what you're doing!
-    # parsed_section_name="mr_pickle",  # you can' rename norris, norris renames you!
+    # parsed_section_name="mr_pickle",  # you can't rename norris, norris renames you!
     parse_function=parse_norris,
     host_label_function=host_labels_norris,
 )
 
 
-def discover_norris(params: Mapping[str, Any], section: Section) -> DiscoveryResult:
-    yield Service(...)
+def discover_norris(_params: Mapping[str, object], _section: Section) -> DiscoveryResult:
+    yield Service(item="Chuck")
 
 
-def check_norris(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+def check_norris(item: str, params: Mapping[str, object], section: Section) -> CheckResult:
     yield Result(
         state=State.UNKNOWN,
         summary="Check not implemented",
         details=(
-            "Check not implemented.\n"
-            f"item: {item!r}\n"
-            f"params: {params!r}\n"
-            f"section: {section!r}\n"
+            f"Check not implemented.\nitem: {item!r}\nparams: {params!r}\nsection: {section!r}\n"
         ),
     )
 
 
 def cluster_check_norris(
-    item: str, params: Mapping[str, Any], section: Mapping[str, Section]
+    item: str, params: Mapping[str, object], section: Mapping[str, Section]
 ) -> CheckResult:
     """This is just an example."""
     aggregated_data = Section()
@@ -80,9 +75,9 @@ def cluster_check_norris(
     yield from check_norris(item, params, aggregated_data)
 
 
-register.check_plugin(
+check_plugin_norris = CheckPlugin(
     name="norris",
-    service_description="Check Norris %s",
+    service_name="Check Norris %s",
     discovery_function=discover_norris,
     discovery_default_parameters={},
     discovery_ruleset_name="norris_discovery_rule",

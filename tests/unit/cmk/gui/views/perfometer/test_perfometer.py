@@ -9,15 +9,12 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.gui.config import active_config
-from cmk.gui.display_options import display_options
-from cmk.gui.http import request, response
-from cmk.gui.logged_in import user
-from cmk.gui.painter.v0.helpers import RenderLink
-from cmk.gui.painter_options import PainterOptions
+from cmk.gui.http import request
 from cmk.gui.type_defs import Row
-from cmk.gui.utils.theme import theme
 from cmk.gui.views.perfometer.base import Perfometer
 from cmk.gui.views.perfometer.sorter import SorterPerfometer
+
+from cmk.graphing.v1 import perfometers
 
 
 @pytest.mark.parametrize(
@@ -43,17 +40,25 @@ def test_cmp_of_missing_values(sort_values: Sequence[float | None], request_cont
         }
         for v in sort_values
     ]
-    sorter = SorterPerfometer(
-        user=user,
-        config=active_config,
-        request=request,
-        painter_options=PainterOptions.get_instance(),
-        theme=theme,
-        url_renderer=RenderLink(request, response, display_options),
-    )
 
     def wrapped(r1: Row, r2: Row) -> int:
-        return sorter.cmp(r1, r2, None)
+        return SorterPerfometer.cmp(r1, r2, parameters=None, config=active_config, request=request)
 
     data.sort(key=functools.cmp_to_key(wrapped))
-    assert [Perfometer(r).sort_value()[1] for r in data] == [None, -1.0, 0.0, 1.0]
+    assert [
+        Perfometer(
+            r,
+            {},
+            {
+                "kube_memory_usage": perfometers.Perfometer(
+                    name="kube_memory_usage",
+                    focus_range=perfometers.FocusRange(
+                        perfometers.Closed(0),
+                        perfometers.Open(1000000000),
+                    ),
+                    segments=["kube_memory_usage"],
+                )
+            },
+        ).sort_value()[1]
+        for r in data
+    ] == [None, -1.0, 0.0, 1.0]

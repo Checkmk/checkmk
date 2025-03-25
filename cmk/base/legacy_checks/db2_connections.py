@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.db2 import parse_db2_dbs
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError
+from cmk.plugins.db2.agent_based.lib import parse_db2_dbs
+
+check_info = {}
 
 # <<<db2_connections>>>
 # [[[db2taddm:CMDBS1]]]
@@ -57,6 +57,7 @@ def check_db2_connections(item, params, parsed):
 
 
 check_info["db2_connections"] = LegacyCheckDefinition(
+    name="db2_connections",
     parse_function=parse_db2_dbs,
     service_name="DB2 Connections %s",
     discovery_function=inventory_db2_connections,

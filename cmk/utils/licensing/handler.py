@@ -93,6 +93,7 @@ class UserEffect:
     header: HeaderNotification | HeaderNotificationSingleLine | None
     email: EmailNotification | None
     block: ActivationBlock | None
+    banner: HeaderNotificationSingleLine | None = None
 
 
 class NotificationHandler(abc.ABC):

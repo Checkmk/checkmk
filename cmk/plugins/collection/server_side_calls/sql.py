@@ -39,7 +39,7 @@ class SQLParams(BaseModel):
 def generate_sql_command(
     params: SQLParams,
     host_config: HostConfig,
-) -> Iterator[ActiveCheckCommand]:  # pylint: disable=too-many-branches
+) -> Iterator[ActiveCheckCommand]:
     args: list[str | Secret] = [
         (
             f"--hostname={replace_macros(params.host, host_config.macros)}"
@@ -90,7 +90,7 @@ def generate_sql_command(
 
 
 def _extract_levels(
-    levels: tuple[str, tuple[float, float] | None] | None
+    levels: tuple[str, tuple[float, float] | None] | None,
 ) -> tuple[str, str] | tuple[float, float]:
     match levels:
         case ("no_levels", None):

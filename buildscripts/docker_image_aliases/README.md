@@ -21,12 +21,24 @@ see:
 
 ## Usage
 
+Perform these steps inside the testing container or use a small rescue venv for it.
+The rescue venv trick is especially helpfull if the image to register or update is the testing image.
+
+```bash
+scripts/run-in-docker.sh bash
+make .venv
+# or way faster
+python3 -m venv .venvRescure
+. .venvRescure/bin/activate
+pip install docker pyyaml
+```
+
 ### Register a new docker image alias
 
 Just switch to `buildscripts/docker_image_aliases` and run `register.py` providing the name of
 the image alias (preferably uppper case and prefixed with "`IMAGE_`" for consistancy).
 
-This step has to be performed for every branch, e.g. `master`, `2.2.0`, `2.1.0`
+This step has to be performed for every branch, e.g. `master`, `2.4.0`, `2.3.0`
 
 Remember to login to the registry once by
 `docker login artifacts.lan.tribe29.com:4000 --username USER.NAME` to create the required
@@ -34,6 +46,7 @@ Remember to login to the registry once by
 
 ```bash
 ./register.py IMAGE_CMK_BASE debian:buster-slim
+./register.py IMAGE_UBUNTU_24_10 ubuntu:24.10
 ```
 
 In case of a SUSE image you might need to pull it from the SUSE registry and use the following command
@@ -58,7 +71,7 @@ buildscripts/docker_image_aliases/resolve.py IMAGE_CMK_BASE
 In order to update a specific or all aliases to their respective upstreams, run `update.sh`:
 
 ```bash
-update.sh [IMAGE_CMK_BASE ..]
+./update.sh [all, IMAGE_CMK_BASE, IMAGE_TESTING, IMAGE_UBUNTU_20_04, ...]
 ```
 
 This script basically validates your input and updates all provided aliases by removing and

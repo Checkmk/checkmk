@@ -7,13 +7,13 @@
 from collections.abc import Mapping
 from typing import Literal
 
+from cmk.ccc.version import Edition, edition
+
 from cmk.utils import paths
 
 from cmk.gui.mkeventd import syslog_facilities  # pylint: disable=cmk-module-layer-violation
 
-from cmk.ccc.version import edition, Edition
 from cmk.plugins.emailchecks.forwarding_option import ECForwarding
-from cmk.plugins.emailchecks.server_side_calls.check_mail import Parameters
 from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
@@ -69,7 +69,6 @@ def _valuespec_active_checks_mail() -> Dictionary:
                 else {"forward": DictElement(parameter_form=_forward_to_ec_form())}
             ),
         },
-        custom_validate=(Parameters.model_validate,),
     )
 
 
@@ -321,7 +320,7 @@ def _forward_to_ec_form() -> Dictionary:
 
 
 rule_spec_mail = ActiveCheck(
-    title=Title("Check Email"),
+    title=Title("Check email"),
     topic=Topic.APPLICATIONS,
     name="mail",
     parameter_form=_valuespec_active_checks_mail,

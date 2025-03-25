@@ -12,6 +12,8 @@ description:
  For output ports the state is {OK} when the status of the port is {Off}.
  Otherwise the checks are {WARN}.
 
+ Firmware versions using the MIB of firmware V3.15.20 are supported.
+
 item:
  The internal name of the input or output ports
 

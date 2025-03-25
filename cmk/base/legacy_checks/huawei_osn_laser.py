@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.huawei import DETECT_HUAWEI_OSN
+
+check_info = {}
 
 # The dBm should not get too low. So we check only for lower levels
 
@@ -41,15 +41,21 @@ def check_huawei_osn_laser(item, params, info):
             warn_out, crit_out = params["levels_low_out"]
 
             # In
-            yield 0, "In: %.1f dBm" % dbm_in, [
-                ("input_signal_power_dBm", dbm_in, warn_in, crit_in),
-            ]
+            yield (
+                0,
+                "In: %.1f dBm" % dbm_in,
+                [
+                    ("input_signal_power_dBm", dbm_in, warn_in, crit_in),
+                ],
+            )
             yield check_state(dbm_in, (warn_in, crit_in))
 
             # And out
-            yield 0, "Out: %.1f dBm" % dbm_out, [
-                ("output_signal_power_dBm", dbm_out, warn_out, crit_out)
-            ]
+            yield (
+                0,
+                "Out: %.1f dBm" % dbm_out,
+                [("output_signal_power_dBm", dbm_out, warn_out, crit_out)],
+            )
             yield check_state(dbm_out, (warn_out, crit_out))
 
             # FEC Correction
@@ -64,6 +70,7 @@ def parse_huawei_osn_laser(string_table: StringTable) -> StringTable:
 
 
 check_info["huawei_osn_laser"] = LegacyCheckDefinition(
+    name="huawei_osn_laser",
     parse_function=parse_huawei_osn_laser,
     detect=DETECT_HUAWEI_OSN,
     fetch=SNMPTree(

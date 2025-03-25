@@ -6,7 +6,7 @@ import time
 from collections.abc import Mapping, MutableMapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -129,7 +129,7 @@ def check_livestatus_status(
     )
 
 
-def _generate_livestatus_results(  # pylint: disable=too-many-branches
+def _generate_livestatus_results(
     item: str,
     params: Mapping[str, Any],
     section_livestatus_status: LivestatusSection | None,
@@ -237,7 +237,7 @@ def _generate_livestatus_results(  # pylint: disable=too-many-branches
             if key == "average_latency_checker":
                 key = "average_latency_cmk"
 
-            yield from check_levels(
+            yield from check_levels_v1(
                 value=value,
                 metric_name=key,
                 levels_upper=params.get(key),
@@ -247,7 +247,7 @@ def _generate_livestatus_results(  # pylint: disable=too-many-branches
                 boundaries=(0, None),
             )
 
-    yield from check_levels(
+    yield from check_levels_v1(
         value=int(status["num_hosts"]),
         metric_name="monitored_hosts",
         levels_upper=params.get("levels_hosts"),
@@ -255,7 +255,7 @@ def _generate_livestatus_results(  # pylint: disable=too-many-branches
         notice_only=True,
         boundaries=(0, None),
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         value=int(status["num_services"]),
         metric_name="monitored_services",
         levels_upper=params.get("levels_services"),
@@ -288,7 +288,7 @@ def _generate_livestatus_results(  # pylint: disable=too-many-branches
         )
         secs_left = valid_until - this_time
         warn_d, crit_d = params["site_cert_days"]
-        yield from check_levels(
+        yield from check_levels_v1(
             value=secs_left,
             label="Expiring in",
             levels_lower=None if None in (warn_d, crit_d) else (warn_d * 86400.0, crit_d * 86400.0),

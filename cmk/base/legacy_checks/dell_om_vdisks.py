@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.dell_om import parse_omreport, status_translate_omreport
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 # sample agent output:
 #
@@ -51,6 +53,7 @@ def check_dell_om_vdisks(item, params, parsed):
 
 
 check_info["dell_om_vdisks"] = LegacyCheckDefinition(
+    name="dell_om_vdisks",
     parse_function=parse_omreport,
     service_name="Virtual Disk %s",
     discovery_function=inventory_dell_om_vdisks,

@@ -21,7 +21,7 @@ import re
 from collections.abc import Mapping, Sequence
 from typing import Any, assert_never, Literal, NamedTuple
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -131,7 +131,7 @@ def check_sap_dialog(item: str, params: Mapping[str, Any], section: Section) -> 
     #     'ResponseTime': (77, 'msec'),
     # }
     for key, value in dialog.items():
-        yield from check_levels(
+        yield from check_levels_v1(
             value[0],
             metric_name=perf_clean_key(key),
             levels_upper=params.get(key),

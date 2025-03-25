@@ -3,14 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
+import os
 import re
-from collections.abc import Iterator
+import shlex
+from collections.abc import Collection, Iterator
 from pathlib import Path
 from typing import NamedTuple
 
-import pytest
-
 from tests.testlib.site import Site
+
+ldd_regex = re.compile(r"(\S+) => (\S+) \(0x[0-9a-f]+\)")
+not_found_regex = re.compile(r"(\S+) => not found")
 
 
 class LinkedLibrary(NamedTuple):
@@ -21,32 +26,39 @@ class LinkedLibrary(NamedTuple):
     name: str
     path: Path | None
 
+    @classmethod
+    def from_ldd_output(cls, line: str) -> LinkedLibrary | None:
+        if (match := not_found_regex.match(line.strip())) is not None:
+            return cls(name=match.group(1), path=None)
+
+        if (match := ldd_regex.match(line.strip())) is not None:
+            return cls(name=match.group(1), path=Path(match.group(2)))
+
+        # According to 'man ldd':
+        #   The linux-vdso and ld-linux shared dependencies are special; see vdso(7) and ld.so(8).
+        # linux-gate appears to be special as well and "statically linked" occurs when a
+        # "dynamic executable" doesn't link to any shared libraries.
+        if any(
+            allowed in line
+            for allowed in ("ld-linux", "linux-vdso", "linux-gate", "statically linked")
+        ):
+            return None
+
+        raise ValueError(f"failed to parse ldd output: {line!r}")
+
 
 def _run_find_dynamically_linked(site: Site, path: Path) -> frozenset[Path]:
     """
     Use find to search all dynamically linked executables in the given path.
-
-    The corresponding command in bash:
-      find -L <path> \
-           -type f -executable \
-           -exec file {} + \
-      | grep "dynamically linked" \
-      | awk -F':' '{print $1}' \
-      | xargs realpath \
     """
 
-    # Implemented with as much find magic as I could muster because os.walk is _much_ slower.
     find_result = site.check_output(
-        ["find", "-L", str(path), "-type", "f", "-executable", "-exec", "file", "{}", ";"]
+        shlex.split(f"find -L {path} -type f -executable -exec file {{}} +")
     ).splitlines()
 
     return frozenset(
         Path(line.split(":")[0]).resolve() for line in find_result if "dynamically linked" in line
     )
-
-
-ldd_regex = re.compile(r"(\S+) => (\S+) \(0x[0-9a-f]+\)")
-not_found_regex = re.compile(r"(\S+) => not found")
 
 
 def _run_ldd(site: Site, file: Path) -> list[str]:
@@ -75,16 +87,11 @@ def _parse_ldd(lines: list[str]) -> Iterator[LinkedLibrary]:
     ... )
     [LinkedLibrary(name='libwrap.so.0', path=PosixPath('/lib/x86_64-linux-gnu/libwrap.so.0'))]
     """
-    for line in lines:
-        if (match := not_found_regex.match(line.strip())) is not None:
-            yield LinkedLibrary(name=match.group(1), path=None)
-            continue
-        if (match := ldd_regex.match(line.strip())) is None:
-            # According to man ldd only ld-linux and linux-vdso are different...
-            # (The linux-vdso and ld-linux shared dependencies are special; see vdso(7) and ld.so(8).)
-            assert "ld-linux" in line or "linux-vdso" in line or "linux-gate" in line, f"? {line!r}"
-            continue
-        yield LinkedLibrary(name=match.group(1), path=Path(match.group(2)))
+    return (
+        linked_lib
+        for line in lines
+        if (linked_lib := LinkedLibrary.from_ldd_output(line)) is not None
+    )
 
 
 def _linked_libraries_of_file(site: Site, file: Path) -> Iterator[LinkedLibrary]:
@@ -94,7 +101,10 @@ def _linked_libraries_of_file(site: Site, file: Path) -> Iterator[LinkedLibrary]
     yield from _parse_ldd(_run_ldd(site, file))
 
 
-@pytest.mark.skip(reason="fails unexpected at the moment - CMK-15651")
+def _is_in_exclude_list(file: Path, exclusions: Collection[str]) -> bool:
+    return any(str(file).endswith(path) for path in exclusions)
+
+
 def test_linked_libraries(site: Site) -> None:
     """
     A test to sanity check linked libraries in the installation.
@@ -111,24 +121,91 @@ def test_linked_libraries(site: Site) -> None:
         "libcrypto.so.1.1",
     ]
 
-    files = _run_find_dynamically_linked(site, Path(site.root))
+    files = _run_find_dynamically_linked(site, site.root)
+
+    exclude_entirely = [
+        # That is a 32bit binary.
+        "share/check_mk/agents/plugins/cmk-update-agent-32",
+    ]
+
+    exclude_from_forbidden_links_check = [
+        # Some monitoring plugins link to existing libraries on the host, which in turn link to
+        # the host's potentially older OpenSSL.
+        "lib/nagios/plugins/check_ldap",
+        "lib/nagios/plugins/check_mysql",
+        "lib/nagios/plugins/check_mysql_query",
+        "lib/nagios/plugins/check_pgsql",
+        # To be investigated
+        "bin/heirloom-mailx",
+        "lib/python3.12/site-packages/netsnmp/client_intf.cpython-312-x86_64-linux-gnu.so",
+        "var/tmp/xinetd",
+        # Actually fixed, but not here
+        "lib/nagios/plugins/check_nrpe",
+        # system kerberos links on certain distros to openssl 1, see CMK-15651
+        "lib/python3.12/site-packages/activedirectory/protocol/krb5.cpython-312-x86_64-linux-gnu.so",
+        # ToDo: Pymsql links on certain distros to openssl 1, see CMK-21906
+        "lib/python3.12/site-packages/pymssql/_mssql.cpython-312-x86_64-linux-gnu.so",
+        "lib/python3.12/site-packages/pymssql/_pymssql.cpython-312-x86_64-linux-gnu.so",
+        # ToDo: _ldap links on certain distros to openssl 1, see CMK-21908
+        "lib/python3.12/site-packages/_ldap.cpython-312-x86_64-linux-gnu.so",
+        # ToDo: SSLeay links on certain distros to openssl 1, see CMK-21910
+        "lib/perl5/lib/perl5/x86_64-linux-thread-multi/auto/Crypt/SSLeay/SSLeay.so",
+        # ToDo: Psycog 2 links on certain distros to openssl 1, see CMK-21909
+        "lib/python3.12/site-packages/psycopg2/_psycopg.cpython-312-x86_64-linux-gnu.so",
+    ]
 
     for file in files:
-        if str(file).endswith("/share/check_mk/agents/plugins/cmk-update-agent-32"):
-            # That is a 32bit binary, so let's skip checking it
+        if _is_in_exclude_list(file, exclude_entirely):
             continue
+
         for lib in _linked_libraries_of_file(site, file):
-            assert lib.name not in forbidden, f"{file} links to forbidden libraries"
+            if not _is_in_exclude_list(file, exclude_from_forbidden_links_check):
+                assert lib.name not in forbidden, f"{file} links to forbidden libraries"
 
             if lib.path is None:
-                if str(file).endswith("/lib/seccli/naviseccli"):
-                    # seccli has some libraries next to the binary
-                    assert lib.name in list(p.name for p in Path(file).parent.iterdir())
-                    continue
+                # seccli brings it's own libs next to the binary
+                if str(file.parent).endswith("lib/seccli"):
+                    if lib.name in list(p.name for p in file.parent.iterdir()):
+                        # libs found in the seccli directory
+                        continue
+                    if lib.name == "libnsl.so.1":
+                        # This link is also broken. To be investigated.
+                        continue
+                    assert False, f"seccli file {file} linked to a non-existing library"
+
+                # guess we don't care about treasures
                 if str(file).endswith(
-                    "/share/doc/check_mk/treasures/modbus/agents/special/agent_modbus"
+                    "share/doc/check_mk/treasures/modbus/agents/special/agent_modbus"
                 ):
                     assert lib.name == "libmodbus.so.5"
                     continue
 
+                if "lib/perl5/lib/perl5/auto/NetSNMP/" in str(file):
+                    # Multiple missing links here. To be investigated.
+                    continue
+
                 assert False, f"Library {lib.name} was not found. Linked from {file}"
+
+
+def test_perl_rrds_links_against_omd_rrd_so(site: Site) -> None:
+    distro = os.environ["DISTRO"]
+    if "sles" in distro or "alma" in distro:
+        perl_rrd_so = (
+            Path(site.root) / "lib/perl5/lib/perl5/x86_64-linux-thread-multi/auto/RRDs/RRDs.so"
+        )
+    else:
+        perl_rrd_so = (
+            Path(site.root) / "lib/perl5/lib/perl5/x86_64-linux-gnu-thread-multi/auto/RRDs/RRDs.so"
+        )
+
+    linked_rrd_libs = [
+        linked_library
+        for linked_library in _parse_ldd(_run_ldd(site, perl_rrd_so))
+        if "librrd" in linked_library.name
+    ]
+    assert len(linked_rrd_libs) == 1, (
+        f"RRDs.so should link to exactly one librrd but ldd returned: {linked_rrd_libs}"
+    )
+    assert linked_rrd_libs[0].path == Path(site.root) / "lib/librrd.so.8", (
+        "RRDs.so should link against a librrd which is shipped with omd."
+    )

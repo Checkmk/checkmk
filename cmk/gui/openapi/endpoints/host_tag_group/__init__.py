@@ -35,7 +35,6 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.utils import permission_verification as permissions
-from cmk.gui.watolib.host_attributes import undeclare_host_tag_attribute
 from cmk.gui.watolib.tags import (
     change_host_tags,
     edit_tag_group,
@@ -250,7 +249,6 @@ def delete_host_tag_group(params: Mapping[str, Any]) -> Response:
                     "authorize Checkmk to update the relevant instances using the repair or mode parameters"
                 ),
             )
-        undeclare_host_tag_attribute(ident)
         _ = change_host_tags(OperationRemoveTagGroup(ident), mode)
 
     tag_config = load_tag_config()

@@ -6,7 +6,7 @@
 from collections.abc import Iterable, Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -45,7 +45,7 @@ def parse_netapp_ontap_snapmirror(string_table: StringTable) -> Section:
     return {
         snap.destination: snap
         for line in string_table
-        if (snap := models.SnapMirrorModel.model_validate_json(line[0]))
+        for snap in [models.SnapMirrorModel.model_validate_json(line[0])]
     }
 
 
@@ -101,7 +101,7 @@ def check_netapp_ontap_snapvault(
     else:
         levels = params.get("lag_time")
 
-    yield from check_levels(
+    yield from check_levels_v1(
         value=lagtime,
         levels_upper=levels,
         render_func=render.timespan,

@@ -5,15 +5,20 @@
 
 import argparse
 import itertools
+import sys
 from typing import NamedTuple
 
 from jinja2 import Environment, PackageLoader, select_autoescape, StrictUndefined
 
 from cmk.ccc.version import ReleaseType, Version
-from cmk.werks.models import Class, Compatibility, Edition, Werk
 
-from .. import has_content, load_raw_files
-from ..werk import sort_by_version_and_component, WerkTranslator
+from cmk.werks.models import Class, Compatibility, Edition, Werk
+from cmk.werks.utils import (
+    has_content,
+    load_raw_files,
+    sort_by_version_and_component,
+    WerkTranslator,
+)
 
 
 class SimpleWerk(NamedTuple):
@@ -85,9 +90,9 @@ def main(args: argparse.Namespace) -> None:
 
     if version.release.release_type == ReleaseType.b:
         release_type = "beta"
-        assert (
-            version.base is not None
-        ), f"Expected version.base to be not None for release type beta: {version}"
+        assert version.base is not None, (
+            f"Expected version.base to be not None for release type beta: {version}"
+        )
         feedback_mail = f"feedback-{version.base.major}.{version.base.minor}-beta@checkmk.com"
     elif version.release.release_type == ReleaseType.p or version.release.is_unspecified():
         release_type = "stable"
@@ -97,11 +102,12 @@ def main(args: argparse.Namespace) -> None:
         raise NotImplementedError(f"Can not create announcement for {version.release.release_type}")
 
     template = env.get_template(f"announce.{args.format}.jinja2")
-    print(
+    sys.stdout.write(
         template.render(
             werks=werks,
             release_type=release_type,
             version=args.version,
             feedback_mail=feedback_mail,
         )
+        + "\n"
     )

@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.4.0b1"
+CMK_VERSION="2.5.0b1"
 
 # gets optional socket as argument
 do_query() {
@@ -36,10 +36,21 @@ do_query() {
         -e "SELECT table_schema, sum(data_length + index_length), sum(data_free)
             FROM information_schema.TABLES GROUP BY table_schema"
 
-    echo "<<<mysql_slave>>>"
+    MYSQL_VERSION=$($MYSQL --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -s -e "SELECT VERSION();" | grep -o '^[0-9]\+')
+    MYSQL_FULL_VERSION=$($MYSQL --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -s -e "SELECT VERSION();")
+
+    echo "<<<mysql_replica_slave>>>"
     echo "$INSTANCE_HEADER"
+
+    if echo "$MYSQL_FULL_VERSION" | grep -q "MariaDB"; then
+        STATUS_COMMAND="SHOW SLAVE STATUS\G"
+    elif [ "$MYSQL_VERSION" -ge 8 ]; then
+        STATUS_COMMAND="SHOW REPLICA STATUS\G"
+    else
+        STATUS_COMMAND="SHOW SLAVE STATUS\G"
+    fi
     $MYSQL --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -s \
-        -e "show slave status\G"
+        -e "$STATUS_COMMAND"
 
 }
 

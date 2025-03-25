@@ -16,6 +16,7 @@ include $(REPO_PATH)/defines.make
 # TODO: Cleanup one of these
 PACKAGE_BASE       := $(REPO_PATH)/omd/packages
 PACKAGE_DIR        := $(PACKAGE_BASE)
+NON_FREE_PACKAGE_DIR := $(REPO_PATH)/non-free/packages
 # The OMD build (RPM, DEB, ...) needs some working directorties of several types
 # during the build. All of them should be located below this base directory to
 # make it easier to clean them up.
@@ -140,4 +141,3 @@ $(shell echo -n "$(1)" ; \
     fi \
 )
 endef
-

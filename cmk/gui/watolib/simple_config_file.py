@@ -3,10 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from abc import ABC, abstractmethod
+from collections.abc import Callable, Mapping
 from pathlib import Path
-from typing import Callable, cast, Generic, Mapping, TypeAlias, TypeVar
+from typing import cast, Generic, TypeAlias, TypeVar
 
 from pydantic import TypeAdapter, ValidationError
+
+from cmk.ccc import store
+from cmk.ccc.plugin_registry import Registry
 
 from cmk.utils.config_validation_layer.validation_utils import ConfigValidationError
 from cmk.utils.paths import omd_root
@@ -14,9 +18,6 @@ from cmk.utils.paths import omd_root
 from cmk.gui.config import active_config
 from cmk.gui.watolib.config_domain_name import wato_fileheader
 from cmk.gui.watolib.utils import format_config_value
-
-from cmk.ccc import store
-from cmk.ccc.plugin_registry import Registry
 
 _G = TypeVar("_G")
 _T = TypeVar("_T")
@@ -36,11 +37,14 @@ class WatoConfigFile(ABC, Generic[_G]):
         spec_class: TypeAlias,
     ) -> None:
         self._config_file_path = config_file_path
-        self.validator = TypeAdapter(spec_class)
+        self.spec_class = spec_class
 
-    def _validate(self, raw: object) -> _G:
+    def validate(self, raw: object) -> _G:
         try:
-            return self.validator.validate_python(raw, strict=True)
+            # No performance impact - only called during cmk-update-config
+            return TypeAdapter(self.spec_class).validate_python(  # nosemgrep: type-adapter-detected
+                raw, strict=True
+            )
         except ValidationError as exc:
             raise ConfigValidationError(
                 which_file=self.name,
@@ -66,9 +70,10 @@ class WatoConfigFile(ABC, Generic[_G]):
 
     def read_file_and_validate(self) -> None:
         cfg = self._load_file(lock=False)
-        self._validate(cfg)
+        self.validate(cfg)
 
 
+# NOTE: Variance is wrong, we confuse list <=> Sequence below.
 class WatoListConfigFile(WatoConfigFile[list[_G]], Generic[_G]):
     """Manage simple .mk config file containing a list of objects."""
 
@@ -99,6 +104,8 @@ class WatoListConfigFile(WatoConfigFile[list[_G]], Generic[_G]):
         )
 
 
+# NOTE: This should actually have *two* type parameters, one for the key and one for the mapped
+# value. Furthermore, the variance should be fixed, so we don't confuse dict <=> Mapping.
 class WatoSingleConfigFile(WatoConfigFile[_D], Generic[_D]):
     """Manage simple .mk config file containing a single dict variable which represents
     the overall configuration. The 1st level dict represents the configuration
@@ -117,16 +124,24 @@ class WatoSingleConfigFile(WatoConfigFile[_D], Generic[_D]):
             lock=lock,
         )
 
+    def save_for_snapshot(self, omd_root_path: Path, work_dir: Path, cfg: _D) -> None:
+        self._save_to_path(work_dir / self._config_file_path.relative_to(omd_root_path), cfg)
+
     def save(self, cfg: _D) -> None:
-        self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
+        self._save_to_path(self._config_file_path, cfg)
+
+    def _save_to_path(self, target_path: Path, cfg: _D) -> None:
+        target_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         store.save_to_mk_file(
-            str(self._config_file_path),
+            str(target_path),
             self._config_variable,
             cfg,
             pprint_value=active_config.wato_pprint_config,
         )
 
 
+# NOTE: This should actually have *two* type parameters, one for the key and one for the mapped
+# value. Furthermore, the variance should be fixed, so we don't confuse dict <=> Mapping.
 class WatoSimpleConfigFile(WatoSingleConfigFile[dict[str, _T]], Generic[_T]):
     """Manage simple .mk config file containing a single dict variable
     with nested entries. The 1st level dict encompasses those entries where each entry
@@ -174,16 +189,13 @@ class WatoMultiConfigFile(WatoConfigFile[_D], Generic[_D]):
         self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         output = wato_fileheader()
         for field, value in cfg.items():
-            output += "{} = \\\n{}\n\n".format(
-                field,
-                format_config_value(value),
-            )
+            output += f"{field} = \\\n{format_config_value(value)}\n\n"
         store.save_mk_file(self._config_file_path, output, add_header=False)
 
     def validate_and_save(self, raw: Mapping[str, object]) -> None:
         with_defaults = dict(self.load_default())
         with_defaults.update(raw)
-        cfg = self._validate(with_defaults)
+        cfg = self.validate(with_defaults)
         self.save(cfg)
 
 

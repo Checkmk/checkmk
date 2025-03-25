@@ -1,0 +1,30 @@
+#!/bin/sh
+# Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# Reason for this no-op: shellcheck disable=... before the first command disables the error for the
+# entire script.
+:
+
+# Disable unused variable error (needed to keep track of version)
+# shellcheck disable=SC2034
+CMK_VERSION="2.5.0b1"
+
+main() {
+    if ! command -v smartctl >/dev/null 2>&1; then
+        echo "ERROR: smartctl not found" >&2
+        exit
+    fi
+    if ! smartctl -V | grep -q '^smartctl 7'; then
+        echo "ERROR: smartctl version 7 or newer is required" >&2
+        exit
+    fi
+    echo "<<<smart_posix_all:sep(0)>>>"
+    smartctl --scan | awk '{print $1}' | while read -r DEVICE; do
+        smartctl --all --json=c "$DEVICE"
+        printf "\n"
+    done
+}
+
+[ -z "${MK_SOURCE_ONLY}" ] && main

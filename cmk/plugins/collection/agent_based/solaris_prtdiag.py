@@ -82,7 +82,7 @@ class Section(NamedTuple):
     hardware: Mapping[str, str]
 
 
-def parse_solaris_prtdiag(  # pylint: disable=too-many-branches
+def parse_solaris_prtdiag(
     string_table: StringTable,
 ) -> Section:
     bios: dict[str, str | int] = {}

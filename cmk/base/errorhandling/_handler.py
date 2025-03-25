@@ -7,15 +7,6 @@ from __future__ import annotations
 
 from typing import Final, Literal
 
-from cmk.utils.hostaddress import HostName
-from cmk.utils.servicename import ServiceName
-
-from cmk.snmplib import SNMPBackendEnum
-
-from cmk.checkengine.checkresults import ActiveCheckResult
-from cmk.checkengine.exitspec import ExitSpec
-from cmk.checkengine.submitters import ServiceState
-
 import cmk.ccc.debug
 from cmk.ccc.exceptions import (
     MKAgentError,
@@ -25,6 +16,15 @@ from cmk.ccc.exceptions import (
     MKSNMPError,
     MKTimeout,
 )
+
+from cmk.utils.hostaddress import HostName
+from cmk.utils.servicename import ServiceName
+
+from cmk.snmplib import SNMPBackendEnum
+
+from cmk.checkengine.checkresults import ActiveCheckResult
+from cmk.checkengine.exitspec import ExitSpec
+from cmk.checkengine.submitters import ServiceState
 
 from ._crash import create_check_crash_dump
 
@@ -62,18 +62,17 @@ class CheckResultErrorHandler:
         if type_ is None:
             return True
         assert value is not None
-        self._result = ActiveCheckResult(
-            *_handle_failure(
-                value,
-                self.exit_spec,
-                host_name=self.host_name,
-                service_name=self.service_name,
-                plugin_name=self.plugin_name,
-                is_cluster=self.is_cluster,
-                snmp_backend=self.snmp_backend,
-                keepalive=self.keepalive,
-            )
+        state, summary = _handle_failure(
+            value,
+            self.exit_spec,
+            host_name=self.host_name,
+            service_name=self.service_name,
+            plugin_name=self.plugin_name,
+            is_cluster=self.is_cluster,
+            snmp_backend=self.snmp_backend,
+            keepalive=self.keepalive,
         )
+        self._result = ActiveCheckResult(state=state, summary=summary)
         return True
 
 
@@ -91,13 +90,13 @@ def _handle_failure(
     if isinstance(exc, MKTimeout):
         if keepalive:
             raise exc
-        return exit_spec.get("timeout", 2), "Timed out\n"
+        return exit_spec.get("timeout", 2), "Timed out"
 
     if isinstance(exc, (MKAgentError, MKFetcherError, MKSNMPError, MKIPAddressLookupError)):
-        return exit_spec.get("connection", 2), f"{exc}\n"
+        return exit_spec.get("connection", 2), str(exc)
 
     if isinstance(exc, MKGeneralException):
-        return exit_spec.get("exception", 3), f"{exc}\n"
+        return exit_spec.get("exception", 3), str(exc)
 
     if cmk.ccc.debug.enabled():
         raise exc

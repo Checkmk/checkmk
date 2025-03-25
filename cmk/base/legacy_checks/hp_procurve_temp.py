@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
+
+check_info = {}
 
 # .1.3.6.1.4.1.11.2.14.11.1.2.8.1.1.2.0 Sys-1   # system name
 # .1.3.6.1.4.1.11.2.14.11.1.2.8.1.1.3.0 21C     # current temperature
@@ -37,6 +38,7 @@ def parse_hp_procurve_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["hp_procurve_temp"] = LegacyCheckDefinition(
+    name="hp_procurve_temp",
     parse_function=parse_hp_procurve_temp,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.11.2.3.7.11"),
     fetch=SNMPTree(

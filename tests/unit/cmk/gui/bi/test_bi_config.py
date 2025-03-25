@@ -3,15 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from collections.abc import Mapping
 
 import pytest
 from pytest import param
 
+from tests.unit.cmk.bi.bi_mocks import MockBIAggregationPack
 from tests.unit.cmk.bi.bi_test_data import sample_config
-from tests.unit.cmk.bi.conftest import MockBIAggregationPack
 
 from cmk.gui.bi._config import ModeBIEditRule
 from cmk.gui.bi._valuespecs import _convert_bi_rule_from_vs, _convert_bi_rule_to_vs
@@ -116,7 +115,7 @@ def test_bi_rule_outermost_transform_to_vs(rest_config: None | Mapping[str, obje
 class ModeBIEditRuleFake(ModeBIEditRule):
     """Fake for testing new bi rule edit"""
 
-    def __init__(self):  # pylint: disable=super-init-not-called
+    def __init__(self):
         self._rule_id = None
         self._new = True
 

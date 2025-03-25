@@ -3,17 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
 
 from collections.abc import Callable
 
 import pytest
 
-from cmk.utils.crypto.certificate import Certificate, CertificatePEM
-
 import cmk.gui.valuespec as vs
 from cmk.gui.exceptions import MKUserError
+
+from cmk.crypto.certificate import Certificate, CertificatePEM
 
 
 # some relevant data:
@@ -102,33 +100,21 @@ vmjkI6TZraE3
         (
             _swiss_sign_cert,
             {
-                "issuer": {
-                    "Country": "CH",
-                    "Organization Name": "SwissSign AG",
-                    "Common Name": "SwissSign Gold CA - G2",
-                },
-                "subject": {
-                    "Country": "CH",
-                    "Organization Name": "SwissSign AG",
-                    "Common Name": "SwissSign Gold CA - G2",
-                },
+                "issuer": "CN=SwissSign Gold CA - G2,O=SwissSign AG,C=CH",
+                "subject": "CN=SwissSign Gold CA - G2,O=SwissSign AG,C=CH",
+                "creation": "2006-10-25",
+                "expiration": "2036-10-25",
+                "fingerprint": "62:DD:0B:E9:B9:F5:0A:16:3E:A0:F8:E7:5C:05:3B:1E:CA:57:EA:55:C8:68:8F:64:7C:68:81:F2:C8:35:7B:95",
             },
         ),
         (
             _etugra_cert,  # ECC certificate
             {
-                "issuer": {
-                    "Country": "TR",
-                    "Locality Name": "Ankara",
-                    "Organization Name": "E-Tugra EBG A.S.",
-                    "Common Name": "E-Tugra Global Root CA ECC v3",
-                },
-                "subject": {
-                    "Country": "TR",
-                    "Locality Name": "Ankara",
-                    "Organization Name": "E-Tugra EBG A.S.",
-                    "Common Name": "E-Tugra Global Root CA ECC v3",
-                },
+                "issuer": "CN=E-Tugra Global Root CA ECC v3,OU=E-Tugra Trust Center,O=E-Tugra EBG A.S.,L=Ankara,C=TR",
+                "subject": "CN=E-Tugra Global Root CA ECC v3,OU=E-Tugra Trust Center,O=E-Tugra EBG A.S.,L=Ankara,C=TR",
+                "expiration": "2045-03-12",
+                "creation": "2020-03-18",
+                "fingerprint": "87:3F:46:85:FA:7F:56:36:25:25:2E:6D:36:BC:D7:F1:6F:C2:49:51:F2:64:E4:7E:1B:95:4F:49:08:CD:CA:13",
             },
         ),
     ],

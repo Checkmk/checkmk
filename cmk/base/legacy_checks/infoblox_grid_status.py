@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.infoblox import DETECT_INFOBLOX
+
+check_info = {}
 
 # .1.3.6.1.4.1.7779.3.1.1.2.1.15.0 X.X.X.X --> IB-PLATFORMONE-MIB::ibGridMasterVIP.0
 # .1.3.6.1.4.1.7779.3.1.1.2.1.16.0 ONLINE --> IB-PLATFORMONE-MIB::ibGridReplicationState.0
@@ -33,6 +33,7 @@ def parse_infoblox_grid_status(string_table: StringTable) -> StringTable | None:
 
 
 check_info["infoblox_grid_status"] = LegacyCheckDefinition(
+    name="infoblox_grid_status",
     parse_function=parse_infoblox_grid_status,
     detect=DETECT_INFOBLOX,
     fetch=SNMPTree(

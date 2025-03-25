@@ -3,15 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import abc
 from collections.abc import Callable, Sequence
 
+import cmk.ccc.plugin_registry
+
 from cmk.gui.type_defs import PermissionName, RoleName
 from cmk.gui.utils.speaklater import LazyString
-
-import cmk.ccc.plugin_registry
 
 
 class PermissionSection(abc.ABC):

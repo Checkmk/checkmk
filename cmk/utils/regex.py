@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module wraps some regex handling functions used by Check_MK"""
 
-
 import contextlib
 import re
 from typing import Final

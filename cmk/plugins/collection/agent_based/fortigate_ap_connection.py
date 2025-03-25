@@ -6,7 +6,7 @@
 from collections.abc import Mapping, Sequence
 from typing import NamedTuple, TypedDict
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -129,7 +129,7 @@ def check_fortigate_ap_connection(
         summary=f"State: {access_point.connection_state.status}",
         details=access_point.connection_state.description,
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         access_point.station_count,
         metric_name="connections",
         label="Connected clients",

@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import Any, TypedDict
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib import oracle
+from cmk.plugins.oracle.agent_based.liboracle import OraErrors
 
 # actual format
 # <<<oracle_rman>>>
@@ -52,7 +52,7 @@ class SectionSidOracleRman(TypedDict):
 SectionOracleRman = dict[str, SectionSidOracleRman]
 
 
-def parse_oracle_rman(  # pylint: disable=too-many-branches
+def parse_oracle_rman(
     string_table: StringTable,
 ) -> SectionOracleRman:
     section: SectionOracleRman = {}
@@ -60,7 +60,7 @@ def parse_oracle_rman(  # pylint: disable=too-many-branches
 
     for line in string_table:
         # Check for query errors
-        check_ora = oracle.OraErrors(line)
+        check_ora = OraErrors(line)
         if check_ora.ignore:
             continue  # ignore ancient agent outputs
         if check_ora.has_error:
@@ -78,7 +78,7 @@ def parse_oracle_rman(  # pylint: disable=too-many-branches
             sid, status, _start, _end, backuptype, backupage_str = line
             item = f"{sid}.{backuptype}"
 
-            backupscn = int(-1)
+            backupscn = -1
             backuplevel = "-1"
 
         elif len(line) == 8:
@@ -93,7 +93,7 @@ def parse_oracle_rman(  # pylint: disable=too-many-branches
                 backupscn_str,
             ) = line
             if backupscn_str == "":
-                backupscn = int(-1)
+                backupscn = -1
             else:
                 backupscn = int(backupscn_str)
 
@@ -214,7 +214,7 @@ def check_oracle_rman(
 
         else:
             # backupage is time in minutes from agent!
-            yield from check_levels(
+            yield from check_levels_v1(
                 backupage * 60,
                 levels_upper=params.get("levels", (None, None)),
                 metric_name="age",

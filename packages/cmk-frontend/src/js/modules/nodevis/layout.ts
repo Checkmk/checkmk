@@ -85,7 +85,7 @@ class LayoutHistory {
     create_undo_step(): void {
         this._undo_history = this._undo_history.slice(
             0,
-            this._undo_history.length - this._undo_end_offset
+            this._undo_history.length - this._undo_end_offset,
         );
         this._undo_end_offset = 0;
         this._undo_history.push(this._create_manual_layout_settings());
@@ -95,7 +95,7 @@ class LayoutHistory {
     _create_manual_layout_settings(): SerializedNodevisLayout {
         const serialized_layout = this._layout_manager.get_layout().serialize();
         const layout = JSON.parse(
-            JSON.stringify(serialized_layout)
+            JSON.stringify(serialized_layout),
         ) as SerializedNodevisLayout;
         layout.origin_info = "Explicit set";
         layout.origin_type = "explicit";
@@ -110,7 +110,7 @@ class LayoutHistory {
                 enter
                     .insert("div", "div#line_style_config")
                     .attr("id", "history_icons")
-                    .classed("noselect", true)
+                    .classed("noselect", true),
             );
 
         const icons = [
@@ -150,11 +150,11 @@ class LayoutHistory {
         const history_length = this.length();
         this._selection!.selectAll("#undo").classed(
             "disabled",
-            history_length - end_offset <= 1
+            history_length - end_offset <= 1,
         );
         this._selection!.selectAll("#redo").classed(
             "disabled",
-            end_offset == 0
+            end_offset == 0,
         );
     }
 
@@ -169,7 +169,7 @@ class LayoutHistory {
         this._undo_end_offset += step_direction;
 
         const layout_settings = JSON.parse(
-            JSON.stringify(this._undo_history[new_index])
+            JSON.stringify(this._undo_history[new_index]),
         );
 
         this._layout_manager.update_layout(layout_settings);
@@ -227,7 +227,7 @@ export class LayoutManagerLayer extends FixLayer {
 
     show_style_configuration(new_style: AbstractLayoutStyle | null) {
         this._toolbar.layout_style_configuration.show_style_configuration(
-            new_style
+            new_style,
         );
     }
 
@@ -241,15 +241,15 @@ export class LayoutManagerLayer extends FixLayer {
         options: StyleOptionValues,
         options_changed_callback: (changed_options: StyleOptionValues) => void,
         reset_default_options_callback: (
-            event: D3DragEvent<any, any, any>
-        ) => void
+            event: D3DragEvent<any, any, any>,
+        ) => void,
     ) {
         this._toolbar.layout_style_configuration.show_configuration(
             style_id,
             style_option_spec,
             options,
             options_changed_callback,
-            reset_default_options_callback
+            reset_default_options_callback,
         );
     }
 
@@ -261,7 +261,7 @@ export class LayoutManagerLayer extends FixLayer {
         // Register layout manager toolbar plugin
         this._mouse_events_overlay = new LayoutingMouseEventsOverlay(
             world,
-            this
+            this,
         );
         this.layout_applier = new LayoutApplier(world, this);
         this.styles_selection = this._svg_selection
@@ -318,14 +318,14 @@ export class LayoutManagerLayer extends FixLayer {
         this._layout.deserialize(
             layout_settings,
             this._viewport.get_size(),
-            force_config
+            force_config,
         );
     }
 
     apply_current_layout(trigger_force_simulation = true) {
         this.layout_applier.apply_layout(
             this._viewport._node_config,
-            trigger_force_simulation
+            trigger_force_simulation,
         );
     }
 
@@ -488,7 +488,7 @@ export class LayoutManagerLayer extends FixLayer {
     simulation_end_actions() {
         // Actions when the force simulation ends
         const nodes_layer = this._viewport.get_layer(
-            "nodes"
+            "nodes",
         ) as LayeredNodesLayer;
         nodes_layer.simulation_end();
         const layout_settings = this.get_layout_settings();
@@ -550,8 +550,8 @@ export class LayoutStyleConfiguration {
         options: StyleOptionValues,
         options_changed_callback: (changed_options: StyleOptionValues) => void,
         reset_default_options_callback: (
-            event: D3DragEvent<any, any, any>
-        ) => void
+            event: D3DragEvent<any, any, any>,
+        ) => void,
     ) {
         if (style_option_spec.length == 0) {
             this.hide_configuration();
@@ -566,7 +566,7 @@ export class LayoutStyleConfiguration {
             style_option_spec,
             options,
             options_changed_callback,
-            reset_default_options_callback
+            reset_default_options_callback,
         );
     }
 
@@ -608,7 +608,7 @@ export class LayoutStyleConfiguration {
             layout_style.get_style_options(),
             layout_style.style_config.options,
             new_options => layout_style.changed_options(new_options),
-            () => layout_style.reset_default_options()
+            () => layout_style.reset_default_options(),
         );
     }
 }
@@ -635,7 +635,7 @@ function show_viewport_information(viewport: Viewport) {
             .selectAll("div#viewport_information")
             .data([null])
             .join(enter =>
-                enter.append("div").attr("id", "viewport_information")
+                enter.append("div").attr("id", "viewport_information"),
             );
         const new_row = viewport_div
             .selectAll("tr")
@@ -727,7 +727,7 @@ export class LayoutingToolbar {
     constructor(
         world: NodevisWorld,
         layout_manager: LayoutManagerLayer,
-        selection: d3SelectionDiv
+        selection: d3SelectionDiv,
     ) {
         this._world = world;
         this._layout_manager = layout_manager;
@@ -737,15 +737,15 @@ export class LayoutingToolbar {
         this._datasource_specific_settings =
             this._get_datasource_specific_elements(this._world.datasource);
         this._toolbar_selection = this._create_toolbar_selection(
-            this._selection
+            this._selection,
         );
         this._layout_history = new LayoutHistory(
             layout_manager,
-            this._toolbar_selection
+            this._toolbar_selection,
         );
         this.layout_style_configuration = new LayoutStyleConfiguration(
             this._selection.select("#style_management"),
-            world
+            world,
         );
     }
 
@@ -769,7 +769,7 @@ export class LayoutingToolbar {
                     .attr("id", "layouting_toolbar")
                     .classed("box", true)
                     .style("opacity", 0)
-                    .style("display", "none")
+                    .style("display", "none"),
             );
 
         toolbar_selection
@@ -794,7 +794,7 @@ export class LayoutingToolbar {
 
     _render_line_style(
         into_selection: d3SelectionDiv,
-        line_style: LineStyle
+        line_style: LineStyle,
     ): void {
         const options = [
             new RadioGroupOption("round", get("round")),
@@ -808,7 +808,7 @@ export class LayoutingToolbar {
             options,
             line_style,
             (new_style: string) =>
-                this._change_line_style(new_style as LineStyle)
+                this._change_line_style(new_style as LineStyle),
         );
     }
 
@@ -828,7 +828,7 @@ export class LayoutingToolbar {
 
         this._render_line_style(
             this._toolbar_selection!,
-            this._layout_manager._layout.line_config.style
+            this._layout_manager._layout.line_config.style,
         );
 
         this._world.viewport.update_gui_of_layers();
@@ -886,7 +886,7 @@ export class LayoutingToolbar {
     _add_search_filter_mutation_observer() {
         if (this._filter_mutation_observer != null) return;
         const filter_node = select(
-            "div#popup_filters"
+            "div#popup_filters",
         ).node() as HTMLDivElement;
         if (filter_node == null) return;
 
@@ -898,7 +898,7 @@ export class LayoutingToolbar {
 
     update_layout_configuration() {
         this._datasource_specific_settings.render_layout(
-            this._toolbar_selection
+            this._toolbar_selection,
         );
     }
 }
@@ -945,7 +945,7 @@ class LayoutingMouseEventsOverlay {
         this._dragged_node = select(event.sourceEvent.target);
 
         const nodevis_node = this._world.viewport.get_node_by_id(
-            this._dragged_node.datum()
+            this._dragged_node.datum(),
         );
         if (!nodevis_node) return;
 
@@ -962,7 +962,7 @@ class LayoutingMouseEventsOverlay {
             // TODO: improve
             this._layout_manager.layout_applier._convert_node(
                 nodevis_node,
-                this._dragging_class
+                this._dragging_class,
                 // LayoutStyleHierarchy
                 // LayoutStyleRadial
                 // LayoutStyleFixed
@@ -990,7 +990,7 @@ class LayoutingMouseEventsOverlay {
             return;
 
         const nodevis_node = this._world.viewport.get_node_by_id(
-            this._dragged_node.datum()
+            this._dragged_node.datum(),
         );
         if (!nodevis_node) return;
 
@@ -1002,7 +1002,7 @@ class LayoutingMouseEventsOverlay {
                 nodevis_node.data.use_style.style_config.options.detach_from_parent =
                     true;
                 this._layout_manager.show_style_configuration(
-                    nodevis_node.data.use_style
+                    nodevis_node.data.use_style,
                 );
             }
         }
@@ -1014,7 +1014,7 @@ class LayoutingMouseEventsOverlay {
         this._apply_drag_force(
             nodevis_node,
             this._drag_start_x + delta_x,
-            this._drag_start_y + delta_y
+            this._drag_start_y + delta_y,
         );
 
         this._world.viewport.restart_force_simulation(0.5);
@@ -1044,14 +1044,14 @@ class LayoutingMouseEventsOverlay {
             return;
 
         const nodevis_node = this._world.viewport.get_node_by_id(
-            this._dragged_node.datum()
+            this._dragged_node.datum(),
         );
         if (!nodevis_node) return;
 
         if (nodevis_node.data.use_style) {
             const new_position =
                 this._world.viewport.get_viewport_percentage_of_node(
-                    nodevis_node
+                    nodevis_node,
                 );
             nodevis_node.data.use_style.style_config.position = new_position;
             nodevis_node.data.use_style.force_style_translation();
@@ -1135,7 +1135,7 @@ class LayoutApplier {
 
     _convert_node(
         node: NodevisNode,
-        style_class: AbstractNodeVisConstructor<AbstractLayoutStyle> | null
+        style_class: AbstractNodeVisConstructor<AbstractLayoutStyle> | null,
     ) {
         const layout = this._layout_manager.get_layout();
         const current_style = node.data.use_style;
@@ -1158,7 +1158,7 @@ class LayoutApplier {
             new_style = this.layout_style_factory.instantiate_style_class(
                 style_class,
                 node,
-                this._layout_manager.get_div_selection()
+                this._layout_manager.get_div_selection(),
             );
             new_style.style_config.options.detach_from_parent = true;
             layout.save_style(new_style.style_config);
@@ -1171,7 +1171,7 @@ class LayoutApplier {
     }
 
     _convert_all(
-        style_class: AbstractNodeVisConstructor<AbstractLayoutStyle> | null
+        style_class: AbstractNodeVisConstructor<AbstractLayoutStyle> | null,
     ) {
         const used_style: AbstractLayoutStyle[] = [];
         const current_style: AbstractLayoutStyle | null = null;
@@ -1187,8 +1187,8 @@ class LayoutApplier {
                         this.layout_style_factory.instantiate_style_class(
                             LayoutStyleFixed,
                             node,
-                            this._layout_manager.get_div_selection()
-                        ).style_config
+                            this._layout_manager.get_div_selection(),
+                        ).style_config,
                     );
                 });
             } else {
@@ -1197,7 +1197,7 @@ class LayoutApplier {
                     this.layout_style_factory.instantiate_style_class(
                         style_class,
                         all_nodes[0],
-                        this._layout_manager.get_div_selection()
+                        this._layout_manager.get_div_selection(),
                     );
                 layout.save_style(new_style.style_config);
             }
@@ -1234,7 +1234,7 @@ class LayoutApplier {
                     this.layout_style_factory.instantiate_style_name(
                         layout_settings.default_id!,
                         node_config.hierarchy,
-                        this._layout_manager.get_div_selection()
+                        this._layout_manager.get_div_selection(),
                     );
                 default_style.style_config.position = {x: 50, y: 50};
                 layout.clear_styles();
@@ -1246,7 +1246,7 @@ class LayoutApplier {
         const node_matcher = new NodeMatcher(node_config);
         nodes_with_style = this.find_nodes_for_layout(
             layout,
-            node_matcher
+            node_matcher,
         ).concat(nodes_with_style);
         // Sort styles, as the layout of the parent node takes precedence
         nodes_with_style.sort(function (a, b) {
@@ -1262,7 +1262,7 @@ class LayoutApplier {
 
         // TODO: better access
         this._layout_manager._viewport._force_simulation.set_force_options(
-            layout.force_config
+            layout.force_config,
         );
         this._update_node_specific_styles(nodes_with_style);
 
@@ -1272,7 +1272,7 @@ class LayoutApplier {
 
     _merge_styles(
         primary: StyleConfig[],
-        secondary: StyleConfig[]
+        secondary: StyleConfig[],
     ): StyleConfig[] {
         const merged_styles: Map<string, StyleConfig> = new Map();
         primary.forEach(style_config => {
@@ -1281,7 +1281,7 @@ class LayoutApplier {
                     matcher: style_config.matcher,
                     type: style_config.type,
                 }),
-                style_config
+                style_config,
             );
         });
         secondary.forEach(style_config => {
@@ -1321,7 +1321,7 @@ class LayoutApplier {
 
         // Cleanup box_leaf_nodes hint
         nodes_with_style.forEach(entry =>
-            entry.node.descendants().forEach(d => delete d.data.box_leaf_nodes)
+            entry.node.descendants().forEach(d => delete d.data.box_leaf_nodes),
         );
 
         const grouped_styles: NodeWithStyle[] = [];
@@ -1331,7 +1331,7 @@ class LayoutApplier {
             const new_style = this.layout_style_factory.instantiate_style_name(
                 "block",
                 node,
-                this._layout_manager.get_div_selection()
+                this._layout_manager.get_div_selection(),
             );
             new_style.style_config.options = {};
             grouped_styles.push({node: node, style: new_style.style_config});
@@ -1350,10 +1350,10 @@ class LayoutApplier {
                     "  filtered duplicate style assignment" +
                         compute_style_id(
                             layout_style_class_registry.get_class(
-                                config.style.type
+                                config.style.type,
                             ),
-                            config.node
-                        )
+                            config.node,
+                        ),
                 );
                 continue;
             }
@@ -1367,7 +1367,7 @@ class LayoutApplier {
                 // TODO: check if prototype is not required
                 return compute_style_id(
                     layout_style_class_registry.get_class(d.style.type),
-                    d.node
+                    d.node,
                 );
             });
 
@@ -1379,8 +1379,8 @@ class LayoutApplier {
                     "  removing style " +
                         compute_style_id(
                             layout_style_class_registry.get_class(d.style.type),
-                            d.node
-                        )
+                            d.node,
+                        ),
                 );
                 const use_style = d.node.data.use_style;
                 if (use_style)
@@ -1399,18 +1399,18 @@ class LayoutApplier {
                     "  create style " +
                         compute_style_id(
                             layout_style_class_registry.get_class(d.style.type),
-                            d.node
-                        )
+                            d.node,
+                        ),
                 );
                 if (d.node.data.use_style) {
                     this._layout_manager.remove_active_style(
-                        d.node.data.use_style
+                        d.node.data.use_style,
                     );
                 }
                 const new_style = this.layout_style_factory.instantiate_style(
                     d.style,
                     d.node,
-                    select(nodes[idx])
+                    select(nodes[idx]),
                 );
                 this._layout_manager.add_active_style(new_style);
             })
@@ -1421,12 +1421,12 @@ class LayoutApplier {
                     "  updating style " +
                         compute_style_id(
                             layout_style_class_registry.get_class(d.style.type),
-                            d.node
-                        )
+                            d.node,
+                        ),
                 );
                 const style_id = compute_style_id(
                     layout_style_class_registry.get_class(d.style.type),
-                    d.node
+                    d.node,
                 );
                 const style = this._layout_manager.get_active_style(style_id);
                 d.node.data.use_style = style;
@@ -1443,7 +1443,7 @@ class LayoutApplier {
                     const abs_coords =
                         this._layout_manager.get_absolute_node_coords(
                             {x: position.x, y: position.y},
-                            this._layout_manager._viewport.get_size()
+                            this._layout_manager._viewport.get_size(),
                         );
                     d.node.fx = abs_coords.x;
                     d.node.fy = abs_coords.y;
@@ -1456,14 +1456,14 @@ class LayoutApplier {
         const all_links = this._layout_manager._viewport.get_all_links();
         this._layout_manager._viewport.update_nodes_and_links(
             all_nodes,
-            all_links
+            all_links,
         );
         this._layout_manager.update_data();
     }
 
     find_nodes_for_layout(
         layout: NodeVisualizationLayout,
-        node_matcher: NodeMatcher
+        node_matcher: NodeMatcher,
     ): NodeWithStyle[] {
         const nodes: NodeWithStyle[] = [];
         layout.style_configs.forEach(style => {

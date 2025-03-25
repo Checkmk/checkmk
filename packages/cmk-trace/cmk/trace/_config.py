@@ -18,6 +18,18 @@ class TraceSendConfig:
     target: LocalTarget | str
 
 
+def service_namespace_from_config(default_namespace: str, config: Mapping[str, str]) -> str:
+    """
+    >>> service_namespace_from_config("harry", {})
+    'harry'
+    >>> service_namespace_from_config("harry", {"CONFIG_TRACE_SERVICE_NAMESPACE": "hirsch"})
+    'hirsch'
+    """
+    if namespace := config.get("CONFIG_TRACE_SERVICE_NAMESPACE"):
+        return namespace
+    return default_namespace
+
+
 def trace_send_config(config: Mapping[str, str]) -> TraceSendConfig:
     trace_enabled = config.get("CONFIG_TRACE_SEND") == "on"
     if not trace_enabled:

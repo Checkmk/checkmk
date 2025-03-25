@@ -8,21 +8,21 @@ from __future__ import annotations
 
 import copy
 import json
-import os
 import textwrap
 import traceback
-from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from collections.abc import Callable
 from enum import Enum
-from typing import Any, cast, Self
+from typing import Any
 
 from livestatus import SiteId
+
+from cmk.ccc.exceptions import MKGeneralException
 
 import cmk.utils.paths
 
 from cmk.gui import hooks, pagetypes, sites
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
-from cmk.gui.config import active_config, register_post_config_load_hook
+from cmk.gui.config import active_config
 from cmk.gui.dashboard import DashletRegistry
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.header import make_header
@@ -31,28 +31,26 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
-from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.main_menu import mega_menu_registry, MegaMenuRegistry
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuTopic
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.permissions import PermissionSectionRegistry
-from cmk.gui.type_defs import Icon as Icon
+from cmk.gui.theme.current_theme import theme
+from cmk.gui.type_defs import TopicMenuTopic
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.utils import load_web_plugins
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
-from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.valuespec import CascadingDropdown, CascadingDropdownChoice, Dictionary, ValueSpec
 from cmk.gui.werks import may_acknowledge
 
-import cmk.ccc.version as cmk_version
-from cmk.ccc.exceptions import MKGeneralException
-
 from . import _snapin
+from ._snapin import all_snapins, CustomSnapins, PermissionSectionSidebarSnapins
 from ._snapin import begin_footnote_links as begin_footnote_links
 from ._snapin import bulletlink as bulletlink
 from ._snapin import CustomizableSidebarSnapin as CustomizableSidebarSnapin
+from ._snapin import default_view_menu_topics as default_view_menu_topics
 from ._snapin import end_footnote_links as end_footnote_links
 from ._snapin import footnotelinks as footnotelinks
 from ._snapin import heading as heading
@@ -60,7 +58,6 @@ from ._snapin import iconlink as iconlink
 from ._snapin import link as link
 from ._snapin import make_topic_menu as make_topic_menu
 from ._snapin import PageHandlers as PageHandlers
-from ._snapin import PermissionSectionSidebarSnapins
 from ._snapin import render_link as render_link
 from ._snapin import show_topic_menu as show_topic_menu
 from ._snapin import SidebarSnapin as SidebarSnapin
@@ -68,7 +65,9 @@ from ._snapin import snapin_registry as snapin_registry
 from ._snapin import snapin_site_choice as snapin_site_choice
 from ._snapin import snapin_width as snapin_width
 from ._snapin import SnapinRegistry as SnapinRegistry
+from ._snapin import view_menu_items as view_menu_items
 from ._snapin import write_snapin_exception as write_snapin_exception
+from ._snapin._bookmarks import BookmarkList
 from ._snapin_dashlet import SnapinDashlet
 from .main_menu import (
     ajax_message_read,
@@ -86,6 +85,8 @@ def register(
     permission_section_registry: PermissionSectionRegistry,
     snapin_registry_: SnapinRegistry,
     dashlet_registry: DashletRegistry,
+    mega_menu_registry_: MegaMenuRegistry,
+    view_menu_topics: Callable[[], list[TopicMenuTopic]],
 ) -> None:
     page_registry.register_page("sidebar_fold")(AjaxFoldSnapin)
     page_registry.register_page("sidebar_openclose")(AjaxOpenCloseSnapin)
@@ -101,8 +102,15 @@ def register(
         PageAjaxSidebarGetUnackIncompWerks
     )
     permission_section_registry.register(PermissionSectionSidebarSnapins)
-    _snapin.register(snapin_registry_, page_registry)
+    _snapin.register(
+        snapin_registry_,
+        page_registry,
+        mega_menu_registry_,
+        view_menu_topics,
+    )
     dashlet_registry.register(SnapinDashlet)
+    pagetypes.declare(CustomSnapins)
+    pagetypes.declare(BookmarkList)
 
 
 def load_plugins() -> None:
@@ -273,7 +281,7 @@ class UserSidebarConfig:
 
         # Remove not existing (e.g. legacy) snapins
         user_config["snapins"] = [
-            e for e in user_config["snapins"] if e["snapin_type_id"] in snapin_registry
+            e for e in user_config["snapins"] if e["snapin_type_id"] in all_snapins()
         ]
 
         user_config = self._from_config(user_config)
@@ -329,12 +337,12 @@ class UserSidebarSnapin:
     @staticmethod
     def from_config(cfg: dict[str, Any]) -> UserSidebarSnapin:
         """Construct a UserSidebarSnapin object from the persisted data structure"""
-        snapin_class = snapin_registry[cfg["snapin_type_id"]]
+        snapin_class = all_snapins()[cfg["snapin_type_id"]]
         return UserSidebarSnapin(snapin_class, SnapinVisibility(cfg["visibility"]))
 
     @staticmethod
     def from_snapin_type_id(snapin_type_id: str) -> UserSidebarSnapin:
-        return UserSidebarSnapin(snapin_registry[snapin_type_id])
+        return UserSidebarSnapin(all_snapins()[snapin_type_id])
 
     def __init__(
         self,
@@ -545,10 +553,7 @@ class SidebarRenderer:
         # The heading. A click on the heading mini/maximizes the snapin
         toggle_actions: dict[str, str] = {}
         img_id = f"treeangle.snapin.{name}"
-        onclick = "cmk.sidebar.toggle_sidebar_snapin(this, {}, {})".format(
-            json.dumps(toggle_url),
-            json.dumps(img_id),
-        )
+        onclick = f"cmk.sidebar.toggle_sidebar_snapin(this, {json.dumps(toggle_url)}, {json.dumps(img_id)})"
         if user.may("general.configure_sidebar"):
             toggle_actions = {
                 "onclick": onclick,
@@ -694,7 +699,7 @@ def ajax_snapin():
 
 
 class AjaxFoldSnapin(AjaxPage):
-    def page(self) -> PageResult:  # pylint: disable=useless-return
+    def page(self) -> PageResult:
         check_csrf_token()
         response.set_content_type("application/json")
         user_config = UserSidebarConfig(user, active_config.sidebar)
@@ -764,136 +769,6 @@ def move_snapin() -> None:
 
 
 # .
-#   .--Custom-Snapins------------------------------------------------------.
-#   |       ____          _     ____                    _                  |
-#   |      / ___|   _ ___| |_  / ___| _ __   __ _ _ __ (_)_ __  ___        |
-#   |     | |  | | | / __| __| \___ \| '_ \ / _` | '_ \| | '_ \/ __|       |
-#   |     | |__| |_| \__ \ |_ _ ___) | | | | (_| | |_) | | | | \__ \       |
-#   |      \____\__,_|___/\__(_)____/|_| |_|\__,_| .__/|_|_| |_|___/       |
-#   |                                            |_|                       |
-#   '----------------------------------------------------------------------'
-
-
-class CustomSnapinsModel(pagetypes.OverridableModel):
-    custom_snapin: tuple[str, dict]
-
-
-@dataclass(kw_only=True)
-class CustomSnapinsConfig(pagetypes.OverridableConfig):
-    custom_snapin: tuple[str, dict]
-
-
-class CustomSnapins(pagetypes.Overridable[CustomSnapinsConfig]):
-    @classmethod
-    def deserialize(cls, page_dict: Mapping[str, object]) -> Self:
-        deserialized = CustomSnapinsModel.model_validate(page_dict)
-        return cls(
-            CustomSnapinsConfig(
-                name=deserialized.name,
-                title=deserialized.title,
-                description=deserialized.description,
-                owner=deserialized.owner,
-                public=deserialized.public,
-                hidden=deserialized.hidden,
-                custom_snapin=deserialized.custom_snapin,
-            )
-        )
-
-    def serialize(self) -> dict[str, object]:
-        return CustomSnapinsModel(
-            name=self.config.name,
-            title=self.config.title,
-            description=self.config.description,
-            owner=self.config.owner,
-            public=self.config.public,
-            hidden=self.config.hidden,
-            custom_snapin=self.config.custom_snapin,
-        ).model_dump()
-
-    @classmethod
-    def type_name(cls) -> str:
-        return "custom_snapin"
-
-    @classmethod
-    def type_icon(cls) -> Icon:
-        return "custom_snapin"
-
-    @classmethod
-    def type_is_show_more(cls) -> bool:
-        return True
-
-    @classmethod
-    def phrase(cls, phrase: pagetypes.PagetypePhrase) -> str:
-        return {
-            "title": _("Custom sidebar element"),
-            "title_plural": _("Custom sidebar elements"),
-            # "add_to"         : _("Add to custom element list"),
-            "clone": _("Clone element"),
-            "create": _("Create element"),
-            "edit": _("Edit element"),
-            "new": _("Add element"),
-        }.get(phrase, pagetypes.Base.phrase(phrase))
-
-    @classmethod
-    def parameters(
-        cls, mode: pagetypes.PageMode
-    ) -> list[tuple[str, list[tuple[float, str, ValueSpec]]]]:
-        parameters = super().parameters(mode)
-
-        parameters += [
-            (
-                cls.phrase("title"),
-                # sort-index, key, valuespec
-                [
-                    (
-                        2.5,
-                        "custom_snapin",
-                        CascadingDropdown(
-                            title=_("Element type"),
-                            choices=cls._customizable_snapin_type_choices,
-                        ),
-                    )
-                ],
-            )
-        ]
-
-        return parameters
-
-    @classmethod
-    def _customizable_snapin_type_choices(cls) -> Sequence[CascadingDropdownChoice]:
-        choices = []
-        for snapin_type_id, snapin_type in sorted(snapin_registry.get_customizable_snapin_types()):
-            choices.append(
-                (
-                    snapin_type_id,
-                    snapin_type.title(),
-                    Dictionary(
-                        title=_("Parameters"),
-                        elements=snapin_type.vs_parameters(),
-                        optional_keys=[],
-                    ),
-                )
-            )
-        return choices
-
-    @classmethod
-    def reserved_unique_ids(cls) -> list[str]:
-        return [k for k, v in snapin_registry.items() if not v.is_custom_snapin()]
-
-
-pagetypes.declare(CustomSnapins)
-
-
-def _register_custom_snapins():
-    """First remove all previously registered custom snapins, then register
-    the currently configured ones"""
-    instances = CustomSnapins.load()
-    snapin_registry.register_custom_snapins(instances.instances_sorted())
-
-
-register_post_config_load_hook(_register_custom_snapins)
-
-# .
 #   .--Add Snapin----------------------------------------------------------.
 #   |           _       _     _   ____                    _                |
 #   |          / \   __| | __| | / ___| _ __   __ _ _ __ (_)_ __           |
@@ -915,7 +790,7 @@ def page_add_snapin() -> None:
     used_snapins = _used_snapins()
 
     html.open_div(class_=["add_snapin"])
-    for name, snapin_class in sorted(snapin_registry.items()):
+    for name, snapin_class in sorted(all_snapins().items()):
         if name in used_snapins:
             continue
         if not snapin_class.may_see():
@@ -969,7 +844,7 @@ class AjaxAddSnapin(AjaxPage):
 
         addname = request.var("name")
 
-        if addname is None or addname not in snapin_registry:
+        if addname is None or addname not in all_snapins():
             raise MKUserError(None, _("Invalid sidebar element %s") % addname)
 
         if addname in _used_snapins():
@@ -999,7 +874,7 @@ class AjaxAddSnapin(AjaxPage):
 def ajax_set_snapin_site():
     response.set_content_type("application/json")
     ident = request.var("ident")
-    if ident not in snapin_registry:
+    if ident not in all_snapins():
         raise MKUserError(None, _("Invalid ident"))
 
     site = request.var("site")

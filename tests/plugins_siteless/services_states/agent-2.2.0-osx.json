@@ -1,0 +1,29 @@
+{
+  "Check_MK Agent": {
+    "expected_state": 0
+  },
+  "CPU load": {
+    "expected_state": 0
+  },
+  "Number of threads": {
+    "expected_state": 0
+  },
+  "Interface 1": {
+    "expected_state": 0
+  },
+  "Interface 2": {
+    "expected_state": 0
+  },
+  "Interface 3": {
+    "expected_state": 0
+  },
+  "Interface 8": {
+    "expected_state": 0
+  },
+  "TCP Connections": {
+    "expected_state": 0
+  },
+  "Uptime": {
+    "expected_state": 0
+  }
+}

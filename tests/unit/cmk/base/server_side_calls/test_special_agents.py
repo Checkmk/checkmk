@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
@@ -12,13 +11,8 @@ from typing import NamedTuple
 
 import pytest
 
-import cmk.utils.paths
 from cmk.utils import password_store
 from cmk.utils.hostaddress import HostAddress, HostName
-
-from cmk.base.server_side_calls import SpecialAgent
-from cmk.base.server_side_calls._commons import InfoFunc
-from cmk.base.server_side_calls._special_agents import SpecialAgentCommandLine
 
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import (
@@ -29,6 +23,8 @@ from cmk.server_side_calls.v1 import (
     SpecialAgentCommand,
     SpecialAgentConfig,
 )
+from cmk.server_side_calls_backend import SpecialAgent
+from cmk.server_side_calls_backend._special_agents import SpecialAgentCommandLine
 
 HOST_ATTRS = {
     "alias": "my_host_alias",
@@ -93,13 +89,12 @@ def _with_file(path: Path) -> Iterator[None]:
 
 
 def argument_function_with_exception(*args, **kwargs):
-    raise Exception("Can't create argument list")
+    raise RuntimeError("Can't create argument list")
 
 
 @pytest.mark.parametrize(
     (
         "plugins",
-        "legacy_plugins",
         "parameters",
         "host_attrs",
         "host_config",
@@ -107,102 +102,6 @@ def argument_function_with_exception(*args, **kwargs):
         "expected_result",
     ),
     [
-        pytest.param(
-            {},
-            {"test_agent": lambda a, b, c: "arg0 arg;1"},
-            {},
-            {},
-            HOST_CONFIG,
-            {},
-            [SpecialAgentCommandLine("agent_path arg0 arg;1", None)],
-            id="legacy plug-in string args",
-        ),
-        pytest.param(
-            {},
-            {"test_agent": lambda a, b, c: ["arg0", "arg;1"]},
-            {},
-            {},
-            HOST_CONFIG,
-            {},
-            [SpecialAgentCommandLine("agent_path arg0 'arg;1'", None)],
-            id="legacy plug-in list args",
-        ),
-        pytest.param(
-            {},
-            {"test_agent": lambda a, b, c: SpecialAgentLegacyConfiguration(["arg0"], None)},
-            {},
-            {},
-            HOST_CONFIG,
-            {},
-            [SpecialAgentCommandLine("agent_path arg0", None)],
-            id="legacy plug-in TestSpecialAgentConfiguration",
-        ),
-        pytest.param(
-            {},
-            {
-                "test_agent": lambda a, b, c: SpecialAgentLegacyConfiguration(
-                    ["arg0", "arg;1"], None
-                )
-            },
-            {},
-            {},
-            HOST_CONFIG,
-            {},
-            [SpecialAgentCommandLine("agent_path arg0 'arg;1'", None)],
-            id="legacy plug-in TestSpecialAgentConfiguration, escaped arg",
-        ),
-        pytest.param(
-            {},
-            {
-                "test_agent": lambda a, b, c: SpecialAgentLegacyConfiguration(
-                    ["list0", "list1"], None
-                )
-            },
-            {},
-            {},
-            HOST_CONFIG,
-            {},
-            [SpecialAgentCommandLine("agent_path list0 list1", None)],
-            id="legacy plug-in TestSpecialAgentConfiguration, arg list",
-        ),
-        pytest.param(
-            {},
-            {
-                "test_agent": lambda a, b, c: SpecialAgentLegacyConfiguration(
-                    ["arg0", "arg;1"], "stdin_blob"
-                )
-            },
-            {},
-            {},
-            HOST_CONFIG,
-            {},
-            [SpecialAgentCommandLine("agent_path arg0 'arg;1'", "stdin_blob")],
-            id="legacy plug-in with stdin, escaped arg",
-        ),
-        pytest.param(
-            {},
-            {
-                "test_agent": lambda a, b, c: SpecialAgentLegacyConfiguration(
-                    ["list0", "list1"], "stdin_blob"
-                )
-            },
-            {},
-            {},
-            HOST_CONFIG,
-            {},
-            [SpecialAgentCommandLine("agent_path list0 list1", "stdin_blob")],
-            id="legacy plug-in with stdin",
-        ),
-        pytest.param(
-            {},
-            {"test_agent": lambda a, b, c: ["-h", "$HOSTNAME$", "-a", "<IP>"]},
-            {},
-            {},
-            HOST_CONFIG_WITH_MACROS,
-            {},
-            [SpecialAgentCommandLine("agent_path -h 'test_host' -a '127.0.0.1'", None)],
-            id="legacy plug-in with macros",
-        ),
         pytest.param(
             {
                 PluginLocation(
@@ -219,7 +118,6 @@ def argument_function_with_exception(*args, **kwargs):
                     ),
                 )
             },
-            {},
             {},
             HOST_ATTRS,
             HOST_CONFIG,
@@ -242,7 +140,6 @@ def argument_function_with_exception(*args, **kwargs):
                     ),
                 )
             },
-            {},
             {},
             HOST_ATTRS,
             HOST_CONFIG,
@@ -270,7 +167,6 @@ def argument_function_with_exception(*args, **kwargs):
                 )
             },
             {},
-            {},
             HOST_ATTRS,
             HOST_CONFIG,
             {"mypassword": "123456"},
@@ -281,7 +177,6 @@ def argument_function_with_exception(*args, **kwargs):
 )
 def test_iter_special_agent_commands(
     plugins: Mapping[PluginLocation, SpecialAgentConfig],
-    legacy_plugins: Mapping[str, InfoFunc],
     parameters: Mapping[str, object],
     host_attrs: Mapping[str, str],
     host_config: HostConfig,
@@ -289,12 +184,10 @@ def test_iter_special_agent_commands(
     expected_result: Sequence[SpecialAgentCommandLine],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(SpecialAgent, "_make_source_path", lambda *_: "agent_path")
     monkeypatch.setitem(password_store.hack.HACK_AGENTS, "test_agent", True)
 
     special_agent = SpecialAgent(
         plugins,
-        legacy_plugins,
         HostName("test_host"),
         HostAddress("127.0.0.1"),
         host_config,
@@ -302,6 +195,7 @@ def test_iter_special_agent_commands(
         http_proxies={},
         stored_passwords=stored_passwords,
         password_store_file=Path("/pw/store"),
+        finder=lambda *_: "agent_path",
     )
     commands = list(special_agent.iter_special_agent_commands("test_agent", parameters))
     assert commands == expected_result
@@ -332,12 +226,10 @@ _PASSWORD_TEST_PLUGINS = {
 def test_iter_special_agent_commands_stored_password_with_hack(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(SpecialAgent, "_make_source_path", lambda *_: "agent_path")
     monkeypatch.setitem(password_store.hack.HACK_AGENTS, "test_agent", True)
 
     special_agent = SpecialAgent(
         plugins=_PASSWORD_TEST_PLUGINS,
-        legacy_plugins={},
         host_name=HostName("test_host"),
         host_address=HostAddress("127.0.0.1"),
         host_config=HOST_CONFIG,
@@ -345,6 +237,7 @@ def test_iter_special_agent_commands_stored_password_with_hack(
         http_proxies={},
         stored_passwords={"1234": "p4ssw0rd!"},
         password_store_file=Path("/pw/store"),
+        finder=lambda *_: "agent_path",
     )
     assert list(
         special_agent.iter_special_agent_commands(
@@ -359,14 +252,9 @@ def test_iter_special_agent_commands_stored_password_with_hack(
     ]
 
 
-def test_iter_special_agent_commands_stored_password_without_hack(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(SpecialAgent, "_make_source_path", lambda *_: "agent_path")
-
+def test_iter_special_agent_commands_stored_password_without_hack() -> None:
     special_agent = SpecialAgent(
         plugins=_PASSWORD_TEST_PLUGINS,
-        legacy_plugins={},
         host_name=HostName("test_host"),
         host_address=HostAddress("127.0.0.1"),
         host_config=HOST_CONFIG,
@@ -374,6 +262,7 @@ def test_iter_special_agent_commands_stored_password_without_hack(
         http_proxies={},
         stored_passwords={"uuid1234": "p4ssw0rd!"},
         password_store_file=Path("/pw/store"),
+        finder=lambda *_: "agent_path",
     )
     assert list(
         special_agent.iter_special_agent_commands(
@@ -388,42 +277,17 @@ def test_iter_special_agent_commands_stored_password_without_hack(
     ]
 
 
-@pytest.mark.parametrize(
-    "plugins, legacy_plugins",
-    [
-        pytest.param(
-            {
-                PluginLocation(
-                    "cmk.plugins.test.server_side_calls.test_agent", "special_agent_text"
-                ): SpecialAgentConfig(
-                    name="test_agent",
-                    parameter_parser=lambda e: e,
-                    commands_function=argument_function_with_exception,
-                )
-            },
-            {},
-            id="special agent",
-        ),
-        pytest.param(
-            {}, {"test_agent": argument_function_with_exception}, id="legacy special agent"
-        ),
-    ],
-)
-def test_iter_special_agent_commands_crash(
-    plugins: Mapping[PluginLocation, SpecialAgentConfig],
-    legacy_plugins: Mapping[str, InfoFunc],
-    monkeypatch: pytest.MonkeyPatch,
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    monkeypatch.setattr(
-        cmk.ccc.debug,
-        "enabled",
-        lambda: False,
-    )
-
+def test_iter_special_agent_commands_crash() -> None:
     special_agent = SpecialAgent(
-        plugins,
-        legacy_plugins,
+        {
+            PluginLocation(
+                "cmk.plugins.test.server_side_calls.test_agent", "special_agent_text"
+            ): SpecialAgentConfig(
+                name="test_agent",
+                parameter_parser=lambda e: e,
+                commands_function=argument_function_with_exception,
+            )
+        },
         HostName("test_host"),
         HostAddress("127.0.0.1"),
         HOST_CONFIG,
@@ -431,103 +295,11 @@ def test_iter_special_agent_commands_crash(
         http_proxies={},
         stored_passwords={},
         password_store_file=Path("/pw/store"),
-    )
-
-    list(special_agent.iter_special_agent_commands("test_agent", {}))
-
-    captured = capsys.readouterr()
-    assert (
-        captured.out
-        == "\nWARNING: Config creation for special agent test_agent failed on test_host: Can't create argument list\n"
-    )
-
-
-@pytest.mark.parametrize(
-    "plugins, legacy_plugins",
-    [
-        pytest.param(
-            {
-                PluginLocation(
-                    "cmk.plugins.test.server_side_calls.test_agent", "special_agent_text"
-                ): SpecialAgentConfig(
-                    name="test_agent",
-                    parameter_parser=lambda e: e,
-                    commands_function=argument_function_with_exception,
-                )
-            },
-            {},
-            id="special agent",
-        ),
-        pytest.param(
-            {}, {"test_agent": argument_function_with_exception}, id="legacy special agent"
-        ),
-    ],
-)
-def test_iter_special_agent_commands_crash_with_debug(
-    plugins: Mapping[PluginLocation, SpecialAgentConfig],
-    legacy_plugins: Mapping[str, InfoFunc],
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(
-        cmk.ccc.debug,
-        "enabled",
-        lambda: True,
-    )
-
-    special_agent = SpecialAgent(
-        plugins,
-        legacy_plugins,
-        HostName("test_host"),
-        HostAddress("127.0.0.1"),
-        HOST_CONFIG,
-        HOST_ATTRS,
-        http_proxies={},
-        stored_passwords={},
-        password_store_file=Path("/pw/store"),
+        finder=lambda *_: "/path/to/agent",
     )
 
     with pytest.raises(
-        Exception,
+        RuntimeError,
         match="Can't create argument list",
     ):
         list(special_agent.iter_special_agent_commands("test_agent", {}))
-
-
-def test_make_source_path() -> None:
-    special_agent = SpecialAgent(
-        {},
-        {},
-        HostName("test_host"),
-        HostAddress("127.0.0.1"),
-        HOST_CONFIG,
-        host_attrs={},
-        http_proxies={},
-        stored_passwords={},
-        password_store_file=Path("/pw/store"),
-    )
-
-    shipped_path = Path(cmk.utils.paths.agents_dir, "special", "agent_test_agent")
-    with _with_file(shipped_path):
-        agent_path = special_agent._make_source_path("test_agent")
-
-    assert agent_path == shipped_path
-
-
-def test_make_source_path_local_agent() -> None:
-    special_agent = SpecialAgent(
-        {},
-        {},
-        HostName("test_host"),
-        HostAddress("127.0.0.1"),
-        HOST_CONFIG,
-        host_attrs={},
-        http_proxies={},
-        stored_passwords={},
-        password_store_file=Path("/pw/store"),
-    )
-
-    local_agent_path = Path(cmk.utils.paths.agents_dir, "special", "agent_test_agent")
-    with _with_file(local_agent_path):
-        agent_path = special_agent._make_source_path("test_agent")
-
-    assert agent_path == local_agent_path

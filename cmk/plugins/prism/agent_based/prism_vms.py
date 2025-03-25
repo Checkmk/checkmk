@@ -69,7 +69,7 @@ def check_prism_vms(item: str, params: Mapping[str, Any], section: Section) -> C
 
     yield Result(
         state=State(0),
-        notice=f"Memory {memory}," f"\nDescription {vm_desc}," f"\nProtetion Domain {prot_domain}",
+        notice=f"Memory {memory},\nDescription {vm_desc},\nProtetion Domain {prot_domain}",
     )
 
 

@@ -7,7 +7,7 @@ from collections.abc import Sequence
 
 import pytest
 
-from tests.testlib.repo import is_cloud_repo, is_enterprise_repo
+from tests.testlib.common.repo import is_cloud_repo, is_enterprise_repo
 
 from cmk.post_rename_site import main
 from cmk.post_rename_site.registry import rename_action_registry
@@ -17,6 +17,7 @@ from cmk.post_rename_site.registry import rename_action_registry
 def fixture_expected_plugins() -> list[str]:
     expected = [
         "sites",
+        "messaging",
         "hosts_and_folders",
         "update_core_config",
         "warn_remote_site",
@@ -36,7 +37,7 @@ def fixture_expected_plugins() -> list[str]:
 
     if is_cloud_repo():
         # The CCE plug-ins are loaded when the CCE plug-ins are available
-        expected.append("agent_controller_connections")
+        expected.extend(["agent_controller_connections", "otel"])
 
     return expected
 

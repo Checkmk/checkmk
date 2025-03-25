@@ -4,27 +4,38 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from typing import Any, Literal
 
 import livestatus
-from livestatus import MKLivestatusNotFoundError, OnlySites, SiteId
+from livestatus import MKLivestatusNotFoundError, OnlySites, Query, QuerySpecification
 
-from cmk.gui import sites
-from cmk.gui.data_source import ABCDataSource, DataSourceLivestatus, RowTable
+from cmk.gui.config import Config
+from cmk.gui.data_source import (
+    ABCDataSource,
+    DataSourceLivestatus,
+    query_livestatus,
+    query_row,
+    RowTable,
+)
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import Request
+from cmk.gui.http import request as active_request
 from cmk.gui.i18n import _, _l, ungettext
-from cmk.gui.painter.v0.base import Cell, Painter
+from cmk.gui.painter.v0 import Cell, Painter
 from cmk.gui.painter_options import paint_age
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.view_utils import CellSpec
-from cmk.gui.views.command import Command, CommandActionResult, PermissionSectionAction
+from cmk.gui.views.command import (
+    Command,
+    CommandActionResult,
+    CommandGroupVarious,
+    PermissionSectionAction,
+)
 from cmk.gui.views.sorter import cmp_simple_number, Sorter
 from cmk.gui.visuals.filter import Filter
 
@@ -70,8 +81,13 @@ class CrashReportsRowTable(RowTable):
         limit: int | None,
         all_active_filters: list[Filter],
     ) -> Rows | tuple[Rows, int]:
-        rows = []
-        for raw_row in self.get_crash_report_rows(only_sites, filter_headers=""):
+        return sorted(
+            self.parse_rows(self.get_crash_report_rows(only_sites, filter_headers="")),
+            key=lambda r: r["crash_time"],
+        )
+
+    def parse_rows(self, rows: Iterable[Row]) -> Iterable[Row]:
+        for raw_row in rows:
             crash_info = raw_row.get("crash_info")
             if crash_info is None:
                 continue  # skip broken crash reports
@@ -81,34 +97,26 @@ class CrashReportsRowTable(RowTable):
             except json.JSONDecodeError:
                 continue  # skip broken crash infos like b'' or b'\n'
 
-            rows.append(
-                {
-                    "site": raw_row["site"],
-                    "crash_id": raw_row["crash_id"],
-                    "crash_type": raw_row["crash_type"],
-                    "crash_time": crash_info_raw["time"],
-                    "crash_version": crash_info_raw["version"],
-                    "crash_exc_type": crash_info_raw["exc_type"],
-                    "crash_exc_value": crash_info_raw["exc_value"],
-                    "crash_exc_traceback": crash_info_raw["exc_traceback"],
-                }
-            )
-        return sorted(rows, key=lambda r: r["crash_time"])
+            yield {
+                "site": raw_row["site"],
+                "crash_id": raw_row["crash_id"],
+                "crash_type": raw_row["crash_type"],
+                "crash_time": crash_info_raw["time"],
+                "crash_version": crash_info_raw["version"],
+                "crash_exc_type": crash_info_raw["exc_type"],
+                "crash_exc_value": crash_info_raw["exc_value"],
+                "crash_exc_traceback": crash_info_raw["exc_traceback"],
+            }
 
     def get_crash_report_rows(
         self, only_sites: OnlySites, filter_headers: str
-    ) -> list[dict[str, str]]:
+    ) -> Iterator[dict[str, str]]:
         # First fetch the information that is needed to query for the dynamic columns (crash_info,
         # ...)
-        crash_infos = self._get_crash_report_info(only_sites, filter_headers)
-        if not crash_infos:
-            return []
-
-        rows = []
-        for crash_info in crash_infos:
+        for crash_info in self._get_crash_report_info(only_sites, filter_headers):
             file_path = "/".join([crash_info["crash_type"], crash_info["crash_id"]])
 
-            headers = ["crash_info"]
+            headers = ["site", "crash_info"]
             columns = ["file:crash_info:%s/crash.info" % livestatus.lqencode(file_path)]
 
             if crash_info["crash_type"] in ("check", "section"):
@@ -119,41 +127,42 @@ class CrashReportsRowTable(RowTable):
                 ]
 
             try:
-                sites.live().set_prepend_site(False)
-                sites.live().set_only_sites([SiteId(crash_info["site"])])
-
-                raw_row = sites.live().query_row(
-                    "GET crashreports\n"
-                    "Columns: %s\n"
-                    "Filter: id = %s"
-                    % (" ".join(columns), livestatus.lqencode(crash_info["crash_id"]))
+                raw_row = query_row(
+                    Query(
+                        QuerySpecification(
+                            table="crashreports",
+                            columns=columns,
+                            headers="Filter: id = %s" % livestatus.lqencode(crash_info["crash_id"]),
+                        )
+                    ),
+                    only_sites=only_sites,
+                    limit=None,
+                    auth_domain="read",
                 )
             except MKLivestatusNotFoundError:
                 continue
-            finally:
-                sites.live().set_only_sites(None)
-                sites.live().set_prepend_site(False)
 
             crash_info.update(dict(zip(headers, raw_row)))
-            rows.append(crash_info)
-
-        return rows
+            yield crash_info
 
     def _get_crash_report_info(
         self, only_sites: OnlySites, filter_headers: str | None = None
-    ) -> list[dict[str, str]]:
-        try:
-            sites.live().set_prepend_site(True)
-            sites.live().set_only_sites(only_sites)
-            rows = sites.live().query(
-                "GET crashreports\nColumns: id component\n%s" % (filter_headers or "")
-            )
-        finally:
-            sites.live().set_only_sites(None)
-            sites.live().set_prepend_site(False)
+    ) -> Iterator[dict[str, str]]:
+        rows = query_livestatus(
+            Query(
+                QuerySpecification(
+                    table="crashreports",
+                    columns=["id", "component"],
+                    headers=filter_headers or "",
+                )
+            ),
+            only_sites=only_sites,
+            limit=None,
+            auth_domain="read",
+        )
 
         columns = ["site", "crash_id", "crash_type"]
-        return [dict(zip(columns, r)) for r in rows]
+        return (dict(zip(columns, r)) for r in rows)
 
 
 class PainterCrashIdent(Painter):
@@ -295,21 +304,23 @@ class PainterCrashException(Painter):
         return None, "{}: {}".format(row["crash_exc_type"], row["crash_exc_value"])
 
 
-class SorterCrashTime(Sorter):
-    @property
-    def ident(self) -> str:
-        return "crash_time"
+def _sort_crash_time(
+    r1: Row,
+    r2: Row,
+    *,
+    parameters: Mapping[str, Any] | None,
+    config: Config,
+    request: Request,
+) -> int:
+    return cmp_simple_number("crash_time", r1, r2)
 
-    @property
-    def title(self) -> str:
-        return _("Crash time")
 
-    @property
-    def columns(self) -> Sequence[ColumnName]:
-        return ["crash_time"]
-
-    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
-        return cmp_simple_number("crash_time", r1, r2)
+SorterCrashTime = Sorter(
+    ident="crash_time",
+    title=_l("Crash time"),
+    columns=["crash_time"],
+    sort_function=_sort_crash_time,
+)
 
 
 PermissionActionDeleteCrashReport = permission_registry.register(
@@ -323,59 +334,52 @@ PermissionActionDeleteCrashReport = permission_registry.register(
 )
 
 
-class CommandDeleteCrashReports(Command):
-    @property
-    def ident(self) -> str:
-        return "delete_crash_reports"
-
-    @property
-    def title(self) -> str:
-        return _("Delete crash reports")
-
-    @property
-    def confirm_title(self) -> str:
-        return _("Delete crash reports?")
-
-    @property
-    def confirm_button(self) -> LazyString:
-        return _l("Delete")
-
-    @property
-    def permission(self) -> Permission:
-        return PermissionActionDeleteCrashReport
-
-    @property
-    def tables(self) -> list[str]:
-        return ["crash"]
-
-    def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
-        return HTML.without_escaping(
-            _("Affected %s: %s")
-            % (
-                ungettext(
-                    "crash report",
-                    "crash reports",
-                    len_action_rows,
-                ),
+def command_delete_crash_report_affected(
+    len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
+) -> HTML:
+    return HTML.without_escaping(
+        _("Affected %s: %s")
+        % (
+            ungettext(
+                "crash report",
+                "crash reports",
                 len_action_rows,
-            )
+            ),
+            len_action_rows,
         )
+    )
 
-    def render(self, what: str) -> None:
-        html.open_div(class_="group")
-        html.button("_delete_crash_reports", _("Delete"), cssclass="hot")
-        html.button("_cancel", _("Cancel"))
-        html.close_div()
 
-    def _action(
-        self,
-        cmdtag: Literal["HOST", "SVC"],
-        spec: str,
-        row: dict,
-        row_index: int,
-        action_rows: Rows,
-    ) -> CommandActionResult:
-        if request.has_var("_delete_crash_reports"):
-            commands = [("DEL_CRASH_REPORT;%s" % row["crash_id"])]
-            return commands, self.confirm_dialog_options(cmdtag, row, len(action_rows))
-        return None
+def command_delete_crash_report_render(what: str) -> None:
+    html.open_div(class_="group")
+    html.button("_delete_crash_reports", _("Delete"), cssclass="hot")
+    html.button("_cancel", _("Cancel"))
+    html.close_div()
+
+
+def command_delete_crash_report_action(
+    command: Command,
+    cmdtag: Literal["HOST", "SVC"],
+    spec: str,
+    row: dict,
+    row_index: int,
+    action_rows: Rows,
+) -> CommandActionResult:
+    if active_request.has_var("_delete_crash_reports"):
+        commands = [("DEL_CRASH_REPORT;%s" % row["crash_id"])]
+        return commands, command.confirm_dialog_options(cmdtag, row, action_rows)
+    return None
+
+
+CommandDeleteCrashReports = Command(
+    ident="delete_crash_reports",
+    title=_l("Delete crash reports"),
+    confirm_title=_l("Delete crash reports?"),
+    confirm_button=_l("Delete"),
+    permission=PermissionActionDeleteCrashReport,
+    group=CommandGroupVarious,
+    tables=["crash"],
+    render=command_delete_crash_report_render,
+    action=command_delete_crash_report_action,
+    affected_output_cb=command_delete_crash_report_affected,
+)

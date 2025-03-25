@@ -4,13 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.check_legacy_includes.scaleio import convert_scaleio_space
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
 from cmk.plugins.lib.scaleio import parse_scaleio, ScaleioSection
+
+check_info = {}
 
 # <<<scaleio_pd>>>
 # PROTECTION_DOMAIN 91ebcf4500000000:
@@ -44,6 +45,7 @@ def check_scaleio_pd(item, params, parsed):
 
 
 check_info["scaleio_pd"] = LegacyCheckDefinition(
+    name="scaleio_pd",
     parse_function=parse_scaleio_pd,
     service_name="ScaleIO PD capacity %s",
     discovery_function=inventory_scaleio_pd,
@@ -70,6 +72,7 @@ def check_scaleio_pd_status(item, _no_params, parsed):
 
 
 check_info["scaleio_pd.status"] = LegacyCheckDefinition(
+    name="scaleio_pd_status",
     service_name="ScaleIO PD status %s",
     sections=["scaleio_pd"],
     discovery_function=inventory_scaleio_pd_status,

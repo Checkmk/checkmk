@@ -13,9 +13,9 @@ from _pytest.capture import CaptureFixture
 def test_import_module(capfd: CaptureFixture) -> None:
     with pytest.raises(SystemExit) as pytest_wrapped_e:
         if sys.version_info[0] == 2:
-            import agents.plugins.plesk_backups_2  # pylint: disable=syntax-error,unused-import
+            import agents.plugins.plesk_backups_2
         else:
-            import agents.plugins.plesk_backups  # pylint: disable=unused-import
+            import agents.plugins.plesk_backups  # noqa: F401
     out, _ = capfd.readouterr()
     # PY2 vs PY3: No module named 'MySQLdb' vs No module named MySQLdb
     out = out.replace("'", "")

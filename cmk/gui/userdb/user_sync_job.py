@@ -6,13 +6,15 @@
 import traceback
 from collections.abc import Callable
 from datetime import datetime
-from functools import partial
+from logging import Logger
+
+from pydantic import BaseModel
 
 from cmk.gui.background_job import (
     BackgroundJob,
-    BackgroundJobAlreadyRunning,
     BackgroundProcessInterface,
     InitialStatusArgs,
+    JobTarget,
 )
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -37,27 +39,35 @@ def execute_userdb_job() -> None:
         return
 
     job = UserSyncBackgroundJob()
-    if job.is_active():
-        gui_logger.debug("Another synchronization job is already running: Skipping this sync")
-        return
 
     if not job.shall_start():
         gui_logger.debug("Job shall not start")
         return
 
-    job.start(
-        partial(
-            job.do_sync,
-            add_to_changelog=False,
-            enforce_sync=False,
-            load_users_func=load_users,
-            save_users_func=save_users,
-        ),
-        InitialStatusArgs(
-            title=job.gui_title(),
-            stoppable=False,
-            user=str(user.id) if user.id else None,
-        ),
+    if (
+        result := job.start(
+            JobTarget(
+                callable=sync_entry_point,
+                args=UserSyncArgs(add_to_changelog=False, enforce_sync=False),
+            ),
+            InitialStatusArgs(
+                title=job.gui_title(),
+                stoppable=False,
+                user=str(user.id) if user.id else None,
+            ),
+        )
+    ).is_error():
+        gui_logger.error("Error starting user sync job: %s", result.error)
+
+
+class UserSyncArgs(BaseModel, frozen=True):
+    add_to_changelog: bool
+    enforce_sync: bool
+
+
+def sync_entry_point(job_interface: BackgroundProcessInterface, args: UserSyncArgs) -> None:
+    UserSyncBackgroundJob().do_sync(
+        job_interface, args, load_users_func=load_users, save_users_func=save_users
     )
 
 
@@ -76,14 +86,11 @@ def _userdb_sync_job_enabled() -> bool:
 def ajax_sync() -> None:
     try:
         job = UserSyncBackgroundJob()
-        try:
-            job.start(
-                partial(
-                    job.do_sync,
-                    add_to_changelog=False,
-                    enforce_sync=True,
-                    load_users_func=load_users,
-                    save_users_func=save_users,
+        if (
+            result := job.start(
+                JobTarget(
+                    callable=sync_entry_point,
+                    args=UserSyncArgs(add_to_changelog=False, enforce_sync=True),
                 ),
                 InitialStatusArgs(
                     title=job.gui_title(),
@@ -91,8 +98,8 @@ def ajax_sync() -> None:
                     user=str(user.id) if user.id else None,
                 ),
             )
-        except BackgroundJobAlreadyRunning as e:
-            raise MKUserError(None, _("Another user synchronization is already running: %s") % e)
+        ).is_error():
+            raise MKUserError(None, str(result.error))
         response.set_data("OK Started synchronization\n")
     except Exception as e:
         gui_logger.exception("error synchronizing user DB")
@@ -123,17 +130,17 @@ class UserSyncBackgroundJob(BackgroundJob):
     def do_sync(
         self,
         job_interface: BackgroundProcessInterface,
-        add_to_changelog: bool,
-        enforce_sync: bool,
+        args: UserSyncArgs,
         load_users_func: Callable[[bool], Users],
         save_users_func: Callable[[Users, datetime], None],
     ) -> None:
+        logger = job_interface.get_logger()
         with job_interface.gui_context():
-            job_interface.send_progress_update(_("Synchronization started..."))
+            logger.info(_("Synchronization started..."))
             if self._execute_sync_action(
-                job_interface,
-                add_to_changelog,
-                enforce_sync,
+                logger,
+                args.add_to_changelog,
+                args.enforce_sync,
                 load_users_func,
                 save_users_func,
                 datetime.now(),
@@ -146,7 +153,7 @@ class UserSyncBackgroundJob(BackgroundJob):
 
     def _execute_sync_action(
         self,
-        job_interface: BackgroundProcessInterface,
+        logger: Logger,
         add_to_changelog: bool,
         enforce_sync: bool,
         load_users_func: Callable[[bool], Users],
@@ -158,24 +165,20 @@ class UserSyncBackgroundJob(BackgroundJob):
                 if not enforce_sync and not connection.sync_is_needed():
                     continue
 
-                job_interface.send_progress_update(
-                    _("[%s] Starting sync for connection") % connection_id
-                )
+                logger.info(_("[%s] Starting sync for connection") % connection_id)
                 connection.do_sync(
                     add_to_changelog=add_to_changelog,
                     only_username=None,
                     load_users_func=load_users,
                     save_users_func=save_users,
                 )
-                job_interface.send_progress_update(
-                    _("[%s] Finished sync for connection") % connection_id
-                )
+                logger.info(_("[%s] Finished sync for connection") % connection_id)
             except Exception as e:
-                job_interface.send_exception(_("[%s] Exception: %s") % (connection_id, e))
+                logger.error(_("[%s] Exception: %s") % (connection_id, e))
                 gui_logger.error(
                     "Exception (%s, userdb_job): %s", connection_id, traceback.format_exc()
                 )
 
-        job_interface.send_progress_update(_("Finalizing synchronization"))
+        logger.info(_("Finalizing synchronization"))
         general_userdb_job(now)
         return True

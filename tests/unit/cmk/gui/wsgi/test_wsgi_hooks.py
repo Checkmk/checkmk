@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
 from cmk.gui import hooks
 

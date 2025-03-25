@@ -4,19 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import shutil
-import time
-from contextlib import suppress
 from datetime import datetime, timedelta
-from logging import Logger
-from pathlib import Path
 
 import cmk.utils.paths
 
-from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
-from cmk.gui.i18n import _
-from cmk.gui.log import logger as gui_logger
+from cmk.gui.log import logger
 
-from ..logged_in import user
 from .store import load_users
 
 
@@ -24,52 +17,10 @@ def execute_user_profile_cleanup_job() -> None:
     """This function is called by the GUI cron job once a minute.
 
     Errors are logged to var/log/web.log."""
-    job = UserProfileCleanupBackgroundJob()
-    if job.is_active():
-        gui_logger.debug("Job is already running: Skipping this time")
-        return
-
-    interval = 3600
-    with suppress(FileNotFoundError):
-        if time.time() - UserProfileCleanupBackgroundJob.last_run_path().stat().st_mtime < interval:
-            gui_logger.debug("Job was already executed within last %d seconds", interval)
-            return
-
-    job.start(
-        job.do_execute,
-        InitialStatusArgs(
-            title=job.gui_title(),
-            lock_wato=False,
-            stoppable=False,
-            user=str(user.id) if user.id else None,
-        ),
-    )
+    cleanup_abandoned_profiles(datetime.now(), timedelta(days=30))
 
 
-class UserProfileCleanupBackgroundJob(BackgroundJob):
-    job_prefix = "user_profile_cleanup"
-
-    @staticmethod
-    def last_run_path() -> Path:
-        return Path(cmk.utils.paths.var_dir, "wato", "last_user_profile_cleanup.mk")
-
-    @classmethod
-    def gui_title(cls) -> str:
-        return _("User profile cleanup")
-
-    def __init__(self) -> None:
-        super().__init__(self.job_prefix)
-
-    def do_execute(self, job_interface: BackgroundProcessInterface) -> None:
-        with job_interface.gui_context():
-            try:
-                cleanup_abandoned_profiles(self._logger, datetime.now(), timedelta(days=30))
-                job_interface.send_result_message(_("Job finished"))
-            finally:
-                UserProfileCleanupBackgroundJob.last_run_path().touch(exist_ok=True)
-
-
-def cleanup_abandoned_profiles(logger: Logger, now: datetime, max_age: timedelta) -> None:
+def cleanup_abandoned_profiles(now: datetime, max_age: timedelta) -> None:
     """Cleanup abandoned profile directories
 
     The cleanup is done like this:

@@ -7,7 +7,7 @@ import time
 from collections.abc import Mapping, MutableMapping
 from typing import Any, Literal
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -120,7 +120,7 @@ def _check_duration(
     ts = value_store.get(value_store_key) or now
     value_store[value_store_key] = ts
 
-    yield from check_levels(
+    yield from check_levels_v1(
         now - ts,
         levels_upper=levels_upper,
         render_func=render.timespan,

@@ -23,7 +23,7 @@ def _parameter_valuespec_oracle_logswitches() -> Dictionary:
             (
                 "levels",
                 Tuple(
-                    title=_("Set upper Levels"),
+                    title=_("Set upper levels"),
                     elements=[
                         Integer(
                             title=_("Warning at or above"),
@@ -41,7 +41,7 @@ def _parameter_valuespec_oracle_logswitches() -> Dictionary:
             (
                 "levels_lower",
                 Tuple(
-                    title=_("Set lower Levels"),
+                    title=_("Set lower levels"),
                     elements=[
                         Integer(
                             title=_("Warning at or below"),

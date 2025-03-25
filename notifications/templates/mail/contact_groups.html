@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<table align="center"
+       width="100%"
+       style="border-spacing: 0;
+              min-width: 220px;
+              max-width: 536px">
+    <tr>
+        <td style="height: 20px;
+                   line-height: 20px;
+                   font-size: 0;
+                   mso-line-height-rule: exactly">&nbsp;</td>
+    </tr>
+    <tr>
+        <th style="font-size: 18px;
+                   font-weight: 600;
+                   text-align: left"
+            colspan="2">
+            <img src="cid:contact_groups.png" style="width: 18px; height: 19px" />
+            Contact groups
+        </th>
+    </tr>
+    <tr>
+        <td>
+            {% for item in data.HOSTCONTACTGROUPNAMES.split(',') %}
+                <span style=" padding-right: 8px; font-size: 14px; ">• {{ item }}</span>
+            {% endfor %}
+        </td>
+    </tr>
+</table>

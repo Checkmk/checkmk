@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 # Coords:
 # 0,0 is at the *bottom* left of the page. When you specify
@@ -28,12 +27,11 @@ from pathlib import Path
 from textwrap import wrap
 from typing import Literal, NewType, overload, Protocol, TypedDict
 
-from reportlab.lib.units import mm  # type: ignore[import-untyped]
-from reportlab.lib.utils import ImageReader  # type: ignore[import-untyped]
+from reportlab.lib.units import mm
+from reportlab.lib.utils import ImageReader
 
 # Import software from reportlab (thanks to them!)
-from reportlab.pdfgen import canvas  # type: ignore[import-untyped]
-from six import ensure_str
+from reportlab.pdfgen import canvas
 
 import cmk.utils.paths
 from cmk.utils.images import CMKImage, ImageType
@@ -224,12 +222,8 @@ class Document:
 
     @classmethod
     def send(cls, pdf_source: bytes, sendas: str) -> None:
-        # ? sendas seems to be used with type str
         response.set_content_type("application/pdf")
-        response.set_content_disposition(
-            ContentDispositionType.INLINE,
-            ensure_str(sendas),  # pylint: disable= six-ensure-str-bin-call
-        )
+        response.set_content_disposition(ContentDispositionType.INLINE, sendas)
         response.set_data(pdf_source)
 
     # Methods dealing with manipulating the graphics state (font size, etc.)
@@ -378,7 +372,7 @@ class Document:
 
         anchor = position[0]
         if anchor in ("s", "n", "w", "e"):
-            offset = position[1] * mm
+            offset = position[1] * mm  # type: ignore[operator]
             if anchor == "n":
                 return h_center, self._top - offset
             if anchor == "s":
@@ -1006,7 +1000,7 @@ class TableRenderer:
         super().__init__()
         self.pdf = pdf
 
-    def add_table(  # pylint: disable=too-many-branches
+    def add_table(
         self,
         header_texts: Sequence[str],
         raw_rows: RawTableRows,
@@ -1053,7 +1047,8 @@ class TableRenderer:
         # ( "number", "0.75" ), or ("", ("icon", "/bar/foo.png") )
         # The headers come *without* the css field and are always texts.
         headers: list[CellRenderer] = [
-            TitleCell(["heading"], header_text) for header_text in header_texts  #
+            TitleCell(["heading"], header_text)
+            for header_text in header_texts  #
         ]
 
         rows: list[list[CellRenderer]] = []

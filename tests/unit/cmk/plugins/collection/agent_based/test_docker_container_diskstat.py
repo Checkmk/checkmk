@@ -8,16 +8,15 @@ from collections.abc import Mapping
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
-from cmk.utils.sectionname import SectionName
-
-from cmk.checkengine.checking import CheckPluginName
-
 from cmk.agent_based.v1.type_defs import StringTable
-from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, Service, State
+from cmk.agent_based.v2 import AgentSection, IgnoreResultsError, Metric, Result, Service, State
 from cmk.agent_based.v2.render import iobandwidth
+from cmk.plugins.collection.agent_based.diskstat import check_plugin_diskstat
+from cmk.plugins.collection.agent_based.docker_container_diskstat import (
+    agent_section_docker_container_diskstat,
+)
 from cmk.plugins.collection.agent_based.docker_container_diskstat_cgroupv2 import (
+    agent_section_docker_container_diskstat_cgroupv2,
     DockerDiskstatParser,
 )
 
@@ -240,11 +239,10 @@ def test_parser() -> None:
 
 @pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
-    "section_name, plugin_name, string_table_0, string_table_10, read_bytes, write_bytes, read_ops, write_ops",
+    "section, string_table_0, string_table_10, read_bytes, write_bytes, read_ops, write_ops",
     [
         [
-            "docker_container_diskstat",
-            "diskstat",
+            agent_section_docker_container_diskstat,
             DOCKER_CONTAINER_DISKSTAT_CGROUPV1_0,
             DOCKER_CONTAINER_DISKSTAT_CGROUPV1_60,
             8947848.533333333,
@@ -253,8 +251,7 @@ def test_parser() -> None:
             4377.666666666667,
         ],
         [
-            "docker_container_diskstat",
-            "diskstat",
+            agent_section_docker_container_diskstat,
             MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_CGROUPV1_0,
             MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_CGROUPV1_60,
             8720333.321099441,
@@ -263,8 +260,7 @@ def test_parser() -> None:
             4266.356583908161,
         ],
         [
-            "docker_container_diskstat_cgroupv2",
-            "diskstat",
+            agent_section_docker_container_diskstat_cgroupv2,
             DOCKER_CONTAINER_DISKSTAT_CGROUPV2_0,
             DOCKER_CONTAINER_DISKSTAT_CGROUPV2_60,
             8801296.786885247,
@@ -273,8 +269,7 @@ def test_parser() -> None:
             4304.836065573771,
         ],
         [
-            "docker_container_diskstat",
-            "diskstat",
+            agent_section_docker_container_diskstat,
             MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_CGROUPV2_0,
             MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_CGROUPV2_60,
             8729947.19603285,
@@ -285,25 +280,20 @@ def test_parser() -> None:
     ],
 )
 def test_docker_container_diskstat(
-    fix_register: FixRegister,
-    section_name: str,
-    plugin_name: str,
-    string_table_0: list[StringTable],
-    string_table_10: list[StringTable],
+    section: AgentSection,
+    string_table_0: StringTable,
+    string_table_10: StringTable,
     read_bytes: float,
     write_bytes: float,
     read_ops: float,
     write_ops: float,
 ) -> None:
-    agent_section = fix_register.agent_sections[SectionName(section_name)]
-    plugin = fix_register.check_plugins[CheckPluginName(plugin_name)]
-
-    section_0_seconds = agent_section.parse_function(string_table_0)
-    section_60_seconds = agent_section.parse_function(string_table_10)
+    section_0_seconds = section.parse_function(string_table_0)
+    section_60_seconds = section.parse_function(string_table_10)
     with pytest.raises(IgnoreResultsError):
         # first run, no rate metrics yet:
         _ = list(
-            plugin.check_function(
+            check_plugin_diskstat.check_function(
                 params={},
                 section_multipath=None,
                 section_diskstat=section_0_seconds,
@@ -312,7 +302,7 @@ def test_docker_container_diskstat(
         )
     # now we have a rate:
     result = list(
-        plugin.check_function(
+        check_plugin_diskstat.check_function(
             params={},
             section_multipath=None,
             section_diskstat=section_60_seconds,
@@ -337,18 +327,10 @@ def test_docker_container_diskstat(
 
 
 @pytest.mark.parametrize(
-    "section_name, plugin_name, string_table_0",
+    "string_table_0",
     [
-        [
-            "docker_container_diskstat",
-            "diskstat",
-            DOCKER_CONTAINER_DISKSTAT_CGROUPV1_0,
-        ],
-        [
-            "docker_container_diskstat",
-            "diskstat",
-            MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_CGROUPV1_0,
-        ],
+        DOCKER_CONTAINER_DISKSTAT_CGROUPV1_0,
+        MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_CGROUPV1_0,
     ],
 )
 @pytest.mark.parametrize(
@@ -371,20 +353,13 @@ def test_docker_container_diskstat(
     ],
 )
 def test_docker_container_diskstat_discovery(
-    section_name: str,
-    plugin_name: str,
     discovery_params: Mapping[str, str | bool],
-    string_table_0: list[StringTable],
-    fix_register: FixRegister,
+    string_table_0: StringTable,
     expected_item: str,
 ) -> None:
-    agent_section = fix_register.agent_sections[SectionName(section_name)]
-    plugin = fix_register.check_plugins[CheckPluginName(plugin_name)]
-
-    assert plugin
-    section_0_seconds = agent_section.parse_function(string_table_0)
+    section_0_seconds = agent_section_docker_container_diskstat.parse_function(string_table_0)
     assert list(
-        plugin.discovery_function(
+        check_plugin_diskstat.discovery_function(
             [discovery_params], section_diskstat=section_0_seconds, section_multipath=None
         )
     ) == [Service(item=expected_item)]

@@ -7,11 +7,8 @@ from collections.abc import Mapping
 
 import pytest
 
+import cmk.plugins.proxmox_ve.agent_based.proxmox_ve_disk_usage as pvdu
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State
-from cmk.plugins.proxmox_ve.agent_based.proxmox_ve_disk_usage import (
-    check_proxmox_ve_disk_usage,
-    Section,
-)
 
 DISK_DATA = {"disk": 1024**4, "max_disk": 2 * 1024**4}
 
@@ -88,24 +85,14 @@ DISK_DATA = {"disk": 1024**4, "max_disk": 2 * 1024**4}
     ),
 )
 def test_check_proxmox_ve_disk_usage(
-    params: Mapping[str, object], section: Section, expected_results: CheckResult
+    params: Mapping[str, object], section: pvdu.Section, expected_results: CheckResult
 ) -> None:
-    results = tuple(check_proxmox_ve_disk_usage(params, section))
-    print("\n" + "\n".join(map(str, results)))
+    results = tuple(pvdu.check_proxmox_ve_disk_usage(params, section))
     assert results == expected_results
 
 
 if __name__ == "__main__":
     # Please keep these lines - they make TDD easy and have no effect on normal test runs.
     # Just run this file from your IDE and dive into the code.
-    import os
-
-    from tests.testlib.repo import repo_path
-
-    assert not pytest.main(
-        [
-            "--doctest-modules",
-            os.path.join(repo_path(), "cmk/base/plugins/agent_based/proxmox_ve_disk_usage.py"),
-        ]
-    )
+    assert not pytest.main(["--doctest-modules", pvdu.__file__])
     pytest.main(["-T=unit", "-vvsx", __file__])

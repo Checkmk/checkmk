@@ -6,21 +6,18 @@ import importlib.util
 import os
 import os.path
 import types
-from importlib._bootstrap_external import SourceFileLoader  # type: ignore[import-not-found]
+from importlib._bootstrap_external import SourceFileLoader
 
 import flask
 import pytest
-import webtest  # type: ignore[import-untyped]
 from flask import request
 from werkzeug.test import create_environ
 
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
-
-from cmk.utils.user import UserId
-
-from cmk.gui import cron
+from tests.unit.cmk.web_test_app import CmkTestResponse, WebTestAppForCMK
 
 from cmk.ccc.site import omd_site
+
+from cmk.utils.user import UserId
 
 
 def search_up(search_path: str, start_path: str) -> str:
@@ -121,10 +118,7 @@ def test_normal_auth(base: str, wsgi_app: WebTestAppForCMK, with_user: tuple[Use
     # Add a failing Basic Auth to check if the other types will succeed.
     wsgi_app.set_authorization(("Basic", ("foobazbar", "foobazbar")))
 
-    login: webtest.TestResponse = wsgi_app.get("/NO_SITE/check_mk/login.py", status=200)
-    login.form["_username"] = username
-    login.form["_password"] = password
-    resp = login.form.submit("_login", index=1)
+    resp: CmkTestResponse = wsgi_app.login(username, password)
 
     assert "Invalid credentials." not in resp.text
 
@@ -155,6 +149,7 @@ def test_openapi_app_exception(
         headers={"Accept": "application/json"},
         status=500,
     )
+    resp.assert_rest_api_crash()
     assert "detail" in resp.json
     assert "title" in resp.json
     assert "crash_report_url" in resp.json["ext"]["details"]
@@ -162,30 +157,9 @@ def test_openapi_app_exception(
     assert "id" in resp.json["ext"]
 
 
-def test_cmk_run_cron(wsgi_app: WebTestAppForCMK) -> None:
-    orig_multisite_cronjobs = cron.multisite_cronjobs[:]
-    try:
-        cron.multisite_cronjobs.clear()
-        wsgi_app.get("/NO_SITE/check_mk/run_cron.py", status=200)
-    finally:
-        cron.multisite_cronjobs = orig_multisite_cronjobs
-
-
 def test_cmk_automation(wsgi_app: WebTestAppForCMK) -> None:
     response = wsgi_app.get("/NO_SITE/check_mk/automation.py", status=200)
     assert response.text == "Missing secret for automation command."
-
-
-def test_cmk_ajax_graph_images(wsgi_app: WebTestAppForCMK) -> None:
-    resp = wsgi_app.get("/NO_SITE/check_mk/ajax_graph_images.py", status=200)
-    assert resp.text.startswith("You are not allowed")
-
-    resp = wsgi_app.get(
-        "/NO_SITE/check_mk/ajax_graph_images.py",
-        status=200,
-        extra_environ={"REMOTE_ADDR": "127.0.0.1"},
-    )
-    assert resp.text == ""
 
 
 def test_options_disabled(wsgi_app: WebTestAppForCMK) -> None:
@@ -193,7 +167,7 @@ def test_options_disabled(wsgi_app: WebTestAppForCMK) -> None:
     wsgi_app.options("/", status=404)
 
 
-@pytest.mark.usefixtures("suppress_license_expiry_header", "patch_theme")
+@pytest.mark.usefixtures("suppress_license_expiry_header", "patch_theme", "suppress_license_banner")
 def test_pnp_template(wsgi_app: WebTestAppForCMK) -> None:
     # This got removed some time ago and "Not found" pages are 404 now.
     resp = wsgi_app.get("/NO_SITE/check_mk/pnp_template.py", status=404)

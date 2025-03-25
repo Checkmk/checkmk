@@ -8,7 +8,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -56,12 +56,11 @@ agent_section_graylog_alerts = AgentSection(
 
 
 def discover_graylog_alerts(section: AlertsInfo) -> DiscoveryResult:
-    if section:
-        yield Service(item=None)
+    yield Service(item=None)
 
 
 def check_graylog_alerts(params: Mapping[str, Any], section: AlertsInfo) -> CheckResult:
-    yield from check_levels(
+    yield from check_levels_v1(
         value=section.num_of_alerts,
         levels_upper=params.get("alerts_upper", (None, None)),
         levels_lower=params.get("alerts_lower", (None, None)),
@@ -70,7 +69,7 @@ def check_graylog_alerts(params: Mapping[str, Any], section: AlertsInfo) -> Chec
     )
 
     if section.has_since_argument and section.alerts_since:
-        yield from check_levels(
+        yield from check_levels_v1(
             value=section.num_of_alerts_in_range,
             levels_upper=params.get("alerts_in_range_upper", (None, None)),
             levels_lower=params.get("alerts_in_range_lower", (None, None)),

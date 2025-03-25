@@ -7,10 +7,10 @@
 #
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render, SNMPTree, startswith, StringTable
+
+check_info = {}
 
 
 def inventory_cisco_sys_mem(info):
@@ -37,6 +37,7 @@ def parse_cisco_sys_mem(string_table: StringTable) -> StringTable:
 
 
 check_info["cisco_sys_mem"] = LegacyCheckDefinition(
+    name="cisco_sys_mem",
     parse_function=parse_cisco_sys_mem,
     detect=startswith(".1.3.6.1.2.1.1.1.0", "Cisco NX-OS"),
     fetch=SNMPTree(
@@ -46,6 +47,6 @@ check_info["cisco_sys_mem"] = LegacyCheckDefinition(
     service_name="Supervisor Mem Used",
     discovery_function=inventory_cisco_sys_mem,
     check_function=check_cisco_sys_mem,
-    check_ruleset_name="cisco_supervisor_mem",  # seperate group since only percentage,
+    check_ruleset_name="cisco_supervisor_mem",  # separate group since only percentage,
     check_default_parameters={"levels": (80.0, 90.0)},
 )

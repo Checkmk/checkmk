@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
 from cmk.plugins.lib.netextreme import DETECT_NETEXTREME
+
+check_info = {}
 
 # .1.3.6.1.4.1.1916.1.1.1.27.1.9.1 52550 --> EXTREME-SYSTEM-MIB::extremePowerSupplyInputPowerUsage.1
 # .1.3.6.1.4.1.1916.1.1.1.27.1.9.2 43700 --> EXTREME-SYSTEM-MIB::extremePowerSupplyInputPowerUsage.2
@@ -35,6 +36,7 @@ def discover_netextreme_psu_in(section):
 
 
 check_info["netextreme_psu_in"] = LegacyCheckDefinition(
+    name="netextreme_psu_in",
     detect=DETECT_NETEXTREME,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1916.1.1.1.27.1",

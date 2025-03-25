@@ -10,6 +10,8 @@ from typing import Any, NewType
 
 from livestatus import SiteId
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
 
 import cmk.gui.watolib.changes as _changes
@@ -43,8 +45,6 @@ from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import redirect
-
-import cmk.ccc.version as cmk_version
 
 DisplayIndex = NewType("DisplayIndex", int)
 RealIndex = NewType("RealIndex", int)
@@ -206,7 +206,7 @@ def render_connections_page(
 
 
 def add_change(action_name: str, text: LogMessage, sites: list[SiteId]) -> None:
-    _changes.add_change(action_name, text, domains=[ConfigDomainGUI], sites=sites)
+    _changes.add_change(action_name, text, domains=[ConfigDomainGUI()], sites=sites)
 
 
 def get_affected_sites(connection: ConfigurableUserConnectionSpec) -> list[SiteId]:

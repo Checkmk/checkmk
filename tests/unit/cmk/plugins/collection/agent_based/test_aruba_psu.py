@@ -23,6 +23,7 @@ DATA = [
     ["4", "6", "1", "61", "AC 120V/240V", "620", "680", "745051", "JL086A"],
     ["5", "1", "0", "0", "-- ---------", "0", "0", "0", ""],
     ["6", "2", "0", "0", "-- ---------", "0", "0", "0", ""],
+    ["7", "8", "1", "0", "AC 120V/240V", "0", "0", "0", "JL086A"],
 ]
 
 
@@ -36,6 +37,7 @@ DATA = [
                 Service(item="JL086A 2"),
                 Service(item="JL086A 3"),
                 Service(item="JL086A 4"),
+                Service(item="JL086A 7"),
             ],
         ),
     ],
@@ -81,6 +83,14 @@ def test_discover_aruba_psu_status(
             [
                 Result(state=State.OK, summary="PSU Status: Max"),
                 Result(state=State.OK, summary="Uptime: 8 days 14 hours"),
+            ],
+        ),
+        (
+            DATA,
+            "JL086A 7",
+            [
+                Result(state=State.CRIT, summary="PSU Status: NotPowered"),
+                Result(state=State.OK, summary="Uptime: 0 seconds"),
             ],
         ),
     ],

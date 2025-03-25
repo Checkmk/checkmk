@@ -9,10 +9,10 @@
 # shift and gives false info for "slot_id"
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, any_of, equals, exists, SNMPTree
+
+check_info = {}
 
 
 def parse_ibm_xraid_pdisks(info):
@@ -47,6 +47,7 @@ def check_ibm_xraid_pdisks(item, _no_params, section):
 
 
 check_info["ibm_xraid_pdisks"] = LegacyCheckDefinition(
+    name="ibm_xraid_pdisks",
     detect=all_of(
         any_of(
             equals(".1.3.6.1.2.1.1.1.0", "software: windows"), equals(".1.3.6.1.2.1.1.1.0", "linux")

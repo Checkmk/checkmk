@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, contains, not_equals, OIDEnd, SNMPTree
+
+check_info = {}
 
 #
 # monitoring of cluster members (nodes) in fortigate high availability tree
@@ -90,6 +91,7 @@ def check_fortigate_cluster(_no_item, _no_params, parsed):
 
 
 check_info["fortigate_node"] = LegacyCheckDefinition(
+    name="fortigate_node",
     detect=all_of(
         contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1"),
         not_equals(".1.3.6.1.4.1.12356.101.13.1.1.0", "1"),
@@ -133,6 +135,7 @@ def check_fortigate_node_cpu(item, params, parsed):
 
 
 check_info["fortigate_node.cpu"] = LegacyCheckDefinition(
+    name="fortigate_node_cpu",
     service_name="CPU utilization %s",
     sections=["fortigate_node"],
     discovery_function=inventory_fortigate_node_cpu,
@@ -166,6 +169,7 @@ def check_fortigate_node_ses(item, params, parsed):
 
 
 check_info["fortigate_node.sessions"] = LegacyCheckDefinition(
+    name="fortigate_node_sessions",
     service_name="Sessions %s",
     sections=["fortigate_node"],
     discovery_function=inventory_fortigate_node_ses,

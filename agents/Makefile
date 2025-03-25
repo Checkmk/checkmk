@@ -20,12 +20,14 @@ DEB_PACKAGE := $(AGENTS_DIR)/check-mk-agent_$(VERSION)-1_all.deb
 DEB_TOPDIR := $(AGENTS_DIR)/debian
 DEB_BUILDDIR := $(AGENTS_DIR)/debian/.build
 
+HOST_PACKAGES_DIR := $(REPO_PATH)/packages/host
+
 AGENT_CTL := $(AGENTS_DIR)/linux/cmk-agent-ctl
 AGENT_CTL_GZ := $(AGENT_CTL).gz
-AGENT_CTL_DIR := $(REPO_PATH)/packages/cmk-agent-ctl
+AGENT_CTL_DIR := $(HOST_PACKAGES_DIR)/cmk-agent-ctl
 
 MK_SQL := $(AGENTS_DIR)/linux/mk-sql
-MK_SQL_DIR := $(REPO_PATH)/packages/mk-sql
+MK_SQL_DIR := $(HOST_PACKAGES_DIR)/mk-sql
 
 BUILDROOT_DEPS := \
 	conffiles/super-server.cfg \
@@ -69,9 +71,9 @@ setversion:
 	-e 's/^$$CMK_VERSION = ".*/$$CMK_VERSION = "$(NEW_VERSION)"/' \
 	$(shell find plugins/ -maxdepth 1 -type f ! -name \*_2.py ! -name \*.checksum) ; \
 	sed -i 's/say "Version: .*"/say "Version: $(NEW_VERSION)"/' check_mk_agent.openvms
-	sed -i 's/^Version: .*/Version: $(NEW_VERSION)/' check_mk_agent.linux
 	sed -i 's/echo "Version: [0-9.a-z-]*"/echo "Version: $(NEW_VERSION)"/g' \
 	    check_mk_agent.aix \
+	    check_mk_agent.linux \
 	    check_mk_agent.freebsd \
 	    check_mk_agent.hpux \
 	    check_mk_agent.macosx \
@@ -95,7 +97,7 @@ build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE) $(AGENT_CTL)  $(MK_SQL)
 $(AGENT_CTL):
 	$(AGENT_CTL_DIR)/run --setup-environment --build
 	mkdir -p linux
-	install -m 755 $(AGENT_CTL_DIR)/target/x86_64-unknown-linux-musl/release/cmk-agent-ctl $(AGENT_CTL)
+	install -m 755 $(HOST_PACKAGES_DIR)/target/x86_64-unknown-linux-musl/release/cmk-agent-ctl $(AGENT_CTL)
 	strip $(AGENT_CTL)
 
 $(AGENT_CTL_GZ): $(AGENT_CTL)
@@ -104,7 +106,7 @@ $(AGENT_CTL_GZ): $(AGENT_CTL)
 $(MK_SQL):
 	$(MK_SQL_DIR)/run --setup-environment --build
 	mkdir -p linux
-	install -m 755 $(MK_SQL_DIR)/target/x86_64-unknown-linux-musl/release/mk-sql $(MK_SQL)
+	install -m 755 $(HOST_PACKAGES_DIR)/target/x86_64-unknown-linux-musl/release/mk-sql $(MK_SQL)
 	strip $(MK_SQL)
 
 packages: $(DEB_PACKAGE) $(RPM_PACKAGE)

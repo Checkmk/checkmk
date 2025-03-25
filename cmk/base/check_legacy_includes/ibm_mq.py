@@ -7,7 +7,7 @@ import re
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+from cmk.agent_based.v2 import IgnoreResultsError
 
 
 def is_ibm_mq_service_vanished(item: str, parsed: Mapping[str, Any]) -> bool:

@@ -47,14 +47,12 @@ def _validate_process_return_code(process: subprocess.Popen, assert_msg: str) ->
 def _execute_cmd_and_validate_return_code(
     site: Site, cmd: list[str], assert_msg: str
 ) -> tuple[str, str]:
-    with site.execute(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    ) as process:
-        _validate_process_return_code(process, assert_msg)
-        p_out, p_err = process.communicate()
-    return p_out, p_err
+    try:
+        response = site.run(cmd)
+    except subprocess.CalledProcessError as excp:
+        excp.add_note(assert_msg)
+        raise excp
+    return response.stdout, response.stderr
 
 
 def _get_ec_rule_packs(rule_id: str, title: str, state: State, match: str) -> list[ECRulePackSpec]:
@@ -113,7 +111,7 @@ def _write_ec_rule(site: Site, rule: list | None) -> None:
 def _activate_ec_changes(site: Site) -> None:
     replication_changes_path = site.path(f"var/check_mk/wato/replication_changes_{site.id}.mk")
     site.write_text_file(str(replication_changes_path), str(_get_replication_change()))
-    site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
+    site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
 
 
 def _generate_message_via_events_pipe(site: Site, message: str, end_of_line: bool = True) -> None:
@@ -149,7 +147,7 @@ def _generate_message_via_syslog(
 def _wait_for_queried_column(
     site: Site,
     query: str,
-    sleep_time: float = 1,
+    sleep_time: float = 2,
     max_count: int = 20,
     strict: bool = True,
 ) -> list[str]:
@@ -327,10 +325,9 @@ def test_ec_rule_match_snmp_trap(site: Site, setup_ec: Iterator, enable_receiver
     match, rule_id, rule_state = setup_ec
     event_message = f"some {match} status"
 
-    process = site.execute(
-        _get_snmp_trap_cmd(event_message), stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    _ = _execute_cmd_and_validate_return_code(
+        site, _get_snmp_trap_cmd(event_message), "Failed to send message via SNMP trap."
     )
-    _validate_process_return_code(process, "Failed to send message via SNMP trap.")
 
     assert event_message in site.read_file("var/log/mkeventd.log")
 
@@ -360,10 +357,9 @@ def test_ec_rule_no_match_snmp_trap(site: Site, setup_ec: Iterator, enable_recei
     event_message = "some other status"
     assert match not in event_message
 
-    process = site.execute(
-        _get_snmp_trap_cmd(event_message), stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    _ = _execute_cmd_and_validate_return_code(
+        site, _get_snmp_trap_cmd(event_message), "Failed to send message via SNMP trap."
     )
-    _validate_process_return_code(process, "Failed to send message via SNMP trap.")
 
     queried_event_states = _wait_for_queried_column(
         site, "GET eventconsoleevents\nColumns: event_state\n", max_count=3, strict=False
@@ -389,10 +385,9 @@ def test_ec_global_settings(
     match, _, _ = setup_ec
     event_message = f"some {match} status"
 
-    process = site.execute(
-        _get_snmp_trap_cmd(event_message), stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    _ = _execute_cmd_and_validate_return_code(
+        site, _get_snmp_trap_cmd(event_message), "Failed to send message via SNMP trap."
     )
-    _validate_process_return_code(process, "Failed to send message via SNMP trap.")
 
     queried_event_messages = _wait_for_queried_column(
         site, "GET eventconsoleevents\nColumns: event_text"
@@ -400,9 +395,9 @@ def test_ec_global_settings(
     assert len(queried_event_messages) == 1
 
     pattern = "SNMP.*MIB"  # pattern expected after SNMP traps translation
-    assert re.compile(pattern).search(
-        queried_event_messages[0]
-    ), f"{pattern} not found in the event message:\n {queried_event_messages[0]}"
+    assert re.compile(pattern).search(queried_event_messages[0]), (
+        f"{pattern} not found in the event message:\n {queried_event_messages[0]}"
+    )
 
 
 @skip_if_saas_edition(reason="EC is disabled in the SaaS edition")

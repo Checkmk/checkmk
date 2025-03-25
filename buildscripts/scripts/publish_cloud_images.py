@@ -9,9 +9,9 @@ import enum
 import json
 import os
 import sys
-from typing import Final, Iterator
+from typing import Final
 
-import boto3  # type: ignore[import]
+import boto3
 from azure.identity import DefaultAzureCredential
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.compute.models import (
@@ -26,7 +26,7 @@ from azure.mgmt.resource import ResourceManagementClient
 from msrest.polling import LROPoller
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
-from cmk.ccc.version import _PatchVersion, Version
+from cmk.ccc.version import _BaseVersion, ReleaseType, Version
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -108,7 +108,7 @@ class CloudPublisher(abc.ABC):
         """
         return (
             f"https://forum.checkmk.com/t/release-checkmk-stable-release-"
-            f"{version.replace('.','-')}/"
+            f"{version.replace('.', '-')}/"
         )
 
 
@@ -217,7 +217,7 @@ class AWSPublisher(CloudPublisher):
             ],
         )["Images"]
         assert len(images) == 1, (
-            "Cannot identify the correct image to publish, " f"received the following: {images}"
+            f"Cannot identify the correct image to publish, received the following: {images}"
         )
         return images[0]["ImageId"]
 
@@ -258,13 +258,17 @@ class AzurePublisher(CloudPublisher):
         resource_group: str,
     ):
         super().__init__(version, build_tag, image_name)
+        assert self.version is not None
+
         credentials = DefaultAzureCredential()
         self.subscription_id = subscription_id
         self.resource_group = resource_group
+        # The image name is hardcoded, because we changing this for each new
+        # major or minor version would require going through the complete
+        # listing process again.
+        # The gallery ID is only visible internally and not visible by users.
         # Use Checkmk_Cloud_Edition_2.2b5 for e.g. testing
-        self.gallery_image_name = (
-            f"Checkmk-Cloud-Edition-{self.version.version.major}.{self.version.version.minor}"
-        )
+        self.gallery_image_name = "Checkmk-Cloud-Edition-2.2"
         self.compute_client = ComputeManagementClient(
             credentials,
             self.subscription_id,
@@ -274,37 +278,39 @@ class AzurePublisher(CloudPublisher):
             self.subscription_id,
         )
 
-    def get_azure_image_id(self) -> Iterator[str]:
+    def get_azure_image_id(self) -> str:
         resource_list = self.resource_client.resources.list_by_resource_group(
             self.resource_group,
             filter=f"name eq '{self.image_name}'",
         )
-        yield next(resource_list).id
+        first_id = next(resource_list).id
         if another_match := next(resource_list, None):
             raise RuntimeError(
                 f"Cannot identify a unique azure image by using {self.image_name=}. "
                 f"Found also: {another_match}"
             )
 
+        return first_id
+
     @staticmethod
-    def azure_compatible_version(version: _PatchVersion) -> str:
+    def azure_compatible_version(version: Version) -> str:
         """
         Yea, this is great... but azure doesn't accept our versioning schema
-        >>> AzurePublisher.azure_compatible_version(Version("2.2.0p5").version)
+        >>> AzurePublisher.azure_compatible_version(Version.from_str("2.2.0p5"))
         '2.2.5'
         """
-        return f"{version.major}.{version.minor}.{version.patch}"
+        assert isinstance(version.base, _BaseVersion)
+        return f"{version.base.major}.{version.base.minor}.{version.release.value}"
 
     async def build_gallery_image(self):
-        image_id = list(self.get_azure_image_id())[0]
+        image_id = self.get_azure_image_id()
         print(f"Creating new gallery image from {self.version=} by using {image_id=}")
-        assert isinstance(self.version.version, _PatchVersion)
         self.update_succesful(
             self.compute_client.gallery_image_versions.begin_create_or_update(
                 resource_group_name=self.resource_group,
                 gallery_name=self.GALLERY_NAME,
                 gallery_image_name=self.gallery_image_name,
-                gallery_image_version_name=self.azure_compatible_version(self.version.version),
+                gallery_image_version_name=self.azure_compatible_version(self.version),
                 gallery_image_version=GalleryImageVersion(
                     location=self.LOCATION,
                     publishing_profile=GalleryImageVersionPublishingProfile(
@@ -359,8 +365,8 @@ class AzurePublisher(CloudPublisher):
 
 
 def ensure_using_official_release(version: str) -> Version:
-    parsed_version = Version(version)
-    if not isinstance(parsed_version.version, _PatchVersion):
+    parsed_version = Version.from_str(version)
+    if parsed_version.release.release_type not in (ReleaseType.p, ReleaseType.na):
         raise RuntimeError(
             f"We only want to publish official patch releases, got {parsed_version} instead."
         )

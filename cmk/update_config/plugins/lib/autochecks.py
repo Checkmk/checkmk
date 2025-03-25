@@ -3,14 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import ast
-from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
+from collections.abc import Callable, Generator, Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, NamedTuple, Self, TypeVar
+from typing import Any, TypeVar
 
+from cmk.ccc import debug
+
+from cmk.utils import paths
 from cmk.utils.hostaddress import HostName
-from cmk.utils.paths import autochecks_dir
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.checkengine.checking import CheckPluginName
@@ -18,21 +19,12 @@ from cmk.checkengine.discovery import AutocheckEntry, AutochecksStore
 from cmk.checkengine.legacy import LegacyCheckParameters
 
 from cmk.base.api.agent_based import register
+from cmk.base.api.agent_based.plugin_classes import CheckPlugin
+from cmk.base.config import load_all_plugins
 
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
 
-from cmk.ccc import debug
-from cmk.ccc.store import ObjectStore
-
-REPLACED_CHECK_PLUGINS: dict[CheckPluginName, CheckPluginName] = {}
-
-_ALL_REPLACED_CHECK_PLUGINS: Mapping[CheckPluginName, CheckPluginName] = {
-    **REPLACED_CHECK_PLUGINS,
-    **{
-        old_name.create_management_name(): new_name.create_management_name()
-        for old_name, new_name in REPLACED_CHECK_PLUGINS.items()
-    },
-}
+from cmk.update_config.plugins.lib.replaced_check_plugins import ALL_REPLACED_CHECK_PLUGINS
 
 TDiscoveredItemsTransforms = Mapping[CheckPluginName, Callable[[str | None], str | None]]
 
@@ -74,18 +66,28 @@ class RewriteError:
 
 
 def rewrite_yielding_errors(*, write: bool) -> Iterable[RewriteError]:
+    """Rewrite autochecks and yield errors
+
+    This function is used by both the pre- and the regular update_config plug-in,
+    to ensure consistency.
+    """
     all_rulesets = AllRulesets.load_all_rulesets()
+    plugins = load_all_plugins(paths.checks_dir)
     for hostname in _autocheck_hosts():
-        fixed_autochecks = yield from _get_fixed_autochecks(hostname, all_rulesets)
+        fixed_autochecks = yield from _get_fixed_autochecks(
+            hostname, all_rulesets, plugins.check_plugins
+        )
         if write:
             AutochecksStore(hostname).write(fixed_autochecks)
 
 
 def _get_fixed_autochecks(
-    host_name: HostName, all_rulesets: AllRulesets
+    host_name: HostName,
+    all_rulesets: AllRulesets,
+    check_plugins: Mapping[CheckPluginName, CheckPlugin],
 ) -> Generator[RewriteError, None, list[AutocheckEntry]]:
     try:
-        autochecks = _AutochecksStoreV22(host_name).read()
+        autochecks = AutochecksStore(host_name).read()
     except Exception as exc:
         if debug.enabled():
             raise
@@ -95,7 +97,7 @@ def _get_fixed_autochecks(
     fixed_autochecks: list[AutocheckEntry] = []
     for entry in autochecks:
         try:
-            fixed_autochecks.append(_fix_entry(entry, all_rulesets, host_name))
+            fixed_autochecks.append(_fix_entry(entry, all_rulesets, check_plugins, host_name))
         except Exception as exc:
             if debug.enabled():
                 raise
@@ -107,70 +109,18 @@ def _get_fixed_autochecks(
 
 
 def _autocheck_hosts() -> Iterable[HostName]:
-    for autocheck_file in Path(autochecks_dir).glob("*.mk"):
+    for autocheck_file in Path(paths.autochecks_dir).glob("*.mk"):
         yield HostName(autocheck_file.stem)
 
 
-class _AutocheckEntryV22(NamedTuple):
-    check_plugin_name: CheckPluginName
-    item: str | None
-    parameters: LegacyCheckParameters
-    service_labels: Mapping[str, str]
-
-    @staticmethod
-    def _parse_parameters(parameters: object) -> LegacyCheckParameters:
-        # Make sure it's a 'LegacyCheckParameters' (mainly done for mypy).
-        if parameters is None or isinstance(parameters, (dict, tuple, list, str, int, bool)):
-            return parameters
-        # I have no idea what else it could be (LegacyCheckParameters is quite pointless).
-        raise ValueError(f"Invalid autocheck: invalid parameters: {parameters!r}")
-
-    @classmethod
-    def load(cls, raw_dict: Mapping[str, Any]) -> Self:
-        return cls(
-            check_plugin_name=CheckPluginName(raw_dict["check_plugin_name"]),
-            item=None if (raw_item := raw_dict["item"]) is None else str(raw_item),
-            parameters=cls._parse_parameters(raw_dict["parameters"]),
-            service_labels={str(n): str(v) for n, v in raw_dict["service_labels"].items()},
-        )
-
-
-class _AutochecksSerializerV22:
-    @staticmethod
-    def serialize(entries: Sequence[_AutocheckEntryV22]) -> bytes:
-        raise NotImplementedError()
-
-    @staticmethod
-    def deserialize(raw: bytes) -> Sequence[_AutocheckEntryV22]:
-        """Deserialize "old" autocheck entries, where the parameters might not be a dict.
-
-        >>> _AutochecksSerializerV22.deserialize(
-        ...     b"[{'check_plugin_name': 'mounts', 'item': '/', 'parameters': ['errors=remount-ro', 'relatime', 'rw'], 'service_labels': {}},]"
-        ... )
-        [_AutocheckEntryV22(check_plugin_name=CheckPluginName('mounts'), item='/', parameters=['errors=remount-ro', 'relatime', 'rw'], service_labels={})]
-        """
-        return [_AutocheckEntryV22.load(d) for d in ast.literal_eval(raw.decode("utf-8"))]
-
-
-class _AutochecksStoreV22:
-    def __init__(self, host_name: HostName) -> None:
-        self._host_name = host_name
-        self._store = ObjectStore(
-            Path(autochecks_dir, f"{host_name}.mk"),
-            serializer=_AutochecksSerializerV22(),
-        )
-
-    def read(self) -> Sequence[_AutocheckEntryV22]:
-        return self._store.read_obj(default=[])
-
-
 def _fix_entry(
-    entry: _AutocheckEntryV22,
+    entry: AutocheckEntry,
     all_rulesets: RulesetCollection,
+    check_plugins: Mapping[CheckPluginName, CheckPlugin],
     hostname: str,
 ) -> AutocheckEntry:
     """Change names of removed plugins to the new ones and transform parameters"""
-    new_plugin_name = _ALL_REPLACED_CHECK_PLUGINS.get(
+    new_plugin_name = ALL_REPLACED_CHECK_PLUGINS.get(
         entry.check_plugin_name, entry.check_plugin_name
     )
 
@@ -185,9 +135,10 @@ def _fix_entry(
         check_plugin_name=new_plugin_name,
         item=explicit_item_transform(entry.item),
         parameters=_transformed_params(
-            new_plugin_name or entry.check_plugin_name,
+            new_plugin_name,
             explicit_parameters_transform(entry.parameters),
             all_rulesets,
+            check_plugins,
             hostname,
         ),
         service_labels=entry.service_labels,
@@ -201,9 +152,10 @@ def _transformed_params(
     plugin_name: CheckPluginName,
     params: T,
     all_rulesets: RulesetCollection,
+    check_plugins: Mapping[CheckPluginName, CheckPlugin],
     host: str,
 ) -> Mapping[str, object]:
-    if (ruleset := _get_ruleset(plugin_name, all_rulesets)) is None:
+    if (ruleset := _get_ruleset(plugin_name, all_rulesets, check_plugins)) is None:
         if not params:
             return {}
         if isinstance(params, dict):
@@ -226,9 +178,10 @@ def _transformed_params(
 def _get_ruleset(
     plugin_name: CheckPluginName,
     all_rulesets: RulesetCollection,
+    check_plugins: Mapping[CheckPluginName, CheckPlugin],
 ) -> Ruleset | None:
     if (
-        check_plugin := register.get_check_plugin(plugin_name)
+        check_plugin := register.get_check_plugin(plugin_name, check_plugins)
     ) is None or check_plugin.check_ruleset_name is None:
         return None
 

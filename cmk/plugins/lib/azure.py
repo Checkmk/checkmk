@@ -10,7 +10,8 @@ from typing import Any, NamedTuple
 
 from pydantic import BaseModel, Field
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v1 import Metric, Result
 from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
@@ -73,6 +74,7 @@ class FrontendIpConfiguration(BaseModel):
 
 
 Section = Mapping[str, Resource]
+CheckFunction = Callable[[str, Mapping[str, Any], Section], CheckResult]
 
 
 def parse_azure_datetime(datetime_string: str) -> datetime:
@@ -118,11 +120,14 @@ def _get_metrics(metrics_data: Sequence[Sequence[str]]) -> Iterable[tuple[str, A
         metric_dict = json.loads(AZURE_AGENT_SEPARATOR.join(metric_line))
 
         key = f"{metric_dict['aggregation']}_{metric_dict['name'].replace(' ', '_')}"
-        yield key, AzureMetric(
-            metric_dict["name"],
-            metric_dict["aggregation"],
-            metric_dict["value"],
-            metric_dict["unit"],
+        yield (
+            key,
+            AzureMetric(
+                metric_dict["name"],
+                metric_dict["aggregation"],
+                metric_dict["value"],
+                metric_dict["unit"],
+            ),
         )
 
 
@@ -251,7 +256,7 @@ def create_discover_by_metrics_function_single(
 
 
 def iter_resource_attributes(
-    resource: Resource, include_keys: tuple[str] = ("location",)
+    resource: Resource, include_keys: tuple[str, ...] = ("location",)
 ) -> Generator[tuple[str, str | None], None, None]:
     def capitalize(string: str) -> str:
         return string[0].upper() + string[1:]
@@ -270,6 +275,7 @@ def check_resource_metrics(
     params: Mapping[str, Any],
     metrics_data: Sequence[MetricData],
     suppress_error: bool = False,
+    check_levels: Callable[..., Iterable[Result | Metric]] = check_levels_v1,
 ) -> CheckResult:
     metrics = [resource.metrics.get(m.azure_metric_name) for m in metrics_data]
     if not any(metrics) and not suppress_error:
@@ -291,7 +297,9 @@ def check_resource_metrics(
 
 
 def create_check_metrics_function(
-    metrics_data: Sequence[MetricData], suppress_error: bool = False
+    metrics_data: Sequence[MetricData],
+    suppress_error: bool = False,
+    check_levels: Callable[..., Iterable[Result | Metric]] = check_levels_v1,
 ) -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
     def check_metric(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
         resource = section.get(item)
@@ -300,7 +308,9 @@ def create_check_metrics_function(
                 return
             raise IgnoreResultsError("Data not present at the moment")
 
-        yield from check_resource_metrics(resource, params, metrics_data, suppress_error)
+        yield from check_resource_metrics(
+            resource, params, metrics_data, suppress_error, check_levels
+        )
 
     return check_metric
 
@@ -320,7 +330,7 @@ def create_check_metrics_function_single(
     return check_metric
 
 
-def check_memory() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
+def check_memory() -> CheckFunction:
     return create_check_metrics_function(
         [
             MetricData(
@@ -334,7 +344,7 @@ def check_memory() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
     )
 
 
-def check_cpu() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
+def check_cpu() -> CheckFunction:
     return create_check_metrics_function(
         [
             MetricData(
@@ -348,7 +358,7 @@ def check_cpu() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
     )
 
 
-def check_connections() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
+def check_connections() -> CheckFunction:
     return create_check_metrics_function(
         [
             MetricData(
@@ -378,7 +388,7 @@ def check_connections() -> Callable[[str, Mapping[str, Any], Section], CheckResu
     )
 
 
-def check_network() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
+def check_network() -> CheckFunction:
     return create_check_metrics_function(
         [
             MetricData(
@@ -399,7 +409,7 @@ def check_network() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
     )
 
 
-def check_storage() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
+def check_storage() -> CheckFunction:
     return create_check_metrics_function(
         [
             MetricData(

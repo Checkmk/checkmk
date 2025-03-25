@@ -9,9 +9,8 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-
 import cmk.plugins.bazel.agent_based.bazel_cache_metrics as bc
+from cmk.agent_based.v2 import Metric, Result, Service, State
 
 TEST_TIMEZONE = ZoneInfo("CET")
 

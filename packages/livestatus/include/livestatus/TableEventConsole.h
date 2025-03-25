@@ -13,7 +13,6 @@
 #include <vector>
 
 #include "livestatus/IntColumn.h"
-#include "livestatus/Interface.h"
 #include "livestatus/ListColumn.h"
 #include "livestatus/Table.h"
 
@@ -21,12 +20,11 @@ class ColumnOffsets;
 template <typename T>
 class DoubleColumn;
 class ICore;
-class Query;
+class IHost;
 template <typename T>
 class StringColumn;
 template <typename T>
 class TimeColumn;
-class User;
 
 class ECRow {
 public:
@@ -57,7 +55,7 @@ public:
 
 private:
     std::map<std::string, std::string> map_;
-    std::unique_ptr<const IHost> host_;
+    const IHost *host_;
 
     [[nodiscard]] std::string get(const std::string &column_name,
                                   const std::string &default_value) const;

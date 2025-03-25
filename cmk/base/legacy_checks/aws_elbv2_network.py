@@ -4,18 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import (
     aws_get_bytes_rate_human_readable,
     aws_get_counts_rate_human_readable,
     aws_get_float_human_readable,
     check_aws_metrics,
     inventory_aws_generic_single,
+    MetricInfo,
 )
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError
 from cmk.plugins.aws.lib import extract_aws_metrics_by_labels, parse_aws
+
+check_info = {}
 
 
 def parse_aws_elbv2_network(string_table):
@@ -74,6 +76,7 @@ def discover_aws_elbv2_network(p):
 
 
 check_info["aws_elbv2_network"] = LegacyCheckDefinition(
+    name="aws_elbv2_network",
     parse_function=parse_aws_elbv2_network,
     service_name="AWS/NetworkELB LCUs",
     discovery_function=discover_aws_elbv2_network,
@@ -102,12 +105,12 @@ _aws_elbv2_network_connection_types = [
 def check_aws_elbv2_network_connections(item, params, parsed):
     return check_aws_metrics(
         [
-            {
-                "metric_val": parsed.get(cw_metric_name),
-                "metric_name": "aws_%s_connections" % key,
-                "info_name": info_name,
-                "human_readable_func": aws_get_counts_rate_human_readable,
-            }
+            MetricInfo(
+                metric_val=parsed.get(cw_metric_name),
+                metric_name="aws_%s_connections" % key,
+                info_name=info_name,
+                human_readable_func=aws_get_counts_rate_human_readable,
+            )
             for cw_metric_name, (info_name, key) in zip(
                 _aws_elbv2_network_connection_types,
                 [
@@ -126,6 +129,7 @@ def discover_aws_elbv2_network_connections(p):
 
 
 check_info["aws_elbv2_network.connections"] = LegacyCheckDefinition(
+    name="aws_elbv2_network_connections",
     service_name="AWS/NetworkELB Connections",
     sections=["aws_elbv2_network"],
     discovery_function=discover_aws_elbv2_network_connections,
@@ -213,12 +217,12 @@ _aws_elbv2_network_tls_types = [
 def check_aws_elbv2_network_tls_handshakes(item, params, parsed):
     return check_aws_metrics(
         [
-            {
-                "metric_val": parsed.get(cw_metric_name),
-                "metric_name": "aws_failed_tls_%s_handshake" % info_name.lower(),
-                "info_name": info_name,
-                "human_readable_func": aws_get_counts_rate_human_readable,
-            }
+            MetricInfo(
+                metric_val=parsed.get(cw_metric_name),
+                metric_name="aws_failed_tls_%s_handshake" % info_name.lower(),
+                info_name=info_name,
+                human_readable_func=aws_get_counts_rate_human_readable,
+            )
             for cw_metric_name, info_name in zip(_aws_elbv2_network_tls_types, ["Client", "Target"])
         ]
     )
@@ -229,6 +233,7 @@ def discover_aws_elbv2_network_tls_handshakes(p):
 
 
 check_info["aws_elbv2_network.tls_handshakes"] = LegacyCheckDefinition(
+    name="aws_elbv2_network_tls_handshakes",
     service_name="AWS/NetworkELB TLS Handshakes",
     sections=["aws_elbv2_network"],
     discovery_function=discover_aws_elbv2_network_tls_handshakes,
@@ -255,12 +260,12 @@ _aws_elbv2_network_rst_packets_types = [
 def check_aws_elbv2_network_rst_packets(item, params, parsed):
     return check_aws_metrics(
         [
-            {
-                "metric_val": parsed.get(cw_metric_name),
-                "metric_name": "aws_%s" % key,
-                "info_name": info_name,
-                "human_readable_func": aws_get_counts_rate_human_readable,
-            }
+            MetricInfo(
+                metric_val=parsed.get(cw_metric_name),
+                metric_name="aws_%s" % key,
+                info_name=info_name,
+                human_readable_func=aws_get_counts_rate_human_readable,
+            )
             for cw_metric_name, (info_name, key) in zip(
                 _aws_elbv2_network_rst_packets_types,
                 [
@@ -278,6 +283,7 @@ def discover_aws_elbv2_network_rst_packets(p):
 
 
 check_info["aws_elbv2_network.rst_packets"] = LegacyCheckDefinition(
+    name="aws_elbv2_network_rst_packets",
     service_name="AWS/NetworkELB Reset Packets",
     sections=["aws_elbv2_network"],
     discovery_function=discover_aws_elbv2_network_rst_packets,
@@ -303,12 +309,12 @@ _aws_elbv2_network_statistics_metric_names = [
 def check_aws_elbv2_network_statistics(item, params, parsed):
     return check_aws_metrics(
         [
-            {
-                "metric_val": parsed.get(cw_metric_name),
-                "metric_name": "aws_%s" % key,
-                "info_name": info_name,
-                "human_readable_func": aws_get_bytes_rate_human_readable,
-            }
+            MetricInfo(
+                metric_val=parsed.get(cw_metric_name),
+                metric_name="aws_%s" % key,
+                info_name=info_name,
+                human_readable_func=aws_get_bytes_rate_human_readable,
+            )
             for cw_metric_name, (info_name, key) in zip(
                 _aws_elbv2_network_statistics_metric_names,
                 [
@@ -327,6 +333,7 @@ def discover_aws_elbv2_network_statistics(p):
 
 
 check_info["aws_elbv2_network.statistics"] = LegacyCheckDefinition(
+    name="aws_elbv2_network_statistics",
     service_name="AWS/NetworkELB Statistics",
     sections=["aws_elbv2_network"],
     discovery_function=discover_aws_elbv2_network_statistics,

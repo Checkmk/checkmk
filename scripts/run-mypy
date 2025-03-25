@@ -13,7 +13,8 @@ REPO_PATH="$(dirname "$(dirname "$(realpath "$0")")")"
 VENV_MYPY_PATH="$REPO_PATH/.venv/bin/mypy"
 if [ ! -f "$VENV_MYPY_PATH" ]; then
     # Try to fix this first
-    rm -rf "$REPO_PATH/.venv"
+    # the .venv folder it self can't be removed as it is a mount point in docker
+    rm -rf "$REPO_PATH/.venv/**/*"
     make -C "$REPO_PATH" .venv 1>&2
 
     if [ ! -f "$VENV_MYPY_PATH" ]; then
@@ -24,4 +25,4 @@ if [ ! -f "$VENV_MYPY_PATH" ]; then
 fi
 
 # shellcheck disable=SC2086
-exec "$REPO_PATH/scripts/run-pipenv" run mypy ${JUNIT_XML} "$@"
+exec "$REPO_PATH/scripts/run-uvenv" mypy ${JUNIT_XML} "$@"

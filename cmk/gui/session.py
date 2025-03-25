@@ -14,25 +14,29 @@ import flask
 from flask import Flask
 from flask.sessions import SessionInterface, SessionMixin
 
+from cmk.ccc.exceptions import MKException
+from cmk.ccc.site import omd_site
+
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.user import UserId
 
-import cmk.gui.userdb.session  # NOQA  # pylint: disable=unused-import
 from cmk.gui import config, userdb
-from cmk.gui.auth import check_auth, parse_and_check_cookie, SiteInternalPseudoUser
+from cmk.gui.auth import (
+    check_auth,
+    parse_and_check_cookie,
+)
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, LoggedInUser
+from cmk.gui.logged_in import LoggedInNobody, LoggedInRemoteSite, LoggedInSuperUser, LoggedInUser
+from cmk.gui.pseudo_users import PseudoUserId, RemoteSitePseudoUser, SiteInternalPseudoUser
 from cmk.gui.type_defs import AuthType, SessionId, SessionInfo
 from cmk.gui.userdb.session import auth_cookie_value
 from cmk.gui.userdb.store import convert_idle_timeout, load_custom_attr
-from cmk.gui.utils.flashed_messages import MSG_TYPET
+from cmk.gui.utils.flashed_messages import MsgType
 from cmk.gui.utils.security_log_events import AuthenticationSuccessEvent
 from cmk.gui.wsgi.utils import dict_property
 
 from cmk import trace
-from cmk.ccc.exceptions import MKException
-from cmk.ccc.site import omd_site
 
 tracer = trace.get_tracer()
 
@@ -57,7 +61,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
 
     @user.setter
     def user(self, user: LoggedInUser) -> None:
-        if not isinstance(user, (LoggedInNobody, LoggedInSuperUser)):
+        if not isinstance(user, (LoggedInNobody, LoggedInSuperUser, LoggedInRemoteSite)):
             assert user.id is not None
         self["_user"] = user
 
@@ -67,14 +71,14 @@ class CheckmkFileBasedSession(dict, SessionMixin):
 
     @property
     def persist_session(self) -> bool:
-        if isinstance(self.user, (LoggedInNobody, LoggedInSuperUser)):
+        if isinstance(self.user, (LoggedInNobody, LoggedInSuperUser, LoggedInRemoteSite)):
             return False
 
         if not self.is_gui_session:
             # No persistant sessions for RestAPI
             return False
 
-        return not self.user.is_automation_user()
+        return not self.user.automation_user
 
     def initialize(
         self,
@@ -121,13 +125,19 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         return sess
 
     @classmethod
-    def create_internal_session(cls) -> CheckmkFileBasedSession:
-        """This method is reserved for site internal inter component authenticated "sessions"
+    def create_pseudo_user_session(cls, pseudo_user_id: PseudoUserId) -> CheckmkFileBasedSession:
+        """This method is reserved for pseudo users
 
         These should not really be sessions but currently everything is a session..."""
 
         sess = cls()
-        sess.user = LoggedInSuperUser()
+        match pseudo_user_id:
+            case SiteInternalPseudoUser():
+                sess.user = LoggedInSuperUser()
+            case RemoteSitePseudoUser():
+                sess.user = LoggedInRemoteSite(site_name=pseudo_user_id.site_name)
+            case _:
+                raise NotImplementedError
         return sess
 
     @classmethod
@@ -168,7 +178,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         sess["_flashes"] = info.flashes
         return sess
 
-    @tracer.start_as_current_span("CheckmkFileBas.login")
+    @tracer.instrument("CheckmkFileBas.login")
     def login(self, user_obj: LoggedInUser) -> None:
         userdb.session.on_succeeded_login(user_obj.ident, datetime.now())
         self.user = user_obj
@@ -188,6 +198,12 @@ class CheckmkFileBasedSession(dict, SessionMixin):
             userdb.session.load_session_infos(self.user.ident, lock=True),
             datetime.now(),
         )
+
+        # Check if the latest session persist was a logout, then keep the logged_out state
+        if self.session_info.session_id in session_infos:
+            if session_infos[self.session_info.session_id].logged_out is True:
+                self.session_info.logged_out = True
+
         session_infos[self.session_info.session_id] = self.session_info
         userdb.session.save_session_infos(self.user.ident, session_infos)
 
@@ -235,7 +251,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
                 ),
             )
 
-    def _flash_message(self, msg_type: MSG_TYPET, message: str) -> None:
+    def _flash_message(self, msg_type: MsgType, message: str) -> None:
         """
 
         Copy of the flash.flash functionality.
@@ -245,6 +261,15 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         tuple_to_add = (msg_type, message)
         if tuple_to_add not in self.session_info.flashes:
             self.session_info.flashes.append(tuple_to_add)
+
+    def two_factor_pending(self) -> bool:
+        if isinstance(self.user, (LoggedInNobody, LoggedInSuperUser)):
+            return False
+
+        return (
+            userdb.is_two_factor_login_enabled(self.user.ident)
+            and not self.session_info.two_factor_completed
+        )
 
 
 class FileBasedSession(SessionInterface):
@@ -301,9 +326,12 @@ class FileBasedSession(SessionInterface):
         try to authenticate a request based on headers, password login is
         handled in login.py"""
 
-        user_name, auth_type = check_auth()
-        if isinstance(user_name, SiteInternalPseudoUser):
-            return self.session_class.create_internal_session()
+        identity, auth_type = check_auth()
+
+        if isinstance(identity, PseudoUserId):
+            return self.session_class.create_pseudo_user_session(identity)
+
+        user_name = identity
 
         userdb.session.on_succeeded_login(user_name, datetime.now())
 
@@ -332,7 +360,7 @@ class FileBasedSession(SessionInterface):
         }
         userdb.save_custom_attr(userid, "last_login", last_login_info)
 
-    @tracer.start_as_current_span("FileBasedSession.open_session")
+    @tracer.instrument("FileBasedSession.open_session")
     def open_session(self, app: Flask, request: flask.Request) -> CheckmkFileBasedSession | None:
         # We need the config to be able to set the timeout values correctly.
         config.initialize()
@@ -345,8 +373,8 @@ class FileBasedSession(SessionInterface):
     # NOTE: The type-ignore[override] here is due to the fact, that any alternative would result
     # in multiple hundreds of lines changes and hundreds of mypy errors at this point and is thus
     # deferred to a later date.
-    @tracer.start_as_current_span("FileBasedSession.save_session")
-    def save_session(  # type: ignore[override]  # pylint: disable=redefined-outer-name
+    @tracer.instrument("FileBasedSession.save_session")
+    def save_session(  # type: ignore[override]
         self, app: Flask, session: CheckmkFileBasedSession, response: flask.Response
     ) -> None:
         # NOTE

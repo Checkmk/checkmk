@@ -3,28 +3,33 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from pytest import MonkeyPatch
 
-from tests.testlib.base import Scenario
+from tests.testlib.unit.base_configuration_scenario import Scenario
+
+import cmk.ccc.version as cmk_version
+from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
 from cmk.utils.hostaddress import HostName
+from cmk.utils.labels import LabelSource
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 
 from cmk.automations.results import AnalyseHostResult, GetServicesLabelsResult
 
 import cmk.base.automations
 import cmk.base.automations.check_mk as automations
-
-import cmk.ccc.version as cmk_version
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
+from cmk.base.config import LoadedConfigFragment, LoadingResult
 
 
 def test_registered_automations() -> None:
     needed_automations = [
         "active-check",
         "analyse-host",
+        "analyze-host-rule-matches",
+        "analyze-service-rule-matches",
         "get-services-labels",
         "analyse-service",
         "create-diagnostics-dump",
@@ -40,6 +45,7 @@ def test_registered_automations() -> None:
         "get-check-information",
         "get-configuration",
         "get-section-information",
+        "get-service-name",
         "inventory",
         "notification-analyse",
         "notification-get-bulks",
@@ -49,7 +55,6 @@ def test_registered_automations() -> None:
         "rename-hosts",
         "restart",
         "scan-parents",
-        "set-autochecks",
         "set-autochecks-v2",
         "update-dns-cache",
         "update-host-labels",
@@ -67,6 +72,12 @@ def test_registered_automations() -> None:
 
 
 def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
+    additional_labels: dict[str, str] = {}
+    additional_label_sources: dict[str, LabelSource] = {}
+    if edition(paths.omd_root) is Edition.CME:
+        additional_labels = {"cmk/customer": "provider"}
+        additional_label_sources = {"cmk/customer": "discovered"}
+
     automation = automations.AutomationAnalyseHost()
 
     ts = Scenario()
@@ -79,11 +90,23 @@ def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
             },
         },
     )
-    ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch)
 
-    assert automation.execute(["test-host"]) == AnalyseHostResult(
-        label_sources={"cmk/site": "discovered", "explicit": "explicit"},
-        labels={"cmk/site": "NO_SITE", "explicit": "ding"},
+    label_sources: dict[str, LabelSource] = {
+        "cmk/site": "discovered",
+        "explicit": "explicit",
+    }
+    assert automation.execute(
+        ["test-host"],
+        AgentBasedPlugins.empty(),
+        LoadingResult(loaded_config=LoadedConfigFragment(), config_cache=config_cache),
+    ) == AnalyseHostResult(
+        label_sources=label_sources | additional_label_sources,
+        labels={
+            "cmk/site": "NO_SITE",
+            "explicit": "ding",
+        }
+        | additional_labels,
     )
 
 
@@ -114,9 +137,13 @@ def test_service_labels(monkeypatch):
             ]
         ),
     )
-    ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch)
 
-    assert automation.execute(["test-host", "CPU load", "CPU temp"]) == GetServicesLabelsResult(
+    assert automation.execute(
+        ["test-host", "CPU load", "CPU temp"],
+        AgentBasedPlugins.empty(),
+        LoadingResult(loaded_config=LoadedConfigFragment(), config_cache=config_cache),
+    ) == GetServicesLabelsResult(
         {
             "CPU load": {"label1": "val1", "label2": "val2"},
             "CPU temp": {"label1": "val1"},

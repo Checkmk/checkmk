@@ -15,11 +15,11 @@
 
 from collections.abc import Sequence
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.lgp import DETECT_LGP
+
+check_info = {}
 
 lgp_info_devices = {
     ".1.3.6.1.4.1.476.1.42.4.8.2.1": "lgpMPX",
@@ -56,6 +56,7 @@ def parse_lgp_info(string_table: Sequence[StringTable]) -> Sequence[StringTable]
 
 
 check_info["lgp_info"] = LegacyCheckDefinition(
+    name="lgp_info",
     parse_function=parse_lgp_info,
     detect=DETECT_LGP,
     fetch=[

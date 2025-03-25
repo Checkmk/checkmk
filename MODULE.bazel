@@ -1,9 +1,293 @@
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+new_local_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:local.bzl", "new_local_repository")
+repo_license = use_repo_rule("//bazel/rules:repo_license.bzl", "detect_repo_license")
+
+bazel_dep(name = "aspect_rules_lint", version = "1.2.0")
+bazel_dep(name = "aspect_rules_py", version = "0.7.4")
+bazel_dep(name = "bazel_clang_tidy", dev_dependency = True)
+bazel_dep(name = "bazel_iwyu", dev_dependency = True)
+bazel_dep(name = "bazel_skylib", version = "1.7.1")
+bazel_dep(
+    name = "buildifier_prebuilt",
+    version = "8.0.0",
+    dev_dependency = True,
+)
+bazel_dep(name = "gazelle", version = "0.42.0")
+bazel_dep(
+    # Transitive dependency for protobuf.
+    # Req anything with a version equal or greater than 1.64.0.
+    name = "grpc-java",
+    version = "1.64.0",
+)
+bazel_dep(
 # Hedron's Compile Commands Extractor for Bazel
 # https://github.com/hedronvision/bazel-compile-commands-extractor
-bazel_dep(name = "hedron_compile_commands", dev_dependency = True)
+name = "hedron_compile_commands", dev_dependency = True)
+bazel_dep(name = "protobuf", version = "29.3", repo_name = "com_google_protobuf")
+bazel_dep(name = "rules_cc", version = "0.1.1")
+bazel_dep(name = "rules_foreign_cc", version = "0.14.0")
+bazel_dep(name = "rules_go", version = "0.50.1")
+bazel_dep(name = "rules_multitool", version = "0.4.0")
+bazel_dep(name = "rules_mypy", version = "0.29.0")
+bazel_dep(name = "rules_proto_grpc", version = "5.0.1")
+bazel_dep(name = "rules_python", version = "1.1.0")
+bazel_dep(name = "rules_rust", version = "0.54.1")
+bazel_dep(
+    # LLVM for clang-tidy, clang-format, and IWYU.
+    name = "toolchains_llvm",
+    version = "1.3.0",
+)
+bazel_dep(name = "rules_uv", version = "0.44.0")
+bazel_dep(
+    # Transitive dep required because a dependency in the protobuf-python chain
+    # expects `@rules_proto//proto/private/rules:proto_toolchain_rule.bzl`.
+    # However, 7083178 removed the file from rules_proto.
+    name = "toolchains_protoc",
+    version = "0.3.7",
+)
+
+# TODO (TBC): Switch back to upstream as soon as https://github.com/aspect-build/rules_py/pull/428 is merged
+git_override(
+    module_name = "aspect_rules_py",
+    commit = "6a3242d016798c6892a848939e36cc7bff99d6c8",
+    remote = "https://github.com/TimotheusBachinger/rules_py",
+)
+git_override(
+    module_name = "bazel_clang_tidy",
+    # No tags, no releases.  Live on head.
+    commit = "db677011c7363509a288a9fb3bf0a50830bbf791",
+    remote = "https://github.com/erenon/bazel_clang_tidy.git",
+)
+git_override(
+    module_name = "bazel_iwyu",
+    # Live on head because of https://github.com/storypku/bazel_iwyu/issues/5
+    # even if using master doesn't solve the issue.
+    commit = "1fe9048c30469ac506498c3c740ce47475ad3361",
+    remote = "https://github.com/storypku/bazel_iwyu.git",
+    patches = ["//bazel/patches:bazel_iwyu-make_IWYU_executable_configurable.patch"],
+)
 git_override(
     module_name = "hedron_compile_commands",
     # No tags, no releases.  Let's go with today's head.
     commit = "1e08f8e0507b6b6b1f4416a9a22cf5c28beaba93",
     remote = "https://github.com/hedronvision/bazel-compile-commands-extractor.git",
+)
+
+single_version_override(
+    module_name = "protobuf",
+    patch_strip = 1,
+    patches = ["//bazel/patches:protobuf-silence_build_warnings.patch"],
+)
+single_version_override(
+    module_name = "rules_cc",
+    patch_strip = 1,
+    patches = [
+        "//bazel/patches:rules_cc-add_static_link_cpp_runtimes.patch",
+    ],
+)
+single_version_override(
+    module_name = "rules_foreign_cc",
+    patch_strip = 1,
+    patches = ["//omd/packages/foreign_cc:symlink.patch"],
+)
+single_version_override(
+    module_name = "rules_python",
+    patch_strip = 1,
+    patches = [
+        "//bazel/patches:rules_python-py_wheel-package_pyi_files.patch",
+        "//bazel/patches:rules_python-py_wheel-filter_out_virtual_imports.patch",
+    ],
+)
+single_version_override(
+    module_name = "rules_uv",
+    patch_strip = 1,
+    patches = [
+        "//bazel/patches:rules_uv_rm_venv.patch",
+        "//bazel/patches:rules_uv_quiet.patch",
+        "//bazel/patches:rules_uv_create_venv_whls.patch",
+        "//bazel/patches:rules_uv-requirements_in_info.patch",
+    ],
+)
+
+new_local_repository(
+    name = "glib",
+    build_file = "@//omd/packages/glib:BUILD",
+    path = "/usr",
+)
+new_local_repository(
+    name = "libxml2",
+    build_file = "@//omd/packages/libxml2:BUILD",
+    path = "/usr",
+)
+
+# TODO: Duplicate from bazel_variables.bzl. won't be needed anymore when all omd packages are loaded via MODULE.bazel
+UPSTREAM_MIRROR_URL = "https://artifacts.lan.tribe29.com/repository/upstream-archives/"
+
+OCB_VERSION = "0.113.0"
+http_file(
+    name = "otel_collector_custom_builder",
+    executable = True,
+    sha256 = "bbccc5ab73364a17d99b22f0c1d53fc0efecee5fa8f93000596b4cfbe9a73325",
+    url = "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fbuilder%2Fv" + OCB_VERSION + "/ocb_" + OCB_VERSION + "_linux_amd64",
+)
+SHFMT_VERSION = "v3.10.0"
+http_file(
+    name = "shfmt",
+    executable = True,
+    sha256 = "1f57a384d59542f8fac5f503da1f3ea44242f46dff969569e80b524d64b71dbc",
+    urls = [
+        "https://github.com/mvdan/sh/releases/download/" + SHFMT_VERSION + "/shfmt_" + SHFMT_VERSION + "_linux_amd64",
+        UPSTREAM_MIRROR_URL + "/shfmt_" + SHFMT_VERSION + "_linux_amd64",
+    ],
+)
+TAPLO_VERSION = "0.9.3"
+http_file(
+    name = "taplo.gz",
+    sha256 = "0cf7e0fbeb299e62cecd5b648d820a103decf2ed2d42a3aac4d6f6c930e88125",
+    urls = [
+        "https://github.com/tamasfe/taplo/releases/download/" + TAPLO_VERSION + "/taplo-full-linux-x86.gz",
+        UPSTREAM_MIRROR_URL + "/taplo-full-linux-x86-" + TAPLO_VERSION + ".gz",
+    ],
+)
+
+PATCH_VERSION = "2.7.6"
+PATCH_FILENAME = "patch-" + PATCH_VERSION + ".tar.gz"
+http_archive(
+    name = "patch",
+    build_file = "//omd/packages/patch:BUILD.patch.bazel",
+    patch_args = ["-p1"],
+    patch_tool = "patch",
+    patches = [
+        "//omd/packages/patch/patches:ed-style-01-missing-input-files.patch.dif",
+        "//omd/packages/patch/patches:ed-style-02-fix-arbitrary-command-execution.patch.dif",
+        "//omd/packages/patch/patches:ed-style-03-update-test-Makefile.patch.dif",
+        "//omd/packages/patch/patches:ed-style-04-invoke-ed-directly.patch.dif",
+        "//omd/packages/patch/patches:ed-style-05-minor-cleanups.patch.dif",
+        "//omd/packages/patch/patches:ed-style-06-fix-test-failure.patch.dif",
+        "//omd/packages/patch/patches:ed-style-07-dont-leak-tmp-file.patch.dif",
+        "//omd/packages/patch/patches:ed-style-08-dont-leak-tmp-file-multi.patch.dif",
+        "//omd/packages/patch/patches:fix-segfault-mangled-rename.patch.dif",
+    ],
+    sha256 = "8cf86e00ad3aaa6d26aca30640e86b0e3e1f395ed99f189b06d4c9f74bc58a4e",
+    strip_prefix = "patch-" + PATCH_VERSION,
+    urls = [
+        "https://ftp.gnu.org/gnu/patch/patch-" + PATCH_FILENAME,
+        UPSTREAM_MIRROR_URL + PATCH_FILENAME,
+    ],
+)
+SHELLCHECK_VERSION = "v0.10.0"
+http_archive(
+    name = "shellcheck",
+    build_file_content = """
+exports_files([
+    "shellcheck",
+])
+""",
+    sha256 = "6c881ab0698e4e6ea235245f22832860544f17ba386442fe7e9d629f8cbedf87",
+    strip_prefix = "shellcheck-" + SHELLCHECK_VERSION,
+    urls = [
+        "https://github.com/koalaman/shellcheck/releases/download/" + SHELLCHECK_VERSION + "/shellcheck-" + SHELLCHECK_VERSION + ".linux.x86_64.tar.xz",
+        UPSTREAM_MIRROR_URL + "/shellcheck-" + SHELLCHECK_VERSION + ".linux.x86_64.tar.xz",
+    ],
+)
+
+repo_license(name = "repo_license")
+register_toolchains("//bazel/toolchains/cc:linux_gcc13")
+
+llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm")
+llvm.toolchain(
+    llvm_version = "19.1.7",
+    sha256 = {"linux-x86_64": "4a5ec53951a584ed36f80240f6fbf8fdd46b4cf6c7ee87cc2d5018dc37caf679"},
+    strip_prefix = {
+        "linux-x86_64": "LLVM-19.1.7-Linux-X64",
+    },
+    urls = {
+        "linux-x86_64": [
+            "https://artifacts.lan.tribe29.com/repository/upstream-archives/LLVM-19.1.7-Linux-X64.tar.xz",
+            "https://github.com/llvm/llvm-project/releases/download/llvmorg-19.1.7/LLVM-19.1.7-Linux-X64.tar.xz",
+        ]
+    },
+)
+use_repo(llvm, "llvm_toolchain", "llvm_toolchain_llvm")
+
+multitool = use_extension("@rules_multitool//multitool:extension.bzl", "multitool")
+use_repo(multitool, "multitool")
+
+# TODO: how to sync this with the PYTHON_VERSION in package_versions.bzl?
+PYTHON_VERSION = "3.12.3"
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    is_default = True,
+    # We can specify the exact version.
+    python_version = PYTHON_VERSION,
+)
+
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+pip.parse(
+    environment = {
+        # Hack for building extensions from source.
+        # See also:  https://github.com/bazelbuild/rules_python/issues/1463
+        "CC": "gcc-13",
+    },
+    hub_name = "cmk_requirements",
+    python_version = PYTHON_VERSION,
+    requirements_by_platform = {
+        "@//:requirements.txt": "linux_*",
+    },
+)
+use_repo(pip, "cmk_requirements")
+
+types = use_extension("@rules_mypy//mypy:types.bzl", "types")
+types.requirements(
+    name = "cmk_types",
+    pip_requirements = "@cmk_requirements//:requirements.bzl",
+    requirements_txt = "//:requirements.txt",
+)
+use_repo(types, "cmk_types")
+
+go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
+go_sdk.download(version = "1.22.10")
+
+go_deps = use_extension("@gazelle//:extensions.bzl", "go_deps")
+go_deps.from_file(go_mod = "//:go.mod")
+use_repo(
+    go_deps,
+    "com_github_open_telemetry_opentelemetry_collector_contrib_exporter_fileexporter",
+    "com_github_open_telemetry_opentelemetry_collector_contrib_extension_basicauthextension",
+    "com_github_open_telemetry_opentelemetry_collector_contrib_processor_transformprocessor",
+    "com_github_open_telemetry_opentelemetry_collector_contrib_receiver_prometheusreceiver",
+    "io_opentelemetry_go_collector_component",
+    "io_opentelemetry_go_collector_confmap",
+    "io_opentelemetry_go_collector_confmap_provider_envprovider",
+    "io_opentelemetry_go_collector_confmap_provider_fileprovider",
+    "io_opentelemetry_go_collector_confmap_provider_httpprovider",
+    "io_opentelemetry_go_collector_confmap_provider_httpsprovider",
+    "io_opentelemetry_go_collector_confmap_provider_yamlprovider",
+    "io_opentelemetry_go_collector_connector",
+    "io_opentelemetry_go_collector_exporter",
+    "io_opentelemetry_go_collector_extension",
+    "io_opentelemetry_go_collector_otelcol",
+    "io_opentelemetry_go_collector_processor",
+    "io_opentelemetry_go_collector_processor_batchprocessor",
+    "io_opentelemetry_go_collector_receiver",
+    "io_opentelemetry_go_collector_receiver_otlpreceiver",
+)
+
+# The overrides are needed to avoid issues like:
+# no such package '@@gazelle~~go_deps~com_github_prometheus_prometheus//gogoproto': BUILD file not found in directory 'gogoproto' of external repository
+# See conversation here: https://github.com/bazel-contrib/bazel-gazelle/issues/1035
+# The mentioned solution 'build_file_proto_mode = "disable_global"' is deprecated and was moved to 'gazelle_override':
+# https://github.com/bazel-contrib/bazel-gazelle/blob/56b3f7867eff7bd43dd93777987af9f9668ae896/internal/bzlmod/go_deps.bzl#L206
+
+go_deps.gazelle_override(
+    directives = [
+        "gazelle:proto disable",
+    ],
+    path = "github.com/prometheus/prometheus",
+)
+go_deps.gazelle_override(
+    build_file_generation = "on",
+    path = "github.com/cncf/xds/go",
 )

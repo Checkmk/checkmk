@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib import ucd_hr_detection
+
+check_info = {}
 
 # .1.3.6.1.4.1.2021.9.1.2.1 /         --> UCD-SNMP-MIB::dskPath.1
 # .1.3.6.1.4.1.2021.9.1.6.1 958827968 --> UCD-SNMP-MIB::dskTotal.1
@@ -46,6 +47,7 @@ def parse_ucd_disk(string_table: StringTable) -> StringTable:
 
 
 check_info["ucd_disk"] = LegacyCheckDefinition(
+    name="ucd_disk",
     parse_function=parse_ucd_disk,
     detect=ucd_hr_detection.PREFER_HR_ELSE_UCD,
     fetch=SNMPTree(

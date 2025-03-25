@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import check_aws_limits, parse_aws_limits_generic
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 
 def check_aws_elbv2_limits(item, params, parsed):
@@ -20,6 +22,7 @@ def discover_aws_elbv2_limits(section):
 
 
 check_info["aws_elbv2_limits"] = LegacyCheckDefinition(
+    name="aws_elbv2_limits",
     parse_function=parse_aws_limits_generic,
     service_name="AWS/ELBv2 Limits %s",
     discovery_function=discover_aws_elbv2_limits,

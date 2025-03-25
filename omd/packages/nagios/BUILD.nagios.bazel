@@ -18,7 +18,14 @@ configure_make(
         "--with-perlcache",
         "--enable-embedded-perl",
     ],
-    copts = ["-Wl,--rpath,$ORIGIN_VAR/../lib"],
+    copts = [
+        # The implicit int warning cannot be fixed with `-std=c89`
+        # as the code also uses newer features such as `inline`.
+        "-Wno-deprecated-non-prototype",
+        "-Wno-implicit-int",
+        "-Wno-unused-but-set-variable",
+        "-Wl,--rpath,$ORIGIN_VAR/../lib",
+    ],
     env = {
         "PKG_CONFIG_PATH": ":".join([
             "/usr/lib/pkgconfig",

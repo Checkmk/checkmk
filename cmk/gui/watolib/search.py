@@ -8,13 +8,16 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
-from contextlib import suppress
 from dataclasses import dataclass
 from itertools import chain
 from typing import Final
 
 import redis
 from redis import ConnectionError as RedisConnectionError
+
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.plugin_registry import Registry
+from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
 from cmk.utils.redis import get_redis_client, redis_enabled, redis_server_reachable
@@ -26,9 +29,10 @@ from cmk.utils.setup_search_index import (
 
 from cmk.gui.background_job import (
     BackgroundJob,
-    BackgroundJobAlreadyRunning,
     BackgroundProcessInterface,
     InitialStatusArgs,
+    NoArgs,
+    simple_job_target,
 )
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKAuthException
@@ -49,10 +53,6 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import file_name_and_query_vars_from_url, QueryVars
 from cmk.gui.watolib.mode_permissions import mode_permissions_ensurance_registry
 from cmk.gui.watolib.utils import may_edit_ruleset
-
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.plugin_registry import Registry
-from cmk.ccc.version import edition, Edition
 
 
 class IndexNotFoundException(MKGeneralException):
@@ -314,6 +314,7 @@ class PermissionsHandler:
             "event_console": user.may("mkeventd.edit") or user.may("wato.seeall"),
             "event_console_settings": user.may("mkeventd.config") or user.may("wato.seeall"),
             "logfile_pattern_analyzer": user.may("wato.pattern_editor") or user.may("wato.seeall"),
+            "notification_parameter": user.may("wato.notifications") or user.may("wato.seeall"),
         }
 
     @staticmethod
@@ -405,18 +406,17 @@ class IndexSearcher:
 
     def _launch_index_building_in_background_job(self) -> None:
         build_job = SearchIndexBackgroundJob()
-        with suppress(BackgroundJobAlreadyRunning):
-            build_job.start(
-                _index_building_in_background_job,
-                # We deliberately do not provide an estimated duration here, since that involves I/O.
-                # We need to be as fast as possible here, since this is done at the end of HTTP
-                # requests.
-                InitialStatusArgs(
-                    title=_("Search index"),
-                    stoppable=False,
-                    user=str(user.id) if user.id else None,
-                ),
-            )
+        build_job.start(
+            simple_job_target(_index_building_in_background_job),
+            # We deliberately do not provide an estimated duration here, since that involves I/O.
+            # We need to be as fast as possible here, since this is done at the end of HTTP
+            # requests.
+            InitialStatusArgs(
+                title=_("Search index"),
+                stoppable=False,
+                user=str(user.id) if user.id else None,
+            ),
+        )
 
     def _search_redis_categories(
         self,
@@ -504,6 +504,7 @@ class IndexSearcher:
             _("Event Console rule packs"),
             _("Event Console rules"),
             _("Event Console settings"),
+            _("Notification parameter"),
             # _("Users"),
             _("Enforced services"),
             _("Global settings"),
@@ -514,7 +515,7 @@ class IndexSearcher:
 
     @staticmethod
     def _filter_results_by_user_permissions(
-        results_by_topic: Iterable[tuple[str, Iterable[_SearchResultWithPermissionsCheck]]]
+        results_by_topic: Iterable[tuple[str, Iterable[_SearchResultWithPermissionsCheck]]],
     ) -> SearchResultsByTopic:
         yield from (
             (
@@ -535,9 +536,11 @@ class _SearchResultWithPermissionsCheck:
     permissions_check: Callable[[str], bool]
 
 
-def _index_building_in_background_job(job_interface: BackgroundProcessInterface) -> None:
-    with job_interface.gui_context():
-        _build_index(job_interface, get_redis_client())
+def _index_building_in_background_job(
+    job_interface: BackgroundProcessInterface, args: NoArgs
+) -> None:
+    with job_interface.gui_context(), get_redis_client() as redis_client:
+        _build_index(job_interface, redis_client)
 
 
 def _build_index(job_interface: BackgroundProcessInterface, redis_client: redis.Redis[str]) -> None:
@@ -550,23 +553,24 @@ def launch_requests_processing_background() -> None:
     if not updates_requested() or not redis_enabled():
         return
     job = SearchIndexBackgroundJob()
-    with suppress(BackgroundJobAlreadyRunning):
-        job.start(
-            _process_update_requests_background,
-            # We deliberately do not provide an estimated duration here, since that involves I/O.
-            # We need to be as fast as possible here, since this is done at the end of HTTP
-            # requests.
-            InitialStatusArgs(
-                title=_("Search index"),
-                stoppable=False,
-                user=str(user.id) if user.id else None,
-            ),
-        )
+    # Don't report any error from job.start() to not spam the logs
+    job.start(
+        simple_job_target(_process_update_requests_background),
+        # We deliberately do not provide an estimated duration here, since that involves I/O.
+        # We need to be as fast as possible here, since this is done at the end of HTTP
+        # requests.
+        InitialStatusArgs(
+            title=_("Search index"),
+            stoppable=False,
+            user=str(user.id) if user.id else None,
+        ),
+    )
 
 
-def _process_update_requests_background(job_interface: BackgroundProcessInterface) -> None:
-    with job_interface.gui_context():
-        redis_client = get_redis_client()
+def _process_update_requests_background(
+    job_interface: BackgroundProcessInterface, args: NoArgs
+) -> None:
+    with job_interface.gui_context(), get_redis_client() as redis_client:
         if not redis_server_reachable(redis_client):
             job_interface.send_progress_update(_("Redis is not reachable, terminating"))
             return

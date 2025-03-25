@@ -7,8 +7,6 @@ import abc
 import socket
 from collections.abc import Mapping, Sequence
 
-from six import ensure_str
-
 import cmk.utils
 import cmk.utils.paths
 from cmk.utils.encryption import fetch_certificate_details
@@ -48,17 +46,12 @@ class ABCPageListOfMultipleGetChoice(AjaxPage, abc.ABC):
         raise NotImplementedError()
 
     def page(self) -> dict:
-        # ? get_request() is typed as returning dict[str,Any], the type of ensure_str argument seems to be Any
         api_request = request.get_request()
         vs = ListOfMultiple(
             choices=self._get_choices(api_request), choice_page_name="unused_dummy_page"
         )
         with output_funnel.plugged():
-            vs.show_choice_row(
-                ensure_str(api_request["varprefix"]),  # pylint: disable= six-ensure-str-bin-call
-                ensure_str(api_request["ident"]),  # pylint: disable= six-ensure-str-bin-call
-                {},
-            )
+            vs.show_choice_row(api_request["varprefix"], api_request["ident"], {})
             return {"html_code": output_funnel.drain()}
 
 

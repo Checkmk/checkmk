@@ -7,7 +7,7 @@ import time
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -138,7 +138,7 @@ def discover_win_dhcp_pools(params: Mapping[str, Any], section: Section) -> Disc
 
         if len(pool_stats) == 3:
             in_block = False
-            used, free, pending = pool_stats  # pylint: disable=unbalanced-tuple-unpacking
+            used, free, pending = pool_stats
             size = used + free + pending
             if size > 0 or params["empty_pools"]:
                 yield Service(item=last_pool)
@@ -229,7 +229,7 @@ def check_win_dhcp_pools_stats(section: Section) -> CheckResult:
                 "Scopes",
             ]:
                 value = _safe_int(line[1])
-                yield from check_levels(
+                yield from check_levels_v1(
                     get_rate(value_store, key, this_time, value),
                     metric_name=key,
                     render_func=lambda f: f"{f:.0f}/s",

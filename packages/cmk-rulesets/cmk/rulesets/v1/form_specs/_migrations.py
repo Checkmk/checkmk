@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Literal, TypeVar
+from uuid import uuid4
 
 from ._levels import _PredictiveLevelsT, LevelDirection, LevelsConfigModel, SimpleLevelsConfigModel
 
@@ -15,7 +16,7 @@ def _extract_bound(
 ) -> tuple[_NumberT, _NumberT] | None:
     match (model, level_dir):
         case ({"levels_upper_min": (warn, crit)}, LevelDirection.UPPER):
-            return ntype(warn * scale), ntype(crit * scale)
+            return ntype(warn * scale), ntype(crit * scale)  # type: ignore[misc]
         case _:
             return None
 
@@ -49,15 +50,18 @@ def _parse_to_predictive_levels(
 ) -> _PredictiveLevelsT[_NumberT] | None:
     match model:
         # already migrated
+        # NOTE: Using a variable of type "type[...]" in a class pattern should be OK, but
+        # mypy complains about that, see e.g. https://github.com/python/mypy/issues/17133.
+        # As a consequence, we need those three suppressions below. :-/
         case {
             "period": "wday" | "day" | "hour" | "minute",
             "horizon": int(),
-            "levels": ("absolute", (ntype(), ntype()))
+            "levels": ("absolute", (ntype(), ntype()))  # type: ignore[misc]
             | ("relative", (float(), float()))
             | ("stdev", (float(), float())),
-            "bound": (ntype(), ntype()) | None,
+            "bound": (ntype(), ntype()) | None,  # type: ignore[misc]
         }:
-            return model
+            return model  # type: ignore[return-value]
         # migrate upper predictive levels
         case {
             "period": "wday" | "day" | "hour" | "minute" as p,
@@ -69,7 +73,7 @@ def _parse_to_predictive_levels(
             return _PredictiveLevelsT[_NumberT](
                 period=p,
                 horizon=h,
-                levels=_extract_levels(raw_levels, scale, ntype),
+                levels=_extract_levels(raw_levels, scale, ntype),  # type: ignore[misc]
                 bound=_extract_bound(model, scale, ntype, level_dir),
             )
         # migrate lower predictive levels
@@ -83,14 +87,16 @@ def _parse_to_predictive_levels(
             return _PredictiveLevelsT[_NumberT](
                 period=p,
                 horizon=h,
-                levels=_extract_levels(raw_levels, scale, ntype),
+                levels=_extract_levels(raw_levels, scale, ntype),  # type: ignore[misc]
                 bound=_extract_bound(model, scale, ntype, level_dir),
             )
         # migrate not configured predictive levels
-        case {
-            "period": "wday" | "day" | "hour" | "minute",
-            "horizon": int(),
-        } as val if "levels" not in val and "bound" not in val:  # type: ignore[operator]
+        case (
+            {
+                "period": "wday" | "day" | "hour" | "minute",
+                "horizon": int(),
+            } as val
+        ) if "levels" not in val and "bound" not in val:  # type: ignore[operator]
             return None
         case _:
             raise TypeError(
@@ -115,12 +121,7 @@ def _migrate_to_levels(
         # 2.2. format + format released in 2.3.0b3
         case dict(val_dict) | ("predictive", dict(val_dict)):
             if (
-                pred_levels := _parse_to_predictive_levels(
-                    val_dict,  # type: ignore[misc] # Expression type contains "Any"
-                    scale,
-                    ntype,
-                    level_dir,
-                )
+                pred_levels := _parse_to_predictive_levels(val_dict, scale, ntype, level_dir)  # type: ignore[misc]
             ) is None:
                 return "no_levels", None
             return "cmk_postprocessed", "predictive_levels", pred_levels
@@ -276,7 +277,11 @@ def migrate_to_password(
     match model:
         # old password format
         case "password", str(password):
-            return "cmk_postprocessed", "explicit_password", ("throwaway-id", password)
+            return (
+                "cmk_postprocessed",
+                "explicit_password",
+                (str(uuid4()), password),
+            )
         case "store", str(password_store_id):
             return "cmk_postprocessed", "stored_password", (password_store_id, "")
 
@@ -295,7 +300,7 @@ def migrate_to_password(
     raise TypeError(f"Could not migrate {model!r} to Password.")
 
 
-def migrate_to_proxy(  # pylint: disable=too-many-return-statements
+def migrate_to_proxy(
     model: object,
 ) -> tuple[
     Literal["cmk_postprocessed"],
@@ -305,6 +310,7 @@ def migrate_to_proxy(  # pylint: disable=too-many-return-statements
     """
     Transform a previous proxy configuration to a model of the `Proxy` FormSpec.
     Previous configurations are transformed in the following way:
+
         ("global", <stored-proxy-id>) -> ("cmk_postprocessed", "stored_proxy", <stored-proxy-id>)
         ("environment", "environment") -> ("cmk_postprocessed", "environment_proxy", "")
         ("url", <url>) -> ("cmk_postprocessed", "explicit_proxy", <url>)
@@ -340,6 +346,7 @@ def migrate_to_time_period(
     """
     Transform a previous time period configuration to a model of the `TimePeriod` FormSpec.
     Previous configurations are transformed in the following way:
+
         <time-period> -> ("time_period", "preconfigured", <time-period>)
 
     Args:

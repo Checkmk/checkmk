@@ -18,10 +18,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def inventory_mq_queues(info):
@@ -69,6 +69,7 @@ def parse_mq_queues(string_table: StringTable) -> StringTable:
 
 
 check_info["mq_queues"] = LegacyCheckDefinition(
+    name="mq_queues",
     parse_function=parse_mq_queues,
     service_name="Queue %s",
     discovery_function=inventory_mq_queues,

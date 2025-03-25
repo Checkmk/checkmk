@@ -5,14 +5,15 @@
 
 # comNET GmbH, Fabian Binder - 2018-05-07
 
-from collections.abc import Iterable, Mapping
-from typing import Any, Final, Iterator, NamedTuple
+from collections.abc import Iterable, Iterator, Mapping
+from typing import Any, Final, NamedTuple
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.cisco_ucs import DETECT, map_operability
-from cmk.base.config import check_info
+from cmk.base.check_legacy_includes.cisco_ucs import DETECT, MAP_OPERABILITY
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import render, SNMPTree, StringTable
+
+check_info = {}
 
 _HOT_SPARE_VALUES: Final = {3, 4}
 
@@ -36,7 +37,7 @@ def parse_cisco_ucs_hdd(string_table: StringTable) -> Section:
         disk_id: HDD(
             disk_id,
             model,
-            *map_operability[r_operability],
+            *MAP_OPERABILITY[r_operability],
             serial,
             int(r_size or 0) * 1024**2,
             vendor,
@@ -72,6 +73,7 @@ def check_cisco_ucs_hdd(
 
 
 check_info["cisco_ucs_hdd"] = LegacyCheckDefinition(
+    name="cisco_ucs_hdd",
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.719.1.45.4.1",

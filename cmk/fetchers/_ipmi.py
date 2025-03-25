@@ -5,32 +5,33 @@
 
 from __future__ import annotations
 
+import errno
 import logging
+import os
 from collections.abc import Iterable
 from dataclasses import astuple, dataclass
 from typing import Final, Self, TYPE_CHECKING, TypedDict
 
-import pyghmi.constants as ipmi_const  # type: ignore[import-untyped]
-from pyghmi.exceptions import IpmiException  # type: ignore[import-untyped]
+import pyghmi.constants as ipmi_const
+from pyghmi.exceptions import IpmiException
 
 if TYPE_CHECKING:
     # The remaining pyghmi imports are expensive (60 ms for all of them together).
-    import pyghmi.ipmi.command as ipmi_cmd  # type: ignore[import-untyped]
-    import pyghmi.ipmi.sdr as ipmi_sdr  # type: ignore[import-untyped]
+    import pyghmi.ipmi.command as ipmi_cmd
+    import pyghmi.ipmi.sdr as ipmi_sdr
 
-from six import ensure_binary
+from cmk.ccc.exceptions import MKFetcherError, MKTimeout
 
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostAddress
 from cmk.utils.log import VERBOSE
-
-from cmk.ccc.exceptions import MKFetcherError, MKTimeout
 
 from ._abstract import Fetcher, Mode
 
 __all__ = ["IPMICredentials", "IPMIFetcher"]
 
 
+# Keep in sync with cmk.gui.watolib.host_attributes.IPMICredentials
 class IPMICredentials(TypedDict, total=False):
     username: str
     password: str
@@ -52,14 +53,10 @@ class IPMISensor:
         #  'value': 25.0, 'unavailable': 0}]]
         return cls(
             id=b"%d" % number,
-            name=ensure_binary(reading.name),  # pylint: disable= six-ensure-str-bin-call
-            type=ensure_binary(reading.type),  # pylint: disable= six-ensure-str-bin-call
+            name=reading.name.encode("utf-8"),
+            type=reading.type.encode("utf-8"),
             value=(b"%0.2f" % reading.value) if reading.value else b"N/A",
-            unit=(
-                ensure_binary(reading.units)  # pylint: disable= six-ensure-str-bin-call
-                if reading.units != b"\xc2\xb0C"
-                else b"C"
-            ),
+            unit=(reading.units.encode("utf-8") if reading.units != b"\xc2\xb0C" else b"C"),
             health=cls._parse_health_txt(reading),
         )
 
@@ -156,7 +153,7 @@ class IPMIFetcher(Fetcher[AgentRawData]):
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         self._logger.log(VERBOSE, "Get IPMI data")
         if self._command is None:
-            raise MKFetcherError("Not connected")
+            raise OSError(errno.ENOTCONN, os.strerror(errno.ENOTCONN))
 
         return AgentRawData(b"" + self._sensors_section() + self._firmware_section())
 
@@ -194,7 +191,7 @@ class IPMIFetcher(Fetcher[AgentRawData]):
         # initialize a new session every cycle.
         # We also don't want to reuse sockets or other things from previous calls.
 
-        import pyghmi.ipmi.private.session as ipmi_session  # type: ignore[import-untyped]
+        import pyghmi.ipmi.private.session as ipmi_session
 
         ipmi_session.iothread.join()
         ipmi_session.iothread = None
@@ -218,7 +215,7 @@ class IPMIFetcher(Fetcher[AgentRawData]):
 
     def _sensors_section(self) -> AgentRawData:
         if self._command is None:
-            raise MKFetcherError("Not connected")
+            raise OSError(errno.ENOTCONN, os.strerror(errno.ENOTCONN))
 
         self._logger.debug("Fetching sensor data via UDP from %s:623", self._command.bmc)
 
@@ -258,7 +255,7 @@ class IPMIFetcher(Fetcher[AgentRawData]):
 
     def _firmware_section(self) -> AgentRawData:
         if self._command is None:
-            raise MKFetcherError("Not connected")
+            raise OSError(errno.ENOTCONN, os.strerror(errno.ENOTCONN))
 
         self._logger.debug("Fetching firmware information via UDP from %s:623", self._command.bmc)
         try:

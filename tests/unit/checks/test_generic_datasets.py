@@ -19,6 +19,7 @@ If you also want to test for specific results you can either provide the
 required variables manually (as in ''veritas_vcs_*.py''), or create a
 regression test dataset as described in ''checks/generictests/regression.py''
 """
+
 import datetime
 from importlib import import_module
 from zoneinfo import ZoneInfo
@@ -26,7 +27,7 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-from tests.unit.conftest import FixPluginLegacy
+from tests.unit.mocks_and_helpers import FixPluginLegacy
 
 from . import generictests
 

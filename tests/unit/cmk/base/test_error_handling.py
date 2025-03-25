@@ -5,6 +5,9 @@
 
 import pytest
 
+from cmk.ccc.exceptions import MKAgentError, MKGeneralException, MKTimeout
+
+from cmk.utils import paths
 from cmk.utils.hostaddress import HostName
 
 from cmk.snmplib import SNMPBackendEnum
@@ -13,8 +16,6 @@ from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.exitspec import ExitSpec
 
 from cmk.base.errorhandling import CheckResultErrorHandler
-
-from cmk.ccc.exceptions import MKAgentError, MKGeneralException, MKTimeout
 
 
 def _handler() -> CheckResultErrorHandler:
@@ -34,10 +35,10 @@ def test_no_error_keeps_status_from_callee() -> None:
 
     with _handler() as handler:
         check_result = ActiveCheckResult(
-            0,
-            "summary",
-            ("details", "lots of"),
-            ("metrics", "x"),
+            state=0,
+            summary="summary",
+            details=("details", "lots of"),
+            metrics=("metrics", "x"),
         )
 
     assert check_result is not None
@@ -81,3 +82,7 @@ def test_unhandled_exception_returns_3() -> None:
     assert handler.result is not None
     assert handler.result.state == 3
     assert handler.result.as_text().startswith("check failed - please submit a crash report!")
+    # "... (Crash-ID: ...)"
+    crash_id = handler.result.as_text().rsplit(" ", maxsplit=1)[-1][:-1]
+    crash_file = paths.crash_dir / "check" / crash_id / "crash.info"
+    crash_file.unlink()

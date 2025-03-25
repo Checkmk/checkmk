@@ -8,31 +8,24 @@ import time
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from datetime import timedelta
 from pathlib import Path
 
 from livestatus import SiteId
 
-from cmk.gui.background_job import (
-    BackgroundJob,
-    BackgroundJobRegistry,
-    BackgroundProcessInterface,
-    InitialStatusArgs,
-)
+from cmk.ccc import store
+from cmk.ccc.site import omd_site
+
 from cmk.gui.config import active_config
-from cmk.gui.cron import register_job
+from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.http import request
-from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.logged_in import user
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, wato_slave_sites
 from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.paths import wato_var_dir
 from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
-
-from cmk.ccc import store
-from cmk.ccc.site import omd_site
 
 AuditLogs = Sequence[AuditLogStore.Entry]
 SiteChangeSequence = Sequence[ChangeSpec]
@@ -41,10 +34,17 @@ LastSiteChanges = Mapping[SiteId, SiteChangeSequence]
 
 
 def register(
-    automation_command_registry: AutomationCommandRegistry, job_registry: BackgroundJobRegistry
+    automation_command_registry: AutomationCommandRegistry,
+    cron_job_registry: CronJobRegistry,
 ) -> None:
-    register_job(execute_sync_remote_sites)
-    job_registry.register(SyncRemoteSitesBackgroundJob)
+    cron_job_registry.register(
+        CronJob(
+            name="execute_sync_remote_sites",
+            callable=_execute_sync_remote_sites,
+            interval=timedelta(minutes=1),
+            run_in_thread=True,
+        )
+    )
 
     automation_command_registry.register(AutomationSyncRemoteSites)
     automation_command_registry.register(AutomationClearSiteChanges)
@@ -71,13 +71,14 @@ class SyncRemoteSitesResult:
         return cls(audit_logs, site_changes)
 
 
-class AutomationSyncRemoteSites(AutomationCommand):
+class AutomationSyncRemoteSites(AutomationCommand[int]):
     def command_name(self) -> str:
         return "sync-remote-site"
 
     def execute(self, api_request: int) -> str:
         site_id = omd_site()
 
+        # Note: This misses entries which are stored in the same second
         audit_logs = AuditLogStore().get_entries_since(timestamp=api_request)
         site_changes = SiteChanges(site_id).read()
 
@@ -87,16 +88,22 @@ class AutomationSyncRemoteSites(AutomationCommand):
         return int(request.get_str_input_mandatory("last_audit_log_timestamp"))
 
 
-class AutomationClearSiteChanges(AutomationCommand):
+class AutomationClearSiteChanges(AutomationCommand[str]):
     def command_name(self) -> str:
         return "clear-site-changes"
 
-    def execute(self, api_request: object = None) -> None:
+    def execute(self, api_request: str) -> None:
         site_id = omd_site()
-        SiteChanges(site_id).clear()
+        with SiteChanges(site_id).mutable_view() as site_entries:
+            keep_idx = len(site_entries)
+            for idx, entry in enumerate(site_entries):
+                if entry["id"] == api_request:
+                    keep_idx = idx + 1
+                    break
+            site_entries[:] = site_entries[keep_idx:]
 
-    def get_request(self) -> None:
-        pass
+    def get_request(self) -> str:
+        return request.get_str_input_mandatory("last_change_id")
 
 
 class LastAuditLogTimestampsStore:
@@ -122,15 +129,8 @@ def _get_last_audit_log_timestamps_path() -> Path:
     return wato_var_dir() / "log" / "last_audit_log_timestamps"
 
 
-class SyncRemoteSitesBackgroundJob(BackgroundJob):
-    job_prefix = "sync_remote_sites"
-
-    @classmethod
-    def gui_title(cls) -> str:
-        return _("Sync remote site changes and audit log")
-
+class SyncRemoteSitesJob:
     def __init__(self) -> None:
-        super().__init__(self.job_prefix)
         self._last_audit_log_timestamps_path = _get_last_audit_log_timestamps_path()
         self._last_audit_log_timestamps_store = LastAuditLogTimestampsStore(
             self._last_audit_log_timestamps_path
@@ -141,11 +141,7 @@ class SyncRemoteSitesBackgroundJob(BackgroundJob):
         """Some basic preliminary check to decide quickly whether to start the job"""
         return bool(wato_slave_sites())
 
-    def do_execute(self, job_interface: BackgroundProcessInterface) -> None:
-        with job_interface.gui_context():
-            self._execute(job_interface)
-
-    def _execute(self, job_interface: BackgroundProcessInterface) -> None:
+    def do_execute(self) -> None:
         with store.locked(self._last_audit_log_timestamps_path):
             prev_last_timestamps = self._last_audit_log_timestamps_store.load()
 
@@ -157,9 +153,7 @@ class SyncRemoteSitesBackgroundJob(BackgroundJob):
         ) = self._get_remote_changes(prev_last_timestamps)
 
         if failed_sites:
-            job_interface.send_progress_update(
-                _("Failed to get changes from sites: %s.") % ", ".join(sorted(failed_sites))
-            )
+            logger.error("Failed to get changes from sites: %s.", ", ".join(sorted(failed_sites)))
 
         audit_logs_synced_sites = (
             self._store_audit_logs(last_audit_logs) if last_audit_logs else None
@@ -172,16 +166,16 @@ class SyncRemoteSitesBackgroundJob(BackgroundJob):
             logger.debug(
                 "Removing site changes from sites: %s.", ", ".join(site_changes_synced_sites)
             )
-            self._clear_site_changes_from_remote_sites(site_changes_synced_sites)
+            self._clear_site_changes_from_remote_sites(last_site_changes)
 
         with store.locked(self._last_audit_log_timestamps_path):
             self._last_audit_log_timestamps_store.write(last_timestamps)
 
-        job_interface.send_result_message(
+        logger.info(
             self._get_result_message(last_audit_logs, audit_logs_synced_sites, "audit logs")
         )
 
-        job_interface.send_result_message(
+        logger.info(
             self._get_result_message(last_site_changes, site_changes_synced_sites, "site changes")
         )
 
@@ -276,9 +270,14 @@ class SyncRemoteSitesBackgroundJob(BackgroundJob):
         for site_id, num_entries in counter.items():
             logger.debug("Wrote %s %s entries from site %s", num_entries, change_name, site_id)
 
-    def _clear_site_changes_from_remote_sites(self, site_changes_synced_sites: set[SiteId]) -> None:
-        for site_id in site_changes_synced_sites:
-            do_remote_automation(get_site_config(active_config, site_id), "clear-site-changes", [])
+    def _clear_site_changes_from_remote_sites(self, last_site_changes: LastSiteChanges) -> None:
+        for site_id, site_changes in last_site_changes.items():
+            if site_changes:
+                do_remote_automation(
+                    get_site_config(active_config, site_id),
+                    "clear-site-changes",
+                    [("last_change_id", str(site_changes[-1]["id"]))],
+                )
 
     def _get_result_message(
         self,
@@ -287,12 +286,12 @@ class SyncRemoteSitesBackgroundJob(BackgroundJob):
         change_name: str,
     ) -> str:
         if not last_changes or not synced_remote_sites:
-            return _("No remote %s processed.") % change_name
+            return "No remote %s processed." % change_name
 
-        return _("Successfully got %s from sites: %s<br>%s") % (
+        return "Successfully got {} from sites: {}\n{}".format(
             change_name,
             ", ".join(sorted(synced_remote_sites)),
-            "<br>".join(
+            "\n".join(
                 [
                     f"{site_id}: {len(changes)}"
                     for site_id, changes in sorted(
@@ -304,25 +303,12 @@ class SyncRemoteSitesBackgroundJob(BackgroundJob):
         )
 
 
-def execute_sync_remote_sites() -> None:
+def _execute_sync_remote_sites() -> None:
     if is_wato_slave_site():
         return
 
-    job = SyncRemoteSitesBackgroundJob()
-    if job.is_active():
-        logger.debug("Another 'sync remote sites' job is already running: Skipping this time.")
-        return
-
-    if not job.shall_start():
+    if not wato_slave_sites():
         logger.debug("Job shall not start")
         return
 
-    job.start(
-        job.do_execute,
-        InitialStatusArgs(
-            title=SyncRemoteSitesBackgroundJob.gui_title(),
-            lock_wato=False,
-            stoppable=False,
-            user=str(user.id) if user.id else None,
-        ),
-    )
+    SyncRemoteSitesJob().do_execute()

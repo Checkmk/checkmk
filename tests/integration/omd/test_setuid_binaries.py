@@ -23,7 +23,7 @@ from tests.testlib.site import Site
     ],
 )
 def test_binary_capability(site: Site, rel_path: str, expected_capability: str) -> None:
-    if rel_path in ("lib/cmc/icmpreceiver", "lib/cmc/icmpsender") and site.version.is_raw_edition():
+    if rel_path in ("lib/cmc/icmpreceiver", "lib/cmc/icmpsender") and site.edition.is_raw_edition():
         pytest.skip("No cmc in raw edition")
 
     path = site.path(rel_path)

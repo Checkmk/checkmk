@@ -69,7 +69,6 @@ def inventory_cmciii_lcp_waterflow(section: Section) -> DiscoveryResult:
 
 
 def check_cmciii_lcp_waterflow(section: Section) -> CheckResult:
-
     state = State.OK
     if section.status != "OK":
         state = State.CRIT

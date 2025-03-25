@@ -38,7 +38,7 @@ std::optional<std::chrono::system_clock::time_point> last_statistics_update;
 constexpr auto statistics_interval = 5s;
 constexpr double rating_weight = 0.25;
 
-double lerp(double a, double b, double t) { return (1 - t) * a + t * b; }
+double lerp(double a, double b, double t) { return ((1 - t) * a) + (t * b); }
 }  // namespace
 
 void counterReset(Counter which) {

@@ -237,7 +237,7 @@ std::optional<DWORD> GetServiceStatus(SC_HANDLE service_handle) {
     SERVICE_STATUS_PROCESS ssp;
     auto buffer = reinterpret_cast<LPBYTE>(&ssp);
 
-    if (QueryServiceStatusEx(service_handle, SC_STATUS_PROCESS_INFO, buffer,
+    if (::QueryServiceStatusEx(service_handle, SC_STATUS_PROCESS_INFO, buffer,
                              sizeof SERVICE_STATUS_PROCESS,
                              &bytes_needed) == FALSE) {
         XLOG::l("QueryServiceStatusEx failed [{}]", GetLastError());
@@ -318,8 +318,7 @@ std::optional<DWORD> GetServiceStatusByName(const std::wstring &name) {
 }
 
 // from MS MSDN
-static uint32_t CalcDelay(SC_HANDLE handle) noexcept {
-    const auto hint = GetServiceHint(handle);
+uint32_t CalcDelayFromHint(uint32_t hint) noexcept {
     // Do not wait longer than the wait hint. A good interval is
     // one-tenth of the wait hint but not less than 1 second
     // and not more than 10 seconds.
@@ -329,6 +328,11 @@ static uint32_t CalcDelay(SC_HANDLE handle) noexcept {
     else if (delay > 10000)
         delay = 10000;
     return delay;
+}
+
+static uint32_t CalcDelay(SC_HANDLE handle) noexcept {
+    const auto hint = GetServiceHint(handle);
+    return CalcDelayFromHint(hint);
 }
 
 // internal function based om MS logic from the MSDN, and the logic is not a

@@ -6,10 +6,10 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.plugins.lib import memory
+
+check_info = {}
 
 
 def inventory_mem_vmalloc(section):
@@ -55,6 +55,7 @@ def check_mem_vmalloc(_item, params, section):
 
 
 check_info["mem.vmalloc"] = LegacyCheckDefinition(
+    name="mem_vmalloc",
     service_name="Vmalloc address space",
     sections=["mem"],
     discovery_function=inventory_mem_vmalloc,

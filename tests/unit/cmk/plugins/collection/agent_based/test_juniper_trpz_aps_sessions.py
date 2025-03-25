@@ -674,8 +674,6 @@ def test_parse_juniper_trpz_aps(
 )
 def test_check_juniper_trpz_aps(section: SectionAps, expected_results: CheckResult) -> None:
     results = list(check_juniper_trpz_aps(section))
-    for r in results:
-        print(r)
     assert results == expected_results
 
 
@@ -698,8 +696,6 @@ def test_cluster_check_juniper_trpz_aps(
     node_sections: Mapping[str, SectionAps | None], expected_results: CheckResult
 ) -> None:
     results = list(cluster_check_juniper_trpz_aps(node_sections))
-    for r in results:
-        print(r)
     assert results == expected_results
 
 
@@ -769,8 +765,7 @@ def test__check_common_juniper_trpz_aps_sessions_single(
 ) -> None:
     now = 1600000000
     vs: dict[str, Any] = {}
-    for _ in range(2):
-        results = list(_check_common_juniper_trpz_aps_sessions(vs, now, "ap1", node_sections))
+    results = list(_check_common_juniper_trpz_aps_sessions(vs, now, "ap1", node_sections))
     assert results == expected_results
 
 
@@ -809,8 +804,7 @@ def test__check_common_juniper_trpz_aps_sessions_cluster(
 ) -> None:
     now = 1600000000
     vs: dict[str, Any] = {}
-    for _ in range(2):
-        results = list(_check_common_juniper_trpz_aps_sessions(vs, now, "ap1", node_sections))
+    results = list(_check_common_juniper_trpz_aps_sessions(vs, now, "ap1", node_sections))
     assert results == expected_results
 
 

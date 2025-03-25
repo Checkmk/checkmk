@@ -2,6 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+# ruff: noqa: A005
 
 from __future__ import annotations
 
@@ -12,11 +13,13 @@ import re
 import time
 import typing
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from enum import Enum
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Literal, overload
 
 from flask import current_app, session
+
+import cmk.ccc.version as cmk_version
 
 import cmk.utils.paths
 
@@ -24,11 +27,12 @@ from cmk.gui import log, utils
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.hooks import request_memoize
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu_entry import enable_page_menu_entry
+from cmk.gui.theme import Theme
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import (
     Choice,
     ChoiceGroup,
@@ -42,13 +46,9 @@ from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.popups import PopupMethod
-from cmk.gui.utils.theme import theme, Theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import doc_reference_url, DocReference, requested_file_name
 from cmk.gui.utils.user_errors import user_errors
-
-import cmk.ccc.version as cmk_version
-from cmk.ccc.exceptions import MKGeneralException
 
 from .generator import HTMLWriter
 from .tag_rendering import (
@@ -63,29 +63,10 @@ from .tag_rendering import (
 from .type_defs import RequireConfirmation
 
 
-class ExperimentalRenderMode(Enum):
-    BACKEND = "backend"
-    FRONTEND = "frontend"
-    BACKEND_AND_FRONTEND = "backend_and_frontend"
-
-
-@request_memoize()
-def get_render_mode() -> ExperimentalRenderMode:
-    # Settings via url overwrite config based settings
-    if (rendering_mode := html.request.var("experimental_render_mode", None)) is None:
-        rendering_mode = active_config.experimental_features.get(
-            "render_mode", ExperimentalRenderMode.BACKEND.value
-        )
-
-    match rendering_mode:
-        case ExperimentalRenderMode.BACKEND.value:
-            return ExperimentalRenderMode.BACKEND
-        case ExperimentalRenderMode.FRONTEND.value:
-            return ExperimentalRenderMode.FRONTEND
-        case ExperimentalRenderMode.BACKEND_AND_FRONTEND.value:
-            return ExperimentalRenderMode.BACKEND_AND_FRONTEND
-        case _:
-            raise MKGeneralException(_("Unknown rendering mode %s") % rendering_mode)
+class _Manifest(typing.NamedTuple):
+    main: str
+    main_stylesheets: list[str]
+    stage1: str
 
 
 def inject_js_profiling_code():
@@ -190,10 +171,9 @@ class HTMLGenerator(HTMLWriter):
         help_text = HTML.without_escaping(self.resolve_help_text_macros(stripped))
 
         self.enable_help_toggle()
-        style: str = "display:%s;" % ("flex" if user.show_help else "none")
         inner_html: HTML = HTMLWriter.render_div(self.render_icon("info"), class_="info_icon")
         inner_html += HTMLWriter.render_div(help_text, class_="help_text")
-        return HTMLWriter.render_div(inner_html, class_="help", style=style)
+        return HTMLWriter.render_div(inner_html, class_="help")
 
     @staticmethod
     def resolve_help_text_macros(text: str) -> str:
@@ -255,9 +235,13 @@ class HTMLGenerator(HTMLWriter):
         if self.link_target:
             self.base(target=self.link_target)
 
+        font_css_filepath = "themes/facelift/fonts_inter.css"
         css_filepath = theme.url("theme.css")
-        if current_app.debug:
+
+        if current_app.debug and not current_app.testing:
             HTMLGenerator._verify_file_exists_in_web_dirs(css_filepath)
+            HTMLGenerator._verify_file_exists_in_web_dirs(font_css_filepath)
+        self.stylesheet(HTMLGenerator._append_cache_busting_query(font_css_filepath))
         self.stylesheet(HTMLGenerator._append_cache_busting_query(css_filepath))
 
         self._add_custom_style_sheet()
@@ -266,18 +250,12 @@ class HTMLGenerator(HTMLWriter):
         for js in javascripts:
             js_filepath = f"js/{js}_min.js"
             js_url = HTMLGenerator._append_cache_busting_query(js_filepath)
-            if js == "vue" and active_config.load_frontend_vue == "inject":
-                # stage1 will try to load the hot reloading files. if this fails,
-                # an error will be shown and the fallback files will be loaded.
-                self.js_entrypoint(
-                    json.dumps({"fallback": [js_url]}),
-                    type_="cmk-entrypoint-vue-stage1",
-                )
-                self.javascript_file(HTMLGenerator._append_cache_busting_query("js/vue_stage1.js"))
-            else:
-                if current_app.debug:
-                    HTMLGenerator._verify_file_exists_in_web_dirs(js_filepath)
-                self.javascript_file(js_url)
+            if current_app.debug and not current_app.testing:
+                HTMLGenerator._verify_file_exists_in_web_dirs(js_filepath)
+            self.javascript_file(js_url)
+
+        if "main" in javascripts:
+            self._inject_vue_frontend()
 
         self.set_js_csrf_token()
 
@@ -285,6 +263,33 @@ class HTMLGenerator(HTMLWriter):
             self.javascript(f"cmk.utils.set_reload({self.browser_reload})")
 
         self.close_head()
+
+    @lru_cache
+    def _load_vue_manifest(self) -> _Manifest:
+        base = Path(cmk.utils.paths.web_dir, "htdocs", "cmk-frontend-vue")
+        with (base / ".manifest.json").open() as fo:
+            manifest = json.load(fo)
+
+        main = f"cmk-frontend-vue/{manifest['src/main.ts']['file']}"
+        main_stylesheets = manifest["src/main.ts"]["css"]
+        stage1 = f"cmk-frontend-vue/{manifest['src/stage1.ts']['file']}"
+        return _Manifest(main, main_stylesheets, stage1)
+
+    def _inject_vue_frontend(self):
+        manifest = self._load_vue_manifest()
+        if active_config.load_frontend_vue == "inject":
+            # stage1 will try to load the hot reloading files. if this fails,
+            # an error will be shown and the fallback files will be loaded.
+            self.js_entrypoint(
+                json.dumps({"fallback": [manifest.main]}),
+                type_="cmk-entrypoint-vue-stage1",
+            )
+            self.javascript_file(manifest.stage1)
+        else:
+            # production setup
+            self.javascript_file(manifest.main, type_="module")
+            for stylesheet in manifest.main_stylesheets:
+                self.stylesheet(f"cmk-frontend-vue/{stylesheet}")
 
     def _inject_profiling_code(self):
         self.javascript("const startTime = Date.now();")
@@ -353,8 +358,6 @@ class HTMLGenerator(HTMLWriter):
         force: bool = False,
     ) -> None:
         javascript_files = [main_javascript]
-        if get_render_mode() != ExperimentalRenderMode.BACKEND:
-            javascript_files.append("vue")
         if force or not self._header_sent:
             self.write_html(HTML.without_escaping("<!DOCTYPE HTML>\n"))
             self.open_html()
@@ -374,8 +377,10 @@ class HTMLGenerator(HTMLWriter):
         classes = self._body_classes[:]
         if self.screenshotmode:
             classes += ["screenshotmode"]
-        if user.show_help:
-            classes += ["show_help"]
+        if user.inline_help_as_text:
+            classes += ["inline_help_as_text"]
+        if user.get_attribute("contextual_help_icon"):
+            classes += ["inline_help_hide_icon"]
         return classes
 
     def html_foot(self) -> None:
@@ -462,7 +467,7 @@ class HTMLGenerator(HTMLWriter):
             enctype=enctype if method.lower() == "post" else None,
         )
         if hasattr(session, "session_info"):
-            self.hidden_field("csrf_token", session.session_info.csrf_token)
+            self.hidden_field("_csrf_token", session.session_info.csrf_token)
 
         self.hidden_field("filled_in", name, add_var=True)
         if add_transid:
@@ -960,7 +965,7 @@ class HTMLGenerator(HTMLWriter):
 
     # Choices is a list pairs of (key, title). They keys of the choices
     # and the default value must be of type None, str or unicode.
-    def dropdown(  # pylint: disable=too-many-branches
+    def dropdown(
         self,
         varname: str,
         choices: Iterable[Choice] | Iterable[ChoiceGroup],
@@ -1190,7 +1195,7 @@ class HTMLGenerator(HTMLWriter):
         self.write_html(HTMLGenerator.render_icon("trans"))
 
     @staticmethod
-    def render_icon(  # pylint: disable=redefined-outer-name
+    def render_icon(
         icon: Icon,
         title: str | None = None,
         id_: str | None = None,
@@ -1257,7 +1262,7 @@ class HTMLGenerator(HTMLWriter):
         )
 
     @staticmethod
-    def render_icon_button(  # pylint: disable=redefined-outer-name
+    def render_icon_button(
         url: None | str,
         title: str,
         icon: Icon,
@@ -1292,7 +1297,7 @@ class HTMLGenerator(HTMLWriter):
             onclick=onclick,
         )
 
-    def icon_button(  # pylint: disable=redefined-outer-name
+    def icon_button(
         self,
         url: str | None,
         title: str,
@@ -1392,10 +1397,7 @@ class HTMLGenerator(HTMLWriter):
 
         if popup_group:
             onmouseenter: str | None = (
-                "cmk.popup_menu.switch_popup_menu_group(this, {}, {})".format(
-                    json.dumps(popup_group),
-                    json.dumps(hover_switch_delay),
-                )
+                f"cmk.popup_menu.switch_popup_menu_group(this, {json.dumps(popup_group)}, {json.dumps(hover_switch_delay)})"
             )
             onmouseleave: str | None = "cmk.popup_menu.stop_popup_menu_group_switch(this)"
         else:
@@ -1501,7 +1503,7 @@ def _path(path_or_str: str) -> Path: ...
 
 
 def _path(path_or_str: Path | str) -> Path:
-    if isinstance(path_or_str, str):  # pylint: disable=no-else-return
+    if isinstance(path_or_str, str):
         return Path(path_or_str)
     else:
         return path_or_str

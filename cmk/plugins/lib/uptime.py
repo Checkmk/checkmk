@@ -6,13 +6,15 @@ import time
 from collections.abc import Mapping
 from typing import Any, NamedTuple
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v2 import check_levels as check_levels_v2
 from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
     render,
     Result,
     Service,
+    SNMPTree,
     State,
     StringTable,
 )
@@ -21,6 +23,17 @@ from cmk.agent_based.v2 import (
 class Section(NamedTuple):
     uptime_sec: float | None
     message: str | None
+
+
+UPTIME_TREE = SNMPTree(
+    base=".1.3.6.1.2.1",
+    oids=[
+        # On Linux appliances: .1.3.6.1.2.1.1.3.0    means uptime of snmpd
+        #                      .1.3.6.1.2.1.25.1.1.0 means system uptime
+        "1.3",  # DISMAN-EVENT-MIB::sysUpTime
+        "25.1.1",  # HOST-RESOURCES-MIB::hrSystemUptime
+    ],
+)
 
 
 def discover(section: Section) -> DiscoveryResult:
@@ -38,14 +51,28 @@ def check(params: Mapping[str, Any], section: Section) -> CheckResult:
     up_date = render.datetime(time.time() - section.uptime_sec)
     yield Result(state=State.OK, summary=f"Up since {up_date}")
 
-    yield from check_levels(
-        section.uptime_sec,
-        levels_upper=params.get("max"),
-        levels_lower=params.get("min"),
-        metric_name="uptime",
-        render_func=render.timespan,
-        label="Uptime",
-    )
+    # Support both API versions as long as not all plugins using this library are migrated
+    levels_upper = params.get("max")
+    levels_lower = params.get("min")
+    match (levels_upper, levels_lower):
+        case ((int() | float(), int() | float()), _) | (_, (int() | float(), int() | float())):
+            yield from check_levels_v1(
+                section.uptime_sec,
+                levels_upper=levels_upper,
+                levels_lower=levels_lower,
+                metric_name="uptime",
+                render_func=render.timespan,
+                label="Uptime",
+            )
+        case _:
+            yield from check_levels_v2(
+                section.uptime_sec,
+                levels_upper=levels_upper,
+                levels_lower=levels_lower,
+                metric_name="uptime",
+                render_func=render.timespan,
+                label="Uptime",
+            )
 
 
 def parse_snmp_uptime(string_table: StringTable) -> Section | None:

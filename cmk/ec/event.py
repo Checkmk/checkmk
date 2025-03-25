@@ -9,7 +9,7 @@ from logging import Logger
 from re import findall
 from time import localtime, mktime, strptime
 from time import time as _time
-from typing import TypedDict
+from typing import Literal, TypedDict
 
 from dateutil.parser import isoparse
 from dateutil.tz import tzlocal
@@ -17,6 +17,12 @@ from dateutil.tz import tzlocal
 from livestatus import SiteId
 
 from cmk.utils.hostaddress import HostAddress, HostName
+
+# State transitions (probably incomplete):
+#   {ack, open, counting} => closed
+#   {ack, delayed}  => open
+#   {open} => ack
+EventPhase = Literal["open", "delayed", "counting", "ack", "closed"]
 
 
 # This is far from perfect, but at least we see all possible keys.
@@ -45,12 +51,12 @@ class Event(TypedDict, total=False):
     last: float
     last_token: float
     live_until: float
-    live_until_phases: Iterable[str]
+    live_until_phases: Iterable[EventPhase]
     match_groups: Iterable[str]
     match_groups_syslog_application: Iterable[str]
     orig_host: HostName
     owner: str
-    phase: str
+    phase: EventPhase
     rule_id: str | None
     site: SiteId
     sl: int
@@ -97,14 +103,12 @@ def create_event_from_syslog_message(
         width = max(len(k) for k in event) + 1
         logger.info(
             "parsed message: %s",
-            "".join(f'\n {k + ":":{width}} {v}' for k, v in sorted(event.items())),
+            "".join(f"\n {k + ':':{width}} {v}" for k, v in sorted(event.items())),
         )
     return event
 
 
-def parse_syslog_message_into_event(  # pylint: disable=too-many-branches
-    line: str, ipaddress: str
-) -> Event:
+def parse_syslog_message_into_event(line: str, ipaddress: str) -> Event:
     """
     Variant 1: plain syslog message without priority/facility:
     May 26 13:45:01 Klapprechner CRON[8046]:  message....
@@ -404,7 +408,7 @@ def fix_broken_sophos_timestamp(timestamp: str) -> str:
     # Step 3: Add explicit offset for local time
     offset = current_utcoffset_seconds()
     hours, minutes = divmod(abs(offset) // 60, 60)
-    return timestamp + f'{"-" if offset < 0 else "+"}{hours:02}{minutes:02}'
+    return timestamp + f"{'-' if offset < 0 else '+'}{hours:02}{minutes:02}"
 
 
 def current_utcoffset_seconds() -> int:

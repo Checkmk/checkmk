@@ -11,11 +11,12 @@ from collections.abc import Iterable, Mapping, MutableMapping
 from dataclasses import dataclass
 from typing import Any
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.graylog import handle_graylog_messages
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render, StringTable
+
+check_info = {}
 
 # <<<graylog_sources>>>
 # {"sources": {"172.18.0.1": {"messages": 457, "has_since": false}}}
@@ -96,6 +97,7 @@ def discover_graylog_sources(section):
 
 
 check_info["graylog_sources"] = LegacyCheckDefinition(
+    name="graylog_sources",
     parse_function=parse_graylog_sources,
     service_name="Graylog Source %s",
     discovery_function=discover_graylog_sources,

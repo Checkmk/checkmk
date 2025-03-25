@@ -6,11 +6,12 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_dict
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.plugins.lib import memory
+
+check_info = {}
 
 
 def inventory_mem_linux(section):
@@ -38,6 +39,7 @@ def check_mem_linux(_no_item, params, section):
         + section.get("SReclaimable", 0)
     )
 
+    # RAM, https://github.com/Checkmk/checkmk/commit/1657414506bfe8f4001f3e10ef648947276ad75d
     section["MemUsed"] = section["MemTotal"] - section["MemFree"] - section["Caches"]
     section["SwapUsed"] = section["SwapTotal"] - section["SwapFree"]
     section["TotalTotal"] = section["MemTotal"] + section["SwapTotal"]
@@ -120,6 +122,7 @@ def _camelcase_to_underscored(name):
 
 
 check_info["mem.linux"] = LegacyCheckDefinition(
+    name="mem_linux",
     service_name="Memory",
     sections=["mem"],
     discovery_function=inventory_mem_linux,

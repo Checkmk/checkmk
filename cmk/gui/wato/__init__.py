@@ -11,7 +11,10 @@ backend business and persistence logic, which is also shared with the REST API.
 
 # A huge number of imports are here to be compatible with old GUI plugins. Once we dropped support
 # for them, we can remove this here and the imports
-# pylint: disable=unused-import
+# ruff: noqa: F401
+
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.paths
 
 import cmk.gui.valuespec
@@ -32,7 +35,6 @@ import cmk.gui.watolib.translation
 import cmk.gui.watolib.user_scripts
 import cmk.gui.watolib.utils
 from cmk.gui import background_job, forms, gui_background_job, sites, userdb, utils, watolib, weblib
-from cmk.gui.cron import register_job
 from cmk.gui.hooks import register_hook as register_hook
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
@@ -72,13 +74,18 @@ from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.watolib.hosts_and_folders import ajax_popup_host_action_menu
 from cmk.gui.watolib.main_menu import MenuItem, register_modules, WatoModule
 from cmk.gui.watolib.mode import mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.watolib.notification_parameter import (
+    notification_parameter_registry as notification_parameter_registry,
+)
+from cmk.gui.watolib.notification_parameter import NotificationParameter as NotificationParameter
+from cmk.gui.watolib.notification_parameter import (
+    NotificationParameterRegistry as NotificationParameterRegistry,
+)
+from cmk.gui.watolib.notification_parameter import register_notification_parameters
 from cmk.gui.watolib.rulespecs import register_check_parameters as register_check_parameters
 from cmk.gui.watolib.rulespecs import register_rule as register_rule
 from cmk.gui.watolib.sites import LivestatusViaTCP
 from cmk.gui.watolib.translation import HostnameTranslation
-
-import cmk.ccc.version as cmk_version
-from cmk.ccc.exceptions import MKGeneralException
 
 from ._check_mk_configuration import monitoring_macro_help as monitoring_macro_help
 from ._check_mk_configuration import PluginCommandLine as PluginCommandLine
@@ -90,13 +97,7 @@ from ._group_selection import ServiceGroupSelection as ServiceGroupSelection
 from ._http_proxy import HTTPProxyReference as HTTPProxyReference
 from ._levels import Levels as Levels
 from ._levels import PredictiveLevels as PredictiveLevels
-from ._notification_parameter import (
-    notification_parameter_registry as notification_parameter_registry,
-)
-from ._notification_parameter import NotificationParameter as NotificationParameter
 from ._notification_parameter import NotificationParameterMail as NotificationParameterMail
-from ._notification_parameter import NotificationParameterRegistry as NotificationParameterRegistry
-from ._notification_parameter import register_notification_parameters
 from ._permissions import PermissionSectionWATO as PermissionSectionWATO
 from ._rulespec_groups import RulespecGroupActiveChecks as RulespecGroupActiveChecks
 from ._rulespec_groups import (
@@ -165,6 +166,7 @@ from .pages._simple_modes import SimpleEditMode as SimpleEditMode
 from .pages._simple_modes import SimpleListMode as SimpleListMode
 from .pages._simple_modes import SimpleModeType as SimpleModeType
 from .pages._tile_menu import TileMenuRenderer as TileMenuRenderer
+from .pages.user_profile.mega_menu import default_user_menu_topics as default_user_menu_topics
 
 # Has to be kept for compatibility with pre 1.6 register_rule() and register_check_parameters()
 # calls in the Setup plug-in context

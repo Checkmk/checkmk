@@ -11,7 +11,7 @@ import pytest
 
 from tests.unit.cmk.plugins.collection.agent_based.snmp import snmp_is_detected
 
-from cmk.utils.sectionname import SectionName
+from cmk.plugins.collection.agent_based.apc_symmetra_power import snmp_section_apc_symmetra_power
 
 # SUP-12323
 DATA0 = """
@@ -24,7 +24,6 @@ DATA1 = """
 """
 
 
-@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
     "walk",
     [
@@ -33,4 +32,4 @@ DATA1 = """
     ],
 )
 def test_apc_symmetra_power_detect(walk: str, as_path: Callable[[str], Path]) -> None:
-    assert snmp_is_detected(SectionName("apc_symmetra_power"), as_path(walk))
+    assert snmp_is_detected(snmp_section_apc_symmetra_power, as_path(walk))

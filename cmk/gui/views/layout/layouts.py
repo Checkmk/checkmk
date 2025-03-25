@@ -7,9 +7,9 @@ import abc
 import re
 from collections.abc import Hashable, Iterator, Sequence
 from functools import partial
-from typing import Any
+from typing import Any, override
 
-from cmk.utils.regex import escape_regex_chars
+from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.gui import utils
 from cmk.gui.config import active_config
@@ -19,15 +19,13 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.painter.v0.base import Cell, EmptyCell
+from cmk.gui.painter.v0 import Cell, EmptyCell
 from cmk.gui.painter.v1.helpers import is_stale
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.table import init_rowselect, table_element
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import GroupSpec, Row, Rows, ViewSpec
-from cmk.gui.utils.theme import theme
 from cmk.gui.visual_link import render_link_to_view
-
-from cmk.ccc.exceptions import MKGeneralException
 
 from .base import Layout
 from .helpers import group_value
@@ -74,17 +72,21 @@ class LayoutSingleDataset(Layout):
     more than on dataset however."""
 
     @property
+    @override
     def ident(self) -> str:
         return "dataset"
 
     @property
+    @override
     def title(self) -> str:
         return _("Single dataset")
 
     @property
+    @override
     def can_display_checkboxes(self) -> bool:
         return False
 
+    @override
     def render(
         self,
         rows: Rows,
@@ -130,6 +132,7 @@ class GroupedBoxesLayout(Layout):
     def _css_class(self) -> str | None:
         raise NotImplementedError()
 
+    @override
     def render(
         self,
         rows: Rows,
@@ -182,7 +185,7 @@ class GroupedBoxesLayout(Layout):
         html.close_tr()
         html.close_table()
 
-    def _render_group(  # pylint: disable=too-many-branches
+    def _render_group(
         self,
         rows_with_ids: list[tuple[str, Row]],
         view: ViewSpec,
@@ -388,8 +391,8 @@ def calculate_view_grouping_of_services(
                 continue  # skip grouping first row
 
             if current_group == group_spec:
-                row = rows_with_ids.pop(index)
-                rows_with_ids.insert(index - len(groups[group_id][1]), row)
+                r = rows_with_ids.pop(index)
+                rows_with_ids.insert(index - len(groups[group_id][1]), r)
                 continue
 
         current_group = group_spec
@@ -404,18 +407,26 @@ def calculate_view_grouping_of_services(
     return groupings, rows_with_ids
 
 
+def get_group_spec(group_spec: GroupSpec, service_name: str) -> GroupSpec:
+    if re.findall(r"\\\d", group_spec["title"]):
+        return GroupSpec(
+            title=re.sub(
+                pattern=group_spec["pattern"],
+                repl=group_spec["title"],
+                string=service_name,
+            ),
+            pattern=group_spec["pattern"],
+            min_items=group_spec["min_items"],
+        )
+    return group_spec
+
+
 def try_to_match_group(row: Row) -> GroupSpec | None:
     for group_spec in active_config.service_view_grouping:
         if row.get("service_description") and re.match(
             group_spec["pattern"], row["service_description"]
         ):
-            if re.findall(r"(\([^)]*\))", group_spec["pattern"]):
-                group_spec["title"] = re.sub(
-                    group_spec["pattern"],
-                    escape_regex_chars(group_spec["title"]),
-                    row["service_description"],
-                )
-            return group_spec
+            return get_group_spec(group_spec, row["service_description"])
 
     return None
 
@@ -425,21 +436,26 @@ class LayoutBalancedBoxes(GroupedBoxesLayout):
     stacked in columns and can have different sizes."""
 
     @property
+    @override
     def ident(self) -> str:
         return "boxed"
 
     @property
+    @override
     def title(self) -> str:
         return _("Balanced boxes")
 
     @property
+    @override
     def can_display_checkboxes(self) -> bool:
         return True
 
+    @override
     def _css_class(self) -> str | None:
         return None
 
     @property
+    @override
     def hide_entries_per_row(self) -> bool:
         return True
 
@@ -448,17 +464,21 @@ class LayoutBalancedGraphBoxes(GroupedBoxesLayout):
     """Same as balanced boxes layout but adds a CSS class graph to the box"""
 
     @property
+    @override
     def ident(self) -> str:
         return "boxed_graph"
 
     @property
+    @override
     def title(self) -> str:
         return _("Balanced graph boxes")
 
     @property
+    @override
     def can_display_checkboxes(self) -> bool:
         return True
 
+    @override
     def _css_class(self) -> str | None:
         return "graph"
 
@@ -467,18 +487,22 @@ class LayoutTiled(Layout):
     """The tiled layout puts each dataset into one box with a fixed size"""
 
     @property
+    @override
     def ident(self) -> str:
         return "tiled"
 
     @property
+    @override
     def title(self) -> str:
         return _("Tiles")
 
     @property
+    @override
     def can_display_checkboxes(self) -> bool:
         return True
 
-    def render(  # pylint: disable=too-many-branches
+    @override
+    def render(
         self,
         rows: Rows,
         view: ViewSpec,
@@ -551,7 +575,7 @@ class LayoutTiled(Layout):
             # We need at least five cells
             render_cells = list(cells)
             if len(render_cells) < 5:
-                render_cells += [EmptyCell(None, None)] * (5 - len(render_cells))
+                render_cells += [EmptyCell(None, None, None)] * (5 - len(render_cells))
 
             rendered = [cell.render(row, link_renderer) for cell in render_cells]
 
@@ -608,18 +632,22 @@ class LayoutTable(Layout):
     width of the columns."""
 
     @property
+    @override
     def ident(self) -> str:
         return "table"
 
     @property
+    @override
     def title(self) -> str:
         return _("Table")
 
     @property
+    @override
     def can_display_checkboxes(self) -> bool:
         return True
 
-    def render(  # pylint: disable=too-many-branches
+    @override
+    def render(
         self,
         rows: Rows,
         view: ViewSpec,
@@ -809,21 +837,26 @@ class LayoutMatrix(Layout):
     The columns are hosts and the rows are services."""
 
     @property
+    @override
     def ident(self) -> str:
         return "matrix"
 
     @property
+    @override
     def title(self) -> str:
         return _("Matrix")
 
     @property
+    @override
     def can_display_checkboxes(self) -> bool:
         return False
 
     @property
+    @override
     def has_individual_csv_export(self) -> bool:
         return True
 
+    @override
     def csv_export(
         self, rows: Rows, view: ViewSpec, group_cells: Sequence[Cell], cells: Sequence[Cell]
     ) -> None:
@@ -871,7 +904,8 @@ class LayoutMatrix(Layout):
                                 html.write_text_permissive(",")
                             html.write_text_permissive(content)
 
-    def render(  # pylint: disable=too-many-branches
+    @override
+    def render(
         self,
         rows: Rows,
         view: ViewSpec,
@@ -1009,6 +1043,7 @@ class LayoutMatrix(Layout):
         return counts, majorities
 
     @property
+    @override
     def painter_options(self) -> list[str]:
         return ["matrix_omit_uniform"]
 

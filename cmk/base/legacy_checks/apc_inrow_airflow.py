@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.apc import DETECT
+
+check_info = {}
 
 
 def inventory_apc_inrow_airflow(info):
@@ -53,6 +53,7 @@ def parse_apc_inrow_airflow(string_table: StringTable) -> StringTable:
 
 
 check_info["apc_inrow_airflow"] = LegacyCheckDefinition(
+    name="apc_inrow_airflow",
     parse_function=parse_apc_inrow_airflow,
     detect=DETECT,
     fetch=SNMPTree(

@@ -2,18 +2,15 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Sequence
+from tests.unit.cmk.gui.quick_setup.factories import QuickSetupFactory
 
-from tests.unit.cmk.gui.quick_setup.factories import QuickSetupFactory, QuickSetupStageFactory
-
-from cmk.gui.quick_setup.to_frontend import (
-    build_quick_setup_formspec_map,
-    recaps_form_spec,
-    retrieve_next_stage,
-)
-from cmk.gui.quick_setup.v0_unstable.definitions import IncomingStage
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupStage
-from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, RawFormData, StageId
+from cmk.gui.quick_setup.handlers.stage import recap_stage
+from cmk.gui.quick_setup.handlers.utils import InfoLogger
+from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
+from cmk.gui.quick_setup.v0_unstable.predefined import build_formspec_map_from_stages
+from cmk.gui.quick_setup.v0_unstable.predefined._recaps import recaps_form_spec
+from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupStage, QuickSetupStageAction
+from cmk.gui.quick_setup.v0_unstable.type_defs import ActionId, RawFormData, StageIndex
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, FormSpecRecap, FormSpecWrapper
 
 from cmk.rulesets.v1 import Title
@@ -22,8 +19,7 @@ from cmk.rulesets.v1.form_specs import DictElement, Dictionary, FieldSize, Strin
 
 def test_form_spec_recap() -> None:
     setup_stages = [
-        QuickSetupStage(
-            stage_id=StageId(1),
+        lambda: QuickSetupStage(
             title="stage1",
             configure_components=[
                 FormSpecWrapper(
@@ -42,26 +38,37 @@ def test_form_spec_recap() -> None:
                     ),
                 ),
             ],
-            validators=[],
-            recap=[],
-            button_label="Next",
+            actions=[
+                QuickSetupStageAction(
+                    id=ActionId("action"),
+                    custom_validators=[],
+                    recap=[recaps_form_spec],
+                    next_button_label="Next",
+                )
+            ],
         ),
     ]
+    quick_setup = QuickSetupFactory.build(stages=setup_stages)
+    quick_setup_registry.register(quick_setup)
+    stage_index = StageIndex(0)
 
-    form_data: Sequence[ParsedFormData] = [
-        {FormSpecId("wrapper"): {"test_dict_element": "I am a test string"}}
-    ]
-    recap = list(recaps_form_spec(form_data, build_quick_setup_formspec_map(setup_stages)))
+    built_stages = [stage() for stage in quick_setup.stages[: stage_index + 1]]
+    form_spec_map = build_formspec_map_from_stages(built_stages)
 
-    assert len(recap) == 1
-    assert isinstance(recap[0], FormSpecRecap)
-    assert recap[0].form_spec.data == form_data[0][FormSpecId("wrapper")]  # type: ignore[attr-defined]
-
-
-def test_retrieve_next_following_last_stage() -> None:
-    quick_setup = QuickSetupFactory.build(
-        stages=[QuickSetupStageFactory.build(stage_id=StageId(1))]
+    stage_recap = recap_stage(
+        quick_setup_id=quick_setup.id,
+        stage_index=stage_index,
+        stages=built_stages,
+        stage_action_id=ActionId("action"),
+        stages_raw_formspecs=[
+            RawFormData({FormSpecId("wrapper"): {"test_dict_element": "I am a test string"}})
+        ],
+        quick_setup_formspec_map=form_spec_map,
+        progress_logger=InfoLogger(),
     )
-    incoming_stages = [IncomingStage(stage_id=StageId(1), form_data=RawFormData({}))]
-    stage = retrieve_next_stage(quick_setup=quick_setup, incoming_stages=incoming_stages)
-    assert stage.next_stage_structure is None
+
+    assert len(stage_recap) == 1
+    assert isinstance(stage_recap[0], FormSpecRecap)
+    assert stage_recap[0].form_spec.data == {  # type: ignore[attr-defined]
+        "test_dict_element": "I am a test string"
+    }

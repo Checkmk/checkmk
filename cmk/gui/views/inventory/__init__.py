@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from __future__ import annotations
 
@@ -13,28 +12,23 @@ from cmk.utils.structured_data import SDKey, SDPath
 from cmk.utils.user import UserId
 
 from cmk.gui import inventory
-from cmk.gui.data_source import data_source_registry, DataSourceRegistry
+from cmk.gui.data_source import data_source_registry
 from cmk.gui.i18n import _, _l
 from cmk.gui.inventory.filters import FilterInvBool, FilterInvFloat, FilterInvText
-from cmk.gui.pages import PageRegistry
-from cmk.gui.painter.v0.base import Painter, painter_registry, PainterRegistry
-from cmk.gui.painter_options import PainterOptionRegistry, PainterOptions
+from cmk.gui.painter.v0 import Painter, painter_registry
+from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import (
     ColumnSpec,
     FilterName,
-    SorterSpec,
-    ViewName,
-    ViewSpec,
     VisualContext,
     VisualLinkSpec,
 )
-from cmk.gui.views.sorter import cmp_simple_number, declare_1to1_sorter, Sorter, sorter_registry
+from cmk.gui.views.sorter import Sorter, sorter_registry
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.visuals.info import visual_info_registry, VisualInfo
 
-from . import _paint_functions, builtin_display_hints
-from ._data_sources import ABCDataSourceInventory, DataSourceInventoryHistory, RowTableInventory
+from ._data_sources import ABCDataSourceInventory, RowTableInventory
 from ._display_hints import (
     AttributeDisplayHint,
     inv_display_hints,
@@ -49,16 +43,9 @@ from ._painters import (
     ColumnPainterFromHint,
     node_painter_from_hint,
     NodePainterFromHint,
-    PainterInventoryTree,
-    PainterInvhistChanged,
-    PainterInvhistDelta,
-    PainterInvhistNew,
-    PainterInvhistRemoved,
-    PainterInvhistTime,
-    PainterOptionShowInternalTreePaths,
 )
 from ._sorter import attribute_sorter_from_hint, column_sorter_from_hint, SorterFromHint
-from ._tree_renderer import ajax_inv_render_tree, make_table_view_name_of_host
+from ._tree_renderer import make_table_view_name_of_host
 from .registry import (
     inv_paint_funtions,
     inventory_displayhints,
@@ -77,43 +64,6 @@ def register_inv_paint_functions(mapping: Mapping[str, object]) -> None:
     for k, v in mapping.items():
         if k.startswith(PAINT_FUNCTION_NAME_PREFIX) and callable(v):
             inv_paint_funtions.register(InvPaintFunction(name=k, func=v))
-
-
-def register(
-    page_registry: PageRegistry,
-    data_source_registry_: DataSourceRegistry,
-    painter_registry_: PainterRegistry,
-    painter_option_registry: PainterOptionRegistry,
-    multisite_builtin_views_: dict[ViewName, ViewSpec],
-) -> None:
-    register_inv_paint_functions(
-        # Do no overwrite paint functions from plugins
-        {k: v for k, v in vars(_paint_functions).items() if k not in inv_paint_funtions}
-    )
-    builtin_display_hints.register(inventory_displayhints)
-    page_registry.register_page_handler("ajax_inv_render_tree", ajax_inv_render_tree)
-    data_source_registry_.register(DataSourceInventoryHistory)
-    painter_registry_.register(PainterInventoryTree)
-    painter_registry_.register(PainterInvhistTime)
-    painter_registry_.register(PainterInvhistDelta)
-    painter_registry_.register(PainterInvhistRemoved)
-    painter_registry_.register(PainterInvhistNew)
-    painter_registry_.register(PainterInvhistChanged)
-    painter_option_registry.register(PainterOptionShowInternalTreePaths)
-
-    declare_1to1_sorter("invhist_time", cmp_simple_number, reverse=True)
-    declare_1to1_sorter("invhist_removed", cmp_simple_number)
-    declare_1to1_sorter("invhist_new", cmp_simple_number)
-    declare_1to1_sorter("invhist_changed", cmp_simple_number)
-
-    multisite_builtin_views_.update(
-        {
-            "inv_host": _INV_VIEW_HOST,
-            "inv_hosts_cpu": _INV_VIEW_HOST_CPU,
-            "inv_hosts_ports": _INV_VIEW_HOST_PORTS,
-            "inv_host_history": _INV_VIEW_HOST_HISTORY,
-        }
-    )
 
 
 def _register_painter(
@@ -147,21 +97,15 @@ def _register_painter(
 
 
 def _register_sorter(ident: str, spec: SorterFromHint) -> None:
-    # TODO Clean this up one day
-    cls = type(
-        "LegacySorter%s" % str(ident).title(),
-        (Sorter,),
-        {
-            "_ident": ident,
-            "_spec": spec,
-            "ident": property(lambda s: s._ident),
-            "title": property(lambda s: s._spec["title"]),
-            "columns": property(lambda s: s._spec["columns"]),
-            "load_inv": property(lambda s: s._spec.get("load_inv", False)),
-            "cmp": lambda self, r1, r2, p: spec["cmp"](r1, r2),
-        },
+    sorter_registry.register(
+        Sorter(
+            ident=ident,
+            title=spec["title"],
+            columns=spec["columns"],
+            sort_function=lambda r1, r2, **_kwargs: spec["cmp"](r1, r2),
+            load_inv=spec.get("load_inv", False),
+        )
     )
-    sorter_registry.register(cls)
 
 
 def _make_attribute_filter(
@@ -419,230 +363,3 @@ def register_table_views_and_columns() -> None:
             )
 
         _register_table_view(node_hint)
-
-
-#   .--views---------------------------------------------------------------.
-#   |                            _                                         |
-#   |                     __   _(_) _____      _____                       |
-#   |                     \ \ / / |/ _ \ \ /\ / / __|                      |
-#   |                      \ V /| |  __/\ V  V /\__ \                      |
-#   |                       \_/ |_|\___| \_/\_/ |___/                      |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-# View for Inventory tree of one host
-_INV_VIEW_HOST = ViewSpec(
-    {
-        # General options
-        "datasource": "hosts",
-        "topic": "inventory",
-        "title": _("Inventory of host"),
-        "description": _("The complete hardware- and software inventory of a host"),
-        "icon": "inventory",
-        "hidebutton": False,
-        "public": True,
-        "hidden": True,
-        "link_from": {
-            "single_infos": ["host"],
-            # Check root of inventory tree
-            "has_inventory_tree": tuple(),
-        },
-        # Layout options
-        "layout": "dataset",
-        "num_columns": 1,
-        "browser_reload": 0,
-        "column_headers": "pergroup",
-        "user_sortable": False,
-        "play_sounds": False,
-        "force_checkboxes": False,
-        "mustsearch": False,
-        "mobile": False,
-        # Columns
-        "group_painters": [],
-        "painters": [
-            ColumnSpec(
-                name="host",
-                link_spec=VisualLinkSpec(type_name="views", name="host"),
-            ),
-            ColumnSpec(name="inventory_tree"),
-        ],
-        "sorters": [],
-        "owner": UserId.builtin(),
-        "name": "inv_host",
-        "single_infos": ["host"],
-        "context": {},
-        "add_context_to_title": True,
-        "sort_index": 99,
-        "is_show_more": False,
-        "packaged": False,
-        "megamenu_search_terms": [],
-    }
-)
-
-# View with table of all hosts, with some basic information
-_INV_VIEW_HOST_CPU = ViewSpec(
-    {
-        # General options
-        "datasource": "hosts",
-        "topic": "inventory",
-        "sort_index": 10,
-        "title": _("CPU inventory of all hosts"),
-        "description": _("A list of all hosts with some CPU related inventory data"),
-        "public": True,
-        "hidden": False,
-        "hidebutton": False,
-        "is_show_more": True,
-        # Layout options
-        "layout": "table",
-        "num_columns": 1,
-        "browser_reload": 0,
-        "column_headers": "pergroup",
-        "user_sortable": True,
-        "play_sounds": False,
-        "force_checkboxes": False,
-        "mustsearch": False,
-        "mobile": False,
-        # Columns
-        "group_painters": [],
-        "painters": [
-            ColumnSpec(
-                name="host",
-                link_spec=VisualLinkSpec(type_name="views", name="inv_host"),
-            ),
-            ColumnSpec(name="inv_software_os_name"),
-            ColumnSpec(name="inv_hardware_cpu_cpus"),
-            ColumnSpec(name="inv_hardware_cpu_cores"),
-            ColumnSpec(name="inv_hardware_cpu_max_speed"),
-            ColumnSpec(
-                name="perfometer",
-                join_value="CPU load",
-            ),
-            ColumnSpec(
-                name="perfometer",
-                join_value="CPU utilization",
-            ),
-        ],
-        "sorters": [],
-        "owner": UserId.builtin(),
-        "name": "inv_hosts_cpu",
-        "single_infos": [],
-        "context": {
-            "has_inv": {"is_has_inv": "1"},
-            "inv_hardware_cpu_cpus": {},
-            "inv_hardware_cpu_cores": {},
-            "inv_hardware_cpu_max_speed": {},
-        },
-        "link_from": {},
-        "icon": None,
-        "add_context_to_title": True,
-        "packaged": False,
-        "megamenu_search_terms": [],
-    }
-)
-
-# View with available and used ethernet ports
-_INV_VIEW_HOST_PORTS = ViewSpec(
-    {
-        # General options
-        "datasource": "hosts",
-        "topic": "inventory",
-        "sort_index": 20,
-        "title": _("Switch port statistics"),
-        "description": _(
-            "A list of all hosts with statistics about total, used and free networking interfaces"
-        ),
-        "public": True,
-        "hidden": False,
-        "hidebutton": False,
-        "is_show_more": False,
-        # Layout options
-        "layout": "table",
-        "num_columns": 1,
-        "browser_reload": 0,
-        "column_headers": "pergroup",
-        "user_sortable": True,
-        "play_sounds": False,
-        "force_checkboxes": False,
-        "mustsearch": False,
-        "mobile": False,
-        # Columns
-        "group_painters": [],
-        "painters": [
-            ColumnSpec(
-                name="host",
-                link_spec=VisualLinkSpec(
-                    type_name="views",
-                    name=make_table_view_name_of_host("invinterface"),
-                ),
-            ),
-            ColumnSpec(name="inv_hardware_system_product"),
-            ColumnSpec(name="inv_networking_total_interfaces"),
-            ColumnSpec(name="inv_networking_total_ethernet_ports"),
-            ColumnSpec(name="inv_networking_available_ethernet_ports"),
-        ],
-        "sorters": [SorterSpec(sorter="inv_networking_available_ethernet_ports", negate=True)],
-        "owner": UserId.builtin(),
-        "name": "inv_hosts_ports",
-        "single_infos": [],
-        "context": {
-            "has_inv": {"is_has_inv": "1"},
-            "siteopt": {},
-            "hostregex": {},
-        },
-        "link_from": {},
-        "icon": None,
-        "add_context_to_title": True,
-        "packaged": False,
-        "megamenu_search_terms": [],
-    }
-)
-
-_INV_VIEW_HOST_HISTORY = ViewSpec(
-    {
-        # General options
-        "datasource": "invhist",
-        "topic": "inventory",
-        "title": _("Inventory history of host"),
-        "description": _("The history for changes in hardware- and software inventory of a host"),
-        "icon": {
-            "icon": "inventory",
-            "emblem": "time",
-        },
-        "hidebutton": False,
-        "public": True,
-        "hidden": True,
-        "is_show_more": False,
-        "link_from": {
-            "single_infos": ["host"],
-            "has_inventory_tree_history": tuple(),
-        },
-        # Layout options
-        "layout": "table",
-        "num_columns": 1,
-        "browser_reload": 0,
-        "column_headers": "pergroup",
-        "user_sortable": True,
-        "play_sounds": False,
-        "force_checkboxes": False,
-        "mustsearch": False,
-        "mobile": False,
-        # Columns
-        "group_painters": [],
-        "painters": [
-            ColumnSpec(name="invhist_time"),
-            ColumnSpec(name="invhist_removed"),
-            ColumnSpec(name="invhist_new"),
-            ColumnSpec(name="invhist_changed"),
-            ColumnSpec(name="invhist_delta"),
-        ],
-        "sorters": [SorterSpec(sorter="invhist_time", negate=False)],
-        "owner": UserId.builtin(),
-        "name": "inv_host_history",
-        "single_infos": ["host"],
-        "context": {},
-        "add_context_to_title": True,
-        "sort_index": 99,
-        "packaged": False,
-        "megamenu_search_terms": [],
-    }
-)

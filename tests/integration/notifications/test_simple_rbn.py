@@ -23,50 +23,83 @@ def fake_sendmail_fixture(site: Site) -> Iterator[None]:
         "local/bin/sendmail", '#!/bin/bash\nset -e\necho "sendmail called with: $@"\n'
     )
     try:
-        assert site.execute(["chmod", "0775", site.path("local/bin/sendmail")]).wait() == 0
+        site.run(["chmod", "0775", site.path("local/bin/sendmail").as_posix()])
         yield
     finally:
         site.delete_file("local/bin/sendmail")
 
 
+@pytest.fixture(name="fake_notification_rule")
+def fake_notification_rule(site: Site) -> Iterator[None]:
+    site.write_text_file(
+        "etc/check_mk/conf.d/wato/notifications.mk",
+        """# Written by Checkmk store\n\nnotification_rules += [{'rule_id': 'f03dd14d-63cd-4dac-8339-9b002753aa9e', 'allow_disable': True, 'contact_all': False, 'contact_all_with_email': False, 'contact_object': True, 'description': 'Notify all contacts of a host/service via HTML email', 'disabled': False, 'notify_plugin': ('mail', '1c131382-2cc5-4979-9026-71a935444d1f')}]""",
+    )
+    try:
+        yield
+    finally:
+        site.write_text_file(
+            "etc/check_mk/conf.d/wato/notifications.mk",
+            """# Written by Checkmk store\n\nnotification_rules += [{'description': 'Notify all contacts of a host/service via HTML email', 'comment': '', 'docu_url': '', 'disabled': False, 'allow_disable': True, 'contact_object': True, 'contact_all': False, 'contact_all_with_email': False, 'rule_id': '50cf4824-12ad-41e2-a6f5-efdd21c55ae7', 'notify_plugin': ('mail', {})}]""",
+        )
+
+
+@pytest.fixture(name="fake_notification_parameter")
+def fake_notification_parameter(site: Site) -> Iterator[None]:
+    site.write_text_file(
+        "etc/check_mk/conf.d/wato/notification_parameter.mk",
+        """# Written by Checkmk store\n\nnotification_parameter.update({'mail': {'1c131382-2cc5-4979-9026-71a935444d1f': {'general': {'description': 'Migrated from notification rule #0', 'comment': 'Auto migrated on update', 'docu_url': ''}, 'parameter_properties': {}}}})""",
+    )
+    try:
+        yield
+    finally:
+        # TODO remove this if default rule is removed
+        # Back to sample config
+        site.delete_file("etc/check_mk/conf.d/wato/notification_parameter.mk")
+
+
 @pytest.fixture(name="test_user")
 def fixture_test_user(site: Site) -> Iterator[None]:
-    initial_users = site.openapi.get_all_users()
+    initial_users = site.openapi.users.get_all()
 
     username = "hh"
-    site.openapi.create_user(
+    site.openapi.users.create(
         username=username,
         fullname="Harry Hirsch",
         password="1234abcdabcd",
         email=f"{site.id}@localhost",
         contactgroups=["all"],
-        customer="global" if site.version.is_managed_edition() else None,
+        customer="global" if site.edition.is_managed_edition() else None,
     )
+    site.activate_changes_and_wait_for_core_reload()
 
-    all_users = site.openapi.get_all_users()
+    all_users = site.openapi.users.get_all()
     assert len(all_users) == len(initial_users) + 1
 
     try:
         yield
     finally:
-        site.openapi.delete_user(username)
+        site.openapi.users.delete(username)
+        site.activate_changes_and_wait_for_core_reload()
 
 
 @pytest.fixture(name="host")
 def fixture_host(site: Site) -> Iterator[HostName]:
     hostname = HostName("notify-test")
-    site.openapi.create_host(hostname, attributes={"ipaddress": "127.0.0.1"})
+    site.openapi.hosts.create(hostname, attributes={"ipaddress": "127.0.0.1"})
     site.activate_changes_and_wait_for_core_reload()
 
     try:
         yield hostname
     finally:
-        site.openapi.delete_host(hostname)
+        site.openapi.hosts.delete(hostname)
         site.activate_changes_and_wait_for_core_reload()
 
 
 @pytest.mark.usefixtures("fake_sendmail")
 @pytest.mark.usefixtures("test_user")
+@pytest.mark.usefixtures("fake_notification_rule")
+@pytest.mark.usefixtures("fake_notification_parameter")
 @pytest.mark.usefixtures("disable_checks")
 @pytest.mark.usefixtures("disable_flap_detection")
 def test_simple_rbn_host_notification(host: HostName, site: Site) -> None:

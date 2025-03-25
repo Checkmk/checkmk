@@ -9,10 +9,12 @@
 import sys
 
 try:
-    from cmk.cee.notification_plugins import jira_issues
+    from cmk.cee.notification_plugins import (  # type: ignore[import-untyped, unused-ignore]
+        jira_issues,
+    )
 except ImportError:
     sys.stderr.write("JIRA notification script is only available with commercial editions.\n")
     sys.exit(1)
 
 if __name__ == "__main__":
-    sys.exit(jira_issues.main())
+    jira_issues.main()

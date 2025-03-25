@@ -8,6 +8,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Literal, TypedDict
 
+from cmk.ccc import store
+
 from cmk.gui import hooks
 from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.i18n import _
@@ -15,14 +17,13 @@ from cmk.gui.type_defs import RoleName
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.utils import multisite_dir
 
-from cmk.ccc import store
 
-
-class BuiltInUserRoleValues(Enum):
+class BuiltInUserRoleValues(str, Enum):
     USER = "user"
     ADMIN = "admin"
     GUEST = "guest"
     AGENT_REGISTRATION = "agent_registration"
+    NO_PERMISSIONS = "no_permissions"
 
 
 class UserRoleBase(TypedDict):
@@ -50,6 +51,7 @@ def _get_builtin_roles() -> dict[RoleName, BuiltInUserRole]:
         "user": _("Normal monitoring user"),
         "guest": _("Guest user"),
         "agent_registration": _("Agent registration user"),
+        "no_permission": _("Empty template for least privilege roles"),
     }
 
     return {
@@ -90,6 +92,12 @@ class UserRolesConfigFile(WatoSingleConfigFile[Roles]):
 
         return cfg
 
+    def read_file_and_validate(self) -> None:
+        cfg = self._load_file(lock=False)
+        for role in cfg.values():
+            if "basedon" in role and role["basedon"] in builtin_role_ids:
+                role["basedon"] = BuiltInUserRoleValues(role["basedon"])
+
     def save(self, cfg: Roles) -> None:
         active_config.roles.update(cfg)
         hooks.call("roles-saved", cfg)
@@ -117,6 +125,7 @@ class UserRole:
     alias: str
     builtin: bool = False
     permissions: dict[str, bool] = field(default_factory=dict)
+    two_factor: bool = False
     basedon: str | None = None
 
     def to_dict(self) -> dict[str, str | dict | bool]:
@@ -125,11 +134,13 @@ class UserRole:
                 "alias": self.alias,
                 "permissions": self.permissions,
                 "builtin": True,
+                "two_factor": self.two_factor,
             }
 
         return {
             "alias": self.alias,
             "permissions": self.permissions,
             "builtin": False,
+            "two_factor": self.two_factor,
             "basedon": self.basedon,
         }

@@ -11,6 +11,7 @@ from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.type_defs import UserSpec
+from cmk.gui.utils import roles
 
 from .store import load_users, save_users
 
@@ -20,7 +21,7 @@ auth_logger = gui_logger.getChild("auth")
 def on_failed_login(username: UserId, now: datetime) -> None:
     users = load_users(lock=True)
 
-    if (user := users.get(username)) and not _is_automation_user(user):
+    if (user := users.get(username)) and not roles.is_automation_user(username):
         _increment_failed_logins_and_lock(user)
         save_users(users, now)
 
@@ -48,10 +49,6 @@ def on_failed_login(username: UserId, now: datetime) -> None:
             log_msg_until_locked,
             request.remote_ip,
         )
-
-
-def _is_automation_user(user: UserSpec) -> bool:
-    return "automation_secret" in user
 
 
 def _increment_failed_logins_and_lock(user: UserSpec) -> None:

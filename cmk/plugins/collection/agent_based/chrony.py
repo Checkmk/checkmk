@@ -21,7 +21,7 @@ from calendar import timegm
 from time import strptime, time
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -50,7 +50,8 @@ def parse_chrony(string_table: StringTable) -> dict[str, Any] | None:
             if key == "Reference ID":
                 parsed[key] = value
                 try:
-                    parsed["address"] = value.split(" ")[1]
+                    # if brackets are empty, NTP servers are unreachable
+                    parsed["address"] = value.split(" ")[1].replace("()", "") or None
                 except IndexError:
                     pass
             elif key == "System time":
@@ -106,19 +107,16 @@ def check_chrony(params, section_chrony, section_ntp):
         return
 
     address = section_chrony.get("address")
-    if address in (None, "", "()"):
-        # if brackets are empty, NTP servers are unreachable
-        address = "unreachable"
     ref_id = section_chrony.get("Reference ID")
     yield Result(
-        state=State.WARN if address == "unreachable" else State.OK,
-        notice=f"NTP servers: {address}\nReference ID: {ref_id}",
+        state=State.OK if address else State.WARN,
+        notice=f"NTP servers: {address or 'unreachable'}\nReference ID: {ref_id}",
     )
 
     crit_stratum, warn, crit = params["ntp_levels"]
 
     if (sys_time_offset := section_chrony.get("System time")) is not None:
-        yield from check_levels(
+        yield from check_levels_v1(
             abs(sys_time_offset),
             levels_upper=(warn, crit),
             metric_name="offset",
@@ -127,8 +125,13 @@ def check_chrony(params, section_chrony, section_ntp):
             boundaries=(0, None),
         )
 
+    # without address ('Reference ID') being specified `last_sync` ('Ref time (UTC)') and
+    # Stratum are semantically 'n/a' - don't execute checks or return metrics in that case!
+    if not address:
+        return
+
     if (stratum := section_chrony.get("Stratum")) is not None:
-        yield from check_levels(
+        yield from check_levels_v1(
             stratum,
             levels_upper=(crit_stratum, crit_stratum),
             render_func=lambda v: "%d" % v,
@@ -138,7 +141,7 @@ def check_chrony(params, section_chrony, section_ntp):
 
     if (last_sync := section_chrony.get("last_sync")) is not None:
         if last_sync >= 0:
-            yield from check_levels(
+            yield from check_levels_v1(
                 last_sync,
                 levels_upper=params["alert_delay"],
                 render_func=render.timespan,
@@ -163,7 +166,7 @@ check_plugin_chrony = CheckPlugin(
     check_function=check_chrony,
     check_default_parameters={
         "ntp_levels": (10, 200.0, 500.0),
-        "alert_delay": (1800, 3600),  # chronys default maxpoll is 10 (1024s)
+        "alert_delay": (1025, 3600),  # chronys default maxpoll is 10 (1024s)
     },
     check_ruleset_name="ntp_time",
 )

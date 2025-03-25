@@ -3,25 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+
 from __future__ import annotations
 
 from base64 import b64encode
 from collections.abc import Generator, Iterator
 from http.cookies import SimpleCookie
-from unittest.mock import patch
 
 import flask
 import pytest
 from werkzeug.test import create_environ
 
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 from tests.unit.cmk.gui.users import create_and_destroy_user
+from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.user import UserId
 
-import cmk.gui.session  # pylint: disable=unused-import  # this is here for it's side effects...
 from cmk.gui import auth, http, login
 from cmk.gui.config import load_config
 from cmk.gui.http import request
@@ -30,7 +28,6 @@ from cmk.gui.session import session
 from cmk.gui.type_defs import UserSpec, WebAuthnCredential
 from cmk.gui.userdb.session import auth_cookie_name, auth_cookie_value, generate_auth_hash
 from cmk.gui.utils.script_helpers import application_and_request_context
-from cmk.gui.utils.transaction_manager import transactions
 
 
 @pytest.fixture(name="user_id")
@@ -96,43 +93,40 @@ def test_login_two_factor_has_precedence_over_password_change(
 
 
 def test_login_with_cookies(
+    wsgi_app: WebTestAppForCMK,
     with_user: tuple[UserId, str],
-    flask_app: flask.Flask,
     mock_livestatus: MockLiveStatusConnection,
     patch_theme: None,
 ) -> None:
-    with flask_app.app_context():
-        client = flask_app.test_client(use_cookies=True)
-        # We will be redirected to the login page
-        response = client.get("/NO_SITE/check_mk/")
-        login_page_url = response.location
-        assert login_page_url.startswith("/NO_SITE/check_mk/login.py")
+    # We will be redirected to the login page
+    response = wsgi_app.get("/NO_SITE/check_mk/")
+    login_page_url = response.location
+    assert login_page_url.startswith("/NO_SITE/check_mk/login.py")
 
-        # We see if we can access the login page.
-        response = client.get(login_page_url)
-        assert response.status_code == 200
+    # We see if we can access the login page.
+    response = wsgi_app.get(login_page_url)
+    assert response.status_code == 200
 
-        # We try to log in
-        response = client.post(
-            login_page_url,
-            data={"_username": with_user[0], "_password": with_user[1], "_login": "Login"},
-        )
-        index_page = response.location
-        assert index_page.endswith("index.py")  # Relative redirect to "index.py" :-( !!!
-        response = client.get("/NO_SITE/check_mk/index.py")
-        assert response.status_code == 200
+    # We try to log in
+    response = wsgi_app.post(
+        login_page_url,
+        params={"_username": with_user[0], "_password": with_user[1], "_login": "Login"},
+    )
+    index_page = response.location
+    assert index_page.endswith("index.py")  # Relative redirect to "index.py" :-( !!!
+    response = wsgi_app.get("/NO_SITE/check_mk/index.py")
+    assert response.status_code == 200
 
-        test_environ = create_environ("/NO_SITE/", method="GET")
-        client._add_cookies_to_wsgi(test_environ)
+    test_environ = create_environ("/NO_SITE/", method="GET")
+    wsgi_app._add_cookies_to_wsgi(test_environ)
 
-        # request context with cookie yields a user
-        with flask_app.request_context(test_environ):
-            assert session.user.id == with_user[0]
+    # request context with cookie yields a user
+    assert session.user.id == with_user[0]
 
-        # request context without this cookie yields nobody
-        with flask_app.test_request_context("/"):
-            assert isinstance(session.user, LoggedInNobody)
-            assert session.user.id != with_user[0]
+    # request context without this cookie yields nobody
+    with application_and_request_context(dict(create_environ())):
+        assert isinstance(session.user, LoggedInNobody)
+        assert session.user.id != with_user[0]
 
 
 # TODO: to be moved out of REST API blueprint to global in a later commit.
@@ -140,7 +134,7 @@ def test_login_with_bearer_token(with_user: tuple[UserId, str], flask_app: flask
     with flask_app.test_request_context(
         "/", method="GET", headers={"Authorization": f"Bearer {with_user[0]} {with_user[1]}"}
     ):
-        assert type(session.user) is LoggedInUser  # pylint: disable=unidiomatic-typecheck
+        assert type(session.user) is LoggedInUser
         assert session.user.id == with_user[0]
 
 
@@ -149,7 +143,7 @@ def test_login_with_basic_auth(with_user: tuple[UserId, str], flask_app: flask.F
     with flask_app.test_request_context(
         "/", method="GET", headers={"Authorization": f"Basic {token}"}
     ):
-        assert type(session.user) is LoggedInUser  # pylint: disable=unidiomatic-typecheck
+        assert type(session.user) is LoggedInUser
         assert session.user.id == with_user[0]
 
 
@@ -159,7 +153,7 @@ def test_login_with_webserver(with_user: tuple[UserId, str], flask_app: flask.Fl
         method="GET",
         environ_overrides={"REMOTE_USER": with_user[0]},
     ):
-        assert type(session.user) is LoggedInUser  # pylint: disable=unidiomatic-typecheck
+        assert type(session.user) is LoggedInUser
         assert session.user.id == with_user[0]
 
 
@@ -211,9 +205,7 @@ def fixture_pre_20_cookie() -> Iterator[str]:
 
 
 @pytest.fixture(name="session_id")
-def fixture_session_id(
-    flask_app: flask.Flask, with_user: tuple[UserId, str]
-) -> Generator[str, None, None]:
+def fixture_session_id(flask_app: flask.Flask, with_user: tuple[UserId, str]) -> Generator[str]:
     with flask_app.test_request_context(
         environ_overrides={"REMOTE_USER": with_user[0]},
     ):
@@ -280,37 +272,16 @@ def test_web_server_auth_session(flask_app: flask.Flask, user_id: UserId) -> Non
             assert user.id is None
 
 
-def test_auth_session_times(flask_app: flask.Flask, auth_request: http.Request) -> None:
-    with flask_app.test_client(use_cookies=True) as client:
-        client.get(auth_request)
-        assert session.session_info.started_at is not None
-        assert session.user.id == auth_request.environ["REMOTE_USER"]
-        session_id = session.session_info.session_id
-        started_at = session.session_info.started_at
-        last_activity = session.session_info.last_activity
+def test_auth_session_times(wsgi_app: WebTestAppForCMK, auth_request: http.Request) -> None:
+    wsgi_app.get(auth_request)
+    assert session.session_info.started_at is not None
+    assert session.user.id == auth_request.environ["REMOTE_USER"]
+    session_id = session.session_info.session_id
+    started_at = session.session_info.started_at
+    last_activity = session.session_info.last_activity
 
-        client.get(auth_request)
-        assert session.session_info.session_id == session_id
-        assert session.session_info.started_at == started_at
-        # tried it with time.sleep and ">".
-        assert session.session_info.last_activity >= last_activity
-
-
-# the url auth for the automationuser is disabled by default so it must be enabled for this test
-@patch("cmk.gui.auth.active_config")
-def test_ignore_transaction_ids(
-    request_context: Iterator[None],
-    with_automation_user: tuple[UserId, str],
-    flask_app: flask.Flask,
-) -> None:
-    user_id, password = with_automation_user
-    env = create_environ(
-        path="/NO_SITE/check_mk/index.py",
-        query_string={"_username": user_id, "_secret": password},
-        method="GET",
-    )
-    with flask_app.request_context(env):
-        flask_app.preprocess_request()
-        with login.authenticate():
-            assert transactions._ignore_transids
-        assert transactions._ignore_transids is False
+    wsgi_app.get(auth_request)
+    assert session.session_info.session_id == session_id
+    assert session.session_info.started_at == started_at
+    # tried it with time.sleep and ">".
+    assert session.session_info.last_activity >= last_activity

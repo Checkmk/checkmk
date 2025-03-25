@@ -25,6 +25,9 @@ from cmk.plugins.collection.agent_based.winperf_if import (
     SectionTeaming,
     TeamingData,
 )
+from cmk.plugins.lib import interfaces
+
+from .utils_inventory import sort_inventory_result
 
 
 class Names(StrEnum):
@@ -44,17 +47,13 @@ class Names(StrEnum):
     INTEL_X520_2 = "Intel[R] Ethernet 10G 2P X520 Adapter 2"
     INTEL_X520_3 = "Intel[R] Ethernet 10G 2P X520 Adapter 3"
     INTEL_X520_4 = "Intel[R] Ethernet 10G 2P X520 Adapter 4"
-    ISATAP_A4 = "isatap.{A447D54F-0E4B-40B3-9FBA-228F7DCE8FC7}"
-    ISATAP_4F = "isatap.{4FCE4C48-6217-465A-B807-B61499AE570C}"
-    ISATAP_01 = "isatap.{0143C2F2-BFF1-4839-8766-82C6EB3FC440}"
-    ISATAP_16 = "isatap.{16377083-0A9A-456B-AB35-9A37E78B3FD4}"
-    ISATAP_7A = "isatap.{7A093D2B-D64D-43DF-A0F6-050996EE8D9A}"
-    NIN = "isatap.corp.nintendo.eu"
+    ISATAP_24 = "isatap.{24AA204E-C3FE-47E8-A890-3C1D7584FAF6}"
+    ISATAP_2E = "isatap.{2EBF040F-4EA6-4F38-B743-1B4A7BC02F30}"
+    ISATAP_A0 = "isatap.{A00F44A5-844B-4679-B2BA-0161B98AE717}"
+    ISATAP_09 = "isatap.{09804D64-9D95-4FBF-A8B1-5BE56205FBD8}"
+    ISATAP_BF = "isatap.{BF9E1970-5245-46E2-8CA3-87BDF4A9ECAF}"
+    ISA = "isatap.rhtz.com"
 
-
-from cmk.plugins.lib import interfaces
-
-from .utils_inventory import sort_inventory_result
 
 _counters: Final[dict[Names, interfaces.Counters]] = {
     Names.INTEL_PRO: interfaces.Counters(
@@ -272,8 +271,8 @@ MULTIPLY_INTERFACES_INPUT: _Block = [
         "Intel[R]_I350_Gigabit_Network_Connection__3",
         "Intel[R]_I350_Gigabit_Network_Connection__4",
         "IBM_USB_Remote_NDIS_Network_Device__2",
-        "isatap.{A447D54F-0E4B-40B3-9FBA-228F7DCE8FC7}",
-        "isatap.{4FCE4C48-6217-465A-B807-B61499AE570C}",
+        "isatap.{24AA204E-C3FE-47E8-A890-3C1D7584FAF6}",
+        "isatap.{2EBF040F-4EA6-4F38-B743-1B4A7BC02F30}",
     ],
     ["-122", "8902209474", "23935663", "0", "0", "0", "0", "622938240", "0", "0", "bulk_count"],
     ["-110", "10989775", "27949", "0", "0", "0", "0", "6788061", "0", "0", "bulk_count"],
@@ -324,10 +323,10 @@ MULTIPLY_INTERFACES_12_INPUT: _Block = [
         "Intel[R]_Gigabit_4P_I350-t_rNDC__4",
         "Intel[R]_Ethernet_10G_2P_X520_Adapter__3",
         "Intel[R]_Ethernet_10G_2P_X520_Adapter__4",
-        "isatap.corp.nintendo.eu",
-        "isatap.{0143C2F2-BFF1-4839-8766-82C6EB3FC440}",
-        "isatap.{16377083-0A9A-456B-AB35-9A37E78B3FD4}",
-        "isatap.{7A093D2B-D64D-43DF-A0F6-050996EE8D9A}",
+        "isatap.rhtz.com",
+        "isatap.{A00F44A5-844B-4679-B2BA-0161B98AE717}",
+        "isatap.{09804D64-9D95-4FBF-A8B1-5BE56205FBD8}",
+        "isatap.{BF9E1970-5245-46E2-8CA3-87BDF4A9ECAF}",
     ],
     [
         "-122",
@@ -519,21 +518,21 @@ TEAMING_INPUT: _Block = [
         "DAG-NET ",
         "SwitchIndependent ",
         "Dynamic ",
-        "40:90:7C:1A:45:F8;7C:33:82:DE:F6:3A",
+        "85:ae:ac:eb:a5:53;39:d6:c8:28:3f:c7",
         "SLOT 6 Port 1 DAG;SLOT 4 Port 2 DAG",
         "Intel(R) Ethernet 10G 2P X520 Adapter #2;Intel(R) Ethernet 10G 2P X520 Adapter #4",
         "10000000000;10000000000",
-        "{70F3DEC7-8347-4157-B066-95F5672F39BA};{9C4971CB-95AA-4B01-B828-F61B339E4F19}",
+        "{07F1904B-3242-4CFE-8D5C-15C174CD3CD5};{CAA71E22-85E1-4D60-8AA9-4D59D470FD18}",
     ],
     [
         "MAPI-NET ",
         "SwitchIndependent ",
         "Dynamic ",
-        "C4:B7:2C:2A:7C:43;5C:74:5B:97:33:7D",
+        "f0:23:a7:da:b2:85,13:89:c4:52:a9:13",
         "SLOT 6 Port 2 MAPI;SLOT 4 Port 1 MAPI",
         "Intel(R) Ethernet 10G 2P X520 Adapter;Intel(R) Ethernet 10G 2P X520 Adapter #3",
         "10000000000;10000000000",
-        "{4C88A19B-5EE4-44A6-ACBB-262131EE1560};{9BD62095-22A8-49CA-BA8B-A7846C6B5FDB}",
+        "{F27DD595-90F2-43D7-9853-B76E6ABB3057};{5B3C2733-25B4-452C-80DC-A0B0A7816AFA}",
     ],
     ["[teaming_end]"],
 ]
@@ -549,93 +548,93 @@ WINPERF_IF_WIN32_NETWORKADAPTER_INPUT_2: _Block = [
     ],
     [
         "PWEX02 ",
-        " C6:E0:D0:A9:38:87 ",
+        " 4d:4d:ed:4d:0d:1d ",
         " Intel(R) Gigabit 4P I350-t rNDC ",
         " NIC1 ",
         " 2 ",
         " 1000000000 ",
-        " {AD68A885-C33E-4E9E-AA6E-3650513F72B3}",
+        " {02C3339A-3E06-45A9-B5D4-77AD13199A63}",
     ],
     [
         "PWEX02 ",
-        " C4:B7:2C:2A:7C:43 ",
+        " f9:d5:5b:3d:6d:ee ",
         " Intel(R) Ethernet 10G 2P X520 Adapter ",
         " SLOT 6 Port 2 MAPI ",
         " 2 ",
         "  ",
-        " {4C88A19B-5EE4-44A6-ACBB-262131EE1560}",
+        " {F27DD595-90F2-43D7-9853-B76E6ABB3057}",
     ],
     [
         "PWEX02 ",
-        " 40:90:7C:1A:45:F8 ",
+        " 32:59:47:d0:52:26 ",
         " Intel(R) Ethernet 10G 2P X520 Adapter ",
         " SLOT 6 Port 1 DAG ",
         " 2 ",
         "  ",
-        " {70F3DEC7-8347-4157-B066-95F5672F39BA}",
+        " {07F1904B-3242-4CFE-8D5C-15C174CD3CD5}",
     ],
     [
         "PWEX02 ",
-        " DC:03:0E:A4:F4:0A ",
+        " 82:84:b1:4f:1d:a8 ",
         " Intel(R) Gigabit 4P I350-t rNDC #2 ",
         " NIC2 ",
         " 7 ",
         " 9223372036854775807 ",
-        " {84E4243F-9832-4923-93FB-F0A48F88FB1C}",
+        " {B02D91C6-6361-4FD7-B76F-738C0B0A9EA7}",
     ],
     [
         "PWEX02 ",
-        " 6F:97:0D:91:B1:EA ",
+        " d0:fe:91:ac:30:29 ",
         " Intel(R) Gigabit 4P I350-t rNDC #3 ",
         " NIC3 ",
         " 7 ",
         " 9223372036854775807 ",
-        " {5EF9E8A8-5A85-42E7-AE8A-E3E63558D571}",
+        " {5385E65C-5D93-433C-8C47-0450E6086AFD}",
     ],
     [
         "PWEX02 ",
-        " E7:AD:77:C9:73:A6 ",
+        " 89:cd:72:0a:8f:58 ",
         " Intel(R) Gigabit 4P I350-t rNDC #4 ",
         " NIC4 ",
         " 7 ",
         " 9223372036854775807 ",
-        " {D7FE624A-1554-41D6-BC35-7EDDE1D396C3}",
+        " {C3D7E9E2-D103-4F93-A40B-D6C27A5B93A9}",
     ],
     [
         "PWEX02 ",
-        " 5C:74:5B:97:33:7D ",
+        " e7:4e:75:95:06:5c ",
         " Intel(R) Ethernet 10G 2P X520 Adapter ",
         " SLOT 4 Port 1 MAPI ",
         " 2 ",
         "  ",
-        " {9BD62095-22A8-49CA-BA8B-A7846C6B5FDB}",
+        " {5B3C2733-25B4-452C-80DC-A0B0A7816AFA}",
     ],
     [
         "PWEX02 ",
-        " 7C:33:82:DE:F6:3A ",
+        " 48:3b:ed:54:44:3f ",
         " Intel(R) Ethernet 10G 2P X520 Adapter ",
         " SLOT 4 Port 2 DAG ",
         " 2 ",
         "  ",
-        " {9C4971CB-95AA-4B01-B828-F61B339E4F19}",
+        " {CAA71E22-85E1-4D60-8AA9-4D59D470FD18}",
     ],
     [
         "PWEX02 ",
-        " 5C:74:5B:97:33:7D ",
+        " e7:4e:75:95:06:5c ",
         " Microsoft Network Adapter Multiplexor Driver ",
         " MAPI-NET ",
         " 2 ",
         " 10000000000 ",
-        " {0143C2F2-BFF1-4839-8766-82C6EB3FC440}",
+        " {A00F44A5-844B-4679-B2BA-0161B98AE717}",
     ],
     [
         "PWEX02 ",
-        " 40:90:7C:1A:45:F8 ",
+        " 32:59:47:d0:52:26 ",
         " Microsoft Network Adapter Multiplexor Driver #2 ",
         " DAG-NET ",
         " 2 ",
         " 10000000000 ",
-        " {16377083-0A9A-456B-AB35-9A37E78B3FD4}",
+        " {09804D64-9D95-4FBF-A8B1-5BE56205FBD8}",
     ],
 ]
 
@@ -646,8 +645,8 @@ EXPECTED_WINPERF_IF_WIN32_NETWORKADAPTER_OUTPUT_2: Sequence[AdditionalIfData] = 
         speed=1000000000,
         oper_status="1",
         oper_status_name="up",
-        mac_address="C6:E0:D0:A9:38:87",
-        guid="{AD68A885-C33E-4E9E-AA6E-3650513F72B3}",
+        mac_address="4d:4d:ed:4d:0d:1d",
+        guid="{02C3339A-3E06-45A9-B5D4-77AD13199A63}",
     ),
     AdditionalIfData(
         name="Intel(R) Ethernet 10G 2P X520 Adapter",
@@ -655,8 +654,8 @@ EXPECTED_WINPERF_IF_WIN32_NETWORKADAPTER_OUTPUT_2: Sequence[AdditionalIfData] = 
         speed=0,
         oper_status="1",
         oper_status_name="up",
-        mac_address="C4:B7:2C:2A:7C:43",
-        guid="{4C88A19B-5EE4-44A6-ACBB-262131EE1560}",
+        mac_address="f9:d5:5b:3d:6d:ee",
+        guid="{F27DD595-90F2-43D7-9853-B76E6ABB3057}",
     ),
     AdditionalIfData(
         name="Intel(R) Ethernet 10G 2P X520 Adapter",
@@ -664,8 +663,8 @@ EXPECTED_WINPERF_IF_WIN32_NETWORKADAPTER_OUTPUT_2: Sequence[AdditionalIfData] = 
         speed=0,
         oper_status="1",
         oper_status_name="up",
-        mac_address="40:90:7C:1A:45:F8",
-        guid="{70F3DEC7-8347-4157-B066-95F5672F39BA}",
+        mac_address="32:59:47:d0:52:26",
+        guid="{07F1904B-3242-4CFE-8D5C-15C174CD3CD5}",
     ),
     AdditionalIfData(
         name="Intel(R) Gigabit 4P I350-t rNDC #2",
@@ -673,8 +672,8 @@ EXPECTED_WINPERF_IF_WIN32_NETWORKADAPTER_OUTPUT_2: Sequence[AdditionalIfData] = 
         speed=0,
         oper_status="7",
         oper_status_name="Media disconnected",
-        mac_address="DC:03:0E:A4:F4:0A",
-        guid="{84E4243F-9832-4923-93FB-F0A48F88FB1C}",
+        mac_address="82:84:b1:4f:1d:a8",
+        guid="{B02D91C6-6361-4FD7-B76F-738C0B0A9EA7}",
     ),
     AdditionalIfData(
         name="Intel(R) Gigabit 4P I350-t rNDC #3",
@@ -682,8 +681,8 @@ EXPECTED_WINPERF_IF_WIN32_NETWORKADAPTER_OUTPUT_2: Sequence[AdditionalIfData] = 
         speed=0,
         oper_status="7",
         oper_status_name="Media disconnected",
-        mac_address="6F:97:0D:91:B1:EA",
-        guid="{5EF9E8A8-5A85-42E7-AE8A-E3E63558D571}",
+        mac_address="d0:fe:91:ac:30:29",
+        guid="{5385E65C-5D93-433C-8C47-0450E6086AFD}",
     ),
     AdditionalIfData(
         name="Intel(R) Gigabit 4P I350-t rNDC #4",
@@ -691,8 +690,8 @@ EXPECTED_WINPERF_IF_WIN32_NETWORKADAPTER_OUTPUT_2: Sequence[AdditionalIfData] = 
         speed=0,
         oper_status="7",
         oper_status_name="Media disconnected",
-        mac_address="E7:AD:77:C9:73:A6",
-        guid="{D7FE624A-1554-41D6-BC35-7EDDE1D396C3}",
+        mac_address="89:cd:72:0a:8f:58",
+        guid="{C3D7E9E2-D103-4F93-A40B-D6C27A5B93A9}",
     ),
     AdditionalIfData(
         name="Intel(R) Ethernet 10G 2P X520 Adapter",
@@ -700,8 +699,8 @@ EXPECTED_WINPERF_IF_WIN32_NETWORKADAPTER_OUTPUT_2: Sequence[AdditionalIfData] = 
         speed=0,
         oper_status="1",
         oper_status_name="up",
-        mac_address="5C:74:5B:97:33:7D",
-        guid="{9BD62095-22A8-49CA-BA8B-A7846C6B5FDB}",
+        mac_address="e7:4e:75:95:06:5c",
+        guid="{5B3C2733-25B4-452C-80DC-A0B0A7816AFA}",
     ),
     AdditionalIfData(
         name="Intel(R) Ethernet 10G 2P X520 Adapter",
@@ -709,8 +708,8 @@ EXPECTED_WINPERF_IF_WIN32_NETWORKADAPTER_OUTPUT_2: Sequence[AdditionalIfData] = 
         speed=0,
         oper_status="1",
         oper_status_name="up",
-        mac_address="7C:33:82:DE:F6:3A",
-        guid="{9C4971CB-95AA-4B01-B828-F61B339E4F19}",
+        mac_address="48:3b:ed:54:44:3f",
+        guid="{CAA71E22-85E1-4D60-8AA9-4D59D470FD18}",
     ),
     AdditionalIfData(
         name="Microsoft Network Adapter Multiplexor Driver",
@@ -718,8 +717,8 @@ EXPECTED_WINPERF_IF_WIN32_NETWORKADAPTER_OUTPUT_2: Sequence[AdditionalIfData] = 
         speed=10000000000,
         oper_status="1",
         oper_status_name="up",
-        mac_address="5C:74:5B:97:33:7D",
-        guid="{0143C2F2-BFF1-4839-8766-82C6EB3FC440}",
+        mac_address="e7:4e:75:95:06:5c",
+        guid="{A00F44A5-844B-4679-B2BA-0161B98AE717}",
     ),
     AdditionalIfData(
         name="Microsoft Network Adapter Multiplexor Driver #2",
@@ -727,8 +726,8 @@ EXPECTED_WINPERF_IF_WIN32_NETWORKADAPTER_OUTPUT_2: Sequence[AdditionalIfData] = 
         speed=10000000000,
         oper_status="1",
         oper_status_name="up",
-        mac_address="40:90:7C:1A:45:F8",
-        guid="{16377083-0A9A-456B-AB35-9A37E78B3FD4}",
+        mac_address="32:59:47:d0:52:26",
+        guid="{09804D64-9D95-4FBF-A8B1-5BE56205FBD8}",
     ),
 ]
 
@@ -744,75 +743,75 @@ WINPERF_IF_WIN32_NETWORKADAPTER_INPUT_1: _Block = [
     ],
     [
         "TBWAW-VEEAM01",
-        "E1:43:6A:0F:D3:F4 ",
+        "63:fc:b4:9a:ae:63 ",
         "IBM USB Remote NDIS   Network Device        #2 ",
         "Local Area Connection 2 ",
         "2 ",
         "9728000 ",
-        "{A447D54F-0E4B-40B3-9FBA-228F7DCE8FC7}",
+        "{24AA204E-C3FE-47E8-A890-3C1D7584FAF6}",
     ],
     [
         "TBWAW-VEEAM01",
-        "BE:7E:D4:52:D3:1A ",
+        "c3:08:87:2e:16:89 ",
         "Intel(R) I350 Gigabit Network Connection ",
         "Ethernet 3 ",
         "7 ",
         "9223372036854775807 ",
-        "{1C656D16-F30D-4714-9A7E-B3D3F9AD52FA}",
+        "{2FCFD4C6-B7C6-40CB-8336-385865CA8822}",
     ],
     [
         "TBWAW-VEEAM01",
-        "15:35:42:65:DB:0A ",
+        "94:4f:82:20:86:50 ",
         "Intel(R) I350 Gigabit Network Connection #2 ",
         "Ethernet 4 ",
         "7 ",
         "9223372036854775807 ",
-        "{F9C89525-0500-4A6B-95AC-95F66BDA739A}",
+        "{C28247BA-9E89-4F4F-8B42-6637D507B1A2}",
     ],
     [
         "TBWAW-VEEAM01",
-        "01:73:7F:4A:47:91 ",
+        "71:0d:d9:6a:50:aa ",
         "Intel(R) I350 Gigabit Network Connection #3 ",
         "Ethernet 5 ",
         "7 ",
         "9223372036854775807 ",
-        "{A0D28181-6DF8-4A80-9837-D2933D013510}",
+        "{3A8F46C0-2BC8-4BB2-8C61-64ED8BC5B76E}",
     ],
     [
         "TBWAW-VEEAM01",
-        "A2:22:DD:FD:C8:F9 ",
+        "c4:70:14:5f:d2:c0 ",
         "Intel(R) I350 Gigabit Network Connection #4 ",
         "Ethernet 6 ",
         "7 ",
         "9223372036854775807 ",
-        "{95CA2691-7AFA-4842-A769-F521FE6173B2}",
+        "{2443DE70-0A53-4936-A561-7C6DBFE28631}",
     ],
     [
         "TBWAW-VEEAM01",
-        "21:77:22:AE:F8:B4 ",
+        "38:4c:78:cc:d7:51 ",
         "QLogic 1/10GbE Server Adapter ",
         "Ethernet 2 ",
         "2 ",
         " ",
-        "{2B232067-0EE5-41EE-B498-0CA2FE8715D0}",
+        "{4E16E6AC-F88A-4D51-9620-711DBB7B0015}",
     ],
     [
         "TBWAW-VEEAM01",
-        "35:37:CF:44:20:A2 ",
+        "1e:03:f0:24:5c:ce ",
         "QLogic 1/10GbE Server Adapter ",
         "Ethernet ",
         "1 ",
         " ",
-        "{11477AB1-0A73-449C-8768-A17F47C02A1F}",
+        "{0A2E026F-F059-43CA-AA66-E77FC40EF702}",
     ],
     [
         "TBWAW-VEEAM01",
-        "21:77:22:AE:F8:B4 ",
+        "38:4c:78:cc:d7:51 ",
         "Microsoft Network Adapter Multiplexor Driver ",
         "LAN ",
         "2 ",
         "20000000000 ",
-        "{4FCE4C48-6217-465A-B807-B61499AE570C}",
+        "{2EBF040F-4EA6-4F38-B743-1B4A7BC02F30}",
     ],
 ]
 
@@ -823,8 +822,8 @@ EXPECTED_WINPERF_IF_WIN32_NETWORKADAPTER_OUTPUT_1: Sequence[AdditionalIfData] = 
         speed=9728000,
         oper_status="1",
         oper_status_name="up",
-        mac_address="E1:43:6A:0F:D3:F4",
-        guid="{A447D54F-0E4B-40B3-9FBA-228F7DCE8FC7}",
+        mac_address="63:fc:b4:9a:ae:63",
+        guid="{24AA204E-C3FE-47E8-A890-3C1D7584FAF6}",
     ),
     AdditionalIfData(
         name="Intel(R) I350 Gigabit Network Connection",
@@ -832,8 +831,8 @@ EXPECTED_WINPERF_IF_WIN32_NETWORKADAPTER_OUTPUT_1: Sequence[AdditionalIfData] = 
         speed=0,
         oper_status="7",
         oper_status_name="Media disconnected",
-        mac_address="BE:7E:D4:52:D3:1A",
-        guid="{1C656D16-F30D-4714-9A7E-B3D3F9AD52FA}",
+        mac_address="c3:08:87:2e:16:89",
+        guid="{2FCFD4C6-B7C6-40CB-8336-385865CA8822}",
     ),
     AdditionalIfData(
         name="Intel(R) I350 Gigabit Network Connection #2",
@@ -841,8 +840,8 @@ EXPECTED_WINPERF_IF_WIN32_NETWORKADAPTER_OUTPUT_1: Sequence[AdditionalIfData] = 
         speed=0,
         oper_status="7",
         oper_status_name="Media disconnected",
-        mac_address="15:35:42:65:DB:0A",
-        guid="{F9C89525-0500-4A6B-95AC-95F66BDA739A}",
+        mac_address="94:4f:82:20:86:50",
+        guid="{C28247BA-9E89-4F4F-8B42-6637D507B1A2}",
     ),
     AdditionalIfData(
         name="Intel(R) I350 Gigabit Network Connection #3",
@@ -850,8 +849,8 @@ EXPECTED_WINPERF_IF_WIN32_NETWORKADAPTER_OUTPUT_1: Sequence[AdditionalIfData] = 
         speed=0,
         oper_status="7",
         oper_status_name="Media disconnected",
-        mac_address="01:73:7F:4A:47:91",
-        guid="{A0D28181-6DF8-4A80-9837-D2933D013510}",
+        mac_address="71:0d:d9:6a:50:aa",
+        guid="{3A8F46C0-2BC8-4BB2-8C61-64ED8BC5B76E}",
     ),
     AdditionalIfData(
         name="Intel(R) I350 Gigabit Network Connection #4",
@@ -859,8 +858,8 @@ EXPECTED_WINPERF_IF_WIN32_NETWORKADAPTER_OUTPUT_1: Sequence[AdditionalIfData] = 
         speed=0,
         oper_status="7",
         oper_status_name="Media disconnected",
-        mac_address="A2:22:DD:FD:C8:F9",
-        guid="{95CA2691-7AFA-4842-A769-F521FE6173B2}",
+        mac_address="c4:70:14:5f:d2:c0",
+        guid="{2443DE70-0A53-4936-A561-7C6DBFE28631}",
     ),
     AdditionalIfData(
         name="QLogic 1/10GbE Server Adapter",
@@ -868,8 +867,8 @@ EXPECTED_WINPERF_IF_WIN32_NETWORKADAPTER_OUTPUT_1: Sequence[AdditionalIfData] = 
         speed=0,
         oper_status="1",
         oper_status_name="up",
-        mac_address="21:77:22:AE:F8:B4",
-        guid="{2B232067-0EE5-41EE-B498-0CA2FE8715D0}",
+        mac_address="38:4c:78:cc:d7:51",
+        guid="{4E16E6AC-F88A-4D51-9620-711DBB7B0015}",
     ),
     AdditionalIfData(
         name="QLogic 1/10GbE Server Adapter",
@@ -877,8 +876,8 @@ EXPECTED_WINPERF_IF_WIN32_NETWORKADAPTER_OUTPUT_1: Sequence[AdditionalIfData] = 
         speed=0,
         oper_status="2",
         oper_status_name="Connecting",
-        mac_address="35:37:CF:44:20:A2",
-        guid="{11477AB1-0A73-449C-8768-A17F47C02A1F}",
+        mac_address="1e:03:f0:24:5c:ce",
+        guid="{0A2E026F-F059-43CA-AA66-E77FC40EF702}",
     ),
     AdditionalIfData(
         name="Microsoft Network Adapter Multiplexor Driver",
@@ -886,8 +885,8 @@ EXPECTED_WINPERF_IF_WIN32_NETWORKADAPTER_OUTPUT_1: Sequence[AdditionalIfData] = 
         speed=20000000000,
         oper_status="1",
         oper_status_name="up",
-        mac_address="21:77:22:AE:F8:B4",
-        guid="{4FCE4C48-6217-465A-B807-B61499AE570C}",
+        mac_address="38:4c:78:cc:d7:51",
+        guid="{2EBF040F-4EA6-4F38-B743-1B4A7BC02F30}",
     ),
 ]
 
@@ -997,8 +996,8 @@ def test_parse_winperf_if_ex(
                             (Names.INTEL_I350_3, 0),
                             (Names.INTEL_I350_4, 0),
                             (Names.IBM_USB_2, 9728000),
-                            (Names.ISATAP_A4, 100000),
-                            (Names.ISATAP_4F, 100000),
+                            (Names.ISATAP_24, 100000),
+                            (Names.ISATAP_2E, 100000),
                         ]
                     )
                 },
@@ -1029,10 +1028,10 @@ def test_parse_winperf_if_ex(
                             (Names.INTEL_NDC_4, 0),
                             (Names.INTEL_X520_3, 10000000000),
                             (Names.INTEL_X520_4, 10000000000),
-                            (Names.NIN, 100000),
-                            (Names.ISATAP_01, 100000),
-                            (Names.ISATAP_16, 100000),
-                            (Names.ISATAP_7A, 100000),
+                            (Names.ISA, 100000),
+                            (Names.ISATAP_A0, 100000),
+                            (Names.ISATAP_09, 100000),
+                            (Names.ISATAP_BF, 100000),
                         ]
                     )
                 },
@@ -1069,37 +1068,37 @@ def test_parse_winperf_if(
                     "DAG-NET ",
                     "SwitchIndependent ",
                     "Dynamic ",
-                    "40:90:7C:1A:45:F8;7C:33:82:DE:F6:3A",
+                    "85:ae:ac:eb:a5:53;39:d6:c8:28:3f:c7",
                     "SLOT 6 Port 1 DAG;SLOT 4 Port 2 DAG",
                     "Intel(R) Ethernet 10G 2P X520 Adapter     #2;Intel(R) Ethernet 10G 2P X520 Adapter   #4",
                     "10000000000;10000000000",
-                    "{70F3DEC7-8347-4157-B066-95F5672F39BA};{9C4971CB-95AA-4B01-B828-F61B339E4F19}",
+                    "{07F1904B-3242-4CFE-8D5C-15C174CD3CD5};{CAA71E22-85E1-4D60-8AA9-4D59D470FD18}",
                 ],
                 [
                     "MAPI-NET ",
                     "SwitchIndependent ",
                     "Dynamic ",
-                    "C4:B7:2C:2A:7C:43;5C:74:5B:97:33:7D",
+                    "13:89:c4:52:a9:13;4c:98:fb:4c:8f:c6",
                     "SLOT 6 Port 2 MAPI;SLOT 4 Port 1 MAPI",
                     "Intel(R) Ethernet 10G 2P X520 Adapter;Intel(R) Ethernet 10G 2P X520 Adapter #3",
                     "10000000000;10000000000",
-                    "{4C88A19B-5EE4-44A6-ACBB-262131EE1560};{9BD62095-22A8-49CA-BA8B-A7846C6B5FDB}",
+                    "{F27DD595-90F2-43D7-9853-B76E6ABB3057};{5B3C2733-25B4-452C-80DC-A0B0A7816AFA}",
                 ],
             ],
             {
-                "{70F3DEC7-8347-4157-B066-95F5672F39BA}": TeamingData(
+                "{07F1904B-3242-4CFE-8D5C-15C174CD3CD5}": TeamingData(
                     team_name="DAG-NET",
                     name="Intel(R) Ethernet 10G 2P X520 Adapter #2",
                 ),
-                "{9C4971CB-95AA-4B01-B828-F61B339E4F19}": TeamingData(
+                "{CAA71E22-85E1-4D60-8AA9-4D59D470FD18}": TeamingData(
                     team_name="DAG-NET",
                     name="Intel(R) Ethernet 10G 2P X520 Adapter #4",
                 ),
-                "{4C88A19B-5EE4-44A6-ACBB-262131EE1560}": TeamingData(
+                "{F27DD595-90F2-43D7-9853-B76E6ABB3057}": TeamingData(
                     team_name="MAPI-NET",
                     name="Intel(R) Ethernet 10G 2P X520 Adapter",
                 ),
-                "{9BD62095-22A8-49CA-BA8B-A7846C6B5FDB}": TeamingData(
+                "{5B3C2733-25B4-452C-80DC-A0B0A7816AFA}": TeamingData(
                     team_name="MAPI-NET",
                     name="Intel(R) Ethernet 10G 2P X520 Adapter #3",
                 ),
@@ -1121,37 +1120,37 @@ def test_parse_winperf_if(
                     "PVSMWTeam ",
                     "Lacp ",
                     "Dynamic ",
-                    "14:42:AD:DB:92:BB;5B:02:F6:E1:43:36",
+                    "4a:10:45:0b:42:85;e8:5d:43:89:fc:36",
                     "Ethernet 3;Ethernet 6",
                     "HP NC523SFP 10Gb 2-port Server Adapter;HP NC523SFP 10Gb 2-port Server Adapter #3",
                     "10000000000;10000000000",
-                    "{9F992251-4863-4207-9B48-FA095C0A1165};{F6036562-3810-402C-BE91-5B78E0C94AA0}",
+                    "{0DB3EDD7-7556-4C2F-912E-2DA7902FF40A};{9E6FF8D7-B45D-4A39-A063-BEED584A4A54}",
                 ],
                 [
                     "SRVMWTeam ",
                     "Lacp ",
                     "Dynamic ",
-                    "E9:A8:BE:9B:83:23;99:CC:82:AB:97:98",
+                    "c6:27:f6:2a:c2:20;b1:df:cd:c2:9b:3b",
                     "Ethernet 7;Ethernet 5",
                     "HP NC382i DP Multifunction Gigabit Server Adapter #52;HP NC382i DP Multifunction Gigabit Server Adapter #53",
                     "1000000000;1000000000",
-                    "{7A548B9E-C618-4620-B0BC-1974251252DB};{B434E38A-A0A7-4CBD-959D-FB450768C511}",
+                    "{5EC6AE42-0E76-4EC1-A081-8EBA8C27A7F6};{51673C8C-251D-4DF1-8AB2-97452DC1355D}",
                 ],
             ],
             {
-                "{9F992251-4863-4207-9B48-FA095C0A1165}": TeamingData(
+                "{0DB3EDD7-7556-4C2F-912E-2DA7902FF40A}": TeamingData(
                     team_name="PVSMWTeam",
                     name="HP NC523SFP 10Gb 2-port Server Adapter",
                 ),
-                "{F6036562-3810-402C-BE91-5B78E0C94AA0}": TeamingData(
+                "{9E6FF8D7-B45D-4A39-A063-BEED584A4A54}": TeamingData(
                     team_name="PVSMWTeam",
                     name="HP NC523SFP 10Gb 2-port Server Adapter #3",
                 ),
-                "{7A548B9E-C618-4620-B0BC-1974251252DB}": TeamingData(
+                "{5EC6AE42-0E76-4EC1-A081-8EBA8C27A7F6}": TeamingData(
                     team_name="SRVMWTeam",
                     name="HP NC382i DP Multifunction Gigabit Server Adapter #52",
                 ),
-                "{B434E38A-A0A7-4CBD-959D-FB450768C511}": TeamingData(
+                "{51673C8C-251D-4DF1-8AB2-97452DC1355D}": TeamingData(
                     team_name="SRVMWTeam",
                     name="HP NC382i DP Multifunction Gigabit Server Adapter #53",
                 ),
@@ -1173,19 +1172,19 @@ def test_parse_winperf_if(
                     "LAN ",
                     "Lacp ",
                     "Dynamic ",
-                    "35:37:CF:44:20:A2;21:77:22:AE:F8:B4",
+                    "1e:03:f0:24:5c:ce;38:4c:78:cc:d7:51",
                     "Ethernet;Ethernet 2",
                     "QLogic 1/10GbE Server Adapter #2;QLogic 1/10GbE Server Adapter",
                     "10000000000;10000000000",
-                    "{11477AB1-0A73-449C-8768-A17F47C02A1F};{2B232067-0EE5-41EE-B498-0CA2FE8715D0}",
+                    "{0A2E026F-F059-43CA-AA66-E77FC40EF702};{4E16E6AC-F88A-4D51-9620-711DBB7B0015}",
                 ],
             ],
             {
-                "{11477AB1-0A73-449C-8768-A17F47C02A1F}": TeamingData(
+                "{0A2E026F-F059-43CA-AA66-E77FC40EF702}": TeamingData(
                     team_name="LAN",
                     name="QLogic 1/10GbE Server Adapter #2",
                 ),
-                "{2B232067-0EE5-41EE-B498-0CA2FE8715D0}": TeamingData(
+                "{4E16E6AC-F88A-4D51-9620-711DBB7B0015}": TeamingData(
                     team_name="LAN",
                     name="QLogic 1/10GbE Server Adapter",
                 ),
@@ -1217,9 +1216,9 @@ def test_parse_winperf_if_teaming(
             [
                 ["Node", "MACAddress", "Name", "NetConnectionID", "NetConnectionStatus"],
                 ["Z3127130", "", "WAN Miniport (L2TP)", "", ""],  # do not skip
-                ["Z3127130", "13:09:72:66:8A:B3", "Broadcom OK 1", "NIC2", "2"],
+                ["Z3127130", "31:0b:d4:9c:ef:59", "Broadcom OK 1", "NIC2", "2"],
                 ["Z3127130", "", "Broadcom XX Skip", "NIC4", "4"],
-                ["Z3127130", "54:8B:A4:39:61:53", "Broadcom OK 2", "NIC1", "2"],
+                ["Z3127130", "ee:17:bb:db:42:fa", "Broadcom OK 2", "NIC1", "2"],
             ],
             [
                 AdditionalIfData(
@@ -1237,7 +1236,7 @@ def test_parse_winperf_if_teaming(
                     speed=0,
                     oper_status="1",
                     oper_status_name="up",
-                    mac_address="13:09:72:66:8A:B3",
+                    mac_address="31:0b:d4:9c:ef:59",
                     guid=None,
                 ),
                 AdditionalIfData(
@@ -1246,7 +1245,7 @@ def test_parse_winperf_if_teaming(
                     speed=0,
                     oper_status="1",
                     oper_status_name="up",
-                    mac_address="54:8B:A4:39:61:53",
+                    mac_address="ee:17:bb:db:42:fa",
                     guid=None,
                 ),
             ],
@@ -1272,7 +1271,7 @@ def test_parse_winperf_if_get_netadapter() -> None:
                 "1",
                 "Up",
                 "",
-                "{FD85A0EF-1969-462E-87AE-6C78F8CE4216}",
+                "{F71AF561-CF55-47EE-A803-3F05F2EDFD65}",
             ],
             [
                 "Intel(R) PRO/1000 MT Desktop Adapter_",
@@ -1280,8 +1279,8 @@ def test_parse_winperf_if_get_netadapter() -> None:
                 "999",
                 "1",
                 "Up",
-                "39-86-7E-CE-71-1F",
-                "{4AA86136-917B-45D2-BE98-087B589B8CA0}",
+                "7e-e6-cc-09-c3-c8",
+                "{570809B4-FDEF-4479-9DEE-1E263EA4166F}",
             ],
         ]
     ) == [
@@ -1292,7 +1291,7 @@ def test_parse_winperf_if_get_netadapter() -> None:
             oper_status="1",
             oper_status_name="Up",
             mac_address="",
-            guid="{FD85A0EF-1969-462E-87AE-6C78F8CE4216}",
+            guid="{F71AF561-CF55-47EE-A803-3F05F2EDFD65}",
         ),
         AdditionalIfData(
             name="Intel(R) PRO/1000 MT Desktop Adapter",
@@ -1300,8 +1299,8 @@ def test_parse_winperf_if_get_netadapter() -> None:
             speed=999,
             oper_status="1",
             oper_status_name="Up",
-            mac_address="39:86:7E:CE:71:1F",
-            guid="{4AA86136-917B-45D2-BE98-087B589B8CA0}",
+            mac_address="7e:e6:cc:09:c3:c8",
+            guid="{570809B4-FDEF-4479-9DEE-1E263EA4166F}",
         ),
     ]
 
@@ -1354,8 +1353,8 @@ def test_parse_winperf_if_dhcp() -> None:
                 Names.INTEL_I350_3: _entry(5, Names.INTEL_I350_3, 0),
                 Names.INTEL_I350_4: _entry(6, Names.INTEL_I350_4, 0),
                 Names.IBM_USB_2: _entry(7, Names.IBM_USB_2, 9728000),
-                Names.ISATAP_A4: _entry(8, Names.ISATAP_A4, 100000),
-                Names.ISATAP_4F: _entry(9, Names.ISATAP_4F, 100000),
+                Names.ISATAP_24: _entry(8, Names.ISATAP_24, 100000),
+                Names.ISATAP_2E: _entry(9, Names.ISATAP_2E, 100000),
             },
             None,
             EXPECTED_WINPERF_IF_WIN32_NETWORKADAPTER_OUTPUT_1,
@@ -1367,7 +1366,7 @@ def test_parse_winperf_if_dhcp() -> None:
                     10000000000,
                     Mode.UP,
                     alias="Ethernet 2",
-                    phys_address='!w"®ø´',
+                    phys_address="8LxÌ×Q",
                 ),
                 _entry(
                     3,
@@ -1375,7 +1374,7 @@ def test_parse_winperf_if_dhcp() -> None:
                     0,
                     Mode.DISCONN,
                     alias="Ethernet 3",
-                    phys_address="¾~ÔRÓ\x1a",
+                    phys_address="Ã\x08\x87.\x16\x89",
                 ),
                 _entry(
                     4,
@@ -1383,7 +1382,7 @@ def test_parse_winperf_if_dhcp() -> None:
                     0,
                     Mode.DISCONN,
                     alias="Ethernet 4",
-                    phys_address="\x155BeÛ\n",
+                    phys_address="\x94O\x82 \x86P",
                 ),
                 _entry(
                     5,
@@ -1391,7 +1390,7 @@ def test_parse_winperf_if_dhcp() -> None:
                     0,
                     Mode.DISCONN,
                     alias="Ethernet 5",
-                    phys_address="\x01s\x7fJG\x91",
+                    phys_address="q\rÙjPª",
                 ),
                 _entry(
                     6,
@@ -1399,7 +1398,7 @@ def test_parse_winperf_if_dhcp() -> None:
                     0,
                     Mode.DISCONN,
                     alias="Ethernet 6",
-                    phys_address='¢"ÝýÈù',
+                    phys_address="Äp\x14_ÒÀ",
                 ),
                 _entry(
                     7,
@@ -1407,10 +1406,10 @@ def test_parse_winperf_if_dhcp() -> None:
                     9728000,
                     Mode.UP,
                     alias="Local Area Connection 2",
-                    phys_address="áCj\x0fÓô",
+                    phys_address="cü´\x9a®c",
                 ),
-                _entry(8, Names.ISATAP_A4, 100000),
-                _entry(9, Names.ISATAP_4F, 100000),
+                _entry(8, Names.ISATAP_24, 100000),
+                _entry(9, Names.ISATAP_2E, 100000),
             ],
             id="with additional data",
         ),
@@ -1424,25 +1423,25 @@ def test_parse_winperf_if_dhcp() -> None:
                 Names.INTEL_NDC_4: _entry(6, Names.INTEL_NDC_4, 0),
                 Names.INTEL_X520_3: _entry(7, Names.INTEL_X520_3, 10000000000),
                 Names.INTEL_X520_4: _entry(8, Names.INTEL_X520_4, 10000000000),
-                Names.NIN: _entry(9, Names.NIN, 100000),
-                Names.ISATAP_01: _entry(10, Names.ISATAP_01, 100000),
-                Names.ISATAP_16: _entry(11, Names.ISATAP_16, 100000),
-                Names.ISATAP_7A: _entry(12, Names.ISATAP_7A, 100000),
+                Names.ISA: _entry(9, Names.ISA, 100000),
+                Names.ISATAP_A0: _entry(10, Names.ISATAP_A0, 100000),
+                Names.ISATAP_09: _entry(11, Names.ISATAP_09, 100000),
+                Names.ISATAP_BF: _entry(12, Names.ISATAP_BF, 100000),
             },
             {
-                "{70F3DEC7-8347-4157-B066-95F5672F39BA}": TeamingData(
+                "{07F1904B-3242-4CFE-8D5C-15C174CD3CD5}": TeamingData(
                     team_name="DAG-NET",
                     name="Intel(R) Ethernet 10G 2P X520 Adapter #2",
                 ),
-                "{9C4971CB-95AA-4B01-B828-F61B339E4F19}": TeamingData(
+                "{CAA71E22-85E1-4D60-8AA9-4D59D470FD18}": TeamingData(
                     team_name="DAG-NET",
                     name="Intel(R) Ethernet 10G 2P X520 Adapter #4",
                 ),
-                "{4C88A19B-5EE4-44A6-ACBB-262131EE1560}": TeamingData(
+                "{F27DD595-90F2-43D7-9853-B76E6ABB3057}": TeamingData(
                     team_name="MAPI-NET",
                     name="Intel(R) Ethernet 10G 2P X520 Adapter",
                 ),
-                "{9BD62095-22A8-49CA-BA8B-A7846C6B5FDB}": TeamingData(
+                "{5B3C2733-25B4-452C-80DC-A0B0A7816AFA}": TeamingData(
                     team_name="MAPI-NET",
                     name="Intel(R) Ethernet 10G 2P X520 Adapter #3",
                 ),
@@ -1455,7 +1454,7 @@ def test_parse_winperf_if_dhcp() -> None:
                     1000000000,
                     Mode.UP,
                     alias="NIC1",
-                    phys_address="ÆàÐ©8\x87",
+                    phys_address="MMíM\r\x1d",
                 ),
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
@@ -1466,7 +1465,7 @@ def test_parse_winperf_if_dhcp() -> None:
                         speed=10000000000,
                         oper_status="1",
                         out_qlen=0,
-                        phys_address="Ä·,*|C",
+                        phys_address="ùÕ[=mî",
                         oper_status_name="up",
                         speed_as_text="",
                         group="MAPI-NET",
@@ -1484,7 +1483,7 @@ def test_parse_winperf_if_dhcp() -> None:
                         speed=10000000000,
                         oper_status="1",
                         out_qlen=0,
-                        phys_address="@\x90|\x1aEø",
+                        phys_address="2YGÐR&",
                         oper_status_name="up",
                         speed_as_text="",
                         group="DAG-NET",
@@ -1499,7 +1498,7 @@ def test_parse_winperf_if_dhcp() -> None:
                     0,
                     mode=Mode.DISCONN,
                     alias="NIC2",
-                    phys_address="Ü\x03\x0e¤ô\n",
+                    phys_address="\x82\x84±O\x1d¨",
                 ),
                 _entry(
                     5,
@@ -1507,7 +1506,7 @@ def test_parse_winperf_if_dhcp() -> None:
                     0,
                     mode=Mode.DISCONN,
                     alias="NIC3",
-                    phys_address="o\x97\r\x91±ê",
+                    phys_address="Ðþ\x91¬0)",
                 ),
                 _entry(
                     6,
@@ -1515,7 +1514,7 @@ def test_parse_winperf_if_dhcp() -> None:
                     0,
                     mode=Mode.DISCONN,
                     alias="NIC4",
-                    phys_address="ç\xadwÉs¦",
+                    phys_address="\x89Ír\n\x8fX",
                 ),
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
@@ -1526,7 +1525,7 @@ def test_parse_winperf_if_dhcp() -> None:
                         speed=10000000000,
                         oper_status="1",
                         out_qlen=0,
-                        phys_address="\\t[\x973}",
+                        phys_address="çNu\x95\x06\\",
                         oper_status_name="up",
                         speed_as_text="",
                         group="MAPI-NET",
@@ -1544,7 +1543,7 @@ def test_parse_winperf_if_dhcp() -> None:
                         speed=10000000000,
                         oper_status="1",
                         out_qlen=0,
-                        phys_address="|3\x82Þö:",
+                        phys_address="H;íTD?",
                         oper_status_name="up",
                         speed_as_text="",
                         group="DAG-NET",
@@ -1553,10 +1552,10 @@ def test_parse_winperf_if_dhcp() -> None:
                     ),
                     _counters[Names.INTEL_X520_4],
                 ),
-                _entry(9, Names.NIN, 100000),
-                _entry(10, Names.ISATAP_01, 100000),
-                _entry(11, Names.ISATAP_16, 100000),
-                _entry(12, Names.ISATAP_7A, 100000),
+                _entry(9, Names.ISA, 100000),
+                _entry(10, Names.ISATAP_A0, 100000),
+                _entry(11, Names.ISATAP_09, 100000),
+                _entry(12, Names.ISATAP_BF, 100000),
             ],
             id="with additional data",
         ),
@@ -1648,7 +1647,7 @@ def test_inventory_winperf_if() -> None:
                         10000000000,
                         Mode.UP,
                         alias="Ethernet 2",
-                        phys_address="\\óü7*0",
+                        phys_address="QC2I7y",
                     ),
                     Names.INTEL_I350: _entry(
                         3,
@@ -1656,7 +1655,7 @@ def test_inventory_winperf_if() -> None:
                         0,
                         Mode.DISCONN,
                         alias="Ethernet 3",
-                        phys_address="@òé!¾Ò",
+                        phys_address="42oV#!",
                     ),
                     Names.INTEL_I350_2: _entry(
                         4,
@@ -1664,7 +1663,7 @@ def test_inventory_winperf_if() -> None:
                         0,
                         Mode.DISCONN,
                         alias="Ethernet 4",
-                        phys_address="@òé!¾Ó",
+                        phys_address="@cZ7ff",
                     ),
                     Names.IBM_USB_2: _entry(
                         7,
@@ -1672,9 +1671,9 @@ def test_inventory_winperf_if() -> None:
                         9728000,
                         Mode.UP,
                         alias="Local Area Connection 2",
-                        phys_address="Bòé!¾Ñ",
+                        phys_address="gJ7F^9",
                     ),
-                    Names.ISATAP_A4: _entry(8, Names.ISATAP_A4, 100000),
+                    Names.ISATAP_24: _entry(8, Names.ISATAP_24, 100000),
                 },
                 found_windows_if=False,
                 found_mk_dhcp_enabled=False,
@@ -1709,7 +1708,7 @@ def test_inventory_winperf_if() -> None:
                     "description": "QLogic 1 10GbE Server Adapter",
                     "alias": "Ethernet 2",
                     "speed": 10000000000,
-                    "phys_address": "5C:F3:FC:37:2A:30",
+                    "phys_address": "51:43:32:49:37:79",
                     "oper_status": 1,
                     "port_type": 6,
                     "available": False,
@@ -1725,7 +1724,7 @@ def test_inventory_winperf_if() -> None:
                     "description": "IBM USB Remote NDIS Network Device 2",
                     "alias": "Local Area Connection 2",
                     "speed": 9728000,
-                    "phys_address": "42:F2:E9:21:BE:D1",
+                    "phys_address": "67:4A:37:46:5E:39",
                     "oper_status": 1,
                     "port_type": 6,
                     "available": False,
@@ -1738,8 +1737,8 @@ def test_inventory_winperf_if() -> None:
                     "index": 8,
                 },
                 inventory_columns={
-                    "description": "isatap.{A447D54F-0E4B-40B3-9FBA-228F7DCE8FC7}",
-                    "alias": "isatap.{A447D54F-0E4B-40B3-9FBA-228F7DCE8FC7}",
+                    "description": "isatap.{24AA204E-C3FE-47E8-A890-3C1D7584FAF6}",
+                    "alias": "isatap.{24AA204E-C3FE-47E8-A890-3C1D7584FAF6}",
                     "speed": 100000,
                     "phys_address": "",
                     "oper_status": 1,

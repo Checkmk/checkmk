@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+
 import contextlib
 import datetime
 from collections.abc import Iterator, Sequence
@@ -12,12 +12,15 @@ from unittest.mock import MagicMock
 
 import pytest
 import time_machine
+from pytest_mock import MockerFixture
 
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
 from livestatus import SiteId
+
+from cmk.ccc import version
 
 from cmk.utils import paths
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
@@ -26,19 +29,43 @@ from cmk.utils.hostaddress import HostName
 from cmk.automations.results import DeleteHostsResult
 
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.type_defs import CustomHostAttrSpec
+from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundleStore
+from cmk.gui.watolib.configuration_bundles import (
+    create_config_bundle,
+    CreateBundleEntities,
+)
 from cmk.gui.watolib.custom_attributes import (
     CustomAttrSpecs,
-    CustomHostAttrSpec,
     save_custom_attrs_to_mk_file,
 )
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 
-from cmk.ccc import version
-
 managedtest = pytest.mark.skipif(
     version.edition(paths.omd_root) is not version.Edition.CME, reason="see #7213"
 )
+
+
+@pytest.fixture()
+def quick_setup_config_bundle() -> Iterator[tuple[BundleId, str]]:
+    bundle_id = BundleId("bundle_id")
+    program_id = PROGRAM_ID_QUICK_SETUP
+    create_config_bundle(
+        bundle_id=bundle_id,
+        bundle={
+            "title": "bundle_title",
+            "comment": "bundle_comment",
+            "group": "bundle_group",
+            "program_id": program_id,
+        },
+        entities=CreateBundleEntities(),
+    )
+    yield bundle_id, program_id
+    store = ConfigBundleStore()
+    all_bundles = store.load_for_modification()
+    all_bundles.pop(bundle_id)
+    store.save(all_bundles)
 
 
 def test_openapi_missing_host(clients: ClientRegistry) -> None:
@@ -591,7 +618,6 @@ def test_openapi_host_collection(clients: ClientRegistry) -> None:
     for host in resp.json["value"]:
         # Check that all entries are domain objects
         assert "extensions" in host
-        assert "links" in host
         assert "members" in host
         assert "title" in host
         assert "id" in host
@@ -605,15 +631,48 @@ def test_openapi_host_collection_effective_attributes(clients: ClientRegistry) -
 
     resp2 = clients.HostConfig.get_all(effective_attributes=False)
     for host in resp2.json["value"]:
-        assert host["extensions"]["effective_attributes"] is None
+        assert "effective_attributes" not in host["extensions"]
+
+
+@pytest.mark.usefixtures("with_host")
+def test_host_collection_fields(clients: ClientRegistry) -> None:
+    resp = clients.HostConfig.get_all(fields="(id)")
+    # TODO: update response models to not automatically add fields
+    # assert resp.json == {"id": "host"}, "Expected only the id field to be returned"
+    assert resp.json == {"id": "host", "domainType": "host_config"}
+
+    resp = clients.HostConfig.get_all(fields="!(value~extensions)")
+    assert "value" in resp.json, "Expected the value field to be returned"
+    for host in resp.json["value"]:
+        assert host.get("links"), "Expected the links field to be returned and computed"
+        assert "extensions" not in host, "Expected the extensions field to not be returned"
+
+
+def test_host_collection_invalid_fields(clients: ClientRegistry) -> None:
+    clients.HostConfig.get_all(fields="invalid_filter", expect_ok=False).assert_status_code(400)
+
+
+@pytest.mark.usefixtures("with_host")
+def test_openapi_list_hosts_include_links(clients: ClientRegistry) -> None:
+    default_response = clients.HostConfig.get_all()
+    enabled_response = clients.HostConfig.get_all(include_links=True)
+    disabled_response = clients.HostConfig.get_all(include_links=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == disabled_response.json
+    assert any(bool(value["links"]) for value in enabled_response.json["value"])
+    assert all("links" not in value for value in disabled_response.json["value"])
 
 
 @pytest.mark.usefixtures("inline_background_jobs")
 def test_openapi_host_rename(
     clients: ClientRegistry,
     monkeypatch: pytest.MonkeyPatch,
+    mocker: MockerFixture,
 ) -> None:
     monkeypatch.setattr("cmk.gui.openapi.endpoints.host_config.has_pending_changes", lambda: False)
+    automation = mocker.patch("cmk.gui.watolib.host_rename.rename_hosts")
 
     clients.HostConfig.create(
         host_name="foobar",
@@ -623,6 +682,7 @@ def test_openapi_host_rename(
         host_name="foobar",
         new_name="foobaz",
     ).assert_status_code(204)
+    automation.assert_called_once()
 
 
 def test_openapi_host_rename_wait_for_completion_without_job(clients: ClientRegistry) -> None:
@@ -673,18 +733,20 @@ def test_openapi_host_rename_on_invalid_hostname(
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_rename_locked_by_quick_setup(
     clients: ClientRegistry,
+    quick_setup_config_bundle: tuple[BundleId, str],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr("cmk.gui.openapi.endpoints.host_config.has_pending_changes", lambda: False)
 
+    bundle_id, program_id = quick_setup_config_bundle
     clients.HostConfig.create(
         host_name="foobar",
         folder="/",
         attributes={
             "locked_by": {
                 "site_id": "heute",
-                "program_id": PROGRAM_ID_QUICK_SETUP,
-                "instance_id": "some-rule",
+                "program_id": program_id,
+                "instance_id": bundle_id,
             }
         },
     )
@@ -698,16 +760,18 @@ def test_openapi_host_rename_locked_by_quick_setup(
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_delete_locked_by_quick_setup(
     clients: ClientRegistry,
+    quick_setup_config_bundle: tuple[BundleId, str],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    bundle_id, program_id = quick_setup_config_bundle
     clients.HostConfig.create(
         host_name="foobar",
         folder="/",
         attributes={
             "locked_by": {
                 "site_id": "heute",
-                "program_id": PROGRAM_ID_QUICK_SETUP,
-                "instance_id": "some-rule",
+                "program_id": program_id,
+                "instance_id": bundle_id,
             }
         },
     )
@@ -720,8 +784,10 @@ def test_openapi_host_delete_locked_by_quick_setup(
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_update_locked_by_quick_setup(
     clients: ClientRegistry,
+    quick_setup_config_bundle: tuple[BundleId, str],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    bundle_id, program_id = quick_setup_config_bundle
     clients.HostConfig.create(
         host_name="foobar",
         folder="/",
@@ -730,8 +796,8 @@ def test_openapi_host_update_locked_by_quick_setup(
             "locked_attributes": ["tag_address_family"],
             "locked_by": {
                 "site_id": "heute",
-                "program_id": PROGRAM_ID_QUICK_SETUP,
-                "instance_id": "some-rule",
+                "program_id": program_id,
+                "instance_id": bundle_id,
             },
         },
     )
@@ -914,11 +980,38 @@ def test_openapi_host_with_inventory_failed(clients: ClientRegistry) -> None:
     assert resp.json["extensions"]["attributes"]["inventory_failed"] is True
 
 
+@managedtest
+def test_openapi_host_with_waiting_for_discovery(clients: ClientRegistry) -> None:
+    resp = clients.HostConfig.create(
+        host_name="example.com",
+        folder="/",
+        attributes={
+            "ipaddress": "192.168.0.123",
+            "waiting_for_discovery": True,
+        },
+    )
+    assert resp.json["extensions"]["attributes"]["waiting_for_discovery"] is True
+
+
 def test_openapi_host_with_invalid_labels(clients: ClientRegistry) -> None:
     clients.HostConfig.create(
         folder="/",
         host_name="example.com",
         attributes={"labels": {"label": ["invalid_label_entry", "another_one"]}},
+        expect_ok=False,
+    ).assert_status_code(400)
+
+    clients.HostConfig.create(
+        folder="/",
+        host_name="example.com",
+        attributes={"labels": {"label": "va:lue"}},
+        expect_ok=False,
+    ).assert_status_code(400)
+
+    clients.HostConfig.create(
+        folder="/",
+        host_name="example.com",
+        attributes={"labels": {"la:bel": "value"}},
         expect_ok=False,
     ).assert_status_code(400)
 
@@ -1448,6 +1541,7 @@ def test_openapi_host_config_effective_attributes_includes_all_host_attributes_r
             "tag_agent": "cmk-agent",
             "tag_piggyback": "auto-piggyback",
             "tag_snmp_ds": "no-snmp",
+            "waiting_for_discovery": False,
         }
         != {
             "additional_ipv4addresses": [],
@@ -1493,6 +1587,7 @@ def test_openapi_host_config_effective_attributes_includes_all_host_attributes_r
             "tag_agent": "cmk-agent",
             "tag_piggyback": "auto-piggyback",
             "tag_snmp_ds": "no-snmp",
+            "waiting_for_discovery": False,
         }
     )
 
@@ -1586,7 +1681,7 @@ def test_create_host_with_too_long_of_a_name(
         expect_ok=False,
     )
     resp.assert_status_code(400)
-    assert resp.json["fields"]["host_name"][0] == f"HostName too long: {16 * 'a' + '…'!r}"
+    assert resp.json["fields"]["host_name"][0] == f"host address too long: {16 * 'a' + '…'!r}"
 
 
 @managedtest
@@ -1676,3 +1771,28 @@ def test_openapi_list_hosts_with_include_links(clients: ClientRegistry) -> None:
     clients.HostConfig.create(host_name="host1")
     resp = clients.HostConfig.get_all(include_links=True)
     assert len(resp.json["value"][0]["links"])
+
+
+class TestHostsFilters:
+    """Test cases for filtering hosts by various attributes."""
+
+    def test_openapi_hostnames_filter(self, clients: ClientRegistry) -> None:
+        clients.HostConfig.bulk_create(
+            entries=[
+                {"host_name": "host1", "folder": "/"},
+                {"host_name": "host2", "folder": "/"},
+                {"host_name": "host3", "folder": "/"},
+            ]
+        )
+
+        resp = clients.HostConfig.get_all(search={"hostnames": ["host1", "host2"]})
+        assert {entry["id"] for entry in resp.json["value"]} == {"host1", "host2"}
+
+    def test_openapi_not_matching_site_filter(self, clients: ClientRegistry) -> None:
+        clients.HostConfig.bulk_create(
+            entries=[
+                {"host_name": "host1", "folder": "/", "attributes": {"site": "NO_SITE"}},
+            ]
+        )
+        resp = clients.HostConfig.get_all(search={"site": "INVALID_SITE"})
+        assert not resp.json["value"]

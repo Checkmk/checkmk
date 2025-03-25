@@ -15,7 +15,15 @@ configure_make(
         "--disable-mans",
         "--disable-docs",
     ],
-    copts = ["-Wl,--rpath,$ORIGIN_VAR/../lib"],
+    copts = [
+        "-std=c89",
+        "-Wno-newline-eof",
+        "-Wno-unknown-warning-option",
+        "-Wno-unused-command-line-argument",
+        "-Wno-strict-prototypes",
+        "-Wl,-rpath",
+        "-Wl,$ORIGIN_VAR/../lib",
+    ],
 
     # This is a nasty workaround for Bazel's inability to escape `$ORIGIN`
     # combined with foreign_cc/configure_make's RPATH agnosticness

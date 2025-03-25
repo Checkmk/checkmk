@@ -4,12 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import functools
 import sys
+import threading
 import traceback
 import typing
 from collections.abc import Callable
 from typing import Any, Literal, NamedTuple
 
 from cmk.ccc.exceptions import MKGeneralException
+
+from cmk import trace
+
+tracer = trace.get_tracer()
 
 
 class Hook(NamedTuple):
@@ -72,15 +77,20 @@ def registered(name: str) -> bool:
 
 
 def call(name: str, *args: Any) -> None:
-    n = 0
-    for hook in hooks.get(name, []):
-        n += 1
-        try:
-            hook.handler(*args)
-        except Exception as e:
-            t, v, tb = sys.exc_info()
-            msg = "".join(traceback.format_exception(t, v, tb, None))
-            raise MKGeneralException(msg) from e
+    if not (registered_hooks := hooks.get(name, [])):
+        return
+
+    with tracer.span(f"hook_call[{name}]"):
+        for hook in registered_hooks:
+            try:
+                hook.handler(*args)
+            except Exception as e:
+                # for builtin hooks do not change exception handling
+                if hook.is_builtin:
+                    raise
+                t, v, tb = sys.exc_info()
+                msg = "".join(traceback.format_exception(t, v, tb, None))
+                raise MKGeneralException(msg) from e
 
 
 ClearEvent = Literal[
@@ -98,88 +108,82 @@ ClearEvent = Literal[
     "users-saved",
 ]
 
-ClearEvents = list[ClearEvent] | ClearEvent
-
-R = typing.TypeVar("R")
 P = typing.ParamSpec("P")
-F = typing.TypeVar("F")
-
-CacheWrapperArgs = typing.ParamSpec("CacheWrapperArgs")
+R = typing.TypeVar("R")
 
 
-def scoped_memoize(
-    clear_events: ClearEvents,
-    cache_impl: Callable[CacheWrapperArgs, Callable[P, R]],
-    cache_impl_args: CacheWrapperArgs.args,
-    cache_impl_kwargs: CacheWrapperArgs.kwargs,
-) -> Callable[[Callable[P, R]], Callable[P, R]]:
-    """A scoped memoization decorator.
+class ThreadLocalLRUCache:
+    def __init__(self) -> None:
+        self._local_storage = threading.local()
+        self._local_storage.caches = {}
 
-    This caches the decorated function with a supplied implementation. The cache will be
-    explicitly cleared whenever one of the supplied events in `clear_events` is triggered.
+    def _get_cached_func(self, func: Callable[P, R], maxsize: int | None) -> Callable[P, R]:
+        if not hasattr(self._local_storage, "caches"):
+            self._local_storage.caches = {}
+        if func not in self._local_storage.caches:
+            self._local_storage.caches[func] = functools.lru_cache(maxsize=maxsize)(func)
+        return self._local_storage.caches[func]
 
-    For this to work, the return-value of the cache implementation needs to have a `cache_clear`
-    method.
+    def cache_function(
+        self, maxsize: int | None = 128
+    ) -> Callable[[Callable[P, R]], Callable[P, R]]:
+        """Create a decorator to cache a function with a thread-local LRU cache."""
 
-    Args:
-        clear_events:
-            A list of hook events, which shall trigger a clearing of the cache.
+        def decorator(func: Callable[P, R]) -> Callable[P, R]:
+            def wrapper(*args: object, **kwargs: object) -> R:
+                cached_func = self._get_cached_func(func, maxsize)
+                return cached_func(*args, **kwargs)  # type: ignore[arg-type]
 
-        cache_impl:
-            The actual cache implementation. Is a function which returns a caching decorator.
+            return wrapper
 
-        cache_impl_args:
-            The var-args to be passed to the cache implementation.
+        return decorator
 
-        cache_impl_kwargs:
-            The keyword arguments to be passed to the cache implementation.
+    def cache_clear_all(self) -> None:
+        """Clear all caches in the current thread"""
+        if hasattr(self._local_storage, "caches"):
+            self._local_storage.caches.clear()
 
-    Returns:
-        A wrapped function which clears the cache according to `clear_events`.
+    def cache_clear(self, func: Callable[P, R]) -> None:
+        """Clear the cache of a function."""
+        if hasattr(self._local_storage, "caches"):
+            self._local_storage.caches.pop(func, None)
 
-    Raises:
-        ValueError - When no or unknown clear events are supplied.
-
-    """
-    if isinstance(clear_events, str):
-        clear_events = [clear_events]
-    if not clear_events:
-        raise ValueError(f"No clear-events specified. Use one of: {ClearEvent!r}")
-
-    def _decorator(func: P.args) -> P.args:
-        cached_func = cache_impl(*cache_impl_args, **cache_impl_kwargs)(func)
-        for clear_event in clear_events:
-            # Tried to generically type this such that parameters and added methods are checked,
-            # but this is not easily possible right now. lru_cache also has an incompatible
-            # type then.
-            # See: https://github.com/python/mypy/issues/5107
-            register_builtin(clear_event, cached_func.cache_clear)  # type: ignore[attr-defined]
-        return cached_func
-
-    return _decorator
+    def cache_info(self, func: Callable[P, R]) -> object | None:
+        """Shows the cache statistics of a function"""
+        if hasattr(self._local_storage, "caches") and func in self._local_storage.caches:
+            return self._local_storage.caches[func].cache_info()
+        return None
 
 
-def request_memoize(
-    maxsize: int | None = 128, typed: bool = False
-) -> Callable[[Callable[P, R]], Callable[P, R]]:
+_thread_cache = ThreadLocalLRUCache()
+
+
+def register_thread_cache_cleanup() -> None:
+    for clear_event in ["request-end", "request-context-exit"]:
+        # Note: This only clears the main thread cache. other caches are cleared on termination
+        register_builtin(clear_event, _thread_cache.cache_clear_all)
+
+
+def request_memoize(maxsize: int | None = 128) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """A cache decorator which only has a scope for one request.
 
-    This one uses `functools.lru_cache`, as the caching-scope can only be in one process anyway.
+    This one uses the ThreadLocalLRUCache as the caching-scope, hereby creating a separate
+    cache for each thread.
 
     Args:
         maxsize:
             See `functools.lru_cache`
 
-        typed:
-            See `functools.lru_cache`
-
     Returns:
-        A `_scoped_memoize` decorator which clears on every request-end and request-context-exit.
-
+        A decorator which clears on every request-end and request-context-exit.
+        The main thread cache is cleared on every request-end and request-context-exit.
+        Worker thread caches are automatically cleared when the thread is terminated.
     """
-    return scoped_memoize(
-        clear_events=["request-end", "request-context-exit"],
-        cache_impl=functools.lru_cache,  # type: ignore  # too specialized _lru_cache[_P, _R] ...
-        cache_impl_args=(),
-        cache_impl_kwargs={"maxsize": maxsize, "typed": typed},
-    )
+
+    def _memoize_decorator(func: Callable[P, R]) -> Callable[P, R]:
+        cached_function = _thread_cache.cache_function(maxsize)(func)
+        cached_function.cache_clear = lambda: _thread_cache.cache_clear(func)  # type: ignore[attr-defined]
+        cached_function.cache_info = lambda: _thread_cache.cache_info(func)  # type: ignore[attr-defined]
+        return cached_function
+
+    return _memoize_decorator

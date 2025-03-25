@@ -9,7 +9,7 @@ import time
 from collections.abc import Generator, Iterator, MutableMapping, Sequence
 from typing import Any, overload, TypedDict
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import CheckResult, get_average, get_rate, Metric, Result, State
 from cmk.agent_based.v2.render import timespan
 
@@ -199,7 +199,7 @@ def _check_trend(
         # as a positive or negative value
         levels_lower_trend = (abs(levels_lower_trend[0]) * -1, abs(levels_lower_trend[1]) * -1)
 
-    yield from check_levels(
+    yield from check_levels_v1(
         value=trend,
         levels_upper=levels_upper_trend,
         levels_lower=levels_lower_trend,
@@ -234,8 +234,8 @@ def _check_trend(
 
     diff_to_limit = limit - temp
     if rate_avg != 0 and not math.isinf(seconds_left := float(diff_to_limit / rate_avg)):
-        yield from check_levels(
-            value=seconds_left,
+        yield from check_levels_v1(
+            value=max(seconds_left, 0),
             levels_lower=levels_timeleft_sec,
             render_func=timespan,
             label="Time until temperature limit reached",
@@ -291,7 +291,7 @@ def check_temperature(
 ) -> TemperatureResult: ...
 
 
-def check_temperature(  # pylint: disable=too-many-branches
+def check_temperature(
     reading: float,
     params: TempParamType,
     *,
@@ -363,7 +363,7 @@ def check_temperature(  # pylint: disable=too-many-branches
 
     device_levels_handling = params.get("device_levels_handling", "usrdefault")
 
-    usr_result, usr_metric = check_levels(
+    usr_result, usr_metric = check_levels_v1(
         value=temp,
         metric_name="temp",
         levels_upper=usr_levels_upper,
@@ -374,7 +374,7 @@ def check_temperature(  # pylint: disable=too-many-branches
     assert isinstance(usr_result, Result)
     assert isinstance(usr_metric, Metric)
 
-    dev_result, dev_metric = check_levels(
+    dev_result, dev_metric = check_levels_v1(
         value=temp,
         metric_name="temp",
         levels_upper=dev_levels_upper,

@@ -6,11 +6,11 @@
 
 from collections.abc import Iterable
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
 from cmk.plugins.lib.couchbase import parse_couchbase_lines, Section
+
+check_info = {}
 
 DiscoveryResult = Iterable[tuple[str, dict]]
 
@@ -44,6 +44,7 @@ def check_couchbase_buckets_fragmentation(item, params, parsed):
 
 
 check_info["couchbase_buckets_fragmentation"] = LegacyCheckDefinition(
+    name="couchbase_buckets_fragmentation",
     parse_function=parse_couchbase_lines,
     service_name="Couchbase Bucket %s Fragmentation",
     discovery_function=discover_couchbase_buckets_fragmentation,

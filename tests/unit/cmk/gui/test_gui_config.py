@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
 
 from dataclasses import asdict
 from pathlib import Path
 
 import pytest
 
-from tests.testlib.repo import is_enterprise_repo, is_managed_repo
+from tests.testlib.common.repo import is_enterprise_repo, is_managed_repo
 
 import cmk.utils.paths
 
@@ -143,6 +142,7 @@ def test_default_config_from_plugins() -> None:
         "bi_compile_log",
         "bi_precompile_on_demand",
         "bi_use_legacy_compilation",
+        "broker_connections",
         "sites",
         "config_storage_format",
         "tags",
@@ -150,10 +150,12 @@ def test_default_config_from_plugins() -> None:
         "enable_deprecated_automation_user_authentication",
         "enable_community_translations",
         "default_temperature_unit",
-        "experimental_features",
+        "vue_experimental_features",
         "inject_js_profiling_code",
         "load_frontend_vue",
         "configuration_bundles",
+        "default_dynamic_visual_permission",
+        "require_two_factor_all_users",
     ]
 
     # The below lines are confusing and incorrect. The reason we need them is
@@ -230,7 +232,7 @@ def local_config_plugin():
 @pytest.mark.usefixtures("local_config_plugin")
 def test_load_config_respects_local_plugin(request_context: None) -> None:
     cmk.gui.config.load_config()
-    assert active_config.ding == "dong"  # type: ignore[attr-defined]
+    assert active_config.ding == "dong"  # type: ignore[attr-defined, unused-ignore]
 
 
 @pytest.mark.usefixtures("local_config_plugin")
@@ -238,7 +240,7 @@ def test_load_config_allows_local_plugin_setting(request_context: None) -> None:
     with Path(cmk.utils.paths.default_config_dir, "multisite.mk").open("w") as f:
         f.write("ding = 'ding'\n")
     cmk.gui.config.load_config()
-    assert active_config.ding == "ding"  # type: ignore[attr-defined]
+    assert active_config.ding == "ding"  # type: ignore[attr-defined, unused-ignore]
 
 
 @pytest.mark.usefixtures("load_config")

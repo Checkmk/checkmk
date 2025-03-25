@@ -10,7 +10,13 @@ from collections.abc import Iterable, Mapping, Sequence
 from datetime import datetime, timezone
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+# The only reasonable thing to do here is use our own version parsing. It's to big to duplicate.
+from cmk.ccc.version import (  # pylint: disable=cmk-module-layer-violation
+    __version__,
+    parse_check_mk_version,
+)
+
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -19,12 +25,6 @@ from cmk.agent_based.v2 import (
     Result,
     Service,
     State,
-)
-
-# The only reasonable thing to do here is use our own version parsing. It's to big to duplicate.
-from cmk.ccc.version import (  # pylint: disable=cmk-module-layer-violation
-    __version__,
-    parse_check_mk_version,
 )
 from cmk.plugins.lib.checkmk import (
     CachedPlugin,
@@ -271,24 +271,33 @@ def _get_error_result(error: str, params: Mapping[str, Any]) -> CheckResult:
     default_state = State.WARN
     summary = first_line if (first_line := error.split("\n")[0].strip()) else "See details"
     details = None if summary == error else error  # drop details if same as the summary
-    if "deployment is currently globally disabled" in error.lower():
+    if (
+        # Keep in sync with corresponding gui code
+        "deployment is currently globally disabled"
+    ) in error.lower():
         yield Result(
             state=State(params.get("error_deployment_globally_disabled", default_state)),
             summary=summary,
             details=details,
         )
-    elif "agent updates are disabled for hostname" in error.lower():
+        return
+
+    if (
+        # Keep in sync with corresponding gui code
+        "agent updates are disabled for host"
+    ) in error.lower():
         yield Result(
             state=State(params.get("error_deployment_disabled_for_hostname", default_state)),
             summary=summary,
             details=details,
         )
-    else:
-        yield Result(
-            state=default_state,
-            summary=f"Update error: {summary}",
-            details=details,
-        )
+        return
+
+    yield Result(
+        state=default_state,
+        summary=f"Update error: {summary}",
+        details=details,
+    )
 
 
 def _check_cmk_agent_update_certificates(parsed: CMKAgentUpdateSection) -> CheckResult:
@@ -325,7 +334,7 @@ def _check_cmk_agent_update_certificates(parsed: CMKAgentUpdateSection) -> Check
         else:
             amount_trusted += 1
             longest_valid = max(longest_valid, duration_valid.total_seconds())
-            yield from check_levels(
+            yield from check_levels_v1(
                 duration_valid.total_seconds(),
                 levels_lower=(90 * 3600 * 24, None),  # type: ignore[arg-type]
                 render_func=render.timespan,
@@ -336,7 +345,7 @@ def _check_cmk_agent_update_certificates(parsed: CMKAgentUpdateSection) -> Check
     if amount_trusted == 0:
         yield Result(state=State.CRIT, notice="Updater has no trusted certificates")
     else:
-        yield from check_levels(
+        yield from check_levels_v1(
             longest_valid,
             levels_lower=(90 * 3600 * 24, 30 * 3600 * 24),
             render_func=render.timespan,
@@ -365,7 +374,7 @@ def _check_cmk_agent_update(
         yield Result(state=State.WARN, summary="No successful connect to server yet")
     else:
         if (age := time.time() - last_check) >= 0:
-            yield from check_levels(
+            yield from check_levels_v1(
                 age,
                 levels_upper=(2 * 3600 * 24, None),  # type: ignore[arg-type]
                 render_func=render.timespan,
@@ -480,7 +489,7 @@ def _check_min_version(
                 summary=f"{type_} {plugin.name!r}: unable to parse version {plugin.version!r}",
             )
         else:
-            yield from check_levels(
+            yield from check_levels_v1(
                 plugin.version_int,
                 levels_lower=levels,
                 render_func=lambda v: render_info[int(v)],
@@ -507,7 +516,7 @@ def _check_duplicates(
 
 def _check_controller_cert_validity(section: ControllerSection, now: float) -> CheckResult:
     for connection in section.connections:
-        yield from check_levels(
+        yield from check_levels_v1(
             connection.local.cert_info.to.timestamp() - now,
             levels_lower=(30 * 24 * 3600, 15 * 24 * 3600),  # (30 days, 15 days)
             render_func=render.timespan,

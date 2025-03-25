@@ -1,71 +1,16 @@
 [project]
 name = "cmk-trace"
 version = "1.0.0"
-dependencies = [
-    "opentelemetry-api==1.25.0",
-    "opentelemetry-sdk==1.25.0",
-    "opentelemetry-exporter-otlp==1.25.0",
-    "opentelemetry-semantic-conventions==0.46b0",
-]
+dynamic = ["dependencies"]
 
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+
 [tool.setuptools.package-data]
 "cmk.trace" = ["py.typed"]
 
 [tool.bandit]
-
-[tool.black]
-line_length = 100
-quiet = true
-
-[tool.isort]
-profile = "black"
-order_by_type = false
-line_length = 100
-py_version = 312
-
-[tool.mypy]
-explicit_package_bases = true
-packages = ["cmk", "tests"]
-strict = true
-# Miscellaneous stuff not in --strict
-disallow_any_decorated = false
-disallow_any_explicit = false
-disallow_any_expr = false
-disallow_any_generics = true
-disallow_any_unimported = true
-disallow_subclassing_any = true
-no_implicit_optional = true
-strict_optional = true
-warn_unreachable = true
-# hidden flags for PEP 688 compat, see https://github.com/python/mypy/issues/15313
-disable_bytearray_promotion = true
-disable_memoryview_promotion = true
-
-[tool.pydantic-mypy]
-init_forbid_extra = true
-init_typed = true
-warn_required_dynamic_aliases = true
-
-[tool.pylint.format]
-max-line-length = 100
-persistent = "no"
-score = "no"
-
-[tool.pylint.messages_control]
-disable = [
-  # We should at least document modules and classes. :-/
-  "missing-module-docstring",
-  "missing-class-docstring",
-  "missing-function-docstring",
-  # black and pylint disagree here, so let's silence pylint.
-  "multiple-statements",
-]
-
-[tool.pytest.ini_options]
-pythonpath = ["."]
-testpaths = ["cmk", "tests"]
-addopts = "--doctest-modules --import-mode=importlib"

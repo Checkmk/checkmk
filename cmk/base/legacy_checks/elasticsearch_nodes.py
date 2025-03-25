@@ -19,10 +19,10 @@
 
 # mypy: disable-error-code="var-annotated,arg-type"
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+
+check_info = {}
 
 nodes_info = {
     "open_file_descriptors": "Open file descriptors",
@@ -73,6 +73,7 @@ def discover_elasticsearch_nodes(section):
 
 
 check_info["elasticsearch_nodes"] = LegacyCheckDefinition(
+    name="elasticsearch_nodes",
     parse_function=parse_elasticsearch_nodes,
     service_name="Elasticsearch Node %s",
     discovery_function=discover_elasticsearch_nodes,

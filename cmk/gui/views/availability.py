@@ -11,6 +11,8 @@ from collections.abc import Iterator
 
 from livestatus import SiteId
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
@@ -77,8 +79,6 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.view import View
 from cmk.gui.visuals import page_menu_topic_add_to, view_title
-
-import cmk.ccc.version as cmk_version
 
 # Variable name conventions
 # av_rawdata: a two tier dict: (site, host) -> service -> list(spans)
@@ -181,7 +181,7 @@ def _show_availability_options_controls() -> None:
 # Render the page showing availability table or timelines. It
 # is (currently) called by views.py, when showing a view but
 # availability mode is activated.
-def show_availability_page(  # pylint: disable=too-many-branches
+def show_availability_page(
     view: View,
     filterheaders: FilterHeader,
 ) -> None:
@@ -788,7 +788,7 @@ def render_timeline_bar(
 # get the list of BI aggregates from the statehist table but use the views
 # logic for getting the aggregates. As soon as we have cleaned of the visuals,
 # filters, contexts etc we can unify the code!
-def show_bi_availability(  # pylint: disable=too-many-branches
+def show_bi_availability(
     view: View,
     aggr_rows: Rows,
 ) -> None:
@@ -832,9 +832,6 @@ def show_bi_availability(  # pylint: disable=too-many-branches
                 "availability",
                 deflt=PageMenuDropdown(name="availability", title=_("Availability"), topics=[]),
             )
-            if not dropdown:
-                raise RuntimeError('Dropdown "availability" missing')
-
             aggr_name = aggr_rows[0]["aggr_name"]
             aggr_group = aggr_rows[0]["aggr_group"]
             timeline_url = makeuri(

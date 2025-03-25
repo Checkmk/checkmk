@@ -259,7 +259,7 @@ def sending() -> CascadingSingleChoice:
 
 
 def fetching(
-    supported_protocols: Container[Literal["IMAP", "POP3", "EWS"]]
+    supported_protocols: Container[Literal["IMAP", "POP3", "EWS"]],
 ) -> CascadingSingleChoice:
     return CascadingSingleChoice(
         title=Title("Mail receiving"),

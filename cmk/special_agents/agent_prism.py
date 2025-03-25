@@ -6,7 +6,7 @@ import base64
 import logging
 import sys
 from collections.abc import Sequence
-from typing import Any, TypedDict
+from typing import Any, NotRequired, TypedDict
 
 import requests
 
@@ -29,10 +29,12 @@ class GatewayData(TypedDict):
     storage_pools: dict[str, Any]
     vms: dict[str, Any]
     hosts: dict[str, Any]
-    protection_domains: dict[str, Any]
-    remote_support: dict[str, Any]
-    ha: dict[str, Any]
-    hosts_networks: dict[str, Any]
+    # The following data is not query-able on prism central
+    # The corresponding endpoints would return: 412 Client Error: PRECONDITION FAILED
+    protection_domains: NotRequired[dict[str, Any]]
+    remote_support: NotRequired[dict[str, Any]]
+    ha: NotRequired[dict[str, Any]]
+    hosts_networks: NotRequired[dict[str, Any]]
 
 
 class SessionManager:
@@ -42,9 +44,7 @@ class SessionManager:
         self._session = requests.Session()
         auth_encoded = base64.b64encode(f"{username}:{password}".encode()).decode()
         self._session.headers.update({"Authorization": f"Basic {auth_encoded}"})
-        self._verify = (
-            False if cert_check is False else True  # pylint: disable=simplifiable-if-expression
-        )
+        self._verify = False if cert_check is False else True
         self._timeout = timeout
         if isinstance(cert_check, str):
             self._session.mount(base_url, HostnameValidationAdapter(cert_check))
@@ -117,20 +117,28 @@ def fetch_from_gateway(
         hosts_networks[element["uuid"]] = networks
 
     LOGGING.info("fetching data from gateway..")
+
+    cluster = session_manager.get(f"{base_url_v2}/cluster")
+    is_prism_central = cluster["multicluster"]
     prism_objects: GatewayData = {
         "containers": session_manager.get(f"{base_url_v1}/containers"),
+        "cluster": cluster,
         "alerts": session_manager.get(
             f"{base_url_v2}/alerts", params={"resolved": "false", "acknowledged": "false"}
         ),
-        "cluster": session_manager.get(f"{base_url_v2}/cluster"),
         "storage_pools": session_manager.get(f"{base_url_v1}/storage_pools"),
         "vms": session_manager.get(f"{base_url_v1}/vms"),
         "hosts": hosts_obj,
-        "protection_domains": session_manager.get(f"{base_url_v2}/protection_domains"),
-        "remote_support": session_manager.get(f"{base_url_v2}/cluster/remote_support"),
-        "ha": session_manager.get(f"{base_url_v2}/ha"),
-        "hosts_networks": hosts_networks,
     }
+    if not is_prism_central:
+        prism_objects.update(
+            {
+                "protection_domains": session_manager.get(f"{base_url_v2}/protection_domains"),
+                "remote_support": session_manager.get(f"{base_url_v2}/cluster/remote_support"),
+                "ha": session_manager.get(f"{base_url_v2}/ha"),
+                "hosts_networks": hosts_networks,
+            }
+        )
 
     LOGGING.debug("got %d containers", len(prism_objects["containers"]["entities"]))
     LOGGING.debug("got %d alerts", len(prism_objects["alerts"]["entities"]))
@@ -181,11 +189,11 @@ def agent_prism_main(args: Args) -> int:
     output_entities(gateway_objs["alerts"], "alerts")
     output_entities(gateway_objs["cluster"], "info")
     output_entities(gateway_objs["storage_pools"], "storage_pools")
-    output_hosts(gateway_objs["hosts"], gateway_objs["hosts_networks"])
+    output_hosts(gateway_objs["hosts"], gateway_objs.get("hosts_networks", {}))
     output_vms(gateway_objs["vms"])
-    output_entities(gateway_objs["protection_domains"], "protection_domains")
-    output_entities(gateway_objs["remote_support"], "remote_support")
-    output_entities(gateway_objs["ha"], "ha")
+    for key in ["protection_domains", "remote_support", "ha"]:
+        if key in gateway_objs:
+            output_entities(gateway_objs[key], key)  # type: ignore[literal-required] # TODO: Refactor typing...
 
     LOGGING.info("all done. bye.")
     return 0

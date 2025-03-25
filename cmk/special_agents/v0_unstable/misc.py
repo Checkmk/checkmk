@@ -90,7 +90,7 @@ USAGE: agent_%s --section_url [{section_name},{url}]
                 try:
                     pprint.pprint(json.loads(line))
                 except Exception:
-                    print(line)
+                    sys.stdout.write(line + "\n")
             return None
 
         return content
@@ -105,6 +105,12 @@ def datetime_serializer(obj):
 
 
 class DataCache(abc.ABC):
+    """
+    Attention! A user may configure multiple special agents per Checkmk instance.
+    Most of the time you don't want to share the Cache between those configurations.
+    Normally you should use the hostname as part of the cache_file_name or cache_file_dir.
+    """
+
     def __init__(self, cache_file_dir: Path, cache_file_name: str, debug: bool = False) -> None:
         self._cache_file_dir = cache_file_dir
         self._cache_file = self._cache_file_dir / ("%s.cache" % cache_file_name)
@@ -256,7 +262,7 @@ def vcrtrace(**vcr_init_kwargs):
                 setattr(namespace, self.dest, _NullContext())
                 return
 
-            import vcr  # type: ignore[import-untyped] # pylint: disable=import-outside-toplevel
+            import vcr
 
             use_cassette = vcr.VCR(**vcr_init_kwargs).use_cassette
             setattr(namespace, self.dest, lambda **kwargs: use_cassette(filename, **kwargs))
@@ -371,11 +377,3 @@ def JsonCachedData(
             LOG.debug("Cache: write file: %r", str(cache_file.absolute()))
             with cache_file.open(mode="w") as cwfile:
                 json.dump(cache, cwfile, indent=2)
-
-
-if __name__ == "__main__":
-    # Please keep these lines - they make TDD easy and have no effect on normal test runs.
-    # Just run this file from your IDE and dive into the code.
-    import pytest
-
-    assert not pytest.main(["--doctest-modules", __file__])

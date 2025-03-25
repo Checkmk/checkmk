@@ -1,7 +1,7 @@
 ==================
-agent_based_api.v1
+cmk.agent_based.v1
 ==================
 
-.. automodule:: cmk.base.plugins.agent_based.agent_based_api.v1
+.. automodule:: cmk.agent_based.v1
    :members:
    :show-inheritance:

@@ -6,9 +6,7 @@
 
 import time
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import (
     any_of,
     get_rate,
@@ -19,6 +17,8 @@ from cmk.agent_based.v2 import (
     startswith,
     StringTable,
 )
+
+check_info = {}
 
 # settings for inventory: which ports should be inventorized
 qlogic_fcport_inventory_opstates = ["1", "3"]
@@ -76,7 +76,7 @@ def inventory_qlogic_fcport(info):
     return inventory
 
 
-def check_qlogic_fcport(item, _no_params, info):  # pylint: disable=too-many-branches
+def check_qlogic_fcport(item, _no_params, info):
     for (
         port_id,
         oper_mode,
@@ -255,6 +255,7 @@ def parse_qlogic_fcport(string_table: StringTable) -> StringTable:
 
 
 check_info["qlogic_fcport"] = LegacyCheckDefinition(
+    name="qlogic_fcport",
     parse_function=parse_qlogic_fcport,
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1663.1.1"),
@@ -298,5 +299,4 @@ check_info["qlogic_fcport"] = LegacyCheckDefinition(
     service_name="FC Port %s",
     discovery_function=inventory_qlogic_fcport,
     check_function=check_qlogic_fcport,
-    check_ruleset_name="qlogic_fcport",
 )

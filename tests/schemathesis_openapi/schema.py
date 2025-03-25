@@ -9,10 +9,12 @@ from re import match
 from typing import Any
 
 import schemathesis
+from requests.structures import CaseInsensitiveDict
 from schemathesis import DataGenerationMethod
+from schemathesis.generation import GenerationConfig
 from schemathesis.specs.openapi import schemas
 
-from tests.testlib.site import get_site_factory, Site
+from tests.testlib.site import AUTOMATION_USER, get_site_factory, Site
 
 from tests.schemathesis_openapi import settings
 
@@ -108,11 +110,7 @@ def add_links(
             trg_schema = raw_schema["paths"][endpoint["target"]][method.lower()]
             parameter_pattern = trg_schema["parameters"][0]["schema"].get("pattern", None)
 
-            if (
-                parameter_pattern
-                and not property_pattern
-                and "CMK-12182" not in settings.suppressed_issues
-            ):
+            if parameter_pattern and not property_pattern:
                 logger.error(
                     '%s %s: Parameter pattern "%s" defined while POST %s object property'
                     ' "%s" has no pattern!',
@@ -125,12 +123,13 @@ def add_links(
             elif parameter_pattern and parameter_pattern != property_pattern:
                 logger.warning(
                     '%s %s: Parameter pattern "%s" defined while POST %s object property'
-                    ' "%s" has a different pattern!',
+                    ' "%s" has a different pattern "%s"!',
                     method.upper(),
                     endpoint["target"],
                     parameter_pattern,
                     endpoint["source"],
                     property_id,
+                    property_pattern,
                 )
             schema.add_link(
                 source=schema[endpoint["source"]]["POST"],
@@ -179,7 +178,8 @@ def get_site() -> Iterator[Site]:
 def get_schema() -> schemas.BaseOpenAPISchema:
     """Return schema for parametrization."""
     site = next(get_site())
-    token = f"Bearer automation {site.get_automation_secret()}"
+
+    token = f"Bearer {AUTOMATION_USER} {site.get_automation_secret()}"
 
     @schemathesis.auths.register()
     class _Auth(schemathesis.auths.AuthProvider):
@@ -190,19 +190,23 @@ def get_schema() -> schemas.BaseOpenAPISchema:
 
         def set(self, case, data, context):
             case.cookies = {}
+            if case.headers is None:
+                case.headers = CaseInsensitiveDict({})
             case.headers["Authorization"] = token
             case.headers["Content-Type"] = "application/json"
 
-    site_id = site.id
-    api_url = f"http://localhost/{site_id}/check_mk/api/1.0"
-    schema_filename = "openapi-swagger-ui"
-    schema_filedir = os.getenv("TEST_OPENAPI_SCHEMA_DIR", "")
+    api_url = f"http://localhost:{site.apache_port}/{site.id}/check_mk/api/1.0"
+    schema_filename = "openapi-doc"
+    schema_filedir = os.getenv("SCHEMATHESIS_SCHEMA_DIR", "")
     if os.path.exists(f"{schema_filedir}/{schema_filename}.json"):
         schema_filetype = "json"
     else:
         schema_filetype = "yaml"
     schema_filepath = f"{schema_filedir}/{schema_filename}.{schema_filetype}"
     schema_url = f"{api_url}/{schema_filename}.{schema_filetype}"
+    allow_nulls = os.getenv("SCHEMATHESIS_ALLOW_NULLS", "0") == "1"
+    codec = os.getenv("SCHEMATHESIS_CODEC", "utf-8")
+    generation_config = GenerationConfig(allow_x00=allow_nulls, codec=codec)
     if os.path.exists(schema_filepath):
         logger.info('Loading OpenAPI schema from file "%s"...', schema_filepath)
         schema = schemathesis.from_path(
@@ -212,6 +216,7 @@ def get_schema() -> schemas.BaseOpenAPISchema:
             validate_schema=validate_schema,
             data_generation_methods=data_generation_methods,
             code_sample_style=code_sample_style,
+            generation_config=generation_config,
         )
     else:
         logger.info('Loading OpenAPI schema from URL "%s"...', schema_url)
@@ -224,6 +229,7 @@ def get_schema() -> schemas.BaseOpenAPISchema:
             validate_schema=validate_schema,
             data_generation_methods=data_generation_methods,
             code_sample_style=code_sample_style,
+            generation_config=generation_config,
             headers={"Authorization": token},
         )
     schema = add_links(schema)
@@ -338,7 +344,7 @@ def update_schema(
         )
 
     upd_values = {key: val for key, val in patch.items() if val is not None}
-    del_values = (key for key in patch.keys() if key is None) if delete_nulls else ()
+    del_values = patch.keys() if delete_nulls else ()
     keys = [key for key in raw_schema if isinstance(raw_schema[key], dict)]
     for key in keys:
         key_path = f"{path}/{key}"

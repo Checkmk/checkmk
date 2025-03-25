@@ -1,0 +1,3 @@
+lint:
+  aspects:
+    - //bazel/tools:aspects.bzl%ruff

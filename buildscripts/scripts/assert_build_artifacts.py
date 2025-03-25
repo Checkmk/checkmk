@@ -9,11 +9,12 @@ from argparse import Namespace as Args
 from collections.abc import Iterator
 from pathlib import Path
 
-import docker  # type: ignore
 import requests
 
 sys.path.insert(0, Path(__file__).parent.parent.parent.as_posix())
-from tests.testlib.version import ABCPackageManager, code_name
+from tests.testlib.package_manager import ABCPackageManager, code_name
+
+from cmk.ccc.version import Edition
 
 from buildscripts.scripts.lib.common import flatten, load_editions_file
 from buildscripts.scripts.lib.registry import (
@@ -24,7 +25,6 @@ from buildscripts.scripts.lib.registry import (
     get_default_registries,
     Registry,
 )
-from cmk.ccc.version import Edition
 
 
 def hash_file(artifact_name: str) -> str:
@@ -55,9 +55,9 @@ def build_docker_image_name_and_registry(
     def build_folder(ed: str) -> str:
         # TODO: Merge with build-cmk-container.py
         match ed:
-            case "raw" | "cloud":
+            case "raw" | "cloud" | "managed":
                 return "checkmk/"
-            case "enterprise" | "managed":
+            case "enterprise":
                 return f"{ed}/"
             case "saas":
                 return ""
@@ -75,12 +75,12 @@ def build_docker_image_name_and_registry(
 
 def build_package_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str, bool]]:
     for edition in loaded_yaml["editions"]:
-        for distro in flatten(loaded_yaml["editions"][edition]["release"]):
+        for distro in flatten(loaded_yaml["editions"][edition][args.use_case]):
             package_name = ABCPackageManager.factory(code_name(distro)).package_name(
                 Edition.from_long_edition(edition), version=args.version
             )
             internal_only = (
-                distro in loaded_yaml["internal_distros"]
+                distro in loaded_yaml.get("internal_distros", [])
                 or edition in loaded_yaml["internal_editions"]
             )
             yield package_name, internal_only
@@ -94,6 +94,7 @@ def file_exists_on_download_server(filename: str, version: str, credentials: Cre
         requests.head(
             f"https://download.checkmk.com/checkmk/{version}/{filename}",
             auth=(credentials.username, credentials.password),
+            timeout=10,
         ).status_code
         != 200
     ):
@@ -149,6 +150,7 @@ def parse_arguments() -> Args:
     sub_assert_build_artifacts = subparsers.add_parser("assert_build_artifacts")
     sub_assert_build_artifacts.set_defaults(func=assert_build_artifacts)
     sub_assert_build_artifacts.add_argument("--version", required=True, default=False)
+    sub_assert_build_artifacts.add_argument("--use_case", required=False, default="release")
 
     return parser.parse_args()
 

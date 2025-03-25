@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.ccc.exceptions import MKGeneralException
+
+from cmk.gui.form_specs.converter import SimplePassword
+from cmk.gui.form_specs.private import not_empty
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Alternative,
@@ -17,7 +21,7 @@ from cmk.gui.valuespec import (
     ValueSpecHelp,
 )
 
-from cmk.ccc.exceptions import MKGeneralException
+from cmk.rulesets.v1 import form_specs, Title
 
 
 def IPMIParameters() -> Dictionary:
@@ -43,7 +47,27 @@ def IPMIParameters() -> Dictionary:
     )
 
 
-def SNMPCredentials(  # pylint: disable=redefined-builtin
+def create_ipmi_parameters() -> form_specs.Dictionary:
+    return form_specs.Dictionary(
+        title=Title("IPMI credentials"),
+        elements={
+            "username": form_specs.DictElement(
+                required=True,
+                parameter_form=form_specs.String(
+                    title=Title("Username"),
+                ),
+            ),
+            "password": form_specs.DictElement(
+                required=True,
+                parameter_form=SimplePassword(
+                    title=Title("Password"), custom_validate=[not_empty()]
+                ),
+            ),
+        },
+    )
+
+
+def SNMPCredentials(
     title: str | None = None,
     help: ValueSpecHelp | None = None,
     only_v3: bool = False,

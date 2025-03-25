@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
 from cmk.plugins.lib.enterasys import DETECT_ENTERASYS
+
+check_info = {}
 
 
 def inventory_enterasys_fans(info):
@@ -38,6 +38,7 @@ def parse_enterasys_fans(string_table: StringTable) -> StringTable:
 
 
 check_info["enterasys_fans"] = LegacyCheckDefinition(
+    name="enterasys_fans",
     parse_function=parse_enterasys_fans,
     detect=DETECT_ENTERASYS,
     fetch=SNMPTree(

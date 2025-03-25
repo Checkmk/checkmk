@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.hp_proliant import DETECT, STATUS_MAP
+
+check_info = {}
 
 hp_proliant_status2nagios_map = {k: int(v) for k, v in STATUS_MAP.items()}
 
@@ -86,6 +87,7 @@ def check_hp_proliant_temp(item, params, info):
 
 
 check_info["hp_proliant_temp"] = LegacyCheckDefinition(
+    name="hp_proliant_temp",
     parse_function=parse_hp_proliant_temp,
     detect=DETECT,
     fetch=SNMPTree(

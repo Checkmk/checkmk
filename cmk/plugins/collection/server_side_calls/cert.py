@@ -57,7 +57,7 @@ class Subject(BaseModel):
     organization: str | None = None
     org_unit: str | None = None
     pubkey_algorithm: PubKey | None = None
-    pubkey_size: str | None = None
+    pubkeysize: str | None = None
 
 
 class Certificate(BaseModel):
@@ -156,8 +156,8 @@ def _response_time_args(response_time: FloatLevels) -> Iterator[str]:
     match response_time:
         case (LevelsType.FIXED, (float(warn), float(crit))):
             yield "--response-time"
-            yield f"{int(warn * _MILLISECOND)}"
-            yield f"{int(crit * _MILLISECOND)}"
+            yield f"{round(warn, 3)}"
+            yield f"{round(crit, 3)}"
 
 
 def _validity_args(validity: Certificate) -> Iterator[str]:
@@ -174,8 +174,8 @@ def _remaining_args(remaining: FloatLevels) -> Iterator[str]:
     match remaining:
         case (LevelsType.FIXED, (float(warn), float(crit))):
             yield "--not-after"
-            yield f"{round(warn / _DAY)}"
-            yield f"{round(crit / _DAY)}"
+            yield f"{int(round(warn))}"
+            yield f"{int(round(crit))}"
 
 
 def _cert_details_args(cert_details: CertificateDetails, host_config: HostConfig) -> Iterator[str]:
@@ -231,7 +231,7 @@ def _subject_args(subject: Subject, host_config: HostConfig) -> Iterator[str]:
     if (pubkey := subject.pubkey_algorithm) is not None:
         yield "--pubkey-algorithm"
         yield pubkey[0]
-    if (pubkey_size := subject.pubkey_size) is not None:
+    if (pubkey_size := subject.pubkeysize) is not None:
         yield "--pubkey-size"
         yield replace_macros(pubkey_size, host_config.macros)
 

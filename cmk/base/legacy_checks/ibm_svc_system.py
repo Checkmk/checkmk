@@ -75,10 +75,10 @@
 # total_drive_raw_capacity:0
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def inventory_ibm_svc_system(info):
@@ -100,6 +100,7 @@ def parse_ibm_svc_system(string_table: StringTable) -> StringTable:
 
 
 check_info["ibm_svc_system"] = LegacyCheckDefinition(
+    name="ibm_svc_system",
     parse_function=parse_ibm_svc_system,
     service_name="Info",
     discovery_function=inventory_ibm_svc_system,

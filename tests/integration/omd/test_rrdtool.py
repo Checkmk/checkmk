@@ -29,6 +29,7 @@ v returned data rows, includes end y
         |---------------|
       x---v---v---v---v---y
 """
+
 import ast
 from collections.abc import Mapping, Sequence
 from pathlib import Path
@@ -43,7 +44,7 @@ def fixture_rrd_database(site: Site) -> Path:
     "Create rrd database for integration test"
     with site.python_helper("helper_rrd_database.py").execute() as p:
         assert p.wait() == 0
-    return Path(site.path("test.rrd"))
+    return site.path("test.rrd")
 
 
 @pytest.mark.parametrize(
@@ -113,7 +114,7 @@ def test_xport(
 
     output = ast.literal_eval(
         site.python_helper("helper_test_xport.py")
-        .check_output(input=repr((str(rrd_database), qstart, qend)))
+        .check_output(input_=repr((str(rrd_database), qstart, qend)))
         .rstrip()
     )
     assert output == result
@@ -191,3 +192,24 @@ def test_cli_xport(
     )
 
     assert stdout == result
+
+
+@pytest.mark.parametrize(
+    "cli_tool_args,return_code,expected_output",
+    [
+        (["rrdtool"], 0, "RRDtool"),
+        (["rrdcached", "--help"], 1, "RRDCacheD"),
+        (["rrdupdate"], 1, "RRDtool"),
+        (["rrdcreate"], 1, "RRDtool"),
+        (["rrdinfo"], 1, "RRDtool"),
+    ],
+)
+def test_additional_cli_tools(
+    cli_tool_args: list[str],
+    return_code: int,
+    expected_output: str,
+    site: Site,
+) -> None:
+    p = site.run(check=False, args=cli_tool_args)
+    assert expected_output in p.stdout
+    assert return_code == p.returncode

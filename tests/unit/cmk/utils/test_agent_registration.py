@@ -10,9 +10,9 @@ from uuid import UUID
 import pytest
 
 from cmk.utils.agent_registration import (
+    _UUIDLink,
     get_r4r_filepath,
     HostAgentConnectionMode,
-    UUIDLink,
     UUIDLinkManager,
 )
 from cmk.utils.hostaddress import HostName
@@ -28,13 +28,16 @@ from cmk.utils.paths import (
 
 class TestUUIDLink:
     @pytest.fixture
-    def link(self, tmp_path: Path) -> UUIDLink:
-        return UUIDLink(tmp_path / "59e631e9-de89-40d6-9662-ba54569a24fb", tmp_path / "hostname")
+    def link(self, tmp_path: Path) -> _UUIDLink:
+        return _UUIDLink(
+            source=tmp_path / "59e631e9-de89-40d6-9662-ba54569a24fb",
+            target=tmp_path / "hostname",
+        )
 
-    def test_uuid(self, link: UUIDLink) -> None:
+    def test_uuid(self, link: _UUIDLink) -> None:
         assert isinstance(link.uuid, UUID)
 
-    def test_unlink_nonexisiting(self, link: UUIDLink) -> None:
+    def test_unlink_nonexisiting(self, link: _UUIDLink) -> None:
         assert not link.source.exists()
         link.unlink()
 

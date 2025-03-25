@@ -19,11 +19,9 @@ $(OMD_INSTALL): omdlib-install
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/omd.bin $(DESTDIR)$(OMD_ROOT)/bin/omd
 	sed -i 's|###OMD_VERSION###|$(OMD_VERSION)|g' $(DESTDIR)$(OMD_ROOT)/bin/omd
 # SUP-10161: our openssl is incompatible with some system executables on various sles15sp*
-ifneq ($(filter $(DISTRO_CODE), sles15sp3 sles15sp4 sles15sp5),)
+ifneq ($(filter sles15%,$(DISTRO_CODE)),)
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/ssh
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/scp
-endif
-ifneq ($(filter $(DISTRO_CODE),centos8 sles15sp4 sles15sp5),)
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/pdftoppm
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/curl
 endif
@@ -50,4 +48,12 @@ omdlib-install: $(PACKAGE_PYTHON3_MODULES_PYTHON_DEPS)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python3/omdlib
 	install -m 644 $(PACKAGE_DIR)/$(OMD)/omdlib/*.py $(DESTDIR)$(OMD_ROOT)/lib/python3/omdlib/
 	sed -i 's|###OMD_VERSION###|$(OMD_VERSION)|g' $(DESTDIR)$(OMD_ROOT)/lib/python3/omdlib/__init__.py
-	$(PACKAGE_PYTHON3_MODULES_PYTHON) -m py_compile $(DESTDIR)$(OMD_ROOT)/lib/python3/omdlib/*.py
+	# Pre-compile all python modules
+	bazel run :venv
+	source .venv/bin/activate \
+	&& python3 -m compileall \
+		-f \
+		--invalidation-mode=checked-hash \
+		-s "$(CHECK_MK_INSTALL_DIR)/lib/python3" \
+		$(DESTDIR)$(OMD_ROOT)/lib/python3/omdlib/ \
+	&& deactivate

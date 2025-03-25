@@ -7,11 +7,9 @@ Everything from the packaging module that is not yet properly sorted.
 Don't add new stuff here!
 """
 
-# pylint: disable=too-many-arguments
-
 import logging
-import subprocess
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from contextlib import contextmanager
 from itertools import groupby
 from pathlib import Path
 from stat import filemode
@@ -45,6 +43,14 @@ def format_file_name(package_id: PackageID) -> str:
     return f"{package_id.name}-{package_id.version}.mkp"
 
 
+@contextmanager
+def _log_exception(m: Manifest, name: str) -> Iterator[None]:
+    try:
+        yield
+    except Exception as e:
+        _logger.error("[%s %s]: Error in post %s hook: %s", m.name, m.version, name, e)
+
+
 def release(
     installer: Installer,
     pacname: PackageName,
@@ -60,7 +66,8 @@ def release(
             _logger.info("    %s", f)
 
     for part in set(manifest.files) & set(callbacks):
-        callbacks[part].release(manifest.files[part])
+        with _log_exception(manifest, "release"):
+            callbacks[part].release(manifest.files[part])
 
     installer.remove_installed_manifest(pacname)
 
@@ -75,7 +82,8 @@ def _uninstall(
         raise PackageError(", ".join(err))
 
     for part in set(manifest.files) & set(callbacks):
-        callbacks[part].uninstall(manifest.files[part])
+        with _log_exception(manifest, "uninstall"):
+            callbacks[part].uninstall(manifest.files[part])
 
     installer.remove_installed_manifest(manifest.name)
 
@@ -217,7 +225,11 @@ def create(
     _validate_package_files(manifest, installer)
     installer.add_installed_manifest(manifest)
     _create_enabled_mkp_from_installed_package(
-        package_store, manifest, path_config, persisting_function, version_packaged=version_packaged
+        package_store,
+        manifest,
+        path_config,
+        persisting_function,
+        version_packaged=version_packaged,
     )
 
 
@@ -286,18 +298,17 @@ def install(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     *,
     site_version: str,
-    allow_outdated: bool = True,
+    version_check: bool,
     parse_version: Callable[[str], ComparableVersion],
 ) -> Manifest:
     try:
         return _install(
             installer,
-            package_store,
             package_store.read_bytes(package_id),
             path_config,
             callbacks,
             site_version=site_version,
-            allow_outdated=allow_outdated,
+            version_check=version_check,
             parse_version=parse_version,
         )
     finally:
@@ -307,18 +318,13 @@ def install(
 
 def _install(
     installer: Installer,
-    package_store: PackageStore,
     mkp: bytes,
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     *,
     site_version: str,
     parse_version: Callable[[str], ComparableVersion],
-    # I am not sure whether we should install outdated packages by default -- but
-    #  a) this is the compatible way to go
-    #  b) users cannot even modify packages without installing them
-    # Reconsider!
-    allow_outdated: bool,
+    version_check: bool,
 ) -> Manifest:
     manifest = extract_manifest(mkp)
 
@@ -333,7 +339,13 @@ def _install(
         _logger.info("[%s %s]: Installing", manifest.name, manifest.version)
 
     _raise_for_installability(
-        installer, path_config, manifest, old_manifest, site_version, allow_outdated, parse_version
+        installer,
+        path_config,
+        manifest,
+        old_manifest,
+        site_version,
+        version_check,
+        parse_version,
     )
 
     extract_mkp(manifest, mkp, path_config.get_path)
@@ -341,7 +353,8 @@ def _install(
     _fix_files_permissions(manifest, path_config)
 
     for part in set(manifest.files) & set(callbacks):
-        callbacks[part].install(manifest.files[part])
+        with _log_exception(manifest, "install"):
+            callbacks[part].install(manifest.files[part])
 
     # In case of an update remove files from old_package not present in new one
     if old_manifest is not None:
@@ -350,9 +363,10 @@ def _install(
 
         for part in set(old_manifest.files) & set(callbacks):
             new_files = set(manifest.files.get(part, []))
-            callbacks[part].uninstall([f for f in old_manifest.files[part] if f not in new_files])
-
-        package_store.remove_enabled_mark(old_manifest.id)
+            with _log_exception(old_manifest, "uninstall"):
+                callbacks[part].uninstall(
+                    [f for f in old_manifest.files[part] if f not in new_files]
+                )
 
     # Last but not least install package file
     installer.add_installed_manifest(manifest)
@@ -361,7 +375,9 @@ def _install(
 
 
 def remove_files(
-    manifest: Manifest, keep_files: Mapping[PackagePart, Iterable[Path]], path_config: PathConfig
+    manifest: Manifest,
+    keep_files: Mapping[PackagePart, Iterable[Path]],
+    path_config: PathConfig,
 ) -> tuple[str, ...]:
     errors = []
     for part, files in manifest.files.items():
@@ -383,12 +399,12 @@ def _raise_for_installability(
     package: Manifest,
     old_package: Manifest | None,
     site_version: str,
-    allow_outdated: bool,
+    version_check: bool,
     parse_version: Callable[[str], ComparableVersion],
 ) -> None:
     """Raise a `PackageException` if we should not install this package"""
-    _raise_for_too_old_cmk_version(parse_version, package.version_min_required, site_version)
-    if not allow_outdated:
+    if version_check:
+        _raise_for_too_old_cmk_version(parse_version, package.version_min_required, site_version)
         _raise_for_too_new_cmk_version(parse_version, package.version_usable_until, site_version)
     _raise_for_conflicts(package, old_package, installer, path_config)
 
@@ -438,7 +454,10 @@ def _fix_files_permissions(manifest: Manifest, path_config: PathConfig) -> None:
             has_perm = path.stat().st_mode & 0o7777
             if has_perm != desired_perm:
                 _logger.debug(
-                    "Fixing %s: %s -> %s", path, filemode(has_perm), filemode(desired_perm)
+                    "Fixing %s: %s -> %s",
+                    path,
+                    filemode(has_perm),
+                    filemode(desired_perm),
                 )
                 path.chmod(desired_perm)
 
@@ -465,26 +484,31 @@ def _raise_for_collision(manifest: Manifest, other_manifest: Manifest) -> None:
 
 
 def _raise_for_too_old_cmk_version(
-    parse_version: Callable[[str], ComparableVersion], min_version: str, site_version: str
+    parse_version: Callable[[str], ComparableVersion],
+    min_version: str,
+    site_version: str,
 ) -> None:
     """Raise PackageException if the site is too old for this package
 
     If the sites version can not be parsed, the check is simply passing without error.
     """
     try:
-        too_old = parse_version(site_version) < parse_version(min_version)
-    except Exception:  # pylint: disable=broad-exception-caught
+        if parse_version(min_version) <= parse_version(site_version):
+            return
+    except Exception:
         # Be compatible: When a version can not be parsed, then skip this check
         return
 
-    if too_old:
-        raise PackageError(
-            f"Package requires Checkmk version {min_version} (this is {site_version})"
-        )
+    raise PackageError(
+        f"Package requires a Checkmk version {min_version} or higher (this is {site_version})."
+        f" You can skip all version checks by using the `--force-install` flag on the commandline."
+    )
 
 
 def _raise_for_too_new_cmk_version(
-    parse_version: Callable[[str], ComparableVersion], until_version: str | None, site_version: str
+    parse_version: Callable[[str], ComparableVersion],
+    until_version: str | None,
+    site_version: str,
 ) -> None:
     """Raise PackageException if the site is too new for this package
 
@@ -494,15 +518,16 @@ def _raise_for_too_new_cmk_version(
         return
 
     try:
-        too_new = parse_version(site_version) >= parse_version(until_version)
-    except Exception:  # pylint: disable=broad-exception-caught
+        if parse_version(site_version) < parse_version(until_version):
+            return
+    except Exception:
         # Be compatible: When a version can not be parsed, then skip this check
         return
 
-    if too_new:
-        raise PackageError(
-            f"Package requires Checkmk version below {until_version} (this is {site_version})"
-        )
+    raise PackageError(
+        f"Package requires a Checkmk version below {until_version} (this is {site_version})."
+        f" You can skip all version checks by using the `--force-install` flag on the commandline."
+    )
 
 
 class StoredManifests(BaseModel):
@@ -620,7 +645,7 @@ def _deinstall_inapplicable_active_packages(
                 manifest,
                 manifest,
                 site_version,
-                allow_outdated=False,
+                version_check=True,
                 parse_version=parse_version,
             )
         except PackageError as exc:
@@ -657,8 +682,8 @@ def _install_applicable_inactive_packages(
                         manifest.id,
                         path_config,
                         callbacks,
-                        allow_outdated=False,
                         site_version=site_version,
+                        version_check=True,
                         parse_version=parse_version,
                     )
                 )
@@ -750,15 +775,3 @@ def make_post_package_change_actions(
             callback()
 
     return _execute_post_package_change_actions
-
-
-def reload_apache() -> None:
-    try:
-        subprocess.run(["omd", "status", "apache"], capture_output=True, check=True)
-    except subprocess.CalledProcessError:
-        return
-
-    try:
-        subprocess.run(["omd", "reload", "apache"], capture_output=True, check=True)
-    except subprocess.CalledProcessError:
-        _logger.error("Error reloading apache", exc_info=True)

@@ -1,1 +1,2 @@
-src/vue_formspec_components.ts
+src/components/_demo/public/mockServiceWorker.js
+dist-dev/

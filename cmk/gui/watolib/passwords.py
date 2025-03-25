@@ -53,21 +53,21 @@ def _add_change(ident: str, change_type: str) -> None:
         add_change(
             "add-password",
             f"Added the password {ident}",
-            domains=[ConfigDomainCore],
+            domains=[ConfigDomainCore()],
             sites=None,
         )
     elif change_type == "edit":
         add_change(
             "edit-password",
             f"Edited the password '{ident}'",
-            domains=[ConfigDomainCore],
+            domains=[ConfigDomainCore()],
             sites=None,
         )
     else:  # delete
         add_change(
             "delete-password",
             f"Removed the password '{ident}'",
-            domains=[ConfigDomainCore],
+            domains=[ConfigDomainCore()],
             sites=None,
         )
 

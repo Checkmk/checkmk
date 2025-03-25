@@ -9,7 +9,9 @@ import contextlib
 import errno
 import fnmatch
 import io
+import logging
 import os
+import shutil
 import socket
 import sqlite3
 import sys
@@ -17,10 +19,32 @@ import tarfile
 from collections.abc import Callable, Iterator
 from pathlib import Path
 from types import TracebackType
-from typing import BinaryIO
+from typing import BinaryIO, override
 
 from omdlib.contexts import SiteContext
 from omdlib.type_defs import CommandOptions
+
+from cmk.utils.log import VERBOSE
+from cmk.utils.paths import mkbackup_lock_dir
+
+logger = logging.getLogger("cmk.omd")
+
+
+def ensure_mkbackup_lock_dir_rights() -> None:
+    try:
+        mkbackup_lock_dir.mkdir(mode=0o0770, exist_ok=True)
+        shutil.chown(mkbackup_lock_dir, group="omd")
+        mkbackup_lock_dir.chmod(0o0770)
+    except PermissionError:
+        logger.log(
+            VERBOSE,
+            "Unable to create %s needed for mkbackup. "
+            "This may be due to the fact that your SITE "
+            "User isn't allowed to create the backup directory. "
+            "You could resolve this issue by running 'sudo omd start' as root "
+            "(and not as SITE user).",
+            mkbackup_lock_dir,
+        )
 
 
 def backup_site_to_tarfile(
@@ -42,7 +66,7 @@ def backup_site_to_tarfile(
             for glob_pattern in excludes
         )
 
-    with RRDSocket(site.dir, site.is_stopped(), site.name, verbose) as rrd_socket:
+    with RRDSocket(site.is_stopped(), site.name, verbose) as rrd_socket:
         with tarfile.TarFile.open(
             fileobj=fh,
             mode=mode,
@@ -51,7 +75,7 @@ def backup_site_to_tarfile(
             # check a) the sitename and b) the version before reading
             # the whole tar archive. Important for streaming.
             # The file is added twice to get the first for validation
-            # and the second for excration during restore.
+            # and the second for extraction during restore.
             tar_add(
                 rrd_socket,
                 tar,
@@ -94,9 +118,12 @@ def get_exclude_patterns(options: CommandOptions) -> list[str]:
         excludes.append("var/pnp4nagios/states/*")
         excludes.append("var/check_mk/rrd/*")
 
+    if "no-agents" in options or "no-past" in options:
+        excludes.append("var/check_mk/agents/*")
+
     if "no-logs" in options or "no-past" in options:
         # Logs of different components
-        excludes.append("var/log/*.log")
+        excludes.append("var/log/*.log*")
         excludes.append("var/log/*/*")
         excludes.append("var/pnp4nagios/log/*")
         excludes.append("var/pnp4nagios/perfdata.dump")
@@ -117,7 +144,7 @@ def get_exclude_patterns(options: CommandOptions) -> list[str]:
 
 
 class RRDSocket(contextlib.AbstractContextManager):
-    def __init__(self, site_dir: str, site_stopped: bool, site_name: str, verbose: bool) -> None:
+    def __init__(self, site_stopped: bool, site_name: str, verbose: bool) -> None:
         self._rrdcached_socket_path = str(Path("site_dir") / "tmp/run/rrdcached.sock")
         self._site_requires_suspension = not site_stopped and os.path.exists(
             self._rrdcached_socket_path
@@ -211,6 +238,7 @@ class RRDSocket(contextlib.AbstractContextManager):
         ):
             raise Exception(f"Error while processing rrdcached command ({cmd}): {msg}")
 
+    @override
     def __exit__(
         self,
         exc_type: type[BaseException] | None,

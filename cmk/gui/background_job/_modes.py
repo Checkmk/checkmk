@@ -6,6 +6,7 @@
 import json
 import traceback
 from collections.abc import Collection, Iterator
+from typing import override
 
 from cmk.gui import gui_background_job
 from cmk.gui.background_job import BackgroundJob, BackgroundStatusSnapshot, job_registry
@@ -43,50 +44,62 @@ def register(
 
 class MainModuleBackgroundJobs(ABCMainModule):
     @property
+    @override
     def mode_or_url(self) -> str:
         return "background_jobs_overview"
 
     @property
+    @override
     def topic(self) -> MainModuleTopic:
         return MainModuleTopicMaintenance
 
     @property
+    @override
     def title(self) -> str:
         return _("Background jobs")
 
     @property
+    @override
     def icon(self) -> Icon:
         return "background_jobs"
 
     @property
+    @override
     def permission(self) -> None | str:
         return "background_jobs.manage_jobs"
 
     @property
+    @override
     def description(self) -> str:
         return _("Manage longer running tasks in the Checkmk GUI")
 
     @property
+    @override
     def sort_index(self) -> int:
         return 60
 
     @property
+    @override
     def is_show_more(self) -> bool:
         return True
 
 
 class ModeBackgroundJobsOverview(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "background_jobs_overview"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["background_jobs.manage_jobs"]
 
+    @override
     def title(self) -> str:
         return _("Background jobs overview")
 
+    @override
     def page(self) -> None:
         job_manager = gui_background_job.GUIBackgroundJobManager()
 
@@ -94,7 +107,8 @@ class ModeBackgroundJobsOverview(WatoMode):
         job_manager.show_status_of_job_classes(job_registry.values(), job_details_back_url=back_url)
 
     # Mypy requires the explicit return, pylint does not like it.
-    def action(self) -> ActionResult:  # pylint: disable=useless-return
+    @override
+    def action(self) -> ActionResult:
         action_handler = gui_background_job.ActionHandler(self.breadcrumb())
         action_handler.handle_actions()
         return None
@@ -102,20 +116,25 @@ class ModeBackgroundJobsOverview(WatoMode):
 
 class ModeBackgroundJobDetails(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "background_job_details"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return []
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackgroundJobsOverview
 
+    @override
     def title(self) -> str:
         return _("Background job details")
 
+    @override
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
@@ -148,6 +167,7 @@ class ModeBackgroundJobDetails(WatoMode):
     def back_url(self) -> str:
         return request.get_url_input("back_url", deflt="")
 
+    @override
     def page(self) -> None:
         job = BackgroundJob(job_id := request.get_ascii_input_mandatory("job_id"))
         if job.is_active():
@@ -169,10 +189,12 @@ class ModeBackgroundJobDetails(WatoMode):
 class ModeAjaxBackgroundJobDetails(AjaxPage):
     """AJAX handler for supporting the background job state update"""
 
+    @override
     def handle_page(self) -> None:
         self.action()
         super().handle_page()
 
+    @override
     def page(self) -> PageResult:
         with output_funnel.plugged():
             api_request = request.get_request()

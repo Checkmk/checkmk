@@ -11,9 +11,7 @@
 # real separate packages with their own setup.py files etc.
 
 # Test with:
-#     PYLINT_ARGS="--load-plugins=tests.testlib.pylint_checker_layering_violation --disable=all --enable=layering-violation" time make -C tests test-pylint
-# or
-#     PYTHONPATH=. pipenv run python3 -m pylint --load-plugins=tests.testlib.pylint_checker_layering_violation --disable=all --enable=layering-violation cmk/{bi,ec,checkers,fields,notification_plugins,snmplib,utils} livestatus.py
+#     PYTHONPATH=. pylint --load-plugins=tests.testlib.pylint_checker_layering_violation --disable=all --enable=layering-violation cmk/{bi,ec,checkers,fields,notification_plugins,snmplib,utils} livestatus.py
 
 from __future__ import annotations
 
@@ -167,7 +165,7 @@ def load_layering_configuration(path: Path) -> IsImportOK:
 
 # PyYAML doesn't check for duplicate mapping keys, although it really should, see
 # https://github.com/yaml/pyyaml/issues/165 for a discussion and the workaround below.
-class UniqueKeyLoader(yaml.SafeLoader):  # pylint: disable=too-many-ancestors
+class UniqueKeyLoader(yaml.SafeLoader):
     def construct_mapping(self, node: yaml.MappingNode, deep: bool = False) -> dict:
         mapping = set()
         for key_node, _value_node in node.value:

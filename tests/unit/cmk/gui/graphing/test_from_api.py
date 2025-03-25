@@ -10,17 +10,12 @@ from typing import Literal
 
 import pytest
 
+from cmk.ccc.version import Edition, edition
+
 from cmk.utils.paths import omd_root
 
-from cmk.gui.config import active_config
-from cmk.gui.graphing import perfometer_info
-from cmk.gui.graphing._from_api import _compute_unit_info, _TemperatureUnitConverter
-from cmk.gui.graphing._legacy import AutomaticDict, graph_info, metric_info, UnitInfo
-from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.metrics import _load_graphing_plugins
-from cmk.gui.utils.temperate_unit import TemperatureUnit
+from cmk.gui.graphing_main import _load_graphing_plugins
 
-from cmk.ccc.version import Edition, edition
 from cmk.discover_plugins import PluginLocation
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.graphing.v1 import metrics as metrics_api
@@ -32,18 +27,6 @@ def test_load_graphing_plugins() -> None:
     discovered_graphing_plugins = _load_graphing_plugins()
     assert not discovered_graphing_plugins.errors
     assert discovered_graphing_plugins.plugins
-
-
-def test_metric_duplicates() -> None:
-    assert not metric_info
-
-
-def test_perfometers() -> None:
-    assert not perfometer_info
-
-
-def test_graph_duplicates() -> None:
-    assert graph_info == AutomaticDict()
 
 
 def test_translations_to_be_standalone() -> None:
@@ -289,7 +272,7 @@ def _metric_names_by_module(
         | graphs_api.Graph
         | graphs_api.Bidirectional
         | translations_api.Translation,
-    ]
+    ],
 ) -> Mapping[str, _MetricNamesInModule]:
     metric_names_by_module: dict[str, _MetricNamesInModule] = {}
     for plugin_location, plugin in plugins.items():
@@ -345,90 +328,3 @@ _ALLOWED_BUNDLE_VIOLATIONS = (
         "cmk.plugins.robotmk.graphing.cee",
     }
 )
-
-
-@pytest.mark.parametrize(
-    "unit_info_, unit, expected_value",
-    [
-        pytest.param(
-            UnitInfo(
-                id="DecimalNotation_foo_AutoPrecision_2",
-                title="Title",
-                symbol="foo",
-                render=lambda v: f"{v} foo",
-                js_render="v => v",
-                conversion=lambda v: v,
-            ),
-            TemperatureUnit.CELSIUS,
-            "123.456 foo",
-            id="no-converter",
-        ),
-        pytest.param(
-            UnitInfo(
-                id="DecimalNotation_°C_AutoPrecision_2",
-                title="Title",
-                symbol="°C",
-                render=lambda v: f"{v} °C",
-                js_render="v => v",
-                conversion=lambda v: v,
-            ),
-            TemperatureUnit.CELSIUS,
-            "123.456 °C",
-            id="temp-celsius-celius",
-        ),
-        pytest.param(
-            UnitInfo(
-                id="DecimalNotation_°C_AutoPrecision_2",
-                title="Title",
-                symbol="°C",
-                render=lambda v: f"{v} °C",
-                js_render="v => v",
-                conversion=lambda v: v,
-            ),
-            TemperatureUnit.FAHRENHEIT,
-            "254.22 °F",
-            id="temp-celsius-fahrenheit",
-        ),
-        pytest.param(
-            UnitInfo(
-                id="DecimalNotation_°F_AutoPrecision_2",
-                title="Title",
-                symbol="°F",
-                render=lambda v: f"{v} °F",
-                js_render="v => v",
-                conversion=lambda v: v,
-            ),
-            TemperatureUnit.CELSIUS,
-            "50.81 °C",
-            id="temp-fahrenheit-celius",
-        ),
-        pytest.param(
-            UnitInfo(
-                id="DecimalNotation_°F_AutoPrecision_2",
-                title="Title",
-                symbol="°F",
-                render=lambda v: f"{v} °F",
-                js_render="v => v",
-                conversion=lambda v: v,
-            ),
-            TemperatureUnit.FAHRENHEIT,
-            "123.456 °F",
-            id="temp-fahrenheit-fahrenheit",
-        ),
-    ],
-)
-def test__compute_unit_info(
-    unit_info_: UnitInfo,
-    unit: TemperatureUnit,
-    expected_value: str,
-    request_context: None,
-) -> None:
-    active_config.default_temperature_unit = unit.value
-    unit_info_ = _compute_unit_info(
-        unit_info_.id,
-        unit_info_,
-        active_config,
-        LoggedInUser(None),
-        [_TemperatureUnitConverter],
-    )
-    assert unit_info_.render(unit_info_.conversion(123.456)) == expected_value

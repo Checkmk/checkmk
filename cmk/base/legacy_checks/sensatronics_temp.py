@@ -5,11 +5,12 @@
 
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, equals, SNMPTree
+
+check_info = {}
 
 Section = Mapping[str, float]
 
@@ -41,6 +42,7 @@ def check_sensatronics_temp(
 
 
 check_info["sensatronics_temp"] = LegacyCheckDefinition(
+    name="sensatronics_temp",
     detect=any_of(equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.16174.1.1.1")),
     fetch=[
         SNMPTree(

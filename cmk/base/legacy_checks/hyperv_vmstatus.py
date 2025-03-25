@@ -11,8 +11,9 @@
 
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 Section = Mapping[str, str]
 
@@ -36,6 +37,7 @@ def check_hyperv_vmstatus(_no_item, _no_params, parsed):
 
 
 check_info["hyperv_vmstatus"] = LegacyCheckDefinition(
+    name="hyperv_vmstatus",
     parse_function=parse_hyperv_vmstatus,
     service_name="HyperV Status",
     discovery_function=discover_hyperv_vmstatus,

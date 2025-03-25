@@ -42,13 +42,14 @@ ARGV = [
     "--require-tag-value",
     "tag2",
     "value2",
+    "--cache-id",
+    "testhost",
 ]
 
 ARGS = Args(
     debug=False,
     verbose=0,
     vcrtrace=False,
-    sequential=False,
     dump_config=False,
     timeout=10,
     piggyback_vms="grouphost",
@@ -57,12 +58,14 @@ ARGS = Args(
     client="client-id",
     tenant="tenant-id",
     secret="secret",
+    cache_id="testhost",
     proxy=None,
     require_tag=["tag1"],
     require_tag_value=[["tag2", "value2"]],
     explicit_config=["group=test-group", "resources=Resource1,Resource2"],
     services=["Microsoft.Compute/virtualMachines", "Microsoft.Storage/storageAccounts"],
     tag_key_pattern=TagsImportPatternOption.import_all,
+    connection_test=False,
 )
 
 
@@ -76,7 +79,6 @@ ARGS = Args(
                 "argparse: debug = False",
                 "argparse: verbose = 0",
                 "argparse: vcrtrace = False",
-                "argparse: sequential = False",
                 "argparse: dump_config = False",
                 "argparse: timeout = 10",
                 "argparse: piggyback_vms = 'grouphost'",
@@ -84,6 +86,7 @@ ARGS = Args(
                 "argparse: client = 'client-id'",
                 "argparse: tenant = 'tenant-id'",
                 "argparse: secret = '****'",
+                "argparse: cache_id = 'testhost'",
                 "argparse: proxy = None",
                 "argparse: require_tag = ['tag1']",
                 "argparse: require_tag_value = [['tag2', 'value2']]",
@@ -91,12 +94,16 @@ ARGS = Args(
                 "argparse: services = ['Microsoft.Compute/virtualMachines', 'Microsoft.Storage/storageAccounts']",
                 "argparse: authority = 'global'",
                 "argparse: tag_key_pattern = <TagsImportPatternOption.import_all: 'IMPORT_ALL'>",
+                "argparse: connection_test = False",
             ],
         ),
     ],
 )
 def test_parse_arguments(
-    argv: Sequence[str], args: Args, expected_log: Sequence[str], caplog: pytest.LogCaptureFixture
+    argv: Sequence[str],
+    args: Args,
+    expected_log: Sequence[str],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     caplog.set_level(logging.DEBUG)
     assert parse_arguments(argv) == args

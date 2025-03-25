@@ -7,11 +7,8 @@ from collections.abc import Mapping
 
 import pytest
 
+import cmk.plugins.proxmox_ve.agent_based.proxmox_ve_mem_usage as pvmu
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State
-from cmk.plugins.proxmox_ve.agent_based.proxmox_ve_mem_usage import (
-    check_proxmox_ve_mem_usage,
-    Section,
-)
 
 MEM_DATA = {"mem": 1024**3, "max_mem": 2 * 1024**3}
 
@@ -44,25 +41,14 @@ MEM_DATA = {"mem": 1024**3, "max_mem": 2 * 1024**3}
     ],
 )
 def test_check_proxmox_ve_mem_usage(
-    params: Mapping[str, object], section: Section, expected_results: CheckResult
+    params: Mapping[str, object], section: pvmu.Section, expected_results: CheckResult
 ) -> None:
-    results = tuple(check_proxmox_ve_mem_usage(params, section))
-    print("\n" + "\n".join(map(str, results)))
+    results = tuple(pvmu.check_proxmox_ve_mem_usage(params, section))
     assert results == expected_results
 
 
 if __name__ == "__main__":
     # Please keep these lines - they make TDD easy and have no effect on normal test runs.
     # Just run this file from your IDE and dive into the code.
-    from os.path import dirname, join
-
-    assert not pytest.main(
-        [
-            "--doctest-modules",
-            join(
-                dirname(__file__),
-                "../../../../../../cmk/base/plugins/agent_based/proxmox_ve_mem_usage.py",
-            ),
-        ]
-    )
+    assert not pytest.main(["--doctest-modules", pvmu.__file__])
     pytest.main(["-T=unit", "-vvsx", __file__])

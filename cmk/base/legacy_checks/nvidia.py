@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def format_nvidia_name(identifier):
@@ -42,6 +43,7 @@ def parse_nvidia(string_table: StringTable) -> StringTable:
 
 
 check_info["nvidia"] = LegacyCheckDefinition(
+    name="nvidia",
     parse_function=parse_nvidia,
 )
 
@@ -51,6 +53,7 @@ def discover_nvidia_temp(info):
 
 
 check_info["nvidia.temp"] = LegacyCheckDefinition(
+    name="nvidia_temp",
     service_name="Temperature %s",
     sections=["nvidia"],
     discovery_function=discover_nvidia_temp,
@@ -65,6 +68,7 @@ def discover_nvidia_temp_core(info):
 
 
 check_info["nvidia.temp_core"] = LegacyCheckDefinition(
+    name="nvidia_temp_core",
     service_name="Temperature %s",
     sections=["nvidia"],
     discovery_function=discover_nvidia_temp_core,
@@ -92,6 +96,7 @@ def check_nvidia_errors(_no_item, _no_params, info):
 
 
 check_info["nvidia.errors"] = LegacyCheckDefinition(
+    name="nvidia_errors",
     service_name="NVIDIA GPU Errors",
     sections=["nvidia"],
     discovery_function=inventory_nvidia_errors,

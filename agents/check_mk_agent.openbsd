@@ -122,7 +122,7 @@ section_openbsd_mem() {
 
 section_misc_sections() {
     echo "<<<check_mk>>>"
-    echo "Version: 2.4.0b1"
+    echo "Version: 2.5.0b1"
     echo "AgentOS: openbsd"
     echo "Hostname: $(hostname)"
     echo "AgentDirectory: $MK_CONFDIR"
@@ -251,7 +251,7 @@ section_misc_sections() {
     IFS=$OFS
 
     # IPMI-Data (Fans, CPU, temperature, etc)
-    # needs the sysutils/ipmitool and kldload ipmi.ko
+    # needs the sysutils/ipmitool or freeipmi and kldload ipmi.ko
     if inpath ipmitool; then
         echo '<<<ipmi>>>'
         ipmitool sensor list |
@@ -259,11 +259,28 @@ section_misc_sections() {
             sed -e 's/ *| */|/g' -e "s/ /_/g" -e 's/_*$//' -e 's/|/ /g' |
             grep -v -E '^[^ ]+ na ' |
             grep -v ' discrete '
+    elif inpath ipmi-sensors; then
+        echo '<<<ipmi_sensors>>>'
+        if ipmi-sensors --help | grep -q legacy-output; then
+            IPMI_FORMAT="--legacy-output"
+        else
+            IPMI_FORMAT=""
+        fi
+        if ipmi-sensors --help | grep -q " \-\-groups"; then
+            IPMI_GROUP_OPT="-g"
+        else
+            IPMI_GROUP_OPT="-t"
+        fi
+        for class in Temperature Power_Unit Fan; do
+            ipmi-sensors ${IPMI_FORMAT} --sdr-cache-directory /var/cache ${IPMI_GROUP_OPT} "${class}" | sed -e 's/ /_/g' -e 's/:_/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
+            # In case of a timeout immediately leave loop.
+            if [ $? = 255 ]; then break; fi
+        done
     fi
 
     if inpath mailq && getent passwd postfix >/dev/null 2>&1; then
         echo '<<<postfix_mailq>>>'
-        mailq | tail -n 6
+        sudo_as_root mailq | tail -n 6
     fi
 }
 

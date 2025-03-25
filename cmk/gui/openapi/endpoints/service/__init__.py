@@ -19,6 +19,7 @@ which you can look up in the Checkmk documentation.
 
 For a detailed list of columns, have a look at the [services table](#section/Table-definitions/Services-Table) definition.
 """
+
 from collections.abc import Mapping
 from typing import Any
 

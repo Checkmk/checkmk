@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-""" Edit global settings of the visual """
+"""Edit global settings of the visual"""
 
 import copy
 from collections.abc import Sequence
@@ -63,7 +63,7 @@ from ._filter_valuespecs import VisualFilterList
 from ._store import available, delete_local_file, move_visual_to_local, save, TVisual
 
 
-def page_edit_visual(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branches
+def page_edit_visual(  # type: ignore[no-untyped-def]
     what: VisualTypeName,
     all_visuals: dict[tuple[UserId, VisualName], TVisual],
     custom_field_handler=None,
@@ -473,7 +473,7 @@ def _visual_spec_multi(
 
 
 def process_context_specs(
-    context_specs: list[tuple[InfoName, Transform[dict] | VisualFilterList]]
+    context_specs: list[tuple[InfoName, Transform[dict] | VisualFilterList]],
 ) -> VisualContext:
     context: dict[str, Any] = {}
     for info_key, spec in context_specs:

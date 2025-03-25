@@ -1,0 +1,164 @@
+#!/usr/bin/env python3
+# Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+"""cmk-broker-test
+
+A debugging tool for Checkmks builtin message broker. This tests if sites of a shared distributed setup can communicate via the message broker.
+Some debugging information is printed to the console, but you cannot expect this to be a stable interface.
+
+You can start this application in two modes:
+
+When the SITE argument is given, the application will send a message to the given site and wait for a response.
+It will exit successfully if the response contains the expected UUID, otherwise it will exit with some error code.
+
+When the SITE argument is omitted, the application will start listening for incoming messages.
+It will respond to each message with a message of its own, containing the same UUID.
+"""
+
+import argparse
+import os
+import sys
+import time
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Self
+from uuid import UUID, uuid4
+
+from pydantic import BaseModel
+
+from cmk.ccc.site import omd_site
+
+from cmk.utils.paths import omd_root
+
+from cmk.messaging import AppName, Channel, Connection, DeliveryTag, QueueName, RoutingKey
+
+
+class TestMessage(BaseModel):
+    publisher_site: str
+    uuid: UUID
+    timestamp: float
+
+    @classmethod
+    def new(cls, uuid: UUID | None = None) -> Self:
+        return cls(publisher_site=omd_site(), uuid=uuid or uuid4(), timestamp=time.time())
+
+
+APP_NAME = AppName(__doc__.split("\n", 1)[0])
+
+QUEUE_PING = QueueName("debugging-test-ping")
+QUEUE_PONG = QueueName("debugging-test-pong")
+
+ROUTING_KEY_PING = RoutingKey(QUEUE_PING.value)
+ROUTING_KEY_PONG = RoutingKey(QUEUE_PONG.value)
+
+
+def write(message: str) -> None:
+    """We need to immediately flush, to know when pong is ready."""
+    sys.stdout.write(message)
+    sys.stdout.flush()
+
+
+@dataclass(frozen=True)
+class Arguments:
+    site: str | None
+
+
+def parse_arguments(args: list[str]) -> Arguments:
+    prog, descr = __doc__.split("\n", 1)
+    parser = argparse.ArgumentParser(
+        prog=prog, description=descr, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument("site", nargs="?", help="The site to send the message to")
+    return Arguments(site=None if (site := parser.parse_args(args).site) is None else str(site))
+
+
+def _callback_pong(
+    channel: Channel[TestMessage], delivery_tag: DeliveryTag, received: TestMessage
+) -> None:
+    """Upon receiving a message (ping), publish a response (pong)"""
+    response = TestMessage.new(received.uuid)
+    write(
+        "===================================\n"
+        "Received message:\n"
+        f"  {received!r}\n"
+        f"Received after {(response.timestamp - received.timestamp) * 1000:.3f} ms\n"
+        "Responding with message:\n"
+        f"  {response!r}\n"
+    )
+    channel.publish_for_site(received.publisher_site, response, routing=ROUTING_KEY_PONG)
+    channel.acknowledge(delivery_tag)
+
+
+def _command_pong() -> int:
+    write("Establishing connection to local broker\n")
+    with Connection(APP_NAME, omd_root, omd_site()) as conn:
+        channel = conn.channel(TestMessage)
+        channel.queue_declare(queue=QUEUE_PING)
+        write("Waiting for messages\n")
+        channel.consume(QUEUE_PING, _callback_pong)
+    return 42  # can't happen
+
+
+def _make_callback_ping(
+    sent: TestMessage,
+) -> Callable[[Channel[TestMessage], DeliveryTag, TestMessage], None]:
+    def _callback_ping(
+        channel: Channel[TestMessage], delivery_tag: DeliveryTag, received: TestMessage
+    ) -> None:
+        now = time.time()
+        write(
+            "Received message:\n"
+            f"  {received!r}\n"
+            f"Received after {(now - received.timestamp) * 1000:.3f} ms\n"
+            f"Roundtrip: {(now - sent.timestamp) * 1000:.3f} ms\n"
+        )
+        channel.acknowledge(delivery_tag)
+
+        if not received.uuid == sent.uuid:
+            write(
+                "Ignoring message that was not sent in response to my message (the UUIDs don't match).\n"
+            )
+            return
+        write("UUIDs match.\n")
+        sys.exit(0)
+
+    return _callback_ping
+
+
+def _command_ping(site_id: str) -> int:
+    write("Establishing connection to local broker\n")
+    with Connection(APP_NAME, omd_root, omd_site()) as conn:
+        channel = conn.channel(TestMessage)
+        channel.queue_declare(queue=QUEUE_PONG)
+
+        message = TestMessage.new()
+
+        write(f"Sending message:\n  {message!r}\n")
+        channel.publish_for_site(
+            site_id,
+            message,
+            routing=ROUTING_KEY_PONG if site_id == omd_site() else ROUTING_KEY_PING,
+        )
+
+        write("Waiting for response\n")
+        channel.consume(QUEUE_PONG, _make_callback_ping(message))
+
+    return 23  # can't happen
+
+
+def main() -> int:
+    args = parse_arguments(sys.argv[1:])
+    write(f"cmk-broker-test [{os.getpid()}]\n")
+    try:
+        return _command_pong() if args.site is None else _command_ping(args.site)
+    except KeyboardInterrupt:
+        if args.site is None:
+            write("\nExiting (interrupted)\n")
+            return 0
+        write("\nGiving up (interrupted)\n")
+        return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())

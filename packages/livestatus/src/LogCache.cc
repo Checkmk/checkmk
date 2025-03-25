@@ -5,18 +5,45 @@
 
 #include "livestatus/LogCache.h"
 
-#include <compare>
+#include <iostream>
+#include <optional>
+#include <string>
 #include <system_error>
 #include <utility>
 
+#include "livestatus/ChronoUtils.h"
 #include "livestatus/ICore.h"
 #include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
+#include "livestatus/Query.h"
 
 namespace {
 // Check memory every N'th new message
 constexpr unsigned long check_mem_cycle = 1000;
 }  // namespace
+
+// Figure out the time interval for the query: In queries for the monitoring
+// history, there should always be a time range in the form of one or two filter
+// expressions for "time"". We use that to limit the number of log files we need
+// to scan and to find the optimal entry point into the log file. Note that we
+// use a half-open interval, but the bounds are inclusive, so we need to add 1
+// to the LUB.
+// static
+LogPeriod LogPeriod ::make(const Query &query) {
+    using sc = std::chrono::system_clock;
+    auto now = sc::to_time_t(sc::now());
+    return {
+        .since =
+            sc::from_time_t(query.greatestLowerBoundFor("time").value_or(0)),
+        .until =
+            sc::from_time_t(query.leastUpperBoundFor("time").value_or(now) + 1),
+    };
+}
+
+std::ostream &operator<<(std::ostream &os, const LogPeriod &p) {
+    return os << "[" << FormattedTimePoint(p.since) << ", "
+              << FormattedTimePoint(p.until) << ")";
+}
 
 LogCache::LogCache(ICore *core)
     : core_{core}, num_cached_log_messages_{0}, num_at_last_check_{0} {}
@@ -78,7 +105,7 @@ void LogCache::addToIndex(const std::filesystem::path &path, bool watch) {
 // The parameters to this method reflect the current query, not the messages
 // that have just been loaded.
 void LogCache::logLineHasBeenAdded(Logfile *log_file,
-                                   std::bitset<32> log_entry_classes_to_keep) {
+                                   LogEntryClasses log_entry_classes_to_keep) {
     const unsigned log_classes =
         log_entry_classes_to_keep.to_ulong();  // TODO(sp)
     if (++num_cached_log_messages_ <= core_->maxCachedMessages()) {

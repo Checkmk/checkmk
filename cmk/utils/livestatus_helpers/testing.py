@@ -8,6 +8,7 @@ For code to be admitted to this module, it should itself be tested thoroughly, s
 have any friction during testing with these helpers themselves.
 
 """
+
 from __future__ import annotations
 
 import collections
@@ -23,7 +24,7 @@ import time
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
 from contextlib import contextmanager
 from types import TracebackType
-from typing import Any, Literal
+from typing import Any, Literal, override
 from unittest import mock
 
 from livestatus import LivestatusTestingError, MultiSiteConnection, SiteConfigurations, SiteId
@@ -531,7 +532,7 @@ def execute_query(
         # We check the store for data and filter for the actual data that is requested.
         if table not in tables:
             raise LivestatusTestingError(
-                f"Table {table!r} not stored on site {site_name!r}." " Call .add_table(...)"
+                f"Table {table!r} not stored on site {site_name!r}. Call .add_table(...)"
             )
 
         # Filtering and Aggregating
@@ -546,7 +547,7 @@ def execute_query(
                     row.append(entry[col])
                 except KeyError as exc:
                     raise KeyError(
-                        f"Column '{col}' not in result. " "Add to test-data or fix query."
+                        f"Column '{col}' not in result. Add to test-data or fix query."
                     ) from exc
 
             for col in sorted(entry.keys()):
@@ -639,10 +640,10 @@ class MockSingleSiteConnection:
             return f"\n\nNo queries were sent to site {self._site_name}."
         formatted_queries = "\n".join(["* " + repr(query.decode()) for query in self._sent_queries])
         return (
-            f"\n\nThe following queries were sent to site {self._site_name}:\n "
-            f"{formatted_queries}"
+            f"\n\nThe following queries were sent to site {self._site_name}:\n {formatted_queries}"
         )
 
+    @override
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} id={id(self)} site={self._site_name}>"
 

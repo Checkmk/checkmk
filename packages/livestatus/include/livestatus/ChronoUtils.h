@@ -51,7 +51,7 @@ inline double elapsed_ms_since(std::chrono::steady_clock::time_point then) {
 
 inline tm to_tm(std::chrono::system_clock::time_point tp) {
     auto t = std::chrono::system_clock::to_time_t(tp);
-    struct tm ret {};
+    struct tm ret{};
 // NOTE: A brilliant example of how to make a simple API function a total
 // chaos follows...
 #if defined(__STDC_LIB_EXT1__)
@@ -71,7 +71,7 @@ inline tm to_tm(std::chrono::system_clock::time_point tp) {
     // circumstances, so better avoid it there. Signature:
     //    struct tm *localtime_r(const time_t *restrict timer,
     //                           struct tm *restrict result);
-    localtime_r(&t, &ret);
+    (void)localtime_r(&t, &ret);
 #endif
     return ret;
 }

@@ -21,8 +21,9 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, assert_never, Literal, TypedDict
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -303,7 +304,7 @@ def check_etherbox_smoke(item: str, params: SmokeParams, section: Section) -> Ch
         )
 
     elif smoke_handling_config[0] == "levels":
-        yield from check_levels(
+        yield from check_levels_v1(
             data.value,
             levels_upper=smoke_handling_config[1],
             metric_name="smoke",
@@ -398,5 +399,5 @@ check_plugin_etherbox_voltage = CheckPlugin(
     discovery_function=discovery_voltage,
     service_name="Sensor %s",
     check_ruleset_name="etherbox_voltage",
-    check_default_parameters={"levels": None},
+    check_default_parameters={"levels": ("no_levels", None)},
 )

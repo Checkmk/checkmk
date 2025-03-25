@@ -15,7 +15,7 @@ import type {FigureData} from "@/modules/figures/figure_types";
 
 // Basic dc table with pagination
 export class DCTableFigure<
-    DCTableFigureData extends FigureData = FigureData
+    DCTableFigureData extends FigureData = FigureData,
 > extends DCFigureBase<DCTableFigureData> {
     _offset: number;
     _pages: number;
@@ -153,7 +153,7 @@ export class DCTableFigure<
     }
 
     dimension(
-        dimension: Dimension<any, any>
+        dimension: Dimension<any, any>,
     ): void | null | Dimension<any, any> {
         if (!arguments.length) {
             return this._dimension;
@@ -193,7 +193,7 @@ export class DCTableFigure<
             this._chart.endSlice(this._pages);
             this._post_body = this._post_body.replace(
                 /(offset=).*?(&)?$/,
-                "$1" + this._offset + "$2"
+                "$1" + this._offset + "$2",
             );
         }
     }
@@ -234,7 +234,7 @@ export class DCTableFigure<
             .selectAll(".next")
             .attr(
                 "disabled",
-                this._offset + this._pages >= totFilteredRecs ? "true" : null
+                this._offset + this._pages >= totFilteredRecs ? "true" : null,
             );
         // display text
         const text =

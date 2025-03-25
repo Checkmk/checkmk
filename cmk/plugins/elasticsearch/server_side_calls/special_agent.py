@@ -28,15 +28,9 @@ def _agent_elasticsearch_arguments(
     hostconfig: HostConfig,
 ) -> Iterable[SpecialAgentCommand]:
     # We're lazy with the parsing, so we need a few asserts and str()s below to please mypy.
-    assert isinstance(params["infos"], Sequence)  # of Literal["cluster_health", "nodes", "stats"]
     assert isinstance(params["hosts"], Sequence)  # of str
 
-    args: list[str | Secret] = [
-        "-P",
-        str(params["protocol"]),
-        "-m",
-        *(str(i) for i in params["infos"]),
-    ]
+    args: list[str | Secret] = ["-P", str(params["protocol"])]
 
     if "user" in params:
         args.extend(["-u", str(params["user"])])
@@ -47,6 +41,15 @@ def _agent_elasticsearch_arguments(
         args.extend(["-p", str(params["port"])])
     if params.get("no_cert_check", False):
         args.append("--no-cert-check")
+
+    if params.get("cluster_health", False):
+        args.append("--cluster-health")
+    if params.get("nodes", False):
+        args.append("--nodes")
+
+    if "stats" in params:
+        assert isinstance(params["stats"], Sequence)
+        args.extend(["--stats", *(str(i) for i in params["stats"])])
 
     args.append("--")  # make sure the hosts are separated from the infos
     args.extend(replace_macros(str(h), hostconfig.macros) for h in params["hosts"])

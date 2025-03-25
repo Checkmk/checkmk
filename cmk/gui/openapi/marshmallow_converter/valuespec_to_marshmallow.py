@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 """This module provides hooks for converting ValueSpec trees into marshmallow fields.
 
@@ -28,7 +27,9 @@ Note:
 Module Attributes:
     match_on: Decorator used to register conversion functions for specific ValueSpec subclasses.
 """
+
 import typing
+from typing import cast
 
 from marshmallow import ValidationError
 from marshmallow.validate import Validator
@@ -736,12 +737,19 @@ def get_schema_from_precalculated_schemas(
     Get a schema from the precalculated schemas or create a new one.
     This is required because the schemas are created dynamically and need to be cached
     to avoid creating the same schema multiple times.
+
+    Since the `from_dict` function returns a new type that inherits from the class from
+    which it was called but the return type hint is `type[Schema]` it is necessary to set
+    the type accordingly.
     """
     if (schema := PRECALCULATED_SCHEMAS.get(schema_name)) is not None:
         return schema
-    PRECALCULATED_SCHEMAS[schema_name] = schema_cls.from_dict(
-        schema_fields,
-        name=schema_name,
+    PRECALCULATED_SCHEMAS[schema_name] = cast(
+        BaseOrOneOfSchemaType,
+        schema_cls.from_dict(
+            schema_fields,
+            name=schema_name,
+        ),
     )
     return PRECALCULATED_SCHEMAS[schema_name]
 

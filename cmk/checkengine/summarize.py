@@ -11,6 +11,14 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
+from cmk.ccc.exceptions import (
+    MKAgentError,
+    MKFetcherError,
+    MKIPAddressLookupError,
+    MKSNMPError,
+    MKTimeout,
+)
+
 import cmk.utils.resulttype as result
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionName
@@ -20,16 +28,8 @@ from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetcher import FetcherType, SourceInfo
 from cmk.checkengine.parser import AgentRawDataSection, HostSections
 
-from cmk.ccc.exceptions import (
-    MKAgentError,
-    MKFetcherError,
-    MKIPAddressLookupError,
-    MKSNMPError,
-    MKTimeout,
-)
-from cmk.piggyback import PiggybackMetaData
-from cmk.piggyback.config import Config as PiggybackConfig
-from cmk.piggyback.config import PiggybackTimeSettings
+from cmk.piggyback.backend import Config as PiggybackConfig
+from cmk.piggyback.backend import PiggybackMetaData, PiggybackTimeSettings
 
 __all__ = ["summarize", "SummarizerFunction", "SummaryConfig"]
 
@@ -77,7 +77,7 @@ def summarize(
 
 
 def summarize_success(exit_spec: ExitSpec) -> Sequence[ActiveCheckResult]:
-    return [ActiveCheckResult(0, "Success")]
+    return [ActiveCheckResult(state=0, summary="Success")]
 
 
 def summarize_failure(exit_spec: ExitSpec, exc: Exception) -> Sequence[ActiveCheckResult]:
@@ -98,9 +98,9 @@ def summarize_failure(exit_spec: ExitSpec, exc: Exception) -> Sequence[ActiveChe
 
     return [
         ActiveCheckResult(
-            extract_status(exc),
-            str(exc).rsplit("\n", maxsplit=1)[-1],
-            str(exc).split("\n") if "\n" in str(exc) else (),
+            state=extract_status(exc),
+            summary=str(exc).rsplit("\n", maxsplit=1)[-1],
+            details=str(exc).split("\n") if "\n" in str(exc) else (),
         )
     ]
 
@@ -124,18 +124,17 @@ def summarize_piggyback(
         return [_summarize_single_piggyback_source(info, config, now) for info in meta_infos]
 
     if expect_data:
-        return [ActiveCheckResult(1, "Missing data")]
-    return [ActiveCheckResult(0, "Success (but no data found for this host)")]
+        return [ActiveCheckResult(state=1, summary="Missing data")]
+    return [ActiveCheckResult(state=0, summary="Success (but no data found for this host)")]
 
 
 def _summarize_single_piggyback_source(
     meta: PiggybackMetaData, config: PiggybackConfig, now: float
 ) -> ActiveCheckResult:
-
     if (age := now - meta.last_update) > (allowed := config.max_cache_age(meta.source)):
         return ActiveCheckResult(
-            0,
-            f"Piggyback data outdated (age: {_render_time(age)}, allowed: {_render_time(allowed)})",
+            state=0,
+            summary=f"Piggyback data outdated (age: {_render_time(age)}, allowed: {_render_time(allowed)})",
         )
 
     if meta.last_contact is None or (meta.last_update < meta.last_contact):
@@ -144,9 +143,9 @@ def _summarize_single_piggyback_source(
         if (time_left := meta.last_update + config.validity_period(meta.source) - now) > 0:
             msg += f" (still valid, {_render_time(time_left)} left)"
             state = config.validity_state(meta.source)
-        return ActiveCheckResult(state, msg)
+        return ActiveCheckResult(state=state, summary=msg)
 
-    return ActiveCheckResult(0, f"Successfully processed from source '{meta.source}'")
+    return ActiveCheckResult(state=0, summary=f"Successfully processed from source '{meta.source}'")
 
 
 def _render_time(value: float | int) -> str:

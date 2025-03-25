@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
-# pylint: disable=redefined-outer-name
 import os
 from collections.abc import Sequence
 from pathlib import Path
@@ -61,7 +59,7 @@ def test_hostname() -> None:
 
 
 def test_main_help(capsys: pytest.CaptureFixture[str]) -> None:
-    omdlib.main.main_help(object(), object())
+    omdlib.main.main_help()
     stdout = capsys.readouterr()[0]
     assert "omd COMMAND -h" in stdout
 
@@ -365,9 +363,9 @@ def test_permission_action_all_changed_streamline_standard_directories(relpath: 
             old_type="dir",
             new_type="dir",
             user_type="dir",
-            old_perm=int(0o775),
-            new_perm=int(0o770),
-            user_perm=int(0o750),
+            old_perm=0o775,
+            new_perm=0o770,
+            user_perm=0o750,
         )
         == "default"
     )

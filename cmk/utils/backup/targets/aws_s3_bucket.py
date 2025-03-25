@@ -7,12 +7,10 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Final, TypedDict
 
-import boto3
+from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.utils.backup.targets.remote_interface import ProgressStepLogger, RemoteTarget
 from cmk.utils.password_store import extract, PasswordId
-
-from cmk.ccc.exceptions import MKGeneralException
 
 
 class S3Params(TypedDict):
@@ -23,6 +21,9 @@ class S3Params(TypedDict):
 
 class S3Bucket:
     def __init__(self, params: S3Params) -> None:
+        # Conditional import to only consume the necessary memory when the feature is used
+        import boto3
+
         if not (secret_extracted := extract(params["secret"])):
             raise MKGeneralException("Failed to retrieve secret")
         self.client: Final = boto3.client(
@@ -72,7 +73,10 @@ class S3Bucket:
         self.bucket.delete_objects(Delete={"Objects": [{"Key": str(key)}]})
 
     def objects(self) -> Iterator[Path]:
-        yield from (Path(object_summary.key) for object_summary in self.bucket.objects.all())
+        paginator = self.client.get_paginator("list_objects_v2")
+        for page in paginator.paginate(Bucket=self.bucket.name):
+            for obj in page["Contents"]:
+                yield Path(obj["Key"])
 
 
 class S3Target(RemoteTarget[S3Params, S3Bucket]):

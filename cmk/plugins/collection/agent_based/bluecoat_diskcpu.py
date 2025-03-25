@@ -38,7 +38,7 @@ Section = Mapping[str, CPU]
 
 
 def parse_bluecoat_diskcpu(string_table: StringTable) -> Section:
-    return {cpu.name: cpu for line in string_table if (cpu := CPU.from_line(line))}
+    return {cpu.name: cpu for line in string_table for cpu in [CPU.from_line(line)]}
 
 
 snmp_section_bluecoat_diskcpu = SimpleSNMPSection(

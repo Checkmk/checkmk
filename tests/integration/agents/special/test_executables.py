@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import subprocess
-from pathlib import Path
 
 import pytest
 
@@ -19,7 +18,7 @@ def test_no_exception(site: Site) -> None:
     Possible reasons for an exception are e.g. a wrong shebang, import
     errors or a wrong PYTHONPATH.
     """
-    special_agent_dir = Path(site.root) / "share" / "check_mk" / "agents" / "special"
+    special_agent_dir = site.root / "share" / "check_mk" / "agents" / "special"
     for special_agent_path in special_agent_dir.glob("agent_*"):
         command = [str(special_agent_path)]
         p = site.execute(

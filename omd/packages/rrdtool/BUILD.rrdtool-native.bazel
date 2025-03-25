@@ -1,12 +1,15 @@
+load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
+load("@rules_python//python:packaging.bzl", "py_wheel")
 
 # port from upstream `src/Makefile.am`
 
 NUMVERS = "1.7002"
 
-config_setting(
-    name = "non_standard_glib_path",
-    values = {"define": "non-standard-glib-path=true"},
+cc_library(
+    name = "rrd_config",
+    hdrs = ["src/rrd_config.h"],
+    includes = ["src"],
 )
 
 cc_library(
@@ -31,6 +34,7 @@ cc_library(
         "src/rrd_rpncalc.c",
         "src/rrd_utils.c",
         "src/rrd_snprintf.c",
+        "src/rrd_restore.c",
         "src/rrd_update.c",
         "src/rrd_modify.c",
         "src/quicksort.c",
@@ -60,7 +64,6 @@ cc_library(
         "src/rrd_is_thread_safe.h",
         "src/rrd_modify.h",
         "src/rrd_update.h",
-        "src/rrd_config.h",
         "src/quicksort.h",
     ],
     hdrs = [
@@ -69,25 +72,22 @@ cc_library(
         "src/rrd_format.h",
     ],
     copts = [
-        "-I/usr/include/glib-2.0/",
+        "-Wno-implicit-const-int-float-conversion",
         "-Wno-int-conversion",
         "-Wno-stringop-truncation",
+        "-Wno-unknown-warning-option",
+        "-Wno-unused-but-set-variable",
         "-O2",
     ],
-    linkopts = [
-        "-lglib-2.0",
+    deps = [
+        ":rrd_config",
+        "@glib",
+        "@libxml2",
     ],
-    linkstatic = True,
-    deps = select(
-        {
-            ":non_standard_glib_path": ["@glibconfig-centos"],
-            "//conditions:default": ["@glibconfig-default"],
-        },
-    ),
 )
 
 cc_library(
-    name = "rrd",
+    name = "rrd_library",
     srcs = [
         "src/rrd_dump.c",
         "src/rrd_fetch.c",
@@ -102,11 +102,14 @@ cc_library(
         "src/rrd_version.c",
     ],
     copts = [
-        "-Wformat-truncation=0",  # false positive in src/rrd_list.c
+        "-std=gnu99",
+        "-Wno-format-truncation",  # false positive in src/rrd_list.c
         "-O2",  # maybe O3?
     ],
-    linkstatic = True,
-    local_defines = ['NUMVERS="' + NUMVERS + '"'],
+    local_defines = [
+        'NUMVERS="' + NUMVERS + '"',
+        "_GNU_SOURCE",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         ":rrdupd",
@@ -128,11 +131,13 @@ cc_library(
     copts = [
         "-I/usr/include/cairo",
         "-I/usr/include/pango-1.0",
-        "-I/usr/include/glib-2.0",
         "-I/usr/include/harfbuzz",
-        "-Wno-implicit-function-declaration",
         "-Wno-format-truncation",
+        "-Wno-implicit-const-int-float-conversion",
+        "-Wno-implicit-function-declaration",
         "-Wno-strict-aliasing",
+        "-Wno-unknown-warning-option",
+        "-Wno-unused-but-set-variable",
         "-O2",
     ],
     linkopts = [
@@ -142,9 +147,11 @@ cc_library(
         "-lpangocairo-1.0",
         "-lpng",
     ],
-    linkstatic = True,
     visibility = ["//visibility:public"],
-    deps = [":rrd"],
+    deps = [
+        ":rrd_library",
+        "@glib",
+    ],
 )
 
 cc_binary(
@@ -152,6 +159,9 @@ cc_binary(
     srcs = ["src/rrdupdate.c"],
     copts = [
         "-O2",
+    ],
+    linkopts = [
+        "-lpthread",
     ],
     visibility = ["//visibility:public"],
     deps = [":rrdupd"],
@@ -165,8 +175,13 @@ cc_binary(
         "-Wno-format-truncation",
         "-O2",
     ],
+    linkopts = [
+        "-lpthread",
+    ],
     visibility = ["//visibility:public"],
-    deps = [":rrd"],
+    deps = [
+        "rrdgraph",
+    ],
 )
 
 cc_binary(
@@ -174,16 +189,67 @@ cc_binary(
     srcs = ["src/rrd_daemon.c"],
     copts = [
         "-Wno-format-truncation",
-        "-I/usr/include/glib-2.0/",
         "-O2",
     ],
     linkopts = [
-        "-lglib-2.0",
+        "-lpthread",
     ],
     local_defines = ["LOCALSTATEDIR="],
     visibility = ["//visibility:public"],
     deps = [
-        ":rrd",
+        ":rrd_library",
         ":rrdupd",
+        "@glib",
     ],
+)
+
+cc_shared_library(
+    name = "rrd_shared",
+    shared_lib_name = "librrd.so",
+    visibility = ["@omd_packages//omd/packages/rrdtool:__pkg__"],
+    deps = [
+        "rrd_library",
+        "rrdgraph",
+        "rrdupd",
+    ],
+)
+
+cc_library(
+    name = "rrdtoolmodule",
+    srcs = [
+        "bindings/python/rrdtoolmodule.c",
+    ],
+    copts = [
+        "-Wno-discarded-qualifiers",
+        "-Wno-ignored-qualifiers",
+        "-Wno-incompatible-pointer-types-discards-qualifiers",
+        "-Wno-unknown-warning-option",
+        "-O2",
+    ],
+    deps = [
+        ":rrd_config",
+        ":rrdgraph",
+        "@rules_python//python/cc:current_py_cc_headers",
+    ],
+    alwayslink = True,
+)
+
+cc_shared_library(
+    name = "rrdtoolmodule_shared",
+    shared_lib_name = "rrdtool.so",
+    deps = [":rrdtoolmodule"],
+)
+
+py_library(
+    name = "rrdtool_python_lib",
+    data = [":rrdtoolmodule_shared"],
+    visibility = ["//visibility:public"],
+)
+
+py_wheel(
+    name = "rrdtool_python_wheel",
+    distribution = "rrdtool",
+    version = "1",
+    visibility = ["//visibility:public"],
+    deps = [":rrdtoolmodule_shared"],
 )

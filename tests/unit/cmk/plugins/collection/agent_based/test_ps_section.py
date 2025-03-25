@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import copy
 import itertools
@@ -681,6 +680,59 @@ def test_parse_ps(
                 1540375342,
             ),
             id="no_time_in_agent_output",
+        ),
+        pytest.param(
+            [
+                ["[time]"],
+                ["1705152576"],
+                ["[processes]"],
+                ["[header]", "CGROUP", "USER", "VSZ", "RSS", "TIME", "ELAPSED", "PID", "COMMAND"],
+                [
+                    "0::/init.scope",
+                    "root",
+                    "168884",
+                    "13184",
+                    "00:46:24",
+                    "441077220-16:41:36",
+                    "1",
+                    "/sbin/init",
+                ],
+                ["-", "root", "3342", "1604", "00:00:00", "00:00", "59928", "cat"],
+                ["[time]"],
+                ["1705152577"],
+                ["[processes]"],
+                ["[header]", "CGROUP", "USER", "VSZ", "RSS", "TIME", "ELAPSED", "PID", "COMMAND"],
+                ["-", "root", "3352", "1664", "00:00:00", "00:00", "59928", "cat"],
+            ],
+            (
+                1,
+                [
+                    (
+                        ps.PsInfo(
+                            user="root",
+                            virtual=168884,
+                            physical=13184,
+                            cputime="00:46:24/441077220-16:41:36",
+                            process_id="1",
+                            cgroup="0::/init.scope",
+                        ),
+                        ["/sbin/init"],
+                    ),
+                    (
+                        ps.PsInfo(
+                            user="root",
+                            virtual=3352,
+                            physical=1664,
+                            cputime="00:00:00/00:00",
+                            process_id="59928",
+                            cgroup="-",
+                        ),
+                        ["cat"],
+                    ),
+                ],
+                1705152576,
+            ),
+            id="multiple_sections",
         ),
     ],
 )

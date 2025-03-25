@@ -1,0 +1,10 @@
+title: AudioCodes: Operational State Redundant
+agents: snmp
+catalog: agentless
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the operational state of every redundant module in an AudioCodes device.
+
+discovery:
+ One service is created for every redundant module.

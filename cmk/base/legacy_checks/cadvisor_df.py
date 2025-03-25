@@ -8,9 +8,11 @@ import json
 from collections.abc import Iterable, Mapping
 from typing import Any
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 Section = Mapping[str, Any]
 
@@ -45,6 +47,7 @@ def check_cadvisor_df(item, _params, parsed):
 
 
 check_info["cadvisor_df"] = LegacyCheckDefinition(
+    name="cadvisor_df",
     parse_function=parse_cadvisor_df,
     service_name="Filesystem",
     discovery_function=discover_cadvisor_df,

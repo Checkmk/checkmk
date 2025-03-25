@@ -1,0 +1,71 @@
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mklink")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+
+# static linking of protobuf because of linking issues with libgcc and listdc++.
+# Nowadays we are shipping those, so dynamic linking should work as well.
+pkg_files(
+    name = "protobuf_bin",
+    srcs = ["@com_google_protobuf//:protoc"],
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+    prefix = "bin",
+)
+
+pkg_files(
+    name = "protobuf_lib",
+    srcs = [
+        "@com_google_protobuf//:protoc_lib",
+    ],
+    excludes = ["libprotoc_lib.a"],
+)
+
+# Workaround as long as we do not build the python wheel with Bazel (CMK-14608)
+pkg_mklink(
+    name = "protobuf_lib_link",
+    link_name = "libprotobuf.so.31",
+    target = "libprotoc_lib.so",
+)
+
+pkg_files(
+    name = "well_known_proto_files",
+    srcs = [
+        "@com_google_protobuf//:well_known_type_protos",
+    ],
+)
+
+pkg_filegroup(
+    name = "well_known_protos",
+    srcs = [
+        ":well_known_proto_files",
+    ],
+    prefix = "include/google/protobuf",
+)
+
+pkg_filegroup(
+    name = "protobuf_library",
+    srcs = [
+        ":protobuf_lib",
+        ":protobuf_lib_link",
+    ],
+    prefix = "lib",
+)
+
+pkg_filegroup(
+    name = "protobuf",
+    srcs = [
+        ":protobuf_bin",
+        ":protobuf_library",
+        ":well_known_protos",
+    ],
+    visibility = ["//omd:__pkg__"],
+)
+
+pkg_tar(
+    name = "protobuf_tar",
+    srcs = [
+        ":protobuf",
+    ],
+    package_file_name = "protobuf.tar",
+    visibility = ["//omd:__pkg__"],
+)

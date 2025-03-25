@@ -4,42 +4,72 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 PIDFILE="${OMD_ROOT}/tmp/run/rabbitmq.pid"
-RABBITMQ_NODENAME="rabbit-###SITE###"
+RABBITMQ_NODENAME="rabbit-${OMD_SITE}@localhost"
 RABBITMQ_LOG_BASE="${OMD_ROOT}/var/log/rabbitmq"
 RABBITMQ_MNESIA_BASE="${OMD_ROOT}/var/rabbitmq/mnesia"
 RABBITMQ_CONFIG_FILES="${OMD_ROOT}/etc/rabbitmq/conf.d"
+RABBITMQ_ADVANCED_CONFIG_FILE="${OMD_ROOT}/etc/rabbitmq/advanced_conf.d/00-advanced.conf"
 RABBITMQ_ENABLED_PLUGINS_FILE="${OMD_ROOT}/etc/rabbitmq/enabled_plugins"
 RABBITMQ_DIST_PORT="${CONFIG_RABBITMQ_DIST_PORT:?}"
-EXECUTE="${OMD_ROOT}/bin/rabbitmq-server"
+RABBITMQ_PORT="${CONFIG_RABBITMQ_PORT:?}"
+RABBITMQ_DIAGNOSTICS="${OMD_ROOT}/lib/rabbitmq/sbin/rabbitmq-diagnostics"
+RABBITMQCTL="${OMD_ROOT}/lib/rabbitmq/sbin/rabbitmqctl"
+BROKER_CERTIFICATES=$OMD_ROOT/bin/message-broker-certs
+EXECUTE="${OMD_ROOT}/lib/rabbitmq/sbin/rabbitmq-server"
+ERL_EPMD_ADDRESS="::1"
+# Control number of Erlang schedulers and amount of memory allocated for constant data
+RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS="+S 2:2 +MIscs 32"
+# Control the number of arenas that the erlang memory allocator can use for multi-threaded applications
+MALLOC_ARENA_MAX="1"
+INITLOG="${RABBITMQ_LOG_BASE}/init.log"
+REMOTE_PIGGYBACK_HUB_STATES_FILE="${OMD_ROOT}/etc/check_mk/remote_piggyback_hub_status"
 
 getpid() {
-    cat "${PIDFILE}" 2>/dev/null
+    cat "${1}" 2>/dev/null
 }
 
 process_is_running() {
-    [ -e "${PIDFILE}" ] && kill -0 "$(getpid)" 2>/dev/null
+    # when the process is killed, and the pidfile already removed
+    # the process can still run for a short time.
+    kill -0 "$1" 2>/dev/null
 }
 
 await_process_stop() {
     max=$(("${1}" * 10))
     for N in $(seq "${max}"); do
-        process_is_running || return 0
+        process_is_running "$2" || return 0
         [ $((N % 10)) -eq 0 ] && printf "."
         sleep 0.1
     done
     return 1
 }
 
+rabbitmq_accepting_connections() {
+    "${RABBITMQ_DIAGNOSTICS}" check_port_listener --node "${RABBITMQ_NODENAME}" "${RABBITMQ_PORT}"
+    # no idea why we can't use this anymore; it will fail for the management plugin
+    # "${RABBITMQ_DIAGNOSTICS}" check_port_connectivity --node "${RABBITMQ_NODENAME}"
+}
+
 await_process_start() {
+    # Only write output in the end, otherwise we clobber the logfile.
     max=$(("${1}" * 10))
     # If the PIDFILE gets filled, rabbitmq started
     for N in $(seq "${max}"); do
-        [ -s "${PIDFILE}" ] && return 0
-        [ -e "${PIDFILE}" ] || return 1
-        [ $((N % 10)) -eq 0 ] && printf "."
+        [ -s "${PIDFILE}" ] && rabbitmq_accepting_connections &>/dev/null && break
+        [ -e "${PIDFILE}" ] || {
+            date +"%F %T.%N RabbitMQ failed to start (pidfile vanished)"
+            return 1
+        }
         sleep 0.1
     done
-    # give up after timeout.
+
+    # once again, mostly to get the output of the diagnostics call
+    [ -s "${PIDFILE}" ] && rabbitmq_accepting_connections && {
+        date +"%F %T.%N RabbitMQ considered ready"
+        return 0
+    }
+
+    date +"%F %T.%N RabbitMQ failed to start (giving up after timeout)"
     return 1
 }
 
@@ -58,22 +88,57 @@ exit_failure() {
     exit 1
 }
 
+ensure_broker_certs() {
+    printf "Ensuring broker certificates presence...\n"
+    if [ ! -f "${OMD_ROOT}/etc/rabbitmq/ssl/cert.pem" ]; then
+        printf "Creating broker certificates...\n"
+        "${BROKER_CERTIFICATES}" "${OMD_ROOT}" "${OMD_SITE}"
+    fi
+}
+
+stop_and_reset_app() {
+    "${RABBITMQCTL}" -n "${RABBITMQ_NODENAME}" stop_app &>/dev/null
+    "${RABBITMQCTL}" -n "${RABBITMQ_NODENAME}" reset &>/dev/null
+}
+
+start_app() {
+    "${RABBITMQCTL}" -n "${RABBITMQ_NODENAME}" start_app &>/dev/null
+}
+
+stop_process() {
+    stop_and_reset_app
+    printf "killing %s..." "${1}"
+    kill "${1}" 2>/dev/null
+}
+
+local_rabbimq_enabled() {
+    # only enable rabbitmq if there's at least one service that needs it
+    # on the local or remote sites
+    [ "${CONFIG_PIGGYBACK_HUB:?}" = "on" ]
+}
+
+remote_rabbimq_enabled() {
+    cut -d' ' -f2 "${REMOTE_PIGGYBACK_HUB_STATES_FILE}" 2>/dev/null | grep -q "on"
+}
+
+local_rabbimq_enabled || remote_rabbimq_enabled || exit 5
+
 case "$1" in
 
     start-blocking)
-        # this is just a temporary no-op:
-        trap 'rm --force "${PIDFILE}"' EXIT
-        flock "${PIDFILE}" --command "echo $$ >'${PIDFILE}'; while true; do sleep 1000; done"
-        # to test with systems rabbitmq: comment out the above two lines, and uncomment the following line
-        # EXECUTE=/usr/lib/rabbitmq/bin/rabbitmq-server
+        ensure_broker_certs
 
         RABBITMQ_NODENAME="${RABBITMQ_NODENAME}" \
             RABBITMQ_ENABLED_PLUGINS_FILE="${RABBITMQ_ENABLED_PLUGINS_FILE}" \
             RABBITMQ_CONFIG_FILES="${RABBITMQ_CONFIG_FILES}" \
+            RABBITMQ_ADVANCED_CONFIG_FILE="${RABBITMQ_ADVANCED_CONFIG_FILE}" \
             RABBITMQ_LOG_BASE="${RABBITMQ_LOG_BASE}" \
             RABBITMQ_PID_FILE="${PIDFILE}" \
             RABBITMQ_MNESIA_BASE="${RABBITMQ_MNESIA_BASE}" \
             RABBITMQ_DIST_PORT="${RABBITMQ_DIST_PORT}" \
+            ERL_EPMD_ADDRESS="${ERL_EPMD_ADDRESS}" \
+            RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS="${RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS}" \
+            MALLOC_ARENA_MAX="${MALLOC_ARENA_MAX}" \
             flock "${PIDFILE}" --command "${EXECUTE}"
         rm --force "${PIDFILE}" # should be removed by rabbitmq itself
         ;;
@@ -81,16 +146,25 @@ case "$1" in
     start)
         printf "Starting rabbitmq..."
         if ! flock --nonblock "${PIDFILE}" --command :; then
-            exit_successfully 'already running'
+            exit_successfully 'already running.'
         fi
+
+        # set locale to avoid irrelevant warnings in log
+        export LANG="C.utf8"
+        export LC_CTYPE="C.utf8"
 
         touch "${PIDFILE}"
         mkdir -p "${RABBITMQ_LOG_BASE}"
 
-        nohup "${0}" "start-blocking" &>"${RABBITMQ_LOG_BASE}/init.log" &
+        nohup "${0}" "start-blocking" &>"${INITLOG}" &
 
         # try for one minute to interpret the outcome
-        await_process_start 60 && exit_successfully "OK"
+        if await_process_start 60 &>>"${INITLOG}"; then
+            RABBITMQ_NODENAME="${RABBITMQ_NODENAME}" \
+                RABBITMQCTL="${RABBITMQCTL}" \
+                cmk-monitor-broker --setup &>>"${INITLOG}"
+            exit_successfully "OK"
+        fi
 
         # Give up
         exit_failure "failed"
@@ -109,31 +183,25 @@ case "$1" in
             exit_successfully "not running (PID file orphaned)"
         fi
 
-        printf "killing %s..." "${PID}"
+        stop_process "${PID}"
 
-        if ! kill "${PID}" 2>/dev/null; then
-            # Remove the stale pidfile to have a clean state after this
-            rm "${PIDFILE}"
-            exit_successfully "OK"
-        fi
-
-        # signal could be sent. Patiently wait for 1 minute.
-        if await_process_stop 60; then
+        # signal could be sent. Patiently wait for max 1 minute.
+        if await_process_stop 60 "${PID}"; then
             exit_successfully "OK"
         fi
 
         # We insist...
         force_kill "${PID}"
-        if await_process_stop 10; then
+        if await_process_stop 10 "${PID}"; then
             exit_successfully "OK"
         fi
         # Give up
         exit_failure "failed"
         ;;
 
-    restart | reload)
-        $0 stop
-        $0 start
+    reload)
+        stop_and_reset_app
+        start_app
         ;;
 
     status)
@@ -150,7 +218,7 @@ case "$1" in
         exit_successfully "running"
         ;;
     *)
-        exit_failure "Usage: rabbitmq {start|stop|restart|reload|status}"
+        exit_failure "Usage: rabbitmq {start|stop|reload|status}"
         ;;
 
 esac

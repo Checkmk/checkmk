@@ -32,7 +32,6 @@ def check_arc_raid_status(
 ) -> CheckResult:
     for line in section:
         if line[0] == item:
-
             raid_state = line[-1]
             match raid_state:
                 case "Checking" | "Normal":

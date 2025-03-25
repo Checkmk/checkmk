@@ -16,6 +16,7 @@ from cmk.base.check_legacy_includes.temperature import (
     Number,
 )
 
+from cmk.agent_based.v1 import IgnoreResultsError
 from cmk.plugins.lib.temperature import TempParamDict, TempParamType, TrendComputeDict
 
 from .checktestlib import assertCheckResultsEqual, CheckResult, mock_item_state
@@ -198,7 +199,11 @@ from .checktestlib import assertCheckResultsEqual, CheckResult, mock_item_state
         ),
     ],
 )
-def test_check_temperature(params: tuple[Number, TempParamType, str | None], kwargs, expected: Iterable[object] | CheckResult | None) -> None:  # type: ignore[no-untyped-def]
+def test_check_temperature(  # type: ignore[no-untyped-def]
+    params: tuple[Number, TempParamType, str | None],
+    kwargs,
+    expected: Iterable[object] | CheckResult | None,
+) -> None:
     result = check_temperature(*params, **kwargs)
     assertCheckResultsEqual(CheckResult(result), CheckResult(expected))
 
@@ -275,12 +280,38 @@ _WATO_DICT: TrendComputeDict = {
     ],
 )
 def test_check_temperature_trend(test_case: Entry) -> None:
-
     time = dt.datetime(2014, 1, 1, 0, 0, 0)
 
     state = {"temp.foo.delta": (unix_ts(time), test_case.reading), "temp.foo.trend": (0, 0)}
 
     with mock_item_state(state):
+        with time_machine.travel(time + dt.timedelta(seconds=test_case.seconds_elapsed)):
+            result = check_temperature_trend(
+                test_case.reading + test_case.growth,
+                test_case.wato_dict,
+                "c",
+                100,  # crit, don't boil
+                0,  # crit_lower, don't freeze over
+                "foo",
+            )
+            assertCheckResultsEqual(CheckResult(result), CheckResult(test_case.expected))
+
+
+def test_check_temperature_trend_exception() -> None:
+    test_case = Entry(
+        reading=5,
+        growth=0.5,
+        seconds_elapsed=10 * 60,
+        wato_dict=_WATO_DICT,
+        expected=(3, "Value Store does not have any valid values"),
+    )
+
+    time = dt.datetime(2014, 1, 1, 0, 0, 0)
+
+    def raises_exception(*args, **kwargs) -> None:  # type: ignore[no-untyped-def]
+        raise IgnoreResultsError("Value Store does not have any valid values")
+
+    with mock_item_state(raises_exception):
         with time_machine.travel(time + dt.timedelta(seconds=test_case.seconds_elapsed)):
             result = check_temperature_trend(
                 test_case.reading + test_case.growth,

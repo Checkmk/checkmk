@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.4.0b1"
+CMK_VERSION="2.5.0b1"
 
 # SAP HANA Plugin for Checkmk Agent on Linux
 # Copyright Gerd Stolz - SVA - 2016
@@ -880,10 +880,15 @@ else
         INSTANCE_STATUS=$(mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "SYSTEMDB" "$(query_sap_hana_db_status)" "$CREDENTIALS" "$SSLOPTION")
         rc=$?
 
-        if [ $rc != 0 ]; then
-            INSTANCE_STATUS_ERROR=$INSTANCE_STATUS
-            echo "$INSTANCE_STATUS_ERROR" 1>&2
-        fi
+        case "${rc}" in
+            0)
+                INSTANCE_STATUS_ERROR=""
+                ;;
+            *)
+                INSTANCE_STATUS_ERROR=$INSTANCE_STATUS
+                echo "$INSTANCE_STATUS_ERROR" 1>&2
+                ;;
+        esac
 
         set_sap_hana_version "$INSTANCE_USER"
 
@@ -898,6 +903,5 @@ else
             echo "[[${SID} ${INSTANCE}]]"
             echo "$INSTANCE_STATUS_ERROR"
         fi
-
     done
 fi

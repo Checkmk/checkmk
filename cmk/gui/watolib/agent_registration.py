@@ -8,8 +8,10 @@ from collections.abc import Mapping, Sequence
 
 from livestatus import SiteId
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.agent_registration import get_uuid_link_manager
-from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.hostaddress import HostName
 
 from cmk.gui.config import active_config
 from cmk.gui.http import request
@@ -35,23 +37,29 @@ def remove_tls_registration(hosts_by_site: Mapping[SiteId, Sequence[HostName]]) 
         )
 
 
-class AutomationRemoveTLSRegistration(AutomationCommand):
-    def command_name(self):
+class AutomationRemoveTLSRegistration(AutomationCommand[Sequence[HostName]]):
+    def command_name(self) -> str:
         return "remove-tls-registration"
 
     def get_request(self) -> Sequence[HostName]:
-        return json.loads(request.get_ascii_input_mandatory("host_names", "[]"))
-
-    def execute(self, api_request: Sequence[HostName]) -> None:
-        valid_hosts = [hostname for hostname in api_request if HostAddress.is_valid(hostname)]
-        if len(valid_hosts) < len(api_request):
+        value = json.loads(request.get_ascii_input_mandatory("host_names", "[]"))
+        if not isinstance(value, list):
+            raise MKGeneralException(f"Not a list of host names: {value}")
+        valid_hostnames, invalid_hostnames = [], []
+        for hostname in value:
+            try:
+                valid_hostnames.append(HostName(hostname))
+            except ValueError:
+                invalid_hostnames.append(hostname)
+        if invalid_hostnames:
             logger.warning(
                 "remove-tls-registration called with the following invalid host names: %s",
-                ", ".join(
-                    hostname for hostname in api_request if not HostAddress.is_valid(hostname)
-                ),
+                ", ".join(invalid_hostnames),
             )
-        _remove_tls_registration(valid_hosts)
+        return valid_hostnames
+
+    def execute(self, api_request: Sequence[HostName]) -> None:
+        _remove_tls_registration(api_request)
 
 
 def _remove_tls_registration(host_names: Sequence[HostName]) -> None:

@@ -48,14 +48,7 @@ def check_dell_chassis_power(section: StringTable) -> CheckResult:
     }
     infotext, state = state_table.get(status, ("unknown state, ", State.UNKNOWN))
 
-    infotext += (
-        "Power: {:.1f} W, PotentialPower: {:.1f} W, MaxPower: {:.1f} W, Current: {:.1f} A".format(
-            savefloat(power),
-            savefloat(PotentialPower),
-            savefloat(MaxPowerSpec),
-            savefloat(current),
-        )
-    )
+    infotext += f"Power: {savefloat(power):.1f} W, PotentialPower: {savefloat(PotentialPower):.1f} W, MaxPower: {savefloat(MaxPowerSpec):.1f} W, Current: {savefloat(current):.1f} A"
 
     yield Result(state=state, summary=infotext)
     yield Metric("power", savefloat(power))

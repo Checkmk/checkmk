@@ -17,16 +17,15 @@ import asyncio
 import json
 import logging
 import os
+import re
 import subprocess
 import sys
 import time
 from collections.abc import Mapping, Sequence
-from functools import reduce
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict
 
 import yaml
-from typing_extensions import TypedDict
 
 LOG = logging.getLogger("validate_changes")
 
@@ -42,6 +41,8 @@ class StageInfo(TypedDict, total=False):
     ENV_VARS: Vars
     ENV_VAR_LIST: Sequence[str]
     SEC_VAR_LIST: Sequence[str]
+    JENKINS_API_ACCESS: bool
+    BAZEL_LOCKS_AMOUNT: int
     COMMAND: str
     TEXT_ON_SKIP: str
     SKIPPED: str
@@ -114,6 +115,8 @@ def to_stage_info(raw_stage: Mapping[Any, Any]) -> StageInfo:
         DIR=str(raw_stage.get("DIR", "")),
         ENV_VARS={str(k): str(v) for k, v in raw_stage.get("ENV_VARS", {}).items()},
         SEC_VAR_LIST=list(raw_stage.get("SEC_VAR_LIST", [])),
+        JENKINS_API_ACCESS=bool(raw_stage.get("JENKINS_API_ACCESS", False)),
+        BAZEL_LOCKS_AMOUNT=int(raw_stage.get("BAZEL_LOCKS_AMOUNT", -1)),
         COMMAND=str(raw_stage["COMMAND"]),
         TEXT_ON_SKIP=str(raw_stage.get("TEXT_ON_SKIP", "")),
         RESULT_CHECK_TYPE=str(raw_stage.get("RESULT_CHECK_TYPE", "")),
@@ -125,7 +128,7 @@ def load_file(filename: Path) -> tuple[Sequence[Vars], Stages]:
     """Read and parse a YAML file containing 'VARIABLES' and 'STAGES' and return a tuple with
     typed content"""
     try:
-        raw_data = yaml.load(Path.read_text(filename), Loader=yaml.BaseLoader)
+        raw_data = yaml.safe_load(Path.read_text(filename))
     except FileNotFoundError:
         raise RuntimeError(
             f"Could not find {filename}. Must be a YAML file containing stage declarations."
@@ -142,7 +145,12 @@ def replace_variables(string: str, env_vars: Vars) -> str:
     >>> replace_variables("foo: ${foo}", {"foo": "bar"})
     'foo: bar'
     """
-    return reduce(lambda s, kv: str.replace(s, f"${{{kv[0]}}}", kv[1]), env_vars.items(), string)
+
+    def replace_match(match: re.Match) -> str:
+        var_name = match.group(1)
+        return env_vars.get(var_name, match.group(0))
+
+    return re.sub(r"\$\{(\w+)\}", replace_match, string)
 
 
 def apply_variables(in_data: StageInfo, env_vars: Vars) -> StageInfo:
@@ -153,6 +161,8 @@ def apply_variables(in_data: StageInfo, env_vars: Vars) -> StageInfo:
         DIR=replace_variables(in_data["DIR"], env_vars),
         ENV_VARS={k: replace_variables(v, env_vars) for k, v in in_data["ENV_VARS"].items()},
         SEC_VAR_LIST=list(in_data["SEC_VAR_LIST"]),
+        JENKINS_API_ACCESS=in_data.get("JENKINS_API_ACCESS", False),
+        BAZEL_LOCKS_AMOUNT=int(replace_variables(str(in_data["BAZEL_LOCKS_AMOUNT"]), env_vars)),
         COMMAND=replace_variables(in_data["COMMAND"], env_vars),
         TEXT_ON_SKIP=replace_variables(in_data["TEXT_ON_SKIP"], env_vars),
         RESULT_CHECK_TYPE=replace_variables(in_data["RESULT_CHECK_TYPE"], env_vars),
@@ -170,6 +180,8 @@ def finalize_stage(stage: StageInfo, env_vars: Vars, no_skip: bool) -> StageInfo
             DIR=stage.get("DIR", ""),
             ENV_VAR_LIST=[f"{k}={v}" for k, v in stage.get("ENV_VARS", {}).items()],
             SEC_VAR_LIST=list(stage.get("SEC_VAR_LIST", [])),
+            JENKINS_API_ACCESS=stage.get("JENKINS_API_ACCESS", False),
+            BAZEL_LOCKS_AMOUNT=int(stage.get("BAZEL_LOCKS_AMOUNT", -1)),
             COMMAND=stage["COMMAND"],
             RESULT_CHECK_TYPE=stage["RESULT_CHECK_TYPE"],
             RESULT_CHECK_FILE_PATTERN=stage["RESULT_CHECK_FILE_PATTERN"],
@@ -178,7 +190,7 @@ def finalize_stage(stage: StageInfo, env_vars: Vars, no_skip: bool) -> StageInfo
         else StageInfo(  #
             NAME=stage["NAME"],
             SKIPPED=(
-                f'Reason: {stage.get("TEXT_ON_SKIP") or "not provided"},'
+                f"Reason: {stage.get('TEXT_ON_SKIP') or 'not provided'},"
                 f" Condition: {condition_vars}"
             ),
         )
@@ -236,7 +248,17 @@ def evaluate_vars(raw_vars: Sequence[Vars], env_vars: Vars) -> Vars:
             )
 
         LOG.debug("evaluate %r run command %r", e["NAME"], cmd)
-        replace_newlines = e.get("REPLACE_NEWLINES", "false") in (
+        replace_newlines = convert_newline_entry_to_bool(e.get("REPLACE_NEWLINES", False))
+        cmd_result = run_shell_command(cmd, replace_newlines)
+        LOG.debug("set to %r", cmd_result)
+        result[e["NAME"]] = cmd_result
+
+    return result
+
+
+def convert_newline_entry_to_bool(entry: str | bool) -> bool:
+    if isinstance(entry, str):
+        return entry.lower() in (
             "y",
             "yes",
             "t",
@@ -244,11 +266,8 @@ def evaluate_vars(raw_vars: Sequence[Vars], env_vars: Vars) -> Vars:
             "on",
             "1",
         )
-        cmd_result = run_shell_command(cmd, replace_newlines)
-        LOG.debug("set to %r", cmd_result)
-        result[e["NAME"]] = cmd_result
 
-    return result
+    return bool(entry)
 
 
 def compile_stage_info(stages_file: Path, env_vars: Vars, no_skip: bool) -> tuple[Vars, Stages]:

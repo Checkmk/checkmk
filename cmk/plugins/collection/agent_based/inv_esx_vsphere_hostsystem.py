@@ -45,8 +45,8 @@ SECTION_TO_INVENTORY: dict[str, SUB_SECTION] = {
             "hardware.cpuInfo.numCpuPackages": ("cpus", FIRST_ELEMENT),
             "hardware.cpuInfo.numCpuCores": ("cores", FIRST_ELEMENT),
             "hardware.cpuInfo.numCpuThreads": ("threads", FIRST_ELEMENT),
-            "hardware.cpuPkg.description.1": ("model", JOIN_LIST),
-            "hardware.cpuPkg.vendor.1": ("vendor", FIRST_ELEMENT),
+            "hardware.cpuPkg.description.0": ("model", JOIN_LIST),
+            "hardware.cpuPkg.vendor.0": ("vendor", FIRST_ELEMENT),
             "hardware.cpuPkg.busHz.0": ("bus_speed", FIRST_ELEMENT_AS_FLOAT),
         },
     },
@@ -97,7 +97,7 @@ def inv_esx_vsphere_hostsystem(section: Section) -> InventoryResult:
         for section_key, (inv_key, transform) in sub_section["translation"].items():
             if section_key in section:
                 # Found after update to 2.9.0. Seems to be a false positive
-                data[inv_key] = transform(section[section_key])  # pylint: disable=not-callable
+                data[inv_key] = transform(section[section_key])
 
         # Handle some corner cases for hw and sys
         if name == "hw":

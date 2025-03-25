@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.dell import DETECT_DELL_COMPELLENT
+
+check_info = {}
 
 
 def inventory_dell_compellent_folder(info):
@@ -32,6 +33,7 @@ def parse_dell_compellent_folder(string_table: StringTable) -> StringTable:
 
 
 check_info["dell_compellent_folder"] = LegacyCheckDefinition(
+    name="dell_compellent_folder",
     parse_function=parse_dell_compellent_folder,
     detect=DETECT_DELL_COMPELLENT,
     fetch=SNMPTree(

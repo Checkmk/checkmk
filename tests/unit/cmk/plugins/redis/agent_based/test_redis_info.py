@@ -118,7 +118,6 @@ def test_check_redis_info(
         datetime.datetime.fromisoformat("2019-12-06T11:36:00Z").replace(tzinfo=ZoneInfo("UTC")),
         tick=False,
     ):
-
         assert list(check_redis_info(item, params, section)) == expected
 
 
@@ -186,7 +185,6 @@ def test_discover_redis_info_persistence(section, expected):
 def test_check_redis_info_persistence(
     item: str, params: Mapping[str, Any], section: Section, expected: CheckResult
 ) -> None:
-
     with time_machine.travel(
         datetime.datetime.fromisoformat("2019-12-06T11:36:00Z").replace(tzinfo=ZoneInfo("UTC")),
         tick=False,

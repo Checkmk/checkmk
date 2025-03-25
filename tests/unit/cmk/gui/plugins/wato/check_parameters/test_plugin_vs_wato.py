@@ -3,34 +3,35 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
 import abc
+import logging
 import typing as t
-from pprint import pprint
+from pprint import pformat
 
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets.definition import RuleGroup
 
-from cmk.base.api.agent_based.plugin_classes import CheckPlugin, InventoryPlugin
+from cmk.checkengine.inventory import InventoryPlugin
+
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins, CheckPlugin
 
 from cmk.gui.inventory import RulespecGroupInventory
 from cmk.gui.plugins.wato.utils import RulespecGroupCheckParametersDiscovery
+from cmk.gui.utils.rule_specs.legacy_converter import GENERATED_GROUP_PREFIX
+from cmk.gui.wato import RulespecGroupDiscoveryCheckParameters
 from cmk.gui.watolib.rulespecs import (
     CheckParameterRulespecWithItem,
     CheckParameterRulespecWithoutItem,
     Rulespec,
     rulespec_registry,
+    RulespecSubGroup,
 )
+
+logger = logging.getLogger(__name__)
 
 T = t.TypeVar("T")
 TF = t.TypeVar("TF", bound=Rulespec)
 TC = t.TypeVar("TC", bound=t.Union[CheckPlugin, InventoryPlugin])
-
-
-class FixRegister:  # TODO: make the original class importable?!
-    check_plugins: t.Dict[str, CheckPlugin]
-    inventory_plugins: t.Dict[str, InventoryPlugin]
 
 
 class MergeKey(t.NamedTuple):
@@ -133,11 +134,11 @@ class PluginInventory(Plugin[InventoryPlugin]):
     type = "inventory"
 
     def get_merge_name(self) -> str:
-        assert self._element.inventory_ruleset_name
-        return str(self._element.inventory_ruleset_name)
+        assert self._element.ruleset_name
+        return str(self._element.ruleset_name)
 
     def get_default_parameters(self) -> t.Optional[ParametersTypeAlias]:
-        return self._element.inventory_default_parameters
+        return self._element.defaults
 
 
 class PluginCheck(Plugin[CheckPlugin]):
@@ -196,21 +197,25 @@ class WatoCheck(Wato[t.Union[CheckParameterRulespecWithoutItem, CheckParameterRu
         return isinstance(self._element, CheckParameterRulespecWithItem)
 
 
-def load_plugin(fix_register: FixRegister) -> t.Iterator[PluginProtocol]:
-    for check_element in fix_register.check_plugins.values():
+def load_plugin(agent_based_plugins: AgentBasedPlugins) -> t.Iterator[PluginProtocol]:
+    for check_element in agent_based_plugins.check_plugins.values():
         if check_element.check_ruleset_name is not None:
             yield PluginCheck(check_element)
-    for discovery_element in fix_register.check_plugins.values():
+    for discovery_element in agent_based_plugins.check_plugins.values():
         if discovery_element.discovery_ruleset_name is not None:
             yield PluginDiscovery(discovery_element)
-    for inventory_element in fix_register.inventory_plugins.values():
-        if inventory_element.inventory_ruleset_name is not None:
+    for inventory_element in agent_based_plugins.inventory_plugins.values():
+        if inventory_element.ruleset_name is not None:
             yield PluginInventory(inventory_element)
 
 
 def load_wato() -> t.Iterator[WatoProtocol]:
     for element in rulespec_registry.values():
-        if element.group == RulespecGroupCheckParametersDiscovery:
+        if isinstance(group := element.group(), RulespecGroupCheckParametersDiscovery) or (
+            isinstance(group, RulespecSubGroup)
+            and GENERATED_GROUP_PREFIX in group.__class__.__name__
+            and issubclass(group.main_group, RulespecGroupDiscoveryCheckParameters)
+        ):
             yield WatoDiscovery(element)
         elif element.group == RulespecGroupInventory:
             yield WatoInventory(element)
@@ -224,9 +229,9 @@ def load_wato() -> t.Iterator[WatoProtocol]:
             yield WatoCheck(element)
 
 
-def test_plugin_vs_wato(fix_register: FixRegister) -> None:
+def test_plugin_vs_wato(agent_based_plugins: AgentBasedPlugins) -> None:
     error_reporter = ErrorReporter()
-    for plugin, wato in merge(sorted(load_plugin(fix_register)), sorted(load_wato())):
+    for plugin, wato in merge(sorted(load_plugin(agent_based_plugins)), sorted(load_wato())):
         if plugin is None and wato is not None:
             error_reporter.report_wato_unused(wato)
         elif wato is None and plugin is not None:
@@ -245,7 +250,6 @@ class ErrorReporter:
         # type # name
         ("check", RuleGroup.CheckgroupParameters("checkmk_agent_plugins")),
         ("check", RuleGroup.CheckgroupParameters("ceph_status")),
-        ("check", RuleGroup.CheckgroupParameters("entersekt_soaprrors")),
         ("check", RuleGroup.CheckgroupParameters("mailqueue_length")),
         ("check", RuleGroup.CheckgroupParameters("mssql_blocked_sessions")),
         ("check", RuleGroup.CheckgroupParameters("postgres_sessions")),
@@ -253,6 +257,7 @@ class ErrorReporter:
         ("check", RuleGroup.CheckgroupParameters("systemd_services")),
         ("check", RuleGroup.CheckgroupParameters("temperature_trends")),
         ("check", RuleGroup.CheckgroupParameters("prism_container")),
+        ("check", RuleGroup.CheckgroupParameters("azure_databases")),  # deprecated
         ("discovery", "discovery_systemd_units_services_rules"),
         ("inventory", RuleGroup.ActiveChecks("cmk_inv")),
         ("inventory", RuleGroup.InvParameters("inv_if")),
@@ -264,27 +269,26 @@ class ErrorReporter:
         ),  # deprecated since 2.2
     }
 
-    KNOWN_WATO_MISSING = {
+    ENFORCING_ONLY_RULESETS = {
+        # These plugins only have rules to be enforced (and configured),
+        # but no rules to configure discovered services.
+        # This may or may not be intentional and/or reasonable.
+        # If the plugins are discovered by default, it is likely to be unintentional.
         # type # instance # wato
-        ("check", "3ware_units", "raid"),
-        ("check", "brocade_tm", "brocade_tm"),
-        ("check", "checkpoint_vsx_status", "checkpoint_vsx_traffic_status"),
-        ("check", "entersekt_soaperrors", "entersekt_soaperrors"),
-        ("check", "lsi_array", "raid"),
-        ("check", "md", "raid"),
-        ("check", "mongodb_replication_info", "mongodb_replication_info"),
-        ("check", "moxa_iologik_register", "iologik_register"),
-        ("check", "netstat", "tcp_connections"),
+        ("check", "3ware_units", "raid"),  # has no params, but can be enforced.
+        ("check", "lsi_array", "raid"),  # has no params, but can be enforced.
+        ("check", "md", "raid"),  # has no params, but can be enforced.
+        ("check", "netstat", "tcp_connections"),  # can only be enforced, never discovered.
         ("check", "nvidia_errors", "hw_errors"),
-        ("check", "qlogic_fcport", "qlogic_fcport"),
-        ("check", "stormshield_cluster_node", "stormshield_quality"),
-        ("check", "stormshield_policy", "stormshield"),
-        ("check", "stormshield_updates", "stormshield_updates"),
         ("check", "vbox_guest", "vm_state"),
         ("check", "win_netstat", "tcp_connections"),
         ("check", "wmic_process", "wmic_process"),
         ("check", "zertificon_mail_queues", "zertificon_mail_queues"),
         ("check", "zpool_status", "zpool_status"),
+    }
+
+    KNOWN_WATO_MISSING = {
+        # type # instance # wato
         ("discovery", "fileinfo", "fileinfo_groups"),
         ("discovery", "fileinfo_groups", "fileinfo_groups"),
         ("discovery", "sap_hana_fileinfo", "fileinfo_groups"),
@@ -299,7 +303,7 @@ class ErrorReporter:
         self._last_exception: t.Optional[DefaultLoadingFailed] = None
         self._failed = False
         self._known_wato_unused = self.KNOWN_WATO_UNUSED.copy()
-        self._known_wato_missing = self.KNOWN_WATO_MISSING.copy()
+        self._known_wato_missing = self.KNOWN_WATO_MISSING | self.ENFORCING_ONLY_RULESETS
 
     def failed(self) -> bool:
         return self._failed
@@ -309,7 +313,7 @@ class ErrorReporter:
         if element in self._known_wato_unused:
             self._known_wato_unused.remove(element)
             return
-        print(f"{wato.get_description()} is not used by any plugin")
+        logger.info(f"{wato.get_description()} is not used by any plugin")
         self._failed |= True
 
     def report_wato_missing(self, plugin: PluginProtocol) -> None:
@@ -317,7 +321,7 @@ class ErrorReporter:
         if element in self._known_wato_missing:
             self._known_wato_missing.remove(element)
             return
-        print(
+        logger.info(
             f"{plugin.get_description()} wants to use "
             f"wato ruleset '{plugin.get_merge_name()}' but this can not be found"
         )
@@ -339,11 +343,11 @@ class ErrorReporter:
         plugin: PluginCheck,
         wato: WatoCheck,
     ) -> None:
-        print(
+        logger.info(
             f"{plugin.get_description()} and {wato.get_description()} have different item requirements:"
         )
-        print("    wato   handles item:", wato.has_item())
-        print("    plug-in handles items:", plugin.has_item())
+        logger.info("    wato   handles item: %r", wato.has_item())
+        logger.info("    plug-in handles items: %r", plugin.has_item())
         self._failed |= True
 
     def _report_error_loading_defaults(
@@ -352,7 +356,7 @@ class ErrorReporter:
         wato: WatoProtocol,
         exception: Exception,
     ) -> None:
-        print(
+        logger.info(
             f"Loading the default value of {plugin.get_description()} "
             f"into {wato.get_description()} failed:\n    {exception.__class__.__name__}: {exception}"
         )
@@ -378,8 +382,8 @@ class ErrorReporter:
         `_known_*` set.
         """
         # ci does not report the variables, so we print them...
-        pprint(self._known_wato_missing)
-        pprint(self._known_wato_unused)
+        logger.info(pformat(self._known_wato_missing))
+        logger.info(pformat(self._known_wato_unused))
         assert len(self._known_wato_missing) == 0
         assert len(self._known_wato_unused) == 0
 

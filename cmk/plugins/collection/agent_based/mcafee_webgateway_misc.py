@@ -8,8 +8,7 @@ Where possibile the "McAfee" string has been removed in favor of more generic th
 The old plug-in names, value_store dict keys, and ruleset names have been kept for compatibility/history-keeping reasons.
 """
 
-
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, Service
 from cmk.plugins.lib import mcafee_gateway
 
@@ -24,7 +23,7 @@ def check_webgateway_misc(
     params: mcafee_gateway.MiscParams, section: mcafee_gateway.Section
 ) -> CheckResult:
     if section.client_count is not None:
-        yield from check_levels(
+        yield from check_levels_v1(
             section.client_count,
             levels_upper=params.get("clients"),
             metric_name="connections",
@@ -32,7 +31,7 @@ def check_webgateway_misc(
             render_func=str,
         )
     if section.socket_count is not None:
-        yield from check_levels(
+        yield from check_levels_v1(
             section.socket_count,
             levels_upper=params.get("network_sockets"),
             metric_name="open_network_sockets",

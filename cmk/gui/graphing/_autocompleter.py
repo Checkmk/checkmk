@@ -3,14 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable
-
 from cmk.gui.type_defs import Choices
-from cmk.gui.visuals import livestatus_query_bare
 
-from ._graph_templates_from_plugins import get_graph_template_choices, get_graph_templates
-from ._metrics import get_metric_spec, registered_metrics
-from ._utils import translated_metrics_from_row
+from ._from_api import metrics_from_api
+from ._metrics import registered_metric_ids_and_titles
 from ._valuespecs import metrics_of_query
 
 
@@ -22,35 +18,13 @@ def metrics_autocompleter(value: str, params: dict) -> Choices:
         return []
 
     if context:
-        metrics = set(metrics_of_query(context))
+        metrics = set(metrics_of_query(context, metrics_from_api))
     else:
-        metrics = set(registered_metrics())
+        metrics = set(registered_metric_ids_and_titles(metrics_from_api))
 
     return sorted(
         (v for v in metrics if _matches_id_or_title(value, v)),
         key=lambda a: a[1].lower(),
-    )
-
-
-def graph_templates_autocompleter(value: str, params: dict) -> Choices:
-    """Return the matching list of dropdown choices
-    Called by the webservice with the current input field value and the
-    completions_params to get the list of choices"""
-    if not params.get("context") and params.get("show_independent_of_context") is True:
-        choices: Iterable[tuple[str, str]] = get_graph_template_choices()
-    else:
-        choices = {
-            (template.id, template.title or str(get_metric_spec(template.id).title))
-            for row in livestatus_query_bare(
-                "service",
-                params["context"],
-                ["service_check_command", "service_perf_data", "service_metrics"],
-            )
-            for template in get_graph_templates(translated_metrics_from_row(row))
-        }
-
-    return sorted(
-        (v for v in choices if _matches_id_or_title(value, v)), key=lambda a: a[1].lower()
     )
 
 

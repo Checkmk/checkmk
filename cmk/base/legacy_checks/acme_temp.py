@@ -4,13 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.acme import ACME_ENVIRONMENT_STATES
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.plugins.lib.acme import DETECT_ACME
+from cmk.plugins.acme.agent_based.lib import ACME_ENVIRONMENT_STATES, DETECT_ACME
+
+check_info = {}
 
 # .1.3.6.1.4.1.9148.3.3.1.3.1.1.2.1 0 --> ACMEPACKET-ENVMON-MIB::apEnvMonTemperatureStatusType.1
 # .1.3.6.1.4.1.9148.3.3.1.3.1.1.2.2 0 --> ACMEPACKET-ENVMON-MIB::apEnvMonTemperatureStatusType.2
@@ -50,7 +50,7 @@ def check_acme_temp(item, params, info):
                 float(value_str),
                 params,
                 "acme_temp.%s" % item,
-                dev_status=dev_state,
+                dev_status=int(dev_state),
                 dev_status_name=dev_state_readable,
             )
     return None
@@ -61,6 +61,7 @@ def parse_acme_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["acme_temp"] = LegacyCheckDefinition(
+    name="acme_temp",
     parse_function=parse_acme_temp,
     detect=DETECT_ACME,
     fetch=SNMPTree(

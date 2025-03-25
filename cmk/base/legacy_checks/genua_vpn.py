@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.genua import DETECT_GENUA
+
+check_info = {}
 
 # .1.3.6.1.4.1.3717.2.1.3.1.1.1 1
 # .1.3.6.1.4.1.3717.2.1.3.1.1.2 2
@@ -46,12 +46,7 @@ def check_genua_vpn(item, params, info):
             if ip_opposite:
                 ip_info += " (%s)" % ip_opposite
 
-            infotext = "Hostname: {}{}, VPN private: {}, VPN remote: {}".format(
-                hostname_opposite,
-                ip_info,
-                vpn_private,
-                vpn_remote,
-            )
+            infotext = f"Hostname: {hostname_opposite}{ip_info}, VPN private: {vpn_private}, VPN remote: {vpn_remote}"
 
             if vpn_state == "2":
                 return 0, "Connected, %s" % infotext
@@ -64,6 +59,7 @@ def parse_genua_vpn(string_table: StringTable) -> StringTable:
 
 
 check_info["genua_vpn"] = LegacyCheckDefinition(
+    name="genua_vpn",
     parse_function=parse_genua_vpn,
     detect=DETECT_GENUA,
     fetch=SNMPTree(

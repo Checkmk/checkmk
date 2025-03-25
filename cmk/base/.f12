@@ -1,5 +1,14 @@
 #!/bin/bash
 set -e
 
-(cd ../../non-free/cmc-protocols && bash .f12)
+SITE=${SITE:-$(until [ "$PWD" == / ]; do if [ -e .site ]; then
+    cat .site
+    break
+else cd ..; fi; done)}
+SITE=${SITE:-$(omd sites --bare | head -n 1)}
+
 (cd .. && bash .f12)
+
+if [ -z "$ONLY_COPY" ]; then
+    sudo --login -u "$SITE" -- bash -c "omd restart automation-helper"
+fi

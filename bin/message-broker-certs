@@ -1,0 +1,69 @@
+#!/usr/bin/env python3
+# Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+"""Ensure the message broker certificates are created"""
+
+import argparse
+import logging
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+
+from cmk.utils.certs import MessagingTrustedCAs, SiteBrokerCA, SiteBrokerCertificate
+
+from cmk import messaging
+
+
+@dataclass(frozen=True)
+class Arguments:
+    omd_root: Path
+    site_name: str
+
+
+def initialize_message_broker_certs(omd_root: Path, site_name: str) -> None:
+    """Initialize the CA and create the certificate for use with the message broker.
+    These might be replaced by the config sync later.
+    """
+    ca = SiteBrokerCA(messaging.cacert_file(omd_root), messaging.ca_key_file(omd_root))
+    ca_cert_bundle = ca.create_and_persist(site_name)
+    MessagingTrustedCAs(messaging.trusted_cas_file(omd_root)).write(
+        ca_cert_bundle.certificate_path.read_bytes()
+    )
+
+    site_broker_ca = SiteBrokerCertificate(
+        messaging.site_cert_file(omd_root), messaging.site_key_file(omd_root)
+    )
+    site_broker_ca.persist(site_broker_ca.create_bundle(site_name, ca_cert_bundle))
+
+
+def _parse_arguments(argv: list[str]) -> Arguments:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("omd_root", help="The OMD root directory")
+    parser.add_argument("site_name", help="The site name")
+
+    args = parser.parse_args(argv[1:])
+    return Arguments(
+        omd_root=Path(args.omd_root),
+        site_name=str(args.site_name),
+    )
+
+
+def main(argv: list[str]) -> int:
+    logger = logging.getLogger("cmk-message-broker-certs")
+    logger.addHandler(handler := logging.StreamHandler(stream=sys.stdout))
+    handler.setFormatter(logging.Formatter("%(message)s"))
+    logger.setLevel(logging.INFO)
+
+    try:
+        args = _parse_arguments(argv)
+        initialize_message_broker_certs(args.omd_root, args.site_name)
+    except Exception as e:
+        logger.error("Error: %s", e)
+        return 1
+
+    return 0
+
+
+if __name__ == "__main__":
+    main(sys.argv)

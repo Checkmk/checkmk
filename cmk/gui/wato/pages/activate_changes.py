@@ -11,12 +11,10 @@ import json
 import os
 import tarfile
 from collections.abc import Collection, Iterator
-from dataclasses import asdict
-from typing import NamedTuple
-
-from six import ensure_str
 
 from livestatus import SiteConfiguration, SiteId
+
+from cmk.ccc.version import Edition, edition, edition_has_enforced_licensing
 
 from cmk.utils import paths, render
 from cmk.utils.hostaddress import HostName
@@ -25,7 +23,7 @@ from cmk.utils.licensing.usage import get_license_usage_report_validity, License
 from cmk.utils.setup_search_index import request_index_rebuild
 
 import cmk.gui.watolib.changes as _changes
-from cmk.gui import forms, weblib
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
@@ -38,6 +36,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     make_checkbox_selection_topic,
+    make_javascript_action,
     make_javascript_link,
     make_simple_link,
     PageMenu,
@@ -53,15 +52,18 @@ from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Dictionary, DictionaryEntry, TextAreaUnicode
 from cmk.gui.watolib import activate_changes, backup_snapshots, read_only
 from cmk.gui.watolib.activate_changes import (
     affects_all_sites,
+    ConfigWarnings,
     has_been_activated,
     is_foreign_change,
     prevent_discard_changes,
+    verify_remote_site_config,
 )
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
 from cmk.gui.watolib.automations import MKAutomationException
@@ -69,8 +71,6 @@ from cmk.gui.watolib.config_domain_name import ABCConfigDomain, DomainRequest, D
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree, Host
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
-
-from cmk.ccc.version import edition, Edition, edition_has_enforced_licensing
 
 from .sites import sort_sites
 
@@ -143,7 +143,10 @@ def _get_snapshots() -> list[str]:
 
 def _get_last_wato_snapshot_file():
     for snapshot_file in _get_snapshots():
-        status = backup_snapshots.get_snapshot_status(snapshot_file)
+        status = backup_snapshots.get_snapshot_status(
+            snapshot=snapshot_file,
+            debug=active_config.debug,
+        )
         if status["type"] == "automatic" and not status["broken"]:
             return snapshot_file
     return None
@@ -364,6 +367,9 @@ def _change_table(changes: list[tuple[str, dict]], title: str) -> None:
 
 
 class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
+    VAR_ORIGIN = "origin"
+    VAR_SPECIAL_AGENT_NAME = "special_agent_name"
+
     @classmethod
     def name(cls) -> str:
         return "changelog"
@@ -377,6 +383,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         super().__init__()
         super().load()
         self._license_usage_report_validity = get_license_usage_report_validity()
+        self._quick_setup_origin = request.get_ascii_input(self.VAR_ORIGIN) == "quick_setup"
 
     def title(self) -> str:
         return _("Activate pending changes")
@@ -534,6 +541,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         return self._license_allows_activation()
 
     def page(self) -> None:
+        self._quick_setup_activation_msg()
         self._activation_msg()
         self._activation_form()
 
@@ -543,6 +551,32 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
 
         if self.has_pending_changes():
             _change_table(self._pending_changes, _("Pending changes"))
+
+    def _quick_setup_activation_msg(self):
+        if not (self._quick_setup_origin and self.has_pending_changes()):
+            return
+
+        message = html.render_div(
+            (
+                html.render_div(
+                    _("Activate the changes by clicking the Activate on selected sites button.")
+                )
+                + html.render_div(_("This action will affect all pending changes you have made."))
+            ),
+            class_="confirm_info",
+        )
+
+        confirm_url = "javascript:" + make_javascript_action(
+            'cmk.activation.activate_changes("selected")'
+        )
+
+        show_confirm_cancel_dialog(
+            title=_("Activate pending changes"),
+            confirm_url=confirm_url,
+            confirm_text=_("Activate on selected sites"),
+            message=message,
+            show_cancel_button=False,
+        )
 
     def _activation_msg(self):
         html.open_div(id_="async_progress_msg")
@@ -604,7 +638,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                     )
 
             forms.end()
-            html.hidden_field("selection_id", weblib.selection_id())
+            html.hidden_field("selection_id", SelectionId.from_request(request))
             html.hidden_fields()
         init_rowselect(self.name())
 
@@ -802,7 +836,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
 
     def _select_sites_with_pending_changes(self) -> None:
         selected_sites: list[SiteId | str] = self._get_selected_sites()
-        user.set_rowselection(weblib.selection_id(), self.name(), selected_sites, "set")
+        user.set_rowselection(SelectionId.from_request(request), self.name(), selected_sites, "set")
 
     def _is_active_site(self, site_id: SiteId, site: SiteConfiguration, status: str) -> bool:
         return self._site_is_online(status) and self._site_is_logged_in(site_id, site)
@@ -948,17 +982,13 @@ class PageAjaxStartActivation(AjaxPage):
         user.need_permission("wato.activate")
 
         api_request = self.webapi_request()
-        # ? type of activate_until is unclear
         activate_until = api_request.get("activate_until")
         if not activate_until:
             raise MKUserError("activate_until", _('Missing parameter "%s".') % "activate_until")
 
         manager = activate_changes.ActivateChangesManager()
         manager.load()
-        # ? type of api_request is unclear
-        affected_sites_request = ensure_str(  # pylint: disable= six-ensure-str-bin-call
-            api_request.get("sites", "").strip()
-        )
+        affected_sites_request = api_request.get("sites", "").strip()
         if not affected_sites_request:
             affected_sites = manager.dirty_and_active_activation_sites()
         else:
@@ -983,7 +1013,7 @@ class PageAjaxStartActivation(AjaxPage):
 
         activation_id = manager.start(
             sites=affected_sites,
-            activate_until=ensure_str(activate_until),  # pylint: disable= six-ensure-str-bin-call
+            activate_until=activate_until,
             comment=comment,
             activate_foreign=activate_foreign,
             source="GUI",
@@ -1011,35 +1041,17 @@ class PageAjaxActivationState(AjaxPage):
         return manager.get_state()
 
 
-class ActivateChangesRequest(NamedTuple):
-    site_id: SiteId
-    domains: DomainRequests
-
-
-class AutomationActivateChanges(AutomationCommand):
-    def command_name(self):
+class AutomationActivateChanges(AutomationCommand[DomainRequests]):
+    def command_name(self) -> str:
         return "activate-changes"
 
-    def get_request(self):
-        site_id = SiteId(request.get_ascii_input_mandatory("site_id"))
-        activate_changes.verify_remote_site_config(site_id)
-
+    def get_request(self) -> DomainRequests:
+        verify_remote_site_config(SiteId(request.get_ascii_input_mandatory("site_id")))
+        domains = request.get_ascii_input_mandatory("domains")
         try:
-            serialized_domain_requests = ast.literal_eval(
-                request.get_ascii_input_mandatory("domains")
-            )
-            if serialized_domain_requests and isinstance(serialized_domain_requests[0], str):
-                serialized_domain_requests = [
-                    asdict(DomainRequest(x)) for x in serialized_domain_requests
-                ]
+            return [DomainRequest(**x) for x in ast.literal_eval(domains)]
         except SyntaxError:
-            raise MKAutomationException(
-                _("Invalid request: %r") % request.get_ascii_input_mandatory("domains")
-            )
+            raise MKAutomationException(_("Invalid request: %r") % domains)
 
-        return ActivateChangesRequest(site_id=site_id, domains=serialized_domain_requests)
-
-    def execute(self, api_request):
-        return activate_changes.execute_activate_changes(
-            activate_changes.parse_serialized_domain_requests(api_request.domains)
-        )
+    def execute(self, api_request: DomainRequests) -> ConfigWarnings:
+        return activate_changes.execute_activate_changes(api_request)

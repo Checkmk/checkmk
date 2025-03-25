@@ -3,17 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
-# pylint: disable=redefined-outer-name
 
 from argparse import Namespace as Args
 from collections.abc import Iterator, Mapping, Sequence
-from typing import Any
+from typing import Any, Unpack
 
 import pytest
 from mypy_boto3_logs.client import CloudWatchLogsClient
-from mypy_boto3_logs.type_defs import GetQueryResultsResponseTypeDef
+from mypy_boto3_logs.type_defs import (
+    GetQueryResultsRequestRequestTypeDef,
+    GetQueryResultsResponseTypeDef,
+)
 
 from cmk.special_agents.agent_aws import (
     _create_lamdba_sections,
@@ -275,20 +275,26 @@ def test_agent_aws_lambda_cloudwatch_insights(names: Sequence[str], tags: Overal
     for result in lambda_cloudwatch_logs_results:
         for function_arn, metrics in result.content.items():
             function_name = function_arn.split(":")[-1]
-            assert function_name not in {
-                "FunctionName-1",  # In the simulation data, the FunctionName-1 log group doesn't exist so we shouldn't have metrics for it
-                "deleted-function",  # In the simulation data, deleted-function is a non-existing function with an existing log group
-            }
+            assert (
+                function_name
+                not in {
+                    "FunctionName-1",  # In the simulation data, the FunctionName-1 log group doesn't exist so we shouldn't have metrics for it
+                    "deleted-function",  # In the simulation data, deleted-function is a non-existing function with an existing log group
+                }
+            )
             assert len(metrics) == 4  # all metrics
 
 
 def test_lambda_cloudwatch_insights_query_results_timeout() -> None:
     class CloudWatchLogsClientStub(CloudWatchLogsClient):
-        def __init__(self):  # pylint: disable=super-init-not-called
+        def __init__(self):
             pass
 
-        def get_query_results(self, *, queryId: str) -> GetQueryResultsResponseTypeDef:
+        def get_query_results(
+            self, **kwargs: Unpack[GetQueryResultsRequestRequestTypeDef]
+        ) -> GetQueryResultsResponseTypeDef:
             return {
+                "queryLanguage": "CWLI",
                 "results": [[]],
                 "statistics": {"recordsMatched": 2.0, "recordsScanned": 6.0, "bytesScanned": 710.0},
                 "status": "Running",

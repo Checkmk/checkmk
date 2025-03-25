@@ -12,10 +12,10 @@
 import json
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+
+check_info = {}
 
 Section = Mapping
 
@@ -79,6 +79,7 @@ def check_mongodb_cluster_databases(item, _params, databases_dict):
 
 
 check_info["mongodb_cluster"] = LegacyCheckDefinition(
+    name="mongodb_cluster",
     parse_function=parse_mongodb_cluster,
     service_name="MongoDB Database: %s",
     discovery_function=inventory_mongodb_cluster_databases,
@@ -481,6 +482,7 @@ def _mongodb_cluster_split_namespace(namespace):
 
 
 check_info["mongodb_cluster.collections"] = LegacyCheckDefinition(
+    name="mongodb_cluster_collections",
     service_name="MongoDB Cluster: %s",
     sections=["mongodb_cluster"],
     discovery_function=inventory_mongodb_cluster_shards,
@@ -516,6 +518,7 @@ def check_mongodb_cluster_balancer(_item, _params, databases_dict):
 
 
 check_info["mongodb_cluster.balancer"] = LegacyCheckDefinition(
+    name="mongodb_cluster_balancer",
     service_name="MongoDB Balancer",
     sections=["mongodb_cluster"],
     discovery_function=discover_mongodb_cluster_balancer,

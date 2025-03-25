@@ -21,10 +21,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+
+check_info = {}
 
 
 def parse_tsm_storagepools(string_table):
@@ -63,6 +63,7 @@ def check_tsm_storagepools(item, _no_params, parsed):
 
 
 check_info["tsm_storagepools"] = LegacyCheckDefinition(
+    name="tsm_storagepools",
     parse_function=parse_tsm_storagepools,
     service_name="TSM Storagepool %s",
     discovery_function=inventory_tsm_storagepools,

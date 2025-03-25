@@ -392,7 +392,7 @@ metric_pgstate_unknown = metrics.Metric(
 )
 graph_pgs = graphs.Graph(
     name="pgs",
-    title=Title("Placement Groups"),
+    title=Title("Placement groups"),
     minimal_range=graphs.MinimalRange(
         0,
         metrics.MaximumOf("num_pgs", metrics.Color.GRAY),

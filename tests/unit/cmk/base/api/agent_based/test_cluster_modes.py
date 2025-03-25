@@ -12,13 +12,14 @@ import pytest
 from cmk.utils.hostaddress import HostName
 
 from cmk.checkengine.checking import CheckPluginName, ServiceID
+from cmk.checkengine.value_store import ValueStoreManager
 
 from cmk.base.api.agent_based import cluster_mode
 from cmk.base.api.agent_based.plugin_classes import CheckFunction, CheckPlugin
-from cmk.base.api.agent_based.value_store._utils import ValueStoreManager
 
 from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric, Result, State
 from cmk.agent_based.v1.type_defs import CheckResult
+from cmk.discover_plugins import PluginLocation
 
 TEST_SERVICE_ID = ServiceID(CheckPluginName("unit_test_plugin"), "unit_test_item")
 
@@ -42,7 +43,7 @@ def _get_test_check_plugin(**kwargs) -> CheckPlugin:  # type: ignore[no-untyped-
         cluster_check_function=kwargs.get("cluster_check_function", lambda *args, **kw: object),
         check_default_parameters=kwargs.get("check_default_parameters"),
         check_ruleset_name=kwargs.get("check_ruleset_name"),
-        location=None,
+        location=PluginLocation(module="module", name="name"),
     )
 
 
@@ -184,9 +185,7 @@ def test_cluster_check_worst_yield_worst_nodes_metrics(vsm: ValueStoreManager) -
             },
         )
         if isinstance(m, Metric)
-    )[0] == Metric(
-        "n", 42
-    )  # Nodeberts value
+    )[0] == Metric("n", 42)  # Nodeberts value
 
 
 def test_cluster_check_worst_yield_selected_nodes_metrics(vsm: ValueStoreManager) -> None:
@@ -203,9 +202,7 @@ def test_cluster_check_worst_yield_selected_nodes_metrics(vsm: ValueStoreManager
             },
         )
         if isinstance(m, Metric)
-    )[0] == Metric(
-        "n", 23
-    )  # Nodetts value
+    )[0] == Metric("n", 23)  # Nodetts value
 
 
 def test_cluster_check_worst_unprefered_node_is_ok(vsm: ValueStoreManager) -> None:
@@ -282,9 +279,7 @@ def test_cluster_check_best_yield_best_nodes_metrics(vsm: ValueStoreManager) -> 
             },
         )
         if isinstance(m, Metric)
-    )[0] == Metric(
-        "n", 23
-    )  # Nodetts value
+    )[0] == Metric("n", 23)  # Nodetts value
 
 
 def test_cluster_check_best_unprefered_node_is_ok(vsm: ValueStoreManager) -> None:
@@ -343,9 +338,7 @@ def test_cluster_check_failover_yield_worst_nodes_metrics(vsm: ValueStoreManager
             },
         )
         if isinstance(m, Metric)
-    )[0] == Metric(
-        "n", 42
-    )  # Nodeberts value.
+    )[0] == Metric("n", 42)  # Nodeberts value.
 
 
 def test_cluster_check_failover_two_are_not_ok(vsm: ValueStoreManager) -> None:

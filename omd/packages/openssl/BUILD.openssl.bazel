@@ -1,3 +1,4 @@
+load("@//bazel/rules:cc_export.bzl", "cc_export_shared_library", "cc_export_static_library")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 
 filegroup(
@@ -27,7 +28,6 @@ configure_make(
         "-O2",
     ],
     copts = ["-Wl,--rpath,$ORIGIN_VAR/../lib"],
-
     # This is a nasty workaround for Bazel's inability to escape `$ORIGIN`
     # combined with foreign_cc/configure_make's RPATH agnosticness
     #   see https://github.com/bazelbuild/rules_foreign_cc/issues/940
@@ -50,7 +50,6 @@ configure_make(
     ],
     out_data_dirs = [
         "skel",
-        "tar",
         "lib/pkgconfig",
         "lib/engines-3",
     ],
@@ -66,16 +65,75 @@ configure_make(
         "libssl.a",
         "libcrypto.a",
     ],
-    postfix_script = """
-        tar -C ${INSTALLDIR}/../ \
-            --exclude="openssl/tar" \
-            -cf ${INSTALLDIR}/tar/openssl.tar \
-            openssl
-    """,
     targets = [
         "build_programs",
         "install_sw",
         "install_ssldirs",
     ],
     visibility = ["//visibility:public"],
+)
+
+cc_export_shared_library(
+    name = "libssl.so.3",
+    srcs = [":openssl"],
+    shared_library = "libssl.so.3",
+)
+
+cc_export_shared_library(
+    name = "libssl.so",
+    srcs = [":openssl"],
+    shared_library = "libssl.so",
+)
+
+cc_export_shared_library(
+    name = "libcrypto.so.3",
+    srcs = [":openssl"],
+    shared_library = "libcrypto.so.3",
+)
+
+cc_export_shared_library(
+    name = "libcrypto.so",
+    srcs = [":openssl"],
+    shared_library = "libcrypto.so",
+)
+
+cc_export_static_library(
+    name = "libssl.a",
+    srcs = [":openssl"],
+    static_library = "libssl.a",
+)
+
+cc_export_static_library(
+    name = "libcrypto.a",
+    srcs = [":openssl"],
+    static_library = "libcrypto.a",
+)
+
+filegroup(
+    name = "gen_dir",
+    srcs = [":openssl"],
+    output_group = "gen_dir",
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "openssl_shared",
+    visibility = ["//visibility:public"],
+    deps = [
+        # Note that for Linux builds, libssl must come before libcrypto on the
+        # linker command-line. As such, libssl must be listed before libcrypto.
+        ":libssl.so",
+        ":libssl.so.3",
+        ":libcrypto.so",
+        ":libcrypto.so.3",
+    ],
+)
+
+cc_library(
+    name = "openssl_static",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":libcrypto.a",
+        ":libssl.a",
+    ],
 )

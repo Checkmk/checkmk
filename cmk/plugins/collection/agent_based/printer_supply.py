@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import Final, Literal, NewType, TypedDict
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     all_of,
     CheckPlugin,
@@ -45,6 +45,11 @@ MAP_UNIT: Final = {
 }
 
 
+Unit = NewType("Unit", str)
+
+type Color = Literal["black", "cyan", "magenta", "yellow"]
+
+
 class SupplyClass(enum.Enum):
     CONTAINER = enum.auto()
     RECEPTACLE = enum.auto()
@@ -52,11 +57,40 @@ class SupplyClass(enum.Enum):
 
 @dataclass(frozen=True)
 class PrinterSupply:
-    unit: str
+    unit: Unit
     max_capacity: int
     level: int
     supply_class: SupplyClass
-    color: str
+    color: Color | None
+
+    @property
+    def capacity_unrestricted(self) -> bool:
+        return self.max_capacity == -1
+
+    @property
+    def capacity_unknown(self) -> bool:
+        return self.max_capacity == -2
+
+    @property
+    def level_unrestricted(self) -> bool:
+        return self.level == -1
+
+    @property
+    def level_unknown(self) -> bool:
+        return self.level == -2
+
+    @property
+    def some_level_remains(self) -> bool:
+        return self.level == -3
+
+    @property
+    def has_partial_data(self) -> bool:
+        return (
+            self.capacity_unknown
+            or self.level_unrestricted
+            or self.level_unknown
+            or self.some_level_remains
+        )
 
 
 Section = dict[str, PrinterSupply]
@@ -67,9 +101,39 @@ def _get_oid_end_last_index(oid_end: str) -> str:
     return oid_end.split(".")[-1]
 
 
-def get_unit(unit_info: str) -> str:
-    unit = MAP_UNIT.get(unit_info, "")
-    return unit if unit in ("", "%") else f" {unit}"
+def _get_supply_unit(raw_unit: str) -> Unit:
+    unit = MAP_UNIT.get(raw_unit, "")
+    return Unit(unit) if unit in {"", "%"} else Unit(f" {unit}")
+
+
+def _get_supply_color(raw_color: str) -> Color | None:
+    color = raw_color.lower()
+
+    if color == "black":
+        return "black"
+
+    if color == "cyan":
+        return "cyan"
+
+    if color == "magenta":
+        return "magenta"
+
+    if color == "yellow":
+        return "yellow"
+
+    return None
+
+
+def _get_supply_class(raw_supply_class: str) -> SupplyClass:
+    # When unit type is
+    # 1 = other
+    # 3 = supplyThatIsConsumed
+    # 4 = supplyThatIsFilled
+    # the value is contains the current level if this supply is a container
+    # but when the remaining space if this supply is a receptacle
+    #
+    # This table can be missing on some devices. Assume type 3 in this case.
+    return SupplyClass.RECEPTACLE if raw_supply_class == "4" else SupplyClass.CONTAINER
 
 
 def parse_printer_supply(string_table: Sequence[StringTable]) -> Section:
@@ -83,7 +147,7 @@ def parse_printer_supply(string_table: Sequence[StringTable]) -> Section:
 
     for index, (
         name,
-        unit_info,
+        raw_unit,
         raw_max_capacity,
         raw_level,
         raw_supply_class,
@@ -103,36 +167,25 @@ def parse_printer_supply(string_table: Sequence[StringTable]) -> Section:
         if max_capacity == 0:
             max_capacity = 100
 
-        color = color_mapping.get(color_id, "")
+        raw_color = color_mapping.get(color_id, "")
         # For toners or drum units add the color (if available)
         if name.startswith("Toner Cartridge") or name.startswith("Image Drum Unit"):
-            if color:
-                colors += [color]
-            elif color == "" and colors:
-                color = colors[index - len(colors)]
-            if color:
-                name = f"{color.title()} {name}"
+            if raw_color:
+                colors += [raw_color]
+            elif raw_color == "" and colors:
+                raw_color = colors[index - len(colors)]
+            if raw_color:
+                name = f"{raw_color.title()} {name}"
 
         # fix trailing zero bytes (seen on HP Jetdirect 143 and 153)
         description = name.split(" S/N:")[0].strip("\0")
-        color = color.rstrip("\0")
-        unit = get_unit(unit_info)
+        raw_color = raw_color.rstrip("\0")
 
-        parsed[description] = PrinterSupply(
-            unit,
-            max_capacity,
-            level,
-            # When unit type is
-            # 1 = other
-            # 3 = supplyThatIsConsumed
-            # 4 = supplyThatIsFilled
-            # the value is contains the current level if this supply is a container
-            # but when the remaining space if this supply is a receptacle
-            #
-            # This table can be missing on some devices. Assume type 3 in this case.
-            SupplyClass.RECEPTACLE if raw_supply_class == "4" else SupplyClass.CONTAINER,
-            color,
-        )
+        unit = _get_supply_unit(raw_unit)
+        color = _get_supply_color(raw_color)
+        supply_class = _get_supply_class(raw_supply_class)
+
+        parsed[description] = PrinterSupply(unit, max_capacity, level, supply_class, color)
 
     return parsed
 
@@ -169,50 +222,27 @@ def discovery_printer_supply(section: Section) -> DiscoveryResult:
         yield Service(item=key)
 
 
-def check_printer_supply(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    supply = section.get(item)
-    if supply is None:
+class CheckParams(TypedDict):
+    levels: tuple[float, float]
+    upturn_toner: bool
+    some_remaining_ink: int
+    some_remaining_space: int
+
+
+def check_printer_supply(item: str, params: CheckParams, section: Section) -> CheckResult:
+    if (supply := section.get(item)) is None:
         return
 
-    color_info = ""
-    if supply.color and supply.color.lower() not in item.lower():
-        color_info = "[%s] " % supply.color
+    color_info = _get_supply_color_info(item, supply.color)
 
     warn, crit = params["levels"]
 
-    # handle cases with partial data
-    if supply.max_capacity == -2 or supply.level in [-3, -2, -1]:  # no percentage possible
-        if supply.level == -1 or supply.max_capacity == -1:
-            yield Result(
-                state=State.OK, summary="%sThere are no restrictions on this supply" % color_info
-            )
-            return
+    if supply.has_partial_data:  # no percentage possible
+        yield from _get_partial_data_results(supply, params, color_info)
+        return
 
-        if supply.level == -3:
-            yield _check_some_remaining(supply, params, color_info)
-            return
-
-        if supply.level == -2:
-            yield Result(state=State.UNKNOWN, summary="%s Unknown level" % color_info)
-            return
-
-        if supply.max_capacity == -2:
-            # no percentage possible. We compare directly against levels
-            yield Result(state=State.OK, summary="%sLevel: %d" % (color_info, supply.level))
-            yield Metric("pages", supply.level)
-            return
-
-    leftperc = 100.0 * supply.level / supply.max_capacity
-    if supply.supply_class is SupplyClass.RECEPTACLE:
-        leftperc = 100 - leftperc
-
-    # Some printers handle the used / remaining material differently
-    # With the upturn option we can toggle the point of view (again)
-    if params["upturn_toner"]:
-        leftperc = 100 - leftperc
-
-    yield from check_levels(
-        leftperc,
+    yield from check_levels_v1(
+        _get_fill_level_percentage(supply, params["upturn_toner"]),
         levels_lower=(warn, crit),
         label=f"{color_info}Remaining",
         render_func=render.percent,
@@ -228,28 +258,47 @@ def check_printer_supply(item: str, params: Mapping[str, Any], section: Section)
     )
 
 
-def _check_some_remaining(
-    supply: PrinterSupply, params: Mapping[str, Any], color_info: str
-) -> Result:
-    match supply.supply_class:
-        case SupplyClass.CONTAINER:
-            return Result(
-                state=State(params["some_remaining_ink"]),
-                summary=f"{color_info}Some ink remaining",
-            )
-        case SupplyClass.RECEPTACLE:
-            return Result(
-                state=State(params["some_remaining_space"]),
-                summary=f"{color_info}Some space remaining",
-            )
+def _get_supply_color_info(item: str, color: Color | None) -> str:
+    return f"[{color}] " if color and color not in item.lower() else ""
 
 
-DEFAULT_PARAMETERS = {
-    "levels": (20.0, 10.0),
-    "upturn_toner": False,
-    "some_remaining_ink": 1,
-    "some_remaining_space": 1,
-}
+def _get_partial_data_results(
+    supply: PrinterSupply, params: CheckParams, color_info: str
+) -> CheckResult:
+    if supply.level_unrestricted or supply.capacity_unrestricted:
+        summary = "%sThere are no restrictions on this supply" % color_info
+        yield Result(state=State.OK, summary=summary)
+
+    elif supply.some_level_remains:
+        match supply.supply_class:
+            case SupplyClass.CONTAINER:
+                yield Result(
+                    state=State(params["some_remaining_ink"]),
+                    summary=f"{color_info}Some ink remaining",
+                )
+            case SupplyClass.RECEPTACLE:
+                yield Result(
+                    state=State(params["some_remaining_space"]),
+                    summary=f"{color_info}Some space remaining",
+                )
+
+    elif supply.level_unknown:
+        yield Result(state=State.UNKNOWN, summary="%s Unknown level" % color_info)
+
+    elif supply.capacity_unknown:
+        yield Result(state=State.OK, summary="%sLevel: %d" % (color_info, supply.level))
+        yield Metric("pages", supply.level)
+
+
+def _get_fill_level_percentage(supply: PrinterSupply, upturn_toner: bool) -> float:
+    fill_level_percentage = 100.0 * supply.level / supply.max_capacity
+
+    # Some printers handle the used / remaining material differently
+    # With the upturn option we can toggle the point of view (again)
+    if supply.supply_class is SupplyClass.RECEPTACLE or upturn_toner:
+        return 100 - fill_level_percentage
+
+    return fill_level_percentage
 
 
 check_plugin_printer_supply = CheckPlugin(
@@ -258,5 +307,10 @@ check_plugin_printer_supply = CheckPlugin(
     discovery_function=discovery_printer_supply,
     check_function=check_printer_supply,
     check_ruleset_name="printer_supply",
-    check_default_parameters=DEFAULT_PARAMETERS,
+    check_default_parameters=CheckParams(
+        levels=(20.0, 10.0),
+        upturn_toner=False,
+        some_remaining_ink=State.WARN.value,
+        some_remaining_space=State.WARN.value,
+    ),
 )

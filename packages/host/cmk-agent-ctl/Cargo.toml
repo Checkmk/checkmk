@@ -1,0 +1,68 @@
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+[package]
+name = "cmk-agent-ctl"
+version = "1.0.0"
+workspace = ".."
+edition.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lints.rust]
+unexpected_cfgs = { level = "allow", check-cfg = ['cfg(build_system_bazel)'] }
+
+[dependencies]
+anyhow = { workspace = true, features = ["backtrace"] }
+async-std.workspace = true
+async-trait.workspace = true
+# binary serialisation, used by mailslot, can't be replaced with serde
+bincode.workspace = true
+clap = { workspace = true, features = ["derive"] }
+faccess.workspace = true
+flate2.workspace = true
+flexi_logger.workspace = true
+gethostname.workspace = true
+http.workspace = true
+ipnet.workspace = true
+log.workspace = true
+nix = { workspace = true, features = ["user"] }
+openssl = { workspace = true, features = ["vendored"] }
+os_info.workspace = true
+rand.workspace = true
+# ideally, we would just use "rustls-tls-native-roots" instead of "native-tls" and "rustls-tls-manual-roots
+# however, in SUP-10832, native-tls was ok with the custom CA of the customer, while rustls complained
+# unfortunately, we couldn't find out why, so for now, we have to keep native-tls
+reqwest = { workspace = true, features = [
+  "blocking",
+  "json",
+  "multipart",
+  "native-tls",
+  "rustls-tls-manual-roots",
+] }
+rpassword.workspace = true
+# explicitly avoid aws_lc_rs for now since it needs eg. cmake, which we currently don't have on the Windows build nodes
+rustls = { workspace = true, features = ["ring", "logging", "std", "tls12"] }
+rustls-pemfile.workspace = true
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+serde_with.workspace = true
+socket2.workspace = true
+tokio = { workspace = true, features = ["full"] }
+# explicitly avoid aws_lc_rs for now since it needs eg. cmake, which we currently don't have on the Windows build nodes
+tokio-rustls = { workspace = true, features = ["ring", "logging", "tls12"] }
+toml.workspace = true
+uuid = { workspace = true, features = ["v4"] }
+x509-parser.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+is_elevated.workspace = true
+mail_slot.workspace = true
+winapi = { workspace = true, features = ["processthreadsapi", "winsock2"] }
+
+[dev-dependencies]
+assert_cmd.workspace = true
+lazy_static.workspace = true
+predicates.workspace = true
+tempfile.workspace = true

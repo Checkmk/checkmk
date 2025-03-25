@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
 
 from collections.abc import Sequence
 
 import pytest
 from pytest import MonkeyPatch
+
+import cmk.ccc.version as cmk_version
+from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.utils import paths
 from cmk.utils.rulesets.definition import RuleGroup
@@ -40,9 +41,6 @@ from cmk.gui.watolib.rulespecs import (
     RulespecSubGroup,
 )
 from cmk.gui.watolib.search import MatchItem
-
-import cmk.ccc.version as cmk_version
-from cmk.ccc.exceptions import MKGeneralException
 
 
 def test_rulespec_sub_group() -> None:
@@ -121,7 +119,7 @@ def _expected_rulespec_group_choices():
         ("agent/check_mk_agent", "&nbsp;&nbsp;\u2319 Checkmk agent"),
         ("agent/general_settings", "&nbsp;&nbsp;\u2319 General Settings"),
         ("agents", "Agent rules"),
-        ("agents/generic_options", "&nbsp;&nbsp;\u2319 Generic Options"),
+        ("agents/generic_options", "&nbsp;&nbsp;\u2319 Generic agent options"),
         ("checkparams", "Service discovery rules"),
         ("checkparams/discovery", "&nbsp;&nbsp;\u2319 Discovery of individual services"),
         (
@@ -174,8 +172,8 @@ def _expected_rulespec_group_choices():
         expected += [
             ("agents/agent_plugins", "&nbsp;&nbsp;\u2319 Agent plug-ins"),
             ("agents/automatic_updates", "&nbsp;&nbsp;\u2319 Automatic Updates"),
-            ("agents/linux_agent", "&nbsp;&nbsp;\u2319 Linux Agent"),
-            ("agents/windows_agent", "&nbsp;&nbsp;\u2319 Windows Agent"),
+            ("agents/linux_agent", "&nbsp;&nbsp;\u2319 Linux/UNIX agent options"),
+            ("agents/windows_agent", "&nbsp;&nbsp;\u2319 Windows agent options"),
             ("agents/windows_modules", "&nbsp;&nbsp;\u2319 Windows Modules"),
         ]
 
@@ -298,7 +296,6 @@ def test_rulespec_get_all_groups() -> None:
         "datasource_programs/custom",
         "datasource_programs/hw",
         "datasource_programs/os",
-        "datasource_programs/testing",
         "inventory",
         "eventconsole",
     ]
@@ -526,7 +523,7 @@ def test_register_check_parameters(patch_rulespec_registries: None) -> None:
     assert rulespec.item_help is None
     # The item_spec of the ManualCheckParameterRulespec fetched differently,
     # since it is no actual item spec
-    assert isinstance(rulespec._get_item_spec(), TextInput)
+    assert isinstance(rulespec._get_item_valuespec(), TextInput)
     assert rulespec.is_deprecated is False
     assert rulespec.is_optional is False
 
@@ -661,16 +658,16 @@ def test_match_item_generator_rules() -> None:
         HostRulespec(
             name="some_host_rulespec",
             group=SomeRulespecGroup,
-            valuespec=lambda: TextInput(),  # pylint: disable=unnecessary-lambda
-            title=lambda: "Title",  # pylint: disable=unnecessary-lambda
+            valuespec=lambda: TextInput(),
+            title=lambda: "Title",
         )
     )
     rulespec_reg.register(
         HostRulespec(
             name="some_deprecated_host_rulespec",
             group=SomeRulespecGroup,
-            valuespec=lambda: TextInput(),  # pylint: disable=unnecessary-lambda
-            title=lambda: "Title",  # pylint: disable=unnecessary-lambda
+            valuespec=lambda: TextInput(),
+            title=lambda: "Title",
             is_deprecated=True,
         )
     )

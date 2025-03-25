@@ -1,4 +1,4 @@
-load("@omd_packages//:package_versions.bzl", "PYTHON_MAJOR_DOT_MINOR")
+load("@omd_packages//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 
 filegroup(
@@ -45,7 +45,7 @@ configure_make(
         "PERL_MODULES_TAR": "$(execpath @omd_packages//omd/packages/perl-modules:perl-modules.tar)",
         "PYTHON_MODULES_TAR": "$(execpath @omd_packages//omd/packages/python3-modules:python3-modules.tar)",
         "PERL_DIR": "$$(dirname $(execpath @omd_packages//omd/packages/perl-modules:perl-modules.tar))/perl-modules",
-        "PYTHONPATH": "$$(dirname $(execpath @omd_packages//omd/packages/python3-modules:python3-modules.tar))/python3-modules/lib/python%s/site-packages/" % PYTHON_MAJOR_DOT_MINOR,
+        "PYTHONPATH": "$$(dirname $(execpath @omd_packages//omd/packages/python3-modules:python3-modules.tar))/lib/python%s/site-packages/" % PYTHON_MAJOR_DOT_MINOR,
     },
     lib_source = ":all_srcs",
     out_binaries = [
@@ -74,7 +74,6 @@ configure_make(
         "share/snmp/mibs",
         "share/man/",
         "lib/python%s/site-packages/netsnmp" % PYTHON_MAJOR_DOT_MINOR,
-        "tar",
         "lib/perl5/",
     ],
     out_shared_libs = [
@@ -106,11 +105,6 @@ configure_make(
 
         chmod u+w -R ${INSTALLDIR}
         chmod 644 ${INSTALLDIR}/share/snmp/mibs/*
-
-        tar -C ${INSTALLDIR}/../ \
-            --exclude="net-snmp/tar" \
-            -cf ${INSTALLDIR}/tar/net-snmp.tar \
-            net-snmp
     """,
     targets = [
         "",
@@ -123,20 +117,9 @@ configure_make(
     deps = ["@python"],
 )
 
-genrule(
-    name = "skel",
-    srcs = [
-        "@omd_packages//omd/packages/stunnel/skel",
-        "@omd_packages//omd/packages/stunnel/skel:skel_root",
-    ],
-    outs = [
-        "skel/etc/init.d/stunnel",
-        "skel/etc/logrotate.d/stunnel",
-        "skel/etc/rc.d/85-stunnel",
-        "skel/etc/stunnel/server.conf",
-        "skel/etc/stunnel/conf.d",
-    ],
-    cmd = """
-        cp -r --dereference $$(dirname $(execpath @omd_packages//omd/packages/stunnel/skel:skel_root)) $$(realpath $(RULEDIR))
-    """,
+filegroup(
+    name = "gen_dir",
+    srcs = [":net-snmp"],
+    output_group = "gen_dir",
+    visibility = ["//visibility:public"],
 )

@@ -3,358 +3,42 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Mapping, Sequence
+import math
+from collections.abc import Mapping, Sequence
 
-import numpy as np
 import pytest
 
-from cmk.gui.graphing import get_first_matching_perfometer, PerfometerSpec
-from cmk.gui.graphing._legacy import LegacyPerfometer, UnitInfo
+from cmk.gui.graphing import get_first_matching_perfometer
+from cmk.gui.graphing._formatter import AutoPrecision
 from cmk.gui.graphing._perfometer import (
     _make_projection,
-    _perfometer_possible,
     _PERFOMETER_PROJECTION_PARAMETERS,
-    MetricometerRendererLegacyLinear,
-    MetricometerRendererLegacyLogarithmic,
     MetricometerRendererPerfometer,
-    MetricRendererStack,
-    parse_perfometer,
+    MetricometerRendererStacked,
 )
-from cmk.gui.graphing._type_defs import Original, ScalarBounds, TranslatedMetric
+from cmk.gui.graphing._translated_metrics import Original, ScalarBounds, TranslatedMetric
+from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
 
 
+@pytest.mark.usefixtures("request_context")
 @pytest.mark.parametrize(
-    "perfometer, translated_metrics",
-    [
-        pytest.param(
-            {
-                "type": "linear",
-                "segments": ["m1", "m2,m3,+", "m4,10,*"],
-                "total": 100.0,
-                "label": ("m1,m2,/", "%"),
-            },
-            {
-                "m1": TranslatedMetric(
-                    originals=[],
-                    value=1,
-                    scalar={},
-                    auto_graph=False,
-                    title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
-                    ),
-                    color="#111111",
-                ),
-                "m2": TranslatedMetric(
-                    originals=[],
-                    value=2,
-                    scalar={},
-                    auto_graph=False,
-                    title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
-                    ),
-                    color="#222222",
-                ),
-                "m3": TranslatedMetric(
-                    originals=[],
-                    value=3,
-                    scalar={},
-                    auto_graph=False,
-                    title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
-                    ),
-                    color="#333333",
-                ),
-                "m4": TranslatedMetric(
-                    originals=[],
-                    value=4,
-                    scalar={},
-                    auto_graph=False,
-                    title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
-                    ),
-                    color="#444444",
-                ),
-            },
-            id="linear with total float",
-        ),
-        pytest.param(
-            {
-                "type": "linear",
-                "segments": ["m1", "m2,m3,+", "m4,10,*"],
-                "total": "m5:max",
-                "label": ("m1,m2,/", "%"),
-            },
-            {
-                "m1": TranslatedMetric(
-                    originals=[],
-                    value=1,
-                    scalar={},
-                    auto_graph=False,
-                    title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
-                    ),
-                    color="#111111",
-                ),
-                "m2": TranslatedMetric(
-                    originals=[],
-                    value=2,
-                    scalar={},
-                    auto_graph=False,
-                    title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
-                    ),
-                    color="#222222",
-                ),
-                "m3": TranslatedMetric(
-                    originals=[],
-                    value=3,
-                    scalar={},
-                    auto_graph=False,
-                    title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
-                    ),
-                    color="#333333",
-                ),
-                "m4": TranslatedMetric(
-                    originals=[],
-                    value=4,
-                    scalar={},
-                    auto_graph=False,
-                    title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
-                    ),
-                    color="#444444",
-                ),
-                "m5": TranslatedMetric(
-                    originals=[],
-                    value=5,
-                    scalar={"max": 5},
-                    auto_graph=False,
-                    title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
-                    ),
-                    color="#555555",
-                ),
-            },
-            id="linear with total RPN expression",
-        ),
-        pytest.param(
-            {
-                "type": "linear",
-                "segments": ["m1", "m2,m3,+", "m4,10,*"],
-                "total": 100.0,
-                "condition": "m1,m2,<",
-            },
-            {
-                "m1": TranslatedMetric(
-                    originals=[],
-                    value=1,
-                    scalar={},
-                    auto_graph=False,
-                    title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
-                    ),
-                    color="#111111",
-                ),
-                "m2": TranslatedMetric(
-                    originals=[],
-                    value=2,
-                    scalar={},
-                    auto_graph=False,
-                    title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
-                    ),
-                    color="#222222",
-                ),
-                "m3": TranslatedMetric(
-                    originals=[],
-                    value=3,
-                    scalar={},
-                    auto_graph=False,
-                    title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
-                    ),
-                    color="#333333",
-                ),
-                "m4": TranslatedMetric(
-                    originals=[],
-                    value=4,
-                    scalar={},
-                    auto_graph=False,
-                    title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
-                    ),
-                    color="#444444",
-                ),
-            },
-            id="linear with condition",
-        ),
-        pytest.param(
-            {
-                "type": "logarithmic",
-                "metric": "m1",
-                "half_value": 5,
-                "exponent": 2,
-            },
-            {
-                "m1": TranslatedMetric(
-                    originals=[],
-                    value=1,
-                    scalar={},
-                    auto_graph=False,
-                    title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
-                    ),
-                    color="#111111",
-                ),
-            },
-            id="logarithmic with metric name",
-        ),
-        pytest.param(
-            {
-                "type": "logarithmic",
-                "metric": "m1,m2,+",
-                "half_value": 5,
-                "exponent": 2,
-            },
-            {
-                "m1": TranslatedMetric(
-                    originals=[],
-                    value=1,
-                    scalar={},
-                    auto_graph=False,
-                    title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
-                    ),
-                    color="#111111",
-                ),
-                "m2": TranslatedMetric(
-                    originals=[],
-                    value=2,
-                    scalar={},
-                    auto_graph=False,
-                    title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
-                    ),
-                    color="#222222",
-                ),
-            },
-            id="logarithmic with RPN expression",
-        ),
-    ],
-)
-def test__perfometer_possible(
-    perfometer: PerfometerSpec,
-    translated_metrics: Mapping[str, TranslatedMetric],
-) -> None:
-    assert _perfometer_possible(perfometer, translated_metrics)
-
-
-@pytest.mark.parametrize(
-    "translated_metrics, perfometer",
+    ("translated_metrics", "registered_perfometers", "perfometer"),
     [
         pytest.param(
             {"active_connections": {}},
+            {
+                "active_connections": perfometers_api.Perfometer(
+                    name="active_connections",
+                    focus_range=perfometers_api.FocusRange(
+                        perfometers_api.Closed(0),
+                        perfometers_api.Open(90),
+                    ),
+                    segments=["active_connections"],
+                )
+            },
             perfometers_api.Perfometer(
                 name="active_connections",
                 focus_range=perfometers_api.FocusRange(
@@ -369,216 +53,17 @@ def test__perfometer_possible(
 )
 def test_get_first_matching_perfometer(
     translated_metrics: Mapping[str, TranslatedMetric],
+    registered_perfometers: Mapping[
+        str, perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
+    ],
     perfometer: (
         perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
     ),
-    request_context: None,
 ) -> None:
-    assert (first_renderer := get_first_matching_perfometer(translated_metrics)) is not None
+    assert (
+        first_renderer := get_first_matching_perfometer(translated_metrics, registered_perfometers)
+    ) is not None
     assert first_renderer.perfometer == perfometer
-
-
-class TestMetricometerRendererLegacyLinear:
-    def _renderer(
-        self,
-        unit_info: UnitInfo,
-    ) -> MetricometerRendererLegacyLinear:
-        return MetricometerRendererLegacyLinear(
-            {
-                "type": "linear",
-                "segments": ["my_metric"],
-                "total": 100.0,
-            },
-            {
-                "my_metric": TranslatedMetric(
-                    originals=[Original("my_metric", 1.0)],
-                    value=60.0,
-                    scalar={"warn": 80.0, "crit": 90.0},
-                    auto_graph=True,
-                    title="My metric",
-                    unit_info=unit_info,
-                    color="#ffa000",
-                )
-            },
-        )
-
-    @pytest.mark.parametrize(
-        ["unit_info", "expected_result"],
-        [
-            pytest.param(
-                UnitInfo(
-                    id="u",
-                    title="My unit",
-                    symbol="U",
-                    render=str,
-                    js_render="v => cmk.number_format.drop_dotzero(v) + ' U'",
-                    conversion=lambda v: v,
-                    description="My unit",
-                ),
-                [[(60.0, "#ffa000"), (40.0, "#bdbdbd")]],
-                id="no unit conversion",
-            ),
-            pytest.param(
-                UnitInfo(
-                    id="u",
-                    title="My unit",
-                    symbol="U",
-                    render=str,
-                    js_render="v => cmk.number_format.drop_dotzero(v) + ' U'",
-                    conversion=lambda v: 2 * v - 10,
-                    description="My unit",
-                ),
-                [
-                    [
-                        (60.0 / (2 * 100 - 10) * 100, "#ffa000"),
-                        (100 - 60.0 / (2 * 100 - 10) * 100, "#bdbdbd"),
-                    ]
-                ],
-                id="with unit conversion",
-            ),
-        ],
-    )
-    def test_get_stack(
-        self,
-        unit_info: UnitInfo,
-        expected_result: MetricRendererStack,
-        request_context: None,
-        patch_theme: None,
-    ) -> None:
-        assert self._renderer(unit_info).get_stack() == expected_result
-
-    @pytest.mark.parametrize(
-        ["perfometer_render", "expected_result"],
-        [
-            pytest.param(
-                None,
-                "60.0",
-                id="no dedicated perfometer renderer",
-            ),
-            pytest.param(
-                lambda v: f"{2 * v} U",
-                "120.0 U",
-                id="dedicated perfometer renderer",
-            ),
-        ],
-    )
-    def test_get_label(
-        self,
-        perfometer_render: Callable[[float], str] | None,
-        expected_result: str,
-    ) -> None:
-        unit_info = UnitInfo(
-            id="u",
-            title="My unit",
-            symbol="U",
-            render=str,
-            js_render="v => cmk.number_format.drop_dotzero(v) + ' U'",
-            conversion=lambda v: v,
-            description="My unit",
-            perfometer_render=perfometer_render,
-        )
-        assert self._renderer(unit_info).get_label() == expected_result
-
-
-class TestMetricometerRendererLegacyLogarithmic:
-    def _renderer(
-        self,
-        unit_info: UnitInfo,
-    ) -> MetricometerRendererLegacyLogarithmic:
-        return MetricometerRendererLegacyLogarithmic(
-            {
-                "type": "logarithmic",
-                "metric": "my_metric",
-                "half_value": 40.0,
-                "exponent": 1.2,
-            },
-            {
-                "my_metric": TranslatedMetric(
-                    originals=[Original("my_metric", 1.0)],
-                    value=123.0,
-                    scalar={"warn": 158.0, "crit": 176.0},
-                    auto_graph=True,
-                    title="My metric",
-                    unit_info=unit_info,
-                    color="#ffa000",
-                )
-            },
-        )
-
-    @pytest.mark.parametrize(
-        ["conversion", "expected_result"],
-        [
-            pytest.param(
-                lambda v: v,
-                (40, 1.2),
-                id="no-op conversion",
-            ),
-            # a purely multiplicate conversion should not lead to change in the 10%-factor
-            pytest.param(
-                lambda v: 0.7 * v,
-                (0.7 * 40, 1.2),
-                id="multiplicative stretch only",
-            ),
-            # a huge additive offset should lead to a multiplicate 10%-factor very close to 1
-            pytest.param(
-                lambda v: v + 1000000,
-                (40 + 1000000, 1.0),
-                id="huge additive offset",
-            ),
-        ],
-    )
-    def test_estimate_parameters_for_converted_units(
-        self,
-        conversion: Callable[[float], float],
-        expected_result: tuple[float, float],
-    ) -> None:
-        assert np.allclose(
-            self._renderer(
-                UnitInfo(
-                    id="u",
-                    title="My unit",
-                    symbol="U",
-                    render=str,
-                    js_render="v => cmk.number_format.drop_dotzero(v) + ' U'",
-                    conversion=lambda v: v,
-                    description="My unit",
-                    perfometer_render=lambda _v: "testing",
-                )
-            ).estimate_parameters_for_converted_units(conversion),
-            expected_result,
-        )
-
-    @pytest.mark.parametrize(
-        ["perfometer_render", "expected_result"],
-        [
-            pytest.param(
-                None,
-                "123.0",
-                id="no dedicated perfometer renderer",
-            ),
-            pytest.param(
-                lambda v: f"{2 * v} U",
-                "246.0 U",
-                id="dedicated perfometer renderer",
-            ),
-        ],
-    )
-    def test_get_label(
-        self,
-        perfometer_render: Callable[[float], str] | None,
-        expected_result: str,
-    ) -> None:
-        unit_info = UnitInfo(
-            id="u",
-            title="My unit",
-            symbol="U",
-            render=str,
-            js_render="v => cmk.number_format.drop_dotzero(v) + ' U'",
-            conversion=lambda v: v,
-            description="My unit",
-            perfometer_render=perfometer_render,
-        )
-        assert self._renderer(unit_info).get_label() == expected_result
 
 
 @pytest.mark.parametrize(
@@ -600,11 +85,25 @@ class TestMetricometerRendererLegacyLogarithmic:
             perfometers_api.FocusRange(perfometers_api.Open(10), perfometers_api.Open(-10)),
             id="open-open",
         ),
+        pytest.param(
+            perfometers_api.FocusRange(perfometers_api.Closed(0), perfometers_api.Closed(0)),
+            id="closed-closed-equal",
+        ),
     ],
 )
 def test_perfometer_projection_error(focus_range: perfometers_api.FocusRange) -> None:
-    with pytest.raises(ValueError):
-        _make_projection(focus_range, _PERFOMETER_PROJECTION_PARAMETERS, {})
+    projection = _make_projection(
+        focus_range,
+        _PERFOMETER_PROJECTION_PARAMETERS,
+        {},
+        "name",
+    )
+    assert math.isnan(projection.lower_x)
+    assert math.isnan(projection.upper_x)
+    assert math.isnan(projection.lower_atan(123))
+    assert math.isnan(projection.focus_linear(456))
+    assert math.isnan(projection.upper_atan(789))
+    assert math.isnan(projection.limit)
 
 
 @pytest.mark.parametrize(
@@ -620,6 +119,7 @@ def test_perfometer_projection_closed_closed(value: int | float, result: float) 
         perfometers_api.FocusRange(perfometers_api.Closed(-10), perfometers_api.Closed(20)),
         _PERFOMETER_PROJECTION_PARAMETERS,
         {},
+        "name",
     )
     assert projection(value) == result
 
@@ -638,6 +138,7 @@ def test_perfometer_projection_closed_closed_exceeds(
         perfometers_api.FocusRange(perfometers_api.Closed(-10), perfometers_api.Closed(20)),
         _PERFOMETER_PROJECTION_PARAMETERS,
         {},
+        "name",
     )
     assert projection(value) == result
 
@@ -656,6 +157,7 @@ def test_perfometer_projection_open_closed(value: int | float, result: float) ->
         perfometers_api.FocusRange(perfometers_api.Open(-10), perfometers_api.Closed(20)),
         _PERFOMETER_PROJECTION_PARAMETERS,
         {},
+        "name",
     )
     assert projection(value) == result
 
@@ -671,6 +173,7 @@ def test_perfometer_projection_open_closed_exceeds(value: int | float, result: i
         perfometers_api.FocusRange(perfometers_api.Open(-10), perfometers_api.Closed(20)),
         _PERFOMETER_PROJECTION_PARAMETERS,
         {},
+        "name",
     )
     assert projection(value) == result
 
@@ -689,6 +192,7 @@ def test_perfometer_projection_closed_open(value: int | float, result: float) ->
         perfometers_api.FocusRange(perfometers_api.Closed(-10), perfometers_api.Open(20)),
         _PERFOMETER_PROJECTION_PARAMETERS,
         {},
+        "name",
     )
     assert projection(value) == result
 
@@ -704,6 +208,7 @@ def test_perfometer_projection_closed_open_exceeds(value: int | float, result: i
         perfometers_api.FocusRange(perfometers_api.Closed(-10), perfometers_api.Open(20)),
         _PERFOMETER_PROJECTION_PARAMETERS,
         {},
+        "name",
     )
     assert projection(value) == result
 
@@ -723,6 +228,7 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
         perfometers_api.FocusRange(perfometers_api.Open(-10), perfometers_api.Open(20)),
         _PERFOMETER_PROJECTION_PARAMETERS,
         {},
+        "name",
     )
     assert projection(value) == result
 
@@ -739,13 +245,9 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
                     scalar={},
                     auto_graph=True,
                     title="Metric name 1",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#111111",
                 ),
@@ -762,13 +264,9 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
                     scalar={},
                     auto_graph=True,
                     title="Metric name 1",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#111111",
                 ),
@@ -778,13 +276,9 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
                     scalar={},
                     auto_graph=True,
                     title="Metric name 2",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#222222",
                 ),
@@ -801,13 +295,9 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
                     scalar={},
                     auto_graph=True,
                     title="Metric name 1",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#111111",
                 ),
@@ -817,13 +307,9 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
                     scalar={},
                     auto_graph=True,
                     title="Metric name 2",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#222222",
                 ),
@@ -833,13 +319,9 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
                     scalar={},
                     auto_graph=True,
                     title="Metric name 3",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#333333",
                 ),
@@ -896,13 +378,9 @@ def test_perfometer_renderer_stack_same_values(request_context: None, patch_them
                 scalar={},
                 auto_graph=True,
                 title="Metric name 1",
-                unit_info=UnitInfo(
-                    id="id",
-                    title="Title",
-                    symbol="",
-                    render=lambda v: f"{v}",
-                    js_render="v => v",
-                    conversion=lambda v: v,
+                unit_spec=ConvertibleUnitSpecification(
+                    notation=DecimalNotation(symbol=""),
+                    precision=AutoPrecision(digits=2),
                 ),
                 color="#111111",
             ),
@@ -912,13 +390,9 @@ def test_perfometer_renderer_stack_same_values(request_context: None, patch_them
                 scalar={},
                 auto_graph=True,
                 title="Metric name 2",
-                unit_info=UnitInfo(
-                    id="id",
-                    title="Title",
-                    symbol="",
-                    render=lambda v: f"{v}",
-                    js_render="v => v",
-                    conversion=lambda v: v,
+                unit_spec=ConvertibleUnitSpecification(
+                    notation=DecimalNotation(symbol=""),
+                    precision=AutoPrecision(digits=2),
                 ),
                 color="#222222",
             ),
@@ -939,19 +413,15 @@ def test_perfometer_renderer_stack_same_values(request_context: None, patch_them
                     scalar=ScalarBounds(),
                     auto_graph=True,
                     title="Metric name",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#111111",
                 ),
             },
             [[(100.0, "#111111"), (0.0, "#bdbdbd")]],
-            "101.0",
+            "101",
             id="one-metric",
         ),
         pytest.param(
@@ -963,13 +433,9 @@ def test_perfometer_renderer_stack_same_values(request_context: None, patch_them
                     scalar=ScalarBounds(),
                     auto_graph=True,
                     title="Metric name 1",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#111111",
                 ),
@@ -979,19 +445,15 @@ def test_perfometer_renderer_stack_same_values(request_context: None, patch_them
                     scalar=ScalarBounds(),
                     auto_graph=True,
                     title="Metric name 2",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#111111",
                 ),
             },
             [[(98.02, "#111111"), (1.98, "#111111"), (0.0, "#bdbdbd")]],
-            "101.0",
+            "101",
             id="two-metrics",
         ),
     ],
@@ -1028,124 +490,56 @@ def test_perfometer_renderer_exceeds_limit(
     assert metricometer.get_label() == label
 
 
-@pytest.mark.parametrize(
-    "legacy_perfometer, expected_perfometer",
-    [
-        pytest.param(
-            ("linear", ([], 100, "Label 1")),
-            {"type": "linear", "segments": [], "total": 100, "label": "Label 1"},
-            id="linear",
-        ),
-        pytest.param(
-            ("dual", [("linear", ([], 100, "Label 2")), ("linear", ([], 100, "Label 3"))]),
-            {
-                "type": "dual",
-                "perfometers": [
-                    {"type": "linear", "segments": [], "total": 100, "label": "Label 2"},
-                    {"type": "linear", "segments": [], "total": 100, "label": "Label 3"},
-                ],
-            },
-            id="dual",
-        ),
-        pytest.param(
-            ("stacked", [("linear", ([], 100, "Label 4")), ("linear", ([], 100, "Label 5"))]),
-            {
-                "type": "stacked",
-                "perfometers": [
-                    {"type": "linear", "segments": [], "total": 100, "label": "Label 4"},
-                    {"type": "linear", "segments": [], "total": 100, "label": "Label 5"},
-                ],
-            },
-            id="stacked",
-        ),
-    ],
-)
-def test_parse_perfometer(
-    legacy_perfometer: LegacyPerfometer, expected_perfometer: PerfometerSpec
-) -> None:
-    assert parse_perfometer(legacy_perfometer) == expected_perfometer
-
-
-@pytest.mark.parametrize(
-    "legacy_perfometer",
-    [
-        pytest.param(
-            ("dual", [("linear", ([], 100, "Label"))]),
-            id="dual-one-sub-perfometers",
-        ),
-        pytest.param(
-            (
-                "dual",
-                [
-                    ("linear", ([], 100, "Label 1")),
-                    ("linear", ([], 100, "Label 2")),
-                    ("linear", ([], 100, "Label 3")),
-                ],
+def test_metricometer_renderer_stacked(request_context: None, patch_theme: None) -> None:
+    metricometer = MetricometerRendererStacked(
+        perfometers_api.Stacked(
+            name="stacked",
+            lower=perfometers_api.Perfometer(
+                name="lower",
+                focus_range=perfometers_api.FocusRange(
+                    lower=perfometers_api.Closed(0),
+                    upper=perfometers_api.Open(10),
+                ),
+                segments=["metric_1"],
             ),
-            id="dual-three-sub-perfometers",
-        ),
-        pytest.param(
-            (
-                "dual",
-                [
-                    (
-                        "dual",
-                        [
-                            ("linear", ([], 100, "Label 1")),
-                            ("linear", ([], 100, "Label 2")),
-                        ],
-                    )
-                ],
+            upper=perfometers_api.Perfometer(
+                name="upper",
+                focus_range=perfometers_api.FocusRange(
+                    lower=perfometers_api.Closed(0),
+                    upper=perfometers_api.Open(10),
+                ),
+                segments=["metric_2"],
             ),
-            id="dual-dual-sub-perfometers",
         ),
-        pytest.param(
-            (
-                "dual",
-                [
-                    (
-                        "stacked",
-                        [
-                            ("linear", ([], 100, "Label 1")),
-                            ("linear", ([], 100, "Label 2")),
-                        ],
-                    )
-                ],
+        {
+            "metric_1": TranslatedMetric(
+                originals=[Original("metric_1", 1.0)],
+                value=2.0,
+                scalar={},
+                auto_graph=True,
+                title="Metric 1",
+                unit_spec=ConvertibleUnitSpecification(
+                    notation=DecimalNotation(symbol=""),
+                    precision=AutoPrecision(digits=2),
+                ),
+                color="#111111",
             ),
-            id="dual-stacked-sub-perfometers",
-        ),
-        pytest.param(
-            (
-                "stacked",
-                [
-                    (
-                        "stacked",
-                        [
-                            ("linear", ([], 100, "Label 1")),
-                            ("linear", ([], 100, "Label 2")),
-                        ],
-                    )
-                ],
+            "metric_2": TranslatedMetric(
+                originals=[Original("metric_2", 1.0)],
+                value=7.0,
+                scalar={},
+                auto_graph=True,
+                title="Metric 2",
+                unit_spec=ConvertibleUnitSpecification(
+                    notation=DecimalNotation(symbol=""),
+                    precision=AutoPrecision(digits=2),
+                ),
+                color="#111111",
             ),
-            id="stacked-stacked-sub-perfometers",
-        ),
-        pytest.param(
-            (
-                "stacked",
-                [
-                    (
-                        "dual",
-                        [
-                            ("linear", ([], 100, "Label 1")),
-                            ("linear", ([], 100, "Label 2")),
-                        ],
-                    )
-                ],
-            ),
-            id="stacked-dual-sub-perfometers",
-        ),
-    ],
-)
-def test_parse_dual_or_stacked_perfometer_errors(legacy_perfometer: LegacyPerfometer) -> None:
-    with pytest.raises(MKGeneralException):
-        parse_perfometer(legacy_perfometer)
+        },
+    )
+    assert metricometer.get_stack() == [
+        [(59.5, "#111111"), (40.5, "#bdbdbd")],
+        [(17.0, "#111111"), (83.0, "#bdbdbd")],
+    ]
+    assert metricometer.get_label() == "7 / 2"

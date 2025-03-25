@@ -14,5 +14,7 @@ description:
  extracted and a state of {WARN} is assumed if the actual flow is
  outside these limits.
 
+ Firmware versions using the MIB of firmware V3.15.20 are supported.
+
 discovery:
  One service is created.

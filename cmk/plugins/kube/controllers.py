@@ -6,7 +6,10 @@
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 
-from kubernetes import client  # type: ignore[import-untyped]
+from kubernetes.client import (  # type: ignore[attr-defined]
+    # https://github.com/kubernetes-client/python/issues/2033
+    V1Pod,
+)
 
 from cmk.plugins.kube.schemata import api
 
@@ -92,7 +95,7 @@ def _find_control_chains(
 
 # TODO Needs an integration test
 def _match_controllers(
-    pod_to_controllers: Mapping[api.PodUID, Sequence[api.Controller]]
+    pod_to_controllers: Mapping[api.PodUID, Sequence[api.Controller]],
 ) -> Mapping[str, Sequence[api.PodUID]]:
     """Matches controllers to the pods they control."""
     controller_to_pods: dict[str, list[api.PodUID]] = {}
@@ -104,7 +107,7 @@ def _match_controllers(
 
 
 def map_controllers(
-    raw_pods: Sequence[client.V1Pod],
+    raw_pods: Sequence[V1Pod],
     object_to_owners: Mapping[str, api.OwnerReferences],
 ) -> tuple[Mapping[str, Sequence[api.PodUID]], Mapping[api.PodUID, Sequence[api.Controller]]]:
     pod_to_controllers = _find_control_chains(
@@ -115,7 +118,7 @@ def map_controllers(
 
 
 def map_controllers_top_to_down(
-    object_to_owners: Mapping[str, api.OwnerReferences]
+    object_to_owners: Mapping[str, api.OwnerReferences],
 ) -> Mapping[str, Sequence[str]]:
     """Creates a mapping where the key is the controller and the value a sequence of controlled
     objects

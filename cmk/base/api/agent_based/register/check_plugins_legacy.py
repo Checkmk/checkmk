@@ -3,27 +3,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-"""Helper to register a new-style section based on config.check_info
-"""
+"""Helper to register a new-style section based on config.check_info"""
+
 import copy
 import functools
 import itertools
 from collections import defaultdict
-from collections.abc import Callable, Generator, Iterable
+from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 from contextlib import suppress
 from typing import Any
 
-from cmk.utils.check_utils import maincheckify
-from cmk.utils.legacy_check_api import LegacyCheckDefinition
-
 from cmk.checkengine.parameters import Parameters
 
-from cmk.base.api.agent_based.plugin_classes import CheckPlugin
-from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
+from cmk.base.api.agent_based.plugin_classes import CheckPlugin, LegacyPluginLocation
+from cmk.base.api.agent_based.register.check_plugins import (
+    create_check_plugin,
+)
 
-from cmk.agent_based.v1 import IgnoreResults, Metric, Result, Service, State
-from cmk.agent_based.v1.type_defs import CheckResult
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.v2 import CheckResult, IgnoreResults, Metric, Result, Service, State
 
 
 def _create_discovery_function(check_info_element: LegacyCheckDefinition) -> Callable:
@@ -242,9 +240,9 @@ def _create_signature_check_function(
     return check_migration_wrapper
 
 
-def create_check_plugin_from_legacy(
-    check_plugin_name: str,
+def _create_check_plugin_from_legacy(
     check_info_element: LegacyCheckDefinition,
+    location: LegacyPluginLocation,
     *,
     validate_creation_kwargs: bool = True,
 ) -> CheckPlugin:
@@ -253,22 +251,17 @@ def create_check_plugin_from_legacy(
         # handled gracefully
         raise ValueError(check_info_element.service_name)
 
-    new_check_name = maincheckify(check_plugin_name)
-    sections = [check_plugin_name.split(".", 1)[0]]
-    if "." in check_plugin_name:
-        assert sections == check_info_element.sections
-
     discovery_function = _create_discovery_function(check_info_element)
 
     check_function = _create_check_function(
-        check_plugin_name,
+        check_info_element.name,
         check_info_element.service_name,
         check_info_element,
     )
 
     return create_check_plugin(
-        name=new_check_name,
-        sections=sections,
+        name=check_info_element.name,
+        sections=check_info_element.sections,
         service_name=check_info_element.service_name,
         discovery_function=discovery_function,
         discovery_default_parameters=None,  # legacy madness!
@@ -276,5 +269,38 @@ def create_check_plugin_from_legacy(
         check_function=check_function,
         check_default_parameters=check_info_element.check_default_parameters or {},
         check_ruleset_name=check_info_element.check_ruleset_name,
+        location=location,
         validate_kwargs=validate_creation_kwargs,
     )
+
+
+def convert_legacy_check_plugins(
+    legacy_checks: Iterable[LegacyCheckDefinition],
+    tracked_files: Mapping[str, str],
+    *,
+    validate_creation_kwargs: bool,
+    raise_errors: bool,
+) -> tuple[list[str], Sequence[CheckPlugin]]:
+    errors = []
+    checks = []
+    for check_info_element in legacy_checks:
+        # skip pure section declarations:
+        if check_info_element.service_name is None:
+            continue
+        file = tracked_files[check_info_element.name]
+        try:
+            checks.append(
+                _create_check_plugin_from_legacy(
+                    check_info_element,
+                    location=LegacyPluginLocation(file),
+                    validate_creation_kwargs=validate_creation_kwargs,
+                )
+            )
+        except (NotImplementedError, KeyError, AssertionError, ValueError):
+            # NOTE: as a result of a missing check plug-in, the corresponding services
+            #       will be silently droppend on most (all?) occasions.
+            if raise_errors:
+                raise
+            errors.append(f"Failed to auto-migrate legacy plug-in to check plug-in: {file}\n")
+
+    return errors, checks

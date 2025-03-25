@@ -7,17 +7,19 @@ import logging
 import re
 import time
 from collections.abc import Callable, Iterator
+from urllib.parse import quote_plus
 
 import pytest
-from playwright.sync_api import expect, FilePayload
-from playwright.sync_api import TimeoutError as PWTimeoutError
+from playwright.sync_api import expect, FilePayload, Locator
 
-from tests.testlib.playwright.pom.dashboard import Dashboard
+from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
+from tests.gui_e2e.testlib.playwright.timeouts import TIMEOUT_ASSERTIONS
+from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
 
-from cmk.utils.crypto.certificate import CertificateWithPrivateKey
-from cmk.utils.crypto.password import Password
-from cmk.utils.crypto.types import HashAlgorithm
+from cmk.crypto.certificate import CertificateWithPrivateKey
+from cmk.crypto.hash import HashAlgorithm
+from cmk.crypto.password import Password
 
 logger = logging.getLogger(__name__)
 
@@ -25,57 +27,78 @@ logger = logging.getLogger(__name__)
 @pytest.fixture(name="self_signed_cert", scope="module")
 def fixture_self_signed() -> CertificateWithPrivateKey:
     return CertificateWithPrivateKey.generate_self_signed(
-        common_name="Some CN", organization="e2etest"
+        common_name="Some CN", organization="e2etest", key_size=1024
     )
 
 
 def go_to_signature_page(page: Dashboard) -> None:
     """Go to the `Signature keys for signing agents` page."""
-    page.click_and_wait(page.main_menu.setup_menu("Windows, Linux, Solaris, AIX"), navigate=True)
-    page.main_area.locator("#page_menu_dropdown_agents >> text=Agents >> visible=true").click()
-    page.click_and_wait(page.main_area.get_text("Signature keys"), navigate=True)
+    logger.info("Navigate to 'Windows, Linux, ...' / Agent bakery page.")
+    page.main_menu.setup_menu("Windows, Linux, Solaris, AIX").click()
+    page.page.wait_for_url(re.compile(quote_plus("wato.py?mode=agents")))
+    page.main_area.check_page_title("Windows, Linux, Solaris, AIX")
+
+    logger.info("Navigate to 'Signature keys for signing agents' page.")
+
+    # flake-proofing: interaction with 'Agents menu' is unreliable.
+    def _click_on_agents_menu() -> bool:
+        page.main_area.locator("#page_menu_dropdown_agents").click()
+        time.sleep(0.1)
+        return page.main_area.locator("div[id='menu_agents']").is_visible()
+
+    wait_until(_click_on_agents_menu, interval=1, timeout=TIMEOUT_ASSERTIONS)
+
+    page.get_link("Signature keys").click()
+    page.page.wait_for_url(re.compile(quote_plus("wato.py?folder=&mode=signature_keys")))
     page.main_area.check_page_title("Signature keys for signing agents")
 
 
 def delete_key(page: Dashboard, identifier: str | None = None) -> None:
-    """Delete a key based on some text, e.g. alias or hash.
+    """Delete a key, if key identifier is provided. Otherwise, delete all the listed keys.
 
-    Note: you already have to be on the `Signature keys for signing agents` site.
+    `identifier` can be a key description or a fingerprint.
+
+    Note: you already have to be on the page
+    `Setup > Windows, Linux, ... > Signature keys for signing agents`
     """
-    locator = f"tr.data:has-text('{identifier}')" if identifier else "tr.data"
-    try:
-        for row in page.main_area.locator(f"{locator}").all():
-            row.locator("td.buttons >> a[title='Delete this key']").click()
-            page.main_area.locator("#page_menu_popups").locator("button.swal2-confirm").click()
-    except PWTimeoutError:
-        pass
+
+    def _delete_key(row: Locator) -> None:
+        key_identifier = identifier if identifier else row.inner_text().replace("\t", " ")
+        logger.info("Deleting key: '%s'!", key_identifier)
+
+        row.get_by_role("link", name="Delete this key").click()
+        page.main_area.locator().get_by_role("dialog").get_by_role("button", name="Delete").click()
+        expect(row, f"Key: '{key_identifier}' not deleted from the list!").to_have_count(0)
+
+    if identifier:
+        _delete_key(page.main_area.locator(f"tr.data:has-text('{identifier}')"))
+    else:
+        rows = page.main_area.locator("tr.data").all()
+        if not rows:
+            logger.info("There are no keys available. Skip deletion ...")
+        # delete the listed keys, if any.
+        for row in rows:
+            _delete_key(row)
 
 
 def send_pem_content(page: Dashboard, description: str, password: str, content: str) -> None:
     """Upload a combined pem file (private key and certificate) via the Paste textarea method."""
-    go_to_signature_page(page)
-    delete_key(page, description)
 
-    page.click_and_wait(page.main_area.get_suggestion("Upload key"), navigate=True)
-    page.main_area.check_page_title("Upload agent signature key")
-
+    _navigate_to_upload_key(page)
     page.main_area.get_input("key_p_alias").fill(description)
     page.main_area.get_input("key_p_passphrase").fill(password)
     page.main_area.locator("#select2-key_p_key_file_sel-container").click()
     page.main_area.get_text("Paste CRT/PEM Contents").click()
     page.main_area.locator("textarea[name='key_p_key_file_1']").fill(content)
 
+    logger.info("Upload key '%s'.", description)
     page.main_area.get_suggestion("Upload").click()
 
 
 def send_pem_file(page: Dashboard, description: str, password: str, content: str) -> None:
     """Upload a combined pem file (private key and certificate) via upload."""
-    go_to_signature_page(page)
-    delete_key(page, description)
 
-    page.click_and_wait(page.main_area.get_suggestion("Upload key"), navigate=True)
-    page.main_area.check_page_title("Upload agent signature key")
-
+    _navigate_to_upload_key(page)
     page.main_area.get_input("key_p_alias").fill(description)
     page.main_area.get_input("key_p_passphrase").fill(password)
     page.main_area.get_input("key_p_key_file_0").set_input_files(
@@ -86,13 +109,32 @@ def send_pem_file(page: Dashboard, description: str, password: str, content: str
         ]
     )
 
+    logger.info("Upload key '%s'.", description)
     page.main_area.get_suggestion("Upload").click()
+
+
+def _navigate_to_upload_key(page: Dashboard) -> None:
+    """Navigate to 'Upload key' page.
+
+    The page can be accessed at
+    ```
+    Setup
+        > Main menu
+            > Windows, Linux, ... (Agent bakery)
+                > Signature keys for signing agents
+    ```             > Upload key
+    """
+    go_to_signature_page(page)
+    logger.info("Navigate to 'Upload key' page.")
+    page.main_area.get_suggestion("Upload key").click()
+    page.page.wait_for_url(re.compile(quote_plus("wato.py?mode=upload_signature_key")))
+    page.main_area.check_page_title("Upload agent signature key")
 
 
 def wait_for_bakery(test_site: Site, max_attempts: int = 60) -> None:
     """Continously check the baking status and return once the agent baking is finished."""
     for attempt in range(max_attempts):
-        if test_site.openapi.get_baking_status().state == "finished":
+        if test_site.openapi.agents.get_baking_status().state == "finished":
             logger.info("Agent baking completed!")
             return
         assert attempt < max_attempts - 1, "Agent baking timed out!"
@@ -105,89 +147,100 @@ def test_upload_signing_keys(
     self_signed_cert: CertificateWithPrivateKey,
     upload_function: Callable[[Dashboard, str, str, str], None],
 ) -> None:
-    """Send a few payloads to the `Signature keys for signing agents` page and check the
-    responses."""
+    """Send a few payloads to the `Signature keys for signing agents` page.
 
-    # pem is invalid
-    upload_function(dashboard_page, "Some description", "password", "invalid")
-    dashboard_page.main_area.check_error("The file does not look like a valid key file.")
+    Also, check the responses.
+    """
+    try:
+        # pem is invalid
+        upload_function(dashboard_page, "invalid-1", "password", "invalid")
+        dashboard_page.main_area.check_error("The key file is invalid or the password is wrong.")
 
-    # This is very delicate...
-    # But will be fixed soon
-    pem_content = (
-        self_signed_cert.private_key.dump_pem(Password("SecureP4ssword")).str
-        + "\n"
-        + self_signed_cert.certificate.dump_pem().str
-    ).strip() + "\n"
-    fingerprint = rf'{self_signed_cert.certificate.fingerprint(HashAlgorithm.MD5).hex(":")}'
+        # This is very delicate...
+        # But will be fixed soon
+        pem_content = (
+            self_signed_cert.private_key.dump_pem(Password("SecureP4ssword")).str
+            + "\n"
+            + self_signed_cert.certificate.dump_pem().str
+        ).strip() + "\n"
+        fingerprint = rf"{self_signed_cert.certificate.fingerprint(HashAlgorithm.MD5).hex(':')}"
 
-    # passphrase is invalid
-    upload_function(dashboard_page, "Some description", "password", pem_content)
-    # There is a weird bug that is not reproducible and a wrong password can be
-    # mistreated as an invalid file. This happens so rarely and we don't think
-    # users are too confused by that so we leave it as is, but we should except
-    # both cases...
-    # See also: tests/unit/cmk/utils/crypto/test_certificate.py
-    dashboard_page.main_area.check_error(
-        re.compile("(Invalid pass phrase)|(The file does not look like a valid key file.)")
-    )
+        # passphrase is invalid
+        upload_function(dashboard_page, "invalid-2", "password", pem_content)
+        dashboard_page.main_area.check_error("The key file is invalid or the password is wrong.")
 
-    # all ok
-    upload_function(dashboard_page, "Some description", "SecureP4ssword", pem_content)
-    expect(dashboard_page.main_area.get_text(fingerprint.upper())).to_be_visible()
+        # all ok
+        upload_function(dashboard_page, "valid", "SecureP4ssword", pem_content)
+        expect(
+            dashboard_page.main_area.get_text(fingerprint.upper()),
+            f"Previously uploaded signature key '{fingerprint.upper()[:10]}...' not found.",
+        ).to_be_visible()
 
-    delete_key(dashboard_page, fingerprint)
+    finally:
+        go_to_signature_page(dashboard_page)
+        delete_key(dashboard_page)
 
 
 def test_generate_key(dashboard_page: Dashboard) -> None:
     """Add a key, aka let Checkmk generate it."""
+    invalid_key = "Won't work"
+    valid_key = "e2e-test"
     go_to_signature_page(dashboard_page)
-    delete_key(dashboard_page, "e2e-test")
 
     dashboard_page.click_and_wait(
         dashboard_page.main_area.get_suggestion("Generate key"), navigate=True
     )
     dashboard_page.main_area.check_page_title("Add agent signature key")
 
-    # Use a too short password
-    dashboard_page.main_area.get_input("key_p_alias").fill("Won't work")
-    dashboard_page.main_area.get_input("key_p_passphrase").fill("short")
-    dashboard_page.main_area.get_suggestion("Create").click()
-    dashboard_page.main_area.check_error("You need to provide at least 12 characters.")
+    try:
+        # Invalid key: Use a too short password
+        dashboard_page.main_area.get_input("key_p_alias").fill(invalid_key)
+        dashboard_page.main_area.get_input("key_p_passphrase").fill("short")
+        dashboard_page.main_area.get_suggestion("Create").click()
+        dashboard_page.main_area.check_error("You need to provide at least 12 characters.")
 
-    dashboard_page.main_area.get_input("key_p_alias").fill("e2e-test")
-    dashboard_page.main_area.get_input("key_p_passphrase").fill("123456789012")
-    dashboard_page.main_area.get_suggestion("Create").click()
-    expect(dashboard_page.main_area.get_text("e2e-test")).to_be_visible()
-
-    delete_key(dashboard_page, "e2e-test")
+        # Valid key
+        dashboard_page.main_area.get_input("key_p_alias").fill(valid_key)
+        dashboard_page.main_area.get_input("key_p_passphrase").fill("123456789012")
+        dashboard_page.main_area.get_suggestion("Create").click()
+        expect(
+            dashboard_page.main_area.get_text(valid_key),
+            f"Unable to find the key '{valid_key}' in the list of keys (the main area).",
+        ).to_be_visible()
+    finally:
+        go_to_signature_page(dashboard_page)
+        delete_key(dashboard_page)
 
 
 @pytest.fixture(name="with_key")
 def with_key_fixture(
     dashboard_page: Dashboard, self_signed_cert: CertificateWithPrivateKey
 ) -> Iterator[str]:
-    """Create a signing key via the GUI, yield and then delete it again."""
+    """Create a signature key via the GUI, yield and then delete it again."""
     key_name = "with_key_fixture"
     password = Password("foo")
     combined_file = (
         self_signed_cert.private_key.dump_pem(password).str
         + self_signed_cert.certificate.dump_pem().str
     )
-    send_pem_file(dashboard_page, key_name, password.raw, combined_file)
-    expect(dashboard_page.main_area.get_text(key_name)).to_be_visible()
+    try:
+        send_pem_file(dashboard_page, key_name, password.raw, combined_file)
+        expect(
+            dashboard_page.main_area.get_text(key_name),
+            f"Creation of signature key '{key_name}' failed.",
+        ).to_be_visible()
+        yield key_name
+    finally:
+        go_to_signature_page(dashboard_page)
+        delete_key(dashboard_page, key_name)
 
-    yield key_name
 
-    delete_key(dashboard_page, key_name)
-
-
-@pytest.mark.xfail(reason="Currently does not return an error message, see CMK-18451.", strict=True)
 def test_download_key(dashboard_page: Dashboard, with_key: str) -> None:
     """Test downloading a key.
 
-    First a wrong password is provided, checking the error message; then the key should be
-    downloaded successfully using the correct password."""
+    First a wrong password is provided, checking the error message;
+    then the key should be downloaded successfully using the correct password.
+    """
     go_to_signature_page(dashboard_page)
 
     dashboard_page.get_link("Download this key").click()
@@ -200,15 +253,15 @@ def test_download_key(dashboard_page: Dashboard, with_key: str) -> None:
     with dashboard_page.page.expect_download() as download_info:
         dashboard_page.main_area.get_suggestion("Download").click()
 
-    assert (
-        download_info.is_done()
-    ), "Signature key couldn't be downloaded, even after providing correct passphrase."
+    assert download_info.is_done(), (
+        "Signature key couldn't be downloaded, even after providing correct passphrase."
+    )
 
 
 def test_bake_and_sign(dashboard_page: Dashboard, test_site: Site, with_key: str) -> None:
-    """Go to agents and click bake and sign.
+    """Go to agents and click "bake and sign."
 
-    Bake and sign starts an asynchronous background job, which is why we run "wait_for_bakery()".
+    "Bake and sign" starts an asynchronous background job, which is why we run "wait_for_bakery()".
     If the job finished, the success is reported and the test can continue."""
     dashboard_page.click_and_wait(
         dashboard_page.main_menu.setup_menu("Windows, Linux, Solaris, AIX"), navigate=True
@@ -233,9 +286,10 @@ def test_bake_and_sign(dashboard_page: Dashboard, test_site: Site, with_key: str
 
     # wait for completion and verify status
     wait_for_bakery(test_site)
-    expect(dashboard_page.main_area.get_text("Agent baking successful")).to_be_visible(
-        timeout=30000
-    )
+    expect(
+        dashboard_page.main_area.get_text("Agent baking successful"),
+        "Message box with text 'Agent baking successful' was not found.",
+    ).to_be_visible()
 
 
 def test_bake_and_sign_disabled(dashboard_page: Dashboard) -> None:
@@ -247,9 +301,11 @@ def test_bake_and_sign_disabled(dashboard_page: Dashboard) -> None:
         dashboard_page.main_menu.setup_menu("Windows, Linux, Solaris, AIX"), navigate=True
     )
 
-    expect(dashboard_page.main_area.get_suggestion("Bake and sign agents")).to_have_class(
-        re.compile("disabled"), timeout=15000
-    )
-    expect(dashboard_page.main_area.get_suggestion("Sign agents")).to_have_class(
-        re.compile("disabled"), timeout=15000
-    )
+    expect(
+        dashboard_page.main_area.get_suggestion("Bake and sign agents"),
+        "The 'bake and sign agents' button should be disabled after key deletion, but isn't.",
+    ).to_have_class(re.compile("disabled"))
+    expect(
+        dashboard_page.main_area.get_suggestion("Sign agents"),
+        "The 'sign agents' button should be disabled after key deletion, but isn't.",
+    ).to_have_class(re.compile("disabled"))

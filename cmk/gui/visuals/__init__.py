@@ -3,22 +3,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable
+
+from cmk.ccc import store
+
 from cmk.utils import paths
 
 from cmk.gui import hooks, utils
 from cmk.gui.pages import PageRegistry
-from cmk.gui.valuespec import autocompleter_registry
+from cmk.gui.type_defs import FilterHTTPVariables
+from cmk.gui.valuespec import AutocompleterRegistry
 
-import cmk.ccc.version as cmk_version
-from cmk.ccc import store
-
-from . import _filters, info
+from . import _filters, _site_filters, info
 from ._add_to_visual import (
     add_to_dashboard_choices_autocompleter,
-    add_to_report_choices_autocompleter,
     ajax_add_visual,
     ajax_popup_add,
 )
+from ._add_to_visual import get_visual_choices as get_visual_choices
 from ._add_to_visual import page_menu_dropdown_add_to_visual as page_menu_dropdown_add_to_visual
 from ._add_to_visual import page_menu_topic_add_to as page_menu_topic_add_to
 from ._add_to_visual import set_page_context as set_page_context
@@ -49,9 +51,6 @@ from ._filter_valuespecs import filters_exist_for_infos as filters_exist_for_inf
 from ._filter_valuespecs import PageAjaxVisualFilterListGetChoice
 from ._filter_valuespecs import VisualFilterList as VisualFilterList
 from ._filter_valuespecs import VisualFilterListWithAddPopup as VisualFilterListWithAddPopup
-from ._filters import cre_site_filter_heading_info as cre_site_filter_heading_info
-from ._filters import MultipleSitesFilter as MultipleSitesFilter
-from ._filters import SiteFilter as SiteFilter
 from ._livestatus import get_filter_headers as get_filter_headers
 from ._livestatus import get_livestatus_filter_headers as get_livestatus_filter_headers
 from ._livestatus import get_only_sites_from_context as get_only_sites_from_context
@@ -66,16 +65,16 @@ from ._page_edit_visual import render_context_specs as render_context_specs
 from ._page_edit_visual import single_infos_spec as single_infos_spec
 from ._page_list import page_list as page_list
 from ._permissions import declare_visual_permissions as declare_visual_permissions
+from ._site_filters import default_site_filter_heading_info as default_site_filter_heading_info
+from ._site_filters import SiteFilter as SiteFilter
 from ._store import available as available
 from ._store import available_by_owner as available_by_owner
 from ._store import declare_custom_permissions as declare_custom_permissions
 from ._store import declare_packaged_visuals_permissions as declare_packaged_visuals_permissions
-from ._store import delete_local_file, get_installed_packages
 from ._store import get_permissioned_visual as get_permissioned_visual
 from ._store import invalidate_all_caches
 from ._store import load as load
 from ._store import load_visuals_of_a_user as load_visuals_of_a_user
-from ._store import local_file_exists, move_visual_to_local
 from ._store import save as save
 from ._store import TVisual as TVisual
 from ._title import view_title as view_title
@@ -96,6 +95,9 @@ def register(
     page_registry: PageRegistry,
     _visual_info_registry: VisualInfoRegistry,
     _filter_registry: FilterRegistry,
+    autocompleter_registry: AutocompleterRegistry,
+    site_choices: Callable[[], list[tuple[str, str]]],
+    site_filter_heading_info: Callable[[FilterHTTPVariables], str | None],
 ) -> None:
     page_registry.register_page("ajax_visual_filter_list_get_choice")(
         PageAjaxVisualFilterListGetChoice
@@ -104,13 +106,12 @@ def register(
     page_registry.register_page_handler("ajax_add_visual", ajax_add_visual)
     info.register(_visual_info_registry)
     _filters.register(page_registry, filter_registry)
+    _site_filters.register(
+        filter_registry, autocompleter_registry, site_choices, site_filter_heading_info
+    )
     autocompleter_registry.register_autocompleter(
         "add_to_dashboard_choices", add_to_dashboard_choices_autocompleter
     )
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
-        autocompleter_registry.register_autocompleter(
-            "add_to_report_choices", add_to_report_choices_autocompleter
-        )
 
     hooks.register_builtin("snapshot-pushed", invalidate_all_caches)
     hooks.register_builtin(

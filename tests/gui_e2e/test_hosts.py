@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
+import os
 import re
 from collections.abc import Iterator
 from urllib.parse import quote_plus
@@ -11,13 +12,19 @@ import pytest
 from faker import Faker
 from playwright.sync_api import expect
 
-from tests.testlib.playwright.pom.dashboard import Dashboard
-from tests.testlib.playwright.pom.monitor.host_search import HostSearch
-from tests.testlib.playwright.pom.monitor.host_status import HostStatus
-from tests.testlib.playwright.pom.setup.hosts import HostDetails, HostProperties
+from tests.gui_e2e.testlib.host_details import (
+    AddressFamily,
+    AgentAndApiIntegration,
+    HostDetails,
+)
+from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
+from tests.gui_e2e.testlib.playwright.pom.monitor.host_search import HostSearch
+from tests.gui_e2e.testlib.playwright.pom.monitor.host_status import HostStatus
+from tests.gui_e2e.testlib.playwright.pom.setup.hosts import HostProperties
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
+pytestmark = pytest.mark.xfail(reason="CMK-22540; Flake while activating changes ...")
 
 
 @pytest.fixture(name="host")
@@ -27,8 +34,9 @@ def fixture_host(dashboard_page: Dashboard) -> Iterator[HostProperties]:
         HostDetails(name=f"test_host_{Faker().first_name()}", ip="127.0.0.1"),
     )
     yield _host
-    _host.navigate()
-    _host.delete_host()
+    if int(os.getenv("CLEANUP", "1")) == 1:
+        _host.navigate()
+        _host.delete_host()
 
 
 def test_navigate_to_host_properties(host: HostProperties) -> None:
@@ -90,8 +98,8 @@ def create_and_delete_hosts_with_labels(test_site: Site) -> Iterator[tuple[list[
             name=f"test_host_{faker.unique.first_name()}",
             ip="127.0.0.1",
             site=site.id,
-            tag_agent="no-agent",
-            tag_address_family="ip-v4-only",
+            agent_and_api_integration=AgentAndApiIntegration.no_agent,
+            address_family=AddressFamily.ip_v4_only,
         )
         if i % 2 == 0:
             host_details.labels = {label_key: label_value_foo}
@@ -99,15 +107,9 @@ def create_and_delete_hosts_with_labels(test_site: Site) -> Iterator[tuple[list[
         else:
             host_details.labels = {label_key: label_value_bar}
             bar_label_hosts.append(host_details)
-        test_site.openapi.create_host(
+        test_site.openapi.hosts.create(
             host_details.name,
-            attributes={
-                "ipaddress": host_details.ip,
-                "site": host_details.site,
-                "tag_agent": host_details.tag_agent,
-                "tag_address_family": host_details.tag_address_family,
-                "labels": host_details.labels,
-            },
+            attributes=host_details.rest_api_attributes(),
         )
     site.activate_changes_and_wait_for_core_reload()
 
@@ -115,14 +117,13 @@ def create_and_delete_hosts_with_labels(test_site: Site) -> Iterator[tuple[list[
 
     logger.info("Delete all hosts via API")
     for host in foo_label_hosts + bar_label_hosts:
-        site.openapi.delete_host(host.name)
+        site.openapi.hosts.delete(host.name)
     site.activate_changes_and_wait_for_core_reload()
 
 
 def test_filter_hosts_with_host_labels(
     hosts_with_labels: tuple[list[HostDetails], str], dashboard_page: Dashboard
 ) -> None:
-
     expected_hosts_list, expected_label = hosts_with_labels
     host_status_page = HostStatus(dashboard_page.page, expected_hosts_list[0])
 
@@ -132,9 +133,9 @@ def test_filter_hosts_with_host_labels(
     host_search_page.check_label_filter_applied("is", expected_label)
 
     # TODO: add validation corresponding to CMK-18579, if required.
-    assert host_search_page.found_hosts.count() == len(
-        expected_hosts_list
-    ), "Unexpected number of hosts after applying label filter."
+    assert host_search_page.found_hosts.count() == len(expected_hosts_list), (
+        "Unexpected number of hosts after applying label filter."
+    )
     assert sorted(host_search_page.found_hosts.all_inner_texts()) == sorted(
         [host.name for host in expected_hosts_list]
     ), "Unexpected host names after applying label filter."

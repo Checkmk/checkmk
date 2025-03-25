@@ -40,8 +40,9 @@
 # State                         = STANDBY
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 hpux_multipath_pathstates = {
     "ACTIVE": 0,
@@ -113,6 +114,7 @@ def check_hpux_multipath(item, params, parsed):
 
 
 check_info["hpux_multipath"] = LegacyCheckDefinition(
+    name="hpux_multipath",
     service_name="Multipath %s",
     parse_function=parse_hpux_multipath,
     discovery_function=inventory_hpux_multipath,

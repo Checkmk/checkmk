@@ -3,18 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from os import path
 from typing import Any, Literal
 
 from marshmallow import validate, ValidationError
 
-from cmk.utils.crypto import certificate, keys
 from cmk.utils.tags import BuiltinTagConfig, TagGroupID, TagID
 
 from cmk.gui.config import active_config
 from cmk.gui.userdb import connection_choices, get_saml_connections
+from cmk.gui.userdb.ldap_connector import LDAPUserConnector
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.password_store import PasswordStore
@@ -26,6 +25,7 @@ from cmk.gui.watolib.tags import (
 from cmk.gui.watolib.timeperiods import verify_timeperiod_name_exists
 
 from cmk import fields
+from cmk.crypto import certificate, keys
 from cmk.fields import validators
 
 
@@ -76,6 +76,7 @@ class RelativeUrl(fields.String):
             validator = validate.URL(
                 schemes=set(self.must_startwith_one),
                 error=self.error_messages["invalid"],
+                require_tld=False,
             )
             self.validators.insert(0, validator)
 
@@ -163,6 +164,35 @@ class NetworkPortNumber(fields.Integer):
             example=6790,
             **kwargs,
         )
+
+
+class LDAPConnectionSuffix(fields.String):
+    default_error_messages = {
+        "should_exist": "The LDAP connection suffix {path!r} should exist but it doesn't.",
+        "should_not_exist": "The LDAP connection suffix {path!r} should not exist but it does.",
+    }
+
+    def __init__(
+        self,
+        presence: Literal["should_exist", "should_not_exist", "ignore"] = "ignore",
+        required: bool = True,
+        description: str = "The LDAP connection suffix can be used to distinguish equal named objects"
+        " (name conflicts), for example user accounts, from different LDAP connections.",
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(required=required, description=description, **kwargs)
+        self.presence = presence
+
+    def _validate(self, value: str) -> None:
+        super()._validate(value)
+
+        if self.presence == "should_exist":
+            if value not in LDAPUserConnector.get_connection_suffixes():
+                raise self.make_error("should_exist", path=value)
+
+        if self.presence == "should_not_exist":
+            if value in LDAPUserConnector.get_connection_suffixes():
+                raise self.make_error("should_not_exist", path=value)
 
 
 class LDAPConnectionID(fields.String):

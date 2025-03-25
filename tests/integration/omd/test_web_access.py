@@ -115,11 +115,6 @@ def test_cmk_deploy_agent(site: Site) -> None:
     assert response.json()["result"].startswith("Missing")
 
 
-def test_cmk_run_cron(site: Site) -> None:
-    web = CMKWebSession(site)
-    web.get("/%s/check_mk/run_cron.py" % site.id)
-
-
 def test_cmk_pnp_template_removed(site: Site) -> None:
     web = CMKWebSession(site)
     web.get("/%s/check_mk/pnp_template.py" % site.id, expected_code=404)
@@ -127,7 +122,12 @@ def test_cmk_pnp_template_removed(site: Site) -> None:
 
 def test_cmk_ajax_graph_images(site: Site) -> None:
     web = CMKWebSession(site)
-    response = web.get("/%s/check_mk/ajax_graph_images.py" % site.id)
+    response = web.get(
+        "/%s/check_mk/ajax_graph_images.py" % site.id,
+        headers={
+            "Authorization": f"InternalToken {site.get_site_internal_secret().b64_str}",
+        },
+    )
     assert response.text == ""
 
 
@@ -183,6 +183,11 @@ def test_content_security_policy_header(site: Site) -> None:
     # CSP for error pages
     response = web.request("OPTIONS", "/", expected_code=405)
     assert response.headers["Content-Security-Policy"] == default_csp
+
+    # "CSP for successful pages" causes ConnectionError for CSE with auth provider in CI
+    # See CMK-22347 for details.
+    if site.edition.is_saas_edition():
+        return
 
     # CSP for successful pages
     response = web.get("/%s/check_mk/login.py?_origtarget=index.py" % site.id)

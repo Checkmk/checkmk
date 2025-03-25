@@ -83,7 +83,7 @@ class FocusRange:
 @dataclass(frozen=True, kw_only=True)
 class Perfometer:
     """
-    Istances of this class will only be picked up by Checkmk if their names start with
+    Instances of this class will only be picked up by Checkmk if their names start with
     ``perfometer_``.
 
     Args:

@@ -17,6 +17,10 @@ import json
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 
+import cmk.ccc.version as cmk_version
+
+from cmk.utils import paths
+
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -28,13 +32,13 @@ from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodInline
+from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.urls import (
     doc_reference_url,
     DocReference,
     get_confirm_link_title,
     makeuri,
     makeuri_contextless,
-    requested_file_with_query,
     youtube_reference_url,
     YouTubeReference,
 )
@@ -112,28 +116,57 @@ def make_confirmed_form_submit_link(
     )
 
 
+def show_success_dialog(
+    title: str,
+    confirm_url: str,
+    message: str | HTML | None = None,
+    confirm_text: str | None = None,
+) -> None:
+    dialog_options = {
+        "title": title,
+        "html": escaping.escape_text(message),
+        "confirmButtonText": confirm_text if confirm_text else _("Confirm"),
+        "customClass": {
+            "confirmButton": "confirm_success",
+            "icon": "confirm_icon" + " confirm_success",
+        },
+        "showCancelButton": False,
+        "iconHtml": "<span>&check;</span>",
+    }
+
+    html.javascript(
+        "cmk.forms.confirm_dialog(%s, ()=>{location.href = %s;})"
+        % (
+            json.dumps(dialog_options),
+            json.dumps(confirm_url),
+        )
+    )
+
+
 def show_confirm_cancel_dialog(
     title: str,
     confirm_url: str,
     cancel_url: str | None = None,
     message: str | HTML | None = None,
     confirm_text: str | None = None,
+    show_cancel_button: bool = True,
 ) -> None:
+    dialog_options = {
+        "title": title,
+        "html": escaping.escape_text(message),
+        "confirmButtonText": confirm_text if confirm_text else _("Confirm"),
+        "cancelButtonText": _("Cancel"),
+        "customClass": {
+            "confirmButton": "confirm_question",
+            "icon": "confirm_icon" + " confirm_question",
+        },
+        "showCancelButton": show_cancel_button,
+    }
+
     html.javascript(
         "cmk.forms.confirm_dialog(%s, ()=>{location.href = %s;}, %s)"
         % (
-            json.dumps(
-                {
-                    "title": title,
-                    "html": escaping.escape_text(message),
-                    "confirmButtonText": confirm_text if confirm_text else _("Confirm"),
-                    "cancelButtonText": _("Cancel"),
-                    "customClass": {
-                        "confirmButton": "confirm_question",
-                        "icon": "confirm_icon" + " confirm_question",
-                    },
-                }
-            ),
+            json.dumps(dialog_options),
             json.dumps(confirm_url),
             f"()=>{{location.href = {json.dumps(cancel_url)}}}" if cancel_url else "null",
         )
@@ -204,6 +237,14 @@ class PageMenuEntry:
     css_classes: list[str | None] = field(default_factory=list)
     disabled_tooltip: str | None = None
     sort_index: int = 1
+
+
+@dataclass
+class PageMenuEntryCEEOnly(PageMenuEntry):
+    def __post_init__(self) -> None:
+        if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE:
+            self.is_enabled = False
+            self.disabled_tooltip = _("Enterprise feature")
 
 
 @dataclass
@@ -396,7 +437,7 @@ def make_help_dropdown() -> PageMenuDropdown:
                 entries=[
                     PageMenuEntry(
                         title=_("Show inline help"),
-                        icon_name="toggle_" + ("on" if user.show_help else "off"),
+                        icon_name="toggle_" + ("on" if user.inline_help_as_text else "off"),
                         item=make_javascript_link("cmk.help.toggle()"),
                         name="inline_help",
                         is_enabled=False,
@@ -446,7 +487,7 @@ def make_up_link(breadcrumb: Breadcrumb) -> PageMenuDropdown:
 
 
 def make_checkbox_selection_topic(selection_key: str, is_enabled: bool = True) -> PageMenuTopic:
-    is_selected = user.get_rowselection(request.var("selection") or "", selection_key)
+    is_selected = user.get_rowselection(SelectionId.from_request(request), selection_key)
     return PageMenuTopic(
         title=_("Selection"),
         entries=[
@@ -649,7 +690,7 @@ class PageMenuRenderer:
         html.close_td()
 
     def _show_suggestions(self, menu: PageMenu) -> None:
-        entries = menu.suggestions
+        entries = list(menu.suggestions)
         if not entries:
             return
 
@@ -848,7 +889,7 @@ def inpage_search_form(mode: str | None = None, default_value: str = "") -> None
         if mode:
             html.hidden_field("mode", mode, add_var=True)
         reset_url = request.get_ascii_input_mandatory(
-            "reset_url", requested_file_with_query(request)
+            "reset_url", makeuri(request, [], delvars=["filled_in", "search"])
         )
         html.hidden_field("reset_url", reset_url, add_var=True)
         html.buttonlink(reset_url, "", obj_id=reset_button_id, title=_("Reset"))

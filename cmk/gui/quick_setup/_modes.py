@@ -3,12 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable
-from typing import Collection, Mapping, Protocol, Sequence
+from abc import ABC
+from collections.abc import Collection, Iterable, Mapping, Sequence
+from typing import Protocol
 
-from cmk.utils.rulesets.definition import RuleGroupType
+from cmk.ccc.exceptions import MKGeneralException
 
-from cmk.gui.breadcrumb import Breadcrumb
+from cmk.utils.rulesets.definition import RuleGroup, RuleGroupType
+
+from cmk.gui import forms
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -17,12 +21,15 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
+    make_simple_form_page_menu,
     make_simple_link,
     PageMenu,
     PageMenuDropdown,
     PageMenuEntry,
     PageMenuTopic,
 )
+from cmk.gui.page_menu_entry import enable_page_menu_entry
+from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.table import Foldable, Table, table_element
 from cmk.gui.type_defs import ActionResult, HTTPVariables, Icon, PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -30,35 +37,119 @@ from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link
-from cmk.gui.valuespec import Dictionary, DictionaryEntry, FixedValue, RuleComment, TextInput
+from cmk.gui.valuespec import (
+    Dictionary,
+    DictionaryEntry,
+    FixedValue,
+    RuleComment,
+    TextInput,
+)
+from cmk.gui.wato import TileMenuRenderer
 from cmk.gui.wato._main_module_topics import MainModuleTopicQuickSetup
 from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.wato.pages.password_store import ModeEditPassword
 from cmk.gui.wato.pages.rulesets import ModeEditRule
-from cmk.gui.watolib.configuration_bundles import (
-    BUNDLE_DOMAINS,
+from cmk.gui.watolib.changes import add_change
+from cmk.gui.watolib.configuration_bundle_store import (
     BundleId,
-    BundleReferences,
     ConfigBundle,
     ConfigBundleStore,
-    delete_config_bundle,
-    identify_bundle_group_type,
-    identify_bundle_references,
     load_group_bundles,
+)
+from cmk.gui.watolib.configuration_bundles import (
+    bundle_domains,
+    BundleReferences,
+    delete_config_bundle,
+    delete_config_bundle_objects,
+    edit_config_bundle_configuration,
+    identify_bundle_references,
     valid_special_agent_bundle,
 )
 from cmk.gui.watolib.hosts_and_folders import make_action_link
-from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
-from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic, MenuItem
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.rulespecs import rulespec_registry
-
-from cmk.ccc.exceptions import MKGeneralException
 
 
 def register(main_module_registry: MainModuleRegistry, mode_registry: ModeRegistry) -> None:
-    # main_module_registry.register(MainModuleQuickSetupAWS)    # TODO: register once quick setup is implemented
     mode_registry.register(ModeConfigurationBundle)
     mode_registry.register(ModeEditConfigurationBundles)
+    mode_registry.register(ModeQuickSetupSpecialAgent)
+    main_module_registry.register(MainModuleQuickSetupAWS)
+    main_module_registry.register(MainModuleQuickSetupAzure)
+    main_module_registry.register(MainModuleQuickSetupGCP)
+
+
+class ModeQuickSetupSpecialAgent(WatoMode):
+    """
+    This mode allows to create a new special agent configuration using the quick setup. It
+    is solely restricted to special agent based rules and relies on the RuleGroup.SpecialAgents
+    naming convention of the rulespec entry
+    """
+
+    VAR_NAME = "varname"
+
+    @classmethod
+    def name(cls) -> str:
+        return "new_special_agent_configuration"
+
+    @classmethod
+    def parent_mode(cls) -> type[WatoMode] | None:
+        return ModeEditConfigurationBundles
+
+    def _breadcrumb_url(self) -> str:
+        return self.mode_url(varname=self._name)
+
+    def _from_vars(self) -> None:
+        self._name = request.get_ascii_input_mandatory(self.VAR_NAME)
+        if not self._name.startswith(RuleGroupType.SPECIAL_AGENTS.value):
+            raise MKUserError(
+                None,
+                _("Add configuration is only available for special agent based rules."),
+            )
+
+        quick_setup = quick_setup_registry.get(self._name)
+        if quick_setup is None:
+            raise MKUserError(None, _("No Configuration Quick setup for %s available") % self._name)
+        self._quick_setup_id = quick_setup.id
+
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
+        return []
+
+    def ensure_permissions(self) -> None:
+        self._ensure_static_permissions()
+        for domain_definition in bundle_domains()[RuleGroupType.SPECIAL_AGENTS]:
+            pname = domain_definition.permission
+            user.need_permission(pname if "." in pname else ("wato." + pname))
+
+    def title(self) -> str:
+        title = rulespec_registry[self._name].title
+        assert title is not None
+        return _("Add %s configuration") % title
+
+    def breadcrumb(self) -> Breadcrumb:
+        with request.stashed_vars():
+            return super().breadcrumb()
+
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(
+            title=_("Configuration"),
+            breadcrumb=breadcrumb,
+            add_cancel_link=True,
+            cancel_url=mode_url(mode_name=ModeEditConfigurationBundles.name(), varname=self._name),
+        )
+
+    def page(self) -> None:
+        enable_page_menu_entry(html, "inline_help")
+        html.vue_app(
+            app_name="quick_setup",
+            data={
+                "quick_setup_id": self._quick_setup_id,
+                "mode": "guided",
+                "toggle_enabled": False,
+            },
+        )
 
 
 class ModeEditConfigurationBundles(WatoMode):
@@ -74,18 +165,28 @@ class ModeEditConfigurationBundles(WatoMode):
     def static_permissions() -> Collection[PermissionName]:
         return []
 
+    def _topic_breadcrumb_item(self) -> Iterable[BreadcrumbItem]:
+        """Return the BreadcrumbItem for the topic of this mode"""
+        yield BreadcrumbItem(
+            title=MainModuleTopicQuickSetup.title,
+            url=None,
+        )
+
     def ensure_permissions(self) -> None:
         self._ensure_static_permissions()
-        for domain_definition in BUNDLE_DOMAINS[self._bundle_group_type]:
+        for domain_definition in bundle_domains()[self._bundle_group_type]:
             pname = domain_definition.permission
             user.need_permission(pname if "." in pname else ("wato." + pname))
 
     def _from_vars(self) -> None:
         self._name = request.get_ascii_input_mandatory(self.VAR_NAME)
-        self._bundle_group_type = identify_bundle_group_type(self._name)
-        if self._bundle_group_type not in BUNDLE_DOMAINS:
+        try:
+            self._bundle_group_type = RuleGroupType(self._name.split(":")[0])
+        except ValueError:
+            raise MKUserError(None, _("Invalid configuration bundle group type."))
+        if self._bundle_group_type not in bundle_domains():
             raise MKUserError(
-                None,
+                self.VAR_NAME,
                 _("No edit configuration bundle implemented for bundle group type '%s'.")
                 % self._name,
             )
@@ -114,8 +215,11 @@ class ModeEditConfigurationBundles(WatoMode):
                                     title=_("Add configuration"),
                                     icon_name="new",
                                     item=make_simple_link(
-                                        ""
-                                    ),  # TODO: add Quick setup creation page
+                                        mode_url(
+                                            ModeQuickSetupSpecialAgent.name(),
+                                            varname=self._name,
+                                        )
+                                    ),
                                     is_shortcut=True,
                                     is_suggested=True,
                                 )
@@ -137,16 +241,52 @@ class ModeEditConfigurationBundles(WatoMode):
 
         self._bundles_listing(self._name)
 
+    def _delete_bundle(self, bundle_id: BundleId) -> None:
+        if self._bundle_group_type is RuleGroupType.SPECIAL_AGENTS:
+            # revert changes does not work correctly when a config sync to another site occurred
+            # for consistency reasons we always prevent the user from reverting the changes
+            prevent_discard_changes = True
+        else:
+            raise MKGeneralException("Not implemented")
+
+        delete_config_bundle(bundle_id)
+        add_change(
+            "delete-quick-setup",
+            _("Deleted Quick setup {bundle_id}").format(bundle_id=bundle_id),
+            prevent_discard_changes=prevent_discard_changes,
+        )
+
     def _bundles_listing(self, group_name: str) -> None:
         bundle_ids = set(load_group_bundles(group_name).keys())
         if not bundle_ids:
-            # TODO (CMK-18347): add redesigned overview for empty configurations
-            html.div(_("No configuration yet"))
+            self._no_bundles()
             return
 
         bundles_with_references = identify_bundle_references(group_name, bundle_ids)
         if self._bundle_group_type is RuleGroupType.SPECIAL_AGENTS:
             self._special_agent_bundles_listing(group_name, bundles_with_references)
+            return
+
+        raise MKGeneralException("Not implemented")
+
+    def _no_bundles(self) -> None:
+        if self._bundle_group_type is RuleGroupType.SPECIAL_AGENTS:
+            subtype = self._name.split(":", maxsplit=1)[1]
+            html.div(
+                html.render_icon(f"qs_{subtype}")
+                + html.render_b(_("No %s configuration yet") % self.title())
+                + html.render_p(
+                    _(
+                        'Click the "Add configuration" button to start setting up your first '
+                        "configuration."
+                    )
+                )
+                + html.render_a(
+                    _("Add configuration"),
+                    mode_url(ModeQuickSetupSpecialAgent.name(), varname=self._name),
+                ),
+                css=["no-config-bundles"],
+            )
             return
 
         raise MKGeneralException("Not implemented")
@@ -163,14 +303,14 @@ class ModeEditConfigurationBundles(WatoMode):
     def action(self) -> ActionResult:
         check_csrf_token()
         if not transactions.check_transaction():
-            return redirect(self.mode_url())
+            return redirect(self.mode_url(**{"mode": self.name(), self.VAR_NAME: self._name}))
 
-        action = request.get_ascii_input_mandatory(self.VAR_ACTION)
         bundle_id = BundleId(request.get_ascii_input_mandatory(self.VAR_BUNDLE_ID))
+        action = request.get_ascii_input_mandatory(self.VAR_ACTION)
         if action == "delete":
-            delete_config_bundle(bundle_id)
+            self._delete_bundle(bundle_id)
 
-        return redirect(self.mode_url())
+        return redirect(self.mode_url(**{"mode": self.name(), self.VAR_NAME: self._name}))
 
     def _special_agent_bundles_listing(
         self, group_name: str, bundles: Mapping[BundleId, BundleReferences]
@@ -235,7 +375,7 @@ class ModeEditConfigurationBundles(WatoMode):
         html.empty_icon()
 
         table.cell(_("Actions"), css=["buttons rulebuttons"])
-        edit_url = ""  # TODO: introduce edit button
+        edit_url = mode_url(ModeConfigurationBundle.name(), bundle_id=bundle_id)
         html.icon_button(url=edit_url, title=_("Edit this configuration"), icon="edit")
 
         html.icon_button(
@@ -248,14 +388,24 @@ class ModeEditConfigurationBundles(WatoMode):
         )
 
 
-class MainModuleQuickSetupAWS(ABCMainModule):
-    @property
-    def mode_or_url(self) -> str:
-        return "quick_setup_aws"
-
+class ABCMainModuleQuickSetup(ABCMainModule, ABC):
     @property
     def topic(self) -> MainModuleTopic:
         return MainModuleTopicQuickSetup
+
+    @property
+    def permission(self) -> None | str:
+        return "wato"
+
+    @property
+    def is_show_more(self) -> bool:
+        return False
+
+
+class MainModuleQuickSetupAWS(ABCMainModuleQuickSetup):
+    @property
+    def mode_or_url(self) -> str:
+        return mode_url(ModeEditConfigurationBundles.name(), varname=RuleGroup.SpecialAgents("aws"))
 
     @property
     def title(self) -> str:
@@ -266,10 +416,6 @@ class MainModuleQuickSetupAWS(ABCMainModule):
         return "quick_setup_aws"
 
     @property
-    def permission(self) -> None | str:
-        return None
-
-    @property
     def description(self) -> str:
         return _("Configure Amazon Web Service (AWS) monitoring in Checkmk")
 
@@ -277,13 +423,67 @@ class MainModuleQuickSetupAWS(ABCMainModule):
     def sort_index(self) -> int:
         return 10
 
-    @property
-    def is_show_more(self) -> bool:
-        return False
-
     @classmethod
     def megamenu_search_terms(cls) -> Sequence[str]:
         return ["aws"]
+
+
+class MainModuleQuickSetupAzure(ABCMainModuleQuickSetup):
+    @property
+    def mode_or_url(self) -> str:
+        return mode_url(
+            ModeEditConfigurationBundles.name(),
+            varname=RuleGroup.SpecialAgents("azure"),
+        )
+
+    @property
+    def title(self) -> str:
+        return _("Microsoft Azure")
+
+    @property
+    def icon(self) -> Icon:
+        return "azure_vms"
+
+    @property
+    def description(self) -> str:
+        return _("Configure Microsoft Azure monitoring in Checkmk")
+
+    @property
+    def sort_index(self) -> int:
+        return 11
+
+    @classmethod
+    def megamenu_search_terms(cls) -> Sequence[str]:
+        return ["azure"]
+
+
+class MainModuleQuickSetupGCP(ABCMainModuleQuickSetup):
+    @property
+    def mode_or_url(self) -> str:
+        return mode_url(
+            ModeEditConfigurationBundles.name(),
+            varname=RuleGroup.SpecialAgents("gcp"),
+        )
+
+    @property
+    def title(self) -> str:
+        return _("Google Cloud Platform (GCP)")
+
+    @property
+    def icon(self) -> Icon:
+        return "gcp"
+
+    @property
+    def description(self) -> str:
+        return _("Configure Google Cloud Platform (GCP) monitoring in Checkmk")
+
+    @property
+    def sort_index(self) -> int:
+        return 12
+
+    @classmethod
+    def megamenu_search_terms(cls) -> Sequence[str]:
+        return ["gcp"]
 
 
 class EditDCDConnection(Protocol):
@@ -293,35 +493,55 @@ class EditDCDConnection(Protocol):
 
     def page(self, form_name: str) -> None: ...
 
+    def action(self) -> ActionResult: ...
+
 
 class ModeConfigurationBundle(WatoMode):
-    edit_dcd_connection_hook: Callable[[], EditDCDConnection | None] = lambda: None
+    FORM_PREFIX = "options"
+    VAR_ACTION = "action"
 
     @classmethod
     def name(cls) -> str:
         return "edit_configuration_bundle"
+
+    @classmethod
+    def parent_mode(cls) -> type["WatoMode"]:
+        return ModeEditConfigurationBundles
 
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:
         return []
 
     def ensure_permissions(self) -> None:
+        if not self._existing_bundle:
+            return
+
         self._ensure_static_permissions()
-        for domain_definition in BUNDLE_DOMAINS.get(self._rule_group_type, []):
+        for domain_definition in bundle_domains().get(self._rule_group_type, []):
             pname = domain_definition.permission
             user.need_permission(pname if "." in pname else ("wato." + pname))
 
     def title(self) -> str:
+        if not self._existing_bundle:
+            return _("Configuration: %s") % self._bundle_id
         return _("Edit configuration: %s") % self._bundle["title"]
+
+    def breadcrumb(self) -> Breadcrumb:
+        if not self._existing_bundle:
+            return Breadcrumb()
+
+        request.set_var(ModeEditConfigurationBundles.VAR_NAME, self._bundle_group)
+        return super().breadcrumb()
 
     def _from_vars(self) -> None:
         self._bundle_id = request.get_validated_type_input_mandatory(BundleId, "bundle_id")
+
         bundle_store = ConfigBundleStore().load_for_reading()
+        self._existing_bundle = True
         if self._bundle_id not in bundle_store:
-            raise MKUserError(
-                "bundle_id",
-                _('The configuration "%s" does not exist.') % self._bundle_id,
-            )
+            self._existing_bundle = False
+            return
+
         self._bundle: ConfigBundle = bundle_store[self._bundle_id]
         self._bundle_group = self._bundle["group"]
         self._bundle_references = identify_bundle_references(self._bundle_group, {self._bundle_id})[
@@ -331,7 +551,7 @@ class ModeConfigurationBundle(WatoMode):
         self._rule_group_type = RuleGroupType(self._bundle_group.split(":")[0])
         match self._rule_group_type:
             case RuleGroupType.SPECIAL_AGENTS:
-                self._special_agents_from_vars()
+                self._verify_special_agent_vars()
             case _:
                 raise MKUserError(
                     None,
@@ -339,58 +559,132 @@ class ModeConfigurationBundle(WatoMode):
                     % self._bundle_group,
                 )
 
-    def _special_agents_from_vars(self) -> None:
-        if not all(
-            [
-                self._bundle_references.rules,
-                self._bundle_references.hosts,
-                self._bundle_references.passwords,
-            ]
-        ):
-            raise MKUserError(
-                None,
-                _("The configuration bundle does not contain all required objects."),
+    def _verify_special_agent_vars(self) -> None:
+        if not valid_special_agent_bundle(self._bundle_references):
+            raise MKGeneralException(
+                _(
+                    "The configuration bundle '%s' is not valid. "
+                    "This likely means that parts of it were removed or not properly created."
+                )
+                % self._bundle_id,
             )
 
-        assert self._bundle_references.rules
-        assert len(self._bundle_references.rules) == 1
-        assert self._bundle_references.hosts
-        assert len(self._bundle_references.hosts) == 1
-        assert self._bundle_references.passwords
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(
+            _("Actions"), breadcrumb, form_name="edit_bundle", button_name="_save"
+        )
 
-        # Rule
-        ModeEditRule.set_vars(self._bundle_group, self._bundle_references.rules[0].id)
-        self._edit_rule = ModeEditRule()
+    def page(self) -> None:
+        if not self._existing_bundle:
+            html.open_div(class_="really")
+            html.h3(_("The configuration bundle %s does not exist") % self._bundle_id)
+            html.br()
+            html.write_text_permissive(
+                _(
+                    "This can happen if the configuration bundle was deleted and some underlying "
+                    "objects were not properly cleaned up. By pressing the button 'Clean Up' you "
+                    "can remove all objects that reference the non-existing configuration."
+                )
+            )
+            html.br()
+            with html.form_context("edit_bundle", method="POST"):
+                html.button("_clean_up", _("Clean Up"), "")
+                html.hidden_fields(add_action_vars=True)
 
-        # Host
-        ModeEditHost.set_vars(self._bundle_references.hosts[0].name())
-        self._edit_host = ModeEditHost()
+            html.close_div()
+            return
 
-        # DCD connections
+        html.h1(_("Configuration"), class_=["edit_configuration_bundle_header"])
+        match self._rule_group_type:
+            case RuleGroupType.SPECIAL_AGENTS:
+                self._page_section_bundle_links()
+                self._page_section_bundle_configuration()
+            case _:
+                raise MKUserError(
+                    None,
+                    _("No edit configuration bundle implemented for bundle group type '%s'.")
+                    % self._bundle_group,
+                )
+
+    def _page_section_bundle_links(self) -> None:
+        assert self._bundle_references.rules and self._bundle_references.hosts
+        host = self._bundle_references.hosts[0]
+        rule = self._bundle_references.rules[0]
+
+        bundle_entity_links = [
+            MenuItem(
+                mode_or_url=ModeEditRule.mode_url(
+                    varname=RuleGroup.SpecialAgents(self._bundle_group.split(":")[1]),
+                    rule_id=rule.id,
+                ),
+                title=_("Rule"),
+                icon="cloud",
+                permission="rulesets",
+                description=_(
+                    'The rule set "{rule_title}" contains the special agent configuration. Credentials and other agent-specific data can be edited here'
+                ).format(rule_title=rule.ruleset.title()),
+            ),
+            MenuItem(
+                mode_or_url=ModeEditHost.mode_url(host=host.name()),
+                title=_("Host"),
+                icon="folder",
+                permission="hosts",
+                description=_(
+                    'The host "{host_name}" contains all configuration like general properties and the folder location. Adjust to modify labels, tags or similar customization.'
+                ).format(host_name=host.name()),
+            ),
+        ]
+
         if self._bundle_references.dcd_connections:
-            for index, dcd_connection in enumerate(self._bundle_references.dcd_connections):
-                request.set_var(f"dcd_id_{index}", dcd_connection[0])
+            dcd_config_id, dcd_config_spec = self._bundle_references.dcd_connections[0]
+            bundle_entity_links.append(
+                MenuItem(
+                    mode_or_url=mode_url("edit_dcd_connection", ident=dcd_config_id),
+                    title=_("Dynamic host management"),
+                    icon="dcd_connections",
+                    permission="dcd_connections",
+                    description=_(
+                        'Additional hosts are created automatically if they do not yet exist. Adjust the connection "{dcd_title}" to modify the folder or properties.'
+                    ).format(dcd_title=dcd_config_spec["title"]),
+                )
+            )
 
-            self._edit_dcd_connections: Sequence[EditDCDConnection | None] = [
-                self.edit_dcd_connection_hook() for _dcd in self._bundle_references.dcd_connections
-            ]
-            for index, edit_dcd_connection in enumerate(self._edit_dcd_connections):
-                if edit_dcd_connection:
-                    edit_dcd_connection.from_vars(f"dcd_id_{index}")
+        if self._bundle_references.passwords:
+            password_id, password = self._bundle_references.passwords[0]
+            bundle_entity_links.append(
+                MenuItem(
+                    mode_or_url=ModeEditPassword.mode_url(ident=password_id),
+                    title=_("Password"),
+                    icon="passwords",
+                    permission="passwords",
+                    description=_(
+                        'All passwords, secrets and other sensitive data are stored in the Password Store. Changes to the entry "{password_title}" can be made here.'
+                    ).format(password_title=password["title"]),
+                )
+            )
+        TileMenuRenderer(bundle_entity_links, tile_size="large").show()
 
-        # Passwords
-        for index, password in enumerate(self._bundle_references.passwords):
-            request.set_var(f"password_id_{index}", password[0])
-        self._edit_passwords = [ModeEditPassword() for _pw in self._bundle_references.passwords]
-        for index, edit_password in enumerate(self._edit_passwords):
-            edit_password.from_vars(f"password_id_{index}")
+    def _page_section_bundle_configuration(self) -> None:
+        with html.form_context("edit_bundle", method="POST"):
+            self._configuration_vs(self._bundle_id).render_input(
+                self.FORM_PREFIX,
+                {
+                    "_name": self._bundle["title"],
+                    "_comment": self._bundle["comment"],
+                },
+            )
+            forms.end()
+            html.hidden_fields()
 
     @staticmethod
     def _configuration_vs(bundle_id: str) -> Dictionary:
         elements: Sequence[DictionaryEntry] = [
             ("_name", TextInput(title=_("Name"), size=80)),
             ("_comment", RuleComment()),
-            ("_bundle_id", FixedValue(title=_("Configuration bundle ID"), value=bundle_id)),
+            (
+                "_bundle_id",
+                FixedValue(title=_("Configuration bundle ID"), value=bundle_id),
+            ),
         ]
         return Dictionary(
             title=_("Configuration bundle properties"),
@@ -399,49 +693,26 @@ class ModeConfigurationBundle(WatoMode):
             elements=elements,
         )
 
-    def _sub_page_configuration(self) -> None:
-        html.h1(_("Configuration"), class_=["edit_configuration_bundle_header"])
-        with html.form_context("edit_bundle", method="POST"):
-            self._configuration_vs(self._bundle_id).render_input(
-                "options",
+    def action(self) -> ActionResult:
+        check_csrf_token()
+
+        if not transactions.check_transaction():
+            return redirect(self.mode_url(bundle_id=self._bundle_id))
+
+        if request.has_var("_clean_up"):
+            delete_config_bundle_objects(self._bundle_id, None)
+            return redirect(mode_url("changelog"))
+
+        if request.has_var("_save"):
+            vs = self._configuration_vs(self._bundle_id)
+            config = vs.from_html_vars(self.FORM_PREFIX)
+            vs.validate_value(config, "edit_bundle")
+            self._bundle.update(
                 {
-                    "_name": self._bundle["title"],
-                    "_comment": self._bundle["comment"],
-                },
+                    "title": config["_name"],
+                    "comment": config["_comment"],
+                }
             )
+            edit_config_bundle_configuration(self._bundle_id, self._bundle)
 
-    def _sub_page_rule(self) -> None:
-        html.h1(_("Rule"), class_=["edit_configuration_bundle_header"])
-        self._edit_rule.page()
-
-    def _sub_page_host(self) -> None:
-        html.h1(_("Host"), class_=["edit_configuration_bundle_header"])
-        self._edit_host.page()
-
-    def _sub_page_dcd_connection(self) -> None:
-        if any(edit_dcd_connection for edit_dcd_connection in self._edit_dcd_connections):
-            html.h1(_("Dynamic host management"), class_=["edit_configuration_bundle_header"])
-            for index, edit_dcd_connection in enumerate(self._edit_dcd_connections):
-                if edit_dcd_connection:
-                    edit_dcd_connection.page(f"edit_dcd_{index}")
-
-    def _sub_page_password(self) -> None:
-        if self._edit_passwords:
-            html.h1(_("Password"), class_=["edit_configuration_bundle_header"])
-            for index, edit_password in enumerate(self._edit_passwords):
-                edit_password.page(f"edit_password_{index}")
-
-    def page(self) -> None:
-        match self._rule_group_type:
-            case RuleGroupType.SPECIAL_AGENTS:
-                self._sub_page_configuration()
-                self._sub_page_rule()
-                self._sub_page_host()
-                self._sub_page_dcd_connection()
-                self._sub_page_password()
-            case _:
-                raise MKUserError(
-                    None,
-                    _("No edit configuration bundle implemented for bundle group type '%s'.")
-                    % self._bundle_group,
-                )
+        return redirect(self.parent_mode().mode_url(varname=self._bundle_group))

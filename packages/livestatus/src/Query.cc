@@ -196,10 +196,9 @@ bool Query::processDataset(Row row) {
 void Query::renderSorters() {
     // See also Query::renderAggregators()
     const auto &o = orderBy();
-    std::sort(
-        sorted_rows_.begin(), sorted_rows_.end(), [&o](auto &&x, auto &&y) {
-            return o.direction == OrderByDirection::ascending ? x < y : x > y;
-        });
+    std::ranges::sort(sorted_rows_, [&o](auto &&x, auto &&y) {
+        return o.direction == OrderByDirection::ascending ? x < y : x > y;
+    });
     for (auto &&[k, row_fragment] : sorted_rows_) {
         if (parsed_query_.limit && ++current_line_ > *parsed_query_.limit) {
             break;

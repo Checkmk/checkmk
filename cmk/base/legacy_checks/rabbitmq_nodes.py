@@ -7,12 +7,13 @@
 import json
 from collections.abc import Callable, Iterable, Mapping, Sequence
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+
+check_info = {}
 
 # <<<rabbitmq_nodes>>>
 # {"fd_total": 1098576, "sockets_total": 973629, "mem_limit": 6808874700,
@@ -123,8 +124,9 @@ def check_rabbitmq_nodes(item, params, parsed):
         state = 0
         if not node_state:
             state = params.get("state")
-        yield state, "Is running: %s" % str(node_state).replace("True", "yes").replace(
-            "False", "no"
+        yield (
+            state,
+            "Is running: %s" % str(node_state).replace("True", "yes").replace("False", "no"),
         )
 
     for alarm_key, alarm_infotext in [
@@ -139,13 +141,17 @@ def check_rabbitmq_nodes(item, params, parsed):
         if alarm_value:
             alarm_state = params.get(alarm_key)
 
-            yield alarm_state, "{}: {}".format(
-                alarm_infotext,
-                str(alarm_value).replace("True", "yes").replace("False", "no"),
+            yield (
+                alarm_state,
+                "{}: {}".format(
+                    alarm_infotext,
+                    str(alarm_value).replace("True", "yes").replace("False", "no"),
+                ),
             )
 
 
 check_info["rabbitmq_nodes"] = LegacyCheckDefinition(
+    name="rabbitmq_nodes",
     parse_function=parse_rabbitmq_nodes,
     service_name="RabbitMQ Node %s",
     discovery_function=discover_rabbitmq_nodes,
@@ -202,36 +208,12 @@ def check_rabbitmq_nodes_filedesc(item, params, parsed):
 
 
 check_info["rabbitmq_nodes.filedesc"] = LegacyCheckDefinition(
+    name="rabbitmq_nodes_filedesc",
     service_name="RabbitMQ Node %s Filedesc",
     sections=["rabbitmq_nodes"],
     discovery_function=discover_key("fd"),
     check_function=check_rabbitmq_nodes_filedesc,
     check_ruleset_name="rabbitmq_nodes_filedesc",
-)
-
-
-def check_rabbitmq_nodes_sockets(item, params, parsed):
-    socket_data = parsed.get(item, {}).get("sockets")
-    if not socket_data:
-        return None
-
-    value = socket_data.get("sockets_used")
-    if value is None:
-        return None
-
-    total = socket_data.get("sockets_total")
-    if total is None:
-        return None
-
-    return _handle_output(params, value, total, "Sockets used", "sockets")
-
-
-check_info["rabbitmq_nodes.sockets"] = LegacyCheckDefinition(
-    service_name="RabbitMQ Node %s Sockets",
-    sections=["rabbitmq_nodes"],
-    discovery_function=discover_key("sockets"),
-    check_function=check_rabbitmq_nodes_sockets,
-    check_ruleset_name="rabbitmq_nodes_sockets",
 )
 
 
@@ -262,6 +244,7 @@ def check_rabbitmq_nodes_mem(item, params, parsed):
 
 
 check_info["rabbitmq_nodes.mem"] = LegacyCheckDefinition(
+    name="rabbitmq_nodes_mem",
     service_name="RabbitMQ Node %s Memory",
     sections=["rabbitmq_nodes"],
     discovery_function=discover_key("mem"),
@@ -328,6 +311,7 @@ def check_rabbitmq_nodes_uptime(item, params, parsed):
 
 
 check_info["rabbitmq_nodes.uptime"] = LegacyCheckDefinition(
+    name="rabbitmq_nodes_uptime",
     service_name="RabbitMQ Node %s Uptime",
     sections=["rabbitmq_nodes"],
     discovery_function=discover_key("uptime"),
@@ -349,10 +333,7 @@ def _handle_output(params, value, total, info_text, perf_key):
         value_check = perc_value
         warn_abs: int | None = int((warn / 100.0) * total)
         crit_abs: int | None = int((crit / 100.0) * total)
-        level_msg = " (warn/crit at {}/{})".format(
-            render.percent(warn),
-            render.percent(crit),
-        )
+        level_msg = f" (warn/crit at {render.percent(warn)}/{render.percent(crit)})"
     else:
         value_check = value
         warn_abs = warn
@@ -365,12 +346,7 @@ def _handle_output(params, value, total, info_text, perf_key):
         (warn, crit),
     )
 
-    infotext = "{}: {} of {}, {}".format(
-        info_text,
-        value,
-        total,
-        render.percent(perc_value),
-    )
+    infotext = f"{info_text}: {value} of {total}, {render.percent(perc_value)}"
 
     if state:
         infotext += level_msg
@@ -380,6 +356,7 @@ def _handle_output(params, value, total, info_text, perf_key):
 
 
 check_info["rabbitmq_nodes.gc"] = LegacyCheckDefinition(
+    name="rabbitmq_nodes_gc",
     service_name="RabbitMQ Node %s GC",
     sections=["rabbitmq_nodes"],
     discovery_function=discover_key("gc"),

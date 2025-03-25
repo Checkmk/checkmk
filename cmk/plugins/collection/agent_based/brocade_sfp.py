@@ -6,7 +6,7 @@
 from collections.abc import Mapping, Sequence
 from typing import Any, TypedDict
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -204,7 +204,7 @@ def check_brocade_sfp(item: str, params: Mapping[str, Any], section: Section) ->
     def _levels_upper(key: str) -> tuple[float, float] | None:
         return (v[2], v[3]) if (v := params.get(key)) else None
 
-    yield from check_levels(
+    yield from check_levels_v1(
         port_info["rx_power"],
         metric_name="input_signal_power_dbm",
         levels_lower=_levels_lower("rx_power"),
@@ -212,7 +212,7 @@ def check_brocade_sfp(item: str, params: Mapping[str, Any], section: Section) ->
         render_func=lambda f: "%.2f dBm" % f,
         label="Rx",
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         port_info["tx_power"],
         metric_name="output_signal_power_dbm",
         levels_lower=_levels_lower("tx_power"),
@@ -220,7 +220,7 @@ def check_brocade_sfp(item: str, params: Mapping[str, Any], section: Section) ->
         render_func=lambda f: "%.2f dBm" % f,
         label="Tx",
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         port_info["current"],
         metric_name="current",
         levels_lower=_levels_lower("current"),
@@ -228,7 +228,7 @@ def check_brocade_sfp(item: str, params: Mapping[str, Any], section: Section) ->
         render_func=lambda f: "%.2f A" % f,
         label="Current",
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         port_info["voltage"],
         metric_name="voltage",
         levels_lower=_levels_lower("voltage"),

@@ -12,12 +12,12 @@ oneTimeSetUp() {
 
     set_up_get_epoch
 
-    export MK_VARDIR="${SHUNIT_TMPDIR}"
-    mkdir -p "$MK_VARDIR/cache/"
+    export CACHEDIR="${SHUNIT_TMPDIR}/cache"
+    mkdir -p "$CACHEDIR"
 
-    PLUG_CACHE="$MK_VARDIR/cache/plugins_my_plugin.cache"
-    LOCA_CACHE="$MK_VARDIR/cache/local_my_local_check.cache"
-    MRPE_CACHE="$MK_VARDIR/cache/mrpe_mrpetest.cache"
+    PLUG_CACHE="$CACHEDIR/plugins_my_plugin.cache"
+    LOCA_CACHE="$CACHEDIR/local_my_local_check.cache"
+    MRPE_CACHE="$CACHEDIR/mrpe_mrpetest.cache"
 
     # create some caches
     # similar/duplicate lines are on purpose, because sed is for pros.

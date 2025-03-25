@@ -14,7 +14,6 @@ usage() {
     echo "usage: $(basename "$0") [OPTION]..."
     echo "Run the CI pipeline or parts of it."
     echo
-    echo "  -e, --setup-environment    setup environment"
     echo "  -c, --clean                remove artifacts first"
     echo "  -b, --build                build"
     echo "  -t, --tests                run tests"
@@ -28,7 +27,6 @@ usage() {
 
 parse_options() {
     # Yes, all those option variables are global.
-    RUN_SETUP_ENVIRONMENT=no
     RUN_CLEAN=no
     RUN_BUILD=no
     RUN_TESTS=no
@@ -37,7 +35,7 @@ parse_options() {
     RUN_ESLINT=no
     RUN_FORMAT=no
 
-    if ! OPTIONS=$(getopt --options 'ecbtFTEafh' --long 'setup-environment,clean,build,tests,check-format,tsc,eslint,all,format,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'cbtFTEafh' --long 'clean,build,tests,check-format,tsc,eslint,all,format,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -46,11 +44,6 @@ parse_options() {
 
     while true; do
         case "$1" in
-            '-e' | '--setup-environment')
-                RUN_SETUP_ENVIRONMENT=yes
-                shift
-                continue
-                ;;
             '-c' | '--clean')
                 RUN_CLEAN=yes
                 shift
@@ -108,14 +101,10 @@ parse_options() {
         esac
     done
 
-    readonly RUN_SETUP_ENVIRONMENT RUN_CLEAN RUN_BUILD RUN_TESTS RUN_CHECK_FORMAT RUN_TSC RUN_ESLINT RUN_FORMAT
+    readonly RUN_CLEAN RUN_BUILD RUN_TESTS RUN_CHECK_FORMAT RUN_TSC RUN_ESLINT RUN_FORMAT
 }
 
-run_setup_environment() {
-    ARTIFACTS_BASE="https://artifacts.lan.tribe29.com"
-    export NPM_CONFIG_REGISTRY="${ARTIFACTS_BASE}/repository/npm-proxy/"
-    export SASS_BINARY_SITE="${ARTIFACTS_BASE}/repository/archives/"
-    export NODE_OPTIONS="--dns-result-order=ipv4first",
+npm_install_dependencies() {
     npm \
         ci \
         --yes \
@@ -123,32 +112,50 @@ run_setup_environment() {
         --audit=false
 }
 
+npm_dependencies_installed() {
+    npm ls --all &>/dev/null
+}
+
+setup_npm() {
+    test "${SETUP_NPM_RAN}" = "yes" && return
+    npm_dependencies_installed || npm_install_dependencies
+    echo "npm version $(npm --version)"
+    echo "node version $(node --version)"
+    SETUP_NPM_RAN=yes
+}
+
 run_clean() {
-    rm -rf dist
+    rm -rf dist node_packages
 }
 
 run_build() {
+    setup_npm
     npm run build
 }
 
-run_tests() {
-    npm run test
-}
-
 run_check_format() {
+    setup_npm
     npm run test-prettier
 }
 
 run_tsc() {
+    setup_npm
     npm run test-tsc
 }
 
 run_eslint() {
+    setup_npm
     npm run test-eslint
 }
 
 run_format() {
+    setup_npm
     npm run prettier
+}
+
+run_tests() {
+    setup_npm
+    npm run test
 }
 
 main() {
@@ -156,7 +163,6 @@ main() {
     # and we can call this script from everywhere.
     cd -- "${BASH_SOURCE%/*}"
     parse_options "$@"
-    test ${RUN_SETUP_ENVIRONMENT} = yes && run_setup_environment
     test ${RUN_CLEAN} = yes && run_clean
     test ${RUN_BUILD} = yes && run_build
     test ${RUN_TESTS} = yes && run_tests

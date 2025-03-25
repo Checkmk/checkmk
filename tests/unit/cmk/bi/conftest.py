@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterator
-from typing import Any
 
 import pytest
+
+from tests.unit.cmk.bi.bi_mocks import MockBIAggregationPack
 
 from livestatus import LivestatusOutputFormat, LivestatusResponse, SiteId
 
@@ -17,18 +18,6 @@ from cmk.bi.packs import BIAggregationPacks
 from cmk.bi.rule import BIRule
 from cmk.bi.rule_interface import bi_rule_id_registry
 from cmk.bi.searcher import BISearcher
-
-
-class MockBIAggregationPack(BIAggregationPacks):
-    def __init__(self, config: dict[Any, Any]) -> None:
-        super().__init__("")
-        self._load_config(config)
-
-    def load_config(self) -> None:
-        pass
-
-    def save_config(self) -> None:
-        pass
 
 
 def mock_query_callback(

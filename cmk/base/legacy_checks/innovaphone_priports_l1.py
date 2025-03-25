@@ -6,10 +6,10 @@
 
 import time
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import equals, get_rate, get_value_store, SNMPTree
+
+check_info = {}
 
 
 def saveint(i: str) -> int:
@@ -72,6 +72,7 @@ def check_innovaphone_priports_l1(item, params, parsed):
 
 
 check_info["innovaphone_priports_l1"] = LegacyCheckDefinition(
+    name="innovaphone_priports_l1",
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.6666"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.6666.1.2.1",

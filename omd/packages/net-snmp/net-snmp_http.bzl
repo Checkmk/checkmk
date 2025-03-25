@@ -1,7 +1,8 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
 
-def netsnmp(version_str, sha256):
+def netsnmp_workspace():
+    version_str = "5.9.1"
     filename = "net-snmp-" + version_str + ".zip"
     http_archive(
         name = "net-snmp",
@@ -33,5 +34,5 @@ def netsnmp(version_str, sha256):
         ],
         patch_args = ["-p1"],
         patch_tool = "patch",
-        sha256 = sha256,
+        sha256 = "75b59d67e871aaaa31c8cef89ba7d06972782b97736b7e8c3399f36b50a8816f",
     )

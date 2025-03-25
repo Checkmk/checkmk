@@ -3,24 +3,34 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
-from contextlib import suppress
-from pathlib import Path
+from cmk.ccc.site import omd_site
 
 import cmk.utils.paths
+from cmk.utils.auto_queue import AutoQueue
 
 from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResult
 
-from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
+from cmk.gui.background_job import (
+    BackgroundJob,
+    BackgroundProcessInterface,
+    InitialStatusArgs,
+    NoArgs,
+    simple_job_target,
+)
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.changes import add_service_change
 from cmk.gui.watolib.check_mk_automations import autodiscovery
+from cmk.gui.watolib.config_domain_name import (
+    config_domain_registry,
+    generate_hosts_to_update_settings,
+)
+from cmk.gui.watolib.config_domain_name import (
+    CORE as CORE_DOMAIN,
+)
 from cmk.gui.watolib.hosts_and_folders import Host
-
-from cmk.ccc.site import omd_site
 
 
 class AutodiscoveryBackgroundJob(BackgroundJob):
@@ -33,10 +43,6 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
     def __init__(self) -> None:
         super().__init__(self.job_prefix)
         self.site_id = omd_site()
-
-    @staticmethod
-    def last_run_path() -> Path:
-        return Path(cmk.utils.paths.var_dir, "wato", "last_autodiscovery.mk")
 
     @staticmethod
     def _get_discovery_message_text(
@@ -55,16 +61,11 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
             discovery_result.self_total_host_labels,
         )
 
-    def do_execute(self, job_interface: BackgroundProcessInterface) -> None:
-        with job_interface.gui_context():
-            self._execute(job_interface)
-
-    def _execute(self, job_interface: BackgroundProcessInterface) -> None:
+    def execute(self, job_interface: BackgroundProcessInterface) -> None:
         result = autodiscovery(self.site_id)
 
         if not result.hosts:
             job_interface.send_result_message(_("No hosts to be discovered"))
-            AutodiscoveryBackgroundJob.last_run_path().touch(exist_ok=True)
             return
 
         for hostname, discovery_result in result.hosts.items():
@@ -87,6 +88,8 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
                     "autodiscovery",
                     message,
                     host.object_ref(),
+                    [config_domain_registry[CORE_DOMAIN]],
+                    {CORE_DOMAIN: generate_hosts_to_update_settings([host.name()])},
                     self.site_id,
                     diff_text=discovery_result.diff_text,
                 )
@@ -95,27 +98,32 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
             log_audit("activate-changes", "Started activation of site %s" % self.site_id)
 
         job_interface.send_result_message(_("Successfully discovered hosts"))
-        AutodiscoveryBackgroundJob.last_run_path().touch(exist_ok=True)
 
 
 def execute_autodiscovery() -> None:
-    job = AutodiscoveryBackgroundJob()
-    if job.is_active():
-        logger.debug("Another 'autodiscovery' job is already running: Skipping this time.")
+    # Only execute the job in case there is some work to do. The directory was so far internal to
+    # "autodiscovery" automation which is implemented in cmk.base.automations.checkm_mk. But since
+    # this condition saves us a lot of overhead and this function is part of the feature, it seems
+    # to be acceptable to do this.
+    if len(AutoQueue(cmk.utils.paths.autodiscovery_dir)) == 0:
+        logger.debug("No hosts to be discovered")
         return
 
-    interval = 300
-    with suppress(FileNotFoundError):
-        if time.time() - AutodiscoveryBackgroundJob.last_run_path().stat().st_mtime < interval:
-            logger.debug("Job was already executed within last %d minutes", interval / 60)
-            return
+    job = AutodiscoveryBackgroundJob()
+    if (
+        result := job.start(
+            simple_job_target(autodiscovery_job_entry_point),
+            InitialStatusArgs(
+                title=job.gui_title(),
+                lock_wato=False,
+                stoppable=False,
+                user=str(user.id) if user.id else None,
+            ),
+        )
+    ).is_error():
+        logger.error(str(result))
 
-    job.start(
-        job.do_execute,
-        InitialStatusArgs(
-            title=job.gui_title(),
-            lock_wato=False,
-            stoppable=False,
-            user=str(user.id) if user.id else None,
-        ),
-    )
+
+def autodiscovery_job_entry_point(job_interface: BackgroundProcessInterface, args: NoArgs) -> None:
+    with job_interface.gui_context():
+        AutodiscoveryBackgroundJob().execute(job_interface)

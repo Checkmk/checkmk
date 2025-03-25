@@ -22,9 +22,7 @@ from cmk.gui.utils.transaction_manager import TransactionManager
 
 QueryVars = Mapping[str, Sequence[str]]
 
-_ALWAYS_SAFE = frozenset(
-    b"ABCDEFGHIJKLMNOPQRSTUVWXYZ" b"abcdefghijklmnopqrstuvwxyz" b"0123456789" b"_.-~" b" "
-)
+_ALWAYS_SAFE = frozenset(b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.-~ ")
 _ALWAYS_SAFE_BYTES = bytes(_ALWAYS_SAFE)
 _QUOTED = {b: chr(b) if b in _ALWAYS_SAFE else f"%{b:02X}" for b in range(256)}
 
@@ -241,7 +239,7 @@ def makeactionuri(
 ) -> str:
     session_vars: HTTPVariables = [("_transid", transaction_manager.get())]
     if session and hasattr(session, "session_info"):
-        session_vars.append(("csrf_token", session.session_info.csrf_token))
+        session_vars.append(("_csrf_token", session.session_info.csrf_token))
 
     return makeuri(request, addvars + session_vars, filename=filename, delvars=delvars)
 
@@ -254,7 +252,7 @@ def makeactionuri_contextless(
 ) -> str:
     session_vars: HTTPVariables = [("_transid", transaction_manager.get())]
     if session and hasattr(session, "session_info"):
-        session_vars.append(("csrf_token", session.session_info.csrf_token))
+        session_vars.append(("_csrf_token", session.session_info.csrf_token))
 
     return makeuri_contextless(request, addvars + session_vars, filename=filename)
 
@@ -396,7 +394,9 @@ class DocReference(Enum):
     AGENT_WINDOWS = "agent_windows"
     ALERT_HANDLERS = "alert_handlers"
     ANALYZE_CONFIG = "analyze_configuration"
+    ANALYZE_NOTIFICATIONS = "notifications#_rule_evaluation_by_the_notification_module"
     AWS = "monitoring_aws"
+    AWS_MANUAL_VM = "monitoring_aws#_manually_creating_hosts_for_ec2_instances"
     AZURE = "monitoring_azure"
     BACKUPS = "backup"
     BI = "bi"  # Business Intelligence
@@ -415,6 +415,7 @@ class DocReference(Enum):
     EVENTCONSOLE = "ec"
     FORECAST_GRAPH = "forecast_graphs"
     GCP = "monitoring_gcp"
+    GCP_MANUAL_VM = "monitoring_gcp#_manually_creating_hosts_for_vm_instances"
     GRAPHING_RRDS = "graphing#rrds"
     HOST_TAGS = "host_tags"
     INFLUXDB_CONNECTIONS = "metrics_exporter"
@@ -423,11 +424,13 @@ class DocReference(Enum):
     INTRO_LINUX = "intro_setup_monitor#linux"
     INTRO_SERVICES = "intro_setup_monitor#services"
     INTRO_WELCOME = "welcome"
+    INTRO_SETUP = "intro_setup"
     KUBERNETES = "monitoring_kubernetes"
     LICENSING = "license"
     LDAP = "ldap"
     MKPS = "mkps"
     NOTIFICATIONS = "notifications"
+    NTOPNG_CONNECT = "ntop#ntop_connect"
     PIGGYBACK = "piggyback"
     PROMETHEUS = "monitoring_prometheus"
     REGEXES = "regexes"
@@ -435,6 +438,7 @@ class DocReference(Enum):
     REPORTS = "reporting"
     SLA_CONFIGURATION = "sla"
     TIMEPERIODS = "timeperiods"
+    TEST_NOTIFICATIONS = "notifications#notification_testing"
     USER_INTERFACE = "user_interface"
     VIEWS = "views"
     VMWARE = "monitoring_vmware"
@@ -457,11 +461,12 @@ class DocReference(Enum):
 
 def doc_reference_url(doc_ref: DocReference | None = None) -> str:
     base = user.get_docs_base_url()
+    origin = "?origin=checkmk"
     if doc_ref is None:
-        return base
+        return base + origin
     if "#" not in doc_ref.value:
-        return f"{base}/{doc_ref.value}.html"
-    return f"{base}/{doc_ref.value.replace('#', '.html#', 1)}"
+        return f"{base}/{doc_ref.value}.html{origin}"
+    return f"{base}/{doc_ref.value.replace('#', f'.html{origin}#', 1)}"
 
 
 class YouTubeReference(Enum):
@@ -481,3 +486,14 @@ def youtube_reference_url(youtube_ref: YouTubeReference | None = None) -> str:
     if youtube_ref is None:
         return "https://youtube.com/@checkmk-channel"
     return "https://youtu.be/%s" % youtube_ref.value
+
+
+class WerkReference(Enum):
+    DECOMMISSION_V1_API = 17201
+
+    def ref(self) -> str:
+        return f"Werk #{self.value}"
+
+
+def werk_reference_url(werk: WerkReference) -> str:
+    return f"https://checkmk.com/werk/{werk.value}"

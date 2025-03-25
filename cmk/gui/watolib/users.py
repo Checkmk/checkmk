@@ -2,24 +2,28 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import cast
+from typing import cast, Literal, TypeAlias
 
-from cmk.utils.config_validation_layer.users.contacts import validate_contacts
-from cmk.utils.config_validation_layer.users.users import validate_users
-from cmk.utils.crypto.password import Password, PasswordPolicy
+from livestatus import SiteConfigurations, SiteId
+
+from cmk.ccc.plugin_registry import Registry
+from cmk.ccc.version import Edition, edition
+
+from cmk.utils import paths
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.user import UserId
 
-from cmk.gui import hooks, userdb
+from cmk.gui import hooks, site_config, userdb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _l
-from cmk.gui.logged_in import user
-from cmk.gui.type_defs import UserObject, Users, UserSpec
+from cmk.gui.logged_in import LoggedInUser, user
+from cmk.gui.type_defs import UserContactDetails, UserObject, Users, UserSpec
 from cmk.gui.userdb import add_internal_attributes, get_user_attributes
 from cmk.gui.userdb._connections import get_connection
 from cmk.gui.utils.security_log_events import UserManagementEvent
@@ -35,8 +39,34 @@ from cmk.gui.watolib.user_scripts import (
 )
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
 
+from cmk.crypto.password import Password, PasswordPolicy
 
-def delete_users(users_to_delete: Sequence[UserId]) -> None:
+_UserAssociatedSitesFn: TypeAlias = Callable[[UserSpec], Sequence[SiteId] | None]
+
+_AffectedSites: TypeAlias = set[SiteId] | Literal["all"]
+
+
+def default_sites(_user: UserSpec) -> Sequence[SiteId] | None:
+    """The default implementation to get sites associated with user.
+
+    Which sites are associated to a user is edition-specific."""
+    return _user.get("authorized_sites")
+
+
+def _update_affected_sites(
+    affected_sites: _AffectedSites,
+    user_sites: Sequence[SiteId] | None,
+) -> _AffectedSites:
+    if affected_sites == "all":
+        return "all"
+
+    if user_sites is None:
+        return "all"
+
+    return affected_sites | set(user_sites)
+
+
+def delete_users(users_to_delete: Sequence[UserId], sites: _UserAssociatedSitesFn) -> None:
     user.need_permission("wato.users")
     user.need_permission("wato.edit")
     if user.id in users_to_delete:
@@ -45,9 +75,11 @@ def delete_users(users_to_delete: Sequence[UserId]) -> None:
     all_users = userdb.load_users(lock=True)
 
     deleted_users = []
+    affected_sites: _AffectedSites = set()
     for entry in users_to_delete:
         if entry in all_users:  # Silently ignore not existing users
             deleted_users.append(entry)
+            affected_sites = _update_affected_sites(affected_sites, sites(all_users[entry]))
             connection_id = all_users[entry].get("connector", None)
             connection = get_connection(connection_id)
             log_security_event(
@@ -70,29 +102,34 @@ def delete_users(users_to_delete: Sequence[UserId]) -> None:
                 "Deleted user: %s" % user_id,
                 object_ref=make_user_object_ref(user_id),
             )
-        add_change("edit-users", _l("Deleted user: %s") % ", ".join(deleted_users))
+        add_change(
+            "edit-users",
+            _l("Deleted user: %s") % ", ".join(deleted_users),
+            sites=None if affected_sites == "all" else list(affected_sites),
+        )
         userdb.save_users(all_users, datetime.now())
 
 
-def edit_users(changed_users: UserObject) -> None:
-    if user:
-        user.need_permission("wato.users")
-        user.need_permission("wato.edit")
+def edit_users(changed_users: UserObject, sites: _UserAssociatedSitesFn) -> None:
+    user.need_permission("wato.users")
+    user.need_permission("wato.edit")
     all_users = userdb.load_users(lock=True)
     new_users_info = []
     modified_users_info = []
+    affected_sites: _AffectedSites = set()
     for user_id, settings in changed_users.items():
-        user_attrs = settings.get("attributes", {})
+        user_attrs: UserSpec = settings.get("attributes", {})
         is_new_user = settings.get("is_new_user", True)
         _validate_user_attributes(all_users, user_id, user_attrs, is_new_user=is_new_user)
 
+        affected_sites = _update_affected_sites(affected_sites, sites(user_attrs))
         if is_new_user:
             new_users_info.append(user_id)
+            add_internal_attributes(user_attrs)
         else:
             modified_users_info.append(user_id)
-
-        if is_new_user:
-            add_internal_attributes(user_attrs)
+            old_user_attrs = all_users[user_id]
+            affected_sites = _update_affected_sites(affected_sites, sites(old_user_attrs))
 
         old_object = make_user_audit_log_object(all_users.get(user_id, {}))
         log_audit(
@@ -122,18 +159,22 @@ def edit_users(changed_users: UserObject) -> None:
         add_change(
             "edit-users",
             _l("Created new users: %s") % ", ".join(new_users_info),
+            sites=None if affected_sites == "all" else list(affected_sites),
         )
     if modified_users_info:
         add_change(
             "edit-users",
             _l("Modified users: %s") % ", ".join(modified_users_info),
+            sites=None if affected_sites == "all" else list(affected_sites),
         )
         hooks.call("users-changed", modified_users_info)
 
     userdb.save_users(all_users, datetime.now())
 
 
-def remove_custom_attribute_from_all_users(custom_attribute_name: str) -> None:
+def remove_custom_attribute_from_all_users(
+    custom_attribute_name: str, sites: _UserAssociatedSitesFn
+) -> None:
     edit_users(
         {
             user_id: {
@@ -144,7 +185,8 @@ def remove_custom_attribute_from_all_users(custom_attribute_name: str) -> None:
                 "is_new_user": False,
             }
             for user_id, settings in userdb.load_users(lock=True).items()
-        }
+        },
+        sites,
     )
 
 
@@ -174,7 +216,7 @@ def make_user_object_ref(user_id: UserId) -> ObjectRef:
     return ObjectRef(ObjectRefType.User, str(user_id))
 
 
-def _validate_user_attributes(  # pylint: disable=too-many-branches
+def _validate_user_attributes(
     all_users: Users,
     user_id: UserId,
     user_attrs: UserSpec,
@@ -264,13 +306,13 @@ def vs_idle_timeout_duration() -> Age:
         display=["minutes", "hours", "days"],
         minvalue=60,
         help=_(
-            "Normally a user login session is valid until the password is changed or "
-            "the user is locked. By enabling this option, you can apply a time limit "
-            "to login sessions which is applied when the user stops interacting with "
-            "the GUI for a given amount of time. When a user is exceeding the configured "
-            "maximum idle time, the user will be logged out and redirected to the login "
-            "screen to renew the login session. This setting can be overridden in each "
-            "individual user's profile."
+            "Normally a user login session is valid until the password is changed, the "
+            "browser is closed or the user is locked. By enabling this option, you "
+            "can apply a time limit to login sessions which is applied when the user "
+            "stops interacting with the GUI for a given amount of time. When a user "
+            "exceeds the configured maximum idle time, the user will be logged "
+            "out and redirected to the login screen to renew the login session. "
+            "This setting can be overridden in each individual user's profile.",
         ),
         default_value=5400,
     )
@@ -286,8 +328,8 @@ def notification_script_choices() -> list[tuple[str, str]]:
 
     choices: list[tuple[str, str]] = []
     for choice in user_script_choices("notifications"):
-        notificaton_plugin_name, _notification_plugin_title = choice
-        if user.may("notification_plugin.%s" % notificaton_plugin_name):
+        notification_plugin_name, _notification_plugin_title = choice
+        if user.may("notification_plugin.%s" % notification_plugin_name):
             choices.append(choice)
     return choices
 
@@ -313,34 +355,59 @@ def verify_password_policy(password: Password, varname: str = "password") -> Non
         )
 
 
-class UsersConfigFile(WatoSingleConfigFile[dict]):
+class UsersConfigFile(WatoSingleConfigFile[Users]):
     """Handles reading and writing users.mk file"""
 
     def __init__(self) -> None:
         super().__init__(
             config_file_path=Path(multisite_dir()) / "users.mk",
             config_variable="multisite_users",
-            spec_class=dict,
+            spec_class=Users,
         )
 
-    def read_file_and_validate(self) -> None:
-        cfg = self.load_for_reading()
-        validate_users(cfg)
 
-
-class ContactsConfigFile(WatoSingleConfigFile[dict]):
+class ContactsConfigFile(WatoSingleConfigFile[dict[UserId, UserContactDetails]]):
     """Handles reading and writing contacts.mk file"""
 
     def __init__(self) -> None:
         super().__init__(
             config_file_path=Path(wato_root_dir()) / "contacts.mk",
             config_variable="contacts",
-            spec_class=dict,
+            spec_class=dict[UserId, UserContactDetails],
         )
 
-    def read_file_and_validate(self) -> None:
-        cfg = self.load_for_reading()
-        validate_contacts(cfg)
+
+@dataclass(frozen=True, kw_only=True)
+class UserFeatures:
+    edition: Edition
+    sites: _UserAssociatedSitesFn
+
+
+class UserFeaturesRegistry(Registry[UserFeatures]):
+    def plugin_name(self, instance: UserFeatures) -> str:
+        return str(instance.edition)
+
+    def features(self) -> UserFeatures:
+        return self[str(edition(paths.omd_root))]
+
+
+user_features_registry = UserFeaturesRegistry()
+
+
+def get_enabled_remote_sites_for_logged_in_user(logged_in_user: LoggedInUser) -> SiteConfigurations:
+    all_enabled_slave_sites = site_config.wato_slave_sites()
+    if (
+        site_ids_for_user := user_features_registry.features().sites(logged_in_user.attributes)
+    ) is None:
+        return all_enabled_slave_sites
+
+    return SiteConfigurations(
+        {
+            site_id: site_config
+            for site_id, site_config in all_enabled_slave_sites.items()
+            if site_id in site_ids_for_user
+        }
+    )
 
 
 def register(config_file_registry: ConfigFileRegistry) -> None:

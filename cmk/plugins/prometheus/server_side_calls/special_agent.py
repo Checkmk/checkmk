@@ -107,11 +107,17 @@ def _commands_function(
                 exclude_unset=True,
             )
             | {
-                "host_address": host_config.primary_ip_config.address,
+                "host_address": _primary_ip_address_from_host_config_if_configured(host_config),
                 "host_name": host_config.name,
             }
         ),
     ]
+    if params.verify_cert:
+        args.extend(["--cert-server-name", host_config.name])
+    else:
+        args.append("--disable-cert-verification")
+    # the authentication parameters must come last because they are parsed by subparsers that
+    # consume all remaining arguments (and throw errors if they don't recognize them)
     match params.auth_basic:
         case ("auth_login", AuthLogin(username=username, password=password)):
             args += [
@@ -127,10 +133,6 @@ def _commands_function(
                 "--token",
                 token,
             ]
-    if params.verify_cert:
-        args.extend(["--cert-server-name", host_config.name])
-    else:
-        args.append("--disable-cert-verification")
     yield SpecialAgentCommand(command_arguments=args)
 
 
@@ -139,3 +141,11 @@ special_agent_prometheus = SpecialAgentConfig(
     parameter_parser=Params.model_validate,
     commands_function=_commands_function,
 )
+
+
+def _primary_ip_address_from_host_config_if_configured(host_config: HostConfig) -> str | None:
+    try:
+        primary_ip_config = host_config.primary_ip_config
+    except ValueError:
+        return None
+    return primary_ip_config.address

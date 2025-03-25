@@ -2,72 +2,161 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""Consolidate methods which relate to processing version and edition of a Checkmk package."""
 
-import abc
-import hashlib
 import logging
 import operator
 import os
-import subprocess
+import re
 import time
 from collections.abc import Callable
-from pathlib import Path
-from typing import Final, NewType, Self
+from typing import Final, Self
 
 import git
-import requests
 from packaging.version import Version
 
-from tests.testlib.repo import (
+from tests.testlib.common.repo import (
     branch_from_env,
     current_base_branch_name,
     current_branch_version,
     repo_path,
 )
-from tests.testlib.utils import (
-    edition_from_env,
-    get_cmk_download_credentials,
-    package_hash_path,
-    version_spec_from_env,
-)
+from tests.testlib.common.utils import version_spec_from_env
 
 from cmk.ccc.version import Edition
 
 logger = logging.getLogger()
 
-PackageUrl = NewType("PackageUrl", str)
+
+class CMKEditionType:
+    """Wrap `cmk.ccc.version:Edition` and extend with test-framework functionality.
+
+    This object acts as an interface and wrapper to `Edition` present within the source code.
+    `CMKEdition` has been initialized in this module, using this wrapper, to act as an interface
+    to the test code.
+
+    Usage:
+    - `edition = CMKEdition.CCE/CEE/CME/CRE/CSE`
+    - `pkg_edition = CMKEdition(edition) / CMKEdition(CMKEdition.edition_from_text("cloud"))`
+    - `pkg_edition.short/long/title`
+    - `pkg_edition.is_enterprise_edition()`
+    - `pkg_edition = CMKEdition(CMKEdition.from_version_string("2.4.0.cee"))`
+
+    Note:
+    Wrapping 'Edition' using inheriting would be easier but not possisble,
+    as 'enum.Enum' with existing members must not be subclassed.
+    """
+
+    CRE = Edition.CRE
+    CEE = Edition.CEE
+    CCE = Edition.CCE
+    CSE = Edition.CSE
+    CME = Edition.CME
+
+    def __init__(self, edition: Edition | None = None) -> None:
+        self._edition: type[Edition] | Edition
+        self._edition = Edition if not edition else edition
+
+    def __call__(self, edition: Edition) -> "CMKEditionType":
+        """Return a new instance, which is initialized with an 'Edition' value."""
+        return CMKEditionType(edition)
+
+    @property
+    def edition(self) -> Edition:
+        if isinstance(self._edition, Edition) and hasattr(self._edition, "value"):
+            return self._edition
+        raise AttributeError(
+            "An `edition` has not been assigned to the object!\n"
+            "Use `CMKEdition(CMKEdition.CCE/CEE/...)` to initialize the object with an edition."
+        )
+
+    @property
+    def short(self) -> str:
+        """Return short-form of Checkmk edition."""
+        return self.edition.short
+
+    @property
+    def long(self) -> str:
+        """Return Checkmk edition as string."""
+        return self.edition.long
+
+    @property
+    def title(self) -> str:
+        """Return edition as displayed on Checkmk UI."""
+        return self.edition.title
+
+    def is_managed_edition(self) -> bool:
+        return self.edition is self.CME
+
+    def is_enterprise_edition(self) -> bool:
+        return self.edition is self.CEE
+
+    def is_raw_edition(self) -> bool:
+        return self.edition is self.CRE
+
+    def is_cloud_edition(self) -> bool:
+        return self.edition is self.CCE
+
+    def is_saas_edition(self) -> bool:
+        return self.edition is self.CSE
+
+    def edition_from_text(self, value: str) -> Edition:
+        """Parse text and return an Edition.
+
+        'short' and 'long' forms of edition strings are accepted. Example,
+        'cee', 'enterprise', 'cloud'.
+        """
+        excp = ValueError()
+        try:
+            edition = self.from_long_edition(value)
+        except RuntimeError as excp_short:
+            excp.add_note(str(excp_short))
+            try:
+                edition = getattr(self, value.upper())
+            except AttributeError as excp_long:
+                excp.add_note(str(excp_long))
+                excp.add_note(
+                    f"String: '{value}' neither matches 'short' nor 'long' edition formats!"
+                )
+                raise excp
+        return edition
+
+    def from_long_edition(self, text: str) -> Edition:
+        return self._edition.from_long_edition(text)
+
+    def from_version_string(self, text: str) -> Edition:
+        return self._edition.from_version_string(text)
+
+
+# import this in other modules, rather than 'CMKEditionType'.
+CMKEdition: Final = CMKEditionType()
 
 
 # It's ok to make it currently only work on debian based distros
 class CMKVersion:
     """
     Compare versions without timestamps.
-    >>> CMKVersion("2.0.0p12", Edition.CEE) < CMKVersion("2.1.0p12", Edition.CEE)
+    >>> CMKVersion("2.0.0p12") < CMKVersion("2.1.0p12")
     True
-    >>> CMKVersion("2.3.0p3", Edition.CEE) > CMKVersion("2.3.0", Edition.CEE)
+    >>> CMKVersion("2.3.0p3") > CMKVersion("2.3.0")
     True
-    >>> CMKVersion("2.3.0", Edition.CCE) >= CMKVersion("2.3.0", Edition.CCE)
+    >>> CMKVersion("2.3.0") >= CMKVersion("2.3.0")
     True
-    >>> CMKVersion("2.2.0p11", Edition.CCE) <= CMKVersion("2.2.0p11", Edition.CCE)
-    True
-    >>> try:
-    ...     CMKVersion("2.3.0", Edition.CCE) == CMKVersion("2.3.0", Edition.CEE)
-    ... except Exception as e:
-    ...     isinstance(e, TypeError)
+    >>> CMKVersion("2.2.0p11") <= CMKVersion("2.2.0p11")
     True
 
     Only one of the versions has a timestamp (only daily builds have a timestamp)
-    >>> CMKVersion("2.2.0-2024.05.05", Edition.CEE) > CMKVersion("2.2.0p26", Edition.CEE)
+    >>> CMKVersion("2.2.0-2024.05.05") > CMKVersion("2.2.0p26")
     True
-    >>> CMKVersion("2.2.0-2024.05.05", Edition.CRE) < CMKVersion("2.3.0p3", Edition.CRE)
+    >>> CMKVersion("2.2.0-2024.05.05") < CMKVersion("2.3.0p3")
     True
-    >>> CMKVersion("2.1.0-2024.05.05", Edition.CEE) != CMKVersion("2.1.0p18", Edition.CEE)
+    >>> CMKVersion("2.1.0-2024.05.05") != CMKVersion("2.1.0p18")
     True
 
     Both the versions have a timestamp (patch versions are always `0`)
-    >>> CMKVersion("2.3.0-2024.05.05", Edition.CEE) > CMKVersion("2.2.0-2024.05.05", Edition.CEE)
+    >>> CMKVersion("2.3.0-2024.05.05") > CMKVersion("2.2.0-2024.05.05")
     True
-    >>> CMKVersion("2.2.0-2024.05.05", Edition.CEE) < CMKVersion("2.2.0-2024.05.10", Edition.CEE)
+    >>> CMKVersion("2.2.0-2024.05.05") < CMKVersion("2.2.0-2024.05.10")
     True
     """
 
@@ -78,13 +167,17 @@ class CMKVersion:
     def __init__(
         self,
         version_spec: str,
-        edition: Edition,
         branch: str = current_base_branch_name(),
         branch_version: str = current_branch_version(),
     ) -> None:
         self.version_spec: Final = version_spec
-        self.version: Final = self._version(version_spec, branch, branch_version)
-        self.edition: Final = edition
+        self.version_rc_aware: Final = self._version(version_spec, branch, branch_version)
+        self.version: Final = re.sub(r"-rc(\d+)", "", self.version_rc_aware)
+        self.semantic: Final = (
+            _semantic_match.group(0)
+            if (_semantic_match := re.match(r"\d+\.\d+\.\d+", self.version))
+            else branch_version
+        )
         self.branch: Final = branch
         self.branch_version: Final = branch_version
 
@@ -117,46 +210,17 @@ class CMKVersion:
             raise Exception("Invalid version. Remove the edition suffix!")
         return version_spec
 
-    def is_managed_edition(self) -> bool:
-        return self.edition is Edition.CME
-
-    def is_enterprise_edition(self) -> bool:
-        return self.edition is Edition.CEE
-
-    def is_raw_edition(self) -> bool:
-        return self.edition is Edition.CRE
-
-    def is_cloud_edition(self) -> bool:
-        return self.edition is Edition.CCE
-
-    def is_saas_edition(self) -> bool:
-        return self.edition is Edition.CSE
-
-    def version_directory(self) -> str:
-        return self.omd_version()
-
-    def omd_version(self) -> str:
-        return f"{self.version}.{self.edition.short}"
-
-    def version_path(self) -> str:
-        return "/omd/versions/%s" % self.version_directory()
-
-    def is_installed(self) -> bool:
-        return os.path.exists(self.version_path())
+    def is_release_candidate(self) -> bool:
+        return self.version != self.version_rc_aware
 
     def __repr__(self) -> str:
-        return f"CMKVersion([{self.version}][{self.edition.long}][{self.branch}])"
+        return f"CMKVersion([{self.version}][{self.branch}])"
 
     @staticmethod
     def _checkmk_compare_versions_logic(
         primary: object, other: object, compare_operator: Callable[..., bool]
     ) -> bool:
         if isinstance(primary, CMKVersion) and isinstance(other, CMKVersion):
-            if primary.edition != other.edition:
-                raise TypeError(
-                    "Invalid comparison, mismatching editions! "
-                    f"{primary.edition} != {other.edition}"
-                )
             primary_version, primary_timestamp = CMKVersion._sanitize_version_spec(primary.version)
             other_version, other_timestamp = CMKVersion._sanitize_version_spec(other.version)
             # if only one of the versions has a timestamp and other does not
@@ -195,12 +259,16 @@ class CMKVersion:
         Uses `packaging.version.Version` to wrap Checkmk version.
         """
         _timestamp = None
+
         # treat `patch-version` as `micro-version`.
         _version = version.replace("0p", "")
+
         # detect daily builds
-        if "-" in version:
-            _timestamp = time.strptime(version.split("-")[-1], CMKVersion.TIMESTAMP_FORMAT)
-            _version = version.split("-")[0]
+        if match := re.search(
+            r"([1-9]?\d\.[1-9]?\d\.[1-9]?\d)-([1-9]\d{3}\.[0-1]\d\.[0-3]\d)", _version
+        ):
+            _version = match.groups()[0]
+            _timestamp = time.strptime(match.groups()[1], CMKVersion.TIMESTAMP_FORMAT)
         return Version(_version), _timestamp
 
     @staticmethod
@@ -227,250 +295,66 @@ class CMKVersion:
         return self < other or self == other
 
 
+class CMKPackageInfo:
+    """Consolidate information about a Checkmk package."""
+
+    def __init__(self, version: CMKVersion, edition: CMKEditionType) -> None:
+        self._version = version
+        self._edition = edition
+
+    def __str__(self) -> str:
+        return self.omd_version()
+
+    def __repr__(self) -> str:
+        return (
+            "CMKPackageInfo"
+            f"([{self._version.version}][{self._edition.long}][{self._version.branch}])"
+        )
+
+    @property
+    def version(self) -> CMKVersion:
+        return self._version
+
+    @property
+    def edition(self) -> CMKEditionType:
+        return self._edition
+
+    def is_installed(self) -> bool:
+        return os.path.exists(self.version_path())
+
+    def version_path(self) -> str:
+        return "/omd/versions/%s" % self.version_directory()
+
+    def version_directory(self) -> str:
+        return self.omd_version()
+
+    def omd_version(self) -> str:
+        return f"{self._version.version}.{self._edition.short}"
+
+
 def version_from_env(
     *,
     fallback_version_spec: str | None = None,
-    fallback_edition: Edition = Edition.CEE,
     fallback_branch: str | Callable[[], str] | None = None,
 ) -> CMKVersion:
     return CMKVersion(
         version_spec_from_env(fallback_version_spec or CMKVersion.DAILY),
-        edition_from_env(fallback_edition),
         branch_from_env(env_var="BRANCH", fallback=fallback_branch or current_base_branch_name),
     )
 
 
-def get_min_version(edition: Edition | None = None) -> CMKVersion:
+def edition_from_env(fallback: Edition = CMKEdition.CEE) -> CMKEditionType:
+    value = os.getenv("EDITION", "")
+    try:
+        edition = CMKEdition.edition_from_text(value)
+    except ValueError:
+        edition = fallback
+    return CMKEdition(edition)
+
+
+def get_min_version() -> CMKVersion:
     """Minimal version supported for an update to the daily version of this branch."""
-    if edition is None:
-        # by default, fallback to edition: CEE
-        edition = edition_from_env(fallback=Edition.CEE)
-    return CMKVersion(os.getenv("MIN_VERSION", "2.3.0p11"), edition)
-
-
-def get_omd_distro_name() -> str:
-    if os.path.exists("/etc/cma"):
-        raise NotImplementedError()
-
-    rh = Path("/etc/redhat-release")
-    if rh.exists():
-        content = rh.read_text()
-        if content.startswith("CentOS release 6"):
-            return "el6"
-        if content.startswith("CentOS Linux release 7"):
-            return "el7"
-        if content.startswith("CentOS Linux release 8"):
-            return "el8"
-        if content.startswith("AlmaLinux release 9"):
-            return "el9"
-        raise NotImplementedError()
-
-    os_spec = _read_os_release()
-    if not os_spec:
-        raise NotImplementedError()
-
-    if os_spec["NAME"] == "SLES":
-        return "sles%s" % os_spec["VERSION"].lower().replace("-", "")
-
-    if os_spec["NAME"] in ["Ubuntu", "Debian GNU/Linux"]:
-        if os_spec["VERSION_ID"] == "14.04":
-            return "trusty"
-        if os_spec["VERSION_ID"] == "8":
-            return "jessie"
-        return os_spec["VERSION_CODENAME"]
-
-    raise NotImplementedError()
-
-
-def _read_os_release() -> dict[str, str] | None:
-    os_release = Path("/etc/os-release")
-    if not os_release.exists():
-        return None
-
-    os_spec = {}
-    with os_release.open() as f:
-        for l in f:
-            if "=" not in l:
-                continue
-            key, val = l.strip().split("=", 1)
-            os_spec[key] = val.strip('"')
-
-    return os_spec
-
-
-class ABCPackageManager(abc.ABC):
-    @classmethod
-    def factory(cls, distro_name: str | None = None) -> "ABCPackageManager":
-        if not distro_name:
-            distro_name = get_omd_distro_name()
-        logger.info("Distro: %s", distro_name)
-
-        if distro_name.startswith("sles"):
-            return PackageManagerSuSE(distro_name)
-
-        if distro_name.startswith("el"):
-            return PackageManagerRHEL(distro_name)
-
-        if distro_name.startswith("cma"):
-            return PackageManagerCMA(distro_name)
-
-        return PackageManagerDEB(distro_name)
-
-    def __init__(self, distro_name: str) -> None:
-        self.distro_name = distro_name
-
-    @classmethod
-    def _is_debuntu(cls) -> bool:
-        return Path("/etc/debian_version").exists()
-
-    def install(self, version: str, edition: Edition) -> None:
-        package_name = self.package_name(edition, version)
-        build_system_path = self._build_system_package_path(version, package_name)
-        packages_dir = Path(__file__).parent.parent.parent / "package_download"
-        if (package_path := packages_dir / package_name).exists():
-            logger.info("Install from locally available package %s", package_path)
-            self._write_package_hash(version, edition, package_path)
-            self._install_package(package_path)
-
-        elif build_system_path.exists():
-            logger.info("Install from build system package (%s)", build_system_path)
-            self._write_package_hash(version, edition, build_system_path)
-            self._install_package(build_system_path)
-
-        else:
-            try:
-                # Prefer downloading from tstbuild: This is the place where also sandbox builds
-                # should be found.
-                logger.info("Try install from tstbuild")
-                package_path = self._download_package(
-                    package_name, self.package_url_internal(version, package_name)
-                )
-            except requests.exceptions.HTTPError:
-                logger.info("Could not Install from tstbuild, trying download portal...")
-                package_path = self._download_package(
-                    package_name, self.package_url_public(version, package_name)
-                )
-
-            self._write_package_hash(version, edition, package_path)
-            self._install_package(package_path)
-            os.unlink(package_path)
-
-    def _write_package_hash(self, version: str, edition: Edition, package_path: Path) -> None:
-        pkg_hash = sha256_file(package_path)
-        package_hash_path(version, edition).write_text(f"{pkg_hash}  {package_path.name}\n")
-
-    @abc.abstractmethod
-    def package_name(self, edition: Edition, version: str) -> str:
-        raise NotImplementedError()
-
-    def _build_system_package_path(self, version: str, package_name: str) -> Path:
-        """On Jenkins inside a container the previous built packages get mounted into /packages."""
-        return Path("/packages", version, package_name)
-
-    def _download_package(self, package_name: str, package_url: PackageUrl) -> Path:
-        temp_package_path = Path("/tmp", package_name)
-
-        logger.info("Downloading from: %s", package_url)
-        response = requests.get(  # nosec
-            package_url, auth=get_cmk_download_credentials(), verify=True
-        )
-        response.raise_for_status()
-
-        with open(temp_package_path, "wb") as f:
-            f.write(response.content)
-
-        return temp_package_path
-
-    def package_url_public(self, version: str, package_name: str) -> PackageUrl:
-        return PackageUrl(f"https://download.checkmk.com/checkmk/{version}/{package_name}")
-
-    def package_url_internal(self, version: str, package_name: str) -> PackageUrl:
-        return PackageUrl(f"https://tstbuilds-artifacts.lan.tribe29.com/{version}/{package_name}")
-
-    @abc.abstractmethod
-    def _install_package(self, package_path: Path) -> None:
-        raise NotImplementedError()
-
-    def _execute(self, cmd: list[str | Path]) -> None:
-        logger.debug("Executing: %s", subprocess.list2cmdline(list(map(str, cmd))))
-
-        # Workaround to fix package installation issues
-        # - systemctl in docker leads to: Failed to connect to bus: No such file or directory
-        if Path("/.dockerenv").exists():
-            systemctl = Path("/bin/systemctl")
-            if systemctl.exists():
-                systemctl.unlink()
-            systemctl.symlink_to("/bin/true")
-
-        if os.geteuid() != 0:
-            cmd.insert(0, "sudo")
-
-        completed_process = subprocess.run(
-            cmd, shell=False, close_fds=True, encoding="utf-8", check=False
-        )
-        if completed_process.returncode >> 8 != 0:
-            raise Exception("Failed to install package")
-
-
-def sha256_file(path: Path) -> str:
-    h = hashlib.sha256()
-    with path.open("rb") as f:
-        while chunk := f.read(65536):
-            h.update(chunk)
-    return h.hexdigest()
-
-
-class PackageManagerDEB(ABCPackageManager):
-    def package_name(self, edition: Edition, version: str) -> str:
-        return f"check-mk-{edition.long}-{version}_0.{self.distro_name}_amd64.deb"
-
-    def _install_package(self, package_path: Path) -> None:
-        # all dependencies are installed via install-cmk-dependencies.sh in the Dockerfile
-        # this step should fail in case additional packages would be required
-        self._execute(["dpkg", "-i", package_path])
-
-
-class ABCPackageManagerRPM(ABCPackageManager):
-    def package_name(self, edition: Edition, version: str) -> str:
-        return f"check-mk-{edition.long}-{version}-{self.distro_name}-38.x86_64.rpm"
-
-
-class PackageManagerSuSE(ABCPackageManagerRPM):
-    def _install_package(self, package_path: Path) -> None:
-        self._execute(["rpm", "-i", package_path])
-
-
-class PackageManagerRHEL(ABCPackageManagerRPM):
-    def _install_package(self, package_path: Path) -> None:
-        self._execute(["rpm", "-i", package_path])
-
-
-class PackageManagerCMA(PackageManagerDEB):
-    def package_name(self, edition: Edition, version: str) -> str:
-        return f"check-mk-{edition.long}-{version}-{self.distro_name.split('-')[1]}-x86_64.cma"
-
-
-# TODO: Duplicated in cmk_dev.utils.distro_code
-def code_name(distro_name: str) -> str:
-    if code := {
-        "cma-4": "cma-4",
-        "debian-11": "bullseye",
-        "debian-12": "bookworm",
-        "ubuntu-22.04": "jammy",
-        "ubuntu-23.04": "lunar",
-        "ubuntu-23.10": "mantic",
-        "ubuntu-24.04": "noble",
-        "centos-7": "el7",
-        "centos-8": "el8",
-        "almalinux-9": "el9",
-        "sles-15sp1": "sles15sp1",
-        "sles-15sp2": "sles15sp2",
-        "sles-15sp3": "sles15sp3",
-        "sles-15sp4": "sles15sp4",
-        "sles-15sp5": "sles15sp5",
-    }.get(distro_name):
-        return code
-    raise RuntimeError(f"Unknown distro: {distro_name}")
+    return CMKVersion(os.getenv("MIN_VERSION", "2.4.0b1"))
 
 
 def git_tag_exists(version: CMKVersion) -> bool:

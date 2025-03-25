@@ -15,6 +15,8 @@ from cmk.utils.hostaddress import HostAddress
 
 from cmk.snmplib import BackendOIDSpec, BackendSNMPTree, SNMPBackendEnum, SpecialColumn
 
+from .snmp_helpers import default_config, get_single_oid, get_snmp_table
+
 INFO_TREE = BackendSNMPTree(
     base=".1.3.6.1.2.1.1",
     oids=[
@@ -23,8 +25,6 @@ INFO_TREE = BackendSNMPTree(
         BackendOIDSpec("5.0", "string", False),
     ],
 )
-
-from .snmp_helpers import default_config, get_single_oid, get_snmp_table
 
 
 # Missing in currently used dump:
@@ -80,7 +80,7 @@ def test_get_simple_snmp_table_not_resolvable(site: Site, backend_type: SNMPBack
 
     with pytest.raises(CalledProcessError) as e:
         site.python_helper("helper_get_snmp_table.py").check_output(
-            input=repr(
+            input_=repr(
                 (
                     INFO_TREE.to_json(),
                     backend_type.serialize(),
@@ -107,7 +107,7 @@ def test_get_simple_snmp_table_wrong_credentials(site: Site, backend_type: SNMPB
 
     with pytest.raises(CalledProcessError) as e:
         site.python_helper("helper_get_snmp_table.py").check_output(
-            input=repr(
+            input_=repr(
                 (
                     INFO_TREE.to_json(),
                     backend_type.serialize(),

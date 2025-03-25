@@ -12,6 +12,7 @@
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
+from collections import OrderedDict
 from collections.abc import Sequence
 from typing import Any
 
@@ -184,8 +185,9 @@ class BIRule(ABCBIRule, ABCWithSchema):
 
 
 class BIRuleSchema(Schema):
-    class Meta:
-        ordered = True
+    @property
+    def dict_class(self) -> type:
+        return OrderedDict
 
     id = ReqString(
         dump_default="",

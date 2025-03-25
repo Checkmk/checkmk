@@ -10,252 +10,28 @@
 # This script creates a nifty HTML email in multipart format with
 # attached graphs and such neat stuff. Sweet!
 
-import base64
-import os
 import socket
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from email.message import Message
-from email.mime.application import MIMEApplication
-from email.mime.image import MIMEImage
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from typing import Literal, NamedTuple, NoReturn
+from typing import NoReturn
 
-import requests
+from jinja2 import Environment, FileSystemLoader
 
-from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail, set_mail_headers
-from cmk.utils.paths import omd_root
-
-from cmk.notification_plugins import utils
-
-from cmk.ccc import site
 from cmk.ccc.exceptions import MKException
 
+from cmk.utils.escaping import escape_permissive
+from cmk.utils.mail import (
+    Attachment,
+    default_from_address,
+    MailString,
+    multipart_mail,
+    send_mail_sendmail,
+)
+from cmk.utils.paths import omd_root, web_dir
 
-def tmpl_head_html(html_section: str) -> str:
-    return (
-        """
-<html>
-<head>
-<title>$SUBJECT$</title>
-<style>
-body {
-    background-color: #ffffff;
-    padding: 5px;
-    font-family: arial,helvetica,sans-serif;
-    font-size: 10px;
-}
-table {
-    border-spacing: 0px;
-    border-collapse: collapse;
-    margin: 5px 0 0 0;
-    padding: 0;
-    width: 100%;
-    color: black;
-    empty-cells: show;
-}
-
-table th {
-    font-weight: normal;
-    border-right: 1px solid #cccccc;
-    background-color: #999999;
-    text-align: center;
-    color: #ffffff;
-    vertical-align: middle;
-    font-size: 9pt;
-    height: 14px;
-}
-table th:last-child {
-    border-right-style: none;
-}
-
-table tr > td {
-    border-right: 1px solid #cccccc;
-    padding: 2px 4px;
-    height: 22px;
-    vertical-align: middle;
-}
-table tr td:last-child {
-    border-right-style: none;
-}
-
-table a {
-    text-decoration: none;
-    color: black;
-}
-table a:hover {
-    text-decoration: underline;
-}
-
-table tr td {
-    padding-bottom: 4px;
-    padding: 4px 5px 2px 5px;
-    text-align: left;
-    height: 16px;
-    line-height: 14px;
-    vertical-align: top;
-    font-size: 9pt;
-}
-table tr td.left {
-    width: 10%;
-    white-space: nowrap;
-    vertical-align: top;
-    padding-right: 20px;
-}
-table tr.even0 td.left {
-    background-color: #bbbbbb;
-}
-table tr.odd0 td.left {
-    background-color: #cccccc;
-}
-
-tr.odd0  { background-color: #eeeeee; }
-tr.even0 { background-color: #dddddd; }
-
-td.odd0  { background-color: #eeeeee; }
-td.even0 { background-color: #dddddd; }
-
-tr.odd1  { background-color: #ffffcc; }
-tr.even1 { background-color: #ffffaa; }
-
-tr.odd2  { background-color: #ffcccc; }
-tr.even2 { background-color: #ffaaaa; }
-
-tr.odd3  { background-color: #ffe0a0; }
-tr.even3 { background-color: #ffefaf; }
-
-.stateOK, .stateUP {
-    padding-left: 3px;
-    padding-right: 3px;
-    border-radius: 2px;
-    font-weight: bold;
-    background-color: #0b3; color: #ffffff;
-}
-
-.stateWARNING {
-    padding-left: 3px;
-    padding-right: 3px;
-    border-radius: 2px;
-    font-weight: bold;
-    background-color: #ffff00; color: #000000;
-}
-
-.stateCRITICAL, .stateDOWN {
-    padding-left: 3px;
-    padding-right: 3px;
-    border-radius: 2px;
-    font-weight: bold;
-    background-color: #ff0000; color: #ffffff;
-}
-
-.stateUNKNOWN, .stateUNREACHABLE {
-    padding-left: 3px;
-    padding-right: 3px;
-    border-radius: 2px;
-    font-weight: bold;
-    background-color: #ff8800; color: #ffffff;
-}
-
-.statePENDING {
-    padding-left: 3px;
-    padding-right: 3px;
-    border-radius: 2px;
-    font-weight: bold;
-    background-color: #888888; color: #ffffff;
-}
-
-.stateDOWNTIME {
-    padding-left: 3px;
-    padding-right: 3px;
-    border-radius: 2px;
-    font-weight: bold;
-    background-color: #00aaff; color: #ffffff;
-}
-
-b.stmarkstate0 {
-    margin-left: 2px;
-    padding: 1px 3px;
-    border-radius: 4px;
-    font-size: 7pt;
-    border: 1px solid #666;
-    position: relative;
-    top: -1px;
-
-    background-color: #0b3; color: #ffffff;
-}
-
-b.stmarkstate1 {
-    margin-left: 2px;
-    padding: 1px 3px;
-    border-radius: 4px;
-    font-size: 7pt;
-    border: 1px solid #666;
-    position: relative;
-    top: -1px;
-
-    background-color: #ffff00; color: #000000;
-}
-
-b.stmarkstate2 {
-    margin-left: 2px;
-    padding: 1px 3px;
-    border-radius: 4px;
-    font-size: 7pt;
-    border: 1px solid #666;
-    position: relative;
-    top: -1px;
-
-    background-color: #ff0000; color: #ffffff;
-}
-
-b.stmarkstate3 {
-    margin-left: 2px;
-    padding: 1px 3px;
-    border-radius: 4px;
-    font-size: 7pt;
-    border: 1px solid #666;
-    position: relative;
-    top: -1px;
-
-    background-color: #ff8800; color: #ffffff;
-}
-
-td.graphs {
-    width: 617px;
-    padding: 10px;
-}
-
-img {
-    margin-right: 10px;
-}
-
-img.nofloat {
-    display: block;
-    margin-bottom: 10px;
-}
-
-table.context {
-    border-collapse: collapse;
-}
-
-table.context td {
-    border: 1px solid #888;
-    padding: 3px 8px;
-}
-
-
-</style>
-</head>
-<body>"""
-        + html_section
-        + "<table>"
-    )
-
-
-TMPL_FOOT_HTML = """</table>
-</body>
-</html>"""
+from cmk.notification_plugins import utils
+from cmk.notification_plugins.utils import get_password_from_env_or_context, render_cmk_graphs
 
 # Elements to be put into the mail body. Columns:
 # 1. Name
@@ -264,7 +40,6 @@ TMPL_FOOT_HTML = """</table>
 # 4. "normal"-> for normal notifications, "alerthandler" -> for alert handler notifications, "all" -> for all types
 # 5. Title
 # 6. Text template
-# 7. HTML template
 
 BODY_ELEMENTS = [
     (
@@ -274,9 +49,15 @@ BODY_ELEMENTS = [
         "all",
         "Host",
         "$HOSTNAME_AND_ALIAS_TXT$",
-        "$HOSTNAME_AND_ALIAS_HTML$",
     ),
-    ("servicedesc", "service", True, "all", "Service", "$SERVICEDESC$", "$LINKEDSERVICEDESC$"),
+    (
+        "servicedesc",
+        "service",
+        True,
+        "all",
+        "Service",
+        "$SERVICEDESC$",
+    ),
     (
         "event",
         "both",
@@ -284,7 +65,6 @@ BODY_ELEMENTS = [
         "all",
         "Event",
         "$EVENT_TXT$",
-        "$EVENT_HTML$",
     ),
     # Elements for both host and service notifications
     (
@@ -294,7 +74,6 @@ BODY_ELEMENTS = [
         "all",
         "Address",
         "$HOSTADDRESS$",
-        "$HOSTADDRESS$",
     ),
     (
         "abstime",
@@ -303,17 +82,29 @@ BODY_ELEMENTS = [
         "all",
         "Time",
         "$LONGDATETIME$",
-        "$LONGDATETIME$",
     ),
-    ("omdsite", "both", False, "all", "Site", "$OMD_SITE$", "$OMD_SITE$"),
-    ("hosttags", "both", False, "all", "Host tags", "$HOST_TAGS$", "$HOST_TAGS$"),
+    (
+        "omdsite",
+        "both",
+        False,
+        "all",
+        "Site",
+        "$OMD_SITE$",
+    ),
+    (
+        "hosttags",
+        "both",
+        False,
+        "all",
+        "Host tags",
+        "$HOST_TAGS$",
+    ),
     (
         "notification_author",
         "both",
         False,
         "all",
         "Notification author",
-        "$NOTIFICATIONAUTHOR$",
         "$NOTIFICATIONAUTHOR$",
     ),
     (
@@ -323,7 +114,6 @@ BODY_ELEMENTS = [
         "all",
         "Notification comment",
         "$NOTIFICATIONCOMMENT$",
-        "$NOTIFICATIONCOMMENT$",
     ),
     (
         "notesurl",
@@ -331,7 +121,6 @@ BODY_ELEMENTS = [
         False,
         "all",
         "Custom host notes URL",
-        "$HOSTNOTESURL$",
         "$HOSTNOTESURL$",
     ),
     # Elements only for host notifications
@@ -342,7 +131,6 @@ BODY_ELEMENTS = [
         "all",
         "Relative time",
         "$LASTHOSTSTATECHANGE_REL$",
-        "$LASTHOSTSTATECHANGE_REL$",
     ),
     (
         "output",
@@ -351,7 +139,6 @@ BODY_ELEMENTS = [
         "normal",
         "Summary",
         "$HOSTOUTPUT$",
-        "$HOSTOUTPUT_HTML$",
     ),
     (
         "ack_author",
@@ -359,7 +146,6 @@ BODY_ELEMENTS = [
         False,
         "normal",
         "Acknowledge author",
-        "$HOSTACKAUTHOR$",
         "$HOSTACKAUTHOR$",
     ),
     (
@@ -369,7 +155,6 @@ BODY_ELEMENTS = [
         "normal",
         "Acknowledge comment",
         "$HOSTACKCOMMENT$",
-        "$HOSTACKCOMMENT$",
     ),
     (
         "perfdata",
@@ -377,7 +162,6 @@ BODY_ELEMENTS = [
         False,
         "normal",
         "Metrics",
-        "$HOSTPERFDATA$",
         "$HOSTPERFDATA$",
     ),
     # Elements only for service notifications
@@ -388,7 +172,6 @@ BODY_ELEMENTS = [
         "all",
         "Relative time",
         "$LASTSERVICESTATECHANGE_REL$",
-        "$LASTSERVICESTATECHANGE_REL$",
     ),
     (
         "output",
@@ -397,7 +180,6 @@ BODY_ELEMENTS = [
         "normal",
         "Summary",
         "$SERVICEOUTPUT$",
-        "$SERVICEOUTPUT_HTML$",
     ),
     (
         "longoutput",
@@ -406,7 +188,6 @@ BODY_ELEMENTS = [
         "normal",
         "Details",
         "$LONGSERVICEOUTPUT$",
-        "$LONGSERVICEOUTPUT_HTML$",
     ),
     (
         "ack_author",
@@ -414,7 +195,6 @@ BODY_ELEMENTS = [
         False,
         "normal",
         "Acknowledge author",
-        "$SERVICEACKAUTHOR$",
         "$SERVICEACKAUTHOR$",
     ),
     (
@@ -424,7 +204,6 @@ BODY_ELEMENTS = [
         "normal",
         "Acknowledge comment",
         "$SERVICEACKCOMMENT$",
-        "$SERVICEACKCOMMENT$",
     ),
     (
         "perfdata",
@@ -432,7 +211,6 @@ BODY_ELEMENTS = [
         False,
         "normal",
         "Host metrics",
-        "$HOSTPERFDATA$",
         "$HOSTPERFDATA$",
     ),
     (
@@ -442,7 +220,6 @@ BODY_ELEMENTS = [
         "normal",
         "Service metrics",
         "$SERVICEPERFDATA$",
-        "$SERVICEPERFDATA$",
     ),
     (
         "notesurl",
@@ -450,7 +227,6 @@ BODY_ELEMENTS = [
         False,
         "all",
         "Custom service notes URL",
-        "$SERVICENOTESURL$",
         "$SERVICENOTESURL$",
     ),
     # Alert handlers
@@ -461,7 +237,6 @@ BODY_ELEMENTS = [
         "alerthandler",
         "Name of alert handler",
         "$ALERTHANDLERNAME$",
-        "$ALERTHANDLERNAME$",
     ),
     (
         "alerthandler_output",
@@ -469,7 +244,6 @@ BODY_ELEMENTS = [
         True,
         "alerthandler",
         "Output of alert handler",
-        "$ALERTHANDLEROUTPUT$",
         "$ALERTHANDLEROUTPUT$",
     ),
     # Debugging
@@ -480,12 +254,11 @@ BODY_ELEMENTS = [
         "all",
         "Complete variable list",
         "$CONTEXT_ASCII$",
-        "$CONTEXT_HTML$",
     ),
 ]
 
-TMPL_HOST_SUBJECT = "Check_MK: $HOSTNAME$ - $EVENT_TXT$"
-TMPL_SERVICE_SUBJECT = "Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$"
+TMPL_HOST_SUBJECT = "Checkmk: $HOSTNAME$ - $EVENT_TXT$"
+TMPL_SERVICE_SUBJECT = "Checkmk: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$"
 
 opt_debug = "-d" in sys.argv
 bulk_mode = "--bulk" in sys.argv
@@ -495,67 +268,22 @@ class GraphException(MKException):
     pass
 
 
-class AttachmentNamedTuple(NamedTuple):
-    what: Literal["img"]
-    name: str
-    contents: bytes | str
-    how: str
-
-
-# Keeping this for compatibility reasons
-AttachmentUnNamedTuple = tuple[str, str, bytes | str, str]
-AttachmentTuple = AttachmentNamedTuple | AttachmentUnNamedTuple
-AttachmentList = list[AttachmentTuple]
-
-
-# TODO: Just use a single EmailContent parameter.
-def multipart_mail(
-    target: str,
-    subject: str,
-    from_address: str,
-    reply_to: str,
-    content_txt: str,
-    content_html: str,
-    attach: AttachmentList | None = None,
-) -> MIMEMultipart:
-    if attach is None:
-        attach = []
-
-    m = MIMEMultipart("related", _charset="utf-8")
-
-    alt = MIMEMultipart("alternative")
-
-    # The plain text part
-    txt = MIMEText(content_txt, "plain", _charset="utf-8")
-    alt.attach(txt)
-
-    # The html text part
-    html = MIMEText(content_html, "html", _charset="utf-8")
-    alt.attach(html)
-
-    m.attach(alt)
-
-    # Add all attachments
-    for what, name, contents, how in attach:
-        part = (
-            MIMEImage(contents, name=name)
-            if what == "img"
-            else MIMEApplication(contents, name=name)
+class TemplateRenderer:
+    def __init__(self) -> None:
+        self.env = Environment(
+            loader=FileSystemLoader(omd_root / "share/check_mk/notifications/templates/mail"),
+            autoescape=True,
         )
-        part.add_header("Content-ID", "<%s>" % name)
-        # how must be inline or attachment
-        part.add_header("Content-Disposition", how, filename=name)
-        m.attach(part)
 
-    return set_mail_headers(
-        MailString(target), MailString(subject), MailString(from_address), MailString(reply_to), m
-    )
+    def render_template(self, template_file: str, data: dict[str, object]) -> str:
+        template = self.env.get_template(template_file)
+        return template.render(data)
 
 
-def send_mail_smtp(  # pylint: disable=too-many-branches
+def send_mail_smtp(
     message: Message, target: MailString, from_address: MailString, context: dict[str, str]
 ) -> int:
-    import smtplib  # pylint: disable=import-outside-toplevel
+    import smtplib
 
     host_index = 1
 
@@ -585,10 +313,19 @@ def send_mail_smtp(  # pylint: disable=too-many-branches
             if errorcode not in [
                 450,  # sender address domain not found
                 550,  # sender address unknown
+                554,  # "Transaction failed" / "Message rejected"
             ]:
                 retry_possible = True
 
-            sys.stderr.write('mail to "%s" refused: %d, %r\n' % (target, errorcode, err_message))
+            sys.stderr.write(
+                'mail from %s" to "%s" refused: %d, %r\n'
+                % (
+                    from_address,
+                    target,
+                    errorcode,
+                    err_message,
+                )
+            )
         except smtplib.SMTPHeloError as e:
             retry_possible = True  # server is acting up, this may be fixed quickly
             sys.stderr.write(
@@ -622,18 +359,6 @@ def _ensure_str_error_message(message: bytes | str) -> str:
     return message.decode("utf-8") if isinstance(message, bytes) else message
 
 
-# We can not use cmk.utils.html.replace_state_markers here because of a bug in outlook
-# that results in missing state markers
-# https://github.com/hteumeuleu/email-bugs/issues/75
-def _replace_state_markers(output: str) -> str:
-    return (
-        output.replace("(!)", '<b class="stmarkstate1">WARN</b>')
-        .replace("(!!)", '<b class="stmarkstate2">CRIT</b>')
-        .replace("(?)", '<b class="stmarkstate3">UNKN</b>')
-        .replace("(.)", '<b class="stmarkstate0">OK</b>')
-    )
-
-
 def send_mail_smtp_impl(
     message: Message,
     target: MailString,
@@ -641,8 +366,8 @@ def send_mail_smtp_impl(
     from_address: MailString,
     context: dict[str, str],
 ) -> None:
-    import smtplib  # pylint: disable=import-outside-toplevel
-    import types  # pylint: disable=import-outside-toplevel
+    import smtplib
+    import types
 
     def getreply_wrapper(self: smtplib.SMTP) -> tuple[int, bytes]:
         # We introduce those attributes...
@@ -670,7 +395,13 @@ def send_mail_smtp_impl(
         conn.starttls()
 
     if context.get("PARAMETER_SMTP_AUTH_USER") is not None:
-        conn.login(context["PARAMETER_SMTP_AUTH_USER"], context["PARAMETER_SMTP_AUTH_PASSWORD"])
+        conn.login(
+            context["PARAMETER_SMTP_AUTH_USER"],
+            get_password_from_env_or_context(
+                key="PARAMETER_SMTP_AUTH_PASSWORD",
+                context=context,
+            ),
+        )
 
     # this call returns a dictionary with the recipients that failed + the reason, but only
     # if at least one succeeded, otherwise it throws an exception.
@@ -695,88 +426,26 @@ def send_mail(message: Message, target: str, from_address: str, context: dict[st
     return 0
 
 
-def render_cmk_graphs(context: dict[str, str], is_bulk: bool) -> list[bytes]:
-    if context["WHAT"] == "HOST":
-        svc_desc = "_HOST_"
-    else:
-        svc_desc = context["SERVICEDESC"]
+def render_performance_graphs(
+    context: dict[str, str],
+) -> tuple[list[Attachment], list[str]]:
+    attachments: list[Attachment] = []
+    file_names = []
+    for graph in render_cmk_graphs(context):
+        attachments.append(Attachment("img", graph.filename, graph.data, "inline"))
 
-    request = requests.Request(
-        "GET",
-        f"http://localhost:{site.get_apache_port(omd_root)}/{os.environ['OMD_SITE']}/check_mk/ajax_graph_images.py",
-        params={
-            "host": context["HOSTNAME"],
-            "service": svc_desc,
-            "num_graphs": context["PARAMETER_GRAPHS_PER_NOTIFICATION"],
-        },
-    ).prepare()
+        file_names.append(graph.filename)
 
-    timeout = 10
-
-    try:
-        response = requests.Session().send(
-            request,
-            timeout=timeout,
-        )
-        base64_strings = response.json()
-    except requests.exceptions.ReadTimeout:
-        if opt_debug:
-            raise
-        sys.stderr.write(f"ERROR: Timed out fetching graphs ({timeout} sec)\nURL: {request.url}\n")
-        return []
-    except requests.exceptions.JSONDecodeError as e:
-        if response.text == "":
-            return []
-        if opt_debug:
-            raise
-        sys.stderr.write(
-            f"ERROR: Failed to decode graphs: {e}\nURL: {request.url}\nData: {response.text!r}\n"
-        )
-        return []
-    except Exception as e:
-        if opt_debug:
-            raise
-        sys.stderr.write(f"ERROR: Failed to fetch graphs: {e}\nURL: {request.url}\n")
-        return []
-
-    return [base64.b64decode(s) for s in base64_strings]
-
-
-def render_performance_graphs(context: dict[str, str], is_bulk: bool) -> tuple[AttachmentList, str]:
-    graphs = render_cmk_graphs(context, is_bulk)
-
-    attachments: AttachmentList = []
-    graph_code = ""
-    for source, graph_png in enumerate(graphs):
-        if context["WHAT"] == "HOST":
-            svc_desc = "_HOST_"
-        else:
-            svc_desc = context["SERVICEDESC"].replace(" ", "_")
-            # replace forbidden windows characters < > ? " : | \ / *
-            for token in ["<", ">", "?", '"', ":", "|", "\\", "/", "*"]:
-                svc_desc = svc_desc.replace(token, "x%s" % ord(token))
-
-        filename = "%s-%s-%d.png" % (context["HOSTNAME"], svc_desc, source)
-
-        attachments.append(AttachmentNamedTuple("img", filename, graph_png, "inline"))
-
-        cls = ""
-        if context.get("PARAMETER_NO_FLOATING_GRAPHS"):
-            cls = ' class="nofloat"'
-        graph_code += f'<img src="cid:{filename}"{cls} />'
-
-    if graph_code:
-        graph_code = (
-            "<tr><th colspan=2>Graphs</th></tr>"
-            '<tr class="even0"><td colspan=2 class=graphs>%s</td></tr>' % graph_code
-        )
-
-    return attachments, graph_code
+    return attachments, file_names
 
 
 def construct_content(
-    context: dict[str, str], is_bulk: bool = False, notification_number: int = 1
-) -> tuple[str, str, AttachmentList]:
+    context: dict[str, str],
+    is_bulk: bool = False,
+    bulk_summary: list[dict[str, str]] | None = None,
+    last_bulk_entry: bool = False,
+    notification_number: int = 1,
+) -> tuple[str, str, list[Attachment]]:
     # A list of optional information is configurable via the parameter "elements"
     # (new configuration style)
     # Note: The value PARAMETER_ELEMENTSS is NO TYPO.
@@ -791,50 +460,64 @@ def construct_content(
         if notification_number > int(notifications_with_graphs):
             elements.remove("graph")
 
-    # Prepare the mail contents
-    template_txt, template_html = body_templates(
+    # Prepare the text mail content
+    template_txt = body_templates(
         context["WHAT"].lower(),
         "ALERTHANDLEROUTPUT" in context,
         elements,
         BODY_ELEMENTS,
     )
     content_txt = utils.substitute_context(template_txt, context)
-    content_html = utils.substitute_context(template_html, context)
 
-    attachments: AttachmentList = []
+    attachments: list[Attachment] = []
+    file_names: list[str] = []
     if "graph" in elements and "ALERTHANDLEROUTPUT" not in context:
         # Add Checkmk graphs
         try:
-            attachments, graph_code = render_performance_graphs(context, is_bulk)
-            content_html += graph_code
+            attachments, file_names = render_performance_graphs(context)
         except Exception as e:
             sys.stderr.write("Failed to add graphs to mail. Continue without them. (%s)\n" % e)
 
-    extra_html_section = ""
-    if "PARAMETER_INSERT_HTML_SECTION" in context:
-        extra_html_section = context["PARAMETER_INSERT_HTML_SECTION"]
-
-    content_html = (
-        utils.substitute_context(tmpl_head_html(extra_html_section), context)
-        + content_html
-        + utils.substitute_context(TMPL_FOOT_HTML, context)
+    content_html = utils.substitute_context(
+        TemplateRenderer().render_template(
+            "base.html",
+            {
+                "data": context,
+                "graphs": file_names,
+                "insert": escape_permissive(context.get("PARAMETER_INSERT_HTML_SECTION", "")),
+                "is_bulk": is_bulk,
+                "bulk_summary": bulk_summary,
+                "last_bulk_entry": last_bulk_entry,
+            },
+        ),
+        context,
     )
 
-    return content_txt, content_html, attachments
+    return (
+        content_txt,
+        content_html,
+        attachments,
+    )
 
 
-def extend_context(context: dict[str, str]) -> None:
-    if context.get("PARAMETER_2"):
-        context["PARAMETER_URL_PREFIX"] = context["PARAMETER_2"]
-
+def extend_context(context: dict[str, str], is_bulk: bool = False) -> None:
     context["LINKEDHOSTNAME"] = utils.format_link(
-        '<a href="%s">%s</a>', utils.host_url_from_context(context), context["HOSTNAME"]
+        '<a href="%s" style="color:#000000">%s</a>',
+        utils.host_url_from_context(context),
+        context["HOSTNAME"],
     )
     context["LINKEDSERVICEDESC"] = utils.format_link(
-        '<a href="%s">%s</a>',
+        '<a href="%s" style="color:#000000">%s</a>',
         utils.service_url_from_context(context),
         context.get("SERVICEDESC", ""),
     )
+
+    # For "Additional details", graph is a default
+    if "graph" in context.get("PARAMETER_ELEMENTSS", "graph").split():
+        context["GRAPH_URL"] = utils.graph_url_from_context(context)
+
+    if is_bulk:
+        context["EVENTHISTORYURL"] = utils.eventhistory_url_from_context(context)
 
     if context["HOSTALIAS"] and context["HOSTNAME"] != context["HOSTALIAS"]:
         context["HOSTNAME_AND_ALIAS_TXT"] = "$HOSTNAME$ ($HOSTALIAS$)"
@@ -843,25 +526,22 @@ def extend_context(context: dict[str, str]) -> None:
         context["HOSTNAME_AND_ALIAS_TXT"] = "$HOSTNAME$"
         context["HOSTNAME_AND_ALIAS_HTML"] = "$LINKEDHOSTNAME$"
 
-    event_template_txt, event_template_html = event_templates(context["NOTIFICATIONTYPE"])
+    event_template_txt = txt_event_template(context["NOTIFICATIONTYPE"])
 
     context["EVENT_TXT"] = utils.substitute_context(
         event_template_txt.replace("@", context["WHAT"]), context
     )
-    context["EVENT_HTML"] = utils.substitute_context(
-        event_template_html.replace("@", context["WHAT"]), context
-    )
 
     if "HOSTOUTPUT" in context:
-        context["HOSTOUTPUT_HTML"] = _replace_state_markers(context["HOSTOUTPUT"])
+        context["HOSTOUTPUT_HTML"] = context["HOSTOUTPUT"]
 
     if context["WHAT"] == "SERVICE":
-        context["SERVICEOUTPUT_HTML"] = _replace_state_markers(context["SERVICEOUTPUT"])
+        context["SERVICEOUTPUT_HTML"] = context["SERVICEOUTPUT"]
 
         long_serviceoutput = (
             context["LONGSERVICEOUTPUT"].replace("\\n", "<br>").replace("\n", "<br>")
         )
-        context["LONGSERVICEOUTPUT_HTML"] = _replace_state_markers(long_serviceoutput)
+        context["LONGSERVICEOUTPUT_HTML"] = long_serviceoutput
 
     # Compute the subject of the mail
     if context["WHAT"] == "HOST":
@@ -872,66 +552,40 @@ def extend_context(context: dict[str, str]) -> None:
         context["SUBJECT"] = utils.substitute_context(tmpl, context)
 
 
-def event_templates(notification_type: str) -> tuple[str, str]:
+def txt_event_template(notification_type: str) -> str:
     # Returns an event summary
     if notification_type in ["PROBLEM", "RECOVERY"]:
-        return (
-            "$PREVIOUS@HARDSHORTSTATE$ -> $@SHORTSTATE$",
-            '<span class="state$PREVIOUS@HARDSTATE$">$PREVIOUS@HARDSTATE$</span> &rarr; <span class="state$@STATE$">$@STATE$</span>',
-        )
+        return "$PREVIOUS@HARDSHORTSTATE$ -> $@SHORTSTATE$"
     if notification_type == "FLAPPINGSTART":
-        return "Started Flapping", "Started Flapping"
+        return "Started Flapping"
     if notification_type == "FLAPPINGSTOP":
-        return (
-            "Stopped Flapping ($@SHORTSTATE$)",
-            'Stopped Flapping (while <span class="state$@STATE$">$@STATE$</span>)',
-        )
+        return "Stopped Flapping ($@SHORTSTATE$)"
     if notification_type == "FLAPPINGDISABLED":
-        return (
-            "Disabled Flapping ($@SHORTSTATE$)",
-            'Disabled Flapping (while <span class="state$@STATE$">$@STATE$</span>)',
-        )
+        return "Disabled Flapping ($@SHORTSTATE$)"
     if notification_type == "DOWNTIMESTART":
-        return (
-            "Downtime Start ($@SHORTSTATE$)",
-            'Downtime Start (while <span class="state$@STATE$">$@STATE$</span>)',
-        )
+        return "Downtime Start ($@SHORTSTATE$)"
     if notification_type == "DOWNTIMEEND":
-        return (
-            "Downtime End ($@SHORTSTATE$)",
-            'Downtime End (while <span class="state$@STATE$">$@STATE$</span>)',
-        )
+        return "Downtime End ($@SHORTSTATE$)"
     if notification_type == "DOWNTIMECANCELLED":
-        return (
-            "Downtime Cancelled ($@SHORTSTATE$)",
-            'Downtime Cancelled (while <span class="state$@STATE$">$@STATE$</span>)',
-        )
+        return "Downtime Cancelled ($@SHORTSTATE$)"
     if notification_type == "ACKNOWLEDGEMENT":
-        return (
-            "Acknowledged ($@SHORTSTATE$)",
-            'Acknowledged (while <span class="state$@STATE$">$@STATE$</span>)',
-        )
+        return "Acknowledged ($@SHORTSTATE$)"
     if notification_type == "CUSTOM":
-        return (
-            "Custom Notification ($@SHORTSTATE$)",
-            'Custom Notification (while <span class="state$@STATE$">$@STATE$</span>)',
-        )
+        return "Custom Notification ($@SHORTSTATE$)"
     if notification_type.startswith("ALERTHANDLER"):
         # The notification_type here is "ALERTHANDLER (exit_code)"
-        return notification_type, notification_type
-    return notification_type, notification_type
+        return notification_type
+    return notification_type
 
 
 def body_templates(
     what: str,
     is_alert_handler: bool,
     elements: list[str],
-    body_elements: list[tuple[str, str, bool, str, str, str, str]],
-) -> tuple[str, str]:
-    even = "even"
+    body_elements: list[tuple[str, str, bool, str, str, str]],
+) -> str:
     tmpl_txt: list[str] = []
-    tmpl_html: list[str] = []
-    for name, whence, forced, nottype, title, txt, html in body_elements:
+    for name, whence, forced, nottype, title, txt in body_elements:
         if nottype == "alerthandler" and not is_alert_handler:
             continue
 
@@ -940,10 +594,8 @@ def body_templates(
 
         if (whence in ("both", what)) and (forced or (name in elements)):
             tmpl_txt += "%-20s %s\n" % (title + ":", txt)
-            tmpl_html += f'<tr class="{even}0"><td class=left>{title}</td><td>{html}</td></tr>'
-            even = "odd" if even == "even" else "even"
 
-    return "".join(tmpl_txt), "".join(tmpl_html)
+    return "".join(tmpl_txt)
 
 
 # TODO: NamedTuple?
@@ -957,7 +609,7 @@ class EmailContent:
         reply_to: str,
         content_txt: str,
         content_html: str,
-        attachments: AttachmentList,
+        attachments: Sequence[Attachment],
     ) -> None:
         self.context = context
         self.mailto = mailto
@@ -979,16 +631,27 @@ class BulkEmailContent(EmailContent):
         parameters, contexts = context_function()
         hosts = set()
 
-        for i, c in enumerate(contexts, 1):
-            c.update(parameters)
-            escaped_context = utils.html_escape_context(c)
-            extend_context(escaped_context)
+        all_contexts_updated: list[dict[str, str]] = []
+        for single_context in contexts:
+            single_context.update(parameters)
+            escaped_context = utils.html_escape_context(single_context)
+            extend_context(escaped_context, is_bulk=True)
+            all_contexts_updated.append(escaped_context)
 
-            txt, html, att = construct_content(escaped_context, is_bulk=True, notification_number=i)
+        for i, c in enumerate(all_contexts_updated, 1):
+            txt, html, att = construct_content(
+                c,
+                is_bulk=True,
+                bulk_summary=all_contexts_updated if i == 1 else None,
+                last_bulk_entry=i == len(all_contexts_updated),
+                notification_number=i,
+            )
             content_txt += txt
             content_html += html
             attachments += att
             hosts.add(c["HOSTNAME"])
+
+        attachments = _add_template_attachments(escaped_context, attachments)
 
         # TODO: cleanup duplicate code with SingleEmailContent
         # TODO: the context is only needed because of SMPT settings used in send_mail
@@ -1025,6 +688,8 @@ class SingleEmailContent(EmailContent):
         extend_context(escaped_context)
         content_txt, content_html, attachments = construct_content(escaped_context)
 
+        attachments = _add_template_attachments(context, attachments)
+
         # TODO: cleanup duplicate code with BulkEmailContent
         # TODO: the context is only needed because of SMPT settings used in send_mail
         super().__init__(
@@ -1043,6 +708,38 @@ class SingleEmailContent(EmailContent):
             content_html=content_html,
             attachments=attachments,
         )
+
+
+def _add_template_attachments(
+    context: dict[str, str],
+    attachments: list[Attachment],
+) -> list[Attachment]:
+    # always needed
+    for icon in [
+        "checkmk_logo.png",
+        "overview.png",
+    ]:
+        attachments.append(attach_file(icon=icon))
+
+    if context.get("PARAMETER_CONTACT_GROUPS"):
+        attachments.append(attach_file(icon="contact_groups.png"))
+    if elements := context.get("PARAMETER_ELEMENTSS", "graph abstime longoutput").split():
+        if "graph" in elements:
+            attachments.append(attach_file(icon="graph.png"))
+            elements.remove("graph")
+        if elements:
+            attachments.append(attach_file(icon="additional.png"))
+    if context.get("PARAMETER_SVC_LABELS") or context.get("PARAMETER_HOST_LABELS"):
+        attachments.append(attach_file(icon="label.png"))
+    if context.get("PARAMETER_HOST_TAGS"):
+        attachments.append(attach_file(icon="vector.png"))
+
+    return attachments
+
+
+def attach_file(icon: str) -> Attachment:
+    with open(web_dir + f"/htdocs/images/icons/{icon}", "rb") as file:
+        return Attachment(what="img", name=icon, contents=file.read(), how="inline")
 
 
 def main() -> NoReturn:

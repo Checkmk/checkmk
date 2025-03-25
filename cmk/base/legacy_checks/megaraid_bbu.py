@@ -6,11 +6,11 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import State
 from cmk.plugins.lib.megaraid import check_state
+
+check_info = {}
 
 # Agent output not included since it has almost 100 lines
 # it's available in our archive or fh's bitbucket
@@ -58,7 +58,7 @@ def megaraid_bbu_parse(string_table):
             # We lose the numerical temperature here
             # (same key is used twice in output of megacli)
             # TODO: Fix the code and remove the pragma below!
-            current_hba[name] = data  # pylint: disable=unsupported-assignment-operation
+            current_hba[name] = data
     return controllers
 
 
@@ -110,6 +110,7 @@ def check_megaraid_bbu(item, _no_params, section):
 
 
 check_info["megaraid_bbu"] = LegacyCheckDefinition(
+    name="megaraid_bbu",
     parse_function=megaraid_bbu_parse,
     service_name="RAID BBU %s",
     discovery_function=discover_megaraid_bbu,

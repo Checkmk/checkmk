@@ -10,11 +10,11 @@ import json
 import time
 from calendar import timegm
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.check_legacy_includes.azure import AZURE_AGENT_SEPARATOR
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+from cmk.plugins.lib.azure import AZURE_AGENT_SEPARATOR
+
+check_info = {}
 
 
 def parse_azure_ad(string_table):
@@ -77,6 +77,7 @@ def check_azure_users(item, _no_params, parsed):
 
 
 check_info["azure_ad"] = LegacyCheckDefinition(
+    name="azure_ad",
     parse_function=parse_azure_ad,
     service_name="AD Users",
     discovery_function=discover_ad_users,
@@ -132,6 +133,7 @@ def check_azure_sync(item, params, parsed):
 
 
 check_info["azure_ad.sync"] = LegacyCheckDefinition(
+    name="azure_ad_sync",
     service_name="AD Sync %s",
     sections=["azure_ad"],
     discovery_function=discover_sync,

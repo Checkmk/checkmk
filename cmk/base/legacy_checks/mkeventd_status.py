@@ -12,17 +12,18 @@
 # mypy: disable-error-code="var-annotated"
 
 import time
+from typing import Any
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.v2 import get_rate, get_value_store, GetRateError, render
 
-from cmk.agent_based.v2 import get_rate, get_value_store, render
+check_info = {}
 
 
 def parse_mkeventd_status(string_table):
     import json
 
-    parsed, site = {}, None
+    parsed, site = dict[Any, Any](), None
     for line in string_table:
         try:
             data = json.loads(line[0])
@@ -47,7 +48,7 @@ def inventory_mkeventd_status(parsed):
     return [(site, {}) for (site, status) in parsed.items() if status is not None]
 
 
-def check_mkeventd_status(item, params, parsed):  # pylint: disable=too-many-branches
+def check_mkeventd_status(item, params, parsed):
     if item not in parsed:
         return
 
@@ -59,13 +60,17 @@ def check_mkeventd_status(item, params, parsed):  # pylint: disable=too-many-bra
         yield 0, "Currently not running"
         return
 
-    yield 0, "Current events: %d" % status["num_open_events"], [
-        ("num_open_events", status["num_open_events"])
-    ]
+    yield (
+        0,
+        "Current events: %d" % status["num_open_events"],
+        [("num_open_events", status["num_open_events"])],
+    )
 
-    yield 0, "Virtual memory: %s" % render.bytes(status["virtual_memory_size"]), [
-        ("process_virtual_size", status["virtual_memory_size"])
-    ]
+    yield (
+        0,
+        "Virtual memory: %s" % render.bytes(status["virtual_memory_size"]),
+        [("process_virtual_size", status["virtual_memory_size"])],
+    )
 
     # Event limits
     if status["event_limit_active_overall"]:
@@ -92,13 +97,17 @@ def check_mkeventd_status(item, params, parsed):  # pylint: disable=too-many-bra
     rates = {}
     this_time = time.time()
     for title, col, fmt in columns:
-        counter_value = status[col + "s"]
-        rate = get_rate(get_value_store(), col, this_time, counter_value, raise_overflow=True)
+        try:
+            rate = get_rate(
+                get_value_store(), col, this_time, status[col + "s"], raise_overflow=True
+            )
+        except GetRateError:
+            continue
         rates[col] = rate
         yield 0, ("%s: " + fmt) % (title, rate), [("average_%s_rate" % col, rate)]
 
     # Hit rate
-    if rates["rule_trie"] == 0.0:
+    if rates.get("rule_trie", 0.0) == 0.0:
         hit_rate_txt = "-"
     else:
         value = rates["rule_hit"] / rates["rule_trie"] * 100
@@ -125,6 +134,7 @@ def check_mkeventd_status(item, params, parsed):  # pylint: disable=too-many-bra
 
 
 check_info["mkeventd_status"] = LegacyCheckDefinition(
+    name="mkeventd_status",
     parse_function=parse_mkeventd_status,
     service_name="OMD %s Event Console",
     discovery_function=inventory_mkeventd_status,

@@ -11,11 +11,13 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.repo import repo_path
+from tests.testlib.common.repo import repo_path
+
+import cmk.ccc.version as cmk_version
 
 import cmk.utils.werks
 
-import cmk.ccc.version as cmk_version
+import cmk.werks.utils
 
 CVSS_REGEX_V31 = re.compile(
     r"CVSS:3.1/AV:[NALP]/AC:[LH]/PR:[NLH]/UI:[NR]/S:[UC]/C:[NLH]/I:[NLH]/A:[NLH]"
@@ -27,15 +29,15 @@ CVSS_REGEX_V40 = re.compile(
 
 @pytest.fixture(scope="function", name="precompiled_werks")
 def fixture_precompiled_werks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    all_werks = cmk.utils.werks.load_raw_files(repo_path() / ".werks")
-    cmk.utils.werks.write_precompiled_werks(tmp_path / "werks", {w.id: w for w in all_werks})
+    all_werks = cmk.werks.utils.load_raw_files(repo_path() / ".werks")
+    cmk.werks.utils.write_precompiled_werks(tmp_path / "werks", {w.id: w for w in all_werks})
     monkeypatch.setattr(cmk.utils.werks, "_compiled_werks_dir", lambda: tmp_path)
 
 
 def test_write_precompiled_werks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     tmp_dir = str(tmp_path)
 
-    all_werks = cmk.utils.werks.load_raw_files(repo_path() / ".werks")
+    all_werks = cmk.werks.utils.load_raw_files(repo_path() / ".werks")
     cre_werks = {w.id: w for w in all_werks if w.edition.value == "cre"}
     cee_werks = {w.id: w for w in all_werks if w.edition.value == "cee"}
     cme_werks = {w.id: w for w in all_werks if w.edition.value == "cme"}
@@ -47,20 +49,20 @@ def test_write_precompiled_werks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 
     assert len(cre_werks) > 9847
     assert [w for w in cre_werks.keys() if 9000 <= w < 10000] == []
-    cmk.utils.werks.write_precompiled_werks(Path(tmp_dir) / "werks", cre_werks)
+    cmk.werks.utils.write_precompiled_werks(Path(tmp_dir) / "werks", cre_werks)
 
     assert len(cee_werks) > 1358
-    cmk.utils.werks.write_precompiled_werks(Path(tmp_dir) / "werks-enterprise", cee_werks)
+    cmk.werks.utils.write_precompiled_werks(Path(tmp_dir) / "werks-enterprise", cee_werks)
 
     assert len(cme_werks) > 50
-    cmk.utils.werks.write_precompiled_werks(Path(tmp_dir) / "werks-managed", cme_werks)
+    cmk.werks.utils.write_precompiled_werks(Path(tmp_dir) / "werks-managed", cme_werks)
 
     assert len(cce_werks) > 10
-    cmk.utils.werks.write_precompiled_werks(Path(tmp_dir) / "werks-cloud", cce_werks)
+    cmk.werks.utils.write_precompiled_werks(Path(tmp_dir) / "werks-cloud", cce_werks)
 
     # We currently don't have cse werks (yet)
     assert len(cse_werks) == 0
-    cmk.utils.werks.write_precompiled_werks(Path(tmp_dir) / "werks-saas", cse_werks)
+    cmk.werks.utils.write_precompiled_werks(Path(tmp_dir) / "werks-saas", cse_werks)
 
     monkeypatch.setattr(cmk.utils.werks, "_compiled_werks_dir", lambda: Path(tmp_dir))
     werks_loaded = cmk.utils.werks.load()
@@ -85,9 +87,9 @@ def test_werk_versions(precompiled_werks: None) -> None:
     for werk_id, werk in cmk.utils.werks.load().items():
         parsed_werk_version = cmk_version.Version.from_str(werk.version)
 
-        assert (
-            parsed_werk_version <= parsed_version
-        ), "Version %s of werk #%d is not allowed in this branch" % (werk.version, werk_id)
+        assert parsed_werk_version <= parsed_version, (
+            "Version %s of werk #%d is not allowed in this branch" % (werk.version, werk_id)
+        )
 
 
 def test_secwerk_has_cvss(precompiled_werks: None) -> None:
@@ -131,10 +133,14 @@ def test_werk_versions_after_tagged(precompiled_werks: None) -> None:
 
     assert not list_of_offenders, (
         "The following Werks are not found in the git tag corresponding to their Version. "
-        "Looks like the wrong version was declared in these werks:\n"
-        + "\n".join(
-            "Werk #%d has version %s, not found in git tag %s, first found in %s" % entry
-            for entry in list_of_offenders
+        "Looks like the wrong version was declared in these werks:\n%s\n"
+        "Your HEAD thinks the next version to be released is %s."
+        % (
+            "\n".join(
+                "Werk #%d has version %s, not found in git tag %s, first found in %s" % entry
+                for entry in list_of_offenders
+            ),
+            cmk_version.__version__,
         )
     )
 

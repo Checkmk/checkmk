@@ -48,8 +48,9 @@
 # these default values were suggested by Aldi Sued
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_hyperv_vms(string_table):
@@ -100,9 +101,12 @@ def check_hyperv_vms(item, params, parsed):
 
         # this means that the check is executed as a manual check
         if discovered_state is None:
-            yield 3, "State is {} ({}), discovery state is not available".format(
-                vm["state"],
-                vm["state_msg"],
+            yield (
+                3,
+                "State is {} ({}), discovery state is not available".format(
+                    vm["state"],
+                    vm["state_msg"],
+                ),
             )
             return
 
@@ -110,10 +114,13 @@ def check_hyperv_vms(item, params, parsed):
             yield 0, "State {} ({}) matches discovery".format(vm["state"], vm["state_msg"])
             return
 
-        yield 2, "State {} ({}) does not match discovery ({})".format(
-            vm["state"],
-            vm["state_msg"],
-            discovered_state,
+        yield (
+            2,
+            "State {} ({}) does not match discovery ({})".format(
+                vm["state"],
+                vm["state_msg"],
+                discovered_state,
+            ),
         )
         return
 
@@ -164,6 +171,7 @@ DEFAULT_PARAMETERS = {
 }
 
 check_info["hyperv_vms"] = LegacyCheckDefinition(
+    name="hyperv_vms",
     parse_function=parse_hyperv_vms,
     service_name="VM %s",
     discovery_function=inventory_hyperv_vms,

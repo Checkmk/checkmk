@@ -4,9 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.4.0b1"
-
-USER_AGENT = "checkmk-agent-apache_status-" + __version__
 # Checkmk-Agent-Plugin - Apache Server Status
 #
 # Fetches the server-status page from detected or configured apache
@@ -30,6 +27,10 @@ import re
 import sys
 from urllib.error import HTTPError, URLError
 from urllib.request import build_opener, HTTPSHandler, install_opener, Request, urlopen
+
+__version__ = "2.5.0b1"
+
+USER_AGENT = "checkmk-agent-apache_status-" + __version__
 
 if sys.version_info < (2, 6):
     sys.stderr.write("ERROR: Python 2.5 is not supported. Please use Python 2.6 or newer.\n")
@@ -301,7 +302,7 @@ def main():
         except HTTPError as exc:
             sys.stderr.write("HTTP-Error (%s%s): %s %s\n" % (address, portspec, exc.code, exc))
 
-        except Exception as exc:  # pylint: disable=broad-except
+        except Exception as exc:
             sys.stderr.write("Exception (%s%s): %s\n" % (address, portspec, exc))
 
     return 0

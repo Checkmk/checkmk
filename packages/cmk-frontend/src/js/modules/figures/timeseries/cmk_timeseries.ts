@@ -14,6 +14,7 @@ import type {
     ZoomTransform,
 } from "d3";
 import {
+    range,
     axisBottom,
     axisLeft,
     max,
@@ -25,7 +26,6 @@ import {
     zoom,
     zoomIdentity,
 } from "d3";
-import range from "lodash.range";
 
 import type {
     Domain,
@@ -63,7 +63,7 @@ import {subplot_factory} from "./sub_plot";
 export type SubplotSubs = LinePlot | ScatterPlot | AreaPlot | BarPlot;
 
 export class TimeseriesFigure<
-    _DashletSpec extends FigureBaseDashletSpec = FigureBaseDashletSpec
+    _DashletSpec extends FigureBaseDashletSpec = FigureBaseDashletSpec,
 > extends FigureBase<TimeseriesFigureData, _DashletSpec> {
     _subplots: SubPlot[];
     _subplots_by_id: Record<string, SubPlot>;
@@ -106,7 +106,7 @@ export class TimeseriesFigure<
         this._subplots_by_id = {};
         this.margin = {top: 20, right: 10, bottom: 30, left: 65};
         this._legend_dimension = this._crossfilter.dimension<string>(
-            d => d.tag
+            d => d.tag,
         );
     }
 
@@ -227,7 +227,7 @@ export class TimeseriesFigure<
         this.svg!.attr("height", this.figure_size.height);
         this.g.attr(
             "transform",
-            "translate(" + this.margin.left + "," + this.margin.top + ")"
+            "translate(" + this.margin.left + "," + this.margin.top + ")",
         );
 
         this.orig_scale_x.range([0, this.plot_size.width]);
@@ -358,9 +358,9 @@ export class TimeseriesFigure<
                     0,
                     "metric",
                     "unit",
-                    "stepping"
-                )
-            )
+                    "stepping",
+                ),
+            ),
         );
         this._y_domain = [min_val, max_val];
         this._y_domain_step = step;
@@ -402,7 +402,7 @@ export class TimeseriesFigure<
 
     create_plot_from_definition(definition: SubPlotPlotDefinition) {
         const new_plot = new (subplot_factory.get_plot(definition.plot_type))(
-            definition
+            definition,
         );
         const dimension = this._crossfilter.dimension(d => d.date);
         new_plot.renderer(this);
@@ -443,7 +443,7 @@ export class TimeseriesFigure<
         this._legend.style(
             "display",
             //@ts-ignore
-            this._subplots.length > 1 ? null : "none"
+            this._subplots.length > 1 ? null : "none",
         );
 
         if (this._subplots.length <= 1) return;
@@ -468,7 +468,7 @@ export class TimeseriesFigure<
             item.style(
                 "background",
                 // @ts-ignore
-                (item.classed("disabled") && "grey") || null
+                (item.classed("disabled") && "grey") || null,
             );
             const all_disabled: string[] = [];
             this._div_selection.selectAll(".legend_item.disabled").each(d => {
@@ -480,15 +480,16 @@ export class TimeseriesFigure<
             });
             this._compute_stack_values();
             this._subplots.forEach(subplot =>
-                subplot.update_transformed_data()
+                subplot.update_transformed_data(),
             );
             this.update_gui();
         });
 
-        //@ts-ignore
         new_items
             .merge(items)
             .selectAll<HTMLDivElement, SubplotSubs>("div")
+            // 2769: No overload matches this call
+            // @ts-ignore
             .style("background", d => d.get_color());
     }
 
@@ -502,7 +503,7 @@ export class TimeseriesFigure<
             const y_max = this.orig_scale_y.domain()[1];
             const y_stretch = Math.max(
                 0.05 * y_max,
-                y_max + (this._current_zoom.y / 100) * y_max
+                y_max + (this._current_zoom.y / 100) * y_max,
             );
             this.scale_y.domain([0, y_stretch]);
         }
@@ -510,7 +511,7 @@ export class TimeseriesFigure<
 
     _find_metric_to_stack(
         definition: SubPlotPlotDefinition,
-        all_disabled: string[]
+        all_disabled: string[],
     ): string | undefined | null {
         if (!definition.stack_on || !this._subplots_by_id[definition.stack_on])
             return null;
@@ -519,7 +520,7 @@ export class TimeseriesFigure<
         if (this._subplots_by_id[definition.stack_on].definition!.stack_on)
             return this._find_metric_to_stack(
                 this._subplots_by_id[definition.stack_on].definition!,
-                all_disabled
+                all_disabled,
             );
         return null;
     }
@@ -540,7 +541,7 @@ export class TimeseriesFigure<
             if (subplot.definition!.stack_on) {
                 const stack_on = this._find_metric_to_stack(
                     subplot.definition!,
-                    all_disabled
+                    all_disabled,
                 );
                 if (stack_on != null)
                     required_stacks[subplot.definition!.id] = stack_on;
@@ -588,7 +589,7 @@ export class TimeseriesFigure<
                     // @ts-ignore
                     return timeFormat("%H:%M")(d);
                 })
-                .ticks(x_tick_count)
+                .ticks(x_tick_count),
         );
         x.attr("transform", "translate(0," + this.plot_size.height + ")");
 
@@ -603,7 +604,7 @@ export class TimeseriesFigure<
         this.transition(y).call(
             axisLeft(this.scale_y)
                 .tickFormat(d => render_function(d).replace(/\.0+\b/, ""))
-                .ticks(this._y_ticks())
+                .ticks(this._y_ticks()),
         );
     }
 
@@ -611,7 +612,7 @@ export class TimeseriesFigure<
         const max = range(
             this._y_domain[0],
             this._y_domain[1] + 1,
-            this._y_domain_step
+            this._y_domain_step,
         ).length;
         const min = Math.ceil(this.plot_size.height / 65);
         return Math.min(min, max);
@@ -630,7 +631,7 @@ export class TimeseriesFigure<
                 .data([null])
                 .join("g")
                 .classed("grid vertical", true)
-                .attr("transform", "translate(0," + height + ")")
+                .attr("transform", "translate(0," + height + ")"),
         );
 
         const width = this.plot_size.width;
@@ -644,7 +645,7 @@ export class TimeseriesFigure<
                 .selectAll<SVGGElement, unknown>("g.grid.horizontal")
                 .data([null])
                 .join("g")
-                .classed("grid horizontal", true)
+                .classed("grid horizontal", true),
         );
     }
 

@@ -9,8 +9,9 @@ import copy
 from collections.abc import Collection, Iterator
 from typing import Final, overload
 
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.tags
-from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
 
 import cmk.gui.watolib.sites as watolib_sites
@@ -48,13 +49,13 @@ from cmk.gui.watolib.host_attributes import collect_attributes
 from cmk.gui.watolib.hosts_and_folders import (
     folder_from_request,
     folder_preserving_link,
+    folder_tree,
     Host,
     validate_all_hosts,
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 
-from cmk.ccc.exceptions import MKGeneralException
-
+from ...watolib.configuration_bundle_store import is_locked_by_quick_setup
 from ._host_attributes import configure_attributes
 from ._status_links import make_host_status_link
 
@@ -164,7 +165,7 @@ class ABCHostMode(WatoMode, abc.ABC):
                     "nodes_%d" % nr,
                     _(
                         "The node <b>%s</b> does not exist "
-                        " (must be a host that is configured with WATO)"
+                        " (must be a host that is configured via Setup)"
                     )
                     % cluster_node,
                 )
@@ -214,7 +215,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         errors = None
         if self._mode == "edit":
             errors = (
-                validate_all_hosts([self._host.name()]).get(self._host.name(), [])
+                validate_all_hosts(folder_tree(), [self._host.name()]).get(self._host.name(), [])
                 + self._host.validation_errors()
             )
 
@@ -268,14 +269,11 @@ class ABCHostMode(WatoMode, abc.ABC):
             ]
 
             if self._is_cluster():
-                if self._host:
-                    nodes = self._host.cluster_nodes()
-                    assert nodes is not None
-                else:
-                    nodes = []
+                nodes = self._host.cluster_nodes()
+                assert nodes is not None
                 basic_attributes += [
                     # attribute name, valuepec, default value
-                    ("nodes", self._vs_cluster_nodes(), nodes if self._host else []),
+                    ("nodes", self._vs_cluster_nodes(), nodes),
                 ]
 
             configure_attributes(
@@ -337,8 +335,7 @@ class ModeEditHost(ABCHostMode):
     # pylint does not understand this overloading
     @overload
     @classmethod
-    def mode_url(cls, *, host: str) -> str:  # pylint: disable=arguments-differ
-        ...
+    def mode_url(cls, *, host: str) -> str: ...
 
     @overload
     @classmethod
@@ -354,6 +351,10 @@ class ModeEditHost(ABCHostMode):
     @classmethod
     def set_vars(cls, host: HostName) -> None:
         request.set_var(cls.VAR_HOST, host)
+
+    @property
+    def host(self) -> Host:
+        return self._host
 
     def _init_host(self) -> Host:
         hostname = request.get_validated_type_input_mandatory(HostName, self.VAR_HOST)
@@ -503,7 +504,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
             makeuri_contextless(
                 request,
                 [
-                    ("mode", "notifications"),
+                    ("mode", "test_notifications"),
                     ("host_name", host.name()),
                     ("_test_host_notifications", 1),
                 ],

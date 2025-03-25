@@ -11,30 +11,45 @@ import subprocess
 import tarfile
 import time
 import traceback
-from collections.abc import Callable
+from collections.abc import Callable, Generator
+from concurrent.futures import Future, ThreadPoolExecutor
+from contextlib import contextmanager
 from hashlib import sha256
 from pathlib import Path
-from typing import Any, IO, Literal, NotRequired, TypedDict, TypeVar
+from typing import IO, Literal, NotRequired, TypedDict, TypeVar
+
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
 
 import cmk.utils
 import cmk.utils.paths
 from cmk.utils.user import UserId
 
-from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.watolib.audit_log import log_audit
 
 from cmk import trace
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
-
-DomainSpec = dict
 
 var_dir = cmk.utils.paths.var_dir + "/wato/"
 snapshot_dir = var_dir + "snapshots/"
 
-backup_domains: dict[str, dict[str, Any]] = {}
+backup_domains: dict[str, "DomainSpec"] = {}
+
+
+class DomainSpec(TypedDict):
+    group: NotRequired[str]
+    title: str
+    prefix: Path | str
+    paths: list[tuple[Literal["file", "dir"], str]]
+    exclude: NotRequired[list[str]]
+    default: NotRequired[Literal[True]]
+    checksum: NotRequired[bool]
+    cleanup: NotRequired[bool]
+    deprecated: NotRequired[bool]
+    pre_restore: NotRequired[Callable[[], list[str]]]
+    post_restore: NotRequired[Callable[[], list[str]]]
 
 
 class SnapshotData(TypedDict, total=False):
@@ -68,26 +83,43 @@ class SnapshotStatus(TypedDict):
     checksums: NotRequired[None | bool]
 
 
-def create_snapshot_subprocess(
-    comment: str,
+@contextmanager
+def create_snapshot_in_concurrent_thread(
+    *,
+    comment: str | None,
     created_by: Literal[""] | UserId,
     secret: bytes,
     max_snapshots: int,
     use_git: bool,
+    debug: bool,
     parent_span_context: trace.SpanContext,
-) -> None:
-    """Entry point of the backup subprocess"""
-    context = trace.set_span_in_context(trace.NonRecordingSpan(parent_span_context))
-    with trace.get_tracer().start_as_current_span("create_backup_snapshot", context):
-        create_snapshot(comment, created_by, secret, max_snapshots, use_git)
+) -> Generator[Future]:
+    def create_snapshot_with_tracing() -> None:
+        with trace.get_tracer().span(
+            "create_backup_snapshot",
+            trace.set_span_in_context(trace.NonRecordingSpan(parent_span_context)),
+        ):
+            create_snapshot(
+                comment=comment,
+                created_by=created_by,
+                secret=secret,
+                max_snapshots=max_snapshots,
+                use_git=use_git,
+                debug=debug,
+            )
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        yield pool.submit(copy_request_context(create_snapshot_with_tracing))
 
 
 def create_snapshot(
-    comment: str,
+    *,
+    comment: str | None,
     created_by: Literal[""] | UserId,
     secret: bytes,
     max_snapshots: int,
     use_git: bool,
+    debug: bool,
 ) -> None:
     logger.debug("Start creating backup snapshot")
     start = time.time()
@@ -109,7 +141,7 @@ def create_snapshot(
     data["snapshot_name"] = snapshot_name
 
     _do_create_snapshot(data, secret)
-    _do_snapshot_maintenance(max_snapshots)
+    _do_snapshot_maintenance(max_snapshots, debug)
 
     log_audit(
         "snapshot-created",
@@ -210,9 +242,7 @@ def _do_create_snapshot(data: SnapshotData, secret: bytes) -> None:
 
             for key in ("comment", "created_by", "type"):
                 tarinfo = get_basic_tarinfo(key)
-                # key is basically Literal["comment", "created_by", "type"] but
-                # the assignment from the tuple confuses mypy
-                encoded_value = data[key].encode("utf-8")  # type: ignore[literal-required]
+                encoded_value = data[key].encode("utf-8")
                 tarinfo.size = len(encoded_value)
                 tar_in_progress.addfile(tarinfo, io.BytesIO(encoded_value))
 
@@ -222,11 +252,11 @@ def _do_create_snapshot(data: SnapshotData, secret: bytes) -> None:
         shutil.rmtree(work_dir)
 
 
-def _do_snapshot_maintenance(max_snapshots: int) -> None:
+def _do_snapshot_maintenance(max_snapshots: int, debug: bool) -> None:
     snapshots = []
     for f in os.listdir(snapshot_dir):
         if f.startswith("wato-snapshot-"):
-            status = get_snapshot_status(f, check_correct_core=False)
+            status = get_snapshot_status(f, debug, check_correct_core=False)
             # only remove automatic and legacy snapshots
             if status.get("type") in ["automatic", "legacy"]:
                 snapshots.append(f)
@@ -239,8 +269,9 @@ def _do_snapshot_maintenance(max_snapshots: int) -> None:
 
 
 # Returns status information for snapshots or snapshots in progress
-def get_snapshot_status(  # pylint: disable=too-many-branches
+def get_snapshot_status(
     snapshot: str,
+    debug: bool,
     validate_checksums: bool = False,
     check_correct_core: bool = True,
 ) -> SnapshotStatus:
@@ -305,8 +336,7 @@ def get_snapshot_status(  # pylint: disable=too-many-branches
                     def handler(x: str | IO[bytes], entry: str = entry) -> str:
                         return _get_file_content(x, entry).decode("utf-8")
 
-                    # entry is assigned from a tuple, mypy does not get that this is Literal...
-                    status[entry] = access_snapshot(handler)  # type: ignore[literal-required]
+                    status[entry] = access_snapshot(handler)
                 else:
                     raise MKGeneralException(_("Invalid snapshot (missing file: %s)") % entry)
 
@@ -433,7 +463,7 @@ def get_snapshot_status(  # pylint: disable=too-many-branches
             check_checksums()
 
     except Exception as e:
-        if active_config.debug:
+        if debug:
             status["broken_text"] = traceback.format_exc()
             status["broken"] = True
         else:
@@ -474,7 +504,7 @@ def _get_file_content(the_tarfile: str | IO[bytes], filename: str) -> bytes:
     raise MKGeneralException(_("Failed to extract %s") % filename)
 
 
-def _get_default_backup_domains() -> dict[str, dict[str, Any]]:
+def _get_default_backup_domains() -> dict[str, DomainSpec]:
     domains = {}
     for domain, value in backup_domains.items():
         if "default" in value and not value.get("deprecated"):
@@ -493,7 +523,7 @@ def snapshot_secret() -> bytes:
         return s
 
 
-def extract_snapshot(  # pylint: disable=too-many-branches
+def extract_snapshot(
     tar: tarfile.TarFile,
     domains: dict[str, DomainSpec],
 ) -> None:
@@ -558,7 +588,7 @@ def extract_snapshot(  # pylint: disable=too-many-branches
         if domain.get("cleanup") is False:
             return []
 
-        def path_valid(prefix: str, path: str) -> bool:
+        def path_valid(_prefix: str | Path, path: str) -> bool:
             if path.startswith("/") or path.startswith(".."):
                 return False
             return True
@@ -622,14 +652,14 @@ def extract_snapshot(  # pylint: disable=too-many-branches
         (
             "Pre-Restore",
             True,
-            lambda domain, tar_member: execute_restore(domain, is_pre_restore=True),
+            lambda domain, _tar_member: execute_restore(domain, is_pre_restore=True),
         ),
-        ("Cleanup", False, lambda domain, tar_member: cleanup_domain(domain)),
+        ("Cleanup", False, lambda domain, _tar_member: cleanup_domain(domain)),
         ("Extract", False, extract_domain),
         (
             "Post-Restore",
             False,
-            lambda domain, tar_member: execute_restore(domain, is_pre_restore=False),
+            lambda domain, _tar_member: execute_restore(domain, is_pre_restore=False),
         ),
     ]:
         errors: list[str] = []
@@ -640,10 +670,8 @@ def extract_snapshot(  # pylint: disable=too-many-branches
                     errors.extend(dom_errors or [])
                 except Exception:
                     # This should NEVER happen
-                    err_info = "Restore-Phase: {}, Domain: {}\nError: {}".format(
-                        what,
-                        name,
-                        traceback.format_exc(),
+                    err_info = (
+                        f"Restore-Phase: {what}, Domain: {name}\nError: {traceback.format_exc()}"
                     )
                     errors.append(err_info)
                     logger.critical(err_info)

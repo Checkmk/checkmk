@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 # shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh
 . "${SCRIPT_DIR}/build_lib.sh"
 
-OPENSSL_VERSION=3.0.13
+OPENSSL_VERSION=3.0.14
 DIR_NAME=openssl-${OPENSSL_VERSION}
 ARCHIVE_NAME=${DIR_NAME}.tar.gz
 TARGET_DIR="${TARGET_DIR:-/opt}"
@@ -18,7 +18,7 @@ TARGET="" # for x64, use the default target
 # OpenSSL "config" seems to have problems with detecting 32bit architecture in some cases
 [ "${ARCHITECTURE}" = i386 ] && TARGET="linux-x86"
 # Increase this to enforce a recreation of the build cache
-BUILD_ID=9
+BUILD_ID=10
 
 build_package() {
     mkdir -p "$TARGET_DIR/src"

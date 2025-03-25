@@ -109,7 +109,6 @@ MAP_HEALTH = {
 
 
 def check_blade_blades(item: str, section: Section) -> CheckResult:
-
     if (blade := section.get(item)) is None:
         return
 

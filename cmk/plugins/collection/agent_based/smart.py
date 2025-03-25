@@ -240,7 +240,7 @@ def _parse_nvme_lines(nvme_lines: Iterable[Sequence[str]]) -> Section:
 
 
 agent_section_smart = AgentSection(
-    name="smart",
+    name="smart",  # This agent plugin was superseded by smart_posix
     parse_function=parse_raw_values,
 )
 
@@ -272,7 +272,7 @@ def check_smart_stats(item: str, params: Mapping[str, int], section: Section) ->
 
         match (attribute, ref_value):
             case (DiskAttribute.TEMPERATURE, _):
-                # Currently handled in a seperate check plug-in "smart.temp"
+                # Currently handled in a separate check plug-in "smart.temp"
                 continue
 
             case (DiskAttribute.AVAILABLE_SPARE, _):
@@ -433,7 +433,7 @@ def _display_attribute_name(attribute: DiskAttribute) -> str:
 
 check_plugin_smart_stats = CheckPlugin(
     name="smart_stats",
-    sections=["smart"],
+    sections=["smart"],  # This agent plugin was superseded by smart_posix
     service_name="SMART %s Stats",
     discovery_function=discover_smart_stats,
     check_function=check_smart_stats,

@@ -28,15 +28,15 @@ CHECK_MK_CHANGELOG_PATH := $(CHECK_MK_WORK_DIR)/ChangeLog
 # without the need to have shared logic between like this.
 include ../artifacts.make
 
-$(CHECK_MK_WERKS_PATH): $(PACKAGE_PYTHON3_MODULES_PYTHON_DEPS)
+$(CHECK_MK_WERKS_PATH):
 	$(MKDIR) $(CHECK_MK_WORK_DIR)
-	PYTHONPATH=$(REPO_PATH) \
-	    $(PACKAGE_PYTHON3_MODULES_PYTHON) -m cmk.utils.werks precompile $(REPO_PATH)/.werks $@ --filter-by-edition cre
+	bazel build //omd:run_werks_precompile_cre
+	cp $(BAZEL_BIN)/omd/werks_precompiled_cre $@
 
-$(CHECK_MK_CHANGELOG_PATH): $(CHECK_MK_WERKS_PATH) $(PACKAGE_PYTHON3_MODULES_PYTHON_DEPS)
+$(CHECK_MK_CHANGELOG_PATH):
 	$(MKDIR) $(CHECK_MK_WORK_DIR)
-	PYTHONPATH=$(REPO_PATH) \
-	    $(PACKAGE_PYTHON3_MODULES_PYTHON) -m cmk.utils.werks changelog $@ $<
+	bazel build //omd:run_changelog_cre
+	cp $(BAZEL_BIN)/omd/changelog_cre $@
 
 # RPM/DEB build are currently working on the same working directory and would
 # influence each other. Need to be cleaned up later
@@ -92,8 +92,11 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	find $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks -name "*.py" -type f | sed -e 'p;s~.py$$~~' | xargs -n2 mv
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications
-	install -m 755 $(REPO_PATH)/notifications/* $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications
+	find $(REPO_PATH)/notifications/ -maxdepth 1 -type f ! -name ".*" -exec install -m 755 {} $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications \;
 	chmod 644 $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications/README
+
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications/templates/mail
+	find $(REPO_PATH)/notifications/templates/mail/ -maxdepth 1 -type f ! -name ".*" -exec install -m 644 {} $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications/templates/mail \;
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/web/htdocs
 	tar -c -C $(REPO_PATH)/packages/cmk-frontend/dist \
@@ -101,10 +104,11 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	    . | \
 	    tar -x -C $(CHECK_MK_INSTALL_DIR)/share/check_mk/web/htdocs
 
-	tar -c -C $(REPO_PATH)/packages/cmk-frontend-vue/dist/assets/ \
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/web/htdocs/cmk-frontend-vue
+	tar -c -C $(REPO_PATH)/packages/cmk-frontend-vue/dist \
 	    $(CHECK_MK_TAROPTS) \
 	    . | \
-	    tar -x -C $(CHECK_MK_INSTALL_DIR)/share/check_mk/web/htdocs/js/
+	    tar -x -C $(CHECK_MK_INSTALL_DIR)/share/check_mk/web/htdocs/cmk-frontend-vue
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk
 	install -m 644 $(REPO_PATH)/{COPYING,AUTHORS} $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk
@@ -184,26 +188,28 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 
 	# After installing all python modules, ensure they are compiled
 	# compile pyc files explicitly selecting `checked-hash` invalidation mode
-	$(PACKAGE_PYTHON3_MODULES_PYTHON) -m compileall \
+	bazel run :venv
+	source .venv/bin/activate \
+	&& python3 -m compileall \
 	    -f \
 	    --invalidation-mode=checked-hash \
 	    -s "$(CHECK_MK_INSTALL_DIR)/lib/python3" \
-	    "$(CHECK_MK_INSTALL_DIR)/lib/python3/cmk"
+	    "$(CHECK_MK_INSTALL_DIR)/lib/python3/cmk" \
+	&& deactivate
 
 	# Provide the externally documented paths for Checkmk plugins
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib
 	$(LN) -sf python3/cmk $(CHECK_MK_INSTALL_DIR)/lib/check_mk
 	# ... and ensure the same for the local hierarchy
-	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk
 	$(LN) -sf python3/cmk $(CHECK_MK_INSTALL_DIR)/skel/local/lib/check_mk
 	# Create the plugin namespaces
-	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk_addons/plugins
-	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/base/plugins/agent_based
-	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/plugins
-	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/special_agents
-	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/gui/plugins/views
-	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/gui/plugins/dashboard
-	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk_addons/plugins
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk_addons/plugins
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/plugins
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/special_agents
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/gui/plugins/views
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/gui/plugins/dashboard
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk_addons/plugins
 
 
 	# Install the diskspace cleanup plugin
@@ -230,20 +236,22 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/AGENT_RECEIVER $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/AGENT_RECEIVER_PORT $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/AUTOMATION_HELPER $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD_SNMPTRAP $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD_SYSLOG $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD_SYSLOG_TCP $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MULTISITE_AUTHORISATION $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MULTISITE_COOKIE_AUTH $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/RABBITMQ_PORT $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/RABBITMQ_DIST_PORT $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/PIGGYBACK_HUB $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/TRACE_SEND $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/TRACE_SEND_TARGET $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/TRACE_SERVICE_NAMESPACE $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-create
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/post-create/01_create-sample-config.py $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-create/
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/post-create/02_cmk-compute-api-spec $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-create/
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/post-create/03_message-broker-certs  $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-create/
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/update-pre-hooks
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/update-pre-hooks/01_mkp-disable-outdated $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/update-pre-hooks/

@@ -6,10 +6,10 @@
 # Older versions replay an empty string if the state is Unknown / Error state
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, any_of, equals, exists, SNMPTree, startswith, StringTable
+
+check_info = {}
 
 sync_name_mapping = {
     "1": "Synced",
@@ -56,6 +56,7 @@ def parse_stormshield_cluster(string_table: StringTable) -> StringTable | None:
 
 
 check_info["stormshield_cluster"] = LegacyCheckDefinition(
+    name="stormshield_cluster",
     parse_function=parse_stormshield_cluster,
     detect=all_of(
         any_of(

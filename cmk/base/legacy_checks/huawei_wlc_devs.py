@@ -8,10 +8,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import contains, render, SNMPTree
+
+check_info = {}
 
 
 def parse_huawei_wlc_devs(string_table):
@@ -28,6 +28,7 @@ def parse_huawei_wlc_devs(string_table):
 
 
 check_info["huawei_wlc_devs"] = LegacyCheckDefinition(
+    name="huawei_wlc_devs",
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2011.2.240.17"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2011.5.25.31.1.1",
@@ -59,6 +60,7 @@ def check_huawei_wlc_devs_mem(item, params, parsed):
 
 
 check_info["huawei_wlc_devs.mem"] = LegacyCheckDefinition(
+    name="huawei_wlc_devs_mem",
     service_name="Device %s Memory",
     sections=["huawei_wlc_devs"],
     discovery_function=discovery_huawei_wlc_devs_mem,
@@ -85,6 +87,7 @@ def check_huawei_wlc_devs_cpu(item, params, parsed):
 
 
 check_info["huawei_wlc_devs.cpu"] = LegacyCheckDefinition(
+    name="huawei_wlc_devs_cpu",
     service_name="Device %s CPU",
     sections=["huawei_wlc_devs"],
     discovery_function=discovery_huawei_wlc_devs_cpu,

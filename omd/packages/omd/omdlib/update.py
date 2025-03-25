@@ -16,8 +16,11 @@ from types import TracebackType
 from typing import Literal, Self
 
 from omdlib.contexts import SiteContext
+from omdlib.crash_reporting import report_crash
 from omdlib.tmpfs import prepare_and_populate_tmpfs, unmount_tmpfs_without_save
 from omdlib.version_info import VersionInfo
+
+from cmk.utils.paths import crash_dir
 
 
 def store(site_dir: Path, relpath: Path | str, backup_dir: Path) -> None:
@@ -89,26 +92,25 @@ def walk_in_DFS_order(path: Path) -> Iterator[Path]:
             yield Path(root).joinpath(file)
 
 
-def walk_managed(site_dir: Path, skel: Path) -> Iterator[str]:
+def walk_managed(skel: Path) -> Iterator[str]:
     for path in walk_in_DFS_order(skel):
         relpath = os.path.relpath(path, start=skel)
         yield relpath
 
 
 def backup_managed(site_dir: Path, old_skel: Path, new_skel: Path, backup_dir: Path) -> None:
-    for relpath in walk_managed(site_dir, new_skel):
-        if relpath != ".":
-            store(site_dir, Path(relpath), backup_dir)
-    for relpath in walk_managed(site_dir, old_skel):
-        if relpath != "." and not os.path.lexists(new_skel / relpath):  # Already backed-up
+    for relpath in walk_managed(new_skel):
+        store(site_dir, Path(relpath), backup_dir)
+    for relpath in walk_managed(old_skel):
+        if not os.path.lexists(new_skel / relpath):  # Already backed-up
             store(site_dir, Path(relpath), backup_dir)
 
 
 def restore_managed(site_dir: Path, old_skel: Path, new_skel: Path, backup_dir: Path) -> None:
-    for relpath in walk_managed(site_dir, old_skel):
+    for relpath in walk_managed(old_skel):
         if not (new_skel / relpath).exists():
             restore(site_dir, Path(relpath), backup_dir)
-    for relpath in reversed(list(walk_managed(site_dir, new_skel))):
+    for relpath in reversed(list(walk_managed(new_skel))):
         restore(site_dir, Path(relpath), backup_dir)
 
 
@@ -128,26 +130,33 @@ def _restore_version_meta_dir(site_dir: Path, backup_dir: Path) -> None:
 
 
 HOOK_RELPATHS = [
-    "etc/check_mk/multisite.d/liveproxyd.mk",
-    "etc/apache/apache/listen-port.conf",
-    "etc/mk-livestatus/xinetd.conf",
-    "etc/xinetd.d/mk-livestatus",
-    "etc/apache/conf.d/nagios.conf",
-    "etc/check_mk/conf.d/microcore.mk",
-    "var/log/livestatus.log",
-    "var/log/nagios.log",
-    "etc/init.d/core",
-    "var/check_mk/core/config",
     ".forward",
+    "etc/apache/apache/listen-port.conf",
+    "etc/apache/conf.d/cookie_auth.conf",
+    "etc/apache/conf.d/nagios.conf",
+    "etc/apache/conf.d/pnp4nagios.conf",
+    "etc/check_mk/conf.d/microcore.mk",
+    "etc/check_mk/conf.d/mkeventd.mk",
+    "etc/check_mk/conf.d/pnp4nagios.mk",
+    "etc/check_mk/multisite.d/liveproxyd.mk",
+    "etc/check_mk/multisite.d/mkeventd.mk",
+    "etc/init.d/core",
+    "etc/jaeger/apache.conf",
+    "etc/jaeger/omd-admin-port.yaml",
+    "etc/jaeger/omd-grpc.yaml",
+    "etc/jaeger/omd-query-port.yaml",
+    "etc/mk-livestatus/xinetd.conf",
     "etc/mod-gearman/perfdata.conf",
     "etc/nagios/nagios.d/pnp4nagios.cfg",
-    "etc/apache/conf.d/pnp4nagios.conf",
-    "etc/check_mk/conf.d/pnp4nagios.mk",
-    "etc/apache/conf.d/cookie_auth.conf",
     "etc/nagvis/conf.d/cookie_auth.ini.php",
+    "etc/omd/site.conf",
     "etc/pnp4nagios/config.d/cookie_auth.php",
-    "etc/check_mk/multisite.d/mkeventd.mk",
-    "etc/check_mk/conf.d/mkeventd.mk",
+    "etc/rabbitmq/conf.d/01-default.conf",
+    "etc/rabbitmq/conf.d/02-management-port.conf",
+    "etc/xinetd.d/mk-livestatus",
+    "var/check_mk/core/config",
+    "var/log/livestatus.log",
+    "var/log/nagios.log",
 ]
 
 
@@ -164,15 +173,13 @@ class ManageUpdate:
         self.populated_tmpfs = False
 
     def __enter__(self) -> Self:
-        try:
-            self.backup_dir.mkdir()
-        except FileExistsError:
+        if self.backup_dir.exists():
             sys.exit(
-                "An unknown error occured before the update could be started. The folder "
-                f"{self.backup_dir} contains data from a failed update attempt. This data should "
-                "have been written back to the site directory and then have been deleted. "
-                "Check whether any files need to be restored from this directory. Then this folder "
-                "can be deleted and the update can be retried."
+                f"The folder {self.backup_dir} contains data from a failed update attempt. This "
+                "only happens, if a serious error occured during a previous update attempt. "
+                f"Please contact support. A crash report may be available in {crash_dir}. "
+                "Since the root cause of this error is not known to OMD, the site is an "
+                "unknown state and both, restarting or updating the site, can have unknown effects.\n"
             )
         backup_managed(self.site_dir, self.old_skel, self.new_skel, self.backup_dir)
         store(self.site_dir, "version", self.backup_dir)
@@ -192,15 +199,24 @@ class ManageUpdate:
         exc_tb: TracebackType | None,
     ) -> Literal[False]:
         if exc_type is not None:
-            if self.populated_tmpfs:
-                # Always leave the tmpfs unmounted. We currently are in the context of the new
-                # version (symlink has been restored, but python3 interpreter and dynamic libraries
-                # are pointing to the new context. Thus, we only umount here.
-                unmount_tmpfs_without_save(self.site_name, self.tmp_dir, False, False)
-            for relpath in HOOK_RELPATHS:
-                restore(self.site_dir, relpath, self.backup_dir)
-            _restore_version_meta_dir(self.site_dir, self.backup_dir)
-            restore(self.site_dir, "version", self.backup_dir)
-            restore_managed(self.site_dir, self.old_skel, self.new_skel, self.backup_dir)
+            try:
+                if self.populated_tmpfs:
+                    # Always leave the tmpfs unmounted. We currently are in the context of the new
+                    # version (symlink has been restored, but python3 interpreter and dynamic libraries
+                    # are pointing to the new context. Thus, we only umount here.
+                    unmount_tmpfs_without_save(self.site_name, self.tmp_dir, False, False)
+                for relpath in HOOK_RELPATHS:
+                    restore(self.site_dir, relpath, self.backup_dir)
+                _restore_version_meta_dir(self.site_dir, self.backup_dir)
+                restore(self.site_dir, "version", self.backup_dir)
+                restore_managed(self.site_dir, self.old_skel, self.new_skel, self.backup_dir)
+            except Exception:
+                identity = report_crash()
+                sys.stderr.write(
+                    f"A serious error occured, which resulted in a crash with id: {identity}\n"
+                    "Please contact support with this crash id.\n"
+                    "Since the root cause of this error is not known to OMD, the site is an "
+                    "unknown state and both, restarting or updating the site, can have unknown effects.\n"
+                )
         shutil.rmtree(self.backup_dir)
         return False  # Don't suppress the exception

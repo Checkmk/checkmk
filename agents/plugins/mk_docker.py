@@ -11,15 +11,18 @@ At 'agents/cfg_examples/mk_docker.cfg' (relative to the check_mk
 source code directory ) you should find some example configuration
 files. For more information on possible configurations refer to the
 file docker.cfg in said directory.
-The docker library must be installed on the system executing the
-plugin ("pip install docker").
+The Python docker package is required to run this plugin.
+Depending on the system, there are different ways to install it.
+Installation options:
+    - pip: pip install docker
+    - apt: apt install python3-docker  # Debian/Ubuntu
 
 This plugin it will be called by the agent without any arguments.
 """
 
 from __future__ import with_statement
 
-__version__ = "2.4.0b1"
+__version__ = "2.5.0b1"
 
 # NOTE: docker is available for python versions from 2.6 / 3.3
 
@@ -294,8 +297,10 @@ class MKDockerClient(docker.DockerClient):  # type: ignore[misc]
 
             self._device_map = {}
             for device in os.listdir("/sys/block"):
-                with open("/sys/block/%s/dev" % device) as handle:
-                    self._device_map[handle.read().strip()] = device
+                dev_path = "/sys/block/%s/dev" % device
+                if os.path.exists(dev_path):
+                    with open(dev_path) as handle:
+                        self._device_map[handle.read().strip()] = device
 
         return self._device_map
 

@@ -8,7 +8,6 @@ Where possibile the "McAfee" string has been removed in favor of more generic th
 The old plug-in names, value_store dict keys, and ruleset names have been kept for compatibility/history-keeping reasons.
 """
 
-
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,

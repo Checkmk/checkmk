@@ -601,7 +601,7 @@ class KubeletInfo(Section):
 
     version: str
     proxy_version: str
-    health: api.HealthZ
+    health: api.HealthZ | api.NodeConnectionError
 
 
 class HardResourceRequirement(Section, api.HardResourceRequirement):

@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.mbg_lantime import DETECT_MBG_LANTIME_NG
+
+check_info = {}
 
 #   .--general-------------------------------------------------------------.
 #   |                                                  _                   |
@@ -171,6 +171,7 @@ def mbg_lantime_ng_generalstate(clock_type, usage, state, substate):
 
     # Translation for values of MBG-SNMP-LTNG-MIB::mbgLtNgRefclockSubstate
     refclock_substates = {
+        "-1": "MRS Ref None",
         "0": "not available",
         "1": "GPS sync",
         "2": "GPS tracking",
@@ -202,16 +203,14 @@ def mbg_lantime_ng_generalstate(clock_type, usage, state, substate):
         "165": "MRS HAVE QUICK sync",
         "166": "MRS external oscillator sync",
         "167": "MRS SyncE",
+        "168": "MRS video in sync",
+        "169": "MRS ltc sync",
+        "170": "MRS osc sync",
     }
 
     state, state_txt = refclock_states[state]
     detailed_state_txt = " (%s)" % refclock_substates[substate] if substate != "0" else ""
-    infotext = "Type: {}, Usage: {}, State: {}{}".format(
-        mbg_lantime_ng_refclock_types[clock_type],
-        refclock_usages[usage],
-        state_txt,
-        detailed_state_txt,
-    )
+    infotext = f"Type: {mbg_lantime_ng_refclock_types[clock_type]}, Usage: {refclock_usages[usage]}, State: {state_txt}{detailed_state_txt}"
 
     return state, infotext
 
@@ -274,6 +273,7 @@ def check_lantime_ng_refclock_gps(item, params, info):
 
 
 check_info["mbg_lantime_ng_refclock.gps"] = LegacyCheckDefinition(
+    name="mbg_lantime_ng_refclock_gps",
     service_name="LANTIME Refclock %s",
     sections=["mbg_lantime_ng_refclock"],
     discovery_function=inventory_lantime_ng_refclock_gps,
@@ -343,6 +343,7 @@ def parse_mbg_lantime_ng_refclock(string_table: StringTable) -> StringTable:
 
 
 check_info["mbg_lantime_ng_refclock"] = LegacyCheckDefinition(
+    name="mbg_lantime_ng_refclock",
     parse_function=parse_mbg_lantime_ng_refclock,
     detect=DETECT_MBG_LANTIME_NG,
     fetch=SNMPTree(

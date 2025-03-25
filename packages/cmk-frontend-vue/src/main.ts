@@ -7,70 +7,92 @@
 // see https://github.com/vuejs/eslint-plugin-vue/issues/2201
 /* eslint-disable vue/one-component-per-file */
 
-import 'core-js/stable'
-
 import { createApp } from 'vue'
 
-import { mixinUniqueId } from './plugins'
+import QuickSetup from './quick-setup/QuickSetupApp.vue'
+import NotificationOverview from './notification/NotificationOverviewApp.vue'
+import { FormApp } from '@/form'
+import NotificationParametersOverviewApp from '@/notification/NotificationParametersOverviewApp.vue'
+import GraphDesignerApp from '@/graph-designer/GraphDesignerApp.vue'
 
-import D3Table from './views/D3Table.vue'
-import Table from './views/CmkTable.vue'
-import { CmkRuleset } from './components/cmk-form/'
-import QuickSetup from './views/QuickSetup.vue'
+import '@/assets/variables.css'
 
 function setupVue() {
-  document.querySelectorAll<HTMLFormElement>('div[data-cmk_vue_app]').forEach((div) => {
-    const dataset = div.dataset
-    if (dataset == undefined) {
-      return
-    }
+  document
+    .querySelectorAll<HTMLFormElement>('div[data-cmk_vue_app_name]')
+    .forEach((div, divIndex) => {
+      const dataset = div.dataset
+      if (dataset === undefined) {
+        return
+      }
 
-    const vueAppData = dataset['cmk_vue_app']
-    if (vueAppData == undefined) {
-      return
-    }
-    const vueApp = JSON.parse(vueAppData)
+      const appName = dataset['cmk_vue_app_name']
+      const appDataRaw = dataset['cmk_vue_app_data']
+      if (appName === undefined || appDataRaw === undefined) {
+        return
+      }
+      const appData = JSON.parse(appDataRaw)
 
-    if (vueApp.app_name == 'form_spec') {
-      const app = createApp(CmkRuleset, {
-        id: vueApp.id,
-        spec: vueApp.spec,
-        // eslint has a false positive: assuming `data` is part of a vue component
-        // eslint-disable-next-line vue/no-deprecated-data-object-declaration, vue/no-shared-component-data
-        data: vueApp.data,
-        validation: vueApp.validation,
-        renderMode: vueApp.render_mode
-      })
-      // Assign a unique id to each component, useful for label for=..
-      // until https://github.com/vuejs/rfcs/discussions/557 is resolved
-      app.use(mixinUniqueId)
+      let app
+
+      switch (appName) {
+        case 'form_spec': {
+          app = createApp(FormApp, {
+            id: appData.id,
+            spec: appData.spec,
+            // eslint has a false positive: assuming `data` is part of a vue component
+            // eslint-disable-next-line vue/no-deprecated-data-object-declaration, vue/no-shared-component-data
+            data: appData.data,
+            backendValidation: appData.validation,
+            displayMode: appData.display_mode
+          })
+          break
+        }
+        case 'quick_setup': {
+          app = createApp(QuickSetup, {
+            quick_setup_id: appData.quick_setup_id,
+            mode: appData.mode,
+            toggleEnabled: appData.toggle_enabled,
+            objectId: appData.object_id || null
+          })
+          break
+        }
+        case 'notification_overview': {
+          app = createApp(NotificationOverview, {
+            overview_title_i18n: appData.overview_title_i18n,
+            fallback_warning: appData.fallback_warning,
+            notification_stats: appData.notification_stats,
+            core_stats: appData.core_stats,
+            rule_sections: appData.rule_sections,
+            user_id: appData.user_id
+          })
+          break
+        }
+        case 'notification_parameters_overview': {
+          app = createApp(NotificationParametersOverviewApp, {
+            parameters: appData.parameters,
+            i18n: appData.i18n
+          })
+          break
+        }
+        case 'graph_designer': {
+          app = createApp(GraphDesignerApp, {
+            graph_lines: appData.graph_lines,
+            graph_options: appData.graph_options,
+            i18n: appData.i18n
+          })
+          break
+        }
+        default:
+          throw `can not load vue app "${appName}"`
+      }
+      app.config.idPrefix = `app${divIndex}` // useId for multiple vue apps
       app.mount(div)
-    } else if (vueApp.app_name == 'd3_table') {
-      console.log('vue create table')
-      const app = createApp(D3Table, {
-        table_spec: vueApp.component
-      })
-      app.mount(div)
-      console.log('vue fully mounted table')
-    } else if (vueApp.app_name == 'vue_table') {
-      console.log('vue create table')
-      const app = createApp(Table, {
-        table_spec: vueApp.component
-      })
-      app.mount(div)
-      console.log('vue fully mounted table')
-    } else if (vueApp.app_name == 'quick_setup') {
-      const app = createApp(QuickSetup, { quick_setup_id: vueApp.quick_setup_id })
-      app.mount(div)
-    } else {
-      throw `can not load vue app "${vueApp.app_name}"`
-    }
-  })
+
+      div.classList.add('cmk-vue-app')
+    })
 }
 
 addEventListener('load', () => {
   setupVue()
 })
-
-/* eslint-disable-next-line @typescript-eslint/naming-convention */
-export const cmk_export = {}

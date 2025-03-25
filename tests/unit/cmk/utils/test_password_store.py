@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import binascii
 from pathlib import Path
@@ -11,12 +10,12 @@ from pathlib import Path
 import pytest
 from cryptography.exceptions import InvalidTag
 
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.paths
 from cmk.utils import password_store
 from cmk.utils.local_secrets import PasswordStoreSecret
 from cmk.utils.password_store import PasswordId, PasswordStore
-
-from cmk.ccc.exceptions import MKGeneralException
 
 PW_STORE = "pw_from_store"
 PW_EXPL = "pw_explicit"

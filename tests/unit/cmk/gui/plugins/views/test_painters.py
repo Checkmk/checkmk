@@ -13,24 +13,24 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.paths import default_config_dir
-from cmk.utils.structured_data import ImmutableTree
+from cmk.utils.structured_data import deserialize_tree
 from cmk.utils.user import UserId
 
 from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.http import request
-from cmk.gui.painter.v0.base import painter_registry
+from cmk.gui.painter.v0 import all_painters
 from cmk.gui.painter.v0.painters import _paint_custom_notes
 from cmk.gui.type_defs import ColumnSpec, Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.view import View
 from cmk.gui.views.page_edit_view import painters_of_datasource
 from cmk.gui.visual_link import render_link_to_view
-
-import cmk.ccc.version as cmk_version
 
 
 @pytest.fixture(name="live")
@@ -70,7 +70,7 @@ def fixture_livestatus_test_config(
 
 @pytest.mark.usefixtures("load_config")
 def test_registered_painters() -> None:
-    painters = painter_registry.keys()
+    painters = all_painters(active_config).keys()
     expected_painters = [
         "aggr_acknowledged",
         "aggr_assumed_state",
@@ -115,7 +115,6 @@ def test_registered_painters() -> None:
         "downtime_fixed",
         "downtime_id",
         "downtime_origin",
-        "downtime_recurring",
         "downtime_start_time",
         "downtime_type",
         "downtime_what",
@@ -266,8 +265,11 @@ def test_registered_painters() -> None:
         "inv_hardware_cpu_threads_per_cpu",
         "inv_hardware_cpu_type",
         "inv_hardware_cpu_voltage",
+        "inv_hardware_firmware",
+        "inv_hardware_firmware_redfish",
         "inv_hardware_memory",
         "inv_hardware_memory_arrays",
+        "inv_hardware_memory_arrays_devices",
         "inv_hardware_memory_total_ram_usable",
         "inv_hardware_memory_total_swap",
         "inv_hardware_memory_total_vmalloc",
@@ -292,6 +294,11 @@ def test_registered_painters() -> None:
         "inv_hardware_system_product",
         "inv_hardware_system_serial",
         "inv_hardware_system_serial_number",
+        "inv_hardware_system_type",
+        "inv_hardware_system_software_version",
+        "inv_hardware_system_license_key_list",
+        "inv_hardware_uploaded_files",
+        "inv_hardware_uploaded_files_call_progress_tones",
         "inv_hardware_video",
         "inv_hardware_volumes",
         "inv_hardware_volumes_physical_volumes",
@@ -302,6 +309,7 @@ def test_registered_painters() -> None:
         "inv_networking_hostname",
         "inv_networking_kube",
         "inv_networking_routes",
+        "inv_networking_sip_interfaces",
         "inv_networking_total_ethernet_ports",
         "inv_networking_total_interfaces",
         "inv_networking_tunnels",
@@ -542,6 +550,11 @@ def test_registered_painters() -> None:
         "invfan_name",
         "invfan_serial",
         "invfan_software",
+        "invfirmwareredfish_component",
+        "invfirmwareredfish_description",
+        "invfirmwareredfish_location",
+        "invfirmwareredfish_updateable",
+        "invfirmwareredfish_version",
         "invhist_changed",
         "invhist_delta",
         "invhist_new",
@@ -582,13 +595,16 @@ def test_registered_painters() -> None:
         "invmodule_bootloader",
         "invmodule_description",
         "invmodule_firmware",
+        "invmodule_ha_status",
         "invmodule_index",
+        "invmodule_license_key_list",
         "invmodule_location",
         "invmodule_manufacturer",
         "invmodule_model",
         "invmodule_name",
         "invmodule_serial",
         "invmodule_software",
+        "invmodule_software_version",
         "invmodule_type",
         "invoradataguardstats_db_unique",
         "invoradataguardstats_role",
@@ -839,6 +855,7 @@ def test_registered_painters() -> None:
             "deployment_last_download",
             "deployment_last_error",
             "deployment_target_hash",
+            "downtime_recurring",
         ]
 
     if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
@@ -859,7 +876,7 @@ def test_registered_painters() -> None:
             "customer_num_services_warn",
         ]
 
-    assert sorted(painters) == sorted(expected_painters)
+    assert set(painters) == set(expected_painters)
 
 
 @pytest.fixture(name="service_painter_idents")
@@ -986,7 +1003,7 @@ def _service_row():
         "host_in_check_period": 1,
         "host_in_notification_period": 1,
         "host_in_service_period": 1,
-        "host_inventory": ImmutableTree.deserialize(
+        "host_inventory": deserialize_tree(
             {
                 "hardware": {
                     "memory": {
@@ -1091,9 +1108,9 @@ def _service_row():
                                     "num_services": "79",
                                     "rrdcached": "stopped",
                                     "site": "heute",
-                                    "stunnel": "not " "existent",
+                                    "stunnel": "not existent",
                                     "used_version": "2021.03.18.cee",
-                                    "xinetd": "not " "existent",
+                                    "xinetd": "not existent",
                                 },
                                 {
                                     "apache": "stopped",
@@ -1113,9 +1130,9 @@ def _service_row():
                                     "num_services": "74",
                                     "rrdcached": "stopped",
                                     "site": "old",
-                                    "stunnel": "not " "existent",
+                                    "stunnel": "not existent",
                                     "used_version": "1.6.0-2021.03.19.cee",
-                                    "xinetd": "not " "existent",
+                                    "xinetd": "not existent",
                                 },
                                 {
                                     "apache": "running",
@@ -1135,9 +1152,9 @@ def _service_row():
                                     "num_services": "69",
                                     "rrdcached": "running",
                                     "site": "abc",
-                                    "stunnel": "not " "existent",
+                                    "stunnel": "not existent",
                                     "used_version": "2.0.0-2021.03.31.cee",
-                                    "xinetd": "not " "existent",
+                                    "xinetd": "not existent",
                                 },
                                 {
                                     "apache": "stopped",
@@ -1171,8 +1188,8 @@ def _service_row():
                                     "mknotifyd": "running",
                                     "rrdcached": "running",
                                     "site": "beta",
-                                    "stunnel": "not " "existent",
-                                    "xinetd": "not " "existent",
+                                    "stunnel": "not existent",
+                                    "xinetd": "not existent",
                                 },
                                 {
                                     "apache": "running",
@@ -1184,7 +1201,7 @@ def _service_row():
                                     "mknotifyd": "running",
                                     "rrdcached": "running",
                                     "site": "beta_slave_1",
-                                    "stunnel": "not " "existent",
+                                    "stunnel": "not existent",
                                     "xinetd": "running",
                                 },
                                 {
@@ -1210,7 +1227,7 @@ def _service_row():
                                     "mknotifyd": "running",
                                     "rrdcached": "running",
                                     "site": "crawl_central",
-                                    "stunnel": "not " "existent",
+                                    "stunnel": "not existent",
                                     "xinetd": "running",
                                 },
                                 {
@@ -1238,8 +1255,8 @@ def _service_row():
                                     "mknotifyd": "running",
                                     "rrdcached": "running",
                                     "site": "lmtest",
-                                    "stunnel": "not " "existent",
-                                    "xinetd": "not " "existent",
+                                    "stunnel": "not existent",
+                                    "xinetd": "not existent",
                                 },
                                 {
                                     "apache": "stopped",
@@ -1251,8 +1268,8 @@ def _service_row():
                                     "mknotifyd": "stopped",
                                     "rrdcached": "stopped",
                                     "site": "stable2",
-                                    "stunnel": "not " "existent",
-                                    "xinetd": "not " "existent",
+                                    "stunnel": "not existent",
+                                    "xinetd": "not existent",
                                 },
                                 {"autostart": False, "site": "cmk", "used_version": ""},
                             ],

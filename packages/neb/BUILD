@@ -1,14 +1,19 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+load("//bazel/rules:define_from_flag.bzl", "define_from_flag")
 
-CMK_VERSION = "2.4.0b1"
+define_from_flag(
+    name = "cmk_version_define",
+    macro = "VERSION",
+    value = "//:cmk_version",
+)
 
 # Keep code using VERSION apart to minimize cache invalidation.
 cc_library(
     name = "neb_version",
     srcs = ["src/CmkVersion.cc"],
     hdrs = ["include/neb/CmkVersion.h"],
-    local_defines = [r'VERSION=\"' + CMK_VERSION + r'\"'],
     strip_include_prefix = "include/",
+    deps = [":cmk_version_define"],
 )
 
 # Our generated & patched headers for Nagios 3 & 4
@@ -29,7 +34,9 @@ cc_library(
     srcs = [
         "include/neb/CmkVersion.h",
         "src/MacroExpander.cc",
+        "src/NebComment.cc",
         "src/NebCore.cc",
+        "src/NebDowntime.cc",
         "src/NebHost.cc",
         "src/NebService.cc",
         "src/TimeperiodsCache.cc",
@@ -54,7 +61,10 @@ cc_library(
         "include/neb/TimeperiodsCache.h",
         "include/neb/nagios.h",
     ],
-    copts = ["-O3"],
+    copts = [
+        "-O3",
+        "-std=c++20",
+    ],
     strip_include_prefix = "include/",
     deps = [
         ":neb_nagios_headers",
@@ -111,6 +121,9 @@ cc_test(
         "test/test_CrashReport.cc",
         "test/test_DictFilter.cc",
         "test/test_MacroExpander.cc",
+    ],
+    copts = [
+        "-std=c++20",
     ],
     deps = [
         ":dummy_nagios",

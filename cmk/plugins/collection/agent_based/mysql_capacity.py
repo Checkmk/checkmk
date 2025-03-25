@@ -6,7 +6,7 @@ from collections import defaultdict
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -51,7 +51,7 @@ def discover_capacity(section: Section) -> DiscoveryResult:
 def check_capacity(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     instance, dbname = item.split(":", 1)
     if (size := section.get(instance, {}).get(dbname, None)) is not None:
-        yield from check_levels(
+        yield from check_levels_v1(
             size,
             metric_name="database_size",
             levels_upper=params["levels"],

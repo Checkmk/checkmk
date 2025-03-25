@@ -5,11 +5,11 @@
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
 from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
+
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 
 from cmk.agent_based.v2 import GetRateError, Metric, Result, State, StringTable
 
@@ -238,10 +238,10 @@ def test_container_cpu_cgroupv1(
     string_table_0: StringTable,
     string_table_10: StringTable,
     util: float,
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
-    agent_section = fix_register.agent_sections[SectionName(section_name)]
-    plugin = fix_register.check_plugins[CheckPluginName(plugin_name)]
+    agent_section = agent_based_plugins.agent_sections[SectionName(section_name)]
+    plugin = agent_based_plugins.check_plugins[CheckPluginName(plugin_name)]
 
     # assert plugin
     section_0_seconds = agent_section.parse_function(string_table_0)

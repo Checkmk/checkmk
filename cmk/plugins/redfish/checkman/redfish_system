@@ -1,0 +1,13 @@
+title: Redfish system
+agents: agent_redfish
+catalog: hw/server/redfish
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the state of a Redfish compatible devices system.
+
+discovery:
+ One service per system is created.
+
+item:
+ The elements "Id".

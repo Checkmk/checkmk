@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # fmt: off
-# pylint: disable=protected-access,redefined-outer-name
 
 import locale
 import os
@@ -101,13 +100,13 @@ def _get_parsed_config() -> (
 
 def text_type():
     if sys.version_info[0] == 2:
-        return unicode  # pylint: disable=undefined-variable # noqa: F821
+        return unicode  # noqa: F821
     return str
 
 
 def binary_type():
     if sys.version_info[0] == 2:
-        return str  # pylint: disable=undefined-variable
+        return str
     return bytes
 
 
@@ -686,7 +685,7 @@ def _path_to_testfile(filename):
     )
 
 
-class MockStdout:  # pylint: disable=useless-object-inheritance
+class MockStdout:
     def isatty(self):
         return False
 

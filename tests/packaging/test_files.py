@@ -3,11 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import csv
+import io
+import json
 import logging
 import os
 import re
 import subprocess
-from pathlib import Path
+from functools import cache
+from pathlib import Path, PosixPath
 
 import pytest
 
@@ -98,17 +102,16 @@ def test_package_sizes(package_path: str, pkg_format: str, min_size: int, max_si
         pytest.skip("only testing enterprise packages")
 
     size = os.stat(package_path).st_size
-    assert min_size <= size <= max_size, "Package {} size {} not between {} and {} bytes.".format(
-        package_path,
-        size,
-        min_size,
-        max_size,
+    assert min_size <= size <= max_size, (
+        f"Package {package_path} size {size} not between {min_size} and {max_size} bytes."
     )
 
 
 def test_files_not_in_version_path(package_path: str, cmk_version: str) -> None:
     if not package_path.endswith(".rpm") and not package_path.endswith(".deb"):
         pytest.skip("%s is another package type" % os.path.basename(package_path))
+
+    paths = _get_paths_from_package(package_path)
 
     version_allowed_patterns = [
         "/opt/omd/versions/?$",
@@ -130,10 +133,6 @@ def test_files_not_in_version_path(package_path: str, cmk_version: str) -> None:
             "/opt/omd/sites$",
             "/var/lock/mkbackup$",
         ] + version_allowed_patterns
-
-        paths = subprocess.check_output(
-            ["rpm", "-qlp", package_path], encoding="utf-8"
-        ).splitlines()
     elif package_path.endswith(".deb"):
         allowed_patterns = [
             "/$",
@@ -156,12 +155,6 @@ def test_files_not_in_version_path(package_path: str, cmk_version: str) -> None:
             "/etc/init.d/$",
             "/etc/init.d/check-mk-(raw|free|enterprise|managed|cloud|saas)-.*$",
         ] + version_allowed_patterns
-
-        paths = []
-        for line in subprocess.check_output(
-            ["dpkg", "-c", package_path], encoding="utf-8"
-        ).splitlines():
-            paths.append(line.split()[5].lstrip("."))
     else:
         raise NotImplementedError()
 
@@ -175,6 +168,24 @@ def test_files_not_in_version_path(package_path: str, cmk_version: str) -> None:
             re.match(p.replace("###OMD_VERSION###", omd_version), path) for p in allowed_patterns
         )
         assert is_allowed, f"Found unexpected global file: {path} in {package_path}"
+
+
+@cache
+def _get_paths_from_package(path_to_package: str) -> list[str]:
+    if path_to_package.endswith(".rpm"):
+        paths = subprocess.check_output(
+            ["rpm", "-qlp", path_to_package], encoding="utf-8"
+        ).splitlines()
+    elif path_to_package.endswith(".deb"):
+        paths = []
+        for line in subprocess.check_output(
+            ["dpkg", "-c", path_to_package], encoding="utf-8"
+        ).splitlines():
+            paths.append(line.split()[5].lstrip("."))
+    else:
+        raise NotImplementedError()
+
+    return paths
 
 
 def test_cma_only_contains_version_paths(package_path: str, cmk_version: str) -> None:
@@ -306,7 +317,7 @@ def test_not_rc_tag(package_path: str, cmk_version: str) -> None:
 
     if os.stat(msi_file_path).st_size == 0:
         pytest.skip(
-            f"The file {msi_file_path} was most likely faked by fake-windows-artifacts, "
+            f"The file {msi_file_path} was most likely faked by fake-artifacts, "
             f"so there is no reason to check it with msiinfo"
         )
     properties = {
@@ -321,3 +332,125 @@ def test_not_rc_tag(package_path: str, cmk_version: str) -> None:
     assert "ProductVersion" in properties
     assert properties["ProductVersion"] == cmk_version
     assert not re.match(r".*-rc\d+$", properties["ProductVersion"])
+
+
+def test_python_files_are_precompiled_pycs(package_path: str, cmk_version: str) -> None:
+    if not package_path.endswith((".rpm", ".deb")):
+        pytest.skip("%s is another package type" % os.path.basename(package_path))
+
+    LOGGER.info("Testing %s", package_path)
+
+    paths = _get_paths_from_package(package_path)
+
+    omd_version = _get_omd_version(cmk_version, package_path)
+    LOGGER.info("Checking OMD version: %s", omd_version)
+
+    def _get_shipped_python_binary_name(paths: list[str]) -> str:
+        """
+        Get name for the shipped Python binary.
+
+        Will look for a name with major and minor included, e.g. python3.12
+        """
+        for path in paths:
+            if not path.startswith(f"/opt/omd/versions/{omd_version}/bin/python3"):
+                continue
+
+            # We might encounter binaries like python3.12-config.
+            # Skip those by checking if we end in a number
+            if not path.endswith(tuple(map(str, range(10)))):
+                continue
+
+            p = PosixPath(path)
+
+            # We need a major.minor version, not just python3
+            if "." not in p.name:
+                continue
+
+            return p.name
+
+        raise ValueError("Unable to find shipped Python version")
+
+    def expected_pyc_path(python_file_path: str, python3_version: str) -> str:
+        # In: /opt/omd/versions/2.4.0-2025.02.06.cee/lib/python3/cmk/automations/__init__.py
+        # Out: /opt/omd/versions/2.4.0-2025.02.06.cee/lib/python3/cmk/automations/__pycache__/__init__.cpython-312.pyc
+        path = PosixPath(python_file_path)
+
+        cachedir = path.parent / "__pycache__"
+
+        filename = path.name.removesuffix(path.suffix)
+        filename = f"{filename}.cpython-{python3_version}.pyc"
+
+        return str(cachedir / filename)
+
+    python_binary = _get_shipped_python_binary_name(paths)
+    shortened_python_version = python_binary.replace("python", "").replace(".", "")
+
+    python_paths = set(
+        path for path in paths if path.startswith(f"/opt/omd/versions/{omd_version}/lib/python3")
+    )
+    python_files = [path for path in python_paths if path.endswith(".py")]
+    assert python_files, f"Didn't find Python files in package {package_path}"
+
+    missing_pycs = set()
+    for path in python_files:
+        expected_path = expected_pyc_path(path, shortened_python_version)
+
+        if expected_path not in python_paths:
+            missing_pycs.add(path)
+
+    assert not missing_pycs, f"The following files aren't precompiled: {', '.join(missing_pycs)}"
+
+
+def test_bom(package_path: str, cmk_version: str) -> None:
+    """Check that there is a BOM and it contains dependencies from various eco-systems"""
+    if package_path.endswith(".tar.gz"):
+        pytest.skip("%s is a source package" % os.path.basename(package_path))
+
+    bom = json.loads(
+        _get_file_from_package(package_path, cmk_version, "share/doc/bill-of-materials.json")
+    )
+    purls_wo_version = {c["purl"].split("@", 1)[0] for c in bom["components"] if "purl" in c}
+
+    # These are manually picked and should represent dependencies from our various ecosystems.
+    # I chose dependencies that are unlikely to be removed...
+    assert "pkg:cargo/clap" in purls_wo_version
+    assert "pkg:npm/d3" in purls_wo_version
+    assert "pkg:github/google/re2" in purls_wo_version
+    assert "pkg:pypi/certifi" in purls_wo_version
+
+
+def test_bom_csv_synchronous(package_path: str, cmk_version: str) -> None:
+    """test that the csv and bom contain the same versions
+
+    let's just check for certifi and openssl since I know they are updated constantly"""
+
+    if package_path.endswith(".tar.gz"):
+        pytest.skip("%s is a source package" % os.path.basename(package_path))
+
+    bom = json.loads(
+        _get_file_from_package(package_path, cmk_version, "share/doc/bill-of-materials.json")
+    )
+    license_file = io.StringIO(
+        _get_file_from_package(package_path, cmk_version, "share/doc/Licenses.csv").decode("utf-8")
+    )
+    reader = csv.DictReader(license_file)
+    license_csv = list(reader)
+
+    openssl_version: str | None = None
+    # we have multiple certifis (agent updater 2x and in a site)
+    certifi_versions: set[str] = set()
+
+    for component in bom["components"]:
+        if component["name"] == "openssl" and "cpe" in component:
+            openssl_version = component["version"]
+        if component.get("purl", "").startswith("pkg:pypi/certifi@"):
+            certifi_versions.add(component["version"])
+
+    assert openssl_version is not None
+    assert certifi_versions
+
+    for row in license_csv:
+        if row["Name"] == "openssl":
+            assert row["Version"] == openssl_version
+        if row["Name"] == "Python module: certifi":
+            assert row["Version"] in certifi_versions

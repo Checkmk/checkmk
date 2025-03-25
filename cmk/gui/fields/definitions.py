@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 """A few upgraded Fields which handle some OpenAPI validation internally."""
+
 import ast
 import json
 import logging
@@ -21,6 +21,9 @@ from cryptography.x509.oid import NameOID
 from marshmallow import fields as _fields
 from marshmallow import post_load, pre_dump, utils, ValidationError
 from marshmallow_oneofschema import OneOfSchema
+
+from cmk.ccc import version
+from cmk.ccc.exceptions import MKException
 
 from cmk.utils import paths
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -48,13 +51,13 @@ from cmk.gui.watolib.groups_io import load_group_information
 from cmk.gui.watolib.host_attributes import host_attribute
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
+from cmk.gui.watolib.sites import site_management_registry
 from cmk.gui.watolib.tags import load_tag_group
 
-from cmk.ccc import version
-from cmk.ccc.exceptions import MKException
-from cmk.fields import base, DateTime, validators
+from cmk.fields import base, Boolean, DateTime, validators
 
 _logger = logging.getLogger(__name__)
+_CONNECTION_ID_PATTERN = "^[-a-z0-9A-Z_]+$"
 
 
 class PythonString(base.String):
@@ -261,7 +264,7 @@ class NotExprSchema(BaseSchema):
 
     op = base.String(description="The operator. In this case `not`.")
     expr = base.Nested(
-        lambda: ExprSchema(),  # pylint: disable=unnecessary-lambda
+        lambda: ExprSchema(),
         description="The query expression to negate.",
     )
 
@@ -273,13 +276,26 @@ class LogicalExprSchema(BaseSchema):
     # many=True does not work here for some reason.
     expr = base.List(
         base.Nested(
-            lambda *a, **kw: ExprSchema(*a, **kw),  # pylint: disable=unnecessary-lambda
+            lambda *a, **kw: ExprSchema(*a, **kw),
             description="A list of query expressions to combine.",
         )
     )
 
 
-class ExprSchema(OneOfSchema):
+class CmkOneOfSchema(OneOfSchema):
+    context: dict[object, object] = {}
+
+    def __init__(
+        self,
+        *args,
+        **kwargs,
+    ):
+        context = kwargs.pop("context", {})
+        super().__init__(*args, **kwargs)
+        self.context = context
+
+
+class ExprSchema(CmkOneOfSchema):
     """Top level class for query expression schema
 
     Operators can be one of: AND, OR
@@ -361,8 +377,17 @@ class ExprSchema(OneOfSchema):
 
 
 class _ExprNested(base.Nested):
-    def _load(self, value, data, partial=None):
-        _data = super()._load(value, data, partial=partial)
+    def __init__(
+        self,
+        *args,
+        **kwargs,
+    ):
+        context = kwargs.pop("context", {})
+        super().__init__(*args, **kwargs)
+        self.context = context
+
+    def _load(self, value, partial=None):
+        _data = super()._load(value, partial=partial)
         return tree_to_expr(_data, table=self.metadata["table"])
 
 
@@ -611,7 +636,11 @@ class HostField(base.String):
         host = Host.host(value)
         self._confirm_user_has_permission(host)
 
-        if self._skip_validation_on_view and self.context.get("object_context") == "view":
+        if (
+            self._skip_validation_on_view
+            and self.context is not None
+            and self.context.get("object_context") == "view"
+        ):
             return
 
         # Regex gets checked through the `pattern` of the String instance
@@ -853,7 +882,7 @@ class CustomHostAttributes(ValueTypedDictSchema):
         # If an attribute gets deleted AFTER it has already been set to a host or a folder,
         # then this would break here. We therefore can't validate outbound data as thoroughly
         # because our own data can be inherently inconsistent.
-        if self.context["direction"] == "outbound":  # pylint: disable=no-else-return
+        if self.context["direction"] == "outbound":
             return validate_custom_host_attributes(data, "warn")
         else:
             return validate_custom_host_attributes(data, "raise")
@@ -863,7 +892,6 @@ class TagGroupAttributes(ValueTypedDictSchema):
     """Schema to validate tag groups
 
     Examples:
-
         >>> schema = TagGroupAttributes()
         >>> schema.load({"foo": "bar"})
         Traceback (most recent call last):
@@ -1036,7 +1064,11 @@ class SiteField(base.String):
         if self.allow_all_value and value == "all":
             return
 
-        if self.presence == "might_not_exist_on_view" and self.context["object_context"] == "view":
+        if (
+            self.presence == "might_not_exist_on_view"
+            and self.context is not None
+            and self.context["object_context"] == "view"
+        ):
             return
 
         if self.presence in ["should_exist", "might_not_exist_on_view"]:
@@ -1051,12 +1083,6 @@ class SiteField(base.String):
         if self.presence == "might_not_exist_on_view" and value not in configured_sites().keys():
             return "Unknown Site: " + value
         return super()._serialize(value, attr, obj, **kwargs)
-
-
-def customer_field(**kw):
-    if version.edition(paths.omd_root) is version.Edition.CME:
-        return _CustomerField(**kw)
-    return None
 
 
 class _CustomerField(base.String):
@@ -1106,6 +1132,32 @@ class _CustomerField(base.String):
     def _deserialize(self, value, attr, data, **kwargs):
         value = super()._deserialize(value, attr, data, **kwargs)
         return None if value == "global" else value
+
+
+def customer_field(**kw: Any) -> _CustomerField | None:
+    if version.edition(paths.omd_root) is version.Edition.CME:
+        return _CustomerField(**kw)
+    return None
+
+
+def customer_field_response(**kw: Any) -> _CustomerField | None:
+    if "description" not in kw:
+        kw["description"] = "The customer for which the object is configured."
+    return customer_field(**kw)
+
+
+def bake_agent_field() -> Boolean | None:
+    """Enterprise specific implementation of host attribute field
+
+    Notes:
+        * takes inspiration of the customer field implementation (which is not the best) but
+        deemed acceptable as the intention is to move away from the marshmallow implementation
+    """
+    if version.edition(paths.omd_root) is not version.Edition.CRE:
+        return Boolean(
+            description="Bake agent packages for this folder even if it is empty.",
+        )
+    return None
 
 
 def verify_group_exists(group_type: GroupType, name: GroupName) -> bool:
@@ -1209,11 +1261,11 @@ class PasswordIdent(base.String):
             raise self.make_error("should_not_exist", name=value)
 
 
-class PasswordOwner(base.String):
-    """A field representing a password owner group"""
+class PasswordEditableBy(base.String):
+    """A field representing which group can edit a password"""
 
     default_error_messages = {
-        "invalid": "Specified owner value is not valid: {name!r}",
+        "invalid": "Specified contact group does not exist or you do not have the necessary permissions: {name!r}",
     }
 
     def __init__(
@@ -1231,17 +1283,18 @@ class PasswordOwner(base.String):
         )
 
     def _validate(self, value):
-        """Verify if the specified owner is valid for the logged-in user
+        """Verify if the specified editor is valid for the logged-in user
 
-        Non-admin users cannot specify admin as the owner
-
+        Non-admin users cannot specify admin as the editor
         """
         super()._validate(value)
-        permitted_owners = [group[0] for group in contact_group_choices(only_own=True)]
         if user.may("wato.edit_all_passwords"):
-            permitted_owners.append("admin")
+            permitted_group_ids = [group[0] for group in contact_group_choices(only_own=False)]
+            permitted_group_ids.append("admin")
+        else:
+            permitted_group_ids = [group[0] for group in contact_group_choices(only_own=True)]
 
-        if value not in permitted_owners:
+        if value not in permitted_group_ids:
             raise self.make_error("invalid", name=value)
 
 
@@ -1478,6 +1531,42 @@ class Username(base.String):
             raise self.make_error("should_not_exist", username=value)
 
 
+class ConnectionIdentifier(base.String):
+    default_error_messages = {
+        "should_exist": "ConnectionId missing: {connection_id!r}",
+        "should_not_exist": "ConnectionId {connection_id!r} already exists",
+        "invalid_name": "ConnectionId {connection_id!r} is not a valid checkmk ConnectionId",
+    }
+
+    def __init__(
+        self,
+        example: str,
+        required: bool = True,
+        validate: Callable[[object], bool] | Collection[Callable[[object], bool]] | None = None,
+        presence: Literal["should_exist", "should_not_exist", "ignore"] = "ignore",
+        **kwargs: Any,
+    ):
+        self._presence = presence
+        super().__init__(
+            example=example,
+            required=required,
+            validate=validate,
+            pattern=_CONNECTION_ID_PATTERN,
+            **kwargs,
+        )
+
+    def _validate(self, value):
+        super()._validate(value)
+        user.need_permission("wato.sites")
+
+        site_mgmt = site_management_registry["site_management"]
+        exists = site_mgmt.broker_connection_id_exists(value)
+        if self._presence == "should_exist" and not exists:
+            raise self.make_error("should_exist", connection_id=value)
+        if self._presence == "should_not_exist" and exists:
+            raise self.make_error("should_not_exist", connection_id=value)
+
+
 class FolderIDField(FolderField):
     """This field represents a folder's path.
 
@@ -1540,6 +1629,7 @@ __all__ = [
     "host_attributes_field",
     "column_field",
     "customer_field",
+    "customer_field_response",
     "DateTime",
     "ExprSchema",
     "FolderField",
@@ -1549,8 +1639,8 @@ __all__ = [
     "HostField",
     "HostnameOrIP",
     "MultiNested",
+    "PasswordEditableBy",
     "PasswordIdent",
-    "PasswordOwner",
     "PasswordShare",
     "PermissionField",
     "PythonString",

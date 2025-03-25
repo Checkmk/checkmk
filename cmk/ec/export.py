@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=unused-import
-
 from .config import Action as Action
 from .config import ConfigFromWATO as ConfigFromWATO
 from .config import ContactGroups as ContactGroups
@@ -26,6 +24,7 @@ from .config import TextPattern as TextPattern
 from .defaults import default_config as default_config
 from .defaults import default_rule_pack as default_rule_pack
 from .event import Event as Event
+from .event import EventPhase as EventPhase
 from .mkp import mkp_callbacks as mkp_callbacks
 from .mkp import mkp_rule_pack_dir as mkp_rule_pack_dir
 from .mkp import rule_pack_dir as rule_pack_dir

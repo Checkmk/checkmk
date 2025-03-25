@@ -4,61 +4,62 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
+import logging
 import re
-import subprocess
 from collections.abc import Iterator, MutableMapping, Sequence
 
 import pytest
 
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.common.utils import get_standard_linux_agent_output
 from tests.testlib.site import Site
-from tests.testlib.utils import get_standard_linux_agent_output
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.servicename import ServiceName
 
 from cmk.automations import results
-from cmk.automations.results import SetAutochecksInput, SetAutochecksTable
+from cmk.automations.results import SetAutochecksInput
 
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import DiscoveryResult
 from cmk.checkengine.discovery._autochecks import _AutochecksSerializer, AutocheckEntry
+
+logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(name="test_cfg", scope="module")
 def test_cfg_fixture(site: Site) -> Iterator[None]:
     site.ensure_running()
 
-    print("Applying default config")
-    site.openapi.create_host(
+    logger.info("Applying default config")
+    site.openapi.hosts.create(
         "modes-test-host",
         attributes={
             "ipaddress": "127.0.0.1",
         },
     )
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         "modes-test-host2",
         attributes={
             "ipaddress": "127.0.0.1",
             "tag_criticality": "test",
         },
     )
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         "modes-test-host3",
         attributes={
             "ipaddress": "127.0.0.1",
             "tag_criticality": "test",
         },
     )
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         "modes-test-host4",
         attributes={
             "ipaddress": "127.0.0.1",
             "tag_criticality": "offline",
         },
     )
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         "host_with_secondary_ip",
         attributes={"ipaddress": "127.0.0.1", "additional_ipv4addresses": ["127.0.0.1"]},
     )
@@ -79,11 +80,11 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
         "var/check_mk/agent_output/modes-test-host3", get_standard_linux_agent_output()
     )
 
-    site.openapi.discover_services_and_wait_for_completion("modes-test-host")
-    site.openapi.discover_services_and_wait_for_completion("modes-test-host2")
-    site.openapi.discover_services_and_wait_for_completion("modes-test-host3")
-    site.openapi.discover_services_and_wait_for_completion("host_with_secondary_ip")
-    icmp_rule_id = site.openapi.create_rule(
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion("modes-test-host")
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion("modes-test-host2")
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion("modes-test-host3")
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion("host_with_secondary_ip")
+    icmp_rule_id = site.openapi.rules.create(
         ruleset_name=RuleGroup.ActiveChecks("icmp"),
         value={"address": "all_ipv4addresses"},
     )
@@ -95,18 +96,18 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
         #
         # Cleanup code
         #
-        print("Cleaning up test config")
+        logger.info("Cleaning up test config")
 
         site.delete_dir("var/check_mk/agent_output")
 
         site.delete_file("etc/check_mk/conf.d/modes-test-host.mk")
 
-        site.openapi.delete_host("modes-test-host")
-        site.openapi.delete_host("modes-test-host2")
-        site.openapi.delete_host("modes-test-host3")
-        site.openapi.delete_host("modes-test-host4")
-        site.openapi.delete_host("host_with_secondary_ip")
-        site.openapi.delete_rule(icmp_rule_id)
+        site.openapi.hosts.delete("modes-test-host")
+        site.openapi.hosts.delete("modes-test-host2")
+        site.openapi.hosts.delete("modes-test-host3")
+        site.openapi.hosts.delete("modes-test-host4")
+        site.openapi.hosts.delete("host_with_secondary_ip")
+        site.openapi.rules.delete(icmp_rule_id)
         site.activate_changes_and_wait_for_core_reload()
 
 
@@ -135,24 +136,21 @@ def _execute_automation(
     parse_data: bool = True,
 ) -> object:
     cmdline = ["cmk", "--automation", cmd, *([] if args is None else args)]
-    p = site.execute(cmdline, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+    p = site.run(cmdline, input_=stdin, check=False)
+    error_msg = "Exit code: %d, Output: %r, Error: %r" % (p.returncode, p.stdout, p.stderr)
 
-    stdout, stderr = p.communicate(stdin)
-
-    error_msg = "Exit code: %d, Output: %r, Error: %r" % (p.wait(), stdout, stderr)
-
-    assert p.wait() == expect_exit_code, error_msg
+    assert p.returncode == expect_exit_code, error_msg
 
     if expect_stderr_pattern:
-        assert re.match(expect_stderr_pattern, stderr) is not None, error_msg
+        assert re.match(expect_stderr_pattern, p.stderr) is not None, error_msg
     else:
-        assert stderr == expect_stderr, error_msg
+        assert p.stderr == expect_stderr, error_msg
 
     if expect_stdout is not None:
-        assert stdout == expect_stdout, error_msg
+        assert p.stdout == expect_stdout, error_msg
 
     if parse_data:
-        return results.result_type_registry[cmd].deserialize(stdout)
+        return results.result_type_registry[cmd].deserialize(p.stdout)
 
     return None
 
@@ -161,31 +159,24 @@ def _execute_automation(
 @pytest.mark.usefixtures("test_cfg")
 def test_automation_inventory_no_host(site: Site) -> None:
     # NOTE: We can't use @raiseerrors here, because this would redirect stderr to /dev/null!
-    p = site.execute(
-        ["cmk", "--automation", "inventory", "@scan", "new"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
+    p = site.run(["cmk", "--automation", "inventory", "@scan", "new"], check=False)
 
-    stdout, stderr = p.communicate()
-    assert "Need two arguments:" in stderr
-    assert stdout == ""
-    assert p.wait() == 1
+    assert "Need two arguments:" in p.stderr
+    assert p.stdout == ""
+    assert p.returncode == 1
 
 
 @pytest.mark.usefixtures("test_cfg")
 def test_automation_discovery_no_host(site: Site) -> None:
     # NOTE: We can't use @raiseerrors here, because this would redirect stderr to /dev/null!
-    p = site.execute(
+    p = site.run(
         ["cmk", "--automation", "service-discovery", "@scan", "new"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        check=False,
     )
 
-    stdout, stderr = p.communicate()
-    assert "Need two arguments:" in stderr
-    assert stdout == ""
-    assert p.wait() == 1
+    assert "Need two arguments:" in p.stderr
+    assert p.stdout == ""
+    assert p.returncode == 1
 
 
 # old alias, drop after 2.2 release
@@ -353,6 +344,91 @@ def test_automation_analyse_service_no_check(site: Site) -> None:
     assert automation_result.label_sources == {}
 
 
+@pytest.mark.usefixtures("test_cfg")
+def test_automation_analyze_host_rule_matches(site: Site) -> None:
+    automation_result = _execute_automation(
+        site,
+        "analyze-host-rule-matches",
+        args=["modes-test-host"],
+        stdin=repr(
+            [
+                [
+                    {
+                        "id": "b92a5406-1d56-4f1d-953d-225b111239e3",
+                        "value": "ag",
+                        "condition": {},
+                        "options": {
+                            "description": "",
+                        },
+                    }
+                ],
+                [
+                    {
+                        "id": "aaaaaaaa-1d56-4f1d-953d-225b111239e3",
+                        "value": "duda",
+                        "condition": {
+                            "host_tags": {
+                                "criticality": "test",
+                            }
+                        },
+                        "options": {
+                            "description": "",
+                        },
+                    }
+                ],
+            ]
+        ),
+    )
+
+    assert isinstance(automation_result, results.AnalyzeHostRuleMatchesResult)
+    assert automation_result.results == {
+        "b92a5406-1d56-4f1d-953d-225b111239e3": ["ag"],
+        "aaaaaaaa-1d56-4f1d-953d-225b111239e3": [],
+    }
+
+
+@pytest.mark.usefixtures("test_cfg")
+def test_automation_analyze_service_rule_matches(site: Site) -> None:
+    automation_result = _execute_automation(
+        site,
+        "analyze-service-rule-matches",
+        args=["modes-test-host", "Ding"],
+        stdin=repr(
+            (
+                [
+                    [
+                        {
+                            "id": "b92a5406-1d56-4f1d-953d-225b111239e3",
+                            "value": "yay",
+                            "condition": {"service_description": [{"$regex": "Ding$"}]},
+                            "options": {
+                                "description": "",
+                            },
+                        }
+                    ],
+                    [
+                        {
+                            "id": "aaaaaaaa-1d56-4f1d-953d-225b111239e3",
+                            "value": "nono",
+                            "condition": {"service_description": [{"$regex": "Dong$"}]},
+                            "options": {
+                                "description": "",
+                            },
+                        }
+                    ],
+                ],
+                {},
+            )
+        ),
+    )
+
+    assert isinstance(automation_result, results.AnalyzeServiceRuleMatchesResult)
+    assert automation_result.results == {
+        "b92a5406-1d56-4f1d-953d-225b111239e3": ["yay"],
+        "aaaaaaaa-1d56-4f1d-953d-225b111239e3": [],
+    }
+
+
 def test_automation_discovery_preview_not_existing_host(site: Site) -> None:
     _execute_automation(
         site,
@@ -362,10 +438,10 @@ def test_automation_discovery_preview_not_existing_host(site: Site) -> None:
             r"Failed to lookup IPv4 address of xxx-not-existing-host. "
             r"via DNS: (\[Errno -2\] Name or service not known"
             r"|\[Errno -3\] Temporary failure in name resolution"
-            r"|\[Errno -5\] No address associated with host name)\n"
+            r"|\[Errno -5\] No address associated with hostname)\n"
         ),
         expect_stdout="",
-        expect_exit_code=2,
+        expect_exit_code=1,
         parse_data=False,
     )
 
@@ -383,56 +459,6 @@ def test_automation_discovery_preview_host(site: Site) -> None:
     assert isinstance(result.nodes_check_table, dict)
     for _h, node_check_table in result.nodes_check_table.items():
         assert isinstance(node_check_table, list)
-
-
-@pytest.mark.usefixtures("test_cfg")
-def test_automation_set_autochecks(site: Site) -> None:
-    hostname = HostName("blablahost")
-    new_items: SetAutochecksTable = {
-        ("df", "xxx"): ("Filesystem xxx", {}, {"xyz": "123"}, [hostname]),
-        ("uptime", None): ("Uptime", {}, {}, [hostname]),
-    }
-
-    try:
-        assert isinstance(
-            _execute_automation(
-                site,
-                "set-autochecks",
-                args=[hostname],
-                stdin=repr(new_items),
-            ),
-            results.SetAutochecksResult,
-        )
-
-        autochecks_file = f"var/check_mk/autochecks/{hostname}.mk"
-        assert site.file_exists(autochecks_file)
-
-        data = _AutochecksSerializer().deserialize(site.read_file(autochecks_file).encode("utf-8"))
-        services = [
-            (
-                (str(s.check_plugin_name), s.item),
-                s.parameters,
-                s.service_labels,
-            )
-            for s in data
-        ]
-        assert sorted(services) == [
-            (
-                ("df", "xxx"),
-                {},
-                {"xyz": "123"},
-            ),
-            (
-                ("uptime", None),
-                {},
-                {},
-            ),
-        ]
-
-        assert site.file_exists("var/check_mk/autochecks/%s.mk" % hostname)
-    finally:
-        if site.file_exists("var/check_mk/autochecks/%s.mk" % hostname):
-            site.delete_file("var/check_mk/autochecks/%s.mk" % hostname)
 
 
 @pytest.mark.usefixtures("test_cfg")
@@ -491,7 +517,7 @@ def test_automation_set_autochecks_v2(site: Site) -> None:
 
 
 @pytest.mark.usefixtures("test_cfg")
-def test_automation_update_dns_cache(site: Site, clients: ClientRegistry) -> None:
+def test_automation_update_dns_cache(site: Site) -> None:
     cache_path = "var/check_mk/ipaddresses.cache"
 
     if site.file_exists(cache_path):
@@ -500,8 +526,8 @@ def test_automation_update_dns_cache(site: Site, clients: ClientRegistry) -> Non
     # use .internal. FQDN to avoid false positives in name resolution
     unknown_host = "update-dns-cache-host.internal."
     try:
-        clients.HostConfig.create(host_name=unknown_host)
-        clients.HostConfig.create(host_name="localhost")
+        site.openapi.hosts.create(hostname=unknown_host)
+        site.openapi.hosts.create(hostname="localhost")
 
         site.write_text_file(cache_path, "{('bla', 4): '127.0.0.1'}")
 
@@ -509,9 +535,9 @@ def test_automation_update_dns_cache(site: Site, clients: ClientRegistry) -> Non
         assert isinstance(result, results.UpdateDNSCacheResult)
 
         assert result.n_updated > 0
-        assert result.failed_hosts == [
-            unknown_host
-        ], f'Successfully resolved unknown host "{unknown_host}"!'
+        assert result.failed_hosts == [unknown_host], (
+            f'Successfully resolved unknown host "{unknown_host}"!'
+        )
 
         assert site.file_exists(cache_path)
 
@@ -520,9 +546,9 @@ def test_automation_update_dns_cache(site: Site, clients: ClientRegistry) -> Non
         assert cache[("localhost", 4)] == "127.0.0.1"
         assert ("bla", 4) not in cache
     finally:
-        clients.HostConfig.delete("localhost")
-        clients.HostConfig.delete(unknown_host)
-        clients.ActivateChanges.call_activate_changes_and_wait_for_completion()
+        site.openapi.hosts.delete("localhost")
+        site.openapi.hosts.delete(unknown_host)
+        site.openapi.changes.activate_and_wait_for_completion(timeout=120)
 
 
 # TODO: Test with the different cores
@@ -645,7 +671,7 @@ def test_automation_active_check_icmp_all_ipv4(site: Site) -> None:
         )
         assert isinstance(result, results.ActiveCheckResult)
         assert result.state == 0
-        assert result.output.startswith("OK - 127.0.0.1: rta")
+        assert result.output.startswith("OK - 127.0.0.1 rta")
 
 
 def test_automation_active_check_unknown_custom(site: Site) -> None:
@@ -721,7 +747,14 @@ def test_automation_create_diagnostics_dump(site: Site) -> None:
     assert "var/check_mk/diagnostics" in result.tarfile_path
 
 
-# TODO: rename-hosts
-# TODO: delete-hosts
-# TODO: scan-parents
-# TODO: diag-host
+def test_automation_restart_with_non_resolvable_host(site: Site) -> None:
+    host = "modes-test-host-unresolvable"
+    site.openapi.hosts.create(host)
+    try:
+        result = _execute_automation(site, "restart", expect_stderr_pattern=".*")
+    finally:
+        site.openapi.hosts.delete(host)
+        site.openapi.changes.activate_and_wait_for_completion()
+
+    assert isinstance(result, results.RestartResult)
+    assert any(f"Failed to lookup IPv4 address of {host}" in w for w in result.config_warnings)

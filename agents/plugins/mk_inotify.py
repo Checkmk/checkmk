@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.4.0b1"
+__version__ = "2.5.0b1"
 
 import os
 import signal
@@ -17,13 +17,13 @@ except ImportError:  # Python 2
     import ConfigParser as configparser  # type: ignore[import-not-found,no-redef]
 
 try:
-    from typing import Any  # pylint: disable=unused-import
+    from typing import Any  # noqa: F401
 except ImportError:
     pass
 
 try:
     # TODO: We should probably ship this package.
-    import pyinotify  # type: ignore[import-not-found] # pylint: disable=import-error
+    import pyinotify  # type: ignore[import-not-found]
 except ImportError:
     sys.stderr.write("Error: Python plugin pyinotify is not installed\n")
     sys.exit(1)
@@ -281,7 +281,7 @@ def update_watched_folders():
                 attributes["watch_descriptor"] = new_wd
 
 
-def main():  # pylint: disable=too-many-branches
+def main():
     # Read config
 
     for section in config.sections():

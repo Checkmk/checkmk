@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 from typing import Final
 
 from cmk.agent_based.v2 import AgentSection, StringTable
-from cmk.plugins.lib.oracle_instance import GeneralError, Instance, InvalidData, Section
+from cmk.plugins.oracle.agent_based.libinstance import GeneralError, Instance, InvalidData, Section
 
 # <<<oracle_instance:sep(124)>>>
 # XE|11.2.0.2.0|OPEN|ALLOWED|STOPPED|3524|2752243048|NOARCHIVELOG|PRIMARY|NO|XE|080220151025
@@ -166,8 +166,8 @@ def parse_oracle_instance(string_table: StringTable) -> Section:
             # ORA-99999 tnsping failed for +ASM1
             and not (line[0].startswith("ORA-") and line[0][4].isdigit() and len(line[0]) < 16)
             and not len(line) == 1
-            and (data := _parse_agent_line(line))
         )
+        for data in [_parse_agent_line(line)]
     }
 
 

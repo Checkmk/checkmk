@@ -11,11 +11,15 @@ import pprint
 import tarfile
 import time
 import traceback
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator, Mapping, Sequence
 from typing import Final, TypedDict
 
 import livestatus
 from livestatus import SiteId
+
+import cmk.ccc.crash_reporting
+import cmk.ccc.version as cmk_version
+from cmk.ccc.crash_reporting import CrashInfo
 
 from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import (
@@ -50,10 +54,6 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode, urlencode_vars
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import Dictionary, EmailAddress, TextInput
-
-import cmk.ccc.crash_reporting
-import cmk.ccc.version as cmk_version
-from cmk.ccc.crash_reporting import CrashInfo
 
 from .helpers import local_files_involved_in_crash
 from .views import CrashReportsRowTable
@@ -98,16 +98,18 @@ class ABCCrashReportPage(Page, abc.ABC):
         )
 
     def _get_crash_report_row(self, crash_id: str, *, site_id: str) -> CrashReportRow | None:
-        if rows := CrashReportsRowTable().get_crash_report_rows(
+        rows = CrashReportsRowTable().get_crash_report_rows(
             only_sites=[SiteId(site_id)],
             filter_headers="Filter: id = %s" % livestatus.lqencode(crash_id),
-        ):
-            return rows[0]
-        return None
+        )
+        try:
+            return next(rows)
+        except StopIteration:
+            return None
 
-    def _get_serialized_crash_report(self):
+    def _get_serialized_crash_report(self) -> Mapping[str, bytes | None]:
         return {
-            k: v
+            k: v.encode()
             for k, v in self._get_crash_row().items()
             if k not in ["site", "crash_id", "crash_type"]
         }
@@ -280,7 +282,7 @@ class PageCrash(ABCCrashReportPage):
             html.show_error(
                 _(
                     "Failed to send the crash report. Please download it manually and send it "
-                    'to <a href="%s">%s</a>'
+                    'to <a href="%s">%s</a> or try again later.'
                 )
                 % (report_url, self._get_crash_report_target())
             )
@@ -396,7 +398,9 @@ class PageCrash(ABCCrashReportPage):
 
         _crash_row(_("Crash Type"), info["crash_type"], odd=False, legend=True)
         _crash_row(
-            _("Time"), time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(info["time"])), odd=True
+            _("Time"),
+            time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(info["time"]))),
+            odd=True,
         )
         _crash_row(_("Operating System"), info["os"], False)
         _crash_row(_("Checkmk Version"), info["version"], True)
@@ -409,7 +413,7 @@ class PageCrash(ABCCrashReportPage):
 
         html.close_table()
 
-    def _format_traceback(self, tb: list[traceback.FrameSummary]) -> str:
+    def _format_traceback(self, tb: Sequence[tuple[str, int, str, str]]) -> str:
         return "".join(traceback.format_list(tb))
 
     def _show_crash_report_details(self, crash_info: CrashInfo, row: CrashReportRow) -> None:
@@ -512,8 +516,9 @@ class ReportRendererCheck(ABCReportRenderer):
     def page_menu_entries_related_monitoring(
         self, crash_info: CrashInfo, site_id: SiteId
     ) -> Iterator[PageMenuEntry]:
-        host = crash_info["details"]["host"]
-        service = crash_info["details"]["description"]
+        details = crash_info["details"]
+        host = details["host"]
+        service = details["description"]
 
         host_url = makeuri(
             request,
@@ -554,7 +559,7 @@ class ReportRendererCheck(ABCReportRenderer):
         _show_agent_output(row)
 
     def _show_crashed_check_details(self, info: CrashInfo) -> None:
-        def format_bool(val):
+        def format_bool(val: bool | None) -> str:
             return {
                 True: _("Yes"),
                 False: _("No"),
@@ -655,8 +660,7 @@ def _show_output_box(title: str, content: bytes) -> None:
 def _show_agent_output(row: CrashReportRow) -> None:
     agent_output = row.get("agent_output")
     if agent_output:
-        assert isinstance(agent_output, bytes)
-        _show_output_box(_("Agent output"), agent_output)
+        _show_output_box(_("Agent output"), agent_output.encode())
 
 
 class PageDownloadCrashReport(ABCCrashReportPage):

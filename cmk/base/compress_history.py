@@ -10,10 +10,10 @@
 import logging
 from typing import IO
 
-from cmk.utils.log import VERBOSE
-
 import cmk.ccc.debug
 from cmk.ccc.exceptions import MKBailOut
+
+from cmk.utils.log import VERBOSE
 
 logger = logging.getLogger("cmk.base.compress_history")
 
@@ -32,7 +32,7 @@ def do_compress_history(args: list[str]) -> None:
             raise MKBailOut("%s" % e)
 
 
-def compress_history_file(  # pylint: disable=too-many-branches
+def compress_history_file(
     input_path: str,
     output_path: str,
 ) -> None:
@@ -88,7 +88,7 @@ def compress_history_file(  # pylint: disable=too-many-branches
                 elif line_type == "OPERATION":
                     if machine_state != "START":
                         if machine_state == "INITIAL":
-                            for host in known_services:
+                            for host in list(known_services.keys()):
                                 if host not in services_after_reload:
                                     for service in known_services[host]:
                                         log_vanished_object(output, timestamp, host, service)

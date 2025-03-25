@@ -13,10 +13,10 @@
 # swi03 ping swi03 up
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def inventory_heartbeat_nodes(info):
@@ -59,6 +59,7 @@ def parse_heartbeat_nodes(string_table: StringTable) -> StringTable:
 
 
 check_info["heartbeat_nodes"] = LegacyCheckDefinition(
+    name="heartbeat_nodes",
     parse_function=parse_heartbeat_nodes,
     service_name="Heartbeat Node %s",
     discovery_function=inventory_heartbeat_nodes,

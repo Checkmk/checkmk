@@ -10,7 +10,7 @@ from typing import Annotated, Any, Union
 
 from pydantic import BaseModel, BeforeValidator, Field
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -162,7 +162,7 @@ def check_sensor_battery(
         return
 
     if section.battery.percentage:
-        yield from check_levels(
+        yield from check_levels_v1(
             value=section.battery.percentage,
             render_func=render.percent,
             levels_lower=params.get("levels_lower"),

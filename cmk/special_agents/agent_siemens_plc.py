@@ -84,7 +84,7 @@ def parse_spec(hostspec):
     for spec in parts[5:]:
         p = spec.split(",")
         if len(p) != 5:
-            print("ERROR: Invalid value specified: %s" % spec, file=sys.stderr)
+            sys.stderr.write("ERROR: Invalid value specified: %s\n" % spec)
             return 1
 
         if ":" in p[0]:
@@ -293,14 +293,14 @@ def main(sys_argv=None):
         try:
             client.connect(device["host_address"], device["rack"], device["slot"], device["port"])
         except Snap7Exception as e:
-            print(_snap7error(hostname, "Error connecting to device", e), file=sys.stderr)
+            sys.stderr.write(_snap7error(hostname, "Error connecting to device", e) + "\n")
             continue
 
         try:
             cpu_state = client.get_cpu_state()
         except Snap7Exception as e:
             cpu_state = None
-            print(_snap7error(hostname, "Error reading device CPU state", e), file=sys.stderr)
+            sys.stderr.write(_snap7error(hostname, "Error reading device CPU state", e) + "\n")
 
         parsed_area_values = []
         for (area_name, db_number), iter_values in _group_device_values(device):
@@ -314,7 +314,7 @@ def main(sys_argv=None):
                     size=end_address - start_address,
                 )
             except Snap7Exception as e:
-                print(_snap7error(hostname, "Error reading data area", e), file=sys.stderr)
+                sys.stderr.write(_snap7error(hostname, "Error reading data area", e) + "\n")
                 continue
 
             parsed_area_values.extend(_cast_values(values, start_address, area_value))

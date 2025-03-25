@@ -6,10 +6,12 @@
 import argparse
 import os
 import re
+import sys
 from pathlib import Path
 
 from . import load_werk
 from .config import load_config, try_load_current_version_from_defines_make
+from .constants import NON_WERK_FILES_IN_WERK_FOLDER
 
 
 def main(
@@ -34,6 +36,11 @@ def main(
     choices_component = {e[0] for e in config.all_components()}
 
     for werk_path in werks_to_check:
+        if werk_path.name in NON_WERK_FILES_IN_WERK_FOLDER:
+            print(  # nosemgrep: disallow-print
+                "WARNING: NOT CHECKING", werk_path, "as it's not a werk."
+            )
+            continue
         werk_content = werk_path.read_text(encoding="utf-8")
         try:
             werk = load_werk(file_content=werk_content, file_name=werk_path.name)
@@ -49,7 +56,7 @@ def main(
         except Exception as e:
             raise RuntimeError(f"Error while loading werk {werk_path}\n\n{werk_content}") from e
 
-    print(f"Successfully validated {len(werks_to_check)} werks")
+    sys.stdout.write(f"Successfully validated {len(werks_to_check)} werks\n")
 
 
 def parse_args() -> argparse.Namespace:
@@ -58,7 +65,7 @@ def parse_args() -> argparse.Namespace:
         "--version-regex",
         help="regex used to validate the version in the werk",
         default=r"^\d.\d.\d([ipb]\d+)?$",
-        type=lambda x: re.compile(x),  # pylint: disable=unnecessary-lambda
+        type=lambda x: re.compile(x),
     )
     parser.add_argument(
         "--werk-config",

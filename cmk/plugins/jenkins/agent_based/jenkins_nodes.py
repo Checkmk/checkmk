@@ -29,6 +29,18 @@ _MAP_NODE_STATES: Final = {
     False: "no",
 }
 
+CHECK_DEFAULT_PARAMETERS: Final = {
+    "jenkins_offline": State.CRIT.value,
+    "jenkins_numexecutors": ("no_levels", None),
+    "jenkins_numexecutors_upper": ("no_levels", None),
+    "jenkins_busyexecutors_lower": ("no_levels", None),
+    "jenkins_busyexecutors": ("no_levels", None),
+    "jenkins_idleexecutors_lower": ("no_levels", None),
+    "jenkins_idleexecutors": ("no_levels", None),
+    "jenkins_temp": ("no_levels", None),
+    "jenkins_clock": ("no_levels", None),
+    "avg_response_time": ("no_levels", None),
+}
 
 Section = Mapping[str, Sequence[Mapping]]
 
@@ -79,7 +91,7 @@ def _get_optional_value(
     return None
 
 
-def check_jenkins_nodes(  # pylint: disable=too-many-branches
+def check_jenkins_nodes(
     item: str,
     params: Mapping[str, Any],
     section: Section,
@@ -113,7 +125,8 @@ def check_jenkins_nodes(  # pylint: disable=too-many-branches
             yield from check_levels(
                 exec_data,
                 metric_name="jenkins_num_executors",
-                levels_lower=params.get(exec_name),
+                levels_lower=params[exec_name],
+                levels_upper=params[exec_name + "_upper"],
                 render_func=render_integer,
                 label="Total number of executors",
             )
@@ -140,7 +153,8 @@ def check_jenkins_nodes(  # pylint: disable=too-many-branches
                 yield from check_levels(
                     value,
                     metric_name=f"jenkins_{key}_executors",
-                    levels_upper=params.get(f"jenkins_{key}executors"),
+                    levels_upper=params[f"jenkins_{key}executors"],
+                    levels_lower=params[f"jenkins_{key}executors_lower"],
                     render_func=render_integer,
                     label=f"Number of {key} executors",
                 )
@@ -184,7 +198,7 @@ def check_jenkins_nodes(  # pylint: disable=too-many-branches
             yield from check_levels(
                 response_time / 1000.0,
                 metric_name="avg_response_time",
-                levels_upper=params.get("avg_response_time"),
+                levels_upper=params["avg_response_time"],
                 label="Average response time",
                 render_func=render.timespan,
             )
@@ -195,7 +209,7 @@ def check_jenkins_nodes(  # pylint: disable=too-many-branches
             yield from check_levels(
                 abs(diff) / 1000.0,
                 metric_name="jenkins_clock",
-                levels_upper=params.get("jenkins_clock"),
+                levels_upper=params["jenkins_clock"],
                 label="Clock difference",
                 render_func=render.timespan,
             )
@@ -208,7 +222,7 @@ def check_jenkins_nodes(  # pylint: disable=too-many-branches
             yield from check_levels(
                 size,
                 metric_name="jenkins_temp",
-                levels_lower=params.get("jenkins_temp"),
+                levels_lower=params["jenkins_temp"],
                 label="Free temp space",
                 render_func=render.bytes,
             )
@@ -219,6 +233,6 @@ check_plugin_jenkins_nodes = CheckPlugin(
     service_name="Jenkins Node %s",
     discovery_function=discover_jenkins_nodes,
     check_function=check_jenkins_nodes,
-    check_default_parameters={"jenkins_offline": State.CRIT.value},
+    check_default_parameters=CHECK_DEFAULT_PARAMETERS,
     check_ruleset_name="jenkins_nodes",
 )

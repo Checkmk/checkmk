@@ -68,7 +68,7 @@ def parse_netapp_ontap_cpu(string_table: StringTable) -> Section:
     return {
         node_obj.name: node_obj
         for node in string_table
-        if (node_obj := models.NodeModel.model_validate_json(node[0]))
+        for node_obj in [models.NodeModel.model_validate_json(node[0])]
     }
 
 

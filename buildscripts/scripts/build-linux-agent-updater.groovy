@@ -11,16 +11,16 @@ def main() {
 
     check_environment_variables([
         "DOCKER_REGISTRY",
-        "BAZEL_CACHE_URL",
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+    def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
 
     shout("configure");
 
     def branch_version = versioning.get_branch_version(checkout_dir);
 
-    def safe_branch_name = versioning.safe_branch_name(scm);
+    def safe_branch_name = versioning.safe_branch_name();
     def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
 
@@ -43,7 +43,7 @@ def main() {
 
     inside_container(
         set_docker_group_id: true,
-        priviliged: true,
+        privileged: true,
     ) {
         // TODO: check why this doesn't work
         // docker_reference_image().inside(docker_args) {
@@ -89,7 +89,7 @@ def main() {
             }
             def package_name_rpm = cmd_output("find ${checkout_dir} -name *.rpm");
             def package_name_deb = cmd_output("find ${checkout_dir} -name *.deb");
-            sign_package(checkout_dir, package_name_rpm)
+            package_helper.sign_package(checkout_dir, package_name_rpm)
             dir("${WORKSPACE}/build") {
                 sh("""
                     cp ${package_name_rpm} .
@@ -117,24 +117,6 @@ def main() {
                 );
             }
         }
-    }
-}
-
-def sign_package(source_dir, package_path) {
-    print("FN sign_package(source_dir=${source_dir}, package_path=${package_path})");
-    withCredentials([file(
-        credentialsId: "Check_MK_Release_Key",
-        variable: "GPG_KEY",)]) {
-        /// --batch is needed to awoid ioctl error
-        sh("gpg --batch --import ${GPG_KEY}");
-    }
-    withCredentials([
-        usernamePassword(
-            credentialsId: "9d7aca31-0043-4cd0-abeb-26a249d68261",
-            passwordVariable: "GPG_PASSPHRASE",
-            usernameVariable: "GPG_USERNAME",)
-    ]) {
-        sh("${source_dir}/buildscripts/scripts/sign-packages.sh ${package_path}");
     }
 }
 

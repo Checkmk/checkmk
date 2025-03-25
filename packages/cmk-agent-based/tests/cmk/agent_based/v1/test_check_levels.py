@@ -8,7 +8,8 @@ from collections.abc import Callable
 
 import pytest
 
-from cmk.agent_based.v1 import check_levels, Metric, render, Result, State
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v1 import Metric, render, Result, State
 from cmk.agent_based.v1._check_levels import _do_check_levels as do_check_levels
 
 
@@ -43,7 +44,7 @@ def test_boundaries(
 
 
 def test_check_levels_wo_levels() -> None:
-    assert list(check_levels(5, metric_name="battery", render_func=render.percent)) == [
+    assert list(check_levels_v1(5, metric_name="battery", render_func=render.percent)) == [
         Result(state=State.OK, summary="5.00%"),
         Metric("battery", 5.0),
     ]
@@ -51,7 +52,9 @@ def test_check_levels_wo_levels() -> None:
 
 def test_check_levels_ok_levels() -> None:
     assert list(
-        check_levels(5, metric_name="battery", render_func=render.percent, levels_upper=(100, 200))
+        check_levels_v1(
+            5, metric_name="battery", render_func=render.percent, levels_upper=(100, 200)
+        )
     ) == [
         Result(state=State.OK, summary="5.00%"),
         Metric("battery", 5.0, levels=(100.0, 200.0)),
@@ -63,7 +66,7 @@ def test_check_levels_warn_levels() -> None:
         return f"{x:.2f} years"
 
     assert list(
-        check_levels(
+        check_levels_v1(
             6,
             metric_name="disk",
             levels_upper=(4, 8),
@@ -84,7 +87,7 @@ def test_check_levels_boundaries() -> None:
         return f"pH {-math.log10(x):.1f}"
 
     assert list(
-        check_levels(
+        check_levels_v1(
             5e-7,
             metric_name="H_concentration",
             levels_upper=(4e-7, 8e-7),

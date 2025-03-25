@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.paths import omd_root
-
 from cmk.ccc import site
+
+from cmk.utils.paths import omd_root
 
 
 def test_get_omd_config(patch_omd_site: None) -> None:
@@ -16,6 +16,7 @@ def test_get_omd_config(patch_omd_site: None) -> None:
         "CONFIG_APACHE_MODE": "own",
         "CONFIG_APACHE_TCP_ADDR": "127.0.0.1",
         "CONFIG_APACHE_TCP_PORT": "5002",
+        "CONFIG_AUTOMATION_HELPER": "on",
         "CONFIG_AUTOSTART": "off",
         "CONFIG_CORE": "cmc",
         "CONFIG_LIVEPROXYD": "on",
@@ -33,6 +34,7 @@ def test_get_omd_config(patch_omd_site: None) -> None:
         "CONFIG_NSCA_TCP_PORT": "5667",
         "CONFIG_PNP4NAGIOS": "on",
         "CONFIG_RABBITMQ_PORT": "5672",
+        "CONFIG_RABBITMQ_ONLY_FROM": "0.0.0.0 ::",
         "CONFIG_RABBITMQ_DIST_PORT": "25672",
         "CONFIG_TMPFS": "on",
         "CONFIG_TRACE_JAEGER_ADMIN_PORT": "14269",

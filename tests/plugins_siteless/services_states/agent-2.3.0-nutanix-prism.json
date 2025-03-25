@@ -1,0 +1,38 @@
+{
+  "NTNX Alerts": {
+    "expected_state": 1
+  },
+  "NTNX Container DEWOBNX01-ISO": {
+    "expected_state": 0
+  },
+  "NTNX Container DEWOBNX01-Prod-01-gespiegelt": {
+    "expected_state": 0
+  },
+  "NTNX Container DEWOBNX01-Prod-02-ungespiegelt": {
+    "expected_state": 0
+  },
+  "NTNX Container DEWOBNX01-vCLS_ctr": {
+    "expected_state": 0
+  },
+  "NTNX Container DEWOBNX02-Prod-01-gespiegelt": {
+    "expected_state": 0
+  },
+  "NTNX Container DEWOBNX02-vCLS_ctr": {
+    "expected_state": 0
+  },
+  "NTNX Container NutanixManagementShare": {
+    "expected_state": 0
+  },
+  "NTNX Container SelfServiceContainer": {
+    "expected_state": 0
+  },
+  "NTNX High Availability": {
+    "expected_state": 0
+  },
+  "NTNX Remote Tunnel": {
+    "expected_state": 0
+  },
+  "NTNX Storage default-storage-pool-45040222659409": {
+    "expected_state": 0
+  }
+}

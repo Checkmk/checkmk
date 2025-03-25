@@ -20,7 +20,7 @@ just to signal that real build script was not called -->
 <?define ServiceName = "CheckmkService"?>
 <?define ServiceDisplayName = "Checkmk Service"?>
 <!-- IMPORTANT NOTE 3: String below must start from 'Checkmk monitoring agent service - ', grep client to find why-->
-<?define ServiceDescription = "Checkmk monitoring agent service - 2.4"?>
+<?define ServiceDescription = "Checkmk monitoring agent service - 2.5"?>
 <?define ServiceStart = "demand"?>
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
@@ -293,8 +293,8 @@ just to signal that real build script was not called -->
             <Component Id="cmp61BBFBF9B8A5AB1F142A3B2EF7ACA7FF" Guid="{B212E12B-A293-47C3-9960-E1CD3CD1F3D6}">
                 <File Id="fil91D110DCF5FAEC3700A334A3D96D9774" KeyPath="yes" Source="..\..\windows\plugins\citrix_farm.ps1" DiskId="1" />
             </Component>
-            <Component Id="cmp010EC0D0C899D89CC77140C6643B04AC" Guid="{73CFBEA4-30B4-4211-9B77-6B1D6CA5263E}">
-                <File Id="fil133D59036043DA9F7A06816349E9C910" KeyPath="yes" Source="..\..\windows\plugins\citrix_licenses.vbs" DiskId="1"  />
+            <Component Id="cmp2DF2BCC24714445B8B3083E2D1DF9CC9" Guid="{B0EDC6E3-D8F0-4C3B-BF9E-E0E536B890DC}">
+                <File Id="filD3405C32F50F40E88CE956124F10B103" KeyPath="yes" Source="..\..\windows\plugins\citrix_licenses.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmpABBC9DF796FC09C181EC9B2D01A62525" Guid="{24BE0241-312F-45D9-B547-9C536CD69C12}">
                 <File Id="fil68F9AD67E8F26BC4712A85950742D48F" KeyPath="yes" Source="..\..\windows\plugins\citrix_xenapp.ps1" DiskId="1"  />
@@ -305,8 +305,8 @@ just to signal that real build script was not called -->
             <Component Id="cmpE9245496997CBB452C7AB2DD036AA4DD" Guid="{B53B231C-FFFF-405C-AAC4-88BE73233A66}">
                 <File Id="fil1DAD57269AB73A084B862EC3C5DE5A71" KeyPath="yes" Source="..\..\windows\plugins\hyperv_vms_guestinfos.ps1" DiskId="1"  />
             </Component>
-            <Component Id="cmp9A6397189697490FEDA525CB1466EFAA" Guid="{06A9C936-E99E-4041-B75D-0B663C1F45A4}">
-                <File Id="fil9FC37D392CCD6754BAC8051683D40DD1" KeyPath="yes" Source="..\..\windows\plugins\kaspersky_av_client.vbs" DiskId="1"  />
+            <Component Id="cmp139D49E9FB5840048B28A161D1AC903D" Guid="{1CE43602-C0DC-4A8D-A6BD-93E7B0146E65}">
+                <File Id="fil8E8D55BD121B46CE8FEADE51980298A8" KeyPath="yes" Source="..\..\windows\plugins\kaspersky_av_client.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmp7B7D687D53F2D4CECFA13EBE1BE3801E" Guid="{DEA3C541-D345-4147-8A46-8FF86DAEE966}">
                 <File Id="fil6C23EA1FD057C5625D316AB8C9864258" KeyPath="yes" Source="..\..\windows\plugins\mcafee_av_client.bat" DiskId="1"  />
@@ -338,8 +338,8 @@ just to signal that real build script was not called -->
             <Component Id="cmp3823AD91DED5D234942D302869EA2459" Guid="{9DB98C17-62EA-4F57-91E6-137BDC88F02D}">
                 <File Id="fil53CEAB102B917C0FF7143AA4E2BB5DB6" KeyPath="yes" Source="..\..\windows\plugins\netstat_an.bat" DiskId="1"  />
             </Component>
-            <Component Id="cmpF776CAE45639A529E8686CEDEF56DAA4" Guid="{3580B9B5-81D4-4C65-A8D3-F31EBB9B8DB0}">
-                <File Id="fil4552A185F3A06FE0B3543EA0C43708B9" KeyPath="yes" Source="..\..\windows\plugins\rds_licenses.vbs" DiskId="1"  />
+            <Component Id="cmpB18CE5A6AC9A49BB9022E4BE3321C54B" Guid="{C5EB0C29-A3DB-46B9-8C36-2399178A6C6F}">
+                <File Id="fil0071C3D02B87474E923658217B2F323B" KeyPath="yes" Source="..\..\windows\plugins\rds_licenses.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmpC5A956A870678ABFCA74D5813DD79858" Guid="{536A7F3B-ED66-412B-8688-E27521D31207}">
                 <File Id="fil939214DE697F4A3FEF7A1E5E8138BD31" KeyPath="yes" Source="..\..\windows\plugins\rstcli.bat" DiskId="1"  />
@@ -365,8 +365,8 @@ just to signal that real build script was not called -->
             <Component Id="cmpDA3AA5A21788961EA252DF4F86230677" Guid="{178B1BD1-2F7E-46C0-BA10-EE030F027FBD}">
                 <File Id="fil0E43AE5883F9C6E509B57083C9A3184E" KeyPath="yes" Source="..\..\windows\plugins\windows_intel_bonding.bat" DiskId="1"  />
             </Component>
-            <Component Id="cmp6C2C816B1A2BFFA73BA877CEF0A285F8" Guid="{CF2F4F05-DE6B-4936-AA34-3D7248DD83F5}">
-                <File Id="filF46ABE49F18E73AE3C8969D0619BCB5B" KeyPath="yes" Source="..\..\windows\plugins\windows_multipath.vbs" DiskId="1"  />
+            <Component Id="cmp58B593286B37436B9B814D441B0350EE" Guid="{37E3122F-A09F-4693-BB22-6EC92F670A44}">
+                <File Id="fil70CE7AE7E9AC44A8BA2AEB7430BF8BC7" KeyPath="yes" Source="..\..\windows\plugins\windows_multipath.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmp10FDAC6C36BC91AC9660DCD519E0EBD3" Guid="{1669BE8A-ED8E-45A9-891C-ED0F1D479CA1}">
                 <File Id="fil6C6BD73C2966F9AD5B4D0A8392AC7458" KeyPath="yes" Source="..\..\windows\plugins\windows_os_bonding.ps1" DiskId="1"  />
@@ -374,8 +374,8 @@ just to signal that real build script was not called -->
             <Component Id="cmp57F6981D839AA296FACB18CA0B80F385" Guid="{4E4D51FC-3829-4CE5-B26F-022DA372B3B0}">
                 <File Id="fil3C227A99C2CDD7FA84B1310AD2C5A01A" KeyPath="yes" Source="..\..\windows\plugins\windows_tasks.ps1" DiskId="1"  />
             </Component>
-            <Component Id="cmp61E0F87AE1301C873DCBE5B46E029A77" Guid="{A7BA9FFC-958B-45FF-A530-A6E3C9A5EBA3}">
-                <File Id="fil15C29091CE6AA9903FDCAF7095E86B15" KeyPath="yes" Source="..\..\windows\plugins\windows_updates.vbs" DiskId="1"  />
+            <Component Id="cmp23E4BF6C7C534A32BFE976FEA694B14F" Guid="{B79990AF-326A-4186-B942-F20F87331BDE}">
+                <File Id="fil2D476020F3EF4F4FA8E2AD8BCEBE0B3A" KeyPath="yes" Source="..\..\windows\plugins\windows_updates.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmp1C47F228C3994B4CAEF42FB94962ABD2" Guid="{B89DC847-FC4B-4868-A5D6-8F1B915D20CC}">
                 <File Id="fil22DEF483A73CED9FD288835C50E1B29E" KeyPath="yes" Source="..\..\windows\plugins\win_dhcp_pools.bat" DiskId="1"  />
@@ -410,11 +410,11 @@ just to signal that real build script was not called -->
             <ComponentRef Id="cmp14A70A7296CB588F156BBC06BA51D2E3" />
             <ComponentRef Id="cmpBFADA0486A248D40B4365D85892EA124" />
             <ComponentRef Id="cmp61BBFBF9B8A5AB1F142A3B2EF7ACA7FF" />
-            <ComponentRef Id="cmp010EC0D0C899D89CC77140C6643B04AC" />
+            <ComponentRef Id="cmp2DF2BCC24714445B8B3083E2D1DF9CC9" />
             <ComponentRef Id="cmpABBC9DF796FC09C181EC9B2D01A62525" />
             <ComponentRef Id="cmp832B7FCA61C9CFF8F1CA5C6FA13B5454" />
             <ComponentRef Id="cmpE9245496997CBB452C7AB2DD036AA4DD" />
-            <ComponentRef Id="cmp9A6397189697490FEDA525CB1466EFAA" />
+            <ComponentRef Id="cmp139D49E9FB5840048B28A161D1AC903D" />
             <ComponentRef Id="cmp7B7D687D53F2D4CECFA13EBE1BE3801E" />
             <ComponentRef Id="cmp2A9B7CC157BFEF8A29D75CC2F64A5A02" />
             <ComponentRef Id="cmpC93DA459EC69F6EE0183382A29CB8174" />
@@ -425,7 +425,7 @@ just to signal that real build script was not called -->
             <ComponentRef Id="cmp2CF5BD4FBED2352573D1A8CEC68D99A8" />
             <ComponentRef Id="cmp44A5CA3D1E13BADB6759D3A42DE39C1E" />
             <ComponentRef Id="cmp3823AD91DED5D234942D302869EA2459" />
-            <ComponentRef Id="cmpF776CAE45639A529E8686CEDEF56DAA4" />
+            <ComponentRef Id="cmpB18CE5A6AC9A49BB9022E4BE3321C54B" />
             <ComponentRef Id="cmpC5A956A870678ABFCA74D5813DD79858" />
             <ComponentRef Id="cmpC7E325AEAF544AE491303C332363D403" />
             <ComponentRef Id="cmp616C56CB91563F336410622442A506DD" />
@@ -434,10 +434,10 @@ just to signal that real build script was not called -->
             <ComponentRef Id="cmp601FE4ED2C2FD3F546593475F9666973" />
             <ComponentRef Id="cmp8A6994FC62D135D9A6BA2E01B62043FF" />
             <ComponentRef Id="cmpDA3AA5A21788961EA252DF4F86230677" />
-            <ComponentRef Id="cmp6C2C816B1A2BFFA73BA877CEF0A285F8" />
+            <ComponentRef Id="cmp58B593286B37436B9B814D441B0350EE" />
             <ComponentRef Id="cmp10FDAC6C36BC91AC9660DCD519E0EBD3" />
             <ComponentRef Id="cmp57F6981D839AA296FACB18CA0B80F385" />
-            <ComponentRef Id="cmp61E0F87AE1301C873DCBE5B46E029A77" />
+            <ComponentRef Id="cmp23E4BF6C7C534A32BFE976FEA694B14F" />
             <ComponentRef Id="cmp1C47F228C3994B4CAEF42FB94962ABD2" />
             <ComponentRef Id="cmp96008BD5424F4E9D0BF1111A1E4EA3C3" />
             <ComponentRef Id="cmp8B610C872802BC16FE56FCA23BF098AD" />

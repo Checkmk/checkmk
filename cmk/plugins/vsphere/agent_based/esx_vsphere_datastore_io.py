@@ -15,7 +15,7 @@ from cmk.agent_based.v2 import (
     RuleSetType,
 )
 from cmk.plugins.lib.diskstat import (
-    check_diskstat_dict,
+    check_diskstat_dict_legacy,
     combine_disks,
     discovery_diskstat_generic,
     DISKSTAT_DEFAULT_PARAMS,
@@ -142,7 +142,7 @@ def _check_esx_vsphere_datastore_io(
         except KeyError:
             return
 
-    yield from check_diskstat_dict(
+    yield from check_diskstat_dict_legacy(
         params=params,
         disk=disk,
         value_store=value_store,

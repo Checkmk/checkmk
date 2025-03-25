@@ -205,8 +205,7 @@ class ModeCheckPluginTopic(WatoMode):
     # pylint does not understand this overloading
     @overload
     @classmethod
-    def mode_url(cls, *, topic: str) -> str:  # pylint: disable=arguments-differ
-        ...
+    def mode_url(cls, *, topic: str) -> str: ...
 
     @overload
     @classmethod
@@ -352,7 +351,7 @@ def _render_manpage_list(
             table.cell(
                 _("Type of Check"), HTMLWriter.render_a(entry["title"], href=url), css=["title"]
             )
-            table.cell(_("Plug-in Name"), HTMLWriter.render_tt(entry["name"]), css=["name"])
+            table.cell(_("Plug-in name"), HTMLWriter.render_tt(entry["name"]), css=["name"])
             table.cell(
                 _("Agents"), ", ".join(map(translate, sorted(entry["agents"]))), css=["agents"]
             )
@@ -474,6 +473,21 @@ class ModeCheckManPage(WatoMode):
             request.set_var("topic", "/".join(self._manpage.catalog))
             return super().breadcrumb()
 
+    @staticmethod
+    def _get_full_ruleset_name(ruleset_name: str | None) -> str | None:
+        if ruleset_name is None:
+            return None
+
+        check_group_param = RuleGroup.CheckgroupParameters(ruleset_name)
+        if check_group_param in rulespec_registry:
+            return check_group_param
+
+        static_check = RuleGroup.StaticChecks(ruleset_name)
+        if static_check in rulespec_registry:
+            return static_check
+
+        return None
+
     def _from_vars(self) -> None:
         self._check_plugin_name = request.get_ascii_input_mandatory("check_type", "")
 
@@ -501,9 +515,7 @@ class ModeCheckManPage(WatoMode):
             self._check_type = "check_mk"
             self._service_description = check_info["service_description"]
             ruleset_name = check_info.get("check_ruleset_name")
-            self._ruleset: str | None = (
-                RuleGroup.CheckgroupParameters(ruleset_name) if ruleset_name else None
-            )
+            self._ruleset: str | None = self._get_full_ruleset_name(ruleset_name)
             self._check_default_parameters = check_info.get("check_default_parameters")
 
         elif self._check_plugin_name in check_builtins:

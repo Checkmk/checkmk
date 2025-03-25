@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from .base import ParameterizedSorter, Sorter, SorterEntry
+from .base import ParameterizedSorter, Sorter, SorterEntry, SorterProtocol
 from .helpers import (
     cmp_custom_variable,
     cmp_insensitive_string,
@@ -16,6 +16,7 @@ from .helpers import (
     compare_ips,
 )
 from .registry import (
+    all_sorters,
     declare_1to1_sorter,
     declare_simple_sorter,
     register_sorter,
@@ -26,9 +27,11 @@ from .sorters import register_sorters
 
 __all__ = [
     "Sorter",
+    "SorterProtocol",
     "ParameterizedSorter",
     "SorterEntry",
     "SorterRegistry",
+    "all_sorters",
     "cmp_custom_variable",
     "cmp_insensitive_string",
     "cmp_ip_address",

@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.qnap import DETECT_QNAP
+
+check_info = {}
 
 
 def inventory_qnap_disks(info):
@@ -42,6 +42,7 @@ def parse_qnap_disks(string_table: StringTable) -> StringTable:
 
 
 check_info["qnap_disks"] = LegacyCheckDefinition(
+    name="qnap_disks",
     parse_function=parse_qnap_disks,
     detect=DETECT_QNAP,
     fetch=SNMPTree(

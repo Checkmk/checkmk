@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import datetime
 from collections.abc import Mapping, Sequence
@@ -11,10 +10,11 @@ from pathlib import Path
 from typing import Literal
 
 import pytest
-import time_machine
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
+
+from cmk.base import config
 
 import cmk.ec.export as ec
 
@@ -94,6 +94,14 @@ DEFAULT_TEST_PARAMETERS = logwatch_.ParameterLogwatchEc(
         "host_name": "test-host",
     }
 )
+
+
+def _patch_config_cache(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        config,
+        config.access_globally_cached_config_cache.__name__,
+        lambda: config.ConfigCache(config.LoadedConfigFragment()),
+    )
 
 
 @pytest.mark.parametrize(
@@ -237,6 +245,7 @@ class _FakeForwarder:
         self,
         method: str | tuple,
         messages: Sequence[ec.SyslogMessage],
+        timestamp: float,
     ) -> logwatch_ec.LogwatchForwardedResult:
         return logwatch_ec.LogwatchForwardedResult(num_forwarded=len(messages))
 
@@ -278,13 +287,16 @@ def test_check_logwatch_ec_common_single_node(
     params: logwatch_.ParameterLogwatchEc,
     parsed: logwatch_.ClusterSection,
     expected_result: CheckResult,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    _patch_config_cache(monkeypatch)
     assert (
         list(
             logwatch_ec.check_logwatch_ec_common(
                 item,
                 params,
                 parsed,
+                logwatch_ec.check_plugin_logwatch_ec_single,
                 value_store={},
                 message_forwarder=_FakeForwarder(),
             )
@@ -301,13 +313,15 @@ def test_check_logwatch_ec_common_single_node_item_missing() -> None:
             {
                 "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
             },
+            logwatch_ec.check_plugin_logwatch_ec_single,
             value_store={},
             message_forwarder=_FakeForwarder(),
         )
     )
 
 
-def test_check_logwatch_ec_common_single_node_log_missing() -> None:
+def test_check_logwatch_ec_common_single_node_log_missing(monkeypatch: pytest.MonkeyPatch) -> None:
+    _patch_config_cache(monkeypatch)
     actual_result = list(
         logwatch_ec.check_logwatch_ec_common(
             "log3",
@@ -323,6 +337,7 @@ def test_check_logwatch_ec_common_single_node_log_missing() -> None:
             {
                 "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
             },
+            logwatch_ec.check_plugin_logwatch_ec_single,
             value_store={},
             message_forwarder=_FakeForwarder(),
         )
@@ -376,13 +391,16 @@ def test_check_logwatch_ec_common_single_node_log_missing() -> None:
 def test_check_logwatch_ec_common_multiple_nodes_grouped(
     cluster_section: logwatch_.ClusterSection,
     expected_result: CheckResult,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    _patch_config_cache(monkeypatch)
     assert (
         list(
             logwatch_ec.check_logwatch_ec_common(
                 "log1",
                 DEFAULT_TEST_PARAMETERS,
                 cluster_section,
+                logwatch_ec.check_plugin_logwatch_ec_single,
                 value_store={},
                 message_forwarder=_FakeForwarder(),
             )
@@ -484,6 +502,7 @@ def test_check_logwatch_ec_common_multiple_nodes_ungrouped(
                 None,
                 params,
                 cluster_section,
+                logwatch_ec.check_plugin_logwatch_ec_single,
                 value_store={},
                 message_forwarder=_FakeForwarder(),
             )
@@ -501,13 +520,17 @@ def test_check_logwatch_ec_common_multiple_nodes_item_completely_missing() -> No
                 "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
                 "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
             },
+            logwatch_ec.check_plugin_logwatch_ec_single,
             value_store={},
             message_forwarder=_FakeForwarder(),
         )
     )
 
 
-def test_check_logwatch_ec_common_multiple_nodes_item_partially_missing() -> None:
+def test_check_logwatch_ec_common_multiple_nodes_item_partially_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _patch_config_cache(monkeypatch)
     assert list(
         logwatch_ec.check_logwatch_ec_common(
             "log1",
@@ -516,6 +539,7 @@ def test_check_logwatch_ec_common_multiple_nodes_item_partially_missing() -> Non
                 "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
                 "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
             },
+            logwatch_ec.check_plugin_logwatch_ec_single,
             value_store={},
             message_forwarder=_FakeForwarder(),
         )
@@ -525,7 +549,10 @@ def test_check_logwatch_ec_common_multiple_nodes_item_partially_missing() -> Non
     ]
 
 
-def test_check_logwatch_ec_common_multiple_nodes_logfile_missing() -> None:
+def test_check_logwatch_ec_common_multiple_nodes_logfile_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _patch_config_cache(monkeypatch)
     assert list(
         logwatch_ec.check_logwatch_ec_common(
             "log3",
@@ -542,6 +569,7 @@ def test_check_logwatch_ec_common_multiple_nodes_logfile_missing() -> None:
                 "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
                 "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
             },
+            logwatch_ec.check_plugin_logwatch_ec_single,
             value_store={},
             message_forwarder=_FakeForwarder(),
         )
@@ -553,6 +581,7 @@ def test_check_logwatch_ec_common_multiple_nodes_logfile_missing() -> None:
 
 
 def test_check_logwatch_ec_common_spool(monkeypatch: pytest.MonkeyPatch) -> None:
+    _patch_config_cache(monkeypatch)
     monkeypatch.setattr(logwatch_ec, "_MAX_SPOOL_SIZE", 32)
     assert list(
         logwatch_ec.check_logwatch_ec_common(
@@ -564,6 +593,7 @@ def test_check_logwatch_ec_common_spool(monkeypatch: pytest.MonkeyPatch) -> None
             {
                 "node1": SECTION1,
             },
+            logwatch_ec.check_plugin_logwatch_ec_single,
             value_store={},
             message_forwarder=logwatch_ec.MessageForwarder("log1", HostName("test-host")),
         )
@@ -588,6 +618,7 @@ def _forward_message(
     text: str = "some_text",
     item: str | None = None,
     application: str = "-",
+    timestamp: str = "2023-11-11 11:11:00Z",
 ) -> tuple[logwatch_ec.LogwatchForwardedResult, list[tuple[float, int, list[str]]]]:
     messages_forwarded: list[tuple[float, int, list[str]]] = []
 
@@ -613,6 +644,7 @@ def _forward_message(
                 facility=1, severity=1, timestamp=0.0, text=text, application=application
             )
         ],
+        timestamp=datetime.datetime.fromisoformat(timestamp).timestamp(),
     )
 
     return result, messages_forwarded
@@ -709,10 +741,11 @@ def test_forward_tcp_message_forwarded_spool_twice() -> None:
     spool_dir = Path(cmk.utils.paths.var_dir, "logwatch_spool", "some_host_name")
 
     # create a spooled message:
-    with time_machine.travel(datetime.datetime.fromisoformat("2023-10-31 16:02:00Z")):
-        result, messages_forwarded = _forward_message(
-            tcp_result="set exception", method=SPOOL_METHOD
-        )
+    result, messages_forwarded = _forward_message(
+        tcp_result="set exception",
+        method=SPOOL_METHOD,
+        timestamp="2023-10-31 16:02:00Z",
+    )
     assert result.num_forwarded == 0
     assert result.num_spooled == 1
     assert result.num_dropped == 0
@@ -723,10 +756,11 @@ def test_forward_tcp_message_forwarded_spool_twice() -> None:
     assert list(f.name for f in spool_dir.iterdir()) == ["spool.1698768120.00"]
 
     # create another spooled message:
-    with time_machine.travel(datetime.datetime.fromisoformat("2023-10-31 16:03:00Z")):
-        result, messages_forwarded = _forward_message(
-            tcp_result="set exception", method=SPOOL_METHOD
-        )
+    result, messages_forwarded = _forward_message(
+        tcp_result="set exception",
+        method=SPOOL_METHOD,
+        timestamp="2023-10-31 16:03:00Z",
+    )
     assert result.num_forwarded == 0
     assert result.num_spooled == 2
     assert result.num_dropped == 0
@@ -751,23 +785,23 @@ def test_forward_tcp_message_update_old_spoolfiles() -> None:
     # read and moved to the correct subfolder.
 
     # first we create a spooled message for a logwatch_ec service with "separate_checks" = False
-    # this is the same as the old behaviour, before werk 15397 with "seperate_checks" = True
-    with time_machine.travel(datetime.datetime.fromisoformat("2023-10-31 16:02:00Z"), tick=False):
-        _result, messages_forwarded = _forward_message(
-            tcp_result="set exception",
-            method=SPOOL_METHOD,
-            application="item_name_1",
-        )
+    # this is the same as the old behaviour, before werk 15397 with "separate_checks" = True
+    _result, messages_forwarded = _forward_message(
+        tcp_result="set exception",
+        method=SPOOL_METHOD,
+        application="item_name_1",
+        timestamp="2023-10-31 16:02:00Z",
+    )
     # we expect one spool file to be created:
     assert list(f.name for f in spool_dir.iterdir()) == ["spool.1698768120.00"]
 
     # now we do the same, but for a different item:
-    with time_machine.travel(datetime.datetime.fromisoformat("2023-10-31 16:03:00Z"), tick=False):
-        _result, messages_forwarded = _forward_message(
-            tcp_result="set exception",
-            method=SPOOL_METHOD,
-            application="another_item",
-        )
+    _result, messages_forwarded = _forward_message(
+        tcp_result="set exception",
+        method=SPOOL_METHOD,
+        application="another_item",
+        timestamp="2023-10-31 16:03:00Z",
+    )
     # we expect two spool files in the host folder:
     assert {f.name for f in spool_dir.iterdir()} == {
         "spool.1698768120.00",
@@ -777,13 +811,13 @@ def test_forward_tcp_message_update_old_spoolfiles() -> None:
     # this was the old behaviour. now we image the customer installed the new version of checkmk.
     # their logwatch_ec services had separate_checks = True from the beginning.
 
-    with time_machine.travel(datetime.datetime.fromisoformat("2023-10-31 16:04:00Z"), tick=False):
-        _result, messages_forwarded = _forward_message(
-            tcp_result="ok",
-            method=SPOOL_METHOD,
-            item="item_name_1",
-            application="item_name_1",
-        )
+    _result, messages_forwarded = _forward_message(
+        tcp_result="ok",
+        method=SPOOL_METHOD,
+        item="item_name_1",
+        application="item_name_1",
+        timestamp="2023-10-31 16:04:00Z",
+    )
 
     # we now expect, that the item_name_1 message was found (although in the old directory) and the
     # new message was also sent:
@@ -813,11 +847,13 @@ def test_logwatch_spool_path_is_escaped() -> None:
     assert get_spool_path(HostName("short"), "..").name == "item_.."
 
 
-def test_check_logwatch_ec_common_batch_stored() -> None:
+def test_check_logwatch_ec_common_batch_stored(monkeypatch: pytest.MonkeyPatch) -> None:
     """Multiple logfiles with different batches. All must be remembered as "seen_batches".
 
     Failing to do so leads to messages being processed multiple times.
     """
+    _patch_config_cache(monkeypatch)
+
     value_store: dict = {}
 
     _result = list(
@@ -833,6 +869,7 @@ def test_check_logwatch_ec_common_batch_stored() -> None:
                     },
                 ),
             },
+            logwatch_ec.check_plugin_logwatch_ec_single,
             value_store=value_store,
             message_forwarder=_FakeForwarder(),
         )

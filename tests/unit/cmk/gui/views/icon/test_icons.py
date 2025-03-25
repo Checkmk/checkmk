@@ -7,14 +7,19 @@ from typing import Any
 
 import pytest
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
 
 import cmk.gui.permissions
 import cmk.gui.views
-from cmk.gui.views.icon import Icon, icon_and_action_registry
+from cmk.gui.config import active_config
+from cmk.gui.type_defs import BuiltinIconVisibility, IconSpec
+from cmk.gui.views.icon import (
+    Icon,
+    icon_and_action_registry,
+)
 from cmk.gui.views.icon import registry as icon_registry
-
-import cmk.ccc.version as cmk_version
 
 
 def test_builtin_icons_and_actions() -> None:
@@ -59,7 +64,7 @@ def test_builtin_icons_and_actions() -> None:
             "deployment_status",
             "status_shadow",
             "ntop_host",
-            "robotmk_suite_ok_log",
+            "robotmk_html_log",
         ]
 
     cmk.gui.views.register_legacy_icons()
@@ -134,3 +139,66 @@ def test_register_icon_plugin_with_default_registry_works(monkeypatch: pytest.Mo
     registry.register(TestIcon)
 
     assert "test_icon" in icon_registry.icon_and_action_registry
+
+
+@pytest.mark.usefixtures("load_config")
+def test_config_icon_registered(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(icon_registry, "icon_and_action_registry", icon_registry.IconRegistry())
+
+    with monkeypatch.context() as m:
+        m.setattr(
+            active_config,
+            "user_icons_and_actions",
+            {
+                "config_icon": IconSpec(
+                    {
+                        "icon": "icon",
+                        "title": "Config Icon",
+                        "sort_index": 10,
+                        "toplevel": True,
+                    }
+                ),
+            },
+        )
+        assert "config_icon" in icon_registry.all_icons()
+
+
+@pytest.mark.usefixtures("load_config")
+def test_config_override_builtin_icons(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        icon_registry, "icon_and_action_registry", registry := icon_registry.IconRegistry()
+    )
+
+    class TestIcon(Icon):
+        @classmethod
+        def ident(cls):
+            return "test_icon"
+
+        @classmethod
+        def title(cls) -> str:
+            return "Test icon"
+
+        def default_sort_index(self):
+            return 50
+
+        def host_columns(self):
+            return []
+
+        def render(self, what, row, tags, custom_vars):
+            return "agents", "Title", "url"
+
+    registry.register(TestIcon)
+
+    with monkeypatch.context() as m:
+        m.setattr(
+            active_config,
+            "builtin_icon_visibility",
+            {
+                "test_icon": BuiltinIconVisibility(
+                    {
+                        "toplevel": True,
+                    }
+                ),
+            },
+        )
+        assert icon_registry.all_icons()["test_icon"].toplevel() is True

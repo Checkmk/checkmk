@@ -33,3 +33,24 @@ make(
     targets = [""],
     visibility = ["//visibility:public"],
 )
+
+filegroup(
+    name = "pkgmk",
+    srcs = [":heirloom-pkgtools"],
+    output_group = "pkgmk",
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "pkgtrans",
+    srcs = [":heirloom-pkgtools"],
+    output_group = "pkgtrans",
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "share",
+    srcs = [":heirloom-pkgtools"],
+    output_group = "gen_dir",
+    visibility = ["//visibility:public"],
+)

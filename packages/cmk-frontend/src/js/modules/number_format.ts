@@ -62,7 +62,7 @@ export function fmt_number_with_precision(
     unit_prefix_type: typeof UnitPrefixes = SIUnitPrefixes,
     precision = 2,
     drop_zeroes = false,
-    unit = ""
+    unit = "",
 ) {
     const [factor, prefix] = unit_prefix_type.scale_factor_and_prefix(v);
     const value = v / factor;
@@ -76,14 +76,14 @@ export function fmt_bytes(
     b: number,
     unit_prefix_type: typeof UnitPrefixes = IECUnitPrefixes,
     precision = 2,
-    unit = "B"
+    unit = "B",
 ) {
     return fmt_number_with_precision(
         b,
         unit_prefix_type,
         precision,
         false,
-        unit
+        unit,
     );
 }
 
@@ -126,7 +126,7 @@ export function scientific(v: number, precision: number): string {
     const exponent = frexpb(v, 10)[1];
     if (-3 <= exponent && exponent <= 4) {
         return v.toFixed(
-            Math.min(precision, Math.max(0, precision - exponent))
+            Math.min(precision, Math.max(0, precision - exponent)),
         );
     }
     return v.toExponential(precision);
@@ -134,7 +134,7 @@ export function scientific(v: number, precision: number): string {
 
 export function calculate_physical_precision(
     v: number,
-    precision: number
+    precision: number,
 ): [string, number, number] {
     if (v == 0) return ["", precision - 1, 1];
     let exponent = frexpb(v, 10)[1];
@@ -176,12 +176,12 @@ export function calculate_physical_precision(
 export function physical_precision(
     v: number,
     precision: number,
-    unit_symbol: string
+    unit_symbol: string,
 ): string {
     if (v < 0) return "-" + physical_precision(-1 * v, precision, unit_symbol);
     const [symbol, places_after_comma, factor] = calculate_physical_precision(
         v,
-        precision
+        precision,
     );
     const scaled_value = v / factor;
     return (
@@ -245,7 +245,7 @@ function tickStep(range: number, ticks: number, increments: number[]) {
 export function partitionableDomain(
     domain: [number, number],
     ticks: number,
-    increments: number[]
+    increments: number[],
 ) {
     let [start, end] = domain.map(x => x || 0).sort((a, b) => a - b);
     if (start === end) end += 1;
@@ -340,7 +340,7 @@ abstract class NotationFormatter {
         let digits = this.precision.digits;
         if (this.precision instanceof AutoPrecision) {
             const exponent = Math.abs(
-                Math.ceil(Math.log10(value - value_floor))
+                Math.ceil(Math.log10(value - value_floor)),
             );
             if (exponent > 0) {
                 digits = Math.max(exponent + 1, this.precision.digits);
@@ -372,8 +372,8 @@ abstract class NotationFormatter {
             }
             results.push(
                 this.compose(
-                    new Formatted(text, formatted.prefix, formatted.symbol)
-                ).trim()
+                    new Formatted(text, formatted.prefix, formatted.symbol),
+                ).trim(),
             );
         }
         return results.join(" ");
@@ -532,7 +532,7 @@ export class StandardScientificFormatter extends NotationFormatter {
             new Preformatted(
                 value / Math.pow(10, exponent),
                 "e" + exponent,
-                this.symbol
+                this.symbol,
             ),
         ];
     }
@@ -543,7 +543,7 @@ export class StandardScientificFormatter extends NotationFormatter {
             new Preformatted(
                 value / Math.pow(10, exponent),
                 "e+" + exponent,
-                this.symbol
+                this.symbol,
             ),
         ];
     }
@@ -560,7 +560,7 @@ export class EngineeringScientificFormatter extends NotationFormatter {
             new Preformatted(
                 value / Math.pow(10, exponent),
                 "e" + exponent,
-                this.symbol
+                this.symbol,
             ),
         ];
     }
@@ -571,7 +571,7 @@ export class EngineeringScientificFormatter extends NotationFormatter {
             new Preformatted(
                 value / Math.pow(10, exponent),
                 "e+" + exponent,
-                this.symbol
+                this.symbol,
             ),
         ];
     }
@@ -638,7 +638,7 @@ export class TimeFormatter extends NotationFormatter {
                 days = Math.floor(rounded_value / _ONE_DAY);
                 formatted_parts.push(new Preformatted(days, "", "d"));
                 hours = parseFloat(
-                    ((rounded_value - days * _ONE_DAY) / _ONE_HOUR).toFixed()
+                    ((rounded_value - days * _ONE_DAY) / _ONE_HOUR).toFixed(),
                 );
                 if (days < 10 && hours > 0) {
                     formatted_parts.push(new Preformatted(hours, "", "h"));
@@ -652,7 +652,7 @@ export class TimeFormatter extends NotationFormatter {
                     (
                         (rounded_value - hours * _ONE_HOUR) /
                         _ONE_MINUTE
-                    ).toFixed()
+                    ).toFixed(),
                 );
                 if (minutes > 0) {
                     formatted_parts.push(new Preformatted(minutes, "", "min"));
@@ -663,7 +663,7 @@ export class TimeFormatter extends NotationFormatter {
                 minutes = Math.floor(rounded_value / _ONE_MINUTE);
                 formatted_parts.push(new Preformatted(minutes, "", "min"));
                 seconds = parseFloat(
-                    (rounded_value - minutes * _ONE_MINUTE).toFixed()
+                    (rounded_value - minutes * _ONE_MINUTE).toFixed(),
                 );
                 if (seconds > 0) {
                     formatted_parts.push(new Preformatted(seconds, "", "s"));

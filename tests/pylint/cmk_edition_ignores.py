@@ -5,7 +5,7 @@
 
 from pylint.lint import PyLinter
 
-from tests.testlib.repo import is_enterprise_repo
+from tests.testlib.common.repo import is_enterprise_repo
 
 
 # Is called by pylint to load this plugin

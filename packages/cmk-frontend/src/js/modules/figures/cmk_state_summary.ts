@@ -58,7 +58,7 @@ export class HostStateSummary extends TextFigure<HostStateSummaryData> {
             summary_data.total.count.toString();
         const value_font_size = Math.min(
             this.plot_size.width / text.length,
-            (this.plot_size.height * 2) / 3
+            (this.plot_size.height * 2) / 3,
         );
         metric_value_component(this.plot, {
             value: {
@@ -69,7 +69,7 @@ export class HostStateSummary extends TextFigure<HostStateSummaryData> {
                 this.plot_size,
                 {
                     font_size: value_font_size,
-                }
+                },
             ),
         });
     }

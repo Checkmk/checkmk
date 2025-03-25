@@ -10,7 +10,7 @@ from typing import Any, NotRequired, TypedDict
 from dateutil import parser as date_parser
 from dateutil import tz
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -196,7 +196,7 @@ def check_timesyncd(
     # Offset information
     offset = section_timesyncd.get("offset")
     if offset is not None:
-        yield from check_levels(
+        yield from check_levels_v1(
             value=abs(offset),
             metric_name="time_offset",
             levels_upper=levels,
@@ -233,7 +233,7 @@ def check_timesyncd(
         return
 
     if (stratum := section_timesyncd.get("stratum")) is not None:
-        yield from check_levels(
+        yield from check_levels_v1(
             value=stratum,
             levels_upper=(stratum_level := params["stratum_level"] - 1, stratum_level),
             label="Stratum",
@@ -242,7 +242,7 @@ def check_timesyncd(
     # Jitter Information append
     jitter = section_timesyncd.get("jitter")
     if jitter is not None:
-        yield from check_levels(
+        yield from check_levels_v1(
             value=jitter,
             metric_name="jitter",
             levels_upper=levels,

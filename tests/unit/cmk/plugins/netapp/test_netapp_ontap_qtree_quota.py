@@ -5,8 +5,7 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-
+from cmk.agent_based.v2 import StringTable
 from cmk.plugins.lib.netapp_api import Qtree
 from cmk.plugins.netapp.agent_based.netapp_ontap_qtree_quota import (
     parse_netapp_ontap_qtree_quota,
@@ -130,7 +129,6 @@ from cmk.plugins.netapp.agent_based.netapp_ontap_qtree_quota import (
 def test_parse_netapp_ontap_qtree_quota(
     input_string_table: StringTable, expected_section: Section
 ) -> None:
-
     result = parse_netapp_ontap_qtree_quota(input_string_table)
 
     assert result == expected_section

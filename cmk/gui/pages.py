@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import abc
 import functools
@@ -12,6 +11,9 @@ import json
 from collections.abc import Callable
 from typing import Any
 
+import cmk.ccc.plugin_registry
+from cmk.ccc.exceptions import MKException
+
 from cmk.gui.config import active_config
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
@@ -19,9 +21,6 @@ from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.log import logger
-
-import cmk.ccc.plugin_registry
-from cmk.ccc.exceptions import MKException
 
 PageHandlerFunc = Callable[[], None]
 PageResult = object

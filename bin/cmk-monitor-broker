@@ -1,0 +1,152 @@
+#!/bin/sh
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+[ "$(whoami)" = "root" ] && {
+    # Don't accept further arguments when called as root, since we would put them after an 'su' unseen.
+    su - "${OMD_SITE:?}" -c "${0}"
+    exit
+}
+
+MANAGEMENT_API_PORT="$(grep "^CONFIG_RABBITMQ_MANAGEMENT_PORT=" ~/etc/omd/site.conf | cut -d"'" -f2)"
+MONITORING_USER="cmk-internal-monitoring"
+MONITORING_ROLE="monitoring"
+ADMIN_ROLE="administrator"
+TRACING_LOG_FILE_NAME="trace"
+DEFAULT_VHOST_API="%2f"
+
+usage() {
+    cat <<HERE >&2
+Usage: ${0##*/} [--setup | --query <api_path> | --trace]
+
+Used for internal monitoring of RabbitMQ broker.
+For debugging purposes use the --query option to query the RabbitMQ management API,
+e.g. \`${0##*/} --query api/overview\`.
+To enable tracing for published/received messages use the --enable_tracing option, e.g. \`${0##*/} --enable_tracing\`.
+To disable tracing again, use --disable_tracing.
+HERE
+    return 1
+}
+
+_get_secret() {
+    cat ~/.erlang.cookie
+}
+
+_get_user_config() {
+    printf 'user = "%s:' "${MONITORING_USER}"
+    _get_secret
+    printf '"\n'
+}
+
+_setup_tracing_user() {
+    _get_secret | "${RABBITMQCTL:-rabbitmqctl}" add_user "${MONITORING_USER}"
+    "${RABBITMQCTL:-rabbitmqctl}" set_permissions_globally "${MONITORING_USER}" "amq.*" "amq.*" ".*"
+    "${RABBITMQCTL:-rabbitmqctl}" set_user_tags "${MONITORING_USER}" "${ADMIN_ROLE}"
+
+}
+
+_get_tracing_config() {
+    printf 'data = "{\"format\": \"text\", \"pattern\": \"#\", \"max_payload_bytes\": 1000, \"tracer_connection_username\": \"%s\", \"tracer_connection_password\": \"' "${MONITORING_USER}"
+    _get_secret
+    printf '\"}"\n'
+}
+
+_format_vhost() {
+    if [ "${1}" = "/" ]; then
+        printf "%s" "$DEFAULT_VHOST_API"
+    else
+        printf "%s" "${1}"
+    fi
+}
+
+_bind_tracing_vhost() {
+    "${RABBITMQCTL:-rabbitmqctl}" trace_on -p "${1}"
+
+    vhost="$(_format_vhost "${1}")"
+    response=$({
+        _get_user_config
+        _get_tracing_config
+    } | curl -i --config - \
+        -H "content-type:application/json" \
+        -XPUT "http://localhost:${MANAGEMENT_API_PORT}/api/traces/${vhost}/${TRACING_LOG_FILE_NAME}" 2>&1)
+
+    bad_request_unknown_cause='{"error":"bad_request","reason":"Something went wrong trying to start the trace - check the logs."}'
+    if echo "${response}" | grep -q "HTTP/1.1 201 Created"; then
+        printf "Tracing for vhost '%s' successfully enabled.\n" "${1}"
+    elif echo "${response}" | grep -q "${bad_request_unknown_cause}"; then
+        printf "Error enabling tracing for vhost '%s': %s. This can occur if tracing is already enabled.\n" "${1}" "${bad_request_unknown_cause}"
+    else
+        printf "Error enabling tracing for vhost '%s': %s\n" "${1}" "${response}"
+    fi
+}
+
+_bind_tracing() {
+    "${RABBITMQCTL:-rabbitmqctl}" list_vhosts --formatter json | jq -r '.[].name' | while read -r vhost; do
+        _bind_tracing_vhost "${vhost}"
+    done
+}
+
+_delete_tracing() {
+    "${RABBITMQCTL:-rabbitmqctl}" list_vhosts --formatter json | jq -r '.[].name' | while read -r vhost; do
+        "${RABBITMQCTL:-rabbitmqctl}" trace_off -p "${vhost}"
+        api_vhost="$(_format_vhost "${vhost}")"
+        _get_user_config | curl --config - \
+            -DELETE "http://localhost:${MANAGEMENT_API_PORT}/api/traces/${api_vhost}/${TRACING_LOG_FILE_NAME}"
+    done
+}
+
+query() {
+    _get_user_config | curl --config - "http://localhost:${MANAGEMENT_API_PORT}/${1}"
+}
+
+enable_tracing() {
+    rabbitmq-plugins enable rabbitmq_tracing
+    _setup_tracing_user
+    _bind_tracing
+}
+
+disable_tracing() {
+    _delete_tracing
+    rabbitmq-plugins disable rabbitmq_tracing
+    setup_monitoring_user
+}
+
+setup_monitoring_user() {
+    _get_secret | "${RABBITMQCTL:-rabbitmqctl}" add_user "${MONITORING_USER}"
+    "${RABBITMQCTL:-rabbitmqctl}" set_permissions_globally "${MONITORING_USER}" "$^" "$^" ".*"
+    "${RABBITMQCTL:-rabbitmqctl}" set_user_tags "${MONITORING_USER}" "${MONITORING_ROLE}"
+}
+
+make_sections() {
+    printf "<<<omd_broker_status:sep(0)>>>\n"
+    query "api/nodes?columns=name,mem_used"
+    printf "\n"
+    printf "<<<omd_broker_queues:sep(0)>>>\n"
+    query "api/queues?columns=node,name,messages,vhost&disable_stats=true&enable_queue_totals=true"
+    printf "\n"
+    printf "<<<omd_broker_shovels:sep(0)>>>\n"
+    query "api/shovels?columns=node,name,state"
+    printf "\n"
+}
+
+case "${1}" in
+    "-h" | "--help")
+        usage
+        ;;
+    "--setup")
+        setup_monitoring_user
+        ;;
+    "--query")
+        query "${2}"
+        ;;
+    "--enable_tracing")
+        enable_tracing
+        ;;
+    "--disable_tracing")
+        disable_tracing
+        ;;
+    *)
+        make_sections
+        ;;
+esac

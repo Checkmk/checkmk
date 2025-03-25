@@ -10,9 +10,9 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.site import Site
-
 from tests.integration.linux_test_host import create_linux_test_host
+
+from tests.testlib.site import Site
 
 from cmk.utils.hostaddress import HostName
 
@@ -61,7 +61,6 @@ def _test_compile_delayed_host_check(request: pytest.FixtureRequest, site: Site)
     site.check_output(["cmk", "-R"])
 
     with _stopped(site):  # don't interfere...
-
         #
         # Phase 1: No compilation yet.
         #

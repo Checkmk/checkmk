@@ -4,10 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper functions to work with persisted values"""
 
-
-# pylint: disable=duplicate-code
-
-
 from collections.abc import MutableMapping
 from typing import Any, cast
 
@@ -20,7 +16,7 @@ class GetRateError(IgnoreResultsError):
     """
 
 
-def get_rate(  # type: ignore[misc]
+def get_rate(  # type: ignore[explicit-any]
     value_store: MutableMapping[str, Any],
     key: str,
     time: float,
@@ -96,8 +92,7 @@ def get_rate(  # type: ignore[misc]
             pass
         case _other:
             raise GetRateError(
-                f"Counter {key!r} has been initialized."
-                " Result available on second check execution."
+                f"Counter {key!r} has been initialized. Result available on second check execution."
             )
 
     if time <= last_time:
@@ -114,7 +109,7 @@ def get_rate(  # type: ignore[misc]
     return rate
 
 
-def get_average(  # type: ignore[misc]
+def get_average(  # type: ignore[explicit-any]
     value_store: MutableMapping[str, Any],
     key: str,
     time: float,

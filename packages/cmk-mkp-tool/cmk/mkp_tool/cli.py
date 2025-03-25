@@ -519,6 +519,15 @@ def _args_package_id(
     )
 
 
+def _args_enable(subparser: argparse.ArgumentParser) -> None:
+    subparser.add_argument(
+        "--force-install",
+        action="store_true",
+        help="Skip the version check, and install the package even if it is not suitable for this site",
+    )
+    _args_package_id(subparser)
+
+
 def _command_enable(
     site_context: SiteContext,
     args: argparse.Namespace,
@@ -537,6 +546,7 @@ def _command_enable(
         path_config,
         site_context.callbacks,
         site_version=site_context.version,
+        version_check=not args.force_install,
         parse_version=site_context.parse_version,
     )
     site_context.post_package_change_actions([installed])
@@ -681,6 +691,7 @@ def _command_package(
             path_config,
             site_context.callbacks,
             site_version=site_context.version,
+            version_check=False,
             parse_version=site_context.parse_version,
         )
         site_context.post_package_change_actions([installed])
@@ -750,7 +761,7 @@ def _parse_arguments(argv: list[str], site_context: SiteContext | None) -> argpa
     _add_command(subparsers, "add", _args_add, partial(_command_add, site_context))
     _add_command(subparsers, "remove", _args_package_id, partial(_command_remove, site_context))
     _add_command(subparsers, "release", _args_release, partial(_command_release, site_context))
-    _add_command(subparsers, "enable", _args_package_id, partial(_command_enable, site_context))
+    _add_command(subparsers, "enable", _args_enable, partial(_command_enable, site_context))
     _add_command(subparsers, "disable", _args_package_id, partial(_command_disable, site_context))
     _add_command(
         subparsers, "disable-outdated", _no_args, partial(_command_disable_outdated, site_context)

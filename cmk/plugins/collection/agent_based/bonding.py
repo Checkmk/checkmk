@@ -12,6 +12,7 @@ from cmk.plugins.lib import bonding
 DEFAULT_PARAMS = {
     "ieee_302_3ad_agg_id_missmatch_state": 1,
     "expect_active": "ignore",
+    "expected_interfaces": {"expected_number": 2, "state": 0},
 }
 
 
@@ -93,9 +94,7 @@ def _check_bonding_mode(current_mode: str, config: BondingModeConfig) -> CheckRe
     yield Result(state=state, summary=summary)
 
 
-def check_bonding(  # pylint: disable=too-many-branches
-    item: str, params: Mapping[str, Any], section: bonding.Section
-) -> CheckResult:
+def check_bonding(item: str, params: Mapping[str, Any], section: bonding.Section) -> CheckResult:
     """
     >>> for result in check_bonding(
     ...     "bond0", {
@@ -169,6 +168,13 @@ def check_bonding(  # pylint: disable=too-many-branches
         yield Result(
             state=State.WARN, summary=f"Active: {active_if} (expected is {expected_active})"
         )
+
+    if (number_interfaces := params.get("expected_interfaces")) is not None:
+        if (actual_number := len(properties["interfaces"])) < number_interfaces["expected_number"]:
+            yield Result(
+                state=State(number_interfaces["state"]),
+                summary=f"Unexpected number of interfaces (expected: {number_interfaces['expected_number']}, got: {actual_number})",
+            )
 
 
 check_plugin_bonding = CheckPlugin(

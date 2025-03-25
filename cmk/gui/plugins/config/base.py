@@ -8,15 +8,23 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any, Literal, TypedDict
 
-from livestatus import SiteConfigurations
+from livestatus import BrokerConnections, SiteConfigurations
+
+from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
 from cmk.utils.tags import TagConfigSpec
 
-from cmk.gui.type_defs import GroupSpec, TrustedCertificateAuthorities, UserSpec
+from cmk.gui.type_defs import (
+    BuiltinIconVisibility,
+    CustomHostAttrSpec,
+    CustomUserAttrSpec,
+    GroupSpec,
+    IconSpec,
+    TrustedCertificateAuthorities,
+    UserSpec,
+)
 from cmk.gui.utils.temperate_unit import TemperatureUnit
-
-from cmk.ccc.version import edition, Edition
 
 CustomLinkSpec = tuple[str, bool, list[tuple[str, str, str | None, str]]]
 
@@ -95,6 +103,7 @@ class CREConfig:
 
     # define default values for all settings
     sites: SiteConfigurations = field(default_factory=lambda: SiteConfigurations({}))
+    broker_connections: BrokerConnections = field(default_factory=lambda: BrokerConnections({}))
     debug: bool = False
     screenshotmode: bool = False
     profile: bool | str = False
@@ -113,6 +122,7 @@ class CREConfig:
             "cmk.web.bi.compilation": 30,
             "cmk.web.automations": 30,
             "cmk.web.background-job": 30,
+            "cmk.web.ui-job-scheduler": 20,
             "cmk.web.slow-views": 30,
             "cmk.web.agent_registration": 30,
         }
@@ -391,6 +401,8 @@ class CREConfig:
     default_user_profile: UserSpec = field(default_factory=make_default_user_profile)
     log_logon_failures: bool = True
     lock_on_logon_failures: int | None = 10
+    default_dynamic_visual_permission: Literal["yes", "no"] = "yes"
+    require_two_factor_all_users: bool = False
     session_mgmt: dict[str, Any] = field(
         default_factory=lambda: {
             "max_duration": {"enforce_reauth": 86400, "enforce_reauth_warning_threshold": 900},
@@ -411,7 +423,12 @@ class CREConfig:
 
     # Individual changes to user's authentication security will trigger either emails or use notifications
     # Default is 7 days
-    user_security_notification_duration: int = 604800
+    user_security_notification_duration: dict[str, Any] = field(
+        default_factory=lambda: {
+            "max_duration": 604800,
+            "update_existing_duration": False,
+        }
+    )
 
     user_localizations: dict[str, dict[str, str]] = field(
         default_factory=lambda: {
@@ -470,7 +487,7 @@ class CREConfig:
     )
 
     # Contains user specified icons and actions for hosts and services
-    user_icons_and_actions: dict = field(default_factory=dict)
+    user_icons_and_actions: dict[str, IconSpec] = field(default_factory=dict)
 
     # Defintions of custom attributes to be used for services
     custom_service_attributes: dict = field(default_factory=dict)
@@ -486,7 +503,7 @@ class CREConfig:
     )
 
     # Override toplevel and sort_index settings of built-in icons
-    builtin_icon_visibility: dict = field(default_factory=dict)
+    builtin_icon_visibility: dict[str, BuiltinIconVisibility] = field(default_factory=dict)
 
     trusted_certificate_authorities: TrustedCertificateAuthorities = field(
         default_factory=lambda: TrustedCertificateAuthorities(
@@ -553,7 +570,6 @@ class CREConfig:
     wato_hide_filenames: bool = True
     wato_hide_hosttags: bool = False
     wato_hide_varnames: bool = True
-    wato_hide_help_in_lists: bool = True
     wato_max_snapshots: int = 50
     wato_num_hostspecs: int = 12
     wato_num_itemspecs: int = 15
@@ -561,8 +577,8 @@ class CREConfig:
     wato_write_nagvis_auth: bool = False
     wato_use_git: bool = False
     wato_hidden_users: list = field(default_factory=list)
-    wato_user_attrs: list = field(default_factory=list)
-    wato_host_attrs: list = field(default_factory=list)
+    wato_user_attrs: Sequence[CustomUserAttrSpec] = field(default_factory=list)
+    wato_host_attrs: Sequence[CustomHostAttrSpec] = field(default_factory=list)
     wato_read_only: dict = field(default_factory=dict)
     wato_hide_folders_without_read_permissions: bool = False
     wato_pprint_config: bool = False
@@ -634,6 +650,7 @@ class CREConfig:
     bi_compile_log: str | None = None
     bi_precompile_on_demand: bool = False
     bi_use_legacy_compilation: bool = False
+    wato_hide_help_in_lists: bool = True
 
     # new in 2.1
     config_storage_format: Literal["standard", "raw", "pickle"] = "pickle"
@@ -642,5 +659,5 @@ class CREConfig:
 
     inject_js_profiling_code: bool = False
     load_frontend_vue: Literal["static_files", "inject"] = "static_files"
-    # Experimental feature flags
-    experimental_features: dict[str, Any] = field(default_factory=dict)
+    # Vue experimental feature settings
+    vue_experimental_features: dict[str, Any] = field(default_factory=dict)

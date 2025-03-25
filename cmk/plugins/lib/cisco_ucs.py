@@ -20,6 +20,7 @@ DETECT = any_of(
     contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.2424"),
     contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.2492"),
     contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.2493"),
+    contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.3100"),
 )
 
 
@@ -206,8 +207,9 @@ class Fault:
     severity: FaultSeverity
 
     def monitoring_state(self) -> State:
-        if self.acknowledge:
-            return State.OK
+        # refererence: werk #17287
+        # if self.acknowledge:
+        #     return State.OK
 
         match self.severity:
             case FaultSeverity.major | FaultSeverity.critical:

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import abc
 import itertools
@@ -16,6 +15,9 @@ from enum import Enum, unique
 from typing import Final, Literal, TypeVar
 
 import livestatus
+
+import cmk.ccc.plugin_registry
+from cmk.ccc.exceptions import MKException, MKGeneralException
 
 from cmk.utils.redis import get_redis_client
 
@@ -56,9 +58,6 @@ from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.watolib.main_menu import main_module_registry
 from cmk.gui.watolib.search import IndexNotFoundException, IndexSearcher, PermissionsHandler
-
-import cmk.ccc.plugin_registry
-from cmk.ccc.exceptions import MKException, MKGeneralException
 
 from ._base import PageHandlers, SidebarSnapin
 
@@ -361,9 +360,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
             "hosts": ["name"],
             "hostgroups": ["name"],
             "servicegroups": ["name"],
-        }.get(
-            self.livestatus_table, []
-        )  # TODO: Is the default correct/necessary?
+        }.get(self.livestatus_table, [])  # TODO: Is the default correct/necessary?
 
     def get_search_url_params(self) -> HTTPVariables:
         exact_match = self.num_rows() == 1
@@ -743,6 +740,7 @@ class QuicksearchSnapin(SidebarSnapin):
         if not query:
             return
 
+        search_objects: list[ABCQuicksearchConductor] = []
         try:
             search_objects = self._quicksearch_manager._determine_search_objects(
                 livestatus.lqencode(query)
@@ -763,6 +761,9 @@ class QuicksearchSnapin(SidebarSnapin):
             if active_config.debug:
                 raise
             html.show_error(traceback.format_exc())
+
+        if not search_objects:
+            return
 
         QuicksearchResultRenderer().show(
             self._quicksearch_manager._evaluate_results(search_objects), query
@@ -1012,7 +1013,7 @@ class ServiceMatchPlugin(ABCLivestatusMatchPlugin):
         super().__init__(["services"], "services", "s")
 
     def get_match_topic(self) -> str:
-        return _("Service Description")
+        return _("Service description")
 
     def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> list[LivestatusColumn]:
         return ["service_description"]
@@ -1492,7 +1493,7 @@ class MenuSearchResultsRenderer(abc.ABC):
                 if use_show_all:
                     html.open_li(class_="show_all_items")
                     html.open_a(
-                        href="",
+                        href=None,
                         onclick=f"cmk.search.on_click_show_all_results({json.dumps(topic)}, 'popup_menu_{self.search_type}');",
                     )
                     html.write_text_permissive(_("Show all results"))
@@ -1521,7 +1522,7 @@ class MenuSearchResultsRenderer(abc.ABC):
 
         html.open_a(
             class_="show_all_topics",
-            href="",
+            href=None,
             onclick=f"cmk.search.on_click_show_all_topics({json.dumps(topic)})",
         )
         html.icon(icon="collapse_arrow", title=_("Show all topics"))

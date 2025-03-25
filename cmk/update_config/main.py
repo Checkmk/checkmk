@@ -11,13 +11,18 @@ be called manually.
 
 import argparse
 import logging
+import os
 import subprocess
 import sys
 import traceback
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Generator, Sequence
+from contextlib import contextmanager
 from itertools import chain
 from pathlib import Path
 from typing import Literal
+
+from cmk.ccc import debug
+from cmk.ccc.version import Edition, edition
 
 from cmk.utils import log, paths, tty
 from cmk.utils.log import VERBOSE
@@ -30,7 +35,6 @@ from cmk.utils.redis import disable_redis
 # to a specific layer in the future, but for the the moment we need to deal
 # with it.
 from cmk.base import config as base_config
-from cmk.base.check_api import get_check_api_context
 
 from cmk.gui import main_modules
 from cmk.gui.exceptions import MKUserError
@@ -39,11 +43,10 @@ from cmk.gui.session import SuperUserContext
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.script_helpers import gui_context
+from cmk.gui.watolib.automations import ENV_VARIABLE_FORCE_CLI_INTERFACE
 from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 
-from cmk.ccc import debug
-from cmk.ccc.version import edition, Edition
 from cmk.update_config.plugins.pre_actions.utils import ConflictMode
 
 from .registry import pre_update_action_registry, update_action_registry
@@ -69,10 +72,11 @@ def main(
         tty.yellow,
         tty.normal,
     )
-    exit_code = main_check_config(logger, arguments.conflict)
-    if exit_code != 0 or arguments.dry_run:
-        return exit_code
-    return main_update_config(logger, arguments.conflict)
+    with _force_automations_cli_interface():
+        exit_code = main_check_config(logger, arguments.conflict)
+        if exit_code != 0 or arguments.dry_run:
+            return exit_code
+        return main_update_config(logger, arguments.conflict)
 
 
 def main_update_config(logger: logging.Logger, conflict: ConflictMode) -> Literal[0, 1]:
@@ -84,8 +88,7 @@ def main_update_config(logger: logging.Logger, conflict: ConflictMode) -> Litera
         if debug.enabled():
             raise
         logger.exception(
-            'ERROR: Please repair this and run "cmk-update-config" '
-            "BEFORE starting the site again."
+            'ERROR: Please repair this and run "cmk-update-config" BEFORE starting the site again.'
         )
         return 1
 
@@ -132,7 +135,8 @@ def _parse_arguments(args: Sequence[str]) -> argparse.Namespace:
         type=ConflictMode,
         help=(
             f"If you choose '{ConflictMode.ASK}', you will need to manually answer all upcoming questions. "
-            f"With '{ConflictMode.INSTALL}' or '{ConflictMode.KEEP_OLD}' no interaction is needed. "
+            f"With '{ConflictMode.FORCE}', '{ConflictMode.INSTALL}' or '{ConflictMode.KEEP_OLD}' no interaction is needed. "
+            f"'{ConflictMode.FORCE}' continues the update even if errors occur during the pre-flight checks. "
             f"If you choose '{ConflictMode.ABORT}', the update will be aborted if interaction is needed."
         ),
     )
@@ -189,6 +193,11 @@ def _load_plugins(logger: logging.Logger) -> None:
             []
             if edition(paths.omd_root) is Edition.CRE
             else load_plugins_with_exceptions("cmk.update_config.cee.plugins.actions")
+        ),
+        (
+            load_plugins_with_exceptions("cmk.update_config.cme.plugins.actions")
+            if edition(paths.omd_root) is Edition.CME
+            else []
         ),
     ):
         logger.error("Error in action plug-in %s: %s\n", plugin, exc)
@@ -288,11 +297,13 @@ def _check_failed_gui_plugins(logger: logging.Logger) -> None:
 
 
 def _initialize_base_environment() -> None:
-    base_config.load_all_plugins(
-        get_check_api_context,
-        local_checks_dir=paths.local_checks_dir,
-        checks_dir=paths.checks_dir,
-    )
-    # Watch out: always load the plugins before loading the config.
-    # The validation step will not be executed otherwise.
-    base_config.load()
+    base_config.load(discovery_rulesets=())
+
+
+@contextmanager
+def _force_automations_cli_interface() -> Generator[None]:
+    try:
+        os.environ[ENV_VARIABLE_FORCE_CLI_INTERFACE] = "True"
+        yield
+    finally:
+        os.environ.pop(ENV_VARIABLE_FORCE_CLI_INTERFACE, None)

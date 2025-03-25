@@ -3,15 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
-
 import pytest
-
-from tests.unit.conftest import FixRegister
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
+
+from cmk.agent_based.v2 import CheckResult, Result, State
 
 
 @pytest.mark.parametrize(
@@ -36,11 +34,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
     ],
 )
 def test_check_oracle_recovery_status(
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
     item: str,
     info: list[list[str]],
-    expected_result: Sequence[tuple[str, Mapping]],
+    expected_result: CheckResult,
 ) -> None:
-    check_plugin = fix_register.check_plugins[CheckPluginName("oracle_recovery_status")]
+    check_plugin = agent_based_plugins.check_plugins[CheckPluginName("oracle_recovery_status")]
     result = list(check_plugin.check_function(item=item, params={}, section=info))
     assert result == expected_result

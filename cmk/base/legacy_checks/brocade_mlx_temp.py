@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.brocade import DETECT_MLX
+
+check_info = {}
 
 
 def parse_brocade_mlx_temp(string_table):
@@ -43,6 +44,7 @@ def check_brocade_mlx_temp(item, params, parsed):
 
 
 check_info["brocade_mlx_temp"] = LegacyCheckDefinition(
+    name="brocade_mlx_temp",
     detect=DETECT_MLX,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1991.1.1.2.13.1.1",

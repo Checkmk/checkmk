@@ -3,21 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import (
-    Collection,
-    Iterable,
-    Iterator,
-    KeysView,
-    Mapping,
-    MutableMapping,
-    Sequence,
-)
+from collections.abc import Collection, Iterator, KeysView, Mapping, MutableMapping, Sequence
 from re import Pattern
-from typing import Any, Literal, TypedDict
-
-from cmk.utils.translations import TranslationOptions
+from typing import Any, Literal, TypeAlias, TypedDict
 
 from cmk.ccc.exceptions import MKException
+
+from cmk.utils.timeperiod import TimeperiodName
+from cmk.utils.translations import TranslationOptions
 
 TextPattern = str | Pattern[str]
 TextMatchResult = Literal[False] | Sequence[str]
@@ -108,13 +101,17 @@ class Replication(ReplicationBase, total=False):
 
 
 class ContactGroups(TypedDict):
-    groups: Iterable[str]
+    groups: Collection[str]
     notify: bool
     precedence: Literal["host", "rule"]
 
 
+# number of second with an optional timzone offest from UTC in hours
+ExpectInterval: TypeAlias = int | tuple[int, int]
+
+
 class Expect(TypedDict):
-    interval: int  # seconds
+    interval: ExpectInterval
     count: int
     merge: Literal["open", "acked", "never"]
 
@@ -150,10 +147,10 @@ class Count(TypedDict):
 
 # TODO: This is only a rough approximation.
 class Rule(TypedDict, total=False):
-    actions: Iterable[str]
+    actions: Collection[str]
     actions_in_downtime: bool
     autodelete: bool
-    cancel_actions: Iterable[str]
+    cancel_actions: Collection[str]
     cancel_action_phases: str
     cancel_application: TextPattern
     cancel_priority: tuple[int, int]
@@ -169,7 +166,7 @@ class Rule(TypedDict, total=False):
     hits: int
     id: str
     invert_matching: bool
-    livetime: tuple[int, Iterable[Literal["open", "ack"]]]
+    livetime: tuple[int, Collection[Literal["open", "ack"]]]
     match: TextPattern
     match_application: TextPattern
     match_facility: int
@@ -177,9 +174,9 @@ class Rule(TypedDict, total=False):
     match_ipaddress: str
     match_ok: TextPattern
     match_priority: tuple[int, int]
-    match_site: Iterable[str]
+    match_site: Collection[str]
     match_sl: tuple[int, int]
-    match_timeperiod: str
+    match_timeperiod: TimeperiodName
     pack: str
     set_application: str
     set_comment: str
@@ -315,7 +312,7 @@ class SNMPCredentialBase(TypedDict):
 
 
 class SNMPCredential(SNMPCredentialBase, total=False):
-    engine_ids: Iterable[str]
+    engine_ids: Collection[str]
 
 
 # This is what we get from the outside.
@@ -341,7 +338,7 @@ class ConfigFromWATO(TypedDict):
     rules: Collection[Rule]
     sqlite_housekeeping_interval: int
     sqlite_freelist_size: int
-    snmp_credentials: Iterable[SNMPCredential]
+    snmp_credentials: Collection[SNMPCredential]
     socket_queue_len: int
     statistics_interval: int
     translate_snmptraps: SNMPTrapTranslation

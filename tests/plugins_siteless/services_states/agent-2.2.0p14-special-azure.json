@@ -1,0 +1,62 @@
+{
+  "AD Users": {
+    "expected_state": 0
+  },
+  "Azure Agent Info": {
+    "expected_state": 0
+  },
+  "Azure/App Registration Secret azure-cli-2022-11-14-10-09-49 - rbac": {
+    "expected_state": 0
+  },
+  "Azure/App Registration Secret azure-cli-2022-12-19-12-23-12 - rbac": {
+    "expected_state": 0
+  },
+  "Azure/App Registration Secret azure-cli-2022-12-19-12-35-16 - rbac": {
+    "expected_state": 0
+  },
+  "Azure/App Registration Secret azure-cli-2023-01-17-07-23-40 - rbac": {
+    "expected_state": 0
+  },
+  "Azure/App Registration Secret checkmk - checkmk": {
+    "expected_state": 0
+  },
+  "Azure/App Registration Secret my-check-mk-app - my-check-mk-key": {
+    "expected_state": 0
+  },
+  "Azure/App Registration Secret my-checkmk-app - my-checkmk-key": {
+    "expected_state": 0
+  },
+  "Azure Status Australia Central": {
+    "expected_state": 0
+  },
+  "Azure Status Australia Central 2": {
+    "expected_state": 0
+  },
+  "Azure Status Australia East": {
+    "expected_state": 0
+  },
+  "Azure Status Australia Southeast": {
+    "expected_state": 0
+  },
+  "Azure Status Brazil South": {
+    "expected_state": 0
+  },
+  "Azure Status Brazil Southeast": {
+    "expected_state": 0
+  },
+  "Azure Status Canada Central": {
+    "expected_state": 0
+  },
+  "Azure Status Germany North": {
+    "expected_state": 0
+  },
+  "Azure Status Germany West Central": {
+    "expected_state": 0
+  },
+  "Azure Status Global": {
+    "expected_state": 0
+  },
+  "Azure Status West Europe": {
+    "expected_state": 0
+  }
+}

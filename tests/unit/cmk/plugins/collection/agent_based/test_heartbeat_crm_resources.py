@@ -3,13 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.collection.agent_based.heartbeat_crm import (
     check_heartbeat_crm_resources,
     discover_heartbeat_crm_resources,
+    HeartbeatCrmResourcesParameters,
     parse_heartbeat_crm,
     Resources,
     Section,
@@ -269,23 +269,40 @@ def test_discovery_heartbeat_crm_resources_something(section_2: Section) -> None
 
 
 def test_check_heartbeat_crm_resources_no_data(section_2: Section) -> None:
-    assert not list(check_heartbeat_crm_resources("no such item", {}, section_2))
+    assert not list(
+        check_heartbeat_crm_resources(
+            "no such item",
+            HeartbeatCrmResourcesParameters(
+                expected_node=None,
+                monitoring_state_if_unmanaged_nodes=1,
+            ),
+            section_2,
+        )
+    )
 
 
 def test_check_heartbeat_crm_resources_no_resources(section_2: Section) -> None:
     section_2.resources.resources["faked empty ressource"] = []  # type: ignore[index]
-    assert list(check_heartbeat_crm_resources("faked empty ressource", {}, section_2)) == [
-        Result(state=State.OK, summary="No resources found")
-    ]
+    assert list(
+        check_heartbeat_crm_resources(
+            "faked empty ressource",
+            HeartbeatCrmResourcesParameters(
+                expected_node=None,
+                monitoring_state_if_unmanaged_nodes=1,
+            ),
+            section_2,
+        )
+    ) == [Result(state=State.OK, summary="No resources found")]
 
 
 def test_check_heartbeat_crm_resources_ok(section_1: Section) -> None:
     assert list(
         check_heartbeat_crm_resources(
             "clone_nfs_sapmnt_IFG",
-            {
-                "expected_node": "nevermind",
-            },
+            HeartbeatCrmResourcesParameters(
+                expected_node="nevermind",
+                monitoring_state_if_unmanaged_nodes=1,
+            ),
             section_1,
         )
     ) == [
@@ -297,7 +314,10 @@ def test_check_heartbeat_crm_resources_started(section_2: Section) -> None:
     assert list(
         check_heartbeat_crm_resources(
             "cluster1_fence(stonith:fence_ipmilan):",
-            {},
+            HeartbeatCrmResourcesParameters(
+                expected_node=None,
+                monitoring_state_if_unmanaged_nodes=1,
+            ),
             section_2,
         )
     ) == [

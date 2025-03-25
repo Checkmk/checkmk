@@ -12,17 +12,17 @@ logwatch:
 
     logs:
         # From application log send only critical messages
-        application: 
+        application:
             level:crit
 
         # From system log send only warning/critical messages,
         # but suppress any context messages
-        system: 
+        system:
             level: warn
             context: no
         # Switch all other logfiles off. Default is warn:
         # send messages of type warn or crit
-        other: 
+        other:
             level: off
 
         # below is detailed by app
@@ -32,6 +32,6 @@ logwatch:
             # wildcards only work with standard logs that are found in Windows registry.
             # To find the correct name for a log, right-click on the log in
             # event-viewer -> Properties and use the name from "Full Name"
-            - Microsoft-Windows-GroupPolicy/Operational: 
+            - Microsoft-Windows-GroupPolicy/Operational:
                 level: warn
                 context: yes

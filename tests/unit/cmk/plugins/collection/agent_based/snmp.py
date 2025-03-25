@@ -5,10 +5,9 @@
 
 import logging
 from pathlib import Path
-from typing import Any, assert_never, Final
+from typing import Any, Final
 
 from cmk.utils.hostaddress import HostAddress, HostName
-from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib import (
     BackendSNMPTree,
@@ -22,11 +21,10 @@ from cmk.snmplib import (
 from cmk.fetchers._snmpscan import _evaluate_snmp_detection as evaluate_snmp_detection
 from cmk.fetchers.snmp_backend import StoredWalkSNMPBackend
 
-import cmk.base.api.agent_based.register as agent_based_register
-from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin
 from cmk.base.api.agent_based.register.section_plugins import create_snmp_section_plugin
 
 from cmk.agent_based.v2 import SimpleSNMPSection, SNMPSection
+from cmk.discover_plugins import PluginLocation
 
 SNMP_HOST_CONFIG: Final = SNMPHostConfig(
     is_ipv6_primary=False,
@@ -45,25 +43,10 @@ SNMP_HOST_CONFIG: Final = SNMPHostConfig(
 )
 
 
-def _get_snmp_section_plugin(
-    section: SectionName | SNMPSection | SimpleSNMPSection,
-) -> SNMPSectionPlugin:
-    match section:
-        case SectionName():
-            section_plugin = agent_based_register.get_snmp_section_plugin(section)
-            assert isinstance(section_plugin, SNMPSectionPlugin)
-            return section_plugin
-        case SNMPSection() | SimpleSNMPSection():
-            return create_snmp_section_plugin(section, None, validate=True)
-        case other:
-            assert_never(other)
-
-
-def snmp_is_detected(
-    section: SectionName | SNMPSection | SimpleSNMPSection, snmp_walk: Path
-) -> bool:
-
-    section_plugin = _get_snmp_section_plugin(section)
+def snmp_is_detected(section: SNMPSection | SimpleSNMPSection, snmp_walk: Path) -> bool:
+    section_plugin = create_snmp_section_plugin(
+        section, PluginLocation("not", "relevant"), validate=True
+    )
 
     backend = StoredWalkSNMPBackend(SNMP_HOST_CONFIG, logging.getLogger("test"), snmp_walk)
 
@@ -80,12 +63,14 @@ def snmp_is_detected(
 
 
 def get_parsed_snmp_section(
-    section: SectionName | SNMPSection | SimpleSNMPSection, snmp_walk: Path
+    section: SNMPSection | SimpleSNMPSection, snmp_walk: Path
 ) -> Any | None:
     logger = logging.getLogger("test")
     backend = StoredWalkSNMPBackend(SNMP_HOST_CONFIG, logger, snmp_walk)
 
-    section_plugin = _get_snmp_section_plugin(section)
+    section_plugin = create_snmp_section_plugin(
+        section, PluginLocation("not", "relevant"), validate=True
+    )
 
     table = []
     for tree in section_plugin.trees:

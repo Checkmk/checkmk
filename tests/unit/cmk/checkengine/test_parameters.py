@@ -7,6 +7,8 @@ from collections.abc import Mapping
 
 import pytest
 
+from cmk.utils.timeperiod import TimeperiodName
+
 from cmk.checkengine.parameters import Parameters, TimespecificParameters, TimespecificParameterSet
 
 
@@ -14,8 +16,11 @@ def _default() -> Mapping[str, int]:
     return {"default": 42}
 
 
-def _tp_values() -> list[tuple[str, Mapping[str, str]]]:
-    return [("tp1", {"value": "from tp1"}), ("tp2", {"value": "from tp2"})]
+def _tp_values() -> list[tuple[TimeperiodName, Mapping[str, str]]]:
+    return [
+        (TimeperiodName("tp1"), {"value": "from tp1"}),
+        (TimeperiodName("tp2"), {"value": "from tp2"}),
+    ]
 
 
 class TestTimespecificParameterSet:
@@ -66,7 +71,7 @@ class TestTimespecificParameters:
                     {"key": "default"},
                     [
                         (
-                            "active_tp",
+                            TimeperiodName("active_tp"),
                             {
                                 "key": "I am a specificly time-matching value, but from a more general rule!"
                             },
@@ -81,8 +86,10 @@ class TestTimespecificParameters:
             TimespecificParameters(
                 (
                     TimespecificParameterSet({"key1": ""}, []),
-                    TimespecificParameterSet({}, [("active_tp", {"key2": ""})]),
-                    TimespecificParameterSet({"key3": ""}, [("inactive_tp", {"key4": ""})]),
+                    TimespecificParameterSet({}, [(TimeperiodName("active_tp"), {"key2": ""})]),
+                    TimespecificParameterSet(
+                        {"key3": ""}, [(TimeperiodName("inactive_tp"), {"key4": ""})]
+                    ),
                 )
             ).evaluate(lambda x: x == "active_tp")
         ) == {"key1", "key2", "key3"}

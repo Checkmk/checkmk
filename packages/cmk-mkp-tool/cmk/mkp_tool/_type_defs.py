@@ -23,9 +23,7 @@ _SortKeyElement = (
     #  b) Numeric identifiers always have lower precedence than non-numeric identifiers
     #  c) A larger set of fields has a higher precedence than a smaller set,
     #     if all of the preceding identifiers are equal.
-    tuple[Literal[0], str]
-    | tuple[Literal[1], int]
-    | tuple[Literal[2], None]
+    tuple[Literal[0], str] | tuple[Literal[1], int] | tuple[Literal[2], None]
 )
 
 
@@ -137,9 +135,9 @@ class PackageID(BaseModel):
     version: PackageVersion
 
     @field_validator("name")
-    def make_name(cls, value: str) -> PackageName:  # pylint: disable=no-self-argument
+    def make_name(cls, value: str) -> PackageName:
         return PackageName(value)
 
     @field_validator("version")
-    def make_version(cls, value: str) -> PackageVersion:  # pylint: disable=no-self-argument
+    def make_version(cls, value: str) -> PackageVersion:
         return PackageVersion(value)

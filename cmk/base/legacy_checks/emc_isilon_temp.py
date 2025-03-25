@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.emc import DETECT_ISILON
+
+check_info = {}
 
 
 def inventory_isilon_temp(info, is_cpu):
@@ -65,6 +66,7 @@ def discover_emc_isilon_temp(info):
 
 
 check_info["emc_isilon_temp"] = LegacyCheckDefinition(
+    name="emc_isilon_temp",
     parse_function=parse_emc_isilon_temp,
     detect=DETECT_ISILON,
     fetch=SNMPTree(
@@ -102,6 +104,7 @@ def discover_emc_isilon_temp_cpu(info):
 #   '----------------------------------------------------------------------'
 
 check_info["emc_isilon_temp.cpu"] = LegacyCheckDefinition(
+    name="emc_isilon_temp_cpu",
     service_name="Temperature %s",
     sections=["emc_isilon_temp"],
     discovery_function=discover_emc_isilon_temp_cpu,

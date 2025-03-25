@@ -19,9 +19,15 @@ import socket
 import subprocess
 import time
 from collections.abc import Iterable, Iterator, Mapping, Sequence
+from dataclasses import dataclass
 from io import TextIOWrapper
 from pathlib import Path
 from typing import assert_never, cast, Final, Generic, TypeVar
+
+import cmk.ccc.version as cmk_version
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.plugin_registry import Registry
+from cmk.ccc.site import omd_site
 
 from cmk.utils import render
 from cmk.utils.backup.config import Config as RawConfig
@@ -45,8 +51,6 @@ from cmk.utils.backup.targets.remote_interface import (
 from cmk.utils.backup.type_defs import SiteBackupInfo
 from cmk.utils.backup.utils import BACKUP_INFO_FILENAME
 from cmk.utils.certs import CertManagementEvent
-from cmk.utils.crypto.keys import WrongPasswordError
-from cmk.utils.crypto.password import Password as PasswordType
 from cmk.utils.paths import omd_root
 from cmk.utils.schedule import next_scheduled_time
 
@@ -100,10 +104,8 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.wato import IndividualOrStoredPassword
 
-import cmk.ccc.version as cmk_version
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.plugin_registry import Registry
-from cmk.ccc.site import omd_site
+from cmk.crypto.password import Password as PasswordType
+from cmk.crypto.pem import PEMDecodingError
 
 
 def register() -> None:
@@ -533,7 +535,7 @@ class PageBackup:
         show_key_download_warning(self.key_store.load())
         self._show_job_list()
 
-    def _show_job_list(self) -> None:  # pylint: disable=too-many-branches
+    def _show_job_list(self) -> None:
         html.h3(_("Jobs"))
         with table_element(sortable=False, searchable=False) as table:
             for nr, job in enumerate(sorted(Config.load().jobs.values(), key=lambda j: j.ident)):
@@ -1032,6 +1034,26 @@ class PageBackupJobState(PageAbstractMKBackupJobState[Job]):
 #   '----------------------------------------------------------------------'
 
 
+@dataclass(frozen=True)
+class _Backups:
+    backups: Mapping[str, SiteBackupInfo]
+    timed_out: bool
+
+    def get(self, ident: str) -> SiteBackupInfo:
+        try:
+            return self.backups[ident]
+        except KeyError as ex:
+            if self.timed_out:
+                raise MKGeneralException(
+                    "Unable to find backup. This may be because "
+                    "the listing of remote backups timed out. "
+                    "There may be too many files present at the "
+                    "remote target."
+                )
+            else:
+                raise ex
+
+
 class ABCBackupTargetType(abc.ABC):
     @abc.abstractmethod
     def __init__(self, params: Mapping[str, object]) -> None: ...
@@ -1067,9 +1089,15 @@ class ABCBackupTargetType(abc.ABC):
     @abc.abstractmethod
     def validate(self, varprefix: str) -> None: ...
 
-    def backups(self) -> Mapping[str, SiteBackupInfo]:
+    def backups(self) -> _Backups:
         _check_if_target_ready(self.target)
-        return dict(self.target.list_backups())
+        backups: dict[str, SiteBackupInfo] = {}
+        time0 = time.time()
+        for ident, info in self.target.list_backups():
+            backups[ident] = info
+            if time.time() - time0 > request.request_timeout - 20:
+                return _Backups(backups, timed_out=True)
+        return _Backups(backups, timed_out=False)
 
     @abc.abstractmethod
     def remove_backup(self, backup_ident: str) -> None: ...
@@ -1166,7 +1194,7 @@ class ABCBackupTargetRemote(ABCBackupTargetType, Generic[TRemoteParams, TRemoteS
         )
 
     def remove_backup(self, backup_ident: str) -> None:
-        backup_info = self.backups()[backup_ident]
+        backup_info = self.backups().get(backup_ident)
         for remote_key in (
             Path(backup_ident) / BACKUP_INFO_FILENAME,
             Path(backup_ident) / backup_info.filename,
@@ -1466,55 +1494,7 @@ class Target:
             )
         return target_type(target_params)
 
-    def show_backup_list(self) -> None:
-        with table_element(sortable=False, searchable=False) as table:
-            for backup_ident, info in sorted(self.backups().items()):
-                table.row()
-                table.cell(_("Actions"), css=["buttons"])
-
-                from_info = f"{info.hostname} (Site: {info.site_id}, Version: {info.site_version})"
-                delete_url = make_confirm_delete_link(
-                    url=makeactionuri(
-                        request, transactions, [("_action", "delete"), ("_backup", backup_ident)]
-                    ),
-                    title=_("Delete backup"),
-                    message=_("From: %s") % from_info,
-                    suffix=backup_ident,
-                )
-
-                html.icon_button(delete_url, _("Delete this backup"), "delete")
-
-                start_url = make_confirm_link(
-                    url=makeactionuri(
-                        request, transactions, [("_action", "start"), ("_backup", backup_ident)]
-                    ),
-                    title=_("Start restore of backup"),
-                    suffix=backup_ident,
-                    message=_("From: %s") % from_info,
-                    confirm_button=_("Start"),
-                    cancel_button=_("Cancel"),
-                )
-
-                html.icon_button(
-                    start_url,
-                    _("Start restore of this backup"),
-                    {
-                        "icon": "backup",
-                        "emblem": "refresh",
-                    },
-                )
-
-                table.cell(_("Backup-ID"), backup_ident)
-                table.cell(_("From"), from_info)
-                table.cell(_("Finished"), render.date_and_time(info.finished))
-                table.cell(_("Size"), render.fmt_bytes(info.size))
-                table.cell(_("Encrypted"))
-                if (encrypt := info.config["encrypt"]) is not None:
-                    html.write_text_permissive(encrypt)
-                else:
-                    html.write_text_permissive(_("No"))
-
-    def backups(self) -> Mapping[str, SiteBackupInfo]:
+    def backups(self) -> _Backups:
         return self._target_type().backups()
 
     def remove_backup(self, backup_ident: str) -> None:
@@ -1913,7 +1893,7 @@ def show_key_download_warning(keys: dict[int, Key]) -> None:
             _(
                 "To be able to restore your encrypted backups, you need to "
                 "download and keep the backup encryption keys in a safe place. "
-                "If you loose your keys or the keys passphrases, your backup "
+                "If you lose your keys or the keys passphrases, your backup "
                 "can not be restored.<br>"
                 "The following keys have not been downloaded yet: %s"
             )
@@ -1971,6 +1951,10 @@ class PageBackupRestore:
         super().__init__()
         self.key_store = key_store
         self._load_target()
+        if self._target:
+            self._backups = self._target.backups()
+        else:
+            self._backups = _Backups({}, timed_out=False)
 
     def _load_target(self) -> None:
         ident = request.var("target")
@@ -2080,7 +2064,13 @@ class PageBackupRestore:
 
         if self._target is None:
             raise Exception("no backup target")
-        if backup_ident not in self._target.backups():
+        if backup_ident not in self._backups.backups:
+            if self._backups.timed_out:
+                raise MKGeneralException(
+                    "Unable to find backup to delete. "
+                    "This may be because the listing of remote backups timed out. "
+                    "There may be too many files present at the remote target."
+                )
             raise MKUserError(None, _("This backup does not exist."))
 
         assert backup_ident is not None
@@ -2098,7 +2088,7 @@ class PageBackupRestore:
         if self._target is None:
             raise Exception("no backup target")
         assert backup_ident is not None
-        backup_info = self._target.backups()[backup_ident]
+        backup_info = self._backups.get(backup_ident)
         if (key_digest := backup_info.config["encrypt"]) is not None:
             return self._start_encrypted_restore(backup_ident, key_digest)
         return self._start_unencrypted_restore(backup_ident)
@@ -2129,7 +2119,7 @@ class PageBackupRestore:
                     # Validate the passphrase
                     try:
                         key.to_certificate_with_private_key(passphrase)
-                    except (ValueError, WrongPasswordError):
+                    except (PEMDecodingError, ValueError):
                         raise MKUserError("_key_p_passphrase", _("Invalid passphrase"))
 
                     transactions.check_transaction()  # invalidate transid
@@ -2204,7 +2194,61 @@ class PageBackupRestore:
 
     def _show_backup_list(self) -> None:
         assert self._target is not None
-        self._target.show_backup_list()
+        if self._backups.timed_out:
+            html.show_warning(
+                "The following list is not complete "
+                "as the listing of remote backups timed "
+                "out. There may be too many files present "
+                "at the remote target. To make sure all "
+                "backups are listed, remove unneeded files "
+                "at the remote target."
+            )
+        with table_element(sortable=False, searchable=False) as table:
+            for backup_ident, info in sorted(self._backups.backups.items()):
+                table.row()
+                table.cell(_("Actions"), css=["buttons"])
+
+                from_info = f"{info.hostname} (Site: {info.site_id}, Version: {info.site_version})"
+                delete_url = make_confirm_delete_link(
+                    url=makeactionuri(
+                        request, transactions, [("_action", "delete"), ("_backup", backup_ident)]
+                    ),
+                    title=_("Delete backup"),
+                    message=_("From: %s") % from_info,
+                    suffix=backup_ident,
+                )
+
+                html.icon_button(delete_url, _("Delete this backup"), "delete")
+
+                start_url = make_confirm_link(
+                    url=makeactionuri(
+                        request, transactions, [("_action", "start"), ("_backup", backup_ident)]
+                    ),
+                    title=_("Start restore of backup"),
+                    suffix=backup_ident,
+                    message=_("From: %s") % from_info,
+                    confirm_button=_("Start"),
+                    cancel_button=_("Cancel"),
+                )
+
+                html.icon_button(
+                    start_url,
+                    _("Start restore of this backup"),
+                    {
+                        "icon": "backup",
+                        "emblem": "refresh",
+                    },
+                )
+
+                table.cell(_("Backup-ID"), backup_ident)
+                table.cell(_("From"), from_info)
+                table.cell(_("Finished"), render.date_and_time(info.finished))
+                table.cell(_("Size"), render.fmt_bytes(info.size))
+                table.cell(_("Encrypted"))
+                if (encrypt := info.config["encrypt"]) is not None:
+                    html.write_text_permissive(encrypt)
+                else:
+                    html.write_text_permissive(_("No"))
 
     def _show_restore_progress(self) -> None:
         PageBackupRestoreState().page()

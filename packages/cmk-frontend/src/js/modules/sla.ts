@@ -14,7 +14,7 @@ import {
 export function details_period_hover(
     td: HTMLTableCellElement,
     sla_period: string,
-    onoff: 0 | 1
+    onoff: 0 | 1,
 ) {
     if (has_class(td, "lock_hilite")) {
         return;
@@ -32,7 +32,7 @@ export function details_period_hover(
 
 export function details_period_click(
     td: HTMLTableCellElement,
-    sla_period: string
+    sla_period: string,
 ) {
     const sla_period_elements = querySelectorAllByClassName(sla_period);
     const onoff = has_class(td, "lock_hilite");
@@ -50,7 +50,7 @@ export function details_period_click(
 export function details_table_hover(
     tr: HTMLTableRowElement,
     row_id: string,
-    onoff: 1 | 0
+    onoff: 1 | 0,
 ) {
     const sla_period_elements = tr
         .closest("table")!

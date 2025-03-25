@@ -1,7 +1,9 @@
+@use "sass:color";
 @charset "UTF-8";
 // Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
+
 body.main {
   td.shortcuts {
     a.suggested {
@@ -107,10 +109,12 @@ div#top_heading {
       padding-top: 2px;
       div.text_container span {
         position: absolute;
-        right: 6px;
         bottom: 20px;
         font-size: $font-size-small;
         line-height: $font-size-small;
+        width: 25px;
+        margin-left: 8px;
+        text-align: center;
       }
       div.icon_container,
       div.icon_container > img.icon {
@@ -460,7 +464,8 @@ div#top_heading {
 }
 div#page_menu_popups {
   margin-right: $spacing;
-  .confirm_container {
+  .confirm_container,
+  .message_container {
     position: static;
     padding: 0;
     .confirm_popup {
@@ -468,6 +473,7 @@ div#page_menu_popups {
       background-color: $headline-color;
       margin-bottom: $spacing;
       button.confirm_question,
+      button.confirm_success,
       button.confirm_warning {
         margin-left: 0px;
       }
@@ -479,25 +485,38 @@ div#page_menu_popups {
           border-color: $color-state-1-background;
         }
         &:hover {
-          background-color: darken($color-state-1-background, 5%);
-          border-color: darken($color-state-1-background, 5%);
+          background-color: color.adjust($color-state-1-background, $lightness: -5%);
+          border-color: color.adjust($color-state-1-background, $lightness: -5%);
         }
       }
       button.confirm_warning {
         &,
         &:active {
           color: $white;
-          background-color: darken($color-state-2-background, 5%);
-          border-color: darken($color-state-2-background, 5%);
+          background-color: color.adjust($color-state-2-background, $lightness: -5%);
+          border-color: color.adjust($color-state-2-background, $lightness: -5%);
         }
         &:hover {
           background-color: $color-state-2-background;
           border-color: $color-state-2-background;
         }
       }
+      button.confirm_success {
+        &,
+        &:active {
+          color: $font-color-light-bg;
+          background-color: $success-dimmed;
+          border-color: $success-dimmed;
+        }
+        &:hover {
+          background-color: $success;
+          border-color: $success;
+        }
+      }
     }
   }
-  .confirm_icon {
+  .confirm_icon,
+  .message_icon {
     position: absolute;
     width: 25px;
     height: 100%;
@@ -517,7 +536,23 @@ div#page_menu_popups {
       background-color: $color-state-2-background;
       border-color: $color-state-2-background;
     }
+    &.confirm_success,
+    &.message_success {
+      background-color: $success;
+      border-color: $success;
+    }
   }
+  .message_content {
+    text-align: left;
+    padding-left: 15px;
+  }
+
+  .message_close {
+    position: absolute;
+    top: 25%;
+    font-size: 20px;
+  }
+
   .confirm_title,
   .confirm_content {
     color: $font-color;
@@ -537,7 +572,8 @@ div#page_menu_popups {
     margin: 0 25px 0px;
     font-weight: $font-weight-bold;
   }
-  .confirm_content {
+  .confirm_content,
+  .message_content {
     margin: 5px 25px 0px;
     div.confirm_info,
     div.confirm_block {
@@ -631,7 +667,7 @@ div.page_menu_popup {
       &.active,
       &:hover,
       &:focus {
-        background-color: darken($input-button-hover-bg-color, 7%);
+        background-color: color.adjust($input-button-hover-bg-color, $lightness: -7%);
       }
     }
     span.vs_age_footer {
@@ -872,8 +908,14 @@ div#page_menu_popups div.side_popup {
     &.active {
       display: block;
     }
+    div.filter_group {
+      margin-top: 8px;
+    }
     div.filter_group:last-child {
       margin-bottom: 10px;
+    }
+    div.filter_group > div {
+      margin-left: 8px;
     }
     a.filter_group_title {
       display: block;
@@ -886,6 +928,7 @@ div#page_menu_popups div.side_popup {
       position: absolute;
       top: 8px;
       right: 6px;
+      z-index: +1;
     }
     ul {
       padding: 0 20px;
@@ -924,7 +967,7 @@ div#page_menu_popups div[id^="popup_add_to_"] > div.content > span {
     padding-right: $spacing * 3;
   }
 }
-div#page_menu_popups div#popup_test_notifications #form_test_notifications {
+#form_test_notifications {
   div.help,
   div.foldable,
   span.checkbox {
@@ -955,11 +998,12 @@ div#page_menu_popups div#popup_test_notifications #form_test_notifications {
         border: none;
         border-radius: 0px;
         border: 1px solid $line-color;
+        background-color: $bg-color;
 
         &.active,
         &:hover,
         &:focus {
-          background-color: darken($input-button-hover-bg-color, 7%);
+          background-color: color.adjust($input-button-hover-bg-color, $lightness: -7%);
         }
       }
 
@@ -977,6 +1021,7 @@ div#page_menu_popups div#popup_test_notifications #form_test_notifications {
   }
 
   table.nform {
+    background: None;
     .dots,
     .heading {
       display: None;
@@ -1004,7 +1049,21 @@ div#page_menu_popups div#popup_test_notifications #form_test_notifications {
   .checkbox {
     display: block;
     width: 460px;
+    margin-bottom: $spacing;
+  }
+
+  #notify_plugin_d_notify_plugin {
+    margin-top: -$spacing;
+    margin-left: 30px;
     margin-bottom: 20px;
+
+    span.vs_floating_text {
+      margin-right: $spacing;
+    }
+
+    span[id^="notify_plugin_p_notify_plugin_"] {
+      margin-left: $spacing;
+    }
   }
 
   .foldable {
@@ -1013,9 +1072,21 @@ div#page_menu_popups div#popup_test_notifications #form_test_notifications {
     div#advanced_opts_d_date_and_time,
     div#advanced_opts_d_notification_nr {
       margin: 0px;
-      input {
+      input#date_advanced_opts_p_date_and_time_0 {
         margin-left: $spacing;
       }
+
+      input.number {
+        margin-left: 12px;
+      }
+
+      .tuple_td:last-child {
+        align-content: center;
+      }
+    }
+
+    div#advanced_opts_d_notification_nr {
+      padding-top: 10px;
     }
 
     .valuespec_foldable_content {
@@ -1044,4 +1115,8 @@ div#page_menu_popups div#popup_test_notifications #form_test_notifications {
       margin-right: 10px;
     }
   }
+}
+
+div.test_notifications_matching_help {
+  margin-top: 10px;
 }

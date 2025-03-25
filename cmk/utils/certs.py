@@ -17,18 +17,19 @@ from dateutil.relativedelta import relativedelta
 
 from livestatus import SiteId
 
-from cmk.utils.crypto.certificate import (
-    Certificate,
-    CertificateSigningRequest,
-    CertificateWithPrivateKey,
-    X509Name,
-)
-from cmk.utils.crypto.keys import is_supported_private_key_type, PrivateKey
-from cmk.utils.crypto.types import HashAlgorithm
+from cmk.ccc.site import omd_site
+
 from cmk.utils.log.security_event import SecurityEvent
 from cmk.utils.user import UserId
 
-from cmk.ccc.site import omd_site
+from cmk.crypto.certificate import (
+    Certificate,
+    CertificatePEM,
+    CertificateWithPrivateKey,
+    PersistedCertificateWithPrivateKey,
+)
+from cmk.crypto.hash import HashAlgorithm
+from cmk.crypto.keys import is_supported_private_key_type, PrivateKey
 
 
 class _CNTemplate:
@@ -36,7 +37,7 @@ class _CNTemplate:
 
     def __init__(self, template: str) -> None:
         self._temp = template
-        self._match = re.compile("CN=" + template % "([^=+,]*)").match
+        self._match = re.compile("CN=" + template % "([^=+,]*)").search
 
     def format(self, site: SiteId | str) -> str:
         return self._temp % site
@@ -81,19 +82,6 @@ class RootCA(CertificateWithPrivateKey):
             _save_cert_chain(path, [ca.certificate], ca.private_key)
             return cls(ca.certificate, ca.private_key)
 
-    def issue_new_certificate(
-        self,
-        common_name: str,
-        validity: relativedelta = _DEFAULT_VALIDITY,
-        key_size: int = _DEFAULT_KEY_SIZE,
-    ) -> tuple[Certificate, PrivateKey]:
-        new_cert_key = PrivateKey.generate_rsa(key_size)
-        new_cert_csr = CertificateSigningRequest.create(
-            subject_name=X509Name.create(common_name=common_name),
-            subject_private_key=new_cert_key,
-        )
-        return self.sign_csr(new_cert_csr, validity), new_cert_key
-
     def issue_and_store_certificate(
         self,
         path: Path,
@@ -102,7 +90,13 @@ class RootCA(CertificateWithPrivateKey):
         key_size: int = _DEFAULT_KEY_SIZE,
     ) -> None:
         """Create and sign a new certificate, store the chain to 'path'"""
-        new_cert, new_key = self.issue_new_certificate(common_name, validity, key_size)
+        new_cert, new_key = self.issue_new_certificate(
+            common_name=common_name,
+            organization=f"Checkmk Site {omd_site()}",
+            subject_alt_dns_names=[common_name],
+            expiry=validity,
+            key_size=key_size,
+        )
         _save_cert_chain(path, [new_cert, self.certificate], new_key)
 
 
@@ -170,17 +164,15 @@ def _set_certfile_permissions(
 
 
 class RemoteSiteCertsStore:
-    # TODO: don't expose cryptography x509.Certificate in interface
-
     def __init__(self, path: Path) -> None:
         self.path: Final = path
 
-    def save(self, site_id: SiteId, cert: x509.Certificate) -> None:
+    def save(self, site_id: SiteId, cert: Certificate) -> None:
         self.path.mkdir(parents=True, exist_ok=True)
-        self._make_file_name(site_id).write_bytes(Certificate(cert).dump_pem().bytes)
+        self._make_file_name(site_id).write_bytes(cert.dump_pem().bytes)
 
-    def load(self, site_id: SiteId) -> x509.Certificate:
-        return x509.load_pem_x509_certificate(self._make_file_name(site_id).read_bytes())
+    def load(self, site_id: SiteId) -> Certificate:
+        return Certificate.load_pem(CertificatePEM(self._make_file_name(site_id).read_bytes()))
 
     def _make_file_name(self, site_id: SiteId) -> Path:
         return self.path / f"{site_id}.pem"
@@ -190,12 +182,23 @@ class RemoteSiteCertsStore:
 class CertManagementEvent(SecurityEvent):
     """Indicates a certificate has been added or removed"""
 
-    ComponentType = Literal["saml", "agent controller", "backup encryption keys", "agent bakery"]
+    ComponentType = Literal[
+        "saml",
+        "agent controller",
+        "backup encryption keys",
+        "agent bakery",
+        "trusted certificate authorities",
+    ]
 
     def __init__(
         self,
         *,
-        event: Literal["certificate created", "certificate removed", "certificate uploaded"],
+        event: Literal[
+            "certificate created",
+            "certificate removed",
+            "certificate uploaded",
+            "certificate added",
+        ],
         component: CertManagementEvent.ComponentType,
         actor: UserId | str | None,
         cert: Certificate | None,
@@ -217,3 +220,151 @@ class CertManagementEvent(SecurityEvent):
             details,
             SecurityEvent.Domain.cert_management,
         )
+
+
+class SiteBrokerCertificate:
+    def __init__(self, cert_path: Path, key_path: Path) -> None:
+        self.cert_path: Final = cert_path
+        self.key_path: Final = key_path
+
+    @classmethod
+    def create_bundle(
+        cls, site_name: str, issuer: CertificateWithPrivateKey
+    ) -> CertificateWithPrivateKey:
+        """Have the site's certificate issued by the given CA.
+
+        The certificate and key are not persisted to disk directly because this method is also used
+        to create certificates for remote sites.
+        """
+        organization = f"Checkmk Site {site_name}"
+        expires = relativedelta(years=2)
+        is_ca = False
+        key_size = 4096
+
+        return issuer.issue_new_certificate(
+            common_name=site_name,
+            organization=organization,
+            expiry=expires,
+            key_size=key_size,
+            is_ca=is_ca,
+        )
+
+    def persist(self, cert_bundle: CertificateWithPrivateKey) -> None:
+        self.cert_path.parent.mkdir(parents=True, exist_ok=True)
+        PersistedCertificateWithPrivateKey.persist(cert_bundle, self.cert_path, self.key_path)
+
+    def persist_broker_certificates(
+        self,
+        signing_ca: bytes,
+        cert: bytes,
+        additionally_trusted_ca: bytes,
+        trusted_cas_store: MessagingTrustedCAs,
+    ) -> None:
+        """Persist the received certificates to disk."""
+        ca = Certificate.load_pem(CertificatePEM(signing_ca))
+        Certificate.load_pem(CertificatePEM(cert)).verify_is_signed_by(ca)
+
+        self.cert_path.parent.mkdir(parents=True, exist_ok=True)
+
+        trusted_cas_store.write(signing_ca + additionally_trusted_ca)
+        self.cert_path.write_bytes(cert)
+
+
+class SiteBrokerCA:
+    def __init__(self, cert_path: Path, key_path: Path) -> None:
+        self.cert_path: Final = cert_path
+        self.key_path: Final = key_path
+
+    def create_and_persist(self, site_name: str) -> PersistedCertificateWithPrivateKey:
+        common_name = f"Site '{site_name}' broker CA"
+        organization = f"Checkmk Site {site_name}"
+        expires = relativedelta(years=5)
+        key_size = 4096
+        is_ca = True
+
+        cert = CertificateWithPrivateKey.generate_self_signed(
+            common_name=common_name,
+            organization=organization,
+            expiry=expires,
+            key_size=key_size,
+            is_ca=is_ca,
+        )
+
+        self.cert_path.parent.mkdir(parents=True, exist_ok=True)
+        return PersistedCertificateWithPrivateKey.persist(cert, self.cert_path, self.key_path)
+
+    def load(self) -> PersistedCertificateWithPrivateKey:
+        return PersistedCertificateWithPrivateKey.read_files(self.cert_path, self.key_path)
+
+    def delete(self) -> None:
+        self.cert_path.unlink(missing_ok=True)
+        self.key_path.unlink(missing_ok=True)
+
+
+class CustomerBrokerCA:
+    def __init__(self, cert_path: Path, key_path: Path) -> None:
+        self.cert_path: Final = cert_path
+        self.key_path: Final = key_path
+
+    def create_and_persist(
+        self, customer: str, site_name: str
+    ) -> PersistedCertificateWithPrivateKey:
+        common_name = f"Message broker '{customer}' CA"
+        organization = f"Checkmk Site {site_name}"
+        expires = relativedelta(years=5)
+        key_size = 4096
+        is_ca = True
+
+        cert = CertificateWithPrivateKey.generate_self_signed(
+            common_name=common_name,
+            organization=organization,
+            expiry=expires,
+            key_size=key_size,
+            is_ca=is_ca,
+        )
+
+        self.cert_path.parent.mkdir(parents=True, exist_ok=True)
+        return PersistedCertificateWithPrivateKey.persist(cert, self.cert_path, self.key_path)
+
+    def load(self) -> PersistedCertificateWithPrivateKey:
+        return PersistedCertificateWithPrivateKey.read_files(self.cert_path, self.key_path)
+
+    def delete(self) -> None:
+        self.cert_path.unlink(missing_ok=True)
+        self.key_path.unlink(missing_ok=True)
+
+
+class LocalBrokerCertificate:
+    def __init__(self, path: Path) -> None:
+        self.cert_path: Final = path
+
+    def load(self) -> Certificate:
+        return Certificate.load_pem(CertificatePEM(self.cert_path.read_bytes()))
+
+    def write(self, cert: bytes) -> None:
+        save_single_cert(
+            self.cert_path,
+            Certificate.load_pem(CertificatePEM(cert)),
+        )
+
+    def exists(self) -> bool:
+        return self.cert_path.exists()
+
+
+class MessagingTrustedCAs:
+    def __init__(self, path: Path) -> None:
+        self.path: Final = path
+
+    def write(self, certs: bytes) -> None:
+        self.path.write_bytes(certs)
+
+    def update_trust_cme(self, update_from: Iterable[Path]) -> None:
+        """Add all customer CAs to the trusted CAs file. Only relevant in a multisite setup."""
+        trusted_cas = []
+        for path in update_from:
+            try:
+                trusted_cas.append(path.read_bytes())
+            except FileNotFoundError:
+                pass
+
+        self.write(b"".join(trusted_cas))

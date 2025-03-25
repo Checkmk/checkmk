@@ -6,10 +6,10 @@
 
 # mypy: disable-error-code="var-annotated,arg-type"
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+
+check_info = {}
 
 
 def parse_emcvnx_storage_pools(string_table):
@@ -89,15 +89,19 @@ def check_emcvnx_storage_pools(item, params, parsed):
         over_subscribed = float(data["Oversubscribed by (GBs)"]) * 1024**3
         total_subscribed_capacity = float(data["Total Subscribed Capacity (GBs)"]) * 1024**3
 
-        yield 0, (
-            "State: %s, Status: %s, [Phys. capacity] User capacity: %s, "
-            + "Consumed capacity: %s, Available capacity: %s"
-        ) % (
-            state,
-            status,
-            render.bytes(user_capacity),
-            render.bytes(consumed_capacity),
-            render.bytes(avail_capacity),
+        yield (
+            0,
+            (
+                "State: %s, Status: %s, [Phys. capacity] User capacity: %s, "
+                + "Consumed capacity: %s, Available capacity: %s"
+            )
+            % (
+                state,
+                status,
+                render.bytes(user_capacity),
+                render.bytes(consumed_capacity),
+                render.bytes(avail_capacity),
+            ),
         )
 
         state = 0
@@ -109,30 +113,35 @@ def check_emcvnx_storage_pools(item, params, parsed):
             elif percent_full >= perc_full_warn:
                 state = 1
             if state:
-                infotext += " (warn/crit at {}/{})".format(
-                    render.bytes(perc_full_warn),
-                    render.bytes(perc_full_crit),
+                infotext += (
+                    f" (warn/crit at {render.bytes(perc_full_warn)}/{render.bytes(perc_full_crit)})"
                 )
 
         yield state, infotext
-        yield 0, (
-            "[Virt. capacity] Percent subscribed: %s, Oversubscribed by: %s, "
-            + "Total subscribed capacity: %s"
-        ) % (
-            render.percent(percent_subscribed),
-            render.bytes(over_subscribed),
-            render.bytes(total_subscribed_capacity),
-        ), [
-            ("emcvnx_consumed_capacity", consumed_capacity),
-            ("emcvnx_avail_capacity", avail_capacity),
-            ("emcvnx_perc_full", percent_full),
-            ("emcvnx_perc_subscribed", percent_subscribed),
-            ("emcvnx_over_subscribed", over_subscribed),
-            ("emcvnx_total_subscribed_capacity", total_subscribed_capacity),
-        ]
+        yield (
+            0,
+            (
+                "[Virt. capacity] Percent subscribed: %s, Oversubscribed by: %s, "
+                + "Total subscribed capacity: %s"
+            )
+            % (
+                render.percent(percent_subscribed),
+                render.bytes(over_subscribed),
+                render.bytes(total_subscribed_capacity),
+            ),
+            [
+                ("emcvnx_consumed_capacity", consumed_capacity),
+                ("emcvnx_avail_capacity", avail_capacity),
+                ("emcvnx_perc_full", percent_full),
+                ("emcvnx_perc_subscribed", percent_subscribed),
+                ("emcvnx_over_subscribed", over_subscribed),
+                ("emcvnx_total_subscribed_capacity", total_subscribed_capacity),
+            ],
+        )
 
 
 check_info["emcvnx_storage_pools"] = LegacyCheckDefinition(
+    name="emcvnx_storage_pools",
     parse_function=parse_emcvnx_storage_pools,
     service_name="Pool %s General",
     discovery_function=inventory_emcvnx_storage_pools,
@@ -225,6 +234,7 @@ def check_emcvnx_storage_pools_tiering(item, params, parsed):
 
 
 check_info["emcvnx_storage_pools.tiering"] = LegacyCheckDefinition(
+    name="emcvnx_storage_pools_tiering",
     service_name="Pool %s Tiering Status",
     sections=["emcvnx_storage_pools"],
     discovery_function=inventory_emcvnx_storage_pools_tiering,
@@ -314,6 +324,7 @@ def check_emcvnx_storage_pools_tieringtypes(item, params, parsed):
 
 
 check_info["emcvnx_storage_pools.tieringtypes"] = LegacyCheckDefinition(
+    name="emcvnx_storage_pools_tieringtypes",
     service_name="Pool %s tiering",
     sections=["emcvnx_storage_pools"],
     discovery_function=inventory_emcvnx_storage_pools_tieringtypes,
@@ -373,6 +384,7 @@ def check_emcvnx_storage_pools_deduplication(item, _no_params, parsed):
 
 
 check_info["emcvnx_storage_pools.deduplication"] = LegacyCheckDefinition(
+    name="emcvnx_storage_pools_deduplication",
     service_name="Pool %s Deduplication",
     sections=["emcvnx_storage_pools"],
     discovery_function=inventory_emcvnx_storage_pools,

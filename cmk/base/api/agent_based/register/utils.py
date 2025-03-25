@@ -3,52 +3,30 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 import inspect
-import sys
-from collections.abc import Callable, Mapping, Sequence
+from collections import defaultdict
+from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
 from typing import Final, get_args, Literal, NoReturn, Union
 
-from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets import RuleSetName
+from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.inventory import InventoryPluginName
+from cmk.checkengine.inventory import InventoryPlugin, InventoryPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
-from cmk.base.api.agent_based.plugin_classes import CheckPlugin
+from cmk.base.api.agent_based.plugin_classes import (
+    AgentBasedPlugins,
+    CheckPlugin,
+    SectionPlugin,
+    SNMPSectionPlugin,
+)
 
 from cmk.agent_based.v1.register import RuleSetType
-from cmk.ccc.version import Edition
-from cmk.discover_plugins import PluginLocation
 
 TypeLabel = Literal["check", "cluster_check", "discovery", "host_label", "inventory"]
 
 ITEM_VARIABLE: Final = "%s"
-
-_ALLOWED_EDITION_FOLDERS: Final = {e.short for e in Edition}
-
-
-def get_validated_plugin_location() -> PluginLocation:
-    """Find out which module registered the plug-in and make sure its in the right place"""
-    # We used this before, but it was a performance killer. The method below is a lot faster.
-    # calling_from = inspect.stack()[2].filename
-    full_module_name = str(sys._getframe(2).f_globals["__name__"])
-
-    match full_module_name.split("."):
-        case ("cmk", "base", "plugins", "agent_based", _module):
-            return PluginLocation(full_module_name)
-        case (
-            "cmk",
-            "base",
-            "plugins",
-            "agent_based",
-            edition,
-            _module,
-        ) if edition in _ALLOWED_EDITION_FOLDERS:
-            return PluginLocation(full_module_name)
-
-    raise ImportError(f"do not register from {full_module_name!r}")
 
 
 def create_subscribed_sections(
@@ -69,7 +47,7 @@ def validate_function_arguments(
     type_label: TypeLabel,
     function: Callable,
     has_item: bool,
-    default_params: ParametersTypeAlias | None,
+    default_params: Mapping[str, object] | None,
     sections: list[ParsedSectionName],
 ) -> None:
     """Validate the functions signature and type"""
@@ -178,10 +156,6 @@ def _validate_optional_section_annotation(
         )
 
 
-def _value_type(annotation: inspect.Parameter) -> bytes:
-    return get_args(annotation)[1]
-
-
 def validate_ruleset_type(ruleset_type: RuleSetType) -> None:
     if not isinstance(ruleset_type, RuleSetType):
         allowed = ", ".join(str(c) for c in RuleSetType)
@@ -191,7 +165,7 @@ def validate_ruleset_type(ruleset_type: RuleSetType) -> None:
 def validate_default_parameters(
     params_type: Literal["check", "discovery", "host_label", "inventory"],
     ruleset_name: str | None,
-    default_parameters: ParametersTypeAlias | None,
+    default_parameters: Mapping[str, object] | None,
 ) -> None:
     if default_parameters is None:
         if ruleset_name is None:
@@ -205,34 +179,49 @@ def validate_default_parameters(
         raise TypeError(f"missing ruleset name for default {params_type} parameters")
 
 
-def validate_check_ruleset_item_consistency(
-    check_plugin: CheckPlugin,
-    check_plugins_by_ruleset_name: dict[RuleSetName | None, list[CheckPlugin]],
-) -> None:
-    """Validate check plug-ins sharing a check_ruleset_name have either all or none an item.
+def filter_relevant_raw_sections(
+    *,
+    consumers: Iterable[CheckPlugin | InventoryPlugin],
+    sections: Iterable[SectionPlugin],
+) -> Mapping[SectionName, SectionPlugin]:
+    """Return the raw sections potentially relevant for the given check or inventory plugins"""
+    parsed_section_names = {
+        section_name for plugin in consumers for section_name in plugin.sections
+    }
 
-    Mixed checkgroups lead to strange exceptions when processing the check parameters.
-    So it is much better to catch these errors in a central place with a clear error message.
+    return {
+        section.name: section
+        for section in sections
+        if section.parsed_section_name in parsed_section_names
+    }
+
+
+def sections_needing_redetection(
+    sections: Iterable[SNMPSectionPlugin],
+) -> set[SectionName]:
+    """Return the names of sections that need to be redetected
+
+    Sections that are not the only producers of their parsed
+    sections need to be re-detected during checking.
     """
-    if check_plugin.check_ruleset_name is None:
-        return
+    sections_by_parsed_name = defaultdict(set)
+    for section in sections:
+        sections_by_parsed_name[section.parsed_section_name].add(section.name)
+    return {
+        section_name
+        for section_names in sections_by_parsed_name.values()
+        if len(section_names) > 1
+        for section_name in section_names
+    }
 
-    present_check_plugins = check_plugins_by_ruleset_name[check_plugin.check_ruleset_name]
-    if not present_check_plugins:
-        return
 
-    # Try to detect whether the check has an item. But this mechanism is not
-    # 100% reliable since Checkmk appends an item to the service_description when "%s"
-    # is not in the checks service_description template.
-    # Maybe we need to define a new rule which enforces the developer to use the %s in
-    # the service_description. At least for grouped checks.
-    item_present = ITEM_VARIABLE in check_plugin.service_name
-    item_expected = ITEM_VARIABLE in present_check_plugins[0].service_name
-
-    if item_present is not item_expected:
-        present_plugins = ", ".join(str(p.name) for p in present_check_plugins)
-        raise ValueError(
-            f"Check ruleset {check_plugin.check_ruleset_name} has checks with and without item! "
-            "At least one of the checks in this group needs to be changed "
-            f"(offending plug-in: {check_plugin.name}, present plug-ins: {present_plugins})."
+def extract_known_discovery_rulesets(plugins: AgentBasedPlugins) -> Collection[RuleSetName]:
+    return {
+        r
+        for r in (
+            *(p.discovery_ruleset_name for p in plugins.check_plugins.values()),
+            *(p.host_label_ruleset_name for p in plugins.agent_sections.values()),
+            *(p.host_label_ruleset_name for p in plugins.snmp_sections.values()),
         )
+        if r is not None
+    }

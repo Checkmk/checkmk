@@ -5,11 +5,11 @@
 
 import sys
 
+import cmk.ccc.debug
+
 import cmk.utils.paths
 from cmk.utils.log import console
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
-
-import cmk.ccc.debug
 
 from .function_types import (
     BakeryPlugin,

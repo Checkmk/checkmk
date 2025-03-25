@@ -18,7 +18,7 @@
 
 function count_graph_designer_checked_checkbox() {
     const all_checkboxes = document.querySelectorAll(
-        "#form_graph input[type='checkbox']"
+        "#form_graph input[type='checkbox']",
     ) as NodeListOf<HTMLInputElement>;
     return Array.from(all_checkboxes).filter(el => el.checked).length;
 }
@@ -26,20 +26,20 @@ function count_graph_designer_checked_checkbox() {
 export function fix_graph_designer_operator_visibiliy() {
     toggle_graph_designer_block_visibility(
         "graph_designer_operators",
-        count_graph_designer_checked_checkbox() >= 2
+        count_graph_designer_checked_checkbox() >= 2,
     );
 }
 
 export function fix_graph_designer_transform_visibiliy() {
     toggle_graph_designer_block_visibility(
         "graph_designer_transformations",
-        count_graph_designer_checked_checkbox() == 1
+        count_graph_designer_checked_checkbox() == 1,
     );
 }
 
 export function toggle_graph_designer_block_visibility(
     elementid: string,
-    visible: boolean
+    visible: boolean,
 ) {
     const block = document.getElementById(elementid);
     const block_off = document.getElementById(elementid + "_off");

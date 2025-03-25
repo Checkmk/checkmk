@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import equals, OIDEnd, SNMPTree, StringTable
+
+check_info = {}
 
 
 def inventory_arris_cmts_cpu(info):
@@ -48,6 +48,7 @@ def parse_arris_cmts_cpu(string_table: StringTable) -> StringTable:
 
 
 check_info["arris_cmts_cpu"] = LegacyCheckDefinition(
+    name="arris_cmts_cpu",
     parse_function=parse_arris_cmts_cpu,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4998.2.1"),
     fetch=SNMPTree(

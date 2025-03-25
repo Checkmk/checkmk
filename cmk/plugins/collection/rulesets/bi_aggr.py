@@ -28,13 +28,13 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.rulesets.v1.rule_specs import ActiveCheck, Topic
 
 
-def _migrate_credentials(
+def migrate_credentials(
     params: object,
 ) -> tuple[Literal["automation"], None] | tuple[Literal["credentials"], Mapping[str, object]]:
     match params:
-        case "automation":
+        case "automation" | ("automation", None):
             return "automation", None
-        case "credentials", (user, secret):
+        case "credentials", ((user, secret) | {"user": user, "secret": secret}):
             return "credentials", {"user": user, "secret": secret}
     raise ValueError(params)
 
@@ -78,7 +78,7 @@ def _form_spec_active_checks_bi_aggr() -> Dictionary:
                 required=True,
                 parameter_form=CascadingSingleChoice(
                     title=Title("Login credentials"),
-                    migrate=_migrate_credentials,
+                    migrate=migrate_credentials,
                     help_text=Help(
                         "Here you can configured the credentials to be used. Keep in mind that the <tt>automation</tt> user need "
                         "to exist if you choose this option"
@@ -141,6 +141,9 @@ def _form_spec_active_checks_bi_aggr() -> Dictionary:
                                     ),
                                     SingleChoiceElement(name="basic", title=Title("HTTP Basic")),
                                     SingleChoiceElement(name="digest", title=Title("HTTP Digest")),
+                                    # Kerberos auth support was removed with 2.4.0 but kept here to
+                                    # show a helpful error message in case a user still has
+                                    # configured it. Can be removed with 2.5.
                                     SingleChoiceElement(name="kerberos", title=Title("Kerberos")),
                                 ],
                             ),
@@ -156,7 +159,7 @@ def _form_spec_active_checks_bi_aggr() -> Dictionary:
                         "in_downtime": DictElement(
                             parameter_form=SingleChoice(
                                 title=Title("State, if BI aggregate is in scheduled downtime"),
-                                migrate=lambda x: str(x) or "normal",
+                                migrate=lambda x: str(x) if x is not None else "normal",
                                 elements=(
                                     SingleChoiceElement(
                                         name="normal",
@@ -173,7 +176,7 @@ def _form_spec_active_checks_bi_aggr() -> Dictionary:
                         "acknowledged": DictElement(
                             parameter_form=SingleChoice(
                                 title=Title("State, if BI aggregate is acknowledged"),
-                                migrate=lambda x: str(x) or "normal",
+                                migrate=lambda x: str(x) if x is not None else "normal",
                                 elements=(
                                     SingleChoiceElement(
                                         name="normal",

@@ -10,11 +10,12 @@ from collections.abc import Iterator
 from datetime import datetime
 from urllib.parse import unquote
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc.site import omd_site, url_prefix
+
 import cmk.utils.paths
-from cmk.utils.crypto.password import Password
 from cmk.utils.licensing.handler import LicenseStateError, RemainingTrialTime
 from cmk.utils.licensing.registry import get_remaining_trial_time_rounded
-from cmk.utils.local_secrets import AutomationUserSecret
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.urls import is_allowed_url
 from cmk.utils.user import UserId
@@ -30,23 +31,29 @@ from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, ungettext
-from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, LoggedInUser, user
+from cmk.gui.logged_in import (
+    LoggedInNobody,
+    LoggedInRemoteSite,
+    LoggedInSuperUser,
+    LoggedInUser,
+    user,
+)
 from cmk.gui.main import get_page_heading
 from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.session import session, UserContext
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.userdb import get_active_saml_connections
 from cmk.gui.userdb.session import auth_cookie_name
+from cmk.gui.utils import roles
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.login import show_saml2_login, show_user_errors
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.security_log_events import AuthenticationFailureEvent, AuthenticationSuccessEvent
-from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, requested_file_name, urlencode
 from cmk.gui.utils.user_errors import user_errors
 
-import cmk.ccc.version as cmk_version
-from cmk.ccc.site import omd_site, url_prefix
+from cmk.crypto.password import Password
 
 
 def register(page_registry: PageRegistry) -> None:
@@ -74,7 +81,7 @@ def authenticate() -> Iterator[bool]:
     automation secret authentication."""
     if isinstance(session.user, LoggedInNobody):
         yield False
-    elif isinstance(session.user, LoggedInSuperUser):
+    elif isinstance(session.user, (LoggedInSuperUser, LoggedInRemoteSite)):
         # This is used with the internaltoken auth
         # Let's hope we do not need the transactions for this user...
         yield True
@@ -94,10 +101,6 @@ def TransactionIdContext(user_id: UserId) -> Iterator[None]:
 
     """
     with UserContext(user_id):
-        # Auth with automation secret succeeded before - mark transid as
-        # unneeded in this case
-        if session.session_info.auth_type == "automation":
-            transactions.ignore()
         try:
             yield
         finally:
@@ -159,7 +162,7 @@ class LoginPage(Page):
 
         self._show_login_page()
 
-    def _do_login(self) -> None:  # pylint: disable=too-many-branches
+    def _do_login(self) -> None:
         """handle the login form"""
         if not request.var("_login"):
             return
@@ -212,7 +215,7 @@ class LoginPage(Page):
                 # from mixed case to lower case.
                 username = result
 
-                if _is_automation_user(username):
+                if roles.is_automation_user(username):
                     raise MKUserError(None, _("Automation user rejected"))
 
                 # The login succeeded! Now:
@@ -226,6 +229,17 @@ class LoginPage(Page):
                 if userdb.is_two_factor_login_enabled(username):
                     raise HTTPRedirect(
                         "user_login_two_factor.py?_origtarget=%s" % urlencode(makeuri(request, []))
+                    )
+
+                # Having this before password updating to prevent redirect access issues
+                if (
+                    active_config.require_two_factor_all_users
+                    or roles.is_two_factor_required(username)
+                ) and not session.session_info.two_factor_completed:
+                    session.session_info.two_factor_required = True
+                    raise HTTPRedirect(
+                        "user_two_factor_enforce.py?_origtarget=%s"
+                        % urlencode(makeuri(request, []))
                     )
 
                 log_security_event(
@@ -430,10 +444,6 @@ def _show_remaining_trial_time(remaining_trial_time: RemainingTrialTime) -> None
     html.close_div()
 
     html.close_div()
-
-
-def _is_automation_user(user_id: UserId) -> bool:
-    return AutomationUserSecret(user_id).exists()
 
 
 class LogoutPage(Page):

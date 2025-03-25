@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import pytest
+
+from cmk.ccc.version import Edition
 
 from cmk.utils.licensing.handler import LicenseState
 
@@ -17,8 +18,6 @@ from cmk.gui.utils.compatibility import (
     LicensingCompatibility,
     LicensingCompatible,
 )
-
-from cmk.ccc.version import Edition
 
 
 @pytest.mark.parametrize(

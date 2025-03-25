@@ -5,8 +5,7 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.agent_based.v2 import IgnoreResultsError, StringTable
 
 from .checktestlib import Check, CheckResult
 

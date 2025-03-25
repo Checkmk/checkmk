@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Rulesets"""
+
 from __future__ import annotations
 
 from cmk.gui.logged_in import user
@@ -18,10 +19,22 @@ from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.escaping import strip_tags
-from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Ruleset
+from cmk.gui.watolib.rulesets import (
+    AllRulesets,
+    FolderRulesets,
+    Ruleset,
+    SingleRulesetRecursively,
+    visible_ruleset,
+    visible_rulesets,
+)
 from cmk.gui.watolib.rulesets import RulesetCollection as RulesetCollection_
-from cmk.gui.watolib.rulesets import SingleRulesetRecursively, visible_ruleset, visible_rulesets
 
+LIST_PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("wato.rulesets"),
+        permissions.Optional(permissions.Perm("wato.edit_all_passwords")),
+    ]
+)
 PERMISSIONS = permissions.Perm("wato.rulesets")
 
 
@@ -31,7 +44,7 @@ PERMISSIONS = permissions.Perm("wato.rulesets")
     method="get",
     query_params=[RulesetSearchOptions],
     response_schema=RulesetCollection,
-    permissions_required=PERMISSIONS,
+    permissions_required=LIST_PERMISSIONS,
 )
 def list_rulesets(param):
     """Search rule sets"""

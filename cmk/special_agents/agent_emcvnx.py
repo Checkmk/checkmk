@@ -88,7 +88,7 @@ def normalize_str(line: str) -> str:
     return line.rstrip("\n").rstrip("\r")
 
 
-def main(sys_argv=None):  # pylint: disable=too-many-branches
+def main(sys_argv=None):
     if sys_argv is None:
         replace_passwords()
         sys_argv = sys.argv[1:]
@@ -191,11 +191,7 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
         # try using security files
         basecmd = "naviseccli -h %s " % host_address
     else:
-        basecmd = "naviseccli -h {} -User {} -Password '{}' -Scope 0 ".format(
-            host_address,
-            user,
-            password,
-        )
+        basecmd = f"naviseccli -h {host_address} -User {user} -Password '{password}' -Scope 0 "
 
     #
     # check_mk section of agent output
@@ -214,16 +210,16 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
         )
         sys.exit(1)
 
-    print("<<<emcvnx_info:sep(58)>>>")
+    sys.stdout.write("<<<emcvnx_info:sep(58)>>>\n")
     for line in cmdout:
-        print(line.strip())
+        sys.stdout.write(line.strip() + "\n")
 
     # if module "agent" was requested, fetch additional information about the
     # agent, e. g. Model and Revision
     if fetch_agent_info:
-        print("<<<emcvnx_agent:sep(58)>>>")
+        sys.stdout.write("<<<emcvnx_agent:sep(58)>>>\n")
         for line in run("getagent"):
-            print(normalize_str(line))
+            sys.stdout.write(normalize_str(line) + "\n")
 
     #
     # all other sections of agent output
@@ -232,15 +228,15 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
         if module_options["active"] is True:
             separator = module_options["sep"]
             if separator:
-                print(f"<<<emcvnx_{module}:sep({separator})>>>")
+                sys.stdout.write(f"<<<emcvnx_{module}:sep({separator})>>>\n")
             else:
-                print("<<<emcvnx_%s>>>" % module)
+                sys.stdout.write("<<<emcvnx_%s>>>\n" % module)
 
             for header, cmd_option in module_options["cmd_options"]:
                 if header is not None:
-                    print("[[[%s]]]" % header)
+                    sys.stdout.write("[[[%s]]]\n" % header)
                 for line in run(cmd_option):
-                    print(normalize_str(line))
+                    sys.stdout.write(normalize_str(line) + "\n")
 
     if g_profile:
         g_profile_path = Path("emcvnx_profile.out")

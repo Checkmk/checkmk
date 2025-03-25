@@ -8,9 +8,9 @@ from collections.abc import Mapping
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
 from cmk.checkengine.checking import CheckPluginName
+
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 
 from cmk.agent_based.v2 import CheckResult, IgnoreResultsError, Metric, Result, State
 from cmk.plugins.lib.fileinfo import Fileinfo, FileinfoItem
@@ -50,9 +50,12 @@ from cmk.plugins.lib.fileinfo import Fileinfo, FileinfoItem
     ],
 )
 def test_sap_hana_fileinfo(
-    fix_register: FixRegister, item: str, parsed: Fileinfo, expected_result: CheckResult
+    agent_based_plugins: AgentBasedPlugins,
+    item: str,
+    parsed: Fileinfo,
+    expected_result: CheckResult,
 ) -> None:
-    plugin = fix_register.check_plugins[CheckPluginName("sap_hana_fileinfo")]
+    plugin = agent_based_plugins.check_plugins[CheckPluginName("sap_hana_fileinfo")]
     result = list(plugin.check_function(item=item, params={}, section=parsed))
 
     assert result == expected_result
@@ -67,8 +70,10 @@ def test_sap_hana_fileinfo(
         ),
     ],
 )
-def test_sap_hana_fileinfo_stale(fix_register: FixRegister, item: str, parsed: Fileinfo) -> None:
-    plugin = fix_register.check_plugins[CheckPluginName("sap_hana_fileinfo")]
+def test_sap_hana_fileinfo_stale(
+    agent_based_plugins: AgentBasedPlugins, item: str, parsed: Fileinfo
+) -> None:
+    plugin = agent_based_plugins.check_plugins[CheckPluginName("sap_hana_fileinfo")]
     with pytest.raises(IgnoreResultsError) as e:
         list(plugin.check_function(item=item, params={}, section=parsed))
 
@@ -104,13 +109,13 @@ def test_sap_hana_fileinfo_stale(fix_register: FixRegister, item: str, parsed: F
     ],
 )
 def test_sap_hana_fileinfo_groups(
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
     item: str,
     parsed: Fileinfo,
     params: Mapping[str, object],
     expected_result: CheckResult,
 ) -> None:
-    plugin = fix_register.check_plugins[CheckPluginName("sap_hana_fileinfo_groups")]
+    plugin = agent_based_plugins.check_plugins[CheckPluginName("sap_hana_fileinfo_groups")]
 
     result = list(plugin.check_function(item=item, params=params, section=parsed))
     assert result == expected_result
@@ -126,9 +131,9 @@ def test_sap_hana_fileinfo_groups(
     ],
 )
 def test_sap_hana_fileinfo_groups_stale(
-    fix_register: FixRegister, item: str, parsed: Fileinfo
+    agent_based_plugins: AgentBasedPlugins, item: str, parsed: Fileinfo
 ) -> None:
-    plugin = fix_register.check_plugins[CheckPluginName("sap_hana_fileinfo_groups")]
+    plugin = agent_based_plugins.check_plugins[CheckPluginName("sap_hana_fileinfo_groups")]
     with pytest.raises(IgnoreResultsError) as e:
         list(plugin.check_function(item=item, params={}, section=parsed))
 

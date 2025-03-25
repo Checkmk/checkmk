@@ -13,8 +13,6 @@
 +---------------------------------------------------------+
 """
 
-# pylint: disable=duplicate-code
-
 from types import ModuleType
 
 from cmk.agent_based import v2
@@ -27,6 +25,7 @@ def _names(space: ModuleType) -> set[str]:
 def test_v2() -> None:
     expected = {
         "entry_point_prefixes",
+        "AgentParseFunction",
         "AgentSection",
         "SimpleSNMPSection",
         "SNMPSection",

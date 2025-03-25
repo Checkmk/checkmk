@@ -13,6 +13,7 @@ class OpenAPIAttributes:
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         metadata = kwargs.setdefault("metadata", {})
         for key in [
+            "deprecated",
             "description",
             "doc_default",
             "enum",
@@ -246,7 +247,7 @@ class UniqueFields:
     default_error_messages = {
         "duplicate": "Duplicate entry found at entry #{idx}: {entry!r}",
         "duplicate_vary": (
-            "Duplicate entry found at entry #{idx}: {entry!r} " "(optional fields {optional!r})"
+            "Duplicate entry found at entry #{idx}: {entry!r} (optional fields {optional!r})"
         ),
     }
 
@@ -335,9 +336,20 @@ class Nested(OpenAPIAttributes, fields.Nested, UniqueFields):
     # In this situation, it should be sufficient to replace the `missing` parameter with
     # a `lambda` which returns the same object, as callables are ignored by apispec.
 
-    def _deserialize(self, value, attr, data, partial=None, **kwargs):
+    context: dict[object, object] = {}
+
+    def __init__(
+        self,
+        *args,
+        **kwargs,
+    ):
+        context = kwargs.pop("context", {})
+        super().__init__(*args, **kwargs)
+        self.context = context
+
+    def _deserialize(self, value, attr, data=None, partial=None, **kwargs):
         self._validate_missing(value)
-        if value is fields.missing_:  # type: ignore[attr-defined]
+        if value is fields.missing_:  # type: ignore[attr-defined, unused-ignore]
             _miss = self.missing
             value = _miss() if callable(_miss) else _miss
         value = super()._deserialize(value, attr, data)

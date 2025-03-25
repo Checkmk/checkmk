@@ -52,7 +52,7 @@ def parse_netapp_ontap_ports(string_table: StringTable) -> Section:
     return {
         port_obj.item_name(): port_obj
         for line in string_table
-        if (port_obj := models.PortModel.model_validate_json(line[0]))
+        for port_obj in [models.PortModel.model_validate_json(line[0])]
     }
 
 
@@ -91,7 +91,7 @@ def check_netapp_ontap_ports(
         state={"up": State.OK, "degraded": State.CRIT, "down": State.UNKNOWN}.get(
             port.state, State.UNKNOWN
         ),
-        summary=f"Health status: {({'up': 'healthy', 'down': 'unknown', 'degraded': 'not healthy'}.get(port.state))}",
+        summary=f"Health status: { ({'up': 'healthy', 'down': 'unknown', 'degraded': 'not healthy'}.get(port.state)) }",
     )
 
     yield Result(

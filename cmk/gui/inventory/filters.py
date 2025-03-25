@@ -351,7 +351,10 @@ class FilterInvHasSoftwarePackage(Filter):
         return bool(value.get(self._varprefix + "name"))
 
     def display(self, value: FilterHTTPVariables) -> None:
-        html.text_input(self._varprefix + "name")
+        html.text_input(
+            varname=self._varprefix + "name",
+            default_value=value.get(self._varprefix + "name", ""),
+        )
         html.br()
         display_filter_radiobuttons(
             varname=self._varprefix + "match",
@@ -432,6 +435,7 @@ class FilterInvHasSoftwarePackage(Filter):
                 continue
             if to_version and self.version_is_higher(version, to_version):
                 continue
+            return True
         return False
 
     def version_is_lower(self, a: str | None, b: str | None) -> bool:

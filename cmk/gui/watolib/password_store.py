@@ -7,17 +7,18 @@ import subprocess
 from collections.abc import Mapping
 from pathlib import Path
 
+from cmk.ccc import store
+
 from cmk.utils import password_store
 from cmk.utils.password_store import Password
 
-from cmk.gui import userdb
+from cmk.gui import userdb, valuespec
 from cmk.gui.hooks import request_memoize
+from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Choices
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSimpleConfigFile
 from cmk.gui.watolib.utils import wato_root_dir
-
-from cmk.ccc import store
 
 
 class PasswordStore(WatoSimpleConfigFile[Password]):
@@ -93,7 +94,7 @@ def join_password_specs(
 
 
 def split_password_specs(
-    joined: Mapping[str, Password]
+    joined: Mapping[str, Password],
 ) -> tuple[dict[str, Password], dict[str, str]]:
     """Separate passwords from meta data"""
     meta_data, passwords = {}, {}
@@ -113,5 +114,88 @@ def passwordstore_choices() -> Choices:
     ]
 
 
+# TODO remove this once a solution for use of passwordstore_choices is found
+def passwordstore_choices_without_user() -> Choices:
+    pw_store = PasswordStore()
+    return [(ident, pw["title"]) for ident, pw in pw_store.load_for_reading().items()]
+
+
 def register(config_file_registry: ConfigFileRegistry) -> None:
     config_file_registry.register(PasswordStore())
+
+
+def IndividualOrStoredPassword(
+    title: str | None = None,
+    help: valuespec.ValueSpecHelp | None = None,
+    allow_empty: bool = True,
+    size: int = 25,
+) -> valuespec.CascadingDropdown:
+    """ValueSpec for a password that can be entered directly or selected from a password store
+
+    One should look into using :func:`password_store.extract` to translate the reference to the
+    actual password.
+    """
+    return valuespec.CascadingDropdown(
+        title=title,
+        help=help,
+        choices=[
+            (
+                "password",
+                _("Explicit"),
+                valuespec.Password(
+                    allow_empty=allow_empty,
+                    size=size,
+                ),
+            ),
+            (
+                "store",
+                _("From password store"),
+                valuespec.DropdownChoice(
+                    choices=passwordstore_choices,
+                    sorted=True,
+                    invalid_choice="complain",
+                    invalid_choice_title=_("Password does not exist or using not permitted"),
+                    invalid_choice_error=_(
+                        "The configured password has either be removed or you "
+                        "are not permitted to use this password. Please choose "
+                        "another one."
+                    ),
+                ),
+            ),
+        ],
+        orientation="horizontal",
+    )
+
+
+def MigrateNotUpdatedToIndividualOrStoredPassword(
+    title: str | None = None,
+    help: valuespec.ValueSpecHelp | None = None,
+    allow_empty: bool = True,
+    size: int = 25,
+) -> valuespec.MigrateNotUpdated:
+    return valuespec.MigrateNotUpdated(
+        valuespec=IndividualOrStoredPassword(
+            title=title,
+            help=help,
+            allow_empty=allow_empty,
+            size=size,
+        ),
+        migrate=lambda v: ("password", v) if not isinstance(v, tuple) else v,
+    )
+
+
+def MigrateToIndividualOrStoredPassword(
+    title: str | None = None,
+    help: valuespec.ValueSpecHelp | None = None,
+    allow_empty: bool = True,
+    size: int = 25,
+) -> valuespec.Migrate:
+    return valuespec.Migrate(
+        valuespec=IndividualOrStoredPassword(
+            title=title,
+            help=help,
+            allow_empty=allow_empty,
+            size=size,
+        ),
+        migrate=lambda v: ("password", v) if not isinstance(v, tuple) else v,
+    )

@@ -8,11 +8,11 @@ from collections.abc import Callable, Sequence
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.gui import weblib
 from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import get_site_config
+from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.watolib.hosts_and_folders import Folder, Host, SearchFolder
 
 
@@ -23,7 +23,9 @@ def get_hostnames_from_checkboxes(
 ) -> Sequence[HostName]:
     """Create list of all host names that are select with checkboxes in the current file.
     This is needed for bulk operations."""
-    selected = user.get_rowselection(weblib.selection_id(), "wato-folder-/" + folder.path())
+    selected = user.get_rowselection(
+        SelectionId.from_request(request), "wato-folder-/" + folder.path()
+    )
     search_text = request.var("search")
 
     selected_host_names: list[HostName] = []
@@ -43,12 +45,8 @@ def _search_text_matches(
     match_regex = re.compile(search_text, re.IGNORECASE)
     for pattern in [
         host.name(),
-        str(host.effective_attributes().get("ipaddress")),
-        str(host.effective_attributes().get("alias")),
-        host.site_id(),
+        str(host.effective_attributes()),
         str(get_site_config(active_config, host.site_id())["alias"]),
-        str(host.tag_groups()),
-        str(host.labels()),
     ]:
         if match_regex.search(pattern):
             return True

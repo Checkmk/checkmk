@@ -6,12 +6,13 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, contains, OIDEnd, SNMPTree, startswith
+
+check_info = {}
 
 # .1.3.6.1.4.1.18248.20.1.2.1.1.1.1 0
 # .1.3.6.1.4.1.18248.20.1.2.1.1.1.2 0
@@ -104,6 +105,7 @@ def check_papouch_th2e_sensors(item, params, parsed):
 
 
 check_info["papouch_th2e_sensors"] = LegacyCheckDefinition(
+    name="papouch_th2e_sensors",
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "th2e"), startswith(".1.3.6.1.2.1.1.2.0", ".0.10.43.6.1.4.1")
     ),
@@ -139,6 +141,7 @@ def check_papouch_th2e_sensors_dewpoint(item, params, parsed):
 
 
 check_info["papouch_th2e_sensors.dewpoint"] = LegacyCheckDefinition(
+    name="papouch_th2e_sensors_dewpoint",
     service_name="Dew point %s",
     sections=["papouch_th2e_sensors"],
     discovery_function=discover_papouch_th2e_sensors_dewpoint,
@@ -170,6 +173,7 @@ def check_papouch_th2e_sensors_humidity(item, params, parsed):
 
 
 check_info["papouch_th2e_sensors.humidity"] = LegacyCheckDefinition(
+    name="papouch_th2e_sensors_humidity",
     service_name="Humidity %s",
     sections=["papouch_th2e_sensors"],
     discovery_function=inventory_papouch_th2e_sensors_humidity,

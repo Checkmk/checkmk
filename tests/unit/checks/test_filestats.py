@@ -7,12 +7,11 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
+
+from cmk.agent_based.v2 import CheckResult, Metric, Result, State
 
 
 @pytest.mark.parametrize(
@@ -100,13 +99,13 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResul
     ],
 )
 def test_check_filestats(
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
     item: str,
     params: Mapping[str, object],
     data: Mapping[str, Sequence[Mapping[str, object]]],
     expected_result: CheckResult,
 ) -> None:
-    check_plugin = fix_register.check_plugins[CheckPluginName("filestats")]
+    check_plugin = agent_based_plugins.check_plugins[CheckPluginName("filestats")]
     assert (
         list(check_plugin.check_function(item=item, params=params, section=data)) == expected_result
     )
@@ -164,10 +163,10 @@ def test_check_filestats(
     ],
 )
 def test_check_filestats_single(
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
     item: str,
     data: Mapping[str, Sequence[Mapping[str, object]]],
     expected_result: CheckResult,
 ) -> None:
-    check_plugin = fix_register.check_plugins[CheckPluginName("filestats_single")]
+    check_plugin = agent_based_plugins.check_plugins[CheckPluginName("filestats_single")]
     assert list(check_plugin.check_function(item=item, params={}, section=data)) == expected_result

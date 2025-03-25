@@ -7,7 +7,7 @@ from dataclasses import asdict, dataclass
 from enum import Enum, unique
 from typing import Final, TypedDict
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     any_of,
     CheckResult,
@@ -29,6 +29,9 @@ DETECT_UPS_GENERIC = any_of(
     equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2254.2.5"),
     equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12551.4.0"),
     equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.850.1"),
+    equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.43943"),
+    equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4555.1.1.7"),
+    equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.42610.1.4.4"),
     startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.2.1.33"),
     startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.534.2"),
     startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5491"),
@@ -150,7 +153,7 @@ def _output_time_remaining(
     # Metric for time left on battery always - check remaining time only when on battery
     ignore_levels = seconds_left == 0 and not on_battery
     if seconds_left is not None:
-        yield from check_levels(
+        yield from check_levels_v1(
             seconds_left,
             metric_name="battery_seconds_remaining",
             levels_lower=None if ignore_levels else (levels[0] * 60, levels[1] * 60),
@@ -172,7 +175,7 @@ def _output_percent_charged(
     if percent_charged is None:
         return
 
-    yield from check_levels(
+    yield from check_levels_v1(
         percent_charged,
         metric_name="battery_capacity",
         levels_lower=levels if on_battery else None,

@@ -6,10 +6,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def inventory_unitrends_replication(info):
@@ -40,6 +40,7 @@ def parse_unitrends_replication(string_table: StringTable) -> StringTable:
 
 
 check_info["unitrends_replication"] = LegacyCheckDefinition(
+    name="unitrends_replication",
     parse_function=parse_unitrends_replication,
     service_name="Replicaion %s",
     discovery_function=inventory_unitrends_replication,

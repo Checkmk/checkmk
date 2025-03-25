@@ -23,6 +23,9 @@ from livestatus import (
     SiteId,
 )
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc import store
+
 import cmk.utils.paths
 from cmk.utils import dateutils
 from cmk.utils.cpu_tracking import CPUTracker
@@ -65,7 +68,6 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.view_utils import CSSClass
 
-import cmk.ccc.version as cmk_version
 from cmk.bi.lib import (
     BIHostSpec,
     BIHostStatusInfoRow,
@@ -75,7 +77,6 @@ from cmk.bi.lib import (
     NodeResultBundle,
 )
 from cmk.bi.trees import BICompiledAggregation, BICompiledRule, CompiledAggrTree
-from cmk.ccc import store
 
 AVMode = str  # TODO: Improve this type
 AVObjectType = Literal["host", "service", "bi"]
@@ -978,10 +979,7 @@ def get_availability_rawdata(
     av_filter = "Filter: time >= %d\nFilter: time < %d\n" % time_range
     if av_object:
         tl_site, tl_host, tl_service = av_object
-        av_filter += "Filter: host_name = {}\nFilter: service_description = {}\n".format(
-            lqencode(str(tl_host)),
-            lqencode(tl_service),
-        )
+        av_filter += f"Filter: host_name = {lqencode(str(tl_host))}\nFilter: service_description = {lqencode(tl_service)}\n"
         assert tl_site is not None
         only_sites = [tl_site]
     elif what == "service":
@@ -1148,7 +1146,7 @@ def spans_by_object(spans: list[AVSpan]) -> AVRawData:
 
 
 # Compute an availability table. what is one of "bi", "host", "service".
-def compute_availability(  # pylint: disable=too-many-branches
+def compute_availability(
     what: AVObjectType,
     av_rawdata: AVRawData,
     avoptions: AVOptions,
@@ -1732,7 +1730,7 @@ def _annotation_affects_time_range(annotation_from, annotation_until, from_time,
 #    "urls" : { "timeline": "view.py..." },
 #    "object" : ( "Host123", "Foobar" ),
 # }
-def layout_availability_table(  # pylint: disable=too-many-branches
+def layout_availability_table(
     what: AVObjectType,
     group_title: str | None,
     availability_table: AVData,
@@ -1763,6 +1761,8 @@ def layout_availability_table(  # pylint: disable=too-many-branches
     av_table["cell_titles"] = _availability_cell_headers(
         availability_columns, avoptions, os_aggrs, os_states, timeformats, what
     )
+
+    summary["ok_level"] = 0
 
     # Actual rows
     for entry in availability_table:
@@ -1840,17 +1840,17 @@ def layout_availability_table(  # pylint: disable=too-many-branches
                             statistics.append(("", ""))
                     cells.extend(statistics)
 
-            # If timeline == [] and states == {} then this objects has complete unmonitored state
-            if entry["timeline"] == [] and entry["states"] == {}:
-                unmonitored_objects += 1
+        # If timeline == [] and states == {} then this objects has complete unmonitored state
+        if entry["timeline"] == [] and entry["states"] == {}:
+            unmonitored_objects += 1
 
         # regardless of timeformat the percentage value should be taken for summary levels
         # verification since the percentage value takes the considered duration as reference duration
         if show_summary and av_levels:
-            summary["ok_level"] = sum(
-                float(entry["states"].get("ok", 0)) / entry["considered_duration"]
-                for entry in availability_table
-                if entry["considered_duration"] > 0
+            summary["ok_level"] += float(entry["states"].get("ok", 0)) / (
+                entry["considered_duration"]
+                if entry["considered_duration"]
+                else entry["total_duration"]
             )
 
     # Summary line. It has the same format as each entry in cells
@@ -2048,7 +2048,7 @@ def get_object_cells(what: AVObjectType, av_entry: AVEntry, labelling: list[str]
 #    "spans" : [ spans... ],
 #    "legend" : [ legendentries... ],
 # }
-def layout_timeline(  # pylint: disable=too-many-branches
+def layout_timeline(
     what: AVObjectType,
     timeline_rows: AVTimelineRows,
     considered_duration: int,
@@ -2441,7 +2441,7 @@ class TimelineContainer:
 
 def split_time_range(
     start: AVTimeStamp, end: AVTimeStamp, interval: AVTimeStamp
-) -> Generator[AVTimeRange, None, None]:
+) -> Generator[AVTimeRange]:
     """
     Split a time range into smaller ranges of a given interval.
 

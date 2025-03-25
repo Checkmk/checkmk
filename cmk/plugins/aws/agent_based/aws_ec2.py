@@ -30,7 +30,7 @@ from cmk.plugins.aws.lib import (
 )
 from cmk.plugins.lib import interfaces
 from cmk.plugins.lib.cpu_util import check_cpu_util
-from cmk.plugins.lib.diskstat import check_diskstat_dict
+from cmk.plugins.lib.diskstat import check_diskstat_dict_legacy
 
 Section = Mapping[str, float]
 
@@ -233,14 +233,14 @@ def check_aws_ec2_disk_io(
     section: Section,
 ) -> CheckResult:
     disk_data: dict[str, float] = {}
-    key_pairs: Mapping[str, str] = (
-        {  # The key from the Mapping is the result that we want and the value is how we get the data
-            "read_ios": "DiskReadOps",
-            "write_ios": "DiskWriteOps",
-            "read_throughput": "DiskReadBytes",
-            "write_throughput": "DiskWriteBytes",
-        }
-    )
+    key_pairs: Mapping[
+        str, str
+    ] = {  # The key from the Mapping is the result that we want and the value is how we get the data
+        "read_ios": "DiskReadOps",
+        "write_ios": "DiskWriteOps",
+        "read_throughput": "DiskReadBytes",
+        "write_throughput": "DiskWriteBytes",
+    }
 
     for key, section_key in key_pairs.items():
         if (value := section.get(section_key)) is None:
@@ -251,7 +251,7 @@ def check_aws_ec2_disk_io(
     if not disk_data:
         raise IgnoreResultsError("Currently no data from AWS")
 
-    yield from check_diskstat_dict(
+    yield from check_diskstat_dict_legacy(
         params=params,
         disk=disk_data,
         value_store=get_value_store(),

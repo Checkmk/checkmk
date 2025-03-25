@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
 from cmk.plugins.lib.ups_modulys import DETECT_UPS_MODULYS
+
+check_info = {}
 
 
 def inventory_ups_modulys_alarms(info):
@@ -65,6 +65,7 @@ def parse_ups_modulys_alarms(string_table: StringTable) -> StringTable:
 
 
 check_info["ups_modulys_alarms"] = LegacyCheckDefinition(
+    name="ups_modulys_alarms",
     parse_function=parse_ups_modulys_alarms,
     detect=DETECT_UPS_MODULYS,
     fetch=SNMPTree(

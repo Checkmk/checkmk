@@ -8,6 +8,7 @@ To add a new example (new language, library, etc.), a new Jinja2-Template has to
 be referenced in the result of _build_code_templates.
 
 """
+
 import functools
 import json
 import re
@@ -16,16 +17,20 @@ from typing import Any, cast, NamedTuple, TypeAlias
 
 import jinja2
 from apispec import APISpec
-from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[attr-defined]
+from apispec.ext.marshmallow import (  # type: ignore[attr-defined,unused-ignore]
+    resolve_schema_instance,
+)
 from marshmallow import Schema
+
+from cmk.ccc.site import omd_site
+
+from cmk.utils.jsontype import JsonSerializable
 
 from cmk.gui import fields
 from cmk.gui.fields.base import BaseSchema
 from cmk.gui.openapi.restful_objects.decorators import Endpoint
 from cmk.gui.openapi.restful_objects.params import fill_out_path_template, to_openapi
 from cmk.gui.openapi.restful_objects.type_defs import CodeSample, OpenAPIParameter, RawParameter
-
-from cmk.ccc.site import omd_site
 
 CODE_TEMPLATE_MACROS = """
 {%- macro comments(comment_format="# ", request_schema_multiple=False) %}
@@ -157,10 +162,10 @@ curl {%- if includes_redirect %} -L {%- endif %} \\
   {%- if param.example is defined and param.example %}
     {%- if param.example is iterable and param.example is not string %}
     {%- for example in param.example %}
-  --data-urlencode {{ (param.name + "=" + example) | repr }} \\
+  --data-urlencode {{ (param.name ~ "=" ~ example) | repr }} \\
     {%- endfor %}
     {%- else %}
-  --data-urlencode {{ (param.name + "=" + param.example) | repr }} \\
+  --data-urlencode {{ (param.name ~ "=" ~ param.example) | repr }} \\
     {%- endif %}
   {%- endif %}
  {%- endfor %}
@@ -349,10 +354,6 @@ def to_dict(schema: BaseSchema) -> dict[str, str]:
         A dict with the field-names as a key and their example as value.
 
     """
-    if not getattr(schema.Meta, "ordered", False):
-        # NOTE: We need this to make sure our checkmk.yaml spec file is always predictably sorted.
-        raise Exception(f"Schema '{schema.__module__}.{schema.__class__.__name__}' is not ordered.")
-
     if (schema_example := schema.schema_example) is not None:
         return schema_example
 
@@ -390,14 +391,14 @@ def _transform_params(param_list):
     }
 
 
-JsonObject: TypeAlias = dict[
-    str, int | float | str | bool | dict[str, "JsonObject"] | list["JsonObject"]
-]
+JsonObject: TypeAlias = dict[str, JsonSerializable]
 
 
 def _httpie_request_body_lines(prefix: str, field: JsonObject, lines: list[str]) -> list[str]:
     for key, example in field.items():
         match example:
+            case None:
+                lines.append(prefix + key + ":=null")
             case bool():
                 lines.append(prefix + key + ":=" + str(example).lower())
             case int() | float():
@@ -430,6 +431,8 @@ def httpie_request_body(examples: JsonObject) -> str:
     "foo='bar bar bar'"
     >>> httpie_request_body({"foo": 5})
     'foo:=5'
+    >>> httpie_request_body({"foo": None})
+    'foo:=null'
     >>> httpie_request_body({"foo": False})
     'foo:=false'
     >>> httpie_request_body({"foo": [1,2,3]})

@@ -38,6 +38,7 @@
 #include "livestatus/PnpUtils.h"
 #include "livestatus/Query.h"
 #include "livestatus/RRDColumn.h"
+#include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/StringUtils.h"
 #include "livestatus/TableHosts.h"
@@ -126,11 +127,11 @@ void TableServices::addColumns(Table *table, const ICore &core,
             auto d = PerformanceData{row.perf_data(), ""};
             auto out = DictDoubleValueColumn<row_type>::value_type{};
             out.reserve(d.size());
-            std::transform(d.begin(), d.end(), std::inserter(out, out.begin()),
-                           [](auto &&metric) {
-                               return std::make_pair(metric.name().string(),
-                                                     metric.value_as_double());
-                           });
+            std::ranges::transform(
+                d, std::inserter(out, out.begin()), [](auto &&metric) {
+                    return std::make_pair(metric.name().string(),
+                                          metric.value_as_double());
+                });
             return out;
         }));
     table->addColumn(std::make_unique<StringColumn<row_type>>(

@@ -6,11 +6,12 @@
 
 # mypy: disable-error-code="list-item"
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+
+check_info = {}
 
 
 def parse_ddn_s2a_stats(string_table):
@@ -52,6 +53,7 @@ def check_ddn_s2a_stats_readhits(item, params, parsed):
 
 
 check_info["ddn_s2a_stats.readhits"] = LegacyCheckDefinition(
+    name="ddn_s2a_stats_readhits",
     service_name="DDN S2A Read Hits %s",
     sections=["ddn_s2a_stats"],
     discovery_function=inventory_ddn_s2a_stats_readhits,
@@ -123,6 +125,7 @@ def check_ddn_s2a_stats_io(item, params, parsed):
 
 
 check_info["ddn_s2a_stats.io"] = LegacyCheckDefinition(
+    name="ddn_s2a_stats_io",
     service_name="DDN S2A IO %s",
     sections=["ddn_s2a_stats"],
     discovery_function=inventory_ddn_s2a_stats_io,
@@ -196,6 +199,7 @@ def check_ddn_s2a_stats(item, params, parsed):
 
 
 check_info["ddn_s2a_stats"] = LegacyCheckDefinition(
+    name="ddn_s2a_stats",
     parse_function=parse_ddn_s2a_stats,
     service_name="DDN S2A Data Rate %s",
     discovery_function=inventory_ddn_s2a_stats,

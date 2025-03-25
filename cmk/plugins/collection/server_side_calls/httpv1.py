@@ -22,6 +22,9 @@ from cmk.server_side_calls.v1 import (
 FloatLevels = tuple[Literal["no_levels"], None] | tuple[Literal["fixed"], tuple[float, float]]
 
 
+_SECONDS_PER_DAY = 3600 * 24
+
+
 class RegexMode(BaseModel):
     regex: str
     case_insensitive: bool
@@ -114,8 +117,6 @@ def _parse_family(params: HttpHostParams, host_config: HostConfig) -> Family:
         case "ipv6_enforced":  # Enforce IPv6
             return Family.ipv6
         case "primary_enforced":  # Enforce primary address family
-            if not host_config.primary_ip_config:
-                raise ValueError("No primary IP address configured")
             match host_config.primary_ip_config.family:
                 case IPAddressFamily.IPV4:
                     return Family.ipv4
@@ -151,8 +152,6 @@ class HostSettings:
                     raise ValueError("No IPv6 address configured")
                 return self.host_config.ipv6_config.address
             case Family.any:
-                if not self.host_config.primary_ip_config:
-                    raise ValueError("No primary IP address configured")
                 return self.host_config.primary_ip_config.address
             case _:
                 assert_never(self.family)
@@ -187,15 +186,12 @@ class DirectHost:
         return self.settings.port
 
     def virtual_host(self, mode: Mode) -> str | None:
-        return (
-            self.settings.virtual
-            if isinstance(self.settings.virtual, str)
-            # In URL mode, don't return the address in this case, because check_http would
-            # automatically set the HTTP Host header and use HTTP/1.1 instead of
-            # HTTP/1.0. This can lead to request timeouts on hosts which are
-            # not compliant with HTTP/1.1.
-            else None if mode is Mode.URL else self.address
-        )
+        if isinstance(self.settings.virtual, str):
+            return self.settings.virtual
+        # In URL mode, don't return the address, because check_http would automatically set the HTTP
+        # Host header and use HTTP/1.1 instead of HTTP/1.0. This can lead to request timeouts on
+        # hosts which are not compliant with HTTP/1.1.
+        return None if mode is Mode.URL else self.address
 
 
 @dataclass(frozen=True)
@@ -240,7 +236,7 @@ def _cert_arguments(
     args: list[str | Secret] = []
     match settings.cert_days:
         case ("fixed", (float(warn), float(crit))):
-            args += ["-C", "%d,%d" % (int(warn), int(crit))]
+            args += ["-C", "%d,%d" % (int(warn / _SECONDS_PER_DAY), int(crit / _SECONDS_PER_DAY))]
     if isinstance(host, ProxyHost):
         args += ["--ssl", "-j", "CONNECT"]
 
@@ -261,7 +257,7 @@ def _expect_regex_arguments(expect_regex: RegexMode) -> list[str | Secret]:
     return args
 
 
-def _url_arguments(  # pylint: disable=too-many-branches
+def _url_arguments(
     settings: HttpModeUrlParams,
     proxy_used: bool,
     host_config: HostConfig,
@@ -274,7 +270,14 @@ def _url_arguments(  # pylint: disable=too-many-branches
     match settings.ssl:
         case "auto":
             args.append("--ssl")
-        case str(ssl):
+        case str(settings_ssl):
+            ssl = {
+                "ssl_1_1": "1.1",
+                "ssl_1_2": "1.2",
+                "ssl_1": "1",
+                "ssl_2": "2",
+                "ssl_3": "3",
+            }[settings_ssl]
             args.append("--ssl=%s" % ssl)
 
     if (response_time := settings.response_time) is not None:
@@ -316,8 +319,13 @@ def _url_arguments(  # pylint: disable=too-many-branches
         args += ["-P", post_data.data, "-T", post_data.content_type]
 
     http_method = "CONNECT" if proxy_used else None
-    if settings.method is not None:
-        http_method = settings.method
+    match settings.method:
+        case None:
+            pass
+        case "CONNECT_POST":
+            http_method = "CONNECT:POST"
+        case _:
+            http_method = settings.method
     if http_method:
         args += ["-j", http_method]
 
@@ -359,7 +367,7 @@ def _common_args(
 
     args += ["-I", replace_macros(host.server_address, host_config.macros)]
     if (virtual_host := host.virtual_host(mode)) is not None:
-        args += ["-H", virtual_host]
+        args += ["-H", replace_macros(virtual_host, host_config.macros)]
 
     return args
 

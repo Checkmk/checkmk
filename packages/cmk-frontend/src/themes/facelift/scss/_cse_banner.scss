@@ -1,0 +1,42 @@
+@use "sass:color";
+@charset "UTF-8";
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
+
+/* Styles used to show the banner in CSE */
+
+.cse-banner {
+  display: flex;
+  align-items: center;
+  padding-left: 20px;
+  color: $font-color-white;
+
+  &:not(:last-child) {
+    padding-right: 20px;
+  }
+
+  &__message {
+    font-weight: $font-weight-default;
+  }
+
+  &__button {
+    margin-left: 10px;
+    padding: 5px 15px;
+    border-radius: $theme-border-radius;
+    background-color: $success-dimmed;
+    line-height: 1.5;
+    color: $font-color-black !important;
+    font-weight: $font-weight-bold;
+    text-decoration: none;
+    white-space: nowrap;
+
+    &:hover {
+      background-color: color.mix($black, $success-dimmed, 10%);
+    }
+
+    &:visited {
+      color: $font-color-black !important;
+    }
+  }
+}

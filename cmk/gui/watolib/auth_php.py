@@ -38,6 +38,8 @@ import copy
 from pathlib import Path
 from typing import Any, Literal
 
+from cmk.ccc import store
+
 from cmk.gui import userdb
 from cmk.gui.config import active_config
 from cmk.gui.groups import GroupName
@@ -47,8 +49,6 @@ from cmk.gui.utils.roles import get_role_permissions
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.paths import wato_var_dir
 from cmk.gui.watolib.utils import format_php
-
-from cmk.ccc import store
 
 _CalleeHooks = ClearEvent | Literal["page_hook"]
 
@@ -69,13 +69,14 @@ def _create_php_file(
     for user in nagvis_users.values():
         user.setdefault("language", active_config.default_language)  # Set a language for all users
         user.pop("session_info", None)  # remove the SessionInfo object
+        user.pop("automation_secret", None)
 
-    content = """<?php
-// Created by Multisite UserDB Hook ({})
+    content = f"""<?php
+// Created by Multisite UserDB Hook ({callee})
 global $mk_users, $mk_roles, $mk_groups;
-$mk_users   = {};
-$mk_roles   = {};
-$mk_groups  = {};
+$mk_users   = {format_php(nagvis_users)};
+$mk_roles   = {format_php(role_permissions)};
+$mk_groups  = {format_php(groups)};
 
 function all_users() {{
     global $mk_users;
@@ -174,12 +175,7 @@ function permitted_maps($username) {{
 }}
 
 ?>
-""".format(
-        callee,
-        format_php(nagvis_users),
-        format_php(role_permissions),
-        format_php(groups),
-    )
+"""
 
     store.makedirs(_auth_php().parent)
     store.save_text_to_file(_auth_php(), content)

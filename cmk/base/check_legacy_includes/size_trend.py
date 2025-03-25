@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=no-else-return
-
 import time
 from collections.abc import Callable
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+from cmk.agent_based.v2 import (
     get_average,
     get_rate,
     get_value_store,
@@ -43,11 +41,7 @@ def _check_shrinking(
 
     wa, cr = levels
     if trend <= -wa:
-        problem = "shrinking too fast (warn/crit at {}/{} per {:.1f} h)(!".format(
-            renderer(wa),
-            renderer(cr),
-            range_hours,
-        )
+        problem = f"shrinking too fast (warn/crit at {renderer(wa)}/{renderer(cr)} per {range_hours:.1f} h)(!"
         state = 1
         if trend <= -cr:
             state = 2
@@ -56,7 +50,7 @@ def _check_shrinking(
     return state, problem
 
 
-def size_trend(  # pylint: disable=too-many-branches
+def size_trend(
     check: str,
     item: str,
     resource: str,
@@ -64,7 +58,7 @@ def size_trend(  # pylint: disable=too-many-branches
     used_mb: float,
     size_mb: float,
     timestamp: float | None = None,
-) -> tuple[int, str, list]:  # pylint: disable=function-redefined
+) -> tuple[int, str, list]:
     """Trend computation for size related checks of disks, ram, etc.
     Trends are computed in two steps. In the first step the delta to
     the last check is computed, using a normal check_mk counter.
@@ -138,11 +132,7 @@ def size_trend(  # pylint: disable=too-many-branches
 
     trend = rate_avg * range_sec
     sign = "+" if trend > 0 else ""
-    infotext += ", trend: {}{} / {:g} hours".format(
-        sign,
-        render.bytes(trend * MB),
-        range_hours,
-    )
+    infotext += f", trend: {sign}{render.bytes(trend * MB)} / {range_hours:g} hours"
 
     # levels for performance data
     warn_perf: float | None = None

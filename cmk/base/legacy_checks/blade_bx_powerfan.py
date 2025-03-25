@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.blade.agent_based.detection import DETECT_BLADE_BX
+
+check_info = {}
 
 blade_bx_status = {
     "1": "unknown",
@@ -28,7 +28,7 @@ def inventory_blade_bx_powerfan(info):
             yield descr, {}
 
 
-def check_blade_bx_powerfan(item, params, info):  # pylint: disable=too-many-branches
+def check_blade_bx_powerfan(item, params, info):
     if isinstance(params, dict):
         warn_perc_lower, crit_perc_lower = params["levels_lower"]
         warn_perc, crit_perc = params["levels"]
@@ -54,16 +54,10 @@ def check_blade_bx_powerfan(item, params, info):  # pylint: disable=too-many-bra
             levels_text = ""
             if speed_perc < crit_perc_lower:
                 state = 2
-                levels_text = " (warn/crit below {:.1f}%/{:.1f}%)".format(
-                    warn_perc_lower,
-                    crit_perc_lower,
-                )
+                levels_text = f" (warn/crit below {warn_perc_lower:.1f}%/{crit_perc_lower:.1f}%)"
             elif speed_perc < warn_perc_lower:
                 state = 1
-                levels_text = " (warn/crit below {:.1f}%/{:.1f}%)".format(
-                    warn_perc_lower,
-                    crit_perc_lower,
-                )
+                levels_text = f" (warn/crit below {warn_perc_lower:.1f}%/{crit_perc_lower:.1f}%)"
 
             if warn_perc:
                 if speed_perc >= crit_perc:
@@ -85,6 +79,7 @@ def parse_blade_bx_powerfan(string_table: StringTable) -> StringTable:
 
 
 check_info["blade_bx_powerfan"] = LegacyCheckDefinition(
+    name="blade_bx_powerfan",
     parse_function=parse_blade_bx_powerfan,
     detect=DETECT_BLADE_BX,
     fetch=SNMPTree(

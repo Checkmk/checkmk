@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
 
 from polyfactory.factories.pydantic_factory import ModelFactory
 
@@ -216,6 +214,21 @@ def test_cron_job_status_with_pending_job() -> None:
     assert result.state == State.WARN
 
 
+def test_cron_job_status_with_unknown_status() -> None:
+    """Test that check outputs WARN state when latest job is pending and crosses the threshold"""
+    result = list(
+        kube_cronjob_status._cron_job_status(
+            current_time=Timestamp(300.0),
+            pending_levels=(300, 600),
+            running_levels=None,
+            job_status=kube_cronjob_status.JobStatusType.UNKNOWN,
+            job_pod=JobPodFactory.build(),
+            job_start_time=Timestamp(0.0),
+        )
+    )[0]
+    assert result.state == State.UNKNOWN
+
+
 def test_kube_cron_job_with_running_params() -> None:
     current_time = 10.0
     elapsed_running_time = 8.0
@@ -255,3 +268,63 @@ def test_kube_cronjob_with_no_pod() -> None:
 
     assert result.state == State.CRIT
     assert result.summary == "Latest job: Failed with no pod"
+
+
+def test_cron_job_status_with_failed_target_job() -> None:
+    cron_job_status = CronJobStatusFactory.build()
+    failure_reason = "reason"
+    waiting_container = _mocked_container_info_from_state(
+        state=ContainerWaitingState(reason=failure_reason, detail="detail")
+    )
+    latest_job = CronJobLatestJobFactory.build(
+        pods=[
+            JobPodFactory.build(
+                containers={waiting_container.container_id: waiting_container}, init_containers={}
+            )
+        ],
+        status=JobStatusFactory.build(
+            conditions=[
+                JobConditionFactory.build(
+                    type_=JobConditionType.FAILURE_TARGET, status=ConditionStatus.TRUE
+                )
+            ]
+        ),
+    )
+
+    check_result = list(
+        kube_cronjob_status._check_cron_job_status(Timestamp(2.0), {}, cron_job_status, latest_job)
+    )
+    status_check_result = check_result[0]
+    assert isinstance(status_check_result, Result)
+    assert status_check_result.state == State.CRIT
+    assert status_check_result.summary == f"Latest job: Failed ({failure_reason})"
+
+
+def test_cron_job_status_with_success_criteria_met_job() -> None:
+    cron_job_status = CronJobStatusFactory.build()
+    failure_reason = "reason"
+    waiting_container = _mocked_container_info_from_state(
+        state=ContainerWaitingState(reason=failure_reason, detail="detail")
+    )
+    latest_job = CronJobLatestJobFactory.build(
+        pods=[
+            JobPodFactory.build(
+                containers={waiting_container.container_id: waiting_container}, init_containers={}
+            )
+        ],
+        status=JobStatusFactory.build(
+            conditions=[
+                JobConditionFactory.build(
+                    type_=JobConditionType.SUCCESS_CRITERIA_MET, status=ConditionStatus.TRUE
+                )
+            ]
+        ),
+    )
+
+    check_result = list(
+        kube_cronjob_status._check_cron_job_status(Timestamp(2.0), {}, cron_job_status, latest_job)
+    )
+    status_check_result = check_result[0]
+    assert isinstance(status_check_result, Result)
+    assert status_check_result.state == State.OK
+    assert status_check_result.summary == "Latest job: Completed"

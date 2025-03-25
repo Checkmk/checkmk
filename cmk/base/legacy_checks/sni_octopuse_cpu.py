@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
 from cmk.plugins.lib.sni_octopuse import DETECT_SNI_OCTOPUSE
+
+check_info = {}
 
 
 def discover_octopus_cpu(section: StringTable) -> DiscoveryResult:
@@ -27,6 +27,7 @@ def parse_sni_octopuse_cpu(string_table: StringTable) -> StringTable | None:
 
 
 check_info["sni_octopuse_cpu"] = LegacyCheckDefinition(
+    name="sni_octopuse_cpu",
     parse_function=parse_sni_octopuse_cpu,
     detect=DETECT_SNI_OCTOPUSE,
     fetch=SNMPTree(

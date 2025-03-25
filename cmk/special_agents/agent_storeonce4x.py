@@ -15,7 +15,7 @@ from typing import Any
 
 import urllib3
 from oauthlib.oauth2 import LegacyApplicationClient
-from requests_oauthlib import OAuth2Session  # type: ignore[import-untyped]
+from requests_oauthlib import OAuth2Session
 
 import cmk.utils.paths
 

@@ -5,11 +5,11 @@
 
 import pytest
 
+from cmk.ccc.crash_reporting import crash_report_registry
+
 from cmk.utils import paths
 
-from cmk.gui.crash_handler import GUICrashReport
-
-from cmk.ccc.crash_reporting import crash_report_registry
+from cmk.gui.crash_handler import GUICrashReport, RequestDetails
 
 
 def test_gui_crash_report_registry() -> None:
@@ -20,9 +20,30 @@ def test_gui_crash_report_from_exception_without_request_context() -> None:
     try:
         raise ValueError("Test")
     except ValueError:
-        report = GUICrashReport.from_exception(paths.crash_dir, {})
-        # In this case we currently don't produce any type specific details
-        assert not report.crash_info["details"]
+        report = GUICrashReport.from_exception(
+            paths.crash_dir,
+            {
+                "core": "test",
+                "python_version": "test",
+                "edition": "test",
+                "python_paths": ["foo", "bar"],
+                "version": "3.99",
+                "time": 0.0,
+                "os": "Foobuntu",
+            },
+        )
+        # In this case we currently don't produce unknown request details
+        assert report.crash_info["details"] == RequestDetails(
+            page="unknown",
+            vars={},
+            username=None,
+            user_agent="unknown",
+            referer="unknown",
+            is_mobile=False,
+            is_ssl_request=False,
+            language="unknown",
+            request_method="unknown",
+        )
 
 
 @pytest.mark.usefixtures("request_context")
@@ -30,5 +51,17 @@ def test_gui_crash_report_from_exception_with_request_context() -> None:
     try:
         raise ValueError("Test")
     except ValueError:
-        report = GUICrashReport.from_exception(paths.crash_dir, {})
-        assert report.crash_info["details"]["page"] == "index.py"
+        report = GUICrashReport.from_exception(
+            paths.crash_dir,
+            {
+                "core": "test",
+                "python_version": "test",
+                "edition": "test",
+                "python_paths": ["foo", "bar"],
+                "version": "3.99",
+                "time": 0.0,
+                "os": "Foobuntu",
+            },
+        )
+        details = report.crash_info["details"]
+        assert details["page"] == "index.py"

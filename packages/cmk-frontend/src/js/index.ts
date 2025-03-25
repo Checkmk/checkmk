@@ -35,6 +35,7 @@ import * as host_diagnose from "./modules/host_diagnose";
 import * as hover from "./modules/hover";
 import * as keyboard_shortcuts from "./modules/keyboard_shortcuts";
 import {insert_before} from "./modules/layout";
+import {lock_and_redirect} from "./modules/sites";
 import * as license_usage_timeseries_graph from "./modules/license_usage/license_usage_timeseries_graph";
 import * as nodevis from "./modules/nodevis/main";
 import * as ntop_alerts from "./modules/ntop/ntop_alerts";
@@ -71,7 +72,7 @@ register();
 type CallableFunctionArguments = {[key: string]: string};
 type CallableFunction = (
     node: HTMLElement,
-    options: CallableFunctionArguments
+    options: CallableFunctionArguments,
 ) => Promise<void>;
 
 // See cmk.gui.htmllib.generator:KnownTSFunction
@@ -80,6 +81,7 @@ const callable_functions: {[name: string]: CallableFunction} = {
     render_stats_table: render_stats_table,
     render_qr_code: render_qr_code,
     insert_before: insert_before,
+    lock_and_redirect: lock_and_redirect,
 };
 
 $(() => {
@@ -111,7 +113,7 @@ $(() => {
         .querySelectorAll<HTMLFormElement>("form[data-cmk_form_confirmation]")
         .forEach((form, _) => {
             const confirmation: RequireConfirmation = JSON.parse(
-                form.dataset.cmk_form_confirmation!
+                form.dataset.cmk_form_confirmation!,
             );
             forms.add_confirm_on_submit(form, confirmation);
         });
@@ -130,6 +132,7 @@ export const cmk_export = {
         background_job: background_job,
         backup: backup,
         bi: bi,
+        d3: d3,
         dashboard: dashboard,
         element_dragging: element_dragging,
         figures: cmk_figures,

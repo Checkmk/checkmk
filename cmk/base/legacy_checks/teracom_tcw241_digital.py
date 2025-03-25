@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import contains, SNMPTree
+
+check_info = {}
 
 
 def parse_tcw241_digital(string_table):
@@ -54,9 +54,12 @@ def check_tcw241_digital(item, params, parsed):
     """
     if not (info_dict := parsed.get(item)):
         return
-    yield 0 if info_dict.get("state") == "open" else 2, "[{}] is {}".format(
-        info_dict.get("description"),
-        info_dict.get("state"),
+    yield (
+        0 if info_dict.get("state") == "open" else 2,
+        "[{}] is {}".format(
+            info_dict.get("description"),
+            info_dict.get("state"),
+        ),
     )
 
 
@@ -65,6 +68,7 @@ def discover_teracom_tcw241_digital(section):
 
 
 check_info["teracom_tcw241_digital"] = LegacyCheckDefinition(
+    name="teracom_tcw241_digital",
     detect=contains(".1.3.6.1.2.1.1.1.0", "Teracom"),
     fetch=[
         SNMPTree(

@@ -7,13 +7,13 @@ import copy
 
 import pytest
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
 
 from cmk.gui.type_defs import ColumnSpec
 from cmk.gui.view import View
-from cmk.gui.views.join_service_rows import _get_needed_join_columns
-
-import cmk.ccc.version as cmk_version
+from cmk.gui.views._join_service_rows import _get_needed_join_columns
 
 
 @pytest.mark.usefixtures("load_config")

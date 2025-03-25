@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, contains, equals, SNMPTree, StringTable
+
+check_info = {}
 
 # .1.3.6.1.4.1.31560.3.1.1.1.48 33 --> ARTEC-MIB::hddTemperature
 
@@ -28,6 +29,7 @@ def parse_artec_temp(string_table: StringTable) -> StringTable | None:
 
 
 check_info["artec_temp"] = LegacyCheckDefinition(
+    name="artec_temp",
     parse_function=parse_artec_temp,
     detect=all_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),

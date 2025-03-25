@@ -17,10 +17,12 @@ from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any
 
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.hostaddress import HostName
 
 import cmk.gui.pages
-from cmk.gui import weblib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
@@ -41,6 +43,7 @@ from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     Checkbox,
@@ -53,19 +56,14 @@ from cmk.gui.valuespec import (
 from cmk.gui.wato.pages.custom_attributes import ModeCustomHostAttrs
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib import bakery
-from cmk.gui.watolib.host_attributes import host_attribute_registry, HostAttributes
+from cmk.gui.watolib.host_attributes import host_attribute, HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_from_request
-from cmk.gui.watolib.mode import mode_url, redirect, WatoMode
-
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 
 # Was not able to get determine the type of csv._reader / _csv.reader
 CSVReader = Any
 
 ImportTuple = tuple[HostName, HostAttributes, None]
-
-from cmk.gui.watolib.mode import ModeRegistry
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -240,8 +238,9 @@ class ModeBulkImport(WatoMode):
 
             def _check_duplicates(_names: list[str | None]) -> None:
                 _attrs_seen = set()
-                for _name in _attr_names:
-                    if _name in _attrs_seen:
+                for _name in _names:
+                    # "-" is the value set for "Don't import"
+                    if _name != "-" and _name in _attrs_seen:
                         raise MKUserError(
                             None,
                             _(
@@ -270,7 +269,7 @@ class ModeBulkImport(WatoMode):
                 yield dict(zip(_attr_names, csv_row))
 
         def _transform_and_validate_raw_rows(
-            iterator: typing.Iterator[dict[str, str]]
+            iterator: typing.Iterator[dict[str, str]],
         ) -> typing.Generator[ImportTuple, None, None]:
             """Here we transform each row into a tuple of HostName and HostAttributes and None.
 
@@ -290,7 +289,7 @@ class ModeBulkImport(WatoMode):
 
             class HostAttributeInstances(dict):
                 def __missing__(self, key):
-                    inst = host_attribute_registry[key]()
+                    inst = host_attribute(key)
                     self[key] = inst
                     return inst
 
@@ -361,7 +360,7 @@ class ModeBulkImport(WatoMode):
         if num_succeeded > 0 and request.var("do_service_detection") == "1":
             # Create a new selection for performing the bulk discovery
             user.set_rowselection(
-                weblib.selection_id(),
+                SelectionId.from_request(request),
                 "wato-folder-/" + folder_path,
                 selected,
                 "set",
@@ -372,7 +371,7 @@ class ModeBulkImport(WatoMode):
                     _bulk_inventory="1",
                     show_checkboxes="1",
                     folder=folder_path,
-                    selection=weblib.selection_id(),
+                    selection=SelectionId.from_request(request),
                 )
             )
 
@@ -531,7 +530,7 @@ class ModeBulkImport(WatoMode):
                 # Render attribute selection fields
                 table.row()
                 for col_num in range(num_columns):
-                    header = headers[col_num] if len(headers) > col_num else None
+                    header = headers[col_num] if len(headers) > col_num else ""
                     table.cell(escape_to_html_permissive(header))
                     attribute_varname = "attribute_%d" % col_num
                     if request.var(attribute_varname):

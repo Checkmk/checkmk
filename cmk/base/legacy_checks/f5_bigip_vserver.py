@@ -7,11 +7,12 @@
 import socket
 import time
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.f5_bigip import DETECT
-from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import get_rate, get_value_store, render, SNMPTree
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
+from cmk.agent_based.v2 import get_rate, get_value_store, GetRateError, render, SNMPTree
+
+check_info = {}
 
 # Current server status
 # vserver["status"]
@@ -103,26 +104,35 @@ def inventory_f5_bigip_vserver(parsed):
             yield name, {}
 
 
+_AGGREGATION_KEYS = {
+    "if_in_pkts",
+    "if_out_pkts",
+    "if_in_octets",
+    "if_out_octets",
+    "connections_rate",
+    "packet_velocity_asic",
+}
+
+
 def get_aggregated_values(vserver):
+    value_store = get_value_store()
     now = time.time()
 
-    aggregation = {
-        k: 0.0
-        for k in (
-            "if_in_pkts",
-            "if_out_pkts",
-            "if_in_octets",
-            "if_out_octets",
-            "connections_rate",
-            "packet_velocity_asic",
-        )
-        if k in vserver
-    }
+    aggregation: dict[str, float] = {}
+
     # Calculate counters
-    for what in aggregation:
+    for what in _AGGREGATION_KEYS.intersection(vserver):
+        this_aggregation = 0.0
+        raised = False
         for idx, entry in enumerate(vserver[what]):
-            rate = get_rate(get_value_store(), f"{what}.{idx}", now, entry, raise_overflow=True)
-            aggregation[what] += rate
+            try:
+                this_aggregation += get_rate(
+                    value_store, f"{what}.{idx}", now, entry, raise_overflow=True
+                )
+            except GetRateError:
+                raised = True
+        if not raised:
+            aggregation[what] = this_aggregation
 
     # Calucate min/max/sum/mean values
     for what, function in [
@@ -215,6 +225,7 @@ def check_f5_bigip_vserver(item, params, parsed):
 
 
 check_info["f5_bigip_vserver"] = LegacyCheckDefinition(
+    name="f5_bigip_vserver",
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3375.2.2.10",

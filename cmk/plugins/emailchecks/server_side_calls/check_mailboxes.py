@@ -3,11 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""This is the command line generator for the `check_mailboxes` active check.
-It defines active_check_info["mailboxes"]
-
-"""
-
 from collections.abc import Iterable, Sequence
 from typing import Literal
 

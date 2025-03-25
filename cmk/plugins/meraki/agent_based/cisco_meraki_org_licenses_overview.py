@@ -8,7 +8,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -116,7 +116,7 @@ def _check_expiration_date(
         )
 
     else:
-        yield from check_levels(
+        yield from check_levels_v1(
             age,
             levels_lower=params.get("remaining_expiration_time"),
             label="Remaining time",

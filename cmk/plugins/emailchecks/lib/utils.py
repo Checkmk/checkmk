@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 """Common module for mail related active checks
 Current responsibilities include:
@@ -161,7 +160,7 @@ def _output_check_result(text: str, perfdata: PerfData) -> None:
     sys.stdout.write(text)
     if perfdata:
         sys.stdout.write(" | ")
-        sys.stdout.write(" ".join(f'{p[0]}={";".join(map(str, p[1:]))}' for p in perfdata))
+        sys.stdout.write(" ".join(f"{p[0]}={';'.join(map(str, p[1:]))}" for p in perfdata))
     sys.stdout.write("\n")
 
 

@@ -7,15 +7,14 @@
 import abc
 import re
 from collections.abc import Collection, Iterator, Mapping, Sequence
-from typing import TypeVar
+from typing import override, TypeVar
 
-from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
 from cmk.utils.tags import TagGroupID, TagID
 
 import cmk.gui.view_utils
-from cmk.gui import forms, weblib
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -50,7 +49,9 @@ from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
+from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.rendering import set_inpage_search_result_info
+from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.sort import natural_sort
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
@@ -72,10 +73,11 @@ from cmk.gui.valuespec import (
 from cmk.gui.watolib.agent_registration import remove_tls_registration
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.check_mk_automations import delete_hosts
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.host_attributes import (
+    all_host_attributes,
     collect_attributes,
-    host_attribute_registry,
     HostAttributes,
 )
 from cmk.gui.watolib.hosts_and_folders import (
@@ -114,6 +116,7 @@ def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
 
 
 def wato_folder_choices_autocompleter(value: str, params: dict) -> Choices:
+    validate_regex(value, varname=None)
     match_pattern = re.compile(value, re.IGNORECASE)
     matching_folders: Choices = []
     for path, name in folder_tree().folder_choices_fulltitle():
@@ -144,10 +147,12 @@ def make_folder_breadcrumb(folder: Folder | SearchFolder) -> Breadcrumb:
 
 class ModeFolder(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "folder"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["hosts"]
 
@@ -163,12 +168,15 @@ class ModeFolder(WatoMode):
         if request.has_var("_show_explicit_labels"):
             user.wato_folders_show_labels = request.get_ascii_input("_show_explicit_labels") == "1"
 
+    @override
     def title(self) -> str:
         return self._folder.title()
 
+    @override
     def breadcrumb(self) -> Breadcrumb:
         return make_folder_breadcrumb(self._folder)
 
+    @override
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         if not self._folder.is_disk_folder():
             return self._search_folder_page_menu(breadcrumb)
@@ -394,7 +402,7 @@ class ModeFolder(WatoMode):
                 item=make_simple_link(self._folder.url([("mode", "random_hosts")])),
             )
 
-    def _page_menu_entries_selected_hosts(  # pylint: disable=too-many-branches
+    def _page_menu_entries_selected_hosts(
         self,
     ) -> Iterator[PageMenuEntry]:
         if not user.may("wato.edit_hosts") and not user.may("wato.manage_hosts"):
@@ -583,7 +591,8 @@ class ModeFolder(WatoMode):
                 ),
             )
 
-    def action(self) -> ActionResult:  # pylint: disable=too-many-branches
+    @override
+    def action(self) -> ActionResult:
         check_csrf_token()
 
         if request.var("_search"):  # just commit to search form
@@ -681,7 +690,7 @@ class ModeFolder(WatoMode):
                         add_vars=[
                             ("mode", mode_name),
                             ("search", search_text),
-                            ("selection", weblib.selection_id()),
+                            ("selection", SelectionId.from_request(request)),
                         ]
                     )
                 )
@@ -693,6 +702,7 @@ class ModeFolder(WatoMode):
 
         return None
 
+    @override
     def page(self) -> None:
         if not self._folder.permissions.may("read"):
             reason = self._folder.permissions.reason_why_may_not("read")
@@ -963,7 +973,7 @@ class ModeFolder(WatoMode):
             with table_element("hosts", title=_("Hosts"), omit_empty_columns=True) as table:
                 # Compute colspan for bulk actions
                 colspan = 6
-                for attr in host_attribute_registry.attributes():
+                for attr in all_host_attributes(active_config).values():
                     if attr.show_in_table():
                         colspan += 1
                 if (
@@ -995,7 +1005,7 @@ class ModeFolder(WatoMode):
                         contact_group_names,
                     )
 
-            html.hidden_field("selection_id", weblib.selection_id())
+            html.hidden_field("selection_id", SelectionId.from_request(request))
             html.hidden_fields()
 
         show_row_count(
@@ -1066,7 +1076,7 @@ class ModeFolder(WatoMode):
         html.a(hostname, href=host.edit_url())
 
         # Show attributes
-        for attr in host_attribute_registry.attributes():
+        for attr in all_host_attributes(active_config).values():
             if attr.show_in_table():
                 attrname = attr.name()
                 if attrname in host.attributes:
@@ -1097,7 +1107,7 @@ class ModeFolder(WatoMode):
             ),
         )
         table.cell(
-            _("Contact Groups"),
+            _("Contact groups"),
             HTML.without_escaping(", ").join(
                 [self._render_contact_group(contact_group_names, g) for g in host_contact_groups]
             ),
@@ -1149,13 +1159,6 @@ class ModeFolder(WatoMode):
 
     def _show_host_actions(self, host: Host) -> None:
         html.icon_button(host.edit_url(), _("Edit the properties of this host"), "edit")
-        if user.may("wato.rulesets"):
-            html.icon_button(
-                host.params_url(),
-                _("View the rule based effective parameters of this host"),
-                "rulesets",
-            )
-
         if host.permissions.may("read"):
             if user.may("wato.services"):
                 msg = _("Run service discovery")
@@ -1168,6 +1171,13 @@ class ModeFolder(WatoMode):
                     "The service discovery of this host failed during a previous bulk service discovery."
                 )
             html.icon_button(host.services_url(), msg, image)
+
+        if user.may("wato.rulesets"):
+            html.icon_button(
+                host.params_url(),
+                _("View the rule based effective parameters of this host"),
+                "rulesets",
+            )
 
         if not host.locked():
             if user.may("wato.edit_hosts") and user.may("wato.move_hosts"):
@@ -1219,6 +1229,7 @@ class ModeFolder(WatoMode):
 class PageAjaxPopupMoveToFolder(AjaxPage):
     """Renders the popup menu contents for either moving a host or a folder to another folder"""
 
+    @override
     def _from_vars(self) -> None:
         self._what = request.var("what")
         if self._what not in ["host", "folder"]:
@@ -1232,9 +1243,11 @@ class PageAjaxPopupMoveToFolder(AjaxPage):
 
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
+    @override
     def handle_page(self) -> None:
         self._handle_exc(self.page)
 
+    @override
     def page(self) -> PageResult:
         html.span(self._move_title())
 
@@ -1279,6 +1292,7 @@ class PageAjaxPopupMoveToFolder(AjaxPage):
 
 class ABCFolderMode(WatoMode, abc.ABC):
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
@@ -1297,6 +1311,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
     def _save(self, title: str, attributes: HostAttributes) -> None:
         raise NotImplementedError()
 
+    @override
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         is_enabled = (
             self._is_new
@@ -1320,6 +1335,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
             save_is_enabled=is_enabled,
         )
 
+    @override
     def action(self) -> ActionResult:
         check_csrf_token()
 
@@ -1342,6 +1358,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
         return redirect(mode_url("folder", folder=folder.path()))
 
     # TODO: Clean this method up! Split new/edit handling to sub classes
+    @override
     def page(self) -> None:
         new = self._is_new
         folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
@@ -1403,44 +1420,54 @@ class ABCFolderMode(WatoMode, abc.ABC):
 
 class ModeEditFolder(ABCFolderMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "editfolder"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["hosts"]
 
     def __init__(self) -> None:
         super().__init__(is_new=False)
 
+    @override
     def _init_folder(self) -> Folder:
         return folder_from_request(request.var("folder"), request.get_ascii_input("host"))
 
+    @override
     def title(self) -> str:
         return _("Folder properties")
 
+    @override
     def _save(self, title: str, attributes: HostAttributes) -> None:
         self._folder.edit(title, attributes)
 
 
 class ModeCreateFolder(ABCFolderMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "newfolder"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "manage_folders"]
 
     def __init__(self) -> None:
         super().__init__(is_new=True)
 
+    @override
     def _init_folder(self) -> Folder:
         return folder_tree().root_folder()
 
+    @override
     def title(self) -> str:
         return _("Add folder")
 
+    @override
     def _save(self, title: str, attributes: HostAttributes) -> None:
         parent_folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
         if not active_config.wato_hide_filenames:
@@ -1453,7 +1480,8 @@ class ModeCreateFolder(ABCFolderMode):
 
 
 class PageAjaxSetFoldertree(AjaxPage):
-    def page(self) -> PageResult:  # pylint: disable=useless-return
+    @override
+    def page(self) -> PageResult:
         check_csrf_token()
         api_request = self.webapi_request()
         user.save_file("foldertree", (api_request.get("topic"), api_request.get("target")))

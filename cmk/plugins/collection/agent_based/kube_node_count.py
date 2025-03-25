@@ -8,7 +8,7 @@ import enum
 from collections.abc import Sequence
 from typing import Literal, TypedDict
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -118,7 +118,7 @@ def _check_levels(
 ) -> CheckResult:
     levels_upper = _get_levels(params, name, LevelName.levels_upper)
     levels_lower = _get_levels(params, name, LevelName.levels_lower)
-    result, metric = check_levels(
+    result, metric = check_levels_v1(
         ready_count.ready,
         metric_name=f"kube_node_count_{name}_ready",
         levels_upper=levels_upper,

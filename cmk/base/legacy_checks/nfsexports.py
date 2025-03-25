@@ -10,10 +10,10 @@
 # [['/mirrored/data/recording', '172.0.0.0/255.0.0.0']]
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def inventory_nfsexports(info):
@@ -52,6 +52,7 @@ def parse_nfsexports(string_table: StringTable) -> StringTable:
 
 
 check_info["nfsexports"] = LegacyCheckDefinition(
+    name="nfsexports",
     parse_function=parse_nfsexports,
     service_name="NFS export %s",
     discovery_function=inventory_nfsexports,

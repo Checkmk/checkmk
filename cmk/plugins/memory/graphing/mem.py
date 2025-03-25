@@ -59,7 +59,7 @@ metric_swap_cached = Metric(
     name="swap_cached",
     title=Title("Swap cached"),
     unit=UNIT_BYTES,
-    color=Color.LIGHT_GREEN,
+    color=Color.PINK,
 )
 metric_mem_lnx_slab = Metric(
     name="mem_lnx_slab",
@@ -78,6 +78,12 @@ metric_mem_lnx_buffers = Metric(
     title=Title("Buffered memory"),
     unit=UNIT_BYTES,
     color=Color.CYAN,
+)
+metric_sreclaimable = Metric(
+    name="sreclaimable",
+    title=Title("Reclaimable slab"),
+    unit=UNIT_BYTES,
+    color=Color.ORANGE,
 )
 
 perfometer_mem_used = Perfometer(
@@ -151,30 +157,37 @@ graph_mem_absolute = Graph(
         "mem_used",
         "mem_free",
     ),
+    conflicting=("mem_lnx_cached", "mem_lnx_buffers"),
 )
-graph_ram_swap_overview = Graph(
-    name="ram_swap_overview",
-    title=Title("RAM + swap overview"),
-    compound_lines=[
+graph_mem_absolute_2 = Graph(
+    name="mem_absolute_2",
+    title=Title("RAM"),
+    simple_lines=(
+        # see mem_linux.py
         Sum(
-            Title("RAM + swap installed"),
-            Color.LIGHT_BLUE,
-            [
-                "mem_total",
-                "swap_total",
-            ],
-        )
-    ],
-    simple_lines=[
-        Sum(
-            Title("RAM + swap used"),
-            Color.GREEN,
-            [
+            Title("Total RAM"),
+            Color.DARK_BLUE,
+            (
                 "mem_used",
-                "swap_used",
-            ],
-        )
-    ],
+                "mem_free",
+                "mem_lnx_cached",
+                "mem_lnx_buffers",
+                "swap_cached",
+                "sreclaimable",
+            ),
+        ),
+        WarningOf("mem_used"),
+        CriticalOf("mem_used"),
+    ),
+    compound_lines=(
+        "sreclaimable",
+        "mem_lnx_cached",
+        "mem_lnx_buffers",
+        "swap_cached",
+        "mem_free",
+        "mem_used",
+    ),
+    optional=("swap_cached", "sreclaimable"),
 )
 graph_ram_swap_used = Graph(
     name="ram_swap_used",
@@ -222,6 +235,49 @@ graph_ram_swap_used = Graph(
     ],
     conflicting=["swap_total"],
 )
+graph_ram_swap_overview = Graph(
+    name="ram_swap_overview",
+    title=Title("RAM + swap overview"),
+    compound_lines=[
+        Sum(
+            Title("RAM + swap installed"),
+            Color.LIGHT_BLUE,
+            [
+                "mem_total",
+                "swap_total",
+            ],
+        )
+    ],
+    simple_lines=[
+        Sum(
+            Title("RAM + swap used"),
+            Color.GREEN,
+            [
+                "mem_used",
+                "swap_used",
+            ],
+        )
+    ],
+)
+graph_swap = Graph(
+    name="swap",
+    title=Title("Swap"),
+    compound_lines=[
+        "swap_used",
+        "swap_cached",
+    ],
+    simple_lines=["swap_total"],
+)
+graph_caches = Graph(
+    name="caches",
+    title=Title("Caches"),
+    compound_lines=[
+        "mem_lnx_slab",
+        "swap_cached",
+        "mem_lnx_buffers",
+        "mem_lnx_cached",
+    ],
+)
 graph_ram_used = Graph(
     name="ram_used",
     title=Title("RAM used"),
@@ -241,24 +297,8 @@ graph_ram_used = Graph(
         WarningOf("mem_used"),
         CriticalOf("mem_used"),
     ],
-    conflicting=["swap_used"],
-)
-graph_swap = Graph(
-    name="swap",
-    title=Title("Swap"),
-    compound_lines=[
+    conflicting=[
         "swap_used",
-        "swap_cached",
-    ],
-    simple_lines=["swap_total"],
-)
-graph_caches = Graph(
-    name="caches",
-    title=Title("Caches"),
-    simple_lines=[
-        "mem_lnx_slab",
-        "swap_cached",
-        "mem_lnx_buffers",
-        "mem_lnx_cached",
+        "mem_free",
     ],
 )

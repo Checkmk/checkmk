@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fireeye import check_fireeye_states, inventory_fireeye_generic
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.fireeye import DETECT
+
+check_info = {}
 
 # .1.3.6.1.4.1.25597.11.3.1.1.0 Good --> FE-FIREEYE-MIB::fePowerSupplyOverallStatus.0
 # .1.3.6.1.4.1.25597.11.3.1.2.0 1 --> FE-FIREEYE-MIB::fePowerSupplyOverallIsHealthy.0
@@ -32,6 +33,7 @@ def discover_fireeye_powersupplies(info):
 
 
 check_info["fireeye_powersupplies"] = LegacyCheckDefinition(
+    name="fireeye_powersupplies",
     parse_function=parse_fireeye_powersupplies,
     detect=DETECT,
     fetch=SNMPTree(

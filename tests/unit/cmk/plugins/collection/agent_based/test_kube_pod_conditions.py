@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
-# pylint: disable=comparison-with-callable,redefined-outer-name
 
 import json
 
@@ -13,9 +10,11 @@ import pytest
 from polyfactory.factories.pydantic_factory import ModelFactory
 from pydantic import ValidationError
 
-from tests.unit.conftest import FixRegister
-
-from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin, CheckPlugin
+from cmk.base.api.agent_based.plugin_classes import (
+    AgentBasedPlugins,
+    AgentSectionPlugin,
+    CheckPlugin,
+)
 
 from cmk.agent_based.v2 import CheckResult, render, Result, State, StringTable
 from cmk.plugins.collection.agent_based import kube_pod_conditions
@@ -178,16 +177,16 @@ def check_result(params, section):
 
 
 @pytest.fixture
-def agent_section(fix_register: FixRegister) -> AgentSectionPlugin:
-    for name, section in fix_register.agent_sections.items():
+def agent_section(agent_based_plugins: AgentBasedPlugins) -> AgentSectionPlugin:
+    for name, section in agent_based_plugins.agent_sections.items():
         if str(name) == "kube_pod_conditions_v1":
             return section
     assert False, "Should be able to find the section"
 
 
 @pytest.fixture
-def check_plugin(fix_register: FixRegister) -> CheckPlugin:
-    for name, plugin in fix_register.check_plugins.items():
+def check_plugin(agent_based_plugins: AgentBasedPlugins) -> CheckPlugin:
+    for name, plugin in agent_based_plugins.check_plugins.items():
         if str(name) == "kube_pod_conditions":
             return plugin
     assert False, "Should be able to find the plugin"

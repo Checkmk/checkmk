@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -23,7 +23,8 @@ from cmk.agent_based.v2 import (
     StringTable,
     TableRow,
 )
-from cmk.plugins.lib import db, oracle
+from cmk.plugins.lib import db
+from cmk.plugins.oracle.agent_based import liboracle as oracle
 
 # no used space check for Tablsspaces with CONTENTS in ('TEMPORARY','UNDO')
 # It is impossible to check the used space in UNDO and TEMPORARY Tablespaces
@@ -176,7 +177,7 @@ def discovery_oracle_tablespaces(section: oracle.SectionTableSpaces) -> Discover
             )
 
 
-def check_oracle_tablespaces(  # pylint: disable=too-many-branches
+def check_oracle_tablespaces(
     item: str,
     params: Mapping[str, Any],
     section: oracle.SectionTableSpaces,
@@ -309,7 +310,7 @@ def check_oracle_tablespaces(  # pylint: disable=too-many-branches
             or (ts_type == "TEMPORARY" and params.get("temptablespace"))
             or (ts_type == "UNDO" and params.get("monitor_undo_tablespace"))
         ):
-            yield from check_levels(
+            yield from check_levels_v1(
                 stats.free_space,
                 levels_lower=(warn, crit),
                 render_func=render.bytes,

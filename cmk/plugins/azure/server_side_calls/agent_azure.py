@@ -45,8 +45,10 @@ class AzureParams(BaseModel):
     services: list[str]
     config: Config
     piggyback_vms: str | None = None
-    sequential: str | None = None
-    import_tags: tuple[str, str | None] | None = None
+    filter_tags: (
+        tuple[Literal["filter_tags"], str] | tuple[Literal["dont_import_tags"], None] | None
+    ) = None
+    connection_test: bool = False  # only used by quick setup
 
 
 def _tag_based_args(tag_based: list[TagBased]) -> list[str]:
@@ -80,13 +82,14 @@ def agent_azure_arguments(
         params.secret.unsafe(),
     ]
     if params.authority:
-        args += ["--authority", params.authority if params.authority != "global_" else "global"]
+        args += [
+            "--authority",
+            params.authority if params.authority != "global_" else "global",
+        ]
     if params.subscription:
         args += ["--subscription", params.subscription]
     if params.piggyback_vms:
-        args += ["--piggyback-vms", params.piggyback_vms]
-    if params.sequential == "singlethreaded":
-        args += ["--sequential"]
+        args += ["--piggyback_vms", params.piggyback_vms]
 
     if params.proxy:
         match params.proxy:
@@ -112,6 +115,21 @@ def agent_azure_arguments(
         args += _explicit_args(config.explicit)
     if config.tag_based:
         args += _tag_based_args(config.tag_based)
+
+    if params.connection_test:
+        args += ["--connection-test"]
+
+    args += [
+        "--cache-id",
+        host_config.name,
+    ]
+
+    if params.filter_tags is not None:
+        match params.filter_tags[1]:
+            case str(tag_key_pattern):
+                args += ["--import-matching-tags-as-labels", tag_key_pattern]
+            case None:
+                args += ["--ignore-all-tags"]
 
     yield SpecialAgentCommand(command_arguments=args)
 

@@ -22,7 +22,7 @@ AGENT_OUTPUT = [
 ]
 
 
-@pytest.mark.usefixtures("fix_register")
+@pytest.mark.usefixtures("agent_based_plugins")
 def test_check_docker_node_disk_usage() -> None:
     result = list(
         check_docker_node_disk_usage("volumes", {}, parse_docker_node_disk_usage(AGENT_OUTPUT))

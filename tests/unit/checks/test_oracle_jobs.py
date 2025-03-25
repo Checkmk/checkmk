@@ -7,9 +7,8 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
-
 from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import IgnoreResultsError
 
 from .checktestlib import Check
 

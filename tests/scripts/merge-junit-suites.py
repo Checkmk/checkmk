@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Merge several junit report files (combining suites of the same name)."""
+
 import os
 import sys
 from xml.etree import ElementTree
@@ -61,32 +62,30 @@ set_attr = {"hostname"}
 min_attr = {"timestamp"}
 
 # merge suites of same name and get combined statistics
-for suite in suites:
+for suite, value in suites.items():
     nodes = root.findall(f"testsuite[@name='{suite}']")
     last_node_idx = len(nodes) - 1
     for node_idx, child in enumerate(reversed(nodes)):
         for attr in sum_attr:
             if child.attrib.get(attr).isdecimal():
-                suites[suite][attr] = suites[suite].get(attr, 0) + int(child.attrib.get(attr))
+                value[attr] = value.get(attr, 0) + int(child.attrib.get(attr))
                 continue
-            suites[suite][attr] = suites[suite].get(attr, 0.0) + float(child.attrib.get(attr))
+            value[attr] = value.get(attr, 0.0) + float(child.attrib.get(attr))
         for attr in set_attr:
-            items = suites[suite].get(attr, "").split(",") + [child.attrib.get(attr)]
-            suites[suite][attr] = ", ".join({_ for _ in items if _})
+            items = value.get(attr, "").split(",") + [child.attrib.get(attr)]
+            value[attr] = ", ".join({_ for _ in items if _})
         for attr in min_attr:
-            suites[suite][attr] = min(
-                child.attrib.get(attr), suites[suite].get(attr, child.attrib.get(attr))
-            )
+            value[attr] = min(child.attrib.get(attr), value.get(attr, child.attrib.get(attr)))
         if node_idx < last_node_idx:
             for grandchild in child:
                 if node := root.find(f"testsuite[@name='{suite}']"):
                     node.append(grandchild)
             root.remove(child)
-    for key in suites[suite]:
+    for key in value:
         if node := root.find(f"testsuite[@name='{suite}']"):
-            node.attrib[key] = str(suites[suite][key])
+            node.attrib[key] = str(value[key])
         if print_stats:
-            print(f"{suite}.{key}: {suites[suite][key]}")
+            print(f"{suite}.{key}: {value[key]}")
 
 if output_file and not stats_only:
     tree.write(output_file)

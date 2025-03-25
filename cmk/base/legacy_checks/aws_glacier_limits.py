@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import check_aws_limits, parse_aws_limits_generic
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 # .
 #   .--Glacier limits------------------------------------------------------.
@@ -30,6 +32,7 @@ def discover_aws_glacier_limits(section):
 
 
 check_info["aws_glacier_limits"] = LegacyCheckDefinition(
+    name="aws_glacier_limits",
     parse_function=parse_aws_limits_generic,
     service_name="AWS/Glacier Limits %s",
     discovery_function=discover_aws_glacier_limits,

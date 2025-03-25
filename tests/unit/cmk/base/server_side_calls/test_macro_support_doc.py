@@ -2,24 +2,25 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-""" Test documentation of supported macros in server side calls
+"""Test documentation of supported macros in server side calls
 
 These tests are a single point of truth about supported macros
 in active check and special agent SSC plugins.
 """
+
 from collections.abc import Iterable, Iterator, Sequence
 
 import pytest
 
-from tests.testlib.base import Scenario
+from tests.testlib.unit.base_configuration_scenario import Scenario
+
+import cmk.ccc.version as cmk_version
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 
 import cmk.base.config as base_config
 from cmk.base.config import ConfigCache
-
-import cmk.ccc.version as cmk_version
 
 DOCUMENTED_ACTIVE_CHECK_MACROS = {
     "required": [
@@ -173,7 +174,7 @@ def test_active_checks_macros(config_cache: ConfigCache, resource_cfg_file: None
 
     documented = DOCUMENTED_ACTIVE_CHECK_MACROS
 
-    label_sources = config_cache.label_sources(host_name).keys()
+    label_sources = config_cache.label_manager.label_sources_of_host(host_name).keys()
     custom_attrs = [
         attr[1:].upper() for attr in config_cache.explicit_host_attributes(host_name).keys()
     ]
@@ -181,7 +182,11 @@ def test_active_checks_macros(config_cache: ConfigCache, resource_cfg_file: None
     expected_macros = (
         documented["required"]
         + list(_iter_macros(documented["per_tag"], config_cache.tags(host_name).keys()))
-        + list(_iter_macros(documented["per_label"], config_cache.labels(host_name).keys()))
+        + list(
+            _iter_macros(
+                documented["per_label"], config_cache.label_manager.labels_of_host(host_name).keys()
+            )
+        )
         + list(_iter_macros(documented["per_label_source"], label_sources))
         + list(_iter_macros(documented["per_custom_host_attribute"], custom_attrs))
         + list(_iter_macros(documented["per_custom_macro"], ["CUSTOM_MACRO"]))
@@ -224,7 +229,7 @@ def test_special_agent_macros(
 
     documented = DOCUMENTED_SPECIAL_AGENT_MACROS
 
-    label_sources = config_cache.label_sources(host_name).keys()
+    label_sources = config_cache.label_manager.label_sources_of_host(host_name).keys()
     custom_attrs = [
         attr[1:].upper() for attr in config_cache.explicit_host_attributes(host_name).keys()
     ]
@@ -232,7 +237,11 @@ def test_special_agent_macros(
     expected_macros = (
         documented["required"]
         + list(_iter_macros(documented["per_tag"], config_cache.tags(host_name).keys()))
-        + list(_iter_macros(documented["per_label"], config_cache.labels(host_name).keys()))
+        + list(
+            _iter_macros(
+                documented["per_label"], config_cache.label_manager.labels_of_host(host_name).keys()
+            )
+        )
         + list(_iter_macros(documented["per_label_source"], label_sources))
         + list(_iter_macros(documented["per_custom_host_attribute"], custom_attrs))
     )

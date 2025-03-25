@@ -9,47 +9,47 @@ from typing import Literal, NewType
 FormSpecId = NewType("FormSpecId", str)
 
 
-@dataclass
-class Widget:
-    widget_type: str
+@dataclass(frozen=True, kw_only=True)
+class Widget: ...
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class Text(Widget):
-    widget_type: str = "text"
+    widget_type: str = field(default="text", init=False)
     text: str = ""
     tooltip: str | None = None
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class NoteText(Widget):
     widget_type: str = field(default="note_text", init=False)
     text: str = ""
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class ListOfWidgets(Widget):
     widget_type: str = field(default="list_of_widgets", init=False)
     items: list[Widget] = field(default_factory=list)
     list_type: None | Literal["bullet", "ordered", "check"] = None
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class FormSpecWrapper(Widget):
     id: FormSpecId
-    widget_type: str = field(default="form_spec", init=False)
     form_spec: object
+    widget_type: str = field(default="form_spec", init=False)
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class FormSpecRecap(Widget):
     id: FormSpecId
     widget_type: str = field(default="form_spec_recap", init=False)
     form_spec: object
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class Collapsible(Widget):
     widget_type: str = field(default="collapsible", init=False)
     title: str
     items: list[Widget] = field(default_factory=list)
+    help_text: str | None = None

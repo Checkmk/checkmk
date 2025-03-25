@@ -89,10 +89,7 @@ def check_dell_idrac_disks(item: str, section: StringTable) -> CheckResult:
         if disk_name == item:
             yield Result(
                 state=State.OK,
-                summary="[{}] Size: {}".format(
-                    display_name,
-                    render.disksize(int(capacity_MB) * 1024 * 1024),
-                ),
+                summary=f"[{display_name}] Size: {render.disksize(int(capacity_MB) * 1024 * 1024)}",
             )
 
             for what, what_key, what_text in [

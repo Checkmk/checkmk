@@ -7,7 +7,7 @@
 from collections.abc import Iterable, Mapping
 from typing import Any, Final, Literal
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -256,16 +256,16 @@ def _check_oxyreduct(params: Mapping[str, Any], data: Mapping[int, float]) -> Ch
             try:
                 levels = params[tag_params["levels_name"]]
             except KeyError:
-                levels = tag_params.get("levels")
+                levels = tag_params.get("levels", (16, 17, 14, 13))
 
-            template = f"%.2f {tag_params.get('unit', '')}".strip()
-            yield from check_levels(
+            unit_str = tag_params.get("unit", "")
+            yield from check_levels_v1(
                 value,
                 metric_name=tag_params.get("perfvar"),
                 levels_lower=levels[2:],
                 levels_upper=levels[:2],
                 label=tag_params["name"],
-                render_func=lambda v: template % v,  # pylint: disable=cell-var-from-loop
+                render_func=lambda v, u=unit_str: f"{v:.2f} {u}".strip(),
             )
 
         # if it's a bitmask, try to determine if they are good flags
@@ -284,7 +284,7 @@ def _check_oxyreduct(params: Mapping[str, Any], data: Mapping[int, float]) -> Ch
 
 
 def discovery_ewon(params: Mapping[Literal["device"], Any], section: Section) -> DiscoveryResult:
-    device_name = params["device"]
+    device_name = params.get("device")
 
     yield Service(item="eWON Status", parameters={"device": device_name})
 
@@ -294,7 +294,7 @@ def discovery_ewon(params: Mapping[Literal["device"], Any], section: Section) ->
 
 
 def check_ewon(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    device_name = params["device"]
+    device_name = params.get("device")
     if item == "eWON Status":
         if device_name is None:
             yield Result(

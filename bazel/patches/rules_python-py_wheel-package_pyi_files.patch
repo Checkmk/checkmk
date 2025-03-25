@@ -1,0 +1,33 @@
+commit 0d432d7455edc3ff00404403de59ecfd20936c92
+Author: Mathias Laurin <Mathias.Laurin+github.com@gmail.com>
+Date:   Thu Feb 6 11:26:29 2025 +0100
+
+    Package pyi files in wheel
+
+diff --git a/python/private/py_wheel.bzl b/python/private/py_wheel.bzl
+index b5fbec9c..c196ca6a 100644
+--- a/python/private/py_wheel.bzl
++++ b/python/private/py_wheel.bzl
+@@ -14,6 +14,7 @@
+ 
+ "Implementation of py_wheel rule"
+ 
++load(":py_info.bzl", "PyInfo")
+ load(":py_package.bzl", "py_package_lib")
+ load(":py_wheel_normalize_pep440.bzl", "normalize_pep440")
+ load(":stamp.bzl", "is_stamping_enabled")
+@@ -319,8 +320,13 @@ def _py_wheel_impl(ctx):
+ 
+     name_file = ctx.actions.declare_file(ctx.label.name + ".name")
+ 
++    direct_pyi_files = []
++    for dep in ctx.attr.deps:
++        if PyInfo in dep:
++            direct_pyi_files.extend(dep[PyInfo].direct_pyi_files.to_list())
++
+     inputs_to_package = depset(
+-        direct = ctx.files.deps,
++        direct = ctx.files.deps + direct_pyi_files,
+     )
+ 
+     # Inputs to this rule which are not to be packaged.

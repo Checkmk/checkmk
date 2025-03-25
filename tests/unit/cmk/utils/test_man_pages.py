@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import os
 from collections.abc import Mapping, Sequence
@@ -11,16 +10,17 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.repo import repo_path
+from tests.testlib.common.repo import repo_path
 
-from tests.unit.conftest import FixPluginLegacy, FixRegister
+from tests.unit.mocks_and_helpers import FixPluginLegacy
 
 from cmk.utils import man_pages
 
-from cmk.base.server_side_calls import load_active_checks
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 
 from cmk.agent_based.v2 import CheckPlugin
-from cmk.discover_plugins import discover_families, discover_plugins, PluginGroup
+from cmk.discover_plugins import discover_all_plugins, discover_families, PluginGroup
+from cmk.server_side_calls_backend import load_active_checks
 
 _IF64_MAN_PAGE = man_pages.ManPage(
     name="if64",
@@ -159,7 +159,7 @@ def test_cmk_plugins_families_manpages() -> None:
     man_page_path_map = man_pages.make_man_page_path_map(
         discover_families(raise_errors=True), PluginGroup.CHECKMAN.value
     )
-    check_plugins = discover_plugins(
+    check_plugins = discover_all_plugins(
         PluginGroup.AGENT_BASED, {CheckPlugin: "check_plugin_"}, raise_errors=True
     )
     assert not {
@@ -173,28 +173,27 @@ def test_cmk_plugins_families_manpages() -> None:
 
 
 def test_man_page_consistency(
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
     fix_plugin_legacy: FixPluginLegacy,
     all_pages: Mapping[str, man_pages.ManPage],
 ) -> None:
     """Make sure we have one man page per plugin, and no additional ones"""
     expected_man_pages = (
-        {str(plugin_name) for plugin_name in fix_register.check_plugins}
-        | {f"check_{name}" for name in fix_plugin_legacy.active_check_info}
-        | {f"check_{plugin.name}" for plugin in load_active_checks()[1].values()}
+        {str(plugin_name) for plugin_name in agent_based_plugins.check_plugins}
+        | {f"check_{plugin.name}" for plugin in load_active_checks(raise_errors=False).values()}
         | {"check-mk", "check-mk-inventory"}
     )
     assert set(all_pages) == expected_man_pages
 
 
 def test_cluster_check_functions_match_manpages_cluster_sections(
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
     all_pages: Mapping[str, man_pages.ManPage],
 ) -> None:
     missing_cluster_description: set[str] = set()
     unexpected_cluster_description: set[str] = set()
 
-    for plugin in fix_register.check_plugins.values():
+    for plugin in agent_based_plugins.check_plugins.values():
         man_page = all_pages[str(plugin.name)]
         has_cluster_doc = bool(man_page.cluster)
         has_cluster_func = plugin.cluster_check_function is not None
@@ -202,9 +201,7 @@ def test_cluster_check_functions_match_manpages_cluster_sections(
             (
                 missing_cluster_description,
                 unexpected_cluster_description,
-            )[
-                has_cluster_doc
-            ].add(str(plugin.name))
+            )[has_cluster_doc].add(str(plugin.name))
 
     assert not missing_cluster_description
     assert not unexpected_cluster_description
@@ -214,9 +211,9 @@ def test_no_subtree_and_entries_on_same_level(catalog: man_pages.ManPageCatalog)
     for category, entries in catalog.items():
         has_entries = bool(entries)
         has_categories = bool(man_pages._manpage_catalog_subtree_names(catalog, category))
-        assert (
-            has_entries != has_categories
-        ), "A category must only have entries or categories, not both"
+        assert has_entries != has_categories, (
+            "A category must only have entries or categories, not both"
+        )
 
 
 def test_print_man_page_nowiki_content() -> None:

@@ -10,11 +10,11 @@
 # upsBatteryVoltage             1.3.6.1.4.1.4555.1.1.1.1.2.5
 # upsBatteryTemperature         1.3.6.1.4.1.4555.1.1.1.1.2.6
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.ups_socomec import DETECT_SOCOMEC
+
+check_info = {}
 
 
 def inventory_ups_socomec_capacity(info):
@@ -49,9 +49,11 @@ def check_ups_socomec_capacity(item, params, info):
             levelsinfo = " (warn at %d min)" % cap_warn
         else:
             state = 0
-        yield state, "%d min left on battery" % minutes_left + levelsinfo, [
-            ("capacity", minutes_left, warn, crit)
-        ]
+        yield (
+            state,
+            "%d min left on battery" % minutes_left + levelsinfo,
+            [("capacity", minutes_left, warn, crit)],
+        )
 
     # Check percentual capacity
     levelsinfo = ""
@@ -63,9 +65,11 @@ def check_ups_socomec_capacity(item, params, info):
         levelsinfo = " (warn at %d%%)" % cap_warn
     else:
         state = 0
-    yield state, "capacity: %d%%" % percent_fuel + levelsinfo, [
-        ("percent", percent_fuel, cap_warn, cap_crit)
-    ]
+    yield (
+        state,
+        "capacity: %d%%" % percent_fuel + levelsinfo,
+        [("percent", percent_fuel, cap_warn, cap_crit)],
+    )
 
     # Output time on battery
     if time_on_bat > 0:
@@ -77,6 +81,7 @@ def parse_ups_socomec_capacity(string_table: StringTable) -> StringTable:
 
 
 check_info["ups_socomec_capacity"] = LegacyCheckDefinition(
+    name="ups_socomec_capacity",
     parse_function=parse_ups_socomec_capacity,
     detect=DETECT_SOCOMEC,
     fetch=SNMPTree(

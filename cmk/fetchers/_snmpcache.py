@@ -7,12 +7,12 @@
 import os
 from pathlib import Path
 
+from cmk.ccc import store
+
 import cmk.utils.cleanup
 from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.snmplib import OID, SNMPDecodedString
-
-from cmk.ccc import store
 
 # TODO: Replace this by generic caching
 _g_single_oid_hostname: HostName | None = None

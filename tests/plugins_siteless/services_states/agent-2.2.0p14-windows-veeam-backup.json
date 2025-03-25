@@ -1,0 +1,137 @@
+{
+  "Check_MK Agent": {
+    "expected_state": 0
+  },
+  "Memory": {
+    "expected_state": 0
+  },
+  "Service Summary": {
+    "expected_state": 0
+  },
+  "System Time": {
+    "expected_state": 2
+  },
+  "Uptime": {
+    "expected_state": 0
+  },
+  "VEEAM Job AWO_VPN": {
+    "expected_state": 0
+  },
+  "VEEAM Job BM-VM-DDC-001": {
+    "expected_state": 0
+  },
+  "VEEAM Job BM-VM-ELO-001": {
+    "expected_state": 0
+  },
+  "VEEAM Job BM-VM-EXCH-002": {
+    "expected_state": 0
+  },
+  "VEEAM Job BM-VM-NASQL-001": {
+    "expected_state": 0
+  },
+  "VEEAM Job BM-VM-NASQL-002": {
+    "expected_state": 0
+  },
+  "VEEAM Job Citrix_CMA_Maschines": {
+    "expected_state": 0
+  },
+  "VEEAM Job DC-Second": {
+    "expected_state": 0
+  },
+  "VEEAM Job DC\ufffdS": {
+    "expected_state": 0
+  },
+  "VEEAM Job David": {
+    "expected_state": 3
+  },
+  "VEEAM Job Fibu2008": {
+    "expected_state": 0
+  },
+  "VEEAM Job Monitoring_DMZ": {
+    "expected_state": 0
+  },
+  "VEEAM Job Qlickview_Nprinting": {
+    "expected_state": 0
+  },
+  "VEEAM Job Service_Server": {
+    "expected_state": 0
+  },
+  "VEEAM Job Service_Vario": {
+    "expected_state": 0
+  },
+  "VEEAM Job StandardLinuxVM\ufffds": {
+    "expected_state": 0
+  },
+  "VEEAM Job StandardWinVMs_/_Domain_Member": {
+    "expected_state": 0
+  },
+  "VEEAM Job StandardWinVMs_/__KEIN_Domain_Member": {
+    "expected_state": 0
+  },
+  "VEEAM Job StandardWinVMs_/_ohne_Domain": {
+    "expected_state": 0
+  },
+  "VEEAM Job UNITOP_ALL": {
+    "expected_state": 0
+  },
+  "VEEAM Job UNITOP_DEV": {
+    "expected_state": 0
+  },
+  "VEEAM Job UNITOP_PRD": {
+    "expected_state": 0
+  },
+  "VEEAM Job UNITOP_TST": {
+    "expected_state": 0
+  },
+  "VEEAM Job Windows_Fileserver": {
+    "expected_state": 0
+  },
+  "VEEAM Job bm-vm-autou-001": {
+    "expected_state": 0
+  },
+  "VEEAM Job bm-vm-lvs-001": {
+    "expected_state": 0
+  },
+  "VEEAM Job ext-ftp-sk-01": {
+    "expected_state": 0
+  },
+  "Task \\CreateExplorerShellUnelevatedTask": {
+    "expected_state": 0
+  },
+  "Task \\Dell SupportAssistAgent AutoUpdate": {
+    "expected_state": 2
+  },
+  "Task \\MicrosoftEdgeUpdateTaskMachineCore": {
+    "expected_state": 0
+  },
+  "Task \\MicrosoftEdgeUpdateTaskMachineUA": {
+    "expected_state": 0
+  },
+  "Task \\OneDrive Reporting Task-S-1-5-21-2921784179-2616683105-1033149960-500": {
+    "expected_state": 0
+  },
+  "Task \\OneDrive Standalone Update Task-S-1-5-21-2921784179-2616683105-1033149960-500": {
+    "expected_state": 2
+  },
+  "Task \\User_Feed_Synchronization-{0AA30982-9C3A-4669-9BBF-CA408B069982}": {
+    "expected_state": 0
+  },
+  "Task \\User_Feed_Synchronization-{57E2292A-A5C2-4BAB-ABAC-456D2D206CB6}": {
+    "expected_state": 0
+  },
+  "Interface 1": {
+    "expected_state": 0
+  },
+  "Interface 2": {
+    "expected_state": 0
+  },
+  "Interface 3": {
+    "expected_state": 0
+  },
+  "Interface 4": {
+    "expected_state": 0
+  },
+  "Processor Queue": {
+    "expected_state": 0
+  }
+}

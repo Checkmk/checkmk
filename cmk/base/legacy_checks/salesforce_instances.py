@@ -6,8 +6,9 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_salesforce(string_table):
@@ -59,6 +60,7 @@ def check_salesforce_instances(item, params, parsed):
 
 
 check_info["salesforce_instances"] = LegacyCheckDefinition(
+    name="salesforce_instances",
     parse_function=parse_salesforce,
     service_name="Salesforce Instance %s",
     discovery_function=inventory_salesforce_instances,

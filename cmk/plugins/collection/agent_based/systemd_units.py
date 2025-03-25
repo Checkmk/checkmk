@@ -10,7 +10,7 @@ from datetime import timedelta
 from enum import Enum
 from typing import Any, NamedTuple, Self
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -103,6 +103,7 @@ from cmk.agent_based.v2 import (
 
 
 _SYSTEMD_UNIT_FILE_STATES = [
+    # TODO: alias is missing. is this by accident?
     "enabled",
     "enabled-runtime",
     "linked",
@@ -157,7 +158,7 @@ class Memory:
 
 
 CPU_PATTERN = re.compile(
-    r"(?:(\d+)d)?\s*(?:(\d+)h)?\s*(?:(\d+)min)?\s*(?:(\d+(?:\.\d+)?)s)?\s*(?:(\d+)ms)?\s*(?:(\d+)u)?"
+    r"(?:(\d+)y)?\s*(?:(\d+)month)?\s*(?:(\d+)w)?\s*(?:(\d+)d)?\s*(?:(\d+)h)?\s*(?:(\d+)min)?\s*(?:(\d+(?:\.\d+)?)s)?\s*(?:(\d+)ms)?\s*(?:(\d+)u)?"
 )
 
 
@@ -188,14 +189,32 @@ class CpuTimeSeconds:
         if not (match := CPU_PATTERN.match(raw)):
             raise ValueError(f"Cannot parse from raw: {raw}")
 
-        days, hours, minutes, seconds, milliseconds, microseconds = match.groups()
-        if all(v is None for v in (days, hours, minutes, seconds, milliseconds, microseconds)):
+        years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds = (
+            match.groups()
+        )
+        if all(
+            v is None
+            for v in (
+                years,
+                months,
+                weeks,
+                days,
+                hours,
+                minutes,
+                seconds,
+                milliseconds,
+                microseconds,
+            )
+        ):
             raise ValueError(f"Raw does not contain any known value/unit pair: {raw}")
 
         return cls(
             value=sum(
                 float(v) * f
                 for (v, f) in (
+                    (years, SEC_PER_YEAR),
+                    (months, SEC_PER_MONTH),
+                    (weeks, 7 * 24 * 60 * 60),
                     (days, 24 * 60 * 60),
                     (hours, 60 * 60),
                     (minutes, 60),
@@ -232,6 +251,7 @@ class UnitTypes(Enum):
 class UnitStatus:
     name: str
     status: str
+    enabled_status: str | None
     time_since_change: timedelta | None
     cpu: CpuTimeSeconds | None = None
     memory: Memory | None = None
@@ -240,7 +260,10 @@ class UnitStatus:
     @classmethod
     def from_entry(cls, entry: Sequence[Sequence[str]]) -> "UnitStatus":
         name = entry[0][1].split(".", 1)[0]
-        timestr = " ".join(entry[2]).split(";", 1)[-1]
+        enabled_status = entry[1][3].rstrip(";)") if len(entry[1]) >= 4 else None
+
+        time_line = next((line for line in entry if line[0].lstrip().startswith("Active:")), [])
+        timestr = " ".join(time_line).split(";", 1)[-1]
         if "ago" in timestr:
             time_since_change = _parse_time_str(timestr.replace("ago", "").strip())
         else:
@@ -249,7 +272,7 @@ class UnitStatus:
         for line in entry[3:]:
             match line[0]:
                 case "CPU:":
-                    cpu = CpuTimeSeconds.parse_raw(line[1])
+                    cpu = CpuTimeSeconds.parse_raw(" ".join(line[1:]))
                 case "Memory:":
                     memory = Memory.from_raw(line[1])
                 case "Tasks:":
@@ -259,6 +282,7 @@ class UnitStatus:
         return cls(
             name=name,
             status=entry[2][1],
+            enabled_status=enabled_status,
             time_since_change=time_since_change,
             cpu=cpu,
             memory=memory,
@@ -269,11 +293,17 @@ class UnitStatus:
 @dataclass(frozen=True)
 class UnitEntry:
     name: str
-    loaded_status: str
-    active_status: str
-    current_state: str
+    loaded_status: str  # LOAD   = Reflects whether the unit definition was properly loaded.
+    #                     for example: loaded, not-found, bad-setting, error, masked
+    active_status: str  # ACTIVE = The high-level unit activation state, i.e. generalization of SUB.
+    #                     for example: active, reloading, inactive, failed, activating, deactivating
+    current_state: str  # SUB    = The low-level unit activation state, values depend on unit type.
+    # The list of possible LOAD, ACTIVE, and SUB states is not constant and new systemd releases may
+    # both add and remove values. See systemctl --state=help
     description: str
-    enabled_status: str
+    enabled_status: (
+        str | None
+    )  # see "Available unit file states:" in `systemctl --state=help` or _SYSTEMD_UNIT_FILE_STATES
     time_since_change: timedelta | None = None
     cpu_seconds: CpuTimeSeconds | None = None
     memory: Memory | None = None
@@ -305,7 +335,13 @@ class UnitEntry:
             return None
         name, unit_type = name_unit
         temp = name[: name.find("@") + 1] if "@" in name else name
-        enabled = enabled_status.get(f"{temp}{unit_type.suffix}", "unknown")
+        # Prefer enabled state from the status section over the list-unit-files, it is the actual instantiation of a service
+        # The status section is generated by the agent since a6a979ce and may not be present
+        enabled = (
+            status_details[name].enabled_status
+            if name in status_details
+            else enabled_status.get(f"{temp}{unit_type.suffix}")
+        )
         remains = (" ".join(row[1:])).split(" ", 3)
         if len(remains) == 3:
             remains.append("")
@@ -404,15 +440,34 @@ def _is_service_entry(entry: Sequence[Sequence[str]]) -> bool:
     return unit.endswith(".service")
 
 
-def _is_new_entry(line: Sequence[str]) -> bool:
-    return (line[0] in _STATUS_SYMBOLS) and (len(line) > 3) and ("." in str(line[1]))
+SERVICE_REGEX = re.compile(
+    r".+\.(service|socket|device|mount|automount|swap|target|path|timer|slice|scope)$"
+)
+# hopefully all possible unit types as described in https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Description
+
+
+def _is_new_entry(line: Sequence[str], entry: list[Sequence[str]]) -> bool:
+    # First check if we're not looking at a "Triggers" section.
+    # It looks like the beginning of a new status entry, e.g.:
+    # "Triggers: ● check-mk-agent@3148-1849349-997.service",
+    # "● check-mk-agent@3149-1849349-997.service",
+    for elem in reversed(entry):
+        if elem[0].startswith("Triggers:"):
+            return False
+        if elem[0] not in _STATUS_SYMBOLS:
+            break
+    return (
+        (line[0] in _STATUS_SYMBOLS)
+        and (len(line) >= 2)
+        and (bool(SERVICE_REGEX.match(str(line[1]))))
+    )
 
 
 def _parse_status(source: Iterator[Sequence[str]]) -> Mapping[str, UnitStatus]:
     unit_status = {}
     entry: list[Sequence[str]] = []
     for line in source:
-        if _is_new_entry(line):
+        if _is_new_entry(line, entry):
             if entry and _is_service_entry(entry):
                 status = UnitStatus.from_entry(entry)
                 unit_status[status.name] = status
@@ -526,7 +581,11 @@ def check_systemd_sockets(item: str, params: Mapping[str, Any], section: Section
 def check_systemd_units(item: str, params: Mapping[str, Any], units: Units) -> CheckResult:
     # A service found in the discovery phase can vanish in subsequent runs. I.e. the systemd service was deleted during an update
     if item not in units:
-        yield Result(state=State(params["else"]), summary="Service not found")
+        yield Result(
+            state=State(params["else"]),
+            summary="Unit not found",
+            details="Only units currently in memory are found. These can be shown with `systemctl --all --type service --type socket`.",
+        )
         return
     unit = units[item]
     # TODO: this defaults unknown states to CRIT with the default params
@@ -534,7 +593,7 @@ def check_systemd_units(item: str, params: Mapping[str, Any], units: Units) -> C
     yield Result(state=State(state), summary=f"Status: {unit.active_status}")
     yield Result(state=State.OK, summary=unit.description)
     if unit.cpu_seconds:
-        yield from check_levels(
+        yield from check_levels_v1(
             unit.cpu_seconds.value,
             levels_upper=params.get("cpu_time"),
             label="CPU Time",
@@ -542,7 +601,7 @@ def check_systemd_units(item: str, params: Mapping[str, Any], units: Units) -> C
             render_func=render.timespan,
         )
     if unit.time_since_change is not None and unit.active_status == "active":
-        yield from check_levels(
+        yield from check_levels_v1(
             unit.time_since_change.total_seconds(),
             levels_lower=params.get("active_since_lower"),
             levels_upper=params.get("active_since_upper"),
@@ -551,7 +610,7 @@ def check_systemd_units(item: str, params: Mapping[str, Any], units: Units) -> C
             render_func=render.timespan,
         )
     if unit.memory:
-        yield from check_levels(
+        yield from check_levels_v1(
             unit.memory.bytes,
             levels_upper=params.get("memory"),
             label="Memory",
@@ -559,7 +618,7 @@ def check_systemd_units(item: str, params: Mapping[str, Any], units: Units) -> C
             render_func=render.bytes,
         )
     if unit.number_of_tasks:
-        yield from check_levels(
+        yield from check_levels_v1(
             unit.number_of_tasks,
             label="Number of tasks",
             metric_name="number_of_tasks",
@@ -617,22 +676,26 @@ def _services_split(
     services: Iterable[UnitEntry], blacklist: Sequence[str]
 ) -> Mapping[str, list[UnitEntry]]:
     services_organised: dict[str, list[UnitEntry]] = {
-        "included": [],
-        "excluded": [],
-        "disabled": [],
+        # early exit:
+        "excluded": [],  # based on configured regex
+        # based on active_status:
         "activating": [],
         "deactivating": [],
         "reloading": [],
+        # based on enabled_status:
+        "disabled": [],  # includes also indirect
         "static": [],
+        # fallback
+        "included": [],  # all others
     }
     compiled_patterns = [re.compile(p) for p in blacklist]
     for service in services:
-        if any(expr.match(service.name) for expr in compiled_patterns):
+        if any(expr.match(service.name) for expr in compiled_patterns) or service.name in blacklist:
             services_organised["excluded"].append(service)
             continue
-        if service.active_status in ("activating", "deactivating"):
+        if service.active_status in ("reloading", "activating", "deactivating"):
             services_organised[service.active_status].append(service)
-        elif service.enabled_status in ("reloading", "disabled", "static", "indirect"):
+        elif service.enabled_status in ("disabled", "static", "indirect"):
             service_type = (
                 "disabled" if service.enabled_status == "indirect" else service.enabled_status
             )
@@ -653,7 +716,7 @@ def _check_temporary_state(
         elapsed_time = service.time_since_change
         if elapsed_time is None:
             continue
-        yield from check_levels(
+        yield from check_levels_v1(
             elapsed_time.total_seconds(),
             levels_upper=levels,
             render_func=render.timespan,
@@ -711,10 +774,18 @@ def check_systemd_units_summary(
     yield Result(state=State.OK, summary=f"Total: {len(units):d}")
     services_organised = _services_split(units, blacklist)
     yield Result(state=State.OK, summary=f"Disabled: {len(services_organised['disabled']):d}")
-    # some of the failed ones might be ignored, so this is OK:
+
     yield Result(
-        state=State.OK, summary=f"Failed: {sum(s.active_status == 'failed' for s in units):d}"
+        state=State(params["states"].get("failed", params["states_default"]))
+        if sum(
+            s.active_status == "failed"
+            for s in units
+            if s not in services_organised["excluded"] and s not in services_organised["disabled"]
+        )
+        else State.OK,
+        summary=f"Failed: {sum(s.active_status == 'failed' for s in units)}",
     )
+
     included_template = "{count:d} {unit_type} {status} ({service_text})"
     yield from _check_non_ok_services(
         services_organised["included"], params, included_template, unit_type

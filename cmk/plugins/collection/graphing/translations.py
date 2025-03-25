@@ -368,8 +368,8 @@ translation_dell_powerconnect_temp = translations.Translation(
     translations={"temperature": translations.RenameTo("temp")},
 )
 
-translation_df_db2_logsizes_esx_vsphere_datastores_netapp_ontap_aggr_vms_df_vms_diskstat_df_disk_df_netapp_df_netapp32_zfsget_hr_fs_oracle_asm_diskgroup_esx_vsphere_counters_ramdisk_hitachi_hnas_span_hitachi_hnas_volume_hitachi_hnas_volume_virtual_emcvnx_raidgroups_capacity_emcvnx_raidgroups_capacity_contiguous_ibm_svc_mdiskgrp_fast_lta_silent_cubes_capacity_fast_lta_volumes_libelle_business_shadow_archive_dir_netapp_ontap_luns_netapp_ontap_qtree_quota_emc_datadomain_fs_emc_isilon_quota_emc_isilon_ifs_3par_cpgs_usage_3par_capacity_3par_volumes_storeonce_clusterinfo_space_storeonce_servicesets_capacity_storeonce4x_appliances_storage_storeonce4x_cat_stores_numble_volumes_zpool_vnx_quotas_sap_hana_diskusage_fjdarye200_pools_dell_compellent_folder_nimble_volumes_ceph_df_kube_pvc_lvm_vgs_df_netscaler_prism_host_usage_prism_containers_prism_storage_pools_ucd_disk = translations.Translation(
-    name="df_db2_logsizes_esx_vsphere_datastores_netapp_ontap_aggr_vms_df_vms_diskstat_df_disk_df_netapp_df_netapp32_zfsget_hr_fs_oracle_asm_diskgroup_esx_vsphere_counters_ramdisk_hitachi_hnas_span_hitachi_hnas_volume_hitachi_hnas_volume_virtual_emcvnx_raidgroups_capacity_emcvnx_raidgroups_capacity_contiguous_ibm_svc_mdiskgrp_fast_lta_silent_cubes_capacity_fast_lta_volumes_libelle_business_shadow_archive_dir_netapp_ontap_luns_netapp_ontap_qtree_quota_emc_datadomain_fs_emc_isilon_quota_emc_isilon_ifs_3par_cpgs_usage_3par_capacity_3par_volumes_storeonce_clusterinfo_space_storeonce_servicesets_capacity_storeonce4x_appliances_storage_storeonce4x_cat_stores_numble_volumes_zpool_vnx_quotas_sap_hana_diskusage_fjdarye200_pools_dell_compellent_folder_nimble_volumes_ceph_df_kube_pvc_lvm_vgs_df_netscaler_prism_host_usage_prism_containers_prism_storage_pools_ucd_disk",
+translation_df_db2_logsizes_esx_vsphere_datastores_netapp_ontap_aggr_vms_df_vms_diskstat_df_disk_df_netapp_df_netapp32_zfsget_hr_fs_oracle_asm_diskgroup_esx_vsphere_counters_ramdisk_hitachi_hnas_span_hitachi_hnas_volume_hitachi_hnas_volume_virtual_emcvnx_raidgroups_capacity_emcvnx_raidgroups_capacity_contiguous_ibm_svc_mdiskgrp_fast_lta_silent_cubes_capacity_fast_lta_volumes_libelle_business_shadow_archive_dir_netapp_ontap_luns_netapp_ontap_qtree_quota_emc_datadomain_fs_emc_isilon_quota_emc_isilon_ifs_3par_cpgs_usage_3par_capacity_3par_volumes_storeonce_clusterinfo_space_storeonce_servicesets_capacity_storeonce4x_appliances_storage_storeonce4x_cat_stores_numble_volumes_zpool_vnx_quotas_sap_hana_diskusage_fjdarye200_pools_dell_compellent_folder_nimble_volumes_ceph_df_kube_pvc_lvm_vgs_df_netscaler_prism_host_usage_prism_containers_prism_storage_pools_ucd_disk_hp_msa_volume_df = translations.Translation(
+    name="df_db2_logsizes_esx_vsphere_datastores_netapp_ontap_aggr_vms_df_vms_diskstat_df_disk_df_netapp_df_netapp32_zfsget_hr_fs_oracle_asm_diskgroup_esx_vsphere_counters_ramdisk_hitachi_hnas_span_hitachi_hnas_volume_hitachi_hnas_volume_virtual_emcvnx_raidgroups_capacity_emcvnx_raidgroups_capacity_contiguous_ibm_svc_mdiskgrp_fast_lta_silent_cubes_capacity_fast_lta_volumes_libelle_business_shadow_archive_dir_netapp_ontap_luns_netapp_ontap_qtree_quota_emc_datadomain_fs_emc_isilon_quota_emc_isilon_ifs_3par_cpgs_usage_3par_capacity_3par_volumes_storeonce_clusterinfo_space_storeonce_servicesets_capacity_storeonce4x_appliances_storage_storeonce4x_cat_stores_numble_volumes_zpool_vnx_quotas_sap_hana_diskusage_fjdarye200_pools_dell_compellent_folder_nimble_volumes_ceph_df_kube_pvc_lvm_vgs_df_netscaler_prism_host_usage_prism_containers_prism_storage_pools_ucd_disk_hp_msa_volume_df",
     check_commands=[
         translations.PassiveCheck("df"),
         translations.PassiveCheck("db2_logsizes"),
@@ -420,6 +420,7 @@ translation_df_db2_logsizes_esx_vsphere_datastores_netapp_ontap_aggr_vms_df_vms_
         translations.PassiveCheck("prism_containers"),
         translations.PassiveCheck("prism_storage_pools"),
         translations.PassiveCheck("ucd_disk"),
+        translations.PassiveCheck("hp_msa_volume_df"),
     ],
     translations={
         "fs_free": translations.ScaleBy(1048576),
@@ -437,10 +438,37 @@ translation_df_db2_logsizes_esx_vsphere_datastores_netapp_ontap_aggr_vms_df_vms_
         ),
         "trend_hoursleft": translations.ScaleBy(3600),
         "uncommitted": translations.ScaleBy(1048576),
-        "~(?!inodes_used|fs_size|growth|trend|reserved|fs_free|fs_provisioning|uncommitted|overprovisioned|dedup_rate|file_count).*$": translations.RenameToAndScaleBy(
+        "~(?!inodes_used|fs_size|growth|trend|reserved|fs_free|fs_provisioning|uncommitted|overprovisioned|dedup_rate|file_count|fs_used_percent).*$": translations.RenameToAndScaleBy(
             "fs_used",
             1048576,
         ),
+    },
+)
+
+# translation for lib function check_diskstat_dict
+# no new check plugins should be added here (see docstring for check_diskstat_dict_)
+translation_disk_utilization_check_diskstat_dict = translations.Translation(
+    name="disk_utilization_check_diskstat_dict",
+    check_commands=[
+        translations.PassiveCheck("diskstat_io"),
+        translations.PassiveCheck("diskstat_io_director"),
+        translations.PassiveCheck("diskstat_io_volumes"),
+        translations.PassiveCheck("aws_ebs"),
+        translations.PassiveCheck("aws_ec2_disk_io"),
+        translations.PassiveCheck("aws_rds_disk_io"),
+        translations.PassiveCheck("cadvisor_diskstat"),
+        translations.PassiveCheck("scaleio_storage_pool_totalrw"),
+        translations.PassiveCheck("scaleio_storage_pool_rebalancerw"),
+        translations.PassiveCheck("scaleio_volume"),
+        translations.PassiveCheck("ucd_diskio"),
+        translations.PassiveCheck("winperf_phydisk"),
+        translations.PassiveCheck("gcp_filestore_disk"),
+        translations.PassiveCheck("gcp_sql_disk"),
+        translations.PassiveCheck("esx_vsphere_counters_diskio"),
+        translations.PassiveCheck("esx_vsphere_datastore_io"),
+    ],
+    translations={
+        "disk_utilization": translations.ScaleBy(100.0),
     },
 )
 
@@ -524,15 +552,14 @@ translation_emc_isilon_iops = translations.Translation(
     translations={"iops": translations.RenameTo("disk_ios")},
 )
 
-translation_emc_vplex_director_stats_emc_vplex_volumes_hp_msa_controller_io_hp_msa_disk_io_hp_msa_volume_io_winperf_phydisk_arbor_peakflow_sp_disk_usage_arbor_peakflow_tms_disk_usage_arbor_pravail_disk_usage = translations.Translation(
-    name="emc_vplex_director_stats_emc_vplex_volumes_hp_msa_controller_io_hp_msa_disk_io_hp_msa_volume_io_winperf_phydisk_arbor_peakflow_sp_disk_usage_arbor_peakflow_tms_disk_usage_arbor_pravail_disk_usage",
+translation_disk_utilization_scale = translations.Translation(
+    name="disk_utilization_scale",
     check_commands=[
         translations.PassiveCheck("emc_vplex_director_stats"),
         translations.PassiveCheck("emc_vplex_volumes"),
         translations.PassiveCheck("hp_msa_controller_io"),
         translations.PassiveCheck("hp_msa_disk_io"),
         translations.PassiveCheck("hp_msa_volume_io"),
-        translations.PassiveCheck("winperf_phydisk"),
         translations.PassiveCheck("arbor_peakflow_sp_disk_usage"),
         translations.PassiveCheck("arbor_peakflow_tms_disk_usage"),
         translations.PassiveCheck("arbor_pravail_disk_usage"),
@@ -544,7 +571,6 @@ translation_esx_vsphere_counters_diskio = translations.Translation(
     name="esx_vsphere_counters_diskio",
     check_commands=[translations.PassiveCheck("esx_vsphere_counters_diskio")],
     translations={
-        "disk_utilization": translations.ScaleBy(100.0),
         "ios": translations.RenameTo("disk_ios"),
         "latency": translations.RenameTo("disk_latency"),
         "read": translations.RenameTo("disk_read_throughput"),
@@ -802,6 +828,20 @@ translation_icmp = translations.Translation(
     },
 )
 
+translation_ping_exe = translations.Translation(
+    name="ping_exe",
+    check_commands=[translations.NagiosPlugin("check_ping.exe")],
+    translations={
+        "~.*rta": translations.ScaleBy(0.001),
+    },
+)
+
+translation_tcp_exe = translations.Translation(
+    name="tcp_exe",
+    check_commands=[translations.NagiosPlugin("check_tcp.exe")],
+    translations={"time": translations.RenameTo("response_time")},
+)
+
 translation_icmp_host_ping_host_service_ping = translations.Translation(
     name="icmp_host-ping_host-service_ping",
     check_commands=[
@@ -814,6 +854,35 @@ translation_icmp_host_ping_host_service_ping = translations.Translation(
         "rta": translations.ScaleBy(0.001),
         "rtmax": translations.ScaleBy(0.001),
         "rtmin": translations.ScaleBy(0.001),
+    },
+)
+
+translation_drbd_disk = translations.Translation(
+    name="drbd_disk",
+    check_commands=[translations.PassiveCheck("drbd_disk")],
+    translations={
+        # orig values in check plug-in are measured in kb
+        "read": translations.RenameToAndScaleBy("disk_read_throughput", 1000),
+        "write": translations.RenameToAndScaleBy("disk_write_throughput", 1000),
+    },
+)
+
+translation_drbd_net = translations.Translation(
+    name="drbd_net",
+    check_commands=[translations.PassiveCheck("drbd_net")],
+    translations={
+        # orig values in check plug-in are measured in kb
+        "in": translations.RenameToAndScaleBy("if_in_bps", 8000),
+        "out": translations.RenameToAndScaleBy("if_out_bps", 8000),
+    },
+)
+
+translation_drbd_stats = translations.Translation(
+    name="drbd_stats",
+    check_commands=[translations.PassiveCheck("drbd_stats")],
+    translations={
+        # see related check plug-in drbd_stats: "ooo (out of sync)"
+        "kb_out_of_sync": translations.ScaleBy(1024),
     },
 )
 
@@ -1441,7 +1510,7 @@ translation_sansymphony_pool = translations.Translation(
         ),
         "trend_hoursleft": translations.ScaleBy(3600),
         "uncommitted": translations.ScaleBy(1048576),
-        "~(?!inodes_used|fs_size|growth|trend|reserved|fs_free|fs_provisioning|uncommitted|overprovisioned|dedup_rate|file_count).*$": translations.RenameToAndScaleBy(
+        "~(?!inodes_used|fs_size|growth|trend|reserved|fs_free|fs_provisioning|uncommitted|overprovisioned|dedup_rate|file_count|fs_used_percent).*$": translations.RenameToAndScaleBy(
             "fs_used",
             1048576,
         ),
@@ -1453,6 +1522,7 @@ translation_smart_stats = translations.Translation(
     check_commands=[translations.PassiveCheck("smart_stats")],
     translations={
         "Available_Spare": translations.RenameTo("nvme_available_spare"),
+        "CRC_Errors": translations.RenameTo("harddrive_crc_errors"),
         "CRC_Error_Count": translations.RenameTo("harddrive_crc_errors"),
         "Command_Timeout_Counter": translations.RenameTo("harddrive_cmd_timeouts"),
         "Critical_Warning": translations.RenameTo("nvme_critical_warning"),

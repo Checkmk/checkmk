@@ -26,6 +26,7 @@ Components
    :maxdepth: 1
 
    arch-comp-gui.rst
+   arch-comp-gui-vue.rst
    arch-comp-gui-metrics.rst
    arch-comp-painters-v1.rst
    arch-comp-apache.rst

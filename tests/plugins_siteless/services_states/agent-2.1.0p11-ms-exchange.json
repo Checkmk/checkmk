@@ -1,0 +1,308 @@
+{
+  "Check_MK Agent": {
+    "expected_state": 0
+  },
+  "DotNet Memory Management _Global_": {
+    "expected_state": 0
+  },
+  "Log Application": {
+    "expected_state": 0
+  },
+  "Log HardwareEvents": {
+    "expected_state": 0
+  },
+  "Log Internet Explorer": {
+    "expected_state": 0
+  },
+  "Log Key Management Service": {
+    "expected_state": 0
+  },
+  "Log MSExchange Management": {
+    "expected_state": 0
+  },
+  "Log Security": {
+    "expected_state": 2
+  },
+  "Log System": {
+    "expected_state": 0
+  },
+  "Log Windows PowerShell": {
+    "expected_state": 0
+  },
+  "Memory": {
+    "expected_state": 0
+  },
+  "Exchange DAG ContentIndex of MailboxDB1": {
+    "expected_state": 0
+  },
+  "Exchange DAG ContentIndex of MailboxDB2": {
+    "expected_state": 0
+  },
+  "Exchange DAG ContentIndex of MailboxDB3": {
+    "expected_state": 0
+  },
+  "Exchange DAG ContentIndex of MailboxDB4": {
+    "expected_state": 0
+  },
+  "Exchange DAG ContentIndex of MailboxDB5": {
+    "expected_state": 0
+  },
+  "Exchange DAG ContentIndex of MailboxDB6": {
+    "expected_state": 0
+  },
+  "Exchange DAG ContentIndex of MailboxDB7": {
+    "expected_state": 0
+  },
+  "Exchange DAG ContentIndex of Migration-new": {
+    "expected_state": 0
+  },
+  "Exchange DAG ContentIndex of Migration-new2": {
+    "expected_state": 0
+  },
+  "Exchange DAG CopyQueue of MailboxDB1": {
+    "expected_state": 0
+  },
+  "Exchange DAG CopyQueue of MailboxDB2": {
+    "expected_state": 0
+  },
+  "Exchange DAG CopyQueue of MailboxDB3": {
+    "expected_state": 0
+  },
+  "Exchange DAG CopyQueue of MailboxDB4": {
+    "expected_state": 0
+  },
+  "Exchange DAG CopyQueue of MailboxDB5": {
+    "expected_state": 0
+  },
+  "Exchange DAG CopyQueue of MailboxDB6": {
+    "expected_state": 0
+  },
+  "Exchange DAG CopyQueue of MailboxDB7": {
+    "expected_state": 0
+  },
+  "Exchange DAG CopyQueue of Migration-new": {
+    "expected_state": 0
+  },
+  "Exchange DAG CopyQueue of Migration-new2": {
+    "expected_state": 0
+  },
+  "Exchange DAG DBCopy for MailboxDB1": {
+    "expected_state": 0
+  },
+  "Exchange DAG DBCopy for MailboxDB2": {
+    "expected_state": 0
+  },
+  "Exchange DAG DBCopy for MailboxDB3": {
+    "expected_state": 0
+  },
+  "Exchange DAG DBCopy for MailboxDB4": {
+    "expected_state": 0
+  },
+  "Exchange DAG DBCopy for MailboxDB5": {
+    "expected_state": 0
+  },
+  "Exchange DAG DBCopy for MailboxDB6": {
+    "expected_state": 0
+  },
+  "Exchange DAG DBCopy for MailboxDB7": {
+    "expected_state": 0
+  },
+  "Exchange DAG DBCopy for Migration-new": {
+    "expected_state": 0
+  },
+  "Exchange DAG DBCopy for Migration-new2": {
+    "expected_state": 0
+  },
+  "Exchange Database edgetransport/_total": {
+    "expected_state": 0
+  },
+  "Exchange Database edgetransport/ip filtering database": {
+    "expected_state": 0
+  },
+  "Exchange Database edgetransport/transport mail database": {
+    "expected_state": 0
+  },
+  "Exchange Database information store - mailboxdb1/_total": {
+    "expected_state": 0
+  },
+  "Exchange Database information store - mailboxdb2/_total": {
+    "expected_state": 0
+  },
+  "Exchange Database information store - mailboxdb3/_total": {
+    "expected_state": 0
+  },
+  "Exchange Database information store - mailboxdb4/_total": {
+    "expected_state": 0
+  },
+  "Exchange Database information store - mailboxdb5/_total": {
+    "expected_state": 0
+  },
+  "Exchange Database information store - mailboxdb6/_total": {
+    "expected_state": 0
+  },
+  "Exchange Database information store - mailboxdb7/_total": {
+    "expected_state": 0
+  },
+  "Exchange Database information store - migration-new/_total": {
+    "expected_state": 0
+  },
+  "Exchange Database information store - migration-new2/_total": {
+    "expected_state": 0
+  },
+  "Exchange Database information store/_total": {
+    "expected_state": 0
+  },
+  "Exchange Database msexchangerepl/_total": {
+    "expected_state": 0
+  },
+  "Exchange Database msexchangerepl/log verifier e01": {
+    "expected_state": 0
+  },
+  "Exchange Database msexchangerepl/log verifier e02": {
+    "expected_state": 0
+  },
+  "Exchange Database msexchangerepl/log verifier e03": {
+    "expected_state": 0
+  },
+  "Exchange Database msexchangerepl/log verifier e04": {
+    "expected_state": 0
+  },
+  "Exchange Database msexchangerepl/mailboxdb1?aaa_passiveinblockmode": {
+    "expected_state": 0
+  },
+  "Exchange Database msexchangerepl/mailboxdb2?aaa_passiveinblockmode": {
+    "expected_state": 0
+  },
+  "Exchange Database msexchangerepl/mailboxdb3?aaa_passiveinblockmode": {
+    "expected_state": 0
+  },
+  "Exchange Database msexchangerepl/migration-new?aaa_passiveinblockmode": {
+    "expected_state": 0
+  },
+  "Exchange IS Store _total": {
+    "expected_state": 0
+  },
+  "Exchange IS Store mailboxdb1": {
+    "expected_state": 0
+  },
+  "Exchange IS Store mailboxdb2": {
+    "expected_state": 0
+  },
+  "Exchange IS Store mailboxdb3": {
+    "expected_state": 0
+  },
+  "Exchange IS Store mailboxdb4": {
+    "expected_state": 0
+  },
+  "Exchange IS Store mailboxdb5": {
+    "expected_state": 0
+  },
+  "Exchange IS Store mailboxdb6": {
+    "expected_state": 0
+  },
+  "Exchange IS Store mailboxdb7": {
+    "expected_state": 0
+  },
+  "Exchange IS Store migration-new": {
+    "expected_state": 0
+  },
+  "Exchange IS Store migration-new2": {
+    "expected_state": 0
+  },
+  "Exchange Replication Health ActiveManager": {
+    "expected_state": 0
+  },
+  "Exchange Replication Health ClusterNetwork": {
+    "expected_state": 0
+  },
+  "Exchange Replication Health ClusterService": {
+    "expected_state": 0
+  },
+  "Exchange Replication Health DBCopyFailed": {
+    "expected_state": 0
+  },
+  "Exchange Replication Health DBCopySuspended": {
+    "expected_state": 0
+  },
+  "Exchange Replication Health DBDisconnected": {
+    "expected_state": 0
+  },
+  "Exchange Replication Health DBInitializing": {
+    "expected_state": 0
+  },
+  "Exchange Replication Health DBLogCopyKeepingUp": {
+    "expected_state": 0
+  },
+  "Exchange Replication Health DBLogReplayKeepingUp": {
+    "expected_state": 0
+  },
+  "Exchange Replication Health DagMembersUp": {
+    "expected_state": 0
+  },
+  "Exchange Replication Health DatabaseAvailability": {
+    "expected_state": 0
+  },
+  "Exchange Replication Health DatabaseRedundancy": {
+    "expected_state": 0
+  },
+  "Exchange Replication Health FileShareQuorum": {
+    "expected_state": 0
+  },
+  "Exchange Replication Health MonitoringService": {
+    "expected_state": 0
+  },
+  "Exchange Replication Health QuorumGroup": {
+    "expected_state": 0
+  },
+  "Exchange Replication Health ReplayService": {
+    "expected_state": 0
+  },
+  "Exchange Replication Health ServerLocatorService": {
+    "expected_state": 0
+  },
+  "Exchange Replication Health TasksRpcListener": {
+    "expected_state": 0
+  },
+  "Exchange Replication Health TcpListener": {
+    "expected_state": 0
+  },
+  "Service Summary": {
+    "expected_state": 0
+  },
+  "System Time": {
+    "expected_state": 2
+  },
+  "Uptime": {
+    "expected_state": 0
+  },
+  "Interface 1": {
+    "expected_state": 0
+  },
+  "Interface 2": {
+    "expected_state": 0
+  },
+  "Interface 3": {
+    "expected_state": 0
+  },
+  "Queue Active Mailbox Delivery": {
+    "expected_state": 0
+  },
+  "Queue Active Remote Delivery": {
+    "expected_state": 0
+  },
+  "Queue Poison Queue Length": {
+    "expected_state": 0
+  },
+  "Queue Retry Remote Delivery": {
+    "expected_state": 0
+  },
+  "Processor Queue": {
+    "expected_state": 0
+  },
+  "Web Service Default Web Site": {
+    "expected_state": 0
+  },
+  "Web Service Exchange Back End": {
+    "expected_state": 0
+  }
+}

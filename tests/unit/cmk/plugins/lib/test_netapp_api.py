@@ -225,8 +225,8 @@ def test_check_netapp_qtree_quota_ok() -> None:
         quota="qtree",
         quota_users="1",
         volume="",
-        disk_limit="500",
-        disk_used="100",
+        disk_limit="214748364800",  # 200 GiB
+        disk_used="107374182400",  # 100 GiB
         files_used="",
         file_limit="",
     )
@@ -237,7 +237,13 @@ def test_check_netapp_qtree_quota_ok() -> None:
     }
     result = list(check_netapp_qtree_quota("item_name", qtree, params, value_store))
 
-    assert len(result) == 10
+    assert result[:5] == [
+        Metric("fs_used", 102400.0, levels=(163840.0, 184320.0), boundaries=(0.0, 204800.0)),
+        Metric("fs_free", 102400.0, boundaries=(0.0, None)),
+        Metric("fs_used_percent", 50.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+        Result(state=State.OK, summary="Used: 50.00% - 100 GiB of 200 GiB"),
+        Metric("fs_size", 204800.0, boundaries=(0.0, None)),
+    ]
 
 
 @pytest.mark.parametrize(

@@ -12,7 +12,7 @@ def _get_real_adapter_name(bond: str, name: str) -> str:
     return name[len(f"TEAM : {bond} - ") :]
 
 
-def parse_windows_intel_bonding(  # pylint: disable=too-many-branches
+def parse_windows_intel_bonding(
     string_table: StringTable,
 ) -> bonding.Section:
     lines = iter(string_table)

@@ -7,8 +7,9 @@ import json
 from collections.abc import Mapping, Sequence
 from typing import cast, Literal
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
-from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.definition import RuleGroup
 
@@ -23,14 +24,13 @@ from cmk.gui.quick_setup.html import quick_setup_render_link
 from cmk.gui.utils.html import HTML as HTML
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import FixedValue, ValueSpec
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttributeValueSpec,
     get_sorted_host_attribute_topics,
     get_sorted_host_attributes_by_topic,
 )
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_from_request, Host, SearchFolder
-
-import cmk.ccc.version as cmk_version
 
 #   "host"        -> normal host edit dialog
 #   "cluster"     -> normal host edit dialog
@@ -47,7 +47,7 @@ def _get_single_host(hosts: Mapping[str, object]) -> Host | None:
 
 
 # TODO: Wow, this function REALLY has to be cleaned up
-def configure_attributes(  # pylint: disable=too-many-branches
+def configure_attributes(
     new: bool,
     hosts: Mapping[str, Host | Folder | None],
     for_what: DialogIdent,
@@ -368,7 +368,7 @@ def configure_attributes(  # pylint: disable=too-many-branches
             topic_id == "basic"
             and single_edit_host
             and (locked_by := single_edit_host.locked_by())
-            and is_locked_by_quick_setup(locked_by)
+            and is_locked_by_quick_setup(locked_by, check_reference_exists=False)
         ):
             vs = FixedValue(
                 value=locked_by["instance_id"],

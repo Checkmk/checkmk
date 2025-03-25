@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from logging import getLogger
 
@@ -43,6 +42,7 @@ def fixture_rulespec_with_migration() -> Rulespec:
         item_help=None,
         is_optional=False,
         is_deprecated=False,
+        deprecation_planned=False,
         is_cloud_and_managed_edition_only=False,
         is_for_services=False,
         is_binary_ruleset=False,
@@ -74,6 +74,7 @@ def fixture_replaced_rulespec() -> Rulespec:
         item_help=None,
         is_optional=False,
         is_deprecated=False,
+        deprecation_planned=False,
         is_cloud_and_managed_edition_only=False,
         is_for_services=False,
         is_binary_ruleset=False,

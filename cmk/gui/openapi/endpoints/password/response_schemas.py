@@ -20,11 +20,18 @@ class PasswordExtension(BaseSchema):
         attribute="docu_url",
         description="A URL pointing to documentation or any other page.",
     )
+    # TODO: DEPRECATED(17274) - remove in 2.5
     owned_by = fields.String(
         example="admin",
-        description="The owner of the password who is able to edit, delete and use existing passwords.",
+        description="Deprecated - use `editable_by` instead. The owner of the password who is able to edit, delete and use existing passwords.",
+        deprecated=True,
     )
-
+    editable_by = fields.String(
+        example="admin",
+        description="The owner of the password who is able to edit, delete and use existing passwords.",
+        dump_only=True,  # marshmallow magic, this allows us to copy the value of "owned_by"
+        attribute="owned_by",
+    )
     shared = fields.List(
         fields.String(
             example="all",

@@ -8,6 +8,7 @@ The "render" namespace adds functions to render values in a human readable way.
 All of the render functions take a single numerical value as an argument, and return
 a string.
 """
+
 import math as _math
 import time as _time
 from collections.abc import Iterable as _Iterable
@@ -170,7 +171,7 @@ def disksize(bytes_: float) -> str:
     return f"{value_str if unit != 'B' else value_str.split('.')[0]} {unit}"
 
 
-def bytes(bytes_: float) -> str:  # pylint: disable=redefined-builtin
+def bytes(bytes_: float) -> str:  # noqa: A001
     """Render a number of bytes using an appropriate IEC prefix
 
     Example:

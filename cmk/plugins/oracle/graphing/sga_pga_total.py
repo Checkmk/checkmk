@@ -11,7 +11,7 @@ metric_oracle_sga_size = metrics.Metric(
     name="oracle_sga_size",
     title=Title("Oracle maximum SGA size"),
     unit=UNIT_BYTES,
-    color=metrics.Color.BROWN,
+    color=metrics.Color.GRAY,
 )
 metric_oracle_pga_total_pga_allocated = metrics.Metric(
     name="oracle_pga_total_pga_allocated",
@@ -87,15 +87,23 @@ perfometer_oracle_sga_pga_size = perfometers.Perfometer(
     ],
 )
 
-graph_oracle_pga_memory_info = graphs.Graph(
-    name="oracle_pga_memory_info",
-    title=Title("Oracle PGA memory statistics"),
-    simple_lines=[
+graph_oracle_sga_pga_total = graphs.Graph(
+    name="oracle_sga_pga_total",
+    title=Title("Oracle memory"),
+    compound_lines=[
+        "oracle_sga_size",
         "oracle_pga_total_pga_allocated",
-        "oracle_pga_total_pga_inuse",
-        "oracle_pga_total_freeable_pga_memory",
     ],
-    optional=["oracle_pga_total_freeable_pga_memory"],
+    simple_lines=[
+        metrics.Sum(
+            Title("Oracle total Memory"),
+            metrics.Color.GRAY,
+            [
+                "oracle_sga_size",
+                "oracle_pga_total_pga_allocated",
+            ],
+        )
+    ],
 )
 graph_oracle_sga_info = graphs.Graph(
     name="oracle_sga_info",
@@ -116,21 +124,13 @@ graph_oracle_sga_info = graphs.Graph(
         "oracle_sga_streams_pool",
     ],
 )
-graph_oracle_sga_pga_total = graphs.Graph(
-    name="oracle_sga_pga_total",
-    title=Title("Oracle memory"),
-    compound_lines=[
-        "oracle_sga_size",
-        "oracle_pga_total_pga_allocated",
-    ],
+graph_oracle_pga_memory_info = graphs.Graph(
+    name="oracle_pga_memory_info",
+    title=Title("Oracle PGA memory statistics"),
     simple_lines=[
-        metrics.Sum(
-            Title("Oracle total Memory"),
-            metrics.Color.GRAY,
-            [
-                "oracle_sga_size",
-                "oracle_pga_total_pga_allocated",
-            ],
-        )
+        "oracle_pga_total_pga_allocated",
+        "oracle_pga_total_pga_inuse",
+        "oracle_pga_total_freeable_pga_memory",
     ],
+    optional=["oracle_pga_total_freeable_pga_memory"],
 )

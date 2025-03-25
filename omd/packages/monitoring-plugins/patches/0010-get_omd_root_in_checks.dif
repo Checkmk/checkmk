@@ -1,30 +1,37 @@
---- a/plugins/check_snmp.c	2021-04-10 14:13:41.000000000 +0200
-+++ b/plugins/check_snmp.c	2022-04-04 15:54:22.705840165 +0200
-@@ -299,9 +299,11 @@
+diff --git a/plugins/check_snmp.c b/plugins/check_snmp.c
+index 295aa9b5..5fd9325f 100644
+--- a/plugins/check_snmp.c
++++ b/plugins/check_snmp.c
+@@ -311,12 +311,14 @@ main (int argc, char **argv)
  		snmpcmd = strdup (PATH_TO_SNMPGET);
  	}
 
 +	char *absolute_snmpcmd_path= get_absolute_snmp_cmd_path(snmpcmd);
 +
  	/* 10 arguments to pass before context and authpriv options + 1 for host and numoids. Add one for terminating NULL */
- 	command_line = calloc (10 + numcontext + numauthpriv + 1 + numoids + 1, sizeof (char *));
--	command_line[0] = snmpcmd;
-+	command_line[0] = absolute_snmpcmd_path;
- 	command_line[1] = strdup ("-Le");
- 	command_line[2] = strdup ("-t");
- 	xasprintf (&command_line[3], "%d", timeout_interval);
-@@ -324,7 +326,7 @@
 
- 	/* This is just for display purposes, so it can remain a string */
- 	xasprintf(&cl_hidden_auth, "%s -Le -t %d -r %d -m %s -v %s %s %s %s:%s",
--		snmpcmd, timeout_interval, retries, strlen(miblist) ? miblist : "''", proto, "[context]", "[authpriv]",
-+		absolute_snmpcmd_path, timeout_interval, retries, strlen(miblist) ? miblist : "''", proto, "[context]", "[authpriv]",
- 		server_address, port);
+ 	unsigned index = 0;
+ 	command_line = calloc (11 + numcontext + numauthpriv + 1 + numoids + 1, sizeof (char *));
 
- 	for (i = 0; i < numoids; i++) {
---- a/plugins/check_hpjd.c	2022-10-19 12:50:27.000000000 +0000
-+++ b/plugins/check_hpjd.c	2023-01-13 12:09:34.120943312 +0000
-@@ -37,6 +37,7 @@
+-	command_line[index++] = snmpcmd;
++	command_line[index++] = absolute_snmpcmd_path;
+ 	command_line[index++] = strdup ("-Le");
+ 	command_line[index++] = strdup ("-t");
+ 	xasprintf (&command_line[index++], "%d", timeout_interval);
+@@ -328,7 +330,7 @@ main (int argc, char **argv)
+ 	command_line[index++] = strdup (proto);
+
+ 	xasprintf(&cl_hidden_auth, "%s -Le -t %d -r %d -m %s -v %s",
+-		snmpcmd, timeout_interval, retries, strlen(miblist) ? miblist : "''", proto);
++		absolute_snmpcmd_path, timeout_interval, retries, strlen(miblist) ? miblist : "''", proto);
+
+ 	if (ignore_mib_parsing_errors) {
+ 		command_line[index++] = "-Pe";
+diff --git a/plugins/check_hpjd.c b/plugins/check_hpjd.c
+index c34bb082..b24ff677 100644
+--- a/plugins/check_hpjd.c
++++ b/plugins/check_hpjd.c
+@@ -37,6 +37,7 @@ const char *email = "devel@monitoring-plugins.org";
  #include "popen.h"
  #include "utils.h"
  #include "netutils.h"
@@ -32,7 +39,7 @@
 
  #define DEFAULT_COMMUNITY "public"
  #define DEFAULT_PORT "161"
-@@ -121,12 +122,9 @@
+@@ -121,12 +122,9 @@ main (int argc, char **argv)
  		 HPJD_GD_DOOR_OPEN, HPJD_GD_PAPER_OUTPUT, HPJD_GD_STATUS_DISPLAY);
 
  	/* get the command to run */
@@ -48,9 +55,13 @@
 
  	/* run the command */
  	child_process = spopen (command_line);
---- a/lib/utils_cmd.h	2021-04-10 14:13:41.000000000 +0200
-+++ b/lib/utils_cmd.h	2022-04-04 15:45:58.801463952 +0200
-@@ -23,6 +23,7 @@
+diff --git a/lib/utils_cmd.c b/lib/utils_cmd.c
+index 7957ec14..a776b6ba 100644
+diff --git a/lib/utils_cmd.h b/lib/utils_cmd.h
+index 061f5d4f..a93ed6e6 100644
+--- a/lib/utils_cmd.h
++++ b/lib/utils_cmd.h
+@@ -23,6 +23,7 @@ typedef struct output output;
  int cmd_run (const char *, output *, output *, int);
  int cmd_run_array (char *const *, output *, output *, int);
  int cmd_file_read (char *, output *, int);
@@ -58,10 +69,10 @@
 
  /* only multi-threaded plugins need to bother with this */
  void cmd_init (void);
---- a/lib/utils_cmd.c	2021-04-10 14:13:41.000000000 +0200
-+++ b/lib/utils_cmd.c	2022-04-04 15:45:58.801463952 +0200
-@@ -383,6 +383,22 @@
-        return 0;
+--- a/lib/utils_cmd.c
++++ b/lib/utils_cmd.c
+@@ -387,6 +387,22 @@ cmd_file_read ( char *filename, output *out, int flags)
+ 	return 0;
  }
 
 +char * get_absolute_snmp_cmd_path(char* relativ_snmp_cmd)

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Rules"""
+
 from __future__ import annotations
 
 import dataclasses
@@ -10,9 +11,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from cmk.utils.datastructures import denilled
-from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.labels import LabelGroups
-from cmk.utils.object_diff import make_diff_text
 from cmk.utils.rulesets.conditions import (
     allow_host_label_conditions,
     allow_service_label_conditions,
@@ -45,6 +44,7 @@ from cmk.gui.utils import gen_id
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.escaping import strip_tags
 from cmk.gui.watolib.changes import add_change
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.rulesets import (
     AllRulesets,
@@ -228,16 +228,7 @@ def create_rule(param):
 
     index = ruleset.append_rule(folder, rule)
     rulesets.save_folder()
-    # TODO Duplicated code is in pages/rulesets.py:2670-
-    # TODO Move to
-    add_change(
-        "new-rule",
-        _l('Created new rule #%d in ruleset "%s" in folder "%s"')
-        % (index, ruleset.title(), folder.alias_path()),
-        sites=folder.all_site_ids(),
-        diff_text=make_diff_text({}, rule.to_log()),
-        object_ref=rule.object_ref(),
-    )
+    ruleset.add_new_rule_change(index, folder, rule)
     rule_entry = _get_rule_by_id(rule.id)
     return serve_json(_serialize_rule(rule_entry))
 
@@ -258,19 +249,18 @@ def list_rules(param):
 
     ruleset = _retrieve_from_rulesets(all_rulesets, ruleset_name)
 
-    result = []
-    for folder, index, rule in ruleset.get_rules():
-        result.append(
-            _serialize_rule(
-                RuleEntry(
-                    rule=rule,
-                    ruleset=rule.ruleset,
-                    folder=folder,
-                    index_nr=index,
-                    all_rulesets=all_rulesets,
-                )
+    result = [
+        _serialize_rule(
+            RuleEntry(
+                rule=rule,
+                ruleset=rule.ruleset,
+                folder=folder,
+                index_nr=index,
+                all_rulesets=all_rulesets,
             )
         )
+        for folder, index, rule in ruleset.get_rules()
+    ]
 
     return serve_json(
         constructors.collection_object(

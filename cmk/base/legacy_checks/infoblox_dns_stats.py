@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.infoblox import check_infoblox_statistics
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.infoblox import DETECT_INFOBLOX
+
+check_info = {}
 
 
 def inventory_infoblox_statistics(info):
@@ -42,6 +43,7 @@ def parse_infoblox_dns_stats(string_table: StringTable) -> StringTable | None:
 
 
 check_info["infoblox_dns_stats"] = LegacyCheckDefinition(
+    name="infoblox_dns_stats",
     parse_function=parse_infoblox_dns_stats,
     detect=DETECT_INFOBLOX,
     fetch=SNMPTree(

@@ -11,7 +11,7 @@ import json
 import time
 from base64 import b32decode, b32encode
 from http import HTTPStatus
-from typing import Literal
+from typing import assert_never, Literal
 from urllib import parse
 from uuid import uuid4
 
@@ -27,10 +27,11 @@ from fido2.webauthn import (
     UserVerificationRequirement,
 )
 
-from cmk.utils.crypto.password import Password, PasswordHash
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
+
 from cmk.utils.jsontype import JsonSerializable
 from cmk.utils.log.security_event import log_security_event
-from cmk.utils.totp import TOTP, TotpVersion
 from cmk.utils.user import UserId
 
 from cmk.gui import forms
@@ -43,7 +44,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
     make_javascript_link,
@@ -56,7 +57,9 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.session import session
+from cmk.gui.site_config import has_wato_slave_sites, is_wato_slave_site
 from cmk.gui.table import Table, table_element
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import (
     TotpCredential,
     TwoFactorCredentials,
@@ -75,7 +78,6 @@ from cmk.gui.userdb.store import save_custom_attr, save_two_factor_credentials
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.security_log_events import TwoFactorEvent, TwoFactorEventType, TwoFAFailureEvent
-from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     DocReference,
@@ -89,8 +91,9 @@ from cmk.gui.utils.user_security_message import SecurityNotificationEvent, send_
 from cmk.gui.valuespec import Dictionary, FixedValue, TextInput
 from cmk.gui.watolib.mode import redirect
 
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import omd_site
+from cmk.crypto.password import Password
+from cmk.crypto.password_hashing import PasswordHash
+from cmk.crypto.totp import TOTP
 
 from .abstract_page import ABCUserProfilePage
 from .page_menu import page_menu_dropdown_user_related
@@ -143,11 +146,71 @@ def _handle_failed_auth(user_id: UserId) -> None:
         raise MKUserError(None, _("User is locked"), HTTPStatus.UNAUTHORIZED)
 
 
-def _handle_success_auth(user_id: UserId) -> None:
+def _handle_success_auth(user_id: UserId, replicate: bool = False) -> None:
     origtarget = request.get_url_input("_origtarget", "index.py")
     session.session_info.two_factor_completed = True
     save_custom_attr(user_id, "num_failed_logins", 0)
+    if replicate:
+        raise redirect(
+            makeuri_contextless(
+                request,
+                [("back", "dashboard.py")],
+                filename="user_profile_replicate.py",
+            )
+        )
     raise HTTPRedirect(origtarget)
+
+
+def _sec_notification_event_from_2fa_event(event: TwoFactorEventType) -> SecurityNotificationEvent:
+    match event:
+        case TwoFactorEventType.totp_add:
+            return SecurityNotificationEvent.totp_added
+        case TwoFactorEventType.totp_remove:
+            return SecurityNotificationEvent.totp_removed
+        case TwoFactorEventType.webauthn_add_:
+            return SecurityNotificationEvent.webauthn_added
+        case TwoFactorEventType.webauthn_remove:
+            return SecurityNotificationEvent.webauthn_removed
+        case TwoFactorEventType.backup_add:
+            return SecurityNotificationEvent.backup_reset
+        case TwoFactorEventType.backup_remove:
+            return SecurityNotificationEvent.backup_revoked
+        case TwoFactorEventType.backup_used:
+            return SecurityNotificationEvent.backup_used
+        case _:
+            assert_never()
+
+
+def _handle_revoke_all_backup_codes(user: LoggedInUser, credentials: TwoFactorCredentials) -> None:
+    credentials["backup_codes"] = []
+    flash(_("All backup codes have been deleted"))
+    _save_credentials_all_sites(
+        user,
+        "user_two_factor_overview.py",
+        credentials,
+        TwoFactorEventType.backup_remove,
+    )
+
+
+def _save_credentials_all_sites(
+    user: LoggedInUser,
+    origtarget: str,
+    credentials: TwoFactorCredentials,
+    log_event: TwoFactorEventType | Literal["alias_changed"],
+) -> None:
+    if (user_id := user.id) is None:
+        return
+
+    save_two_factor_credentials(user_id, credentials)
+    if log_event != "alias_changed":
+        _log_event_usermanagement(log_event)
+        send_security_message(user_id, _sec_notification_event_from_2fa_event(log_event))
+    if has_wato_slave_sites():
+        raise redirect(
+            makeuri_contextless(
+                request, [("back", origtarget)], filename="user_profile_replicate.py"
+            )
+        )
 
 
 overview_page_name: str = "user_two_factor_overview"
@@ -155,6 +218,7 @@ overview_page_name: str = "user_two_factor_overview"
 
 def register(page_registry: PageRegistry) -> None:
     page_registry.register_page(overview_page_name)(UserTwoFactorOverview)
+    page_registry.register_page("user_two_factor_enforce")(UserTwoFactorEnforce)
     page_registry.register_page("user_two_factor_edit_credential")(EditCredentialAlias)
     page_registry.register_page("user_webauthn_register_begin")(UserWebAuthnRegisterBegin)
     page_registry.register_page("user_webauthn_register_complete")(UserWebAuthnRegisterComplete)
@@ -178,31 +242,42 @@ class UserTwoFactorOverview(ABCUserProfilePage):
         if credential_id := request.get_ascii_input("_delete_credential"):
             if credential_id in credentials["webauthn_credentials"]:
                 del credentials["webauthn_credentials"][credential_id]
-                _log_event_usermanagement(TwoFactorEventType.webauthn_remove)
-                send_security_message(user.id, SecurityNotificationEvent.webauthn_removed)
+                flash(_("Selected credential has been deleted"))
+                _save_credentials_all_sites(
+                    user,
+                    "user_two_factor_overview.py",
+                    credentials,
+                    TwoFactorEventType.webauthn_remove,
+                )
             elif credential_id in credentials["totp_credentials"]:
                 del credentials["totp_credentials"][credential_id]
-                _log_event_usermanagement(TwoFactorEventType.totp_remove)
-                send_security_message(user.id, SecurityNotificationEvent.totp_removed)
+                flash(_("Selected credential has been deleted"))
+                _save_credentials_all_sites(
+                    user,
+                    "user_two_factor_overview.py",
+                    credentials,
+                    TwoFactorEventType.totp_remove,
+                )
             else:
                 return
-            save_two_factor_credentials(user.id, credentials)
-            flash(_("Selected credential has been deleted"))
+            if not is_two_factor_login_enabled(user.id):
+                session.session_info.two_factor_completed = False
+                if credentials["backup_codes"]:
+                    _handle_revoke_all_backup_codes(user, credentials)
 
         if request.has_var("_delete_codes"):
-            credentials["backup_codes"] = []
-            _log_event_usermanagement(TwoFactorEventType.backup_remove)
-            save_two_factor_credentials(user.id, credentials)
-            send_security_message(user.id, SecurityNotificationEvent.backup_revoked)
-            flash(_("All backup codes have been deleted"))
+            _handle_revoke_all_backup_codes(user, credentials)
 
         if request.has_var("_backup_codes"):
             codes = make_two_factor_backup_codes()
             credentials["backup_codes"] = [pwhashed for _password, pwhashed in codes]
-            _log_event_usermanagement(TwoFactorEventType.backup_add)
-            save_two_factor_credentials(user.id, credentials)
-            send_security_message(user.id, SecurityNotificationEvent.backup_reset)
             flash(self.flash_new_backup_codes(codes))
+            _save_credentials_all_sites(
+                user,
+                "user_two_factor_overview.py",
+                credentials,
+                TwoFactorEventType.backup_add,
+            )
 
     def flash_new_backup_codes(self, codes: list[tuple[Password, PasswordHash]]) -> HTML:
         backup_codes = "\n".join(pw.raw for pw, _hash in codes)
@@ -399,6 +474,18 @@ class UserTwoFactorOverview(ABCUserProfilePage):
     def _show_form(self) -> None:
         assert user.id is not None
 
+        if is_wato_slave_site():
+            html.user_error(
+                MKUserError(
+                    None,
+                    _(
+                        "Changes to a user's two-factor settings within remote sites will "
+                        "be overritten by changes to the user's settings in the central site."
+                    ),
+                ),
+                True,
+            )
+
         credentials = load_two_factor_credentials(user.id)
         webauthn_credentials = credentials["webauthn_credentials"]
         backup_codes = credentials["backup_codes"]
@@ -468,6 +555,116 @@ class UserTwoFactorOverview(ABCUserProfilePage):
             )
 
 
+class UserTwoFactorEnforce(ABCUserProfilePage):
+    def _page_title(self) -> str:
+        return _("Two-factor authentication")
+
+    def __init__(self) -> None:
+        super().__init__("general.manage_2fa")
+
+    def _action(self) -> None:
+        assert user.id is not None
+
+    def _page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        assert user.id is not None
+
+        page_menu: PageMenu = PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="actions",
+                    title=_("Actions"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Actions"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Register authenticator app"),
+                                    icon_name="2fa",
+                                    item=make_simple_link("user_totp_register.py"),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                    description=_(
+                                        "Make use of an authenicator app to generate time-based one-time validation codes."
+                                    ),
+                                ),
+                                PageMenuEntry(
+                                    title=_("Register security token"),
+                                    icon_name="2fa",
+                                    item=make_javascript_link("cmk.webauthn.register()"),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                    description=_(
+                                        "Make use of Web Authentication also known as WebAuthn to "
+                                        "register cryptographic keys generated by authentication "
+                                        "devices such as YubiKey."
+                                    ),
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+                page_menu_dropdown_user_related(page_name=overview_page_name, show_shortcuts=False),
+            ],
+            breadcrumb=breadcrumb,
+        )
+        page_menu.add_doc_reference(title=self._page_title(), doc_ref=DocReference.WATO_USER_2FA)
+        return page_menu
+
+    def _render_credentials_table_rows(
+        self,
+        credentials: dict[str, TotpCredential] | dict[str, WebAuthnCredential],
+        what: Literal["totp", "webauthn"],
+        table: Table,
+    ) -> None:
+        name = _("authenticator app") if what == "totp" else _("security token")
+        title = _("Authenticator apps") if what == "totp" else _("Security tokens")
+
+        table.groupheader(title + (f" ({len(credentials)})" if credentials else ""))
+        table.row()
+        table.cell(
+            "",
+            html.render_i(
+                _("Click on 'Register %s' to enable two-factor authentication via %s.")
+                % (name, name)
+            ),
+            colspan=2,
+        )
+
+    def _show_form(self) -> None:
+        assert user.id is not None
+
+        if is_wato_slave_site():
+            html.user_error(
+                MKUserError(
+                    None,
+                    _(
+                        "Changes to a user's two-factor settings within remote sites will "
+                        "be overritten by changes to the user's settings in the central site."
+                    ),
+                ),
+                True,
+            )
+
+        credentials = load_two_factor_credentials(user.id)
+        webauthn_credentials = credentials["webauthn_credentials"]
+        totp_credentials = credentials["totp_credentials"]
+
+        html.div("", id_="webauthn_message")
+        html.show_warning(
+            _(
+                "Your administrator has enforced two factor authentication for your account. Kindly register one of the following two factor mechanisms:"
+            )
+        )
+        html.open_div(class_="two_factor_overview")
+
+        with table_element(sortable=False, omit_headers=not bool(totp_credentials)) as table:
+            self._render_credentials_table_rows(totp_credentials, "totp", table)
+            self._render_credentials_table_rows(webauthn_credentials, "webauthn", table)
+
+        html.close_div()
+        html.footer()
+
+
 class RegisterTotpSecret(ABCUserProfilePage):
     def _page_title(self) -> str:
         return _("Register authenticator app")
@@ -506,7 +703,7 @@ class RegisterTotpSecret(ABCUserProfilePage):
         credentials = load_two_factor_credentials(user.id, lock=True)
 
         self.secret = b32decode(request.get_ascii_input_mandatory("_otp"))
-        otp = TOTP(self.secret, TotpVersion.one)
+        otp = TOTP(self.secret)
 
         alias = TextInput().from_html_vars("alias")
         now_time = otp.calculate_generation(datetime.datetime.now())
@@ -519,18 +716,31 @@ class RegisterTotpSecret(ABCUserProfilePage):
                 "registered_at": int(time.time()),
                 "alias": alias or "",
             }
-            save_two_factor_credentials(user.id, credentials)
-            _log_event_usermanagement(TwoFactorEventType.totp_add)
-            send_security_message(user.id, SecurityNotificationEvent.totp_added)
+            if not session.session_info.two_factor_required:
+                # This will trigger when a user is adding a new TOTP secret from the overview page.
+                # We redirect the user back as TOTP is added through a seperate page they are sent to.
+                origtarget = "user_two_factor_overview.py"
+            else:
+                # When a user has added TOTP as part of Two Factor Enforcement the user will have
+                # been forwarded to a enforcement page based on the below session boolean being
+                # set at login. We want them to then enter the main site after a successful TOTP add.
+                session.session_info.two_factor_required = False
+                origtarget = "index.py"
             session.session_info.two_factor_completed = True
             flash(_("Registration successful"))
-            origtarget = "user_two_factor_overview.py"
-            raise redirect(origtarget)
+            _save_credentials_all_sites(
+                user,
+                origtarget,
+                credentials,
+                TwoFactorEventType.totp_add,
+            )
 
+            raise redirect(origtarget)
         flash(_("Failed"))
 
     def _show_form(self) -> None:
         assert user.id is not None
+        assert user.alias is not None
 
         if not self.secret:
             self.secret = TOTP.generate_secret()
@@ -636,21 +846,12 @@ class EditCredentialAlias(ABCUserProfilePage):
 
         credential["alias"] = settings["alias"]
 
-        save_two_factor_credentials(user.id, credentials)
-
         flash(_("Successfully changed the credential."))
+        _save_credentials_all_sites(
+            user, "user_two_factor_overview.py", credentials, "alias_changed"
+        )
 
-        # In distributed setups with remote sites where the user can login, start the
-        # user profile replication now which will redirect the user to the destination
-        # page after completion. Otherwise directly open up the destination page.
-        origtarget = "user_two_factor_overview.py"
-        if user.authorized_login_sites():
-            raise redirect(
-                makeuri_contextless(
-                    request, [("back", origtarget)], filename="user_profile_replicate.py"
-                )
-            )
-        raise redirect(origtarget)
+        raise redirect("user_two_factor_overview.py")
 
     def _show_form(self) -> None:
         assert user.id is not None
@@ -815,7 +1016,13 @@ class UserWebAuthnRegisterComplete(JsonPage):
         send_security_message(user.id, SecurityNotificationEvent.webauthn_added)
         session.session_info.two_factor_completed = True
         flash(_("Registration successful"))
-        return {"status": "OK"}
+        navigation_json = {"status": "OK", "redirect": False, "replicate": False}
+        if has_wato_slave_sites():
+            navigation_json["replicate"] = True
+        if session.session_info.two_factor_required:
+            session.session_info.two_factor_required = False
+            navigation_json["redirect"] = True
+        return navigation_json  # type: ignore[return-value]
 
 
 class UserLoginTwoFactor(Page):
@@ -954,7 +1161,7 @@ class UserLoginTwoFactor(Page):
             if totp_code := request.get_validated_type_input(Password, "_totp_code"):
                 totp_credential = credentials["totp_credentials"]
                 for credential in totp_credential:
-                    otp = TOTP(totp_credential[credential]["secret"], TotpVersion.one)
+                    otp = TOTP(totp_credential[credential]["secret"])
                     if otp.check_totp(
                         totp_code.raw_bytes.decode(),
                         otp.calculate_generation(datetime.datetime.now()),
@@ -969,7 +1176,7 @@ class UserLoginTwoFactor(Page):
                 if is_two_factor_backup_code_valid(user.id, backup_code):
                     _log_event_usermanagement(TwoFactorEventType.backup_used)
                     send_security_message(user.id, SecurityNotificationEvent.backup_used)
-                    _handle_success_auth(user.id)
+                    _handle_success_auth(user.id, has_wato_slave_sites())
                 _log_event_auth("Backup code")
                 _handle_failed_auth(user.id)
                 raise MKUserError(None, _("Invalid code provided"), HTTPStatus.UNAUTHORIZED)
@@ -1079,5 +1286,6 @@ class UserWebAuthnLoginComplete(JsonPage):
             raise
 
         session.session_info.webauthn_action_state = None
-        _handle_success_auth(user.id)
+        session.session_info.two_factor_completed = True
+        save_custom_attr(user.id, "num_failed_logins", 0)
         return {"status": "OK"}

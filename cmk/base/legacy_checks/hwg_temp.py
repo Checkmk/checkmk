@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.hwg import parse_hwg
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import contains, SNMPTree
+
+check_info = {}
 
 HWG_TEMP_DEFAULTLEVELS = {"levels": (30.0, 35.0)}
 
@@ -53,6 +54,7 @@ def check_hwg_temp(item, params, parsed):
 
 
 check_info["hwg_temp"] = LegacyCheckDefinition(
+    name="hwg_temp",
     detect=contains(".1.3.6.1.2.1.1.1.0", "hwg"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.21796.4.1.3.1",
@@ -67,6 +69,7 @@ check_info["hwg_temp"] = LegacyCheckDefinition(
 )
 
 check_info["hwg_ste2"] = LegacyCheckDefinition(
+    name="hwg_ste2",
     detect=contains(".1.3.6.1.2.1.1.1.0", "STE2"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.21796.4.9.3.1",

@@ -88,12 +88,7 @@ def check_dell_eql_storage(item: str, section: StringTable) -> CheckResult:
             yield Metric("fs_free", total_bytes - used_bytes)
             yield Result(
                 state=State.OK,
-                summary="Used: {}/{} (Snapshots: {}, Replication: {})".format(
-                    render.disksize(used_bytes),
-                    render.disksize(total_bytes),
-                    render.disksize(snap_bytes),
-                    render.disksize(repl_bytes),
-                ),
+                summary=f"Used: {render.disksize(used_bytes)}/{render.disksize(total_bytes)} (Snapshots: {render.disksize(snap_bytes)}, Replication: {render.disksize(repl_bytes)})",
             )
 
 

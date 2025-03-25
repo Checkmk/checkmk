@@ -1,0 +1,16 @@
+---
+rules:
+    - id: type-adapter-detected
+      patterns:
+          - pattern: |
+                TypeAdapter(...)
+          - pattern-inside: |
+                def $FUNC(...): ...
+      message: >-
+          Detected the use of TypeAdapter(). Executing TypeAdapter() is a costly operation which can
+            lead to a major performance issue if used wrong. Its use may be acceptable when invoked
+            only once, e.g. during program startup. Ensure it does not impact performance of your
+            program negatively. Add "# nosemgrep: type-adapter-detected" to acknowledge this
+            warning.
+      languages: [python]
+      severity: WARNING

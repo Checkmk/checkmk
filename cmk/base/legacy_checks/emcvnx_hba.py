@@ -64,10 +64,10 @@
 
 import time
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store
+
+check_info = {}
 
 
 def saveint(i: str) -> int:
@@ -132,6 +132,7 @@ def check_emcvnx_hba(item, _no_params, parsed):
 
 
 check_info["emcvnx_hba"] = LegacyCheckDefinition(
+    name="emcvnx_hba",
     parse_function=parse_emcvnx_hba,
     service_name="HBA %s",
     discovery_function=inventory_emcvnx_hba,

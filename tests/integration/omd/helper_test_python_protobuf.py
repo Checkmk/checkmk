@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # Tools are not aware of our generated test module
-import test_pb2  # type: ignore[import-not-found] # pylint: disable=import-error
+import test_pb2  # type: ignore[import-not-found]
 
 address_book = test_pb2.AddressBook()
 

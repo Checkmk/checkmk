@@ -5,13 +5,13 @@
 
 from pydantic import BaseModel
 
+from cmk.ccc.version import Edition, edition
+
 from cmk.utils import paths
 from cmk.utils.paths import cse_config_dir
 from cmk.utils.rulesets.definition import RuleGroupType
 
 from cmk.gui.log import logger
-
-from cmk.ccc.version import edition, Edition
 
 LOGGER = logger.getChild("global-config")
 
@@ -43,7 +43,8 @@ def load_global_config() -> GlobalConfig:
         with open(path, encoding="utf-8") as file:
             return GlobalConfig.model_validate_json(file.read())
     except Exception as e:
-        LOGGER.debug("Failed to load config from %s: %s", path, e)
+        if edition(paths.omd_root) is not Edition.CSE:
+            LOGGER.debug("Failed to load config from %s: %s", path, e)
         return GlobalConfig(
             global_settings=GlobalSettings(is_activate=set[str]()),
             rulespec_allow_list=RulespecAllowList(),

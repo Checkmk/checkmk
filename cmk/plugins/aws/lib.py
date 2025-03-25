@@ -8,7 +8,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
@@ -146,7 +146,7 @@ def check_aws_limits(
         if not limit_ref:
             continue
 
-        result, _ = check_levels(
+        result, _ = check_levels_v1(
             value=100.0 * amount / limit_ref,
             levels_upper=(warn, crit),
             metric_name=resource_key + "_in_%",
@@ -170,7 +170,7 @@ def check_aws_metrics(metric_infos: Sequence[AWSMetric]) -> CheckResult:
         raise IgnoreResultsError("Currently no data from AWS")
 
     for metric_info in metric_infos:
-        yield from check_levels(
+        yield from check_levels_v1(
             value=metric_info.value,
             metric_name=metric_info.name,
             levels_lower=metric_info.levels_lower,

@@ -5,7 +5,6 @@
 
 import ast
 import logging
-import os
 import stat
 from collections.abc import Iterator
 from enum import IntFlag
@@ -56,12 +55,8 @@ def get_site_file_permission(site: Site) -> list[tuple[int, str]]:
     )
 
 
-@pytest.mark.skipif(
-    os.getenv("DISTRO", "") in ["centos-8", "almalinux-9", "sles-15sp5"],
-    reason="refer to CMK-18188.",
-)
 @pytest.mark.parametrize(
-    "mode,known_files_set",
+    "mode, known_files_set",
     ((Mode.WORLD_WRITEABLE, KNOWN_WORLD_WRITABLE_FILES),),
 )
 def test_site_file_permissions(site: Site, mode: Mode, known_files_set: set[str]) -> None:
@@ -75,13 +70,15 @@ def test_site_file_permissions(site: Site, mode: Mode, known_files_set: set[str]
 
         offenders.add(rel_path)
 
-    assert not offenders
+    assert not offenders, (
+        f"Incorrect file permissions! Found writable file(s):\n{'\n'.join(offenders)}"
+    )
 
 
 def test_world_accessible_files_parents(site: Site) -> None:
     """files which are supposed to be accessible need their parents to be also accessible"""
     for file in KNOWN_WORLD_WRITABLE_FILES | KNOWN_WORLD_READABLE_FILES:
-        path = Path(site.root) / file
+        path = site.root / file
         assert path.exists()
         for parent in path.parents:
             if not parent.is_relative_to(site.root):
@@ -89,21 +86,21 @@ def test_world_accessible_files_parents(site: Site) -> None:
             assert has_permission(parent, Mode.WORLD_EXECUTE)
 
 
-@pytest.mark.skipif(
-    os.getenv("DISTRO", "") in ["centos-8", "almalinux-9", "sles-15sp5"],
-    reason="refer to CMK-18188.",
-)
 def test_version_file_permissions(site: Site) -> None:
-    """test that there are no writeable files in the version dir
+    """Test that there are no writeable files in the version dir.
 
-    check for world writeable and group writeable
-    only the owner should be allowed to write, the owner is checked in another
-    test"""
-    assert not {
-        p
-        for p in iter_dir(Path(site.version.version_path()))
+    Check for world writeable and group writeable
+    Only the owner should be allowed to write.
+    The ownership is checked in `test_version_file_ownership`.
+    """
+    writable_files = {
+        str(p)
+        for p in iter_dir(Path(site.package.version_path()))
         if has_permission(p, Mode.WORLD_WRITEABLE ^ Mode.GROUP_WRITEABLE)
     }
+    assert not writable_files, (
+        f"Incorrect file permissions! Found writable file(s):\n{'\n'.join(writable_files)}"
+    )
 
 
 def test_version_file_ownership(site: Site) -> None:
@@ -113,7 +110,7 @@ def test_version_file_ownership(site: Site) -> None:
     There are some files with omd as group, because of some caps, these are
     explicitly listed in the end, therefore the set construct"""
 
-    path_to_version = Path(site.version.version_path())
+    path_to_version = Path(site.package.version_path())
     non_root_group = set()
     for p in iter_dir(path_to_version):
         assert p.owner() == "root", p
@@ -126,7 +123,7 @@ def test_version_file_ownership(site: Site) -> None:
         "lib/nagios/plugins/check_dhcp",
         "lib/nagios/plugins/check_icmp",
     }
-    if not site.version.is_raw_edition():
+    if not site.edition.is_raw_edition():
         exceptions |= {
             "lib/cmc/icmpsender",
             "lib/cmc/icmpreceiver",

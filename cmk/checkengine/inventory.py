@@ -13,6 +13,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, assert_never, TypeVar
 
+import cmk.ccc.debug
+
 import cmk.utils.paths
 from cmk.utils import tty
 from cmk.utils.hostaddress import HostName
@@ -33,8 +35,8 @@ from cmk.utils.structured_data import (
 )
 from cmk.utils.validatedstr import ValidatedString
 
-import cmk.ccc.debug
 from cmk.agent_based.v1 import Attributes, TableRow
+from cmk.discover_plugins import PluginLocation
 
 from .checkresults import ActiveCheckResult
 from .fetcher import FetcherFunction, HostKey, SourceType
@@ -62,6 +64,7 @@ __all__ = [
 
 _SDPATH_HARDWARE = (SDNodeName("hardware"),)
 _SDPATH_SOFTWARE = (SDNodeName("software"),)
+_SDPATH_NETWORKING = (SDNodeName("networking"),)
 _SDPATH_SOFTWARE_PACKAGES = (SDNodeName("software"), SDNodeName("packages"))
 _SDPATH_CLUSTER = (
     SDNodeName("software"),
@@ -84,10 +87,12 @@ class InventoryPluginName(ValidatedString):
 
 @dataclass(frozen=True)
 class InventoryPlugin:
+    name: InventoryPluginName
     sections: Sequence[ParsedSectionName]
     function: Callable[..., Iterable[Attributes | TableRow]]
     ruleset_name: RuleSetName | None
     defaults: Mapping[str, object]
+    location: PluginLocation
 
 
 @dataclass(frozen=True)
@@ -95,6 +100,7 @@ class HWSWInventoryParameters:
     hw_changes: int
     sw_changes: int
     sw_missing: int
+    nw_changes: int
 
     # Do not use source states which would overwrite "State when
     # inventory fails" in the ruleset "Do HW/SW Inventory".
@@ -108,6 +114,7 @@ class HWSWInventoryParameters:
             hw_changes=int(raw_parameters.get("hw-changes", 0)),
             sw_changes=int(raw_parameters.get("sw-changes", 0)),
             sw_missing=int(raw_parameters.get("sw-missing", 0)),
+            nw_changes=int(raw_parameters.get("nw-changes", 0)),
             fail_status=int(raw_parameters.get("inv-fail-status", 1)),
             status_data_inventory=bool(raw_parameters.get("status_data_inventory", False)),
         )
@@ -117,7 +124,7 @@ class HWSWInventoryParameters:
 class CheckInventoryTreeResult:
     processing_failed: bool
     no_data_or_files: bool
-    check_result: ActiveCheckResult
+    check_results: Sequence[ActiveCheckResult]
     inventory_tree: MutableTree
     update_result: UpdateResult
 
@@ -181,20 +188,18 @@ def inventorize_host(
     return CheckInventoryTreeResult(
         processing_failed=processing_failed,
         no_data_or_files=no_data_or_files,
-        check_result=ActiveCheckResult.from_subresults(
-            *itertools.chain(
-                _check_fetched_data_or_trees(
-                    parameters=parameters,
-                    inventory_tree=trees.inventory,
-                    status_data_tree=trees.status_data,
-                    previous_tree=previous_tree,
-                    processing_failed=processing_failed,
-                    no_data_or_files=no_data_or_files,
-                ),
-                (r for r in summarizer(host_sections) if r.state != 0),
-                check_parsing_errors(parsing_errors, error_state=parameters.fail_status),
-            )
-        ),
+        check_results=[
+            *_check_fetched_data_or_trees(
+                parameters=parameters,
+                inventory_tree=trees.inventory,
+                status_data_tree=trees.status_data,
+                previous_tree=previous_tree,
+                processing_failed=processing_failed,
+                no_data_or_files=no_data_or_files,
+            ),
+            *(r for r in summarizer(host_sections) if r.state != 0),
+            *check_parsing_errors(parsing_errors, error_state=parameters.fail_status),
+        ],
         inventory_tree=trees.inventory,
         update_result=update_result,
     )
@@ -210,13 +215,13 @@ def inventorize_cluster(
     return CheckInventoryTreeResult(
         processing_failed=False,
         no_data_or_files=False,
-        check_result=ActiveCheckResult.from_subresults(
-            *_check_trees(
+        check_results=list(
+            _check_trees(
                 parameters=parameters,
                 inventory_tree=inventory_tree,
                 status_data_tree=MutableTree(),
                 previous_tree=previous_tree,
-            ),
+            )
         ),
         inventory_tree=inventory_tree,
         update_result=UpdateResult(),
@@ -580,7 +585,7 @@ def _check_fetched_data_or_trees(
     processing_failed: bool,
 ) -> Iterator[ActiveCheckResult]:
     if no_data_or_files:
-        yield ActiveCheckResult(0, "No data yet, please be patient")
+        yield ActiveCheckResult(state=0, summary="No data yet, please be patient")
         return
 
     if processing_failed:
@@ -594,11 +599,11 @@ def _check_fetched_data_or_trees(
             ),
             bool,
         ):
-            yield ActiveCheckResult(0, "No further data for tree update")
+            yield ActiveCheckResult(state=0, summary="No further data for tree update")
         else:
             yield ActiveCheckResult(
-                parameters.fail_status,
-                "Did not update the tree due to at least one error",
+                state=parameters.fail_status,
+                summary="Did not update the tree due to at least one error",
             )
 
     yield from _check_trees(
@@ -617,19 +622,24 @@ def _check_trees(
     previous_tree: ImmutableTree,
 ) -> Iterator[ActiveCheckResult]:
     if not (inventory_tree or status_data_tree):
-        yield ActiveCheckResult(0, "Found no data")
+        yield ActiveCheckResult(state=0, summary="Found no data")
         return
 
-    yield ActiveCheckResult(0, f"Found {len(inventory_tree)} inventory entries")
+    yield ActiveCheckResult(state=0, summary=f"Found {len(inventory_tree)} inventory entries")
 
     if parameters.sw_missing and not inventory_tree.has_table(_SDPATH_SOFTWARE_PACKAGES):
-        yield ActiveCheckResult(parameters.sw_missing, "software packages information is missing")
+        yield ActiveCheckResult(
+            state=parameters.sw_missing, summary="software packages information is missing"
+        )
 
     if previous_tree.get_tree(_SDPATH_SOFTWARE) != inventory_tree.get_tree(_SDPATH_SOFTWARE):
-        yield ActiveCheckResult(parameters.sw_changes, "software changes")
+        yield ActiveCheckResult(state=parameters.sw_changes, summary="software changes")
 
     if previous_tree.get_tree(_SDPATH_HARDWARE) != inventory_tree.get_tree(_SDPATH_HARDWARE):
-        yield ActiveCheckResult(parameters.hw_changes, "hardware changes")
+        yield ActiveCheckResult(state=parameters.hw_changes, summary="hardware changes")
+
+    if previous_tree.get_tree(_SDPATH_NETWORKING) != inventory_tree.get_tree(_SDPATH_NETWORKING):
+        yield ActiveCheckResult(state=parameters.nw_changes, summary="networking changes")
 
     if status_data_tree:
-        yield ActiveCheckResult(0, f"Found {len(status_data_tree)} status entries")
+        yield ActiveCheckResult(state=0, summary=f"Found {len(status_data_tree)} status entries")

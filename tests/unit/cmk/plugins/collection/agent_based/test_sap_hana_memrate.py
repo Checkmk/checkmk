@@ -6,12 +6,6 @@
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
-from cmk.utils.sectionname import SectionName
-
-from cmk.checkengine.checking import CheckPluginName
-
 from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
@@ -21,6 +15,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.plugins.collection.agent_based import sap_hana_memrate
 from cmk.plugins.lib.sap_hana import ParsedSection
 
 
@@ -51,12 +46,10 @@ from cmk.plugins.lib.sap_hana import ParsedSection
     ],
 )
 def test_parse_sap_hana_memrate(
-    fix_register: FixRegister,
     info: StringTable,
     expected_result: ParsedSection,
 ) -> None:
-    section_plugin = fix_register.agent_sections[SectionName("sap_hana_memrate")]
-    assert section_plugin.parse_function(info) == expected_result
+    assert sap_hana_memrate.parse_sap_hana_memrate(info) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -71,12 +64,15 @@ def test_parse_sap_hana_memrate(
         ),
     ],
 )
-def test_inventory_sap_hana_memrate(
-    fix_register: FixRegister, info: StringTable, expected_result: DiscoveryResult
-) -> None:
-    section = fix_register.agent_sections[SectionName("sap_hana_memrate")].parse_function(info)
-    plugin = fix_register.check_plugins[CheckPluginName("sap_hana_memrate")]
-    assert list(plugin.discovery_function(section)) == expected_result
+def test_inventory_sap_hana_memrate(info: StringTable, expected_result: DiscoveryResult) -> None:
+    assert (
+        list(
+            sap_hana_memrate.discovery_sap_hana_memrate(
+                sap_hana_memrate.parse_sap_hana_memrate(info)
+            )
+        )
+        == expected_result
+    )
 
 
 @pytest.mark.parametrize(
@@ -96,8 +92,15 @@ def test_inventory_sap_hana_memrate(
     ],
 )
 def test_check_sap_hana_memrate(
-    fix_register: FixRegister, item: str, info: StringTable, expected_result: CheckResult
+    item: str,
+    info: StringTable,
+    expected_result: CheckResult,
 ) -> None:
-    section = fix_register.agent_sections[SectionName("sap_hana_memrate")].parse_function(info)
-    plugin = fix_register.check_plugins[CheckPluginName("sap_hana_memrate")]
-    assert list(plugin.check_function(item, {}, section)) == expected_result
+    assert (
+        list(
+            sap_hana_memrate.check_sap_hana_memrate(
+                item, {}, sap_hana_memrate.parse_sap_hana_memrate(info)
+            )
+        )
+        == expected_result
+    )

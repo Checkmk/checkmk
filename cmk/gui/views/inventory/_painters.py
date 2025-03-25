@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
-from typing import Callable, TypedDict
+from collections.abc import Callable, Mapping, Sequence
+from typing import TypedDict
 
 from livestatus import SiteId
 
@@ -18,6 +18,8 @@ from cmk.utils.structured_data import (
     SDRawDeltaTree,
     SDRawTree,
     SDValue,
+    serialize_delta_tree,
+    serialize_tree,
 )
 
 from cmk.gui import sites
@@ -25,12 +27,12 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.painter.v0.base import Cell, Painter
+from cmk.gui.painter.v0 import Cell, Painter
 from cmk.gui.painter_options import paint_age, PainterOption, PainterOptions
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnName, PainterParameters, Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
-from cmk.gui.utils.theme import theme
 from cmk.gui.valuespec import Checkbox, Dictionary, FixedValue, ValueSpec
 from cmk.gui.view_utils import CellSpec, CSVExportError
 
@@ -138,13 +140,13 @@ class PainterInventoryTree(Painter):
         return "invtree", code
 
     def export_for_python(self, row: Row, cell: Cell) -> SDRawTree:
-        return self._compute_data(row, cell).serialize()
+        return serialize_tree(self._compute_data(row, cell))
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
     def export_for_json(self, row: Row, cell: Cell) -> SDRawTree:
-        return self._compute_data(row, cell).serialize()
+        return serialize_tree(self._compute_data(row, cell))
 
 
 class PainterInvhistTime(Painter):
@@ -220,13 +222,13 @@ class PainterInvhistDelta(Painter):
         return "invtree", code
 
     def export_for_python(self, row: Row, cell: Cell) -> SDRawDeltaTree:
-        return self._compute_data(row, cell).serialize()
+        return serialize_delta_tree(self._compute_data(row, cell))
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
     def export_for_json(self, row: Row, cell: Cell) -> SDRawDeltaTree:
-        return self._compute_data(row, cell).serialize()
+        return serialize_delta_tree(self._compute_data(row, cell))
 
 
 def _paint_invhist_count(row: Row, what: str) -> CellSpec:
@@ -328,7 +330,7 @@ def _paint_host_inventory_attribute(
 ) -> CellSpec:
     if (attributes := _get_attributes(row, path)) is None:
         return "", ""
-    return SDItem(
+    alignment_class, _coloring_class, rendered_value = SDItem(
         key=key,
         title=title,
         value=attributes.pairs.get(key),
@@ -336,6 +338,7 @@ def _paint_host_inventory_attribute(
         paint_function=paint_function,
         icon_path_svc_problems=theme.detect_icon_path("svc_problems", "icon_"),
     ).compute_cell_spec()
+    return alignment_class, rendered_value
 
 
 def attribute_painter_from_hint(
@@ -397,7 +400,7 @@ def _paint_host_inventory_column(
 ) -> CellSpec:
     if ident not in row:
         return "", ""
-    return SDItem(
+    alignment_class, _coloring_class, rendered_value = SDItem(
         key=SDKey(ident),
         title=title,
         value=row[ident],
@@ -405,6 +408,7 @@ def _paint_host_inventory_column(
         paint_function=paint_function,
         icon_path_svc_problems=theme.detect_icon_path("svc_problems", "icon_"),
     ).compute_cell_spec()
+    return alignment_class, rendered_value
 
 
 def column_painter_from_hint(ident: str, hint: ColumnDisplayHint) -> ColumnPainterFromHint:
@@ -425,7 +429,7 @@ def column_painter_from_hint(ident: str, hint: ColumnDisplayHint) -> ColumnPaint
         sorter=ident,
         paint=lambda row: _paint_host_inventory_column(row, ident, hint.title, hint.paint_function),
         export_for_python=lambda row, cell: row.get(ident),
-        export_for_csv=lambda row, cell: "" if (data := row.get(ident)) is None else str(data),
+        export_for_csv=lambda row, cell: ("" if (data := row.get(ident)) is None else str(data)),
         export_for_json=lambda row, cell: row.get(ident),
     )
 
@@ -507,8 +511,10 @@ def node_painter_from_hint(
         sorter=hint.ident,
         paint=lambda row: _paint_host_inventory_tree(row, hint.path, painter_options),
         export_for_python=lambda row, cell: (
-            _compute_node_painter_data(row, hint.path).serialize()
+            serialize_tree(_compute_node_painter_data(row, hint.path))
         ),
         export_for_csv=lambda row, cell: _export_node_for_csv(),
-        export_for_json=lambda row, cell: _compute_node_painter_data(row, hint.path).serialize(),
+        export_for_json=lambda row, cell: serialize_tree(
+            _compute_node_painter_data(row, hint.path)
+        ),
     )

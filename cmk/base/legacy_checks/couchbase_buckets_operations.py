@@ -8,10 +8,10 @@
 
 import collections
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.plugins.lib.couchbase import parse_couchbase_lines
+
+check_info = {}
 
 
 def parse_couchbase_buckets_operations(string_table):
@@ -93,6 +93,7 @@ def check_couchbase_buckets_operations(item, params, parsed):
 
 
 check_info["couchbase_buckets_operations"] = LegacyCheckDefinition(
+    name="couchbase_buckets_operations",
     parse_function=parse_couchbase_buckets_operations,
     service_name="Couchbase Bucket %s Operations",
     discovery_function=discover_couchbase_buckets_operations,
@@ -101,6 +102,7 @@ check_info["couchbase_buckets_operations"] = LegacyCheckDefinition(
 )
 
 check_info["couchbase_buckets_operations.total"] = LegacyCheckDefinition(
+    name="couchbase_buckets_operations_total",
     service_name="Couchbase Bucket Operations",
     sections=["couchbase_buckets_operations"],
     discovery_function=discover_couchbase_buckets_operations,

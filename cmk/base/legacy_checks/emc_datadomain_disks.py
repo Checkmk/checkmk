@@ -6,11 +6,11 @@
 
 from collections.abc import Sequence
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
 from cmk.plugins.lib.emc import DETECT_DATADOMAIN
+
+check_info = {}
 
 
 def inventory_emc_datadomain_disks(info):
@@ -46,11 +46,9 @@ def check_emc_datadomain_disks(item, _no_params, info):
                 busy = info[1][index][0]
                 perfdata = [("busy", busy + "%")]
                 yield 0, "busy %s%%" % busy, perfdata
-            yield 0, "Model {}, Firmware {}, Serial {}, Capacity {}".format(
-                model,
-                firmware,
-                serial,
-                capacity,
+            yield (
+                0,
+                f"Model {model}, Firmware {firmware}, Serial {serial}, Capacity {capacity}",
             )
 
 
@@ -59,6 +57,7 @@ def parse_emc_datadomain_disks(string_table: Sequence[StringTable]) -> Sequence[
 
 
 check_info["emc_datadomain_disks"] = LegacyCheckDefinition(
+    name="emc_datadomain_disks",
     parse_function=parse_emc_datadomain_disks,
     detect=DETECT_DATADOMAIN,
     fetch=[

@@ -300,7 +300,7 @@ def cluster_check_veritas_vcs_subsection(
 
     yield Result(
         state=cluster_state,
-        notice=", ".join(f'[{n.node_name}]: {", ".join(n.node_summaries)}' for n in node_results),
+        notice=", ".join(f"[{n.node_name}]: {', '.join(n.node_summaries)}" for n in node_results),
     )
 
     if cluster_name:

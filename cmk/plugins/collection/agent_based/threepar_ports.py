@@ -103,11 +103,8 @@ class ThreeParPort:
     cardPort: int
 
     def __post_init__(self):
-        self.name = "{} Node {} Slot {} Port {}".format(
-            PROTOCOLS.get(self.protocol),
-            self.node,
-            self.slot,
-            self.cardPort,
+        self.name = (
+            f"{PROTOCOLS.get(self.protocol)} Node {self.node} Slot {self.slot} Port {self.cardPort}"
         )
 
 

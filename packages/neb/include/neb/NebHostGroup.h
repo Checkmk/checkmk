@@ -14,8 +14,8 @@
 
 class NebHostGroup : public IHostGroup {
 public:
-    explicit NebHostGroup(const hostgroup &host_group)
-        : host_group_{host_group} {}
+    NebHostGroup(const hostgroup &host_group, const NebCore &core)
+        : host_group_{host_group}, core_{core} {}
 
     [[nodiscard]] std::string name() const override {
         return host_group_.group_name;
@@ -37,7 +37,7 @@ public:
     bool all(const std::function<bool(const IHost &)> &pred) const override {
         for (const auto *member = host_group_.members; member != nullptr;
              member = member->next) {
-            if (!pred(NebHost{*member->host_ptr})) {
+            if (!pred(*core_.ihost(member->host_ptr))) {
                 return false;
             }
         }
@@ -46,5 +46,6 @@ public:
 
 private:
     const hostgroup &host_group_;
+    const NebCore &core_;
 };
 #endif  // NebHostGroup_h

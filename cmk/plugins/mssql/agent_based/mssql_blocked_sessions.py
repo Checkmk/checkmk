@@ -8,7 +8,7 @@ from collections.abc import Mapping
 from enum import Enum
 from typing import NamedTuple, NotRequired, TypedDict
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -76,7 +76,7 @@ def parse_mssql_blocked_sessions(string_table: StringTable) -> dict[str, list[DB
 
 def check_mssql_blocked_sessions(
     item: str, params: Params, section: dict[str, list[DBInstance]]
-) -> CheckResult:  # pylint: disable=too-many-branches
+) -> CheckResult:
     if item == "":
         yield Result(
             state=State.UNKNOWN,
@@ -109,7 +109,7 @@ def check_mssql_blocked_sessions(
             ignored_waittypes.add(db_inst.wait_type)
             continue
 
-        (result,) = check_levels(
+        (result,) = check_levels_v1(
             db_inst.wait_duration,
             levels_upper=params.get("waittime"),
             label=f"Session {db_inst.session_id} blocked by {db_inst.blocking_session_id}, Type: {db_inst.wait_type}, Wait",

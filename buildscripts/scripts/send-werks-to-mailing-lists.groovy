@@ -37,6 +37,10 @@ def was_timer_triggered() {
 }
 
 def main() {
+    if (params.CUSTOM_GIT_REF != "") {
+       raise("The werk jobs are not meant to be triggered with a custom git ref to no miss any werks.");
+    }
+
     check_job_parameters([
         "SEND_WERK_MAILS_OF_BRANCHES",
         "SEND_WERK_MAILS",
@@ -58,7 +62,7 @@ def main() {
 
     if (was_timer_triggered()) {
         println("Current job was triggered by Timer, so we need to use the production parameters.");
-        send_werk_mails_of_branches = ["master", "2.3.0", "2.2.0", "2.1.0", "2.0.0"];
+        send_werk_mails_of_branches = ["master", "2.4.0", "2.3.0", "2.2.0", "2.1.0", "2.0.0"];
         send_werk_mails = true;
         add_werk_git_notes = true;
         assume_no_mails_sent_except = "";
@@ -81,6 +85,17 @@ def main() {
         |===================================================
         """.stripMargin());
 
+    stage("Checkout repositories") {
+        // this will checkout the repo at "${WORKSPACE}/${repo_name}"
+        // but check again if you modify it here
+        provide_clone("check_mk", "ssh-git-gerrit-jenkins");
+
+        // check_mk has to be on master
+        dir("${WORKSPACE}/check_mk") {
+            sh("git checkout master");
+        }
+    }
+
     stage("Send mails") {
         inside_container(args: docker_args) {
             withCredentials([
@@ -92,8 +107,8 @@ def main() {
                             sh("""
                                 git config --add user.name ${user};
                                 git config --add user.email ${JENKINS_MAIL};
-                                scripts/run-pipenv run python3 -m cmk.utils.werks mail \
-                                . origin/${branch} werk_mail ${cmd_line};
+                                scripts/run-uvenv python3 -m cmk.utils.werks mail \
+                                ${WORKSPACE}/check_mk origin/${branch} werk_mail ${cmd_line};
                             """);
                         }
                     }

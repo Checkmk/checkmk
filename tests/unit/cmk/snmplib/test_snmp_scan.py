@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access, redefined-outer-name
 
 import logging
 from collections.abc import Iterator
@@ -11,7 +10,9 @@ from pathlib import Path
 
 import pytest
 
-from tests.unit.conftest import FixPluginLegacy
+from tests.unit.mocks_and_helpers import FixPluginLegacy
+
+from cmk.ccc.exceptions import MKSNMPError, OnError
 
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import logger
@@ -23,10 +24,9 @@ from cmk.snmplib import OID, SNMPBackend, SNMPBackendEnum, SNMPHostConfig, SNMPV
 import cmk.fetchers._snmpcache as snmp_cache
 import cmk.fetchers._snmpscan as snmp_scan
 
-import cmk.base.api.agent_based.register as agent_based_register
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 
 from cmk.agent_based.v2 import SimpleSNMPSection, SNMPSection
-from cmk.ccc.exceptions import MKSNMPError, OnError
 from cmk.plugins.collection.agent_based import aironet_clients, brocade_info
 
 
@@ -227,8 +227,11 @@ def test_snmp_scan_fake_description_object__success(backend: SNMPBackend) -> Non
 
 
 @pytest.mark.usefixtures("cache_oids")
-def test_snmp_scan_find_plugins__success(backend: SNMPBackend) -> None:
-    sections = [(s.name, s.detect_spec) for s in agent_based_register.iter_all_snmp_sections()]
+def test_snmp_scan_find_plugins__success(
+    backend: SNMPBackend,
+    agent_based_plugins: AgentBasedPlugins,
+) -> None:
+    sections = [(s.name, s.detect_spec) for s in agent_based_plugins.snmp_sections.values()]
     found = snmp_scan._find_sections(
         sections,
         on_error=OnError.RAISE,
@@ -241,12 +244,16 @@ def test_snmp_scan_find_plugins__success(backend: SNMPBackend) -> None:
 
 
 @pytest.mark.usefixtures("cache_oids")
-def test_gather_available_raw_section_names_defaults(backend: SNMPBackend, tmp_path: Path) -> None:
+def test_gather_available_raw_section_names_defaults(
+    backend: SNMPBackend,
+    tmp_path: Path,
+    agent_based_plugins: AgentBasedPlugins,
+) -> None:
     assert snmp_cache.single_oid_cache()[snmp_scan.OID_SYS_DESCR]
     assert snmp_cache.single_oid_cache()[snmp_scan.OID_SYS_OBJ]
 
     assert snmp_scan.gather_available_raw_section_names(
-        [(s.name, s.detect_spec) for s in agent_based_register.iter_all_snmp_sections()],
+        [(s.name, s.detect_spec) for s in agent_based_plugins.snmp_sections.values()],
         scan_config=snmp_scan.SNMPScanConfig(
             on_error=OnError.RAISE,
             missing_sys_description=False,

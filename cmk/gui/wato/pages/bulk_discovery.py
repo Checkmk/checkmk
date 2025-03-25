@@ -7,7 +7,7 @@ this mode is used."""
 
 import copy
 from collections.abc import Collection
-from typing import cast
+from typing import cast, override
 
 from cmk.utils.hostaddress import HostName
 
@@ -52,17 +52,21 @@ def register(mode_registry: ModeRegistry) -> None:
 
 class ModeBulkDiscovery(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "bulkinventory"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "services"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
+    @override
     def _from_vars(self) -> None:
         self._start = bool(request.var("_save"))
         self._all = bool(request.var("all"))
@@ -106,9 +110,11 @@ class ModeBulkDiscovery(WatoMode):
         assert isinstance(bulk_size, int)
         return DoFullScan(do_scan), BulkSize(bulk_size)
 
+    @override
     def title(self) -> str:
         return _("Bulk discovery")
 
+    @override
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Discovery"),
@@ -118,6 +124,7 @@ class ModeBulkDiscovery(WatoMode):
             save_title=_("Start"),
         )
 
+    @override
     def action(self) -> ActionResult:
         check_csrf_token()
 
@@ -125,14 +132,17 @@ class ModeBulkDiscovery(WatoMode):
 
         try:
             transactions.check_transaction()
-            start_bulk_discovery(
-                self._job,
-                self._get_hosts_to_discover(),
-                self._mode,
-                self._do_full_scan,
-                self._ignore_errors,
-                self._bulk_size,
-            )
+            if (
+                result := start_bulk_discovery(
+                    self._job,
+                    self._get_hosts_to_discover(),
+                    self._mode,
+                    self._do_full_scan,
+                    self._ignore_errors,
+                    self._bulk_size,
+                )
+            ).is_error():
+                raise result.error
 
         except Exception as e:
             if active_config.debug:
@@ -144,6 +154,7 @@ class ModeBulkDiscovery(WatoMode):
 
         raise HTTPRedirect(self._job.detail_url())
 
+    @override
     def page(self) -> None:
         user.need_permission("wato.services")
 
@@ -264,8 +275,5 @@ class ModeBulkDiscovery(WatoMode):
 
     def _find_hosts_with_failed_agent(self) -> list[HostName]:
         return sites.live().query_column(
-            "GET services\n"
-            "Filter: description = Check_MK\n"
-            "Filter: state >= 2\n"
-            "Columns: host_name"
+            "GET services\nFilter: description = Check_MK\nFilter: state >= 2\nColumns: host_name"
         )

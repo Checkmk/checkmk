@@ -27,6 +27,7 @@ from cmk.gui.openapi.endpoints.activate_changes.request_schemas import ActivateC
 from cmk.gui.openapi.endpoints.activate_changes.response_schemas import (
     ActivationRunCollection,
     ActivationRunResponse,
+    ActivationStatusResponse,
     PendingChangesCollection,
 )
 from cmk.gui.openapi.endpoints.utils import may_fail
@@ -175,7 +176,7 @@ def _activation_run_domain_object(
     status_descriptions={
         204: "The activation has been completed.",
         302: (
-            "The activation is still running. Redirecting to the " "'Wait for completion' endpoint."
+            "The activation is still running. Redirecting to the 'Wait for completion' endpoint."
         ),
         404: "There is no running activation with this activation_id.",
     },
@@ -201,8 +202,7 @@ def activate_changes_wait_for_completion(params: Mapping[str, Any]) -> Response:
             detail=f"Could not find an activation with id {activation_id!r}.",
         )
 
-    done = manager.wait_for_completion(timeout=request.request_timeout - 10)
-    if not done:
+    if manager.is_running():
         response = Response(status=302)
         response.location = urlparse(request.url).path
         return response
@@ -219,7 +219,7 @@ def activate_changes_wait_for_completion(params: Mapping[str, Any]) -> Response:
         404: "There is no running activation with this activation_id.",
     },
     permissions_required=PERMISSIONS,
-    response_schema=ActivationRunResponse,
+    response_schema=ActivationStatusResponse,
 )
 def show_activation(params: Mapping[str, Any]) -> Response:
     """Show the activation status

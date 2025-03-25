@@ -40,6 +40,7 @@ def _migrate(value: object) -> Mapping[str, object]:
 
 def _valuespec_active_checks_uniserv():
     return Dictionary(
+        migrate=_migrate,
         title=Title("Check uniserv service"),
         elements={
             "port": DictElement(

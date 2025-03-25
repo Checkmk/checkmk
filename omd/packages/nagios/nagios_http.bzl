@@ -1,7 +1,8 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
 
-def nagios(version_str, sha256):
+def nagios_workspace():
+    version_str = "3.5.1"
     filename = "nagios-" + version_str + ".tar.gz"
     http_archive(
         name = "nagios",
@@ -22,5 +23,5 @@ def nagios(version_str, sha256):
             "https://assets.nagios.com/downloads/nagioscore/releases/" + filename,
             UPSTREAM_MIRROR_URL + filename,
         ],
-        sha256 = sha256,
+        sha256 = "b4323f8c027bf3f409225eeb4f7fb8e55856092ef5f890206fc2983bc75b072e",
     )

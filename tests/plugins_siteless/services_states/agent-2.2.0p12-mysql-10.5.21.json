@@ -1,0 +1,17 @@
+{
+  "Check_MK Agent": {
+    "expected_state": 0
+  },
+  "MySQL Version mysql": {
+    "expected_state": 0
+  },
+  "MySQL DB Size mysql:database1": {
+    "expected_state": 0
+  },
+  "MySQL Connections mysql": {
+    "expected_state": 0
+  },
+  "MySQL Instance mysql": {
+    "expected_state": 0
+  }
+}

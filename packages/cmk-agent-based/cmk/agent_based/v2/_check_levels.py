@@ -6,7 +6,7 @@
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, replace
 from enum import Enum, StrEnum
-from typing import Literal, TypeVar
+from typing import Literal, TypeVar, Union
 
 from cmk.agent_based.v1 import Metric, Result, State
 
@@ -20,7 +20,7 @@ PredictiveLevelsT = tuple[
     Literal["predictive"], tuple[str, float | None, tuple[_NumberT, _NumberT] | None]
 ]
 
-LevelsT = NoLevelsT | FixedLevelsT[_NumberT] | PredictiveLevelsT[_NumberT]
+LevelsT = Union[NoLevelsT, FixedLevelsT[_NumberT], PredictiveLevelsT[_NumberT]]
 
 
 class Direction(StrEnum):
@@ -80,7 +80,7 @@ def _check_fixed_levels(
     return CheckLevelsResult(Type.FIXED, State.OK, levels)
 
 
-def _check_predictive_levels(  # pylint: disable=too-many-arguments
+def _check_predictive_levels(
     value: float,
     metric_name: str,
     predicted_value: float | None,
@@ -167,7 +167,7 @@ def _summarize_predictions(
     return predictions, f"(upper levels {upper_text}, lower levels {lower_text})"
 
 
-def check_levels(  # pylint: disable=too-many-arguments,too-many-locals
+def check_levels(
     value: float,
     *,
     levels_upper: LevelsT[_NumberT] | None = None,

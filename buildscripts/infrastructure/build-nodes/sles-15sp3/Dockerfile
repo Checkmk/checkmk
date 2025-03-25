@@ -20,7 +20,6 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15sp3 sles15sp3 \
     git \
     make \
     python \
-    rrdtool-devel \
     sudo \
     vim \
     && zypper clean -a
@@ -41,6 +40,7 @@ RUN zypper ref -s \
     gtk-doc \
     intltool \
     iputils \
+    jq \
     krb5-devel \
     libXpm-devel \
     libbz2-devel \
@@ -85,12 +85,10 @@ RUN zypper ref -s \
     which \
     && zypper clean -a
 
-# krb5-devel installs krb5-config which will be in $PATH when /etc/profile is sourced
+# krb5-devel installs krb5-config to /usr/lib/mit, but we want it to be found with standard
+# values for PATH, so we create a symlink here..
 # This is needed and expected by setup.py of pykerberos for properly linking against the needed libs.
-# However we're executing the make targets within the container in a "non-login" shell and /etc/profile is not sourced.
-# Sourcing this file during the container creation led to several other issues (no tty available etc.).
-# That's why, we're going this direct way now.
-ENV PATH="/usr/lib/mit/bin:${PATH}"
+RUN ln -sf /usr/lib/mit/bin/krb5-config /usr/bin/
 
 # Install our standard tool chain for building in seperate container
 # - gnu-toolchain is needed for compiling all the C++ stuff
@@ -114,41 +112,37 @@ ENV \
 COPY \
     .bazelversion \
     package_versions.bzl \
-    static_variables.bzl \
     defines.make \
     /opt/
 
-COPY --from=scripts \
+COPY \
     build_lib.sh \
     Check_MK-pubkey.gpg \
     /opt/
 
-COPY --from=scripts install-gnu-toolchain.sh /opt/
+COPY install-gnu-toolchain.sh /opt/
 RUN /opt/install-gnu-toolchain.sh
 
-COPY --from=scripts install-valgrind.sh /opt/
+COPY install-valgrind.sh /opt/
 RUN /opt/install-valgrind.sh
 
-COPY --from=scripts install-cmake.sh /opt/
+COPY install-cmake.sh /opt/
 RUN /opt/install-cmake.sh
 
-COPY --from=scripts install-protobuf-cpp.sh /opt/
+COPY install-protobuf-cpp.sh /opt/
 RUN /opt/install-protobuf-cpp.sh
 
-COPY --from=scripts install-openssl.sh /opt/
+COPY install-openssl.sh /opt/
 RUN /opt/install-openssl.sh
 
-COPY --from=scripts install-python.sh /opt/
+COPY install-python.sh /opt/
 RUN /opt/install-python.sh
 
 # install GDB after Python as it requires shared object files, see CMK-15854
-COPY --from=scripts install-gdb.sh /opt/
+COPY install-gdb.sh /opt/
 RUN /opt/install-gdb.sh
 
-COPY --from=scripts install-freetds.sh /opt/
-RUN /opt/install-freetds.sh
-
-COPY --from=scripts install-rust-cargo.sh /opt/
+COPY install-rust-cargo.sh /opt/
 RUN /opt/install-rust-cargo.sh
 
 # Now shrink all the binaries and libraries we produced to build a small image
@@ -157,7 +151,7 @@ COPY strip_binaries /opt/
 RUN /opt/strip_binaries /opt
 
 # Run this AFTER strip_binaries!!
-COPY --from=scripts install-bazel.sh /opt/
+COPY install-bazel.sh /opt/
 RUN /opt/install-bazel.sh
 
 ### Actual Build Image ###
@@ -179,19 +173,15 @@ RUN /opt/install-valgrind.sh link-only
 RUN /opt/install-cmake.sh link-only
 RUN /opt/install-protobuf-cpp.sh --link-only
 RUN /opt/install-python.sh link-only
-RUN /opt/install-freetds.sh link-only
 RUN /opt/install-bazel.sh link-only
 RUN /opt/install-rust-cargo.sh link-only
 
 # Install non cached dependencies
-COPY --from=scripts install-pipenv.sh /opt/
-RUN /opt/install-pipenv.sh
-
-COPY --from=omd_distros "${DISTRO_MK_FILE}" /opt/
-COPY --from=scripts install-cmk-dependencies.sh /opt/
+COPY "${DISTRO_MK_FILE}" /opt/
+COPY install-cmk-dependencies.sh /opt/
 RUN /opt/install-cmk-dependencies.sh
 
-COPY --from=scripts install-patchelf.sh /opt/
+COPY install-patchelf.sh /opt/
 RUN /opt/install-patchelf.sh
 
 # The /etc/fstab does not exist in the base image we use. A missing fstab prevents OMD from
@@ -199,14 +189,28 @@ RUN /opt/install-patchelf.sh
 # simply solve this by pre-creating the empty file here.
 RUN touch /etc/fstab
 
-COPY --from=scripts ci.bazelrc /etc/
+ENV RUSTUP_HOME=/opt/rust/rustup
+
+COPY ci.bazelrc /etc/
+RUN <<EOF cat >> /etc/ci.bazelrc
+common:ci --@//:filesystem_layout=fhs
+common:ci --action_env=DISTRO=${DISTRO}
+common:ci --action_env=BRANCH_VERSION=${BRANCH_VERSION}
+common:ci --action_env=RUSTUP_HOME=${RUSTUP_HOME}
+# We encountered false cache hits with remote caching due to environment variables
+# not being propagated to external dependeny builds
+# In that case `--host_action_env=...` (in addition to `--action_env`) might help
+# Currently we don't use any external dependencies though.
+common:ci --host_action_env=DISTRO=${DISTRO}
+common:ci --host_action_env=BRANCH_VERSION=${BRANCH_VERSION}
+common:ci --host_action_env=RUSTUP_HOME=${RUSTUP_HOME}
+EOF
 
 ARG VERS_TAG
 RUN echo "${VERS_TAG}" > /version.txt
 
-ENV RUSTUP_HOME=/opt/rust/rustup
 LABEL \
     com.checkmk.image_type="build-image"
 
-COPY --from=dev_images entrypoint.sh /opt/
+COPY entrypoint.sh /opt/
 ENTRYPOINT ["/opt/entrypoint.sh"]

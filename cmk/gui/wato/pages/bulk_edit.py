@@ -8,9 +8,11 @@ values."""
 
 from collections.abc import Collection, Sequence
 from hashlib import sha256
+from typing import override
 
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -23,8 +25,9 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttribute,
+    all_host_attributes,
     collect_attributes,
-    host_attribute_registry,
+    sorted_host_attributes,
 )
 from cmk.gui.watolib.hosts_and_folders import (
     disk_or_search_folder_from_request,
@@ -45,30 +48,37 @@ def register(mode_registry: ModeRegistry) -> None:
 
 class ModeBulkEdit(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "bulkedit"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "edit_hosts"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
+    @override
     def _from_vars(self) -> None:
         self._folder = disk_or_search_folder_from_request(
             request.var("folder"), request.get_ascii_input("host")
         )
 
+    @override
     def title(self) -> str:
         return _("Bulk edit hosts")
 
+    @override
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
             _("Hosts"), breadcrumb, form_name="edit_host", button_name="_save"
         )
 
+    @override
     def action(self) -> ActionResult:
         check_csrf_token()
 
@@ -89,6 +99,7 @@ class ModeBulkEdit(WatoMode):
         flash(_("Edited %d hosts") % len(host_names))
         return redirect(self._folder.url())
 
+    @override
     def page(self) -> None:
         host_names = get_hostnames_from_checkboxes(self._folder)
         hosts = {host_name: self._folder.load_host(host_name) for host_name in host_names}
@@ -135,25 +146,31 @@ class ModeBulkEdit(WatoMode):
 
 class ModeBulkCleanup(WatoMode):
     @classmethod
+    @override
     def name(cls) -> str:
         return "bulkcleanup"
 
     @staticmethod
+    @override
     def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "edit_hosts"]
 
     @classmethod
+    @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
+    @override
     def _from_vars(self) -> None:
         self._folder = disk_or_search_folder_from_request(
             request.var("folder"), request.get_ascii_input("host")
         )
 
+    @override
     def title(self) -> str:
         return _("Bulk removal of explicit attributes")
 
+    @override
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         hosts = get_hosts_from_checkboxes(self._folder)
 
@@ -165,6 +182,7 @@ class ModeBulkCleanup(WatoMode):
             save_is_enabled=bool(self._get_attributes_for_bulk_cleanup(hosts)),
         )
 
+    @override
     def action(self) -> ActionResult:
         check_csrf_token()
 
@@ -189,12 +207,12 @@ class ModeBulkCleanup(WatoMode):
 
     def _bulk_collect_cleaned_attributes(self) -> list[str]:
         to_clean = []
-        for attr in host_attribute_registry.attributes():
-            attrname = attr.name()
+        for attrname in all_host_attributes(active_config).keys():
             if html.get_checkbox("_clean_" + attrname) is True:
                 to_clean.append(attrname)
         return to_clean
 
+    @override
     def page(self) -> None:
         hosts = get_hosts_from_checkboxes(self._folder)
 
@@ -243,7 +261,7 @@ class ModeBulkCleanup(WatoMode):
         self, hosts: Sequence[Host]
     ) -> list[tuple[ABCHostAttribute, bool, int]]:
         attributes = []
-        for attr in host_attribute_registry.get_sorted_host_attributes():
+        for attr in sorted_host_attributes():
             attrname = attr.name()
 
             if not attr.show_in_host_cleanup():

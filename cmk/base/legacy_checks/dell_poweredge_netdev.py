@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.dell_poweredge import check_dell_poweredge_netdev
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.dell import DETECT_IDRAC_POWEREDGE
+
+check_info = {}
 
 
 def inventory_dell_poweredge_netdev(info):
@@ -25,6 +26,7 @@ def parse_dell_poweredge_netdev(string_table: StringTable) -> StringTable:
 
 
 check_info["dell_poweredge_netdev"] = LegacyCheckDefinition(
+    name="dell_poweredge_netdev",
     parse_function=parse_dell_poweredge_netdev,
     detect=DETECT_IDRAC_POWEREDGE,
     fetch=SNMPTree(

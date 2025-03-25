@@ -4,46 +4,78 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import fnmatch
+import logging
 import os
 import re
 import subprocess
-from collections.abc import Iterator, Mapping
+import time
+from collections.abc import Generator, Iterator, Mapping
 from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
 from psutil import Process
 
-from tests.testlib.site import Site
+from tests.testlib.common.utils import run
+from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
+from tests.testlib.site import get_site_factory, Site
 from tests.testlib.web_session import CMKWebSession
 
 from cmk.utils.paths import mkbackup_lock_dir
 
+logger = logging.getLogger(__name__)
+
+
+@pytest.fixture(name="site_for_mkbackup_tests", scope="module")
+def site(request: pytest.FixtureRequest) -> Generator[Site]:
+    """
+    The tests in this module heavily modify the site they operate on. For example, they restore the
+    site from a previously created backup without history, which results in a site without baked
+    agents. To avoid impacting any subsequent tests, we create a dedicate site for the tests in this
+    module.
+    """
+    with exit_pytest_on_exceptions(
+        exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
+    ):
+        yield from get_site_factory(prefix="int_").get_test_site(
+            name="test_mkbup",
+            save_results=False,
+        )
+
 
 @contextmanager
-def simulate_backup_lock(site: Site) -> Iterator[None]:
-    with site.execute(
+def simulate_backup_lock(site_for_mkbackup_tests: Site, timeout: int = 1200) -> Iterator[None]:
+    file_name = f"mkbackup-{site_for_mkbackup_tests.id}.lock"
+    with site_for_mkbackup_tests.execute(
         [
             "flock",
             "-o",
             "-x",
             "-n",
-            str(mkbackup_lock_dir / f"mkbackup-{site.id}.lock"),
+            str(mkbackup_lock_dir / file_name),
             "sleep",
-            "300",
+            str(timeout),
         ]
     ) as p:
+        logger.info("Lock file %s", file_name)
+        start_time = time.time()
         try:
             yield None
         finally:
+            # command returns an exit code only after 'timeout' seconds (sleep).
+            if p.poll() == 0:
+                raise TimeoutError(
+                    f"{file_name} in unlocked state since "
+                    f"{((time.time() - start_time) - timeout):.2f} seconds!"
+                    "\nThis affects the test design and may result in false positives!"
+                )
             for c in Process(p.pid).children(recursive=True):
                 if c.name() == "sleep":
-                    assert site.execute(["kill", str(c.pid)]).wait() == 0
-            p.wait()
+                    assert site_for_mkbackup_tests.run(["kill", str(c.pid)]).returncode == 0
 
 
 @pytest.fixture(name="cleanup_restore_lock")
-def cleanup_restore_lock_fixture(site: Site) -> Iterator[None]:
+def cleanup_restore_lock_fixture(site_for_mkbackup_tests: Site) -> Iterator[None]:
     """Prevent conflict with file from other test runs
 
     The restore lock is left behind after the restore. In case a new site
@@ -51,7 +83,7 @@ def cleanup_restore_lock_fixture(site: Site) -> Iterator[None]:
     resulting in a test failure."""
 
     def rm() -> None:
-        restore_lock_path = Path(f"/tmp/restore-{site.id}.state")
+        restore_lock_path = Path(f"/tmp/restore-{site_for_mkbackup_tests.id}.state")
         if restore_lock_path.exists():
             subprocess.run(["/usr/bin/sudo", "rm", str(restore_lock_path)], check=True)
 
@@ -63,18 +95,18 @@ def cleanup_restore_lock_fixture(site: Site) -> Iterator[None]:
 
 
 @pytest.fixture(name="backup_path")
-def backup_path_fixture(site: Site) -> Iterator[str]:
-    yield from site.system_temp_dir()
+def backup_path_fixture(site_for_mkbackup_tests: Site) -> Iterator[str]:
+    yield from site_for_mkbackup_tests.system_temp_dir()
 
 
 @pytest.fixture(
     name="backup_lock_dir",
     params=[
-        {"exists": True},
-        {"exists": False},
+        pytest.param(True, id="lock dir exists"),
+        pytest.param(False, id="lock dir not existing"),
     ],
 )
-def backup_lock_dir_fixture(site: Site, request: pytest.FixtureRequest) -> None:
+def backup_lock_dir_fixture(site_for_mkbackup_tests: Site, request: pytest.FixtureRequest) -> None:
     # This fixture should prepare two possible scenarios:
     # 1) The folder for the backup locks does already exist *and* has the correct permissions
     # 2) The folder does not yet exist.
@@ -83,21 +115,26 @@ def backup_lock_dir_fixture(site: Site, request: pytest.FixtureRequest) -> None:
     # In the second case the "omd" command executed as root ensures that the directory is created.
     # This functionality has been added to the "omd" command, because it is the only command which
     # can reliably create the directory when started as root.
-    if not request.param["exists"]:
-        subprocess.check_call(["sudo", "rm", "-r", str(mkbackup_lock_dir)])
+    if not request.param:
+        run(["rm", "-r", str(mkbackup_lock_dir)], sudo=True)
         assert not mkbackup_lock_dir.exists()
 
         # This omd call triggers the creation of the lock dir with the correct permissions. In
         # production there is always at least one command executed before being able to execute
         # the backup code. So we can assume it has been executed before.
-        site.omd("status")
+        run(["omd", "status"], sudo=True)
 
     assert mkbackup_lock_dir.exists()
+    backup_permission_mask = oct(mkbackup_lock_dir.stat().st_mode)[-4:]
+    assert backup_permission_mask == "0770"
+    assert mkbackup_lock_dir.group() == "omd"
 
 
 @pytest.fixture(name="test_cfg", scope="function")
-def test_cfg_fixture(web: CMKWebSession, site: Site, backup_path: str) -> Iterator[None]:
-    site.ensure_running()
+def test_cfg_fixture(
+    web: CMKWebSession, site_for_mkbackup_tests: Site, backup_path: str
+) -> Iterator[None]:
+    site_for_mkbackup_tests.ensure_running()
 
     cfg = {
         "jobs": {
@@ -138,7 +175,7 @@ def test_cfg_fixture(web: CMKWebSession, site: Site, backup_path: str) -> Iterat
             },
         },
     }
-    site.write_text_file("etc/check_mk/backup.mk", str(cfg))
+    site_for_mkbackup_tests.write_text_file("etc/check_mk/backup.mk", str(cfg))
 
     keys = {
         1: {
@@ -151,52 +188,35 @@ def test_cfg_fixture(web: CMKWebSession, site: Site, backup_path: str) -> Iterat
         }
     }
 
-    site.write_text_file("etc/check_mk/backup_keys.mk", f"keys.update({keys})")
+    site_for_mkbackup_tests.write_text_file("etc/check_mk/backup_keys.mk", f"keys.update({keys})")
 
     yield None
 
     #
     # Cleanup code
     #
-    site.delete_file("etc/check_mk/backup_keys.mk")
-    site.delete_file("etc/check_mk/backup.mk")
+    site_for_mkbackup_tests.delete_file("etc/check_mk/backup_keys.mk")
+    site_for_mkbackup_tests.delete_file("etc/check_mk/backup.mk")
 
-    site.ensure_running()
+    site_for_mkbackup_tests.ensure_running()
 
 
-def _execute_backup(site: Site, job_id: str = "testjob") -> str:
+def _execute_backup(site_for_mkbackup_tests: Site, job_id: str = "testjob") -> str:
     # Perform the backup
-    p = site.execute(
-        ["mkbackup", "backup", job_id],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        encoding="utf-8",
-    )
-    stdout, stderr = p.communicate()
-    assert stderr == ""
-    assert p.wait() == 0
-    assert "Backup completed" in stdout, "Invalid output: %r" % stdout
+    p = site_for_mkbackup_tests.run(["mkbackup", "backup", job_id])
+    assert "Backup completed" in p.stdout, "Invalid output: %r" % p.stdout
 
     # Check successful backup listing
-    p = site.execute(
-        ["mkbackup", "list", "test-target"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        encoding="utf-8",
-    )
-    stdout, stderr = p.communicate()
-    assert stderr == ""
-    assert p.wait() == 0
-    assert "%s-complete" % job_id.replace("-", "+") in stdout
+    p = site_for_mkbackup_tests.run(["mkbackup", "list", "test-target"])
+    assert "%s-complete" % job_id.replace("-", "+") in p.stdout
 
     if job_id == "testjob-encrypted":
-        assert "C0:4E:D4:4B:B4:AB:8B:3F:B4:09:32:CE:7D:A6:CF:76" in stdout
+        assert "C0:4E:D4:4B:B4:AB:8B:3F:B4:09:32:CE:7D:A6:CF:76" in p.stdout
 
     # Extract and return backup id
-    print(stdout)
     matches = re.search(
         r"Backup-ID:\s+(Check_MK-[a-zA-Z0-9_+\.-]+-%s-complete)" % job_id.replace("-", "\\+"),
-        stdout,
+        p.stdout,
     )
     assert matches is not None
     backup_id = matches.groups()[0]
@@ -205,26 +225,22 @@ def _execute_backup(site: Site, job_id: str = "testjob") -> str:
 
 
 def _execute_restore(
-    site: Site, backup_id: str, env: Mapping[str, str] | None = None, stop_on_failure: bool = False
+    site_for_mkbackup_tests: Site,
+    backup_id: str,
+    env: Mapping[str, str] | None = None,
+    stop_on_failure: bool = False,
 ) -> None:
-    p = site.execute(
-        ["mkbackup", "restore", "test-target", backup_id],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        env=env,
-        preserve_env=["MKBACKUP_PASSPHRASE"] if env and "MKBACKUP_PASSPHRASE" in env else None,
-        encoding="utf-8",
-    )
-    stdout, stderr = p.communicate()
-
     try:
-        assert stderr == ""
-        assert "Restore completed" in stdout, "Invalid output: %r" % stdout
-        assert p.wait() == 0
-    except Exception:
+        p = site_for_mkbackup_tests.run(
+            ["mkbackup", "restore", "test-target", backup_id],
+            env=env,
+            preserve_env=["MKBACKUP_PASSPHRASE"] if env and "MKBACKUP_PASSPHRASE" in env else None,
+        )
+    except subprocess.CalledProcessError as excp:
         if stop_on_failure:
-            pytest.exit("Stop test run after failed restore")
-        raise
+            pytest.exit(f"Stop test run after failed restore!\n{str(excp)}")
+        raise excp
+    assert "Restore completed" in p.stdout, "Invalid output: %r" % p.stdout
 
 
 # .
@@ -242,106 +258,88 @@ def _execute_restore(
 
 
 @pytest.mark.usefixtures("test_cfg")
-def test_mkbackup_help(site: Site) -> None:
-    p = site.execute(["mkbackup"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8")
-    stdout, stderr = p.communicate()
-    assert stderr == "ERROR: Missing operation mode\n"
-    assert stdout.startswith("Usage:")
-    assert p.wait() == 3
+def test_mkbackup_help(site_for_mkbackup_tests: Site) -> None:
+    p = site_for_mkbackup_tests.run(["mkbackup"], check=False)
+    assert p.stderr == "ERROR: Missing operation mode\n"
+    assert p.stdout.startswith("Usage:")
+    assert p.returncode == 3
 
 
 @pytest.mark.usefixtures("test_cfg")
-def test_mkbackup_list_targets(site: Site) -> None:
-    p = site.execute(
-        ["mkbackup", "targets"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8"
-    )
-    stdout, stderr = p.communicate()
-    assert stderr == ""
-    assert p.wait() == 0
-    assert "test-target" in stdout
-    assert "tärget" in stdout
+def test_mkbackup_list_targets(site_for_mkbackup_tests: Site) -> None:
+    p = site_for_mkbackup_tests.run(["mkbackup", "targets"], check=False)
+    assert p.stderr == ""
+    assert p.returncode == 0
+    assert "test-target" in p.stdout
+    assert "tärget" in p.stdout
 
 
 @pytest.mark.usefixtures("test_cfg")
-def test_mkbackup_list_backups(site: Site) -> None:
-    p = site.execute(
-        ["mkbackup", "list", "test-target"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        encoding="utf-8",
-    )
-    stdout, stderr = p.communicate()
-    assert stderr == ""
-    assert p.wait() == 0
-    assert "Job" in stdout
-    assert "Details" in stdout
+def test_mkbackup_list_backups(site_for_mkbackup_tests: Site) -> None:
+    p = site_for_mkbackup_tests.run(["mkbackup", "list", "test-target"])
+    assert p.stderr == ""
+    assert p.returncode == 0
+    assert "Details" in p.stdout
 
 
 @pytest.mark.usefixtures("test_cfg")
-def test_mkbackup_list_backups_invalid_target(site: Site) -> None:
-    p = site.execute(
-        ["mkbackup", "list", "xxx"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        encoding="utf-8",
-    )
-    stdout, stderr = p.communicate()
-    assert stderr.startswith("This backup target does not exist")
-    assert p.wait() == 3
-    assert stdout == ""
+def test_mkbackup_list_backups_invalid_target(site_for_mkbackup_tests: Site) -> None:
+    p = site_for_mkbackup_tests.run(["mkbackup", "list", "xxx"], check=False)
+    assert p.stderr.startswith("This backup target does not exist")
+    assert p.returncode == 3
+    assert p.stdout == ""
 
 
 @pytest.mark.usefixtures("test_cfg")
-def test_mkbackup_list_jobs(site: Site) -> None:
-    p = site.execute(
-        ["mkbackup", "jobs"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8"
-    )
-    stdout, stderr = p.communicate()
-    assert stderr == ""
-    assert p.wait() == 0
-    assert "testjob" in stdout
-    assert "Tästjob" in stdout
+def test_mkbackup_list_jobs(site_for_mkbackup_tests: Site) -> None:
+    p = site_for_mkbackup_tests.run(["mkbackup", "jobs"])
+    assert p.stderr == ""
+    assert p.returncode == 0
+    assert "testjob" in p.stdout
+    assert "Tästjob" in p.stdout
 
 
 @pytest.mark.usefixtures("test_cfg", "backup_lock_dir")
-def test_mkbackup_simple_backup(site: Site) -> None:
-    _execute_backup(site)
+def test_mkbackup_simple_backup(site_for_mkbackup_tests: Site) -> None:
+    _execute_backup(site_for_mkbackup_tests)
 
 
 @pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
-def test_mkbackup_simple_restore(site: Site) -> None:
-    backup_id = _execute_backup(site)
-    _execute_restore(site, backup_id)
+def test_mkbackup_simple_restore(site_for_mkbackup_tests: Site) -> None:
+    backup_id = _execute_backup(site_for_mkbackup_tests)
+    _execute_restore(site_for_mkbackup_tests, backup_id)
 
 
 @pytest.mark.usefixtures("test_cfg")
-def test_mkbackup_encrypted_backup(site: Site) -> None:
-    _execute_backup(site, job_id="testjob-encrypted")
+def test_mkbackup_encrypted_backup(site_for_mkbackup_tests: Site) -> None:
+    _execute_backup(site_for_mkbackup_tests, job_id="testjob-encrypted")
 
 
 @pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
-def test_mkbackup_encrypted_backup_and_restore(site: Site) -> None:
-    backup_id = _execute_backup(site, job_id="testjob-encrypted")
+def test_mkbackup_encrypted_backup_and_restore(site_for_mkbackup_tests: Site) -> None:
+    backup_id = _execute_backup(site_for_mkbackup_tests, job_id="testjob-encrypted")
 
     env = os.environ.copy()
     env["MKBACKUP_PASSPHRASE"] = "lala"
 
-    _execute_restore(site, backup_id, env)
+    _execute_restore(site_for_mkbackup_tests, backup_id, env)
 
 
 @pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
-def test_mkbackup_compressed_backup_and_restore(site: Site) -> None:
-    backup_id = _execute_backup(site, job_id="testjob-compressed")
-    _execute_restore(site, backup_id)
+def test_mkbackup_compressed_backup_and_restore(site_for_mkbackup_tests: Site) -> None:
+    backup_id = _execute_backup(site_for_mkbackup_tests, job_id="testjob-compressed")
+    _execute_restore(site_for_mkbackup_tests, backup_id)
 
 
 @pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
-def test_mkbackup_no_history_backup_and_restore(site: Site, backup_path: str) -> None:
-    backup_id = _execute_backup(site, job_id="testjob-no-history")
+def test_mkbackup_no_history_backup_and_restore(
+    site_for_mkbackup_tests: Site, backup_path: str
+) -> None:
+    backup_id = _execute_backup(site_for_mkbackup_tests, job_id="testjob-no-history")
 
-    tar_path = os.path.join(backup_path, backup_id, "site-%s.tar" % site.id)
+    tar_path = os.path.join(backup_path, backup_id, "site-%s.tar" % site_for_mkbackup_tests.id)
 
-    p = site.execute(["tar", "-tvf", tar_path], stdout=subprocess.PIPE)
+    p = site_for_mkbackup_tests.execute(["tar", "-tvf", tar_path], stdout=subprocess.PIPE)
     stdout = p.communicate()[0]
     assert p.returncode == 0
     member_names = [l.split(" ")[-1] for l in stdout.split("\n")]
@@ -354,16 +352,16 @@ def test_mkbackup_no_history_backup_and_restore(site: Site, backup_path: str) ->
     assert not rrds, rrds
     assert not logs, logs
 
-    _execute_restore(site, backup_id)
+    _execute_restore(site_for_mkbackup_tests, backup_id)
 
 
 @pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
-def test_mkbackup_locking(site: Site) -> None:
-    backup_id = _execute_backup(site, job_id="testjob-no-history")
-    with simulate_backup_lock(site):
-        with pytest.raises(AssertionError) as locking_issue:
-            _execute_backup(site)
-        assert "Failed to get the exclusive backup lock" in str(locking_issue)
-        with pytest.raises(AssertionError) as locking_issue:
-            _execute_restore(site, backup_id=backup_id, stop_on_failure=False)
-        assert "Failed to get the exclusive backup lock" in str(locking_issue)
+def test_mkbackup_locking(site_for_mkbackup_tests: Site) -> None:
+    backup_id = _execute_backup(site_for_mkbackup_tests, job_id="testjob-no-history")
+    with simulate_backup_lock(site_for_mkbackup_tests):
+        with pytest.raises(subprocess.CalledProcessError) as locking_issue:
+            _execute_backup(site_for_mkbackup_tests)
+        assert "Failed to get the exclusive backup lock" in str(locking_issue.value.stderr)
+        with pytest.raises(subprocess.CalledProcessError) as locking_issue:
+            _execute_restore(site_for_mkbackup_tests, backup_id=backup_id, stop_on_failure=False)
+        assert "Failed to get the exclusive backup lock" in str(locking_issue.value.stderr)

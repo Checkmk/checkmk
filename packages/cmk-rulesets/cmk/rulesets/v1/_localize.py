@@ -9,7 +9,7 @@ from __future__ import annotations
 import enum
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import assert_never, Self
+from typing import assert_never, override, Self
 
 
 class _Operation(enum.Enum):
@@ -63,6 +63,7 @@ class _Localizable:
     _arg: str | Self
     _modifier: tuple[_Operation, tuple[str | Self, ...]] | None = field(kw_only=True, default=None)
 
+    @override
     def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__}({self._arg!r})"
@@ -101,20 +102,20 @@ class _Localizable:
         return self.__class__(other, _modifier=(_Operation.MOD, (self,)))
 
 
-class Title(_Localizable):  # pylint: disable=too-few-public-methods
+class Title(_Localizable):
     """Create a localizable title which shortly describes an element"""
 
 
-class Label(_Localizable):  # pylint: disable=too-few-public-methods
+class Label(_Localizable):
     """Create a localizable label which acts an extension of the input field with additional
     information"""
 
 
-class Help(_Localizable):  # pylint: disable=too-few-public-methods
+class Help(_Localizable):
     """Create a localizable help text for more detailed descriptions which can contain more complex
     formatting"""
 
 
-class Message(_Localizable):  # pylint: disable=too-few-public-methods
+class Message(_Localizable):
     """Create a localizable message which notifies the user during runtime, e.g. to clarify why a
     validation has failed."""

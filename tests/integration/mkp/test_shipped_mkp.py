@@ -5,7 +5,7 @@
 
 import json
 import subprocess
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 
 import pytest
@@ -14,9 +14,7 @@ from tests.testlib.site import Site
 
 from tests.extension_compatibility.test_extension_compatibility import ImportErrors
 
-MKP_TO_TEST = {
-    "redfish",
-}
+MKP_TO_TEST: Iterable[str] = ()
 
 
 @pytest.mark.parametrize("package_name", MKP_TO_TEST)

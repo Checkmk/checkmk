@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import pytest
 from pylint.lint import PyLinter
@@ -32,15 +31,12 @@ COMPONENT_LIST = [c for c, _ in _COMPONENTS]
 def test_get_absolute_importee(
     root_name: str, modname: str, level: int, is_package: bool, abs_module: str
 ) -> None:
-    assert (
-        get_absolute_importee(
-            root_name=root_name,
-            modname=modname,
-            level=level,
-            is_package=is_package,
-        )
-        == abs_module
-    )
+    assert get_absolute_importee(
+        root_name=root_name,
+        modname=modname,
+        level=level,
+        is_package=is_package,
+    ) == ModuleName(abs_module)
 
 
 @pytest.mark.parametrize(
@@ -50,21 +46,12 @@ def test_get_absolute_importee(
         ("cmk/base", "cmk.base", "cmk.gui", False),
         # allow component internal imprt
         ("cmk/gui", "cmk.gui.foo", "cmk.gui.bar", True),
-        # utils not ok in agent based plugins
-        ("_nevermind_", "cmk.base.plugins.agent_based.utils.foo", "cmk.ccc.debug", False),
         # `checkers` in `utils` is wrong but anywhere else is OK
         ("cmk/checkers", "cmk.checkengine.snmp", "cmk.utils", True),
         ("cmk/base", "cmk.base.sources", "cmk.checkengine", True),
         # disallow import of `snmplib` in `utils`
         ("cmk/utils", "cmk.utils.foo", "cmk.snmplib", False),
         ("cmk/base", "cmk.base.data_sources", "cmk.snmplib", True),
-        # disallow import of one plug-in in another
-        (
-            "cmk/base/plugins/agent_based",
-            "cmk.base.plugins.agent_based.foo",
-            "cmk.base.plugins.agent_based.bar",
-            False,
-        ),
         # disallow import of `base` / `gui` in `automations`
         ("cmk/automations", "cmk.automations.x", "cmk.base.a", False),
         ("cmk/automations", "cmk.automations.y", "cmk.gui.b", False),

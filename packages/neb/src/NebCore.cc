@@ -101,7 +101,7 @@ NebCore::NebCore(std::map<unsigned long, std::unique_ptr<Downtime>> &downtimes,
     , state_file_created_{state_file_created}
     , _store(this) {
     for (::host *hst = host_list; hst != nullptr; hst = hst->next) {
-        ihosts_by_handle_[hst] = std::make_unique<NebHost>(*hst);
+        ihosts_by_handle_[hst] = std::make_unique<NebHost>(*hst, *this);
         if (const char *address = hst->address) {
             _hosts_by_designation[mk::unsafe_tolower(address)] = hst;
         }
@@ -112,25 +112,36 @@ NebCore::NebCore(std::map<unsigned long, std::unique_ptr<Downtime>> &downtimes,
     }
 
     for (::service *svc = service_list; svc != nullptr; svc = svc->next) {
-        iservices_by_handle_[svc] = std::make_unique<NebService>(*svc);
+        iservices_by_handle_[svc] = std::make_unique<NebService>(*svc, *this);
     }
 
     for (const auto *hg = hostgroup_list; hg != nullptr; hg = hg->next) {
-        ihostgroups_by_handle_[hg] = std::make_unique<NebHostGroup>(*hg);
+        ihostgroups_by_handle_[hg] = std::make_unique<NebHostGroup>(*hg, *this);
     }
 
     for (const auto *sg = servicegroup_list; sg != nullptr; sg = sg->next) {
-        iservicegroups_by_handle_[sg] = std::make_unique<NebServiceGroup>(*sg);
+        iservicegroups_by_handle_[sg] =
+            std::make_unique<NebServiceGroup>(*sg, *this);
     }
 
     for (const ::contact *ctc = contact_list; ctc != nullptr; ctc = ctc->next) {
-        icontacts_[ctc] = std::make_unique<NebContact>(*ctc);
+        icontacts_by_handle_[ctc] = std::make_unique<NebContact>(*ctc);
     }
 
     for (const ::contactgroup *cg = contactgroup_list; cg != nullptr;
          cg = cg->next) {
-        icontactgroups_[cg] = std::make_unique<NebContactGroup>(*cg);
+        icontactgroups_by_handle_[cg] = std::make_unique<NebContactGroup>(*cg);
     }
+}
+
+void NebCore::dump_infos() const {
+    Notice(_logger) << "created core abstraction with "
+                    << ihosts_by_handle_.size() << " hosts, "
+                    << ihostgroups_by_handle_.size() << " host groups, "
+                    << iservices_by_handle_.size() << " services, "
+                    << iservicegroups_by_handle_.size() << " service groups, "
+                    << icontacts_by_handle_.size() << " contacts, "
+                    << icontactgroups_by_handle_.size() << " contact groups";
 }
 
 const IHost *NebCore::ihost(const ::host *handle) const {
@@ -159,24 +170,22 @@ const IHostGroup *NebCore::find_hostgroup(const std::string &name) const {
 
 bool NebCore::all_of_hosts(
     const std::function<bool(const IHost &)> &pred) const {
-    return std::all_of(
-        ihosts_by_handle_.cbegin(), ihosts_by_handle_.cend(),
-        [pred](const auto &entry) { return pred(*entry.second); });
+    return std::ranges::all_of(ihosts_by_handle_, [pred](const auto &entry) {
+        return pred(*entry.second);
+    });
 }
 
 bool NebCore::all_of_services(
     const std::function<bool(const IService &)> &pred) const {
-    return std::all_of(
-        iservices_by_handle_.cbegin(), iservices_by_handle_.cend(),
-        [pred](const auto &entry) { return pred(*entry.second); });
+    return std::ranges::all_of(iservices_by_handle_, [pred](const auto &entry) {
+        return pred(*entry.second);
+    });
 }
 
-std::unique_ptr<const IHost> NebCore::getHostByDesignation(
+const IHost *NebCore::getHostByDesignation(
     const std::string &designation) const {
     auto it = _hosts_by_designation.find(mk::unsafe_tolower(designation));
-    return it == _hosts_by_designation.end()
-               ? nullptr
-               : std::make_unique<NebHost>(*it->second);
+    return it == _hosts_by_designation.end() ? nullptr : ihost(it->second);
 }
 
 const IService *NebCore::iservice(const ::service *handle) const {
@@ -203,12 +212,17 @@ const IService *NebCore::find_service(
     return handle == nullptr ? nullptr : iservice(handle);
 }
 
+const IContactGroup *NebCore::icontactgroup(
+    const ::contactgroup *handle) const {
+    auto it = icontactgroups_by_handle_.find(handle);
+    return it == icontactgroups_by_handle_.end() ? nullptr : it->second.get();
+}
+
 const IContactGroup *NebCore::find_contactgroup(const std::string &name) const {
-    auto it = icontactgroups_.find(
-        // Older Nagios headers are not const-correct... :-P
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
-        ::find_contactgroup(const_cast<char *>(name.c_str())));
-    return it == icontactgroups_.end() ? nullptr : it->second.get();
+    // Older Nagios headers are not const-correct... :-P
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+    const auto *handle = ::find_contactgroup(const_cast<char *>(name.c_str()));
+    return handle == nullptr ? nullptr : icontactgroup(handle);
 }
 
 const IServiceGroup *NebCore::find_servicegroup(const std::string &name) const {
@@ -219,16 +233,17 @@ const IServiceGroup *NebCore::find_servicegroup(const std::string &name) const {
 }
 
 const IContact *NebCore::find_contact(const std::string &name) const {
-    // Older Nagios headers are not const-correct... :-P
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
-    auto it = icontacts_.find(::find_contact(const_cast<char *>(name.c_str())));
-    return it == icontacts_.end() ? nullptr : it->second.get();
+    auto it = icontacts_by_handle_.find(
+        // Older Nagios headers are not const-correct... :-P
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+        ::find_contact(const_cast<char *>(name.c_str())));
+    return it == icontacts_by_handle_.end() ? nullptr : it->second.get();
 }
 
 bool NebCore::all_of_contacts(
     const std::function<bool(const IContact &)> &pred) const {
-    return std::all_of(
-        icontacts_.cbegin(), icontacts_.cend(),
+    return std::ranges::all_of(
+        icontacts_by_handle_,
         [&pred](const auto &entry) { return pred(*entry.second); });
 }
 
@@ -281,7 +296,8 @@ std::vector<std::unique_ptr<const IComment>> NebCore::comments_unlocked(
     std::vector<std::unique_ptr<const IComment>> result;
     for (const auto &[id, co] : _comments) {
         if (co->_host == &h && co->_service == nullptr) {
-            result.emplace_back(std::make_unique<NebComment>(*co));
+            result.emplace_back(
+                std::make_unique<NebComment>(*co, hst, nullptr));
         }
     }
     return result;
@@ -300,7 +316,8 @@ std::vector<std::unique_ptr<const IComment>> NebCore::comments_unlocked(
     std::vector<std::unique_ptr<const IComment>> result;
     for (const auto &[id, co] : _comments) {
         if (co->_host == s.host_ptr && co->_service == &s) {
-            result.emplace_back(std::make_unique<NebComment>(*co));
+            result.emplace_back(
+                std::make_unique<NebComment>(*co, svc.host(), &svc));
         }
     }
     return result;
@@ -315,10 +332,10 @@ std::vector<std::unique_ptr<const IComment>> NebCore::comments(
 bool NebCore::all_of_comments(
     const std::function<bool(const IComment &)> &pred) const {
     // TODO(sp): Do we need a mutex here?
-    return std::all_of(_comments.cbegin(), _comments.cend(),
-                       [&pred](const auto &comment) {
-                           return pred(NebComment{*comment.second});
-                       });
+    return std::ranges::all_of(_comments, [this, &pred](const auto &comment) {
+        return pred(NebComment{*comment.second, *ihost(comment.second->_host),
+                               iservice(comment.second->_service)});
+    });
 }
 
 std::vector<std::unique_ptr<const IDowntime>> NebCore::downtimes_unlocked(
@@ -328,7 +345,8 @@ std::vector<std::unique_ptr<const IDowntime>> NebCore::downtimes_unlocked(
     std::vector<std::unique_ptr<const IDowntime>> result;
     for (const auto &[id, dt] : _downtimes) {
         if (dt->_host == &h && dt->_service == nullptr) {
-            result.emplace_back(std::make_unique<NebDowntime>(*dt));
+            result.emplace_back(
+                std::make_unique<NebDowntime>(*dt, hst, nullptr));
         }
     }
     return result;
@@ -347,7 +365,8 @@ std::vector<std::unique_ptr<const IDowntime>> NebCore::downtimes_unlocked(
     std::vector<std::unique_ptr<const IDowntime>> result;
     for (const auto &[id, dt] : _downtimes) {
         if (dt->_host == s.host_ptr && dt->_service == &s) {
-            result.emplace_back(std::make_unique<NebDowntime>(*dt));
+            result.emplace_back(
+                std::make_unique<NebDowntime>(*dt, svc.host(), &svc));
         }
     }
     return result;
@@ -362,10 +381,11 @@ std::vector<std::unique_ptr<const IDowntime>> NebCore::downtimes(
 bool NebCore::all_of_downtimes(
     // TODO(sp): Do we need a mutex here?
     const std::function<bool(const IDowntime &)> &pred) const {
-    return std::all_of(_downtimes.cbegin(), _downtimes.cend(),
-                       [&pred](const auto &downtime) {
-                           return pred(NebDowntime{*downtime.second});
-                       });
+    return std::ranges::all_of(_downtimes, [this, &pred](const auto &downtime) {
+        return pred(NebDowntime{*downtime.second,
+                                *ihost(downtime.second->_host),
+                                iservice(downtime.second->_service)});
+    });
 }
 
 bool NebCore::all_of_timeperiods(
@@ -381,25 +401,23 @@ bool NebCore::all_of_timeperiods(
 
 bool NebCore::all_of_contact_groups(
     const std::function<bool(const IContactGroup &)> &pred) const {
-    return std::all_of(
-        icontactgroups_.cbegin(), icontactgroups_.cend(),
+    return std::ranges::all_of(
+        icontactgroups_by_handle_,
         [&pred](const auto &entry) { return pred(*entry.second); });
 }
 
 bool NebCore::all_of_host_groups(
     const std::function<bool(const IHostGroup &)> &pred) const {
-    return std::all_of(
-        ihostgroups_by_handle_.cbegin(), ihostgroups_by_handle_.cend(),
+    return std::ranges::all_of(
+        ihostgroups_by_handle_,
         [pred](const auto &entry) { return pred(*entry.second); });
 }
 
 bool NebCore::all_of_service_groups(
     const std::function<bool(const IServiceGroup &)> &pred) const {
-    for (const auto *sg = servicegroup_list; sg != nullptr; sg = sg->next) {
-        if (!pred(NebServiceGroup{*sg})) {
-            return false;
-        }
-    }
+    return std::ranges::all_of(
+        iservicegroups_by_handle_,
+        [pred](const auto &entry) { return pred(*entry.second); });
     return true;
 }
 
@@ -527,9 +545,8 @@ std::vector<std::string> toMetrics(const std::string &host_name,
     std::vector<std::string> metrics;
     auto names = scan_rrd(paths.rrd_multiple_directory() / host_name,
                           description, logger);
-    std::transform(std::begin(names), std::end(names),
-                   std::back_inserter(metrics),
-                   [](auto &&m) { return m.string(); });
+    std::ranges::transform(names, std::back_inserter(metrics),
+                           [](auto &&m) { return m.string(); });
     return metrics;
 }
 }  // namespace
@@ -614,10 +631,10 @@ MetricLocation NebCore::metricLocation(const std::string &host_name,
                                        const std::string &service_description,
                                        const Metric::Name &var) const {
     return MetricLocation{
-        paths()->rrd_multiple_directory() / host_name /
-            pnp_cleanup(service_description + "_" +
-                        Metric::MangledName(var).string() + ".rrd"),
-        "1"};
+        .path_ = paths()->rrd_multiple_directory() / host_name /
+                 pnp_cleanup(service_description + "_" +
+                             Metric::MangledName(var).string() + ".rrd"),
+        .data_source_name_ = "1"};
 }
 
 bool NebCore::pnp4nagiosEnabled() const {

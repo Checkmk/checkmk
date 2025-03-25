@@ -5,6 +5,7 @@
 
 if "%1" == "" powershell Write-Host "Invalid binary to sign" -ForegroundColor Red && goto usage
 
+
 set ext=raw
 set pin=469673
 set cert=7b97b15df65358623576584b7aafbe04d6668a0e
@@ -17,5 +18,5 @@ exit /b 0
 powershell Write-Host "Usage:" -ForegroundColor DarkGreen
 powershell Write-Host "sign_code.cmd file" -ForegroundColor DarkGreen
 powershell Write-Host "Example:" -ForegroundColor DarkGreen
-powershell Write-Host "       sign_code.cmd check_mk_agent.exe check_mk_agent.exe.hash" -ForegroundColor DarkGreen
+powershell Write-Host "       sign_code.cmd check_mk_agent.exe" -ForegroundColor DarkGreen
 :exit

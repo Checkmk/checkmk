@@ -4,7 +4,8 @@ catalog: cloud/gcp
 license: GPLv2
 distribution: check_mk
 description:
- This check monitors cost of gcp projects.
+ This check monitors cost of gcp projects. It shows the accumulated costs of
+ the current month. At the start of each month, the check will thus return 0.
 
  To make this check work you have to configure the related
  special agent {Google Cloud Platform (GCP)}.

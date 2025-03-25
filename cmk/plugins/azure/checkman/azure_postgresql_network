@@ -11,5 +11,5 @@ item:
  The name of the resource.
 
 discovery:
- One service is created for each database if any of required metrics
+ One service is created for each database if any of the required metrics
  (total_network_bytes_ingress, total_network_bytes_egress) are given.

@@ -5,9 +5,12 @@
 
 import abc
 import time
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from fnmatch import fnmatch
 from pathlib import Path
+from typing import Literal
+
+import cmk.ccc.version as cmk_version
 
 import cmk.utils.paths
 from cmk.utils import man_pages
@@ -16,16 +19,22 @@ from cmk.utils.render import approx_age
 from cmk.utils.statename import short_host_state_name, short_service_state_name
 
 from cmk.gui import sites
-from cmk.gui.config import Config
+from cmk.gui.config import active_config, Config
 from cmk.gui.graphing._color import render_color_icon
-from cmk.gui.graphing._metrics import get_metric_spec, registered_metrics
-from cmk.gui.graphing._type_defs import TranslatedMetric
-from cmk.gui.graphing._utils import parse_perf_data, translate_metrics
+from cmk.gui.graphing._from_api import metrics_from_api, RegisteredMetric
+from cmk.gui.graphing._metrics import get_metric_spec, registered_metric_ids_and_titles
+from cmk.gui.graphing._translated_metrics import (
+    parse_perf_data,
+    translate_metrics,
+    TranslatedMetric,
+)
+from cmk.gui.graphing._unit import user_specific_unit
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.painter_options import (
     paint_age,
     paint_age_or_never,
@@ -34,6 +43,7 @@ from cmk.gui.painter_options import (
     PainterOptions,
 )
 from cmk.gui.site_config import get_site_config
+from cmk.gui.theme import Theme
 from cmk.gui.type_defs import (
     ColumnName,
     HTTPVariables,
@@ -46,7 +56,6 @@ from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
-from cmk.gui.utils.theme import Theme
 from cmk.gui.valuespec import (
     Checkbox,
     DateFormat,
@@ -70,11 +79,10 @@ from cmk.gui.view_utils import (
 )
 from cmk.gui.visual_link import render_link_to_view
 
-import cmk.ccc.version as cmk_version
 from cmk.discover_plugins import discover_families, PluginGroup
 
 from ..v1.helpers import get_perfdata_nth_value, is_stale, paint_stalified
-from .base import Cell, Painter, PainterRegistry
+from .base import Cell, Painter
 from .helpers import (
     format_labels_for_csv_export,
     get_label_sources,
@@ -85,6 +93,7 @@ from .helpers import (
     RenderLink,
     replace_action_url_macros,
 )
+from .registry import PainterRegistry
 
 
 def register(
@@ -403,13 +412,17 @@ def paint_custom_var(what: str, key: CSSClass, row: Row, choices: list | None = 
     return key, ""
 
 
-def _paint_future_time(  # pylint: disable=redefined-outer-name
+def _paint_future_time(
     timestamp: int,
     *,
     request: Request,
     painter_options: PainterOptions,
 ) -> CellSpec:
-    if timestamp <= 0:
+    # NOTE: Nagios uses 0 to represent "never again" while the CMC uses a time far into the future
+    # (year 2262 or 0x7fffffffffffffff nanoseconds after 1970, but we leave some headroom below).
+    # Although this is inconsistent, the latter is arguably more correct. In any case, the usage of
+    # magic numbers is a quite a hack...
+    if not (0 < timestamp < 0x200000000):
         return "", "-"
     return paint_age(
         timestamp,
@@ -732,7 +745,11 @@ class PainterSvcMetrics(Painter):
         perf_data, check_command = parse_perf_data(
             row["service_perf_data"], row["service_check_command"], config=self.config
         )
-        translated_metrics = translate_metrics(perf_data, check_command)
+        translated_metrics = translate_metrics(
+            perf_data,
+            check_command,
+            metrics_from_api,
+        )
 
         if row["service_perf_data"] and not translated_metrics:
             return "", _("Failed to parse performance data string: %s") % row["service_perf_data"]
@@ -766,7 +783,14 @@ class PainterSvcMetrics(Painter):
             html.open_tr()
             html.td(render_color_icon(translated_metric.color), class_="color")
             html.td(f"{translated_metric.title}{optional_metric_id}:")
-            html.td(translated_metric.unit_info.render(translated_metric.value), class_="value")
+            html.td(
+                user_specific_unit(
+                    translated_metric.unit_spec,
+                    user,
+                    active_config,
+                ).formatter.render(translated_metric.value),
+                class_="value",
+            )
             if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE:
                 html.td(
                     html.render_popup_trigger(
@@ -897,7 +921,7 @@ class PainterSvcNotesURL(Painter):
         return "svc_notes_url"
 
     def title(self, cell: Cell) -> str:
-        return _("Notes URL for Services")
+        return _("Notes (URL) for Services")
 
     def short_title(self, cell: Cell) -> str:
         return _("Notes URL")
@@ -1033,7 +1057,7 @@ class PainterSvcStateAge(Painter):
         )
 
 
-def _paint_checked(  # pylint: disable=redefined-outer-name
+def _paint_checked(
     what: str, row: Row, *, config: Config, request: Request, painter_options: PainterOptions
 ) -> CellSpec:
     age = row[what + "_last_check"]
@@ -1061,7 +1085,7 @@ class PainterSvcCheckAge(Painter):
         return "svc_check_age"
 
     def title(self, cell: Cell) -> str:
-        return _("The time since the last check of the service")
+        return _("Time since the last check of the service")
 
     def short_title(self, cell: Cell) -> str:
         return _("Checked")
@@ -1818,6 +1842,21 @@ def _paint_custom_vars(what: str, row: Row, blacklist: list | None = None) -> Ce
     return "", HTMLWriter.render_table(HTML.empty().join(rows))
 
 
+def _export_custom_vars(what: str, row: Row, blacklist: list | None = None) -> str:
+    if blacklist is None:
+        blacklist = []
+
+    items = sorted(row[what + "_custom_variables"].items())
+    rows = []
+    for varname, value in items:
+        if varname not in blacklist:
+            if value:
+                rows.append(f"{varname}: {value}")
+            else:
+                rows.append(f"{varname}")
+    return ", ".join(rows)
+
+
 class PainterServiceCustomVariables(Painter):
     @property
     def ident(self) -> str:
@@ -1835,6 +1874,12 @@ class PainterServiceCustomVariables(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_custom_vars("service", row)
+
+    def export_for_csv(self, row: Row, cell: Cell) -> str:
+        return _export_custom_vars("service", row)
+
+    def export_for_json(self, row: Row, cell: Cell) -> str:
+        return _export_custom_vars("service", row)
 
 
 class ABCPainterCustomVariable(Painter, abc.ABC):
@@ -2107,7 +2152,7 @@ class PainterHostNotesURL(Painter):
         return "host_notes_url"
 
     def title(self, cell: Cell) -> str:
-        return _("Notes URL for Hosts")
+        return _("Notes (URL) for Hosts")
 
     def short_title(self, cell: Cell) -> str:
         return _("Notes URL")
@@ -2132,7 +2177,7 @@ class PainterHostStateAge(Painter):
         return "host_state_age"
 
     def title(self, cell: Cell) -> str:
-        return _("The age of the current host state")
+        return _("Age of the current host state")
 
     def short_title(self, cell: Cell) -> str:
         return _("Age")
@@ -2161,7 +2206,7 @@ class PainterHostCheckAge(Painter):
         return "host_check_age"
 
     def title(self, cell: Cell) -> str:
-        return _("The time since the last check of the host")
+        return _("Time since the last check of the host")
 
     def short_title(self, cell: Cell) -> str:
         return _("Checked")
@@ -3367,6 +3412,17 @@ class PainterHostIsStale(Painter):
 
 
 class PainterHostCustomVariables(Painter):
+    BLACKLIST: list[str] = [
+        "FILENAME",
+        "TAGS",
+        "ADDRESS_4",
+        "ADDRESS_6",
+        "ADDRESS_FAMILY",
+        "NODEIPS",
+        "NODEIPS_4",
+        "NODEIPS_6",
+    ]
+
     @property
     def ident(self) -> str:
         return "host_custom_vars"
@@ -3382,20 +3438,13 @@ class PainterHostCustomVariables(Painter):
         return tuple(row["host_custom_variables"].items())
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_custom_vars(
-            "host",
-            row,
-            [
-                "FILENAME",
-                "TAGS",
-                "ADDRESS_4",
-                "ADDRESS_6",
-                "ADDRESS_FAMILY",
-                "NODEIPS",
-                "NODEIPS_4",
-                "NODEIPS_6",
-            ],
-        )
+        return _paint_custom_vars("host", row, self.BLACKLIST)
+
+    def export_for_csv(self, row: Row, cell: Cell) -> str:
+        return _export_custom_vars("host", row, self.BLACKLIST)
+
+    def export_for_json(self, row: Row, cell: Cell) -> str:
+        return _export_custom_vars("host", row, self.BLACKLIST)
 
 
 def _paint_discovery_output(
@@ -4281,30 +4330,6 @@ class PainterDowntimeOrigin(Painter):
         return (None, row["downtime_origin"] == 1 and _("configuration") or _("command"))
 
 
-class PainterDowntimeRecurring(Painter):
-    # Poor man's composition.  CRE and non-CRE have different renderers.
-    renderer: Callable[[Row, Cell], CellSpec] | None = None
-
-    @property
-    def ident(self) -> str:
-        return "downtime_recurring"
-
-    def title(self, cell: Cell) -> str:
-        return _("Downtime recurring interval")
-
-    def short_title(self, cell: Cell) -> str:
-        return _("Recurring")
-
-    @property
-    def columns(self) -> Sequence[ColumnName]:
-        return ["downtime_recurring"]
-
-    def render(self, row: Row, cell: Cell) -> CellSpec:
-        renderer = type(self).renderer
-        assert renderer is not None
-        return renderer(row, cell)  # pylint: disable=not-callable
-
-
 class PainterDowntimeWhat(Painter):
     @property
     def ident(self) -> str:
@@ -4337,10 +4362,10 @@ class PainterDowntimeType(Painter):
 
     @property
     def columns(self) -> Sequence[ColumnName]:
-        return ["downtime_type"]
+        return ["is_pending"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, row["downtime_type"] == 0 and _("active") or _("pending"))
+        return (None, row["is_pending"] == 0 and _("active") or _("pending"))
 
 
 class PainterDowntimeEntryTime(Painter):
@@ -4511,12 +4536,12 @@ class PainterLogDetailsHistory(Painter):
         # See werk #15523.
         is_ps_check = row["service_check_command"] == "check_mk-ps"
         # We can only display tables if they are complete.
-        displayable = long_output.endswith("</table>")
+        non_displayable_html = "<table>" in long_output and not long_output.endswith("</table>")
         # Only hand over relevant row to ensure correct escaping options in
         # case of ps_check. Otherwise "ESCAPE_PLUGIN_OUTPUT" would be used in
         # format_plugin_output()
         row_to_format = (
-            {"log_long_plugin_output": long_output} if is_ps_check and not displayable else row
+            {"log_long_plugin_output": long_output} if is_ps_check and non_displayable_html else row
         )
         content = format_plugin_output(
             long_output,
@@ -4532,7 +4557,7 @@ class PainterLogDetailsHistory(Painter):
         # escaping
         custom_vars = row.get("service_custom_variables", row.get("host_custom_variables", {}))
         escape_plugin_output = custom_vars.get("ESCAPE_PLUGIN_OUTPUT", "1") == "0"
-        if long_output_len > max_len and escape_plugin_output and not displayable:
+        if long_output_len > max_len and escape_plugin_output and non_displayable_html:
             setting_link_tag = self.url_renderer.link_from_filename(
                 "wato.py",
                 html_text="(%s)" % _("Increase limit for future entries"),
@@ -4587,12 +4612,12 @@ class PainterLogPluginOutput(Painter):
         return ["log_plugin_output", "log_type", "log_state_type", "log_comment"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        output = row["log_plugin_output"]
-        comment = row["log_comment"]
-        if output:
+        if output := self._decode_item(row, column="log_plugin_output"):
             return "", format_plugin_output(output, request=self.request, row=row)
-        if comment:
+
+        if comment := self._decode_item(row, column="log_comment"):
             return "", comment
+
         log_type = row["log_type"]
         lst = row["log_state_type"]
         if "FLAPPING" in log_type:
@@ -4603,6 +4628,12 @@ class PainterLogPluginOutput(Painter):
         if lst:
             return "", (lst + " - " + log_type)
         return "", ""
+
+    @staticmethod
+    def _decode_item(row: Row, *, column: Literal["log_plugin_output", "log_comment"]) -> str:
+        """Decode escaped characters coming from Nagios history monitoring."""
+        # TODO: decode all escaped characters coming from monitoring history.
+        return row.get(column, "").replace("%3B", ";")
 
 
 class PainterLogWhat(Painter):
@@ -4780,7 +4811,7 @@ class PainterLogIcon(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["log_type", "log_state", "log_state_type", "log_command_name"]
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:  # pylint: disable=too-many-branches
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         img = None
         log_type = row["log_type"]
         log_state = row["log_state"]
@@ -5410,20 +5441,24 @@ class AbstractColumnSpecificMetric(Painter):
         raise NotImplementedError()
 
     def title(self, cell: Cell) -> str:
-        return self._title_with_parameters(cell.painter_parameters())
+        return self._title_with_parameters(cell.painter_parameters(), metrics_from_api)
 
     def short_title(self, cell: Cell) -> str:
-        return self._title_with_parameters(cell.painter_parameters())
+        return self._title_with_parameters(cell.painter_parameters(), metrics_from_api)
 
     def list_title(self, cell: Cell) -> str:
         return _("Metric")
 
-    def _title_with_parameters(self, parameters: PainterParameters | None) -> str:
+    def _title_with_parameters(
+        self,
+        parameters: PainterParameters | None,
+        registered_metrics: Mapping[str, RegisteredMetric],
+    ) -> str:
         try:
             if not parameters:
                 # Used in Edit-View
                 return _("Show single metric")
-            return get_metric_spec(parameters["metric"]).title
+            return get_metric_spec(parameters["metric"], registered_metrics).title
         except KeyError:
             return _("Metric not found")
 
@@ -5452,7 +5487,10 @@ class AbstractColumnSpecificMetric(Painter):
     @request_memoize()
     def _metric_choices(cls) -> list[tuple[str, str]]:
         return sorted(
-            ((metric_id, metric_title) for metric_id, metric_title in registered_metrics()),
+            (
+                (metric_id, metric_title)
+                for metric_id, metric_title in registered_metric_ids_and_titles(metrics_from_api)
+            ),
             key=lambda x: x[1],
         )
 
@@ -5466,13 +5504,25 @@ class AbstractColumnSpecificMetric(Painter):
         perf_data, check_command = parse_perf_data(
             perf_data_entries, check_command, config=self.config
         )
-        translated_metrics = translate_metrics(perf_data, check_command)
+        translated_metrics = translate_metrics(
+            perf_data,
+            check_command,
+            metrics_from_api,
+        )
 
         if show_metric not in translated_metrics:
             return "", ""
 
         translated_metric = translated_metrics[show_metric]
-        return "", translated_metric.unit_info.render(translated_metric.value)
+
+        return (
+            "",
+            user_specific_unit(
+                translated_metric.unit_spec,
+                user,
+                active_config,
+            ).formatter.render(translated_metric.value),
+        )
 
 
 class PainterHostSpecificMetric(AbstractColumnSpecificMetric):
@@ -5599,7 +5649,7 @@ class PainterHostKubernetesDeployment(_PainterHostKubernetes):
     _constraints = ["deployment", "namespace", "cluster-host", "cluster"]
 
     def title(self, cell: Cell) -> str:
-        return _("Kubernetes Deployment")
+        return _("Kubernetes deployment")
 
     def short_title(self, cell: Cell) -> str:
         return _("Deployment")

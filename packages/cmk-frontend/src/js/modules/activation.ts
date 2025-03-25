@@ -43,7 +43,7 @@ export function activate_changes(mode: "selected" | "site", site_id: string) {
 
     if (mode == "selected") {
         const checkboxes = document.getElementsByClassName(
-            "site_checkbox"
+            "site_checkbox",
         ) as HTMLCollectionOf<HTMLInputElement>;
         for (let i = 0; i < checkboxes.length; i++) {
             if (checkboxes[i].checked) {
@@ -61,20 +61,20 @@ export function activate_changes(mode: "selected" | "site", site_id: string) {
     }
 
     const activate_until = document.getElementById(
-        "activate_until"
+        "activate_until",
     ) as HTMLInputElement | null;
     if (!activate_until) return;
 
     let comment = "";
     const comment_field = document.getElementsByName(
-        "activate_p_comment"
+        "activate_p_comment",
     )[0] as HTMLInputElement | null;
     if (comment_field && comment_field.value != "")
         comment = comment_field.value;
 
     let activate_foreign: 0 | 1 = 0;
     const foreign_checkbox = document.getElementsByName(
-        "activate_p_foreign"
+        "activate_p_foreign",
     )[0] as HTMLInputElement | null;
     if (foreign_checkbox && foreign_checkbox.checked) activate_foreign = 1;
 
@@ -86,7 +86,7 @@ function start_activation(
     sites: string[],
     activate_until: string,
     comment: string,
-    activate_foreign: 0 | 1
+    activate_foreign: 0 | 1,
 ) {
     show_info("Initializing activation...");
 
@@ -138,10 +138,10 @@ function handle_start_activation(_unused: unknown, response_json: string) {
 function handle_start_activation_error(
     _unused: unknown,
     status_code: number,
-    error_msg: string
+    error_msg: string,
 ) {
     show_error(
-        "Failed to start activation [" + status_code + "]: " + error_msg
+        "Failed to start activation [" + status_code + "]: " + error_msg,
     );
 }
 
@@ -151,20 +151,20 @@ function lock_activation_controls(lock: boolean) {
     elements = elements.concat(
         Array.prototype.slice.call(
             document.getElementsByName("activate_p_comment"),
-            0
-        )
+            0,
+        ),
     );
     elements = elements.concat(
         Array.prototype.slice.call(
             document.getElementsByClassName("site_checkbox"),
-            0
-        )
+            0,
+        ),
     );
     elements = elements.concat(
         Array.prototype.slice.call(
             document.getElementsByClassName("activate_site"),
-            0
-        )
+            0,
+        ),
     );
 
     for (let i = 0; i < elements.length; i++) {
@@ -198,7 +198,7 @@ function is_activation_progress_finished(response: {
 function initialize_site_progresses(sites: string[]) {
     for (const site_id of sites) {
         const progress = document.getElementById(
-            "site_" + site_id + "_progress"
+            "site_" + site_id + "_progress",
         );
         // Temporarily disable the transition for the reset
         if (!progress) throw new Error("progress shouldn't be null!");
@@ -210,7 +210,7 @@ function initialize_site_progresses(sites: string[]) {
 
 function update_activation_state(
     _unused_handler_data: unknown,
-    response: {sites: Record<string, any>}
+    response: {sites: Record<string, any>},
 ) {
     for (const site_id in response["sites"]) {
         // skip loop if the property is from prototype
@@ -239,7 +239,7 @@ function update_activation_state(
 export function update_site_activation_state(site_state: Record<string, any>) {
     // Show status text (overlay text on the progress bar)
     const msg = document.getElementById(
-        "site_" + site_state["_site_id"] + "_status"
+        "site_" + site_state["_site_id"] + "_status",
     );
     if (!msg) throw new Error("msg shouldn't be null!");
     /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
@@ -256,7 +256,7 @@ export function update_site_activation_state(site_state: Record<string, any>) {
     // Show status details
     if (site_state["_status_details"]) {
         const details = document.getElementById(
-            "site_" + site_state["_site_id"] + "_details"
+            "site_" + site_state["_site_id"] + "_details",
         );
         if (!details) throw new Error("details shouldn't be null!");
         let detail_content = site_state["_status_details"];
@@ -283,7 +283,7 @@ function update_site_progress(site_state: Record<string, any>) {
     const max_width = 160;
 
     const progress = document.getElementById(
-        "site_" + site_state["_site_id"] + "_progress"
+        "site_" + site_state["_site_id"] + "_progress",
     );
     if (!progress) throw new Error("progress shouldn't be null!");
 

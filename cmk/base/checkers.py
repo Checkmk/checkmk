@@ -13,11 +13,13 @@ import logging
 import time
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from functools import partial
 from pathlib import Path
 from typing import Final, Literal
 
 import livestatus
+
+import cmk.ccc.debug
+from cmk.ccc.exceptions import MKTimeout, OnError
 
 import cmk.utils.paths
 import cmk.utils.resulttype as result
@@ -29,9 +31,8 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.log import console
 from cmk.utils.misc import pnp_cleanup
-from cmk.utils.prediction import make_updated_predictions, PredictionStore
+from cmk.utils.prediction import make_updated_predictions, MetricRecord, PredictionStore
 from cmk.utils.rulesets import RuleSetName
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RuleSpec
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.timeperiod import timeperiod_active
@@ -56,9 +57,14 @@ from cmk.checkengine.checkresults import (
     SubmittableServiceCheckResult,
     UnsubmittableServiceCheckResult,
 )
-from cmk.checkengine.discovery import AutocheckEntry, DiscoveryPlugin, HostLabelPlugin
+from cmk.checkengine.discovery import (
+    AutocheckEntry,
+    ConfigGetter,
+    DiscoveryPlugin,
+    get_plugin_parameters,
+    HostLabelPlugin,
+)
 from cmk.checkengine.fetcher import HostKey, SourceInfo, SourceType
-from cmk.checkengine.inventory import InventoryPlugin, InventoryPluginName
 from cmk.checkengine.parameters import Parameters
 from cmk.checkengine.parser import HostSections, NO_SELECTION, parse_raw_data, SectionNameCollection
 from cmk.checkengine.sectionparser import ParsedSectionName, Provider, ResolvedResult, SectionPlugin
@@ -69,21 +75,21 @@ from cmk.checkengine.sectionparserutils import (
 )
 from cmk.checkengine.submitters import ServiceState
 from cmk.checkengine.summarize import summarize, SummaryConfig
+from cmk.checkengine.value_store import ValueStoreManager
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.api.agent_based.register._config as _api
-from cmk.base.api.agent_based import cluster_mode, value_store
+from cmk.base.api.agent_based import cluster_mode
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
+from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin as AgentSectionPluginAPI
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin as CheckPluginAPI
-from cmk.base.api.agent_based.value_store import ValueStoreManager
+from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin as SNMPSectionPluginAPI
 from cmk.base.config import (
     ConfigCache,
-    get_plugin_parameters,
     IPLookup,
     lookup_ip_address,
     lookup_mgmt_board_ip_address,
 )
 from cmk.base.errorhandling import create_check_crash_dump
-from cmk.base.server_side_calls import SpecialAgentCommandLine
 from cmk.base.sources import (
     FetcherFactory,
     make_parser,
@@ -94,16 +100,14 @@ from cmk.base.sources import (
     SpecialAgentSource,
 )
 
-import cmk.ccc.debug
 from cmk.agent_based.prediction_backend import (
     InjectedParameters,
     lookup_predictive_levels,
     PredictionParameters,
 )
-from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric
+from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric, State
 from cmk.agent_based.v1 import Result as CheckFunctionResult
-from cmk.agent_based.v1 import State
-from cmk.ccc.exceptions import MKTimeout, OnError
+from cmk.server_side_calls_backend import SpecialAgentCommandLine
 
 __all__ = [
     "CheckPluginMapper",
@@ -113,10 +117,11 @@ __all__ = [
     "DiscoveryPluginMapper",
     "get_aggregated_result",
     "HostLabelPluginMapper",
-    "InventoryPluginMapper",
     "SectionPluginMapper",
     "SpecialAgentFetcher",
 ]
+
+type _Labels = Mapping[str, str]
 
 
 def _fetch_all(
@@ -162,14 +167,12 @@ class CMKParser:
         self,
         factory: ParserFactory,
         *,
-        checking_sections: Callable[[HostName], Iterable[SectionName]],
         selected_sections: SectionNameCollection,
         keep_outdated: bool,
         logger: logging.Logger,
     ) -> None:
         self.factory: Final = factory
         self.selected_sections: Final = selected_sections
-        self.checking_sections: Final = checking_sections
         self.keep_outdated: Final = keep_outdated
         self.logger: Final = logger
 
@@ -194,7 +197,6 @@ class CMKParser:
                     self.factory,
                     source.hostname,
                     source.fetcher_type,
-                    checking_sections=self.checking_sections(source.hostname),
                     persisted_section_dir=make_persisted_section_dir(
                         source.hostname,
                         fetcher_type=source.fetcher_type,
@@ -248,14 +250,14 @@ def _summarize_host_sections(
     return ActiveCheckResult.from_subresults(
         *(
             ActiveCheckResult(
-                (
+                state=(
                     s.state
                     if (s.state == 0 or override_non_ok_state is None)
                     else override_non_ok_state
                 ),
-                f"[{source.ident}] {s.summary}" if idx == 0 else s.summary,
-                s.details,
-                s.metrics,
+                summary=f"[{source.ident}] {s.summary}" if idx == 0 else s.summary,
+                details=s.details,
+                metrics=s.metrics,
             )
             for idx, s in enumerate(
                 summarize(
@@ -285,7 +287,9 @@ class SpecialAgentFetcher:
         self.cmds: Final = cmds
         self.file_cache_options: Final = file_cache_options
 
-    def __call__(self, host_name: HostName, *, ip_address: HostAddress | None) -> Sequence[
+    def __call__(
+        self, host_name: HostName, *, ip_address: HostAddress | None
+    ) -> Sequence[
         tuple[
             SourceInfo,
             result.Result[AgentRawData | SNMPRawData, Exception],
@@ -320,6 +324,7 @@ class CMKFetcher:
         self,
         config_cache: ConfigCache,
         factory: FetcherFactory,
+        plugins: AgentBasedPlugins,
         *,
         # alphabetically sorted
         file_cache_options: FileCacheOptions,
@@ -335,6 +340,7 @@ class CMKFetcher:
     ) -> None:
         self.config_cache: Final = config_cache
         self.factory: Final = factory
+        self.plugins: Final = plugins
         self.file_cache_options: Final = file_cache_options
         self.force_snmp_cache_refresh: Final = force_snmp_cache_refresh
         self.ip_address_of: Final = ip_address_of
@@ -346,7 +352,9 @@ class CMKFetcher:
         self.max_cachefile_age: Final = max_cachefile_age
         self.snmp_backend_override: Final = snmp_backend_override
 
-    def __call__(self, host_name: HostName, *, ip_address: HostAddress | None) -> Sequence[
+    def __call__(
+        self, host_name: HostName, *, ip_address: HostAddress | None
+    ) -> Sequence[
         tuple[
             SourceInfo,
             result.Result[AgentRawData | SNMPRawData, Exception],
@@ -398,6 +406,7 @@ class CMKFetcher:
         return _fetch_all(
             itertools.chain.from_iterable(
                 make_sources(
+                    self.plugins,
                     current_host_name,
                     current_ip_address,
                     current_ip_stack_config,
@@ -461,57 +470,76 @@ class CMKFetcher:
 
 
 class SectionPluginMapper(SectionMap[SectionPlugin]):
-    # We should probably not tap into the private `register._config` module but
-    # the data we need doesn't seem to be available elsewhere.  Anyway, this is
-    # an *immutable* Mapping so we are actually on the safe side.
+    def __init__(
+        self,
+        sections: Mapping[SectionName, AgentSectionPluginAPI | SNMPSectionPluginAPI],
+    ) -> None:
+        self._sections = sections
 
     def __getitem__(self, __key: SectionName) -> SectionPlugin:
-        plugin = _api.get_section_plugin(__key)
-        return SectionPlugin(
-            supersedes=plugin.supersedes,
-            parse_function=plugin.parse_function,
-            parsed_section_name=plugin.parsed_section_name,
+        plugin = self._sections.get(__key)
+        return (
+            SectionPlugin.trivial(__key)
+            if plugin is None
+            else SectionPlugin(
+                supersedes=plugin.supersedes,
+                parse_function=plugin.parse_function,
+                parsed_section_name=plugin.parsed_section_name,
+            )
         )
 
     def __iter__(self) -> Iterator[SectionName]:
-        return iter(
-            frozenset(_api.registered_agent_sections) | frozenset(_api.registered_snmp_sections)
-        )
+        return iter(self._sections)
 
     def __len__(self) -> int:
-        return len(
-            frozenset(_api.registered_agent_sections) | frozenset(_api.registered_snmp_sections)
+        return len(self._sections)
+
+
+def _make_parameters_getter(
+    config_getter: ConfigGetter,
+    plugin: AgentSectionPluginAPI | SNMPSectionPluginAPI,
+) -> Callable[[HostName], Sequence[Parameters] | Parameters | None]:
+    """wrapper for partial, which is not supported by mypy"""
+
+    def get_parameters(host_name: HostName) -> Sequence[Parameters] | Parameters | None:
+        return get_plugin_parameters(
+            host_name,
+            config_getter,
+            default_parameters=plugin.host_label_default_parameters,
+            ruleset_name=plugin.host_label_ruleset_name,
+            ruleset_type=plugin.host_label_ruleset_type,
         )
+
+    return get_parameters
 
 
 class HostLabelPluginMapper(SectionMap[HostLabelPlugin]):
-    def __init__(self, *, ruleset_matcher: RulesetMatcher) -> None:
+    def __init__(
+        self,
+        *,
+        config_getter: ConfigGetter,
+        sections: Mapping[SectionName, AgentSectionPluginAPI | SNMPSectionPluginAPI],
+    ) -> None:
         super().__init__()
-        self.ruleset_matcher: Final = ruleset_matcher
+        self._config_getter: Final = config_getter
+        self._sections = sections
 
     def __getitem__(self, __key: SectionName) -> HostLabelPlugin:
-        plugin = _api.get_section_plugin(__key)
-        return HostLabelPlugin(
-            function=plugin.host_label_function,
-            parameters=partial(
-                get_plugin_parameters,
-                matcher=self.ruleset_matcher,
-                default_parameters=plugin.host_label_default_parameters,
-                ruleset_name=plugin.host_label_ruleset_name,
-                ruleset_type=plugin.host_label_ruleset_type,
-                rules_getter_function=agent_based_register.get_host_label_ruleset,
-            ),
+        plugin = self._sections.get(__key)
+        return (
+            HostLabelPlugin(
+                function=plugin.host_label_function,
+                parameters=_make_parameters_getter(self._config_getter, plugin),
+            )
+            if plugin is not None
+            else HostLabelPlugin.trivial()
         )
 
     def __iter__(self) -> Iterator[SectionName]:
-        return iter(
-            frozenset(_api.registered_agent_sections) | frozenset(_api.registered_snmp_sections)
-        )
+        return iter(self._sections)
 
     def __len__(self) -> int:
-        return len(
-            frozenset(_api.registered_agent_sections) | frozenset(_api.registered_snmp_sections)
-        )
+        return len(self._sections)
 
 
 class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
@@ -519,18 +547,22 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
     def __init__(
         self,
         config_cache: ConfigCache,
+        check_plugins: Mapping[CheckPluginName, CheckPluginAPI],
         value_store_manager: ValueStoreManager,
+        logger: logging.Logger,
         *,
         clusters: Container[HostName],
         rtc_package: AgentRawData | None,
     ):
         self.config_cache: Final = config_cache
         self.value_store_manager: Final = value_store_manager
+        self._logger: Final = logger
         self.clusters: Final = clusters
         self.rtc_package: Final = rtc_package
+        self.check_plugins: Final = check_plugins
 
     def __getitem__(self, __key: CheckPluginName) -> CheckPlugin:
-        plugin = _api.get_check_plugin(__key)
+        plugin = agent_based_register.get_check_plugin(__key, self.check_plugins)
         if plugin is None:
             raise KeyError(__key)
 
@@ -559,7 +591,9 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
                 rtc_package=self.rtc_package,
                 get_effective_host=self.config_cache.effective_host,
                 snmp_backend=self.config_cache.get_snmp_backend(host_name),
-                parameters=_compute_final_check_parameters(host_name, service, self.config_cache),
+                parameters=_compute_final_check_parameters(
+                    host_name, service, self.config_cache, self._logger
+                ),
             )
 
         return CheckPlugin(
@@ -571,14 +605,41 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
         )
 
     def __iter__(self) -> Iterator[CheckPluginName]:
-        return iter(_api.registered_check_plugins)
+        return iter(self.check_plugins)
 
     def __len__(self) -> int:
-        return len(_api.registered_check_plugins)
+        return len(self.check_plugins)
+
+
+def _make_rrd_data_getter(
+    host_name: HostAddress, service_name: ServiceName, logger: logging.Logger
+) -> Callable[[str, int, int], MetricRecord | None]:
+    """Replacement for `partial` which is not supported by mypy"""
+
+    def get_rrd_data(rpn: str, fromtime: int, untiltime: int) -> MetricRecord | None:
+        try:
+            return livestatus.get_rrd_data(
+                livestatus.LocalConnection(), host_name, service_name, rpn, fromtime, untiltime
+            )
+        except (
+            ()
+            if cmk.ccc.debug.enabled()
+            else (
+                livestatus.MKLivestatusSocketError,
+                livestatus.MKLivestatusNotFoundError,
+            )
+        ) as e:
+            logger.warning(f"Cannot get historic metrics via Livestatus: {e}")
+        return None
+
+    return get_rrd_data
 
 
 def _compute_final_check_parameters(
-    host_name: HostName, service: ConfiguredService, config_cache: ConfigCache
+    host_name: HostName,
+    service: ConfiguredService,
+    config_cache: ConfigCache,
+    logger: logging.Logger,
 ) -> Parameters:
     params = service.parameters.evaluate(timeperiod_active)
     if not _needs_postprocessing(params):
@@ -599,12 +660,7 @@ def _compute_final_check_parameters(
             meta_file_path_template=prediction_store.meta_file_path_template,
             predictions=make_updated_predictions(
                 prediction_store,
-                partial(
-                    livestatus.get_rrd_data,
-                    livestatus.LocalConnection(),
-                    host_name,
-                    service.description,
-                ),
+                _make_rrd_data_getter(host_name, service.description, logger),
                 time.time(),
             ),
         )
@@ -612,7 +668,9 @@ def _compute_final_check_parameters(
     config = PostprocessingConfig(
         only_from=lambda: config_cache.only_from(host_name),
         prediction=make_prediction,
-        service_level=lambda: config_cache.effective_service_level(host_name, service.description),
+        service_level=lambda: config_cache.effective_service_level(
+            host_name, service.description, service.labels
+        ),
         host_name=str(host_name),
         service_name=str(service.description),
     )
@@ -624,14 +682,16 @@ def _get_check_function(
     config_cache: ConfigCache,
     host_name: HostName,
     service: ConfiguredService,
-    value_store_manager: value_store.ValueStoreManager,
+    value_store_manager: ValueStoreManager,
     *,
     clusters: Container[HostName],
 ) -> Callable[..., ServiceCheckResult]:
     assert plugin.name == service.check_plugin_name
     check_function = (
         cluster_mode.get_cluster_check_function(
-            *config_cache.get_clustered_service_configuration(host_name, service.description),
+            *config_cache.get_clustered_service_configuration(
+                host_name, service.description, service.labels
+            ),
             plugin=plugin,
             service_id=service.id(),
             value_store_manager=value_store_manager,
@@ -649,7 +709,9 @@ def _get_check_function(
 
 
 def _aggregate_results(
-    subresults: tuple[Sequence[IgnoreResults], Sequence[MetricTuple], Sequence[CheckFunctionResult]]
+    subresults: tuple[
+        Sequence[IgnoreResults], Sequence[MetricTuple], Sequence[CheckFunctionResult]
+    ],
 ) -> ServiceCheckResult:
     # Impedance matching part of `get_check_function()`.
     ignore_results, metrics, results = subresults
@@ -738,7 +800,7 @@ def _get_monitoring_data_kwargs(
     source_type: SourceType | None = None,
     *,
     cluster_nodes: Sequence[HostName],
-    get_effective_host: Callable[[HostName, ServiceName], HostName],
+    get_effective_host: Callable[[HostName, ServiceName, _Labels], HostName],
 ) -> tuple[Mapping[str, object], UnsubmittableServiceCheckResult]:
     # Mapping[str, object] stands for either
     #  * Mapping[HostName, Mapping[str, ParsedSectionContent | None]] for clusters, or
@@ -754,7 +816,7 @@ def _get_monitoring_data_kwargs(
         nodes = _get_clustered_service_node_keys(
             host_name,
             source_type,
-            service.description,
+            service,
             cluster_nodes=cluster_nodes,
             get_effective_host=get_effective_host,
         )
@@ -780,14 +842,18 @@ def _get_monitoring_data_kwargs(
 def _get_clustered_service_node_keys(
     cluster_name: HostName,
     source_type: SourceType,
-    service_descr: ServiceName,
+    service: ConfiguredService,
     *,
     cluster_nodes: Sequence[HostName],
-    get_effective_host: Callable[[HostName, ServiceName], HostName],
+    get_effective_host: Callable[[HostName, ServiceName, _Labels], HostName],
 ) -> Sequence[HostKey]:
     """Returns the node keys if a service is clustered, otherwise an empty sequence"""
     used_nodes = (
-        [nn for nn in cluster_nodes if cluster_name == get_effective_host(nn, service_descr)]
+        [
+            nn
+            for nn in cluster_nodes
+            if cluster_name == get_effective_host(nn, service.description, service.labels)
+        ]
         or cluster_nodes  # IMHO: this can never happen, but if it does, using nodes is wrong.
         or ()
     )
@@ -806,7 +872,7 @@ def get_aggregated_result(
     *,
     parameters: Mapping[str, object],
     rtc_package: AgentRawData | None,
-    get_effective_host: Callable[[HostName, ServiceName], HostName],
+    get_effective_host: Callable[[HostName, ServiceName, _Labels], HostName],
     snmp_backend: SNMPBackendEnum,
 ) -> AggregatedResult:
     # Mostly API-specific error-handling around the check function.
@@ -1005,14 +1071,20 @@ def _postprocess_predictive_levels(
 
 class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
     # See comment to SectionPluginMapper.
-    def __init__(self, *, ruleset_matcher: RulesetMatcher) -> None:
+    def __init__(
+        self,
+        *,
+        config_getter: ConfigGetter,
+        check_plugins: Mapping[CheckPluginName, CheckPluginAPI],
+    ) -> None:
         super().__init__()
-        self.ruleset_matcher: Final = ruleset_matcher
+        self._config_getter: Final = config_getter
+        self._check_plugins: Final = check_plugins
 
     def __getitem__(self, __key: CheckPluginName) -> DiscoveryPlugin:
         # `get_check_plugin()` is not an error.  Both check plug-ins and
         # discovery are declared together in the check API.
-        plugin = _api.get_check_plugin(__key)
+        plugin = agent_based_register.get_check_plugin(__key, self._check_plugins)
         if plugin is None:
             raise KeyError(__key)
 
@@ -1035,40 +1107,36 @@ class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
             service_name=plugin.service_name,
             function=__discovery_function,
             parameters=_make_discovery_parameters_getter(
-                matcher=self.ruleset_matcher,
+                config_getter=self._config_getter,
                 check_plugin_name=plugin.name,
                 default_parameters=plugin.discovery_default_parameters,
                 ruleset_name=plugin.discovery_ruleset_name,
                 ruleset_type=plugin.discovery_ruleset_type,
-                rules_getter_function=agent_based_register.get_discovery_ruleset,
             ),
         )
 
     def __iter__(self) -> Iterator[CheckPluginName]:
-        return iter(_api.registered_check_plugins)
+        return iter(self._check_plugins)
 
     def __len__(self) -> int:
-        return len(_api.registered_check_plugins)
+        return len(self._check_plugins)
 
 
 def _make_discovery_parameters_getter(
-    matcher: RulesetMatcher,
+    config_getter: ConfigGetter,
     check_plugin_name: CheckPluginName,
     *,
     default_parameters: ParametersTypeAlias | None,
     ruleset_name: RuleSetName | None,
     ruleset_type: Literal["all", "merged"],
-    rules_getter_function: Callable[[RuleSetName], Sequence[RuleSpec]],
 ) -> Callable[[HostName], None | Parameters | list[Parameters]]:
-
     def get_discovery_parameters(host_name: HostName) -> None | Parameters | list[Parameters]:
         params = get_plugin_parameters(
             host_name,
-            matcher,
+            config_getter,
             default_parameters=default_parameters,
             ruleset_name=ruleset_name,
             ruleset_type=ruleset_type,
-            rules_getter_function=rules_getter_function,
         )
 
         #
@@ -1090,21 +1158,3 @@ def _make_discovery_parameters_getter(
         return [Parameters({**p, "host_name": host_name}) for p in params]
 
     return get_discovery_parameters
-
-
-class InventoryPluginMapper(Mapping[InventoryPluginName, InventoryPlugin]):
-    # See comment to SectionPluginMapper.
-    def __getitem__(self, __key: InventoryPluginName) -> InventoryPlugin:
-        plugin = _api.registered_inventory_plugins[__key]
-        return InventoryPlugin(
-            sections=plugin.sections,
-            function=plugin.inventory_function,
-            ruleset_name=plugin.inventory_ruleset_name,
-            defaults=plugin.inventory_default_parameters,
-        )
-
-    def __iter__(self) -> Iterator[InventoryPluginName]:
-        return iter(_api.registered_inventory_plugins)
-
-    def __len__(self) -> int:
-        return len(_api.registered_inventory_plugins)

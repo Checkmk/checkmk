@@ -212,7 +212,7 @@ def _grep_pattern(argument: str) -> str:
 
 
 def _greatest_lower_bound_for_filters(
-    filters: Iterable[tuple[OperatorName, float]]
+    filters: Iterable[tuple[OperatorName, float]],
 ) -> float | None:
     result: float | None = None
     for operator, value in filters:

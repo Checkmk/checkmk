@@ -5,11 +5,15 @@
 
 from collections.abc import Mapping
 
-from cmk.base.check_api import check_levels, CheckResult, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import (
+    check_levels,
+    LegacyCheckDefinition,
+    LegacyCheckResult,
+)
 from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
 from cmk.plugins.lib.decru import DETECT_DECRU
+
+check_info = {}
 
 
 def parse_decru_fans(string_table: StringTable) -> Mapping[str, int]:
@@ -23,7 +27,7 @@ def discover_decru_fans(section: Mapping[str, int]) -> DiscoveryResult:
 
 def check_decru_fans(
     item: str, params: Mapping[str, tuple[int, int]], section: Mapping[str, int]
-) -> CheckResult:
+) -> LegacyCheckResult:
     if (rpm := section.get(item)) is None:
         return
     yield check_levels(
@@ -36,6 +40,7 @@ def check_decru_fans(
 
 
 check_info["decru_fans"] = LegacyCheckDefinition(
+    name="decru_fans",
     detect=DETECT_DECRU,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12962.1.2.3.1",

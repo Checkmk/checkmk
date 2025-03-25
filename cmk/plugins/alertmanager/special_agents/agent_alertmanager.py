@@ -5,6 +5,7 @@
 """
 Special agent for monitoring Promtheus Alertmanager with Checkmk.
 """
+
 import argparse
 import ast
 import json

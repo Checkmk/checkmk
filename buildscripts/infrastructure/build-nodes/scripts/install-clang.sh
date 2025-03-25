@@ -40,6 +40,8 @@ CLANG_VERSION_PATTERNS[15]="-15"
 CLANG_VERSION_PATTERNS[16]="-16"
 CLANG_VERSION_PATTERNS[17]="-17"
 CLANG_VERSION_PATTERNS[18]="-18"
+CLANG_VERSION_PATTERNS[19]="-19"
+CLANG_VERSION_PATTERNS[20]="-20"
 
 if [ ! ${CLANG_VERSION_PATTERNS[$CLANG_VERSION]+_} ]; then
     failure "This script does not support LLVM version $CLANG_VERSION"
@@ -58,6 +60,7 @@ case "$DIST_VERSION" in
     Ubuntu_18.10) REPO_NAME="deb http://apt.llvm.org/cosmic/ llvm-toolchain-cosmic$CLANG_VERSION_STRING main" ;;
     Ubuntu_19.04) REPO_NAME="deb http://apt.llvm.org/disco/ llvm-toolchain-disco$CLANG_VERSION_STRING main" ;;
     Ubuntu_19.10) REPO_NAME="deb http://apt.llvm.org/eoan/ llvm-toolchain-eoan$CLANG_VERSION_STRING main" ;;
+    Ubuntu_20.04) REPO_NAME="deb http://apt.llvm.org/focal/ llvm-toolchain-focal$CLANG_VERSION_STRING main" ;;
     Ubuntu_20.10) REPO_NAME="deb http://apt.llvm.org/groovy/ llvm-toolchain-groovy$CLANG_VERSION_STRING main" ;;
     Ubuntu_21.04) REPO_NAME="deb http://apt.llvm.org/hirsute/ llvm-toolchain-hirsute$CLANG_VERSION_STRING main" ;;
     Ubuntu_21.10) REPO_NAME="deb http://apt.llvm.org/impish/ llvm-toolchain-impish$CLANG_VERSION_STRING main" ;;
@@ -66,6 +69,7 @@ case "$DIST_VERSION" in
     Ubuntu_23.04) REPO_NAME="deb http://apt.llvm.org/lunar/ llvm-toolchain-lunar$CLANG_VERSION_STRING main" ;;
     Ubuntu_23.10) REPO_NAME="deb http://apt.llvm.org/mantic/ llvm-toolchain-mantic$CLANG_VERSION_STRING main" ;;
     Ubuntu_24.04) REPO_NAME="deb http://apt.llvm.org/noble/ llvm-toolchain-noble$CLANG_VERSION_STRING main" ;;
+    Ubuntu_24.10) REPO_NAME="deb http://apt.llvm.org/oracular/ llvm-toolchain-oracular$CLANG_VERSION_STRING main" ;;
     *) failure "Distribution '$DISTRO' in version '$VERSION' is not supported by this script (${DIST_VERSION})." >&2 ;;
 esac
 

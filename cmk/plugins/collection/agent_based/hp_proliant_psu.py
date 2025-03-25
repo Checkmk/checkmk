@@ -6,7 +6,7 @@
 import typing
 from collections import abc
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -105,7 +105,7 @@ def check_hp_proliant_psu(item: str, params: Params, section: Section) -> CheckR
 
     yield Result(state=State.OK, summary=f"Usage: {psu.used}/{psu.max_} Watts")
     yield Metric(name="power_usage", value=psu.used)
-    yield from check_levels(
+    yield from check_levels_v1(
         psu.used * 100.0 / psu.max_,
         levels_upper=params["levels"],
         metric_name="power_usage_percentage",

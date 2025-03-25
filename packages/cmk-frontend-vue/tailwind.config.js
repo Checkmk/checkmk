@@ -1,3 +1,8 @@
+/**
+ * Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
 import { animate } from "tailwindcss-animate"
 
 /** @type {import('tailwindcss').Config} */
@@ -5,14 +10,14 @@ export default {
   darkMode: ["class"],
   safelist: ["dark"],
   prefix: "",
-  
+
   content: [
     './pages/**/*.{ts,tsx,vue}',
     './components/**/*.{ts,tsx,vue}',
     './app/**/*.{ts,tsx,vue}',
     './src/**/*.{ts,tsx,vue}',
 	],
-  
+
   theme: {
     container: {
       center: true,

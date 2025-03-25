@@ -15,11 +15,11 @@
 # .1.3.6.1.4.1.3652.3.2.3.1.2.10 3 --> SPEEDCARRIER-MIB::nmFanGroupStatus.10
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.pandacom import DETECT_PANDACOM
+
+check_info = {}
 
 
 def inventory_pandacom_fan(info):
@@ -48,6 +48,7 @@ def parse_pandacom_fan(string_table: StringTable) -> StringTable:
 
 
 check_info["pandacom_fan"] = LegacyCheckDefinition(
+    name="pandacom_fan",
     parse_function=parse_pandacom_fan,
     detect=DETECT_PANDACOM,
     fetch=SNMPTree(

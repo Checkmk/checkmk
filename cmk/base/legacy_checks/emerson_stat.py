@@ -32,10 +32,10 @@
 # from a customer, it is named "Emerson Energy Systems (EES) Power MIB"
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, startswith, StringTable
+
+check_info = {}
 
 
 def discover_emerson_stat(string_table: StringTable) -> DiscoveryResult:
@@ -76,6 +76,7 @@ def parse_emerson_stat(string_table: StringTable) -> StringTable:
 
 
 check_info["emerson_stat"] = LegacyCheckDefinition(
+    name="emerson_stat",
     parse_function=parse_emerson_stat,
     detect=startswith(".1.3.6.1.4.1.6302.2.1.1.1.0", "Emerson Network Power"),
     fetch=SNMPTree(

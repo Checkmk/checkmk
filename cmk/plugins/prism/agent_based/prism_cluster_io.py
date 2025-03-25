@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, Service
 
 Section = Mapping[str, Mapping[str, Any]]
@@ -26,7 +26,7 @@ def check_prism_cluster_io(params: Mapping[str, Any], section: Section) -> Check
     iobw_used = section.get("stats", {}).get("controller_io_bandwidth_kBps")
     if iobw_used:
         iobw_usage = int(iobw_used) / 10000
-        yield from check_levels(
+        yield from check_levels_v1(
             iobw_usage,
             levels_upper=params["io"],
             metric_name="prism_cluster_iobw",
@@ -37,7 +37,7 @@ def check_prism_cluster_io(params: Mapping[str, Any], section: Section) -> Check
     iops_used = section.get("stats", {}).get("controller_num_iops")
     if iops_used:
         iops_usage = int(iops_used) / 10000
-        yield from check_levels(
+        yield from check_levels_v1(
             iops_usage,
             levels_upper=params["iops"],
             metric_name="prism_cluster_iops",
@@ -48,7 +48,7 @@ def check_prism_cluster_io(params: Mapping[str, Any], section: Section) -> Check
     if iolatency_raw:
         iolatency = int(iolatency_raw) / 1000
 
-        yield from check_levels(
+        yield from check_levels_v1(
             iolatency,
             levels_upper=params["iolat"],
             metric_name="prism_cluster_iolatency",

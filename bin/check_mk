@@ -21,26 +21,34 @@ from typing import Self
 # Needs to be placed before cmk modules, because they are not available
 # when executed as non site user. Alas, this screws up our import ordering
 # a bit, so we have to tell pylint about that.
-# pylint: disable=wrong-import-position
+
 if not os.environ.get("OMD_SITE"):
     sys.stderr.write("Check_MK can be used only as site user.\n")
     sys.exit(1)
+
+import cmk.ccc.debug
+import cmk.ccc.version as cmk_version
+from cmk.ccc.crash_reporting import (
+    ABCCrashReport,
+    BaseDetails,
+    crash_report_registry,
+    CrashReportStore,
+    VersionInfo,
+)
+from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTerminate
+from cmk.ccc.site import get_omd_config, omd_site, resource_attributes_from_config
 
 import cmk.utils.caching
 import cmk.utils.log
 import cmk.utils.paths
 from cmk.utils.log import console
 
-import cmk.base.check_api as check_api
-import cmk.base.config as config
-import cmk.base.profiling as profiling
 import cmk.base.utils
+from cmk.base import profiling
 from cmk.base.modes import modes
 
-import cmk.ccc.debug
-import cmk.ccc.version as cmk_version
-from cmk.ccc.crash_reporting import ABCCrashReport, crash_report_registry, CrashReportStore
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTerminate
+from cmk import trace
+from cmk.trace.export import exporter_from_config, init_span_processor
 
 cmk.utils.log.setup_console_logging()
 logger = logging.getLogger("cmk.base")
@@ -49,10 +57,30 @@ cmk.base.utils.register_sigint_handler()
 
 help_function = modes.get("help").handler_function
 
+# Would be nice if we could enable tracing in all cases. But the current timeout and retry
+# logic of the OpenTelemetry SDK does not work as intended, which can lead to longer hanging
+# executions in case the configured collector (e.g. Jaeger) is not reachable.
+# For now only enable tracing in case the caller provides a tracing context. This way we produce
+# traces only when the caller is interested in them.
+# This condition can be removed once the timeout and retry logic was fixed
+# (https://github.com/open-telemetry/opentelemetry-python/issues/4043).
+if trace_context := trace.extract_context_from_environment(dict(os.environ)):
+    init_span_processor(
+        trace.init_tracing(
+            service_namespace=trace.service_namespace_from_config(
+                "", omd_config := get_omd_config(cmk.utils.paths.omd_root)
+            ),
+            service_name="cmk",
+            service_instance_id=omd_site(),
+            extra_resource_attributes=resource_attributes_from_config(cmk.utils.paths.omd_root),
+        ),
+        exporter_from_config(trace.trace_send_config(omd_config)),
+    )
+
 
 # We probably don't really need to register that here, do we?
 @crash_report_registry.register
-class CrashReport(ABCCrashReport):
+class CrashReport(ABCCrashReport[BaseDetails]):
     @classmethod
     def type(cls) -> str:
         return "base"
@@ -61,17 +89,17 @@ class CrashReport(ABCCrashReport):
     def from_exception(
         cls,
         crashdir: Path,
-        version_info: dict[str, object],
-        details: object = None,
-        type_specific_attributes: object = None,
+        version_info: VersionInfo,
     ) -> Self:
-        return super().from_exception(
+        return cls(
             crashdir,
-            version_info,
-            details={
-                "argv": sys.argv,
-                "env": dict(os.environ),
-            },
+            cls.make_crash_info(
+                version_info,
+                {
+                    "argv": sys.argv,
+                    "env": dict(os.environ),
+                },
+            ),
         )
 
 
@@ -101,33 +129,15 @@ try:
         help_function()
         sys.exit(0)
 
-    # At least in case the config is needed, the checks are needed too, because
-    # the configuration may refer to check config variable names.
-    if mode_name not in modes.non_checks_options():
-        errors = config.load_all_plugins(
-            check_api.get_check_api_context,
-            local_checks_dir=cmk.utils.paths.local_checks_dir,
-            checks_dir=cmk.utils.paths.checks_dir,
-        )
-        if sys.stderr.isatty():
-            for error_msg in errors:
-                console.error(error_msg, file=sys.stderr)
-
-    # Read the configuration files (main.mk, autochecks, etc.), but not for
-    # certain operation modes that does not need them and should not be harmed
-    # by a broken configuration
-    if mode_name not in modes.non_config_options():
-        config.load()
-
     done, exit_status = False, 0
     if mode_name is not None and mode_args is not None:
-        exit_status = modes.call(mode_name, mode_args, opts, args)
+        exit_status = modes.call(mode_name, mode_args, opts, args, trace_context)
         done = True
 
     # When no mode was found, Checkmk is running the "check" mode
     if not done:
         if (args and len(args) <= 2) or "--keepalive" in [o[0] for o in opts]:
-            exit_status = modes.call("--check", None, opts, args)
+            exit_status = modes.call("--check", None, opts, args, trace_context)
         else:
             help_function = modes.get("help").handler_function
             if help_function is None:
@@ -142,7 +152,7 @@ except MKTerminate:
     sys.exit(1)
 
 except (MKGeneralException, MKBailOut) as e:
-    sys.stderr.write("%s\n" % e)
+    sys.stderr.write(f"{e}\n")
     if cmk.ccc.debug.enabled():
         raise
     sys.exit(3)

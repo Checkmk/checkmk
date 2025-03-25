@@ -8,14 +8,16 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Literal
 
+from cmk.ccc.exceptions import OnError
+
 import cmk.utils.paths
 from cmk.utils import tty
 from cmk.utils.hostaddress import HostAddress, HostName
-from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel, ServiceLabel
+from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
 from cmk.utils.sectionname import SectionMap, SectionName
-from cmk.utils.servicename import Item, ServiceName
+from cmk.utils.servicename import Item
 from cmk.utils.timeperiod import timeperiod_active
 
 from cmk.checkengine.checking import CheckPlugin, CheckPluginName, ConfiguredService, ServiceID
@@ -36,10 +38,8 @@ from cmk.checkengine.sectionparser import (
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.summarize import SummarizerFunction
 
-from cmk.ccc.exceptions import OnError
-
-from ._autochecks import AutocheckEntry, DiscoveredService
-from ._autodiscovery import _Transition, get_host_services_by_host_name
+from ._autochecks import AutocheckEntry, AutochecksConfig, AutochecksStore
+from ._autodiscovery import _Transition, discovery_by_host, get_host_services_by_host_name
 from ._discovery import DiscoveryPlugin
 from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabelPlugin
 from ._utils import QualifiedDiscovery
@@ -92,10 +92,7 @@ def get_check_preview(
     host_label_plugins: SectionMap[HostLabelPlugin],
     discovery_plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
-    ignore_service: Callable[[HostName, ServiceName], bool],
-    ignore_plugin: Callable[[HostName, CheckPluginName], bool],
-    get_effective_host: Callable[[HostName, ServiceName], HostName],
-    find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
+    autochecks_config: AutochecksConfig,
     compute_check_parameters: Callable[[HostName, AutocheckEntry], TimespecificParameters],
     enforced_services: Mapping[ServiceID, tuple[RulesetName, ConfiguredService]],
     on_error: OnError,
@@ -157,16 +154,18 @@ def get_check_preview(
 
     grouped_services_by_host = get_host_services_by_host_name(
         host_name,
+        existing_services=(
+            {n: AutochecksStore(n).read() for n in cluster_nodes}
+            if is_cluster
+            else {host_name: AutochecksStore(host_name).read()}
+        ),
+        discovered_services=discovery_by_host(
+            cluster_nodes if is_cluster else (host_name,), providers, discovery_plugins, on_error
+        ),
         is_cluster=is_cluster,
         cluster_nodes=cluster_nodes,
-        providers=providers,
-        plugins=discovery_plugins,
-        ignore_service=ignore_service,
-        ignore_plugin=ignore_plugin,
-        get_effective_host=get_effective_host,
-        get_service_description=find_service_description,
+        autochecks_config=autochecks_config,
         enforced_services=enforced_services,
-        on_error=on_error,
     )
 
     passive_rows_by_host = {
@@ -175,22 +174,17 @@ def get_check_preview(
                 h,
                 check_plugins=check_plugins,
                 service=ConfiguredService(
-                    check_plugin_name=DiscoveredService.check_plugin_name(entry),
-                    item=DiscoveredService.item(entry),
-                    description=find_service_description(h, *DiscoveredService.id(entry)),
-                    parameters=compute_check_parameters(h, DiscoveredService.older(entry)),
-                    discovered_parameters=DiscoveredService.older(entry).parameters,
-                    service_labels={
-                        n: ServiceLabel(n, v)
-                        for n, v in DiscoveredService.older(entry).service_labels.items()
-                    },
+                    check_plugin_name=entry.newer.check_plugin_name,
+                    item=entry.newer.item,
+                    description=autochecks_config.service_description(h, entry.newer),
+                    parameters=compute_check_parameters(h, entry.older),
+                    discovered_parameters=entry.older.parameters,
+                    labels=autochecks_config.service_labels(h, entry.older),
+                    discovered_labels=entry.older.service_labels,
                     is_enforced=False,
                 ),
-                new_discovered_parameters=DiscoveredService.newer(entry).parameters,
-                new_service_labels={
-                    n: ServiceLabel(n, v)
-                    for n, v in DiscoveredService.newer(entry).service_labels.items()
-                },
+                new_discovered_parameters=entry.newer.parameters,
+                new_service_labels=entry.newer.service_labels,
                 check_source=check_source,
                 providers=providers,
                 found_on_nodes=found_on_nodes,
@@ -228,7 +222,7 @@ def _check_preview_table_row(
     *,
     service: ConfiguredService,
     new_discovered_parameters: Mapping[str, object],
-    new_service_labels: Mapping[str, ServiceLabel],
+    new_service_labels: Mapping[str, str],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     check_source: _Transition | Literal["manual"],
     providers: Mapping[HostKey, Provider],
@@ -269,7 +263,7 @@ def _check_preview_table_row(
         state=result.state,
         output=make_output(),
         metrics=[],
-        old_labels={l.name: l.value for l in service.service_labels.values()},
-        new_labels={l.name: l.value for l in new_service_labels.values()},
+        old_labels=service.discovered_labels,
+        new_labels=new_service_labels,
         found_on_nodes=list(found_on_nodes),
     )

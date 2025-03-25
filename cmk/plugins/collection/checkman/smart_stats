@@ -10,6 +10,7 @@ description:
 
  The check uses information provided by the Checkmk linux agent which are
  available when the agent has been extended with the {smart} agent plugin.
+ The {smart} agent plugins has been superseded by the {smart_posix} plugin.
 
  During inventory the current value of all counters is being
  snapshotted into the check's parameters. If later one of the value increases

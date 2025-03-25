@@ -11,14 +11,17 @@ import copy
 import json
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
-from dataclasses import dataclass
 from typing import Literal
+
+import cmk.ccc.version as cmk_version
+from cmk.ccc.exceptions import MKException
 
 from cmk.utils import paths
 from cmk.utils.user import UserId
 
 from cmk.gui import crash_handler, visuals
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.crash_handler import GUIDetails
 from cmk.gui.exceptions import MKAuthException, MKMissingDataError, MKUserError
 from cmk.gui.graphing._utils import MKCombinedGraphLimitExceededError
 from cmk.gui.hooks import call as call_hooks
@@ -36,11 +39,13 @@ from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
     PageMenuEntry,
+    PageMenuEntryCEEOnly,
     PageMenuLink,
     PageMenuSidePopup,
     PageMenuTopic,
 )
 from cmk.gui.type_defs import InfoName, VisualContext
+from cmk.gui.utils.filter import check_if_non_default_filter_in_request
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.output_funnel import output_funnel
@@ -48,9 +53,7 @@ from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.watolib.activate_changes import get_pending_changes_tooltip, has_pending_changes
-
-import cmk.ccc.version as cmk_version
-from cmk.ccc.exceptions import MKException
+from cmk.gui.watolib.users import get_enabled_remote_sites_for_logged_in_user
 
 from ._network_topology import get_topology_context_and_filters
 from .breadcrumb import dashboard_breadcrumb
@@ -67,9 +70,12 @@ from .dashlet import (
     StaticTextDashletConfig,
 )
 from .store import (
+    get_all_dashboards,
     get_permitted_dashboards,
     get_permitted_dashboards_by_owners,
-    load_dashboard_with_cloning,
+    load_dashboard,
+    save_all_dashboards,
+    save_and_replicate_all_dashboards,
 )
 from .type_defs import DashboardConfig, DashboardName
 
@@ -134,7 +140,24 @@ def draw_dashboard(name: DashboardName, owner: UserId) -> None:
     if mode == "edit" and not user.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
 
-    board = load_dashboard_with_cloning(get_permitted_dashboards(), name, edit=mode == "edit")
+    need_replication = False
+    permitted_dashboards = get_permitted_dashboards()
+    board = load_dashboard(permitted_dashboards, name)
+
+    if mode == "edit" and board["owner"] == UserId.builtin():
+        # Trying to edit a built-in dashboard results in doing a copy
+        all_dashboards = get_all_dashboards()
+        active_user = user.id
+        assert active_user is not None
+        board = copy.deepcopy(board)
+        board["owner"] = active_user
+        board["public"] = False
+
+        all_dashboards[(active_user, name)] = board
+        permitted_dashboards[name] = board
+        save_all_dashboards()
+        need_replication = True
+
     board = _add_context_to_dashboard(board)
 
     # Like _dashboard_info_handler we assume that only host / service filters are relevant
@@ -172,7 +195,13 @@ def draw_dashboard(name: DashboardName, owner: UserId) -> None:
         ),
     )
 
-    call_hooks("dashboard_banner", name)
+    # replication is only needed if we have remote sites
+    if need_replication and get_enabled_remote_sites_for_logged_in_user(user):
+        save_and_replicate_all_dashboards(
+            makeuri(request, [("name", name), ("edit", "1" if mode == "edit" else "0")])
+        )
+
+    call_hooks("rmk_dashboard_banner", name)
 
     html.open_div(class_=["dashboard_%s" % name], id_="dashboard")  # Container of all dashlets
 
@@ -377,11 +406,20 @@ def render_dashlet_exception_content(dashlet: Dashlet, e: Exception) -> HTML | s
             return output_funnel.drain()
 
         crash_handler.handle_exception_as_gui_crash_report(
-            details={
-                "dashlet_id": dashlet.dashlet_id,
-                "dashlet_type": dashlet.type_name(),
-                "dashlet_spec": dashlet.dashlet_spec,
-            }
+            details=GUIDetails(
+                dashlet_id=dashlet.dashlet_id,
+                dashlet_type=dashlet.type_name(),
+                dashlet_spec=dashlet.dashlet_spec,
+                page="unknown",
+                vars={},
+                username=None,
+                user_agent="unknown",
+                referer="unknown",
+                is_mobile=False,
+                is_ssl_request=False,
+                language="unknown",
+                request_method="unknown",
+            )
         )
         return output_funnel.drain()
 
@@ -478,7 +516,7 @@ def _page_menu(
         enable_suggestions=False,
     )
 
-    _extend_display_dropdown(menu, board, board_context, unconfigured_single_infos)
+    _extend_display_dropdown(name, menu, board, board_context, unconfigured_single_infos)
 
     return menu
 
@@ -674,6 +712,7 @@ def _minimal_context(
 
 
 def _extend_display_dropdown(
+    name: str,
     menu: PageMenu,
     board: DashboardConfig,
     board_context: VisualContext,
@@ -686,7 +725,10 @@ def _extend_display_dropdown(
     )
     # Like _dashboard_info_handler we assume that only host / service filters are relevant
     info_list = ["host", "service"]
-    is_filter_set = request.var("filled_in") == "filter"
+
+    is_filter_set = check_if_non_default_filter_in_request(
+        AjaxInitialDashboardFilters().get_context(page_name=name)
+    )
 
     display_dropdown.topics.insert(
         0,
@@ -716,12 +758,14 @@ def _extend_display_dropdown(
 
 
 class AjaxInitialDashboardFilters(ABCAjaxInitialFilters):
+    def get_context(self, page_name: str) -> VisualContext:
+        return self._get_context(page_name)
+
     def _get_context(self, page_name: str) -> VisualContext:
         dashboard_name = page_name
-        board = load_dashboard_with_cloning(
+        board = load_dashboard(
             get_permitted_dashboards(),
             dashboard_name,
-            edit=False,
         )
         board = _add_context_to_dashboard(board)
 
@@ -734,14 +778,6 @@ class AjaxInitialDashboardFilters(ABCAjaxInitialFilters):
             }
 
         return _minimal_context(_get_mandatory_filters(board, set()), board["context"])
-
-
-@dataclass
-class PageMenuEntryCEEOnly(PageMenuEntry):
-    def __post_init__(self) -> None:
-        if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE:
-            self.is_enabled = False
-            self.disabled_tooltip = _("Enterprise feature")
 
 
 def _dashboard_add_dashlet_back_http_var() -> tuple[str, str]:

@@ -9,7 +9,7 @@ import sys
 import pytest
 
 if sys.version_info[0] == 2:
-    import agents.plugins.mtr_2 as mtr  # pylint: disable=syntax-error
+    import agents.plugins.mtr_2 as mtr
 else:
     from agents.plugins import mtr
 

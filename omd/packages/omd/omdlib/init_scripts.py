@@ -10,6 +10,7 @@ import logging
 import os
 import subprocess
 import sys
+from typing import Literal
 
 from cmk.utils import tty
 from cmk.utils.local_secrets import SiteInternalSecret
@@ -21,26 +22,26 @@ logger = logging.getLogger("cmk.omd")
 
 def call_init_scripts(
     site_dir: str,
-    command: str,
+    command: Literal["start", "stop", "restart", "reload", "status"],
     daemon: str | None = None,
     exclude_daemons: list[str] | None = None,
-) -> int:
+) -> Literal[0, 2]:
     # Restart: Do not restart each service after another,
     # but first do stop all, then start all again! This
     # preserves the order.
     if command == "restart":
-        log_security_event(SiteStartStoppedEvent(event="restart"))
+        log_security_event(SiteStartStoppedEvent(event="restart", daemon=daemon))
         code_stop = call_init_scripts(site_dir, "stop", daemon)
         code_start = call_init_scripts(site_dir, "start", daemon)
-        return max(code_stop, code_start)
+        return 0 if (code_stop, code_start) == (0, 0) else 2
 
     # OMD guarantees OMD_ROOT to be the current directory
     with contextlib.chdir(site_dir):
         if command == "start":
-            log_security_event(SiteStartStoppedEvent(event="start"))
+            log_security_event(SiteStartStoppedEvent(event="start", daemon=daemon))
             SiteInternalSecret().regenerate()
         elif command == "stop":
-            log_security_event(SiteStartStoppedEvent(event="stop"))
+            log_security_event(SiteStartStoppedEvent(event="stop", daemon=daemon))
 
         if daemon:
             success = _call_init_script(f"{site_dir}/etc/init.d/{daemon}", command)
@@ -60,12 +61,10 @@ def call_init_scripts(
                 if not _call_init_script(f"{rc_dir}/{script}", command):
                     success = False
 
-    if success:
-        return 0
-    return 2
+    return 0 if success else 2
 
 
-def check_status(  # pylint: disable=too-many-branches
+def check_status(
     site_dir: str, display: bool = True, daemon: str | None = None, bare: bool = False
 ) -> int:
     num_running = 0
@@ -93,7 +92,7 @@ def check_status(  # pylint: disable=too-many-branches
             if bare:
                 sys.stdout.write(komponent + " ")
             else:
-                sys.stdout.write("%-16s" % (komponent + ":"))
+                sys.stdout.write("%-20s" % (komponent + ":"))
                 sys.stdout.write(tty.bold)
 
         if bare:
@@ -131,8 +130,8 @@ def check_status(  # pylint: disable=too-many-branches
         if bare:
             sys.stdout.write("OVERALL %d\n" % exit_code)
         else:
-            sys.stdout.write("-----------------------\n")
-            sys.stdout.write("Overall state:  %s\n" % (tty.bold + ovstate + tty.normal))
+            sys.stdout.write("---------------------------\n")
+            sys.stdout.write("Overall state:      %s\n" % (tty.bold + ovstate + tty.normal))
     return exit_code
 
 

@@ -7,10 +7,8 @@ import time
 from collections.abc import Callable, Mapping, MutableMapping, Sequence
 from typing import Any
 
-from cmk.utils import oracle_constants  # pylint: disable=cmk-module-layer-violation
-
-from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -23,7 +21,8 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.plugins.lib.oracle import InstancePerformance, SectionPerformance
+from cmk.plugins.oracle import constants
+from cmk.plugins.oracle.agent_based.liboracle import InstancePerformance, SectionPerformance
 
 # In cooperation with Thorsten Bruhns from OPITZ Consulting
 
@@ -82,7 +81,7 @@ def discover_oracle_performance(
     yield from (Service(item=item, parameters=discovered_params.copy()) for item in section)
 
 
-def check_oracle_performance(  # pylint: disable=too-many-branches
+def check_oracle_performance(
     item: str, params: Mapping[str, Any], section: SectionPerformance
 ) -> CheckResult:
     data = _get_item_data(item, section)
@@ -99,7 +98,7 @@ def check_oracle_performance(  # pylint: disable=too-many-branches
         # old agents deliver not the needed data...
         sga_info = data.get("SGA_info")
         if sga_info:
-            for sga_field in oracle_constants.oracle_sga_fields:
+            for sga_field in constants.ORACLE_SGA_FIELDS:
                 if sga_field.name not in sga_info:
                     continue
                 value = sga_info[sga_field.name]
@@ -248,11 +247,10 @@ def _check_oracle_db_time(
         ("oracle_db_cpu", "DB CPU", cpu_time_rate),
         ("oracle_db_wait_time", "DB Non-Idle Wait", wait_time_rate),
     ]:
-        metric_params = params.get(metric, (None, None))
         yield from check_levels(
             rate,
             metric_name=metric,
-            levels_upper=metric_params,
+            levels_upper=params.get(metric),
             render_func=_unit_formatter("/s"),
             label=infoname,
         )
@@ -289,18 +287,17 @@ def _check_oracle_memory_info(
     data: Mapping[str, Any],
     params: Mapping[str, Any],
     sticky_fields: Sequence[str],
-    fields: Sequence[oracle_constants.OracleSGA] | Sequence[oracle_constants.OraclePGA],
+    fields: Sequence[constants.OracleSGA] | Sequence[constants.OraclePGA],
 ) -> CheckResult:
     for ga_field in fields:
         value = data.get(ga_field.name)
         if value is None:
             continue
 
-        metric_params = params.get(ga_field.metric, (None, None))
         yield from check_levels(
             value,
             metric_name=ga_field.metric,
-            levels_upper=metric_params,
+            levels_upper=params.get(ga_field.metric),
             render_func=render.bytes,
             label=ga_field.name,
             notice_only=ga_field.name not in sticky_fields,
@@ -315,12 +312,12 @@ def check_oracle_performance_memory(
     sga_info = data.get("SGA_info", {})
 
     yield from _check_oracle_memory_info(
-        sga_info, params, ["Maximum SGA Size"], oracle_constants.oracle_sga_fields
+        sga_info, params, ["Maximum SGA Size"], constants.ORACLE_SGA_FIELDS
     )
 
     pga_info = {field: value[0] for field, value in data.get("PGA_info", {}).items()}
     yield from _check_oracle_memory_info(
-        pga_info, params, ["total PGA allocated"], oracle_constants.oracle_pga_fields
+        pga_info, params, ["total PGA allocated"], constants.ORACLE_PGA_FIELDS
     )
 
 
@@ -354,7 +351,7 @@ def _check_oracle_performance_iostat_file(
     totals = [0.0] * len(io_fields)
 
     iostat_info = data.get("iostat_file", {})
-    for iofile in oracle_constants.oracle_iofiles:
+    for iofile in constants.ORACLE_IO_FILES:
         waitdata = iostat_info.get(iofile.name)
         if not waitdata:
             continue
@@ -371,11 +368,10 @@ def _check_oracle_performance_iostat_file(
 
             totals[i] += rate
 
-            metric_params = params.get(metric_name, (None, None))
             yield from check_levels(
                 rate,
                 metric_name=metric_name,
-                levels_upper=metric_params,
+                levels_upper=params.get(metric_name),
                 render_func=_unit_formatter(unit),
                 label=iofile.name + " " + field_name,
                 notice_only=True,
@@ -483,7 +479,7 @@ def check_oracle_performance_waitclasses(
 
     # sys_wait_class -> wait_class
     waitclass_info = data.get("sys_wait_class", {})
-    for waitclass in oracle_constants.oracle_waitclasses:
+    for waitclass in constants.ORACLE_WAITCLASSES:
         waitdata = waitclass_info.get(waitclass.name)
         if not waitdata:
             continue
@@ -508,11 +504,10 @@ def check_oracle_performance_waitclasses(
             else:
                 total_waited_sum_fg += rate
 
-            metric_params = params.get(metric_name, (None, None))
             yield from check_levels(
                 rate,
                 metric_name=metric_name,
-                levels_upper=metric_params,
+                levels_upper=params.get(metric_name),
                 render_func=_unit_formatter("/s"),
                 label=f"{waitclass.name} {infotext_suffix}",
                 notice_only=True,
@@ -523,11 +518,10 @@ def check_oracle_performance_waitclasses(
         ("Total waited", total_waited_sum, "oracle_wait_class_total"),
         ("Total waited (FG)", total_waited_sum_fg, "oracle_wait_class_total_fg"),
     ]:
-        metric_params = params.get(total_metric, (None, None))
         yield from check_levels(
             total_value,
             metric_name=total_metric,
-            levels_upper=metric_params,
+            levels_upper=params.get(total_metric),
             render_func=_unit_formatter("/s"),
             label=infoname,
         )

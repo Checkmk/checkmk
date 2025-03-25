@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import NamedTuple
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -67,14 +67,14 @@ def check_ciena_routing_instance(item: str, section: Section) -> CheckResult:
     if item not in section:
         return
 
-    yield from check_levels(
+    yield from check_levels_v1(
         value=section[item].transmitted,
         metric_name="if_out_octets",
         render_func=render.iobandwidth,
         boundaries=(0, None),
         label="Transmitted",
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         value=section[item].received,
         metric_name="if_in_octets",
         render_func=render.iobandwidth,

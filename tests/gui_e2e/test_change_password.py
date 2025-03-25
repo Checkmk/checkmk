@@ -10,11 +10,11 @@ from urllib.parse import quote_plus
 import pytest
 from playwright.sync_api import expect
 
-from tests.testlib.playwright.helpers import CmkCredentials
-from tests.testlib.playwright.pom.change_password import ChangePassword
-from tests.testlib.playwright.pom.dashboard import Dashboard
-from tests.testlib.playwright.pom.login import LoginPage
-from tests.testlib.playwright.pom.setup.global_settings import GlobalSettings
+from tests.gui_e2e.testlib.playwright.helpers import CmkCredentials
+from tests.gui_e2e.testlib.playwright.pom.change_password import ChangePassword
+from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
+from tests.gui_e2e.testlib.playwright.pom.login import LoginPage
+from tests.gui_e2e.testlib.playwright.pom.setup.global_settings import GlobalSettings
 from tests.testlib.site import ADMIN_USER, Site
 
 logger = logging.getLogger(__name__)

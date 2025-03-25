@@ -13,12 +13,11 @@ from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
 from cmk.gui.http import request, response
 from cmk.gui.logged_in import user
-from cmk.gui.painter.v0 import base as painter_base
-from cmk.gui.painter.v0.base import Cell, Painter, PainterRegistry
+from cmk.gui.painter.v0 import Cell, Painter, PainterRegistry, register_painter, registry
 from cmk.gui.painter.v0.helpers import RenderLink, replace_action_url_macros
 from cmk.gui.painter_options import PainterOptions
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnSpec, Row, SorterSpec, ViewSpec
-from cmk.gui.utils.theme import theme
 from cmk.gui.views.layout import group_value
 from cmk.gui.views.page_show_view import _parse_url_sorters
 from cmk.gui.views.sort_url import _encode_sorter_url
@@ -90,12 +89,12 @@ def test_replace_action_url_macros(
 
 
 def test_group_value(monkeypatch: pytest.MonkeyPatch, view_spec: ViewSpec) -> None:
-    monkeypatch.setattr(painter_base, "painter_registry", PainterRegistry())
+    monkeypatch.setattr(registry, "painter_registry", painter_registry := PainterRegistry())
 
     def rendr(row: Row) -> tuple[str, str]:
         return ("abc", "xyz")
 
-    painter_base.register_painter(
+    register_painter(
         "tag_painter",
         {
             "title": "Tag painter",
@@ -109,7 +108,7 @@ def test_group_value(monkeypatch: pytest.MonkeyPatch, view_spec: ViewSpec) -> No
         },
     )
 
-    painter: Painter = painter_base.painter_registry["tag_painter"](
+    painter: Painter = painter_registry["tag_painter"](
         user=user,
         config=active_config,
         request=request,
@@ -117,6 +116,6 @@ def test_group_value(monkeypatch: pytest.MonkeyPatch, view_spec: ViewSpec) -> No
         theme=theme,
         url_renderer=RenderLink(request, response, display_options),
     )
-    dummy_cell: Cell = Cell(ColumnSpec(name=painter.ident), None)
+    dummy_cell: Cell = Cell(ColumnSpec(name=painter.ident), None, painter_registry)
 
     assert group_value({"host_tags": {"networking": "dmz"}}, [dummy_cell]) == ("dmz",)

@@ -6,11 +6,12 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, startswith
+
+check_info = {}
 
 
 def parse_aruba_cpu_util(string_table):
@@ -37,6 +38,7 @@ def discover_aruba_cpu_util(section):
 
 
 check_info["aruba_cpu_util"] = LegacyCheckDefinition(
+    name="aruba_cpu_util",
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14823"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14823.2.2.1.1.1.9.1",

@@ -7,7 +7,7 @@ import time
 from collections.abc import Mapping, Sequence
 from typing import Any, NamedTuple
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -92,7 +92,7 @@ def check_windows_updates(params: Mapping[str, Any], section: Section) -> CheckR
     if section.failed:
         yield Result(state=State.CRIT, notice=f"({section.failed})")
 
-    yield from check_levels(
+    yield from check_levels_v1(
         len(section.important_updates),
         metric_name="important",
         levels_upper=params["levels_important"],
@@ -102,7 +102,7 @@ def check_windows_updates(params: Mapping[str, Any], section: Section) -> CheckR
     if section.important_updates:
         yield Result(state=State.OK, notice=f"({'; '.join(section.important_updates)})")
 
-    yield from check_levels(
+    yield from check_levels_v1(
         len(section.optional_updates),
         metric_name="optional",
         levels_upper=params["levels_optional"],
@@ -116,7 +116,7 @@ def check_windows_updates(params: Mapping[str, Any], section: Section) -> CheckR
     if not section.forced_reboot or (delta := section.forced_reboot - time.time()) < 0:
         return
 
-    yield from check_levels(
+    yield from check_levels_v1(
         delta,
         levels_lower=params["levels_lower_forced_reboot"],
         render_func=render.timespan,

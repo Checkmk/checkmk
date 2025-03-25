@@ -51,7 +51,7 @@ def parse_netapp_ontap_fan(string_table: StringTable) -> Section:
     return {
         fan.item_name(): fan
         for line in string_table
-        if (fan := models.ShelfFanModel.model_validate_json(line[0]))
+        for fan in [models.ShelfFanModel.model_validate_json(line[0])]
     }
 
 

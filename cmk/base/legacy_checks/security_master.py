@@ -6,12 +6,13 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, startswith
+
+check_info = {}
 
 #
 # SNMP Infos
@@ -91,7 +92,7 @@ def saveint(i: str) -> int:
         return 0
 
 
-def parse_security_master(string_table):  # pylint: disable=too-many-branches
+def parse_security_master(string_table):
     supported_sensors = {
         50: "temp",
         60: "humidity",
@@ -173,6 +174,7 @@ def discover_security_master(parsed):
 
 
 check_info["security_master"] = LegacyCheckDefinition(
+    name="security_master",
     detect=startswith(".1.3.6.1.2.1.1.2.0", "1.3.6.1.4.1.35491"),
     fetch=[
         SNMPTree(
@@ -216,6 +218,7 @@ def discover_security_master_humidity(parsed):
 
 
 check_info["security_master.humidity"] = LegacyCheckDefinition(
+    name="security_master_humidity",
     service_name="Sensor %s",
     sections=["security_master"],
     discovery_function=discover_security_master_humidity,
@@ -257,6 +260,7 @@ def discover_security_master_temp(parsed):
 
 
 check_info["security_master.temp"] = LegacyCheckDefinition(
+    name="security_master_temp",
     service_name="Sensor %s",
     sections=["security_master"],
     discovery_function=discover_security_master_temp,

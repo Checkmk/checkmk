@@ -15,7 +15,7 @@ metric_secs_cmk_views = metrics.Metric(
 )
 metric_secs_cmk_wato = metrics.Metric(
     name="secs_cmk_wato",
-    title=Title("Checkmk: WATO: Secs"),
+    title=Title("Checkmk: Setup: Secs"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.DARK_CYAN,
 )

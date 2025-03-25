@@ -8,41 +8,40 @@ from __future__ import annotations
 
 import ast
 import os
+import time
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass
+from datetime import timedelta
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from typing import Any
 
 from livestatus import SiteConfiguration, SiteId
 
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore
 
-from cmk.gui import log
-from cmk.gui.background_job import (
-    BackgroundJob,
-    BackgroundJobAlreadyRunning,
-    BackgroundProcessInterface,
-    InitialStatusArgs,
-)
 from cmk.gui.config import active_config
+from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.logged_in import user
 from cmk.gui.site_config import get_site_config, has_wato_slave_sites, wato_slave_sites
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation, MKAutomationException
-from cmk.gui.watolib.hosts_and_folders import Host
+from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
 from cmk.gui.watolib.paths import wato_var_dir
 
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
-
 UpdatedHostLabelsEntry = tuple[str, float, str]
+
+_PATH_LAST_CLEANUP_TIMESTAMP = wato_var_dir() / "last_discovered_host_labels_cleanup.mk"
+_MINIMUM_CLEANUP_INTERVAL = 60 * 60
 
 
 @dataclass
@@ -102,6 +101,17 @@ class DiscoveredHostLabelSyncResponse:
     updated_host_labels: list[UpdatedHostLabelsEntry]
 
 
+def register(cron_job_registry: CronJobRegistry) -> None:
+    cron_job_registry.register(
+        CronJob(
+            name="execute_host_label_sync_job",
+            callable=execute_host_label_sync_job,
+            interval=timedelta(minutes=1),
+            run_in_thread=True,
+        )
+    )
+
+
 def execute_host_label_sync(host_name: HostName, site_id: SiteId) -> None:
     """Contacts the given remote site to synchronize the labels of the given host"""
     site_spec = get_site_config(active_config, site_id)
@@ -116,50 +126,39 @@ def execute_host_label_sync(host_name: HostName, site_id: SiteId) -> None:
     save_updated_host_label_files(result.updated_host_labels)
 
 
-def execute_host_label_sync_job() -> DiscoveredHostLabelSyncJob | None:
+def execute_host_label_sync_job() -> None:
     """This function is called by the GUI cron job once a minute.
     Errors are logged to var/log/web.log."""
     if not has_wato_slave_sites():
-        return None
+        return
 
-    job = DiscoveredHostLabelSyncJob()
+    DiscoveredHostLabelSyncJob().do_sync()
 
-    try:
-        job.start(
-            job.do_sync,
-            InitialStatusArgs(
-                title=DiscoveredHostLabelSyncJob.gui_title(),
-                stoppable=False,
-                user=str(user.id) if user.id else None,
-            ),
-        )
-    except BackgroundJobAlreadyRunning:
-        logger.debug("Another synchronization job is already running: Skipping this sync")
+    now = time.time()
+    if (
+        now - _load_and_parse_timestamp_last_cleanup_defensive(_PATH_LAST_CLEANUP_TIMESTAMP)
+        < _MINIMUM_CLEANUP_INTERVAL
+    ):
+        return
 
-    return job
+    _cleanup_discovered_host_labels(
+        cmk.utils.paths.discovered_host_labels_dir,
+        folder_tree().root_folder().all_hosts_recursively(),
+    )
+    store.save_text_to_file(_PATH_LAST_CLEANUP_TIMESTAMP, str(now))
 
 
-class DiscoveredHostLabelSyncJob(BackgroundJob):
+class DiscoveredHostLabelSyncJob:
     """This job synchronizes the discovered host labels from remote sites to the central site
 
     Currently they are only needed for the Agent Bakery, but may be used in other places in the
     future.
     """
 
-    job_prefix = "discovered_host_label_sync"
-
-    @classmethod
-    def gui_title(cls) -> str:
-        return _("Discovered host label synchronization")
-
-    def __init__(self) -> None:
-        super().__init__(self.job_prefix)
-
-    def do_sync(self, job_interface: BackgroundProcessInterface) -> None:
-        with job_interface.gui_context():
-            job_interface.send_progress_update(_("Synchronization started..."))
-            self._execute_sync()
-            job_interface.send_result_message(_("The synchronization finished."))
+    def do_sync(self) -> None:
+        logger.info("Synchronization started...")
+        self._execute_sync()
+        logger.info("The synchronization finished.")
 
     def _execute_sync(self) -> None:
         newest_host_labels = self._load_newest_host_labels_per_site()
@@ -187,7 +186,6 @@ class DiscoveredHostLabelSyncJob(BackgroundJob):
             SiteRequest,
         ],
     ) -> SiteResult:
-        log.init_logging()  # NOTE: We run in a subprocess!
         return _execute_site_sync(*args)
 
     def _process_site_sync_results(
@@ -257,7 +255,7 @@ def _execute_site_sync(
         )
 
     except Exception as e:
-        logger.error("Exception (%s, discovered_host_label_sync)", site_id, exc_info=True)
+        logger.error("Failed to get discovered host labels from site %s: %s", site_id, e)
         return SiteResult(
             site_id=site_id,
             success=False,
@@ -294,7 +292,7 @@ def get_updated_host_label_files(newer_than: float) -> list[UpdatedHostLabelsEnt
     return updated_host_labels
 
 
-class AutomationDiscoveredHostLabelSync(AutomationCommand):
+class AutomationDiscoveredHostLabelSync(AutomationCommand[SiteRequest]):
     """Called by execute_site_sync to perform the sync with a remote site"""
 
     def command_name(self) -> str:
@@ -320,3 +318,30 @@ class AutomationDiscoveredHostLabelSync(AutomationCommand):
             )
 
         return asdict(response)
+
+
+def _load_and_parse_timestamp_last_cleanup_defensive(path: Path) -> float:
+    try:
+        raw_timestamp_last_cleanup = path.read_text()
+    except FileNotFoundError:
+        raw_timestamp_last_cleanup = str(0.0)
+    try:
+        return float(raw_timestamp_last_cleanup)
+    except ValueError:
+        return 0.0
+
+
+def _cleanup_discovered_host_labels(
+    discovered_host_labels_dir: Path,
+    all_known_hosts: Iterable[str],
+) -> None:
+    hosts_with_stored_discovered_host_labels = set(
+        p.stem for p in discovered_host_labels_dir.iterdir()
+    )
+    for removed_host_with_still_stored_discovered_host_labels in (
+        hosts_with_stored_discovered_host_labels - set(all_known_hosts)
+    ):
+        (
+            discovered_host_labels_dir
+            / f"{removed_host_with_still_stored_discovered_host_labels}.mk"
+        ).unlink(missing_ok=True)

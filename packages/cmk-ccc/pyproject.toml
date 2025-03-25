@@ -1,0 +1,20 @@
+[project]
+name = "cmk-ccc"
+version = "1.0.0"
+dynamic = ["dependencies"]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+
+[tool.setuptools.package-data]
+"cmk.ccc" = ["py.typed"]
+
+[tool.bandit]
+
+[tool.mypy]
+packages = ["cmk", "tests"]
+strict = true

@@ -21,7 +21,7 @@ import time
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -138,10 +138,10 @@ def lnx_quota_limit_check(quota: Quota, filesys_mode: QuotasType) -> Iterable[Re
         yield Result(state=State.OK, notice=f"{filesys_mode.name} {quota.no_limits_set()}")
         return
 
-    (result,) = check_levels(
+    (result,) = check_levels_v1(
         value=quota.used, levels_upper=(quota.soft, quota.hard), notice_only=True
     )
-    match (result.state):
+    match result.state:
         case State.OK:
             yield Result(state=State.OK, notice=f"{filesys_mode.name} {quota.exceeded_no_limit()}")
         case State.WARN:

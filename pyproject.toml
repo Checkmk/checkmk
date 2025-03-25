@@ -1,20 +1,25 @@
 [tool.ruff]
-src = ["cmk", "tests"]
 extend-exclude = ["agents/plugins/mk_sap_2.py", "doc/**/*.py"]
 target-version = "py312"
 line-length = 100
 
 [tool.ruff.lint]
-# NOTE: No "I" yet due to various tiny formatting differences
-select = ["E", "F", "W", "C90", "PL"]
+select = [
+  "A",      # flake8: builtins
+  "ARG",    # flake8: unused args
+  "C90",    # mccabe
+  "E",      # pycodestyle (error)
+  "F",      # pyflakes
+  "I",      # isort
+  "PL",     # pylint
+  "RUF100", # ruff: unused noqa
+  "SLF",    # flake8: self
+  "UP",     # pyugrade
+  "W",      # pycodestyle (warning)
+]
 ignore = [
   # Black is our formatting tool, so ignore any formatting-related findings.
   "E501", # line too long
-  # Ignore findings which are incompatible with our "import" techonology.
-  "F401", # 'FOO' imported but unused
-  "E402", # module level import not at top of file
-  "F403", # 'from FOO import *' used; unable to detect undefined names
-  "F405", # 'FOO' may be undefined, or defined from star imports: BAR
   # We should probably have a look at these findings.
   "E731", # do not assign a lambda expression, use a def
   "E741", # ambiguous variable name 'FOO'
@@ -28,7 +33,47 @@ ignore = [
   "PLR2044", # Line with empty comment
   "PLW0603", # Using the global statement to update `FOO` is discouraged
   "PLW2901", # `for` loop variable `FOO` overwritten by assignment target
+  # Basically a TODO list...
+  "UP004", # Class `_MockHttpResponse` inherits from `object`
+  "UP006", # Use `collections.defaultdict` instead of `DefaultDict` for type annotation
+  "UP007", # Use `X | Y` for type annotations
+  "UP009", # UTF-8 encoding declaration is unnecessary
+  "UP010", # Unnecessary `__future__` import `with_statement` for target Python version
+  "UP012", # Unnecessary call to `encode` as UTF-8
+  "UP015", # Unnecessary open mode parameters
+  "UP017", # Use `datetime.UTC` alias
+  "UP024", # Replace aliased errors with `OSError`
+  "UP025", # Remove unicode literals from strings
+  "UP026", # `mock` is deprecated, use `unittest.mock`
+  "UP028", # Replace `yield` over `for` loop with `yield from`
+  "UP031", # Use format specifiers instead of percent format
+  "UP032", # Use f-string instead of `format` call
+  "UP035", # Import from `FOO` instead: `BAR`
+  "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
+  "UP040", # Type alias `FOO` uses `TypeAlias` annotation instead of the `type` keyword
+  "UP041", # Replace aliased errors with `TimeoutError`
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"cmk/*" = [
+  "A001",
+  "A002",
+  "A004",
+  "ARG001",
+  "ARG002",
+  "ARG003",
+  "ARG004",
+  "ARG005",
+  "SLF001",
+]
+"packages/cmk-trace/cmk/trace/__init__.py" = ["A005"]
+"non-free/packages/cmk-mknotifyd/*" = ["ARG001", "ARG002", "SLF001"]
+"tests/*" = ["A002", "ARG001", "ARG002", "ARG003", "ARG004", "ARG005", "SLF001"]
+"agents/*" = ["ARG001", "ARG002", "SLF001"]
+# Agent plugins still need to support Python 2.7
+"agents/plugins/*" = ["UP036"]
+"tests/agent-plugin-unit/*" = ["UP036"]
+"agents/wnx/tests/ap/test_mk_logwatch_win.py" = ["UP036"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 64 # TODO: This is far too much, we need to lower this!
@@ -41,16 +86,17 @@ section-order = [
   "future",
   "standard-library",
   "third-party",
-  "werks",
   "cmc_proto",
-  "testlib",
-  "integrationtests",
   "compositiontests",
+  "uitests",
+  "integrationtests",
+  "testlib",
   "unittests",
   "livestatus",
   "omd",
   "cmk_ccc",
   "cmk_utils",
+  "cmk_events",
   "cmk_automations",
   "cmk_snmplib",
   "cmk_fetchers",
@@ -60,20 +106,27 @@ section-order = [
   "cmk_gui",
   "cmk_cee",
   "cmk_notification_plugins",
+  "cmk_werks",
   "first-party",
   "local-folder",
 ]
 
 [tool.ruff.lint.isort.sections]
-werks = ["werks"]
 cmc_proto = ["cmc_proto"]
-testlib = ["tests.testlib"]
-integrationtests = ["tests.integration"]
+testlib = ["tests.testlib", "tests.gui_e2e.testlib"]
+integrationtests = ["tests.agent_plugin_integration", "tests.integration"]
 compositiontests = ["tests.composition"]
-unittests = ["tests.unit", "tests.plugins_integration", "tests.update"]
+unittests = [
+  "tests.unit",
+  "tests.plugins_integration",
+  "tests.plugins_siteless",
+  "tests.update",
+]
+uitests = ["tests.gui_crawl", "tests.gui_e2e"]
 livestatus = ["livestatus"]
 omd = ["omdlib"]
 cmk_ccc = ["cmk.ccc"]
+cmk_events = ["cmk.events"]
 cmk_utils = ["cmk.utils"]
 cmk_automations = ["cmk.automations"]
 cmk_snmplib = ["cmk.snmplib"]
@@ -84,65 +137,158 @@ cmk_ec = ["cmk.ec"]
 cmk_gui = ["cmk.gui"]
 cmk_cee = ["cmk.cee.dcd", "cmk.cee.liveproxy", "cmk.cee.mknotifyd"]
 cmk_notification_plugins = ["cmk.notification_plugins"]
-
-
-[tool.isort]
-known_werks = "werks"
-known_cmc_proto = "cmc_proto"
-known_testlib = "tests.testlib"
-known_integrationtests = "tests.integration"
-known_compositiontests = "tests.composition"
-known_unittests = "tests.unit,tests.plugins_integration,tests.update"
-known_livestatus = "livestatus"
-known_omd = "omdlib"
-known_cmk_utils = "cmk.utils"
-known_cmk_automations = "cmk.automations"
-known_cmk_snmplib = "cmk.snmplib"
-known_cmk_fetchers = "cmk.fetchers"
-known_cmk_checkengine = "cmk.checkengine"
-known_cmk_base = "cmk.base"
-known_cmk_ec = "cmk.ec"
-known_cmk_gui = "cmk.gui"
-known_cmk_cee = "cmk.cee.dcd,cmk.cee.liveproxy,cmk.cee.mknotifyd"
-known_cmk_notification_plugins = "cmk.notification_plugins"
-known_first_party = "cmk"
-
-# Order sections according to our layering.
-sections = """FUTURE,STDLIB,THIRDPARTY,WERKS,CMC_PROTO,TESTLIB,INTEGRATIONTESTS,COMPOSITIONTESTS,UNITTESTS,LIVESTATUS,OMD,
-CMK_UTILS,CMK_AUTOMATIONS,CMK_SNMPLIB,CMK_FETCHERS,CMK_CHECKENGINE,CMK_BASE,CMK_EC,CMK_GUI,CMK_CEE,
-CMK_NOTIFICATION_PLUGINS,FIRSTPARTY,LOCALFOLDER"""
-
-profile = "black"
-order_by_type = "False"
-line_length = 100
-py_version = "312"
-
-
-[tool.black]
-line-length = 100
-target-version = ['py312']
-
+cmk_werks = ["cmk.werks"]
 
 # NOTE: Keep this is sync with mypy-raw.ini!
 # The number of errors/files below are just a snapshot to give a rough idea. In
 # addition, a single cause can imply multiple symptoms, so these numbers have to
 # be taken with a grain of salt...
 [tool.mypy]
+# Global options.
+# Add per-module options as [[tool.mypy.overrides]].
 explicit_package_bases = true
+# TODO: `mypy_path` shouldn't be required with Bazel.
 mypy_path = """\
-    $MYPY_CONFIG_FILE_DIR:\
-    $MYPY_CONFIG_FILE_DIR/non-free/cmc-protocols:\
-    $MYPY_CONFIG_FILE_DIR/non-free/cmk-update-agent:\
-    $MYPY_CONFIG_FILE_DIR/livestatus/api/python:\
     $MYPY_CONFIG_FILE_DIR/omd/packages/omd:\
-    $MYPY_CONFIG_FILE_DIR/tests/typeshed:\
-    $MYPY_CONFIG_FILE_DIR/packages/cmk-trace\
     """
 plugins = ["pydantic.mypy"]
 python_version = "3.12"
 scripts_are_modules = true
-# When all of these are true, we can enable --strict
+
+# do not descend into 3rd party dependencies
+follow_imports = "silent"
+follow_imports_for_stubs = true
+
+# hidden flags for PEP 688 compat, see https://github.com/python/mypy/issues/15313
+disable_bytearray_promotion = true
+disable_memoryview_promotion = true
+
+# global options enabled with strict
 check_untyped_defs = true
+warn_redundant_casts = true
+warn_unused_configs = true
+
+[[tool.mypy.overrides]]
+module = [
+  # 3rd party that "does not explictly export attribute ... [attr-defined]"
+  "icalendar",
+  "feedparser",
+  "marshmallow_oneofschema",
+  "msal",
+  "opsgenie_sdk",
+  "requests_oauthlib",
+  "robot",
+  "robot.model",
+  "robot.result",
+  "vcr",
+]
+no_implicit_reexport = false
+
+[[tool.mypy.overrides]]
+module = [
+  # active_checks
+  "check_sql",
+  "check_elasticsearch_query",
+  "check_bi_aggr",
+  "check_uniserv",
+  "check_form_submit",
+  "check_notify_count",
+  "agents.modules.windows.tests.integration.conftest",
+  "agents.plugins.*",
+  # agents/special/*
+  "agent_activemq",
+  "agent_alertmanager",
+  "agent_allnet_ip_sensoric",
+  "agent_appdynamics",
+  "agent_aws",
+  "agent_aws_status",
+  "agent_azure",
+  "agent_azure_status",
+  "agent_bi",
+  "agent_cisco_meraki",
+  "agent_cisco_prime",
+  "agent_couchbase",
+  "agent_datadog",
+  "agent_ddn_s2a",
+  "agent_elasticsearch",
+  "agent_emcvnx",
+  "agent_gcp",
+  "agent_gcp_status",
+  "agent_graylog",
+  "agent_hivemanager",
+  "agent_hivemanager_ng",
+  "agent_hp_msa",
+  "agent_ibmsvc",
+  "agent_innovaphone",
+  "agent_ipmi_sensors",
+  "agent_jira",
+  "agent_jolokia",
+  "agent_kube",
+  "agent_mobileiron",
+  "agent_mqtt",
+  "agent_netapp_ontap",
+  "agent_prism",
+  "agent_prometheus",
+  "agent_proxmox_ve",
+  "agent_pure_storage_fa",
+  "agent_rabbitmq",
+  "agent_random",
+  "agent_ruckus_spot",
+  "agent_salesforce",
+  "agent_siemens_plc",
+  "agent_smb_share",
+  "agent_splunk",
+  "agent_storeonce",
+  "agent_storeonce4x",
+  "agent_tinkerforge",
+  "agent_ucs_bladecenter",
+  "agent_vnx_quotas",
+  "agent_vsphere",
+  "agent_zerto",
+  "agents.wnx.tests.*",
+  "buildscripts.*",
+  "cmk.*",
+  "cmk_update_agent",
+  # omd/packages/maintenance
+  "diskspace",
+  "doc.*",
+  # doc/*
+  "foo.check",
+  "import-memory",
+  "figheader",
+  #
+  "logdate",
+  "omd.*",
+  "omdlib.*",
+  "scripts.create_build_environment_variables",
+  "tests.*",
+  # tests/agent-plugin-unit/*
+  "test_apache_status",
+  "test_mk_filestats",
+  "test_mk_jolokia",
+  "test_mk_logwatch",
+  "test_mk_mongodb",
+  "test_mk_postgres",
+  "test_mk_sap",
+  "test_mtr",
+  "test_plesk_backups",
+  "test_plesk_domains",
+]
+enable_error_code = [
+  # "explicit-override",   # 443 errors in 99 files
+  "ignore-without-code",
+  # "mutable-override",    # 336 errors in 71 files
+  # "possibly-undefined",  # 401 errors in 183 files
+  # "redundant-expr",      # 115 errors in 86 files
+  "redundant-self",
+  "truthy-bool",
+  "truthy-iterable",
+  "unimported-reveal",
+  "unused-awaitable",
+  "unused-ignore",
+]
+
+# When all of these are true, we can enable --strict
 disallow_any_generics = false      # 1904 errors in 507 files
 disallow_incomplete_defs = true
 disallow_subclassing_any = true
@@ -152,10 +298,9 @@ disallow_untyped_defs = false      # 6738 errors in 1571
 extra_checks = true
 no_implicit_reexport = true
 strict_equality = true
-warn_redundant_casts = true
 warn_return_any = false            # 622 errors in 267 files
-warn_unused_configs = true
 warn_unused_ignores = true
+
 # Miscellaneous stuff not in --strict
 disallow_any_decorated = false  # 3433 errors in 997 files
 disallow_any_explicit = false   # 2854 errors in 836 files
@@ -164,14 +309,17 @@ disallow_any_unimported = false # 291 errors in 46 files
 no_implicit_optional = true
 strict_optional = true
 warn_unreachable = false        # 240 errors in 133 files
-# hidden flags for PEP 688 compat, see https://github.com/python/mypy/issues/15313
-disable_bytearray_promotion = true
-disable_memoryview_promotion = true
+
+[[tool.mypy.overrides]]
+module = ["mk_jolokia"]
+disallow_untyped_calls = false
+disallow_untyped_defs = false
 
 [[tool.mypy.overrides]]
 module = [
   "cmk.active_checks.check_sftp",
   "cmk.cee.bakery.*",
+  "cmk.cee.liveproxy.*",
   "cmk.gui.background_job.*",
   "cmk.gui.mobile.views",
   "cmk.gui.views.layout.*",
@@ -187,16 +335,273 @@ module = [
   "cmk.gui.watolib.registration",
   "cmk.notification_plugins.*",
   "cmk.update_config.*",
-  "cmk.utils.crypto.*",
   "cmk.utils.livestatus_helpers.*",
   "tests.gui_e2e.*",
   "tests.unit.cmk.ec.*",
   "tests.unit.cmk.update_config.*",
 ]
+enable_error_code = ["explicit-override"]
 disallow_untyped_calls = true
 disallow_untyped_defs = true
 warn_return_any = true
 warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = [
+  # generated code
+  "cmc_proto.*",
+]
+disallow_untyped_calls = false
+
+[[tool.mypy.overrides]]
+module = ["cmk.crypto.*"]
+enable_error_code = [
+  "explicit-override",
+  "ignore-without-code",
+  "mutable-override",
+  "possibly-undefined",
+  "redundant-expr",
+  "redundant-self",
+  "truthy-bool",
+  "truthy-iterable",
+  "unimported-reveal",
+  "unused-awaitable",
+  "unused-ignore",
+]
+strict = true
+# Miscellaneous stuff not in --strict
+disallow_any_decorated = true
+disallow_any_explicit = true
+# disallow_any_expr = true  -- TODO
+disallow_any_generics = true
+disallow_any_unimported = true
+disallow_subclassing_any = true
+no_implicit_optional = true
+strict_optional = true
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = ["cmk.server_side_calls.*", "cmk.rulesets.*"]
+enable_error_code = [
+  "explicit-override",
+  "ignore-without-code",
+  "mutable-override",
+  "possibly-undefined",
+  "redundant-expr",
+  "redundant-self",
+  "truthy-bool",
+  "truthy-iterable",
+  "unimported-reveal",
+  "unused-awaitable",
+  "unused-ignore",
+]
+strict = true
+# Miscellaneous stuff not in --strict
+disallow_any_decorated = false
+disallow_any_explicit = false
+disallow_any_expr = true
+disallow_any_generics = true
+disallow_any_unimported = true
+disallow_subclassing_any = true
+no_implicit_optional = true
+strict_optional = true
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = ["cmk.agent_receiver.*"]
+enable_error_code = [
+  "explicit-override",
+  "ignore-without-code",
+  "mutable-override",
+  "possibly-undefined",
+  "redundant-expr",
+  "redundant-self",
+  "truthy-bool",
+  "truthy-iterable",
+  "unimported-reveal",
+  "unused-awaitable",
+  "unused-ignore",
+]
+strict = true
+# Miscellaneous stuff not in --strict
+disallow_any_decorated = false
+disallow_any_explicit = false
+disallow_any_expr = false
+disallow_any_generics = true
+disallow_any_unimported = true
+disallow_subclassing_any = true
+no_implicit_optional = true
+strict_optional = true
+warn_unreachable = true
+
+
+[[tool.mypy.overrides]]
+module = ["cmk.trace.*"]
+enable_error_code = [
+  "explicit-override",
+  "ignore-without-code",
+  "mutable-override",
+  "possibly-undefined",
+  "redundant-expr",
+  "redundant-self",
+  "truthy-bool",
+  "truthy-iterable",
+  "unimported-reveal",
+  "unused-awaitable",
+  "unused-ignore",
+]
+strict = true
+# Miscellaneous stuff not in --strict
+disallow_any_decorated = false
+disallow_any_explicit = false
+disallow_any_expr = false
+disallow_any_generics = true
+disallow_any_unimported = true
+disallow_subclassing_any = true
+no_implicit_optional = true
+strict_optional = true
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = ["cmk.graphing.*"]
+enable_error_code = [
+  "explicit-override",
+  "ignore-without-code",
+  "mutable-override",
+  "possibly-undefined",
+  # The few findings need to be investigated
+  #"redundant-expr",
+  "redundant-self",
+  "truthy-bool",
+  "truthy-iterable",
+  "unimported-reveal",
+  "unused-awaitable",
+  "unused-ignore",
+]
+strict = true
+# Miscellaneous stuff not in --strict
+disallow_any_decorated = true
+disallow_any_explicit = true
+disallow_any_expr = true
+disallow_any_generics = true
+disallow_any_unimported = true
+disallow_subclassing_any = true
+no_implicit_optional = true
+strict_optional = true
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = ["cmk.livestatus_client.*", "livestatus.*"]
+enable_error_code = [
+  "explicit-override",
+  "ignore-without-code",
+  "mutable-override",
+  "possibly-undefined",
+  "redundant-expr",
+  "redundant-self",
+  "truthy-bool",
+  "truthy-iterable",
+  "unimported-reveal",
+  "unused-awaitable",
+  "unused-ignore",
+]
+strict = true
+# Miscellaneous stuff not in --strict
+disallow_any_decorated = true
+# TODO: Disabled for initial move to a package
+disallow_any_explicit = false
+# TODO: Disabled for initial move to a package
+disallow_any_expr = false
+disallow_any_generics = true
+disallow_any_unimported = true
+disallow_subclassing_any = true
+no_implicit_optional = true
+strict_optional = true
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = ["cmk.mkp_tool.*", "cmk.events.*"]
+enable_error_code = [
+  "explicit-override",
+  "ignore-without-code",
+  "mutable-override",
+  "possibly-undefined",
+  "redundant-expr",
+  "redundant-self",
+  "truthy-bool",
+  "truthy-iterable",
+  "unimported-reveal",
+  "unused-awaitable",
+  "unused-ignore",
+]
+strict = true
+# Miscellaneous stuff not in --strict
+disallow_any_decorated = false
+disallow_any_explicit = false
+disallow_any_expr = false
+disallow_any_generics = true
+disallow_any_unimported = true
+disallow_subclassing_any = true
+no_implicit_optional = true
+strict_optional = true
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = ["cmk.messaging.*"]
+enable_error_code = [
+  "explicit-override",
+  "ignore-without-code",
+  "mutable-override",
+  "possibly-undefined",
+  "redundant-expr",
+  "redundant-self",
+  "truthy-bool",
+  "truthy-iterable",
+  "unimported-reveal",
+  "unused-awaitable",
+  "unused-ignore",
+]
+strict = true
+# my-py warns about decorated functions containing type "Any"
+# but they come from pydantic base classes:
+disallow_any_decorated = false
+# Miscellaneous stuff not in --strict
+disallow_any_explicit = false
+disallow_any_expr = true
+disallow_any_generics = true
+disallow_any_unimported = true
+disallow_subclassing_any = true
+no_implicit_optional = true
+strict_optional = true
+warn_unreachable = true
+
+
+[[tool.mypy.overrides]]
+module = ["cmk.werks.*"]
+enable_error_code = [
+  "explicit-override",
+  "ignore-without-code",
+  "mutable-override",
+  "possibly-undefined",
+  "redundant-expr",
+  "redundant-self",
+  "truthy-bool",
+  "truthy-iterable",
+  "unimported-reveal",
+  "unused-awaitable",
+  "unused-ignore",
+]
+strict = true
+# Miscellaneous stuff not in --strict
+disallow_any_decorated = false
+disallow_any_explicit = false
+disallow_any_expr = false
+disallow_any_generics = true
+disallow_any_unimported = true
+disallow_subclassing_any = true
+no_implicit_optional = true
+strict_optional = true
+warn_unreachable = true
 
 [[tool.mypy.overrides]]
 module = ["cmk.gui.form_specs.*"]
@@ -207,6 +612,61 @@ module = ["cmk.ec.*"]
 disallow_any_generics = true
 disallow_untyped_calls = true
 disallow_untyped_defs = true
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = "cmk.agent_based.*"
+strict = true
+enable_error_code = [
+  "explicit-override",
+  "ignore-without-code",
+  "mutable-override",
+  "possibly-undefined",
+  # Needs to be investigated
+  # "redundant-expr",
+  "redundant-self",
+  "truthy-bool",
+  "truthy-iterable",
+  "unimported-reveal",
+  "unused-awaitable",
+  "unused-ignore",
+]
+# Miscellaneous stuff not in --strict
+disallow_any_decorated = true
+disallow_any_explicit = true
+disallow_any_expr = true
+disallow_any_generics = true
+disallow_any_unimported = true
+disallow_subclassing_any = true
+no_implicit_optional = true
+strict_optional = true
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = "cmk.otel_collector.*"
+strict = true
+enable_error_code = [
+  "explicit-override",
+  "ignore-without-code",
+  "mutable-override",
+  "possibly-undefined",
+  "redundant-expr",
+  "redundant-self",
+  "truthy-bool",
+  "truthy-iterable",
+  "unimported-reveal",
+  "unused-awaitable",
+  "unused-ignore",
+]
+# Miscellaneous stuff not in --strict
+disallow_any_decorated = true
+disallow_any_explicit = true
+disallow_any_expr = true
+disallow_any_generics = true
+disallow_any_unimported = true
+disallow_subclassing_any = true
+no_implicit_optional = true
+strict_optional = true
 warn_unreachable = true
 
 [tool.pydantic-mypy]
@@ -226,7 +686,7 @@ addopts = [
   # successful, etc. etc. We might reconsinder lowering the live log level when we
   # have cleaned up things...
   "--log-cli-level=CRITICAL",
-  "--log-cli-format=\"%(asctime)s %(levelname)s %(message)s\"",
+  "--log-cli-format=%(asctime)s %(levelname)s %(message)s",
   # Show summary of skipped tests
   "-rs",
   # Show N slowest setup/test durations
@@ -263,7 +723,10 @@ filterwarnings = [
   'ignore:^Type google\._upb\._message.ScalarMapContainer uses PyType_Spec with a metaclass that has custom tp_new\. This is deprecated and will no longer be allowed in Python 3\.14\.$:DeprecationWarning:importlib._bootstrap:488',
   # ignore PytestCollectionWarning caused by webtest
   'ignore:^cannot collect test class .* because it has a __init__ constructor.*$:UserWarning:.*webtest.*:0',
+  # openapi collector uses pkg resources
+  'ignore:pkg_resources:DeprecationWarning:.*opentelemetry.*',
 ]
 # When writing a junit.xml, also write the output of a test to the junit
 # file in addition to the console.
 junit_logging = "all"
+asyncio_default_fixture_loop_scope = "function"

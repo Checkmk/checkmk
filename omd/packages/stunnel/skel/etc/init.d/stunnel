@@ -38,7 +38,7 @@ case "$1" in
         if [ -e "$PIDFILE" ]; then
             PID=$(cat $PIDFILE)
             if [ -n "$PID" ] && ps "$PID" >/dev/null 2>&1; then
-                echo "Already running."
+                echo "already running."
                 exit 0
             fi
             echo "removing stale pid file..."
@@ -69,7 +69,7 @@ case "$1" in
             done
             echo "OK"
         else
-            echo "Failed"
+            echo "failed"
         fi
         ;;
     restart | reload)

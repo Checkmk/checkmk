@@ -61,7 +61,7 @@ class SMBShareDiskUsageProto(Protocol):
 
 
 def _output_check_result(summary: str, perfdata: Metric | None) -> None:
-    print(f"{summary} | {perfdata}" if perfdata else summary)
+    sys.stdout.write((f"{summary} | {perfdata}" if perfdata else summary) + "\n")
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:

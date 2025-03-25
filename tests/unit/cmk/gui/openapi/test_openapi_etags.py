@@ -6,9 +6,9 @@ from collections.abc import Iterator
 
 import pytest
 
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
-from tests.unit.cmk.gui.conftest import SetConfig, WebTestAppForCMK
+from tests.unit.cmk.web_test_app import SetConfig, WebTestAppForCMK
 
 
 @pytest.fixture(scope="function", name="etags_off")

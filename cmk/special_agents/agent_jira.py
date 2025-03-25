@@ -277,7 +277,7 @@ def parse_arguments(argv):
         "--jql-field",
         nargs=1,
         action="append",
-        help='Field for operation. Please use "None" if you ' 'use "count" as result option.',
+        help='Field for operation. Please use "None" if you use "count" as result option.',
     )
     parser.add_argument(
         "--jql-limit", nargs=1, action="append", help="Maximum number of processed search results."

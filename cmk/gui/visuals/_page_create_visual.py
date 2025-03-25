@@ -153,6 +153,6 @@ def _single_info_selection_to_valuespec(restrictions: Sequence[str]) -> tuple[st
 
 
 def _single_info_selection_from_valuespec(
-    name_and_restrictions: tuple[str, Sequence[str]]
+    name_and_restrictions: tuple[str, Sequence[str]],
 ) -> Sequence[str]:
     return name_and_restrictions[1]

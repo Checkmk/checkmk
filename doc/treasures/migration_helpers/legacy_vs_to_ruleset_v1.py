@@ -6,11 +6,12 @@
 
 This tool will modify files in place, to make them use the API `cmk.rulesets.v1`.
 It requires you to install the python library `libcst`.
-It does not require, but will attempt to call `autoflake`, `scripts/run-black` and `scripts/run-isort` on the modified file(s).
+It does not require, but will attempt to call `autoflake`, `scripts/run-format` and `scripts/run-sort` on the modified file(s).
 For very simple plugins, it might do the whole job, for most it will not.
 
 It's a quick and dirty, untested hacky thing.
 """
+
 import argparse
 import subprocess
 import sys
@@ -118,7 +119,6 @@ def _extract(keyword: str, args: Sequence[cst.Arg]) -> Iterable[cst.Arg]:
 
 
 class VSTransformer(cst.CSTTransformer):
-
     def leave_Arg(self, original_node: cst.Arg, updated_node: cst.Arg) -> cst.Arg:
         match updated_node:
             case cst.Arg(cst.Call(func=cst.Name("_"), args=args), cst.Name("title")):
@@ -309,11 +309,11 @@ class VSTransformer(cst.CSTTransformer):
         ]
 
         template_args = []
-        if (args.get("unit")) is not None:
+        if (unit := args.get("unit")) is not None:
             template_args = [
                 cst.Arg(
                     keyword=cst.Name("unit_symbol"),
-                    value=cst.ensure_type(args["spec"], cst.SimpleString),
+                    value=cst.ensure_type(unit, cst.SimpleString),
                 )
             ]
 
@@ -409,7 +409,6 @@ class VSTransformer(cst.CSTTransformer):
 
 
 class RegistrationTransformer(cst.CSTTransformer):
-
     def leave_SimpleStatementLine(
         self, original_node: cst.SimpleStatementLine, updated_node: cst.SimpleStatementLine
     ) -> cst.SimpleStatementLine | cst.FlattenSentinel:
@@ -433,13 +432,20 @@ class RegistrationTransformer(cst.CSTTransformer):
             return self._construct_check_parameters(old_ruleset.args)
 
         args = {k.value: arg.value for arg in old_ruleset.args if (k := arg.keyword) is not None}
-        group = cst.ensure_type(
-            cst.ensure_type(args["name"], cst.Call).func, cst.Attribute
-        ).attr.value
+        group = (
+            name.value
+            if isinstance(name := args["name"], cst.SimpleString)
+            else cst.ensure_type(
+                cst.ensure_type(args["name"], cst.Call).func, cst.Attribute
+            ).attr.value
+        )
         if rule_type == "HostRulespec" and group == "SpecialAgents":
             return self._construct_special_agent(old_ruleset.args)
         if rule_type == "HostRulespec" and group == "ActiveChecks":
             return self._construct_active_check(old_ruleset.args)
+        if rule_type == "HostRulespec":
+            # a guess, but most of the time it's a discovery rule
+            return self._construct_discovery_parameters(group, old_ruleset.args)
 
         print(f"not yet implemented rulespec type: {rule_type}", file=sys.stderr)
         return cst.SimpleStatementLine(
@@ -462,6 +468,33 @@ class RegistrationTransformer(cst.CSTTransformer):
                     targets=(cst.AssignTarget(cst.Name(f"rule_spec_{name}")),),
                     value=cst.Call(
                         func=cst.Name("CheckParameters"),
+                        args=(
+                            cst.Arg(cst.SimpleString(f'"{name}"'), cst.Name("name")),
+                            *_extract("title", old),
+                            cst.Arg(cst.Name("Topic"), cst.Name("topic")),
+                            cst.Arg(form_spec, cst.Name("parameter_form")),
+                            cst.Arg(
+                                self._make_condition(args.get("item_spec")),
+                                cst.Name("condition"),
+                            ),
+                        ),
+                    ),
+                ),
+            )
+        )
+
+    def _construct_discovery_parameters(
+        self, name: str, old: Sequence[cst.Arg]
+    ) -> cst.SimpleStatementLine:
+        args = {k.value: arg.value for arg in old if (k := arg.keyword) is not None}
+        form_spec = args["parameter_valuespec"]
+
+        return cst.SimpleStatementLine(
+            (
+                cst.Assign(
+                    targets=(cst.AssignTarget(cst.Name(f"rule_spec_{name}")),),
+                    value=cst.Call(
+                        func=cst.Name("DiscoveryParameters"),
                         args=(
                             cst.Arg(cst.SimpleString(f'"{name}"'), cst.Name("name")),
                             *_extract("title", old),
@@ -572,7 +605,6 @@ def _try_to_run(*command_items: object) -> None:
 
 
 def main(argv: Sequence[str]) -> None:
-
     args = parse_arguments(argv)
 
     for file in (Path(p) for p in args.files):
@@ -585,8 +617,8 @@ def main(argv: Sequence[str]) -> None:
                 raise
 
     _try_to_run("autoflake", "-i", "--remove-all-unused-imports", *args.files)
-    _try_to_run("scripts/run-isort", *args.files)
-    _try_to_run("scripts/run-black", *args.files)
+    _try_to_run("scripts/run-sort", *args.files)
+    _try_to_run("scripts/run-format", *args.files)
 
 
 if __name__ == "__main__":

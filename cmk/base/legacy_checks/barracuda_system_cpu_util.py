@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.barracuda import DETECT_BARRACUDA
+
+check_info = {}
 
 # .1.3.6.1.4.1.20632.2.13 3
 
@@ -29,6 +30,7 @@ def parse_barracuda_system_cpu_util(string_table: StringTable) -> StringTable | 
 
 
 check_info["barracuda_system_cpu_util"] = LegacyCheckDefinition(
+    name="barracuda_system_cpu_util",
     parse_function=parse_barracuda_system_cpu_util,
     detect=DETECT_BARRACUDA,
     # The barracuda spam firewall does not response or returns a timeout error

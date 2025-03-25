@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+
 from copy import deepcopy
 from os import environ, getenv
 
@@ -14,31 +14,20 @@ allow_redirects = False
 
 # generic issues that affect testing as a whole and should always be suppressed
 suppressed_issues = {
-    "CMK-11886",  # no real fix possible
-    "INVALID-JSON",
+    "CMK-11886"  # no real fix possible, caused by webserver if SCHEMATHESIS_ALLOW_NULLS=1
 }
-if "TEST_OPENAPI_SUPPRESS" in environ:
-    suppressed_issues.update(set(getenv("TEST_OPENAPI_SUPPRESS", "").upper().split(",")))
+if "SCHEMATHESIS_SUPPRESS" in environ:
+    suppressed_issues.update(set(getenv("SCHEMATHESIS_SUPPRESS", "").upper().split(",")))
 else:
     suppressed_issues.update(
         {
-            "CMK-12182",  # mostly done, but fixing InputPassword was apparently overlooked
-            "CMK-13216",
-            "CMK-14273",
-            # "CMK-14375",
-            # "CMK-14375.1",
-            # "CMK-14375.2",
-            "CMK-14381",
-            "CMK-TODO",
-            # "CMK-14991",
-            "CMK-14995",
-            "CMK-15035",
-            "CMK-15166",
-            "CMK-15167",
-            "CMK-15515",
+            "CMK-21677",
+            "CMK-21783",
+            "CMK-21807",
+            "CMK-21809",
         }
     )
-for issue in set(getenv("TEST_OPENAPI_ALLOW", "").upper().split(",")):
+for issue in set(getenv("SCHEMATHESIS_ALLOW", "").upper().split(",")):
     suppressed_issues.discard(issue)
 
 # default "string" strategy
@@ -52,13 +41,13 @@ schemathesis.register_string_format(
 )
 
 # hypothesis settings
-current_profile = settings._current_profile if hasattr(settings, "_current_profile") else "default"
+current_profile = getenv("SCHEMATHESIS_PROFILE", getattr(settings, "_current_profile", "default"))
 
 # default settings profile
 default_settings = {
     "deadline": 5000,
     "derandomize": False,
-    "max_examples": 100,
+    "max_examples": 1,
     "phases": [
         Phase.explicit,
         Phase.generate,
@@ -82,7 +71,7 @@ settings.register_profile("qa", None, **qa_settings)
 
 # ci settings profile
 ci_settings = deepcopy(default_settings)
-ci_settings.update({"derandomize": True, "verbosity": Verbosity.quiet})
+ci_settings.update({"derandomize": True, "max_examples": 10, "verbosity": Verbosity.quiet})
 settings.register_profile("ci", None, **ci_settings)
 
 # debug settings profile

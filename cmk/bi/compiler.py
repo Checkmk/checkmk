@@ -14,6 +14,10 @@ from typing import TypedDict
 
 from redis import Redis
 
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.i18n import _
+
 from cmk.utils.log import logger
 from cmk.utils.paths import default_config_dir
 from cmk.utils.redis import get_redis_client
@@ -25,9 +29,6 @@ from cmk.bi.packs import BIAggregationPacks
 from cmk.bi.searcher import BISearcher
 from cmk.bi.trees import BICompiledAggregation, BICompiledRule, FrozenBIInfo
 from cmk.bi.type_defs import frozen_aggregations_dir
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.i18n import _
 
 
 class ConfigStatus(TypedDict):

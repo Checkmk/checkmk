@@ -41,7 +41,7 @@ class Parameters(BaseModel):
     delete_messages: bool = False
 
 
-def check_mail_loop_arguments(  # pylint: disable=too-many-branches
+def check_mail_loop_arguments(
     params: Parameters, host_config: HostConfig
 ) -> Iterable[ActiveCheckCommand]:
     args: list[str | Secret] = [

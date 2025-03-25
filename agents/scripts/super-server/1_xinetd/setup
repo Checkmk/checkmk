@@ -3,13 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+: "${MK_INSTALLDIR:=""}"
+: "${MK_CONFDIR:="/etc/check_mk"}"
+
 MYSELF="$(realpath -- "$0" || printf "%s" "$0")"
-TEMPLATE="/etc/check_mk/xinetd-service-template.cfg"
 DESTINATION="/etc/xinetd.d"
 SERVICE_FILE="check-mk-agent"
-# In a CCE you can configure auto registration, that cannot be achieved with xinetd
-# if this file exists we assume that was configured. (See CMK-12997)
-PREDEFINED_CONNECTIONS_PATH="/var/lib/cmk-agent/pre_configured_connections.json"
+
+if [ -n "${MK_INSTALLDIR}" ]; then
+    TEMPLATE="${MK_INSTALLDIR}/package/config/xinetd-service-template.cfg"
+    # In a CCE you can configure auto registration, that cannot be achieved with xinetd
+    # if this file exists we assume that was configured. (See CMK-12997)
+    PREDEFINED_CONNECTIONS_PATH="${MK_INSTALLDIR}/package/config/pre_configured_connections.json"
+else
+    TEMPLATE="${MK_CONFDIR}/xinetd-service-template.cfg"
+    PREDEFINED_CONNECTIONS_PATH="/var/lib/cmk-agent/pre_configured_connections.json"
+fi
 
 usage() {
     cat >&2 <<HERE
@@ -35,7 +44,7 @@ _xinetd_present() {
 }
 
 _predefined_connection_not_present() {
-    if [ -e ${PREDEFINED_CONNECTIONS_PATH} ]; then
+    if [ -e "${PREDEFINED_CONNECTIONS_PATH}" ]; then
         printf "A auto-registration rule was configured for this host!\n" >&2
         printf "The agent controller does not support the xinetd setup and therefore transport encryption and auto-registration are not available!\n" >&2
         printf "Since this might be expected we abort here. If xinetd should really be used exclude this host from the rule that configures the auto-registration\n" >&2

@@ -14,10 +14,10 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
-from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri_contextless, urlencode_vars
 
 from .helpers import get_state_assumption_key
@@ -320,7 +320,7 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
             html.close_li()
 
     @contextmanager
-    def _show_node(  # pylint: disable=too-many-branches
+    def _show_node(
         self,
         tree,
         show_host,

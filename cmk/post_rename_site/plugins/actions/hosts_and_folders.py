@@ -4,12 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from logging import Logger
+from typing import Sequence
 
 from livestatus import SiteId
 
+from cmk.ccc.i18n import _
+
+from cmk.utils.global_ident_type import GlobalIdent
+
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 
-from cmk.ccc.i18n import _
 from cmk.post_rename_site.registry import rename_action_registry, RenameAction
 
 
@@ -25,18 +29,38 @@ def update_hosts_and_folders(old_site_id: SiteId, new_site_id: SiteId, logger: L
             logger.debug("Folder %s: Update explicitly set site", folder.alias_path())
             folder.attributes["site"] = new_site_id
 
-        # 2. Update explicitly set site in hosts
         for host in folder.hosts().values():
+            # 2. Update explicitly set site in hosts
             if host.attributes.get("site") == old_site_id:
                 logger.debug("Host %s: Update explicitly set site", host.name())
                 host.attributes["site"] = new_site_id
+
+            # 3. Update the locked_by attribute in hosts
+            if locked_by := _update_locked_by(old_site_id, new_site_id, host.locked_by()):
+                logger.debug("Host %s: Update dynamic site configuration", host.name())
+                host.update_attributes({"locked_by": locked_by})
 
         # Always rewrite the host config: The host_tags need to be updated, even in case there is no
         # site_id explicitly set. Just to be sure everything is fine we also rewrite the folder
         # config
         logger.debug("Folder %s: Saving config", folder.alias_path())
         folder.save()
-        folder.save_hosts()
+
+
+def _update_locked_by(
+    old_site_id: SiteId, new_site_id: SiteId, locked_by: GlobalIdent | None
+) -> Sequence[str] | None:
+    if not locked_by:
+        return None
+
+    if locked_by["site_id"] != old_site_id:
+        return None
+
+    return (
+        new_site_id,
+        locked_by["program_id"],
+        locked_by["instance_id"],
+    )
 
 
 rename_action_registry.register(

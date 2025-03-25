@@ -3,21 +3,33 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+"""
+This module provides a collection of utility functions and context managers for managing and testing
+the Checkmk agent in various environments.
+"""
+
 import contextlib
 import json
 import logging
 import os
 import re
-import socketserver
 import subprocess
+import sys
 import time
 from collections.abc import Iterator, Mapping
-from multiprocessing import Process
 from pathlib import Path
-from typing import Any
+from typing import Any, assert_never, Literal
 
+from tests.testlib.common.repo import repo_path
+from tests.testlib.common.utils import (
+    daemon,
+    DaemonTerminationMode,
+    execute,
+    is_containerized,
+    run,
+    wait_until,
+)
 from tests.testlib.site import Site
-from tests.testlib.utils import execute, run, wait_until
 
 from cmk.utils.hostaddress import HostName
 
@@ -26,7 +38,17 @@ logger = logging.getLogger(__name__)
 OMD_STATUS_CACHE = Path("/var/lib/check_mk_agent/cache/omd_status.cache")
 
 
-def get_package_type() -> str:
+def bake_agents(site: Site) -> None:
+    expected_baking_start_time = time.time()
+    bake_all_agents_response = site.openapi.post("domain-types/agent/actions/bake/invoke")
+    bake_all_agents_response.raise_for_status()
+    wait_for_baking_job(
+        central_site=site,
+        expected_start_time=expected_baking_start_time,
+    )
+
+
+def get_package_type() -> Literal["linux_deb", "linux_rpm"]:
     if os.path.exists("/var/lib/dpkg/status"):
         return "linux_deb"
     if (
@@ -45,22 +67,61 @@ def install_agent_package(package_path: Path) -> Path:
     package_type = get_package_type()
     installed_ctl_path = Path("/usr/bin/cmk-agent-ctl")
     if package_type == "linux_deb":
-        try:
-            run(["sudo", "dpkg", "-i", package_path.as_posix()])
-        except RuntimeError as e:
-            process_table = run(["ps", "aux"]).stdout
-            raise RuntimeError(f"dpkg failed. Process table:\n{process_table}") from e
+        agent_install_cmd = ["dpkg", "-i", package_path.as_posix()]
+    elif package_type == "linux_rpm":
+        agent_install_cmd = [
+            "rpm",
+            "-vU",
+            "--oldpackage",
+            "--replacepkgs",
+            package_path.as_posix(),
+        ]
+    else:
+        raise NotImplementedError(
+            f"Installation of package type {package_type} is not supported yet, please implement it"
+        )
+    logger.info("Installing Checkmk agent...")
+    try:
+        agent_installation = run(agent_install_cmd, sudo=True)
+        logger.info(
+            "Agent installation output: %s\n%s",
+            agent_installation.stdout,
+            agent_installation.stderr,
+        )
+        assert installed_ctl_path.exists(), (
+            f'Agent installation completed but agent controller not found at "{installed_ctl_path}"'
+        )
         return installed_ctl_path
-    if package_type == "linux_rpm":
-        run(["sudo", "rpm", "-vU", "--oldpackage", "--replacepkgs", package_path.as_posix()])
-        return installed_ctl_path
-    raise NotImplementedError(
-        f"Installation of package type {package_type} is not supported yet, please implement it"
-    )
+    except RuntimeError as e:
+        process_table = run(["ps", "aux"]).stdout
+        raise RuntimeError(f"Agent installation failed. Process table:\n{process_table}") from e
+
+
+def uninstall_agent_package(package_name: str = "check-mk-agent") -> None:
+    match package_type := get_package_type():
+        case "linux_deb":
+            run(
+                ["dpkg", "--remove", package_name],
+                sudo=True,
+            )
+        case "linux_rpm":
+            run(
+                ["rpm", "--erase", package_name],
+                sudo=True,
+            )
+        case _:
+            assert_never(package_type)
 
 
 def download_and_install_agent_package(site: Site, tmp_dir: Path) -> Path:
-    if site.version.is_raw_edition():
+    # Some smoke test to ensure the cmk-agent-ctl is executable in the current environment before
+    # trying to install and use it in the following steps.
+    # Please note: We can not verify the agent controller from the package below, as it is
+    # automatically deleted by the post install script in case it is not executable (see also
+    # agents/scripts/super-server/0_systemd/setup).
+    run([site.path("share/check_mk/agents/linux/cmk-agent-ctl").as_posix(), "--version"])
+
+    if site.edition.is_raw_edition():
         agent_download_resp = site.openapi.get(
             "domain-types/agent/actions/download/invoke",
             params={
@@ -87,108 +148,50 @@ def download_and_install_agent_package(site: Site, tmp_dir: Path) -> Path:
     return install_agent_package(path_agent_package)
 
 
-def _is_containerized() -> bool:
-    return (
-        os.path.exists("/.dockerenv")
-        or os.path.exists("/run/.containerenv")
-        or os.environ.get("CMK_CONTAINERIZED") == "TRUE"
-    )
-
-
-class _CMKAgentSocketHandler(socketserver.BaseRequestHandler):
-    def handle(self) -> None:
-        self.request.sendall(
-            subprocess.run(
-                ["check_mk_agent"],
-                input=self.request.recv(1024),
-                capture_output=True,
-                close_fds=True,
-                check=True,
-            ).stdout
-        )
-
-
-def _clear_controller_connections(ctl_path: Path) -> None:
-    run(["sudo", ctl_path.as_posix(), "delete-all"])
-
-
 @contextlib.contextmanager
-def _provide_agent_unix_socket() -> Iterator[None]:
-    socket_address = Path("/run/check-mk-agent.socket")
-    socket_address.unlink(missing_ok=True)
-    proc = Process(
-        target=socketserver.UnixStreamServer(
-            server_address=str(socket_address),
-            RequestHandlerClass=_CMKAgentSocketHandler,
-        ).serve_forever
-    )
-    proc.start()
-    socket_address.chmod(0o777)
-    try:
-        yield
-    finally:
-        proc.kill()
-        socket_address.unlink(missing_ok=True)
-
-
-@contextlib.contextmanager
-def _run_controller_daemon(ctl_path: Path) -> Iterator[None]:
-    # Note:
-    # We are deliberately not using Popen as a context manager here. In case we run into an
-    # exception while we are inside a Popen context manager, we end up in Popen.__exit__, which
-    # waits for the child process to finish. Our child process is not supposed to ever finish.
-    proc = subprocess.Popen(
-        [
-            ctl_path.as_posix(),
-            "daemon",
-        ],
-        stderr=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        close_fds=True,
-        encoding="utf-8",
-    )
-
-    try:
-        yield
-    finally:
-        exit_code = proc.poll()
-        proc.kill()
-
-        stdout, stderr = proc.communicate()
-        logger.info("Stdout from controller daemon process:\n%s", stdout)
-        logger.info("Stderr from controller daemon process:\n%s", stderr)
-
-        if exit_code is not None:
-            logger.error("Controller daemon exited with code %s, which is unexpected.", exit_code)
-
-
-@contextlib.contextmanager
-def agent_controller_daemon(ctl_path: Path) -> Iterator[None]:
+def agent_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen | None]:
     """Manually take over systemds job if we are in a container (where we have no systemd)."""
-    if not _is_containerized():
-        yield
+    if not is_containerized():
+        yield None
         return
 
-    with _provide_agent_unix_socket(), _run_controller_daemon(ctl_path):
-        yield
-
-
-@contextlib.contextmanager
-def clean_agent_controller(ctl_path: Path) -> Iterator[None]:
-    _clear_controller_connections(ctl_path)
-    try:
-        yield
-    finally:
-        _clear_controller_connections(ctl_path)
+    logger.info("Running agent controller daemon...")
+    with daemon(
+        [
+            sys.executable,
+            "-B",
+            str(repo_path() / "tests" / "scripts" / "agent_controller_daemon.py"),
+            "--agent-controller-path",
+            ctl_path.as_posix(),
+        ],
+        name_for_logging="agent controller",
+        termination_mode=DaemonTerminationMode.GROUP,
+        sudo=True,
+    ) as agent_ctl_daemon:
+        # wait for a dump being returned successfully, which may not work immediately
+        # after starting the agent controller, so we retry for some time
+        wait_until(
+            lambda: execute(
+                [ctl_path.as_posix(), "dump"],
+                sudo=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            ).wait()
+            == 0,
+            timeout=30,
+            interval=0.1,
+        )
+        yield agent_ctl_daemon
 
 
 def register_controller(
-    contoller_path: Path, site: Site, hostname: HostName, site_address: str | None = None
+    ctl_path: Path, site: Site, hostname: HostName, site_address: str | None = None
 ) -> None:
+    # Register the agent controller with the site
+    # (previously ran delete-all. Now part of _clean_agent_controller)
     run(
         [
-            "sudo",
-            contoller_path.as_posix(),
+            ctl_path.as_posix(),
             "--verbose",
             "register",
             "--server",
@@ -202,7 +205,8 @@ def register_controller(
             "--password",
             site.admin_password,
             "--trust-cert",
-        ]
+        ],
+        sudo=True,
     )
 
 
@@ -213,19 +217,66 @@ def wait_until_host_receives_data(
     timeout: int = 120,
     interval: int = 20,
 ) -> None:
-    wait_until(
-        lambda: not site.execute(
-            ["cmk", "-d", hostname],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        ).wait(),
-        timeout=timeout,
-        interval=interval,
+    try:
+        wait_until(
+            lambda: not site.execute(
+                ["cmk", "-d", hostname],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            ).wait(),
+            timeout=timeout,
+            interval=interval,
+        )
+    except TimeoutError as e:
+        try:
+            _ = site.run(["cmk", "-d", hostname])
+        except subprocess.CalledProcessError as excp:
+            raise excp from e
+
+
+def controller_status_json(controller_path: Path) -> Mapping[str, Any]:
+    return json.loads(run([controller_path.as_posix(), "status", "--json"], sudo=True).stdout)
+
+
+def controller_connection_json(
+    controller_status: Mapping[str, Any], site: Site
+) -> Mapping[str, Any]:
+    """Get the site-specific connection details from a controller_status mapping.
+
+    Assert that the connection is found and that the structure of the connection status is valid.
+    """
+    assert "connections" in controller_status, (
+        f"No connections returned as part of controller status!\nStatus:\n{controller_status}"
     )
-
-
-def controller_status_json(contoller_path: Path) -> Mapping[str, Any]:
-    return json.loads(run(["sudo", contoller_path.as_posix(), "status", "--json"]).stdout)
+    # iterate over the connections and return the first match
+    # return an empty response if no match was found (or the list is empty)
+    controller_connection: Mapping[str, Any] = next(
+        (
+            _
+            for _ in controller_status["connections"]
+            if _["site_id"] == f"{site.http_address}/{site.id}"
+        ),
+        {},
+    )
+    assert controller_connection, (
+        f'No controller connection found for site "{site.id}"!\nStatus:\n{controller_status}'
+    )
+    assert "remote" in controller_connection, (
+        "No remote endpoint details returned as part of controller connection details!"
+        f"\nStatus:\n{controller_status}"
+    )
+    assert "error" not in controller_connection["remote"], (
+        f"Error in status output: {controller_connection['remote']['error']}"
+    )
+    assert "hostname" in controller_connection["remote"], (
+        "No remote endpoint hostname returned as part of controller connection details!"
+        f"\nStatus:\n{controller_status}"
+    )
+    assert "connection_mode" in controller_connection["remote"], (
+        "No remote endpoint connection mode returned as part of controller connection details!"
+        f"\nStatus:\n{controller_status}"
+    )
+    return controller_connection
 
 
 def wait_until_host_has_services(
@@ -255,19 +306,29 @@ def _query_hosts_service_count(site: Site, hostname: HostName) -> int:
 
 
 def wait_for_baking_job(central_site: Site, expected_start_time: float) -> None:
-    waiting_time = 1
-    waiting_cycles = 20
+    """Waits for the baking job to first start, then finish
+
+    Args:
+        central_site (Site): active site to use/watch
+        expected_start_time (float): Time (as of time.time) when the job is expected to have started
+
+    Raises:
+        AssertionError: If the baking job didn't start after expected_start_time
+            or didn't finish successfully after a certain amount of time.
+    """
+    waiting_time = 2
+    waiting_cycles = 30
     for _ in range(waiting_cycles):
         time.sleep(waiting_time)
-        baking_status = central_site.openapi.get_baking_status()
+        baking_status = central_site.openapi.agents.get_baking_status()
         assert baking_status.state in (
             "initialized",
             "running",
             "finished",
         ), f"Unexpected baking state: {baking_status}"
-        assert (
-            baking_status.started >= expected_start_time
-        ), f"No baking job started after expected starting time: {expected_start_time}"
+        assert baking_status.started >= expected_start_time, (
+            f"No baking job started after expected starting time: {expected_start_time}"
+        )
         if baking_status.state == "finished":
             return
     raise AssertionError(
@@ -277,28 +338,27 @@ def wait_for_baking_job(central_site: Site, expected_start_time: float) -> None:
 
 def _remove_omd_status_cache() -> None:
     logger.info("Removing omd status agent cache...")
-    with execute(
-        ["rm", "-f", str(OMD_STATUS_CACHE)],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    ) as p:
-        rc = p.wait()
-        p_out, p_err = p.communicate()
-        assert rc == 0, f"Failed to remove agent cache.\nSTDOUT: {p_out}\nSTDERR: {p_err}"
+    try:
+        run(["rm", "-f", str(OMD_STATUS_CACHE)], sudo=True)
+    except subprocess.CalledProcessError as excp:
+        excp.add_note("Failed to remove agent cache!")
+        raise excp
 
 
 def _all_omd_services_running_from_cache(site: Site) -> tuple[bool, str]:
-    stdout = site.read_file(OMD_STATUS_CACHE)
-    assert f"[{site.id}]" in stdout
-    assert "OVERALL" in stdout
+    omd_status_cache_content = site.read_file(OMD_STATUS_CACHE)
+    assert f"[{site.id}]" in omd_status_cache_content, (
+        f'Site "{site.id}" not found in "{OMD_STATUS_CACHE}"!'
+    )
+    assert "OVERALL" in omd_status_cache_content
 
     # extract text between '[<site.id>]' and 'OVERALL'
-    match_extraction = re.findall(rf"\[{site.id}\]([^\\]*?)OVERALL", stdout)
+    match_extraction = re.findall(rf"\[{site.id}\]([^\\]*?)OVERALL", omd_status_cache_content)
     sub_stdout = match_extraction[0] if match_extraction else ""
 
     # find all occurrences of one or more digits in the extracted stdout
     match_assertion = re.findall(r"\d+", sub_stdout)
-    return all(int(match) == 0 for match in match_assertion), stdout
+    return all(int(match) == 0 for match in match_assertion), omd_status_cache_content
 
 
 def wait_for_agent_cache_omd_status(site: Site, max_count: int = 20, waiting_time: int = 5) -> None:
@@ -323,3 +383,18 @@ def wait_for_agent_cache_omd_status(site: Site, max_count: int = 20, waiting_tim
         count += 1
 
     logger.info("Agent cache not matching the current OMD status")
+
+
+@contextlib.contextmanager
+def clean_up_host(site: Site, hostname: HostName) -> Iterator[None]:
+    try:
+        yield
+    finally:
+        deleted = False
+        if site.openapi.hosts.get(hostname):
+            logger.info("Delete created host %s", hostname)
+            site.openapi.hosts.delete(hostname)
+            deleted = True
+
+        if deleted:
+            site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)

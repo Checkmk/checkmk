@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<table width="100%"
+       align="center"
+       style="min-width: 220px;
+              max-width: 536px">
+    <tr>
+        <td style="height: 20px;
+                   line-height: 20px;
+                   font-size: 0;
+                   mso-line-height-rule: exactly">&nbsp;</td>
+    </tr>
+    <tr>
+        <td style="font-size: 18px;
+                   font-weight: 600;
+                   text-align: left;
+                   padding: 0">
+            <img src="cid:graph.png"
+                 style="width: 18px;
+                        height: 19px;
+                        display: inline-block;
+                        vertical-align: middle"
+                 width="18"
+                 height="19"
+                 alt="Graph Icon" />
+            <span style="vertical-align: middle;">Graph</span>
+        </td>
+    </tr>
+    <tr>
+        <td style="padding-top: 10px;">
+            {% for graph in graphs %}
+                <img src="cid:{{ graph }}"
+                     style="min-width: 220px;
+                            max-width: 536px;
+                            width: 100%;
+                            height: auto;
+                            display: block"
+                     width="536"
+                     alt="Graph Image" />
+            {% endfor %}
+        </td>
+    </tr>
+</table>
+{% if data.PARAMETER_URL_PREFIX_1 | default(false) %}
+<table align="center"
+       width="100%"
+       style="min-width: 220px;
+              max-width: 536px">
+    <tr>
+        <td>
+            <a href="{{ data.GRAPH_URL }}" class="view_graph" style=" color: black; display: block; height: 24px; font-size: 16px; color: #2c3843; line-height: 24px; ">
+                View graph to inspect
+            </a>
+        </td>
+    </tr>
+</table>
+{% endif %}

@@ -5,9 +5,10 @@
 
 from abc import ABC, abstractmethod
 from logging import Logger
-from typing import Final
+from typing import Final, override
 
 from cmk.ccc.plugin_registry import Registry
+
 from cmk.update_config.plugins.pre_actions.utils import ConflictMode
 
 
@@ -42,6 +43,7 @@ class UpdateAction(ABC):
 
 
 class UpdateActionRegistry(Registry[UpdateAction]):
+    @override
     def plugin_name(self, instance: UpdateAction) -> str:
         return instance.name
 
@@ -77,6 +79,7 @@ class PreUpdateAction(ABC):
 
 
 class PreUpdateActionRegistry(Registry[PreUpdateAction]):
+    @override
     def plugin_name(self, instance: PreUpdateAction) -> str:
         return instance.name
 

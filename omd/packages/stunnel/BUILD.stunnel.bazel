@@ -30,33 +30,43 @@ configure_make(
     out_binaries = [
         "stunnel",
         "stunnel3",
+        "stunnel.bash",
     ],
-    out_data_dirs = ["share"],  # For bash completion file
     out_lib_dir = "lib/stunnel",
     out_shared_libs = [
         "libstunnel.so",
     ],
+    postfix_script = """
+        mv $INSTALLDIR/share/stunnel.bash $INSTALLDIR/bin
+    """,
     visibility = ["//visibility:public"],
     deps = ["@openssl"],
 )
 
-genrule(
-    name = "skel",
-    srcs = [
-        "@omd_packages//omd/packages/stunnel:skel",
-    ],
-    outs = [
-        "skel/etc/init.d/stunnel",
-        "skel/etc/logrotate.d/stunnel",
-        "skel/etc/rc.d/85-stunnel",
-        "skel/etc/stunnel/server.conf",
-        # Either .gitignore are deleted in the packaging step
-        # or empty folders are created later
-        # as Bazel genrules don't allow output directories.
-        "skel/etc/stunnel/conf.d/.gitignore",
-    ],
-    cmd = """
-        cp -r --dereference $(execpath @omd_packages//omd/packages/stunnel:skel) $$(realpath $(RULEDIR))
-    """,
+filegroup(
+    name = "stunnel_bin",
+    srcs = [":stunnel"],
+    output_group = "stunnel",
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "stunnel3_bin",
+    srcs = [":stunnel"],
+    output_group = "stunnel3",
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "stunnel.bash",
+    srcs = [":stunnel"],
+    output_group = "stunnel.bash",
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "libstunnel.so",
+    srcs = [":stunnel"],
+    output_group = "libstunnel.so",
     visibility = ["//visibility:public"],
 )

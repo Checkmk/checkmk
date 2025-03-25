@@ -5,11 +5,14 @@
 
 import hashlib
 import re
+from collections.abc import Mapping
 from http import HTTPStatus
 from typing import Any, NewType
 from urllib.parse import quote
 
 from werkzeug.datastructures import ETags
+
+from cmk.ccc.site import omd_site
 
 from cmk.gui.config import active_config
 from cmk.gui.http import HTTPMethod, request, Response
@@ -28,8 +31,6 @@ from cmk.gui.openapi.restful_objects.type_defs import (
     ResultType,
 )
 from cmk.gui.openapi.utils import EXT, ProblemException
-
-from cmk.ccc.site import omd_site
 
 ETagHash = NewType("ETagHash", str)
 
@@ -438,6 +439,37 @@ def domain_object_collection_href(
     return f"/objects/{domain_type}/{url_safe(obj_id)}/collections/{collection_name}"
 
 
+def sub_object_href(
+    domain_type: DomainType,
+    obj_id: str,
+    parent_domain_type: DomainType,
+    parent_id: str,
+) -> str:
+    """Constructs a href to a sub-object of a domain-object.
+
+    Args:
+         domain_type:
+            The domain-type of the sub-object.
+
+        obj_id:
+            The object-id of the sub-object.
+
+        parent_domain_type:
+            The domain-type of the parent object.
+
+        parent_id:
+            The object-id of the parent object.
+
+    Examples:
+        >>> sub_object_href('host', 'localhost', 'folder_config', 'stuff')
+        '/objects/folder_config/stuff/host/localhost'
+
+    Returns:
+        The href as a string.
+    """
+    return f"/objects/{parent_domain_type}/{url_safe(parent_id)}/{domain_type}/{url_safe(obj_id)}"
+
+
 def collection_href(domain_type: DomainType, name: str = "all") -> str:
     """Constructs a href to a collection.
 
@@ -622,8 +654,6 @@ def domain_object(
 
     """
     uri = object_href(domain_type, identifier)
-    if extensions is None:
-        extensions = {}
     if members is None:
         members = {}
 
@@ -637,14 +667,17 @@ def domain_object(
         if links:
             _links.extend(links)
 
-    return {
+    out: DomainObject = {
         "domainType": domain_type,
         "id": identifier,
         "title": title,
         "links": _links,
         "members": members,
-        "extensions": extensions,
     }
+    if extensions is not None:
+        out["extensions"] = extensions
+
+    return out
 
 
 def collection_object(
@@ -764,7 +797,7 @@ def action_parameter(action, parameter, friendly_name, optional, pattern):
     )
 
 
-def hash_of_dict(dict_: dict[str, Any]) -> ETagHash:
+def hash_of_dict(dict_: Mapping[str, Any]) -> ETagHash:
     """Build a sha256 hash over a dictionary's content.
 
     Keys are sorted first to ensure a stable hash.
@@ -802,7 +835,7 @@ def hash_of_dict(dict_: dict[str, Any]) -> ETagHash:
     return ETagHash(_hash.hexdigest())
 
 
-def etag_of_dict(dict_: dict[str, Any]) -> ETags:
+def etag_of_dict(dict_: Mapping[str, Any]) -> ETags:
     """Build a sha256 hash over a dictionary's content.
 
     Keys are sorted first to ensure a stable hash.
@@ -831,7 +864,7 @@ def etag_of_dict(dict_: dict[str, Any]) -> ETags:
     return ETags(strong_etags=[hash_of_dict(dict_)])
 
 
-def response_with_etag_created_from_dict(response: Response, dict_: dict[str, Any]) -> Response:
+def response_with_etag_created_from_dict(response: Response, dict_: Mapping[str, Any]) -> Response:
     """Add an ETag header to the response and return the updated response.
     The ETag header is an ETagHash generated from the dict passed in.
     """

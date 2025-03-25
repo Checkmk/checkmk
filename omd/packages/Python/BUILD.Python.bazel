@@ -1,4 +1,5 @@
-load("@omd_packages//:package_versions.bzl", "PYTHON_MAJOR_DOT_MINOR", "PYTHON_VERSION", "PYTHON_VERSION_MAJOR")
+load("@omd_packages//:package_versions.bzl", "PYTHON_VERSION")
+load("@omd_packages//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR", "PYTHON_VERSION_MAJOR")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 
 package(default_visibility = ["//visibility:public"])
@@ -90,9 +91,9 @@ configure_make(
         sed -i "s|$BUILD_TMPDIR|$omd_prefix|g" $sysconfig_path;
 
         # Fix shebang of scripts
-	cd $bin_dir && \
-        ln -s python{pyMaj} python && \
-	sed -i 's|^#!'$py_install_dir'.*|#!/usr/bin/env python{pyMaj}|' 2to3 2to3-{pyMajMin} idle{pyMajMin} pydoc{pyMajMin};
+        cd $bin_dir && \
+            ln -s python{pyMaj} python && \
+            sed -i 's|^#!'$py_install_dir'.*|#!/usr/bin/env python{pyMaj}|' 2to3 2to3-{pyMajMin} idle{pyMajMin} pydoc{pyMajMin};
 
         # Fix pip3 configuration by using own wrapper script
         # * PIP_TARGET currently has an issue when installing non-wheel packages, see https://github.com/pypa/pip/issues/8438
@@ -105,12 +106,7 @@ configure_make(
         install -m 644 $EXT_BUILD_ROOT/omd/packages/Python/pip $bin_dir/pip{pyMajMin};
 
         # Tests are not needed in final package
-        rm -rf $INSTALLDIR/lib/python{pyMajMin}/test ; \
-
-        mkdir $BUILD_TMPDIR/tar
-        cp -R $INSTALLDIR $BUILD_TMPDIR/Python-{pyVers}
-        rm -rf $BUILD_TMPDIR/Python-{pyVers}/tar
-        tar -C $BUILD_TMPDIR -cf $INSTALLDIR/tar/python.tar Python-{pyVers}
+        rm -rf $INSTALLDIR/lib/python{pyMajMin}/test ;
     """.format(
         installPrefix = INSTALL_PREFIX,
         pyMaj = PYTHON_VERSION_MAJOR,
@@ -119,4 +115,10 @@ configure_make(
     ),
     visibility = ["//visibility:public"],
     deps = ["@openssl"],
+)
+
+filegroup(
+    name = "gen_dir",
+    srcs = [":python"],
+    output_group = "gen_dir",
 )

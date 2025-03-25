@@ -2,19 +2,23 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Background tools required to register a check plug-in
-"""
+"""Background tools required to register a check plug-in"""
+
 import functools
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Generator, Mapping
 from typing import Any
 
-from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets import RuleSetName
 
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
-from cmk.base.api.agent_based.plugin_classes import CheckFunction, CheckPlugin, DiscoveryFunction
+from cmk.base.api.agent_based.plugin_classes import (
+    CheckFunction,
+    CheckPlugin,
+    DiscoveryFunction,
+    LegacyPluginLocation,
+)
 from cmk.base.api.agent_based.register.utils import (
     create_subscribed_sections,
     ITEM_VARIABLE,
@@ -103,11 +107,11 @@ def _validate_kwargs(
     service_name: str,
     requires_item: bool,
     discovery_function: Callable,
-    discovery_default_parameters: ParametersTypeAlias | None,
+    discovery_default_parameters: Mapping[str, object] | None,
     discovery_ruleset_name: str | None,
     discovery_ruleset_type: RuleSetType,
     check_function: Callable,
-    check_default_parameters: ParametersTypeAlias | None,
+    check_default_parameters: Mapping[str, object] | None,
     check_ruleset_name: str | None,
     cluster_check_function: Callable | None,
 ) -> None:
@@ -159,14 +163,14 @@ def create_check_plugin(
     sections: list[str] | None = None,
     service_name: str,
     discovery_function: Callable,
-    discovery_default_parameters: ParametersTypeAlias | None = None,
+    discovery_default_parameters: Mapping[str, object] | None = None,
     discovery_ruleset_name: str | None = None,
     discovery_ruleset_type: RuleSetType = RuleSetType.MERGED,
     check_function: Callable,
-    check_default_parameters: ParametersTypeAlias | None = None,
+    check_default_parameters: Mapping[str, object] | None = None,
     check_ruleset_name: str | None = None,
     cluster_check_function: Callable | None = None,
-    location: PluginLocation | None = None,
+    location: PluginLocation | LegacyPluginLocation,
     validate_kwargs: bool = True,
 ) -> CheckPlugin:
     """Return an CheckPlugin object after validating and converting the arguments one by one
@@ -221,7 +225,7 @@ def create_check_plugin(
     )
 
 
-def management_plugin_factory(original_plugin: CheckPlugin) -> CheckPlugin:
+def _management_plugin_factory(original_plugin: CheckPlugin) -> CheckPlugin:
     return CheckPlugin(
         original_plugin.name.create_management_name(),
         original_plugin.sections,
@@ -235,4 +239,24 @@ def management_plugin_factory(original_plugin: CheckPlugin) -> CheckPlugin:
         original_plugin.check_ruleset_name,
         original_plugin.cluster_check_function,
         original_plugin.location,
+    )
+
+
+def get_check_plugin(
+    plugin_name: CheckPluginName, registered_check_plugins: Mapping[CheckPluginName, CheckPlugin]
+) -> CheckPlugin | None:
+    """Returns the registered check plug-in
+
+    Management plugins may be created on the fly.
+    """
+    plugin = registered_check_plugins.get(plugin_name)
+    if plugin is not None or not plugin_name.is_management_name():
+        return plugin
+
+    return (
+        None
+        if (non_mgmt_plugin := registered_check_plugins.get(plugin_name.create_basic_name()))
+        is None
+        # create management board plug-in on the fly:
+        else _management_plugin_factory(non_mgmt_plugin)
     )

@@ -8,8 +8,10 @@ from json.decoder import JSONDecodeError
 from typing import Any
 
 import hypothesis
+import hypothesis.stateful
 import schemathesis
 from requests import Response
+from schemathesis.specs.openapi import schemas
 from schemathesis.stateful.state_machine import APIStateMachine
 
 from tests.schemathesis_openapi import settings
@@ -18,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 def _init_case(
-    schema: schemathesis.schemas.BaseSchema,
+    schema: schemas.BaseOpenAPISchema,
     data: Any,
     endpoint: str,
     method: str,
@@ -76,7 +78,7 @@ def _response_reason(response: Response, value: str | None = "detail") -> str:
 
 
 def run_crud_test(
-    schema: schemathesis.schemas.BaseSchema,
+    schema: schemas.BaseOpenAPISchema,
     data: Any,
     object_endpoint: str,
     post_endpoint: str,
@@ -189,6 +191,7 @@ def run_crud_test(
     logger.info('Retrieving "%s" object...', object_type)
     get_response = get_case.call_and_validate(allow_redirects=settings.allow_redirects)
     get_done = get_response.status_code == 200
+    put_response = None
     if get_done:
         logger.info('Retrieved "%s" object: %s', object_type, _response_json(get_response))
         put_case = _init_case(
@@ -255,7 +258,7 @@ def run_crud_test(
             f'Failed to retrieve "{object_type}" object "{object_id}"!'
             f" Reason: {_response_reason(get_response)}"
         )
-    if put_done:
+    if put_done and put_response:
         assert put_response.status_code in (
             200,
             204,
@@ -266,7 +269,7 @@ def run_crud_test(
         )
 
 
-def run_state_machine_test(schema: schemathesis.schemas.BaseSchema) -> None:
+def run_state_machine_test(schema: schemas.BaseOpenAPISchema) -> None:
     """Get a state machine for stateful testing."""
     state_machine: type[APIStateMachine]
     state_machine = schema.as_state_machine()

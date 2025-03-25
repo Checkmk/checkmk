@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.hitachi_hnas import DETECT
+
+check_info = {}
 
 
 def inventory_hitachi_hnas_psu(info):
@@ -31,16 +31,10 @@ def check_hitachi_hnas_psu(item, _no_params, info):
         if clusternode + "." + id_ == item:
             status = int(status)
             if status == 0 or status >= len(statusmap):
-                return 3, "PNode {} PSU {} reports unidentified status {}".format(
-                    clusternode,
-                    id_,
-                    status,
-                )
-            return statusmap[status][1], "PNode {} PSU {} reports status {}".format(
-                clusternode,
-                id_,
-                statusmap[status][0],
-            )
+                return 3, f"PNode {clusternode} PSU {id_} reports unidentified status {status}"
+            return statusmap[status][
+                1
+            ], f"PNode {clusternode} PSU {id_} reports status {statusmap[status][0]}"
 
     return 3, "SNMP did not report a status of this PSU"
 
@@ -50,6 +44,7 @@ def parse_hitachi_hnas_psu(string_table: StringTable) -> StringTable:
 
 
 check_info["hitachi_hnas_psu"] = LegacyCheckDefinition(
+    name="hitachi_hnas_psu",
     parse_function=parse_hitachi_hnas_psu,
     detect=DETECT,
     fetch=SNMPTree(

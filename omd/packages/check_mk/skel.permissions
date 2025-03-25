@@ -9,10 +9,13 @@ etc/cron.d/cmk_cleanup_pdf_tmp_files 0640
 etc/init.d/agent-receiver 0770
 etc/init.d/mkeventd 0770
 etc/init.d/piggyback-hub 0770
-etc/init.d/background-jobs 0770
+etc/init.d/ui-job-scheduler 0770
+etc/init.d/automation-helper 0770
 etc/logrotate.d/audit 0640
 etc/logrotate.d/license-usage 0640
 etc/logrotate.d/security 0640
+etc/logrotate.d/security 0640
+etc/logrotate.d/ui-job-scheduler 0640
 tmp/run 0751
 var/check_mk/backup 0770
 var/check_mk/crashes 0770

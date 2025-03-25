@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """EC History sqlite backend."""
+
 import itertools
 import json
 import sqlite3
@@ -124,7 +125,7 @@ def filters_to_sqlite_query(filters: Iterable[QueryFilter]) -> tuple[str, list[o
         query_conditions.append(sqlite_filter)
         query_arguments.append(f.argument)
     return (
-        f'SELECT * FROM history {"WHERE" if query_arguments else ""} {" AND ".join(query_conditions)};',
+        f"SELECT * FROM history {'WHERE' if query_arguments else ''} {' AND '.join(query_conditions)};",  # nosec B608 # BNS:6b6392
         query_arguments,
     )
 
@@ -233,8 +234,8 @@ class SQLiteHistory(History):
             cur = connection.cursor()
             cur.execute(
                 f"""INSERT INTO
-                    history ({', '.join(TABLE_COLUMNS[1:])})
-                        VALUES ({', '.join(itertools.repeat('?', len(TABLE_COLUMNS[1:])))});""",
+                    history ({", ".join(TABLE_COLUMNS[1:])})
+                        VALUES ({", ".join(itertools.repeat("?", len(TABLE_COLUMNS[1:])))});""",  # nosec B608 # BNS:6b6392
                 tuple(
                     itertools.chain(
                         (time.time(), what, who, addinfo),
@@ -256,8 +257,8 @@ class SQLiteHistory(History):
             cur = connection.cursor()
             cur.executemany(
                 f"""INSERT INTO
-                    history ({', '.join(TABLE_COLUMNS[1:])})
-                        VALUES ({', '.join(itertools.repeat('?', len(TABLE_COLUMNS[1:])))});""",
+                    history ({", ".join(TABLE_COLUMNS[1:])})
+                        VALUES ({", ".join(itertools.repeat("?", len(TABLE_COLUMNS[1:])))});""",  # nosec B608 # BNS:6b6392
                 (entry[1:] for entry in entries),
             )
 

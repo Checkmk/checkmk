@@ -5,13 +5,13 @@
 
 from collections.abc import Iterator
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
 
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_simple_link, PageMenuDropdown, PageMenuEntry, PageMenuTopic
-
-import cmk.ccc.version as cmk_version
 
 
 def page_menu_dropdown_user_related(

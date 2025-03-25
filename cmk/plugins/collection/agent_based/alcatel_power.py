@@ -39,7 +39,7 @@ alcatel_power_type_map = {
     "2": "DC",
 }
 
-AlcatelPowerEntry = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+AlcatelPowerEntry = collections.namedtuple(  # nosemgrep: typing-namedtuple-call
     "AlcatelPowerEntry",
     [
         "oper_state_readable",

@@ -6,6 +6,9 @@
 import groovy.transform.Field
 
 /* groovylint-disable DuplicateListLiteral */
+// ATTENTION: The paths added here for removal MUST NOT include slashes, because
+//            the command used in the function patch_folders will then fail and
+//            paths will not be removed as expected.
 @Field
 def REPO_PATCH_RULES = [\
 "raw": [\
@@ -22,9 +25,8 @@ def REPO_PATCH_RULES = [\
         "saas", \
         "cse", \
         "cse.py", \
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/{cme,cee,cce}"],\
-    "folders_to_be_created": [\
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/{cme,cee,cce}"]], \
+        "cmk.cee.dcd.plugins.connectors.connectors_api"],\
+    "folders_to_be_created": []], \
 "enterprise": [\
     "paths_to_be_removed": [\
         "managed", \
@@ -35,10 +37,8 @@ def REPO_PATCH_RULES = [\
         "cce.py", \
         "saas", \
         "cse", \
-        "cse.py", \
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/{cme,cce}"], \
-    "folders_to_be_created": [\
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/{cme,cce}"]], \
+        "cse.py"], \
+    "folders_to_be_created": []], \
 "managed": [\
     "paths_to_be_removed": [\
         "saas", \
@@ -52,18 +52,14 @@ def REPO_PATCH_RULES = [\
         "cme.py", \
         "saas", \
         "cse", \
-        "cse.py", \
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/cme"], \
-    "folders_to_be_created": [\
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/cme"]], \
+        "cse.py"], \
+    "folders_to_be_created": []], \
 "saas": [\
     "paths_to_be_removed": [\
         "managed", \
         "cme", \
-        "cme.py", \
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/cme"], \
-    "folders_to_be_created": [\
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/cme"]], \
+        "cme.py"], \
+    "folders_to_be_created": []], \
 ];
 /* groovylint-enable DuplicateListLiteral */
 
@@ -73,7 +69,7 @@ def branch_name_is_branch_version(String git_dir=".") {
     }
 }
 
-def branch_name(scm) {
+def branch_name() {
     if (params.CUSTOM_GIT_REF) {
         if (branch_name_is_branch_version("${checkout_dir}")) {
             // this is only required as "master" is called "stable branch + 0.1.0"
@@ -83,12 +79,13 @@ def branch_name(scm) {
             return env.GERRIT_BRANCH ?: "master"
         }
     } else {
-        return env.GERRIT_BRANCH ?: scm.branches[0].name;
+        // defined in global-defaults.yml
+        return env.GERRIT_BRANCH ?: branches_str;
     }
 }
 
-def safe_branch_name(scm) {
-    return branch_name(scm).replaceAll("/", "-");
+def safe_branch_name() {
+    return branch_name().replaceAll("/", "-");
 }
 
 /* groovylint-disable DuplicateListLiteral */
@@ -102,6 +99,17 @@ def get_cmk_version(branch_name, branch_version, version) {
       "${version}");
 }
 /* groovylint-enable DuplicateListLiteral */
+
+def get_package_name(base_dir, package_type, edition, cmk_version) {
+    print("FN get_package_name(base_dir=${base_dir}, package_type=${package_type}, cmk_version=${cmk_version})");
+    dir(base_dir) {
+        def file_pattern = (package_type == "deb" ?
+            "check-mk-$edition-${cmk_version}_*.${package_type}" :  // FIXME do we need this?
+            "check-mk-$edition-${cmk_version}-*.${package_type}");
+        return (cmd_output("ls ${file_pattern}")
+                ?: error("Found no package matching ${file_pattern} in ${base_dir}"));
+    }
+}
 
 def get_distros(Map args) {
     def override_distros = args.override.trim() ?: "";
@@ -173,8 +181,8 @@ distro_package_type = { distro ->
       raise("Cannot associate distro ${distro}"));
 }
 
-def get_docker_tag(scm, String git_dir=".") {
-    return "${safe_branch_name(scm)}-${build_date}-${get_git_hash(git_dir)}";
+def get_docker_tag(String git_dir=".") {
+    return "${safe_branch_name()}-${build_date}-${get_git_hash(git_dir)}";
 }
 
 def get_docker_artifact_name(edition, cmk_version) {
@@ -219,6 +227,7 @@ def configure_checkout_folder(edition, cmk_version) {
 
 def delete_non_cre_files() {
     non_cre_paths = [
+        "non-free",
         "enterprise",
         "managed",
         "cloud",
@@ -245,6 +254,22 @@ def delete_non_cre_files() {
 
 def strip_rc_number_from_version(VERSION) {
     return VERSION.split("-rc")[0];
+}
+
+def is_official_release(version) {
+    if (strip_rc_number_from_version(version) ==~ /((\d+.\d+.\d+)(([pib])(\d+))?)/) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+def path_hashes(includedRegions) {
+    return directory_hashes(includedRegions.collect({entry ->
+        // truncate at last occurrence of '/' if available
+        def last_slash_pos = entry.lastIndexOf('/');
+        last_slash_pos > 0 ? entry.substring(0, last_slash_pos) : entry
+    }));
 }
 
 return this;

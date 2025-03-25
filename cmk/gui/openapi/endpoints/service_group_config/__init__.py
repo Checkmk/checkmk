@@ -17,8 +17,11 @@ A service group object can have the following relations present in `links`:
  * `urn:org.restfulobject/rels:update` - An endpoint to change this service group.
  * `urn:org.restfulobject/rels:delete` - An endpoint to delete this service group.
 """
+
 from collections.abc import Mapping
 from typing import Any
+
+from cmk.ccc import version
 
 from cmk.utils import paths
 
@@ -36,6 +39,7 @@ from cmk.gui.openapi.endpoints.service_group_config.response_schemas import (
     ServiceGroupCollection,
 )
 from cmk.gui.openapi.endpoints.utils import (
+    build_group_list,
     fetch_group,
     fetch_specific_groups,
     prepare_groups,
@@ -54,8 +58,6 @@ from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib import groups
 from cmk.gui.watolib.groups import GroupInUseException, UnknownGroupException
 from cmk.gui.watolib.groups_io import load_service_group_information
-
-from cmk.ccc import version
 
 PERMISSIONS = permissions.Perm("wato.groups")
 
@@ -125,9 +127,7 @@ def bulk_create(params: Mapping[str, Any]) -> Response:
 def list_groups(params: Mapping[str, Any]) -> Response:
     """Show all service groups"""
     user.need_permission("wato.groups")
-    collection = [
-        {"id": k, "alias": v["alias"]} for k, v in load_service_group_information().items()
-    ]
+    collection = build_group_list(load_service_group_information())
     return serve_json(serialize_group_list("service_group_config", collection))
 
 

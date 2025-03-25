@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=too-many-return-statements,too-many-instance-attributes
 
 import tomllib
 from collections.abc import Callable, Mapping, Sequence
@@ -153,7 +152,7 @@ def ui_title(part: PackagePart, _: Callable[[str], str]) -> str:
         case PackagePart.EC_RULE_PACKS:
             return _("Event Console rule packs")
         case PackagePart.AGENT_BASED:
-            return _("Agent based plug-ins (deprecated)")
+            return _("Agent based plug-ins (outdated, ignored)")
         case PackagePart.CHECKS:
             return _("Legacy check plug-ins (deprecated)")
         case PackagePart.HASI:

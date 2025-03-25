@@ -37,14 +37,14 @@ export class CmkGraphShifter extends CmkGraphTimeseriesFigure {
         //I still have no idea how this data are being get since this class has
         //no equivalent in python.
         const new_definitions = data.plot_definitions.filter(
-            d => d.is_shift !== true
+            d => d.is_shift !== true,
         );
         this._shifts.forEach(config => {
             if (config.seconds === 0) return;
             const shift = JSON.parse(
                 JSON.stringify(
-                    this._subplots_by_id[config.shifted_id].definition
-                )
+                    this._subplots_by_id[config.shifted_id].definition,
+                ),
             );
             const seconds = config.seconds;
             shift.id += "_shifted";
@@ -79,7 +79,7 @@ export class CmkGraphShifter extends CmkGraphTimeseriesFigure {
                     .style("position", "absolute")
                     .style("top", "0px")
                     .style("left", 40 + this.figure_size.width + "px")
-                    .classed("cutter_options noselect", true)
+                    .classed("cutter_options noselect", true),
             );
 
         this._cutter_div!.append("label")
@@ -135,7 +135,7 @@ export class CmkGraphShifter extends CmkGraphTimeseriesFigure {
             .attr("value", 0)
             .on("change", (event, d) => {
                 this._cutter_div!.selectAll("td.value#" + d.id).text(
-                    event.target.value
+                    event.target.value,
                 );
                 this._update_shifts();
             });
@@ -156,9 +156,9 @@ export class CmkGraphShifter extends CmkGraphTimeseriesFigure {
                             d.definition!.is_scalar ||
                             d.definition!.is_shift ||
                             d.definition!.hidden
-                        )
+                        ),
                 ),
-                d => d.definition!.id
+                d => d.definition!.id,
             )
             .join("tr")
             .classed("metric", true);
@@ -183,10 +183,10 @@ export class CmkGraphShifter extends CmkGraphTimeseriesFigure {
 
     _update_shifts() {
         const hours = parseInt(
-            this._cutter_div!.selectAll("td.value#Hours").text()
+            this._cutter_div!.selectAll("td.value#Hours").text(),
         );
         const days = parseInt(
-            this._cutter_div!.selectAll("td.value#Days").text()
+            this._cutter_div!.selectAll("td.value#Days").text(),
         );
 
         const checked_metrics = this._cutter_div!.selectAll<

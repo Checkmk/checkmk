@@ -3,43 +3,33 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import importlib
 import logging
-import multiprocessing
 import os
 import shutil
-import signal
 import time
-from collections.abc import Callable
-from typing import NoReturn
 
-import psutil
+from cmk.ccc.exceptions import MKGeneralException
 
+import cmk.utils.resulttype as result
 from cmk.utils.regex import regex, REGEX_GENERIC_IDENTIFIER
 from cmk.utils.user import UserId
 
 from cmk.gui import log
-from cmk.gui.crash_handler import create_gui_crash_report
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.utils.urls import makeuri_contextless
 
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.trace import get_tracer, Link, Status, StatusCode, TracerProvider
-from cmk.trace.export import init_span_processor, SpanExporter
+from cmk.trace import get_tracer, SpanContext, Status, StatusCode
 
 from ._defines import BackgroundJobDefines
-from ._interface import BackgroundProcessInterface, JobParameters
+from ._executor import AlreadyRunningError, JobExecutor, StartupError, ThreadedJobExecutor
+from ._interface import JobTarget, SpanContextModel
+from ._job_scheduler_executor import JobSchedulerExecutor
 from ._status import BackgroundStatusSnapshot, InitialStatusArgs, JobStatusSpec, JobStatusStates
 from ._store import JobStatusStore
 
 tracer = get_tracer()
-
-
-class BackgroundJobAlreadyRunning(MKGeneralException):
-    pass
 
 
 class BackgroundJob:
@@ -55,21 +45,38 @@ class BackgroundJob:
         # instantiated in various places.
         raise NotImplementedError()
 
+    @classmethod
+    def on_scheduler_start(cls, executor: JobExecutor) -> None:
+        """Called when the job scheduler starts
+
+        Can be used to implement initialization tasks that should be triggered once
+        the job scheduler is ready to start background jobs"""
+
     def __init__(
         self,
         job_id: str,
         logger: logging.Logger | None = None,
+        executor: JobExecutor | None = None,
     ) -> None:
         super().__init__()
         self.validate_job_id(job_id)
         self._job_id = job_id
         self._job_base_dir = BackgroundJobDefines.base_dir
-        self._job_initializiation_lock = os.path.join(self._job_base_dir, "job_initialization.lock")
 
         self._logger = logger if logger else log.logger.getChild("background-job")
 
         self._work_dir = os.path.join(self._job_base_dir, self._job_id)
         self._jobstatus_store = JobStatusStore(self._work_dir)
+
+        self._executor: JobExecutor = (
+            executor
+            if executor
+            else (
+                ThreadedJobExecutor(self._logger)
+                if os.environ.get("_CMK_BG_JOBS_WITHOUT_JOB_SCHEDULER") == "1"
+                else JobSchedulerExecutor(self._logger)
+            )
+        )
 
     @staticmethod
     def validate_job_id(job_id: str) -> None:
@@ -135,25 +142,11 @@ class BackgroundJob:
     def _is_foreign(self) -> bool:
         return self.get_status().user != user.id
 
-    def _verify_running(self, job_status: JobStatusSpec) -> bool:
-        if job_status.pid is None:
-            return False
-
-        try:
-            p = psutil.Process(job_status.pid)
-            if self._is_correct_process(job_status, p):
-                return True
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            return False
-
-        return False
-
     def is_active(self) -> bool:
-        if not self.exists():
+        result = self._executor.is_alive(self._job_id)
+        if result.is_error():
             return False
-
-        job_status = self.get_status()
-        return job_status.is_active and self._verify_running(job_status)
+        return result.ok
 
     def stop(self) -> None:
         if not self.is_active():
@@ -194,82 +187,15 @@ class BackgroundJob:
             pass
 
     def _terminate_processes(self) -> None:
-        job_status = self.get_status()
-
-        if job_status.pid is None:
-            return
-
-        # Send SIGTERM
-        self._logger.debug(
-            'Stopping job using SIGTERM "%s" (PID: %s)', self._job_id, job_status.pid
-        )
-        try:
-            process = psutil.Process(job_status.pid)
-            if not self._is_correct_process(job_status, process):
-                return
-            process.send_signal(signal.SIGTERM)
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            return
-
-        self._logger.debug("Waiting for job")
-        start_time = time.time()
-        while time.time() - start_time < 10:  # 10 seconds SIGTERM grace period
-            job_still_running = False
-            try:
-                process = psutil.Process(job_status.pid)
-                if not self._is_correct_process(job_status, process):
-                    return
-                job_still_running = True
-            except (psutil.NoSuchProcess, psutil.AccessDenied):
-                return
-
-            if not job_still_running:
-                break
-            time.sleep(0.1)
-
-        try:
-            p = psutil.Process(job_status.pid)
-            if self._is_correct_process(job_status, process):
-                # Kill unresponsive jobs
-                self._logger.debug("Killing job")
-                p.send_signal(signal.SIGKILL)
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            return
-
-    def _is_correct_process(
-        self, job_status: JobStatusSpec, psutil_process: psutil.Process
-    ) -> bool:
-        # Once the process has executed setthreadtitle, this is the best indicator
-        # that the process is the correct one.
-        if psutil_process.name() == BackgroundJobDefines.process_name:
-            return True
-
-        # Before that, we try our best to decide whether the process is the correct one with some
-        # kind of finger printing. If this does not work, a look at the other information
-        # psutil_process has to offer might be necessary.
-        # Alternatively, maybe we can hand over the process some argument or environment variable
-        # to identify it.
-        if (
-            job_status.state == JobStatusStates.INITIALIZED
-            and "--multiprocessing-fork" in psutil_process.cmdline()
-        ):
-            return True
-
-        return False
+        if (result := self._executor.terminate(self._job_id)).is_error():
+            raise MKGeneralException(_("Failed to stop job: %s") % result.error)
 
     def get_status(self) -> JobStatusSpec:
         status = self._jobstatus_store.read()
 
         # Some dynamic stuff
-        if status.state == JobStatusStates.RUNNING and status.pid is not None:
-            try:
-                p = psutil.Process(status.pid)
-                if not self._is_correct_process(status, p):
-                    status.state = JobStatusStates.STOPPED
-                else:
-                    status.duration = time.time() - status.started
-            except (psutil.NoSuchProcess, psutil.AccessDenied):
-                status.state = JobStatusStates.STOPPED
+        if status.state == JobStatusStates.RUNNING:
+            status.duration = time.time() - status.started
 
         map_job_state_to_is_active = {
             JobStatusStates.INITIALIZED: True,
@@ -284,136 +210,45 @@ class BackgroundJob:
 
     def start(
         self,
-        target: Callable[[BackgroundProcessInterface], None],
+        target: JobTarget,
         initial_status_args: InitialStatusArgs,
         override_job_log_level: int | None = None,
-        init_span_processor_callback: (
-            Callable[[TracerProvider, SpanExporter | None], None] | None
-        ) = None,
-    ) -> None:
-        if init_span_processor_callback is None:
-            init_span_processor_callback = init_span_processor
-
-        with (
-            tracer.start_as_current_span(f"start_background_job[{self._job_id}]") as span,
-            store.locked(self._job_initializiation_lock),
-        ):
-            if self._start(
-                target,
-                initial_status_args,
-                override_job_log_level,
-                init_span_processor_callback,
-                Link(span.get_span_context()),
-            ):
-                job_status = self.get_status()
-                self._logger.debug('Started job "%s" (PID: %s)', self._job_id, job_status.pid)
+    ) -> result.Result[None, AlreadyRunningError | StartupError]:
+        with tracer.span(f"start_background_job[{self._job_id}]") as span:
+            if (
+                start_result := self._start(
+                    target,
+                    initial_status_args,
+                    override_job_log_level,
+                    span.get_span_context(),
+                )
+            ).is_ok():
+                self._logger.debug('Started job "%s"', self._job_id)
             else:
-                self._logger.error('Failed to start job "%s"', self._job_id)
-                span.set_status(Status(StatusCode.ERROR))
+                self._logger.debug('Failed to start job "%s"', self._job_id)
+                if not isinstance(start_result.error, AlreadyRunningError):
+                    # Callers decided on the severity of this case, so we don't report this as an
+                    # error condition here.
+                    span.set_status(Status(StatusCode.ERROR, str(start_result.error)))
+            return start_result
 
     def _start(
         self,
-        target: Callable[[BackgroundProcessInterface], None],
+        target: JobTarget,
         initial_status_args: InitialStatusArgs,
         override_job_log_level: int | None,
-        init_span_processor_callback: Callable[[TracerProvider, SpanExporter | None], None],
-        origin_span: Link,
-    ) -> bool:
-        if self.is_active():
-            raise BackgroundJobAlreadyRunning(_("Background Job %s already running") % self._job_id)
-
-        self._prepare_work_dir()
-
-        # Start processes
-        initial_status = JobStatusSpec(
-            state=JobStatusStates.INITIALIZED,
-            started=time.time(),
-            duration=0.0,
-            pid=None,
-            is_active=False,
-            loginfo={
-                "JobProgressUpdate": [],
-                "JobResult": [],
-                "JobException": [],
-            },
-            title=initial_status_args.title,
-            stoppable=initial_status_args.stoppable,
-            deletable=initial_status_args.deletable,
-            user=initial_status_args.user,
-            estimated_duration=initial_status_args.estimated_duration,
-            logfile_path=initial_status_args.logfile_path,
-            lock_wato=initial_status_args.lock_wato,
-            host_name=initial_status_args.host_name,
+        origin_span_context: SpanContext,
+    ) -> result.Result[None, AlreadyRunningError | StartupError]:
+        return self._executor.start(
+            self.__class__.__name__,
+            self._job_id,
+            self._work_dir,
+            self.job_prefix,
+            target,
+            initial_status_args,
+            override_job_log_level,
+            origin_span_context=SpanContextModel.from_span_context(origin_span_context),
         )
-        self._jobstatus_store.write(initial_status)
-
-        p = multiprocessing.Process(
-            target=self._start_background_subprocess,
-            args=(
-                JobParameters(
-                    work_dir=self._work_dir,
-                    job_id=self._job_id,
-                    target=target,
-                    lock_wato=initial_status_args.lock_wato,
-                    is_stoppable=initial_status_args.stoppable,
-                    override_job_log_level=override_job_log_level,
-                    init_span_processor_callback=init_span_processor_callback,
-                    origin_span=origin_span,
-                ),
-            ),
-        )
-        p.start()
-        p.join()
-
-        return p.exitcode == 0
-
-    def _prepare_work_dir(self) -> None:
-        self._delete_work_dir()
-        os.makedirs(self._work_dir)
-
-    def _start_background_subprocess(self, job_parameters: JobParameters) -> None:
-        try:
-            # Even the "short living" intermediate process here needs to close
-            # the inherited file descriptors as soon as possible to prevent
-            # race conditions with inherited locks that have been inherited
-            # from the parent process. The job_initialization.lock is such a
-            # thing we had a problem with when background jobs were initialized
-            # while the apache tried to stop / restart.
-            #
-            # Had problems with closefrom() during the tests. Explicitly
-            # closing the locks here instead of closing all fds to keep logging
-            # related fds open.
-            # daemon.closefrom(3)
-            store.release_all_locks()
-
-            self._jobstatus_store.update({"ppid": os.getpid()})
-
-            p = multiprocessing.get_context("spawn").Process(
-                # The import hack here is done to avoid circular imports. Actually run_process is
-                # only needed in the background job. A better way to approach this, could be to
-                # launch the background job with a subprocess instead to get rid of this import
-                # hack.
-                target=importlib.import_module("cmk.gui.background_job._process").run_process,
-                args=(job_parameters,),
-            )
-            p.start()
-
-            assert p.pid is not None
-            self._jobstatus_store.update({"pid": p.pid})
-
-        except Exception as e:
-            crash = create_gui_crash_report()
-            self._logger.exception(
-                "Error while starting subprocess: %s (Crash ID: %s)", e, crash.ident_to_text()
-            )
-            self._exit(1)
-        self._exit(0)
-
-    def _exit(self, code: int) -> NoReturn:
-        """Exit the interpreter.
-
-        This is here so we can mock this away cleanly."""
-        os._exit(code)
 
     def wait_for_completion(self, timeout: float | None = None) -> bool:
         """Wait for background job to be complete.

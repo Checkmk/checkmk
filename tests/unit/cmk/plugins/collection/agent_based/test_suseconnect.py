@@ -22,8 +22,8 @@ from cmk.plugins.collection.agent_based.suseconnect import (
 
 
 @pytest.fixture(name="plugin", scope="module")
-def _get_plugin(fix_register):
-    return fix_register.check_plugins[CheckPluginName("suseconnect")]
+def _get_plugin(agent_based_plugins):
+    return agent_based_plugins.check_plugins[CheckPluginName("suseconnect")]
 
 
 @pytest.fixture(name="discover_suseconnect", scope="module")
@@ -85,7 +85,7 @@ def test_check(
 
 
 def test_agent_output_parsable(
-    check_suseconnect: Callable[[object, Section], DiscoveryResult]
+    check_suseconnect: Callable[[object, Section], DiscoveryResult],
 ) -> None:
     with time_machine.travel(datetime.datetime(2020, 7, 15, tzinfo=ZoneInfo("UTC"))):
         assert list(

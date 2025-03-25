@@ -5,9 +5,7 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
-
+from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
 from cmk.plugins.lib.temperature import TempParamDict
 from cmk.plugins.liebert.agent_based.liebert_temp_fluid import (
     check_liebert_temp_fluid,

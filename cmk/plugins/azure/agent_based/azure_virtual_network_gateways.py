@@ -217,7 +217,7 @@ def check_virtual_network_gateway_settings(item: str, section: Section) -> Check
 
     yield Result(
         state=state,
-        summary=f'IPsec replay protection: {"off" if settings.disableIPSecReplayProtection else "on"}',
+        summary=f"IPsec replay protection: {'off' if settings.disableIPSecReplayProtection else 'on'}",
     )
     yield Result(
         state=State.OK,

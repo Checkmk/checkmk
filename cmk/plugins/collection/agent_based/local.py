@@ -18,7 +18,7 @@ from collections.abc import Iterable, Mapping, Sequence
 # P No-Text hirn=-8;-20
 from typing import Any, NamedTuple
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -350,7 +350,7 @@ def _local_make_metrics(local_result: LocalResult) -> LocalCheckResult:
         else:
             metric_name = entry.name
 
-        yield from check_levels(
+        yield from check_levels_v1(
             entry.value,
             # check_levels does not like levels like (23, None), but it does deal with it.
             levels_upper=entry.levels_upper if local_result.apply_levels else None,
@@ -412,9 +412,17 @@ def discover_local(section: LocalSection) -> DiscoveryResult:
 
 def check_local(item: str, params: Mapping[str, Any], section: LocalSection) -> LocalCheckResult:
     if (local_error := section.errors.get(item)) is not None:
-        raise ValueError(
-            f'Invalid local check line: "{local_error.output}". Reason: {local_error.reason}'
+        # Do *not* raise an exception here. Users will send us crash reports if we do.
+        yield Result(
+            state=State.UNKNOWN,
+            summary=f"Invalid data: {local_error.output!r}",
+            details=(
+                "The monitoring site got invalid data from a local check on the monitored host.\n"
+                f"Invalid data: {local_error.output!r}\n"
+                f"Reason: {local_error.reason}"
+            ),
         )
+        return
 
     local_result = section.data.get(item)
     if local_result is None:

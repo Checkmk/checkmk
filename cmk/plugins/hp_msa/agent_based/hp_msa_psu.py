@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping, MutableMapping
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -110,7 +110,7 @@ def check_hp_msa_psu(
         ("dc33v", "3.3 V", "levels_33v_"),
     ]:
         psu_voltage = float(data[psu_type]) / 100
-        yield from check_levels(
+        yield from check_levels_v1(
             psu_voltage,
             levels_lower=params[levels_type + "lower"],
             levels_upper=params[levels_type + "upper"],

@@ -4,7 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import Callable, Generator, Mapping
+from collections import Counter
+from collections.abc import Sequence
+from dataclasses import dataclass
+from typing import Literal
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -15,300 +18,14 @@ from cmk.agent_based.v2 import (
     TableRow,
 )
 
-Section = list[tuple[str, StringTable]]
 
-Converter = str | tuple[str, Callable[[str], str | float | None]]
-
-
-def parse_dmidecode(string_table: StringTable) -> Section:
-    """Parse the output of `dmidecode -q | sed 's/\t/:/g'` with sep(58)
-
-    This is a *massively* reduced example:
-
-        >>> from pprint import pprint
-        >>> string_table = [line.split(':') for line in [
-        ...     'Processor Information',
-        ...     ':Type: Central Processor',
-        ...     ':Family: Core i7',
-        ...     ':Manufacturer: Intel(R) Corporation',
-        ...     ':ID: 61 06 04 00 FF FB EB BF',
-        ...     ':Flags:',
-        ...     '::FPU (Floating-point unit on-chip)',
-        ...     '::VME (Virtual mode extension)',
-        ...     '::DE (Debugging extension)',
-        ...     '',
-        ...     'Chassis Information',
-        ...     ':Manufacturer: Apple Inc.',
-        ...     ':Type: Laptop',
-        ...     '',
-        ...     'Onboard Device',
-        ...     ':Reference Designation: Integrated Video Controller',
-        ...     ':Type: Video',
-        ...     ':Status: Enabled',
-        ...     ':Type Instance: 1',
-        ...     ':Bus Address: 0000:00:00.0',
-        ...     '',
-        ...     'Physical Memory Array',
-        ...     ':Location: System Board Or Motherboard',
-        ...     ':Number Of Devices: 2',
-        ...     '',
-        ...     'Memory Device',
-        ...     ':Bank Locator: BANK 0',
-        ...     '',
-        ...     'Memory Device',
-        ...     ':Bank Locator: BANK 1',
-        ... ] if line]
-        >>> pprint(parse_dmidecode(string_table))
-        [('Processor Information',
-          [['Type', 'Central Processor'],
-           ['Family', 'Core i7'],
-           ['Manufacturer', 'Intel(R) Corporation'],
-           ['ID', '61 06 04 00 FF FB EB BF'],
-           ['Flags', ''],
-           ['', 'FPU (Floating-point unit on-chip)'],
-           ['', 'VME (Virtual mode extension)'],
-           ['', 'DE (Debugging extension)']]),
-         ('Chassis Information', [['Manufacturer', 'Apple Inc.'], ['Type', 'Laptop']]),
-         ('Onboard Device',
-          [['Reference Designation', 'Integrated Video Controller'],
-           ['Type', 'Video'],
-           ['Status', 'Enabled'],
-           ['Type Instance', '1'],
-           ['Bus Address', '0000', '00', '00.0']]),
-         ('Physical Memory Array',
-          [['Location', 'System Board Or Motherboard'], ['Number Of Devices', '2']]),
-         ('Memory Device', [['Bank Locator', 'BANK 0']]),
-         ('Memory Device', [['Bank Locator', 'BANK 1']])]
-
-
-    Note: on Linux \t is replaced by : and then the split is done by :.
-    On Windows the \t comes 1:1 and no splitting is being done.
-    So we need to split manually here.
-    """
-    # We cannot use a dict here, we may have multiple
-    # subsections with the same title and the order matters!
-    subsections = []
-    current_lines: StringTable = []  # these will not be used
-    for line in string_table:
-        # Windows plug-in keeps tabs and has no separator
-        if len(line) == 1:
-            parts = line[0].replace("\t", ":").split(":")
-            line = [x.strip() for x in parts]
-
-        if len(line) == 1:
-            current_lines = []
-            subsections.append((line[0], current_lines))
-        else:
-            current_lines.append([w.strip() for w in line[1:]])
-
-    return subsections
-
-
-agent_section_dmidecode = AgentSection(
-    name="dmidecode",
-    parse_function=parse_dmidecode,
-)
-
-
-def inventory_dmidecode(section: Section) -> InventoryResult:
-    # There will be "Physical Memory Array" sections, each followed
-    # by multiple "Memory Device" sections. Keep track of which belongs where:
-    memory_array_number = 0
-    for title, lines in section:
-        memory_array_number += title == "Physical Memory Array"
-        yield from _dispatch_subsection(title, lines, memory_array_number)
-
-
-def _dispatch_subsection(
-    title: str,
-    lines: list[list[str]],
-    memory_array_number: int,
-) -> InventoryResult:
-    if title == "BIOS Information":
-        yield _make_inventory_bios(lines)
-        return
-
-    if title == "System Information":
-        yield _make_inventory_system(lines)
-        return
-
-    if title == "Chassis Information":
-        yield _make_inventory_chassis(lines)
-        return
-
-    if title == "Processor Information":
-        yield from _make_inventory_processor(lines)
-        return
-
-    if title == "Physical Memory Array":
-        yield _make_inventory_physical_mem_array(lines, memory_array_number)
-        return
-
-    if title == "Memory Device":
-        yield from _make_inventory_mem_device(lines, memory_array_number)
-        return
-
-
-def _make_inventory_bios(lines: list[list[str]]) -> Attributes:
-    return Attributes(
-        path=["software", "bios"],
-        inventory_attributes=_make_dict(
-            lines,
-            {
-                "Vendor": "vendor",
-                "Version": "version",
-                "Release Date": ("date", _parse_date),
-                "BIOS Revision": "revision",
-                "Firmware Revision": "firmware",
-            },
-        ),
-    )
-
-
-def _make_inventory_system(lines: list[list[str]]) -> Attributes:
-    return Attributes(
-        path=["hardware", "system"],
-        inventory_attributes=_make_dict(
-            lines,
-            {
-                "Manufacturer": "manufacturer",
-                "Product Name": "product",
-                "Version": "version",
-                "Serial Number": "serial",
-                "UUID": "uuid",
-                "Family": "family",
-            },
-        ),
-    )
-
-
-def _make_inventory_chassis(lines: list[list[str]]) -> Attributes:
-    return Attributes(
-        path=["hardware", "chassis"],
-        inventory_attributes=_make_dict(
-            lines,
-            {
-                "Manufacturer": "manufacturer",
-                "Type": "type",
-            },
-        ),
-    )
-
-
-# Note: This node is also being filled by lnx_cpuinfo
-def _make_inventory_processor(lines: list[list[str]]) -> Generator[Attributes, None, None]:
-    vendor_map = {
-        "GenuineIntel": "intel",
-        "Intel(R) Corporation": "intel",
-        "AuthenticAMD": "amd",
-    }
-    cpu_info = _make_dict(
-        lines,
-        {
-            "Manufacturer": ("vendor", lambda v: vendor_map.get(v, v)),
-            "Max Speed": ("max_speed", _parse_speed),
-            "Voltage": ("voltage", _parse_voltage),
-            "Status": "status",
-        },
-    )
-
-    if cpu_info.pop("Status", "") == "Unpopulated":
-        # Only update our CPU information if the socket is populated
-        return
-
-    yield Attributes(
-        path=["hardware", "cpu"],
-        inventory_attributes=cpu_info,
-    )
-
-
-def _make_inventory_physical_mem_array(lines: list[list[str]], array_number: int) -> Attributes:
-    # We expect several possible arrays
-    return Attributes(
-        path=["hardware", "memory", "arrays", str(array_number)],
-        inventory_attributes=_make_dict(
-            lines,
-            {
-                "Location": "location",
-                "Use": "use",
-                "Error Correction Type": "error_correction",
-                "Maximum Capacity": ("maximum_capacity", _parse_size),
-            },
-        ),
-    )
-
-
-def _make_inventory_mem_device(
-    lines: list[list[str]],
-    array_number: int,
-) -> Generator[TableRow, None, None]:
-    device = _make_dict(
-        lines,
-        {
-            "Total Width": "total_width",  # 64 bits
-            "Data Width": "data_width",  # 64 bits
-            "Form Factor": "form_factor",  # SODIMM
-            "Set": "set",  # None
-            "Locator": "locator",  # PROC 1 DIMM 2
-            "Bank Locator": "bank_locator",  # Bank 2/3
-            "Type": "type",  # DDR2
-            "Type Detail": "type_detail",  # Synchronous
-            "Manufacturer": "manufacturer",  # Not Specified
-            "Serial Number": "serial",  # Not Specified
-            "Asset Tag": "asset_tag",  # Not Specified
-            "Part Number": "part_number",  # Not Specified
-            "Speed": "speed",  # 667 MHz
-            "Size": "size",  # 2048 MB
-        },
-    )
-    if device["size"] == "No Module Installed":
-        return
-    # Convert speed and size into numbers
-    device["speed"] = _parse_speed(device.get("speed", "Unknown"))  # type: ignore[arg-type]
-    device["size"] = _parse_size(device.get("size", "Unknown"))  # type: ignore[arg-type]
-
-    key_keys = ["set"]  # match hp_proliant_mem!
-    yield TableRow(
-        path=["hardware", "memory", "arrays", str(array_number), "devices"],
-        key_columns={k: device.pop(k) for k in key_keys},
-        inventory_columns=device,
-    )
-
-
-def _make_dict(
-    lines: list[list[str]],
-    converter_map: Mapping[str, Converter],
-) -> dict[str, float | str | None]:
-    dict_: dict[str, float | str | None] = {}
-    for name, raw_value, *_rest in lines:
-        if name not in converter_map or raw_value == "Not Specified":
-            continue
-
-        converter = converter_map[name]
-        if isinstance(converter, str):
-            dict_[converter] = raw_value
-            continue
-
-        label, transform = converter
-        value = transform(raw_value)
-        if value is not None:
-            dict_[label] = value
-
-    return dict_
-
-
-inventory_plugin_dmidecode = InventoryPlugin(
-    name="dmidecode",
-    inventory_function=inventory_dmidecode,
-)
-
-#                              _          _
-#  _ __   __ _ _ __ ___  ___  | |__   ___| |_ __   ___ _ __ ___
-# | '_ \ / _` | '__/ __|/ _ \ | '_ \ / _ \ | '_ \ / _ \ '__/ __|
-# | |_) | (_| | |  \__ \  __/ | | | |  __/ | |_) |  __/ |  \__ \
-# | .__/ \__,_|_|  |___/\___| |_| |_|\___|_| .__/ \___|_|  |___/
-# |_|                                      |_|
-#
+@dataclass(frozen=True, kw_only=True)
+class BIOSInformation:
+    vendor: str
+    version: str
+    release_date: float | None
+    bios_revision: str
+    firmware_revision: str
 
 
 def _parse_date(value: str) -> float | None:
@@ -318,20 +35,107 @@ def _parse_date(value: str) -> float | None:
         return None
 
 
-def _parse_size(v: str) -> float | None:  # into Bytes (int)
-    if not v or v == "Unknown":
-        return None
+def _parse_bios_information(lines: list[list[str]]) -> BIOSInformation:
+    vendor = ""
+    version = ""
+    release_date = None
+    bios_revision = ""
+    firmware_revision = ""
+    for name, raw_value, *_rest in lines:
+        if raw_value == "Not Specified":
+            continue
+        match name:
+            case "Vendor":
+                vendor = raw_value
+            case "Version":
+                version = raw_value
+            case "Release Date":
+                release_date = _parse_date(raw_value)
+            case "BIOS Revision":
+                bios_revision = raw_value
+            case "Firmware Revision":
+                firmware_revision = raw_value
+    return BIOSInformation(
+        vendor=vendor,
+        version=version,
+        release_date=release_date,
+        bios_revision=bios_revision,
+        firmware_revision=firmware_revision,
+    )
 
-    parts = v.split()
-    if parts[1].lower() == "tb":
-        return int(parts[0]) * 1024 * 1024 * 1024 * 1024
-    if parts[1].lower() == "gb":
-        return int(parts[0]) * 1024 * 1024 * 1024
-    if parts[1].lower() == "mb":
-        return int(parts[0]) * 1024 * 1024
-    if parts[1].lower() == "kb":
-        return int(parts[0]) * 1024
-    return int(parts[0])
+
+@dataclass(frozen=True, kw_only=True)
+class SystemInformation:
+    manufacturer: str
+    product_name: str
+    version: str
+    serial_number: str
+    uuid: str
+    family: str
+
+
+def _parse_system_information(lines: list[list[str]]) -> SystemInformation:
+    manufacturer = ""
+    product_name = ""
+    version = ""
+    serial_number = ""
+    uuid = ""
+    family = ""
+    for name, raw_value, *_rest in lines:
+        if raw_value == "Not Specified":
+            continue
+        match name:
+            case "Manufacturer":
+                manufacturer = raw_value
+            case "Product Name":
+                product_name = raw_value
+            case "Version":
+                version = raw_value
+            case "Serial Number":
+                serial_number = raw_value
+            case "UUID":
+                uuid = raw_value
+            case "Family":
+                family = raw_value
+    return SystemInformation(
+        manufacturer=manufacturer,
+        product_name=product_name,
+        version=version,
+        serial_number=serial_number,
+        uuid=uuid,
+        family=family,
+    )
+
+
+@dataclass(frozen=True, kw_only=True)
+class ChassisInformation:
+    manufacturer: str
+    type: str
+
+
+def _parse_chassis_information(lines: list[list[str]]) -> ChassisInformation:
+    manufacturer = ""
+    type_ = ""
+    for name, raw_value, *_rest in lines:
+        if raw_value == "Not Specified":
+            continue
+        match name:
+            case "Manufacturer":
+                manufacturer = raw_value
+            case "Type":
+                type_ = raw_value
+    return ChassisInformation(
+        manufacturer=manufacturer,
+        type=type_,
+    )
+
+
+@dataclass(frozen=True, kw_only=True)
+class ProcessorInformation:
+    manufacturer: str
+    max_speed: float | None
+    voltage: float | None
+    status: str
 
 
 def _parse_speed(v: str) -> float | None:  # into Hz (float)
@@ -358,8 +162,345 @@ def _parse_voltage(v: str) -> float | None:
     return float(parts[0])
 
 
-def _parse_time(v: str) -> float:  # 155 ns
+def _parse_processor_information(lines: list[list[str]]) -> ProcessorInformation:
+    manufacturer = ""
+    max_speed: float | None = None
+    voltage: float | None = None
+    status = ""
+    for name, raw_value, *_rest in lines:
+        if raw_value == "Not Specified":
+            continue
+        match name:
+            case "Manufacturer":
+                manufacturer = raw_value
+            case "Max Speed":
+                max_speed = _parse_speed(raw_value)
+            case "Voltage":
+                voltage = _parse_voltage(raw_value)
+            case "Status":
+                status = raw_value
+    return ProcessorInformation(
+        manufacturer=manufacturer,
+        max_speed=max_speed,
+        voltage=voltage,
+        status=status,
+    )
+
+
+def _map_vendor(manufacturer: str) -> str:
+    return {
+        "GenuineIntel": "intel",
+        "Intel(R) Corporation": "intel",
+        "AuthenticAMD": "amd",
+    }.get(manufacturer, manufacturer)
+
+
+@dataclass(frozen=True, kw_only=True)
+class PhysicalMemoryArray:
+    index: int
+    location: str
+    use: str
+    error_correction_type: str
+    maximum_capacity: float | None
+
+
+def _parse_size(v: str) -> float | None:  # into Bytes (int)
+    if not v or v == "Unknown":
+        return None
+
     parts = v.split()
-    if parts[1] == "ns":
-        return float(parts[0]) / 1000000000.0
-    return float(parts[0])  # assume seconds
+    if parts[1].lower() == "tb":
+        return int(parts[0]) * 1024 * 1024 * 1024 * 1024
+    if parts[1].lower() == "gb":
+        return int(parts[0]) * 1024 * 1024 * 1024
+    if parts[1].lower() == "mb":
+        return int(parts[0]) * 1024 * 1024
+    if parts[1].lower() == "kb":
+        return int(parts[0]) * 1024
+    return int(parts[0])
+
+
+def _parse_physical_memory_array(
+    lines: list[list[str]],
+    counter: Counter[Literal["physical_memory_array", "memory_device"]],
+) -> PhysicalMemoryArray:
+    location = ""
+    use = ""
+    error_correction_type = ""
+    maximum_capacity: float | None = None
+    for name, raw_value, *_rest in lines:
+        if raw_value == "Not Specified":
+            continue
+        match name:
+            case "Location":
+                location = raw_value
+            case "Use":
+                use = raw_value
+            case "Error Correction Type":
+                error_correction_type = raw_value
+            case "Maximum Capacity":
+                maximum_capacity = _parse_size(raw_value)
+    counter.update({"physical_memory_array": 1})
+    return PhysicalMemoryArray(
+        index=counter["physical_memory_array"],
+        location=location,
+        use=use,
+        error_correction_type=error_correction_type,
+        maximum_capacity=maximum_capacity,
+    )
+
+
+@dataclass(frozen=True, kw_only=True)
+class MemoryDevice:
+    physical_memory_array: int
+    index: int
+    total_width: str
+    data_width: str
+    form_factor: str
+    set: str
+    locator: str
+    bank_locator: str
+    type: str
+    type_detail: str
+    manufacturer: str
+    serial_number: str
+    asset_tag: str
+    part_number: str
+    speed: float | None
+    size: float | None
+
+
+def _parse_memory_device(
+    lines: list[list[str]],
+    counter: Counter[Literal["physical_memory_array", "memory_device"]],
+) -> MemoryDevice:
+    total_width = ""
+    data_width = ""
+    form_factor = ""
+    set_ = ""
+    locator = ""
+    bank_locator = ""
+    type_ = ""
+    type_detail = ""
+    manufacturer = ""
+    serial_number = ""
+    asset_tag = ""
+    part_number = ""
+    speed: float | None = None
+    size: float | None = None
+    for name, raw_value, *_rest in lines:
+        if raw_value == "Not Specified":
+            continue
+        match name:
+            case "Total Width":
+                total_width = raw_value
+            case "Data Width":
+                data_width = raw_value
+            case "Form Factor":
+                form_factor = raw_value
+            case "Set":
+                set_ = raw_value
+            case "Locator":
+                locator = raw_value
+            case "Bank Locator":
+                bank_locator = raw_value
+            case "Type":
+                type_ = raw_value
+            case "Type Detail":
+                type_detail = raw_value
+            case "Manufacturer":
+                manufacturer = raw_value
+            case "Serial Number":
+                serial_number = raw_value
+            case "Asset Tag":
+                asset_tag = raw_value
+            case "Part Number":
+                part_number = raw_value
+            case "Speed":
+                speed = _parse_speed(raw_value)
+            case "Size":
+                if raw_value != "No Module Installed":
+                    size = _parse_size(raw_value)
+    counter.update({"memory_device": 1})
+    return MemoryDevice(
+        physical_memory_array=counter["physical_memory_array"],
+        index=counter["memory_device"],
+        total_width=total_width,
+        data_width=data_width,
+        form_factor=form_factor,
+        set=set_,
+        locator=locator,
+        bank_locator=bank_locator,
+        type=type_,
+        type_detail=type_detail,
+        manufacturer=manufacturer,
+        serial_number=serial_number,
+        asset_tag=asset_tag,
+        part_number=part_number,
+        speed=speed,
+        size=size,
+    )
+
+
+def parse_dmidecode(
+    string_table: StringTable,
+) -> Sequence[
+    BIOSInformation
+    | SystemInformation
+    | ChassisInformation
+    | ProcessorInformation
+    | PhysicalMemoryArray
+    | MemoryDevice
+]:
+    """Parse the output of `dmidecode -q | sed 's/\t/:/g'` with sep(58)
+    Note: on Linux \t is replaced by : and then the split is done by :.
+    On Windows the \t comes 1:1 and no splitting is being done.
+    So we need to split manually here.
+    """
+    # We cannot use a dict here, we may have multiple
+    # subsections with the same title and the order matters!
+    subsections = []
+    current_lines: StringTable = []  # these will not be used
+    for line in string_table:
+        # Windows plug-in keeps tabs and has no separator
+        if len(line) == 1:
+            parts = line[0].replace("\t", ":").split(":")
+            line = [x.strip() for x in parts]
+
+        if len(line) == 1:
+            current_lines = []
+            subsections.append((line[0], current_lines))
+        else:
+            current_lines.append([w.strip() for w in line[1:]])
+
+    # There will be "Physical Memory Array" sections, each followed
+    # by multiple "Memory Device" sections. Keep track of which belongs where:
+    entities: list[
+        BIOSInformation
+        | SystemInformation
+        | ChassisInformation
+        | ProcessorInformation
+        | PhysicalMemoryArray
+        | MemoryDevice
+    ] = []
+    counter: Counter[Literal["physical_memory_array", "memory_device"]] = Counter()
+    for title, lines in subsections:
+        match title:
+            case "BIOS Information":
+                entities.append(_parse_bios_information(lines))
+            case "System Information":
+                entities.append(_parse_system_information(lines))
+            case "Chassis Information":
+                entities.append(_parse_chassis_information(lines))
+            case "Processor Information":
+                entities.append(_parse_processor_information(lines))
+            case "Physical Memory Array":
+                entities.append(_parse_physical_memory_array(lines, counter))
+            case "Memory Device":
+                entities.append(_parse_memory_device(lines, counter))
+    return entities
+
+
+agent_section_dmidecode = AgentSection(
+    name="dmidecode",
+    parse_function=parse_dmidecode,
+)
+
+
+def inventory_dmidecode(
+    section: Sequence[
+        BIOSInformation
+        | SystemInformation
+        | ChassisInformation
+        | ProcessorInformation
+        | PhysicalMemoryArray
+        | MemoryDevice
+    ],
+) -> InventoryResult:
+    for entity in section:
+        match entity:
+            case BIOSInformation():
+                yield Attributes(
+                    path=["software", "bios"],
+                    inventory_attributes={
+                        "vendor": entity.vendor,
+                        "version": entity.version,
+                        "date": entity.release_date,
+                        "revision": entity.bios_revision,
+                        "firmware": entity.firmware_revision,
+                    },
+                )
+            case SystemInformation():
+                yield Attributes(
+                    path=["hardware", "system"],
+                    inventory_attributes={
+                        "manufacturer": entity.manufacturer,
+                        "product": entity.product_name,
+                        "version": entity.version,
+                        "serial": entity.serial_number,
+                        "uuid": entity.uuid,
+                        "family": entity.family,
+                    },
+                )
+            case ChassisInformation():
+                yield Attributes(
+                    path=["hardware", "chassis"],
+                    inventory_attributes={
+                        "manufacturer": entity.manufacturer,
+                        "type": entity.type,
+                    },
+                )
+            case ProcessorInformation():
+                if entity.status != "Unpopulated":
+                    # Note: This node is also being filled by lnx_cpuinfo
+                    yield Attributes(
+                        path=["hardware", "cpu"],
+                        inventory_attributes={
+                            "vendor": _map_vendor(entity.manufacturer),
+                            "max_speed": entity.max_speed,
+                            "voltage": entity.voltage,
+                            "status": entity.status,
+                        },
+                    )
+            case PhysicalMemoryArray():
+                yield TableRow(
+                    path=["hardware", "memory", "arrays"],
+                    key_columns={"array_id": str(entity.index)},
+                    inventory_columns={
+                        "location": entity.location,
+                        "use": entity.use,
+                        "error_correction": entity.error_correction_type,
+                        "maximum_capacity": entity.maximum_capacity,
+                    },
+                )
+            case MemoryDevice():
+                if entity.size is not None:
+                    yield TableRow(
+                        path=["hardware", "memory", "arrays", "devices"],
+                        key_columns={
+                            "array_id": str(entity.physical_memory_array),
+                            "index": entity.index,
+                            "set": entity.set,  # None
+                        },
+                        inventory_columns={
+                            "total_width": entity.total_width,  # 64 bits
+                            "data_width": entity.data_width,  # 64 bits
+                            "form_factor": entity.form_factor,  # SODIMM
+                            "locator": entity.locator,  # PROC 1 DIMM 2
+                            "bank_locator": entity.bank_locator,  # Bank 2/3
+                            "type": entity.type,  # DDR2
+                            "type_detail": entity.type_detail,  # Synchronous
+                            "manufacturer": entity.manufacturer,  # Not Specified
+                            "serial": entity.serial_number,  # Not Specified
+                            "asset_tag": entity.asset_tag,  # Not Specified
+                            "part_number": entity.part_number,  # Not Specified
+                            "speed": entity.speed,  # 667 MHz
+                            "size": entity.size,  # 2048 MB
+                        },
+                    )
+
+
+inventory_plugin_dmidecode = InventoryPlugin(
+    name="dmidecode",
+    inventory_function=inventory_dmidecode,
+)

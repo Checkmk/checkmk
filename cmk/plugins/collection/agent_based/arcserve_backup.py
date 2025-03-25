@@ -121,9 +121,7 @@ def inventory_arcserve_backup(section: Any) -> DiscoveryResult:
     yield from [Service(item=item, parameters=parameters) for (item, parameters) in inventory]
 
 
-def check_arcserve_backup(
-    item: str, section: Any
-) -> CheckResult:  # pylint: disable=too-many-branches
+def check_arcserve_backup(item: str, section: Any) -> CheckResult:
     if (backup := section.get(item)) is None:
         return
 

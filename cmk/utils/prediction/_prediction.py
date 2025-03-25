@@ -134,9 +134,11 @@ class PredictionStore:
                 continue
 
             data_path = info_path.with_suffix(self.DATA_FILE_SUFFIX)
+
             try:
-                if info_path.stat().st_mtime >= data_path.stat().st_mtime:
+                if info_path.stat().st_mtime <= data_path.stat().st_mtime:
                     yield meta, PredictionData.model_validate_json(data_path.read_text())
+                    continue
             except FileNotFoundError:
                 pass
 
@@ -146,9 +148,12 @@ class PredictionStore:
 def compute_prediction(
     info: PredictionInfo,
     get_recorded_data: Callable[[str, int, int], MetricRecord | None],
+    now: float,
 ) -> PredictionData | None:
     time_windows = time_slices(
-        info.valid_interval[0], info.params.horizon * 86400, info.params.period
+        int(now),
+        info.params.horizon * 86400,
+        info.params.period,
     )
 
     from_time = time_windows[0][0]
@@ -162,7 +167,15 @@ def compute_prediction(
         if (response := get_recorded_data(f"{info.metric}.max", start, end))
     ]
 
-    return _calculate_data_for_prediction(raw_slices[0][0], raw_slices) if raw_slices else None
+    return (
+        _calculate_data_for_prediction(raw_slices[0][0], raw_slices)
+        if raw_slices
+        else PredictionData(
+            points=[None],
+            start=from_time,
+            step=1,
+        )
+    )
 
 
 def _calculate_data_for_prediction(

@@ -21,11 +21,19 @@ MAPPING = {
 
 def __parse_docker_api(data, docker_key_name):
     for entry in data[docker_key_name] or ():
-        yield f'{entry["major"]}:{entry["minor"]}', docker_key_name, entry["op"], entry["value"]
+        yield f"{entry['major']}:{entry['minor']}", docker_key_name, entry["op"], entry["value"]
 
 
-def _parse_docker_container_diskstat_plugin(info: StringTable) -> diskstat.Section:
+def _parse_docker_container_diskstat_plugin(
+    info: StringTable,
+) -> diskstat.Section | diskstat.NoIOSection:
     raw = docker.parse(info).data
+
+    metrics_to_be_considered = ("io_service_bytes_recursive", "io_serviced_recursive")
+    if all(raw[m] is None for m in metrics_to_be_considered):
+        return diskstat.NoIOSection(
+            message="No information regarding disk IO of the montiored container available."
+        )
 
     devices_by_name: dict[str, dict[str, float]] = {}
     devices_by_number: dict[str, dict[str, float]] = {}
@@ -35,8 +43,7 @@ def _parse_docker_container_diskstat_plugin(info: StringTable) -> diskstat.Secti
         }
 
     for major_minor, docker_key_name, docker_op, value in chain(
-        __parse_docker_api(raw, "io_service_bytes_recursive"),
-        __parse_docker_api(raw, "io_serviced_recursive"),
+        *[__parse_docker_api(raw, m) for m in metrics_to_be_considered]
     ):
         diskstat_key = MAPPING.get((docker_key_name, docker_op.lower()))
         if diskstat_key is not None:
@@ -89,12 +96,17 @@ def _parse_docker_container_diskstat_agent(info: StringTable) -> diskstat.Sectio
     return section
 
 
-def parse_docker_container_diskstat(string_table: StringTable) -> diskstat.Section:
+def parse_docker_container_diskstat(
+    string_table: StringTable,
+) -> diskstat.Section | diskstat.NoIOSection:
     version = docker.get_version(string_table)
     if version is None:
         result = _parse_docker_container_diskstat_agent(string_table)
     else:
-        result = _parse_docker_container_diskstat_plugin(string_table)
+        result_intermediate = _parse_docker_container_diskstat_plugin(string_table)
+        if isinstance(result_intermediate, diskstat.NoIOSection):
+            return result_intermediate
+        result = result_intermediate
 
     filtered_result = {}
     for device_name, data in result.items():

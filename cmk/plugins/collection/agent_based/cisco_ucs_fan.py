@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -15,12 +16,18 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib.cisco_ucs import DETECT, Operability
+from cmk.plugins.lib.cisco_ucs import check_cisco_fault, DETECT, Fault, Operability
 
 
-def parse_cisco_ucs_fan(string_table: StringTable) -> dict[str, Operability]:
+@dataclass(frozen=True, kw_only=True)
+class FanModule:
+    operability: Operability
+    id: str
+
+
+def parse_cisco_ucs_fan(string_table: StringTable) -> dict[str, FanModule]:
     return {
-        " ".join(name.split("/")[2:]): Operability(operability)
+        " ".join(name.split("/")[2:]): FanModule(operability=Operability(operability), id=name)
         for name, operability in string_table
     }
 
@@ -39,23 +46,35 @@ snmp_section_cisco_ucs_fan = SimpleSNMPSection(
 )
 
 
-def discover_cisco_ucs_fan(section: Mapping[str, Operability]) -> DiscoveryResult:
-    yield from (Service(item=name) for name in section)
+def discover_cisco_ucs_fan(
+    section_cisco_ucs_fan: Mapping[str, FanModule] | None,
+    section_cisco_ucs_fault: Mapping[str, Sequence[Fault]] | None,
+) -> DiscoveryResult:
+    if not section_cisco_ucs_fan:
+        return
+    yield from (Service(item=name) for name in section_cisco_ucs_fan)
 
 
-def check_cisco_ucs_fan(item: str, section: Mapping[str, Operability]) -> CheckResult:
-    if not (operability := section.get(item)):
+def check_cisco_ucs_fan(
+    item: str,
+    section_cisco_ucs_fan: Mapping[str, FanModule] | None,
+    section_cisco_ucs_fault: Mapping[str, Sequence[Fault]] | None,
+) -> CheckResult:
+    if not (fan_module := (section_cisco_ucs_fan or {}).get(item)):
         return
 
     yield Result(
-        state=operability.monitoring_state(),
-        summary=f"Status: {operability.name}",
+        state=fan_module.operability.monitoring_state(),
+        summary=f"Status: {fan_module.operability.name}",
     )
+
+    yield from check_cisco_fault((section_cisco_ucs_fault or {}).get(fan_module.id, []))
 
 
 check_plugin_cisco_ucs_fan = CheckPlugin(
     name="cisco_ucs_fan",
     service_name="Fan %s",
+    sections=["cisco_ucs_fan", "cisco_ucs_fault"],
     discovery_function=discover_cisco_ucs_fan,
     check_function=check_cisco_ucs_fan,
 )

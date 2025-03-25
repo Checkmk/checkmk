@@ -10,6 +10,7 @@
 #include <chrono>
 #include <cstdint>
 #include <iosfwd>
+#include <iterator>
 #include <map>
 #include <memory>
 #include <optional>
@@ -42,29 +43,29 @@ public:
     // and calls the non-const getAggregatorsFor() member function.
     bool processDataset(Row row);
 
-    bool timelimitReached() const;
+    [[nodiscard]] bool timelimitReached() const;
 
     void badRequest(const std::string &message) const;
     void payloadTooLarge(const std::string &message) const;
     void invalidRequest(const std::string &message) const;
     void badGateway(const std::string &message) const;
 
-    std::chrono::seconds timezoneOffset() const {
+    [[nodiscard]] std::chrono::seconds timezoneOffset() const {
         return parsed_query_.timezone_offset;
     }
 
-    std::unique_ptr<Filter> partialFilter(const std::string &message,
-                                          columnNamePredicate predicate) const;
-    std::optional<std::string> stringValueRestrictionFor(
+    [[nodiscard]] std::unique_ptr<Filter> partialFilter(
+        const std::string &message, columnNamePredicate predicate) const;
+    [[nodiscard]] std::optional<std::string> stringValueRestrictionFor(
         const std::string &column_name) const;
-    std::optional<int32_t> greatestLowerBoundFor(
+    [[nodiscard]] std::optional<int32_t> greatestLowerBoundFor(
         const std::string &column_name) const;
-    std::optional<int32_t> leastUpperBoundFor(
+    [[nodiscard]] std::optional<int32_t> leastUpperBoundFor(
         const std::string &column_name) const;
-    std::optional<std::bitset<32>> valueSetLeastUpperBoundFor(
+    [[nodiscard]] std::optional<std::bitset<32>> valueSetLeastUpperBoundFor(
         const std::string &column_name) const;
 
-    const std::unordered_set<std::string> &allColumnNames() const;
+    [[nodiscard]] const std::unordered_set<std::string> &allColumnNames() const;
 
 private:
     const ParsedQuery parsed_query_;
@@ -81,8 +82,8 @@ private:
     std::vector<std::pair<Sorter::key_type, RowFragment>> sorted_rows_;
 
     [[nodiscard]] Logger *logger() const;
-    bool doStats() const;
-    bool hasOrderBy() const;
+    [[nodiscard]] bool doStats() const;
+    [[nodiscard]] bool hasOrderBy() const;
     [[nodiscard]] const OrderBy &orderBy() const;
     std::unique_ptr<Renderer> makeRenderer(std::ostream &os);
     void renderColumnHeaders();

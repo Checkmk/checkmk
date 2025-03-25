@@ -12,7 +12,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -58,13 +58,13 @@ def discover(section: Section) -> DiscoveryResult:
 
 
 def check(params: Mapping[str, Any], section: Section) -> CheckResult:
-    yield from check_levels(
+    yield from check_levels_v1(
         section.server_conns,
         metric_name="server_conns",
         levels_upper=params.get("server_conns"),
         label="Server connections",
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         section.client_conns,
         metric_name="client_conns",
         levels_upper=params.get("client_conns"),

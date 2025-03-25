@@ -10,10 +10,10 @@
 #
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def inventory_windows_broadcom_bonding(info):
@@ -42,6 +42,7 @@ def parse_windows_broadcom_bonding(string_table: StringTable) -> StringTable:
 
 
 check_info["windows_broadcom_bonding"] = LegacyCheckDefinition(
+    name="windows_broadcom_bonding",
     parse_function=parse_windows_broadcom_bonding,
     service_name="Bonding Interface %s",
     discovery_function=inventory_windows_broadcom_bonding,

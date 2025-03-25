@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
 
 from argparse import Namespace as Args
 from collections.abc import Callable
@@ -40,7 +39,10 @@ def get_cloudwatch_alarms_sections() -> CreateCloudwatchAlarmSections:
 
         # TODO: FakeCloudwatchClient shoud actually subclass CloudWatchClient, etc.
         cloudwatch_alarms_limits = CloudwatchAlarmsLimits(
-            fake_cloudwatch_client, region, config, distributor  # type: ignore[arg-type]
+            fake_cloudwatch_client,  # type: ignore[arg-type]
+            region,
+            config,
+            distributor,
         )
         cloudwatch_alarms = CloudwatchAlarms(fake_cloudwatch_client, region, config)  # type: ignore[arg-type]
 

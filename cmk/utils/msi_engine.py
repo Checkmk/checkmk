@@ -21,9 +21,9 @@ from pathlib import Path
 from subprocess import PIPE, Popen
 from typing import Final, NoReturn
 
-from cmk.utils import msi_patch
-
 from cmk.ccc.version import __version__
+
+from cmk.utils import msi_patch
 
 
 def _extract_major_version(version: str) -> str:
@@ -73,9 +73,7 @@ def msi_component_table() -> list[str]:
 
 def _remove_cab(path_to_msibuild: Path, *, msi: Path) -> None:
     _verbose("Removing product.cab from %s" % msi)
-    cmd: Final = (
-        f"{path_to_msibuild / 'msibuild'} {msi} -q \"DELETE FROM _Streams where Name = 'product.cab'\""
-    )
+    cmd: Final = f"{path_to_msibuild / 'msibuild'} {msi} -q \"DELETE FROM _Streams where Name = 'product.cab'\""  # nosec B608 # BNS:666c0d
 
     if (result := os.system(cmd)) != 0:  # nosec B605 # BNS:f6c1b9
         bail_out(f"msibuild is failed on remove cab, {result=}")

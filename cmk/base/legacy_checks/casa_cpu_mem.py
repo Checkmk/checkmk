@@ -5,12 +5,13 @@
 
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
 from cmk.plugins.lib.casa import DETECT_CASA
+
+check_info = {}
 
 Section = Mapping[str, Mapping[str, object]]
 
@@ -48,6 +49,7 @@ def check_casa_cpu_mem(item, params, parsed):
 
 
 check_info["casa_cpu_mem"] = LegacyCheckDefinition(
+    name="casa_cpu_mem",
     detect=DETECT_CASA,
     fetch=[
         SNMPTree(

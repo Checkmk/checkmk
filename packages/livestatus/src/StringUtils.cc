@@ -10,6 +10,8 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cerrno>
+#include <cstdlib>
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
@@ -19,13 +21,13 @@
 namespace mk {
 std::string unsafe_tolower(const std::string &str) {
     std::string result = str;
-    std::transform(str.begin(), str.end(), result.begin(), ::tolower);
+    std::ranges::transform(str, result.begin(), ::tolower);
     return result;
 }
 
 std::string unsafe_toupper(const std::string &str) {
     std::string result = str;
-    std::transform(str.begin(), str.end(), result.begin(), ::toupper);
+    std::ranges::transform(str, result.begin(), ::toupper);
     return result;
 }
 
@@ -47,8 +49,9 @@ std::tuple<std::string, std::string> splitCompositeKey2(
     auto semicolon = composite_key.find(';');
     return semicolon == std::string::npos
                ? mk::nextField(composite_key)
-               : make_tuple(mk::rstrip(composite_key.substr(0, semicolon)),
-                            mk::rstrip(composite_key.substr(semicolon + 1)));
+               : std::make_pair(
+                     mk::rstrip(composite_key.substr(0, semicolon)),
+                     mk::rstrip(composite_key.substr(semicolon + 1)));
 }
 
 std::string join(const std::vector<std::string> &values,
@@ -273,4 +276,18 @@ std::string next_argument(std::string_view &str) {
     }
 }
 
+std::pair<char *, std::error_code> from_chars(const char *first,
+                                              const char * /* last */,
+                                              double &value) {
+    errno = 0;
+    char dummy = '\0';
+    char *end = &dummy;  // must not be nullptr
+    value = strtod(first, &end);
+    if (end == first) {
+        // any non-zero error will do for now
+        return std::make_pair(
+            end, std::make_error_code(std::errc::illegal_byte_sequence));
+    }
+    return std::make_pair(end, std::make_error_code(std::errc{errno}));
+}
 }  // namespace mk

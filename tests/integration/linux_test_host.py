@@ -7,8 +7,8 @@ import subprocess
 
 import pytest
 
+from tests.testlib.common.utils import get_standard_linux_agent_output
 from tests.testlib.site import Site
-from tests.testlib.utils import get_standard_linux_agent_output
 
 
 def create_linux_test_host(request: pytest.FixtureRequest, site: Site, hostname: str) -> None:
@@ -25,7 +25,7 @@ def create_linux_test_host(request: pytest.FixtureRequest, site: Site, hostname:
         return output.split(" ")
 
     def finalizer() -> None:
-        site.openapi.delete_host(hostname)
+        site.openapi.hosts.delete(hostname)
         site.activate_changes_and_wait_for_core_reload()
 
         for path in [
@@ -44,7 +44,7 @@ def create_linux_test_host(request: pytest.FixtureRequest, site: Site, hostname:
 
     request.addfinalizer(finalizer)
 
-    site.openapi.create_host(hostname, attributes={"ipaddress": "127.0.0.1"})
+    site.openapi.hosts.create(hostname, attributes={"ipaddress": "127.0.0.1"})
 
     site.write_text_file(
         "etc/check_mk/conf.d/linux_test_host_%s.mk" % hostname,

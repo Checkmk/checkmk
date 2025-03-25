@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
+
+check_info = {}
 
 #   .--Temperature---------------------------------------------------------.
 #   |     _____                                   _                        |
@@ -51,6 +52,7 @@ def parse_bluenet_sensor(string_table: StringTable) -> StringTable:
 
 
 check_info["bluenet_sensor"] = LegacyCheckDefinition(
+    name="bluenet_sensor",
     parse_function=parse_bluenet_sensor,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.21695.1"),
     fetch=SNMPTree(
@@ -105,6 +107,7 @@ def check_bluenet_sensor_hum(item, params, info):
 
 
 check_info["bluenet_sensor.hum"] = LegacyCheckDefinition(
+    name="bluenet_sensor_hum",
     service_name="Humidity %s",
     sections=["bluenet_sensor"],
     discovery_function=inventory_bluenet_sensor_hum,

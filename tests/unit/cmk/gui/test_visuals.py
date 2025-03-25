@@ -7,6 +7,8 @@ from collections.abc import Sequence
 
 import pytest
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
 
 from cmk.gui import visuals
@@ -16,8 +18,6 @@ from cmk.gui.visuals import filters_allowed_for_info, filters_allowed_for_infos
 from cmk.gui.visuals.filter import AjaxDropdownFilter, Filter
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
-
-import cmk.ccc.version as cmk_version
 
 
 def test_get_filter() -> None:
@@ -249,37 +249,30 @@ def test_get_missing_single_infos_missing_context() -> None:
 def test_get_context_specs_no_info_limit() -> None:
     result = visuals.get_context_specs(["host"], list(visual_info_registry.keys()))
     expected = [
-        "host",
-        "service",
-        "hostgroup",
-        "servicegroup",
-        "log",
-        "comment",
-        "downtime",
         "aggr",
         "aggr_group",
+        "comment",
         "discovery",
+        "downtime",
         "event",
         "history",
+        "host",
+        "hostgroup",
         "invbackplane",
         "invchassis",
-        "invcontainer",
-        "invfan",
-        "invmodule",
-        "invother",
-        "invpsu",
-        "invsensor",
-        "invstack",
-        "invunknown",
-        "invinterface",
-        "invtunnels",
         "invcmksites",
         "invcmkversions",
+        "invcontainer",
         "invdockercontainers",
         "invdockerimages",
+        "invfan",
+        "invfirmwareredfish",
         "invibmmqchannels",
         "invibmmqmanagers",
         "invibmmqqueues",
+        "invinterface",
+        "invkernelconfig",
+        "invmodule",
         "invoradataguardstats",
         "invorainstance",
         "invorapga",
@@ -287,15 +280,23 @@ def test_get_context_specs_no_info_limit() -> None:
         "invorasga",
         "invorasystemparameter",
         "invoratablespace",
-        "invkernelconfig",
+        "invother",
+        "invpsu",
+        "invsensor",
+        "invstack",
         "invswpac",
         "invsyntheticmonitoringplans",
         "invsyntheticmonitoringtests",
+        "invtunnels",
+        "invunknown",
+        "log",
+        "service",
+        "servicegroup",
     ]
     if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
         expected += ["customer"]
 
-    assert sorted([r[0] for r in result]) == sorted(expected)
+    assert {r[0] for r in result} == set(expected)
 
 
 def test_get_context_specs_only_host_and_service_info() -> None:

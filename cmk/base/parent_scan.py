@@ -12,6 +12,9 @@ from contextlib import suppress
 from dataclasses import dataclass
 from typing import Protocol
 
+import cmk.ccc.debug
+from cmk.ccc.exceptions import MKGeneralException, MKIPAddressLookupError
+
 import cmk.utils.paths
 from cmk.utils import tty
 from cmk.utils.caching import cache_manager, DictCache
@@ -20,9 +23,6 @@ from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.log import console
 
 from cmk.automations.results import Gateway, GatewayResult
-
-import cmk.ccc.debug
-from cmk.ccc.exceptions import MKGeneralException, MKIPAddressLookupError
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -57,7 +57,6 @@ def scan_parents_of(
     *,
     lookup_ip_address: _IpAddressLookup,
 ) -> Sequence[GatewayResult]:
-    # pylint: disable=too-many-branches
     if settings is None:
         settings = {}
 
@@ -106,7 +105,7 @@ def scan_parents_of(
                 (
                     host,
                     ip,
-                    subprocess.Popen(  # pylint: disable=consider-using-with
+                    subprocess.Popen(
                         command,
                         stdout=subprocess.PIPE,
                         stderr=subprocess.STDOUT,
@@ -124,7 +123,8 @@ def scan_parents_of(
     def dot(color: str, dot: str = "o") -> None:
         if not silent:
             with suppress(IOError):
-                print(tty.bold + color + dot + tty.normal, end="", flush=True, file=sys.stdout)
+                sys.stdout.write(tty.bold + color + dot + tty.normal)
+                sys.stdout.flush()
 
     # Now all run and we begin to read the answers. For each host
     # we add a triple to gateways: the gateway, a scan state  and a diagnostic output

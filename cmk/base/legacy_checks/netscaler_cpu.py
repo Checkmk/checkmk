@@ -11,11 +11,11 @@
 # .1.3.6.1.4.1.5951.4.1.1.41.6.1.2.12.80.97.99.107.101.116.32.67.80.85.32.48  0
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.netscaler import SNMP_DETECT
+
+check_info = {}
 
 
 def inventory_netscaler_cpu(info):
@@ -49,6 +49,7 @@ def parse_netscaler_cpu(string_table: StringTable) -> StringTable:
 
 
 check_info["netscaler_cpu"] = LegacyCheckDefinition(
+    name="netscaler_cpu",
     parse_function=parse_netscaler_cpu,
     detect=SNMP_DETECT,
     fetch=SNMPTree(

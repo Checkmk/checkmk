@@ -39,7 +39,10 @@ def make_timing_results(
     infotext = "execution time %.1f sec" % total_times.process.elapsed
     if not perfdata_with_times:
         return ActiveCheckResult(
-            0, infotext, (), ("execution_time=%.3f" % total_times.process.elapsed,)
+            state=0,
+            summary=infotext,
+            details=(),
+            metrics=("execution_time=%.3f" % total_times.process.elapsed,),
         )
 
     perfdata = [
@@ -53,4 +56,4 @@ def make_timing_results(
     for phase, duration in summary.items():
         perfdata.append(f"cmk_time_{phase}={duration.idle:.3f}")
 
-    return ActiveCheckResult(0, infotext, (), perfdata)
+    return ActiveCheckResult(state=0, summary=infotext, details=(), metrics=perfdata)

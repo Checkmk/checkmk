@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
+from typing import Literal
 
 from pydantic import BaseModel, model_validator, ValidationInfo
 
@@ -16,6 +17,12 @@ class Config(BaseModel):
     levels: list[tuple[str, str]]
     compatible: list[tuple[str, str]]
     online_url: str
+    project: Literal["cmk", "cloudmk", "cma"]
+    create_commit: bool = True
+    """
+    Should the werk tool automatically create a commit when reserving ids or creating a werk?
+    This option was introduced for cloudmk, they have special requirements for commit messages.
+    """
     current_version: str
 
     def all_components(self) -> list[tuple[str, str]]:
@@ -56,9 +63,7 @@ def try_load_current_version_from_defines_make(defines_make: Path) -> str | None
 
 def load_config(werk_config: Path, *, current_version: str | None = None) -> Config:
     data: dict[str, object] = {}
-    exec(  # pylint: disable=exec-used # nosec B102 # BNS:aee528
-        werk_config.read_text(encoding="utf-8"), data, data
-    )
+    exec(werk_config.read_text(encoding="utf-8"), data, data)  # nosec B102 # BNS:aee528
 
     data.pop("__builtins__")
     return Config.model_validate(

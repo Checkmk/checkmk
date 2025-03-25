@@ -396,7 +396,7 @@ def _form_active_checks_cert() -> Dictionary:
 def _signature_algorithm_choice() -> CascadingSingleChoice:
     def fmt(sa: ObjectIdentifier) -> Title:
         return Title("%s (%s)") % (
-            sa._name,  # pylint: disable=protected-access
+            sa._name,
             sa.dotted_string,
         )
 
@@ -436,7 +436,7 @@ def _signature_algorithm_choice() -> CascadingSingleChoice:
     return CascadingSingleChoice(
         title=Title("Certificate signature algorithm"),
         help_text=Help(
-            "The signature algorithm algorithm for the "
+            "The signature algorithm for the "
             "certificate's signature. Please note that an matching is done on "
             "the OID"
         ),

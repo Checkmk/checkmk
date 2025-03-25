@@ -1,0 +1,10 @@
+title: AudioCodes: Temperature
+agents: snmp
+catalog: agentless
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the temperature of every module in an AudioCodes device.
+
+discovery:
+ One service is created for every module.

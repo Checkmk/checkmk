@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import NamedTuple
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     all_of,
     CheckPlugin,
@@ -81,7 +81,7 @@ def check_zertificon_mail_queues(
     params: Mapping[str, tuple[int, int]],
     section: Section,
 ) -> CheckResult:
-    yield from check_levels(
+    yield from check_levels_v1(
         section.postfix,
         levels_upper=params.get("postfix"),
         metric_name="mail_queue_postfix_total",
@@ -90,7 +90,7 @@ def check_zertificon_mail_queues(
         boundaries=(0, None),
         notice_only=True,
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         section.incoming,
         levels_upper=params.get("incoming"),
         metric_name="mail_queue_incoming_length",
@@ -99,7 +99,7 @@ def check_zertificon_mail_queues(
         boundaries=(0, None),
         notice_only=True,
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         section.active,
         levels_upper=params.get("active"),
         metric_name="mail_queue_active_length",
@@ -108,7 +108,7 @@ def check_zertificon_mail_queues(
         boundaries=(0, None),
         notice_only=True,
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         section.deferred,
         levels_upper=params.get("deferred"),
         metric_name="mail_queue_deferred_length",
@@ -117,7 +117,7 @@ def check_zertificon_mail_queues(
         boundaries=(0, None),
         notice_only=True,
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         section.hold,
         levels_upper=params.get("hold"),
         metric_name="mail_queue_hold_length",
@@ -126,7 +126,7 @@ def check_zertificon_mail_queues(
         boundaries=(0, None),
         notice_only=True,
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         section.maildrop,
         levels_upper=params.get("maildrop"),
         metric_name="mail_queue_drop_length",
@@ -135,7 +135,7 @@ def check_zertificon_mail_queues(
         boundaries=(0, None),
         notice_only=True,
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         section.z1,
         levels_upper=params.get("z1"),
         metric_name="mail_queue_z1_messenger",

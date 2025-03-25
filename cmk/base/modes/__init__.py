@@ -8,6 +8,8 @@ from __future__ import annotations
 import textwrap
 from collections.abc import Callable, Sequence
 
+from cmk.ccc.exceptions import MKBailOut, MKGeneralException
+
 from cmk.utils import tty
 from cmk.utils.hostaddress import HostName, Hosts
 from cmk.utils.log import console
@@ -17,7 +19,7 @@ from cmk.utils.tags import TagID
 
 from cmk.base.config import ConfigCache
 
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException
+from cmk import trace
 
 OptionSpec = str
 Argument = str
@@ -27,6 +29,8 @@ ModeFunction = Callable
 ConvertFunction = Callable
 Options = list[tuple[OptionSpec, Argument]]
 Arguments = list[str]
+
+tracer = trace.get_tracer()
 
 
 class Modes:
@@ -52,7 +56,14 @@ class Modes:
         except KeyError:
             return False
 
-    def call(self, opt: str, arg: Argument | None, all_opts: Options, all_args: Arguments) -> int:
+    def call(
+        self,
+        opt: str,
+        arg: Argument | None,
+        all_opts: Options,
+        all_args: Arguments,
+        trace_context: trace.Context,
+    ) -> int:
         mode = self._get(opt)
         sub_options = mode.get_sub_options(all_opts)
 
@@ -69,7 +80,15 @@ class Modes:
         if handler is None:
             raise TypeError()
 
-        return handler(*handler_args)
+        with tracer.span(
+            f"mode[{mode.name()}]",
+            attributes={
+                "cmk.base.mode.name": mode.name(),
+                "cmk.base.mode.args": repr(handler_args),
+            },
+            context=trace_context,
+        ):
+            return handler(*handler_args)
 
     def _get(self, opt: str) -> Mode:
         opt_name = self._strip_dashes(opt)
@@ -117,20 +136,6 @@ class Modes:
                 texts.append(text)
         return "\n\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
 
-    def non_config_options(self) -> list[str]:
-        options: list[str] = []
-        for mode in self._modes:
-            if not mode.needs_config:
-                options += mode.options()
-        return options
-
-    def non_checks_options(self) -> list[str]:
-        options: list[str] = []
-        for mode in self._modes:
-            if not mode.needs_checks:
-                options += mode.options()
-        return options
-
     def parse_hostname_list(
         self,
         config_cache: ConfigCache,
@@ -174,7 +179,7 @@ class Modes:
                         num_found += 1
                 if num_found == 0:
                     raise MKBailOut(
-                        "Host name or tag specification '%s' does " "not match any host." % arg
+                        "Host name or tag specification '%s' does not match any host." % arg
                     )
         return hostlist
 
@@ -337,8 +342,6 @@ class Mode(Option):
         argument_conv: ConvertFunction | None = None,
         argument_optional: bool = False,
         long_help: list[str] | None = None,
-        needs_config: bool = True,
-        needs_checks: bool = True,
         sub_options: list[Option] | None = None,
     ) -> None:
         super().__init__(
@@ -352,8 +355,6 @@ class Mode(Option):
             handler_function=handler_function,
         )
         self.long_help = long_help
-        self.needs_config = needs_config
-        self.needs_checks = needs_checks
         self.sub_options = sub_options or []
 
     def short_getopt_specs(self) -> list[str]:
@@ -449,11 +450,6 @@ class Mode(Option):
 
         return options
 
-
-keepalive_option = Option(
-    long_option="keepalive",
-    short_help="Execute in keepalive mode (CEE only)",
-)
 
 #
 # Initialize the modes object and load all available modes

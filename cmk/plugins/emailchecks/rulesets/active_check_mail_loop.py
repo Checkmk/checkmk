@@ -131,7 +131,7 @@ def _valuespec_active_checks_mail_loop() -> Dictionary:
 
 rule_spec_active_check_mail_loop = ActiveCheck(
     name="mail_loop",
-    title=Title("Check Email Delivery"),
+    title=Title("Check email delivery"),
     topic=Topic.APPLICATIONS,
     parameter_form=_valuespec_active_checks_mail_loop,
 )

@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.ibm import DETECT_IBM_IMM
+
+check_info = {}
 
 
 def inventory_ibm_imm_voltage(info):
@@ -25,12 +25,7 @@ def check_ibm_imm_voltage(item, _no_params, info):
             perfdata = [
                 ("volt", volt, str(warn_low) + ":" + str(warn), str(crit_low) + ":" + str(crit))
             ]
-            levelstext = " (levels warn/crit lower: {:.1f}/{:.1f} upper: {:.1f}/{:.1f})".format(
-                warn_low,
-                crit_low,
-                warn,
-                crit,
-            )
+            levelstext = f" (levels warn/crit lower: {warn_low:.1f}/{crit_low:.1f} upper: {warn:.1f}/{crit:.1f})"
 
             if (crit_low and volt <= crit_low) or (crit and volt >= crit):
                 state = 2
@@ -50,6 +45,7 @@ def parse_ibm_imm_voltage(string_table: StringTable) -> StringTable:
 
 
 check_info["ibm_imm_voltage"] = LegacyCheckDefinition(
+    name="ibm_imm_voltage",
     parse_function=parse_ibm_imm_voltage,
     detect=DETECT_IBM_IMM,
     fetch=SNMPTree(

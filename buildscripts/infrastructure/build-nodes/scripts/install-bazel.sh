@@ -15,17 +15,27 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 DIR_NAME="bazel"
 TARGET_DIR="${TARGET_DIR:-/opt}"
 BAZEL_VERSION="$(<"${SCRIPT_DIR}"/.bazelversion)"
-BAZEL_EXE_FILE="bazel-${BAZEL_VERSION}-linux-x86_64"
+BAZELISK_VERSION="v1.20.0"
+BAZELISK_EXE_FILE="bazelisk-${BAZELISK_VERSION}-linux-amd64"
+BAZELISK_EXE_FILE_WITHOUT_VERSION="bazelisk-linux-amd64"
 
 if [ "$1" != "link-only" ]; then
     mkdir -p "${TARGET_DIR}/${DIR_NAME}"
     cd "${TARGET_DIR}/${DIR_NAME}"
     mirrored_download \
-        "${BAZEL_EXE_FILE}" \
-        "https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/${BAZEL_EXE_FILE}"
-    chmod +x "${BAZEL_EXE_FILE}"
+        "${BAZELISK_EXE_FILE}" \
+        "https://github.com/bazelbuild/bazelisk/releases/download/${BAZELISK_VERSION}/${BAZELISK_EXE_FILE_WITHOUT_VERSION}"
+
+    # see https://github.com/bazelbuild/bazelisk/issues/606
+    if [[ -e ${BAZELISK_EXE_FILE_WITHOUT_VERSION} ]]; then
+        mv ${BAZELISK_EXE_FILE_WITHOUT_VERSION} ${BAZELISK_EXE_FILE}
+    fi
+    chmod +x "${BAZELISK_EXE_FILE}"
 fi
 
-ln -sf "${TARGET_DIR}/${DIR_NAME}/${BAZEL_EXE_FILE}" "/usr/bin/bazel"
+ln -sf "${TARGET_DIR}/${DIR_NAME}/${BAZELISK_EXE_FILE}" "/usr/bin/bazel"
+# Let's also provide bazelisk in PATH, see https://github.com/bazelbuild/bazelisk?tab=readme-ov-file#installation
+ln -sf "${TARGET_DIR}/${DIR_NAME}/${BAZELISK_EXE_FILE}" "/usr/bin/bazelisk"
 
+export USE_BAZEL_VERSION=$BAZEL_VERSION
 test_package "bazel --version" "^bazel $BAZEL_VERSION$"

@@ -1,4 +1,3 @@
-load("@omd_packages//:package_versions.bzl", "PYTHON_MAJOR_DOT_MINOR", "RRDLIB_MAJOR", "RRDLIB_MAJOR_DOT_MINOR")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 
 MAKE_PARALLEL = "-j4"
@@ -16,7 +15,6 @@ configure_make(
     args = ["%s" % MAKE_PARALLEL],
     build_data = [
         "@omd_packages//omd/packages/perl-modules:perl-modules.tar",
-        "@omd_packages//omd/packages/python3-modules:python3-modules.tar",
     ],
     configure_in_place = True,
     configure_options = [
@@ -28,6 +26,7 @@ configure_make(
         "--disable-lua",
         "--disable-rrdcgi",
         "--disable-libdbi",
+        "--disable-python",
         "--with-systemdsystemunitdir=no",
         "--with-perl-options='LIB=$${EXT_BUILD_DEPS}/lib/perl5/lib/perl5'",
         "CFLAGS='-Dredacted=\"redacted\"'",
@@ -60,12 +59,8 @@ configure_make(
     env = {
         "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",
         "RANLIB": "ranlib",
-        "LD_LIBRARY_PATH": "$$EXT_BUILD_DEPS/python/lib/",
-        "PERL_DIR": "$$EXT_BUILD_DEPS/omd/packages/perl-modules/perl-modules",
-        "CFLAGS": "'-Dredacted=\"redacted\"' -I$$EXT_BUILD_DEPS/python/include/python%s" % PYTHON_MAJOR_DOT_MINOR,
-        "PYTHONPATH": "$$(cd $$(dirname $(execpath @omd_packages//omd/packages/python3-modules:python3-modules.tar)); tar xf python3-modules.tar;)$$(dirname $(execpath @omd_packages//omd/packages/python3-modules:python3-modules.tar))/python3-modules/lib/python%s/site-packages/" % PYTHON_MAJOR_DOT_MINOR,
-        "PYTHON_3_VERSION": "%s" % PYTHON_MAJOR_DOT_MINOR,
-        "PATH": "$$EXT_BUILD_DEPS/python/bin/:$$PATH",
+        "PERL_DIR": "$$EXT_BUILD_DEPS/omd/packages/perl-modules",
+        "CFLAGS": "'-Dredacted=\"redacted\"'",
         "top_builddir": ".",
     },
     install_prefix = "$INSTALLDIR",
@@ -79,65 +74,41 @@ configure_make(
         "-lpng",
     ],
     out_binaries = [
-        "rrdcached",
-        "rrdcreate",
-        "rrdinfo",
-        "rrdtool",
-        "rrdupdate",
     ],
     out_data_dirs = [
-        "share",
-        "tar",
         "lib/perl5/lib/perl5/",
-        "lib/python%s/site-packages/" % PYTHON_MAJOR_DOT_MINOR,
-        "lib/pkgconfig",
     ],
+    out_headers_only = True,
     out_shared_libs = [
-        "librrd.so",
-        "librrd.so.%s" % RRDLIB_MAJOR,
-        "librrd.so.%s" % RRDLIB_MAJOR_DOT_MINOR,
     ],
     out_static_libs = [
-        "librrd.a",
     ],
     postfix_script = """
         # The install step doesn't put the perl bindings where we
         # expect them.  So let's copy them here.
         LPLP="lib/perl5/lib/perl5"
         cp -R ${INSTALLDIR}${EXT_BUILD_DEPS}/$LPLP/* ${INSTALLDIR}/$LPLP
-        chmod u+w -R ${INSTALLDIR}/../
-        patchelf --set-rpath "\\$ORIGIN/../lib" \
-                ${INSTALLDIR}/bin/rrdcached \
-                ${INSTALLDIR}/bin/rrdcreate \
-                ${INSTALLDIR}/bin/rrdinfo \
-                ${INSTALLDIR}/bin/rrdtool \
-                ${INSTALLDIR}/bin/rrdupdate
-        tar -C ${INSTALLDIR}/../ \
-            --exclude="rrdtool/home" \
-            --exclude="rrdtool/usr" \
-            --exclude="rrdtool/tar" \
-            -cf ${INSTALLDIR}/tar/rrdtool.tar \
-            rrdtool
+        # remove unnecessary folders
+        rm -rf ${INSTALLDIR}/{home,usr}
     """,
     targets = [
         "-C po all",
         "-C src all",
         "-C tests all",
         "-C etc all",
-        # Explicitly require perl and python bindings to make sure
+        # Explicitly require perl bindings to make sure
         # we fail if they are not built.
         "-C bindings perl-piped",
         "-C bindings perl-shared",
-        "-C bindings python",
-        "-C po install",
-        "-C src install",
-        "-C tests install",
-        "-C etc install",
         # DESTDIR for Perl, since the prefix is not honored
         "DESTDIR=$INSTALLDIR -C bindings install",
-        # DESTDIR for Python, since INSTALLDIR is in prefix
-        "DESTDIR=/ -C bindings install",
     ],
     visibility = ["//visibility:public"],
-    deps = ["@python"],
+)
+
+filegroup(
+    name = "perl_bindings_gen_dir",
+    srcs = [":rrdtool"],
+    output_group = "gen_dir",
+    visibility = ["//visibility:public"],
 )

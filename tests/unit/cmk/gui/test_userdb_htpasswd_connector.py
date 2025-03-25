@@ -8,12 +8,13 @@ from pathlib import Path
 import pytest
 from pytest import MonkeyPatch
 
-from cmk.utils.crypto import password_hashing
-from cmk.utils.crypto.password import Password
 from cmk.utils.user import UserId
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.userdb import CheckCredentialsResult, htpasswd
+
+from cmk.crypto import password_hashing
+from cmk.crypto.password import Password
 
 
 @pytest.fixture(name="htpasswd_file", autouse=True)

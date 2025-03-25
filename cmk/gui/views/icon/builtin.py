@@ -23,9 +23,8 @@ from cmk.gui.logged_in import user
 from cmk.gui.painter.v0.helpers import render_cache_info
 from cmk.gui.painter.v1.helpers import is_stale
 from cmk.gui.painter_options import paint_age, PainterOptions
-from cmk.gui.type_defs import ColumnName
+from cmk.gui.type_defs import ColumnName, Row, VisualLinkSpec
 from cmk.gui.type_defs import Icon as IconSpec
-from cmk.gui.type_defs import Row, VisualLinkSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.popups import MethodAjax
@@ -628,7 +627,7 @@ class NotesIcon(Icon):
         if display_options.enabled(display_options.X):
             notes_url = row[what + "_notes_url_expanded"]
             if notes_url:
-                return "notes", _("Custom Notes"), (notes_url, "_blank")
+                return "notes", _("Notes (URL)"), (notes_url, "_blank")
         return None
 
 
@@ -673,7 +672,7 @@ class DowntimesIcon(Icon):
         def detail_txt(
             downtimes_with_extra_info: Sequence[
                 tuple[int, str, str, str, int, int, int, bool, int, bool, bool]
-            ]
+            ],
         ) -> str:
             if not downtimes_with_extra_info:
                 return ""
@@ -695,16 +694,9 @@ class DowntimesIcon(Icon):
                 ) = downtime_entry[:11]
 
                 if fixed:
-                    time_info = "Start: {}, End: {}".format(
-                        cmk.utils.render.date_and_time(start_time),
-                        cmk.utils.render.date_and_time(end_time),
-                    )
+                    time_info = f"Start: {cmk.utils.render.date_and_time(start_time)}, End: {cmk.utils.render.date_and_time(end_time)}"
                 else:
-                    time_info = "May start from {} till {} with duration of {}".format(
-                        cmk.utils.render.date_and_time(start_time),
-                        cmk.utils.render.date_and_time(end_time),
-                        cmk.utils.render.Age(duration),
-                    )
+                    time_info = f"May start from {cmk.utils.render.date_and_time(start_time)} till {cmk.utils.render.date_and_time(end_time)} with duration of {cmk.utils.render.Age(duration)}"
                     lines.append(f"{author} ({time_info}) - {comment}")
 
             return "\n%s" % "\n".join(lines)
@@ -1196,7 +1188,7 @@ class CrashdumpsIcon(Icon):
                 )
 
             # Extract the crash ID produced by cmk/base/crash_reporting.py from output
-            match = re.search(r"\(Crash-ID: ([^\)]+)\)$", row["service_plugin_output"])
+            match = re.search(r"\(Crash-ID: ([^\)]+)\)", row["service_plugin_output"])
             if not match:
                 return "crash", _(
                     "This check crashed, but no crash dump is available, please report this "

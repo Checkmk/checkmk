@@ -75,7 +75,7 @@
 import re
 import time
 from collections.abc import Mapping, MutableMapping, Sequence
-from typing import Any, TypeVar
+from typing import Any, Iterable, TypeVar
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -87,6 +87,7 @@ from cmk.agent_based.v2 import (
     IgnoreResultsError,
     Result,
     RuleSetType,
+    Service,
     State,
     StringTable,
 )
@@ -346,20 +347,65 @@ def diskstat_convert_info(
     return converted_disks
 
 
+def _discovery_diskstat(
+    params: Sequence[Mapping[str, Any]],
+    section: Iterable[str],
+) -> DiscoveryResult:
+    item_candidates = list(section)
+    # Skip over on empty data
+    if not item_candidates:
+        return
+
+    modes = params[0]
+
+    if modes["summary"]:
+        yield Service(item="SUMMARY")
+
+    for name in item_candidates:
+        if (
+            (physical := modes.get("physical"))
+            and " " not in name
+            and not diskstat.DISKSTAT_DISKLESS_PATTERN.match(name)
+        ):
+            if ":" in name:
+                device, wwn = name.split(":")
+                item = wwn if physical == "wwn" else device
+                yield Service(item=item)
+            else:
+                yield Service(item=name)
+
+        if modes["lvm"] and name.startswith("LVM "):
+            yield Service(item=name)
+
+        if modes["vxvm"] and name.startswith("VxVM "):
+            yield Service(item=name)
+
+        if modes["diskless"] and diskstat.DISKSTAT_DISKLESS_PATTERN.match(name):
+            # Sort of partitions with disks - typical in XEN virtual setups.
+            # Eg. there are xvda1, xvda2, but no xvda...
+            yield Service(item=name)
+
+
 def discover_diskstat(
     params: Sequence[Mapping[str, Any]],
-    section_diskstat: diskstat.Section | None,
+    section_diskstat: diskstat.Section | diskstat.NoIOSection | None,
     section_multipath: multipath.Section | None,
 ) -> DiscoveryResult:
-    if section_diskstat is None:
-        return
-    yield from diskstat.discovery_diskstat_generic(
-        params,
-        diskstat_convert_info(
-            section_diskstat,
-            section_multipath,
-        ),
-    )
+    match section_diskstat:
+        case None:
+            return
+        case diskstat.NoIOSection():
+            if params[0]["summary"]:
+                yield Service(item="SUMMARY")
+                return
+        case _:
+            yield from _discovery_diskstat(
+                params,
+                diskstat_convert_info(
+                    section_diskstat,
+                    section_multipath,
+                ),
+            )
 
 
 def _compute_rates_single_disk(
@@ -435,13 +481,15 @@ def _compute_rates_single_disk(
 def check_diskstat(
     item: str,
     params: Mapping[str, Any],
-    section_diskstat: diskstat.Section | None,
+    section_diskstat: diskstat.Section | diskstat.NoIOSection | None,
     section_multipath: multipath.Section | None,
 ) -> CheckResult:
     # Unfortunately, summarizing the disks does not commute with computing the rates for this check.
     # Therefore, we have to compute the rates first.
     if section_diskstat is None:
         return
+    if isinstance(section_diskstat, diskstat.NoIOSection):
+        raise IgnoreResultsError(section_diskstat.message)
 
     converted_disks = diskstat_convert_info(
         section_diskstat,
@@ -471,7 +519,7 @@ def check_diskstat(
         if disk_name != item:
             yield Result(state=State.OK, summary=f"[{disk_name}]")
 
-    yield from diskstat.check_diskstat_dict(
+    yield from diskstat.check_diskstat_dict_legacy(
         params=params,
         disk=disk_with_rates,
         value_store=value_store,
@@ -498,7 +546,7 @@ _ItemData = TypeVar("_ItemData")
 
 
 def _merge_cluster_sections(
-    cluster_section: Mapping[str, Mapping[str, _ItemData] | None]
+    cluster_section: Mapping[str, Mapping[str, _ItemData] | None],
 ) -> Mapping[str, _ItemData] | None:
     return {
         k: v

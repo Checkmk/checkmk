@@ -6,13 +6,16 @@
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
 from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.api.agent_based.plugin_classes import CheckFunction, CheckPlugin, DiscoveryFunction
+from cmk.base.api.agent_based.plugin_classes import (
+    AgentBasedPlugins,
+    CheckFunction,
+    CheckPlugin,
+    DiscoveryFunction,
+)
 
 from cmk.agent_based.v2 import Result, Service, State
 
@@ -21,14 +24,14 @@ check_name = "megaraid_bbu"
 
 # TODO: drop this after migration
 @pytest.fixture(scope="module", name="plugin")
-def _get_plugin(fix_register: FixRegister) -> CheckPlugin:
-    return fix_register.check_plugins[CheckPluginName(check_name)]
+def _get_plugin(agent_based_plugins: AgentBasedPlugins) -> CheckPlugin:
+    return agent_based_plugins.check_plugins[CheckPluginName(check_name)]
 
 
 # TODO: drop this after migration
 @pytest.fixture(scope="module", name=f"parse_{check_name}")
-def _get_parse_function(fix_register):
-    return fix_register.agent_sections[SectionName(check_name)].parse_function
+def _get_parse_function(agent_based_plugins):
+    return agent_based_plugins.agent_sections[SectionName(check_name)].parse_function
 
 
 # TODO: drop this after migration
@@ -78,9 +81,7 @@ BBU GasGauge Status: 0x6ef7
 Pack energy : 247 J
 Capacitance : 110
 Remaining reserve space : 0
-""".split(
-                "\n"
-            )
+""".split("\n")
             if line
         ]
     )

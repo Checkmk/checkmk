@@ -6,19 +6,19 @@
 
 import os
 
-from flask import Flask
-
+from cmk.gui.features import Features
+from cmk.gui.flask_app import CheckmkFlaskApp
 from cmk.gui.http import Request, Response
 from cmk.gui.session import FileBasedSession
 
 
-class BackgroundJobFlaskApp(Flask):
+class BackgroundJobFlaskApp(CheckmkFlaskApp):
     request_class = Request
     response_class = Response
-    session_interface = FileBasedSession()
 
     def __init__(
         self,
+        features: Features,
         static_url_path: str | None = None,
         static_folder: str | os.PathLike[str] | None = "static",
         static_host: str | None = None,
@@ -31,6 +31,8 @@ class BackgroundJobFlaskApp(Flask):
     ):
         super().__init__(
             import_name=__name__,
+            session_interface=FileBasedSession(),
+            features=features,
             static_url_path=static_url_path,
             static_folder=static_folder,
             static_host=static_host,

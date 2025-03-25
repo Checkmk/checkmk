@@ -99,7 +99,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Literal
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     all_of,
     CheckPlugin,
@@ -461,7 +461,7 @@ def check_cisco_qos_(
             )
         except GetRateError:
             continue
-        yield from check_levels(
+        yield from check_levels_v1(
             (
                 get_average(
                     value_store=value_store,

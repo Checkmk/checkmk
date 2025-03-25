@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, render, Service
 from cmk.plugins.lib.cpu import Section
 
@@ -41,7 +41,7 @@ def check_cpu_threads(params: Params, section: Section) -> CheckResult:
     if not (threads := section.threads):
         return
     if threads.count is not None:
-        yield from check_levels(
+        yield from check_levels_v1(
             threads.count,
             metric_name="threads",
             levels_upper=_get_levels(params, "levels"),
@@ -49,7 +49,7 @@ def check_cpu_threads(params: Params, section: Section) -> CheckResult:
         )
     if threads.max is not None and threads.count is not None:
         thread_usage = 100.0 * threads.count / threads.max
-        yield from check_levels(
+        yield from check_levels_v1(
             thread_usage,
             metric_name="thread_usage",
             levels_upper=_get_levels(params, "levels_percent"),

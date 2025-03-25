@@ -33,52 +33,54 @@ def _parameter_valuespec_graylog_nodes():
             ),
             (
                 "lc_running",
-                MonitoringState(title=_("State when lifecycle state is running"), default_value=0),
+                MonitoringState(title=_("State when life cycle state is running"), default_value=0),
             ),
             (
                 "lc_starting",
-                MonitoringState(title=_("State when lifecycle state is starting"), default_value=1),
+                MonitoringState(
+                    title=_("State when life cycle state is starting"), default_value=1
+                ),
             ),
             (
                 "lc_halting",
-                MonitoringState(title=_("State when lifecycle state is halting"), default_value=1),
+                MonitoringState(title=_("State when life cycle state is halting"), default_value=1),
             ),
             (
                 "lc_paused",
-                MonitoringState(title=_("State when lifecycle state is paused"), default_value=1),
+                MonitoringState(title=_("State when life cycle state is paused"), default_value=1),
             ),
             (
                 "lc_uninitialized",
                 MonitoringState(
-                    title=_("State when lifecycle state is uninitialized"), default_value=1
+                    title=_("State when life cycle state is uninitialized"), default_value=1
                 ),
             ),
             (
                 "lc_failed",
-                MonitoringState(title=_("State when lifecycle state is failed"), default_value=2),
+                MonitoringState(title=_("State when life cycle state is failed"), default_value=2),
             ),
             (
                 "lc_throttled",
                 MonitoringState(
-                    title=_("State when lifecycle state is throttled"), default_value=2
+                    title=_("State when life cycle state is throttled"), default_value=2
                 ),
             ),
             (
                 "lc_override_lb_alive",
                 MonitoringState(
-                    title=_("State when lifecycle state is override_lb_alive"), default_value=0
+                    title=_("State when life cycle state is override_lb_alive"), default_value=0
                 ),
             ),
             (
                 "lc_override_lb_dead",
                 MonitoringState(
-                    title=_("State when lifecycle state is override_lb_dead"), default_value=1
+                    title=_("State when life cycle state is override_lb_dead"), default_value=1
                 ),
             ),
             (
                 "lc_override_lb_throttled",
                 MonitoringState(
-                    title=_("State when lifecycle state is override_lb_throttled"), default_value=1
+                    title=_("State when life cycle state is override_lb_throttled"), default_value=1
                 ),
             ),
             (

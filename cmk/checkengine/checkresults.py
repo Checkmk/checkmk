@@ -43,7 +43,6 @@ class ServiceCheckResult:
 
 
 class SubmittableServiceCheckResult(ServiceCheckResult):
-
     def is_submittable(self) -> bool:
         return True
 
@@ -57,7 +56,6 @@ class SubmittableServiceCheckResult(ServiceCheckResult):
 
 
 class UnsubmittableServiceCheckResult(ServiceCheckResult):
-
     def is_submittable(self) -> bool:
         return False
 
@@ -71,7 +69,7 @@ class UnsubmittableServiceCheckResult(ServiceCheckResult):
         return cls(3, f"Clustered service received no monitoring data ({node_hint})")
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class ActiveCheckResult:
     state: int = 0
     summary: str = ""

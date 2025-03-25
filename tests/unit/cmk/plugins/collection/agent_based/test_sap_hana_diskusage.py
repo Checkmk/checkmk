@@ -9,11 +9,11 @@ from datetime import datetime
 import pytest
 import time_machine
 
-from tests.unit.conftest import FixRegister
-
 from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
+
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 
 from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, Service, State, StringTable
 from cmk.plugins.collection.agent_based import sap_hana_diskusage
@@ -56,9 +56,11 @@ LAST_TIME_EPOCH = (
     ],
 )
 def test_parse_sap_hana_diskusage(
-    fix_register: FixRegister, info: StringTable, expected_result: Mapping[str, Mapping[str, float]]
+    agent_based_plugins: AgentBasedPlugins,
+    info: StringTable,
+    expected_result: Mapping[str, Mapping[str, float]],
 ) -> None:
-    section_plugin = fix_register.agent_sections[SectionName("sap_hana_diskusage")]
+    section_plugin = agent_based_plugins.agent_sections[SectionName("sap_hana_diskusage")]
     assert section_plugin.parse_function(info) == expected_result
 
 
@@ -81,10 +83,12 @@ def test_parse_sap_hana_diskusage(
     ],
 )
 def test_inventory_sap_hana_diskusage(
-    fix_register: FixRegister, info: StringTable, expected_result: Sequence[Service]
+    agent_based_plugins: AgentBasedPlugins, info: StringTable, expected_result: Sequence[Service]
 ) -> None:
-    section = fix_register.agent_sections[SectionName("sap_hana_diskusage")].parse_function(info)
-    plugin = fix_register.check_plugins[CheckPluginName("sap_hana_diskusage")]
+    section = agent_based_plugins.agent_sections[SectionName("sap_hana_diskusage")].parse_function(
+        info
+    )
+    plugin = agent_based_plugins.check_plugins[CheckPluginName("sap_hana_diskusage")]
     assert list(plugin.discovery_function(section)) == expected_result
 
 
@@ -195,13 +199,15 @@ def value_store_fixture(monkeypatch):
 )
 @time_machine.travel(NOW_SIMULATED)
 def test_check_sap_hana_diskusage(
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
     item: str,
     info: StringTable,
     expected_result: Sequence[Result | Metric],
 ) -> None:
-    section = fix_register.agent_sections[SectionName("sap_hana_diskusage")].parse_function(info)
-    plugin = fix_register.check_plugins[CheckPluginName("sap_hana_diskusage")]
+    section = agent_based_plugins.agent_sections[SectionName("sap_hana_diskusage")].parse_function(
+        info
+    )
+    plugin = agent_based_plugins.check_plugins[CheckPluginName("sap_hana_diskusage")]
     check_results = list(plugin.check_function(item, FILESYSTEM_DEFAULT_PARAMS, section))
 
     assert [r for r in check_results if isinstance(r, Result)] == [
@@ -230,9 +236,11 @@ def test_check_sap_hana_diskusage(
     ],
 )
 def test_check_sap_hana_diskusage_stale(
-    fix_register: FixRegister, item: str, info: StringTable
+    agent_based_plugins: AgentBasedPlugins, item: str, info: StringTable
 ) -> None:
-    section = fix_register.agent_sections[SectionName("sap_hana_diskusage")].parse_function(info)
-    plugin = fix_register.check_plugins[CheckPluginName("sap_hana_diskusage")]
+    section = agent_based_plugins.agent_sections[SectionName("sap_hana_diskusage")].parse_function(
+        info
+    )
+    plugin = agent_based_plugins.check_plugins[CheckPluginName("sap_hana_diskusage")]
     with pytest.raises(IgnoreResultsError):
         list(plugin.check_function(item, {}, section))

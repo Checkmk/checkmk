@@ -45,7 +45,6 @@ def _get_address(host_config: HostConfig, params: Params) -> str:
 def commands_check_disk_smb(
     params: Params, host_config: HostConfig
 ) -> Iterator[ActiveCheckCommand]:
-
     args: list[str | Secret] = [
         replace_macros(params.share, host_config.macros),
         "-H",

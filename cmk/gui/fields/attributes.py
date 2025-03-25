@@ -22,6 +22,8 @@ from cmk.gui.watolib.tags import load_tag_group
 from cmk.fields import Boolean, Constant, Integer, List, Nested, String, Time
 from cmk.fields.validators import IsValidRegexp, ValidateIPv4, ValidateIPv4Network
 
+from .definitions import CmkOneOfSchema
+
 # TODO: make wrong 'tuple_fields' entries fail at compile not, not at runtime.
 
 
@@ -343,16 +345,12 @@ class TimeAllowedRange(BaseSchema, CheckmkTuple):
     converter = (DateConverter(), DateConverter())
 
     start = Time(
-        description=(
-            "The start time of day. Inclusive. " "Use ISO8601 format. Seconds are stripped."
-        ),
+        description=("The start time of day. Inclusive. Use ISO8601 format. Seconds are stripped."),
         required=True,
         pattern=r"^\d\d:\d\d(:\d\d)?$",
     )
     end = Time(
-        description=(
-            "The end time of day. Inclusive. " "Use ISO8601 format. Seconds are stripped."
-        ),
+        description=("The end time of day. Inclusive. Use ISO8601 format. Seconds are stripped."),
         required=True,
         pattern=r"^\d\d:\d\d(:\d\d)?$",
     )
@@ -805,14 +803,14 @@ class SNMPv3AuthPrivacy(BaseSchema, CheckmkTuple):
     )
     privacy_password = String(
         description=(
-            "Privacy pass phrase. " "If filled, privacy_protocol needs to be selected as well."
+            "Privacy pass phrase. If filled, privacy_protocol needs to be selected as well."
         ),
         required=True,
         minLength=8,
     )
 
 
-class SNMPCredentials(OneOfSchema):
+class SNMPCredentials(CmkOneOfSchema):
     """Validate and convert from/to Checkmk internal format for SNMP credentials.
 
     Here are the various possible values in the attribute

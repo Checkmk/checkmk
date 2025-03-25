@@ -1,0 +1,101 @@
+{
+  "Logical Volume rootvg/hd1": {
+    "expected_state": 0
+  },
+  "Logical Volume rootvg/hd10opt": {
+    "expected_state": 0
+  },
+  "Logical Volume rootvg/hd11admin": {
+    "expected_state": 0
+  },
+  "Logical Volume rootvg/hd2": {
+    "expected_state": 0
+  },
+  "Logical Volume rootvg/hd3": {
+    "expected_state": 0
+  },
+  "Logical Volume rootvg/hd4": {
+    "expected_state": 0
+  },
+  "Logical Volume rootvg/hd5": {
+    "expected_state": 0
+  },
+  "Logical Volume rootvg/hd6": {
+    "expected_state": 0
+  },
+  "Logical Volume rootvg/hd8": {
+    "expected_state": 0
+  },
+  "Logical Volume rootvg/hd9var": {
+    "expected_state": 0
+  },
+  "Logical Volume rootvg/livedump": {
+    "expected_state": 0
+  },
+  "Multipath hdisk0": {
+    "expected_state": 0
+  },
+  "Multipath hdisk1": {
+    "expected_state": 0
+  },
+  "Multipath hdisk2": {
+    "expected_state": 0
+  },
+  "Multipath hdisk3": {
+    "expected_state": 0
+  },
+  "Multipath hdisk4": {
+    "expected_state": 0
+  },
+  "Multipath hdisk5": {
+    "expected_state": 0
+  },
+  "Multipath hdisk6": {
+    "expected_state": 0
+  },
+  "Multipath hdisk7": {
+    "expected_state": 0
+  },
+  "Page Space hd6/hdisk0": {
+    "expected_state": 0
+  },
+  "Check_MK Agent": {
+    "expected_state": 0
+  },
+  "CPU load": {
+    "expected_state": 0
+  },
+  "Number of threads": {
+    "expected_state": 0
+  },
+  "Interface 1": {
+    "expected_state": 0
+  },
+  "Interface 2": {
+    "expected_state": 0
+  },
+  "Performance Check": {
+    "expected_state": 0
+  },
+  "lparstat": {
+    "expected_state": 0
+  },
+  "CPU utilization": {
+    "expected_state": 0
+  },
+  "Memory": {
+    "expected_state": 0
+  },
+  "NTP Time": {
+    "expected_state": 0
+  },
+  "Postfix Queue default": {
+    "expected_state": 0
+  },
+  "TCP Connections": {
+    "expected_state": 0
+  },
+  "Uptime": {
+    "expected_state": 0
+  }
+}

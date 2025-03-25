@@ -41,6 +41,7 @@ from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri
 from cmk.gui.watolib.user_scripts import declare_notification_plugin_permissions
+from cmk.gui.watolib.users import get_enabled_remote_sites_for_logged_in_user
 
 
 def register(
@@ -58,7 +59,7 @@ class FailedNotificationTimes(NamedTuple):
 g_columns: list[str] = [
     "time",
     "contact_name",
-    "type",
+    "command_name",
     "host_name",
     "service_description",
     "comment",
@@ -207,7 +208,7 @@ class ClearFailedNotificationPage(Page):
         if request.var("_confirm"):
             _acknowledge_failed_notifications(acktime, time.time())
 
-            if user.authorized_login_sites():
+            if get_enabled_remote_sites_for_logged_in_user(user):
                 title = _("Replicate user profile")
                 breadcrumb = make_simple_page_breadcrumb(
                     mega_menu_registry.menu_monitoring(), title
@@ -246,7 +247,7 @@ class ClearFailedNotificationPage(Page):
                     _("Time"), cmk.utils.render.approx_age(time.time() - row[header["time"]])
                 )
                 table.cell(_("Contact"), row[header["contact_name"]])
-                table.cell(_("Plug-in"), row[header["type"]])
+                table.cell(_("Plug-in"), row[header["command_name"]])
                 table.cell(_("Host"), row[header["host_name"]])
                 table.cell(_("Service"), row[header["service_description"]])
                 table.cell(_("Output"), row[header["comment"]])

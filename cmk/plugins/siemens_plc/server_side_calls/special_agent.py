@@ -59,10 +59,7 @@ def _serialize_device(
     return (
         f"{device.host_name};{device.host_address};{device.rack};{device.slot};{device.tcp_port}"
     ) + (
-        ";"
-        + ";".join(
-            _serialize_value(value) for value in values  # pylint: disable=used-before-assignment
-        )
+        ";" + ";".join(_serialize_value(value) for value in values)
         if (values := [*global_values, *device.values])
         else ""
     )

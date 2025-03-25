@@ -87,7 +87,7 @@ class VisualInfoService(VisualInfo):
                 "service",
                 MonitoredServiceDescription(
                     # TODO: replace MonitoredServiceDescription with AjaxDropdownChoice
-                    title=_("Service Description"),
+                    title=_("Service description"),
                     autocompleter=ContextAutocompleterConfig(
                         ident=MonitoredServiceDescription.ident,
                         strict=True,
@@ -508,11 +508,11 @@ class VisualInfoKubernetesDeployment(VisualInfo):
 
     @property
     def title(self) -> str:
-        return _("Kubernetes Deployment")
+        return _("Kubernetes deployment")
 
     @property
     def title_plural(self):
-        return _("Kubernetes Deployments")
+        return _("Kubernetes deployments")
 
     @property
     def single_spec(self) -> list[tuple[str, ValueSpec]]:

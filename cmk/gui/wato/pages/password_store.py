@@ -5,7 +5,6 @@
 import copy
 from collections.abc import Collection
 
-from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.password_store import Password
 
 from cmk.gui.exceptions import MKUserError
@@ -27,16 +26,24 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     DualListChoice,
     FixedValue,
+    ValueSpec,
 )
 from cmk.gui.valuespec import Password as PasswordValuespec
-from cmk.gui.valuespec import ValueSpec
-from cmk.gui.wato.pages._simple_modes import SimpleEditMode, SimpleListMode, SimpleModeType
+from cmk.gui.wato.pages._simple_modes import (
+    convert_dict_elements_vs2fs,
+    SimpleEditMode,
+    SimpleListMode,
+    SimpleModeType,
+)
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainCore
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.passwords import sorted_contact_group_choices
+
+from cmk.rulesets.v1.form_specs import DictElement
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -57,8 +64,8 @@ class PasswordStoreModeType(SimpleModeType[Password]):
     def can_be_disabled(self) -> bool:
         return False
 
-    def affected_config_domains(self) -> list[type[ABCConfigDomain]]:
-        return [ConfigDomainCore]
+    def affected_config_domains(self) -> list[ABCConfigDomain]:
+        return [ConfigDomainCore()]
 
 
 class ModePasswords(SimpleListMode[Password]):
@@ -187,7 +194,7 @@ class ModeEditPassword(SimpleEditMode[Password]):
     def _vs_mandatory_elements(self) -> list[DictionaryEntry]:
         elements = super()._vs_mandatory_elements()
         locked_by = None if self._new else self._entry.get("locked_by")
-        if is_locked_by_quick_setup(locked_by):
+        if is_locked_by_quick_setup(locked_by, check_reference_exists=False):
             elements.append(
                 (
                     "source",
@@ -200,6 +207,9 @@ class ModeEditPassword(SimpleEditMode[Password]):
             )
 
         return elements
+
+    def _mandatory_elements(self) -> dict[str, DictElement]:
+        return convert_dict_elements_vs2fs(self._vs_mandatory_elements())
 
     def _vs_individual_elements(self) -> list[DictionaryEntry]:
         if user.may("wato.edit_all_passwords"):

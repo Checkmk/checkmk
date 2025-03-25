@@ -210,7 +210,6 @@ public:
     [[nodiscard]] virtual bool in_custom_time_period() const = 0;
 
     [[nodiscard]] virtual std::string host_name() const = 0;
-    [[nodiscard]] virtual std::string name() const = 0;
     [[nodiscard]] virtual std::string description() const = 0;
     [[nodiscard]] virtual std::string display_name() const = 0;
     [[nodiscard]] virtual std::string check_command() const = 0;

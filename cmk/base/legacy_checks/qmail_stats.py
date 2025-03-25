@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def saveint(i: str) -> int:
@@ -54,6 +54,7 @@ def parse_qmail_stats(string_table: StringTable) -> StringTable:
 
 
 check_info["qmail_stats"] = LegacyCheckDefinition(
+    name="qmail_stats",
     parse_function=parse_qmail_stats,
     service_name="Qmail Queue",
     discovery_function=discover_qmail_stats,

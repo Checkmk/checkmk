@@ -11,8 +11,8 @@ from pathlib import Path
 from tests.testlib.agent import get_package_type, wait_for_baking_job
 from tests.testlib.site import Site
 
-LOGGER = logging.getLogger("composition-tests")
-LOGGER.setLevel(logging.INFO)
+logger = logging.getLogger("composition-tests")
+logger.setLevel(logging.INFO)
 
 
 def get_package_extension() -> str:
@@ -27,15 +27,16 @@ def get_package_extension() -> str:
 
 
 def bake_agent(site: Site, hostname: str) -> tuple[str, Path]:
-    LOGGER.info('Create host "%s" and bake agent...', hostname)
+    logger.info('Create host "%s" and bake agent...', hostname)
     start_time = time.time()
-    site.openapi.create_host(
+    if site.openapi.hosts.get(hostname):
+        site.openapi.hosts.delete(hostname)
+    site.openapi.hosts.create(
         hostname,
         attributes={"ipaddress": site.http_address},
         bake_agent=True,
     )
-
-    site.activate_changes_and_wait_for_core_reload()
+    site.activate_changes_and_wait_for_core_reload(allow_foreign_changes=True)
 
     # A baking job just got triggered automatically after adding the host. wait for it to finish.
     wait_for_baking_job(site, start_time)

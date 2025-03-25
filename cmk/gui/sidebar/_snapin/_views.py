@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import pprint
-from collections.abc import Sequence
+from collections.abc import Callable
 
 from cmk.utils.user import UserId
 
@@ -18,13 +17,36 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
-from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.main_menu import MegaMenuRegistry
 from cmk.gui.nodevis.topology import ParentChildTopologyPage
+from cmk.gui.pages import PageRegistry
 from cmk.gui.type_defs import ABCMegaMenuSearch, MegaMenu, TopicMenuTopic, Visual
 from cmk.gui.views.store import get_permitted_views
 
 from ._base import SidebarSnapin
 from ._helpers import footnotelinks, make_topic_menu, show_topic_menu
+from ._registry import SnapinRegistry
+
+
+def register(
+    page_registry: PageRegistry,
+    snapin_registry: SnapinRegistry,
+    mega_menu_registry: MegaMenuRegistry,
+    view_menu_topics: Callable[[], list[TopicMenuTopic]],
+) -> None:
+    snapin_registry.register(Views)
+    page_registry.register_page_handler("export_views", ajax_export_views)
+
+    mega_menu_registry.register(
+        MegaMenu(
+            name="monitoring",
+            title=_l("Monitor"),
+            icon="main_monitoring",
+            sort_index=5,
+            topics=view_menu_topics,
+            search=MonitoringSearch("monitoring_search"),
+        )
+    )
 
 
 class Views(SidebarSnapin):
@@ -41,7 +63,7 @@ class Views(SidebarSnapin):
         return _("Links to global views and dashboards")
 
     def show(self):
-        show_topic_menu(treename="views", menu=view_menu_topics(include_reports=False))
+        show_topic_menu(treename="views", menu=make_topic_menu(view_menu_items()))
 
         links = []
         if user.may("general.edit_views"):
@@ -59,11 +81,11 @@ def ajax_export_views() -> None:
 
 
 @request_memoize()
-def view_menu_topics(include_reports: bool) -> list[TopicMenuTopic]:
-    return make_topic_menu(view_menu_items(include_reports))
+def default_view_menu_topics() -> list[TopicMenuTopic]:
+    return make_topic_menu(view_menu_items())
 
 
-def view_menu_items(include_reports: bool) -> Sequence[tuple[str, tuple[str, Visual]]]:
+def view_menu_items() -> list[tuple[str, tuple[str, Visual]]]:
     # The page types that are implementing the PageRenderer API should also be
     # part of the menu. Bring them into a visual like structure to make it easy to
     # integrate them.
@@ -99,15 +121,7 @@ def view_menu_items(include_reports: bool) -> Sequence[tuple[str, tuple[str, Vis
     visuals_to_show += [("pages", e) for e in pages_to_show]
     visuals_to_show += page_type_items
 
-    if include_reports:
-        visuals_to_show += report_menu_items()
-
     return visuals_to_show
-
-
-def report_menu_items() -> list[tuple[str, tuple[str, Visual]]]:
-    """Is replaced by cmk.gui.reporting.registration"""
-    return []
 
 
 class MonitoringSearch(ABCMegaMenuSearch):
@@ -154,15 +168,3 @@ class MonitoringSearch(ABCMegaMenuSearch):
             )
         html.close_div()
         html.div("", id_="mk_side_clear")
-
-
-mega_menu_registry.register(
-    MegaMenu(
-        name="monitoring",
-        title=_l("Monitor"),
-        icon="main_monitoring",
-        sort_index=5,
-        topics=lambda: view_menu_topics(include_reports=True),
-        search=MonitoringSearch("monitoring_search"),
-    )
-)

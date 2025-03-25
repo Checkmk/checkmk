@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -11,39 +12,46 @@ from tests.testlib.agent import (
     wait_until_host_has_services,
     wait_until_host_receives_data,
 )
-from tests.testlib.pytest_helpers.marks import skip_if_not_cloud_edition, skip_if_not_containerized
+from tests.testlib.pytest_helpers.marks import (
+    skip_if_not_cloud_or_managed_edition,
+    skip_if_not_containerized,
+)
 from tests.testlib.site import Site
 
 from cmk.utils.agent_registration import HostAgentConnectionMode
 from cmk.utils.hostaddress import HostName
 
-from ..utils import LOGGER
+logger = logging.getLogger(__name__)
 
 
 def _test_register_workflow(
     *,
     site: Site,
-    agent_ctl: Path,
+    ctl_path: Path,
     hostname: HostName,
     host_attributes: Mapping[str, object],
 ) -> None:
-    site.openapi.create_host(hostname=hostname, attributes=dict(host_attributes))
-    site.openapi.activate_changes_and_wait_for_completion()
+    try:
+        site.openapi.hosts.create(hostname=hostname, attributes=dict(host_attributes))
+        site.openapi.changes.activate_and_wait_for_completion()
 
-    register_controller(agent_ctl, site, hostname)
+        register_controller(ctl_path, site, hostname)
 
-    LOGGER.info("Waiting for controller to open TCP socket or push data")
-    wait_until_host_receives_data(site, hostname)
+        logger.info("Waiting for controller to open TCP socket or push data")
+        wait_until_host_receives_data(site, hostname)
 
-    site.openapi.discover_services_and_wait_for_completion(hostname)
-    site.openapi.activate_changes_and_wait_for_completion()
+        site.openapi.service_discovery.run_discovery_and_wait_for_completion(hostname)
+        site.openapi.changes.activate_and_wait_for_completion()
 
-    wait_until_host_has_services(
-        site,
-        hostname,
-        timeout=30,
-        interval=10,
-    )
+        wait_until_host_has_services(
+            site,
+            hostname,
+            timeout=30,
+            interval=10,
+        )
+    finally:
+        site.openapi.hosts.delete(hostname=hostname)
+        site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
 
 
 @skip_if_not_containerized
@@ -53,21 +61,21 @@ def test_register_workflow_pull(
 ) -> None:
     _test_register_workflow(
         site=central_site,
-        agent_ctl=agent_ctl,
+        ctl_path=agent_ctl,
         hostname=HostName("pull-host"),
         host_attributes={"ipaddress": "127.0.0.1"},
     )
 
 
 @skip_if_not_containerized
-@skip_if_not_cloud_edition
+@skip_if_not_cloud_or_managed_edition
 def test_register_workflow_push(
     central_site: Site,
     agent_ctl: Path,
 ) -> None:
     _test_register_workflow(
         site=central_site,
-        agent_ctl=agent_ctl,
+        ctl_path=agent_ctl,
         hostname=HostName("push-host"),
         host_attributes={
             "cmk_agent_connection": HostAgentConnectionMode.PUSH.value,

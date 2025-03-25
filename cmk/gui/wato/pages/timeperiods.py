@@ -3,21 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+
 """Modes for managing timeperiod definitions for the core"""
 
 import logging
 import time
 from collections.abc import Collection
 from datetime import date, datetime, timedelta
+from typing import Any, cast
 
-import recurring_ical_events  # type: ignore[import-untyped]
-from icalendar import Calendar, Event  # type: ignore[import-untyped]
-from icalendar.prop import vDDDTypes  # type: ignore[import-untyped]
+import recurring_ical_events
+from icalendar import Calendar, Event
+from icalendar.prop import vDDDTypes
 
 from cmk.utils import dateutils
 from cmk.utils.timeperiod import (
-    builtin_timeperiods,
+    is_builtin_timeperiod,
     timeperiod_spec_alias,
     TimeperiodName,
     TimeperiodSpec,
@@ -47,6 +48,7 @@ from cmk.gui.utils.urls import DocReference, make_confirm_delete_link
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
+    DictionaryModel,
     FileUpload,
     FileUploadModel,
     FixedValue,
@@ -61,14 +63,12 @@ from cmk.gui.valuespec import (
 from cmk.gui.watolib import groups
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
-from cmk.gui.watolib.mode import mode_url, redirect, WatoMode
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.timeperiods import load_timeperiods
 
 logger = logging.getLogger(__name__)
 
 TimeperiodUsage = tuple[str, str]
-
-from cmk.gui.watolib.mode import ModeRegistry
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -77,7 +77,7 @@ def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeEditTimeperiod)
 
 
-class ICalEvent(Event):  # type: ignore[misc]
+class ICalEvent(Event):
     def __init__(self, event: Event):
         super().__init__(**event)
         self.time_ranges: list[tuple[str, str]] = []
@@ -262,7 +262,7 @@ class ModeTimeperiods(WatoMode):
             return redirect(mode_url("timeperiods"))
 
         try:
-            watolib.timeperiods.delete_timeperiod(delname)
+            watolib.timeperiods.delete_timeperiod(TimeperiodName(delname))
             self._timeperiods = load_timeperiods()
 
         except watolib.timeperiods.TimePeriodBuiltInError:
@@ -289,7 +289,7 @@ class ModeTimeperiods(WatoMode):
 
                 table.cell(_("Actions"), css=["buttons"])
                 alias = timeperiod_spec_alias(timeperiod)
-                if name in builtin_timeperiods():
+                if is_builtin_timeperiod(name):
                     html.i(_("(built-in)"))
                 else:
                     self._action_buttons(name, alias)
@@ -459,9 +459,9 @@ class ModeTimeperiodImportICal(WatoMode):
                 exception_map[dt] = [timerange]
 
         # If a time period exception has the full day, we can ignore the others (if available)
-        for exception in exception_map:
-            if ("00:00", "24:00") in exception_map[exception]:
-                exception_map[exception] = [("00:00", "24:00")]
+        for timeranges in exception_map.values():
+            if ("00:00", "24:00") in timeranges:
+                timeranges[:] = [("00:00", "24:00")]
 
         get_vars = {
             "timeperiod_p_alias": str(
@@ -512,37 +512,34 @@ class ModeEditTimeperiod(WatoMode):
 
     def _from_vars(self) -> None:
         self._timeperiods = load_timeperiods()
-        self._name = request.var("edit")  # missing -> new group
-        # TODO: Nuke the field below? It effectively hides facts about _name for mypy.
-        self._new = self._name is None
-
-        if self._name in builtin_timeperiods():
-            raise MKUserError("edit", _("Built-in time periods can not be modified"))
-        if self._new:
-            clone_name = request.var("clone")
+        self._name = (
+            None if (n := request.var("edit")) is None else TimeperiodName(n)
+        )  # missing -> new group
+        if self._name is None:
+            clone_name = None if (c := request.var("clone")) is None else TimeperiodName(c)
             if request.var("mode") == "import_ical":
-                self._timeperiod = {}
+                self._timeperiod: TimeperiodSpec = {"alias": request.var("timeperiod_p_alias", "")}
             elif clone_name:
                 self._name = clone_name
-
                 self._timeperiod = self._get_timeperiod(self._name)
             else:
                 # initialize with 24x7 config
-                self._timeperiod = {day: [("00:00", "24:00")] for day in dateutils.weekday_ids()}
+                self._timeperiod = {"alias": ""}
+                for day in dateutils.weekday_ids():
+                    self._timeperiod[day] = [("00:00", "24:00")]
         else:
-            assert self._name is not None
+            if is_builtin_timeperiod(self._name):
+                raise MKUserError("edit", _("Built-in time periods can not be modified"))
             self._timeperiod = self._get_timeperiod(self._name)
 
-    def _get_timeperiod(self, name: str) -> TimeperiodSpec:
+    def _get_timeperiod(self, name: TimeperiodName) -> TimeperiodSpec:
         try:
             return self._timeperiods[name]
         except KeyError:
             raise MKUserError(None, _("This time period does not exist."))
 
     def title(self) -> str:
-        if self._new:
-            return _("Add time period")
-        return _("Edit time period")
+        return _("Add time period") if self._name is None else _("Edit time period")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
@@ -550,7 +547,7 @@ class ModeEditTimeperiod(WatoMode):
         )
 
     def _valuespec(self) -> Dictionary:
-        if self._new:
+        if self._name is None:
             # Cannot use ID() here because old versions of the GUI allowed time periods to start
             # with numbers and so on. The ID() valuespec does not allow it.
             name_element: ValueSpec = TextInput(
@@ -739,13 +736,10 @@ class ModeEditTimeperiod(WatoMode):
         vs.validate_value(vs_spec, "timeperiod")
         self._timeperiod = self._from_valuespec(vs_spec)
 
-        if self._new:
+        if self._name is None:
             self._name = vs_spec["name"]
-            assert self._name is not None
             watolib.timeperiods.create_timeperiod(self._name, self._timeperiod)
-
         else:
-            assert self._name is not None
             watolib.timeperiods.modify_timeperiod(self._name, self._timeperiod)
 
         self._timeperiods = load_timeperiods()
@@ -823,8 +817,8 @@ class ModeEditTimeperiod(WatoMode):
         e.g. "00:30" -> (0, 30)"""
         return tuple(map(int, time_str.split(":")))
 
-    def _from_valuespec(self, vs_spec):
-        tp_spec = {
+    def _from_valuespec(self, vs_spec: DictionaryModel) -> TimeperiodSpec:
+        tp_spec: dict[str, Any] = {
             "alias": vs_spec["alias"],
         }
 
@@ -833,16 +827,16 @@ class ModeEditTimeperiod(WatoMode):
 
         tp_spec.update(self._exceptions_from_valuespec(vs_spec))
         tp_spec.update(self._time_exceptions_from_valuespec(vs_spec))
-        return tp_spec
+        return cast(TimeperiodSpec, tp_spec)
 
-    def _exceptions_from_valuespec(self, vs_spec):
+    def _exceptions_from_valuespec(self, vs_spec: DictionaryModel) -> dict[str, Any]:
         tp_spec = {}
         for exception_name, time_ranges in vs_spec["exceptions"]:
             if time_ranges:
                 tp_spec[exception_name] = self._time_ranges_from_valuespec(time_ranges)
         return tp_spec
 
-    def _time_exceptions_from_valuespec(self, vs_spec):
+    def _time_exceptions_from_valuespec(self, vs_spec: DictionaryModel) -> dict[str, Any]:
         # TODO: time exceptions is either a list of tuples or a dictionary for
         period_type, exceptions_details = vs_spec["weekdays"]
 

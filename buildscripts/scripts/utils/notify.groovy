@@ -2,7 +2,9 @@
 
 /// file: notify.groovy
 
-import org.codehaus.groovy.runtime.StackTraceUtils;
+email_address_team_ci = [ "timotheus.bachinger@checkmk.com", "frans.fuerst@checkmk.com", "jonas.scharpf@checkmk.com" ];
+email_address_team_qa = [ "matteo.stifano@checkmk.com", "rene.slowenski@checkmk.com" ];
+email_address_team_werks = [ "benedikt.seidl@checkmk.com" ];
 
 def get_author_email() {
     // Workaround since CHANGE_AUTHOR_EMAIL is not available
@@ -70,7 +72,7 @@ def notify_error(error) {
 
         if (isFirstFailure && !isChangeValidation && !isTriggerJob && !isTesting) {
             /// include me for now to give me the chance to debug
-            def notify_emails = [];
+            def List<String> notify_emails = [];
             // ugly workaround, split() only + unique() does not work
             notify_emails.addAll(TEAM_CI_MAIL.replaceAll(',', ' ').split(' ').grep());
             currentBuild.changeSets.each { changeSet ->
@@ -104,22 +106,17 @@ def notify_error(error) {
 
             /// Inform werk workers if something's wrong with the werk jobs
             if (projectname.startsWith("werks/")) {
-                notify_emails += "benedikt.seidl@checkmk.com";
+                notify_emails.addAll(email_address_team_werks);
             }
 
             /// Inform QA if something's wrong with those jobs
             if (projectname.contains("test-plugins") || projectname.contains("test-update")) {
-                notify_emails += "matteo.stifano@checkmk.com";
-                notify_emails += "rene.slowenski@checkmk.com";
+                notify_emails.addAll(email_address_team_qa);
             }
 
             /// fallback - for investigation
             /* groovylint-disable DuplicateListLiteral */
-            notify_emails = notify_emails ?: [
-                "timotheus.bachinger@checkmk.com",
-                "frans.fuerst@checkmk.com",
-                "jonas.scharpf@checkmk.com",
-            ];
+            notify_emails = notify_emails ?: email_address_team_ci;
             /* groovylint-enable DuplicateListLiteral */
 
             print("|| error-reporting: notify_emails ${notify_emails}");
@@ -164,13 +161,6 @@ def notify_error(error) {
     //slack_build_failed(error)
     // after notifying everybody, the error needs to be thrown again
     // This ensures that the build status is set correctly
-
-    StackTraceUtils.sanitize(error);
-    print("ERROR: ${error.stackTrace.head()}: ${error}");
-    currentBuild.description += (
-        "<br>The build failed due to an exception (at ${error.stackTrace.head()}):" +
-            "<br><strong style='color:red'>${error}</strong>");
-    throw error;
 }
 
 return this;

@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from enum import StrEnum
 from typing import (
-    Annotated,
     Any,
     get_args,
     Literal,
@@ -17,23 +16,24 @@ from typing import (
     TypeGuard,
 )
 
-from pydantic import PlainValidator, TypeAdapter, ValidationInfo
+from pydantic import (
+    TypeAdapter,
+    ValidationInfo,
+)
 
-from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.ruleset_matcher import TagCondition
 from cmk.utils.tags import TagGroupID
 from cmk.utils.timeperiod import TimeperiodName
+
+from cmk.events.notification_result import NotificationContext as NotificationContext
 
 __all__ = [
     # Types
     "ContactName",
     "HandlerName",
     "HandlerParameters",
-    "NotifyPluginParamsList",
     "NotifyPluginParamsDict",
-    "NotifyPluginParams",
     "NotifyBulkParameters",
-    "NotificationType",
     "NotificationContext",
     "PluginNotificationContext",
     "NotifyRuleInfo",
@@ -43,13 +43,16 @@ __all__ = [
     "UUIDs",
     "NotifyBulk",
     "NotifyBulks",
+    "NotificationParameterID",
+    "NotificationParameterMethod",
+    "NotificationParameterSpec",
+    "NotificationParameterSpecs",
     # Classes
     "EventRule",
     "DisabledNotificationsOptions",
     "Contact",
-    "EventContext",
-    "EnrichedEventContext",
-    "ECEventContext",
+    "NotificationParameterGeneralInfos",
+    "NotificationParameterItem",
 ]
 
 ContactName = str
@@ -72,7 +75,7 @@ GroupBy = Literal[
 class BulkBaseParameters(TypedDict):
     count: int
     groupby: list[GroupBy]
-    groupby_custom: list[str]
+    groupby_custom: NotRequired[list[str]]
     bulk_subject: NotRequired[str]
 
 
@@ -81,7 +84,7 @@ class AlwaysBulkParameters(BulkBaseParameters):
 
 
 class TimeperiodBulkParameters(BulkBaseParameters):
-    timeperiod: str
+    timeperiod: TimeperiodName
     bulk_outside: NotRequired[AlwaysBulkParameters]
 
 
@@ -105,19 +108,6 @@ class PluginOptions(StrEnum):
     WITH_PARAMS = "create_notification_with_the_following_parameters"
     WITH_CUSTOM_PARAMS = "create_notification_with_custom_parameters"
 
-
-NotificationType = Literal[
-    "ACKNOWLEDGEMENT",
-    "DOWNTIMECANCELLED",
-    "DOWNTIMEEND",
-    "DOWNTIMESTART",
-    "FLAPPINGDISABLED",
-    "FLAPPINGSTART",
-    "FLAPPINGSTOP",
-    "PROBLEM",
-    "RECOVERY",
-]
-NotificationContext = NewType("NotificationContext", dict[str, str])
 
 MgmntPriorityType = Literal[
     "low",
@@ -144,18 +134,6 @@ OpsGeniePriorityPValueType = Literal[
     "P4",
     "P5",
 ]
-PushOverPriorityNumType = Literal[
-    "-2",
-    "-1",
-    "0",
-    "1",
-]
-PushOverPriorityStringType = Literal[
-    "lowest",
-    "low",
-    "normal",
-    "high",
-]
 GroupbyType = Literal[
     "folder",
     "host",
@@ -166,46 +144,51 @@ GroupbyType = Literal[
     "ec_contact",
     "ec_comment",
 ]
-HostEventType = Literal[
-    "rd",
-    "ru",
-    "dr",
-    "du",
-    "ud",
-    "ur",
-    "?r",
-    "?d",
-    "?u",
-    "f",
-    "s",
-    "x",
-    "as",
-    "af",
-]
-ServiceEventType = Literal[
-    "rw",
-    "rr",
-    "rc",
-    "ru",
-    "wr",
-    "wc",
-    "wu",
-    "cr",
-    "cw",
-    "cu",
-    "ur",
-    "uw",
-    "uc",
-    "?r",
-    "?w",
-    "?c",
-    "?u",
-    "f",
-    "s",
-    "x",
-    "as",
-    "af",
-]
+
+NonStateChangeEventType = Literal["f", "s", "x", "as", "af"]
+
+
+def is_non_state_change_event_type(value: str) -> TypeGuard[NonStateChangeEventType]:
+    return value in get_args(NonStateChangeEventType)
+
+
+HostEventType = (
+    Literal[
+        "rd",
+        "ru",
+        "dr",
+        "du",
+        "ud",
+        "ur",
+        "?r",
+        "?d",
+        "?u",
+    ]
+    | NonStateChangeEventType
+)
+
+ServiceEventType = (
+    Literal[
+        "rw",
+        "rr",
+        "rc",
+        "ru",
+        "wr",
+        "wc",
+        "wu",
+        "cr",
+        "cw",
+        "cu",
+        "ur",
+        "uw",
+        "uc",
+        "?r",
+        "?w",
+        "?c",
+        "?u",
+    ]
+    | NonStateChangeEventType
+)
 SysLogFacilityIntType = Literal[
     0,
     1,
@@ -366,23 +349,10 @@ MatchRegex = tuple[
 ]
 
 
-class AutomaticUrlPrefix(TypedDict):
-    automatic: Literal["http", "https"]
-
-
-class ManualUrlPrefix(TypedDict):
-    manual: str
-
-
-URLPrefix = AutomaticUrlPrefix | ManualUrlPrefix
-
-
-def is_auto_urlprefix(url_prefix: URLPrefix) -> TypeGuard[AutomaticUrlPrefix]:
-    return "automatic" in url_prefix
-
-
-def is_manual_urlprefix(url_prefix: URLPrefix) -> TypeGuard[ManualUrlPrefix]:
-    return "manual" in url_prefix
+HTTPPrefixURL = tuple[Literal["automatic_http"], None]
+HTTPSPrefixURL = tuple[Literal["automatic_https"], None]
+ManualPrefixURL = tuple[Literal["manual"], str]
+URLPrefix = HTTPPrefixURL | HTTPSPrefixURL | ManualPrefixURL
 
 
 class SMTPAuthAttrs(TypedDict):
@@ -433,6 +403,13 @@ PluginNotificationContext = dict[str, str]
 NotificationRuleID = NewType("NotificationRuleID", str)
 
 
+CheckmkPassword = tuple[
+    Literal["cmk_postprocessed"],
+    Literal["stored_password", "explicit_password"],
+    tuple[str, str],
+]
+
+
 class EmailFromOrTo(TypedDict):
     display_name: NotRequired[str]
     address: NotRequired[str]
@@ -473,12 +450,12 @@ AsciiMailPluginModel = TypedDict(
     },
 )
 
+EnvironmentProxy = tuple[Literal["cmk_postprocessed"], Literal["environment_proxy"], str]
+WithoutProxy = tuple[Literal["cmk_postprocessed"], Literal["no_proxy"], str]
+StoredProxy = tuple[Literal["cmk_postprocessed"], Literal["stored_proxy"], str]
+ExplicitProxy = tuple[Literal["cmk_postprocessed"], Literal["explicit_proxy"], str]
+ProxyUrl = EnvironmentProxy | WithoutProxy | StoredProxy | ExplicitProxy
 
-Environment = tuple[Literal["environment"], Literal["environment"]]
-WithoutProxy = tuple[Literal["no_proxy"], None]
-GlobalProxy = tuple[Literal["global"], str]
-ExplicitProxy = tuple[Literal["url"], str]
-ProxyUrl = Environment | WithoutProxy | GlobalProxy | ExplicitProxy
 WebhookURL = tuple[Literal["webhook_url", "store"], str]
 
 
@@ -495,7 +472,7 @@ class MKEventdPluginModel(TypedDict):
 
 
 class IlertPluginModel(TypedDict):
-    ilert_api_key: tuple[Literal["ilert_api_key", "store"], str]
+    ilert_api_key: CheckmkPassword
     ilert_priority: Literal["HIGH", "LOW"]
     ilert_summary_host: str
     ilert_summary_service: str
@@ -504,10 +481,22 @@ class IlertPluginModel(TypedDict):
     proxy_url: NotRequired[ProxyUrl]
 
 
+class TokenAuthCredentials(TypedDict):
+    token: CheckmkPassword
+
+
+class BasicAuthCredentials(TypedDict):
+    username: str
+    password: CheckmkPassword
+
+
+TokenAuth = tuple[Literal["auth_token"], TokenAuthCredentials]
+BasicAuth = tuple[Literal["auth_basic"], BasicAuthCredentials]
+
+
 class JiraIssuePluginModel(TypedDict):
     url: str
-    username: str
-    password: str
+    auth: BasicAuth | TokenAuth
     project: str
     issuetype: str
     host_customid: str
@@ -518,6 +507,7 @@ class JiraIssuePluginModel(TypedDict):
     host_summary: NotRequired[str]
     service_summary: NotRequired[str]
     label: NotRequired[str]
+    graphs_per_notification: NotRequired[int]
     resolution: NotRequired[str]
     timeout: NotRequired[str]
     site_customid: NotRequired[str]
@@ -537,9 +527,27 @@ class MicrosoftTeamsPluginModel(TypedDict):
     affected_host_groups: NotRequired[Literal[True]]
 
 
+OpsgenieElement = Literal[
+    "omd_site",
+    "hosttags",
+    "address",
+    "abstime",
+    "reltime",
+    "longoutput",
+    "ack_author",
+    "ack_comment",
+    "notification_author",
+    "notification_comment",
+    "perfdata",
+    "notesurl",
+    "context",
+]
+
+
 class OpsGenieIssuesPluginModel(TypedDict, total=False):
-    password: Required[tuple[Literal["password", "store"], str]]
+    password: CheckmkPassword
     url: str
+    ignore_ssl: Literal[True]
     proxy_url: ProxyUrl
     owner: str
     source: str
@@ -554,6 +562,7 @@ class OpsGenieIssuesPluginModel(TypedDict, total=False):
     actions: list[str]
     tags: list[str]
     entity: str
+    elements: list[OpsgenieElement]
 
 
 class PagerDutyPluginModel(TypedDict):
@@ -564,20 +573,25 @@ class PagerDutyPluginModel(TypedDict):
     url_prefix: NotRequired[URLPrefix]
 
 
+PushOverPriorityStringType = Literal["lowest", "low", "normal", "high"]
+PushOverEmergencyType = tuple[Literal["emergency"], tuple[float, float, str]]
+PushOverPriorityType = tuple[PushOverPriorityStringType, None] | PushOverEmergencyType
+
+
 class PushoverPluginModel(TypedDict):
     api_key: str
     recipient_key: str
-    url_prefix: str
+    url_prefix: URLPrefix
     proxy_url: NotRequired[ProxyUrl]
-    priority: NotRequired[PushOverPriorityNumType]
+    priority: NotRequired[PushOverPriorityType]
     sound: NotRequired[SoundType]
 
 
 CaseStateStr = Literal["none", "new", "closed", "resolved", "open", "awaiting_info"]
-CaseState = CaseStateStr | int
+CaseState = tuple[Literal["predefined"], CaseStateStr] | tuple[Literal["integer"], int]
 
 IncidentStateStr = Literal["none", "new", "progress", "closed", "resolved", "hold", "canceled"]
-IncidentState = IncidentStateStr | int
+IncidentState = tuple[Literal["predefined"], IncidentStateStr] | tuple[Literal["integer"], int]
 
 
 class IncidentRecoveryState(TypedDict):
@@ -618,18 +632,23 @@ class MgmtTypeCase(MgmtTypeBase):
     recovery_state: NotRequired[CaseRecoveryState]
 
 
+MgmtTypeCaseType = tuple[Literal["case"], MgmtTypeCase]
+MgmtTypeIncidentType = tuple[Literal["incident"], MgmtTypeIncident]
+
+UseSiteIDType = Literal["use_site_id", "deactivated"]
+
+
 class ServiceNowPluginModel(TypedDict):
     url: str
-    username: str
-    password: tuple[Literal["password", "store"], str]
-    use_site_id: NotRequired[bool]
+    auth: BasicAuth | TokenAuth
+    use_site_id: NotRequired[UseSiteIDType]
     timeout: NotRequired[str]
     proxy_url: NotRequired[ProxyUrl]
-    mgmt_type: tuple[Literal["incident"], MgmtTypeIncident] | tuple[Literal["case"], MgmtTypeCase]
+    mgmt_type: MgmtTypeCaseType | MgmtTypeIncidentType
 
 
 class SignL4PluginModel(TypedDict):
-    password: tuple[Literal["password", "store"], str]
+    password: CheckmkPassword
     url_prefix: URLPrefix
     proxy_url: NotRequired[ProxyUrl]
     ignore_ssl: NotRequired[Literal[True]]
@@ -647,14 +666,18 @@ class SmsApiPluginModel(TypedDict):
     url: str
     proxy_url: ProxyUrl
     username: str
-    password: tuple[Literal["password", "store"], str]
+    password: CheckmkPassword
     ignore_ssl: NotRequired[Literal[True]]
     timeout: NotRequired[str]
 
 
+class SmsPluginModel(TypedDict):
+    params: list[str]
+
+
 class SpectrumPluginModel(TypedDict):
     destination: str
-    community: str
+    community: CheckmkPassword
     baseoid: str
 
 
@@ -708,7 +731,7 @@ SmsApiPluginName = Literal["sms_api"]
 SmsApiNotify = tuple[SmsApiPluginName, SmsApiPluginModel | None]
 
 SmsPluginName = Literal["sms"]
-SmsNotify = tuple[SmsPluginName, list[str] | None]
+SmsNotify = tuple[SmsPluginName, SmsPluginModel | None]
 
 SpectrumPluginName = Literal["spectrum"]
 SpectrumNotify = tuple[SpectrumPluginName, SpectrumPluginModel | None]
@@ -717,9 +740,9 @@ SplunkPluginName = Literal["victorops"]
 SplunkNotify = tuple[SplunkPluginName, SplunkPluginModel | None]
 
 CustomPluginName = NewType("CustomPluginName", str)
-CustomPluginType = tuple[CustomPluginName, dict[str, Any] | list[str] | None]
+CustomPluginParameters = tuple[CustomPluginName, dict[str, Any] | None]
 
-KnownPlugins = (
+KnownPluginParameters = (
     MailNotify
     | AsciiMailNotify
     | CiscoNotify
@@ -759,20 +782,6 @@ BuiltInPluginNames = (
     | SplunkPluginName
 )
 
-
-NotificationPluginNameStr = BuiltInPluginNames | CustomPluginName
-NotifyPlugin = KnownPlugins | CustomPluginType
-
-
-def get_builtin_plugin_names() -> list[BuiltInPluginNames]:
-    return [get_args(name)[0] for name in get_args(BuiltInPluginNames)]
-
-
-def is_known_plugin(notify_plugin: NotifyPlugin) -> TypeGuard[KnownPlugins]:
-    return notify_plugin[0] in get_builtin_plugin_names()
-
-
-NotifyPluginParamsList = list[str]
 NotifyPluginParamsDict = (
     MailPluginModel
     | AsciiMailPluginModel
@@ -787,20 +796,32 @@ NotifyPluginParamsDict = (
     | SignL4PluginModel
     | SlackPluginModel
     | SmsApiPluginModel
+    | SmsPluginModel
     | SpectrumPluginModel
     | SplunkPluginModel
     | MicrosoftTeamsPluginModel
     | dict[str, Any]
 )
 
-NotifyPluginParams = NotifyPluginParamsList | NotifyPluginParamsDict
+NotificationPluginNameStr = BuiltInPluginNames | CustomPluginName
+NotificationParameterID = NewType("NotificationParameterID", str)
+PluginNameWithParameters = tuple[NotificationPluginNameStr, NotifyPluginParamsDict | None]
+NotifyPlugin = tuple[NotificationPluginNameStr, NotificationParameterID | None]
 
 
-custom_plugin_type_adapter: TypeAdapter = TypeAdapter(CustomPluginType)
-known_plugin_type_adapter: TypeAdapter = TypeAdapter(KnownPlugins)
+def get_builtin_plugin_names() -> list[BuiltInPluginNames]:
+    return [get_args(name)[0] for name in get_args(BuiltInPluginNames)]
 
 
-def validate_plugin(value: Any, _handler: ValidationInfo) -> NotifyPlugin:
+def is_known_plugin(notify_plugin: PluginNameWithParameters) -> TypeGuard[KnownPluginParameters]:
+    return notify_plugin[0] in get_builtin_plugin_names()
+
+
+custom_plugin_type_adapter: TypeAdapter = TypeAdapter(CustomPluginParameters)
+known_plugin_type_adapter: TypeAdapter = TypeAdapter(KnownPluginParameters)
+
+
+def validate_plugin(value: Any, _handler: ValidationInfo) -> PluginNameWithParameters:
     assert isinstance(value, tuple)
     assert len(value) == 2
 
@@ -821,60 +842,60 @@ class _EventRuleMandatory(TypedDict):
     contact_object: bool
     description: str
     disabled: bool
-    notify_plugin: Annotated[NotifyPlugin, PlainValidator(validate_plugin)]
+    notify_plugin: NotifyPlugin
 
 
-class EventRule(_EventRuleMandatory, total=False):
+class EventRule(_EventRuleMandatory):
     """Event Rule
 
     used to be dict[str, Any], feel free to add stuff"""
 
-    user_id: str | None
-    comment: str
-    docu_url: str
-    alert_handler: tuple[HandlerName, HandlerParameters]
-    contact: str
-    contact_emails: list[str]
-    contact_groups: list[str]
-    contact_match_groups: list[str]
-    contact_match_macros: list[tuple[str, str]]
-    contact_users: list[str]
-    match_attempt: tuple[int, int]
-    match_checktype: list[str]
-    match_contactgroups: list[str]
-    match_contacts: list[str]
-    match_ec: ConditionEventConsoleAlertsType | Literal[False]
-    match_escalation: tuple[int, int]
-    match_escalation_throttle: tuple[int, int]
-    match_exclude_hosts: list[str]
-    match_exclude_servicegroups: list[str]
-    match_exclude_servicegroups_regex: MatchServiceGroupsRegex
-    match_exclude_services: list[str]
-    match_folder: str
-    match_host_event: Sequence[HostEventType]
-    match_hostgroups: list[str]
-    match_hostlabels: dict[str, str]
-    match_hosts: list[str]
-    match_hosttags: Mapping[TagGroupID, TagCondition]
-    match_notification_comment: str
-    match_plugin_output: str
-    match_service_event: Sequence[ServiceEventType]
-    match_servicegroups: list[str]
-    match_servicegroups_regex: MatchServiceGroupsRegex
-    match_servicelabels: dict[str, str]
-    match_services: list[str]
-    match_site: list[str]
-    match_sl: tuple[int, int]
-    match_timeperiod: TimeperiodName
-    bulk: NotifyBulkType
-    match_service_level: tuple[int, int]
-    match_only_during_timeperiod: str
+    user_id: NotRequired[str | None]
+    comment: NotRequired[str]
+    docu_url: NotRequired[str]
+    alert_handler: NotRequired[tuple[HandlerName, HandlerParameters]]
+    contact: NotRequired[str]
+    contact_emails: NotRequired[list[str]]
+    contact_groups: NotRequired[list[str]]
+    contact_match_groups: NotRequired[list[str]]
+    contact_match_macros: NotRequired[list[tuple[str, str]]]
+    contact_users: NotRequired[list[str]]
+    match_attempt: NotRequired[tuple[int, int]]
+    match_checktype: NotRequired[list[str]]
+    match_contactgroups: NotRequired[list[str]]
+    match_contacts: NotRequired[list[str]]
+    match_ec: NotRequired[ConditionEventConsoleAlertsType | Literal[False]]
+    match_escalation: NotRequired[tuple[int, int]]
+    match_escalation_throttle: NotRequired[tuple[int, int]]
+    match_exclude_hosts: NotRequired[list[str]]
+    match_exclude_servicegroups: NotRequired[list[str]]
+    match_exclude_servicegroups_regex: NotRequired[MatchServiceGroupsRegex]
+    match_exclude_services: NotRequired[list[str]]
+    match_folder: NotRequired[str]
+    match_host_event: NotRequired[Sequence[HostEventType]]
+    match_hostgroups: NotRequired[list[str]]
+    match_hostlabels: NotRequired[dict[str, str]]
+    match_hosts: NotRequired[list[str]]
+    match_hosttags: NotRequired[Mapping[TagGroupID, TagCondition]]
+    match_notification_comment: NotRequired[str]
+    match_plugin_output: NotRequired[str]
+    match_service_event: NotRequired[Sequence[ServiceEventType]]
+    match_servicegroups: NotRequired[list[str]]
+    match_servicegroups_regex: NotRequired[MatchServiceGroupsRegex]
+    match_servicelabels: NotRequired[dict[str, str]]
+    match_services: NotRequired[list[str]]
+    match_site: NotRequired[list[str]]
+    match_sl: NotRequired[tuple[int, int]]
+    match_timeperiod: NotRequired[TimeperiodName]
+    bulk: NotRequired[NotifyBulkType]
+    match_service_level: NotRequired[tuple[int, int]]
+    match_only_during_timeperiod: NotRequired[str]
 
 
 NotifyRuleInfo = tuple[str, EventRule, str]
 NotifyPluginName = str
 NotifyPluginInfo = tuple[
-    ContactName, NotificationPluginNameStr, NotifyPluginParams, NotifyBulkParameters | None
+    ContactName, NotificationPluginNameStr, NotifyPluginParamsDict, NotifyBulkParameters | None
 ]
 NotifyAnalysisInfo = tuple[list[NotifyRuleInfo], list[NotifyPluginInfo]]
 
@@ -902,112 +923,23 @@ class Contact(TypedDict, total=False):
     service_notification_options: str
 
 
-class EventContext(TypedDict, total=False):
-    """Used to be dict[str, Any]"""
-
-    CONTACTNAME: str
-    CONTACTS: str
-    DATE: str
-    EC_COMMENT: str
-    EC_FACILITY: str
-    EC_PRIORITY: str
-    EC_RULE_ID: str
-    HOSTATTEMPT: str
-    HOSTCONTACTGROUPNAMES: str
-    HOSTGROUPNAMES: str
-    HOSTNAME: HostName
-    HOSTNOTIFICATIONNUMBER: str
-    HOSTOUTPUT: str
-    HOSTSTATE: Literal["UP", "DOWN", "UNREACHABLE"]
-    HOSTTAGS: str
-    HOST_SL: str
-    LASTHOSTSTATE: str
-    LASTHOSTSTATECHANGE: str
-    LASTHOSTUP: str
-    LASTSERVICEOK: str
-    LASTSERVICESTATE: str
-    LASTSERVICESTATECHANGE: str
-    LOGDIR: str
-    LONGDATETIME: str
-    LONGSERVICEOUTPUT: str
-    MICROTIME: str
-    MONITORING_HOST: str
-    NOTIFICATIONCOMMENT: str
-    NOTIFICATIONTYPE: NotificationType
-    OMD_ROOT: str
-    OMD_SITE: str
-    PREVIOUSHOSTHARDSTATE: str
-    PREVIOUSSERVICEHARDSTATE: str
-    SERVICEATTEMPT: str
-    SERVICECHECKCOMMAND: str
-    SERVICECONTACTGROUPNAMES: str
-    SERVICEDESC: str
-    SERVICEFORURL: str
-    SERVICEGROUPNAMES: str
-    SERVICENOTIFICATIONNUMBER: str
-    SERVICEOUTPUT: str
-    SERVICESTATE: str
-    SHORTDATETIME: str
-    SVC_SL: str
-    WHAT: Literal["SERVICE", "HOST"]
+class NotificationParameterGeneralInfos(TypedDict):
+    description: str
+    comment: str
+    docu_url: str
 
 
-class EnrichedEventContext(EventContext, total=False):
-    # Dynamically added:
-    # FOOSHORTSTATE: str
-    # HOSTLABEL_*: str
-    # SERVICELABEL_*: str
-
-    # Dynamically added:
-    # # Add short variants for state names (at most 4 characters)
-    # for key, value in list(raw_context.items()):
-    #     if key.endswith("STATE"):
-    #         raw_context[key[:-5] + "SHORTSTATE"] = value[:4]
-    # We know of:
-    HOSTFORURL: str
-    HOSTURL: str
-    HOSTSHORTSTATE: str
-    LASTHOSTSHORTSTATE: str
-    LASTHOSTSTATECHANGE_REL: str
-    LASTHOSTUP_REL: str
-    LASTSERVICESHORTSTATE: str
-    LASTSERVICESTATECHANGE_REL: str
-    LASTSERVICEOK_REL: str
-    PREVIOUSHOSTHARDSHORTSTATE: str
-    PREVIOUSSERVICEHARDSHORTSTATE: str
-    SERVICESHORTSTATE: str
-    SERVICEURL: str
+class NotificationParameterItem(TypedDict):
+    general: NotificationParameterGeneralInfos
+    parameter_properties: NotifyPluginParamsDict
 
 
-class ECEventContext(EventContext, total=False):
-    """The keys "found" in cmk.ec
+NotificationParameterMethod = str
+NotificationParameterSpec = dict[NotificationParameterID, NotificationParameterItem]
+NotificationParameterSpecs = dict[NotificationParameterMethod, NotificationParameterSpec]
 
-    Not sure if subclassing EventContext is the right call...
-    Feel free to merge if you feel like doing it.
-    """
 
-    EC_CONTACT: str
-    EC_CONTACT_GROUPS: str
-    EC_ID: str
-    EC_MATCH_GROUPS: str
-    EC_ORIG_HOST: str
-    EC_OWNER: str
-    EC_PHASE: str
-    EC_PID: str
-    HOSTADDRESS: str
-    HOSTALIAS: str
-    HOSTDOWNTIME: str
-    LASTSERVICESTATEID: str
-    NOTIFICATIONAUTHOR: str
-    NOTIFICATIONAUTHORALIAS: str
-    NOTIFICATIONAUTHORNAME: str
-    SERVICEACKAUTHOR: str
-    SERVICEACKCOMMENT: str
-    SERVICEPERFDATA: str
-    SERVICEPROBLEMID: str
-    SERVICESTATEID: str
-    SERVICE_EC_CONTACT: str
-    SERVICE_SL: str
-
-    # Dynamically added:
-    # HOST_*: str  #  custom_variables
+def get_rules_related_to_parameter(
+    rules: Iterable[EventRule], parameter_id: NotificationParameterID
+) -> list[EventRule]:
+    return [rule for rule in rules if parameter_id in rule["notify_plugin"]]

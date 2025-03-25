@@ -31,8 +31,9 @@
 
 import json
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_graylog_nodes(string_table):
@@ -55,7 +56,7 @@ def inventory_graylog_nodes(parsed):
         yield node, {}
 
 
-def check_graylog_nodes(item, params, parsed):  # pylint: disable=too-many-branches
+def check_graylog_nodes(item, params, parsed):
     if parsed is None:
         return
 
@@ -79,9 +80,12 @@ def check_graylog_nodes(item, params, parsed):  # pylint: disable=too-many-branc
 
                 state = params.get(f"{levels}{str(value).lower()}", 1)
 
-                yield state, "{}: {}".format(
-                    infotext,
-                    str(value).replace("True", "yes").replace("False", "no"),
+                yield (
+                    state,
+                    "{}: {}".format(
+                        infotext,
+                        str(value).replace("True", "yes").replace("False", "no"),
+                    ),
                 )
 
             long_output = []
@@ -137,6 +141,7 @@ def check_graylog_nodes(item, params, parsed):  # pylint: disable=too-many-branc
 
 
 check_info["graylog_nodes"] = LegacyCheckDefinition(
+    name="graylog_nodes",
     parse_function=parse_graylog_nodes,
     service_name="Graylog Node %s",
     discovery_function=inventory_graylog_nodes,

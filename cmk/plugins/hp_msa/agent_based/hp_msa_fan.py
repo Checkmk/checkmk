@@ -81,13 +81,10 @@ def check_hp_msa_fan(item: str, section: Section) -> CheckResult:
 
     yield Result(state=fan_state, summary=f"Status: {fan_state_readable}, speed: {fan_speed} RPM")
 
-    if fan_health_state and fan_health_reason:
+    if fan_health_state is not State.OK and fan_health_reason:
         yield Result(
             state=fan_health_state,
-            summary="health: {} ({})".format(
-                fan_health_state_readable,
-                fan_health_reason,
-            ),
+            summary=f"health: {fan_health_state_readable} ({fan_health_reason})",
         )
 
 

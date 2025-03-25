@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """This file provides an abstraction of the internal MKP structure"""
+
 from __future__ import annotations
 
 import ast
@@ -97,9 +98,7 @@ def manifest_template(
     version: PackageVersion | None = None,
     files: Mapping[PackagePart, Sequence[Path]] | None = None,
 ) -> Manifest:
-    return Manifest(  # type: ignore[call-arg]
-        # unfortunately mypy does not understand that I can use the non-alias
-        # field names (which is the point of them) :-(
+    return Manifest(
         title=f"Title of {name}",
         name=name,
         description="Please add a description here",
@@ -143,7 +142,7 @@ def extract_manifests(paths: Iterable[Path]) -> list[Manifest]:
 def extract_manifest_optionally(pkg_path: Path) -> Manifest | None:
     try:
         return _extract_manifest_cached(pkg_path, pkg_path.stat().st_mtime)
-    except Exception:  # pylint: disable=broad-exception-caught
+    except Exception:
         # Do not make broken files / packages fail the whole mechanism
         _logger.error("[%s]: Failed to read package mainfest", pkg_path, exc_info=True)
     return None
@@ -159,9 +158,7 @@ def create_mkp(
     site_paths: Callable[[PackagePart], Path],
     version_packaged: str,
 ) -> bytes:
-    manifest = Manifest(  # type: ignore[call-arg]
-        # unfortunately mypy does not understand that I can use the non-alias
-        # field names (which is the point of them) :-(
+    manifest = Manifest(
         title=manifest.title,
         name=manifest.name,
         description=manifest.description,

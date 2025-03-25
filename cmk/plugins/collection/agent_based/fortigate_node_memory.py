@@ -6,7 +6,7 @@
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     all_of,
     CheckPlugin,
@@ -67,7 +67,7 @@ def check_fortigate_node_memory(
     if memory is None:
         return
 
-    yield from check_levels(
+    yield from check_levels_v1(
         memory,
         metric_name="mem_used_percent",
         levels_upper=params["levels"],

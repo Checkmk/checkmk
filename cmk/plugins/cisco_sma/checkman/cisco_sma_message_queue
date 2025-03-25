@@ -1,0 +1,22 @@
+title: Cisco SMA Mail Queue
+agents: snmp
+catalog: os/storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the mail queue for the Cisco Security Management Appliance (SMA).
+
+ The mapping of memory availability statuses reported by the system can be configured via the dedicated ruleset. 
+
+ The check utilizes the following OID from ASYNCOS-MAIL-MIB
+
+    - queueAvailabilityStatus .1.3.6.1.4.1.15497.1.1.1.5
+
+    - workQueueMessages .1.3.6.1.4.1.15497.1.1.1.11
+
+    - oldestMessageAge .1.3.6.1.4.1.15497.1.1.1.14
+
+    - perCentQueueUtilization .1.3.6.1.4.1.15497.1.1.1.4
+
+discovery:
+ One service is created.

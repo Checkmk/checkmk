@@ -5,12 +5,7 @@
  */
 
 import {call_ajax} from "./ajax";
-import {
-    add_class,
-    has_class,
-    querySelectorAllByClassName,
-    remove_class,
-} from "./utils";
+import {add_class, has_class, remove_class} from "./utils";
 
 //#   .-Help Toggle--------------------------------------------------------.
 //#   |          _   _      _         _____                 _              |
@@ -21,11 +16,10 @@ import {
 //#   |                      |_|                |___/ |___/                |
 //#   '--------------------------------------------------------------------'
 
+const SHOW_HELP_CLASS = "inline_help_as_text";
+
 function is_help_active() {
-    const helpdivs = document.getElementsByClassName(
-        "help"
-    ) as HTMLCollectionOf<HTMLElement>;
-    return helpdivs.length !== 0 && helpdivs[0].style.display === "flex";
+    return has_class(document.body, SHOW_HELP_CLASS);
 }
 
 export function toggle() {
@@ -38,33 +32,8 @@ export function toggle() {
 }
 
 function switch_help(how: boolean) {
-    // recursive scan for all div class=help elements
-    if (how) document.body.classList.add("show_help");
-    else document.body.classList.remove("show_help");
-    const helpdivs = document.getElementsByClassName(
-        "help"
-    ) as HTMLCollectionOf<HTMLElement>;
-    let i;
-    for (i = 0; i < helpdivs.length; i++) {
-        helpdivs[i].style.display = how ? "flex" : "none";
-    }
-
-    // small hack for wato ruleset lists, toggle the "float" and "nofloat"
-    // classes on those objects to make the layout possible
-    const rulesetdivs = querySelectorAllByClassName("ruleset");
-    for (i = 0; i < rulesetdivs.length; i++) {
-        if (how) {
-            if (has_class(rulesetdivs[i], "float")) {
-                remove_class(rulesetdivs[i], "float");
-                add_class(rulesetdivs[i], "nofloat");
-            }
-        } else {
-            if (has_class(rulesetdivs[i], "nofloat")) {
-                remove_class(rulesetdivs[i], "nofloat");
-                add_class(rulesetdivs[i], "float");
-            }
-        }
-    }
+    if (how) add_class(document.body, SHOW_HELP_CLASS);
+    else remove_class(document.body, SHOW_HELP_CLASS);
 
     call_ajax("ajax_switch_help.py?enabled=" + (how ? "yes" : ""));
 }

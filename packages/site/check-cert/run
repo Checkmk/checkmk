@@ -1,0 +1,190 @@
+#!/bin/bash
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+set -e
+
+JOBS=6
+readonly ALL_LINTERS=clippy
+
+failure() {
+    test ${#@} -eq 0 || echo "$(basename "$0"):" "$@" >&2
+    exit 1
+}
+
+usage() {
+    echo "usage: $(basename "$0") [OPTION]..."
+    echo "Run the CI pipeline or parts of it."
+    echo
+    echo "  -e, --setup-environment     setup environment"
+    echo "  -c, --clean                 remove artifacts first"
+    echo "  -b, --build                 build executable"
+    echo "  -u, --unit-tests            run unit tests"
+    echo "  -F, --check-format          check for correct formatting"
+    echo "  -l L,..., --lint=L,...      run linters, 'all' means '${ALL_LINTERS}'"
+    echo "  -I F,..., --features=F,...  list of features to activate"
+    echo "  -a, --all                   shortcut for -b -u -F -l all"
+    echo "  -f, --format                format sources"
+    echo "  -D, --documentation         generate documentation"
+    echo "  -j N, --jobs=N              allow N jobs at once, default is ${JOBS}"
+    echo "  -h, --help                  show this help"
+}
+
+parse_options() {
+    # Yes, all those option variables are global.
+    RUN_SETUP_ENVIRONMENT=no
+    RUN_CLEAN=no
+    RUN_BUILD=no
+    RUN_UNIT_TESTS=no
+    RUN_CHECK_FORMAT=no
+    RUN_CLIPPY=no
+    FEATURES=""
+    RUN_FORMAT=no
+    RUN_DOCUMENTATION=no
+
+    if ! OPTIONS=$(getopt --options 'ecbuFl:I:afDj:h' --long 'setup-environment,clean,build,unit-tests,check-format,lint:,features:,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
+        usage >&2
+        failure
+    fi
+    eval set -- "$OPTIONS"
+    unset OPTIONS
+
+    while true; do
+        case "$1" in
+            '-e' | '--setup-environment')
+                RUN_SETUP_ENVIRONMENT=yes
+                shift
+                ;;
+            '-c' | '--clean')
+                RUN_CLEAN=yes
+                shift
+                ;;
+            '-b' | '--build')
+                RUN_BUILD=yes
+                shift
+                ;;
+            '-u' | '--unit-tests')
+                RUN_UNIT_TESTS=yes
+                shift
+                ;;
+            '-F' | '--check-format')
+                RUN_CHECK_FORMAT=yes
+                shift
+                ;;
+            '-l' | '--lint')
+                test "$2" = "all" && LINTERS="${ALL_LINTERS}" || LINTERS="$2"
+                for LINTER in ${LINTERS//,/ }; do
+                    case ,"${ALL_LINTERS}", in
+                        *,"${LINTER}",*)
+                            FLAG="RUN_${LINTER//-/_}"
+                            eval "${FLAG^^}=yes"
+                            ;;
+                        *) failure "unknown linter: ${LINTER}" ;;
+                    esac
+                done
+                shift 2
+                ;;
+            '-I' | '--features')
+                FEATURES="$2"
+                shift 2
+                ;;
+            '-a' | '--all')
+                RUN_BUILD=yes
+                RUN_UNIT_TESTS=yes
+                RUN_CHECK_FORMAT=yes
+                RUN_CLIPPY=yes
+                shift
+                ;;
+            '-f' | '--format')
+                RUN_FORMAT=yes
+                shift
+                ;;
+            '-D' | '--documentation')
+                RUN_DOCUMENTATION=yes
+                shift
+                ;;
+            '-j' | '--jobs')
+                JOBS="$2"
+                shift 2
+                ;;
+            '-h' | '--help')
+                usage
+                exit 0
+                ;;
+            '--')
+                shift
+                test ${#@} -eq 0 || failure "extra arguments:" "$@"
+                break
+                ;;
+            *) failure "internal error" ;;
+        esac
+    done
+
+    readonly RUN_SETUP_ENVIRONMENT RUN_CLEAN RUN_BUILD RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_CLIPPY FEATURES RUN_FORMAT RUN_DOCUMENTATION JOBS
+}
+
+# TODO: This needs some serious massaging, some stuff probably don't even belong
+# here, it should probably live in some Gerrit/Jenkins scripts and/or Makefiles.
+run_setup_environment() {
+    REPO_DIR="$(git rev-parse --show-toplevel)"
+
+    # When executed via "make deb", e.g. during local builds, these are set and
+    # confuse cargo.
+    unset MAKEFLAGS DESTDIR
+
+    if [ -e "/opt/rust/rustup" ]; then
+        # Make sure we don't use "$HOME/.cargo" accidentally (expands to
+        # /.cargo, if HOME is not set). On a jenkins node, .cargo should be
+        # created under /home/jenkins/shared_cargo_folder in order to reuse it
+        # between workspaces, see run-in-docker.sh.
+        : "${CARGO_HOME:="${REPO_DIR}/shared_cargo_folder/.cargo"}"
+        export CARGO_HOME
+    fi
+
+    export CARGO_BUILD_TARGET="x86_64-unknown-linux-musl"
+    RUSTFLAGS="
+$RUSTFLAGS \
+--remap-path-prefix=${REPO_DIR}=/builddir \
+--remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo-home"
+    export RUSTFLAGS
+}
+
+run_cargo_cmd_with_explicit_package() {
+    cargo "${1}" --package "${PWD##*/}" "${@:2}"
+}
+
+run_format() {
+    bazel run \
+        --ui_event_filters=-info,-stderr \
+        --action_env=RUST_LOG=warn //bazel/tools:taplo_bin -- \
+        format Cargo.toml
+    run_cargo_cmd_with_explicit_package fmt
+}
+
+run_check_format() {
+    bazel run \
+        --ui_event_filters=-info,-stderr \
+        --action_env=RUST_LOG=warn //bazel/tools:taplo_bin -- \
+        format --check --diff Cargo.toml
+    bazel build --config=rustfmt :all
+}
+
+main() {
+    # Change to the directory where this script resides, it makes many things easier
+    # and we can call this script from everywhere.
+    cd -- "${BASH_SOURCE%/*}"
+    parse_options "$@"
+    test ${RUN_SETUP_ENVIRONMENT} = yes && run_setup_environment
+    test ${RUN_CLEAN} = yes && run_cargo_cmd_with_explicit_package clean
+    # TODO: Re-evaluate usage of --all-targets below
+    test ${RUN_BUILD} = yes && bazel build :all
+    test ${RUN_UNIT_TESTS} = yes && bazel test :all
+    test ${RUN_CHECK_FORMAT} = yes && run_check_format
+    test ${RUN_CLIPPY} = yes && bazel build --config=clippy :all
+    test ${RUN_FORMAT} = yes && run_format
+    test ${RUN_DOCUMENTATION} = yes && run_cargo_cmd_with_explicit_package doc --jobs="${JOBS}" --release --lib --bins --examples ${FEATURES:+"--features=$FEATURES"}
+    true
+}
+
+main "$@"

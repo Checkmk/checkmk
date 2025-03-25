@@ -8,7 +8,6 @@ from collections.abc import Mapping
 import pytest
 from apispec import APISpec
 from marshmallow import post_load, Schema, ValidationError
-from marshmallow.base import SchemaABC
 
 from cmk.gui.fields.base import ValueTypedDictSchema
 from cmk.gui.openapi.spec.plugin_marshmallow import CheckmkMarshmallowPlugin
@@ -158,7 +157,7 @@ def test_apispec_plugin_parameters(spec: APISpec) -> None:
     ],
 )
 def test_typed_dictionary_success(
-    schema_class: type[SchemaABC],
+    schema_class: type[Schema],
     in_data: Mapping[str, object],
     expected_result: Mapping[str, object],
 ) -> None:
@@ -177,7 +176,7 @@ def test_typed_dictionary_success(
     ],
 )
 def test_typed_dictionary_failed_validation(
-    schema_class: type[SchemaABC], in_data: Mapping[str, object]
+    schema_class: type[Schema], in_data: Mapping[str, object]
 ) -> None:
     schema = schema_class()
     with pytest.raises(ValidationError):

@@ -12,20 +12,23 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, assert_never, Literal, NamedTuple
 
+import cmk.ccc.debug
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKIPAddressLookupError, MKTerminate, MKTimeout
+
 import cmk.utils.paths
 from cmk.utils.caching import cache_manager
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import console
-
-import cmk.ccc.debug
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKIPAddressLookupError, MKTerminate, MKTimeout
 
 IPLookupCacheId = tuple[HostName | HostAddress, socket.AddressFamily]
 
 
 _fake_dns: HostAddress | None = None
 _enforce_localhost = False
+
+_FALLBACK_V4 = HostAddress("0.0.0.0")
+_FALLBACK_V6 = HostAddress("::")
 
 
 @enum.unique
@@ -47,19 +50,23 @@ class IPLookupConfig(NamedTuple):
 
 
 def fallback_ip_for(
-    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
 ) -> HostAddress:
     match family:
         case socket.AddressFamily.AF_INET:
-            return HostAddress("0.0.0.0")
+            return _FALLBACK_V4
         case socket.AddressFamily.AF_INET6:
-            return HostAddress("::")
+            return _FALLBACK_V6
         case other:
             assert_never(other)
 
 
+def is_fallback_ip(ip: HostAddress | str) -> bool:
+    return HostAddress(ip) in (_FALLBACK_V4, _FALLBACK_V6)
+
+
 def _local_ip_for(
-    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
 ) -> HostAddress:
     match family:
         case socket.AddressFamily.AF_INET:
@@ -208,7 +215,10 @@ def _actual_dns_lookup(
     fallback: HostAddress | None = None,
 ) -> HostAddress:
     try:
-        return HostAddress(socket.getaddrinfo(host_name, None, family)[0][4][0])
+        socket_address = socket.getaddrinfo(host_name, None, family)[0][4][0]
+        if isinstance(socket_address, int):
+            raise Exception("Your Python has been compiled with --disable-ipv6, sorry...")
+        return HostAddress(socket_address)
     except (MKTerminate, MKTimeout):
         # We should be more specific with the exception handler below, then we
         # could drop this special handling here

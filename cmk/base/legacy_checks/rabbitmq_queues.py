@@ -17,10 +17,10 @@
 
 import json
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+
+check_info = {}
 
 
 def parse_rabbitmq_queues(string_table):
@@ -65,8 +65,9 @@ def check_rabbitmq_queues(item, params, parsed):
         state = 0
         if not queue_state:
             state = 2
-        yield state, "Is running: %s" % str(queue_state).replace("True", "yes").replace(
-            "False", "no"
+        yield (
+            state,
+            "Is running: %s" % str(queue_state).replace("True", "yes").replace("False", "no"),
         )
 
     queue_node = data.get("node")
@@ -116,6 +117,7 @@ def discover_rabbitmq_queues(section):
 
 
 check_info["rabbitmq_queues"] = LegacyCheckDefinition(
+    name="rabbitmq_queues",
     parse_function=parse_rabbitmq_queues,
     service_name="RabbitMQ Queue %s",
     discovery_function=discover_rabbitmq_queues,

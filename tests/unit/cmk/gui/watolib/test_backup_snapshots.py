@@ -21,7 +21,12 @@ def _snapshot_files() -> Generator[pathlib.Path, None, None]:
 @pytest.mark.usefixtures("patch_omd_site")
 def test_create_snapshot() -> None:
     backup_snapshots.create_snapshot(
-        comment="", created_by="", secret=b"abc", max_snapshots=10, use_git=False
+        comment="",
+        created_by="",
+        secret=b"abc",
+        max_snapshots=10,
+        use_git=False,
+        debug=False,
     )
     assert list(_snapshot_files())
 
@@ -29,13 +34,17 @@ def test_create_snapshot() -> None:
 @pytest.mark.usefixtures("patch_omd_site")
 def test_snapshot_status() -> None:
     backup_snapshots.create_snapshot(
-        "test snapshot",
+        comment="test snapshot",
         created_by="",
         secret=b"abc",
         max_snapshots=10,
         use_git=False,
+        debug=False,
     )
-    snapshot_status = backup_snapshots.get_snapshot_status(next(_snapshot_files()).name)
+    snapshot_status = backup_snapshots.get_snapshot_status(
+        snapshot=next(_snapshot_files()).name,
+        debug=False,
+    )
     assert "test snapshot" in snapshot_status["comment"]
     assert not snapshot_status["broken"]
     assert "broken_text" not in snapshot_status
@@ -44,7 +53,12 @@ def test_snapshot_status() -> None:
 @pytest.mark.usefixtures("patch_omd_site")
 def test_extract_snapshot() -> None:
     backup_snapshots.create_snapshot(
-        "", created_by=UserId("harry"), secret=b"abc", max_snapshots=10, use_git=False
+        comment="",
+        created_by=UserId("harry"),
+        secret=b"abc",
+        max_snapshots=10,
+        use_git=False,
+        debug=False,
     )
     with tarfile.open(next(_snapshot_files()), mode="r") as snapshot_tar:
         backup_snapshots.extract_snapshot(

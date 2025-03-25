@@ -12,7 +12,7 @@ from typing import Any, NotRequired, TypedDict
 
 import pydantic
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -218,7 +218,7 @@ def _check_metric(
     value_store: MutableMapping[str, Any],
     now: float,
 ) -> CheckResult:
-    yield from check_levels(
+    yield from check_levels_v1(
         metric_value,
         metric_name=metric_name,
         render_func=render_func,
@@ -255,11 +255,10 @@ def _check_metric(
             avg_rate * (rate_crit / 100.0 + 1),
         )
 
-    yield from check_levels(
+    yield from check_levels_v1(
         rate,
         levels_upper=levels_rate,
         metric_name=f"{metric_name}_rate",
-        # pylint: disable=cell-var-from-loop
         render_func=lambda v: f"{render_func(v)}/minute",
         label=f"{label} rate",
     )

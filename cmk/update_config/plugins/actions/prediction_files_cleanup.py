@@ -5,6 +5,7 @@
 
 from logging import Logger
 from pathlib import Path
+from typing import override
 
 import cmk.utils.paths
 from cmk.utils.prediction import PredictionData, PredictionStore
@@ -22,6 +23,7 @@ class RemoveUnreadablePredictions(UpdateAction):
     Deleting the unreadable ones allows us to change the format between releases.
     """
 
+    @override
     def __call__(self, logger: Logger) -> None:
         self.cleanup_unreadable_files(cmk.utils.paths.predictions_dir)
 

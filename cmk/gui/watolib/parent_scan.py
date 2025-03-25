@@ -5,22 +5,33 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from functools import partial
 from typing import Literal
+
+from pydantic import BaseModel
 
 from livestatus import SiteId
 
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.paths import configuration_lockfile
+from cmk.utils.resulttype import Result
 
 from cmk.automations.results import Gateway, GatewayResult
 
-from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
+from cmk.gui.background_job import (
+    AlreadyRunningError,
+    BackgroundJob,
+    BackgroundProcessInterface,
+    InitialStatusArgs,
+    JobTarget,
+    StartupError,
+)
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.session import SuperUserContext
 from cmk.gui.watolib import bakery
 from cmk.gui.watolib.check_mk_automations import scan_parents
 from cmk.gui.watolib.host_attributes import HostAttributes
@@ -31,9 +42,6 @@ from cmk.gui.watolib.hosts_and_folders import (
     folder_tree,
     Host,
 )
-
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
 
 
 @dataclass(frozen=True)
@@ -83,7 +91,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         tasks: Sequence[ParentScanTask],
         job_interface: BackgroundProcessInterface,
     ) -> None:
-        with SuperUserContext():
+        with job_interface.gui_context():
             self._initialize_statistics()
             self._logger.info("Parent scan started...")
 
@@ -319,12 +327,17 @@ def start_parent_scan(
     hosts: Sequence[Host],
     job: ParentScanBackgroundJob,
     settings: ParentScanSettings,
-) -> None:
-    job.start(
-        partial(
-            job.do_execute,
-            settings,
-            [ParentScanTask(host.site_id(), host.folder().path(), host.name()) for host in hosts],
+) -> Result[None, AlreadyRunningError | StartupError]:
+    return job.start(
+        JobTarget(
+            callable=parent_scan_job_entry_point,
+            args=ParentScanJobArgs(
+                tasks=[
+                    ParentScanTask(host.site_id(), host.folder().path(), host.name())
+                    for host in hosts
+                ],
+                settings=settings,
+            ),
         ),
         InitialStatusArgs(
             title=_("Parent scan"),
@@ -333,3 +346,14 @@ def start_parent_scan(
             user=str(user.id) if user.id else None,
         ),
     )
+
+
+class ParentScanJobArgs(BaseModel, frozen=True):
+    tasks: Sequence[ParentScanTask]
+    settings: ParentScanSettings
+
+
+def parent_scan_job_entry_point(
+    job_interface: BackgroundProcessInterface, args: ParentScanJobArgs
+) -> None:
+    ParentScanBackgroundJob().do_execute(args.settings, args.tasks, job_interface)

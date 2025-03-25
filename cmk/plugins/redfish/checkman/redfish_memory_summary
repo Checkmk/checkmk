@@ -1,0 +1,13 @@
+title: Redfish Memory Summary
+agents: agent_redfish, agent_redfish_power
+catalog: hw/server/redfish
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the overall capacity and health of a Redfish compatible devices memory unit.
+
+discovery:
+ One service is created for each memory module of the device.
+
+item:
+ The elements "Id".

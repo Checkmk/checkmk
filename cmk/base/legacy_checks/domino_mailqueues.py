@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.domino import DETECT
+
+check_info = {}
 
 MAILQUEUES_LABEL = (
     ("lnDeadMail", "Dead mails"),
@@ -47,6 +47,7 @@ def discover_domino_mailqueues(section):
 
 
 check_info["domino_mailqueues"] = LegacyCheckDefinition(
+    name="domino_mailqueues",
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.334.72.1.1.4",

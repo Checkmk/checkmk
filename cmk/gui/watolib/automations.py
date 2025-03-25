@@ -9,27 +9,34 @@ and similar things."""
 from __future__ import annotations
 
 import ast
+import functools
 import json
-import logging
+import os
 import re
 import subprocess
 import time
 import uuid
-from collections.abc import Callable, Iterable, Mapping, Sequence
-from functools import partial
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from contextlib import contextmanager
 from io import BytesIO
 from pathlib import Path
-from typing import NamedTuple
+from typing import Final, NamedTuple
 
 import requests
 import urllib3
+from pydantic import BaseModel, field_validator
 
-from livestatus import SiteConfiguration, SiteId
+from livestatus import sanitize_site_configuration, SiteConfiguration, SiteId
+
+import cmk.ccc.version as cmk_version
+from cmk.ccc import store  # Some braindead "unit" test monkeypatch this like hell :-/
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import get_omd_config
+from cmk.ccc.store import RealIo
 
 from cmk.utils import paths
 from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import get_license_state
-from cmk.utils.log import VERBOSE
 from cmk.utils.user import UserId
 
 from cmk.automations.results import result_type_registry, SerializedResult
@@ -42,10 +49,11 @@ from cmk.gui.background_job import (
     InitialStatusArgs,
     JobStatusSpec,
     JobStatusStates,
+    JobTarget,
 )
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.http import request, Request
+from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -63,10 +71,10 @@ from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automation_types import PhaseOneResult
 from cmk.gui.watolib.utils import mk_repr
 
-import cmk.ccc.version as cmk_version
 from cmk import trace
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
+
+from . import automation_helper, automation_subprocess
+from .automation_executor import AutomationExecutor
 
 auto_logger = logger.getChild("automations")
 tracer = trace.get_tracer()
@@ -74,6 +82,10 @@ tracer = trace.get_tracer()
 # Disable python warnings in background job output or logs like "Unverified
 # HTTPS request is being made". We warn the user using analyze configuration.
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+ENV_VARIABLE_FORCE_CLI_INTERFACE: Final[str] = "_CMK_AUTOMATIONS_FORCE_CLI_INTERFACE"
+
+OMDStatus = Mapping[str, int]
 
 
 class MKAutomationException(MKGeneralException):
@@ -92,96 +104,76 @@ def check_mk_local_automation_serialized(
     indata: object = "",
     stdin_data: str | None = None,
     timeout: int | None = None,
+    force_cli_interface: bool = False,
 ) -> tuple[Sequence[str], SerializedResult]:
-    with tracer.start_as_current_span(
+    with tracer.span(
         f"local_automation[{command}]",
         attributes={"cmk.automation.args": repr(args)},
     ) as span:
         if args is None:
             args = []
-        new_args = list(args)
 
         if stdin_data is None:
             stdin_data = repr(indata)
 
-        if timeout:
-            new_args = ["--timeout", "%d" % timeout] + new_args
-
-        cmd = ["check_mk"]
-
-        if auto_logger.isEnabledFor(logging.DEBUG):
-            cmd.append("-vv")
-        elif auto_logger.isEnabledFor(VERBOSE):
-            cmd.append("-v")
-
-        cmd += ["--automation", command] + new_args
-
         if command in ["restart", "reload"]:
             call_hook_pre_activate_changes()
 
-        # This debug output makes problems when doing bulk inventory, because
-        # it garbles the non-HTML response output
-        # if config.debug:
-        #     html.write_text("<div class=message>Running <tt>%s</tt></div>\n" % subprocess.list2cmdline(cmd))
-        auto_logger.info("RUN: %s" % subprocess.list2cmdline(cmd))
-        span.set_attribute("cmk.automation.command", subprocess.list2cmdline(cmd))
-        auto_logger.info("STDIN: %r" % stdin_data)
+        executor: AutomationExecutor = (
+            automation_subprocess.SubprocessExecutor()
+            if force_cli_interface
+            or os.environ.get(ENV_VARIABLE_FORCE_CLI_INTERFACE)
+            or not _automation_helper_enabled_in_omd_config()
+            else automation_helper.HelperExecutor()
+        )
 
         try:
-            completed_process = subprocess.run(
-                cmd,
-                capture_output=True,
-                close_fds=True,
-                encoding="utf-8",
-                input=stdin_data,
-                check=False,
-            )
+            result = executor.execute(command, args, stdin_data, auto_logger, timeout)
         except Exception as e:
-            raise local_automation_failure(command=command, cmdline=cmd, exc=e)
-
-        span.set_attribute("cmk.automation.exit_code", completed_process.returncode)
-        auto_logger.info("FINISHED: %d" % completed_process.returncode)
-        auto_logger.debug("OUTPUT: %r" % completed_process.stdout)
-
-        if completed_process.stderr:
-            auto_logger.warning(
-                "'%s' returned '%s'"
-                % (
-                    " ".join(cmd),
-                    completed_process.stderr,
-                )
-            )
-        if completed_process.returncode:
-            auto_logger.error(
-                "Error running %r (exit code %d)"
-                % (
-                    subprocess.list2cmdline(cmd),
-                    completed_process.returncode,
-                )
-            )
-            raise local_automation_failure(
+            msg = get_local_automation_failure_message(
                 command=command,
-                cmdline=cmd,
-                code=completed_process.returncode,
-                out=completed_process.stdout,
-                err=completed_process.stderr,
+                cmdline=executor.command_description(command, args, logger, timeout),
+                exc=e,
             )
+            raise MKAutomationException(msg)
+
+        span.set_attribute("cmk.automation.exit_code", result.exit_code)
+        auto_logger.info("FINISHED: %d" % result.exit_code)
+        auto_logger.debug("OUTPUT: %r" % result.output)
+
+        if result.exit_code:
+            auto_logger.error(
+                "Error running %r (exit code %d)" % (result.command_description, result.exit_code)
+            )
+            msg = get_local_automation_failure_message(
+                command=command,
+                cmdline=result.command_description,
+                code=result.exit_code,
+                out=result.output,
+                err=result.error,
+            )
+
+            if result.exit_code == 1:
+                raise MKUserError(None, msg)
+
+            raise MKAutomationException(msg)
 
         # On successful "restart" command execute the activate changes hook
         if command in ["restart", "reload"]:
             call_hook_activate_changes()
 
-        return cmd, SerializedResult(completed_process.stdout)
+        return result.command_description, SerializedResult(result.output)
 
 
-def local_automation_failure(
+def get_local_automation_failure_message(
+    *,
     command: str,
     cmdline: Iterable[str],
     code: int | None = None,
     out: str | None = None,
     err: str | None = None,
     exc: Exception | None = None,
-) -> MKAutomationException:
+) -> str:
     call = subprocess.list2cmdline(cmdline) if active_config.debug else command
     msg = "Error running automation call <tt>%s</tt>" % call
     if code:
@@ -192,7 +184,7 @@ def local_automation_failure(
         msg += ", error: <pre>%s</pre>" % _hilite_errors(err)
     if exc:
         msg += ": %s" % exc
-    return MKAutomationException(msg)
+    return msg
 
 
 def _hilite_errors(outdata: str) -> str:
@@ -210,7 +202,7 @@ def check_mk_remote_automation_serialized(
     sync: Callable[[SiteId], None],
     non_blocking_http: bool = False,
 ) -> SerializedResult:
-    with tracer.start_as_current_span(
+    with tracer.span(
         f"remote_automation[{command}]",
         attributes={
             "cmk.automation.target_site_id": str(site_id),
@@ -242,6 +234,7 @@ def check_mk_remote_automation_serialized(
         # Synchronous execution of the actual remote command in a single blocking HTTP request
         return SerializedResult(
             _do_remote_automation_serialized(
+                site_id=site_id,
                 site=get_site_config(active_config, site_id),
                 command="checkmk-automation",
                 vars_=[
@@ -251,6 +244,7 @@ def check_mk_remote_automation_serialized(
                     ("stdin_data", mk_repr(stdin_data).decode("ascii")),  # The input data for stdin
                     ("timeout", mk_repr(timeout).decode("ascii")),  # The timeout
                 ],
+                timeout=timeout,
             )
         )
 
@@ -266,7 +260,7 @@ def check_mk_remote_automation_serialized(
 def call_hook_pre_activate_changes() -> None:
     if hooks.registered("pre-activate-changes"):
         # TODO: Cleanup this local import
-        import cmk.gui.watolib.hosts_and_folders  # pylint: disable=redefined-outer-name
+        import cmk.gui.watolib.hosts_and_folders
 
         hooks.call("pre-activate-changes", cmk.gui.watolib.hosts_and_folders.collect_all_hosts())
 
@@ -283,20 +277,22 @@ def call_hook_pre_activate_changes() -> None:
 def call_hook_activate_changes() -> None:
     if hooks.registered("activate-changes"):
         # TODO: Cleanup this local import
-        import cmk.gui.watolib.hosts_and_folders  # pylint: disable=redefined-outer-name
+        import cmk.gui.watolib.hosts_and_folders
 
         hooks.call("activate-changes", cmk.gui.watolib.hosts_and_folders.collect_all_hosts())
 
 
 def _do_remote_automation_serialized(
     *,
+    site_id: SiteId | None,
     site: SiteConfiguration,
     command: str,
     vars_: Sequence[tuple[str, str]],
     files: Mapping[str, BytesIO] | None = None,
     timeout: float | None = None,
 ) -> str:
-    auto_logger.info("RUN [%s]: %s", site, command)
+    auto_logger.info("RUN [%s]: %s", site_id or "site id not in config", command)
+    auto_logger.debug("Site config: %r", sanitize_site_configuration(site))
     auto_logger.debug("VARS: %r", vars_)
 
     base_url = site["multisiteurl"]
@@ -377,6 +373,8 @@ def do_remote_automation(
     timeout: float | None = None,
 ) -> object:
     serialized_response = _do_remote_automation_serialized(
+        # callsites currently disagree on whether it should be there.
+        site_id=site.get("id"),
         site=site,
         command=command,
         vars_=vars_,
@@ -403,20 +401,27 @@ def get_url_raw(
     data: Mapping[str, str] | None = None,
     files: Mapping[str, BytesIO] | None = None,
     timeout: float | None = None,
+    add_headers: dict[str, str] | None = None,
 ) -> requests.Response:
-    response = requests.post(
-        url,
-        data=data,
-        verify=not insecure,
-        auth=auth,
-        files=files,
-        timeout=timeout,
-        headers={
-            "x-checkmk-version": cmk_version.__version__,
-            "x-checkmk-edition": cmk_version.edition(paths.omd_root).short,
-            "x-checkmk-license-state": get_license_state().readable,
-        },
-    )
+    headers_ = {
+        "x-checkmk-version": cmk_version.__version__,
+        "x-checkmk-edition": cmk_version.edition(paths.omd_root).short,
+        "x-checkmk-license-state": get_license_state().readable,
+    }
+    headers_.update(add_headers or {})
+
+    try:
+        response = requests.post(
+            url,
+            data=data,
+            verify=not insecure,
+            auth=auth,
+            files=files,
+            timeout=timeout,
+            headers=headers_,
+        )
+    except (ConnectionError, requests.ConnectionError) as e:
+        raise MKUserError(None, _("Could not connect to the remote site (%s)") % e)
 
     response.encoding = "utf-8"  # Always decode with utf-8
 
@@ -542,17 +547,6 @@ def get_url(
     timeout: float | None = None,
 ) -> str:
     return get_url_raw(url, insecure, auth, data, files, timeout).text
-
-
-def get_url_json(
-    url: str,
-    insecure: bool,
-    auth: tuple[str, str] | None = None,
-    data: Mapping[str, str] | None = None,
-    files: Mapping[str, BytesIO] | None = None,
-    timeout: float | None = None,
-) -> object:
-    return get_url_raw(url, insecure, auth, data, files, timeout).json()
 
 
 def do_site_login(site: SiteConfiguration, name: UserId, password: str) -> str:
@@ -684,7 +678,7 @@ def _start_remote_automation_job(
     return job_id
 
 
-class AutomationCheckmkAutomationStart(AutomationCommand):
+class AutomationCheckmkAutomationStart(AutomationCommand[CheckmkAutomationRequest]):
     """Called by do_remote_automation_in_background_job to execute the background job on a remote site"""
 
     def command_name(self) -> str:
@@ -699,18 +693,36 @@ class AutomationCheckmkAutomationStart(AutomationCommand):
         automation_id = str(uuid.uuid4())
         job_id = f"{CheckmkAutomationBackgroundJob.job_prefix}{api_request.command}-{automation_id}"
         job = CheckmkAutomationBackgroundJob(job_id)
-        job.start(
-            partial(job.execute_automation, api_request=api_request),
-            InitialStatusArgs(
-                title=_("Checkmk automation %s %s") % (api_request.command, automation_id),
-                user=str(user.id) if user.id else None,
-            ),
-        )
+        if (
+            result := job.start(
+                JobTarget(
+                    callable=checkmk_automation_job_entry_point,
+                    args=CheckmkAutomationJobArgs(job_id=job_id, api_request=api_request),
+                ),
+                InitialStatusArgs(
+                    title=_("Checkmk automation %s %s") % (api_request.command, automation_id),
+                    user=str(user.id) if user.id else None,
+                ),
+            )
+        ).is_error():
+            raise result.error
 
         return job.get_job_id()
 
 
-class AutomationCheckmkAutomationGetStatus(AutomationCommand):
+class CheckmkAutomationJobArgs(BaseModel, frozen=True):
+    job_id: str
+    api_request: CheckmkAutomationRequest
+
+
+def checkmk_automation_job_entry_point(
+    job_interface: BackgroundProcessInterface, args: CheckmkAutomationJobArgs
+) -> None:
+    job = CheckmkAutomationBackgroundJob(args.job_id)
+    job.execute_automation(job_interface, args.api_request)
+
+
+class AutomationCheckmkAutomationGetStatus(AutomationCommand[str]):
     """Called by do_remote_automation_in_background_job to get the background job state from on a
     remote site"""
 
@@ -759,12 +771,13 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
                 .serialize(cmk_version_of_remote_automation_source(request)),
             )
         except SyntaxError as e:
-            raise local_automation_failure(
+            msg = get_local_automation_failure_message(
                 command=automation_cmd,
                 cmdline=cmdline_cmd,
                 out=serialized_result,
                 exc=e,
             )
+            raise MKAutomationException(msg)
 
     def execute_automation(
         self,
@@ -872,3 +885,82 @@ def compatible_with_central_site(
         return licensing_compatibility
 
     return cmk_version.VersionsCompatible()
+
+
+class LastKnownCentralSiteVersion(BaseModel):
+    """information about the central site
+
+    this is currently only used to store the central site info. We need that info in order to
+    communicate to the central site e.g. with the updater-registration (CEE freature). There we
+    decide on the auth scheme based on that info.
+
+    As of now this can go with 2.5 since then it is certain the central site supports the new
+    scheme. In 2.4 we could encounter a 2.3 central site that does not support the new scheme."""
+
+    version_str: str
+
+    @property
+    def cmk_version(self) -> cmk_version.Version:
+        return cmk_version.Version.from_str(self.version_str)
+
+    @field_validator("version_str")
+    @classmethod
+    def _validate_version(cls, v: str) -> str:
+        # just check if it is parse able...
+        cmk_version.Version.from_str(v)
+        return v
+
+
+class LastKnownCentralSiteVersionStore:
+    def __init__(self) -> None:
+        self._io: Final = RealIo(Path(paths.var_dir) / "last_known_site_version.json")
+
+    @contextmanager
+    def locked(self) -> Iterator[None]:
+        yield from self._io.locked()
+
+    def write_obj(self, obj: LastKnownCentralSiteVersion) -> None:
+        return self._io.write(obj.model_dump_json().encode())
+
+    def read_obj(self) -> LastKnownCentralSiteVersion | None:
+        return (
+            LastKnownCentralSiteVersion.model_validate_json(raw.decode())
+            if (raw := self._io.read())
+            else None
+        )
+
+
+@functools.cache
+def _automation_helper_enabled_in_omd_config() -> bool:
+    return get_omd_config(paths.omd_root)["CONFIG_AUTOMATION_HELPER"] == "on"
+
+
+class AutomationGetRemoteOMDStatus(AutomationCommand[None]):
+    """Called to get the status of OMD services on the remote site
+    0: running, 1: stopped, 5: disabled
+    """
+
+    def command_name(self) -> str:
+        return "get-remote-omd-status"
+
+    def get_request(self) -> None:
+        pass
+
+    def _parse_omd_status(self, raw_status: str) -> OMDStatus:
+        status = {key: int(val) for key, val in (el.split(" ") for el in raw_status.splitlines())}
+        auto_logger.debug("OMD remote status: %s", status)
+        return status
+
+    def _get_omd_status(self) -> OMDStatus:
+        result = subprocess.run(
+            ["omd", "-v", "status", "--bare"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        return self._parse_omd_status(result.stdout)
+
+    def execute(self, api_request: None) -> OMDStatus:
+        auto_logger.debug("Executing AutomationGetRemoteOMDStatus")
+        return self._get_omd_status()

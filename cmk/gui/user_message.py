@@ -6,12 +6,12 @@
 import time
 from collections.abc import Iterator
 
-from cmk.gui import message
+from cmk.gui import forms, message
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
@@ -22,22 +22,38 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import Page, PageRegistry
-from cmk.gui.table import table_element
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
+from cmk.gui.utils.html import HTML
+from cmk.gui.utils.transaction_manager import transactions
+from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri
 
 
 def register(page_registry: PageRegistry) -> None:
     page_registry.register_page("user_message")(PageUserMessage)
     page_registry.register_page_handler("ajax_delete_user_message", ajax_delete_user_message)
+    page_registry.register_page_handler(
+        "ajax_acknowledge_user_message", ajax_acknowledge_user_message
+    )
 
 
 class PageUserMessage(Page):
     def title(self) -> str:
-        return _("User messages")
+        return _("Your messages")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
+                PageMenuDropdown(
+                    name="messages",
+                    title=_("Messages"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Received messages"),
+                            entries=list(_page_menu_entries_ack_all_messages()),
+                        ),
+                    ],
+                ),
                 PageMenuDropdown(
                     name="related",
                     title=_("Related"),
@@ -55,7 +71,55 @@ class PageUserMessage(Page):
     def page(self) -> None:
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), _("Messages"))
         make_header(html, self.title(), breadcrumb, self.page_menu(breadcrumb))
-        render_user_message_table("gui_hint")
+
+        for flashed_msg in get_flashed_messages():
+            html.show_message(flashed_msg.msg)
+
+        _handle_ack_all()
+
+        html.open_div(class_="wato user_messages")
+        show_user_messages()
+        html.close_div()
+
+        html.footer()
+
+
+def _handle_ack_all() -> None:
+    if not transactions.check_transaction():
+        return
+
+    if request.var("_ack_all"):
+        num = len([msg for msg in message.get_gui_messages() if not msg.get("acknowledged")])
+        message.acknowledge_all_messages()
+        flash(
+            _("%d %s.")
+            % (
+                num,
+                ungettext(
+                    "received message has been acknowledged",
+                    "received messages have been acknowledged",
+                    num,
+                ),
+            )
+        )
+        html.reload_whole_page()
+
+
+def _page_menu_entries_ack_all_messages() -> Iterator[PageMenuEntry]:
+    yield PageMenuEntry(
+        title=_("Acknowledge all"),
+        icon_name="werk_ack",
+        is_shortcut=True,
+        is_suggested=True,
+        item=make_simple_link(
+            make_confirm_delete_link(
+                url=makeactionuri(request, transactions, [("_ack_all", "1")]),
+                title=_("Acknowledge all received messages"),
+                confirm_button=_("Acknowledge all"),
+            )
+        ),
+        is_enabled=bool([msg for msg in message.get_gui_messages() if not msg.get("acknowledged")]),
+    )
 
 
 def _page_menu_entries_related() -> Iterator[PageMenuEntry]:
@@ -79,45 +143,91 @@ def _page_menu_entries_related() -> Iterator[PageMenuEntry]:
         )
 
 
-def render_user_message_table(what: str) -> None:
+def show_user_messages() -> None:
     html.open_div()
-    with table_element(
-        "user_messages", sortable=False, searchable=False, omit_if_empty=True
-    ) as table:
-        for entry in sorted(message.get_gui_messages(), key=lambda e: e["time"], reverse=True):
-            if what not in entry["methods"]:
-                continue
 
-            table.row()
+    if not (messages := [m for m in message.get_gui_messages() if "gui_hint" in m["methods"]]):
+        html.show_message(_("Currently you have no received messages"))
+        return
 
-            msg_id = entry["id"]
-            datetime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(entry["time"]))
-            expiretime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(entry["valid_till"]))
-            msg = entry["text"].replace("\n", " ")
+    for num, entry in enumerate(sorted(messages, key=lambda e: e["time"], reverse=True)):
+        forms.header(_("Message #%d") % (num + 1))
+        forms.container()
+        html.open_div(class_="container")
+        msg_text = entry["text"]
+        match msg_text["content_type"]:
+            case "text":
+                html.div(msg_text["content"].replace("\n", "<br>"), class_="text")
+            case "html":
+                html.div(HTML(msg_text["content"], escape=False), class_="text")
 
-            table.cell(_("Actions"), css=["buttons"], sortable=False)
-            if not entry.get("security"):
-                onclick = (
-                    "cmk.utils.delete_user_message('%s', this);cmk.utils.reload_whole_page();"
-                    % msg_id
-                    if what == "gui_hint"
-                    else "cmk.utils.delete_user_message('%s', this);" % msg_id
-                )
-                html.icon_button(
-                    "",
-                    _("Delete"),
-                    "delete",
-                    onclick=onclick,
-                )
+        html.open_div(class_="footer")
+        html.open_div(class_="actions")
+        show_message_actions(
+            "gui_hint",
+            entry["id"],
+            is_acknowledged=bool(entry.get("acknowledged")),
+            must_expire=bool(entry.get("security")),
+        )
+        html.close_div()
 
-            table.cell(_("Message"), msg)
-            table.cell(_("Date sent"), datetime)
-            table.cell(_("Expires on"), expiretime)
+        html.open_div(class_="details")
+        html.write_text(
+            _("Sent on: %s, Expires on: %s")
+            % (
+                time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(entry["time"])),
+                "-"
+                if (valid_till := entry["valid_till"]) is None
+                else time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(valid_till)),
+            )
+        )
+        html.close_div()
+        html.close_div()
+        forms.end()
 
     html.close_div()
+
+
+def show_message_actions(
+    what: str,
+    msg_id: str,
+    is_acknowledged: bool,
+    must_expire: bool,
+) -> None:
+    if is_acknowledged:
+        html.icon("checkmark", _("Acknowledged"))
+    else:
+        html.icon_button(
+            "",
+            _("Acknowledge message"),
+            "werk_ack",
+            onclick="cmk.utils.acknowledge_user_message('%s');cmk.utils.reload_whole_page();"
+            % msg_id,
+        )
+
+    if must_expire:
+        html.icon("delete", _("Cannot be deleted manually, must expire"), cssclass="colorless")
+    else:
+        onclick = (
+            "cmk.utils.delete_user_message('%s', this);cmk.utils.reload_whole_page();" % msg_id
+            if what == "gui_hint"
+            else "cmk.utils.delete_user_message('%s', this);" % msg_id
+        )
+        html.icon_button(
+            "",
+            _("Delete"),
+            "delete",
+            onclick=onclick,
+        )
 
 
 def ajax_delete_user_message() -> None:
     check_csrf_token()
     msg_id = request.get_str_input_mandatory("id")
     message.delete_gui_message(msg_id)
+
+
+def ajax_acknowledge_user_message() -> None:
+    check_csrf_token()
+    msg_id = request.get_str_input_mandatory("id")
+    message.acknowledge_gui_message(msg_id)

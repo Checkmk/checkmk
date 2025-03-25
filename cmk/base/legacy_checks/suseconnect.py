@@ -49,11 +49,11 @@ import time
 from collections.abc import Iterable, Mapping
 from typing import Any
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import render
 from cmk.plugins.collection.agent_based.suseconnect import get_data, Section
+
+check_info = {}
 
 
 def inventory_suseconnect(section: Section) -> Iterable[tuple[None, dict]]:
@@ -82,10 +82,14 @@ def check_suseconnect(
         state = 2
     yield state, infotext
 
-    yield 0, (
-        "Subscription type: %(subscription_type)s, Registration code: %(registration_code)s, "
-        "Starts at: %(starts_at)s, Expires at: %(expires_at)s"
-    ) % specs
+    yield (
+        0,
+        (
+            "Subscription type: %(subscription_type)s, Registration code: %(registration_code)s, "
+            "Starts at: %(starts_at)s, Expires at: %(expires_at)s"
+        )
+        % specs,
+    )
 
     expiration_date = time.strptime(specs["expires_at"], "%Y-%m-%d %H:%M:%S %Z")
     expiration_time = time.mktime(expiration_date) - time.time()
@@ -111,6 +115,7 @@ def check_suseconnect(
 
 
 check_info["suseconnect"] = LegacyCheckDefinition(
+    name="suseconnect",
     service_name="SLES license",
     # section is migrated already!,
     discovery_function=inventory_suseconnect,

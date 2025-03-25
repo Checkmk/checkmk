@@ -6,6 +6,7 @@
 import re
 from collections import defaultdict
 from collections.abc import Callable, Generator, Iterable, Mapping, MutableMapping, Sequence
+from dataclasses import dataclass
 from typing import Any, DefaultDict, TypedDict
 
 from cmk.agent_based.v2 import (
@@ -28,11 +29,15 @@ Section = Mapping[str, Disk]
 DISKSTAT_DISKLESS_PATTERN = re.compile("x?[shv]d[a-z]*[0-9]+")
 DISKSTAT_DEFAULT_PARAMS = {
     "summary": True,
-    "physical": {},
     "lvm": False,
     "vxvm": False,
     "diskless": False,
 }
+
+
+@dataclass
+class NoIOSection:
+    message: str = ""
 
 
 def discovery_diskstat_generic(
@@ -50,17 +55,8 @@ def discovery_diskstat_generic(
         yield Service(item="SUMMARY")
 
     for name in item_candidates:
-        if (
-            (physical := modes["physical"])
-            and " " not in name
-            and not DISKSTAT_DISKLESS_PATTERN.match(name)
-        ):
-            if ":" in name:
-                device, wwn = name.split(":")
-                item = wwn if physical["service_description"] == "wwn" else device
-                yield Service(item=item)
-            else:
-                yield Service(item=name)
+        if "physical" in modes and " " not in name and not DISKSTAT_DISKLESS_PATTERN.match(name):
+            yield Service(item=name)
 
         if modes["lvm"] and name.startswith("LVM "):
             yield Service(item=name)
@@ -192,6 +188,7 @@ def summarize_disks(disks: Iterable[tuple[str, Disk]]) -> Disk:
 
 
 class MetricSpecs(TypedDict, total=False):
+    scale_by: float
     value_scale: float
     levels_key: str
     levels_scale: float
@@ -203,9 +200,7 @@ class MetricSpecs(TypedDict, total=False):
 _METRICS: tuple[tuple[str, MetricSpecs], ...] = (
     (
         "utilization",
-        {
-            "render_func": lambda x: render.percent(x * 100),
-        },
+        {"render_func": render.percent, "scale_by": 100.0},
     ),
     (
         "read_throughput",
@@ -401,12 +396,77 @@ def compute_rates(
 #       'read_ql'                    : 0.0,
 #       'write_ql'                   : 0.0,
 # }}
+def check_diskstat_dict_legacy(
+    *,
+    params: Mapping[str, Any],
+    disk: Disk,
+    value_store: MutableMapping,
+    this_time: float,
+) -> CheckResult:
+    """Deprecated check_diskstat_dict function with adjusted behaviour
+
+    tldr: Use the new function 'check_diskstat_dict' for new check plugin implementations. Only
+    check plugins which relied on the old (previously faulty) behaviour should use this function.
+
+    The original check_diskstat_dict function was not working as expected and was used by multiple
+    check plugins. The problem was that the value for 'disk_utilization' was scaled by 100.0 only
+    by the render_func and not for the associating metric value.
+
+    There are different approaches to resolve this issue (scale both values by 100.0). Each
+    approach must take into account for existing metric data (which at this point is already
+    faulty):
+        1. Make a metric translation with ScaleBy without touching the 'render_func'
+        2. Make a metric translation with Rename and ScaleBy therefore having to introduce a new
+        metric name for 'disk_utilization'
+
+    While the second approach was considered to be more correct, 'disk_utilization' is quite a
+    central metric name used by at least perfometers, graphs and dashboards. Changing the metric
+    name increases the chance to break other parts. Therefore, the first approach was chosen with
+    the addition that the existing 'faulty' check plugins use this function and new implementations
+    should make use of the correctly behaving function 'check_diskstat_dict'. No new check plugins
+    should use this function.
+
+    A list of the affected check plugins can be found by inspecting the translation with the name
+    'disk_utilization_check_diskstat_dict'
+
+    """
+    # we keep the old behaviour for the utilization metric and scale the metric values via the
+    # metric translation (translation_disk_utilization_check_diskstat_dict)
+    deprecated_utilization_metric: MetricSpecs = {
+        "render_func": lambda x: render.percent(x * 100.0),
+    }
+    metrics = tuple(
+        i if i[0] != "utilization" else ("utilization", deprecated_utilization_metric)
+        for i in _METRICS
+    )
+    yield from _check_diskstat_dict(
+        params=params,
+        disk=disk,
+        value_store=value_store,
+        this_time=this_time,
+        metrics=metrics,
+    )
+
+
 def check_diskstat_dict(
     *,
     params: Mapping[str, Any],
     disk: Disk,
     value_store: MutableMapping,
     this_time: float,
+) -> CheckResult:
+    return _check_diskstat_dict(
+        params=params, disk=disk, value_store=value_store, this_time=this_time, metrics=_METRICS
+    )
+
+
+def _check_diskstat_dict(
+    *,
+    params: Mapping[str, Any],
+    disk: Disk,
+    value_store: MutableMapping,
+    this_time: float,
+    metrics: Iterable[tuple[str, MetricSpecs]] = _METRICS,
 ) -> CheckResult:
     if not disk:
         return
@@ -415,9 +475,10 @@ def check_diskstat_dict(
     if averaging:
         disk = yield from _get_averaged_disk(averaging, disk, value_store, this_time)
 
-    for key, specs in _METRICS:
+    for key, specs in metrics:
         metric_val = disk.get(key)
         if metric_val is not None:
+            metric_val = metric_val * specs.get("scale_by", 1.0)
             levels = params.get(key)
             metric_name = "disk_" + key
             render_func = specs.get("render_func")
@@ -449,7 +510,7 @@ def check_diskstat_dict(
     # of their amount. They are present as performance data and will shown in graphs.
 
     # Send everything as performance data now. Sort keys alphabetically
-    for key in sorted(set(disk) - {m for m, _ in _METRICS}):
+    for key in sorted(set(disk) - {m for m, _ in metrics}):
         value = disk[key]
         if isinstance(value, (int, float)):
             # Currently the levels are not shown in the perfdata

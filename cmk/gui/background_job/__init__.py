@@ -4,10 +4,26 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._base import BackgroundJob as BackgroundJob
-from ._base import BackgroundJobAlreadyRunning as BackgroundJobAlreadyRunning
 from ._defines import BackgroundJobDefines as BackgroundJobDefines
+from ._executor import AlreadyRunningError as AlreadyRunningError
+from ._executor import JobExecutor as JobExecutor
+from ._executor import StartupError as StartupError
+from ._executor import ThreadedJobExecutor as ThreadedJobExecutor
 from ._interface import BackgroundProcessInterface as BackgroundProcessInterface
+from ._interface import JobTarget as JobTarget
+from ._interface import NoArgs as NoArgs
+from ._interface import simple_job_target as simple_job_target
+from ._interface import SpanContextModel as SpanContextModel
 from ._manager import BackgroundJobManager as BackgroundJobManager
+from ._models import BackgroundJobsHealth as BackgroundJobsHealth
+from ._models import HealthResponse as HealthResponse
+from ._models import IsAliveRequest as IsAliveRequest
+from ._models import IsAliveResponse as IsAliveResponse
+from ._models import ProcessHealth as ProcessHealth
+from ._models import ScheduledJobsHealth as ScheduledJobsHealth
+from ._models import StartRequest as StartRequest
+from ._models import StartResponse as StartResponse
+from ._models import TerminateRequest as TerminateRequest
 from ._registry import BackgroundJobRegistry as BackgroundJobRegistry
 from ._registry import job_registry as job_registry
 from ._status import BackgroundStatusSnapshot as BackgroundStatusSnapshot

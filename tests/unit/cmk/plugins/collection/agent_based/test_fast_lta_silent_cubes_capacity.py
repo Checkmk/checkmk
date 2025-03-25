@@ -18,8 +18,8 @@ check_name = "fast_lta_silent_cubes_capacity"
 
 # TODO: drop this after migration
 @pytest.fixture(scope="module", name="plugin")
-def _get_plugin(fix_register):
-    return fix_register.check_plugins[CheckPluginName(check_name)]
+def _get_plugin(agent_based_plugins):
+    return agent_based_plugins.check_plugins[CheckPluginName(check_name)]
 
 
 # TODO: drop this after migration

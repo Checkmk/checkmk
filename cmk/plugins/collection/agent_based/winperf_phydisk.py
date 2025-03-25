@@ -542,16 +542,6 @@ def _update_value_and_calc_rate(metric: str, compute_specs: _ComputeSpec, value:
     )
 
 
-def _with_average_in_seconds(params: Mapping[str, Any]) -> Mapping[str, Any]:
-    key_avg = "average"
-    if key_avg in params:
-        params = {
-            **params,
-            key_avg: params[key_avg] * 60,
-        }
-    return params
-
-
 def check_winperf_phydisk(
     item: str,
     params: Mapping[str, Any],
@@ -577,8 +567,8 @@ def check_winperf_phydisk(
         except KeyError:
             return
 
-    yield from diskstat.check_diskstat_dict(
-        params=_with_average_in_seconds(params),
+    yield from diskstat.check_diskstat_dict_legacy(
+        params=params,
         disk=disk_with_rates,
         value_store=value_store,
         this_time=time.time(),

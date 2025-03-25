@@ -10,10 +10,10 @@
 # BBSA-WIFI-LSN-Hald-F2-1|24|Cleared|True|57 Days, 3 Hrs 24 Mins 22 Secs
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render, StringTable
+
+check_info = {}
 
 TOKEN_MULTIPLIER = (1, 60, 3600, 86400, 31536000)
 
@@ -24,7 +24,7 @@ def inventory_hivemanager_devices(info):
         yield infos["hostName"], {}
 
 
-def check_hivemanager_devices(item, params, info):  # pylint: disable=too-many-branches
+def check_hivemanager_devices(item, params, info):
     for line in info:
         infos = dict([x.split("::") for x in line])
         if infos["hostName"] == item:
@@ -80,8 +80,15 @@ def check_hivemanager_devices(item, params, info):  # pylint: disable=too-many-b
                 "location",
                 "networkPolicy",
             ]
-            yield 0, ", ".join(
-                [f"{x}: {y}" for x, y in infos.items() if x in additional_informations and y != "-"]
+            yield (
+                0,
+                ", ".join(
+                    [
+                        f"{x}: {y}"
+                        for x, y in infos.items()
+                        if x in additional_informations and y != "-"
+                    ]
+                ),
             )
 
 
@@ -90,6 +97,7 @@ def parse_hivemanager_devices(string_table: StringTable) -> StringTable:
 
 
 check_info["hivemanager_devices"] = LegacyCheckDefinition(
+    name="hivemanager_devices",
     parse_function=parse_hivemanager_devices,
     service_name="Client %s",
     discovery_function=inventory_hivemanager_devices,

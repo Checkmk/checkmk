@@ -17,14 +17,20 @@ import re
 from collections.abc import Callable, Container, Iterable, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from re import Pattern
-from typing import Any, Literal, NamedTuple, NotRequired, TypedDict
+from typing import Any, Literal, NamedTuple, Never, NotRequired, TypedDict
 
 from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
+
+from cmk.checkengine.checking import CheckPluginName  # pylint: disable=cmk-module-layer-violation
 
 # from cmk.base.config import logwatch_rule will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
 
-from cmk.agent_based.v2 import CheckResult, Result, State
+from cmk.agent_based.v2 import CheckPlugin, CheckResult, Result, State
+
+# Watch out! Matching the 'logwatch_rules' ruleset against labels will not
+# work as expected, if logfiles are grouped!
+NEVER_DISCOVER_SERVICE_LABELS: Sequence[Never] = ()
 
 
 class ItemData(TypedDict):
@@ -141,18 +147,53 @@ class RulesetAccess:
 
     # This is only wishful typing -- but lets assume this is what we get.
     @staticmethod
-    def logwatch_rules_all(host_name: str, item: str) -> Sequence[ParameterLogwatchRules]:
-        return cmk.base.config.get_config_cache().ruleset_matcher.service_extra_conf(
-            HostName(host_name), item, cmk.base.config.logwatch_rules  # type: ignore[arg-type]
+    def logwatch_rules_all(
+        *, host_name: str, plugin: CheckPlugin, logfile: str
+    ) -> Sequence[ParameterLogwatchRules]:
+        host_name = HostName(host_name)
+        cc = cmk.base.config.access_globally_cached_config_cache()
+        # We're using the logfile to match the ruleset, not necessarily the "item"
+        # (which might be the group). However: the ruleset matcher expects this to be the item.
+        # As a result, the following will all fail (hidden in `service_extra_conf`):
+        #
+        # Fail #1: Look up the discovered labels
+        # Mitigate this by never discovering any labels.
+        discovered_labels: Mapping[str, str] = dict(NEVER_DISCOVER_SERVICE_LABELS)
+
+        # Fail #2: Compute the correct service description
+        # This will be wrong if the logfile is grouped.
+        service_description = cmk.base.config.service_description(
+            cc.ruleset_matcher,
+            cc.label_manager.labels_of_host,
+            host_name,
+            CheckPluginName(plugin.name),
+            service_name_template=plugin.service_name,
+            item=logfile,
+        )
+
+        # Fail #3: Retrieve the configured labels for this service.
+        # This might be wrong as a result of #2.
+        service_labels = cc.label_manager.labels_of_service(
+            host_name, service_description, discovered_labels
+        )
+        # => Matching this rule agains service labels will most likely fail.
+        return cc.ruleset_matcher.get_checkgroup_ruleset_values(
+            host_name,
+            logfile,
+            service_labels,
+            cmk.base.config.logwatch_rules,  # type: ignore[arg-type]
+            cc.label_manager.labels_of_host,
         )
 
     # This is only wishful typing -- but lets assume this is what we get.
     @staticmethod
     def logwatch_ec_all(host_name: str) -> Sequence[ParameterLogwatchEc]:
         """Isolate the remaining API violation w.r.t. parameters"""
-        return cmk.base.config.get_config_cache().ruleset_matcher.get_host_values(
+        cc = cmk.base.config.access_globally_cached_config_cache()
+        return cc.ruleset_matcher.get_host_values(
             HostName(host_name),
             cmk.base.config.checkgroup_parameters.get("logwatch_ec", []),  # type: ignore[arg-type]
+            cc.label_manager.labels_of_host,
         )
 
 

@@ -7,7 +7,7 @@ import json
 import time
 from collections.abc import Mapping, Sequence
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import CheckResult, render, Result, State, StringTable
 
 MerakiAPIData = Mapping[str, object]
@@ -32,7 +32,7 @@ def check_last_reported_ts(
         )
         return
 
-    yield from check_levels(
+    yield from check_levels_v1(
         value=age,
         label="Time since last report",
         metric_name="last_reported" if as_metric else None,

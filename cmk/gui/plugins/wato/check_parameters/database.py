@@ -37,38 +37,6 @@ rulespec_registry.register(
 )
 
 
-def _parameter_valuespec_connections():
-    return Dictionary(
-        title=_("Levels connections"),
-        elements=[
-            (
-                "active_connections_lower",
-                SimpleLevels(Integer, title=_("Lower levels for active connections")),
-            ),
-            (
-                "active_connections",
-                SimpleLevels(Integer, title=_("Upper levels for active connections")),
-            ),
-            (
-                "failed_connections",
-                SimpleLevels(Integer, title=_("Failed connections")),
-            ),
-        ],
-        required_keys=[],
-    )
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="database_connections",
-        item_spec=lambda: TextInput(title=_("Database connections")),
-        group=RulespecGroupCheckParametersApplications,
-        parameter_valuespec=_parameter_valuespec_connections,
-        title=lambda: _("Database connections"),
-    )
-)
-
-
 def _parameter_valuespec_network():
     return Dictionary(
         title=_("Levels network"),

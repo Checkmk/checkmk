@@ -5,6 +5,7 @@
 """
 Library with container registry focussed functionality
 """
+
 import sys
 from collections.abc import Callable, Iterator, Sequence
 from contextlib import suppress
@@ -15,13 +16,15 @@ from pathlib import Path
 from typing import NamedTuple, Self, TypeAlias
 from urllib.parse import urlparse
 
-import docker  # type: ignore
+import docker  # type: ignore[import-untyped]
 import requests
 
-from cmk.utils.version import BuildDate, ReleaseType, Version
+from cmk.ccc.version import BuildDate, ReleaseType, Version
 
 sys.path.insert(0, Path(__file__).parent.parent.parent.parent.as_posix())
-from tests.testlib.utils import get_cmk_download_credentials as _get_cmk_download_credentials
+from tests.testlib.common.utils import (
+    get_cmk_download_credentials as _get_cmk_download_credentials,
+)
 
 # FQIN -> Fully Qualified Image Name
 # The format is: registryhost[:port]/repository/imagename[:tag]
@@ -194,7 +197,7 @@ class Registry:
             return False
         return self.image_can_be_pulled_enterprise(image, edition)
 
-    def image_exists_enterprise(self, image: DockerImage, edition: str) -> bool:
+    def image_exists_enterprise(self, image: DockerImage, _edition: str) -> bool:
         url = f"{self.url}/v2/{image.image_name}/tags/list"
         sys.stdout.write(f"Test if {image.tag} can be found in {url}...")
         exists = (
@@ -332,7 +335,7 @@ class Registry:
         self.client = docker.client.from_env()
         self.credentials = get_credentials()
         match self.editions:
-            case ["enterprise", "managed"]:
+            case ["enterprise"]:
                 self.url = "https://registry.checkmk.com"
                 # Asking why we're also pulling? -> CMK-14567
                 self.image_exists = self.image_exists_and_can_be_pulled_enterprise
@@ -342,7 +345,7 @@ class Registry:
                     username=self.credentials.username,
                     password=self.credentials.password,
                 )
-            case ["raw", "cloud"]:
+            case ["raw", "cloud", "managed"]:
                 self.url = "https://hub.docker.com/"
                 self.image_exists = self.image_exists_docker_hub
                 self.get_image_tags = self._get_image_tags_docker_hub
@@ -368,10 +371,10 @@ def get_credentials() -> Credentials:
 def get_default_registries() -> list[Registry]:
     return [
         Registry(
-            editions=["enterprise", "managed"],
+            editions=["enterprise"],
         ),
         Registry(
-            editions=["raw", "cloud"],
+            editions=["raw", "cloud", "managed"],
         ),
         Registry(
             editions=["saas"],

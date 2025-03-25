@@ -9,7 +9,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -42,7 +42,13 @@ def parse_volume(string_table: StringTable) -> Mapping[str, Volume] | None:
     if not (volumes := json_data.get("items")):
         return None
 
-    return {item["name"]: Volume.model_validate(item["space"]) for item in volumes}
+    return {
+        item["name"]: Volume.model_validate(item["space"])
+        for item in volumes
+        # don't discover protocol_endpoint entries since those don't carry
+        # any volume relevant values resulting in avoidable problems
+        if item["subtype"] != "protocol_endpoint"
+    }
 
 
 agent_section_pure_storage_fa_volumes = AgentSection(
@@ -73,7 +79,7 @@ def check_volume_capacity(
         params,
     )
 
-    yield from check_levels(
+    yield from check_levels_v1(
         volume.data_reduction,
         metric_name="data_reduction",
         levels_lower=params.get("data_reduction"),

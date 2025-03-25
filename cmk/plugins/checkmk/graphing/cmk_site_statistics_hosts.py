@@ -9,13 +9,13 @@ UNIT_NUMBER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(
 
 metric_cmk_hosts_up = metrics.Metric(
     name="cmk_hosts_up",
-    title=Title("UP hosts"),
+    title=Title("Up hosts"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_CYAN,
 )
 metric_cmk_hosts_down = metrics.Metric(
     name="cmk_hosts_down",
-    title=Title("DOWN hosts"),
+    title=Title("Down hosts"),
     unit=UNIT_NUMBER,
     color=metrics.Color.RED,
 )

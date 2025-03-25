@@ -9,12 +9,8 @@ from datetime import datetime
 
 import pytest
 
+import cmk.plugins.proxmox_ve.agent_based.proxmox_ve_backup_status as pvbs
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State
-from cmk.plugins.proxmox_ve.agent_based.proxmox_ve_backup_status import (
-    check_proxmox_ve_vm_backup_status,
-    parse_proxmox_ve_vm_backup_status,
-    Section,
-)
 
 FROZEN_TIME = datetime.strptime("2020-04-17 17:00:00+0000", "%Y-%m-%d %H:%M:%S%z")
 
@@ -104,17 +100,17 @@ def set_null_values(backup_data):
     (
         (
             {},
-            parse_proxmox_ve_vm_backup_status(NO_BACKUP_DATA),
+            pvbs.parse_proxmox_ve_vm_backup_status(NO_BACKUP_DATA),
             (Result(state=State.OK, summary="No backup found and none needed"),),
         ),
         (
             {"age_levels_upper": (43200, 86400)},
-            parse_proxmox_ve_vm_backup_status(NO_BACKUP_DATA),
+            pvbs.parse_proxmox_ve_vm_backup_status(NO_BACKUP_DATA),
             (Result(state=State.CRIT, summary="No backup found"),),
         ),
         (
             {},
-            parse_proxmox_ve_vm_backup_status(BACKUP_DATA1),
+            pvbs.parse_proxmox_ve_vm_backup_status(BACKUP_DATA1),
             (
                 Result(state=State.OK, summary="Age: 18 hours 39 minutes"),
                 Metric("age", 67157.0, boundaries=(0.0, None)),
@@ -131,7 +127,7 @@ def set_null_values(backup_data):
         ),
         (
             {"age_levels_upper": (43200, 86400)},
-            parse_proxmox_ve_vm_backup_status(BACKUP_DATA1),
+            pvbs.parse_proxmox_ve_vm_backup_status(BACKUP_DATA1),
             (
                 Result(
                     state=State.WARN,
@@ -151,7 +147,7 @@ def set_null_values(backup_data):
         ),
         (
             {},
-            parse_proxmox_ve_vm_backup_status(BACKUP_DATA2),
+            pvbs.parse_proxmox_ve_vm_backup_status(BACKUP_DATA2),
             (
                 Result(state=State.OK, summary="Age: 18 hours 39 minutes"),
                 Metric("age", 67157.0, boundaries=(0.0, None)),
@@ -168,7 +164,7 @@ def set_null_values(backup_data):
         ),
         (
             {},
-            parse_proxmox_ve_vm_backup_status(BACKUP_DATA3),
+            pvbs.parse_proxmox_ve_vm_backup_status(BACKUP_DATA3),
             (
                 Result(state=State.OK, summary="Age: 18 hours 39 minutes"),
                 Metric("age", 67157.0, boundaries=(0.0, None)),
@@ -184,7 +180,7 @@ def set_null_values(backup_data):
         ),
         (
             {},
-            parse_proxmox_ve_vm_backup_status(BACKUP_DATA4),
+            pvbs.parse_proxmox_ve_vm_backup_status(BACKUP_DATA4),
             (
                 Result(state=State.OK, summary="Age: 18 hours 39 minutes"),
                 Metric("age", 67157.0, boundaries=(0.0, None)),
@@ -201,7 +197,7 @@ def set_null_values(backup_data):
         ),
         (
             {},
-            set_null_values(parse_proxmox_ve_vm_backup_status(BACKUP_DATA1)),
+            set_null_values(pvbs.parse_proxmox_ve_vm_backup_status(BACKUP_DATA1)),
             (
                 Result(state=State.OK, summary="Age: 18 hours 39 minutes"),
                 Metric("age", 67157.0, boundaries=(0.0, None)),
@@ -216,7 +212,7 @@ def set_null_values(backup_data):
         ),
         (
             {},
-            set_null_values(parse_proxmox_ve_vm_backup_status(BACKUP_DATA2)),
+            set_null_values(pvbs.parse_proxmox_ve_vm_backup_status(BACKUP_DATA2)),
             (
                 Result(state=State.OK, summary="Age: 18 hours 39 minutes"),
                 Metric("age", 67157.0, boundaries=(0.0, None)),
@@ -230,7 +226,7 @@ def set_null_values(backup_data):
         ),
         (
             {},
-            set_null_values(parse_proxmox_ve_vm_backup_status(BACKUP_DATA3)),
+            set_null_values(pvbs.parse_proxmox_ve_vm_backup_status(BACKUP_DATA3)),
             (
                 Result(state=State.OK, summary="Age: 18 hours 39 minutes"),
                 Metric("age", 67157.0, boundaries=(0.0, None)),
@@ -247,24 +243,14 @@ def set_null_values(backup_data):
     ),
 )
 def test_check_proxmox_ve_vm_backup_status(
-    params: Mapping[str, object], section: Section, expected_results: CheckResult
+    params: Mapping[str, object], section: pvbs.Section, expected_results: CheckResult
 ) -> None:
-    results = tuple(check_proxmox_ve_vm_backup_status(FROZEN_TIME, params, section))
-    print("\n" + ",\n".join(map(str, results)))
+    results = tuple(pvbs.check_proxmox_ve_vm_backup_status(FROZEN_TIME, params, section))
     assert results == expected_results
 
 
 if __name__ == "__main__":
     # Please keep these lines - they make TDD easy and have no effect on normal test runs.
     # Just run this file from your IDE and dive into the code.
-    import os
-
-    from tests.testlib.repo import repo_path
-
-    assert not pytest.main(
-        [
-            "--doctest-modules",
-            os.path.join(repo_path(), "cmk/base/plugins/agent_based/proxmox_ve_backup_status.py"),
-        ]
-    )
+    assert not pytest.main(["--doctest-modules", pvbs.__file__])
     pytest.main(["-T=unit", "-vvsx", __file__])

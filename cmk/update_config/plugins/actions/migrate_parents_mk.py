@@ -6,11 +6,14 @@
 import pprint
 import re
 from ast import literal_eval
+from collections.abc import Iterator
 from logging import Logger
 from pathlib import Path
-from typing import Iterator, NamedTuple
+from typing import NamedTuple, override
 
 from livestatus import SiteId
+
+from cmk.ccc.site import omd_site
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -21,7 +24,6 @@ from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 
-from cmk.ccc.site import omd_site
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
@@ -36,6 +38,7 @@ class MigrateParentsMK(UpdateAction):
         r"(?:all_hosts \+= (.*)$)|(?:ipaddresses\.update\((.*?)\))|(?:parents \+= (.*?)$)"
     )
 
+    @override
     def __call__(self, logger: Logger) -> None:
         results: dict[Path, ParentsMKResult] = {}
         for path in Path(cmk.utils.paths.check_mk_config_dir).glob("*.mk"):

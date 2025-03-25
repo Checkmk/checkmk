@@ -3,12 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.alcatel import DETECT_ALCATEL
+
+check_info = {}
 
 
 def parse_alcatel_temp(string_table: StringTable) -> StringTable:
@@ -44,6 +45,7 @@ def check_alcatel_temp(item, params, info):
 
 
 check_info["alcatel_temp"] = LegacyCheckDefinition(
+    name="alcatel_temp",
     parse_function=parse_alcatel_temp,
     detect=DETECT_ALCATEL,
     fetch=SNMPTree(

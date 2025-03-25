@@ -5,7 +5,7 @@
 
 # Custom command for creating support tickets
 
-# pylint: disable=all
+
 # noqa
 
 config.declare_permission(

@@ -3,6 +3,6 @@
   "include": ["env.d.ts", "src/**/*", "tests/**/*.ts", "tests/**/*.vue"],
   "exclude": [],
   "compilerOptions": {
-    "types": ["node", "vitest/globals"]
+    "types": ["node", "vitest/globals", "@testing-library/jest-dom"]
   }
 }

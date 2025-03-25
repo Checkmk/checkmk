@@ -33,11 +33,15 @@ from typing import Generic, Literal, Self, TypeVar
 
 from pydantic import BaseModel as PydanticBaseModel
 
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.version import Edition, edition
+
 import cmk.utils.paths
 from cmk.utils.user import UserId
 
 import cmk.gui.pages
-from cmk.gui import sites, userdb, weblib
+from cmk.gui import sites, userdb
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadcrumb
 from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.default_name import unique_default_name_suggestion
@@ -47,10 +51,10 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l, _u
 from cmk.gui.logged_in import LoggedInUser, save_user_file, user
-from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.main_menu import mega_menu_registry, MegaMenuRegistry
 from cmk.gui.page_menu import (
     doc_reference_to_page_menu,
     make_confirmed_form_submit_link,
@@ -88,6 +92,7 @@ from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.roles import is_user_with_publish_permissions, user_may
+from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
@@ -108,10 +113,6 @@ from cmk.gui.valuespec import (
     TextInput,
     ValueSpec,
 )
-
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.version import edition, Edition
 
 SubPagesSpec = list[tuple[str, str, str]]
 PagetypePhrase = Literal["title", "title_plural", "add_to", "clone", "create", "edit", "new"]
@@ -137,14 +138,14 @@ class BaseConfig:
 
 class OverridableModel(BaseModel):
     owner: UserId
-    public: bool | tuple[Literal["contact_groups"], Sequence[str]] | None
+    public: bool | tuple[Literal["contact_groups", "sites"], Sequence[str]] | None
     hidden: bool = False  # TODO: Seems it is not configurable through the UI. Is it OK?
 
 
 @dataclass(kw_only=True)
 class OverridableConfig(BaseConfig):
     owner: UserId
-    public: bool | tuple[Literal["contact_groups"], Sequence[str]] | None
+    public: bool | tuple[Literal["contact_groups", "sites"], Sequence[str]] | None
     hidden: bool = False  # TODO: Seems it is not configurable through the UI. Is it OK?
 
 
@@ -188,6 +189,19 @@ class PagetypeTopicConfig(OverridableConfig):
     sort_index: int
     max_entries: int = 10
     hide: bool = False  # TODO: Seems it is not configurable through the UI. Is it OK?
+
+
+def register(mega_menu_registry_: MegaMenuRegistry) -> None:
+    mega_menu_registry_.register(
+        MegaMenu(
+            name="customize",
+            title=_l("Customize"),
+            icon="main_customize",
+            sort_index=10,
+            topics=_customize_menu_topics,
+            hide=hide_customize_menu,
+        )
+    )
 
 
 #   .--Base----------------------------------------------------------------.
@@ -1029,7 +1043,7 @@ class ListPage(Page, Generic[_T]):
                 if what != "builtin":
                     with html.form_context("bulk_delete", method="POST"):
                         self._show_table(instances, scope_instances, deletable=True)
-                        html.hidden_field("selection_id", weblib.selection_id())
+                        html.hidden_field("selection_id", SelectionId.from_request(request))
                         html.hidden_fields()
                         init_rowselect(self._type.type_name())
                 else:
@@ -1156,7 +1170,7 @@ class EditPage(Page, Generic[_T_OverridableConfig, _T]):
     def __init__(self, pagetype: type[_T]) -> None:
         self._type = pagetype
 
-    def page(self) -> None:  # pylint: disable=too-many-branches
+    def page(self) -> None:
         """Page for editing an existing page, or creating a new one"""
         back_url = request.get_url_input("back", self._type.list_url())
 
@@ -1674,8 +1688,9 @@ class OverridableContainer(Overridable[_T_OverridableContainerConfig]):
         if target_page:
             if not isinstance(target_page, str):
                 target_page = target_page.page_url()
-            html.write_text_permissive(target_page)
-        html.write_text_permissive("\n%s" % ("true" if need_sidebar_reload else "false"))
+
+        response.set_content_type("text/plain")
+        response.set_data(f"{target_page or ''}\n{'true' if need_sidebar_reload else 'false'}")
 
     # Default implementation for generic containers - used e.g. by GraphCollection
     @classmethod
@@ -2235,7 +2250,11 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
         """Returns either the requested topic or fallback to "other"."""
         instances = PagetypeTopics.load()
         other_page = instances.find_page("other")
-        assert other_page is not None
+        if not other_page:
+            raise MKUserError(
+                None,
+                _("No permission for fallback topic 'Other'. Please contact your administrator."),
+            )
         return instances.find_page(topic_id) or other_page
 
 
@@ -2377,17 +2396,6 @@ def hide_customize_menu() -> bool:
 
     return not any(user.may(perm) for perm in permissions)
 
-
-mega_menu_registry.register(
-    MegaMenu(
-        name="customize",
-        title=_l("Customize"),
-        icon="main_customize",
-        sort_index=10,
-        topics=_customize_menu_topics,
-        hide=hide_customize_menu,
-    )
-)
 
 #   .--Permissions---------------------------------------------------------.
 #   |        ____                     _         _                          |

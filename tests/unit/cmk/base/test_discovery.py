@@ -3,24 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
 
-import functools
 import logging
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import NamedTuple
 
 import pytest
 from pytest import MonkeyPatch
 
-from tests.testlib.base import Scenario
+from tests.testlib.unit.base_configuration_scenario import Scenario
+
+from cmk.ccc.exceptions import OnError
 
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.rulesets import RuleSetName
-from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib import SNMPRawData
@@ -45,20 +44,18 @@ from cmk.checkengine.discovery import (
     find_plugins,
     QualifiedDiscovery,
 )
-from cmk.checkengine.discovery._autochecks import DiscoveredService
+from cmk.checkengine.discovery._active_check import _check_host_labels, _check_service_lists
 from cmk.checkengine.discovery._autodiscovery import (
-    _get_cluster_services,
     _get_post_discovery_autocheck_services,
     _group_by_transition,
     _make_diff,
+    discovery_by_host,
     make_table,
     ServicesByTransition,
     ServicesTable,
     ServicesTableEntry,
 )
 from cmk.checkengine.discovery._filters import RediscoveryParameters, ServiceFilters
-from cmk.checkengine.discovery._impl import _check_host_labels, _check_service_lists
-from cmk.checkengine.discovery._services import _find_host_plugins, _find_mgmt_plugins
 from cmk.checkengine.discovery._utils import DiscoveredItem
 from cmk.checkengine.fetcher import HostKey, SourceType
 from cmk.checkengine.parser import AgentRawDataSection, HostSections, NO_SELECTION
@@ -70,9 +67,8 @@ from cmk.checkengine.sectionparser import (
     SectionsParser,
 )
 
-import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config
-from cmk.base.api.agent_based.plugin_classes import SectionPlugin as SectionPluginAPI
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.checkers import (
     CMKFetcher,
     CMKParser,
@@ -82,14 +78,21 @@ from cmk.base.checkers import (
 )
 from cmk.base.config import ConfigCache
 
-from cmk.ccc.exceptions import OnError
+from cmk.agent_based.v2 import AgentSection, SimpleSNMPSection
+from cmk.plugins.collection.agent_based.df_section import agent_section_df
+from cmk.plugins.collection.agent_based.kernel import agent_section_kernel
+from cmk.plugins.collection.agent_based.labels import agent_section_labels
+from cmk.plugins.collection.agent_based.uptime import agent_section_uptime
+from cmk.plugins.liebert.agent_based.liebert_fans import snmp_section_liebert_fans
 
 
-def _as_plugin(plugin: SectionPluginAPI) -> SectionPlugin:
+def _as_plugin(plugin: AgentSection | SimpleSNMPSection) -> SectionPlugin:
     return SectionPlugin(
-        supersedes=plugin.supersedes,
+        supersedes=set()
+        if plugin.supersedes is None
+        else {SectionName(n) for n in plugin.supersedes},
         parse_function=plugin.parse_function,
-        parsed_section_name=plugin.parsed_section_name,
+        parsed_section_name=ParsedSectionName(plugin.parsed_section_name or plugin.name),
     )
 
 
@@ -591,13 +594,13 @@ def test__get_post_discovery_services(
     service_filters = ServiceFilters.from_settings(parameters_rediscovery)
 
     new_item_names = [
-        DiscoveredService.item(entry.service) or ""
+        entry.service.newer.item or ""
         for entry in _get_post_discovery_autocheck_services(
             HostName("hostname"),
             grouped_services,
             service_filters,
             result,
-            get_service_description=lambda *args: f"Test Description {args[-1]}",
+            get_service_description=lambda hn, entry: f"Test Description {entry.item}",
             settings=DiscoverySettings.from_vs(mode),
             keep_clustered_vanished_services=True,
         ).values()
@@ -1012,41 +1015,41 @@ def test__check_service_table(
         services_by_transition=grouped_services,
         params=parameters,
         service_filters=ServiceFilters.from_settings(rediscovery_parameters),
-        find_service_description=lambda *args: f"Test Description {args[-1]}",
+        get_service_description=lambda hn, entry: f"Test Description {entry.item}",
         discovery_mode=discovery_mode,
     )
 
     assert results == [
         ActiveCheckResult(
-            0,
-            "",
-            [
+            state=0,
+            summary="",
+            details=[
                 "Service unmonitored: check_plugin_name: Test Description New Item 1",
             ],
         ),
         ActiveCheckResult(
-            0,
-            "",
-            [
+            state=0,
+            summary="",
+            details=[
                 "Service unmonitored: check_plugin_name: Test Description New Item 2",
             ],
         ),
-        ActiveCheckResult(1, "Services unmonitored: 2 (check_plugin_name: 2)"),
+        ActiveCheckResult(state=1, summary="Services unmonitored: 2 (check_plugin_name: 2)"),
         ActiveCheckResult(
-            0,
-            "",
-            [
+            state=0,
+            summary="",
+            details=[
                 "Service vanished: check_plugin_name: Test Description Vanished Item 1",
             ],
         ),
         ActiveCheckResult(
-            0,
-            "",
-            [
+            state=0,
+            summary="",
+            details=[
                 "Service vanished: check_plugin_name: Test Description Vanished Item 2",
             ],
         ),
-        ActiveCheckResult(0, "Services vanished: 2 (check_plugin_name: 2)"),
+        ActiveCheckResult(state=0, summary="Services vanished: 2 (check_plugin_name: 2)"),
     ]
     assert need_rediscovery == result_need_rediscovery
 
@@ -1073,7 +1076,7 @@ def test__check_host_labels_up_to_date() -> None:
             update_changed_service_labels=False,
             update_changed_service_parameters=False,
         ),
-    ) == ([ActiveCheckResult(0, "Host labels: all up to date")], False)
+    ) == ([ActiveCheckResult(state=0, summary="Host labels: all up to date")], False)
 
 
 def test__check_host_labels_changed() -> None:
@@ -1101,17 +1104,17 @@ def test__check_host_labels_changed() -> None:
     ) == (
         [
             ActiveCheckResult(
-                1,
-                "New host labels: 2 (my_section: 1, labels: 1)",
-                [
+                state=1,
+                summary="New host labels: 2 (my_section: 1, labels: 1)",
+                details=[
                     "New host label: my_section: that:yay-new-value",
                     "New host label: labels: yetanotherone:isnew",
                 ],
             ),
             ActiveCheckResult(
-                0,
-                "Vanished host labels: 2 (my_section: 2)",
-                [
+                state=0,
+                summary="Vanished host labels: 2 (my_section: 2)",
+                details=[
                     "Vanished host label: my_section: that:changes",
                     "Vanished host label: my_section: anotherone:vanishes",
                 ],
@@ -1121,13 +1124,12 @@ def test__check_host_labels_changed() -> None:
     )
 
 
-@pytest.mark.usefixtures("fix_register")
-def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
-    # This test doesn't test much:
-    #  1. It concentrates on implementation details and private functions.
-    #  2. Because it tests private functions, it also copy-pastes a lot of
-    #     production code!
-    config_cache = Scenario().apply(monkeypatch)
+def test__find_candidates(
+    monkeypatch: MonkeyPatch,
+    agent_based_plugins: AgentBasedPlugins,
+) -> None:
+    # plugins have been loaded by the fixture. Better: load the ones we need for this test
+    Scenario().apply(monkeypatch)
     providers = {
         # we just care about the keys here, content set to arbitrary values that can be parsed.
         # section names are chosen arbitrarily.
@@ -1144,8 +1146,8 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
                     error_handling=lambda *args, **kw: "error",
                 ),
                 section_plugins={
-                    section_name: _as_plugin(agent_based_register.get_section_plugin(section_name))
-                    for section_name in (SectionName("kernel"), SectionName("uptime"))
+                    SectionName("kernel"): _as_plugin(agent_section_kernel),
+                    SectionName("uptime"): _as_plugin(agent_section_uptime),
                 },
             )
         ),
@@ -1166,74 +1168,21 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
                     error_handling=lambda *args, **kw: "error",
                 ),
                 section_plugins={
-                    section_name: _as_plugin(agent_based_register.get_section_plugin(section_name))
-                    for section_name in (
-                        SectionName("uptime"),
-                        SectionName("liebert_fans"),
-                        SectionName("mgmt_snmp_info"),
-                    )
+                    SectionName("uptime"): _as_plugin(agent_section_uptime),
+                    SectionName("liebert_fans"): _as_plugin(snmp_section_liebert_fans),
+                    SectionName("mgmt_snmp_info"): SectionPlugin(
+                        supersedes=set(),
+                        parsed_section_name=ParsedSectionName("mgmt_snmp_info"),
+                        parse_function=lambda x: x,
+                    ),
                 },
             )
         ),
     }
 
-    preliminary_candidates = list(agent_based_register.iter_all_check_plugins())
-    parsed_sections_of_interest = {
-        parsed_section_name
-        for plugin in preliminary_candidates
-        for parsed_section_name in plugin.sections
-    }
-
-    def __iter(
-        section_names: Iterable[ParsedSectionName], providers: Mapping[HostKey, Provider]
-    ) -> Iterable[tuple[HostKey, ParsedSectionName]]:
-        for host_key, provider in providers.items():
-            # filter section names for sections that cannot be resolved
-            for section_name in (
-                section_name
-                for section_name in section_names
-                if provider.resolve(section_name) is not None
-            ):
-                yield host_key, section_name
-
-    resolved = tuple(__iter(parsed_sections_of_interest, providers))
-
-    assert _find_host_plugins(
-        ((p.name, p.sections) for p in preliminary_candidates),
-        frozenset(
-            section_name
-            for host_key, section_name in resolved
-            if host_key.source_type is SourceType.HOST
-        ),
-    ) == {
-        CheckPluginName("docker_container_status_uptime"),
-        CheckPluginName("kernel"),
-        CheckPluginName("kernel_performance"),
-        CheckPluginName("kernel_util"),
-        CheckPluginName("uptime"),
-    }
-
-    assert _find_mgmt_plugins(
-        ((p.name, p.sections) for p in preliminary_candidates),
-        frozenset(
-            section_name
-            for host_key, section_name in resolved
-            if host_key.source_type is SourceType.MANAGEMENT
-        ),
-    ) == {
-        CheckPluginName("mgmt_docker_container_status_uptime"),
-        CheckPluginName("mgmt_liebert_fans"),
-        CheckPluginName("mgmt_uptime"),
-    }
-
     assert find_plugins(
         providers,
-        [
-            (name, p.sections)
-            for name, p in DiscoveryPluginMapper(
-                ruleset_matcher=config_cache.ruleset_matcher
-            ).items()
-        ],
+        [(p.name, p.sections) for p in agent_based_plugins.check_plugins.values()],
     ) == {
         CheckPluginName("docker_container_status_uptime"),
         CheckPluginName("kernel"),
@@ -1306,7 +1255,7 @@ _expected_services: dict = {
     (CheckPluginName("omd_status"), "test2"): {},
     (CheckPluginName("omd_status"), "test3"): {},
     (CheckPluginName("omd_status"), "test_crawl"): {},
-    (CheckPluginName("postfix_mailq"), ""): {},
+    (CheckPluginName("postfix_mailq"), "default"): {},
     (CheckPluginName("postfix_mailq_status"), "postfix"): {},
     (CheckPluginName("tcp_conn_stats"), None): {},
     (CheckPluginName("uptime"), None): {},
@@ -1321,26 +1270,31 @@ _expected_host_labels = [
 ]
 
 
-@pytest.mark.usefixtures("patch_omd_site", "fix_register")
-def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
+@pytest.mark.usefixtures("patch_omd_site")
+def test_commandline_discovery(
+    monkeypatch: MonkeyPatch,
+    agent_based_plugins: AgentBasedPlugins,
+) -> None:
     testhost = HostName("test-host")
     ts = Scenario()
     ts.add_host(testhost, ipaddress=HostAddress("127.0.0.1"))
     ts.fake_standard_linux_agent_output(testhost)
     config_cache = ts.apply(monkeypatch)
+
+    # damn you logwatch!!
+    config._globally_cache_config_cache(config_cache)
+
     file_cache_options = FileCacheOptions()
     parser = CMKParser(
         config_cache.parser_factory(),
-        checking_sections=lambda hostname: config_cache.make_checking_sections(
-            hostname, selected_sections=NO_SELECTION
-        ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("tests"),
     )
     fetcher = CMKFetcher(
         config_cache,
-        config_cache.fetcher_factory(),
+        config_cache.fetcher_factory(config_cache.make_service_configurer({})),
+        agent_based_plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=config.ConfiguredIPLookup(
@@ -1353,15 +1307,24 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
         snmp_backend_override=None,
         password_store_file=Path("/pw/store"),
     )
+
     commandline_discovery(
         host_name=testhost,
         ruleset_matcher=config_cache.ruleset_matcher,
         parser=parser,
         fetcher=fetcher,
-        section_plugins=SectionPluginMapper(),
+        section_plugins=SectionPluginMapper(
+            {**agent_based_plugins.agent_sections, **agent_based_plugins.snmp_sections}
+        ),
         section_error_handling=lambda *args, **kw: "error",
-        host_label_plugins=HostLabelPluginMapper(ruleset_matcher=config_cache.ruleset_matcher),
-        plugins=DiscoveryPluginMapper(ruleset_matcher=config_cache.ruleset_matcher),
+        host_label_plugins=HostLabelPluginMapper(
+            config_getter=lambda hname, rname, type_: [] if type_ == "all" else {},
+            sections={**agent_based_plugins.agent_sections, **agent_based_plugins.snmp_sections},
+        ),
+        plugins=DiscoveryPluginMapper(
+            config_getter=lambda hname, rname, type_: [] if type_ == "all" else {},
+            check_plugins=agent_based_plugins.check_plugins,
+        ),
         run_plugin_names=EVERYTHING,
         ignore_plugin=lambda *args, **kw: False,
         arg_only_new=False,
@@ -1397,23 +1360,6 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
     ts.add_host(hostname, ipaddress=HostAddress("127.0.0.1"))
     config_cache = ts.apply(monkeypatch)
 
-    agent_based_register.set_discovery_ruleset(
-        RuleSetName("inventory_df_rules"),
-        list[RuleSpec[dict[str, list[str]]]](
-            [
-                {
-                    "id": "nobody-cares-about-the-id-in-this-test",
-                    "value": {
-                        "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
-                        "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
-                    },
-                    "condition": {
-                        "host_label_groups": [("and", [("and", "cmk/check_mk_server:yes")])]
-                    },
-                }
-            ]
-        ),
-    )
     DiscoveredHostLabelsStore(hostname).save(
         [
             HostLabel("existing_label", "bar", SectionName("foo")),
@@ -1458,8 +1404,8 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
                     error_handling=lambda *args, **kw: "error",
                 ),
                 section_plugins={
-                    section_name: _as_plugin(agent_based_register.get_section_plugin(section_name))
-                    for section_name in (SectionName("labels"), SectionName("df"))
+                    SectionName("labels"): _as_plugin(agent_section_labels),
+                    SectionName("df"): _as_plugin(agent_section_df),
                 },
             )
         )
@@ -1501,23 +1447,6 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
     )
     config_cache = ts.apply(monkeypatch)
 
-    agent_based_register.set_discovery_ruleset(
-        RuleSetName("inventory_df_rules"),
-        list[RuleSpec[dict[str, list[str]]]](
-            [
-                {
-                    "id": "nobody-cares-about-the-id-in-this-test",
-                    "value": {
-                        "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
-                        "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
-                    },
-                    "condition": {
-                        "host_label_groups": [("and", [("and", "cmk/check_mk_server:yes")])]
-                    },
-                }
-            ]
-        ),
-    )
     DiscoveredHostLabelsStore(node1_hostname).save(
         [HostLabel("node1_existing_label", "true", SectionName("node1_plugin"))]
     )
@@ -1559,8 +1488,8 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
                     error_handling=lambda *args, **kw: "error",
                 ),
                 section_plugins={
-                    section_name: _as_plugin(agent_based_register.get_section_plugin(section_name))
-                    for section_name in (SectionName("labels"), SectionName("df"))
+                    SectionName("labels"): _as_plugin(agent_section_labels),
+                    SectionName("df"): _as_plugin(agent_section_df),
                 },
             )
         ),
@@ -1600,8 +1529,8 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
                     error_handling=lambda *args, **kw: "error",
                 ),
                 section_plugins={
-                    section_name: _as_plugin(agent_based_register.get_section_plugin(section_name))
-                    for section_name in (SectionName("labels"), SectionName("df"))
+                    SectionName("labels"): _as_plugin(agent_section_labels),
+                    SectionName("df"): _as_plugin(agent_section_df),
                 },
             )
         ),
@@ -1638,7 +1567,6 @@ class DiscoveryTestCase(NamedTuple):
     on_cluster: ExpectedDiscoveryResultOnCluster
 
 
-@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
     "host_labels, expected_services",
     [
@@ -1656,6 +1584,7 @@ def test__discovery_considers_host_labels(
     host_labels: tuple[HostLabel],
     expected_services: set[ServiceID],
     realhost_scenario: RealHostScenario,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     # this takes the detour via ruleset matcher :-(
     DiscoveredHostLabelsStore(realhost_scenario.hostname).save(host_labels)
@@ -1666,7 +1595,28 @@ def test__discovery_considers_host_labels(
     providers = realhost_scenario.providers
 
     # arrange
-    plugins = DiscoveryPluginMapper(ruleset_matcher=config_cache.ruleset_matcher)
+    plugins = DiscoveryPluginMapper(
+        config_getter=config.DiscoveryConfigurer(
+            config_cache.ruleset_matcher,
+            config_cache.label_manager.labels_of_host,
+            rules={
+                RuleSetName("mssql_transactionlogs_discovery"): [],
+                RuleSetName("inventory_df_rules"): [
+                    {
+                        "id": "nobody-cares-about-the-id-in-this-test",
+                        "value": {
+                            "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
+                            "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
+                        },
+                        "condition": {
+                            "host_label_groups": [("and", [("and", "cmk/check_mk_server:yes")])]
+                        },
+                    }
+                ],
+            },
+        ),
+        check_plugins=agent_based_plugins.check_plugins,
+    )
     plugin_names = find_plugins(
         providers,
         [(plugin_name, plugin.sections) for plugin_name, plugin in plugins.items()],
@@ -1675,7 +1625,11 @@ def test__discovery_considers_host_labels(
     assert {
         entry.id()
         for entry in discover_services(
-            host_name, plugin_names, providers=providers, plugins=plugins, on_error=OnError.RAISE
+            host_name,
+            plugin_names,
+            providers=providers,
+            plugins=plugins,
+            on_error=OnError.RAISE,
         )
     } == expected_services
 
@@ -1704,7 +1658,11 @@ _discovery_test_cases = [
         ),
         on_cluster=ExpectedDiscoveryResultOnCluster(
             expected_vanished_host_labels=[
-                HostLabel("node1_existing_label", "true", plugin_name=SectionName("node1_plugin"))
+                HostLabel(
+                    "node1_existing_label",
+                    "true",
+                    plugin_name=SectionName("node1_plugin"),
+                )
             ],
             expected_old_host_labels=[],
             expected_new_host_labels=[
@@ -1801,10 +1759,11 @@ _discovery_test_cases = [
 ]
 
 
-@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize("discovery_test_case", _discovery_test_cases)
 def test__discover_host_labels_and_services_on_realhost(
-    realhost_scenario: RealHostScenario, discovery_test_case: DiscoveryTestCase
+    realhost_scenario: RealHostScenario,
+    discovery_test_case: DiscoveryTestCase,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     if discovery_test_case.only_host_labels:
         # check for consistency of the test case
@@ -1813,18 +1772,24 @@ def test__discover_host_labels_and_services_on_realhost(
 
     # unpack for readability
     host_name = realhost_scenario.hostname
-    config_cache = realhost_scenario.config_cache
     providers = realhost_scenario.providers
 
     # arrange
-    plugins = DiscoveryPluginMapper(ruleset_matcher=config_cache.ruleset_matcher)
+    plugins = DiscoveryPluginMapper(
+        config_getter=lambda hname, rname, type_: [] if type_ == "all" else {},
+        check_plugins=agent_based_plugins.check_plugins,
+    )
     plugin_names = find_plugins(
         providers,
         [(plugin_name, plugin.sections) for plugin_name, plugin in plugins.items()],
     )
 
     discovered_services = discover_services(
-        host_name, plugin_names, providers=providers, plugins=plugins, on_error=OnError.RAISE
+        host_name,
+        plugin_names,
+        providers=providers,
+        plugins=plugins,
+        on_error=OnError.RAISE,
     )
 
     services = {s.id() for s in discovered_services}
@@ -1832,10 +1797,12 @@ def test__discover_host_labels_and_services_on_realhost(
     assert services == discovery_test_case.expected_services
 
 
-@pytest.mark.usefixtures("fix_register")
+@pytest.mark.usefixtures("agent_based_plugins")
 @pytest.mark.parametrize("discovery_test_case", _discovery_test_cases)
 def test__perform_host_label_discovery_on_realhost(
-    realhost_scenario: RealHostScenario, discovery_test_case: DiscoveryTestCase
+    realhost_scenario: RealHostScenario,
+    discovery_test_case: DiscoveryTestCase,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     scenario = realhost_scenario
 
@@ -1847,7 +1814,13 @@ def test__perform_host_label_discovery_on_realhost(
         ),
         current=discover_host_labels(
             scenario.hostname,
-            HostLabelPluginMapper(ruleset_matcher=scenario.config_cache.ruleset_matcher),
+            HostLabelPluginMapper(
+                config_getter=lambda hname, rname, type_: [] if type_ == "all" else {},
+                sections={
+                    **agent_based_plugins.agent_sections,
+                    **agent_based_plugins.snmp_sections,
+                },
+            ),
             providers=scenario.providers,
             on_error=OnError.RAISE,
         ),
@@ -1862,43 +1835,49 @@ def test__perform_host_label_discovery_on_realhost(
     assert host_label_result.present == discovery_test_case.on_realhost.expected_kept_labels
 
 
-@pytest.mark.usefixtures("fix_register")
-@pytest.mark.parametrize("discovery_test_case", _discovery_test_cases)
 def test__discover_services_on_cluster(
-    cluster_scenario: ClusterScenario, discovery_test_case: DiscoveryTestCase
+    cluster_scenario: ClusterScenario,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
-    if discovery_test_case.only_host_labels:
-        # check for consistency of the test case
-        assert not discovery_test_case.expected_services
-        return
+    assert discovery_by_host(
+        cluster_scenario.config_cache.nodes(cluster_scenario.parent),
+        cluster_scenario.providers,
+        DiscoveryPluginMapper(
+            config_getter=lambda hname, rname, type_: [] if type_ == "all" else {},
+            check_plugins=agent_based_plugins.check_plugins,
+        ),
+        OnError.RAISE,
+    ) == {
+        "test-node1": [
+            AutocheckEntry(
+                check_plugin_name=CheckPluginName("df"),
+                item="/boot/test-efi",
+                parameters={
+                    "mountpoint_for_block_devices": "volume_name",
+                    "item_appearance": "mountpoint",
+                },
+                service_labels={},
+            ),
+        ],
+        "test-node2": [
+            AutocheckEntry(
+                check_plugin_name=CheckPluginName("df"),
+                item="/boot/test-efi",
+                parameters={
+                    "mountpoint_for_block_devices": "volume_name",
+                    "item_appearance": "mountpoint",
+                },
+                service_labels={},
+            ),
+        ],
+    }
 
-    scenario = cluster_scenario
-    config_cache = scenario.config_cache
-    ruleset_matcher = config_cache.ruleset_matcher
-    nodes = config_cache.nodes(scenario.parent)
-    assert nodes
 
-    discovered_services = _get_cluster_services(
-        scenario.parent,
-        cluster_nodes=nodes,
-        providers=scenario.providers,
-        plugins=DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),
-        ignore_plugin=lambda *args, **kw: False,
-        ignore_service=lambda *args, **kw: False,
-        get_effective_host=lambda *args, **kw: scenario.parent,
-        get_service_description=functools.partial(config.service_description, ruleset_matcher),
-        on_error=OnError.RAISE,
-    )
-
-    services = set(discovered_services[scenario.parent])
-
-    assert services == discovery_test_case.expected_services
-
-
-@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize("discovery_test_case", _discovery_test_cases)
 def test__perform_host_label_discovery_on_cluster(
-    cluster_scenario: ClusterScenario, discovery_test_case: DiscoveryTestCase
+    cluster_scenario: ClusterScenario,
+    discovery_test_case: DiscoveryTestCase,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     scenario = cluster_scenario
     nodes = scenario.config_cache.nodes(scenario.parent)
@@ -1910,7 +1889,13 @@ def test__perform_host_label_discovery_on_cluster(
         discovered_host_labels={
             node: discover_host_labels(
                 node,
-                HostLabelPluginMapper(ruleset_matcher=scenario.config_cache.ruleset_matcher),
+                HostLabelPluginMapper(
+                    config_getter=lambda *a: [],
+                    sections={
+                        **agent_based_plugins.agent_sections,
+                        **agent_based_plugins.snmp_sections,
+                    },
+                ),
                 providers=scenario.providers,
                 on_error=OnError.RAISE,
             )
@@ -1929,6 +1914,23 @@ def test__perform_host_label_discovery_on_cluster(
     assert host_label_result.old == discovery_test_case.on_cluster.expected_old_host_labels
     assert host_label_result.new == discovery_test_case.on_cluster.expected_new_host_labels
     assert kept_labels == discovery_test_case.on_cluster.expected_kept_labels
+
+
+class _AutochecksConfigDummy:
+    def ignore_plugin(self, hn: HostName, plugin: CheckPluginName) -> bool:
+        return False
+
+    def ignore_service(self, hn: HostName, entry: AutocheckEntry) -> bool:
+        return False
+
+    def effective_host(self, host_name: HostName, entry: AutocheckEntry) -> HostName:
+        return host_name
+
+    def service_description(self, host_name: HostName, entry: AutocheckEntry) -> str:
+        return "desc"
+
+    def service_labels(self, host_name: HostName, entry: AutocheckEntry) -> Mapping[str, str]:
+        return {}
 
 
 def test_get_node_services() -> None:
@@ -1953,19 +1955,15 @@ def test_get_node_services() -> None:
             for discovery_status in ("unchanged", "new")
         ],
     )
-    assert make_table(
-        host_name,
-        entries,
-        ignore_service=lambda *args, **kw: False,
-        ignore_plugin=lambda *args, **kw: False,
-        get_effective_host=lambda hn, *args, **kw: hn,
-        get_service_description=lambda *args, **kw: "desc",
-    ) == {
+    assert make_table(host_name, entries, autochecks_config=_AutochecksConfigDummy()) == {
         ServiceID(CheckPluginName("plugin_vanished"), item=None): ServicesTableEntry(
             transition="vanished",
             autocheck=DiscoveredItem[AutocheckEntry](
                 previous=AutocheckEntry(
-                    CheckPluginName("plugin_vanished"), item=None, parameters={}, service_labels={}
+                    CheckPluginName("plugin_vanished"),
+                    item=None,
+                    parameters={},
+                    service_labels={},
                 ),
                 new=None,
             ),
@@ -1975,10 +1973,16 @@ def test_get_node_services() -> None:
             transition="unchanged",
             autocheck=DiscoveredItem[AutocheckEntry](
                 previous=AutocheckEntry(
-                    CheckPluginName("plugin_unchanged"), item=None, parameters={}, service_labels={}
+                    CheckPluginName("plugin_unchanged"),
+                    item=None,
+                    parameters={},
+                    service_labels={},
                 ),
                 new=AutocheckEntry(
-                    CheckPluginName("plugin_unchanged"), item=None, parameters={}, service_labels={}
+                    CheckPluginName("plugin_unchanged"),
+                    item=None,
+                    parameters={},
+                    service_labels={},
                 ),
             ),
             hosts=[host_name],
@@ -1987,7 +1991,10 @@ def test_get_node_services() -> None:
             transition="new",
             autocheck=DiscoveredItem[AutocheckEntry](
                 new=AutocheckEntry(
-                    CheckPluginName("plugin_new"), item=None, parameters={}, service_labels={}
+                    CheckPluginName("plugin_new"),
+                    item=None,
+                    parameters={},
+                    service_labels={},
                 ),
                 previous=None,
             ),

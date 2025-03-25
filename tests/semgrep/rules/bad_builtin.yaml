@@ -1,0 +1,16 @@
+---
+rules:
+    - id: bad-builtin
+      pattern-either:
+          - pattern: unichr(...)
+          - pattern: basestring(...)
+          - pattern: unicode(...)
+          - pattern: file(...)
+          - pattern: cmp(...)
+          - pattern: apply(...)
+          - pattern: execfile(...)
+          - pattern: reduce(...)
+          - pattern: reload(...)
+      message: Detected use of disallowed builtin function
+      languages: [python]
+      severity: WARNING

@@ -23,13 +23,13 @@ CMK_URL=${2:-http://localhost:5000}
 
 # Write cognito configuration file
 sudo mkdir -p /etc/cse
-"$(dirname "$0")/create_cognito_config_cse.sh" "${URL}" "${CMK_URL}" | sudo tee /etc/cse/cognito-cmk.json >/dev/null
+"$(dirname "$0")/create_cognito_config_cse.sh" "${URL}" "${CMK_URL}" "notused" "092fd467-0d2f-4e0a-90b8-4ee6494f7453" | sudo tee /etc/cse/cognito-cmk.json >/dev/null
 
 CSE_UAP_URL=https://admin-panel.saas-prod.cloudsandbox.checkmk.cloud/
 json_string=$(jq --null-input \
     --arg uap_url "$CSE_UAP_URL" \
     --arg bug_tracker_url "${CSE_UAP_URL}bug-report" \
-    '{"uap_url": $uap_url, "bug_tracker_url": $bug_tracker_url}')
+    '{"uap_url": $uap_url, "bug_tracker_url": $bug_tracker_url, "download_agent_user": "automation", "tenant_id": "092fd467-0d2f-4e0a-90b8-4ee6494f7453"}')
 
 echo "$json_string" | jq "." | sudo tee /etc/cse/admin_panel_url.json >/dev/null
 
@@ -45,4 +45,4 @@ CSE_LICENSE_SECRET=$(head -c 32 /dev/urandom | sha256sum -z | awk -F' ' '{{print
 echo "$CSE_LICENSE_SECRET" | sudo tee "$CSE_LICENSE_SECRET_PATH" >/dev/null
 
 export PYTHONPATH="${REPO_PATH}"
-"${REPO_PATH}/scripts/run-pipenv" run uvicorn tests.testlib.cse.openid_oauth_provider:application --host "${HOST}" --port "${PORT}"
+"${REPO_PATH}/scripts/run-uvenv" uvicorn tests.testlib.cse.openid_oauth_provider:application --host "${HOST}" --port "${PORT}"

@@ -7,7 +7,7 @@
 
 usage() {
     cat >&2 <<-HERE
-usage: $(basename "${0}") [--omit-legacy-checks|--filter]
+usage: $(basename "${0}") [--filter]
 
    --filter:             read file candidates from lines of stdin (one file per line)
 HERE
@@ -28,6 +28,7 @@ get_candidates_from_filesystem() {
     PRUNE=
     SEARCH+=" active_checks"
     SEARCH+=" agents"
+    SEARCH+=" buildscripts"
     SEARCH+=" bin"
     PRUNE+=" -path $(realpath bin)/cmk -prune -o" # symlink to bin/check_mk + confusion with cmk/ directory
     SEARCH+=" cmk"
@@ -37,11 +38,13 @@ get_candidates_from_filesystem() {
         SEARCH+=" non-free/cmk-update-agent"
         SEARCH+=" omd/packages/enterprise/alert_handlers"
         SEARCH+=" omd/packages/enterprise/bin"
-        SEARCH+=" packages/cmc/test"
+        SEARCH+=" omd/packages/enterprise/saml2/attribute_mappings"
+        SEARCH+=" omd/packages/enterprise/scripts/update-pre-hooks"
     fi
     SEARCH+=" locale"
     SEARCH+=" notifications"
     # Do not search whole omd/ because it may contain unpacked sub-packages
+    SEARCH+=" omd/license_sources"
     SEARCH+=" omd/packages/appliance"
     SEARCH+=" omd/packages/maintenance"
     SEARCH+=" omd/packages/omd"
@@ -77,10 +80,14 @@ get_candidates_from_filesystem() {
 }
 
 filter_for_python_files() {
+    local repo_path
+    repo_path="$(dirname "$(dirname "$(realpath "$0")")")"
+
+    # use "-r" over "--no-run-if-empty" and "-0" over "--null" to work on alpine
     # Exclude files below packages: The package specific jobs deal with them
-    grep --null --null-data -v "^$(realpath /packages/)" |
+    grep --null --null-data -v -e "^$repo_path/packages/" -e "^$repo_path/non-free/packages/" |
         sort --zero-terminated |
-        xargs --no-run-if-empty --null \
+        xargs -r -0 \
             grep --binary-files=without-match --files-with-matches '^#!.*python3$'
 }
 

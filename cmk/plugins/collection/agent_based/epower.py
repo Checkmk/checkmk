@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, Service
 
 
@@ -16,7 +16,7 @@ def discover_epower(section: Mapping[str, int]) -> DiscoveryResult:
 
 def check_epower(item: str, params: dict, section: dict[str, int]) -> CheckResult:
     if (power := section.get(item)) is not None:
-        yield from check_levels(
+        yield from check_levels_v1(
             power,
             levels_lower=params["levels_lower"],
             levels_upper=params["levels_upper"],

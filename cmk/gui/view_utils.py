@@ -15,14 +15,14 @@ from cmk.utils.tags import TagGroupID, TagID
 
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, Request
+from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import FilterHTTPVariables, HTTPVariables, Row
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.labels import filter_http_vars_for_simple_label_group
-from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 
@@ -63,7 +63,7 @@ _URL_PATTERN = (
 _STATE_MARKER_PATTERN = r"(.*)(\((?:!|!!|.)\))$"
 
 
-def format_plugin_output(  # pylint: disable=redefined-outer-name
+def format_plugin_output(
     output: str,
     *,
     request: Request,
@@ -103,9 +103,7 @@ def _render_url_icons(row: Row | None) -> bool:
     return row is None or row.get("service_check_command", "") != "check_mk-checkmk_agent"
 
 
-def _render_host_links(  # pylint: disable=redefined-outer-name
-    output: str, row: Row | None, *, request: Request
-) -> str:
+def _render_host_links(output: str, row: Row | None, *, request: Request) -> str:
     if not row or "[running on" not in output:
         return output
 
@@ -155,9 +153,7 @@ def _render_url(token: str, last_char: str) -> Iterator[str]:
         yield escaping.escape_attribute(rest)
 
 
-def get_host_list_links(  # pylint: disable=redefined-outer-name
-    site: SiteId, hosts: list[str], *, request: Request
-) -> list[HTML]:
+def get_host_list_links(site: SiteId, hosts: list[str], *, request: Request) -> list[HTML]:
     entries = []
     for host in hosts:
         args: HTTPVariables = [
@@ -214,7 +210,7 @@ def get_labels(row: "Row", what: str) -> Labels:
     return labels
 
 
-def render_labels(  # pylint: disable=redefined-outer-name
+def render_labels(
     labels: Labels,
     object_type: str,
     with_links: bool,
@@ -285,7 +281,7 @@ def render_label_groups(label_groups: LabelGroups, object_type: str) -> HTML:
     return overall_html
 
 
-def render_tag_groups(  # pylint: disable=redefined-outer-name
+def render_tag_groups(
     tag_groups: Mapping[TagGroupID, TagID], object_type: str, with_links: bool, *, request: Request
 ) -> HTML:
     return _render_tag_groups_or_labels(
@@ -298,7 +294,7 @@ def render_tag_groups(  # pylint: disable=redefined-outer-name
     )
 
 
-def _render_tag_groups_or_labels(  # pylint: disable=redefined-outer-name
+def _render_tag_groups_or_labels(
     entries: Mapping[TagGroupID, TagID] | Labels,
     object_type: str,
     with_links: bool,
@@ -331,7 +327,7 @@ def _render_tag_groups_or_labels(  # pylint: disable=redefined-outer-name
     )
 
 
-def _render_tag_group(  # pylint: disable=redefined-outer-name
+def _render_tag_group(
     tag_group_id_or_label_key: TagGroupID | str,
     tag_id_or_label_value: TagID | str,
     object_type: str,

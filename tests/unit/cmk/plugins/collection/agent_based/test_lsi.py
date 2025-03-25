@@ -7,9 +7,9 @@ from collections.abc import Mapping
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
 from cmk.checkengine.checking import CheckPluginName
+
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State
 from cmk.plugins.collection.agent_based.lsi import parse_lsi
@@ -51,15 +51,15 @@ def test_lsi_parsing() -> None:
     ],
 )
 def test_lsi_discovery(
-    fix_register: FixRegister, plugin_name: str, expected: DiscoveryResult
+    agent_based_plugins: AgentBasedPlugins, plugin_name: str, expected: DiscoveryResult
 ) -> None:
-    plugin = fix_register.check_plugins[CheckPluginName(plugin_name)]
+    plugin = agent_based_plugins.check_plugins[CheckPluginName(plugin_name)]
     section = parse_lsi(INFO)
     assert list(plugin.discovery_function(section=section)) == expected
 
 
-def test_lsi_array(fix_register: FixRegister) -> None:
-    plugin = fix_register.check_plugins[CheckPluginName("lsi_array")]
+def test_lsi_array(agent_based_plugins: AgentBasedPlugins) -> None:
+    plugin = agent_based_plugins.check_plugins[CheckPluginName("lsi_array")]
     section = parse_lsi(INFO)
     assert list(plugin.check_function(item="286", params={}, section=section)) == [
         Result(state=State.OK, summary="Status is 'Okay(OKY)'")
@@ -84,13 +84,13 @@ def test_lsi_array(fix_register: FixRegister) -> None:
     ],
 )
 def test_lsi(
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
     plugin_name: str,
     item: str,
     params: Mapping[str, str],
     expected: CheckResult,
 ) -> None:
-    plugin = fix_register.check_plugins[CheckPluginName(plugin_name)]
+    plugin = agent_based_plugins.check_plugins[CheckPluginName(plugin_name)]
     section = parse_lsi(INFO)
     assert (
         list(

@@ -27,13 +27,17 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, Choices, PermissionName
-from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri_contextless
-from cmk.gui.watolib.custom_attributes import (
+from cmk.gui.type_defs import (
+    ActionResult,
+    Choices,
     CustomAttrSpec,
     CustomHostAttrSpec,
     CustomUserAttrSpec,
+    PermissionName,
+)
+from cmk.gui.utils.transaction_manager import transactions
+from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
+from cmk.gui.watolib.custom_attributes import (
     load_custom_attrs_from_mk_file,
     save_custom_attrs_to_mk_file,
     update_host_custom_attrs,
@@ -42,7 +46,7 @@ from cmk.gui.watolib.custom_attributes import (
 from cmk.gui.watolib.host_attributes import host_attribute_topic_registry
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
-from cmk.gui.watolib.users import remove_custom_attribute_from_all_users
+from cmk.gui.watolib.users import remove_custom_attribute_from_all_users, user_features_registry
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -289,7 +293,7 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr[CustomUserAttrSpec]):
             ("ident", _("Identity")),
             ("security", _("Security")),
             ("notify", _("Notifications")),
-            ("personal", _("Personal Settings")),
+            ("personal", _("Personal settings")),
         ]
 
     @property
@@ -494,17 +498,19 @@ class ModeCustomAttrs(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
 
     def action(self) -> ActionResult:
         if not transactions.check_transaction():
-            return redirect(self.mode_url())
+            request.del_var("_transid")
+            return redirect(makeuri(request=request, addvars=list(request.itervars())))
 
         if not request.var("_delete"):
-            return redirect(self.mode_url())
+            request.del_var("_transid")
+            return redirect(makeuri(request=request, addvars=list(request.itervars())))
 
         delname = request.get_ascii_input_mandatory("_delete")
         for index, attr in enumerate(self._attrs):
             if attr["name"] == delname:
                 self._attrs.pop(index)
         save_custom_attrs_to_mk_file(self._all_attrs)
-        remove_custom_attribute_from_all_users(delname)
+        remove_custom_attribute_from_all_users(delname, user_features_registry.features().sites)
         self._update_config()
         _changes.add_change("edit-%sattrs" % self._type, _("Deleted attribute %s") % (delname))
         return redirect(self.mode_url())

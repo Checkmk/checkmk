@@ -6,6 +6,7 @@
 
 import itertools
 from logging import Logger
+from typing import override
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
@@ -24,16 +25,29 @@ from cmk.update_config.registry import pre_update_action_registry, PreUpdateActi
 from ..lib.autochecks import rewrite_yielding_errors
 
 
+def _continue_per_users_choice(conflict_mode: ConflictMode, msg: str) -> bool:
+    match conflict_mode:
+        case ConflictMode.FORCE:
+            return True
+        case ConflictMode.ABORT:
+            return False
+        case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:
+            return False
+        case ConflictMode.ASK:
+            return continue_per_users_choice(msg).is_not_abort()
+
+
 class PreUpdateAgentBasedPlugins(PreUpdateAction):
     """Load all agent based plugins before the real update happens"""
 
+    @override
     def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
         plugin_errors: dict[CheckPluginName, dict[HostName, list[str]]] = {}
 
         for error in rewrite_yielding_errors(write=False):
             if error.plugin is None:
                 logger.error(f"{error.host_name}: {error.message}.")
-                if continue_per_users_choice(
+                if _continue_per_users_choice(
                     conflict_mode,
                     " You can abort and fix this manually."
                     " If you continue, the affected service(s) will be lost, but can be rediscovered."
@@ -48,7 +62,6 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
 
         # show one error per plugin to decrease the number of errors user has to handle
         for plugin, hosts in plugin_errors.items():
-
             logger.log(VERBOSE, f"{plugin}: Failed to migrate autochecks")
             for host, messages in hosts.items():
                 logger.log(VERBOSE, f"  {len(messages)} service(s) on {host} affected")
@@ -56,7 +69,7 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
             all_messages = list(itertools.chain(*hosts.values()))
 
             logger.error(f"{plugin}: {all_messages[0]}. ")
-            if continue_per_users_choice(
+            if _continue_per_users_choice(
                 conflict_mode,
                 "You can abort and fix this manually. "
                 f"If you continue, {len(all_messages)} service(s) on {len(hosts)} host(s) will be lost, but can be rediscovered."

@@ -39,8 +39,9 @@
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_hpux_tunables(info):
@@ -59,6 +60,7 @@ def parse_hpux_tunables(info):
 
 
 check_info["hpux_tunables"] = LegacyCheckDefinition(
+    name="hpux_tunables",
     parse_function=parse_hpux_tunables,
 )
 
@@ -82,9 +84,11 @@ def check_hpux_tunables(section, params, tunable, descr):
         warn_perf = float(warn * threshold / 100)
         crit_perf = float(crit * threshold / 100)
 
-        yield 0, "%.2f%% used (%d/%d %s)" % (perc, usage, threshold, descr), [
-            (descr, usage, warn_perf, crit_perf, 0, threshold)
-        ]
+        yield (
+            0,
+            "%.2f%% used (%d/%d %s)" % (perc, usage, threshold, descr),
+            [(descr, usage, warn_perf, crit_perf, 0, threshold)],
+        )
 
         if perc > crit:
             state = 2
@@ -125,6 +129,7 @@ def check_hpux_tunables_nkthread(_no_item, params, section):
 
 
 check_info["hpux_tunables.nkthread"] = LegacyCheckDefinition(
+    name="hpux_tunables_nkthread",
     service_name="Number of threads",
     sections=["hpux_tunables"],
     discovery_function=inventory_hpux_tunables_nkthread,
@@ -159,6 +164,7 @@ def check_hpux_tunables_nproc(_no_item, params, section):
 
 
 check_info["hpux_tunables.nproc"] = LegacyCheckDefinition(
+    name="hpux_tunables_nproc",
     service_name="Number of processes",
     sections=["hpux_tunables"],
     discovery_function=inventory_hpux_tunables_nproc,
@@ -191,6 +197,7 @@ def check_hpux_tunables_maxfiles_lim(_no_item, params, section):
 
 
 check_info["hpux_tunables.maxfiles_lim"] = LegacyCheckDefinition(
+    name="hpux_tunables_maxfiles_lim",
     service_name="Number of open files",
     sections=["hpux_tunables"],
     discovery_function=inventory_hpux_tunables_maxfiles_lim,
@@ -223,6 +230,7 @@ def check_hpux_tunables_semmni(_no_item, params, section):
 
 
 check_info["hpux_tunables.semmni"] = LegacyCheckDefinition(
+    name="hpux_tunables_semmni",
     service_name="Number of IPC Semaphore IDs",
     sections=["hpux_tunables"],
     discovery_function=inventory_hpux_tunables_semmni,
@@ -255,6 +263,7 @@ def check_hpux_tunables_shmseg(_no_item, params, section):
 
 
 check_info["hpux_tunables.shmseg"] = LegacyCheckDefinition(
+    name="hpux_tunables_shmseg",
     service_name="Number of shared memory segments",
     sections=["hpux_tunables"],
     discovery_function=inventory_hpux_tunables_shmseg,
@@ -287,6 +296,7 @@ def check_hpux_tunables_semmns(_no_item, params, section):
 
 
 check_info["hpux_tunables.semmns"] = LegacyCheckDefinition(
+    name="hpux_tunables_semmns",
     service_name="Number of IPC Semaphores",
     sections=["hpux_tunables"],
     discovery_function=inventory_hpux_tunables_semmns,

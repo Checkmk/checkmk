@@ -8,10 +8,10 @@
 # check is SNMP-Based, then remove this section
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def saveint(i: str) -> int:
@@ -59,6 +59,7 @@ def parse_tsm_sessions(string_table: StringTable) -> StringTable:
 
 
 check_info["tsm_sessions"] = LegacyCheckDefinition(
+    name="tsm_sessions",
     parse_function=parse_tsm_sessions,
     service_name="tsm_sessions",
     discovery_function=inventory_tsm_sessions,

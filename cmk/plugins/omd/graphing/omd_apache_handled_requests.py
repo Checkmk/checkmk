@@ -15,7 +15,7 @@ metric_requests_cmk_views = metrics.Metric(
 )
 metric_requests_cmk_wato = metrics.Metric(
     name="requests_cmk_wato",
-    title=Title("Checkmk: WATO: Requests"),
+    title=Title("Checkmk: Setup: Requests"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.DARK_CYAN,
 )

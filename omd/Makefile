@@ -25,48 +25,28 @@ include $(BUILD_BASE_DIR)/build-helper-files.make
 # PACKAGES variable there to customzie the list of packages.
 
 PACKAGES := \
-    openssl \
     erlang \
-    redis \
     libgsf \
     cpp-libs \
-    perl-modules \
-    Python \
-    freetds \
-    protobuf \
-    python3-modules \
-    rrdtool \
     lcab \
     msitools \
-    net-snmp \
     apache-omd \
     xinetd \
-    mod_fcgid \
-    mod_wsgi \
     check_mk \
     mk-livestatus \
-    stunnel \
     nagios \
     monitoring-plugins \
     check-cert \
-    check-http \
-    nagvis \
     nrpe \
     omd \
     navicli \
     pnp4nagios \
-    maintenance \
-    patch \
     heirloom-mailx \
-    snap7 \
-    heirloom-pkgtools \
     livestatus \
     unixcat \
     neb \
     robotmk \
     xmlsec1 \
-    redfish_mkp \
-    jaeger \
     rabbitmq
 
 ifeq ($(EDITION),enterprise)
@@ -76,15 +56,20 @@ ifeq ($(EDITION),managed)
 PACKAGES += enterprise
 PACKAGES += cloud
 PACKAGES += managed
+PACKAGES += otel-collector
 endif
 ifeq ($(EDITION),cloud)
 PACKAGES += enterprise
 PACKAGES += cloud
+PACKAGES += otel-collector
 endif
 ifeq ($(EDITION),saas)
 PACKAGES += enterprise
 PACKAGES += cloud
 PACKAGES += saas
+else
+PACKAGES += jaeger
+PACKAGES += nagvis
 endif
 
 BUILD_TARGET_VARS := $(call package_target_prefix,$(PACKAGES))
@@ -106,7 +91,7 @@ $(BUILD_BASE_DIR)/build-helper-files.make:
 	$(MKDIR) $(BUILD_BASE_DIR)
 	$(RM) $@
 	for P in $(PACKAGES); do \
-	  inc_path=$(PACKAGE_DIR)/$$P/$$P.make; \
+	  inc_path=$$(test -f "$(NON_FREE_PACKAGE_DIR)/$$P/$$P.make" && echo "$(NON_FREE_PACKAGE_DIR)/$$P/$$P.make" || echo "$(PACKAGE_DIR)/$$P/$$P.make"); \
 	  P_VAR=$$(echo $${P^^} | tr '-' '_' ); \
 	  egrep -h "^$$P_VAR\s+:=\s+" $$inc_path >> $@ ; \
 	  egrep -h "^$${P_VAR}_VERS\s+:=\s+" $$inc_path >> $@ ; \
@@ -116,7 +101,6 @@ $(BUILD_BASE_DIR)/build-helper-files.make:
 	  egrep -h "^$${P_VAR}_INTERMEDIATE_INSTALL(_[A-Z]+)?\s+:=\s+" $$inc_path >> $@ ; \
 	  egrep -h "^$${P_VAR}_CACHE_PKG_PROCESS(_[A-Z]+)?\s+:=\s+" $$inc_path >> $@ ; \
 	done || true
-	egrep -h "^PACKAGE_PYTHON3_MODULES_PYTHON_DEPS?\s+:=\s+" packages/python3-modules/python3-modules.make >> $@
 
 
 -include .config
@@ -138,8 +122,11 @@ BOM := bill-of-materials.json
 .PHONY: install cma rpm deb clean install-clean venv
 
 # Called while building the .rpm/.deb packages
-install: $(INSTALL_GLOBAL)
-	python3 ./strip_binaries --exclude cmk-agent-ctl --exclude mk-sql --exclude cmc --exclude waitmax --exclude agent_modbus $(DESTDIR)$(OMD_ROOT)/
+install: $(INSTALL_GLOBAL) $(DEPS_INSTALL_BAZEL)
+	bazel run :venv
+	source .venv/bin/activate \
+	&& python3 ./strip_binaries --exclude cmk-agent-ctl --exclude mk-sql --exclude cmc --exclude waitmax --exclude agent_modbus $(DESTDIR)$(OMD_ROOT)/ \
+	&& deactivate
 
 # Called by our release system to build appliance packages
 cma: $(CMA_PACKAGE)
@@ -182,12 +169,21 @@ $(INSTALL): $(INSTALL_LOG_TARGETS)
 $(SKEL_PERMISSIONS): $(INSTALL)
 # Create permissions file for skel
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/omd
-	set -e ; cd packages ; for p in $(PACKAGES) ; do \
+	set -e ; \
+	OUTPUT=""; \
+	cd packages ; for p in $(PACKAGES) rrdtool; do \
 	    if [ -d $$p ] && [ -e $$p/skel.permissions ] ; then \
-	        echo "# $$p" ; \
-	        cat $$p/skel.permissions ; \
+	        OUTPUT="$${OUTPUT}# $$p\n$$(cat $$p/skel.permissions)\n"; \
 	    fi ; \
-	done > $(SKEL_PERMISSIONS)
+	done ; \
+	cd ../../non-free/packages ; for p in $(PACKAGES) ; do \
+	    if [ -d $$p ] && [ -e $$p/skel.permissions ] ; then \
+	        OUTPUT="$${OUTPUT}# $$p\n$$(cat $$p/skel.permissions)\n"; \
+	    fi ; \
+	done ; \
+	bazel build //omd:skel_permissions_$(EDITION_SHORT) ; \
+	OUTPUT="$${OUTPUT}# Bazel\n$$(cat $(REPO_PATH)/bazel-bin/omd/skel.permissions_$(EDITION_SHORT))\n" ; \
+	echo -e "$$OUTPUT" > $(SKEL_PERMISSIONS)
 
 $(INSTALL_GLOBAL): $(SKEL_PERMISSIONS) $(BOM)
 	# Create link to default version
@@ -216,10 +212,6 @@ $(INSTALL_GLOBAL): $(SKEL_PERMISSIONS) $(BOM)
 	# Install ChangeLog created from all werks
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc
 	ln -sfn check_mk/ChangeLog $(DESTDIR)$(OMD_ROOT)/share/doc/ChangeLog
-	install -m 644 Licenses.csv $(DESTDIR)$(OMD_ROOT)/share/doc/Licenses.csv
-	install -m 644 Licenses.README.txt $(DESTDIR)$(OMD_ROOT)/share/doc/Licenses.README.txt
-	install -m 644 License_texts.pdf $(DESTDIR)$(OMD_ROOT)/share/doc/License_texts.pdf
-	install -m 644 $(BOM) $(DESTDIR)$(OMD_ROOT)/share/doc/$(BOM)
 
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/share
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/share/man
@@ -293,36 +285,29 @@ debian/control: debian/control.in
 #
 # Check out "man debuild" and "man dpkg-buildpackage" to get a description of
 # the build mechanism.
-# Please keep in bind that we are building for multiple Ubuntu/Debian version
+# Please keep in mind that we are building for multiple Ubuntu/Debian version
 # and need to be compatible to all of the tool chains shipped with them.
 #
 # In case we want to have fast package creation without need to rebuild
 # everything, we'd have to
-# a) add -nc fo jessie/trusty/xenial
-# b) drop the "clean" argument for newer distros
-# c) remove the dh_prep from debian/rules
+# a) drop the "clean" argument for newer distros
+# b) remove the dh_prep from debian/rules
 deb: debian/changelog debian/control
-	if [ "$(DISTRO_CODE)" = "jessie" ] || [ "$(DISTRO_CODE)" = "trusty" ] || [ "$(DISTRO_CODE)" = "xenial" ]; then \
-	    TARGET="-us -uc -B" ; \
-	else \
-	    TARGET="--no-sign -- clean build-arch binary-arch" ; \
-	fi && \
-	    debuild \
-	    --preserve-envvar="NEXUS_*" \
-	    --preserve-envvar="BAZEL_*" \
-	    --preserve-envvar="MAKE" \
-	    --preserve-envvar="CI" \
-	    --preserve-envvar="RUSTUP_HOME" \
-	    --prepend-path $$HOME/.cargo/bin \
-	    --prepend-path=/usr/local/bin \
-	    --prepend-path=`dirname $$(which pipenv)` \
-	    --prepend-path=`dirname $$(which python3)` \
-	    --set-envvar EDITION=$(EDITION) \
-	    --no-lintian \
-	    -i\.git -I\.git \
-	    -i.gitignore -I.gitignore \
-	    -rfakeroot \
-	    $$TARGET
+	debuild \
+	--preserve-envvar="NEXUS_*" \
+	--preserve-envvar="BAZEL_*" \
+	--preserve-envvar="MAKE" \
+	--preserve-envvar="CI" \
+	--preserve-envvar="RUSTUP_HOME" \
+	--prepend-path $$HOME/.cargo/bin \
+	--prepend-path=/usr/local/bin \
+	--prepend-path=`dirname $$(which python3)` \
+	--set-envvar EDITION=$(EDITION) \
+	--no-lintian \
+	-i\.git -I\.git \
+	-i.gitignore -I.gitignore \
+	-rfakeroot \
+	--no-sign -- clean build-arch binary-arch
 
 # Please note: APPLIANCE_*_CMA are defined in omd/packages/appliance/appliance.make
 $(APPLIANCE_INSTALL_CMA): $(PRE_INSTALL)

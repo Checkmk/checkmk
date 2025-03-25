@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+
 """
 # Introduction
 
@@ -390,6 +390,7 @@ We cannot guarantee bug-for-bug backwards compatibility. If a behaviour of an en
 documented we may change it without incrementing the API version.
 
 """
+
 import enum
 import hashlib
 import http.client
@@ -397,7 +398,7 @@ from collections.abc import Iterator, Sequence
 from typing import Any, get_args, TypedDict
 
 import apispec
-import apispec_oneofschema  # type: ignore[import-untyped]
+import apispec_oneofschema
 import openapi_spec_validator
 from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin
@@ -407,6 +408,12 @@ from marshmallow.schema import SchemaMeta
 from werkzeug.utils import import_string
 
 from livestatus import SiteId
+
+from cmk.ccc import store
+from cmk.ccc import version as cmk_version
+from cmk.ccc.site import omd_site
+
+from cmk.utils.paths import omd_root
 
 from cmk.gui import main_modules
 from cmk.gui.config import active_config
@@ -418,6 +425,7 @@ from cmk.gui.openapi.restful_objects.api_error import (
 from cmk.gui.openapi.restful_objects.code_examples import code_samples
 from cmk.gui.openapi.restful_objects.decorators import Endpoint
 from cmk.gui.openapi.restful_objects.documentation import table_definitions
+from cmk.gui.openapi.restful_objects.endpoint_family import endpoint_family_registry
 from cmk.gui.openapi.restful_objects.parameters import (
     ACCEPT_HEADER,
     CONTENT_TYPE,
@@ -451,14 +459,11 @@ from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.script_helpers import gui_context
 
-from cmk.ccc import store
-from cmk.ccc.site import omd_site
-
 Ident = tuple[str, str]
 __version__ = "1.0"
 
 
-def main(args: Sequence[str]) -> int:
+def main() -> int:
     main_modules.load_plugins()
     if errors := get_failed_plugins():
         raise Exception(f"The following errors occured during plug-in loading: {errors}")
@@ -480,6 +485,11 @@ def _generate_spec(
 
     methods = ["get", "put", "post", "delete"]
 
+    undocumented_tag_groups = ["Undocumented Endpoint"]
+
+    if cmk_version.edition(omd_root) == cmk_version.Edition.CSE:
+        undocumented_tag_groups.append("Checkmk Internal")
+
     def module_name(func: Any) -> str:
         return f"{func.__module__}.{func.__name__}"
 
@@ -489,7 +499,7 @@ def _generate_spec(
     seen_paths: dict[Ident, OperationObject] = {}
     ident: Ident
     for endpoint in sorted(endpoint_registry, key=sort_key):
-        if target in endpoint.blacklist_in:
+        if target in endpoint.blacklist_in or endpoint.tag_group in undocumented_tag_groups:
             continue
 
         for path, operation_dict in _operation_dicts(spec, endpoint):
@@ -541,7 +551,7 @@ def _make_spec() -> apispec.APISpec:
         "3.0.2",
         plugins=[
             MarshmallowPlugin(),
-            apispec_oneofschema.MarshmallowPlugin(),
+            apispec_oneofschema.MarshmallowPlugin(),  # type: ignore[attr-defined]
             CheckmkMarshmallowPlugin(),
         ],
         **_redoc_spec(),
@@ -622,6 +632,7 @@ def _redoc_spec() -> ReDocSpec:
             {"name": "Monitoring", "tags": []},
             {"name": "Setup", "tags": []},
             {"name": "Checkmk Internal", "tags": []},
+            {"name": "Undocumented Endpoint", "tags": []},
         ],
         "x-ignoredHeaderParameters": [
             "User-Agent",
@@ -719,7 +730,7 @@ DEFAULT_STATUS_CODE_SCHEMAS = {
 }
 
 
-def _to_operation_dict(  # pylint: disable=too-many-branches
+def _to_operation_dict(
     spec: APISpec,
     endpoint: Endpoint,
     werk_id: int | None = None,
@@ -837,19 +848,30 @@ def _to_operation_dict(  # pylint: disable=too-many-branches
             endpoint, 428, DefaultStatusCodeDescription.Code428
         )
 
-    docstring_name = _docstring_name(module_obj.__doc__)
-    tag_obj: OpenAPITag = {
-        "name": docstring_name,
-        "x-displayName": docstring_name,
-    }
-    docstring_desc = _docstring_description(module_obj.__doc__)
-    if docstring_desc:
-        tag_obj["description"] = docstring_desc
+    family_name = None
+    tag_obj: OpenAPITag
+    if endpoint.family_name is not None:
+        family = endpoint_family_registry.get(endpoint.family_name)
+        if family is not None:
+            tag_obj = family.to_openapi_tag()
+            family_name = family.name
+            _add_tag(spec, tag_obj, tag_group=endpoint.tag_group)
+    else:
+        docstring_name = _docstring_name(module_obj.__doc__)
+        tag_obj = {
+            "name": docstring_name,
+            "x-displayName": docstring_name,
+        }
+        docstring_desc = _docstring_description(module_obj.__doc__)
+        if docstring_desc:
+            tag_obj["description"] = docstring_desc
 
-    _add_tag(spec, tag_obj, tag_group=endpoint.tag_group)
+        family_name = docstring_name
+        _add_tag(spec, tag_obj, tag_group=endpoint.tag_group)
 
+    assert family_name is not None
     operation_spec: OperationSpecType = {
-        "tags": [docstring_name],
+        "tags": [family_name],
         "description": "",
     }
     if werk_id:
@@ -1087,9 +1109,7 @@ def _permission_descriptions(
     def _count_perms(_perms):
         return len([p for p in _perms if not isinstance(p, permissions.Undocumented)])
 
-    def _add_desc(  # pylint: disable=too-many-branches
-        permission: permissions.BasePerm, indent: int, desc_list: list[str]
-    ) -> None:
+    def _add_desc(permission: permissions.BasePerm, indent: int, desc_list: list[str]) -> None:
         if isinstance(permission, permissions.Undocumented):
             # Don't render
             return
@@ -1202,7 +1222,7 @@ def _to_named_schema(fields_: dict[str, Field]) -> type[Schema]:
     attrs["Meta"] = type(
         "GeneratedMeta",
         (Schema.Meta,),
-        {"register": True, "ordered": True},
+        {"register": True},
     )
     _hash = hashlib.sha256()
 
@@ -1282,7 +1302,7 @@ def _docstring_name(docstring: str | None) -> str:
     Returns:
         A string or nothing.
 
-    """ ""
+    """
     if not docstring:
         raise ValueError("No name for the module defined. Please add a docstring!")
 

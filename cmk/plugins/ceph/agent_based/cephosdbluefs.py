@@ -47,7 +47,6 @@ Section = Mapping[str, BlueFS]
 
 
 def parse_cephosdbluefs(string_table: StringTable) -> Section:
-
     raw = json.loads("".join(string_table[0]))
 
     return {

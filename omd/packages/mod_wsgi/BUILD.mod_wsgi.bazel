@@ -1,4 +1,4 @@
-load("@omd_packages//:package_versions.bzl", "PYTHON_MAJOR_DOT_MINOR")
+load("@omd_packages//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 
 filegroup(
@@ -41,4 +41,11 @@ configure_make(
     targets = [""],
     visibility = ["//visibility:public"],
     deps = ["@python"],
+)
+
+filegroup(
+    name = "mod_wsgi.so",
+    srcs = [":mod_wsgi"],
+    output_group = "mod_wsgi.so",
+    visibility = ["//visibility:public"],
 )

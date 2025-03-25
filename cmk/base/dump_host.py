@@ -10,6 +10,8 @@ from contextlib import suppress
 from pathlib import Path
 from typing import Literal
 
+from cmk.ccc.exceptions import OnError
+
 import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.render
@@ -39,6 +41,7 @@ from cmk.checkengine.parser import NO_SELECTION
 
 import cmk.base.core
 from cmk.base import sources
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.config import (
     ConfigCache,
     ConfiguredIPLookup,
@@ -48,10 +51,8 @@ from cmk.base.config import (
 )
 from cmk.base.sources import SNMPFetcherConfig, Source
 
-from cmk.ccc.exceptions import OnError
 
-
-def dump_source(source: Source) -> str:  # pylint: disable=too-many-branches
+def dump_source(source: Source) -> str:
     fetcher = source.fetcher()
     if isinstance(fetcher, IPMIFetcher):
         description = "Management board - IPMI"
@@ -120,17 +121,19 @@ def _agent_description(cds: ComputedDataSources) -> str:
 
 def print_(txt: str) -> None:
     with suppress(IOError):
-        print(txt, end="", flush=True, file=sys.stdout)
+        sys.stdout.write(txt)
+        sys.stdout.flush()
 
 
 def dump_host(
     config_cache: ConfigCache,
+    plugins: AgentBasedPlugins,
     hostname: HostName,
     *,
     simulation_mode: bool,
 ) -> None:
-    # pylint: disable=too-many-branches
     print_("\n")
+    label_manager = config_cache.label_manager
     hosts_config = config_cache.hosts_config
     if hostname in hosts_config.clusters:
         assert config_cache.nodes(hostname)
@@ -187,7 +190,9 @@ def dump_host(
     tags = [(tag_template % ":".join(t)) for t in sorted(config_cache.tags(hostname).items())]
     print_(tty.yellow + "Tags:                   " + tty.normal + ", ".join(tags) + "\n")
 
-    labels = [tag_template % ":".join(l) for l in sorted(config_cache.labels(hostname).items())]
+    labels = [
+        tag_template % ":".join(l) for l in sorted(label_manager.labels_of_host(hostname).items())
+    ]
     print_(tty.yellow + "Labels:                 " + tty.normal + ", ".join(labels) + "\n")
 
     if hostname in hosts_config.clusters:
@@ -229,10 +234,13 @@ def dump_host(
     agenttypes = [
         dump_source(source)
         for source in sources.make_sources(
+            plugins,
             hostname,
             ipaddress,
             ConfigCache.ip_stack_config(hostname),
-            fetcher_factory=config_cache.fetcher_factory(),
+            fetcher_factory=config_cache.fetcher_factory(
+                config_cache.make_service_configurer(plugins.check_plugins)
+            ),
             snmp_fetcher_config=SNMPFetcherConfig(
                 scan_config=SNMPScanConfig(
                     on_error=OnError.RAISE,
@@ -290,14 +298,25 @@ def dump_host(
     colors = [tty.normal, tty.blue, tty.normal, tty.green, tty.normal]
 
     table_data = []
-    for service in sorted(config_cache.check_table(hostname).values(), key=lambda s: s.description):
+    for service in sorted(
+        config_cache.check_table(
+            hostname,
+            plugins.check_plugins,
+            config_cache.make_service_configurer(plugins.check_plugins),
+        ).values(),
+        key=lambda s: s.description,
+    ):
         table_data.append(
             [
                 str(service.check_plugin_name),
                 str(service.item),
                 _evaluate_params(service.parameters),
                 service.description,
-                ",".join(config_cache.servicegroups_of_service(hostname, service.description)),
+                ",".join(
+                    config_cache.servicegroups_of_service(
+                        hostname, service.description, service.labels
+                    )
+                ),
             ]
         )
 
@@ -308,10 +327,7 @@ def _evaluate_params(params: TimespecificParameters) -> str:
     return (
         repr(params.evaluate(timeperiod_active))
         if params.is_constant()
-        else "Timespecific parameters at {}: {!r}".format(
-            cmk.utils.render.date_and_time(time.time()),
-            params.evaluate(timeperiod_active),
-        )
+        else f"Timespecific parameters at {cmk.utils.render.date_and_time(time.time())}: {params.evaluate(timeperiod_active)!r}"
     )
 
 

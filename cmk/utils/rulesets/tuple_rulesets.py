@@ -6,12 +6,12 @@
 from collections.abc import Iterable, Sequence
 from re import Pattern
 
+import cmk.ccc.debug
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.paths
 from cmk.utils.regex import combine_patterns, regex
 from cmk.utils.tags import TagID
-
-import cmk.ccc.debug
-from cmk.ccc.exceptions import MKGeneralException
 
 # Conveniance macros for legacy tuple based host and service rules
 PHYSICAL_HOSTS = ["@physical"]  # all hosts but not clusters
@@ -37,7 +37,7 @@ def get_rule_options(entry):
     return entry, {}
 
 
-def in_extraconf_hostlist(hostlist, hostname):  # pylint: disable=too-many-branches
+def in_extraconf_hostlist(hostlist, hostname):
     """Whether or not the given host matches the hostlist.
 
     Entries in list are hostnames that must equal the hostname.

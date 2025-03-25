@@ -90,7 +90,7 @@ def _make_form_spec_check_sftp() -> Dictionary:
             ),
             "description": DictElement(
                 parameter_form=String(
-                    title=Title("Service Description"),
+                    title=Title("Service description"),
                     prefill=DefaultValue("SFTP"),
                 ),
             ),

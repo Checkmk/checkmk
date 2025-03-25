@@ -6,21 +6,24 @@
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.api.agent_based.plugin_classes import CheckFunction, DiscoveryFunction
+from cmk.base.api.agent_based.plugin_classes import (
+    AgentBasedPlugins,
+    CheckFunction,
+    CheckPlugin,
+    DiscoveryFunction,
+)
 
-from cmk.agent_based.v2 import CheckPlugin, Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, Service, State
 
 _PLUGIN = CheckPluginName("fireeye_quarantine")
 
 
 # TODO: drop this after migration
 @pytest.fixture(scope="module", name="plugin")
-def _get_plugin(fix_register: FixRegister) -> CheckPlugin:
-    return fix_register.check_plugins[_PLUGIN]
+def _get_plugin(agent_based_plugins: AgentBasedPlugins) -> CheckPlugin:
+    return agent_based_plugins.check_plugins[_PLUGIN]
 
 
 # TODO: drop this after migration

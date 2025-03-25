@@ -93,7 +93,7 @@ This is the data we can extract
 
 """
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from typing import NamedTuple, TypedDict
 
 from cmk.agent_based.v2 import (
@@ -201,11 +201,12 @@ def _create_item_data(entry: list[str | list[int]]) -> BGPData:
 
 
 def _check_string_table(string_table: Sequence[StringByteTable]) -> None:
-    assert all(
-        len(entry) >= len(BGPData.__annotations__) - 1 for entry in string_table[0]
-    ), "Not all info elements have the size guessed from known names %d: %r" % (
-        len(BGPData.__annotations__),
-        [len(entry) for entry in string_table[0]],
+    assert all(len(entry) >= len(BGPData.__annotations__) - 1 for entry in string_table[0]), (
+        "Not all info elements have the size guessed from known names %d: %r"
+        % (
+            len(BGPData.__annotations__),
+            [len(entry) for entry in string_table[0]],
+        )
     )
 
 
@@ -213,7 +214,30 @@ def _clean_address(address_as_oids: Sequence[str]) -> str:
     addr_type = int(address_as_oids[0])
     addr_len = int(address_as_oids[1])
     addr_elements = address_as_oids[2 : 2 + addr_len]
+    match addr_type:
+        case 0:
+            raise ValueError("Unknown address type is currently unsupported")
+        case 1:
+            return clean_v4_address(addr_elements)
+        case 2:
+            return clean_v6_address(addr_elements)
+        case 3:
+            return (
+                f"{clean_v4_address(addr_elements[:-4])}%{_render_zone_index(addr_elements[-4:])}"
+            )
+        case 4:
+            return (
+                f"{clean_v6_address(addr_elements[:-4])}%{_render_zone_index(addr_elements[-4:])}"
+            )
+        case 16:
+            raise ValueError("DNS domain names are currently unsupported")
+        case _:
+            raise ValueError(f"Unknown address type: {addr_type}")
     return clean_v4_address(addr_elements) if addr_type == 1 else clean_v6_address(addr_elements)
+
+
+def _render_zone_index(elements: Iterable[str]) -> str:
+    return ".".join(elements)
 
 
 def parse_bgp_peer(string_table: Sequence[StringByteTable]) -> Section:

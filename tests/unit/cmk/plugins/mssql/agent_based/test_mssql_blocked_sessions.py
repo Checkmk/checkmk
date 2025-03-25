@@ -6,11 +6,11 @@
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
 from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
+
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.plugins.mssql.agent_based.mssql_blocked_sessions import (
@@ -58,12 +58,12 @@ def default_parameters(
 
 
 def test_mssql_blocked_sessions_default(
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
-    parse_function = fix_register.agent_sections[
+    parse_function = agent_based_plugins.agent_sections[
         SectionName("mssql_blocked_sessions")
     ].parse_function
-    plugin = fix_register.check_plugins[CheckPluginName("mssql_blocked_sessions")]
+    plugin = agent_based_plugins.check_plugins[CheckPluginName("mssql_blocked_sessions")]
     assert plugin
     assert list(
         plugin.check_function(
@@ -85,12 +85,12 @@ def test_mssql_blocked_sessions_default(
 
 
 def test_mssql_blocked_sessions_no_blocking_sessions(
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
-    parse_function = fix_register.agent_sections[
+    parse_function = agent_based_plugins.agent_sections[
         SectionName("mssql_blocked_sessions")
     ].parse_function
-    plugin = fix_register.check_plugins[CheckPluginName("mssql_blocked_sessions")]
+    plugin = agent_based_plugins.check_plugins[CheckPluginName("mssql_blocked_sessions")]
     assert plugin
     assert list(
         plugin.check_function(
@@ -103,7 +103,7 @@ def test_mssql_blocked_sessions_no_blocking_sessions(
     ]
 
 
-def test_mssql_blocked_sessions_waittime(fix_register: FixRegister) -> None:
+def test_mssql_blocked_sessions_waittime(agent_based_plugins: AgentBasedPlugins) -> None:
     assert list(
         check_mssql_blocked_sessions(
             item="INST_ID1",
@@ -128,7 +128,7 @@ def test_mssql_blocked_sessions_waittime(fix_register: FixRegister) -> None:
     ]
 
 
-def test_mssql_blocked_sessions_ignore_waittype(fix_register: FixRegister) -> None:
+def test_mssql_blocked_sessions_ignore_waittype(agent_based_plugins: AgentBasedPlugins) -> None:
     assert list(
         check_mssql_blocked_sessions(
             item="INST_ID1",
@@ -153,7 +153,7 @@ def test_mssql_blocked_sessions_ignore_waittype(fix_register: FixRegister) -> No
     ]
 
 
-def test_mssql_blocked_sessions_parsing(fix_register: FixRegister) -> None:
+def test_mssql_blocked_sessions_parsing(agent_based_plugins: AgentBasedPlugins) -> None:
     assert not parse_mssql_blocked_sessions([["ERROR: asd"]])
     assert parse_mssql_blocked_sessions([["INST_ID1", "No blocking sessions"]]) == {"INST_ID1": []}
     assert parse_mssql_blocked_sessions(
@@ -309,7 +309,7 @@ DATA_GENERIC_1 = [
     ],
 )
 def test_mssql_blocked_sessions_generic(
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
     string_table: StringTable,
     params: Params,
     item: str,
@@ -340,7 +340,9 @@ def test_mssql_blocked_sessions_generic(
     ],
 )
 def test_mssql_blocked_sessions_generic_discover(
-    fix_register: FixRegister, string_table: StringTable, discovery_result: list[Service]
+    agent_based_plugins: AgentBasedPlugins,
+    string_table: StringTable,
+    discovery_result: list[Service],
 ) -> None:
     assert (
         list(discovery_mssql_blocked_sessions(parse_mssql_blocked_sessions(string_table)))
@@ -348,7 +350,7 @@ def test_mssql_blocked_sessions_generic_discover(
     )
 
 
-def test_mssql_blocked_sessions_generic_cluster(fix_register: FixRegister) -> None:
+def test_mssql_blocked_sessions_generic_cluster(agent_based_plugins: AgentBasedPlugins) -> None:
     assert list(
         cluster_check_mssql_blocked_sessions(
             item="ID 1",

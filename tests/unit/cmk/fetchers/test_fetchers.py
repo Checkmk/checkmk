@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+
 from __future__ import annotations
 
 import os
@@ -15,6 +15,8 @@ from typing import Generic, NamedTuple, NoReturn, TypeAlias, TypeVar
 import pytest
 from pyghmi.exceptions import IpmiException  # type: ignore[import-untyped]
 from pytest import MonkeyPatch
+
+from cmk.ccc.exceptions import MKFetcherError, MKTimeout, OnError
 
 import cmk.utils.resulttype as result
 from cmk.utils.agentdatatype import AgentRawData
@@ -57,8 +59,6 @@ from cmk.fetchers.filecache import (
     SNMPFileCache,
 )
 from cmk.fetchers.snmp import SNMPPluginStore, SNMPPluginStoreItem
-
-from cmk.ccc.exceptions import MKFetcherError, MKTimeout, OnError
 
 
 class SensorReading(NamedTuple):
@@ -484,7 +484,6 @@ class TestSNMPFetcherFetch:
                     checking=True,
                     disabled=False,
                     redetect=False,
-                    fetch_interval=None,
                 ),
             },
         )
@@ -521,7 +520,6 @@ class TestSNMPFetcherFetch:
                     checking=True,
                     disabled=False,
                     redetect=False,
-                    fetch_interval=None,
                 ),
             },
         )
@@ -579,7 +577,6 @@ class TestSNMPFetcherFetch:
                     checking=False,
                     disabled=True,
                     redetect=False,
-                    fetch_interval=None,
                 )
             },
             do_status_data_inventory=True,
@@ -616,7 +613,6 @@ class TestSNMPFetcherFetch:
                     checking=False,
                     disabled=True,
                     redetect=False,
-                    fetch_interval=None,
                 )
             },
         )
@@ -652,7 +648,6 @@ class TestSNMPFetcherFetch:
                     checking=False,
                     disabled=True,
                     redetect=False,
-                    fetch_interval=None,
                 )
             },
             do_status_data_inventory=True,
@@ -744,8 +739,8 @@ class TestSNMPSectionMeta:
     @pytest.mark.parametrize(
         "meta",
         [
-            SNMPSectionMeta(checking=False, disabled=False, redetect=False, fetch_interval=None),
-            SNMPSectionMeta(checking=True, disabled=False, redetect=False, fetch_interval=None),
+            SNMPSectionMeta(checking=False, disabled=False, redetect=False),
+            SNMPSectionMeta(checking=True, disabled=False, redetect=False),
         ],
     )
     def test_serialize(self, meta: SNMPSectionMeta) -> None:

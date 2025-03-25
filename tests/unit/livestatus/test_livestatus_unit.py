@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
-# pylint: disable=redefined-outer-name
 
 import errno
 import socket
@@ -20,7 +17,7 @@ from pytest import MonkeyPatch
 import livestatus
 
 # FIXME: Somehow tools disagree about the order...
-from omdlib.certs import CertificateAuthority  # pylint: disable=wrong-import-order
+from omdlib.certs import CertificateAuthority
 
 from cmk.utils.certs import root_cert_path, RootCA
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
@@ -36,7 +33,7 @@ def prevent_livestatus_connect() -> None:
 def ca(tmp_path: Path) -> CertificateAuthority:
     p = tmp_path / "etc" / "ssl"
     ca = CertificateAuthority(
-        root_ca=RootCA.load_or_create(root_cert_path(p), "ca-name"), ca_path=p
+        root_ca=RootCA.load_or_create(root_cert_path(p), "ca-name", key_size=1024), ca_path=p
     )
     ssl_dir = tmp_path / "var/ssl"
     ssl_dir.mkdir(parents=True)

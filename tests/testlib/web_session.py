@@ -2,6 +2,14 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""This module provides a class for managing web sessions with a Checkmk site.
+
+It contains methods for handling HTTP requests, verifying HTML page resources, and
+managing authentication.
+
+Note: this implementation is purely request-based and does not manage cookies or running
+JavaScript scripts.
+"""
 
 import logging
 import os
@@ -13,7 +21,7 @@ from http.cookiejar import Cookie
 import requests
 from bs4 import BeautifulSoup
 
-from tests.testlib.version import version_from_env
+from tests.testlib.version import edition_from_env
 
 
 class APIError(Exception):
@@ -67,7 +75,7 @@ class CMKWebSession:
         # Trying to workaround this by trying the problematic request a second time.
         try:
             response = self.session.request(method, url, **kwargs)
-        except requests.ConnectionError as e:
+        except requests.exceptions.ConnectionError as e:
             if "Connection aborted" in "%s" % e:
                 response = self.session.request(method, url, **kwargs)
             else:
@@ -79,13 +87,14 @@ class CMKWebSession:
     def _handle_http_response(
         self, response: requests.Response, expected_code: int, allow_redirect_to_login: bool
     ) -> None:
-        assert (
-            response.status_code == expected_code
-        ), "Got invalid status code (%d != %d) for URL %s (Location: %s)" % (
-            response.status_code,
-            expected_code,
-            response.url,
-            response.headers.get("Location", "None"),
+        assert response.status_code == expected_code, (
+            "Got invalid status code (%d != %d) for URL %s (Location: %s)"
+            % (
+                response.status_code,
+                expected_code,
+                response.url,
+                response.headers.get("Location", "None"),
+            )
         )
 
         if not allow_redirect_to_login and response.history:
@@ -120,7 +129,7 @@ class CMKWebSession:
         # by checkmk. We do not want to check it in the integration tests
         script_filters = (
             [("src", "https://static.saas-dev.cloudsandbox.checkmk.cloud")]
-            if version_from_env().is_saas_edition()
+            if edition_from_env().is_saas_edition()
             else None
         )
         self._check_resources(
@@ -170,7 +179,7 @@ class CMKWebSession:
     ) -> list:
         urls = []
 
-        for element in soup.findAll(tag):
+        for element in soup.find_all(tag):
             try:
                 skip = False
                 for attr, val in filters or []:
@@ -226,8 +235,14 @@ class CMKWebSession:
         assert 'action="login.py"' in r.text
 
     def is_logged_in(self) -> bool:
-        r = self.get("info.py", allow_redirect_to_login=True)
-        return all(x in r.text for x in ("About Checkmk", "Your IT monitoring platform"))
+        try:
+            r = self.get("info.py", allow_redirect_to_login=True)
+            return all(x in r.text for x in ("About Checkmk", "Your IT monitoring platform"))
+        except requests.exceptions.ConnectionError:
+            if edition_from_env().is_saas_edition():
+                # with the auth provider running, the get request may fail
+                return self.get_auth_cookie() is not None
+            raise
 
     def get_auth_cookie(self) -> Cookie | None:
         """return the auth cookie

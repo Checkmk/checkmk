@@ -29,7 +29,7 @@ def main() {
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy")
     def branch_version = versioning.get_branch_version(checkout_dir);
-    def cmk_version = versioning.get_cmk_version(versioning.safe_branch_name(scm), branch_version, VERSION)
+    def cmk_version = versioning.get_cmk_version(versioning.safe_branch_name(), branch_version, VERSION)
     if (cmk_version != versioning.strip_rc_number_from_version(cmk_version)) {
         error("You may try to build a release candidate (${cmk_version}) for the cloud images but " +
             "this is currently not supported. During a release, we will build the cloud images when a package rc was " +
@@ -184,7 +184,7 @@ def create_publish_stages(targets_names, version, publish) {
                         // Used global env variable from jenkins:
                         // AWS_MARKETPLACE_SCANNER_ARN and AWS_AMI_IMAGE_PRODUCT_ID
                         sh("""
-                           scripts/run-pipenv run buildscripts/scripts/publish_cloud_images.py \
+                           scripts/run-uvenv buildscripts/scripts/publish_cloud_images.py \
                             --cloud-type ${target} --new-version ${version} \
                             --build-tag '${env.JOB_BASE_NAME}-${env.BUILD_NUMBER}' --image-name ${name} \
                             --marketplace-scanner-arn '${AWS_MARKETPLACE_SCANNER_ARN}' \

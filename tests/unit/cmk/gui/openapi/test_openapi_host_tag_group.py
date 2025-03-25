@@ -8,9 +8,9 @@ from typing import Any, Literal
 
 import pytest
 
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.tags import BuiltinTagConfig

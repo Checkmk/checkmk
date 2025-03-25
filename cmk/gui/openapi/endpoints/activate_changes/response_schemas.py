@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Literal
 
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields import Timestamp
@@ -11,22 +12,45 @@ from cmk.gui.openapi.restful_objects.response_schemas import Linkable
 
 from cmk import fields
 
-ACTIVATION_EXT_EXAMPLE = {
-    "changes": [
-        {
-            "id": "da5430a5-6d0a-48ae-9efd-0563482a3b36",
-            "action_name": "edit-host",
-            "text": "Modified host heute.",
-            "user_id": "cmkadmin",
-            "time": "2023-01-20T16:31:51.362057+00:00",
-        }
-    ],
-    "is_running": False,
-    "activate_foreign": True,
-    "time_started": "2023-01-20T16:31:54.306846+00:00",
-    "sites": ["heute"],
-    "comment": "",
-}
+STATUS_PER_SITE_EXAMPLE = [
+    {
+        "site": "heute",
+        "status_text": "Activating",
+        "status_details": "Started at: 15:23:09. Finished at: 15:23:13.",
+        "start_time": "2025-01-20T15:23:09.306846+00:00",
+        "end_time": "2025-01-20T15:23:13.306846+00:00",
+    },
+    {
+        "site": "morgen",
+        "status_text": "Activating",
+        "status_details": "Started at: 12:45:05. Finished at: 12:46:12.",
+        "start_time": "2025-01-20T12:45:05.306846+00:00",
+        "end_time": "2025-01-20T12:45:12.306846+00:00",
+    },
+]
+
+
+def activation_example(which: Literal["activation_run", "activation_status"]) -> dict[str, Any]:
+    example = {
+        "changes": [
+            {
+                "id": "da5430a5-6d0a-48ae-9efd-0563482a3b36",
+                "action_name": "edit-host",
+                "text": "Modified host heute.",
+                "user_id": "cmkadmin",
+                "time": "2023-01-20T16:31:51.362057+00:00",
+            }
+        ],
+        "is_running": False,
+        "activate_foreign": True,
+        "time_started": "2023-01-20T16:31:54.306846+00:00",
+        "sites": ["heute"],
+        "comment": "",
+    }
+    if which == "activation_status":
+        example["status_per_site"] = STATUS_PER_SITE_EXAMPLE
+
+    return example
 
 
 class ChangesFields(BaseSchema):
@@ -53,6 +77,44 @@ class ChangesFields(BaseSchema):
     )
 
 
+class ActivationSiteStatus(BaseSchema):
+    site = gui_fields.SiteField(
+        presence="ignore",
+        description="The site affected by this activation",
+        example="heute",
+    )
+    phase = fields.String(
+        enum=["initialized", "queued", "started", "sync", "activate", "finishing", "done"],
+        description="The phase",
+        example="done",
+        allow_none=True,
+    )
+    state = fields.String(
+        enum=["success", "error", "warning"],
+        description="The state",
+        example="success",
+        allow_none=True,
+    )
+    status_text = fields.String(
+        description="The status text",
+        example="Activating",
+        allow_none=True,
+    )
+    status_details = fields.String(
+        description="The status details",
+        example="Started at: 15:23:10. Finished at: 15:23:12.",
+    )
+    start_time = Timestamp(
+        description="The date and time the activation started.",
+        example="2025-03-03T17:31:24+00:00",
+    )
+    end_time = Timestamp(
+        description="The date and time the activation ended.",
+        example="2023-03-03T17:31:41+00:00",
+        allow_none=True,
+    )
+
+
 class ActivationExtensionFields(BaseSchema):
     sites = fields.List(
         gui_fields.SiteField(presence="ignore"),
@@ -64,11 +126,11 @@ class ActivationExtensionFields(BaseSchema):
         example=False,
     )
     force_foreign_changes = fields.Boolean(
-        description="If the activation is still running",
+        description="A boolean flag indicating that even changes which do not originate from the user requesting the activation shall be activated",
         example=False,
     )
     time_started = Timestamp(
-        description="The date and time the activation was started.",
+        description="The date and time the activation started.",
         example="2023-02-21T17:34:12+00:00",
     )
     changes = fields.List(
@@ -77,7 +139,15 @@ class ActivationExtensionFields(BaseSchema):
     )
 
 
-class ActivationRunResponse(Linkable):
+class ActivationExtensionStatusFields(ActivationExtensionFields):
+    status_per_site = fields.List(
+        fields.Nested(ActivationSiteStatus),
+        description="A list of sites with their activation status.",
+        example=STATUS_PER_SITE_EXAMPLE,
+    )
+
+
+class ActivationRunBaseResponse(Linkable):
     domainType = fields.Constant(
         "activation_run",
         description="The domain type of the object.",
@@ -93,10 +163,21 @@ class ActivationRunResponse(Linkable):
     members: gui_fields.Field = fields.Dict(
         description="The container for external resources, like linked foreign objects or actions.",
     )
+
+
+class ActivationRunResponse(ActivationRunBaseResponse):
     extensions = fields.Nested(
         ActivationExtensionFields,
         description="The activation run attributes.",
-        example=ACTIVATION_EXT_EXAMPLE,
+        example=activation_example("activation_run"),
+    )
+
+
+class ActivationStatusResponse(ActivationRunBaseResponse):
+    extensions = fields.Nested(
+        ActivationExtensionStatusFields,
+        description="The activation run attributes with status.",
+        example=activation_example("activation_status"),
     )
 
 
@@ -109,7 +190,7 @@ class ActivationRunCollection(Linkable):
         description="The domain type of the objects in the collection.",
     )
     value = fields.List(
-        fields.Nested(ActivationRunResponse),
+        fields.Nested(ActivationStatusResponse),
         description="A list of activation runs.",
         example=[
             {
@@ -126,7 +207,7 @@ class ActivationRunCollection(Linkable):
                 "id": "b0a0bf49-ff5f-454b-a5d5-9731cb0fb5fa",
                 "title": "test-title",
                 "members": {},
-                "extensions": ACTIVATION_EXT_EXAMPLE,
+                "extensions": activation_example("activation_status"),
             }
         ],
     )

@@ -3,42 +3,54 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import io
 import logging
 import os
 import tarfile
-from contextlib import nullcontext
+from collections.abc import Mapping
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 from werkzeug import datastructures as werkzeug_datastructures
 
-from tests.testlib.repo import is_enterprise_repo, is_managed_repo
+from tests.testlib.common.repo import is_enterprise_repo, is_managed_repo
+from tests.testlib.unit.rabbitmq import get_expected_definition
+from tests.testlib.unit.utils import reset_registries
 
 from livestatus import SiteConfiguration, SiteId
+
+import cmk.ccc.version as cmk_version
 
 import cmk.utils.paths
 
 import cmk.gui.watolib.utils
-from cmk.gui.background_job import BackgroundProcessInterface
-from cmk.gui.background_job._defines import BackgroundJobDefines
 from cmk.gui.http import Request
 from cmk.gui.watolib import activate_changes
-from cmk.gui.watolib.activate_changes import ActivationCleanupBackgroundJob, ConfigSyncFileInfo
-from cmk.gui.watolib.config_sync import ReplicationPath
+from cmk.gui.watolib.activate_changes import (
+    ActivationCleanupJob,
+    ConfigSyncFileInfo,
+    default_rabbitmq_definitions,
+)
+from cmk.gui.watolib.config_sync import replication_path_registry, ReplicationPath
 
-import cmk.ccc.version as cmk_version
+from cmk.livestatus_client import (
+    BrokerConnection,
+    BrokerConnections,
+    BrokerSite,
+    ConnectionId,
+    NetworkSocketDetails,
+)
+from cmk.messaging import rabbitmq
 
 logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(autouse=True)
 def restore_orig_replication_paths():
-    _orig_paths = activate_changes._replication_paths[:]
-    yield
-    activate_changes._replication_paths = _orig_paths
+    with reset_registries([replication_path_registry]):
+        yield
 
 
 def _expected_replication_paths(edition: cmk_version.Edition) -> list[ReplicationPath]:
@@ -51,7 +63,10 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
         ReplicationPath("file", "auth.serials", "etc/auth.serials", []),
         ReplicationPath("file", "stored_passwords", "var/check_mk/stored_passwords", []),
         ReplicationPath(
-            "dir", "usersettings", "var/check_mk/web", ["report-thumbnails", "session_info.mk"]
+            "dir",
+            "usersettings",
+            "var/check_mk/web",
+            ["last_login.mk", "report-thumbnails", "session_info.mk"],
         ),
         ReplicationPath("dir", "mkps", "var/check_mk/packages", []),
         ReplicationPath("dir", "local", "local", []),
@@ -63,6 +78,12 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
         ),
         ReplicationPath(
             ty="dir", ident="omd", site_path="etc/omd", excludes=["site.conf", "instance_id"]
+        ),
+        ReplicationPath(
+            ty="dir",
+            ident="rabbitmq",
+            site_path="etc/rabbitmq/definitions.d",
+            excludes=["00-default.json", "definitions.json", ".*new*"],
         ),
         ReplicationPath(
             ty="dir",
@@ -82,12 +103,6 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             site_path="etc/check_mk/apache.d/wato",
             excludes=[],
         ),
-        ReplicationPath(
-            ty="dir",
-            ident="piggyback_hub",
-            site_path="etc/check_mk/piggyback_hub.d/wato",
-            excludes=[],
-        ),
     ]
 
     if edition is not cmk_version.Edition.CRE:
@@ -95,12 +110,14 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             ReplicationPath("dir", "liveproxyd", "etc/check_mk/liveproxyd.d/wato/", []),
             ReplicationPath("dir", "dcd", "etc/check_mk/dcd.d/wato/", []),
             ReplicationPath("dir", "mknotify", "etc/check_mk/mknotifyd.d/wato", []),
+            # CMK-20769
+            ReplicationPath("dir", "otel_collector", "etc/check_mk/otel_collector.d/wato", []),
         ]
 
     expected += [
         ReplicationPath("dir", "mkeventd", "etc/check_mk/mkeventd.d/wato", []),
         ReplicationPath("dir", "mkeventd_mkp", "etc/check_mk/mkeventd.d/mkp/rule_packs", []),
-        ReplicationPath("file", "diskspace", "etc/diskspace.conf", []),
+        ReplicationPath("dir", "diskspace", "etc/check_mk/diskspace.d/wato", []),
     ]
 
     if edition is cmk_version.Edition.CME:
@@ -161,6 +178,8 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             ReplicationPath("dir", "dcd", "etc/check_mk/dcd.d/wato/", []),
             ReplicationPath("dir", "mknotify", "etc/check_mk/mknotifyd.d/wato", []),
             ReplicationPath("dir", "liveproxyd", "etc/check_mk/liveproxyd.d/wato/", []),
+            # CMK-20769
+            ReplicationPath("dir", "otel_collector", "etc/check_mk/otel_collector.d/wato/", []),
         ]
 
     if is_managed_repo() and edition is not cmk_version.Edition.CME:
@@ -218,7 +237,7 @@ def test_get_replication_paths_defaults(
     edition: cmk_version.Edition, request_context: None
 ) -> None:
     expected = _expected_replication_paths(edition)
-    assert sorted(activate_changes.get_replication_paths()) == sorted(expected)
+    assert sorted(replication_path_registry.values()) == sorted(expected)
 
 
 @pytest.mark.parametrize("replicate_ec", [None, True, False])
@@ -232,7 +251,7 @@ def test_get_replication_components(
 ) -> None:
     partial_site_config = SiteConfiguration({})
     # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
-    # pylint: disable=unsupported-assignment-operation
+
     if replicate_ec is not None:
         partial_site_config["replicate_ec"] = replicate_ec
     if replicate_mkps is not None:
@@ -248,18 +267,6 @@ def test_get_replication_components(
 
     assert sorted(activate_changes._get_replication_components(partial_site_config)) == sorted(
         expected
-    )
-
-
-def test_add_replication_paths(request_context: None) -> None:
-    activate_changes.add_replication_paths(
-        [
-            ReplicationPath("dir", "abc", "path/to/abc", ["e1", "e2"]),
-        ]
-    )
-
-    assert activate_changes.get_replication_paths()[-1] == ReplicationPath(
-        "dir", "abc", "path/to/abc", ["e1", "e2"]
     )
 
 
@@ -294,9 +301,9 @@ def test_automation_get_config_sync_state(request_context: None) -> None:
             ),
             "etc/omd/site.conf": (
                 33200,
-                941,
+                1010,
                 None,
-                "8b0a3be9479c9302deeafb8093f301224933fd74a7b8d733aa7a7d066296d16a",
+                "4a1a223aa376f18e6e7775157d88f554c49eec3d968a02ecb781a2b31c7a375d",
             ),
         },
         0,
@@ -740,8 +747,7 @@ def test_get_current_config_generation() -> None:
     assert activate_changes._get_current_config_generation() == 3
 
 
-def test_activation_cleanup_background_job(capsys: pytest.CaptureFixture[str]) -> None:
-
+def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> None:
     act_dir = (
         cmk.utils.paths.tmp_dir / "wato" / "activation" / "9a61e24f-d991-4710-b8e7-04700c309594"
     )
@@ -788,22 +794,214 @@ def test_activation_cleanup_background_job(capsys: pytest.CaptureFixture[str]) -
     )
     os.utime(act_dir, (1720800187.7206023, 1720800187.7206023))
 
-    job = ActivationCleanupBackgroundJob()
-    os.makedirs(job.get_work_dir())
-    interface = BackgroundProcessInterface(
-        job.get_work_dir(),
-        job.get_job_id(),
-        logging.getLogger(),
-        lambda: nullcontext(),  # pylint: disable=unnecessary-lambda
-    )
-
-    job.do_execute(interface)
-
-    stdout, stderr = capsys.readouterr()
-    assert stdout == ""
-    assert stderr == ""
-
-    result = Path(job.get_work_dir(), BackgroundJobDefines.result_message_filename).read_text()
-    assert result == "Activation cleanup finished\n"
-
+    with caplog.at_level(logging.INFO, logger="cmk.web"):
+        ActivationCleanupJob().do_execute()
+    assert any("Activation cleanup finished" in m for m in caplog.messages)
     assert not act_dir.exists()
+
+
+@pytest.mark.parametrize(
+    "site_configs, peer_to_peer_connections, expected_definitions",
+    [
+        pytest.param(
+            {},
+            {},
+            {},
+            id="no connection",
+        ),
+        pytest.param(
+            {
+                "remote_1": SiteConfiguration(
+                    alias="remote site",
+                    disable_wato=True,
+                    disabled=False,
+                    insecure=False,
+                    multisiteurl="http://127.0.0.1/remote_1/check_mk/",
+                    persist=False,
+                    replicate_ec=True,
+                    replication="slave",
+                    message_broker_port=5673,
+                    secret="watosecret",
+                    timeout=2,
+                    user_login=True,
+                    url_prefix="/heute/",
+                    proxy=None,
+                    socket=(
+                        "tcp",
+                        NetworkSocketDetails(
+                            address=("127.0.0.1", 6790),
+                            tls=("encrypted", {"verify": True}),
+                        ),
+                    ),
+                ),
+            },
+            {},
+            get_expected_definition("NO_SITE", {"remote_1": 5673}, {}),
+            id="replicated site",
+        ),
+        pytest.param(
+            {
+                "remote_1": SiteConfiguration(
+                    alias="remote site",
+                    disable_wato=True,
+                    disabled=False,
+                    insecure=False,
+                    multisiteurl="http://127.0.0.1:5001/remote_1/check_mk/",
+                    persist=False,
+                    replicate_ec=True,
+                    replication="slave",
+                    secret="watosecret",
+                    timeout=2,
+                    user_login=True,
+                    url_prefix="/heute/",
+                    proxy=None,
+                    socket=(
+                        "tcp",
+                        NetworkSocketDetails(
+                            address=("127.0.0.1", 6790),
+                            tls=("encrypted", {"verify": True}),
+                        ),
+                    ),
+                ),
+            },
+            {},
+            get_expected_definition("NO_SITE", {"remote_1": 5672}, {}),
+            id="replicated site with apache port in multisiteurl",
+        ),
+        pytest.param(
+            {
+                "remote_1": SiteConfiguration(
+                    alias="remote site",
+                    disable_wato=True,
+                    disabled=False,
+                    insecure=False,
+                    multisiteurl="http://127.0.0.1/remote_1/check_mk/",
+                    persist=False,
+                    replicate_ec=True,
+                    replication="slave",
+                    message_broker_port=5673,
+                    secret="watosecret",
+                    timeout=2,
+                    user_login=True,
+                    url_prefix="/heute/",
+                    proxy=None,
+                    socket=(
+                        "tcp",
+                        NetworkSocketDetails(
+                            address=("127.0.0.1", 6790),
+                            tls=("encrypted", {"verify": True}),
+                        ),
+                    ),
+                ),
+                "remote_2": SiteConfiguration(
+                    alias="remote site 2",
+                    disable_wato=True,
+                    disabled=False,
+                    insecure=False,
+                    multisiteurl="http://127.0.0.1/remote_2/check_mk/",
+                    persist=False,
+                    replicate_ec=True,
+                    replication="slave",
+                    message_broker_port=5674,
+                    secret="watosecret",
+                    timeout=2,
+                    user_login=True,
+                    url_prefix="/heute/",
+                    proxy=None,
+                    socket=(
+                        "tcp",
+                        NetworkSocketDetails(
+                            address=("127.0.0.1", 6791),
+                            tls=("encrypted", {"verify": True}),
+                        ),
+                    ),
+                ),
+            },
+            BrokerConnections(
+                {
+                    ConnectionId("test"): BrokerConnection(
+                        connecter=BrokerSite(site_id=SiteId("remote_1")),
+                        connectee=BrokerSite(site_id=SiteId("remote_2")),
+                    )
+                }
+            ),
+            get_expected_definition(
+                "NO_SITE", {"remote_1": 5673, "remote_2": 5674}, {"remote_1": "remote_2"}
+            ),
+            id="peer to peer connection",
+        ),
+        pytest.param(
+            {
+                "remote_1": SiteConfiguration(
+                    alias="remote site",
+                    disable_wato=True,
+                    disabled=False,
+                    insecure=False,
+                    multisiteurl="http://127.0.0.1/remote_1/check_mk/",
+                    persist=False,
+                    replicate_ec=True,
+                    replication="slave",
+                    message_broker_port=5673,
+                    secret="watosecret",
+                    timeout=2,
+                    user_login=True,
+                    url_prefix="/heute/",
+                    proxy=None,
+                    socket=(
+                        "tcp",
+                        NetworkSocketDetails(
+                            address=("127.0.0.1", 6790),
+                            tls=("encrypted", {"verify": True}),
+                        ),
+                    ),
+                ),
+                "remote_2": SiteConfiguration(
+                    alias="remote site 2",
+                    disable_wato=True,
+                    disabled=False,
+                    insecure=False,
+                    multisiteurl="http://127.0.0.1: 5001/remote_2/check_mk/",
+                    persist=False,
+                    replicate_ec=True,
+                    replication="slave",
+                    message_broker_port=5674,
+                    secret="watosecret",
+                    timeout=2,
+                    user_login=True,
+                    url_prefix="/heute/",
+                    proxy=None,
+                    socket=(
+                        "tcp",
+                        NetworkSocketDetails(
+                            address=("127.0.0.1", 6791),
+                            tls=("encrypted", {"verify": True}),
+                        ),
+                    ),
+                ),
+            },
+            BrokerConnections(
+                {
+                    ConnectionId("test"): BrokerConnection(
+                        connecter=BrokerSite(site_id=SiteId("remote_1")),
+                        connectee=BrokerSite(site_id=SiteId("remote_2")),
+                    )
+                }
+            ),
+            get_expected_definition(
+                "NO_SITE", {"remote_1": 5673, "remote_2": 5674}, {"remote_1": "remote_2"}
+            ),
+            id="peer to peer connection with apache port in multisiteurl",
+        ),
+    ],
+)
+def test_default_rabbitmq_definitions(
+    site_configs: Mapping[str, SiteConfiguration],
+    peer_to_peer_connections: BrokerConnections,
+    expected_definitions: Mapping[str, rabbitmq.Definitions],
+) -> None:
+    with patch(
+        "cmk.gui.watolib.activate_changes.get_all_replicated_sites",
+        return_value=site_configs,
+    ):
+        actual_definitions = default_rabbitmq_definitions(peer_to_peer_connections)
+        assert dict(actual_definitions) == expected_definitions

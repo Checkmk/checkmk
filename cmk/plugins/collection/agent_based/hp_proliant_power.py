@@ -6,7 +6,7 @@
 import typing
 from collections import abc
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -74,7 +74,7 @@ def check_hp_proliant_power(params: Params, section: Section) -> CheckResult:
         yield Result(state=State.CRIT, summary=f"Power Meter state: {status}")
         return
 
-    yield from check_levels(
+    yield from check_levels_v1(
         value=reading,
         metric_name="power",
         levels_upper=params.get("levels"),

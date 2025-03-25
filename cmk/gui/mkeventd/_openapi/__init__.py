@@ -20,6 +20,7 @@ The event console endpoints allow for
     * Query the event console table using filters, id or live status query and archive those events.
 
 """
+
 from collections.abc import Mapping
 from typing import Any
 
@@ -139,7 +140,7 @@ def event_id_not_found_problem(event_id: str) -> Response:
 
 
 def _serialize_event(event: ECEvent) -> DomainObject:
-    returnthis = constructors.domain_object(
+    return constructors.domain_object(
         domain_type="event_console",
         identifier=str(event.event_id),
         title=event.event_text,
@@ -147,7 +148,6 @@ def _serialize_event(event: ECEvent) -> DomainObject:
         editable=False,
         deletable=True,
     )
-    return returnthis
 
 
 @Endpoint(

@@ -6,6 +6,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.pages import PageRegistry
 from cmk.gui.permissions import PermissionSection, PermissionSectionRegistry
+from cmk.gui.valuespec import AutocompleterRegistry
 from cmk.gui.visuals.type import VisualTypeRegistry
 from cmk.gui.watolib.groups import ContactGroupUsageFinderRegistry
 
@@ -33,6 +34,7 @@ def register(
     visual_type_registry: VisualTypeRegistry,
     dashlet_registry_: DashletRegistry,
     contact_group_usage_finder_registry: ContactGroupUsageFinderRegistry,
+    autocompleter_registry: AutocompleterRegistry,
 ) -> None:
     visual_type_registry.register(VisualTypeDashboards)
     permission_section_registry.register(PermissionSectionDashboard)
@@ -53,7 +55,7 @@ def register(
     page_registry.register_page_handler("delete_dashlet", page_delete_dashlet)
     page_registry.register_page_handler("ajax_dashlet_pos", ajax_dashlet_pos)
 
-    register_dashlets(dashlet_registry_)
+    register_dashlets(dashlet_registry_, autocompleter_registry)
     register_builtin_dashboards(builtin_dashboards)
     contact_group_usage_finder_registry.register(find_usages_of_contact_group_in_dashboards)
 

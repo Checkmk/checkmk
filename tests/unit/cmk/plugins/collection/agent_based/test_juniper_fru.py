@@ -10,13 +10,13 @@ from tests.unit.cmk.plugins.collection.agent_based.snmp import (
     get_parsed_snmp_section,
     snmp_is_detected,
 )
-from tests.unit.conftest import FixRegister
-
-from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
 
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
+
 from cmk.agent_based.v2 import Result, Service, State
+from cmk.plugins.juniper.agent_based.juniper_fru_section import snmp_section_juniper_fru
 
 # SUP-13184
 DATA_0 = """
@@ -122,10 +122,12 @@ DATA_1 = """
 """
 
 
-def test_juniper_fru(fix_register: FixRegister, as_path: Callable[[str], Path]) -> None:
-    assert snmp_is_detected(SectionName("juniper_fru"), as_path(DATA_1))
-    plugin = fix_register.check_plugins[CheckPluginName("juniper_fru")]
-    parsed = get_parsed_snmp_section(SectionName("juniper_fru"), as_path(DATA_1))
+def test_juniper_fru(
+    agent_based_plugins: AgentBasedPlugins, as_path: Callable[[str], Path]
+) -> None:
+    assert snmp_is_detected(snmp_section_juniper_fru, as_path(DATA_1))
+    plugin = agent_based_plugins.check_plugins[CheckPluginName("juniper_fru")]
+    parsed = get_parsed_snmp_section(snmp_section_juniper_fru, as_path(DATA_1))
     assert list(plugin.discovery_function(parsed)) == [
         Service(item="PEM 0"),
         Service(item="PEM 1"),
@@ -137,10 +139,12 @@ def test_juniper_fru(fix_register: FixRegister, as_path: Callable[[str], Path]) 
     ]
 
 
-def test_juniper_fru_18(fix_register: FixRegister, as_path: Callable[[str], Path]) -> None:
-    assert snmp_is_detected(SectionName("juniper_fru"), as_path(DATA_0))
-    plugin = fix_register.check_plugins[CheckPluginName("juniper_fru")]
-    parsed = get_parsed_snmp_section(SectionName("juniper_fru"), as_path(DATA_0))
+def test_juniper_fru_18(
+    agent_based_plugins: AgentBasedPlugins, as_path: Callable[[str], Path]
+) -> None:
+    assert snmp_is_detected(snmp_section_juniper_fru, as_path(DATA_0))
+    plugin = agent_based_plugins.check_plugins[CheckPluginName("juniper_fru")]
+    parsed = get_parsed_snmp_section(snmp_section_juniper_fru, as_path(DATA_0))
     assert list(plugin.discovery_function(parsed)) == [
         Service(item="PSM 1"),
         Service(item="PSM 1 INP0"),

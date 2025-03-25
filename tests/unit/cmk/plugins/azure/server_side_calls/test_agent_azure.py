@@ -42,6 +42,8 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
                 "--services",
                 "users_count",
                 "Microsoft.DBforMySQL/servers",
+                "--cache-id",
+                "testhost",
             ],
             id="explicit_password",
         ),
@@ -73,6 +75,8 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
                 "group=my_res_group",
                 "--require-tag",
                 "my_tag",
+                "--cache-id",
+                "testhost",
             ],
             id="password_from_store",
         ),
@@ -90,7 +94,6 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
                         {"tag": "my_tag_2", "condition": ("equals", "t1")},
                     ],
                 },
-                "sequential": "singlethreaded",
                 "proxy": EnvProxy(),
                 "services": [],
             },
@@ -105,7 +108,6 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
                 "global",
                 "--subscription",
                 "banana",
-                "--sequential",
                 "--proxy",
                 "FROM_ENVIRONMENT",
                 "--explicit-config",
@@ -116,6 +118,8 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
                 "--require-tag-value",
                 "my_tag_2",
                 "t1",
+                "--cache-id",
+                "testhost",
             ],
             id="all_arguments",
         ),
@@ -126,7 +130,7 @@ def test_azure_argument_parsing(
     expected_args: Sequence[Any],
 ) -> None:
     """Tests if all required arguments are present."""
-    host_config = HostConfig(name="test")
+    host_config = HostConfig(name="testhost")
     commands = list(commands_function(AzureParams.model_validate(params), host_config))
     assert len(commands) == 1
     arguments = commands[0].command_arguments

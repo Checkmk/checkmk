@@ -8,8 +8,9 @@
 
 from dataclasses import dataclass
 
-from cmk.base.check_api import LegacyCheckDefinition, state_markers
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, STATE_MARKERS
+
+check_info = {}
 
 # .
 #   .--State---------------------------------------------------------------.
@@ -50,6 +51,7 @@ def check_esx_vsphere_hostsystem_state(_no_item, _no_params, parsed):
 
 
 check_info["esx_vsphere_hostsystem.state"] = LegacyCheckDefinition(
+    name="esx_vsphere_hostsystem_state",
     service_name="Overall state",
     sections=["esx_vsphere_hostsystem"],
     discovery_function=inventory_esx_vsphere_hostsystem_state,
@@ -92,6 +94,7 @@ def check_esx_vsphere_hostsystem_maintenance(_no_item, params, parsed):
 
 
 check_info["esx_vsphere_hostsystem.maintenance"] = LegacyCheckDefinition(
+    name="esx_vsphere_hostsystem_maintenance",
     service_name="Maintenance Mode",
     sections=["esx_vsphere_hostsystem"],
     discovery_function=inventory_esx_vsphere_hostsystem_maintenance,
@@ -141,7 +144,7 @@ class StateInfo:
     info: str
 
 
-def check_esx_vsphere_hostsystem_multipath(  # pylint: disable=too-many-branches
+def check_esx_vsphere_hostsystem_multipath(
     item,
     params,
     parsed,
@@ -171,7 +174,7 @@ def check_esx_vsphere_hostsystem_multipath(  # pylint: disable=too-many-branches
         if state_item:
             state_item.count += 1
             state = max(state_item.alert_state, state)
-            path_info += state_markers[state_item.alert_state]
+            path_info += STATE_MARKERS[state_item.alert_state]
         path_names.append(path_info)
 
     # Check warn, critical
@@ -220,6 +223,7 @@ def check_esx_vsphere_hostsystem_multipath(  # pylint: disable=too-many-branches
 
 
 check_info["esx_vsphere_hostsystem.multipath"] = LegacyCheckDefinition(
+    name="esx_vsphere_hostsystem_multipath",
     service_name="Multipath %s",
     sections=["esx_vsphere_hostsystem"],
     discovery_function=inventory_esx_vsphere_hostsystem_multipath,

@@ -5,56 +5,59 @@
 
 from typing import Any
 
-from cmk.gui.form_specs.vue.autogen_type_defs import vue_formspec_components as VueComponents
-from cmk.gui.form_specs.vue.registries import FormSpecVisitor
-from cmk.gui.form_specs.vue.type_defs import (
-    DEFAULT_VALUE,
-    DefaultValue,
-    EMPTY_VALUE,
-    EmptyValue,
-    Value,
-)
-from cmk.gui.form_specs.vue.utils import (
-    compute_input_hint,
+from cmk.gui.form_specs.private import CascadingSingleChoiceExtended
+from cmk.gui.form_specs.vue.validators import build_vue_validators
+from cmk.gui.i18n import _, translate_to_current_language
+
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
+
+from ._base import FormSpecVisitor
+from ._registry import get_visitor
+from ._type_defs import DEFAULT_VALUE, DefaultValue, InvalidValue
+from ._utils import (
+    base_i18n_form_spec,
     compute_label,
-    compute_validation_errors,
+    compute_title_input_hint,
     compute_validators,
-    create_validation_error,
     get_prefill_default,
     get_title_and_help,
-    get_visitor,
-    migrate_value,
 )
-from cmk.gui.form_specs.vue.validators import build_vue_validators
-from cmk.gui.i18n import translate_to_current_language
 
-from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import CascadingSingleChoice
+_ParsedValueModel = tuple[str, object]
+_FrontendModel = tuple[str, object]
 
 
-class CascadingSingleChoiceVisitor(FormSpecVisitor[CascadingSingleChoice, tuple[str, object]]):
-    def _parse_value(self, raw_value: object) -> tuple[str, object] | EmptyValue:
-        raw_value = migrate_value(self.form_spec, self.options, raw_value)
+class CascadingSingleChoiceVisitor(
+    FormSpecVisitor[CascadingSingleChoiceExtended, _ParsedValueModel, _FrontendModel]
+):
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
         if isinstance(raw_value, DefaultValue):
+            fallback_value: _FrontendModel = ("", None)
             if isinstance(
-                prefill_default := get_prefill_default(self.form_spec.prefill), EmptyValue
+                prefill_default := get_prefill_default(self.form_spec.prefill, fallback_value),
+                InvalidValue,
             ):
                 return prefill_default
             # The default value for a cascading_single_choice element only
             # contains the name of the selected element, not the value.
             return (prefill_default, DEFAULT_VALUE)
         if not isinstance(raw_value, (list, tuple)) or len(raw_value) != 2:
-            return EMPTY_VALUE
-        assert isinstance(raw_value[0], str)
+            return InvalidValue(reason=_("Invalid datatype"), fallback_value=("", None))
+
+        name = raw_value[0]
+        if not any(name == element.name for element in self.form_spec.elements):
+            return InvalidValue(reason=_("Invalid selection"), fallback_value=("", None))
+
+        assert isinstance(name, str)
         assert len(raw_value) == 2
         return tuple(raw_value)
 
     def _to_vue(
-        self, raw_value: object, parsed_value: tuple[str, object] | EmptyValue
-    ) -> tuple[VueComponents.CascadingSingleChoice, Value]:
+        self, raw_value: object, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
+    ) -> tuple[shared_type_defs.CascadingSingleChoice, _FrontendModel]:
         title, help_text = get_title_and_help(self.form_spec)
-        if isinstance(parsed_value, EmptyValue):
-            parsed_value = ("", None)
+        if isinstance(parsed_value, InvalidValue):
+            parsed_value = parsed_value.fallback_value
 
         selected_name, selected_value = parsed_value
         vue_elements = []
@@ -67,7 +70,7 @@ class CascadingSingleChoiceVisitor(FormSpecVisitor[CascadingSingleChoice, tuple[
                 selected_value = element_vue_value
 
             vue_elements.append(
-                VueComponents.CascadingSingleChoiceElement(
+                shared_type_defs.CascadingSingleChoiceElement(
                     name=element.name,
                     title=element.title.localize(translate_to_current_language),
                     default_value=element_vue_value,
@@ -76,30 +79,25 @@ class CascadingSingleChoiceVisitor(FormSpecVisitor[CascadingSingleChoice, tuple[
             )
 
         return (
-            VueComponents.CascadingSingleChoice(
+            shared_type_defs.CascadingSingleChoice(
                 title=title,
                 label=compute_label(self.form_spec.label),
                 help=help_text,
+                i18n_base=base_i18n_form_spec(),
                 elements=vue_elements,
                 validators=build_vue_validators(compute_validators(self.form_spec)),
-                input_hint=compute_input_hint(self.form_spec.prefill),
+                input_hint=compute_title_input_hint(self.form_spec.prefill),
+                layout=self.form_spec.layout,
             ),
             (selected_name, selected_value),
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: tuple[str, object] | EmptyValue
-    ) -> list[VueComponents.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
-            return create_validation_error(raw_value, Title("Invalid selection"))
-
+        self, raw_value: object, parsed_value: _ParsedValueModel
+    ) -> list[shared_type_defs.ValidationMessage]:
         selected_name, selected_value = parsed_value
-        element_validations = (
-            compute_validation_errors(compute_validators(self.form_spec), parsed_value)
-            if self.form_spec.custom_validate
-            else []
-        )
 
+        element_validations: list[shared_type_defs.ValidationMessage] = []
         for element in self.form_spec.elements:
             if selected_name != element.name:
                 continue
@@ -107,16 +105,16 @@ class CascadingSingleChoiceVisitor(FormSpecVisitor[CascadingSingleChoice, tuple[
             element_visitor = get_visitor(element.parameter_form, self.options)
             for validation in element_visitor.validate(selected_value):
                 element_validations.append(
-                    VueComponents.ValidationMessage(
+                    shared_type_defs.ValidationMessage(
                         location=[element.name] + validation.location,
                         message=validation.message,
-                        invalid_value=validation.invalid_value,
+                        replacement_value=validation.replacement_value,
                     )
                 )
 
         return element_validations
 
-    def _to_disk(self, raw_value: object, parsed_value: tuple[str, object]) -> tuple[str, object]:
+    def _to_disk(self, parsed_value: _ParsedValueModel) -> tuple[str, object]:
         selected_name, selected_value = parsed_value
 
         disk_value: Any = None

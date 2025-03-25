@@ -8,11 +8,12 @@
 
 import re
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.f5_bigip import DETECT
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
+
+check_info = {}
 
 # Agent / MIB output
 # see: 1.3.6.1.4.1.3375.2.2.5.1.2.1
@@ -95,6 +96,7 @@ def check_f5_bigip_pool(item, params, parsed):
 
 
 check_info["f5_bigip_pool"] = LegacyCheckDefinition(
+    name="f5_bigip_pool",
     detect=DETECT,
     fetch=[
         SNMPTree(

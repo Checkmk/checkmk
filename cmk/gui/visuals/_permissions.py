@@ -9,7 +9,6 @@ from cmk.gui.permissions import declare_permission
 from cmk.gui.type_defs import VisualTypeName
 
 
-# TODO: This has been obsoleted by pagetypes.py
 def declare_visual_permissions(what: VisualTypeName, what_plural: str) -> None:
     declare_permission(
         "general.edit_" + what,

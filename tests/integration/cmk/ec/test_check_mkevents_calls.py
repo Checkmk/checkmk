@@ -17,6 +17,6 @@ from tests.testlib.site import Site
 )
 def test_simple_check_mkevents_call(site: Site, args: list[str]) -> None:
     stdout = site.check_output(
-        [site.path("lib/nagios/plugins/check_mkevents")] + args + ["somehost"],
+        [site.path("lib/nagios/plugins/check_mkevents").as_posix()] + args + ["somehost"],
     )
     assert stdout == "OK - no events for somehost\n"

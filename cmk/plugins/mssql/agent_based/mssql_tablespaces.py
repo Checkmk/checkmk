@@ -3,18 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
     IgnoreResultsError,
-    Metric,
     render,
     Result,
     Service,
@@ -98,56 +97,9 @@ def discover(section: SectionTableSpaces) -> DiscoveryResult:
 agent_section_mssql_tablespaces = AgentSection(name="mssql_tablespaces", parse_function=parse)
 
 
-def _get_check_value(
-    levels: LevelsType, value_bytes: float, value_perc: float | None
-) -> tuple[float, Callable[[float], str]]:
-    if isinstance(levels[1], float) and value_perc is not None:
-        return value_perc, render.percent
-    return value_bytes, render.bytes
-
-
-def _check_levels_space_upper(
-    value_bytes: float,
-    value_perc: float | None,
-    metric_name: str,
-    levels: LevelsType,
-    infotext: str,
-) -> CheckResult:
-    value, render_func = _get_check_value(levels, value_bytes, value_perc)
-
-    warn, crit = levels
-    state = State.OK
-    if value >= crit:
-        state = State.CRIT
-    elif value >= warn:
-        state = State.WARN
-    if state:
-        infotext = f"{infotext} (warn/crit at {render_func(warn)}/{render_func(crit)})"
-
-    yield Result(state=state, summary=infotext)
-    yield Metric(name=metric_name, value=value_bytes)
-
-
-def _check_levels_space_lower(
-    value_bytes: float,
-    value_perc: float | None,
-    metric_name: str,
-    levels: LevelsType,
-    infotext: str,
-) -> CheckResult:
-    value, render_func = _get_check_value(levels, value_bytes, value_perc)
-
-    warn, crit = levels
-    state = State.OK
-    if value <= crit:
-        state = State.CRIT
-    elif value <= warn:
-        state = State.WARN
-    if state:
-        infotext = f"{infotext} (warn/crit below {render_func(warn)}/{render_func(crit)})"
-
-    yield Result(state=state, summary=infotext)
-    yield Metric(name=metric_name, value=value_bytes)
+def _levels_are_in_percentage(levels: LevelsType | None) -> bool:
+    # Oldschool type dispatch :-(
+    return levels is not None and isinstance(levels[1], float)
 
 
 def check(item: str, params: Mapping[str, Any], section: SectionTableSpaces) -> CheckResult:
@@ -162,38 +114,47 @@ def check(item: str, params: Mapping[str, Any], section: SectionTableSpaces) -> 
         yield Result(state=State.CRIT, summary=tablespace.error)
 
     if size is not None:
-        levels = params.get("size", (None, None))
-        yield from check_levels(
+        yield from check_levels_v1(
             value=size,
             metric_name="size",
-            levels_upper=levels,
+            levels_upper=params.get("size"),
             render_func=render.bytes,
             label="Size",
         )
 
-    for metric_name, value_bytes, label, check_levels_space in [
-        ("unallocated", tablespace.unallocated, "Unallocated space", _check_levels_space_lower),
-        ("reserved", tablespace.reserved, "Reserved space", _check_levels_space_upper),
-        ("data", tablespace.data, "Data", _check_levels_space_upper),
-        ("indexes", tablespace.indexes, "Indexes", _check_levels_space_upper),
-        ("unused", tablespace.unused, "Unused", _check_levels_space_upper),
+    for metric_name, value_bytes, label, levels_lower, levels_upper in [
+        (
+            "unallocated",
+            tablespace.unallocated,
+            "Unallocated space",
+            params.get("unallocated"),
+            None,
+        ),
+        ("reserved", tablespace.reserved, "Reserved space", None, params.get("reserved")),
+        ("data", tablespace.data, "Data", None, params.get("data")),
+        ("indexes", tablespace.indexes, "Indexes", None, params.get("indexes")),
+        ("unused", tablespace.unused, "Unused", None, params.get("unused")),
     ]:
         if value_bytes is None:
             continue
 
-        if size is None or size == 0:
-            value_perc = None
-            infotext = f"{label}: {render.bytes(value_bytes)}"
-        else:
-            value_perc = 100.0 * value_bytes / size
-            infotext = f"{label}: {render.bytes(value_bytes)}, {render.percent(value_perc)}"
+        levels_are_perc = _levels_are_in_percentage(levels_upper or levels_lower)
 
-        if (levels := params.get(metric_name)) is None:
-            yield Result(state=State.OK, summary=infotext)
-            yield Metric(name=metric_name, value=value_bytes)
-            continue
-
-        yield from check_levels_space(value_bytes, value_perc, metric_name, levels, infotext)
+        yield from check_levels_v1(
+            value=value_bytes,
+            metric_name=metric_name,
+            levels_upper=None if levels_are_perc else levels_upper,
+            levels_lower=None if levels_are_perc else levels_lower,
+            render_func=render.bytes,
+            label=label,
+        )
+        if size is not None and size != 0:
+            yield from check_levels_v1(
+                value=100.0 * value_bytes / size,
+                levels_upper=levels_upper if levels_are_perc else None,
+                levels_lower=levels_lower if levels_are_perc else None,
+                render_func=render.percent,
+            )
 
 
 check_plugin_mssql_tablespaces = CheckPlugin(

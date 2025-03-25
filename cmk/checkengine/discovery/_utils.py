@@ -20,6 +20,7 @@ DiscoveryVsSetting = dict[
         "remove_vanished_services",
         "update_host_labels",
         "update_changed_service_labels",
+        "update_changed_service_parameters",
     ],
     bool,
 ]
@@ -72,7 +73,9 @@ class DiscoverySettings:
             add_new_services=mode[1].get("add_new_services", False),
             remove_vanished_services=mode[1].get("remove_vanished_services", False),
             update_changed_service_labels=mode[1].get("update_changed_service_labels", False),
-            update_changed_service_parameters=False,
+            update_changed_service_parameters=mode[1].get(
+                "update_changed_service_parameters", False
+            ),
         )
 
     def to_json(self) -> str:
@@ -126,6 +129,16 @@ _DiscoveredItem = TypeVar("_DiscoveredItem", bound=_Discoverable)
 class DiscoveredItem(Generic[_DiscoveredItem]):
     previous: _DiscoveredItem | None
     new: _DiscoveredItem | None
+    older: _DiscoveredItem = dataclasses.field(init=False)
+    newer: _DiscoveredItem = dataclasses.field(init=False)
+
+    def __post_init__(self) -> None:
+        older = self.new if self.previous is None else self.previous
+        newer = self.previous if self.new is None else self.new
+        if older is None or newer is None:
+            raise ValueError("Either 'previous' or 'new' must be set.")
+        self.older = older
+        self.newer = newer
 
 
 class QualifiedDiscovery(Generic[_DiscoveredItem]):
@@ -137,6 +150,9 @@ class QualifiedDiscovery(Generic[_DiscoveredItem]):
         preexisting: Sequence[_DiscoveredItem],
         current: Sequence[_DiscoveredItem],
     ) -> None:
+        self.preexisting: Final = preexisting
+        self.current: Final = current
+
         current_dict = {v.id(): v for v in current}
         preexisting_dict = {v.id(): v for v in preexisting}
 
@@ -181,11 +197,14 @@ class QualifiedDiscovery(Generic[_DiscoveredItem]):
 
     @property
     def present(self) -> list[_DiscoveredItem]:
+        # not quite like 'current'!
         return self.old + self.new
 
     def chain_with_transition(
         self,
-    ) -> Iterable[tuple[Literal["vanished", "unchanged", "changed", "new"], DiscoveredItem]]:
+    ) -> Iterable[
+        tuple[Literal["vanished", "unchanged", "changed", "new"], DiscoveredItem[_DiscoveredItem]]
+    ]:
         yield from (("vanished", value) for value in self._vanished)
         yield from (("unchanged", value) for value in self._unchanged)
         yield from (("changed", value) for value in self._changed)

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from logging import Logger
+from typing import override
 
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 
@@ -16,10 +17,10 @@ class CreatePrecompiledFiles(UpdateAction):
     Create all precompiled files for better performance.
     """
 
+    @override
     def __call__(self, _logger: Logger) -> None:
         for folder in folder_tree().root_folder().subfolders_recursively():
             folder.save()
-            folder.save_hosts()
 
 
 update_action_registry.register(

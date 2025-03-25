@@ -5,11 +5,12 @@
 import os
 import typing
 import urllib
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 import pytest
 
-from tests.testlib.rest_api_client import (
+from tests.testlib.unit.rest_api_client import (
     ClientRegistry,
     Response,
     RestApiClient,
@@ -17,11 +18,14 @@ from tests.testlib.rest_api_client import (
     RuleProperties,
 )
 
+from cmk.ccc.store import load_mk_file, save_mk_file, save_to_mk_file
+
 from cmk.utils import paths
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
 from cmk.utils.rulesets.definition import RuleGroup
 
-from cmk.ccc.store import load_mk_file, save_mk_file, save_to_mk_file
+from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundleStore
+from cmk.gui.watolib.configuration_bundles import create_config_bundle, CreateBundleEntities
 
 DEFAULT_VALUE_RAW = """{
     "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
@@ -138,18 +142,17 @@ def test_openapi_get_non_existing_rule(clients: ClientRegistry) -> None:
 
 def test_openapi_create_rule_regression(clients: ClientRegistry) -> None:
     value_raw = '{"inodes_levels": (10.0, 5.0), "levels": [(0, (0, 0)), (0, (0.0, 0.0))], "magic": 0.8, "trend_perfdata": True}'
-    r = clients.Rule.create(
+    clients.Rule.create(
         ruleset=RuleGroup.CheckgroupParameters("filesystem"),
         value_raw=value_raw,
         conditions={},
         folder="~",
         properties={"disabled": False, "description": "API2I"},
     )
-    print(r)
 
 
 def test_openapi_value_raw_is_unaltered(clients: ClientRegistry) -> None:
-    value_raw = "{'levels': (10.0, 5.0)}"
+    value_raw = "{'levels': ('fixed', (10.0, 5.0))}"
     resp = clients.Rule.create(
         ruleset=RuleGroup.CheckgroupParameters("memory_percentage_used"),
         value_raw=value_raw,
@@ -186,7 +189,7 @@ def test_openapi_value_active_check_http(clients: ClientRegistry) -> None:
 
 
 def test_openapi_rules_href_escaped(clients: ClientRegistry) -> None:
-    resp = clients.Ruleset.list(search_options="?used=0")
+    resp = clients.Ruleset.list(used=False)
     ruleset = next(r for r in resp.json["value"] if RuleGroup.SpecialAgents("gcp") == r["id"])
     assert (
         ruleset["links"][0]["href"]
@@ -301,7 +304,7 @@ def test_openapi_show_non_existing_ruleset(clients: ClientRegistry) -> None:
 
 
 def test_openapi_list_rulesets(clients: ClientRegistry) -> None:
-    resp = clients.Ruleset.list(search_options="?fulltext=cisco_qos&used=False")
+    resp = clients.Ruleset.list(fulltext="cisco_qos", used=False)
     assert len(resp.json["value"]) == 2
 
 
@@ -484,7 +487,7 @@ def test_openapi_edit_rule_reject_incompatible_value_raw(clients: ClientRegistry
         rule_id=resp.json["id"],
         value_raw='{"memory": {"horizon": 90, "levels_upper": ("absolute", (0.5, 1.0)), "period": "24x7"}}',
         expect_ok=False,
-    )
+    ).assert_rest_api_crash()
 
 
 def test_openapi_create_rule_label_groups_no_operator(clients: ClientRegistry) -> None:
@@ -500,6 +503,19 @@ def test_openapi_create_rule_label_groups_no_operator(clients: ClientRegistry) -
 
 @pytest.fixture(name="locked_rule_id")
 def fixture_locked_rule_id() -> Iterable[str]:
+    bundle_id = BundleId("bundle_id")
+    program_id = PROGRAM_ID_QUICK_SETUP
+    create_config_bundle(
+        bundle_id=bundle_id,
+        bundle={
+            "title": "bundle_title",
+            "comment": "bundle_comment",
+            "group": "bundle_group",
+            "program_id": program_id,
+        },
+        entities=CreateBundleEntities(),
+    )
+
     rules_mk = os.path.join(paths.omd_root, "etc", "check_mk", "conf.d", "wato", "rules.mk")
     content: str | None = None
     if os.path.exists(rules_mk):
@@ -517,13 +533,20 @@ def fixture_locked_rule_id() -> Iterable[str]:
                 "options": {"disabled": False},
                 "locked_by": {
                     "site_id": "heute",
-                    "program_id": PROGRAM_ID_QUICK_SETUP,
-                    "instance_id": "some-rule-id",
+                    "program_id": program_id,
+                    "instance_id": bundle_id,
                 },
             },
         ],
     )
     yield id_
+
+    # remove Quick setup config bundle
+    store = ConfigBundleStore()
+    all_bundles = store.load_for_modification()
+    all_bundles.pop(bundle_id)
+    store.save(all_bundles)
+
     if content is None:
         os.remove(rules_mk)
     else:

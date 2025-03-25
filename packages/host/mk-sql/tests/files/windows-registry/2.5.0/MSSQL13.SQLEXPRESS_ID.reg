@@ -1,0 +1,244 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID]
+@="SQLEXPRESS_NAME"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\ClusterState]
+"SQL_Replication_Core_Inst"=dword:00000000
+"MPT_AGENT_CORE_CNI"=dword:00000000
+"SQL_Engine_Core_Inst"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\ConfigurationState]
+"SQL_Replication_Core_Inst"=dword:00000001
+"MPT_AGENT_CORE_CNI"=dword:00000001
+"SQL_Engine_Core_Inst"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\CPE]
+"CollectorParameters"="SQL MSSQL13.SQLEXPRESS_ID"
+"TimeOfReporting"=dword:0000003c
+"ErrorDumpDir"="C:\\Program Files\\Microsoft SQL Server\\MSSQL13.SQLEXPRESS_ID\\MSSQL\\LOG\\"
+"EnableErrorReporting"=dword:00000001
+"CustomerFeedback"=dword:00000001
+"InstallID"="e3d9ea37-61b2-4956-ab6f-e03d2db889a9"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\MSSQLServer]
+"SysDb"=dword:00000001
+"AuditLevel"=dword:00000002
+"BackupDirectory"="C:\\Program Files\\Microsoft SQL Server\\MSSQL13.SQLEXPRESS_ID\\MSSQL\\Backup"
+"DefaultLogin"="guest"
+"LoginMode"=dword:00000002
+"Tapeloadwaittime"=dword:ffffffff
+"SetHostName"=dword:00000000
+"FirstStart"=dword:00000000
+"uptime_pid"=dword:000010f4
+"uptime_time_utc"=hex:d0,3d,df,ac,f2,72,db,01
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\MSSQLServer\CurrentVersion]
+"RegisteredOwner"=""
+"SerialNumber"=""
+"CurrentVersion"="13.2.5026.0"
+"Language"=dword:00000409
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\MSSQLServer\Filestream]
+"RsFxVersion"="0411"
+"RsFxVersionBase"="0401"
+"RsFxVersionPcu"="0410"
+"InstanceGuid"="{1a001bd5-a47c-48ef-b510-9c16da20e00a}"
+"ShareName"="SQLEXPRESS_NAME"
+"EnableLevel"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\MSSQLServer\HADR]
+"HADR_Enabled"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\MSSQLServer\Parameters]
+"SQLArg0"="-dC:\\Program Files\\Microsoft SQL Server\\MSSQL13.SQLEXPRESS_ID\\MSSQL\\DATA\\master.mdf"
+"SQLArg1"="-eC:\\Program Files\\Microsoft SQL Server\\MSSQL13.SQLEXPRESS_ID\\MSSQL\\Log\\ERRORLOG"
+"SQLArg2"="-lC:\\Program Files\\Microsoft SQL Server\\MSSQL13.SQLEXPRESS_ID\\MSSQL\\DATA\\mastlog.ldf"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\MSSQLServer\SuperSocketNetLib]
+"ForceEncryption"=dword:00000000
+"HideInstance"=dword:00000000
+"Certificate"=""
+"ExtendedProtection"=dword:00000000
+"AcceptedSPNs"=hex(7):00,00
+"DisplayName"="SQL Server Network Configuration"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\MSSQLServer\SuperSocketNetLib\AdminConnection]
+"DisplayName"="Dedicated Administrative Connection"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\MSSQLServer\SuperSocketNetLib\AdminConnection\Tcp]
+"TcpDynamicPorts"="0"
+"DisplayName"="TCP/IP"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\MSSQLServer\SuperSocketNetLib\Np]
+"Enabled"=dword:00000000
+"PipeName"="\\\\.\\pipe\\MSSQL$SQLEXPRESS_NAME\\sql\\query"
+"DisplayName"="Named Pipes"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\MSSQLServer\SuperSocketNetLib\Sm]
+"Enabled"=dword:00000001
+"DisplayName"="Shared Memory"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\MSSQLServer\SuperSocketNetLib\Tcp]
+"Enabled"=dword:00000001
+"ListenOnAllIPs"=dword:00000001
+"KeepAlive"=dword:00007530
+"DisplayName"="TCP/IP"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\MSSQLServer\SuperSocketNetLib\Tcp\IP1]
+"Enabled"=dword:00000000
+"Active"=dword:00000001
+"TcpPort"=""
+"TcpDynamicPorts"="0"
+"DisplayName"="Specific IP Address"
+"IpAddress"="fec0::f15e:48d4:e37e:6f80%1"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\MSSQLServer\SuperSocketNetLib\Tcp\IP2]
+"Enabled"=dword:00000000
+"Active"=dword:00000001
+"TcpPort"=""
+"TcpDynamicPorts"="0"
+"DisplayName"="Specific IP Address"
+"IpAddress"="fe80::3de7:a923:1e30:84b0%3"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\MSSQLServer\SuperSocketNetLib\Tcp\IP3]
+"Enabled"=dword:00000000
+"Active"=dword:00000001
+"TcpPort"=""
+"TcpDynamicPorts"="0"
+"DisplayName"="Specific IP Address"
+"IpAddress"="10.0.2.15"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\MSSQLServer\SuperSocketNetLib\Tcp\IP4]
+"Enabled"=dword:00000000
+"Active"=dword:00000001
+"TcpPort"=""
+"TcpDynamicPorts"="0"
+"DisplayName"="Specific IP Address"
+"IpAddress"="::1"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\MSSQLServer\SuperSocketNetLib\Tcp\IP5]
+"Enabled"=dword:00000000
+"Active"=dword:00000001
+"TcpPort"=""
+"TcpDynamicPorts"="0"
+"DisplayName"="Specific IP Address"
+"IpAddress"="127.0.0.1"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\MSSQLServer\SuperSocketNetLib\Tcp\IPAll]
+"TcpPort"=""
+"TcpDynamicPorts"="59698"
+"DisplayName"="Any IP Address"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\MSSQLServer\SuperSocketNetLib\Via]
+"Enabled"=dword:00000000
+"DefaultServerPort"="0:1433"
+"ListenInfo"="0:1433"
+"DisplayName"="VIA"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\Providers]
+"AllowInProcess"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\Providers\ADSDSOObject]
+"AllowInProcess"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\Providers\DB2OLEDB]
+"AllowInProcess"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\Providers\MSDASQL]
+"AllowInProcess"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\Providers\MSIDXS]
+"AllowInProcess"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\Providers\MSOLAP]
+"AllowInProcess"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\Providers\MSQLImpProv]
+"AllowInProcess"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\Providers\MSSEARCHSQL]
+"AllowInProcess"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\Providers\SQLNCLI11]
+"AllowInProcess"=dword:00000001
+"DisallowAdhocAccess"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\Replication]
+"DistributionDB"=""
+"WorkingDirectory"="C:\\Program Files\\Microsoft SQL Server\\MSSQL13.SQLEXPRESS_ID\\MSSQL\\repldata"
+"IsInstalled"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\Replication\Setup]
+"Upgraded"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\Security]
+"Entropy"=hex:a4,f1,cf,6f,54,fc,08,33,8f,ee,36,e7,34,fa,32,67,cf,89,60,fc,01,\
+  3e,93,d2,90,64,47,07,fe,4f,a2,99,21,32,d0,e2,52,ac,1c,ab,77,90,81,0d,54,6c,\
+  0b,b9,91,58,52,83,4c,b8,9a,a3,26,39,55,61,2a,de,85,4c,27,7e,0e,1d,12,09,36,\
+  4c,e0,03,51,ae,40,81,37,cf,f1,3f,26,3d,9d,a0,3e,f6,31,50,e4,79,b0,59,c1,bc,\
+  b3,30,d1,2e,58,07,6b,56,94,3e,6e,97,76,48,3c,e5,31,5f,8d,0e,2c,04,f2,15,28,\
+  a8,e3,96,96,fc,93,9e,c4,8d,69,b3,99,fb,2e,b5,10,a9,37,a9,6c,ba,6d,dd,10,83,\
+  78,6f,a9,66,15,45,8a,bd,bc,fe,e4,d7,1d,ec,fa,7d,81,fc,8a,fb,0a,3d,e5,a8,e1,\
+  e2,9f,fc,d8,07,0c,ea,93,25,28,74,85,a8,3d,62,91,5e,ce,d3,82,b4,67,d7,c9,c1,\
+  91,86,88,e2,1f,13,ba,13,81,29,14,6b,e2,5c,6d,9d,32,b2,3e,10,b0,f6,92,33,8c,\
+  f9,00,1a,81,9a,4e,b7,14,ab,cf,1e,1a,c0,69,57,b3,ec,0e,44,88,3b,64,44,7c,1e,\
+  78,85,65,77,62,a2,be,f3,f8,af
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\Setup]
+"Version"="13.2.5026.0"
+"SP"=dword:00000002
+"SQLPath"="C:\\Program Files\\Microsoft SQL Server\\MSSQL13.SQLEXPRESS_ID\\MSSQL"
+"ProductCode"="{51574D2C-DE28-4441-BDC2-967F0FFC0918}"
+"SqlProgramDir"="C:\\Program Files\\Microsoft SQL Server\\"
+"FeatureList"="SQL_Engine_Core_Inst=3 SQL_Replication_Core_Inst=3 SQL_DataFiles_Core_Inst=3 SQL_ENGINE_DB_CNI=3 SQL_Replication_CNI=3 SQL_Replication_FNI=3 SQL_CMDLINETOOLS_CNI=3 SQL_DUMPER_CNI=3 SQL_Engine_CNI=3 SQL_ENGINE_CORE_CNI=3 SQL_LEGACYTOOLS_CNI=3 SQL_SLP_ENGINE_SUPPORT_CNI=3 MPT_AGENT_CORE_CNI=3 MPT_AGENT_CORE_MNGD_CNI=3 SQL_AGENT_FNI=3 SQL_DATA_COLLECTOR_FNI=3 SQL_LEGACYTOOLS_FNI=3 SQL_MAIL_FNI=3 SQL_UPGRADESCRIPTS_FNI=3"
+"PatchLevel"="13.2.5108.50"
+"SQLBinRoot"="C:\\Program Files\\Microsoft SQL Server\\MSSQL13.SQLEXPRESS_ID\\MSSQL\\Binn"
+"Language"=dword:00000409
+"checksum"=hex:39,36,33,66,66,66,30,65,62,38,32,62,30,34,37,62,31,30,35,31,36,\
+  38,32,31,30,30,63,63,36,30,32,30,31,36,31,38,62,62,61,63,64,30,34,39,36,31,\
+  61,62,38,39,33,38,37,30,66,66,39,31,64,38,62,31,32,65,35,64,66,38,63,63,34,\
+  63,36,33,30,35,30,66,61,37,38,62,61,33,65,30,39,36,61,64,65,32,64,64,35,30,\
+  31,64,35,64,32,64,31,64,38,64,65,35,31,63,36,31,39,62,65,34,35,61,62,35,35,\
+  32,34,66,35,35,36,39,33,39,31,30,39,39,38,32,64,34,30,33,62,30,36,32,38,37,\
+  63,37,39,38,38,33,38,32,34,63,63,30,31,30,36,39,35,61,64,38,37,35,32,30,35,\
+  38,34,33,37,35,38,31,34,63,66,36,34,61,36,64,65,39,39,30,64,35,39,35,00
+"EditionType"="Express Edition"
+"Edition"="Express Edition"
+"SQLGroup"="S-1-5-80-3425791387-3859401890-1858296329-3072660334-2645038276"
+"Collation"="Latin1_General_CI_AS"
+"SQLDataRoot"="C:\\Program Files\\Microsoft SQL Server\\MSSQL13.SQLEXPRESS_ID\\MSSQL"
+"AGTGroup"="S-1-5-80-184356311-2026763126-1694844900-1806529655-4130366230"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\Setup\SQL_Engine_Core_Inst]
+"ProductCode"="{51574D2C-DE28-4441-BDC2-967F0FFC0918}"
+"FeatureList"="SQL_Engine_Core_Inst=3 SQL_Replication_Core_Inst=3 SQL_DataFiles_Core_Inst=3 SQL_ENGINE_DB_CNI=3 SQL_Replication_CNI=3 SQL_Replication_FNI=3 SQL_CMDLINETOOLS_CNI=3 SQL_DUMPER_CNI=3 SQL_Engine_CNI=3 SQL_ENGINE_CORE_CNI=3 SQL_LEGACYTOOLS_CNI=3 SQL_SLP_ENGINE_SUPPORT_CNI=3 MPT_AGENT_CORE_CNI=3 MPT_AGENT_CORE_MNGD_CNI=3 SQL_AGENT_FNI=3 SQL_DATA_COLLECTOR_FNI=3 SQL_LEGACYTOOLS_FNI=3 SQL_MAIL_FNI=3 SQL_UPGRADESCRIPTS_FNI=3"
+"Version"="13.2.5026.0"
+"PatchLevel"="13.2.5108.50"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\Setup\SQL_Engine_Core_Inst\1033]
+"ProductCode"="{0C457EC3-E998-4041-B856-908D5A2C1708}"
+"FeatureList"="SQL_Engine_Core_Inst_Loc=3 SQL_ENGINE_CORE_CLI=3 MPT_AGENT_CORE_CLI=3 MPT_AGENT_CORE_MNGD_CLI=3 SQL_AGENT_FLI=3 SQL_DATA_COLLECTOR_FLI=3 SQL_LEGACYTOOLS_FLI=3 SQL_MAIL_FLI=3"
+"Version"="13.2.5026.0"
+"PatchLevel"="13.2.5026.0"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\SQLServerAgent]
+"ErrorLogFile"="C:\\Program Files\\Microsoft SQL Server\\MSSQL13.SQLEXPRESS_ID\\MSSQL\\Log\\SQLAGENT.OUT"
+"WorkingDirectory"="C:\\Program Files\\Microsoft SQL Server\\MSSQL13.SQLEXPRESS_ID\\MSSQL\\JOBS"
+"RestartServer"="1"
+"ErrorLoggingLevel"=dword:00000003
+"JobHistoryMaxRows"=dword:000003e8
+"JobHistoryMaxRowsPerJob"=dword:00000064
+"NonAlertableErrors"="1204,4002"
+"MSXServerName"=""
+"SysAdminOnly"="1"
+"ServerHost"=""
+"DownloadedMaxRows"=dword:00000064
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\SQLServerSCP]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\checkmk\tests\2.5.0\mk-sql\instances\test-std\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\UpgradeIncompleteState]
+"SQL_Replication_Core_Inst"=dword:00000000
+"MPT_AGENT_CORE_CNI"=dword:00000000
+"SQL_Engine_Core_Inst"=dword:00000000
+

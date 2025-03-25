@@ -18,7 +18,7 @@ from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.painter.v0.base import Cell
+from cmk.gui.painter.v0 import Cell
 from cmk.gui.type_defs import ColumnName, Rows, VisualContext
 from cmk.gui.visuals.filter import Filter
 
@@ -122,9 +122,7 @@ class RowTableLivestatus(RowTable):
         return rows, len(data)
 
 
-def query_livestatus(
-    query: Query, only_sites: OnlySites, limit: int | None, auth_domain: str
-) -> list[LivestatusRow]:
+def debug_livestatus(query: Query) -> None:
     if all(
         (
             active_config.debug_livestatus_queries,
@@ -135,6 +133,27 @@ def query_livestatus(
         html.open_div(class_=["livestatus", "message"])
         html.tt(str(query).replace("\n", "<br>\n"))
         html.close_div()
+
+
+def query_row(
+    query: Query, only_sites: OnlySites, limit: int | None, auth_domain: str
+) -> LivestatusRow:
+    debug_livestatus(query)
+
+    sites.live().set_auth_domain(auth_domain)
+
+    with sites.only_sites(only_sites), sites.prepend_site(), sites.set_limit(limit):
+        row = sites.live().query_row(query)
+
+    sites.live().set_auth_domain("read")
+
+    return row
+
+
+def query_livestatus(
+    query: Query, only_sites: OnlySites, limit: int | None, auth_domain: str
+) -> list[LivestatusRow]:
+    debug_livestatus(query)
 
     sites.live().set_auth_domain(auth_domain)
     with sites.only_sites(only_sites), sites.prepend_site(), sites.set_limit(limit):
@@ -169,13 +188,13 @@ def _merge_data(
     for c in columns:
         _tablename, col = c.split("_", 1)
         if col.startswith("num_") or col.startswith("members"):
-            mergefunc = lambda a, b: a + b  # pylint: disable=unnecessary-lambda-assignment
+            mergefunc = lambda a, b: a + b
         elif col.startswith("worst_service"):
             mergefunc = functools.partial(worst_service_state, default=3)
         elif col.startswith("worst_host"):
             mergefunc = worst_host_state
         else:
-            mergefunc = lambda a, b: a  # pylint: disable=unnecessary-lambda-assignment
+            mergefunc = lambda a, b: a
 
         mergefuncs.append(mergefunc)
 

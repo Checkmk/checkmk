@@ -1,100 +1,109 @@
 {
-  "$schema": "https://json-schema.org/draft/2019-09/schema",
-  "type": "object",
-  "$defs": {
-    "is_integer": {
-      "type": "object",
-      "properties": {
-        "type": {
-          "const": "is_integer",
-          "default": "is_integer"
+    "$schema": "https://json-schema.org/draft/2019-09/schema",
+    "type": "object",
+    "$defs": {
+        "is_integer": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "is_integer",
+                    "default": "is_integer"
+                },
+                "error_message": {
+                    "type": "string"
+                }
+            },
+            "required": ["type", "error_message"]
         },
-        "error_message": {
-          "type": "string"
+        "is_float": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "is_float",
+                    "default": "is_float"
+                },
+                "error_message": {
+                    "type": "string"
+                }
+            },
+            "required": ["type", "error_message"]
+        },
+        "length_in_range": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "length_in_range",
+                    "default": "length_in_range"
+                },
+                "min_value": {
+                    "type": ["integer", "null"]
+                },
+                "max_value": {
+                    "type": ["integer", "null"]
+                },
+                "error_message": {
+                    "type": "string"
+                }
+            },
+            "required": ["type", "min_value", "max_value", "error_message"]
+        },
+        "number_in_range": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "number_in_range",
+                    "default": "number_in_range"
+                },
+                "min_value": {
+                    "type": ["number", "null"]
+                },
+                "max_value": {
+                    "type": ["number", "null"]
+                },
+                "error_message": {
+                    "type": "string"
+                }
+            },
+            "required": ["type", "min_value", "max_value", "error_message"]
+        },
+        "match_regex": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "match_regex",
+                    "default": "match_regex"
+                },
+                "regex": {
+                    "type": "string"
+                },
+                "error_message": {
+                    "type": "string"
+                }
+            },
+            "required": ["type"]
+        },
+        "validator": {
+            "discriminator": {
+                "propertyName": "type"
+            },
+            "oneOf": [
+                {
+                    "$ref": "#/$defs/is_integer"
+                },
+                {
+                    "$ref": "#/$defs/is_float"
+                },
+                {
+                    "$ref": "#/$defs/number_in_range"
+                },
+                {
+                    "$ref": "#/$defs/length_in_range"
+                },
+                {
+                    "$ref": "#/$defs/match_regex"
+                }
+            ],
+            "required": ["type"]
         }
-      },
-      "required": [
-        "type"
-      ]
-    },
-    "is_float": {
-      "type": "object",
-      "properties": {
-        "type": {
-          "const": "is_float",
-          "default": "is_float"
-        },
-        "error_message": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "type"
-      ]
-    },
-    "length_in_range": {
-      "type": "object",
-      "properties": {
-        "type": {
-          "const": "length_in_range",
-          "default": "length_in_range"
-        },
-        "min_value": {
-          "type": "integer"
-        },
-        "max_value": {
-          "type": "integer"
-        },
-        "error_message": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "type"
-      ]
-    },
-    "number_in_range": {
-      "type": "object",
-      "properties": {
-        "type": {
-          "const": "number_in_range",
-          "default": "number_in_range"
-        },
-        "min_value": {
-          "type": "integer"
-        },
-        "max_value": {
-          "type": "integer"
-        },
-        "error_message": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "type"
-      ]
-    },
-    "validators": {
-      "discriminator": {
-        "propertyName": "type"
-      },
-      "oneOf": [
-        {
-          "$ref": "#/$defs/is_integer"
-        },
-        {
-          "$ref": "#/$defs/is_float"
-        },
-        {
-          "$ref": "#/$defs/number_in_range"
-        },
-        {
-          "$ref": "#/$defs/length_in_range"
-        }
-      ],
-      "required": [
-        "type"
-      ]
     }
-  }
 }

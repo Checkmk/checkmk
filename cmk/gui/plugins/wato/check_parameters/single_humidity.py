@@ -15,7 +15,7 @@ from cmk.gui.valuespec import Dictionary, Integer, Migrate, Tuple
 
 
 def _migrate_quadruple(
-    p: Mapping[str, tuple] | tuple[float, float, float, float]
+    p: Mapping[str, tuple] | tuple[float, float, float, float],
 ) -> Mapping[str, tuple]:
     if isinstance(p, dict):
         return p

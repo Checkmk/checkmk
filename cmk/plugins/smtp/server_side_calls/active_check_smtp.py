@@ -61,7 +61,7 @@ def _get_ip_option(params: Parameters, host_config: HostConfig) -> tuple[str, Li
     return ipv4.address, "-4"
 
 
-def check_smtp_arguments(  # pylint: disable=too-many-branches
+def check_smtp_arguments(
     params: Parameters, host_config: HostConfig
 ) -> Iterable[ActiveCheckCommand]:
     address, ip_option = _get_ip_option(params, host_config)

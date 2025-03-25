@@ -24,14 +24,14 @@ check_name = "fast_lta_volumes"
 
 # TODO: drop this after migration
 @pytest.fixture(scope="module", name="plugin")
-def _get_plugin(fix_register):
-    return fix_register.check_plugins[CheckPluginName(check_name)]
+def _get_plugin(agent_based_plugins):
+    return agent_based_plugins.check_plugins[CheckPluginName(check_name)]
 
 
 # TODO: drop this after migration
 @pytest.fixture(scope="module", name=f"parse_{check_name}")
-def _get_parse(fix_register):
-    return fix_register.snmp_sections[SectionName(check_name)].parse_function
+def _get_parse(agent_based_plugins):
+    return agent_based_plugins.snmp_sections[SectionName(check_name)].parse_function
 
 
 # TODO: drop this after migration

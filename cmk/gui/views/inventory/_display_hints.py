@@ -32,18 +32,14 @@ from .registry import inv_paint_funtions, InventoryHintSpec, InvValue, PaintFunc
 
 @dataclass(frozen=True)
 class _RelatedLegacyHints:
-    for_node: InventoryHintSpec = field(
-        default_factory=lambda: InventoryHintSpec()  # pylint: disable=unnecessary-lambda
-    )
-    for_table: InventoryHintSpec = field(
-        default_factory=lambda: InventoryHintSpec()  # pylint: disable=unnecessary-lambda
-    )
+    for_node: InventoryHintSpec = field(default_factory=lambda: InventoryHintSpec())
+    for_table: InventoryHintSpec = field(default_factory=lambda: InventoryHintSpec())
     by_column: dict[str, InventoryHintSpec] = field(default_factory=dict)
     by_key: dict[str, InventoryHintSpec] = field(default_factory=dict)
 
 
 def _get_related_legacy_hints(
-    legacy_hints: Mapping[str, InventoryHintSpec]
+    legacy_hints: Mapping[str, InventoryHintSpec],
 ) -> Mapping[SDPath, _RelatedLegacyHints]:
     related_legacy_hints_by_path: dict[SDPath, _RelatedLegacyHints] = {}
     for raw_path, legacy_hint in legacy_hints.items():
@@ -284,7 +280,7 @@ _ALLOWED_KEYS: Sequence[
 
 
 def _parse_legacy_display_hints(
-    legacy_hints: Mapping[str, InventoryHintSpec]
+    legacy_hints: Mapping[str, InventoryHintSpec],
 ) -> Iterator[_NodeDisplayHint]:
     for path, related_legacy_hints in sorted(
         _get_related_legacy_hints(legacy_hints).items(), key=lambda t: t[0]

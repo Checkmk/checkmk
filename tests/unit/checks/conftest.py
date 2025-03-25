@@ -11,8 +11,8 @@ import pytest
 
 
 @pytest.fixture(autouse=True, scope="session")
-def _autouse_fix_register(fix_register):
-    # make fix_register autouse for this package. "Check(.)" requires it.
+def _autouse_fix_register(agent_based_plugins):
+    # make agent_based_plugins autouse for this package. "Check(.)" requires it.
     pass
 
 

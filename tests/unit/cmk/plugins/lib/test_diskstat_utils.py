@@ -23,20 +23,28 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.lib import diskstat
 
+SECTION: Mapping[str, Mapping] = {
+    "disk1": {},
+    "disk2": {},
+    "LVM disk": {},
+    "VxVM disk": {},
+    "xsd0 disk": {},
+}
+
 
 @pytest.mark.parametrize(
-    "params,exp_res",
+    "params,section,exp_res",
     [
         (
             [
                 {
                     "summary": True,
-                    "physical": {},
                     "lvm": False,
                     "vxvm": False,
                     "diskless": False,
                 },
             ],
+            SECTION,
             [
                 Service(item="SUMMARY"),
             ],
@@ -45,12 +53,13 @@ from cmk.plugins.lib import diskstat
             [
                 {
                     "summary": True,
-                    "physical": {"service_description": "name"},
+                    "physical": "name",
                     "lvm": False,
                     "vxvm": False,
                     "diskless": False,
                 },
             ],
+            SECTION,
             [
                 Service(item="SUMMARY"),
                 Service(item="disk1"),
@@ -61,16 +70,17 @@ from cmk.plugins.lib import diskstat
             [
                 {
                     "summary": True,
-                    "physical": {"service_description": "wwn"},
+                    "physical": "wwn",  # This has no effect on discovery_diskstat_generic, see the diskstat plugin, if you need this functionality.
                     "lvm": True,
                     "vxvm": True,
                     "diskless": True,
                 },
             ],
+            SECTION,
             [
                 Service(item="SUMMARY"),
-                Service(item="wwn1"),
-                Service(item="wwn2"),
+                Service(item="disk1"),
+                Service(item="disk2"),
                 Service(item="LVM disk"),
                 Service(item="VxVM disk"),
                 Service(item="xsd0 disk"),
@@ -78,22 +88,8 @@ from cmk.plugins.lib import diskstat
         ),
     ],
 )
-def test_discovery_diskstat_generic(params, exp_res) -> None:  # type: ignore[no-untyped-def]
-    assert (
-        list(
-            diskstat.discovery_diskstat_generic(
-                params,
-                {
-                    "disk1:wwn1": {},
-                    "disk2:wwn2": {},
-                    "LVM disk": {},
-                    "VxVM disk": {},
-                    "xsd0 disk": {},
-                },
-            )
-        )
-        == exp_res
-    )
+def test_discovery_diskstat_generic(params, section, exp_res) -> None:  # type: ignore[no-untyped-def]
+    assert list(diskstat.discovery_diskstat_generic(params, section)) == exp_res
 
 
 DISK = {
@@ -448,20 +444,20 @@ def test_check_diskstat_dict(
     params: Mapping[str, object], disk: diskstat.Disk, exp_res: CheckResult
 ) -> None:
     value_store: dict[str, Any] = {}
-
+    expected = list(exp_res)
     assert (
         list(
-            diskstat.check_diskstat_dict(
+            diskstat.check_diskstat_dict_legacy(
                 params=params,
                 disk=disk,
                 value_store=value_store,
                 this_time=0.0,
             )
         )
-        == exp_res
+        == expected
     )
     assert list(
-        diskstat.check_diskstat_dict(
+        diskstat.check_diskstat_dict_legacy(
             params={**params, "average": 300},
             disk=disk,
             value_store=value_store,
@@ -470,8 +466,8 @@ def test_check_diskstat_dict(
     ) == [
         *(
             [Result(state=State.OK, notice="All values averaged over 5 minutes 0 seconds")]
-            if exp_res
+            if expected
             else []
         ),
-        *exp_res,
+        *expected,
     ]

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from __future__ import annotations
 
@@ -15,7 +14,6 @@ from contextlib import contextmanager, nullcontext
 from enum import auto, Enum
 from typing import Any, ContextManager, Final, Literal, NamedTuple
 
-from cmk.gui import weblib
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -31,8 +29,8 @@ from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.rendering import set_inpage_search_result_info
-from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeactionuri, makeuri, requested_file_name
+from cmk.gui.utils.selection_id import SelectionId
+from cmk.gui.utils.urls import makeuri, requested_file_name
 
 
 class TableHeader(NamedTuple):
@@ -89,7 +87,7 @@ def table_element(
     omit_headers: bool = False,
     omit_update_header: bool = False,
     empty_text: str | None = None,
-    help: str | None = None,  # pylint: disable=redefined-builtin
+    help: str | None = None,
     css: str | None = None,
     isopen: bool = True,
 ) -> Iterator[Table]:
@@ -152,7 +150,7 @@ class Table:
         omit_headers: bool = False,
         omit_update_header: bool = False,
         empty_text: str | None = None,
-        help: str | None = None,  # pylint: disable=redefined-builtin
+        help: str | None = None,
         css: str | None = None,
         isopen: bool = True,
     ):
@@ -311,7 +309,7 @@ class Table:
         """
         self.next_header = title
 
-    def _end(self) -> None:  # pylint: disable=too-many-branches
+    def _end(self) -> None:
         if not self.rows and self.options["omit_if_empty"]:
             return
 
@@ -444,7 +442,7 @@ class Table:
     def _get_sort_column(self, table_opts: dict[str, Any]) -> str | None:
         return request.get_ascii_input("_%s_sort" % self.id, table_opts.get("sort"))
 
-    def _write_table(  # pylint: disable=too-many-branches
+    def _write_table(
         self,
         rows: TableRows,
         num_rows_unlimited: int,
@@ -590,7 +588,7 @@ class Table:
 
         response.set_data("".join(resp))
 
-    def _render_headers(  # pylint: disable=too-many-branches
+    def _render_headers(
         self, actions_enabled: bool, actions_visible: bool, empty_columns: list[bool]
     ) -> None:
         if self.options["omit_headers"]:
@@ -628,9 +626,7 @@ class Table:
                     if sort_col == nr:
                         reverse = 1 if sort_reverse == 0 else 0
 
-                action_uri = makeactionuri(
-                    request, transactions, [("_%s_sort" % table_id, "%d,%d" % (nr, reverse))]
-                )
+                action_uri = makeuri(request, [("_%s_sort" % table_id, "%d,%d" % (nr, reverse))])
                 html.open_th(
                     class_=css_class,
                     title=_("Sort by %s") % header.title,
@@ -687,8 +683,12 @@ def _filter_rows(rows: TableRows, search_term: str) -> TableRows:
             if cell.css is not None and "buttons" in cell.css:
                 continue
             # The inpage search of the folder page adds href with
-            # "search=searchterm" to cell.content and would always match
+            # "search=searchterm" to cell.content and would always match => remove for matching
             if "inpage_search_form" in cell.content:
+                cell_string = str(cell.content).replace("search=" + search_term, "")
+                if match_regex.search(cell_string) is not None:
+                    filtered_rows.append(row)
+                    break
                 continue
             if match_regex.search(str(cell.content)):
                 filtered_rows.append(row)
@@ -727,10 +727,11 @@ def _sort_rows(rows: TableRows, sort_col: int, sort_reverse: int) -> TableRows:
 
 
 def init_rowselect(selection_key: str) -> None:
-    selected = user.get_rowselection(weblib.selection_id(), selection_key)
+    selection_id = SelectionId.from_request(request)
+    selected = user.get_rowselection(selection_id, selection_key)
     selection_properties = {
         "page_id": selection_key,
-        "selection_id": weblib.selection_id(),
+        "selection_id": selection_id,
         "selected_rows": selected,
     }
     html.javascript("cmk.selection.init_rowselect(%s);" % (json.dumps(selection_properties)))

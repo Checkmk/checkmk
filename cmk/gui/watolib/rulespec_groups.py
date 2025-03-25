@@ -5,7 +5,6 @@
 
 """Defining built-in rule spec groups"""
 
-
 from cmk.gui.i18n import _
 
 from .rulespecs import (
@@ -193,7 +192,7 @@ class RulespecGroupMonitoringAgentsGenericOptions(RulespecSubGroup):
 
     @property
     def title(self) -> str:
-        return _("Generic Options")
+        return _("Generic agent options")
 
 
 class RulespecGroupEnforcedServicesNetworking(RulespecSubGroup):

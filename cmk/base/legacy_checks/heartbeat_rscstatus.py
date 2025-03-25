@@ -9,8 +9,9 @@
 # Status can be "local", "foreign", "all" or "none"
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_heartbeat_rscstatus(string_table):
@@ -44,6 +45,7 @@ def check_heartbeat_rscstatus(_no_item, params, heartbeat_rsc_status):
 
 
 check_info["heartbeat_rscstatus"] = LegacyCheckDefinition(
+    name="heartbeat_rscstatus",
     parse_function=parse_heartbeat_rscstatus,
     service_name="Heartbeat Ressource Status",
     discovery_function=inventory_heartbeat_rscstatus,

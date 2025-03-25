@@ -9,14 +9,17 @@ from typing import Any, NamedTuple, TypeVar
 
 from livestatus import SiteId
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils.diagnostics import DiagnosticsCLParameters
 from cmk.utils.hostaddress import HostName
-from cmk.utils.labels import HostLabel
-from cmk.utils.notify_types import EventContext
-from cmk.utils.servicename import ServiceName
+from cmk.utils.labels import HostLabel, Labels
+from cmk.utils.notify import NotificationContext
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec
+from cmk.utils.servicename import Item, ServiceName
 
 from cmk.automations import results
-from cmk.automations.results import SetAutochecksInput, SetAutochecksTable
+from cmk.automations.results import SetAutochecksInput
 
 from cmk.checkengine.checking import CheckPluginName
 
@@ -28,12 +31,9 @@ from cmk.gui.watolib.activate_changes import sync_changes_before_remote_automati
 from cmk.gui.watolib.automations import (
     check_mk_local_automation_serialized,
     check_mk_remote_automation_serialized,
-    local_automation_failure,
+    get_local_automation_failure_message,
     MKAutomationException,
 )
-
-import cmk.ccc.version as cmk_version
-from cmk.ccc.exceptions import MKGeneralException
 
 
 class AutomationResponse(NamedTuple):
@@ -53,6 +53,7 @@ def _automation_serialized(
     timeout: int | None = None,
     sync: bool = True,
     non_blocking_http: bool = False,
+    force_cli_interface: bool = False,
 ) -> AutomationResponse:
     if args is None:
         args = []
@@ -64,6 +65,7 @@ def _automation_serialized(
             indata=indata,
             stdin_data=stdin_data,
             timeout=timeout,
+            force_cli_interface=force_cli_interface,
         )
         return AutomationResponse(
             command=command,
@@ -92,14 +94,15 @@ def _automation_serialized(
 def _automation_failure(
     response: AutomationResponse,
     exception: SyntaxError,
-) -> MKGeneralException:
+) -> MKAutomationException:
     if response.local:
-        return local_automation_failure(
+        msg = get_local_automation_failure_message(
             command=response.command,
             cmdline=response.cmdline,
             out=response.serialized_result,
             exc=exception,
         )
+        return MKAutomationException(msg)
     return MKAutomationException(
         "%s: <pre>%s</pre>"
         % (
@@ -184,6 +187,10 @@ def special_agent_discovery_preview(
             stdin_data=special_agent_preview_input.serialize(
                 cmk_version.Version.from_str(cmk_version.__version__)
             ),
+            force_cli_interface=True,
+            # the special agent discovery preview can take a long time depending on the underlying
+            # datasource agent which can be problematic for remote setups
+            timeout=5 * 60,
         ),
         results.SpecialAgentDiscoveryPreviewResult,
     )
@@ -213,22 +220,6 @@ def autodiscovery(site_id: SiteId) -> results.AutodiscoveryResult:
     return _deserialize(
         _automation_serialized("autodiscovery", siteid=site_id),
         results.AutodiscoveryResult,
-    )
-
-
-def set_autochecks(
-    site_id: SiteId,
-    host_name: HostName,
-    checks: SetAutochecksTable,
-) -> results.SetAutochecksResult:
-    return _deserialize(
-        _automation_serialized(
-            "set-autochecks",
-            siteid=site_id,
-            args=[host_name],
-            indata=checks,
-        ),
-        results.SetAutochecksResult,
     )
 
 
@@ -293,6 +284,17 @@ def get_services_labels(
     )
 
 
+def get_service_name(
+    host_name: HostName, check_plugin_name: CheckPluginName, item: Item
+) -> results.GetServiceNameResult:
+    return _deserialize(
+        _automation_serialized(
+            "get-service-name", args=[host_name, str(check_plugin_name), repr(item)]
+        ),
+        results.GetServiceNameResult,
+    )
+
+
 def analyse_service(
     site_id: SiteId,
     host_name: HostName,
@@ -322,6 +324,31 @@ def analyse_host(
     )
 
 
+def analyze_host_rule_matches(
+    host_name: HostName, rules: Sequence[Sequence[RuleSpec]]
+) -> results.AnalyzeHostRuleMatchesResult:
+    return _deserialize(
+        _automation_serialized("analyze-host-rule-matches", args=[host_name], indata=rules),
+        results.AnalyzeHostRuleMatchesResult,
+    )
+
+
+def analyze_service_rule_matches(
+    host_name: HostName,
+    service_or_item: str,
+    service_labels: Labels,
+    rules: Sequence[Sequence[RuleSpec]],
+) -> results.AnalyzeServiceRuleMatchesResult:
+    return _deserialize(
+        _automation_serialized(
+            "analyze-service-rule-matches",
+            args=[host_name, service_or_item],
+            indata=(rules, service_labels),
+        ),
+        results.AnalyzeServiceRuleMatchesResult,
+    )
+
+
 def delete_hosts(
     site_id: SiteId,
     host_names: Sequence[HostName],
@@ -336,14 +363,14 @@ def delete_hosts(
     )
 
 
-def restart(hosts_to_update: list[HostName] | None = None) -> results.RestartResult:
+def restart(hosts_to_update: Sequence[HostName] | None = None) -> results.RestartResult:
     return _deserialize(
         _automation_serialized("restart", args=hosts_to_update),
         results.RestartResult,
     )
 
 
-def reload(hosts_to_update: list[HostName] | None = None) -> results.ReloadResult:
+def reload(hosts_to_update: Sequence[HostName] | None = None) -> results.ReloadResult:
     return _deserialize(
         _automation_serialized("reload", args=hosts_to_update),
         results.ReloadResult,
@@ -355,8 +382,20 @@ def get_configuration(*config_var_names: str) -> results.GetConfigurationResult:
         _automation_serialized(
             "get-configuration",
             indata=list(config_var_names),
+            # We must not call this through the automation helper,
+            # see automation call execution.
+            force_cli_interface=True,
         ),
         results.GetConfigurationResult,
+    )
+
+
+def update_merged_password_file() -> results.UpdatePasswordsMergedFileResult:
+    return _deserialize(
+        _automation_serialized(
+            "update-passwords-merged-file",
+        ),
+        results.UpdatePasswordsMergedFileResult,
     )
 
 
@@ -490,11 +529,13 @@ def notification_analyse(notification_number: int) -> results.NotificationAnalys
     )
 
 
-def notification_test(raw_context: EventContext, dispatch: bool) -> results.NotificationTestResult:
+def notification_test(
+    raw_context: NotificationContext, dispatch: str
+) -> results.NotificationTestResult:
     return _deserialize(
         _automation_serialized(
             "notification-test",
-            args=[json.dumps(raw_context), str(dispatch)],
+            args=[json.dumps(raw_context), dispatch],
         ),
         results.NotificationTestResult,
     )
@@ -527,11 +568,15 @@ def create_diagnostics_dump(
     )
 
 
-def bake_agents(indata: Mapping[str, Any] | None = None) -> results.BakeAgentsResult:
+def bake_agents(
+    indata: Mapping[str, Any] | None = None,
+    force_automation_cli_interface: bool = False,
+) -> results.BakeAgentsResult:
     return _deserialize(
         _automation_serialized(
             "bake-agents",
             indata="" if indata is None else indata,
+            force_cli_interface=force_automation_cli_interface,
         ),
         results.BakeAgentsResult,
     )

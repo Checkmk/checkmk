@@ -8,12 +8,31 @@
 #  configure the IP address to listen for traces. The setting "[::]" makes the port available to all
 #  IPv4 and IPv6 clients.
 
+# Load other config options. This hook needs TRACE_RECEIVE_PORT.
+if [ -f "$OMD_ROOT/etc/omd/site.conf" ]; then
+    # shellcheck source=/dev/null
+    . "$OMD_ROOT/etc/omd/site.conf"
+else
+    CONFIG_TRACE_RECEIVE_PORT=${CONFIG_TRACE_RECEIVE_PORT:-0}
+fi
+
 case "$1" in
     default)
         echo "[::1]"
         ;;
     choices)
         echo "@{IP_LISTEN_ADDRESS}"
+        ;;
+    set)
+        cat <<EOF >"$OMD_ROOT"/etc/jaeger/omd-grpc.yaml
+# Written by TRACE_RECEIVE_ADDRESS or TRACE_RECEIVE_PORT hook
+---
+receivers:
+    otlp:
+        protocols:
+            grpc:
+                endpoint: "$2:$CONFIG_TRACE_RECEIVE_PORT"
+EOF
         ;;
     depends)
         [ "$CONFIG_TRACE_RECEIVE" = on ]

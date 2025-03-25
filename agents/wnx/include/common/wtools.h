@@ -78,11 +78,16 @@ private:
     ACL *acl_{nullptr};
 };
 
+template <typename R>
+concept LocalAllocated = requires(R *r) {
+    { LocalFree(reinterpret_cast<HLOCAL>(r)) };
+};
+
 // this is functor to kill any pointer allocated with ::LocalAlloc
 // usually this pointer comes from Windows API
-template <typename T>
+template <LocalAllocated R>
 struct LocalAllocDeleter {
-    void operator()(T *r) const noexcept {
+    void operator()(R *r) const noexcept {
         if (r != nullptr) {
             ::LocalFree(reinterpret_cast<HLOCAL>(r));
         }
@@ -95,8 +100,8 @@ LocalResource<SERVICE_FAILURE_ACTIONS> actions(
     ::WindowsApiToGetActions(handle_to_service));
 #endif
 //
-template <typename T>
-using LocalResource = std::unique_ptr<T, LocalAllocDeleter<T>>;
+template <LocalAllocated R>
+using LocalResource = std::unique_ptr<R, LocalAllocDeleter<R>>;
 
 struct HandleDeleter {
     using pointer = HANDLE;  // trick to use HANDLE as STL pointer
@@ -433,10 +438,6 @@ private:
     // output
     std::vector<char> data_;
     uint32_t exit_code_{STILL_ACTIVE};
-#if defined(ENABLE_WHITE_BOX_TESTING)
-    friend class Wtools;
-    FRIEND_TEST(Wtools, AppRunner);
-#endif
 };
 
 class ServiceController final {
@@ -444,8 +445,7 @@ class ServiceController final {
     static ServiceController *s_controller_;  // probably we need her shared
                                               // ptr, but this is clear overkill
 public:
-    explicit ServiceController(
-        std::unique_ptr<wtools::BaseServiceProcessor> processor);
+    explicit ServiceController(std::unique_ptr<BaseServiceProcessor> processor);
 
     ServiceController(const ServiceController &) = delete;
     ServiceController &operator=(const ServiceController &) = delete;
@@ -466,6 +466,8 @@ public:
     StopType registerAndRun(const wchar_t *service_name) {
         return registerAndRun(service_name, true, true, true);
     }
+
+    const BaseServiceProcessor *processor() const { return processor_.get(); }
 
 protected:
     void setServiceStatus(DWORD current_state, DWORD win32_exit_code,
@@ -525,11 +527,6 @@ private:
 
     SERVICE_STATUS status_ = {};
     SERVICE_STATUS_HANDLE status_handle_{nullptr};
-#if defined(ENABLE_WHITE_BOX_TESTING)
-    friend class ServiceControllerTest;
-    FRIEND_TEST(ServiceControllerTest, CreateDelete);
-    FRIEND_TEST(ServiceControllerTest, StartStop);
-#endif
 };
 
 /// Converts string to UTF-8 with error code

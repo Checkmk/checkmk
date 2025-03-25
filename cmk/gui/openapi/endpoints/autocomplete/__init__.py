@@ -8,6 +8,7 @@ This provides access to autocomplete functionality. This currently is mostly use
 internally by the Grafana's data source plug-in and relies on data sent by it that
 is not fully documented and specified yet.
 """
+
 from collections.abc import Mapping
 from typing import Any
 
@@ -49,7 +50,14 @@ def show(params: Mapping[str, Any]) -> Response:
     value = body.get("value", "")
     parameters = body.get("parameters", {})
     autocompleter = params["autocomplete_id"]
-    function = autocompleter_registry.get(autocompleter)
+    internal_autocompleter = autocompleter
+
+    # This fix allows the autocompleter to be accessible by both the old and the new name,
+    # thus maintaining compatibility with the Grafana datasource, which uses the old name.
+    if internal_autocompleter == "combined_graphs":
+        internal_autocompleter = "graph_template_for_combined_graph"
+
+    function = autocompleter_registry.get(internal_autocompleter)
 
     if function is None:
         return problem(404, f"Autocompleter {autocompleter} not found.")

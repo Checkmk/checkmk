@@ -52,7 +52,6 @@ clang-analyzer/
 cmc-*.tar.gz
 cme-*.tar.gz
 agents/linux/*
-agents/windows/*
 doc/plugin-api/build/
 doc/plugin-api/source/apidoc/
 doc/documentation/*.png
@@ -71,7 +70,6 @@ omd/pkgs_by_bzl/
 bazel_execution_log*.json
 pip-mirror-tmp
 RemoteSystemsTempFiles
-requirements.txt
 requirements-no-dev.txt
 tags
 tests/web/data/*
@@ -82,8 +80,9 @@ tests/.hypothesis/
 /buildscripts/docker_image_aliases/docker-image-alias-resolve-error.txt
 /bazel-*
 /bazel_log*
-/MODULE.bazel.lock
+bazel-memory.profile
 user.bazelrc
+remote.bazelrc
 
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode
@@ -107,4 +106,4 @@ user.bazelrc
 
 # gui-e2e tests: playwright specific ignores
 test-results/
-*.png
+/*.png

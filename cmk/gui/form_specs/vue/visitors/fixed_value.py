@@ -2,60 +2,54 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Callable, Sequence, TypeVar
+from collections.abc import Callable, Sequence
+from typing import TypeVar
 
-from cmk.gui.form_specs.vue.autogen_type_defs import vue_formspec_components as VueComponents
-from cmk.gui.form_specs.vue.registries import FormSpecVisitor
-from cmk.gui.form_specs.vue.type_defs import DEFAULT_VALUE, EmptyValue, Value
-from cmk.gui.form_specs.vue.utils import (
-    compute_validation_errors,
+from cmk.ccc.exceptions import MKGeneralException
+
+from cmk.gui.form_specs.vue.validators import build_vue_validators
+
+from cmk.rulesets.v1.form_specs import FixedValue
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
+
+from ._base import FormSpecVisitor
+from ._type_defs import InvalidValue
+from ._utils import (
     compute_validators,
-    create_validation_error,
     get_title_and_help,
     localize,
 )
-from cmk.gui.form_specs.vue.validators import build_vue_validators
 
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import FixedValue
-
-T = TypeVar("T", int, float, str, bool, None)
+_FixedValueT = TypeVar("_FixedValueT", int, float, str, bool, None)
+_ParsedValueModel = int | float | str | bool | None
+_FrontendModel = int | float | str | bool | None
 
 
-class FixedValueVisitor(FormSpecVisitor[FixedValue[T], T]):
-    def _parse_value(self, raw_value: object) -> T | EmptyValue:
+class FixedValueVisitor(
+    FormSpecVisitor[FixedValue[_FixedValueT], _ParsedValueModel, _FrontendModel]
+):
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
         return self.form_spec.value
 
-    def _validators(self) -> Sequence[Callable[[T], object]]:
+    def _validators(self) -> Sequence[Callable[[_FixedValueT], object]]:
         return list(self.form_spec.custom_validate) if self.form_spec.custom_validate else []
 
     def _to_vue(
-        self, raw_value: object, parsed_value: T | EmptyValue
-    ) -> tuple[VueComponents.FixedValue, Value]:
+        self, raw_value: object, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
+    ) -> tuple[shared_type_defs.FixedValue, _FrontendModel]:
         title, help_text = get_title_and_help(self.form_spec)
         return (
-            VueComponents.FixedValue(
+            shared_type_defs.FixedValue(
                 title=title,
                 help=help_text,
-                label=localize(self.form_spec.label),
+                label=localize(self.form_spec.label) if self.form_spec.label is not None else None,
                 value=parsed_value,
                 validators=build_vue_validators(compute_validators(self.form_spec)),
             ),
-            parsed_value,
+            self.form_spec.value,
         )
 
-    def _validate(
-        self, raw_value: object, parsed_value: T | EmptyValue
-    ) -> list[VueComponents.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
-            # Note: this code should be unreachable, because the parse function always returns a valid value
-            return create_validation_error(
-                "" if raw_value == DEFAULT_VALUE else raw_value, Title("Invalid FixedValue")
-            )
-        return compute_validation_errors(compute_validators(self.form_spec), raw_value)
-
-    def _to_disk(self, raw_value: object, parsed_value: T | EmptyValue) -> T:
-        if isinstance(parsed_value, EmptyValue):
+    def _to_disk(self, parsed_value: _ParsedValueModel) -> _ParsedValueModel:
+        if isinstance(parsed_value, InvalidValue):
             raise MKGeneralException("Unable to serialize empty value")
         return parsed_value

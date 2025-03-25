@@ -4,6 +4,7 @@
 #include "wnx/agent_controller.h"
 
 #include <VersionHelpers.h>
+#include <tools/_misc.h>
 
 #include <filesystem>
 #include <fstream>
@@ -86,7 +87,7 @@ fs::path CopyControllerToBin() {
     return {};
 }
 
-template <typename T>
+template <type::AnyStringView T>
 int ToInt(const T value) noexcept {
     try {
         return std::stoi(value);

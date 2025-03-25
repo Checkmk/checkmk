@@ -3,17 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from tests.unit.conftest import FixRegister
-
 from cmk.checkengine.checking import CheckPluginName
+
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 
 from cmk.agent_based.v2 import Metric, Result, State
 
 
 def test_make_sure_bluecat_threads_can_handle_new_params_format(
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
-    plugin = fix_register.check_plugins[CheckPluginName("bluecat_threads")]
+    plugin = agent_based_plugins.check_plugins[CheckPluginName("bluecat_threads")]
     assert plugin
     assert list(
         plugin.check_function(

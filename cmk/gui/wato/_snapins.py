@@ -76,7 +76,7 @@ def render_wato(mini: bool) -> None:
     else:
         show_topic_menu(treename="wato", menu=menu, show_item_icons=True)
 
-    pending_info = ActivateChanges().get_pending_changes_info()
+    pending_info = ActivateChanges().get_pending_changes_info(count_limit=10)
     if pending_info.has_changes():
         assert pending_info.message is not None  # only for mypy, semantically useless
         footnotelinks([(pending_info.message, "wato.py?mode=changelog")])
@@ -210,7 +210,7 @@ class SidebarSnapinWATOMini(SidebarSnapin):
 
     @classmethod
     def title(cls) -> str:
-        return _("Quick setup")
+        return _("Setup shortcuts")
 
     @classmethod
     def has_show_more_items(cls) -> bool:
@@ -448,5 +448,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         # Now render the whole tree
         if user_folders:
             render_tree_folder(
-                "wato-hosts", list(user_folders.values())[0], "cmk.sidebar.wato_tree_click"
+                "wato-hosts",
+                list(user_folders.values())[0],
+                "cmk.sidebar.wato_tree_click",
             )

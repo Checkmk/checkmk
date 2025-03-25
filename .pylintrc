@@ -3,21 +3,20 @@
 init-hook=
     import sys;
     sys.path.insert(0, __file__[:__file__.rfind("/.venv")]);  # __file__ is somewhere deep inside the .venv
-    from tests.testlib.repo import add_python_paths;
+    from tests.testlib.common.repo import add_protocols_path, add_python_paths, add_otel_collector_path;
+    add_protocols_path();
     add_python_paths();
+    add_otel_collector_path();
 load-plugins=
     tests.pylint.cmk_edition_ignores,
     tests.pylint.checker_localization,
-    tests.pylint.checker_forbidden_objects,
     tests.pylint.checker_cmk_module_layers,
     tests.pylint.checker_layering_violation,
-    pylint.extensions.bad_builtin,
     pylint_pydantic
 jobs=0
 # pickle collected data for later comparisons. Not used in our CI and makes runs faster
 persistent=no
 extension-pkg-whitelist=rrdtool,_ldap,netifaces,pymssql,pydantic,lxml
-bad-functions=unichr,basestring,unicode,file,cmp,apply,execfile,reduce,reload
 
 signature-mutators=cmk.utils.store.with_lock_dict
 
@@ -69,6 +68,7 @@ disable=
     # will be a non-trivial amount of work.
     too-few-public-methods,
     too-many-arguments,
+    too-many-positional-arguments,
     too-many-boolean-expressions,
     too-many-instance-attributes,
     too-many-lines,

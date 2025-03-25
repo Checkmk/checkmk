@@ -43,12 +43,16 @@ def _migrate_host(param: object) -> tuple[str, str]:
             return ("use_parent_host", "")
         case "define_host", str(host):
             return ("define_host", host)
+        case (str(_key), str(_host)):
+            return (_key, _host)
     raise ValueError(param)
 
 
 def _migrate_auth_tuple(params: object) -> Mapping[str, object]:
     match params:
         case (user, password):
+            return {"user": user, "password": password}
+        case {"user": user, "password": password}:
             return {"user": user, "password": password}
     raise ValueError(params)
 

@@ -12,6 +12,7 @@ Files are changed inplace.
 Note that it is not perfect.
 You have to check and adjust the result manually!
 """
+
 import argparse
 import re
 import subprocess
@@ -165,9 +166,9 @@ def main(argv: list[str]) -> int:
                 raise
             sys.stderr.write(f"ERROR {file_name}: {e}\n")
 
-    _try_to_run("scripts/run-isort", *args.files)
+    _try_to_run("scripts/run-sort", *args.files)
     _try_to_run("autoflake", "-i", "--remove-all-unused-imports", *args.files)
-    _try_to_run("scripts/run-black", *args.files)
+    _try_to_run("scripts/run-format", *args.files)
 
     return 0
 

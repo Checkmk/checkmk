@@ -11,10 +11,10 @@
 
 import time
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, StringTable
+
+check_info = {}
 
 
 def inventory_appdynamics_sessions(info):
@@ -61,6 +61,7 @@ def parse_appdynamics_sessions(string_table: StringTable) -> StringTable:
 
 
 check_info["appdynamics_sessions"] = LegacyCheckDefinition(
+    name="appdynamics_sessions",
     parse_function=parse_appdynamics_sessions,
     service_name="AppDynamics Sessions %s",
     discovery_function=inventory_appdynamics_sessions,

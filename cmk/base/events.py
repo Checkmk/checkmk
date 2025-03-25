@@ -12,25 +12,29 @@ import select
 import socket
 import sys
 import time
+import traceback
 from collections.abc import Callable, Iterable, Mapping
-from typing import Any, cast
+from typing import Any, cast, Literal
 from urllib.parse import quote, urlencode
 
 import livestatus
 
-import cmk.utils.daemon
+import cmk.ccc.daemon
+import cmk.ccc.debug
+from cmk.ccc.site import omd_site
+
 from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.notify import read_notify_host_file
-from cmk.utils.notify_types import EnrichedEventContext, EventContext, EventRule
+from cmk.utils.notify_types import EventRule, NotifyPluginParamsDict
 from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import matches_host_tags
 from cmk.utils.rulesets.tuple_rulesets import in_extraconf_servicelist
 from cmk.utils.servicename import ServiceName
+from cmk.utils.tags import TagGroupID, TagID
 from cmk.utils.timeperiod import check_timeperiod, cleanup_timeperiod_caches, TimeperiodSpecs
 
-import cmk.ccc.debug
-from cmk.ccc.site import omd_site
+from cmk.events.event_context import EnrichedEventContext, EventContext
 
 ContactList = list  # TODO Improve this
 
@@ -52,7 +56,6 @@ def event_keepalive(
     loop_interval: int | None = None,
     shutdown_function: Callable[[], object] | None = None,
 ) -> None:
-    # pylint: disable=too-many-branches
     last_config_timestamp = config_timestamp()
 
     # Send signal that we are ready to receive the next event, but
@@ -89,7 +92,7 @@ def event_keepalive(
                     # had an issue related to os.urandom() which kept FDs open.
                     # This specific issue of Python 2.7.9 should've been fixed
                     # since Python 2.7.10. Just to be sure we keep cleaning up.
-                    cmk.utils.daemon.closefrom(3)
+                    cmk.ccc.daemon.closefrom(3)
 
                     os.execvp("cmk", sys.argv)
 
@@ -266,7 +269,7 @@ def add_rulebased_macros(
         )
 
         contact_list = livestatus_fetch_contacts(
-            raw_context["HOSTNAME"], raw_context.get("SERVICEDESC")
+            HostName(raw_context["HOSTNAME"]), raw_context.get("SERVICEDESC")
         )
         if contact_list is not None:
             raw_context["CONTACTS"] = ",".join(contact_list)
@@ -287,7 +290,6 @@ def complete_raw_context(
     with_dump: bool,
     contacts_needed: bool,
 ) -> EnrichedEventContext:
-    # pylint: disable=too-many-branches
     """Extend the raw notification context
 
     This ensures that all raw contexts processed in the notification code has specific variables
@@ -421,7 +423,7 @@ def complete_raw_context(
             enriched_context["SERVICEFORURL"] = quote(enriched_context["SERVICEDESC"])
         enriched_context["HOSTFORURL"] = quote(enriched_context["HOSTNAME"])
 
-        _update_enriched_context_with_labels(enriched_context)
+        _update_enriched_context_from_notify_host_file(enriched_context)
 
     except Exception as e:
         logger.info("Error on completing raw context: %s", e)
@@ -441,8 +443,8 @@ def complete_raw_context(
     return enriched_context
 
 
-def _update_enriched_context_with_labels(enriched_context: EnrichedEventContext) -> None:
-    notify_host_config = read_notify_host_file(enriched_context["HOSTNAME"])
+def _update_enriched_context_from_notify_host_file(enriched_context: EnrichedEventContext) -> None:
+    notify_host_config = read_notify_host_file(HostName(enriched_context["HOSTNAME"]))
     for k, v in notify_host_config.host_labels.items():
         # Dynamically added keys...
         enriched_context["HOSTLABEL_" + k] = v  # type: ignore[literal-required]
@@ -452,6 +454,9 @@ def _update_enriched_context_with_labels(enriched_context: EnrichedEventContext)
         ).items():
             # Dynamically added keys...
             enriched_context["SERVICELABEL_" + k] = v  # type: ignore[literal-required]
+
+    for k, v in notify_host_config.tags.items():
+        enriched_context["HOSTTAG_" + k] = v  # type: ignore[literal-required]
 
 
 # TODO: Use cmk.utils.render.*?
@@ -479,7 +484,10 @@ def apply_matchers(
     all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     for matcher in matchers:
-        result = matcher(rule, context, analyse, all_timeperiods)
+        try:
+            result = matcher(rule, context, analyse, all_timeperiods)
+        except Exception:
+            return f"Error in matcher: {traceback.format_exc()}"
         if result is not None:
             return result
     return None
@@ -536,6 +544,8 @@ def event_match_rule(
             event_match_checktype,
             event_match_timeperiod,
             event_match_servicelevel,
+            event_match_hostlabels,
+            event_match_servicelabels,
         ],
         rule,
         context,
@@ -586,10 +596,7 @@ def event_match_folder(
                     return None  # Match is on main folder, always OK
                 while mustpath:
                     if not haspath or mustpath[0] != haspath[0]:
-                        return "The rule requires folder '{}', but the host is in '{}'".format(
-                            mustfolder,
-                            hasfolder,
-                        )
+                        return f"The rule requires folder '{mustfolder}', but the host is in '{hasfolder}'"
                     mustpath = mustpath[1:]
                     haspath = haspath[1:]
 
@@ -606,10 +613,14 @@ def event_match_hosttags(
 ) -> str | None:
     required_tags = rule.get("match_hosttags")
     if required_tags:
-        notify_host_config = read_notify_host_file(context["HOSTNAME"])
-        host_tags = notify_host_config.tags
+        context_str = "HOSTTAG_"
+        host_tags = {
+            TagGroupID(variable.replace(context_str, "")): TagID(str(value))
+            for variable, value in context.items()
+            if variable.startswith(context_str)
+        }
         if not matches_host_tags(set(host_tags.items()), required_tags):
-            return f"The host's tags {host_tags} do not " f"match the required tags {required_tags}"
+            return f"The host's tags {host_tags} do not match the required tags {required_tags}"
     return None
 
 
@@ -644,7 +655,6 @@ def _event_match_servicegroups(
     *,
     is_regex: bool,
 ) -> str | None:
-    # pylint: disable=too-many-branches
     if is_regex:
         match_type, required_groups = rule.get("match_servicegroups_regex", (None, None))
     else:
@@ -1001,12 +1011,79 @@ def event_match_servicelevel(
     return None
 
 
+def event_match_hostlabels(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
+) -> str | None:
+    if "match_hostlabels" in rule:
+        return _event_handle_labels(rule, context, "host")
+
+    return None
+
+
+def event_match_servicelabels(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
+) -> str | None:
+    if "match_servicelabels" in rule:
+        return _event_handle_labels(rule, context, "service")
+
+    return None
+
+
+def _event_handle_labels(
+    rule: EventRule, context: EventContext, what: Literal["host", "service"]
+) -> str | None:
+    labels: dict[str, Any] = {}
+    context_str = "%sLABEL" % what.upper()
+    labels = {
+        variable.replace("%s_" % context_str, ""): value
+        for variable, value in context.items()
+        if variable.startswith(context_str)
+    }
+
+    key: Literal["match_servicelabels", "match_hostlabels"] = (
+        "match_servicelabels" if what == "service" else "match_hostlabels"
+    )
+    if not set(labels.items()).issuperset(set(rule[key].items())):
+        return f"The {what} labels {rule[key]} did not match {labels}"
+
+    return None
+
+
 def add_context_to_environment(
     plugin_context: Mapping[str, str] | EventContext, prefix: str
 ) -> None:
     for key, value in plugin_context.items():
         assert isinstance(value, str)
         os.putenv(prefix + key, value.encode("utf-8"))
+
+
+def convert_proxy_params(params: NotifyPluginParamsDict) -> dict[str, Any]:
+    """
+    This is needed before add_to_event_context() to keep the 2.3 structure for
+    the changes we made in 2.4. The new format can not be handled by add_to_event_context()
+    """
+    params_dict = dict(params)
+    proxy_params = params["proxy_url"]  # type: ignore[typeddict-item]
+    match proxy_params:
+        case "cmk_postprocessed", "environment_proxy", str():
+            params_dict["proxy_url"] = ("environment", "environment")
+        case "cmk_postprocessed", "no_proxy", str():
+            params_dict["proxy_url"] = ("no_proxy", None)
+        case "cmk_postprocessed", "stored_proxy", str(stored_proxy_id):
+            params_dict["proxy_url"] = ("global", stored_proxy_id)
+        case "cmk_postprocessed", "explicit_proxy", str(url):
+            params_dict["proxy_url"] = ("url", url)
+        case _:
+            # unknown format, take it as it is
+            pass
+
+    return params_dict
 
 
 # recursively turns a python object (with lists, dictionaries and pods) containing parameters

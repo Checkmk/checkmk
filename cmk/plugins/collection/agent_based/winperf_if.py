@@ -226,7 +226,7 @@ def parse_winperf_if(string_table: StringTable) -> SectionCounters:
     raw_nic_names: Sequence[str] = []
     agent_section: dict[str, Line] = {}
 
-    for line in (lines := iter(string_table_filtered)):  # pylint: disable=superfluous-parens
+    for line in (lines := iter(string_table_filtered)):
         if _is_first_line(line):
             agent_timestamp, raw_nic_names = _parse_timestamp_and_instance_names(
                 line,
@@ -582,16 +582,22 @@ def _check_winperf_if(
     if not section_winperf_if:
         return
 
+    ifaces = _merge_sections(
+        section_winperf_if.interfaces,
+        section_winperf_if_teaming,
+        section_winperf_if_extended,
+    )
+    timestamps = (
+        [section_winperf_if.timestamp] * len(ifaces)
+        if section_winperf_if.timestamp is not None
+        else None
+    )
     yield from interfaces.check_multiple_interfaces(
         item,
         params,
-        _merge_sections(
-            section_winperf_if.interfaces,
-            section_winperf_if_teaming,
-            section_winperf_if_extended,
-        ),
+        ifaces,
         group_name="Teaming",
-        timestamp=section_winperf_if.timestamp,
+        timestamps=timestamps,
         value_store=value_store,
     )
     if section_winperf_if_dhcp and (

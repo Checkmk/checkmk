@@ -5,15 +5,16 @@
 
 from collections.abc import Iterator
 from pathlib import Path
-from typing import assert_never, Final, Literal, TypedDict
+from typing import assert_never, Final, Literal, TYPE_CHECKING, TypedDict, Union
 
-from azure.identity import ClientSecretCredential
-from azure.storage.blob import ContainerClient, LinearRetry
+from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.utils.backup.targets.remote_interface import ProgressStepLogger, RemoteTarget
 from cmk.utils.password_store import extract, PasswordId
 
-from cmk.ccc.exceptions import MKGeneralException
+if TYPE_CHECKING:
+    # Conditional import to only consume the necessary memory when the feature is used
+    from azure.identity import ClientSecretCredential
 
 
 class BlobStorageADCredentials(TypedDict):
@@ -37,6 +38,9 @@ class BlobStorageParams(TypedDict):
 class BlobStorage:
     def __init__(self, params: BlobStorageParams) -> None:
         self.account_url: Final = f"https://{params['storage_account_name']}.blob.core.windows.net"
+        # Conditional import to only consume the necessary memory when the feature is used
+        from azure.storage.blob import ContainerClient, LinearRetry
+
         self.container_client: Final = ContainerClient(
             account_url=self.account_url,
             container_name=params["container"],
@@ -90,7 +94,10 @@ class BlobStorage:
     @staticmethod
     def _credentials(
         configured_credentials: BlobStorageCredentials,
-    ) -> str | ClientSecretCredential:
+    ) -> Union[str, "ClientSecretCredential"]:
+        # Conditional import to only consume the necessary memory when the feature is used
+        from azure.identity import ClientSecretCredential
+
         # a match statement would be perfect here but the type narrowing does not seem to work in
         # this particular case with a match statement :(
         if configured_credentials[0] == "shared_key":
@@ -101,6 +108,7 @@ class BlobStorage:
             ad_credentials = configured_credentials[1]
             if not (client_secret := extract(ad_credentials["client_secret"])):
                 raise MKGeneralException("Failed to retrieve client secret")
+
             return ClientSecretCredential(
                 tenant_id=ad_credentials["tenant_id"],
                 client_id=ad_credentials["client_id"],

@@ -126,7 +126,7 @@ def test_unauthenticated_users(
     assert user.stars == set()
     assert user.is_site_disabled(SiteId("any_site")) is False
 
-    assert user.load_file("any_file", "default") == "default"
+    assert user.load_file("unittest", "default") == "default"
     assert user.file_modified("any_file") == 0
 
     with pytest.raises(TypeError):
@@ -165,21 +165,6 @@ def test_unauthenticated_users_authorized_sites(
 
     monkeypatch.setattr("cmk.gui.site_config.enabled_sites", lambda: {"site1": {}, "site2": {}})
     assert user.authorized_sites() == {"site1": {}, "site2": {}}
-
-
-@pytest.mark.parametrize("user", [LoggedInNobody(), LoggedInSuperUser()])
-def test_unauthenticated_users_authorized_login_sites(
-    monkeypatch: MonkeyPatch, user: LoggedInUser
-) -> None:
-    monkeypatch.setattr("cmk.gui.site_config.get_login_slave_sites", lambda: ["slave_site"])
-    monkeypatch.setattr(
-        "cmk.gui.site_config.enabled_sites",
-        lambda: {
-            "master_site": {},
-            "slave_site": {},
-        },
-    )
-    assert user.authorized_login_sites() == {"slave_site": {}}
 
 
 @pytest.mark.usefixtures("request_context")
@@ -257,8 +242,8 @@ def fixture_monitoring_user() -> Iterator[LoggedInUser]:
     user_dir.joinpath("favorites.mk").write_text(str(MONITORING_USER_FAVORITES))
 
     assert default_authorized_builtin_role_ids == ["user", "admin", "guest"]
-    assert default_unauthorized_builtin_role_ids == ["agent_registration"]
-    assert builtin_role_ids == ["user", "admin", "guest", "agent_registration"]
+    assert default_unauthorized_builtin_role_ids == ["agent_registration", "no_permissions"]
+    assert builtin_role_ids == ["user", "admin", "guest", "agent_registration", "no_permissions"]
     assert "test" not in active_config.admin_users
 
     with create_and_destroy_user(username="test") as user:
@@ -299,9 +284,9 @@ def test_monitoring_user(request_context: None, monitoring_user: LoggedInUser) -
     assert monitoring_user.is_site_disabled(SiteId("heute_slave_1")) is True
     assert monitoring_user.is_site_disabled(SiteId("heute_slave_2")) is False
 
-    assert monitoring_user.show_help is False
-    monitoring_user.show_help = True
-    assert monitoring_user.show_help is True
+    assert monitoring_user.inline_help_as_text is False
+    monitoring_user.inline_help_as_text = True
+    assert monitoring_user.inline_help_as_text is True
 
     assert monitoring_user.acknowledged_notifications == 0
     timestamp = 1578479929
@@ -313,10 +298,10 @@ def test_monitoring_user_read_broken_file(
     request_context: None, monitoring_user: LoggedInUser
 ) -> None:
     assert monitoring_user.confdir
-    with Path(monitoring_user.confdir, "asd.mk").open("w") as f:
+    with Path(monitoring_user.confdir, "unittest.mk").open("w") as f:
         f.write("%#%#%")
 
-    assert monitoring_user.load_file("asd", deflt="xyz") == "xyz"
+    assert monitoring_user.load_file("unittest", deflt="xyz") == "xyz"
 
 
 def test_monitoring_user_permissions(

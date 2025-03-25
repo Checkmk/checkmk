@@ -8,11 +8,12 @@ import time
 from collections.abc import Callable, Iterable, Mapping
 from typing import Literal
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.jolokia import jolokia_basic_split
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, StringTable
+
+check_info = {}
 
 Section = Mapping[str, Mapping[str, float | str]]
 
@@ -36,7 +37,7 @@ def parse_jolokia_generic(string_table: StringTable) -> Section:
 
 
 def discover_type(
-    type_: Literal["string", "rate", "number"]
+    type_: Literal["string", "rate", "number"],
 ) -> Callable[[Section], DiscoveryResult]:
     def _discover_bound_type(section: Section) -> DiscoveryResult:
         yield from ((item, {}) for item, data in section.items() if data.get("type") == type_)
@@ -70,6 +71,7 @@ def check_jolokia_generic_string(item, params, parsed):
 
 
 check_info["jolokia_generic.string"] = LegacyCheckDefinition(
+    name="jolokia_generic_string",
     service_name="JVM %s",
     sections=["jolokia_generic"],
     discovery_function=discover_type("string"),
@@ -97,6 +99,7 @@ def check_jolokia_generic_rate(item, params, parsed):
 
 
 check_info["jolokia_generic.rate"] = LegacyCheckDefinition(
+    name="jolokia_generic_rate",
     service_name="JVM %s",
     sections=["jolokia_generic"],
     discovery_function=discover_type("rate"),
@@ -124,6 +127,7 @@ def check_jolokia_generic(item, params, parsed):
 
 
 check_info["jolokia_generic"] = LegacyCheckDefinition(
+    name="jolokia_generic",
     parse_function=parse_jolokia_generic,
     service_name="JVM %s",
     discovery_function=discover_type("number"),

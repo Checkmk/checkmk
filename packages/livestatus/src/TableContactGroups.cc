@@ -14,6 +14,7 @@
 #include "livestatus/Interface.h"
 #include "livestatus/ListColumn.h"
 #include "livestatus/Query.h"
+#include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 
 using row_type = IContactGroup;

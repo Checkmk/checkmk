@@ -12,10 +12,14 @@
 # Time remaining: 11820 minute(s) (8 day(s))
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition, regex
-from cmk.base.config import check_info
+import re
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+
+TIME_LEFT_RE = re.compile(r"(\d+) minute")
+
+check_info = {}
 
 
 def parse_win_license(string_table):
@@ -32,8 +36,7 @@ def parse_win_license(string_table):
         if line[0] in ["Time", "Timebased", "Volume"]:
             expiration = " ".join(line).split(":")[1].strip()
             parsed["expiration"] = expiration
-            time_left_re = regex(r"(\d+) minute")
-            if (search := time_left_re.search(expiration)) is None:
+            if (search := TIME_LEFT_RE.search(expiration)) is None:
                 raise ValueError(expiration)
             time_left = int(search.group(1)) * 60
             parsed["expiration_time"] = time_left
@@ -76,6 +79,7 @@ def check_win_license(_item, params, parsed):
 
 
 check_info["win_license"] = LegacyCheckDefinition(
+    name="win_license",
     parse_function=parse_win_license,
     service_name="Windows License",
     discovery_function=inventory_win_license,

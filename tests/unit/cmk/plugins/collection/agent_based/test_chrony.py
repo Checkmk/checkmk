@@ -59,7 +59,7 @@ def test_chrony_servers_unreachable() -> None:
             {"ntp_levels": (None, None, None)},
             {
                 "Reference ID": "55DCBEF6 ()",
-                "address": "()",
+                "address": None,
             },
             None,
         )

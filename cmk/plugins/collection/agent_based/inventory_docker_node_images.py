@@ -23,8 +23,8 @@ def parse_docker_node_images(string_table: StringTable) -> Section:
 
     running_images = [c["Image"] for c in containers.values()]
 
-    for image_id in images:
-        images[image_id]["amount_containers"] = running_images.count(image_id)
+    for image_id, image in images.items():
+        image["amount_containers"] = running_images.count(image_id)
 
     return {"images": images, "containers": containers}
 

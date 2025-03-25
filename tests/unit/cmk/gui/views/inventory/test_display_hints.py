@@ -50,6 +50,7 @@ _IGNORED_KEYS_BY_PATH = {
         "type",
         "vendor",
     ],
+    ("software", "applications", "vmwareesx"): ["clusters"],
 }
 
 
@@ -93,18 +94,17 @@ def test_related_display_hints() -> None:
             == set(related_legacy_hints.by_key) - ignored_keys
         )
 
-    assert all(
-        _check_path(path)
-        and _check_legacy_hints(related_legacy_hints)
-        and _check_table_key_order(path, related_legacy_hints)
-        and _check_attributes_key_order(path, related_legacy_hints)
-        for path, related_legacy_hints in _get_related_legacy_hints(inventory_displayhints).items()
-    )
+    for path, related_legacy_hints in _get_related_legacy_hints(inventory_displayhints).items():
+        assert _check_path(path)
+        assert _check_legacy_hints(related_legacy_hints)
+        assert _check_table_key_order(path, related_legacy_hints)
+        assert _check_attributes_key_order(path, related_legacy_hints)
 
 
 def test_missing_table_keyorder() -> None:
     ignore_paths = [
         ".hardware.memory.arrays:",  # Has no table
+        ".software.applications.vmwareesx:",
     ]
 
     missing_keyorders = [

@@ -69,7 +69,6 @@ class SecondsRenderer(Renderer):
         )
 
 
-# NOTE: strftime's format *must* be of type str, both in Python 2 and 3.
 def date(timestamp: float | None) -> str:
     return time.strftime(
         str(
@@ -131,7 +130,7 @@ class Age:
 
         days = hours / 24.0
         if days < 6:
-            return f'{drop_dotzero(days, 1)} {_("d")}'
+            return f"{drop_dotzero(days, 1)} {_('d')}"
         if days < 999:
             return "{:.0f} {}".format(days, _("d"))
         years = days / 365.0

@@ -5,9 +5,8 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-
 import cmk.plugins.jenkins.agent_based.jenkins_nodes as jn
+from cmk.agent_based.v2 import Metric, Result, Service, State
 
 
 @pytest.fixture(scope="module", name="section")
@@ -34,9 +33,7 @@ def test_discovery(section: jn.Section) -> None:
 
 
 def test_check_windows_item(section: jn.Section) -> None:
-    assert list(
-        jn.check_jenkins_nodes("Windows", {"jenkins_offline": State.CRIT.value}, section)
-    ) == [
+    assert list(jn.check_jenkins_nodes("Windows", jn.CHECK_DEFAULT_PARAMETERS, section)) == [
         Result(state=State.OK, summary="Description: Name: Myname, Ip-Address: 1.1.1.1"),
         Result(state=State.OK, summary="Is JNLP agent: yes"),
         Result(state=State.OK, summary="Is idle: yes"),
@@ -58,9 +55,7 @@ def test_check_windows_item(section: jn.Section) -> None:
 
 
 def test_check_master_item(section: jn.Section) -> None:
-    assert list(
-        jn.check_jenkins_nodes("master", {"jenkins_offline": State.CRIT.value}, section)
-    ) == [
+    assert list(jn.check_jenkins_nodes("master", jn.CHECK_DEFAULT_PARAMETERS, section)) == [
         Result(state=State.OK, summary="Description: The Master Jenkins Node"),
         Result(state=State.OK, summary="Is JNLP agent: no"),
         Result(state=State.OK, summary="Is idle: no"),
@@ -86,7 +81,7 @@ def test_check_foo_item(section: jn.Section) -> None:
         jn.check_jenkins_nodes(
             "foo",
             {
-                "jenkins_offline": State.CRIT.value,
+                **jn.CHECK_DEFAULT_PARAMETERS,
                 "avg_response_time": ("fixed", (1.0, 2.0)),
                 "jenkins_clock": ("fixed", (3.0, 4.0)),
             },
@@ -218,7 +213,7 @@ def test_showing_correct_executor_amount(multi_label_section):
         metric
         for metric in jn.check_jenkins_nodes(
             "build-fra-002.lan.corpo.net",
-            {},
+            jn.CHECK_DEFAULT_PARAMETERS,
             multi_label_section,
         )
         if isinstance(metric, Metric) and metric[0].endswith("_executors")
@@ -238,7 +233,7 @@ def test_showing_correct_executor_mode(multi_label_section):
     check_results = list(
         jn.check_jenkins_nodes(
             "build-fra-002.lan.corpo.net",
-            {},
+            jn.CHECK_DEFAULT_PARAMETERS,
             multi_label_section,
         )
     )

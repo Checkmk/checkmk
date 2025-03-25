@@ -19,7 +19,7 @@ import time
 from collections.abc import Mapping
 from typing import Any, Final, NamedTuple
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -68,6 +68,9 @@ def _ntp_fmt_time(raw: str) -> int:
         return int(raw[:-1]) * 60 * 60
     if raw[-1] == "d":
         return int(raw[:-1]) * 60 * 60 * 24
+    if raw[-1] == "y":
+        # Yes, does only hold true for non-leap years... but let's keep it simple at that point
+        return int(raw[:-1]) * 60 * 60 * 24 * 365
     return int(raw)
 
 
@@ -158,7 +161,7 @@ def check_ntp(
         return
 
     crit_stratum, warn, crit = params["ntp_levels"]
-    yield from check_levels(
+    yield from check_levels_v1(
         value=peer.offset,
         levels_upper=(warn, crit),
         levels_lower=(-warn, -crit),
@@ -166,13 +169,13 @@ def check_ntp(
         render_func=lambda f: "%.4f ms" % f,
         label="Offset",
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         value=peer.stratum,
         levels_upper=(crit_stratum, crit_stratum),
         render_func=lambda d: str(int(d)),
         label="Stratum",
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         value=peer.jitter,
         metric_name="jitter",
         render_func=lambda f: "%.4f ms" % f,

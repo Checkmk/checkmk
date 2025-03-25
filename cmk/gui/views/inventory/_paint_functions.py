@@ -13,7 +13,44 @@ from cmk.gui.i18n import _
 from cmk.gui.ifaceoper import interface_oper_state_name, interface_port_types
 from cmk.gui.utils.escaping import escape_text
 
-from .registry import PaintResult
+from .registry import InvPaintFunction, InvPaintFunctions, PaintResult
+
+
+def register(inv_paint_funtions: InvPaintFunctions) -> None:
+    for paint_function in [
+        inv_paint_generic,
+        inv_paint_hz,
+        inv_paint_bytes,
+        inv_paint_size,
+        inv_paint_bytes_rounded,
+        inv_paint_number,
+        inv_paint_count,
+        inv_paint_nic_speed,
+        inv_paint_if_oper_status,
+        inv_paint_if_admin_status,
+        inv_paint_if_port_type,
+        inv_paint_if_available,
+        inv_paint_mssql_is_clustered,
+        inv_paint_mssql_node_names,
+        inv_paint_ipv4_network,
+        inv_paint_ip_address_type,
+        inv_paint_route_type,
+        inv_paint_volt,
+        inv_paint_date,
+        inv_paint_date_and_time,
+        inv_paint_age,
+        inv_paint_bool,
+        inv_paint_timestamp_as_age,
+        inv_paint_timestamp_as_age_days,
+        inv_paint_csv_labels,
+        inv_paint_container_ready,
+        inv_paint_service_status,
+    ]:
+        # Do no overwrite paint functions from plugins
+        if paint_function.__name__ not in inv_paint_funtions:
+            inv_paint_funtions.register(
+                InvPaintFunction(name=paint_function.__name__, func=paint_function)
+            )
 
 
 def inv_paint_generic(value: SDValue) -> PaintResult:
@@ -290,7 +327,7 @@ def inv_paint_timestamp_as_age_days(value: SDValue) -> PaintResult:
         return css_class, _("today")
     if age_days == 1:
         return css_class, _("yesterday")
-    return css_class, "%d %s ago" % (int(age_days), _("days"))
+    return css_class, "%d %s" % (int(age_days), _("days ago"))
 
 
 def inv_paint_csv_labels(value: SDValue) -> PaintResult:

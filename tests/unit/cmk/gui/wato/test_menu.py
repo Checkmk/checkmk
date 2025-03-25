@@ -6,13 +6,13 @@
 
 import pytest
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
 
 from cmk.gui.type_defs import TopicMenuItem, TopicMenuTopic
 from cmk.gui.wato._snapins import get_wato_menu_items, MatchItemGeneratorSetupMenu
 from cmk.gui.watolib.search import MatchItem
-
-import cmk.ccc.version as cmk_version
 
 
 def expected_items() -> dict[str, list[str]]:
@@ -44,6 +44,8 @@ def expected_items() -> dict[str, list[str]]:
 
     events_items = [
         "notifications",
+        "analyze_notifications",
+        "test_notifications",
         "mkeventd_rule_packs",
     ]
 
@@ -58,6 +60,7 @@ def expected_items() -> dict[str, list[str]]:
 
     maintenance_items += [
         "diagnostics",
+        "certificate_overview",
         "analyze_config",
         "background_jobs_overview",
     ]
@@ -76,6 +79,9 @@ def expected_items() -> dict[str, list[str]]:
         "host_attrs",
         "wato.py?group=inventory&mode=rulesets",
     ]
+
+    if cmk_version.edition(paths.omd_root) in [cmk_version.Edition.CCE, cmk_version.Edition.CME]:
+        hosts_items.append("otel_collectors")
 
     users_items = []
     if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
@@ -108,6 +114,11 @@ def expected_items() -> dict[str, list[str]]:
         ],
         "hosts": hosts_items,
         "maintenance": maintenance_items,
+        "quick_setups": [
+            "wato.py?mode=edit_configuration_bundles&varname=special_agents%3Aaws",
+            "wato.py?mode=edit_configuration_bundles&varname=special_agents%3Aazure",
+            "wato.py?mode=edit_configuration_bundles&varname=special_agents%3Agcp",
+        ],
         "services": [
             "wato.py?group=monconf&mode=rulesets",
             "wato.py?group=checkparams&mode=rulesets",
@@ -122,7 +133,12 @@ def expected_items() -> dict[str, list[str]]:
     }
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
-        expected_items_dict.update({"exporter": ["influxdb_connections"]})
+        expected_items_dict.update(
+            {
+                "exporter": ["influxdb_connections"],
+                "synthetic_monitoring": ["robotmk_managed_robots_overview"],
+            }
+        )
 
     return expected_items_dict
 

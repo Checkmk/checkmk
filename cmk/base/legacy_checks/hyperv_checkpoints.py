@@ -9,10 +9,10 @@
 # c85ae17b-1a6c-4a34-949a-a1b9385ef67a 2040
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render, StringTable
+
+check_info = {}
 
 
 def inventory_hyperv_checkpoints(info):
@@ -52,6 +52,7 @@ def parse_hyperv_checkpoints(string_table: StringTable) -> StringTable:
 
 
 check_info["hyperv_checkpoints"] = LegacyCheckDefinition(
+    name="hyperv_checkpoints",
     parse_function=parse_hyperv_checkpoints,
     service_name="HyperV Checkpoints",
     discovery_function=inventory_hyperv_checkpoints,

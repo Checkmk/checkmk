@@ -3,16 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
 
 import os
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator
 
 import docker  # type: ignore[import-untyped]
 import pytest
 
-from tests.testlib.repo import repo_path
+from tests.testlib.common.repo import repo_path
 
 
 @pytest.fixture(scope="module")
@@ -65,8 +64,7 @@ def test_agent_plugin_syntax_compatibility(
 
     if not plugin_path.endswith(".py2") and python_version in ["2.5", "2.6"]:
         pytest.skip(
-            "Do not test .py with Python 2 "
-            "(Plugins are needed for compatibilit with 2.5 and newer)"
+            "Do not test .py with Python 2 (Plugins are needed for compatibilit with 2.5 and newer)"
         )
 
     _exit_code, output = python_container.exec_run(

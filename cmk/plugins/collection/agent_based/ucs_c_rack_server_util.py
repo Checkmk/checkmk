@@ -20,7 +20,7 @@ from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -95,7 +95,7 @@ def check_ucs_c_rack_server_util(
         return
     if (overall_util := rack_utils.overall) is None:
         return
-    yield from check_levels(
+    yield from check_levels_v1(
         overall_util,
         levels_upper=params["upper_levels"],
         metric_name="overall_util",
@@ -167,7 +167,7 @@ def check_ucs_c_rack_server_util_pci_io(
         return
     if (io_util := rack_utils.io) is None:
         return
-    yield from check_levels(
+    yield from check_levels_v1(
         io_util,
         levels_upper=params["upper_levels"],
         metric_name="pci_io_util",
@@ -195,7 +195,7 @@ def check_ucs_c_rack_server_util_mem(
         return
     if (memory_util := rack_utils.memory) is None:
         return
-    yield from check_levels(
+    yield from check_levels_v1(
         memory_util,
         levels_upper=params["upper_levels"],
         metric_name="memory_util",

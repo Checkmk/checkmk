@@ -4,19 +4,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # This file initializes the pytest environment
-# pylint: disable=redefined-outer-name,wrong-import-order
+
 
 import logging
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from pathlib import Path
 from typing import Final
 
 import pytest
-import pytest_check  # type: ignore[import-untyped]
+import pytest_check
+from playwright.sync_api import TimeoutError as PWTimeoutError
 from pytest_metadata.plugin import metadata_key  # type: ignore[import-untyped]
 
 # TODO: Can we somehow push some of the registrations below to the subdirectories?
@@ -25,7 +27,7 @@ pytest.register_assert_rewrite(
     "tests.testlib", "tests.unit.checks.checktestlib", "tests.unit.checks.generictests.run"
 )
 
-from tests.testlib.repo import (
+from tests.testlib.common.repo import (  # noqa: E402
     add_python_paths,
     current_base_branch_name,
     is_cloud_repo,
@@ -34,8 +36,29 @@ from tests.testlib.repo import (
     is_saas_repo,
     repo_path,
 )
+from tests.testlib.common.utils import (  # noqa: E402
+    is_containerized,
+    run,
+    verbose_called_process_error,
+)
+from tests.testlib.pytest_helpers.timeouts import MonitorTimeout, SessionTimeoutError  # noqa: E402
 
-_logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
+
+# This allows exceptions to be handled by IDEs (rather than just printing the results)
+# when pytest based tests are being run from inside the IDE
+# To enable this, set `_PYTEST_RAISE` to some value != '0' in your IDE
+PYTEST_RAISE = os.getenv("_PYTEST_RAISE", "0") != "0"
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _session_timeout(pytestconfig: pytest.Config) -> Iterator[None]:
+    session_timeout_cli = "--session-timeout"
+    timeout_duration = pytestconfig.getoption(session_timeout_cli)
+    if "gui" in pytestconfig.getoption("-T") and timeout_duration > 0:
+        pytest.exit(f"'UI-tests' do not support usage of '{session_timeout_cli}'!")
+    with MonitorTimeout(timeout=timeout_duration):
+        yield
 
 
 @pytest.fixture(scope="function", autouse=True)
@@ -51,20 +74,117 @@ def fail_on_log_exception(
             pytest_check.fail(record.message)
 
 
-if os.getenv("_PYTEST_RAISE", "0") != "0":
-    # This allows exceptions to be handled by IDEs (rather than just printing the results)
-    # when pytest based tests are being run from inside the IDE
-    # To enable this, set `_PYTEST_RAISE` to some value != '0' in your IDE
-    @pytest.hookimpl(tryfirst=True)
-    def pytest_exception_interact(call):
-        raise call.excinfo.value
+@pytest.hookimpl(tryfirst=True)
+def pytest_exception_interact(
+    node: pytest.Item | pytest.Collector,
+    call: pytest.CallInfo,
+    report: pytest.CollectReport | pytest.TestReport,
+) -> None:
+    if not (excinfo := call.excinfo):
+        return
 
-    @pytest.hookimpl(tryfirst=True)
-    def pytest_internalerror(excinfo):
+    testsuite_type = node.config.getoption("-T")
+    sudo_run_in_container = is_containerized()
+
+    excp_ = excinfo.value
+    if testsuite_type in ("composition"):
+        excp_.add_note("-" * 80)
+        excp_.add_note(
+            _render_command_output(
+                "ps -ef",
+                sudo=sudo_run_in_container,
+            )
+        )
+        if sudo_run_in_container:
+            for site_name in _currently_existing_omd_site_names():
+                excp_.add_note("-" * 80)
+                excp_.add_note(f"SITE: {site_name}")
+                for command_output in _rendered_command_outputs_for_site(site_name):
+                    excp_.add_note("-" * 80)
+                    excp_.add_note(command_output)
+        else:
+            excp_.add_note("-" * 80)
+            excp_.add_note(
+                _render_command_output(
+                    "lslocks --output-all --notruncate",
+                    sudo=False,
+                )
+            )
+
+    if excinfo.type == SessionTimeoutError:
+        # Prevents execution of the next test and exits the pytest-run, and
+        # leads to clean termination of the affected test run.
+        node.session.shouldstop = True
+    elif excinfo.type in (TimeoutError, PWTimeoutError):
+        excp_.add_note("-" * 80)
+        excp_.add_note(
+            _render_command_output(
+                "top -b -n 1",
+                sudo=sudo_run_in_container,
+            )
+        )
+    elif isinstance(excp_, subprocess.CalledProcessError):
+        excp_.add_note(verbose_called_process_error(excp_))
+        logger.exception(excp_)
+
+    report.longrepr = node.repr_failure(excinfo)
+    if PYTEST_RAISE:
+        raise excp_
+
+
+def _render_command_output(cmd: str, sudo: bool, substitute_user: str | None = None) -> str:
+    """Render stdout and stderr from command as string or exception if raised.
+
+    Command execution can have non-zero exit-code.
+    """
+    try:
+        completed_process = run(
+            cmd.split(" "),
+            sudo=sudo,
+            check=False,
+            substitute_user=substitute_user,
+        )
+    except BaseException as excp:
+        return f"EXCEPTION '{cmd}':\n{excp}"
+    return (
+        f"STDOUT '{cmd}':\n{completed_process.stdout}\nSTDERR '{cmd}':\n{completed_process.stderr}"
+    )
+
+
+def _currently_existing_omd_site_names() -> Generator[str]:
+    """Yield the names of all currently existing OMD sites"""
+    yield from (site_path.name for site_path in Path("/omd/sites").iterdir())
+
+
+def _rendered_command_outputs_for_site(site_name: str) -> Generator[str]:
+    """Yield rendered output for OMD site command-by-command"""
+    yield _render_command_output(
+        "lslocks --output-all --notruncate",
+        sudo=True,
+        substitute_user=site_name,
+    )
+    yield _render_command_output(
+        "cmk-ui-job-scheduler-health",
+        sudo=True,
+        substitute_user=site_name,
+    )
+    yield _render_command_output(
+        "omd status",
+        sudo=True,
+        substitute_user=site_name,
+    )
+    yield _render_command_output(
+        'lq "GET hosts\\nColumns: name"',
+        sudo=True,
+        substitute_user=site_name,
+    )
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_internalerror(excinfo: pytest.ExceptionInfo) -> None:
+    if PYTEST_RAISE:
         raise excinfo.value
 
-
-pytest_plugins = ("tests.testlib.playwright.plugin",)
 
 collect_ignore: list[str] = []
 
@@ -90,8 +210,10 @@ test_types = [
     "pylint",
     "docker",
     "agent-integration",
+    "agent_plugin_integration",
     "agent-plugin-unit",
     "integration",
+    "integration_redfish",
     "gui_crawl",
     "gui_e2e",
     "packaging",
@@ -100,6 +222,7 @@ test_types = [
     "update",
     "schemathesis_openapi",
     "plugins_integration",
+    "plugins_siteless",
     "extension_compatibility",
     "testlib",
 ]
@@ -132,6 +255,14 @@ def pytest_addoption(parser):
         default=None,
         type=int,
         help="Select only the first N tests from the collection list.",
+    )
+    parser.addoption(
+        "--session-timeout",
+        action="store",
+        metavar="TIMEOUT",
+        default=0,
+        type=int,
+        help="Terminate testsuite run cleanly after TIMEOUT seconds. By default, 0 (disabled).",
     )
 
 
@@ -168,8 +299,7 @@ def pytest_collection_modifyitems(items: list[pytest.Item], config: pytest.Confi
         type_marker = item.get_closest_marker("type")
         if type_marker and type_marker.args:
             continue  # Do not modify manually set marks
-        file_path = Path("%s" % item.reportinfo()[0])
-        repo_rel_path = file_path.relative_to(repo_path())
+        repo_rel_path = item.path.relative_to(Path(__file__).parent.parent)
         ty = repo_rel_path.parts[1]
         if ty not in test_types:
             if not isinstance(item, pytest.DoctestItem):
@@ -215,40 +345,28 @@ def cleanup_cmk():
         pass
 
 
-def pytest_cmdline_main(config):
-    if not config.getoption("-T"):
-        return  # missing option is handled later
-    verify_virtualenv()
-
-
-def verify_virtualenv():
-    if not sys.prefix.endswith("/.venv"):
-        raise SystemExit(
-            "ERROR: Please load virtual environment first "
-            f'(Use "pipenv shell" or configure direnv) ({sys.prefix})'
-        )
-
-
 # Some cmk.* code is calling things like cmk_version.is_raw_edition() at import time
 # (e.g. cmk/base/default_config/notify.py) for edition specific variable
 # defaults. In integration tests we want to use the exact version of the
 # site. For unit tests we assume we are in Enterprise Edition context.
 def _fake_version_and_paths() -> None:
-    from pytest import MonkeyPatch  # pylint: disable=import-outside-toplevel
+    from pytest import MonkeyPatch
 
     monkeypatch = MonkeyPatch()
     tmp_dir = tempfile.mkdtemp(prefix="pytest_cmk_")
 
-    if is_managed_repo():
-        edition_short = "cme"
-    elif is_cloud_repo():
-        edition_short = "cce"
-    elif is_saas_repo():
-        edition_short = "cse"
-    elif is_enterprise_repo():
-        edition_short = "cee"
-    else:
-        edition_short = "cre"
+    def guess_from_repo() -> str:
+        if is_managed_repo():
+            return "cme"
+        if is_cloud_repo():
+            return "cce"
+        if is_saas_repo():
+            return "cse"
+        if is_enterprise_repo():
+            return "cee"
+        return "cre"
+
+    edition_short = os.getenv("EDITION") or guess_from_repo()
 
     unpatched_paths: Final = {
         # FIXME :-(
@@ -259,8 +377,8 @@ def _fake_version_and_paths() -> None:
     }
 
     # patch `cmk.utils.paths` before `cmk.ccc.versions`
-    _logger.info("Patching `cmk.utils.paths`.")
-    import cmk.utils.paths  # pylint: disable=import-outside-toplevel
+    logger.info("Patching `cmk.utils.paths`.")
+    import cmk.utils.paths
 
     # Unit test context: load all available modules
     original_omd_root = Path(cmk.utils.paths.omd_root)
@@ -284,8 +402,8 @@ def _fake_version_and_paths() -> None:
     monkeypatch.setattr("cmk.utils.paths.legacy_check_manpages_dir", "%s/checkman" % repo_path())
 
     # patch `cmk.ccc.versions`
-    _logger.info("Patching `cmk.ccc.versions`.")
-    import cmk.ccc.version as cmk_version  # pylint: disable=import-outside-toplevel
+    logger.info("Patching `cmk.ccc.versions`.")
+    import cmk.ccc.version as cmk_version
 
     monkeypatch.setattr(cmk_version, "orig_omd_version", cmk_version.omd_version, raising=False)
     monkeypatch.setattr(

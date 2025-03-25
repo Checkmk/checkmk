@@ -7,6 +7,8 @@ import copy
 from collections.abc import Callable, Sequence
 from typing import cast, Literal, TypeVar
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.user import UserId
 
 from cmk.gui import visuals
@@ -37,8 +39,6 @@ from cmk.gui.views.page_show_view import get_limit, get_user_sorters, process_vi
 from cmk.gui.views.store import get_all_views, get_permitted_views
 from cmk.gui.views.view_choices import view_choices
 from cmk.gui.visuals import get_only_sites_from_context
-
-from cmk.ccc.exceptions import MKGeneralException
 
 
 class ABCViewDashletConfig(DashletConfig):
@@ -223,7 +223,11 @@ class ABCViewDashlet(IFrameDashlet[VT]):
         view.only_sites = get_only_sites_from_context(context)
         view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
 
-        process_view(GUIViewRenderer(view, show_buttons=False))
+        process_view(
+            GUIViewRenderer(
+                view, show_buttons=False, page_menu_dropdowns_callback=lambda x, y, z: None
+            )
+        )
 
         html.close_div()
 

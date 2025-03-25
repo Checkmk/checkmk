@@ -7,7 +7,7 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.utils.structured_data import ImmutableTree, MutableTree, SDKey
+from cmk.utils.structured_data import ImmutableTree, MutableTree, SDKey, SDNodeName
 
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.inventory import _check_trees, HWSWInventoryParameters
@@ -17,7 +17,7 @@ from cmk.checkengine.inventory import _check_trees, HWSWInventoryParameters
     "parameters, expected_results",
     [
         pytest.param(
-            HWSWInventoryParameters(0, 0, 0, 0, False),
+            HWSWInventoryParameters(0, 0, 0, 0, 0, False),
             [
                 ActiveCheckResult(
                     state=0,
@@ -29,7 +29,7 @@ from cmk.checkengine.inventory import _check_trees, HWSWInventoryParameters
             id="OK",
         ),
         pytest.param(
-            HWSWInventoryParameters(0, 0, 1, 0, False),
+            HWSWInventoryParameters(0, 0, 1, 0, 0, False),
             [
                 ActiveCheckResult(
                     state=0,
@@ -64,3 +64,52 @@ def test__check_trees(
         )
         == expected_results
     )
+
+
+def test__check_trees_hardware_or_software_changes() -> None:
+    inventory_tree = MutableTree()
+    inventory_tree.add(
+        path=(SDNodeName("hardware"),),
+        pairs=[{SDKey("h1"): "H 1", SDKey("h2"): "H 2"}],
+    )
+    inventory_tree.add(
+        path=(SDNodeName("software"),),
+        pairs=[{SDKey("s1"): "S 1", SDKey("s2"): "S 2"}],
+    )
+    inventory_tree.add(
+        path=(SDNodeName("networking"),),
+        pairs=[{SDKey("n1"): "N 1", SDKey("n2"): "N 2"}],
+    )
+    assert list(
+        _check_trees(
+            parameters=HWSWInventoryParameters(1, 2, 0, 3, 0, False),
+            inventory_tree=inventory_tree,
+            status_data_tree=MutableTree(),
+            previous_tree=ImmutableTree(),
+        )
+    ) == [
+        ActiveCheckResult(
+            state=0,
+            summary="Found 6 inventory entries",
+            details=(),
+            metrics=(),
+        ),
+        ActiveCheckResult(
+            state=2,
+            summary="software changes",
+            details=(),
+            metrics=(),
+        ),
+        ActiveCheckResult(
+            state=1,
+            summary="hardware changes",
+            details=(),
+            metrics=(),
+        ),
+        ActiveCheckResult(
+            state=3,
+            summary="networking changes",
+            details=(),
+            metrics=(),
+        ),
+    ]

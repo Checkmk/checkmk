@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, any_of, exists, SNMPTree, startswith, StringTable
+
+check_info = {}
 
 
 def inventory_fast_lta_silent_cubes_status(info):
@@ -32,6 +33,7 @@ def parse_fast_lta_silent_cubes(string_table: StringTable) -> StringTable:
 
 
 check_info["fast_lta_silent_cubes"] = LegacyCheckDefinition(
+    name="fast_lta_silent_cubes",
     parse_function=parse_fast_lta_silent_cubes,
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),
@@ -48,6 +50,7 @@ check_info["fast_lta_silent_cubes"] = LegacyCheckDefinition(
 
 
 check_info["fast_lta_silent_cubes.capacity"] = LegacyCheckDefinition(
+    name="fast_lta_silent_cubes_capacity",
     service_name="Fast LTA SC Capacity %s",
     sections=["fast_lta_silent_cubes"],
     discovery_function=inventory_fast_lta_silent_cubes_status,

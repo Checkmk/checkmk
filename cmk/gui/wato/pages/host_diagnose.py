@@ -9,6 +9,8 @@ import json
 from collections.abc import Collection
 from typing import NotRequired, TypedDict
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.snmplib import SNMPCredentials  # pylint: disable=cmk-module-layer-violation
@@ -34,17 +36,14 @@ from cmk.gui.utils.encrypter import Encrypter
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
-from cmk.gui.valuespec import Dictionary, DropdownChoice, FixedValue, Float
+from cmk.gui.valuespec import Dictionary, DropdownChoice, FixedValue, Float, Integer, Password
 from cmk.gui.valuespec import HostAddress as VSHostAddress
-from cmk.gui.valuespec import Integer, Password
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.attributes import SNMPCredentials as VSSNMPCredentials
 from cmk.gui.watolib.check_mk_automations import diag_host
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import folder_from_request, folder_preserving_link, Host
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
-
-from cmk.ccc.exceptions import MKGeneralException
 
 SNMPv3NoAuthNoPriv = tuple[str, str]
 SNMPv3AuthNoPriv = tuple[str, str, str, str]
@@ -376,7 +375,7 @@ class ModeDiagHost(WatoMode):
                         unit=_("sec"),
                         display_format="%.0f",  # show values consistent to
                         size=2,  # SNMP-Timeout
-                        title=_('TCP Connection Timeout (<a href="%s">Rules</a>)')
+                        title=_('TCP connection timeout (<a href="%s">Rules</a>)')
                         % folder_preserving_link(
                             [("mode", "edit_ruleset"), ("varname", "tcp_connect_timeouts")]
                         ),

@@ -3,14 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
-import pytest
 from polyfactory.factories.pydantic_factory import ModelFactory
 
 from tests.unit.cmk.plugins.vsphere.agent_based.esx_vsphere_vm_util import esx_vm_section
 
-from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result
+from cmk.agent_based.v2 import Metric, Result
 from cmk.plugins.lib import esx_vsphere
 from cmk.plugins.vsphere.agent_based import esx_vsphere_vm, esx_vsphere_vm_cpu
 
@@ -46,10 +44,5 @@ def test_check_cpu_usage_metrics():
     assert [m.name for m in metrics] == ["demand"]
 
 
-def test_check_cpu_usage_raises_error():
-    with pytest.raises(IgnoreResultsError):
-        list(esx_vsphere_vm_cpu.check_cpu(None))
-
-
-def _esx_vm_section(cpu: esx_vsphere.ESXCpu) -> esx_vsphere.ESXVm:
+def _esx_vm_section(cpu: esx_vsphere.ESXCpu) -> esx_vsphere.SectionESXVm:
     return esx_vm_section(cpu=cpu)

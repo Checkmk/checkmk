@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -46,14 +46,14 @@ def check_fortimail_queue(
 ) -> CheckResult:
     if not (queue_data := section.get(item)):
         return
-    yield from check_levels(
+    yield from check_levels_v1(
         queue_data["length"],
         levels_upper=params["queue_length"],
         metric_name="mail_queue_active_length",
         label="Length",
         render_func=str,
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         queue_data["size"],
         metric_name="mail_queue_active_size",
         label="Size",

@@ -9,7 +9,7 @@ addopts = [
   # successful, etc. etc. We might reconsinder lowering the live log level when we
   # have cleaned up things...
   "--log-cli-level=CRITICAL",
-  "--log-cli-format=\"%(asctime)s %(levelname)s %(message)s\"",
+  "--log-cli-format=%(asctime)s %(levelname)s %(message)s",
   # Show summary of skipped tests
   "-rs",
   # Show N slowest setup/test durations

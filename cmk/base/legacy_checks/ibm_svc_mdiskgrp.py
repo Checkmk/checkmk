@@ -6,12 +6,13 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+
+check_info = {}
 
 # Example output from agent:
 # <<<ibm_svc_mdiskgrp:sep(58)>>>
@@ -138,10 +139,7 @@ def check_ibm_svc_mdiskgrp(item, params, parsed):
         elif provisioning >= warn:
             state = 1
         if state:
-            infotext += " (warn/crit at {}/{})".format(
-                render.percent(warn),
-                render.percent(crit),
-            )
+            infotext += f" (warn/crit at {render.percent(warn)}/{render.percent(crit)})"
         warn_mb = capacity * mb * warn / 100
         crit_mb = capacity * mb * crit / 100
     else:
@@ -150,12 +148,15 @@ def check_ibm_svc_mdiskgrp(item, params, parsed):
 
     # Note: Performance data is now (with new metric system) normed to
     # canonical units - i.e. 1 byte in this case.
-    yield state, infotext, [
-        ("fs_provisioning", virtual_capacity * mb, warn_mb, crit_mb, 0, capacity * mb)
-    ]
+    yield (
+        state,
+        infotext,
+        [("fs_provisioning", virtual_capacity * mb, warn_mb, crit_mb, 0, capacity * mb)],
+    )
 
 
 check_info["ibm_svc_mdiskgrp"] = LegacyCheckDefinition(
+    name="ibm_svc_mdiskgrp",
     parse_function=parse_ibm_svc_mdiskgrp,
     service_name="Pool Capacity %s",
     discovery_function=inventory_ibm_svc_mdiskgrp,

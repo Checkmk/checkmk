@@ -100,6 +100,13 @@ bool FindActivateStartLegacyAgent(AddAction action = AddAction::nothing);
 std::wstring FindLegacyAgent();
 std::optional<DWORD> GetServiceStatusByName(const std::wstring &name);
 std::optional<DWORD> GetServiceStatus(SC_HANDLE service_handle);
+uint32_t GetServiceHint(SC_HANDLE ServiceHandle);
+std::optional<DWORD> SendServiceCommand(SC_HANDLE handle, uint32_t command);
+
+// Calculate delay when service pending state occurs
+uint32_t CalcDelayFromHint(uint32_t hint) noexcept;
+uint32_t CalcDelay(SC_HANDLE handle) noexcept;
+
 // this is full-featured function
 // may be used in production as part of top level API
 bool StopWindowsService(std::wstring_view service_name);

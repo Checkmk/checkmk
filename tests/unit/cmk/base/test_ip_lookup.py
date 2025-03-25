@@ -11,7 +11,9 @@ from typing import TypeAlias
 import pytest
 from pytest import MonkeyPatch
 
-from tests.testlib.base import Scenario
+from tests.testlib.unit.base_configuration_scenario import Scenario
+
+from cmk.ccc.exceptions import MKIPAddressLookupError
 
 from cmk.utils import ip_lookup
 from cmk.utils.caching import cache_manager
@@ -19,8 +21,6 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.tags import TagGroupID, TagID
 
 from cmk.base import config
-
-from cmk.ccc.exceptions import MKIPAddressLookupError
 
 _IPLookupCacheMapping: TypeAlias = dict[
     ip_lookup.IPLookupCacheId, HostAddress | MKIPAddressLookupError

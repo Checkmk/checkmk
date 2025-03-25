@@ -4,19 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, contains, OIDBytes, OIDEnd, SNMPTree, startswith
+
+check_info = {}
 
 _TABLES = ["1", "2", "3", "4"]
 
 
-def parse_emka_modules(string_table):  # pylint: disable=too-many-branches
-    if not all(string_table):
+def parse_emka_modules(string_table):
+    if not any(string_table):
         return None
 
     # basModuleCoIx == 0
@@ -86,7 +87,7 @@ def parse_emka_modules(string_table):  # pylint: disable=too-many-branches
                 if mode:
                     attrs["mode"] = mode
 
-    for oidend, threshold in string_table[6]:
+    for oidend, threshold in string_table[5]:
         location, threshold_ty = oidend.split(".")
         if threshold_ty == "1":
             ty = "levels_lower"
@@ -109,7 +110,7 @@ def parse_emka_modules(string_table):  # pylint: disable=too-many-branches
     # 0.02  => 2/100 [multiplicator]/[divisor]
     # -30.0          [offset]
     # Notice, may also "=#\xb0C0.0230.0"
-    for oidend, equation_bin in string_table[7]:
+    for oidend, equation_bin in string_table[6]:
         equation = []
         part = []
         for entry in equation_bin:
@@ -202,6 +203,7 @@ def check_emka_modules(item, params, parsed):
 
 
 check_info["emka_modules"] = LegacyCheckDefinition(
+    name="emka_modules",
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "emka"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13595"),
@@ -269,6 +271,7 @@ def check_emka_modules_alarm(item, params, parsed):
 
 
 check_info["emka_modules.alarm"] = LegacyCheckDefinition(
+    name="emka_modules_alarm",
     service_name="Alarm %s",
     sections=["emka_modules"],
     discovery_function=inventory_emka_modules_alarm,
@@ -308,6 +311,7 @@ def check_emka_modules_handle(item, params, parsed):
 
 
 check_info["emka_modules.handle"] = LegacyCheckDefinition(
+    name="emka_modules_handle",
     service_name="Handle %s",
     sections=["emka_modules"],
     discovery_function=inventory_emka_modules_handle,
@@ -339,6 +343,7 @@ def check_emka_modules_sensor_volt(item, params, parsed):
 
 
 check_info["emka_modules.sensor_volt"] = LegacyCheckDefinition(
+    name="emka_modules_sensor_volt",
     service_name="Phase %s",
     sections=["emka_modules"],
     discovery_function=inventory_emka_modules_sensor_volt,
@@ -377,6 +382,7 @@ def check_emka_modules_sensor_temp(item, params, parsed):
 
 
 check_info["emka_modules.sensor_temp"] = LegacyCheckDefinition(
+    name="emka_modules_sensor_temp",
     service_name="Temperature %s",
     sections=["emka_modules"],
     discovery_function=inventory_emka_modules_sensor_temp,
@@ -409,6 +415,7 @@ def check_emka_modules_sensor_humid(item, params, parsed):
 
 
 check_info["emka_modules.sensor_humid"] = LegacyCheckDefinition(
+    name="emka_modules_sensor_humid",
     service_name="Humidity %s",
     sections=["emka_modules"],
     discovery_function=inventory_emka_modules_sensor_humid,
@@ -446,6 +453,7 @@ def check_emka_modules_relay(item, params, parsed):
 
 
 check_info["emka_modules.relay"] = LegacyCheckDefinition(
+    name="emka_modules_relay",
     service_name="Relay %s",
     sections=["emka_modules"],
     discovery_function=inventory_emka_modules_relay,

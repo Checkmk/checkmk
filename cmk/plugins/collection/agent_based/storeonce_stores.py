@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -98,12 +98,12 @@ def check_storeonce_stores(item: str, section: Section) -> CheckResult:
         summary="Status: %s" % values["Status"],
     )
 
-    yield from check_levels(
+    yield from check_levels_v1(
         float(values["diskBytes"]), metric_name="data_size", label="Size", render_func=render.bytes
     )
 
     if "Dedupe Ratio" in values:
-        yield from check_levels(
+        yield from check_levels_v1(
             float(values["Dedupe Ratio"]), metric_name="dedup_rate", label="Dedup ratio"
         )
 

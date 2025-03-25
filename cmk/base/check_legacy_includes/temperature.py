@@ -3,21 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=unused-import
-
 import time
-from collections.abc import Generator, Mapping, Sequence
+from collections.abc import Generator, Sequence
 from typing import AnyStr, NotRequired, TypedDict
 
-from cmk.base.check_api import check_levels, state_markers
-
-from cmk.agent_based.v2 import get_average, get_rate, get_value_store, IgnoreResultsError, State
-from cmk.plugins.lib.temperature import _migrate_params
-from cmk.plugins.lib.temperature import fahrenheit_to_celsius as fahrenheit_to_celsius
+from cmk.agent_based.legacy.v0_unstable import check_levels
+from cmk.agent_based.v2 import get_average, get_rate, get_value_store, IgnoreResultsError
+from cmk.plugins.lib.temperature import _migrate_params, TempParamDict
+from cmk.plugins.lib.temperature import (
+    fahrenheit_to_celsius as fahrenheit_to_celsius,  # ruff: ignore[unused-import]
+)
 from cmk.plugins.lib.temperature import render_temp as render_temp
 from cmk.plugins.lib.temperature import StatusType as StatusType
 from cmk.plugins.lib.temperature import temp_unitsym as temp_unitsym
-from cmk.plugins.lib.temperature import TempParamDict
 from cmk.plugins.lib.temperature import TempParamType as TempParamType
 from cmk.plugins.lib.temperature import to_celsius as to_celsius
 from cmk.plugins.lib.temperature import TwoLevelsType as TwoLevelsType
@@ -87,7 +85,7 @@ def _normalize_level(entry):
     return entry
 
 
-def check_temperature_determine_levels(  # pylint: disable=too-many-branches
+def check_temperature_determine_levels(
     dlh,
     usr_warn,
     usr_crit,
@@ -117,15 +115,17 @@ def check_temperature_determine_levels(  # pylint: disable=too-many-branches
     # minn is a min that deals with None in the way we want here.
     elif dlh == "best":
         warn, crit = maxx(usr_warn, dev_warn), maxx(usr_crit, dev_crit)
-        warn_lower, crit_lower = minn(usr_warn_lower, dev_warn_lower), minn(
-            usr_crit_lower, dev_crit_lower
+        warn_lower, crit_lower = (
+            minn(usr_warn_lower, dev_warn_lower),
+            minn(usr_crit_lower, dev_crit_lower),
         )
 
     # Use most critical of your and device's levels
     elif dlh == "worst":
         warn, crit = minn(usr_warn, dev_warn), minn(usr_crit, dev_crit)
-        warn_lower, crit_lower = maxx(usr_warn_lower, dev_warn_lower), maxx(
-            usr_crit_lower, dev_crit_lower
+        warn_lower, crit_lower = (
+            maxx(usr_warn_lower, dev_warn_lower),
+            maxx(usr_crit_lower, dev_crit_lower),
         )
 
     # Use user's levels if present, otherwise the device's
@@ -155,7 +155,7 @@ def check_temperature_determine_levels(  # pylint: disable=too-many-branches
 
 
 # determine temperature trends. This is a private function, not to be called by checks
-def check_temperature_trend(  # pylint: disable=too-many-branches
+def check_temperature_trend(
     temp,
     params,
     output_unit,
@@ -256,12 +256,12 @@ def check_temperature_trend(  # pylint: disable=too-many-branches
                     combiner(2, "%s until temp limit reached(!!)" % format_minutes(minutes_left))
                 elif minutes_left <= warn:
                     combiner(1, "%s until temp limit reached(!)" % format_minutes(minutes_left))
-    except IgnoreResultsError:
-        pass
+    except IgnoreResultsError as e:
+        combiner(3, str(e))
     return combiner.status, combiner.infotext  # type: ignore[attr-defined]
 
 
-def check_temperature(  # pylint: disable=too-many-branches
+def check_temperature(
     reading: Number,
     params: TempParamType,
     unique_name: AnyStr | None,
@@ -374,32 +374,16 @@ def check_temperature(  # pylint: disable=too-many-branches
         dev_levelstext_lower = ""
 
         if usr_warn is not None and usr_crit is not None:
-            usr_levelstext = " (warn/crit at {}/{} {})".format(
-                render_temp(usr_warn, output_unit),
-                render_temp(usr_crit, output_unit),
-                temp_unitsym[output_unit],
-            )
+            usr_levelstext = f" (warn/crit at {render_temp(usr_warn, output_unit)}/{render_temp(usr_crit, output_unit)} {temp_unitsym[output_unit]})"
 
         if usr_warn_lower is not None and usr_crit_lower is not None:
-            usr_levelstext_lower = " (warn/crit below {}/{} {})".format(
-                render_temp(usr_warn_lower, output_unit),
-                render_temp(usr_crit_lower, output_unit),
-                temp_unitsym[output_unit],
-            )
+            usr_levelstext_lower = f" (warn/crit below {render_temp(usr_warn_lower, output_unit)}/{render_temp(usr_crit_lower, output_unit)} {temp_unitsym[output_unit]})"
 
         if dev_levels:
-            dev_levelstext = " (device warn/crit at {}/{} {})".format(
-                render_temp(dev_warn, output_unit),
-                render_temp(dev_crit, output_unit),
-                temp_unitsym[output_unit],
-            )
+            dev_levelstext = f" (device warn/crit at {render_temp(dev_warn, output_unit)}/{render_temp(dev_crit, output_unit)} {temp_unitsym[output_unit]})"
 
         if dev_levels_lower:
-            dev_levelstext_lower = " (device warn/crit below {}/{} {})".format(
-                render_temp(dev_warn_lower, output_unit),
-                render_temp(dev_crit_lower, output_unit),
-                temp_unitsym[output_unit],
-            )
+            dev_levelstext_lower = f" (device warn/crit below {render_temp(dev_warn_lower, output_unit)}/{render_temp(dev_crit_lower, output_unit)} {temp_unitsym[output_unit]})"
 
         # Output only levels that are relevant when computing the state
         if dlh == "usr":

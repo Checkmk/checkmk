@@ -10,7 +10,7 @@ import os.path
 import socket
 import sys
 
-__version__ = "2.4.0b1"
+__version__ = "2.5.0b1"
 
 
 try:
@@ -21,7 +21,7 @@ except ImportError:
         "Error: mk_ceph requires the library 'rados'."
         " Please install it on the monitored system (%s install rados)." % pip
     )
-    sys.stdout.write("<<<cephstatus:sep(0)>>>\n" "%s\n" % json.dumps({"deployment_error": error}))
+    sys.stdout.write("<<<cephstatus:sep(0)>>>\n%s\n" % json.dumps({"deployment_error": error}))
     sys.exit(0)
 
 
@@ -30,7 +30,6 @@ def _output_json_section(name, data):
 
 
 class RadosCMD(rados.Rados):  # type: ignore[misc]
-
     def command_mon(self, cmd, params=None):
         data = {"prefix": cmd, "format": "json"}
         if params:
@@ -121,7 +120,6 @@ def _make_osd_section(raw_df, raw_perf, localosds):
 
 
 def main() -> int:
-
     ceph_config, ceph_client = _load_plugin_config(os.environ["MK_CONFDIR"])
 
     cluster = RadosCMD(conffile=ceph_config, name=ceph_client)
@@ -139,7 +137,6 @@ def main() -> int:
         # only on MON hosts
         mons = status.get("quorum_names", [])
         if hostname in mons or fqdn in mons:
-
             _output_json_section("cephstatus", status)
 
             res = cluster.command_mon("df", params={"detail": "detail"})

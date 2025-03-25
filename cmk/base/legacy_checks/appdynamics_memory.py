@@ -10,10 +10,10 @@
 
 # mypy: disable-error-code="arg-type,list-item"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import render, StringTable
+
+check_info = {}
 
 
 def inventory_appdynamics_memory(info):
@@ -21,7 +21,7 @@ def inventory_appdynamics_memory(info):
         yield " ".join(line[0:2]), {}
 
 
-def check_appdynamics_memory(item, params, info):  # pylint: disable=too-many-branches
+def check_appdynamics_memory(item, params, info):
     for line in info:
         if item == " ".join(line[0:2]):
             mb = 1024 * 1024.0
@@ -83,12 +83,11 @@ def check_appdynamics_memory(item, params, info):  # pylint: disable=too-many-br
 
             if max_available > 0:
                 perfdata = [("mem_%s" % mem_type, used, warn, crit, 0, max_available)]
-                yield state, "Used: {} of {} ({:.2f}%){}".format(
-                    render.bytes(used),
-                    render.bytes(max_available),
-                    used_percent,
-                    levels_label,
-                ), perfdata
+                yield (
+                    state,
+                    f"Used: {render.bytes(used)} of {render.bytes(max_available)} ({used_percent:.2f}%){levels_label}",
+                    perfdata,
+                )
             else:
                 perfdata = [("mem_%s" % mem_type, used)]
                 yield state, "Used: %s" % render.bytes(used), perfdata
@@ -107,6 +106,7 @@ def parse_appdynamics_memory(string_table: StringTable) -> StringTable:
 
 
 check_info["appdynamics_memory"] = LegacyCheckDefinition(
+    name="appdynamics_memory",
     parse_function=parse_appdynamics_memory,
     service_name="AppDynamics Memory %s",
     discovery_function=inventory_appdynamics_memory,

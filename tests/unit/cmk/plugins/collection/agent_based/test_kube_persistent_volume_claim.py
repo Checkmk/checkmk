@@ -21,8 +21,6 @@ from cmk.plugins.kube.schemata.section import (
     StorageRequirement,
 )
 
-# pylint: disable=comparison-with-callable,redefined-outer-name
-
 
 class PVCStatusFactory(ModelFactory):
     __model__ = PersistentVolumeClaimStatus

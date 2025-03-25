@@ -8,6 +8,7 @@ from typing import Any, get_args
 
 from marshmallow import post_load, pre_load, ValidationError
 from marshmallow_oneofschema import OneOfSchema
+from urllib3.util import parse_url
 
 from cmk.utils.notify_types import (
     CaseStateStr,
@@ -18,6 +19,7 @@ from cmk.utils.notify_types import (
     IncidentStateStr,
     MgmntPriorityType,
     MgmntUrgencyType,
+    OpsgenieElement,
     OpsGeniePriorityStrType,
     PluginOptions,
     PushOverPriorityStringType,
@@ -47,7 +49,7 @@ from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.openapi.endpoints.notification_rules.request_example import (
     notification_rule_request_example,
 )
-from cmk.gui.wato import notification_parameter_registry
+from cmk.gui.watolib.notification_parameter import notification_parameter_registry
 from cmk.gui.watolib.tags import load_tag_group
 from cmk.gui.watolib.user_scripts import user_script_choices
 
@@ -1311,6 +1313,53 @@ class IlertPluginCreate(PluginName):
 
 
 # Jira --------------------------------------------------------------
+class AuthOptions(BaseSchema):
+    option = fields.String(
+        enum=["explicit_token", "token_store_id", "explicit_password", "password_store_id"],
+        required=True,
+        example="password_store_id",
+    )
+
+
+class BasicAuth(AuthOptions):
+    username = fields.String(
+        required=True,
+        example="username_example",
+        description="Your username",
+    )
+
+
+class BasicAuthExplicit(BasicAuth):
+    password = fields.String(
+        required=True,
+        example="password_example",
+        description="Your password",
+    )
+
+
+class BasicAuthStorePassword(BasicAuth):
+    store_id = PASSWORD_STORE_ID_SHOULD_EXIST
+
+
+class ExplicitToken(AuthOptions):
+    token = fields.String(
+        required=True,
+        example="token_example",
+        description="Your personal access token",
+    )
+
+
+class AuthStoreToken(AuthOptions):
+    store_id = PASSWORD_STORE_ID_SHOULD_EXIST
+
+
+class AuthSelector(OptionOneOfSchema):
+    type_schemas = {
+        "password_store_id": BasicAuthStorePassword,
+        "explicit_password": BasicAuthExplicit,
+        "explicit_token": ExplicitToken,
+        "token_store_id": AuthStoreToken,
+    }
 
 
 class JiraPluginCreate(PluginName):
@@ -1320,15 +1369,10 @@ class JiraPluginCreate(PluginName):
         description="Configure the Jira URL here",
     )
     disable_ssl_cert_verification = DISABLE_SSL_CERT_VERIFICATION
-    username = fields.String(
+    auth = fields.Nested(
+        AuthSelector,
         required=True,
-        example="username_a",
-        description="Configure the user name here",
-    )
-    password = fields.String(
-        required=True,
-        example="example_pass_123&*",
-        description="The password entered here is stored in plain text within the monitoring site. This usually needed because the monitoring process needs to have access to the unencrypted password because it needs to submit it to authenticate with remote systems",
+        description="The authentication credentials for the Jira connection",
     )
     project_id = fields.String(
         required=True,
@@ -1353,7 +1397,7 @@ class JiraPluginCreate(PluginName):
     monitoring_url = fields.String(
         required=True,
         example="",
-        description="Configure the base URL for the monitoring web GUI here. Include the site name. Used for link to Checkmk out of Jira",
+        description="Configure the base URL for the monitoring web GUI here. Include the site name. Used for linking to Checkmk out of Jira",
     )
     site_custom_id = fields.Nested(
         StrValueOneOfSchema,
@@ -1379,6 +1423,11 @@ class JiraPluginCreate(PluginName):
         StrValueOneOfSchema,
         required=True,
         description="Here you can set a custom label for new issues. If not set, 'monitoring' will be used",
+    )
+    graphs_per_notification = fields.Nested(
+        GraphsPerNotificationOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
+        description="Here you can set a limit for the number of graphs that are displayed in a notification. If not set, 0 will be used",
     )
     resolution_id = fields.Nested(
         StrValueOneOfSchema,
@@ -1436,6 +1485,21 @@ class ListOfStrOneOfSchema(CheckboxOneOfSchema):
     }
 
 
+class ListOfExtraProperties(Checkbox):
+    value = fields.List(
+        fields.String(enum=list(get_args(OpsgenieElement))),
+        load_default=["abstime", "address", "longoutput"],
+        uniqueItems=True,
+    )
+
+
+class ListOfExtraPropertiesOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": ListOfExtraProperties,
+    }
+
+
 class OpsGeniePluginCreate(PluginName):
     api_key = fields.Nested(
         OpsGenisStoreOrExplicitKeySelector,
@@ -1446,6 +1510,7 @@ class OpsGeniePluginCreate(PluginName):
         required=True,
         description="If you have an european account, please set the domain of your opsgenie. Specify an absolute URL like https://api.eu.opsgenie.com",
     )
+    disable_ssl_cert_verification = DISABLE_SSL_CERT_VERIFICATION
     http_proxy = HTTP_PROXY_CREATE
     owner = fields.Nested(
         StrValueOneOfSchema,
@@ -1511,6 +1576,11 @@ class OpsGeniePluginCreate(PluginName):
         required=True,
         description="Is used to specify which domain the alert is related to",
     )
+    extra_properties = fields.Nested(
+        ListOfExtraPropertiesOneOfSchema,
+        description="A list of extra properties that will be included in the notification",
+        load_default=lambda: {"state": "disabled"},
+    )
 
 
 # PagerDuty ---------------------------------------------------------
@@ -1547,9 +1617,58 @@ class PagerDutyPluginCreate(PluginName):
 # PushOver ----------------------------------------------------------
 
 
-class PushOverPriority(Checkbox):
-    value = fields.String(
+class PushOverPriorityBase(BaseSchema):
+    level = fields.String(
         enum=list(get_args(PushOverPriorityStringType)),
+        required=True,
+        description="The pushover priority level",
+        example="normal",
+    )
+
+
+class PushOverPriorityEmergency(BaseSchema):
+    level = fields.String(
+        enum=["emergency"],
+        required=True,
+        description="The pushover priority level",
+        example="emergency",
+    )
+    retry = fields.Integer(
+        required=True,
+        description="The retry interval in seconds",
+        example=60,
+    )
+    expire = fields.Integer(
+        required=True,
+        description="The expiration time in seconds",
+        example=3600,
+    )
+    receipt = fields.String(
+        required=True,
+        description="The receipt of the message",
+        example="The receipt can be used to periodically poll receipts API to get "
+        "the status of the notification. "
+        'See <a href="https://pushover.net/api#receipt" target="_blank">'
+        "Pushover receipts and callbacks</a> for more information.",
+        pattern="^[a-zA-Z0-9]{30,40}$",
+    )
+
+
+class PushOverPrioritySelector(OneOfSchema):
+    type_field = "level"
+    type_field_remove = False
+    type_schemas = {
+        "lowest": PushOverPriorityBase,
+        "low": PushOverPriorityBase,
+        "normal": PushOverPriorityBase,
+        "high": PushOverPriorityBase,
+        "emergency": PushOverPriorityEmergency,
+    }
+
+
+class PushOverPriority(Checkbox):
+    value = fields.Nested(
+        PushOverPrioritySelector,
         required=True,
         description="The pushover priority level",
         example="normal",
@@ -1592,11 +1711,7 @@ class PushOverPluginCreate(PluginName):
         description="Configure the user or group to receive the notifications by providing the user or group key here. The key can be obtained from the Pushover website.",
         pattern="^[a-zA-Z0-9]{30,40}$",
     )
-    url_prefix_for_links_to_checkmk = fields.Nested(
-        StrValueOneOfSchema,
-        required=True,
-        description="If you specify an URL prefix here, then several parts of the email body are armed with hyperlinks to your Check_MK GUI, so that the recipient of the email can directly visit the host or service in question in Check_MK. Specify an absolute URL including the .../check_mk/",
-    )
+    url_prefix_for_links_to_checkmk = URL_PREFIX_FOR_LINKS_TO_CHECKMK_CREATE
     priority = fields.Nested(
         PushOverOneOfSchema,
         required=True,
@@ -1609,29 +1724,9 @@ class PushOverPluginCreate(PluginName):
 
 
 # ServiceNow --------------------------------------------------------
-
-
-class ServiceNowPasswordStoreID(ExplicitOrStoreOptions):
-    store_id = PASSWORD_STORE_ID_SHOULD_EXIST
-
-
-class ServiceNowExplicitPassword(ExplicitOrStoreOptions):
-    password = fields.String(
-        required=True,
-        example="password_example",
-    )
-
-
-class ServiceNowPasswordSelector(OptionOneOfSchema):
-    type_schemas = {
-        "explicit": ServiceNowExplicitPassword,
-        "store": ServiceNowPasswordStoreID,
-    }
-
-
 class CheckBoxUseSiteIDPrefix(Checkbox):
     value = fields.String(
-        enum=["use_site_id_prefix", "deactivated"],
+        enum=["use_site_id", "deactivated"],
         required=True,
         description="",
         example="use_site_id",
@@ -1801,15 +1896,10 @@ class ServiceNowPluginCreate(PluginName):
         example="https://myservicenow.com",
         description="Configure your ServiceNow URL here",
     )
-    username = fields.String(
+    auth = fields.Nested(
+        AuthSelector,
         required=True,
-        example="username_a",
-        description="Configure the user name here",
-    )
-
-    user_password = fields.Nested(
-        ServiceNowPasswordSelector,
-        required=True,
+        description="The authentication credentials for the ServiceNow connection",
     )
     http_proxy = HTTP_PROXY_CREATE
     use_site_id_prefix = fields.Nested(
@@ -1860,10 +1950,28 @@ class SlackWebhookStore(ExplicitOrStoreOptions):
     store_id = PASSWORD_STORE_ID_SHOULD_EXIST
 
 
+def _validate_slack_uses_https(url: object) -> bool:
+    if not isinstance(url, str):
+        return False
+
+    parsed = parse_url(url)
+    if (
+        isinstance(parsed.host, str)
+        and parsed.host.endswith("slack.com")
+        and parsed.scheme != "https"
+    ):  # Mattermost uses the same plugin, but we allow HTTP there
+        raise ValidationError("Slack Webhooks must use HTTPS")
+
+    return True
+
+
 class SlackWebhookURL(ExplicitOrStoreOptions):
-    url = fields.String(
+    url = fields.URL(
         required=True,
         example="https://example_webhook_url.com",
+        schemes={"http", "https"},
+        validate=_validate_slack_uses_https,
+        description="Configure your Slack or Mattermost Webhook URL here. Slack Webhooks must use HTTPS",
     )
 
 

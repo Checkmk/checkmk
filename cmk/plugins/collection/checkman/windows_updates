@@ -10,7 +10,7 @@ description:
  By default the check only fetches the information and never raises WARNING/CRITICAL
  states. But this can be configured.
 
- The windows agent needs to be extended with the {windows_updates.vbs} provided
+ The windows agent needs to be extended with the {windows_updates.ps1} provided
  in {agents/windows/plugins}.
 
 discovery:

@@ -8,6 +8,8 @@ from pathlib import Path
 import pytest
 from pytest import MonkeyPatch
 
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import (
@@ -18,8 +20,6 @@ from cmk.utils.labels import (
     ServiceLabel,
 )
 from cmk.utils.sectionname import SectionName
-
-from cmk.ccc.exceptions import MKGeneralException
 
 
 class TestServiceLabel:

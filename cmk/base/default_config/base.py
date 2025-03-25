@@ -25,6 +25,8 @@ from cmk.fetchers import IPMICredentials
 from cmk.checkengine.discovery import RediscoveryParameters
 from cmk.checkengine.exitspec import ExitSpec
 
+from cmk.server_side_calls_backend import ConfigSet as SSCConfigSet
+
 # This file contains the defaults settings for almost all configuration
 # variables that can be overridden in main.mk. Some configuration
 # variables are preset in checks/* as well.
@@ -84,8 +86,6 @@ http_proxies: dict[str, dict[str, str]] = {}
 
 # Global config for SNMP Backend
 snmp_backend_default: Literal["inline", "classic"] = "inline"
-# Deprecated: Replaced by snmp_backend_hosts
-use_inline_snmp: bool = True
 
 # Ruleset to enable specific SNMP Backend for each host.
 snmp_backend_hosts: list[RuleSpec[object]] = []
@@ -183,20 +183,16 @@ tag_config: TagConfigSpec = {
     "tag_groups": [],
 }
 static_checks: dict[str, list[RuleSpec[list[object]]]] = {}
-check_parameters: list[RuleSpec[Any]] = []
 checkgroup_parameters: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
 # for HW/SW Inventory
 inv_parameters: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
 
 
-# WATO variant for fully formalized checks
-# WATOs active check configurations are demanded to be Mapping[str, object] by the new ruleset API.
-# However: We still have legacy rulesets, which can be of any (basic python) type.
-active_checks: dict[str, list[RuleSpec[object]]] = {}
-# WATO variant for datasource_programs
-# WATOs special agent configurations are demanded to be Mapping[str, object] by the new ruleset API.
-# However: We still have legacy rulesets, which can be of any (basic python) type.
-special_agents: dict[str, list[RuleSpec[object]]] = {}
+# WATO variant for fully formalized checks / special agents.
+# The typing here is a lie, we cannot know what customers have configred (in the past)
+# There's a parsing step later that ensures this.
+active_checks: dict[str, list[RuleSpec[SSCConfigSet]]] = {}
+special_agents: dict[str, list[RuleSpec[SSCConfigSet]]] = {}
 
 
 # WATO variant for free-form custom checks without formalization
@@ -308,7 +304,9 @@ check_mk_exit_status: list[RuleSpec[_NestedExitSpec]] = []
 # Rule for defining expected version for agents
 check_mk_agent_target_versions: list[RuleSpec[str]] = []
 check_periods: list[RuleSpec[str]] = []
-snmp_check_interval: list[RuleSpec[tuple[str | None, int]]] = []
+snmp_check_interval: list[
+    RuleSpec[tuple[list[str], tuple[Literal["cached"], float] | tuple[Literal["uncached"], None]]]
+] = []
 snmp_exclude_sections: list[RuleSpec[Mapping[str, Sequence[str]]]] = []
 # Rulesets for parameters of notification scripts
 notification_parameters: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
@@ -352,5 +350,3 @@ logwatch_rules: list[RuleSpec[object]] = []
 config_storage_format: Literal["standard", "raw", "pickle"] = "pickle"
 
 automatic_host_removal: list[RuleSpec[object]] = []
-
-ruleset_matching_stats = False

@@ -37,7 +37,7 @@ export class interface_table extends TableFigure {
     override update_gui() {
         super.update_gui();
         const select = $("div.ntop").find(
-            "#ntop_interface_choice.select2-enable, #ntop_vlan_choice.select2-enable"
+            "#ntop_interface_choice.select2-enable, #ntop_vlan_choice.select2-enable",
         );
         const select2 = select.select2({
             dropdownAutoWidth: true,
@@ -69,7 +69,7 @@ export class interface_table extends TableFigure {
                 this._vlanid +
                 "&ifid=" +
                 this._ifid +
-                host_body
+                host_body,
         );
         selectAll("." + ifid_dep)
             .data()
@@ -148,7 +148,7 @@ export function seconds_to_time(seconds: number) {
 
 export function add_columns_classes_to_nodes(
     chart: DataTableWidget,
-    columns: NtopColumn[]
+    columns: NtopColumn[],
 ) {
     chart
         .selectAll("tr")

@@ -23,9 +23,10 @@ from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
 from cmk.checkengine.fetcher import FetcherType
 
-import cmk.base.api.agent_based.register as agent_based_register
-from cmk.base.api.agent_based.register.snmp_plugin_store import make_plugin_store
-from cmk.base.server_side_calls import SpecialAgentCommandLine
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
+from cmk.base.snmp_plugin_store import make_plugin_store
+
+from cmk.server_side_calls_backend import SpecialAgentCommandLine
 
 from ._api import Source
 from ._sources import (
@@ -49,6 +50,7 @@ __all__ = ["make_sources"]
 class _Builder:
     def __init__(
         self,
+        plugins: AgentBasedPlugins,
         host_name: HostName,
         ipaddress: HostAddress | None,
         ip_stack_config: IPStackConfig,
@@ -75,6 +77,7 @@ class _Builder:
         super().__init__()
         assert not is_cluster
 
+        self.plugins: Final = plugins
         self.host_name: Final = host_name
         self.fetcher_factory: Final = fetcher_factory
         self.ipaddress: Final = ipaddress
@@ -155,26 +158,14 @@ class _Builder:
                 self._add(elem)
 
         elif self.cds.is_tcp:
-            if special_agents:
-                self._add(special_agents[0])
-            else:
+            for elem in special_agents:
+                self._add(elem)
+            if not special_agents:
                 self._add_agent()
 
     def _initialize_snmp_plugin_store(self) -> None:
-        if len(SNMPFetcher.plugin_store) != agent_based_register.len_snmp_sections():
-            # That's a hack.
-            #
-            # `make_plugin_store()` depends on
-            # `iter_all_snmp_sections()` and `iter_all_inventory_plugins()`
-            # that are populated by the Check API upon loading the plugins.
-            #
-            # It is there, when the plugins are loaded, that we should
-            # make the plug-in store.  However, it is not clear whether
-            # the API would let us register hooks to accomplish that.
-            #
-            # The current solution is brittle in that there is not guarantee
-            # that all the relevant plugins are loaded at this point.
-            SNMPFetcher.plugin_store = make_plugin_store()
+        if len(SNMPFetcher.plugin_store) != len(self.plugins.snmp_sections):
+            SNMPFetcher.plugin_store = make_plugin_store(self.plugins)
 
     def _initialize_snmp_based(self) -> None:
         if not self.cds.is_snmp:
@@ -189,6 +180,7 @@ class _Builder:
             self._add(
                 SNMPSource(
                     self.fetcher_factory,
+                    self.plugins,
                     self.host_name,
                     self.ipaddress or HostAddress("127.0.0.1"),
                     fetcher_config=self.snmp_fetcher_config,
@@ -208,6 +200,7 @@ class _Builder:
         self._add(
             SNMPSource(
                 self.fetcher_factory,
+                self.plugins,
                 self.host_name,
                 self.ipaddress,
                 fetcher_config=self.snmp_fetcher_config,
@@ -233,6 +226,7 @@ class _Builder:
                 self._add(
                     MgmtSNMPSource(
                         self.fetcher_factory,
+                        self.plugins,
                         self.host_name,
                         self.management_ip,
                         fetcher_config=self.snmp_fetcher_config,
@@ -304,6 +298,7 @@ class _Builder:
 
 
 def make_sources(
+    plugins: AgentBasedPlugins,
     host_name: HostName,
     ipaddress: HostAddress | None,
     address_family: IPStackConfig,
@@ -351,6 +346,7 @@ def make_sources(
         return file_cache_max_age
 
     return _Builder(
+        plugins,
         host_name,
         ipaddress,
         address_family,

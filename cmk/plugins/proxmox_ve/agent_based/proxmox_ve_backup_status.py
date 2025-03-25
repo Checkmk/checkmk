@@ -8,7 +8,7 @@ from collections.abc import Mapping
 from datetime import datetime, timezone
 from typing import Any, TypedDict
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -46,7 +46,7 @@ class BackupData(TypedDict, total=False):
 Section = Mapping[str, BackupData]
 
 
-def parse_proxmox_ve_vm_backup_status(  # pylint: disable=too-many-branches
+def parse_proxmox_ve_vm_backup_status(
     string_table: StringTable,
 ) -> Section:
     result = BackupData()
@@ -91,7 +91,7 @@ def discover_single(section: Section) -> DiscoveryResult:
     yield Service()
 
 
-def check_proxmox_ve_vm_backup_status(  # pylint: disable=too-many-branches
+def check_proxmox_ve_vm_backup_status(
     now: datetime,
     params: Mapping[str, Any],
     section: Section,
@@ -151,7 +151,7 @@ def check_proxmox_ve_vm_backup_status(  # pylint: disable=too-many-branches
     # explicitly converted them to utc
     started_time = last_backup.get("started_time")
     if started_time:
-        yield from check_levels(
+        yield from check_levels_v1(
             value=(now - started_time.astimezone(timezone.utc)).total_seconds(),
             levels_upper=age_levels_upper,
             metric_name="age",
@@ -164,7 +164,7 @@ def check_proxmox_ve_vm_backup_status(  # pylint: disable=too-many-branches
         summary=f"Server local start time: {started_time}",
     )
 
-    yield from check_levels(
+    yield from check_levels_v1(
         value=last_backup["total_duration"],
         levels_upper=duration_levels_upper,
         metric_name="backup_duration",
@@ -201,7 +201,7 @@ def check_proxmox_ve_vm_backup_status(  # pylint: disable=too-many-branches
     else:
         return
 
-    yield from check_levels(
+    yield from check_levels_v1(
         value=bandwidth,
         levels_lower=bandwidth_levels_lower,
         metric_name="backup_avgspeed",

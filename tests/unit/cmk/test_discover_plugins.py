@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable
+from collections.abc import Collection
 from dataclasses import dataclass
 from types import ModuleType, UnionType
 
@@ -18,7 +18,7 @@ class AssumeDirs:
     def __init__(self, *dirs: str) -> None:
         self._dirs = tuple(d.rstrip("/") for d in dirs)
 
-    def __call__(self, path: str) -> Iterable[str]:
+    def __call__(self, path: str) -> Collection[str]:
         path_ = path.rstrip("/")
         return sorted(
             {

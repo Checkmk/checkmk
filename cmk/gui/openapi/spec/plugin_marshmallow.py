@@ -99,7 +99,7 @@ def field_properties(field: fields.Field) -> FieldProperties:
     return properties
 
 
-class CheckmkOpenAPIConverter(marshmallow.OpenAPIConverter):  # type: ignore[name-defined,misc]
+class CheckmkOpenAPIConverter(marshmallow.OpenAPIConverter):  # type: ignore[name-defined,misc,unused-ignore]
     def schema2jsonschema(self, schema):
         if not is_value_typed_dict(schema):
             return super().schema2jsonschema(schema)
@@ -148,8 +148,7 @@ class CheckmkOpenAPIConverter(marshmallow.OpenAPIConverter):  # type: ignore[nam
         return super().nested2properties(field, ret)
 
 
-class CheckmkOpenAPIResolver(marshmallow.SchemaResolver):  # type: ignore[name-defined,misc]
-
+class CheckmkOpenAPIResolver(marshmallow.SchemaResolver):  # type: ignore[name-defined,misc,unused-ignore]
     def resolve_parameters(self, parameters: list[object]) -> list[object]:
         parameters = super().resolve_parameters(parameters)
 

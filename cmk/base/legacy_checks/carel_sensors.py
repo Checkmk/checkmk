@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, any_of, contains, endswith, exists, OIDEnd, SNMPTree
+
+check_info = {}
 
 # No factory default because of different defaultlevels
 carel_temp_defaultlevels = {
@@ -77,6 +78,7 @@ def check_carel_sensors_temp(item, params, parsed):
 
 
 check_info["carel_sensors"] = LegacyCheckDefinition(
+    name="carel_sensors",
     detect=all_of(
         any_of(contains(".1.3.6.1.2.1.1.1.0", "pCO"), endswith(".1.3.6.1.2.1.1.1.0", "armv4l")),
         exists(".1.3.6.1.4.1.9839.1.1.0"),

@@ -17,8 +17,8 @@ from cmk.agent_based.v2 import (
     StringTable,
     TableRow,
 )
-from cmk.plugins.lib.oracle import SectionPerformance
 from cmk.plugins.oracle.agent_based import oracle_performance_check as opc
+from cmk.plugins.oracle.agent_based.liboracle import SectionPerformance
 from cmk.plugins.oracle.agent_based.oracle_performance_inventory import inventory_oracle_performance
 from cmk.plugins.oracle.agent_based.oracle_performance_section import parse_oracle_performance
 
@@ -223,7 +223,7 @@ def test_inventory_oracle_performance(
         (
             "Oracle DB",
             {
-                "dbtime": [("oracle_db_cpu", (1.0, 2.0))],
+                "dbtime": [("oracle_db_cpu", ("fixed", (1.0, 2.0)))],
             },
             {
                 "Oracle DB": {
@@ -257,7 +257,7 @@ def test_check_oracle_performance_dbtime(
         (
             "Oracle DB",
             {
-                "memory": [("oracle_sga_size", (1, 2))],
+                "memory": [("oracle_sga_size", ("fixed", (1, 2)))],
             },
             {
                 "Oracle DB": {
@@ -297,7 +297,7 @@ def test_check_oracle_performance_memory(
         (
             "Oracle DB",
             {
-                "memory": [("oracle_sga_size", (1, 2))],
+                "memory": [("oracle_sga_size", ("fixed", (1, 2)))],
             },
             {
                 "Oracle DB": {
@@ -344,7 +344,7 @@ def test_check_oracle_performance_iostat_ios(
         (
             "Oracle DB",
             {
-                "waitclasses": [("oracle_wait_class_total", (1.0, 3.0))],
+                "waitclasses": [("oracle_wait_class_total", ("fixed", (1.0, 3.0)))],
             },
             {
                 "Oracle DB": {

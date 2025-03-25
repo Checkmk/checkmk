@@ -5,12 +5,16 @@
 
 from collections.abc import Iterator
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
+from cmk.utils.user import UserId
 
 from cmk.gui import pagetypes, visuals
 from cmk.gui.bi import is_part_of_aggregation
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -29,8 +33,6 @@ from cmk.gui.visual_link import get_linked_visual_request_vars, make_linked_visu
 from cmk.gui.visuals import view_title
 from cmk.gui.visuals.info import visual_info_registry, VisualInfo
 from cmk.gui.visuals.type import visual_type_registry, VisualType
-
-import cmk.ccc.version as cmk_version
 
 
 def get_context_page_menu_dropdowns(view: View, rows: Rows, mobile: bool) -> list[PageMenuDropdown]:
@@ -125,9 +127,23 @@ def _get_context_page_menu_topics(
         ):
             continue
 
+        if (
+            visual.get("name", "").startswith("topology_")
+            and visual.get("owner", "") == UserId.builtin()
+        ):
+            # Don't show network topology views
+            continue
+
         try:
             topic = topics[visual["topic"]]
         except KeyError:
+            if "other" not in topics:
+                raise MKUserError(
+                    None,
+                    _(
+                        "No permission for fallback topic 'Other'. Please contact your administrator."
+                    ),
+                )
             topic = topics["other"]
 
         entry = _make_page_menu_entry_for_visual(
@@ -404,7 +420,7 @@ def _page_menu_networking_topic(view: View) -> list[PageMenuTopic]:
             title=_("Network monitoring"),
             entries=[
                 PageMenuEntry(
-                    title=_("Parent/Child topology"),
+                    title=_("Parent/child topology"),
                     icon_name="aggr",
                     item=make_simple_link(
                         makeuri_contextless(
@@ -554,7 +570,7 @@ def page_menu_entries_host_setup(host_name: str) -> Iterator[PageMenuEntry]:
             makeuri_contextless(
                 request,
                 [
-                    ("mode", "notifications"),
+                    ("mode", "test_notifications"),
                     ("host_name", host_name),
                     ("_test_host_notifications", 1),
                 ],
@@ -572,7 +588,7 @@ def page_menu_entries_service_setup(host_name: str, serivce_name: str) -> Iterat
             makeuri_contextless(
                 request,
                 [
-                    ("mode", "notifications"),
+                    ("mode", "test_notifications"),
                     ("host_name", host_name),
                     ("service_name", serivce_name),
                     ("_test_service_notifications", 1),

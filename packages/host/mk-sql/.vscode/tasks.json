@@ -1,0 +1,73 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cargo",
+			"command": "build",
+			"problemMatcher": [
+				"$rustc"
+			],
+			"group": "build",
+			"label": "cargo build"
+		},
+		{
+			"type": "cargo",
+			"command": "test",
+			"problemMatcher": [
+				"$rustc"
+			],
+			"group": "build",
+			"label": "cargo test"
+		},
+		{
+			"type": "cargo",
+			"command": "clippy",
+			"problemMatcher": [
+				"$rustc"
+			],
+			"group": "build",
+			"label": "cargo clippy"
+		},
+		{
+			"type": "cargo",
+			"command": "check",
+			"problemMatcher": [
+				"$rustc"
+			],
+			"group": "build",
+			"label": "cargo check"
+		},
+		{
+			"type": "shell",
+			"command": "./run --all",
+			"problemMatcher": [
+				"$rustc"
+			],
+			"group": "build",
+			"label": "run all"
+		},
+		{
+			"label": "Bazel Test All",
+			"type": "bazel",
+			"command": "test",
+			"targets": [
+				"//packages/host/mk-sql:all" // this is not tested yet "${input:pickTest}"
+			],
+			//"options": [
+			//	"--runs_per_test=9"
+			//],
+			"group": "build",
+		},
+	],
+	"inputs": [
+		{
+			"id": "pickTest",
+			"type": "command",
+			"command": "bazel.pickTarget",
+			"args": {
+				"query": "kind('.*_test', //...:*)",
+				"placeHolder": "Which test to check for flakyness?",
+			},
+		},
+	],
+}

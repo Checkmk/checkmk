@@ -12,8 +12,10 @@
 # warnings.simplefilter("error", RemovedInMarshmallow4Warning)
 
 
-from marshmallow.fields import missing_  # type: ignore[attr-defined]
-from marshmallow.fields import Field
+from marshmallow.fields import (  # type: ignore[attr-defined,unused-ignore]
+    Field,
+    missing_,
+)
 
 from cmk.gui.fields.attributes import (
     HostAttributeManagementBoardField,
@@ -45,6 +47,7 @@ from cmk.gui.fields.custom_fields import (
     UnixPath,
 )
 from cmk.gui.fields.definitions import (
+    bake_agent_field,
     column_field,
     customer_field,
     CustomHostAttributes,
@@ -56,8 +59,8 @@ from cmk.gui.fields.definitions import (
     host_attributes_field,
     HostField,
     HostnameOrIP,
+    PasswordEditableBy,
     PasswordIdent,
-    PasswordOwner,
     PasswordShare,
     PythonString,
     query_field,
@@ -70,6 +73,7 @@ from cmk.gui.fields.definitions import (
 
 __all__ = [
     "AuxTagIDField",
+    "bake_agent_field",
     "host_attributes_field",
     "CertPublicKey",
     "CertPrivateKey",
@@ -99,8 +103,8 @@ __all__ = [
     "PasswordStoreIDField",
     "LDAPConnectionID",
     "LockedBy",
+    "PasswordEditableBy",
     "PasswordIdent",
-    "PasswordOwner",
     "PasswordShare",
     "PythonString",
     "query_field",

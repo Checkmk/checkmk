@@ -5,7 +5,7 @@
 """Alertmanager Check"""
 
 import json
-from enum import Enum
+from enum import StrEnum
 from typing import NamedTuple, TypedDict
 
 from cmk.agent_based.v2 import (
@@ -20,22 +20,22 @@ from cmk.agent_based.v2 import (
 )
 
 
-class RuleState(Enum):
+class RuleState(StrEnum):
     INACTIVE = "inactive"
     FIRING = "firing"
     PENDING = "pending"
     NONE = "none"
-    NA = None
+    NA = "not_applicable"
 
 
-class Severity(Enum):
+class Severity(StrEnum):
     INFO = "info"
     WARNING = "warning"
     ALERT = "alert"
     CRITICAL = "critical"
     ERROR = "error"
     NONE = "none"
-    NA = None
+    NA = "not_applicable"
 
     @classmethod
     def _missing_(cls, value):
@@ -131,10 +131,7 @@ def _create_group_service(group_name: str, group: Group, params: DiscoveryParams
 
 def _get_rule_state(rule: Rule, params: CheckParams) -> State:
     mapping = _get_mapping(rule, params)
-    if mapping:
-        # Needed because Dicts cannot handle "None" as Key but Enums can
-        return State(mapping[rule.status.value if rule.status.value else "not_applicable"])
-    return default_state_mapping[rule.status]
+    return State(mapping[str(rule.status)]) if mapping else default_state_mapping[rule.status]
 
 
 def parse_alertmanager(string_table: StringTable) -> Section:
@@ -147,7 +144,7 @@ def parse_alertmanager(string_table: StringTable) -> Section:
                 Rule(
                     rule["name"],
                     group,
-                    RuleState(rule["state"]),
+                    RuleState(raw_state) if (raw_state := rule["state"]) else RuleState.NA,
                     Severity(rule["severity"]),
                     rule["message"],
                 ),
@@ -184,10 +181,10 @@ def check_alertmanager_rules(item: str, params: CheckParams, section: Section) -
         rule = group.get(item)
         if rule:
             status = _get_rule_state(rule, params)
-            if rule.severity:
+            if rule.severity is not Severity.NA:
                 yield Result(
                     state=State.OK,
-                    summary="Severity: %s" % rule.severity.value,
+                    summary=f"Severity: {rule.severity}",
                 )
             yield Result(
                 state=State.OK,

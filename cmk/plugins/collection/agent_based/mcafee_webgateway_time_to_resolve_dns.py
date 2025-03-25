@@ -8,10 +8,7 @@ Where possibile the "McAfee" string has been removed in favor of more generic th
 The old plug-in names, value_store dict keys, and ruleset names have been kept for compatibility/history-keeping reasons.
 """
 
-# pylint: disable=protected-access
-
-
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, render, Service
 from cmk.plugins.lib import mcafee_gateway
 
@@ -23,7 +20,7 @@ def discovery(section: mcafee_gateway.Section) -> DiscoveryResult:
 
 def check(params: mcafee_gateway.MiscParams, section: mcafee_gateway.Section) -> CheckResult:
     if section.time_to_resolve_dns is not None:
-        yield from check_levels(
+        yield from check_levels_v1(
             value=section.time_to_resolve_dns.total_seconds(),
             metric_name="time_to_resolve_dns",
             levels_upper=mcafee_gateway.get_param_in_seconds(params["time_to_resolve_dns"]),

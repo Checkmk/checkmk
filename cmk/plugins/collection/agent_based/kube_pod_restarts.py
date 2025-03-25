@@ -7,7 +7,7 @@ import time
 from collections.abc import MutableMapping
 from typing import Any, Literal, TypedDict
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, get_value_store, Service
 from cmk.plugins.kube.schemata.section import PodContainers
 
@@ -41,7 +41,7 @@ def _check(
     host_value_store: MutableMapping[str, Any],
 ) -> CheckResult:
     restart_count = sum(container.restart_count for container in section.containers.values())
-    yield from check_levels(
+    yield from check_levels_v1(
         restart_count,
         levels_upper=params["restart_count"][1] if params["restart_count"] != "no_levels" else None,
         metric_name="kube_pod_restart_count",
@@ -54,7 +54,7 @@ def _check(
         host_value_store,
     )
     if restart_rate is not None:
-        yield from check_levels(
+        yield from check_levels_v1(
             restart_rate,
             levels_upper=(
                 params["restart_rate"][1] if params["restart_rate"] != "no_levels" else None

@@ -4,17 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+import sys
 import traceback
 from collections.abc import Callable, Iterable
 from pathlib import Path
 from textwrap import indent
+from typing import Literal
 
-PROJECT_ROOT = Path(__file__).parent
+PROJECT_ROOT = Path(__file__).parent.parent
 GIT_ROOT = PROJECT_ROOT / "../../../"
-
-
-def is_enterprise_repo() -> bool:
-    return (GIT_ROOT / "omd" / "packages" / "enterprise").exists()
 
 
 def scss_files() -> Iterable[Path]:
@@ -38,6 +36,8 @@ def _scss_variables(_scss_files: Iterable[Path]) -> tuple[set[str], set[str]]:
                 after_colon: str = l.split(":", 1)[-1]
                 if usage := variable_usage.findall(after_colon):
                     usages.update(usage)
+    assert definitions
+    assert usages
     return definitions, usages
 
 
@@ -72,12 +72,8 @@ def _get_regex_matches_in_scss_files(
 def test_unused_scss_variables() -> None:
     definitions, usages = _scss_variables(scss_files())
     unused = [var for var in definitions if var not in usages]
-    expected = []
 
-    if not is_enterprise_repo():
-        expected.append("$ntop-protocol-painter-padding-top")
-
-    assert sorted(unused) == sorted(expected), f"Found unused SCSS variables {unused}"
+    assert not unused, f"Found unused SCSS variables {unused}"
 
 
 def test_rgb_color_codes() -> None:
@@ -95,18 +91,29 @@ def test_hex_color_codes() -> None:
     assert not matches, f"Hex color codes found {matches}"
 
 
-def test(function: Callable) -> None:
-    print(function.__name__)
+def test(function: Callable) -> Literal["FAILED", "OK"]:
+    sys.stdout.write(function.__name__ + "\n")
     try:
         function()
     except Exception:
-        print(indent(traceback.format_exc().rstrip("\n"), "  "))
-        print("  FAIL")
-    else:
-        print("  OK")
+        sys.stdout.write(indent(traceback.format_exc().rstrip("\n"), "  ") + "\n")
+        sys.stdout.write("  FAIL\n")
+        return "FAILED"
+    sys.stdout.write("  OK\n")
+    return "OK"
+
+
+def test_all() -> Iterable[Literal["FAILED", "OK"]]:
+    yield test(test_unused_scss_variables)
+    yield test(test_rgb_color_codes)
+    yield test(test_hex_color_codes)
+
+
+def main() -> int:
+    if not all(t == "OK" for t in test_all()):
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
-    test(test_unused_scss_variables)
-    test(test_rgb_color_codes)
-    test(test_hex_color_codes)
+    sys.exit(main())

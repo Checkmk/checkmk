@@ -15,7 +15,7 @@ metric_bytes_cmk_views = metrics.Metric(
 )
 metric_bytes_cmk_wato = metrics.Metric(
     name="bytes_cmk_wato",
-    title=Title("Checkmk: WATO: Bytes"),
+    title=Title("Checkmk: Setup: Bytes"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.DARK_CYAN,
 )

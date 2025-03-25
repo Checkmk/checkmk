@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.juniper import DETECT_JUNIPER_TRPZ
+
+check_info = {}
 
 
 def inventory_juniper_trpz_info(info):
@@ -26,6 +26,7 @@ def parse_juniper_trpz_info(string_table: StringTable) -> StringTable | None:
 
 
 check_info["juniper_trpz_info"] = LegacyCheckDefinition(
+    name="juniper_trpz_info",
     parse_function=parse_juniper_trpz_info,
     detect=DETECT_JUNIPER_TRPZ,
     fetch=SNMPTree(

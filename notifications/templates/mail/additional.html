@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+{% macro additional_tr(data, title, key) %}
+    <tr>
+        <td {{ macros.td_first_child(width="170px") }}>{{ title }}:
+            <span style="font-weight: initial;" {{ macros.td_last_child() }}>{{ data[key] }}
+            </span>
+        </td>
+    </tr>
+{% endmacro %}
+<table align="center"
+       width="100%"
+       style="border-spacing: 0;
+              min-width: 220px;
+              max-width: 536px">
+    <tr>
+        <td style="height: 20px;
+                   line-height: 20px;
+                   font-size: 0;
+                   mso-line-height-rule: exactly">&nbsp;</td>
+    </tr>
+    <tr>
+        <th colspan="2"
+            style="font-size: 18px;
+                   font-weight: 600;
+                   text-align: left">
+            <img src="cid:additional.png" style="width: 18px; height: 19px;" />
+            Additional details
+        </th>
+    </tr>
+    <tr>
+        <td>
+            <table width="100%"
+                   style="height: 54px;
+                          min-width: 220px;
+                          max-width: 536px;
+                          table-layout: fixed">
+                {% for element in data.PARAMETER_ELEMENTSS.split(' ') %}
+                    {% if element =="ack_author" %}
+                        {% if service_notification %}
+                            {{ additional_tr(data, "Acknowledgment author", "data.SERVICEACKAUTHOR") }}
+                        {% else %}
+                            {{ additional_tr(data, "Acknowledgment author", "data.HOSTACKAUTHOR") }}
+                        {% endif %}
+                    {% elif element == "ack_comment" %}
+                        {% if service_notification %}
+                            {{ additional_tr(data, "Acknowledgment comment", "data.SERVICEACKCOMMENT") }}
+                        {% else %}
+                            {{ additional_tr(data, "Acknowledgment comment", "data.HOSTACKCOMMENT") }}
+                        {% endif %}
+                    {% elif element == "notification_author" %}
+                        {% if service_notification %}
+                            {{ additional_tr(data, "Notification author", "data.SERVICEACKAUTHOR") }}
+                        {% else %}
+                            {{ additional_tr(data, "Notification author", "data.HOSTACKAUTHOR") }}
+                        {% endif %}
+                    {% elif element == "notification_comment" %}
+                        {% if service_notification %}
+                            {{ additional_tr(data, "Notification comment", "data.SERVICEACKCOMMENT") }}
+                        {% else %}
+                            {{ additional_tr(data, "Notification comment", "data.HOSTACKCOMMENT") }}
+                        {% endif %}
+                    {% elif element == "omdsite" %}
+                        {{ additional_tr(data, "Site", "OMD_SITE") }}
+                    {% elif element == "reltime" %}
+                        {% if service_notification %}
+                            {{ additional_tr(data, "Relative time", "LASTSERVICESTATECHANGE_REL") }}
+                        {% else %}
+                            {{ additional_tr(data, "Relative time", "LASTHOSTSTATECHANGE_REL") }}
+                        {% endif %}
+                    {% elif element == "perfdata" %}
+                        {% if service_notification %}
+                            {{ additional_tr(data, "Service metrics", "SERVICEPERFDATA") }}
+                        {% else %}
+                            {{ additional_tr(data, "Host metrics", "HOSTPERFDATA") }}
+                        {% endif %}
+                    {% elif element == "notesurl" %}
+                        {% if service_notification %}
+                            {{ additional_tr(data, "Custom service notes URL", "SERVICENOTESURL") }}
+                        {% else %}
+                            {{ additional_tr(data, "Custom host notes URL", "HOSTNOTESURL") }}
+                        {% endif %}
+                    {% elif element == "context" %}
+                        <tr>
+                            <td {{ macros.td_first_child(width="170px") }}>
+                                Complete variable list:
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <table style="border: 1px solid #dfdfdf;
+                                              min-width: 220px;
+                                              max-width: 536px;
+                                              width: 100%;
+                                              border-collapse: collapse;
+                                              table-layout: fixed">
+                                    {% for key, value in data.items() %}
+                                        <tr style="border: 1px solid #dfdfdf;">
+                                            <td style="border: 1px solid #dfdfdf;
+                                                       padding-left: 16px;
+                                                       padding-top: 8px;
+                                                       font-size: 14px;
+                                                       color: #2c3844;
+                                                       width: 60%;
+                                                       word-wrap: break-word">{{ key }}</td>
+                                            <td style="border: 1px solid #dfdfdf;
+                                                       padding-left: 16px;
+                                                       padding-top: 8px;
+                                                       font-size: 14px;
+                                                       color: #2c3844;
+                                                       width: 40%;
+                                                       word-wrap: break-word">
+                                                <!--[if mso]>
+                                                    <style>
+                                                        td {
+                                                            overflow-wrap: break-word;
+                                                            word-break: break-all;
+                                                        }
+</style>
+                                                <![endif]-->
+                                                {{ value }}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </table>
+                            </td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+            </table>
+        </td>
+    </tr>
+</table>

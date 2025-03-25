@@ -3,9 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Literal
 
+from cmk.graphing.v1 import graphs as graphs_api
+
+from ._from_api import RegisteredMetric
 from ._graph_specification import (
     FixedVerticalRange,
     GraphMetric,
@@ -13,13 +16,14 @@ from ._graph_specification import (
     GraphSpecification,
     HorizontalRule,
 )
-from ._type_defs import GraphConsoldiationFunction
+from ._metric_operation import GraphConsolidationFunction
+from ._unit import ConvertibleUnitSpecification
 
 
 class ExplicitGraphSpecification(GraphSpecification, frozen=True):
     title: str
-    unit: str
-    consolidation_function: GraphConsoldiationFunction | None
+    unit: ConvertibleUnitSpecification
+    consolidation_function: GraphConsolidationFunction | None
     explicit_vertical_range: tuple[float | None, float | None]
     omit_zero_metrics: bool
     horizontal_rules: Sequence[HorizontalRule]
@@ -30,11 +34,15 @@ class ExplicitGraphSpecification(GraphSpecification, frozen=True):
     def graph_type_name() -> Literal["explicit"]:
         return "explicit"
 
-    def recipes(self) -> list[GraphRecipe]:
+    def recipes(
+        self,
+        registered_metrics: Mapping[str, RegisteredMetric],
+        registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
+    ) -> list[GraphRecipe]:
         return [
             GraphRecipe(
                 title=self.title,
-                unit=self.unit,
+                unit_spec=self.unit,
                 consolidation_function=self.consolidation_function,
                 explicit_vertical_range=FixedVerticalRange(
                     min=self.explicit_vertical_range[0],
@@ -42,7 +50,7 @@ class ExplicitGraphSpecification(GraphSpecification, frozen=True):
                 ),
                 omit_zero_metrics=self.omit_zero_metrics,
                 horizontal_rules=self.horizontal_rules,
-                metrics=list(self.metrics),  # TODO: pydantic-9319
+                metrics=self.metrics,
                 specification=self,
                 mark_requested_end_time=self.mark_requested_end_time,
             )

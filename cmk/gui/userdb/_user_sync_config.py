@@ -7,10 +7,10 @@ from typing import Literal
 
 from livestatus import SiteId
 
+from cmk.ccc.site import omd_site
+
 from cmk.gui.config import active_config
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local
-
-from cmk.ccc.site import omd_site
 
 UserSyncConfig = Literal["all", "master"] | tuple[Literal["list"], list[str]] | None
 

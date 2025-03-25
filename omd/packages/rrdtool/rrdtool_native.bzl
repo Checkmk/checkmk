@@ -1,7 +1,8 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
 
-def rrdtool_native(version_str, sha256):
+def rrdtool_native_workspace():
+    version_str = "1.7.2"
     filename = "rrdtool-" + version_str + ".tar.gz"
     http_archive(
         name = "rrdtool_native",
@@ -16,10 +17,8 @@ def rrdtool_native(version_str, sha256):
             "//omd/packages/rrdtool/patches:0003-cli-xport-consistency.dif",
             "//omd/packages/rrdtool/patches:0004-fix-error-formatting.dif",
             "//omd/packages/rrdtool/patches:0005-config-disable_nls.dif",
-            "//omd/packages/rrdtool/patches:0006-config-disable_rrd_graph.dif",
-            "//omd/packages/rrdtool/patches:0007-config-disable_rrd_restore.dif",
         ],
         patch_args = ["-p1"],
         patch_tool = "patch",
-        sha256 = sha256,
+        sha256 = "a199faeb7eff7cafc46fac253e682d833d08932f3db93a550a4a5af180ca58db",
     )

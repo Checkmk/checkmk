@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access,redefined-outer-name
 
 import copy
 import sys
@@ -15,7 +14,7 @@ from _pytest.monkeypatch import MonkeyPatch
 if sys.version_info[0] == 2:
     from mock import Mock, patch
 
-    import agents.plugins.mk_postgres_2 as mk_postgres  # pylint: disable=syntax-error
+    import agents.plugins.mk_postgres_2 as mk_postgres
 else:
     from unittest.mock import Mock, patch
 
@@ -48,7 +47,6 @@ VALID_CONFIG_WITH_PG_BINARY_PATH = [
     "",
     "DBUSER=user_xy",
 ]
-PG_PASSFILE = ["myhost:myport:mydb:myusr:mypw"]
 
 #   .--tests---------------------------------------------------------------.
 #   |                        _            _                                |
@@ -451,6 +449,36 @@ class TestWindows:
 
     @patch("os.path.isfile", return_value=True)
     @patch("subprocess.Popen")
+    def test_factory_do_not_overwrite_PG_PASSFILE(
+        self,
+        mock_Popen,
+        mock_isfile,
+    ):
+        instance = {
+            "pg_database": "mydb",
+            "pg_port": "1234",
+            "name": "mydb",
+            "pg_user": "myuser",
+            "pg_version": "12.1",
+        }  # type: dict[str, str | None]
+        process_mock = Mock()
+        attrs = {
+            "communicate.side_effect": [
+                (b"postgres\x00db1\x00", b"ok"),
+                (b"12.1.5\x00", b"ok"),
+            ],
+            "returncode": 0,
+        }
+        process_mock.configure_mock(**attrs)
+        mock_Popen.return_value = process_mock
+
+        myPostgresOnWin = mk_postgres.postgres_factory("postgres", None, instance)
+
+        mock_isfile.assert_called_with("C:\\Program Files\\PostgreSQL\\12\\bin\\psql.exe")
+        assert "PGPASSFILE" not in myPostgresOnWin.my_env
+
+    @patch("os.path.isfile", return_value=True)
+    @patch("subprocess.Popen")
     def test_factory_with_instance(
         self,
         mock_Popen,
@@ -550,3 +578,60 @@ class TestWindows:
         )
         expected = ("/home/postgres/db2.env", "USER_NAME", "/PATH/TO/.pgpass", "hi")
         assert got == expected
+
+
+def test_parse_env_file(tmp_path):
+    path = tmp_path / ".env"
+    with open(str(path), "wb") as fo:
+        fo.write(
+            (
+                "export PGDATABASE='ut_pg_database'\n"
+                "PGPORT=ut_pg_port  # missing export, but still parsed... \n"
+                'export PGVERSION="some version"   \n'
+            ).encode("utf-8")
+        )
+    assert mk_postgres.parse_env_file(str(path)) == (
+        "'ut_pg_database'",  # this double quoting seems to be funny.
+        # but this is the expected behaviour (and we want to make a minimal change)
+        # the value will be used on the commandline, so bash will handle the quoting...
+        "ut_pg_port",
+        '"some version"',  # same as above
+    )
+
+
+def test_parse_env_file_comments(tmp_path):
+    path = tmp_path / ".env"
+    with open(str(path), "wb") as fo:
+        fo.write(
+            (
+                "export PGDATABASE=ut_pg_database\n"
+                "# export PGDATABASE=ut_some_other_database\n"
+                "PGPORT=123\n"
+                "#PGPORT=345\n"
+            ).encode("utf-8")
+        )
+    assert mk_postgres.parse_env_file(str(path)) == (
+        "ut_pg_database",
+        "123",
+        None,
+    )
+
+
+def test_parse_env_file_parser(tmp_path):
+    path = tmp_path / ".env"
+    with open(str(path), "wb") as fo:
+        fo.write(
+            (
+                "# this is a comment\n"
+                " # t = is a comment\n"
+                "\t#\tt =s a comment\n"
+                "\n"  # empty line
+                "export PGDATABASE=ut_pg_database\n"
+                "PGPORT=123\n"
+            ).encode("utf-8")
+        )
+    assert mk_postgres.parse_env_file(str(path)) == (
+        "ut_pg_database",
+        "123",
+        None,
+    )

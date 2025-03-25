@@ -10,7 +10,9 @@ class TestActiveCheckResult:
     @staticmethod
     def test_as_text_short():
         assert (
-            ActiveCheckResult(1, "Make sure this has no trailing newlines and the like").as_text()
+            ActiveCheckResult(
+                state=1, summary="Make sure this has no trailing newlines and the like"
+            ).as_text()
             == "Make sure this has no trailing newlines and the like"
         )
 
@@ -18,7 +20,10 @@ class TestActiveCheckResult:
     def test_as_text_full():
         assert (
             ActiveCheckResult(
-                2, "This is the summary", ("Detail: 1", "Detail: 2"), ("detail_count=2",)
+                state=2,
+                summary="This is the summary",
+                details=("Detail: 1", "Detail: 2"),
+                metrics=("detail_count=2",),
             ).as_text()
             == "This is the summary | detail_count=2\nDetail: 1\nDetail: 2"
         )
@@ -27,7 +32,10 @@ class TestActiveCheckResult:
     def test_as_text_sane():
         assert (
             ActiveCheckResult(
-                2, "This | breaks things!", ("Detail: | is special.",), ("detail_count=2",)
+                state=2,
+                summary="This | breaks things!",
+                details=("Detail: | is special.",),
+                metrics=("detail_count=2",),
             )
             .as_text()
             .count("|")
@@ -37,14 +45,19 @@ class TestActiveCheckResult:
     @staticmethod
     def test_from_subresults() -> None:
         assert ActiveCheckResult.from_subresults(
-            ActiveCheckResult(0, "Ok", ("We're good",), ("metric1",)),
-            ActiveCheckResult(2, "Critical", ("We're doomed",), ("metric2",)),
+            ActiveCheckResult(state=0, summary="Ok", details=("We're good",), metrics=("metric1",)),
+            ActiveCheckResult(
+                state=2, summary="Critical", details=("We're doomed",), metrics=("metric2",)
+            ),
         ) == ActiveCheckResult(
-            2, "Ok, Critical(!!)", ("We're good", "We're doomed(!!)"), ("metric1", "metric2")
+            state=2,
+            summary="Ok, Critical(!!)",
+            details=("We're good", "We're doomed(!!)"),
+            metrics=("metric1", "metric2"),
         )
 
     @staticmethod
     def test_active_check_result_no_redundant_state_markers() -> None:
         assert ActiveCheckResult.from_subresults(
-            ActiveCheckResult.from_subresults(ActiveCheckResult(1, "Be warned")),
-        ) == ActiveCheckResult(1, "Be warned(!)")
+            ActiveCheckResult.from_subresults(ActiveCheckResult(state=1, summary="Be warned")),
+        ) == ActiveCheckResult(state=1, summary="Be warned(!)")

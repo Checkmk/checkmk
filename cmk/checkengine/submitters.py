@@ -12,7 +12,9 @@ from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from random import Random
-from typing import final, Final, IO, Literal
+from typing import Final, final, IO, Literal
+
+from cmk.ccc.exceptions import MKGeneralException
 
 import cmk.utils.paths
 from cmk.utils import tty
@@ -22,8 +24,6 @@ from cmk.utils.servicename import ServiceName
 from cmk.utils.timeout import Timeout
 
 from cmk.checkengine.checkresults import ServiceCheckResult
-
-from cmk.ccc.exceptions import MKGeneralException
 
 _CacheInfo = tuple[int, int]
 
@@ -154,13 +154,13 @@ class Submitter(abc.ABC):
             _output_check_result(submittee, show_perfdata=self.show_perfdata)
 
         if formatted_submittees:
-            self._submit((s for s in formatted_submittees if not s.pending))
+            self._submit(s for s in formatted_submittees if not s.pending)
 
     @abc.abstractmethod
     def _submit(self, formatted_submittees: Iterable[FormattedSubmittee]) -> None: ...
 
     def _make_details(self, result: ServiceCheckResult) -> str:
-        return "%s|%s" % (
+        return "{}|{}".format(
             # The vertical bar indicates end of service output and start of metrics.
             # Replace the ones in the output by a Uniocode "Light vertical bar"
             result.output.replace("|", "\u2758"),
@@ -190,9 +190,7 @@ class PipeSubmitter(Submitter):
 
         try:
             with Timeout(3, message="Timeout after 3 seconds"):
-                cls._nagios_command_pipe = open(  # pylint: disable=consider-using-with
-                    cmk.utils.paths.nagios_command_pipe_path, "wb"
-                )
+                cls._nagios_command_pipe = open(cmk.utils.paths.nagios_command_pipe_path, "wb")
         except Exception as exc:
             cls._nagios_command_pipe = False
             raise MKGeneralException(f"Error opening command pipe: {exc!r}") from exc

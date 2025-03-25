@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.post_rename_site.main import load_plugins
+import sys
 
-load_plugins()
+from cmk.post_rename_site.main import load_plugins
 from cmk.post_rename_site.registry import rename_action_registry
 
-print("test" in rename_action_registry)
+load_plugins()
+
+sys.stdout.write(f"{'test' in rename_action_registry}\n")

@@ -4,10 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.perle import perle_check_alarms
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 # .1.3.6.1.4.1.1966.21.1.1.1.1.1.1.2.1 MCR1900 --> PERLE-MCR-MGT-MIB::chassisModelName.1
 # .1.3.6.1.4.1.1966.21.1.1.1.1.1.1.4.1 103-001715T10033 --> PERLE-MCR-MGT-MIB::chassisSerialNumber.1
@@ -35,6 +37,7 @@ def check_perle_chassis(_no_item, _no_params, section):
 
 
 check_info["perle_chassis"] = LegacyCheckDefinition(
+    name="perle_chassis",
     service_name="Chassis status",
     discovery_function=inventory_perle_chassis,
     check_function=check_perle_chassis,
@@ -50,6 +53,7 @@ def check_perle_chassis_temp(item, params, section):
 
 
 check_info["perle_chassis.temp"] = LegacyCheckDefinition(
+    name="perle_chassis_temp",
     service_name="Temperature %s",
     sections=["perle_chassis"],
     discovery_function=inventory_perle_chassis_temp,

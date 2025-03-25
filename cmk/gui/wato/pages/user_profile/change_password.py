@@ -6,7 +6,6 @@
 import time
 from datetime import datetime
 
-from cmk.utils.crypto.password import Password
 from cmk.utils.log.security_event import log_security_event
 
 from cmk.gui import forms, userdb
@@ -24,7 +23,12 @@ from cmk.gui.utils.security_log_events import UserManagementEvent
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_security_message import SecurityNotificationEvent, send_security_message
 from cmk.gui.watolib.mode import redirect
-from cmk.gui.watolib.users import verify_password_policy
+from cmk.gui.watolib.users import (
+    get_enabled_remote_sites_for_logged_in_user,
+    verify_password_policy,
+)
+
+from cmk.crypto.password import Password
 
 from .abstract_page import ABCUserProfilePage
 
@@ -108,7 +112,7 @@ class UserChangePasswordPage(ABCUserProfilePage):
         # user profile replication now which will redirect the user to the destination
         # page after completion. Otherwise directly open up the destination page.
         origtarget = request.get_str_input_mandatory("_origtarget", "user_change_pw.py")
-        if user.authorized_login_sites():
+        if get_enabled_remote_sites_for_logged_in_user(user):
             raise redirect(
                 makeuri_contextless(
                     request, [("back", origtarget)], filename="user_profile_replicate.py"

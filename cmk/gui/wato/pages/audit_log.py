@@ -658,9 +658,8 @@ class ModeAuditLog(WatoMode):
         response.set_content_type("text/csv")
 
         if self._options["display"] == "daily":
-            filename = "wato-auditlog-{}_{}.csv".format(
-                render.date(time.time()),
-                render.time_of_day(time.time()),
+            filename = (
+                f"wato-auditlog-{render.date(time.time())}_{render.time_of_day(time.time())}.csv"
             )
         else:
             filename = "wato-auditlog-{}_{}_days.csv".format(

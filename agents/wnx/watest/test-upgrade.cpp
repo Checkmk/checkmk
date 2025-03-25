@@ -1051,4 +1051,22 @@ TEST(UpgradeTest, FindLwa_Simulation) {
     EXPECT_FALSE(IsLegacyAgentActive());
 }
 
+class CalcDelayFromHintTest
+    : public ::testing::TestWithParam<std::pair<uint32_t, uint32_t>> {};
+
+TEST_P(CalcDelayFromHintTest, CalculateDelay) {
+    const auto &[hint, expected_delay] = GetParam();
+    EXPECT_EQ(CalcDelayFromHint(hint), expected_delay);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    DifferentHintValues, CalcDelayFromHintTest,
+    ::testing::Values(
+        std::make_pair(500, 1'000),
+        std::make_pair(5'000, 1'000),
+        std::make_pair(10'000, 1'000),
+        std::make_pair(20'000, 2'000),
+        std::make_pair(150'000, 10'000)
+        ));
+
 }  // namespace cma::cfg::upgrade

@@ -7,12 +7,13 @@ from logging import Logger
 
 from livestatus import SiteId
 
+from cmk.ccc.i18n import _
+
 from cmk.utils import tty
 from cmk.utils.log import console
 
 from cmk.gui.site_config import is_wato_slave_site
 
-from cmk.ccc.i18n import _
 from cmk.post_rename_site.registry import rename_action_registry, RenameAction
 
 

@@ -6,7 +6,7 @@
 from collections.abc import Mapping, MutableMapping
 from typing import NamedTuple
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
     Service,
     StringTable,
 )
-from cmk.plugins.lib.oracle import OraErrors
+from cmk.plugins.oracle.agent_based.liboracle import OraErrors
 
 # In cooperation with Thorsten Bruhns from OPITZ Consulting
 
@@ -99,7 +99,7 @@ def check_oracle_processes(
     processes_pct = float(process.processes_count / process.processes_limit) * 100
     warn, crit = params["levels"]
 
-    yield from check_levels(
+    yield from check_levels_v1(
         value=processes_pct,
         levels_upper=(warn, crit),
         label=f"{process.processes_count} of {process.processes_limit} processes are used",

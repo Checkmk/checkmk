@@ -6,14 +6,15 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.jolokia import (
     jolokia_mbean_attribute,
     parse_jolokia_json_output,
 )
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+
+check_info = {}
 
 
 def parse_jolokia_jvm_memory(string_table):
@@ -89,6 +90,7 @@ def check_jolokia_jvm_memory(item, params, parsed):
 
 
 check_info["jolokia_jvm_memory"] = LegacyCheckDefinition(
+    name="jolokia_jvm_memory",
     parse_function=parse_jolokia_jvm_memory,
     service_name="JVM %s Memory",
     discovery_function=discover_jolokia_jvm_memory,
@@ -133,7 +135,13 @@ def check_jolokia_jvm_memory_pools(item, params, parsed):
         return
 
     if isinstance(usage, str) and usage.startswith("ERROR"):
-        yield 3, f"Check received invalid data. See long output for details. \n" f'Error was: "{usage}". ' f"This could be a support case for the Jolokia API maintainers: " f"https://github.com/rhuss/jolokia"
+        yield (
+            3,
+            f"Check received invalid data. See long output for details. \n"
+            f'Error was: "{usage}". '
+            f"This could be a support case for the Jolokia API maintainers: "
+            f"https://github.com/rhuss/jolokia",
+        )
         return
 
     value_max = usage.get("max", -1)
@@ -150,6 +158,7 @@ def check_jolokia_jvm_memory_pools(item, params, parsed):
 
 
 check_info["jolokia_jvm_memory.pools"] = LegacyCheckDefinition(
+    name="jolokia_jvm_memory_pools",
     service_name="JVM %s",
     sections=["jolokia_jvm_memory"],
     discovery_function=discover_jolokia_jvm_memory_pools,

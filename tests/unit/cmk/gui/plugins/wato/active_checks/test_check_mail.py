@@ -7,10 +7,15 @@ from functools import lru_cache
 
 import pytest
 
+from cmk.ccc.version import Edition
+
 from cmk.utils.rulesets.definition import RuleGroup
 
+from cmk.gui.utils.rule_specs import legacy_converter
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.watolib.rulesets import AllRulesets
+
+from cmk.plugins.emailchecks.rulesets.active_check_mail import rule_spec_mail
 
 
 @lru_cache
@@ -24,6 +29,29 @@ def _check_mail_vs() -> ValueSpec:
 
 def migrate(old: object) -> object:
     return _check_mail_vs().transform_value(old)
+
+
+def test_minimal_migration_validation() -> None:
+    rule = {
+        "service_description": "Email",
+        "connect_timeout": 10,
+        "fetch": (
+            "IMAP",
+            {
+                "server": "",
+                "connection": {"disable_tls": False, "disable_cert_validation": False},
+                "auth": ("basic", ("foo", ("password", "123"))),
+            },
+        ),
+    }
+
+    converted = legacy_converter.convert_to_legacy_rulespec(
+        rule_spec_mail, Edition.CEE, lambda x: x
+    ).valuespec
+
+    converted.validate_datatype(rule, "")
+    rule_transformed = converted.transform_value(rule)
+    converted.validate_value(rule_transformed, "")
 
 
 def test_migration_minimal_config(request_context: None) -> None:

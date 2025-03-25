@@ -8,7 +8,7 @@ def main() {
     def windows = load("${checkout_dir}/buildscripts/scripts/utils/windows.groovy");
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
-    def branch_name = versioning.safe_branch_name(scm);
+    def branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
     def cmk_vers_rc_aware = versioning.get_cmk_version(branch_name, branch_version, VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_vers_rc_aware);
@@ -16,7 +16,7 @@ def main() {
     dir("${checkout_dir}") {
         setCustomBuildProperty(
             key: "path_hashes",
-            value: scm_directory_hashes(scm.extensions)
+            value: versioning.path_hashes(["agents/wnx/.*", "agents/windows/.*", "packages/cmk-agent-ctl/.*", "packages/mk-sql/.*"])
         );
 
         stage("make setversion") {

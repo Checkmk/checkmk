@@ -20,9 +20,7 @@ TABLE = [
 4096    /omd/sites/test/var/check_mk/rrd
 16668   /omd/sites/test/var/log
 26668   /omd/sites/test
-""".split(
-        "\n"
-    )
+""".split("\n")
 ]
 
 TABLE_2 = [
@@ -45,9 +43,7 @@ TABLE_2 = [
 4096    /omd/sites/local/var/mkeventd/history/
 743561	/omd/sites/local/var/check_mk/core/
 13208	/omd/sites/local/var/check_mk/inventory_archive/
-""".split(
-        "\n"
-    )
+""".split("\n")
 ]
 
 

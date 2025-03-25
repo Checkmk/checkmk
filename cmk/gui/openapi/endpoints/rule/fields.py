@@ -7,8 +7,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any, cast, Literal, TYPE_CHECKING, TypedDict
 
-import marshmallow_oneofschema
 from marshmallow import post_load, pre_dump, types, validates_schema, ValidationError
+from marshmallow_oneofschema import OneOfSchema
 
 from cmk.utils.rulesets.conditions import (
     HostOrServiceConditions,
@@ -92,7 +92,7 @@ class MoveToSpecificRule(_BaseMoveTo):
     )
 
 
-class MoveRuleTo(marshmallow_oneofschema.OneOfSchema):
+class MoveRuleTo(OneOfSchema):
     """
 
     Examples:
@@ -348,7 +348,7 @@ class TagConditionConditionSchemaBase(TagConditionSchemaBase):
 # Although all these operators are supported, each one only applies to one or two
 # particular locations in the code. There is no one piece of code which understands the
 # operators, there are many.
-class TagConditionSchema(marshmallow_oneofschema.OneOfSchema):
+class TagConditionSchema(OneOfSchema):
     """Convert Rulesets to Checkmk Structure and back
 
     Examples:
@@ -473,7 +473,7 @@ class HostOrServiceConditionSchema(base.BaseSchema):
         only: types.StrSequenceOrSet | None = None,
         exclude: types.StrSequenceOrSet = (),
         many: bool = False,
-        context: dict | None = None,
+        context: dict[object, object] = {},
         load_only: types.StrSequenceOrSet = (),
         dump_only: types.StrSequenceOrSet = (),
         partial: bool | types.StrSequenceOrSet = False,
@@ -582,7 +582,7 @@ class HostOrServiceConditionSchema(base.BaseSchema):
         else:
             raise ValidationError(f"Unknown type: {data['match_on']!r}.")
 
-        if data["operator"] == "one_of":  # pylint: disable=no-else-return
+        if data["operator"] == "one_of":
             return match_on
         elif data["operator"] == "none_of":
             return {"$nor": match_on}
@@ -1094,7 +1094,7 @@ def _scalar_value(
     if not isinstance(value, str):
         raise ValidationError(f"Unsupported data type: {value!r}")
 
-    if operator == "is":  # pylint: disable=no-else-return
+    if operator == "is":
         return value
     elif operator == "is_not":
         return {"$ne": TagID(value)}
@@ -1132,7 +1132,7 @@ def _collection_value(
     if not isinstance(value, list):
         raise ValidationError(f"Unsupported data type: {value!r}")
 
-    if operator == "one_of":  # pylint: disable=no-else-return
+    if operator == "one_of":
         return {"$or": [TagID(v) for v in value]}
     elif operator == "none_of":
         return {"$nor": [TagID(v) for v in value]}
@@ -1177,7 +1177,7 @@ def _unpack_operator(v: HostOrServiceConditions) -> ApiOperator:
         _key = next(iter(v.keys()))
         # Thank you pylint, but these things need to be returned like this,
         # because otherwise mypy won't recognize the Literal values.
-        if _key == "$ne":  # pylint: disable=no-else-return
+        if _key == "$ne":
             return "is_not"
         elif _key == "$or":
             return "one_of"

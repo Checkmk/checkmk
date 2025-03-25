@@ -82,7 +82,7 @@ def discover_summary(
 
 
 def get_single_check(
-    device_type: Literal["fan", "power supply unit"]
+    device_type: Literal["fan", "power supply unit"],
 ) -> Callable[[str, SectionSingleInstance], CheckResult]:
     error_key, number_key = DEV_KEYS[device_type]
 
@@ -105,7 +105,7 @@ def get_single_check(
 
 
 def get_summary_check(
-    device_type: Literal["fan", "power supply unit"]
+    device_type: Literal["fan", "power supply unit"],
 ) -> Callable[[str, SectionSingleInstance], CheckResult]:
     error_key, _number_key = DEV_KEYS[device_type]
 
@@ -241,7 +241,7 @@ def combine_netapp_api_volumes(
 def check_netapp_luns(
     item: str,
     online: bool,
-    read_only: bool,
+    read_only: bool | None,
     size_total_bytes: int,
     size_total: float,
     size_available: float,
@@ -256,7 +256,7 @@ def check_netapp_luns(
         expected = str(params.get("read_only")).lower()
         yield Result(
             state=State.WARN,
-            summary=f"read-only is {str(read_only).lower()} (expected: {expected})",
+            summary=f"read-only is {str(read_only if read_only is not None else 'unknown').lower()} (expected: {expected})",
         )
 
     if params.get("ignore_levels"):
@@ -276,7 +276,7 @@ def check_netapp_luns(
         )
 
 
-def merge_if_sections(  # pylint: disable=too-many-branches
+def merge_if_sections(
     interfaces_section: SectionSingleInstance,
     if_mac_list: MutableMapping[str, MACList],
     virtual_interfaces: Sequence[str],
@@ -373,7 +373,7 @@ def merge_if_sections(  # pylint: disable=too-many-branches
     return nics, extra_info
 
 
-def check_netapp_interfaces(  # pylint: disable=too-many-branches
+def check_netapp_interfaces(
     item: str,
     params: Mapping[str, Any],
     section: IfSection,
@@ -550,8 +550,8 @@ def check_netapp_qtree_quota(
         yield Result(state=State.UNKNOWN, summary="Qtree has no used space data set")
         return
 
-    size_total = int(disk_limit) / 1024.0
-    size_avail = size_total - int(qtree.disk_used) / 1024.0
+    size_total = int(disk_limit) / 1024**2
+    size_avail = size_total - int(qtree.disk_used) / 1024**2
     if qtree.files_used.isdigit() and qtree.file_limit.isdigit():
         inodes_total = int(qtree.file_limit)
         inodes_avail = inodes_total - int(qtree.files_used)

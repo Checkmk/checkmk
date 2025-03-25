@@ -1,0 +1,76 @@
+load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
+load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
+load("@cmk_requirements//:requirements.bzl", "requirement")
+load("@rules_python//python:packaging.bzl", "py_wheel")
+load("//bazel/rules:doctest.bzl", "py_doc_test")
+load("//bazel/rules:package_wheel.bzl", "package_wheel")
+
+exports_files([
+    "pyproject.toml",
+    "requirements.in",
+])
+
+py_library(
+    name = "cmk-messaging",
+    srcs = [
+        "cmk/messaging/__init__.py",
+        "cmk/messaging/_config.py",
+        "cmk/messaging/_connection.py",
+        "cmk/messaging/_constants.py",
+        "cmk/messaging/_logging.py",
+        "cmk/messaging/rabbitmq.py",
+    ],
+    imports = ["."],
+    visibility = ["//cmk:__pkg__"],
+    deps = [
+        requirement("pika"),
+        requirement("pydantic"),
+    ],
+)
+
+py_doc_test(
+    name = "doctest",
+    size = "small",
+    srcs = ["cmk-messaging"],
+    tags = ["no-mypy"],
+)
+
+py_pytest_main(
+    name = "__test__",
+    deps = [
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "unit",
+    size = "small",
+    srcs = glob(["tests/**/*.py"]) + [":__test__.py"],
+    main = "__test__.py",
+    deps = [
+        ":__test__",
+        ":cmk-messaging",
+        requirement("pika"),
+        requirement("pytest"),
+    ],
+)
+
+format_multirun(
+    name = "format",
+    python = "@aspect_rules_lint//format:ruff",
+)
+
+py_wheel(
+    name = "wheel",
+    distribution = "cmk-messaging",
+    strip_path_prefixes = ["packages/cmk-messaging"],
+    # TODO: Duplicated from pyproject.toml
+    version = "0.1.0",
+    deps = [":cmk-messaging"],
+)
+
+package_wheel(
+    name = "pkg_tar",
+    visibility = ["//visibility:public"],
+    whl = "wheel",
+)

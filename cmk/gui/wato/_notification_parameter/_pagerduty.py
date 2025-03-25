@@ -3,13 +3,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
-from cmk.gui.valuespec import CascadingDropdown, Dictionary, DropdownChoice, FixedValue, TextInput
-from cmk.gui.wato import HTTPProxyReference
-from cmk.gui.watolib.password_store import passwordstore_choices
+from typing import Literal
 
-from ._base import NotificationParameter
-from ._helpers import get_url_prefix_specs, local_site_url
+from cmk.utils import password_store
+
+from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
+from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recompose
+from cmk.gui.http import request
+from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
+from cmk.gui.watolib.notification_parameter import NotificationParameter
+
+from cmk.rulesets.v1 import Help, Label, Message, Title
+from cmk.rulesets.v1.form_specs import (
+    DictElement,
+    FixedValue,
+    migrate_to_proxy,
+    Password,
+    Proxy,
+)
+from cmk.rulesets.v1.form_specs.validators import LengthInRange
+
+from ._helpers import _get_url_prefix_setting
 
 
 class NotificationParameterPagerDuty(NotificationParameter):
@@ -18,47 +32,77 @@ class NotificationParameterPagerDuty(NotificationParameter):
         return "pagerduty"
 
     @property
-    def spec(self) -> Dictionary:
-        return Dictionary(
-            title=_("Create notification with the following parameters"),
-            optional_keys=["ignore_ssl", "proxy_url", "url_prefix"],
-            hidden_keys=["webhook_url"],
-            elements=[
-                (
-                    "routing_key",
-                    CascadingDropdown(
-                        title=_("PagerDuty Service Integration Key"),
-                        help=_(
-                            "After setting up a new service in PagerDuty you will receive an "
-                            "Integration key associated with that service. Copy that value here."
-                        ),
-                        choices=[
-                            ("routing_key", _("Integration Key"), TextInput(size=32)),
-                            (
-                                "store",
-                                _("Key from password store"),
-                                DropdownChoice(sorted=True, choices=passwordstore_choices),
+    def spec(self) -> ValueSpecDictionary:
+        # TODO needed because of mixed Form Spec and old style setup
+        return recompose(self._form_spec()).valuespec  # type: ignore[return-value]  # expects Valuespec[Any]
+
+    def _form_spec(self) -> DictionaryExtended:
+        # TODO register CSE specific version
+        return DictionaryExtended(
+            title=Title("PagerDuty parameters"),
+            elements={
+                "routing_key": DictElement(
+                    parameter_form=Password(
+                        title=Title("PagerDuty Service Integration Key"),
+                        migrate=_migrate_to_password,
+                        custom_validate=[
+                            LengthInRange(
+                                min_value=1,
+                                error_msg=Message("Please enter a Service Integration Key"),
                             ),
                         ],
                     ),
+                    required=True,
                 ),
-                (
-                    "webhook_url",
-                    FixedValue(
+                "webhook_url": DictElement(
+                    parameter_form=FixedValue(
+                        title=Title("API endpoint from PagerDuty V2"),
                         value="https://events.pagerduty.com/v2/enqueue",
-                        title=_("API endpoint from PagerDuty V2"),
+                    ),
+                    required=True,
+                ),
+                "ignore_ssl": DictElement(
+                    parameter_form=FixedValue(
+                        title=Title("Disable SSL certificate verification"),
+                        label=Label("Disable SSL certificate verification"),
+                        value="https://events.pagerduty.com/v2/enqueue",
+                        help_text=Help(
+                            "Ignore unverified HTTPS request warnings. Use with caution."
+                        ),
+                    )
+                ),
+                "proxy_url": DictElement(
+                    parameter_form=Proxy(
+                        migrate=migrate_to_proxy,
                     ),
                 ),
-                (
-                    "ignore_ssl",
-                    FixedValue(
-                        value=True,
-                        title=_("Disable SSL certificate verification"),
-                        totext=_("Disable SSL certificate verification"),
-                        help=_("Ignore unverified HTTPS request warnings. Use with caution."),
-                    ),
+                "url_prefix": _get_url_prefix_setting(
+                    default_value="automatic_https" if request.is_ssl_request else "automatic_http",
                 ),
-                ("proxy_url", HTTPProxyReference()),
-                ("url_prefix", get_url_prefix_specs(local_site_url)),
-            ],
+            },
         )
+
+
+def _migrate_to_password(
+    password: object,
+) -> tuple[
+    Literal["cmk_postprocessed"],
+    Literal["explicit_password", "stored_password"],
+    tuple[str, str],
+]:
+    if isinstance(password, tuple):
+        if password[0] == "store":
+            return ("cmk_postprocessed", "stored_password", (password[1], ""))
+
+        if password[0] == "routing_key":
+            return (
+                "cmk_postprocessed",
+                "explicit_password",
+                (password_store.ad_hoc_password_id(), password[1]),
+            )
+
+        # Already migrated
+        assert len(password) == 3
+        return password
+
+    raise ValueError(f"Invalid password format: {password}")

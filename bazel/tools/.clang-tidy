@@ -1,0 +1,39 @@
+---
+Checks: >
+  -*,
+  bugprone-*,
+  cert-*,
+  clang-analyzer-*,
+  concurrency-*,
+  cppcoreguidelines-*,
+  misc-*,
+  modernize-*,
+  performance-*,
+  portability-*,
+  readability-*,
+  -bugprone-easily-swappable-parameters,
+  -cert-err34-c,
+  -clang-analyzer-optin.core.EnumCastOutOfRange,
+  -cppcoreguidelines-avoid-const-or-ref-data-members,
+  -cppcoreguidelines-avoid-do-while,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-non-private-member-variables-in-classes,
+  -cppcoreguidelines-special-member-functions,
+  -misc-include-cleaner,
+  -misc-non-private-member-variables-in-classes,
+  -modernize-use-trailing-return-type,
+  -performance-enum-size,
+  -readability-avoid-nested-conditional-operator,
+  -readability-avoid-return-with-void-value,
+  -readability-identifier-length,
+  -readability-magic-numbers,
+  -modernize-use-designated-initializers,
+
+WarningsAsErrors: '*'
+
+CheckOptions:
+  bugprone-signed-char-misuse.CharTypdefsToIgnore: 'int8_t'
+  cert-str34-c.CharTypdefsToIgnore: 'int8_t'
+  # There is a cycle within the Asio library: asio/io_context.hpp <=> asio/impl/io_context.ipp
+  misc-header-include-cycle.IgnoredFilesList: '/asio/io_context\.hpp$'
+...

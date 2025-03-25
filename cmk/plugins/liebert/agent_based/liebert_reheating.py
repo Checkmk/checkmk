@@ -7,7 +7,9 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels  # we can only use v2 after migrating the ruleset!
+from cmk.agent_based.v1 import (
+    check_levels as check_levels_v1,  # we can only use v2 after migrating the ruleset!
+)
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -33,7 +35,7 @@ def check_liebert_reheating(params: Mapping[str, Any], section: Section[float]) 
     if (data := next((e for k, e in section.items() if "Reheat" in k), None)) is None:
         return
     value, unit = data
-    yield from check_levels(
+    yield from check_levels_v1(
         value,
         metric_name="filehandler_perc",
         levels_upper=params["levels"],

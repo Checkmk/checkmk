@@ -15,409 +15,389 @@ from cmk.gui.graphing._formatter import (
     EngineeringScientificFormatter,
     IECFormatter,
     Label,
+    NotationFormatter,
     SIFormatter,
     StandardScientificFormatter,
+    StrictPrecision,
     TimeFormatter,
 )
-from cmk.gui.graphing._from_api import register_unit_info
-
-from cmk.graphing.v1 import metrics as metrics_api
 
 
 @pytest.mark.parametrize(
     "precision, value, expected",
     [
         pytest.param(
-            metrics_api.AutoPrecision(0),
+            AutoPrecision(digits=0),
             0,
             "0 unit",
             id="zero",
         ),
         pytest.param(
-            metrics_api.AutoPrecision(0),
+            AutoPrecision(digits=0),
             1,
             "1 unit",
             id="one",
         ),
         #
         pytest.param(
-            metrics_api.AutoPrecision(0),
+            AutoPrecision(digits=0),
             0.006789,
             "0.007 unit",
             id="small-zeros-auto-0",
         ),
         pytest.param(
-            metrics_api.StrictPrecision(0),
+            StrictPrecision(digits=0),
             0.006789,
             "0 unit",
             id="small-zeros-strict-0",
         ),
         pytest.param(
-            metrics_api.AutoPrecision(1),
+            AutoPrecision(digits=1),
             0.006789,
             "0.007 unit",
             id="small-zeros-auto-1",
         ),
         pytest.param(
-            metrics_api.StrictPrecision(1),
+            StrictPrecision(digits=1),
             0.006789,
             "0 unit",
             id="small-zeros-strict-1",
         ),
         pytest.param(
-            metrics_api.AutoPrecision(0),
+            AutoPrecision(digits=0),
             0.6789,
             "1 unit",
             id="small-no-zeros-auto-0",
         ),
         pytest.param(
-            metrics_api.StrictPrecision(0),
+            StrictPrecision(digits=0),
             0.6789,
             "1 unit",
             id="small-no-zeros-strict-0",
         ),
         pytest.param(
-            metrics_api.AutoPrecision(1),
+            AutoPrecision(digits=1),
             0.6789,
             "0.7 unit",
             id="small-no-zeros-auto-1",
         ),
         pytest.param(
-            metrics_api.StrictPrecision(1),
+            StrictPrecision(digits=1),
             0.6789,
             "0.7 unit",
             id="small-no-zeros-strict-1",
         ),
         #
         pytest.param(
-            metrics_api.AutoPrecision(0),
+            AutoPrecision(digits=0),
             12345.006789,
-            "12345.007 unit",
+            "12 345.007 unit",
             id="large-zeros-auto-0",
         ),
         pytest.param(
-            metrics_api.StrictPrecision(0),
+            StrictPrecision(digits=0),
             12345.006789,
-            "12345 unit",
+            "12 345 unit",
             id="large-zeros-strict-0",
         ),
         pytest.param(
-            metrics_api.AutoPrecision(1),
+            AutoPrecision(digits=1),
             12345.006789,
-            "12345.007 unit",
+            "12 345.007 unit",
             id="large-zeros-auto-1",
         ),
         pytest.param(
-            metrics_api.StrictPrecision(1),
+            StrictPrecision(digits=1),
             12345.006789,
-            "12345 unit",
+            "12 345 unit",
             id="large-zeros-strict-1",
         ),
         pytest.param(
-            metrics_api.AutoPrecision(0),
+            AutoPrecision(digits=0),
             12345.6789,
-            "12346 unit",
+            "12 346 unit",
             id="large-no-zeros-auto-0",
         ),
         pytest.param(
-            metrics_api.StrictPrecision(0),
+            StrictPrecision(digits=0),
             12345.6789,
-            "12346 unit",
+            "12 346 unit",
             id="large-no-zeros-strict-0",
         ),
         pytest.param(
-            metrics_api.AutoPrecision(1),
+            AutoPrecision(digits=1),
             12345.6789,
-            "12345.7 unit",
+            "12 345.7 unit",
             id="large-no-zeros-auto-1",
         ),
         pytest.param(
-            metrics_api.StrictPrecision(1),
+            StrictPrecision(digits=1),
             12345.6789,
-            "12345.7 unit",
+            "12 345.7 unit",
             id="large-no-zeros-strict-1",
         ),
     ],
 )
-def test_register_unit_info(
-    precision: metrics_api.AutoPrecision | metrics_api.StrictPrecision,
+def test_render_unit_precision(
+    precision: AutoPrecision | StrictPrecision,
     value: int | float,
     expected: str,
 ) -> None:
-    unit = metrics_api.Unit(metrics_api.DecimalNotation("unit"), precision)
-    assert register_unit_info(unit).render(value) == expected
+    assert DecimalFormatter(symbol="unit", precision=precision).render(value) == expected
 
 
 @pytest.mark.parametrize(
-    "notation, value, expected",
+    "formatter, value, expected",
     [
         pytest.param(
-            metrics_api.SINotation("unit"),
+            SIFormatter(
+                symbol="unit",
+                precision=StrictPrecision(digits=2),
+            ),
             0.0000123456789,
             "12.35 μunit",
             id="si-small",
         ),
         pytest.param(
-            metrics_api.SINotation("unit"),
+            SIFormatter(
+                symbol="unit",
+                precision=StrictPrecision(digits=2),
+            ),
             123456.789,
             "123.46 kunit",
             id="si-large",
         ),
         pytest.param(
-            metrics_api.SINotation("unit"),
+            SIFormatter(
+                symbol="unit",
+                precision=StrictPrecision(digits=2),
+            ),
             999.999,
             "1000 unit",
             id="si-large-border",
         ),
         pytest.param(
-            metrics_api.IECNotation("unit"),
+            IECFormatter(
+                symbol="unit",
+                precision=StrictPrecision(digits=2),
+            ),
             0.0000123456789,
             "0 unit",
             id="iec-small",
         ),
         pytest.param(
-            metrics_api.IECNotation("unit"),
+            IECFormatter(
+                symbol="unit",
+                precision=StrictPrecision(digits=2),
+            ),
             123456.789,
             "120.56 Kiunit",
             id="iec-large",
         ),
         pytest.param(
-            metrics_api.IECNotation("unit"),
+            IECFormatter(
+                symbol="unit",
+                precision=StrictPrecision(digits=2),
+            ),
             1023.999,
             "1024 unit",
             id="iec-large-border",
         ),
         pytest.param(
-            metrics_api.StandardScientificNotation("unit"),
+            StandardScientificFormatter(
+                symbol="unit",
+                precision=StrictPrecision(digits=2),
+            ),
             0.0000123456789,
             "1.23e-5 unit",
             id="standard-scientific-small",
         ),
         pytest.param(
-            metrics_api.StandardScientificNotation("unit"),
+            StandardScientificFormatter(
+                symbol="unit",
+                precision=StrictPrecision(digits=2),
+            ),
             123456.789,
             "1.23e+5 unit",
             id="standard-scientific-large",
         ),
         pytest.param(
-            metrics_api.StandardScientificNotation("unit"),
+            StandardScientificFormatter(
+                symbol="unit",
+                precision=StrictPrecision(digits=2),
+            ),
             0.00001,
             "1e-5 unit",
             id="standard-scientific-small-power-of-ten",
         ),
         pytest.param(
-            metrics_api.StandardScientificNotation("unit"),
+            StandardScientificFormatter(
+                symbol="unit",
+                precision=StrictPrecision(digits=2),
+            ),
             100000.0,
             "1e+5 unit",
             id="standard-scientific-large-power-of-ten",
         ),
         pytest.param(
-            metrics_api.EngineeringScientificNotation("unit"),
+            EngineeringScientificFormatter(
+                symbol="unit",
+                precision=StrictPrecision(digits=2),
+            ),
             0.0000123456789,
             "12.35e-6 unit",
             id="engineering-scientific-small",
         ),
         pytest.param(
-            metrics_api.EngineeringScientificNotation("unit"),
+            EngineeringScientificFormatter(
+                symbol="unit",
+                precision=StrictPrecision(digits=2),
+            ),
             123456.789,
             "123.46e+3 unit",
             id="engineering-scientific-large",
         ),
         pytest.param(
-            metrics_api.EngineeringScientificNotation("unit"),
+            EngineeringScientificFormatter(
+                symbol="unit",
+                precision=StrictPrecision(digits=2),
+            ),
             0.00001,
             "10e-6 unit",
             id="engineering-scientific-small-power-of-ten",
         ),
         pytest.param(
-            metrics_api.EngineeringScientificNotation("unit"),
+            EngineeringScientificFormatter(
+                symbol="unit",
+                precision=StrictPrecision(digits=2),
+            ),
             1000000.0,
             "1e+6 unit",
             id="engineering-scientific-large-power-of-ten",
         ),
         pytest.param(
-            metrics_api.EngineeringScientificNotation("unit"),
+            EngineeringScientificFormatter(
+                symbol="unit",
+                precision=StrictPrecision(digits=2),
+            ),
             100000.0,
             "100e+3 unit",
             id="engineering-scientific-large-power-of-ten-2",
         ),
         pytest.param(
-            metrics_api.EngineeringScientificNotation("unit"),
+            EngineeringScientificFormatter(
+                symbol="unit",
+                precision=StrictPrecision(digits=2),
+            ),
             120000.0,
             "120e+3 unit",
             id="engineering-scientific-large-power-of-ten-2",
         ),
         pytest.param(
-            metrics_api.TimeNotation(),
+            TimeFormatter(
+                symbol="s",
+                precision=StrictPrecision(digits=2),
+            ),
             0.0000123456789,
             "12.35 μs",
             id="time-small",
         ),
         pytest.param(
-            metrics_api.TimeNotation(),
+            TimeFormatter(
+                symbol="s",
+                precision=StrictPrecision(digits=2),
+            ),
             137,
             "2 min 17 s",
             id="time-minutes",
         ),
         pytest.param(
-            metrics_api.TimeNotation(),
+            TimeFormatter(
+                symbol="s",
+                precision=StrictPrecision(digits=2),
+            ),
             4312,
             "1 h 12 min",
             id="time-hours",
         ),
         pytest.param(
-            metrics_api.TimeNotation(),
+            TimeFormatter(
+                symbol="s",
+                precision=StrictPrecision(digits=2),
+            ),
             123456.789,
             "1 d 10 h",
             id="time-large",
         ),
         pytest.param(
-            metrics_api.TimeNotation(),
+            TimeFormatter(
+                symbol="s",
+                precision=StrictPrecision(digits=2),
+            ),
             86399.999,
             "24 h",
             id="time-large-border",
         ),
+        pytest.param(
+            DecimalFormatter(
+                symbol="/unit",
+                precision=StrictPrecision(digits=2),
+            ),
+            2,
+            "2/unit",
+            id="unit-with-leading-slash",
+        ),
+        pytest.param(
+            SIFormatter(
+                symbol="/unit",
+                precision=StrictPrecision(digits=2),
+            ),
+            2000,
+            "2 k/unit",
+            id="unit-with-leading-slash-but-prefix",
+        ),
+        pytest.param(
+            TimeFormatter(
+                symbol="s",
+                precision=StrictPrecision(digits=2),
+            ),
+            31536000,
+            "1 y",
+            id="time-one-year",
+        ),
+        pytest.param(
+            TimeFormatter(
+                symbol="s",
+                precision=StrictPrecision(digits=2),
+            ),
+            47304000,
+            "1 y 182 d",
+            id="time-one-and-a-half-year",
+        ),
+        pytest.param(
+            TimeFormatter(
+                symbol="s",
+                precision=StrictPrecision(digits=2),
+            ),
+            315360000,
+            "10 y",
+            id="time-ten-years",
+        ),
     ],
 )
 def test_render_unit_notation(
-    notation: (
-        metrics_api.SINotation
-        | metrics_api.IECNotation
-        | metrics_api.StandardScientificNotation
-        | metrics_api.EngineeringScientificNotation
-        | metrics_api.TimeNotation
-    ),
+    formatter: NotationFormatter,
     value: int | float,
     expected: str,
 ) -> None:
-    unit = metrics_api.Unit(notation, metrics_api.StrictPrecision(2))
-    assert register_unit_info(unit).render(value) == expected
-
-
-@pytest.mark.parametrize(
-    "unit, expected",
-    [
-        #
-        pytest.param(
-            metrics_api.Unit(metrics_api.DecimalNotation("unit"), metrics_api.AutoPrecision(2)),
-            """v => new cmk.number_format.DecimalFormatter(
-    "unit",
-    new cmk.number_format.AutoPrecision(2),
-).render(v)""",
-            id="decimal-auto",
-        ),
-        pytest.param(
-            metrics_api.Unit(metrics_api.DecimalNotation("unit"), metrics_api.StrictPrecision(2)),
-            """v => new cmk.number_format.DecimalFormatter(
-    "unit",
-    new cmk.number_format.StrictPrecision(2),
-).render(v)""",
-            id="decimal-strict",
-        ),
-        #
-        pytest.param(
-            metrics_api.Unit(metrics_api.SINotation("unit"), metrics_api.AutoPrecision(2)),
-            """v => new cmk.number_format.SIFormatter(
-    "unit",
-    new cmk.number_format.AutoPrecision(2),
-).render(v)""",
-            id="si-auto",
-        ),
-        pytest.param(
-            metrics_api.Unit(metrics_api.SINotation("unit"), metrics_api.StrictPrecision(2)),
-            """v => new cmk.number_format.SIFormatter(
-    "unit",
-    new cmk.number_format.StrictPrecision(2),
-).render(v)""",
-            id="si-strict",
-        ),
-        #
-        pytest.param(
-            metrics_api.Unit(metrics_api.IECNotation("unit"), metrics_api.AutoPrecision(2)),
-            """v => new cmk.number_format.IECFormatter(
-    "unit",
-    new cmk.number_format.AutoPrecision(2),
-).render(v)""",
-            id="iec-auto",
-        ),
-        pytest.param(
-            metrics_api.Unit(metrics_api.IECNotation("unit"), metrics_api.StrictPrecision(2)),
-            """v => new cmk.number_format.IECFormatter(
-    "unit",
-    new cmk.number_format.StrictPrecision(2),
-).render(v)""",
-            id="iec-strict",
-        ),
-        #
-        pytest.param(
-            metrics_api.Unit(
-                metrics_api.StandardScientificNotation("unit"), metrics_api.AutoPrecision(2)
-            ),
-            """v => new cmk.number_format.StandardScientificFormatter(
-    "unit",
-    new cmk.number_format.AutoPrecision(2),
-).render(v)""",
-            id="standard-scientific-auto",
-        ),
-        pytest.param(
-            metrics_api.Unit(
-                metrics_api.StandardScientificNotation("unit"), metrics_api.StrictPrecision(2)
-            ),
-            """v => new cmk.number_format.StandardScientificFormatter(
-    "unit",
-    new cmk.number_format.StrictPrecision(2),
-).render(v)""",
-            id="standard-scientific-strict",
-        ),
-        #
-        pytest.param(
-            metrics_api.Unit(
-                metrics_api.EngineeringScientificNotation("unit"), metrics_api.AutoPrecision(2)
-            ),
-            """v => new cmk.number_format.EngineeringScientificFormatter(
-    "unit",
-    new cmk.number_format.AutoPrecision(2),
-).render(v)""",
-            id="engineering-scientific-auto",
-        ),
-        pytest.param(
-            metrics_api.Unit(
-                metrics_api.EngineeringScientificNotation("unit"), metrics_api.StrictPrecision(2)
-            ),
-            """v => new cmk.number_format.EngineeringScientificFormatter(
-    "unit",
-    new cmk.number_format.StrictPrecision(2),
-).render(v)""",
-            id="engineering-scientific-strict",
-        ),
-        #
-        pytest.param(
-            metrics_api.Unit(metrics_api.TimeNotation(), metrics_api.AutoPrecision(2)),
-            """v => new cmk.number_format.TimeFormatter(
-    "s",
-    new cmk.number_format.AutoPrecision(2),
-).render(v)""",
-            id="time-auto",
-        ),
-        pytest.param(
-            metrics_api.Unit(metrics_api.TimeNotation(), metrics_api.StrictPrecision(2)),
-            """v => new cmk.number_format.TimeFormatter(
-    "s",
-    new cmk.number_format.StrictPrecision(2),
-).render(v)""",
-            id="time-strict",
-        ),
-    ],
-)
-def test_js_render_unit_notation(unit: metrics_api.Unit, expected: str) -> None:
-    assert register_unit_info(unit).js_render == expected
+    assert formatter.render(value) == expected
 
 
 @pytest.mark.parametrize(
     "formatter, max_y, expected_ident, expected_labels",
     [
         pytest.param(
-            DecimalFormatter("u", AutoPrecision(decimal_places=2)),
+            DecimalFormatter("u", AutoPrecision(digits=2)),
             0.00123,
             "Decimal",
             [
@@ -431,21 +411,21 @@ def test_js_render_unit_notation(unit: metrics_api.Unit, expected: str) -> None:
             id="decimal-small",
         ),
         pytest.param(
-            DecimalFormatter("u", AutoPrecision(decimal_places=2)),
+            DecimalFormatter("u", AutoPrecision(digits=2)),
             123456.789,
             "Decimal",
             [
-                Label(20000, "20000 u"),
-                Label(40000, "40000 u"),
-                Label(60000, "60000 u"),
-                Label(80000, "80000 u"),
-                Label(100000, "100000 u"),
-                Label(120000, "120000 u"),
+                Label(20000, "20 000 u"),
+                Label(40000, "40 000 u"),
+                Label(60000, "60 000 u"),
+                Label(80000, "80 000 u"),
+                Label(100000, "100 000 u"),
+                Label(120000, "120 000 u"),
             ],
             id="decimal-large",
         ),
         pytest.param(
-            SIFormatter("u", AutoPrecision(decimal_places=2)),
+            SIFormatter("u", AutoPrecision(digits=2)),
             0.00123,
             "SI",
             [
@@ -459,7 +439,7 @@ def test_js_render_unit_notation(unit: metrics_api.Unit, expected: str) -> None:
             id="si-small",
         ),
         pytest.param(
-            SIFormatter("u", AutoPrecision(decimal_places=2)),
+            SIFormatter("u", AutoPrecision(digits=2)),
             123456.789,
             "SI",
             [
@@ -473,7 +453,7 @@ def test_js_render_unit_notation(unit: metrics_api.Unit, expected: str) -> None:
             id="si-large",
         ),
         pytest.param(
-            IECFormatter("u", AutoPrecision(decimal_places=2)),
+            IECFormatter("u", AutoPrecision(digits=2)),
             0.00123,
             "IEC",
             [
@@ -487,7 +467,7 @@ def test_js_render_unit_notation(unit: metrics_api.Unit, expected: str) -> None:
             id="iec-small",
         ),
         pytest.param(
-            IECFormatter("u", AutoPrecision(decimal_places=2)),
+            IECFormatter("u", AutoPrecision(digits=2)),
             123456.789,
             "IEC",
             [
@@ -502,7 +482,7 @@ def test_js_render_unit_notation(unit: metrics_api.Unit, expected: str) -> None:
             id="iec-large",
         ),
         pytest.param(
-            StandardScientificFormatter("u", AutoPrecision(decimal_places=2)),
+            StandardScientificFormatter("u", AutoPrecision(digits=2)),
             0.00123,
             "StandardScientific",
             [
@@ -516,7 +496,7 @@ def test_js_render_unit_notation(unit: metrics_api.Unit, expected: str) -> None:
             id="std-sci-small",
         ),
         pytest.param(
-            StandardScientificFormatter("u", AutoPrecision(decimal_places=2)),
+            StandardScientificFormatter("u", AutoPrecision(digits=2)),
             123456.789,
             "StandardScientific",
             [
@@ -530,7 +510,7 @@ def test_js_render_unit_notation(unit: metrics_api.Unit, expected: str) -> None:
             id="std-sci-large",
         ),
         pytest.param(
-            EngineeringScientificFormatter("u", AutoPrecision(decimal_places=2)),
+            EngineeringScientificFormatter("u", AutoPrecision(digits=2)),
             0.00123,
             "EngineeringScientific",
             [
@@ -544,7 +524,7 @@ def test_js_render_unit_notation(unit: metrics_api.Unit, expected: str) -> None:
             id="eng-sci-small",
         ),
         pytest.param(
-            EngineeringScientificFormatter("u", AutoPrecision(decimal_places=2)),
+            EngineeringScientificFormatter("u", AutoPrecision(digits=2)),
             123456.789,
             "EngineeringScientific",
             [
@@ -558,7 +538,7 @@ def test_js_render_unit_notation(unit: metrics_api.Unit, expected: str) -> None:
             id="eng-sci-large",
         ),
         pytest.param(
-            TimeFormatter("s", AutoPrecision(decimal_places=2)),
+            TimeFormatter("s", AutoPrecision(digits=2)),
             0.00123,
             "Time",
             [
@@ -572,7 +552,7 @@ def test_js_render_unit_notation(unit: metrics_api.Unit, expected: str) -> None:
             id="time-small",
         ),
         pytest.param(
-            TimeFormatter("s", AutoPrecision(decimal_places=2)),
+            TimeFormatter("s", AutoPrecision(digits=2)),
             123456.789,
             "Time",
             [
@@ -585,17 +565,54 @@ def test_js_render_unit_notation(unit: metrics_api.Unit, expected: str) -> None:
             id="time-large",
         ),
         pytest.param(
-            TimeFormatter("s", AutoPrecision(decimal_places=2)),
-            86400001,
+            TimeFormatter("s", AutoPrecision(digits=2)),
+            31536001,
             "Time",
             [
-                Label(17280000, "200 d"),
-                Label(34560000, "400 d"),
-                Label(51840000, "600 d"),
-                Label(69120000, "800 d"),
-                Label(86400000, "1000 d"),
+                Label(position=4320000, text="50 d"),
+                Label(position=8640000, text="100 d"),
+                Label(position=12960000, text="150 d"),
+                Label(position=17280000, text="200 d"),
+                Label(position=21600000, text="250 d"),
+                Label(position=25920000, text="300 d"),
+                Label(position=30240000, text="350 d"),
             ],
-            id="time-very-large",
+            id="time->year",
+        ),
+        pytest.param(
+            TimeFormatter("s", AutoPrecision(digits=2)),
+            15552000.123,
+            "Time",
+            [
+                Label(position=4320000, text="50 d"),
+                Label(position=8640000, text="100 d"),
+                Label(position=12960000, text="150 d"),
+            ],
+            id="time-half-year",
+        ),
+        pytest.param(
+            TimeFormatter("s", AutoPrecision(digits=2)),
+            94608000,
+            "Time",
+            [
+                Label(position=31536000, text="1 y"),
+                Label(position=63072000, text="2 y"),
+                Label(position=94608000, text="3 y"),
+            ],
+            id="time-three-years",
+        ),
+        pytest.param(
+            TimeFormatter("s", AutoPrecision(digits=2)),
+            315360000,
+            "Time",
+            [
+                Label(position=63072000, text="2 y"),
+                Label(position=126144000, text="4 y"),
+                Label(position=189216000, text="6 y"),
+                Label(position=252288000, text="8 y"),
+                Label(position=315360000, text="10 y"),
+            ],
+            id="time-ten-years",
         ),
     ],
 )
@@ -685,7 +702,7 @@ def test_decimal_render_y_labels_with_min_y(
     min_y: float, max_y: float, expected_labels: Sequence[Label]
 ) -> None:
     assert (
-        DecimalFormatter("u", AutoPrecision(decimal_places=2)).render_y_labels(
+        DecimalFormatter("u", AutoPrecision(digits=2)).render_y_labels(
             min_y=min_y,
             max_y=max_y,
             mean_num_labels=5,

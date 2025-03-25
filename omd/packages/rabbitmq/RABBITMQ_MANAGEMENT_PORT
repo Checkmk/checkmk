@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# Alias: TCP port number for management plugin of RabbitMQ instance
+# Menu: Basic
+# Description:
+#  Configure the port on which the RabbitMQ management plugin
+#  will expose its REST API. If the port isn't
+#  available, the next available port will be chosen.
+
+CONF_FILE="$OMD_ROOT/etc/rabbitmq/conf.d/02-management-port.conf"
+
+write_config() {
+    cat <<HERE >"${CONF_FILE}"
+# Port set by \`omd config\` hook \`RABBITMQ_MANAGEMENT_PORT\`. Better do not edit manually.
+management.tcp.port = ${1}
+HERE
+}
+
+case "$1" in
+    default)
+        PORT=$("$OMD_ROOT/lib/omd/next_free_port" RABBITMQ_MANAGEMENT_PORT 15671)
+        echo "$PORT"
+        ;;
+    choices)
+        echo "[0-9]{1,5}"
+        ;;
+    set)
+        PORT=$("$OMD_ROOT/lib/omd/next_free_port" RABBITMQ_MANAGEMENT_PORT "$2")
+
+        if [ "$PORT" != "$2" ]; then
+            echo "RabbitMQ management port $2 is in use. I've choosen $PORT instead." >&2
+            echo "$PORT"
+        fi
+
+        write_config "${PORT}"
+        ;;
+esac

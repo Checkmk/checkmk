@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Submodule providing the `run` function of generictests package"""
+
 import datetime
 from contextlib import contextmanager
 
@@ -102,6 +103,9 @@ def run_test_on_parse(dataset, immu):
         return None
 
     immu.register(dataset.info, "info")
+
+    main_check: Check | None = None
+
     try:
         main_check = Check(dataset.checkname)
         parse_function = main_check.info.parse_function
@@ -116,14 +120,15 @@ def run_test_on_parse(dataset, immu):
     elif not parse_function:  # we may not have one:
         return None
 
-    parsed = main_check.run_parse(info)
-    if parsed_expected is not None:
-        assertEqual(parsed, parsed_expected, " parsed result ")
+    if main_check:
+        parsed = main_check.run_parse(info)
+        if parsed_expected is not None:
+            assertEqual(parsed, parsed_expected, " parsed result ")
 
-    immu.test(" after parse function ")
-    immu.register(parsed, "parsed")
+        immu.test(" after parse function ")
+        immu.register(parsed, "parsed")
 
-    return parsed
+        return parsed
 
 
 def run_test_on_discovery(check, subcheck, dataset, info_arg, immu):
@@ -173,6 +178,7 @@ def run(check_info, dataset):
         parsed = run_test_on_parse(dataset, immu)
 
         # LOOP OVER ALL (SUB)CHECKS
+        subcheck: str | None = None
         for sname in checklist:
             subcheck = (sname + ".").split(".")[1]
             check = Check(sname)
@@ -188,4 +194,5 @@ def run(check_info, dataset):
 
                 run_test_on_checks(check, subcheck, dataset, info_arg, immu)
 
-        immu.test(f" at end of subcheck loop {subcheck!r} ")
+        if subcheck:
+            immu.test(f" at end of subcheck loop {subcheck!r} ")

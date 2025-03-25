@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Final
+from typing import Final, Mapping
 
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
@@ -36,28 +36,17 @@ from cmk.rulesets.v1.rule_specs import (
 _MB = 1000**2
 
 
-def migrate_diskstat_inventory(value: object) -> dict[str, object]:
+def migrate_diskstat_inventory(value: object) -> Mapping[str, object]:
     if not isinstance(value, dict):
-        raise TypeError(f"Invalid value {value!r}")
+        raise TypeError(value)
 
-    if "summary" not in value:
-        value["summary"] = False
+    if isinstance((physical := value.get("physical")), str):
+        return value
 
-    if "lvm" not in value:
-        value["lvm"] = False
-
-    if "vxvm" not in value:
-        value["vxvm"] = False
-
-    if "diskless" not in value:
-        value["diskless"] = False
-
-    if not (physical := value.pop("physical", None)):
-        value["physical"] = {}
-    else:
-        value["physical"] = {"service_description": "name"} if physical is True else physical
-
-    return value
+    return {
+        **{f: f in value for f in ("summary", "lvm", "vxvm", "diskless")},
+        **({} if physical is None else {"physical": "name"}),
+    }
 
 
 def _valuespec_diskstat_inventory() -> Dictionary:
@@ -72,33 +61,25 @@ def _valuespec_diskstat_inventory() -> Dictionary:
                 ),
             ),
             "physical": DictElement(
-                required=True,
-                parameter_form=Dictionary(
-                    title=Title("Physical disks"),
-                    elements={
-                        "service_description": DictElement(
-                            required=False,
-                            parameter_form=SingleChoice(
-                                title=Title("Create a separate check for each physical disk"),
-                                elements=[
-                                    SingleChoiceElement(
-                                        name="wwn",
-                                        title=Title("Use World Wide Name (WWN) as service name"),
-                                    ),
-                                    SingleChoiceElement(
-                                        name="name",
-                                        title=Title("Use device name as service name"),
-                                    ),
-                                ],
-                                prefill=DefaultValue("wwn"),
-                                help_text=Help(
-                                    "Using device name as service name isn't recommended. "
-                                    "Device names aren't persistent and can change after a reboot or an update. "
-                                    "In case WWN is not available, device name will be used."
-                                ),
-                            ),
-                        )
-                    },
+                required=False,
+                parameter_form=SingleChoice(
+                    title=Title("Create a separate check for each physical disk"),
+                    elements=[
+                        SingleChoiceElement(
+                            name="wwn",
+                            title=Title("Use World Wide Name (WWN) as service name"),
+                        ),
+                        SingleChoiceElement(
+                            name="name",
+                            title=Title("Use device name as service name"),
+                        ),
+                    ],
+                    prefill=DefaultValue("wwn"),
+                    help_text=Help(
+                        "Using device name as service name isn't recommended. "
+                        "Device names aren't persistent and can change after a reboot or an update. "
+                        "In case WWN is not available, device name will be used."
+                    ),
                 ),
             ),
             "lvm": DictElement(
@@ -186,7 +167,7 @@ def _parameter_valuespec_diskstat() -> Dictionary:
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((50 * _MB, 100 * _MB)),
                     predictive=PredictiveLevels(
-                        reference_metric="read_throughput",
+                        reference_metric="disk_read_throughput",
                         prefill_abs_diff=DefaultValue((0.0, 0.0)),
                     ),
                     migrate=migrate_to_upper_integer_levels,
@@ -203,7 +184,7 @@ def _parameter_valuespec_diskstat() -> Dictionary:
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((50 * _MB, 100 * _MB)),
                     predictive=PredictiveLevels(
-                        reference_metric="write_throughput",
+                        reference_metric="disk_write_throughput",
                         prefill_abs_diff=DefaultValue((0.0, 0.0)),
                     ),
                     migrate=migrate_to_upper_integer_levels,
@@ -219,7 +200,7 @@ def _parameter_valuespec_diskstat() -> Dictionary:
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((0.8, 0.9)),
                     predictive=PredictiveLevels(
-                        reference_metric="utilization",
+                        reference_metric="disk_utilization",
                         prefill_abs_diff=DefaultValue((0.0, 0.0)),
                     ),
                     migrate=migrate_to_upper_float_levels,
@@ -233,7 +214,7 @@ def _parameter_valuespec_diskstat() -> Dictionary:
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((0.08, 0.16)),
                     predictive=PredictiveLevels(
-                        reference_metric="latency",
+                        reference_metric="disk_latency",
                         prefill_abs_diff=DefaultValue((0.0, 0.0)),
                     ),
                     migrate=migrate_to_upper_float_levels,
@@ -247,7 +228,7 @@ def _parameter_valuespec_diskstat() -> Dictionary:
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((0.08, 0.16)),
                     predictive=PredictiveLevels(
-                        reference_metric="read_latency",
+                        reference_metric="disk_read_latency",
                         prefill_abs_diff=DefaultValue((0.0, 0.0)),
                     ),
                     migrate=migrate_to_upper_float_levels,
@@ -261,7 +242,7 @@ def _parameter_valuespec_diskstat() -> Dictionary:
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((0.08, 0.16)),
                     predictive=PredictiveLevels(
-                        reference_metric="write_latency",
+                        reference_metric="disk_write_latency",
                         prefill_abs_diff=DefaultValue((0.0, 0.0)),
                     ),
                     migrate=migrate_to_upper_float_levels,
@@ -275,7 +256,7 @@ def _parameter_valuespec_diskstat() -> Dictionary:
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((0.03, 0.05)),
                     predictive=PredictiveLevels(
-                        reference_metric="average_read_wait",
+                        reference_metric="disk_average_read_wait",
                         prefill_abs_diff=DefaultValue((0.0, 0.0)),
                     ),
                     migrate=migrate_to_upper_float_levels,
@@ -289,7 +270,7 @@ def _parameter_valuespec_diskstat() -> Dictionary:
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((0.03, 0.05)),
                     predictive=PredictiveLevels(
-                        reference_metric="average_write_wait",
+                        reference_metric="disk_average_write_wait",
                         prefill_abs_diff=DefaultValue((0.0, 0.0)),
                     ),
                     migrate=migrate_to_upper_float_levels,
@@ -323,7 +304,7 @@ def _parameter_valuespec_diskstat() -> Dictionary:
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((400.0, 600.0)),
                     predictive=PredictiveLevels(
-                        reference_metric="read_ios",
+                        reference_metric="disk_read_ios",
                         prefill_abs_diff=DefaultValue((0.0, 0.0)),
                     ),
                     migrate=migrate_to_upper_float_levels,
@@ -337,7 +318,7 @@ def _parameter_valuespec_diskstat() -> Dictionary:
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((300.0, 400.0)),
                     predictive=PredictiveLevels(
-                        reference_metric="write_ios",
+                        reference_metric="disk_write_ios",
                         prefill_abs_diff=DefaultValue((0.0, 0.0)),
                     ),
                     migrate=migrate_to_upper_float_levels,

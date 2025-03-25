@@ -1,3 +1,4 @@
+@use "sass:color";
 @charset "UTF-8";
 // Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -92,15 +93,15 @@
     }
 
     &.OK {
-      background-color: lighten($color-state-success-background, 10%);
+      background-color: color.adjust($color-state-success-background, $lightness: 10%);
     }
 
     &.WARN {
-      background-color: lighten($color-state-1-background, 10%);
+      background-color: color.adjust($color-state-1-background, $lightness: 10%);
     }
 
     &.CRIT {
-      background-color: lighten($color-state-2-background, 10%);
+      background-color: color.adjust($color-state-2-background, $lightness: 10%);
     }
   }
 }

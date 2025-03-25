@@ -36,11 +36,11 @@
 
 from collections.abc import Callable, Mapping
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
 from cmk.plugins.lib.lgp import DETECT_LGP
+
+check_info = {}
 
 lgp_pdu_aux_types = {
     "0": "UNSPEC",
@@ -196,6 +196,7 @@ def parse_lgp_pdu_aux(string_table: StringTable) -> StringTable:
 
 
 check_info["lgp_pdu_aux"] = LegacyCheckDefinition(
+    name="lgp_pdu_aux",
     parse_function=parse_lgp_pdu_aux,
     detect=DETECT_LGP,
     fetch=SNMPTree(

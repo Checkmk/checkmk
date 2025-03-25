@@ -5,11 +5,11 @@
 
 from collections.abc import Sequence
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
 from cmk.plugins.lib.genua import DETECT_GENUA
+
+check_info = {}
 
 # Example Agent Output:
 # GENUA-MIB:
@@ -83,6 +83,7 @@ def parse_genua_pfstate(string_table: Sequence[StringTable]) -> Sequence[StringT
 
 
 check_info["genua_pfstate"] = LegacyCheckDefinition(
+    name="genua_pfstate",
     parse_function=parse_genua_pfstate,
     detect=DETECT_GENUA,
     fetch=[

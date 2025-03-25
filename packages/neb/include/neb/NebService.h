@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <functional>
+#include <iterator>
 #include <memory>
 #include <optional>
 #include <string>
@@ -23,14 +24,13 @@
 #include "neb/MacroExpander.h"
 #include "neb/NebContact.h"
 #include "neb/NebCore.h"
-#include "neb/NebHost.h"
 #include "neb/TimeperiodsCache.h"
 #include "neb/nagios.h"
 
 class NebService : public IService {
 public:
-    explicit NebService(const ::service &svc)
-        : service_{svc}, host_{NebHost{*svc.host_ptr}} {}
+    NebService(const ::service &svc, const NebCore &core)
+        : service_{svc}, core_{core} {}
 
     [[nodiscard]] const ::service &handle() const { return service_; }
 
@@ -38,7 +38,7 @@ public:
         return &service_;
     }
 
-    [[nodiscard]] const IHost &host() const override { return host_; }
+    [[nodiscard]] const IHost &host() const override;
 
     [[nodiscard]] bool hasContact(const IContact &contact) const override {
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
@@ -65,10 +65,9 @@ public:
         // empty assumes 24X7
         return tp.empty() || g_timeperiods_cache->inTimeperiod(tp);
     }
-    [[nodiscard]] std::string name() const override {
+    [[nodiscard]] std::string description() const override {
         return service_.description == nullptr ? "" : service_.description;
     }
-    [[nodiscard]] std::string description() const override { return name(); }
     [[nodiscard]] std::string host_name() const override {
         return service_.host_name == nullptr ? "" : service_.host_name;
     }
@@ -399,16 +398,16 @@ public:
         // TODO(sp) Avoid construction of temporary map
         auto labels =
             CustomAttributes(service_.custom_variables, AttributeKind::labels);
-        return std::all_of(
-            labels.cbegin(), labels.cend(),
-            [&pred](const std::pair<std::string, std::string> &label) {
-                return pred(Attribute{label.first, label.second});
+        return std::ranges::all_of(
+            labels, [&pred](const std::pair<std::string, std::string> &label) {
+                return pred(
+                    Attribute{.name = label.first, .value = label.second});
             });
     }
 
 private:
     const ::service &service_;
-    const NebHost host_;
+    const NebCore &core_;
 };
 
 #endif  // NebService_h

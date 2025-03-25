@@ -59,7 +59,7 @@ def main(argv=None):
     return 0
 
 
-def handle_request(args, sections):  # pylint: disable=too-many-branches
+def handle_request(args, sections):
     url_base = f"{args.proto}://{args.hostname}:{args.port}/api"
 
     for section in sections:
@@ -329,7 +329,7 @@ def parse_arguments(argv):
         "-m",
         "--sections",
         default=sections,
-        help="""Comma seperated list of data to query. Possible values: %s (default: all)"""
+        help="""Comma separated list of data to query. Possible values: %s (default: all)"""
         % ", ".join(sections),
     )
     parser.add_argument(

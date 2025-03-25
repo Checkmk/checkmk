@@ -7,7 +7,9 @@
 Metrics visible in the Checkmk user interface can also be retrieved via the
 REST-API.
 """
+
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api
 from cmk.gui.graphing._graph_images import graph_spec_from_request
 from cmk.gui.openapi.endpoints.metric import request_schemas, response_schemas
 from cmk.gui.openapi.endpoints.metric.common import (
@@ -50,6 +52,8 @@ def get_graph(params):
                 "data_range": reorganize_time_range(body["time_range"]),
                 "consolidation_function": body["reduce"],
             },
+            metrics_from_api,
+            graphs_from_api,
         )
 
     except MKUserError as e:

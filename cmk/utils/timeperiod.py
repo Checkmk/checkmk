@@ -3,21 +3,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from datetime import datetime
-from typing import TypeAlias, TypeGuard
+from pathlib import Path
+from typing import NewType, NotRequired, TypeAlias, TypedDict, TypeGuard
 
 from dateutil.tz import tzlocal
 
 import livestatus
 
-import cmk.utils.cleanup
-from cmk.utils.caching import cache_manager
-from cmk.utils.dateutils import Weekday
-
 import cmk.ccc.debug
 from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.i18n import _
+from cmk.ccc.store import load_from_mk_file
+
+import cmk.utils.cleanup
+from cmk.utils.caching import cache_manager
+from cmk.utils.dateutils import Weekday, weekday_ids
+from cmk.utils.paths import check_mk_config_dir
 
 __all__ = [
     "TimeperiodName",
@@ -26,36 +29,73 @@ __all__ = [
     "timeperiod_spec_alias",
 ]
 
-TimeperiodName: TypeAlias = str
+TimeperiodName = NewType("TimeperiodName", str)
+DayTimeFrame: TypeAlias = tuple[str, str]
 
-# TODO: TimeperiodSpec should really be a class or at least a NamedTuple! We
-# can easily transform back and forth for serialization.
-TimeperiodSpec = dict[str, str | list[str] | list[tuple[str, str]]]
-# class TimeperiodSpec(TypedDict):
-#    alias: str
-#    monday: NotRequired[list[tuple[str, str]]]
-#    tuesday: NotRequired[list[tuple[str, str]]]
-#    wednesday: NotRequired[list[tuple[str, str]]]
-#    thursday: NotRequired[list[tuple[str, str]]]
-#    friday: NotRequired[list[tuple[str, str]]]
-#    saturday: NotRequired[list[tuple[str, str]]]
-#    sunday: NotRequired[list[tuple[str, str]]]
-#    exclude: NotRequired[list[TimeperiodName]]
-#    # In addition to the above fields the data structures allows arbitrary
-#    # fields in the following format. This is not supported by typed dicts,
-#    # so we definetely should use something else during runtime.
-#    # %Y-%m-%d: list[tuple[str, str]]
 
-TimeperiodSpecs = dict[TimeperiodName, TimeperiodSpec]
+# TODO: in python 3.13 we may be able to add support for the
+# timeperiod exceptions - see https://peps.python.org/pep-0728/
+
+
+class TimeperiodSpec(TypedDict):
+    # In addition to the defined fields the data structures allows arbitrary
+    # fields in the following format (standing for exceptions). This is not
+    # supported by typed dicts, so we definitely should use something else
+    # during runtime. %Y-%m-%d: list[tuple[str, str]]
+    alias: str
+    monday: NotRequired[list[DayTimeFrame]]
+    tuesday: NotRequired[list[DayTimeFrame]]
+    wednesday: NotRequired[list[DayTimeFrame]]
+    thursday: NotRequired[list[DayTimeFrame]]
+    friday: NotRequired[list[DayTimeFrame]]
+    saturday: NotRequired[list[DayTimeFrame]]
+    sunday: NotRequired[list[DayTimeFrame]]
+    exclude: NotRequired[list[TimeperiodName]]
+
+
+TimeperiodSpecs = Mapping[TimeperiodName, TimeperiodSpec]
+
+
+def add_builtin_timeperiods(timeperiods: TimeperiodSpecs) -> TimeperiodSpecs:
+    return {**timeperiods, **_builtin_timeperiods()}
+
+
+def remove_builtin_timeperiods(timeperiods: TimeperiodSpecs) -> TimeperiodSpecs:
+    return {k: timeperiods[k] for k in timeperiods.keys() - _builtin_timeperiods().keys()}
+
+
+def is_builtin_timeperiod(name: TimeperiodName) -> bool:
+    return name in _builtin_timeperiods()
+
+
+def _builtin_timeperiods() -> TimeperiodSpecs:
+    return {
+        TimeperiodName("24X7"): TimeperiodSpec(
+            alias=_("Always"),
+            monday=[("00:00", "24:00")],
+            tuesday=[("00:00", "24:00")],
+            wednesday=[("00:00", "24:00")],
+            thursday=[("00:00", "24:00")],
+            friday=[("00:00", "24:00")],
+            saturday=[("00:00", "24:00")],
+            sunday=[("00:00", "24:00")],
+        )
+    }
+
+
+# NOTE: This is a variation of cmk.gui.watolib.timeperiods.load_timeperiods(). Can we somehow unify this?
+def load_timeperiods() -> TimeperiodSpecs:
+    return add_builtin_timeperiods(
+        load_from_mk_file(Path(check_mk_config_dir, "wato", "timeperiods.mk"), "timeperiods", {})
+    )
+
+
+def _is_time_range(obj: object) -> TypeGuard[DayTimeFrame]:
+    return isinstance(obj, tuple) and len(obj) == 2 and all(isinstance(item, str) for item in obj)
 
 
 def is_time_range_list(obj: object) -> TypeGuard[list[tuple[str, str]]]:
-    return isinstance(obj, list) and all(
-        isinstance(item, tuple)
-        and len(item) == 2
-        and all(isinstance(subitem, str) for subitem in item)
-        for item in obj
-    )
+    return isinstance(obj, list) and all(_is_time_range(item) for item in obj)
 
 
 # TODO: We should really parse our configuration file and use a
@@ -119,21 +159,6 @@ def cleanup_timeperiod_caches() -> None:
 
 
 cmk.utils.cleanup.register_cleanup(cleanup_timeperiod_caches)
-
-
-def builtin_timeperiods() -> TimeperiodSpecs:
-    return {
-        "24X7": {
-            "alias": _("Always"),
-            "monday": [("00:00", "24:00")],
-            "tuesday": [("00:00", "24:00")],
-            "wednesday": [("00:00", "24:00")],
-            "thursday": [("00:00", "24:00")],
-            "friday": [("00:00", "24:00")],
-            "saturday": [("00:00", "24:00")],
-            "sunday": [("00:00", "24:00")],
-        }
-    }
 
 
 def _is_time_in_timeperiod(
@@ -224,3 +249,69 @@ def _is_timeperiod_excluded_via_exception(
             return True
 
     return False
+
+
+def validate_timeperiod_exceptions(timeperiod: TimeperiodSpec) -> None:
+    """Validate the time period exceptions.
+
+    Note: in the timeperiod dict the exceptions are stored as additional fields besides
+    the fields defined in TimeperiodSpec. This is obviously not ideal and should be changed
+
+    """
+    for name, value in timeperiod.items():
+        if name in TimeperiodSpec.__annotations__:  # see docstring
+            continue
+
+        try:
+            datetime.strptime(name, "%Y-%m-%d")
+        except ValueError:
+            raise ValueError(f"Invalid time period field: {name}")
+
+        assert is_time_range_list(value)
+        for time_range in value:
+            _validate_time_range(time_range)
+
+
+def validate_day_time_ranges(timeperiod: TimeperiodSpec) -> None:
+    day_names = weekday_ids()
+    has_day_fields = False
+    for name in day_names:
+        if name not in timeperiod:
+            continue
+
+        has_day_fields = True
+        for time_range in timeperiod[name]:
+            _validate_time_range(time_range)
+
+    if not has_day_fields:
+        raise ValueError("Missing time periods")
+
+
+def _validate_time_range(time_range: DayTimeFrame) -> None:
+    _validate_time(time_range[0])
+    _validate_time(time_range[1])
+
+    start_hour, start_minute = map(int, time_range[0].split(":"))
+    end_hour, end_minute = map(int, time_range[1].split(":"))
+
+    if (end_hour * 60 + end_minute) < (start_hour * 60 + start_minute):
+        raise ValueError(f"Invalid time range: {time_range}")
+
+
+def _validate_time(value: str) -> None:
+    time_components = value.split(":")
+    if len(time_components) != 2:
+        raise ValueError(f"Invalid time: {value}")
+
+    if time_components[0] == "24" and time_components[1] == "00":
+        return
+
+    try:
+        hour = int(time_components[0])
+        minute = int(time_components[1])
+
+    except ValueError:
+        raise ValueError(f"Invalid time: {value}")
+
+    if hour < 0 or hour > 23 or minute < 0 or minute > 59:
+        raise ValueError(f"Invalid time: {value}")

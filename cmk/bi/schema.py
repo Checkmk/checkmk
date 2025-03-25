@@ -10,11 +10,6 @@ from marshmallow import Schema as marshmallow_Schema
 class Schema(marshmallow_Schema):
     schema_example: dict[str, Any] | None = None
 
-    class Meta:
-        # Even if we hard-wire the dict below, we still need to set this
-        # property to get a stably ordered spec-file generated.
-        ordered = True
-
     @property
     def dict_class(self) -> type:
         # Having an OrderedDict breaks bi, having an OrderedDict with a __repr__() which doesn't

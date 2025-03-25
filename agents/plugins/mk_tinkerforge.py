@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.4.0b1"
+__version__ = "2.5.0b1"
 
 ###################################################
 # plugin to retrieve data from tinkerforge devices.
@@ -40,13 +40,12 @@ __version__ = "2.4.0b1"
 #  implemented
 
 # Don't have tinkerforge module during tests. So disable those checks
-# pylint: disable=import-error
 
 import hashlib
 import os
 import sys
 import time
-from optparse import OptionParser  # pylint: disable=deprecated-module
+from optparse import OptionParser
 from urllib.request import urlopen
 
 
@@ -75,7 +74,7 @@ def install():
     #   `curl -s "https://download.tinkerforge.com/[new-version].zip | sha256sum`
     download_digest = "e735e0e53ad56e2c2919cf412f3ec28ec0997919eb556b20c27519a57fb7bad0"
 
-    response = urlopen(url)  # nosec B310 # BNS:28af27 # pylint: disable=consider-using-with
+    response = urlopen(url)  # nosec B310 # BNS:28af27
     buf = BytesIO(response.read())
     check_digest(buf, download_digest)
 
@@ -364,7 +363,13 @@ def main():
 
         conn.register_callback(
             IPConnection.CALLBACK_ENUMERATE,
-            lambda uid, connected_uid, position, hardware_version, firmware_version, device_identifier, enumeration_type: enumerate_callback(
+            lambda uid,
+            connected_uid,
+            position,
+            hardware_version,
+            firmware_version,
+            device_identifier,
+            enumeration_type: enumerate_callback(
                 conn,
                 device_handlers,
                 settings,

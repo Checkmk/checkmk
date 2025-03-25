@@ -5,16 +5,21 @@
 
 import tarfile
 import uuid
-from collections.abc import Collection, Sequence
-from functools import partial
+from collections.abc import Collection, Iterator, Sequence
 from pathlib import Path
 
+from pydantic import BaseModel
+
 from livestatus import SiteId
+
+import cmk.ccc.version as cmk_version
+from cmk.ccc.site import omd_site
 
 import cmk.utils.paths
 from cmk.utils.diagnostics import (
     CheckmkFileInfo,
     CheckmkFileSensitivity,
+    CheckmkFilesMap,
     DiagnosticsParameters,
     get_checkmk_config_files_map,
     get_checkmk_core_files_map,
@@ -23,6 +28,7 @@ from cmk.utils.diagnostics import (
     get_checkmk_file_sensitivity_for_humans,
     get_checkmk_licensing_files_map,
     get_checkmk_log_files_map,
+    OPT_BI_RUNTIME_DATA,
     OPT_CHECKMK_CONFIG_FILES,
     OPT_CHECKMK_CRASH_REPORTS,
     OPT_CHECKMK_LOG_FILES,
@@ -46,11 +52,12 @@ from cmk.gui.background_job import (
     BackgroundJobRegistry,
     BackgroundProcessInterface,
     InitialStatusArgs,
+    JobTarget,
 )
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
-from cmk.gui.htmllib.html import html
+from cmk.gui.htmllib.html import html, HTMLGenerator
 from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -64,6 +71,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.site_config import get_site_config, site_is_local
+from cmk.gui.theme import make_theme
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.user_sites import get_activation_site_choices
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -76,15 +84,13 @@ from cmk.gui.valuespec import (
     DualListChoice,
     FixedValue,
     Integer,
+    MonitoredHostname,
     ValueSpec,
 )
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import create_diagnostics_dump
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
-
-import cmk.ccc.version as cmk_version
-from cmk.ccc.site import omd_site
 
 _CHECKMK_FILES_NOTE = _(
     "<br>Note: Some files may contain highly sensitive data like"
@@ -135,6 +141,7 @@ class ModeDiagnostics(WatoMode):
                 "general": params["general"],
                 "opt_info": params["opt_info"],
                 "comp_specific": params["comp_specific"],
+                "checkmk_server_host": params["checkmk_server_host"],
             }
         return None
 
@@ -182,15 +189,21 @@ class ModeDiagnostics(WatoMode):
 
         params = self._diagnostics_parameters
         assert params is not None
-        self._job.start(
-            partial(self._job.do_execute, params),
-            InitialStatusArgs(
-                title=self._job.gui_title(),
-                lock_wato=False,
-                stoppable=False,
-                user=str(user.id) if user.id else None,
-            ),
-        )
+        if (
+            result := self._job.start(
+                JobTarget(
+                    callable=diagnostics_dump_entry_point,
+                    args=DiagnosticsDumpArgs(params=params),
+                ),
+                InitialStatusArgs(
+                    title=self._job.gui_title(),
+                    lock_wato=False,
+                    stoppable=False,
+                    user=str(user.id) if user.id else None,
+                ),
+            )
+        ).is_error():
+            raise result.error
 
         return redirect(self._job.detail_url())
 
@@ -271,11 +284,11 @@ class ModeDiagnostics(WatoMode):
                                         "(see inline help)."
                                     ),
                                     help=_(
-                                        "The timeout in seconds when gathering the Support "
-                                        "Diagnostics Data. The default is 110 seconds. When "
+                                        "The timeout in seconds when gathering the support "
+                                        "diagnostics data. The default is 110 seconds. When "
                                         "very large files are collected, it's also possible to "
-                                        "call the support diagnostics from command line using "
-                                        "the command 'cmk --create-diagnostics-dump' with "
+                                        "call the support diagnostics from the command line "
+                                        "using the command 'cmk --create-diagnostics-dump' with "
                                         "appropriate parameters in the context of the affected "
                                         "site. See the %s."
                                     )
@@ -290,6 +303,19 @@ class ModeDiagnostics(WatoMode):
                                 ),
                             ),
                         ],
+                    ),
+                ),
+                (
+                    "checkmk_server_host",
+                    MonitoredHostname(
+                        title=_("Checkmk server host"),
+                        help=_(
+                            "Some of the diagnostics data needs to be collected from the host "
+                            "that represents the Checkmk server of the related site. "
+                            "In case your Checkmk server is not monitored by itself, but from "
+                            "a different site (which is actually recommended), please enter "
+                            "the name of that host here."
+                        ),
                     ),
                 ),
                 (
@@ -309,6 +335,15 @@ class ModeDiagnostics(WatoMode):
                     Dictionary(
                         title=_("Optional general information"),
                         elements=self._get_optional_information_elements(),
+                        default_keys=[
+                            OPT_LOCAL_FILES,
+                            OPT_OMD_CONFIG,
+                            OPT_CHECKMK_OVERVIEW,
+                            OPT_CHECKMK_CRASH_REPORTS,
+                            OPT_CHECKMK_LOG_FILES,
+                            OPT_CHECKMK_CONFIG_FILES,
+                            OPT_PERFORMANCE_GRAPHS,
+                        ],
                     ),
                 ),
                 (
@@ -316,6 +351,11 @@ class ModeDiagnostics(WatoMode):
                     Dictionary(
                         title=_("Component specific information"),
                         elements=self._get_component_specific_elements(),
+                        default_keys=[
+                            OPT_COMP_BUSINESS_INTELLIGENCE,
+                            OPT_COMP_CMC,
+                            OPT_COMP_LICENSING,
+                        ],
                     ),
                 ),
             ],
@@ -462,7 +502,8 @@ class ModeDiagnostics(WatoMode):
                     % _CHECKMK_FILES_NOTE,
                     elements=self._get_component_specific_checkmk_files_elements(
                         OPT_COMP_BUSINESS_INTELLIGENCE,
-                    ),
+                    )
+                    + self._get_bi_runtime_data(),
                     default_keys=["config_files"],
                 ),
             ),
@@ -502,69 +543,60 @@ class ModeDiagnostics(WatoMode):
             )
         return elements
 
+    def _get_bi_runtime_data(self) -> list[tuple[str, ValueSpec]]:
+        return [
+            (
+                OPT_BI_RUNTIME_DATA,
+                FixedValue(
+                    value=True,
+                    totext="",
+                    title=_("BI runtime data"),
+                    help=_(
+                        "Cached data from Business Intelligence. "
+                        "Contains states, downtimes, acknowledgements and service periods "
+                        "for all hosts/services included in a BI aggregation."
+                    ),
+                ),
+            )
+        ]
+
+    def _get_cs_elements_for(
+        self, component: str, element_id: str, element_title: str, files_map: CheckmkFilesMap
+    ) -> Iterator[tuple[str, ValueSpec]]:
+        files = [
+            (f, fi)
+            for f in files_map
+            for fi in [get_checkmk_file_info(f, component)]
+            if component in fi.components
+        ]
+
+        if not files:
+            return
+
+        yield (
+            element_id,
+            self._get_component_specific_checkmk_files_choices(element_title, files),
+        )
+
     def _get_component_specific_checkmk_files_elements(
         self, component: str
     ) -> list[tuple[str, ValueSpec]]:
-        elements = []
-        config_files = [
-            (f, fi)
-            for f in self._checkmk_config_files_map
-            for fi in [get_checkmk_file_info(f, component)]
-            if component in fi.components
-        ]
-        if config_files:
-            elements.append(
-                (
-                    "config_files",
-                    self._get_component_specific_checkmk_files_choices(
-                        _("Configuration files"), config_files
-                    ),
-                )
-            )
+        elements: list[tuple[str, ValueSpec]] = []
+        for filetype in [
+            ("config_files", _("Configuration files"), self._checkmk_config_files_map),
+            ("core_files", _("Core files"), self._checkmk_core_files_map),
+            ("licensing_files", _("Licensing files"), self._checkmk_licensing_files_map),
+            ("log_files", _("Log files"), self._checkmk_log_files_map),
+        ]:
+            element_id, element_title, files_map = filetype
+            for cs_element in self._get_cs_elements_for(
+                component,
+                element_id,
+                element_title,
+                files_map,
+            ):
+                elements.append(cs_element)
 
-        core_files = [
-            (f, fi)
-            for f in self._checkmk_core_files_map
-            for fi in [get_checkmk_file_info(f, component)]
-            if component in fi.components
-        ]
-        if core_files:
-            elements.append(
-                (
-                    "core_files",
-                    self._get_component_specific_checkmk_files_choices(_("Core files"), core_files),
-                )
-            )
-
-        licensing_files = [
-            (f, fi)
-            for f in self._checkmk_licensing_files_map
-            for fi in [get_checkmk_file_info(f, component)]
-            if component in fi.components
-        ]
-        if licensing_files:
-            elements.append(
-                (
-                    "licensing_files",
-                    self._get_component_specific_checkmk_files_choices(
-                        _("Licensing files"), licensing_files
-                    ),
-                )
-            )
-
-        log_files = [
-            (f, fi)
-            for f in self._checkmk_log_files_map
-            for fi in [get_checkmk_file_info(f, component)]
-            if component in fi.components
-        ]
-        if log_files:
-            elements.append(
-                (
-                    "log_files",
-                    self._get_component_specific_checkmk_files_choices(_("Log files"), log_files),
-                )
-            )
         return elements
 
     def _get_component_specific_checkmk_files_choices(
@@ -650,6 +682,16 @@ class ModeDiagnostics(WatoMode):
         ]
 
 
+class DiagnosticsDumpArgs(BaseModel, frozen=True):
+    params: DiagnosticsParameters
+
+
+def diagnostics_dump_entry_point(
+    job_interface: BackgroundProcessInterface, args: DiagnosticsDumpArgs
+) -> None:
+    DiagnosticsDumpBackgroundJob().do_execute(args.params, job_interface)
+
+
 class DiagnosticsDumpBackgroundJob(BackgroundJob):
     job_prefix = "diagnostics_dump"
 
@@ -728,10 +770,17 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
                 ],
                 filename="download_diagnostics_dump.py",
             )
-            button = html.render_icon_button(download_url, _("Download"), "diagnostics_dump_file")
 
             job_interface.send_progress_update(_("Dump file: %s") % tarfile_path)
-            job_interface.send_result_message(_("%s Retrieve created dump file") % button)
+            job_interface.send_result_message(
+                _("%s Retrieve created dump file")
+                % HTMLGenerator.render_icon_button(
+                    url=download_url,
+                    title=_("Download"),
+                    icon="diagnostics_dump_file",
+                    theme=make_theme(validate_choices=False),
+                )
+            )
 
         else:
             job_interface.send_result_message(_("Creating dump file failed"))
@@ -765,6 +814,7 @@ def _merge_results(
 
 
 def _get_tarfile_from_remotesite(site: SiteId, tarfile_name: str, timeout: int) -> str:
+    cmk.utils.paths.diagnostics_dir.mkdir(parents=True, exist_ok=True)
     tarfile_localpath = _create_file_path()
     with open(tarfile_localpath, "wb") as file:
         file.write(_get_diagnostics_dump_file(site, tarfile_name, timeout))
@@ -809,7 +859,7 @@ class PageDownloadDiagnosticsDump(Page):
         response.set_data(file_content)
 
 
-class AutomationDiagnosticsDumpGetFile(AutomationCommand):
+class AutomationDiagnosticsDumpGetFile(AutomationCommand[str]):
     def command_name(self) -> str:
         return "diagnostics-dump-get-file"
 

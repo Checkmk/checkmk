@@ -10,14 +10,15 @@ a host.
 You can find an introduction to services including service discovery in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_services.html).
 """
+
 import enum
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from typing import Any, assert_never
 from urllib.parse import urlparse
 
 from cmk.utils.everythingtype import EVERYTHING
 
-from cmk.checkengine.discovery import CheckPreviewEntry, DiscoverySettings
+from cmk.checkengine.discovery import DiscoverySettings
 
 from cmk.gui import fields as gui_fields
 from cmk.gui.background_job import BackgroundStatusSnapshot
@@ -25,21 +26,14 @@ from cmk.gui.config import active_config
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import user
+from cmk.gui.openapi.endpoints.background_job import JobID
 from cmk.gui.openapi.endpoints.host_config.request_schemas import EXISTING_HOST_NAME
-from cmk.gui.openapi.endpoints.service_discovery.response_schemas import (
-    DiscoveryBackgroundJobStatusObject,
-)
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_schemas
-from cmk.gui.openapi.restful_objects.constructors import (
-    collection_href,
-    domain_object,
-    link_rel,
-    object_property,
-)
+from cmk.gui.openapi.restful_objects.constructors import domain_object, link_rel, object_property
 from cmk.gui.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject, LinkType
-from cmk.gui.openapi.utils import problem, ProblemException, serve_json
+from cmk.gui.openapi.utils import EXT, problem, ProblemException, serve_json
 from cmk.gui.site_config import site_is_local
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.automations import (
@@ -47,7 +41,6 @@ from cmk.gui.watolib.automations import (
     MKAutomationException,
 )
 from cmk.gui.watolib.bulk_discovery import (
-    bulk_discovery_job_status,
     BulkDiscoveryBackgroundJob,
     prepare_hosts_for_discovery,
     start_bulk_discovery,
@@ -56,8 +49,8 @@ from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.services import (
     Discovery,
     DiscoveryAction,
-    DiscoveryOptions,
     DiscoveryResult,
+    DiscoveryState,
     get_check_table,
     has_discovery_action_specific_permissions,
     perform_fix_all,
@@ -67,6 +60,8 @@ from cmk.gui.watolib.services import (
 )
 
 from cmk import fields
+
+from ._response_schemas import ServiceDiscoveryResultSchema, ServiceDiscoveryRunSchema
 
 DISCOVERY_PERMISSIONS = permissions.AllPerm(
     [
@@ -85,21 +80,21 @@ DISCOVERY_PERMISSIONS = permissions.AllPerm(
 )
 
 SERVICE_DISCOVERY_PHASES = {
-    "undecided": "new",
-    "vanished": "vanished",
-    "monitored": "unchanged",
-    "changed": "changed",
-    "ignored": "ignored",
-    "removed": "removed",
-    "manual": "manual",
-    "active": "active",
-    "custom": "custom",
-    "clustered_monitored": "clustered_old",
-    "clustered_undecided": "clustered_new",
-    "clustered_vanished": "clustered_vanished",
-    "clustered_ignored": "clustered_ignored",
-    "active_ignored": "active_ignored",
-    "custom_ignored": "custom_ignored",
+    "undecided": DiscoveryState.UNDECIDED,
+    "vanished": DiscoveryState.VANISHED,
+    "monitored": DiscoveryState.MONITORED,
+    "changed": DiscoveryState.CHANGED,
+    "ignored": DiscoveryState.IGNORED,
+    "removed": DiscoveryState.REMOVED,
+    "manual": DiscoveryState.MANUAL,
+    "active": DiscoveryState.ACTIVE,
+    "ignored_active": DiscoveryState.ACTIVE_IGNORED,
+    "custom": DiscoveryState.CUSTOM,
+    "ignored_custom": DiscoveryState.CUSTOM_IGNORED,
+    "clustered_monitored": DiscoveryState.CLUSTERED_OLD,
+    "clustered_undecided": DiscoveryState.CLUSTERED_NEW,
+    "clustered_vanished": DiscoveryState.CLUSTERED_VANISHED,
+    "clustered_ignored": DiscoveryState.CLUSTERED_IGNORED,
     "legacy": "legacy",
     "legacy_ignored": "legacy_ignored",
 }
@@ -158,7 +153,7 @@ DISCOVERY_ACTION = {
     constructors.object_href("service_discovery", "{host_name}"),
     "cmk/list",
     method="get",
-    response_schema=response_schemas.DomainObject,
+    response_schema=ServiceDiscoveryResultSchema,
     tag_group="Setup",
     path_params=[
         {
@@ -178,46 +173,34 @@ def show_service_discovery_result(params: Mapping[str, Any]) -> Response:
     try:
         discovery_result = get_check_table(host, DiscoveryAction.NONE, raise_errors=False)
     except MKAutomationException:
+        pass
+    else:
+        return serve_json(serialize_discovery_result(host, discovery_result))
+
+    try:
+        snapshot = _job_snapshot(host)
+    except MKAutomationException:
         return problem(
             status=400,
             title="Error running automation",
-            detail="Please run `Show the last service discovery background job on a host` in order to get details about the error",
+            detail="Could not retrieve the service discovery result",
         )
-
-    return serve_json(serialize_discovery_result(host, discovery_result))
-
-
-@Endpoint(
-    collection_href("service", "services"),
-    ".../collection",
-    method="get",
-    response_schema=response_schemas.DomainObject,
-    tag_group="Setup",
-    query_params=[
-        {
-            "host_name": gui_fields.HostField(
-                description="The host of the discovered services.",
-                example="example.com",
-                required=True,
-            ),
-            "discovery_phase": fields.String(
-                description="The discovery phase of the services.",
-                enum=sorted(SERVICE_DISCOVERY_PHASES.keys()),
-                example="monitored",
-                required=True,
-            ),
-        }
-    ],
-    deprecated_urls={"/domain-types/service/collections/services": 14537},
-)
-def show_services(params: Mapping[str, Any]) -> Response:
-    """Show all services of specific phase"""
-    host = Host.load_host(params["host_name"])
-    discovery_result = get_check_table(host, DiscoveryAction.NONE, raise_errors=False)
-    return _serve_services(
-        host,
-        discovery_result.check_table,
-        [params["discovery_phase"]],
+    logs = snapshot.status.loginfo
+    return problem(
+        status=400,
+        title="Error running automation",
+        detail="Could not retrieve the service discovery result",
+        ext=EXT(
+            {
+                "job_id": snapshot.job_id,
+                "state": snapshot.status.state,
+                "logs": {
+                    "result": logs["JobResult"],
+                    "progress": logs["JobProgressUpdate"],
+                    "exception": logs["JobException"],
+                },
+            }
+        ),
     )
 
 
@@ -313,7 +296,7 @@ def _update_single_service_phase(
     method="get",
     tag_group="Setup",
     path_params=[HOST_NAME],
-    response_schema=response_schemas.DomainObject,
+    response_schema=ServiceDiscoveryRunSchema,
 )
 def show_service_discovery_run(params: Mapping[str, Any]) -> Response:
     """Show the last service discovery background job on a host"""
@@ -374,16 +357,15 @@ def service_discovery_run_wait_for_completion(params: Mapping[str, Any]) -> Resp
     return Response(status=204)
 
 
-class DiscoverServicesDeprecated(BaseSchema):
-    mode = _discovery_mode(default_mode="fix_all")
-
-
 class DiscoverServices(BaseSchema):
     host_name = gui_fields.HostField(
         description="The host of the service which shall be updated.",
         example="example.com",
     )
     mode = _discovery_mode(default_mode="fix_all")
+
+
+_DISCOVERY_RUNNING_MSG = "A service discovery background job is currently running"
 
 
 @Endpoint(
@@ -394,7 +376,7 @@ class DiscoverServices(BaseSchema):
     status_descriptions={
         303: "The service discovery background job has been initialized. Redirecting to the "
         "'Wait for service discovery completion' endpoint.",
-        409: "A service discovery background job is currently running",
+        409: _DISCOVERY_RUNNING_MSG,
     },
     additional_status_codes=[303, 409],
     request_schema=DiscoverServices,
@@ -410,39 +392,14 @@ def execute_service_discovery(params: Mapping[str, Any]) -> Response:
     return _execute_service_discovery(discovery_action, host)
 
 
-@Endpoint(
-    constructors.object_action_href("host", "{host_name}", "discover_services"),
-    ".../update",
-    method="post",
-    tag_group="Setup",
-    status_descriptions={
-        303: "The service discovery background job has been initialized. Redirecting to the "
-        "'Wait for service discovery completion' endpoint.",
-        404: "Host could not be found",
-        409: "A service discovery background job is currently running",
-    },
-    additional_status_codes=[303, 409],
-    path_params=[HOST_NAME],
-    request_schema=DiscoverServicesDeprecated,
-    response_schema=response_schemas.DomainObject,
-    permissions_required=DISCOVERY_PERMISSIONS,
-    deprecated_urls={
-        "/objects/host/{host_name}/actions/discover_services/invoke": 14538,
-    },
-)
-def execute(params: Mapping[str, Any]) -> Response:
-    """Execute a service discovery on a host"""
-    user.need_permission("wato.edit")
-    host = Host.load_host(params["host_name"])
-    body = params["body"]
-    discovery_action = APIDiscoveryAction(body["mode"])
-    return _execute_service_discovery(discovery_action, host)
-
-
 def _execute_service_discovery(api_discovery_action: APIDiscoveryAction, host: Host) -> Response:
     job_snapshot = _job_snapshot(host)
     if job_snapshot.is_active:
-        return Response(status=409)
+        return problem(
+            status=409,
+            title="Conflict",
+            detail=_DISCOVERY_RUNNING_MSG,
+        )
 
     discovery_action = DISCOVERY_ACTION[api_discovery_action.value]
     if not has_discovery_action_specific_permissions(discovery_action, None):
@@ -514,13 +471,6 @@ def _discovery_wait_for_completion_link(host_name: str) -> LinkType:
         "cmk/wait-for-completion",
         parameters={"host_name": host_name},
     )
-
-
-def _in_phase(phase_to_check: str, discovery_phases: list[str]) -> bool:
-    for phase in list(discovery_phases):
-        if SERVICE_DISCOVERY_PHASES[phase] == phase_to_check:
-            return True
-    return False
 
 
 def _lookup_phase_name(internal_phase_name: str) -> str:
@@ -634,6 +584,12 @@ class BulkDiscoveryOptions(BaseSchema):
         example=True,
         load_default=False,
     )
+    update_service_parameters = fields.Boolean(
+        required=False,
+        description="The option whether to update discovered service parameters or not.",
+        example=True,
+        load_default=False,
+    )
     update_host_labels = fields.Boolean(
         required=False,
         description="The option whether to update host labels or not.",
@@ -653,7 +609,13 @@ class BulkDiscovery(BaseSchema):
         BulkDiscoveryOptions,
         description="The discovery options for the bulk discovery",
         required=True,
-        example={"monitor_undecided": True, "remove_vanished": True, "update_service_labels": True},
+        example={
+            "monitor_undecided_services": True,
+            "remove_vanished_services": True,
+            "update_service_labels": True,
+            "update_service_parameters": True,
+            "update_host_labels": True,
+        },
     )
     do_full_scan = fields.Boolean(
         required=False,
@@ -679,20 +641,24 @@ class BulkDiscovery(BaseSchema):
     constructors.domain_type_action_href("discovery_run", "bulk-discovery-start"),
     "cmk/activate",
     method="post",
-    status_descriptions={
-        409: "A bulk discovery job is already active",
-    },
-    additional_status_codes=[409],
+    additional_status_codes=[303],
     request_schema=BulkDiscovery,
-    response_schema=DiscoveryBackgroundJobStatusObject,
+    output_empty=True,
+    status_descriptions={
+        303: "The bulk discovery job has been started in the background."
+        "Redirecting to the 'Get background job status snapshot' endpoint."
+    },
 )
 def execute_bulk_discovery(params: Mapping[str, Any]) -> Response:
-    """Start a bulk discovery job"""
+    """Start a bulk discovery job
+
+    This endpoint will start a bulk discovery background job. Only one bulk discovery job can run
+    at a time. An active bulk discovery job will block other bulk discovery jobs from running until
+    the active job is finished.
+    """
     # TODO: documentation should be adjusted; initial fix for resolving tests
     body = params["body"]
     job = BulkDiscoveryBackgroundJob()
-    if job.is_active():
-        return Response(status=409)
 
     options = body["options"]
     discovery_settings = DiscoverySettings(
@@ -700,43 +666,29 @@ def execute_bulk_discovery(params: Mapping[str, Any]) -> Response:
         add_new_services=options["monitor_undecided_services"],
         remove_vanished_services=options["remove_vanished_services"],
         update_changed_service_labels=options["update_service_labels"],
-        update_changed_service_parameters=False,
+        update_changed_service_parameters=options["update_service_parameters"],
     )
     hosts_to_discover = prepare_hosts_for_discovery(body["hostnames"])
-    start_bulk_discovery(
-        job,
-        hosts_to_discover,
-        discovery_settings,
-        body["do_full_scan"],
-        body["ignore_errors"],
-        body["bulk_size"],
-    )
-
-    return _serve_background_job(job)
-
-
-@Endpoint(
-    constructors.object_href("discovery_run", "{job_id}"),
-    "cmk/show",
-    method="get",
-    path_params=[JOB_ID],
-    status_descriptions={
-        404: "There is no running background job with this job_id.",
-    },
-    response_schema=DiscoveryBackgroundJobStatusObject,
-)
-def show_bulk_discovery_status(params: Mapping[str, Any]) -> Response:
-    """Show the status of a bulk discovery job"""
-
-    job_id = params["job_id"]
-    job = BulkDiscoveryBackgroundJob()
-    if job.get_job_id() != job_id:
-        raise ProblemException(
-            status=404,
-            title="The requested background job_id was not found",
-            detail=f"Could not find a background job with id {job_id}.",
+    if (
+        result := start_bulk_discovery(
+            job,
+            hosts_to_discover,
+            discovery_settings,
+            body["do_full_scan"],
+            body["ignore_errors"],
+            body["bulk_size"],
         )
-    return _serve_background_job(job)
+    ).is_error():
+        raise result.error
+
+    background_job_status_link = constructors.link_endpoint(
+        module_name="cmk.gui.openapi.endpoints.background_job",
+        rel="cmk/show",
+        parameters={JobID.field_name: job.get_job_id()},
+    )
+    response = Response(status=303)
+    response.location = urlparse(background_job_status_link["href"]).path
+    return response
 
 
 def _job_snapshot(host: Host) -> BackgroundStatusSnapshot:
@@ -747,117 +699,10 @@ def _job_snapshot(host: Host) -> BackgroundStatusSnapshot:
     return fetch_service_discovery_background_job_status(host.site_id(), host.name())
 
 
-def _discovery_options(action_mode: DiscoveryAction) -> DiscoveryOptions:
-    return DiscoveryOptions(
-        action=action_mode,
-        show_checkboxes=False,
-        show_parameters=False,
-        show_discovered_labels=False,
-        show_plugin_names=False,
-        ignore_errors=True,
-    )
-
-
-def _serve_background_job(job: BulkDiscoveryBackgroundJob) -> Response:
-    job_id = job.get_job_id()
-    status_details = bulk_discovery_job_status(job)
-    return serve_json(
-        constructors.domain_object(
-            domain_type="discovery_run",
-            identifier=job_id,
-            title=f"Background job {job_id} {'is active' if status_details['is_active'] else 'is finished'}",
-            extensions={
-                "active": status_details["is_active"],
-                "state": status_details["job_state"],
-                "logs": status_details["logs"],
-            },
-            deletable=False,
-            editable=False,
-        )
-    )
-
-
-def _serve_services(
-    host: Host,
-    discovered_services: Sequence[CheckPreviewEntry],
-    discovery_phases: list[str],
-) -> Response:
-    members = {}
-    host_name = host.name()
-    for entry in discovered_services:
-        if _in_phase(entry.check_source, discovery_phases):
-            service_phase = _lookup_phase_name(entry.check_source)
-            members[f"{entry.check_plugin_name}-{entry.item}"] = object_property(
-                name=entry.description,
-                title=f"The service is currently {service_phase!r}",
-                value=service_phase,
-                prop_format="string",
-                linkable=False,
-                extensions={
-                    "host_name": host_name,
-                    "check_plugin_name": entry.check_plugin_name,
-                    "service_name": entry.description,
-                    "service_item": entry.item,
-                    "service_phase": service_phase,
-                },
-                base="",
-                links=[
-                    link_rel(
-                        rel="cmk/service.move-monitored",
-                        href=update_service_phase.path.format(host_name=host_name),
-                        body_params={
-                            "target_phase": "monitored",
-                            "check_type": entry.check_plugin_name,
-                            "service_item": entry.item,
-                        },
-                        method="put",
-                        title="Move the service to monitored",
-                    ),
-                    link_rel(
-                        rel="cmk/service.move-undecided",
-                        href=update_service_phase.path.format(host_name=host_name),
-                        body_params={
-                            "target_phase": "undecided",
-                            "check_type": entry.check_plugin_name,
-                            "service_item": entry.item,
-                        },
-                        method="put",
-                        title="Move the service to undecided",
-                    ),
-                    link_rel(
-                        rel="cmk/service.move-ignored",
-                        href=update_service_phase.path.format(host_name=host_name),
-                        body_params={
-                            "target_phase": "ignored",
-                            "check_type": entry.check_plugin_name,
-                            "service_item": entry.item,
-                        },
-                        method="put",
-                        title="Move the service to ignored",
-                    ),
-                ],
-            )
-
-    return serve_json(
-        domain_object(
-            domain_type="service_discovery",
-            identifier=f"{host_name}-services-wato",
-            title="Services discovery",
-            members=members,
-            editable=False,
-            deletable=False,
-            extensions={},
-        )
-    )
-
-
 def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(show_service_discovery_result)
-    endpoint_registry.register(show_services)
     endpoint_registry.register(update_service_phase)
     endpoint_registry.register(show_service_discovery_run)
     endpoint_registry.register(service_discovery_run_wait_for_completion)
     endpoint_registry.register(execute_service_discovery)
-    endpoint_registry.register(execute)
     endpoint_registry.register(execute_bulk_discovery)
-    endpoint_registry.register(show_bulk_discovery_status)

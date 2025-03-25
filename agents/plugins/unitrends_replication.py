@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.4.0b1"
+__version__ = "2.5.0b1"
 
 import sys
 import time
@@ -24,7 +24,7 @@ url = (
     % (start, end, dpu)
 )
 
-xml = urlopen(url)  # nosec B310 # BNS:28af27 # pylint: disable=consider-using-with
+xml = urlopen(url)  # nosec B310 # BNS:28af27
 
 
 def _get_text(node: NodeList[minidom.Element]) -> str:

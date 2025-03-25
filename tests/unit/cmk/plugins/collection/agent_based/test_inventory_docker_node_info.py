@@ -6,7 +6,7 @@
 
 import pytest
 
-from tests.unit.conftest import FixRegister
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 
 from cmk.agent_based.v2 import Attributes, InventoryResult, TableRow
 from cmk.plugins.collection.agent_based.docker_node_info import inventory_docker_node_info
@@ -156,7 +156,7 @@ from .utils_inventory import sort_inventory_result
     ],
 )
 def test_inv_docker_node_info(
-    fix_register: FixRegister, parsed: Section, expected: InventoryResult
+    agent_based_plugins: AgentBasedPlugins, parsed: Section, expected: InventoryResult
 ) -> None:
     assert sort_inventory_result(inventory_docker_node_info(parsed)) == sort_inventory_result(
         expected

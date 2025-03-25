@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from collections.abc import Mapping, Sequence
 
@@ -11,15 +10,7 @@ import pytest
 
 from tests.unit.cmk.plugins.vsphere.agent_based.esx_vsphere_vm_util import esx_vm_section
 
-from cmk.agent_based.v2 import (
-    CheckResult,
-    DiscoveryResult,
-    IgnoreResultsError,
-    Metric,
-    Result,
-    Service,
-    State,
-)
+from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Metric, Result, Service, State
 from cmk.plugins.lib import esx_vsphere
 from cmk.plugins.vsphere.agent_based import esx_vsphere_vm, esx_vsphere_vm_mem_usage
 
@@ -73,11 +64,6 @@ def test_parse_esx_vsphere_memory(
     ["section", "expected_result"],
     [
         pytest.param(
-            None,
-            [],
-            id="no data",
-        ),
-        pytest.param(
             esx_vm_section(
                 memory=None,
                 power_state="poweredOff",
@@ -103,7 +89,9 @@ def test_parse_esx_vsphere_memory(
         ),
     ],
 )
-def test_discovery_mem_usage(section: esx_vsphere.ESXVm, expected_result: DiscoveryResult) -> None:
+def test_discovery_mem_usage(
+    section: esx_vsphere.SectionESXVm, expected_result: DiscoveryResult
+) -> None:
     assert list(esx_vsphere_vm_mem_usage.discovery_mem_usage(section)) == expected_result
 
 
@@ -170,7 +158,9 @@ def test_discovery_mem_usage(section: esx_vsphere.ESXVm, expected_result: Discov
         ),
     ],
 )
-def test_check_memory_usage(section: esx_vsphere.ESXVm, expected_result: CheckResult) -> None:
+def test_check_memory_usage(
+    section: esx_vsphere.SectionESXVm, expected_result: CheckResult
+) -> None:
     assert (
         list(
             esx_vsphere_vm_mem_usage.check_mem_usage(
@@ -180,8 +170,3 @@ def test_check_memory_usage(section: esx_vsphere.ESXVm, expected_result: CheckRe
         )
         == expected_result
     )
-
-
-def test_check_memory_usage_raises_error() -> None:
-    with pytest.raises(IgnoreResultsError):
-        list(esx_vsphere_vm_mem_usage.check_mem_usage({}, None))

@@ -12,7 +12,7 @@ may require the following env variables
 - DOCKER_USERNAME=carl.lama
 - DOCKER_PASSPHRASE=eatingHands
 
-scripts/run-pipenv run python \
+scripts/run-uvenv python \
 buildscripts/scripts/build-cmk-container.py \
 --branch=master \
 --edition=enterprise \
@@ -27,7 +27,7 @@ may require the following env variables
 - INTERNAL_DEPLOY_PORT=42
 - INTERNAL_DEPLOY_DEST=user@some-domain.tld:/path/
 
-scripts/run-pipenv run python \
+scripts/run-uvenv python \
 buildscripts/scripts/build-cmk-container.py \
 --branch=2.2.0 \
 --edition=enterprise \
@@ -49,9 +49,8 @@ import tarfile
 from pathlib import Path
 from shutil import rmtree
 from tempfile import mkdtemp
-from typing import Union
 
-import docker  # type: ignore
+import docker  # type: ignore[import-untyped]
 
 sys.path.insert(0, Path(__file__).parent.parent.parent.as_posix())
 from buildscripts.scripts.lib.common import cwd, strtobool
@@ -126,14 +125,11 @@ def parse_arguments() -> argparse.Namespace:
 
 
 def run_cmd(
-    cmd: Union[list[str], str],
-    shell: bool = False,
+    cmd: list[str] | str,
     raise_exception: bool = True,
     print_stdout: bool = True,
 ) -> subprocess.CompletedProcess:
-    completed_process = subprocess.run(
-        cmd, encoding="utf-8", capture_output=True, shell=shell, check=False
-    )
+    completed_process = subprocess.run(cmd, encoding="utf-8", capture_output=True, check=False)
     if raise_exception and completed_process.returncode != 0:
         raise Exception(
             f"Failed to execute command '{' '.join(cmd)}' with: {completed_process.stdout}, {completed_process.stderr}"
@@ -231,7 +227,7 @@ def docker_tag(
 
 def docker_login(registry: str, docker_username: str, docker_passphrase: str) -> None:
     """Log into a registry"""
-    LOG.info("Login to %s ...", registry)
+    LOG.info("Perform docker login to registry '%s' as user '%s' ...", registry, docker_username)
     docker_client.login(registry=registry, username=docker_username, password=docker_passphrase)
 
 
@@ -262,6 +258,8 @@ def docker_push(args: argparse.Namespace, version_tag: str, registry: str, folde
     )
     for line in resp:
         LOG.debug(line)
+        if "error" in line:
+            raise ValueError(f"Some error occured during upload: {line}")
 
     if args.set_branch_latest_tag:
         LOG.info("Pushing '%s' as '%s-latest' ...", this_repository, args.branch)
@@ -276,6 +274,8 @@ def docker_push(args: argparse.Namespace, version_tag: str, registry: str, folde
 
     for line in resp:
         LOG.debug(line)
+        if "error" in line:
+            raise ValueError(f"Some error occured during upload: {line}")
 
     if args.set_latest_tag:
         LOG.info("Pushing '%s' as 'latest' ...", this_repository)
@@ -284,12 +284,14 @@ def docker_push(args: argparse.Namespace, version_tag: str, registry: str, folde
         )
         for line in resp:
             LOG.debug(line)
+            if "error" in line:
+                raise ValueError(f"Some error occured during upload: {line}")
 
 
 def needed_packages(mk_file: str, output_file: str) -> None:
     """Extract needed packages from MK file"""
     packages = []
-    with open(Path(mk_file).resolve(), "r") as file:
+    with open(Path(mk_file).resolve()) as file:
         lines = [line.rstrip() for line in file]
         for line in lines:
             this = re.findall(r"^(OS_PACKAGES\s*\+=\s*)(.*?)(?=#|$)", line)
@@ -495,6 +497,8 @@ def main() -> None:
             suffix = ".cee"
         case "managed":
             suffix = ".cme"
+            registry = ""
+            folder = "checkmk"
         case "cloud":
             suffix = ".cce"
             registry = ""

@@ -3,19 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from collections.abc import Callable
 from typing import Any
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.inventory import InventoryPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins, CheckPlugin
 from cmk.base.api.agent_based.register import check_plugins
 from cmk.base.api.agent_based.register.utils import (
     create_subscribed_sections,
@@ -25,9 +23,9 @@ from cmk.base.api.agent_based.register.utils import (
 from cmk.discover_plugins import PluginLocation
 
 
-def dummy_generator(section):  # pylint: disable=unused-argument
+def dummy_generator(section):
     return
-    yield  # pylint: disable=unreachable
+    yield
 
 
 MINIMAL_CREATION_KWARGS: dict[str, Any] = {
@@ -35,32 +33,33 @@ MINIMAL_CREATION_KWARGS: dict[str, Any] = {
     "service_name": "Norris Device",
     "discovery_function": dummy_generator,
     "check_function": dummy_generator,
+    "location": PluginLocation("", ""),
 }
 
 
-def dummy_function(section):  # pylint: disable=unused-argument
+def dummy_function(section):
     return
-    yield  # pylint: disable=unreachable
+    yield
 
 
-def dummy_function_i(item, section):  # pylint: disable=unused-argument
+def dummy_function_i(item, section):
     return
-    yield  # pylint: disable=unreachable
+    yield
 
 
-def dummy_function_ip(item, params, quark):  # pylint: disable=unused-argument
+def dummy_function_ip(item, params, quark):
     return
-    yield  # pylint: disable=unreachable
+    yield
 
 
-def dummy_function_ips(item, params, section):  # pylint: disable=unused-argument
+def dummy_function_ips(item, params, section):
     return
-    yield  # pylint: disable=unreachable
+    yield
 
 
-def dummy_function_jj(section_jim, section_jill):  # pylint: disable=unused-argument
+def dummy_function_jj(section_jim, section_jill):
     return
-    yield  # pylint: disable=unreachable
+    yield
 
 
 @pytest.mark.parametrize(
@@ -222,8 +221,46 @@ def test_create_check_plugin() -> None:
     assert plugin.check_ruleset_name is None
 
 
-def test_module_attribute(fix_register: FixRegister) -> None:
-    local_check = fix_register.check_plugins[CheckPluginName("local")]
+def test_module_attribute(agent_based_plugins: AgentBasedPlugins) -> None:
+    local_check = agent_based_plugins.check_plugins[CheckPluginName("local")]
     assert local_check.location == PluginLocation(
         "cmk.plugins.collection.agent_based.local", "check_plugin_local"
     )
+
+
+TEST_PLUGIN = CheckPlugin(
+    CheckPluginName("my_test_plugin"),
+    [],
+    "Unit Test",
+    lambda: [],
+    None,
+    None,
+    "merged",
+    lambda: [],
+    None,
+    None,
+    None,
+    PluginLocation("not", "relevant"),
+)
+
+TEST_PLUGINS = {TEST_PLUGIN.name: TEST_PLUGIN}
+
+
+def test_get_registered_check_plugins_lookup() -> None:
+    assert check_plugins.get_check_plugin(TEST_PLUGIN.name, TEST_PLUGINS) is TEST_PLUGIN
+
+
+def test_get_registered_check_plugins_no_match() -> None:
+    assert (
+        check_plugins.get_check_plugin(CheckPluginName("mgmt_this_should_not_exists"), TEST_PLUGINS)
+        is None
+    )
+
+
+def test_get_registered_check_plugins_mgmt_factory() -> None:
+    mgmt_plugin = check_plugins.get_check_plugin(
+        TEST_PLUGIN.name.create_management_name(), TEST_PLUGINS
+    )
+    assert mgmt_plugin is not None
+    assert mgmt_plugin.name.create_basic_name() == TEST_PLUGIN.name
+    assert mgmt_plugin.service_name.startswith("Management Interface: ")

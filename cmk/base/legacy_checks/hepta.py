@@ -10,10 +10,10 @@ import struct
 import time
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, startswith
+
+check_info = {}
 
 Section = Mapping[str, str]
 
@@ -51,9 +51,7 @@ def parse_hepta(string_table):
             local,
             sync_state,
         ),
-    ) = (
-        string_table[0] or string_table[1]
-    )
+    ) = string_table[0] or string_table[1]
     return {
         "devicetype": device_type,
         "serialnumber": serial_number,
@@ -87,6 +85,7 @@ def check_hepta(item, params, parsed):
 
 
 check_info["hepta"] = LegacyCheckDefinition(
+    name="hepta",
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12527"),
     fetch=[
         SNMPTree(
@@ -141,6 +140,7 @@ def check_hepta_time_sync(item, params, parsed):
 
 
 check_info["hepta.syncmoduletimesyncstate"] = LegacyCheckDefinition(
+    name="hepta_syncmoduletimesyncstate",
     service_name="%s",
     sections=["hepta"],
     discovery_function=inventory_hepta_time_sync,
@@ -181,6 +181,7 @@ def check_hepta_ntpsysstratum(item, params, parsed):
 
 
 check_info["hepta.ntpsysstratum"] = LegacyCheckDefinition(
+    name="hepta_ntpsysstratum",
     service_name="%s",
     sections=["hepta"],
     discovery_function=inventory_hepta_ntpsysstratum,
@@ -214,6 +215,7 @@ def check_hepta_syncmoduletimelocal(item, params, parsed):
 
 
 check_info["hepta.syncmoduletimelocal"] = LegacyCheckDefinition(
+    name="hepta_syncmoduletimelocal",
     service_name="%s",
     sections=["hepta"],
     discovery_function=inventory_hepta_syncmoduletimelocal,

@@ -28,14 +28,15 @@ from __future__ import annotations
 
 import json
 import typing
-from typing import assert_never, Final, final, Literal
+from typing import Any, assert_never, Final, final
+
+from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.gui.i18n import _
 from cmk.gui.utils import escaping
+from cmk.gui.utils.flashed_messages import MsgType
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import OutputFunnel
-
-from cmk.ccc.exceptions import MKGeneralException
 
 from .tag_rendering import (
     HTMLContent,
@@ -53,6 +54,7 @@ KnownTSFunction = typing.Literal[
     "render_qr_code",
     "render_stats_table",
     "insert_before",
+    "lock_and_redirect",
 ]
 
 
@@ -60,6 +62,15 @@ def maybecall(entry: FinalJavaScript) -> str:
     if callable(entry):
         return entry()
     return entry
+
+
+def _dump_standard_compliant_json(data: object) -> str:
+    # default json.dumps produces non standard compliant output: NaN, Infinity, -Infinity are not
+    # part of the JSON spec. in case you still serialize such a value with pythons default
+    # json.dumps you see very confusing parsing errors in the frontend.
+    # this function will make sure that a backend error is thrown if one of the three values is
+    # serialized, which makes it more obvious whats going wrong.
+    return json.dumps(data, allow_nan=False)
 
 
 class HTMLWriter:
@@ -203,9 +214,10 @@ class HTMLWriter:
     def show_message_by_msg_type(
         self,
         msg: HTML | str,
-        msg_type: Literal["message", "warning", "error"],
+        msg_type: MsgType,
+        flashed: bool = False,
     ) -> None:
-        self._write(self._render_message(msg, msg_type))
+        self._write(self._render_message(msg, msg_type, flashed))
 
     def show_message(self, msg: HTML | str) -> None:
         self._write(self._render_message(msg, "message"))
@@ -216,34 +228,48 @@ class HTMLWriter:
     def show_warning(self, msg: HTML | str) -> None:
         self._write(self._render_message(msg, "warning"))
 
-    def render_message(self, msg: HTML | str) -> HTML:
+    def render_message(
+        self,
+        msg: HTML | str,
+        flashed: bool = False,
+    ) -> HTML:
         return self._render_message(msg, "message")
 
-    def render_error(self, msg: HTML | str) -> HTML:
+    def render_error(
+        self,
+        msg: HTML | str,
+        flashed: bool = False,
+    ) -> HTML:
         return self._render_message(msg, "error")
 
-    def render_warning(self, msg: HTML | str) -> HTML:
+    def render_warning(
+        self,
+        msg: HTML | str,
+        flashed: bool = False,
+    ) -> HTML:
         return self._render_message(msg, "warning")
 
     def _render_message(
         self,
         msg: HTML | str,
-        msg_type: Literal["message", "warning", "error"] = "message",
+        msg_type: MsgType = "message",
+        flashed: bool = False,
     ) -> HTML:
-        if msg_type == "message":
-            cls = "success"
-            prefix = _("MESSAGE")
-        elif msg_type == "warning":
-            cls = "warning"
-            prefix = _("WARNING")
-        elif msg_type == "error":
-            cls = "error"
-            prefix = _("ERROR")
-        else:
-            raise TypeError(msg_type)
+        match msg_type:
+            case "message":
+                cls = "success"
+                prefix = _("MESSAGE")
+            case "warning":
+                cls = "warning"
+                prefix = _("WARNING")
+            case "error":
+                cls = "error"
+                prefix = _("ERROR")
+            case other:
+                assert_never(other)
 
         if self.output_format == "html":
-            code = HTMLWriter.render_div(msg, class_=cls)
+            code = HTMLWriter.render_div(msg, class_=[cls, "flashed"] if flashed else cls)
             if self.mobile:
                 return HTMLWriter.render_center(code)
             return code
@@ -376,6 +402,16 @@ class HTMLWriter:
 
     def div(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_element("div", content, **kwargs))
+
+    def vue_app(self, app_name: str, data: dict[str, Any]) -> None:
+        self.write_html(
+            render_element(
+                "div",
+                None,
+                data_cmk_vue_app_name=app_name,
+                data_cmk_vue_app_data=_dump_standard_compliant_json(data),
+            )
+        )
 
     def legend(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_element("legend", content, **kwargs))
@@ -659,7 +695,7 @@ class HTMLWriter:
         if arguments is None:
             json_arguments = "{}"
         else:
-            json_arguments = json.dumps(arguments)
+            json_arguments = _dump_standard_compliant_json(arguments)
         self.write_html(
             render_start_tag(
                 container,

@@ -4,9 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# pylint: disable=no-else-return
-
-
 def inventory_fireeye_generic(info, has_item, has_params=False):
     if info:
         params: dict | None = None

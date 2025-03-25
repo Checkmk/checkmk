@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.repo import is_enterprise_repo
+from tests.testlib.common.repo import is_enterprise_repo
 
 from cmk.utils.hostaddress import HostAddress, HostName
 
@@ -19,11 +19,11 @@ from cmk.fetchers.snmp import make_backend
 from cmk.fetchers.snmp_backend import ClassicSNMPBackend
 
 if is_enterprise_repo():
-    from cmk.fetchers.cee.snmp_backend.inline import (  # type: ignore[import,unused-ignore] # pylint: disable=import-error,no-name-in-module
+    from cmk.fetchers.cee.snmp_backend.inline import (  # type: ignore[import,unused-ignore]
         InlineSNMPBackend,
     )
 else:
-    InlineSNMPBackend = None  # type: ignore[assignment, misc]
+    InlineSNMPBackend = None  # type: ignore[assignment, misc, unused-ignore]
 
 
 @pytest.fixture(name="snmp_config")

@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.lib.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
-from cmk.plugins.lib.diskstat import check_diskstat_dict
+from cmk.plugins.lib.diskstat import check_diskstat_dict_legacy
 from cmk.plugins.lib.scaleio import (
     convert_scaleio_space_into_mb,
     create_disk_read_write,
@@ -184,7 +184,7 @@ def _check_scaleio_storage_pool_disks(
         )
         return
 
-    yield from check_diskstat_dict(
+    yield from check_diskstat_dict_legacy(
         params=params,
         disk={
             "read_ios": disk_stats.read_operations,

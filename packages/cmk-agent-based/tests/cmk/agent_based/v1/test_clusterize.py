@@ -66,11 +66,6 @@ def test_node_mutliline() -> None:
         Result(
             state=State.WARN,
             summary="[test_node]: These, are, four, lines",
-            details=(
-                "[test_node]: These\n"
-                "[test_node]: are\n"
-                "[test_node]: four\n"
-                "[test_node]: lines"
-            ),
+            details=("[test_node]: These\n[test_node]: are\n[test_node]: four\n[test_node]: lines"),
         ),
     ]

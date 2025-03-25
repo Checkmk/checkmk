@@ -77,7 +77,7 @@ def _multi_folder_rule_match_condition() -> DictionaryEntry:
 
 
 class FullPathFolderChoice(DropdownChoice):
-    def __init__(self, title: str, help: str) -> None:  # pylint: disable=redefined-builtin
+    def __init__(self, title: str, help: str) -> None:
         super().__init__(title=title, help=help, choices=folder_tree().folder_choices_fulltitle)
 
 

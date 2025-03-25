@@ -114,7 +114,7 @@ class IECNotation:
 class StandardScientificNotation:
     """
     A unit with the standard scientific notation formats a number as following:
-    m * 10**n, where 1 <= |m| < 10.
+    m * 10**n, where 1 <= \\|m| < 10.
     """
 
     symbol: str
@@ -124,7 +124,7 @@ class StandardScientificNotation:
 class EngineeringScientificNotation:
     """
     A unit with the engineering scientific notation formats a number as following:
-    m * 10**n, where 1 <= |m| < 1000 and n % 3 == 0.
+    m * 10**n, where 1 <= \\|m| < 1000 and n % 3 == 0.
     """
 
     symbol: str
@@ -134,7 +134,7 @@ class EngineeringScientificNotation:
 class TimeNotation:
     """
     A unit with the time notation formats a number with the following magnitudes:
-    µs, ms, s, min, h, d.
+    µs, ms, s, min, h, d, y.
     """
 
     @property

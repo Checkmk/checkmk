@@ -26,7 +26,7 @@ export function create_graph(
     ft: number,
     ut: number,
     vmi: number,
-    vma: number
+    vma: number,
 ) {
     // Keep important data as global variables, needed by
     // render_curve()
@@ -49,7 +49,7 @@ function arrow_up(
     cy: number,
     length: number,
     size: number,
-    color: string
+    color: string,
 ) {
     c.strokeStyle = color;
     c.moveTo(cx, cy);
@@ -69,7 +69,7 @@ function arrow_right(
     cy: number,
     length: number,
     size: number,
-    color: string
+    color: string,
 ) {
     c.strokeStyle = color;
     c.moveTo(cx, cy);
@@ -89,7 +89,7 @@ const linec = "#bbbbbb";
 
 export function render_coordinates(
     v_scala: [number, string][],
-    t_scala: [number, string][]
+    t_scala: [number, string][],
 ) {
     // Create canvas
     const canvas = <HTMLCanvasElement>document.getElementById(canvas_id);
@@ -158,7 +158,7 @@ export function render_coordinates(
         height - bottom_border,
         8,
         8,
-        "#000000"
+        "#000000",
     );
 }
 
@@ -175,7 +175,7 @@ function line(
     t0: number,
     v0: number,
     t1: number,
-    v1: number
+    v1: number,
 ) {
     const p0 = point(t0, v0);
     const p1 = point(t1, v1);
@@ -203,7 +203,7 @@ export function render_curve(
     points: number[],
     color: string,
     w: number,
-    square: boolean
+    square: boolean,
 ) {
     const canvas = <HTMLCanvasElement>document.getElementById(canvas_id);
     const c = canvas.getContext("2d")!;
@@ -241,7 +241,7 @@ export function render_area(points: number[], color: string, alpha: number) {
 export function render_area_reverse(
     points: number[],
     color: string,
-    alpha: number
+    alpha: number,
 ) {
     render_dual_area(points, null, color, alpha);
 }
@@ -250,7 +250,7 @@ export function render_dual_area(
     lower_points: null | number[],
     upper_points: null | number[],
     color: string,
-    alpha: number
+    alpha: number,
 ) {
     const canvas = <HTMLCanvasElement>document.getElementById(canvas_id);
     const c = canvas.getContext("2d")!;

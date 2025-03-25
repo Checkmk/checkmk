@@ -6,9 +6,12 @@ def main() {
     def test_gerrit_helper = load("${checkout_dir}/buildscripts/scripts/utils/gerrit_stages.groovy");
     // no `def` - must be global
     test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
+    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+
     def result_dir = "${checkout_dir}/results";
     def time_job_started = new Date();
     def time_stage_started = time_job_started;
+    def safe_branch_name = versioning.safe_branch_name();
 
     print(
         """
@@ -42,21 +45,6 @@ def main() {
                 sh("buildscripts/scripts/ensure-workspace-integrity");
             }
             sh("rm -rf ${result_dir}; mkdir ${result_dir}");
-
-            /// Reason for the following try/catch block:
-            /// Jenkins will abort jobs (e.g. in case of a new patch set) with SIGKILL (at least this is what we think)
-            /// in case a job is aborted during a rebuild of the .venv, the .venv will be left broken
-            /// the next run in this workspace will use the .venv as-is but fail to import modules
-            /// attempts to use a trap in the .venv Makefile-target were also not succesful - SIGKILL is not trap-able...
-            /// So at the end, we need to use a groovy try/catch to ensure a rebuild in the next job in case something failed
-            try {
-                sh("""scripts/run-in-docker.sh \
-                    make .venv
-                """);
-            } catch (e) {
-                sh("rm -rf .venv");
-                throw e;
-            }
         }
         time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);
     }
@@ -64,17 +52,16 @@ def main() {
 
         dir("${checkout_dir}") {
             stage("Create stages") {
-                /// Generate list of stages to be added - save them locally for reference
-                sh("""scripts/run-in-docker.sh \
-                    scripts/run-pipenv run \
-                      buildscripts/scripts/validate_changes.py \
-                      --env "RESULTS=${result_dir}" \
-                      --env "WORKSPACE=${checkout_dir}" \
-                      --env "PATCHSET_REVISION=${GERRIT_PATCHSET_REVISION}" \
-                      --write-file=${result_dir}/stages.json \
-                      buildscripts/scripts/stages.yml
-                """);
-
+                inside_container_minimal(safe_branch_name: safe_branch_name) {
+                    /// Generate list of stages to be added - save them locally for reference
+                    sh("""python buildscripts/scripts/validate_changes.py \
+                          --env "RESULTS=${result_dir}" \
+                          --env "WORKSPACE=${checkout_dir}" \
+                          --env "PATCHSET_REVISION=${GERRIT_PATCHSET_REVISION}" \
+                          --write-file=${result_dir}/stages.json \
+                          buildscripts/scripts/stages.yml
+                    """);
+                }
                 time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);
             }
             test_gerrit_helper.desc_add_status_row("Preparation",
@@ -82,25 +69,28 @@ def main() {
             def stage_info = load_json("${result_dir}/stages.json");
             def allStagesPassed = true;
             def thisStagePassed = true;
-            stage_info.STAGES.each { item ->
-                (thisStagePassed, thisIssues) = test_gerrit_helper.create_stage(item, time_stage_started);
-                allStagesPassed = thisStagePassed && allStagesPassed;
-                if (thisIssues && !thisStagePassed) {
-                    stage("Analyse Issues") {
-                        thisIssues.each { issue ->
-                            publishIssues(
-                                issues: [issue],
-                                name: "${item.NAME}",
-                                // Only characters, digits, dashes and underscores allowed
-                                // ID must match the regex \p{Alnum}[\p{Alnum}-_]*).
-                                id: "${item.RESULT_CHECK_FILE_PATTERN}".replaceAll("""([^A-Za-z0-9\\-\\_]+)""", "-"),
-                                trendChartType: 'TOOLS_ONLY',
-                                qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]]
-                            );
+            // privileged/set_docker_group_id aka mounting the docker is needed for agent plugin tests: they do docker in docker
+            inside_container(privileged: true, set_docker_group_id: true) {
+                stage_info.STAGES.each { item ->
+                    (thisStagePassed, thisIssues) = test_gerrit_helper.create_stage(item, time_stage_started);
+                    allStagesPassed = thisStagePassed && allStagesPassed;
+                    if (thisIssues && !thisStagePassed) {
+                        stage("Analyse Issues") {
+                            thisIssues.each { issue ->
+                                publishIssues(
+                                    issues: [issue],
+                                    name: "${item.NAME}",
+                                    // Only characters, digits, dashes and underscores allowed
+                                    // ID must match the regex \p{Alnum}[\p{Alnum}-_]*).
+                                    id: "${item.RESULT_CHECK_FILE_PATTERN}".replaceAll("""([^A-Za-z0-9\\-\\_]+)""", "-"),
+                                    trendChartType: 'TOOLS_ONLY',
+                                    qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]]
+                                );
+                            }
                         }
                     }
+                    time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);
                 }
-                time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);
             }
             currentBuild.result = allStagesPassed ? "SUCCESS" : "FAILED";
         }
@@ -119,7 +109,7 @@ def main() {
                 )]);
 
                 show_duration("archiveArtifacts") {
-                    archiveArtifacts(allowEmptyArchive: true, artifacts: 'results/*');
+                    archiveArtifacts(allowEmptyArchive: true, artifacts: 'results/**');
                 }
             }
         }

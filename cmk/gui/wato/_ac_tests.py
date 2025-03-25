@@ -5,9 +5,9 @@
 
 import abc
 import multiprocessing
+import os
 import subprocess
-from collections.abc import Iterator
-from contextlib import suppress
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 
 import requests
@@ -15,8 +15,19 @@ import urllib3
 
 from livestatus import LocalConnection, SiteConfiguration, SiteId
 
-from cmk.utils.crypto.password import Password
-from cmk.utils.paths import local_checks_dir, local_inventory_dir
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
+from cmk.ccc.version import __version__, Version
+
+from cmk.utils.paths import (
+    local_agent_based_plugins_dir,
+    local_checks_dir,
+    local_gui_plugins_dir,
+    local_inventory_dir,
+    local_legacy_check_manpages_dir,
+    local_pnp_templates_dir,
+    local_web_dir,
+)
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.user import UserId
 
@@ -36,7 +47,7 @@ from cmk.gui.site_config import (
 )
 from cmk.gui.userdb import active_connections as active_connections_
 from cmk.gui.userdb import htpasswd
-from cmk.gui.utils.urls import doc_reference_url, DocReference
+from cmk.gui.utils.urls import doc_reference_url, DocReference, werk_reference_url, WerkReference
 from cmk.gui.watolib.analyze_configuration import (
     ACResultState,
     ACSingleResult,
@@ -47,10 +58,9 @@ from cmk.gui.watolib.analyze_configuration import (
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.rulesets import SingleRulesetRecursively
-from cmk.gui.watolib.sites import SiteManagementFactory
+from cmk.gui.watolib.sites import site_management_registry
 
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import omd_site
+from cmk.crypto.password import Password
 
 # Disable python warnings in background job output or logs like "Unverified
 # HTTPS request is being made". We warn the user using analyze configuration.
@@ -67,7 +77,6 @@ def register(ac_test_registry: ACTestRegistry) -> None:
     ac_test_registry.register(ACTestNumberOfUsers)
     ac_test_registry.register(ACTestHTTPSecured)
     ac_test_registry.register(ACTestOldDefaultCredentials)
-    ac_test_registry.register(ACTestMknotifydCommunicationEncrypted)
     ac_test_registry.register(ACTestBackupConfigured)
     ac_test_registry.register(ACTestBackupNotEncryptedConfigured)
     ac_test_registry.register(ACTestEscapeHTMLDisabled)
@@ -76,13 +85,17 @@ def register(ac_test_registry: ACTestRegistry) -> None:
     ac_test_registry.register(ACTestCheckMKHelperUsage)
     ac_test_registry.register(ACTestCheckMKFetcherUsage)
     ac_test_registry.register(ACTestCheckMKCheckerUsage)
-    ac_test_registry.register(ACTestAlertHandlerEventTypes)
     ac_test_registry.register(ACTestGenericCheckHelperUsage)
     ac_test_registry.register(ACTestSizeOfExtensions)
     ac_test_registry.register(ACTestBrokenGUIExtension)
     ac_test_registry.register(ACTestESXDatasources)
+    ac_test_registry.register(ACTestDeprecatedV1CheckPlugins)
     ac_test_registry.register(ACTestDeprecatedCheckPlugins)
     ac_test_registry.register(ACTestDeprecatedInventoryPlugins)
+    ac_test_registry.register(ACTestDeprecatedCheckManpages)
+    ac_test_registry.register(ACTestDeprecatedGUIExtensions)
+    ac_test_registry.register(ACTestDeprecatedLegacyGUIExtensions)
+    ac_test_registry.register(ACTestDeprecatedPNPTemplates)
     ac_test_registry.register(ACTestUnexpectedAllowedIPRanges)
     ac_test_registry.register(ACTestCheckMKCheckerNumber)
 
@@ -184,8 +197,8 @@ class ACTestLiveproxyd(ACTest):
             return ACSingleResult(
                 state=ACResultState.WARN,
                 text=_(
-                    "The Livestatus Proxy is not only good for slave sites, "
-                    "enable it for your master site"
+                    "The Livestatus Proxy is not only good for remote sites, "
+                    "enable it for your central site"
                 ),
                 site_id=site_id,
             )
@@ -222,6 +235,7 @@ class ACTestLivestatusUsage(ACTest):
         return True
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         local_connection = LocalConnection()
         site_status = local_connection.query_row(
             "GET status\n"
@@ -248,10 +262,12 @@ class ACTestLivestatusUsage(ACTest):
         yield ACSingleResult(
             state=state,
             text=_("The current livestatus usage is %.2f%%") % usage_perc,
+            site_id=site_id,
         )
         yield ACSingleResult(
             state=state,
             text=_("%d of %d connections used") % (active_connections, threads),
+            site_id=site_id,
         )
 
         # Only available with Micro Core
@@ -259,6 +275,7 @@ class ACTestLivestatusUsage(ACTest):
             yield ACSingleResult(
                 state=state,
                 text=_("you have a connection overflow rate of %.2f/s") % overflows_rate,
+                site_id=site_id,
             )
 
 
@@ -282,9 +299,12 @@ class ACTestTmpfs(ACTest):
         return True
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         if self._tmpfs_mounted(omd_site()):
             yield ACSingleResult(
-                state=ACResultState.OK, text=_("The temporary filesystem is mounted")
+                state=ACResultState.OK,
+                text=_("The temporary filesystem is mounted"),
+                site_id=site_id,
             )
         else:
             yield ACSingleResult(
@@ -293,6 +313,7 @@ class ACTestTmpfs(ACTest):
                     "The temporary filesystem is not mounted. Your installation "
                     "may work with degraded performance."
                 ),
+                site_id=site_id,
             )
 
     def _tmpfs_mounted(self, site_id):
@@ -333,6 +354,7 @@ class ACTestLDAPSecured(ACTest):
         return bool([c for _cid, c in active_connections_() if c.type() == "ldap"])
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         for connection_id, connection in active_connections_():
             if connection.type() != "ldap":
                 continue
@@ -340,13 +362,18 @@ class ACTestLDAPSecured(ACTest):
             assert isinstance(connection, ldap.LDAPUserConnector)
 
             if connection.use_ssl():
-                yield ACSingleResult(state=ACResultState.OK, text=_("%s: Uses SSL") % connection_id)
+                yield ACSingleResult(
+                    state=ACResultState.OK,
+                    text=_("%s: Uses SSL") % connection_id,
+                    site_id=site_id,
+                )
 
             else:
                 yield ACSingleResult(
                     state=ACResultState.WARN,
                     text=_("%s: Not using SSL. Consider enabling it in the connection settings.")
                     % connection_id,
+                    site_id=site_id,
                 )
 
 
@@ -373,16 +400,21 @@ class ACTestLivestatusSecured(ACTest):
         return bool(cfg["site_livestatus_tcp"])
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         cfg = ConfigDomainOMD().default_globals()
         if not cfg["site_livestatus_tcp"]:
             yield ACSingleResult(
-                state=ACResultState.OK, text=_("Livestatus network traffic is encrypted")
+                state=ACResultState.OK,
+                text=_("Livestatus network traffic is encrypted"),
+                site_id=site_id,
             )
             return
 
         if not cfg["site_livestatus_tcp"]["tls"]:
             yield ACSingleResult(
-                state=ACResultState.CRIT, text=_("Livestatus network traffic is unencrypted")
+                state=ACResultState.CRIT,
+                text=_("Livestatus network traffic is unencrypted"),
+                site_id=site_id,
             )
 
 
@@ -406,13 +438,16 @@ class ACTestNumberOfUsers(ACTest):
         return True
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         users = userdb.load_users()
         num_users = len(users)
         user_warn_threshold = 500
 
         if num_users <= user_warn_threshold:
             yield ACSingleResult(
-                state=ACResultState.OK, text=_("You have %d users configured") % num_users
+                state=ACResultState.OK,
+                text=_("You have %d users configured") % num_users,
+                site_id=site_id,
             )
         else:
             yield ACSingleResult(
@@ -422,6 +457,7 @@ class ACTestNumberOfUsers(ACTest):
                     "users you have configured in Checkmk."
                 )
                 % num_users,
+                site_id=site_id,
             )
 
 
@@ -452,12 +488,18 @@ class ACTestHTTPSecured(ACTest):
         return True
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         if request.is_ssl_request:
-            yield ACSingleResult(state=ACResultState.OK, text=_("Site is using HTTPS"))
+            yield ACSingleResult(
+                state=ACResultState.OK,
+                text=_("Site is using HTTPS"),
+                site_id=site_id,
+            )
         else:
             yield ACSingleResult(
                 state=ACResultState.WARN,
                 text=_("Site is using plain HTTP. Consider enabling HTTPS."),
+                site_id=site_id,
             )
 
 
@@ -480,6 +522,7 @@ class ACTestOldDefaultCredentials(ACTest):
         return userdb.user_exists(UserId("omdadmin"))
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         if (
             htpasswd.HtpasswdUserConnector(
                 {
@@ -496,64 +539,13 @@ class ACTestOldDefaultCredentials(ACTest):
                     "Found <tt>omdadmin</tt> with default password. "
                     "It is highly recommended to change this password."
                 ),
+                site_id=site_id,
             )
         else:
             yield ACSingleResult(
-                state=ACResultState.OK, text=_("Found <tt>omdadmin</tt> using custom password.")
-            )
-
-
-class ACTestMknotifydCommunicationEncrypted(ACTest):
-    def category(self) -> str:
-        return ACTestCategories.security
-
-    def title(self) -> str:
-        return _("Encrypt notification daemon communication")
-
-    def help(self) -> str:
-        return _(
-            "Since version 2.1 it is possible to encrypt the communication of the notification "
-            "daemon with TLS. After an upgrade of an existing site incoming connections will still "
-            "use plain text communication and outgoing connections will try to use TLS and fall "
-            "back to plain text communication if the remote site does not support TLS. It is "
-            "recommended to enforce TLS encryption as soon as all sites support it."
-        )
-
-    def is_relevant(self) -> bool:
-        return True
-
-    def execute(self) -> Iterator[ACSingleResult]:
-        only_encrypted = True
-        config = self._get_effective_global_setting("notification_spooler_config")
-
-        if (incoming := config.get("incoming", {})) and incoming.get("encryption") == "unencrypted":
-            only_encrypted = False
-            yield ACSingleResult(
-                state=ACResultState.CRIT,
-                text=_("Incoming connections on port %s communicate via plain text")
-                % incoming["listen_port"],
-            )
-
-        for outgoing in config["outgoing"]:
-            socket = f"{outgoing['address']}:{outgoing['port']}"
-            if outgoing["encryption"] == "upgradable":
-                only_encrypted = False
-                yield ACSingleResult(
-                    state=ACResultState.WARN,
-                    text=_("Encryption for %s is only used if it is enabled on the remote site")
-                    % socket,
-                )
-            if outgoing["encryption"] == "unencrypted":
-                only_encrypted = False
-                yield ACSingleResult(
-                    state=ACResultState.CRIT,
-                    text=_("Plain text communication is enabled for %s") % socket,
-                )
-
-        if only_encrypted:
-            yield ACSingleResult(
                 state=ACResultState.OK,
-                text="Encrypted communication is enabled for all configured connections",
+                text=_("Found <tt>omdadmin</tt> using custom password."),
+                site_id=site_id,
             )
 
 
@@ -566,30 +558,33 @@ class ACTestBackupConfigured(ACTest):
 
     def help(self) -> str:
         return _(
-            "<p>You should have a backup configured for being able to restore your "
-            "monitoring environment in case of a data loss.<br>"
-            "In case you a using a virtual machine as Checkmk server and perform snapshot based "
-            "backups, you should be safe.</p>"
-            "<p>In case you are using a 3rd party backup solution the backed up data may not be "
-            "reliably backed up or not up-to-date in the moment of the backup.</p>"
-            "<p>It is recommended to use the Checkmk backup to create a backup of the runnning "
-            "site to be sure that the data is consistent. If you need to, you can then use "
-            "the 3rd party tool to archive the Checkmk backups.</p>"
+            "A reliable backup ensures that your monitoring "
+            "environment can be restored in case of data loss.<br><br>We recommend "
+            'using the <a href="wato.py?mode=backup">Checkmk backup</a> '
+            "feature to create a consistent backup "
+            "of your running site.<br><br>Virtual machine snapshots alone are not "
+            "sufficient, as they do not guarantee data consistency.<br>"
+            "Similarly, third-party backup solutions may fail to capture a "
+            "consistent state."
         )
 
     def is_relevant(self) -> bool:
         return True
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         n_configured_jobs = len(BackupConfig.load().jobs)
         if n_configured_jobs:
             yield ACSingleResult(
                 state=ACResultState.OK,
                 text=_("You have configured %d backup jobs") % n_configured_jobs,
+                site_id=site_id,
             )
         else:
             yield ACSingleResult(
-                state=ACResultState.WARN, text=_("There is no backup job configured")
+                state=ACResultState.WARN,
+                text=_("There is no backup job configured"),
+                site_id=site_id,
             )
 
 
@@ -612,14 +607,19 @@ class ACTestBackupNotEncryptedConfigured(ACTest):
         return True
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         for job in BackupConfig.load().jobs.values():
             if job.is_encrypted():
                 yield ACSingleResult(
-                    state=ACResultState.OK, text=_('The job "%s" is encrypted') % job.title
+                    state=ACResultState.OK,
+                    text=_('The job "%s" is encrypted') % job.title,
+                    site_id=site_id,
                 )
             else:
                 yield ACSingleResult(
-                    state=ACResultState.WARN, text=_('There job "%s" is not encrypted') % job.title
+                    state=ACResultState.WARN,
+                    text=_('There job "%s" is not encrypted') % job.title,
+                    site_id=site_id,
                 )
 
 
@@ -648,6 +648,7 @@ class ACTestEscapeHTMLDisabled(ACTest):
         return True
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         if not self._get_effective_global_setting("escape_plugin_output"):
             yield ACSingleResult(
                 state=ACResultState.CRIT,
@@ -662,12 +663,14 @@ class ACTestEscapeHTMLDisabled(ACTest):
                     "wato.py?mode=edit_ruleset&varname=extra_host_conf:_ESCAPE_PLUGIN_OUTPUT",
                     "wato.py?mode=edit_configvar&varname=escape_plugin_output",
                 ),
+                site_id=site_id,
             )
         else:
             yield ACSingleResult(
                 state=ACResultState.OK,
                 text=_('Escaping is <a href="%s">enabled globally</a>')
                 % "wato.py?mode=edit_configvar&varname=escape_plugin_output",
+                site_id=site_id,
             )
 
 
@@ -749,6 +752,7 @@ class ACTestApacheNumberOfProcesses(ABCACApacheTest):
                 cmk.utils.render.fmt_bytes(average_process_size),
                 cmk.utils.render.fmt_bytes(estimated_memory_size),
             ),
+            site_id=omd_site(),
         )
 
     def _get_average_process_size(self):
@@ -833,6 +837,7 @@ class ACTestApacheProcessUsage(ABCACApacheTest):
                 "%d of the configured maximum of %d processes have been started. This is a usage of %0.2f %%."
             )
             % (used_slots, total_slots, usage),
+            site_id=omd_site(),
         )
 
 
@@ -892,6 +897,7 @@ class ACTestCheckMKHelperUsage(ACTest):
                 "The current checker usage is %.2f%%. The checkers have an average latency of %.3fs."
             )
             % (helper_usage_checker_percent, average_latency_checker),
+            site_id=omd_site(),
         )
 
 
@@ -928,6 +934,7 @@ class ACTestCheckMKFetcherUsage(ACTest):
         return self._uses_microcore()
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         local_connection = LocalConnection()
         row = local_connection.query_row(
             "GET status\nColumns: helper_usage_fetcher average_latency_fetcher\n"
@@ -951,6 +958,7 @@ class ACTestCheckMKFetcherUsage(ACTest):
                 " The checks have an average check latency of %.3fs."
             )
             % (fetcher_usage_perc, fetcher_latency),
+            site_id=site_id,
         )
 
         # Only report this as warning in case the user increased the default helper configuration
@@ -966,6 +974,7 @@ class ACTestCheckMKFetcherUsage(ACTest):
                     "The fetcher usage is below 50%, you may decrease the number of "
                     "fetchers to reduce the memory consumption."
                 ),
+                site_id=site_id,
             )
 
 
@@ -1003,6 +1012,7 @@ class ACTestCheckMKCheckerUsage(ACTest):
         return self._uses_microcore()
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         local_connection = LocalConnection()
         row = local_connection.query_row(
             "GET status\nColumns: helper_usage_checker average_latency_fetcher\n"
@@ -1026,6 +1036,7 @@ class ACTestCheckMKCheckerUsage(ACTest):
                 "The checks have an average check latency of %.3fs."
             )
             % (checker_usage_perc, fetcher_latency),
+            site_id=site_id,
         )
 
         # Only report this as warning in case the user increased the default helper configuration
@@ -1041,36 +1052,7 @@ class ACTestCheckMKCheckerUsage(ACTest):
                     "The checker usage is below 50%, you may decrease the number of "
                     "checkers to reduce the memory consumption."
                 ),
-            )
-
-
-class ACTestAlertHandlerEventTypes(ACTest):
-    def category(self) -> str:
-        return ACTestCategories.performance
-
-    def title(self) -> str:
-        return _("Alert handler: Don't handle all check executions")
-
-    def help(self) -> str:
-        return _(
-            "In general it will result in a significantly increased load when alert handlers are "
-            "configured to handle all check executions. It is highly recommended to "
-            '<a href="wato.py?mode=edit_configvar&varname=alert_handler_event_types">disable '
-            "this</a> in most cases."
-        )
-
-    def is_relevant(self) -> bool:
-        return self._uses_microcore()
-
-    def execute(self) -> Iterator[ACSingleResult]:
-        if "checkresult" in self._get_effective_global_setting("alert_handler_event_types"):
-            yield ACSingleResult(
-                state=ACResultState.CRIT,
-                text=_("Alert handler are configured to handle all check execution."),
-            )
-        else:
-            yield ACSingleResult(
-                state=ACResultState.OK, text=_("Alert handlers will handle state changes.")
+                site_id=site_id,
             )
 
 
@@ -1101,6 +1083,7 @@ class ACTestGenericCheckHelperUsage(ACTest):
         return self._uses_microcore()
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         local_connection = LocalConnection()
         row = local_connection.query_row(
             "GET status\nColumns: helper_usage_generic average_latency_generic\n"
@@ -1119,6 +1102,7 @@ class ACTestGenericCheckHelperUsage(ACTest):
         yield ACSingleResult(
             state=state,
             text=_("The current check helper usage is %.2f%%") % helper_usage_perc,
+            site_id=site_id,
         )
 
         if check_latency_generic > 1:
@@ -1129,6 +1113,7 @@ class ACTestGenericCheckHelperUsage(ACTest):
             state=state,
             text=_("The active check services have an average check latency of %.3fs.")
             % (check_latency_generic),
+            site_id=site_id,
         )
 
 
@@ -1165,6 +1150,7 @@ class ACTestSizeOfExtensions(ACTest):
         yield ACSingleResult(
             state=state,
             text=_("Your extensions have a size of %s.") % cmk.utils.render.fmt_bytes(size),
+            site_id=omd_site(),
         )
 
     def _size_of_extensions(self):
@@ -1191,14 +1177,21 @@ class ACTestBrokenGUIExtension(ACTest):
         return True
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         errors = cmk.gui.utils.get_failed_plugins()
         if not errors:
-            yield ACSingleResult(state=ACResultState.OK, text=_("No broken extensions were found."))
+            yield ACSingleResult(
+                state=ACResultState.OK,
+                text=_("No broken extensions were found."),
+                site_id=site_id,
+            )
 
-        for _path, gui_part, plugin_file, error in errors:
+        for plugin_filepath, gui_part, plugin_file, error in errors:
             yield ACSingleResult(
                 state=ACResultState.CRIT,
                 text=_('Loading "%s/%s" failed: %s') % (gui_part, plugin_file, error),
+                site_id=site_id,
+                path=plugin_filepath,
             )
 
 
@@ -1229,6 +1222,7 @@ class ACTestESXDatasources(ACTest):
         return self._get_rules()
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         all_rules_ok = True
         for folder, rule_index, rule in self._get_rules():
             vsphere_queries_agent = rule.value.get("direct") in ["agent", "hostsystem_agent"]
@@ -1237,10 +1231,158 @@ class ACTestESXDatasources(ACTest):
                 yield ACSingleResult(
                     state=ACResultState.CRIT,
                     text=_("Rule %d in Folder %s is affected") % (rule_index + 1, folder.title()),
+                    site_id=site_id,
                 )
 
         if all_rules_ok:
-            yield ACSingleResult(state=ACResultState.OK, text=_("No configured rules are affected"))
+            yield ACSingleResult(
+                state=ACResultState.OK,
+                text=_("No configured rules are affected"),
+                site_id=site_id,
+            )
+
+
+def _compute_deprecation_result(
+    *,
+    version: str,
+    deprecated_version: str,
+    removed_version: str,
+    title_entity: str,
+    title_api: str,
+    site_id: SiteId,
+    path: Path,
+) -> ACSingleResult:
+    base = Version.from_str(version).base
+    deprecated_base = Version.from_str(deprecated_version).base
+    removed_base = Version.from_str(removed_version).base
+    assert base is not None
+    assert removed_base is not None
+    assert deprecated_base is not None
+    assert removed_base > deprecated_base
+
+    if base > removed_base:
+        return ACSingleResult(
+            state=ACResultState.CRIT,
+            text=_("%s uses an API (%s) which was removed in Checkmk %s.")
+            % (
+                title_entity,
+                title_api,
+                removed_version,
+            ),
+            site_id=site_id,
+            path=path,
+        )
+
+    if base == removed_base:
+        return ACSingleResult(
+            state=ACResultState.CRIT,
+            text=_(
+                "%s uses an API (%s) which was marked as deprecated in"
+                " Checkmk %s and is removed in Checkmk %s."
+            )
+            % (
+                title_entity,
+                title_api,
+                deprecated_version,
+                removed_version,
+            ),
+            site_id=site_id,
+            path=path,
+        )
+
+    if base > deprecated_base:
+        return ACSingleResult(
+            state=ACResultState.WARN,
+            text=_(
+                "%s uses an API (%s) which was marked as deprecated in"
+                " Checkmk %s and will be removed in Checkmk %s."
+            )
+            % (
+                title_entity,
+                title_api,
+                deprecated_version,
+                removed_version,
+            ),
+            site_id=site_id,
+            path=path,
+        )
+
+    if base == deprecated_base:
+        return ACSingleResult(
+            state=ACResultState.WARN,
+            text=_(
+                "%s uses an API (%s) which is marked as deprecated in"
+                " Checkmk %s and will be removed in Checkmk %s."
+            )
+            % (
+                title_entity,
+                title_api,
+                deprecated_version,
+                removed_version,
+            ),
+            site_id=site_id,
+            path=path,
+        )
+
+    return ACSingleResult(
+        state=ACResultState.OK,
+        text="",
+        site_id=site_id,
+        path=path,
+    )
+
+
+class ACTestDeprecatedV1CheckPlugins(ACTest):
+    def category(self) -> str:
+        return ACTestCategories.deprecations
+
+    def title(self) -> str:
+        return _("Deprecated check plug-ins (v1)")
+
+    def help(self) -> str:
+        return _(
+            "The check plug-in API for plug-ins in <tt>%s</tt> is removed."
+            " Plug-in files in this folder are ignored."
+            " Please migrate the plug-ins to the new API."
+            " More information can be found in"
+            " <a href='%s'>%s</a> and our"
+            " <a href='%s'>User Guide</a>."
+        ) % (
+            "/".join(local_agent_based_plugins_dir.parts[-4:]),
+            werk_reference_url(WerkReference.DECOMMISSION_V1_API),
+            WerkReference.DECOMMISSION_V1_API.ref(),
+            doc_reference_url(DocReference.DEVEL_CHECK_PLUGINS),
+        )
+
+    def _get_files(self) -> Sequence[Path]:
+        try:
+            return list(local_agent_based_plugins_dir.rglob("*.py"))
+        except FileNotFoundError:
+            return ()
+
+    def is_relevant(self) -> bool:
+        return bool(self._get_files())
+
+    def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
+        if plugin_files := self._get_files():
+            for plugin_filepath in plugin_files:
+                yield _compute_deprecation_result(
+                    version=__version__,
+                    deprecated_version="2.3.0",
+                    removed_version="2.4.0",
+                    title_entity=_("Check plug-in"),
+                    title_api="v1",
+                    site_id=site_id,
+                    path=plugin_filepath,
+                )
+            return
+
+        yield ACSingleResult(
+            state=ACResultState.OK,
+            text=_("No check plug-ins using the deprecated API (v1)"),
+            site_id=site_id,
+        )
 
 
 class ACTestDeprecatedCheckPlugins(ACTest):
@@ -1248,12 +1390,12 @@ class ACTestDeprecatedCheckPlugins(ACTest):
         return ACTestCategories.deprecations
 
     def title(self) -> str:
-        return _("Deprecated check plug-ins")
+        return _("Deprecated check plug-ins (legacy)")
 
     def help(self) -> str:
         return _(
             "The check plug-in API for plug-ins in <tt>%s</tt> is deprecated."
-            " Plugin files in this folder are still considered, but the API they are using may change at any time without notice."
+            " Plug-in files in this folder are still considered, but the API they are using may change at any time without notice."
             " Please migrate the plug-ins to the new API."
             " More information can be found in our <a href='%s'>User Guide</a>."
         ) % (
@@ -1261,21 +1403,34 @@ class ACTestDeprecatedCheckPlugins(ACTest):
             doc_reference_url(DocReference.DEVEL_CHECK_PLUGINS),
         )
 
+    def _get_files(self) -> Sequence[Path]:
+        try:
+            return list(local_checks_dir.iterdir())
+        except FileNotFoundError:
+            return []
+
     def is_relevant(self) -> bool:
         return True
 
     def execute(self) -> Iterator[ACSingleResult]:
-        with suppress(FileNotFoundError):
-            if plugin_files := list(local_checks_dir.iterdir()):
-                yield ACSingleResult(
-                    state=ACResultState.CRIT,
-                    text=_("%d check plug-ins using the deprecated API: %s")
-                    % (len(plugin_files), ", ".join(f.name for f in plugin_files)),
+        site_id = omd_site()
+        if files := self._get_files():
+            for plugin_filepath in files:
+                yield _compute_deprecation_result(
+                    version=__version__,
+                    deprecated_version="2.3.0",
+                    removed_version="2.4.0",
+                    title_entity=_("Check plug-in"),
+                    title_api=_("legacy"),
+                    site_id=site_id,
+                    path=plugin_filepath,
                 )
-                return
+            return
 
         yield ACSingleResult(
-            state=ACResultState.OK, text=_("No check plug-ins using the deprecated API")
+            state=ACResultState.OK,
+            text=_("No check plug-ins using the deprecated API"),
+            site_id=site_id,
         )
 
 
@@ -1289,30 +1444,262 @@ class ACTestDeprecatedInventoryPlugins(ACTest):
     def help(self) -> str:
         return _(
             "The old inventory plug-in API has been removed in Checkmk version 2.2."
-            " Plugin files in <tt>'%s'</tt> are ignored."
+            " Plug-in files in <tt>'%s'</tt> are ignored."
             " Please migrate the plug-ins to the new API."
         ) % str(local_inventory_dir)
+
+    def _get_files(self) -> Sequence[Path]:
+        try:
+            return list(local_inventory_dir.iterdir())
+        except FileNotFoundError:
+            return []
 
     def is_relevant(self) -> bool:
         return True
 
     def execute(self) -> Iterator[ACSingleResult]:
-        with suppress(FileNotFoundError):
-            if plugin_files := list(local_inventory_dir.iterdir()):
-                yield ACSingleResult(
-                    state=ACResultState.CRIT,
-                    text=_("%d ignored HW/SW Inventory plug-ins found: %s")
-                    % (len(plugin_files), ", ".join(f.name for f in plugin_files)),
+        site_id = omd_site()
+        if files := self._get_files():
+            for plugin_filepath in files:
+                yield _compute_deprecation_result(
+                    version=__version__,
+                    deprecated_version="2.1.0",
+                    removed_version="2.2.0",
+                    title_entity=_("HW/SW Inventory plug-in"),
+                    title_api=_("legacy"),
+                    site_id=site_id,
+                    path=plugin_filepath,
                 )
-                return
+            return
 
         yield ACSingleResult(
-            state=ACResultState.OK, text=_("No ignored HW/SW Inventory plug-ins found")
+            state=ACResultState.OK,
+            text=_("No HW/SW Inventory plug-ins using the deprecated API"),
+            site_id=site_id,
+        )
+
+
+class ACTestDeprecatedCheckManpages(ACTest):
+    def category(self) -> str:
+        return ACTestCategories.deprecations
+
+    def title(self) -> str:
+        return _("Deprecated check man pages")
+
+    def help(self) -> str:
+        return _(
+            "Check man pages in <tt>'%s'</tt> are marked as 'deprecated'"
+            " and will be ignored in future Checkmk versions"
+            " (official deprecation timeline not decided yet)."
+        ) % str(local_legacy_check_manpages_dir)
+
+    def _get_files(self) -> Sequence[Path]:
+        try:
+            return list(local_legacy_check_manpages_dir.iterdir())
+        except FileNotFoundError:
+            return []
+
+    def is_relevant(self) -> bool:
+        return True
+
+    def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
+        if files := self._get_files():
+            for plugin_filepath in files:
+                yield _compute_deprecation_result(
+                    version=__version__,
+                    deprecated_version="2.3.0",
+                    removed_version="2.4.0",
+                    title_entity=_("Check man page"),
+                    title_api=_("legacy"),
+                    site_id=site_id,
+                    path=plugin_filepath,
+                )
+            return
+
+        yield ACSingleResult(
+            state=ACResultState.OK,
+            text=_("No check man pages using the deprecated API"),
+            site_id=site_id,
+        )
+
+
+def _walk(folder: Path) -> Iterator[Path]:
+    for root, _dirs, files in os.walk(folder):
+        for file in files:
+            if (path := Path(root, file)).is_file() and path.suffix == ".py":
+                yield path
+
+
+class ACTestDeprecatedGUIExtensions(ACTest):
+    def category(self) -> str:
+        return ACTestCategories.deprecations
+
+    def title(self) -> str:
+        return _("Deprecated GUI extensions")
+
+    def help(self) -> str:
+        return _(
+            "GUI extensions in <tt>'%s'</tt> are marked as 'deprecated'"
+            " and will be ignored in future Checkmk versions"
+            " (official deprecation timeline not decided yet)."
+        ) % str(local_gui_plugins_dir)
+
+    def _get_files(self) -> Sequence[Path]:
+        try:
+            return list(_walk(local_gui_plugins_dir))
+        except FileNotFoundError:
+            return []
+
+    def is_relevant(self) -> bool:
+        return True
+
+    def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
+        if files := self._get_files():
+            for plugin_filepath in files:
+                yield ACSingleResult(
+                    state=ACResultState.WARN,
+                    text=(
+                        _(
+                            "GUI extension in %r uses an API which is marked as deprecated and may"
+                            " not work anymore due to unknown imports or objects."
+                        )
+                        % plugin_filepath.parent.name
+                    ),
+                    site_id=site_id,
+                    path=plugin_filepath,
+                )
+            return
+
+        yield ACSingleResult(
+            state=ACResultState.OK,
+            text=_("No GUI extensions using the deprecated API"),
+            site_id=site_id,
+        )
+
+
+class ACTestDeprecatedLegacyGUIExtensions(ACTest):
+    def category(self) -> str:
+        return ACTestCategories.deprecations
+
+    def title(self) -> str:
+        return _("Deprecated legacy GUI extensions")
+
+    def help(self) -> str:
+        return _(
+            "Legacy GUI extensions in <tt>'%s'</tt> are marked as 'deprecated'"
+            " and will be ignored in future Checkmk versions"
+            " (official deprecation timeline not decided yet)."
+        ) % str(local_web_dir)
+
+    def _get_files(self) -> Sequence[Path]:
+        try:
+            return list(_walk(local_web_dir))
+        except FileNotFoundError:
+            return []
+
+    def is_relevant(self) -> bool:
+        return True
+
+    def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
+        if files := self._get_files():
+            for plugin_filepath in files:
+                match plugin_filepath.parent.name:
+                    case "metrics" | "perfometer":
+                        yield _compute_deprecation_result(
+                            version=__version__,
+                            deprecated_version="2.3.0",
+                            removed_version="2.4.0",
+                            title_entity=(
+                                _("Legacy GUI extension in %r") % plugin_filepath.parent.name
+                            ),
+                            title_api=_("legacy"),
+                            site_id=site_id,
+                            path=plugin_filepath,
+                        )
+                    case "wato":
+                        yield _compute_deprecation_result(
+                            version=__version__,
+                            deprecated_version="2.4.0",
+                            removed_version="2.5.0",
+                            title_entity=(
+                                _("Legacy GUI extension in %r") % plugin_filepath.parent.name
+                            ),
+                            title_api=_("legacy"),
+                            site_id=site_id,
+                            path=plugin_filepath,
+                        )
+                    case _:
+                        yield ACSingleResult(
+                            state=ACResultState.WARN,
+                            text=(
+                                _(
+                                    "Legacy GUI extension in %r uses an API which is marked as"
+                                    " deprecated and may not work anymore due to unknown imports or"
+                                    " objects."
+                                )
+                                % plugin_filepath.parent.name
+                            ),
+                            site_id=site_id,
+                            path=plugin_filepath,
+                        )
+            return
+
+        yield ACSingleResult(
+            state=ACResultState.OK,
+            text=_("No legacy GUI extensions using the deprecated API"),
+            site_id=site_id,
+        )
+
+
+class ACTestDeprecatedPNPTemplates(ACTest):
+    def category(self) -> str:
+        return ACTestCategories.deprecations
+
+    def title(self) -> str:
+        return _("Deprecated PNP templates")
+
+    def help(self) -> str:
+        return _(
+            "PNP templates in <tt>'%s'</tt> are marked as 'deprecated'"
+            " and will be ignored in future Checkmk versions"
+            " (official deprecation timeline not decided yet)."
+        ) % str(local_pnp_templates_dir)
+
+    def _get_files(self) -> Sequence[Path]:
+        try:
+            return list(local_pnp_templates_dir.iterdir())
+        except FileNotFoundError:
+            return []
+
+    def is_relevant(self) -> bool:
+        return True
+
+    def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
+        if files := self._get_files():
+            for plugin_filepath in files:
+                yield ACSingleResult(
+                    state=ACResultState.CRIT,
+                    text=_(
+                        "PNP template uses an API which was removed in an ealier Checkmk version."
+                    ),
+                    site_id=site_id,
+                    path=plugin_filepath,
+                )
+            return
+
+        yield ACSingleResult(
+            state=ACResultState.OK,
+            text=_("No PNP templates using the deprecated API"),
+            site_id=site_id,
         )
 
 
 def _site_is_using_livestatus_proxy(site_id):
-    site_configs = SiteManagementFactory().factory().load_sites()
+    site_configs = site_management_registry["site_management"].load_sites()
     return site_configs[site_id].get("proxy") is not None
 
 
@@ -1343,6 +1730,7 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
         return bool(self._get_rules())
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         rules = self._get_rules()
         if not rules:
             yield ACSingleResult(
@@ -1350,6 +1738,7 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
                 text=_(
                     "No ruleset <b>State in case of restricted address mismatch</b> is configured"
                 ),
+                site_id=site_id,
             )
             return
 
@@ -1357,6 +1746,7 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
             yield ACSingleResult(
                 state=ACResultState.CRIT,
                 text=f"Rule in <b>{folder_title}</b> has value <b>{rule_state}</b>",
+                site_id=site_id,
             )
 
     def _get_rules(self):
@@ -1391,12 +1781,14 @@ class ACTestCheckMKCheckerNumber(ACTest):
         return self._uses_microcore()
 
     def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
         try:
             num_cpu = multiprocessing.cpu_count()
         except NotImplementedError:
             yield ACSingleResult(
                 state=ACResultState.OK,
                 text=_("Cannot test. Unable to determine the number of CPUs on target system."),
+                site_id=site_id,
             )
             return
 
@@ -1408,9 +1800,12 @@ class ACTestCheckMKCheckerNumber(ACTest):
                     "a detrimental effect, since they are not IO bound."
                 )
                 % num_cpu,
+                site_id=site_id,
             )
             return
 
         yield ACSingleResult(
-            state=ACResultState.OK, text=_("Number of Checkmk checkers is less than number of CPUs")
+            state=ACResultState.OK,
+            text=_("Number of Checkmk checkers is less than number of CPUs"),
+            site_id=site_id,
         )

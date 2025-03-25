@@ -5,13 +5,14 @@
 
 from collections.abc import Sequence
 from functools import partial
+from typing import override
 
 from cmk.utils.user import UserId
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l
-from cmk.gui.painter.v0.base import Cell
+from cmk.gui.painter.v0 import Cell
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import ColumnSpec, Rows, SorterSpec, ViewSpec, VisualLinkSpec
 from cmk.gui.utils.html import HTML
@@ -965,17 +966,21 @@ def render_mobile_table(
 
 class LayoutMobileTable(Layout):
     @property
+    @override
     def ident(self) -> str:
         return "mobiletable"
 
     @property
+    @override
     def title(self) -> str:
         return _("Mobile: Table")
 
     @property
+    @override
     def can_display_checkboxes(self) -> bool:
         return False
 
+    @override
     def render(
         self,
         rows: Rows,
@@ -1044,17 +1049,21 @@ def render_mobile_list(
 
 class LayoutMobileList(Layout):
     @property
+    @override
     def ident(self) -> str:
         return "mobilelist"
 
     @property
+    @override
     def title(self) -> str:
         return _("Mobile: List")
 
     @property
+    @override
     def can_display_checkboxes(self) -> bool:
         return False
 
+    @override
     def render(
         self,
         rows: Rows,
@@ -1107,17 +1116,21 @@ def render_mobile_dataset(
 
 class LayoutMobileDataset(Layout):
     @property
+    @override
     def ident(self) -> str:
         return "mobiledataset"
 
     @property
+    @override
     def title(self) -> str:
         return _("Mobile: Dataset")
 
     @property
+    @override
     def can_display_checkboxes(self) -> bool:
         return False
 
+    @override
     def render(
         self,
         rows: Rows,

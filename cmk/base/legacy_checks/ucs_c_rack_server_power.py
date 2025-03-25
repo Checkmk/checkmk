@@ -16,8 +16,9 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_ucs_c_rack_server_power(string_table):
@@ -70,6 +71,7 @@ def discover_ucs_c_rack_server_power(section):
 
 
 check_info["ucs_c_rack_server_power"] = LegacyCheckDefinition(
+    name="ucs_c_rack_server_power",
     parse_function=parse_ucs_c_rack_server_power,
     service_name="Motherboard Power Statistics %s",
     discovery_function=discover_ucs_c_rack_server_power,

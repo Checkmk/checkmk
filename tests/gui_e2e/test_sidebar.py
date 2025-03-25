@@ -6,8 +6,8 @@
 import pytest
 from playwright.sync_api import expect
 
-from tests.testlib.playwright.helpers import Keys
-from tests.testlib.playwright.pom.dashboard import Dashboard
+from tests.gui_e2e.testlib.playwright.helpers import Keys
+from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
 
 
 @pytest.mark.parametrize("snapin_id", [("snapin_container_time"), ("snapin_container_speedometer")])

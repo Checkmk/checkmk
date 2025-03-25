@@ -41,7 +41,7 @@ export class TopTalkersDashlet extends TableFigure {
             Object.assign({}, this._default_params, {
                 ifid: this._ifid,
                 vlanid: this._vlanid,
-            })
+            }),
         ).toString();
         this.scheduler.force_update();
     }
@@ -54,10 +54,10 @@ export class TopTalkersDashlet extends TableFigure {
             d["cells"].forEach(c =>
                 c["figure_config"]
                     ? definitions_to_update.push(
-                          c["figure_config"]["plot_definitions"]
+                          c["figure_config"]["plot_definitions"],
                       )
-                    : null
-            )
+                    : null,
+            ),
         );
         definitions_to_update.forEach(entry => {
             entry.forEach((definition, idx) => {

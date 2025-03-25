@@ -6,10 +6,15 @@
 from collections.abc import Callable
 from pathlib import Path
 
+from cmk.ccc.plugin_registry import Registry
+
 from cmk.utils.timeperiod import (
-    builtin_timeperiods,
+    add_builtin_timeperiods,
     cleanup_timeperiod_caches,
+    is_builtin_timeperiod,
+    remove_builtin_timeperiods,
     timeperiod_spec_alias,
+    TimeperiodName,
     TimeperiodSpec,
     TimeperiodSpecs,
 )
@@ -19,10 +24,8 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DropdownChoice
-from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSimpleConfigFile
+from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 from cmk.gui.watolib.utils import wato_root_dir
-
-from cmk.ccc.plugin_registry import Registry
 
 from . import changes as _changes
 
@@ -32,6 +35,8 @@ TimeperiodUsage = tuple[str, str]
 TimeperiodUsageFinder = Callable[[str], list[TimeperiodUsage]]
 
 
+# The WatoConfigFile hierarchy is broken in many ways regarding typing, so we have to add some
+# typing wrapper methods below.
 class TimePeriodsConfigFile(WatoSimpleConfigFile[TimeperiodSpec]):
     def __init__(self) -> None:
         super().__init__(
@@ -40,25 +45,29 @@ class TimePeriodsConfigFile(WatoSimpleConfigFile[TimeperiodSpec]):
             spec_class=TimeperiodSpec,
         )
 
+    def load_timeperiod_specs_for_reading(self) -> TimeperiodSpecs:
+        return {TimeperiodName(n): s for n, s in self.load_for_reading().items()}
 
-def register(config_file_registry: ConfigFileRegistry) -> None:
-    config_file_registry.register(TimePeriodsConfigFile())
+    def load_timeperiod_specs_for_modification(self) -> dict[TimeperiodName, TimeperiodSpec]:
+        return {TimeperiodName(n): s for n, s in self.load_for_modification().items()}
+
+    def save_timeperiod_specs(self, timeperiods: TimeperiodSpecs) -> None:
+        self.save({_project(n): s for n, s in timeperiods.items()})
 
 
-def _filter_builtin_timeperiods(timeperiods: TimeperiodSpecs) -> TimeperiodSpecs:
-    builtin_keys = set(builtin_timeperiods().keys())
-    return {k: v for k, v in timeperiods.items() if k not in builtin_keys}
+# basically the inverse of TimeperiodName
+def _project(name: TimeperiodName) -> str:
+    return name
 
 
+# NOTE: This is a variation of cmk.utils.timeperiod.load_timeperiods(). Can we somehow unify this?
 @request_memoize()
 def load_timeperiods() -> TimeperiodSpecs:
-    timeperiods = TimePeriodsConfigFile().load_for_reading()
-    timeperiods.update(builtin_timeperiods())
-    return timeperiods
+    return add_builtin_timeperiods(TimePeriodsConfigFile().load_timeperiod_specs_for_reading())
 
 
 def save_timeperiods(timeperiods: TimeperiodSpecs) -> None:
-    TimePeriodsConfigFile().save(_filter_builtin_timeperiods(timeperiods))
+    TimePeriodsConfigFile().save_timeperiod_specs(remove_builtin_timeperiods(timeperiods))
     cleanup_timeperiod_caches()
     load_timeperiods.cache_clear()  # type: ignore[attr-defined]
 
@@ -89,7 +98,7 @@ class TimePeriodInUseError(Exception):
         self.usages = usages
 
 
-def load_timeperiod(name: str) -> TimeperiodSpec:
+def load_timeperiod(name: TimeperiodName) -> TimeperiodSpec:
     try:
         timeperiod = load_timeperiods()[name]
     except KeyError:
@@ -97,10 +106,10 @@ def load_timeperiod(name: str) -> TimeperiodSpec:
     return timeperiod
 
 
-def delete_timeperiod(name: str) -> None:
-    if name in builtin_timeperiods():
+def delete_timeperiod(name: TimeperiodName) -> None:
+    if is_builtin_timeperiod(name):
         raise TimePeriodBuiltInError()
-    time_periods = TimePeriodsConfigFile().load_for_modification()
+    time_periods = TimePeriodsConfigFile().load_timeperiod_specs_for_modification()
     if name not in time_periods:
         raise TimePeriodNotFoundError
     if usages := list(find_usages_of_timeperiod(name)):
@@ -110,11 +119,11 @@ def delete_timeperiod(name: str) -> None:
     _changes.add_change("edit-timeperiods", _("Deleted time period %s") % name)
 
 
-def modify_timeperiod(name: str, timeperiod: TimeperiodSpec) -> None:
-    if name in builtin_timeperiods():
+def modify_timeperiod(name: TimeperiodName, timeperiod: TimeperiodSpec) -> None:
+    if is_builtin_timeperiod(name):
         raise TimePeriodBuiltInError()
 
-    existing_timeperiods = TimePeriodsConfigFile().load_for_modification()
+    existing_timeperiods = TimePeriodsConfigFile().load_timeperiod_specs_for_modification()
     if name not in existing_timeperiods:
         raise TimePeriodNotFoundError()
 
@@ -123,11 +132,11 @@ def modify_timeperiod(name: str, timeperiod: TimeperiodSpec) -> None:
     _changes.add_change("edit-timeperiods", _("Modified time period %s") % name)
 
 
-def create_timeperiod(name: str, timeperiod: TimeperiodSpec) -> None:
-    if name in builtin_timeperiods():
+def create_timeperiod(name: TimeperiodName, timeperiod: TimeperiodSpec) -> None:
+    if is_builtin_timeperiod(name):
         raise TimePeriodBuiltInError()
 
-    existing_timeperiods = TimePeriodsConfigFile().load_for_modification()
+    existing_timeperiods = TimePeriodsConfigFile().load_timeperiod_specs_for_modification()
     if name in existing_timeperiods:
         raise TimePeriodAlreadyExistsError()
 
@@ -145,7 +154,7 @@ class TimeperiodSelection(DropdownChoice[str]):
     def __init__(
         self,
         title: str | None = None,
-        help: str | None = None,  # pylint: disable=redefined-builtin
+        help: str | None = None,
     ) -> None:
         super().__init__(
             choices=self._get_choices,
@@ -160,7 +169,7 @@ class TimeperiodSelection(DropdownChoice[str]):
             (name, "{} - {}".format(name, tp["alias"])) for (name, tp) in timeperiods.items()
         ]
 
-        always = ("24X7", _("Always"))
+        always = (TimeperiodName("24X7"), _("Always"))
         if always[0] not in dict(elements):
             elements.insert(0, always)
 

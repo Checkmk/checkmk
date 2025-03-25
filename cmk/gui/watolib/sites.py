@@ -9,7 +9,20 @@ import time
 from pathlib import Path
 from typing import Any, cast, NamedTuple
 
-from livestatus import NetworkSocketDetails, SiteConfiguration, SiteConfigurations, SiteId
+from livestatus import (
+    BrokerConnection,
+    BrokerConnections,
+    ConnectionId,
+    NetworkSocketDetails,
+    SiteConfiguration,
+    SiteConfigurations,
+    SiteId,
+)
+
+import cmk.ccc.version as cmk_version
+from cmk.ccc import store
+from cmk.ccc.plugin_registry import Registry
+from cmk.ccc.site import omd_site
 
 from cmk.utils import paths
 
@@ -32,41 +45,35 @@ from cmk.gui.site_config import (
     is_replication_enabled,
     is_wato_slave_site,
     site_is_local,
+    wato_slave_sites,
 )
 from cmk.gui.userdb import connection_choices
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.valuespec import (
-    Alternative,
     CascadingDropdown,
     Checkbox,
     Dictionary,
     FixedValue,
-    Float,
     HostAddress,
     Integer,
     IPNetwork,
     ListChoice,
     ListOfStrings,
-    MigrateNotUpdated,
     TextInput,
     Tuple,
     ValueSpec,
 )
+from cmk.gui.watolib.broker_connections import BrokerConnectionsConfigFile
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import (
     ConfigDomainCACertificates,
     ConfigDomainGUI,
-    ConfigDomainLiveproxy,
 )
 from cmk.gui.watolib.config_sync import create_distributed_wato_files
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.utils import ldap_connections_are_configurable
-
-import cmk.ccc.version as cmk_version
-from cmk.ccc import store
-from cmk.ccc.site import omd_site
 
 
 class SitesConfigFile(WatoSingleConfigFile[SiteConfigurations]):
@@ -265,7 +272,133 @@ class SiteManagement:
         )
 
     @classmethod
-    def validate_configuration(  # pylint: disable=too-many-branches
+    def is_site_in_broker_connections(cls, site_id: SiteId) -> bool:
+        connections = BrokerConnectionsConfigFile().load_for_modification()
+        connections_ids = {
+            site_id
+            for connection in connections.values()
+            for site_id in (connection.connectee.site_id, connection.connecter.site_id)
+        }
+
+        return site_id in connections_ids
+
+    @classmethod
+    def _change_affects_broker_connection(
+        cls, current_config: SiteConfiguration, old_config: SiteConfiguration
+    ) -> bool:
+        return (
+            is_replication_enabled(old_config) != is_replication_enabled(current_config)
+            or old_config.get("message_broker_port", 5672)
+            != current_config.get("message_broker_port", 5672)
+            or old_config["multisiteurl"] != current_config["multisiteurl"]
+        )
+
+    @classmethod
+    def get_connected_sites_to_update(
+        cls,
+        new_or_deleted_connection: bool,
+        modified_site: SiteId,
+        current_config: SiteConfiguration,
+        old_config: SiteConfiguration | None = None,
+    ) -> set[SiteId]:
+        connected = {omd_site()}
+
+        if new_or_deleted_connection or (
+            old_config
+            and is_replication_enabled(old_config) != is_replication_enabled(current_config)
+        ):
+            connected |= set(wato_slave_sites().keys())
+            return connected
+
+        if old_config is None:
+            raise MKUserError(None, _("An old configuration is required for existing connections."))
+
+        if not cls._change_affects_broker_connection(current_config, old_config):
+            return set()
+
+        connections = BrokerConnectionsConfigFile().load_for_reading()
+        for connection in connections.values():
+            if modified_site in (
+                connection.connectee.site_id,
+                connection.connecter.site_id,
+            ):
+                connected |= {
+                    connection.connectee.site_id,
+                    connection.connecter.site_id,
+                }
+
+        return connected
+
+    @classmethod
+    def get_broker_connections(cls) -> BrokerConnections:
+        return BrokerConnectionsConfigFile().load_for_reading()
+
+    @classmethod
+    def broker_connection_id_exists(cls, connection_id: str) -> bool:
+        return connection_id in cls.get_broker_connections()
+
+    @classmethod
+    def _validate_broker_connection(
+        cls, connection_id: ConnectionId, connection: BrokerConnection, is_new: bool
+    ) -> None:
+        if not re.match("^[-a-z0-9A-Z_]+$", connection_id):
+            raise MKUserError(
+                "id", _("The connection id must consist only of letters, digit and the underscore.")
+            )
+
+        if connection.connecter.site_id == connection.connectee.site_id:
+            raise MKUserError(
+                None,
+                _("Connecter and connectee sites must be different."),
+            )
+
+        if is_new and cls.broker_connection_id_exists(connection_id):
+            raise MKUserError(
+                None,
+                _("Connection id %s already exists.") % connection_id,
+            )
+
+        old_connection_sites = {connection.connecter.site_id, connection.connectee.site_id}
+        for _conn_id, conn in cls.get_broker_connections().items():
+            if _conn_id == connection_id:
+                continue
+
+            if old_connection_sites == {conn.connecter.site_id, conn.connectee.site_id}:
+                raise MKUserError(
+                    None,
+                    _("A connection with the same sites already exists."),
+                )
+
+    @classmethod
+    def _save_broker_connection_config(
+        cls, save_id: str, connection: BrokerConnection
+    ) -> tuple[SiteId, SiteId]:
+        broker_connections = cls.get_broker_connections()
+        broker_connections[ConnectionId(save_id)] = connection
+        BrokerConnectionsConfigFile().save(broker_connections)
+        return connection.connectee.site_id, connection.connecter.site_id
+
+    @classmethod
+    def validate_and_save_broker_connection(
+        cls, connection_id: ConnectionId, connection: BrokerConnection, is_new: bool
+    ) -> tuple[SiteId, SiteId]:
+        cls._validate_broker_connection(connection_id, connection, is_new)
+        return cls._save_broker_connection_config(connection_id, connection)
+
+    @classmethod
+    def delete_broker_connection(cls, connection_id: ConnectionId) -> tuple[SiteId, SiteId]:
+        broker_connections = cls.get_broker_connections()
+        if connection_id not in broker_connections:
+            raise MKUserError(None, _("Unable to delete unknown connection id: %s") % connection_id)
+
+        connection = broker_connections[connection_id]
+        del broker_connections[connection_id]
+        BrokerConnectionsConfigFile().save(broker_connections)
+
+        return connection.connectee.site_id, connection.connecter.site_id
+
+    @classmethod
+    def validate_configuration(
         cls,
         site_id,
         site_configuration,
@@ -340,6 +473,16 @@ class SiteManagement:
                     "replication", _("You cannot do replication with the local site.")
                 )
 
+        if not is_replication_enabled(site_configuration) and cls.is_site_in_broker_connections(
+            site_id
+        ):
+            raise MKUserError(
+                "replication",
+                _(
+                    "You cannot disable the replication on this site. It is used in a broker peer to peer connection."
+                ),
+            )
+
         # User synchronization
         if ldap_connections_are_configurable():
             user_sync_valuespec = cls.user_sync_valuespec(site_id)
@@ -371,7 +514,7 @@ class SiteManagement:
             hooks.call("sites-saved", sites)
 
     @classmethod
-    def delete_site(cls, site_id):
+    def delete_site(cls, site_id: SiteId) -> None:
         # TODO: Clean this up
         from cmk.gui.watolib.hosts_and_folders import folder_tree
 
@@ -404,294 +547,45 @@ class SiteManagement:
                 % search_url,
             )
 
+        if cls.is_site_in_broker_connections(site_id):
+            raise MKUserError(
+                None,
+                _(
+                    "You cannot delete this connection. It is used in a broker peer to peer connection."
+                ),
+            )
+
         domains = cls._affected_config_domains()
 
+        connected_sites = cls.get_connected_sites_to_update(
+            new_or_deleted_connection=True, modified_site=site_id, current_config=all_sites[site_id]
+        )
+
         del all_sites[site_id]
-        sites_config_file.save(all_sites)
-        cmk.gui.watolib.activate_changes.clear_site_replication_status(site_id)
+        cls.save_sites(all_sites)
+
         cmk.gui.watolib.changes.add_change(
-            "edit-sites", _("Deleted site %s") % site_id, domains=domains, sites=[omd_site()]
+            "edit-sites",
+            _("Deleted site %s") % site_id,
+            domains=domains,
+            # Exclude site which is about to be removed. The activation won't be executed for that
+            # site anymore, so there is no point in adding a change for this site
+            sites=list(connected_sites - {site_id}),
+            need_restart=True,
         )
+        cmk.gui.watolib.activate_changes.clear_site_replication_status(site_id)
 
     @classmethod
-    def _affected_config_domains(cls):
-        return [ConfigDomainGUI]
+    def _affected_config_domains(cls) -> list[ABCConfigDomain]:
+        return [ConfigDomainGUI()]
 
 
-class SiteManagementFactory:
-    @staticmethod
-    def factory() -> SiteManagement:
-        if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE:
-            cls: type[SiteManagement] = CRESiteManagement
-        else:
-            cls = CEESiteManagement
-
-        return cls()
+class SiteManagementRegistry(Registry[SiteManagement]):
+    def plugin_name(self, instance: SiteManagement) -> str:
+        return "site_management"
 
 
-class CRESiteManagement(SiteManagement):
-    pass
-
-
-# TODO: This has been moved directly into watolib because it was not easily possible
-# to extract SiteManagement() to a separate module (depends on Folder, add_change, ...).
-# As soon as we have untied this we should re-establish a watolib plug-in hierarchy and
-# move this to a CEE/CME specific watolib plugin
-class CEESiteManagement(SiteManagement):
-    @classmethod
-    def livestatus_proxy_valuespec(cls):
-        return Alternative(
-            title=_("Use Livestatus Proxy Daemon"),
-            elements=[
-                FixedValue(
-                    value=None,
-                    title=_("Connect directly, without Livestatus Proxy"),
-                    totext="",
-                ),
-                MigrateNotUpdated(
-                    valuespec=Dictionary(
-                        title=_("Use Livestatus Proxy Daemon"),
-                        optional_keys=["tcp"],
-                        columns=1,
-                        elements=[
-                            (
-                                "params",
-                                Alternative(
-                                    title=_("Parameters"),
-                                    elements=[
-                                        FixedValue(
-                                            value=None,
-                                            title=_("Use global connection parameters"),
-                                            totext=_(
-                                                'Use the <a href="%s">global parameters</a> for this connection'
-                                            )
-                                            % "wato.py?mode=edit_configvar&site=&varname=liveproxyd_default_connection_params",
-                                        ),
-                                        Dictionary(
-                                            title=_("Use custom connection parameters"),
-                                            elements=cls.liveproxyd_connection_params_elements(),
-                                        ),
-                                    ],
-                                ),
-                            ),
-                            ("tcp", _liveproxyd_via_tcp()),
-                        ],
-                    ),
-                    migrate=cls.migrate_old_connection_params,
-                ),
-            ],
-        )
-
-    # Duplicate code with cmk.cee.liveproxy.Channel._transform_old_socket_spec
-    @classmethod
-    def _transform_old_socket_spec(cls, sock_spec):
-        """Transforms pre 1.6 socket configs"""
-        if isinstance(sock_spec, str):
-            return "unix", {
-                "path": sock_spec,
-            }
-
-        if isinstance(sock_spec, tuple) and len(sock_spec) == 2 and isinstance(sock_spec[1], int):
-            return "tcp", {
-                "address": sock_spec,
-            }
-
-        return sock_spec
-
-    @classmethod
-    def liveproxyd_connection_params_elements(cls):
-        defaults = ConfigDomainLiveproxy.connection_params_defaults()
-
-        return [
-            (
-                "channels",
-                Integer(
-                    title=_("Number of channels to keep open"),
-                    minvalue=2,
-                    maxvalue=50,
-                    default_value=defaults["channels"],
-                ),
-            ),
-            (
-                "heartbeat",
-                Tuple(
-                    title=_("Regular heartbeat"),
-                    orientation="float",
-                    elements=[
-                        Integer(
-                            label=_("One heartbeat every"),
-                            unit=_("sec"),
-                            minvalue=1,
-                            default_value=defaults["heartbeat"][0],
-                        ),
-                        Float(
-                            label=_("with a timeout of"),
-                            unit=_("sec"),
-                            minvalue=0.1,
-                            default_value=defaults["heartbeat"][1],
-                        ),
-                    ],
-                ),
-            ),
-            (
-                "channel_timeout",
-                Float(
-                    title=_("Timeout waiting for a free channel"),
-                    minvalue=0.1,
-                    default_value=defaults["channel_timeout"],
-                    unit=_("sec"),
-                ),
-            ),
-            (
-                "query_timeout",
-                Float(
-                    title=_("Total query timeout"),
-                    minvalue=0.1,
-                    unit=_("sec"),
-                    default_value=defaults["query_timeout"],
-                ),
-            ),
-            (
-                "connect_retry",
-                Float(
-                    title=_("Cooling period after failed connect/heartbeat"),
-                    minvalue=0.1,
-                    unit=_("sec"),
-                    default_value=defaults["connect_retry"],
-                ),
-            ),
-            (
-                "cache",
-                Checkbox(
-                    title=_("Enable Caching"),
-                    label=_("Cache several non-status queries"),
-                    help=_(
-                        "This option will enable the caching of several queries that "
-                        "need no current data. This reduces the number of Livestatus "
-                        "queries to sites and cuts down the response time of remote "
-                        "sites with large latencies."
-                    ),
-                    default_value=defaults["cache"],
-                ),
-            ),
-        ]
-
-    # Each site had it's individual connection params set all time. Detect whether or
-    # not a site is at the default configuration and set the config to
-    # "use default connection params". In case the values are not similar to the current
-    # defaults just change the data structure to the new one.
-    @classmethod
-    def migrate_old_connection_params(cls, value):
-        if "params" in value:
-            return value
-
-        new_value = {
-            "params": value,
-        }
-
-        defaults = ConfigDomainLiveproxy.connection_params_defaults()
-        for key, val in list(value.items()):
-            if val == defaults[key]:
-                del value[key]
-
-        if not value:
-            new_value["params"] = None
-
-        return new_value
-
-    @classmethod
-    def save_sites(cls, sites, activate=True):
-        super().save_sites(sites, activate)
-
-        if activate and active_config.liveproxyd_enabled:
-            cls._save_liveproxyd_config(sites)
-
-    @classmethod
-    def _save_liveproxyd_config(cls, sites):
-        path = cmk.utils.paths.default_config_dir + "/liveproxyd.mk"
-
-        conf = {}
-        for siteid, siteconf in sites.items():
-            proxy_params = siteconf.get("proxy")
-            if proxy_params is None:
-                continue
-
-            conf[siteid] = {
-                "socket": siteconf["socket"],
-            }
-
-            if "tcp" in proxy_params:
-                conf[siteid]["tcp"] = proxy_params["tcp"]
-
-            if proxy_params["params"]:
-                conf[siteid].update(proxy_params["params"])
-
-        store.save_to_mk_file(path, "sites", conf)
-
-        ConfigDomainLiveproxy().activate()
-
-    @classmethod
-    def _affected_config_domains(cls):
-        domains = super()._affected_config_domains()
-        if active_config.liveproxyd_enabled:
-            domains.append(ConfigDomainLiveproxy)
-        return domains
-
-
-def _liveproxyd_via_tcp() -> Dictionary:
-    return Dictionary(
-        title=_("Allow access via TCP"),
-        help=_(
-            "This option can be useful to build a cascading distributed setup. "
-            "The Livestatus Proxy of this site connects to the site configured "
-            "here via Livestatus and opens up a TCP port for clients. The "
-            "requests of the clients are forwarded to the destination site. "
-            "You need to configure a TCP port here that is not used on the "
-            "local system yet."
-        ),
-        elements=[
-            (
-                "port",
-                Integer(
-                    title=_("TCP port"),
-                    minvalue=1,
-                    maxvalue=65535,
-                    default_value=6560,
-                ),
-            ),
-            (
-                "only_from",
-                ListOfStrings(
-                    title=_("Restrict access to IP addresses"),
-                    help=_(
-                        "The access to the Livestatus Proxy via TCP will only be allowed from the "
-                        "configured source IP addresses. For an IP address to be allowed it must "
-                        "exactly match one of the specified values."
-                    ),
-                    valuespec=IPNetwork(),  # TODO: This is nonsense.
-                    orientation="horizontal",
-                    allow_empty=False,
-                ),
-            ),
-            (
-                "tls",
-                FixedValue(
-                    value=True,
-                    title=_("Encrypt communication"),
-                    totext=_("Encrypt TCP Livestatus connections"),
-                    help=_(
-                        "Since Checkmk 1.6 it is possible to encrypt the TCP Livestatus "
-                        "connections using SSL. This is enabled by default for sites that "
-                        "enable Livestatus via TCP with 1.6 or newer. Sites that already "
-                        "have this option enabled keep the communication unencrypted for "
-                        "compatibility reasons. However, it is highly recommended to "
-                        "migrate to an encrypted communication."
-                    ),
-                ),
-            ),
-        ],
-        optional_keys=["only_from", "tls"],
-    )
+site_management_registry = SiteManagementRegistry()
 
 
 # Don't use or change this ValueSpec, it is out-of-date. It can't be removed due to CMK-12228.
@@ -699,7 +593,7 @@ class LivestatusViaTCP(Dictionary):
     def __init__(
         self,
         title: str | None = None,
-        help: str | None = None,  # pylint: disable=redefined-builtin
+        help: str | None = None,
         tcp_port: int = 6557,
     ) -> None:
         elements: list[tuple[str, ValueSpec]] = [
@@ -859,7 +753,7 @@ def get_effective_global_setting(site_id: SiteId, is_remote_site: bool, varname:
     if is_remote_site:
         current_settings = load_configuration_settings(site_specific=True)
     else:
-        sites = SiteManagementFactory.factory().load_sites()
+        sites = site_management_registry["site_management"].load_sites()
         current_settings = sites.get(site_id, SiteConfiguration({})).get("globals", {})
 
     if varname in current_settings:

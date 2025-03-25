@@ -18,7 +18,6 @@ import traceback
 import urllib.parse
 import uuid
 from collections.abc import Iterator, Mapping
-from contextlib import suppress
 from datetime import datetime
 from functools import cache
 from pathlib import Path
@@ -27,6 +26,11 @@ from typing import Any
 import requests
 
 import livestatus
+
+import cmk.ccc.version as cmk_version
+from cmk.ccc import site, store
+from cmk.ccc.i18n import _
+from cmk.ccc.site import omd_site
 
 import cmk.utils.paths
 from cmk.utils import tty
@@ -42,6 +46,7 @@ from cmk.utils.diagnostics import (
     get_checkmk_core_files_map,
     get_checkmk_licensing_files_map,
     get_checkmk_log_files_map,
+    OPT_BI_RUNTIME_DATA,
     OPT_CHECKMK_CONFIG_FILES,
     OPT_CHECKMK_CORE_FILES,
     OPT_CHECKMK_CRASH_REPORTS,
@@ -54,16 +59,12 @@ from cmk.utils.diagnostics import (
 )
 from cmk.utils.hostaddress import HostName
 from cmk.utils.licensing.usage import deserialize_dump
-from cmk.utils.local_secrets import AutomationUserSecret
+from cmk.utils.local_secrets import SiteInternalSecret
 from cmk.utils.log import console, section
 from cmk.utils.paths import omd_root
-from cmk.utils.structured_data import load_tree, SDNodeName, SDRawTree
-from cmk.utils.user import UserId
+from cmk.utils.structured_data import load_tree, SDNodeName, SDRawTree, serialize_tree
 
-import cmk.ccc.version as cmk_version
-from cmk.ccc import site, store
-from cmk.ccc.i18n import _
-from cmk.ccc.site import omd_site
+from cmk.base.config import LoadedConfigFragment
 
 if cmk_version.edition(cmk.utils.paths.omd_root) in [
     cmk_version.Edition.CEE,
@@ -71,20 +72,22 @@ if cmk_version.edition(cmk.utils.paths.omd_root) in [
     cmk_version.Edition.CCE,
     cmk_version.Edition.CSE,
 ]:
-    from cmk.base.cee.diagnostics import (  # type: ignore[import,unused-ignore]  # pylint: disable=no-name-in-module,import-error
-        cmc_specific_attrs,
+    from cmk.base.cee.diagnostics import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
+        cmc_specific_attrs,  # type: ignore[import,unused-ignore]
     )
 else:
 
-    def cmc_specific_attrs() -> Mapping[str, int]:
+    def cmc_specific_attrs(loaded_config: LoadedConfigFragment) -> Mapping[str, int]:
         return {}
 
 
 SUFFIX = ".tar.gz"
 
 
-def create_diagnostics_dump(parameters: DiagnosticsOptionalParameters | None) -> None:
-    dump = DiagnosticsDump(parameters)
+def create_diagnostics_dump(
+    loaded_config: LoadedConfigFragment, parameters: DiagnosticsOptionalParameters | None
+) -> None:
+    dump = DiagnosticsDump(loaded_config, parameters)
     dump.create()
 
     section.section_step("Creating diagnostics dump", verbose=False)
@@ -141,10 +144,14 @@ def _format_error(error):
 class DiagnosticsDump:
     """Caring about the persistance of diagnostics dumps in the local site"""
 
-    _keep_num_dumps = 5
+    _keep_num_dumps = 10
 
-    def __init__(self, parameters: DiagnosticsOptionalParameters | None = None) -> None:
-        self.fixed_elements = self._get_fixed_elements()
+    def __init__(
+        self,
+        loaded_config: LoadedConfigFragment,
+        parameters: DiagnosticsOptionalParameters | None = None,
+    ) -> None:
+        self.fixed_elements = self._get_fixed_elements(loaded_config)
         self.optional_elements = self._get_optional_elements(parameters)
         self.elements = self.fixed_elements + self.optional_elements
 
@@ -154,15 +161,21 @@ class DiagnosticsDump:
         self.tarfile_path = dump_folder.joinpath(_file_name).with_suffix(SUFFIX)
         self.tarfile_created = False
 
-    def _get_fixed_elements(self) -> list[ABCDiagnosticsElement]:
+    def _get_fixed_elements(
+        self, loaded_config: LoadedConfigFragment
+    ) -> list[ABCDiagnosticsElement]:
         return [
             GeneralDiagnosticsElement(),
-            PerfDataDiagnosticsElement(),
+            PerfDataDiagnosticsElement(loaded_config),
             HWDiagnosticsElement(),
+            VendorDiagnosticsElement(),
             EnvironmentDiagnosticsElement(),
             FilesSizeCSVDiagnosticsElement(),
             PipFreezeDiagnosticsElement(),
             SELinuxJSONDiagnosticsElement(),
+            DpkgCSVDiagnosticsElement(),
+            RpmCSVDiagnosticsElement(),
+            CMAJSONDiagnosticsElement(),
         ]
 
     def _get_optional_elements(
@@ -180,11 +193,16 @@ class DiagnosticsDump:
         if parameters.get(OPT_OMD_CONFIG):
             optional_elements.append(OMDConfigDiagnosticsElement())
 
-        if parameters.get(OPT_CHECKMK_OVERVIEW):
-            optional_elements.append(CheckmkOverviewDiagnosticsElement())
+        if OPT_CHECKMK_OVERVIEW in parameters:
+            optional_elements.append(
+                CheckmkOverviewDiagnosticsElement(parameters.get(OPT_CHECKMK_OVERVIEW, ""))
+            )
 
         if parameters.get(OPT_CHECKMK_CRASH_REPORTS):
             optional_elements.append(CrashDumpsDiagnosticsElement())
+
+        if parameters.get(OPT_BI_RUNTIME_DATA):
+            optional_elements.append(BIDataDiagnosticsElement())
 
         rel_checkmk_config_files = parameters.get(OPT_CHECKMK_CONFIG_FILES)
         if rel_checkmk_config_files:
@@ -201,8 +219,10 @@ class DiagnosticsDump:
                 optional_elements.append(CheckmkCoreFilesDiagnosticsElement(rel_checkmk_core_files))
                 optional_elements.append(CMCDumpDiagnosticsElement())
 
-            if parameters.get(OPT_PERFORMANCE_GRAPHS):
-                optional_elements.append(PerformanceGraphsDiagnosticsElement())
+            if OPT_PERFORMANCE_GRAPHS in parameters:
+                optional_elements.append(
+                    PerformanceGraphsDiagnosticsElement(parameters.get(OPT_PERFORMANCE_GRAPHS, ""))
+                )
 
             rel_checkmk_licensing_files = parameters.get(OPT_CHECKMK_LICENSING_FILES)
             if rel_checkmk_licensing_files:
@@ -294,14 +314,17 @@ def get_omd_config() -> site.OMDConfig:
 
 
 @cache
-def get_checkmk_server_name() -> HostName | None:
+def verify_checkmk_server_host(checkmk_server_host: str | None) -> HostName:
+    if checkmk_server_host:
+        return HostName(checkmk_server_host)
+
     result = livestatus.LocalConnection().query(
         f"GET services\nColumns: host_name\nFilter: service_description ~ OMD {omd_site()} performance\n"
     )
     try:
         return HostName(result[0][0])
     except IndexError:
-        return None
+        raise DiagnosticsElementError("No Checkmk server found")
 
 
 # .
@@ -403,13 +426,79 @@ class FilesSizeCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
 
     def _collect_infos(self) -> DiagnosticsElementCSVResult:
         csv_data = []
-        csv_data.append("size;path")
-        for path, _dirs, files in os.walk(cmk.utils.paths.omd_root):
-            for f in files:
-                fp = os.path.join(path, f)
-                if not os.path.islink(fp):
-                    csv_data.append("%d;%s" % (os.path.getsize(fp), str(fp)))
+        csv_data.append("size;path;owner;group;mode;changed")
+        for dirpath, _dirnames, filenames in os.walk(cmk.utils.paths.omd_root):
+            for file in filenames:
+                f = Path(dirpath).joinpath(file)
+                if f.is_symlink():
+                    continue
+                csv_data.append(
+                    ";".join(
+                        [
+                            str(f.stat().st_size),
+                            str(f),
+                            f.owner(),
+                            f.group(),
+                            str(oct(f.stat().st_mode)),
+                            datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S"),
+                        ]
+                    )
+                )
+
         return "\n".join(csv_data)
+
+
+class DpkgCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
+    @property
+    def ident(self) -> str:
+        return "dpkg_packages"
+
+    @property
+    def title(self) -> str:
+        return _("Dpkg packages information")
+
+    @property
+    def description(self) -> str:
+        return _("Output of `dpkg -l`. See the corresponding commandline help for more details.")
+
+    def _collect_infos(self) -> DiagnosticsElementCSVResult:
+        if not (dpkg_binary := shutil.which("dpkg")):
+            return ""
+
+        dpkg_output = subprocess.check_output([dpkg_binary, "-l"], text=True)
+        return "\n".join(
+            [";".join(l.split(maxsplit=4)) for l in dpkg_output.split("\n") if len(l.split()) > 4]
+        )
+
+
+class RpmCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
+    @property
+    def ident(self) -> str:
+        return "rpm_packages"
+
+    @property
+    def title(self) -> str:
+        return _("Rpm packages information")
+
+    @property
+    def description(self) -> str:
+        return _("Output of `rpm -qa`. See the corresponding commandline help for more details.")
+
+    def _collect_infos(self) -> DiagnosticsElementCSVResult:
+        if not (rpm_binary := shutil.which("rpm")):
+            return ""
+
+        try:
+            output = subprocess.check_output(
+                [rpm_binary, "-qa", "--queryformat", r"%{NAME};%{VERSION};%{RELEASE};%{ARCH}\n"],
+                text=True,
+                stderr=subprocess.STDOUT,
+            )
+
+        except subprocess.CalledProcessError:
+            return ""
+
+        return "\n".join(sorted(output.split("\n")))
 
 
 #   ---json dumps-----------------------------------------------------------
@@ -432,13 +521,24 @@ class GeneralDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
     def _collect_infos(self) -> DiagnosticsElementJSONResult:
         version_infos = cmk_version.get_general_version_infos(omd_root)
-        version_infos["arch"] = platform.machine()
-        time_obj = datetime.fromtimestamp(version_infos.get("time", 0))
-        version_infos["time_human_readable"] = time_obj.isoformat(sep=" ")
-        return version_infos
+        time_obj = datetime.fromtimestamp(version_infos.get("time", 0.0))
+        return {
+            "arch": platform.machine(),
+            "time_human_readable": time_obj.isoformat(sep=" "),
+            "time": version_infos["time"],
+            "os": version_infos["os"],
+            "version": version_infos["version"],
+            "edition": version_infos["edition"],
+            "core": version_infos["core"],
+            "python_version": version_infos["python_version"],
+            "python_paths": list(version_infos["python_paths"]),
+        }
 
 
 class PerfDataDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+    def __init__(self, load_config: LoadedConfigFragment) -> None:
+        self._loaded_config = load_config
+
     @property
     def ident(self) -> str:
         return "perfdata"
@@ -461,9 +561,97 @@ class PerfDataDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             if (key := result[0][i]) not in ["license_usage_history"]
         }
 
-        performance_data.update(cmc_specific_attrs())
+        performance_data.update(cmc_specific_attrs(self._loaded_config))
 
         return performance_data
+
+
+def collect_infos_hw(proc_base_path: Path) -> DiagnosticsElementJSONResult:
+    # Get the information from the proc files
+
+    hw_info: dict[str, dict[str, str]] = {}
+
+    for procfile, parser in [
+        ("meminfo", _meminfo_proc_parser),
+        ("loadavg", _load_avg_proc_parser),
+        ("cpuinfo", _cpuinfo_proc_parser),
+    ]:
+        filepath = proc_base_path.joinpath(procfile)
+        if content := _try_to_read(filepath):
+            hw_info[procfile] = parser(content)
+
+    return hw_info
+
+
+def _meminfo_proc_parser(content: list[str]) -> dict[str, str]:
+    info: dict[str, str] = {}
+
+    for line in content:
+        if line == "":
+            continue
+
+        key, value = (w.strip() for w in line.split(":", 1))
+        info[key.replace(" ", "_")] = value
+
+    return info
+
+
+def _cpuinfo_proc_parser(content: list[str]) -> dict[str, str]:
+    cpu_info: dict[str, Any] = {}
+    physical_ids: list[str] = []
+    num_processors = 0
+
+    # Example lines from /proc/cpuinfo output:
+    # >>> pprint.pprint(content)
+    # ['processor\t: 0',
+    #  'cpu family\t: 6',
+    #  'cpu MHz\t\t: 2837.021',
+    #  'core id\t\t: 0',
+    #  'power management:',
+    # ...
+    #  '',
+    #  'processor\t: 1',
+    #  'cpu family\t: 6',
+    #  'cpu MHz\t\t: 2100.000',
+    #  'core id\t\t: 1',
+    #  'power management:',
+    #  '',
+    # ...
+
+    # Keys that have different values for each processor
+    _KEYS_TO_IGNORE = [
+        "apicid",
+        "core_id",
+        "cpu_MHz",
+        "initial_apicid",
+        "processor",
+    ]
+
+    # Remove empty keys, empty values and ignore some keys
+    for line in content:
+        if line == "":
+            continue
+
+        key, value = (w.strip() for w in line.split(":", 1))
+        key = key.replace(" ", "_")
+
+        if key not in _KEYS_TO_IGNORE:
+            cpu_info[key] = value
+
+        if key == "processor":
+            num_processors += 1
+
+        if key == "physical_id" and value not in physical_ids:
+            physical_ids.append(value)
+
+    cpu_info["num_logical_processors"] = str(num_processors)
+    cpu_info["cpus"] = len(physical_ids)
+
+    return cpu_info
+
+
+def _load_avg_proc_parser(content: list[str]) -> dict[str, str]:
+    return dict(zip(["loadavg_1", "loadavg_5", "loadavg_15"], content[0].split()))
 
 
 class HWDiagnosticsElement(ABCDiagnosticsElementJSONDump):
@@ -480,116 +668,48 @@ class HWDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         return _("Hardware information of the Checkmk Server")
 
     def _collect_infos(self) -> DiagnosticsElementJSONResult:
-        # Get the information from the proc files
+        return collect_infos_hw(Path("/proc"))
 
-        hw_info: dict[str, dict[str, str]] = {}
 
-        for procfile, parser in [
-            ("meminfo", self._meminfo_proc_parser),
-            ("loadavg", self._load_avg_proc_parser),
-            ("cpuinfo", self._cpuinfo_proc_parser),
-        ]:
-            filepath = Path("/proc").joinpath(procfile)
-            try:
-                content = self._get_proc_content(filepath)
-            except FileNotFoundError:
-                continue
+def collect_infos_vendor(sys_path: Path) -> DiagnosticsElementJSONResult:
+    _SYS_FILES = [
+        "bios_vendor",
+        "bios_version",
+        "sys_vendor",
+        "product_name",
+        "chassis_asset_tag",
+    ]
+    _AZURE_TAG = "7783-7084-3265-9085-8269-3286-77"
+    vendor_info = {}
 
-            hw_info[procfile] = parser(content)
-
-        hw_info["vendorinfo"] = self._get_vendor_info()
-
-        return hw_info
-
-    def _get_proc_content(self, filepath: Path) -> list[str]:
-        with open(filepath) as f:
-            return f.read().splitlines()
-
-    def _meminfo_proc_parser(self, content: list[str]) -> dict[str, str]:
-        info: dict[str, str] = {}
-
-        for line in content:
-            if line == "":
-                continue
-
-            key, value = (w.strip() for w in line.split(":", 1))
-            info[key.replace(" ", "_")] = value
-
-        return info
-
-    def _cpuinfo_proc_parser(self, content: list[str]) -> dict[str, str]:
-        cpu_info: dict[str, Any] = {}
-        num_processors = 0
-
-        # Example lines from /proc/cpuinfo output:
-        # >>> pprint.pprint(content)
-        # ['processor\t: 0',
-        #  'cpu family\t: 6',
-        #  'cpu MHz\t\t: 2837.021',
-        #  'core id\t\t: 0',
-        #  'power management:',
-        # ...
-        #  '',
-        #  'processor\t: 1',
-        #  'cpu family\t: 6',
-        #  'cpu MHz\t\t: 2100.000',
-        #  'core id\t\t: 1',
-        #  'power management:',
-        #  '',
-        # ...
-
-        # Keys that have different values for each processor
-        _KEYS_TO_IGNORE = [
-            "apicid",
-            "core_id",
-            "cpu_MHz",
-            "initial_apicid",
-            "processor",
-        ]
-
-        # Remove empty keys, empty values and ignore some keys
-        for line in content:
-            if line == "":
-                continue
-
-            key, value = (w.strip() for w in line.split(":", 1))
-            key = key.replace(" ", "_")
-
-            if key not in _KEYS_TO_IGNORE:
-                cpu_info[key] = value
-
-            if key == "processor":
-                num_processors += 1
-
-        cpu_info["num_processors"] = str(num_processors)
-        return cpu_info
-
-    def _load_avg_proc_parser(self, content: list[str]) -> dict[str, str]:
-        return dict(zip(["loadavg_1", "loadavg_5", "loadavg_15"], content[0].split()))
-
-    def _get_vendor_info(self) -> dict[str, str]:
-        _SYS_FILES = [
-            "bios_vendor",
-            "bios_version",
-            "sys_vendor",
-            "product_name",
-            "chassis_asset_tag",
-        ]
-        _AZURE_TAG = "7783-7084-3265-9085-8269-3286-77"
-        sys_path = Path("/sys/class/dmi/id")
-        vendor_info = {}
-
-        for sys_file in _SYS_FILES:
-            file_content = store.load_text_from_file(sys_path.joinpath(sys_file)).replace("\n", "")
-            if sys_file == "chassis_asset_tag":
-                if file_content == _AZURE_TAG:
-                    vendor_info[sys_file] = "Azure"
-                else:
-                    vendor_info[sys_file] = "Other"
+    for sys_file in _SYS_FILES:
+        file_content = store.load_text_from_file(sys_path.joinpath(sys_file)).replace("\n", "")
+        if sys_file == "chassis_asset_tag":
+            if file_content == _AZURE_TAG:
+                vendor_info[sys_file] = "Azure"
             else:
-                vendor_info[sys_file] = file_content
+                vendor_info[sys_file] = "Other"
+        else:
+            vendor_info[sys_file] = file_content
 
-        return vendor_info
+    return vendor_info
+
+
+class VendorDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+    @property
+    def ident(self) -> str:
+        return "vendorinfo"
+
+    @property
+    def title(self) -> str:
+        return _("Vendor Information")
+
+    @property
+    def description(self) -> str:
+        return _("HW Vendor information of the Checkmk Server")
+
+    def _collect_infos(self) -> DiagnosticsElementJSONResult:
+        return collect_infos_vendor(Path("/sys/class/dmi/id"))
 
 
 class EnvironmentDiagnosticsElement(ABCDiagnosticsElementJSONDump):
@@ -685,8 +805,7 @@ class MKPListTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @property
     def description(self) -> str:
         return _(
-            "Output of `mkp list --json`. "
-            "See the corresponding commandline help for more details."
+            "Output of `mkp list --json`. See the corresponding commandline help for more details."
         )
 
     def _collect_infos(self) -> DiagnosticsElementJSONResult:
@@ -717,6 +836,42 @@ class SELinuxJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         }
 
 
+def _try_to_read(filename: str | Path) -> list[str]:
+    try:
+        with open(filename) as f:
+            content = f.readlines()
+
+    except (PermissionError, FileNotFoundError):
+        return []
+
+    return [l.rstrip() for l in content]
+
+
+class CMAJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+    @property
+    def ident(self) -> str:
+        return "appliance"
+
+    @property
+    def title(self) -> str:
+        return _("Checkmk Appliance information")
+
+    @property
+    def description(self) -> str:
+        return _("Information about the Appliance hardware and firmware version.")
+
+    def _collect_infos(self) -> DiagnosticsElementJSONResult:
+        cma_infos: dict[str, str | dict[str, str]] = {}
+
+        if hw_content := _try_to_read("/etc/cma/hw"):
+            cma_infos["hw"] = dict([l.replace("'", "").split("=") for l in hw_content if "=" in l])
+
+        if fw_content := _try_to_read("/ro/usr/share/cma/version"):
+            cma_infos["fw"] = fw_content[0]
+
+        return cma_infos
+
+
 class OMDConfigDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @property
     def ident(self) -> str:
@@ -740,6 +895,9 @@ class OMDConfigDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
 
 class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+    def __init__(self, checkmk_server_host: str) -> None:
+        self.checkmk_server_host = checkmk_server_host
+
     @property
     def ident(self) -> str:
         return "checkmk_overview"
@@ -759,26 +917,27 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         )
 
     def _collect_infos(self) -> SDRawTree:
-        checkmk_server_name = get_checkmk_server_name()
-        if checkmk_server_name is None:
-            raise DiagnosticsElementError("No Checkmk server found")
-
+        checkmk_server_host = verify_checkmk_server_host(self.checkmk_server_host)
         try:
-            tree = load_tree(Path(cmk.utils.paths.inventory_output_dir) / checkmk_server_name)
+            tree = load_tree(Path(cmk.utils.paths.inventory_output_dir) / checkmk_server_host)
         except FileNotFoundError:
             raise DiagnosticsElementError(
-                "No HW/SW Inventory tree of '%s' found" % checkmk_server_name
+                "No HW/SW Inventory tree of '%s' found" % checkmk_server_host
             )
 
         if not (
             node := tree.get_tree(
-                (SDNodeName("software"), SDNodeName("applications"), SDNodeName("check_mk"))
+                (
+                    SDNodeName("software"),
+                    SDNodeName("applications"),
+                    SDNodeName("check_mk"),
+                )
             )
         ):
             raise DiagnosticsElementError(
                 "No HW/SW Inventory node 'Software > Applications > Checkmk'"
             )
-        return node.serialize()
+        return serialize_tree(node)
 
 
 #   ---collect exiting files------------------------------------------------
@@ -827,10 +986,14 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
         # sanitize encrypted files
         elif str(rel_filepath) == "multisite.d/sites.mk":
             sites = store.load_from_mk_file(filepath, "sites", {})
-            for detail in sites.values():
-                with suppress(KeyError):
-                    detail["secret"] = "redacted"
-            store.save_to_mk_file(tmp_filepath, "sites", sites)
+            store.save_to_mk_file(
+                tmp_filepath,
+                "sites",
+                {
+                    siteid: livestatus.sanitize_site_configuration(config)
+                    for siteid, config in sites.items()
+                },
+            )
         else:
             shutil.copy(str(filepath), str(tmp_filepath))
 
@@ -940,6 +1103,9 @@ class CheckmkLicensingFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement)
 
 
 class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
+    def __init__(self, checkmk_server_host: str) -> None:
+        self.checkmk_server_host = checkmk_server_host
+
     @property
     def ident(self) -> str:
         return "performance_graphs"
@@ -957,11 +1123,8 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
         )
 
     def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
-        checkmk_server_name = get_checkmk_server_name()
-        if checkmk_server_name is None:
-            raise DiagnosticsElementError("No Checkmk server found")
-
-        response = self._get_response(checkmk_server_name, get_omd_config())
+        checkmk_server_host = verify_checkmk_server_host(self.checkmk_server_host)
+        response = self._get_response(checkmk_server_host, get_omd_config())
 
         if response.status_code != 200:
             raise DiagnosticsElementError(
@@ -970,7 +1133,6 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
 
         if "<html>" in response.text.lower():
             raise DiagnosticsElementError("Login failed - Invalid automation user or secret")
-
         # Verify if it's a PDF document: The header must begin with
         # "%PDF-" (hex: "25 50 44 46 2d")
         if response.content[:5].hex() != "255044462d":
@@ -983,25 +1145,51 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
         yield filepath
 
     def _get_response(
-        self, checkmk_server_name: str, omd_config: site.OMDConfig
+        self, checkmk_server_host: str, omd_config: site.OMDConfig
     ) -> requests.Response:
-        automation_secret = AutomationUserSecret(UserId("automation")).read()
-
+        internal_secret = "InternalToken %s" % (SiteInternalSecret().secret.b64_str)
         url = "http://{}:{}/{}/check_mk/report.py?".format(
             omd_config["CONFIG_APACHE_TCP_ADDR"],
             omd_config["CONFIG_APACHE_TCP_PORT"],
             omd_site(),
         ) + urllib.parse.urlencode(
             [
-                ("host", checkmk_server_name),
+                ("host", checkmk_server_host),
                 ("name", "host_performance_graphs"),
             ]
         )
 
         return requests.post(  # nosec B113 # BNS:773085
             url,
-            auth=("automation", automation_secret),
+            headers={
+                "Authorization": internal_secret,
+            },
         )
+
+
+class BIDataDiagnosticsElement(ABCDiagnosticsElement):
+    @property
+    def ident(self) -> str:
+        return "bi_runtime_data"
+
+    @property
+    def title(self) -> str:
+        return _("Business Intelligence runtime data")
+
+    @property
+    def description(self) -> str:
+        return _(
+            "Cached data from Business Intelligence. "
+            "contains states, downtimes, acknowledgements and service periods "
+            "for all hosts/services included in a BI aggregation."
+        )
+
+    def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
+        tmpdir = tmp_dump_folder.joinpath("tmp/check_mk/bi_cache")
+        tmpdir.mkdir(parents=True, exist_ok=True)
+
+        shutil.copytree(cmk.utils.paths.tmp_dir.joinpath("bi_cache"), tmpdir, dirs_exist_ok=True)
+        yield tmpdir
 
 
 class CrashDumpsDiagnosticsElement(ABCDiagnosticsElement):

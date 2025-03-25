@@ -1,3 +1,4 @@
+@use "sass:color";
 @charset "UTF-8";
 // Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -42,9 +43,9 @@ $font-color-orange: $orange-1;
 // -----------------------------------------------------------------------------
 // Form elements (input, textarea, button, etc.)
 // -----------------------------------------------------------------------------
-$button-background-hover: lighten($grey-6, 10%);
+$button-background-hover: color.adjust($grey-6, $lightness: 10%);
 $default-button-border-color: $ux-theme-5;
-$default-submit-button-border-color: darken($success, 25%);
+$default-submit-button-border-color: color.adjust($success, $lightness: -25%);
 
 $input-background-color: $ux-theme-5;
 $input-hover-bg-color: $ux-theme-4;
@@ -125,8 +126,9 @@ $dragging-bg-color: $ux-theme-1;
 
 $nested-table-th-bg-color: $ux-theme-4;
 $nested-table-td-bg-color: $ux-theme-5;
+$nested-table-td-inactive-bg-color: $nested-table-td-bg-color;
 
-$duallist-control-a-hover-bg-color: mix($white, $grey-5, 10%);
+$duallist-control-a-hover-bg-color: color.mix($white, $grey-5, 10%);
 
 $performance-table-shared-padding: 8px 0;
 
@@ -155,7 +157,7 @@ $help-icon-bg-color: rgb(6, 103, 193);
 $help-tt-font-color: $grey-2;
 
 $timeline-hilite-border: 2px solid $midgrey;
-$timetable-hilite-bg-color: lighten($ux-theme-1, 15%);
+$timetable-hilite-bg-color: color.adjust($ux-theme-1, $lightness: 15%);
 
 $graph-hover-popup-bg-color: $ux-theme-2;
 $graph-hover-popup-border: 1px solid $grey-3;
@@ -207,4 +209,4 @@ $dashlet-figures-grid-color: rgb(128, 151, 177);
 $scatterplot-hilite-color: rgb(70, 130, 180);
 $gauge-span-color: $ux-theme-5;
 $gauge-single-value-color: $font-color;
-$inactive-opacity: 0.5;
+$inactive-opacity: 0.6;

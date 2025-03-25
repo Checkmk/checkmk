@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, exists, SNMPTree, startswith, StringTable
+
+check_info = {}
 
 
 def saveint(i: str) -> int:
@@ -47,6 +47,7 @@ def parse_enterasys_lsnat(string_table: StringTable) -> StringTable | None:
 
 
 check_info["enterasys_lsnat"] = LegacyCheckDefinition(
+    name="enterasys_lsnat",
     parse_function=parse_enterasys_lsnat,
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5624.2.1"),

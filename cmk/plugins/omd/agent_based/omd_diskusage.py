@@ -7,7 +7,7 @@ from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Final, LiteralString
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -98,7 +98,7 @@ def check(item: str, section: Section) -> CheckResult:
         return
 
     for entry in sorted(directories, key=lambda d: (d.spec.label != "Total", d.spec.label)):
-        yield from check_levels(
+        yield from check_levels_v1(
             entry.value,
             metric_name=entry.spec.metric_name,
             label=entry.spec.label,

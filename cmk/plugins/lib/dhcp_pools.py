@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import CheckResult, Metric, render
 
 _Levels = tuple[float, float]
@@ -37,13 +37,13 @@ def check_dhcp_pools_levels(
                 levels_abs = levels
                 metric_levels = levels
 
-        yield from check_levels(
+        yield from check_levels_v1(
             value_abs,
             levels_lower=levels_abs,
             render_func=lambda x: str(int(x)),
             label=f"{category.capitalize()} leases",
         )
-        yield from check_levels(
+        yield from check_levels_v1(
             value_perc,
             levels_lower=levels_perc,
             render_func=render.percent,

@@ -1,0 +1,22 @@
+commit 136a8d919256542107d90053a388263f7ac41860
+Author: Mathias Laurin <Mathias.Laurin+github.com@gmail.com>
+Date:   Thu Feb 6 12:19:55 2025 +0100
+
+    Do not package _virtual_imports
+
+diff --git a/python/private/py_wheel.bzl b/python/private/py_wheel.bzl
+index c196ca6a..1b534f84 100644
+--- a/python/private/py_wheel.bzl
++++ b/python/private/py_wheel.bzl
+@@ -325,8 +325,10 @@ def _py_wheel_impl(ctx):
+         if PyInfo in dep:
+             direct_pyi_files.extend(dep[PyInfo].direct_pyi_files.to_list())
+ 
++    direct_files = [dep for dep in ctx.files.deps if "/_virtual_imports/" not in dep.short_path]
++
+     inputs_to_package = depset(
+-        direct = ctx.files.deps + direct_pyi_files,
++        direct = direct_files + direct_pyi_files,
+     )
+ 
+     # Inputs to this rule which are not to be packaged.

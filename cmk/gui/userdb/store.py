@@ -13,15 +13,19 @@ import traceback
 from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Literal, TypeVar
+from typing import Any, cast, Literal, TypeVar
 
-from six import ensure_str
+from cmk.ccc.store import (
+    acquire_lock,
+    load_from_mk_file,
+    load_text_from_file,
+    mkdir,
+    release_lock,
+    save_text_to_file,
+    save_to_mk_file,
+)
 
 import cmk.utils.paths
-from cmk.utils.config_validation_layer.users.contacts import validate_contacts
-from cmk.utils.config_validation_layer.users.users import validate_users
-from cmk.utils.crypto import password_hashing
-from cmk.utils.crypto.password import Password, PasswordHash
 from cmk.utils.local_secrets import AutomationUserSecret
 from cmk.utils.paths import htpasswd_file, var_dir
 from cmk.utils.user import UserId
@@ -33,19 +37,19 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, save_user_file
-from cmk.gui.type_defs import SessionInfo, TwoFactorCredentials, Users, UserSpec
-from cmk.gui.utils.htpasswd import Htpasswd
-from cmk.gui.utils.roles import roles_of_user
-
-from cmk.ccc.store import (
-    acquire_lock,
-    load_from_mk_file,
-    load_text_from_file,
-    mkdir,
-    release_lock,
-    save_text_to_file,
-    save_to_mk_file,
+from cmk.gui.type_defs import (
+    SessionInfo,
+    TwoFactorCredentials,
+    UserContactDetails,
+    UserDetails,
+    Users,
+    UserSpec,
 )
+from cmk.gui.utils.htpasswd import Htpasswd
+from cmk.gui.utils.roles import AutomationUserFile, roles_of_user
+
+from cmk.crypto import password_hashing
+from cmk.crypto.password import Password
 
 from ._connections import active_connections, get_connection
 from ._connector import UserConnector
@@ -122,18 +126,16 @@ def get_authserials_lines() -> list[str]:
         return f.readlines()
 
 
-def load_users_uncached(lock: bool = False, skip_validation: bool = False) -> Users:
-    return _load_users(lock, skip_validation)
+def load_users_uncached(lock: bool = False) -> Users:
+    return _load_users(lock)
 
 
 @request_memoize()
-def load_users(lock: bool = False, skip_validation: bool = False) -> Users:
-    return _load_users(lock, skip_validation)
+def load_users(lock: bool = False) -> Users:
+    return _load_users(lock)
 
 
-def _load_users(
-    lock: bool = False, skip_validation: bool = False
-) -> Users:  # pylint: disable=too-many-branches
+def _load_users(lock: bool = False) -> Users:
     if lock:
         # Note: the lock will be released on next save_users() call or at
         #       end of page request automatically.
@@ -143,11 +145,11 @@ def _load_users(
     # the first time, then the file will be empty, which is no problem.
     # Execfile will the simply leave contacts = {} unchanged.
     # ? exact type of keys and items returned from load_mk_file seems to be unclear
-    contacts = load_contacts(skip_validation)
+    contacts = load_contacts()
 
     # Now load information about users from the GUI config world
     # ? can users dict be modified in load_mk_file function call and the type of keys str be changed?
-    users = load_multisite_users(skip_validation)
+    users = load_multisite_users()
 
     # Merge them together. Monitoring users not known to Multisite
     # will be added later as normal users.
@@ -158,10 +160,12 @@ def _load_users(
     # far as possible.
     for uid, contact in contacts.items():
         if (uid := UserId(uid)) not in result:
-            result[uid] = contact
+            # making the use of cast since we are handling a legacy support case
+            user_profile: UserSpec = cast(UserSpec, contact)
+            result[uid] = user_profile
             result[uid]["roles"] = ["user"]
             result[uid]["locked"] = True
-            result[uid]["password"] = PasswordHash("")
+            result[uid]["password"] = password_hashing.PasswordHash("")
 
     # Passwords are read directly from the apache htpasswd-file.
     # That way heroes of the command line will still be able to
@@ -214,47 +218,48 @@ def _load_users(
             continue
 
         uid = UserId(user_dir)
+        if uid not in result:
+            continue
 
         # read special values from own files
-        if uid in result:
-            for attr, conv_func in attributes:
-                val = load_custom_attr(user_id=uid, key=attr, parser=conv_func)
-                if val is not None:
-                    result[uid][attr] = val
+        for attr, conv_func in attributes:
+            val = load_custom_attr(user_id=uid, key=attr, parser=conv_func)
+            if val is not None:
+                result[uid][attr] = val
 
-        # read automation secrets and add them to existing users or create new users automatically
-        try:
-            secret = AutomationUserSecret(uid).read()
-            if uid not in result:
-                # new guest automation user
-                result[uid] = {"roles": ["guest"]}
-
-            result[uid]["automation_secret"] = secret
-        except OSError:
-            # no secret; nothing to do
-            pass
-        # Empty secret files will raise a value error that we don't want to ignore here. Otherwise
-        # checking if a user is an automation user via existence of the file will go wrong.
+        result[uid]["store_automation_secret"] = AutomationUserSecret(uid).exists()
+        # The AutomationUserFile was added with 2.4. Previously the info to decide if a user is an
+        # automation user was the automation secret. Instead of creating an update action let's
+        # check both.
+        result[uid]["is_automation_user"] = (
+            AutomationUserSecret(uid).exists() or AutomationUserFile(uid).load()
+        )
 
     return result
 
 
-def _merge_users_and_contacts(users: dict[str, Any], contacts: dict[str, Any]) -> Users:
+def _merge_users_and_contacts(
+    users: dict[str, UserDetails], contacts: dict[str, UserContactDetails]
+) -> Users:
     result: Users = {}
     for uid, user in users.items():
-        # Transform user IDs which were stored with a wrong type
-        uid = ensure_str(uid)  # pylint: disable= six-ensure-str-bin-call
+        profile: dict[str, object] = {}
+        if (contact := contacts.get(uid)) is not None:
+            profile.update(contact)
 
-        profile = contacts.get(uid, {})
         profile.update(user)
-        result[UserId(uid)] = profile
 
         # Convert non unicode mail addresses
         if "email" in profile:
-            profile["email"] = ensure_str(  # pylint: disable= six-ensure-str-bin-call
-                profile["email"]
-            )
+            # TODO: according to UserDetails & UserContactDetails, email can only come from
+            #  UserContactDetails. We keep this just in case UserDetails is incomplete and perform
+            #  the cast to str. Once verified, the condition can be switched to
+            #  `if "email" in contact`.
+            email = cast(str, profile["email"])
+            profile["email"] = email
 
+        # see TODO in UserSpec why the cast is currently necessary
+        result[UserId(uid)] = cast(UserSpec, profile)
     return result
 
 
@@ -263,7 +268,7 @@ def _add_passwords(users: Users) -> Users:
     for uid, password in htpwd_entries.items():
         if password.startswith("!"):
             locked = True
-            password = PasswordHash(password[1:])
+            password = password_hashing.PasswordHash(password[1:])
         else:
             locked = False
 
@@ -353,8 +358,8 @@ def split_dict(d: Mapping[str, Any], keylist: list[str], positive: bool) -> dict
     return {k: v for k, v in d.items() if (k in keylist) == positive}
 
 
-def save_users(profiles: Users, now: datetime, skip_validation: bool = False) -> None:
-    write_contacts_and_users_file(profiles, skip_validation=skip_validation)
+def save_users(profiles: Users, now: datetime) -> None:
+    write_contacts_and_users_file(profiles)
 
     # Execute user connector save hooks
     hook_save(profiles)
@@ -385,7 +390,9 @@ def _add_custom_macro_attributes(profiles: Users) -> Users:
 
     # Add custom macros
     core_custom_macros = {
-        name for name, attr in get_user_attributes() if attr.add_custom_macro()  #
+        name
+        for name, attr in get_user_attributes()
+        if attr.add_custom_macro()  #
     }
     for user in updated_profiles.keys():
         for macro in core_custom_macros:
@@ -398,7 +405,7 @@ def _add_custom_macro_attributes(profiles: Users) -> Users:
 
 
 # Write user specific files
-def _save_user_profiles(  # pylint: disable=too-many-branches
+def _save_user_profiles(
     updated_profiles: Users,
     now: datetime,
 ) -> None:
@@ -410,10 +417,12 @@ def _save_user_profiles(  # pylint: disable=too-many-branches
 
         # authentication secret for local processes
         secret = AutomationUserSecret(user_id)
-        if "automation_secret" in user:
+        if user.get("store_automation_secret", False) and "automation_secret" in user:
             secret.save(user["automation_secret"])
-        else:
+        elif not user.get("store_automation_secret", False):
             secret.delete()
+
+        AutomationUserFile(user_id).save(user.get("is_automation_user", False))
 
         # Write out user attributes which are written to dedicated files in the user
         # profile directory. The primary reason to have separate files, is to reduce
@@ -492,7 +501,8 @@ def _cleanup_old_user_profiles(updated_profiles: Users) -> None:
 
 
 def write_contacts_and_users_file(
-    profiles: Users, custom_default_config_dir: str | None = None, skip_validation: bool = False
+    profiles: Users,
+    custom_default_config_dir: str | None = None,
 ) -> None:
     non_contact_keys = _non_contact_keys()
     multisite_keys = _multisite_keys()
@@ -544,10 +554,6 @@ def write_contacts_and_users_file(
             for p, val in profile.items()
             if p in multisite_keys or p in multisite_attributes_cache[profile.get("connector")]
         }
-
-    if not skip_validation:
-        validate_users(users)
-        validate_contacts(contacts)
 
     # Checkmk's monitoring contacts
     save_to_mk_file(
@@ -613,7 +619,6 @@ def _multisite_keys() -> list[str]:
     return [
         "roles",
         "locked",
-        "automation_secret",
         "alias",
         "language",
         "connector",
@@ -633,13 +638,17 @@ def _save_auth_serials(updated_profiles: Users) -> None:
     save_text_to_file("%s/auth.serials" % os.path.dirname(cmk.utils.paths.htpasswd_file), serials)
 
 
-def create_cmk_automation_user(now: datetime, name: str, alias: str, role: str) -> None:
+def create_cmk_automation_user(
+    now: datetime, name: str, alias: str, role: str, store_secret: bool
+) -> None:
     secret = Password.random(24)
     users = load_users(lock=True)
     users[UserId(name)] = {
         "alias": alias,
         "contactgroups": [],
         "automation_secret": secret.raw,
+        "store_automation_secret": store_secret,
+        "is_automation_user": True,
         "password": password_hashing.hash_password(secret),
         "roles": [role],
         "locked": False,
@@ -660,6 +669,9 @@ def _save_cached_profile(
     # infos that are stored in the custom attribute files.
     cache = UserSpec()
     for key in user.keys():
+        if key in ("automation_secret",):
+            # Stripping away sensitive information
+            continue
         if key in multisite_keys or key not in non_contact_keys:
             # UserSpec is now a TypedDict, unfortunately not complete yet, thanks to such constructs.
             cache[key] = user[key]  # type: ignore[literal-required]
@@ -682,22 +694,16 @@ def convert_idle_timeout(value: str) -> int | bool | None:
         return None  # Invalid value -> use global setting
 
 
-def load_contacts(skip_contact_validation: bool = False) -> dict[str, Any]:
-    contacts = load_from_mk_file(_contacts_filepath(), "contacts", {})
-    if not skip_contact_validation:
-        validate_contacts(contacts)
-    return contacts
+def load_contacts() -> dict[str, UserContactDetails]:
+    return load_from_mk_file(_contacts_filepath(), "contacts", {})
 
 
 def _contacts_filepath() -> str:
     return _root_dir() + "contacts.mk"
 
 
-def load_multisite_users(skip_user_validation: bool = False) -> dict[str, Any]:
-    users = load_from_mk_file(_multisite_dir() + "users.mk", "multisite_users", {})
-    if not skip_user_validation:
-        validate_users(users)
-    return users
+def load_multisite_users() -> dict[str, UserDetails]:
+    return load_from_mk_file(_multisite_dir() + "users.mk", "multisite_users", {})
 
 
 def _convert_start_url(value: str) -> str:

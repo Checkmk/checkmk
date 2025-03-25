@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.ccc import version
+
 from cmk.utils import paths
 
 from cmk.gui.rest_api_types.site_connection import SiteConfig
-
-from cmk.ccc import version
 
 
 def default_config_example() -> SiteConfig:
@@ -57,6 +57,7 @@ def default_config_example() -> SiteConfig:
             },
             "replicate_event_console": True,
             "replicate_extensions": True,
+            "message_broker_port": 5672,
         },
     }
 
@@ -66,5 +67,13 @@ def default_config_example() -> SiteConfig:
             "site_id": "site_id_1",
             "customer": "provider",
         }
+
+    return r
+
+
+def no_replication_config_example() -> SiteConfig:
+    r: SiteConfig = default_config_example()
+
+    r["configuration_connection"] = {"enable_replication": False}
 
     return r

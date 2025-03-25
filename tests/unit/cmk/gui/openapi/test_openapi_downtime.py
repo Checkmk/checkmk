@@ -6,16 +6,16 @@ import datetime
 
 import pytest
 
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
-from tests.unit.cmk.gui.conftest import SetConfig
+from tests.unit.cmk.web_test_app import SetConfig
+
+from cmk.ccc import version
 
 from cmk.utils import paths
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 from cmk.gui.openapi.endpoints.downtime import _with_defaulted_timezone
-
-from cmk.ccc import version
 
 managedtest = pytest.mark.skipif(
     version.edition(paths.omd_root) is not version.Edition.CME, reason="see #7213"

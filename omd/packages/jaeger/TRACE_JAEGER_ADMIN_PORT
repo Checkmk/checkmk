@@ -20,6 +20,21 @@ case "$1" in
             echo "The port $2 is in use. I've choosen $PORT instead." >&2
             echo "$PORT"
         fi
+
+        cat <<EOF >"$OMD_ROOT"/etc/jaeger/omd-admin-port.yaml
+# Written by TRACE_JAEGER_ADMIN_PORT hook
+---
+service:
+    telemetry:
+        metrics:
+            level: detailed
+            readers:
+              - pull:
+                  exporter:
+                    prometheus:
+                      host: "[::1]"
+                      port: $PORT
+EOF
         ;;
     depends)
         [ "$CONFIG_TRACE_RECEIVE" = on ]

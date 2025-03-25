@@ -9,7 +9,7 @@ import time
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -50,7 +50,7 @@ def ceph_check_epoch(id_: str, epoch: float, params: Mapping[str, Any]) -> Check
     )
     epoch_avg = get_average(value_store, f"{id_}.epoch.avg", now, epoch_rate, avg_interval_min)
 
-    yield from check_levels(
+    yield from check_levels_v1(
         epoch_avg,
         levels_upper=(warn, crit),
         label=f"Epoch rate ({render.timespan(avg_interval_min * 60)} average)",
@@ -81,7 +81,6 @@ def _extract_error_messages(section: Section) -> Sequence[str]:
     return sorted(error_messages)
 
 
-# TODO genereller Status -> ceph health (Ausnahmen für "too many PGs per OSD" als Option ermöglichen)
 def check_ceph_status(params: Mapping[str, Any], section: Section) -> CheckResult:
     map_health_states: dict[str, tuple[State, str]] = {
         "HEALTH_OK": (State.OK, "OK"),
@@ -98,7 +97,7 @@ def check_ceph_status(params: Mapping[str, Any], section: Section) -> CheckResul
         overall_status,
         (State.UNKNOWN, "unknown[%s]" % overall_status),
     )
-    if state:
+    if state is not State.OK:
         error_messages = _extract_error_messages(section)
         if error_messages:
             state_readable += " (%s)" % (", ".join(error_messages))
@@ -160,7 +159,7 @@ def check_ceph_status_osds(params: Mapping[str, Any], section: Section) -> Check
         ("num_up_osds", "OSDs down", "num_down_osds"),
     ]:
         value = num_osds - data[ds]
-        yield from check_levels(
+        yield from check_levels_v1(
             100 * float(value) / num_osds,
             levels_upper=params.get(param_key),
             render_func=render.percent,

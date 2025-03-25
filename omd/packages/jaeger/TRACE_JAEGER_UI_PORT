@@ -21,7 +21,23 @@ case "$1" in
             echo "$PORT"
         fi
 
-        sed -ri 's/(\[::1\]:)[0-9]+/\1'"$PORT"'/' "$OMD_ROOT"/etc/jaeger/apache.conf
+        cat <<EOF >"$OMD_ROOT"/etc/jaeger/apache.conf
+# Written by TRACE_JAEGER_UI_PORT hook
+LoadModule proxy_module /omd/sites/$OMD_SITE/lib/apache/modules/mod_proxy.so
+LoadModule proxy_http_module /omd/sites/$OMD_SITE/lib/apache/modules/mod_proxy_http.so
+
+ProxyPass "/$OMD_SITE/jaeger" "http://[::1]:$PORT/$OMD_SITE/jaeger" retry=0 timeout=120
+ProxyPassReverse "/$OMD_SITE/jaeger"  "http://[::1]:$PORT/$OMD_SITE/jaeger"
+EOF
+
+        cat <<EOF >"$OMD_ROOT"/etc/jaeger/omd-query-port.yaml
+# Written by TRACE_JAEGER_UI_PORT hook
+---
+extensions:
+    jaeger_query:
+        http:
+            endpoint: "[::1]:$PORT"
+EOF
         ;;
     depends)
         [ "$CONFIG_TRACE_RECEIVE" = on ]

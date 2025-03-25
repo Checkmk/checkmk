@@ -11,6 +11,8 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.paths
 import cmk.utils.rulesets.tuple_rulesets
 from cmk.utils.rulesets.definition import RuleGroup
@@ -19,8 +21,6 @@ from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.mode import mode_registry
-
-from cmk.ccc.exceptions import MKGeneralException
 
 # TODO: Clean up all call sites in the GUI and only use them in Setup config file loading code
 ALL_HOSTS = cmk.utils.rulesets.tuple_rulesets.ALL_HOSTS

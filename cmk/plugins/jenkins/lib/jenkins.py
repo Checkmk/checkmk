@@ -107,8 +107,6 @@ def handle_request(args, sections):
 
     # labels = {}
 
-    jenkins_version = None
-
     session = requests.Session()
     session.auth = (args.user, args.password)
 
@@ -127,10 +125,6 @@ def handle_request(args, sections):
                 raise
 
             return 1
-
-        # Jenkins version usually comes with every response. We need it once.
-        if jenkins_version is None:
-            jenkins_version = response.headers.get("X-Jenkins")
 
         # Things might go wrong if authentication is missing.
         if response.status_code != 200:
@@ -182,10 +176,6 @@ def handle_request(args, sections):
     # if labels:
     #    sys.stdout.write("<<<labels:sep(0)>>>\n")
     #    sys.stdout.write("%s\n" % json.dumps(labels))
-
-    sys.stdout.write("<<<jenkins_version:sep(0)>>>\n")
-    if jenkins_version:
-        sys.stdout.write(f"{jenkins_version}\n")
 
     return 0
 

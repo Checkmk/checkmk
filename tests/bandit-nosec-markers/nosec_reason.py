@@ -11,8 +11,6 @@ It also helps throwing the dice for new Bandit nosec IDs to use in said doc.
 Call with --help for usage.
 """
 
-# pylint: disable=redefined-outer-name  # for argparse set_defaults(run=...)
-
 from __future__ import annotations
 
 import argparse
@@ -152,7 +150,7 @@ class BnsId:
 
     @staticmethod
     def _random_id() -> BnsId:
-        return BnsId(f'BNS:{hex(random.randint(0, int("F" * ID_LEN, 16)))[2:].rjust(6, "0")}')
+        return BnsId(f"BNS:{hex(random.randint(0, int('F' * ID_LEN, 16)))[2:].rjust(6, '0')}")
 
 
 def existing_ids(exclusions_doc: Path) -> Sequence[BnsId]:
@@ -203,7 +201,7 @@ def find_nosecs(src_root: Path, excluded: Sequence[Path]) -> Sequence[Nosec]:
     if not (src_root / "scripts").is_dir():
         # we need the find-python-files script and this is an easy sanity check
         sys.exit(
-            f"Failed to find folder 'scripts' in '{src_root}'. " "Is this really the check_mk repo?"
+            f"Failed to find folder 'scripts' in '{src_root}'. Is this really the check_mk repo?"
         )
 
     def _format_output(output: bytes) -> Sequence[str]:
@@ -323,7 +321,7 @@ def cmd_local_check(args: argparse.Namespace) -> None:
         " ".join(
             (
                 "P",
-                '"Bandit markers"',
+                '"[SecDev] Bandit markers"',
                 "|".join(
                     (
                         f"not_annotated={sum_not_annotated};1;5",

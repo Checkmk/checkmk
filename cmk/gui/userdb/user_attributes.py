@@ -9,8 +9,8 @@ from cmk.utils.urls import is_allowed_url
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.theme.choices import theme_choices
 from cmk.gui.utils.temperate_unit import temperature_unit_choices
-from cmk.gui.utils.theme import theme_choices
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
     AbsoluteDate,
@@ -38,10 +38,7 @@ def register(user_attribute_registry: UserAttributeRegistry) -> None:
     user_attribute_registry.register(UIIconTitle)
     user_attribute_registry.register(UIIconPlacement)
     user_attribute_registry.register(UIBasicAdvancedToggle)
-
-
-def saas_register(saas_user_attribute_registry: UserAttributeRegistry) -> None:
-    saas_user_attribute_registry.register(UISaaSOnboardingButtonToggle)
+    user_attribute_registry.register(ContextualHelpIcon)
 
 
 class TemperatureUnitUserAttribute(UserAttribute):
@@ -269,25 +266,6 @@ class UISidebarPosition(UserAttribute):
         return "multisite"
 
 
-class UISaaSOnboardingButtonToggle(UserAttribute):
-    @classmethod
-    def name(cls) -> str:
-        return "ui_saas_onboarding_button_toggle"
-
-    def topic(self) -> str:
-        return "interface"
-
-    def valuespec(self) -> ValueSpec:
-        return DropdownChoice(
-            title=_("Toggle onboarding button"),
-            # FIXME: Why isn't this simply a bool instead of an Optional[Literal["Invisible"]]?
-            choices=[(None, _("Visible")), ("invisible", _("Invisible"))],
-        )
-
-    def domain(self) -> str:
-        return "multisite"
-
-
 class UIIconTitle(UserAttribute):
     @classmethod
     def name(cls) -> str:
@@ -305,7 +283,7 @@ class UIIconTitle(UserAttribute):
                 "to save some space in the UI."
             ),
             # FIXME: Why isn't this simply a bool instead of an Optional[Literal["hide"]]?
-            choices=[(None, _("Show title")), ("hide", _("Do not show title"))],
+            choices=[(None, _("Show title")), ("hide", _("Hide title"))],
         )
 
 
@@ -365,6 +343,25 @@ class UIBasicAdvancedToggle(UserAttribute):
                     choices=show_mode_choices(),
                 ),
             ],
+        )
+
+    def domain(self) -> str:
+        return "multisite"
+
+
+class ContextualHelpIcon(UserAttribute):
+    @classmethod
+    def name(cls) -> str:
+        return "contextual_help_icon"
+
+    def topic(self) -> str:
+        return "interface"
+
+    def valuespec(self) -> ValueSpec:
+        return DropdownChoice(
+            title=_("Contextual help icon"),
+            help=_("Some help text"),
+            choices=[(None, _("Show icon")), ("hide_icon", _("Hide icon"))],
         )
 
     def domain(self) -> str:

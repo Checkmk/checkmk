@@ -8,6 +8,9 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import Literal
 
+import cmk.ccc.plugin_registry
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.render
 
 from cmk.gui import background_job as background_job
@@ -28,9 +31,6 @@ from cmk.gui.permissions import (
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri_contextless
-
-import cmk.ccc.plugin_registry
-from cmk.ccc.exceptions import MKGeneralException
 
 
 def register(
@@ -285,7 +285,7 @@ class JobRenderer:
             )
         for left, right in [
             (_("Runtime"), runtime_info),
-            (_("PID"), str(job_status.pid) or ""),
+            (_("Thread ID"), str(job_status.pid) or ""),
             (_("Result"), "<br>".join(loginfo["JobResult"])),
         ]:
             if right is None:
@@ -378,7 +378,7 @@ class JobRenderer:
             _("State"),
             _("Started"),
             _("Owner"),
-            _("PID"),
+            _("Thread ID"),
             _("Runtime"),
             _("Last progress info"),
             _("Results"),
@@ -426,25 +426,14 @@ class JobRenderer:
         html.a(job_id, href=uri)
         html.close_td()
 
-        # Title
         html.td(job_status.title, css="job_title")
-
-        # State
         html.td(
             HTMLWriter.render_span(job_status.state),
             css=cls.get_css_for_jobstate(job_status.state),
         )
-
-        # Started
         html.td(cmk.utils.render.date_and_time(job_status.started), css="job_started")
-
-        # Owner
         html.td(job_status.user or _("Internal user"), css="job_owner")
-
-        # PID
         html.td(job_status.pid or "", css="job_pid")
-
-        # Druation
         html.td(cmk.utils.render.timespan(job_status.duration), css="job_runtime")
 
         # Progress info
@@ -460,7 +449,10 @@ class JobRenderer:
                     progress_text += "%s" % loginfo["JobProgressUpdate"][-1]
                 html.td(HTML.without_escaping(progress_text), css="job_last_progress")
 
-            html.td(HTMLWriter.render_br().join(loginfo["JobResult"]), css="job_result")
+            html.td(
+                HTML.without_escaping("<br>".join(loginfo["JobResult"])),
+                css="job_result",
+            )
         else:
             html.td("", css="job_last_progress")
             html.td("", css="job_result")

@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes import dell_compellent
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.dell import DETECT_DELL_COMPELLENT
+
+check_info = {}
 
 # example output
 # .1.3.6.1.4.1.674.11000.2000.500.1.2.14.1.2.1 1
@@ -62,6 +63,7 @@ def discover_dell_compellent_disks(section):
 
 
 check_info["dell_compellent_disks"] = LegacyCheckDefinition(
+    name="dell_compellent_disks",
     detect=DETECT_DELL_COMPELLENT,
     fetch=[
         SNMPTree(

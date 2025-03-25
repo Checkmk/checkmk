@@ -2,8 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Provide methods to get an snmp table with or without caching
-"""
+"""Provide methods to get an snmp table with or without caching"""
 
 import contextlib
 import hashlib
@@ -11,10 +10,10 @@ from collections.abc import Callable, MutableMapping, Sequence
 from functools import partial
 from typing import assert_never
 
+from cmk.ccc.exceptions import MKGeneralException, MKSNMPError
+
 from cmk.utils.sectionname import SectionMap as _HostSection
 from cmk.utils.sectionname import SectionName
-
-from cmk.ccc.exceptions import MKGeneralException, MKSNMPError
 
 from ._typedefs import (
     BackendSNMPTree,

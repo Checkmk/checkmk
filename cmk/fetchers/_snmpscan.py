@@ -10,6 +10,8 @@ from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
 
+from cmk.ccc.exceptions import MKGeneralException, MKSNMPError, MKTimeout, OnError
+
 from cmk.utils import tty
 from cmk.utils.regex import regex
 from cmk.utils.sectionname import SectionName
@@ -18,8 +20,6 @@ from cmk.utils.tty import format_warning
 from cmk.snmplib import get_single_oid, SNMPBackend, SNMPDetectAtom, SNMPDetectBaseType
 
 import cmk.fetchers._snmpcache as snmp_cache
-
-from cmk.ccc.exceptions import MKGeneralException, MKSNMPError, MKTimeout, OnError
 
 SNMPScanSection = tuple[SectionName, SNMPDetectBaseType]
 
@@ -181,7 +181,7 @@ def _evaluate_snmp_detection(
 
 
 def _output_snmp_check_plugins(
-    title: str, collection: Iterable[SectionName], logger: Logger
+    title: str, collection: Collection[SectionName], logger: Logger
 ) -> None:
     collection_out = " ".join(str(n) for n in sorted(collection)) if collection else "-"
     logger.debug(

@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
+
+from cmk.gui.userdb.ldap_connector import LDAPUserConnector
 
 
 # LDAP API Schema Example
@@ -35,7 +37,7 @@ def ldap_api_schema(ldap_id: str) -> dict:
             "ldap_version": {"state": "enabled", "version": 3},
             "page_size": {"state": "enabled", "size": 1000},
             "response_timeout": {"state": "enabled", "seconds": 60},
-            "connection_suffix": {"state": "enabled", "suffix": "dc=corp,dc=de"},
+            "connection_suffix": {"state": "enabled", "suffix": f"suffix_{ldap_id}"},
         },
         "users": {
             "user_base_dn": "ou=Benutzer,dc=corp,dc=de",
@@ -150,8 +152,15 @@ def ldap_api_schema(ldap_id: str) -> dict:
             },
             "groups_to_roles": {
                 "state": "enabled",
-                "admin": [{"group_dn": "ou=Gruppen,dc=corp,dc=de", "search_in": "this_connection"}],
-                "user": [{"group_dn": "ou=Gruppen,dc=corp,dc=de", "search_in": "LDAP_1"}],
+                "admin": [
+                    {
+                        "group_dn": "CN=cmk_AD_admins,ou=Gruppen,dc=corp,dc=de",
+                        "search_in": "this_connection",
+                    }
+                ],
+                "user": [
+                    {"group_dn": "CN=cmk_AD_users,ou=Gruppen,dc=corp,dc=de", "search_in": "LDAP_1"}
+                ],
             },
         },
         "other": {
@@ -333,3 +342,51 @@ def test_edit_ldap_connection_invalid_etag(clients: ClientRegistry) -> None:
         etag="invalid_etag",
         expect_ok=False,
     ).assert_status_code(412)
+
+
+def test_cant_create_with_the_same_suffix(clients: ClientRegistry) -> None:
+    clients.LdapConnection.create(
+        ldap_data={
+            "general_properties": {"id": "LDAP_1"},
+            "ldap_connection": {
+                "directory_type": {
+                    "type": "active_directory_manual",
+                    "ldap_server": "10.200.3.32",
+                },
+                "connection_suffix": {"state": "enabled", "suffix": "suffix_2"},
+            },
+        }
+    )
+    clients.LdapConnection.create(
+        ldap_data={
+            "general_properties": {"id": "LDAP_2"},
+            "ldap_connection": {
+                "directory_type": {
+                    "type": "active_directory_manual",
+                    "ldap_server": "10.200.3.33",
+                },
+                "connection_suffix": {"state": "enabled", "suffix": "suffix_2"},
+            },
+        },
+        expect_ok=False,
+    ).assert_status_code(400)
+
+
+def test_update_ldap_suffixes_after_delete(clients: ClientRegistry) -> None:
+    LDAPUserConnector.connection_suffixes = {}
+    clients.LdapConnection.create(
+        ldap_data={
+            "general_properties": {"id": "LDAP_1"},
+            "ldap_connection": {
+                "directory_type": {
+                    "type": "active_directory_manual",
+                    "ldap_server": "10.200.3.32",
+                },
+                "connection_suffix": {"state": "enabled", "suffix": "suffix_1"},
+            },
+        }
+    )
+
+    assert LDAPUserConnector.get_connection_suffixes() == {"suffix_1": "LDAP_1"}
+    clients.LdapConnection.delete(ldap_connection_id="LDAP_1").assert_status_code(204)
+    assert not LDAPUserConnector.get_connection_suffixes()

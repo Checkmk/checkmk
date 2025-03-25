@@ -108,6 +108,7 @@ def test_parse_fritz() -> None:
                 Service(
                     item="0",
                     parameters={
+                        "item_appearance": "index",
                         "discovered_oper_status": ["1"],
                         "discovered_speed": 25088000,
                     },

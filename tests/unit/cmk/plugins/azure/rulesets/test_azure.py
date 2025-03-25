@@ -4,10 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Final
 
+from cmk.ccc.version import Edition
+
 from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
 
 import cmk.plugins.azure.rulesets.azure as azure_ruleset
-from cmk.ccc.version import Edition
 
 AZURE_VS_RULESET_VALUE: Final = {
     "authority": "global",
@@ -32,7 +33,6 @@ AZURE_VS_RULESET_VALUE: Final = {
         "tag_based": [("foobar", "exists"), ("foo", ("value", "bar"))],
     },
     "piggyback_vms": "grouphost",
-    "sequential": True,
     "import_tags": ("filter_tags", "my_tag"),
 }
 
@@ -66,7 +66,6 @@ AZURE_FS_RULESET_VALUE: Final = {
         ],
     },
     "piggyback_vms": "grouphost",
-    "sequential": "singlethreaded",
     "import_tags": ("filter_tags", "my_tag"),
 }
 
@@ -90,5 +89,16 @@ def test_vs_to_fs_update() -> None:
     assert value["proxy"] == AZURE_FS_RULESET_VALUE["proxy"]
     assert value["config"] == AZURE_FS_RULESET_VALUE["config"]
     assert value["piggyback_vms"] == AZURE_FS_RULESET_VALUE["piggyback_vms"]
-    assert value["sequential"] == AZURE_FS_RULESET_VALUE["sequential"]
-    assert value["import_tags"] == AZURE_FS_RULESET_VALUE["import_tags"]
+    assert "import_tags" not in value
+
+
+def test_migrate_keeps_values() -> None:
+    migrated = azure_ruleset._migrate_services_to_monitor(["Microsoft.DBforMySQL/flexibleServers"])
+    double_migrated = azure_ruleset._migrate_services_to_monitor(migrated)
+    assert migrated == ["Microsoft_DBforMySQL_slash_flexibleServers"]
+    assert double_migrated == ["Microsoft_DBforMySQL_slash_flexibleServers"]
+
+
+def test_migrate_silently_drops_invalid_values() -> None:
+    migrated = azure_ruleset._migrate_services_to_monitor(["dadada"])
+    assert len(migrated) == 0

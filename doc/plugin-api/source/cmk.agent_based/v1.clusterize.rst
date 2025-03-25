@@ -1,7 +1,7 @@
 =============================
-agent_based_api.v1.clusterize
+cmk.agent_based.v1.clusterize
 =============================
 
-.. automodule:: cmk.base.plugins.agent_based.agent_based_api.v1.clusterize
+.. automodule:: cmk.agent_based.v1.clusterize
    :members:
    :show-inheritance:

@@ -8,7 +8,7 @@ description:
 
  These metrics are purely informational, there are currently no warn/crit levels.
 
- Both, version 1.7 and 2.0 of Jolokia are supported.
+ Versions 1.7, 2.0 and 2.1 of Jolokia are supported.
 
 item:
  The name of the application server instance as configured by the agent followed

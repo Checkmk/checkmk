@@ -1,0 +1,13 @@
+title: Redfish PSU
+agents: agent_redfish
+catalog: hw/server/redfish
+license: GPLv2
+distribution: check_mk
+description:
+ This check provides information about the power supply unit (PSU) of a Redfish compatible device.
+
+discovery:
+ One service is created for each PSU of the device.
+
+item:
+ The index and name of the {{PSU}}.

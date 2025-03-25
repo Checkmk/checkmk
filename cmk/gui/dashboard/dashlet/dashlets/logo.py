@@ -7,7 +7,7 @@ from cmk.gui.dashboard.dashlet.base import Dashlet
 from cmk.gui.dashboard.type_defs import DashletConfig
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.utils.theme import theme
+from cmk.gui.theme.current_theme import theme
 
 
 class MKLogoDashletConfig(DashletConfig): ...

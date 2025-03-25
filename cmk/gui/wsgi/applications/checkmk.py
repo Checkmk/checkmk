@@ -15,9 +15,10 @@ from werkzeug.exceptions import RequestEntityTooLarge
 
 import livestatus
 
+import cmk.ccc.store
+from cmk.ccc.exceptions import MKException
+
 import cmk.utils.paths
-import cmk.utils.profile
-from cmk.utils.crypto.types import MKCryptoException
 
 from cmk.gui import pages, sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -33,7 +34,7 @@ from cmk.gui.exceptions import (
 )
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, response, Response
+from cmk.gui.http import request, Response, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.utils.urls import requested_file_name
@@ -46,9 +47,8 @@ from cmk.gui.wsgi.applications.utils import (
 )
 from cmk.gui.wsgi.type_defs import WSGIResponse
 
-import cmk.ccc.store
 from cmk import trace
-from cmk.ccc.exceptions import MKException
+from cmk.crypto import MKCryptoException
 
 tracer = trace.get_tracer()
 
@@ -62,9 +62,7 @@ def _noauth(func: pages.PageHandlerFunc) -> Callable[[], Response]:
     # however have to make sure all errors get written out in plaintext, without HTML.
     #
     # Currently these are:
-    #  * noauth:run_cron
     #  * noauth:deploy_agent
-    #  * noauth:ajax_graph_images
     #  * noauth:automation
     #
     @functools.wraps(func)
@@ -164,17 +162,22 @@ def get_mime_type_from_output_format(output_format: str) -> str:
 class CheckmkApp(AbstractWSGIApp):
     """The Checkmk GUI WSGI entry point"""
 
-    @tracer.start_as_current_span("CheckmkApp.wsgi_app")
+    def __init__(self, debug: bool = False, testing: bool = False) -> None:
+        super().__init__(debug)
+        self.testing = testing
+
+    @tracer.instrument("CheckmkApp.wsgi_app")
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         """Is called by the WSGI server to serve the current page"""
         with cmk.ccc.store.cleanup_locks(), sites.cleanup_connections():
-            return _process_request(environ, start_response, debug=self.debug)
+            return _process_request(environ, start_response, debug=self.debug, testing=self.testing)
 
 
-def _process_request(  # pylint: disable=too-many-branches
+def _process_request(
     environ: WSGIEnvironment,
     start_response: StartResponse,
     debug: bool = False,
+    testing: bool = False,
 ) -> WSGIResponse:
     resp: Response
     try:
@@ -233,9 +236,9 @@ def _process_request(  # pylint: disable=too-many-branches
         resp = _render_exception(e, title=_("Request too large"))
 
     except Exception:
-        resp = handle_unhandled_exception()
-        if debug:
+        if debug or testing:
             raise
+        resp = handle_unhandled_exception()
 
     resp.set_caching_headers()
     return resp(environ, start_response)

@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping, Sequence
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -46,7 +46,7 @@ def check_fortiauthenticator_auth_fail(
     Result(state=<State.WARN: 1>, summary='Authentication failures within the last 5 minutes: 3 (warn/crit at 1/5)')
     Metric('fortiauthenticator_fails_5min', 3.0, levels=(1.0, 5.0))
     """
-    yield from check_levels(
+    yield from check_levels_v1(
         section["auth_fails"],
         levels_upper=params["auth_fails"],
         metric_name="fortiauthenticator_fails_5min",

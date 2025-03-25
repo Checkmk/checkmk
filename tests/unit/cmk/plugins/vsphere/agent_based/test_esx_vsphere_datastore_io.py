@@ -82,7 +82,7 @@ def _get_section() -> SectionCounter:
 def test_discovery_summary(section: SectionCounter) -> None:
     assert sorted(
         discover_esx_vsphere_datastore_io(
-            [{"summary": True, "physical": {}, "lvm": False, "vxvm": False, "diskless": False}],
+            [{"summary": True, "lvm": False, "vxvm": False, "diskless": False}],
             section,
         )
     ) == sorted(

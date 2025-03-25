@@ -9,17 +9,17 @@ from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import Any, IO
 
-from cmk.utils.crypto.certificate import Certificate, CertificatePEM
-from cmk.utils.crypto.deprecated import (
+from cmk.ccc.exceptions import MKException, MKGeneralException
+
+from cmk.crypto.certificate import Certificate, CertificatePEM
+from cmk.crypto.deprecated import (
     AesCbcCipher,
     certificate_md5_digest,
     decrypt_with_rsa_key,
     encrypt_for_rsa_key,
 )
-from cmk.utils.crypto.keys import EncryptedPrivateKeyPEM, PrivateKey, PublicKey
-from cmk.utils.crypto.password import Password
-
-from cmk.ccc.exceptions import MKException, MKGeneralException
+from cmk.crypto.keys import EncryptedPrivateKeyPEM, PrivateKey, PublicKey
+from cmk.crypto.password import Password
 
 
 # Using RSA directly to encrypt the whole backup is a bad idea. So we use the RSA
@@ -59,9 +59,9 @@ class MKBackupStream:
             )
             yield chunk
 
-        assert (
-            not self._cipher or self._cipher.finalize() == b""
-        ), "Cipher didn't finish processing all input"
+        assert not self._cipher or self._cipher.finalize() == b"", (
+            "Cipher didn't finish processing all input"
+        )
 
     def _init_processing(self) -> bytes | None:
         raise NotImplementedError()

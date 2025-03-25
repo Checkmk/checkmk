@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 
 def inventory_perle_psmu(parsed, what_state):
@@ -27,6 +29,7 @@ def discover_perle_psmu(info):
 
 
 check_info["perle_psmu"] = LegacyCheckDefinition(
+    name="perle_psmu",
     # section is already migrated!
     service_name="Power supply %s",
     discovery_function=discover_perle_psmu,
@@ -47,6 +50,7 @@ def discover_perle_psmu_fan(info):
 
 
 check_info["perle_psmu.fan"] = LegacyCheckDefinition(
+    name="perle_psmu_fan",
     service_name="Fan %s",
     sections=["perle_psmu"],
     discovery_function=discover_perle_psmu_fan,

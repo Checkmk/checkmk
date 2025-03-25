@@ -9,7 +9,7 @@ from typing import Final
 
 import pytest
 
-from tests.testlib.repo import repo_path
+from tests.testlib.common.repo import repo_path
 from tests.testlib.site import Site
 
 from cmk.utils import msi_engine
@@ -28,12 +28,12 @@ TEST_MSI_FILE: Final = Path(
 
 @pytest.mark.parametrize("executable", EXPECTED_EXECUTABLES)
 def test_executables(site: Site, executable: Path) -> None:
-    p = Path(site.path("bin")) / executable
+    p = site.path("bin") / executable
     assert p.exists(), f"path: '{p}' exe: '{executable}'"
 
 
 def _get_msi_file_path_standard(site: Site) -> Path:
-    return Path(site.path(MSI_LOCATION)) / msi_engine.AGENT_STANDARD_MSI_FILE
+    return site.path(MSI_LOCATION) / msi_engine.AGENT_STANDARD_MSI_FILE
 
 
 # check the export with site/bin tools
@@ -42,7 +42,7 @@ def test_export_msi_file_table(site: Site) -> None:
     for name in ["File", "Property", "Component"]:
         size = int(
             site.python_helper("helper_test_export_msi_file_table.py")
-            .check_output(input=repr((name, str(msi_in))))
+            .check_output(input_=repr((name, str(msi_in))))
             .rstrip()
         )
         assert size > 0, f"Ups for [{name}]"

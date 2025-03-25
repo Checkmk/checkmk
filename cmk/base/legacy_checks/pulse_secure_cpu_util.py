@@ -7,12 +7,13 @@
 import time
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib import pulse_secure
+
+check_info = {}
 
 Section = Mapping[str, int]
 
@@ -36,6 +37,7 @@ def check_pulse_secure_cpu(item, params, parsed):
 
 
 check_info["pulse_secure_cpu_util"] = LegacyCheckDefinition(
+    name="pulse_secure_cpu_util",
     detect=pulse_secure.DETECT_PULSE_SECURE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12532",

@@ -4,10 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# pylint: disable=no-else-continue
-
-
-def preparse_emcvnx_info(info):  # pylint: disable=too-many-branches
+def preparse_emcvnx_info(info):
     def convert(value):
         try:
             return int(value)

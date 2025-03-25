@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
 import subprocess
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -22,7 +21,7 @@ class MonitoringPlugin:
     binary_name: str
     path: str = "lib/nagios/plugins"
     cmd_line_option: str = "-V"
-    expected: str = "v2.3.3"
+    expected: str = "v2.4.0"
 
 
 @dataclass(frozen=True)
@@ -61,7 +60,6 @@ MONITORING_PLUGINS: Sequence[Plugin] = (
     MonitoringPlugin("check_icmp"),
     MonitoringPlugin("check_ide_smart"),
     MonitoringPlugin("check_imap"),
-    MonitoringPlugin("check_ircd"),
     MonitoringPlugin("check_jabber"),
     MonitoringPlugin("check_ldap"),
     MonitoringPlugin("check_ldaps"),
@@ -103,6 +101,7 @@ MONITORING_PLUGINS: Sequence[Plugin] = (
     MonitoringPlugin("urlize"),
     MonitoringPlugin("check_mysql"),
     MonitoringPlugin("check_mysql_query"),
+    CheckmkActiveCheck("check_always_crit"),
     CheckmkActiveCheck("check_sftp"),
     CheckmkActiveCheck(
         "check_mail",
@@ -148,18 +147,14 @@ def test_monitoring_plugins_can_be_executed(plugin: Plugin, site: Site) -> None:
         plugin.binary_name == "check_mysql"
     )  # What? Why? Is printing the version dangerous?
 
-    cmd_line = [os.path.join(site.root, plugin.path, plugin.binary_name), plugin.cmd_line_option]
+    cmd_line = [(site.root / plugin.path / plugin.binary_name).as_posix(), plugin.cmd_line_option]
 
     p = site.execute(cmd_line, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert p.stdout and p.stderr  # for mypy
 
     assert plugin.expected in p.stdout.read()
 
-    if plugin.binary_name == "check_sftp":
-        # remove this once `paramiko` is fixed.
-        assert "CryptographyDeprecationWarning" in p.stderr.read()
-    else:
-        assert not p.stderr.read()
+    assert not p.stderr.read()
 
 
 def test_heirloommailx(site: Site) -> None:
@@ -167,6 +162,18 @@ def test_heirloommailx(site: Site) -> None:
     version = p.stdout.read() if p.stdout else "<NO STDOUT>"
     # TODO: Sync this with a global version for heirloom (like we do it for python)
     assert "12.5" in version
+
+
+def test_heirloompkgtools_pkgmk(site: Site) -> None:
+    p = site.execute(["pkgmk"], stderr=subprocess.PIPE)
+    message = p.stderr.read() if p.stderr else "<NO STDERR>"
+    assert "pkgmk: ERROR: unable to find info for device <spool>" in message
+
+
+def test_heirloompkgtools_pkgtrans(site: Site) -> None:
+    p = site.execute(["pkgtrans"], stderr=subprocess.PIPE)
+    message = p.stderr.read() if p.stderr else "<NO STDERR>"
+    assert "usage: pkgtrans [-cinos] srcdev dstdev [pkg [pkg...]]" in message
 
 
 def test_stunnel(site: Site) -> None:

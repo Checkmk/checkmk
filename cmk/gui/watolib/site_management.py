@@ -5,11 +5,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator, Mapping, Set
 from dataclasses import dataclass, field
 from typing import Any, cast, Literal
 
 from livestatus import (
+    BrokerConnection,
+    BrokerConnections,
+    ConnectionId,
     LocalSocketInfo,
     NetworkSocketDetails,
     NetworkSocketInfo,
@@ -25,6 +28,9 @@ from livestatus import (
     UnixSocketInfo,
 )
 
+from cmk.ccc import version
+from cmk.ccc.site import omd_site
+
 from cmk.utils import paths
 from cmk.utils.user import UserId
 
@@ -35,13 +41,13 @@ from cmk.gui.site_config import is_replication_enabled, site_is_local
 from cmk.gui.watolib.activate_changes import clear_site_replication_status
 from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.automations import do_site_login
+from cmk.gui.watolib.broker_certificates import trigger_remote_certs_creation
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
-from cmk.gui.watolib.sites import SiteManagementFactory
+from cmk.gui.watolib.sites import site_management_registry
 
-from cmk.ccc import version
-from cmk.ccc.site import omd_site
+DEFAULT_MESSAGE_BROKER_PORT = 5672
 
 
 class SiteDoesNotExistException(Exception): ...
@@ -429,6 +435,13 @@ class UserSync:
 
         return cls(sync_with_ldap_connections="disabled")
 
+    @classmethod
+    def from_external(cls, external_config: dict[str, Any] | None) -> UserSync:
+        if external_config is None:
+            return cls(sync_with_ldap_connections="disabled")
+
+        return cls(**external_config)
+
     def to_external(self) -> Iterator[tuple[str, str | None | list[str]]]:
         yield "sync_with_ldap_connections", self.sync_with_ldap_connections
         if self.ldap_connections:
@@ -447,13 +460,14 @@ class UserSync:
 @dataclass
 class ConfigurationConnection:
     enable_replication: bool
-    url_of_remote_site: str
-    disable_remote_configuration: bool
-    ignore_tls_errors: bool
-    direct_login_to_web_gui_allowed: bool
     user_sync: UserSync
-    replicate_event_console: bool
-    replicate_extensions: bool
+    url_of_remote_site: str = ""
+    disable_remote_configuration: bool = True
+    ignore_tls_errors: bool = False
+    direct_login_to_web_gui_allowed: bool = True
+    replicate_event_console: bool = True
+    replicate_extensions: bool = True
+    message_broker_port: int = DEFAULT_MESSAGE_BROKER_PORT
 
     @classmethod
     def from_internal(
@@ -472,11 +486,16 @@ class ConfigurationConnection:
             ),
             replicate_event_console=internal_config["replicate_ec"],
             replicate_extensions=internal_config.get("replicate_mkps", False),
+            message_broker_port=internal_config.get(
+                "message_broker_port", DEFAULT_MESSAGE_BROKER_PORT
+            ),
         )
 
     @classmethod
     def from_external(cls, external_config: dict[str, Any]) -> ConfigurationConnection:
-        external_config["user_sync"] = UserSync(**external_config["user_sync"])
+        external_config["user_sync"] = UserSync.from_external(
+            external_config["user_sync"] if "user_sync" in external_config else None
+        )
         return cls(**external_config)
 
     def to_external(self) -> Iterator[tuple[str, dict[str, str | list[str] | None] | bool | str]]:
@@ -497,6 +516,7 @@ class ConfigurationConnection:
             "user_sync": self.user_sync.to_internal(),
             "replicate_ec": self.replicate_event_console,
             "replicate_mkps": self.replicate_extensions,
+            "message_broker_port": self.message_broker_port,
         }
         return configconnection
 
@@ -550,7 +570,7 @@ class SiteConfig:
 
 class SitesApiMgr:
     def __init__(self) -> None:
-        self.site_mgmt = SiteManagementFactory().factory()
+        self.site_mgmt = site_management_registry["site_management"]
         self.all_sites = self.site_mgmt.load_sites()
 
     def get_all_sites(self) -> SiteConfigurations:
@@ -574,6 +594,7 @@ class SitesApiMgr:
             raise LoginException(str(exc))
 
         self.site_mgmt.save_sites(self.all_sites)
+        trigger_remote_certs_creation(site_id, site)
 
     def logout_of_site(self, site_id: SiteId) -> None:
         site = self.get_a_site(site_id)
@@ -587,12 +608,61 @@ class SitesApiMgr:
         self.all_sites.update(sites)
         self.site_mgmt.save_sites(self.all_sites)
 
+    def get_connected_sites_to_update(
+        self,
+        new_or_deleted_connection: bool,
+        modified_site: SiteId,
+        current_site_config: SiteConfiguration,
+        old_site_config: SiteConfiguration | None,
+    ) -> set[SiteId]:
+        return self.site_mgmt.get_connected_sites_to_update(
+            new_or_deleted_connection, modified_site, current_site_config, old_site_config
+        )
+
+    def get_broker_connections(self) -> BrokerConnections:
+        return self.site_mgmt.get_broker_connections()
+
+    def validate_and_save_broker_connection(
+        self, connection_id: ConnectionId, broker_connection: BrokerConnection, is_new: bool
+    ) -> tuple[SiteId, SiteId]:
+        return self.site_mgmt.validate_and_save_broker_connection(
+            connection_id, broker_connection, is_new
+        )
+
+    def delete_broker_connection(self, connection_id: ConnectionId) -> tuple[SiteId, SiteId]:
+        return self.site_mgmt.delete_broker_connection(connection_id)
+
+
+def add_changes_after_editing_broker_connection(
+    *,
+    connection_id: str,
+    is_new_broker_connection: bool,
+    sites: list[SiteId],
+) -> LogMessage:
+    change_message = (
+        _("Created new peer-to-peer broker connection id %s") % connection_id
+        if is_new_broker_connection
+        else _("Modified peer-to-peer broker connection id %s") % connection_id
+    )
+
+    add_change(
+        "edit-sites",
+        change_message,
+        need_sync=True,
+        need_restart=True,
+        sites=[omd_site()] + sites,
+        domains=[ConfigDomainGUI()],
+    )
+
+    return change_message
+
 
 def add_changes_after_editing_site_connection(
     *,
     site_id: SiteId,
     is_new_connection: bool,
     replication_enabled: bool,
+    connected_sites: Set[SiteId] | None = None,
 ) -> LogMessage:
     change_message = (
         _("Created new connection to site %s") % site_id
@@ -600,13 +670,41 @@ def add_changes_after_editing_site_connection(
         else _("Modified site connection %s") % site_id
     )
 
-    # Don't know exactly what have been changed, so better issue a change
-    # affecting all domains
+    sites_to_update = list((connected_sites or set()) | {site_id})
     add_change(
         "edit-sites",
         change_message,
-        sites=[site_id],
-        domains=ABCConfigDomain.enabled_domains(),
+        sites=sites_to_update,
+        # This was ABCConfigDomain.enabled_domains() before. Since e.g. apache config domain takes
+        # significant more time to restart than the other domains, we now try to be more specific
+        # and mention potentially affected domains instead. The idea here is to first hard code
+        # the list of config domains produced by enabled_domains and then reduce it step by step.
+        #
+        # One the list is minimized, we can turn it into an explicit positive list.
+        #
+        # If you extend this, please also check the other "add_change" calls triggered by the site
+        # management.
+        domains=[
+            d
+            for d in ABCConfigDomain.enabled_domains()
+            if d.ident()
+            not in {
+                "apache",
+                "ca-certificates",
+                "check_mk",
+                "diskspace",
+                "ec",
+                "omd",
+                "otel_collector",
+                "rrdcached",
+                # Can we remove more here? Investigate further to minimize the domains:
+                # "liveproxyd",
+                # "multisite",
+                # "piggyback_hub",
+                # "dcd",
+                # "mknotifyd",
+            }
+        ],
     )
 
     # In case a site is not being replicated anymore, confirm all changes for this site!
@@ -615,6 +713,6 @@ def add_changes_after_editing_site_connection(
 
     if site_id != omd_site():
         # On central site issue a change only affecting the GUI
-        add_change("edit-sites", change_message, sites=[omd_site()], domains=[ConfigDomainGUI])
+        add_change("edit-sites", change_message, sites=[omd_site()], domains=[ConfigDomainGUI()])
 
     return change_message

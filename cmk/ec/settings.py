@@ -249,14 +249,17 @@ def create_settings(version: str, omd_root: Path, argv: list[str]) -> Settings:
 
 
 if __name__ == "__main__":
-    import cmk.utils.paths
-
     import cmk.ccc.version as cmk_version
 
-    print(
-        create_settings(
-            str(cmk_version.__version__),
-            cmk.utils.paths.omd_root,
-            sys.argv,
+    import cmk.utils.paths
+
+    sys.stdout.write(
+        repr(
+            create_settings(
+                str(cmk_version.__version__),
+                cmk.utils.paths.omd_root,
+                sys.argv,
+            )
         )
+        + "\n"
     )

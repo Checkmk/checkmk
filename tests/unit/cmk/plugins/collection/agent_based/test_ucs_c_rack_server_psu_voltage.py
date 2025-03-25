@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from tests.unit.conftest import FixRegister
-
 from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
+
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 
 from cmk.agent_based.v2 import Service
 
@@ -18,13 +18,15 @@ equipmentPsu	dn sys/switch-B/psu-1	id 1	model UCS-PSU-6332-AC	operability operab
 """
 
 
-def test_discovery_does_not_discover_UCS_voltage_unknown(fix_register: FixRegister) -> None:
+def test_discovery_does_not_discover_UCS_voltage_unknown(
+    agent_based_plugins: AgentBasedPlugins,
+) -> None:
     # see SUP-11285
     string_table = [line.split("\t") for line in SECTION.strip().split("\n")]
-    discovery_function = fix_register.check_plugins[
+    discovery_function = agent_based_plugins.check_plugins[
         CheckPluginName("ucs_c_rack_server_psu_voltage")
     ].discovery_function
-    parse_function = fix_register.agent_sections[
+    parse_function = agent_based_plugins.agent_sections[
         SectionName("ucs_c_rack_server_psu")
     ].parse_function
     section = parse_function(string_table)

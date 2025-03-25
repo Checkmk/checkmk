@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import shutil
 from collections.abc import Mapping
@@ -12,7 +11,9 @@ from pathlib import Path
 import pytest
 from pytest import MonkeyPatch
 
-from tests.testlib.base import Scenario
+from tests.testlib.unit.base_configuration_scenario import Scenario
+
+import cmk.ccc.version as cmk_version
 
 import cmk.utils.config_path
 import cmk.utils.paths
@@ -27,11 +28,10 @@ from cmk.checkengine.parameters import TimespecificParameters
 
 import cmk.base.nagios_utils
 from cmk.base import config, core_config
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.core_config import get_labels_from_attributes, get_tags_with_groups_from_attributes
 from cmk.base.core_factory import create_core
-
-import cmk.ccc.version as cmk_version
 
 
 @pytest.fixture(name="config_path")
@@ -76,7 +76,9 @@ def test_do_create_config_nagios(
     core_config.do_create_config(
         create_core("nagios"),
         core_scenario,
-        ip_address_of,
+        AgentBasedPlugins.empty(),
+        discovery_rules={},
+        ip_address_of=ip_address_of,
         all_hosts=[HostName("test-host")],
         duplicates=(),
     )
@@ -101,7 +103,9 @@ def test_do_create_config_nagios_collects_passwords(
     core_config.do_create_config(
         create_core("nagios"),
         core_scenario,
-        ip_address_of,
+        AgentBasedPlugins.empty(),
+        discovery_rules={},
+        ip_address_of=ip_address_of,
         all_hosts=[HostName("test-host")],
         duplicates=(),
     )
@@ -148,6 +152,8 @@ def test_get_host_attributes(monkeypatch: MonkeyPatch) -> None:
 
     if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CME:
         expected_attrs["_CUSTOMER"] = "provider"
+        expected_attrs["__LABEL_cmk/customer"] = "provider"
+        expected_attrs["__LABELSOURCE_cmk/customer"] = "discovered"
 
     assert (
         config_cache.get_host_attributes(
@@ -158,7 +164,7 @@ def test_get_host_attributes(monkeypatch: MonkeyPatch) -> None:
     )
 
 
-@pytest.mark.usefixtures("fix_register")
+@pytest.mark.usefixtures("agent_based_plugins")
 @pytest.mark.parametrize(
     "hostname,result",
     [
@@ -215,7 +221,9 @@ def test_get_cmk_passive_service_attributes(
         },
     )
     config_cache = ts.apply(monkeypatch)
-    check_mk_attrs = core_config.get_service_attributes(hostname, "Check_MK", config_cache)
+    check_mk_attrs = core_config.get_service_attributes(
+        config_cache, hostname, "Check_MK", {}, extra_icon=None
+    )
 
     service = ConfiguredService(
         check_plugin_name=CheckPluginName("cpu_loads"),
@@ -223,11 +231,17 @@ def test_get_cmk_passive_service_attributes(
         description="CPU load",
         parameters=TimespecificParameters(),
         discovered_parameters={},
-        service_labels={},
+        discovered_labels={},
+        labels={},
         is_enforced=False,
     )
     service_spec = core_config.get_cmk_passive_service_attributes(
-        config_cache, hostname, service, check_mk_attrs
+        config_cache,
+        hostname,
+        service.description,
+        {},
+        check_mk_attrs,
+        extra_icon=None,
     )
     assert service_spec == result
 

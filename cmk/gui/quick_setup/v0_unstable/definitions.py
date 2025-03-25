@@ -6,15 +6,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from cmk.gui.quick_setup.v0_unstable.type_defs import RawFormData, StageId
-
 from cmk.ccc.exceptions import MKGeneralException
-
-
-@dataclass
-class IncomingStage:  # Request
-    stage_id: StageId
-    form_data: RawFormData
 
 
 @dataclass
@@ -28,3 +20,6 @@ class QuickSetupNotFoundException(MKGeneralException):
 
 UniqueFormSpecIDStr = "formspec_unique_id"
 UniqueBundleIDStr = "bundle_id"
+QSHostName = "host_name"
+QSHostPath = "host_path"
+QSSiteSelection = "site_selection"

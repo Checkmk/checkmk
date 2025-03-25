@@ -4,11 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import typing
 
+from cmk.plugins.gcp.lib.gcp import AssetType, GCPAsset, Item
+
 RegionMap: typing.Final = {
     # Download from:
     # https://github.com/GoogleCloudPlatform/gcping/blob/main/tools/terraform/regions.json
     # Changes to the right-hand side of this list cause an incompatible change to the service name
     # of the check `gcp_status`
+    "africa-south1": "Johannesburg",
     "asia-east1": "Taiwan",
     "asia-east2": "Hong Kong",
     "asia-northeast1": "Tokyo",
@@ -29,7 +32,11 @@ RegionMap: typing.Final = {
     "europe-west6": "Zurich",
     "europe-west8": "Milan",
     "europe-west9": "Paris",
+    "europe-west10": "Berlin",
+    "europe-west12": "Turin",
     "europe-southwest1": "Madrid",
+    "me-central1": "Doha",
+    "me-central2": "Dammam",
     "me-west1": "Tel Aviv",
     "northamerica-northeast1": "Montréal",
     "northamerica-northeast2": "Toronto",
@@ -44,4 +51,19 @@ RegionMap: typing.Final = {
     "us-west2": "Los Angeles",
     "us-west3": "Salt Lake City",
     "us-west4": "Las Vegas",
+}
+
+# Known asset types that downstream checks can work with. Ignore others
+Extractors: typing.Mapping[AssetType, typing.Callable[[GCPAsset], Item]] = {
+    AssetType("file.googleapis.com/Instance"): lambda a: a.resource_data["name"].split("/")[-1],
+    AssetType("cloudfunctions.googleapis.com/CloudFunction"): lambda a: a.resource_data[
+        "name"
+    ].split("/")[-1],
+    AssetType("storage.googleapis.com/Bucket"): lambda a: a.resource_data["id"],
+    AssetType("redis.googleapis.com/Instance"): lambda a: a.resource_data["name"],
+    AssetType("run.googleapis.com/Service"): lambda a: a.resource_data["metadata"]["name"],
+    AssetType("sqladmin.googleapis.com/Instance"): lambda a: a.resource_data["name"],
+    AssetType("compute.googleapis.com/Instance"): lambda a: a.resource_data["name"],
+    AssetType("compute.googleapis.com/Disk"): lambda a: a.resource_data["name"],
+    AssetType("compute.googleapis.com/UrlMap"): lambda a: a.resource_data["name"],
 }

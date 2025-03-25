@@ -1,0 +1,13 @@
+title: Redfish Memory Modules
+agents: agent_redfish, agent_redfish_power
+catalog: hw/server/redfish
+license: GPLv2
+distribution: check_mk
+description:
+ This check provides information about the memory modules of a Redfish compatible device.
+
+discovery:
+ One service is created for each module.
+
+item:
+ The ID of the module.

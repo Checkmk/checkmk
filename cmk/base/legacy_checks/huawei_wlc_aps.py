@@ -6,11 +6,12 @@
 
 from typing import NamedTuple
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import contains, render, SNMPTree
+
+check_info = {}
 
 
 class StateTemplate(NamedTuple):
@@ -90,6 +91,7 @@ def parse_huawei_wlc_aps(string_table):
 
 
 check_info["huawei_wlc_aps"] = LegacyCheckDefinition(
+    name="huawei_wlc_aps",
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2011.2.240.17"),
     fetch=[
         SNMPTree(
@@ -150,6 +152,7 @@ def check_huawei_wlc_aps_status(item, params, parsed):
 
 
 check_info["huawei_wlc_aps.status"] = LegacyCheckDefinition(
+    name="huawei_wlc_aps_status",
     service_name="AP %s Status",
     sections=["huawei_wlc_aps"],
     discovery_function=discovery_huawei_wlc_aps_status,
@@ -175,6 +178,7 @@ def check_huawei_wlc_aps_cpu(item, params, parsed):
 
 
 check_info["huawei_wlc_aps.cpu"] = LegacyCheckDefinition(
+    name="huawei_wlc_aps_cpu",
     service_name="AP %s CPU",
     sections=["huawei_wlc_aps"],
     discovery_function=discovery_huawei_wlc_aps_cpu,
@@ -204,6 +208,7 @@ def check_huawei_wlc_aps_mem(item, params, parsed):
 
 
 check_info["huawei_wlc_aps.mem"] = LegacyCheckDefinition(
+    name="huawei_wlc_aps_mem",
     service_name="AP %s Memory",
     sections=["huawei_wlc_aps"],
     discovery_function=discovery_huawei_wlc_aps_mem,
@@ -231,6 +236,7 @@ def check_huawei_wlc_aps_temp(item, params, parsed):
 
 
 check_info["huawei_wlc_aps.temp"] = LegacyCheckDefinition(
+    name="huawei_wlc_aps_temp",
     service_name="AP %s Temperature",
     sections=["huawei_wlc_aps"],
     discovery_function=discovery_huawei_wlc_aps_temp,

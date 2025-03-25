@@ -6,8 +6,9 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_jolokia_info(string_table):
@@ -41,6 +42,7 @@ def discover_jolokia_info(section):
 
 
 check_info["jolokia_info"] = LegacyCheckDefinition(
+    name="jolokia_info",
     parse_function=parse_jolokia_info,
     service_name="JVM %s",
     discovery_function=discover_jolokia_info,

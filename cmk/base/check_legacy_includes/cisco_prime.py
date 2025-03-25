@@ -7,9 +7,12 @@ see https://solutionpartner.cisco.com/media/prime-infrastructure-api-reference-v
 """
 
 import json
+from collections.abc import Mapping
+
+from cmk.agent_based.v2 import StringTable
 
 
-def parse_cisco_prime(key, info):
+def parse_cisco_prime(key: str, info: StringTable) -> Mapping[str, Mapping[str, object]]:
     """Parse JSON and return queryResponse/entity entry (a list of dicts)
     The JSON outputs of agent_cisco_prime provides the following structure:
 

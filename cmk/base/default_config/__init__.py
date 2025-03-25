@@ -4,17 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # Load plug-in names into this module to have a single set of default settings
-# pylint: disable=wildcard-import,unused-wildcard-import
 
-from .base import *
-from .notify import *
+from .base import *  # noqa: F403
+from .notify import *  # noqa: F403
 
 try:
-    from .cee import *
+    from .cee import *  # type: ignore[import-not-found, import-untyped, unused-ignore]  # noqa: F403
 except ImportError:
     pass  # It's OK in non CEE editions
 
 try:
-    from .cme import *
+    from .cme import *  # type: ignore[import-not-found, import-untyped, unused-ignore]  # noqa: F403
 except ImportError:
     pass  # It's OK in non CME editions

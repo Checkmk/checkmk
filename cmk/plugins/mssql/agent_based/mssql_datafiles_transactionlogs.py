@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 from contextlib import suppress
 from typing import Any, Literal, TypedDict
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -158,7 +158,7 @@ def _mssql_datafiles_process_sizes(
         else:
             levels = calculate_levels(raw_levels, reference_value)
 
-        yield from check_levels(
+        yield from check_levels_v1(
             value,
             metric_name=perf_key,
             levels_upper=levels,

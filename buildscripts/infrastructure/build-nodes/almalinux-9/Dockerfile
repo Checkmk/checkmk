@@ -79,7 +79,6 @@ RUN yum -y makecache \
     readline-devel \
     rpcbind \
     rpm-build \
-    rrdtool-devel \
     rsync \
     samba-client \
     sqlite-devel \
@@ -113,6 +112,7 @@ RUN yum -y makecache \
     && yum -y --enablerepo=crb install \
     joe \
     iputils \
+    jq \
     vim \
     --nogpgcheck \
     && yum clean all
@@ -120,8 +120,8 @@ RUN yum -y makecache \
 # Avoid the annobin chaos on CentOS 8, part 2:
 # See also: omd/omd.spec.in
 RUN if test -f /usr/lib/rpm/redhat/redhat-annobin-cc1; then \
-        rm -f /usr/lib/rpm/redhat/redhat-annobin-cc1 \
-        && touch /usr/lib/rpm/redhat/redhat-annobin-cc1; \
+    rm -f /usr/lib/rpm/redhat/redhat-annobin-cc1 \
+    && touch /usr/lib/rpm/redhat/redhat-annobin-cc1; \
     fi
 
 # Install our standard tool chain for building in seperate container
@@ -146,41 +146,37 @@ ENV \
 COPY \
     .bazelversion \
     package_versions.bzl \
-    static_variables.bzl \
     defines.make \
     /opt/
 
-COPY --from=scripts \
+COPY \
     build_lib.sh \
     Check_MK-pubkey.gpg \
     /opt/
 
-COPY --from=scripts install-gnu-toolchain.sh /opt/
+COPY install-gnu-toolchain.sh /opt/
 RUN /opt/install-gnu-toolchain.sh
 
-COPY --from=scripts install-valgrind.sh /opt/
+COPY install-valgrind.sh /opt/
 RUN /opt/install-valgrind.sh
 
-COPY --from=scripts install-cmake.sh /opt/
+COPY install-cmake.sh /opt/
 RUN /opt/install-cmake.sh
 
-COPY --from=scripts install-protobuf-cpp.sh /opt/
+COPY install-protobuf-cpp.sh /opt/
 RUN /opt/install-protobuf-cpp.sh
 
-COPY --from=scripts install-openssl.sh /opt/
+COPY install-openssl.sh /opt/
 RUN /opt/install-openssl.sh
 
-COPY --from=scripts install-python.sh /opt/
+COPY install-python.sh /opt/
 RUN /opt/install-python.sh
 
 # install GDB after Python as it requires shared object files, see CMK-15854
-COPY --from=scripts install-gdb.sh /opt/
+COPY install-gdb.sh /opt/
 RUN /opt/install-gdb.sh
 
-COPY --from=scripts install-freetds.sh /opt/
-RUN /opt/install-freetds.sh
-
-COPY --from=scripts install-rust-cargo.sh /opt/
+COPY install-rust-cargo.sh /opt/
 RUN /opt/install-rust-cargo.sh
 
 # Now shrink all the binaries and libraries we produced to build a small image
@@ -189,7 +185,7 @@ COPY strip_binaries /opt/
 RUN /opt/strip_binaries /opt
 
 # Run this AFTER strip_binaries!!
-COPY --from=scripts install-bazel.sh /opt/
+COPY install-bazel.sh /opt/
 RUN /opt/install-bazel.sh
 
 ### Actual Build Image ###
@@ -211,19 +207,15 @@ RUN /opt/install-valgrind.sh link-only
 RUN /opt/install-cmake.sh link-only
 RUN /opt/install-protobuf-cpp.sh --link-only
 RUN /opt/install-python.sh link-only
-RUN /opt/install-freetds.sh link-only
 RUN /opt/install-bazel.sh link-only
 RUN /opt/install-rust-cargo.sh link-only
 
 # Install non cached dependencies
-COPY --from=scripts install-pipenv.sh /opt/
-RUN /opt/install-pipenv.sh
-
-COPY --from=omd_distros "${DISTRO_MK_FILE}" /opt/
-COPY --from=scripts install-cmk-dependencies.sh /opt/
+COPY "${DISTRO_MK_FILE}" /opt/
+COPY install-cmk-dependencies.sh /opt/
 RUN /opt/install-cmk-dependencies.sh
 
-COPY --from=scripts install-patchelf.sh /opt/
+COPY install-patchelf.sh /opt/
 RUN /opt/install-patchelf.sh
 
 # The /etc/fstab does not exist in the base image we use. A missing fstab prevents OMD from
@@ -231,14 +223,28 @@ RUN /opt/install-patchelf.sh
 # simply solve this by pre-creating the empty file here.
 RUN touch /etc/fstab
 
-COPY --from=scripts ci.bazelrc /etc/
+ENV RUSTUP_HOME=/opt/rust/rustup
+
+COPY ci.bazelrc /etc/
+RUN <<EOF cat >> /etc/ci.bazelrc
+common:ci --@//:filesystem_layout=fhs
+common:ci --action_env=DISTRO=${DISTRO}
+common:ci --action_env=BRANCH_VERSION=${BRANCH_VERSION}
+common:ci --action_env=RUSTUP_HOME=${RUSTUP_HOME}
+# We encountered false cache hits with remote caching due to environment variables
+# not being propagated to external dependeny builds
+# In that case `--host_action_env=...` (in addition to `--action_env`) might help
+# Currently we don't use any external dependencies though.
+common:ci --host_action_env=DISTRO=${DISTRO}
+common:ci --host_action_env=BRANCH_VERSION=${BRANCH_VERSION}
+common:ci --host_action_env=RUSTUP_HOME=${RUSTUP_HOME}
+EOF
 
 ARG VERS_TAG
 RUN echo "${VERS_TAG}" > /version.txt
 
-ENV RUSTUP_HOME=/opt/rust/rustup
 LABEL \
     com.checkmk.image_type="build-image"
 
-COPY --from=dev_images entrypoint.sh /opt/
+COPY entrypoint.sh /opt/
 ENTRYPOINT ["/opt/entrypoint.sh"]

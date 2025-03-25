@@ -6,9 +6,11 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.license import license_check_levels
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 # <<<rds_licenses:sep(44)>>>
 # KeyPackId,Description,KeyPackType,ProductType,ProductVersion,ProductVersionID,TotalLicenses,IssuedLi...
@@ -26,6 +28,7 @@ from cmk.base.config import check_info
 # Insert any new keys here
 # https://msdn.microsoft.com/en-us/library/aa383803%28v=vs.85%29.aspx#properties
 rds_licenses_product_versionid_map = {
+    "8": "Windows Server 2025",
     "7": "Windows Server 2022",
     "6": "Windows Server 2019",
     "5": "Windows Server 2016",
@@ -72,6 +75,7 @@ def discover_rds_licenses(section):
 
 
 check_info["rds_licenses"] = LegacyCheckDefinition(
+    name="rds_licenses",
     parse_function=parse_rds_licenses,
     service_name="RDS Licenses %s",
     discovery_function=discover_rds_licenses,

@@ -7,14 +7,29 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.utils.sectionname import SectionName
-
-from cmk.checkengine.checking import CheckPluginName
-
-import cmk.base.api.agent_based.register as agent_based_register
-
-from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Metric, Result, Service, State
-from cmk.plugins.collection.agent_based import cmciii, cmciii_phase, cmciii_status
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    Result,
+    Service,
+    State,
+)
+from cmk.plugins.collection.agent_based import (
+    cmciii,
+    cmciii_access,
+    cmciii_can_current,
+    cmciii_humidity,
+    cmciii_io,
+    cmciii_leakage,
+    cmciii_phase,
+    cmciii_psm_current,
+    cmciii_psm_plugs,
+    cmciii_status,
+    cmciii_temp,
+    cmciii_temp_in_out,
+)
 from cmk.plugins.lib.cmciii import SensorType, Variable
 
 
@@ -71,29 +86,6 @@ def test_sensor_id_temp_in_out() -> None:
     assert cmciii.sensor_id("temp_in_out", ["Air"], "Liquid_Cooling_Package") == "Air LCP"
 
 
-def run_discovery(section, plugin, info, params=None):
-    section_plugin = agent_based_register.get_section_plugin(SectionName(section))
-    assert section_plugin
-    plugin = agent_based_register.get_check_plugin(CheckPluginName(plugin))
-    assert plugin
-    section = section_plugin.parse_function(info)
-    if params is None:
-        return sorted(plugin.discovery_function(section=section))
-    return sorted(plugin.discovery_function(params=params, section=section))
-
-
-def run_check(section, plugin, item, info, params=None):
-    section_plugin = agent_based_register.get_section_plugin(SectionName(section))
-    assert section_plugin
-    plugin = agent_based_register.get_check_plugin(CheckPluginName(plugin))
-    assert plugin
-    if params is None:
-        return list(plugin.check_function(item=item, section=section_plugin.parse_function(info)))
-    return list(
-        plugin.check_function(item=item, params=params, section=section_plugin.parse_function(info))
-    )
-
-
 def _leakage_info(status, position):
     return [
         [["4", "CMCIII-LEAK", "CMCIII-LEAK", "2"]],
@@ -107,7 +99,6 @@ def _leakage_info(status, position):
     ]
 
 
-@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
     "status, position, expected",
     [
@@ -138,13 +129,12 @@ def _leakage_info(status, position):
     ],
 )
 def test_cmciii_leakage_sensors(status: str, position: str, expected: CheckResult) -> None:
+    section = cmciii.snmp_section_cmciii.parse_function(_leakage_info(status, position))
     assert (
-        run_check(
-            "cmciii",
-            "cmciii_leakage",
-            "CMCIII-LEAK Leakage",
-            _leakage_info(status, position),
-            params={},
+        list(
+            cmciii_leakage.check_plugin_cmciii_leakage.check_function(
+                "CMCIII-LEAK Leakage", {}, section
+            )
         )
         == expected
     )
@@ -208,12 +198,11 @@ def _lcp_sensor():
     ]  # fmt: off
 
 
-@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
     "plugin,expected",
     [
         (
-            "cmciii_temp_in_out",
+            cmciii_temp_in_out.check_plugin_cmciii_temp_in_out,
             [
                 Service(item="Air LCP In Bottom", parameters={"_item_key": "Air LCP In Bottom"}),
                 Service(item="Air LCP In Middle", parameters={"_item_key": "Air LCP In Middle"}),
@@ -224,17 +213,17 @@ def _lcp_sensor():
             ],
         ),
         (
-            "cmciii_temp",
+            cmciii_temp.check_plugin_cmciii_temp,
             [],
         ),
     ],
 )
-def test_cmciii_lcp_discovery(plugin: str, expected: DiscoveryResult) -> None:
-    assert run_discovery("cmciii", plugin, _lcp_sensor(), params={}) == expected
+def test_cmciii_lcp_discovery(plugin: CheckPlugin, expected: DiscoveryResult) -> None:
+    section = cmciii.snmp_section_cmciii.parse_function(_lcp_sensor())
+    assert sorted(plugin.discovery_function({}, section)) == expected
 
 
 @pytest.mark.usefixtures("initialised_item_state")
-@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
     "item, expected",
     [
@@ -274,7 +263,11 @@ def test_cmciii_lcp_discovery(plugin: str, expected: DiscoveryResult) -> None:
     ],
 )
 def test_cmciii_lcp_check(item: str, expected: CheckResult) -> None:
-    assert run_check("cmciii", "cmciii_temp_in_out", item, _lcp_sensor(), params={}) == expected
+    section = cmciii.snmp_section_cmciii.parse_function(_lcp_sensor())
+    assert (
+        list(cmciii_temp_in_out.check_plugin_cmciii_temp_in_out.check_function(item, {}, section))
+        == expected
+    )
 
 
 def _phase_sensor():
@@ -456,7 +449,6 @@ def test_phase_sensors() -> None:
     ]
 
 
-@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
     "item, expected",
     [
@@ -478,7 +470,10 @@ def test_phase_sensors() -> None:
     ],
 )
 def test_cmciii_phase_check(item: str, expected: CheckResult) -> None:
-    assert run_check("cmciii", "cmciii_phase", item, _phase_sensor(), params={}) == expected
+    section = cmciii.snmp_section_cmciii.parse_function(_phase_sensor())
+    assert (
+        list(cmciii_phase.check_plugin_cmciii_phase.check_function(item, {}, section)) == expected
+    )
 
 
 def _status_info(variable, status):
@@ -523,7 +518,6 @@ def test_cmciii_status_discovery(variable: str) -> None:
     ]
 
 
-@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
     "variable, status, expected",
     [
@@ -533,13 +527,14 @@ def test_cmciii_status_discovery(variable: str) -> None:
     ],
 )
 def test_cmciii_status_sensors(variable: str, status: str, expected: CheckResult) -> None:
+    section = cmciii.snmp_section_cmciii.parse_function(_status_info(variable, status))
     assert (
-        run_check(
-            "cmciii",
-            "cmciii_status",
-            "DET-AC_III_Master %s" % variable,
-            _status_info(variable, status),
-            params={},
+        list(
+            cmciii_status.check_plugin_cmciii_status.check_function(
+                "DET-AC_III_Master %s" % variable,
+                {},
+                section,
+            )
         )
         == expected
     )
@@ -560,21 +555,21 @@ def _access_info():
     ]  # fmt: off
 
 
-@pytest.mark.usefixtures("fix_register")
 def test_cmciii_access_discovery() -> None:
-    assert run_discovery("cmciii", "cmciii_access", _access_info(), {}) == [
+    section = cmciii.snmp_section_cmciii.parse_function(_access_info())
+    assert list(cmciii_access.check_plugin_cmciii_access.discovery_function({}, section)) == [
         Service(item="Tuer_GN-31-F Access", parameters={"_item_key": "Tuer_GN-31-F Access"})
     ]
 
 
-@pytest.mark.usefixtures("fix_register")
 def test_cmciii_access_check() -> None:
-    assert run_check(
-        "cmciii",
-        "cmciii_access",
-        "Tuer_GN-31-F Access",
-        _access_info(),
-        params={},
+    section = cmciii.snmp_section_cmciii.parse_function(_access_info())
+    assert list(
+        cmciii_access.check_plugin_cmciii_access.check_function(
+            "Tuer_GN-31-F Access",
+            {},
+            section,
+        )
     ) == [
         Result(state=State.OK, summary="Access: Closed"),
         Result(state=State.OK, summary="Delay: 5 s"),
@@ -879,12 +874,11 @@ def _generictest_cmciii():
     ]  # fmt: off
 
 
-@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
     "plugin,params,expected",
     [
         (
-            "cmciii",
+            cmciii.check_plugin_cmciii,
             {},
             [
                 Service(item="CMC-IOModul", parameters={"_item_key": "CMC-IOModul"}),
@@ -893,10 +887,10 @@ def _generictest_cmciii():
                 Service(item="CMC-Temperatur", parameters={"_item_key": "CMC-Temperatur"}),
             ],
         ),
-        ("cmciii_psm_current", {}, []),
-        ("cmciii_psm_plugs", {}, []),
+        (cmciii_psm_current.check_plugin_cmciii_psm_current, {}, []),
+        (cmciii_psm_plugs.check_plugin_cmciii_psm_plugs, {}, []),
         (
-            "cmciii_io",
+            cmciii_io.check_plugin_cmciii_io,
             {},
             [
                 Service(
@@ -941,12 +935,12 @@ def _generictest_cmciii():
             ],
         ),
         (
-            "cmciii_access",
+            cmciii_access.check_plugin_cmciii_access,
             {},
             [Service(item="CMC-PU Access", parameters={"_item_key": "CMC-PU Access"})],
         ),
         (
-            "cmciii_temp",
+            cmciii_temp.check_plugin_cmciii_temp,
             {},
             [
                 Service(item="Ambient CMC-PU", parameters={"_item_key": "Ambient CMC-PU"}),
@@ -961,9 +955,9 @@ def _generictest_cmciii():
                 Service(item="System CMC-PU", parameters={"_item_key": "System CMC-PU"}),
             ],
         ),
-        ("cmciii_temp_in_out", {}, []),
+        (cmciii_temp_in_out.check_plugin_cmciii_temp_in_out, {}, []),
         (
-            "cmciii_can_current",
+            cmciii_can_current.check_plugin_cmciii_can_current,
             {},
             [
                 Service(
@@ -977,7 +971,7 @@ def _generictest_cmciii():
             ],
         ),
         (
-            "cmciii_humidity",
+            cmciii_humidity.check_plugin_cmciii_humidity,
             {},
             [
                 Service(
@@ -986,22 +980,28 @@ def _generictest_cmciii():
                 )
             ],
         ),
-        ("cmciii_phase", {}, []),
+        (cmciii_phase.check_plugin_cmciii_phase, {}, []),
     ],
 )
 def test_genericdataset_cmciii_discovery(
-    plugin: str, params: Mapping[object, object] | None, expected: DiscoveryResult
+    plugin: CheckPlugin, params: Mapping[object, object] | None, expected: DiscoveryResult
 ) -> None:
-    assert run_discovery("cmciii", plugin, _generictest_cmciii(), params) == expected
+    assert (
+        sorted(
+            plugin.discovery_function(
+                params, cmciii.snmp_section_cmciii.parse_function(_generictest_cmciii())
+            )
+        )
+        == expected
+    )
 
 
 @pytest.mark.usefixtures("initialised_item_state")
-@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
     "plugin, params, items",
     [
         (
-            "cmciii",
+            cmciii.check_plugin_cmciii,
             {},
             [
                 ("CMC-IOModul", [Result(state=State.OK, summary="Status: OK")]),
@@ -1011,7 +1011,7 @@ def test_genericdataset_cmciii_discovery(
             ],
         ),
         (
-            "cmciii_io",
+            cmciii_io.check_plugin_cmciii_io,
             {},
             [
                 (
@@ -1137,7 +1137,7 @@ def test_genericdataset_cmciii_discovery(
             ],
         ),
         (
-            "cmciii_access",
+            cmciii_access.check_plugin_cmciii_access,
             {},
             [
                 (
@@ -1151,7 +1151,7 @@ def test_genericdataset_cmciii_discovery(
             ],
         ),
         (
-            "cmciii_temp",
+            cmciii_temp.check_plugin_cmciii_temp,
             {},
             [
                 (
@@ -1202,7 +1202,7 @@ def test_genericdataset_cmciii_discovery(
             ],
         ),
         (
-            "cmciii_can_current",
+            cmciii_can_current.check_plugin_cmciii_can_current,
             {},
             [
                 (
@@ -1228,7 +1228,7 @@ def test_genericdataset_cmciii_discovery(
             ],
         ),
         (
-            "cmciii_humidity",
+            cmciii_humidity.check_plugin_cmciii_humidity,
             {"levels": (10, 12), "levels_lower": (5, 1)},
             [
                 (
@@ -1244,21 +1244,11 @@ def test_genericdataset_cmciii_discovery(
     ],
 )
 def test_genericdataset_cmciii_check(
-    plugin: str, params: Mapping[str, object], items: Sequence[tuple[str, CheckResult]]
+    plugin: CheckPlugin, params: Mapping[str, object], items: Sequence[tuple[str, CheckResult]]
 ) -> None:
+    section = cmciii.snmp_section_cmciii.parse_function(_generictest_cmciii())
     for item, expected in items:
-        assert (
-            run_check(
-                "cmciii",
-                plugin,
-                item,
-                _generictest_cmciii(),
-                params,
-            )
-            == expected
-        ), (
-            "Item %s does not match" % item
-        )
+        assert list(plugin.check_function(item, params, section)) == expected
 
 
 def _generictest_cmciii_input_regression():
@@ -1323,12 +1313,11 @@ def _generictest_cmciii_input_regression():
     ]  # fmt: off
 
 
-@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
     "plugin,params,expected",
     [
         (
-            "cmciii",
+            cmciii.check_plugin_cmciii,
             {},
             [
                 Service(item="CMCIII-IO1", parameters={"_item_key": "CMCIII-IO1"}),
@@ -1340,10 +1329,10 @@ def _generictest_cmciii_input_regression():
                 Service(item="Doors", parameters={"_item_key": "Doors"}),
             ],
         ),
-        ("cmciii_psm_current", {}, []),
-        ("cmciii_psm_plugs", {}, []),
+        (cmciii_psm_current.check_plugin_cmciii_psm_current, {}, []),
+        (cmciii_psm_plugs.check_plugin_cmciii_psm_plugs, {}, []),
         (
-            "cmciii_io",
+            cmciii_io.check_plugin_cmciii_io,
             {},
             [
                 Service(item="CMCIII-IO2 Input 2", parameters={"_item_key": "CMCIII-IO2 Input 2"}),
@@ -1356,34 +1345,33 @@ def _generictest_cmciii_input_regression():
                 Service(item="Doors Input", parameters={"_item_key": "Doors Input"}),
             ],
         ),
-        ("cmciii_access", {}, []),
-        ("cmciii_temp", {}, []),
-        ("cmciii_temp_in_out", {}, []),
-        ("cmciii_can_current", {}, []),
-        ("cmciii_humidity", {}, []),
-        ("cmciii_phase", {}, []),
+        (cmciii_access.check_plugin_cmciii_access, {}, []),
+        (cmciii_temp.check_plugin_cmciii_temp, {}, []),
+        (cmciii_temp_in_out.check_plugin_cmciii_temp_in_out, {}, []),
+        (cmciii_can_current.check_plugin_cmciii_can_current, {}, []),
+        (cmciii_humidity.check_plugin_cmciii_humidity, {}, []),
+        (cmciii_phase.check_plugin_cmciii_phase, {}, []),
     ],
 )
 def test_genericdataset_cmciii_input_regression_discovery(
-    plugin: str, params: Mapping[object, object] | None, expected: DiscoveryResult
+    plugin: CheckPlugin, params: Mapping[object, object] | None, expected: DiscoveryResult
 ) -> None:
+    section = cmciii.snmp_section_cmciii.parse_function(_generictest_cmciii_input_regression())
     assert (
-        run_discovery(
-            "cmciii",
-            plugin,
-            _generictest_cmciii_input_regression(),
-            params,
+        sorted(
+            plugin.discovery_function(section=section)
+            if params is None
+            else plugin.discovery_function(params=params, section=section)
         )
         == expected
     )
 
 
-@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
     "plugin,params,items",
     [
         (
-            "cmciii",
+            cmciii.check_plugin_cmciii,
             {},
             [
                 ("CMCIII-IO1", [Result(state=State.OK, summary="Status: OK")]),
@@ -1396,7 +1384,7 @@ def test_genericdataset_cmciii_input_regression_discovery(
             ],
         ),
         (
-            "cmciii_io",
+            cmciii_io.check_plugin_cmciii_io,
             {},
             [
                 (
@@ -1467,18 +1455,19 @@ def test_genericdataset_cmciii_input_regression_discovery(
     ],
 )
 def test_genericdataset_cmciii_input_regression_check(
-    plugin: str, params: Mapping[object, object] | None, items: Sequence[tuple[str, CheckResult]]
+    plugin: CheckPlugin,
+    params: Mapping[object, object] | None,
+    items: Sequence[tuple[str, CheckResult]],
 ) -> None:
+    section = cmciii.snmp_section_cmciii.parse_function(_generictest_cmciii_input_regression())
     for item, expected in items:
         assert (
-            run_check(
-                "cmciii",
-                plugin,
-                item,
-                _generictest_cmciii_input_regression(),
-                params,
+            list(
+                plugin.check_function(
+                    item,
+                    params,
+                    section,
+                )
             )
             == expected
-        ), (
-            "Item %s does not match" % item
         )

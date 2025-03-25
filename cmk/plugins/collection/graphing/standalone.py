@@ -1573,7 +1573,7 @@ metric_nvme_critical_warning = metrics.Metric(
 )
 metric_nvme_available_spare = metrics.Metric(
     name="nvme_available_spare",
-    title=Title("Available Spare"),
+    title=Title("Available spare"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.YELLOW,
 )
@@ -1677,8 +1677,8 @@ metric_memory_used = metrics.Metric(
 # 1024) which means an invalidation of historic values.
 metric_kb_out_of_sync = metrics.Metric(
     name="kb_out_of_sync",
-    title=Title("KiB out of sync"),  # according to documentation
-    unit=UNIT_COUNTER,
+    title=Title("Out of sync"),
+    unit=UNIT_BYTES,
     color=metrics.Color.ORANGE,
 )
 metric_serverlog_storage_percent = metrics.Metric(

@@ -5,9 +5,9 @@
 
 from collections.abc import Iterable, Iterator, Sequence
 
-import feedparser  # type: ignore[import-untyped]
+import feedparser
 import requests
-from feedparser.util import FeedParserDict  # type: ignore[import-untyped]
+from feedparser.util import FeedParserDict
 from lxml.html import fromstring, HtmlElement
 from pydantic import BaseModel
 
@@ -91,9 +91,7 @@ def get_azure_issues(
 
 
 def write_section(args: Args) -> int:
-    response = requests.get(
-        "https://status.azure.com/en-us/status/feed/"
-    )  # nosec B113 # BNS:0b0eac
+    response = requests.get("https://status.azure.com/en-us/status/feed/")  # nosec B113 # BNS:0b0eac
     feed = feedparser.parse(response.text)
 
     selected_regions = [AZURE_REGIONS[r] for r in args.regions]

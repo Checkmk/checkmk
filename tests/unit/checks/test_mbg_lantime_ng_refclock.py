@@ -76,7 +76,7 @@ def test_check_mbg_lantime_ng_refclock(
 def test_discovery_mbg_lantime_ng_refclock_gps(
     info: StringTable, expected: DiscoveryResult
 ) -> None:
-    check = Check("mbg_lantime_ng_refclock.gps")
+    check = Check("mbg_lantime_ng_refclock_gps")
     discovery = DiscoveryResult(check.run_discovery(info))
     assertDiscoveryResultsEqual(check, discovery, expected)
 
@@ -133,6 +133,6 @@ def test_discovery_mbg_lantime_ng_refclock_gps(
 def test_check_mbg_lantime_ng_refclock_gps(
     info: StringTable, item: str, params: tuple[float, float], expected: CheckResult
 ) -> None:
-    check = Check("mbg_lantime_ng_refclock.gps")
+    check = Check("mbg_lantime_ng_refclock_gps")
     result = CheckResult(check.run_check(item, params, info))
     assertCheckResultsEqual(result, expected)

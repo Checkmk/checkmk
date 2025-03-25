@@ -7,7 +7,7 @@ import time
 from collections.abc import Callable, Mapping
 from typing import Any, Final, TypedDict
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -125,9 +125,7 @@ def _get_jobname_and_running_state(
 
 def parse_job(string_table: StringTable) -> Section:
     parsed: Section = {}
-    pseudo_running_jobs: Section = (
-        {}
-    )  # contains jobs that are flagged as running but are not, e.g. killed jobs
+    pseudo_running_jobs: Section = {}  # contains jobs that are flagged as running but are not, e.g. killed jobs
     job: Job = {}
     for idx, line in enumerate(string_table):
         if line[0] == "==>" and line[-1] == "<==":
@@ -144,6 +142,13 @@ def parse_job(string_table: StringTable) -> Section:
                 continue
 
             job = parsed.setdefault(jobname, job_stats)
+            # the setdefault means: the first job wins. so if we see a running job first, and a
+            # stopped afterwards, the job is running.
+            # but if we se a stopped job first and then a running one, then its still reported as
+            # stopped, which is not correct.
+            # running should overwrite stopped, but stopped should not overwrite running:
+            if job_stats["running"] is True:
+                job["running"] = True
 
         elif job and len(line) == 2:
             name, value = _job_parse_metrics(line)
@@ -175,9 +180,8 @@ agent_section_job = AgentSection(
 
 
 def discover_job(section: Section) -> DiscoveryResult:
-    for jobname, job in section.items():
-        if not job["running"]:
-            yield Service(item=jobname)
+    for jobname, _job in section.items():
+        yield Service(item=jobname)
 
 
 _METRIC_SPECS: Mapping[str, tuple[str, Callable]] = {
@@ -195,7 +199,7 @@ _METRIC_SPECS: Mapping[str, tuple[str, Callable]] = {
 
 def _check_job_levels(job: Job, metric: str, notice_only: bool = True) -> CheckResult:
     label, render_func = _METRIC_SPECS[metric]
-    yield from check_levels(
+    yield from check_levels_v1(
         job["metrics"][metric],
         metric_name=metric,
         label=label,
@@ -244,7 +248,7 @@ def _process_job_stats(
 
     used_start_time = max(job["running_start_time"]) if currently_running else job["start_time"]
     if (age := now - used_start_time) >= 0:
-        yield from check_levels(
+        yield from check_levels_v1(
             age,
             metric_name="job_age",
             label=f"Job age{currently_running}",

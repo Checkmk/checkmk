@@ -346,13 +346,7 @@ from cmk.plugins.collection.agent_based import cisco_temperature as ct
                 "14": {
                     "Ethernet1/1 Lane 1 Transceiver Receive Power Sensor": {
                         "admin_state": "down",
-                        "descr": "Ethernet1/1 "
-                        "Lane "
-                        "1 "
-                        "Transceiver "
-                        "Receive "
-                        "Power "
-                        "Sensor",
+                        "descr": "Ethernet1/1 Lane 1 Transceiver Receive Power Sensor",
                         "dev_levels_lower": None,
                         "dev_levels_upper": None,
                         "dev_state": (0, "OK"),
@@ -361,13 +355,7 @@ from cmk.plugins.collection.agent_based import cisco_temperature as ct
                     },
                     "Ethernet1/1 Lane 1 Transceiver Transmit Power Sensor": {
                         "admin_state": "down",
-                        "descr": "Ethernet1/1 "
-                        "Lane "
-                        "1 "
-                        "Transceiver "
-                        "Transmit "
-                        "Power "
-                        "Sensor",
+                        "descr": "Ethernet1/1 Lane 1 Transceiver Transmit Power Sensor",
                         "dev_levels_lower": None,
                         "dev_levels_upper": None,
                         "dev_state": (0, "OK"),
@@ -376,13 +364,7 @@ from cmk.plugins.collection.agent_based import cisco_temperature as ct
                     },
                     "Ethernet1/3 Lane 1 Transceiver Receive Power Sensor": {
                         "admin_state": "up",
-                        "descr": "Ethernet1/3 "
-                        "Lane "
-                        "1 "
-                        "Transceiver "
-                        "Receive "
-                        "Power "
-                        "Sensor",
+                        "descr": "Ethernet1/3 Lane 1 Transceiver Receive Power Sensor",
                         "dev_levels_lower": None,
                         "dev_levels_upper": None,
                         "dev_state": (0, "OK"),
@@ -391,13 +373,7 @@ from cmk.plugins.collection.agent_based import cisco_temperature as ct
                     },
                     "Ethernet1/3 Lane 1 Transceiver Transmit Power Sensor": {
                         "admin_state": "up",
-                        "descr": "Ethernet1/3 "
-                        "Lane "
-                        "1 "
-                        "Transceiver "
-                        "Transmit "
-                        "Power "
-                        "Sensor",
+                        "descr": "Ethernet1/3 Lane 1 Transceiver Transmit Power Sensor",
                         "dev_levels_lower": None,
                         "dev_levels_upper": None,
                         "dev_state": (0, "OK"),
@@ -408,7 +384,7 @@ from cmk.plugins.collection.agent_based import cisco_temperature as ct
                 "8": {
                     "Ethernet1/1 Lane 1 Transceiver Temperature Sensor": {
                         "admin_state": "down",
-                        "descr": "Ethernet1/1 " "Lane 1 " "Transceiver " "Temperature " "Sensor",
+                        "descr": "Ethernet1/1 Lane 1 Transceiver Temperature Sensor",
                         "dev_levels_lower": None,
                         "dev_levels_upper": None,
                         "dev_state": (0, "OK"),
@@ -417,7 +393,7 @@ from cmk.plugins.collection.agent_based import cisco_temperature as ct
                     },
                     "Ethernet1/3 Lane 1 Transceiver Temperature Sensor": {
                         "admin_state": "up",
-                        "descr": "Ethernet1/3 " "Lane 1 " "Transceiver " "Temperature " "Sensor",
+                        "descr": "Ethernet1/3 Lane 1 Transceiver Temperature Sensor",
                         "dev_levels_lower": None,
                         "dev_levels_upper": None,
                         "dev_state": (0, "OK"),
@@ -612,7 +588,7 @@ def test_parse_admin_state_mapping(
                 "14": {
                     "TenGigabitEthernet1/1/7 Transmit Power Sensor": {
                         "admin_state": None,
-                        "descr": "TenGigabitEthernet1/1/7 " "Transmit " "Power " "Sensor",
+                        "descr": "TenGigabitEthernet1/1/7 Transmit Power Sensor",
                         "dev_state": (3, "unavailable"),
                         "raw_dev_state": "2",
                     }
@@ -732,6 +708,32 @@ def test_parse_admin_state_mapping(
             },
             id="fallback_no_coercion_for_severity_other",
         ),
+        pytest.param(
+            [
+                [["1010", "", "Switch 1 - Inlet Temp Sensor"]],
+                [["1010", "8", "9", "0", "49", "1"]],
+                [
+                    # no threshold values
+                    ["1010.1", "1", "1", ""],
+                    ["1010.2", "1", "1", ""],
+                ],
+                [["1010", "Switch 1 - Inlet Temp Sensor", "49", "56", "2"]],
+                [["oid_end", "description", "1"]],
+                [],
+            ],
+            {
+                "8": {
+                    "Switch 1 - Inlet Temp Sensor": {
+                        "dev_levels_lower": None,
+                        "dev_levels_upper": (56.0, 56.0),
+                        "dev_state": (1, "warning"),
+                        "raw_env_mon_state": "2",
+                        "reading": 49,
+                    },
+                }
+            },
+            id="no_threshold_values",
+        ),
     ],
 )
 def test_parse_cisco_temperature_thresholds(
@@ -745,9 +747,7 @@ def test_defect_sensor() -> None:
 
     assert list(ct.discover_cisco_temperature(section))
 
-    (defect_result,) = ct._check_cisco_temperature(  # pylint: disable=protected-access
-        {}, "Chassis 1", {}, section
-    )
+    (defect_result,) = ct._check_cisco_temperature({}, "Chassis 1", {}, section)
     assert isinstance(defect_result, Result)
     assert defect_result.state is not State.OK
 
@@ -1063,9 +1063,5 @@ def test_ensure_invalid_data_is_ignored(as_path: Callable[[str], Path]) -> None:
     parsed_section = get_parsed_snmp_section(ct.snmp_section_cisco_temperature, snmp_walk)
     assert parsed_section is not None
     value_store: dict = {}
-    _ = list(
-        ct._check_cisco_temperature(  # pylint: disable=protected-access
-            value_store, "38487", {}, parsed_section
-        )
-    )
+    _ = list(ct._check_cisco_temperature(value_store, "38487", {}, parsed_section))
     assert not value_store

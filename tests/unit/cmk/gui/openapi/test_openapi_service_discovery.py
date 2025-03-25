@@ -10,9 +10,9 @@ from unittest.mock import call, MagicMock
 import pytest
 from pytest_mock import MockerFixture
 
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel
@@ -20,6 +20,7 @@ from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import ServiceName
 
 from cmk.automations.results import (
+    AnalyzeServiceRuleMatchesResult,
     GetServicesLabelsResult,
     ServiceDiscoveryPreviewResult,
     SetAutochecksInput,
@@ -1003,7 +1004,7 @@ def test_openapi_discovery_refresh_services(
         == "/NO_SITE/check_mk/api/1.0/objects/service_discovery_run/example.com/actions/wait-for-completion/invoke"
     )
     assert mock_discovery_preview.mock_calls == [
-        call("example.com", prevent_fetching=True, raise_errors=False),
+        call("example.com", prevent_fetching=False, raise_errors=False),
         call("example.com", prevent_fetching=False, raise_errors=False),
     ]
     mock_set_autochecks.assert_not_called()
@@ -1036,8 +1037,8 @@ def test_openapi_discovery_tabula_rasa(
         )
     ]
     assert mock_discovery_preview.mock_calls == [
-        call("example.com", prevent_fetching=True, raise_errors=False),
-        call("example.com", prevent_fetching=True, raise_errors=False),
+        call("example.com", prevent_fetching=False, raise_errors=False),
+        call("example.com", prevent_fetching=False, raise_errors=False),
     ]
 
 
@@ -1053,6 +1054,10 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
         # one would like to mock the call in the library and not the import. WHY????
         "cmk.gui.watolib.rulesets.get_services_labels",
         return_value=GetServicesLabelsResult(labels=defaultdict(dict)),
+    )
+    mocker.patch(
+        "cmk.gui.watolib.rulesets.analyze_service_rule_matches",
+        return_value=AnalyzeServiceRuleMatchesResult({}),
     )
     aut_user_auth_wsgi_app.call_method(
         "post",
@@ -1180,31 +1185,10 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
     )
 
 
-@pytest.mark.usefixtures("with_host", "inline_background_jobs")
-def test_openapi_discover_single_service(
-    base: str,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_discovery_preview: MagicMock,
-    mock_set_autochecks: MagicMock,
-) -> None:
-    resp = aut_user_auth_wsgi_app.call_method(
-        "put",
-        f"{base}/objects/host/example.com/actions/update_discovery_phase/invoke",
-        params='{"check_type": "systemd_units_services_summary", "service_item": "Summary", "target_phase": "monitored"}',
-        headers={"Accept": "application/json"},
-        content_type="application/json",
-        status=204,
-    )
-    assert resp.text == ""
-    mock_discovery_preview.assert_called_once()
-    # TODO: This seems to be a bug. Might be caused by the fact that the service is currently not
-    # known to the host. I have not verified this. But in case something like this happens, the
-    # endpoint should fail with some error instead instead of continuing silently.
-    mock_set_autochecks.assert_not_called()
-
-
 @pytest.mark.usefixtures("inline_background_jobs")
-def test_openapi_bulk_discovery_with_default_options(base: str, clients: ClientRegistry) -> None:
+def test_openapi_bulk_discovery_with_default_options(
+    base: str, clients: ClientRegistry, mocker: MockerFixture
+) -> None:
     # create some sample hosts
     clients.HostConfig.bulk_create(
         entries=[
@@ -1219,24 +1203,14 @@ def test_openapi_bulk_discovery_with_default_options(base: str, clients: ClientR
         ]
     )
 
+    automation = mocker.patch("cmk.gui.watolib.bulk_discovery.discovery")
     resp = clients.ServiceDiscovery.bulk_discovery(
         hostnames=["foobar", "sample"],
         monitor_undecided_services=True,
+        follow_redirects=False,
     )
-    assert resp.json["id"] == "bulk_discovery"
-    assert resp.json["title"].endswith("is active") or resp.json["title"].endswith(
-        "is finished"
-    ), resp.json
-    assert "active" in resp.json["extensions"]
-    assert "state" in resp.json["extensions"]
-    assert "result" in resp.json["extensions"]["logs"]
-    assert "progress" in resp.json["extensions"]["logs"]
-
-    status_resp = clients.ServiceDiscovery.discovery_run_status(resp.json["id"])
-    assert status_resp.json["id"] == resp.json["id"]
-    assert "active" in status_resp.json["extensions"]
-
-    # TODO: additional tests for bulk discovery modes (CMK-10160)
+    automation.assert_called_once()
+    assert resp.status_code == 303
 
 
 def test_openapi_bulk_discovery_with_invalid_hostname(
@@ -1289,19 +1263,3 @@ def test_openapi_refresh_job_status(
     assert "state" in resp.json["extensions"]
     assert "result" in resp.json["extensions"]["logs"]
     assert "progress" in resp.json["extensions"]["logs"]
-
-
-@pytest.mark.usefixtures("with_host", "inline_background_jobs")
-def test_openapi_deprecated_execute_discovery_endpoint(
-    base: str,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_discovery_preview: MagicMock,
-) -> None:
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        f"{base}/objects/host/example.com/actions/discover_services/invoke",
-        params='{"mode": "refresh"}',
-        content_type="application/json",
-        headers={"Accept": "application/json"},
-        status=303,
-    )

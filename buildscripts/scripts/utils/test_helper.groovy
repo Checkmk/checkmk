@@ -233,6 +233,29 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
                 )
             ));
             break;
+        case "RUFFFORMAT":
+            parserId = 'ruff-format';
+            update_custom_parser([
+                id: parserId, // ID
+                name: 'Ruff Format', // Name shown on left side menu
+                regex: '(^\\+\\+\\+\\s)(.*\\.py$)\\n(@@\\s\\-)(\\d)(\\,\\d\\s\\+.*\\s@@\\n)([\\s\\w\\+\\.\\-\\(\\@\\)]*\\n)*', // RegEx
+                mapping: 'return builder.setFileName(matcher.group(2)).setLineStart(Integer.parseInt(matcher.group(4))).setMessage(matcher.group(6)).buildOptional()', // Mapping script
+                example: """--- gui_e2e/test_menu_help.py
+                +++ gui_e2e/test_menu_help.py
+                @@ -7,8 +7,8 @@
+                 import pytest
+
+                 from tests.testlib.playwright.pom.dashboard import Dashboard
+                +from tests.testlib.playwright.timeouts import handle_playwright_timeouterror
+                """,  // example log message
+            ]);
+            issues.add(scanForIssues(
+                tool: groovyScript(
+                    parserId: parserId,
+                    pattern: "${result_check_file_pattern}"
+                )
+            ));
+            break;
         default:
             println("No tool defined for RESULT_CHECK_TYPE: ${result_check_type}");
             break;
@@ -304,16 +327,22 @@ def update_custom_parser(Map config = [:]) {
 // Get registry credentials for a specific edition
 def registry_credentials_id(edition) {
     switch(edition) {
-        case "raw":
         case "cloud":
+        case "managed":
+        case "raw":
             return "11fb3d5f-e44e-4f33-a651-274227cc48ab";
         case "enterprise":
-        case "managed":
             return "registry.checkmk.com";
         case "saas":
             return "nexus";
         default:
-            throw new Exception("Cannot provide registry credentials id for edition '${edition}'");
+            throw new Exception("Cannot provide registry credentials id for edition '${edition}'");     // groovylint-disable ThrowException
+    }
+}
+
+def assert_fips_testing(use_case, node_labels) {
+    if (use_case == "fips" && !node_labels.contains("fips")) {
+        throw new Exception("FIPS testing requested but we're not running on a fips node.");
     }
 }
 

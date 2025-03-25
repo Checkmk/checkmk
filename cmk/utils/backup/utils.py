@@ -17,12 +17,12 @@ from hashlib import md5
 from pathlib import Path
 from typing import Final
 
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.backup.job import Job, JobState
 from cmk.utils.backup.stream import BackupStream, RestoreStream
 from cmk.utils.backup.type_defs import Backup, RawBackupInfo, SiteBackupInfo
-
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
 
 SITE_BACKUP_MARKER = "Check_MK"
 BACKUP_INFO_FILENAME = "mkbackup.info"
@@ -153,7 +153,7 @@ def verify_backup_file(info: SiteBackupInfo, archive_path: Path) -> None:
 
 
 def file_checksum(path: Path) -> str:
-    hash_md5 = md5(usedforsecurity=False)  # pylint: disable=unexpected-keyword-arg
+    hash_md5 = md5(usedforsecurity=False)
     with open(path, "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
             hash_md5.update(chunk)
@@ -202,7 +202,7 @@ class State:
 class InfoCalculator:
     def __init__(self, filename: str) -> None:
         self.filename = filename
-        self.hash = md5(usedforsecurity=False)  # pylint: disable=unexpected-keyword-arg
+        self.hash = md5(usedforsecurity=False)
         self.size = 0
 
     @staticmethod
@@ -267,11 +267,13 @@ class ProgressLogger:
         self._state = state
         self._last_state_update = time.time()
         self._last_bps: float | None = None
+        self._bytedif: int = 0
 
     def update(self, bytes_copied: int) -> None:
         timedif = time.time() - self._last_state_update
+        self._bytedif += bytes_copied
         if timedif >= 1:
-            this_bps = bytes_copied / timedif
+            this_bps = self._bytedif / timedif
 
             if self._last_bps is None:
                 bps = this_bps  # initialize the value
@@ -283,6 +285,7 @@ class ProgressLogger:
 
             self._state.update_and_save(bytes_per_second=bps)
             self._last_state_update, self._last_bps = time.time(), bps
+            self._bytedif = 0
 
 
 def do_site_restore(
@@ -322,7 +325,7 @@ def do_site_restore(
     except subprocess.CalledProcessError as exc:
         log(
             "Failed to start the site after restore.\n"
-            f'Details: {exc.output.decode(encoding="utf-8")}'
+            f"Details: {exc.output.decode(encoding='utf-8')}"
         )
 
 

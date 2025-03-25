@@ -10,14 +10,13 @@ from cmk.plugins.lib.esx_vsphere import (
     ESXDataStore,
     ESXMemory,
     ESXStatus,
-    ESXVm,
     HeartBeat,
     HeartBeatStatus,
-    SectionVM,
+    SectionESXVm,
 )
 
 
-def parse_esx_vsphere_vm(string_table: StringTable) -> SectionVM:
+def parse_esx_vsphere_vm(string_table: StringTable) -> SectionESXVm | None:
     grouped_values: dict[str, list[str]] = {}
     for line in string_table:
         # Do not monitor VM templates
@@ -25,7 +24,7 @@ def parse_esx_vsphere_vm(string_table: StringTable) -> SectionVM:
             return None
         grouped_values[line[0]] = line[1:]
 
-    return ESXVm(
+    return SectionESXVm(
         mounted_devices=grouped_values.get("config.hardware.device", []),
         snapshots=grouped_values.get("snapshot.rootSnapshotList", []),
         status=_parse_vm_status(grouped_values),
@@ -36,6 +35,7 @@ def parse_esx_vsphere_vm(string_table: StringTable) -> SectionVM:
         datastores=_parse_esx_datastore_section(grouped_values),
         host=_parse_esx_vm_running_on_host(grouped_values),
         name=_parse_esx_vm_name(grouped_values),
+        systime=_parse_esx_systime(grouped_values),
     )
 
 
@@ -50,6 +50,13 @@ def _parse_esx_vm_name(vm_values: Mapping[str, Sequence]) -> str | None:
         return None
 
     return " ".join(vm_values["name"])
+
+
+def _parse_esx_systime(vm_values: Mapping[str, Sequence]) -> str | None:
+    if "systime" not in vm_values:
+        return None
+
+    return vm_values["systime"][0]
 
 
 def _parse_esx_vm_heartbeat_status(vm_values: Mapping[str, Sequence[str]]) -> HeartBeat | None:
@@ -123,7 +130,7 @@ def _parse_esx_cpu_section(vm_values: Mapping[str, Sequence[str]]) -> ESXCpu | N
 
 
 def _parse_esx_datastore_section(
-    vm_values: Mapping[str, Sequence[str]]
+    vm_values: Mapping[str, Sequence[str]],
 ) -> list[ESXDataStore] | None:
     """Parse datastores specific values
 
@@ -154,7 +161,7 @@ def _parse_esx_datastore_section(
     return stores
 
 
-def host_label_esx_vshpere_vm(section: SectionVM) -> HostLabelGenerator:
+def host_label_esx_vshpere_vm(section: SectionESXVm) -> HostLabelGenerator:
     """Host label function
 
     Labels:
@@ -164,7 +171,7 @@ def host_label_esx_vshpere_vm(section: SectionVM) -> HostLabelGenerator:
             and to "vm" if the host is a virtual machine.
 
     """
-    if section and section.host is not None:
+    if section.host is not None:
         yield HostLabel("cmk/vsphere_object", "vm")
 
 

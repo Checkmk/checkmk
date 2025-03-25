@@ -12,13 +12,13 @@ from cmk.gui.log import logger
 from cmk.gui.pdf import Document
 from cmk.gui.type_defs import RGBColor, SizeMM
 
-from ._artwork import GraphArtwork, LayoutedCurve, LayoutedCurveArea
+from ._artwork import GraphArtwork, LayoutedCurve, LayoutedCurveArea, LayoutedCurveStack
 from ._color import parse_color
 from ._graph_render_config import GraphRenderConfigImage
 from ._graph_specification import GraphDataRange
 
 
-def render_graph_pdf(  # pylint: disable=too-many-branches
+def render_graph_pdf(
     pdf_document: Document,
     graph_artwork: GraphArtwork,
     graph_render_config: GraphRenderConfigImage,
@@ -162,7 +162,7 @@ def render_graph_pdf(  # pylint: disable=too-many-branches
         t = graph_artwork.start_time
         color = parse_color(curve["color"])
 
-        if _is_area_layouted_curve(curve):
+        if _is_area_or_stacked_layouted_curve(curve):
             points = curve["points"]
             prev_lower = None
             prev_upper = None
@@ -395,8 +395,10 @@ def render_graph_pdf(  # pylint: disable=too-many-branches
     logger.debug("  Finished rendering graph")
 
 
-def _is_area_layouted_curve(curve: LayoutedCurve) -> TypeGuard[LayoutedCurveArea]:
-    return curve["type"] == "area"
+def _is_area_or_stacked_layouted_curve(
+    curve: LayoutedCurve,
+) -> TypeGuard[LayoutedCurveArea | LayoutedCurveStack]:
+    return curve["line_type"] in ("area", "-area", "stack", "-stack")
 
 
 def compute_pdf_graph_data_range(width: SizeMM, start_time: int, end_time: int) -> GraphDataRange:

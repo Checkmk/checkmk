@@ -20,7 +20,9 @@ def parse_ucd_cpu_load(string_table: Sequence[StringTable]) -> Section | None:
                 (
                     float(float_cpu_load_str.replace(",", "."))
                     if float_cpu_load_str
-                    else float(int_cpu_load_str) / 100.0 if int_cpu_load_str else 0
+                    else float(int_cpu_load_str) / 100.0
+                    if int_cpu_load_str
+                    else 0
                 )
                 for int_cpu_load_str, float_cpu_load_str in cpu_loads
             )

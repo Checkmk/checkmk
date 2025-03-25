@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, Result, Service, State
 from cmk.plugins.lib.wlc_clients import (
     ClientsPerInterface,
@@ -46,7 +46,7 @@ def check_wlc_clients(
                 )
             )
 
-    yield from check_levels(
+    yield from check_levels_v1(
         total_number_of_clients,
         levels_upper=params.get("levels"),
         levels_lower=params.get("levels_lower"),

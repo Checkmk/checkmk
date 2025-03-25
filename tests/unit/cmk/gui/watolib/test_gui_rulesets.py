@@ -4,15 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Mapping
-
-# pylint: disable=redefined-outer-name
 from dataclasses import dataclass
 from unittest.mock import patch
 
 import pytest
 from pytest import FixtureRequest
 
-from tests.unit.cmk.gui.conftest import SetConfig
+from tests.unit.cmk.web_test_app import SetConfig
+
+from cmk.ccc import version
+from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.utils import paths
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
@@ -29,11 +30,10 @@ from cmk.gui.plugins.wato.check_parameters.local import _parameter_valuespec_loc
 from cmk.gui.plugins.wato.check_parameters.ps import _valuespec_inventory_processes_rules
 from cmk.gui.utils.rule_specs import legacy_converter
 from cmk.gui.watolib import rulesets
+from cmk.gui.watolib.configuration_bundle_store import BundleId
+from cmk.gui.watolib.configuration_bundles import create_config_bundle, CreateBundleEntities
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.gui.watolib.rulesets import Rule, RuleOptions, Ruleset, RuleValue
-
-from cmk.ccc import version
-from cmk.ccc.exceptions import MKGeneralException
 
 
 def _ruleset(ruleset_name: RulesetName) -> rulesets.Ruleset:
@@ -569,6 +569,19 @@ def test_rule_clone_locked() -> None:
 
 def _setup_rules(rule_a_locked: bool, rule_b_locked: bool) -> tuple[Ruleset, Folder, Rule]:
     ruleset = _ruleset(RuleGroup.CheckgroupParameters("local"))
+    bundle_id = BundleId("bundle_id")
+    program_id = PROGRAM_ID_QUICK_SETUP
+    create_config_bundle(
+        bundle_id=bundle_id,
+        bundle={
+            "title": "bundle_title",
+            "comment": "bundle_comment",
+            "group": "bundle_group",
+            "program_id": program_id,
+        },
+        entities=CreateBundleEntities(),
+    )
+
     folder = folder_tree().root_folder()
     ruleset.append_rule(
         folder,
@@ -585,8 +598,8 @@ def _setup_rules(rule_a_locked: bool, rule_b_locked: bool) -> tuple[Ruleset, Fol
                 "locked_by": (
                     {
                         "site_id": "heute",
-                        "program_id": PROGRAM_ID_QUICK_SETUP,
-                        "instance_id": "1",
+                        "program_id": program_id,
+                        "instance_id": bundle_id,
                     }
                     if rule_a_locked
                     else None
@@ -607,8 +620,8 @@ def _setup_rules(rule_a_locked: bool, rule_b_locked: bool) -> tuple[Ruleset, Fol
             "locked_by": (
                 {
                     "site_id": "heute",
-                    "program_id": PROGRAM_ID_QUICK_SETUP,
-                    "instance_id": "2",
+                    "program_id": program_id,
+                    "instance_id": bundle_id,
                 }
                 if rule_b_locked
                 else None
@@ -914,7 +927,7 @@ def test_rules_grouped_by_folder() -> None:
 
     # Also test renamed folder
     folder4 = Folder.new(tree=tree, name="folder4", parent_folder=root)
-    folder4._title = "abc"  # pylint: disable=protected-access
+    folder4._title = "abc"
     rules.append((folder4, 0, Rule.from_ruleset_defaults(folder4, ruleset)))
 
     sorted_rules = sorted(

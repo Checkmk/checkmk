@@ -14,6 +14,15 @@ export MODULEBUILDRC="$OMD_ROOT/.modulebuildrc"
 export PERL_MM_OPT=INSTALL_BASE="$OMD_ROOT/local/lib/perl5/"
 export MANPATH="$OMD_ROOT/share/man:$MANPATH"
 export MAILRC="$OMD_ROOT/etc/mail.rc"
+# rabbitmq will search for its configuration under $RABBITMQ_HOME/etc, see also
+# https://www.rabbitmq.com/docs/install-generic-unix#file-locations
+export RABBITMQ_HOME="${OMD_ROOT}"
+if [ -f "${RABBITMQ_HOME}/.erlang.cookie" ]; then
+    # Early in the site initialization the file does not exist yet
+    export RABBITMQ_ERLANG_COOKIE="$(cat "${RABBITMQ_HOME}/.erlang.cookie")"
+fi
+export RABBITMQ_NODENAME="rabbit-${OMD_SITE}@localhost"
+export PATH="$OMD_ROOT/lib/rabbitmq/sbin:$PATH"
 
 # Make the python requests module trust the CAs configured in Check_MK
 export REQUESTS_CA_BUNDLE=$OMD_ROOT/var/ssl/ca-certificates.crt

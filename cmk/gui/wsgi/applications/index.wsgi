@@ -7,15 +7,18 @@ from wsgiref.types import WSGIEnvironment
 
 from opentelemetry.instrumentation.wsgi import get_default_span_name, OpenTelemetryMiddleware
 
+from cmk.ccc.site import get_omd_config, omd_site, resource_attributes_from_config
+from cmk.ccc.version import edition
+
 from cmk.utils import paths
-from cmk.utils.profile_switcher import (
+
+from cmk.gui.wsgi.applications.profile_switcher import (
     LazyImportProfilingMiddleware,
     ProfileConfigLoader,
     ProfileSetting,
 )
 
 from cmk import trace
-from cmk.ccc.site import get_omd_config, omd_site
 from cmk.trace.export import exporter_from_config, init_span_processor
 
 DEBUG = False
@@ -60,15 +63,25 @@ def _request_hook(span: trace.Span, environ: WSGIEnvironment) -> None:
 
 
 init_span_processor(
-    trace.init_tracing(omd_site(), "gui"),
-    exporter_from_config(trace.trace_send_config(get_omd_config(paths.omd_root))),
+    trace.init_tracing(
+        service_namespace=trace.service_namespace_from_config(
+            "", omd_config := get_omd_config(paths.omd_root)
+        ),
+        service_name="gui",
+        service_instance_id=omd_site(),
+        extra_resource_attributes=resource_attributes_from_config(paths.omd_root),
+    ),
+    exporter_from_config(trace.trace_send_config(omd_config)),
 )
 
 Application = OpenTelemetryMiddleware(
     LazyImportProfilingMiddleware(
         app_factory_module="cmk.gui.wsgi.app",
         app_factory_name="make_wsgi_app",
-        app_factory_args=(DEBUG,),
+        app_factory_args=(
+            edition(paths.omd_root),
+            DEBUG,
+        ),
         app_factory_kwargs={},
         config_loader=ProfileConfigLoader(
             fetch_actual_config=load_actual_config,

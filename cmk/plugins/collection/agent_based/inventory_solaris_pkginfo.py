@@ -70,9 +70,9 @@ def parse_solaris_pkginfo(string_table: StringTable) -> Section:
                 pass
         else:
             # iterate over translation dict and update entries
-            for tkey in translation_dict:
+            for tkey, translated in translation_dict.items():
                 if key == tkey:
-                    entry.update({translation_dict[tkey]: value})
+                    entry.update({translated: value})
     if entry:
         parsed_packages.append(entry)
     return parsed_packages

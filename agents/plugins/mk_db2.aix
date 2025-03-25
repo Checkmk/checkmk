@@ -1,4 +1,4 @@
-#!/usr/bin/ksh
+#!/usr/bin/ksh93
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.4.0b1"
+CMK_VERSION="2.5.0b1"
 
 # Monitor DB/2 databases on AIX
 # $HOME/sqllib/db2profile
@@ -65,11 +65,11 @@ function waitmax {
 function query_instance {
     INSTANCE=$1
     # find home directory
-    HOMEDIR=$(grep "^$INSTANCE" /etc/passwd | awk -F: '{print $6}' | grep "$INSTANCE$")
+    HOMEDIR=$(grep -w "^$INSTANCE:" /etc/passwd | awk -F: '{print $6}')
     NOW=$(perl -e "print time();")
 
     waitmax 200 <<WAITMAX
-    su $INSTANCE << EOF
+    su - $INSTANCE -c "/usr/bin/ksh93" << EOF
 
     if [ ! -f $HOMEDIR/sqllib/db2profile ] ;
     then
@@ -99,7 +99,7 @@ function query_instance {
     DB_PORT='port 0'
     for DB in \\\$DBS; do
             db2 connect to \\\$DB > /dev/null;
-            if [ $? -nq 0 ] ; then
+            if [ $? -ne 0 ] ; then
                 exit 1
             fi
 

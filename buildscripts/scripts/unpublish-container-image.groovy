@@ -43,7 +43,7 @@ def main() {
                 withEnv(["PYTHONUNBUFFERED=1"]) {
                     dir("${checkout_dir}") {
 
-                        command = """scripts/run-pipenv run \
+                        command = """scripts/run-uvenv \
                         buildscripts/scripts/unpublish-container-image.py \
                         --editions_file editions.yml --edition ${EDITION} \
                         ${ACTION}

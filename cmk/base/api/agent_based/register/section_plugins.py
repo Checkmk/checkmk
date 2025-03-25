@@ -2,15 +2,16 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Background tools required to register a section plug-in
-"""
+"""Background tools required to register a section plug-in"""
+
 import functools
 import inspect
 import itertools
-from collections.abc import Generator
-from typing import Any, List, Sequence
+from collections.abc import Generator, Mapping, Sequence
+from typing import Any
 
-from cmk.utils.check_utils import ParametersTypeAlias
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.regex import regex
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.sectionname import SectionName
@@ -23,6 +24,7 @@ from cmk.base.api.agent_based.plugin_classes import (
     AgentParseFunction,
     AgentSectionPlugin,
     HostLabelFunction,
+    LegacyPluginLocation,
     SimpleSNMPParseFunction,
     SNMPParseFunction,
     SNMPSectionPlugin,
@@ -37,7 +39,6 @@ from cmk.agent_based.v1 import HostLabel, SNMPTree
 from cmk.agent_based.v1.register import RuleSetType
 from cmk.agent_based.v1.type_defs import StringByteTable, StringTable
 from cmk.agent_based.v2 import AgentSection, SimpleSNMPSection, SNMPSection
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.discover_plugins import PluginLocation
 
 
@@ -50,11 +51,11 @@ def create_parse_annotation(
     if is_list:
         if needs_bytes:
             return {
-                (List[StringByteTable], "List[StringByteTable]"),
+                (list[StringByteTable], "List[StringByteTable]"),
                 (list[StringByteTable], "list[StringByteTable]"),
             }
         return {
-            (List[StringTable], "List[StringTable]"),
+            (list[StringTable], "List[StringTable]"),
             (list[StringTable], "list[StringTable]"),
         }
     if needs_bytes:
@@ -98,7 +99,7 @@ def validate_parse_function(
 def _validate_host_label_kwargs(
     *,
     host_label_function: HostLabelFunction,
-    host_label_default_parameters: ParametersTypeAlias | None,
+    host_label_default_parameters: Mapping[str, object] | None,
     host_label_ruleset_name: str | None,
     host_label_ruleset_type: RuleSetType,
 ) -> None:
@@ -229,7 +230,7 @@ def _create_supersedes(
 
 def create_agent_section_plugin(
     agent_section_spec: AgentSection,
-    location: PluginLocation | None,
+    location: PluginLocation | LegacyPluginLocation,
     *,
     validate: bool,
 ) -> AgentSectionPlugin:
@@ -272,7 +273,7 @@ def create_agent_section_plugin(
 
 def create_snmp_section_plugin(
     snmp_section_spec: SimpleSNMPSection | SNMPSection,
-    location: PluginLocation | None,
+    location: PluginLocation | LegacyPluginLocation,
     *,
     validate: bool,
 ) -> SNMPSectionPlugin:
@@ -342,17 +343,3 @@ def validate_section_supersedes(all_supersedes: dict[SectionName, set[SectionNam
                 "You must add those to the supersedes keyword argument."
                 % (name, ", ".join(f"'{n}'" for n in sorted(implicitly)))
             )
-
-
-def trivial_section_factory(section_name: SectionName) -> AgentSectionPlugin:
-    return AgentSectionPlugin(
-        name=section_name,
-        parsed_section_name=ParsedSectionName(str(section_name)),
-        parse_function=lambda string_table: string_table,
-        host_label_function=_noop_host_label_function,
-        host_label_default_parameters=None,
-        host_label_ruleset_name=None,
-        host_label_ruleset_type="merged",  # doesn't matter, use default.
-        supersedes=set(),
-        location=None,
-    )

@@ -24,7 +24,7 @@ def cpu_util_elements():
             Tuple(
                 title=_("Levels over an extended time period on total CPU utilization"),
                 elements=[
-                    Percentage(title=_("High utilization at "), default_value=100.0),
+                    Percentage(title=_("High utilization at "), default_value=100.0, maxvalue=None),
                     Age(title=_("Warning after "), default_value=5 * 60),
                     Age(title=_("Critical after "), default_value=15 * 60),
                 ],
@@ -49,7 +49,7 @@ def cpu_util_elements():
                     "may go unnoticed when only monitoring the total utilization of the CPU. "
                     "With this configuration, Checkmk will alert if a single core is "
                     "exceeding a utilization threshold over an extended period of time. "
-                    "This is currently only supported on linux and windows agents "
+                    "This is currently only supported on Linux and Windows agents "
                     "as well as devices monitored through the host-resource mib"
                 ),
             ),
@@ -60,7 +60,9 @@ def cpu_util_elements():
                 title=_("Averaging for total CPU utilization"),
                 help=_(
                     "When this option is activated then the CPU utilization is being "
-                    "averaged <b>before</b> the levels on total CPU utilization are being applied."
+                    "averaged <b>before</b> the levels on total CPU utilization are being applied.\n"
+                    "Note: The average is calculated using the Exponential Moving Average (EMA) method, "
+                    "which considers both the new value and the previous average while applying a weighted factor to each."
                 ),
                 unit=_("minutes"),
                 minvalue=1,
@@ -75,7 +77,9 @@ def cpu_util_elements():
                 help=_(
                     "Compute averaged single-core CPU utilizations. Note that this option only has "
                     "an effect if at least one of the sub-options 'Apply single-core levels' or "
-                    "'Graphs for averaged single-core utilizations' is enabled."
+                    "'Graphs for averaged single-core utilizations' is enabled.\n"
+                    "Note: The average is calculated using the Exponential Moving Average (EMA) method, "
+                    "which considers both the new value and the previous average while applying a weighted factor to each."
                 ),
                 elements=[
                     (
@@ -158,7 +162,7 @@ def cpu_util_elements():
                     "details page, showing utilization of individual cores. "
                     "Please note that this graph may be impractical on "
                     "device with very many cores. "
-                    "This is currently only supported on linux and windows agents "
+                    "This is currently only supported on Linux and Windows agents "
                     "as well as devices monitored through the host-resource mib"
                 ),
                 choices=[
@@ -240,7 +244,7 @@ rulespec_registry.register(
 
 
 def _cpu_utilization_to_dict(
-    param: tuple[float, float] | dict[str, tuple[float, float]]
+    param: tuple[float, float] | dict[str, tuple[float, float]],
 ) -> dict[str, tuple[float, float]]:
     if not param:
         return {}

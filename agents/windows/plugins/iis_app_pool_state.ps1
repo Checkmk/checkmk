@@ -1,4 +1,4 @@
-$CMK_VERSION = "2.4.0b1"
+$CMK_VERSION = "2.5.0b1"
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -21,20 +21,14 @@ Function Get-LocalizedEnglishPerfCounterName {
     }
     $counterId = $enMapping[$index - 1]
 
-    $code = '[DllImport("pdh.dll", SetLastError=true, CharSet=CharSet.Unicode)] public static extern UInt32 PdhLookupPerfNameByIndex(string szMachineName, uint dwNameIndex, System.Text.StringBuilder szNameBuffer, ref uint pcchNameBufferSize);'
-
-    $Buffer = New-Object System.Text.StringBuilder(1024)
-    [UInt32]$BufferSize = $Buffer.Capacity
-
-    $t = Add-Type -MemberDefinition $code -PassThru -Name PerfCounter -Namespace Utility
-    $rv = $t::PdhLookupPerfNameByIndex($env:COMPUTERNAME, $counterId, $Buffer, [Ref]$BufferSize)
-
-    if ($rv -eq 0) {
-        $Buffer.ToString().Substring(0, $BufferSize - 1)
-    }
-    else {
+    $localMappingRegistryKey = 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Perflib\CurrentLanguage'
+    $localMapping = (Get-ItemProperty -Path $localMappingRegistryKey -Name Counter).Counter
+    $localIndex = $localMapping.IndexOf($counterId)
+    if ($localIndex -eq -1) {
         return $null
     }
+
+    $localMapping[$localIndex + 1]
 }
 
 Write-Host '<<<iis_app_pool_state:sep(124)>>>'

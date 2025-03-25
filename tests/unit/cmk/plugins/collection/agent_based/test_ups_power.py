@@ -10,8 +10,6 @@ import pytest
 
 from tests.unit.cmk.plugins.collection.agent_based.snmp import snmp_is_detected
 
-from cmk.utils.sectionname import SectionName
-
 from cmk.agent_based.v2 import StringTable
 from cmk.plugins.collection.agent_based import ups_power
 
@@ -21,33 +19,28 @@ DATA0 = """
 """
 
 
-@pytest.mark.usefixtures("fix_register")
+@pytest.mark.usefixtures("agent_based_plugins")
 def test_ups_power_detect(as_path: Callable[[str], Path]) -> None:
-    assert snmp_is_detected(SectionName("ups_power"), as_path(DATA0))
+    assert snmp_is_detected(ups_power.snmp_section_ups_power, as_path(DATA0))
 
 
 @pytest.mark.parametrize(
     "string_table, section",
     [
         pytest.param(
-            [[["1", "", ""]]],
-            {},
-            id="empty voltage and power",
-        ),
-        pytest.param(
-            [[["1", "", "2"]]],
-            {},
-            id="empty voltage",
-        ),
-        pytest.param(
-            [[["1", "0", ""]]],
+            [[["1", ""]]],
             {},
             id="empty power",
         ),
         pytest.param(
-            [[["1", "1", "0"]]],
+            [[["1", "2"]]],
+            {"1": 2},
+            id="power present",
+        ),
+        pytest.param(
+            [[["1", "0"]]],
             {"1": 0},
-            id="voltage and power",
+            id="power is zero",
         ),
     ],
 )

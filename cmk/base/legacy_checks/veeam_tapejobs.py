@@ -6,10 +6,10 @@
 
 import time
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_value_store, render
+
+check_info = {}
 
 BACKUP_STATE = {"Success": 0, "Warning": 1, "Failed": 2}
 
@@ -62,9 +62,9 @@ def check_veeam_tapejobs(item, params, parsed):
         value_store[f"{job_id}.running_since"] = now
     running_time = now - running_since
 
-    yield 0, "Backup in progress since {} (currently {})".format(
-        render.datetime(running_since),
-        last_state.lower(),
+    yield (
+        0,
+        f"Backup in progress since {render.datetime(running_since)} (currently {last_state.lower()})",
     )
     yield check_levels(
         running_time,
@@ -76,6 +76,7 @@ def check_veeam_tapejobs(item, params, parsed):
 
 
 check_info["veeam_tapejobs"] = LegacyCheckDefinition(
+    name="veeam_tapejobs",
     parse_function=parse_veeam_tapejobs,
     service_name="VEEAM Tape Job %s",
     discovery_function=inventory_veeam_tapejobs,

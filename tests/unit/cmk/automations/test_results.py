@@ -3,10 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+
+from cmk.ccc import version as cmk_version
 
 from cmk.utils import paths
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -30,8 +31,6 @@ from cmk.checkengine.discovery import CheckPreviewEntry
 from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResult
 
 from cmk.base.automations import automations
-
-from cmk.ccc import version as cmk_version
 
 
 def test_result_type_registry_completeness() -> None:

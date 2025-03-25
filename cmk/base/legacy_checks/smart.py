@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 # EXAMPLE DATA FROM: WDC SSC-D0128SC-2100
 # <<<smart>>>
@@ -45,9 +47,10 @@ def check_smart_temp(item, params, section):
 
 
 check_info["smart.temp"] = LegacyCheckDefinition(
+    name="smart_temp",
     # section already migrated!
     service_name="Temperature SMART %s",
-    sections=["smart"],
+    sections=["smart"],  # This agent plugin was superseded by smart_posix
     discovery_function=inventory_smart_temp,
     check_function=check_smart_temp,
     check_ruleset_name="temperature",

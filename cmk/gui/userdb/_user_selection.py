@@ -8,6 +8,7 @@ from typing import Any
 
 from cmk.utils.user import UserId
 
+from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     DEF_VALUE,
     DropdownChoice,
@@ -20,20 +21,19 @@ from cmk.gui.valuespec import (
 from .store import load_users
 
 
-def UserSelection(  # pylint: disable=redefined-builtin
+def UserSelection(
     only_contacts: bool = False,
     only_automation: bool = False,
-    none: str | None = None,
     # ValueSpec
     title: str | None = None,
     help: ValueSpecHelp | None = None,
     default_value: ValueSpecDefault[UserId] = DEF_VALUE,
 ) -> Transform[UserId | None]:
+    # this has been ported to formspec be carfule about changes!
     return Transform(
         valuespec=_UserSelection(
             only_contacts=only_contacts,
             only_automation=only_automation,
-            none=none,
             title=title,
             help=help,
             default_value=default_value,
@@ -46,45 +46,45 @@ def UserSelection(  # pylint: disable=redefined-builtin
 class _UserSelection(DropdownChoice[UserId]):
     """Dropdown for choosing a multisite user"""
 
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         only_contacts: bool = False,
         only_automation: bool = False,
-        none: str | None = None,
         # ValueSpec
         title: str | None = None,
         help: ValueSpecHelp | None = None,
         default_value: ValueSpecDefault[UserId] = DEF_VALUE,
     ) -> None:
         super().__init__(
-            choices=self._generate_wato_users_elements_function(
-                none, only_contacts=only_contacts, only_automation=only_automation
+            choices=generate_wato_users_elements_function(
+                only_contacts=only_contacts, only_automation=only_automation
             ),
             invalid_choice="complain",
             title=title,
+            empty_text=_("No valid users available"),
             help=help,
             default_value=default_value,
         )
 
-    def _generate_wato_users_elements_function(
-        self,
-        none_value: str | None,
-        only_contacts: bool = False,
-        only_automation: bool = False,
-    ) -> Callable[[], list[tuple[UserId | None, str]]]:
-        def get_wato_users(nv: str | None) -> list[tuple[UserId | None, str]]:
-            users = load_users()
-            elements: list[tuple[UserId | None, str]] = sorted(
-                (name, "{} - {}".format(name, us.get("alias", name)))
-                for (name, us) in users.items()
-                if (not only_contacts or us.get("contactgroups"))
-                and (not only_automation or us.get("automation_secret"))
-            )
-            if nv is not None:
-                elements.insert(0, (None, nv))
-            return elements
-
-        return lambda: get_wato_users(none_value)
-
     def value_to_html(self, value: Any) -> ValueSpecText:
         return str(super().value_to_html(value)).rsplit(" - ", 1)[-1]
+
+
+def generate_wato_users_elements_function(
+    only_contacts: bool = False,
+    only_automation: bool = False,
+) -> Callable[[], list[tuple[UserId | None, str]]]:
+    def get_wato_users() -> list[tuple[UserId | None, str]]:
+        users = load_users()
+        elements: list[tuple[UserId | None, str]] = sorted(
+            (name, "{} - {}".format(name, us.get("alias", name)))
+            for (name, us) in users.items()
+            if (not only_contacts or us.get("contactgroups"))
+            and (
+                not only_automation
+                or (us.get("store_automation_secret") and us.get("is_automation_user"))
+            )
+        )
+        return elements
+
+    return get_wato_users

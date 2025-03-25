@@ -14,7 +14,7 @@ import datetime
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -66,7 +66,7 @@ def _check(now: datetime.datetime, params: Mapping[str, Any], section: str) -> C
         )
         return
 
-    yield from check_levels(
+    yield from check_levels_v1(
         value=backup_age,
         levels_upper=params["age"],
         label=f"Last backup was at {datetime.datetime.strftime(backup_time, '%Y-%m-%d %H:%M:%S')}",

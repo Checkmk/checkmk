@@ -20,7 +20,7 @@ class AuditLogExtension(BaseSchema):
 
 class AuditLogEntry(BaseSchema):
     title = fields.String(
-        description="A human readable title of this object. Can be used for " "user interfaces.",
+        description="A human readable title of this object. Can be used for user interfaces.",
     )
 
     extensions = fields.Nested(

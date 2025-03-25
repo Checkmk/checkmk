@@ -3,14 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import re
-
-from cmk.gui import utils
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageRegistry
+from cmk.gui.utils.selection_id import SelectionId
 
 
 def register(page_registry: PageRegistry) -> None:
@@ -41,25 +39,7 @@ def ajax_tree_openclose() -> None:
 
 def init_selection() -> None:
     """Generate the initial selection_id"""
-    selection_id()
     user.cleanup_old_selections()
-
-
-def selection_id() -> str:
-    """Generates a selection id or uses the given one"""
-    if not request.has_var("selection"):
-        sel_id = utils.gen_id()
-        request.set_var("selection", sel_id)
-        return sel_id
-
-    sel_id = request.get_str_input_mandatory("selection")
-
-    # Avoid illegal file access by introducing .. or /
-    if not re.match("^[-0-9a-zA-Z]+$", sel_id):
-        new_id = utils.gen_id()
-        request.set_var("selection", new_id)
-        return new_id
-    return sel_id
 
 
 def ajax_set_rowselection() -> None:
@@ -69,4 +49,4 @@ def ajax_set_rowselection() -> None:
         raise MKUserError(None, _("Invalid action"))
 
     rows = request.get_str_input_mandatory("rows", "").split(",")
-    user.set_rowselection(selection_id(), ident, rows, action)
+    user.set_rowselection(SelectionId.from_request(request), ident, rows, action)

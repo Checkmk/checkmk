@@ -37,10 +37,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, IgnoreResultsError
+
+check_info = {}
 
 db2_counters_map = {
     "deadlocks": "Deadlocks",
@@ -119,6 +119,7 @@ def check_db2_counters(item, params, parsed):
 
 
 check_info["db2_counters"] = LegacyCheckDefinition(
+    name="db2_counters",
     parse_function=parse_db2_counters,
     service_name="DB2 Counters %s",
     discovery_function=inventory_db2_counters,

@@ -8,7 +8,7 @@ from collections.abc import Mapping
 from enum import Enum
 from typing import NamedTuple, TypedDict
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -97,7 +97,7 @@ def check_veeam_cdp_jobs(item: str, params: CheckParams, section: Section) -> Ch
         yield Result(state=State.WARN, summary=warning_message)
         return
 
-    yield from check_levels(
+    yield from check_levels_v1(
         value=cdp.time_diff,
         levels_upper=params.get("age"),
         metric_name=None,

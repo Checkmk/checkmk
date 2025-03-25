@@ -2,30 +2,29 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Background tools required to register a check plug-in
-"""
+"""Background tools required to register a check plug-in"""
+
 import functools
 from collections.abc import Callable, Iterable, Mapping
 from typing import Any
 
 from cmk.utils.rulesets import RuleSetName
 
-from cmk.checkengine.inventory import InventoryPluginName
+from cmk.checkengine.inventory import InventoryPlugin, InventoryPluginName
 
-from cmk.base.api.agent_based.plugin_classes import InventoryFunction, InventoryPlugin
 from cmk.base.api.agent_based.register.utils import (
     create_subscribed_sections,
     validate_default_parameters,
     validate_function_arguments,
 )
 
-from cmk.agent_based.v1 import Attributes, TableRow
+from cmk.agent_based.v2 import Attributes, InventoryResult, TableRow
 from cmk.discover_plugins import PluginLocation
 
 
 def _filter_inventory(
     generator: Callable[..., Iterable],
-) -> InventoryFunction:
+) -> Callable[..., InventoryResult]:
     """Only let Attributes and TableRow instances through
 
     This allows for better typing in base code.
@@ -77,10 +76,8 @@ def create_inventory_plugin(
     return InventoryPlugin(
         name=plugin_name,
         sections=subscribed_sections,
-        inventory_function=_filter_inventory(inventory_function),
-        inventory_default_parameters=inventory_default_parameters or {},
-        inventory_ruleset_name=(
-            RuleSetName(inventory_ruleset_name) if inventory_ruleset_name else None
-        ),
+        function=_filter_inventory(inventory_function),
+        defaults=inventory_default_parameters or {},
+        ruleset_name=(RuleSetName(inventory_ruleset_name) if inventory_ruleset_name else None),
         location=location,
     )

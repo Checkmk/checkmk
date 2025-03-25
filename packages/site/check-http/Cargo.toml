@@ -1,0 +1,38 @@
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+[package]
+name = "check-http"
+version = "0.1.0"
+workspace = ".."
+edition.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+aes-gcm = { workspace = true, features = ["aes", "std"] }
+anyhow.workspace = true
+bytes.workspace = true
+clap = { workspace = true, features = ["derive"] }
+encoding_rs.workspace = true
+httpdate.workspace = true
+log.workspace = true
+mime.workspace = true
+regex.workspace = true
+# We need either rustls-tls or native-tls-alpn to establish HTTP/2 connections.
+# Only native-tls supports TLS1.0/TLS1.1, while setting TLS1.3 as minimum version is only
+# supported by rustls.
+# Since we only know that at runtime we need to pull in both TLS backends.
+reqwest = { workspace = true, features = [
+  "json",
+  "rustls-tls-webpki-roots", # CCADB store (https://www.ccadb.org/) - Updated on (re)compilation
+  "rustls-tls-native-roots", # Additionally listen to SSL_CERT_FILE
+  "native-tls-alpn",
+  "socks",
+] }
+scrypt = { workspace = true, features = ["std"] }
+tokio = { workspace = true, features = ["rt", "macros", "rt-multi-thread"] }
+tracing.workspace = true
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
+x509-parser.workspace = true

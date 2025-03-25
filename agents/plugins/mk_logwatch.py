@@ -8,7 +8,7 @@ This is the Check_MK Agent plugin. If configured it will be called by the
 agent without arguments.
 
 Options:
-    -d               Debug mode: Colored output, no saving of status.
+    -d               Debug mode: No saving of status.
     -c CONFIG_FILE   Use this config file
     -h               Show help.
     --no_state       No state
@@ -20,7 +20,7 @@ You should find an example configuration file at
 
 from __future__ import with_statement
 
-__version__ = "2.4.0b1"
+__version__ = "2.5.0b1"
 
 import sys
 
@@ -45,13 +45,13 @@ import socket
 import time
 
 try:
-    from collections.abc import (  # pylint: disable=unused-import
+    from collections.abc import (  # noqa: F401
         Collection,
         Iterable,
         Iterator,
         Sequence,
     )
-    from typing import Any  # pylint: disable=unused-import
+    from typing import Any  # noqa: F401
 except ImportError:
     # We need typing only for testing
     pass
@@ -78,18 +78,9 @@ IPV4_REGEX = re.compile(r"^(::ffff:|::ffff:0:|)(?:[0-9]{1,3}\.){3}[0-9]{1,3}$")
 IPV6_REGEX = re.compile(r"^(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}$")
 
 ENCODINGS = (
-    (b"\xFF\xFE", "utf_16"),
-    (b"\xFE\xFF", "utf_16_be"),
+    (b"\xff\xfe", "utf_16"),
+    (b"\xfe\xff", "utf_16_be"),
 )
-
-TTY_COLORS = {
-    "C": "\033[1;31m",  # red
-    "W": "\033[1;33m",  # yellow
-    "O": "\033[1;32m",  # green
-    "I": "\033[1;34m",  # blue
-    ".": "",  # remain same
-    "normal": "\033[0m",
-}
 
 CONFIG_ERROR_PREFIX = "CANNOT READ CONFIG FILE: "  # detected by check plug-in
 
@@ -101,7 +92,7 @@ if PY3:
     text_type = str
     binary_type = bytes
 else:
-    text_type = unicode  # pylint: disable=undefined-variable # noqa: F821
+    text_type = unicode  # noqa: F821
     binary_type = str
 
 
@@ -206,7 +197,7 @@ def init_logging(verbosity):
         logging.basicConfig(level=logging.DEBUG, format="%(levelname)s: %(lineno)s: %(message)s")
 
 
-class ArgsParser:  # pylint: disable=too-few-public-methods
+class ArgsParser:
     """
     Custom argument parsing.
     (Neither use optparse which is Python 2.3 to 2.7 only.
@@ -621,11 +612,7 @@ def get_formatted_line(line, level):
     # type: (text_type, str) -> text_type
     formatted_line = "%s %s" % (level, line)
     if sys.stdout.isatty():
-        formatted_line = "%s%s%s" % (
-            TTY_COLORS[level],
-            formatted_line.replace("\1", "\nCONT:"),
-            TTY_COLORS["normal"],
-        )
+        formatted_line = formatted_line.replace("\1", "\nCONT:")
     return formatted_line
 
 
@@ -634,7 +621,7 @@ def should_log_line_with_level(level, nocontext):
     return not (nocontext and level == ".")
 
 
-def process_logfile(section, filestate, debug):  # pylint: disable=too-many-branches
+def process_logfile(section, filestate, debug):
     # type: (LogfileSection, dict[str, Any], object) -> tuple[text_type, list[text_type]]
     """
     Returns tuple of (
@@ -797,13 +784,8 @@ def process_logfile(section, filestate, debug):  # pylint: disable=too-many-bran
         offset_wrap = new_offset // section.options.maxfilesize
         if ((offset or 0) // section.options.maxfilesize) < offset_wrap:
             warnings_and_errors.append(
-                "%sW Maximum allowed logfile size (%d bytes) exceeded for the %dth time.%s\n"
-                % (
-                    TTY_COLORS["W"] if sys.stdout.isatty() else "",
-                    section.options.maxfilesize,
-                    offset_wrap,
-                    TTY_COLORS["normal"] if sys.stdout.isatty() else "",
-                )
+                "W Maximum allowed logfile size (%d bytes) exceeded for the %dth time.\n"
+                % (section.options.maxfilesize, offset_wrap)
             )
 
     # output all lines if at least one warning, error or ok has been found
@@ -1037,12 +1019,8 @@ class LogfileSection:
         self.name_fs = logfile_ref[0]
         self.name_write = logfile_ref[1]
         self.options = Options()
-        self.patterns = (
-            []
-        )  # type: list[tuple[text_type, text_type, Sequence[text_type], Sequence[text_type]]]
-        self._compiled_patterns = (
-            None
-        )  # type: list[tuple[text_type, re.Pattern, Sequence[re.Pattern | int], Sequence[text_type]]] | None
+        self.patterns = []  # type: list[tuple[text_type, text_type, Sequence[text_type], Sequence[text_type]]]
+        self._compiled_patterns = None  # type: list[tuple[text_type, re.Pattern, Sequence[re.Pattern | int], Sequence[text_type]]] | None
 
     @property
     def compiled_patterns(self):
@@ -1050,9 +1028,7 @@ class LogfileSection:
         if self._compiled_patterns is not None:
             return self._compiled_patterns
 
-        compiled_patterns = (
-            []
-        )  # type: list[tuple[text_type, re.Pattern, Sequence[re.Pattern | int], Sequence[text_type]]]
+        compiled_patterns = []  # type: list[tuple[text_type, re.Pattern, Sequence[re.Pattern | int], Sequence[text_type]]]
         for level, raw_pattern, cont_list, rewrite_list in self.patterns:
             if not rewrite_list:
                 # it does not matter what the matched group is in this case
@@ -1174,7 +1150,7 @@ def _filter_maxcontextlines(lines_list, before, after):
         if new_in_context_idx < n_lines and context_end < n_lines:
             new_in_context = lines_list[new_in_context_idx]
             # if the line ahead is relevant, extend the context
-            if new_in_context.startswith(("C", "W")):
+            if new_in_context.startswith(("C", "W", "O")):
                 context_end = new_in_context_idx + after
         if 0 <= idx <= context_end:
             yield lines_list[idx]
@@ -1278,7 +1254,7 @@ def process_batches(current_batch, current_batch_id, remote, retention_period, n
             pass
 
 
-def main(argv=None):  # pylint: disable=too-many-branches
+def main(argv=None):
     if argv is None:
         argv = sys.argv
 

@@ -2,8 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Email server roundtrip active check
-"""
+"""Email server roundtrip active check"""
+
 import argparse
 import email.utils
 import logging
@@ -17,7 +17,7 @@ from email.message import Message as POPIMAPMessage
 from pathlib import Path
 from typing import assert_never
 
-from exchangelib import Message as EWSMessage  # type: ignore[import-untyped]
+from exchangelib import Message as EWSMessage
 
 from cmk.plugins.emailchecks.lib.ac_args import add_trx_arguments, parse_trx_arguments, Scope
 from cmk.plugins.emailchecks.lib.connections import (
@@ -73,7 +73,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
             if "OMD_ROOT" in os.environ
             else Path("/tmp")  # nosec B108 # BNS:13b2c8
         ),
-        help="This plugin needs a file to store information about sent, received "
+        help="This plug-in needs a file to store information about sent, received "
         "and expected mails. Defaults to either '/tmp/' or "
         "'/omd/sites/<sitename>/var/check_mk' when executed from within an "
         "OMD site",
@@ -137,14 +137,14 @@ def subject_and_received_timestamp_from_msg(
 
     if isinstance(msg, EWSMessage):
         try:
-            return msg.subject, int(msg.datetime_received.timestamp())
+            return msg.subject, int(msg.datetime_received.timestamp())  # type: ignore[attr-defined,return-value]
         except Exception:
-            return msg.subject, None
+            return msg.subject, None  # type: ignore[return-value]
 
     return assert_never(msg)
 
 
-def check_mails(  # pylint: disable=too-many-branches
+def check_mails(
     warning: int,
     critical: int,
     expected_mails: MailDict,
@@ -241,7 +241,7 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
         now = int(time.time())
 
         def filter_subject(subject: None | str, re_pattern: re.Pattern[str]) -> None | re.Match:
-            if re_pattern and not (match := re_pattern.match(subject or "")):
+            if not (match := re_pattern.match(subject or "")):
                 logging.debug("ignore message with subject %r", subject)
                 return None
             return match
@@ -313,7 +313,7 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
             # Do not delete all messages in the inbox. Only the ones which were
             # processed before! In the meantime new ones might have come in.
             logging.debug("delete messages...")
-            connection.delete(deletion_candidates)
+            connection.delete(deletion_candidates)  # type: ignore[arg-type]
         else:
             logging.debug("deletion not active (--delete-messages not provided)")
 

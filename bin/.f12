@@ -12,20 +12,23 @@ make
 sudo install -m 755 \
     apply_unsign_msi_patch.sh \
     check_mk \
+    cmk-automation-helper \
+    cmk-compute-api-spec \
+    cmk-passwd \
+    cmk-piggyback-hub \
+    cmk-ui-job-scheduler \
+    cmk-ui-job-scheduler-health \
+    cmk-update-config \
+    cmk-update-license-usage \
+    cmk-validate-config \
+    cmk-validate-plugins \
+    init-redis \
     livedump \
+    mkbackup \
+    mkevent \
     mkeventd \
     mkeventd_open514 \
-    mkevent \
-    mkbackup \
-    cmk-update-config \
-    cmk-compute-api-spec \
-    cmk-update-license-usage \
-    cmk-passwd \
-    cmk-trigger-api-spec-job \
-    cmk-wait-for-background-jobs \
     post-rename-site \
-    init-redis \
-    piggyback_hub \
     "$ROOT"/bin/
 sudo ln -sf check_mk "$ROOT"/bin/cmk
 sudo chown root:omd "$ROOT"/bin/mkeventd_open514

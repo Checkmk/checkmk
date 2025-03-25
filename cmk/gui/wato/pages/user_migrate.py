@@ -29,6 +29,7 @@ from cmk.gui.type_defs import ActionResult, PermissionName, Users
 from cmk.gui.userdb import connections_by_type, ConnectorType, get_connection, get_user_attributes
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import CascadingDropdown, Dictionary, ListChoice
@@ -242,8 +243,13 @@ class ModeUserMigrate(WatoMode):
             for attribute in attributes:
                 if attribute not in all_users[user_id]:
                     continue
-                # TODO Expected TypedDict key to be string literal [misc]
-                all_users[user_id].pop(attribute, None)  # type: ignore[misc]
+
+                match attribute:
+                    case "roles":
+                        all_users[user_id]["roles"] = []
+                    case _:
+                        # TODO Expected TypedDict key to be string literal [misc]
+                        all_users[user_id].pop(attribute, None)  # type: ignore[misc]
 
             all_users[user_id]["connector"] = connector
             if connector == "htpasswd":
@@ -261,7 +267,7 @@ def _get_attribute_choices() -> list[tuple[str, str]]:
     default_choices: list[tuple[str, str]] = [
         ("email", "Email address"),
         ("pager", "Pager address"),
-        ("contactgroups", "Contact Groups"),
+        ("contactgroups", "Contact groups"),
         ("fallback_contact", "Receive fallback notifications"),
         ("roles", "Roles"),
     ]
@@ -276,7 +282,7 @@ def _get_attribute_choices() -> list[tuple[str, str]]:
 def _get_selected_users() -> list[str]:
     selected_users: list[str] = []
     for selection in user.get_rowselection(
-        request.get_str_input_mandatory("selection"),
+        SelectionId.from_request(request),
         "users",
     ):
         selected_users.append(
@@ -290,7 +296,7 @@ def _get_connector_choices() -> list[tuple[str, str, None]]:
 
     for connector_type in [ConnectorType.LDAP, ConnectorType.SAML2]:
         connector_choices += [
-            (connection["id"], f'{connector_type.upper()}: {connection["id"]}', None)
+            (connection["id"], f"{connector_type.upper()}: {connection['id']}", None)
             for connection in connections_by_type(connector_type)
         ]
     return connector_choices

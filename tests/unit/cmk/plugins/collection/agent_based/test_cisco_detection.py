@@ -7,11 +7,11 @@ from collections.abc import Mapping
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
 from cmk.utils.sectionname import SectionName
 
 from cmk.fetchers._snmpscan import _evaluate_snmp_detection as evaluate_snmp_detection
+
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 
 
 @pytest.mark.parametrize(
@@ -74,17 +74,17 @@ from cmk.fetchers._snmpscan import _evaluate_snmp_detection as evaluate_snmp_det
     ],
 )
 def test_cisco_related_snmp_detection(
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
     oid_data: Mapping[str, str],
     detected: set[str],
     not_detected: set[str],
 ) -> None:
     for name in detected | not_detected:
-        section = fix_register.snmp_sections.get(SectionName(name))
+        section = agent_based_plugins.snmp_sections[SectionName(name)]
 
         assert evaluate_snmp_detection(
             detect_spec=section.detect_spec,
             oid_value_getter=oid_data.get,
-        ) == (
-            name in detected
-        ), f"make sure that {name} is{'' if name in detected else ' not'} detected"
+        ) == (name in detected), (
+            f"make sure that {name} is{'' if name in detected else ' not'} detected"
+        )

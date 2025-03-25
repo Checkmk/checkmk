@@ -9,7 +9,7 @@ import datetime
 import re
 from typing import TypedDict
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -56,7 +56,7 @@ def _check_android_patch_level(params: Params, patch_level: str) -> CheckResult:
             summary=f"Security patch level has an invalid date format: '{patch_level}'",
         )
     else:
-        yield from check_levels(
+        yield from check_levels_v1(
             label=f"Security patch level is '{patch_level}'",
             metric_name="mobileiron_last_patched",
             value=age,
@@ -75,7 +75,7 @@ def _check_os_build_version(params: Params, section: Section) -> CheckResult:
             notice=f"OS build version has an invalid date format: '{section.os_build_version}'",
         )
     else:
-        yield from check_levels(
+        yield from check_levels_v1(
             label=f"OS build version is '{section.os_build_version}'",
             metric_name="mobileiron_last_build",
             value=age,

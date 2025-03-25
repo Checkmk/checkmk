@@ -4,16 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from webtest import TestResponse  # type: ignore[import-untyped]
-
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
-
-from cmk.utils import paths
+from tests.unit.cmk.web_test_app import CmkTestResponse, WebTestAppForCMK
 
 import cmk.ccc.version as cmk_version
 
+from cmk.utils import paths
 
-def _get_version(app: WebTestAppForCMK, status: int = 200) -> TestResponse:
+
+def _get_version(app: WebTestAppForCMK, status: int = 200) -> CmkTestResponse:
     return app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/version",

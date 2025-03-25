@@ -7,7 +7,6 @@
 Needs to be part of the generic code, not packed into NTOP addon.
 """
 
-
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -17,7 +16,7 @@ def get_ntop_connection() -> dict | None:
     # Use this function if you *really* want to try accessing the ntop connection settings
     try:
         # ntop is currently part of CEE and will *only* be defined if we are a CEE
-        return active_config.ntop_connection  # type: ignore[attr-defined]
+        return active_config.ntop_connection  # type: ignore[attr-defined, unused-ignore]
     except AttributeError:
         return None
 

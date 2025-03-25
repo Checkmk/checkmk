@@ -14,7 +14,10 @@ from werkzeug.exceptions import BadRequest
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import safe_join
 
-from cmk.gui import http
+from cmk.ccc.version import Edition
+
+from cmk.gui.features import features_registry
+from cmk.gui.flask_app import CheckmkFlaskApp
 from cmk.gui.session import FileBasedSession
 from cmk.gui.wsgi.blueprints.checkmk import checkmk
 from cmk.gui.wsgi.blueprints.rest_api import rest_api
@@ -24,13 +27,7 @@ from .trace import instrument_app_dependencies
 logger = logging.getLogger(__name__)
 
 
-class CheckmkFlaskApp(Flask):
-    request_class = http.Request
-    response_class = http.Response
-    session_interface = FileBasedSession()
-
-
-def make_wsgi_app(debug: bool = False, testing: bool = False) -> Flask:
+def make_wsgi_app(edition: Edition, debug: bool = False, testing: bool = False) -> Flask:
     """Create the Checkmk WSGI application.
 
     Args:
@@ -44,8 +41,12 @@ def make_wsgi_app(debug: bool = False, testing: bool = False) -> Flask:
     Returns:
         The WSGI application
     """
+    try:
+        features = features_registry[str(edition)]
+    except KeyError:
+        raise ValueError(f"Invalid edition: {edition}")
 
-    app = CheckmkFlaskApp(__name__)
+    app = CheckmkFlaskApp(__name__, FileBasedSession(), features)
     app.debug = debug
     app.testing = testing
     # Config needs a request context to work. :(
@@ -76,7 +77,7 @@ def make_wsgi_app(debug: bool = False, testing: bool = False) -> Flask:
     if debug:
         app.wsgi_app = DebuggedApplication(  # type: ignore[method-assign]
             app.wsgi_app,
-            evalex=True,
+            evalex=not testing,  # sets werkzeug.debug.preserve_context, which changes the flask globals behaviour
             pin_logging=False,
             pin_security=False,
         )
@@ -95,4 +96,4 @@ def make_wsgi_app(debug: bool = False, testing: bool = False) -> Flask:
     return app
 
 
-__all__ = ["make_wsgi_app", "CheckmkFlaskApp"]
+__all__ = ["make_wsgi_app"]

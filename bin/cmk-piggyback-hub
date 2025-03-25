@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+# Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import sys
+import traceback
+from typing import Literal
+
+import cmk.ccc.version as cmk_version
+from cmk.ccc import crash_reporting
+from cmk.ccc.crash_reporting import VersionInfo
+
+import cmk.utils.paths
+
+from cmk.piggyback.hub import main
+
+CrashReportStore = crash_reporting.CrashReportStore
+
+
+@crash_reporting.crash_report_registry.register
+class PiggybackHubCrashReport(crash_reporting.ABCCrashReport[VersionInfo]):
+    @classmethod
+    def type(cls) -> Literal["piggyback-hub"]:
+        return "piggyback-hub"
+
+
+def create_crash_report_callback() -> str:
+    try:
+        crash = PiggybackHubCrashReport(
+            cmk.utils.paths.crash_dir,
+            PiggybackHubCrashReport.make_crash_info(
+                cmk_version.get_general_version_infos(cmk.utils.paths.omd_root)
+            ),
+        )
+        CrashReportStore().save(crash)
+        return f"Please submit a crash report! (Crash-ID: {crash.ident_to_text()})"
+    except Exception:
+        return f"Failed to create a crash report: {traceback.format_exc()}"
+
+
+if __name__ == "__main__":
+    sys.exit(main(crash_report_callback=create_crash_report_callback))

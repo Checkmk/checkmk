@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from collections.abc import Callable
 
@@ -61,7 +60,7 @@ class EditDashletPage(Page):
         except KeyError:
             raise MKUserError("name", _("The requested dashboard does not exist."))
 
-    def page(self) -> PageResult:  # pylint: disable=useless-return,too-many-branches
+    def page(self) -> PageResult:
         if self._ident is None:
             type_name = request.get_str_input_mandatory("type")
             mode = "add"
@@ -161,9 +160,9 @@ class EditDashletPage(Page):
         if isinstance(vs_type, Dictionary):
             settings_elements = {el[0] for el in vs_general._get_elements()}
             properties_elements = {el[0] for el in vs_type._get_elements()}
-            assert settings_elements.isdisjoint(
-                properties_elements
-            ), "Dashboard element settings and properties have a shared option name"
+            assert settings_elements.isdisjoint(properties_elements), (
+                "Dashboard element settings and properties have a shared option name"
+            )
 
         if request.var("_save") and transactions.transaction_valid():
             try:
@@ -188,7 +187,7 @@ class EditDashletPage(Page):
                     type_properties = vs_type.from_html_vars("type")
                     vs_type.validate_value(type_properties, "type")
                     # We have to trust from_html_vars and validate_value for now
-                    new_dashlet_spec.update(type_properties)  # type: ignore[typeddict-item]
+                    new_dashlet_spec.update(type_properties)
 
                 elif handle_input_func:
                     # The returned dashlet must be equal to the parameter! It is not replaced/re-added

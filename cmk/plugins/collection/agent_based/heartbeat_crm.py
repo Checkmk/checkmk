@@ -7,7 +7,7 @@ import calendar
 import time
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Literal, TypedDict
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -166,7 +166,7 @@ def _parse_last_updated(line: Sequence[str]) -> int:
     )
 
 
-def heartbeat_crm_parse_resources(  # pylint: disable=too-many-branches
+def heartbeat_crm_parse_resources(
     resources_section: Iterable[Sequence[str]],
 ) -> Mapping[str, Sequence[Sequence[str]]]:
     resources: dict[str, list[Sequence[str]]] = {}
@@ -481,9 +481,14 @@ def discover_heartbeat_crm_resources(
             yield Service(item=name)
 
 
+class HeartbeatCrmResourcesParameters(TypedDict):
+    expected_node: str | None
+    monitoring_state_if_unmanaged_nodes: Literal[0, 1, 2, 3]
+
+
 def check_heartbeat_crm_resources(
     item: str,
-    params: Mapping[str, str | None],
+    params: HeartbeatCrmResourcesParameters,
     section: Section,
 ) -> CheckResult:
     if (resources := section.resources.resources.get(item)) is None:
@@ -494,23 +499,35 @@ def check_heartbeat_crm_resources(
 
 def _check_heartbeat_crm_resources(
     resources: Sequence[Sequence[str]],
-    params: Mapping[str, str | None],
+    params: HeartbeatCrmResourcesParameters,
 ) -> CheckResult:
     if not resources:
         yield Result(state=State.OK, summary="No resources found")
+
+    unmanaged_nodes = set()
 
     for resource in resources:
         yield Result(state=State.OK, summary=" ".join(resource))
 
         if len(resource) in {3, 4} and resource[2] != "Started":
             yield Result(state=State.CRIT, summary=f'Resource is in state "{resource[2]}"')
-        elif (
+            continue
+
+        current_node = resource[3]
+        if (
             (target_node := params["expected_node"])
-            and target_node != resource[3]
-            and resource[1] != "Slave"
-            and resource[1] != "Clone"
+            and target_node != current_node
+            and resource[1] not in {"Slave", "Clone"}
         ):
             yield Result(state=State.CRIT, summary=f"Expected node: {target_node}")
+        if "(unmanaged)" in resource:
+            unmanaged_nodes.add(current_node)
+
+    if unmanaged_nodes:
+        yield Result(
+            state=State(params["monitoring_state_if_unmanaged_nodes"]),
+            summary=f"Unmanaged nodes: {', '.join(sorted(unmanaged_nodes))}",
+        )
 
 
 check_plugin_heartbeat_crm_resources = CheckPlugin(
@@ -525,5 +542,8 @@ check_plugin_heartbeat_crm_resources = CheckPlugin(
     },
     check_function=check_heartbeat_crm_resources,
     check_ruleset_name="heartbeat_crm_resources",
-    check_default_parameters={"expected_node": None},
+    check_default_parameters=HeartbeatCrmResourcesParameters(
+        expected_node=None,
+        monitoring_state_if_unmanaged_nodes=1,
+    ),
 )

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from collections.abc import Mapping, Sequence
 
@@ -21,12 +20,12 @@ _ORGANISATIONS = [
 
 
 class FakeGetOrganisationsByIDCache:
-    def get_data(self) -> Sequence[agent_cisco_meraki._Organisation]:
+    def get_data(self, *args: object) -> Sequence[agent_cisco_meraki._Organisation]:
         return _ORGANISATIONS
 
 
 class FakeGetOrganisationsCache:
-    def get_data(self) -> Sequence[agent_cisco_meraki._Organisation]:
+    def get_data(self, *args: object) -> Sequence[agent_cisco_meraki._Organisation]:
         return _ORGANISATIONS
 
 

@@ -11,7 +11,6 @@
 
 #include "livestatus/Interface.h"
 #include "livestatus/ListColumn.h"
-class ListRenderer;
 
 class CommentRenderer
     : public ListColumnRenderer<std::unique_ptr<const IComment>> {

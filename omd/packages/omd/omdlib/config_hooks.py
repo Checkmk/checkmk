@@ -24,18 +24,18 @@ from collections.abc import Iterable
 from ipaddress import ip_network, IPv4Address, IPv6Address
 from pathlib import Path
 from re import Pattern
-from typing import TYPE_CHECKING
+from typing import override, TYPE_CHECKING
 
 import pydantic
 
 from omdlib.type_defs import Config, ConfigChoiceHasError
 
+from cmk.ccc.exceptions import MKTerminate
+from cmk.ccc.version import edition
+
 import cmk.utils.resulttype as result
 from cmk.utils import paths
 from cmk.utils.log import VERBOSE
-
-from cmk.ccc.exceptions import MKTerminate
-from cmk.ccc.version import edition
 
 if TYPE_CHECKING:
     from omdlib.contexts import SiteContext
@@ -61,6 +61,7 @@ ConfigHooks = dict[str, ConfigHook]
 
 
 class IpAddressListHasError(ConfigChoiceHasError):
+    @override
     def __call__(self, value: str) -> result.Result[None, str]:
         ip_addresses = value.split()
         if not ip_addresses:
@@ -74,6 +75,7 @@ class IpAddressListHasError(ConfigChoiceHasError):
 
 
 class IpListenAddressHasError(ConfigChoiceHasError):
+    @override
     def __call__(self, value: str) -> result.Result[None, str]:
         if not value:
             return result.Error("Empty address")
@@ -94,6 +96,7 @@ class IpListenAddressHasError(ConfigChoiceHasError):
 
 
 class NetworkPortHasError(ConfigChoiceHasError):
+    @override
     def __call__(self, value: str) -> result.Result[None, str]:
         try:
             port = int(value)
@@ -107,6 +110,7 @@ class NetworkPortHasError(ConfigChoiceHasError):
 
 
 class ApacheTCPAddrHasError(ConfigChoiceHasError):
+    @override
     def __call__(self, value: str) -> result.Result[None, str]:
         class _Parser(pydantic.RootModel):
             root: pydantic.HttpUrl
@@ -164,7 +168,7 @@ def load_config_hooks(site: "SiteContext") -> ConfigHooks:
     return config_hooks
 
 
-def _config_load_hook(  # pylint: disable=too-many-branches
+def _config_load_hook(
     site: "SiteContext",
     hook_name: str,
 ) -> ConfigHook:
@@ -316,6 +320,9 @@ def call_hook(site: "SiteContext", hook_name: str, args: list[str]) -> ConfigHoo
         close_fds=True,
         shell=False,
         stdout=subprocess.PIPE,
+        # `sys.stderr` is a magically replaced during `omd update`. During all other situations just
+        # removing `stderr=subprocess.PIPE` and the line below should be completely equivalent.
+        stderr=sys.stderr,
         encoding="utf-8",
         check=False,
     )

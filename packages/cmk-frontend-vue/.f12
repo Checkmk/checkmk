@@ -9,4 +9,4 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
 npm run build
-cp ./dist/assets/*.js* "$ROOT/share/check_mk/web/htdocs/js/"
+rsync -rlD ./dist/ "$ROOT/share/check_mk/web/htdocs/cmk-frontend-vue/"

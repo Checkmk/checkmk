@@ -5,7 +5,6 @@
 from collections.abc import Iterable
 from typing import Any
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.apc_ats import (
     CommunictionStatus,
     OverCurrentStatus,
@@ -14,10 +13,12 @@ from cmk.base.check_legacy_includes.apc_ats import (
     Source,
     Status,
 )
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.apc import DETECT_ATS
+
+check_info = {}
 
 
 def parse_apc_ats_status(info: StringTable) -> Status | None:
@@ -77,14 +78,20 @@ def check_apc_ats_status(_no_item: Any, params: dict, parsed: Status) -> Iterabl
     for powersource in parsed.powersources:
         if powersource is None:
             continue
-        if powersource.status != PowerSupplyStatus.OK:
-            state = 2
-            messages.append(f"{powersource.name} power supply failed(!!)")
+        match powersource.status:
+            case PowerSupplyStatus.Failure:
+                state = 2
+                messages.append(f"{powersource.name} power supply failed(!!)")
+            case PowerSupplyStatus.NotAvailable:
+                # The MIB only defines two valid values "1" and "2". But in reality, the SNMP file
+                # may contain a value of "0", too. According to SUP-22815 this case is OK, too.
+                messages.append(f"{powersource.name} power supply not available")
 
     return state, ", ".join(messages)
 
 
 check_info["apc_ats_status"] = LegacyCheckDefinition(
+    name="apc_ats_status",
     parse_function=parse_apc_ats_status,
     detect=DETECT_ATS,
     fetch=SNMPTree(

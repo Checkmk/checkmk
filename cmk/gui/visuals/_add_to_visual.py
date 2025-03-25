@@ -10,6 +10,8 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
 
 from cmk.gui.ctx_stack import g
@@ -30,10 +32,9 @@ from cmk.gui.type_defs import Choices, VisualContext
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.regex import validate_regex
 from cmk.gui.valuespec import AjaxDropdownChoice
 from cmk.gui.visuals.type import visual_type_registry
-
-import cmk.ccc.version as cmk_version
 
 
 def ajax_popup_add() -> None:
@@ -212,25 +213,19 @@ def page_menu_topic_add_to(visual_type: str, name: str, source_type: str) -> lis
 
 
 def add_to_dashboard_choices_autocompleter(value: str, params: dict) -> Choices:
-    return _get_visual_choices(
+    return get_visual_choices(
         visual_type="dashboards",
         value=value,
     )
 
 
-def add_to_report_choices_autocompleter(value: str, params: dict) -> Choices:
-    return _get_visual_choices(
-        visual_type="reports",
-        value=value,
-    )
-
-
-def _get_visual_choices(visual_type: str, value: str) -> Choices:
+def get_visual_choices(visual_type: str, value: str) -> Choices:
+    validate_regex(value, varname=None)
     match_pattern = re.compile(value, re.IGNORECASE)
     matching_visuals = []
     for name, content in sorted(visual_type_registry[f"{visual_type}"]().permitted_visuals.items()):
         if match_pattern.search(content["title"]) is not None:
-            matching_visuals.append((name, f'{content["title"]} ({name})'))
+            matching_visuals.append((name, f"{content['title']} ({name})"))
     return matching_visuals
 
 
@@ -253,7 +248,7 @@ def _render_add_to_popup(add_to_type: Literal["dashboard", "report"], source_typ
             f'"{add_to_type}",'
             f'"{request.var("view_name")}",'
             f'"{source_type}",'
-            f'{g.get("page_context", {})}'
+            f"{g.get('page_context', {})}"
             f")",
             cssclass="hot",
         )

@@ -44,7 +44,7 @@ Section = Mapping[str, Fan]
 
 
 def parse_blade_powerfan(string_table: StringTable) -> Section:
-    return {fan.index: fan for line in string_table if (fan := Fan.from_line(line))}
+    return {fan.index: fan for line in string_table for fan in [Fan.from_line(line)]}
 
 
 snmp_section_blade_powerfan = SimpleSNMPSection(
@@ -82,12 +82,12 @@ def check_blade_powerfan(item: str, section: Section) -> CheckResult:
 
     yield Result(
         state=State.OK if fan.status == "1" else State.CRIT,
-        notice=f"Status: {'' if fan.status == "1" else 'not '} OK",
+        notice=f"Status: {'' if fan.status == '1' else 'not '} OK",
     )
 
     yield Result(
         state=State.OK if fan.ctrlstate == "1" else State.CRIT,
-        notice=f"Controller state: {'' if fan.ctrlstate == "1" else 'not '} OK",
+        notice=f"Controller state: {'' if fan.ctrlstate == '1' else 'not '} OK",
     )
 
 

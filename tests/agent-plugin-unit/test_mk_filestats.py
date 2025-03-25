@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import ast
 import collections
@@ -16,7 +15,7 @@ from typing import Mapping, Optional, Sequence, Tuple
 import pytest
 
 if sys.version_info[0] == 2:
-    import agents.plugins.mk_filestats_2 as mk_filestats  # pylint: disable=syntax-error
+    import agents.plugins.mk_filestats_2 as mk_filestats
 else:
     from agents.plugins import mk_filestats
 
@@ -159,7 +158,7 @@ def test_output_aggregator_single_file_servicename(group_name: str, expected: st
 
 
 class MockConfigParser(configparser.RawConfigParser):
-    def read(self, cfg_file):  # type: ignore[override]  # pylint: disable=arguments-differ
+    def read(self, cfg_file):  # type: ignore[override]
         pass
 
 
@@ -335,7 +334,7 @@ def test_grouping_multiple_groups(
 
 @pytest.mark.parametrize("val", [None, "null"])
 def test_explicit_null_in_filestat(val):
-    FilestatFake = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+    FilestatFake = collections.namedtuple(  # nosemgrep: typing-namedtuple-call
         "FilestatFake", ["size", "age", "stat_status"]
     )
     filestat = FilestatFake(val, val, "file vanished")
@@ -411,3 +410,91 @@ def test_output_aggregator_extremes_only(files, expected_header, expected_dicts)
     assert result[0] == expected_header
     for result_dict_repr, expected_dict in zip(result[1:], expected_dicts):
         assert ast.literal_eval(result_dict_repr) == expected_dict
+
+
+_TEST_DIR_PATH = os.path.abspath(
+    os.path.join(
+        os.path.dirname(__file__),
+        "datasets",
+        "mk_filestats",
+    )
+)
+
+
+@pytest.mark.parametrize(
+    ["pattern_list", "filters", "expected_result"],
+    [
+        pytest.param(
+            [_TEST_DIR_PATH],
+            [],
+            [
+                "/tests/datasets/mk_filestats/testfile1.txt",
+                "/tests/datasets/mk_filestats/subdir/testfile2.html",
+            ],
+        ),
+        pytest.param(
+            [_TEST_DIR_PATH + "/*"],
+            [],
+            [
+                "/tests/datasets/mk_filestats/testfile1.txt",
+                "/tests/datasets/mk_filestats/subdir/testfile2.html",
+            ],
+        ),
+        pytest.param(
+            [_TEST_DIR_PATH],
+            [mk_filestats.RegexFilter(".*html")],
+            [
+                "/tests/datasets/mk_filestats/subdir/testfile2.html",
+            ],
+        ),
+        pytest.param(
+            [_TEST_DIR_PATH],
+            [mk_filestats.RegexFilter(".*txt")],
+            [
+                "/tests/datasets/mk_filestats/testfile1.txt",
+            ],
+        ),
+        pytest.param(
+            [_TEST_DIR_PATH],
+            [
+                mk_filestats.RegexFilter(".*testfile.*"),
+                mk_filestats.InverseRegexFilter(".*html"),
+            ],
+            [
+                "/tests/datasets/mk_filestats/testfile1.txt",
+            ],
+        ),
+        pytest.param(
+            [_TEST_DIR_PATH + "/*"],
+            [mk_filestats.RegexFilter(".*txt")],
+            [
+                "/tests/datasets/mk_filestats/testfile1.txt",
+            ],
+        ),
+        pytest.param(
+            [_TEST_DIR_PATH + "/*"],
+            [mk_filestats.RegexFilter(".*html")],
+            [
+                "/tests/datasets/mk_filestats/subdir/testfile2.html",
+            ],
+        ),
+        pytest.param(
+            [_TEST_DIR_PATH + "/*"],
+            [
+                mk_filestats.RegexFilter(".*testfile.*"),
+                mk_filestats.InverseRegexFilter(".*txt"),
+            ],
+            [
+                "/tests/datasets/mk_filestats/subdir/testfile2.html",
+            ],
+        ),
+    ],
+)
+def test_pattern_iterator(pattern_list, filters, expected_result):
+    assert sorted(
+        file_stat.file_path
+        for file_stat in mk_filestats.PatternIterator(
+            pattern_list,
+            filters,
+        )
+    ) == sorted(expected_result)

@@ -61,7 +61,7 @@ def _check_bi_aggr_services(
     if params.optional.track_downtimes:
         args += ["-r", "-n", host_config.name]
 
-    yield ActiveCheckCommand(service_description=f"Aggr {aggregation_name}", command_arguments=args)
+    yield ActiveCheckCommand(service_description=aggregation_name, command_arguments=args)
 
 
 active_check_bi_aggr = ActiveCheckConfig(

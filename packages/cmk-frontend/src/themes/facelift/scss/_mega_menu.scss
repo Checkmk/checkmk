@@ -3,6 +3,8 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+@use "_mixins" as *;
+
 #main_menu {
   display: flex;
   flex-direction: column;
@@ -192,6 +194,14 @@
       &#popup_menu_user div.navigation_bar div.search_bar,
       &#popup_menu_help_links div.navigation_bar div.search_bar {
         flex-grow: 0;
+      }
+
+      span.new_msg {
+        padding: 2px 5px;
+        color: $font-color-white;
+        white-space: nowrap;
+        background-color: $color-state-2-background;
+        border-radius: $theme-border-radius;
       }
 
       div.navigation_bar {

@@ -3,11 +3,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
-from cmk.gui.valuespec import CascadingDropdown, Dictionary, FixedValue, HTTPUrl, TextInput
-from cmk.gui.wato import HTTPProxyReference, MigrateToIndividualOrStoredPassword
+from typing import cast
 
-from ._base import NotificationParameter
+from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recompose
+from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
+from cmk.gui.watolib.notification_parameter import NotificationParameter
+
+from cmk.rulesets.v1 import Help, Label, Message, Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    FixedValue,
+    migrate_to_password,
+    migrate_to_proxy,
+    Password,
+    Proxy,
+    SingleChoice,
+    SingleChoiceElement,
+    String,
+    validators,
+)
 
 
 class NotificationParameterSMSviaIP(NotificationParameter):
@@ -16,67 +32,94 @@ class NotificationParameterSMSviaIP(NotificationParameter):
         return "sms_api"
 
     @property
-    def spec(self):
+    def spec(self) -> ValueSpecDictionary:
+        return cast(ValueSpecDictionary, recompose(self._form_spec()).valuespec)
+
+    def _form_spec(self) -> Dictionary:
         return Dictionary(
-            title=_("Create notification with the following parameters"),
-            optional_keys=["ignore_ssl"],
-            elements=[
-                (
-                    "modem_type",
-                    CascadingDropdown(
-                        title=_("Modem type"),
-                        help=_(
+            title=Title("SMS (using modem API) parameters"),
+            elements={
+                "modem_type": DictElement(
+                    required=True,
+                    parameter_form=SingleChoice(
+                        title=Title("Modem type"),
+                        help_text=Help(
                             "Choose what modem is used. Currently supported "
                             "is only Teltonika-TRB140."
                         ),
-                        choices=[
-                            ("trb140", _("Teltonika-TRB140")),
+                        elements=[
+                            SingleChoiceElement(
+                                name="trb140",
+                                title=Title("Teltonika-TRB140"),
+                            ),
                         ],
                     ),
                 ),
-                (
-                    "url",
-                    HTTPUrl(
-                        title=_("Modem URL"),
-                        help=_(
-                            "Configure your modem URL here (e.g. https://mymodem.mydomain.example)."
+                "url": DictElement(
+                    required=True,
+                    parameter_form=String(
+                        title=Title("Modem URL"),
+                        help_text=Help(
+                            "Choose what modem is used. Currently supported "
+                            "is only Teltonika-TRB140."
                         ),
-                        allow_empty=False,
+                        custom_validate=[
+                            validators.LengthInRange(
+                                min_value=1,
+                                error_msg=Message("Modem URL cannot be empty"),
+                            )
+                        ],
                     ),
                 ),
-                (
-                    "ignore_ssl",
-                    FixedValue(
+                "ignore_ssl": DictElement(
+                    parameter_form=FixedValue(
+                        title=Title("Disable SSL certificate verification"),
+                        label=Label("Disable SSL certificate verification"),
+                        help_text=Help(
+                            "Ignore unverified HTTPS request warnings. Use with caution."
+                        ),
                         value=True,
-                        title=_("Disable SSL certificate verification"),
-                        totext=_("Disable SSL certificate verification"),
-                        help=_("Ignore unverified HTTPS request warnings. Use with caution."),
+                    )
+                ),
+                "proxy_url": DictElement(
+                    required=True,
+                    parameter_form=Proxy(
+                        migrate=migrate_to_proxy,
                     ),
                 ),
-                ("proxy_url", HTTPProxyReference()),
-                (
-                    "username",
-                    TextInput(
-                        title=_("Username"),
-                        help=_("The user, used for login."),
-                        size=40,
-                        allow_empty=False,
+                "username": DictElement(
+                    required=True,
+                    parameter_form=String(
+                        title=Title("Username"),
+                        help_text=Help("The user, used for login."),
+                        custom_validate=(
+                            validators.LengthInRange(
+                                min_value=1,
+                                error_msg=Message("Username cannot be empty"),
+                            ),
+                        ),
                     ),
                 ),
-                (
-                    "password",
-                    MigrateToIndividualOrStoredPassword(
-                        title=_("Password of the user"),
-                        allow_empty=False,
+                "password": DictElement(
+                    required=True,
+                    parameter_form=Password(
+                        title=Title("Password of the user"),
+                        custom_validate=(
+                            validators.LengthInRange(
+                                min_value=1,
+                                error_msg=Message("Password cannot be empty"),
+                            ),
+                        ),
+                        migrate=migrate_to_password,
                     ),
                 ),
-                (
-                    "timeout",
-                    TextInput(
-                        title=_("Set optional timeout for connections to the modem."),
-                        help=_("Here you can configure timeout settings."),
-                        default_value="10",
+                "timeout": DictElement(
+                    required=True,
+                    parameter_form=String(
+                        title=Title("Set optional timeout for connections to the modem."),
+                        help_text=Help("Here you can configure timeout settings."),
+                        prefill=DefaultValue("10"),
                     ),
                 ),
-            ],
+            },
         )

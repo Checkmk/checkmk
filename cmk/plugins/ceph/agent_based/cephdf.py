@@ -122,7 +122,6 @@ def check_cephdf_testable(
     now: float,
     value_store: MutableMapping[str, Any],
 ) -> CheckResult:
-
     if (pool := section.pools.get(item)) is None:
         return
 
@@ -203,7 +202,6 @@ def check_cephdfclass_testable(
     now: float,
     value_store: MutableMapping[str, Any],
 ) -> CheckResult:
-
     if (stats := section.stats_by_class.get(item)) is None:
         return
 

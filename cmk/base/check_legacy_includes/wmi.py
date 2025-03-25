@@ -6,12 +6,10 @@
 from collections.abc import Callable, Iterable, Mapping
 from math import ceil
 
-from cmk.base.check_api import check_levels, CheckResult
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckResult
 from cmk.agent_based.v2 import get_rate, get_value_store, IgnoreResultsError, render, StringTable
-from cmk.plugins.lib.wmi import get_wmi_time
+from cmk.plugins.lib.wmi import get_wmi_time, required_tables_missing, WMISection, WMITable
 from cmk.plugins.lib.wmi import parse_wmi_table as parse_wmi_table_migrated
-from cmk.plugins.lib.wmi import required_tables_missing, WMISection, WMITable
 
 # This set of functions are used for checks that handle "generic" windows
 # performance counters as reported via wmi
@@ -177,7 +175,7 @@ def wmi_yield_raw_persec(
     infoname: str | None,
     perfvar: str | None,
     levels: tuple | dict[str, tuple] | None = None,
-) -> CheckResult:
+) -> LegacyCheckResult:
     if table is None:
         # This case may be when a check was discovered with a table which subsequently disappeared again.
         # We expect to get `None` in this case.
@@ -216,7 +214,7 @@ def wmi_yield_raw_counter(
     perfvar: str | None,
     levels: tuple | dict[str, tuple] | None = None,
     unit: str = "",
-) -> CheckResult:
+) -> LegacyCheckResult:
     if row == "":
         row = 0
 
@@ -312,7 +310,7 @@ def wmi_yield_raw_average(
     perfvar: str | None,
     levels: tuple | dict[str, tuple] | None = None,
     perfscale: float = 1.0,
-) -> CheckResult:
+) -> LegacyCheckResult:
     try:
         average = wmi_calculate_raw_average(table, row, column, 1) * perfscale
     except KeyError:
@@ -334,7 +332,7 @@ def wmi_yield_raw_average_timer(
     infoname: str | None,
     perfvar: str | None,
     levels: tuple | dict[str, tuple] | None = None,
-) -> CheckResult:
+) -> LegacyCheckResult:
     assert table.frequency
     try:
         average = (
@@ -363,7 +361,7 @@ def wmi_yield_raw_fraction(
     infoname: str | None,
     perfvar: str | None,
     levels: tuple | dict[str, tuple] | None = None,
-) -> CheckResult:
+) -> LegacyCheckResult:
     try:
         average = wmi_calculate_raw_average(table, row, column, 100)
     except KeyError:

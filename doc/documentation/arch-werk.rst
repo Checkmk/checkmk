@@ -66,7 +66,7 @@ not true. It only contains:
 Version 2.3 and higher ship only Werks from the current major version.
 
 Precompiled Werks consist of multiple files: one for each edition. It is created
-while building checkmk. A make-target is executing ``python -m cmk.utils.werks precompile``
+while building checkmk. A make-target is executing ``python -m cmk.werks.utils precompile``
 
 
 Website
@@ -75,7 +75,7 @@ Website
 You can search and filter Werks on the official checkmk website: https://checkmk.com/werks
 
 To compile a list of all Werks, you have to look for Werks in all branches of
-checkmk. This is done via ``python -m cmk.utils.werks collect``. There is a
+checkmk. This is done via ``python -m cmk.werks.utils collect``. There is a
 jenkins job that executes this command in a 10 minutes interval. The command
 creates a json dump, which will then be copied to the server hosting the
 homepage and read by a cron job.

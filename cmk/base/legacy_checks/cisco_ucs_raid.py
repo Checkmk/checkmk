@@ -7,11 +7,12 @@
 
 from typing import NamedTuple
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.cisco_ucs import DETECT, map_operability
-from cmk.base.config import check_info
+from cmk.base.check_legacy_includes.cisco_ucs import DETECT, MAP_OPERABILITY
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
+
+check_info = {}
 
 
 class Section(NamedTuple):
@@ -27,7 +28,7 @@ def parse_cisco_ucs_raid(string_table: StringTable) -> Section | None:
         return None
     return Section(
         string_table[0][0],
-        *map_operability[string_table[0][1]],
+        *MAP_OPERABILITY[string_table[0][1]],
         string_table[0][2],
         string_table[0][3],
     )
@@ -45,6 +46,7 @@ def check_cisco_ucs_raid(_no_item, _no_params, section):
 
 
 check_info["cisco_ucs_raid"] = LegacyCheckDefinition(
+    name="cisco_ucs_raid",
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.719.1.45.1.1",

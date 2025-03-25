@@ -2,11 +2,12 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+# ruff: noqa: A005
 
 from __future__ import annotations
 
 import abc
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 from cmk.utils.livestatus_helpers.expressions import (
     BinaryExpression,
@@ -50,6 +51,7 @@ class NoTable(Table):
     """
 
     @classmethod
+    @override
     def __columns__(cls) -> list[str]:
         raise NotImplementedError("NoTable instances have no columns.")
 
@@ -120,9 +122,11 @@ class Column:
         # This needs to be a @property, due to the descriptor magic mentioned elsewhere.
         return f"{self.table.__tablename__}.{self.name}"
 
+    @override
     def __str__(self) -> str:
         return self.name
 
+    @override
     def __repr__(self) -> str:
         class_name = self.__class__.__name__
         return f"{class_name}({self.full_name}: {self.type})"
@@ -164,9 +168,11 @@ class Column:
 
         return self
 
+    @override
     def __eq__(self, other: Primitives) -> BinaryExpression:  # type: ignore[override]
         return self.expr.__eq__(other)
 
+    @override
     def __ne__(self, other: Primitives) -> Not:  # type: ignore[override]
         return self.expr.__ne__(other)
 

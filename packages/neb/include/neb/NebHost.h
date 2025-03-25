@@ -24,7 +24,8 @@
 
 class NebHost : public IHost {
 public:
-    explicit NebHost(const ::host &host) : host_{host} {}
+    NebHost(const ::host &host, const NebCore &core)
+        : host_{host}, core_{core} {}
 
     [[nodiscard]] const ::host &handle() const { return host_; }
 
@@ -364,6 +365,7 @@ public:
 
 private:
     const ::host &host_;
+    const NebCore &core_;
 };
 
 #endif  // NebHost_h

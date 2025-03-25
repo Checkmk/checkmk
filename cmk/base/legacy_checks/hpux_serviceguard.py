@@ -21,10 +21,10 @@
 # package:SDBP|summary=degraded
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def inventory_hpux_serviceguard(info):
@@ -58,6 +58,7 @@ def parse_hpux_serviceguard(string_table: StringTable) -> StringTable:
 
 
 check_info["hpux_serviceguard"] = LegacyCheckDefinition(
+    name="hpux_serviceguard",
     parse_function=parse_hpux_serviceguard,
     service_name="Serviceguard %s",
     discovery_function=inventory_hpux_serviceguard,

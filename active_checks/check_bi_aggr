@@ -7,7 +7,6 @@
 import argparse
 import json
 import os
-import subprocess
 import sys
 import time
 import traceback
@@ -16,7 +15,6 @@ from pathlib import Path
 
 import requests
 import urllib3
-from requests_kerberos import HTTPKerberosAuth  # type: ignore[import-untyped]
 
 from cmk.utils import password_store
 from cmk.utils.local_secrets import AutomationUserSecret
@@ -76,6 +74,8 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         "--auth-mode",
         metavar="AUTH_MODE",
         default="header",
+        # Kerberos auth support was removed with 2.4.0 but kept here to show a helpful error message
+        # in case a user still has configured it. Can be removed with 2.5.
         choices=["basic", "digest", "header", "kerberos"],
         help="Authentication mode, defaults to 'header'.",
     )
@@ -103,8 +103,8 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument(
         "--in-downtime",
         metavar="S",
-        choices=["ok", "warn"],
-        default=None,
+        choices=["normal", "ok", "warn"],
+        default="normal",
         help=(
             "S can be 'ok' or 'warn'. Force this state if the aggregate is in scheduled downtime."
             " OK states will always be unchanged."
@@ -113,8 +113,8 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument(
         "--acknowledged",
         metavar="S",
-        choices=["ok", "warn"],
-        default=None,
+        choices=["normal", "ok", "warn"],
+        default="normal",
         help=("Same as --in-downtime, but for acknowledged aggregates."),
     )
     parser.add_argument(
@@ -151,33 +151,22 @@ def _make_credentials(args: argparse.Namespace) -> tuple[str, str]:
 
 
 # returning int requires more refactoring atm
-def main(argv: Sequence[str]) -> None:  # pylint: disable=too-many-branches
-
+def main(argv: Sequence[str]) -> None:
     args = parse_arguments(argv=argv)
 
     username, secret = _make_credentials(args=args)
 
-    if args.track_downtime and not args.hostname:
+    if args.track_downtimes and not args.hostname:
         sys.stderr.write("Please provide a hostname when using downtime tracking.\n")
         sys.exit(1)
 
     def init_auth(pw: str) -> requests.auth.AuthBase | None:
         match args.auth_mode:
             case "kerberos":
-                kinit_completed = subprocess.run(
-                    ["kinit", username],
-                    input="%s\n" % pw,
-                    capture_output=True,
-                    encoding="utf-8",
-                    check=False,
+                raise ValueError(
+                    "Kerberos auth is not supported anymore. Please have a look at "
+                    "werk #16569 for further information."
                 )
-                if kinit_completed.returncode or kinit_completed.stderr:
-                    sys.stderr.write("Error getting Kerberos Ticket:\n")
-                    sys.stderr.write(
-                        f"stdout: {kinit_completed.stdout}\nstderr: {kinit_completed.stderr}\nrc: {kinit_completed.returncode}"
-                    )
-                    sys.exit(1)
-                return HTTPKerberosAuth(principal=username)
             case "digest":
                 return requests.auth.HTTPDigestAuth(username, pw)
             case "basic":
@@ -237,14 +226,14 @@ def main(argv: Sequence[str]) -> None:  # pylint: disable=too-many-branches
 
     # Handle downtimes and acknowledgements
     is_aggr_in_downtime = response_data["aggregations"][args.aggr_name]["in_downtime"]
-    if args.in_downtime and is_aggr_in_downtime:
+    if args.in_downtime != "normal" and is_aggr_in_downtime:
         aggr_output += ", currently in downtime"
         if args.in_downtime == "ok":
             aggr_state = 0
         else:  # "warn"
             aggr_state = min(aggr_state, 1)
 
-    if args.track_downtime:
+    if args.track_downtimes:
         # connect to livestatus
         try:
             import livestatus
@@ -287,7 +276,7 @@ def main(argv: Sequence[str]) -> None:  # pylint: disable=too-many-branches
                     conn.command("[%d] DEL_SVC_DOWNTIME;%d" % (now, dt_id[0]))
 
     is_aggr_acknowledged = response_data["aggregations"][args.aggr_name]["acknowledged"]
-    if args.acknowledged and is_aggr_acknowledged:
+    if args.acknowledged != "normal" and is_aggr_acknowledged:
         aggr_output += ", is acknowledged"
         if args.acknowledged == "ok":
             aggr_state = 0

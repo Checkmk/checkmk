@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.hitachi_hnas import DETECT
+
+check_info = {}
 
 
 def hitachi_hnas_pnode_combine_item(id_, name):
@@ -51,6 +51,7 @@ def parse_hitachi_hnas_pnode(string_table: StringTable) -> StringTable:
 
 
 check_info["hitachi_hnas_pnode"] = LegacyCheckDefinition(
+    name="hitachi_hnas_pnode",
     parse_function=parse_hitachi_hnas_pnode,
     detect=DETECT,
     fetch=SNMPTree(

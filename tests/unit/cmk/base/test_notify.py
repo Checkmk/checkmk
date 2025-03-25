@@ -10,14 +10,9 @@ from typing import Final
 import pytest
 from pytest import MonkeyPatch
 
-from cmk.utils.notify_types import (
-    Contact,
-    ContactName,
-    EnrichedEventContext,
-    EventContext,
-    NotificationContext,
-    NotifyPluginParams,
-)
+from cmk.utils.notify_types import Contact, ContactName, NotificationContext, NotifyPluginParamsDict
+
+from cmk.events.event_context import EnrichedEventContext, EventContext
 
 from cmk.base import notify
 
@@ -96,7 +91,7 @@ def test_raw_context_from_env_pipe_decoding(
 )
 def test_create_plugin_context(
     enriched_context: EnrichedEventContext,
-    params: NotifyPluginParams | list[object],
+    params: NotifyPluginParamsDict,
     expected: NotificationContext,
 ) -> None:
     assert (

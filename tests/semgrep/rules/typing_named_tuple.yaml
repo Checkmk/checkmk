@@ -1,0 +1,11 @@
+---
+rules:
+    - id: typing-namedtuple-call
+      pattern-either:
+          - pattern: NamedTuple(...)
+          - pattern: namedtuple(...)
+          - pattern: collections.namedtuple(...)
+      message: >-
+          NamedTuples should be declared using inheritance
+      languages: [python]
+      severity: ERROR

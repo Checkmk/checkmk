@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from collections.abc import Callable, Sequence
 from pathlib import Path
@@ -15,11 +14,6 @@ from tests.unit.cmk.plugins.collection.agent_based.snmp import (
     get_parsed_snmp_section,
     snmp_is_detected,
 )
-from tests.unit.conftest import FixRegister
-
-from cmk.utils.sectionname import SectionName
-
-from cmk.checkengine.checking import CheckPluginName
 
 from cmk.agent_based.v1 import GetRateError, IgnoreResults, Metric, Result, Service, State
 from cmk.agent_based.v2 import StringTable
@@ -464,13 +458,12 @@ def _get_check_result(section: bf.Section, item: str) -> list[IgnoreResults | Me
     )
 
 
-def test_interface_speed(fix_register: FixRegister, as_path: Callable[[str], Path]) -> None:
-    assert snmp_is_detected(SectionName("brocade_fcport"), as_path(DATA_0))
-    plugin = fix_register.check_plugins[CheckPluginName("brocade_fcport")]
-    parsed = get_parsed_snmp_section(SectionName("brocade_fcport"), as_path(DATA_0))
+def test_interface_speed(as_path: Callable[[str], Path]) -> None:
+    assert snmp_is_detected(bf.snmp_section_brocade_fcport, as_path(DATA_0))
+    parsed = get_parsed_snmp_section(bf.snmp_section_brocade_fcport, as_path(DATA_0))
     assert parsed is not None
     assert list(
-        plugin.discovery_function(
+        bf.check_plugin_brocade_fcport.discovery_function(
             DISCOVERY_DEFAULT_PARAMETERS,
             parsed,
         )

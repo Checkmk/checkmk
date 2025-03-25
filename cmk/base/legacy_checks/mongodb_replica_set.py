@@ -13,11 +13,11 @@ import json
 import time
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_value_store, render
 from cmk.plugins.lib.mongodb import parse_date
+
+check_info = {}
 
 # levels_mongdb_replication_lag: (lag threshold, time interval for warning, time interval for critical)
 
@@ -102,9 +102,13 @@ def check_mongodb_replica_set_lag(_item, params, status_dict):
             )
         else:
             # no info available yet
-            yield 0, "%s: no replication info yet, State: %d" % (
-                member_name,
-                member.get("state", 0),
+            yield (
+                0,
+                "%s: no replication info yet, State: %d"
+                % (
+                    member_name,
+                    member.get("state", 0),
+                ),
             )
 
     yield 0, "\n" + "\n".join(long_output)
@@ -195,6 +199,7 @@ def _calculate_replication_lag(start_operation_time, secondary_operation_time):
 
 
 check_info["mongodb_replica_set"] = LegacyCheckDefinition(
+    name="mongodb_replica_set",
     parse_function=parse_mongodb_replica_set,
     service_name="MongoDB Replication Lag",
     discovery_function=discover_mongodb_replica_set,
@@ -260,15 +265,18 @@ def check_mongodb_primary_election(_item, _params, status_dict):
 
     # warning if primary has changed
     if last_primary_dict and (primary_name_changed or election_date_changed):
-        yield 1, "New primary '{}' elected {} {}".format(
-            primary_name,
-            render.datetime(primary_election_time),
-            "(%s)" % ("node changed" if primary_name_changed else "election date changed"),
+        yield (
+            1,
+            "New primary '{}' elected {} {}".format(
+                primary_name,
+                render.datetime(primary_election_time),
+                "(%s)" % ("node changed" if primary_name_changed else "election date changed"),
+            ),
         )
     else:
-        yield 0, "Primary '{}' elected {}".format(
-            primary_name,
-            render.datetime(primary_election_time),
+        yield (
+            0,
+            f"Primary '{primary_name}' elected {render.datetime(primary_election_time)}",
         )
 
     # update primary information
@@ -290,6 +298,7 @@ def _get_primary_election_time(primary):
 
 
 check_info["mongodb_replica_set.election"] = LegacyCheckDefinition(
+    name="mongodb_replica_set_election",
     service_name="MongoDB Replica Set Primary Election",
     sections=["mongodb_replica_set"],
     discovery_function=discover_mongodb_replica_set,

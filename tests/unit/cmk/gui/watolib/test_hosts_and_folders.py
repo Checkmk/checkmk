@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import datetime
 import os
@@ -25,6 +24,8 @@ from pytest import MonkeyPatch
 
 from livestatus import SiteId
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.redis import disable_redis
 from cmk.utils.user import UserId
@@ -35,11 +36,10 @@ from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.logged_in import user as logged_in_user
 from cmk.gui.watolib import hosts_and_folders
+from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import EffectiveAttributes, Folder, folder_tree
 from cmk.gui.watolib.search import MatchItem
-
-from cmk.ccc.exceptions import MKGeneralException
 
 
 def test_effective_attributes() -> None:
@@ -67,19 +67,6 @@ def test_env(with_admin_login: UserId, load_config: None) -> Iterator[None]:
     # Cleanup WATO folders created by the test
     shutil.rmtree(tree.root_folder().filesystem_path(), ignore_errors=True)
     os.makedirs(tree.root_folder().filesystem_path())
-
-
-@pytest.fixture(autouse=True)
-def fake_start_bake_agents(monkeypatch: MonkeyPatch) -> None:
-    try:
-        import cmk.gui.cee.agent_bakery._misc as agent_bakery  # pylint: disable=no-name-in-module
-    except ImportError:
-        return  # Don't do anything in case the bakery is not available
-
-    def _fake_start_bake_agents(host_names, signing_credentials):
-        pass
-
-    monkeypatch.setattr(agent_bakery, "start_bake_agents", _fake_start_bake_agents)
 
 
 @pytest.mark.parametrize(
@@ -260,10 +247,10 @@ def test_create_nested_folders(request_context: None) -> None:
         root = tree.root_folder()
 
         folder1 = hosts_and_folders.Folder.new(tree=tree, name="folder1", parent_folder=root)
-        folder1.persist_instance()
+        folder1.save_folder_attributes()
 
         folder2 = hosts_and_folders.Folder.new(tree=tree, name="folder2", parent_folder=folder1)
-        folder2.persist_instance()
+        folder2.save_folder_attributes()
 
         shutil.rmtree(os.path.dirname(folder1.wato_info_path()))
 
@@ -273,7 +260,7 @@ def test_eq_operation(request_context: None) -> None:
         tree = folder_tree()
         root = tree.root_folder()
         folder1 = hosts_and_folders.Folder.new(tree=tree, name="folder1", parent_folder=root)
-        folder1.persist_instance()
+        folder1.save_folder_attributes()
 
         folder1_new = hosts_and_folders.Folder.load(tree=tree, name="folder1", parent_folder=root)
 
@@ -282,9 +269,14 @@ def test_eq_operation(request_context: None) -> None:
         assert folder1 in [folder1_new]
 
         folder2 = hosts_and_folders.Folder.new(tree=tree, name="folder2", parent_folder=folder1)
-        folder2.persist_instance()
+        folder2.save_folder_attributes()
 
         assert folder1 not in [folder2]
+
+
+def _not_in_latest_log(secret: str) -> bool:
+    """Check that the most recent entry does not contain the secret"""
+    return secret not in (AuditLogStore().read()[-1].diff_text or "")
 
 
 def test_mgmt_inherit_credentials_explicit_host_snmp() -> None:
@@ -311,6 +303,8 @@ def test_mgmt_inherit_credentials_explicit_host_snmp() -> None:
     assert data is not None
     assert data["management_protocol"]["test-host"] == "snmp"
     assert data["management_snmp_credentials"]["test-host"] == "HOST"
+
+    assert _not_in_latest_log("HOST")
 
 
 def test_mgmt_inherit_credentials_explicit_host_ipmi() -> None:
@@ -347,6 +341,8 @@ def test_mgmt_inherit_credentials_explicit_host_ipmi() -> None:
         "password": "PASS",
     }
 
+    assert _not_in_latest_log("PASS")
+
 
 def test_mgmt_inherit_credentials_snmp() -> None:
     folder = folder_tree().root_folder()
@@ -369,6 +365,8 @@ def test_mgmt_inherit_credentials_snmp() -> None:
     assert data is not None
     assert data["management_protocol"]["mgmt-host"] == "snmp"
     assert data["management_snmp_credentials"]["mgmt-host"] == "FOLDER"
+
+    assert _not_in_latest_log("FOLDER")
 
 
 def test_mgmt_inherit_credentials_ipmi() -> None:
@@ -399,6 +397,8 @@ def test_mgmt_inherit_credentials_ipmi() -> None:
         "password": "FOLDERPASS",
     }
 
+    assert _not_in_latest_log("FOLDERPASS")
+
 
 def test_mgmt_inherit_protocol_explicit_host_snmp() -> None:
     folder = folder_tree().root_folder()
@@ -423,6 +423,8 @@ def test_mgmt_inherit_protocol_explicit_host_snmp() -> None:
     assert data is not None
     assert data["management_protocol"]["mgmt-host"] == "snmp"
     assert data["management_snmp_credentials"]["mgmt-host"] == "HOST"
+
+    assert _not_in_latest_log("HOST")
 
 
 def test_mgmt_inherit_protocol_explicit_host_ipmi() -> None:
@@ -457,6 +459,8 @@ def test_mgmt_inherit_protocol_explicit_host_ipmi() -> None:
         "username": "USER",
         "password": "PASS",
     }
+
+    assert _not_in_latest_log("PASS")
 
 
 @pytest.fixture(name="patch_may")
@@ -932,7 +936,7 @@ def _run_num_host_test(
         )
 
         # Old mechanism
-        with patch.dict(logged_in_user._attributes, {"contactgroups": user_test.contactgroups}):
+        with patch.dict(logged_in_user.attributes, {"contactgroups": user_test.contactgroups}):
             assert (
                 wato_folder.num_hosts_recursively()
                 == expected_host_count + legacy_base_folder_host_offset
@@ -983,22 +987,22 @@ def get_fake_setup_redis_client(
     all_folders: dict[hosts_and_folders.PathWithoutSlash, hosts_and_folders.Folder],
     redis_answers: list[list[list[str]]],
 ) -> Iterator[MockRedisClient]:
-    monkeypatch.setattr(hosts_and_folders, "may_use_redis", lambda: True)
-    mock_redis_client = MockRedisClient(redis_answers)
-    monkeypatch.setattr(hosts_and_folders._RedisHelper, "_cache_integrity_ok", lambda x: True)
-    tree = folder_tree()
-    redis_helper = hosts_and_folders.get_wato_redis_client(tree)
-    monkeypatch.setattr(redis_helper, "_client", mock_redis_client)
-    monkeypatch.setattr(redis_helper, "_folder_paths", [f"{x}/" for x in all_folders.keys()])
-    monkeypatch.setattr(
-        redis_helper,
-        "_folder_metadata",
-        {
-            f"{x}/": hosts_and_folders.FolderMetaData(tree, f"{x}/", "nix", "nix", [])
-            for x in all_folders.keys()
-        },
-    )
     try:
+        monkeypatch.setattr(hosts_and_folders, "may_use_redis", lambda: True)
+        mock_redis_client = MockRedisClient(redis_answers)
+        monkeypatch.setattr(hosts_and_folders._RedisHelper, "_cache_integrity_ok", lambda x: True)
+        tree = folder_tree()
+        redis_helper = hosts_and_folders.get_wato_redis_client(tree)
+        monkeypatch.setattr(redis_helper, "_client", mock_redis_client)
+        monkeypatch.setattr(redis_helper, "_folder_paths", [f"{x}/" for x in all_folders.keys()])
+        monkeypatch.setattr(
+            redis_helper,
+            "_folder_metadata",
+            {
+                f"{x}/": hosts_and_folders.FolderMetaData(tree, f"{x}/", "nix", "nix", [])
+                for x in all_folders.keys()
+            },
+        )
         yield mock_redis_client
     finally:
         monkeypatch.setattr(hosts_and_folders, "may_use_redis", lambda: False)
@@ -1078,7 +1082,7 @@ def test_new_loaded_folder(monkeypatch: pytest.MonkeyPatch) -> None:
     tree = folder_tree()
     with time_machine.travel(datetime.datetime(2018, 1, 10, 2, tzinfo=ZoneInfo("UTC")), tick=False):
         folder1 = Folder.new(tree=tree, name="folder1", parent_folder=tree.root_folder())
-        folder1.persist_instance()
+        folder1.save_folder_attributes()
         tree.invalidate_caches()
 
     folder = Folder.load(tree=tree, name="folder1", parent_folder=tree.root_folder())
@@ -1151,13 +1155,44 @@ def test_folder_times() -> None:
 
     with time_machine.travel(datetime.datetime(2020, 2, 2, 2, 2, 2)):
         current = time.time()
-        Folder.new(tree=tree, name="test", parent_folder=root).save()
+        Folder.new(tree=tree, name="test", parent_folder=root).save_folder_attributes()
+        folder_tree().invalidate_caches()
         folder = Folder.load(tree=tree, name="test", parent_folder=root)
-        folder.save()
+        folder.save_folder_attributes()
+        folder_tree().invalidate_caches()
 
     meta_data = folder.attributes["meta_data"]
     assert int(meta_data["created_at"]) == int(current)
     assert int(meta_data["updated_at"]) == int(current)
 
-    folder.persist_instance()
+    folder.save_folder_attributes()
     assert int(meta_data["updated_at"]) > int(current)
+
+
+def test_subfolder_attributes_are_cached() -> None:
+    # GIVEN folder with cached attributes
+    root = folder_tree().root_folder()
+    subfolder = root.create_subfolder("sub1", "sub1", {"alias": "sub1"})
+    subfolder.effective_attributes()
+
+    # WHEN
+    subfolder.attributes["alias"] = "other_alias"
+
+    # THEN return cached attribute
+    assert subfolder.effective_attributes()["alias"] == "sub1"
+
+
+def test_subfolder_cache_invalidated() -> None:
+    # GIVEN folder with cached attributes
+    subfolder = folder_tree().root_folder().create_subfolder("sub1", "sub1", {"alias": "sub1"})
+    subfolder.effective_attributes()
+
+    # WHEN cache is invalidated from folder_tree and attribute is updated
+    folder_tree().invalidate_caches()
+    subfolder.attributes["alias"] = "other_alias"
+
+    # THEN we read updated attribute
+    # There is a bug when invalidating cache from folder_tree(), not all
+    # subfolders are part of the tree
+    with pytest.raises(AssertionError):
+        assert subfolder.effective_attributes()["alias"] == "other_alias"

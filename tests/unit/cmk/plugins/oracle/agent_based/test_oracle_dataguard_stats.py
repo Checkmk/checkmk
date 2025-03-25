@@ -7,9 +7,10 @@
 import pytest
 
 from tests.unit.cmk.plugins.oracle.agent_based.utils_inventory import sort_inventory_result
-from tests.unit.conftest import FixRegister
 
 from cmk.checkengine.checking import CheckPluginName
+
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 
 from cmk.agent_based.v2 import (
     CheckResult,
@@ -68,9 +69,11 @@ _AGENT_OUTPUT = [
     ],
 )
 def test_discover_oracle_dataguard_stats(
-    fix_register: FixRegister, string_table: StringTable, expected_result: DiscoveryResult
+    agent_based_plugins: AgentBasedPlugins,
+    string_table: StringTable,
+    expected_result: DiscoveryResult,
 ) -> None:
-    check_plugin = fix_register.check_plugins[CheckPluginName("oracle_dataguard_stats")]
+    check_plugin = agent_based_plugins.check_plugins[CheckPluginName("oracle_dataguard_stats")]
     section = parse_oracle_dataguard_stats(string_table)
     assert sorted(check_plugin.discovery_function(section)) == expected_result
 
@@ -116,9 +119,12 @@ def test_discover_oracle_dataguard_stats(
     ],
 )
 def test_check_oracle_dataguard_stats(
-    fix_register: FixRegister, string_table: StringTable, item: str, expected_result: CheckResult
+    agent_based_plugins: AgentBasedPlugins,
+    string_table: StringTable,
+    item: str,
+    expected_result: CheckResult,
 ) -> None:
-    check_plugin = fix_register.check_plugins[CheckPluginName("oracle_dataguard_stats")]
+    check_plugin = agent_based_plugins.check_plugins[CheckPluginName("oracle_dataguard_stats")]
     section = parse_oracle_dataguard_stats(string_table)
     assert (
         list(

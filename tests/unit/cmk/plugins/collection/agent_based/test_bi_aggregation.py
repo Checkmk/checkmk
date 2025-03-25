@@ -76,21 +76,33 @@ TEST_INFO = {
 
 
 def test_check_bi_aggregation() -> None:
-    expected_notice = (
-        "\n"
-        "Aggregation problems affecting the state:\n"
-        "(!) Host test\n+-- (!) General State\n"
-        "| +-- (!) Check_MK\n"
-        "| | +-- (!) Check_MK Discovery, Services unmonitored: 1 (cpu_loads: 1)(!), Host labels: all up to date\n"
-        "\n"
-        "Aggregation problems not affecting the state:\n"
-        "+-- +-- (!) Aggr Host test, Aggregation state: Warning(!), In downtime: no, Acknowledged: no\n"
-        "| +-- (!!) OMD test_gestern Notification Spooler, Version: 2.3.0-2024.02.01, Status last updated 42 days 1 hour ago, spooler seems crashed or busy(!!)\n"
-        "| +-- (!!) OMD stable Notification Spooler, Version: 2.2.0-2024.03.13, Status last updated 22 hours 17 minutes ago, spooler seems crashed or busy(!!)"
-    )
     assert list(check_bi_aggregation("Host test", TEST_INFO)) == [
         Result(state=State.WARN, summary="Aggregation state: Warning"),
         Result(state=State.OK, summary="In downtime: no"),
         Result(state=State.OK, summary="Acknowledged: no"),
-        Result(state=State.OK, notice=expected_notice),
+        Result(state=State.OK, notice="Aggregation problems affecting the state:"),
+        Result(state=State.WARN, notice="Host test"),
+        Result(state=State.WARN, notice="General State", details="+-- General State"),
+        Result(state=State.WARN, notice="Check_MK", details="| +-- Check_MK"),
+        Result(
+            state=State.WARN,
+            notice="Check_MK Discovery, Services unmonitored: 1 (cpu_loads: 1)(!), Host labels: all up to date",
+            details="| | +-- Check_MK Discovery, Services unmonitored: 1 (cpu_loads: 1)(!), Host labels: all up to date",
+        ),
+        Result(state=State.OK, notice="Aggregation problems not affecting the state:"),
+        Result(
+            state=State.WARN,
+            notice="Aggr Host test, Aggregation state: Warning(!), In downtime: no, Acknowledged: no",
+            details="+-- +-- Aggr Host test, Aggregation state: Warning(!), In downtime: no, Acknowledged: no",
+        ),
+        Result(
+            state=State.CRIT,
+            notice="OMD test_gestern Notification Spooler, Version: 2.3.0-2024.02.01, Status last updated 42 days 1 hour ago, spooler seems crashed or busy(!!)",
+            details="| +-- OMD test_gestern Notification Spooler, Version: 2.3.0-2024.02.01, Status last updated 42 days 1 hour ago, spooler seems crashed or busy(!!)",
+        ),
+        Result(
+            state=State.CRIT,
+            notice="OMD stable Notification Spooler, Version: 2.2.0-2024.03.13, Status last updated 22 hours 17 minutes ago, spooler seems crashed or busy(!!)",
+            details="| +-- OMD stable Notification Spooler, Version: 2.2.0-2024.03.13, Status last updated 22 hours 17 minutes ago, spooler seems crashed or busy(!!)",
+        ),
     ]

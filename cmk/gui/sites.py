@@ -17,11 +17,15 @@ from livestatus import (
     MultiSiteConnection,
     NetworkSocketDetails,
     NetworkSocketInfo,
+    sanitize_site_configuration,
     SiteConfiguration,
     SiteConfigurations,
     SiteId,
     UnixSocketInfo,
 )
+
+from cmk.ccc.site import omd_site
+from cmk.ccc.version import __version__, Edition, edition, Version, VersionsIncompatible
 
 from cmk.utils import paths
 from cmk.utils.licensing.handler import LicenseState
@@ -31,20 +35,19 @@ from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
+from cmk.gui.flask_app import current_app
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.logged_in import user as global_user
+from cmk.gui.site_config import get_site_config
 from cmk.gui.utils.compatibility import (
     is_distributed_monitoring_compatible_for_licensing,
     LicensingCompatibility,
     LicensingCompatible,
     make_incompatible_info,
 )
-
-from cmk.ccc.site import omd_site
-from cmk.ccc.version import __version__, Edition, edition, Version, VersionsIncompatible
 
 #   .--API-----------------------------------------------------------------.
 #   |                             _    ____ ___                            |
@@ -108,7 +111,8 @@ def cleanup_connections() -> Iterator[None]:
 # sockets and connection classes. This should really be cleaned up (context managers, ...)
 def disconnect() -> None:
     """Actively closes all Livestatus connections."""
-    if not g:
+    # NOTE: g.__bool__() *can* return False due to the LocalProxy Kung Fu!
+    if not g:  # type: ignore[truthy-bool]
         return
     logger.debug("Disconnecting site connections")
     if "live" in g:
@@ -134,9 +138,7 @@ def all_groups(what: str) -> list[tuple[str, str]]:
 
 # TODO: this too does not really belong here...
 def get_alias_of_host(site_id: SiteId | None, host_name: str) -> SiteId:
-    query = (
-        "GET hosts\n" "Cache: reload\n" "Columns: alias\n" "Filter: name = %s" % lqencode(host_name)
-    )
+    query = "GET hosts\nCache: reload\nColumns: alias\nFilter: name = %s" % lqencode(host_name)
 
     with only_sites(site_id):
         try:
@@ -200,9 +202,19 @@ def _ensure_connected(user: LoggedInUser | None, force_authuser: UserId | None) 
     _connect_multiple_sites(user)
     _set_livestatus_auth(user, force_authuser)
 
-    site_states_to_log = g.site_status.copy()
-    site_states_to_log.update({"secret": "REDACTED"})
-    logger.debug("Site states: %r", site_states_to_log)
+    logger.debug(
+        "Site states: %r",
+        _redacted_site_states_for_logging(),
+    )
+
+
+def _redacted_site_states_for_logging() -> dict[SiteId, dict[str, object]]:
+    return {
+        site_id: {
+            k: sanitize_site_configuration(v) if k == "site" else v for k, v in site_status.items()
+        }
+        for site_id, site_status in g.site_status.items()
+    }
 
 
 def _edition_from_livestatus(livestatus_edition: str | None) -> Edition | None:
@@ -275,13 +287,15 @@ def _inhibit_incompatible_site_connection(
     }
 
 
-ConnectionClass = MultiSiteConnection
-
-
 def _connect_multiple_sites(user: LoggedInUser) -> None:
     enabled_sites, disabled_sites = _get_enabled_and_disabled_sites(user)
     _set_initial_site_states(enabled_sites, disabled_sites)
-    g.live = ConnectionClass(enabled_sites, disabled_sites)
+
+    g.live = MultiSiteConnection(
+        sites=enabled_sites,
+        disabled_sites=disabled_sites,
+        only_sites_postprocess=current_app().features.livestatus_only_sites_postprocess,
+    )
 
     # Fetch status of sites by querying the version of Nagios and livestatus
     # This may be cached by a proxy for up to the next configuration reload.
@@ -366,7 +380,7 @@ def _get_enabled_and_disabled_sites(
     for site_id, site_spec in user.authorized_sites().items():
         site_spec = _site_config_for_livestatus(site_id, site_spec)
         # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
-        # pylint: disable=unsupported-assignment-operation
+
         if user.is_site_disabled(site_id):
             disabled_sites[site_id] = site_spec
         else:
@@ -595,3 +609,14 @@ def filter_available_site_choices(choices: list[tuple[SiteId, str]]) -> list[tup
             continue
         sites_enabled.append(entry)
     return sites_enabled
+
+
+def site_choices() -> list[tuple[str, str]]:
+    return sorted(
+        [
+            (sitename, get_site_config(active_config, sitename)["alias"])
+            for sitename, state in states().items()
+            if state["state"] == "online"
+        ],
+        key=lambda a: a[1].lower(),
+    )

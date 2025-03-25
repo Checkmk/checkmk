@@ -9,6 +9,8 @@ from zlib import compress
 
 import pytest
 
+from cmk.ccc.exceptions import MKFetcherError
+
 from cmk.fetchers._agentprtcl import (
     AgentCtlMessage,
     CompressionType,
@@ -20,8 +22,6 @@ from cmk.fetchers._agentprtcl import (
     validate_agent_protocol,
     Version,
 )
-
-from cmk.ccc.exceptions import MKFetcherError
 
 
 @pytest.fixture(name="uncompressed_data")

@@ -5,9 +5,9 @@
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
 from cmk.checkengine.checking import CheckPluginName
+
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 
 from cmk.agent_based.v1 import Result, State
 from cmk.agent_based.v1.type_defs import CheckResult
@@ -40,9 +40,9 @@ from cmk.plugins.lib.esx_vsphere import Section
     ],
 )
 def test_check_esx_vsphere_hostsystem_cpu_entity_state(
-    fix_register: FixRegister, state: str, expected_check_result: CheckResult
+    agent_based_plugins: AgentBasedPlugins, state: str, expected_check_result: CheckResult
 ) -> None:
-    check = fix_register.check_plugins[CheckPluginName("esx_vsphere_hostsystem_state")]
+    check = agent_based_plugins.check_plugins[CheckPluginName("esx_vsphere_hostsystem_state")]
     assert (
         list(
             check.check_function(
@@ -85,9 +85,9 @@ def test_check_esx_vsphere_hostsystem_cpu_entity_state(
     ],
 )
 def test_check_esx_vsphere_hostsystem_cpu_power_state(
-    fix_register: FixRegister, state: str, expected_check_result: CheckResult
+    agent_based_plugins: AgentBasedPlugins, state: str, expected_check_result: CheckResult
 ) -> None:
-    check = fix_register.check_plugins[CheckPluginName("esx_vsphere_hostsystem_state")]
+    check = agent_based_plugins.check_plugins[CheckPluginName("esx_vsphere_hostsystem_state")]
     assert (
         list(
             check.check_function(

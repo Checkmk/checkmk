@@ -6,11 +6,12 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+
+check_info = {}
 
 # Example output from agent:
 # [zmucvm99-lds]
@@ -57,7 +58,7 @@ def check_esx_vsphere_datastores(item, params, parsed):
     if size_bytes is None or size_bytes == 0 or avail_bytes is None:
         return
 
-    yield df_check_filesystem_single(  # pylint: disable=undefined-variable
+    yield df_check_filesystem_single(
         item, size_bytes / mib, avail_bytes / mib, 0, None, None, params
     )  # fixed: true-division
 
@@ -87,9 +88,11 @@ def check_esx_vsphere_datastores(item, params, parsed):
     if warn is not None:
         # convert percent to abs MiB
         scale = (size_bytes / mib) / 100.0  # fixed: true-division
-        yield 0, "", [
-            ("overprovisioned", prov_bytes / mib, scale * warn, scale * crit)
-        ]  # fixed: true-division
+        yield (
+            0,
+            "",
+            [("overprovisioned", prov_bytes / mib, scale * warn, scale * crit)],
+        )  # fixed: true-division
     else:
         yield 0, "", [("overprovisioned", prov_bytes / mib)]  # fixed: true-division
 
@@ -99,6 +102,7 @@ def discover_esx_vsphere_datastores(section):
 
 
 check_info["esx_vsphere_datastores"] = LegacyCheckDefinition(
+    name="esx_vsphere_datastores",
     parse_function=parse_esx_vsphere_datastores,
     service_name="Filesystem %s",
     discovery_function=discover_esx_vsphere_datastores,

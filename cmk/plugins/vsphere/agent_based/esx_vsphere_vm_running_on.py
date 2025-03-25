@@ -3,30 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.agent_based.v2 import (
-    CheckPlugin,
-    CheckResult,
-    DiscoveryResult,
-    IgnoreResultsError,
-    Result,
-    Service,
-    State,
-)
+from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, Result, Service, State
 from cmk.plugins.lib import esx_vsphere
 
 
-def discovery_running_on(section: esx_vsphere.SectionVM) -> DiscoveryResult:
-    if section is None:
-        return
-
+def discovery_running_on(section: esx_vsphere.SectionESXVm) -> DiscoveryResult:
     if section.host is not None:
         yield Service()
 
 
-def check_running_on(section: esx_vsphere.SectionVM) -> CheckResult:
-    if section is None:
-        raise IgnoreResultsError("No VM information currently available")
-
+def check_running_on(section: esx_vsphere.SectionESXVm) -> CheckResult:
     if not section.host:
         yield Result(state=State.UNKNOWN, summary="Runtime host information is missing")
         return

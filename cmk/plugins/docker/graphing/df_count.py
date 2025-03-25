@@ -23,6 +23,6 @@ metric_docker_count = metrics.Metric(
 graph_docker_df_count = graphs.Graph(
     name="docker_df_count",
     title=Title("Number of objects"),
-    compound_lines=["docker_count"],
-    simple_lines=["docker_active"],
+    compound_lines=["docker_active"],
+    simple_lines=["docker_count"],
 )

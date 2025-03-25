@@ -2,10 +2,7 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Checkmk development script to manage werks
-"""
-
-# pylint: disable=too-many-lines
+"""Checkmk development script to manage werks"""
 
 import argparse
 import ast
@@ -18,11 +15,14 @@ import subprocess
 import sys
 import termios
 import time
+import traceback
 import tty
 from collections.abc import Iterator, Sequence
 from functools import cache
 from pathlib import Path
-from typing import Literal, NamedTuple, NoReturn
+from typing import ClassVar, Literal, NamedTuple, NoReturn, override, Type, TypeVar
+
+from pydantic import BaseModel, Field
 
 from . import load_werk as cmk_werks_load_werk
 from . import parse_werk
@@ -31,13 +31,88 @@ from .convert import werkv1_metadata_to_werkv2_metadata
 from .format import format_as_werk_v1, format_as_werk_v2
 from .parse import WerkV2ParseResult
 
+T = TypeVar("T", bound="Stash")
+
+
+class Stash(BaseModel):
+    PATH: ClassVar[Path] = Path.home() / ".cmk-werk-ids"
+
+    stash_version: Literal["2"] = Field(default="2", alias="__version__")
+    ids_by_project: dict[str, list[int]]
+
+    def count(self) -> int:
+        """
+        total number of ids available in the stash
+        """
+        return sum(len(ids) for ids in self.ids_by_project.values())
+
+    def pick_id(self, *, project: str) -> "WerkId":
+        """
+        the id will still be in the stash, but it could be freed next.
+        """
+        try:
+            return WerkId(sorted(self.ids_by_project[project])[0])
+        except IndexError as e:
+            raise RuntimeError(
+                "You have no werk IDS left. "
+                "You can reserve 10 additional Werk IDS with 'werk ids 10'."
+            ) from e
+
+    def free_id(self, werk_id: "WerkId") -> None:
+        """
+        remove id from stash
+        """
+        removed = False
+        for project, ids in self.ids_by_project.items():
+            if werk_id.id in ids:
+                removed = True
+                ids.remove(werk_id.id)
+                if not ids:
+                    sys.stdout.write(
+                        f"\n{TTY_RED}"
+                        f"This was your last reserved ID for project {project}"
+                        f"{TTY_NORMAL}\n\n"
+                    )
+
+        if not removed:
+            raise RuntimeError(f"Could not find werk_id {werk_id} in any project.")
+
+    def add_id(self, werk_id: "WerkId", *, project: str) -> None:
+        """
+        put a id into the stash
+        """
+        # werks can be delete, but we don't want to lose the id, lets put it back to the stash
+        if project not in self.ids_by_project:
+            self.ids_by_project[project] = []
+        self.ids_by_project[project].append(werk_id.id)
+
+    @classmethod
+    def load_from_file(cls: Type[T]) -> T:
+        if not cls.PATH.exists():
+            return cls.model_validate({"ids_by_project": {}})
+        content = cls.PATH.read_text(encoding="utf-8")
+        if not content:
+            return cls.model_validate({"ids_by_project": {}})
+        if content[0] == "[":
+            # we have a legacy file, from cmk project, we need to adapt it:
+            return cls.model_validate({"ids_by_project": {"cmk": ast.literal_eval(content)}})
+        return cls.model_validate_json(content)
+
+    def dump_to_file(self) -> None:
+        self.PATH.write_text(self.model_dump_json(by_alias=True), encoding="utf-8")
+
 
 class WerkId:
     __slots__ = ("__id",)
 
-    def __init__(self, id: int):  # pylint: disable=redefined-builtin
+    def __init__(self, id: int):  # noqa: A002
         self.__id = id
 
+    @override
+    def __repr__(self) -> str:
+        return f"<WerkId {self.__id:0>5}>"
+
+    @override
     def __str__(self) -> str:
         return f"{self.__id:0>5}"
 
@@ -45,11 +120,13 @@ class WerkId:
     def id(self) -> int:
         return self.__id
 
+    @override
     def __eq__(self, other: object) -> bool:
         if isinstance(other, self.__class__):
             return self.id == other.id
         return False
 
+    @override
     def __hash__(self) -> int:
         return hash(self.__id)
 
@@ -68,8 +145,13 @@ WerkVersion = Literal["v1", "v2"]
 
 WerkMetadata = dict[str, str]
 
+WERK_ID_RANGES = {
+    # start is inclusive, end is exclusive, as it is in range()
+    "cma": [(9_000, 10_000)],
+    "cmk": [(10_000, 1_000_000)],
+    "cloudmk": [(1_000_000, 2_000_000)],
+}
 
-RESERVED_IDS_FILE_PATH = f"{os.getenv('HOME')}/.cmk-werk-ids"
 
 # colored output, if stdout is a tty
 if sys.stdout.isatty():
@@ -293,7 +375,7 @@ BASE_DIR = ""
 
 
 def goto_werksdir() -> None:
-    global BASE_DIR  # pylint: disable=global-statement
+    global BASE_DIR
     BASE_DIR = os.path.abspath(".")
     while not os.path.exists(".werks") and os.path.abspath(".") != "/":
         os.chdir("..")
@@ -325,7 +407,7 @@ def load_werks() -> dict[WerkId, Werk]:
         if (werk_id := entry.name.removesuffix(".md")).isdigit():
             try:
                 werks[WerkId(int(werk_id))] = load_werk(entry)
-            except Exception as e:  # pylint: disable=broad-exception-caught
+            except Exception as e:
                 sys.stderr.write(f"ERROR: Skipping invalid werk {werk_id}: {e}\n")
     return werks
 
@@ -348,7 +430,7 @@ def git_modified_files() -> set[WerkId]:
             try:
                 wid = line.rsplit("/", 1)[-1].strip()
                 modified.add(WerkId(int(wid)))
-            except Exception:  # pylint: disable=broad-exception-caught
+            except Exception:
                 pass
     return modified
 
@@ -450,21 +532,9 @@ def something_in_git_index() -> bool:
     return False
 
 
-def next_werk_id() -> WerkId:
-    my_werk_ids = get_werk_ids()
-    if not my_werk_ids:
-        bail_out(
-            "You have no werk IDS left. "
-            'You can reserve 10 additional Werk IDS with "./werk ids 10".'
-        )
-    return my_werk_ids[0]
-
-
 def add_comment(werk: Werk, title: str, comment: str) -> None:
-    werk.content.metadata[
-        "description"
-    ] += f"""
-{time.strftime('%F %T')}: {title}
+    werk.content.metadata["description"] += f"""
+{time.strftime("%F %T")}: {title}
 {comment}"""
 
 
@@ -503,7 +573,7 @@ def show_werk(werk: Werk) -> None:
     sys.stdout.write(f"\n{werk.content.description}\n")
 
 
-def main_list(args: argparse.Namespace, fmt: str) -> None:  # pylint: disable=too-many-branches
+def main_list(args: argparse.Namespace, fmt: str) -> None:
     # arguments are tags from state, component and class. Multiple values
     # in one class are orred. Multiple types are anded.
 
@@ -566,19 +636,14 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:  # pylint: disable=to
 # CSV Table has the following columns:
 # Component;ID;Title;Class;Effort
 def output_csv(werks: list[Werk]) -> None:
-    def line(*l: int | str) -> None:
-        sys.stdout.write('"' + '";"'.join(map(str, l)) + '"\n')
+    def line(*parts: int | str) -> None:
+        sys.stdout.write('"' + '";"'.join(map(str, parts)) + '"\n')
 
     nr = 1
     for entry in get_config().components:
-        # TODO: Our config has been validated, so we should be able to nuke the isinstance horror
-        # below.
-        if isinstance(entry, tuple) and len(entry) == 2:
-            name, alias = entry
-        elif isinstance(entry, str):  # type: ignore[unreachable]  # TODO: Hmmm...
-            name, alias = entry, entry
-        else:
+        if len(entry) != 2:
             bail_out(f"invalid component {entry!r}")
+        name, alias = entry
 
         line("", "", "", "", "")
 
@@ -612,7 +677,7 @@ def werk_class(werk: Werk) -> str:
         if entry == cl:  # type: ignore[comparison-overlap]
             return cl
 
-        if isinstance(entry, tuple) and entry[0] == cl:
+        if entry[0] == cl:
             return entry[1]
     return cl
 
@@ -625,7 +690,7 @@ def main_show(args: argparse.Namespace) -> None:
     if "all" in args.ids:
         ids = list(load_werks().keys())
     else:
-        ids = [WerkId(id) for id in args.ids] or [get_last_werk()]
+        ids = [WerkId(i) for i in args.ids] or [get_last_werk()]
 
     for wid in ids:
         if wid != ids[0]:
@@ -646,6 +711,12 @@ def get_input(what: str, default: str = "") -> str:
 
 
 def getch() -> str:
+    # allow piping in the answers:
+    if not sys.stdin.isatty():
+        value = sys.stdin.readline().strip()
+        if not value:
+            raise RuntimeError("could not read character from stdin")
+        return value
     fd = sys.stdin.fileno()
     old_settings = termios.tcgetattr(fd)
     try:
@@ -716,8 +787,10 @@ WERK_NOTES = """
 def main_new(args: argparse.Namespace) -> None:
     sys.stdout.write(TTY_GREEN + WERK_NOTES + TTY_NORMAL)
 
+    stash = Stash.load_from_file()
+
     metadata: WerkMetadata = {}
-    werk_id = next_werk_id()
+    werk_id = stash.pick_id(project=get_config().project)
     metadata["id"] = str(werk_id)
 
     # this is the metadata format of werkv1
@@ -744,7 +817,8 @@ def main_new(args: argparse.Namespace) -> None:
 
     save_werk(werk, get_werk_file_version())
     git_add(werk)
-    invalidate_my_werkid(werk_id)
+    stash.free_id(werk_id)
+    stash.dump_to_file()
     edit_werk(werk_path, args.custom_files)
 
     sys.stdout.write(f"Werk {format_werk_id(werk_id)} saved.\n")
@@ -785,9 +859,9 @@ def main_delete(args: argparse.Namespace) -> None:
             sys.stdout.write(f"Error removing werk file: {exc}.\n")
             continue
         sys.stdout.write(f"Deleted werk {format_werk_id(werk_id)} ({werk_to_be_removed_title}).\n")
-        my_ids = get_werk_ids()
-        my_ids.append(werk_id)
-        store_werk_ids(my_ids)
+        stash = Stash.load_from_file()
+        stash.add_id(werk_id, project=get_config().project)
+        stash.dump_to_file()
         sys.stdout.write(f"You lucky bastard now own the werk ID {format_werk_id(werk_id)}.\n")
 
 
@@ -861,12 +935,35 @@ def edit_werk(werk_path: Path, custom_files: list[str] | None = None, commit: bo
     if not editor:
         bail_out("No editor available (please set EDITOR).\n")
 
-    number_of_lines_in_werk = werk_path.read_text(encoding="utf-8").count("\n")
-    if os.system(f"bash -c '{editor} +{number_of_lines_in_werk} {werk_path}'") == 0:  # nosec
-        werk = load_werk(werk_path)
-        git_add(werk)
-        if commit:
-            git_commit(werk, custom_files)
+    initial_werk_text = werk_path.read_text(encoding="utf-8")
+    number_of_lines_in_werk = initial_werk_text.count("\n")
+    werk = None
+
+    while True:
+        if os.system(f"bash -c '{editor} +{number_of_lines_in_werk} {werk_path}'") != 0:  # nosec
+            bail_out("Editor returned error, something is very wrong!")
+
+        try:
+            werk = load_werk(werk_path)
+            # validate the werk, to make sure the commit part at the bottom will work
+            cmk_werks_load_werk(file_content=werk.path.read_text(), file_name=werk.path.name)
+            break
+        except Exception:
+            sys.stdout.write(initial_werk_text + "\n\n")
+            sys.stdout.write(traceback.format_exc() + "\n\n")
+            sys.stdout.write(
+                "Could not load the werk, see exception above.\n"
+                "You may copy the initial werk text above the exception to fix your werk.\n"
+                "Will reopen the editor, after you acknowledged with enter\n"
+            )
+            input()
+
+    if werk is None:
+        bail_out("This should not have happened, werk is None during edit_werk.")
+
+    git_add(werk)
+    if commit and get_config().create_commit:
+        git_commit(werk, custom_files)
 
 
 def main_pick(args: argparse.Namespace) -> None:
@@ -953,41 +1050,50 @@ def werk_cherry_pick(commit_id: str, no_commit: bool, werk_version: WerkVersion)
             subprocess.run(["git", "status"], check=True)
 
 
-def get_werk_ids() -> list[WerkId]:
-    try:
-        return [
-            WerkId(i)
-            for i in ast.literal_eval(Path(RESERVED_IDS_FILE_PATH).read_text(encoding="utf-8"))
-        ]
-    except Exception:  # pylint: disable=broad-exception-caught
-        return []
-
-
-def invalidate_my_werkid(wid: WerkId) -> None:
-    ids = get_werk_ids()
-    ids.remove(wid)
-    store_werk_ids(ids)
-    if not ids:
-        sys.stdout.write(f"\n{TTY_RED}This was your last reserved ID.{TTY_NORMAL}\n\n")
-
-
-def store_werk_ids(l: list[WerkId]) -> None:
-    with open(RESERVED_IDS_FILE_PATH, "w", encoding="utf-8") as f:
-        f.write(repr([i.id for i in l]) + "\n")
-    sys.stdout.write(f"Werk IDs stored in the file: {RESERVED_IDS_FILE_PATH}\n")
-
-
 def current_branch() -> str:
-    return [l for l in os.popen("git branch") if l.startswith("*")][0].split()[-1]
+    return [line for line in os.popen("git branch") if line.startswith("*")][0].split()[-1]
 
 
 def current_repo() -> str:
     return list(os.popen("git config --get remote.origin.url"))[0].strip().split("/")[-1]
 
 
+def _reserve_werk_ids(
+    ranges: list[tuple[int, int]], first_free: int, count: int
+) -> tuple[int, list[WerkId]]:
+    buffer: list[WerkId] = []
+    while ranges:
+        start, end = ranges.pop(0)
+        if first_free > end:
+            # range already complelty exhausted
+            continue
+        if first_free < start:
+            # first_free is not in our range!
+            raise RuntimeError("Configuration error: first_free no in range!")
+        new_first_free = first_free + count
+        if new_first_free < end:
+            return new_first_free, buffer + list(
+                WerkId(i) for i in range(first_free, new_first_free)
+            )
+        buffer += list(WerkId(i) for i in range(first_free, end))
+        count -= end - first_free
+        if not ranges:
+            raise RuntimeError(
+                "Not enough ids available, please add a fresh range to WERK_ID_RANGES"
+            )
+        first_free = ranges[0][0]
+
+    raise RuntimeError("could not allocate ids")
+
+
 def main_fetch_ids(args: argparse.Namespace) -> None:
+    stash = Stash.load_from_file()
+
     if args.count is None:
-        sys.stdout.write(f"You have {len(get_werk_ids())} reserved IDs.\n")
+        per_project = "\n".join(
+            "{project}: {len(ids)}" for project, ids in stash.ids_by_project.items()
+        )
+        sys.stdout.write(f"You have {stash.count()} reserved IDs:\n{per_project}\n")
         sys.exit(0)
 
     if current_branch() != "master" or current_repo() != "check_mk":
@@ -997,44 +1103,38 @@ def main_fetch_ids(args: argparse.Namespace) -> None:
     try:
         with open("first_free", encoding="utf-8") as f:
             first_free = int(f.read().strip())
-    except (OSError, ValueError):
-        first_free = 0
+    except (OSError, ValueError) as e:
+        raise RuntimeError("Could not load .werks/first_free") from e
 
-    new_first_free = first_free + args.count
-    # enterprise werks were between 8000 and 8749. Skip over this area for new
-    # reserved werk ids
-    if 8000 <= first_free < 8780 or 8000 <= new_first_free < 8780:
-        first_free = 8780
-        new_first_free = first_free + args.count
+    project = get_config().project
+    if project not in WERK_ID_RANGES:
+        raise RuntimeError(f"project {project} has no werk id range")
+    ranges = WERK_ID_RANGES[project].copy()
 
-    # cmk-omd werk were between 7500 and 7680. Skip over this area for new
-    # reserved werk ids
-    if 7500 <= first_free < 7680 or 7500 <= new_first_free < 7680:
-        first_free = 7680
-        new_first_free = first_free + args.count
+    new_first_free, fresh_ids = _reserve_werk_ids(ranges, first_free, args.count)
 
-    # cma werks are between 9000 and 9999. Skip over this area for new
-    # reserved werk ids
-    if 9000 <= first_free < 10000 or 9000 <= new_first_free < 10000:
-        first_free = 10000
-        new_first_free = first_free + args.count
-
-    # Store the werk_ids to reserve
-    my_ids = get_werk_ids() + list(WerkId(i) for i in range(first_free, new_first_free))
-    store_werk_ids(my_ids)
+    stash = Stash.load_from_file()
+    for werk_id in fresh_ids:
+        stash.add_id(werk_id, project=project)
+    stash.dump_to_file()
 
     # Store the new reserved werk ids
     with open("first_free", "w", encoding="utf-8") as f:
         f.write(str(new_first_free) + "\n")
 
     sys.stdout.write(
-        f"Reserved {args.count} additional IDs now. You have {len(my_ids)} reserved IDs now.\n"
+        f"Reserved {args.count} additional IDs now. You have {stash.count()} reserved IDs now.\n"
     )
 
-    if os.system(f"git commit -m 'Reserved {args.count} Werk IDS' .") == 0:  # nosec
-        sys.stdout.write("--> Successfully committed reserved werk IDS. Please push it soon!\n")
+    if get_config().create_commit:
+        if os.system(f"git commit -m 'Reserved {args.count} Werk IDS' .") == 0:  # nosec
+            sys.stdout.write("--> Successfully committed reserved werk IDS. Please push it soon!\n")
+        else:
+            bail_out("Cannot commit.")
     else:
-        bail_out("Cannot commit.")
+        sys.stdout.write(
+            "--> Reserved werk IDs. Commit and push it soon, otherwise someone else reserves the same IDs!\n"
+        )
 
 
 def main_preview(args: argparse.Namespace) -> None:
@@ -1050,7 +1150,7 @@ def main_preview(args: argparse.Namespace) -> None:
             yield f"<dt>{item}<dt><dd>{getattr(werk, item)}</dd>"
 
     definition_list = "\n".join(meta_data())
-    print(
+    sys.stdout.write(
         f'<!DOCTYPE html><html lang="en" style="font-family:sans-serif;">'
         "<head>"
         f"<title>Preview of werk {args.id}</title>"
@@ -1060,7 +1160,7 @@ def main_preview(args: argparse.Namespace) -> None:
         f'<div style="background-color:#fff; padding: 10px;">{werk.description}</div>'
         f"<dl>{definition_list}</dl>"
         "</body>"
-        "</html>"
+        "</html>\n"
     )
 
 
@@ -1072,6 +1172,9 @@ def get_werk_file_version() -> WerkVersion:
     for path in Path(".").iterdir():
         if path.name.endswith(".md") and path.name.removesuffix(".md").isdigit():
             return "v2"
+    if set(p.name for p in Path(".").iterdir()) == {"config", "first_free"}:
+        # folder is empty, there are only mandatory files
+        return "v2"
     return "v1"
 
 
@@ -1091,3 +1194,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     goto_werksdir()
     main_args = parse_arguments(argv or sys.argv[1:])
     main_args.func(main_args)
+
+
+if __name__ == "__main__":
+    main()

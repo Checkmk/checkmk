@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, SNMPTree, startswith
+
+check_info = {}
 
 # .1.3.6.1.4.1.2636.3.1.13.1.5.7.1.0.0 FPC: EX3300 48-Port @ 0/*/* --> SNMPv2-SMI::enterprises.2636.3.1.13.1.5.7.1.0.0
 # .1.3.6.1.4.1.2636.3.1.13.1.5.7.2.0.0 FPC: EX3300 48-Port @ 1/*/* --> SNMPv2-SMI::enterprises.2636.3.1.13.1.5.7.2.0.0
@@ -37,6 +38,7 @@ def check_juniper_temp(item, params, parsed):
 
 
 check_info["juniper_temp"] = LegacyCheckDefinition(
+    name="juniper_temp",
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2636.1.1.1.2"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2636.1.1.1.4"),

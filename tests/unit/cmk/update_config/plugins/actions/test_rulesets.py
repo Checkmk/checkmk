@@ -8,6 +8,8 @@ from collections.abc import Mapping
 
 import pytest
 
+from cmk.ccc.version import Edition, edition
+
 from cmk.utils import paths
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
@@ -16,7 +18,6 @@ from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
 from cmk.gui.watolib.rulespecs import Rulespec
 
-from cmk.ccc.version import edition, Edition
 from cmk.update_config.plugins.actions import rulesets as rulesets_updater
 
 

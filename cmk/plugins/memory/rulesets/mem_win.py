@@ -238,13 +238,17 @@ def _parameters_memory_pagefile_win() -> Dictionary:
             "average": DictElement[float](
                 parameter_form=TimeSpan(
                     title=Title("Averaging"),
-                    displayed_magnitudes=[TimeMagnitude.MINUTE],
+                    displayed_magnitudes=[
+                        TimeMagnitude.HOUR,
+                        TimeMagnitude.MINUTE,
+                        TimeMagnitude.SECOND,
+                    ],
                     help_text=Help(
                         "If this parameter is set, all measured values will be averaged "
                         "over the specified time interval before levels are being applied. "
                         "By default, averaging is turned off. "
                     ),
-                    custom_validate=(validators.NumberInRange(60.0, float("inf")),),
+                    custom_validate=(validators.NumberInRange(60.0, None),),
                     prefill=DefaultValue(3600.0),
                 )
             ),

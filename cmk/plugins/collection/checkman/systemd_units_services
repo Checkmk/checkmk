@@ -15,8 +15,10 @@ description:
 item:
  The service unit name.
 
-Inventory:
- By default, no services are discovered. This has to be specifically
- actived using the ruleset "Systemd single services discovery". If
- activated, one service is created in Checkmk for each systemd service
- unit.
+discovery:
+ By default, no services are discovered. For a systemd service to be discovered
+ it has to match the conditions in the ruleset "Systemd single services
+ discovery". Moreover, only systemd units listed by 'systemctl --all' are
+ considered. It is not sufficient for the systemd service to be listed by
+ 'systemctl list-unit-files'. Note, that even if a systemd unit is 'loaded',
+ this does not mean it will be listed by 'systemctl --all'.

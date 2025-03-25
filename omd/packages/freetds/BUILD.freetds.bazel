@@ -61,7 +61,6 @@ configure_make(
     out_data_dirs = [
         "include",
         "lib",
-        "tar",
     ],
 
     # without this bazel complains about missing .a files, lol
@@ -70,7 +69,6 @@ configure_make(
     set -x
     mkdir -p $BUILD_TMPDIR/tar/freetds/lib
     cp -a "$BUILD_TMPDIR/$INSTALL_PREFIX"/lib/libsybdb.so* "$BUILD_TMPDIR"/tar/freetds/lib/
-        tar -C $BUILD_TMPDIR/tar/ -cf "$INSTALLDIR"/tar/freedts.tar freetds
     """,
     targets = [
         "all",
@@ -78,4 +76,11 @@ configure_make(
     ],
     visibility = ["//visibility:public"],
     deps = [],
+)
+
+filegroup(
+    name = "gen_dir",
+    srcs = [":freetds"],
+    output_group = "gen_dir",
+    visibility = ["//visibility:public"],
 )

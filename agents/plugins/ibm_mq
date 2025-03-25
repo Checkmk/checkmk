@@ -10,7 +10,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.4.0b1"
+CMK_VERSION="2.5.0b1"
 
 #
 # Collects monitoring information of all IBM MQ Queue Managers.
@@ -90,6 +90,10 @@ check_tool() {
     fi
 }
 
+timestamp() {
+    date +'%Y-%m-%dT%H:%M:%S'
+}
+
 load_config
 
 echo "<<<ibm_mq_plugin:sep(58)>>>"
@@ -98,21 +102,31 @@ check_tool dspmq
 check_tool runmqsc
 
 dspmq -n | while read -r dspmqline; do
-    now=$(date +'%Y-%m-%dT%H:%M:%S')
     QM=$(echo "$dspmqline" | sed 's,QMNAME(\([^)]*\).*,\1,')
     if is_qm_monitored "$QM"; then
         echo '<<<ibm_mq_channels:sep(10)>>>'
-        echo "$dspmqline NOW($now)"
-        run_command "runmqsc -e \"$QM\"" <<EOF
+        section_channels=$(
+            run_command "runmqsc -e \"$QM\"" <<EOF
 display channel(*) xmitq
 display chstatus(*) monitor
 EOF
+        )
+        # For the channels, the order of computation does not matter, since the timestamp is
+        # currently unused. For consistency, we do it in the same way as for the queues.
+        echo "$dspmqline NOW($(timestamp))"
+        echo "${section_channels}"
         echo '<<<ibm_mq_queues:sep(10)>>>'
-        echo "$dspmqline NOW($now)"
-        run_command "runmqsc -e \"$QM\"" <<EOF
+        section_queues=$(
+            run_command "runmqsc -e \"$QM\"" <<EOF
 display qlocal(*) maxdepth maxmsgl crdate crtime altdate alttime monq
 display qstatus(*) monitor ipprocs opprocs
 EOF
+        )
+        # For the queues, it is important to compute the timestamp after the actual output data.
+        # In the check plugin, we compute differences between timestamps from the output data and
+        # this timestamp and these differences better not be negative ...
+        echo "$dspmqline NOW($(timestamp))"
+        echo "${section_queues}"
     fi
 done
 

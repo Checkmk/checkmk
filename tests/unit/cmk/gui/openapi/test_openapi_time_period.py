@@ -5,11 +5,13 @@
 
 import pytest
 
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
-from cmk.utils.config_validation_layer.timeperiods import validate_timeperiod, validate_timeperiods
+from cmk.utils.timeperiod import TimeperiodName, TimeperiodSpec, TimeperiodSpecs
 
 from cmk.gui.watolib.timeperiods import load_timeperiod
+
+from cmk.validate_config import validate_timeperiods
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -94,7 +96,15 @@ def test_openapi_time_period_active_time_ranges(clients: ClientRegistry) -> None
         },
     )
 
-    days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+    days = [
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday",
+    ]
     assert resp1.json["extensions"]["active_time_ranges"] == [
         {"day": day, "time_ranges": [{"end": "23:59", "start": "00:00"}]} for day in days
     ]
@@ -129,7 +139,10 @@ def test_openapi_time_period_time_ranges(clients: ClientRegistry) -> None:
         time_period_data={
             "active_time_ranges": [{"day": "friday"}],
             "exceptions": [
-                {"date": "2023-02-02", "time_ranges": [{"start": "18:32", "end": "21:15"}]},
+                {
+                    "date": "2023-02-02",
+                    "time_ranges": [{"start": "18:32", "end": "21:15"}],
+                },
             ],
         },
     )
@@ -155,7 +168,10 @@ def test_openapi_time_period_time_ranges(clients: ClientRegistry) -> None:
         "day": "saturday",
         "time_ranges": [{"start": "18:11", "end": "23:45"}],
     }
-    assert resp2.json["extensions"]["exceptions"][0] == {"date": "2023-02-03", "time_ranges": []}
+    assert resp2.json["extensions"]["exceptions"][0] == {
+        "date": "2023-02-03",
+        "time_ranges": [],
+    }
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -168,7 +184,10 @@ def test_openapi_time_period(clients: ClientRegistry) -> None:
                 {"day": "all", "time_ranges": [{"start": "12:00", "end": "14:00"}]}
             ],
             "exceptions": [
-                {"date": "2020-01-01", "time_ranges": [{"start": "14:00", "end": "18:00"}]}
+                {
+                    "date": "2020-01-01",
+                    "time_ranges": [{"start": "14:00", "end": "18:00"}],
+                }
             ],
         },
     )
@@ -195,7 +214,10 @@ def test_openapi_time_period_collection(clients: ClientRegistry) -> None:
                 {"day": "all", "time_ranges": [{"start": "12:00", "end": "14:00"}]}
             ],
             "exceptions": [
-                {"date": "2020-01-01", "time_ranges": [{"start": "14:00", "end": "18:00"}]}
+                {
+                    "date": "2020-01-01",
+                    "time_ranges": [{"start": "14:00", "end": "18:00"}],
+                }
             ],
         },
     )
@@ -299,7 +321,10 @@ def test_openapi_timeperiod_unmodified_update(clients: ClientRegistry) -> None:
             ],
             "alias": "Test All days 8x5",
             "exceptions": [
-                {"date": "2021-04-01", "time_ranges": [{"end": "15:00", "start": "14:00"}]}
+                {
+                    "date": "2021-04-01",
+                    "time_ranges": [{"end": "15:00", "start": "14:00"}],
+                }
             ],
         },
     )
@@ -331,7 +356,10 @@ def test_openapi_timeperiod_complex_update(clients: ClientRegistry) -> None:
             ],
             "alias": "Test All days 8x5",
             "exceptions": [
-                {"date": "2021-04-01", "time_ranges": [{"end": "15:00", "start": "14:00"}]}
+                {
+                    "date": "2021-04-01",
+                    "time_ranges": [{"end": "15:00", "start": "14:00"}],
+                }
             ],
         },
     )
@@ -349,12 +377,15 @@ def test_openapi_timeperiod_complex_update(clients: ClientRegistry) -> None:
             ],
             "alias": "Test All days 8x5 z",
             "exceptions": [
-                {"date": "2021-04-01", "time_ranges": [{"end": "15:00", "start": "14:00"}]}
+                {
+                    "date": "2021-04-01",
+                    "time_ranges": [{"end": "15:00", "start": "14:00"}],
+                }
             ],
         },
     )
 
-    internal_timeperiod = load_timeperiod("test_all_8x5")
+    internal_timeperiod = load_timeperiod(TimeperiodName("test_all_8x5"))
     assert internal_timeperiod == {
         "alias": "Test All days 8x5 z",
         "2021-04-01": [("14:00", "15:00")],
@@ -440,7 +471,7 @@ def test_openapi_timeperiod_exclude_builtin(clients: ClientRegistry) -> None:
         },
     )
 
-    assert clients.TimePeriod.create(
+    clients.TimePeriod.create(
         expect_ok=False,
         time_period_data={
             "name": "exclude_test_3",
@@ -514,7 +545,8 @@ def test_openapi_time_period_24h_regression(clients: ClientRegistry) -> None:
     clients.TimePeriod.get(time_period_id="all_of_monday")
     clients.TimePeriod.get_all()
     clients.TimePeriod.edit(
-        time_period_id="all_of_monday", time_period_data={"alias": "Everything in Monday"}
+        time_period_id="all_of_monday",
+        time_period_data={"alias": "Everything in Monday"},
     )
     clients.TimePeriod.delete(time_period_id="all_of_monday")
 
@@ -604,7 +636,7 @@ def test_openapi_exclude_field(clients: ClientRegistry) -> None:
         == dependent_time_period["exclude"]
     )
 
-    internal_time_period = load_timeperiod(name="time_period_2")
+    internal_time_period = load_timeperiod(TimeperiodName("time_period_2"))
     assert internal_time_period["exclude"] == ["time_period_1"]
 
     referenced_time_period_by_alias = clients.TimePeriod.create(
@@ -669,13 +701,15 @@ def test_openapi_timeperiod_update_exclude(clients: ClientRegistry) -> None:
     assert res_empty_exclude.json["extensions"]["exclude"] == []
 
     clients.TimePeriod.edit(
-        time_period_id="time_period_3", time_period_data={"exclude": [time_period_name_1]}
+        time_period_id="time_period_3",
+        time_period_data={"exclude": [time_period_name_1]},
     )
     res_update_time_period = clients.TimePeriod.get(time_period_id="time_period_3")
     assert res_update_time_period.json["extensions"]["exclude"] == [time_period_name_1]
 
     clients.TimePeriod.edit(
-        time_period_id="time_period_3", time_period_data={"exclude": [time_period_name_2]}
+        time_period_id="time_period_3",
+        time_period_data={"exclude": [time_period_name_2]},
     )
     res_update_time_period = clients.TimePeriod.get(time_period_id="time_period_3")
     assert res_update_time_period.json["extensions"]["exclude"] == [time_period_name_2]
@@ -886,11 +920,11 @@ def test_openapi_timeperiod_update_alias_in_use(clients: ClientRegistry) -> None
     ],
 )
 def test_timeperiod_config_validator_fields(
-    time_period: dict, is_valid: bool, request: pytest.FixtureRequest
+    time_period: TimeperiodSpec, is_valid: bool, request: pytest.FixtureRequest
 ) -> None:
     result = True
     try:
-        validate_timeperiod(request.node.name, time_period)
+        validate_timeperiods({request.node.name: time_period})
     except Exception:
         result = False
 
@@ -898,8 +932,8 @@ def test_timeperiod_config_validator_fields(
 
 
 def test_timeperiod_config_validator_on_file() -> None:
-    time_periods = {
-        "Nights": {
+    time_periods: TimeperiodSpecs = {
+        TimeperiodName("Nights"): {
             "alias": "Nights",
             "friday": [("21:00", "24:00"), ("00:00", "06:00")],
             "monday": [("21:00", "24:00"), ("00:00", "06:00")],
@@ -909,7 +943,7 @@ def test_timeperiod_config_validator_on_file() -> None:
             "tuesday": [("21:00", "24:00"), ("00:00", "06:00")],
             "wednesday": [("21:00", "24:00"), ("00:00", "06:00")],
         },
-        "Service1": {
+        TimeperiodName("Service1"): {
             "alias": "Service1",
             "friday": [("06:00", "20:00")],
             "monday": [("06:00", "20:00")],
@@ -919,10 +953,10 @@ def test_timeperiod_config_validator_on_file() -> None:
             "tuesday": [("06:00", "20:00")],
             "wednesday": [("06:00", "20:00")],
         },
-        "Sunday": {"alias": "Sunday", "sunday": [("00:00", "24:00")]},
-        "Workdays": {
+        TimeperiodName("Sunday"): {"alias": "Sunday", "sunday": [("00:00", "24:00")]},
+        TimeperiodName("Workdays"): {
             "alias": "Workdays",
-            "exclude": ["Sunday"],
+            "exclude": [TimeperiodName("Sunday")],
             "friday": [("07:00", "20:00")],
             "monday": [("07:00", "20:00")],
             "saturday": [("07:00", "20:00")],
@@ -931,7 +965,7 @@ def test_timeperiod_config_validator_on_file() -> None:
             "tuesday": [("07:00", "20:00")],
             "wednesday": [("07:00", "20:00")],
         },
-        "Week": {
+        TimeperiodName("Week"): {
             "alias": "Week",
             "friday": [("06:00", "20:00")],
             "monday": [("06:00", "20:00")],
@@ -941,9 +975,9 @@ def test_timeperiod_config_validator_on_file() -> None:
             "tuesday": [("06:00", "20:00")],
             "wednesday": [("06:00", "20:00")],
         },
-        "period_1": {
+        TimeperiodName("period_1"): {
             "alias": "period_1",
-            "exclude": ["Sunday"],
+            "exclude": [TimeperiodName("Sunday")],
             "friday": [("08:00", "08:05"), ("16:20", "16:25"), ("13:20", "13:25")],
             "monday": [("08:00", "08:05"), ("16:20", "16:25"), ("13:20", "13:25")],
             "saturday": [("08:00", "08:05"), ("16:20", "16:25"), ("13:20", "13:25")],
@@ -952,9 +986,9 @@ def test_timeperiod_config_validator_on_file() -> None:
             "tuesday": [("08:00", "08:05"), ("16:20", "16:25"), ("13:20", "13:25")],
             "wednesday": [("08:00", "08:05"), ("16:20", "16:25"), ("13:20", "13:25")],
         },
-        "period_2": {
+        TimeperiodName("period_2"): {
             "alias": "period_2",
-            "exclude": ["Sunday"],
+            "exclude": [TimeperiodName("Sunday")],
             "friday": [("09:05", "09:10"), ("17:25", "17:30"), ("14:25", "14:30")],
             "monday": [("09:05", "09:10"), ("17:25", "17:30"), ("14:25", "14:30")],
             "saturday": [("09:05", "09:10"), ("17:25", "17:30"), ("14:25", "14:30")],
@@ -963,9 +997,9 @@ def test_timeperiod_config_validator_on_file() -> None:
             "tuesday": [("09:05", "09:10"), ("17:25", "17:30"), ("14:25", "14:30")],
             "wednesday": [("09:05", "09:10"), ("17:25", "17:30"), ("14:25", "14:30")],
         },
-        "period_3": {
+        TimeperiodName("period_3"): {
             "alias": "period_3",
-            "exclude": ["Sunday"],
+            "exclude": [TimeperiodName("Sunday")],
             "friday": [("07:05", "07:10"), ("15:45", "15:50"), ("12:55", "13:00")],
             "monday": [("07:05", "07:10"), ("15:45", "15:50"), ("12:55", "13:00")],
             "saturday": [("07:05", "07:10"), ("15:45", "15:50"), ("12:55", "13:00")],
@@ -974,9 +1008,9 @@ def test_timeperiod_config_validator_on_file() -> None:
             "tuesday": [("07:05", "07:10"), ("15:45", "15:50"), ("12:55", "13:00")],
             "wednesday": [("07:05", "07:10"), ("15:45", "15:50"), ("12:55", "13:00")],
         },
-        "period_4": {
+        TimeperiodName("period_4"): {
             "alias": "period_4",
-            "exclude": ["Sunday"],
+            "exclude": [TimeperiodName("Sunday")],
             "friday": [("08:45", "08:50"), ("17:10", "17:20"), ("14:30", "14:40")],
             "monday": [("08:45", "08:50"), ("17:10", "17:20"), ("14:30", "14:40")],
             "saturday": [("08:45", "08:50"), ("17:10", "17:20"), ("14:30", "14:40")],
@@ -985,7 +1019,7 @@ def test_timeperiod_config_validator_on_file() -> None:
             "tuesday": [("08:45", "08:50"), ("17:10", "17:20"), ("14:30", "14:40")],
             "wednesday": [("08:45", "08:50"), ("17:10", "17:20"), ("14:30", "14:40")],
         },
-        "period_5": {
+        TimeperiodName("period_5"): {
             "alias": "period_5",
             "friday": [("02:00", "19:00")],
             "monday": [("02:00", "19:00")],

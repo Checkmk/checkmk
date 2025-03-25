@@ -29,7 +29,7 @@ def generic_parse(string_table: StringTable) -> GenericSection:
         # for example to
         # elements = dict(tuple(x.split(" ", 1)) for x in line[1:])
         # will make Mypy unhappy (Tuple[str, ...] vs Tuple[<nothing>, <nothing>])
-        # pylint: disable=unnecessary-comprehension
+
         elements = {k: v for k, v in (x.split(" ", 1) for x in line[1:])}
         if elements.get("Dn"):
             result.setdefault(module, {}).update({elements["Dn"]: elements})

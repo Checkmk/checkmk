@@ -11,14 +11,13 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-from tests.unit.conftest import FixRegister
-
 from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.api.agent_based.plugin_classes import CheckPlugin
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins, CheckPlugin
+
+from cmk.agent_based.v2 import Metric, Result, Service, State
 
 _STRING_TABLE = [
     [
@@ -28,13 +27,13 @@ _STRING_TABLE = [
 
 
 @pytest.fixture(name="check_plugin", scope="module")
-def check_plugin_fixture(fix_register: FixRegister) -> CheckPlugin:
-    return fix_register.check_plugins[CheckPluginName("mongodb_collections")]
+def check_plugin_fixture(agent_based_plugins: AgentBasedPlugins) -> CheckPlugin:
+    return agent_based_plugins.check_plugins[CheckPluginName("mongodb_collections")]
 
 
 @pytest.fixture(name="section", scope="module")
-def section_fixture(fix_register: FixRegister) -> Mapping[str, Any]:
-    return fix_register.agent_sections[SectionName("mongodb_collections")].parse_function(
+def section_fixture(agent_based_plugins: AgentBasedPlugins) -> Mapping[str, Any]:
+    return agent_based_plugins.agent_sections[SectionName("mongodb_collections")].parse_function(
         _STRING_TABLE
     )
 

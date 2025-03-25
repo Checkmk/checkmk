@@ -7,6 +7,7 @@ password store compatible.
 
 We are working towards a more staight forward solution.
 """
+
 import shlex
 import sys
 from collections.abc import Callable, Iterable, Mapping
@@ -33,6 +34,7 @@ HACK_AGENTS = {
     "elasticsearch": True,
     "fritzbox": False,  # needs no secret
     "gcp": True,
+    "gerrit": False,
     "jenkins": True,
     "mobileiron": True,
     "netapp_ontap": True,
@@ -42,6 +44,8 @@ HACK_AGENTS = {
     "three_par": True,
     "emcvnx": True,
     "rabbitmq": True,
+    "redfish": False,
+    "redfish_power": False,
     "tinkerforge": False,  # needs no secret
     "couchbase": True,
     "zerto": True,
@@ -51,6 +55,31 @@ HACK_AGENTS = {
     "alertmanager": False,
     "prometheus": False,
     "allnet_ip_sensoric": False,  # needs no secret
+    "graylog": True,
+    "storeonce": True,
+    "appdynamics": True,
+    "ddn_s2a": True,
+    "gcp_status": False,  # needs no secret
+    "hivemanager_ng": True,
+    "hivemanager": True,
+    "hp_msa": True,
+    "ibmsvc": False,  # needs no secret
+    "innovaphone": True,
+    "storeonce4x": True,
+    "vsphere": True,
+    "jolokia": True,
+    "random": False,  # needs no secret
+    "mqtt": True,
+    "splunk": True,
+    "vnx_quotas": True,
+    "ucs_bladecenter": True,
+    "smb_share": True,
+    "jira": True,
+    "salesforce": False,  # needs no secret
+    "ipmi_sensors": True,
+    "ruckus_spot": True,
+    "kube": True,
+    "otel": False,  # needs no secret
 }
 
 

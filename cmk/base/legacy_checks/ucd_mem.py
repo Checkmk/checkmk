@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_dict
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 # FIXME
 # The WATO group 'memory_simple' needs an item and the service_description should
@@ -56,6 +58,7 @@ def check_ucd_mem(_no_item, params, parsed):
 
 # This check plug-in uses the migrated section in cmk/base/plugins/agent_based/ucd_mem.py!
 check_info["ucd_mem"] = LegacyCheckDefinition(
+    name="ucd_mem",
     service_name="Memory",
     discovery_function=inventory_ucd_mem,
     check_function=check_ucd_mem,

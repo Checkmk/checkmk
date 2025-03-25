@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.humidity import check_humidity
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.knuerr import DETECT_KNUERR
+
+check_info = {}
 
 
 def inventory_knuerr_rms_humidity(info):
@@ -26,6 +27,7 @@ def parse_knuerr_rms_humidity(string_table: StringTable) -> StringTable | None:
 
 
 check_info["knuerr_rms_humidity"] = LegacyCheckDefinition(
+    name="knuerr_rms_humidity",
     parse_function=parse_knuerr_rms_humidity,
     detect=DETECT_KNUERR,
     fetch=SNMPTree(

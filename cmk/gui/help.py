@@ -16,5 +16,5 @@ def register(page_registry: PageRegistry) -> None:
 
 def ajax_switch_help() -> None:
     state = request.var("enabled", "") != ""
-    user.show_help = state
+    user.inline_help_as_text = state
     response.set_data(json.dumps(state))

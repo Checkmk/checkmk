@@ -5,7 +5,7 @@
 
 """Register the built-in global setting configuration variable groups"""
 
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _l
 from cmk.gui.watolib.config_domain_name import ConfigVariableGroup, ConfigVariableGroupRegistry
 
 
@@ -18,57 +18,43 @@ def register(config_variable_group_registry: ConfigVariableGroupRegistry) -> Non
     config_variable_group_registry.register(ConfigVariableGroupDeveloperTools)
 
 
-class ConfigVariableGroupNotifications(ConfigVariableGroup):
-    def title(self) -> str:
-        return _("Notifications")
-
-    def sort_index(self) -> int:
-        return 15
+ConfigVariableGroupNotifications = ConfigVariableGroup(
+    title=_l("Notifications"),
+    sort_index=15,
+)
 
 
-class ConfigVariableGroupUserInterface(ConfigVariableGroup):
-    def title(self) -> str:
-        return _("User interface")
-
-    def sort_index(self) -> int:
-        return 20
+ConfigVariableGroupUserInterface = ConfigVariableGroup(
+    title=_l("User interface"),
+    sort_index=20,
+)
 
 
-class ConfigVariableGroupWATO(ConfigVariableGroup):
-    def title(self) -> str:
-        return _("Setup")
-
-    def sort_index(self) -> int:
-        return 25
+ConfigVariableGroupWATO = ConfigVariableGroup(
+    title=_l("Setup"),
+    sort_index=25,
+)
 
 
-class ConfigVariableGroupSiteManagement(ConfigVariableGroup):
-    def title(self) -> str:
-        return _("Site management")
-
-    def sort_index(self) -> int:
-        return 30
+ConfigVariableGroupSiteManagement = ConfigVariableGroup(
+    title=_l("Site management"),
+    sort_index=30,
+)
 
 
-class ConfigVariableGroupSupport(ConfigVariableGroup):
-    def title(self) -> str:
-        return _("Support")
-
-    def sort_index(self) -> int:
-        return 80
+ConfigVariableGroupSupport = ConfigVariableGroup(
+    title=_l("Support"),
+    sort_index=80,
+)
 
 
-class ConfigVariableGroupDeveloperTools(ConfigVariableGroup):
-    def title(self) -> str:
-        return _("Developer Tools")
-
-    def sort_index(self) -> int:
-        return 90
-
-    def warning(self) -> str | None:
-        return _(
-            "These are internal settings used by Checkmk developers. "
-            "Do not change them unless you know what you are doing. "
-            "There is a high risk that using these features will break your Checkmk site. "
-            "Any changes here will result in your Checkmk site no longer being officially supported."
-        )
+ConfigVariableGroupDeveloperTools = ConfigVariableGroup(
+    title=_l("Developer Tools"),
+    sort_index=90,
+    warning=_l(
+        "These are internal settings used by Checkmk developers. "
+        "Do not change them unless you know what you are doing. "
+        "There is a high risk that using these features will break your Checkmk site. "
+        "Any changes here will result in your Checkmk site no longer being officially supported."
+    ),
+)

@@ -37,12 +37,12 @@ global:
     # Restrict the following configuration variables
     # in [global] to the following hosts
     # ?????????
-    host: 
+    host:
         - '*'
 
     # Just output certain sections
     sections: check_mk mrpe skype spool plugins local winperf uptime systemtime df mem services msexch dotnet_clrmemory wmi_webservices wmi_cpuload ps fileinfo logwatch
-    
+
     # forced to not use
     disabled_sections: openhardwaremonitor _logfiles winperf_xxx badname
 
@@ -57,15 +57,15 @@ global:
         # no matter if this timeout is "too high" or how many monitoring
         # systems are querying the agent.
         timeout: 90
-        # enable/disable encryption of regular agent output (default: disabled) 
+        # enable/disable encryption of regular agent output (default: disabled)
         # yes or no
         encrypted: no
         # passphrase for encrypted communication.
         passphrase: this is my password
         # which sections are realtime
         run:
-            - mem 
-            - df 
+            - mem
+            - df
             - winperf_processor
 
     # by default the agent flushes the socket for each agent section.
@@ -74,14 +74,14 @@ global:
     # Disabling this may (very) slightly reduce network traffic.
     section_flush: no
 
-    # -------------------------------------------------------------- 
+    # --------------------------------------------------------------
     # Internal log of agent
     # Write a logfile for tackling down crashes of the agent
     logging:
         # folder with log file, empty is default which means '$CUSTOM_AGENT_PATH$\log'
-        location: 
+        location:
         # name of file log, default is check_mk.log
-        file : 
+        file :
         # log in file also internal debug messages, recommended when we have problems
         debug: no
         # you may send logging messages in realtime in windows debug sink, default is yes
@@ -100,7 +100,7 @@ winperf:
     counters:
         - id: 999
           name: phydisk_ut
-#        - id: 10332 
+#        - id: 10332
 #          name: msx_queues
         - id: 111
           name: tcp_conn_ut
@@ -116,7 +116,7 @@ logfiles:
           observe:
               - 'C:\tmp': # this is folder
                   # below list of file to view on location
-                  - 'logfiles\message_*.log' 
+                  - 'logfiles\message_*.log'
                   - 'logfile\my*.log'
               - 'D:\log': #this is folder
                   - 'sample1.txt'
@@ -128,20 +128,20 @@ logfiles:
               warn:   'Unable to contact*'
               ignore: 'Backup * saved'
         - name: My special logs
-          observe: 
+          observe:
               - 'C:\tmp\memo.udf':
           patterns:
               ok:     '*mail sent*'
               warn:   '*overdue*'
         - name: My interesting logs
-          description: > 
-                this is my description which I can add to almost any iten 
+          description: >
+                this is my description which I can add to almost any iten
                 item ib the config file and see it in the log
-          observe: 
+          observe:
               - 'C:\tmp\memo.crit':
           # below is default
-          rotated: no     
-          context: yes      
+          rotated: no
+          context: yes
           from_start: no
           patterns:
               ok:     '*mail sent*'

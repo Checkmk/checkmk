@@ -54,12 +54,7 @@ def check_datapower_raid_bat(item: str, section: StringTable) -> CheckResult:
         if item == controller_id:
             state, state_txt = datapower_raid_bat_status[status]
             type_txt = datapower_raid_bat_type[bat_type]
-            infotext = "Status: {}, Name: {}, Type: {}, Serial: {}".format(
-                state_txt,
-                name,
-                type_txt,
-                serial,
-            )
+            infotext = f"Status: {state_txt}, Name: {name}, Type: {type_txt}, Serial: {serial}"
             yield Result(state=state, summary=infotext)
             return
 

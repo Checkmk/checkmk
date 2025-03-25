@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
-# pylint: disable=redefined-outer-name
 import copy
 import itertools
 import json
@@ -21,10 +19,11 @@ from cmk.ccc.crash_reporting import (
     ABCCrashReport,
     CrashInfo,
     CrashReportStore,
+    VersionInfo,
 )
 
 
-class UnitTestCrashReport(ABCCrashReport):
+class UnitTestCrashReport(ABCCrashReport[VersionInfo]):
     @classmethod
     def type(cls):
         return "test"
@@ -40,7 +39,20 @@ def crash(crashdir: Path) -> UnitTestCrashReport:
     try:
         raise ValueError("XYZ")
     except ValueError:
-        return UnitTestCrashReport.from_exception(crashdir, {})
+        return UnitTestCrashReport(
+            crashdir,
+            UnitTestCrashReport.make_crash_info(
+                VersionInfo(
+                    core="test",
+                    python_version="test",
+                    edition="test",
+                    python_paths=["foo", "bar"],
+                    version="3.99",
+                    time=0.0,
+                    os="Foobuntu",
+                ),
+            ),
+        )
 
 
 def test_crash_report_type(crash: ABCCrashReport) -> None:
@@ -143,7 +155,20 @@ def test_crash_report_store_cleanup(crashdir: Path, n_crashes: int) -> None:
         try:
             raise ValueError("Crash #%d" % num)
         except ValueError:
-            crash = UnitTestCrashReport.from_exception(crashdir, {})
+            crash = UnitTestCrashReport(
+                crashdir,
+                UnitTestCrashReport.make_crash_info(
+                    VersionInfo(
+                        core="test",
+                        python_version="test",
+                        edition="test",
+                        python_paths=["foo", "bar"],
+                        version="3.99",
+                        time=0.0,
+                        os="Foobuntu",
+                    )
+                ),
+            )
             store.save(crash)
             crash_ids.append(crash.ident_to_text())
 

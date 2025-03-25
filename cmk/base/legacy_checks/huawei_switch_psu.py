@@ -5,15 +5,16 @@
 
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.huawei_switch import (
     parse_huawei_physical_entity_values,
     Section,
 )
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
 from cmk.plugins.lib.huawei import DETECT_HUAWEI_SWITCH
+
+check_info = {}
 
 huawei_switch_hw_oper_state_map = {
     "1": "notSupported",
@@ -46,6 +47,7 @@ def check_huawei_switch_psu(
 
 
 check_info["huawei_switch_psu"] = LegacyCheckDefinition(
+    name="huawei_switch_psu",
     detect=DETECT_HUAWEI_SWITCH,
     fetch=[
         SNMPTree(

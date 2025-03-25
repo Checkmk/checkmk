@@ -3,20 +3,31 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Age,
-    CascadingDropdown,
-    Dictionary,
-    DropdownChoice,
-    TextInput,
-    Transform,
-    Tuple,
-)
-from cmk.gui.wato import HTTPProxyReference
+from cmk.gui.form_specs.converter import Tuple
+from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recompose
+from cmk.gui.http import request
+from cmk.gui.valuespec.definitions import Dictionary as ValueSpecDictionary
+from cmk.gui.watolib.notification_parameter import NotificationParameter
 
-from ._base import NotificationParameter
-from ._helpers import local_site_url
+from cmk.rulesets.v1 import Help, Message, Title
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    FixedValue,
+    migrate_to_proxy,
+    Proxy,
+    SingleChoice,
+    SingleChoiceElement,
+    String,
+    TimeMagnitude,
+    TimeSpan,
+)
+from cmk.rulesets.v1.form_specs.validators import MatchRegex
+
+from ._helpers import _get_url_prefix_setting
 
 
 class NotificationParameterPushover(NotificationParameter):
@@ -25,156 +36,259 @@ class NotificationParameterPushover(NotificationParameter):
         return "pushover"
 
     @property
-    def spec(self):
+    def spec(self) -> ValueSpecDictionary:
+        # TODO needed because of mixed Form Spec and old style setup
+        return recompose(self._form_spec()).valuespec  # type: ignore[return-value]  # expects Valuespec[Any]
+
+    def _form_spec(self) -> Dictionary:
         return Dictionary(
-            title=_("Create notification with the following parameters"),
-            optional_keys=["url_prefix", "proxy_url", "priority", "sound"],
-            elements=[
-                (
-                    "api_key",
-                    TextInput(
-                        title=_("API key"),
-                        help=_(
+            title=Title("Push notification parameters"),
+            elements={
+                "api_key": DictElement(
+                    parameter_form=String(
+                        title=Title("API key"),
+                        help_text=Help(
                             "You need to provide a valid API key to be able to send push notifications "
                             'using Pushover. Register and login to <a href="https://www.pushover.net" '
                             'target="_blank">Pushover</a>, thn create your Checkmk installation as '
                             "application and obtain your API key."
                         ),
-                        size=40,
-                        allow_empty=False,
-                        regex="^[a-zA-Z0-9]{30,40}$",
+                        custom_validate=[
+                            MatchRegex(
+                                regex="^[a-zA-Z0-9]{30,40}$",
+                                error_msg=Message("Invalid API key"),
+                            ),
+                        ],
                     ),
+                    required=True,
                 ),
-                (
-                    "recipient_key",
-                    TextInput(
-                        title=_("User / Group Key"),
-                        help=_(
+                "recipient_key": DictElement(
+                    parameter_form=String(
+                        title=Title("User / Group Key"),
+                        help_text=Help(
                             "Configure the user or group to receive the notifications by providing "
                             "the user or group key here. The key can be obtained from the Pushover "
                             "website."
                         ),
-                        size=40,
-                        allow_empty=False,
-                        regex="^[a-zA-Z0-9]{30,40}$",
+                        custom_validate=[
+                            MatchRegex(
+                                regex="^[a-zA-Z0-9]{30,40}$",
+                                error_msg=Message("Invalid user / group key"),
+                            ),
+                        ],
+                    ),
+                    required=True,
+                ),
+                "url_prefix": _get_url_prefix_setting(
+                    default_value="automatic_https" if request.is_ssl_request else "automatic_http",
+                ),
+                "proxy_url": DictElement(
+                    parameter_form=Proxy(
+                        migrate=migrate_to_proxy,
                     ),
                 ),
-                (
-                    "url_prefix",
-                    TextInput(
-                        title=_("URL prefix for links to Checkmk"),
-                        help=_(
-                            "If you specify an URL prefix here, then several parts of the "
-                            "email body are armed with hyperlinks to your Checkmk GUI, so "
-                            "that the recipient of the email can directly visit the host or "
-                            "service in question in Checkmk. Specify an absolute URL including "
-                            "the <tt>.../check_mk/</tt>"
-                        ),
-                        regex="^(http|https)://.*/check_mk/$",
-                        regex_error=_(
-                            "The URL must begin with <tt>http</tt> or "
-                            "<tt>https</tt> and end with <tt>/check_mk/</tt>."
-                        ),
-                        size=64,
-                        default_value=local_site_url,
-                    ),
-                ),
-                (
-                    "proxy_url",
-                    HTTPProxyReference(),
-                ),
-                (
-                    "priority",
-                    Transform(
-                        valuespec=CascadingDropdown(
-                            title=_("Priority"),
-                            choices=[
-                                (
-                                    "2",
-                                    _(
-                                        "Emergency: Repeat push notification in intervalls till expire time."
-                                    ),
-                                    Tuple(
-                                        elements=[
-                                            Age(title=_("Retry time")),
-                                            Age(title=_("Expire time")),
-                                            TextInput(
-                                                title=_("Receipt"),
-                                                help=_(
-                                                    "The receipt can be used to periodically poll receipts API to get "
-                                                    "the status of the notification. "
-                                                    'See <a href="https://pushover.net/api#receipt" target="_blank">'
-                                                    "Pushover receipts and callbacks</a> for more information."
-                                                ),
-                                                size=40,
-                                                regex="[a-zA-Z0-9]{0,30}",
-                                            ),
-                                        ]
-                                    ),
+                "priority": DictElement(
+                    parameter_form=CascadingSingleChoice(
+                        title=Title("Priority"),
+                        elements=[
+                            CascadingSingleChoiceElement(
+                                name="emergency",
+                                title=Title(
+                                    "Emergency: Repeat push notification in intervalls till expire time."
                                 ),
-                                ("1", _("High: Push notification alerts bypass quiet hours")),
-                                ("0", _("Normal: Regular push notification (default)")),
-                                ("-1", _("Low: No sound/vibration but show popup")),
-                                ("-2", _("Lowest: No notification, update badge number")),
-                            ],
-                            default_value="0",
-                        ),
-                        to_valuespec=self._transform_to_pushover_priority,
-                        from_valuespec=self._transform_from_pushover_priority,
+                                parameter_form=Tuple(
+                                    elements=[
+                                        TimeSpan(
+                                            title=Title("Retry time"),
+                                            displayed_magnitudes=[
+                                                TimeMagnitude.DAY,
+                                                TimeMagnitude.HOUR,
+                                                TimeMagnitude.MINUTE,
+                                                TimeMagnitude.SECOND,
+                                            ],
+                                        ),
+                                        TimeSpan(
+                                            title=Title("Expire time"),
+                                            displayed_magnitudes=[
+                                                TimeMagnitude.DAY,
+                                                TimeMagnitude.HOUR,
+                                                TimeMagnitude.MINUTE,
+                                                TimeMagnitude.SECOND,
+                                            ],
+                                        ),
+                                        String(
+                                            title=Title("Receipt"),
+                                            help_text=Help(
+                                                "The receipt can be used to periodically poll receipts API to get "
+                                                "the status of the notification. "
+                                                'See <a href="https://pushover.net/api#receipt" target="_blank">'
+                                                "Pushover receipts and callbacks</a> for more information."
+                                            ),
+                                            custom_validate=[
+                                                MatchRegex(
+                                                    regex="^[a-zA-Z0-9]{30,40}$",
+                                                    error_msg=Message("Invalid receipt"),
+                                                ),
+                                            ],
+                                        ),
+                                    ]
+                                ),
+                            ),
+                            CascadingSingleChoiceElement(
+                                name="high",
+                                title=Title("High: Push notification alerts bypass quiet hours"),
+                                parameter_form=FixedValue(value=None),
+                            ),
+                            CascadingSingleChoiceElement(
+                                name="normal",
+                                title=Title("Normal: Regular push notification (default)"),
+                                parameter_form=FixedValue(value=None),
+                            ),
+                            CascadingSingleChoiceElement(
+                                name="low",
+                                title=Title("Low: No sound/vibration but show popup"),
+                                parameter_form=FixedValue(value=None),
+                            ),
+                            CascadingSingleChoiceElement(
+                                name="lowest",
+                                title=Title("Lowest: No notification, update badge number"),
+                                parameter_form=FixedValue(value=None),
+                            ),
+                        ],
+                        prefill=DefaultValue("normal"),
+                        migrate=_migrate_to_priority,
                     ),
                 ),
-                (
-                    "sound",
-                    DropdownChoice(
-                        title=_("Select sound"),
-                        help=_(
+                "sound": DictElement(
+                    parameter_form=SingleChoice(
+                        title=Title("Select sound"),
+                        help_text=Help(
                             'See <a href="https://pushover.net/api#sounds" target="_blank">'
                             "Pushover sounds</a> for more information and trying out available sounds."
                         ),
-                        choices=[
-                            ("none", _("None (silent)")),
-                            ("alien", _("Alien Alarm (long)")),
-                            ("bike", _("Bike")),
-                            ("bugle", _("Bugle")),
-                            ("cashregister", _("Cash Register")),
-                            ("classical", _("Classical")),
-                            ("climb", _("Climb (long)")),
-                            ("cosmic", _("Cosmic")),
-                            ("echo", _("Pushover Echo (long)")),
-                            ("falling", _("Falling")),
-                            ("gamelan", _("Gamelan")),
-                            ("incoming", _("Incoming")),
-                            ("intermission", _("Intermission")),
-                            ("magic", _("Magic")),
-                            ("mechanical", _("Mechanical")),
-                            ("persistent", _("Persistent (long)")),
-                            ("pianobar", _("Piano Bar")),
-                            ("pushover", _("Pushover")),
-                            ("siren", _("Siren")),
-                            ("spacealarm", _("Space Alarm")),
-                            ("tugboat", _("Tug Boat")),
-                            ("updown", _("Up Down (long)")),
-                            ("vibrate", _("Vibrate only")),
+                        elements=[
+                            SingleChoiceElement(
+                                name="none",
+                                title=Title("None (silent)"),
+                            ),
+                            SingleChoiceElement(
+                                name="alien",
+                                title=Title("Alien Alarm (long)"),
+                            ),
+                            SingleChoiceElement(
+                                name="bike",
+                                title=Title("Bike"),
+                            ),
+                            SingleChoiceElement(
+                                name="bugle",
+                                title=Title("Bugle"),
+                            ),
+                            SingleChoiceElement(
+                                name="cashregister",
+                                title=Title("Cash Register"),
+                            ),
+                            SingleChoiceElement(
+                                name="classical",
+                                title=Title("Classical"),
+                            ),
+                            SingleChoiceElement(
+                                name="climb",
+                                title=Title("Climb (long)"),
+                            ),
+                            SingleChoiceElement(
+                                name="cosmic",
+                                title=Title("Cosmic"),
+                            ),
+                            SingleChoiceElement(
+                                name="echo",
+                                title=Title("Pushover Echo (long)"),
+                            ),
+                            SingleChoiceElement(
+                                name="falling",
+                                title=Title("Falling"),
+                            ),
+                            SingleChoiceElement(
+                                name="gamelan",
+                                title=Title("Gamelan"),
+                            ),
+                            SingleChoiceElement(
+                                name="incoming",
+                                title=Title("Incoming"),
+                            ),
+                            SingleChoiceElement(
+                                name="intermission",
+                                title=Title("Intermission"),
+                            ),
+                            SingleChoiceElement(
+                                name="magic",
+                                title=Title("Magic"),
+                            ),
+                            SingleChoiceElement(
+                                name="mechanical",
+                                title=Title("Mechanical"),
+                            ),
+                            SingleChoiceElement(
+                                name="persistent",
+                                title=Title("Persistent (long)"),
+                            ),
+                            SingleChoiceElement(
+                                name="pianobar",
+                                title=Title("Piano Bar"),
+                            ),
+                            SingleChoiceElement(
+                                name="pushover",
+                                title=Title("Pushover"),
+                            ),
+                            SingleChoiceElement(
+                                name="siren",
+                                title=Title("Siren"),
+                            ),
+                            SingleChoiceElement(
+                                name="spacealarm",
+                                title=Title("Space Alarm"),
+                            ),
+                            SingleChoiceElement(
+                                name="tugboat",
+                                title=Title("Tug Boat"),
+                            ),
+                            SingleChoiceElement(
+                                name="updown",
+                                title=Title("Up Down (long)"),
+                            ),
+                            SingleChoiceElement(
+                                name="vibrate",
+                                title=Title("Vibrate only"),
+                            ),
                         ],
-                        default_value="none",
+                        prefill=DefaultValue("none"),
                     ),
                 ),
-            ],
+            },
         )
 
-    # We have to transform because 'add_to_event_context'
-    # in modules/events.py can't handle complex data structures
-    def _transform_from_pushover_priority(self, params):
-        if isinstance(params, tuple):
-            return {
-                "priority": "2",
-                "retry": params[1][0],
-                "expire": params[1][1],
-                "receipts": params[1][2],
-            }
-        return params
 
-    def _transform_to_pushover_priority(self, params):
-        if isinstance(params, dict):
-            return (params["priority"], (params["retry"], params["expire"], params["receipts"]))
-        return params
+# TODO add typing
+def _migrate_to_priority(value):
+    # Already migrated
+    if isinstance(value, tuple):
+        return value
+
+    if isinstance(value, dict):
+        assert isinstance(value["retry"], int)
+        assert isinstance(value["expire"], int)
+        assert value["receipts"] is not None and isinstance(value["receipts"], str)
+        return ("emergency", (float(value["retry"]), float(value["expire"]), value["receipts"]))
+
+    if value == "0":
+        return ("normal", None)
+
+    if value == "1":
+        return ("high", None)
+
+    if value == "-1":
+        return ("low", None)
+
+    if value == "-2":
+        return ("lowest", None)
+
+    raise ValueError(f"Invalid priority format: {value}")

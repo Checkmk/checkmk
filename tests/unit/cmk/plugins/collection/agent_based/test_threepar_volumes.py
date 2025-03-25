@@ -133,7 +133,6 @@ def test_discover_3par_volumes(
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +488 KiB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +<0.01%"),
                 Metric("trend", 0.47614433552936597),
-                Result(state=State.OK, summary="Time left until disk full: 11 years 185 days"),
                 Result(state=State.OK, summary="Dedup: 1.65"),
                 Result(state=State.OK, summary="Compact: 19.54"),
                 Result(state=State.OK, summary="Type: FULL, WWN: 60002AC0000000000000003F000292E7"),

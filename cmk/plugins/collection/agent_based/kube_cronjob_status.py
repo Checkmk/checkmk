@@ -7,7 +7,7 @@ import time
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, assert_never
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -166,6 +166,16 @@ def _determine_job_status(
             ):
                 return JobStatusType.COMPLETED
             if (
+                condition.type_ is JobConditionType.SUCCESS_CRITERIA_MET
+                and condition.status == ConditionStatus.TRUE
+            ):
+                return JobStatusType.COMPLETED
+            if (
+                condition.type_ is JobConditionType.FAILURE_TARGET
+                and condition.status == ConditionStatus.TRUE
+            ):
+                return JobStatusType.FAILED
+            if (
                 condition.type_ is JobConditionType.FAILED
                 and condition.status == ConditionStatus.TRUE
             ):
@@ -208,7 +218,7 @@ def _cron_job_status(
         case JobStatusType.PENDING:
             non_running_time = current_time - job_start_time
             result = list(
-                check_levels(
+                check_levels_v1(
                     non_running_time,
                     render_func=render.timespan,
                     levels_upper=pending_levels,
@@ -218,7 +228,7 @@ def _cron_job_status(
             status_message = f"Pending since {result.summary}"
         case JobStatusType.RUNNING:
             result = list(
-                check_levels(
+                check_levels_v1(
                     current_time - job_start_time,
                     render_func=render.timespan,
                     levels_upper=running_levels,
@@ -227,7 +237,8 @@ def _cron_job_status(
             state = result.state
             status_message = f"Running since {result.summary}"
         case JobStatusType.UNKNOWN:
-            raise ValueError("Unknown status type for latest job")
+            yield Result(state=State.UNKNOWN, summary="Unknown status type for latest job")
+            return
         case _:
             assert_never(job_status)
 
@@ -241,7 +252,7 @@ def _last_successful_completion(
         yield Result(state=State.OK, summary="No successfully completed job")
         return
 
-    yield from check_levels(
+    yield from check_levels_v1(
         current_time - last_successful_time,
         metric_name="kube_cron_job_status_since_completion",
         label="Time since last successful completion",
@@ -254,7 +265,7 @@ def _last_schedule(current_time: Timestamp, last_schedule_time: Timestamp | None
         yield Result(state=State.OK, summary="Job is yet to be scheduled")
         return
 
-    yield from check_levels(
+    yield from check_levels_v1(
         current_time - last_schedule_time,
         metric_name="kube_cron_job_status_since_schedule",
         label="Time since last schedule",

@@ -22,6 +22,7 @@
 #include "livestatus/EventConsoleConnection.h"
 #include "livestatus/Filter.h"
 #include "livestatus/ICore.h"
+#include "livestatus/Interface.h"
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
@@ -209,6 +210,7 @@ std::unique_ptr<StringColumn<row_type>> ECRow::makeStringColumn(
     const ColumnOffsets &offsets) {
     return std::make_unique<StringColumn<row_type>>(
         name, description, offsets,
+        // NOLINTNEXTLINE(bugprone-exception-escape)
         [name](const row_type &row) { return row.getString(name); });
 }
 
@@ -218,6 +220,7 @@ std::unique_ptr<IntColumn<row_type>> ECRow::makeIntColumn(
     const ColumnOffsets &offsets) {
     return std::make_unique<IntColumn<row_type>>(
         name, description, offsets,
+        // NOLINTNEXTLINE(bugprone-exception-escape)
         [name](const row_type &row) { return row.getInt(name); });
 }
 
@@ -227,6 +230,7 @@ std::unique_ptr<DoubleColumn<row_type>> ECRow::makeDoubleColumn(
     const ColumnOffsets &offsets) {
     return std::make_unique<DoubleColumn<row_type>>(
         name, description, offsets,
+        // NOLINTNEXTLINE(bugprone-exception-escape)
         [name](const row_type &row) { return row.getDouble(name); });
 }
 
@@ -235,6 +239,7 @@ std::unique_ptr<TimeColumn<row_type>> ECRow::makeTimeColumn(
     const std::string &name, const std::string &description,
     const ColumnOffsets &offsets) {
     return std::make_unique<TimeColumn<row_type>>(
+        // NOLINTNEXTLINE(bugprone-exception-escape)
         name, description, offsets, [name](const row_type &row) {
             return std::chrono::system_clock::from_time_t(
                 static_cast<std::time_t>(row.getDouble(name)));
@@ -246,6 +251,7 @@ std::unique_ptr<ListColumn<row_type>> ECRow::makeListColumn(
     const std::string &name, const std::string &description,
     const ColumnOffsets &offsets) {
     return std::make_unique<ListColumn<row_type>>(
+        // NOLINTNEXTLINE(bugprone-exception-escape)
         name, description, offsets, [name](const row_type &row) {
             return mk::ec::split_list(row.getString(name));
         });
@@ -269,7 +275,7 @@ std::string ECRow::get(const std::string &column_name,
     return it == map_.end() ? default_value : it->second;
 }
 
-const IHost *ECRow::host() const { return host_ ? host_.get() : nullptr; }
+const IHost *ECRow::host() const { return host_; }
 
 namespace {
 std::function<bool(const row_type &)> get_authorizer(const Table &table,

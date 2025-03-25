@@ -5,7 +5,7 @@
 from collections.abc import Mapping, MutableMapping
 from typing import Any, Final, NamedTuple
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -106,7 +106,7 @@ def _simple_ok_result(
     this_time: float,
 ) -> CheckResult:
     try:
-        yield from check_levels(
+        yield from check_levels_v1(
             _ticks_to_percent(value_store, ticks, this_time),
             metric_name=ticks.name,
             render_func=render.percent,

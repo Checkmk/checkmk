@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from pytest_mock import MockerFixture
 
-from tests.testlib.repo import repo_path
+from tests.testlib.common.repo import repo_path
 
 from livestatus import SiteId
 

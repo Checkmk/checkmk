@@ -6,10 +6,16 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+
+"""
+Relevant documentation:
+    * https://docs.deistercloud.com/content/Databases.30/IBM%20Informix.2/Monitoring.10.xml?embedded=true#51cf1eb453b73e7ffdd2172551fc58ed
+    * https://www.ibm.com/docs/en/informix-servers/14.10?topic=tables-syschunks
+"""
+
+check_info = {}
 
 
 def parse_informix_dbspaces(string_table):
@@ -52,11 +58,7 @@ def check_informix_dbspaces(item, params, parsed):
             size += int(entry["chksize"]) * pagesize
 
         used = size - free
-        infotext = "Data files: {}, Size: {}, Used: {}".format(
-            len(datafiles),
-            render.disksize(size),
-            render.disksize(used),
-        )
+        infotext = f"Data files: {len(datafiles)}, Size: {render.disksize(size)}, Used: {render.disksize(used)}"
         state = 0
         if "levels" in params:
             warn, crit = params["levels"]
@@ -65,10 +67,7 @@ def check_informix_dbspaces(item, params, parsed):
             elif size >= warn:
                 state = 1
             if state:
-                infotext += " (warn/crit at {}/{})".format(
-                    render.disksize(warn),
-                    render.disksize(crit),
-                )
+                infotext += f" (warn/crit at {render.disksize(warn)}/{render.disksize(crit)})"
 
         yield state, infotext, [("tablespace_size", size), ("tablespace_used", used)]
 
@@ -88,6 +87,7 @@ def check_informix_dbspaces(item, params, parsed):
 
 
 check_info["informix_dbspaces"] = LegacyCheckDefinition(
+    name="informix_dbspaces",
     parse_function=parse_informix_dbspaces,
     service_name="Informix Tablespace %s",
     discovery_function=inventory_informix_dbspaces,

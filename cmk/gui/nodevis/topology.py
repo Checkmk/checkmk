@@ -7,13 +7,17 @@ import glob
 import json
 import os
 import re
-import time
 import traceback
 from dataclasses import asdict, dataclass, field
+from datetime import timedelta
 from pathlib import Path
 from typing import Any, Literal
 
 import livestatus
+
+import cmk.ccc.plugin_registry
+from cmk.ccc import store
+from cmk.ccc.store import locked
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
@@ -22,7 +26,7 @@ from cmk.utils.user import UserId
 import cmk.gui.visuals
 from cmk.gui import sites
 from cmk.gui.breadcrumb import make_current_page_breadcrumb_item, make_topic_breadcrumb
-from cmk.gui.cron import register_job
+from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.dashboard import get_topology_context_and_filters
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.header import make_header
@@ -59,7 +63,6 @@ from cmk.gui.nodevis.utils import (
     get_toggle_layout_designer_page_menu_entry,
     topology_configs_dir,
     topology_data_dir,
-    topology_dir,
     topology_settings_lookup,
 )
 from cmk.gui.page_menu import (
@@ -71,18 +74,14 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import AjaxPage, Page, PageRegistry, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnSpec, PainterParameters, Visual, VisualLinkSpec
-from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.views.icon import Icon, IconRegistry
 from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals import get_livestatus_filter_headers
 from cmk.gui.visuals.filter import FilterRegistry
-
-import cmk.ccc.plugin_registry
-from cmk.ccc import store
-from cmk.ccc.store import locked
 
 
 @request_memoize()
@@ -94,13 +93,20 @@ def register(
     page_registry: PageRegistry,
     filter_registry: FilterRegistry,
     icon_and_action_registry: IconRegistry,
+    cron_job_registry: CronJobRegistry,
 ) -> None:
     page_registry.register_page("parent_child_topology")(ParentChildTopologyPage)
     page_registry.register_page("network_topology")(NetworkTopologyPage)
     page_registry.register_page("ajax_initial_topology_filters")(AjaxInitialTopologyFilters)
     page_registry.register_page("ajax_fetch_topology")(AjaxFetchTopology)
     icon_and_action_registry.register(NetworkTopology)
-    register_job(cleanup_topology_layouts)
+    cron_job_registry.register(
+        CronJob(
+            name="cleanup_topology_layouts",
+            callable=cleanup_topology_layouts,
+            interval=timedelta(days=1),
+        )
+    )
     filter_registry.register(FilterTopologyMeshDepth())
     filter_registry.register(FilterTopologyMaxNodes())
     topology_layer_registry.register(ParentChildDataGenerator)
@@ -877,9 +883,8 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
             if core_entity is not None:
                 host_id = self._network_data.hostname.get(core_entity[0])
                 if host_id and (
-                    custom_settings := self._topology_configuration.frontend.custom_node_settings.get(
-                        host_id
-                    )
+                    custom_settings
+                    := self._topology_configuration.frontend.custom_node_settings.get(host_id)
                 ):
                     visibility = custom_settings.get("show_services", general_service_visibility)
             if visibility == "all":
@@ -1478,7 +1483,7 @@ def _register_builtin_views():
                 "link_from": {},
                 "mobile": False,
                 "mustsearch": False,
-                "name": "network_hover_service",
+                "name": "topology_hover_service",
                 "num_columns": 1,
                 "packaged": False,
                 "painters": [
@@ -1511,13 +1516,6 @@ def _register_builtin_views():
 def cleanup_topology_layouts() -> None:
     """Topology layouts are currently restricted to a maximum number of 10000"""
     topology_configs_dir.mkdir(parents=True, exist_ok=True)
-    last_run = topology_dir / ".last_run"
-    if not last_run.exists():
-        last_run.touch(exist_ok=True)
-
-    # Run once per day
-    if last_run.stat().st_mtime > time.time() - 86400:
-        return
 
     # Do simply maximum size check
     maximum_files = 10000
@@ -1550,7 +1548,6 @@ def cleanup_topology_layouts() -> None:
             topology_settings.pop(reverse_lookup.get(file_to_remove, ""), None)
 
         store.save_object_to_file(topology_settings_lookup, topology_settings)
-    last_run.touch(exist_ok=True)
 
 
 def _create_filter_configuration_from_hash(hash_value: str) -> TopologyFilterConfiguration | None:
@@ -1604,7 +1601,7 @@ def get_topology_configuration(
 
     # Fallback, new page, no saved settings
     frontend_configuration = FrontendConfiguration()
-    frontend_configuration.overlays_config = default_overlays or OverlaysConfig()
+    frontend_configuration.overlays_config = default_overlays
 
     return TopologyConfiguration(
         type=topology_type,

@@ -14,6 +14,7 @@
 #include "livestatus/IntColumn.h"
 #include "livestatus/Interface.h"
 #include "livestatus/Query.h"
+#include "livestatus/Row.h"
 #include "livestatus/ServiceGroupMembersColumn.h"
 #include "livestatus/ServiceListState.h"
 #include "livestatus/StringColumn.h"
@@ -27,7 +28,7 @@ std::vector<::column::service_group_members::Entry> BuildServiceGroupListInfo(
     std::vector<::column::service_group_members::Entry> entries;
     sg.all([&user, &entries](const IService &s) {
         if (user.is_authorized_for_service(s)) {
-            entries.emplace_back(s.host_name(), s.name(),
+            entries.emplace_back(s.host_name(), s.description(),
                                  static_cast<ServiceState>(s.current_state()),
                                  s.has_been_checked());
         }

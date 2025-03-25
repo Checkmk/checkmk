@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, startswith
+
+check_info = {}
 
 # example output
 # .1.3.6.1.4.1.232.167.2.4.5.2.1.2.1 4
@@ -62,6 +63,7 @@ def check_hp_mcs_sensors(item, params, parsed):
 
 
 check_info["hp_mcs_sensors"] = LegacyCheckDefinition(
+    name="hp_mcs_sensors",
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.232.167"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.232.167.2.4.5.2.1",
@@ -89,6 +91,7 @@ def check_hp_mcs_sensors_fan(item, params, parsed):
 
 
 check_info["hp_mcs_sensors.fan"] = LegacyCheckDefinition(
+    name="hp_mcs_sensors_fan",
     service_name="Sensor %s",
     sections=["hp_mcs_sensors"],
     discovery_function=inventory_hp_mcs_sensors_fan,

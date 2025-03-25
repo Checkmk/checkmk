@@ -6,10 +6,11 @@ distribution: check_mk
 description:
  This check monitors the system time of the monitored host.
  It computes the difference between the time measured on the monitored host and the time of the Checkmk server when the data is processed.
- The resulting difference is refered to as "offset" here (this is also the metrics name).
+ The resulting difference is referred to as "offset" here (this is also the metrics name).
  By default the service is always OK, but levels can be configured for the measured offset.
 
  As the offset includes the systematic time delay between querying the host and querying the reference time, it is never expected to be zero.
+ If the agent is operated in push mode, even greater deviations are to be expected, as the agent's push interval is independent of the server's check interval.
 
  This service is created for hosts monitored by the special agent for NetApp, the special agent for vSphere or the Windows agent.
  For the special agents the local time is measured during the agent run, so the offset should be smaller than the execution time of the agent.

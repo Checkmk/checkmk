@@ -5,7 +5,7 @@ winperf:
     # id is OS is
     # name is check mk name
     counters:
-        - id: 10332 
+        - id: 10332
           name: msx_queues
         - id: 638
           name: tcp_conn

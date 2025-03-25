@@ -45,8 +45,7 @@ def _parameter_valuespec_cooling_cap():
             ),
         ],
         help=_(
-            "Here you can set different warn/crit levels regarding the available cooling "
-            " capacity."
+            "Here you can set different warn/crit levels regarding the available cooling  capacity."
         ),
     )
 

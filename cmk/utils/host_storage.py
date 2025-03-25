@@ -13,12 +13,12 @@ from functools import cache, lru_cache
 from pathlib import Path
 from typing import Any, Generic, TypedDict, TypeVar
 
+from cmk.ccc import store
+
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
 from cmk.utils.rulesets.tuple_rulesets import ALL_HOSTS, ALL_SERVICES
 from cmk.utils.tags import TagGroupID, TagID
-
-from cmk.ccc import store
 
 HostAttributeMapping = tuple[
     str, str, dict[str, Any], str
@@ -186,7 +186,7 @@ class StandardHostsStorage(ABCHostsStorage[str]):
     def __init__(self) -> None:
         super().__init__(StorageFormat.STANDARD)
 
-    def _write(  # pylint: disable=too-many-branches
+    def _write(
         self, file_path: Path, data: HostsStorageData, value_formatter: Callable[[Any], str]
     ) -> None:
         out = io.StringIO()

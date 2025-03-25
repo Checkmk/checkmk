@@ -7,7 +7,7 @@ import json
 from collections.abc import Mapping, Sequence
 from typing import Any, Final, NamedTuple
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -55,7 +55,7 @@ def check_ruckus_spot_ap(
     if not (devices := section.get(item)):
         return
 
-    yield from check_levels(
+    yield from check_levels_v1(
         len(devices),
         metric_name="ap_devices_total",
         render_func=lambda x: str(int(x)),
@@ -66,7 +66,7 @@ def check_ruckus_spot_ap(
         ("drifted", 2, "levels_drifted"),
         ("not responding", 0, "levels_not_responding"),
     ]:
-        yield from check_levels(
+        yield from check_levels_v1(
             sum(dev.status == ap_state for dev in devices),
             metric_name="ap_devices_%s" % label.replace(" ", "_"),
             levels_upper=params.get(key),

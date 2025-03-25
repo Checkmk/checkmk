@@ -16,27 +16,19 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.lib import esx_vsphere
 
 
-def discover_cpu(section: esx_vsphere.SectionVM) -> DiscoveryResult:
-    if section is None:
-        return
-
-    if section.cpu is not None:
-        yield Service()
+def discover_cpu(section: esx_vsphere.SectionESXVm) -> DiscoveryResult:
+    yield Service()
 
 
-def check_cpu(section: esx_vsphere.SectionVM) -> CheckResult:
-    if section is None:
-        raise IgnoreResultsError("No VM information currently available")
-
-    cpu_section = section.cpu
-    if cpu_section is None:
+def check_cpu(section: esx_vsphere.SectionESXVm) -> CheckResult:
+    if section.cpu is None:
         raise IgnoreResultsError("No information about CPU usage. VM is probably powered off.")
 
     yield Result(
         state=State.OK,
-        summary=f"demand is {cpu_section.overall_usage / 1000.0:.3f} Ghz, {cpu_section.cpus_count} virtual CPUs",
+        summary=f"demand is {section.cpu.overall_usage / 1000.0:.3f} Ghz, {section.cpu.cpus_count} virtual CPUs",
     )
-    yield Metric(name="demand", value=cpu_section.overall_usage)
+    yield Metric(name="demand", value=section.cpu.overall_usage)
 
 
 check_plugin_esx_vsphere_vm_cpu = CheckPlugin(

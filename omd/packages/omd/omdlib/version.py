@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
 import sys
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from pathlib import Path
 
 import omdlib
@@ -42,7 +41,7 @@ def main_versions(
     _version_info: object,
     _site: object,
     _global_opts: object,
-    args: Sequence[str],
+    _args: Sequence[str],
     options: Mapping[str, str | None],
     versions_path: Path = Path("/omd/versions"),
 ) -> None:
@@ -54,12 +53,12 @@ def main_versions(
 
 
 def default_version(versions_path: Path) -> str:
-    return os.path.basename(os.path.realpath(versions_path / "default"))
+    return (versions_path / "default").resolve().name
 
 
-def omd_versions(versions_path: Path) -> Iterable[str]:
+def omd_versions(versions_path: Path) -> Collection[str]:
     try:
-        return sorted([v for v in os.listdir(versions_path) if v != "default"])
+        return sorted(d.name for d in versions_path.iterdir() if d.name != "default")
     except FileNotFoundError:
         return []
 
@@ -71,8 +70,7 @@ def version_exists(v: str, versions_path: Path) -> bool:
 def version_from_site_dir(site_dir: Path) -> str | None:
     """The version of a site is solely determined by the link ~SITE/version
     In case the version of a site can not be determined, it reports None."""
-    version_link = site_dir / "version"
     try:
-        return os.readlink(version_link).split("/")[-1]
+        return (site_dir / "version").readlink().name
     except Exception:
         return None

@@ -34,7 +34,7 @@
 ' -----------------------------------------------------------------------------
 
 Option Explicit
-Const CMK_VERSION = "2.4.0b1"
+Const CMK_VERSION = "2.5.0b1"
 
 Dim WMI, FSO, objStdout, SHO, items, objItem, prop, instVersion, registry
 Dim sources, instances, instance, instance_id, instance_name, instance_excluded, service_name
@@ -777,7 +777,7 @@ For Each instance_id In instances.Keys: Do ' Continue trick
        ' most likely shorter than the list of found backups. We track the DB
        ' for which we found a backup to execute the last backup section below.
        For Each record in databaseResponse.Rows
-           backup_database = Trim(record("database_name"))
+           backup_database = record("database_name")
            If dbNames.Exists(backup_database) Then
                backup_database = Replace(backup_database, " ", "_")
                found_db_backups.add LCase(backup_database), ""
@@ -879,7 +879,7 @@ For Each instance_id In instances.Keys: Do ' Continue trick
     Else
        For Each record in databaseResponse.Rows
             ' instance db_name status recovery auto_close auto_shrink
-            addOutput(instance_id & "|" & Replace(Trim(record("name")), " ", "_") & "|" & Trim(record("Status")) & _
+            addOutput(instance_id & "|" & Replace(record("name"), " ", "_") & "|" & Trim(record("Status")) & _
                       "|" & Trim(record("Recovery")) & "|" & Trim(record("auto_close")) & "|" & Trim(record("auto_shrink")) )
         Next
     End If

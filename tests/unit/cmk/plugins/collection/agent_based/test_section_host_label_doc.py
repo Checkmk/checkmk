@@ -8,17 +8,21 @@ Currently the helper below is just used to facilitate the testing.
 Someday it may be used to automatically extract the doc for all
 builtin host labels.
 """
-import itertools
+
 from collections import defaultdict
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from typing import DefaultDict, Final
 
-from tests.unit.conftest import FixRegister
+import cmk.ccc.version as cmk_version
 
 from cmk.utils import paths
 from cmk.utils.sectionname import SectionName
 
-import cmk.ccc.version as cmk_version
+from cmk.base.api.agent_based.plugin_classes import (
+    AgentBasedPlugins,
+    AgentSectionPlugin,
+    SNMPSectionPlugin,
+)
 
 CRE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/azure/resource_group",
@@ -62,6 +66,7 @@ CRE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
 
 CEE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/rmk/node_type",
+    "cmk/otel/metrics",  # CCE, actually.
 }
 
 
@@ -79,22 +84,22 @@ KNOWN_NON_BUILTIN_LABEL_PRODUCERS: Final = {
 
 
 def test_all_sections_have_host_labels_documented(
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     """Test that all sections have documented their host labels"""
-    sections = itertools.chain(
-        fix_register.agent_sections.values(),
-        fix_register.snmp_sections.values(),
-    )
+    sections: Iterable[AgentSectionPlugin | SNMPSectionPlugin] = [
+        *(s for s in agent_based_plugins.agent_sections.values()),
+        *(s for s in agent_based_plugins.snmp_sections.values()),
+    ]
 
     encountered_labels: DefaultDict[str, dict[SectionName, Sequence[str]]] = defaultdict(dict)
 
     for section in (
         s for s in sections if s.host_label_function.__name__ != "_noop_host_label_function"
     ):
-        assert (
-            section.host_label_function.__doc__
-        ), f"Missing doc-string for host label function of {section.name}"
+        assert section.host_label_function.__doc__, (
+            f"Missing doc-string for host label function of {section.name}"
+        )
 
         short_description, body = section.host_label_function.__doc__.split("\n", 1)
         text_sections = _TextSection(
@@ -103,9 +108,9 @@ def test_all_sections_have_host_labels_documented(
         ).subsections()
 
         label_paragraphs = [p for p in text_sections if p.header == "Labels"]
-        assert (
-            len(label_paragraphs) == 1
-        ), f"Missing 'Labels:' section in doc-string for host label function of {section.name}"
+        assert len(label_paragraphs) == 1, (
+            f"Missing 'Labels:' section in doc-string for host label function of {section.name}"
+        )
 
         if str(section.name) in KNOWN_NON_BUILTIN_LABEL_PRODUCERS:
             continue

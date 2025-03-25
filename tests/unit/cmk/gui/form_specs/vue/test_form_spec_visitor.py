@@ -2,14 +2,15 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Callable, Iterable
+from collections.abc import Callable, Iterable
+from typing import Any
 
 import pytest
 
 from cmk.utils.user import UserId
 
 from cmk.gui.form_specs.vue.form_spec_visitor import serialize_data_for_frontend
-from cmk.gui.form_specs.vue.type_defs import DataOrigin, DEFAULT_VALUE
+from cmk.gui.form_specs.vue.visitors._type_defs import DataOrigin, DEFAULT_VALUE
 from cmk.gui.session import UserContext
 
 from cmk.rulesets.v1 import Message, Title
@@ -75,15 +76,23 @@ def _build_value_validation_for_class_with_input_hint(
 ) -> Iterable[tuple[FormSpec, Any, bool]]:
     for good_value in good_values:
         yield class_type(), good_value, True
-        yield class_type(
-            prefill=DefaultValue(prefill_value),
-        ), good_value, True
+        yield (
+            class_type(
+                prefill=DefaultValue(prefill_value),
+            ),
+            good_value,
+            True,
+        )
 
     for bad_value in bad_values:
         yield class_type(), bad_value, False
-        yield class_type(
-            prefill=DefaultValue(prefill_value),
-        ), bad_value, False
+        yield (
+            class_type(
+                prefill=DefaultValue(prefill_value),
+            ),
+            bad_value,
+            False,
+        )
 
     yield class_type(), DEFAULT_VALUE, False
     yield class_type(prefill=DefaultValue(prefill_value)), DEFAULT_VALUE, True
@@ -134,12 +143,12 @@ def _build_value_validation_for_class_with_input_hint(
     ]
     + list(
         _build_value_validation_for_class_with_input_hint(
-            Integer, 5, [5, 10], [10.1, "10", "asdf", {}, None]
+            Integer, 5, [5, 10, 5, 10], [10.1, "5", "10", "5.1", "asdf", {}, None]
         )
     )
     + list(
         _build_value_validation_for_class_with_input_hint(
-            Float, 5.0, [5.0, 10.0, 5, 10], ["10.0", "10", "asdf", {}, None]
+            Float, 5.0, [5.0, 10.0, 5, 10], ["5", "10.0", "asdf", {}, None]
         )
     )
     + list(
@@ -198,7 +207,7 @@ def test_validation(
     )
     + list(
         _build_value_validation_for_class_with_input_hint(
-            Float, 5.0, [5.0, 10.0, 5, 10], ["10.0", "10", "asdf", {}, None]
+            Float, 5.0, [5.0, 10.0, 5, 10], ["10", "10.1", "10.1.1", "asdf", {}, None]
         )
     )
     + list(

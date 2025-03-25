@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
 import math
 import time
-from collections.abc import Callable, Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
@@ -20,24 +18,13 @@ from pydantic import BaseModel
 import cmk.utils.render
 
 from cmk.gui.config import active_config
-from cmk.gui.graphing._formatter import AutoPrecision
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
 
 from ._color import fade_color, parse_color, render_color
-from ._formatter import (
-    DecimalFormatter,
-    EngineeringScientificFormatter,
-    IECFormatter,
-    Label,
-    NotationFormatter,
-    SIFormatter,
-    StandardScientificFormatter,
-    TimeFormatter,
-)
-from ._from_api import get_unit_info
+from ._formatter import Label, NotationFormatter
+from ._from_api import RegisteredMetric
 from ._graph_specification import (
     FixedVerticalRange,
     GraphDataRange,
@@ -46,10 +33,9 @@ from ._graph_specification import (
     HorizontalRule,
     MinimalVerticalRange,
 )
-from ._legacy import UnitInfo
+from ._metric_operation import clean_time_series_point, LineType, RRDData
 from ._rrd_fetch import fetch_rrd_data_for_graph
-from ._timeseries import clean_time_series_point
-from ._type_defs import LineType, RRDData
+from ._time_series import TimeSeries, TimeSeriesValue
 from ._unit import user_specific_unit, UserSpecificUnit
 from ._utils import SizeEx
 
@@ -75,17 +61,21 @@ class _LayoutedCurveBase(TypedDict):
 
 
 class LayoutedCurveLine(_LayoutedCurveBase):
-    type: Literal["line"]
+    line_type: Literal["line", "-line"]
     points: Sequence[TimeSeriesValue]
 
 
 class LayoutedCurveArea(_LayoutedCurveBase):
-    # Handle area and stack.
-    type: Literal["area"]
+    line_type: Literal["area", "-area"]
     points: Sequence[tuple[TimeSeriesValue, TimeSeriesValue]]
 
 
-LayoutedCurve = LayoutedCurveLine | LayoutedCurveArea
+class LayoutedCurveStack(_LayoutedCurveBase):
+    line_type: Literal["stack"] | Literal["-stack"]
+    points: Sequence[tuple[TimeSeriesValue, TimeSeriesValue]]
+
+
+LayoutedCurve = LayoutedCurveLine | LayoutedCurveArea | LayoutedCurveStack
 
 
 class VerticalAxis(TypedDict):
@@ -120,15 +110,15 @@ class GraphArtwork(BaseModel):
     time_axis: TimeAxis
     mark_requested_end_time: bool
     # Displayed range
-    start_time: Timestamp
-    end_time: Timestamp
+    start_time: int
+    end_time: int
     step: Seconds
     explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None
     requested_vrange: tuple[float, float] | None
-    requested_start_time: Timestamp
-    requested_end_time: Timestamp
+    requested_start_time: int
+    requested_end_time: int
     requested_step: str | Seconds
-    pin_time: Timestamp | None
+    pin_time: int | None
     # Definition itself, for reproducing the graph
     definition: GraphRecipe
     # Display id to avoid mixups in our JS code when rendering the same graph multiple times in
@@ -156,30 +146,26 @@ def compute_graph_artwork(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
     size: tuple[int, int],
+    registered_metrics: Mapping[str, RegisteredMetric],
     *,
     graph_display_id: str = "",
 ) -> GraphArtwork:
-    unit_spec: UserSpecificUnit | UnitInfo
-    if graph_recipe.unit_spec:
-        unit_spec = user_specific_unit(
-            graph_recipe.unit_spec,
-            user,
-            active_config,
-        )
-        renderer: Callable[[float], str] = unit_spec.formatter.render
-    else:
-        unit_spec = get_unit_info(graph_recipe.unit)
-        renderer = unit_spec.render
+    unit_spec = user_specific_unit(
+        graph_recipe.unit_spec,
+        user,
+        active_config,
+    )
 
-    curves = list(compute_graph_artwork_curves(graph_recipe, graph_data_range))
+    curves = list(compute_graph_artwork_curves(graph_recipe, graph_data_range, registered_metrics))
 
     pin_time = _load_graph_pin()
-    _compute_scalars(renderer, curves, pin_time)
+    _compute_scalars(unit_spec.formatter.render, curves, pin_time)
     layouted_curves, mirrored = _layout_graph_curves(curves)  # do stacking, mirroring
     width, height = size
 
     try:
-        start_time, end_time, step = curves[0]["rrddata"].twindow
+        time_series = curves[0]["rrddata"]
+        start_time, end_time, step = time_series.start, time_series.end, time_series.step
     except IndexError:  # Empty graph
         (start_time, end_time), step = graph_data_range.time_range, 60
 
@@ -256,20 +242,6 @@ def _layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], 
     # For areas we put (lower, higher) as point into the list of points.
     # For lines simply the values. For mirrored values from is >= to.
 
-    def mirror_point(p: TimeSeriesValue) -> TimeSeriesValue:
-        if p is None:
-            return p
-        return -p
-
-    def _positive_line_type(line_type: LineType) -> Literal["line", "area", "stack"]:
-        if line_type == "-line":
-            return "line"
-        if line_type == "-area":
-            return "area"
-        if line_type == "-stack":
-            return "stack"
-        raise ValueError(line_type)
-
     layouted_curves = []
     for curve in curves:
         line_type = curve["line_type"]
@@ -280,36 +252,39 @@ def _layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], 
             continue
 
         if line_type[0] == "-":
-            raw_points = list(map(mirror_point, raw_points))
-            line_type = _positive_line_type(line_type)
+            raw_points = [None if p is None else -p for p in raw_points]
             mirrored = True
             stack_nr = 0
         else:
             stack_nr = 1
 
-        if line_type == "line":
-            # Handles lines, they cannot stack
-            layouted_curve: LayoutedCurve = LayoutedCurveLine(
-                type="line",
-                points=raw_points,
-                color=curve["color"],
-                title=curve["title"],
-                scalars=curve["scalars"],
-            )
-
-        else:
-            # Handle area and stack.
-            this_stack = stacks[stack_nr]
-            base = [] if this_stack is None or line_type == "area" else this_stack
-
-            layouted_curve = LayoutedCurveArea(
-                type="area",
-                points=_areastack(raw_points, base),
-                color=curve["color"],
-                title=curve["title"],
-                scalars=curve["scalars"],
-            )
-            stacks[stack_nr] = [x[stack_nr] for x in layouted_curve["points"]]
+        match line_type:
+            case "line" | "-line":
+                layouted_curve: LayoutedCurve = LayoutedCurveLine(
+                    line_type=line_type,
+                    points=raw_points,
+                    color=curve["color"],
+                    title=curve["title"],
+                    scalars=curve["scalars"],
+                )
+            case "area" | "-area":
+                layouted_curve = LayoutedCurveArea(
+                    line_type=line_type,
+                    points=_areastack(raw_points, []),
+                    color=curve["color"],
+                    title=curve["title"],
+                    scalars=curve["scalars"],
+                )
+                stacks[stack_nr] = [x[stack_nr] for x in layouted_curve["points"]]
+            case "stack" | "-stack":
+                layouted_curve = LayoutedCurveStack(
+                    line_type=line_type,
+                    points=_areastack(raw_points, stacks[stack_nr] or []),
+                    color=curve["color"],
+                    title=curve["title"],
+                    scalars=curve["scalars"],
+                )
+                stacks[stack_nr] = [x[stack_nr] for x in layouted_curve["points"]]
 
         layouted_curves.append(layouted_curve)
 
@@ -330,7 +305,7 @@ def _areastack(
 
     # Make sure that first entry in pair is not greater than second
     def fix_swap(
-        pp: tuple[TimeSeriesValue, TimeSeriesValue]
+        pp: tuple[TimeSeriesValue, TimeSeriesValue],
     ) -> tuple[TimeSeriesValue, TimeSeriesValue]:
         lower, upper = pp
         if lower is None and upper is None:
@@ -346,8 +321,9 @@ def _areastack(
 
 
 def _compute_graph_curves(
-    metrics: Sequence[GraphMetric],
+    graph_metrics: Sequence[GraphMetric],
     rrd_data: RRDData,
+    registered_metrics: Mapping[str, RegisteredMetric],
 ) -> Iterator[Curve]:
     def _parse_line_type(
         mirror_prefix: Literal["", "-"], ts_line_type: LineType | Literal["ref"]
@@ -363,27 +339,27 @@ def _compute_graph_curves(
                 return "ref"
         assert_never((mirror_prefix, ts_line_type))
 
-    for metric in metrics:
-        time_series = metric.operation.compute_time_series(rrd_data)
+    for graph_metric in graph_metrics:
+        time_series = graph_metric.operation.compute_time_series(rrd_data, registered_metrics)
         if not time_series:
             continue
 
         multi = len(time_series) > 1
-        mirror_prefix: Literal["", "-"] = "-" if metric.line_type.startswith("-") else ""
+        mirror_prefix: Literal["", "-"] = "-" if graph_metric.line_type.startswith("-") else ""
         for i, ts in enumerate(time_series):
-            title = metric.title
+            title = graph_metric.title
             if multi and ts.metadata.title:
                 title += " - " + ts.metadata.title
 
-            color = ts.metadata.color or metric.color
-            if i % 2 == 1 and metric.operation.fade_odd_color():
+            color = ts.metadata.color or graph_metric.color
+            if i % 2 == 1 and graph_metric.operation.fade_odd_color():
                 color = render_color(fade_color(parse_color(color), 0.3))
 
             yield Curve(
                 line_type=(
                     _parse_line_type(mirror_prefix, ts.metadata.line_type)
                     if multi and ts.metadata.line_type
-                    else metric.line_type
+                    else graph_metric.line_type
                 ),
                 color=color,
                 title=title,
@@ -394,11 +370,12 @@ def _compute_graph_curves(
 def compute_graph_artwork_curves(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
+    registered_metrics: Mapping[str, RegisteredMetric],
 ) -> list[Curve]:
     # Fetch all raw RRD data
-    rrd_data = fetch_rrd_data_for_graph(graph_recipe, graph_data_range)
+    rrd_data = fetch_rrd_data_for_graph(graph_recipe, graph_data_range, registered_metrics)
 
-    curves = list(_compute_graph_curves(graph_recipe.metrics, rrd_data))
+    curves = list(_compute_graph_curves(graph_recipe.metrics, rrd_data, registered_metrics))
 
     if graph_recipe.omit_zero_metrics:
         curves = [curve for curve in curves if any(curve["rrddata"])]
@@ -432,13 +409,85 @@ _TCurveType = TypeVar("_TCurveType", Curve, LayoutedCurve)
 
 
 def order_graph_curves_for_legend_and_mouse_hover(
-    graph_recipe: GraphRecipe, curves: Iterable[_TCurveType]
-) -> Iterator[_TCurveType]:
-    yield from (
-        reversed(list(curves))
-        if any(metric.line_type == "stack" for metric in graph_recipe.metrics)
-        else curves
+    curves: Sequence[_TCurveType],
+) -> list[_TCurveType]:
+    """
+    CMK-22181
+    Graph(
+        compound_lines = [
+            "compound-1",
+            "compound-2",
+        ],
+        simple_lines = [
+            "simple-1",
+            "simple-2",
+            Sum(["compound-1", "compound-2"]),
+        ],
     )
+    Legend:
+    - Sum of compound-1 & compound-2
+    - simple-2
+    - simple-1
+    - compound-2
+    - compound-1
+
+    Bidirectional(
+        lower = Graph(
+            compound_lines = [
+                "lower-compound-1",
+                "lower-compound-2",
+            ],
+            simple_lines = [
+                "lower-simple-1",
+                "lower-simple-2",
+                Sum(["lower-compound-1", "lower-compound-2"]),
+            ],
+        ),
+        upper = Graph(
+            compound_lines = [
+                "upper-compound-1",
+                "upper-compound-2",
+            ],
+            simple_lines = [
+                "upper-simple-1",
+                "upper-simple-2",
+                Sum(["upper-compound-1", "upper-compound-2"]),
+            ],
+        ),
+    )
+    Legend:
+    - Sum of upper-compound-1 & upper-compound-2
+    - upper-simple-2
+    - upper-simple-1
+    - upper-compound-2
+    - upper-compound-1
+    - lower-compound-1
+    - lower-compound-2
+    - lower-simple-1
+    - lower-simple-2
+    - Sum of lower-compound-1 & lower-compound-2
+    """
+    lines: list[_TCurveType] = []
+    areas: list[_TCurveType] = []
+    mirrored_lines: list[_TCurveType] = []
+    mirrored_areas: list[_TCurveType] = []
+    refs: list[_TCurveType] = []
+    for curve in curves:
+        match line_type := curve["line_type"]:
+            case "line":
+                target = lines
+            case "-line":
+                target = mirrored_lines
+            case "area" | "stack":
+                target = areas
+            case "-area" | "-stack":
+                target = mirrored_areas
+            case "ref":
+                target = refs
+            case _:
+                raise ValueError(line_type)
+        target.append(curve)
+    return lines[::-1] + areas[::-1] + mirrored_areas + mirrored_lines + refs
 
 
 # .
@@ -510,8 +559,7 @@ def _render_scalar_value(
 
 
 def _get_value_at_timestamp(pin_time: int, rrddata: TimeSeries) -> TimeSeriesValue:
-    start_time, _, step = rrddata.twindow
-    nth_value = (pin_time - start_time) // step
+    nth_value = (pin_time - rrddata.start) // rrddata.step
     if 0 <= nth_value < len(rrddata):
         return rrddata[nth_value]
     return None
@@ -528,35 +576,6 @@ def _get_value_at_timestamp(pin_time: int, rrddata: TimeSeries) -> TimeSeriesVal
 #   +----------------------------------------------------------------------+
 #   |  Computation of vertical axix, including labels and range            |
 #   '----------------------------------------------------------------------'
-
-
-def _make_formatter(
-    formatter_ident: Literal[
-        "Decimal", "SI", "IEC", "StandardScientific", "EngineeringScientific", "Time"
-    ],
-    symbol: str,
-) -> (
-    DecimalFormatter
-    | SIFormatter
-    | IECFormatter
-    | StandardScientificFormatter
-    | EngineeringScientificFormatter
-    | TimeFormatter
-):
-    precision = AutoPrecision(decimal_places=2)
-    match formatter_ident:
-        case "Decimal":
-            return DecimalFormatter(symbol, precision)
-        case "SI":
-            return SIFormatter(symbol, precision)
-        case "IEC":
-            return IECFormatter(symbol, precision)
-        case "StandardScientific":
-            return StandardScientificFormatter(symbol, precision)
-        case "EngineeringScientific":
-            return EngineeringScientificFormatter(symbol, precision)
-        case "Time":
-            return TimeFormatter(symbol, precision)
 
 
 def _compute_labels_from_api(
@@ -633,91 +652,6 @@ class _VAxisMinMax:
     label_range: tuple[float, float]
 
 
-def _render_legacy_labels(
-    height_ex: SizeEx,
-    v_axis_min_max: _VAxisMinMax,
-    unit_info: UnitInfo,
-    mirrored: bool,
-) -> tuple[Sequence[VerticalAxisLabel], int, str | None]:
-    # Guestimate a useful number of vertical labels
-    # max(2, ...)               -> show at least two labels
-    # height_ex - 2             -> add some overall spacing
-    # math.log(height_ex) * 1.6 -> spacing between labels, increase for higher graphs
-    num_v_labels = max(2, (height_ex - 2) / math.log(height_ex) * 1.6) if height_ex > 1 else 0
-
-    # The value range between single labels
-    label_distance_at_least = float(v_axis_min_max.distance) / max(num_v_labels, 1)
-
-    # The stepping of the labels is not always decimal, where
-    # we choose distances like 10, 20, 50. It can also be "binary", where
-    # we have 512, 1024, etc. or "time", where we have seconds, minutes,
-    # days
-    stepping = unit_info.stepping or "decimal"
-
-    if stepping == "integer":
-        label_distance_at_least = max(label_distance_at_least, 1)  # e.g. for unit type "count"
-
-    divide_by = 1.0
-
-    if stepping == "binary":
-        base = 16
-        steps: list[tuple[float, float]] = [
-            (2, 0.5),
-            (4, 1),
-            (8, 2),
-            (16, 4),
-        ]
-
-    elif stepping == "time":
-        if v_axis_min_max.label_range[1] > 3600 * 24:
-            divide_by = 86400.0
-            base = 10
-            steps = [(2, 0.5), (5, 1), (10, 2)]
-        elif v_axis_min_max.label_range[1] >= 10:
-            base = 60
-            steps = [(2, 0.5), (3, 0.5), (5, 1), (10, 2), (20, 5), (30, 5), (60, 10)]
-        else:  # ms
-            base = 10
-            steps = [(2, 0.5), (5, 1), (10, 2)]
-
-    elif stepping == "integer":
-        base = 10
-        steps = [(2, 0.5), (5, 1), (10, 2)]
-
-    else:  # "decimal"
-        base = 10
-        steps = [(2, 0.5), (2.5, 0.5), (5, 1), (10, 2)]
-
-    mantissa, exponent = cmk.utils.render._frexpb(label_distance_at_least / divide_by, base)
-
-    # We draw a label at either 1, 2, or 5 of the choosen
-    # exponent
-    for step, substep in steps:
-        if mantissa <= step:
-            mantissa = step
-            submantissa = substep
-            break
-
-    # Both are in value ranges, not coordinates or similar. These are calculated later
-    # by _create_vertical_axis_labels().
-    label_distance = mantissa * (base**exponent) * divide_by
-    sub_distance = submantissa * (base**exponent) * divide_by
-
-    # We need to round the position of the labels. Otherwise some
-    # strange things can happen due to internal precision limitation.
-    # Here we compute the number of decimal digits we need
-
-    # Adds "labels", "max_label_length" and updates "axis_label" in case
-    # of units which use a graph global unit
-    return _create_vertical_axis_labels(
-        v_axis_min_max.label_range,
-        unit_info,
-        label_distance,
-        sub_distance,
-        mirrored,
-    )
-
-
 # Compute the displayed vertical range and the labelling
 # and scale of the vertical axis.
 # If mirrored == True, then the graph uses the negative
@@ -726,7 +660,7 @@ def _render_legacy_labels(
 #
 # height -> Graph area height in ex
 def _compute_graph_v_axis(
-    unit_spec: UserSpecificUnit | UnitInfo,
+    unit_spec: UserSpecificUnit,
     explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None,
     graph_data_range: GraphDataRange,
     height_ex: SizeEx,
@@ -744,56 +678,28 @@ def _compute_graph_v_axis(
         mirrored,
         height_ex,
     )
-
-    if isinstance(unit_spec, UserSpecificUnit) or unit_spec.formatter_ident:
-        if isinstance(unit_spec, UserSpecificUnit):
-            formatter = unit_spec.formatter
-        elif unit_spec.formatter_ident:
-            formatter = _make_formatter(unit_spec.formatter_ident, unit_spec.symbol)
-
-        labels = _compute_labels_from_api(
-            formatter,
-            height_ex,
-            mirrored,
-            min_y=v_axis_min_max.label_range[0],
-            max_y=v_axis_min_max.label_range[1],
-        )
-        label_positions = [l.position for l in labels]
-        label_range = (
-            min([v_axis_min_max.label_range[0]] + label_positions),
-            max([v_axis_min_max.label_range[1]] + label_positions),
-        )
-        rendered_labels: Sequence[VerticalAxisLabel] = [
-            VerticalAxisLabel(position=label.position, text=label.text, line_width=2)
-            for label in labels
-        ]
-        max_label_length = max(len(l.text) for l in rendered_labels)
-        graph_unit = None
-    else:
-        rendered_labels, max_label_length, graph_unit = _render_legacy_labels(
-            height_ex,
-            v_axis_min_max,
-            unit_spec,
-            mirrored,
-        )
-        label_range = v_axis_min_max.label_range
-
-    v_axis = VerticalAxis(
+    labels = _compute_labels_from_api(
+        unit_spec.formatter,
+        height_ex,
+        mirrored,
+        min_y=v_axis_min_max.label_range[0],
+        max_y=v_axis_min_max.label_range[1],
+    )
+    label_positions = [l.position for l in labels]
+    label_range = (
+        min([v_axis_min_max.label_range[0]] + label_positions),
+        max([v_axis_min_max.label_range[1]] + label_positions),
+    )
+    rendered_labels = [
+        VerticalAxisLabel(position=label.position, text=label.text, line_width=2)
+        for label in labels
+    ]
+    return VerticalAxis(
         range=label_range,
         axis_label=None,
         labels=rendered_labels,
-        max_label_length=max_label_length,
+        max_label_length=max(len(l.text) for l in rendered_labels),
     )
-
-    if graph_unit is not None:
-        v_axis["axis_label"] = graph_unit
-
-    return v_axis
-
-
-def _apply_mirrored(min_value: float, max_value: float) -> tuple[float, float]:
-    abs_limit = max(abs(min_value), abs(max_value))
-    return -abs_limit, abs_limit
 
 
 def _compute_min_max(
@@ -871,7 +777,9 @@ def _compute_v_axis_min_max(
 
     # In case the graph is mirrored, the 0 line is always exactly in the middle
     if mirrored:
-        min_value, max_value = _apply_mirrored(min_value, max_value)
+        abs_limit = max(abs(min_value), abs(max_value))
+        min_value = -abs_limit
+        max_value = abs_limit
 
     # Make sure we have a non-zero range. This avoids math errors for
     # silly graphs.
@@ -898,55 +806,6 @@ def _compute_v_axis_min_max(
     return _VAxisMinMax(distance, (min_value, max_value))
 
 
-# Create labels for the necessary range
-def _create_vertical_axis_labels(
-    label_range: tuple[float, float],
-    unit_info: UnitInfo,
-    label_distance: float,
-    sub_distance: float,
-    mirrored: bool,
-) -> tuple[list[VerticalAxisLabel], int, str | None]:
-    min_value, max_value = label_range
-    # round_to is the precision (number of digits after the decimal point)
-    # that we round labels to.
-    round_to = max(0, 3 - math.trunc(math.log10(max(abs(min_value), abs(max_value)))))
-
-    frac, full = math.modf(min_value / sub_distance)
-    if min_value >= 0:
-        pos = full * sub_distance
-    else:
-        if frac != 0:
-            full -= 1.0
-        pos = full * sub_distance
-
-    # First determine where to put labels and store the label value
-    label_specs = []
-    while pos <= max_value:
-        pos = round(pos, round_to)
-
-        if pos >= min_value and (
-            label_spec := _label_spec(
-                position=pos,
-                label_distance=label_distance,
-                mirrored=mirrored,
-            )
-        ):
-            label_specs.append(label_spec)
-            if len(label_specs) > 1000:
-                break  # avoid memory exhaustion in case of error
-
-        # Make sure that we increase position at least that much that it
-        # will not fall back to its old value due to rounding! This once created
-        # a nice endless loop.
-        pos += max(sub_distance, 10**-round_to)
-
-    # Now render the single label values. When the unit has a function to calculate
-    # a graph global unit, use it. Otherwise add units to all labels individually.
-    if unit_info.graph_unit:
-        return _render_labels_with_graph_unit(label_specs, unit_info.graph_unit)
-    return _render_labels_with_individual_units(label_specs, unit_info)
-
-
 def _label_spec(
     *,
     position: float,
@@ -964,46 +823,8 @@ def _label_spec(
     return None
 
 
-def _render_labels_with_individual_units(
-    label_specs: Sequence[tuple[float, float, int]], unit_info: UnitInfo
-) -> tuple[list[VerticalAxisLabel], int, None]:
-    rendered_labels, max_label_length = render_labels(
-        (
-            label_spec[0],
-            _render_label_value(label_spec[1], render_func=unit_info.render),
-            label_spec[2],
-        )
-        for label_spec in label_specs
-    )
-    return rendered_labels, max_label_length, None
-
-
-def _render_labels_with_graph_unit(
-    label_specs: Sequence[tuple[float, float, int]],
-    graph_unit_func: Callable[[list[float]], tuple[str, list[str]]],
-) -> tuple[list[VerticalAxisLabel], int, str]:
-    graph_unit, scaled_labels = graph_unit_func([l[1] for l in label_specs if l[1] != 0])
-
-    rendered_labels, max_label_length = render_labels(
-        (
-            label_spec[0],
-            _render_label_value(0) if label_spec[1] == 0 else scaled_labels.pop(0),
-            label_spec[2],
-        )
-        for label_spec in label_specs
-    )
-    return rendered_labels, max_label_length, graph_unit
-
-
-def _render_label_value(
-    label_value: float,
-    render_func: Callable[[float], str] = str,
-) -> str:
-    return "0" if label_value == 0 else render_func(label_value)
-
-
 def render_labels(
-    label_specs: Iterable[tuple[float, str, int]]
+    label_specs: Iterable[tuple[float, str, int]],
 ) -> tuple[list[VerticalAxisLabel], int]:
     max_label_length = 0
     rendered_labels: list[VerticalAxisLabel] = []
@@ -1044,9 +865,7 @@ def _remove_useless_zeroes(label: str) -> str:
 #   '----------------------------------------------------------------------'
 
 
-def _compute_graph_t_axis(  # pylint: disable=too-many-branches
-    start_time: Timestamp, end_time: Timestamp, width: int, step: Seconds
-) -> TimeAxis:
+def _compute_graph_t_axis(start_time: int, end_time: int, width: int, step: Seconds) -> TimeAxis:
     # Depending on which time range is being shown we have different
     # steps of granularity
 
@@ -1070,10 +889,7 @@ def _compute_graph_t_axis(  # pylint: disable=too-many-branches
     if start_date == end_date:
         title_label = str(cmk.utils.render.date(start_time))
     else:
-        title_label = "{} \u2014 {}".format(
-            str(cmk.utils.render.date(start_time)),
-            str(cmk.utils.render.date(end_time)),
-        )
+        title_label = f"{str(cmk.utils.render.date(start_time))} \u2014 {str(cmk.utils.render.date(end_time))}"
 
     # TODO: Monatsname und Wochenname lokalisierbar machen
     if start_date == end_date:

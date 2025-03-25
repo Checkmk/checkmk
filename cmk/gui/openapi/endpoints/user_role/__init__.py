@@ -62,22 +62,25 @@ RW_PERMISSIONS = permissions.AllPerm(
 )
 
 
-def serialize_user_role(user_role: UserRole) -> DomainObject:
-    extns = {
+def _serialize_user_role_extensions(user_role: UserRole) -> dict[str, Any]:
+    extensions = {
         "alias": user_role.alias,
         "builtin": user_role.builtin,
         "permissions": get_role_permissions().get(user_role.name),
     }
     if not user_role.builtin:
-        extns["basedon"] = user_role.basedon
+        extensions["basedon"] = user_role.basedon
+    return extensions
 
+
+def serialize_user_role(user_role: UserRole) -> DomainObject:
     return constructors.domain_object(
         domain_type="user_role",
         identifier=user_role.name,
         title=user_role.alias,
-        extensions=extns,
+        extensions=_serialize_user_role_extensions(user_role),
         editable=True,
-        deletable=not (user_role.builtin),
+        deletable=not user_role.builtin,
     )
 
 

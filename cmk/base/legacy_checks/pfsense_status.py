@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import contains, SNMPTree, StringTable
+
+check_info = {}
 
 
 def inventory_pfsense_status(info):
@@ -31,6 +31,7 @@ def parse_pfsense_status(string_table: StringTable) -> StringTable:
 
 
 check_info["pfsense_status"] = LegacyCheckDefinition(
+    name="pfsense_status",
     parse_function=parse_pfsense_status,
     detect=contains(".1.3.6.1.2.1.1.1.0", "pfsense"),
     fetch=SNMPTree(

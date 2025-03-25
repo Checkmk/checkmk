@@ -77,7 +77,6 @@ def gzip_decoder(request: Request, request_schema: type[Schema] | None) -> Any:
 
 
 def decode(content_type: str, request: Request, request_schema: type[Schema] | None) -> Any:
-
     registered_decoders = {
         "application/json": json_decoder,
         "application/gzip": gzip_decoder,

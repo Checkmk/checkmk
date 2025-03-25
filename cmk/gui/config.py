@@ -15,6 +15,9 @@ from typing import Any, Final
 
 from livestatus import SiteConfiguration, SiteConfigurations
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc.site import omd_site, url_prefix
+
 import cmk.utils.tags
 from cmk.utils import paths
 
@@ -25,12 +28,10 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.config.base import CREConfig  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.type_defs import Key, RoleName
 
-import cmk.ccc.version as cmk_version
 from cmk import trace
-from cmk.ccc.site import omd_site, url_prefix
 
 if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
-    from cmk.gui.cee.plugins.config.cee import (  # pylint: disable=no-name-in-module,cmk-module-layer-violation
+    from cmk.gui.cee.plugins.config.cee import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
         CEEConfig,
     )
 else:
@@ -40,7 +41,7 @@ else:
 
 
 if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
-    from cmk.gui.cme.config import (  # pylint: disable=no-name-in-module,cmk-module-layer-violation
+    from cmk.gui.cme.config import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
         CMEConfig,
     )
 else:
@@ -64,7 +65,10 @@ tracer = trace.get_tracer()
 
 # hard coded in various permissions
 default_authorized_builtin_role_ids: Final[list[RoleName]] = ["user", "admin", "guest"]
-default_unauthorized_builtin_role_ids: Final[list[RoleName]] = ["agent_registration"]
+default_unauthorized_builtin_role_ids: Final[list[RoleName]] = [
+    "agent_registration",
+    "no_permissions",
+]
 builtin_role_ids: Final[list[RoleName]] = [
     *default_authorized_builtin_role_ids,
     *default_unauthorized_builtin_role_ids,
@@ -72,7 +76,7 @@ builtin_role_ids: Final[list[RoleName]] = [
 
 
 @dataclass
-class Config(CREConfig, CEEConfig, CMEConfig):
+class Config(CREConfig, CEEConfig, CMEConfig):  # type: ignore[misc, unused-ignore]
     """Holds the loaded configuration during GUI processing
 
     The loaded configuration is then accessible through `from cmk.gui.globals import config`.
@@ -130,7 +134,7 @@ def _determine_pysaml2_log_level(log_levels: Mapping[str, int]) -> Mapping[str, 
             return {"saml2": 50}
 
 
-@tracer.start_as_current_span("config.initialize")
+@tracer.instrument("config.initialize")
 def initialize() -> None:
     load_config()
     log_levels = {
@@ -283,18 +287,18 @@ def _get_default_config_from_module_plugins() -> dict[str, Any]:
 def _config_plugin_modules() -> list[ModuleType]:
     return [
         module
-        for name, module in sys.modules.items()
+        for name, module in list(sys.modules.items())
         if (
-            name.startswith("cmk.gui.plugins.config.")  #
-            or name.startswith("cmk.gui.cee.plugins.config.")  #
+            name.startswith("cmk.gui.plugins.config.")
+            or name.startswith("cmk.gui.cee.plugins.config.")
             or name.startswith("cmk.gui.cme.plugins.config.")
-        )  #
+        )
         and name
         not in (
-            "cmk.gui.plugins.config.base",  #
-            "cmk.gui.cee.plugins.config.cee",  #
+            "cmk.gui.plugins.config.base",
+            "cmk.gui.cee.plugins.config.cee",
             "cmk.gui.cme.plugins.config.cme",
-        )  #
+        )
         and module is not None
     ]
 

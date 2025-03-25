@@ -5,8 +5,7 @@
 
 PIDFILE=$OMD_ROOT/tmp/run/piggyback-hub.pid
 LOGFILE=$OMD_ROOT/var/log/piggyback-hub.log
-CONFDIR=$OMD_ROOT/etc/check_mk/piggyback_hub.d/wato
-DAEMON=$OMD_ROOT/bin/piggyback_hub
+DAEMON=$OMD_ROOT/bin/cmk-piggyback-hub
 PID=$(cat "$PIDFILE" 2>/dev/null)
 
 process_is_running() {
@@ -28,14 +27,9 @@ force_kill() {
     kill -9 "${PID}"
 }
 
-exit_successfully() {
-    printf "%s\n" "${1}"
-    exit 0
-}
-
-exit_failure() {
-    printf "%s\n" "${1}"
-    exit 1
+exit_with_code() {
+    printf "%s\n" "${2}"
+    exit "${1}"
 }
 
 contains_string() {
@@ -43,65 +37,59 @@ contains_string() {
 }
 
 distributed_piggyback_enabled() {
-    if [ -a "$CONFDIR/sitespecific.mk" ] && contains_string "$CONFDIR/sitespecific.mk" "piggyback_hub_enabled"; then
-        contains_string "$CONFDIR/sitespecific.mk" "piggyback_hub_enabled = True"
-        return $?
-
-    elif [ -a "$CONFDIR/global.mk" ] && contains_string "$CONFDIR/global.mk" "piggyback_hub_enabled"; then
-        contains_string "$CONFDIR/global.mk" "piggyback_hub_enabled = True"
-        return $?
-    fi
-
-    return 0
+    [ "${CONFIG_PIGGYBACK_HUB:?}" = "on" ]
 }
 
-if ! distributed_piggyback_enabled; then
-    exit 5
-fi
+distributed_piggyback_enabled || exit 5
 
 case "$1" in
 
     start)
         printf "Starting piggyback-hub..."
+
         if process_is_running; then
-            exit_successfully 'already running.'
+            exit_with_code 0 'already running.'
         fi
-        "$DAEMON" "$PIDFILE" "$LOGFILE"
-        exit_successfully 'OK'
+
+        if "$DAEMON" "$PIDFILE" "$LOGFILE" "$OMD_ROOT" "$OMD_SITE"; then
+            exit_with_code 0 'OK'
+        else
+            exit_with_code 1 'failed'
+        fi
         ;;
 
     stop)
-        echo -n "Stopping piggyback-hub..."
+        printf "Stopping piggyback-hub..."
 
         if [ -z "$PID" ]; then
-            exit_successfully 'not running'
+            exit_with_code 0 "not running"
         fi
 
         if ! process_is_running; then
             rm "$PIDFILE"
-            exit_successfully "not running (PID file orphaned)"
+            exit_with_code 0 "not running (PID file orphaned)"
         fi
 
         echo -n "killing $PID..."
 
         if ! kill "$PID" 2>/dev/null; then
             rm "$PIDFILE"
-            exit_successfully 'OK'
+            exit_with_code 0 "OK"
         fi
 
         # Signal could be sent
 
         # Patiently wait for the process to stop
         if await_process_stop 60; then
-            exit_successfully 'OK'
+            exit_with_code 0 "OK"
         fi
 
         # Insist on killing the process
         force_kill
         if await_process_stop 10; then
-            exit_successfully 'OK'
+            exit_with_code 0 "OK"
         fi
-        exit_failure 'failed'
+        exit_with_code 1 "failed"
         ;;
 
     restart | reload)
@@ -110,19 +98,20 @@ case "$1" in
         ;;
 
     status)
-        echo -n 'Checking status of piggyback-hub...'
+        printf 'Checking status of piggyback-hub...'
+
         if [ -z "$PID" ]; then
-            exit_failure 'not running (PID file missing)'
+            exit_with_code 1 "not running"
         fi
 
         if ! process_is_running; then
-            exit_failure 'not running (PID file orphaned)'
+            exit_with_code 1 "not running (PID file orphaned)"
         fi
 
-        exit_successfully 'running'
+        exit_with_code 0 "running"
         ;;
     *)
-        exit_failure "Usage: ${0} {start|stop|restart|reload|status}"
+        exit_with_code 1 "Usage: ${0} {start|stop|restart|reload|status}"
         ;;
 
 esac

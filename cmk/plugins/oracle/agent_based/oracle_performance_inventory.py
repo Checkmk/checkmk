@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import InventoryPlugin, InventoryResult, TableRow
-from cmk.plugins.lib.oracle import SectionPerformance
+from cmk.plugins.oracle.agent_based.liboracle import SectionPerformance
 
 
 def inventory_oracle_performance(section: SectionPerformance) -> InventoryResult:

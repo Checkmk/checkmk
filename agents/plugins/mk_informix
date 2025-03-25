@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.4.0b1"
+CMK_VERSION="2.5.0b1"
 
 # Informix
 # Make ENV-VARs avail for subshells
@@ -170,6 +170,7 @@ informix_tabextents() {
 }
 
 informix_dbspaces() {
+    # the default dbspace pagesize must be taken to calculate the used and free space
     echo "<<<informix_dbspaces>>>"
     echo "[[[$INFORMIXSERVER/$SERVERNUM]]]"
     sql "select
@@ -179,7 +180,7 @@ informix_dbspaces() {
             sd.flags,
             'CHUNK',
             sc.fname,
-            sc.pagesize,
+            (select sh_pagesize from sysmaster:sysshmvals) pagesize,
             sc.chksize,
             sc.nfree,
             sc.flags,

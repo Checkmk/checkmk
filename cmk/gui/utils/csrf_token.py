@@ -6,14 +6,14 @@ from dataclasses import dataclass
 
 from flask import session
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.log.security_event import log_security_event, SecurityEvent
 from cmk.utils.user import UserId
 
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInNobody
-
-from cmk.ccc.exceptions import MKGeneralException
 
 
 @dataclass
@@ -53,9 +53,9 @@ def check_csrf_token(token: str | None = None) -> None:
     if isinstance(session.user, LoggedInNobody):
         return
 
-    csrf_token = token or request.get_str_input("csrf_token")
+    csrf_token = token or request.get_str_input("_csrf_token")
     if csrf_token is None:
-        csrf_token = request.get_request().get("csrf_token")
+        csrf_token = request.get_request().get("_csrf_token")
 
     if csrf_token is None:
         log_security_event(

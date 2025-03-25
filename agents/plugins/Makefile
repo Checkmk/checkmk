@@ -1,8 +1,7 @@
 include ../../defines.make
 include ../../artifacts.make
 
-PIPENV := ../../scripts/run-pipenv
-THREE_TO_TWO := $(PIPENV) run 3to2
+THREE_TO_TWO := ../../scripts/run-uvenv 3to2
 
 # Not all plugins are working with Python 2 therefore these are skipped during 3to2 conversion
 PYTHON3_ONLY_PLUGINS := mk_sap.py

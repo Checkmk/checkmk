@@ -106,7 +106,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, IPv6Config, Secret
                 "name": "irrelevant",
                 "mode": (
                     "cert",
-                    {"cert_days": ("fixed", (10, 20))},
+                    {"cert_days": ("fixed", (10 * 3600 * 24, 20 * 3600 * 24))},
                 ),
                 "host": {
                     "address": ("direct", "www.test123.com"),
@@ -132,7 +132,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, IPv6Config, Secret
         (
             {
                 "name": "irrelevant",
-                "mode": ("cert", {"cert_days": ("fixed", (10, 20))}),
+                "mode": ("cert", {"cert_days": ("fixed", (10 * 3600 * 24, 20 * 3600 * 24))}),
                 "host": {
                     "address": ("proxy", {"address": "p.roxy"}),
                     "port": 42,
@@ -161,7 +161,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, IPv6Config, Secret
                 "name": "irrelevant",
                 "mode": (
                     "cert",
-                    {"cert_days": ("fixed", (10, 20))},
+                    {"cert_days": ("fixed", (10 * 3600 * 24, 20 * 3600 * 24))},
                 ),
                 "host": {
                     "address": ("proxy", {"address": "p.roxy"}),
@@ -191,7 +191,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, IPv6Config, Secret
                 "name": "irrelevant",
                 "mode": (
                     "cert",
-                    {"cert_days": ("fixed", (10, 20))},
+                    {"cert_days": ("fixed", (10 * 3600 * 24, 20 * 3600 * 24))},
                 ),
                 "host": {
                     "address": (
@@ -239,7 +239,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, IPv6Config, Secret
                     "address_family": "ipv6_enforced",
                     "virthost": "www.test123.com",
                 },
-                "mode": ("cert", {"cert_days": ("fixed", (10, 20))}),
+                "mode": ("cert", {"cert_days": ("fixed", (10 * 3600 * 24, 20 * 3600 * 24))}),
                 "disable_sni": True,
             },
             HostConfig(
@@ -352,6 +352,31 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, IPv6Config, Secret
             {
                 "name": "irrelevant",
                 "mode": ("url", {}),
+                "host": {
+                    "virthost": "$to.expand.virthost$",
+                    "address": ("direct", "$to.expand.address$"),
+                },
+            },
+            HostConfig(
+                name="hostname",
+                ipv4_config=IPv4Config(address="1.2.3.4"),
+                macros={
+                    "$to.expand.virthost$": "expanded.virthost",
+                    "$to.expand.address$": "expanded.address",
+                },
+            ),
+            [
+                "--sni",
+                "-I",
+                "expanded.address",
+                "-H",
+                "expanded.virthost",
+            ],
+        ),
+        (
+            {
+                "name": "irrelevant",
+                "mode": ("url", {}),
                 "host": {"virthost": "virtual.host"},
             },
             HostConfig(
@@ -427,7 +452,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, IPv6Config, Secret
                     "url",
                     {
                         "uri": "/product",
-                        "ssl": "1.2",
+                        "ssl": "ssl_1_2",
                         "response_time": ("fixed", (100.0 / 1000, 200.0 / 1000)),
                         "timeout": 10,
                         "user_agent": "user",
@@ -605,7 +630,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, IPv6Config, Secret
             [
                 "-u",
                 "/url.com",
-                "--ssl=ssl_1_1",
+                "--ssl=1.1",
                 "-w",
                 "100000.000000",
                 "-c",

@@ -10,12 +10,14 @@ import logging
 import os
 import time
 from collections.abc import Container, Sequence
-from typing import Any, Final
+from typing import Any, Final, Literal, NewType
 
 from livestatus import SiteConfigurations, SiteId
 
+from cmk.ccc import store
+from cmk.ccc.version import __version__, Edition, edition, Version
+
 import cmk.utils.paths
-from cmk.utils.local_secrets import AutomationUserSecret
 from cmk.utils.user import UserId
 
 from cmk.gui import hooks, permissions, site_config
@@ -23,15 +25,56 @@ from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import session_attr
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.i18n import _
+from cmk.gui.type_defs import UserSpec
 from cmk.gui.utils.permission_verification import BasePerm
 from cmk.gui.utils.roles import may_with_roles, roles_of_user
+from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import TransactionManager
-
-from cmk.ccc import store
-from cmk.ccc.version import __version__, edition, Edition, Version
 
 _logger = logging.getLogger(__name__)
 _ContactgroupName = str
+UserFileName = Literal[
+    "acknowledged_notifications",
+    "analyze_notification_display_options",
+    "automation_user",
+    "avoptions",
+    "bi_assumptions",
+    "bi_treestate",
+    "cached_profile",
+    "customer_settings",
+    "discovery_checkboxes",
+    "discovery_show_discovered_labels",
+    "discovery_show_plugin_names",
+    "favorites",
+    "foldertree",
+    "graph_pin",
+    "graph_size",
+    "help",
+    "notification_display_options",
+    "parameter_column",
+    "parentscan",
+    "reporting_timerange",
+    "sidebar",
+    "sidebar_sites",
+    "simulated_event",
+    "siteconfig",
+    "start_url",
+    "tableoptions",
+    "test_notification_display_options",
+    "transids",
+    "treestates",
+    "unittest",  # for testing only
+    "viewoptions",
+    "virtual_host_tree",
+    "wato_folders_show_labels",
+    "wato_folders_show_tags",
+]
+
+# a str consisting of `rowselection/` and a SelectionId (uuid)
+_RowSelection = NewType("_RowSelection", str)
+
+# a str that is supposed to be "path safe"
+UserGraphDataRangeFileName = NewType("UserGraphDataRangeFileName", str)
 
 
 class LoggedInUser:
@@ -52,9 +95,9 @@ class LoggedInUser:
 
         self.confdir = _confdir_for_user_id(self.id)
         self.role_ids = self._gather_roles(self.id)
-        self._attributes = self._load_attributes(self.id, self.role_ids)
-        self.alias = self._attributes.get("alias", self.id)
-        self.email = self._attributes.get("email", self.id)
+        self.attributes: UserSpec = self._load_attributes(self.id, self.role_ids)
+        self.alias = self.attributes.get("alias", self.id)
+        self.email = self.attributes.get("email", self.id)
 
         self.explicitly_given_permissions: Final = explicitly_given_permissions
         self._siteconf = self.load_file("siteconfig", {})
@@ -81,10 +124,10 @@ class LoggedInUser:
     def _gather_roles(self, user_id: UserId | None) -> list[str]:
         return roles_of_user(user_id)
 
-    def _load_attributes(self, user_id: UserId | None, role_ids: list[str]) -> Any:
+    def _load_attributes(self, user_id: UserId | None, role_ids: list[str]) -> UserSpec:
         if user_id is None:
             return {"roles": role_ids}
-        attributes = self.load_file("cached_profile", None)
+        attributes: UserSpec | None = self.load_file("cached_profile", None)
         if attributes is None:
             attributes = active_config.multisite_users.get(
                 user_id,
@@ -92,17 +135,18 @@ class LoggedInUser:
                     "roles": role_ids,
                 },
             )
+
         return attributes
 
     def get_attribute(self, key: str, deflt: Any = None) -> Any:
-        return self._attributes.get(key, deflt)
+        return self.attributes.get(key, deflt)
 
     def _set_attribute(self, key: str, value: Any) -> None:
-        self._attributes[key] = value
+        self.attributes[key] = value  # type: ignore[literal-required]
 
     def _unset_attribute(self, key: str) -> None:
         try:
-            del self._attributes[key]
+            del self.attributes[key]  # type: ignore[misc]
         except KeyError:
             pass
 
@@ -117,8 +161,13 @@ class LoggedInUser:
     def reset_language(self) -> None:
         self._unset_attribute("language")
 
-    def is_automation_user(self) -> bool:
-        return AutomationUserSecret(self.ident).exists()
+    @property
+    def automation_user(self) -> bool:
+        return self.load_file("automation_user", False)
+
+    @automation_user.setter
+    def automation_user(self, value: bool) -> None:
+        self.save_file("automation_user", value)
 
     @property
     def show_mode(self) -> str:
@@ -141,11 +190,11 @@ class LoggedInUser:
         return self.load_file("start_url", None)
 
     @property
-    def show_help(self) -> bool:
+    def inline_help_as_text(self) -> bool:
         return self.load_file("help", False)
 
-    @show_help.setter
-    def show_help(self, value: bool) -> None:
+    @inline_help_as_text.setter
+    def inline_help_as_text(self, value: bool) -> None:
         self.save_file("help", value)
 
     @property
@@ -278,14 +327,15 @@ class LoggedInUser:
     def save_tableoptions(self) -> None:
         self.save_file("tableoptions", self._tableoptions)
 
-    def get_rowselection(self, selection_id: str, identifier: str) -> list[str]:
-        vo = self.load_file("rowselection/%s" % selection_id, {})
+    def get_rowselection(self, selection_id: SelectionId, identifier: str) -> list[str]:
+        vo = self.load_file(_RowSelection(f"rowselection/{selection_id}"), {})
         return vo.get(identifier, [])
 
     def set_rowselection(
-        self, selection_id: str, identifier: str, rows: list[str], action: str
+        self, selection_id: SelectionId, identifier: str, rows: list[str], action: str
     ) -> None:
-        vo = self.load_file("rowselection/%s" % selection_id, {}, lock=True)
+        row_selection = _RowSelection(f"rowselection/{selection_id}")
+        vo = self.load_file(row_selection, {}, lock=True)
 
         if action == "set":
             vo[identifier] = rows
@@ -299,7 +349,7 @@ class LoggedInUser:
         elif action == "unset":
             del vo[identifier]
 
-        self.save_file("rowselection/%s" % selection_id, vo)
+        self.save_file(row_selection, vo)
 
     def cleanup_old_selections(self) -> None:
         # Delete all selection files older than the defined livetime.
@@ -359,18 +409,6 @@ class LoggedInUser:
             }
         )
 
-    def authorized_login_sites(self) -> SiteConfigurations:
-        login_site_ids = site_config.get_login_slave_sites()
-        return self.authorized_sites(
-            SiteConfigurations(
-                {
-                    site_id: s
-                    for site_id, s in site_config.enabled_sites().items()
-                    if site_id in login_site_ids  #
-                }
-            )
-        )
-
     def may(self, pname: str) -> bool:
         they_may = (pname in self.explicitly_given_permissions) or may_with_roles(
             self.role_ids, pname
@@ -396,7 +434,12 @@ class LoggedInUser:
                 % perm.title
             )
 
-    def load_file(self, name: str, deflt: Any, lock: bool = False) -> Any:
+    def load_file(
+        self,
+        name: UserFileName | _RowSelection | UserGraphDataRangeFileName,
+        deflt: Any,
+        lock: bool = False,
+    ) -> Any:
         if self.confdir is None:
             return deflt
 
@@ -410,7 +453,9 @@ class LoggedInUser:
         except (ValueError, SyntaxError):
             return deflt
 
-    def save_file(self, name: str, content: Any) -> None:
+    def save_file(
+        self, name: UserFileName | _RowSelection | UserGraphDataRangeFileName, content: object
+    ) -> None:
         assert self.id is not None
         save_user_file(name, content, self.id)
 
@@ -447,6 +492,20 @@ class LoggedInSuperUser(LoggedInUser):
 
     def save_file(self, name: str, content: Any) -> None:
         raise TypeError("The profiles of LoggedInSuperUser cannot be saved")
+
+
+class LoggedInRemoteSite(LoggedInUser):
+    def __init__(self, *, site_name: str) -> None:
+        super().__init__(None)
+        self.alias = f"Remote site {site_name}"
+        self.email = "?"
+        self.site_name = site_name
+
+    def _gather_roles(self, _user_id: UserId | None) -> list[str]:
+        return ["no_permissions"]
+
+    def save_file(self, name: str, content: Any) -> None:
+        raise TypeError("The profiles of LoggedInRemoteSite cannot be saved")
 
 
 class LoggedInNobody(LoggedInUser):

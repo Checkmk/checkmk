@@ -32,6 +32,6 @@ perfometer_docker_size = perfometers.Perfometer(
 graph_docker_df = graphs.Graph(
     name="docker_df",
     title=Title("Disk usage"),
-    compound_lines=["docker_size"],
-    simple_lines=["docker_reclaimable"],
+    compound_lines=["docker_reclaimable"],
+    simple_lines=["docker_size"],
 )

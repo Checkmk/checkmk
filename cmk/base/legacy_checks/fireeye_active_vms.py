@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib import fireeye
+
+check_info = {}
 
 
 def discover_fireeye_active_vms(string_table):
@@ -32,6 +32,7 @@ def parse_fireeye_active_vms(string_table: StringTable) -> StringTable:
 
 
 check_info["fireeye_active_vms"] = LegacyCheckDefinition(
+    name="fireeye_active_vms",
     parse_function=parse_fireeye_active_vms,
     detect=fireeye.DETECT,
     fetch=SNMPTree(

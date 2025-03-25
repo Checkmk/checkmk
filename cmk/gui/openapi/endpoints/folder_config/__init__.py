@@ -32,6 +32,7 @@ A folder_config object can have the following relations present in `links`:
 
 
 """
+
 from collections.abc import Mapping
 from typing import Any
 
@@ -49,7 +50,11 @@ from cmk.gui.openapi.endpoints.folder_config.request_schemas import (
     MoveFolder,
     UpdateFolder,
 )
-from cmk.gui.openapi.endpoints.host_config import serve_host_collection
+from cmk.gui.openapi.endpoints.host_config import (
+    EFFECTIVE_ATTRIBUTES,
+    host_fields_filter,
+    serve_host_collection,
+)
 from cmk.gui.openapi.endpoints.host_config.response_schemas import (
     FolderCollection,
     FolderSchema,
@@ -137,12 +142,20 @@ def create(params: Mapping[str, Any]) -> Response:
     path_params=[PATH_FOLDER_FIELD],
     response_schema=HostConfigCollection,
     permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
+    query_params=[EFFECTIVE_ATTRIBUTES],
 )
 def hosts_of_folder(params: Mapping[str, Any]) -> Response:
     """Show all hosts in a folder"""
     folder: Folder = params["folder"]
     folder.permissions.need_permission("read")
-    return serve_host_collection(folder.hosts().values())
+    return serve_host_collection(
+        folder.hosts().values(),
+        fields_filter=host_fields_filter(
+            is_collection=True,
+            include_links=False,
+            effective_attributes=params["effective_attributes"],
+        ),
+    )
 
 
 @Endpoint(
@@ -251,7 +264,7 @@ def bulk_update(params: Mapping[str, Any]) -> Response:
             detail=f"The following folders were not updated since some of the provided remove attributes did not exist: {', '.join(faulty_folders)}",
         )
 
-    return serve_json(_folders_collection(folders, False))
+    return serve_json(_folders_collection(folders))
 
 
 @Endpoint(
@@ -368,12 +381,13 @@ def list_folders(params: Mapping[str, Any]) -> Response:
     else:
         parent.permissions.need_permission("read")
         folders = parent.subfolders()
-    return serve_json(_folders_collection(folders, params["show_hosts"]))
+    return serve_json(_folders_collection(folders, show_hosts=params["show_hosts"]))
 
 
 def _folders_collection(
     folders: list[Folder],
-    show_hosts: bool,
+    *,
+    show_hosts: bool = False,
 ) -> CollectionObject:
     folders_ = []
     for folder in folders:

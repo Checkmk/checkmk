@@ -3,16 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import logging
+from typing import override
 
 import pytest
 from pytest_mock import MockerFixture
 
 from cmk.gui.plugins.wato.utils import ConfigVariableGroupUserInterface
 from cmk.gui.valuespec import TextInput, Transform
-from cmk.gui.watolib.config_domain_name import ConfigVariable, ConfigVariableRegistry
+from cmk.gui.watolib.config_domain_name import (
+    ConfigVariable,
+    ConfigVariableGroup,
+    ConfigVariableRegistry,
+)
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 
 from cmk.update_config.plugins.actions import global_settings
@@ -28,15 +32,19 @@ def test_update_global_config_transform_values(
     )
 
     class ConfigVariableKey(ConfigVariable):
-        def group(self) -> type[ConfigVariableGroupUserInterface]:
+        @override
+        def group(self) -> ConfigVariableGroup:
             return ConfigVariableGroupUserInterface
 
-        def domain(self) -> type[ConfigDomainGUI]:
-            return ConfigDomainGUI
+        @override
+        def domain(self) -> ConfigDomainGUI:
+            return ConfigDomainGUI()
 
+        @override
         def ident(self) -> str:
             return "key"
 
+        @override
         def valuespec(self) -> Transform:
             return Transform(TextInput(), forth=lambda x: "new" if x == "old" else x)
 

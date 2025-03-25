@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import equals, OIDEnd, SNMPTree, StringTable
+
+check_info = {}
 
 climaveneta_sensors = {
     1: "Room",
@@ -52,6 +53,7 @@ def parse_climaveneta_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["climaveneta_temp"] = LegacyCheckDefinition(
+    name="climaveneta_temp",
     parse_function=parse_climaveneta_temp,
     detect=equals(".1.3.6.1.2.1.1.1.0", "pCO Gateway"),
     fetch=SNMPTree(

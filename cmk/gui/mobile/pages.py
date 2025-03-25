@@ -2,6 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from cmk.ccc.site import omd_site
+
 import cmk.gui.utils
 import cmk.gui.view_utils
 from cmk.gui import visuals
@@ -42,8 +44,6 @@ from cmk.gui.views.page_show_view import (
 from cmk.gui.views.store import get_permitted_views
 from cmk.gui.visuals import get_only_sites_from_context, view_title
 from cmk.gui.visuals.filter import Filter
-
-from cmk.ccc.site import omd_site
 
 HeaderButton = tuple[str, str, str] | tuple[str, str, str, str]
 Items = list[tuple[str, str, str]]
@@ -237,7 +237,7 @@ class PageMobileIndex(Page):
     def ident(cls) -> str:
         return "mobile"
 
-    def page(self) -> PageResult:  # pylint: disable=useless-return
+    def page(self) -> PageResult:
         _page_index()
         return None
 
@@ -301,7 +301,7 @@ class PageMobileView(Page):
     def ident(cls) -> str:
         return "mobile_view"
 
-    def page(self) -> PageResult:  # pylint: disable=useless-return
+    def page(self) -> PageResult:
         _page_view()
         return None
 
@@ -347,7 +347,7 @@ def _page_view() -> None:
 
 
 class MobileViewRenderer(ABCViewRenderer):
-    def render(  # pylint: disable=too-many-branches
+    def render(
         self,
         rows: Rows,
         show_checkboxes: bool,
@@ -484,11 +484,10 @@ def _show_command_form(datasource: ABCDataSource, rows: Rows) -> None:
 
     one_shown = False
     html.open_div(**{"data-role": "collapsible-set"})
-    for command_class in command_registry.values():
-        command = command_class()
+    for command in command_registry.values():
         if what in command.tables and user.may(command.permission.name):
             html.open_div(class_=["command_group"], **{"data-role": "collapsible"})
-            html.h3(command.title)
+            html.h3(str(command.title))
             html.open_p()
 
             with html.form_context("actions"):

@@ -20,12 +20,6 @@ metric_kreclaimable = Metric(
     unit=UNIT_BYTES,
     color=Color.PURPLE,
 )
-metric_sreclaimable = Metric(
-    name="sreclaimable",
-    title=Title("Reclaimable slab"),
-    unit=UNIT_BYTES,
-    color=Color.PURPLE,
-)
 metric_sunreclaim = Metric(
     name="sunreclaim",
     title=Title("Unreclaimable slab"),

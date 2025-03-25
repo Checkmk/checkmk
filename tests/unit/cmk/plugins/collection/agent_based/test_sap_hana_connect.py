@@ -6,9 +6,9 @@
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
 from cmk.utils.sectionname import SectionName
+
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 
 from cmk.agent_based.v2 import StringTable
 
@@ -40,8 +40,12 @@ INFO_1 = [
 
 
 @pytest.mark.parametrize("info", [INFO_0, INFO_1])
-def test_sap_hana_connect_missing_serverdb(fix_register: FixRegister, info: StringTable) -> None:
-    parse_function = fix_register.agent_sections[SectionName("sap_hana_connect")].parse_function
+def test_sap_hana_connect_missing_serverdb(
+    agent_based_plugins: AgentBasedPlugins, info: StringTable
+) -> None:
+    parse_function = agent_based_plugins.agent_sections[
+        SectionName("sap_hana_connect")
+    ].parse_function
     assert parse_function(info) == {
         "YYY 11": {
             "cmk_state": 0,

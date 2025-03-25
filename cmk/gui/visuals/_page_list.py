@@ -57,7 +57,7 @@ from ._store import (
 # TODO: This code has been copied to a new live into htdocs/pagetypes.py
 # We need to convert all existing page types (views, dashboards, reports)
 # to pagetypes.py and then remove this function!
-def page_list(  # pylint: disable=too-many-branches
+def page_list(
     what: VisualTypeName,
     title: str,
     visuals: dict[tuple[UserId, VisualName], TVisual],

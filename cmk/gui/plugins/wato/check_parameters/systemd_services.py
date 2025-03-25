@@ -2,7 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Container, Literal
+from collections.abc import Container
+from typing import Literal
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -287,7 +288,7 @@ def _parameter_valuespec_systemd_units() -> Dictionary:
             (
                 "cpu_time",
                 Tuple(
-                    title=_("CPU Time upper levels"),
+                    title=_("CPU time upper levels"),
                     help=_("Define the upper levels for the consumed CPU time."),
                     elements=[
                         TimeSpan(title=_("Warning at"), display=MIN_SEC_MS),

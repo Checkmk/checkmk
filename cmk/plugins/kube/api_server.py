@@ -15,7 +15,20 @@ from dataclasses import dataclass
 
 import pydantic
 import requests
-from kubernetes import client  # type: ignore[import-untyped]
+from kubernetes.client import (  # type: ignore[attr-defined]
+    # https://github.com/kubernetes-client/python/issues/2033
+    ApiClient,
+    V1CronJob,
+    V1DaemonSet,
+    V1Deployment,
+    V1Job,
+    V1Namespace,
+    V1PersistentVolume,
+    V1PersistentVolumeClaim,
+    V1Pod,
+    V1ReplicaSet,
+    V1ResourceQuota,
+)
 
 from cmk.plugins.kube import query
 from cmk.plugins.kube.controllers import map_controllers, map_controllers_top_to_down
@@ -41,7 +54,7 @@ from cmk.plugins.kube.transform_json import (
 
 LOGGER = logging.getLogger()
 VERSION_MATCH_RE = re.compile(r"\s*v?([0-9]+(?:\.[0-9]+)*).*")
-SUPPORTED_VERSIONS = [(1, 24), (1, 25), (1, 26), (1, 27), (1, 28), (1, 29)]
+SUPPORTED_VERSIONS = [(1, 26), (1, 27), (1, 28), (1, 29), (1, 30), (1, 31)]
 # PM decision: LOWEST_FUNCTIONING_VERSION is incremented, if an issue is reported by a customer.
 # Otherwise, we try not change anything in monitoring (despite lack of support).
 LOWEST_FUNCTIONING_VERSION = (1, 21)
@@ -55,7 +68,7 @@ class FakeResponse:
 
 class Deserializer:
     def __init__(self):
-        self._api_client = client.ApiClient()
+        self._api_client = ApiClient()
 
     def run(self, response_type: str, data: requests.Response) -> typing.Any:
         return self._api_client.deserialize(FakeResponse(data), response_type)
@@ -74,24 +87,24 @@ class ClientAPI:
 
 
 class ClientBatchAPI(ClientAPI):
-    def query_raw_cron_jobs(self) -> Sequence[client.V1CronJob]:
+    def query_raw_cron_jobs(self) -> Sequence[V1CronJob]:
         request = requests.Request("GET", self._config.url("/apis/batch/v1/cronjobs"))
         response = send_request(self._config, self._client, request)
         return self._deserializer.run("V1CronJobList", response).items
 
-    def query_raw_jobs(self) -> Sequence[client.V1Job]:
+    def query_raw_jobs(self) -> Sequence[V1Job]:
         request = requests.Request("GET", self._config.url("/apis/batch/v1/jobs"))
         response = send_request(self._config, self._client, request)
         return self._deserializer.run("V1JobList", response).items
 
 
 class ClientCoreAPI(ClientAPI):
-    def query_raw_pods(self) -> Sequence[client.V1Pod]:
+    def query_raw_pods(self) -> Sequence[V1Pod]:
         request = requests.Request("GET", self._config.url("/api/v1/pods"))
         response = send_request(self._config, self._client, request)
         return self._deserializer.run("V1PodList", response).items
 
-    def query_raw_resource_quotas(self) -> Sequence[client.V1ResourceQuota]:
+    def query_raw_resource_quotas(self) -> Sequence[V1ResourceQuota]:
         request = requests.Request("GET", self._config.url("/api/v1/resourcequotas"))
         response = send_request(self._config, self._client, request)
         return self._deserializer.run("V1ResourceQuotaList", response).items
@@ -101,7 +114,7 @@ class ClientCoreAPI(ClientAPI):
         response = send_request(self._config, self._client, request)
         return self._deserializer.run("V1NamespaceList", response).items
 
-    def query_persistent_volume_claims(self) -> Sequence[client.V1PersistentVolumeClaim]:
+    def query_persistent_volume_claims(self) -> Sequence[V1PersistentVolumeClaim]:
         request = requests.Request("GET", self._config.url("/api/v1/persistentvolumeclaims"))
         response = send_request(self._config, self._client, request)
         return self._deserializer.run("V1PersistentVolumeClaimList", response).items
@@ -113,17 +126,17 @@ class ClientCoreAPI(ClientAPI):
 
 
 class ClientAppsAPI(ClientAPI):
-    def query_raw_deployments(self) -> Sequence[client.V1Deployment]:
+    def query_raw_deployments(self) -> Sequence[V1Deployment]:
         request = requests.Request("GET", self._config.url("/apis/apps/v1/deployments"))
         response = send_request(self._config, self._client, request)
         return self._deserializer.run("V1DeploymentList", response).items
 
-    def query_raw_daemon_sets(self) -> Sequence[client.V1DaemonSet]:
+    def query_raw_daemon_sets(self) -> Sequence[V1DaemonSet]:
         request = requests.Request("GET", self._config.url("/apis/apps/v1/daemonsets"))
         response = send_request(self._config, self._client, request)
         return self._deserializer.run("V1DaemonSetList", response).items
 
-    def query_raw_replica_sets(self) -> Sequence[client.V1ReplicaSet]:
+    def query_raw_replica_sets(self) -> Sequence[V1ReplicaSet]:
         request = requests.Request("GET", self._config.url("/apis/apps/v1/replicasets"))
         response = send_request(self._config, self._client, request)
         return self._deserializer.run("V1ReplicaSetList", response).items
@@ -143,11 +156,7 @@ def send_request(
     request: requests.Request,
 ) -> requests.Response:
     prepared_request = request_client.prepare_request(request)
-    return request_client.send(
-        prepared_request,
-        verify=client_config.verify_cert_api,
-        timeout=client_config.requests_timeout(),
-    )
+    return request_client.send(prepared_request, timeout=client_config.requests_timeout())
 
 
 class CoreAPI(RawAPI):
@@ -182,11 +191,18 @@ class CoreAPI(RawAPI):
         # https://kubernetes.io/docs/reference/using-api/health-checks/
         return api.APIHealth(ready=self._get_healthz("/readyz"), live=self._get_healthz("/livez"))
 
-    def query_kubelet_health(self, node_names: Sequence[str]) -> Mapping[str, api.HealthZ]:
-        return {
-            node_name: self._get_healthz(f"/api/v1/nodes/{node_name}/proxy/healthz")
-            for node_name in node_names
-        }
+    def query_kubelet_health(
+        self, node_names: Sequence[str]
+    ) -> Mapping[str, api.HealthZ | api.NodeConnectionError]:
+        node_to_health: dict[str, api.HealthZ | api.NodeConnectionError] = {}
+        for node_name in node_names:
+            try:
+                node_to_health[node_name] = self._get_healthz(
+                    f"/api/v1/nodes/{node_name}/proxy/healthz"
+                )
+            except requests.RequestException as e:
+                node_to_health[node_name] = api.NodeConnectionError(message=str(e))
+        return node_to_health
 
     def _get_healthz(self, resource_path: str) -> api.HealthZ:
         request = requests.Request("GET", self._config.url(resource_path))
@@ -229,13 +245,7 @@ def _extract_sequence_based_identifier(git_version: str) -> str | None:
 
     """
     version_match = VERSION_MATCH_RE.fullmatch(git_version)
-    if version_match is None:
-        LOGGER.error(
-            msg=f"Could not parse version string '{git_version}', using regex from kubectl "
-            f"'{VERSION_MATCH_RE.pattern}'."
-        )
-        return None
-    return version_match.group(1)
+    return None if version_match is None else version_match.group(1)
 
 
 def decompose_git_version(
@@ -248,6 +258,9 @@ def decompose_git_version(
     # https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/apimachinery/pkg/util/version/version.go
     identifier = _extract_sequence_based_identifier(git_version)
     if identifier is None:
+        LOGGER.error(
+            f"Could not parse version string '{git_version}', using regex from kubectl '{VERSION_MATCH_RE.pattern}'."
+        )
         return api.UnknownKubernetesVersion(git_version=git_version)
     # Unlike kubectl, we do not explicitly handle cases where a component is non-numeric, since
     # this is impossible based on the regex matching done by `_extract_sequence_based_identifier`
@@ -347,18 +360,18 @@ class APIData:
 
 @dataclass(frozen=True)
 class UnparsedAPIData:
-    raw_jobs: Sequence[client.V1Job]
-    raw_cron_jobs: Sequence[client.V1CronJob]
-    raw_pods: Sequence[client.V1Pod]
+    raw_jobs: Sequence[V1Job]
+    raw_cron_jobs: Sequence[V1CronJob]
+    raw_pods: Sequence[V1Pod]
     raw_nodes: JSONNodeList
-    raw_namespaces: Sequence[client.V1Namespace]
-    raw_resource_quotas: Sequence[client.V1ResourceQuota]
-    raw_persistent_volume_claims: Sequence[client.V1PersistentVolumeClaim]
-    raw_persistent_volumes: Sequence[client.V1PersistentVolume]
-    raw_deployments: Sequence[client.V1Deployment]
-    raw_daemonsets: Sequence[client.V1DaemonSet]
-    raw_replica_sets: Sequence[client.V1ReplicaSet]
-    node_to_kubelet_health: Mapping[str, api.HealthZ]
+    raw_namespaces: Sequence[V1Namespace]
+    raw_resource_quotas: Sequence[V1ResourceQuota]
+    raw_persistent_volume_claims: Sequence[V1PersistentVolumeClaim]
+    raw_persistent_volumes: Sequence[V1PersistentVolume]
+    raw_deployments: Sequence[V1Deployment]
+    raw_daemonsets: Sequence[V1DaemonSet]
+    raw_replica_sets: Sequence[V1ReplicaSet]
+    node_to_kubelet_health: Mapping[str, api.HealthZ | api.NodeConnectionError]
     api_health: api.APIHealth
     raw_statefulsets: JSONStatefulSetList
     raw_kubelet_open_metrics_dumps: Sequence[str]
@@ -396,18 +409,18 @@ def query_raw_api_data_v2(
 
 
 def parse_api_data(
-    raw_cron_jobs: Sequence[client.V1CronJob],
-    raw_pods: Sequence[client.V1Pod],
-    raw_jobs: Sequence[client.V1Job],
+    raw_cron_jobs: Sequence[V1CronJob],
+    raw_pods: Sequence[V1Pod],
+    raw_jobs: Sequence[V1Job],
     raw_nodes: JSONNodeList,
-    raw_namespaces: Sequence[client.V1Namespace],
-    raw_resource_quotas: Sequence[client.V1ResourceQuota],
-    raw_deployments: Sequence[client.V1Deployment],
-    raw_daemonsets: Sequence[client.V1DaemonSet],
+    raw_namespaces: Sequence[V1Namespace],
+    raw_resource_quotas: Sequence[V1ResourceQuota],
+    raw_deployments: Sequence[V1Deployment],
+    raw_daemonsets: Sequence[V1DaemonSet],
     raw_statefulsets: JSONStatefulSetList,
-    raw_persistent_volume_claims: Sequence[client.V1PersistentVolumeClaim],
-    raw_persistent_volumes: Sequence[client.V1PersistentVolume],
-    node_to_kubelet_health: Mapping[str, api.HealthZ],
+    raw_persistent_volume_claims: Sequence[V1PersistentVolumeClaim],
+    raw_persistent_volumes: Sequence[V1PersistentVolume],
+    node_to_kubelet_health: Mapping[str, api.HealthZ | api.NodeConnectionError],
     api_health: api.APIHealth,
     controller_to_pods: Mapping[str, Sequence[api.PodUID]],
     pod_to_controllers: Mapping[api.PodUID, Sequence[api.Controller]],

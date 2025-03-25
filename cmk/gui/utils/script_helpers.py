@@ -17,6 +17,10 @@ from flask import Flask
 from flask.ctx import RequestContext
 from werkzeug.test import create_environ
 
+from cmk.ccc.version import edition
+
+from cmk.utils import paths
+
 from cmk.gui.http import Response
 
 Environments = typing.Literal["production", "testing", "development"]
@@ -27,7 +31,8 @@ def session_wsgi_app(debug: bool = False, testing: bool = False) -> Flask:
     # TODO: Temporary hack. Can be removed once #12954 has been ported from 2.0.0
     from cmk.gui.wsgi.app import make_wsgi_app
 
-    return make_wsgi_app(debug=debug, testing=testing)
+    # For now always use the detected edition. At some point make this parameterized
+    return make_wsgi_app(edition(paths.omd_root), debug=debug, testing=testing)
 
 
 def make_request_context(app: Flask, environ: dict[str, Any] | None = None) -> RequestContext:

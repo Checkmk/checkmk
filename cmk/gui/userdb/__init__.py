@@ -24,10 +24,10 @@ from ._connections import (
     ConfigurableUserConnectionSpec,
     connection_choices,
     connections_by_type,
+    ContactGroupMappingSpec,
     CUSTOM_USER_ATTRIBUTE,
     DIR_SERVER_389,
     DISABLE_NOTIFICATIONS,
-    DisableNotificationsAttribute,
     Discover,
     Fixed,
     FORCE_AUTH_USER,
@@ -49,10 +49,13 @@ from ._connections import (
     NAV_HIDE_ICONS_TITLE,
     non_contact_attributes,
     OPEN_LDAP,
+    PrivateKeyPath,
+    PublicKeyPath,
     register_config_file,
     SAMLUserConnectionConfig,
     save_connection_config,
     save_snapshot_user_connection_config,
+    SerializedCertificateSpec,
     SHOW_MODE,
     START_URL,
     SyncAttribute,
@@ -69,11 +72,15 @@ from ._connector import (
     UserConnector,
     UserConnectorRegistry,
 )
-from ._custom_attributes import update_config_based_user_attributes
 from ._find_usage import find_timeperiod_usage_in_notification_rule
-from ._need_to_change_pw import is_automation_user, need_to_change_pw
+from ._need_to_change_pw import need_to_change_pw
 from ._on_failed_login import on_failed_login
-from ._roles import load_roles, register_userroles_config_file, UserRole, UserRolesConfigFile
+from ._roles import (
+    load_roles,
+    register_userroles_config_file,
+    UserRole,
+    UserRolesConfigFile,
+)
 from ._two_factor import (
     disable_two_factor_authentication,
     is_two_factor_backup_code_valid,
@@ -82,6 +89,7 @@ from ._two_factor import (
     make_two_factor_backup_codes,
 )
 from ._user_attribute import (
+    all_user_attributes,
     get_user_attributes,
     get_user_attributes_by_topic,
     user_attribute_registry,
@@ -122,6 +130,7 @@ __all__ = [
     "add_internal_attributes",
     "ActivePlugins",
     "ACTIVE_DIR",
+    "all_user_attributes",
     "builtin_connections",
     "check_credentials",
     "clear_user_connection_cache",
@@ -134,8 +143,8 @@ __all__ = [
     "custom_attr_path",
     "CheckCredentialsResult",
     "ConnectorType",
+    "ContactGroupMappingSpec",
     "CUSTOM_USER_ATTRIBUTE",
-    "DisableNotificationsAttribute",
     "Discover",
     "DIR_SERVER_389",
     "DISABLE_NOTIFICATIONS",
@@ -158,7 +167,6 @@ __all__ = [
     "GroupsToAttributes",
     "GroupsToContactGroups",
     "GroupsToSync",
-    "is_automation_user",
     "is_customer_user_allowed_to_login",
     "is_two_factor_backup_code_valid",
     "is_two_factor_login_enabled",
@@ -183,6 +191,8 @@ __all__ = [
     "new_user_template",
     "non_contact_attributes",
     "NAV_HIDE_ICONS_TITLE",
+    "PrivateKeyPath",
+    "PublicKeyPath",
     "on_failed_login",
     "OPEN_LDAP",
     "UserConnectionConfigFile",
@@ -196,6 +206,7 @@ __all__ = [
     "save_snapshot_user_connection_config",
     "save_two_factor_credentials",
     "save_users",
+    "SerializedCertificateSpec",
     "show_mode_choices",
     "SyncAttribute",
     "SHOW_MODE",
@@ -203,7 +214,6 @@ __all__ = [
     "SAMLUserConnectionConfig",
     "HtpasswdUserConnectionConfig",
     "TEMP_UNIT",
-    "update_config_based_user_attributes",
     "user_attribute_registry",
     "user_connector_registry",
     "user_exists",

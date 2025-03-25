@@ -14,7 +14,7 @@ process, e.g. an active check plug-in. It has been built to extend existing plug
 modificiations as possible. It is built out of two parts:
 
 a) Adding arguments for the command line. This job is done for active checks plugins by
-   `cmk.base.core_config._prepare_check_command` and `cmk.base.check_api.passwordstore_get_cmdline`.
+   `cmk.base.core_config._prepare_check_command` and `cmk.agent_based.legacy.v0_unstable.passwordstore_get_cmdline`.
 
 b) Extracting arguments from the command line. This is done by `password_store.replace_passwords`
    for python plugins and for C monitoring plug-ins by the patches which can be found at

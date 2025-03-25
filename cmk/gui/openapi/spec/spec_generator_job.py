@@ -4,15 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import subprocess
-from contextlib import suppress
 
 from cmk.gui import hooks
 from cmk.gui.background_job import (
     BackgroundJob,
-    BackgroundJobAlreadyRunning,
     BackgroundJobRegistry,
     BackgroundProcessInterface,
     InitialStatusArgs,
+    JobExecutor,
+    NoArgs,
+    simple_job_target,
 )
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -31,31 +32,44 @@ def register(job_registry: BackgroundJobRegistry) -> None:
 
 
 def trigger_spec_generation_in_background(user_id: str | None) -> None:
-    job = SpecGeneratorBackgroundJob()
-    with suppress(BackgroundJobAlreadyRunning):
-        job.start(
-            _generate_spec_in_background_job,
-            InitialStatusArgs(
-                title=SpecGeneratorBackgroundJob.gui_title(),
-                stoppable=False,
-                lock_wato=False,
-                user=user_id,
-            ),
-        )
+    SpecGeneratorBackgroundJob().start(
+        simple_job_target(_generate_spec_in_background_job),
+        InitialStatusArgs(
+            title=SpecGeneratorBackgroundJob.gui_title(),
+            stoppable=False,
+            lock_wato=False,
+            user=user_id,
+        ),
+    )
 
 
 class SpecGeneratorBackgroundJob(BackgroundJob):
     job_prefix = "spec_generator"
 
     @classmethod
+    def on_scheduler_start(cls, executor: JobExecutor) -> None:
+        """Generate the REST API specification on ui-job-scheduler startup"""
+        SpecGeneratorBackgroundJob(executor=executor).start(
+            simple_job_target(_generate_spec_in_background_job),
+            InitialStatusArgs(
+                title=SpecGeneratorBackgroundJob.gui_title(),
+                stoppable=False,
+                lock_wato=False,
+                user=None,
+            ),
+        )
+
+    @classmethod
     def gui_title(cls) -> str:
         return _("Generate REST API specification")
 
-    def __init__(self) -> None:
-        super().__init__(self.job_prefix)
+    def __init__(self, executor: JobExecutor | None = None) -> None:
+        super().__init__(self.job_prefix, executor=executor)
 
 
-def _generate_spec_in_background_job(job_interface: BackgroundProcessInterface) -> None:
+def _generate_spec_in_background_job(
+    job_interface: BackgroundProcessInterface, args: NoArgs
+) -> None:
     job_interface.send_progress_update(_("Generating REST API specification"))
     with subprocess.Popen(
         ["cmk-compute-api-spec"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding="utf-8"

@@ -5,6 +5,7 @@
 
 from contextlib import nullcontext as does_not_raise
 from typing import ContextManager, Literal, NamedTuple, TypeVar
+from unittest.mock import ANY
 
 import pytest
 
@@ -573,7 +574,11 @@ def test_migrate_to_upper_integer_levels_scaled_predictive_stdev() -> None:
     [
         pytest.param(
             ("password", "secret-password"),
-            ("cmk_postprocessed", "explicit_password", ("throwaway-id", "secret-password")),
+            (
+                "cmk_postprocessed",
+                "explicit_password",
+                (ANY, "secret-password"),
+            ),
             id="migrate explicit password",
         ),
         pytest.param(
@@ -623,8 +628,17 @@ def test_migrate_to_password(
         tuple[str, str],
     ],
 ) -> None:
-    assert migrate_to_password(old) == new
-    assert migrate_to_password(new) == new
+    migrated_password = migrate_to_password(old)
+    twice_migrated = migrate_to_password(migrated_password)
+    assert migrated_password == new
+    assert twice_migrated == new
+
+
+def test_multiple_migrations_do_not_reuse_id() -> None:
+    old = ("password", "secret-password")
+    first_migration = migrate_to_password(old)
+    second_migration = migrate_to_password(old)
+    assert first_migration[2][0] != second_migration[2][0]
 
 
 @pytest.mark.parametrize(

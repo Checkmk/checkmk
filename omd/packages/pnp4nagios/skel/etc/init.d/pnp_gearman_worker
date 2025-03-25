@@ -84,7 +84,7 @@ case "$1" in
         get_status > /dev/null;
         if [ $? = 0 ]; then
             echo "failed"
-            echo "$NAME already running"
+            echo "$NAME already running."
             exit 0;
         fi
 

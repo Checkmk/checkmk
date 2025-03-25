@@ -1,0 +1,13 @@
+title: Redfish storage controllers
+agents: agent_redfish
+catalog: hw/server/redfish
+license: GPLv2
+distribution: check_mk
+description:
+ This check provides information about storage controllers of Redfish compatible devices.
+
+discovery:
+ One service per storage controller that is not "UnavailableOffline" is created.
+
+item:
+ The ID of the storage controller.

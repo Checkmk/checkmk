@@ -3,74 +3,121 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import subprocess
+import logging
+import os
 from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
+from shutil import which
+from typing import Literal
 
 import pytest
+from opentelemetry.instrumentation.requests import RequestsInstrumentor
+
+from tests.composition.utils import get_cre_agent_path
 
 from tests.testlib.agent import (
     agent_controller_daemon,
-    clean_agent_controller,
+    bake_agents,
+    download_and_install_agent_package,
     install_agent_package,
 )
-from tests.testlib.site import get_site_factory, Site
-from tests.testlib.utils import is_containerized
-
-from tests.composition.constants import TEST_HOST_1
-from tests.composition.utils import bake_agent, get_cre_agent_path
+from tests.testlib.common.utils import is_containerized, run
+from tests.testlib.site import (
+    get_site_factory,
+    GlobalSettingsUpdate,
+    Site,
+    tracing_config_from_env,
+)
 
 site_factory = get_site_factory(prefix="comp_")
-central_site_ids: list[str] = []
+
+logger = logging.getLogger(__name__)
 
 
-# The scope of the site fixtures is "module" to avoid that changing the site properties in a module
-# may result in a test failing in another one. It also makes analyzing the job artifacts easier.
-@pytest.fixture(name="central_site", scope="module")
-def _central_site(request: pytest.FixtureRequest) -> Iterator[Site]:
-    site_number = len(central_site_ids)
-    central_site_ids.append(f"{site_number}_central")
-    yield from site_factory.get_test_site(
-        f"{site_number}_central",
+@pytest.fixture(scope="session", autouse=True)
+def instrument_requests() -> None:
+    RequestsInstrumentor().instrument()
+
+
+@pytest.fixture(name="central_site", scope="session")
+def _central_site(request: pytest.FixtureRequest, ensure_cron: None) -> Iterator[Site]:
+    with site_factory.get_test_site_ctx(
+        "central",
         description=request.node.name,
         auto_restart_httpd=True,
-    )
+        tracing_config=tracing_config_from_env(os.environ),
+        global_settings_updates=[
+            GlobalSettingsUpdate(
+                relative_path=Path("etc") / "check_mk" / "multisite.d" / "wato" / "global.mk",
+                update={
+                    "log_levels": {
+                        "cmk.web": 10,
+                        "cmk.web.agent_registration": 10,
+                        "cmk.web.background-job": 10,
+                    }
+                },
+            ),
+            GlobalSettingsUpdate(
+                relative_path=Path("etc") / "check_mk" / "conf.d" / "wato" / "global.mk",
+                update={"agent_bakery_logging": 10},
+            ),
+        ],
+    ) as central_site:
+        yield central_site
 
 
-@pytest.fixture(name="remote_site", scope="module")
-def _remote_site(central_site: Site, request: pytest.FixtureRequest) -> Iterator[Site]:
-    site_number = central_site.id.split("_")[1]
-    remote_site_generator = site_factory.get_test_site(
-        f"{site_number}_remote",
-        description=request.node.name,
+@pytest.fixture(name="remote_site", scope="session")
+def _remote_site(
+    central_site: Site, request: pytest.FixtureRequest, ensure_cron: None
+) -> Iterator[Site]:
+    yield from _make_connected_remote_site("remote", central_site, request.node.name)
+
+
+@pytest.fixture(name="remote_site_2", scope="session")
+def _remote_site_2(
+    central_site: Site, request: pytest.FixtureRequest, ensure_cron: None
+) -> Iterator[Site]:
+    yield from _make_connected_remote_site("remote2", central_site, request.node.name)
+
+
+def _make_connected_remote_site(
+    site_name: Literal["remote", "remote2"],  # just to track what we're doing...
+    central_site: Site,
+    site_description: str,
+) -> Iterator[Site]:
+    with site_factory.get_test_site_ctx(
+        site_name,
+        description=site_description,
         auto_restart_httpd=True,
-    )
-    try:  # make pylint happy
-        remote_site = next(remote_site_generator)
-    except StopIteration as e:
-        raise RuntimeError("I should have received a remote site...") from e
-    _add_remote_site_to_central_site(central_site=central_site, remote_site=remote_site)
-
-    try:
-        yield remote_site
-    finally:
-        # Teardown of remote site. We first stop the central site to avoid crashes due to
-        # interruptions in the remote-central communication caused by the teardown.
-        central_site.stop()
-        yield from remote_site_generator
+        tracing_config=tracing_config_from_env(os.environ),
+    ) as remote_site:
+        with _connection(central_site=central_site, remote_site=remote_site):
+            yield remote_site
 
 
-def _add_remote_site_to_central_site(
+@contextmanager
+def _connection(
     *,
     central_site: Site,
     remote_site: Site,
-) -> None:
-    central_site.openapi.create_site(
+) -> Iterator[None]:
+    if central_site.edition.is_managed_edition():
+        basic_settings = {
+            "alias": "Remote Testsite",
+            "site_id": remote_site.id,
+            "customer": "provider",
+        }
+    else:
+        basic_settings = {
+            "alias": "Remote Testsite",
+            "site_id": remote_site.id,
+        }
+
+    logger.info("Create site connection from '%s' to '%s'", central_site.id, remote_site.id)
+    central_site.openapi.sites.create(
         {
-            "basic_settings": {
-                "alias": "Remote Testsite",
-                "site_id": remote_site.id,
-            },
+            "basic_settings": basic_settings,
             "status_connection": {
                 "connection": {
                     "socket_type": "tcp",
@@ -97,57 +144,64 @@ def _add_remote_site_to_central_site(
                 "user_sync": {"sync_with_ldap_connections": "all"},
                 "replicate_event_console": True,
                 "replicate_extensions": True,
+                "message_broker_port": remote_site.message_broker_port,
             },
         }
     )
-    central_site.openapi.login_to_site(remote_site.id)
-    central_site.openapi.activate_changes_and_wait_for_completion(
+    logger.info("Establish site login '%s' to '%s'", central_site.id, remote_site.id)
+    central_site.openapi.sites.login(remote_site.id)
+    logger.info("Activating site setup changes")
+    central_site.openapi.changes.activate_and_wait_for_completion(
         # this seems to be necessary to avoid sporadic CI failures
         force_foreign_changes=True,
     )
+    try:
+        logger.info("Connection from '%s' to '%s' established", central_site.id, remote_site.id)
+        yield
+    finally:
+        if os.environ.get("CLEANUP", "1") == "1":
+            logger.info("Remove site connection from '%s' to '%s'", central_site.id, remote_site.id)
+            logger.info("Hosts left: %s", central_site.openapi.hosts.get_all_names())
+            logger.info("Delete remote site connection '%s'", remote_site.id)
+            central_site.openapi.sites.delete(remote_site.id)
+            logger.info("Activating site removal changes")
+            central_site.openapi.changes.activate_and_wait_for_completion(
+                # this seems to be necessary to avoid sporadic CI failures
+                force_foreign_changes=True,
+            )
 
 
-@pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="module")
-def _installed_agent_ctl_in_unknown_state(central_site: Site) -> Path:
-    return install_agent_package(_agent_package_path(central_site))
-
-
-def _agent_package_path(site: Site) -> Path:
-    if site.version.is_raw_edition():
-        return get_cre_agent_path(site)
-    return bake_agent(site, TEST_HOST_1)[1]
+@pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="function")
+def _installed_agent_ctl_in_unknown_state(central_site: Site, tmp_path: Path) -> Path:
+    if central_site.edition.is_raw_edition():
+        return install_agent_package(get_cre_agent_path(central_site))
+    bake_agents(central_site)
+    return download_and_install_agent_package(central_site, tmp_path)
 
 
 @pytest.fixture(name="agent_ctl", scope="function")
 def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
-    with (
-        clean_agent_controller(installed_agent_ctl_in_unknown_state),
-        agent_controller_daemon(installed_agent_ctl_in_unknown_state),
-    ):
+    with agent_controller_daemon(installed_agent_ctl_in_unknown_state):
         yield installed_agent_ctl_in_unknown_state
 
 
-@pytest.fixture(scope="session", autouse=True)
-def _run_cron() -> Iterator[None]:
+@pytest.fixture(scope="session", name="ensure_cron")
+def _run_cron() -> None:
     """Run cron for background jobs"""
     if not is_containerized():
-        yield
         return
-    for cron_cmd in (
-        cron_cmds := (
-            "cron",  # Ubuntu, Debian, ...
-            "crond",  # RHEL (CentOS, AlmaLinux)
-        )
-    ):
-        try:
-            subprocess.run(
-                [cron_cmd],
-                # calling cron spawns a background process, which fails if cron is already running
-                check=False,
-            )
-        except FileNotFoundError:
-            continue
-        break
-    else:
-        raise RuntimeError(f"No cron executable found (tried {','.join(cron_cmds)})")
-    yield
+
+    logger.info("Ensure system cron is running")
+
+    # cron  - Ubuntu, Debian, ...
+    # crond - RHEL (AlmaLinux)
+    cron_cmd = "crond" if Path("/etc/redhat-release").exists() else "cron"
+
+    if not which(cron_cmd):
+        raise RuntimeError(f"No cron executable found (tried {cron_cmd})")
+
+    if run(["pgrep", cron_cmd], check=False, capture_output=True).returncode == 0:
+        return
+
+    # Start cron daemon. It forks an will keep running in the background
+    run([cron_cmd], check=True, sudo=True)

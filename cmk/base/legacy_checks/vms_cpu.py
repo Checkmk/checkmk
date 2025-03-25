@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.check_legacy_includes.transforms import transform_cpu_iowait
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+
+check_info = {}
 
 # Example output from agent:
 # <<<vms_cpu>>>
@@ -65,6 +66,7 @@ def check_vms_cpu(_no_item, params, parsed):
 
 
 check_info["vms_cpu"] = LegacyCheckDefinition(
+    name="vms_cpu",
     parse_function=parse_vms_cpu,
     service_name="CPU utilization",
     discovery_function=inventory_vms_cpu,

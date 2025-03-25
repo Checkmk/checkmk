@@ -3,22 +3,31 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 """The rulespecs are the ruleset specifications registered to Setup."""
+
 import abc
 import re
+import sys
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import Any, Literal, NamedTuple
+
+import cmk.ccc.plugin_registry
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.version import Edition, edition, mark_edition_only
 
 from cmk.utils import paths
 from cmk.utils.rulesets.definition import is_from_ruleset_group, RuleGroup, RuleGroupType
 
+from cmk.gui.form_specs.converter import Tuple as FSTuple
+from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
+from cmk.gui.form_specs.private.time_specific import TimeSpecific
 from cmk.gui.global_config import get_global_config
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.log import logger
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import (
@@ -46,16 +55,19 @@ from cmk.gui.valuespec import (
     ValueSpecValidateFunc,
 )
 
-import cmk.ccc.plugin_registry
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.version import Edition, edition, mark_edition_only
+from cmk.rulesets.v1 import Help, Label, Title
+from cmk.rulesets.v1.form_specs import DefaultValue, FormSpec, SingleChoice, SingleChoiceElement
+from cmk.rulesets.v1.form_specs import FixedValue as FSFixedValue
 
 from .check_mk_automations import get_check_information_cached
 from .main_menu import ABCMainModule, MainModuleRegistry
-from .search import ABCMatchItemGenerator, match_item_generator_registry, MatchItem, MatchItems
+from .search import ABCMatchItemGenerator, MatchItem, MatchItems
 from .timeperiods import TimeperiodSelection
 
 MatchType = Literal["first", "all", "list", "dict", "varies"]
+
+
+_LOCAL_ROOT = str(paths.local_root)  # `Path`s are slow.
 
 
 class AllowAll:
@@ -257,7 +269,7 @@ def get_rulegroup(group_name):
         group_class = _get_legacy_rulespec_group_class(group_name, group_title=None, help_text=None)
         rulespec_group_registry.register(group_class)
     # Pylint does not detect the subclassing in LegacyRulespecSubGroup correctly. Disable the check here :(
-    return group_class()  # pylint: disable=abstract-class-instantiated
+    return group_class()
 
 
 def _get_legacy_rulespec_group_class(group_name, group_title, help_text):
@@ -302,6 +314,15 @@ def _validate_function_args(arg_infos: list[tuple[Any, bool, bool]], hint: str) 
             )
 
 
+class FormSpecDefinition(NamedTuple):
+    value: Callable[[], FormSpec]
+    item: Callable[[], FormSpec] | None
+
+
+class FormSpecNotImplementedError(Exception):
+    pass
+
+
 class Rulespec(abc.ABC):
     NO_FACTORY_DEFAULT: list = []
     # This option has the same effect as `NO_FACTORY_DEFAULT`. It's often used in MKPs.
@@ -323,12 +344,14 @@ class Rulespec(abc.ABC):
         item_help: Callable[[], str] | None,
         is_optional: bool,
         is_deprecated: bool,
+        deprecation_planned: bool,
         is_cloud_and_managed_edition_only: bool,
         is_for_services: bool,
         is_binary_ruleset: bool,  # unused
         factory_default: Any,
         help_func: Callable[[], str] | None,
         doc_references: dict[DocReference, str] | None,
+        form_spec_definition: FormSpecDefinition | None = None,
     ) -> None:
         super().__init__()
 
@@ -345,10 +368,12 @@ class Rulespec(abc.ABC):
             (item_help, True, True),
             (is_optional, False, False),
             (is_deprecated, False, False),
+            (deprecation_planned, False, False),
             (is_for_services, False, False),
             (is_binary_ruleset, False, False),
             (factory_default, False, True),
             (help_func, True, True),
+            (form_spec_definition, False, True),
         ]
         _validate_function_args(arg_infos, name)
 
@@ -363,12 +388,14 @@ class Rulespec(abc.ABC):
         self._item_help = item_help
         self._is_optional = is_optional
         self._is_deprecated = is_deprecated
+        self._deprecation_planned = deprecation_planned
         self._is_cloud_and_managed_edition_only = is_cloud_and_managed_edition_only
         self._is_binary_ruleset = is_binary_ruleset
         self._is_for_services = is_for_services
         self._factory_default = factory_default
         self._help = help_func
         self._doc_references = doc_references
+        self._form_spec_definition = form_spec_definition
 
     @property
     def name(self) -> str:
@@ -381,6 +408,20 @@ class Rulespec(abc.ABC):
     @property
     def valuespec(self) -> ValueSpec:
         return self._valuespec()
+
+    @property
+    def form_spec(self) -> FormSpec:
+        if self._form_spec_definition is None:
+            raise FormSpecNotImplementedError()
+        return self._form_spec_definition.value()
+
+    @property
+    def item_form_spec(self) -> FormSpec | None:
+        if self._form_spec_definition is None:
+            raise FormSpecNotImplementedError()
+        if self._form_spec_definition.item is None:
+            return None
+        return self._form_spec_definition.item()
 
     @property
     def title(self) -> str | None:
@@ -409,7 +450,7 @@ class Rulespec(abc.ABC):
         return self._is_binary_ruleset
 
     @property
-    def item_type(self) -> str | None:
+    def item_type(self) -> Literal["service", "item"] | None:
         return self._item_type
 
     @property
@@ -482,6 +523,10 @@ class Rulespec(abc.ABC):
         return self._is_deprecated
 
     @property
+    def deprecation_planned(self) -> bool:
+        return self._deprecation_planned
+
+    @property
     def is_cloud_and_managed_edition_only(self) -> bool:
         return self._is_cloud_and_managed_edition_only
 
@@ -495,7 +540,7 @@ class HostRulespec(Rulespec):
     """Base class for all rulespecs managing host rule sets with values"""
 
     # Required because of Rulespec.NO_FACTORY_DEFAULT
-    def __init__(  # pylint: disable=dangerous-default-value
+    def __init__(
         self,
         name: str,
         group: type[Any],
@@ -504,11 +549,13 @@ class HostRulespec(Rulespec):
         match_type: MatchType = "first",
         is_optional: bool = False,
         is_deprecated: bool = False,
+        deprecation_planned: bool = False,
         is_binary_ruleset: bool = False,
         is_cloud_and_managed_edition_only: bool = False,
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         help_func: Callable[[], str] | None = None,
         doc_references: dict[DocReference, str] | None = None,
+        form_spec_definition: FormSpecDefinition | None = None,
     ) -> None:
         super().__init__(
             name=name,
@@ -518,11 +565,13 @@ class HostRulespec(Rulespec):
             match_type=match_type,
             is_optional=is_optional,
             is_deprecated=is_deprecated,
+            deprecation_planned=deprecation_planned,
             is_cloud_and_managed_edition_only=is_cloud_and_managed_edition_only,
             is_binary_ruleset=is_binary_ruleset,
             factory_default=factory_default,
             help_func=help_func,
             doc_references=doc_references,
+            form_spec_definition=None if form_spec_definition is None else form_spec_definition,
             # Excplicit set
             is_for_services=False,
             item_type=None,
@@ -536,7 +585,7 @@ class ServiceRulespec(Rulespec):
     """Base class for all rulespecs managing service rule sets with values"""
 
     # Required because of Rulespec.NO_FACTORY_DEFAULT
-    def __init__(  # pylint: disable=dangerous-default-value
+    def __init__(
         self,
         *,
         name: str,
@@ -550,11 +599,13 @@ class ServiceRulespec(Rulespec):
         item_help: Callable[[], str] | None = None,
         is_optional: bool = False,
         is_deprecated: bool = False,
+        deprecation_planned: bool = False,
         is_cloud_and_managed_edition_only: bool = False,
         is_binary_ruleset: bool = False,
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         help_func: Callable[[], str] | None = None,
         doc_references: dict[DocReference, str] | None = None,
+        form_spec_definition: FormSpecDefinition | None = None,
     ) -> None:
         super().__init__(
             name=name,
@@ -569,10 +620,12 @@ class ServiceRulespec(Rulespec):
             item_help=item_help,
             is_optional=is_optional,
             is_deprecated=is_deprecated,
+            deprecation_planned=deprecation_planned,
             is_cloud_and_managed_edition_only=is_cloud_and_managed_edition_only,
             factory_default=factory_default,
             help_func=help_func,
             doc_references=doc_references,
+            form_spec_definition=form_spec_definition,
             # Excplicit set
             is_for_services=True,
         )
@@ -580,7 +633,7 @@ class ServiceRulespec(Rulespec):
 
 class BinaryHostRulespec(HostRulespec):
     # Required because of Rulespec.NO_FACTORY_DEFAULT
-    def __init__(  # pylint: disable=dangerous-default-value
+    def __init__(
         self,
         name: str,
         group: type[RulespecBaseGroup],
@@ -605,6 +658,7 @@ class BinaryHostRulespec(HostRulespec):
             # Explicit set
             is_binary_ruleset=True,
             valuespec=self._binary_host_valuespec,
+            form_spec_definition=FormSpecDefinition(self._binary_host_form_spec, None),
         )
 
     def _binary_host_valuespec(self) -> ValueSpec:
@@ -616,10 +670,23 @@ class BinaryHostRulespec(HostRulespec):
             default_value=True,
         )
 
+    def _binary_host_form_spec(self) -> SingleChoiceExtended:
+        return SingleChoiceExtended[bool](
+            elements=[
+                SingleChoiceElementExtended[bool](
+                    name=True, title=Title("Positive match (Add matching hosts to the set)")
+                ),
+                SingleChoiceElementExtended[bool](
+                    name=False, title=Title("Negative match (Exclude matching hosts from the set)")
+                ),
+            ],
+            prefill=DefaultValue(True),
+        )
+
 
 class BinaryServiceRulespec(ServiceRulespec):
     # Required because of Rulespec.NO_FACTORY_DEFAULT
-    def __init__(  # pylint: disable=dangerous-default-value
+    def __init__(
         self,
         name: str,
         group: type[RulespecBaseGroup],
@@ -652,6 +719,7 @@ class BinaryServiceRulespec(ServiceRulespec):
             # Explicit set
             is_binary_ruleset=True,
             valuespec=self._binary_service_valuespec,
+            form_spec_definition=FormSpecDefinition(self._binary_service_form_spec, None),
         )
 
     def _binary_service_valuespec(self) -> ValueSpec:
@@ -661,6 +729,20 @@ class BinaryServiceRulespec(ServiceRulespec):
                 (False, _("Negative match (Exclude matching services from the set)")),
             ],
             default_value=True,
+        )
+
+    def _binary_service_form_spec(self) -> SingleChoiceExtended:
+        return SingleChoiceExtended[bool](
+            elements=[
+                SingleChoiceElementExtended[bool](
+                    name=True, title=Title("Positive match (Add services hosts to the set)")
+                ),
+                SingleChoiceElementExtended[bool](
+                    name=False,
+                    title=Title("Negative match (Exclude matching services from the set)"),
+                ),
+            ],
+            prefill=DefaultValue(True),
         )
 
 
@@ -673,6 +755,7 @@ def _get_manual_check_parameter_rulespec_instance(
     is_optional: bool = False,
     is_deprecated: bool = False,
     is_cloud_and_managed_edition_only: bool = False,
+    form_spec_definition: FormSpecDefinition | None = None,
 ) -> "ManualCheckParameterRulespec":
     # There may be no RulespecGroup declaration for the static checks.
     # Create some based on the regular check groups (which should have a definition)
@@ -698,6 +781,7 @@ def _get_manual_check_parameter_rulespec_instance(
         is_optional=is_optional,
         is_deprecated=is_deprecated,
         is_cloud_and_managed_edition_only=is_cloud_and_managed_edition_only,
+        form_spec_definition=form_spec_definition,
     )
 
 
@@ -728,7 +812,7 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
     checks."""
 
     # Required because of Rulespec.NO_FACTORY_DEFAULT
-    def __init__(  # pylint: disable=dangerous-default-value
+    def __init__(
         self,
         *,
         check_group_name: str,
@@ -743,6 +827,7 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
         is_cloud_and_managed_edition_only: bool = False,
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         create_manual_check: bool = True,
+        form_spec_definition: FormSpecDefinition | None = None,
     ) -> None:
         # Mandatory keys
         self._check_group_name = check_group_name
@@ -753,6 +838,7 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
             # (arg, is_callable, none_allowed)
             (check_group_name, False, False),
             (parameter_valuespec, True, False),
+            (form_spec_definition, False, True),
         ]
         _validate_function_args(arg_infos, name)
 
@@ -769,6 +855,12 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
             is_binary_ruleset=False,
             match_type=match_type or "first",
             valuespec=self._rulespec_valuespec,
+            form_spec_definition=None
+            if form_spec_definition is None
+            else FormSpecDefinition(
+                lambda: _wrap_form_spec_in_timeperiod_form_spec(form_spec_definition.value()),
+                form_spec_definition.item,
+            ),
         )
 
         self.manual_check_parameter_rulespec_instance = None
@@ -782,6 +874,7 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
                     item_spec=item_spec,
                     is_optional=is_optional,
                     is_deprecated=is_deprecated,
+                    form_spec_definition=form_spec_definition,
                 )
             )
 
@@ -801,7 +894,7 @@ class CheckParameterRulespecWithoutItem(HostRulespec):
     checks."""
 
     # Required because of Rulespec.NO_FACTORY_DEFAULT
-    def __init__(  # pylint: disable=dangerous-default-value
+    def __init__(
         self,
         *,
         check_group_name: str,
@@ -814,6 +907,7 @@ class CheckParameterRulespecWithoutItem(HostRulespec):
         is_cloud_and_managed_edition_only: bool = False,
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         create_manual_check: bool = True,
+        form_spec_definition: FormSpecDefinition | None = None,
     ):
         self._check_group_name = check_group_name
         name = "checkgroup_parameters:%s" % self._check_group_name
@@ -837,6 +931,11 @@ class CheckParameterRulespecWithoutItem(HostRulespec):
             is_binary_ruleset=False,
             match_type=match_type or "first",
             valuespec=self._rulespec_valuespec,
+            form_spec_definition=None
+            if form_spec_definition is None
+            else FormSpecDefinition(
+                lambda: _wrap_form_spec_in_timeperiod_form_spec(form_spec_definition.value()), None
+            ),
         )
 
         self.manual_check_parameter_rulespec_instance = None
@@ -849,6 +948,7 @@ class CheckParameterRulespecWithoutItem(HostRulespec):
                     parameter_valuespec=parameter_valuespec,
                     is_optional=is_optional,
                     is_deprecated=is_deprecated,
+                    form_spec_definition=form_spec_definition,
                 )
             )
 
@@ -872,13 +972,25 @@ def _wrap_valuespec_in_timeperiod_valuespec(valuespec: ValueSpec) -> ValueSpec:
     return TimeperiodValuespec(valuespec)
 
 
+def _wrap_form_spec_in_timeperiod_form_spec(form_spec: FormSpec) -> TimeSpecific:
+    """Enclose the parameter form_spec with a TimeSpecific form spec.
+    The given form_spec will be transformed to a list of form specs,
+    whereas each element can be set to a specific timeperiod.
+    """
+    if isinstance(form_spec, TimeSpecific):
+        # Legacy check parameters registered through register_check_parameters() already
+        # have their form_spec wrapped in TimeSpecific.
+        return form_spec
+    return TimeSpecific(parameter_form=form_spec)
+
+
 class ManualCheckParameterRulespec(HostRulespec):
     """Base class for all rulespecs managing manually configured checks
 
     These have to be named static_checks:<name-of-checkgroup>"""
 
     # Required because of Rulespec.NO_FACTORY_DEFAULT
-    def __init__(  # pylint: disable=dangerous-default-value
+    def __init__(
         self,
         group: type[RulespecBaseGroup],
         check_group_name: str,
@@ -891,6 +1003,7 @@ class ManualCheckParameterRulespec(HostRulespec):
         name: str | None = None,
         match_type: MatchType = "all",
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
+        form_spec_definition: FormSpecDefinition | None = None,
     ):
         # Mandatory keys
         self._check_group_name = check_group_name
@@ -902,6 +1015,7 @@ class ManualCheckParameterRulespec(HostRulespec):
             (check_group_name, False, False),
             (parameter_valuespec, True, True),
             (item_spec, True, True),
+            (form_spec_definition, False, True),
         ]
         _validate_function_args(arg_infos, name)
         super().__init__(
@@ -915,11 +1029,14 @@ class ManualCheckParameterRulespec(HostRulespec):
             is_cloud_and_managed_edition_only=is_cloud_and_managed_edition_only,
             # Explicit set
             valuespec=self._rulespec_valuespec,
+            form_spec_definition=None
+            if form_spec_definition is None
+            else FormSpecDefinition(lambda: self._rulespec_form_spec(form_spec_definition), None),
         )
 
         # Optional keys
         self._parameter_valuespec = parameter_valuespec
-        self._rule_value_item_spec = item_spec
+        self._rule_value_item_valuespec = item_spec
 
     @property
     def check_group_name(self) -> str:
@@ -952,20 +1069,82 @@ class ManualCheckParameterRulespec(HostRulespec):
                     title=_("Check type"),
                     help=_("Please choose the check plug-in"),
                 ),
-                self._get_item_spec(),
+                self._get_item_valuespec(),
                 parameter_vs,
             ],
         )
 
-    def _get_item_spec(self) -> ValueSpec:
+    def _get_item_valuespec(self) -> ValueSpec:
         """Not used as condition, only for the rule value valuespec"""
-        if self._rule_value_item_spec:
-            return self._rule_value_item_spec()
+        if self._rule_value_item_valuespec:
+            return self._rule_value_item_valuespec()
 
         return FixedValue(
             value=None,
             totext="",
         )
+
+    def _rulespec_form_spec(self, form_spec_definition: FormSpecDefinition) -> FormSpec:
+        """Wraps the parameter together with the other needed form specs
+
+        This should not be overridden by specific manual checks. Normally the parameter_form_spec
+        is the one that should be overridden.
+        """
+
+        value_form_spec, item_form_spec = form_spec_definition
+
+        parameter_fs: FormSpec[Any]
+        if value_form_spec is None:
+            parameter_fs = FSFixedValue(
+                title=Title("Parameters"),
+                value=None,
+                help_text=Help("This check has no parameters."),
+                label=Label(""),
+            )
+        else:
+            parameter_fs = _wrap_form_spec_in_timeperiod_form_spec(value_form_spec())
+
+        return FSTuple(
+            title=parameter_fs.title,
+            elements=[
+                _get_check_type_group_choice(
+                    title=Title("Check type"),
+                    help_text=Help("Please choose the check plug-in"),
+                    check_group_name=self.check_group_name,
+                ),
+                self._compute_item_form_spec(item_form_spec),
+                parameter_fs,
+            ],
+        )
+
+    def _compute_item_form_spec(self, form_spec: Callable[[], FormSpec] | None) -> FormSpec:
+        """Not used as condition, only for the rule value valuespec"""
+        if form_spec is None:
+            return FSFixedValue(
+                value=None,
+                label=Label(""),
+            )
+        return form_spec()
+
+
+def _get_check_type_group_choice(
+    title: Title, help_text: Help, check_group_name: str
+) -> SingleChoice:
+    checks = get_check_information_cached()
+    elements: list[SingleChoiceElement] = []
+    for checkname, check in checks.items():
+        if check.get("group") == check_group_name:
+            elements.append(
+                SingleChoiceElement(
+                    name=str(checkname),
+                    title=Title(f"{checkname} - {check['title']}"),  # pylint: disable=localization-of-non-literal-string
+                )
+            )
+    return SingleChoice(
+        title=title,
+        help_text=help_text,
+        elements=elements,
+    )
 
 
 # Pre 1.6 rule registering logic. Need to be kept for some time
@@ -974,7 +1153,7 @@ def register_rule(
     varname,
     valuespec=None,
     title=None,
-    help=None,  # pylint: disable=redefined-builtin
+    help=None,
     itemspec=None,
     itemtype=None,
     itemname=None,
@@ -1089,6 +1268,31 @@ def _rulespec_class_for(varname: str, has_valuespec: bool, has_itemtype: bool) -
     return BinaryHostRulespec
 
 
+def _registration_should_be_skipped(instance: object) -> bool:
+    # We used this before, but it was a performance killer. The method below is a lot faster.
+    # calling_from = inspect.stack()[2].filename
+    caller_file = str(sys._getframe(2).f_globals["__file__"])
+    if not caller_file.startswith(_LOCAL_ROOT):
+        return False
+
+    # We are in a local file, so we can skip the registration for all
+    # objects that can be specified using the new API.
+    return isinstance(
+        instance,
+        (
+            CheckParameterRulespecWithItem,
+            CheckParameterRulespecWithoutItem,
+            ManualCheckParameterRulespec,
+            HostRulespec,
+            ServiceRulespec,
+        ),
+    )
+
+
+def _log_ignored_local_registration(name: str) -> None:
+    logger.info(f"Ignoring deprecated rulespec from local path: {name!r}")
+
+
 class RulespecRegistry(cmk.ccc.plugin_registry.Registry[Rulespec]):
     def __init__(self, group_registry: RulespecGroupRegistry) -> None:
         super().__init__()
@@ -1116,6 +1320,10 @@ class RulespecRegistry(cmk.ccc.plugin_registry.Registry[Rulespec]):
         return list({gc.group_name for gc in self.values()})
 
     def register(self, instance: Any) -> Any:
+        if _registration_should_be_skipped(instance):
+            _log_ignored_local_registration(instance.name)
+            return instance
+
         # not-yet-a-type: (Rulespec) -> None
         if not isinstance(instance, Rulespec):
             raise MKGeneralException(_("Tried to register incompatible rulespec: %r") % instance)
@@ -1133,18 +1341,9 @@ class RulespecRegistry(cmk.ccc.plugin_registry.Registry[Rulespec]):
 
         return super().register(instance)
 
-    def register_without_manual_check_rulespec(self, instance: Rulespec) -> None:
-        """Use this register method to prevent adding a manual check rulespec"""
-        if not isinstance(instance, Rulespec):
-            raise MKGeneralException(
-                _("!!! Error: Received class in RulespecRegistry:register_manual_check_rulespec %r")
-                % instance
-            )
-        super().register(instance)
-
 
 class CheckTypeGroupSelection(ElementSelection):
-    def __init__(  # pylint: disable=redefined-builtin
+    def __init__(
         self,
         checkgroup: str,
         # ElementSelection
@@ -1393,11 +1592,3 @@ class MatchItemGeneratorRules(ABCMatchItemGenerator):
 
 
 rulespec_registry = RulespecRegistry(rulespec_group_registry)
-
-match_item_generator_registry.register(
-    MatchItemGeneratorRules(
-        "rules",
-        rulespec_group_registry,
-        rulespec_registry,
-    )
-)

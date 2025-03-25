@@ -15,8 +15,9 @@
 # osVersion::6.5.8.1|ip::10.8.95.100|hostName::Host-9|lastUpdated::2017-11-07T22:50:20.425Z|activeClients::9|connected::True|serialId::12345678912345
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_hivemanager_ng_devices(string_table):
@@ -71,6 +72,7 @@ def check_hivemanager_ng_devices(item, params, parsed):
 
 
 check_info["hivemanager_ng_devices"] = LegacyCheckDefinition(
+    name="hivemanager_ng_devices",
     parse_function=parse_hivemanager_ng_devices,
     service_name="Client %s",
     discovery_function=inventory_hivemanager_ng_devices,

@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, equals, SNMPTree, startswith, StringTable
+
+check_info = {}
 
 # Example output from agent:
 # [['1', '24', 'SLOT #0: TEMP #1'],
@@ -40,6 +41,7 @@ def parse_brocade(string_table: StringTable) -> StringTable:
 
 
 check_info["brocade"] = LegacyCheckDefinition(
+    name="brocade",
     parse_function=parse_brocade,
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588.2.1.1"),
@@ -82,6 +84,7 @@ def check_brocade_fan(item, params, info):
 
 
 check_info["brocade.fan"] = LegacyCheckDefinition(
+    name="brocade_fan",
     service_name="FAN %s",
     sections=["brocade"],
     discovery_function=inventory_brocade_fan,
@@ -109,6 +112,7 @@ def check_brocade_power(item, _no_params, info):
 
 
 check_info["brocade.power"] = LegacyCheckDefinition(
+    name="brocade_power",
     service_name="Power supply %s",
     sections=["brocade"],
     discovery_function=inventory_brocade_power,
@@ -130,6 +134,7 @@ def check_brocade_temp(item, params, info):
 
 
 check_info["brocade.temp"] = LegacyCheckDefinition(
+    name="brocade_temp",
     service_name="Temperature Ambient %s",
     sections=["brocade"],
     discovery_function=inventory_brocade_temp,

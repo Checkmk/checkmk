@@ -15,17 +15,18 @@ from ._create_config import (
     NagiosCore,
 )
 from ._host_check_config import HostCheckConfig
-from ._precompile_host_checks import dump_precompiled_hostcheck, HostCheckStore
+from ._precompile_host_checks import dump_precompiled_hostcheck, HostCheckStore, PrecompileMode
 
 __all__ = [
-    "format_nagios_object",
     "create_config",
     "create_nagios_config_commands",
     "create_nagios_host_spec",
     "create_nagios_servicedefs",
-    "NagiosConfig",
-    "NagiosCore",
     "dump_precompiled_hostcheck",
+    "format_nagios_object",
     "HostCheckConfig",
     "HostCheckStore",
+    "NagiosConfig",
+    "NagiosCore",
+    "PrecompileMode",
 ]

@@ -6,12 +6,13 @@
 
 import time
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fireeye import inventory_fireeye_generic
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_average, get_rate, get_value_store, SNMPTree, StringTable
 from cmk.plugins.lib.fireeye import DETECT
+
+check_info = {}
 
 
 def fireeye_counter_generic(value, what, average):
@@ -72,6 +73,7 @@ def discover_fireeye_mail(info):
 
 
 check_info["fireeye_mail"] = LegacyCheckDefinition(
+    name="fireeye_mail",
     parse_function=parse_fireeye_mail,
     detect=DETECT,
     fetch=SNMPTree(
@@ -137,6 +139,7 @@ def discover_fireeye_mail_attachment(info):
 
 
 check_info["fireeye_mail.attachment"] = LegacyCheckDefinition(
+    name="fireeye_mail_attachment",
     service_name="Mails Containing Attachment",
     sections=["fireeye_mail"],
     discovery_function=discover_fireeye_mail_attachment,
@@ -177,6 +180,7 @@ def discover_fireeye_mail_url(info):
 
 
 check_info["fireeye_mail.url"] = LegacyCheckDefinition(
+    name="fireeye_mail_url",
     service_name="Mails Containing URL",
     sections=["fireeye_mail"],
     discovery_function=discover_fireeye_mail_url,
@@ -228,11 +232,16 @@ def check_fireeye_mail_statistics(_no_item, params, info):
         perfdata = [(counter.replace(".", "_"), rate * 60)]
         if average:
             avg = get_average(value_store, f"{counter}.avg", this_time, rate, average)
-            yield 0, "%s: %.2f per %d minutes" % (
-                mail_containing,
-                avg * 60 * average,
-                average,
-            ), perfdata
+            yield (
+                0,
+                "%s: %.2f per %d minutes"
+                % (
+                    mail_containing,
+                    avg * 60 * average,
+                    average,
+                ),
+                perfdata,
+            )
         else:
             yield 0, f"{mail_containing}: {rate * 60:.2f} per minute", perfdata
 
@@ -242,6 +251,7 @@ def discover_fireeye_mail_statistics(info):
 
 
 check_info["fireeye_mail.statistics"] = LegacyCheckDefinition(
+    name="fireeye_mail_statistics",
     service_name="Mail Processing Statistics",
     sections=["fireeye_mail"],
     discovery_function=discover_fireeye_mail_statistics,
@@ -278,6 +288,7 @@ def discover_fireeye_mail_received(info):
 
 
 check_info["fireeye_mail.received"] = LegacyCheckDefinition(
+    name="fireeye_mail_received",
     service_name="Mails Received",
     sections=["fireeye_mail"],
     discovery_function=discover_fireeye_mail_received,

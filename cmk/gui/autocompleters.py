@@ -8,7 +8,6 @@ from collections.abc import Callable, Collection, Sequence
 
 from livestatus import LivestatusColumn, MultiSiteConnection
 
-from cmk.utils import paths
 from cmk.utils.regex import regex
 
 from cmk.gui import sites
@@ -21,8 +20,7 @@ from cmk.gui.utils.labels import encode_label_for_livestatus, Label, LABEL_REGEX
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import autocompleter_registry, AutocompleterRegistry, Labels
 from cmk.gui.visuals import get_only_sites_from_context, livestatus_query_bare_string
-
-import cmk.ccc.version as cmk_version
+from cmk.gui.watolib.check_mk_automations import get_check_information_cached
 
 
 def register(page_registry: PageRegistry, autocompleter_registry_: AutocompleterRegistry) -> None:
@@ -41,6 +39,7 @@ def register(page_registry: PageRegistry, autocompleter_registry_: Autocompleter
     autocompleter_registry_.register_autocompleter("tag_groups", tag_group_autocompleter)
     autocompleter_registry_.register_autocompleter("tag_groups_opt", tag_group_opt_autocompleter)
     autocompleter_registry_.register_autocompleter("label", label_autocompleter)
+    autocompleter_registry_.register_autocompleter("check_types", check_types_autocompleter)
 
 
 def __live_query_to_choices(
@@ -94,25 +93,6 @@ def monitored_hostname_autocompleter(value: str, params: dict) -> Choices:
     if user_errors:
         return [(value, value)]
     return _sorted_unique_lq(query, 200, value, params)
-
-
-def sites_autocompleter(
-    value: str, params: dict, sites_options: Callable[[], list[tuple[str, str]]]
-) -> Choices:
-    """Return the matching list of dropdown choices
-    Called by the webservice with the current input field value and the completions_params to get the list of choices
-    """
-
-    choices: Choices = [v for v in sites_options() if _matches_id_or_title(value, v)]
-    # CME sort order is already in place
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CME:
-        choices.sort(key=lambda a: a[1].lower())
-
-    # This part should not exists as the optional(not enforce) would better be not having the filter at all
-    if not params.get("strict"):
-        empty_choice: Choices = [("", "All Sites")]
-        choices = empty_choice + choices
-    return choices
 
 
 def hostgroup_autocompleter(value: str, params: dict) -> Choices:
@@ -230,6 +210,14 @@ def label_autocompleter(value: str, params: dict) -> Choices:
 
     # The user is allowed to enter new labels if they are valid ("<key>:<value>")
     return [(value, value)] if regex(LABEL_REGEX).match(value) else []
+
+
+def check_types_autocompleter(value: str, params: dict) -> Choices:
+    return [
+        (str(cn), (str(cn) + " - " + c["title"]))
+        for (cn, c) in get_check_information_cached().items()
+        if not cn.is_management_name()
+    ]
 
 
 def validate_autocompleter_data(api_request):

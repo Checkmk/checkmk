@@ -41,7 +41,6 @@ the check function is called.
 
 """
 
-
 from collections.abc import Iterator, MutableMapping
 from contextlib import contextmanager
 from typing import Any, Protocol, TypeVar
@@ -49,7 +48,7 @@ from typing import Any, Protocol, TypeVar
 
 class _ValueStoreManagerProtocol(Protocol):
     @property
-    def active_service_interface(self) -> MutableMapping[str, Any] | None:  # type: ignore[misc]
+    def active_service_interface(self) -> MutableMapping[str, Any] | None:  # type: ignore[misc,explicit-any]
         ...
 
     def save(self) -> None: ...
@@ -58,7 +57,7 @@ class _ValueStoreManagerProtocol(Protocol):
 _active_host_value_store: _ValueStoreManagerProtocol | None = None
 
 
-def get_value_store() -> MutableMapping[str, Any]:  # type: ignore[misc]
+def get_value_store() -> MutableMapping[str, Any]:  # type: ignore[explicit-any]
     """Get the value store for the current service from Checkmk
 
     The returned value store object can be used to persist values
@@ -86,7 +85,7 @@ def set_value_store_manager(
     This class is not to be used by plug-ins, and not part of the plug-in API.
     """
     # ^- and yet it sits in this package. That's what you get for using a global state.
-    global _active_host_value_store  # pylint: disable=global-statement
+    global _active_host_value_store
 
     pushed_back_store = _active_host_value_store
 

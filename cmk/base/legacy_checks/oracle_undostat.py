@@ -9,10 +9,10 @@
 # TUX2 160 0 1081 300 0
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError, render
+
+check_info = {}
 
 
 def parse_oracle_undostat(string_table):
@@ -51,17 +51,22 @@ def check_oracle_undostat(item, params, parsed):
     state_errcnt = params["nospaceerrcnt_state"] if nospaceerrcnt else 0
     yield state_errcnt, "Space errors: %d" % nospaceerrcnt
 
-    yield 0, "", [
-        ("activeblk", activeblks),
-        ("transconcurrent", maxconcurrency),
-        # lower levels are unorthodox here (at least), but we keep it for compatibility (for now)
-        ("tunedretention", tuned_undoretention, warn, crit),
-        ("querylen", maxquerylen),
-        ("nonspaceerrcount", nospaceerrcnt),
-    ]
+    yield (
+        0,
+        "",
+        [
+            ("activeblk", activeblks),
+            ("transconcurrent", maxconcurrency),
+            # lower levels are unorthodox here (at least), but we keep it for compatibility (for now)
+            ("tunedretention", tuned_undoretention, warn, crit),
+            ("querylen", maxquerylen),
+            ("nonspaceerrcount", nospaceerrcnt),
+        ],
+    )
 
 
 check_info["oracle_undostat"] = LegacyCheckDefinition(
+    name="oracle_undostat",
     parse_function=parse_oracle_undostat,
     service_name="ORA %s Undo Retention",
     discovery_function=discover_oracle_undostat,

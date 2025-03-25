@@ -1,0 +1,104 @@
+#!/bin/bash
+
+unset LANG
+
+PIDFILE=$OMD_ROOT/tmp/run/redis-server.pid
+DAEMON=$OMD_ROOT/bin/redis-server
+THE_PID=$(cat "$PIDFILE" 2>/dev/null)
+CONF="$OMD_ROOT/etc/redis/redis.conf"
+
+process_is_running() {
+    [ -e "$PIDFILE" ] && kill -0 "$THE_PID" 2>/dev/null
+}
+
+await_process_stop() {
+    max=$(("${1}" * 10)) # tenths of a second
+    for N in $(seq "${max}"); do
+        process_is_running || return 0
+        [ $((N % 10)) -eq 0 ] && printf "."
+        sleep 0.1
+    done
+    return 1
+}
+
+force_kill() {
+    printf 'sending SIGKILL.'
+    kill -9 "${THE_PID}"
+}
+
+exit_successfully() {
+    printf "%s\n" "${1}"
+    exit 0
+}
+
+exit_failure() {
+    printf "%s\n" "${1}"
+    exit 1
+}
+
+case "$1" in
+
+    start)
+        printf 'Starting redis...'
+        if process_is_running; then
+            exit_successfully 'already running.'
+        fi
+
+        if "$DAEMON" "$CONF"; then
+            init-redis
+            exit_successfully 'OK'
+        fi
+        exit_failure 'failed'
+        ;;
+
+    stop)
+        printf 'Stopping redis...'
+        if [ -z "$THE_PID" ]; then
+            exit_successfully 'not running'
+        fi
+
+        if ! process_is_running; then
+            exit_successfully 'not running (PID file orphaned)'
+        fi
+
+        echo -n "killing $THE_PID..."
+        if ! kill "$THE_PID" 2>/dev/null; then
+            exit_successfully 'OK'
+        fi
+
+        # Signal could be sent.
+
+        # Patiently wait for the process to stop.
+        if await_process_stop 60; then
+            exit_successfully 'OK'
+        fi
+
+        # Insist on killing the process.
+        force_kill
+        if await_process_stop 10; then
+            exit_successfully 'OK'
+        fi
+        exit_failure 'failed'
+        ;;
+
+    restart | reload)
+        $0 stop
+        $0 start
+        ;;
+
+    status)
+        echo -n 'Checking status of redis...'
+        if [ -z "$THE_PID" ]; then
+            exit_failure 'not running (PID file missing)'
+        fi
+
+        if ! process_is_running; then
+            exit_failure 'not running (PID file orphaned)'
+        fi
+
+        exit_successfully 'running'
+        ;;
+    *)
+        exit_successfully "Usage: $0 {start|stop|restart|reload|status}"
+        ;;
+esac

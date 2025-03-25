@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import abc
 import copy
@@ -14,10 +13,10 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, Literal, NamedTuple, Protocol, Self
 
+from cmk.ccc.exceptions import MKSNMPError
+
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionName
-
-from cmk.ccc.exceptions import MKSNMPError
 
 SNMPContext = str
 SNMPValueEncoding = Literal["string", "binary"]

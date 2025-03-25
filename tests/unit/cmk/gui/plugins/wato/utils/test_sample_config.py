@@ -3,18 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
 
 import cmk.gui.watolib.config_domain_name as utils
-
-import cmk.ccc.version as cmk_version
 
 
 def test_registered_generators() -> None:
     expected_generators = [
         "acknowledge_initial_werks",
+        "contact_groups",
         "basic_wato_config",
-        "create_automation_user",
         "create_registration_automation_user",
         "ec_sample_rule_pack",
     ]
@@ -30,6 +30,7 @@ def test_registered_generators() -> None:
 
 def test_get_sorted_generators() -> None:
     expected = [
+        "contact_groups",
         "basic_wato_config",
     ]
 
@@ -42,7 +43,6 @@ def test_get_sorted_generators() -> None:
     expected += [
         "acknowledge_initial_werks",
         "ec_sample_rule_pack",
-        "create_automation_user",
         "create_registration_automation_user",
     ]
 

@@ -8,7 +8,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -68,7 +68,7 @@ def check_graylog_events(params: Mapping[str, Any], section: EventsInfoSection) 
     if not section:
         return
 
-    yield from check_levels(
+    yield from check_levels_v1(
         value=section.num_of_events,
         levels_upper=params.get("events_upper", (None, None)),
         levels_lower=params.get("events_lower", (None, None)),
@@ -77,7 +77,7 @@ def check_graylog_events(params: Mapping[str, Any], section: EventsInfoSection) 
     )
 
     if section.has_since_argument and section.events_since:
-        yield from check_levels(
+        yield from check_levels_v1(
             value=section.num_of_events_in_range,
             levels_upper=params.get("events_in_range_upper", (None, None)),
             levels_lower=params.get("events_in_range_lower", (None, None)),

@@ -153,7 +153,7 @@ case "$1" in
             if [ "$result" = "None" ]; then
                 exit_successfully 'OK'
             fi
-            exit_failure "ERROR: $result"
+            exit_failure "failed: $result"
         fi
         echo -n "Deleting status and history files..."
         rm -f "$OMD_ROOT"/var/mkeventd/{status,master_config,slave_status,history/*}

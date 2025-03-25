@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections import OrderedDict
 from collections.abc import MutableMapping
 from typing import Any
 
@@ -13,7 +14,7 @@ from cmk.gui import fields as gui_fields
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.fields.definitions import GroupField, Username, UserRoleID
 from cmk.gui.fields.utils import BaseSchema
-from cmk.gui.userdb import user_attribute_registry
+from cmk.gui.userdb import all_user_attributes
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 from cmk import fields
@@ -30,6 +31,12 @@ AUTH_SECRET = fields.String(
     description="For accounts used by automation processes (such as fetching data from views "
     "for further procession). This is the automation secret",
     example="DEYQEQQPYCFFBYH@AVMC",
+)
+AUTH_SECRET_STORE = fields.Boolean(
+    required=False,
+    description="If set to True, the secret will be stored unhashed in order to reuse it in rules.",
+    example=False,
+    load_default=False,
 )
 
 AUTH_CREATE_TYPE = fields.String(
@@ -50,6 +57,7 @@ AUTH_UPDATE_TYPE = fields.String(
 class AuthSecret(BaseSchema):
     auth_type = AUTH_CREATE_TYPE
     secret = AUTH_SECRET
+    store_automation_secret = AUTH_SECRET_STORE
 
 
 class AuthPassword(BaseSchema):
@@ -67,6 +75,7 @@ class AuthPassword(BaseSchema):
 class AuthUpdateSecret(BaseSchema):
     auth_type = AUTH_UPDATE_TYPE
     secret = AUTH_SECRET
+    store_automation_secret = AUTH_SECRET_STORE
 
 
 class AuthUpdatePassword(BaseSchema):
@@ -205,12 +214,22 @@ class UserInterfaceAttributes(BaseSchema):
         enum=["default", "default_show_less", "default_show_more", "enforce_show_more"],
         load_default="default",
     )
+    contextual_help_icon = fields.String(
+        required=False,
+        enum=["show_icon", "hide_icon"],
+        description="Whether or not to show the contextual icon in the UI for this user.",
+        example="show_icon",
+        load_default="show_icon",
+    )
 
 
 class CustomUserAttributes(BaseSchema):
     class Meta:
-        ordered = True
         unknown = marshmallow.INCLUDE
+
+    @property
+    def dict_class(self) -> type:
+        return OrderedDict
 
     @marshmallow.post_load(pass_original=True)
     def validate_custom_attributes(
@@ -223,7 +242,7 @@ class CustomUserAttributes(BaseSchema):
             original_data.pop(field, None)
 
         for name, value in original_data.items():
-            attribute = user_attribute_registry.get(name)
+            attribute = dict(all_user_attributes()).get(name)
             if attribute is None:
                 raise marshmallow.ValidationError(f"Unknown Attribute: {name!r}")
             if not attribute.is_custom():
@@ -358,6 +377,7 @@ class CreateUser(CustomUserAttributes):
             "navigation_bar_icons": "hide",
             "mega_menu_icons": "topic",
             "show_mode": "default",
+            "contextual_help_icon": "show_icon",
         },
         example={"interface_theme": "dark"},
         description="",
@@ -393,6 +413,13 @@ class UserInterfaceUpdateAttributes(BaseSchema):
         " Alternatively, this option can also be used to enforce show more removing the three dots "
         "for all menus.",
         enum=["default", "default_show_less", "default_show_more", "enforce_show_more"],
+    )
+    contextual_help_icon = fields.String(
+        required=False,
+        enum=["show_icon", "hide_icon"],
+        description="Whether or not to show the contextual icon in the UI for this user.",
+        example="show_icon",
+        load_default="show_icon",
     )
 
 

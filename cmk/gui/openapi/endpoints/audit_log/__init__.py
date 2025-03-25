@@ -7,6 +7,7 @@
 The audit log records the activities taking place in CheckMK. These endpoints allow you to read and clean these logs
 
 """
+
 import datetime
 import math
 from collections.abc import Mapping, Sequence

@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, contains, SNMPTree, StringTable
+
+check_info = {}
 
 # FIXME
 # The WATO group 'memory_simple' needs an item and the service_description should
@@ -50,6 +51,7 @@ def parse_hp_procurve_mem(string_table: StringTable) -> StringTable:
 
 
 check_info["hp_procurve_mem"] = LegacyCheckDefinition(
+    name="hp_procurve_mem",
     parse_function=parse_hp_procurve_mem,
     detect=any_of(
         contains(".1.3.6.1.2.1.1.2.0", ".11.2.3.7.11"),

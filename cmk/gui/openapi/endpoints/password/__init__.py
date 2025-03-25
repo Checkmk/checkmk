@@ -2,8 +2,43 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Passwords
+from collections.abc import Mapping
+from typing import Any, cast
 
+from cmk.ccc import version
+
+from cmk.utils import paths
+from cmk.utils.password_store import Password
+
+from cmk.gui.http import Response
+from cmk.gui.logged_in import user
+from cmk.gui.openapi.endpoints.password.request_schemas import InputPassword, UpdatePassword
+from cmk.gui.openapi.endpoints.password.response_schemas import PasswordCollection, PasswordObject
+from cmk.gui.openapi.endpoints.utils import (
+    complement_customer,
+    mutually_exclusive_fields,
+    update_customer_info,
+)
+from cmk.gui.openapi.restful_objects import constructors, Endpoint
+from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamily, EndpointFamilyRegistry
+from cmk.gui.openapi.restful_objects.parameters import NAME_ID_FIELD
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
+from cmk.gui.openapi.restful_objects.type_defs import DomainObject
+from cmk.gui.openapi.utils import problem, serve_json
+from cmk.gui.utils import permission_verification as permissions
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
+from cmk.gui.watolib.passwords import (
+    load_password,
+    load_password_to_modify,
+    load_passwords,
+    remove_password,
+    save_password,
+)
+
+PASSWORD_FAMILY = EndpointFamily(
+    name="Passwords",
+    description=(
+        """
 Passwords intended for authentication of certain checks can be stored in the Checkmk
 password store. You can use a stored password in a rule without knowing or entering
 the password.
@@ -13,33 +48,9 @@ same way the user interface does. This includes being able to create, update and
 stored passwords. You are also able to fetch a list of passwrods or individual passwords,
 however, the password itself is not returned for security reasons.
 """
-from collections.abc import Mapping
-from typing import Any, cast
-
-from cmk.utils import paths
-from cmk.utils.global_ident_type import is_locked_by_quick_setup
-from cmk.utils.password_store import Password
-
-from cmk.gui.http import Response
-from cmk.gui.logged_in import user
-from cmk.gui.openapi.endpoints.password.request_schemas import InputPassword, UpdatePassword
-from cmk.gui.openapi.endpoints.password.response_schemas import PasswordCollection, PasswordObject
-from cmk.gui.openapi.endpoints.utils import complement_customer, update_customer_info
-from cmk.gui.openapi.restful_objects import constructors, Endpoint
-from cmk.gui.openapi.restful_objects.parameters import NAME_ID_FIELD
-from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
-from cmk.gui.openapi.restful_objects.type_defs import DomainObject
-from cmk.gui.openapi.utils import problem, serve_json
-from cmk.gui.utils import permission_verification as permissions
-from cmk.gui.watolib.passwords import (
-    load_password,
-    load_password_to_modify,
-    load_passwords,
-    remove_password,
-    save_password,
+    ),
+    tag_group="Setup",
 )
-
-from cmk.ccc import version
 
 PERMISSIONS = permissions.AllPerm(
     [
@@ -65,6 +76,7 @@ RW_PERMISSIONS = permissions.AllPerm(
     etag="output",
     response_schema=PasswordObject,
     permissions_required=RW_PERMISSIONS,
+    family_name=PASSWORD_FAMILY.name,
 )
 def create_password(params: Mapping[str, Any]) -> Response:
     """Create a password"""
@@ -79,12 +91,15 @@ def create_password(params: Mapping[str, Any]) -> Response:
         not in (
             "ident",
             "owned_by",
+            "editable_by",
             "customer",
         )
     }
     if version.edition(paths.omd_root) is version.Edition.CME:
         password_details = update_customer_info(password_details, body["customer"])
-    password_details["owned_by"] = None if body["owned_by"] == "admin" else body["owned_by"]
+    password_details["owned_by"] = mutually_exclusive_fields(
+        str, body, "owned_by", "editable_by", default="admin"
+    )
     save_password(ident, cast(Password, password_details), new_password=True)
     return _serve_password(ident, load_password(ident))
 
@@ -98,6 +113,7 @@ def create_password(params: Mapping[str, Any]) -> Response:
     etag="both",
     response_schema=PasswordObject,
     permissions_required=RW_PERMISSIONS,
+    family_name=PASSWORD_FAMILY.name,
 )
 def update_password(params: Mapping[str, Any]) -> Response:
     """Update a password"""
@@ -105,6 +121,11 @@ def update_password(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.passwords")
     body = params["body"]
     ident = params["name"]
+
+    owned_by = mutually_exclusive_fields(str, body, "owned_by", "editable_by")
+    body.pop("editable_by", None)
+    if owned_by is not None:
+        body["owned_by"] = owned_by
     try:
         password_details = load_password_to_modify(ident)
     except KeyError:
@@ -126,6 +147,7 @@ def update_password(params: Mapping[str, Any]) -> Response:
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
     additional_status_codes=[400],
+    family_name=PASSWORD_FAMILY.name,
 )
 def delete_password(params: Mapping[str, Any]) -> Response:
     """Delete a password"""
@@ -157,6 +179,7 @@ def delete_password(params: Mapping[str, Any]) -> Response:
     path_params=[NAME_ID_FIELD],
     response_schema=PasswordObject,
     permissions_required=PERMISSIONS,
+    family_name=PASSWORD_FAMILY.name,
 )
 def show_password(params: Mapping[str, Any]) -> Response:
     """Show a password"""
@@ -179,6 +202,7 @@ def show_password(params: Mapping[str, Any]) -> Response:
     method="get",
     response_schema=PasswordCollection,
     permissions_required=PERMISSIONS,
+    family_name=PASSWORD_FAMILY.name,
 )
 def list_passwords(params: Mapping[str, Any]) -> Response:
     """Show all passwords"""
@@ -225,7 +249,10 @@ def serialize_password(ident: str, details: Password) -> DomainObject:
     )
 
 
-def register(endpoint_registry: EndpointRegistry) -> None:
+def register(
+    endpoint_family_registry: EndpointFamilyRegistry, endpoint_registry: EndpointRegistry
+) -> None:
+    endpoint_family_registry.register(PASSWORD_FAMILY)
     endpoint_registry.register(create_password)
     endpoint_registry.register(update_password)
     endpoint_registry.register(delete_password)

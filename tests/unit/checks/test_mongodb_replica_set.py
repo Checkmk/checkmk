@@ -9,14 +9,13 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-from tests.unit.conftest import FixRegister
-
 from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.api.agent_based.plugin_classes import CheckPlugin
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins, CheckPlugin
+
+from cmk.agent_based.v2 import Result, Service, State
 
 _STRING_TABLE = [
     [
@@ -81,15 +80,15 @@ _STRING_TABLE_PYMONGO_3 = [
 
 
 @pytest.fixture(name="check_plugin", scope="module")
-def check_plugin_fixture(fix_register: FixRegister) -> CheckPlugin:
-    return fix_register.check_plugins[CheckPluginName("mongodb_replica_set")]
+def check_plugin_fixture(agent_based_plugins: AgentBasedPlugins) -> CheckPlugin:
+    return agent_based_plugins.check_plugins[CheckPluginName("mongodb_replica_set")]
 
 
 def test_discover_mongodb_replica_set(
     check_plugin: CheckPlugin,
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
-    section = fix_register.agent_sections[SectionName("mongodb_replica_set")].parse_function(
+    section = agent_based_plugins.agent_sections[SectionName("mongodb_replica_set")].parse_function(
         _STRING_TABLE
     )
     assert list(check_plugin.discovery_function(section)) == [Service()]
@@ -141,11 +140,11 @@ def test_discover_mongodb_replica_set(
 @pytest.mark.usefixtures("initialised_item_state")
 def test_check_mongodb_replica_set(
     check_plugin: CheckPlugin,
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
     string_table: list[list[str]],
     expected_result: list[Result],
 ) -> None:
-    section = fix_register.agent_sections[SectionName("mongodb_replica_set")].parse_function(
+    section = agent_based_plugins.agent_sections[SectionName("mongodb_replica_set")].parse_function(
         string_table
     )
     with time_machine.travel(datetime.datetime.fromtimestamp(1659514516, tz=ZoneInfo("UTC"))):

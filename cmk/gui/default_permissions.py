@@ -316,8 +316,7 @@ PermissionParentChildTopology = Permission(
     name="parent_child_topology",
     title=_l("Network topology"),
     description=_l(
-        "This dashboard uses the parent relationships of your hosts to "
-        "display a hierarchical map."
+        "This dashboard uses the parent relationships of your hosts to display a hierarchical map."
     ),
     defaults=config.default_authorized_builtin_role_ids,
 )

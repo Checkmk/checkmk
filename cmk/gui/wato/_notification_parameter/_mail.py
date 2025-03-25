@@ -3,28 +3,38 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Mapping
+from typing import Any
+
+from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
 
+from cmk.gui.form_specs.private.dictionary_extended import DictGroupExtended, DictionaryExtended
+from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recompose
 from cmk.gui.http import request
-from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
+from cmk.gui.valuespec.definitions import Dictionary as ValueSpecDictionary
+from cmk.gui.watolib.notification_parameter import NotificationParameter
+
+from cmk.rulesets.v1 import Help, Label, Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
     Dictionary,
-    DictionaryEntry,
-    DropdownChoice,
-    EmailAddress,
+    FieldSize,
     FixedValue,
     Integer,
-    ListChoice,
-    TextAreaUnicode,
-    TextInput,
+    MultilineText,
+    MultipleChoice,
+    MultipleChoiceElement,
+    SingleChoice,
+    SingleChoiceElement,
+    String,
 )
+from cmk.rulesets.v1.form_specs.validators import EmailAddress as ValidateEmailAddress
+from cmk.shared_typing.vue_formspec_components import DictionaryGroupLayout
 
-from cmk.ccc.version import edition, Edition
-
-from ._base import NotificationParameter
-from ._helpers import get_url_prefix_specs, local_site_url
+from ._helpers import _get_url_prefix_setting
 
 
 class NotificationParameterMail(NotificationParameter):
@@ -33,106 +43,38 @@ class NotificationParameterMail(NotificationParameter):
         return "mail"
 
     @property
-    def spec(self) -> Dictionary:
-        return Dictionary(
-            title=_("Create notification with the following parameters"),
-            # must be called at run time!!
-            elements=self._parameter_elements,
-            hidden_keys=(
-                ["from", "url_prefix", "disable_multiplexing", "smtp"]
-                if edition(paths.omd_root) == Edition.CSE
-                else []
-            ),
+    def spec(self) -> ValueSpecDictionary:
+        # TODO needed because of mixed Form Spec and old style setup
+        return recompose(self._form_spec()).valuespec  # type: ignore[return-value]  # expects Valuespec[Any]
+
+    def _form_spec(self) -> DictionaryExtended:
+        # TODO register CSE specific version
+        return DictionaryExtended(
+            title=Title("HTML Email parameters"),
+            elements=self._parameter_elements(is_cse=edition(paths.omd_root) == Edition.CSE),
+            ignored_elements=("no_floating_graphs",),
         )
 
-    def _parameter_elements(self) -> list[DictionaryEntry]:
-        return _vs_add_common_mail_elements(
-            [
-                (
-                    "elements",
-                    ListChoice(
-                        title=_("Display additional information"),
-                        choices=[
-                            ("omdsite", _("Site ID")),
-                            ("hosttags", _("Tags of the host")),
-                            ("address", _("IP address of host")),
-                            ("abstime", _("Absolute time of alert")),
-                            ("reltime", _("Relative time of alert")),
-                            ("longoutput", _("Additional plug-in output")),
-                            ("ack_author", _("Acknowledgement author")),
-                            ("ack_comment", _("Acknowledgement comment")),
-                            ("notification_author", _("Notification author")),
-                            ("notification_comment", _("Notification comment")),
-                            ("perfdata", _("Metrics")),
-                            ("graph", _("Time series graph")),
-                            ("notesurl", _("Custom host/service notes URL")),
-                            ("context", _("Complete variable list (for testing)")),
-                        ],
-                        default_value=["graph", "abstime", "address", "longoutput"],
-                    ),
-                ),
-                (
-                    "insert_html_section",
-                    TextAreaUnicode(
-                        title=_("Add HTML section above table (e.g. title, description…)"),
-                        default_value="<HTMLTAG>CONTENT</HTMLTAG>",
-                        cols=76,
-                        rows=3,
-                    ),
-                ),
-                (
-                    "url_prefix",
-                    get_url_prefix_specs(
-                        local_site_url,
-                        "automatic_https" if request.is_ssl_request else "automatic_http",
-                    ),
-                ),
-                (
-                    "no_floating_graphs",
-                    FixedValue(
-                        value=True,
-                        title=_("Display graphs among each other"),
-                        totext=_("Graphs are shown among each other"),
-                        help=_(
-                            "By default all multiple graphs in emails are displayed floating "
-                            "nearby. You can enable this option to show the graphs among each "
-                            "other."
-                        ),
-                    ),
-                ),
-                (
-                    "graphs_per_notification",
-                    Integer(
-                        title=_("Graphs per notification (default: 5)"),
-                        label=_("Show up to"),
-                        unit=_("graphs"),
-                        help=_(
-                            "Sets a limit for the number of graphs that are displayed in a notification."
-                        ),
-                        default_value=5,
-                        minvalue=0,
-                    ),
-                ),
-                (
-                    "notifications_with_graphs",
-                    Integer(
-                        title=_("Bulk notifications with graphs (default: 5)"),
-                        label=_("Show graphs for the first"),
-                        unit=_("Notifications"),
-                        help=_(
-                            "Sets a limit for the number of notifications in a bulk for which graphs "
-                            "are displayed. If you do not use bulk notifications this option is ignored. "
-                            "Note that each graph increases the size of the mail and takes time to render"
-                            "on the monitoring server. Therefore, large bulks may exceed the maximum "
-                            "size for attachements or the plug-in may run into a timeout so that a failed "
-                            "notification is produced."
-                        ),
-                        default_value=5,
-                        minvalue=0,
-                    ),
-                ),
-            ]
-        )
+    def _parameter_elements(self, is_cse: bool) -> dict[str, DictElement[Any]]:
+        return {
+            **self._settings_elements(is_cse),
+            **_header_elements(is_cse),
+            **_content_elements(),
+            **_testing_elements(),
+            **_bulk_elements(),
+        }
+
+    def _settings_elements(self, is_cse: bool) -> dict[str, DictElement[Any]]:
+        return self._url_prefix_setting(is_cse)
+
+    def _url_prefix_setting(self, is_cse: bool) -> dict[str, DictElement[Any]]:
+        return {
+            "url_prefix": _get_url_prefix_setting(
+                is_cse,
+                default_value="automatic_https" if request.is_ssl_request else "automatic_http",
+                group_title="Settings",
+            )
+        }
 
 
 class NotificationParameterASCIIMail(NotificationParameter):
@@ -141,182 +83,399 @@ class NotificationParameterASCIIMail(NotificationParameter):
         return "asciimail"
 
     @property
-    def spec(self) -> Dictionary:
-        elements = _vs_add_common_mail_elements(
-            [
-                (
-                    "common_body",
-                    TextAreaUnicode(
-                        title=_("Body head for both host and service notifications"),
-                        rows=7,
-                        cols=58,
-                        monospaced=True,
-                        default_value="""Host:     $HOSTNAME$
+    def spec(self) -> ValueSpecDictionary:
+        # TODO needed because of mixed Form Spec and old style setup
+        return recompose(self._form_spec()).valuespec  # type: ignore[return-value]
+
+    def _form_spec(self) -> DictionaryExtended:
+        return DictionaryExtended(
+            title=Title("ASCII Email parameters"),
+            elements=_elements_ascii(is_cse=edition(paths.omd_root) == Edition.CSE),
+        )
+
+
+def _elements_ascii(is_cse: bool) -> Mapping[str, DictElement[Any]]:
+    elements = {
+        "from": _from_address_element(is_cse),
+        "reply_to": _reply_to(),
+        "host_subject": _host_subject(),
+        "service_subject": _service_subject(),
+        "common_body": DictElement(
+            parameter_form=MultilineText(
+                title=Title("Body head for both host and service notifications"),
+                prefill=DefaultValue(
+                    """\
+Host:     $HOSTNAME$
 Alias:    $HOSTALIAS$
 Address:  $HOSTADDRESS$
-""",
-                    ),
+"""
                 ),
-                (
-                    "host_body",
-                    TextAreaUnicode(
-                        title=_("Body tail for host notifications"),
-                        rows=9,
-                        cols=58,
-                        monospaced=True,
-                        default_value="""Event:    $EVENT_TXT$
+                macro_support=True,
+            ),
+        ),
+        "host_body": DictElement(
+            parameter_form=MultilineText(
+                title=Title("Body tail for host notifications"),
+                prefill=DefaultValue(
+                    """\
+Event:    $EVENT_TXT$
 Output:   $HOSTOUTPUT$
 Perfdata: $HOSTPERFDATA$
 $LONGHOSTOUTPUT$
-""",
-                    ),
+"""
                 ),
-                (
-                    "service_body",
-                    TextAreaUnicode(
-                        title=_("Body tail for service notifications"),
-                        rows=11,
-                        cols=58,
-                        monospaced=True,
-                        default_value="""Service:  $SERVICEDESC$
+                macro_support=True,
+            ),
+        ),
+        "service_body": DictElement(
+            parameter_form=MultilineText(
+                title=Title("Body tail for service notifications"),
+                prefill=DefaultValue(
+                    """\
+Service:  $SERVICEDESC$
 Event:    $EVENT_TXT$
 Output:   $SERVICEOUTPUT$
 Perfdata: $SERVICEPERFDATA$
 $LONGSERVICEOUTPUT$
-""",
-                    ),
+"""
                 ),
-            ]
-        )
-        return Dictionary(
-            title=_("Create notification with the following parameters"),
-            elements=elements,
-            hidden_keys=(
-                ["from", "disable_multiplexing"] if edition(paths.omd_root) == Edition.CSE else []
+                macro_support=True,
             ),
-        )
+        ),
+        "bulk_sort_order": _bulk_sort_order(),
+        "disable_multiplexing": _disable_multiplexing(is_cse),
+    }
+
+    return elements
 
 
-def _vs_add_common_mail_elements(elements: Sequence[DictionaryEntry]) -> list[DictionaryEntry]:
-    header: list[DictionaryEntry] = [
-        (
-            "from",
-            Dictionary(
-                title="From",
+def _header_elements(is_cse: bool) -> dict[str, DictElement[Any]]:
+    return {
+        "from": _from_address_element(is_cse),
+        "reply_to": _reply_to(),
+        "disable_multiplexing": _disable_multiplexing(is_cse),
+        "host_subject": _host_subject(),
+        "service_subject": _service_subject(),
+    }
+
+
+def _content_elements() -> dict[str, DictElement[Any]]:
+    return {
+        "insert_html_section": DictElement(
+            group=DictGroupExtended(
+                title=Title("Email body/content"),
+                layout=DictionaryGroupLayout.vertical,
+            ),
+            parameter_form=MultilineText(
+                title=Title("Custom HTML section (e.g. title, description…)"),
+                prefill=DefaultValue("<HTMLTAG>CONTENT</HTMLTAG>"),
+                macro_support=True,
+                help_text=Help("Only simple tags like 'h1', 'b' or 'i' are allowed."),
+            ),
+        ),
+        # TODO should be old ListChoice style
+        "elements": DictElement(
+            group=DictGroupExtended(
+                title=Title("Email body/content"),
+                layout=DictionaryGroupLayout.vertical,
+            ),
+            parameter_form=MultipleChoice(
+                title=Title("Additional details"),
                 elements=[
-                    (
-                        "address",
-                        EmailAddress(
-                            title=_("Email address"),
-                            size=73,
-                            allow_empty=False,
-                        ),
+                    MultipleChoiceElement(
+                        name="omdsite",
+                        title=Title("Site ID"),
                     ),
-                    (
-                        "display_name",
-                        TextInput(
-                            title=_("Display name"),
-                            size=73,
-                            allow_empty=False,
-                        ),
+                    MultipleChoiceElement(
+                        name="address",
+                        title=Title("IP Address of Hosts"),
                     ),
-                ],
-                help=_(
-                    "The email address and visible name used in the From header "
-                    "of notifications messages. If no email address is specified "
-                    "the default address is <tt>OMD_SITE@FQDN</tt> is used. If the "
-                    "environment variable <tt>OMD_SITE</tt> is not set it defaults "
-                    "to <tt>checkmk</tt>."
-                ),
-            ),
-        ),
-        (
-            "reply_to",
-            Dictionary(
-                title="Reply to",
-                elements=[
-                    (
-                        "address",
-                        EmailAddress(
-                            title=_("Email address"),
-                            size=73,
-                            allow_empty=False,
-                        ),
+                    MultipleChoiceElement(
+                        name="abstime",
+                        title=Title("Absolute time of alert"),
                     ),
-                    (
-                        "display_name",
-                        TextInput(
-                            title=_("Display name"),
-                            size=73,
-                            allow_empty=False,
-                        ),
+                    MultipleChoiceElement(
+                        name="reltime",
+                        title=Title("Relative time of alert"),
+                    ),
+                    MultipleChoiceElement(
+                        name="longoutput",
+                        title=Title("Plugin output"),
+                    ),
+                    MultipleChoiceElement(
+                        name="ack_author",
+                        title=Title("Acknowledgment author"),
+                    ),
+                    MultipleChoiceElement(
+                        name="ack_comment",
+                        title=Title("Acknowledgement comment"),
+                    ),
+                    MultipleChoiceElement(
+                        name="perfdata",
+                        title=Title("Metrics"),
+                    ),
+                    MultipleChoiceElement(
+                        name="graph",
+                        title=Title("Time series graph"),
+                    ),
+                    MultipleChoiceElement(
+                        name="notesurl",
+                        title=Title("Custom host/service notes URL"),
+                    ),
+                    MultipleChoiceElement(
+                        name="context",
+                        title=Title("Complete variable list (for testing)"),
                     ),
                 ],
-                required_keys=["address"],
-                help=_(
-                    "The email address and visible name used in the Reply-To header "
-                    "of notifications messages."
-                ),
+                prefill=DefaultValue(["abstime", "longoutput", "graph"]),
             ),
         ),
-        (
-            "host_subject",
-            TextInput(
-                title=_("Subject for host notifications"),
-                help=_(
-                    "Here you are allowed to use all macros that are defined in the "
-                    "notification context."
-                ),
-                default_value="Check_MK: $HOSTNAME$ - $EVENT_TXT$",
-                size=76,
+        "contact_groups": DictElement(
+            group=DictGroupExtended(
+                title=Title("Email body/content"),
+                layout=DictionaryGroupLayout.vertical,
             ),
-        ),
-        (
-            "service_subject",
-            TextInput(
-                title=_("Subject for service notifications"),
-                help=_(
-                    "Here you are allowed to use all macros that are defined in the "
-                    "notification context."
-                ),
-                default_value="Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
-                size=76,
-            ),
-        ),
-    ]
-
-    footer: list[DictionaryEntry] = [
-        (
-            "bulk_sort_order",
-            DropdownChoice(
-                choices=[
-                    ("oldest_first", _("Oldest first")),
-                    ("newest_first", _("Newest first")),
-                ],
-                help=_(
-                    "With this option you can specify, whether the oldest (default) or "
-                    "the newest notification should get shown at the top of the notification mail."
-                ),
-                title=_("Notification sort order for bulk notifications"),
-                default_value="oldest_first",
-            ),
-        ),
-        (
-            "disable_multiplexing",
-            FixedValue(
+            parameter_form=FixedValue(
+                title=Title("Show contact groups"),
+                label=Label(""),
                 value=True,
-                title=_("Send seperate notifications to every recipient"),
-                totext=_(
-                    "A seperate notification is send to every recipient. Recipients "
-                    "cannot see which other recipients were notified."
-                ),
-                help=_(
-                    "Per default only one notification is generated for all recipients. "
-                    "Therefore, all recipients can see who was notified and reply to "
-                    "all other recipients."
+            ),
+        ),
+        "svc_labels": DictElement(
+            group=DictGroupExtended(
+                title=Title("Email body/content"),
+                layout=DictionaryGroupLayout.vertical,
+            ),
+            parameter_form=FixedValue(
+                title=Title("Show service labels"),
+                label=Label(""),
+                value=True,
+            ),
+        ),
+        "host_labels": DictElement(
+            group=DictGroupExtended(
+                title=Title("Email body/content"),
+                layout=DictionaryGroupLayout.vertical,
+            ),
+            parameter_form=FixedValue(
+                title=Title("Show host labels"),
+                label=Label(""),
+                value=True,
+            ),
+        ),
+        "host_tags": DictElement(
+            group=DictGroupExtended(
+                title=Title("Email body/content"),
+                layout=DictionaryGroupLayout.vertical,
+            ),
+            parameter_form=FixedValue(
+                title=Title("Show host tags"),
+                label=Label(""),
+                value=True,
+            ),
+        ),
+        "graphs_per_notification": DictElement(
+            group=DictGroupExtended(
+                title=Title("Email body/content"),
+                layout=DictionaryGroupLayout.vertical,
+            ),
+            parameter_form=Integer(
+                title=Title("Number of graphs per notification (default: 5)"),
+                label=Label("Show up to"),
+                unit_symbol="graphs",
+                prefill=DefaultValue(5),
+                help_text=Help(
+                    "Sets a limit for the number of graphs that are displayed in a notification."
                 ),
             ),
         ),
-    ]
+    }
 
-    return header + list(elements) + footer
+
+def _bulk_elements() -> dict[str, DictElement[Any]]:
+    return {
+        "bulk_sort_order": _bulk_sort_order(),
+        "notifications_with_graphs": DictElement(
+            group=DictGroupExtended(
+                title=Title("Bulk notifications"),
+                layout=DictionaryGroupLayout.vertical,
+            ),
+            parameter_form=Integer(
+                title=Title(
+                    "Limit number of events with graphs per bulk notification (default: 5)"
+                ),
+                label=Label("Show graphs for the first"),
+                unit_symbol="notifications",
+                prefill=DefaultValue(5),
+                help_text=Help(
+                    "Sets a limit for the number of notifications in a bulk for "
+                    "which graphs are displayed. If you do not use bulk "
+                    "notifications this option is ignored. Note that each graph "
+                    "increases the size of the mail and takes time to render on "
+                    "the monitoring server. Therefore, large bulks may exceed "
+                    "the maximum size for attachements or the plug-in may run "
+                    "into a timeout so that a failed notification is produced."
+                ),
+            ),
+        ),
+    }
+
+
+def _testing_elements() -> dict[str, DictElement[Any]]:
+    return {
+        "notification_rule": DictElement(
+            group=DictGroupExtended(
+                title=Title("Troubleshooting/testing settings"),
+                layout=DictionaryGroupLayout.vertical,
+            ),
+            parameter_form=FixedValue(
+                title=Title("Show notification rule that triggered the notification"),
+                label=Label(""),
+                value=True,
+            ),
+        ),
+    }
+
+
+def _from_address_element(is_cse: bool) -> DictElement[Any]:
+    return DictElement(
+        group=DictGroupExtended(
+            title=Title("Email header"),
+            layout=DictionaryGroupLayout.vertical,
+        ),
+        parameter_form=Dictionary(
+            title=Title('Custom sender ("From")'),
+            elements={
+                "address": DictElement(
+                    parameter_form=String(
+                        title=Title("Email address"),
+                        custom_validate=[ValidateEmailAddress()],
+                    ),
+                ),
+                "display_name": DictElement(
+                    parameter_form=String(
+                        title=Title("Display name"),
+                    ),
+                ),
+            },
+        ),
+        render_only=is_cse,
+    )
+
+
+def _reply_to() -> DictElement[Any]:
+    return DictElement(
+        group=DictGroupExtended(
+            title=Title("Email header"),
+            layout=DictionaryGroupLayout.vertical,
+        ),
+        parameter_form=Dictionary(
+            title=Title('Custom recipient of "Reply to"'),
+            elements={
+                "address": DictElement(
+                    parameter_form=String(
+                        title=Title("Email address"),
+                        custom_validate=[ValidateEmailAddress()],
+                    ),
+                ),
+                "display_name": DictElement(
+                    parameter_form=String(
+                        title=Title("Display name"),
+                    ),
+                ),
+            },
+        ),
+    )
+
+
+def _disable_multiplexing(is_cse: bool) -> DictElement[Any]:
+    return DictElement(
+        group=DictGroupExtended(
+            title=Title("Email header"),
+            layout=DictionaryGroupLayout.vertical,
+        ),
+        parameter_form=FixedValue(
+            title=Title("Hide other recipients: Send individual notifications to each recipient"),
+            help_text=Help(
+                "Per default only "
+                "one notification is generated "
+                "for all recipients. Therefore, "
+                "all recipients can see who was "
+                "notified and reply to all other "
+                "recipients."
+            ),
+            value=True,
+            label=Label(
+                "A separate notification is "
+                "send to every recipient. Recipients "
+                "cannot see which other recipients "
+                "were notified."
+            ),
+        ),
+        render_only=is_cse,
+    )
+
+
+def _host_subject() -> DictElement[Any]:
+    return DictElement(
+        group=DictGroupExtended(
+            title=Title("Email header"),
+            layout=DictionaryGroupLayout.vertical,
+        ),
+        parameter_form=String(
+            title=Title("Subject line for host notifications"),
+            help_text=Help(
+                "Here you are allowed to use "
+                "all macros that are defined in "
+                "the notification context."
+            ),
+            prefill=DefaultValue("Checkmk: $HOSTNAME$ - $EVENT_TXT$"),
+            field_size=FieldSize.LARGE,
+            macro_support=True,
+        ),
+    )
+
+
+def _service_subject() -> DictElement[Any]:
+    return DictElement(
+        group=DictGroupExtended(
+            title=Title("Email header"),
+            layout=DictionaryGroupLayout.vertical,
+        ),
+        parameter_form=String(
+            title=Title("Subject line for service notifications"),
+            help_text=Help(
+                "Here you are allowed to use "
+                "all macros that are defined in "
+                "the notification context."
+            ),
+            prefill=DefaultValue("Checkmk: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$"),
+            field_size=FieldSize.LARGE,
+            macro_support=True,
+        ),
+    )
+
+
+def _bulk_sort_order() -> DictElement[Any]:
+    return DictElement(
+        group=DictGroupExtended(
+            title=Title("Bulk notifications"),
+            layout=DictionaryGroupLayout.vertical,
+        ),
+        parameter_form=SingleChoice(
+            title=Title("Notification sort order for bulk notifications"),
+            elements=[
+                SingleChoiceElement(name="oldest_first", title=Title("Oldest first")),
+                SingleChoiceElement(name="newest_first", title=Title("Newest first")),
+            ],
+            help_text=Help(
+                "With this option you can "
+                "specify, whether the oldest "
+                "(default) or the newest "
+                "notification should get shown "
+                "at the top of the notification "
+                "mail."
+            ),
+            prefill=DefaultValue("newest_first"),
+        ),
+    )

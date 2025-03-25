@@ -19,6 +19,10 @@ from uuid import UUID
 
 import livestatus
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc import store
+from cmk.ccc.site import omd_site
+
 from cmk.utils import paths
 from cmk.utils.licensing.export import (
     LicenseUsageExtensions,
@@ -38,10 +42,6 @@ from cmk.utils.licensing.helper import (
 )
 from cmk.utils.paths import licensing_dir, omd_root
 
-import cmk.ccc.version as cmk_version
-from cmk.ccc import store
-from cmk.ccc.site import omd_site
-
 CLOUD_SERVICE_PREFIXES = {"aws", "azure", "gcp"}
 
 
@@ -57,6 +57,8 @@ CLOUD_SERVICE_PREFIXES = {"aws", "azure", "gcp"}
 _LICENSE_LABEL_NAME = "cmk/licensing"
 _LICENSE_LABEL_EXCLUDE = "excluded"
 SYNTHETIC_MON_CHECK_NAME = "robotmk_test"
+PATTERN_BASED_KPI_CHECK_NAME = "robotmk_pattern_based_kpi"
+MARKER_BASED_KPI_CHECK_NAME = "robotmk_marker_based_kpi"
 
 
 class DoCreateSample(Protocol):
@@ -180,6 +182,8 @@ def create_sample(now: Now, instance_id: UUID, site_hash: str) -> LicenseUsageSa
         num_services_excluded=services_counter.num_excluded,
         num_synthetic_tests=synthetic_monitoring_counter.num_services,
         num_synthetic_tests_excluded=synthetic_monitoring_counter.num_excluded,
+        num_synthetic_kpis=synthetic_monitoring_counter.num_kpis,
+        num_synthetic_kpis_excluded=synthetic_monitoring_counter.num_kpis_excluded,
         sample_time=sample_time,
         timezone=now.tz,
         extension_ntop=extensions.ntop,
@@ -206,17 +210,12 @@ class HostsOrServicesCounter(NamedTuple):
 def _get_hosts_counter() -> HostsOrServicesCounter:
     return HostsOrServicesCounter.make(
         _get_from_livestatus(
-            (
-                "GET hosts\n"
-                "Stats: host_check_type != 2\n"
-                "Stats: host_labels != '{label_name}' '{label_value}'\n"
-                "StatsAnd: 2\n"
-                "Stats: check_type = 2\n"
-                "Stats: host_labels = '{label_name}' '{label_value}'\n"
-            ).format(
-                label_name=_LICENSE_LABEL_NAME,
-                label_value=_LICENSE_LABEL_EXCLUDE,
-            )
+            "GET hosts\n"
+            "Stats: host_check_type != 2\n"
+            f"Stats: host_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'\n"
+            "StatsAnd: 2\n"
+            "Stats: check_type = 2\n"
+            f"Stats: host_labels = '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'\n"
         )
     )
 
@@ -224,23 +223,18 @@ def _get_hosts_counter() -> HostsOrServicesCounter:
 def _get_services_counter() -> HostsOrServicesCounter:
     return HostsOrServicesCounter.make(
         _get_from_livestatus(
-            (
-                "GET services\n"
-                "Stats: host_check_type != 2\n"
-                "Stats: check_type != 2\n"
-                "Stats: host_labels != '{label_name}' '{label_value}'\n"
-                "Stats: service_labels != '{label_name}' '{label_value}'\n"
-                "StatsAnd: 4\n"
-                "Stats: host_check_type = 2\n"
-                "Stats: check_type = 2\n"
-                "StatsAnd: 2\n"
-                "Stats: host_labels = '{label_name}' '{label_value}'\n"
-                "Stats: service_labels = '{label_name}' '{label_value}'\n"
-                "StatsOr: 2\n"
-            ).format(
-                label_name=_LICENSE_LABEL_NAME,
-                label_value=_LICENSE_LABEL_EXCLUDE,
-            )
+            "GET services\n"
+            "Stats: host_check_type != 2\n"
+            "Stats: check_type != 2\n"
+            f"Stats: host_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'\n"
+            f"Stats: service_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'\n"
+            "StatsAnd: 4\n"
+            "Stats: host_check_type = 2\n"
+            "Stats: check_type = 2\n"
+            "StatsAnd: 2\n"
+            f"Stats: host_labels = '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'\n"
+            f"Stats: service_labels = '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'\n"
+            "StatsOr: 2\n"
         )
     )
 
@@ -283,32 +277,69 @@ def _get_cloud_counter() -> HostsOrServicesCloudCounter:
 class HostsOrServicesSyntheticCounter(NamedTuple):
     num_services: int
     num_excluded: int
+    num_kpis: int
+    num_kpis_excluded: int
 
     @classmethod
     def make(cls, livestatus_response: Sequence[Sequence[Any]]) -> HostsOrServicesSyntheticCounter:
         stats = livestatus_response[0]
-        return cls(num_services=int(stats[0]), num_excluded=int(stats[1]))
+        return cls(
+            num_services=int(stats[0]),
+            num_excluded=int(stats[1]),
+            num_kpis=int(stats[2]),
+            num_kpis_excluded=int(stats[3]),
+        )
 
 
 def _get_synthetic_monitoring_counter() -> HostsOrServicesSyntheticCounter:
-    return HostsOrServicesSyntheticCounter.make(
-        _get_from_livestatus(
-            "GET services"
-            "\nStats: host_check_type != 2"
-            "\nStats: check_type != 2"
-            f"\nStats: host_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'"
-            f"\nStats: service_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'"
-            f"\nStats: check_command = check_mk-{SYNTHETIC_MON_CHECK_NAME}"
-            "\nStatsAnd: 5"
-            f"\nStats: host_labels = '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'"
-            f"\nStats: service_labels = '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'"
-            "\nStatsOr: 2"
-            "\nStats: host_check_type != 2"
-            "\nStats: check_type != 2"
-            f"\nStats: check_command = check_mk-{SYNTHETIC_MON_CHECK_NAME}"
-            "\nStatsAnd: 4"
-        )
+    shadow_entity_type = "2"
+    num_synthetic_tests_query = [
+        f"\nStats: host_check_type != {shadow_entity_type}",
+        f"\nStats: check_type != {shadow_entity_type}",
+        f"\nStats: host_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'",
+        f"\nStats: service_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'",
+        f"\nStats: check_command = check_mk-{SYNTHETIC_MON_CHECK_NAME}",
+        "\nStatsAnd: 5",
+    ]
+    num_synthetic_tests_excluded_query = [
+        f"\nStats: host_check_type != {shadow_entity_type}",
+        f"\nStats: check_type != {shadow_entity_type}",
+        f"\nStats: host_labels = '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'",
+        f"\nStats: service_labels = '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'",
+        "\nStatsOr: 2",
+        f"\nStats: check_command = check_mk-{SYNTHETIC_MON_CHECK_NAME}",
+        "\nStatsAnd: 4",
+    ]
+    num_synthetic_kpis_query = [
+        f"\nStats: host_check_type != {shadow_entity_type}",
+        f"\nStats: check_type != {shadow_entity_type}",
+        f"\nStats: host_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'",
+        f"\nStats: service_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'",
+        f"\nStats: check_command = check_mk-{PATTERN_BASED_KPI_CHECK_NAME}",
+        f"\nStats: check_command = check_mk-{MARKER_BASED_KPI_CHECK_NAME}",
+        "\nStatsOr: 2",
+        "\nStatsAnd: 5",
+    ]
+    num_synthetic_kpis_excluded_query = [
+        f"\nStats: host_check_type != {shadow_entity_type}",
+        f"\nStats: check_type != {shadow_entity_type}",
+        f"\nStats: host_labels = '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'",
+        f"\nStats: service_labels = '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'",
+        "\nStatsOr: 2",
+        f"\nStats: check_command = check_mk-{PATTERN_BASED_KPI_CHECK_NAME}",
+        f"\nStats: check_command = check_mk-{MARKER_BASED_KPI_CHECK_NAME}",
+        "\nStatsOr: 2",
+        "\nStatsAnd: 4",
+    ]
+    livestatus_query = (
+        "GET services"
+        + "".join(num_synthetic_tests_query)
+        + "".join(num_synthetic_tests_excluded_query)
+        + "".join(num_synthetic_kpis_query)
+        + "".join(num_synthetic_kpis_excluded_query)
     )
+
+    return HostsOrServicesSyntheticCounter.make(_get_from_livestatus(livestatus_query))
 
 
 def _get_next_run_ts(file_path: Path) -> int:

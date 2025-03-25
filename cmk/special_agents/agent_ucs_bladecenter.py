@@ -8,6 +8,8 @@
 True
 >>> C_SERIES_REGEX.match("UCSC") is not None
 True
+>>> C_SERIES_REGEX.match("APIC") is not None
+True
 >>> B_SERIES_REGEX.match("UCSB") is not None
 True
 """
@@ -23,10 +25,12 @@ from typing import Any
 import requests
 import urllib3
 
+from cmk.ccc.exceptions import MKException
+
 from cmk.utils.password_store import replace_passwords
 
-from cmk.ccc.exceptions import MKException
 from cmk.special_agents.v0_unstable.misc import vcrtrace
+from cmk.special_agents.v0_unstable.request_helper import HostnameValidationAdapter
 
 ElementAttributes = dict[str, str]
 
@@ -51,10 +55,14 @@ Entities = list[tuple[str, re.Pattern[str], Sequence[Entry]]]
 B_SERIES_REGEX = re.compile(r"^UCSB$")
 # As of SUP-11234 hyperflex systems share the same hardware with UCSC systems.
 # Those two models should be basically the same: UCSC-C240-M5SX and HXAF240C-M5SX
+# 13th Nov 2023 Michael Frank (michael.frank@forvia.com)
+# Added support for Cisco APIC Rackmount
 C_SERIES_REGEX = re.compile(
     r"""
     ^
     (
+        APIC      # apic-server-l3
+        |
         UCSC      # normal, direct form
         |
         HX        # hyperflex
@@ -360,13 +368,22 @@ class CommunicationException(MKException):
 
 
 class Server:
-    def __init__(self, hostname: str, username: str, password: str, verify_ssl: bool) -> None:
+    def __init__(
+        self,
+        hostname: str,
+        username: str,
+        password: str,
+        cert_check: bool | str,
+    ) -> None:
         self._url = "https://%s/nuova" % hostname
         self._username = username
         self._password = password
         self._session = requests.Session()
-        self._verify_ssl = verify_ssl
+        self._verify_ssl = bool(cert_check)
         self._cookie: str | None = None
+
+        if isinstance(cert_check, str):
+            self._session.mount(self._url, HostnameValidationAdapter(cert_check))
 
     def login(self) -> None:
         logging.debug("Server.login: Login")
@@ -564,10 +581,13 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         "--vcrtrace",
         action=vcrtrace(before_record_request=Server.filter_credentials),
     )
-    parser.add_argument(
-        "--no-cert-check",
-        action="store_true",
-        help="Disables the checking of the servers ssl certificate.",
+    cert_args = parser.add_mutually_exclusive_group()
+    cert_args.add_argument(
+        "--no-cert-check", action="store_true", help="Do not verify TLS certificate"
+    )
+    cert_args.add_argument(
+        "--cert-server-name",
+        help="Use this server name for TLS certificate validation.",
     )
     parser.add_argument("--debug", action="store_true", help="Raise Python exceptions.")
     parser.add_argument("-u", "--username", required=True, help="The username.")

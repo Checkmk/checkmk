@@ -129,7 +129,12 @@ class _ABCGetOrganisationsCache(DataCache):
         return 86400
 
     def get_validity_from_args(self, *args: object) -> bool:
-        return True
+        (org_ids,) = args
+        try:
+            cache_ids = [org["id_"] for org in self.get_cached_data()]
+        except FileNotFoundError:
+            cache_ids = []
+        return cache_ids == org_ids
 
     @abc.abstractmethod
     def get_live_data(self, *args: object) -> Sequence[_Organisation]:
@@ -221,25 +226,33 @@ class MerakiOrganisation:
 
         if _SEC_NAME_DEVICE_STATUSES in self.config.section_names:
             for device_status in self._get_device_statuses():
-                if piggyback := self._get_device_piggyback(device_status, devices_by_serial):
+                # Empty device names are possible when reading from the meraki API, let's set the
+                # piggyback to None so that the output is written to the main section.
+                if (
+                    piggyback := self._get_device_piggyback(device_status, devices_by_serial)
+                ) is not None:
                     yield self._make_section(
                         name=_SEC_NAME_DEVICE_STATUSES,
                         data=device_status,
-                        piggyback=piggyback,
+                        piggyback=piggyback or None,
                     )
 
         if _SEC_NAME_SENSOR_READINGS in self.config.section_names:
             for sensor_reading in self._get_sensor_readings():
-                if piggyback := self._get_device_piggyback(sensor_reading, devices_by_serial):
+                # Empty device names are possible when reading from the meraki API, let's set the
+                # piggyback to None so that the output is written to the main section.
+                if (
+                    piggyback := self._get_device_piggyback(sensor_reading, devices_by_serial)
+                ) is not None:
                     yield self._make_section(
                         name=_SEC_NAME_SENSOR_READINGS,
                         data=sensor_reading,
-                        piggyback=piggyback,
+                        piggyback=piggyback or None,
                     )
 
     def _get_licenses_overview(self) -> MerakiAPIData | None:
         def _update_licenses_overview(
-            licenses_overview: dict[str, object] | None
+            licenses_overview: dict[str, object] | None,
         ) -> MerakiAPIData | None:
             if not licenses_overview:
                 return None
@@ -398,7 +411,7 @@ def _get_organisations(config: MerakiConfig, org_ids: Sequence[str]) -> Sequence
         return []
     return (
         GetOrganisationsByIDCache(config, org_ids) if org_ids else GetOrganisationsCache(config)
-    ).get_data()
+    ).get_data(org_ids)
 
 
 def _need_organisations(section_names: Sequence[str]) -> bool:

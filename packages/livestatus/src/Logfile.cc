@@ -7,14 +7,14 @@
 
 #include <fcntl.h>
 
-#include <algorithm>
-#include <bitset>
 #include <cerrno>
-#include <compare>
+#include <chrono>
 #include <fstream>
+#include <ranges>
 #include <stdexcept>
 #include <vector>
 
+#include "livestatus/ChronoUtils.h"
 #include "livestatus/LogCache.h"
 #include "livestatus/Logger.h"
 
@@ -44,8 +44,14 @@ Logfile::Logfile(Logger *logger, LogCache *log_cache,
     , _lineno(0)
     , _logclasses_read(0) {}
 
-void Logfile::load(const LogFilter &log_filter) {
-    const unsigned missing_types = log_filter.log_entry_classes.to_ulong() &
+std::ostream &operator<<(std::ostream &os, const Logfile &f) {
+    return os << "log file " << f.path() << " (starts at timestamp "
+              << std::chrono::system_clock::to_time_t(f.since()) << " = "
+              << FormattedTimePoint(f.since()) << ")";
+}
+
+void Logfile::load(const LogRestrictions &restrictions) {
+    const unsigned missing_types = restrictions.log_entry_classes.to_ulong() &
                                    ~_logclasses_read;  // TODO(sp)
     // The current logfile has the _watch flag set to true.
     // In that case, if the logfile has grown, we need to
@@ -70,15 +76,19 @@ void Logfile::load(const LogFilter &log_filter) {
         // have read to the end of the file
         if (_logclasses_read != 0U) {
             (void)fsetpos(file, &_read_pos);  // continue at previous end
-            loadRange(log_filter, file, _logclasses_read);
-            (void)fgetpos(file, &_read_pos);
+            loadRange(restrictions, file, _logclasses_read);
+            if (::ferror(file) == 0) {
+                (void)fgetpos(file, &_read_pos);
+            }
         }
         if (missing_types != 0U) {
             (void)fseek(file, 0, SEEK_SET);
             _lineno = 0;
-            loadRange(log_filter, file, missing_types);
+            loadRange(restrictions, file, missing_types);
             _logclasses_read |= missing_types;
-            (void)fgetpos(file, &_read_pos);  // remember current end of file
+            if (::ferror(file) == 0) {
+                (void)fgetpos(file, &_read_pos);
+            }
         }
         // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
         (void)fclose(file);
@@ -96,34 +106,35 @@ void Logfile::load(const LogFilter &log_filter) {
         }
 
         _lineno = 0;
-        loadRange(log_filter, file, missing_types);
+        loadRange(restrictions, file, missing_types);
         _logclasses_read |= missing_types;
         // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
         (void)fclose(file);
     }
 }
 
-void Logfile::loadRange(const LogFilter &log_filter, FILE *file,
+void Logfile::loadRange(const LogRestrictions &restrictions, FILE *file,
                         unsigned missing_types) {
     std::vector<char> linebuffer(65536);
     // TODO(sp) We should really use C++ I/O here...
     while (fgets(linebuffer.data(), static_cast<int>(linebuffer.size()),
                  file) != nullptr) {
-        if (_lineno >= log_filter.max_lines_per_log_file) {
-            Error(_logger) << "more than " << log_filter.max_lines_per_log_file
+        if (_lineno >= restrictions.max_lines_per_log_file) {
+            Error(_logger) << "more than "
+                           << restrictions.max_lines_per_log_file
                            << " lines in " << _path << ", ignoring the rest!";
             return;
         }
         _lineno++;
         // remove trailing newline (should be nuked, see above)
-        auto it =
-            std::find_if(linebuffer.begin(), linebuffer.end(),
-                         [](auto ch) { return ch == '\0' || ch == '\n'; });
+        auto it = std::ranges::find_if(
+            linebuffer, [](auto ch) { return ch == '\0' || ch == '\n'; });
         if (it != linebuffer.end()) {
             *it = '\0';
         }
         if (processLogLine(_lineno, linebuffer.data(), missing_types)) {
-            _log_cache->logLineHasBeenAdded(this, log_filter.log_entry_classes);
+            _log_cache->logLineHasBeenAdded(this,
+                                            restrictions.log_entry_classes);
         }
     }
 }
@@ -168,26 +179,8 @@ bool Logfile::processLogLine(size_t lineno, std::string line,
     return true;
 }
 
-const Logfile::map_type *Logfile::getEntriesFor(const LogFilter &log_filter) {
-    load(log_filter);  // make sure all messages are present
+const Logfile::map_type *Logfile::getEntriesFor(
+    const LogRestrictions &restrictions) {
+    load(restrictions);  // make sure all messages are present
     return &_entries;
-}
-
-// static
-bool Logfile::processLogEntries(
-    const std::function<bool(const LogEntry &)> &process_log_entry,
-    const map_type *entries, const LogFilter &log_filter) {
-    auto it =
-        entries->upper_bound(Logfile::makeKey(log_filter.until, 999999999));
-    while (it != entries->begin()) {
-        --it;
-        const auto &entry = *it->second;
-        if (entry.time() < log_filter.since) {
-            return false;  // time limit exceeded
-        }
-        if (!process_log_entry(entry)) {
-            return false;
-        }
-    }
-    return true;
 }

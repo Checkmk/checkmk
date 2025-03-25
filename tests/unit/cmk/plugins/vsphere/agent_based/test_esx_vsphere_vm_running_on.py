@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from tests.unit.cmk.plugins.vsphere.agent_based.esx_vsphere_vm_util import esx_vm_section
 
 from cmk.agent_based.v2 import Result, State
-from cmk.plugins.lib.esx_vsphere import ESXVm
+from cmk.plugins.lib.esx_vsphere import SectionESXVm
 from cmk.plugins.vsphere.agent_based import esx_vsphere_vm, esx_vsphere_vm_running_on
 
 
@@ -41,5 +40,5 @@ def test_check_running_on_host_missing() -> None:
     assert results[0].summary == "Runtime host information is missing"
 
 
-def _esx_vm_section(host: str | None) -> ESXVm:
+def _esx_vm_section(host: str | None) -> SectionESXVm:
     return esx_vm_section(host=host)

@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, startswith, StringTable
+
+check_info = {}
 
 
 def discover_packeteer_fan_status(section: StringTable) -> DiscoveryResult:
@@ -32,6 +32,7 @@ def parse_packeteer_fan_status(string_table: StringTable) -> StringTable | None:
 
 
 check_info["packeteer_fan_status"] = LegacyCheckDefinition(
+    name="packeteer_fan_status",
     parse_function=parse_packeteer_fan_status,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2334"),
     fetch=SNMPTree(

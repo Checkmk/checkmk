@@ -243,6 +243,8 @@ def check_apt(params: Mapping[str, Any], section: Section) -> CheckResult:
 
     if section.n_updates == 0:
         yield Result(state=State.OK, summary=NOTHING_PENDING_FOR_INSTALLATION)
+        yield Metric(name="normal_updates", value=0)
+        yield Metric(name="security_updates", value=0)
         return
 
     yield Result(

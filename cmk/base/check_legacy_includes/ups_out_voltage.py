@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=no-else-return
-
 
 def check_ups_out_voltage(item, params, info):
     warn, crit = params["levels_lower"]

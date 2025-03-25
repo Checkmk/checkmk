@@ -6,11 +6,12 @@
 from collections.abc import Iterable, Mapping
 from typing import Any
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.plugins.lib.df import FSBlock
+
+check_info = {}
 
 
 def inventory_emc_isilon_ifs(section: FSBlock) -> list[tuple[str, None]]:
@@ -22,6 +23,7 @@ def check_emc_isilon_ifs(item: str, params: Mapping[str, Any], section: FSBlock)
 
 
 check_info["emc_isilon_ifs"] = LegacyCheckDefinition(
+    name="emc_isilon_ifs",
     service_name="Filesystem %s",
     # section already migrated
     discovery_function=inventory_emc_isilon_ifs,

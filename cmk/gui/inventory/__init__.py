@@ -7,23 +7,22 @@ from __future__ import annotations
 
 import json
 import shutil
-import time
-import xml.dom.minidom
 from collections.abc import Mapping
+from datetime import timedelta
 from pathlib import Path
 from typing import Any, Literal, TypedDict
 
-import dicttoxml  # type: ignore[import-untyped]
-
 import livestatus
+
+from cmk.ccc.exceptions import MKException
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostAddress, HostName
-from cmk.utils.structured_data import SDRawTree
+from cmk.utils.structured_data import SDRawTree, serialize_tree
 
 from cmk.gui import sites
 from cmk.gui.config import active_config
-from cmk.gui.cron import register_job
+from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
@@ -37,9 +36,7 @@ from cmk.gui.visuals.filter import FilterRegistry
 from cmk.gui.visuals.info import VisualInfo, VisualInfoRegistry
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 
-from cmk.ccc.exceptions import MKException
-
-from . import _rulespec
+from . import _rulespec, _xml
 from ._history import (
     FilteredInventoryHistoryPaths,
     FilterInventoryHistoryPathsError,
@@ -90,9 +87,16 @@ def register(
     rulespec_group_registry: RulespecGroupRegistry,
     rulespec_registry: RulespecRegistry,
     icon_and_action_registry: IconRegistry,
+    cron_job_registry: CronJobRegistry,
 ) -> None:
     page_registry.register_page_handler("host_inv_api", page_host_inv_api)
-    register_job(execute_inventory_housekeeping_job)
+    cron_job_registry.register(
+        CronJob(
+            name="execute_inventory_housekeeping_job",
+            callable=execute_inventory_housekeeping_job,
+            interval=timedelta(hours=12),
+        )
+    )
     visual_info_registry.register(VisualInfoInventoryHistory)
     filter_registry.register(FilterHasInv())
     filter_registry.register(FilterInvHasSoftwarePackage())
@@ -162,15 +166,16 @@ def _check_for_valid_hostname(hostname: str) -> None:
     Traceback (most recent call last):
     cmk.gui.exceptions.MKUserError: You need to provide a valid "host name". Only letters, digits, dash, underscore and dot are allowed.
     """
-    if HostAddress.is_valid(hostname):
-        return
-    raise MKUserError(
-        None,
-        _(
-            'You need to provide a valid "host name". '
-            "Only letters, digits, dash, underscore and dot are allowed.",
-        ),
-    )
+    try:
+        HostAddress(hostname)
+    except ValueError:
+        raise MKUserError(
+            None,
+            _(
+                'You need to provide a valid "host name". '
+                "Only letters, digits, dash, underscore and dot are allowed.",
+            ),
+        )
 
 
 class _HostInvAPIResponse(TypedDict):
@@ -185,11 +190,10 @@ def _inventory_of_host(host_name: HostName, api_request: dict[str, Any]) -> SDRa
 
     tree = load_filtered_and_merged_tree(get_status_data_via_livestatus(site, host_name))
     if "paths" in api_request:
-        return tree.filter(
-            make_filter_choices_from_api_request_paths(api_request["paths"])
-        ).serialize()
-
-    return tree.serialize()
+        return serialize_tree(
+            tree.filter(make_filter_choices_from_api_request_paths(api_request["paths"]))
+        )
+    return serialize_tree(tree)
 
 
 def _write_json(resp):
@@ -197,8 +201,7 @@ def _write_json(resp):
 
 
 def _write_xml(resp):
-    unformated_xml = dicttoxml.dicttoxml(resp)
-    dom = xml.dom.minidom.parseString(unformated_xml)
+    dom = _xml.dict_to_document(resp)
     response.set_data(dom.toprettyxml())
 
 
@@ -252,12 +255,6 @@ class InventoryHousekeeping:
         ):
             return
 
-        last_cleanup = self._inventory_delta_cache_path / "last_cleanup"
-        # TODO: remove with pylint 2
-        if last_cleanup.exists() and time.time() - last_cleanup.stat().st_mtime < 3600 * 12:
-            return
-
-        # TODO: remove with pylint 2
         inventory_archive_hosts = {
             x.name for x in self._inventory_archive_path.iterdir() if x.is_dir()
         }
@@ -286,9 +283,6 @@ class InventoryHousekeeping:
                     delete = True
                 if delete:
                     (self._inventory_delta_cache_path / hostname / filename).unlink()
-
-        # TODO: remove with pylint 2
-        last_cleanup.touch()
 
     def _get_timestamps_for_host(self, hostname):
         timestamps = {"None"}  # 'None' refers to the histories start

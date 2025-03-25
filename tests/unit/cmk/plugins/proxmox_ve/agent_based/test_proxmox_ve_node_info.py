@@ -8,14 +8,10 @@ from collections.abc import Mapping
 
 import pytest
 
+import cmk.plugins.proxmox_ve.agent_based.proxmox_ve_node_info as pvni
 from cmk.agent_based.v2 import CheckResult, Result, State
-from cmk.plugins.proxmox_ve.agent_based.proxmox_ve_node_info import (
-    check_proxmox_ve_node_info,
-    parse_proxmox_ve_node_info,
-    Section,
-)
 
-NODE_DATA = parse_proxmox_ve_node_info(
+NODE_DATA = pvni.parse_proxmox_ve_node_info(
     [
         [
             json.dumps(
@@ -86,24 +82,14 @@ NODE_DATA = parse_proxmox_ve_node_info(
     ],
 )
 def test_check_proxmox_ve_node_info(
-    params: Mapping[str, object], section: Section, expected_results: CheckResult
+    params: Mapping[str, object], section: pvni.Section, expected_results: CheckResult
 ) -> None:
-    results = tuple(check_proxmox_ve_node_info(params, section))
-    print("\n" + "\n".join(map(str, results)))
+    results = tuple(pvni.check_proxmox_ve_node_info(params, section))
     assert results == expected_results
 
 
 if __name__ == "__main__":
     # Please keep these lines - they make TDD easy and have no effect on normal test runs.
     # Just run this file from your IDE and dive into the code.
-    import os
-
-    from tests.testlib.repo import repo_path
-
-    assert not pytest.main(
-        [
-            "--doctest-modules",
-            os.path.join(repo_path(), "cmk/base/plugins/agent_based/proxmox_ve_node_info.py"),
-        ]
-    )
+    assert not pytest.main(["--doctest-modules", pvni.__file__])
     pytest.main(["-T=unit", "-vvsx", __file__])

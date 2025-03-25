@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import json
 
 import pytest
 
-from tests.testlib.repo import repo_path
+from tests.testlib.common.repo import repo_path
 
 from livestatus import RRDResponse
 
@@ -21,7 +20,7 @@ def _load_fake_rrd_response(start: int, end: int) -> RRDResponse:
         (
             repo_path()
             / "tests/unit/cmk/utils/prediction/test-files/input"
-            / f"test-prediction-CPU load-load15-{start}-{end}"
+            / f"test-prediction-CPU_load-load15-{start}-{end}"
         ).read_text()
     )
     return RRDResponse(
@@ -190,7 +189,7 @@ def test_calculate_data_for_prediction(
             from_time - start,
         )
         for start, end in time_windows
-        if (response := _load_fake_rrd_response(start, end))
+        for response in [_load_fake_rrd_response(start, end)]
     ]
 
     data_for_pred = _prediction._calculate_data_for_prediction(raw_slices[0][0], raw_slices)

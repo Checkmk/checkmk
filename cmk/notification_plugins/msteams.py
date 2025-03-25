@@ -2,6 +2,7 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Iterable
 
 from cmk.utils.ms_teams_constants import (
     ms_teams_tmpl_host_details,
@@ -35,12 +36,20 @@ def _msteams_msg(
     context: PluginNotificationContext,
 ) -> dict[str, object]:
     title, summary, details, subtitle = _get_text_fields(context, notify_what := context["WHAT"])
-    section_facts = _get_section_facts(context, details)
-    info_url: str = (
+    actions = []
+    if info_url := (
         service_url_from_context(context)
         if notify_what == "SERVICE"
         else host_url_from_context(context)
-    )
+    ):
+        actions.append(
+            {
+                "type": "Action.OpenUrl",
+                "title": f"View {notify_what.lower()} details in Checkmk",
+                "url": info_url,
+                "role": "Button",
+            }
+        )
 
     return {
         "type": "message",
@@ -73,24 +82,36 @@ def _msteams_msg(
                             "wrap": True,
                         },
                         {
-                            "type": "FactSet",
-                            "facts": section_facts,
+                            "type": "ColumnSet",
                             "separator": True,
+                            "columns": [
+                                {
+                                    "type": "Column",
+                                    "width": "auto",
+                                    "items": [
+                                        {
+                                            "type": "TextBlock",
+                                            "text": "Details",
+                                            "wrap": True,
+                                            "weight": "bolder",
+                                        }
+                                    ],
+                                },
+                                {
+                                    "type": "Column",
+                                    "width": "stretch",
+                                    "items": list(_get_details(context, details)),
+                                },
+                            ],
                         },
+                        *_get_section_facts(context),
                     ],
-                    "actions": [
-                        {
-                            "type": "Action.OpenUrl",
-                            "title": f"View {notify_what.lower()} details in Checkmk",
-                            "url": info_url,
-                            "role": "Button",
-                        },
-                    ],
+                    "actions": actions,
                     "msteams": {
                         "width": "Full",
                     },
                 },
-            }
+            },
         ],
     }
 
@@ -116,25 +137,41 @@ def _get_text_fields(
     )
 
 
-def _get_section_facts(context: PluginNotificationContext, details: str) -> list[dict[str, str]]:
-    section_facts = [
-        {
-            "title": "Detail",
-            "value": substitute_context(details, context).replace("\\n", "\n\n\n\n"),
-        },
-    ]
+def _get_details(context: PluginNotificationContext, details: str) -> Iterable[dict[str, object]]:
+    full_details = substitute_context(details, context).replace("\\n", "\n\n")
+    add_separator = False
+    for segment in full_details.split("\n\n"):
+        if not segment.strip():
+            add_separator = True
+            continue
 
-    if "PARAMETER_AFFECTED_HOST_GROUPS" in context:
-        section_facts += [{"title": "Affected host groups", "value": context["HOSTGROUPNAMES"]}]
+        if add_separator:
+            yield {"type": "TextBlock", "text": segment, "wrap": True, "separator": True}
+            add_separator = False
+        else:
+            yield {"type": "TextBlock", "text": segment, "wrap": True, "spacing": "none"}
 
-    if context["NOTIFICATIONAUTHOR"] != "":
-        section_facts += [
-            {"title": "Author", "value": context["NOTIFICATIONAUTHOR"]},
-            {"title": "Comment", "value": context["NOTIFICATIONCOMMENT"]},
-        ]
 
-    return section_facts
+def _get_section_facts(context: PluginNotificationContext) -> Iterable[dict[str, object]]:
+    section_facts = []
+    if "PARAMETER_AFFECTED_HOST_GROUPS" in context and (groups := context.get("HOSTGROUPNAMES")):
+        section_facts.append({"title": "Affected host groups", "value": groups})
+
+    if author := context.get("NOTIFICATIONAUTHOR"):
+        section_facts.append({"title": "Author", "value": author})
+
+    if comment := context.get("NOTIFICATIONCOMMENT"):
+        section_facts.append({"title": "Comment", "value": comment})
+
+    if section_facts:
+        yield {
+            "type": "FactSet",
+            "facts": section_facts,
+            "separator": True,
+        }
 
 
 def main() -> int:
-    return process_by_status_code(post_request(_msteams_msg), 202)
+    # 200: old webhooks (deprecated)
+    # 202: workflows
+    return process_by_status_code(post_request(_msteams_msg), (200, 202))

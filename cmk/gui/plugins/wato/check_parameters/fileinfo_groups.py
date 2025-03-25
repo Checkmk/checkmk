@@ -88,7 +88,7 @@ def _transform_level_names(conjunctions):
 
 def _valuespec_fileinfo_groups() -> Dictionary:
     return Dictionary(
-        title=_("Group patterns"),
+        title=_("File grouping patterns"),
         elements=[
             (
                 "group_patterns",
@@ -112,7 +112,7 @@ def _valuespec_fileinfo_groups() -> Dictionary:
                             ),
                         ],
                     ),
-                    title=_("File Grouping Patterns"),
+                    title=_("Group patterns"),
                     help=_get_fileinfo_groups_help(),
                     add_label=_("Add pattern group"),
                 ),

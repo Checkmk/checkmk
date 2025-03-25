@@ -5,6 +5,7 @@
 
 from collections.abc import MutableMapping, Sequence
 from logging import Logger
+from typing import override
 
 from cmk.utils.rulesets.ruleset_matcher import TagCondition
 from cmk.utils.tags import AuxTagList, BuiltinTagConfig, TagConfig, TagGroup, TagGroupID, TagID
@@ -16,6 +17,7 @@ from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
 class UpdateNotificationTagConditions(UpdateAction):
+    @override
     def __call__(self, logger: Logger) -> None:
         tag_groups, aux_tag_list = get_tag_config()
         for rule in (notification_rules := NotificationRuleConfigFile().load_for_modification()):

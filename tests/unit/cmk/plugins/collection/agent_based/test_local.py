@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
 
 import pytest
 
@@ -31,6 +29,25 @@ def test_invalid_metric_name_does_not_crash() -> None:
             ),
         ),
         Result(state=State.OK, notice="Invalid:name: 1.00"),
+    ]
+
+
+def test_error_does_not_raise() -> None:
+    assert list(
+        local.check_local(
+            "MyService",
+            {},
+            local.parse_local([["ARGL", "MyService", "-", "Whopwhop"]]),
+        )
+    ) == [
+        Result(
+            state=State.UNKNOWN,
+            summary="Invalid data: 'ARGL MyService - Whopwhop'",
+            details=(
+                "The monitoring site got invalid data from a local check on the monitored host.\n"
+                "Invalid data: 'ARGL MyService - Whopwhop'\nReason: Invalid plug-in status ARGL."
+            ),
+        )
     ]
 
 
@@ -425,7 +442,7 @@ if __name__ == "__main__":
     # Just run this file from your IDE and dive into the code.
     import os
 
-    from tests.testlib.repo import repo_path
+    from tests.testlib.common.repo import repo_path
 
     assert not pytest.main(
         [

@@ -17,9 +17,8 @@ from cmk.gui.permissions import Permission
 from cmk.gui.type_defs import Row, Rows
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
-from cmk.gui.utils.time import timezone_utc_offset_str
 
-from .group import command_group_registry, CommandGroup
+from .group import CommandGroup
 
 CommandSpecWithoutSite = str
 CommandSpecWithSite = tuple[SiteId | None, CommandSpecWithoutSite]
@@ -45,88 +44,92 @@ CommandExecutor = Callable[[CommandSpec, SiteId | None], None]
 
 
 class Command(abc.ABC):
-    @property
-    @abc.abstractmethod
-    def ident(self) -> str:
-        """The identity of a command. One word, may contain alpha numeric characters"""
-        raise NotImplementedError()
-
-    @property
-    @abc.abstractmethod
-    def title(self) -> str:
-        raise NotImplementedError()
+    def __init__(
+        self,
+        ident: str,
+        title: LazyString,
+        permission: Permission,
+        tables: Sequence[str],
+        render: Callable[[str], None],
+        action: Callable[
+            ["Command", Literal["HOST", "SVC"], str, Row, int, Rows], CommandActionResult
+        ],
+        group: type[CommandGroup],
+        confirm_button: LazyString | Callable[[], LazyString],
+        confirm_title: LazyString | Callable[[], LazyString] | None = None,
+        confirm_dialog_additions: Callable[[Literal["HOST", "SVC"], Row, Rows], HTML] | None = None,
+        confirm_dialog_icon_class: Callable[[], Literal["question", "warning"]] | None = None,
+        cancel_button: LazyString = _l("Cancel"),
+        deny_button: LazyString | None = None,
+        deny_js_function: str | None = None,
+        affected_output_cb: Callable[[int, Literal["HOST", "SVC"]], HTML] | None = None,
+        icon_name: str = "commands",
+        is_show_more: bool = False,
+        is_shortcut: bool = False,
+        is_suggested: bool = False,
+        only_view: str | None = None,
+        show_command_form: bool = True,
+        executor: CommandExecutor | None = None,
+    ) -> None:
+        self.ident = ident
+        self.title = title
+        self.confirm_button = confirm_button
+        self._confirm_title = confirm_title
+        self.cancel_button = cancel_button
+        self.deny_button = deny_button
+        self.deny_js_function = deny_js_function
+        self.permission = permission
+        self.tables = tables
+        self.render = render
+        self._action = action
+        self.group = group
+        self.only_view = only_view
+        self.icon_name = icon_name
+        self.is_show_more = is_show_more
+        self.is_shortcut = is_shortcut
+        self.is_suggested = is_suggested
+        self.show_command_form = show_command_form
+        self._confirm_dialog_additions = confirm_dialog_additions
+        self._confirm_dialog_icon_class = confirm_dialog_icon_class
+        self._affected_output_cb = affected_output_cb
+        self._executor = executor
 
     @property
     def confirm_title(self) -> str:
-        return ("%s %s?") % (self.confirm_button, self.title.lower())
-
-    @property
-    @abc.abstractmethod
-    def confirm_button(self) -> LazyString:
-        raise NotImplementedError()
-
-    @property
-    def cancel_button(self) -> LazyString:
-        return _l("Cancel")
-
-    @property
-    def deny_button(self) -> LazyString | None:
-        return None
-
-    @property
-    def deny_js_function(self) -> str | None:
-        return None
-
-    @property
-    @abc.abstractmethod
-    def permission(self) -> Permission:
-        raise NotImplementedError()
-
-    @property
-    @abc.abstractmethod
-    def tables(self) -> list[str]:
-        """List of livestatus table identities the action may be used with"""
-        raise NotImplementedError()
-
-    def confirm_dialog_additions(
-        self,
-        cmdtag: Literal["HOST", "SVC"],
-        row: Row,
-        len_action_rows: int,
-    ) -> HTML:
-        return HTML.empty()
-
-    def confirm_dialog_icon_class(self) -> Literal["question", "warning"]:
-        return "question"
+        if self._confirm_title:
+            return str(
+                self._confirm_title() if callable(self._confirm_title) else self._confirm_title
+            )
+        return ("%s %s?") % (
+            self.confirm_button() if callable(self.confirm_button) else self.confirm_button,
+            str(self.title).lower(),
+        )
 
     def confirm_dialog_options(
-        self, cmdtag: Literal["HOST", "SVC"], row: Row, len_action_rows: int
+        self, cmdtag: Literal["HOST", "SVC"], row: Row, action_rows: Rows
     ) -> CommandConfirmDialogOptions:
         return CommandConfirmDialogOptions(
             self.confirm_title,
-            self.affected(len_action_rows, cmdtag),
-            self.confirm_dialog_additions(cmdtag, row, len_action_rows),
-            self.confirm_dialog_icon_class(),
-            self.confirm_button,
+            self.affected(len(action_rows), cmdtag),
+            (
+                self._confirm_dialog_additions(cmdtag, row, action_rows)
+                if self._confirm_dialog_additions
+                else HTML.empty()
+            ),
+            (
+                self._confirm_dialog_icon_class()
+                if callable(self._confirm_dialog_icon_class)
+                else "question"
+            ),
+            self.confirm_button() if callable(self.confirm_button) else self.confirm_button,
             self.cancel_button,
             self.deny_button,
             self.deny_js_function,
         )
 
-    def confirm_dialog_date_and_time_format(
-        self, timestamp: float, show_timezone: bool = True
-    ) -> str:
-        """Return date, time and if show_timezone is True the local timezone in the format of e.g.
-        'Mon, 01. January 2042 at 01:23 [UTC+01:00]'"""
-        local_time = time.localtime(timestamp)
-        return (
-            time.strftime(_("%a, %d. %B %Y at %H:%M"), local_time)
-            + (" " + timezone_utc_offset_str(timestamp))
-            if show_timezone
-            else ""
-        )
-
     def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
+        if self._affected_output_cb:
+            return self._affected_output_cb(len_action_rows, cmdtag)
         return HTML.with_escaping(
             _("Affected %s: %s")
             % (
@@ -152,57 +155,21 @@ class Command(abc.ABC):
     ) -> list[tuple[str, str]]:
         return [(_("Confirm"), "_do_confirm")]
 
-    def render(self, what: str) -> None:
-        raise NotImplementedError()
-
     def action(
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
-        result = self._action(cmdtag, spec, row, row_index, action_rows)
+        result = self._action(self, cmdtag, spec, row, row_index, action_rows)
         if result:
             commands, confirm_dialog_options = result
             return commands, confirm_dialog_options
         return None
-
-    @abc.abstractmethod
-    def _action(
-        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
-    ) -> CommandActionResult:
-        raise NotImplementedError()
-
-    @property
-    def group(self) -> type[CommandGroup]:
-        """The command group the commmand belongs to"""
-        return command_group_registry["various"]
-
-    @property
-    def only_view(self) -> str | None:
-        """View name to show a view exclusive command for"""
-        return None
-
-    @property
-    def icon_name(self) -> str:
-        return "commands"
-
-    @property
-    def is_show_more(self) -> bool:
-        return False
-
-    @property
-    def is_shortcut(self) -> bool:
-        return False
-
-    @property
-    def is_suggested(self) -> bool:
-        return False
-
-    @property
-    def show_command_form(self) -> bool:
-        return True
 
     def executor(self, command: CommandSpec, site: SiteId | None) -> None:
         """Function that is called to execute this action"""
         # We only get CommandSpecWithoutSite here. Can be cleaned up once we have a dedicated
         # object type for the command
         assert isinstance(command, str)
+        if self._executor:
+            self._executor(command, site)
+            return
         sites.live().command("[%d] %s" % (int(time.time()), command), site)

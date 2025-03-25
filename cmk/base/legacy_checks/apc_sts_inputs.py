@@ -6,11 +6,12 @@
 
 from itertools import cycle
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import contains, SNMPTree
+
+check_info = {}
 
 # .1.3.6.1.4.1.705.2.3.2.1.2.1 3997 --> MG-SNMP-STS-MIB::stsmgSource1PhasePhaseVoltage.1
 # .1.3.6.1.4.1.705.2.3.2.1.2.2 4017 --> MG-SNMP-STS-MIB::stsmgSource1PhasePhaseVoltage.2
@@ -54,6 +55,7 @@ def discover_apc_sts_inputs(section):
 
 
 check_info["apc_sts_inputs"] = LegacyCheckDefinition(
+    name="apc_sts_inputs",
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.705.2.2"),
     fetch=[
         SNMPTree(

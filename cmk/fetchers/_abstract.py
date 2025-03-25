@@ -7,9 +7,9 @@ import abc
 import enum
 from typing import final, Generic, Literal, TypeVar
 
-import cmk.utils.resulttype as result
-
 from cmk.ccc.exceptions import MKFetcherError, MKTimeout
+
+import cmk.utils.resulttype as result
 
 __all__ = ["Fetcher", "Mode"]
 

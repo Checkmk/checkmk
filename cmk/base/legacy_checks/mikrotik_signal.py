@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import contains, SNMPTree, StringTable
+
+check_info = {}
 
 
 def saveint(i: str) -> int:
@@ -53,6 +53,7 @@ def parse_mikrotik_signal(string_table: StringTable) -> StringTable:
 
 
 check_info["mikrotik_signal"] = LegacyCheckDefinition(
+    name="mikrotik_signal",
     parse_function=parse_mikrotik_signal,
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14988.1"),
     fetch=SNMPTree(

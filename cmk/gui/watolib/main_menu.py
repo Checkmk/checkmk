@@ -6,7 +6,9 @@
 import abc
 import re
 from collections.abc import Iterable, Sequence
-from typing import NamedTuple
+from typing import NamedTuple, override
+
+import cmk.ccc.plugin_registry
 
 from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.http import request
@@ -14,8 +16,6 @@ from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Icon
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri_contextless
-
-import cmk.ccc.plugin_registry
 
 
 class MenuItem:
@@ -84,16 +84,9 @@ class MenuItem:
             return mode_or_url
         return makeuri_contextless(request, [("mode", mode_or_url)], filename="wato.py")
 
+    @override
     def __repr__(self) -> str:
-        return "{}(mode_or_url={!r}, title={!r}, icon={!r}, permission={!r}, description={!r}, sort_index={!r})".format(
-            self.__class__.__name__,
-            self.mode_or_url,
-            self.title,
-            self.icon,
-            self.permission,
-            self.description,
-            self.sort_index,
-        )
+        return f"{self.__class__.__name__}(mode_or_url={self.mode_or_url!r}, title={self.title!r}, icon={self.icon!r}, permission={self.permission!r}, description={self.description!r}, sort_index={self.sort_index!r})"
 
 
 class MainModuleTopic(NamedTuple):
@@ -104,6 +97,7 @@ class MainModuleTopic(NamedTuple):
 
 
 class MainModuleTopicRegistry(cmk.ccc.plugin_registry.Registry[MainModuleTopic]):
+    @override
     def plugin_name(self, instance: MainModuleTopic) -> str:
         return instance.name
 
@@ -129,31 +123,37 @@ class ABCMainModule(MenuItem, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @override
     def mode_or_url(self) -> str:
         raise NotImplementedError()
 
     @property
     @abc.abstractmethod
+    @override
     def title(self) -> str:
         raise NotImplementedError()
 
     @property
     @abc.abstractmethod
+    @override
     def icon(self) -> Icon:
         raise NotImplementedError()
 
     @property
     @abc.abstractmethod
+    @override
     def permission(self) -> None | str:
         raise NotImplementedError()
 
     @property
     @abc.abstractmethod
+    @override
     def description(self) -> str:
         raise NotImplementedError()
 
     @property
     @abc.abstractmethod
+    @override
     def sort_index(self) -> int:
         raise NotImplementedError()
 
@@ -166,7 +166,7 @@ class ABCMainModule(MenuItem, abc.ABC):
     def additional_breadcrumb_items(cls) -> Iterable[BreadcrumbItem]:
         """This class method allows for adding additional items to the breadcrumb navigation"""
         return
-        yield  # pylint: disable=unreachable
+        yield
 
     @classmethod
     def megamenu_search_terms(cls) -> Sequence[str]:
@@ -175,6 +175,7 @@ class ABCMainModule(MenuItem, abc.ABC):
 
 
 class MainModuleRegistry(cmk.ccc.plugin_registry.Registry[type[ABCMainModule]]):
+    @override
     def plugin_name(self, instance: type[ABCMainModule]) -> str:
         return instance().mode_or_url
 

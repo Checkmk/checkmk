@@ -1,26 +1,22 @@
 {
-  "$schema": "https://json-schema.org/draft/2019-09/schema",
-  "type": "object",
-  "$defs": {
-    "validation_message": {
-      "type": "object",
-      "properties": {
-        "location": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "message": {
-          "type": "string"
-        },
-        "invalid_value": {}
-      },
-      "required": [
-        "location",
-        "message",
-        "invalid_value"
-      ]
+    "$schema": "https://json-schema.org/draft/2019-09/schema",
+    "type": "object",
+    "$defs": {
+        "validation_message": {
+            "type": "object",
+            "properties": {
+                "location": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "replacement_value": {}
+            },
+            "required": ["location", "message", "replacement_value"]
+        }
     }
-  }
 }

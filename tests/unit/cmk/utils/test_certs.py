@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 from datetime import datetime, timezone
 from pathlib import Path
@@ -13,13 +12,20 @@ import time_machine
 from cryptography import x509
 from dateutil.relativedelta import relativedelta
 
-from tests.unit.cmk.utils.crypto.certs import rsa_private_keys_equal
-
 from livestatus import SiteId
 
 from cmk.utils.certs import CN_TEMPLATE, RootCA
-from cmk.utils.crypto.certificate import Certificate, CertificateWithPrivateKey, X509Name
-from cmk.utils.crypto.keys import PlaintextPrivateKeyPEM, PrivateKey
+
+from cmk.crypto.certificate import Certificate, CertificateWithPrivateKey, X509Name
+from cmk.crypto.keys import PlaintextPrivateKeyPEM, PrivateKey
+
+
+def _rsa_private_keys_equal(key_a: PrivateKey, key_b: PrivateKey) -> bool:
+    """Check if two keys are the same RSA key"""
+    # Assert keys are RSA keys here just to cut corners on type checking. ed25519 keys don't have
+    # private_numbers(). Also, no-one else needs __eq__ on PrivateKey at the moment.
+    return key_a.get_raw_rsa_key().private_numbers() == key_b.get_raw_rsa_key().private_numbers()
+
 
 _CA = b"""-----BEGIN PRIVATE KEY-----
 MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDpDGxoGtI59lZM
@@ -155,20 +161,21 @@ def test_create_root_ca_and_key(tmp_path: Path) -> None:
 
     assert ca.private_key.get_raw_rsa_key().key_size == 1024
     assert ca.certificate.common_name == "peter"
-    assert (
-        str(ca.certificate.not_valid_before) == "1970-01-01 00:01:40+00:00"
-    ), "creation time is respected"
-    assert (
-        str(ca.certificate.not_valid_after) == "1980-01-01 00:01:40+00:00"
-    ), "is valid for 10 years"
+
+    assert str(ca.certificate.not_valid_before) == "1970-01-01 00:01:40+00:00", (
+        "creation time is respected"
+    )
+    assert str(ca.certificate.not_valid_after) == "1980-01-01 00:01:40+00:00", (
+        "is valid for 10 years"
+    )
     assert ca.certificate.public_key == ca.private_key.public_key
 
     # check extensions
     assert ca.certificate._cert.extensions.get_extension_for_class(
         x509.SubjectKeyIdentifier
-    ).value == x509.SubjectKeyIdentifier.from_public_key(
-        ca.certificate.public_key._key
-    ), "subject key identifier is set and corresponds to the cert's public key"
+    ).value == x509.SubjectKeyIdentifier.from_public_key(ca.certificate.public_key._key), (
+        "subject key identifier is set and corresponds to the cert's public key"
+    )
 
     assert ca.certificate._cert.extensions.get_extension_for_class(
         x509.BasicConstraints
@@ -191,7 +198,7 @@ def test_create_root_ca_and_key(tmp_path: Path) -> None:
     assert filename.exists()
     loaded = RootCA.load(filename)
     assert loaded.certificate._cert == ca.certificate._cert
-    assert rsa_private_keys_equal(loaded.private_key, ca.private_key)
+    assert _rsa_private_keys_equal(loaded.private_key, ca.private_key)
 
 
 def test_sign_csr_with_local_ca() -> None:
@@ -220,6 +227,7 @@ MC4CAQAwBQYDK2VwBCIEIK/fWo6sKC4PDigGfEntUd/o8KKs76Hsi03su4QhpZox
     peter_cert = Certificate._create(
         subject_public_key=peter_key.public_key,
         subject_name=X509Name.create(common_name="peter"),
+        subject_alt_dns_names=None,
         expiry=relativedelta(days=1),
         start_date=datetime.now(timezone.utc),
         is_ca=True,
@@ -229,9 +237,11 @@ MC4CAQAwBQYDK2VwBCIEIK/fWo6sKC4PDigGfEntUd/o8KKs76Hsi03su4QhpZox
     peter_root_ca = RootCA(peter_cert, peter_key)
     with time_machine.travel(datetime.fromtimestamp(567892121, tz=ZoneInfo("UTC"))):
         daughter_cert, daughter_key = peter_root_ca.issue_new_certificate(
-            "peters_daughter",
-            relativedelta(days=100),
-            1024,
+            common_name="peters_daughter",
+            organization="Checkmk Testing",
+            subject_alt_dns_names=["peters_daughter"],
+            expiry=relativedelta(days=100),
+            key_size=1024,
         )
 
     assert str(daughter_cert.not_valid_before) == "1987-12-30 19:48:41+00:00"
@@ -241,4 +251,7 @@ MC4CAQAwBQYDK2VwBCIEIK/fWo6sKC4PDigGfEntUd/o8KKs76Hsi03su4QhpZox
     assert daughter_cert.public_key == daughter_key.public_key, "correct public key in the cert"
 
     assert daughter_cert.common_name == "peters_daughter", "subject CN is the daughter"
+    assert daughter_cert.get_subject_alt_names() == ["peters_daughter"], (
+        "subject alt name is the daughter"
+    )
     assert daughter_cert.issuer == peter_cert.subject, "issuer is peter"

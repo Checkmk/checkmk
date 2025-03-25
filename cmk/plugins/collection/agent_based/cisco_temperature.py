@@ -7,10 +7,10 @@ import dataclasses
 import enum
 import math
 from collections import defaultdict
-from collections.abc import Mapping, Sequence
-from typing import Any, Literal, MutableMapping
+from collections.abc import Mapping, MutableMapping, Sequence
+from typing import Any, Literal
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     all_of,
     any_of,
@@ -132,7 +132,7 @@ def _parse_unspecified_thresholds(
             return None, None
 
 
-def parse_cisco_temperature(  # pylint: disable=too-many-branches
+def parse_cisco_temperature(
     string_table: Sequence[StringTable],
 ) -> Section:
     # CISCO-ENTITY-SENSOR-MIB entSensorType
@@ -245,6 +245,12 @@ def parse_cisco_temperature(  # pylint: disable=too-many-branches
         thresholds.setdefault(sensor_id, [])
 
     for endoid, severity, relation, thresh_value in levels_info:
+        if thresh_value and not all((severity, relation)):
+            raise ValueError("Threshold value with no relation or severity")
+
+        if not thresh_value:
+            continue
+
         # endoid is e.g. 21549.9 or 21459.10
         sensor_id, _subid = endoid.split(".")
         thresholds.setdefault(sensor_id, []).append(
@@ -684,7 +690,7 @@ def check_cisco_temperature_dom(
         # in rare case of sensor id instead of sensor description no destinction
         # between transmit/receive possible
         dsname = "signal_power_dbm"
-    yield from check_levels(
+    yield from check_levels_v1(
         reading,
         metric_name=dsname,
         # Map WATO configuration of levels to check_levels() compatible tuple.

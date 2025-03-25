@@ -6,10 +6,10 @@
 # In cooperation with Thorsten Bruhns from OPITZ Consulting
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError, render
+
+check_info = {}
 
 # <<<oracle_dataguard_stats:sep(124)>>>
 # TESTDB|TESTDBU2|PHYSICAL STANDBY|apply finish time|+00 00:00:00.000|NOT ALLOWED|ENABLED|MAXIMUM PERFORMANCE|DISABLED||||APPLYING_LOG
@@ -38,7 +38,7 @@ def _get_seconds(timestamp: str) -> int | None:
     return sec + 60 * min_ + 3600 * h + 86400 * days
 
 
-def check_oracle_dataguard_stats(item, params, parsed):  # pylint: disable=too-many-branches
+def check_oracle_dataguard_stats(item, params, parsed):
     try:
         dgdata = parsed[item]
     except KeyError:
@@ -60,9 +60,12 @@ def check_oracle_dataguard_stats(item, params, parsed):  # pylint: disable=too-m
             if dgdata["fs_failover_observer_present"] != "YES":
                 yield 2, "Observer not connected"
             else:
-                yield 0, "Observer connected {} from host {}".format(
-                    dgdata["fs_failover_observer_present"].lower(),
-                    dgdata["fs_failover_observer_host"],
+                yield (
+                    0,
+                    "Observer connected {} from host {}".format(
+                        dgdata["fs_failover_observer_present"].lower(),
+                        dgdata["fs_failover_observer_host"],
+                    ),
                 )
 
                 if (
@@ -91,9 +94,11 @@ def check_oracle_dataguard_stats(item, params, parsed):  # pylint: disable=too-m
                 primary_broker_state = params.get("primary_broker_state")
                 if primary_broker_state or dgdata["broker_state"].lower() == "enabled":
                     # We need primary_broker_state False for Data-Guards without Broker
-                    yield 2, "Switchover to standby not possible! reason: %s" % dgdata[
-                        "switchover_status"
-                    ].lower()
+                    yield (
+                        2,
+                        "Switchover to standby not possible! reason: %s"
+                        % dgdata["switchover_status"].lower(),
+                    )
                 else:
                     yield 0, "Switchoverstate ignored "
 
@@ -102,9 +107,10 @@ def check_oracle_dataguard_stats(item, params, parsed):  # pylint: disable=too-m
             if dgdata["switchover_status"] in ("SYNCHRONIZED", "NOT ALLOWED", "SESSIONS ACTIVE"):
                 yield 0, "Switchover to primary possible"
             else:
-                yield 2, "Switchover to primary not possible! reason: %s" % dgdata[
-                    "switchover_status"
-                ]
+                yield (
+                    2,
+                    "Switchover to primary not possible! reason: %s" % dgdata["switchover_status"],
+                )
 
     if dgdata["database_role"] != "PHYSICAL STANDBY":
         return
@@ -152,6 +158,7 @@ def check_oracle_dataguard_stats(item, params, parsed):  # pylint: disable=too-m
 
 
 check_info["oracle_dataguard_stats"] = LegacyCheckDefinition(
+    name="oracle_dataguard_stats",
     # section is already migrated!
     service_name="ORA %s Dataguard-Stats",
     discovery_function=inventory_oracle_dataguard_stats,

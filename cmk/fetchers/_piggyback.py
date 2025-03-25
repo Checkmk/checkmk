@@ -14,8 +14,8 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import omd_root
 
-from cmk.piggyback import get_piggyback_raw_data, PiggybackMessage
-from cmk.piggyback.config import Config as PiggybackConfig
+from cmk.piggyback.backend import Config as PiggybackConfig
+from cmk.piggyback.backend import get_messages_for, PiggybackMessage, PiggybackTimeSettings
 
 from ._abstract import Fetcher, Mode
 
@@ -26,7 +26,7 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
         *,
         hostname: HostName,
         address: HostAddress | None,
-        time_settings: Sequence[tuple[str | None, str, int]],
+        time_settings: PiggybackTimeSettings,
     ) -> None:
         super().__init__()
         self.hostname: Final = hostname
@@ -102,9 +102,7 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
         """
         if not self._sources:
             return b""
-        return f"<<<piggyback_source_summary:sep(0)>>>\n{'\n'.join(s.meta.serialize() for s in self._sources)}\n".encode(
-            "utf-8"
-        )
+        return f"<<<piggyback_source_summary:sep(0)>>>\n{'\n'.join(s.meta.serialize() for s in self._sources)}\n".encode()
 
     def _get_source_labels_section(self) -> bytearray | bytes:
         """Return a <<<labels>>> agent section which adds the piggyback sources
@@ -117,4 +115,4 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
 
     @staticmethod
     def _raw_data(hostname: HostAddress) -> Sequence[PiggybackMessage]:
-        return get_piggyback_raw_data(hostname, omd_root)
+        return get_messages_for(hostname, omd_root)

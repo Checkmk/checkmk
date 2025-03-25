@@ -6,10 +6,9 @@
 from collections.abc import Mapping, Sequence
 from types import ModuleType
 
-# pylint: disable=protected-access
 import pytest
 
-from tests.unit.import_module_hack import import_module_hack
+from tests.testlib.unit.utils import import_module_hack
 
 
 @pytest.fixture(name="check_uniserv", scope="module")

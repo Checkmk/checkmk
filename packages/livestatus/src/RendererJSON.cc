@@ -6,6 +6,7 @@
 #include "livestatus/RendererJSON.h"
 
 #include <ostream>
+#include <vector>
 
 #include "livestatus/data_encoding.h"
 

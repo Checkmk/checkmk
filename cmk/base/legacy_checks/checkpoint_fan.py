@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.checkpoint import checkpoint_sensorstatus_to_nagios
-from cmk.base.config import check_info
+from cmk.base.check_legacy_includes.checkpoint import SENSOR_STATUS_TO_CMK_STATUS
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.checkpoint import DETECT
+
+check_info = {}
 
 
 def format_item_checkpoint_fan(name):
@@ -24,7 +25,7 @@ def inventory_checkpoint_fan(info):
 def check_checkpoint_fan(item, params, info):
     for name, value, unit, dev_status in info:
         if format_item_checkpoint_fan(name) == item:
-            state, state_readable = checkpoint_sensorstatus_to_nagios[dev_status]
+            state, state_readable = SENSOR_STATUS_TO_CMK_STATUS[dev_status]
             yield state, f"Status: {state_readable}, {value} {unit}"
 
 
@@ -33,6 +34,7 @@ def parse_checkpoint_fan(string_table: StringTable) -> StringTable:
 
 
 check_info["checkpoint_fan"] = LegacyCheckDefinition(
+    name="checkpoint_fan",
     parse_function=parse_checkpoint_fan,
     detect=DETECT,
     fetch=SNMPTree(

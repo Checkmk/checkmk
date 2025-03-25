@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, render, Service
 
 Section = Mapping[str, Mapping[str, Any]]
@@ -24,7 +24,7 @@ def check_prism_cluster_mem(params: Mapping[str, Any], section: Section) -> Chec
 
     mem_usage = int(mem_used) / 10000
 
-    yield from check_levels(
+    yield from check_levels_v1(
         mem_usage,
         metric_name="prism_cluster_mem_used",
         levels_upper=params["levels"],

@@ -4,13 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from typing import Iterable
+from collections.abc import Iterable
 
 import pytest
 
-from tests.unit.cmk.gui.watolib.test_watolib_password_store import (  # pylint: disable=unused-import
+from tests.unit.cmk.gui.watolib.test_watolib_password_store import (  # noqa: F401
     mock_update_passwords_merged_file,
 )
+
+from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.password_store import Password
@@ -20,9 +22,8 @@ from cmk.utils.user import UserId
 from cmk.automations.results import DeleteHostsResult
 
 import cmk.gui.watolib.check_mk_automations
+from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundle
 from cmk.gui.watolib.configuration_bundles import (
-    BundleId,
-    ConfigBundle,
     create_config_bundle,
     CreateBundleEntities,
     CreateHost,
@@ -34,8 +35,6 @@ from cmk.gui.watolib.configuration_bundles import (
 from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
 from cmk.gui.watolib.passwords import load_passwords
 from cmk.gui.watolib.rulesets import SingleRulesetRecursively
-
-from cmk.ccc.exceptions import MKGeneralException
 
 logger = logging.getLogger(__name__)
 
@@ -101,14 +100,17 @@ def mock_delete_host_automation(monkeypatch: pytest.MonkeyPatch) -> Iterable[Non
 @pytest.mark.usefixtures("request_context", "with_admin_login", "mock_delete_host_automation")
 def test_create_and_delete_config_bundle_hosts(other_folder: str) -> None:
     bundle_id, bundle = _make_bundle()
+    tree = folder_tree()
     hosts = [
         CreateHost(
-            folder="",
+            folder=tree.root_folder(),
             name=HostName("test-host-1"),
             attributes={},
         ),
         CreateHost(
-            folder=other_folder,
+            folder=tree.root_folder().create_subfolder(
+                name=other_folder, title=other_folder, attributes={}
+            ),
             name=HostName("test-host-2"),
             attributes={},
         ),
@@ -155,9 +157,9 @@ def test_create_and_delete_config_bundle_passwords() -> None:
     delete_config_bundle(bundle_id)
     references_after_delete = identify_single_bundle_references(bundle_id, bundle["group"])
     assert references_after_delete.passwords is None
-    assert (
-        len(load_passwords()) == before_create_password_count
-    ), "Expected created passwords to be deleted"
+    assert len(load_passwords()) == before_create_password_count, (
+        "Expected created passwords to be deleted"
+    )
 
 
 @pytest.mark.usefixtures("request_context", "with_admin_login")

@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.emc import DETECT_DATADOMAIN
+
+check_info = {}
 
 
 def format_emc_datadomain_temp(descr, encid, index, new_format):
@@ -51,6 +52,7 @@ def parse_emc_datadomain_temps(string_table: StringTable) -> StringTable:
 
 
 check_info["emc_datadomain_temps"] = LegacyCheckDefinition(
+    name="emc_datadomain_temps",
     parse_function=parse_emc_datadomain_temps,
     detect=DETECT_DATADOMAIN,
     fetch=SNMPTree(

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+
 from collections.abc import Sequence
 
 from polyfactory.factories.pydantic_factory import ModelFactory
@@ -66,5 +66,5 @@ def test_check_datastore_with_no_capacity():
     assert results[0].summary.endswith("(0 B/0.0% free)")
 
 
-def _esx_vm_section(datastores: Sequence[esx_vsphere.ESXDataStore]) -> esx_vsphere.ESXVm:
+def _esx_vm_section(datastores: Sequence[esx_vsphere.ESXDataStore]) -> esx_vsphere.SectionESXVm:
     return esx_vm_section(datastores=datastores)

@@ -4,44 +4,48 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.raritan import raritan_map_state
-from cmk.base.config import check_info
+from cmk.base.check_legacy_includes.raritan import raritan_pdu_plug_state
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, any_of, SNMPTree, startswith
+
+check_info = {}
 
 
 def parse_raritan_pdu_plugs(string_table):
     parsed = {}
 
     for outlet_label, outlet_name, outlet_state in string_table:
-        parsed[outlet_label] = {
-            "state": raritan_map_state.get(outlet_state, (3, "unknown")),
-            "outlet_name": outlet_name,
-        }
+        state = raritan_pdu_plug_state.get(outlet_state, "unknown")
+        parsed[outlet_label] = {"state": state, "outlet_name": outlet_name}
+
     return parsed
 
 
 def inventory_raritan_pdu_plugs(parsed):
     for key, value in parsed.items():
-        yield key, {"discovered_state": value["state"][1]}
+        if (state := value["state"]) != "unknown":
+            yield key, {"discovered_state": state}
 
 
 def check_raritan_pdu_plugs(item, params, parsed):
     if not (data := parsed.get(item)):
         return
-    if data.get("outlet_name"):
-        yield 0, data["outlet_name"]
 
-    state, state_info = data["state"]
-    yield state, "Status: %s" % state_info
+    if outlet_name := data.get("outlet_name"):
+        yield 0, outlet_name
 
-    required_state = params.get("required_state", params["discovered_state"])
-    if state_info != required_state:
-        yield 2, "Expected: %s" % required_state
+    state = data["state"]
+    expected_state = params["required_state"] or params["discovered_state"]
+
+    if state != expected_state:
+        yield (2, f"Status: {state} (expected: {expected_state})")
+    else:
+        yield 0, "Status: %s" % state
 
 
 check_info["raritan_pdu_plugs"] = LegacyCheckDefinition(
+    name="raritan_pdu_plugs",
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13742.6"),
         any_of(
@@ -58,4 +62,5 @@ check_info["raritan_pdu_plugs"] = LegacyCheckDefinition(
     discovery_function=inventory_raritan_pdu_plugs,
     check_function=check_raritan_pdu_plugs,
     check_ruleset_name="plugs",
+    check_default_parameters={"required_state": None},
 )

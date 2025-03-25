@@ -15,12 +15,13 @@ import time_machine
 from pytest import MonkeyPatch
 from pytest_mock import MockerFixture
 
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
-from tests.unit.cmk.gui.conftest import SetConfig
+from tests.unit.cmk.web_test_app import SetConfig
+
+from cmk.ccc import version
 
 from cmk.utils import paths
-from cmk.utils.crypto.password import PasswordHash
 from cmk.utils.user import UserId
 
 from cmk.gui import userdb
@@ -31,19 +32,18 @@ from cmk.gui.openapi.endpoints.user_config import (
     _load_user,
 )
 from cmk.gui.openapi.endpoints.utils import complement_customer
-from cmk.gui.type_defs import UserObject
+from cmk.gui.type_defs import CustomUserAttrSpec, UserObject
 from cmk.gui.userdb import ConnectorType, UserRole
 from cmk.gui.userdb._connections import Fixed, LDAPConnectionConfigFixed, LDAPUserConnectionConfig
 from cmk.gui.userdb.ldap_connector import LDAPUserConnector
 from cmk.gui.watolib.custom_attributes import (
-    CustomUserAttrSpec,
     save_custom_attrs_to_mk_file,
     update_user_custom_attrs,
 )
 from cmk.gui.watolib.userroles import clone_role, RoleID
-from cmk.gui.watolib.users import edit_users
+from cmk.gui.watolib.users import default_sites, edit_users
 
-from cmk.ccc import version
+from cmk.crypto.password_hashing import PasswordHash
 
 managedtest = pytest.mark.skipif(
     version.edition(paths.omd_root) is not version.Edition.CME, reason="see #7213"
@@ -124,6 +124,7 @@ def test_openapi_customer(clients: ClientRegistry, monkeypatch: MonkeyPatch) -> 
             "navigation_bar_icons": "hide",
             "show_mode": "default",
             "sidebar_position": "right",
+            "contextual_help_icon": "show_icon",
         },
     }
 
@@ -165,7 +166,7 @@ def test_openapi_user_minimal_settings(
                 "is_new_user": True,
             }
         }
-        edit_users(user_object)
+        edit_users(user_object, default_sites)
 
     user_attributes = _load_internal_attributes(UserId("user"))
 
@@ -184,6 +185,8 @@ def test_openapi_user_minimal_settings(
         "last_pw_change": 1632486960,
         "num_failed_logins": 0,
         "serial": 0,
+        "is_automation_user": False,
+        "store_automation_secret": False,
     }
 
 
@@ -228,7 +231,10 @@ def test_openapi_user_minimal_password_settings(
         )
 
     extensions = resp.json["extensions"]
-    assert extensions["auth_option"] == {"auth_type": "automation"}
+    assert extensions["auth_option"] == {
+        "auth_type": "automation",
+        "store_automation_secret": False,
+    }
     assert extensions["idle_timeout"]["option"] == "disable"
     assert extensions["roles"] == ["user"]
 
@@ -325,7 +331,7 @@ def test_openapi_user_internal_with_notifications(
         }
     }
     with run_as_superuser():
-        edit_users(user_object)
+        edit_users(user_object, default_sites)
 
     assert _load_internal_attributes(name) == {
         "alias": "KPECYCq79E",
@@ -343,6 +349,8 @@ def test_openapi_user_internal_with_notifications(
         "last_pw_change": 1265013000,
         "enforce_pw_change": True,
         "num_failed_logins": 0,
+        "is_automation_user": False,
+        "store_automation_secret": False,
     }
 
 
@@ -528,7 +536,7 @@ def test_openapi_user_internal_auth_handling(
 
     with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:30:00Z")):
         with run_as_superuser():
-            edit_users(user_object)
+            edit_users(user_object, default_sites)
 
     assert _load_internal_attributes(name) == {
         "alias": "Foo Bar",
@@ -546,6 +554,8 @@ def test_openapi_user_internal_auth_handling(
         "last_pw_change": 1265011200,  # 08:00:00 -- uses creation data, not current time
         "enforce_pw_change": True,
         "num_failed_logins": 0,
+        "is_automation_user": False,
+        "store_automation_secret": False,
     }
 
     with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 09:00:00Z")):
@@ -560,7 +570,8 @@ def test_openapi_user_internal_auth_handling(
                         "attributes": updated_internal_attributes,
                         "is_new_user": False,
                     }
-                }
+                },
+                default_sites,
             )
 
     assert _load_internal_attributes(name) == {
@@ -574,13 +585,14 @@ def test_openapi_user_internal_auth_handling(
         "user_scheme_serial": 1,
         "locked": False,
         "roles": ["user"],
-        "automation_secret": "QWXWBFUCSUOXNCPJUMS@",
         "password": "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
         "serial": 1,  # this is 2 internally but the function is not invoked here
         "last_pw_change": 1265014800,  # 09:00:00 -- changed as secret was changed
         "enforce_pw_change": True,
         "num_failed_logins": 0,
         "connector": "htpasswd",
+        "is_automation_user": True,
+        "store_automation_secret": False,
     }
 
     with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 09:30:00Z")):
@@ -594,7 +606,8 @@ def test_openapi_user_internal_auth_handling(
                         "attributes": updated_internal_attributes,
                         "is_new_user": False,
                     }
-                }
+                },
+                default_sites,
             )
     assert _load_internal_attributes(name) == {
         "alias": "Foo Bar",
@@ -612,6 +625,8 @@ def test_openapi_user_internal_auth_handling(
         "enforce_pw_change": True,
         "num_failed_logins": 0,
         "connector": "htpasswd",
+        "is_automation_user": False,
+        "store_automation_secret": False,
     }
 
 
@@ -660,7 +675,7 @@ def test_managed_global_internal(
         }
     }
     with run_as_superuser():
-        edit_users(user_object)
+        edit_users(user_object, default_sites)
     user_internal = _load_user(UserId("user"))
     user_endpoint_attrs = complement_customer(_internal_to_api_format(user_internal))
     assert user_endpoint_attrs["customer"] == "global"
@@ -706,6 +721,7 @@ def test_global_full_configuration(clients: ClientRegistry) -> None:
             "navigation_bar_icons": "hide",
             "show_mode": "default",
             "sidebar_position": "right",
+            "contextual_help_icon": "show_icon",
         },
         "temperature_unit": "fahrenheit",
     }
@@ -744,7 +760,7 @@ def test_managed_idle_internal(
         }
     }
     with run_as_superuser():
-        edit_users(user_object)
+        edit_users(user_object, default_sites)
 
     user_internal = _load_user(UserId("user"))
     user_endpoint_attrs = complement_customer(_internal_to_api_format(user_internal))
@@ -795,6 +811,7 @@ def test_openapi_user_update_contact_options(clients: ClientRegistry) -> None:
             "navigation_bar_icons": "hide",
             "show_mode": "default",
             "sidebar_position": "right",
+            "contextual_help_icon": "show_icon",
         },
     }
 
@@ -829,7 +846,7 @@ def test_show_all_users_with_no_email(clients: ClientRegistry, monkeypatch: Monk
     # We remove all the contact information to mimic the no email case
     monkeypatch.setattr(
         "cmk.gui.userdb.store.load_contacts",
-        lambda flag: {},
+        lambda *args, **kwargs: {},
     )
 
     resp = clients.User.get_all()
@@ -1306,7 +1323,7 @@ def test_create_user_with_contact_group(clients: ClientRegistry) -> None:
 
 
 @pytest.fixture(name="mock_ldap_locked_attributes")
-def fixture_mock_ldap_locked_attributes(mocker: MockerFixture) -> MagicMock:
+def fixture_mock_ldap_locked_attributes(request_context: None, mocker: MockerFixture) -> MagicMock:
     """Mock the locked attributes of a LDAP user"""
     ldap_config = LDAPUserConnectionConfig(
         id="CMKTest",
@@ -1404,7 +1421,7 @@ def test_edit_ldap_user_with_locked_attributes(
         },
     }
     with run_as_superuser():
-        edit_users(user_object)
+        edit_users(user_object, default_sites)
 
     clients.User.edit(
         username=name,
@@ -1417,8 +1434,6 @@ def test_openapi_minimum_configuration(clients: ClientRegistry) -> None:
     create_resp = clients.User.create(username="user", fullname="User Test")
     get_resp = clients.User.get(username="user")
 
-    print(create_resp.json)
-    print(get_resp.json)
     assert create_resp.json == get_resp.json
     assert create_resp.json["id"] == "user"
     assert create_resp.json["extensions"]["fullname"] == "User Test"

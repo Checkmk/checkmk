@@ -9,7 +9,12 @@ def main() {
     ) {
         stage('run test-unit-all') {
             dir("${checkout_dir}") {
-                sh("make -C tests test-unit-all");
+                withCredentials([
+                ]) {
+                    lock(label: "bzl_lock_${env.NODE_NAME.split('\\.')[0].split('-')[-1]}", quantity: 1, resource: null) {
+                        sh("make -C tests test-unit-all");
+                    }
+                }
             }
         }
     }

@@ -11,27 +11,29 @@ from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import cache
 from types import TracebackType
-from typing import Any, assert_never, Protocol
+from typing import Any, assert_never, Protocol, Self
 
-import google.protobuf.duration_pb2 as duration  # to satisfy pylint with `duration.Duration`
+import google.protobuf.duration_pb2 as duration
 from google.api_core.exceptions import PermissionDenied, Unauthenticated
 from google.cloud import asset_v1, monitoring_v3
 from google.cloud.monitoring_v3.types import Aggregation as GoogleAggregation
 from google.cloud.monitoring_v3.types import TimeSeries
 from google.oauth2 import service_account
-from googleapiclient.discovery import build, Resource  # type: ignore[import-untyped]
-from googleapiclient.http import HttpError, HttpRequest  # type: ignore[import-untyped]
+from googleapiclient.discovery import build, Resource
+from googleapiclient.errors import HttpError
+from googleapiclient.http import HttpRequest
 
-# Those are enum classes defined in the Aggregation class. Not nice but works
-Aligner = GoogleAggregation.Aligner
-Reducer = GoogleAggregation.Reducer
-
+from cmk.plugins.gcp.lib.constants import Extractors
 from cmk.special_agents.v0_unstable.agent_common import (
     ConditionalPiggybackSection,
     SectionWriter,
     special_agent_main,
 )
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+
+# Those are enum classes defined in the Aggregation class. Not nice but works
+Aligner = GoogleAggregation.Aligner
+Reducer = GoogleAggregation.Reducer
 
 ####################
 # Type Definitions #
@@ -48,9 +50,9 @@ class Asset:
         return json.dumps(asset_v1.Asset.to_dict(obj.asset))
 
     @classmethod
-    def deserialize(cls, data: str) -> "Asset":
+    def deserialize(cls, data: str) -> Self:
         asset = asset_v1.Asset.from_json(data)
-        return cls(asset=asset)
+        return cls(asset=asset)  # type: ignore[arg-type]
 
 
 Schema = Sequence[Mapping[str, str]]
@@ -77,15 +79,15 @@ class Client:
     project: str
     date: datetime.date
 
-    @cache  # pylint: disable=method-cache-max-size-none
+    @cache
     def monitoring(self) -> monitoring_v3.MetricServiceClient:
         return monitoring_v3.MetricServiceClient.from_service_account_info(self.account_info)
 
-    @cache  # pylint: disable=method-cache-max-size-none
+    @cache
     def asset(self) -> asset_v1.AssetServiceClient:
         return asset_v1.AssetServiceClient.from_service_account_info(self.account_info)
 
-    @cache  # pylint: disable=method-cache-max-size-none
+    @cache
     def bigquery(self) -> Resource:
         credentials = service_account.Credentials.from_service_account_info(self.account_info)
         scopes = ["https://www.googleapis.com/auth/bigquery.readonly"]
@@ -100,17 +102,37 @@ class Client:
         return self.asset().list_assets(request)
 
     def list_costs(self, tableid: str) -> tuple[Schema, Pages]:
-        prev_month = self.date.replace(day=1) - datetime.timedelta(days=1)
-        query = f'SELECT PROJECT.name, PROJECT.id, SUM(cost) AS cost, currency, invoice.month FROM `{tableid}`, UNNEST(credits) as c WHERE DATE(_PARTITIONTIME) >= "{prev_month.strftime("%Y-%m-01")}" AND c.type != "SUSTAINED_USAGE_DISCOUNT" GROUP BY PROJECT.name, PROJECT.id, currency, invoice.month'
+        first_of_month = self.date.replace(day=1)
+        if "`" in tableid:
+            raise ValueError("tableid contains invalid character")
+
+        # the query is based on a example query from the official docs:
+        # https://cloud.google.com/billing/docs/how-to/export-data-bigquery-tables/standard-usage#sum-costs-per-invoice
+        # table id is similar to: <project_id>.<dataset_id>.gcp_billing_export_v1_<billing_account_id>
+        query = (
+            "SELECT "  # nosec B608 # BNS:d840de
+            "project.name, "
+            "project.id, "
+            "(SUM(CAST(cost AS NUMERIC)) + SUM(IFNULL((SELECT SUM(CAST(c.amount AS NUMERIC)) FROM UNNEST(credits) c), 0))) AS cost, "
+            "currency, "
+            "invoice.month "
+            f"FROM `{tableid}`"
+            f'WHERE invoice.month = "{first_of_month.strftime("%Y%m")}" '
+            f'AND DATE(_PARTITIONTIME) >= "{first_of_month.strftime("%Y-%m-%d")}" '
+            "AND project.name IS NOT NULL "
+            "GROUP BY project.name, project.id, currency, invoice.month "
+            "ORDER BY project.name, invoice.month"
+        )
+
         body = {"query": query, "useLegacySql": False}
-        request: HttpRequest = self.bigquery().query(projectId=self.project, body=body)
+        request: HttpRequest = self.bigquery().query(projectId=self.project, body=body)  # type: ignore[attr-defined]
         response = request.execute()
         schema: Schema = response["schema"]["fields"]
 
         pages: list[Page] = [response["rows"]]
         # collect all rows, even if we use pagination
         if "pageToken" in response:
-            request = self.bigquery().getQueryResults(
+            request = self.bigquery().getQueryResults(  # type: ignore[attr-defined]
                 projectId=self.project,
                 jobId=response["jobReference"]["jobId"],
                 location=response["jobReference"]["location"],
@@ -119,7 +141,7 @@ class Client:
             response = request.execute()
             pages.append(response["rows"])
 
-            while next_request := self.bigquery().getQueryResults_next(request, response):
+            while next_request := self.bigquery().getQueryResults_next(request, response):  # type: ignore[attr-defined]
                 next_response = next_request.execute()
                 request = next_request
                 response = next_response
@@ -248,7 +270,7 @@ class Result:
             per_series_aligner=raw_aggregation["per_series_aligner"],
             cross_series_reducer=raw_aggregation["cross_series_reducer"],
         )
-        return cls(ts=ts, aggregation=aggregation)
+        return cls(ts=ts, aggregation=aggregation)  # type: ignore[arg-type]
 
 
 @dataclass(frozen=True)
@@ -476,7 +498,9 @@ def run_metrics(client: ClientProtocol, services: Iterable[Service]) -> Iterator
 
 def gather_assets(client: ClientProtocol) -> Sequence[Asset]:
     request = asset_v1.ListAssetsRequest(
-        parent=f"projects/{client.project}", content_type=asset_v1.ContentType.RESOURCE
+        parent=f"projects/{client.project}",
+        content_type=asset_v1.ContentType.RESOURCE,
+        asset_types=list(Extractors),
     )
     all_assets = client.list_assets(request)
     return [Asset(a) for a in all_assets]

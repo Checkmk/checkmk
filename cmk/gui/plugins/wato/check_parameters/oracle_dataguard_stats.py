@@ -31,7 +31,7 @@ def _parameter_valuespec_oracle_dataguard_stats():
                     MonitoringState(
                         title=_("State in case of Active Data-Guard Option is active: "),
                         help=_(
-                            "The Active Data-Guard Option needs an addional License from Oracle."
+                            "The Active Data-Guard Option needs an addional license from Oracle."
                         ),
                         default_value=1,
                     ),

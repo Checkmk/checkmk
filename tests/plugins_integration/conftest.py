@@ -8,13 +8,12 @@ from collections.abc import Iterator
 
 import pytest
 
+from tests.testlib.common.utils import run
+from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.site import get_site_factory, Site, SiteFactory
-from tests.testlib.utils import run
-from tests.testlib.version import get_min_version
+from tests.testlib.version import CMKEdition, CMKPackageInfo, get_min_version
 
 from tests.plugins_integration import checks
-
-from cmk.ccc.version import Edition
 
 logger = logging.getLogger(__name__)
 
@@ -118,24 +117,26 @@ def pytest_addoption(parser):
 
 def pytest_configure(config):
     # parse options that control the test execution
-    checks.config.mode = (
-        checks.CheckModes.UPDATE
-        if config.getoption("--update-checks")
-        else (
-            checks.CheckModes.ADD if config.getoption("--add-checks") else checks.CheckModes.DEFAULT
-        )
-    )
-    checks.config.skip_masking = config.getoption("--skip-masking")
-    checks.config.skip_cleanup = config.getoption("--skip-cleanup")
-    checks.config.data_dir = config.getoption(name="--data-dir")
-    checks.config.dump_dir = config.getoption(name="--dump-dir")
-    checks.config.response_dir = config.getoption(name="--response-dir")
-    checks.config.diff_dir = config.getoption(name="--diff-dir")
-    checks.config.host_names = config.getoption(name="--host-names")
-    checks.config.check_names = config.getoption(name="--check-names")
-    checks.config.dump_types = config.getoption(name="--dump-types")
 
-    checks.config.load()
+    checks.config = checks.CheckConfig(
+        mode=(
+            checks.CheckModes.UPDATE
+            if config.getoption("--update-checks")
+            else (
+                checks.CheckModes.ADD
+                if config.getoption("--add-checks")
+                else checks.CheckModes.DEFAULT
+            )
+        ),
+        skip_cleanup=config.getoption("--skip-cleanup"),
+        data_dir_integration=config.getoption(name="--data-dir"),
+        dump_dir_integration=config.getoption(name="--dump-dir"),
+        response_dir_integration=config.getoption(name="--response-dir"),
+        diff_dir=config.getoption(name="--diff-dir"),
+        host_names=config.getoption(name="--host-names"),
+        check_names=config.getoption(name="--check-names"),
+        dump_types=config.getoption(name="--dump-types"),
+    )
 
 
 def pytest_collection_modifyitems(config, items):
@@ -152,28 +153,61 @@ def pytest_collection_modifyitems(config, items):
 @pytest.fixture(name="test_site", scope="session")
 def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
     """Setup test-site and perform cleanup after test execution."""
-    for site in get_site_factory(prefix="plugins_").get_test_site(
-        auto_cleanup=not checks.config.skip_cleanup
+    with exit_pytest_on_exceptions(
+        exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
     ):
-        dump_path = site.path("var/check_mk/dumps")
-        checks.setup_site(site, dump_path)
+        for site in get_site_factory(prefix="plugins_").get_test_site(
+            auto_cleanup=not checks.config.skip_cleanup
+        ):
+            dump_path = site.path("var/check_mk/dumps")
+            checks.setup_site(site, dump_path)
 
-        yield site
+            yield site
 
-        if not request.config.getoption("--enable-core-scheduling"):
-            site.stop_host_checks()
-            site.stop_active_services()
+            if not request.config.getoption("--enable-core-scheduling"):
+                site.stop_host_checks()
+                site.stop_active_services()
 
-        if not checks.config.skip_cleanup:
-            # cleanup existing agent-output folder in the test site
-            logger.info('Removing folder "%s"...', dump_path)
-            assert run(["sudo", "rm", "-rf", dump_path]).returncode == 0
+            if not checks.config.skip_cleanup:
+                # cleanup existing agent-output folder in the test site
+                logger.info('Removing folder "%s"...', dump_path)
+                assert run(["rm", "-rf", dump_path.as_posix()], sudo=True).returncode == 0
+
+
+@pytest.fixture(name="test_site_piggyback", scope="session")
+def _get_site_piggyback(request: pytest.FixtureRequest) -> Iterator[Site]:
+    with exit_pytest_on_exceptions(
+        exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
+    ):
+        for site in get_site_factory(prefix="PB_").get_test_site(
+            auto_cleanup=not checks.config.skip_cleanup
+        ):
+            dump_path = site.path("var/check_mk/dumps")
+
+            # create dump folder in the test site
+            logger.info('Creating folder "%s"...', dump_path)
+            _ = site.run(["mkdir", "-p", dump_path.as_posix()])
+
+            ruleset_name = "datasource_programs"
+            logger.info('Creating rule "%s"...', ruleset_name)
+            site.openapi.rules.create(ruleset_name=ruleset_name, value=f"cat {dump_path}/<HOST>")
+            logger.info('Rule "%s" created!', ruleset_name)
+
+            logger.info("Setting dynamic configuration global settings...")
+            site.write_text_file(
+                "etc/check_mk/dcd.d/wato/global.mk",
+                "dcd_activate_changes_timeout = 30\n"
+                "dcd_bulk_discovery_timeout = 30\n"
+                "dcd_site_update_interval = 60\n",
+            )
+
+            yield site
 
 
 @pytest.fixture(name="site_factory_update", scope="session")
 def _get_sf_update():
-    base_version = get_min_version(Edition.CEE)
-    return get_site_factory(prefix="update_", version=base_version)
+    base_package = CMKPackageInfo(get_min_version(), CMKEdition(CMKEdition.CEE))
+    return get_site_factory(prefix="update_", package=base_package)
 
 
 @pytest.fixture(name="test_site_update", scope="session")
@@ -181,16 +215,26 @@ def _get_site_update(
     site_factory_update: SiteFactory, request: pytest.FixtureRequest
 ) -> Iterator[Site]:
     """Setup test-site and perform cleanup after test execution."""
-    for site in site_factory_update.get_test_site(auto_cleanup=not checks.config.skip_cleanup):
-        dump_path = site.path("var/check_mk/dumps")
-        checks.setup_site(site, dump_path)
+    with exit_pytest_on_exceptions(
+        exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
+    ):
+        for site in site_factory_update.get_test_site(auto_cleanup=not checks.config.skip_cleanup):
+            dump_path = site.path("var/check_mk/dumps")
+            checks.setup_site(
+                site,
+                dump_path,
+                [
+                    checks.config.dump_dir_integration,
+                    checks.config.dump_dir_siteless,
+                ],
+            )
 
-        yield site
+            yield site
 
-        if not checks.config.skip_cleanup:
-            # cleanup existing agent-output folder in the test site
-            logger.info('Removing folder "%s"...', dump_path)
-            assert run(["sudo", "rm", "-rf", dump_path]).returncode == 0
+            if not checks.config.skip_cleanup:
+                # cleanup existing agent-output folder in the test site
+                logger.info('Removing folder "%s"...', dump_path)
+                assert run(["rm", "-rf", dump_path.as_posix()], sudo=True).returncode == 0
 
 
 @pytest.fixture(name="bulk_setup", scope="session")
@@ -207,8 +251,11 @@ def _bulk_setup(test_site: Site, pytestconfig: pytest.Config) -> Iterator:
 
 
 @pytest.fixture(name="plugin_validation_site", scope="session")
-def _get_site_validation() -> Iterator[Site]:
-    yield from get_site_factory(prefix="val_").get_test_site()
+def _get_site_validation(request: pytest.FixtureRequest) -> Iterator[Site]:
+    with exit_pytest_on_exceptions(
+        exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
+    ):
+        yield from get_site_factory(prefix="val_").get_test_site()
 
 
 def _periodic_service_discovery_rule() -> dict:
@@ -217,6 +264,7 @@ def _periodic_service_discovery_rule() -> dict:
         "severity_unmonitored": 2,
         "severity_vanished": 1,
         "severity_changed_service_labels": 1,
+        "severity_changed_service_params": 1,
         "severity_new_host_label": 1,
         "inventory_rediscovery": {
             "mode": (
@@ -225,6 +273,7 @@ def _periodic_service_discovery_rule() -> dict:
                     "add_new_services": True,
                     "remove_vanished_services": False,
                     "update_changed_service_labels": True,
+                    "update_changed_service_parameters": True,
                     "update_host_labels": True,
                 },
             ),
@@ -240,45 +289,18 @@ def _periodic_service_discovery_rule() -> dict:
 @pytest.fixture(name="create_periodic_service_discovery_rule", scope="function")
 def _create_periodic_service_discovery_rule(test_site_update: Site) -> Iterator[None]:
     existing_rules_ids = []
-    for rule in test_site_update.openapi.get_rules("periodic_discovery"):
+    for rule in test_site_update.openapi.rules.get_all("periodic_discovery"):
         existing_rules_ids.append(rule["id"])
 
-    test_site_update.openapi.create_rule(
+    test_site_update.openapi.rules.create(
         ruleset_name="periodic_discovery",
         value=_periodic_service_discovery_rule(),
     )
-    test_site_update.openapi.activate_changes_and_wait_for_completion()
+    test_site_update.openapi.changes.activate_and_wait_for_completion()
 
     yield
 
-    for rule in test_site_update.openapi.get_rules("periodic_discovery"):
+    for rule in test_site_update.openapi.rules.get_all("periodic_discovery"):
         if rule["id"] not in existing_rules_ids:
-            test_site_update.openapi.delete_rule(rule["id"])
-    test_site_update.openapi.activate_changes_and_wait_for_completion()
-
-
-@pytest.fixture(name="dcd_connector", scope="session")
-def _dcd_connector(test_site: Site) -> Iterator[None]:
-    if checks.config.piggyback:
-        logger.info("Creating a DCD connection for piggyback hosts...")
-        dcd_id = "dcd_connector"
-        host_attributes = {
-            "tag_snmp_ds": "no-snmp",
-            "tag_agent": "no-agent",
-            "tag_piggyback": "piggyback",
-            "tag_address_family": "no-ip",
-        }
-        test_site.openapi.create_dynamic_host_configuration(
-            dcd_id=dcd_id,
-            title="DCD Connector for piggyback hosts",
-            host_attributes=host_attributes,
-            interval=1,
-            validity_period=600,
-        )
-        test_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
-        yield
-        if not checks.config.skip_cleanup:
-            test_site.openapi.delete_dynamic_host_configuration(dcd_id)
-            test_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
-    else:
-        yield  # a fixture must yield or return something
+            test_site_update.openapi.rules.delete(rule["id"])
+    test_site_update.openapi.changes.activate_and_wait_for_completion()

@@ -3,17 +3,6 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-// Simple Mail Slot Transport
-// Windows only
-// by SK
-// CODE STYLE is a bit old-fashioned, this is mix of MSN example with
-// very old implementation
-
-// Thread Safe
-
-// Sender is using postman
-// Receiver is using mailbox (with thread/callback)
-
 #include <stdafx.h>
 //
 #include <fmt/format.h>

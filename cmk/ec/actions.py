@@ -10,8 +10,9 @@ from collections.abc import Iterable
 from logging import Logger
 
 from cmk.utils.log import VERBOSE
-from cmk.utils.notify_types import ECEventContext
 from cmk.utils.statename import service_state_name
+
+from cmk.events import event_context
 
 from .config import Action, Config, EMailActionConfig, Rule, ScriptActionConfig
 from .core_queries import query_contactgroups_members, query_status_enable_notifications
@@ -19,6 +20,41 @@ from .event import Event
 from .history import History
 from .host_config import HostConfig
 from .settings import Settings
+
+
+class ECEventContext(event_context.EventContext, total=False):
+    """The keys "found" in cmk.ec
+
+    Not sure if subclassing EventContext is the right call...
+    Feel free to merge if you feel like doing it.
+    """
+
+    EC_CONTACT: str
+    EC_CONTACT_GROUPS: str
+    EC_ID: str
+    EC_MATCH_GROUPS: str
+    EC_ORIG_HOST: str
+    EC_OWNER: str
+    EC_PHASE: str
+    EC_PID: str
+    HOSTADDRESS: str
+    HOSTALIAS: str
+    HOSTDOWNTIME: str
+    LASTSERVICESTATEID: str
+    NOTIFICATIONAUTHOR: str
+    NOTIFICATIONAUTHORALIAS: str
+    NOTIFICATIONAUTHORNAME: str
+    SERVICEACKAUTHOR: str
+    SERVICEACKCOMMENT: str
+    SERVICEPERFDATA: str
+    SERVICEPROBLEMID: str
+    SERVICESTATEID: str
+    SERVICE_EC_CONTACT: str
+    SERVICE_SL: str
+
+    # Dynamically added:
+    # HOST_*: str  #  custom_variables
+
 
 # .
 #   .--Actions-------------------------------------------------------------.
@@ -417,7 +453,7 @@ def _add_infos_from_monitoring_host(
     def _add_artificial_context_info() -> None:
         context.update(
             {
-                "HOSTNAME": event["host"],
+                "HOSTNAME": event_context.HostName(event["host"]),
                 "HOSTALIAS": event["host"],
                 "HOSTADDRESS": event["ipaddress"],
                 "HOSTTAGS": "",
@@ -441,12 +477,13 @@ def _add_infos_from_monitoring_host(
 
     context.update(
         {
-            "HOSTNAME": config.name,
+            "HOSTNAME": event_context.HostName(config.name),
             "HOSTALIAS": config.alias,
             "HOSTADDRESS": config.address,
             "HOSTTAGS": config.custom_variables.get("TAGS", ""),
             "CONTACTS": ",".join(config.contacts),
             "SERVICECONTACTGROUPNAMES": ",".join(config.contact_groups),
+            "HOSTGROUPNAMES": ",".join(config.host_groups),
         }
     )
 

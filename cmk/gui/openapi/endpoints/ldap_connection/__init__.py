@@ -22,6 +22,7 @@ Documentation: https://docs.checkmk.com/latest/en/ldap.html.
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields.custom_fields import LDAPConnectionID
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
@@ -54,7 +55,7 @@ from cmk.gui.openapi.restful_objects.constructors import (
 )
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
-from cmk.gui.openapi.utils import serve_json
+from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.utils import permission_verification as permissions
 
 RO_PERMISSIONS = permissions.AllPerm(
@@ -192,7 +193,14 @@ def edit_ldap_connection(params: Mapping[str, Any]) -> Response:
 
     ldap_data = params["body"]
     ldap_data["general_properties"]["id"] = ldap_id
-    updated_connection = request_to_edit_ldap_connection(ldap_data=ldap_data, ldap_id=ldap_id)
+    try:
+        updated_connection = request_to_edit_ldap_connection(ldap_data=ldap_data, ldap_id=ldap_id)
+    except MKUserError as exc:
+        raise ProblemException(
+            title=f"There was problem when trying to update the LDAP connection with ldap_id {ldap_id}",
+            detail=str(exc),
+        )
+
     return response_with_etag_created_from_dict(
         serve_json(_serialize_ldap_connection(updated_connection)),
         updated_connection.api_response(),

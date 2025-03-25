@@ -5,6 +5,7 @@
 
 import logging
 import os
+import threading
 from collections.abc import Sequence
 from contextlib import nullcontext
 from dataclasses import dataclass
@@ -12,14 +13,14 @@ from typing import Any
 
 import pytest
 
+from cmk.ccc import store
+from cmk.ccc import version as cmk_version
+
 from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, SerializedResult
 
 from cmk.gui.background_job import BackgroundProcessInterface
 from cmk.gui.http import request
 from cmk.gui.watolib import automations
-
-from cmk.ccc import store
-from cmk.ccc import version as cmk_version
 
 RESULT: object = None
 
@@ -97,12 +98,14 @@ class TestCheckmkAutomationBackgroundJob:
             )
             job = automations.CheckmkAutomationBackgroundJob("job_id")
             os.makedirs(job.get_work_dir())
-            job._execute_automation(  # pylint: disable=protected-access
+            job._execute_automation(
                 BackgroundProcessInterface(
                     job.get_work_dir(),
                     "job_id",
                     logging.getLogger(),
-                    lambda: nullcontext(),  # pylint: disable=unnecessary-lambda
+                    threading.Event(),
+                    lambda: nullcontext(),
+                    open(os.devnull, "w"),
                 ),
                 api_request,
             )
@@ -129,13 +132,43 @@ class TestCheckmkAutomationBackgroundJob:
             )
             job = automations.CheckmkAutomationBackgroundJob("job_id")
             os.makedirs(job.get_work_dir())
-            job._execute_automation(  # pylint: disable=protected-access
+            job._execute_automation(
                 BackgroundProcessInterface(
                     job.get_work_dir(),
                     "job_id",
                     logging.getLogger(),
-                    lambda: nullcontext(),  # pylint: disable=unnecessary-lambda
+                    threading.Event(),
+                    lambda: nullcontext(),
+                    open(os.devnull, "w"),
                 ),
                 api_request,
             )
             assert RESULT == "i was very different previously"
+
+
+def test_parse_omd_status() -> None:
+    # raw status tested in tests/integration/omd/test_omd.py
+    raw_status = (
+        "jaeger 5\n"
+        "agent-receiver 0\n"
+        "mkeventd 0\n"
+        "liveproxyd 0\n"
+        "mknotifyd 0\n"
+        "rrdcached 0\n"
+        "redis 0\n"
+        "npcd 5"
+    )
+
+    assert automations.AutomationGetRemoteOMDStatus()._parse_omd_status(raw_status=raw_status) == {
+        "jaeger": 5,
+        "agent-receiver": 0,
+        "mkeventd": 0,
+        "liveproxyd": 0,
+        "mknotifyd": 0,
+        "rrdcached": 0,
+        "redis": 0,
+        "npcd": 5,
+    }, (
+        "The function should return a dictionary "
+        "with the service names as keys and their states as values"
+    )

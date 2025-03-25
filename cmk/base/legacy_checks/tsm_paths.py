@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def inventory_tsm_paths(info):
@@ -27,6 +27,7 @@ def parse_tsm_paths(string_table: StringTable) -> StringTable:
 
 
 check_info["tsm_paths"] = LegacyCheckDefinition(
+    name="tsm_paths",
     parse_function=parse_tsm_paths,
     service_name="TSM Paths",
     discovery_function=inventory_tsm_paths,

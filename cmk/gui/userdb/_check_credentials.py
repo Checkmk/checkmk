@@ -8,8 +8,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
+import cmk.ccc.version as cmk_version
+
 import cmk.utils.paths
-from cmk.utils.crypto.password import Password
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.user import UserId
 
@@ -23,7 +24,7 @@ from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.utils.security_log_events import UserManagementEvent
 
-import cmk.ccc.version as cmk_version
+from cmk.crypto.password import Password
 
 from ._connections import active_connections, get_connection
 from ._user_spec import new_user_template

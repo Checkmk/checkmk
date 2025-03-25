@@ -11,8 +11,11 @@ from datetime import datetime
 from typing import final
 from wsgiref.types import StartResponse, WSGIEnvironment
 
+import cmk.ccc.store
+import cmk.ccc.version as cmk_version
+from cmk.ccc.site import url_prefix
+
 import cmk.utils.paths
-import cmk.utils.profile
 
 import cmk.gui.auth
 import cmk.gui.session
@@ -20,19 +23,16 @@ from cmk.gui import login, pages, userdb
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUnauthenticatedException
-from cmk.gui.http import request, response, Response
+from cmk.gui.http import request, Response, response
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import LoggedInSuperUser, user
+from cmk.gui.logged_in import LoggedInRemoteSite, LoggedInSuperUser, user
 from cmk.gui.session import session
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.utils.language_cookie import set_language_cookie
-from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
 from cmk.gui.wsgi.type_defs import WSGIResponse
 
-import cmk.ccc.store
-import cmk.ccc.version as cmk_version
 from cmk import trace
-from cmk.ccc.site import url_prefix
 
 # TODO
 #  * derive all exceptions from werkzeug's http exceptions.
@@ -61,7 +61,7 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
             if not authenticated:
                 return _handle_not_authenticated()
 
-            if isinstance(session.user, LoggedInSuperUser):
+            if isinstance(session.user, (LoggedInRemoteSite, LoggedInSuperUser)):
                 func()
                 return response
 
@@ -69,22 +69,36 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
 
             trace.get_current_span().set_attribute("cmk.auth.user_id", str(user_id))
 
-            two_factor_ok = requested_file_name(request) in (
+            two_factor_login_pages = requested_file_name(request) in (
                 "user_login_two_factor",
                 "user_webauthn_login_begin",
                 "user_webauthn_login_complete",
             )
 
-            if (
-                not two_factor_ok
-                and userdb.is_two_factor_login_enabled(user_id)
-                and not session.session_info.two_factor_completed
-            ):
+            two_factor_registration_pages = requested_file_name(request) in (
+                "user_two_factor_enforce",
+                "user_totp_register",
+                "user_webauthn_register_begin",
+                "user_webauthn_register_complete",
+            )
+
+            # Two factor login
+            if not two_factor_login_pages and session.two_factor_pending():
                 raise HTTPRedirect(
                     "user_login_two_factor.py?_origtarget=%s" % urlencode(makeuri(request, []))
                 )
 
-            if not two_factor_ok and requested_file_name(request) != "user_change_pw":
+            # Enforce Two Factor
+            if (
+                not two_factor_registration_pages
+                and session.session_info.two_factor_required
+                and not session.session_info.two_factor_completed
+            ):
+                raise HTTPRedirect(
+                    "user_two_factor_enforce.py?_origtarget=%s" % urlencode(makeuri(request, []))
+                )
+
+            if not two_factor_login_pages and requested_file_name(request) != "user_change_pw":
                 if change_reason := userdb.need_to_change_pw(user_id, datetime.now()):
                     raise HTTPRedirect(
                         f"user_change_pw.py?_origtarget={urlencode(makeuri(request, []))}&reason={change_reason}"
@@ -135,10 +149,7 @@ def _ensure_general_access() -> None:
         return
 
     reason = [
-        _(
-            "You are not authorized to use the Checkmk GUI. Sorry. "
-            "You are logged in as <b>%s</b>."
-        )
+        _("You are not authorized to use the Checkmk GUI. Sorry. You are logged in as <b>%s</b>.")
         % user.id
     ]
 
@@ -187,7 +198,7 @@ def _handle_not_authenticated() -> Response:
     # to the login form. After successful login a http redirect to the originally
     # requested page is performed.
     if cmk_version.edition(cmk.utils.paths.omd_root) == cmk_version.Edition.CSE:
-        from cmk.gui.cse.userdb.cognito.pages import (  # pylint: disable=no-name-in-module
+        from cmk.gui.cse.userdb.cognito.pages import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
             SingleSignOn,
         )
 

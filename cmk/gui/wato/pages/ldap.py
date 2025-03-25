@@ -5,9 +5,9 @@
 """LDAP configuration and diagnose page"""
 
 import re
-from collections.abc import Collection
+from collections.abc import Callable, Collection
 from copy import deepcopy
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
@@ -603,7 +603,7 @@ class LDAPConnectionValuespec(Dictionary):
                 Dictionary(
                     title=_("Attribute sync plug-ins"),
                     help=_(
-                        "It is possible to fetch several attributes of users, like Email or full names, "
+                        "It is possible to fetch several attributes of users, like email or full names, "
                         "from the LDAP directory. This is done by plug-ins which can be individually enabled "
                         "or disabled. When enabling a plug-in, it is used upon the next synchronization of "
                         "user accounts for gathering their attributes. The user options which get imported "
@@ -933,7 +933,7 @@ class ModeEditLDAPConnection(WatoMode):
 
     def _test_connect(self, connection: LDAPUserConnector, address: str) -> tuple[bool, str | None]:
         conn, msg = connection.connect_server(address)
-        if conn:
+        if conn:  # type: ignore[truthy-bool]
             return (True, _("Connection established. The connection settings seem to be ok."))
         return (False, msg)
 

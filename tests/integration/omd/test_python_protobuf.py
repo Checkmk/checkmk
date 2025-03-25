@@ -11,12 +11,10 @@ import pytest
 from tests.testlib.site import Site
 
 
-def test_protobuf_api_implementation_is_cpp(site: Site) -> None:
+def test_protobuf_api_implementation(site: Site) -> None:
     assert (
-        site.python_helper("helper_test_protobuf_api_implementation_is_cpp.py")
-        .check_output()
-        .rstrip()
-        == "cpp"
+        site.python_helper("helper_test_protobuf_api_implementation.py").check_output().rstrip()
+        == "upb"
     )
 
 
@@ -24,7 +22,7 @@ def test_protobuf_api_implementation_is_cpp(site: Site) -> None:
 def fixture_test_dir(site: Site) -> Iterator[Path]:
     site.makedirs("protobuf")
     try:
-        yield Path(site.path("protobuf"))
+        yield site.path("protobuf")
     finally:
         site.delete_dir("protobuf")
 
@@ -67,16 +65,15 @@ message AddressBook {
 @pytest.fixture(name="protobuf_py")
 def fixture_protobuf_py(site: Site, test_dir: Path, proto_source_file: Path) -> Iterator[None]:
     target_dir = site.path("local/lib/python3/")
-    p = site.execute(
+    _ = site.run(
         [
             "protoc",
             "-I=%s" % test_dir,
             "--python_out",
-            target_dir,
+            target_dir.as_posix(),
             str(proto_source_file),
         ]
     )
-    assert p.wait() == 0
 
     assert site.file_exists("local/lib/python3/test_pb2.py")
     yield

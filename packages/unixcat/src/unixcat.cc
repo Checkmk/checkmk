@@ -21,6 +21,7 @@
 
 using namespace std::chrono_literals;
 
+namespace {
 constexpr size_t buffer_size = 65536;
 
 struct thread_info {
@@ -83,7 +84,9 @@ void *copy_thread(void *info) {
     }
     return nullptr;
 }
+}  // namespace
 
+// NOLINTNEXTLINE(bugprone-exception-escape)
 int main(int argc, char *argv[]) {
     std::vector<std::string> arguments{argv, argv + argc};
     if (argc != 2) {
@@ -98,10 +101,8 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    struct sockaddr_un sockaddr {
-        .sun_family = AF_UNIX, .sun_path = ""
-    };
-    auto unixpath = arguments[1];
+    struct sockaddr_un sockaddr{.sun_family = AF_UNIX, .sun_path = ""};
+    const auto &unixpath = arguments[1];
     unixpath.copy(&sockaddr.sun_path[0], sizeof(sockaddr.sun_path) - 1);
     sockaddr.sun_path[sizeof(sockaddr.sun_path) - 1] = '\0';
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)

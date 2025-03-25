@@ -65,12 +65,7 @@ def check_brocade_info(section: Sequence[StringTable]) -> CheckResult:
     data = "".join((model, ssn, fw, wwn))
     if data != "----":
         wwn = brocade_info_parse_wwn(wwn)
-        infotext = "Model: {}, SSN: {}, Firmware Version: {}, WWN: {}".format(
-            model,
-            ssn,
-            fw,
-            wwn,
-        )
+        infotext = f"Model: {model}, SSN: {ssn}, Firmware Version: {fw}, WWN: {wwn}"
         yield Result(state=State.OK, summary=infotext)
         return
     yield Result(state=State.UNKNOWN, summary="no information found")

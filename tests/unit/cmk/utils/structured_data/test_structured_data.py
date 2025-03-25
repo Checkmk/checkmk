@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import ast
 import gzip
 import shutil
 from collections.abc import Iterable, Mapping, Sequence
@@ -11,27 +12,71 @@ from typing import Literal
 
 import pytest
 
-from tests.testlib.repo import repo_path
+from tests.testlib.common.repo import repo_path
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import (
+    _deserialize_retention_interval,
+    _make_meta_and_raw_tree,
     _MutableAttributes,
     _MutableTable,
+    _serialize_retention_interval,
+    deserialize_delta_tree,
+    deserialize_tree,
     ImmutableAttributes,
     ImmutableDeltaTree,
     ImmutableTable,
     ImmutableTree,
+    make_meta,
     MutableTree,
+    parse_from_unzipped,
     parse_visible_raw_path,
     RetentionInterval,
+    SDDeltaValue,
     SDFilterChoice,
     SDKey,
+    SDMeta,
+    SDMetaAndRawTree,
     SDNodeName,
     SDPath,
+    SDRawTree,
     SDRetentionFilterChoices,
+    serialize_delta_tree,
+    serialize_tree,
     TreeStore,
     UpdateResult,
 )
+
+
+@pytest.mark.parametrize(
+    "left, right",
+    [
+        pytest.param(
+            MutableTree(nodes_by_name={SDNodeName("lnode"): MutableTree()}),
+            MutableTree(nodes_by_name={SDNodeName("rnode"): MutableTree()}),
+            id="m-m",
+        ),
+        pytest.param(
+            MutableTree(nodes_by_name={SDNodeName("lnode"): MutableTree()}),
+            ImmutableTree(nodes_by_name={SDNodeName("rnode"): ImmutableTree()}),
+            id="m-i",
+        ),
+        pytest.param(
+            ImmutableTree(nodes_by_name={SDNodeName("lnode"): ImmutableTree()}),
+            MutableTree(nodes_by_name={SDNodeName("rnode"): MutableTree()}),
+            id="i-m",
+        ),
+        pytest.param(
+            ImmutableTree(nodes_by_name={SDNodeName("lnode"): ImmutableTree()}),
+            ImmutableTree(nodes_by_name={SDNodeName("rnode"): ImmutableTree()}),
+            id="i-i",
+        ),
+    ],
+)
+def test_equality_with_non_empty_nodes(
+    left: MutableTree | ImmutableTree, right: MutableTree | ImmutableTree
+) -> None:
+    assert left == right
 
 
 def _make_mutable_tree(tree: ImmutableTree) -> MutableTree:
@@ -111,11 +156,11 @@ def _create_filled_imm_tree() -> ImmutableTree:
 
 
 def test_serialize_empty_mut_tree() -> None:
-    assert _create_empty_mut_tree().serialize() == {"Attributes": {}, "Table": {}, "Nodes": {}}
+    assert serialize_tree(_create_empty_mut_tree()) == {"Attributes": {}, "Table": {}, "Nodes": {}}
 
 
 def test_serialize_filled_mut_tree() -> None:
-    raw_tree = _create_filled_mut_tree().serialize()
+    raw_tree = serialize_tree(_create_filled_mut_tree())
     assert not raw_tree["Attributes"]
     assert not raw_tree["Table"]
     assert not raw_tree["Nodes"][SDNodeName("path-to-nta")]["Attributes"]
@@ -167,12 +212,12 @@ def test_serialize_filled_mut_tree() -> None:
 
 
 def test_deserialize_empty_imm_tree() -> None:
-    assert ImmutableTree.deserialize({}) == MutableTree()
-    assert ImmutableTree.deserialize({}) == ImmutableTree()
+    assert deserialize_tree({}) == MutableTree()
+    assert deserialize_tree({}) == ImmutableTree()
 
 
 def test_deserialize_filled_imm_tree() -> None:
-    tree = ImmutableTree.deserialize(
+    tree = deserialize_tree(
         {
             "Attributes": {},
             "Table": {},
@@ -218,7 +263,7 @@ def test_deserialize_filled_imm_tree() -> None:
 
 
 def test_serialize_empty_delta_tree() -> None:
-    assert _create_empty_imm_tree().difference(_create_empty_imm_tree()).serialize() == {
+    assert serialize_delta_tree(_create_empty_imm_tree().difference(_create_empty_imm_tree())) == {
         "Attributes": {},
         "Table": {},
         "Nodes": {},
@@ -226,7 +271,7 @@ def test_serialize_empty_delta_tree() -> None:
 
 
 def test_serialize_filled_delta_tree() -> None:
-    raw_tree = _create_empty_imm_tree().difference(_create_filled_imm_tree()).serialize()
+    raw_tree = serialize_delta_tree(_create_empty_imm_tree().difference(_create_filled_imm_tree()))
     assert not raw_tree["Attributes"]
     assert not raw_tree["Table"]
     assert not raw_tree["Nodes"][SDNodeName("path-to-nta")]["Attributes"]
@@ -282,7 +327,7 @@ def test_deserialize_empty_delta_tree() -> None:
 
 
 def test_deserialize_filled_delta_tree() -> None:
-    delta_tree = ImmutableDeltaTree.deserialize(
+    delta_tree = deserialize_delta_tree(
         {
             "Attributes": {},
             "Nodes": {
@@ -471,8 +516,8 @@ def test_filter_delta_tree_nt() -> None:
     assert not filtered_child.attributes.pairs
     assert len(filtered_child.table.rows) == 2
     for row in (
-        {"nt1": (None, "NT 01")},
-        {"nt1": (None, "NT 11")},
+        {"nt1": SDDeltaValue(None, "NT 01")},
+        {"nt1": SDDeltaValue(None, "NT 11")},
     ):
         assert row in filtered_child.table.rows
 
@@ -499,7 +544,7 @@ def test_filter_delta_tree_na() -> None:
     filtered_child = filtered.get_tree((SDNodeName("path-to-nta"), SDNodeName("na")))
     assert len(filtered_child) == 1
     assert filtered_child.path == ("path-to-nta", "na")
-    assert filtered_child.attributes.pairs == {"na1": (None, "NA 1")}
+    assert filtered_child.attributes.pairs == {"na1": SDDeltaValue(None, "NA 1")}
     assert filtered_child.table.rows == []
 
 
@@ -525,11 +570,11 @@ def test_filter_delta_tree_ta() -> None:
     filtered_child = filtered.get_tree((SDNodeName("path-to-nta"), SDNodeName("ta")))
     assert len(filtered_child) == 3
     assert filtered_child.path == ("path-to-nta", "ta")
-    assert filtered_child.attributes.pairs == {"ta1": (None, "TA 1")}
+    assert filtered_child.attributes.pairs == {"ta1": SDDeltaValue(None, "TA 1")}
     assert len(filtered_child.table.rows) == 2
     for row in (
-        {"ta1": (None, "TA 01")},
-        {"ta1": (None, "TA 11")},
+        {"ta1": SDDeltaValue(None, "TA 01")},
+        {"ta1": SDDeltaValue(None, "TA 11")},
     ):
         assert row in filtered_child.table.rows
 
@@ -566,11 +611,11 @@ def test_filter_delta_tree_nta_ta() -> None:
 
     filtered_ta = filtered.get_tree((SDNodeName("path-to-nta"), SDNodeName("ta")))
     assert len(filtered_ta) == 5
-    assert filtered_ta.attributes.pairs == {"ta0": (None, "TA 0")}
+    assert filtered_ta.attributes.pairs == {"ta0": SDDeltaValue(None, "TA 0")}
     assert len(filtered_ta.table.rows) == 2
     for row in (
-        {"ta0": (None, "TA 00"), "ta1": (None, "TA 01")},
-        {"ta0": (None, "TA 10"), "ta1": (None, "TA 11")},
+        {"ta0": SDDeltaValue(None, "TA 00"), "ta1": SDDeltaValue(None, "TA 01")},
+        {"ta0": SDDeltaValue(None, "TA 10"), "ta1": SDDeltaValue(None, "TA 11")},
     ):
         assert row in filtered_ta.table.rows
 
@@ -903,7 +948,7 @@ def test_save_tree(tmp_path: Path) -> None:
         path=(SDNodeName("path-to"), SDNodeName("node")), pairs=[{SDKey("foo"): 1, SDKey("bär"): 2}]
     )
     tree_store = TreeStore(tmp_path / "inventory")
-    tree_store.save(host_name=host_name, tree=tree)
+    tree_store.save(host_name=host_name, tree=tree, meta=make_meta(do_archive=True))
 
     assert target.exists()
 
@@ -911,7 +956,121 @@ def test_save_tree(tmp_path: Path) -> None:
     assert gzip_filepath.exists()
 
     with gzip.open(str(gzip_filepath), "rb") as f:
-        f.read()
+        content = f.read()
+
+    # Similiar to InventoryUpdater:
+    meta_and_raw_tree = parse_from_unzipped(ast.literal_eval(content.decode("utf-8")))
+    assert meta_and_raw_tree["meta"]["version"] == "1"
+    assert meta_and_raw_tree["meta"]["do_archive"]
+
+    expected_raw_tree = serialize_tree(tree)
+    assert meta_and_raw_tree["raw_tree"]["Attributes"] == expected_raw_tree["Attributes"]
+    assert meta_and_raw_tree["raw_tree"]["Table"] == expected_raw_tree["Table"]
+    assert meta_and_raw_tree["raw_tree"]["Nodes"] == expected_raw_tree["Nodes"]
+
+
+@pytest.mark.parametrize(
+    "raw, expected",
+    [
+        pytest.param(
+            {"Attributes": {}, "Table": {}, "Nodes": {}},
+            SDMetaAndRawTree(
+                meta=SDMeta(version="1", do_archive=True),
+                raw_tree=SDRawTree(Attributes={}, Table={}, Nodes={}),
+            ),
+            id="missing-version:missing-meta",
+        ),
+        pytest.param(
+            {
+                "meta_version": "0",
+                "meta_do_archive": True,
+                "Attributes": {},
+                "Table": {},
+                "Nodes": {},
+            },
+            SDMetaAndRawTree(
+                meta=SDMeta(version="1", do_archive=True),
+                raw_tree=SDRawTree(Attributes={}, Table={}, Nodes={}),
+            ),
+            id="version=0:do-archive",
+        ),
+        pytest.param(
+            {
+                "meta_version": "0",
+                "meta_do_archive": False,
+                "Attributes": {},
+                "Table": {},
+                "Nodes": {},
+            },
+            SDMetaAndRawTree(
+                meta=SDMeta(version="1", do_archive=False),
+                raw_tree=SDRawTree(Attributes={}, Table={}, Nodes={}),
+            ),
+            id="version=0:do-not-archive",
+        ),
+        pytest.param(
+            {
+                "meta": {"version": "1", "do_archive": True},
+                "raw_tree": {"Attributes": {}, "Table": {}, "Nodes": {}},
+            },
+            SDMetaAndRawTree(
+                meta=SDMeta(version="1", do_archive=True),
+                raw_tree=SDRawTree(Attributes={}, Table={}, Nodes={}),
+            ),
+            id="version=1:do-archive",
+        ),
+        pytest.param(
+            {
+                "meta": {"version": "1", "do_archive": False},
+                "raw_tree": {"Attributes": {}, "Table": {}, "Nodes": {}},
+            },
+            SDMetaAndRawTree(
+                meta=SDMeta(version="1", do_archive=False),
+                raw_tree=SDRawTree(Attributes={}, Table={}, Nodes={}),
+            ),
+            id="version=1:do-archive",
+        ),
+    ],
+)
+def test_parse_from_unzipped(raw: Mapping[str, object], expected: SDMetaAndRawTree) -> None:
+    assert parse_from_unzipped(raw) == expected
+
+
+@pytest.mark.parametrize(
+    "meta, raw_tree, expected",
+    [
+        pytest.param(
+            SDMeta(version="1", do_archive=True),
+            SDRawTree(Attributes={}, Table={}, Nodes={}),
+            SDMetaAndRawTree(
+                meta=SDMeta(version="1", do_archive=True),
+                raw_tree=SDRawTree(
+                    Attributes={},
+                    Table={},
+                    Nodes={},
+                ),
+            ),
+            id="version=0:do-archive",
+        ),
+        pytest.param(
+            SDMeta(version="1", do_archive=False),
+            SDRawTree(Attributes={}, Table={}, Nodes={}),
+            SDMetaAndRawTree(
+                meta=SDMeta(version="1", do_archive=False),
+                raw_tree=SDRawTree(
+                    Attributes={},
+                    Table={},
+                    Nodes={},
+                ),
+            ),
+            id="version=0:do-not-archive",
+        ),
+    ],
+)
+def test__make_meta_and_raw_tree(
+    meta: SDMeta, raw_tree: SDRawTree, expected: SDMetaAndRawTree
+) -> None:
+    assert _make_meta_and_raw_tree(meta, raw_tree) == expected
 
 
 @pytest.mark.parametrize(
@@ -1008,7 +1167,11 @@ def test_save_and_load_real_tree(tree_name: HostName, tmp_path: Path) -> None:
     orig_tree = _get_tree_store().load(host_name=tree_name)
     tree_store = TreeStore(tmp_path / "inventory")
     try:
-        tree_store.save(host_name=HostName("foo"), tree=_make_mutable_tree(orig_tree))
+        tree_store.save(
+            host_name=HostName("foo"),
+            tree=_make_mutable_tree(orig_tree),
+            meta=make_meta(do_archive=False),
+        )
         loaded_tree = tree_store.load(host_name=HostName("foo"))
         assert orig_tree == loaded_tree
     finally:
@@ -1227,7 +1390,7 @@ def test_merge_trees_2() -> None:
     inventory_tree = tree_store.load(host_name=HostName("tree_inv"))
     status_data_tree = tree_store.load(host_name=HostName("tree_status"))
     tree = inventory_tree.merge(status_data_tree)
-    assert "foobar" in tree.serialize()["Nodes"]
+    assert "foobar" in serialize_tree(tree)["Nodes"]
     table = tree.get_tree((SDNodeName("foobar"),)).table
     assert len(table) == 19
     assert len(table.rows) == 5
@@ -1511,7 +1674,7 @@ def test_legacy_tree() -> None:
     #     }
     # }
 
-    tree = ImmutableTree.deserialize(raw_tree)
+    tree = deserialize_tree(raw_tree)
 
     idx_node_attr = tree.get_tree((SDNodeName("path-to"), SDNodeName("idx-node"), SDNodeName("0")))
     assert len(idx_node_attr) > 0
@@ -1570,7 +1733,7 @@ def test_legacy_tree() -> None:
 
 
 def test_update_from_previous_1() -> None:
-    previous_tree = ImmutableTree.deserialize(
+    previous_tree = deserialize_tree(
         {
             "Attributes": {},
             "Table": {
@@ -1617,7 +1780,7 @@ def test_update_from_previous_1() -> None:
 
 
 def test_update_from_previous_2() -> None:
-    previous_tree = ImmutableTree.deserialize(
+    previous_tree = deserialize_tree(
         {
             "Attributes": {},
             "Table": {
@@ -1673,7 +1836,7 @@ def test_deserialize_retention_interval(
     ),
     expected_retention_interval: RetentionInterval,
 ) -> None:
-    assert RetentionInterval.deserialize(raw_retention_interval) == expected_retention_interval
+    assert _deserialize_retention_interval(raw_retention_interval) == expected_retention_interval
 
 
 @pytest.mark.parametrize(
@@ -1687,4 +1850,4 @@ def test_serialize_retention_interval(
     retention_interval: RetentionInterval,
     expected_raw_retention_interval: tuple[int, int, int, Literal["previous", "current"]],
 ) -> None:
-    assert retention_interval.serialize() == expected_raw_retention_interval
+    assert _serialize_retention_interval(retention_interval) == expected_raw_retention_interval

@@ -228,14 +228,14 @@ def test_check_parsing_errors_are_ok() -> None:
     assert check_parsing_errors(
         ("error - message",),
         error_state=0,
-    ) == [ActiveCheckResult(0, "error", ("error - message",))]
+    ) == [ActiveCheckResult(state=0, summary="error", details=("error - message",))]
 
 
 def test_check_parsing_errors_with_errors_() -> None:
     assert check_parsing_errors(("error - message",)) == [
-        ActiveCheckResult(1, "error", ("error - message",))
+        ActiveCheckResult(state=1, summary="error", details=("error - message",))
     ]
     assert check_parsing_errors(
         ("error - message",),
         error_state=2,
-    ) == [ActiveCheckResult(2, "error", ("error - message",))]
+    ) == [ActiveCheckResult(state=2, summary="error", details=("error - message",))]

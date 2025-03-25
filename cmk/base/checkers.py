@@ -1104,7 +1104,6 @@ class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
 
         return DiscoveryPlugin(
             sections=plugin.sections,
-            service_name=plugin.service_name,
             function=__discovery_function,
             parameters=_make_discovery_parameters_getter(
                 config_getter=self._config_getter,

@@ -19,9 +19,5 @@ __all__ = ["DiscoveryPlugin"]
 @dataclass(frozen=True)
 class DiscoveryPlugin:
     sections: Sequence[ParsedSectionName]
-    # There is a single user of the `service_name` attribute.  Is it
-    # *really* needed?  Does it *really* belong to the check plug-in?
-    # This doesn't feel right.
-    service_name: str
     function: Callable[..., Iterable[AutocheckEntry]]
     parameters: Callable[[HostName], Sequence[Parameters] | Parameters | None]

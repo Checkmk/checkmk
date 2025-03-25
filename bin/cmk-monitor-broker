@@ -24,6 +24,10 @@ HERE
 }
 
 _get_secret() {
+    [ -e ~/.erlang.cookie ] || {
+        printf "Error: Erlang cookie ~/.erlang.cookie not found.\n"
+        exit 1
+    }
     cat ~/.erlang.cookie
 }
 

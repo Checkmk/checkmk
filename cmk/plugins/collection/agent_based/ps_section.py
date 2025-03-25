@@ -237,6 +237,8 @@ def _handle_deleted_cgroup(attrs: Iterable[str], line: Sequence[str]) -> Sequenc
 
 
 def parse_ps_lnx(string_table: StringTable) -> ps.Section | None:
+    if not string_table:
+        return None
     now = int(time.time())
     return _parse_ps_lnx(now, string_table)
 

@@ -1015,33 +1015,6 @@ def _build_description(description_text: str | None, werk_id: int | None = None)
     return description
 
 
-def _schema_name(schema_name: str) -> str:
-    """Remove the suffix 'Schema' from a schema-name.
-
-    Examples:
-
-        >>> _schema_name("BakeSchema")
-        'Bake'
-
-        >>> _schema_name("BakeSchemaa")
-        'BakeSchemaa'
-
-    Args:
-        schema_name:
-            The name of the Schema.
-
-    Returns:
-        The name of the Schema, maybe stripped of the suffix 'Schema'.
-
-    """
-    return schema_name[:-6] if schema_name.endswith("Schema") else schema_name
-
-
-def _schema_definition(schema_name: str) -> str:
-    ref = f"#/components/schemas/{_schema_name(schema_name)}"
-    return f'<SchemaDefinition schemaRef="{ref}" showReadOnly={{true}} showWriteOnly={{true}} />'
-
-
 def _permission_descriptions(
     perms: permissions.BasePerm,
     descriptions: dict[str, str] | None = None,

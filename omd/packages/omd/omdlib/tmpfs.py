@@ -274,6 +274,7 @@ def restore_tmpfs_dump(site: SiteContext) -> None:
         return
     with tarfile.TarFile(_tmpfs_dump_path(site)) as tar:
         tar.extractall(site.tmp_dir, filter="data")  # nosec B202 # BNS:a7d6b8
+    _tmpfs_dump_path(site).unlink()
 
 
 def _tmpfs_dump_path(site: SiteContext) -> Path:

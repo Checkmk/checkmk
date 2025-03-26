@@ -742,6 +742,23 @@ def _vs_state_mappings() -> CascadingDropdown:
     )
 
 
+def _migrate_parameter_valuespec_if(value: dict[str, object]) -> dict[str, object]:
+    if "speed" in value:
+        value["discovered_speed"] = value.pop("speed")
+    if "state" in value:
+        value["discovered_oper_status"] = value.pop("state")
+    if "discovered_state" in value:
+        value["discovered_oper_status"] = value.pop("discovered_state")
+    return value
+
+
+def _parameter_valuespec_if_migrate() -> Migrate:
+    return Migrate(
+        valuespec=_parameter_valuespec_if(),
+        migrate=_migrate_parameter_valuespec_if,
+    )
+
+
 def _parameter_valuespec_if() -> Dictionary:
     return Dictionary(
         ignored_keys=[
@@ -1123,7 +1140,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersNetworking,
         item_spec=_item_spec_if,
         match_type="dict",
-        parameter_valuespec=_parameter_valuespec_if,
+        parameter_valuespec=_parameter_valuespec_if_migrate,
         title=lambda: _("Network interfaces and switch ports"),
     )
 )

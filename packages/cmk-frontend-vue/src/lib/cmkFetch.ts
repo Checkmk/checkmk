@@ -85,3 +85,19 @@ export async function cmkFetch(
   const response = await fetch(url, options)
   return new CmkFetchResponse(response, options)
 }
+
+export async function fetchRestAPI<Payload>(url: string, method: string, body?: Payload) {
+  const params: RequestInit = {
+    method,
+    credentials: 'include',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json'
+    }
+  }
+  if (body) {
+    params.body = JSON.stringify(body)
+  }
+  const response = await cmkFetch(url, params)
+  return response
+}

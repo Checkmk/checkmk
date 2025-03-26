@@ -22,6 +22,14 @@ export function getUserFrontendConfig(): UserFrontendConfig | null {
   }
 }
 
+export function isWarningDismissed(warning: string, deflt: boolean): boolean {
+  const config = getUserFrontendConfig()
+  if (config === null || !config.dismissed_warnings) {
+    return deflt
+  }
+  return config.dismissed_warnings.includes(warning)
+}
+
 function _getCookie(cookieName: string): string | null {
   if (document.cookie.length === 0) {
     return null

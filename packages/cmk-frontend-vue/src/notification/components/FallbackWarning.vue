@@ -4,31 +4,30 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { isWarningDismissed } from '@/lib/userConfig'
 import type { FallbackWarning } from 'cmk-shared-typing/typescript/notifications'
 import CmkIcon from '@/components/CmkIcon.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import CmkButton from '@/components/CmkButton.vue'
+import { persistWarningDismissal } from '@/lib/rest-api-client/userConfig'
+
+const WARNING_KEY = 'notification_fallback'
 
 const props = defineProps<{
   properties: FallbackWarning
   user_id: string
 }>()
 
-import { ref, onMounted } from 'vue'
+const warningHidden = ref(false)
 
-const isContentVisible = ref(true)
-const localStorageKey = (userId: string) => `${userId}-notificationFallbackVisibility`
-
-function hideContent() {
-  isContentVisible.value = false
-  localStorage.setItem(localStorageKey(props.user_id), 'hidden')
+async function hideContent() {
+  warningHidden.value = true
+  await persistWarningDismissal(WARNING_KEY)
 }
 
 onMounted(() => {
-  const savedState = localStorage.getItem(localStorageKey(props.user_id))
-  if (savedState === 'hidden') {
-    isContentVisible.value = false
-  }
+  warningHidden.value = isWarningDismissed(WARNING_KEY, warningHidden.value)
 })
 
 function openInSameTab(url: string) {
@@ -37,7 +36,7 @@ function openInSameTab(url: string) {
 </script>
 
 <template>
-  <div v-if="isContentVisible" class="help always_on">
+  <div v-if="!warningHidden" class="help always_on">
     <div class="info_icon">
       <CmkIcon name="info" />
     </div>

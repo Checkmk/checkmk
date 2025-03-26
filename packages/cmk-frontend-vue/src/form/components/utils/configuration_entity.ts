@@ -6,7 +6,7 @@
 import type { ConfigEntityType } from 'cmk-shared-typing/typescript/configuration_entity'
 import type { SetDataResult } from '@/form/components/forms/FormSingleChoiceEditableEditAsync.vue'
 
-import { cmkFetch, type CmkFetchResponse } from '@/lib/cmkFetch'
+import { fetchRestAPI, type CmkFetchResponse } from '@/lib/cmkFetch'
 
 export interface EntityDescription {
   ident: string
@@ -26,22 +26,6 @@ const LIST_CONFIG_ENTITIES = (entityType: ConfigEntityType, entityTypeSpecifier:
   `${API_ROOT}/domain-types/${entityType}/collections/${entityTypeSpecifier}`
 const CREATE_CONFIG_ENTITY = `${API_ROOT}/domain-types/configuration_entity/collections/all`
 const UPDATE_CONFIG_ENTITY = `${API_ROOT}/domain-types/configuration_entity/actions/edit-single-entity/invoke`
-
-const fetchRestAPI = async (url: string, method: string, body?: Payload) => {
-  const params: RequestInit = {
-    method,
-    credentials: 'include',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json'
-    }
-  }
-  if (body) {
-    params.body = JSON.stringify(body)
-  }
-  const response = await cmkFetch(url, params)
-  return response
-}
 
 async function processSaveResponse(
   response: CmkFetchResponse

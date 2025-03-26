@@ -144,17 +144,17 @@ def merge_cluster_autochecks(
     appears_on_cluster: Callable[[HostName, AutocheckEntry], bool],
 ) -> Sequence[AutocheckEntry]:
     # filter for cluster and flatten:
-    entries = {
-        node_name: e
+    entries = [
+        (node_name, e)
         for node_name, entries in autochecks.items()
         for e in entries
         if appears_on_cluster(node_name, e)
-    }
+    ]
 
     # group by service id and reverse order to make the first node win in merging
     # but prioritize the current active nodes
     entries_by_id: dict[ServiceID, list[AutocheckEntry]] = defaultdict(list)
-    for node_name, entry in sorted(entries.items(), key=lambda x: x[0] not in active_nodes):
+    for node_name, entry in sorted(entries, key=lambda x: x[0] not in active_nodes):
         entries_by_id[entry.id()].insert(0, entry)
 
     return [

@@ -284,7 +284,9 @@ def parse_arguments(argv: Sequence[str]) -> Args:
     parser.add_argument("--tenant", required=True, help="Azure tenant ID")
     parser.add_argument("--secret", required=True, help="Azure authentication secret")
     parser.add_argument(
-        "--cache-id", required=True, help="Unique id for this special agent configuration"
+        "--cache-id",
+        required=True,
+        help="Unique id for this special agent configuration",
     )
 
     parser.add_argument(
@@ -696,7 +698,9 @@ class GraphApiClient(BaseApiClient):
         return self._filter_out_applications(applications)
 
     @staticmethod
-    def _filter_out_applications(applications: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def _filter_out_applications(
+        applications: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
         key_subset = {"id", "appId", "displayName", "passwordCredentials"}
         return [
             {k: app[k] for k in key_subset} for app in applications if app["passwordCredentials"]
@@ -1454,7 +1458,9 @@ class MetricCache(DataCache):
         self.metric_definition = metric_definition
         metric_names = metric_definition[0]
         super().__init__(
-            self.get_cache_path(cache_id, resource_type, region), metric_names, debug=debug
+            self.get_cache_path(cache_id, resource_type, region),
+            metric_names,
+            debug=debug,
         )
         self.remaining_reads = None
         self.timedelta = {
@@ -1919,6 +1925,10 @@ def test_connection(args: Args, subscription: str) -> int | tuple[int, str]:
         mgmt_client.login(args.tenant, args.client, args.secret)
     except (ApiLoginFailed, ValueError) as exc:
         error_msg = f"Management client login failed with: {exc}\n"
+        sys.stdout.write(error_msg)
+        return 2, error_msg
+    except requests.exceptions.ProxyError as exc:
+        error_msg = f"Management client login failed due to a proxy error: {exc}\n"
         sys.stdout.write(error_msg)
         return 2, error_msg
     return 0

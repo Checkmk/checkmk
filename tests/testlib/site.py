@@ -836,6 +836,12 @@ class Site:
     @tracer.instrument("Site.uninstall_cmk")
     def uninstall_cmk(self) -> None:
         """Uninstall the Checkmk package corresponding to the site, if it was not preinstalled."""
+        if self.exists() and self._package.version == self.version:
+            raise RuntimeError(
+                f"Site {self.id} is currently running with cmk version "
+                f"{self.version.version}. Please remove or update the site before "
+                f"uninstalling the cmk package."
+            )
         if self._package.is_installed() and not self._package_was_preinstalled:
             logger.info("Uninstalling Checkmk package %s", self._package.version_directory())
             try:

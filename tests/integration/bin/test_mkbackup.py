@@ -8,13 +8,11 @@ import logging
 import os
 import re
 import subprocess
-import time
 from collections.abc import Generator, Iterator, Mapping
 from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
-from psutil import Process
 
 from tests.testlib.common.utils import run
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
@@ -44,34 +42,35 @@ def site(request: pytest.FixtureRequest) -> Generator[Site]:
 
 
 @contextmanager
-def simulate_backup_lock(site_for_mkbackup_tests: Site, timeout: int = 1200) -> Iterator[None]:
-    file_name = f"mkbackup-{site_for_mkbackup_tests.id}.lock"
-    with site_for_mkbackup_tests.execute(
-        [
-            "flock",
-            "-o",
-            "-x",
-            "-n",
-            str(mkbackup_lock_dir / file_name),
-            "sleep",
-            str(timeout),
-        ]
-    ) as p:
-        logger.info("Lock file %s", file_name)
-        start_time = time.time()
+def simulate_backup_lock(site_for_mkbackup_tests: Site) -> Iterator[None]:
+    lock_path = mkbackup_lock_dir / f"mkbackup-{site_for_mkbackup_tests.id}.lock"
+    logger.info("Lock file: %s", lock_path)
+
+    file_locking_proc: subprocess.Popen[str]
+    with site_for_mkbackup_tests.python_helper("helper_mkbackup_file_lock.py").execute(
+        encoding="utf-8",
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+    ) as file_locking_proc:
+        assert file_locking_proc.stdin
+        assert file_locking_proc.stdout
+
+        file_locking_proc.stdin.write(f"{lock_path}\n")
+        file_locking_proc.stdin.flush()
+        assert file_locking_proc.stdout.readline().strip() == "locked"
+        logger.info("%s is now locked", lock_path)
+
         try:
             yield None
         finally:
-            # command returns an exit code only after 'timeout' seconds (sleep).
-            if p.poll() == 0:
-                raise TimeoutError(
-                    f"{file_name} in unlocked state since "
-                    f"{((time.time() - start_time) - timeout):.2f} seconds!"
-                    "\nThis affects the test design and may result in false positives!"
-                )
-            for c in Process(p.pid).children(recursive=True):
-                if c.name() == "sleep":
-                    assert site_for_mkbackup_tests.run(["kill", str(c.pid)]).returncode == 0
+            logger.info("Shutting down file locking process")
+            assert file_locking_proc.poll() is None, (
+                "The file locking process should still be running. The test design relies on this."
+            )
+            further_stdout, stderr = file_locking_proc.communicate(timeout=10)
+
+    assert not further_stdout, "No further output expected from file locking process"
+    assert not stderr, "No stderr output expected from file locking process"
 
 
 @pytest.fixture(name="cleanup_restore_lock")

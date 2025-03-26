@@ -57,7 +57,7 @@ _ADDED_IMPORTS = (
     ),
     (
         "from cmk.rulesets.v1.rule_specs import ActiveCheck, Topic, HostAndServiceCondition, HostCondition, "
-        "HostAndItemCondition, CheckParameters, EnforcedService"
+        "HostAndItemCondition, CheckParameters, EnforcedService, DiscoveryParameters"
     ),
 )
 
@@ -487,7 +487,8 @@ class RegistrationTransformer(cst.CSTTransformer):
         self, name: str, old: Sequence[cst.Arg]
     ) -> cst.SimpleStatementLine:
         args = {k.value: arg.value for arg in old if (k := arg.keyword) is not None}
-        form_spec = args["parameter_valuespec"]
+        form_spec = args["valuespec"]
+        name = name.strip('"')
 
         return cst.SimpleStatementLine(
             (

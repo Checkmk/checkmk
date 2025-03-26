@@ -65179,12 +65179,12 @@ msgstr ""
 "nouvelle API. Vous trouverez de plus amples informations dans <a "
 "href='%s'>notre documentation en ligne</a>."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The check plug-in API for plug-ins in <tt>%s</tt> is removed. Plug-in files "
 "in this folder are ignored. Please migrate the plug-ins to the new API. More "
-"information can be found in <a href='%s'>Werk #%d</a> and our <a "
-"href='%s'>User Guide</a>."
+"information can be found in <a href='%s'>%s</a> and our <a href='%s'>User "
+"Guide</a>."
 msgstr ""
 "L'API de vérification des plugins dans <tt>%s</tt> est obsolète. Les "
 "fichiers de plugins dans ce dossier sont toujours pris en compte, mais à "

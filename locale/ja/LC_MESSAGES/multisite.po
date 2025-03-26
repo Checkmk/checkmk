@@ -61743,12 +61743,12 @@ msgstr ""
 "更される可能性があります。プラグインを新しいAPIに移行してください。詳細は<a "
 "href='%s'>ユーザーガイド</a>をご覧ください。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The check plug-in API for plug-ins in <tt>%s</tt> is removed. Plug-in files "
 "in this folder are ignored. Please migrate the plug-ins to the new API. More "
-"information can be found in <a href='%s'>Werk #%d</a> and our <a "
-"href='%s'>User Guide</a>."
+"information can be found in <a href='%s'>%s</a> and our <a href='%s'>User "
+"Guide</a>."
 msgstr ""
 "<tt>%s</tt> のプラグイン用チェックプラグインAPIが削除されました。このフォルダ"
 "内のプラグインファイルは無視されます。プラグインを新しいAPIに移行してくださ"

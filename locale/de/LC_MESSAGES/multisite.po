@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-03-24 22:50+0000\n"
+"PO-Revision-Date: 2025-03-25 20:50+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -2795,7 +2795,7 @@ msgid "AWS S3 Bucket"
 msgstr "AWS S3 Bucket"
 
 msgid "AWS Tags"
-msgstr "AWS-Tags"
+msgstr "AWS-Merkmale"
 
 msgid "AWS services found!"
 msgstr "AWS Services gefunden!"
@@ -20052,9 +20052,8 @@ msgstr "Indices nicht gruppieren"
 msgid "Do not group interfaces"
 msgstr "Schnittstellen nicht gruppieren"
 
-#, fuzzy
 msgid "Do not import tags"
-msgstr "Nicht importieren"
+msgstr "Keine Merkmale importieren"
 
 msgid "Do not impose levels"
 msgstr "Keine Level anwenden"
@@ -24391,9 +24390,8 @@ msgstr "Auswahl nach Host-Name filtern:"
 msgid "Filter selection by service:"
 msgstr "Auswahl nach Service filtern:"
 
-#, fuzzy
 msgid "Filter tags imported as host/service labels"
-msgstr "Merkmale als Host-/Service-Label importieren"
+msgstr "Filter-Merkmale wurden als Host-/Service-Labels importiert"
 
 msgid "Filter valid annotations by key pattern"
 msgstr "Gültige Annotations nach Key Pattern filtern"
@@ -28683,7 +28681,7 @@ msgid "Host Systems"
 msgstr "Host Systeme"
 
 msgid "Host Tags"
-msgstr "Hostmerkmale"
+msgstr "Host-Merkmale"
 
 msgid "Host active checks enabled"
 msgstr "Aktive Checks für Host aktiviert"
@@ -53899,7 +53897,7 @@ msgid ""
 "restrict them with AWS tags."
 msgstr ""
 "Wählen und konfigurieren Sie die AWS-Services, die Sie überwachen möchten, "
-"und schränken Sie sie optional mit AWS-Tags ein."
+"und schränken Sie sie optional mit AWS-Merkmalen ein."
 
 msgid ""
 "Select and configure the Google Cloud Platform services you would like to "
@@ -54552,7 +54550,7 @@ msgid "Service Speed-O-Meter"
 msgstr "Service Speed-O-Meter"
 
 msgid "Service Tags"
-msgstr "Service-Tags"
+msgstr "Service-Merkmale"
 
 msgid "Service Type"
 msgstr "Servicetyp"
@@ -57260,7 +57258,7 @@ msgid ""
 "Some tags that are used in rules have been removed by you. What shall we do "
 "with that rules?"
 msgstr ""
-"Einige Merkmale ,die in Regeln verwendet werden, wurden von Ihnen gelöscht. "
+"Einige Merkmale, die in Regeln verwendet werden, wurden von Ihnen gelöscht. "
 "Was sollen wir mit diesen Regeln machen?"
 
 msgid "Someone before 1.6"
@@ -60547,16 +60545,17 @@ msgstr ""
 
 msgid "Tags can be used to classify hosts and services in a flexible way."
 msgstr ""
-"Mit Hilfe von Tags können Hosts und Services flexibel klassifiziert werden."
+"Mit Hilfe von Merkmalen können Hosts und Services flexibel klassifiziert "
+"werden."
 
 msgid "Tags enabled but no key defined."
-msgstr "Tags aktiviert, aber kein Schlüssel definiert."
+msgstr "Merkmale aktiviert, aber kein Schlüssel definiert."
 
 msgid "Tags enabled but no tags defined."
 msgstr "Merkmale aktiviert, aber keine Merkmale definiert."
 
 msgid "Tags enabled but no values defined."
-msgstr "Tags aktiviert, aber keine Werte definiert."
+msgstr "Merkmale aktiviert, aber keine Werte definiert."
 
 #, python-format
 msgid "Tags of the alert.<br><br>%s"
@@ -60566,10 +60565,10 @@ msgid "Tags of the host"
 msgstr "Merkmale des Hosts"
 
 msgid "Tags shown in Event Console"
-msgstr "In der Event Console angezeigte Tags"
+msgstr "In der Event Console angezeigte Merkmale"
 
 msgid "Tags to use"
-msgstr "Zu verwendende Tags"
+msgstr "Zu verwendende Merkmale"
 
 msgid "Tags using this auxiliary tag"
 msgstr "Merkmale, die dieses Hilfsmerkmal nutzen"
@@ -62189,12 +62188,12 @@ msgstr ""
 "Sie die Plugins auf die neue API um. Weitere Informationen finden Sie im <a "
 "href='%s'>Handbuch</a>."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The check plug-in API for plug-ins in <tt>%s</tt> is removed. Plug-in files "
 "in this folder are ignored. Please migrate the plug-ins to the new API. More "
-"information can be found in <a href='%s'>Werk #%d</a> and our <a "
-"href='%s'>User Guide</a>."
+"information can be found in <a href='%s'>%s</a> and our <a href='%s'>User "
+"Guide</a>."
 msgstr ""
 "Die Check-Plugin-API für Plugins in <tt>%s</tt> wurde entfernt. Plugin-"
 "Dateien in diesem Ordner werden ignoriert. Bitte stellen Sie die Plugins auf "

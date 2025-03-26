@@ -76,7 +76,7 @@ CODE_TEMPLATE_URLLIB = """
 #!/usr/bin/env python3
 import json
 import pprint
-{%- set downloadable = endpoint.content_type == 'application/octet-stream' %}
+{%- set downloadable = content_type == 'application/octet-stream' %}
 {%- if downloadable %}
 import shutil{% endif %}
 {%- if query_params %}
@@ -105,7 +105,7 @@ request = urllib.request.Request(
     method="{{ request_method | upper }}",
     headers={
         "Authorization": f"Bearer {USERNAME} {PASSWORD}",
-        "Accept": "{{ endpoint.content_type }}",
+        "Accept": "{{ content_type }}",
         {{- list_params(header_params) }}
     },
     {{- comments(comment_format="    # ", request_schema_multiple=request_schema_multiple) }}
@@ -123,7 +123,7 @@ resp = urllib.request.urlopen(request)
 """
 
 CODE_TEMPLATE_CURL = """
-{%- set downloadable = endpoint.content_type == 'application/octet-stream' %}
+{%- set downloadable = content_type == 'application/octet-stream' %}
 #!/bin/bash
 
 # NOTE: We recommend all shell users to use the "httpie" examples instead.
@@ -152,7 +152,7 @@ curl {%- if includes_redirect %} -L {%- endif %} \\
   {%- endif %}
   --write-out "\\nxxx-status_code=%{http_code}\\n" \\
   --header "Authorization: Bearer $USERNAME $PASSWORD" \\
-  --header "Accept: {{ endpoint.content_type }}" \\
+  --header "Accept: {{ content_type }}" \\
 {%- for header in header_params %}
   --header "{{ header.name }}: {{ header.example }}" \\
 {%- endfor %}
@@ -195,12 +195,12 @@ PASSWORD="{{ password }}"
 {%- from '_macros' import comments %}
 {{ comments(comment_format="# ", request_schema_multiple=request_schema_multiple) }}
 http {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parameters }}" \\
-    {%- if endpoint.does_redirects %}
+    {%- if does_redirects %}
     --follow \\
     --all \\
     {%- endif %}
     "Authorization: Bearer $USERNAME $PASSWORD" \\
-    "Accept: {{ endpoint.content_type }}" \\
+    "Accept: {{ content_type }}" \\
 {%- for header in header_params %}
     '{{ header.name }}:{{ header.example }}' \\
 {%- endfor %}
@@ -214,7 +214,7 @@ http {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parame
 {%- if request_schema %}
 {{ request_schema | to_dict | httpie_request_body | indent(spaces=4) }}
 {%- endif %}
-{%- if endpoint.content_type == 'application/octet-stream' %}
+{%- if content_type == 'application/octet-stream' %}
     --download \\
 {%- endif %}
 
@@ -225,7 +225,7 @@ CODE_TEMPLATE_REQUESTS = """
 #!/usr/bin/env python3
 import pprint
 import requests
-{%- set downloadable = endpoint.content_type == 'application/octet-stream' %}
+{%- set downloadable = content_type == 'application/octet-stream' %}
 {%- if downloadable %}
 import shutil {%- endif %}
 
@@ -239,8 +239,8 @@ PASSWORD = "{{ password }}"
 
 session = requests.session()
 session.headers['Authorization'] = f"Bearer {USERNAME} {PASSWORD}"
-session.headers['Accept'] = '{{ endpoint.content_type }}'
-{%- if endpoint.does_redirects %}
+session.headers['Accept'] = '{{ content_type }}'
+{%- if does_redirects %}
 session.max_redirects = 100  # increase if necessary
 {%- endif %}
 {%- set method = request_method | lower %}
@@ -259,7 +259,7 @@ resp = session.{{ method }}(
             to_python |
             indent(skip_lines=1, spaces=4) }},
     {%- endif %}
-    {%- if endpoint.does_redirects %}
+    {%- if does_redirects %}
     allow_redirects=True,
     {%- endif %}
     {%- if downloadable %}
@@ -484,7 +484,8 @@ def code_samples(
                     site=omd_site(),
                     username="automation",
                     password="test123",
-                    endpoint=endpoint,
+                    content_type=endpoint.content_type,
+                    does_redirects=endpoint.does_redirects,
                     path_params=to_openapi(path_params, "path"),
                     query_params=to_openapi(query_params, "query"),
                     header_params=to_openapi(header_params, "header"),
@@ -596,7 +597,8 @@ def _jinja_environment(spec: APISpec) -> jinja2.Environment:
     ...     path_params=[],
     ...     query_params=[],
     ...     header_params=[],
-    ...     endpoint=endpoint,
+    ...     content_type=endpoint.content_type,
+    ...     does_redirects=endpoint.does_redirects,
     ...     request_endpoint=endpoint.path,
     ...     request_method=endpoint.method,
     ...     request_schema=_get_schema(endpoint.request_schema),

@@ -54,7 +54,6 @@ function toggleContent() {
   <FallbackWarningComponent
     v-if="fallback_warning"
     :properties="fallback_warning"
-    :user_id="user_id"
   ></FallbackWarningComponent>
   <h3 class="table overview_header" @click.prevent="toggleContent()">
     <CmkIconButton name="tree_closed" size="xsmall" :rotate="isContentVisible ? 90 : 0" />

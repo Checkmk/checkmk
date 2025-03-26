@@ -31,6 +31,7 @@ import DemoFormDictionary from './DemoFormDictionary.vue'
 import DemoFormCheckboxListChoice from './DemoFormCheckboxListChoice.vue'
 import DemoFormSingleChoiceEditable from './DemoFormSingleChoiceEditable.vue'
 import DemoCmkHtml from './DemoCmkHtml.vue'
+import DemoCmkDialog from './DemoCmkDialog.vue'
 import DemoCmkSwitch from './DemoCmkSwitch.vue'
 import DemoCmkColorPicker from './DemoCmkColorPicker.vue'
 import DemoFormSingleChoice from './DemoFormSingleChoice.vue'
@@ -121,6 +122,11 @@ const routes: Route[] = [
     path: '/cmk_html',
     name: 'CmkHtml',
     component: DemoCmkHtml
+  },
+  {
+    path: '/cmk_dialog',
+    name: 'CmkDialog',
+    component: DemoCmkDialog
   },
   {
     path: '/form',

@@ -6,7 +6,7 @@
 # pylint: disable=cmk-module-layer-violation
 import os
 import shutil
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from pathlib import Path
 
 import pytest
@@ -29,11 +29,11 @@ from tests.plugins_siteless.helpers import (
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.hostaddress import HostName
 
+from cmk.checkengine import value_store
 from cmk.checkengine.checking import execute_checkmk_checks
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetcher import FetcherType, SourceInfo, SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters
-from cmk.checkengine.value_store import ValueStoreManager
 
 from cmk.base import config
 from cmk.base.checkers import (
@@ -57,6 +57,20 @@ def _setup_dirs() -> Iterator[None]:
     shutil.rmtree(var_dir)
 
 
+class _AllValueStoresStoreMocker(value_store.AllValueStoresStore):
+    """Mock the AllValueStoresStore class to avoid writing to disk"""
+
+    def __init__(self) -> None:
+        super().__init__(Path(), log_debug=lambda x: None)
+        self.update_count = 0
+
+    def load(self) -> Mapping[value_store.ValueStoreKey, Mapping[str, str]]:
+        return {}
+
+    def update(self, update: object) -> None:
+        pass
+
+
 @pytest.mark.parametrize("agent_data_filename", get_agent_data_filenames())
 def test_checks_executor(
     agent_data_filename: str, request: pytest.FixtureRequest, setup_dirs: Iterator[None]
@@ -78,7 +92,7 @@ def test_checks_executor(
 
     with (
         set_value_store_manager(
-            ValueStoreManager(HOSTNAME),
+            value_store.ValueStoreManager(HOSTNAME, _AllValueStoresStoreMocker()),
             store_changes=False,
         ) as value_store_manager,
     ):

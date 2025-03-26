@@ -151,7 +151,7 @@ from cmk.checkengine.plugins import (
 )
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 from cmk.checkengine.summarize import summarize
-from cmk.checkengine.value_store import ValueStoreManager
+from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.core
@@ -709,7 +709,8 @@ def _execute_discovery(
 
     with (
         set_value_store_manager(
-            ValueStoreManager(host_name), store_changes=False
+            ValueStoreManager(host_name, AllValueStoresStore(Path(counters_dir, host_name))),
+            store_changes=False,
         ) as value_store_manager,
     ):
         is_cluster = host_name in hosts_config.clusters

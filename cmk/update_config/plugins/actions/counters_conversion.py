@@ -5,7 +5,7 @@
 
 import ast
 import json
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from logging import Logger
 from pathlib import Path
 from typing import override
@@ -15,12 +15,29 @@ import cmk.utils.paths
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
-def _is_json(raw: str) -> bool:
+def _analyze_content(raw: str) -> tuple[bool, bool]:
     try:
-        _ = json.loads(raw)
+        stores = json.loads(raw)
     except json.JSONDecodeError:
-        return False
-    return True
+        return False, False
+    return True, not stores or len(stores[0][0]) == 3
+
+
+def _convert_from_2_4_beta_state(
+    raw: str,
+) -> Mapping[tuple[str, str, str | None], Mapping[str, str]]:
+    stores = json.loads(raw)
+    new: dict[tuple[str, str, str | None], dict[str, str]] = {}
+    for (host, plugin, item, key), value in stores:
+        new.setdefault((host, plugin, item), {})[key] = value
+    return new
+
+
+def _convert_from_2_3_state(raw: str) -> Mapping[tuple[str, str, str | None], Mapping[str, str]]:
+    new: dict[tuple[str, str, str | None], dict[str, str]] = {}
+    for (host, plugin, item, key), v in ast.literal_eval(raw).items():
+        new.setdefault((host, plugin, item), {})[key] = repr(v)
+    return new
 
 
 def _ls(counters_path: Path) -> Sequence[Path]:
@@ -43,17 +60,19 @@ class ConvertCounters(UpdateAction):
                 logger.debug(msg_temp, "skipped (empty)", f)
                 continue
 
-            if _is_json(content):
-                logger.debug(msg_temp, "skipped (already JSON)", f)
+            is_json, is_latest = _analyze_content(content)
+            if is_latest:
+                logger.debug(msg_temp, "skipped (already new format)", f)
                 continue
 
             logger.debug(msg_temp, "converting", f)
             try:
-                f.write_text(
-                    json.dumps(
-                        [(k, repr(v)) for k, v in ast.literal_eval(content).items()],
-                    )
+                new = (
+                    _convert_from_2_4_beta_state(content)
+                    if is_json
+                    else _convert_from_2_3_state(content)
                 )
+                f.write_text(json.dumps(list(new.items())))
             except Exception as exc:
                 # We've seen this conversion fail upon what seemed to be partially written files.
                 # After the fact, we've never seen any traces of them.

@@ -97,7 +97,7 @@ from cmk.checkengine.plugins import CheckPluginName, InventoryPlugin, InventoryP
 from cmk.checkengine.sectionparser import SectionPlugin
 from cmk.checkengine.submitters import get_submitter, ServiceState
 from cmk.checkengine.summarize import summarize, SummarizerFunction
-from cmk.checkengine.value_store import ValueStoreManager
+from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.core
@@ -2397,7 +2397,10 @@ def run_checking(
     with (
         error_handler,
         set_value_store_manager(
-            ValueStoreManager(hostname), store_changes=not dry_run
+            ValueStoreManager(
+                hostname, AllValueStoresStore(Path(cmk.utils.paths.counters_dir, hostname))
+            ),
+            store_changes=not dry_run,
         ) as value_store_manager,
     ):
         console.debug(f"Checkmk version {cmk_version.__version__}")

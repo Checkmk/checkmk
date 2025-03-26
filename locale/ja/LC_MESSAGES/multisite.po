@@ -10427,6 +10427,10 @@ msgstr "パラメータを確認する"
 msgid "Check parameters and other configuration variables for hosts"
 msgstr "ホストのパラメーターおよびその他の構成変数を確認する"
 
+#, python-format
+msgid "Check parameters for checktype '%s' can not be displayed"
+msgstr ""
+
 msgid "Check period"
 msgstr "チェック期間"
 
@@ -54967,7 +54971,7 @@ msgid ""
 "2.3 and will be removed in Checkmk 2.4. To ensure compatibility with Checkmk "
 "2.4 and avoid future issues, please update the plug-ins to use the new API "
 "as soon as possible. For more details on how to adapt your plug-ins, refer "
-"to the <a href='%s'>Werk #%s</a> and the <a href='%s'>user guide</a>."
+"to the <a href='%s'>%s</a> and the <a href='%s'>user guide</a>."
 msgstr ""
 
 msgid ""

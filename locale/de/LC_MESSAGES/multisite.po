@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-03-24 22:50+0000\n"
+"PO-Revision-Date: 2025-03-25 20:50+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -2648,7 +2648,7 @@ msgid "AWS S3 Bucket"
 msgstr "AWS S3 Bucket"
 
 msgid "AWS Tags"
-msgstr "AWS-Tags"
+msgstr "AWS-Merkmale"
 
 msgid "AWS/CE Costs and Usage"
 msgstr "AWS/CE Kosten und Nutzung"
@@ -10750,6 +10750,10 @@ msgstr "Check-Parameter"
 msgid "Check parameters and other configuration variables for hosts"
 msgstr "Check-Parameter und andere Konfigurationsvariablen für Hosts"
 
+#, python-format
+msgid "Check parameters for checktype '%s' can not be displayed"
+msgstr ""
+
 msgid "Check period"
 msgstr "Check-Periode"
 
@@ -18487,9 +18491,8 @@ msgstr "Indices nicht gruppieren"
 msgid "Do not group interfaces"
 msgstr "Schnittstellen nicht gruppieren"
 
-#, fuzzy
 msgid "Do not import tags"
-msgstr "Nicht importieren"
+msgstr "Keine Merkmale importieren"
 
 msgid "Do not impose levels"
 msgstr "Keine Level anwenden"
@@ -25945,7 +25948,7 @@ msgid "Host Systems"
 msgstr "Host Systeme"
 
 msgid "Host Tags"
-msgstr "Hostmerkmale"
+msgstr "Host-Merkmale"
 
 msgid "Host active checks enabled"
 msgstr "Aktive Checks für Host aktiviert"
@@ -51779,7 +51782,7 @@ msgid ""
 "Some tags that are used in rules have been removed by you. What shall we do "
 "with that rules?"
 msgstr ""
-"Einige Merkmale ,die in Regeln verwendet werden, wurden von Ihnen gelöscht. "
+"Einige Merkmale, die in Regeln verwendet werden, wurden von Ihnen gelöscht. "
 "Was sollen wir mit diesen Regeln machen?"
 
 msgid "Someone before 1.6"
@@ -54931,7 +54934,8 @@ msgstr ""
 
 msgid "Tags can be used to classify hosts and services in a flexible way."
 msgstr ""
-"Mit Hilfe von Tags können Hosts und Services flexibel klassifiziert werden."
+"Mit Hilfe von Merkmalen können Hosts und Services flexibel klassifiziert "
+"werden."
 
 msgid "Tags of the alert."
 msgstr "Merkmale des Alerts."
@@ -54940,10 +54944,10 @@ msgid "Tags of the host"
 msgstr "Merkmale des Hosts"
 
 msgid "Tags shown in Event Console"
-msgstr "In der Event Console angezeigte Tags"
+msgstr "In der Event Console angezeigte Merkmale"
 
 msgid "Tags to use"
-msgstr "Zu verwendende Tags"
+msgstr "Zu verwendende Merkmale"
 
 msgid "Tags using this auxiliary tag"
 msgstr "Merkmale, die dieses Hilfsmerkmal nutzen"
@@ -56432,13 +56436,13 @@ msgstr ""
 "Sie die Plugins auf die neue API um. Weitere Informationen finden Sie im <a "
 "href='%s'>Handbuch</a>."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The check plug-in API for plug-ins in <tt>%s</tt> was deprecated in Checkmk "
 "2.3 and will be removed in Checkmk 2.4. To ensure compatibility with Checkmk "
 "2.4 and avoid future issues, please update the plug-ins to use the new API "
 "as soon as possible. For more details on how to adapt your plug-ins, refer "
-"to the <a href='%s'>Werk #%s</a> and the <a href='%s'>user guide</a>."
+"to the <a href='%s'>%s</a> and the <a href='%s'>user guide</a>."
 msgstr ""
 "Die Check-Plugin-API für Plugins in <tt>%s</tt> wurde in Checkmk 2.3 "
 "abgekündigt und wird in Checkmk 2.4 entfernt werden. Um die Kompatibilität "

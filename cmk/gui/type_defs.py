@@ -10,9 +10,9 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from typing import Any, Literal, NamedTuple, NewType, NotRequired, TypedDict
+from typing import Annotated, Any, Literal, NamedTuple, NewType, NotRequired, TypedDict
 
-from pydantic import BaseModel
+from pydantic import BaseModel, PlainValidator
 
 from livestatus import SiteId
 
@@ -699,11 +699,14 @@ class ViewProcessTracking:
     duration_view_render: Snapshot = Snapshot.null()
 
 
+AnnotatedUserId = Annotated[UserId, PlainValidator(UserId.parse)]
+
+
 class Key(BaseModel):
     certificate: str
     private_key: str
     alias: str
-    owner: UserId
+    owner: AnnotatedUserId
     date: float
     # Before 2.2 this field was only used for Setup backup keys. Now we add it to all key, because it
     # won't hurt for other types of keys (e.g. the bakery signing keys). We set a default of False

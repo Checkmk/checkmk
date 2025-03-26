@@ -55,6 +55,7 @@ from cmk.gui.watolib.analyze_configuration import (
     ACTestCategories,
     ACTestRegistry,
 )
+from cmk.gui.watolib.check_mk_automations import find_unknown_check_parameter_rule_sets
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.rulesets import SingleRulesetRecursively
@@ -89,6 +90,7 @@ def register(ac_test_registry: ACTestRegistry) -> None:
     ac_test_registry.register(ACTestSizeOfExtensions)
     ac_test_registry.register(ACTestBrokenGUIExtension)
     ac_test_registry.register(ACTestESXDatasources)
+    ac_test_registry.register(ACTestUnknownCheckParameterRuleSets)
     ac_test_registry.register(ACTestDeprecatedV1CheckPlugins)
     ac_test_registry.register(ACTestDeprecatedCheckPlugins)
     ac_test_registry.register(ACTestDeprecatedInventoryPlugins)
@@ -1330,6 +1332,50 @@ def _compute_deprecation_result(
         site_id=site_id,
         path=path,
     )
+
+
+class ACTestUnknownCheckParameterRuleSets(ACTest):
+    def category(self) -> str:
+        return ACTestCategories.deprecations
+
+    def title(self) -> str:
+        return _("Unknown check parameter rule sets")
+
+    def help(self) -> str:
+        return _(
+            "These rule sets are configured in your site, but not used by any check plug-in."
+            " There are two main reasons to have such rule sets configured:"
+            "<ol>"
+            "<li> Rule sets which were used by builtin check plugins that have been deprecated and"
+            " removed in the past. These can be cleaned up without any negative side effect.</li>"
+            "<li> Rule sets which belong to disabled or removed extension packages. If you plan to"
+            " keep it removed, you can safely clean them up. In case the extension package was"
+            " temporarily disabled, you may consider keeping the rule sets in place.</li>"
+            "</ol>"
+        )
+
+    def is_relevant(self) -> bool:
+        return True
+
+    def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
+        if rule_sets := find_unknown_check_parameter_rule_sets().result:
+            for rule_set in rule_sets:
+                yield ACSingleResult(
+                    state=ACResultState.CRIT,
+                    text=(
+                        _("Found configured rules of unknown check parameter rule set %r.")
+                        % rule_set
+                    ),
+                    site_id=site_id,
+                )
+            return
+
+        yield ACSingleResult(
+            state=ACResultState.OK,
+            text=_("No unknown check parameter rule sets found."),
+            site_id=site_id,
+        )
 
 
 class ACTestDeprecatedV1CheckPlugins(ACTest):

@@ -108,6 +108,7 @@ from cmk.automations.results import (
     SetAutochecksInput,
     SetAutochecksV2Result,
     SpecialAgentResult,
+    UnknownCheckParameterRuleSetsResult,
     UpdateDNSCacheResult,
     UpdateHostLabelsResult,
     UpdatePasswordsMergedFileResult,
@@ -3477,3 +3478,30 @@ class AutomationCreateDiagnosticsDump(Automation):
 
 
 automations.register(AutomationCreateDiagnosticsDump())
+
+
+class AutomationFindUnknownCheckParameterRuleSets(Automation):
+    cmd = "find-unknown-check-parameter-rule-sets"
+
+    def execute(
+        self,
+        args: list[str],
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadingResult | None,
+    ) -> UnknownCheckParameterRuleSetsResult:
+        plugins = plugins or load_plugins()  # do we really still need this?
+        known_check_rule_sets = {
+            str(plugin.check_ruleset_name)
+            for plugin in plugins.check_plugins.values()
+            if plugin.check_ruleset_name
+        }
+        return UnknownCheckParameterRuleSetsResult(
+            [
+                rule_set
+                for rule_set in config.checkgroup_parameters
+                if rule_set not in known_check_rule_sets
+            ]
+        )
+
+
+automations.register(AutomationFindUnknownCheckParameterRuleSets())

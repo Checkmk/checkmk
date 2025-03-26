@@ -59,6 +59,7 @@ def test_registered_automations() -> None:
         "update-dns-cache",
         "update-host-labels",
         "update-passwords-merged-file",
+        "find-unknown-check-parameter-rule-sets",
     ]
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:

@@ -35,7 +35,7 @@ from cmk.utils.tags import TagGroupID, TagID
 from cmk.checkengine.plugins import ServiceID
 
 from cmk.base import config
-from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins, CheckPlugin
+from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.nagios_utils import do_check_nagiosconfig
 
@@ -397,7 +397,6 @@ def _create_core_config(
     config_warnings.initialize()
 
     _verify_non_duplicate_hosts(duplicates)
-    _verify_non_deprecated_checkgroups(plugins.check_plugins.values())
 
     # recompute and save passwords, to ensure consistency:
     passwords = config_cache.collect_passwords()
@@ -418,30 +417,6 @@ def _create_core_config(
     cmk.utils.password_store.save(
         passwords, cmk.utils.password_store.core_password_store_path(config_path)
     )
-
-
-def _verify_non_deprecated_checkgroups(check_plugins: Iterable[CheckPlugin]) -> None:
-    """Verify that the user has no deprecated check groups configured."""
-    # 'check_plugin.check_ruleset_name' is of type RuleSetName, which is an PluginName (good),
-    # but config.checkgroup_parameters contains strings (todo)
-    check_ruleset_names_with_plugin = {
-        str(plugin.check_ruleset_name) for plugin in check_plugins if plugin.check_ruleset_name
-    }
-
-    for checkgroup in config.checkgroup_parameters:
-        if checkgroup not in check_ruleset_names_with_plugin:
-            config_warnings.warn(
-                'Found configured rules of deprecated check group "%s". These rules are not used '
-                "by any check plug-in. Maybe this check group has been renamed during an update, "
-                "in this case you will have to migrate your configuration to the new ruleset manually. "
-                "Please check out the release notes of the involved versions. "
-                'You may use the page "Deprecated rules" in the "Rule search" to view your rules '
-                "and move them to the new rulesets. "
-                "If this is not the case, the rules could be related to a disabled or removed "
-                "extension package (mkp). You would have to enable/upload the corresponding package "
-                "and remove the related rules before disabling/removing the package again."
-                % checkgroup
-            )
 
 
 def _verify_non_duplicate_hosts(duplicates: Collection[HostName]) -> None:

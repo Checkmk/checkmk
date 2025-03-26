@@ -57,6 +57,7 @@ from cmk.gui.utils.escaping import escape_to_html_permissive, strip_tags
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
 from cmk.gui.valuespec import (
@@ -77,6 +78,7 @@ TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("info")(AboutCheckmkPage)
     page_registry.register_page("change_log")(ChangeLogPage)
     page_registry.register_page_handler("werk", page_werk)
 
@@ -117,6 +119,63 @@ _WerkTableOptionColumns = Literal[
     "grouping",
     "group_limit",
 ]
+
+
+class AboutCheckmkPage(Page):
+    def _title(self) -> str:
+        return _("About Checkmk")
+
+    def page(self) -> PageResult:  # pylint: disable=useless-return
+        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry["help_links"], _("Info"))
+        make_header(
+            html,
+            self._title(),
+            breadcrumb=breadcrumb,
+        )
+
+        html.open_div(id_="info_title")
+        html.h1(_("Your IT monitoring platform"))
+        html.a(
+            html.render_img(theme.url("images/checkmk_logo.svg")),
+            "https://checkmk.com",
+            target="_blank",
+        )
+        html.close_div()
+
+        html.div(None, id_="info_underline")
+
+        html.open_div(id_="info_intro_text")
+        html.span(
+            _(
+                "Gain a complete view of your entire IT infrastructure: from public cloud providers, to your data centers, across servers, networks, containers, and more. Checkmk enables ITOps and DevOps teams to run your IT at peak performance."
+            )
+        )
+        html.span(
+            _("Visit our %s to learn more about Checkmk and about the %s.")
+            % (
+                HTMLWriter.render_a(_("website"), "https://checkmk.com", target="_blank"),
+                HTMLWriter.render_a(
+                    _("latest version"),
+                    "https://checkmk.com/product/latest-version",
+                    target="_blank",
+                ),
+            )
+        )
+        html.close_div()
+
+        html.open_div(id="info_image")
+        html.open_a(href="https://checkmk.com/product/latest-version", target="_blank")
+        html.img(theme.url("images/monitoring-machine.png"))
+        html.close_a()
+        html.close_div()
+
+        html.close_div()
+
+        html.open_div(id_="info_footer")
+        html.span(_("© %s Checkmk GmbH. All Rights Reserved.") % time.strftime("%Y"))
+        html.a(_("License agreement"), href="https://checkmk.com/legal.html", target="_blank")
+        html.close_div()
+        return None
 
 
 class ChangeLogPage(Page):

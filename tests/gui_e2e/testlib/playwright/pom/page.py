@@ -309,6 +309,10 @@ class MainMenu(LocatorHelper):
         return self.help_menu("REST API interactive GUI")
 
     @property
+    def help_info(self) -> Locator:
+        return self.help_menu("Info")
+
+    @property
     def help_saas_status_page(self) -> Locator:
         return self.help_menu("Status page")
 

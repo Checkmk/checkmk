@@ -100,6 +100,7 @@ def test_registered_pages() -> None:
         "host_inv_api",
         "host_service_graph_popup",
         "index",
+        "info",
         "login",
         "logout",
         "logwatch",

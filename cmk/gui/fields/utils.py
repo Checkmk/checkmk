@@ -3,15 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import collections
-import functools
 import typing
-from collections.abc import Callable, Mapping
-from typing import Any, Literal, NamedTuple, TypedDict, TypeVar
-
-from marshmallow import ValidationError
-
-from livestatus import SiteId
+from collections.abc import Callable
+from typing import Any, Literal, NamedTuple, TypeVar
 
 from cmk.utils.livestatus_helpers import tables
 from cmk.utils.livestatus_helpers.expressions import (
@@ -27,7 +21,6 @@ from cmk.utils.livestatus_helpers.expressions import (
 from cmk.utils.livestatus_helpers.types import Table
 from cmk.utils.tags import BuiltinTagConfig, TagGroup, TagID
 
-from cmk.gui import site_config
 from cmk.gui.fields.base import BaseSchema as BaseSchema
 from cmk.gui.utils.escaping import strip_tags
 from cmk.gui.watolib.host_attributes import (
@@ -58,8 +51,8 @@ def collect_attributes(
     context: ObjectContext,
 ) -> list[Attr]:
     """Collect all host attributes for a specific object type
+    (host, folder or cluster) and context (create, update or view).
 
-    Use cases can be host or folder creation or updating.
     """
     something = TypeVar("something")
 
@@ -166,98 +159,6 @@ def collect_attributes(
             )
         )
     return result
-
-
-def _field_from_attr(attr):
-    """
-    >>> field = _field_from_attr(
-    ...     Attr(
-    ...         name='simple_text',
-    ...         mandatory=False,
-    ...         description='Hurz!',
-    ...         section='',
-    ...         field=None,
-    ...     )
-    ... )
-    >>> field.required
-    False
-
-    >>> field.metadata
-    {'description': 'Hurz!'}
-
-    >>> _attr = Attr(
-    ...     name='time',
-    ...     mandatory=True,
-    ...     description='Hello World',
-    ...     section='',
-    ...     field=None,
-    ... )
-    >>> _field_from_attr(_attr)  # doctest: +ELLIPSIS
-    <fields.String(...)>
-
-    >>> _attr = Attr(
-    ...     name='time',
-    ...     mandatory=True,
-    ...     description='Hello World',
-    ...     section='',
-    ...     field=None,
-    ... )
-    >>> schema = _field_from_attr(_attr)
-    >>> schema  # doctest: +ELLIPSIS
-    <fields.String(...)>
-
-    Returns:
-
-    """
-    if attr.field is not None:
-        return attr.field
-
-    def site_exists(site_name: SiteId) -> None:
-        if site_name not in site_config.sitenames():
-            raise ValidationError(f"Site {site_name!r} does not exist.")
-
-    validators = {
-        "site": site_exists,
-    }
-
-    class FieldParams(TypedDict, total=False):
-        description: str
-        required: bool
-        enum: list[str | None]
-        validate: Callable[[Any], Any]
-        allow_none: bool
-
-    kwargs: FieldParams = {
-        "required": attr.mandatory,
-        "description": attr.description,
-    }
-    # If we assigned None to enum, this would lead to a broken OpenApi specification!
-    if attr.enum is not None:
-        kwargs["enum"] = attr.enum
-
-    if attr.allow_none is True:
-        kwargs["allow_none"] = True
-
-    if attr.name in validators:
-        kwargs["validate"] = validators[attr.name]
-
-    return fields.String(**kwargs)
-
-
-def _schema_from_dict(name: str, schema_dict: Mapping[str, Any]) -> type[BaseSchema]:
-    dict_ = {**schema_dict}
-    dict_["cast_to_dict"] = True
-    return type(name, (BaseSchema,), dict_)
-
-
-@functools.lru_cache
-def attr_openapi_schema(object_type: ObjectType, context: ObjectContext) -> type[BaseSchema]:
-    schema = collections.OrderedDict()
-    for attr in collect_attributes(object_type, context):
-        schema[attr.name] = _field_from_attr(attr)
-
-    class_name = f"{object_type.title()}{context.title()}Attribute"
-    return _schema_from_dict(class_name, schema)
 
 
 def tree_to_expr(filter_dict: QueryExpression, table: Any = None) -> QueryExpression:

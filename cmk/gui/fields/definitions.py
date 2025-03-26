@@ -11,7 +11,6 @@ import logging
 import re
 import typing
 import uuid
-import warnings
 from collections.abc import Callable, Collection, Mapping, MutableMapping
 from datetime import datetime, timezone
 from typing import Any, Literal
@@ -20,7 +19,7 @@ import marshmallow
 from cryptography.x509 import CertificateSigningRequest, load_pem_x509_csr
 from cryptography.x509.oid import NameOID
 from marshmallow import fields as _fields
-from marshmallow import post_load, pre_dump, utils, ValidationError
+from marshmallow import ValidationError
 from marshmallow_oneofschema import OneOfSchema
 
 from cmk.ccc import version
@@ -33,7 +32,7 @@ from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hostgroups, Hosts, Servicegroups
 from cmk.utils.livestatus_helpers.types import Column, Table
 from cmk.utils.regex import regex, REGEX_ID
-from cmk.utils.tags import TagConfig, TagGroup, TagGroupID, TagID
+from cmk.utils.tags import TagConfig, TagGroup, TagGroupID
 from cmk.utils.user import UserId
 
 from cmk.gui import sites
@@ -41,8 +40,8 @@ from cmk.gui.agent_registration import CONNECTION_MODE_FIELD
 from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.customer import customer_api, SCOPE_GLOBAL
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.fields.base import BaseSchema, MultiNested, ValueTypedDictSchema
-from cmk.gui.fields.utils import attr_openapi_schema, ObjectContext, ObjectType, tree_to_expr
+from cmk.gui.fields.base import BaseSchema, MultiNested
+from cmk.gui.fields.utils import tree_to_expr
 from cmk.gui.groups import GroupName, GroupType
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
@@ -54,7 +53,7 @@ from cmk.gui.watolib.host_attributes import ABCHostAttribute, all_host_attribute
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 from cmk.gui.watolib.sites import site_management_registry
-from cmk.gui.watolib.tags import load_tag_config_read_only, load_tag_group
+from cmk.gui.watolib.tags import load_tag_config_read_only
 
 from cmk.fields import base, Boolean, DateTime, String, validators
 
@@ -954,178 +953,6 @@ class HostnameOrIP(base.String):
         return "pass"
 
 
-class CustomHostAttributes(ValueTypedDictSchema):
-    value_type = ValueTypedDictSchema.field(
-        base.String(
-            description="Each tag is a mapping of string to string",
-            validate=ensure_string,
-        )
-    )
-
-    @post_load
-    def _valid(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
-        # NOTE
-        # If an attribute gets deleted AFTER it has already been set to a host or a folder,
-        # then this would break here. We therefore can't validate outbound data as thoroughly
-        # because our own data can be inherently inconsistent.
-        if self.context["direction"] == "outbound":
-            return validate_custom_host_attributes(data, "warn")
-        else:
-            return validate_custom_host_attributes(data, "raise")
-
-
-class TagGroupAttributes(ValueTypedDictSchema):
-    """Schema to validate tag groups
-
-    Examples:
-        >>> schema = TagGroupAttributes()
-        >>> schema.load({"foo": "bar"})
-        Traceback (most recent call last):
-        ...
-        marshmallow.exceptions.ValidationError: {'foo': "Tag group name must start with 'tag_'"}
-
-        >>> schema.load({"tag_foo": "bar"})
-        Traceback (most recent call last):
-        ...
-        marshmallow.exceptions.ValidationError: {'tag_foo': 'No such tag-group.'}
-
-        >>> schema.load({"tag_agent": "flint"})
-        Traceback (most recent call last):
-        ...
-        marshmallow.exceptions.ValidationError: {'tag_agent': "Invalid value for tag-group: 'flint'"}
-
-        >>> schema.load({"tag_agent": "cmk-agent"})
-        {'tag_agent': 'cmk-agent'}
-
-        >>> schema.dump({"tag_agent": "cmk-agent"})
-        {'tag_agent': 'cmk-agent'}
-
-        >>> schema.load({"tag_agent": None})
-        Traceback (most recent call last):
-        ...
-        marshmallow.exceptions.ValidationError: {'tag_agent': 'Invalid value for tag-group: None'}
-
-        >>> schema.dump({"tag_agent": None})
-        {'tag_agent': None}
-
-    """
-
-    value_type = ValueTypedDictSchema.field(
-        base.String(
-            description=(
-                "The value of the tag-group attribute. Each tag is a mapping of string to string, "
-                "where the tag name must start with `tag_`."
-            ),
-            allow_none=True,
-        )
-    )
-
-    def _validate_tag_group(self, name: str) -> set[TagID | None]:
-        if not name.startswith("tag_"):
-            raise ValidationError({name: "Tag group name must start with 'tag_'"})
-
-        try:
-            tag_group = load_tag_group(TagGroupID(name[4:]))
-        except MKUserError as exc:
-            raise ValidationError({name: str(exc)}) from exc
-
-        if tag_group is None:
-            raise ValidationError({name: "No such tag-group."})
-
-        # FIXME: This should eventually be moved into TagGroup
-
-        # Checkbox tags are allowed to have no value at all. This means they are deactivated.
-        allowed_ids = tag_group.get_tag_ids()
-        if tag_group.is_checkbox_tag_group:
-            allowed_ids.add(None)
-
-        return allowed_ids
-
-    @pre_dump
-    def _pre_dump(self, data: dict[str, str], **kwargs: Any) -> dict[str, str]:
-        rv: dict[str, str] = {}
-        for key, value in data.items():
-            allowed_ids = self._validate_tag_group(key)
-
-            if value not in allowed_ids:
-                warnings.warn(f"Invalid value for tag-group {key}: {value!r}")
-
-            rv[key] = value
-
-        return rv
-
-    @post_load
-    def _post_load(self, data: dict[str, str], **kwargs: Any) -> dict[str, str]:
-        rv: dict[str, str] = {}
-        for key, value in data.items():
-            allowed_ids = self._validate_tag_group(key)
-
-            if value not in allowed_ids:
-                raise ValidationError({key: f"Invalid value for tag-group: {value!r}"})
-
-            rv[key] = value
-
-        return rv
-
-
-def host_attributes_field(
-    object_type: ObjectType,
-    object_context: ObjectContext,
-    direction: typing.Literal["inbound", "outbound"],
-    description: str | None = None,
-    example: Any | None = None,
-    required: bool = False,
-    load_default: Any = utils.missing,
-    many: bool = False,
-) -> _fields.Field:
-    """Build an Attribute Field
-
-    Args:
-        object_type:
-            May be one of 'folder', 'host' or 'cluster'.
-
-        object_context:
-            May be 'create', 'update' or 'view'. Deletion is considered as 'update'.
-
-        direction:
-            If the data is *coming from* the user (inbound) or *going to* the user (outbound).
-
-        description:
-            A descriptive text of this field. Required.
-
-        example:
-            An example for the OpenAPI documentation. Required.
-
-        required:
-            Whether the field must be sent by the client or is option.
-
-        load_default:
-        many:
-
-    Returns:
-
-    """
-    if description is None:
-        # SPEC won't validate without description, though the error message is very obscure, so we
-        # clarify this here by force.
-        raise ValueError("description is necessary.")
-
-    return MultiNested(
-        [
-            lambda: attr_openapi_schema(object_type, object_context),
-            CustomHostAttributes,
-            TagGroupAttributes,
-        ],
-        metadata={"context": {"object_context": object_context, "direction": direction}},
-        merged=True,  # to unify both models
-        description=description,
-        example=example,
-        many=many,
-        load_default=dict if load_default is utils.missing else utils.missing,
-        required=required,
-    )
-
-
 class SiteField(base.String):
     """A field representing a site name."""
 
@@ -1720,7 +1547,6 @@ class FolderIDField(FolderField):
 
 
 __all__ = [
-    "host_attributes_field",
     "column_field",
     "customer_field",
     "customer_field_response",

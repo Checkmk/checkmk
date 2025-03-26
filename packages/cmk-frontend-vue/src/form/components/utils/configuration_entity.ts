@@ -77,7 +77,7 @@ export const configEntityAPI = {
       LIST_CONFIG_ENTITIES(entityType, entityTypeSpecifier),
       'GET'
     )
-    const values: { id: string; title: string }[] = await response.json()
+    const values: { id: string; title: string }[] = (await response.json()).value
     await response.raiseForStatus()
     const entities = values.map((entity) => ({
       ident: entity.id,

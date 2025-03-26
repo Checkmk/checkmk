@@ -28,9 +28,12 @@ from cmk.utils.jsontype import JsonSerializable
 
 from cmk.gui import fields
 from cmk.gui.fields.base import BaseSchema
-from cmk.gui.openapi.restful_objects.decorators import Endpoint
 from cmk.gui.openapi.restful_objects.params import fill_out_path_template, to_openapi
 from cmk.gui.openapi.restful_objects.type_defs import CodeSample, OpenAPIParameter, RawParameter
+from cmk.gui.openapi.spec.spec_generator._type_defs import (
+    MarshmallowSchemaDefinitions,
+    SpecEndpoint,
+)
 
 CODE_TEMPLATE_MACROS = """
 {%- macro comments(comment_format="# ", request_schema_multiple=False) %}
@@ -446,7 +449,8 @@ def httpie_request_body(examples: JsonObject) -> str:
 
 def code_samples(
     spec: APISpec,
-    endpoint: Endpoint,
+    spec_endpoint: SpecEndpoint,
+    schema_definitions: MarshmallowSchemaDefinitions,
     header_params: Sequence[RawParameter],
     path_params: Sequence[RawParameter],
     query_params: Sequence[RawParameter],
@@ -454,26 +458,11 @@ def code_samples(
     """Create a list of rendered code sample Objects
 
     These are not specified by OpenAPI but are specific to ReDoc.
-
-    Examples:
-
-        >>> class Endpoint:  # doctest: +SKIP
-        ...     path = 'foo'
-        ...     method = 'get'
-        ...     content_type = 'application/json'
-        ...     request_schema = _get_schema('CreateHost')
-        ...     does_redirects = False
-
-        >>> spec = make_spec()  # doctest: +SKIP
-        >>> endpoint = Endpoint()  # doctest: +SKIP
-        >>> samples = code_samples(spec, endpoint, [], [], [])  # doctest: +SKIP
-
-
     """
     env = _jinja_environment(spec)
     result: list[CodeSample] = []
     for example in CODE_EXAMPLES:
-        schema = _get_schema(endpoint.request_schema)
+        schema = _get_schema(schema_definitions.request_schema)
         result.append(
             {
                 "label": example.label,
@@ -484,21 +473,21 @@ def code_samples(
                     site=omd_site(),
                     username="automation",
                     password="test123",
-                    content_type=endpoint.content_type,
-                    does_redirects=endpoint.does_redirects,
+                    content_type=spec_endpoint.content_type,
+                    does_redirects=spec_endpoint.does_redirects,
                     path_params=to_openapi(path_params, "path"),
                     query_params=to_openapi(query_params, "query"),
                     header_params=to_openapi(header_params, "header"),
                     includes_redirect=(
                         "redirect" in schema.declared_fields if schema is not None else False
                     ),
-                    request_endpoint=endpoint.path,
-                    request_method=endpoint.method,
+                    request_endpoint=spec_endpoint.path,
+                    request_method=spec_endpoint.method,
                     request_schema=schema,
-                    request_schema_multiple=_schema_is_multiple(endpoint.request_schema),
+                    request_schema_multiple=_schema_is_multiple(schema_definitions.request_schema),
                     formatted_if_statement=formatted_if_statement_for_responses(
-                        list(endpoint.expected_status_codes),
-                        endpoint.content_type == "application/octet-stream",
+                        list(spec_endpoint.expected_status_codes),
+                        spec_endpoint.content_type == "application/octet-stream",
                         example.label,
                     ),
                 )

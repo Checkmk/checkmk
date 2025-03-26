@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import hashlib
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 from apispec.utils import dedent
@@ -62,7 +62,7 @@ def _build_description(description_text: str | None, werk_id: int | None = None)
 
 def _permission_descriptions(
     perms: permissions.BasePerm,
-    descriptions: dict[str, str] | None = None,
+    descriptions: Mapping[str, str] | None = None,
 ) -> str:
     r"""Describe permissions human-readable
 
@@ -121,7 +121,7 @@ def _permission_descriptions(
         The description as a string.
 
     """
-    description_map: dict[str, str] = descriptions if descriptions is not None else {}
+    description_map: Mapping[str, str] = descriptions if descriptions is not None else {}
     _description: list[str] = ["This endpoint requires the following permissions: "]
 
     def _count_perms(_perms):

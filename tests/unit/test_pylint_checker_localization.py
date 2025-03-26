@@ -28,6 +28,7 @@ def deactivate_astroid_bootstrapping(mocker: MockerFixture) -> None:
         pytest.param("_l('%s' % '123')", True),
         pytest.param("_l('%s text')", False),
         pytest.param("_l('{argl} text')", False),
+        pytest.param("_(f'{argl} text')", True),
     ],
 )
 def test_literal_string_checker(

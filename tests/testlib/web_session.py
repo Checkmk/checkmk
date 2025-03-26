@@ -236,8 +236,8 @@ class CMKWebSession:
 
     def is_logged_in(self) -> bool:
         try:
-            r = self.get("info.py", allow_redirect_to_login=True)
-            return all(x in r.text for x in ("About Checkmk", "Your IT monitoring platform"))
+            r = self.get("change_log.py", allow_redirect_to_login=True)
+            return "Change log (Werks)" in r.text
         except requests.exceptions.ConnectionError:
             if version_from_env().is_saas_edition():
                 # with the auth provider running, the get request may fail

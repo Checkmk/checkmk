@@ -50,7 +50,6 @@ def test_detect_spec_dedup(
         ("bluecoat_diskcpu", "bluecoat_sensors"),
         ("bluenet_meter", "bluenet_sensor"),
         ("cisco_asa_conn", "cisco_asa_connections"),
-        ("dell_powerconnect_fans", "dell_powerconnect_psu"),
         ("docsis_channels_downstream", "docsis_channels_upstream"),
         ("emerson_stat", "emerson_temp"),
         ("fjdarye_pcie_flash_modules", "fjdarye_pools_150"),

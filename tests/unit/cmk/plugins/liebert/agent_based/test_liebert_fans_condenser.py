@@ -36,5 +36,5 @@ def test_check() -> None:
             state=State.CRIT,
             summary="4.20 out of 10 clowns (warn/crit below 8.00 out of 10 clowns/9.00 out of 10 clowns)",
         ),
-        Metric("filehandler_perc", 4.2, levels=(80, 90)),
+        Metric("fan_perc", 4.2, levels=(80, 90)),
     ]

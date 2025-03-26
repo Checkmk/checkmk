@@ -13,6 +13,7 @@ import pytest
 
 from tests.integration.linux_test_host import create_linux_test_host
 
+from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
@@ -233,15 +234,13 @@ class TestCrashReport:
         assert _json.loads(rows[0][0]) == crash_info
 
     def test_del_crash_report(self, site: Site, component: str, uuid: str) -> None:
-        before = site.live.query("GET crashreports")
-        assert [component, uuid] in before
-
+        assert [component, uuid] in site.live.query("GET crashreports")
         site.live.command("[%i] DEL_CRASH_REPORT;%s" % (_time.mktime(_time.gmtime()), uuid))
-        _time.sleep(0.1)  # Kindly let it complete.
-
-        after = site.live.query("GET crashreports")
-        assert after != before
-        assert [component, uuid] not in after
+        wait_until(
+            lambda: [component, uuid] not in site.live.query("GET crashreports"),
+            timeout=1,
+            interval=0.1,
+        )
 
     def test_other_crash_report(self, site: Site, component: str, uuid: str) -> None:
         before = site.live.query("GET crashreports")

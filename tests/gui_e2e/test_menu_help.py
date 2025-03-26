@@ -115,3 +115,9 @@ def test_help_menu(
             new_page = new_tab_info.value
             new_page.wait_for_url(url=re.compile(help_menu_button.url_pattern), wait_until="load")
             new_page.close()
+
+
+def test_help_info(dashboard_page: Dashboard) -> None:
+    dashboard_page.main_menu.help_info.click()
+    dashboard_page.page.wait_for_url(url=re.compile("info.py$"), wait_until="load")
+    dashboard_page.main_area.check_page_title("About Checkmk")

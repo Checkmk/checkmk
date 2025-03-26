@@ -21,7 +21,6 @@ from cmk.gui.valuespec import (
     Float,
     Integer,
     ListOf,
-    Migrate,
     Percentage,
     Transform,
     Tuple,
@@ -498,7 +497,7 @@ def vs_filesystem(
     extra_elements: list[DictionaryEntry] | None = None,
     ignored_keys: Sequence[str] | None = None,
     title: str | None = None,
-) -> Migrate:
+) -> Dictionary:
     if extra_elements is None:
         extra_elements = []
 
@@ -526,11 +525,8 @@ def vs_filesystem(
             "mountpoint_for_block_devices",
         ]
 
-    return Migrate(
-        valuespec=Dictionary(
-            elements=dictionary_valuespec_elements,
-            ignored_keys=ignored_keys,
-            title=title,
-        ),
-        migrate=lambda p: {k: v for k, v in p.items() if k != "flex_levels"},
+    return Dictionary(
+        elements=dictionary_valuespec_elements,
+        ignored_keys=ignored_keys,
+        title=title,
     )

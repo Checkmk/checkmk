@@ -102,10 +102,13 @@ const data = ref<string>('some thing')
 </script>
 
 <template>
+  <input type="text" value="unrelated input field you can tab into" />
   <h2>With autocompleter</h2>
   <CmkCheckbox v-model="apiReturnsError" label="error in autocompleter" />
   <pre>{{ JSON.stringify(data) }}</pre>
   <span v-if="mockLoaded">
     <FormEdit v-model:data="data" :spec="spec" :backend-validation="[]" />
   </span>
+  <br />
+  <input type="text" value="unrelated input field you can tab into" />
 </template>

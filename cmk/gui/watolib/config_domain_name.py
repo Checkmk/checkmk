@@ -33,7 +33,6 @@ ConfigDomainName = str
 CORE: Final[ConfigDomainName] = "check_mk"
 GUI: Final[ConfigDomainName] = "multisite"
 LIVEPROXY: Final[ConfigDomainName] = "liveproxyd"
-EVENT_CONSOLE: Final[ConfigDomainName] = "ec"
 CA_CERTIFICATES: Final[ConfigDomainName] = "ca-certificates"
 OMD: Final[ConfigDomainName] = "omd"
 

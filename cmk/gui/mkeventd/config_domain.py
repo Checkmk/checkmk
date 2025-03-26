@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable
+from typing import Final
 
 from cmk.ccc.site import omd_site
 
@@ -13,11 +14,12 @@ import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 from cmk.gui.config import active_config
 from cmk.gui.type_defs import GlobalSettings
-from cmk.gui.watolib import config_domain_name
 from cmk.gui.watolib.audit_log import log_audit
-from cmk.gui.watolib.config_domain_name import ABCConfigDomain, SerializedSettings
+from cmk.gui.watolib.config_domain_name import ABCConfigDomain, ConfigDomainName, SerializedSettings
 
 from .livestatus import execute_command
+
+EVENT_CONSOLE: Final[ConfigDomainName] = "ec"
 
 
 class ConfigDomainEventConsole(ABCConfigDomain):
@@ -26,8 +28,8 @@ class ConfigDomainEventConsole(ABCConfigDomain):
     in_global_settings = False
 
     @classmethod
-    def ident(cls) -> config_domain_name.ConfigDomainName:
-        return config_domain_name.EVENT_CONSOLE
+    def ident(cls) -> ConfigDomainName:
+        return EVENT_CONSOLE
 
     @classmethod
     def enabled(cls) -> bool:

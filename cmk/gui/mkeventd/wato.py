@@ -144,7 +144,6 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigVariableGroup,
     ConfigVariableGroupRegistry,
     ConfigVariableRegistry,
-    EVENT_CONSOLE,
     SampleConfigGenerator,
     SampleConfigGeneratorRegistry,
 )
@@ -195,7 +194,7 @@ from cmk.rulesets.v1.form_specs import (
 )
 
 from ._rulespecs import RulespecLogwatchEC
-from .config_domain import ConfigDomainEventConsole
+from .config_domain import ConfigDomainEventConsole, EVENT_CONSOLE
 from .defines import syslog_facilities, syslog_priorities
 from .helpers import action_choices, eventd_configuration, service_levels
 from .livestatus import execute_command

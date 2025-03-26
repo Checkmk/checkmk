@@ -152,13 +152,13 @@ from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.parser import NO_SELECTION, parse_raw_data
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 from cmk.checkengine.summarize import summarize
+from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.core
 import cmk.base.nagios_utils
 import cmk.base.parent_scan
 from cmk.base import config, core_config, notify, sources
-from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.automations import Automation, automations, MKAutomationError
 from cmk.base.checkers import (
     CheckPluginMapper,
@@ -638,7 +638,8 @@ def _execute_discovery(
 
     with (
         set_value_store_manager(
-            ValueStoreManager(host_name), store_changes=False
+            ValueStoreManager(host_name, AllValueStoresStore(Path(counters_dir, host_name))),
+            store_changes=False,
         ) as value_store_manager,
     ):
         is_cluster = host_name in hosts_config.clusters

@@ -44,6 +44,7 @@ from cmk.fetchers import Fetcher, get_raw_data, Mode, SNMPScanConfig, TLSConfig
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 
+from cmk.checkengine import value_store
 from cmk.checkengine.checking import (
     AggregatedResult,
     CheckPlugin,
@@ -74,11 +75,10 @@ from cmk.checkengine.summarize import summarize, SummaryConfig
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.api.agent_based.register._config as _api
-from cmk.base.api.agent_based import cluster_mode, value_store
+from cmk.base.api.agent_based import cluster_mode
 from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin as AgentSectionPluginAPI
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin as CheckPluginAPI
 from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin as SNMPSectionPluginAPI
-from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.config import (
     ConfigCache,
     get_plugin_parameters,
@@ -532,7 +532,7 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
     def __init__(
         self,
         config_cache: ConfigCache,
-        value_store_manager: ValueStoreManager,
+        value_store_manager: value_store.ValueStoreManager,
         logger: logging.Logger,
         *,
         clusters: Container[HostName],

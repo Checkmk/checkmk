@@ -9,14 +9,13 @@ from pathlib import Path
 from cmk.utils.hostaddress import HostAddress
 
 from cmk.checkengine.checking import CheckPluginName, ServiceID
-
-from cmk.base.api.agent_based.value_store import ValueStoreManager
+from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
 
 from cmk.update_config.plugins.actions.counters_conversion import ConvertCounters
 
 
 def test_new_files_are_ignored(tmp_path: Path) -> None:
-    content = '[[["heute", "plugin", "item", "user-key"], "42"]]'
+    content = '[[["heute", "plugin", "item"], {"user-key": "42"}]]'
 
     (new_file := tmp_path / "heute").write_text(content)
 
@@ -25,19 +24,37 @@ def test_new_files_are_ignored(tmp_path: Path) -> None:
     assert new_file.read_text() == content
 
 
+def test_beta_state_is_converted(tmp_path: Path) -> None:
+    host = HostAddress("heute")
+    service = ServiceID(CheckPluginName("plugin"), "item")
+    old_content = '[[["heute", "plugin", "item", "user-key"], "42"]]'
+    file = tmp_path / str(host)
+
+    file.write_text(old_content)
+
+    ConvertCounters.convert_counter_files(tmp_path, getLogger())
+
+    assert file.exists()
+
+    vsm = ValueStoreManager(host, AllValueStoresStore(file))
+    with vsm.namespace(service):
+        assert vsm.active_service_interface
+        assert vsm.active_service_interface["user-key"] == 42
+
+
 def test_old_files_are_converted(tmp_path: Path) -> None:
     host = HostAddress("heute")
     service = ServiceID(CheckPluginName("plugin"), "item")
     old_content = repr({(host, str(service[0]), service[1], "user-key"): 42})
+    file = tmp_path / str(host)
 
-    (tmp_path / str(host)).write_text(old_content)
+    file.write_text(old_content)
 
     ConvertCounters.convert_counter_files(tmp_path, getLogger())
 
-    assert (tmp_path / str(host)).exists()
+    assert file.exists()
 
-    ValueStoreManager.STORAGE_PATH = tmp_path
-    vsm = ValueStoreManager(host)
+    vsm = ValueStoreManager(host, AllValueStoresStore(file))
     with vsm.namespace(service):
         assert vsm.active_service_interface
         assert vsm.active_service_interface["user-key"] == 42

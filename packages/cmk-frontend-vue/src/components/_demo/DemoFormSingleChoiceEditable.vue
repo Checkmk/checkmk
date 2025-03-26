@@ -42,7 +42,9 @@ async function loadSpec() {
       fatal_error_reload: 'i18n fatal_error_reload',
       // TODO: save & create vs. new and edit!
       slidein_new_title: 'i18n_slidein_new_title',
-      slidein_edit_title: 'i18n_slidein_edit_title'
+      slidein_edit_title: 'i18n_slidein_edit_title',
+      permanent_change_warning: 'i18n permanent_change_warning',
+      permanent_change_warning_dismiss: 'i18n permanent_change_warning_dismiss'
     }
   }
 

@@ -4,17 +4,17 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-export const localStorageHandler = {
-  get: (key: string, defaultValue: unknown = null): unknown => {
-    const value = localStorage.getItem(key)
+export const storageHandler = {
+  get: (storage: Storage, key: string, defaultValue: unknown = null): unknown => {
+    const value = storage.getItem(key)
     if (value) {
       return JSON.parse(value)
     }
     return defaultValue
   },
 
-  set: (key: string, value: unknown): void => {
-    localStorage.setItem(key, JSON.stringify(value))
+  set: (storage: Storage, key: string, value: unknown): void => {
+    storage.setItem(key, JSON.stringify(value))
   }
 }
 

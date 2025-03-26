@@ -153,7 +153,9 @@ provide(dispatcherKey, FormEditDispatcher)
       create_button: 'create',
       loading: 'loading data i18n',
       fatal_error: 'unrecoverable error:',
-      validation_error: 'i18n validation_error'
+      validation_error: 'i18n validation_error',
+      permanent_choice_warning: 'permanent_choice_warning_i18n',
+      permanent_choice_warning_dismissal: 'permanent_choice_warning_dismissal_i18n'
     }"
     @cancel="console.log('cancel')"
     @submitted="(event: unknown) => console.log(event)"

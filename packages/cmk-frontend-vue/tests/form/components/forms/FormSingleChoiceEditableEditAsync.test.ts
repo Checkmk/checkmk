@@ -76,7 +76,9 @@ test('FormSingleChoiceEditableEditAsync renders form', async () => {
         create_button: 'create_button_i18n',
         validation_error: 'validation_button_i18n',
         loading: 'loading_i18n',
-        fatal_error: 'fatal_error_i18n'
+        fatal_error: 'fatal_error_i18n',
+        permanent_choice_warning: 'permanent_choice_warning_i18n',
+        permanent_choice_warning_dismissal: 'permanent_choice_warning_dismissal_i18n'
       }
     }
   })

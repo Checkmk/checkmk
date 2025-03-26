@@ -4,14 +4,15 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import { localStorageHandler } from './utils'
+import { storageHandler } from './utils'
 import { ref, watch } from 'vue'
 
-const usePersistentRef = <T>(key: string, defaultValue: T) => {
-  const currentValue: T = localStorageHandler.get(key, defaultValue) as T
+const usePersistentRef = <T>(key: string, defaultValue: T, storageOpt?: 'session' | 'local') => {
+  const storage = storageOpt === 'session' ? sessionStorage : localStorage
+  const currentValue: T = storageHandler.get(storage, key, defaultValue) as T
   const value = ref(currentValue as T)
   watch(value, (newValue) => {
-    localStorageHandler.set(key, newValue)
+    storageHandler.set(storage, key, newValue)
   })
 
   return value

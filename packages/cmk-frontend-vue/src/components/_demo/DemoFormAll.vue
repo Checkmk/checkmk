@@ -436,7 +436,9 @@ function getSingleChoiceEditable(
       no_selection: 'i18n no_selection',
       validation_error: 'i18n validation_error',
       fatal_error: 'i18n fatal_error',
-      fatal_error_reload: 'i18n fatal_error_reload'
+      fatal_error_reload: 'i18n fatal_error_reload',
+      permanent_change_warning: 'i18n permanent_change_warning',
+      permanent_change_warning_dismiss: 'i18n permanent_change_warning_dismiss'
     },
     ...options
   }

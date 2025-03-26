@@ -17,6 +17,7 @@ import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import { useErrorBoundary } from '@/components/useErrorBoundary'
 import { immediateWatch } from '@/lib/watch'
 import { useFormEditDispatcher } from '@/form/private'
+import CmkDialog from '@/components/CmkDialog.vue'
 
 export type Payload = Record<string, unknown>
 
@@ -40,8 +41,12 @@ export interface FormSingleChoiceEditableEditAsyncProps<ObjectIdent, Result> {
     loading: string
     fatal_error: string
     validation_error: string
+    permanent_choice_warning: string
+    permanent_choice_warning_dismissal: string
   }
 }
+
+const DISMISSAL_KEY = 'immediate_slideout_change'
 
 const props = defineProps<FormSingleChoiceEditableEditAsyncProps<ObjectIdent, Result>>()
 
@@ -99,6 +104,13 @@ const { ErrorBoundary } = useErrorBoundary()
 <template>
   <div class="edit-object__wrapper">
     <ErrorBoundary>
+      <CmkDialog
+        :message="props.i18n.permanent_choice_warning"
+        :dismissal_button="{
+          title: props.i18n.permanent_choice_warning_dismissal,
+          key: DISMISSAL_KEY
+        }"
+      />
       <div class="edit-object__buttons">
         <CmkButtonSubmit @click="save">
           {{

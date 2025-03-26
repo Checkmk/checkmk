@@ -203,6 +203,8 @@ class SingleChoiceEditableI18n:
     validation_error: str
     fatal_error: str
     fatal_error_reload: str
+    permanent_change_warning: str
+    permanent_change_warning_dismiss: str
 
 
 @dataclass(kw_only=True)

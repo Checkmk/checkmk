@@ -18,7 +18,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.version import Edition, edition, mark_edition_only
 
 from cmk.utils import paths
-from cmk.utils.rulesets.definition import is_from_ruleset_group, RuleGroup, RuleGroupType
+from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.form_specs.converter import Tuple as FSTuple
 from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
@@ -260,7 +260,7 @@ rulespec_group_registry = RulespecGroupRegistry()
 
 # TODO: Kept for compatibility with pre 1.6 plugins
 def register_rulegroup(group_name, title, help_text):
-    rulespec_group_registry.register(_get_legacy_rulespec_group_class(group_name, title, help_text))
+    _log_ignored_local_registration(f"register_rule_group ({group_name})")
 
 
 def get_rulegroup(group_name):
@@ -1154,37 +1154,7 @@ def register_rule(
     deprecated=False,
     **kwargs,
 ):
-    base_class = _rulespec_class_for(varname, valuespec is not None, itemtype is not None)
-    class_kwargs = {
-        "name": varname,
-        "group": get_rulegroup(group).__class__ if isinstance(group, str) else group,
-        "match_type": match,
-        "factory_default": kwargs.get("factory_default", Rulespec.NO_FACTORY_DEFAULT),
-        "is_optional": optional,
-        "is_deprecated": deprecated,
-    }
-    if valuespec is not None:
-        class_kwargs["valuespec"] = lambda: valuespec
-    if is_from_ruleset_group(varname, RuleGroupType.STATIC_CHECKS) or is_from_ruleset_group(
-        varname, RuleGroupType.CHECKGROUP_PARAMETERS
-    ):
-        class_kwargs["check_group_name"] = varname.split(":", 1)[1]
-    if title is not None:
-        class_kwargs["title"] = lambda: title
-    if itemtype is not None:
-        class_kwargs["item_type"] = itemtype
-    if help is not None:
-        class_kwargs["help_func"] = lambda v=help: v
-    if itemspec is not None:
-        class_kwargs["item_spec"] = lambda v=itemspec: v
-    if itemname is not None:
-        class_kwargs["item_name"] = lambda v=itemname: v
-    if itemhelp is not None:
-        class_kwargs["item_help"] = lambda v=itemhelp: v
-    if not itemname and itemtype == "service":
-        class_kwargs["item_name"] = lambda: _("Service")
-
-    rulespec_registry.register(base_class(**class_kwargs))
+    _log_ignored_local_registration(f"register_rule ({group})")
 
 
 def register_check_parameters(
@@ -1199,63 +1169,7 @@ def register_check_parameters(
     deprecated=False,
 ):
     """Legacy registration of check parameters"""
-    if valuespec and isinstance(valuespec, Dictionary) and match_type != "dict":
-        raise MKGeneralException(
-            f"Check parameter definition for {checkgroup} has type Dictionary, but match_type {match_type}"
-        )
-
-    if not valuespec:
-        raise NotImplementedError()
-
-    # Added during 1.6 development for easier transition. Convert all legacy subgroup
-    # parameters (which are either str/unicode to group classes
-    if isinstance(subgroup, str):
-        subgroup = get_rulegroup("checkparams/" + subgroup).__class__
-
-    # Register rule for discovered checks
-    if has_inventory:
-        kwargs = {
-            "group": subgroup,
-            "title": lambda: title,
-            "match_type": match_type,
-            "is_deprecated": deprecated,
-            "parameter_valuespec": lambda: valuespec,
-            "check_group_name": checkgroup,
-            "create_manual_check": register_static_check,
-        }
-
-        if itemspec:
-            rulespec_registry.register(
-                CheckParameterRulespecWithItem(item_spec=lambda: itemspec, **kwargs)
-            )
-        else:
-            rulespec_registry.register(CheckParameterRulespecWithoutItem(**kwargs))
-
-    if not (valuespec and has_inventory) and register_static_check:
-        raise MKGeneralException(
-            "Sorry, registering manual check parameters without discovery "
-            "check parameters is not supported anymore using the old API. "
-            "Please register the manual check rulespec using the new API. "
-            "Checkgroup: %s" % checkgroup
-        )
-
-
-# NOTE: mypy's typing rules for ternaries seem to be a bit broken, so we have
-# to nest ifs in a slightly ugly way.
-def _rulespec_class_for(varname: str, has_valuespec: bool, has_itemtype: bool) -> type[Rulespec]:
-    if is_from_ruleset_group(varname, RuleGroupType.STATIC_CHECKS):
-        return ManualCheckParameterRulespec
-    if is_from_ruleset_group(varname, RuleGroupType.CHECKGROUP_PARAMETERS):
-        if has_itemtype:
-            return CheckParameterRulespecWithItem
-        return CheckParameterRulespecWithoutItem
-    if has_valuespec:
-        if has_itemtype:
-            return ServiceRulespec
-        return HostRulespec
-    if has_itemtype:
-        return BinaryServiceRulespec
-    return BinaryHostRulespec
+    _log_ignored_local_registration(f"register_check_parameters ({checkgroup})")
 
 
 def _registration_should_be_skipped(instance: object) -> bool:
@@ -1280,7 +1194,7 @@ def _registration_should_be_skipped(instance: object) -> bool:
 
 
 def _log_ignored_local_registration(name: str) -> None:
-    logger.info(f"Ignoring deprecated rulespec from local path: {name!r}")
+    logger.info(f"Ignoring deprecated registration from local path: {name!r}")
 
 
 class RulespecRegistry(cmk.ccc.plugin_registry.Registry[Rulespec]):
@@ -1311,7 +1225,7 @@ class RulespecRegistry(cmk.ccc.plugin_registry.Registry[Rulespec]):
 
     def register(self, instance: Any) -> Any:
         if _registration_should_be_skipped(instance):
-            _log_ignored_local_registration(instance.name)
+            _log_ignored_local_registration(f"rulespec_registry.register ({instance.name})")
             return instance
 
         # not-yet-a-type: (Rulespec) -> None
@@ -1333,8 +1247,8 @@ class RulespecRegistry(cmk.ccc.plugin_registry.Registry[Rulespec]):
 
     def register_without_manual_check_rulespec(self, instance: Never) -> None:
         """Deprecated!"""
-        # TODO: Remove this with checkmk 2.5
-        _log_ignored_local_registration(instance.name)  # type: ignore[attr-defined]
+        # Removed with checkmk 2.5
+        _log_ignored_local_registration(f"register_without_manual_check_rulespec ({instance.name})")  # type: ignore[attr-defined]
 
 
 class CheckTypeGroupSelection(ElementSelection):

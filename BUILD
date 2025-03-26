@@ -152,6 +152,8 @@ write_file(
     # WHY?
     # * when creating a venv with bazel, we need to have everything sandbox-ed in bazel
     # * however we still want to use the packages somehow editable
+    # * this is also important for the editors:
+    #   changing signatures in package B which are consumed by package A must be picked up by e.g. mypy
     name = "sitecustomize",
     out = "sitecustomize.py",
     content = [

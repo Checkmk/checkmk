@@ -11,7 +11,7 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersStorage,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Dictionary, Float, TextInput
+from cmk.gui.valuespec import Float, Migrate, TextInput
 
 
 def _item_spec_capacity() -> TextInput:
@@ -21,7 +21,7 @@ def _item_spec_capacity() -> TextInput:
     )
 
 
-def _parameter_valuespec_capacity() -> Dictionary:
+def _parameter_valuespec_capacity() -> Migrate:
     return vs_filesystem(
         elements=[
             FilesystemElements.levels_percent,

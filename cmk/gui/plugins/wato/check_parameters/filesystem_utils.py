@@ -21,6 +21,7 @@ from cmk.gui.valuespec import (
     Float,
     Integer,
     ListOf,
+    Migrate,
     Percentage,
     Transform,
     Tuple,
@@ -199,23 +200,6 @@ def _filesystem_show_levels_elements() -> list[DictionaryEntry]:
                     ("always", _("Always")),
                 ],
                 default_value="onmagic",
-            ),
-        ),
-    ]
-
-
-# Note: This hack is only required on very old filesystem checks (prior August 2013)
-def _filesystem_levels_elements_hack() -> list[DictionaryEntry]:
-    return [
-        # Beware: this is a nasty hack that helps us to detect new-style parameters.
-        # Something hat has todo with float/int conversion and has not been documented
-        # by the one who implemented this.
-        (
-            "flex_levels",
-            FixedValue(
-                value=None,
-                totext="",
-                title="",
             ),
         ),
     ]
@@ -514,7 +498,7 @@ def vs_filesystem(
     extra_elements: list[DictionaryEntry] | None = None,
     ignored_keys: Sequence[str] | None = None,
     title: str | None = None,
-) -> Dictionary:
+) -> Migrate:
     if extra_elements is None:
         extra_elements = []
 
@@ -528,13 +512,9 @@ def vs_filesystem(
             FilesystemElements.size_trend,
             FilesystemElements.volume_name,
         ]
-        # some hack, see corresponding valuespec element definition
-        extra_elements += _filesystem_levels_elements_hack()
 
     dictionary_valuespec_elements = [
-        elem  #
-        for elems in [FILESYSTEM_ELEMENTS_SELECTOR[e]() for e in elements]  #
-        for elem in elems
+        elem for elems in [FILESYSTEM_ELEMENTS_SELECTOR[e]() for e in elements] for elem in elems
     ] + extra_elements
 
     if ignored_keys is None:
@@ -546,12 +526,11 @@ def vs_filesystem(
             "mountpoint_for_block_devices",
         ]
 
-    return Dictionary(
-        elements=dictionary_valuespec_elements,
-        hidden_keys=[
-            # some hack, see corresponding valuespec element definition
-            "flex_levels"
-        ],
-        ignored_keys=ignored_keys,
-        title=title,
+    return Migrate(
+        valuespec=Dictionary(
+            elements=dictionary_valuespec_elements,
+            ignored_keys=ignored_keys,
+            title=title,
+        ),
+        migrate=lambda p: {k: v for k, v in p.items() if k != "flex_levels"},
     )

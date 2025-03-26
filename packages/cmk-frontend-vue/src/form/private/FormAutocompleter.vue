@@ -27,7 +27,7 @@ const props = defineProps<{
   allowNewValueInput?: boolean
 }>()
 
-const inputValue = defineModel<string>({ default: '' })
+const model = defineModel<string>({ default: '' })
 const visibleInputValue = ref<string>('')
 
 const autocompleterError = ref<string>('')
@@ -46,7 +46,7 @@ const selectFirstSuggestion = async () => {
 }
 
 const selectSuggestion = async (suggestion: Suggestion) => {
-  inputValue.value = suggestion.name
+  model.value = suggestion.name
   visibleInputValue.value = suggestion.title
   if (props.resetInputOnAdd) {
     await resetVisibleInput()
@@ -55,7 +55,7 @@ const selectSuggestion = async (suggestion: Suggestion) => {
 }
 
 const deleteSelection = async () => {
-  inputValue.value = ''
+  model.value = ''
   await resetVisibleInput()
 }
 
@@ -65,8 +65,8 @@ const resetVisibleInput = async () => {
 }
 
 onMounted(() => {
-  if (inputValue.value) {
-    visibleInputValue.value = inputValue.value
+  if (model.value) {
+    visibleInputValue.value = model.value
   }
 })
 
@@ -102,7 +102,7 @@ async function updateSuggestions(query: string) {
 watch(visibleInputValue, async (value) => {
   await updateSuggestions(value)
   if (props.allowNewValueInput) {
-    inputValue.value = value
+    model.value = value
   }
   showSuggestions.value = true
 })
@@ -126,7 +126,7 @@ const componentId = useId()
     v-click-outside="
       () => {
         showSuggestions = false
-        visibleInputValue = inputValue
+        visibleInputValue = model
       }
     "
     class="form-autocompleter"

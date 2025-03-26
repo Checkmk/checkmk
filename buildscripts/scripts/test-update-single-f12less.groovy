@@ -37,6 +37,7 @@ def main() {
         "DOCKER_REGISTRY",
         "EDITION",
         "CROSS_EDITION_TARGET",
+        "OTEL_SDK_DISABLED",
         "OTEL_EXPORTER_OTLP_ENDPOINT",
     ]);
 

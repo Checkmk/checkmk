@@ -101,12 +101,13 @@ def run_make_target(Map args) {
             VERSION='${args.version}' \
             DISTRO='${args.distro}' \
             BRANCH='${args.branch_name}' \
-            OTEL_EXPORTER_OTLP_ENDPOINT='${env.OTEL_EXPORTER_OTLP_ENDPOINT}' \
             CI_NODE_NAME='${env.NODE_NAME}' \
             CI_WORKSPACE='${env.WORKSPACE}' \
             CI_JOB_NAME='${env.JOB_NAME}' \
             CI_BUILD_NUMBER='${env.BUILD_NUMBER}' \
             CI_BUILD_URL='${env.BUILD_URL}' \
+            OTEL_SDK_DISABLED='${env.OTEL_SDK_DISABLED}' \
+            OTEL_EXPORTER_OTLP_ENDPOINT='${env.OTEL_EXPORTER_OTLP_ENDPOINT}' \
             make ${args.make_target}
         """);
     }

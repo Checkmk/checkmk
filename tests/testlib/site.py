@@ -2246,7 +2246,9 @@ def _assert_tmpfs(site: Site, version: CMKVersion) -> None:
 
 def tracing_config_from_env(env: Mapping[str, str]) -> TracingConfig:
     return TracingConfig(
-        collect_traces=env.get("OTEL_EXPORTER_OTLP_ENDPOINT", "") != "",
+        collect_traces=(
+            env.get("OTEL_SDK_DISABLED") != "true" and bool(env.get("OTEL_EXPORTER_OTLP_ENDPOINT"))
+        ),
         otlp_endpoint=env.get("OTEL_EXPORTER_OTLP_ENDPOINT", ""),
         extra_resource_attributes=_resource_attributes_from_env(env),
     )

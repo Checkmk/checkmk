@@ -27,7 +27,7 @@ const props = defineProps<{
   allowNewValueInput?: boolean
 }>()
 
-const inputValue = defineModel<string>()
+const inputValue = defineModel<string>({ default: '' })
 const visibleInputValue = ref<string>('')
 
 const autocompleterError = ref<string>('')
@@ -126,9 +126,7 @@ const componentId = useId()
     v-click-outside="
       () => {
         showSuggestions = false
-        if (inputValue === '') {
-          visibleInputValue = ''
-        }
+        visibleInputValue = inputValue
       }
     "
     class="form-autocompleter"

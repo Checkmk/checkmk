@@ -198,4 +198,32 @@ describe('FormAutocompleter', () => {
       expect(selectedValue).toBe('os:linux')
     })
   })
+
+  test('should reset to saved value after blur', async () => {
+    // the autcompleter should behave like a dropdown, so the value should only
+    // be changed if it was chosen from the suggestions
+    render(FormAutocompleter, {
+      props: {
+        placeholder: 'placeholder',
+        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
+        filterOn: [],
+        resetInputOnAdd: false,
+        size: 7,
+        id: 'ut_test',
+        modelValue: 'some_value'
+      }
+    })
+
+    const input = screen.getByPlaceholderText<HTMLInputElement>('placeholder')
+
+    await waitFor(() => {
+      expect(input.value).toBe('some_value')
+    })
+
+    await userEvent.type(input, '[Backspace][Backspace]')
+    expect(input.value).toBe('some_val')
+
+    await userEvent.click(document.body) // close suggestions values
+    expect(input.value).toBe('some_value')
+  })
 })

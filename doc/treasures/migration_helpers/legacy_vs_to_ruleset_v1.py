@@ -501,10 +501,6 @@ class RegistrationTransformer(cst.CSTTransformer):
                             *_extract("title", old),
                             cst.Arg(cst.Name("Topic"), cst.Name("topic")),
                             cst.Arg(form_spec, cst.Name("parameter_form")),
-                            cst.Arg(
-                                self._make_condition(args.get("item_spec")),
-                                cst.Name("condition"),
-                            ),
                         ),
                     ),
                 ),

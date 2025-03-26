@@ -23,7 +23,7 @@ from tests.testlib.docker import (
     package_name,
     prepare_package,
 )
-from tests.testlib.version import CMKVersion, git_tag_exists, version_from_env
+from tests.testlib.version import CMKVersion, version_from_env
 
 from cmk.ccc.version import Edition, Version, versions_compatible
 
@@ -36,10 +36,6 @@ pytestmark = [
 ]
 
 logger = logging.getLogger()
-
-old_version = CMKVersion(
-    version_spec="2.3.0p26", edition=Edition.CRE, branch="2.3.0", branch_version="2.3.0"
-)
 
 
 def test_start_simple(checkmk: CheckmkApp) -> None:
@@ -329,23 +325,22 @@ def test_container_agent(checkmk: CheckmkApp) -> None:
     assert ":::6556" in checkmk.container.exec_run(["netstat", "-tln"])[-1].decode("utf-8")
 
 
-@pytest.mark.skipif(
-    not git_tag_exists(old_version),
-    reason=f"Test is skipped until we have {old_version} available as git tag",
-)
 def test_update(client: docker.DockerClient) -> None:
+    base_version = CMKVersion(
+        version_spec="2.3.0p26", edition=Edition.CRE, branch="2.3.0", branch_version="2.3.0"
+    )
     update_version = version_from_env()
     container_name = "%s-monitoring" % update_version.branch
 
     update_compatibility = versions_compatible(
-        Version.from_str(old_version.version), Version.from_str(update_version.version)
+        Version.from_str(base_version.version), Version.from_str(update_version.version)
     )
-    assert update_compatibility.is_compatible, f"Version {old_version} and {update_version} are incompatible, reason: {update_compatibility}"
+    assert update_compatibility.is_compatible, f"Version {base_version} and {update_version} are incompatible, reason: {update_compatibility}"
 
     # 1. create container with old version and add a file to mark the pre-update state
     container_volumes = [f"{container_name}:/omd/sites"]
     with CheckmkApp(
-        client, version=old_version, name=container_name, volumes=container_volumes
+        client, version=base_version, name=container_name, volumes=["/omd/sites"]
     ) as cmk_orig:
         assert (
             cmk_orig.container.exec_run(

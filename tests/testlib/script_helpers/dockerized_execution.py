@@ -539,6 +539,7 @@ def _container_env(package_info: CMKPackageInfo) -> Mapping[str, str]:
         "BRANCH": package_info.version.branch,
         "RESULT_PATH": "/results",
         "CI": os.environ.get("CI", ""),
+        "OTEL_EXPORTER_OTLP_ENDPOINT": os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT", ""),
         "CI_NODE_NAME": os.environ.get("CI_NODE_NAME", ""),
         "CI_WORKSPACE": os.environ.get("CI_WORKSPACE", ""),
         "CI_JOB_NAME": os.environ.get("CI_JOB_NAME", ""),

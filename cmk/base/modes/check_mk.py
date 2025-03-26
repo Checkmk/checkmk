@@ -180,7 +180,8 @@ _verbosity = 0
 
 def print_(txt: str) -> None:
     with suppress(IOError):
-        print(txt, end="", flush=True, file=sys.stdout)
+        sys.stdout.write(txt)
+        sys.stdout.flush()
 
 
 def parse_snmp_backend(backend: object) -> SNMPBackendEnum | None:
@@ -349,7 +350,8 @@ def mode_list_hosts(options: dict, args: list[str]) -> None:
         options,
     )
     with suppress(IOError):
-        print("\n".join(hosts), flush=True, file=sys.stdout)
+        sys.stdout.write("\n".join(hosts) + "\n")
+        sys.stdout.flush()
 
 
 # TODO: Does not care about internal group "check_mk"

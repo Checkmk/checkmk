@@ -143,13 +143,6 @@ def default_developer_items() -> list[TopicMenuItem]:
 def default_about_checkmk_items() -> list[TopicMenuItem]:
     return [
         TopicMenuItem(
-            name="info",
-            title=_("Info"),
-            url="info.py",
-            sort_index=20,
-            icon="checkmk_logo_min",
-        ),
-        TopicMenuItem(
             name="change_log",
             title=_("Change log (Werks)"),
             url="change_log.py",

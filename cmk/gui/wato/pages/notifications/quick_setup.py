@@ -793,6 +793,14 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                 "contact_groups": DictElement(
                                     parameter_form=MultipleChoiceExtended(
                                         title=Title("Groups"),
+                                        help_text=Help(
+                                            "Filters hosts or services assigned "
+                                            "to the selected contact groups. "
+                                            "This filter only works with Checkmk "
+                                            "Micro Core (CMC). If you are not "
+                                            "using CMC, the filter will have no "
+                                            "effect."
+                                        ),
                                         elements=[
                                             MultipleChoiceElementExtended(
                                                 name=name,

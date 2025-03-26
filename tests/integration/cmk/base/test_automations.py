@@ -704,12 +704,32 @@ def test_automation_get_configuration(site: Site) -> None:
 
 
 @pytest.mark.usefixtures("test_cfg")
-def test_automation_create_diagnostics_dump(site: Site) -> None:
-    result = _execute_automation(site, "create-diagnostics-dump")
+@pytest.mark.parametrize(
+    "additional_options",
+    [
+        None,
+        ["local-files"],
+        ["omd-config"],
+        ["checkmk-crashes"],
+        ["local-files", "omd-config", "checkmk-crashes"],
+    ],
+    ids=[
+        "default",
+        "local_files",
+        "omd_config",
+        "checkmk_crashes",
+        "local_files+omd_config+checkmk_crashes",
+    ],
+)
+def test_automation_create_diagnostics_dump(
+    site: Site, additional_options: list[str] | None
+) -> None:
+    result = _execute_automation(site, "create-diagnostics-dump", additional_options)
     assert isinstance(result, results.CreateDiagnosticsDumpResult)
     assert "+ COLLECT DIAGNOSTICS INFORMATION" in result.output
     assert result.tarfile_path.endswith(".tar.gz")
     assert "var/check_mk/diagnostics" in result.tarfile_path
+    assert site.file_exists(result.tarfile_path)
 
 
 def test_automation_restart_with_non_resolvable_host(site: Site) -> None:

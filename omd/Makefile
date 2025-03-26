@@ -43,7 +43,6 @@ PACKAGES := \
     pnp4nagios \
     heirloom-mailx \
     livestatus \
-    unixcat \
     neb \
     robotmk \
     xmlsec1 \

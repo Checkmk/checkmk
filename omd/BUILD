@@ -63,6 +63,7 @@ create_venv(
         "//packages/cmk-server-side-calls:pkg_tar",
         "//packages/cmk-trace:pkg_tar",
         "//packages/cmk-werks:pkg_tar",
+        "//packages/unixcat:unixcat_tar",
         ":license_info",
     ] + edition_deps[edition],
 ) for edition in [

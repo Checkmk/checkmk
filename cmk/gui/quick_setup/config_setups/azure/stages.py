@@ -145,7 +145,8 @@ def configure_authentication() -> QuickSetupStage:
                         parameter_form=azure.formspec(),
                         custom_collect_params=_collect_params_for_connection_test,
                         error_message=_(
-                            "Could not access your Azure account. Please check your credentials."
+                            "Could not access your Azure account. Please check your credentials "
+                            "and/or HTTP proxy setting."
                         ),
                     ),
                 ],

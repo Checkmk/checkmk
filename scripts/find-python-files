@@ -39,7 +39,6 @@ get_candidates_from_filesystem() {
         SEARCH+=" omd/packages/enterprise/alert_handlers"
         SEARCH+=" omd/packages/enterprise/bin"
         SEARCH+=" omd/packages/enterprise/saml2/attribute_mappings"
-        SEARCH+=" omd/packages/enterprise/scripts/update-pre-hooks"
     fi
     SEARCH+=" locale"
     SEARCH+=" notifications"
@@ -54,7 +53,6 @@ get_candidates_from_filesystem() {
     # The submodule is not checked out in the CI, so it should also not be checked locally.
     # The content of that repo needs to be checked by it's own CI
     PRUNE+=" -path $(realpath tests/qa-test-data) -prune -o"
-    SEARCH+=" werk"
 
     # Resolve search paths to real paths before the search for performance reasons
     # shellcheck disable=SC2086

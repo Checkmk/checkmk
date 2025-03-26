@@ -140,6 +140,7 @@ from cmk.gui.watolib.config_domain_name import (
     config_domain_registry,
     config_variable_group_registry,
     config_variable_registry,
+    ConfigDomainRegistry,
     ConfigVariable,
     ConfigVariableGroup,
     ConfigVariableGroupRegistry,
@@ -206,6 +207,8 @@ def register(
     sample_config_generator_registry: SampleConfigGeneratorRegistry,
     mode_registry: ModeRegistry,
     main_module_registry: MainModuleRegistry,
+    config_domain_registry: ConfigDomainRegistry,
+    save_active_config: Callable[[], None],
     config_var_group_registry: ConfigVariableGroupRegistry,
     config_var_registry: ConfigVariableRegistry,
     rulespec_group_registry: RulespecGroupRegistry,
@@ -229,6 +232,7 @@ def register(
     main_module_registry.register(MainModuleEventConsole)
     main_module_registry.register(MainModuleEventConsoleRules)
 
+    config_domain_registry.register(ConfigDomainEventConsole(save_active_config))
     config_var_group_registry.register(ConfigVariableGroupEventConsoleGeneric)
     config_var_group_registry.register(ConfigVariableGroupEventConsoleLogging)
     config_var_group_registry.register(ConfigVariableGroupEventConsoleSNMP)

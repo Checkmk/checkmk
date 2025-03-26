@@ -39,7 +39,6 @@ from ._find_usage import (
 from ._openapi import register as openapi_register
 from ._sidebar_snapin import SidebarSnapinEventConsole
 from .autocompleters import service_levels_autocompleter, syslog_facilities_autocompleter
-from .config_domain import ConfigDomainEventConsole
 from .icon import MkeventdIcon
 from .permission_section import PermissionSectionEventConsole
 
@@ -85,6 +84,8 @@ def register(
         sample_config_generator_registry,
         mode_registry,
         main_module_registry,
+        config_domain_registry,
+        save_active_config,
         config_variable_group_registry,
         config_variable_registry,
         rulespec_group_registry,
@@ -94,7 +95,6 @@ def register(
         replication_path_registry,
     )
     permission_section_registry.register(PermissionSectionEventConsole)
-    config_domain_registry.register(ConfigDomainEventConsole(save_active_config))
     autocompleter_registry.register_autocompleter(
         "syslog_facilities", syslog_facilities_autocompleter
     )

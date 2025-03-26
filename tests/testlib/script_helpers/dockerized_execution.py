@@ -528,7 +528,6 @@ def _container_env(version: CMKVersion) -> Mapping[str, str]:
         "BRANCH": version.branch,
         "RESULT_PATH": "/results",
         "CI": os.environ.get("CI", ""),
-        "OTEL_EXPORTER_OTLP_ENDPOINT": os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT", ""),
         "CI_NODE_NAME": os.environ.get("CI_NODE_NAME", ""),
         "CI_WORKSPACE": os.environ.get("CI_WORKSPACE", ""),
         "CI_JOB_NAME": os.environ.get("CI_JOB_NAME", ""),
@@ -536,6 +535,8 @@ def _container_env(version: CMKVersion) -> Mapping[str, str]:
         "CI_BUILD_URL": os.environ.get("CI_BUILD_URL", ""),
         # Write to this result path by default (may be overridden e.g. by integration tests)
         "PYTEST_ADDOPTS": os.environ.get("PYTEST_ADDOPTS", "") + " --junitxml=/results/junit.xml",
+        "OTEL_SDK_DISABLED": os.environ.get("OTEL_SDK_DISABLED", "true"),
+        "OTEL_EXPORTER_OTLP_ENDPOINT": os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT", ""),
     }
 
 

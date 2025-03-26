@@ -13,6 +13,7 @@ def main() {
 
     check_environment_variables([
         "DOCKER_REGISTRY",
+        "OTEL_SDK_DISABLED",
         "OTEL_EXPORTER_OTLP_ENDPOINT",
     ]);
 

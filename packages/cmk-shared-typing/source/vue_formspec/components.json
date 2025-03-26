@@ -1306,6 +1306,12 @@
                                 },
                                 "fatal_error_reload": {
                                     "type": "string"
+                                },
+                                "permanent_change_warning": {
+                                    "type": "string"
+                                },
+                                "permanent_change_warning_dismiss": {
+                                    "type": "string"
                                 }
                             },
                             "required": [
@@ -1321,7 +1327,9 @@
                                 "no_selection",
                                 "validation_error",
                                 "fatal_error",
-                                "fatal_error_reload"
+                                "fatal_error_reload",
+                                "permanent_change_warning",
+                                "permanent_change_warning_dismiss"
                             ]
                         },
                         "i18n_base": {

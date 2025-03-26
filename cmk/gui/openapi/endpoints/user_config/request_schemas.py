@@ -224,7 +224,10 @@ class UserInterfaceAttributes(BaseSchema):
     )
 
 
-DISMISSABLE_WARNINGS: list[DismissableWarning] = ["notification_fallback"]
+DISMISSABLE_WARNINGS: list[DismissableWarning] = [
+    "notification_fallback",
+    "immediate_slideout_change",
+]
 
 
 class UserDismissWarning(BaseSchema):

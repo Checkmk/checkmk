@@ -108,6 +108,11 @@ class SingleChoiceEditableVisitor(
                     fatal_error_reload=_("reload"),
                     no_objects=_("No options available"),
                     no_selection=input_hint,
+                    permanent_change_warning=_(
+                        "Changes submitted through this form will be immediately applied to your "
+                        "configuration. However, you may still need to activate them for them to take effect."
+                    ),
+                    permanent_change_warning_dismiss=_("Do not show again"),
                 ),
                 i18n_base=base_i18n_form_spec(),
             ),

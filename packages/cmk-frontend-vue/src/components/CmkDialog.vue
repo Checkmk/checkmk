@@ -10,6 +10,7 @@ import CmkIcon from '@/components/CmkIcon.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import CmkButton, { type ButtonVariants } from '@/components/CmkButton.vue'
 import { persistWarningDismissal } from '@/lib/rest-api-client/userConfig'
+import usePersistentRef from '@/lib/usePersistentRef'
 
 const props = defineProps<{
   title?: string
@@ -18,7 +19,9 @@ const props = defineProps<{
   dismissal_button?: { title: string; key: string }
 }>()
 
-const dialogHidden = ref(false)
+const dialogHidden = props.dismissal_button
+  ? usePersistentRef(props.dismissal_button.key, false, 'session')
+  : ref(false)
 
 async function hideContent() {
   if (props.dismissal_button) {

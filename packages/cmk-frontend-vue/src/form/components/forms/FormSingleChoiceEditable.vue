@@ -163,7 +163,9 @@ const { ErrorBoundary, error } = useErrorBoundary()
             create_button: spec.i18n.slidein_create_button,
             loading: spec.i18n.loading,
             validation_error: spec.i18n.validation_error,
-            fatal_error: spec.i18n.fatal_error
+            fatal_error: spec.i18n.fatal_error,
+            permanent_choice_warning: spec.i18n.permanent_change_warning,
+            permanent_choice_warning_dismissal: spec.i18n.permanent_change_warning_dismiss
           }"
           @cancel="closeSlideIn"
           @submitted="slideInSubmitted"

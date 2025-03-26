@@ -417,6 +417,8 @@ export interface SingleChoiceEditableI18N {
   validation_error: string;
   fatal_error: string;
   fatal_error_reload: string;
+  permanent_change_warning: string;
+  permanent_change_warning_dismiss: string;
 }
 export interface I18NOptionalChoice {
   label: string;

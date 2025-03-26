@@ -23,6 +23,7 @@ from cmk.gui.openapi.endpoints.configuration_entity._common import to_domain_typ
 from cmk.gui.openapi.endpoints.contact_group_config.common import APIInventoryPaths
 from cmk.gui.rest_api_types.notifications_rule_types import APINotificationRule
 from cmk.gui.rest_api_types.site_connection import SiteConfig
+from cmk.gui.type_defs import DismissableWarning
 
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 
@@ -724,6 +725,13 @@ class UserClient(RestApiClient):
             url=f"/objects/{self.domain}/{username}",
             expect_ok=expect_ok,
             headers=self._set_etag_header(username, etag),
+        )
+
+    def dismiss_warning(self, warning: DismissableWarning) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/dismiss-warning/invoke",
+            body={"warning": warning},
         )
 
     def _set_etag_header(

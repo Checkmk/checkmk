@@ -15,7 +15,11 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields import Username
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.endpoints.user_config.request_schemas import CreateUser, UpdateUser
+from cmk.gui.openapi.endpoints.user_config.request_schemas import (
+    CreateUser,
+    UpdateUser,
+    UserDismissWarning,
+)
 from cmk.gui.openapi.endpoints.user_config.response_schemas import UserCollection, UserObject
 from cmk.gui.openapi.endpoints.utils import complement_customer, update_customer_info
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
@@ -213,6 +217,22 @@ def edit_user(params: Mapping[str, Any]) -> Response:
         user_features_registry.features().sites,
     )
     return serve_user(username)
+
+
+@Endpoint(
+    constructors.domain_type_action_href("user_config", "dismiss-warning"),
+    ".../action",
+    method="post",
+    tag_group="Checkmk Internal",
+    request_schema=UserDismissWarning,
+    output_empty=True,
+)
+def dismiss_user_warning(params: Mapping[str, Any]) -> Response:
+    """Save a warning dismissal for the current user."""
+    warnings = user.dismissed_warnings or set()
+    warnings.add(params["body"]["warning"])
+    user.dismissed_warnings = warnings
+    return Response(status=204)
 
 
 def _identify_modified_attrs(initial_attrs: UserSpec, new_attrs: dict) -> set[str]:
@@ -796,3 +816,4 @@ def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(create_user)
     endpoint_registry.register(delete_user)
     endpoint_registry.register(edit_user)
+    endpoint_registry.register(dismiss_user_warning)

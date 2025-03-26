@@ -28,11 +28,6 @@ The modules:
     of the nested JSON struct that is specified by the Restful Objects
     specification.
 
-  * The `code_examples` module contains a helper which renders Jinja2
-    templates with source code examples. These are put into the spec
-    by the decorator. The examples are specific to the Redoc documentation
-    generator library.
-
 """
 
 from cmk.gui.openapi.restful_objects.decorators import Endpoint

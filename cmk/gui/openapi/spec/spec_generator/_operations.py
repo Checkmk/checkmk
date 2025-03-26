@@ -21,7 +21,6 @@ from cmk.gui.openapi.restful_objects.api_error import (
     api_custom_error_schema,
     api_default_error_schema,
 )
-from cmk.gui.openapi.restful_objects.code_examples import code_samples
 from cmk.gui.openapi.restful_objects.parameters import (
     CONTENT_TYPE,
     ETAG_HEADER_PARAM,
@@ -42,6 +41,7 @@ from cmk.gui.openapi.restful_objects.type_defs import (
     ResponseType,
     StatusCodeInt,
 )
+from cmk.gui.openapi.spec.spec_generator._code_examples import code_samples
 from cmk.gui.openapi.spec.spec_generator._documentation import (
     _add_once,
     _build_description,

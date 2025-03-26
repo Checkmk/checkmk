@@ -1,0 +1,230 @@
+#!/usr/bin/env python3
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import argparse
+import logging
+import sys
+from collections.abc import Sequence
+from typing import assert_never
+
+from cmk.utils import paths
+from cmk.utils.redis import disable_redis
+from cmk.utils.rulesets.definition import RuleGroup
+
+from cmk.gui.rulespec import register_plugins  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.utils.rule_specs.loader import (  # pylint: disable=cmk-module-layer-violation
+    load_discovered_rule_specs,
+    RuleSpec,
+)
+from cmk.gui.utils.script_helpers import gui_context  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.watolib.rulesets import (  # pylint: disable=cmk-module-layer-violation
+    AllRulesets,
+    RulesetCollection,
+)
+
+from cmk.discover_plugins import (
+    CMK_ADDONS_PLUGINS,
+    CMK_PLUGINS,
+    discover_plugins_from_modules,
+    PluginGroup,
+)
+from cmk.mkp_tool import Installer, Manifest, PackageName, PackagePart
+from cmk.rulesets.v1 import entry_point_prefixes
+from cmk.rulesets.v1.rule_specs import (
+    ActiveCheck,
+    AgentAccess,
+    AgentConfig,
+    CheckParameters,
+    DiscoveryParameters,
+    EnforcedService,
+    Host,
+    HostAndServiceCondition,
+    HostCondition,
+    InventoryParameters,
+    NotificationParameters,
+    Service,
+    SNMP,
+    SpecialAgent,
+)
+from cmk.update_config.plugins.actions.rulesets import (  # pylint: disable=cmk-module-layer-violation
+    validate_rule_values,
+)
+from cmk.update_config.plugins.lib.rulesets import (  # pylint: disable=cmk-module-layer-violation
+    transform_wato_rulesets_params,
+)
+
+logger = logging.getLogger(__name__)
+
+
+def _initialize_logger(log_level: str) -> None:
+    logger.addHandler(handler := logging.StreamHandler(stream=sys.stdout))
+    handler.setFormatter(logging.Formatter("%(message)s"))
+    logger.setLevel(logging.getLevelNamesMapping()[log_level])
+
+
+def _parse_args(args: Sequence[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Migrate the rulesets for a list of enabled mkps.")
+    parser.add_argument(
+        "mkps",
+        nargs="+",
+        type=str,
+        help="List of enabled mkps",
+    )
+
+    parser.add_argument(
+        "--log-level",
+        dest="log_level",
+        default="NOTSET",
+        choices=["CRITICAL", "FATAL", "ERROR", "WARNING", "INFO", "DEBUG", "NOTSET"],
+        help="Logging level",
+    )
+
+    return parser.parse_args(args)
+
+
+def _mkps_modules(mkps: Sequence[str]) -> set[str]:
+    enabled_mkps = [PackageName(mkp_name) for mkp_name in mkps]
+
+    installer = Installer(paths.installed_packages_dir)
+
+    def _is_installed(el: PackageName) -> Manifest | None:
+        if (manifest := installer.get_installed_manifest(el)) is None:
+            logger.warning("Ignoring %s (not installed)", el)
+        return manifest
+
+    manifests = [m for el in enabled_mkps if (m := _is_installed(el)) is not None]
+
+    if not manifests:
+        logger.info("No enabled extensions found.")
+        return set()
+
+    modules = set()
+    for manifest in manifests:
+        part_to_module = {
+            PackagePart.CMK_PLUGINS: CMK_PLUGINS,
+            PackagePart.CMK_ADDONS_PLUGINS: CMK_ADDONS_PLUGINS,
+        }
+
+        for part, files in manifest.files.items():
+            if part not in part_to_module:
+                continue
+
+            for file in files:
+                rel = file.parent if file.name == "__init__.py" else file.with_suffix("")
+
+                # we need to migrate only rulesets
+                if len(rel.parts) != 3 or rel.parts[1] != PluginGroup.RULESETS.value:
+                    logger.debug("Skipping %s", rel)
+                    continue
+
+                modules.add(f"{part_to_module[part]}.{'.'.join(rel.parts)}")
+
+    return modules
+
+
+def _discover_load_plugins(modules: set[str]) -> set[str]:
+    discovered = discover_plugins_from_modules(
+        entry_point_prefixes(),
+        modules,
+        raise_errors=True,
+    )
+
+    _, loaded = load_discovered_rule_specs(discovered)
+    register_plugins(loaded)
+
+    def _add_name_prefix(plugin: RuleSpec) -> str:
+        match plugin:
+            case ActiveCheck():
+                return RuleGroup.ActiveChecks(plugin.name)
+            case AgentConfig():
+                return RuleGroup.AgentConfig(plugin.name)
+            case CheckParameters():
+                return RuleGroup.CheckgroupParameters(plugin.name)
+            case EnforcedService():
+                return RuleGroup.StaticChecks(plugin.name)
+            case InventoryParameters():
+                return RuleGroup.InvParameters(plugin.name)
+            case NotificationParameters():
+                return RuleGroup.NotificationParameters(plugin.name)
+            case SpecialAgent():
+                return RuleGroup.SpecialAgents(plugin.name)
+            case AgentAccess() | Host() | DiscoveryParameters() | SNMP():
+                return str(plugin.name)
+            case Service():
+                match plugin.condition:
+                    case HostCondition() | HostAndServiceCondition():
+                        return str(plugin.name)
+                    case other:
+                        assert_never(other)
+            case other:
+                assert_never(other)
+
+    return {_add_name_prefix(el) for el in discovered.plugins.values()}
+
+
+def _load_and_transform_rulesets(discovered_names: set[str]) -> None:
+    # this is needed for the editions registration that happens
+    # at the top of the main_modules module
+    from cmk.gui import (  # pylint: disable=cmk-module-layer-violation,unused-import
+        main_modules,  # noqa: F401
+    )
+
+    with disable_redis(), gui_context():
+        all_rulesets = AllRulesets.load_all_rulesets()
+        discovered_rulesets = {
+            ruleset_name: ruleset
+            for ruleset_name, ruleset in all_rulesets.get_rulesets().items()
+            if ruleset_name in discovered_names
+        }
+
+        transformed_rulesets = transform_wato_rulesets_params(
+            logger, (rulesets := RulesetCollection(discovered_rulesets)), raise_errors=True
+        )
+
+        if not transformed_rulesets:
+            logger.info("No rulesets transformed")
+            return
+        sys.stdout.write("Successfully migrated rules for rulesets:\n")
+        sys.stdout.write("\n".join(transformed_rulesets) + "\n")
+
+        validate_rule_values(logger, rulesets)
+
+        for transformed_rulename, transformed_rule in rulesets.get_rulesets().items():
+            all_rulesets.set(transformed_rulename, transformed_rule)
+
+        all_rulesets.save()
+
+
+def migrate_extension_rulesets(args: argparse.Namespace) -> int:
+    logger.debug("Migrating rulesets for mkps: %s", args.mkps)
+
+    modules = _mkps_modules(args.mkps)
+    if not modules:
+        return 0
+
+    affected_ruleset_names = _discover_load_plugins(modules)
+    if not affected_ruleset_names:
+        logger.info("No rule sets contained in enabled extensions")
+        return 0
+
+    logger.debug("Discovered rule sets in enabled extensions: %s", affected_ruleset_names)
+    _load_and_transform_rulesets(affected_ruleset_names)
+
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        arguments = _parse_args(sys.argv[1:])
+        _initialize_logger(arguments.log_level)
+        sys.exit(migrate_extension_rulesets(arguments))
+    except Exception:
+        if logger.getEffectiveLevel() <= logging.DEBUG:
+            raise
+        sys.stderr.write(
+            "An error occurred during migration.\n"
+            "Run the script with '--log-level DEBUG' for the full output\n"
+        )
+        sys.exit(1)

@@ -101,6 +101,7 @@ def run_make_target(Map args) {
             VERSION='${args.version}' \
             DISTRO='${args.distro}' \
             BRANCH='${args.branch_name}' \
+            OTEL_EXPORTER_OTLP_ENDPOINT='${env.OTEL_EXPORTER_OTLP_ENDPOINT}' \
             CI_NODE_NAME='${env.NODE_NAME}' \
             CI_WORKSPACE='${env.WORKSPACE}' \
             CI_JOB_NAME='${env.JOB_NAME}' \

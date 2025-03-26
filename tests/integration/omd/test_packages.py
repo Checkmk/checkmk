@@ -181,3 +181,9 @@ def test_stunnel(site: Site) -> None:
     help_text = p.stderr.read() if p.stderr else ""
     # TODO: Sync this with a global version for stunnel (like we do it for python)
     assert "stunnel 5.63" in help_text
+
+
+def test_unixcat(site: Site) -> None:
+    p = site.execute(["unixcat"], stderr=subprocess.PIPE)
+    message = p.stderr.read() if p.stderr else "<NO STDERR>"
+    assert "Usage: unixcat UNIX-socket" in message

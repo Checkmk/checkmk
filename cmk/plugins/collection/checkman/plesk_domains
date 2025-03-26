@@ -15,6 +15,7 @@ description:
  To make this check work you need to install:
 
  * the agent plugin {plesk_domains} on the host which runs Plesk in the directory {/usr/lib/check_mk_agent/plugins}.
+
  * the Python package MySQLdb (e.g. via `pip install mysqlclient` or `apt install python3-mysqldb`).
 
 discovery:

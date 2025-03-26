@@ -3,14 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-from __future__ import annotations
-
 import re
-from typing import Any
-
-from pydantic import GetCoreSchemaHandler
-from pydantic_core import core_schema
+from typing import Self
 
 
 class UserId(str):
@@ -57,19 +51,7 @@ class UserId(str):
     # Note: livestatus.py duplicates the regex to validate incoming UserIds!
     USER_ID_REGEX = re.compile(r"^[\w$][-@.+\w$]*$", re.UNICODE)
 
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls, source_type: Any, _handler: GetCoreSchemaHandler
-    ) -> core_schema.CoreSchema:
-        return core_schema.no_info_after_validator_function(
-            cls,
-            core_schema.union_schema(
-                [core_schema.str_schema(), core_schema.is_instance_schema(cls)]
-            ),
-            serialization=core_schema.to_string_ser_schema(),
-        )
-
-    def __new__(cls, text: str) -> UserId:
+    def __new__(cls, text: str) -> Self:
         """Construct a new UserId object
 
         UserIds are used in a variety of contexts, including HTML, file paths and other external
@@ -154,7 +136,15 @@ class UserId(str):
         return super().__new__(cls, text)
 
     @classmethod
-    def builtin(cls) -> UserId:
+    def parse(cls, x: object) -> Self:
+        if isinstance(x, cls):
+            return x
+        if isinstance(x, str):
+            return cls(x)
+        raise ValueError(f"invalid username: {x!r}")
+
+    @classmethod
+    def builtin(cls) -> Self:
         """A special UserId signifying something is owned or created not by a real user but shipped
         as a built in functionality.
         This is mostly used in cmk.gui.visuals.
@@ -163,4 +153,4 @@ class UserId(str):
         Moreover, be aware that it is very possible that some parts of the code use the UserId ""
         with a different meaning.
         """
-        return UserId("")
+        return cls("")

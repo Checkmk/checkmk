@@ -79,6 +79,7 @@ from cmk.gui.permissions import (
 )
 from cmk.gui.table import init_rowselect, Table, table_element
 from cmk.gui.type_defs import (
+    AnnotatedUserId,
     HTTPVariables,
     Icon,
     MegaMenu,
@@ -137,7 +138,7 @@ class BaseConfig:
 
 
 class OverridableModel(BaseModel):
-    owner: UserId
+    owner: AnnotatedUserId
     public: bool | tuple[Literal["contact_groups", "sites"], Sequence[str]] | None
     hidden: bool = False  # TODO: Seems it is not configurable through the UI. Is it OK?
 

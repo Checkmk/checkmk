@@ -7693,7 +7693,11 @@ def _get_account_id(args: Args, config: botocore.config.Config | None) -> str:
     session = _create_session_from_args(args, args.global_service_region, config)
     try:
         account_id = session.client("sts", config=config).get_caller_identity()["Account"]
-    except (botocore.exceptions.ClientError, botocore.exceptions.NoCredentialsError) as e:
+    except (
+        botocore.exceptions.ClientError,
+        botocore.exceptions.NoCredentialsError,
+        botocore.exceptions.ProxyConnectionError,
+    ) as e:
         raise AwsAccessError(e)
     return account_id
 

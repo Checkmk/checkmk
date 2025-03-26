@@ -334,15 +334,13 @@ def test_container_agent(checkmk: CheckmkApp) -> None:
     reason=f"Test is skipped until we have {old_version} available as git tag",
 )
 def test_update(client: docker.DockerClient) -> None:
-    pkg_version = version_from_env()
-    container_name = "%s-monitoring" % pkg_version.branch
+    update_version = version_from_env()
+    container_name = "%s-monitoring" % update_version.branch
 
     update_compatibility = versions_compatible(
-        Version.from_str(old_version.version), Version.from_str(pkg_version.version)
+        Version.from_str(old_version.version), Version.from_str(update_version.version)
     )
-    assert (
-        update_compatibility.is_compatible
-    ), f"Version {old_version} and {pkg_version} are incompatible, reason: {update_compatibility}"
+    assert update_compatibility.is_compatible, f"Version {old_version} and {update_version} are incompatible, reason: {update_compatibility}"
 
     # 1. create container with old version and add a file to mark the pre-update state
     with CheckmkApp(
@@ -364,14 +362,14 @@ def test_update(client: docker.DockerClient) -> None:
         # 4. create new container
         with CheckmkApp(
             client,
-            version=pkg_version,
+            version=update_version,
             is_update=True,
             name=container_name,
             volumes_from=cmk_orig.container.id,
         ) as cmk_new:
             # 5. verify result
             cmk_new.container.exec_run(["omd", "version"], user="cmk")[1].decode("utf-8").endswith(
-                "%s\n" % pkg_version.omd_version()
+                "%s\n" % update_version.omd_version()
             )
             assert (
                 cmk_new.container.exec_run(

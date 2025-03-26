@@ -204,111 +204,22 @@ def _to_operation_dict(
         response_headers[etag_header.pop("name")] = etag_header
 
     responses: ResponseType = {}
-
-    error_schemas = schema_definitions.error_schemas
-
-    responses["406"] = _error_response_path_item(
-        spec_endpoint, error_schemas, 406, DefaultStatusCodeDescription.Code406
+    responses.update(
+        MarshmallowResponses.generate_error_responses(
+            spec_endpoint.expected_status_codes,
+            spec_endpoint.status_descriptions,
+            schema_definitions.error_schemas,
+        )
     )
-
-    if 401 in spec_endpoint.expected_status_codes:
-        responses["401"] = _error_response_path_item(
-            spec_endpoint, error_schemas, 401, DefaultStatusCodeDescription.Code401
+    responses.update(
+        MarshmallowResponses.generate_success_responses(
+            spec_endpoint.expected_status_codes,
+            spec_endpoint.status_descriptions,
+            spec_endpoint.content_type,
+            schema_definitions.response_schema,
+            response_headers,
         )
-
-    if 403 in spec_endpoint.expected_status_codes:
-        responses["403"] = _error_response_path_item(
-            spec_endpoint, error_schemas, 403, DefaultStatusCodeDescription.Code403
-        )
-
-    if 404 in spec_endpoint.expected_status_codes:
-        responses["404"] = _error_response_path_item(
-            spec_endpoint, error_schemas, 404, DefaultStatusCodeDescription.Code404
-        )
-
-    if 422 in spec_endpoint.expected_status_codes:
-        responses["422"] = _error_response_path_item(
-            spec_endpoint, error_schemas, 422, DefaultStatusCodeDescription.Code422
-        )
-
-    if 423 in spec_endpoint.expected_status_codes:
-        responses["423"] = _error_response_path_item(
-            spec_endpoint, error_schemas, 423, DefaultStatusCodeDescription.Code423
-        )
-
-    if 405 in spec_endpoint.expected_status_codes:
-        responses["405"] = _error_response_path_item(
-            spec_endpoint, error_schemas, 405, DefaultStatusCodeDescription.Code405
-        )
-
-    if 409 in spec_endpoint.expected_status_codes:
-        responses["409"] = _error_response_path_item(
-            spec_endpoint, error_schemas, 409, DefaultStatusCodeDescription.Code409
-        )
-
-    if 415 in spec_endpoint.expected_status_codes:
-        responses["415"] = _error_response_path_item(
-            spec_endpoint, error_schemas, 415, DefaultStatusCodeDescription.Code415
-        )
-
-    if 302 in spec_endpoint.expected_status_codes:
-        responses["302"] = _path_item(
-            spec_endpoint, 302, DefaultStatusCodeDescription.Code302.value
-        )
-
-    if 303 in spec_endpoint.expected_status_codes:
-        responses["303"] = _path_item(
-            spec_endpoint, 303, DefaultStatusCodeDescription.Code302.value
-        )
-
-    if 400 in spec_endpoint.expected_status_codes:
-        responses["400"] = _error_response_path_item(
-            spec_endpoint, error_schemas, 400, DefaultStatusCodeDescription.Code400
-        )
-
-    # We don't(!) support any spec_endpoint without an output schema.
-    # Just define one!
-    if 200 in spec_endpoint.expected_status_codes:
-        if schema_definitions.response_schema:
-            content: ContentObject
-            content = {spec_endpoint.content_type: {"schema": schema_definitions.response_schema}}
-        elif spec_endpoint.content_type.startswith(
-            "application/"
-        ) or spec_endpoint.content_type.startswith("image/"):
-            content = {
-                spec_endpoint.content_type: {
-                    "schema": {
-                        "type": "string",
-                        "format": "binary",
-                    }
-                }
-            }
-        else:
-            raise ValueError(
-                f"Unknown content-type: {spec_endpoint.content_type} Please add condition."
-            )
-        responses["200"] = _path_item(
-            spec_endpoint,
-            200,
-            DefaultStatusCodeDescription.Code200.value,
-            content=content,
-            headers=response_headers,
-        )
-
-    if 204 in spec_endpoint.expected_status_codes:
-        responses["204"] = _path_item(
-            spec_endpoint, 204, DefaultStatusCodeDescription.Code204.value
-        )
-
-    if 412 in spec_endpoint.expected_status_codes:
-        responses["412"] = _error_response_path_item(
-            spec_endpoint, error_schemas, 412, DefaultStatusCodeDescription.Code412
-        )
-
-    if 428 in spec_endpoint.expected_status_codes:
-        responses["428"] = _error_response_path_item(
-            spec_endpoint, error_schemas, 428, DefaultStatusCodeDescription.Code428
-        )
+    )
 
     family_name = None
     tag_obj: OpenAPITag
@@ -437,43 +348,171 @@ def _to_operation_dict(
     return {spec_endpoint.method: operation_spec}
 
 
-def _path_item(
-    spec_endpoint: SpecEndpoint,
-    status_code: StatusCodeInt,
-    description: str,
-    content: dict[str, Any] | None = None,
-    headers: dict[str, OpenAPIParameter] | None = None,
-) -> PathItem:
-    if spec_endpoint.status_descriptions and status_code in spec_endpoint.status_descriptions:
-        description = spec_endpoint.status_descriptions[status_code]
+class MarshmallowResponses:
+    @staticmethod
+    def generate_error_responses(
+        expected_status_codes: set[StatusCodeInt],
+        status_descriptions: Mapping[StatusCodeInt, str],
+        error_schemas: Mapping[ErrorStatusCodeInt, type[ApiError]],
+    ) -> ResponseType:
+        """Generate the error responses dictionary for an operation"""
+        responses: ResponseType = dict()
 
-    response: PathItem = {
-        "description": f"{http.client.responses[status_code]}: {description}",
-        "content": content if content is not None else {},
-    }
-    if headers:
-        response["headers"] = headers
-    return response
+        # Always include 406
+        responses["406"] = MarshmallowResponses._error_response_path_item(
+            status_descriptions, error_schemas, 406, DefaultStatusCodeDescription.Code406
+        )
 
+        # 3xx responses
+        if 302 in expected_status_codes:
+            responses["302"] = MarshmallowResponses._path_item(
+                status_descriptions, 302, DefaultStatusCodeDescription.Code302.value
+            )
 
-def _error_response_path_item(
-    spec_endpoint: SpecEndpoint,
-    error_schemas: Mapping[ErrorStatusCodeInt, type[ApiError]],
-    status_code: ErrorStatusCodeInt,
-    default_description: DefaultStatusCodeDescription,
-) -> PathItem:
-    description = default_description.value
-    schema = DEFAULT_STATUS_CODE_SCHEMAS.get((status_code, default_description))
-    if status_code in spec_endpoint.status_descriptions:
-        description = spec_endpoint.status_descriptions[status_code]
-        schema = api_custom_error_schema(status_code, description)
+        if 303 in expected_status_codes:
+            responses["303"] = MarshmallowResponses._path_item(
+                status_descriptions, 303, DefaultStatusCodeDescription.Code302.value
+            )
 
-    error_schema = error_schemas.get(status_code, schema)
-    response: PathItem = {
-        "description": f"{http.client.responses[status_code]}: {description}",
-        "content": {"application/problem+json": {"schema": error_schema}},
-    }
-    return response
+        # 4xx responses
+        if 401 in expected_status_codes:
+            responses["401"] = MarshmallowResponses._error_response_path_item(
+                status_descriptions, error_schemas, 401, DefaultStatusCodeDescription.Code401
+            )
+
+        if 403 in expected_status_codes:
+            responses["403"] = MarshmallowResponses._error_response_path_item(
+                status_descriptions, error_schemas, 403, DefaultStatusCodeDescription.Code403
+            )
+
+        if 404 in expected_status_codes:
+            responses["404"] = MarshmallowResponses._error_response_path_item(
+                status_descriptions, error_schemas, 404, DefaultStatusCodeDescription.Code404
+            )
+
+        if 405 in expected_status_codes:
+            responses["405"] = MarshmallowResponses._error_response_path_item(
+                status_descriptions, error_schemas, 405, DefaultStatusCodeDescription.Code405
+            )
+
+        if 409 in expected_status_codes:
+            responses["409"] = MarshmallowResponses._error_response_path_item(
+                status_descriptions, error_schemas, 409, DefaultStatusCodeDescription.Code409
+            )
+
+        if 400 in expected_status_codes:
+            responses["400"] = MarshmallowResponses._error_response_path_item(
+                status_descriptions, error_schemas, 400, DefaultStatusCodeDescription.Code400
+            )
+
+        if 412 in expected_status_codes:
+            responses["412"] = MarshmallowResponses._error_response_path_item(
+                status_descriptions, error_schemas, 412, DefaultStatusCodeDescription.Code412
+            )
+
+        if 415 in expected_status_codes:
+            responses["415"] = MarshmallowResponses._error_response_path_item(
+                status_descriptions, error_schemas, 415, DefaultStatusCodeDescription.Code415
+            )
+
+        if 422 in expected_status_codes:
+            responses["422"] = MarshmallowResponses._error_response_path_item(
+                status_descriptions, error_schemas, 422, DefaultStatusCodeDescription.Code422
+            )
+
+        if 423 in expected_status_codes:
+            responses["423"] = MarshmallowResponses._error_response_path_item(
+                status_descriptions, error_schemas, 423, DefaultStatusCodeDescription.Code423
+            )
+
+        if 428 in expected_status_codes:
+            responses["428"] = MarshmallowResponses._error_response_path_item(
+                status_descriptions, error_schemas, 428, DefaultStatusCodeDescription.Code428
+            )
+
+        return responses
+
+    @staticmethod
+    def generate_success_responses(
+        expected_status_codes: set[StatusCodeInt],
+        status_descriptions: Mapping[StatusCodeInt, str] | None,
+        content_type: str,
+        response_schema: RawParameter | None,
+        response_headers: dict[str, OpenAPIParameter],
+    ) -> ResponseType:
+        """Generate the success responses dictionary for an operation."""
+        responses: ResponseType = {}
+
+        # 2xx responses
+        if 200 in expected_status_codes:
+            if response_schema:
+                content: ContentObject
+                content = {content_type: {"schema": response_schema}}
+            elif content_type.startswith("application/") or content_type.startswith("image/"):
+                content = {
+                    content_type: {
+                        "schema": {
+                            "type": "string",
+                            "format": "binary",
+                        }
+                    }
+                }
+            else:
+                raise ValueError(f"Unknown content-type: {content_type} Please add condition.")
+
+            responses["200"] = MarshmallowResponses._path_item(
+                status_descriptions,
+                200,
+                DefaultStatusCodeDescription.Code200.value,
+                content=content,
+                headers=response_headers,
+            )
+
+        if 204 in expected_status_codes:
+            responses["204"] = MarshmallowResponses._path_item(
+                status_descriptions, 204, DefaultStatusCodeDescription.Code204.value
+            )
+
+        return responses
+
+    @staticmethod
+    def _path_item(
+        status_descriptions: Mapping[StatusCodeInt, str] | None,
+        status_code: StatusCodeInt,
+        description: str,
+        content: dict[str, Any] | None = None,
+        headers: dict[str, OpenAPIParameter] | None = None,
+    ) -> PathItem:
+        if status_descriptions and status_code in status_descriptions:
+            description = status_descriptions[status_code]
+
+        response: PathItem = {
+            "description": f"{http.client.responses[status_code]}: {description}",
+            "content": content if content is not None else {},
+        }
+        if headers:
+            response["headers"] = headers
+        return response
+
+    @staticmethod
+    def _error_response_path_item(
+        status_descriptions: Mapping[StatusCodeInt, str],
+        error_schemas: Mapping[ErrorStatusCodeInt, type[ApiError]],
+        status_code: ErrorStatusCodeInt,
+        default_description: DefaultStatusCodeDescription,
+    ) -> PathItem:
+        description = default_description.value
+        schema = DEFAULT_STATUS_CODE_SCHEMAS.get((status_code, default_description))
+        if status_code in status_descriptions:
+            description = status_descriptions[status_code]
+            schema = api_custom_error_schema(status_code, description)
+
+        error_schema = error_schemas.get(status_code, schema)
+        response: PathItem = {
+            "description": f"{http.client.responses[status_code]}: {description}",
+            "content": {"application/problem+json": {"schema": error_schema}},
+        }
+        return response
 
 
 def _add_tag(spec: APISpec, tag: OpenAPITag, tag_group: str | None = None) -> None:

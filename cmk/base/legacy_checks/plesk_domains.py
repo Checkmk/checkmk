@@ -19,7 +19,7 @@ def inventory_plesk_domains(info):
 def check_plesk_domains(_no_item, _no_params, info):
     if not info:
         return (1, "No domains configured")
-    return (0, "%s" % ",<br>".join([i[0] for i in info]))
+    return (0, "%s" % ",\n".join([i[0] for i in info]))
 
 
 def parse_plesk_domains(string_table: StringTable) -> StringTable:

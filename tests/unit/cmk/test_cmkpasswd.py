@@ -65,7 +65,7 @@ def test_verification_error() -> None:
 
 
 def test_invalid_user() -> None:
-    with pytest.raises(InvalidUsernameError, match="Invalid username"):
+    with pytest.raises(InvalidUsernameError, match="invalid username"):
         _run_cmkpasswd("test🔥user", _get_pw(), None)
 
 

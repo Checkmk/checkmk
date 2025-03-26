@@ -17,7 +17,7 @@ class UserId(str):
     """
     A Checkmk user ID
 
-    UserIds must comply to a restricted set of allowed characters (see UserId.validate).
+    UserIds must comply to a restricted set of allowed characters (see UserId.validate_userid).
 
     UserIds must either be compatible with all protocols and components we interface with, or we
     must ensure proper encoding whenever UserIds leave Checkmk.
@@ -62,16 +62,15 @@ class UserId(str):
         cls, source_type: Any, _handler: GetCoreSchemaHandler
     ) -> core_schema.CoreSchema:
         return core_schema.no_info_after_validator_function(
-            cls.validate_userid,
+            cls,
             core_schema.union_schema(
                 [core_schema.str_schema(), core_schema.is_instance_schema(cls)]
             ),
             serialization=core_schema.to_string_ser_schema(),
         )
 
-    @classmethod
-    def validate(cls, text: str) -> None:
-        """Check if it is a valid UserId
+    def __new__(cls, text: str) -> UserId:
+        """Construct a new UserId object
 
         UserIds are used in a variety of contexts, including HTML, file paths and other external
         systems. Currently we have no means of ensuring proper output encoding wherever UserIds
@@ -79,76 +78,80 @@ class UserId(str):
 
         See class docstring for an incomplete list of places where UserIds are processed.
 
-        Examples:
+        Raises:
+            - ValueError: whenever the given text contains special characters.
 
+        Examples:
             The empty UserId is allowed for historical reasons (see `UserId.builtin`).
 
-                >>> UserId.validate("")
+                >>> UserId("")
+                ''
 
             ASCII letters, digits, and selected special characters are allowed.
 
-                >>> UserId.validate("cmkadmin")
-                >>> UserId.validate("$cmk_@dmün.1")
+                >>> UserId("cmkadmin")
+                'cmkadmin'
+
+                >>> UserId("$cmk_@dmün.1")
+                '$cmk_@dmün.1'
 
             Anything considered a letter in Unicode and the dollar sign is allowed.
 
-                >>> UserId.validate("cmkadmin")
-                >>> UserId.validate("$cmkädmin")
-                >>> UserId.validate("ↄ𝒽ѥ𝕔𖹬-艋く")
+                >>> UserId("$cmkädmin")
+                '$cmkädmin'
+
+                >>> UserId("ↄ𝒽ѥ𝕔𖹬-艋く")
+                'ↄ𝒽ѥ𝕔𖹬-艋く'
 
             Emails are allowed
 
-                >>> UserId.validate("cmkadmin@hi.com")
-                >>> UserId.validate("cmkadmin+test@hi.com")
+                >>> UserId("cmkadmin@hi.com")
+                'cmkadmin@hi.com'
+
+                >>> UserId("cmkadmin+test@hi.com")
+                'cmkadmin+test@hi.com'
 
             Special characters other than '$_-@.' are not allowed (see `USER_ID_REGEX`).
 
-                >>> UserId.validate("foo/../")
+                >>> UserId("foo/../")
                 Traceback (most recent call last):
                 ...
-                ValueError: Invalid username: 'foo/../'
+                ValueError: invalid username: 'foo/../'
 
-                >>> UserId.validate("%2F")
+                >>> UserId("%2F")
                 Traceback (most recent call last):
                 ...
-                ValueError: Invalid username: '%2F'
+                ValueError: invalid username: '%2F'
 
             Some special characters are not allowed at the start.
 
-                >>> UserId.validate(".")
+                >>> UserId(".")
                 Traceback (most recent call last):
                 ...
-                ValueError: Invalid username: '.'
+                ValueError: invalid username: '.'
 
-                >>> UserId.validate("@example.com")
+                >>> UserId("@example.com")
                 Traceback (most recent call last):
                 ...
-                ValueError: Invalid username: '@example.com'
+                ValueError: invalid username: '@example.com'
 
             UserIds must not be longer than 255 bytes.
 
-                >>> UserId.validate("𐌈")
-                >>> UserId.validate(64*"𐌈")
+                >>> UserId("𐌈")
+                '𐌈'
+
+                >>> UserId(64*"𐌈")
                 Traceback (most recent call last):
                 ...
-                ValueError: Username too long: '𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈…'
+                ValueError: username too long: '𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈…'
         """
-        cls.validate_userid(text)
-
-    @classmethod
-    def validate_userid(cls, text: str) -> str:
-        if not text:
-            # see UserId.builtin
-            return ""
-
+        # Ext4 and other file systems allow filenames of up to 255 bytes.
         if len(bytes(text, encoding="utf-8")) > 255:
-            # ext4 and others allow filenames of up to 255 bytes
-            raise ValueError(f"Username too long: {text[:16] + '…'!r}")
-
-        if not cls.USER_ID_REGEX.match(text):
-            raise ValueError(f"Invalid username: {text!r}")
-
-        return text
+            raise ValueError(f"username too long: {text[:16] + '…'!r}")
+        # For the empty case, see UserId.builtin().
+        if text and not cls.USER_ID_REGEX.match(text):
+            raise ValueError(f"invalid username: {text!r}")
+        return super().__new__(cls, text)
 
     @classmethod
     def builtin(cls) -> UserId:
@@ -161,12 +164,3 @@ class UserId(str):
         with a different meaning.
         """
         return UserId("")
-
-    def __new__(cls, text: str) -> UserId:
-        """Construct a new UserId object
-
-        Raises:
-            - ValueError: whenever the given text contains special characters. See `validate`.
-        """
-        cls.validate(text)
-        return super().__new__(cls, text)

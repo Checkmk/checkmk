@@ -36,6 +36,7 @@ from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
+from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, save_user_file
 from cmk.gui.type_defs import (
     SessionInfo,
@@ -359,6 +360,8 @@ def split_dict(d: Mapping[str, Any], keylist: list[str], positive: bool) -> dict
 
 
 def save_users(profiles: Users, now: datetime) -> None:
+    logger.debug(f"Saving the profiles of the following users: {', '.join(sorted(profiles))}")
+
     write_contacts_and_users_file(profiles)
 
     # Execute user connector save hooks

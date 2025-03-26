@@ -777,3 +777,15 @@ class BakeAgentsResult(ABCAutomationResult):
 
 
 result_type_registry.register(BakeAgentsResult)
+
+
+@dataclass
+class UnknownCheckParameterRuleSetsResult(ABCAutomationResult):
+    result: Sequence[str]
+
+    @staticmethod
+    def automation_call() -> str:
+        return "find-unknown-check-parameter-rule-sets"
+
+
+result_type_registry.register(UnknownCheckParameterRuleSetsResult)

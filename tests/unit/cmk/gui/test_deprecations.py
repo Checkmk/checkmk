@@ -191,7 +191,7 @@ def test__filter_non_ok_ac_test_results(
             {},
             [
                 _ACTestResultProblem(
-                    ident="unsorted",
+                    ident="text",
                     type="unsorted",
                     _ac_test_results={
                         SiteId("site_id_1"): [
@@ -477,13 +477,13 @@ def test__find_ac_test_result_problems(
     [
         pytest.param(
             _ACTestResultProblem(
-                ident="ident",
+                ident="A text",
                 type="unsorted",
                 _ac_test_results={
                     SiteId("site_id"): [
                         ACTestResult(
                             ACResultState.WARN,
-                            "text",
+                            "A text",
                             "test_id",
                             "deprecations",
                             "Title",
@@ -494,19 +494,19 @@ def test__find_ac_test_result_problems(
                     ],
                 },
             ),
-            "Unsorted",
+            "A text",
             "This may partially work in Checkmk 2.3.0 but will stop working from the next major version onwards.",
             id="unsorted-warn",
         ),
         pytest.param(
             _ACTestResultProblem(
-                ident="ident",
+                ident="A text",
                 type="unsorted",
                 _ac_test_results={
                     SiteId("site_id"): [
                         ACTestResult(
                             ACResultState.CRIT,
-                            "text",
+                            "A text",
                             "test_id",
                             "deprecations",
                             "Title",
@@ -517,7 +517,7 @@ def test__find_ac_test_result_problems(
                     ],
                 },
             ),
-            "Unsorted",
+            "A text",
             "This does not work in Checkmk 2.3.0.",
             id="unsorted-crit",
         ),

@@ -108,6 +108,7 @@ from cmk.automations.results import (
     SetAutochecksTable,
     SetAutochecksV2Result,
     SpecialAgentResult,
+    UnknownCheckParameterRuleSetsResult,
     UpdateDNSCacheResult,
     UpdateHostLabelsResult,
     UpdatePasswordsMergedFileResult,
@@ -3167,3 +3168,30 @@ class AutomationCreateDiagnosticsDump(Automation):
 
 
 automations.register(AutomationCreateDiagnosticsDump())
+
+
+class AutomationFindUnknownCheckParameterRuleSets(Automation):
+    cmd = "find-unknown-check-parameter-rule-sets"
+    needs_config = True
+    needs_checks = True
+
+    def execute(
+        self,
+        args: list[str],
+        called_from_automation_helper: bool,
+    ) -> UnknownCheckParameterRuleSetsResult:
+        known_check_rule_sets = {
+            str(plugin.check_ruleset_name)
+            for plugin in agent_based_register.get_previously_loaded_plugins().check_plugins.values()
+            if plugin.check_ruleset_name
+        }
+        return UnknownCheckParameterRuleSetsResult(
+            [
+                rule_set
+                for rule_set in config.checkgroup_parameters
+                if rule_set not in known_check_rule_sets
+            ]
+        )
+
+
+automations.register(AutomationFindUnknownCheckParameterRuleSets())

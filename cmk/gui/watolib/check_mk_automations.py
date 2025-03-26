@@ -559,3 +559,12 @@ def bake_agents(
         ),
         results.BakeAgentsResult,
     )
+
+
+def find_unknown_check_parameter_rule_sets() -> results.UnknownCheckParameterRuleSetsResult:
+    return _deserialize(
+        _automation_serialized(
+            "find-unknown-check-parameter-rule-sets",
+        ),
+        results.UnknownCheckParameterRuleSetsResult,
+    )

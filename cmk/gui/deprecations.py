@@ -212,8 +212,7 @@ class _ACTestResultProblem:
                     " by migrating or removing this plug-in."
                 )
             case "unsorted":
-                title = _("Unsorted")
-
+                title = self.ident
                 info = ""
                 recommendation = _(
                     "We highly recommend solving this issue already in your installation."
@@ -300,8 +299,8 @@ def _find_ac_test_result_problems(
 
             else:
                 problem = problem_by_ident.setdefault(
-                    "unsorted",
-                    _ACTestResultProblem("unsorted", "unsorted"),
+                    ac_test_result.text,
+                    _ACTestResultProblem(ac_test_result.text, "unsorted"),
                 )
 
             problem.add_ac_test_result(site_id, ac_test_result)

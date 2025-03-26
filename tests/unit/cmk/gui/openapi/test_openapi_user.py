@@ -26,6 +26,7 @@ from cmk.utils.user import UserId
 
 from cmk.gui import userdb
 from cmk.gui.config import active_config
+from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.user_config import (
     _api_to_internal_format,
     _internal_to_api_format,
@@ -1458,3 +1459,8 @@ def test_openapi_full_configuration(clients: ClientRegistry) -> None:
     get_resp = clients.User.get(username="user")
 
     assert create_resp.json == get_resp.json
+
+
+def test_openapi_user_dismiss_warning(clients: ClientRegistry) -> None:
+    clients.User.dismiss_warning(warning="notification_fallback")
+    assert user.dismissed_warnings == {"notification_fallback"}

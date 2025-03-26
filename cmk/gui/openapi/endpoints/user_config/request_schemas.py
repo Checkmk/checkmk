@@ -14,6 +14,7 @@ from cmk.gui import fields as gui_fields
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.fields.definitions import GroupField, Username, UserRoleID
 from cmk.gui.fields.utils import BaseSchema
+from cmk.gui.type_defs import DismissableWarning
 from cmk.gui.userdb import all_user_attributes
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
@@ -220,6 +221,18 @@ class UserInterfaceAttributes(BaseSchema):
         description="Whether or not to show the contextual icon in the UI for this user.",
         example="show_icon",
         load_default="show_icon",
+    )
+
+
+DISMISSABLE_WARNINGS: list[DismissableWarning] = ["notification_fallback"]
+
+
+class UserDismissWarning(BaseSchema):
+    warning = fields.String(
+        required=True,
+        enum=DISMISSABLE_WARNINGS,
+        description="The warning to be dismissed.",
+        example="notification_fallback",
     )
 
 

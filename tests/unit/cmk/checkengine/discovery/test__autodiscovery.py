@@ -15,6 +15,7 @@ from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
 
 NODE_1 = HostAddress("node1")
 NODE_2 = HostAddress("node2")
+NODE_3 = HostAddress("node3")
 CLUSTER = HostAddress("cluster")
 
 AUTOCHECK_1A = AutocheckEntry(
@@ -313,5 +314,36 @@ def test_get_host_services_by_host_name_params_prio_on_active_nodes() -> None:
                 ),
                 nodes=[NODE_2],
             )
+        ],
+    }
+
+
+def test_get_host_services_by_host_name_move_mutiple_nodes_and_autochecks() -> None:
+    assert get_host_services_by_host_name(
+        CLUSTER,
+        existing_services={
+            NODE_1: [AUTOCHECK_1A, AUTOCHECK_2],
+            NODE_2: [],
+            NODE_3: [],
+        },
+        discovered_services={
+            NODE_1: [],
+            NODE_2: [],
+            NODE_3: [AUTOCHECK_1A, AUTOCHECK_2],
+        },
+        is_cluster=True,
+        cluster_nodes=(NODE_1, NODE_2, NODE_3),
+        autochecks_config=_AutochecksConfigDummy(effective_host=CLUSTER),
+        enforced_services={},
+    )[CLUSTER] == {
+        "unchanged": [
+            AutocheckServiceWithNodes(
+                service=DiscoveredItem(previous=AUTOCHECK_1A, new=AUTOCHECK_1A),
+                nodes=[NODE_3],
+            ),
+            AutocheckServiceWithNodes(
+                service=DiscoveredItem(previous=AUTOCHECK_2, new=AUTOCHECK_2),
+                nodes=[NODE_3],
+            ),
         ],
     }

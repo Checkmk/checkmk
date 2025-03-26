@@ -78,7 +78,7 @@ genrule(
         # dh_strip command of deb packaging procedure work
         find perl-modules/lib/perl5 -type f -name \\*.so -exec chmod u+w {} \\;
         find perl-modules/lib/perl5 -type f -name \\*.pm -exec chmod -x {} \\;
-        cd perl-modules/lib/perl5 ; rm -rf utils.pm ; ln -s ../../../nagios/plugins/utils.pm .; cd -
+        cd perl-modules/lib/perl5 ; rm -rf utils.pm ; ln -s ../nagios/plugins/utils.pm .; cd -
         mkdir -p perl-modules/lib/perl5/CPAN
         cp $(execpath //omd/packages/perl-modules:MyConfig.pm) perl-modules/lib/perl5/CPAN/MyConfig.skel
 

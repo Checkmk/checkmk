@@ -125,7 +125,10 @@ def _force_old_http_service_description(all_rulesets: RulesetCollection) -> None
     # relevant for update to 2.4
 
     # remove "http" from configuration/ add another update step
-    if (http_ruleset := all_rulesets.get("active_checks:http")).is_empty():
+    if (
+        not all_rulesets.exists("active_checks:http")
+        or (http_ruleset := all_rulesets.get("active_checks:http")).is_empty()
+    ):
         return
 
     for _, _, rule in http_ruleset.get_rules():

@@ -29,10 +29,12 @@ from ._python_plugins import (
     PluginLocation,
     plugins_local_path,
 )
-from ._wellknown import PluginGroup
+from ._wellknown import CMK_ADDONS_PLUGINS, CMK_PLUGINS, PluginGroup
 
 __all__ = [
     "addons_plugins_local_path",
+    "CMK_ADDONS_PLUGINS",
+    "CMK_PLUGINS",
     "Collector",
     "DiscoveredPlugins",
     "discover_executable",

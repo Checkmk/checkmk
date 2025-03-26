@@ -153,6 +153,14 @@ def _endpoint_to_operation_dict(
     assert endpoint.func is not None, "This object must be used in a decorator environment."
     assert endpoint.operation_id is not None, "This object must be used in a decorator environment."
 
+    if (family_name := endpoint.family_name) is not None:
+        family_tag_obj = _build_tag_obj_from_family(family_name)
+    else:
+        family_name, family_tag_obj = _build_tag_obj_from_module(
+            import_string(endpoint.func.__module__)
+        )
+    _add_tag(spec, family_tag_obj, tag_group=endpoint.tag_group)
+
     schema_definitions = MarshmallowSchemaDefinitions(
         query_params=endpoint.query_params,
         path_params=endpoint.path_params,
@@ -165,7 +173,7 @@ def _endpoint_to_operation_dict(
         func=endpoint.func,
         path=endpoint.path,
         operation_id=endpoint.operation_id,
-        family_name=endpoint.family_name,
+        family_name=family_name,
         etag=endpoint.etag,
         expected_status_codes=set(endpoint.expected_status_codes),
         content_type=endpoint.content_type,
@@ -221,30 +229,8 @@ def _to_operation_dict(
         )
     )
 
-    family_name = None
-    tag_obj: OpenAPITag
-    if spec_endpoint.family_name is not None:
-        family = endpoint_family_registry.get(spec_endpoint.family_name)
-        if family is not None:
-            tag_obj = family.to_openapi_tag()
-            family_name = family.name
-            _add_tag(spec, tag_obj, tag_group=spec_endpoint.tag_group)
-    else:
-        docstring_name = _docstring_name(module_obj.__doc__)
-        tag_obj = {
-            "name": docstring_name,
-            "x-displayName": docstring_name,
-        }
-        docstring_desc = _docstring_description(module_obj.__doc__)
-        if docstring_desc:
-            tag_obj["description"] = docstring_desc
-
-        family_name = docstring_name
-        _add_tag(spec, tag_obj, tag_group=spec_endpoint.tag_group)
-
-    assert family_name is not None
     operation_spec: OperationSpecType = {
-        "tags": [family_name],
+        "tags": [spec_endpoint.family_name],
         "description": "",
     }
     if werk_id:
@@ -346,6 +332,29 @@ def _to_operation_dict(
             operation_spec["description"] += description
 
     return {spec_endpoint.method: operation_spec}
+
+
+def _build_tag_obj_from_family(family_name: str) -> OpenAPITag:
+    """Build a tag object from the endpoint family definition"""
+    family = endpoint_family_registry.get(family_name)
+    if family is None:
+        raise ValueError(f"Family {family_name} not found in registry")
+
+    return family.to_openapi_tag()
+
+
+def _build_tag_obj_from_module(module_obj: Any) -> tuple[str, OpenAPITag]:
+    """Build a tag object from the module's docstring"""
+    docstring_name = _docstring_name(module_obj.__doc__)
+    tag_obj: OpenAPITag = {
+        "name": docstring_name,
+        "x-displayName": docstring_name,
+    }
+    docstring_desc = _docstring_description(module_obj.__doc__)
+    if docstring_desc:
+        tag_obj["description"] = docstring_desc
+
+    return docstring_name, tag_obj
 
 
 class MarshmallowResponses:

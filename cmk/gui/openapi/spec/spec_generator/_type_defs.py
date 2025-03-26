@@ -33,7 +33,7 @@ class SpecEndpoint:
     func: Callable
     path: str
     operation_id: str
-    family_name: str | None
+    family_name: str
     etag: ETagBehaviour | None
     expected_status_codes: set[StatusCodeInt]
     content_type: str

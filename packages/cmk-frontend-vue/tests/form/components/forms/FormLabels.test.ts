@@ -7,7 +7,6 @@ import { fireEvent, render, screen, within } from '@testing-library/vue'
 import FormLabel from '@/form/components/forms/FormLabels.vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
-import { watch } from 'vue'
 import userEvent from '@testing-library/user-event'
 import { Response } from '@/form/components/utils/autocompleter'
 
@@ -20,9 +19,13 @@ vi.mock(import('@/form/components/utils/autocompleter'), async (importOriginal) 
   return {
     ...mod,
     fetchSuggestions: vi.fn(async (_config: unknown, value: string) => {
+      let firstElement: Array<{ name: string; title: string }> = []
+      if (value) {
+        firstElement = [{ name: value, title: value }]
+      }
       await new Promise((resolve) => setTimeout(resolve, 100))
       return new Response([
-        { name: value, title: value },
+        ...firstElement,
         ...[{ name: EXISTING_LABEL_CONCAT, title: EXISTING_LABEL_CONCAT }].filter((item) =>
           item.name.includes(value)
         )
@@ -30,13 +33,6 @@ vi.mock(import('@/form/components/utils/autocompleter'), async (importOriginal) 
     })
   }
 })
-
-vitest.mock('@/form/components/utils/watch', () => ({
-  immediateWatch: vitest.fn((source, callback) => {
-    callback(source())
-    return watch(source, callback, { immediate: true })
-  })
-}))
 
 const spec: FormSpec.Labels = {
   type: 'labels',

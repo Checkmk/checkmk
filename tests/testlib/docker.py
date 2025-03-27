@@ -259,6 +259,7 @@ def start_checkmk(
 
         create_cse_initial_config(root=Path(cse_config_root))
         volumes = (volumes or []) + get_cse_volumes(cse_config_root)
+    volumes = volumes or None
 
     kwargs = {
         key: value

@@ -46,7 +46,7 @@ def _new_migrated_rules(
         rule_count += 1
         if _migrated_rule(rule_v1.id, ruleset_v2) is None:
             for_migration = detect_conflicts(config, rule_v1.value)
-            rule_str = _render_rule(folder.title(), rule_index)
+            rule_str = _render_rule(folder.title(), rule_index, rule_v1.value["name"])
             sys.stdout.write(f"{rule_str}\n")
             if isinstance(for_migration, Conflict):
                 conflict_count += 1
@@ -60,8 +60,12 @@ def _new_migrated_rules(
     return _Count(conflicts=conflict_count, rules=rule_count, skipped=skip_count)
 
 
-def _render_rule(folder_title: str, rule_index: int) -> str:
-    return f"Folder: {folder_title}, Rule: #{rule_index}"
+def _service_name_from_v2(rule_v2: Rule) -> str:
+    return rule_v2.value["endpoints"][0]["service_name"]["name"].removesuffix(MIGRATE_POSTFIX)  # type: ignore[no-any-return]
+
+
+def _render_rule(folder_title: str, rule_index: int, service_name: str) -> str:
+    return f"Folder: {folder_title}, Rule: #{rule_index} - {service_name}"
 
 
 def _from_v1(rule_v1_id: str, ruleset_v1: Ruleset) -> Rule | None:
@@ -129,7 +133,7 @@ def finalize_main(search: SearchArgs) -> None:
         rulecount_v2 = 0
         for folder, rule_index, rule_v2 in select(ruleset_v2, search):
             if (rule_v1_id := _migrated_from(rule_v2)) is not None:
-                rule_str = _render_rule(folder.title(), rule_index)
+                rule_str = _render_rule(folder.title(), rule_index, _service_name_from_v2(rule_v2))
                 sys.stdout.write(f"{rule_str}\n")
                 rule_v1 = _from_v1(rule_v1_id, ruleset_v1)
                 if rule_v1 is None:
@@ -160,7 +164,7 @@ def delete_main(search: SearchArgs) -> None:
         count = 0
         for folder, rule_index, rule_v2 in select(ruleset_v2, search):
             if _migrated_from(rule_v2) is not None:
-                rule_str = _render_rule(folder.title(), rule_index)
+                rule_str = _render_rule(folder.title(), rule_index, _service_name_from_v2(rule_v2))
                 sys.stdout.write(f"{rule_str}\n")
                 sys.stdout.write("Deleting rule.\n")
                 count += 1
@@ -176,7 +180,7 @@ def activate_main(search: SearchArgs) -> None:
         count = 0
         for folder, rule_index, rule_v2 in select(ruleset_v2, search):
             if _migrated_from(rule_v2) is not None:
-                rule_str = _render_rule(folder.title(), rule_index)
+                rule_str = _render_rule(folder.title(), rule_index, _service_name_from_v2(rule_v2))
                 sys.stdout.write(f"{rule_str}\n")
                 if rule_v2.rule_options.disabled:
                     sys.stdout.write("Activating rule.\n")
@@ -199,7 +203,7 @@ def deactivate_main(search: SearchArgs) -> None:
         count = 0
         for folder, rule_index, rule_v2 in select(ruleset_v2, search):
             if _migrated_from(rule_v2) is not None:
-                rule_str = _render_rule(folder.title(), rule_index)
+                rule_str = _render_rule(folder.title(), rule_index, _service_name_from_v2(rule_v2))
                 sys.stdout.write(f"{rule_str}\n")
                 if not rule_v2.rule_options.disabled:
                     sys.stdout.write("Deactivating rule.\n")

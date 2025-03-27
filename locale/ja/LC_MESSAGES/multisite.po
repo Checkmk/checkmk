@@ -7457,7 +7457,8 @@ msgstr "マシンアカウントの自動化の秘密"
 msgid "Automation user authentication via HTTP parameters"
 msgstr "HTTPパラメータによるユーザー認証の自動化"
 
-msgid "Automation user for connection to central site"
+#, fuzzy
+msgid "Automation user for connection to central site (deprecated)"
 msgstr "中央サイトに接続するためのオートメーションユーザー"
 
 msgid "Automation user name"
@@ -11580,6 +11581,10 @@ msgstr "パラメータを確認する"
 msgid "Check parameters and other configuration variables for hosts"
 msgstr "ホストのパラメーターおよびその他の構成変数を確認する"
 
+#, python-format
+msgid "Check parameters for checktype '%s' can not be displayed"
+msgstr ""
+
 msgid "Check period"
 msgstr "チェック期間"
 
@@ -11713,6 +11718,12 @@ msgstr "チェッカーヘルパーの使用法"
 
 msgid "Checking of Datadog monitors"
 msgstr "監視するファイルのセクション"
+
+msgid ""
+"Checking this option allows self-signed certificates by ignoring OpenSSL "
+"error 18 (self signed certificate), and the service will not warn when this "
+"error is returned. Other errors will still trigger an alert."
+msgstr ""
 
 msgid "Checkmk"
 msgstr "Checkmk"
@@ -19825,6 +19836,10 @@ msgstr "Dockerコンテナ"
 msgid "Docker images"
 msgstr "Dockerイメージ"
 
+#, fuzzy
+msgid "Docker networks"
+msgstr "Dockerノード"
+
 msgid "Docker node"
 msgstr "Dockerノード"
 
@@ -24729,6 +24744,10 @@ msgstr ""
 #, python-format
 msgid "Found all %d groups."
 msgstr "すべての%dグループが見つかりました。"
+
+#, python-format
+msgid "Found configured rules of unknown check parameter rule set %r."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -41012,6 +41031,10 @@ msgstr "ネットワークアドレス"
 msgid "Network address:"
 msgstr "ネットワークアドレス:"
 
+#, fuzzy
+msgid "Network containers"
+msgstr "Dockerコンテナ"
+
 msgid "Network filesystem - overall status and usage (e.g. NFS)"
 msgstr "ネットワークファイルシステム-全体的なステータスと使用状況(例:NFS)"
 
@@ -41724,6 +41747,10 @@ msgstr "テストホストなし"
 
 msgid "No title"
 msgstr "タイトルなし"
+
+#, fuzzy
+msgid "No unknown check parameter rule sets found."
+msgstr "メソッド '%s' の通知パラメータが見つかりません"
 
 #, python-format
 msgid ""
@@ -53200,6 +53227,9 @@ msgstr ""
 msgid "Scientific (standard) with symbol %s"
 msgstr ""
 
+msgid "Scope"
+msgstr ""
+
 msgid ""
 "Scope to be used in LDAP searches. In most cases <i>Search whole subtree "
 "below the base DN</i> is the best choice. It searches for matching objects "
@@ -55553,6 +55583,10 @@ msgstr "装備済みCheckmkプラグイン"
 
 msgid "Short - Use the first 12 characters of the docker container ID"
 msgstr "短い - DockerコンテナIDの最初の12文字を使用します"
+
+#, fuzzy
+msgid "Short ID"
+msgstr "ポート"
 
 #, python-format
 msgid "Short description for host %s"
@@ -64457,10 +64491,13 @@ msgstr ""
 "セクション名はアイテム名に含まれます。単一ファイル集計を使用するには、セク"
 "ション名に<tt>%s</tt>を追加します。"
 
+#, fuzzy
 msgid ""
 "The selected automation user needs rights for agent registration and "
 "download. If no user is selected, the Agent Bakery tries to find an "
-"\"automation\" automation user."
+"\"automation\" automation user.<br>This setting is only obeyed when the "
+"central site version is 2.3.0 and this setting will be removed in a future "
+"version."
 msgstr ""
 "選択した自動化ユーザーには、エージェントの登録とダウンロードの権限が必要で"
 "す。ユーザーが選択されていない場合、エージェントベーカリーは[自動化]自動化"
@@ -64592,13 +64629,6 @@ msgstr ""
 "発明されたサービスのサービスの説明は、SAPのパスのように名前が付けられていま"
 "す。このオプションを使用して、インベントリ関数が名前付けに最後のxパスレベルの"
 "みを使用するようにすることができます。"
-
-msgid ""
-"The service will not warn if self-signed certificates are used if this "
-"option is checked."
-msgstr ""
-"このオプションがチェックされている場合、自己署名証明書が使用されてもサービス"
-"は警告しなません。"
 
 msgid ""
 "The service will trigger a warning or critical state if the size of the "
@@ -65590,6 +65620,17 @@ msgid ""
 msgstr ""
 "これらのオプションは、Robot Frameworkの最も一般的なコマンドラインパラメータを"
 "指定します。他のパラメータを使うには、\"引数ファイル\" オプションを使います。"
+
+msgid ""
+"These rule sets are configured in your site, but not used by any check plug-"
+"in. There are two main reasons to have such rule sets configured:<ol><li> "
+"Rule sets which were used by builtin check plugins that have been deprecated "
+"and removed in the past. These can be cleaned up without any negative side "
+"effect.</li><li> Rule sets which belong to disabled or removed extension "
+"packages. If you plan to keep it removed, you can safely clean them up. In "
+"case the extension package was temporarily disabled, you may consider "
+"keeping the rule sets in place.</li></ol>"
+msgstr ""
 
 msgid ""
 "These services are being discovered but have been disabled by creating a "
@@ -73779,6 +73820,10 @@ msgstr "不明なエージェント構成"
 msgid "Unknown aggregation"
 msgstr "不明なアグリゲーション"
 
+#, fuzzy
+msgid "Unknown check parameter rule sets"
+msgstr "チェックパラメータを表示する"
+
 msgid "Unknown configuration change"
 msgstr "不明な構成変更"
 
@@ -73906,10 +73951,6 @@ msgstr "未消化の同時死刑執行率(%)"
 
 msgid "Unset user attributes on migration"
 msgstr "移行時のユーザー属性設定解除"
-
-#, fuzzy
-msgid "Unsorted"
-msgstr "未対応のアクション"
 
 msgid "Unspecific backup"
 msgstr "不特定多数へのバックアップ"
@@ -84192,6 +84233,17 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用不可</b>"
+
+#~ msgid ""
+#~ "The service will not warn if self-signed certificates are used if this "
+#~ "option is checked."
+#~ msgstr ""
+#~ "このオプションがチェックされている場合、自己署名証明書が使用されてもサービ"
+#~ "スは警告しなません。"
+
+#, fuzzy
+#~ msgid "Unsorted"
+#~ msgstr "未対応のアクション"
 
 #~ msgid "Import all valid tags"
 #~ msgstr "有効なタグをすべてインポートする"

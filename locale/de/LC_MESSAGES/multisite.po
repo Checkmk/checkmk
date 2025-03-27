@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-03-25 20:50+0000\n"
+"PO-Revision-Date: 2025-03-26 20:50+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -7693,7 +7693,8 @@ msgstr "Automatisierungspasswort für Maschinenkonten"
 msgid "Automation user authentication via HTTP parameters"
 msgstr "Authentifizierung des Automationsbenutzers über HTTP Parameter"
 
-msgid "Automation user for connection to central site"
+#, fuzzy
+msgid "Automation user for connection to central site (deprecated)"
 msgstr "Automationsbenutzer für Verbindung zur Zentralinstanz"
 
 msgid "Automation user name"
@@ -11816,6 +11817,10 @@ msgstr "Check-Parameter"
 msgid "Check parameters and other configuration variables for hosts"
 msgstr "Check-Parameter und andere Konfigurationsvariablen für Hosts"
 
+#, python-format
+msgid "Check parameters for checktype '%s' can not be displayed"
+msgstr ""
+
 msgid "Check period"
 msgstr "Check-Periode"
 
@@ -11954,6 +11959,12 @@ msgstr "Auslastung Checker Helper"
 
 msgid "Checking of Datadog monitors"
 msgstr "Check der Monitore von Datadog"
+
+msgid ""
+"Checking this option allows self-signed certificates by ignoring OpenSSL "
+"error 18 (self signed certificate), and the service will not warn when this "
+"error is returned. Other errors will still trigger an alert."
+msgstr ""
 
 msgid "Checkmk"
 msgstr "Checkmk"
@@ -20193,6 +20204,10 @@ msgstr "Docker Container"
 msgid "Docker images"
 msgstr "Docker Images"
 
+#, fuzzy
+msgid "Docker networks"
+msgstr "Docker-Knoten"
+
 msgid "Docker node"
 msgstr "Docker-Knoten"
 
@@ -25155,6 +25170,10 @@ msgstr ""
 #, python-format
 msgid "Found all %d groups."
 msgstr "Alle %d Gruppen gefunden."
+
+#, python-format
+msgid "Found configured rules of unknown check parameter rule set %r."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -41373,6 +41392,10 @@ msgstr "Netzwerkadresse"
 msgid "Network address:"
 msgstr "Netzwerkadresse:"
 
+#, fuzzy
+msgid "Network containers"
+msgstr "Docker Container"
+
 msgid "Network filesystem - overall status and usage (e.g. NFS)"
 msgstr "Netzwerk-Dateisystem - Gesamtzustand und Nutzung (z. B. NFS)"
 
@@ -42067,6 +42090,10 @@ msgstr "Kein Testhost"
 
 msgid "No title"
 msgstr "Kein Titel"
+
+#, fuzzy
+msgid "No unknown check parameter rule sets found."
+msgstr "Keine Parameter für Benachrichtigung für die Methode '%s' gefunden"
 
 #, python-format
 msgid ""
@@ -53420,6 +53447,9 @@ msgstr "Wissenschaftlich (Standard)"
 msgid "Scientific (standard) with symbol %s"
 msgstr "Wissenschaftlich (Standard) mit Symbol %s"
 
+msgid "Scope"
+msgstr ""
+
 msgid ""
 "Scope to be used in LDAP searches. In most cases <i>Search whole subtree "
 "below the base DN</i> is the best choice. It searches for matching objects "
@@ -55808,6 +55838,10 @@ msgstr "Verschickte Checkmk-Plugins"
 
 msgid "Short - Use the first 12 characters of the docker container ID"
 msgstr "Kurz - Die ersten 12 Zeichen der Docker Container ID verwenden"
+
+#, fuzzy
+msgid "Short ID"
+msgstr "Port-ID"
 
 #, python-format
 msgid "Short description for host %s"
@@ -62188,7 +62222,7 @@ msgstr ""
 "Sie die Plugins auf die neue API um. Weitere Informationen finden Sie im <a "
 "href='%s'>Handbuch</a>."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "The check plug-in API for plug-ins in <tt>%s</tt> is removed. Plug-in files "
 "in this folder are ignored. Please migrate the plug-ins to the new API. More "
@@ -62197,8 +62231,8 @@ msgid ""
 msgstr ""
 "Die Check-Plugin-API für Plugins in <tt>%s</tt> wurde entfernt. Plugin-"
 "Dateien in diesem Ordner werden ignoriert. Bitte stellen Sie die Plugins auf "
-"die neue API um. Weitere Informationen finden Sie im <a href='%s'>Werk #%d</"
-"a> und in unserem <a href='%s'>Handbuch</a>."
+"die neue API um. Weitere Informationen finden Sie in <a href='%s'>%s</a> und "
+"unserem <a href='%s'>Handbuch</a>."
 
 msgid ""
 "The check takes this state in case the inventory cannot be updated because "
@@ -65131,10 +65165,13 @@ msgstr ""
 "Einzeldatei-Aggregation zu verwenden, fügen Sie <tt>%s</tt> an den "
 "Abschnittsnamen an."
 
+#, fuzzy
 msgid ""
 "The selected automation user needs rights for agent registration and "
 "download. If no user is selected, the Agent Bakery tries to find an "
-"\"automation\" automation user."
+"\"automation\" automation user.<br>This setting is only obeyed when the "
+"central site version is 2.3.0 and this setting will be removed in a future "
+"version."
 msgstr ""
 "Der ausgewählte Automationsbenutzer benötigt Rechte für die "
 "Agentenregistrierung und den Download. Wenn kein Benutzer ausgewählt ist, "
@@ -65274,13 +65311,6 @@ msgstr ""
 "die Pfade im SAP. Mit dieser Option können Sie festlegen, dass die "
 "Inventarisierungsfunktion nur die letzten x Pfadebenen zur Benennung "
 "verwendet."
-
-msgid ""
-"The service will not warn if self-signed certificates are used if this "
-"option is checked."
-msgstr ""
-"Der Service warnt nicht, wenn selbstsignierte Zertifikate verwendet werden, "
-"wenn diese Option aktiviert ist."
 
 msgid ""
 "The service will trigger a warning or critical state if the size of the "
@@ -66337,6 +66367,17 @@ msgstr ""
 "Diese Optionen ermöglichen die Angabe der gebräuchlichsten "
 "Kommandozeilenparameter für das Robot Framework. Um andere Parameter zu "
 "verwenden, können Sie die Option \"Argument-Datei\" nutzen."
+
+msgid ""
+"These rule sets are configured in your site, but not used by any check plug-"
+"in. There are two main reasons to have such rule sets configured:<ol><li> "
+"Rule sets which were used by builtin check plugins that have been deprecated "
+"and removed in the past. These can be cleaned up without any negative side "
+"effect.</li><li> Rule sets which belong to disabled or removed extension "
+"packages. If you plan to keep it removed, you can safely clean them up. In "
+"case the extension package was temporarily disabled, you may consider "
+"keeping the rule sets in place.</li></ol>"
+msgstr ""
 
 msgid ""
 "These services are being discovered but have been disabled by creating a "
@@ -74834,6 +74875,10 @@ msgstr "Unbekannte Agentenkonfiguration"
 msgid "Unknown aggregation"
 msgstr "Unbekannte Aggregation"
 
+#, fuzzy
+msgid "Unknown check parameter rule sets"
+msgstr "Check-Parameter anzeigen"
+
 msgid "Unknown configuration change"
 msgstr "Unbekannte Konfigurationsänderung"
 
@@ -74959,9 +75004,6 @@ msgstr "Unbeschränkte gleichzeitige Ausführungen in Prozent"
 
 msgid "Unset user attributes on migration"
 msgstr "Benutzerattribute bei der Migration zurücksetzen"
-
-msgid "Unsorted"
-msgstr "Unsortiert"
 
 msgid "Unspecific backup"
 msgstr "Unspezifisches Backup"
@@ -85411,6 +85453,16 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid ""
+#~ "The service will not warn if self-signed certificates are used if this "
+#~ "option is checked."
+#~ msgstr ""
+#~ "Der Service warnt nicht, wenn selbstsignierte Zertifikate verwendet "
+#~ "werden, wenn diese Option aktiviert ist."
+
+#~ msgid "Unsorted"
+#~ msgstr "Unsortiert"
 
 #~ msgid "Import all valid tags"
 #~ msgstr "Alle gültigen Merkmale importieren"

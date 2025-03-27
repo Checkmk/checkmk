@@ -7943,7 +7943,7 @@ msgid "Automation user authentication via HTTP parameters"
 msgstr "No se puede crear la solicitud de autenticación"
 
 #, fuzzy
-msgid "Automation user for connection to central site"
+msgid "Automation user for connection to central site (deprecated)"
 msgstr "Usuario de automatización para la conexión con el sitio central"
 
 #, fuzzy
@@ -12303,6 +12303,10 @@ msgid "Check parameters and other configuration variables for hosts"
 msgstr ""
 "Comprobar los parámetros y otras variables de configuración de los hosts"
 
+#, python-format
+msgid "Check parameters for checktype '%s' can not be displayed"
+msgstr ""
+
 msgid "Check period"
 msgstr "Período de verificación"
 
@@ -12449,6 +12453,12 @@ msgstr "Utilización de la ayuda de comprobación"
 
 msgid "Checking of Datadog monitors"
 msgstr "Selección de Datadog a monitorear"
+
+msgid ""
+"Checking this option allows self-signed certificates by ignoring OpenSSL "
+"error 18 (self signed certificate), and the service will not warn when this "
+"error is returned. Other errors will still trigger an alert."
+msgstr ""
 
 msgid "Checkmk"
 msgstr "Checkmk"
@@ -21078,6 +21088,10 @@ msgstr "Contenedores Docker"
 msgid "Docker images"
 msgstr "Imágenes Docker"
 
+#, fuzzy
+msgid "Docker networks"
+msgstr "Nodos Docker"
+
 msgid "Docker node"
 msgstr "Nodo Docker"
 
@@ -26176,6 +26190,10 @@ msgstr ""
 #, python-format
 msgid "Found all %d groups."
 msgstr "Se han encontrado todos los grupos %d."
+
+#, python-format
+msgid "Found configured rules of unknown check parameter rule set %r."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -43278,6 +43296,10 @@ msgstr "Dirección de la red"
 msgid "Network address:"
 msgstr "Dirección de la red:"
 
+#, fuzzy
+msgid "Network containers"
+msgstr "Contenedores Docker"
+
 msgid "Network filesystem - overall status and usage (e.g. NFS)"
 msgstr "Sistema de archivos de red: estado general y uso (por ejemplo, NFS)"
 
@@ -44021,6 +44043,10 @@ msgstr "No hay host de prueba"
 
 msgid "No title"
 msgstr "Sin título"
+
+#, fuzzy
+msgid "No unknown check parameter rule sets found."
+msgstr "Regla de notificación modificada %d"
 
 #, fuzzy, python-format
 msgid ""
@@ -56110,6 +56136,9 @@ msgstr ""
 msgid "Scientific (standard) with symbol %s"
 msgstr ""
 
+msgid "Scope"
+msgstr ""
+
 msgid ""
 "Scope to be used in LDAP searches. In most cases <i>Search whole subtree "
 "below the base DN</i> is the best choice. It searches for matching objects "
@@ -58597,6 +58626,10 @@ msgstr "Comprobar el plugin"
 msgid "Short - Use the first 12 characters of the docker container ID"
 msgstr ""
 "Corto - Utiliza los primeros 12 caracteres del ID del contenedor docker"
+
+#, fuzzy
+msgid "Short ID"
+msgstr "Puerto"
 
 #, python-format
 msgid "Short description for host %s"
@@ -68041,7 +68074,9 @@ msgstr ""
 msgid ""
 "The selected automation user needs rights for agent registration and "
 "download. If no user is selected, the Agent Bakery tries to find an "
-"\"automation\" automation user."
+"\"automation\" automation user.<br>This setting is only obeyed when the "
+"central site version is 2.3.0 and this setting will be removed in a future "
+"version."
 msgstr ""
 "El usuario de automatización seleccionado necesita derechos para el registro "
 "y la descarga del agente. Si no se selecciona ningún usuario, la panadería "
@@ -68179,11 +68214,6 @@ msgstr ""
 "Las descripciones de los servicios inventariados se nombran como las rutas "
 "en SAP. Puede utilizar esta opción para que la función de inventario sólo "
 "utilice los últimos x niveles de ruta para la denominación."
-
-msgid ""
-"The service will not warn if self-signed certificates are used if this "
-"option is checked."
-msgstr ""
 
 msgid ""
 "The service will trigger a warning or critical state if the size of the "
@@ -69205,6 +69235,17 @@ msgid ""
 "These options allow specifying the most common command line parameters for "
 "the Robot Framework. In order to use other parameters, you can use the "
 "option \"Arguments file\"."
+msgstr ""
+
+msgid ""
+"These rule sets are configured in your site, but not used by any check plug-"
+"in. There are two main reasons to have such rule sets configured:<ol><li> "
+"Rule sets which were used by builtin check plugins that have been deprecated "
+"and removed in the past. These can be cleaned up without any negative side "
+"effect.</li><li> Rule sets which belong to disabled or removed extension "
+"packages. If you plan to keep it removed, you can safely clean them up. In "
+"case the extension package was temporarily disabled, you may consider "
+"keeping the rule sets in place.</li></ol>"
 msgstr ""
 
 msgid ""
@@ -78332,6 +78373,10 @@ msgstr "Configuración desconocida del agente"
 msgid "Unknown aggregation"
 msgstr "Agregación desconocida"
 
+#, fuzzy
+msgid "Unknown check parameter rule sets"
+msgstr "Mostrar parámetros de comprobación"
+
 msgid "Unknown configuration change"
 msgstr "Cambio de configuración desconocido"
 
@@ -78464,10 +78509,6 @@ msgstr "Ejecuciones concurrentes no reservadas en porcentaje"
 
 msgid "Unset user attributes on migration"
 msgstr "Desactivar atributos de usuario en la migración"
-
-#, fuzzy
-msgid "Unsorted"
-msgstr "Acción no admitida"
 
 msgid "Unspecific backup"
 msgstr "Copia de seguridad no específica"
@@ -89236,6 +89277,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usar SSL para la conexión."
+
+#, fuzzy
+#~ msgid "Unsorted"
+#~ msgstr "Acción no admitida"
 
 #, fuzzy
 #~ msgid "Import all valid tags"

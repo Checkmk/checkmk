@@ -7874,7 +7874,7 @@ msgstr ""
 "parametrilor HTTP"
 
 #, fuzzy
-msgid "Automation user for connection to central site"
+msgid "Automation user for connection to central site (deprecated)"
 msgstr "Automatizare Utilizator pentru conectarea la site-ul central"
 
 #, fuzzy
@@ -12228,6 +12228,10 @@ msgstr "Verificați parametrii"
 msgid "Check parameters and other configuration variables for hosts"
 msgstr "Verificați parametrii și alte variabile de configurare pentru gazde"
 
+#, python-format
+msgid "Check parameters for checktype '%s' can not be displayed"
+msgstr ""
+
 msgid "Check period"
 msgstr "Perioada de verificare"
 
@@ -12371,6 +12375,12 @@ msgstr "Utilizarea ajutorului Checker helper"
 
 msgid "Checking of Datadog monitors"
 msgstr "Verificarea monitoarelor Datadog"
+
+msgid ""
+"Checking this option allows self-signed certificates by ignoring OpenSSL "
+"error 18 (self signed certificate), and the service will not warn when this "
+"error is returned. Other errors will still trigger an alert."
+msgstr ""
 
 msgid "Checkmk"
 msgstr "Checkmk"
@@ -20944,6 +20954,10 @@ msgstr "Containere Docker"
 msgid "Docker images"
 msgstr "Imagini Docker"
 
+#, fuzzy
+msgid "Docker networks"
+msgstr "Noduri Docker"
+
 msgid "Docker node"
 msgstr "Nod Docker"
 
@@ -26014,6 +26028,10 @@ msgstr ""
 #, python-format
 msgid "Found all %d groups."
 msgstr "Am găsit toate grupurile %d."
+
+#, python-format
+msgid "Found configured rules of unknown check parameter rule set %r."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -43005,6 +43023,10 @@ msgstr "Adresa de rețea"
 msgid "Network address:"
 msgstr "Adresa de rețea:"
 
+#, fuzzy
+msgid "Network containers"
+msgstr "Containere Docker"
+
 msgid "Network filesystem - overall status and usage (e.g. NFS)"
 msgstr ""
 "Sistem de fișiere de rețea - starea generală și utilizarea (de exemplu, NFS)"
@@ -43734,6 +43756,10 @@ msgstr "Nici o gazdă de testare"
 
 msgid "No title"
 msgstr "Fără titlu"
+
+#, fuzzy
+msgid "No unknown check parameter rule sets found."
+msgstr "Regula de notificare modificată %d"
 
 #, fuzzy, python-format
 msgid ""
@@ -55701,6 +55727,9 @@ msgstr ""
 msgid "Scientific (standard) with symbol %s"
 msgstr ""
 
+msgid "Scope"
+msgstr ""
+
 msgid ""
 "Scope to be used in LDAP searches. In most cases <i>Search whole subtree "
 "below the base DN</i> is the best choice. It searches for matching objects "
@@ -58220,6 +58249,10 @@ msgstr "Plugin-uri Checkmk expediate"
 msgid "Short - Use the first 12 characters of the docker container ID"
 msgstr ""
 "Scurt - Utilizați primele 12 caractere ale ID-ului containerului docker"
+
+#, fuzzy
+msgid "Short ID"
+msgstr "Port"
 
 #, python-format
 msgid "Short description for host %s"
@@ -67632,7 +67665,9 @@ msgstr ""
 msgid ""
 "The selected automation user needs rights for agent registration and "
 "download. If no user is selected, the Agent Bakery tries to find an "
-"\"automation\" automation user."
+"\"automation\" automation user.<br>This setting is only obeyed when the "
+"central site version is 2.3.0 and this setting will be removed in a future "
+"version."
 msgstr ""
 "Utilizatorul de automatizare selectat are nevoie de drepturi pentru "
 "înregistrarea și descărcarea agenților. Dacă nu este selectat niciun "
@@ -67774,11 +67809,6 @@ msgstr ""
 "Descrierile serviciilor inventariate sunt denumite ca și căile de acces din "
 "SAP. Puteți utiliza această opțiune pentru a permite funcției de "
 "inventariere să utilizeze doar ultimele x niveluri de cale pentru denumire."
-
-msgid ""
-"The service will not warn if self-signed certificates are used if this "
-"option is checked."
-msgstr ""
 
 msgid ""
 "The service will trigger a warning or critical state if the size of the "
@@ -68816,6 +68846,17 @@ msgstr ""
 "<a href=\"https://robotframework.org/robotframework/latest/"
 "RobotFrameworkUserGuide.html#all-command-line-options\">Toate opțiunile de "
 "linie de comandă</a>), puteți utiliza opțiunea <i>Fișier de argumente</i>."
+
+msgid ""
+"These rule sets are configured in your site, but not used by any check plug-"
+"in. There are two main reasons to have such rule sets configured:<ol><li> "
+"Rule sets which were used by builtin check plugins that have been deprecated "
+"and removed in the past. These can be cleaned up without any negative side "
+"effect.</li><li> Rule sets which belong to disabled or removed extension "
+"packages. If you plan to keep it removed, you can safely clean them up. In "
+"case the extension package was temporarily disabled, you may consider "
+"keeping the rule sets in place.</li></ol>"
+msgstr ""
 
 msgid ""
 "These services are being discovered but have been disabled by creating a "
@@ -77865,6 +77906,10 @@ msgstr "Configurație necunoscută a agentului"
 msgid "Unknown aggregation"
 msgstr "Agregare necunoscută"
 
+#, fuzzy
+msgid "Unknown check parameter rule sets"
+msgstr "Afișarea parametrilor de verificare"
+
 msgid "Unknown configuration change"
 msgstr "Schimbare de configurație necunoscută"
 
@@ -77993,10 +78038,6 @@ msgstr "Execuții concomitente nerezervate în procente"
 
 msgid "Unset user attributes on migration"
 msgstr "Anulare atribute de utilizator la migrare"
-
-#, fuzzy
-msgid "Unsorted"
-msgstr "Acțiune neacceptată"
 
 msgid "Unspecific backup"
 msgstr "Backup nespecific"
@@ -88698,6 +88739,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, fuzzy
+#~ msgid "Unsorted"
+#~ msgstr "Acțiune neacceptată"
 
 #~ msgid "Import all valid tags"
 #~ msgstr "Importați toate etichetele valide"

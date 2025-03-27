@@ -7874,7 +7874,7 @@ msgid "Automation user authentication via HTTP parameters"
 msgstr "Kan geen authenticatieverzoek aanmaken"
 
 #, fuzzy
-msgid "Automation user for connection to central site"
+msgid "Automation user for connection to central site (deprecated)"
 msgstr "Automatiseringsgebruiker voor verbinding met centrale site"
 
 #, fuzzy
@@ -12214,6 +12214,10 @@ msgstr "Parameters controleren"
 msgid "Check parameters and other configuration variables for hosts"
 msgstr "Controleer parameters en andere configuratievariabelen voor hosts"
 
+#, python-format
+msgid "Check parameters for checktype '%s' can not be displayed"
+msgstr ""
+
 msgid "Check period"
 msgstr "Controleer periode"
 
@@ -12360,6 +12364,12 @@ msgstr "Checker helper gebruik"
 
 msgid "Checking of Datadog monitors"
 msgstr "Controleren van Datadog monitors"
+
+msgid ""
+"Checking this option allows self-signed certificates by ignoring OpenSSL "
+"error 18 (self signed certificate), and the service will not warn when this "
+"error is returned. Other errors will still trigger an alert."
+msgstr ""
 
 msgid "Checkmk"
 msgstr "Checkmk"
@@ -20911,6 +20921,10 @@ msgstr "Docker-containers"
 msgid "Docker images"
 msgstr "Docker-afbeeldingen"
 
+#, fuzzy
+msgid "Docker networks"
+msgstr "Docker knooppunten"
+
 msgid "Docker node"
 msgstr "Docker knooppunt"
 
@@ -25973,6 +25987,10 @@ msgstr ""
 #, python-format
 msgid "Found all %d groups."
 msgstr "Alle %d groepen gevonden."
+
+#, python-format
+msgid "Found configured rules of unknown check parameter rule set %r."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -42931,6 +42949,10 @@ msgstr "Netwerkadres"
 msgid "Network address:"
 msgstr "Netwerkadres:"
 
+#, fuzzy
+msgid "Network containers"
+msgstr "Docker-containers"
+
 msgid "Network filesystem - overall status and usage (e.g. NFS)"
 msgstr "Netwerk bestandssysteem - algemene status en gebruik (b.v. NFS)"
 
@@ -43668,6 +43690,10 @@ msgstr "Geen test host"
 
 msgid "No title"
 msgstr "Geen titel"
+
+#, fuzzy
+msgid "No unknown check parameter rule sets found."
+msgstr "Gewijzigde meldingsregel %d"
 
 #, fuzzy, python-format
 msgid ""
@@ -55629,6 +55655,9 @@ msgstr ""
 msgid "Scientific (standard) with symbol %s"
 msgstr ""
 
+msgid "Scope"
+msgstr ""
+
 msgid ""
 "Scope to be used in LDAP searches. In most cases <i>Search whole subtree "
 "below the base DN</i> is the best choice. It searches for matching objects "
@@ -58087,6 +58116,10 @@ msgstr "Controleer plugin"
 
 msgid "Short - Use the first 12 characters of the docker container ID"
 msgstr "Kort - Gebruik de eerste 12 karakters van de docker container ID"
+
+#, fuzzy
+msgid "Short ID"
+msgstr "Haven"
 
 #, python-format
 msgid "Short description for host %s"
@@ -67457,7 +67490,9 @@ msgstr ""
 msgid ""
 "The selected automation user needs rights for agent registration and "
 "download. If no user is selected, the Agent Bakery tries to find an "
-"\"automation\" automation user."
+"\"automation\" automation user.<br>This setting is only obeyed when the "
+"central site version is 2.3.0 and this setting will be removed in a future "
+"version."
 msgstr ""
 "De geselecteerde automatiseringsgebruiker heeft rechten nodig voor het "
 "registreren en downloaden van agenten. Als geen gebruiker is geselecteerd, "
@@ -67594,11 +67629,6 @@ msgstr ""
 "De service beschrijvingen van de geïnventariseerde services worden benoemd "
 "zoals de paden in SAP. U kunt deze optie gebruiken om de inventarisatie "
 "functie alleen de laatste x pad niveaus te laten gebruiken voor naamgeving."
-
-msgid ""
-"The service will not warn if self-signed certificates are used if this "
-"option is checked."
-msgstr ""
 
 msgid ""
 "The service will trigger a warning or critical state if the size of the "
@@ -68626,6 +68656,17 @@ msgid ""
 "These options allow specifying the most common command line parameters for "
 "the Robot Framework. In order to use other parameters, you can use the "
 "option \"Arguments file\"."
+msgstr ""
+
+msgid ""
+"These rule sets are configured in your site, but not used by any check plug-"
+"in. There are two main reasons to have such rule sets configured:<ol><li> "
+"Rule sets which were used by builtin check plugins that have been deprecated "
+"and removed in the past. These can be cleaned up without any negative side "
+"effect.</li><li> Rule sets which belong to disabled or removed extension "
+"packages. If you plan to keep it removed, you can safely clean them up. In "
+"case the extension package was temporarily disabled, you may consider "
+"keeping the rule sets in place.</li></ol>"
 msgstr ""
 
 msgid ""
@@ -77690,6 +77731,10 @@ msgstr "Onbekende agent configuratie"
 msgid "Unknown aggregation"
 msgstr "Onbekende aggregatie"
 
+#, fuzzy
+msgid "Unknown check parameter rule sets"
+msgstr "Toon controleparameters"
+
 msgid "Unknown configuration change"
 msgstr "Onbekende configuratiewijziging"
 
@@ -77822,10 +77867,6 @@ msgstr "Niet gereserveerde gelijktijdige executies in procenten"
 
 msgid "Unset user attributes on migration"
 msgstr "Gebruikersattributen verwijderen bij migratie"
-
-#, fuzzy
-msgid "Unsorted"
-msgstr "Niet-ondersteunde actie"
 
 msgid "Unspecific backup"
 msgstr "Niet-specifieke back-up"
@@ -88511,6 +88552,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy
+#~ msgid "Unsorted"
+#~ msgstr "Niet-ondersteunde actie"
 
 #, fuzzy
 #~ msgid "Import all valid tags"

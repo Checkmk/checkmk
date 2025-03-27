@@ -6,6 +6,7 @@
 import abc
 import logging
 import typing as t
+from collections.abc import Sequence
 from pprint import pformat
 
 from cmk.utils.check_utils import ParametersTypeAlias
@@ -241,7 +242,7 @@ def test_plugin_vs_wato(agent_based_plugins: AgentBasedPlugins) -> None:
             error_reporter.run_tests(plugin, wato)
 
     error_reporter.raise_last_default_loading_exception()
-    assert not error_reporter.failed()
+    assert not error_reporter.failures()
     error_reporter.test_for_vanished_known_problems()
 
 
@@ -301,31 +302,33 @@ class ErrorReporter:
 
     def __init__(self) -> None:
         self._last_exception: t.Optional[DefaultLoadingFailed] = None
-        self._failed = False
+        self._failures: list[str] = []
         self._known_wato_unused = self.KNOWN_WATO_UNUSED.copy()
         self._known_wato_missing = self.KNOWN_WATO_MISSING | self.ENFORCING_ONLY_RULESETS
 
-    def failed(self) -> bool:
-        return self._failed
+    def failures(self) -> Sequence[str]:
+        return self._failures
 
     def report_wato_unused(self, wato: WatoProtocol) -> None:
         element = (wato.type, wato.get_name())
         if element in self._known_wato_unused:
             self._known_wato_unused.remove(element)
             return
-        logger.info(f"{wato.get_description()} is not used by any plugin")
-        self._failed |= True
+        msg = f"{wato.get_description()} is not used by any plugin"
+        logger.info(msg)
+        self._failures.append(msg)
 
     def report_wato_missing(self, plugin: PluginProtocol) -> None:
         element = (plugin.type, plugin.get_name(), plugin.get_merge_name())
         if element in self._known_wato_missing:
             self._known_wato_missing.remove(element)
             return
-        logger.info(
+        msg = (
             f"{plugin.get_description()} wants to use "
             f"wato ruleset '{plugin.get_merge_name()}' but this can not be found"
         )
-        self._failed |= True
+        logger.info(msg)
+        self._failures.append(msg)
 
     def run_tests(self, plugin: PluginProtocol, wato: WatoProtocol) -> None:
         # try to load the plug-in defaults into wato ruleset
@@ -343,12 +346,11 @@ class ErrorReporter:
         plugin: PluginCheck,
         wato: WatoCheck,
     ) -> None:
-        logger.info(
-            f"{plugin.get_description()} and {wato.get_description()} have different item requirements:"
-        )
+        msg = f"{plugin.get_description()} and {wato.get_description()} have different item requirements"
+        logger.info("%s:", msg)
         logger.info("    wato   handles item: %r", wato.has_item())
         logger.info("    plug-in handles items: %r", plugin.has_item())
-        self._failed |= True
+        self._failures.append(msg)
 
     def _report_error_loading_defaults(
         self,
@@ -356,17 +358,18 @@ class ErrorReporter:
         wato: WatoProtocol,
         exception: Exception,
     ) -> None:
-        logger.info(
+        msg = (
             f"Loading the default value of {plugin.get_description()} "
             f"into {wato.get_description()} failed:\n    {exception.__class__.__name__}: {exception}"
         )
+        logger.info(msg)
         self._last_exception = DefaultLoadingFailed(
             f"Loading the default value of {plugin.type} {plugin.get_name()} "
             f"into wato rulespec {wato.get_name()} failed! "
             "The original exception is reported above."
         )
         self._last_exception.__cause__ = exception
-        self._failed |= True
+        self._failures.append(msg)
 
     def test_for_vanished_known_problems(self) -> None:
         """

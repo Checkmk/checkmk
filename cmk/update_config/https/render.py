@@ -53,3 +53,15 @@ def print_summary_finalize(rulecount_v1: int, rulecount_v2: int) -> None:
         sys.stdout.write(
             "For the changes to take effect, complete the process by activating the changes on the site.\n"
         )
+
+
+def print_summary_delete(rulecount_v2: int) -> None:
+    sys.stdout.write(f"Summary: {rulecount_v2} v2 rule(s) deleted\n")
+
+
+def print_summary_activated(rulecount_v2: int) -> None:
+    sys.stdout.write(f"Summary: {rulecount_v2} v2 rule(s) activated\n")
+
+
+def print_summary_deactivated(rulecount_v2: int) -> None:
+    sys.stdout.write(f"Summary: {rulecount_v2} v2 rule(s) deactivated\n")

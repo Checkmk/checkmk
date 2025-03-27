@@ -20,6 +20,9 @@ from cmk.update_config.https.conflicts import Conflict, detect_conflicts, ForMig
 from cmk.update_config.https.migrate import migrate
 from cmk.update_config.https.render import (
     MIGRATE_POSTFIX,
+    print_summary_activated,
+    print_summary_deactivated,
+    print_summary_delete,
     print_summary_dryrun,
     print_summary_finalize,
     print_summary_write,
@@ -154,12 +157,15 @@ def finalize_main(search: SearchArgs) -> None:
 def delete_main(search: SearchArgs) -> None:
     with _force_automations_cli_interface(), with_allrulesets() as all_rulesets:
         ruleset_v2 = all_rulesets.get("active_checks:httpv2")
+        count = 0
         for folder, rule_index, rule_v2 in select(ruleset_v2, search):
             if _migrated_from(rule_v2) is not None:
                 rule_str = _render_rule(folder.title(), rule_index)
                 sys.stdout.write(f"{rule_str}\n")
                 sys.stdout.write("Deleting rule.\n")
+                count += 1
                 ruleset_v2.delete_rule(rule_v2)
+        print_summary_delete(count)
         sys.stdout.write("Saving rule sets...\n")
         all_rulesets.save()
 
@@ -167,14 +173,22 @@ def delete_main(search: SearchArgs) -> None:
 def activate_main(search: SearchArgs) -> None:
     with _force_automations_cli_interface(), with_allrulesets() as all_rulesets:
         ruleset_v2 = all_rulesets.get("active_checks:httpv2")
+        count = 0
         for folder, rule_index, rule_v2 in select(ruleset_v2, search):
             if _migrated_from(rule_v2) is not None:
                 rule_str = _render_rule(folder.title(), rule_index)
                 sys.stdout.write(f"{rule_str}\n")
-                sys.stdout.write("Activating rule.\n")
-                new_rule_v2 = rule_v2.clone(preserve_id=True)
-                new_rule_v2.rule_options = dataclasses.replace(rule_v2.rule_options, disabled=False)
-                ruleset_v2.edit_rule(rule_v2, new_rule_v2)
+                if rule_v2.rule_options.disabled:
+                    sys.stdout.write("Activating rule.\n")
+                    count += 1
+                    new_rule_v2 = rule_v2.clone(preserve_id=True)
+                    new_rule_v2.rule_options = dataclasses.replace(
+                        rule_v2.rule_options, disabled=False
+                    )
+                    ruleset_v2.edit_rule(rule_v2, new_rule_v2)
+                else:
+                    sys.stdout.write("Already active.\n")
+        print_summary_activated(count)
         sys.stdout.write("Saving rulesets...\n")
         all_rulesets.save()
 
@@ -182,14 +196,22 @@ def activate_main(search: SearchArgs) -> None:
 def deactivate_main(search: SearchArgs) -> None:
     with _force_automations_cli_interface(), with_allrulesets() as all_rulesets:
         ruleset_v2 = all_rulesets.get("active_checks:httpv2")
+        count = 0
         for folder, rule_index, rule_v2 in select(ruleset_v2, search):
             if _migrated_from(rule_v2) is not None:
                 rule_str = _render_rule(folder.title(), rule_index)
                 sys.stdout.write(f"{rule_str}\n")
-                sys.stdout.write("Deactivating rule.\n")
-                new_rule_v2 = rule_v2.clone(preserve_id=True)
-                new_rule_v2.rule_options = dataclasses.replace(rule_v2.rule_options, disabled=True)
-                ruleset_v2.edit_rule(rule_v2, new_rule_v2)
+                if not rule_v2.rule_options.disabled:
+                    sys.stdout.write("Deactivating rule.\n")
+                    count += 1
+                    new_rule_v2 = rule_v2.clone(preserve_id=True)
+                    new_rule_v2.rule_options = dataclasses.replace(
+                        rule_v2.rule_options, disabled=True
+                    )
+                    ruleset_v2.edit_rule(rule_v2, new_rule_v2)
+                else:
+                    sys.stdout.write("Already deactivated.\n")
+        print_summary_deactivated(count)
         sys.stdout.write("Saving rulesets...\n")
         all_rulesets.save()
 

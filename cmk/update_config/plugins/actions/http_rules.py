@@ -36,7 +36,7 @@ class CheckHTTPRules(UpdateAction):
 update_action_registry.register(
     CheckHTTPRules(
         name="check_http_rules",
-        title="Check for check_http plug-in rules",
+        title="Check for deprecated check_http plug-in rules",
         sort_index=997,
     )
 )

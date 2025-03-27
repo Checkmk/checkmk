@@ -54,13 +54,13 @@ def register_quick_setup(
             QuickSetupAction(
                 id=ActionId("save"),
                 label="Complete",
-                action=lambda stages, mode, object_id: "http://save/url",
+                action=lambda stages, mode, progress_logger, object_id: "http://save/url",
                 custom_validators=[],
             ),
             QuickSetupAction(
                 id=ActionId("other_save"),
                 label="Complete2: The Sequel",
-                action=lambda stages, mode, object_id: "http://other_save",
+                action=lambda stages, mode, progress_logger, object_id: "http://other_save",
                 custom_validators=[],
             ),
         ]
@@ -591,7 +591,7 @@ def test_validation_on_save_all(
             QuickSetupAction(
                 id=ActionId("save"),
                 label="Complete",
-                action=lambda stages, mode, object_id: "http://save/url",
+                action=lambda stages, mode, progress_logger, object_id: "http://save/url",
                 custom_validators=[_form_spec_extra_validate],
             ),
         ],
@@ -702,7 +702,7 @@ class TestCompleteAction:
                 QuickSetupBackgroundAction(
                     id=ActionId("save"),
                     label="Complete",
-                    action=lambda stages, mode, object_id: "http://save/url",
+                    action=lambda stages, mode, progress_logger, object_id: "http://save/url",
                     custom_validators=[],
                 ),
             ],

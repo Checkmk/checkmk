@@ -308,7 +308,8 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
 def action(
     all_stages_form_data: ParsedFormData,
     mode: QuickSetupActionMode,
-    object_id: str | None,
+    progress_logger: ProgressLogger,
+    _object_id: str | None,
 ) -> str:
     match mode:
         case QuickSetupActionMode.SAVE:
@@ -317,6 +318,7 @@ def action(
                 parameter_form=quick_setup_aws_form_spec(),
                 all_stages_form_data=all_stages_form_data,
                 custom_collect_params=aws_collect_params,
+                progress_logger=progress_logger,
             )
         case QuickSetupActionMode.EDIT:
             raise ValueError("Edit mode not supported")

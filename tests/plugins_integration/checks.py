@@ -401,14 +401,11 @@ def setup_host(site: Site, host_name: str, skip_cleanup: bool = False) -> Iterat
     )
 
     try:
-        logger.info("Activating changes & reloading core...")
-        site.activate_changes_and_wait_for_core_reload()
+        site.openapi.changes.activate_and_wait_for_completion(strict=False)
 
         logger.info("Running service discovery...")
         site.openapi.service_discovery.run_discovery_and_wait_for_completion(host_name)
-
-        logger.info("Activating changes & reloading core...")
-        site.activate_changes_and_wait_for_core_reload()
+        site.openapi.changes.activate_and_wait_for_completion()
 
         logger.info("Scheduling checks & checking for pending services...")
         pending_checks = []

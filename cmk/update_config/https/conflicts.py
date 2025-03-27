@@ -21,7 +21,6 @@ from cmk.update_config.https.conflict_options import (
     Config,
     ConflictType,
     ExpectResponseHeader,
-    HTTP10NotSupported,
     MethodUnavailable,
     OnlyStatusCodesAllowed,
     SSLIncompatible,
@@ -216,15 +215,6 @@ def detect_conflicts(config: Config, rule_value: Mapping[str, object]) -> Confli
         return Conflict(
             type_=ConflictType.cant_migrate_proxy,
             host_fields=["address"],
-        )
-    if (
-        config.http_1_0_not_supported is HTTP10NotSupported.skip
-        and not value.uses_https()
-        and value.host.virthost is None
-    ):
-        return Conflict(
-            type_=ConflictType.http_1_0_not_supported,
-            host_fields=["virthost"],
         )
     mode = value.mode[1]
     if isinstance(mode, V1Url):

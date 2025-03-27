@@ -12,7 +12,6 @@ from pydantic import BaseModel
 
 class ConflictType(enum.Enum):
     invalid_value = "invalid-value"
-    http_1_0_not_supported = "http-1-0-not-supported"
     ssl_incompatible = "ssl-incompatible"
     add_headers_incompatible = "add-headers-incompatible"
     expect_response_header = "expect-response-header"
@@ -24,31 +23,6 @@ class ConflictType(enum.Enum):
     cant_construct_url = "cant-construct-url"
     cant_migrate_proxy = "cant-migrate-proxy"
     cant_have_regex_and_string = "cant-have-regex-and-string"
-
-
-class HTTP10NotSupported(enum.Enum):
-    skip = "skip"
-    ignore = "ignore"
-
-    @classmethod
-    def type_(cls) -> ConflictType:
-        return ConflictType.http_1_0_not_supported
-
-    @classmethod
-    def default(cls) -> "HTTP10NotSupported":
-        return cls.skip
-
-    def help(self) -> str:
-        cls = type(self)
-        match self:
-            case cls.skip:
-                return "do not migrate rule"
-            case cls.ignore:
-                return "use HTTP/1.1 with virtual host set to the address"
-
-    @classmethod
-    def help_header(cls) -> str:
-        return "v2 does not support HTTP/1.0"
 
 
 class SSLIncompatible(enum.Enum):
@@ -305,7 +279,6 @@ class CantHaveRegexAndString(enum.Enum):
 
 
 class Config(BaseModel):
-    http_1_0_not_supported: HTTP10NotSupported = HTTP10NotSupported.default()
     ssl_incompatible: SSLIncompatible = SSLIncompatible.default()
     add_headers_incompatible: AdditionalHeaders = AdditionalHeaders.default()
     expect_response_header: ExpectResponseHeader = ExpectResponseHeader.default()
@@ -336,7 +309,6 @@ def add_migrate_parsing(parser: ArgumentParser) -> ArgumentParser:
         ),
         dest="write",
     )
-    _add_argument(parser, HTTP10NotSupported, HTTP10NotSupported.default())
     _add_argument(parser, SSLIncompatible, SSLIncompatible.default())
     _add_argument(parser, AdditionalHeaders, AdditionalHeaders.default())
     _add_argument(parser, ExpectResponseHeader, ExpectResponseHeader.default())

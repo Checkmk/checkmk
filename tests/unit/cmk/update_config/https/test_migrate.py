@@ -37,7 +37,6 @@ from cmk.update_config.https.conflict_options import (
     Config,
     ConflictType,
     ExpectResponseHeader,
-    HTTP10NotSupported,
     MethodUnavailable,
     OnlyStatusCodesAllowed,
     SSLIncompatible,
@@ -839,43 +838,43 @@ EXAMPLE_99: Mapping[str, object] = {
         (
             EXAMPLE_3,
             Conflict(
-                type_=ConflictType.http_1_0_not_supported,
-                host_fields=["virthost"],
+                type_=ConflictType.cant_construct_url,
+                host_fields=["address", "uri", "virthost"],
             ),
         ),
         (
             EXAMPLE_5,
             Conflict(
-                type_=ConflictType.http_1_0_not_supported,
-                host_fields=["virthost"],
+                type_=ConflictType.cant_construct_url,
+                host_fields=["address", "uri", "virthost"],
             ),
         ),
         (
             EXAMPLE_6,
             Conflict(
-                type_=ConflictType.http_1_0_not_supported,
-                host_fields=["virthost"],
+                type_=ConflictType.cant_construct_url,
+                host_fields=["address", "uri", "virthost"],
             ),
         ),
         (
             EXAMPLE_7,
             Conflict(
-                type_=ConflictType.http_1_0_not_supported,
-                host_fields=["virthost"],
+                type_=ConflictType.cant_construct_url,
+                host_fields=["address", "uri", "virthost"],
             ),
         ),
         (
             EXAMPLE_8,
             Conflict(
-                type_=ConflictType.http_1_0_not_supported,
-                host_fields=["virthost"],
+                type_=ConflictType.cant_construct_url,
+                host_fields=["address", "uri", "virthost"],
             ),
         ),
         (
             EXAMPLE_9,
             Conflict(
-                type_=ConflictType.http_1_0_not_supported,
-                host_fields=["virthost"],
+                type_=ConflictType.cant_construct_url,
+                host_fields=["address", "uri", "virthost"],
             ),
         ),
         (
@@ -1052,13 +1051,6 @@ EXAMPLE_99: Mapping[str, object] = {
             Conflict(
                 type_=ConflictType.ssl_incompatible,
                 mode_fields=["ssl"],
-            ),
-        ),
-        (
-            EXAMPLE_94,
-            Conflict(
-                type_=ConflictType.http_1_0_not_supported,
-                host_fields=["virthost"],
             ),
         ),
         (
@@ -1916,9 +1908,7 @@ def test_preserve_http_version() -> None:
     [
         (
             EXAMPLE_94,
-            Config(
-                http_1_0_not_supported=HTTP10NotSupported.ignore,
-            ),
+            DEFAULT,
             "http://[::1]",
         ),
     ],

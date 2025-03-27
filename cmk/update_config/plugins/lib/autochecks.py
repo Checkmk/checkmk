@@ -45,7 +45,10 @@ TDiscoveredParametersTransforms = Mapping[
     ],
 ]
 
-_EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: TDiscoveredParametersTransforms = {}
+_EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: TDiscoveredParametersTransforms = {
+    # cpu_loads no longer discovers any parameters, hence we can just drop them on update
+    CheckPluginName("cpu_loads"): lambda x: {},
+}
 
 _ALL_EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: TDiscoveredParametersTransforms = {
     **_EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS,

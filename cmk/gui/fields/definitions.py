@@ -37,6 +37,7 @@ from cmk.utils.tags import TagConfig, TagGroup, TagGroupID, TagID
 from cmk.utils.user import UserId
 
 from cmk.gui import sites
+from cmk.gui.agent_registration import CONNECTION_MODE_FIELD
 from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.customer import customer_api, SCOPE_GLOBAL
 from cmk.gui.exceptions import MKUserError
@@ -55,7 +56,7 @@ from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 from cmk.gui.watolib.sites import site_management_registry
 from cmk.gui.watolib.tags import load_tag_config_read_only, load_tag_group
 
-from cmk.fields import base, Boolean, DateTime, validators
+from cmk.fields import base, Boolean, DateTime, String, validators
 
 _logger = logging.getLogger(__name__)
 _CONNECTION_ID_PATTERN = "^[-a-z0-9A-Z_]+$"
@@ -1242,6 +1243,14 @@ def bake_agent_field() -> Boolean | None:
         return Boolean(
             description="Bake agent packages for this folder even if it is empty.",
         )
+    return None
+
+
+def agent_connection_field() -> String | None:
+    """CME Edition only implementation of cmk_agent_connection field"""
+    if version.edition(paths.omd_root) is version.Edition.CME:
+        return CONNECTION_MODE_FIELD
+
     return None
 
 

@@ -88,6 +88,7 @@ class BaseHostAttribute(BaseSchema):
     additional_ipv6addresses = HostAttributeAdditionalIPv6Addresses().openapi_field()
 
     bake_agent_package = gui_fields.bake_agent_field()
+    cmk_agent_connection = gui_fields.agent_connection_field()
     snmp_community = HostAttributeSNMPCommunity().openapi_field()
 
     labels = HostAttributeLabels().openapi_field()

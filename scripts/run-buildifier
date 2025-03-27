@@ -23,6 +23,7 @@ get_bazel_files() {
         -o -name '*.BUILD' \
         -o -name 'BUILD.*.bazel' \
         -o -name 'BUILD.*.oss' \
+        -o -name 'MODULE.bazel' \
         -o -name WORKSPACE \
         -o -name WORKSPACE.bazel \
         -o -name WORKSPACE.oss \

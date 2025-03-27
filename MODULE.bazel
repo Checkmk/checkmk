@@ -1,19 +1,15 @@
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
 http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+
 new_local_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:local.bzl", "new_local_repository")
+
 repo_license = use_repo_rule("//bazel/rules:repo_license.bzl", "detect_repo_license")
 
 bazel_dep(name = "aspect_bazel_lib", version = "2.14.0")
 bazel_dep(name = "aspect_rules_lint", version = "1.2.0")
 bazel_dep(name = "aspect_rules_py", version = "0.7.4")
-bazel_dep(name = "bazel_clang_tidy", dev_dependency = True)
-bazel_dep(name = "bazel_iwyu", dev_dependency = True)
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
-bazel_dep(
-    name = "buildifier_prebuilt",
-    version = "8.0.0",
-    dev_dependency = True,
-)
 bazel_dep(name = "gazelle", version = "0.42.0")
 bazel_dep(
     # Transitive dependency for protobuf.
@@ -21,10 +17,6 @@ bazel_dep(
     name = "grpc-java",
     version = "1.64.0",
 )
-bazel_dep(
-# Hedron's Compile Commands Extractor for Bazel
-# https://github.com/hedronvision/bazel-compile-commands-extractor
-name = "hedron_compile_commands", dev_dependency = True)
 bazel_dep(name = "protobuf", version = "29.3", repo_name = "com_google_protobuf")
 bazel_dep(name = "rules_cc", version = "0.1.1")
 bazel_dep(name = "rules_foreign_cc", version = "0.14.0")
@@ -48,26 +40,43 @@ bazel_dep(
     version = "0.3.7",
 )
 
+bazel_dep(name = "bazel_clang_tidy", dev_dependency = True)
+bazel_dep(name = "bazel_iwyu", dev_dependency = True)
+bazel_dep(
+    name = "buildifier_prebuilt",
+    version = "8.0.0",
+    dev_dependency = True,
+)
+bazel_dep(
+    # Hedron's Compile Commands Extractor for Bazel
+    # https://github.com/hedronvision/bazel-compile-commands-extractor
+    name = "hedron_compile_commands",
+    dev_dependency = True,
+)
+
 # TODO (TBC): Switch back to upstream as soon as https://github.com/aspect-build/rules_py/pull/428 is merged
 git_override(
     module_name = "aspect_rules_py",
     commit = "6a3242d016798c6892a848939e36cc7bff99d6c8",
     remote = "https://github.com/TimotheusBachinger/rules_py",
 )
+
 git_override(
     module_name = "bazel_clang_tidy",
     # No tags, no releases.  Live on head.
     commit = "db677011c7363509a288a9fb3bf0a50830bbf791",
     remote = "https://github.com/erenon/bazel_clang_tidy.git",
 )
+
 git_override(
     module_name = "bazel_iwyu",
     # Live on head because of https://github.com/storypku/bazel_iwyu/issues/5
     # even if using master doesn't solve the issue.
     commit = "1fe9048c30469ac506498c3c740ce47475ad3361",
-    remote = "https://github.com/storypku/bazel_iwyu.git",
     patches = ["//bazel/patches:bazel_iwyu-make_IWYU_executable_configurable.patch"],
+    remote = "https://github.com/storypku/bazel_iwyu.git",
 )
+
 git_override(
     module_name = "hedron_compile_commands",
     # No tags, no releases.  Let's go with today's head.
@@ -80,11 +89,13 @@ single_version_override(
     patch_strip = 1,
     patches = ["//bazel/patches:toolchains_llvm-expose_full_archive.patch"],
 )
+
 single_version_override(
     module_name = "protobuf",
     patch_strip = 1,
     patches = ["//bazel/patches:protobuf-silence_build_warnings.patch"],
 )
+
 single_version_override(
     module_name = "rules_cc",
     patch_strip = 1,
@@ -92,11 +103,13 @@ single_version_override(
         "//bazel/patches:rules_cc-add_static_link_cpp_runtimes.patch",
     ],
 )
+
 single_version_override(
     module_name = "rules_foreign_cc",
     patch_strip = 1,
     patches = ["//omd/packages/foreign_cc:symlink.patch"],
 )
+
 single_version_override(
     module_name = "rules_python",
     patch_strip = 1,
@@ -105,6 +118,7 @@ single_version_override(
         "//bazel/patches:rules_python-py_wheel-filter_out_virtual_imports.patch",
     ],
 )
+
 single_version_override(
     module_name = "rules_uv",
     patch_strip = 1,
@@ -121,6 +135,7 @@ new_local_repository(
     build_file = "@//omd/packages/glib:BUILD",
     path = "/usr",
 )
+
 new_local_repository(
     name = "libxml2",
     build_file = "@//omd/packages/libxml2:BUILD",
@@ -131,13 +146,16 @@ new_local_repository(
 UPSTREAM_MIRROR_URL = "https://artifacts.lan.tribe29.com/repository/upstream-archives/"
 
 OCB_VERSION = "0.113.0"
+
 http_file(
     name = "otel_collector_custom_builder",
     executable = True,
     sha256 = "bbccc5ab73364a17d99b22f0c1d53fc0efecee5fa8f93000596b4cfbe9a73325",
     url = "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fbuilder%2Fv" + OCB_VERSION + "/ocb_" + OCB_VERSION + "_linux_amd64",
 )
+
 SHFMT_VERSION = "v3.10.0"
+
 http_file(
     name = "shfmt",
     executable = True,
@@ -147,7 +165,9 @@ http_file(
         UPSTREAM_MIRROR_URL + "/shfmt_" + SHFMT_VERSION + "_linux_amd64",
     ],
 )
+
 TAPLO_VERSION = "0.9.3"
+
 http_file(
     name = "taplo.gz",
     sha256 = "0cf7e0fbeb299e62cecd5b648d820a103decf2ed2d42a3aac4d6f6c930e88125",
@@ -158,7 +178,9 @@ http_file(
 )
 
 PATCH_VERSION = "2.7.6"
+
 PATCH_FILENAME = "patch-" + PATCH_VERSION + ".tar.gz"
+
 http_archive(
     name = "patch",
     build_file = "//omd/packages/patch:BUILD.patch.bazel",
@@ -182,7 +204,9 @@ http_archive(
         UPSTREAM_MIRROR_URL + PATCH_FILENAME,
     ],
 )
+
 SHELLCHECK_VERSION = "v0.10.0"
+
 http_archive(
     name = "shellcheck",
     build_file_content = """
@@ -199,6 +223,7 @@ exports_files([
 )
 
 repo_license(name = "repo_license")
+
 register_toolchains("//bazel/toolchains/cc:linux_gcc13")
 
 llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm")
@@ -212,7 +237,7 @@ llvm.toolchain(
         "linux-x86_64": [
             "https://artifacts.lan.tribe29.com/repository/upstream-archives/LLVM-19.1.7-Linux-X64.tar.xz",
             "https://github.com/llvm/llvm-project/releases/download/llvmorg-19.1.7/LLVM-19.1.7-Linux-X64.tar.xz",
-        ]
+        ],
     },
 )
 use_repo(llvm, "llvm_toolchain", "llvm_toolchain_llvm")

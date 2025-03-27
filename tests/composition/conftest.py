@@ -22,13 +22,13 @@ from tests.testlib.agent import (
     download_and_install_agent_package,
     install_agent_package,
 )
-from tests.testlib.common.utils import is_containerized, run
 from tests.testlib.site import (
     get_site_factory,
     GlobalSettingsUpdate,
     Site,
     tracing_config_from_env,
 )
+from tests.testlib.utils import is_containerized, run
 
 site_factory = get_site_factory(prefix="comp_")
 

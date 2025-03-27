@@ -16,7 +16,7 @@ from typing import NewType
 
 import requests
 
-from tests.testlib.common.utils import (
+from tests.testlib.utils import (
     get_cmk_download_credentials,
     package_hash_path,
     run,

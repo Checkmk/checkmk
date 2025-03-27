@@ -22,7 +22,7 @@ import requests
 from cmk.ccc.version import BuildDate, ReleaseType, Version
 
 sys.path.insert(0, Path(__file__).parent.parent.parent.parent.as_posix())
-from tests.testlib.common.utils import (
+from tests.testlib.utils import (
     get_cmk_download_credentials as _get_cmk_download_credentials,
 )
 

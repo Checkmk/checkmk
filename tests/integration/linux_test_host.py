@@ -7,8 +7,8 @@ import subprocess
 
 import pytest
 
-from tests.testlib.common.utils import get_standard_linux_agent_output
 from tests.testlib.site import Site
+from tests.testlib.utils import get_standard_linux_agent_output
 
 
 def create_linux_test_host(request: pytest.FixtureRequest, site: Site, hostname: str) -> None:

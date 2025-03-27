@@ -6,8 +6,8 @@ import logging
 
 import pytest
 
-from tests.testlib.common.utils import get_services_with_status
 from tests.testlib.site import Site, SiteFactory
+from tests.testlib.utils import get_services_with_status
 
 from tests.plugins_integration.checks import (
     config,

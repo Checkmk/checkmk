@@ -7,7 +7,7 @@ import os
 
 import pytest
 
-from tests.testlib.common.utils import version_spec_from_env
+from tests.testlib.utils import version_spec_from_env
 
 
 # TODO: Better hand over arguments using pytest mechanisms (http://doc.pytest.org/en/latest/example/parametrize.html)

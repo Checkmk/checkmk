@@ -8,10 +8,10 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.common.utils import ServiceInfo
 from tests.testlib.https import HTTPSDummy
 from tests.testlib.openapi_session import UnexpectedResponse
 from tests.testlib.site import Site
+from tests.testlib.utils import ServiceInfo
 
 from cmk.utils.hostaddress import HostName
 

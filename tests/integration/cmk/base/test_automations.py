@@ -10,8 +10,8 @@ from collections.abc import Iterator, MutableMapping, Sequence
 
 import pytest
 
-from tests.testlib.common.utils import get_standard_linux_agent_output
 from tests.testlib.site import Site
+from tests.testlib.utils import get_standard_linux_agent_output
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.definition import RuleGroup

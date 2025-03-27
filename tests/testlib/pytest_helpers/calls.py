@@ -16,7 +16,7 @@ from typing import Any
 import pytest
 
 from tests.testlib import pytest_helpers
-from tests.testlib.common.utils import verbose_called_process_error
+from tests.testlib.utils import verbose_called_process_error
 
 
 def abort_if_not_containerized(condition: bool = True) -> None:

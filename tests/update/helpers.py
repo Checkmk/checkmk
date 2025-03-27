@@ -12,8 +12,8 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.common.utils import get_supported_distros
 from tests.testlib.site import Site, SiteFactory
+from tests.testlib.utils import get_supported_distros
 from tests.testlib.version import (
     CMKEdition,
     CMKPackageInfo,

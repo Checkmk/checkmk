@@ -234,10 +234,7 @@ def start_checkmk(
 ) -> Iterator[docker.models.containers.Container]:
     """Provide a readily configured Checkmk docker container."""
     environment = {"CMK_PASSWORD": "cmk"} | (environment or {})
-
-    if version is None:
-        version = version_from_env()
-
+    version = version or version_from_env()
     try:
         if version.version == version_from_env().version:
             _image, _build_logs = build_checkmk(client, version)

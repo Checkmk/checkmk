@@ -14,7 +14,7 @@ from cmk.plugins.mssql.agent_based.mssql_jobs import (
     parse_mssql_jobs,
 )
 
-_STRING_TABLE_SINGLE_INSTANCE_SINGLE_JOB = [
+_STRING_TABLE_SINGLE_INSTANCE_SINGLE_NO_SCHEDULE_ENABLED_JOB: StringTable = [
     ["MSSQLSERVER"],
     [
         "{2C32E575-3C76-48E0-9E04-43BD2A15B2E1}",
@@ -28,6 +28,63 @@ _STRING_TABLE_SINGLE_INSTANCE_SINGLE_JOB = [
         "0",
         "0",
         "",
+        "2021-02-08 07:38:50",
+    ],
+]
+
+
+def _make_job(*, enabled: bool, scheduled: bool) -> StringTable:
+    return [
+        ["MSSQLSERVER"],
+        [
+            "{2C32E575-3C76-48E0-9E04-43BD2A15B2E1}",
+            "teststsssss",
+            "1" if enabled else "",
+            "",
+            "",
+            "5",
+            "",
+            "0",
+            "0",
+            "0",
+            "1" if scheduled else "",
+            "2021-02-08 07:38:50",
+        ],
+    ]
+
+
+_STRING_TABLE_SINGLE_INSTANCE_SINGLE_NO_SCHEDULE_DISABLED_JOB = [
+    ["MSSQLSERVER"],
+    [
+        "{2C32E575-3C76-48E0-9E04-43BD2A15B2E1}",
+        "teststsssss",
+        "0",
+        "20200929",
+        "300",
+        "5",
+        "",
+        "0",
+        "0",
+        "0",
+        "",
+        "2021-02-08 07:38:50",
+    ],
+]
+
+_STRING_TABLE_SINGLE_INSTANCE_SINGLE_WITH_SCHEDULE_ENABLED_JOB = [
+    ["MSSQLSERVER"],
+    [
+        "{2C32E575-3C76-48E0-9E04-43BD2A15B2E1}",
+        "teststsssss",
+        "1",
+        "",
+        "",
+        "5",
+        "",
+        "0",
+        "0",
+        "0",
+        "1",
         "2021-02-08 07:38:50",
     ],
 ]
@@ -684,7 +741,7 @@ _STRING_TABLE_ERROR = [
 
 def test_discover_single_instance_single_job() -> None:
     assert list(
-        discover_mssql_jobs(parse_mssql_jobs(_STRING_TABLE_SINGLE_INSTANCE_SINGLE_JOB))
+        discover_mssql_jobs(parse_mssql_jobs(_make_job(enabled=True, scheduled=False)))
     ) == [
         Service(item="teststsssss - MSSQLSERVER"),
     ]
@@ -747,26 +804,68 @@ def test_discover_error() -> None:
     assert not list(discover_mssql_jobs(parse_mssql_jobs(_STRING_TABLE_ERROR)))
 
 
-def test_check_ok() -> None:
+@pytest.mark.parametrize(
+    "job, status, expected_state, expected_result",
+    [
+        (_make_job(enabled=False, scheduled=False), 0, State.OK, "Job is disabled"),
+        (_make_job(enabled=True, scheduled=False), 0, State.OK, "Schedule is disabled"),
+        (_make_job(enabled=True, scheduled=True), 0, State.OK, "Next run: N/A"),
+        (_make_job(enabled=True, scheduled=False), 1, State.WARN, "Schedule is disabled"),
+        (_make_job(enabled=True, scheduled=True), 1, State.OK, "Next run: N/A"),
+    ],
+)
+def test_check_schedule(
+    job: StringTable, status: int, expected_state: State, expected_result: str
+) -> None:
     assert list(
         check_mssql_jobs(
             "teststsssss - MSSQLSERVER",
             {
                 "consider_job_status": "ignore",
                 "status_disabled_jobs": 0,
+                "status_disabled_schedule": status,
                 "status_missing_jobs": 2,
                 "run_duration": None,
             },
-            parse_mssql_jobs(_STRING_TABLE_SINGLE_INSTANCE_SINGLE_JOB),
+            parse_mssql_jobs(job),
         )
     ) == [
         Result(state=State.OK, summary="Last duration: 0 seconds"),
         Metric("database_job_duration", 0.0),
         Result(state=State.OK, summary="MSSQL status: Unknown"),
         Result(state=State.OK, summary="Last run: N/A"),
-        Result(state=State.OK, summary="Schedule is disabled"),
+        Result(state=expected_state, summary=expected_result),
         Result(state=State.OK, notice="Outcome message: "),
     ]
+
+
+@pytest.mark.parametrize(
+    "job, status, expected_state, expected_result",
+    [
+        (_make_job(enabled=False, scheduled=False), 0, State.OK, "Job is disabled"),
+        (_make_job(enabled=False, scheduled=False), 1, State.WARN, "Job is disabled"),
+        (_make_job(enabled=True, scheduled=False), 0, State.OK, "Schedule is disabled"),
+        (_make_job(enabled=True, scheduled=False), 2, State.CRIT, "Schedule is disabled"),
+        (_make_job(enabled=False, scheduled=True), 2, State.CRIT, "Job is disabled"),
+        (_make_job(enabled=True, scheduled=True), 2, State.OK, "Next run: N/A"),
+    ],
+)
+def test_check_job(
+    job: StringTable, status: int, expected_state: State, expected_result: str
+) -> None:
+    assert list(
+        check_mssql_jobs(
+            "teststsssss - MSSQLSERVER",
+            {
+                "consider_job_status": "ignore",
+                "status_disabled_jobs": status,
+                "status_disabled_schedule": status,
+                "status_missing_jobs": 2,
+                "run_duration": None,
+            },
+            parse_mssql_jobs(job),
+        )
+    )[4] == Result(state=expected_state, summary=expected_result)
 
 
 def test_check_failure() -> None:
@@ -775,7 +874,8 @@ def test_check_failure() -> None:
             "Wartung Stündlich - MSSQLSERVER",
             {
                 "consider_job_status": "consider",
-                "status_disabled_jobs": 0,
+                "status_disabled_jobs": 1,
+                "status_disabled_schedule": 0,
                 "status_missing_jobs": 2,
                 "run_duration": (1800, 2400),
             },
@@ -804,6 +904,7 @@ def test_check_with_outcome_message() -> None:
             {
                 "consider_job_status": "ignore",
                 "status_disabled_jobs": 0,
+                "status_disabled_schedule": 0,
                 "status_missing_jobs": 2,
                 "run_duration": (1800, 2400),
             },
@@ -850,6 +951,7 @@ def test_check_with_outcome_message() -> None:
             {
                 "consider_job_status": "consider_if_enabled",
                 "status_disabled_jobs": 0,
+                "status_disabled_schedule": 0,
                 "status_missing_jobs": 2,
             },
             [
@@ -884,6 +986,7 @@ def test_check_with_outcome_message() -> None:
             {
                 "consider_job_status": "consider_if_enabled",
                 "status_disabled_jobs": 0,
+                "status_disabled_schedule": 0,
                 "status_missing_jobs": 2,
             },
             [

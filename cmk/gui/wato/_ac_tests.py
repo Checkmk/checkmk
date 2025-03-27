@@ -58,7 +58,7 @@ from cmk.gui.watolib.analyze_configuration import (
 from cmk.gui.watolib.check_mk_automations import find_unknown_check_parameter_rule_sets
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
-from cmk.gui.watolib.rulesets import SingleRulesetRecursively
+from cmk.gui.watolib.rulesets import AllRulesets, SingleRulesetRecursively
 from cmk.gui.watolib.sites import site_management_registry
 
 from cmk.crypto.password import Password
@@ -90,6 +90,7 @@ def register(ac_test_registry: ACTestRegistry) -> None:
     ac_test_registry.register(ACTestSizeOfExtensions)
     ac_test_registry.register(ACTestBrokenGUIExtension)
     ac_test_registry.register(ACTestESXDatasources)
+    ac_test_registry.register(ACTestDeprecatedRuleSets)
     ac_test_registry.register(ACTestUnknownCheckParameterRuleSets)
     ac_test_registry.register(ACTestDeprecatedV1CheckPlugins)
     ac_test_registry.register(ACTestDeprecatedCheckPlugins)
@@ -1332,6 +1333,46 @@ def _compute_deprecation_result(
         site_id=site_id,
         path=path,
     )
+
+
+class ACTestDeprecatedRuleSets(ACTest):
+    def category(self) -> str:
+        return ACTestCategories.deprecations
+
+    def title(self) -> str:
+        return _("Deprecated rule sets")
+
+    def help(self) -> str:
+        return _(
+            "These rule sets are configured in your site, but marked as deprecated. They still"
+            " work, but need to be migrated to their successor or be removed before the update"
+            " to the next major release. There should be a werk for each of these rules providing"
+            " you with further information on what to do specifically."
+        )
+
+    def is_relevant(self) -> bool:
+        return True
+
+    def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
+        if deprecated_rule_sets := [
+            r
+            for r in AllRulesets.load_all_rulesets().get_rulesets().values()
+            if r.is_deprecated() and r.num_rules()
+        ]:
+            for rule_set in deprecated_rule_sets:
+                yield ACSingleResult(
+                    state=ACResultState.WARN,
+                    text=_("Found configured rules of deprecated rule set %r.") % rule_set.name,
+                    site_id=site_id,
+                )
+            return
+
+        yield ACSingleResult(
+            state=ACResultState.OK,
+            text=_("No deprecated rule sets found."),
+            site_id=site_id,
+        )
 
 
 class ACTestUnknownCheckParameterRuleSets(ACTest):

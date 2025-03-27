@@ -6,8 +6,9 @@
 import datetime
 import json
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
+from enum import auto, Enum
 from pathlib import Path
 from typing import Literal
 
@@ -33,6 +34,7 @@ from cmk.gui.log import logger
 from cmk.gui.message import get_gui_messages, Message, message_gui, MessageText
 from cmk.gui.site_config import get_site_config, is_wato_slave_site
 from cmk.gui.sites import states
+from cmk.gui.type_defs import Users
 from cmk.gui.userdb import load_users
 from cmk.gui.utils import gen_id
 from cmk.gui.utils.html import HTML
@@ -94,10 +96,6 @@ def _filter_non_ok_ac_test_results(
     }
 
 
-def _filter_extension_managing_users(user_ids: Sequence[UserId]) -> Sequence[UserId]:
-    return [u for u in user_ids if user_may(u, "wato.manage_mkps")]
-
-
 def _make_path_config() -> PathConfig | None:
     local_path = plugins_local_path()
     addons_path = addons_plugins_local_path()
@@ -151,10 +149,17 @@ def _try_rel_path(site_id: SiteId, abs_path: Path) -> Path:
         return abs_path
 
 
+class _NotificationCategory(Enum):
+    manage_mkps = auto()
+    rule_sets = auto()
+    log = auto()  # fallback
+
+
 @dataclass(frozen=True)
 class _ACTestResultProblem:
     ident: str
     type: Literal["mkp", "file", "unsorted"]
+    notification_category: _NotificationCategory
     _ac_test_results: dict[SiteId, list[ACTestResult]] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -163,9 +168,35 @@ class _ACTestResultProblem:
     def add_ac_test_result(self, site_id: SiteId, ac_test_result: ACTestResult) -> None:
         self._ac_test_results.setdefault(site_id, []).append(ac_test_result)
 
-    def render(self, version: str) -> str:
+    def text(self) -> str:
+        words = []
+        for state, text, rel_path in sorted(
+            set(
+                (
+                    r.state,
+                    r.text,
+                    _try_rel_path(s, r.path) if r.path else None,
+                )
+                for s, rs in self._ac_test_results.items()
+                for r in rs
+            )
+        ):
+            match state:
+                case ACResultState.CRIT:
+                    words.append(f"[CRIT] Result: {text}")
+                case ACResultState.WARN:
+                    words.append(f"[WARN] Result: {text}")
+                case _:
+                    words.append(f"Result: {text}")
+
+            if rel_path:
+                words.append(f"File: {rel_path}")
+
+        return ", ".join(words)
+
+    def html(self, version: str) -> HTML:
         if not self._ac_test_results:
-            return ""
+            return HTML("", escape=False)
 
         match ACResultState.worst(r.state for rs in self._ac_test_results.values() for r in rs):
             case ACResultState.CRIT:
@@ -179,7 +210,7 @@ class _ACTestResultProblem:
                     % version
                 )
             case _:
-                return ""
+                return HTML("", escape=False)
 
         match self.type:
             case "mkp":
@@ -273,7 +304,7 @@ class _ACTestResultProblem:
             )
 
         html_code += HTMLWriter.render_table(table_content, class_="data table")
-        return str(html_code)
+        return html_code
 
 
 def _find_ac_test_result_problems(
@@ -289,23 +320,99 @@ def _find_ac_test_result_problems(
                 if manifest := manifests_by_path.get(path):
                     problem = problem_by_ident.setdefault(
                         manifest.name,
-                        _ACTestResultProblem(manifest.name, "mkp"),
+                        _ACTestResultProblem(
+                            manifest.name,
+                            "mkp",
+                            _NotificationCategory.manage_mkps,
+                        ),
                     )
                 else:
                     problem = problem_by_ident.setdefault(
                         str(path),
-                        _ACTestResultProblem(str(path), "file"),
+                        _ACTestResultProblem(
+                            str(path),
+                            "file",
+                            _NotificationCategory.manage_mkps,
+                        ),
                     )
 
             else:
+                match ac_test_result.test_id:
+                    case (
+                        "ACTestUnknownCheckParameterRuleSets"
+                        | "ACTestDeprecatedV1CheckPlugins"
+                        | "ACTestDeprecatedCheckPlugins"
+                        | "ACTestDeprecatedInventoryPlugins"
+                        | "ACTestDeprecatedCheckManpages"
+                        | "ACTestDeprecatedGUIExtensions"
+                        | "ACTestDeprecatedLegacyGUIExtensions"
+                        | "ACTestDeprecatedPNPTemplates"
+                    ):
+                        notification_category = _NotificationCategory.manage_mkps
+                    case "ACTestDeprecatedRuleSets":
+                        notification_category = _NotificationCategory.rule_sets
+                    case _:
+                        notification_category = _NotificationCategory.log
+
                 problem = problem_by_ident.setdefault(
                     ac_test_result.text,
-                    _ACTestResultProblem(ac_test_result.text, "unsorted"),
+                    _ACTestResultProblem(
+                        ac_test_result.text,
+                        "unsorted",
+                        notification_category,
+                    ),
                 )
 
             problem.add_ac_test_result(site_id, ac_test_result)
 
     return list(problem_by_ident.values())
+
+
+@dataclass(frozen=True)
+class _NotifiableUser:
+    user_id: UserId
+    notification_categories: Sequence[_NotificationCategory]
+    sent_messages: Sequence[str]
+
+
+def _filter_notifiable_users(users: Users) -> Iterator[_NotifiableUser]:
+    for user_id, user_spec in users.items():
+        notification_categories = []
+        if user_may(user_id, "wato.manage_mkps"):
+            notification_categories.append(_NotificationCategory.manage_mkps)
+        if "admin" in user_spec["roles"] and user_may(user_id, "wato.rulesets"):
+            notification_categories.append(_NotificationCategory.rule_sets)
+        if notification_categories:
+            yield _NotifiableUser(
+                user_id,
+                notification_categories,
+                [m["text"]["content"] for m in get_gui_messages(user_id)],
+            )
+
+
+@dataclass(frozen=True)
+class _ProblemToSend:
+    users: Sequence[_NotifiableUser]
+    content: str
+
+
+def _find_problems_to_send(
+    version: str, problems: Sequence[_ACTestResultProblem], users: Sequence[_NotifiableUser]
+) -> Iterator[_ProblemToSend | str]:
+    for problem in problems:
+        if not (rendered := str(problem.html(version))):
+            continue
+
+        if notifiable_users := [
+            u for u in users if problem.notification_category in u.notification_categories
+        ]:
+            yield _ProblemToSend(notifiable_users, rendered)
+
+        else:
+            yield (
+                "Analyze configuration problem notification could not be sent to any user"
+                f" (Test: {problem.ident}, Result: {problem.text()!r})"
+            )
 
 
 def execute_deprecation_tests_and_notify_users() -> None:
@@ -360,31 +467,37 @@ def execute_deprecation_tests_and_notify_users() -> None:
         else {}
     )
 
-    ac_test_results_messages = [
-        r
-        for p in _find_ac_test_result_problems(not_ok_ac_test_results, manifests_by_path)
-        if (r := p.render(Version.from_str(__version__).version_base))
-    ]
-
     now = int(time.time())
-    for user_id in _filter_extension_managing_users(list(load_users())):
-        sent_messages = [m["text"]["content"] for m in get_gui_messages(user_id)]
-        for ac_test_results_message in ac_test_results_messages:
-            if ac_test_results_message in sent_messages:
-                continue
-            message_gui(
-                user_id,
-                Message(
-                    dest=("list", [user_id]),
-                    methods=["gui_hint"],
-                    text=MessageText(content_type="html", content=ac_test_results_message),
-                    valid_till=None,
-                    id=gen_id(),
-                    time=now,
-                    security=False,
-                    acknowledged=False,
-                ),
-            )
+    for problem_to_send in _find_problems_to_send(
+        Version.from_str(__version__).version_base,
+        _find_ac_test_result_problems(not_ok_ac_test_results, manifests_by_path),
+        list(_filter_notifiable_users(load_users())),
+    ):
+        match problem_to_send:
+            case _ProblemToSend():
+                for user in problem_to_send.users:
+                    if problem_to_send.content in user.sent_messages:
+                        continue
+
+                    message_gui(
+                        user.user_id,
+                        Message(
+                            dest=("list", [user.user_id]),
+                            methods=["gui_hint"],
+                            text=MessageText(
+                                content_type="html",
+                                content=problem_to_send.content,
+                            ),
+                            valid_till=None,
+                            id=gen_id(),
+                            time=now,
+                            security=False,
+                            acknowledged=False,
+                        ),
+                    )
+
+            case str():
+                logger.error(problem_to_send)
 
 
 def register(cron_job_registry: CronJobRegistry) -> None:

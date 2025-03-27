@@ -10,11 +10,17 @@ import pytest
 
 from livestatus import SiteId
 
+from cmk.utils.user import UserId
+
 from cmk.gui.deprecations import (
     _ACTestResultProblem,
     _filter_non_ok_ac_test_results,
     _find_ac_test_result_problems,
+    _find_problems_to_send,
     _MarkerFileStore,
+    _NotifiableUser,
+    _NotificationCategory,
+    _ProblemToSend,
 )
 from cmk.gui.watolib.analyze_configuration import ACResultState, ACTestResult
 
@@ -193,6 +199,7 @@ def test__filter_non_ok_ac_test_results(
                 _ACTestResultProblem(
                     ident="text",
                     type="unsorted",
+                    notification_category=_NotificationCategory.log,
                     _ac_test_results={
                         SiteId("site_id_1"): [
                             ACTestResult(
@@ -273,6 +280,7 @@ def test__filter_non_ok_ac_test_results(
                 _ACTestResultProblem(
                     ident="local/share/check_mk/web/plugins/metrics/file.py",
                     type="file",
+                    notification_category=_NotificationCategory.manage_mkps,
                     _ac_test_results={
                         SiteId("site_id_1"): [
                             ACTestResult(
@@ -307,6 +315,7 @@ def test__filter_non_ok_ac_test_results(
                 _ACTestResultProblem(
                     ident="local/share/check_mk/web/plugins/metrics/file3.py",
                     type="file",
+                    notification_category=_NotificationCategory.manage_mkps,
                     _ac_test_results={
                         SiteId("site_id_3"): [
                             ACTestResult(
@@ -402,6 +411,7 @@ def test__filter_non_ok_ac_test_results(
                 _ACTestResultProblem(
                     ident="asd",
                     type="mkp",
+                    notification_category=_NotificationCategory.manage_mkps,
                     _ac_test_results={
                         SiteId("site_id_1"): [
                             ACTestResult(
@@ -436,6 +446,7 @@ def test__filter_non_ok_ac_test_results(
                 _ACTestResultProblem(
                     ident="asd3",
                     type="mkp",
+                    notification_category=_NotificationCategory.manage_mkps,
                     _ac_test_results={
                         SiteId("site_id_3"): [
                             ACTestResult(
@@ -463,13 +474,7 @@ def test__find_ac_test_result_problems(
     manifests_by_path: Mapping[Path, Manifest],
     problems: Sequence[_ACTestResultProblem],
 ) -> None:
-    assert (
-        _find_ac_test_result_problems(
-            ac_test_results_by_site_id,
-            manifests_by_path,
-        )
-        == problems
-    )
+    assert _find_ac_test_result_problems(ac_test_results_by_site_id, manifests_by_path) == problems
 
 
 @pytest.mark.parametrize(
@@ -479,6 +484,7 @@ def test__find_ac_test_result_problems(
             _ACTestResultProblem(
                 ident="A text",
                 type="unsorted",
+                notification_category=_NotificationCategory.manage_mkps,
                 _ac_test_results={
                     SiteId("site_id"): [
                         ACTestResult(
@@ -502,6 +508,7 @@ def test__find_ac_test_result_problems(
             _ACTestResultProblem(
                 ident="A text",
                 type="unsorted",
+                notification_category=_NotificationCategory.manage_mkps,
                 _ac_test_results={
                     SiteId("site_id"): [
                         ACTestResult(
@@ -525,6 +532,7 @@ def test__find_ac_test_result_problems(
             _ACTestResultProblem(
                 ident="ident",
                 type="file",
+                notification_category=_NotificationCategory.manage_mkps,
                 _ac_test_results={
                     SiteId("site_id"): [
                         ACTestResult(
@@ -550,6 +558,7 @@ def test__find_ac_test_result_problems(
             _ACTestResultProblem(
                 ident="ident",
                 type="file",
+                notification_category=_NotificationCategory.manage_mkps,
                 _ac_test_results={
                     SiteId("site_id"): [
                         ACTestResult(
@@ -575,6 +584,7 @@ def test__find_ac_test_result_problems(
             _ACTestResultProblem(
                 ident="ident",
                 type="mkp",
+                notification_category=_NotificationCategory.manage_mkps,
                 _ac_test_results={
                     SiteId("site_id"): [
                         ACTestResult(
@@ -600,6 +610,7 @@ def test__find_ac_test_result_problems(
             _ACTestResultProblem(
                 ident="ident",
                 type="mkp",
+                notification_category=_NotificationCategory.manage_mkps,
                 _ac_test_results={
                     SiteId("site_id"): [
                         ACTestResult(
@@ -624,6 +635,182 @@ def test__find_ac_test_result_problems(
     ],
 )
 def test_render_problem(problem: _ACTestResultProblem, title: str, box: str) -> None:
-    rendered_problem = problem.render("2.3.0")
+    rendered_problem = str(problem.html("2.3.0"))
     assert title in rendered_problem
     assert box in rendered_problem
+
+
+@pytest.mark.parametrize(
+    "problems, users, result",
+    [
+        pytest.param(
+            [],
+            [
+                _NotifiableUser(
+                    UserId("user-id"),
+                    [_NotificationCategory.manage_mkps, _NotificationCategory.rule_sets],
+                    [],
+                ),
+            ],
+            [],
+            id="empty",
+        ),
+        pytest.param(
+            [
+                _ACTestResultProblem(
+                    ident="A text",
+                    type="unsorted",
+                    notification_category=_NotificationCategory.manage_mkps,
+                    _ac_test_results={
+                        SiteId("site_id"): [
+                            ACTestResult(
+                                ACResultState.WARN,
+                                "A text",
+                                "test_id",
+                                "deprecations",
+                                "Title",
+                                "Help",
+                                SiteId("site_id"),
+                                None,
+                            ),
+                        ],
+                    },
+                ),
+            ],
+            [
+                _NotifiableUser(
+                    UserId("user-id-1"),
+                    [_NotificationCategory.manage_mkps],
+                    [],
+                ),
+                _NotifiableUser(
+                    UserId("user-id-2"),
+                    [_NotificationCategory.rule_sets],
+                    [],
+                ),
+            ],
+            [
+                _ProblemToSend(
+                    users=[
+                        _NotifiableUser(
+                            UserId("user-id-1"),
+                            [_NotificationCategory.manage_mkps],
+                            [],
+                        ),
+                    ],
+                    content=(
+                        '<h2>A text</h2><div class="error">This may partially work in '
+                        "Checkmk 2.3.0 but will stop working from the next major "
+                        "version onwards.</div><p>We highly recommend solving this "
+                        "issue already in your installation.</p><p>Affected sites: "
+                        'site_id</p><p>Details:</p><table class="data table"><tr '
+                        'class="even0"><td>A text</td><td rowspan="2" class="state '
+                        'svcstate"><b class="stmark state1">WARN</b></td></tr><tr '
+                        'class="even0"><td></td></tr></table>'
+                    ),
+                ),
+            ],
+            id="manage-mkps",
+        ),
+        pytest.param(
+            [
+                _ACTestResultProblem(
+                    ident="A text",
+                    type="unsorted",
+                    notification_category=_NotificationCategory.rule_sets,
+                    _ac_test_results={
+                        SiteId("site_id"): [
+                            ACTestResult(
+                                ACResultState.WARN,
+                                "A text",
+                                "test_id",
+                                "deprecations",
+                                "Title",
+                                "Help",
+                                SiteId("site_id"),
+                                None,
+                            ),
+                        ],
+                    },
+                ),
+            ],
+            [
+                _NotifiableUser(
+                    UserId("user-id-1"),
+                    [_NotificationCategory.manage_mkps],
+                    [],
+                ),
+                _NotifiableUser(
+                    UserId("user-id-2"),
+                    [_NotificationCategory.rule_sets],
+                    [],
+                ),
+            ],
+            [
+                _ProblemToSend(
+                    users=[
+                        _NotifiableUser(
+                            UserId("user-id-2"),
+                            [_NotificationCategory.rule_sets],
+                            [],
+                        ),
+                    ],
+                    content=(
+                        '<h2>A text</h2><div class="error">This may partially work in '
+                        "Checkmk 2.3.0 but will stop working from the next major "
+                        "version onwards.</div><p>We highly recommend solving this "
+                        "issue already in your installation.</p><p>Affected sites: "
+                        'site_id</p><p>Details:</p><table class="data table"><tr '
+                        'class="even0"><td>A text</td><td rowspan="2" class="state '
+                        'svcstate"><b class="stmark state1">WARN</b></td></tr><tr '
+                        'class="even0"><td></td></tr></table>'
+                    ),
+                ),
+            ],
+            id="rule-sets",
+        ),
+        pytest.param(
+            [
+                _ACTestResultProblem(
+                    ident="A text",
+                    type="unsorted",
+                    notification_category=_NotificationCategory.log,
+                    _ac_test_results={
+                        SiteId("site_id"): [
+                            ACTestResult(
+                                ACResultState.WARN,
+                                "A text",
+                                "test_id",
+                                "deprecations",
+                                "Title",
+                                "Help",
+                                SiteId("site_id"),
+                                None,
+                            ),
+                        ],
+                    },
+                ),
+            ],
+            [
+                _NotifiableUser(
+                    UserId("user-id"),
+                    [_NotificationCategory.manage_mkps, _NotificationCategory.rule_sets],
+                    [],
+                ),
+            ],
+            [
+                (
+                    "Analyze configuration problem notification could not be sent to any user "
+                    "(Test: A text, Result: '[WARN] Result: A text')"
+                ),
+            ],
+            id="fallback",
+        ),
+    ],
+)
+def test__find_problems_to_send(
+    problems: Sequence[_ACTestResultProblem],
+    users: Sequence[_NotifiableUser],
+    result: Sequence[_ProblemToSend | str],
+) -> None:
+    assert list(_find_problems_to_send("2.3.0", problems, users)) == result

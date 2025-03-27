@@ -3,6 +3,12 @@
     <head>
         <title>HTML Email template</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+        @media screen and (max-width: 460px) and (orientation: portrait) {
+           .iphone_padding { padding:0 !important;}
+           .iphone_event_marker_bulk { width:auto !important;}
+        }
+        </style>
     </head>
     <body>
         {% import 'macros.html' as macros %}
@@ -31,7 +37,7 @@
         } %}
         <table width="100%" style=" border-collapse: collapse; ">
             <tr>
-                <td align="center" style="padding: 20px;">
+                <td align="center" style="padding: 20px;", class="iphone_padding">
                     <table width="100%"
                            align="center"
                            style="max-width: 600px;
@@ -41,7 +47,7 @@
                                   background-color: #ffffff">
                         {{ macros.margin_tr() }}
                         <tr>
-                            <td align="center" style="padding: 8px;">
+                            <td align="center" style="padding: 8px;" class="iphone_padding">
                                 {% if not is_bulk or bulk_summary %}
                                     <table align="center" style=" border-collapse: collapse; width: 100%; min-width: 220px;
                                         max-width: 536px"">

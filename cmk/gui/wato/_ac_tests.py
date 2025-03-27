@@ -1458,7 +1458,7 @@ class ACTestDeprecatedV1CheckPlugins(ACTest):
             return ()
 
     def is_relevant(self) -> bool:
-        return bool(self._get_files())
+        return True
 
     def execute(self) -> Iterator[ACSingleResult]:
         site_id = omd_site()

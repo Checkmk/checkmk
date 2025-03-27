@@ -1511,6 +1511,10 @@ std::pair<std::vector<char>, int> RunSyncPlugins(PluginMap &plugins,
         auto result = r.get();
         if (!result.empty()) {
             ++delivered_count;
+            if (result.back() != '\n') {
+                XLOG::d("Sync plugin doesn't add <CR> at the end of output");
+                result.push_back('\n');
+            }
             tools::AddVector(out, result);
         }
     }
@@ -1565,6 +1569,10 @@ std::pair<std::vector<char>, int> RunAsyncPlugins(PluginMap &plugins,
         auto data = plugin.getResultsAsync(start_immediately);
         if (!data.empty()) {
             ++count;
+            if (data.back() != '\n') {
+                XLOG::d("Async plugin doesn't add <CR> at the end of output");
+                data.push_back('\n');
+            }
         }
         tools::AddVector(result, data);
     }

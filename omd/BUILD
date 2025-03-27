@@ -36,6 +36,7 @@ create_venv(
         "//omd/packages/Python:python_tar",
         "//omd/packages/heirloom-pkgtools",
         "//omd/packages/maintenance",
+        "//omd/packages/mk-livestatus",
         "//omd/packages/mod_fcgid",
         "//omd/packages/mod_wsgi",
         "//omd/packages/net-snmp:net-snmp_tar",

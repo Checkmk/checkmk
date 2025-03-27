@@ -195,7 +195,6 @@ include \
     packages/nrpe/nrpe.make \
     packages/pnp4nagios/pnp4nagios.make \
     packages/omd/omd.make \
-    packages/mk-livestatus/mk-livestatus.make \
     packages/appliance/appliance.make \
     packages/livestatus/livestatus.make \
     packages/neb/neb.make \

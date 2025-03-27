@@ -33,7 +33,6 @@ PACKAGES := \
     apache-omd \
     xinetd \
     check_mk \
-    mk-livestatus \
     nagios \
     monitoring-plugins \
     check-cert \

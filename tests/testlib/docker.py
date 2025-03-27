@@ -9,7 +9,7 @@ import subprocess
 import tarfile
 import time
 from collections.abc import Iterator, Mapping
-from contextlib import contextmanager, nullcontext
+from contextlib import contextmanager, nullcontext, suppress
 from pathlib import Path
 from typing import Any, ContextManager
 
@@ -222,6 +222,19 @@ def build_checkmk(
     return image, build_logs
 
 
+def _remove_volumes(
+    client: docker.DockerClient, volumes: list[str] | None, is_update: bool
+) -> None:
+    """remove any pre-existing volumes"""
+    volume_ids = [_.split(":")[0] for _ in volumes or []]
+    exceptions = [docker.errors.NotFound]
+    if is_update:
+        exceptions.append(docker.errors.APIError)
+    with suppress(*exceptions):
+        for volume_id in volume_ids:
+            client.volumes.get(volume_id).remove(force=True)
+
+
 @contextmanager
 def start_checkmk(
     client: docker.DockerClient,
@@ -333,6 +346,7 @@ def start_checkmk(
         if os.getenv("CLEANUP", "1") != "0":
             c.stop()
             c.remove(force=True)
+            _remove_volumes(client, volumes, is_update)
 
 
 def get_cse_volumes(config_root: Path) -> list[str]:

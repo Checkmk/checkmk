@@ -843,6 +843,9 @@ pub fn calc_real_host(auth: &Authentication, conn: &Connection) -> HostName {
 }
 
 pub fn is_use_tcp(name: &InstanceName, auth: &Authentication, conn: &Connection) -> bool {
+    if conn.backend() != &Backend::Auto && conn.backend() != &Backend::Tcp {
+        return false;
+    }
     if is_local_endpoint(auth, conn) {
         get_registry_instance_info(name)
             .map(|i| i.is_tcp())
@@ -1801,6 +1804,36 @@ mssql:
         assert!(is_use_tcp(&"MSSQLSERVER".to_string().into(), &a, &c));
     }
 
+    fn _make_non_local_host_name() -> HostName {
+        "localhost.com".to_string().into()
+    }
+
+    fn _make_non_local_connection(backend: Backend) -> Connection {
+        Connection {
+            hostname: _make_non_local_host_name(),
+            backend,
+            ..Default::default()
+        }
+    }
+    #[test]
+    fn test_is_use_tcp() {
+        let srv_name: InstanceName = "SERVER".to_string().into();
+        let auth_sql = Authentication {
+            auth_type: AuthType::SqlServer,
+            ..Default::default()
+        };
+        let conn_non_local_tcp = _make_non_local_connection(Backend::Tcp);
+        assert!(is_use_tcp(&srv_name, &auth_sql, &conn_non_local_tcp));
+
+        let conn_non_local_auto = _make_non_local_connection(Backend::Auto);
+        assert!(is_use_tcp(&srv_name, &auth_sql, &conn_non_local_auto));
+
+        #[cfg(windows)]
+        {
+            let conn_non_local_odbc = _make_non_local_connection(Backend::Odbc);
+            assert!(!is_use_tcp(&srv_name, &auth_sql, &conn_non_local_odbc));
+        }
+    }
     #[test]
     fn test_is_local_endpoint() {
         let auth_integrated = Authentication {

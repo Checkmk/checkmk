@@ -38,6 +38,11 @@ status_disabled_jobs = MonitoringState(
     default_value=0,
 )
 
+status_disabled_schedule = MonitoringState(
+    title=_("Status of service in case of disabled schedule and enabled jobs"),
+    default_value=0,
+)
+
 status_missing_jobs = MonitoringState(
     title=_("Status of service in case of missing job"),
     default_value=2,

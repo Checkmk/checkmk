@@ -221,16 +221,19 @@ def check_mssql_jobs(
     yield Result(state=db_status, summary=f"MSSQL status: {job_specs.last_run_outcome}")
 
     yield Result(state=State.OK, summary=f"Last run: {job_specs.last_run_datetime}")
-
-    status_disabled_jobs = State(params["status_disabled_jobs"])
-    if not job_specs.enabled:
-        yield Result(state=status_disabled_jobs, summary="Job is disabled")
-    elif not job_specs.schedule_enabled:
-        yield Result(state=status_disabled_jobs, summary="Schedule is disabled")
-    else:
-        yield Result(state=State.OK, summary=f"Next run: {job_specs.next_run_datetime}")
-
+    yield _calc_job_result(job_specs, params)
     yield Result(state=State.OK, notice=f"Outcome message: {job_specs.last_outcome_message}")
+
+
+def _calc_job_result(job_specs: JobSpec, params: Mapping[str, Any]) -> Result:
+    if not job_specs.enabled:
+        status = State(params["status_disabled_jobs"])
+        return Result(state=status, summary="Job is disabled")
+    if not job_specs.schedule_enabled:
+        status = State(params["status_disabled_schedule"])
+        return Result(state=status, summary="Schedule is disabled")
+
+    return Result(state=State.OK, summary=f"Next run: {job_specs.next_run_datetime}")
 
 
 agent_section_mssql_jobs = AgentSection(
@@ -247,6 +250,7 @@ check_plugin_mssql_jobs = CheckPlugin(
     check_default_parameters={
         "consider_job_status": "ignore",
         "status_disabled_jobs": 0,
+        "status_disabled_schedule": 0,
         "status_missing_jobs": 2,
     },
 )

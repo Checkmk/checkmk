@@ -34,7 +34,7 @@ defineProps<{
           </thead>
           <tbody>
             <tr v-for="(item, index) in stats['sites']!" :key="index" class="data even0">
-              <td>{{ item }}</td>
+              <td :title="item">{{ item }}</td>
               <td>
                 <CmkIcon name="crit-problem" size="small" />
                 {{ stats['i18n']['disabled_msg'] }}
@@ -60,18 +60,29 @@ defineProps<{
     }
   }
 
-  .table {
-    margin-top: 0;
+  .table thead,
+  .table tbody tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+  }
 
-    tr {
-      th {
-        background-color: unset;
-      }
+  .table tbody {
+    display: block;
+    max-height: 120px;
+    overflow-y: auto;
+  }
 
-      td {
-        background-color: var(--default-table-th-color);
-      }
-    }
+  .table td:first-child {
+    max-width: 50%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .table td:last-child {
+    white-space: nowrap;
+    width: 50%;
   }
 }
 </style>

@@ -84,6 +84,9 @@ function toggleContent() {
   margin: 0 0 12px 0;
   cursor: pointer;
 }
+.stats_container {
+  max-width: min-content;
+}
 .button {
   height: 8px;
   width: 8px;

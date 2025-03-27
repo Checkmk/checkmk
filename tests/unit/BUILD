@@ -14,9 +14,9 @@ py_library(
     deps = [
         "//cmk:lib_cmk",
         "//packages/cmk-livestatus-client:py_livestatus",
-        "//tests:conftest",
         "//tests:testlib",
         requirement("fakeredis"),
+        requirement("pytest_metadata"),
     ],
 )
 
@@ -49,6 +49,7 @@ py_test(
     ],
     args = [
         "--config-file=$(location @//:pyproject.toml)",
+        "--import-mode=importlib",
     ],
     data = ["@//:pyproject.toml"],
     main = ":__test__.py",
@@ -56,7 +57,6 @@ py_test(
         ":__test__",
         ":conftest",
         "//cmk:lib_cmk",
-        "//tests:conftest",
         "//tests:testlib",
     ],
 )
@@ -111,7 +111,6 @@ py_test(
         requirement("responses"),
         requirement("time-machine"),
         "//cmk:lib_cmk_repo",
-        "//tests:conftest",
         "//tests:testlib",
         "//tests/unit:conftest",
     ] + select({

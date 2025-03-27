@@ -8,13 +8,9 @@
 
 import logging
 import os
-import shutil
 import subprocess
-import sys
-import tempfile
 from collections.abc import Generator, Iterator
 from pathlib import Path
-from typing import Final
 
 import pytest
 import pytest_check
@@ -28,13 +24,7 @@ pytest.register_assert_rewrite(
 )
 
 from tests.testlib.common.repo import (  # noqa: E402
-    add_python_paths,
     current_base_branch_name,
-    is_cloud_repo,
-    is_enterprise_repo,
-    is_managed_repo,
-    is_saas_repo,
-    repo_path,
 )
 from tests.testlib.common.utils import (  # noqa: E402
     is_containerized,
@@ -327,107 +317,3 @@ def _skip_unwanted_test_types(item: pytest.Item) -> None:
     test_type_name = test_type.args[0]
     if test_type_name != item.config.getoption("-T"):
         pytest.skip("Not testing type %r" % test_type_name)
-
-
-# Cleanup temporary directory created above
-@pytest.fixture(scope="session", autouse=True)
-def cleanup_cmk():
-    yield
-
-    import cmk.utils.paths
-
-    if "pytest_cmk_" not in str(cmk.utils.paths.tmp_dir):
-        return
-
-    try:
-        shutil.rmtree(str(cmk.utils.paths.tmp_dir))
-    except FileNotFoundError:
-        pass
-
-
-# Some cmk.* code is calling things like cmk_version.is_raw_edition() at import time
-# (e.g. cmk/base/default_config/notify.py) for edition specific variable
-# defaults. In integration tests we want to use the exact version of the
-# site. For unit tests we assume we are in Enterprise Edition context.
-def _fake_version_and_paths() -> None:
-    from pytest import MonkeyPatch
-
-    monkeypatch = MonkeyPatch()
-    tmp_dir = tempfile.mkdtemp(prefix="pytest_cmk_")
-
-    def guess_from_repo() -> str:
-        if is_managed_repo():
-            return "cme"
-        if is_cloud_repo():
-            return "cce"
-        if is_saas_repo():
-            return "cse"
-        if is_enterprise_repo():
-            return "cee"
-        return "cre"
-
-    edition_short = os.getenv("EDITION") or guess_from_repo()
-
-    unpatched_paths: Final = {
-        # FIXME :-(
-        # dropping these makes tests/unit/cmk/gui/watolib/test_config_sync.py fail.
-        "local_dashboards_dir",
-        "local_views_dir",
-        "local_reports_dir",
-    }
-
-    # patch `cmk.utils.paths` before `cmk.ccc.versions`
-    logger.info("Patching `cmk.utils.paths`.")
-    import cmk.utils.paths
-
-    # Unit test context: load all available modules
-    original_omd_root = Path(cmk.utils.paths.omd_root)
-    for name, value in vars(cmk.utils.paths).items():
-        if name.startswith("_") or not isinstance(value, (str, Path)) or name in unpatched_paths:
-            continue
-
-        try:
-            monkeypatch.setattr(
-                f"cmk.utils.paths.{name}",
-                type(value)(tmp_dir / Path(value).relative_to(original_omd_root)),
-            )
-        except ValueError:
-            pass  # path is outside of omd_root
-
-    # these use repo_path
-    monkeypatch.setattr("cmk.utils.paths.agents_dir", "%s/agents" % repo_path())
-    monkeypatch.setattr("cmk.utils.paths.checks_dir", "%s/checks" % repo_path())
-    monkeypatch.setattr("cmk.utils.paths.notifications_dir", repo_path() / "notifications")
-    monkeypatch.setattr("cmk.utils.paths.inventory_dir", "%s/inventory" % repo_path())
-    monkeypatch.setattr("cmk.utils.paths.legacy_check_manpages_dir", "%s/checkman" % repo_path())
-
-    # patch `cmk.ccc.versions`
-    logger.info("Patching `cmk.ccc.versions`.")
-    import cmk.ccc.version as cmk_version
-
-    monkeypatch.setattr(cmk_version, "orig_omd_version", cmk_version.omd_version, raising=False)
-    monkeypatch.setattr(
-        cmk_version, "omd_version", lambda *args, **kw: f"{cmk_version.__version__}.{edition_short}"
-    )
-
-
-def _patch_cmk_utils() -> bool:
-    """Patch `cmk.utils` for unit testing.
-
-    `unit tests` can be identified by parsing value of `-T` within pytest commandline, or
-    detecting whether the test run is an `xdist` based run (parallel unit-test runs).
-    """
-    try:
-        is_unit_test = sys.argv[sys.argv.index("-T") + 1] == "unit"
-    except ValueError as _:
-        # default pytest '-T' value is 'unit'
-        is_unit_test = True
-    return is_unit_test or bool(os.getenv("PYTEST_XDIST_TESTRUNUID", ""))
-
-
-#
-# MAIN
-#
-if _patch_cmk_utils():
-    _fake_version_and_paths()
-add_python_paths()

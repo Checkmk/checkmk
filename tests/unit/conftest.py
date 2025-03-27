@@ -8,20 +8,14 @@ import logging
 import os
 import pprint
 import shutil
+import tempfile
 from collections.abc import Callable, Generator, Iterable, Iterator
 from pathlib import Path
+from typing import Final
 from unittest.mock import patch
 
 import pytest
 from fakeredis import FakeRedis
-
-from tests.testlib.common.repo import (
-    is_cloud_repo,
-    is_enterprise_repo,
-    is_managed_repo,
-    is_saas_repo,
-    repo_path,
-)
 
 from tests.unit.mocks_and_helpers import DummyLicensingHandler, FixPluginLegacy
 
@@ -46,7 +40,131 @@ from cmk.checkengine.plugins import (  # pylint: disable=cmk-module-layer-violat
 
 import cmk.crypto.password_hashing
 
+# TODO: Can we somehow push some of the registrations below to the subdirectories?
+# Needs to be executed before the import of those modules
+pytest.register_assert_rewrite(
+    "tests.testlib", "tests.unit.checks.checktestlib", "tests.unit.checks.generictests.run"
+)
+
+
+from tests.testlib.common.repo import (  # noqa: E402
+    add_python_paths,
+    is_cloud_repo,
+    is_enterprise_repo,
+    is_managed_repo,
+    is_saas_repo,
+    repo_path,
+)
+
 logger = logging.getLogger(__name__)
+logging.getLogger("faker").setLevel(logging.ERROR)
+
+# This allows exceptions to be handled by IDEs (rather than just printing the results)
+# when pytest based tests are being run from inside the IDE
+# To enable this, set `_PYTEST_RAISE` to some value != '0' in your IDE
+PYTEST_RAISE = os.getenv("_PYTEST_RAISE", "0") != "0"
+
+
+# Some cmk.* code is calling things like cmk_version.is_raw_edition() at import time
+# (e.g. cmk/base/default_config/notify.py) for edition specific variable
+# defaults. In integration tests we want to use the exact version of the
+# site. For unit tests we assume we are in Enterprise Edition context.
+def _fake_version_and_paths() -> None:
+    from pytest import MonkeyPatch
+
+    monkeypatch = MonkeyPatch()
+    tmp_dir = tempfile.mkdtemp(prefix="pytest_cmk_")
+
+    def guess_from_repo() -> str:
+        if is_managed_repo():
+            return "cme"
+        if is_cloud_repo():
+            return "cce"
+        if is_saas_repo():
+            return "cse"
+        if is_enterprise_repo():
+            return "cee"
+        return "cre"
+
+    edition_short = os.getenv("EDITION") or guess_from_repo()
+
+    unpatched_paths: Final = {
+        # FIXME :-(
+        # dropping these makes tests/unit/cmk/gui/watolib/test_config_sync.py fail.
+        "local_dashboards_dir",
+        "local_views_dir",
+        "local_reports_dir",
+    }
+
+    # patch `cmk.utils.paths` before `cmk.ccc.versions`
+    logger.info("Patching `cmk.utils.paths`.")
+    import cmk.utils.paths
+
+    # Unit test context: load all available modules
+    original_omd_root = Path(cmk.utils.paths.omd_root)
+    for name, value in vars(cmk.utils.paths).items():
+        if name.startswith("_") or not isinstance(value, (str, Path)) or name in unpatched_paths:
+            continue
+
+        try:
+            monkeypatch.setattr(
+                f"cmk.utils.paths.{name}",
+                type(value)(tmp_dir / Path(value).relative_to(original_omd_root)),
+            )
+        except ValueError:
+            pass  # path is outside of omd_root
+
+    # these use repo_path
+    monkeypatch.setattr("cmk.utils.paths.agents_dir", "%s/agents" % repo_path())
+    monkeypatch.setattr("cmk.utils.paths.checks_dir", "%s/checks" % repo_path())
+    monkeypatch.setattr("cmk.utils.paths.notifications_dir", repo_path() / "notifications")
+    monkeypatch.setattr("cmk.utils.paths.inventory_dir", "%s/inventory" % repo_path())
+    monkeypatch.setattr("cmk.utils.paths.legacy_check_manpages_dir", "%s/checkman" % repo_path())
+
+    # patch `cmk.ccc.versions`
+    logger.info("Patching `cmk.ccc.versions`.")
+    import cmk.ccc.version as cmk_version
+
+    monkeypatch.setattr(cmk_version, "orig_omd_version", cmk_version.omd_version, raising=False)
+    monkeypatch.setattr(
+        cmk_version, "omd_version", lambda *args, **kw: f"{cmk_version.__version__}.{edition_short}"
+    )
+
+
+# Cleanup temporary directory created above
+@pytest.fixture(scope="session", autouse=True)
+def cleanup_cmk():
+    yield
+
+    import cmk.utils.paths
+
+    if "pytest_cmk_" not in str(cmk.utils.paths.tmp_dir):
+        return
+
+    try:
+        shutil.rmtree(str(cmk.utils.paths.tmp_dir))
+    except FileNotFoundError:
+        pass
+
+
+# Run _fake_version_and_paths() and add_python_paths() before test execution
+_fake_version_and_paths()
+add_python_paths()
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_exception_interact(
+    node: pytest.Item | pytest.Collector,
+    call: pytest.CallInfo,
+    report: pytest.CollectReport | pytest.TestReport,
+) -> None:
+    if not (excinfo := call.excinfo):
+        return
+
+    excp_ = excinfo.value
+    report.longrepr = node.repr_failure(excinfo)
+    if PYTEST_RAISE:
+        raise excp_
 
 
 @pytest.fixture(autouse=True)

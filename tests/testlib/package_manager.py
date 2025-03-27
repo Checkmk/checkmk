@@ -233,7 +233,7 @@ class PackageManagerSuSE(ABCPackageManagerRPM):
 
 class PackageManagerRHEL(ABCPackageManagerRPM):
     def _install_package(self, package_path: Path) -> None:
-        self._execute(["rpm", "-i", package_path])
+        self._execute(["yum", "install", "-y", package_path])
 
     def _uninstall_package(self, package_name: str) -> None:
         self._execute(["rpm", "-e", package_name])

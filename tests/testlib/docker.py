@@ -23,6 +23,7 @@ import os
 import subprocess
 import tarfile
 from collections.abc import Iterator, Mapping
+from contextlib import suppress
 from pathlib import Path
 from typing import Any, Literal
 
@@ -361,6 +362,7 @@ class CheckmkApp:
             else:
                 logger.info("Removing existing container %s", c.short_id)
                 c.remove(force=True)
+                self._remove_volumes()
                 raise docker.errors.NotFound(self.name)
         except (docker.errors.NotFound, docker.errors.NullResource):
             try:
@@ -400,6 +402,7 @@ class CheckmkApp:
         if os.getenv("CLEANUP", "1") == "1":
             self.container.stop()
             self.container.remove(force=True)
+            self._remove_volumes()
 
     @staticmethod
     def _get_cse_volumes(config_root: Path) -> list[str]:
@@ -430,6 +433,15 @@ class CheckmkApp:
         )
         self.openapi.changes.activate_and_wait_for_completion()
         self.openapi.set_authentication_header(user=self.api_user, password=self.api_secret)
+
+    def _remove_volumes(self) -> None:
+        volume_ids = [_.split(":")[0] for _ in self.volumes or []]
+        exceptions = [docker.errors.NotFound]
+        if self.is_update:
+            exceptions.append(docker.errors.APIError)
+        with suppress(*exceptions):
+            for volume_id in volume_ids:
+                self.client.volumes.get(volume_id).remove(force=True)
 
     def install_agent(
         self, app: docker.models.containers.Container, agent_type: Literal["rpm", "deb"] = "deb"

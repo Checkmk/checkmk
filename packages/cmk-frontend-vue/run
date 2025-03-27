@@ -191,11 +191,11 @@ main() {
     test ${RUN_CLEAN} = yes && run_clean
     test ${RUN_BUILD} = yes && run_build
     test ${RUN_TESTS} = yes && run_tests
-    test ${RUN_CHECK_FORMAT} = yes && run_check_format
     test ${RUN_TSC} = yes && run_tsc
     test ${RUN_ESLINT} = yes && run_eslint
     test ${RUN_FORMAT} = yes && run_format
     test ${RUN_BUILD_DEV} = yes && run_build_dev
+    test ${RUN_CHECK_FORMAT} = yes && run_check_format
     true
 }
 

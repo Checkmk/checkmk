@@ -170,13 +170,15 @@ class CantPostData(enum.Enum):
             case CantPostData.skip:
                 return "do not migrate rule"
             case CantPostData.post:
-                return "use POST method if post data is present"
+                return "use POST method with migrating post data"
             case CantPostData.prefermethod:
-                return "migrate `HTTP method` if post data is present, don't migrate data option"
+                return "migrate `HTTP method` without migrating post data"
 
     @classmethod
     def help_header(cls) -> str:
-        return "the option `Send HTTP POST data` is incompatible with GET, DELETE, HEAD"
+        return (
+            "the option `Send HTTP POST data` is incompatible with HTTP methods GET, DELETE, HEAD"
+        )
 
 
 class MethodUnavailable(enum.Enum):
@@ -196,7 +198,7 @@ class MethodUnavailable(enum.Enum):
             case MethodUnavailable.skip:
                 return "do not migrate rule"
             case MethodUnavailable.ignore:
-                return "ignore this option during migration, use `GET` method or `POST` if post data is present"
+                return "ignore unsupported HTTP method and use POST if post data is present, otherwise use GET"
 
     @classmethod
     def help_header(cls) -> str:

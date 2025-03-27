@@ -27,6 +27,7 @@ from cmk.rulesets.v1.form_specs import FormSpec
 class StepStatus(enum.Enum):
     ACTIVE = "active"
     COMPLETED = "completed"
+    ERROR = "error"
 
 
 class QuickSetupActionMode(StrEnum):
@@ -49,7 +50,7 @@ CallableValidator = Callable[[QuickSetupId, ParsedFormData, ProgressLogger], Gen
 CallableRecap = Callable[
     [QuickSetupId, StageIndex, ParsedFormData, ProgressLogger], Sequence[Widget]
 ]
-CallableAction = Callable[[ParsedFormData, QuickSetupActionMode, str | None], str]
+CallableAction = Callable[[ParsedFormData, QuickSetupActionMode, ProgressLogger, str | None], str]
 WidgetConfigurator = Callable[[], Sequence[Widget]]
 
 

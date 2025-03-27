@@ -30,6 +30,7 @@ from cmk.gui.quick_setup.v0_unstable.predefined._common import (
     _collect_passwords_from_form_data,
     _find_id_in_form_data,
 )
+from cmk.gui.quick_setup.v0_unstable.setups import ProgressLogger, StepStatus
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData
 from cmk.gui.site_config import site_is_local
 from cmk.gui.utils.urls import makeuri_contextless
@@ -220,12 +221,14 @@ def create_and_save_special_agent_bundle(
     special_agent_name: str,
     parameter_form: Dictionary,
     all_stages_form_data: ParsedFormData,
+    progress_logger: ProgressLogger,
 ) -> str:
     return _create_and_save_special_agent_bundle(
         special_agent_name=special_agent_name,
+        parameter_form=parameter_form,
         all_stages_form_data=all_stages_form_data,
         collect_params=_collect_params_with_defaults_from_form_data,
-        parameter_form=parameter_form,
+        progress_logger=progress_logger,
     )
 
 
@@ -234,12 +237,14 @@ def create_and_save_special_agent_bundle_custom_collect_params(
     parameter_form: Dictionary,
     all_stages_form_data: ParsedFormData,
     custom_collect_params: Callable[[ParsedFormData, Dictionary], Mapping[str, object]],
+    progress_logger: ProgressLogger,
 ) -> str:
     return _create_and_save_special_agent_bundle(
         special_agent_name=special_agent_name,
         parameter_form=parameter_form,
         all_stages_form_data=all_stages_form_data,
         collect_params=custom_collect_params,
+        progress_logger=progress_logger,
     )
 
 
@@ -283,6 +288,7 @@ def _create_and_save_special_agent_bundle(
     parameter_form: Dictionary,
     all_stages_form_data: ParsedFormData,
     collect_params: Callable[[ParsedFormData, Dictionary], Mapping[str, object]],
+    progress_logger: ProgressLogger,
 ) -> str:
     rulespec_name = RuleGroup.SpecialAgents(special_agent_name)
     bundle_id = _find_bundle_id(all_stages_form_data)
@@ -310,6 +316,9 @@ def _create_and_save_special_agent_bundle(
     # TODO: The sanitize function is likely to change once we have a folder FormSpec.
     folder = sanitize_folder_path(host_path)
     validated_host_name = HostName(host_name)
+    progress_logger.log_new_progress_step(
+        "create_config_bundle", "Create underlying configurations"
+    )
     create_config_bundle(
         bundle_id=bundle_id,
         bundle=ConfigBundle(
@@ -344,6 +353,8 @@ def _create_and_save_special_agent_bundle(
             ),
         ),
     )
+    progress_logger.update_progress_step_status("create_config_bundle", StepStatus.COMPLETED)
+    progress_logger.log_new_progress_step("service_discovery", "Run service discovery")
     try:
         host: Host = Host.load_host(HostName(host_name))
         if not site_is_local(active_config, site_id):
@@ -364,8 +375,14 @@ def _create_and_save_special_agent_bundle(
             raise_errors=False,
         )
     except Exception as e:
+        progress_logger.update_progress_step_status("service_discovery", StepStatus.ERROR)
+
+        progress_logger.log_new_progress_step("delete_config_bundle", "Revert changes")
         delete_config_bundle(BundleId(bundle_id))
+        progress_logger.update_progress_step_status("delete_config_bundle", StepStatus.COMPLETED)
         raise e
+
+    progress_logger.update_progress_step_status("service_discovery", StepStatus.COMPLETED)
 
     # revert changes does not work correctly when a config sync to another site occurred
     # for consistency reasons we always prevent the user from reverting the changes

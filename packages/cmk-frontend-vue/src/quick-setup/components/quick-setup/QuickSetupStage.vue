@@ -63,7 +63,10 @@ const onClickGoTo = computed(() =>
   position: relative;
   display: flex;
   gap: 16px;
-  padding-bottom: 1rem;
+
+  &:not(:last-child) {
+    padding-bottom: 1rem;
+  }
 
   &:before {
     counter-increment: stage-index;

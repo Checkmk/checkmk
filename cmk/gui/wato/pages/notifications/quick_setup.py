@@ -1760,7 +1760,10 @@ def _validate_optional_url(value: str) -> None:
 
 
 def save_and_test_action(
-    all_stages_form_data: ParsedFormData, mode: QuickSetupActionMode, object_id: str | None
+    all_stages_form_data: ParsedFormData,
+    mode: QuickSetupActionMode,
+    _progress_logger: ProgressLogger,
+    object_id: str | None,
 ) -> str:
     match mode:
         case QuickSetupActionMode.SAVE:
@@ -1776,7 +1779,10 @@ def save_and_test_action(
 
 
 def save_and_new_action(
-    all_stages_form_data: ParsedFormData, mode: QuickSetupActionMode, object_id: str | None
+    all_stages_form_data: ParsedFormData,
+    mode: QuickSetupActionMode,
+    _progress_logger: ProgressLogger,
+    object_id: str | None,
 ) -> str:
     match mode:
         case QuickSetupActionMode.SAVE:

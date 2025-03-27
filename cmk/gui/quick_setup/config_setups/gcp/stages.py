@@ -277,7 +277,10 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
 
 
 def action(
-    all_stages_form_data: ParsedFormData, mode: QuickSetupActionMode, object_id: str | None
+    all_stages_form_data: ParsedFormData,
+    mode: QuickSetupActionMode,
+    progress_logger: ProgressLogger,
+    _object_id: str | None,
 ) -> str:
     match mode:
         case QuickSetupActionMode.SAVE:
@@ -286,6 +289,7 @@ def action(
                 parameter_form=gcp.form_spec(),
                 all_stages_form_data=all_stages_form_data,
                 custom_collect_params=gcp_collect_params,
+                progress_logger=progress_logger,
             )
         case QuickSetupActionMode.EDIT:
             raise ValueError("Edit mode not supported")

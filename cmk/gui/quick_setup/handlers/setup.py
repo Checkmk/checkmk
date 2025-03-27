@@ -239,12 +239,14 @@ def complete_quick_setup(
     mode: QuickSetupActionMode,
     stages_raw_formspecs: Sequence[RawFormData],
     quick_setup_formspec_map: FormspecMap,
-    object_id: str | None = None,
+    progress_logger: ProgressLogger,
+    object_id: str | None,
 ) -> QuickSetupSaveRedirect:
     return QuickSetupSaveRedirect(
         redirect_url=action.action(
             form_spec_parse(stages_raw_formspecs, quick_setup_formspec_map),
             mode,
+            progress_logger,
             object_id,
         )
     )
@@ -310,6 +312,7 @@ def verify_custom_validators_and_complete_quick_setup(
         mode=mode,
         stages_raw_formspecs=stages_raw_formspecs,
         quick_setup_formspec_map=form_spec_map,
+        progress_logger=progress_logger,
         object_id=object_id,
     ).redirect_url
     return CompleteActionResult(redirect_url=redirect_url)

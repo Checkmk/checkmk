@@ -111,9 +111,9 @@ const nextStage = async (actionId: string) => {
     return
   }
 
-  //If we have not finished the quick setup yet, but still on the, regular step
+  followingStage.background_job_log.clear()
+  //If we have not finished the quick setup yet, but still on the regular steps
   if (nextStageNumber < numberOfStages.value - 1) {
-    followingStage.background_job_log.clear()
     let nextStageStructure: QuickSetupStageStructure
     try {
       nextStageStructure = await getStageStructure(
@@ -394,7 +394,14 @@ const saveStage = computed((): QuickSetupSaveStageSpec => {
 
   return {
     errors: [...asStringArray(stg.errors || []), ...asStringArray(globalError.value || [])],
-    actions: [...stg.actions.values()]
+    actions: [...stg.actions.values()],
+    content: renderContent(
+      stg.components || [],
+      () => {},
+      stg.background_job_log.entries,
+      stg.form_spec_errors,
+      stg.user_input
+    )
   }
 })
 

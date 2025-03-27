@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
+import re
 import time
 from collections.abc import Callable, Iterable, Iterator
 from contextlib import contextmanager
@@ -583,3 +583,78 @@ def _synchronize_site(
         current_span,
     )
     assert sync_result is not None
+
+
+def test_replication_path_factory_ok() -> None:
+    assert config_sync.ReplicationPath.make(
+        ty=config_sync.ReplicationPathType.DIR,
+        ident="some_dir",
+        site_path="some_path",
+        excludes_exact_match=["xyz"],
+        excludes_regex_match=[".*abc"],
+    ) == config_sync.ReplicationPath(
+        ty=config_sync.ReplicationPathType.DIR,
+        ident="some_dir",
+        site_path="some_path",
+        excludes_exact_match=frozenset(["xyz"]),
+        excludes_regex_match=frozenset([re.compile(".*abc"), re.compile(r"^\..*\.new.*")]),
+    )
+
+
+def test_replication_path_factory_error_absolute_path() -> None:
+    with pytest.raises(Exception):
+        config_sync.ReplicationPath.make(
+            ty=config_sync.ReplicationPathType.FILE,
+            ident="some_file",
+            site_path="/abs",
+        )
+
+
+@pytest.mark.parametrize(
+    ("entry", "expected_result"),
+    [
+        ("xyz", True),
+        ("123abc", True),
+        (".filename.newabc123", True),
+        ("something.mk", False),
+        ("my-new-file", False),
+    ],
+)
+def test_replication_path_is_excluded(entry: str, expected_result: bool) -> None:
+    assert (
+        config_sync.ReplicationPath.make(
+            ty=config_sync.ReplicationPathType.DIR,
+            ident="some_dir",
+            site_path="some_path",
+            excludes_exact_match=["xyz"],
+            excludes_regex_match=[".*abc"],
+        ).is_excluded(entry)
+        is expected_result
+    )
+
+
+def test_replication_path_serialize_deserialize_round_trip() -> None:
+    replication_path = config_sync.ReplicationPath.make(
+        ty=config_sync.ReplicationPathType.FILE,
+        ident="some-file",
+        site_path="a/b/c.mk",
+        excludes_exact_match=["xyz"],
+        excludes_regex_match=[".*abc"],
+    )
+    assert config_sync.ReplicationPath.deserialize(replication_path.serialize()) == replication_path
+
+
+def test_replication_path_deserialize_legacy_format() -> None:
+    assert config_sync.ReplicationPath.deserialize(
+        ("dir", "ident", "x/y/z", ["1", "2"])
+    ) == config_sync.ReplicationPath.make(
+        ty=config_sync.ReplicationPathType.DIR,
+        ident="ident",
+        site_path="x/y/z",
+        excludes_exact_match=["1", "2"],
+    )
+
+
+def test_replication_path_serialize_deserialize_error() -> None:
+    with pytest.raises(TypeError):
+        config_sync.ReplicationPath.deserialize(("file", "ident", "some_path/x.mk"))

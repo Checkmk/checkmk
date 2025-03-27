@@ -5,9 +5,13 @@
 """Preparing the site configuration in distributed setups for synchronization"""
 
 import abc
+import enum
 import os
+import re
+from collections.abc import Iterable
+from dataclasses import dataclass
 from pathlib import Path
-from typing import NamedTuple, override
+from typing import NamedTuple, override, Self
 
 from livestatus import SiteConfiguration, SiteGlobals, SiteId
 
@@ -26,34 +30,94 @@ from cmk.messaging import rabbitmq
 Command = list[str]
 
 
-class _BaseReplicationPath(NamedTuple):
-    """Needed for the ReplicationPath class to call __new__ method."""
+class ReplicationPathType(enum.Enum):
+    FILE = "file"
+    DIR = "dir"
 
-    ty: str
+
+@dataclass(frozen=True, kw_only=True)
+class ReplicationPath:
+    _PATTERNS_INTERMEDIATE_STORE_FILES = frozenset([re.compile(r"^\..*\.new.*")])
+
+    ty: ReplicationPathType
     ident: str
     site_path: str
-    excludes: list[str]
+    excludes_exact_match: frozenset[str]
+    excludes_regex_match: frozenset[re.Pattern[str]]
 
-
-class ReplicationPath(_BaseReplicationPath):
-    def __new__(cls, ty: str, ident: str, site_path: str, excludes: list[str]) -> "ReplicationPath":
+    @classmethod
+    def make(
+        cls,
+        *,
+        ty: ReplicationPathType,
+        ident: str,
+        site_path: str,
+        excludes_exact_match: Iterable[str] = (),
+        excludes_regex_match: Iterable[str] = (),
+    ) -> Self:
         if site_path.startswith("/"):
-            raise Exception("ReplicationPath.path must be a path relative to the site root")
+            raise Exception("ReplicationPath.site_path must be a path relative to the site root")
         cleaned_path = site_path.rstrip("/")
 
-        if ".*new*" not in excludes:
-            final_excludes = excludes[:]
-            final_excludes.append(".*new*")  # exclude all temporary files
-        else:
-            final_excludes = excludes
-
-        return super().__new__(
-            cls,
+        return cls(
             ty=ty,
             ident=ident,
             site_path=cleaned_path,
-            excludes=final_excludes,
+            excludes_exact_match=frozenset(excludes_exact_match),
+            excludes_regex_match=frozenset(re.compile(pattern) for pattern in excludes_regex_match)
+            | cls._PATTERNS_INTERMEDIATE_STORE_FILES,
         )
+
+    def is_excluded(self, entry: str) -> bool:
+        return entry in self.excludes_exact_match or any(
+            pattern.match(entry) for pattern in self.excludes_regex_match
+        )
+
+    def serialize(self) -> tuple[str, str, str, list[str], list[str]]:
+        return (
+            self.ty.value,
+            self.ident,
+            self.site_path,
+            list(self.excludes_exact_match),
+            [pattern.pattern for pattern in self.excludes_regex_match],
+        )
+
+    @classmethod
+    def deserialize(cls, serialized: object) -> Self:
+        if not isinstance(serialized, tuple):
+            raise TypeError(serialized)
+        match serialized:
+            # Legacy format, drop in 2.6.
+            # We need this in 2.5 to stay compatible with 2.4 central sites. A 2.5 remote site must
+            # support both formats.
+            case (
+                str(raw_ty),
+                str(ident),
+                str(site_path),
+                excludes_exact_match,
+            ):
+                return cls.make(
+                    ty=ReplicationPathType(raw_ty),
+                    ident=ident,
+                    site_path=site_path,
+                    excludes_exact_match=excludes_exact_match,
+                )
+            case (
+                str(raw_ty),
+                str(ident),
+                str(site_path),
+                excludes_exact_match,
+                excludes_regex_match,
+            ):
+                return cls.make(
+                    ty=ReplicationPathType(raw_ty),
+                    ident=ident,
+                    site_path=site_path,
+                    excludes_exact_match=excludes_exact_match,
+                    excludes_regex_match=excludes_regex_match,
+                )
+            case _:
+                raise TypeError(serialized)
 
 
 class ReplicationPathRegistry(Registry[ReplicationPath]):

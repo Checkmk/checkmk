@@ -33,7 +33,11 @@ from cmk.gui.watolib.activate_changes import (
     ConfigSyncFileInfo,
     default_rabbitmq_definitions,
 )
-from cmk.gui.watolib.config_sync import replication_path_registry, ReplicationPath
+from cmk.gui.watolib.config_sync import (
+    replication_path_registry,
+    ReplicationPath,
+    ReplicationPathType,
+)
 
 from cmk.livestatus_client import (
     BrokerConnection,
@@ -55,114 +59,173 @@ def restore_orig_replication_paths():
 
 def _expected_replication_paths(edition: cmk_version.Edition) -> list[ReplicationPath]:
     expected = [
-        ReplicationPath("dir", "check_mk", "etc/check_mk/conf.d/wato/", []),
-        ReplicationPath("dir", "multisite", "etc/check_mk/multisite.d/wato/", []),
-        ReplicationPath("file", "htpasswd", "etc/htpasswd", []),
-        ReplicationPath("file", "auth.secret", "etc/auth.secret", []),
-        ReplicationPath("file", "password_store.secret", "etc/password_store.secret", []),
-        ReplicationPath("file", "auth.serials", "etc/auth.serials", []),
-        ReplicationPath("file", "stored_passwords", "var/check_mk/stored_passwords", []),
-        ReplicationPath(
-            "dir",
-            "usersettings",
-            "var/check_mk/web",
-            ["last_login.mk", "report-thumbnails", "session_info.mk"],
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
+            ident="check_mk",
+            site_path="etc/check_mk/conf.d/wato",
         ),
-        ReplicationPath("dir", "mkps", "var/check_mk/packages", []),
-        ReplicationPath("dir", "local", "local", []),
-        ReplicationPath(
-            ty="file",
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
+            ident="multisite",
+            site_path="etc/check_mk/multisite.d/wato",
+        ),
+        ReplicationPath.make(
+            ty=ReplicationPathType.FILE,
+            ident="htpasswd",
+            site_path="etc/htpasswd",
+        ),
+        ReplicationPath.make(
+            ty=ReplicationPathType.FILE,
+            ident="auth.secret",
+            site_path="etc/auth.secret",
+        ),
+        ReplicationPath.make(
+            ty=ReplicationPathType.FILE,
+            ident="password_store.secret",
+            site_path="etc/password_store.secret",
+        ),
+        ReplicationPath.make(
+            ty=ReplicationPathType.FILE,
+            ident="auth.serials",
+            site_path="etc/auth.serials",
+        ),
+        ReplicationPath.make(
+            ty=ReplicationPathType.FILE,
+            ident="stored_passwords",
+            site_path="var/check_mk/stored_passwords",
+        ),
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
+            ident="usersettings",
+            site_path="var/check_mk/web",
+            excludes_exact_match=["last_login.mk", "report-thumbnails", "session_info.mk"],
+        ),
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
+            ident="mkps",
+            site_path="var/check_mk/packages",
+        ),
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
+            ident="local",
+            site_path="local",
+        ),
+        ReplicationPath.make(
+            ty=ReplicationPathType.FILE,
             ident="distributed_wato",
             site_path="etc/check_mk/conf.d/distributed_wato.mk",
-            excludes=[],
         ),
-        ReplicationPath(
-            ty="dir", ident="omd", site_path="etc/omd", excludes=["site.conf", "instance_id"]
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
+            ident="omd",
+            site_path="etc/omd",
+            excludes_exact_match=["site.conf", "instance_id"],
         ),
-        ReplicationPath(
-            ty="dir",
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
             ident="rabbitmq",
             site_path="etc/rabbitmq/definitions.d",
-            excludes=["00-default.json", "definitions.json", ".*new*"],
+            excludes_exact_match=["00-default.json", "definitions.json"],
         ),
-        ReplicationPath(
-            ty="dir",
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
             ident="frozen_aggregations",
             site_path="var/check_mk/frozen_aggregations",
-            excludes=[],
+            excludes_exact_match=[],
         ),
-        ReplicationPath(
-            ty="dir",
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
             ident="topology",
             site_path="var/check_mk/topology",
-            excludes=[],
+            excludes_exact_match=[],
         ),
-        ReplicationPath(
-            ty="dir",
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
             ident="apache_proccess_tuning",
             site_path="etc/check_mk/apache.d/wato",
-            excludes=[],
+            excludes_exact_match=[],
         ),
     ]
 
     if edition is not cmk_version.Edition.CRE:
         expected += [
-            ReplicationPath("dir", "liveproxyd", "etc/check_mk/liveproxyd.d/wato/", []),
-            ReplicationPath("dir", "dcd", "etc/check_mk/dcd.d/wato/", []),
-            ReplicationPath("dir", "mknotify", "etc/check_mk/mknotifyd.d/wato", []),
+            ReplicationPath.make(
+                ty=ReplicationPathType.DIR,
+                ident="liveproxyd",
+                site_path="etc/check_mk/liveproxyd.d/wato",
+            ),
+            ReplicationPath.make(
+                ty=ReplicationPathType.DIR,
+                ident="dcd",
+                site_path="etc/check_mk/dcd.d/wato",
+            ),
+            ReplicationPath.make(
+                ty=ReplicationPathType.DIR,
+                ident="mknotify",
+                site_path="etc/check_mk/mknotifyd.d/wato",
+            ),
             # CMK-20769
-            ReplicationPath("dir", "otel_collector", "etc/check_mk/otel_collector.d/wato", []),
+            ReplicationPath.make(
+                ty=ReplicationPathType.DIR,
+                ident="otel_collector",
+                site_path="etc/check_mk/otel_collector.d/wato",
+            ),
         ]
 
     expected += [
-        ReplicationPath("dir", "mkeventd", "etc/check_mk/mkeventd.d/wato", []),
-        ReplicationPath("dir", "mkeventd_mkp", "etc/check_mk/mkeventd.d/mkp/rule_packs", []),
-        ReplicationPath("dir", "diskspace", "etc/check_mk/diskspace.d/wato", []),
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
+            ident="mkeventd",
+            site_path="etc/check_mk/mkeventd.d/wato",
+        ),
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
+            ident="mkeventd_mkp",
+            site_path="etc/check_mk/mkeventd.d/mkp/rule_packs",
+        ),
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
+            ident="diskspace",
+            site_path="etc/check_mk/diskspace.d/wato",
+        ),
     ]
 
     if edition is cmk_version.Edition.CME:
         expected += [
-            ReplicationPath(
-                ty="file",
+            ReplicationPath.make(
+                ty=ReplicationPathType.FILE,
                 ident="customer_check_mk",
                 site_path="etc/check_mk/conf.d/customer.mk",
-                excludes=[],
             ),
-            ReplicationPath(
-                ty="file",
+            ReplicationPath.make(
+                ty=ReplicationPathType.FILE,
                 ident="customer_gui_design",
                 site_path="etc/check_mk/multisite.d/zzz_customer_gui_design.mk",
-                excludes=[],
             ),
-            ReplicationPath(
-                ty="file",
+            ReplicationPath.make(
+                ty=ReplicationPathType.FILE,
                 ident="customer_multisite",
                 site_path="etc/check_mk/multisite.d/customer.mk",
-                excludes=[],
             ),
-            ReplicationPath(
-                ty="file",
+            ReplicationPath.make(
+                ty=ReplicationPathType.FILE,
                 ident="login_logo_dark",
                 site_path="local/share/check_mk/web/htdocs/themes/modern-dark/images/login_logo.png",
-                excludes=[],
             ),
-            ReplicationPath(
-                ty="file",
+            ReplicationPath.make(
+                ty=ReplicationPathType.FILE,
                 ident="login_logo_facelift",
                 site_path="local/share/check_mk/web/htdocs/themes/facelift/images/login_logo.png",
-                excludes=[],
             ),
-            ReplicationPath(
-                ty="file",
+            ReplicationPath.make(
+                ty=ReplicationPathType.FILE,
                 ident="navbar_logo_dark",
                 site_path="local/share/check_mk/web/htdocs/themes/modern-dark/images/navbar_logo.png",
-                excludes=[],
             ),
-            ReplicationPath(
-                ty="file",
+            ReplicationPath.make(
+                ty=ReplicationPathType.FILE,
                 ident="navbar_logo_facelift",
                 site_path="local/share/check_mk/web/htdocs/themes/facelift/images/navbar_logo.png",
-                excludes=[],
             ),
         ]
 
@@ -175,58 +238,67 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
         # CEE paths are added when the CEE plug-ins for WATO are available, i.e.
         # when the "enterprise/" path is present.
         expected += [
-            ReplicationPath("dir", "dcd", "etc/check_mk/dcd.d/wato/", []),
-            ReplicationPath("dir", "mknotify", "etc/check_mk/mknotifyd.d/wato", []),
-            ReplicationPath("dir", "liveproxyd", "etc/check_mk/liveproxyd.d/wato/", []),
+            ReplicationPath.make(
+                ty=ReplicationPathType.DIR,
+                ident="dcd",
+                site_path="etc/check_mk/dcd.d/wato",
+            ),
+            ReplicationPath.make(
+                ty=ReplicationPathType.DIR,
+                ident="mknotify",
+                site_path="etc/check_mk/mknotifyd.d/wato",
+            ),
+            ReplicationPath.make(
+                ty=ReplicationPathType.DIR,
+                ident="liveproxyd",
+                site_path="etc/check_mk/liveproxyd.d/wato",
+            ),
             # CMK-20769
-            ReplicationPath("dir", "otel_collector", "etc/check_mk/otel_collector.d/wato/", []),
+            ReplicationPath.make(
+                ty=ReplicationPathType.DIR,
+                ident="otel_collector",
+                site_path="etc/check_mk/otel_collector.d/wato",
+            ),
         ]
 
     if is_managed_repo() and edition is not cmk_version.Edition.CME:
         # CME paths are added when the CME plug-ins for WATO are available, i.e.
         # when the "managed/" path is present.
         expected += [
-            ReplicationPath(
-                ty="file",
+            ReplicationPath.make(
+                ty=ReplicationPathType.FILE,
                 ident="customer_check_mk",
                 site_path="etc/check_mk/conf.d/customer.mk",
-                excludes=[],
             ),
-            ReplicationPath(
-                ty="file",
+            ReplicationPath.make(
+                ty=ReplicationPathType.FILE,
                 ident="customer_gui_design",
                 site_path="etc/check_mk/multisite.d/zzz_customer_gui_design.mk",
-                excludes=[],
             ),
-            ReplicationPath(
-                ty="file",
+            ReplicationPath.make(
+                ty=ReplicationPathType.FILE,
                 ident="customer_multisite",
                 site_path="etc/check_mk/multisite.d/customer.mk",
-                excludes=[],
             ),
-            ReplicationPath(
-                ty="file",
+            ReplicationPath.make(
+                ty=ReplicationPathType.FILE,
                 ident="login_logo_dark",
                 site_path="local/share/check_mk/web/htdocs/themes/modern-dark/images/login_logo.png",
-                excludes=[],
             ),
-            ReplicationPath(
-                ty="file",
+            ReplicationPath.make(
+                ty=ReplicationPathType.FILE,
                 ident="login_logo_facelift",
                 site_path="local/share/check_mk/web/htdocs/themes/facelift/images/login_logo.png",
-                excludes=[],
             ),
-            ReplicationPath(
-                ty="file",
+            ReplicationPath.make(
+                ty=ReplicationPathType.FILE,
                 ident="navbar_logo_dark",
                 site_path="local/share/check_mk/web/htdocs/themes/modern-dark/images/navbar_logo.png",
-                excludes=[],
             ),
-            ReplicationPath(
-                ty="file",
+            ReplicationPath.make(
+                ty=ReplicationPathType.FILE,
                 ident="navbar_logo_facelift",
                 site_path="local/share/check_mk/web/htdocs/themes/facelift/images/navbar_logo.png",
-                excludes=[],
             ),
         ]
 
@@ -237,7 +309,13 @@ def test_get_replication_paths_defaults(
     edition: cmk_version.Edition, request_context: None
 ) -> None:
     expected = _expected_replication_paths(edition)
-    assert sorted(replication_path_registry.values()) == sorted(expected)
+    assert sorted(
+        replication_path_registry.values(),
+        key=lambda replication_path: replication_path.ident,
+    ) == sorted(
+        expected,
+        key=lambda replication_path: replication_path.ident,
+    )
 
 
 @pytest.mark.parametrize("replicate_ec", [None, True, False])
@@ -265,14 +343,26 @@ def test_get_replication_components(
     if not replicate_mkps:
         expected = [e for e in expected if e.ident not in ["local", "mkps"]]
 
-    assert sorted(activate_changes._get_replication_components(partial_site_config)) == sorted(
-        expected
+    assert sorted(
+        activate_changes._get_replication_components(partial_site_config),
+        key=lambda replication_path: replication_path.ident,
+    ) == sorted(
+        expected,
+        key=lambda replication_path: replication_path.ident,
     )
 
 
 def test_automation_get_config_sync_state(request_context: None) -> None:
     get_state = activate_changes.AutomationGetConfigSyncState()
-    response = get_state.execute([ReplicationPath("dir", "abc", "etc", [])])
+    response = get_state.execute(
+        [
+            ReplicationPath.make(
+                ty=ReplicationPathType.DIR,
+                ident="abc",
+                site_path="etc",
+            )
+        ]
+    )
     assert response == (
         {
             "etc/check_mk/multisite.mk": (
@@ -315,13 +405,41 @@ def test_get_config_sync_file_infos() -> None:
     _create_get_config_sync_file_infos_test_config(base_dir)
 
     replication_paths = [
-        ReplicationPath("dir", "d1-empty", "etc/d1", []),
-        ReplicationPath("dir", "d2-not-existing", "etc/d2", []),
-        ReplicationPath("dir", "d3-single-file", "etc/d3", []),
-        ReplicationPath("dir", "d4-multiple-files", "etc/d4", []),
-        ReplicationPath("file", "f1-not-existing", "etc/f1", []),
-        ReplicationPath("file", "f2", "bla/blub/f2", []),
-        ReplicationPath("dir", "links", "links", []),
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
+            ident="d1-empty",
+            site_path="etc/d1",
+        ),
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
+            ident="d2-not-existing",
+            site_path="etc/d2",
+        ),
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
+            ident="d3-single-file",
+            site_path="etc/d3",
+        ),
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
+            ident="d4-multiple-files",
+            site_path="etc/d4",
+        ),
+        ReplicationPath.make(
+            ty=ReplicationPathType.FILE,
+            ident="f1-not-existing",
+            site_path="etc/f1",
+        ),
+        ReplicationPath.make(
+            ty=ReplicationPathType.FILE,
+            ident="f2",
+            site_path="bla/blub/f2",
+        ),
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
+            ident="links",
+            site_path="links",
+        ),
     ]
     sync_infos = activate_changes._get_config_sync_file_infos(replication_paths, base_dir)
 

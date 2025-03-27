@@ -41,7 +41,11 @@ from cmk.gui.watolib.config_domain_name import (
     wato_fileheader,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
-from cmk.gui.watolib.config_sync import ReplicationPath, ReplicationPathRegistry
+from cmk.gui.watolib.config_sync import (
+    ReplicationPath,
+    ReplicationPathRegistry,
+    ReplicationPathType,
+)
 from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupSiteManagement
 
 from cmk.diskspace.config import DEFAULT_CONFIG as diskspace_DEFAULT_CONFIG
@@ -62,11 +66,12 @@ def register(
     config_variable_registry.register(ConfigVariableSiteApacheProcessTuning)
     config_variable_registry.register(ConfigVariableSiteRRDCachedTuning)
     replication_path_registry.register(
-        ReplicationPath(
-            "dir",
-            "diskspace",
-            str(cmk.utils.paths.diskspace_config_dir.relative_to(cmk.utils.paths.omd_root)),
-            [],
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
+            ident="diskspace",
+            site_path=str(
+                cmk.utils.paths.diskspace_config_dir.relative_to(cmk.utils.paths.omd_root)
+            ),
         )
     )
 

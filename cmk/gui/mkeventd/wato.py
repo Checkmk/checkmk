@@ -148,7 +148,11 @@ from cmk.gui.watolib.config_domain_name import (
     SampleConfigGeneratorRegistry,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainGUI, ConfigDomainOMD
-from cmk.gui.watolib.config_sync import ReplicationPath, ReplicationPathRegistry
+from cmk.gui.watolib.config_sync import (
+    ReplicationPath,
+    ReplicationPathRegistry,
+    ReplicationPathType,
+)
 from cmk.gui.watolib.config_variable_groups import (
     ConfigVariableGroupNotifications,
     ConfigVariableGroupSiteManagement,
@@ -290,17 +294,18 @@ def register(
     hooks.register_builtin("pre-activate-changes", mkeventd_update_notification_configuration)
 
     replication_path_registry.register(
-        ReplicationPath(
-            "dir", "mkeventd", str(ec.rule_pack_dir().relative_to(cmk.utils.paths.omd_root)), []
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
+            ident="mkeventd",
+            site_path=str(ec.rule_pack_dir().relative_to(cmk.utils.paths.omd_root)),
         )
     )
 
     replication_path_registry.register(
-        ReplicationPath(
-            "dir",
-            "mkeventd_mkp",
-            str(ec.mkp_rule_pack_dir().relative_to(cmk.utils.paths.omd_root)),
-            [],
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
+            ident="mkeventd_mkp",
+            site_path=str(ec.mkp_rule_pack_dir().relative_to(cmk.utils.paths.omd_root)),
         )
     )
 

@@ -30,6 +30,7 @@ from cmk.gui.watolib.config_sync import (
     get_site_globals,
     replication_path_registry,
     ReplicationPath,
+    ReplicationPathType,
     SnapshotSettings,
 )
 from cmk.gui.watolib.global_settings import save_site_global_settings
@@ -185,7 +186,7 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
             if not source_path.exists():
                 # Not existing files things can simply be skipped, not existing files could also be
                 # skipped, but we create them here to be 1:1 compatible with the pre 1.7 sync.
-                if component.ty == "dir":
+                if component.ty is ReplicationPathType.DIR:
                     store.makedirs(target_path)
 
                 continue

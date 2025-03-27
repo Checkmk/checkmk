@@ -8,7 +8,6 @@
 from __future__ import annotations
 
 import ast
-import enum
 import hashlib
 import io
 import logging
@@ -33,7 +32,7 @@ from datetime import datetime
 from itertools import filterfalse
 from multiprocessing.pool import AsyncResult, ThreadPool
 from pathlib import Path
-from typing import Any, Literal, NamedTuple, TypedDict
+from typing import Any, assert_never, Literal, NamedTuple, TypedDict
 from urllib.parse import urlparse
 
 from pydantic import BaseModel
@@ -120,6 +119,7 @@ from cmk.gui.watolib.config_sync import (
     replication_path_registry,
     ReplicationPath,
     ReplicationPathRegistry,
+    ReplicationPathType,
     SnapshotSettings,
 )
 from cmk.gui.watolib.global_settings import load_configuration_settings
@@ -208,112 +208,107 @@ def get_free_message(format_html: bool = False) -> str:
 
 def register(replication_path_registry_: ReplicationPathRegistry) -> None:
     for repl_path in [
-        ReplicationPath(
-            "dir",
-            "check_mk",
-            os.path.relpath(cmk.gui.watolib.utils.wato_root_dir(), cmk.utils.paths.omd_root),
-            [],
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
+            ident="check_mk",
+            site_path=os.path.relpath(
+                cmk.gui.watolib.utils.wato_root_dir(), cmk.utils.paths.omd_root
+            ),
         ),
-        ReplicationPath(
-            "dir",
-            "multisite",
-            os.path.relpath(cmk.gui.watolib.utils.multisite_dir(), cmk.utils.paths.omd_root),
-            [],
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
+            ident="multisite",
+            site_path=os.path.relpath(
+                cmk.gui.watolib.utils.multisite_dir(), cmk.utils.paths.omd_root
+            ),
         ),
-        ReplicationPath(
-            "file",
-            "htpasswd",
-            os.path.relpath(cmk.utils.paths.htpasswd_file, cmk.utils.paths.omd_root),
-            [],
+        ReplicationPath.make(
+            ty=ReplicationPathType.FILE,
+            ident="htpasswd",
+            site_path=os.path.relpath(cmk.utils.paths.htpasswd_file, cmk.utils.paths.omd_root),
         ),
-        ReplicationPath(
-            "file",
-            "auth.secret",
-            os.path.relpath(cmk.utils.paths.auth_secret_file, cmk.utils.paths.omd_root),
-            [],
+        ReplicationPath.make(
+            ty=ReplicationPathType.FILE,
+            ident="auth.secret",
+            site_path=os.path.relpath(cmk.utils.paths.auth_secret_file, cmk.utils.paths.omd_root),
         ),
-        ReplicationPath(
-            "file",
-            "password_store.secret",
-            os.path.relpath(cmk.utils.paths.password_store_secret_file, cmk.utils.paths.omd_root),
-            [],
+        ReplicationPath.make(
+            ty=ReplicationPathType.FILE,
+            ident="password_store.secret",
+            site_path=os.path.relpath(
+                cmk.utils.paths.password_store_secret_file, cmk.utils.paths.omd_root
+            ),
         ),
-        ReplicationPath(
-            "file",
-            "auth.serials",
-            os.path.relpath(
+        ReplicationPath.make(
+            ty=ReplicationPathType.FILE,
+            ident="auth.serials",
+            site_path=os.path.relpath(
                 "%s/auth.serials" % os.path.dirname(cmk.utils.paths.htpasswd_file),
                 cmk.utils.paths.omd_root,
             ),
-            [],
         ),
-        ReplicationPath(
-            "file",
-            "stored_passwords",
-            os.path.relpath(
+        ReplicationPath.make(
+            ty=ReplicationPathType.FILE,
+            ident="stored_passwords",
+            site_path=os.path.relpath(
                 "%s/stored_passwords" % cmk.utils.paths.var_dir, cmk.utils.paths.omd_root
             ),
-            [],
         ),
         # Also replicate the user-settings of Multisite? While the replication
         # as such works pretty well, the count of pending changes will not
         # know.
-        ReplicationPath(
-            "dir",
-            "usersettings",
-            os.path.relpath(cmk.utils.paths.var_dir + "/web", cmk.utils.paths.omd_root),
-            ["last_login.mk", "report-thumbnails", "session_info.mk"],
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
+            ident="usersettings",
+            site_path=os.path.relpath(cmk.utils.paths.var_dir + "/web", cmk.utils.paths.omd_root),
+            excludes_exact_match=["last_login.mk", "report-thumbnails", "session_info.mk"],
         ),
-        ReplicationPath(
-            "dir",
-            "mkps",
-            os.path.relpath(cmk.utils.paths.var_dir + "/packages", cmk.utils.paths.omd_root),
-            [],
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
+            ident="mkps",
+            site_path=os.path.relpath(
+                cmk.utils.paths.var_dir + "/packages", cmk.utils.paths.omd_root
+            ),
         ),
-        ReplicationPath(
-            "dir",
-            "local",
-            "local",
-            [],
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
+            ident="local",
+            site_path="local",
         ),
-        ReplicationPath(
-            ty="file",
+        ReplicationPath.make(
+            ty=ReplicationPathType.FILE,
             ident="distributed_wato",
             site_path="etc/check_mk/conf.d/distributed_wato.mk",
-            excludes=[],
         ),
-        ReplicationPath(
-            ty="dir",
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
             ident="omd",
             site_path="etc/omd",
-            excludes=["site.conf", "instance_id"],
+            excludes_exact_match=["site.conf", "instance_id"],
         ),
-        ReplicationPath(
-            ty="dir",
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
             ident="rabbitmq",
             site_path=rabbitmq.DEFINITIONS_PATH,
-            excludes=[
+            excludes_exact_match=[
                 rabbitmq.DEFAULT_DEFINITIONS_FILE_NAME,
                 rabbitmq.ACTIVE_DEFINITIONS_FILE_NAME,
             ],
         ),
-        ReplicationPath(
-            ty="dir",
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
             ident="frozen_aggregations",
             site_path=os.path.relpath(frozen_aggregations_dir, cmk.utils.paths.omd_root),
-            excludes=[],
         ),
-        ReplicationPath(
-            ty="dir",
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
             ident="topology",
             site_path=os.path.relpath(topology_dir, cmk.utils.paths.omd_root),
-            excludes=[],
         ),
-        ReplicationPath(
-            ty="dir",
+        ReplicationPath.make(
+            ty=ReplicationPathType.DIR,
             ident="apache_proccess_tuning",
             site_path="etc/check_mk/apache.d/wato",
-            excludes=[],
         ),
     ]:
         replication_path_registry.register(repl_path)
@@ -679,7 +674,7 @@ def _get_config_sync_state(
     response = cmk.gui.watolib.automations.do_remote_automation(
         site,
         "get-config-sync-state",
-        [("replication_paths", repr([tuple(r) for r in replication_paths]))],
+        [("replication_paths", repr([r.serialize() for r in replication_paths]))],
     )
 
     assert isinstance(response, tuple)
@@ -1713,7 +1708,7 @@ class ActivateChangesManager(ActivateChanges):
             snapshot_components = _get_replication_components(site_config)
 
             # Generate a quick reference_by_name for each component
-            component_names = {c[1] for c in snapshot_components}
+            component_names = {c.ident for c in snapshot_components}
 
             snapshot_settings[site_id] = SnapshotSettings(
                 snapshot_path=self._site_snapshot_file(site_id),
@@ -1978,11 +1973,6 @@ def _initialize_site_activation_state(
     return site_activation_state
 
 
-class ReplicationPathType(enum.StrEnum):
-    FILE = enum.auto()
-    DIR = enum.auto()
-
-
 def _get_config_sync_file_infos_per_inode(
     replication_paths: Sequence[ReplicationPath],
 ) -> Mapping[int, ConfigSyncFileInfo]:
@@ -2000,7 +1990,7 @@ def _get_config_sync_file_infos_per_inode(
             )
         elif replication_path.ty == ReplicationPathType.DIR:
             _get_replication_dir_config_sync_file_infos_per_inode(
-                inode_sync_states, replication_path_full, replication_path.excludes
+                inode_sync_states, replication_path_full, replication_path.is_excluded
             )
         else:
             raise NotImplementedError()
@@ -2011,12 +2001,12 @@ def _get_config_sync_file_infos_per_inode(
 def _get_replication_dir_config_sync_file_infos_per_inode(
     inode_sync_states: MutableMapping[int, ConfigSyncFileInfo],
     replication_path: str,
-    replication_path_excludes: Sequence[str],
+    replication_path_excluder: Callable[[str], bool],
 ) -> None:
     # Use os functionality instead of pathlib since it is faster
     for root, dir_names, file_names in os.walk(replication_path):
         root_name = os.path.basename(root)
-        if root_name == GENERAL_DIR_EXCLUDE or root_name in replication_path_excludes:
+        if root_name == GENERAL_DIR_EXCLUDE or replication_path_excluder(root_name):
             continue
 
         for dir_name in dir_names:
@@ -2953,7 +2943,7 @@ class AutomationGetConfigSyncState(AutomationCommand[list[ReplicationPath]]):
 
     def get_request(self) -> list[ReplicationPath]:
         return [
-            ReplicationPath(*e)
+            ReplicationPath.deserialize(e)
             for e in ast.literal_eval(_request.get_ascii_input_mandatory("replication_paths"))
         ]
 
@@ -2971,7 +2961,7 @@ def _get_config_sync_paths(
     dir_names: Sequence[str],
     file_names: Sequence[str],
     general_dir_exclude: str,
-    replication_path_excludes: Sequence[str],
+    replication_path_excluder: Callable[[str], bool],
 ) -> Sequence[str]:
     valid_entries = []
 
@@ -2980,15 +2970,15 @@ def _get_config_sync_paths(
         if (
             os.path.islink(dir_path)
             and not dir_name == general_dir_exclude
-            and dir_name not in replication_path_excludes
+            and not replication_path_excluder(dir_name)
         ):
             valid_entries.append(dir_path)
 
     for file_name in file_names:
         file_path = os.path.join(root_path, file_name)
-        if (
-            os.path.basename(os.path.dirname(file_path)) not in replication_path_excludes
-            and file_name not in replication_path_excludes
+        if not (
+            replication_path_excluder(os.path.basename(os.path.dirname(file_path)))
+            or replication_path_excluder(file_name)
         ):
             valid_entries.append(file_path)
 
@@ -3017,19 +3007,22 @@ def _get_config_sync_file_infos(
         if not os.path.exists(replication_path_full):
             continue  # Only report back existing things
 
-        if replication_path.ty == ReplicationPathType.FILE:
-            infos[replication_path.site_path] = _get_config_sync_file_info(replication_path_full)
+        match replication_path.ty:
+            case ReplicationPathType.FILE:
+                infos[replication_path.site_path] = _get_config_sync_file_info(
+                    replication_path_full
+                )
 
-        elif replication_path.ty == ReplicationPathType.DIR:
-            _get_replication_dir_config_sync_file_infos(
-                infos,
-                config_sync_file_infos_per_inode,
-                base_dir,
-                replication_path_full,
-                replication_path.excludes,
-            )
-        else:
-            raise NotImplementedError()
+            case ReplicationPathType.DIR:
+                _get_replication_dir_config_sync_file_infos(
+                    infos,
+                    config_sync_file_infos_per_inode,
+                    base_dir,
+                    replication_path_full,
+                    replication_path.is_excluded,
+                )
+            case _:
+                assert_never(replication_path.ty)
     return infos
 
 
@@ -3038,17 +3031,17 @@ def _get_replication_dir_config_sync_file_infos(
     config_sync_file_infos_per_inode: Mapping[int, ConfigSyncFileInfo],
     base_dir: Path,
     replication_path: str,
-    replication_path_excludes: Sequence[str],
+    replication_path_excluder: Callable[[str], bool],
 ) -> None:
     # Use os functionality instead of pathlib since it is faster
     for root, dir_names, file_names in os.walk(replication_path):
         root_name = os.path.basename(root)
 
-        if root_name == GENERAL_DIR_EXCLUDE or root_name in replication_path_excludes:
+        if root_name == GENERAL_DIR_EXCLUDE or replication_path_excluder(root_name):
             continue
 
         config_sync_paths = _get_config_sync_paths(
-            root, dir_names, file_names, GENERAL_DIR_EXCLUDE, replication_path_excludes
+            root, dir_names, file_names, GENERAL_DIR_EXCLUDE, replication_path_excluder
         )
         for config_sync_path in config_sync_paths:
             valid_site_path = os.path.relpath(config_sync_path, base_dir)

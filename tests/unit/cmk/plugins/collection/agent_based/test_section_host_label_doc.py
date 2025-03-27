@@ -62,6 +62,7 @@ CRE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/os_version",
     "cmk/vsphere_object",
     "cmk/vsphere_vcenter",
+    "cmk/systemd/unit:{name}",
 }
 
 CEE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {

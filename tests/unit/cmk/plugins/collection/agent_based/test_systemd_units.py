@@ -2,14 +2,16 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 from collections.abc import Mapping, Sequence
 from datetime import timedelta
+from typing import Any
 
 import pytest
 
 from cmk.utils.check_utils import ParametersTypeAlias
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import HostLabel, Metric, Result, Service, State
 from cmk.plugins.collection.agent_based.systemd_units import (
     _services_split,
     CHECK_DEFAULT_PARAMETERS_SUMMARY,
@@ -17,6 +19,7 @@ from cmk.plugins.collection.agent_based.systemd_units import (
     check_systemd_sockets,
     check_systemd_units_services_summary,
     CpuTimeSeconds,
+    discover_host_labels,
     discovery_systemd_units_services,
     discovery_systemd_units_services_summary,
     discovery_systemd_units_sockets,
@@ -641,6 +644,56 @@ def test_services_split(
 def test_parse_systemd_units(pre_string_table: Sequence[str], section: Section) -> None:
     string_table = [el.split() for el in pre_string_table]
     assert parse(string_table) == section
+
+
+@pytest.mark.parametrize(
+    "params, expected",
+    [
+        pytest.param(
+            [{"names": ["~apache"]}],
+            [],
+            id="no-host-labels",
+        ),
+        pytest.param(
+            [{"names": ["~apache"], "host_labels_auto": True}],
+            [HostLabel("cmk/systemd/unit", "apache")],
+            id="host-labels-auto",
+        ),
+        pytest.param(
+            [{"names": ["~apache"], "host_labels_explicit": {"webserver": "value"}}],
+            [HostLabel("webserver", "value")],
+            id="host-labels-explicit",
+        ),
+    ],
+)
+def test_discover_host_labels_of_systemd_units(
+    params: Sequence[Mapping[str, Any]], expected: Sequence[HostLabel]
+) -> None:
+    assert (
+        list(
+            discover_host_labels(
+                params,
+                Section(
+                    services={
+                        "apache": UnitEntry(
+                            name="apache",
+                            loaded_status="loaded",
+                            active_status="active",
+                            current_state="running",
+                            description="LSB: Apache2 web server",
+                            enabled_status=None,
+                            time_since_change=timedelta(days=2),
+                            cpu_seconds=None,
+                            memory=None,
+                            number_of_tasks=None,
+                        )
+                    },
+                    sockets={},
+                ),
+            )
+        )
+        == expected
+    )
 
 
 @pytest.mark.parametrize(

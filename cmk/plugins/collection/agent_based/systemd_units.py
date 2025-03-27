@@ -2,6 +2,7 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import re
 from collections import defaultdict
 from collections.abc import Iterable, Iterator, Mapping, Sequence
@@ -16,6 +17,8 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    HostLabel,
+    HostLabelGenerator,
     render,
     Result,
     RuleSetType,
@@ -506,7 +509,34 @@ def parse(string_table: StringTable) -> Section | None:
     return _parse_all(iter(sections["all"]), enabled_status_collection, status_details)
 
 
-agent_section_systemd_units = AgentSection(name="systemd_units", parse_function=parse)
+def discover_host_labels(
+    params: Sequence[Mapping[str, Any]], section: Section
+) -> HostLabelGenerator:
+    """Host label function
+
+    Labels:
+
+        cmk/systemd/unit:{name} :
+            This label is set automatically if the corresponding systemd unit matches.
+
+    """
+    for unit in _match_systemd_units(params, list(section.services.values())):
+        for settings in params:
+            if settings.get("host_labels_auto"):
+                yield HostLabel("cmk/systemd/unit", unit.name)
+
+            for name, value in settings.get("host_labels_explicit", {}).items():
+                yield HostLabel(name, value)
+
+
+agent_section_systemd_units = AgentSection(
+    name="systemd_units",
+    parse_function=parse,
+    host_label_ruleset_name="discovery_systemd_units_services",
+    host_label_function=discover_host_labels,
+    host_label_default_parameters={},
+    host_label_ruleset_type=RuleSetType.ALL,
+)
 
 #   .--units---------------------------------------------------------------.
 #   |                                    _ _                               |
@@ -535,9 +565,9 @@ def discovery_systemd_units_sockets(
     yield from discovery_systemd_units(params, list(section.sockets.values()))
 
 
-def discovery_systemd_units(
+def _match_systemd_units(
     params: Sequence[Mapping[str, Any]], units: Sequence[UnitEntry]
-) -> DiscoveryResult:
+) -> Iterator[UnitEntry]:
     def regex_match(what: Sequence[str], name: str) -> bool:
         if not what:
             return True
@@ -566,8 +596,14 @@ def discovery_systemd_units(
                 and regex_match(names, unit.name)
                 and state_match(states, unit.active_status)
             ):
-                yield Service(item=unit.name)
-                continue
+                yield unit
+
+
+def discovery_systemd_units(
+    params: Sequence[Mapping[str, Any]], units: Sequence[UnitEntry]
+) -> DiscoveryResult:
+    for unit in _match_systemd_units(params, units):
+        yield Service(item=unit.name)
 
 
 def check_systemd_services(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:

@@ -288,58 +288,60 @@ def start_checkmk(
     }
 
     try:
-        c: docker.models.containers.Container = client.containers.get(name)
-        if os.getenv("REUSE") == "1":
-            logger.info("Reusing existing container %s", c.short_id)
-            c.start()
-            c.exec_run(["omd", "start"], user=site_id)
-        else:
-            logger.info("Removing existing container %s", c.short_id)
-            c.remove(force=True)
-            raise docker.errors.NotFound(name)
-    except (docker.errors.NotFound, docker.errors.NullResource):
-        c = client.containers.run(image=_image.id, detach=True, **kwargs)
-        logger.info("Starting container %s from image %s", c.short_id, _image.short_id)
-
         try:
-            site_id = (environment).get("CMK_SITE_ID", site_id)
-            wait_until(lambda: "### CONTAINER STARTED" in c.logs().decode("utf-8"), timeout=120)
-            output = c.logs().decode("utf-8")
+            c: docker.models.containers.Container = client.containers.get(name)
+            if os.getenv("REUSE") == "1":
+                logger.info("Reusing existing container %s", c.short_id)
+                c.start()
+                c.exec_run(["omd", "start"], user=site_id)
+            else:
+                logger.info("Removing existing container %s", c.short_id)
+                c.remove(force=True)
+                _remove_volumes(client, volumes, is_update)
+                raise docker.errors.NotFound(name)
+        except (docker.errors.NotFound, docker.errors.NullResource):
+            c = client.containers.run(image=_image.id, detach=True, **kwargs)
+            logger.info("Starting container %s from image %s", c.short_id, _image.short_id)
 
-            assert ("Created new site" in output) != is_update
-            assert ("cmkadmin with password:" in output) != is_update
+            try:
+                site_id = (environment).get("CMK_SITE_ID", site_id)
+                wait_until(lambda: "### CONTAINER STARTED" in c.logs().decode("utf-8"), timeout=120)
+                output = c.logs().decode("utf-8")
 
-            assert "STARTING SITE" in output
-        except TimeoutError:
-            logger.error(
-                "TIMEOUT while starting Checkmk. Log output: %s",
-                c.logs().decode("utf-8"),
+                assert ("Created new site" in output) != is_update
+                assert ("cmkadmin with password:" in output) != is_update
+
+                assert "STARTING SITE" in output
+            except TimeoutError:
+                logger.error(
+                    "TIMEOUT while starting Checkmk. Log output: %s",
+                    c.logs().decode("utf-8"),
+                )
+                raise
+
+        status_rc, status_output = c.exec_run(["omd", "status"], user=site_id)
+        assert status_rc == 0, f"Status is {status_rc}. Output: {status_output.decode('utf-8')}"
+
+        # reload() to make sure all attributes are set (e.g. NetworkSettings)
+        c.reload()
+
+        logger.debug(c.logs().decode("utf-8"))
+
+        cse_oauth_context_mngr: ContextManager = nullcontext()
+        if version.is_saas_edition():
+            from tests.testlib.cse.utils import (  # pylint: disable=import-error, no-name-in-module
+                cse_openid_oauth_provider,
             )
-            raise
 
-    status_rc, status_output = c.exec_run(["omd", "status"], user=site_id)
-    assert status_rc == 0, f"Status is {status_rc}. Output: {status_output.decode('utf-8')}"
+            # TODO: The Oauth provider is currently not reachable from the Checkmk container.
+            # To fix this, we should contenairize the Oauth provider as well and provide the Oauth
+            # provider container IP address to the Checkmk container (via the cognito-cmk.json file).
+            # This is similar to what we are doing with the Oracle container in the test_docker_oracle
+            # test.
+            cse_oauth_context_mngr = cse_openid_oauth_provider(
+                site_url=f"http://{get_container_ip(c)}:5000", config_root=cse_config_root
+            )
 
-    # reload() to make sure all attributes are set (e.g. NetworkSettings)
-    c.reload()
-
-    logger.debug(c.logs().decode("utf-8"))
-
-    cse_oauth_context_mngr: ContextManager = nullcontext()
-    if version.is_saas_edition():
-        from tests.testlib.cse.utils import (  # pylint: disable=import-error, no-name-in-module
-            cse_openid_oauth_provider,
-        )
-
-        # TODO: The Oauth provider is currently not reachable from the Checkmk container.
-        # To fix this, we should contenairize the Oauth provider as well and provide the Oauth
-        # provider container IP address to the Checkmk container (via the cognito-cmk.json file).
-        # This is similar to what we are doing with the Oracle container in the test_docker_oracle
-        # test.
-        cse_oauth_context_mngr = cse_openid_oauth_provider(
-            site_url=f"http://{get_container_ip(c)}:5000", config_root=cse_config_root
-        )
-    try:
         with cse_oauth_context_mngr:
             yield c
     finally:

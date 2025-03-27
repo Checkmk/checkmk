@@ -7,7 +7,7 @@
 : "${AGENT_USER:="cmk-agent"}"
 : "${AGENT_USER_UID:=""}"
 : "${AGENT_USER_GID:=""}"
-# "auto" or "create" or "use-existing"
+# "auto" or "use-existing"
 : "${AGENT_USER_CREATION:="auto"}"
 # "root" or "non-root"
 : "${DEPLOYMENT_MODE:="root"}"
@@ -60,52 +60,6 @@ _set_agent_controller_user_permissions() {
     [ -e "${agent_controller_config}" ] && chown :"${GROUP_REF}" "${agent_controller_config}"
     pre_configured_connections="${MK_INSTALLDIR}/package/config/pre_configured_connections.json"
     [ -e "${pre_configured_connections}" ] && chown :"${GROUP_REF}" "${pre_configured_connections}"
-}
-
-_create_user() {
-    # Entirely create agent user with specified uid and gid.
-    # Abort if any of the specified entities (name, uid, gid) exists before.
-    # If group or user creation fails, also abort.
-
-    # Some tests, before we touch anything
-    id "${AGENT_USER}" >/dev/null 2>&1 && {
-        # We can't be entirely strict about forbidding an existing user, since the rule with the "create" option
-        # may remain in agent packages also on (automatic) agent updates.
-        # Hence we allow a user created by us and check for the specified user setup instead.
-        [ "$(getent passwd "${AGENT_USER}" | cut -d: -f5)" = "${USER_COMMENT}" ] && _check_user && return 0
-        printf "User %s already exists, aborting.\n" "${AGENT_USER}"
-        exit 1
-    }
-    [ -n "${AGENT_USER_UID}" ] && {
-        id "${AGENT_USER_UID}" >/dev/null 2>&1 && {
-            printf "User with uid %s already exists, aborting.\n" "${AGENT_USER_UID}"
-            exit 1
-        }
-        uid_argument="--uid ${AGENT_USER_UID}"
-    }
-
-    if [ -n "${AGENT_USER_GID}" ]; then
-        # If we have an explicit gid and want to create the group, we must do it before user creation,
-        # because we can't choose it on user creation
-        getent group "${AGENT_USER_GID}" >/dev/null 2>&1 || groupadd --gid "${AGENT_USER_GID}" "${AGENT_USER}" || exit 1
-        group_argument="--no-user-group --gid ${AGENT_USER_GID}"
-    else
-        group_argument="--user-group"
-    fi
-
-    printf "Creating %s user account ...\n" "${AGENT_USER}"
-    # shellcheck disable=SC2086
-    useradd ${uid_argument} \
-        ${group_argument} \
-        --comment "${USER_COMMENT}" \
-        --system \
-        --home-dir "${HOMEDIR}" \
-        --no-create-home \
-        --shell "/bin/false" \
-        "${AGENT_USER}" || exit 1
-
-    _allow_legacy_pull
-    _issue_legacy_pull_warning
 }
 
 _check_user() {
@@ -216,9 +170,6 @@ main() {
     case "${AGENT_USER_CREATION}" in
         "auto")
             handle_user="_update_user"
-            ;;
-        "create")
-            handle_user="_create_user"
             ;;
         "use-existing")
             handle_user="_check_user"

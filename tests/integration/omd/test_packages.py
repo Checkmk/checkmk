@@ -187,3 +187,10 @@ def test_unixcat(site: Site) -> None:
     p = site.execute(["unixcat"], stderr=subprocess.PIPE)
     message = p.stderr.read() if p.stderr else "<NO STDERR>"
     assert "Usage: unixcat UNIX-socket" in message
+
+
+def test_navicli(site: Site) -> None:
+    p = site.execute(["naviseccli", "-Help"], stdout=subprocess.PIPE)
+    help_text = p.stdout.read() if p.stdout else ""
+    # TODO: Sync this with a global version for navicli (like we do it for python)
+    assert "Revision 7.33.9.1.84" in help_text

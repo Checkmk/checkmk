@@ -664,7 +664,7 @@ def test_container_agent(request: pytest.FixtureRequest, client: docker.DockerCl
 def test_update(
     request: pytest.FixtureRequest, client: docker.DockerClient, version: CMKVersion
 ) -> None:
-    container_name = "%s-monitoring" % version.branch
+    container_name = f"{version.branch}-monitoring"
 
     # Pick a random old version that we can use to the setup the initial site with
     # Later this site is being updated to the current daily build
@@ -675,12 +675,13 @@ def test_update(
     )
 
     # 1. create container with old version and add a file to mark the pre-update state
+    container_volumes = [f"{container_name}:/omd/sites"]
     c_orig = _start(
         request,
         client,
         version=old_version,
         name=container_name,
-        volumes=["/omd/sites"],
+        volumes=container_volumes,
     )
     assert (
         c_orig.exec_run(["touch", "pre-update-marker"], user="cmk", workdir="/omd/sites/cmk")[0]
@@ -700,7 +701,7 @@ def test_update(
         version=version,
         is_update=True,
         name=container_name,
-        volumes_from=c_orig.id,
+        volumes=container_volumes,
     )
 
     # 5. verify result

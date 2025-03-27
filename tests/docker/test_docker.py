@@ -361,7 +361,7 @@ def test_container_agent(checkmk: docker.models.containers.Container) -> None:
 
 
 def test_update(client: docker.DockerClient, version: CMKVersion) -> None:
-    container_name = "%s-monitoring" % version.branch
+    container_name = f"{version.branch}-monitoring"
 
     assert isinstance(
         versions_compatible(
@@ -371,8 +371,9 @@ def test_update(client: docker.DockerClient, version: CMKVersion) -> None:
     )
 
     # 1. create container with old version and add a file to mark the pre-update state
+    container_volumes = [f"{container_name}:/omd/sites"]
     with start_checkmk(
-        client, version=old_version, name=container_name, volumes=["/omd/sites"]
+        client, version=old_version, name=container_name, volumes=container_volumes
     ) as c_orig:
         assert (
             c_orig.exec_run(["touch", "pre-update-marker"], user="cmk", workdir="/omd/sites/cmk")[0]
@@ -391,7 +392,7 @@ def test_update(client: docker.DockerClient, version: CMKVersion) -> None:
             version=version,
             is_update=True,
             name=container_name,
-            volumes_from=c_orig.id,
+            volumes=container_volumes,
         ) as c_new:
             # 5. verify result
             c_new.exec_run(["omd", "version"], user="cmk")[1].decode("utf-8").endswith(

@@ -27,6 +27,7 @@ _HOST_CHANGES = (
     "move-host",
     "edit-folder",
     "piggyback-hub-turned-on",
+    "cmk-update-config",
 )
 
 _REMOTE_PIGGYBACK_STATUS_RELPATH = "etc/check_mk/remote_piggyback_hub_status"

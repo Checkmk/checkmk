@@ -14,6 +14,9 @@ from pathlib import Path
 from typing import Any, ContextManager
 
 import docker  # type: ignore[import-untyped]
+import docker.models  # type: ignore[import-untyped]
+import docker.models.containers  # type: ignore[import-untyped]
+import docker.models.images  # type: ignore[import-untyped]
 import requests
 
 from tests.testlib.repo import repo_path
@@ -130,7 +133,7 @@ def build_checkmk(
     client: docker.DockerClient,
     version: CMKVersion,
     prepare_pkg: bool = True,
-) -> tuple[docker.models.containers.Image, Mapping[str, str]]:
+) -> tuple[docker.models.images.Image, Mapping[str, str]]:
     prepare_build()
 
     if prepare_pkg:
@@ -138,7 +141,7 @@ def build_checkmk(
 
     logger.info("Building docker image (or reuse existing): %s", image_name(version))
     try:
-        image: docker.models.containers.Image
+        image: docker.models.images.Image
         build_logs: Mapping[str, str]
         image, build_logs = client.images.build(
             path=build_path,

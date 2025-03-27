@@ -313,7 +313,7 @@ function Invoke-Attach($usbip, $addr, $port) {
         return
     }
     &$usbip attach -r $addr -b $port
-    for ($i = 1; $i -le 3; $i++) {
+    for ($i = 1; $i -le 15; $i++) {
         if ($LASTEXITCODE -eq 0) {
             break
         }

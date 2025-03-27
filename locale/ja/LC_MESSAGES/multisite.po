@@ -10565,6 +10565,12 @@ msgstr "チェッカーヘルパーの使用法"
 msgid "Checking of Datadog monitors"
 msgstr "監視するファイルのセクション"
 
+msgid ""
+"Checking this option allows self-signed certificates by ignoring OpenSSL "
+"error 18 (self signed certificate), and the service will not warn when this "
+"error is returned. Other errors will still trigger an alert."
+msgstr ""
+
 msgid "Checkmk"
 msgstr "Checkmk"
 
@@ -18086,6 +18092,10 @@ msgstr "Dockerコンテナ"
 
 msgid "Docker images"
 msgstr "Dockerイメージ"
+
+#, fuzzy
+msgid "Docker networks"
+msgstr "Dockerノード"
 
 msgid "Docker node"
 msgstr "Dockerノード"
@@ -36856,6 +36866,10 @@ msgstr "ネットワークアドレス"
 
 msgid "Network address:"
 msgstr "ネットワークアドレス:"
+
+#, fuzzy
+msgid "Network containers"
+msgstr "Dockerコンテナ"
 
 msgid "Network filesystem - overall status and usage (e.g. NFS)"
 msgstr "ネットワークファイルシステム-全体的なステータスと使用状況(例:NFS)"
@@ -57671,13 +57685,6 @@ msgid "The service name will be <b>Mail Loop</b> plus this name"
 msgstr "サービス名は、<b>Mail Loop</b> にこの名前をつけたものになります"
 
 msgid ""
-"The service will not warn if self-signed certificates are used if this "
-"option is checked."
-msgstr ""
-"このオプションがチェックされている場合、自己署名証明書が使用されてもサービス"
-"は警告しなません。"
-
-msgid ""
 "The service will trigger a warning or critical state if the size of the "
 "database exceeds these levels."
 msgstr ""
@@ -75933,6 +75940,13 @@ msgid ""
 msgstr ""
 "サービス制限を下回るまで、「変更を有効にする」はブロックされます。利用限度額"
 "を上げたい場合、 "
+
+#~ msgid ""
+#~ "The service will not warn if self-signed certificates are used if this "
+#~ "option is checked."
+#~ msgstr ""
+#~ "このオプションがチェックされている場合、自己署名証明書が使用されてもサービ"
+#~ "スは警告しなません。"
 
 #~ msgid "Import all valid tags"
 #~ msgstr "有効なタグをすべてインポートする"

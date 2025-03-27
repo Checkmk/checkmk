@@ -10893,6 +10893,12 @@ msgstr "Auslastung Checker Helper"
 msgid "Checking of Datadog monitors"
 msgstr "Check der Monitore von Datadog"
 
+msgid ""
+"Checking this option allows self-signed certificates by ignoring OpenSSL "
+"error 18 (self signed certificate), and the service will not warn when this "
+"error is returned. Other errors will still trigger an alert."
+msgstr ""
+
 msgid "Checkmk"
 msgstr "Checkmk"
 
@@ -18616,6 +18622,10 @@ msgstr "Docker Container"
 
 msgid "Docker images"
 msgstr "Docker Images"
+
+#, fuzzy
+msgid "Docker networks"
+msgstr "Docker-Knoten"
 
 msgid "Docker node"
 msgstr "Docker-Knoten"
@@ -37845,6 +37855,10 @@ msgstr "Netzwerkadresse"
 
 msgid "Network address:"
 msgstr "Netzwerkadresse:"
+
+#, fuzzy
+msgid "Network containers"
+msgstr "Docker Container"
 
 msgid "Network filesystem - overall status and usage (e.g. NFS)"
 msgstr "Netzwerk-Dateisystem - Gesamtzustand und Nutzung (z. B. NFS)"
@@ -59329,13 +59343,6 @@ msgid "The service name will be <b>Mail Loop</b> plus this name"
 msgstr "Der Service-Name lautet <b>Mail Loop</b> plus diesen Namen"
 
 msgid ""
-"The service will not warn if self-signed certificates are used if this "
-"option is checked."
-msgstr ""
-"Der Service warnt nicht, wenn selbstsignierte Zertifikate verwendet werden, "
-"wenn diese Option aktiviert ist."
-
-msgid ""
 "The service will trigger a warning or critical state if the size of the "
 "database exceeds these levels."
 msgstr ""
@@ -78308,6 +78315,13 @@ msgid ""
 msgstr ""
 "\"Änderungen aktivieren\" ist blockiert, bis Sie Ihr Service-Limit "
 "unterschritten haben. Wenn Sie Ihr Service-Limit erhöhen möchten, "
+
+#~ msgid ""
+#~ "The service will not warn if self-signed certificates are used if this "
+#~ "option is checked."
+#~ msgstr ""
+#~ "Der Service warnt nicht, wenn selbstsignierte Zertifikate verwendet "
+#~ "werden, wenn diese Option aktiviert ist."
 
 #~ msgid "Import all valid tags"
 #~ msgstr "Alle gültigen Merkmale importieren"

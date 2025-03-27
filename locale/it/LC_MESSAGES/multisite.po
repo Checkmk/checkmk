@@ -10961,6 +10961,12 @@ msgstr "Uso dell'helper checker"
 msgid "Checking of Datadog monitors"
 msgstr "Controllo dei monitor Datadog"
 
+msgid ""
+"Checking this option allows self-signed certificates by ignoring OpenSSL "
+"error 18 (self signed certificate), and the service will not warn when this "
+"error is returned. Other errors will still trigger an alert."
+msgstr ""
+
 msgid "Checkmk"
 msgstr "Checkmk"
 
@@ -18881,6 +18887,10 @@ msgstr "Contenitori Docker"
 
 msgid "Docker images"
 msgstr "Immagini Docker"
+
+#, fuzzy
+msgid "Docker networks"
+msgstr "Nodi Docker"
 
 msgid "Docker node"
 msgstr "Nodo Docker"
@@ -38287,6 +38297,10 @@ msgstr "Indirizzo di rete"
 
 msgid "Network address:"
 msgstr "Indirizzo di rete:"
+
+#, fuzzy
+msgid "Network containers"
+msgstr "Contenitori Docker"
 
 msgid "Network filesystem - overall status and usage (e.g. NFS)"
 msgstr "File system di rete - stato generale e utilizzo (per esempio NFS)"
@@ -59969,11 +59983,6 @@ msgstr "Il nome del servizio"
 
 msgid "The service name will be <b>Mail Loop</b> plus this name"
 msgstr "Il nome del servizio sarà <b>Mail Loop</b> più questo nome"
-
-msgid ""
-"The service will not warn if self-signed certificates are used if this "
-"option is checked."
-msgstr ""
 
 msgid ""
 "The service will trigger a warning or critical state if the size of the "

@@ -9,6 +9,7 @@ import logging
 import os
 import subprocess
 from collections.abc import Mapping
+from contextlib import suppress
 from pathlib import Path
 
 import docker  # type: ignore[import]
@@ -101,7 +102,10 @@ def resolve_image_alias(alias: str) -> str:
     >>> assert image and isinstance(image, str)
     """
     return subprocess.check_output(
-        [os.path.join(cmk_path(), "buildscripts/docker_image_aliases/resolve.py"), alias],
+        [
+            os.path.join(cmk_path(), "buildscripts/docker_image_aliases/resolve.py"),
+            alias,
+        ],
         text=True,
     ).split("\n", maxsplit=1)[0]
 
@@ -211,6 +215,19 @@ def _pull(client: docker.DockerClient, version: CMKVersion) -> Image:
     return client.images.pull("checkmk/check-mk-raw", tag=version.version)
 
 
+def _remove_volumes(
+    client: docker.DockerClient, volumes: list[str] | None, is_update: bool
+) -> None:
+    """remove any pre-existing volumes"""
+    volume_ids = [_.split(":")[0] for _ in volumes or []]
+    exceptions = [docker.errors.NotFound]
+    if is_update:
+        exceptions.append(docker.errors.APIError)
+    with suppress(*exceptions):
+        for volume_id in volume_ids:
+            client.volumes.get(volume_id).remove(force=True)
+
+
 def _start(
     request: pytest.FixtureRequest,
     client: docker.DockerClient,
@@ -257,6 +274,7 @@ def _start(
         site_id = (environment or {}).get("CMK_SITE_ID", "cmk")
 
         request.addfinalizer(lambda: c.remove(force=True))
+        request.addfinalizer(lambda: _remove_volumes(client, volumes, is_update))
 
         testlib.wait_until(lambda: "### CONTAINER STARTED" in c.logs().decode("utf-8"), timeout=120)
         output = c.logs().decode("utf-8")
@@ -612,14 +630,24 @@ def test_http_access_login_screen(
         "Location: \r\n"
         not in _exec_run(
             c,
-            ["curl", "-D", "-", "http://127.0.0.1:5000/cmk/check_mk/login.py?_origtarget=index.py"],
+            [
+                "curl",
+                "-D",
+                "-",
+                "http://127.0.0.1:5000/cmk/check_mk/login.py?_origtarget=index.py",
+            ],
         )[-1]
     )
     assert (
         'name="_login"'
         in _exec_run(
             c,
-            ["curl", "-D", "-", "http://127.0.0.1:5000/cmk/check_mk/login.py?_origtarget=index.py"],
+            [
+                "curl",
+                "-D",
+                "-",
+                "http://127.0.0.1:5000/cmk/check_mk/login.py?_origtarget=index.py",
+            ],
         )[-1]
     )
 
@@ -648,7 +676,11 @@ def test_update(
 
     # 1. create container with old version and add a file to mark the pre-update state
     c_orig = _start(
-        request, client, version=old_version, name=container_name, volumes=["/omd/sites"]
+        request,
+        client,
+        version=old_version,
+        name=container_name,
+        volumes=["/omd/sites"],
     )
     assert (
         c_orig.exec_run(["touch", "pre-update-marker"], user="cmk", workdir="/omd/sites/cmk")[0]
@@ -674,9 +706,12 @@ def test_update(
     # 5. verify result
     _exec_run(c_new, ["omd", "version"], user="cmk")[1].endswith("%s\n" % version.omd_version())
     assert (
-        _exec_run(c_new, ["test", "-f", "pre-update-marker"], user="cmk", workdir="/omd/sites/cmk")[
-            0
-        ]
+        _exec_run(
+            c_new,
+            ["test", "-f", "pre-update-marker"],
+            user="cmk",
+            workdir="/omd/sites/cmk",
+        )[0]
         == 0
     )
 

@@ -517,12 +517,7 @@ def available_by_owner(
     if user.may("general.see_user_" + what):
         for (u, n), visual in all_visuals.items():
             # Is there a built-in visual with the same name? If yes, honor permissions.
-            if (
-                n not in visuals
-                and published_to_user(visual)
-                and user_may(u, "general.publish_" + what)
-                and not restricted_visual(n)
-            ):
+            if n not in visuals and published_to_user(visual) and not restricted_visual(n):
                 visuals.setdefault(n, {})
                 visuals[n][u] = visual
 

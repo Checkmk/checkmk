@@ -51,6 +51,12 @@ set version=
 set text=cppcheck is required to validate code quality
 call :process
 
+::Bazel/Bazelisk
+set pkg=bazelisk
+set version=
+set text=bazelisk is reliable build system
+call :process
+
 goto eof
 :process
 powershell Write-Host "Installing '%pkg%'..." -Foreground White

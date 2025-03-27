@@ -12,7 +12,6 @@ from pathlib import Path
 import docker  # type: ignore[import]
 import pytest
 import requests
-import requests.exceptions
 from pytest import LogCaptureFixture
 
 from tests.testlib.docker import (

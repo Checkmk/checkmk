@@ -40,7 +40,6 @@ from .automation_commands import AutomationCommandRegistry
 from .automations import (
     AutomationCheckmkAutomationGetStatus,
     AutomationCheckmkAutomationStart,
-    AutomationGetRemoteOMDStatus,
     CheckmkAutomationBackgroundJob,
 )
 from .broker_certificates import (
@@ -146,7 +145,6 @@ def register(
     automation_command_registry.register(AutomationDiscoveredHostLabelSync)
     automation_command_registry.register(AutomationCheckmkAutomationStart)
     automation_command_registry.register(AutomationCheckmkAutomationGetStatus)
-    automation_command_registry.register(AutomationGetRemoteOMDStatus)
     sample_config_generator_registry.register(ConfigGeneratorBasicWATOConfig)
     sample_config_generator_registry.register(ConfigGeneratorAcknowledgeInitialWerks)
     sample_config_generator_registry.register(ConfigGeneratorRegistrationUser)

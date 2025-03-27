@@ -102,6 +102,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.wato.pages._html_elements import wato_html_head
 from cmk.gui.wato.pages.global_settings import ABCEditGlobalSettingMode, ABCGlobalSettingsMode
 from cmk.gui.watolib.activate_changes import get_free_message
+from cmk.gui.watolib.automation_commands import OMDStatus
 from cmk.gui.watolib.automations import (
     do_remote_automation,
     do_site_login,
@@ -1254,41 +1255,17 @@ class ModeDistributedMonitoring(WatoMode):
 class PageAjaxFetchSiteStatus(AjaxPage):
     """AJAX handler for asynchronous fetching of the site status"""
 
-    def page(self) -> PageResult:
-        user.need_permission("wato.sites")
-
-        site_states = {}
-
-        sites = site_management_registry["site_management"].load_sites()
-        replication_sites = [
-            (key, val) for (key, val) in sites.items() if is_replication_enabled(val)
-        ]
-        replication_status = ReplicationStatusFetcher().fetch(replication_sites)
-
-        remote_piggyback_hub_status = {}
-        for site_id, site in sites.items():
-            site_id_str: str = site_id
-
-            site_states[site_id_str] = {
-                "livestatus": self._render_status_connection_status(site_id, site),
-                "replication": self._render_configuration_connection_status(
-                    site_id, site, replication_status
-                ),
-                "message_broker": "",
-            }
-
-            if is_replication_enabled(site):
-                remote_omd_status = self._get_remote_omd_status(site)
-                remote_piggyback_hub_status[SiteId(site_id_str)] = remote_omd_status[
-                    "piggyback-hub"
-                ]
-                site_states[site_id_str].update(
-                    {
-                        "message_broker": self._render_message_broker_status(
-                            site_id, site, remote_omd_status["rabbitmq"]
-                        )
-                    }
-                )
+    def _add_change_for_changed_piggyback_hub_status(
+        self,
+        sites: Mapping[SiteId, SiteConfiguration],
+        remote_status: Mapping[SiteId, ReplicationStatus],
+    ) -> None:
+        remote_piggyback_hub_status = {
+            site_id: ping_response.omd_status["piggyback-hub"]
+            for site_id in sites
+            if is_replication_enabled(sites[site_id])
+            and isinstance(ping_response := remote_status[site_id].response, PingResult)
+        }
 
         # if piggyback-hub has been turned on on the remote site
         # we need to sync changes to send the piggyback-hub configuration
@@ -1300,6 +1277,30 @@ class PageAjaxFetchSiteStatus(AjaxPage):
                 domains=[ConfigDomainGUI()],
                 sites=[site_id],
             )
+
+    def page(self) -> PageResult:
+        user.need_permission("wato.sites")
+
+        site_states = {}
+
+        sites = site_management_registry["site_management"].load_sites()
+        replication_sites = [
+            (key, val) for (key, val) in sites.items() if is_replication_enabled(val)
+        ]
+        remote_status = ReplicationStatusFetcher().fetch(replication_sites)
+
+        for site_id, site in sites.items():
+            site_id_str: str = site_id
+
+            site_states[site_id_str] = {
+                "livestatus": self._render_status_connection_status(site_id, site),
+                "replication": self._render_configuration_connection_status(
+                    site_id, site, remote_status
+                ),
+                "message_broker": self._render_message_broker_status(site_id, site, remote_status),
+            }
+
+        self._add_change_for_changed_piggyback_hub_status(sites, remote_status)
 
         return site_states
 
@@ -1359,36 +1360,25 @@ class PageAjaxFetchSiteStatus(AjaxPage):
         self,
         site_id: SiteId,
         site: SiteConfiguration,
-        remote_broker_status: int,
+        remote_omd_status: Mapping[SiteId, ReplicationStatus],
     ) -> str | HTML:
-        if not is_replication_enabled(site):
+        if not is_replication_enabled(site) or not isinstance(
+            ping_response := remote_omd_status[site_id].response, PingResult
+        ):
             return ""
 
         icon, message = self._get_connection_status_icon_message(
-            site_id, site, remote_broker_status
+            site_id, site, ping_response.omd_status
         )
         return html.render_icon(icon, title=message) + HTMLWriter.render_span(
             message, style="vertical-align:middle"
         )
 
-    def _get_remote_omd_status(self, remote_site: SiteConfiguration) -> Mapping[str, int]:
-        remote_status = do_remote_automation(
-            remote_site,
-            "get-remote-omd-status",
-            (),
-            timeout=60,
-        )
-        if not isinstance(remote_status, Mapping):
-            raise MKUserError(None, _("Got invalid status of remote site %s") % remote_site)
-
-        logger.debug("Got status of remote site %s" % remote_status)
-        return remote_status
-
     def _get_connection_status_icon_message(
         self,
         remote_site_id: SiteId,
         site: SiteConfiguration,
-        remote_broker_status: int,
+        remote_omd_status: OMDStatus,
     ) -> tuple[Literal["checkmark", "cross", "alert", "disabled"], str]:
         if (remote_host := urlparse(site["multisiteurl"]).hostname) is None:
             return "cross", _("Offline: No valid multisite URL configured")
@@ -1419,7 +1409,7 @@ class PageAjaxFetchSiteStatus(AjaxPage):
             case ConnectionRefused.CERTIFICATE_VERIFY_FAILED:
                 return "cross", _("Connection to port %s refused: Invalid certificate")
             case ConnectionRefused.CLOSED:
-                match remote_broker_status:
+                match remote_omd_status["rabbitmq"]:
                     case 1:
                         return "cross", _("Not available")
                     case 5:
@@ -1433,6 +1423,7 @@ class PageAjaxFetchSiteStatus(AjaxPage):
 class PingResult(NamedTuple):
     version: str
     edition: str
+    omd_status: OMDStatus
     license_state: LicenseState | None
 
 
@@ -1512,6 +1503,7 @@ class ReplicationStatusFetcher:
 
             raw_result = do_remote_automation(site, "ping", [], timeout=5)
             assert isinstance(raw_result, dict)
+
             result = ReplicationStatus(
                 site_id=site_id,
                 success=True,
@@ -1519,6 +1511,7 @@ class ReplicationStatusFetcher:
                     version=raw_result["version"],
                     edition=raw_result["edition"],
                     license_state=parse_license_state(raw_result.get("license_state", "")),
+                    omd_status=raw_result["omd_status"],
                 ),
             )
             self._logger.debug("[%s] Finished" % site_id)

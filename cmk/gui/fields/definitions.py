@@ -1074,8 +1074,8 @@ def bake_agent_field() -> Boolean | None:
 
 
 def agent_connection_field() -> String | None:
-    """CME Edition only implementation of cmk_agent_connection field"""
-    if version.edition(paths.omd_root) is version.Edition.CME:
+    """CME and CCE editions only implementation of cmk_agent_connection field"""
+    if version.edition(paths.omd_root) in [version.Edition.CME, version.Edition.CCE]:
         return CONNECTION_MODE_FIELD
 
     return None

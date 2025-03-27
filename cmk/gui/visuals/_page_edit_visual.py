@@ -135,7 +135,7 @@ def page_edit_visual(  # type: ignore[no-untyped-def] # pylint: disable=too-many
             visualname = newname
             oldname = ""  # Prevent renaming
             if owner_id == owner_user_id:
-                visual["title"] += _(" (Copy)")
+                visual["title"] += _(" (copy)")
 
         single_infos = visual["single_infos"]
 
@@ -181,7 +181,7 @@ def page_edit_visual(  # type: ignore[no-untyped-def] # pylint: disable=too-many
             "hidebutton",
             FixedValue(
                 value=True,
-                title=_("Hide this %s in dropdown menus") % visual_type.title,
+                title=_("Hide this %s in drop-down menus") % visual_type.title,
                 totext="",
             ),
         ),

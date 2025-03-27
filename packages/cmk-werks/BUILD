@@ -76,13 +76,23 @@ format_multirun(
 
 py_wheel(
     name = "wheel",
-    console_scripts = {"werk": "cmk.werks.cli:main"},
     distribution = "cmk-werks",
     strip_path_prefixes = ["packages/cmk-werks"],
     # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
-    visibility = ["//visibility:public"],
     deps = [":cmk-werks"],
+)
+
+# This wheel is only used for providing the entry point "werk" from the .venv under .venv/bin
+# We explicitly need to *not* add dependencies here because venv/IDE would take the static wheels
+# and not the editable sources from the repo which are included via sitecustomize.py
+py_wheel(
+    name = "wheel_entrypoint_only",
+    console_scripts = {"werk": "cmk.werks.cli:main"},
+    distribution = "cmk-werks-entrypoint",
+    version = "1.0.0",
+    visibility = ["//visibility:public"],
+    deps = [],
 )
 
 package_wheel(

@@ -179,7 +179,7 @@ create_venv(
     site_packages_extra_files = [":sitecustomize.py"],
     whls = [
         "@rrdtool_native//:rrdtool_python_wheel",
-        "//packages/cmk-werks:wheel",
+        "//packages/cmk-werks:wheel_entrypoint_only",
     ] + select({
         "@//:gpl_repo": [],
         "@//:gpl+enterprise_repo": [

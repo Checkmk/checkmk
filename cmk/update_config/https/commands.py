@@ -154,8 +154,9 @@ def finalize_main(search: SearchArgs) -> None:
                     ruleset_v1.delete_rule(rule_v1)
                 sys.stdout.write(f"Finalized v2 rule #{rule_index}.\n")
         print_summary_finalize(rulecount_v1, rulecount_v2)
-        sys.stdout.write("Saving rule sets...\n")
-        all_rulesets.save()
+        if rulecount_v1 or rulecount_v2:
+            sys.stdout.write("Saving rule sets...\n")
+            all_rulesets.save()
 
 
 def delete_main(search: SearchArgs) -> None:
@@ -170,8 +171,9 @@ def delete_main(search: SearchArgs) -> None:
                 count += 1
                 ruleset_v2.delete_rule(rule_v2)
         print_summary_delete(count)
-        sys.stdout.write("Saving rule sets...\n")
-        all_rulesets.save()
+        if count:
+            sys.stdout.write("Saving rule sets...\n")
+            all_rulesets.save()
 
 
 def activate_main(search: SearchArgs) -> None:
@@ -193,8 +195,9 @@ def activate_main(search: SearchArgs) -> None:
                 else:
                     sys.stdout.write("Already active.\n")
         print_summary_activated(count)
-        sys.stdout.write("Saving rulesets...\n")
-        all_rulesets.save()
+        if count:
+            sys.stdout.write("Saving rulesets...\n")
+            all_rulesets.save()
 
 
 def deactivate_main(search: SearchArgs) -> None:
@@ -216,8 +219,9 @@ def deactivate_main(search: SearchArgs) -> None:
                 else:
                     sys.stdout.write("Already deactivated.\n")
         print_summary_deactivated(count)
-        sys.stdout.write("Saving rulesets...\n")
-        all_rulesets.save()
+        if count:
+            sys.stdout.write("Saving rulesets...\n")
+            all_rulesets.save()
 
 
 @contextmanager

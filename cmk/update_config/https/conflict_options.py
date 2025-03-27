@@ -319,10 +319,22 @@ class Config(BaseModel):
 
 
 def add_migrate_parsing(parser: ArgumentParser) -> ArgumentParser:
-    parser.add_argument(
+    parser.add_argument_group()
+    exclusive_group = parser.add_mutually_exclusive_group(required=True)
+    exclusive_group.add_argument(
         "--write",
         action="store_true",
         help="Persist changes on disk, v2 rules are created as deactivated, will have ‘migrated’ suffix in the service name and a reference to the original v1 rule in the description, use Finalize to clean this up.",
+        dest="write",
+    )
+    exclusive_group.add_argument(
+        "--dry-run",
+        action="store_false",
+        help=(
+            "Attempts to migrate the rules as it would with ‘--write’, but does not save the rules in the end. "
+            "Use this option to understand which conflicts will be encountered."
+        ),
+        dest="write",
     )
     _add_argument(parser, HTTP10NotSupported, HTTP10NotSupported.default())
     _add_argument(parser, SSLIncompatible, SSLIncompatible.default())

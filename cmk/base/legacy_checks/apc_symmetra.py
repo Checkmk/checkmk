@@ -64,6 +64,7 @@ def parse_apc_symmetra(string_table):
 
     # some numeric fields may be empty
     (
+        ups_comm_status,
         battery_status,
         output_status,
         battery_capacity,
@@ -85,6 +86,7 @@ def parse_apc_symmetra(string_table):
     self_test_in_progress = output_state_bitmask & 1 << 35 != 0
 
     for key, val in [
+        ("ups_comm_status", ups_comm_status),
         ("status", battery_status),
         ("output", output_status),
         ("self_test", self_test_in_progress),
@@ -132,6 +134,9 @@ def check_apc_symmetra(_no_item, params, parsed):  # pylint: disable=too-many-br
     data = parsed.get("status")
     if data is None:
         return
+
+    if data.get("ups_comm_status") == "2":
+        yield 3, "UPS communication lost"
 
     battery_status = data.get("status")
     output_status = data.get("output")
@@ -298,6 +303,7 @@ check_info["apc_symmetra"] = LegacyCheckDefinition(
         SNMPTree(
             base=".1.3.6.1.4.1.318.1.1.1",
             oids=[
+                "8.1.0",
                 "2.1.1.0",
                 "4.1.1.0",
                 "2.2.1.0",

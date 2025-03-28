@@ -38,7 +38,7 @@ from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_simple_page_breadcrumb
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
-from cmk.gui.exceptions import HTTPRedirect, MKUserError
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
@@ -146,19 +146,9 @@ def _handle_failed_auth(user_id: UserId) -> None:
         raise MKUserError(None, _("User is locked"), HTTPStatus.UNAUTHORIZED)
 
 
-def _handle_success_auth(user_id: UserId, replicate: bool = False) -> None:
-    origtarget = request.get_url_input("_origtarget", "index.py")
+def _handle_success_auth(user_id: UserId) -> None:
     session.session_info.two_factor_completed = True
     save_custom_attr(user_id, "num_failed_logins", 0)
-    if replicate:
-        raise redirect(
-            makeuri_contextless(
-                request,
-                [("back", "dashboard.py")],
-                filename="user_profile_replicate.py",
-            )
-        )
-    raise HTTPRedirect(origtarget)
 
 
 def _sec_notification_event_from_2fa_event(event: TwoFactorEventType) -> SecurityNotificationEvent:
@@ -1167,6 +1157,7 @@ class UserLoginTwoFactor(Page):
                         otp.calculate_generation(datetime.datetime.now()),
                     ):
                         _handle_success_auth(user.id)
+                        raise redirect(request.get_url_input("_origtarget", "index.py"))
                 _log_event_auth("Authenticator application (TOTP)")
                 _handle_failed_auth(user.id)
                 raise MKUserError(None, _("Invalid code provided"), HTTPStatus.UNAUTHORIZED)
@@ -1176,7 +1167,16 @@ class UserLoginTwoFactor(Page):
                 if is_two_factor_backup_code_valid(user.id, backup_code):
                     _log_event_usermanagement(TwoFactorEventType.backup_used)
                     send_security_message(user.id, SecurityNotificationEvent.backup_used)
-                    _handle_success_auth(user.id, has_wato_slave_sites())
+                    _handle_success_auth(user.id)
+                    if has_wato_slave_sites():
+                        raise redirect(
+                            makeuri_contextless(
+                                request,
+                                [("back", "dashboard.py")],
+                                filename="user_profile_replicate.py",
+                            )
+                        )
+                    raise redirect(request.get_url_input("_origtarget", "index.py"))
                 _log_event_auth("Backup code")
                 _handle_failed_auth(user.id)
                 raise MKUserError(None, _("Invalid code provided"), HTTPStatus.UNAUTHORIZED)

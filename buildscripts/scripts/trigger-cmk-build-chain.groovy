@@ -182,6 +182,16 @@ def main() {
     ]);
 
     success &= smart_stage(
+            name: "Build Packages again",
+            condition: true,
+            raiseOnError: false,) {
+        smart_build(
+            job: "${edition_base_folder}/build-cmk-deliverables",
+            parameters: job_parameters
+        );
+    }
+
+    success &= smart_stage(
             name: "Trigger SaaS Gitlab jobs",
             condition: success && edition == "saas",
             raiseOnError: false,) {

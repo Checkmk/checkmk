@@ -62,7 +62,7 @@ from cmk.checkengine.parser import HostSections, NO_SELECTION, parse_raw_data, S
 from cmk.checkengine.plugins import (
     AggregatedResult,
     AutocheckEntry,
-    CheckPlugin,
+    CheckerPlugin,
     CheckPluginName,
     ConfiguredService,
     DiscoveryPlugin,
@@ -110,7 +110,7 @@ from cmk.agent_based.v1 import Result as CheckFunctionResult
 from cmk.server_side_calls_backend import SpecialAgentCommandLine
 
 __all__ = [
-    "CheckPluginMapper",
+    "CheckerPluginMapper",
     "CMKFetcher",
     "CMKParser",
     "CMKSummarizer",
@@ -542,7 +542,7 @@ class HostLabelPluginMapper(SectionMap[HostLabelPlugin]):
         return len(self._sections)
 
 
-class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
+class CheckerPluginMapper(Mapping[CheckPluginName, CheckerPlugin]):
     # See comment to SectionPluginMapper.
     def __init__(
         self,
@@ -561,7 +561,7 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
         self.rtc_package: Final = rtc_package
         self.check_plugins: Final = check_plugins
 
-    def __getitem__(self, __key: CheckPluginName) -> CheckPlugin:
+    def __getitem__(self, __key: CheckPluginName) -> CheckerPlugin:
         plugin = agent_based_register.get_check_plugin(__key, self.check_plugins)
         if plugin is None:
             raise KeyError(__key)
@@ -596,7 +596,7 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
                 ),
             )
 
-        return CheckPlugin(
+        return CheckerPlugin(
             sections=plugin.sections,
             function=check_function,
             default_parameters=plugin.check_default_parameters,

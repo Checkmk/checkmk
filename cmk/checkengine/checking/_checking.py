@@ -32,7 +32,7 @@ from cmk.checkengine.inventory import (
 from cmk.checkengine.parser import group_by_host, ParserFunction
 from cmk.checkengine.plugins import (
     AggregatedResult,
-    CheckPlugin,
+    CheckerPlugin,
     CheckPluginName,
     ConfiguredService,
     InventoryPlugin,
@@ -65,7 +65,7 @@ def execute_checkmk_checks(
     parser: ParserFunction,
     summarizer: SummarizerFunction,
     section_plugins: SectionMap[SectionPlugin],
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    check_plugins: Mapping[CheckPluginName, CheckerPlugin],
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     inventory_parameters: Callable[[HostName, InventoryPlugin], Mapping[str, object]],
     params: HWSWInventoryParameters,
@@ -202,7 +202,7 @@ def check_host_services(
     *,
     providers: Mapping[HostKey, Provider],
     services: Sequence[ConfiguredService],
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    check_plugins: Mapping[CheckPluginName, CheckerPlugin],
     run_plugin_names: Container[CheckPluginName],
     get_check_period: Callable[[ServiceName, _Labels], TimeperiodName | None],
 ) -> Iterable[AggregatedResult]:

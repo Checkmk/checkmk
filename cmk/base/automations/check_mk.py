@@ -167,7 +167,7 @@ from cmk.base.automations import (
     MKAutomationError,
 )
 from cmk.base.checkers import (
-    CheckPluginMapper,
+    CheckerPluginMapper,
     CMKFetcher,
     CMKParser,
     CMKSummarizer,
@@ -709,7 +709,7 @@ def _execute_discovery(
         ) as value_store_manager,
     ):
         is_cluster = host_name in hosts_config.clusters
-        check_plugins = CheckPluginMapper(
+        check_plugins = CheckerPluginMapper(
             config_cache,
             plugins.check_plugins,
             value_store_manager,

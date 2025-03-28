@@ -30,7 +30,7 @@ from cmk.checkengine.parameters import TimespecificParameters, TimespecificParam
 from cmk.checkengine.parser import group_by_host, ParserFunction
 from cmk.checkengine.plugins import (
     AutocheckEntry,
-    CheckPlugin,
+    CheckerPlugin,
     CheckPluginName,
     ConfiguredService,
     DiscoveryPlugin,
@@ -97,7 +97,7 @@ def get_check_preview(
     section_error_handling: Callable[[SectionName, Sequence[object]], str],
     host_label_plugins: SectionMap[HostLabelPlugin],
     discovery_plugins: Mapping[CheckPluginName, DiscoveryPlugin],
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    check_plugins: Mapping[CheckPluginName, CheckerPlugin],
     autochecks_config: AutochecksConfig,
     compute_check_parameters: Callable[[HostName, AutocheckEntry], TimespecificParameters],
     enforced_services: Mapping[ServiceID, tuple[RulesetName, ConfiguredService]],
@@ -229,7 +229,7 @@ def _check_preview_table_row(
     service: ConfiguredService,
     new_discovered_parameters: Mapping[str, object],
     new_service_labels: Mapping[str, str],
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    check_plugins: Mapping[CheckPluginName, CheckerPlugin],
     check_source: _Transition | Literal["manual"],
     providers: Mapping[HostKey, Provider],
     found_on_nodes: Sequence[HostName],

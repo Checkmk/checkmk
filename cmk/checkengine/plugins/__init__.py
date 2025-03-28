@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._check import AggregatedResult as AggregatedResult
-from ._check import CheckPlugin as CheckPlugin
+from ._check import CheckerPlugin as CheckerPlugin
 from ._check import CheckPluginName as CheckPluginName
 from ._check import ConfiguredService as ConfiguredService
 from ._check import ServiceID as ServiceID

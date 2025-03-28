@@ -37,7 +37,7 @@ from cmk.checkengine.inventory import HWSWInventoryParameters
 
 from cmk.base import config
 from cmk.base.checkers import (
-    CheckPluginMapper,
+    CheckerPluginMapper,
     SectionPluginMapper,
 )
 
@@ -96,7 +96,7 @@ def test_checks_executor(
             store_changes=False,
         ) as value_store_manager,
     ):
-        check_plugins = CheckPluginMapper(
+        check_plugins = CheckerPluginMapper(
             config_cache,
             agent_based_plugins.check_plugins,
             value_store_manager,

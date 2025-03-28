@@ -75,7 +75,7 @@ class AggregatedResult:
     cache_info: tuple[int, int] | None
 
 
-class CheckFunction(Protocol):
+class _CheckerFunction(Protocol):
     def __call__(
         self,
         host_name: HostName,
@@ -86,9 +86,9 @@ class CheckFunction(Protocol):
 
 
 @dataclass(frozen=True)
-class CheckPlugin:
+class CheckerPlugin:
     sections: Sequence[ParsedSectionName]
-    function: CheckFunction
+    function: _CheckerFunction
     default_parameters: Mapping[str, object] | None
     ruleset_name: RuleSetName | None
     discovery_ruleset_name: RuleSetName | None

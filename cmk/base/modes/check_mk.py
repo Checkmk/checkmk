@@ -116,7 +116,7 @@ from cmk.base.api.agent_based.register import (
     filter_relevant_raw_sections,
 )
 from cmk.base.checkers import (
-    CheckPluginMapper,
+    CheckerPluginMapper,
     CMKFetcher,
     CMKParser,
     CMKSummarizer,
@@ -2406,7 +2406,7 @@ def run_checking(
     ):
         console.debug(f"Checkmk version {cmk_version.__version__}")
         fetched = fetcher(hostname, ip_address=ipaddress)
-        check_plugins = CheckPluginMapper(
+        check_plugins = CheckerPluginMapper(
             config_cache,
             plugins.check_plugins,
             value_store_manager,

@@ -21,7 +21,8 @@ from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default
 from cmk.special_agents.v0_unstable.request_helper import HostnameValidationAdapter
 
 _LOGGER = logging.getLogger("agent_pure_storage_fa")
-__version__ = "2.3.0b1"
+
+__version__ = "2.5.0b1"
 
 USER_AGENT = f"checkmk-special-purefa-{__version__}"
 

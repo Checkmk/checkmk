@@ -470,6 +470,44 @@ def check_output(
         return subprocess.check_output(cmd_, **kwargs)
 
 
+@overload
+def read_file(
+    path: str | Path,
+    encoding: str = "utf-8",
+    sudo: bool = True,
+    substitute_user: str | None = None,
+) -> str: ...
+
+
+@overload
+def read_file(
+    path: str | Path,
+    encoding: None,
+    sudo: bool = True,
+    substitute_user: str | None = None,
+) -> bytes: ...
+
+
+def read_file(
+    path: str | Path,
+    encoding: str | None = "utf-8",
+    sudo: bool = True,
+    substitute_user: str | None = None,
+) -> str | bytes:
+    """Read a file as root or another user."""
+    try:
+        return run(
+            ["cat", Path(path).as_posix()],
+            capture_output=True,
+            encoding=encoding,
+            sudo=sudo,
+            substitute_user=substitute_user,
+        ).stdout
+    except subprocess.CalledProcessError as excp:
+        excp.add_note(f"Failed to read file '{path}'!")
+        raise excp
+
+
 def write_file(
     path: str | Path,
     content: bytes | str,

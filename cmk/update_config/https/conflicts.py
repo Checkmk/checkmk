@@ -36,55 +36,6 @@ def _migrate_header(header: str) -> dict[str, str] | None:
     return None
 
 
-MACROS = {
-    "$HOSTNAME$",
-    "$HOSTADDRESS$",
-    "$HOSTALIAS$",
-    "$HOST_TAGS$",
-    "$_HOSTTAGS$",
-    "$HOST__TAG_site$",
-    "$_HOST_TAG_site$",
-    "$HOST__TAG_address_family$",
-    "$_HOST_TAG_address_family$",
-    "$HOST__TAG_ip-v4$",
-    "$_HOST_TAG_ip-v4$",
-    "$HOST__TAG_agent$",
-    "$_HOST_TAG_agent$",
-    "$HOST__TAG_tcp$",
-    "$_HOST_TAG_tcp$",
-    "$HOST__TAG_checkmk-agent$",
-    "$_HOST_TAG_checkmk-agent$",
-    "$HOST__TAG_piggyback$",
-    "$_HOST_TAG_piggyback$",
-    "$HOST__TAG_snmp_ds$",
-    "$_HOST_TAG_snmp_ds$",
-    "$HOST__TAG_criticality$",
-    "$_HOST_TAG_criticality$",
-    "$HOST__TAG_networking$",
-    "$_HOST_TAG_networking$",
-    "$HOST__LABEL_cmk/site$",
-    "$_HOST_LABEL_cmk/site$",
-    "$HOST__LABELSOURCE_cmk/site$",
-    "$_HOST_LABELSOURCE_cmk/site$",
-    "$HOST_ADDRESS_4$",
-    "$_HOSTADDRESS_4$",
-    "$HOST_ADDRESS_6$",
-    "$_HOSTADDRESS_6$",
-    "$HOST_ADDRESS_FAMILY$",
-    "$_HOSTADDRESS_FAMILY$",
-    "$HOST_ADDRESSES_4$",
-    "$_HOSTADDRESSES_4$",
-    "$HOST_ADDRESSES_6$",
-    "$_HOSTADDRESSES_6$",
-    "$HOST_FILENAME$",
-    "$_HOSTFILENAME$",
-    "$USER1$",
-    "$USER2$",
-    "$USER3$",
-    "$USER4$",
-}
-
-
 class MigratableUrl(V1Url):
     def migrate_expect_response(self) -> None | list[int]:
         if self.expect_response is None:
@@ -318,11 +269,6 @@ def detect_conflicts(config: Config, rule_value: Mapping[str, object]) -> Confli
     if config.cant_construct_url is CantConstructURL.skip:
         url = migratable_value.url()
         if _classify(url) is UrlType.INVALID:
-            return Conflict(
-                type_=ConflictType.cant_construct_url,
-                host_fields=["address", "uri", "virthost"],
-            )
-        if any(macro in url for macro in MACROS):
             return Conflict(
                 type_=ConflictType.cant_construct_url,
                 host_fields=["address", "uri", "virthost"],

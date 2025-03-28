@@ -12,6 +12,7 @@ import re
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from dataclasses import asdict
 from enum import auto, Enum
+from pprint import pformat
 from typing import Any, cast, Final, Literal, NamedTuple, overload, TypedDict
 
 from livestatus import SiteId
@@ -29,7 +30,7 @@ from cmk.utils.rulesets.conditions import (
     HostOrServiceConditions,
     HostOrServiceConditionsSimple,
 )
-from cmk.utils.rulesets.definition import RuleGroup
+from cmk.utils.rulesets.definition import RuleGroup, RuleGroupType
 from cmk.utils.rulesets.ruleset_matcher import (
     TagCondition,
     TagConditionNE,
@@ -114,6 +115,7 @@ from cmk.gui.watolib.check_mk_automations import (
     analyse_service,
     analyze_host_rule_matches,
     analyze_service_rule_matches,
+    find_unknown_check_parameter_rule_sets,
     get_check_information,
 )
 from cmk.gui.watolib.config_hostname import ConfigHostname
@@ -177,6 +179,7 @@ def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeCloneRule)
     mode_registry.register(ModeNewRule)
     mode_registry.register(ModeExportRule)
+    mode_registry.register(ModeUnknownRulesets)
 
 
 def _group_rulesets(
@@ -588,6 +591,12 @@ def _page_menu_entries_predefined_searches(group: str | None) -> Iterable[PageMe
             is_shortcut=search_term == "ruleset_used",
             item=make_simple_link(folder_preserving_link(uri_params)),
         )
+
+    yield PageMenuEntry(
+        title=_("Unknown rulesets"),
+        icon_name={"icon": "rulesets", "emblem": "warning"},
+        item=make_simple_link(makeuri_contextless(request, [("mode", "unknown_rulesets")])),
+    )
 
 
 class ModeRulesetGroup(ABCRulesetMode):
@@ -3290,3 +3299,137 @@ def _get_rule_render_mode() -> RenderMode:
             return RenderMode.BACKEND_AND_FRONTEND
         case _:
             raise MKGeneralException(_("Unknown rendering mode %s") % rendering_mode)
+
+
+class ModeUnknownRulesets(WatoMode):
+    @classmethod
+    def name(cls) -> str:
+        return "unknown_rulesets"
+
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
+        return ["rulesets"]
+
+    @classmethod
+    def parent_mode(cls) -> type[WatoMode] | None:
+        request.set_var("group", "monconf")
+        return ModeRulesetGroup
+
+    def title(self) -> str:
+        return _("Unknown rulesets")
+
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Setup"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Service monitoring rules"),
+                                    icon_name="rulesets",
+                                    item=make_simple_link(
+                                        folder_preserving_link(
+                                            [
+                                                ("group", "monconf"),
+                                                ("mode", "rulesets"),
+                                            ]
+                                        )
+                                    ),
+                                )
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+
+    def _unknown_rulesets(self) -> Sequence[Ruleset]:
+        all_rulesets = AllRulesets.load_all_rulesets().get_rulesets()
+        return [
+            f
+            for r in find_unknown_check_parameter_rule_sets().result
+            if (
+                (f := all_rulesets.get(f"{RuleGroupType.CHECKGROUP_PARAMETERS.value}:{r}"))
+                is not None
+            )
+        ]
+
+    def _show_row(self, table: Table, unknown_ruleset_name: str, rule_nr: int, rule: Rule) -> None:
+        table.row()
+
+        table.cell(_("Actions"), css=["buttons"])
+        html.icon_button(
+            make_confirm_delete_link(
+                url=make_action_link(
+                    [
+                        ("mode", "unknown_rulesets"),
+                        ("_delete_ruleset_name", unknown_ruleset_name),
+                        ("_delete_rule_id", rule.id),
+                    ]
+                ),
+                title=_("Delete unknown rule"),
+                message=_("#%s of unknown ruleset %r") % (rule_nr, unknown_ruleset_name),
+            ),
+            _("Delete"),
+            "delete",
+        )
+
+        table.cell("#", css=["narrow nowrap"])
+        html.write_text_permissive(rule_nr)
+        table.cell(_("Folder"), rule.folder.title())
+        table.cell(_("ID"), rule.id)
+        table.cell(_("Value"), HTMLWriter.render_tt(pformat(rule.value).replace("\n", "<br>")))
+        table.cell(
+            _("Conditions"),
+            HTMLWriter.render_tt(
+                pformat(
+                    rule.get_rule_conditions().to_config(UseHostFolder.HOST_FOLDER_FOR_UI)
+                ).replace("\n", "<br>")
+            ),
+        )
+
+    def page(self) -> None:
+        for unknown_ruleset in self._unknown_rulesets():
+            with table_element(
+                f"{self.name()}_{unknown_ruleset.name}",
+                title=_("Unknown ruleset: %s") % unknown_ruleset.name,
+                searchable=False,
+                sortable=False,
+                foldable=Foldable.FOLDABLE_SAVE_STATE,
+                limit=None,
+            ) as table:
+                for rules in unknown_ruleset.rules.values():
+                    for rule_nr, rule in enumerate(rules):
+                        self._show_row(table, unknown_ruleset.name, rule_nr, rule)
+
+    def action(self) -> ActionResult:
+        check_csrf_token()
+
+        if not (d_ruleset_name := request.var("_delete_ruleset_name")) or not (
+            d_rule_id := request.var("_delete_rule_id")
+        ):
+            return None
+
+        rulesets = AllRulesets.load_all_rulesets()
+        if not (ruleset := rulesets.get_rulesets().get(d_ruleset_name)):
+            return None
+
+        for rules in ruleset.rules.values():
+            for rule in rules:
+                if rule.id == d_rule_id:
+                    if is_locked_by_quick_setup(rule.locked_by):
+                        raise MKUserError(
+                            None, _("Cannot delete rules that are managed by Quick setup.")
+                        )
+
+                    ruleset.delete_rule(rule)
+                    rulesets.save_folder(rule.folder)
+                    # TODO causes import-cycles
+                    # reset_scheduling("execute_deprecation_tests_and_notify_users")
+                    return redirect(self.mode_url())
+
+        return None

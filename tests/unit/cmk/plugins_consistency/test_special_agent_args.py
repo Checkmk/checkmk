@@ -10,6 +10,8 @@ from typing import Final
 
 import pytest
 
+from cmk.ccc import version as checkmk_version
+
 from cmk.utils import password_store
 
 from cmk.plugins.alertmanager.special_agents import agent_alertmanager
@@ -241,6 +243,18 @@ def test_all_agents_considered() -> None:
     assert set(TESTED_SA_MODULES) == {
         plugin.name for plugin in load_special_agents(raise_errors=True).values()
     }
+
+
+def test_all_agents_versions() -> None:
+    version_missmatch = {
+        module.__name__
+        for module in TESTED_SA_MODULES.values()
+        # not having the __version__ is ok, but if present it must match
+        if module
+        and hasattr(module, "__version__")
+        and module.__version__ != checkmk_version.__version__
+    }
+    assert not version_missmatch
 
 
 @pytest.mark.parametrize(

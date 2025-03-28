@@ -21,6 +21,12 @@ from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 def _parameter_form() -> Dictionary:
     return Dictionary(
         help_text=Help(
+            "The special agent is deprecated and will be removed in Checkmk 2.5.0. "
+            "If you still require it, will be made available on the Checkmk Exchange "
+            "(exchange.checkmk.com). Dell EMC VNX has been replaced in 2016 by Dell "
+            "EMC Unity and is not supported anymore. Thus, naviseccli, the tool required "
+            "for monitoring Dell EMC VNX is not maintained as well anymore, with potentially "
+            "insecure dependencies."
             "This rule selects the EMC VNX agent instead of the normal Checkmk Agent "
             "and allows monitoring of EMC VNX storage systems by calling naviseccli "
             "commandline tool locally on the monitoring system. Make sure it is installed "
@@ -131,4 +137,5 @@ rule_spec_special_agent_emcvnx = SpecialAgent(
     title=Title("EMC VNX storage systems"),
     topic=Topic.STORAGE,
     parameter_form=_parameter_form,
+    is_deprecated=True,
 )

@@ -106,7 +106,7 @@ def parse_raw_response(
     response: bytes | str,
 ) -> Response | ValidationError | JSONDecodeError:
     try:
-        adapter: TypeAdapter[Response] = TypeAdapter(Response)
-        return adapter.validate_json(response)
+        adapter = TypeAdapter(Response)
+        return adapter.validate_json(response)  # type: ignore[return-value]
     except (ValidationError, JSONDecodeError) as e:
         return e

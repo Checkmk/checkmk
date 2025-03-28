@@ -143,6 +143,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
           v-model:selected-option="selectedOption"
           :component-id="componentId"
           :options="spec.elements"
+          :no-elements-text="spec.no_elements_text"
           :show-filter="spec.elements.length > FILTER_SHOW_THRESHOLD"
           :required-text="props.spec.i18n_base.required"
           :input-hint="props.spec.input_hint || ''"

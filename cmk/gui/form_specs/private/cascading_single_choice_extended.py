@@ -6,6 +6,7 @@
 from dataclasses import dataclass
 from typing import Generic
 
+from cmk.rulesets.v1 import Message
 from cmk.rulesets.v1.form_specs import CascadingSingleChoice, CascadingSingleChoiceElement
 from cmk.rulesets.v1.form_specs._base import ModelT
 from cmk.shared_typing.vue_formspec_components import CascadingSingleChoiceLayout
@@ -26,4 +27,5 @@ class CascadingSingleChoiceElementExtended(CascadingSingleChoiceElement[ModelT],
 
 @dataclass(frozen=True, kw_only=True)
 class CascadingSingleChoiceExtended(CascadingSingleChoice):
+    no_elements_text: Message = Message("(No choices available)")
     layout: CascadingSingleChoiceLayout = CascadingSingleChoiceLayout.vertical

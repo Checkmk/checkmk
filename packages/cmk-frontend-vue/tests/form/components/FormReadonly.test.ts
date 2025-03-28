@@ -187,6 +187,7 @@ const cascadingSingleChoiceFormSpec: FormSpec.CascadingSingleChoice = {
   i18n_base: { required: 'required' },
   validators: [],
   input_hint: null,
+  no_elements_text: '',
   elements: [
     {
       name: 'stringChoice',

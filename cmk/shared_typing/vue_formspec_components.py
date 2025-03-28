@@ -434,6 +434,7 @@ class CascadingSingleChoiceElement:
 
 @dataclass(kw_only=True)
 class CascadingSingleChoice(FormSpec):
+    no_elements_text: str
     label: Optional[str]
     input_hint: Optional[str]
     i18n_base: I18nFormSpecBase

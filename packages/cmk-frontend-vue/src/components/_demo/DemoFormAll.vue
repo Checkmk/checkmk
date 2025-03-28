@@ -215,6 +215,7 @@ function getCascadingSingleChoice(
     ...getFormSpecDefaults(name),
     label: getLabel(name),
     input_hint: getInputHint(name),
+    no_elements_text: '',
     elements: [
       {
         name: 'name one',

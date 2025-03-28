@@ -690,6 +690,9 @@
                             },
                             "default": []
                         },
+                        "no_elements_text": {
+                            "type": "string"
+                        },
                         "label": {
                             "type": ["string", "null"]
                         },
@@ -708,6 +711,7 @@
                     "required": [
                         "type",
                         "elements",
+                        "no_elements_text",
                         "label",
                         "input_hint",
                         "layout",

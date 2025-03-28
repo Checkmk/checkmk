@@ -107,6 +107,7 @@ export function makeCascadingSingleChoice(
     i18n_base: { required: 'required' },
     validators: [],
     elements: elements,
+    no_elements_text: '',
     label: null,
     input_hint: '',
     layout: 'vertical'

@@ -284,7 +284,7 @@ STAGES:
         scripts/run-in-docker.sh scripts/run-pipenv run python3 -m cmk.utils.werks changelog CHANGELOG precompiled.json &>> ${RESULTS}/werk_commands.txt
         # we don't have access to the fixup notes in ci, we might have to fetch them, or temporarily disable this check:
         scripts/run-in-docker.sh scripts/run-pipenv run python3 -m cmk.utils.werks mail . HEAD werk_mail --assume-no-notes-but=$(git log --before="$(date --date="4 weeks ago" --iso=seconds)" --format="%H" --max-count=1) &>> ${RESULTS}/werk_commands.txt
-        scripts/run-in-docker.sh scripts/run-pipenv run ./werk list &>> ${RESULTS}/werk_commands.txt
+        scripts/run-in-docker.sh scripts/run-pipenv run werk list &>> ${RESULTS}/werk_commands.txt
       TEXT_ON_SKIP: 'No Werk code files changed'
       RESULT_CHECK_FILE_PATTERN: "results/werk_commands.txt"
 

@@ -454,7 +454,8 @@ def next_werk_id() -> WerkId:
     if not my_werk_ids:
         bail_out(
             "You have no werk IDS left. "
-            'You can reserve 10 additional Werk IDS with "./werk ids 10".'
+            'You can reserve 10 additional Werk IDS with "werk ids 10".'
+            "Important: You need to activate the .venv before (source .venv/bin/activate)"
         )
     return my_werk_ids[0]
 

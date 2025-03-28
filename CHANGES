@@ -11,7 +11,7 @@ If you want to see the changes of a specific version and maybe filter the
 changes in a flexible way, please check out the list of changes on our
 website (https://checkmk.com/werks), see the werk list in your site (click
 "Help" in the navigation bar, then "Change log (Werks)") or execute the
-"./werk list" command from the git directory of Checkmk.
+"scripts/run-pipenv run werk list" command from the git directory of Checkmk.
 
 From the git of Check_MK, you can create the ChangeLog file with the command
 "make `pwd`/ChangeLog".

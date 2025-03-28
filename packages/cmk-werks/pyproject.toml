@@ -51,3 +51,6 @@ disable = "missing-docstring,fixme"
 pythonpath = [ "." ]
 testpaths = [ "cmk", "tests" ]
 addopts = "--doctest-modules --import-mode=importlib"
+
+[project.scripts]
+werk = "cmk.werks.cli:main"

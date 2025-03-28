@@ -99,7 +99,6 @@ from cmk.checkengine.submitters import get_submitter, ServiceState
 from cmk.checkengine.summarize import summarize, SummarizerFunction
 from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
 
-import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.core
 import cmk.base.core_nagios
 import cmk.base.diagnostics
@@ -111,6 +110,10 @@ from cmk.base.api.agent_based.plugin_classes import (
     AgentSectionPlugin,
     CheckPlugin,
     SNMPSectionPlugin,
+)
+from cmk.base.api.agent_based.register import (
+    extract_known_discovery_rulesets,
+    filter_relevant_raw_sections,
 )
 from cmk.base.checkers import (
     CheckPluginMapper,
@@ -148,9 +151,7 @@ def load_config(plugins: AgentBasedPlugins) -> config.LoadingResult:
     # Read the configuration files (main.mk, autochecks, etc.), but not for
     # certain operation modes that does not need them and should not be harmed
     # by a broken configuration
-    return config.load(
-        discovery_rulesets=agent_based_register.extract_known_discovery_rulesets(plugins)
-    )
+    return config.load(discovery_rulesets=extract_known_discovery_rulesets(plugins))
 
 
 def load_checks() -> AgentBasedPlugins:
@@ -522,7 +523,7 @@ def _get_ds_type(
 ) -> _DSType:
     raw_section_is_snmp = {
         isinstance(s, SNMPSectionPlugin)
-        for s in agent_based_register.filter_relevant_raw_sections(
+        for s in filter_relevant_raw_sections(
             consumers=(check,),
             sections=sections,
         ).values()
@@ -2073,7 +2074,7 @@ def _extract_plugin_selection(
     plugin_names = {type_(p) for p in detect_plugins}
     return (
         frozenset(
-            agent_based_register.filter_relevant_raw_sections(
+            filter_relevant_raw_sections(
                 consumers=(_lookup_plugin(pn, plugins) for pn in plugin_names),
                 sections=sections,
             )
@@ -2816,7 +2817,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
         return
 
     plugins = load_checks()
-    discovery_rulesets = agent_based_register.extract_known_discovery_rulesets(plugins)
+    discovery_rulesets = extract_known_discovery_rulesets(plugins)
     config_cache = config.load(discovery_rulesets).config_cache
 
     parser = CMKParser(

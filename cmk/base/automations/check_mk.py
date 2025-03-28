@@ -153,12 +153,12 @@ from cmk.checkengine.submitters import ServiceDetails, ServiceState
 from cmk.checkengine.summarize import summarize
 from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
 
-import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.core
 import cmk.base.nagios_utils
 import cmk.base.parent_scan
 from cmk.base import config, core_config, notify, sources
 from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins, CheckPlugin
+from cmk.base.api.agent_based.register import extract_known_discovery_rulesets, get_check_plugin
 from cmk.base.automations import (
     Automation,
     automations,
@@ -293,7 +293,7 @@ class AutomationDiscovery(DiscoveryAutomation):
 
         if loading_result is None:
             loading_result = load_config(
-                discovery_rulesets=agent_based_register.extract_known_discovery_rulesets(plugins)
+                discovery_rulesets=extract_known_discovery_rulesets(plugins)
             )
 
         discovery_config = config.DiscoveryConfigurer(
@@ -418,7 +418,7 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
             plugins = load_plugins()
         if loading_result is None:
             loading_result = load_config(
-                discovery_rulesets=agent_based_register.extract_known_discovery_rulesets(plugins)
+                discovery_rulesets=extract_known_discovery_rulesets(plugins)
             )
 
         config_cache = loading_result.config_cache
@@ -478,7 +478,7 @@ class AutomationDiscoveryPreview(Automation):
             plugins = load_plugins()
         if loading_result is None:
             loading_result = load_config(
-                discovery_rulesets=agent_based_register.extract_known_discovery_rulesets(plugins)
+                discovery_rulesets=extract_known_discovery_rulesets(plugins)
             )
 
         config_cache = loading_result.config_cache
@@ -655,12 +655,7 @@ def _make_compute_check_parameters_of_autocheck(
             entry.check_plugin_name,
             service_name_template=(
                 None
-                if (
-                    p := agent_based_register.get_check_plugin(
-                        entry.check_plugin_name, check_plugins
-                    )
-                )
-                is None
+                if (p := get_check_plugin(entry.check_plugin_name, check_plugins)) is None
                 else p.service_name
             ),
             item=entry.item,
@@ -810,7 +805,7 @@ def _execute_autodiscovery(
     ab_plugins = load_plugins() if ab_plugins is None else ab_plugins
     if loading_result is None:
         loading_result = load_config(
-            discovery_rulesets=agent_based_register.extract_known_discovery_rulesets(ab_plugins)
+            discovery_rulesets=extract_known_discovery_rulesets(ab_plugins)
         )
 
     config_cache = loading_result.config_cache
@@ -1031,12 +1026,7 @@ def _make_get_effective_host_of_autocheck_callback(
             entry.check_plugin_name,
             service_name_template=(
                 None
-                if (
-                    p := agent_based_register.get_check_plugin(
-                        entry.check_plugin_name, check_plugins
-                    )
-                )
-                is None
+                if (p := get_check_plugin(entry.check_plugin_name, check_plugins)) is None
                 else p.service_name
             ),
             item=entry.item,
@@ -1070,7 +1060,7 @@ class AutomationSetAutochecksV2(DiscoveryAutomation):
         check_plugins = plugins.check_plugins
         if loading_result is None:
             loading_result = load_config(
-                discovery_rulesets=agent_based_register.extract_known_discovery_rulesets(plugins)
+                discovery_rulesets=extract_known_discovery_rulesets(plugins)
             )
         config_cache = loading_result.config_cache
 
@@ -1167,7 +1157,7 @@ class AutomationRenameHosts(Automation):
             plugins = load_plugins()
         if loading_result is None:
             loading_result = load_config(
-                discovery_rulesets=agent_based_register.extract_known_discovery_rulesets(plugins)
+                discovery_rulesets=extract_known_discovery_rulesets(plugins)
             )
 
         actions: list[str] = []
@@ -1506,7 +1496,7 @@ class AutomationGetServicesLabels(Automation):
             plugins = load_plugins()
         if loading_result is None:
             loading_result = load_config(
-                discovery_rulesets=agent_based_register.extract_known_discovery_rulesets(plugins)
+                discovery_rulesets=extract_known_discovery_rulesets(plugins)
             )
 
         loading_result.config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(
@@ -1555,7 +1545,7 @@ class AutomationGetServiceName(Automation):
         )
         if loaded_config is None:
             loaded_config = load_config(
-                discovery_rulesets=agent_based_register.extract_known_discovery_rulesets(plugins)
+                discovery_rulesets=extract_known_discovery_rulesets(plugins)
             )
         ruleset_matcher = loaded_config.config_cache.ruleset_matcher
         ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
@@ -1567,12 +1557,7 @@ class AutomationGetServiceName(Automation):
                 check_plugin_name,
                 service_name_template=(
                     None
-                    if (
-                        p := agent_based_register.get_check_plugin(
-                            check_plugin_name, plugins.check_plugins
-                        )
-                    )
-                    is None
+                    if (p := get_check_plugin(check_plugin_name, plugins.check_plugins)) is None
                     else p.service_name
                 ),
                 item=item,
@@ -1605,7 +1590,7 @@ class AutomationAnalyseServices(Automation):
             plugins = load_plugins()
         if loading_result is None:
             loading_result = load_config(
-                discovery_rulesets=agent_based_register.extract_known_discovery_rulesets(plugins)
+                discovery_rulesets=extract_known_discovery_rulesets(plugins)
             )
         loading_result.config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(
             {host_name}
@@ -1742,7 +1727,7 @@ class AutomationAnalyseServices(Automation):
             if service.description != servicedesc:
                 continue
 
-            plugin = agent_based_register.get_check_plugin(service.check_plugin_name, check_plugins)
+            plugin = get_check_plugin(service.check_plugin_name, check_plugins)
             if plugin is None:
                 # plug-in can only be None if we looked for the "Unimplemented check..." description.
                 # In this case we can run into the 'not found' case below.
@@ -2087,7 +2072,7 @@ class AutomationRestart(Automation):
             plugins = load_plugins()
         if loading_result is None:
             loading_result = load_config(
-                discovery_rulesets=agent_based_register.extract_known_discovery_rulesets(plugins)
+                discovery_rulesets=extract_known_discovery_rulesets(plugins)
             )
 
         hosts_config = config.make_hosts_config()
@@ -2345,9 +2330,7 @@ class AutomationScanParents(Automation):
             raise MKAutomationError("Cannot find binary <tt>traceroute</tt> in search path.")
 
         plugins = plugins or load_plugins()  # do we really still need this?
-        loading_result = loading_result or load_config(
-            agent_based_register.extract_known_discovery_rulesets(plugins)
-        )
+        loading_result = loading_result or load_config(extract_known_discovery_rulesets(plugins))
 
         hosts_config = config.make_hosts_config()
         monitoring_host = (
@@ -2508,9 +2491,7 @@ class AutomationDiagHost(Automation):
         agent_port, snmp_timeout, snmp_retries = map(int, args[4:7])
 
         plugins = plugins or load_plugins()
-        loading_result = loading_result or load_config(
-            agent_based_register.extract_known_discovery_rulesets(plugins)
-        )
+        loading_result = loading_result or load_config(extract_known_discovery_rulesets(plugins))
         loading_result.config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(
             {host_name}
         )
@@ -2938,9 +2919,7 @@ class AutomationActiveCheck(Automation):
         plugin, item = args[1:]
 
         plugins = plugins or load_plugins()  # do we really still need this?
-        loading_result = loading_result or load_config(
-            agent_based_register.extract_known_discovery_rulesets(plugins)
-        )
+        loading_result = loading_result or load_config(extract_known_discovery_rulesets(plugins))
         config_cache = loading_result.config_cache
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
 
@@ -3101,9 +3080,7 @@ class AutomationUpdateDNSCache(Automation):
         loading_result: config.LoadingResult | None,
     ) -> UpdateDNSCacheResult:
         plugins = plugins or load_plugins()  # can we remove this?
-        loading_result = loading_result or load_config(
-            agent_based_register.extract_known_discovery_rulesets(plugins)
-        )
+        loading_result = loading_result or load_config(extract_known_discovery_rulesets(plugins))
 
         hosts_config = loading_result.config_cache.hosts_config
         return UpdateDNSCacheResult(
@@ -3138,9 +3115,7 @@ class AutomationGetAgentOutput(Automation):
         ty = args[1]
 
         plugins = plugins or load_plugins()  # do we really still need this?
-        loading_result = loading_result or load_config(
-            agent_based_register.extract_known_discovery_rulesets(plugins)
-        )
+        loading_result = loading_result or load_config(extract_known_discovery_rulesets(plugins))
         service_configurer = loading_result.config_cache.make_service_configurer(
             plugins.check_plugins
         )

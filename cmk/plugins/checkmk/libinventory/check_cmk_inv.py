@@ -30,10 +30,13 @@ from cmk.checkengine.inventory import HWSWInventoryParameters
 from cmk.checkengine.parser import NO_SELECTION
 from cmk.checkengine.submitters import ServiceState
 
-import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config
 from cmk.base.api.agent_based import plugin_index
 from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
+from cmk.base.api.agent_based.register import (
+    extract_known_discovery_rulesets,
+    load_selected_plugins,
+)
 from cmk.base.checkers import (
     CMKFetcher,
     CMKParser,
@@ -125,7 +128,7 @@ def inventory_as_check(
     parameters: HWSWInventoryParameters, hostname: HostName, plugins: AgentBasedPlugins
 ) -> ServiceState:
     config_cache = config.load(
-        discovery_rulesets=agent_based_register.extract_known_discovery_rulesets(plugins)
+        discovery_rulesets=extract_known_discovery_rulesets(plugins)
     ).config_cache
     config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
     hosts_config = config.make_hosts_config()
@@ -216,6 +219,4 @@ def load_checks() -> AgentBasedPlugins:
 def load_plugins_from_index(config_path: Path) -> AgentBasedPlugins:
     plugin_idx = plugin_index.load_plugin_index(config_path)
     _errors, sections, checks = config.load_and_convert_legacy_checks(plugin_idx.legacy)
-    return agent_based_register.load_selected_plugins(
-        plugin_idx.locations, sections, checks, validate=False
-    )
+    return load_selected_plugins(plugin_idx.locations, sections, checks, validate=False)

@@ -1216,7 +1216,8 @@ section_mailqueue() {
 section_omd() {
     if inpath omd; then
         # 60 is _probably_ the agents polling interval. Why would you use that??
-        _run_cached_internal "omd_status" 60 60 180 120 "echo '<<<omd_status>>>'; omd status --bare || true"
+        export -f sudo_as_root
+        _run_cached_internal "omd_status" 60 60 180 120 "echo '<<<omd_status>>>'; sudo_as_root omd status --bare || true"
 
         ${MK_RUN_SYNC_PARTS} || return
 

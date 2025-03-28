@@ -58,7 +58,7 @@ editions:
         testbuild: ["ubuntu-24.04", "sles-15sp6", "cma-4"]
     cloud:
         release: [*common, *cma_distros]
-        daily: *daily_reduced
+        daily: [*daily_reduced, *cma_distros]
         daily_tests: *daily_reduced
         fips: []
         # Don't test the update process for internal distros, they are not public anyway

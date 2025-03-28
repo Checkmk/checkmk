@@ -34,6 +34,7 @@ PublicKey/PrivateKey
 from __future__ import annotations
 
 import re
+import uuid
 from dataclasses import dataclass
 from datetime import datetime, UTC
 from pathlib import Path
@@ -81,7 +82,8 @@ class CertificateWithPrivateKey(NamedTuple):
         common_name: str,
         organization: str,
         organizational_unit: str | None = None,
-        subject_alt_dns_names: list[str] | None = None,
+        subject_alternative_names: list[SubjectAlternativeName]
+        | None = None,  # None means no SAN extension is added
         expiry: relativedelta = relativedelta(years=2),
         key_size: int = 4096,
         is_ca: bool = False,
@@ -96,14 +98,11 @@ class CertificateWithPrivateKey(NamedTuple):
             organization_name=organization,
             organizational_unit=organizational_unit,
         )
-        alt_names = (
-            [x509.DNSName(san) for san in subject_alt_dns_names] if subject_alt_dns_names else None
-        )
 
         certificate = Certificate._create(  # noqa: SLF001
             subject_public_key=private_key.public_key,
             subject_name=name,
-            subject_alt_dns_names=alt_names,
+            subject_alternative_names=subject_alternative_names,
             expiry=expiry,
             start_date=datetime.now(tz=UTC),
             is_ca=is_ca,
@@ -165,7 +164,7 @@ class CertificateWithPrivateKey(NamedTuple):
         common_name: str,
         organization: str,
         organizational_unit: str | None = None,
-        subject_alt_dns_names: list[str] | None = None,
+        subject_alternative_names: list[SubjectAlternativeName] | None = None,
         expiry: relativedelta = relativedelta(years=2),
         key_size: int = 4096,
         is_ca: bool = False,
@@ -181,14 +180,11 @@ class CertificateWithPrivateKey(NamedTuple):
             organization_name=organization,
             organizational_unit=organizational_unit,
         )
-        issued_alt_names = (
-            [x509.DNSName(san) for san in subject_alt_dns_names] if subject_alt_dns_names else None
-        )
 
         issued_certificate = Certificate._create(  # noqa: SLF001
             subject_public_key=issued_key.public_key,
             subject_name=issued_name,
-            subject_alt_dns_names=issued_alt_names,
+            subject_alternative_names=subject_alternative_names,
             expiry=expiry,
             start_date=datetime.now(tz=UTC),
             is_ca=is_ca,
@@ -198,12 +194,19 @@ class CertificateWithPrivateKey(NamedTuple):
 
         return CertificateWithPrivateKey(issued_certificate, issued_key)
 
-    def sign_csr(self, csr: CertificateSigningRequest, expiry: relativedelta) -> Certificate:
+    def sign_csr(
+        self,
+        csr: CertificateSigningRequest,
+        expiry: relativedelta,
+        subject_alternative_names: list[SubjectAlternativeName] | None = None,
+    ) -> Certificate:
         """
         Create a certificate by signing a certificate signing request.
 
         Note that the resulting certificate is NOT a CA. This means we don't do intermediate
         certificates at the moment.
+
+        If subject_alternative_names is given, it will be preferred over the SANs in the CSR.
         """
         if not self.certificate.may_sign_certificates():
             raise ValueError("This certificate is not suitable for signing CSRs (not a CA)")
@@ -211,15 +214,15 @@ class CertificateWithPrivateKey(NamedTuple):
         if not csr.is_signature_valid:
             raise ValueError("CSR signature is not valid")
 
-        # Add the DNS name of the subject CN as alternative name.
-        # Our root CA has always done this, so for now this behavior is hardcoded.
-        if (cn := csr.subject.common_name) is None:
-            raise ValueError("common name is expected for CSRs")
+        if not csr.subject.common_name:
+            raise ValueError("CSR subject must have a common name")
+
+        effective_sans = subject_alternative_names or csr.subject_alternative_names
 
         return Certificate._create(  # noqa: SLF001
             subject_public_key=csr.public_key,
             subject_name=csr.subject,
-            subject_alt_dns_names=[x509.DNSName(cn)],
+            subject_alternative_names=effective_sans,
             expiry=expiry,
             start_date=datetime.now(tz=UTC),
             is_ca=False,
@@ -325,7 +328,7 @@ class Certificate:
         # subject info
         subject_public_key: PublicKey,
         subject_name: X509Name,
-        subject_alt_dns_names: list[x509.DNSName] | None,
+        subject_alternative_names: list[SubjectAlternativeName] | None,
         # cert properties
         expiry: relativedelta,
         start_date: datetime,
@@ -394,9 +397,10 @@ class Certificate:
             critical=True,
         )
 
-        if subject_alt_dns_names is not None:
+        if subject_alternative_names is not None:
             builder = builder.add_extension(
-                x509.SubjectAlternativeName(subject_alt_dns_names), critical=False
+                x509.SubjectAlternativeName(n.name for n in subject_alternative_names),
+                critical=False,
             )
 
         hash_algo = (
@@ -589,6 +593,7 @@ class Certificate:
             ).value
             assert isinstance(ext, x509.extensions.SubjectAlternativeName)
             sans = ext.get_values_for_type(x509.DNSName)
+            sans.extend(ext.get_values_for_type(x509.UniformResourceIdentifier))
         except x509.ExtensionNotFound:
             return []
 
@@ -702,6 +707,25 @@ class X509Name:
         return self.name.rfc4514_string()
 
 
+@dataclass(frozen=True, slots=True)
+class SubjectAlternativeName:
+    """A Subject Alternative Name for a certificate's SAN extension.
+
+    A wrapper around `cryptography.x509.GeneralName`, exposing only the types we currently use
+    (DNSName and UUID as URI).
+    """
+
+    name: x509.GeneralName
+
+    @classmethod
+    def dns_name(cls, name: str) -> SubjectAlternativeName:
+        return cls(x509.DNSName(name))
+
+    @classmethod
+    def uuid(cls, name: uuid.UUID) -> SubjectAlternativeName:
+        return cls(x509.UniformResourceIdentifier(name.urn))
+
+
 class CertificateSigningRequestPEM(_PEMData):
     """A Certificate Signing Request in pem format"""
 
@@ -717,7 +741,10 @@ class CertificateSigningRequest:
 
     @classmethod
     def create(
-        cls, subject_name: X509Name, subject_private_key: PrivateKey
+        cls,
+        subject_name: X509Name,
+        subject_private_key: PrivateKey,
+        subject_alternative_names: list[SubjectAlternativeName] | None = None,
     ) -> CertificateSigningRequest:
         """Create a new Certificate Signing Request
 
@@ -735,6 +762,13 @@ class CertificateSigningRequest:
             else None
         )
         builder = x509.CertificateSigningRequestBuilder().subject_name(subject_name.name)
+
+        if subject_alternative_names is not None:
+            builder = builder.add_extension(
+                x509.SubjectAlternativeName(n.name for n in subject_alternative_names),
+                critical=False,
+            )
+
         return cls(builder.sign(subject_private_key._key, hash_algo))  # noqa: SLF001
 
     @property
@@ -750,6 +784,28 @@ class CertificateSigningRequest:
     @property
     def is_signature_valid(self) -> bool:
         return self.csr.is_signature_valid
+
+    @property
+    def subject_alternative_names(self) -> list[SubjectAlternativeName] | None:
+        sans: list[SubjectAlternativeName] = []
+        try:
+            ext = self.csr.extensions.get_extension_for_oid(
+                x509.oid.ExtensionOID.SUBJECT_ALTERNATIVE_NAME
+            ).value
+            assert isinstance(ext, x509.extensions.SubjectAlternativeName)
+            # get_values_for_type returns strings unfortunately, so we need to cast them back
+            sans.extend(
+                SubjectAlternativeName(x509.DNSName(n))
+                for n in ext.get_values_for_type(x509.DNSName)
+            )
+            sans.extend(
+                SubjectAlternativeName(x509.UniformResourceIdentifier(n))
+                for n in ext.get_values_for_type(x509.UniformResourceIdentifier)
+            )
+        except x509.ExtensionNotFound:
+            return None
+
+        return sans
 
     def dump_pem(self) -> CertificateSigningRequestPEM:
         """Return the CSR in PEM format"""

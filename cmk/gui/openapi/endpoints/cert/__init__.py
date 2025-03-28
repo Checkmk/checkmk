@@ -36,7 +36,7 @@ from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.utils import permission_verification as permissions
 
-from cmk.crypto.certificate import CertificateSigningRequest
+from cmk.crypto.certificate import CertificateSigningRequest, SubjectAlternativeName
 
 _403_STATUS_DESCRIPTION = "You do not have the permission for agent pairing."
 
@@ -72,11 +72,15 @@ def _serialized_root_cert() -> str:
 
 
 def _serialized_signed_cert(csr: x509.CertificateSigningRequest) -> str:
+    csr_ = CertificateSigningRequest(csr)
+    if csr_.subject.common_name is None:
+        raise ValueError("CSR must provide a common name")
     cert = _get_agent_ca().sign_csr(
-        CertificateSigningRequest(csr),
+        csr_,
         expiry=relativedelta(
             months=config.active_config.agent_controller_certificates["lifetime_in_months"]
         ),
+        subject_alternative_names=[SubjectAlternativeName.dns_name(csr_.subject.common_name)],
     )
     log_security_event(
         CertManagementEvent(

@@ -25,6 +25,7 @@ from cmk.crypto.certificate import (
     CertificatePEM,
     CertificateWithPrivateKey,
     PersistedCertificateWithPrivateKey,
+    SubjectAlternativeName,
 )
 from cmk.crypto.hash import HashAlgorithm
 from cmk.crypto.keys import is_supported_private_key_type, PrivateKey
@@ -91,7 +92,7 @@ class RootCA(CertificateWithPrivateKey):
         new_cert, new_key = self.issue_new_certificate(
             common_name=common_name,
             organization=f"Checkmk Site {omd_site()}",
-            subject_alt_dns_names=[common_name],
+            subject_alternative_names=[SubjectAlternativeName.dns_name(common_name)],
             expiry=validity,
             key_size=key_size,
         )

@@ -37,6 +37,7 @@ from cmk.crypto.certificate import (
     CertificateSigningRequest,
     CertificateWithPrivateKey,
     PersistedCertificateWithPrivateKey,
+    SubjectAlternativeName,
     X509Name,
 )
 from cmk.crypto.keys import PrivateKey
@@ -110,8 +111,15 @@ class DefaultBrokerCertificateSync(BrokerCertificateSync):
         customer_ca_bundle: PersistedCertificateWithPrivateKey | None,
     ) -> None:
         logger.info("Remote broker certificates creation for site %s", site_id)
-        csr = ask_remote_csr(settings)
-        signed = central_ca_bundle.sign_csr(CertificateSigningRequest(csr), relativedelta(years=2))
+        csr = CertificateSigningRequest(ask_remote_csr(settings))
+        if csr.subject.common_name is None:
+            raise ValueError("CSR must provide a common name")
+
+        signed = central_ca_bundle.sign_csr(
+            csr,
+            relativedelta(years=2),
+            [SubjectAlternativeName.dns_name(csr.subject.common_name)],
+        )
 
         remote_broker_certs = messaging.BrokerCertificates(
             cert=signed.dump_pem().bytes,

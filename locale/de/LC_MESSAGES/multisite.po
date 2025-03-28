@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-03-25 20:50+0000\n"
+"PO-Revision-Date: 2025-03-28 01:50+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -24,9 +24,6 @@ msgstr " %s, Dauer des Ausfalls %s"
 msgid " (%d times)"
 msgstr " (%d mal)"
 
-msgid " (Copy)"
-msgstr " (Kopie)"
-
 msgid " (Data incomplete, maximum number of nodes reached)"
 msgstr " (Daten unvollständig, maximale Anzahl von Knoten erreicht)"
 
@@ -36,7 +33,7 @@ msgstr " (Dauer: %s)"
 
 #, python-format
 msgid " (Duration: %s, %sIO: %s/s)"
-msgstr " (Dauer: %s, %sIO: %s/s)"
+msgstr " (Dauer: %s, %s E/A: %s/s)"
 
 msgid " (copy)"
 msgstr " (Kopie)"
@@ -7242,7 +7239,7 @@ msgid "Automation secret for machine accounts"
 msgstr "Automatisierungspasswort für Maschinenkonten"
 
 msgid "Automation user authentication via HTTP parameters"
-msgstr "Authentifizierung des Automationsbenutzers über HTTP Parameter"
+msgstr "Authentifizierung des Automationsbenutzers über HTTP-Parameter"
 
 msgid "Automation user for connection to central site"
 msgstr "Automationsbenutzer für Verbindung zur Zentralinstanz"
@@ -10742,7 +10739,7 @@ msgid "Check only the listed mailboxes"
 msgstr "Nur die aufgelisteten Mailboxen überprüfen"
 
 msgid "Check origin and parameters"
-msgstr "Ursprung des Services / Parameter"
+msgstr "Check-Ursprung und -Parameter"
 
 msgid "Check parameters"
 msgstr "Check-Parameter"
@@ -10752,7 +10749,7 @@ msgstr "Check-Parameter und andere Konfigurationsvariablen für Hosts"
 
 #, python-format
 msgid "Check parameters for checktype '%s' can not be displayed"
-msgstr ""
+msgstr "Check-Parameter für den Check-Typ '%s' können nicht angezeigt werden"
 
 msgid "Check period"
 msgstr "Check-Periode"
@@ -10898,6 +10895,10 @@ msgid ""
 "error 18 (self signed certificate), and the service will not warn when this "
 "error is returned. Other errors will still trigger an alert."
 msgstr ""
+"Die Aktivierung dieser Option erlaubt selbstsignierte Zertifikate, indem der "
+"OpenSSL-Fehler 18 (selbstsigniertes Zertifikat) ignoriert wird. Der Dienst "
+"warnt nicht, wenn dieser Fehler zurückgegeben wird. Andere Fehler lösen "
+"weiterhin eine Warnung aus."
 
 msgid "Checkmk"
 msgstr "Checkmk"
@@ -13085,7 +13086,7 @@ msgid ""
 "detrimental effect, since they are not IO bound."
 msgstr ""
 "Das Konfigurieren von mehr Checkern als die Anzahl der verfügbaren CPUs (%d) "
-"wirkt sich nachteilig aus, da sie nicht IO-gebunden sind."
+"wirkt sich nachteilig aus, da sie nicht E/A-gebunden sind."
 
 msgid "Confirm"
 msgstr "Bestätigen"
@@ -13951,7 +13952,7 @@ msgstr "Zähler-Level"
 msgid ""
 "Counter rates of DNS parameters for Citrix Netscaler Load Balancer Appliances"
 msgstr ""
-"Zählerraten für DNS-Parameter für Citrix Netscaler Load Balancer Appliances"
+"Zählerraten der DNS-Parameter für Citrix Netscaler Load Balancer Appliances"
 
 msgid "Counter-object name or number"
 msgstr "Zählerobjektname oder -nummer"
@@ -14108,10 +14109,10 @@ msgstr ""
 "Passwortspeicher von Checkmk bezogen werden."
 
 msgid "Create additional service for IO stats bytes"
-msgstr "Zusätzlichen Service für IO Stats Bytes erstellen"
+msgstr "Zusätzlichen Service für E/A-Stats Bytes erstellen"
 
 msgid "Create additional service for IO stats requests"
-msgstr "Zusätzlichen Service für IO-Stats-Anfragen erstellen"
+msgstr "Zusätzlichen Service für E/A-Stats Anfragen erstellen"
 
 msgid "Create additional service for system wait"
 msgstr "Zusätzlichen Service für System Wait erstellen"
@@ -15888,13 +15889,13 @@ msgid "Default metric color"
 msgstr "Standard Metrik-Farbe"
 
 msgid "Default parameters"
-msgstr "Standard-Parameter"
+msgstr "Standardparameter"
 
 msgid "Default parameters for detected services"
 msgstr "Standardparameter für erkannte Services"
 
 msgid "Default parameters when no time period matches"
-msgstr "Standard-Parameter, wenn keine Zeitperiode zutrifft"
+msgstr "Standardparameter, wenn keine Zeitperiode zutrifft"
 
 msgid ""
 "Default permission for dynamic visuals (dashboards, views, etc.). If set to "
@@ -16061,14 +16062,14 @@ msgid ""
 "Define patterns for excluding kernel configuration parameters from the "
 "inventory."
 msgstr ""
-"Definiere Patterns um die Kernel Konfigurationsparameter von der Inventur "
+"Definiere Patterns, um die Kernel-Konfigurationsparameter von der Inventur "
 "auszuschließen."
 
 msgid ""
 "Define patterns for including kernel configuration parameters in the "
 "inventory."
 msgstr ""
-"Definiere Patterns um die Kernel Konfigurationsparameter bei der Inventur "
+"Definiere Patterns, um die Kernel-Konfigurationsparameter bei der Inventur "
 "einzuschließen."
 
 msgid ""
@@ -16846,7 +16847,7 @@ msgid "Deploy plug-in for MS IIS Application Pool States"
 msgstr "Plugin für MS IIS Application Pool States verteilen"
 
 msgid "Deploy plug-in for NFS IO Stats"
-msgstr "Plugin für NFS IO Stats verteilen"
+msgstr "Plugin für NFS E/A-Stats verteilen"
 
 msgid "Deploy plug-in for Veeam backup status"
 msgstr "Plugin für den Veeam Backup-Zustand verteilen"
@@ -17172,7 +17173,7 @@ msgid "Device Component Overall Utilization"
 msgstr "Gesamtauslastung der Gerätekomponente"
 
 msgid "Device Component PCI IO Utilization"
-msgstr "PCI-IO-Auslastung der Gerätekomponente"
+msgstr "PCI-E/A-Auslastung der Gerätekomponente"
 
 msgid "Device Component Power Consumption"
 msgstr "Stromverbrauch der Gerätekomponente"
@@ -17481,7 +17482,7 @@ msgid "Disable this test"
 msgstr "Diesen Test deaktiveren"
 
 msgid "Disable timespecific parameters"
-msgstr "Zeitspezifische Parameter deaktivieren"
+msgstr "Deaktiviere zeitspezifische Parameter"
 
 msgid "Disable undecided services"
 msgstr "Deaktiviere nicht entschiedene Services"
@@ -17659,10 +17660,10 @@ msgid "Disk IO discovery"
 msgstr "Erkennung Festplatten-E/A"
 
 msgid "Disk IO levels"
-msgstr "Disk IO Level"
+msgstr "Festplatten E/A-Levels"
 
 msgid "Disk IO levels (old style checks)"
-msgstr "Disk IO Level (Checks nach altem Muster)"
+msgstr "Festplatten E/A-Levels (Checks nach altem Muster)"
 
 msgid "Disk Latency"
 msgstr "Plattenlatenz"
@@ -18311,7 +18312,7 @@ msgid "Do not deploy plug-in for Microsoft SQL Server"
 msgstr "Plugin für Microsoft SQL-Server nicht verteilen"
 
 msgid "Do not deploy plug-in for NFS IO Stats"
-msgstr "Plugin für NFS IO Stats nicht verteilen"
+msgstr "Plugin für NFS E/A-Stats nicht verteilen"
 
 msgid "Do not deploy plug-in for Veeam backup status"
 msgstr "Plugin für den Veeam-Backup-Zustand nicht verteilen"
@@ -18623,9 +18624,8 @@ msgstr "Docker Container"
 msgid "Docker images"
 msgstr "Docker Images"
 
-#, fuzzy
 msgid "Docker networks"
-msgstr "Docker-Knoten"
+msgstr "Docker-Netzwerke"
 
 msgid "Docker node"
 msgstr "Docker-Knoten"
@@ -19445,10 +19445,10 @@ msgstr ""
 "Regelpakete erstellen, bearbeiten und löschen."
 
 msgid "Edit and analyse the check parameters for this service"
-msgstr "Checkparameter für diesen Service editieren und analysieren"
+msgstr "Check-Parameter für diesen Service editieren und analysieren"
 
 msgid "Edit and analyze the check parameters of this service"
-msgstr "Checkparameter für diesen Service analysieren und editieren"
+msgstr "Check-Parameter für diesen Service analysieren und editieren"
 
 msgid "Edit and analyze the disabled services rules"
 msgstr "Die Regeln für die deaktivierten Services analysieren und bearbeiten"
@@ -19774,10 +19774,10 @@ msgid "Effective labels"
 msgstr "Effektive Labels"
 
 msgid "Effective parameters"
-msgstr "effektive Parameter"
+msgstr "Effektive Parameter"
 
 msgid "Effective parameters of"
-msgstr "Wirksame Parameter von"
+msgstr "Effektive Parameter von"
 
 msgid "Egress packet drop"
 msgstr "verworfene Egress-Pakete"
@@ -19909,7 +19909,7 @@ msgstr "Elektrische Energie"
 msgid "Electrical power"
 msgstr "Elektrische Leistung"
 
-#, no-python-format
+#, fuzzy, no-python-format
 msgid "Electrical tension in % of normal value"
 msgstr "Elektrische Spannung in % des Normwertes"
 
@@ -20166,7 +20166,7 @@ msgid "Enable this site"
 msgstr "Diese Instanz aktivieren"
 
 msgid "Enable timespecific parameters"
-msgstr "Zeitspezifische Parameter aktivieren"
+msgstr "Aktiviere zeitspezifische Parameter"
 
 msgid "Enable trend computation"
 msgstr "Trendberechnung ein"
@@ -22880,10 +22880,11 @@ msgid ""
 "g. <tt>C:/</tt>) or by the device name on Linux/UNIX (e.g. <tt>/dev/sda</"
 "tt>)."
 msgstr ""
-"Geben Sie <tt>SUMMARY</tt> an, um den gesamten Datendurchsatz aller "
-"Festplatten zu erhalten,  Plattenspezifische Werte bekommen Sie mit "
-"Laufwerksbuchstaben (Windows) wie z.B. <tt>C:</tt> oder mit Gerätenamen "
-"(Linux/Unix) wie z.B. <tt>/dev/sda</tt>)."
+"Für einen zusammengefassten Durchsatz aller Festplatten geben Sie "
+"<tt>SUMMARY</tt> an, ein Durchsatz pro Festplatte wird durch den "
+"Laufwerksbuchstaben, einen Doppelpunkt und einen Schrägstrich unter Windows "
+"(z. B. <tt>C:/</tt>) oder durch den Gerätenamen unter Linux/Unix (z. B. <tt>/"
+"dev/sda</tt>) angegeben."
 
 msgid ""
 "For a summarized throughput of all disks, specify <tt>SUMMARY</tt>, for a "
@@ -22894,9 +22895,10 @@ msgid ""
 msgstr ""
 "Geben Sie <tt>SUMMARY</tt> an, um den gesamten Datendurchsatz aller "
 "Festplatten zu erhalten, den Lese-bzw. Schreibdurchsatz erhalten Sie mit "
-"<tt>read</tt> oder <tt>write</tt>. Host-bezogene Werte bekommen Sie mit "
-"Laufwerksbuchstaben (Windows) wie z.B. <tt>C:</tt> oder mit Gerätenamen "
-"(Linux/Unix) wie z.B. <tt>/dev/sda</tt>)."
+"<tt>read</tt> oder <tt>write</tt>. Einen Durchsatz pro Festplatte bekommen "
+"Sie mit dem Laufwerksbuchstaben, einem Doppelpunkt und einem Schrägstrich "
+"unter Windows (z.B. <tt>C:</tt>) oder mit dem Gerätenamen unter Linux/Unix "
+"(z.B. <tt>/dev/sda</tt>)."
 
 msgid ""
 "For agent based checks Checkmk allows you to specify an alternative program "
@@ -23025,7 +23027,7 @@ msgstr ""
 "Datenverlust im Falle eines Systemabsturzes zu verhindern, wird der Zustand "
 "ebenfalls regelmäßig auf der Festplatte gesichert. Das Intervall dafür wird "
 "hier konfiguriert. Kleinere Intervalle halten die Menge der verlorenen Daten "
-"kleiner, verursachen aber ein größeres Disk-IO."
+"kleiner, verursachen aber ein größeres Festplatten-E/A."
 
 msgid ""
 "For security reasons it is recommended to use the password store for setting "
@@ -23627,10 +23629,10 @@ msgid "GCP/GCE CPU utilization"
 msgstr "GCP/GCE CPU-Auslastung"
 
 msgid "GCP/GCE disk IO"
-msgstr "GCP/GCE-Disk-IO"
+msgstr "GCP/GCE-Festplatten-E/A"
 
 msgid "GCP/GCE storage IO"
-msgstr "GCP/GCE Speicher-IO"
+msgstr "GCP/GCE Speicher-E/A"
 
 msgid "GCP/GCS network"
 msgstr "GCP/GCS-Netzwerk"
@@ -25750,8 +25752,8 @@ msgstr "Tabellenaktionen verstecken"
 msgid "Hide the Checkmk version from the login box"
 msgstr "Die Checkmk-Version auf der Login-Box verbergen"
 
-#, python-format
-msgid "Hide this %s in dropdown menus"
+#, fuzzy, python-format
+msgid "Hide this %s in drop-down menus"
 msgstr "%s im Drop-down-Menü"
 
 #, python-format
@@ -26018,7 +26020,7 @@ msgid "Host and service events"
 msgstr "Host- und Service-Ereignisse"
 
 msgid "Host and service parameters"
-msgstr "Host- & Service-Parameter"
+msgstr "Host- und Service-Parameter"
 
 msgid "Host and service rules related to the Event Console"
 msgstr "Host- und Service-Regeln bezogen auf die Event-Console"
@@ -26944,7 +26946,7 @@ msgid "IBM SVC / V7000: Disk Throughput for Drives/MDisks/VDisks in Total"
 msgstr "IBM SVC / V7000: Plattendurchsatz von Drives/MDisks/VDisks gesamt"
 
 msgid "IBM SVC / V7000: IO operations/sec for Drives/MDisks/VDisks in Total"
-msgstr "IBM SVC / V7000: IO-Operationen/sec von Drives/MDisks/VDisks gesamt"
+msgstr "IBM SVC / V7000: E/A-Operationen/sec von Drives/MDisks/VDisks gesamt"
 
 msgid "IBM SVC / V7000: Latency for Drives/MDisks/VDisks in Total"
 msgstr "IBM SVC / V7000: Latenz von Drives/MDisks/VDisks gesamt"
@@ -32106,7 +32108,7 @@ msgid "Levels disk"
 msgstr "Level Festplatte"
 
 msgid "Levels disk IO"
-msgstr "Level der Festplatten-IO"
+msgstr "Level der Festplatten-E/A"
 
 #, python-format
 msgid "Levels for %s"
@@ -32147,10 +32149,10 @@ msgid "Levels for Hold Queue length"
 msgstr "Level für die Queuelänge von wartenden Mails"
 
 msgid "Levels for IO latency."
-msgstr "Level für die IO-Latenz."
+msgstr "Level für die E/A-Latenz."
 
 msgid "Levels for IO operations per second."
-msgstr "Level für die IO-Operationen pro Sekunde."
+msgstr "Level für die E/A-Operationen pro Sekunde."
 
 msgid "Levels for IO stats bytes"
 msgstr "Level für E/A-Zustand in Bytes"
@@ -32159,7 +32161,7 @@ msgid "Levels for IO stats requests"
 msgstr "Level für E/A-Zustand-Anfragen"
 
 msgid "Levels for IO traffic per second."
-msgstr "Level für den IO-Verkehr pro Sekunde."
+msgstr "Level für den E/A-Verkehr pro Sekunde."
 
 msgid "Levels for Inodes"
 msgstr "Level für Inodes"
@@ -36484,7 +36486,7 @@ msgid "Mobileiron compliance"
 msgstr "Mobileiron Compliance"
 
 msgid "Mobileiron compliance parameters"
-msgstr "Mobileiron Compliance Einstellungen"
+msgstr "Mobileiron Compliance Parameter"
 
 msgid "Mobileiron statistics"
 msgstr "Mobileiron-Statistik"
@@ -37268,10 +37270,10 @@ msgid "NFS"
 msgstr "NFS"
 
 msgid "NFS IO Stats (Linux)"
-msgstr "NFS IO Statistiken (Linux)"
+msgstr "NFS E/A-Statistiken (Linux)"
 
 msgid "NFS IO statistics"
-msgstr "NFS E/A Statistiken"
+msgstr "NFS E/A-Statistiken"
 
 msgid "NFS operations"
 msgstr "NFS Operationen"
@@ -37829,10 +37831,10 @@ msgid "Network"
 msgstr "Netzwerk"
 
 msgid "Network ID"
-msgstr "Netzwerk IO"
+msgstr "Netzwerk-ID"
 
 msgid "Network IO"
-msgstr "Netzwerk IO"
+msgstr "Netzwerk-E/A"
 
 msgid "Network Load Balancer Listeners"
 msgstr "Listener von Netzwerk-Load Balancer"
@@ -37856,9 +37858,8 @@ msgstr "Netzwerkadresse"
 msgid "Network address:"
 msgstr "Netzwerkadresse:"
 
-#, fuzzy
 msgid "Network containers"
-msgstr "Docker Container"
+msgstr "Netzwerk-Container"
 
 msgid "Network filesystem - overall status and usage (e.g. NFS)"
 msgstr "Netzwerk-Dateisystem - Gesamtzustand und Nutzung (z. B. NFS)"
@@ -38066,7 +38067,7 @@ msgid "Nice"
 msgstr "Schön"
 
 msgid "Nimble IO levels"
-msgstr "Level für Nimble IO"
+msgstr "Level für Nimble-E/A"
 
 msgid "No"
 msgstr "Nein"
@@ -39899,7 +39900,7 @@ msgid "Nutanix Cluster CPU utilization"
 msgstr "Nutanix Cluster CPU-Auslastung"
 
 msgid "Nutanix Cluster IO utilization"
-msgstr "Nutanix Cluster IO-Auslastung"
+msgstr "Nutanix Cluster E/A-Auslastung"
 
 msgid "Nutanix Cluster memory usage"
 msgstr "Nutanix Cluster-Speicherauslastung"
@@ -40306,7 +40307,7 @@ msgstr ""
 "Painter, um dieses Problem zu beheben."
 
 msgid "One RRD per host/service (saves disk IO, only with CMC)"
-msgstr "Eine RRD pro Host/Service (spart Disk I/O, nur mit CMC)"
+msgstr "Eine RRD pro Host/Service (spart Festplatten-E/A, nur mit CMC)"
 
 msgid "One heartbeat every"
 msgstr "Ein Lebenszeichen alle"
@@ -41037,7 +41038,7 @@ msgid "Oracle performance discovery"
 msgstr "Oracle Leistungserkennung"
 
 msgid "Oracle physical IO"
-msgstr "Oracle physikalischer IO"
+msgstr "Oracle physikalischer E/A"
 
 msgid "Oracle processes"
 msgstr "Oracle Prozesse"
@@ -41548,7 +41549,7 @@ msgid "PASSIVE"
 msgstr "PASSIV"
 
 msgid "PCI Express IO utilization"
-msgstr "PCI Express IO Auslastung"
+msgstr "PCI Express E/A-Auslastung"
 
 msgid "PCIe flash module"
 msgstr "PCIe Flash Modul"
@@ -41944,10 +41945,10 @@ msgid "Parameters for the Windows Update Check with WSUS"
 msgstr "Parameter für den Windows-Update-Check mit WSUS"
 
 msgid "Parameters for the bucket network io"
-msgstr "Parameter für den Bucket-Netzwerk-IO"
+msgstr "Parameter für den Bucket-Netzwerk-E/A"
 
 msgid "Parameters for the bucket objects io"
-msgstr "Parameter für den Bucket-Objekte-IO"
+msgstr "Parameter für den Bucket-Objekte-E/A"
 
 msgid "Parameters for the bucket requests"
 msgstr "Parameter für die Bucket-Anfragen"
@@ -42620,7 +42621,7 @@ msgid "Performance options"
 msgstr "Performance-Einstellungen"
 
 msgid "Performance: IO stats"
-msgstr "Leistung: E/A Statistiken"
+msgstr "Leistung: E/A-Statistiken"
 
 msgid "Period"
 msgstr "Periode"
@@ -44411,13 +44412,13 @@ msgstr ""
 "versuchen wir uns über den Unix Socket %s zu verbinden."
 
 msgid "Provisioned IOPS SSD (io1) IO operations per second"
-msgstr "Vorgesehene IOPS-SSD (io1). IO-Operationen pro Sekunde"
+msgstr "Vorgesehene IOPS-SSD (io1). E/A-Operationen pro Sekunde"
 
 msgid "Provisioned IOPS SSD (io1) space"
 msgstr "Bereitgestellter IOPS-SSD (io1)-Speicherplatz"
 
 msgid "Provisioned IOPS SSD (io2) IO operations per second"
-msgstr "Vorgesehene IOPS-SSD (io2). IO-Operationen pro Sekunde"
+msgstr "Vorgesehene IOPS-SSD (io2). E/A-Operationen pro Sekunde"
 
 msgid "Provisioned IOPS SSD (io2) space"
 msgstr "Bereitgestellter IOPS SSD (io2)-Platz"
@@ -45125,7 +45126,7 @@ msgid "Read / Write queue length"
 msgstr "Lese/Schreib-Warteschlange"
 
 msgid "Read IO operations per second"
-msgstr "Lesende IO-Operationen pro Sekunde"
+msgstr "Lesende E/A-Operationen pro Sekunde"
 
 msgid "Read Latency"
 msgstr "Leselatenz"
@@ -53960,10 +53961,10 @@ msgid "Storage"
 msgstr "Massenspeicher"
 
 msgid "Storage IO"
-msgstr "Speicher IO"
+msgstr "Speicher-E/A"
 
 msgid "Storage IO consumption"
-msgstr "Speicher IO Nutzung"
+msgstr "Speicher E/A-Nutzung"
 
 msgid "Storage Processor Utilization"
 msgstr "Auslastung der Storageprozessors"
@@ -55409,7 +55410,7 @@ msgid ""
 msgstr ""
 "Die CPU-Auslastung summiert die Prozentsätze der CPU-Zeit, die für "
 "Benutzerprozesse, Kernelroutinen (system), Festplattenwartung (manchmal auch "
-"IO-wait genannt) oder nichts (idle) verwendet wird. Die Werte werden immer "
+"'IO wait' genannt) oder nichts (idle) verwendet wird. Die Werte werden immer "
 "auf die durchschnittliche Auslastung seit der letzten Überprüfung angewendet "
 "- in der Regel eine Minute."
 
@@ -55450,7 +55451,7 @@ msgid ""
 "because it increases the amount of context switches."
 msgstr ""
 "Der Checkmk Micro Core verwendet Checkmk-Checker-Prozesse, um die Ergebnisse "
-"der Checkmk-Fetchers zu verarbeiten. Da die Checker-Prozesse nicht IO-"
+"der Checkmk-Fetchers zu verarbeiten. Da die Checker-Prozesse nicht E/A-"
 "gebunden sind, sind sie am effektivsten, wenn jeder Checker eine eigene CPU "
 "erhält. Die Konfiguration von mehr Checkmk-Prozessen als die Anzahl der "
 "verfügbaren CPUs hat einen negativen Effekt, weil dadurch die Anzahl der "
@@ -55884,8 +55885,8 @@ msgid ""
 "IOutilization of the rack units as components of a rack server as device)in "
 "the last check interval. The possible range is from 0% to 100%"
 msgstr ""
-"Die PCI IO-Auslastung von Komponenten eines Gerätes (z.B. PCI Express-Karte "
-"IO-Auslastung der Höheneinheiten als Komponenten eines Rack-Servers als "
+"Die PCI E/A-Auslastung von Komponenten eines Gerätes (z.B. PCI Express-Karte "
+"E/A-Auslastung der Höheneinheiten als Komponenten eines Rack-Servers als "
 "Gerät) im letzten Prüfintervall. Der mögliche Bereich liegt zwischen 0% und "
 "100%"
 
@@ -56038,7 +56039,7 @@ msgid ""
 "(Microsoft Multipath IO)"
 msgstr ""
 "Das Windows Multipath-Plugin überwacht die Anzahl der Pfade einer MPIO "
-"(Microsoft Multipath IO)"
+"(Microsoft Multipath E/A)"
 
 msgid ""
 "The Windows Updates plug-in checks for the number of pending updates. The "
@@ -56932,9 +56933,9 @@ msgstr ""
 "Die Festplatten-Wartezeit ist der Gesamtprozentsatz der Zeit, in der alle "
 "CPUs nichts zu tun haben, außer auf Daten zu warten, die von der Festplatte "
 "gelesen oder auf sie geschrieben werden. Wenn Sie eine signifikante "
-"Festplatten-Wartezeit haben, ist der limitierende Faktor auf Ihrem Server "
-"IO. Bitte beachten Sie, dass dies je nach den ausgeführten Anwendungen "
-"völlig normal sein kann oder auch nicht."
+"Festplatten-Wartezeit haben, ist der limitierende Faktor auf Ihrem Server E/"
+"A. Bitte beachten Sie, dass dies je nach den ausgeführten Anwendungen völlig "
+"normal sein kann oder auch nicht."
 
 msgid ""
 "The distinguished name of the container object, which holds the user objects "
@@ -58527,6 +58528,19 @@ msgstr ""
 
 msgid "The operational transmit power"
 msgstr "Operationelle Übertragungsleistung"
+
+msgid ""
+"The option 'Display a summary over all SLA periods' aggregates all results "
+"of SLA calculations into one result. This means it will show how many "
+"percent of SLA periods have broken the SLA, for example if 1 SLA period of "
+"10 has been broken it will show 10%."
+msgstr ""
+
+msgid ""
+"The option 'Show aggregated info over all SLA periods' combines all SLA "
+"periods but each SLA period is calculated separately. So it will show the "
+"average of all SLA periods."
+msgstr ""
 
 msgid ""
 "The option to use a custom command can only be configured with the "
@@ -64552,7 +64566,7 @@ msgid ""
 "client side NFS IO stats."
 msgstr ""
 "Hiermit wird das Agenten-Plugin <tt>mk_nfsiostat</tt> verteilt, um "
-"verschiedene clientseitige NFS IO-Statistiken zu überprüfen."
+"verschiedene clientseitige NFS E/A-Statistiken zu überprüfen."
 
 msgid ""
 "This will deploy the agent plug-in <tt>mk_oracle</tt> on your target system. "
@@ -65559,7 +65573,7 @@ msgid "Total General Purpose SSD (gp3) space"
 msgstr "Gesamtspeicherplatz der General Purpose SSD (gp3)"
 
 msgid "Total IO operations per second"
-msgstr "Gesamte IO-Operationen pro Sekunde"
+msgstr "Gesamte E/A-Operationen pro Sekunde"
 
 msgid "Total Index Size"
 msgstr "Gesamtindexgröße"
@@ -65583,13 +65597,13 @@ msgid "Total Pending Mails"
 msgstr "Gesamtzahl ausstehender E-Mails"
 
 msgid "Total Provisioned IOPS SSD (io1) IO operations per seconds"
-msgstr "Insgesamt bereitgestellte IOPS SSD (io1) IO-Vorgänge pro Sekunde"
+msgstr "Insgesamt bereitgestellte IOPS SSD (io1) E/A-Vorgänge pro Sekunde"
 
 msgid "Total Provisioned IOPS SSD (io1) space"
 msgstr "Insgesamt bereitgestellter IOPS-SSD-Speicherplatz (io1)"
 
 msgid "Total Provisioned IOPS SSD (io2) IO operations per seconds"
-msgstr "Insgesamt bereitgestellte IOPS SSD (io2) IO-Vorgänge pro Sekunde"
+msgstr "Insgesamt bereitgestellte IOPS SSD (io2) E/A-Vorgänge pro Sekunde"
 
 msgid "Total Provisioned IOPS SSD (io2) space"
 msgstr "Insgesamt bereitgestellter IOPS SSD (io2)-Speicherplatz"
@@ -69717,7 +69731,7 @@ msgid "Use credentials"
 msgstr "Zugangsdaten angeben"
 
 msgid "Use custom connection parameters"
-msgstr "Individuelle Verbindungseinstellungen nutzen"
+msgstr "Individuelle Verbindungsparameter nutzen"
 
 msgid "Use custom region for global AWS services"
 msgstr "Benutzer-Region für globale AWS-Dienste verwenden"
@@ -71551,7 +71565,7 @@ msgid "Volume name"
 msgstr "Name des Volumes"
 
 msgid "Volume parameters"
-msgstr "Volumen-Parameter"
+msgstr "Volumenparameter"
 
 msgid "VolumeSets: Volume Set Configuration"
 msgstr "VolumeSets: Volume Set-Konfiguration"
@@ -71635,8 +71649,8 @@ msgid ""
 msgstr ""
 "WARNUNG: Diese Sektion erhöht die Belastung Ihres Checkmk-Servers und kann "
 "die Belastung Ihrer Datenbank erhöhen. Um Ergebnisse zu sehen, müssen Sie "
-"auch 'Zusätzlichen Service für IO Stats Bytes erstellen' oder 'Zusätzlichen "
-"Service für IO-Stats-Anfragen erstellen' in 'Oracle Leistungserkennung' "
+"auch 'Zusätzlichen Service für E/A-Stats Bytes erstellen' oder 'Zusätzlichen "
+"Service für E/A-Stats-Anfragen erstellen' in 'Oracle Leistungserkennung' "
 "aktivieren."
 
 msgid "WCU"
@@ -73464,7 +73478,7 @@ msgid ""
 msgstr ""
 "Mit dieser Option werden Kontaktgruppen, die Hosts zugeordnet sind, auch zu "
 "Services hinzugefügt. Das hat nur Auswirkungen, wenn Sie mittels der Regeln "
-"unter <i>Host & Service Parameters</i> andere Kontaktgruppen zu Services "
+"unter <i>Host & Service-Parameter</i> andere Kontaktgruppen zu Services "
 "zugewiesen haben. Solange Sie keine derartigen Regeln konfiguriert haben, "
 "erbt ein Service alle Kontaktgruppen von seinem Host."
 
@@ -73835,7 +73849,7 @@ msgid "Write"
 msgstr "schreiben"
 
 msgid "Write IO operations per second"
-msgstr "Schreibende IO-Operationen pro Sekunde"
+msgstr "Schreibende E/A-Operationen pro Sekunde"
 
 msgid "Write Latency"
 msgstr "Schreiblatenz"
@@ -76810,7 +76824,7 @@ msgid "faulty"
 msgstr "fehlerhaft"
 
 msgid "file IO"
-msgstr "File IO"
+msgstr "Datei-E/A"
 
 msgid "files"
 msgstr "Dateien"
@@ -78315,6 +78329,9 @@ msgid ""
 msgstr ""
 "\"Änderungen aktivieren\" ist blockiert, bis Sie Ihr Service-Limit "
 "unterschritten haben. Wenn Sie Ihr Service-Limit erhöhen möchten, "
+
+#~ msgid " (Copy)"
+#~ msgstr " (Kopie)"
 
 #~ msgid ""
 #~ "The service will not warn if self-signed certificates are used if this "

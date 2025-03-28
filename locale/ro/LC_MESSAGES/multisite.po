@@ -25,9 +25,6 @@ msgstr " %s, durata întreruperii %s."
 msgid " (%d times)"
 msgstr " (%d ori)"
 
-msgid " (Copy)"
-msgstr " (Copiază)"
-
 msgid " (Data incomplete, maximum number of nodes reached)"
 msgstr " (Date incomplete, numărul maxim de noduri atins)"
 
@@ -26300,8 +26297,8 @@ msgstr "Ascundeți acțiunile din tabel"
 msgid "Hide the Checkmk version from the login box"
 msgstr "Ascundeți versiunea Checkmk din caseta de autentificare"
 
-#, python-format
-msgid "Hide this %s in dropdown menus"
+#, fuzzy, python-format
+msgid "Hide this %s in drop-down menus"
 msgstr "Ascundeți acest %s în meniurile derulante"
 
 #, python-format
@@ -59906,6 +59903,19 @@ msgid "The operational transmit power"
 msgstr "Puterea de emisie operațională"
 
 msgid ""
+"The option 'Display a summary over all SLA periods' aggregates all results "
+"of SLA calculations into one result. This means it will show how many "
+"percent of SLA periods have broken the SLA, for example if 1 SLA period of "
+"10 has been broken it will show 10%."
+msgstr ""
+
+msgid ""
+"The option 'Show aggregated info over all SLA periods' combines all SLA "
+"periods but each SLA period is calculated separately. So it will show the "
+"average of all SLA periods."
+msgstr ""
+
+msgid ""
 "The option to use a custom command can only be configured with the "
 "permission \"Can add or modify executables\"."
 msgstr ""
@@ -80276,6 +80286,9 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#~ msgid " (Copy)"
+#~ msgstr " (Copiază)"
 
 #~ msgid "Import all valid tags"
 #~ msgstr "Importați toate etichetele valide"

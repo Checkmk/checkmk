@@ -24,9 +24,6 @@ msgstr " %s, 停止期間 %s"
 msgid " (%d times)"
 msgstr " ( %d 回 )"
 
-msgid " (Copy)"
-msgstr " (コピー)"
-
 msgid " (Data incomplete, maximum number of nodes reached)"
 msgstr " (データ不完全、最大ノード数に到達)"
 
@@ -25040,8 +25037,8 @@ msgstr "テーブルアクションを非表示"
 msgid "Hide the Checkmk version from the login box"
 msgstr "ログインボックスからCheckmkバージョンを非表示にします"
 
-#, python-format
-msgid "Hide this %s in dropdown menus"
+#, fuzzy, python-format
+msgid "Hide this %s in drop-down menus"
 msgstr "ドロップダウンメニューでこの %sを非表示にする"
 
 #, python-format
@@ -56918,6 +56915,19 @@ msgid "The operational transmit power"
 msgstr "動作送信電力"
 
 msgid ""
+"The option 'Display a summary over all SLA periods' aggregates all results "
+"of SLA calculations into one result. This means it will show how many "
+"percent of SLA periods have broken the SLA, for example if 1 SLA period of "
+"10 has been broken it will show 10%."
+msgstr ""
+
+msgid ""
+"The option 'Show aggregated info over all SLA periods' combines all SLA "
+"periods but each SLA period is calculated separately. So it will show the "
+"average of all SLA periods."
+msgstr ""
+
+msgid ""
 "The option to use a custom command can only be configured with the "
 "permission \"Can add or modify executables\"."
 msgstr ""
@@ -75940,6 +75950,9 @@ msgid ""
 msgstr ""
 "サービス制限を下回るまで、「変更を有効にする」はブロックされます。利用限度額"
 "を上げたい場合、 "
+
+#~ msgid " (Copy)"
+#~ msgstr " (コピー)"
 
 #~ msgid ""
 #~ "The service will not warn if self-signed certificates are used if this "

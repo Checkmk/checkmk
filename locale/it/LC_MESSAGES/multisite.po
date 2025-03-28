@@ -24,9 +24,6 @@ msgstr " %s, durata dell'interruzione %s"
 msgid " (%d times)"
 msgstr " (%d volte)"
 
-msgid " (Copy)"
-msgstr " (Copia)"
-
 msgid " (Data incomplete, maximum number of nodes reached)"
 msgstr " (Numero massimo di nodi superato)"
 
@@ -26038,8 +26035,8 @@ msgstr "Nascondi le azioni della tabella"
 msgid "Hide the Checkmk version from the login box"
 msgstr "Nascondere la versione di Checkmk dalla casella di accesso"
 
-#, python-format
-msgid "Hide this %s in dropdown menus"
+#, fuzzy, python-format
+msgid "Hide this %s in drop-down menus"
 msgstr "Nascondi questo %s nei menu a discesa"
 
 #, python-format
@@ -59197,6 +59194,19 @@ msgid "The operational transmit power"
 msgstr "La potenza di trasmissione operativa"
 
 msgid ""
+"The option 'Display a summary over all SLA periods' aggregates all results "
+"of SLA calculations into one result. This means it will show how many "
+"percent of SLA periods have broken the SLA, for example if 1 SLA period of "
+"10 has been broken it will show 10%."
+msgstr ""
+
+msgid ""
+"The option 'Show aggregated info over all SLA periods' combines all SLA "
+"periods but each SLA period is calculated separately. So it will show the "
+"average of all SLA periods."
+msgstr ""
+
+msgid ""
 "The option to use a custom command can only be configured with the "
 "permission \"Can add or modify executables\"."
 msgstr ""
@@ -79353,6 +79363,9 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#~ msgid " (Copy)"
+#~ msgstr " (Copia)"
 
 #~ msgid "Import all valid tags"
 #~ msgstr "Importazione di tutti i tag validi"

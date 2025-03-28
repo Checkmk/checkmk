@@ -8,9 +8,10 @@ from collections.abc import Iterable
 from pytest import MonkeyPatch
 
 from cmk.gui.i18n import _l
-from cmk.gui.valuespec import TextInput, ValueSpec
+from cmk.gui.valuespec import TextInput
 from cmk.gui.wato.pages.global_settings import DefaultModeEditGlobals, MatchItemGeneratorSettings
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain, ConfigVariable, ConfigVariableGroup
+from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.search import MatchItem
 
 
@@ -23,15 +24,12 @@ def test_match_item_generator_settings(
         sort_index=10,
     )
 
-    class SomeConfigVariable(ConfigVariable):
-        def group(self) -> ConfigVariableGroup:
-            return group
-
-        def ident(self) -> str:
-            return "ident"
-
-        def valuespec(self) -> ValueSpec:
-            return TextInput(title="title")
+    config_variable = ConfigVariable(
+        group=group,
+        domain=ConfigDomainCore,
+        ident="ident",
+        valuespec=lambda: TextInput(title="title"),
+    )
 
     class SomeSettingsMode(DefaultModeEditGlobals):
         def iter_all_configuration_variables(
@@ -40,7 +38,7 @@ def test_match_item_generator_settings(
             return [
                 (
                     group,
-                    [SomeConfigVariable()],
+                    [config_variable],
                 )
             ]
 

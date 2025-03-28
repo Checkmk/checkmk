@@ -13,7 +13,7 @@ from cmk.gui.watolib.config_domains import ConfigDomainGUI
 
 
 def test_ui_theme_registration() -> None:
-    var = config_variable_registry["ui_theme"]()
+    var = config_variable_registry["ui_theme"]
     assert isinstance(var.domain(), ConfigDomainGUI)
     assert var.group() == ConfigVariableGroupUserInterface
 
@@ -23,7 +23,7 @@ def test_ui_theme_registration() -> None:
 
 
 def test_ui_theme_default_value() -> None:
-    var = config_variable_registry["ui_theme"]()
+    var = config_variable_registry["ui_theme"]
 
     default_setting = var.domain().default_globals()[var.ident()]
     assert default_setting == "modern-dark"

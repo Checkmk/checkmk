@@ -8,7 +8,7 @@ from __future__ import annotations
 import abc
 import os
 import pprint
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Final, TypedDict
@@ -166,7 +166,7 @@ class ABCConfigDomain(abc.ABC):
         return [
             varname
             for (varname, v) in config_variable_registry.items()
-            if v().domain().ident() == self.ident()
+            if v.domain().ident() == self.ident()
         ]
 
     @classmethod
@@ -284,9 +284,9 @@ class ConfigVariableGroup:
         """Return a string if you want to show a warning at the top of this group"""
         return str(self._warning) if self._warning else None
 
-    def config_variables(self) -> list[type[ConfigVariable]]:
+    def config_variables(self) -> list[ConfigVariable]:
         """Returns a list of configuration variable classes that belong to this group"""
-        return [v for v in config_variable_registry.values() if v().group() == self]
+        return [v for v in config_variable_registry.values() if v.group() == self]
 
 
 class ConfigVariableGroupRegistry(cmk.ccc.plugin_registry.Registry[ConfigVariableGroup]):
@@ -298,21 +298,46 @@ config_variable_group_registry = ConfigVariableGroupRegistry()
 
 
 class ConfigVariable:
+    def __init__(
+        self,
+        *,
+        group: ConfigVariableGroup,
+        domain: type[ABCConfigDomain],
+        ident: str,
+        valuespec: Callable[[], ValueSpec],
+        need_restart: bool | None = None,
+        need_apache_reload: bool = False,
+        allow_reset: bool = True,
+        in_global_settings: bool = True,
+        hint: Callable[[], HTML] = lambda: HTML.empty(),
+        domain_hint: HTML = HTML.empty(),
+    ) -> None:
+        self._group = group
+        self._domain_ident = domain.ident()
+        self._ident = ident
+        self._valuespec_func = valuespec
+        self._need_restart = need_restart
+        self._need_apache_reload = need_apache_reload
+        self._allow_reset = allow_reset
+        self._in_global_settings = in_global_settings
+        self._hint_func = hint
+        self._domain_hint = domain_hint
+
     def group(self) -> ConfigVariableGroup:
         """Returns the the configuration variable group this configuration variable belongs to"""
-        raise NotImplementedError()
+        return self._group
 
     def ident(self) -> str:
         """Returns the internal identifier of this configuration variable"""
-        raise NotImplementedError()
+        return self._ident
 
     def valuespec(self) -> ValueSpec:
         """Returns the valuespec object of this configuration variable"""
-        raise NotImplementedError()
+        return self._valuespec_func()
 
     def domain(self) -> ABCConfigDomain:
         """Returns the config domain this configuration variable belongs to"""
-        return config_domain_registry["check_mk"]
+        return config_domain_registry[self._domain_ident]
 
     # TODO: This is boolean flag which defaulted to None in case a variable declaration did not
     # provide this attribute.
@@ -321,31 +346,31 @@ class ConfigVariable:
     # - Can't we simplify this to simply be a boolean?
     def need_restart(self) -> bool | None:
         """Whether or not a change to this setting enforces a "restart" during activate changes instead of just a synchronization"""
-        return None
+        return self._need_restart
 
     def need_apache_reload(self) -> bool:
         """Whether a change to this setting enforces an apache reload, this currently only works when using the ConfigDomainGUI"""
-        return False
+        return self._need_apache_reload
 
     # TODO: Investigate: Which use cases do we have here? Can this be dropped?
     def allow_reset(self) -> bool:
         """Whether or not the user is allowed to change this setting to factory settings"""
-        return True
+        return self._allow_reset
 
     def in_global_settings(self) -> bool:
         """Whether or not to show this option on the global settings page"""
-        return True
+        return self._in_global_settings
 
     def hint(self) -> HTML:
-        return HTML.empty()
+        return self._hint_func()
 
     def domain_hint(self) -> HTML:
-        return self.domain().hint()
+        return self._domain_hint
 
 
-class ConfigVariableRegistry(cmk.ccc.plugin_registry.Registry[type[ConfigVariable]]):
-    def plugin_name(self, instance):
-        return instance().ident()
+class ConfigVariableRegistry(cmk.ccc.plugin_registry.Registry[ConfigVariable]):
+    def plugin_name(self, instance: ConfigVariable) -> str:
+        return instance.ident()
 
 
 config_variable_registry = ConfigVariableRegistry()
@@ -395,17 +420,14 @@ def register_configvar(
     if isinstance(group, str):
         group = config_variable_group_registry[group]
 
-    cls = type(
-        "LegacyConfigVariable%s" % varname.title(),
-        (ConfigVariable,),
-        {
-            "group": lambda self: group,
-            "ident": lambda self: varname,
-            "valuespec": lambda self: valuespec,
-            "domain": lambda self: domain,
-            "need_restart": lambda self: need_restart,
-            "allow_reset": lambda self: allow_reset,
-            "in_global_settings": lambda self: in_global_settings,
-        },
+    config_variable_registry.register(
+        ConfigVariable(
+            ident=varname,
+            group=group,
+            domain=domain,
+            valuespec=valuespec,
+            need_restart=need_restart,
+            allow_reset=allow_reset,
+            in_global_settings=in_global_settings,
+        )
     )
-    config_variable_registry.register(cls)

@@ -5,7 +5,6 @@
 
 
 import logging
-from typing import override
 
 import pytest
 from pytest_mock import MockerFixture
@@ -14,7 +13,6 @@ from cmk.gui.plugins.wato.utils import ConfigVariableGroupUserInterface
 from cmk.gui.valuespec import TextInput, Transform
 from cmk.gui.watolib.config_domain_name import (
     ConfigVariable,
-    ConfigVariableGroup,
     ConfigVariableRegistry,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
@@ -31,22 +29,12 @@ def test_update_global_config_transform_values(
         global_settings, "filter_unknown_settings", lambda global_config: global_config
     )
 
-    class ConfigVariableKey(ConfigVariable):
-        @override
-        def group(self) -> ConfigVariableGroup:
-            return ConfigVariableGroupUserInterface
-
-        @override
-        def domain(self) -> ConfigDomainGUI:
-            return ConfigDomainGUI()
-
-        @override
-        def ident(self) -> str:
-            return "key"
-
-        @override
-        def valuespec(self) -> Transform:
-            return Transform(TextInput(), forth=lambda x: "new" if x == "old" else x)
+    ConfigVariableKey = ConfigVariable(
+        group=ConfigVariableGroupUserInterface,
+        domain=ConfigDomainGUI,
+        ident="key",
+        valuespec=lambda: Transform(TextInput(), forth=lambda x: "new" if x == "old" else x),
+    )
 
     registry = ConfigVariableRegistry()
     registry.register(ConfigVariableKey)

@@ -56,8 +56,7 @@ def save_global_settings(
 
     per_domain: dict[str, dict[Any, Any]] = {}
     # TODO: Uee _get_global_config_var_names() from domain class?
-    for config_variable_class in config_variable_registry.values():
-        config_variable = config_variable_class()
+    for config_variable in config_variable_registry.values():
         domain = config_variable.domain()
         varname = config_variable.ident()
         if varname not in vars_:

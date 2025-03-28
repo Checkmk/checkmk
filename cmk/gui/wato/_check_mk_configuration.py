@@ -72,7 +72,6 @@ from cmk.gui.watolib.check_mk_automations import (
     get_section_information as get_section_information_automation,
 )
 from cmk.gui.watolib.config_domain_name import (
-    ABCConfigDomain,
     ConfigVariable,
     ConfigVariableGroup,
     ConfigVariableGroupRegistry,
@@ -315,105 +314,67 @@ def register(
 #   '----------------------------------------------------------------------'
 
 
-class ConfigVariableUITheme(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
+ConfigVariableUITheme = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="ui_theme",
+    valuespec=lambda: DropdownChoice(
+        title=_("User interface theme"),
+        help=_("Change the default user interface theme of your Checkmk installation"),
+        choices=theme_choices(),
+    ),
+)
 
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
+ConfigVariableEnableCommunityTranslations = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="enable_community_translations",
+    valuespec=lambda: Checkbox(
+        title=_("Community translated languages (not supported)"),
+        label=_("Community translated languages"),
+        help=_(
+            'Show/hide community translated languages in the "Language" dropdown (User > Edit '
+            "profile). Note that these translations are contributed by the Checkmk community "
+            "and thus no liability is assumed for their validity.<br>"
+            "If this setting is turned from 'on' to 'off' while a user has set a community "
+            "translated language, the user's language is changed to 'English'."
+        ),
+    ),
+    need_restart=True,
+)
 
-    def ident(self) -> str:
-        return "ui_theme"
+ConfigVariableDefaultLanguage = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="default_language",
+    valuespec=lambda: DropdownChoice(title=_("Default language"), choices=get_languages()),
+    in_global_settings=False,
+)
 
-    def valuespec(self) -> ValueSpec:
-        return DropdownChoice(
-            title=_("User interface theme"),
-            help=_("Change the default user interface theme of your Checkmk installation"),
-            choices=theme_choices(),
-        )
+ConfigVariableShowMoreMode = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="show_mode",
+    valuespec=lambda: DropdownChoice(
+        title=_("Show more / Show less"),
+        help=_(
+            "In some places like e.g. the main menu Checkmk divides "
+            "features, filters, input fields etc. in two categories, showing "
+            "more or less entries. With this option you can set a default "
+            "mode for unvisited menus. Alternatively, you can enforce to "
+            "show more, so that the round button with the three dots is not "
+            "shown at all."
+        ),
+        choices=show_mode_choices(),
+    ),
+)
 
-
-class ConfigVariableEnableCommunityTranslations(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "enable_community_translations"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("Community translated languages (not supported)"),
-            label=_("Community translated languages"),
-            help=_(
-                'Show/hide community translated languages in the "Language" dropdown (User > Edit '
-                "profile). Note that these translations are contributed by the Checkmk community "
-                "and thus no liability is assumed for their validity.<br>"
-                "If this setting is turned from 'on' to 'off' while a user has set a community "
-                "translated language, the user's language is changed to 'English'."
-            ),
-        )
-
-    def need_restart(self) -> bool:
-        return True
-
-
-class ConfigVariableDefaultLanguage(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "default_language"
-
-    def valuespec(self) -> ValueSpec:
-        return DropdownChoice(title=_("Default language"), choices=get_languages())
-
-    def in_global_settings(self) -> bool:
-        return False
-
-
-class ConfigVariableShowMoreMode(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "show_mode"
-
-    def valuespec(self) -> ValueSpec:
-        return DropdownChoice(
-            title=_("Show more / Show less"),
-            help=_(
-                "In some places like e.g. the main menu Checkmk divides "
-                "features, filters, input fields etc. in two categories, showing "
-                "more or less entries. With this option you can set a default "
-                "mode for unvisited menus. Alternatively, you can enforce to "
-                "show more, so that the round button with the three dots is not "
-                "shown at all."
-            ),
-            choices=show_mode_choices(),
-        )
-
-
-class ConfigVariableBulkDiscoveryDefaultSettings(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "bulk_discovery_default_settings"
-
-    def valuespec(self) -> ValueSpec:
-        return vs_bulk_discovery()
+ConfigVariableBulkDiscoveryDefaultSettings = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="bulk_discovery_default_settings",
+    valuespec=lambda: vs_bulk_discovery(),
+)
 
 
 def _slow_view_logging_help():
@@ -438,1358 +399,1116 @@ def _add_job_scheduler_log_level(params: dict[str, int]) -> dict[str, int]:
     return params
 
 
-class ConfigVariableLogLevels(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "log_levels"
-
-    def valuespec(self) -> ValueSpec:
-        return Migrate(
-            valuespec=Dictionary(
-                title=_("Logging"),
-                help=_(
-                    "This setting decides which types of messages to log into "
-                    "the web log <tt>%s</tt>."
-                )
-                % site_neutral_path(cmk.utils.paths.log_dir + "/web.log"),
-                elements=self._web_log_level_elements(),
-                optional_keys=[],
-            ),
-            migrate=_add_job_scheduler_log_level,
-        )
-
-    def _web_log_level_elements(self):
-        loggers = [
-            (
-                "cmk.web",
-                _("Web"),
-                _(
-                    "The log level for all log entries not assigned to the other "
-                    "log categories on this page."
-                ),
-            ),
-            (
-                "cmk.web.auth",
-                _("Authentication"),
-                _("The log level for user authentication related log entries."),
-            ),
-            ("cmk.web.ldap", _("LDAP"), _("The log level for LDAP related log entries.")),
-            (
-                "cmk.web.bi.compilation",
-                _("BI compilation"),
-                _(
-                    "If this option is enabled, Checkmk BI will create a log with details "
-                    "about compiling BI aggregations. This includes statistics and "
-                    "details for each executed compilation."
-                ),
-            ),
-            (
-                "cmk.web.automations",
-                _("Automation calls"),
-                _(
-                    "Communication between different components of Checkmk (e.g. GUI and check engine) "
-                    "will be logged in this log level."
-                ),
-            ),
-            (
-                "cmk.web.ui-job-scheduler",
-                _("Job scheduler"),
-                _(
-                    "The job scheduler manages regularly running tasks and the execution of "
-                    "background jobs. Log entries of this component are written to <tt>%s</tt>."
-                )
-                % site_neutral_path(
-                    f"{cmk.utils.paths.log_dir}/ui-job-scheduler/ui-job-scheduler.log"
-                ),
-            ),
-            (
-                "cmk.web.background-job",
-                _("Background jobs"),
-                _(
-                    "Some long running tasks are executed as executed in so called background jobs. You "
-                    "can use this log level to individually enable more detailed logging for the "
-                    "background jobs."
-                ),
-            ),
-            (
-                "cmk.web.slow-views",
-                _("Slow views"),
-                _slow_view_logging_help(),
-            ),
-            (
-                "cmk.web.automatic_host_removal",
-                _("Automatic host removal"),
-                _("Log the automatic host removal process."),
-            ),
-        ]
-
-        if edition(cmk.utils.paths.omd_root) is not Edition.CRE:
-            loggers.extend(
-                [
-                    (
-                        "cmk.web.agent_registration",
-                        _("Agent registration"),
-                        _(
-                            "Log the agent registration process of incoming requests"
-                            " by the Checkmk agent controller registration command."
-                        ),
-                    ),
-                    (
-                        "cmk.web.saml2",
-                        _("SAML"),
-                        _("The log level for SAML 2.0 related log entries."),
-                    ),
-                ]
+ConfigVariableLogLevels = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="log_levels",
+    valuespec=lambda: Migrate(
+        valuespec=Dictionary(
+            title=_("Logging"),
+            help=_(
+                "This setting decides which types of messages to log into the web log <tt>%s</tt>."
             )
+            % site_neutral_path(cmk.utils.paths.log_dir + "/web.log"),
+            elements=_web_log_level_elements(),
+            optional_keys=[],
+        ),
+        migrate=_add_job_scheduler_log_level,
+    ),
+)
 
-        elements = []
-        for level_id, title, help_text in loggers:
-            elements.append(
+
+def _web_log_level_elements():
+    loggers = [
+        (
+            "cmk.web",
+            _("Web"),
+            _(
+                "The log level for all log entries not assigned to the other "
+                "log categories on this page."
+            ),
+        ),
+        (
+            "cmk.web.auth",
+            _("Authentication"),
+            _("The log level for user authentication related log entries."),
+        ),
+        ("cmk.web.ldap", _("LDAP"), _("The log level for LDAP related log entries.")),
+        (
+            "cmk.web.bi.compilation",
+            _("BI compilation"),
+            _(
+                "If this option is enabled, Checkmk BI will create a log with details "
+                "about compiling BI aggregations. This includes statistics and "
+                "details for each executed compilation."
+            ),
+        ),
+        (
+            "cmk.web.automations",
+            _("Automation calls"),
+            _(
+                "Communication between different components of Checkmk (e.g. GUI and check engine) "
+                "will be logged in this log level."
+            ),
+        ),
+        (
+            "cmk.web.ui-job-scheduler",
+            _("Job scheduler"),
+            _(
+                "The job scheduler manages regularly running tasks and the execution of "
+                "background jobs. Log entries of this component are written to <tt>%s</tt>."
+            )
+            % site_neutral_path(f"{cmk.utils.paths.log_dir}/ui-job-scheduler/ui-job-scheduler.log"),
+        ),
+        (
+            "cmk.web.background-job",
+            _("Background jobs"),
+            _(
+                "Some long running tasks are executed as executed in so called background jobs. You "
+                "can use this log level to individually enable more detailed logging for the "
+                "background jobs."
+            ),
+        ),
+        (
+            "cmk.web.slow-views",
+            _("Slow views"),
+            _slow_view_logging_help(),
+        ),
+        (
+            "cmk.web.automatic_host_removal",
+            _("Automatic host removal"),
+            _("Log the automatic host removal process."),
+        ),
+    ]
+
+    if edition(cmk.utils.paths.omd_root) is not Edition.CRE:
+        loggers.extend(
+            [
                 (
-                    level_id,
-                    LogLevelChoice(
-                        title=title,
-                        help=help_text,
-                        default_value=logging.WARNING,
+                    "cmk.web.agent_registration",
+                    _("Agent registration"),
+                    _(
+                        "Log the agent registration process of incoming requests"
+                        " by the Checkmk agent controller registration command."
                     ),
-                )
-            )
-
-        return elements
-
-
-class ConfigVariableSlowViewsDurationThreshold(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "slow_views_duration_threshold"
-
-    def valuespec(self) -> ValueSpec:
-        return Integer(
-            title=_("Threshold for slow views"),
-            # title=_("Create a log entry for all view calls taking longer than"),
-            default_value=60,
-            unit=_("Seconds"),
-            size=3,
-            help=_slow_view_logging_help(),
+                ),
+                (
+                    "cmk.web.saml2",
+                    _("SAML"),
+                    _("The log level for SAML 2.0 related log entries."),
+                ),
+            ]
         )
 
-
-class ConfigVariableDebug(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "debug"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("Debug mode"),
-            label=_("enable debug mode"),
-            help=_(
-                "When Multisite is running in debug mode, internal Python error messages "
-                "are being displayed and various debug information in other places is "
-                "also available."
-            ),
+    elements = []
+    for level_id, title, help_text in loggers:
+        elements.append(
+            (
+                level_id,
+                LogLevelChoice(
+                    title=title,
+                    help=help_text,
+                    default_value=logging.WARNING,
+                ),
+            )
         )
 
+    return elements
 
-class ConfigVariableGUIProfile(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
 
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
+ConfigVariableSlowViewsDurationThreshold = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="slow_views_duration_threshold",
+    valuespec=lambda: Integer(
+        title=_("Threshold for slow views"),
+        # title=_("Create a log entry for all view calls taking longer than"),
+        default_value=60,
+        unit=_("Seconds"),
+        size=3,
+        help=_slow_view_logging_help(),
+    ),
+)
 
-    def ident(self) -> str:
-        return "profile"
+ConfigVariableDebug = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="debug",
+    valuespec=lambda: Checkbox(
+        title=_("Debug mode"),
+        label=_("enable debug mode"),
+        help=_(
+            "When Multisite is running in debug mode, internal Python error messages "
+            "are being displayed and various debug information in other places is "
+            "also available."
+        ),
+    ),
+)
 
-    def valuespec(self) -> ValueSpec:
-        return DropdownChoice(
-            title=_("Profile requests"),
-            help=_(
-                "It is possible to profile the rendering process of Multisite pages. This "
-                "Is done using the Python module cProfile. When profiling is performed "
-                "three files are created in <tt>%s</tt>: <tt>multisite.profile</tt>, "
-                "<tt>multisite.cachegrind</tt> and <tt>multisite.py</tt>. By executing the latter "
-                "file you can get runtime statistics about the last processed page. When "
-                "enabled by request the profiling mode is enabled by providing the HTTP "
-                "variable <tt>_profile</tt> in the query parameters."
-            )
-            % site_neutral_path(cmk.utils.paths.var_dir),
-            choices=[
-                (False, _("Disable profiling")),
-                ("enable_by_var", _("Enable profiling by request")),
-                (True, _("Enable profiling for all requests")),
+ConfigVariableGUIProfile = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="profile",
+    valuespec=lambda: DropdownChoice(
+        title=_("Profile requests"),
+        help=_(
+            "It is possible to profile the rendering process of Multisite pages. This "
+            "Is done using the Python module cProfile. When profiling is performed "
+            "three files are created in <tt>%s</tt>: <tt>multisite.profile</tt>, "
+            "<tt>multisite.cachegrind</tt> and <tt>multisite.py</tt>. By executing the latter "
+            "file you can get runtime statistics about the last processed page. When "
+            "enabled by request the profiling mode is enabled by providing the HTTP "
+            "variable <tt>_profile</tt> in the query parameters."
+        )
+        % site_neutral_path(cmk.utils.paths.var_dir),
+        choices=[
+            (False, _("Disable profiling")),
+            ("enable_by_var", _("Enable profiling by request")),
+            (True, _("Enable profiling for all requests")),
+        ],
+    ),
+)
+
+ConfigVariableDebugLivestatusQueries = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="debug_livestatus_queries",
+    valuespec=lambda: Checkbox(
+        title=_("Debug livestatus queries"),
+        label=_("enable debug of livestatus queries"),
+        help=_(
+            "With this option turned on all livestatus queries made by multisite "
+            "in order to render views are being displayed."
+        ),
+    ),
+)
+
+ConfigVariableSelectionLivetime = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="selection_livetime",
+    valuespec=lambda: Integer(
+        title=_("Checkbox selection livetime"),
+        help=_(
+            "This option defines the maximum age of unmodified checkbox selections stored for users. "
+            "If a user modifies the selection in a view, these selections are persisted for the currently "
+            "open view. When a view is re-opened a new selection is used. The old one remains on the "
+            "server until the livetime is exceeded."
+        ),
+        minvalue=1,
+    ),
+)
+
+ConfigVariableShowLivestatusErrors = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="show_livestatus_errors",
+    valuespec=lambda: Checkbox(
+        title=_("Show MK Livestatus error messages"),
+        label=_("show errors"),
+        help=_(
+            "This option controls whether error messages from unreachable sites are shown in the output of "
+            "views. Those error messages shall alert you that not all data from all sites has been shown. "
+            "Other people - however - find those messages distracting. "
+        ),
+    ),
+)
+
+ConfigVariableEnableSounds = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="enable_sounds",
+    valuespec=lambda: Checkbox(
+        title=_("Sounds in views"),
+        label=_("Sounds"),
+        help=_(
+            "If sounds are enabled then the user will be alarmed by problems shown "
+            "in a Multisite status view if that view has been configured for sounds. "
+            "From the views shipped in with Multisite all problem views have sounds "
+            "enabled."
+        ),
+    ),
+)
+
+ConfigVariableSoftQueryLimit = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="soft_query_limit",
+    valuespec=lambda: Integer(
+        title=_("Soft query limit"),
+        help=_(
+            "Whenever the number of returned datasets of a view would exceed this "
+            "limit, a warning is being displayed and no further data is being shown. "
+            "A normal user can override this limit with one mouse click."
+        ),
+        minvalue=1,
+    ),
+)
+
+ConfigVariableHardQueryLimit = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="hard_query_limit",
+    valuespec=lambda: Integer(
+        title=_("Hard query limit"),
+        help=_(
+            "Whenever the number of returned datasets of a view would exceed this "
+            "limit, an error message is shown. The normal user cannot override "
+            "the hard limit. The purpose of the hard limit is to secure the server "
+            "against useless queries with huge result sets."
+        ),
+        minvalue=1,
+    ),
+)
+
+ConfigVariableQuicksearchDropdownLimit = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="quicksearch_dropdown_limit",
+    valuespec=lambda: Integer(
+        title=_("Number of elements to show in Quicksearch"),
+        help=_(
+            "When typing a texts in the Quicksearch snap-in, a dropdown will "
+            "appear listing all matching host names containing that text. "
+            "That list is limited in size so that the dropdown will not get "
+            "too large when you have a huge number of lists. "
+        ),
+        minvalue=1,
+    ),
+)
+
+ConfigVariableQuicksearchSearchOrder = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="quicksearch_search_order",
+    valuespec=lambda: ListOf(
+        valuespec=Tuple(
+            elements=[
+                DropdownChoice(
+                    title=_("Search filter"),
+                    choices=[
+                        ("menu", _("Monitor menu entries")),
+                        ("h", _("Host name")),
+                        ("al", _("Host alias")),
+                        ("ad", _("Host address")),
+                        ("tg", _("Host tag")),
+                        ("hg", _("Host group")),
+                        ("sg", _("Service group")),
+                        ("s", _("Service name")),
+                    ],
+                ),
+                DropdownChoice(
+                    title=_("Match behaviour"),
+                    choices=[
+                        ("continue", _("Continue search")),
+                        (
+                            "finished",
+                            _("Search finished: Also show all results of previous filters"),
+                        ),
+                        (
+                            "finished_distinct",
+                            _("Search finished: Only show results of this filter"),
+                        ),
+                    ],
+                ),
             ],
-        )
+        ),
+        title=_("Quicksearch search order"),
+        add_label=_("Add search filter"),
+    ),
+)
 
-
-class ConfigVariableDebugLivestatusQueries(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "debug_livestatus_queries"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("Debug livestatus queries"),
-            label=_("enable debug of livestatus queries"),
-            help=_(
-                "With this option turned on all livestatus queries made by multisite "
-                "in order to render views are being displayed."
-            ),
-        )
-
-
-class ConfigVariableSelectionLivetime(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "selection_livetime"
-
-    def valuespec(self) -> ValueSpec:
-        return Integer(
-            title=_("Checkbox selection livetime"),
-            help=_(
-                "This option defines the maximum age of unmodified checkbox selections stored for users. "
-                "If a user modifies the selection in a view, these selections are persisted for the currently "
-                "open view. When a view is re-opened a new selection is used. The old one remains on the "
-                "server until the livetime is exceeded."
-            ),
-            minvalue=1,
-        )
-
-
-class ConfigVariableShowLivestatusErrors(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "show_livestatus_errors"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("Show MK Livestatus error messages"),
-            label=_("show errors"),
-            help=_(
-                "This option controls whether error messages from unreachable sites are shown in the output of "
-                "views. Those error messages shall alert you that not all data from all sites has been shown. "
-                "Other people - however - find those messages distracting. "
-            ),
-        )
-
-
-class ConfigVariableEnableSounds(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "enable_sounds"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("Sounds in views"),
-            label=_("Sounds"),
-            help=_(
-                "If sounds are enabled then the user will be alarmed by problems shown "
-                "in a Multisite status view if that view has been configured for sounds. "
-                "From the views shipped in with Multisite all problem views have sounds "
-                "enabled."
-            ),
-        )
-
-
-class ConfigVariableSoftQueryLimit(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "soft_query_limit"
-
-    def valuespec(self) -> ValueSpec:
-        return Integer(
-            title=_("Soft query limit"),
-            help=_(
-                "Whenever the number of returned datasets of a view would exceed this "
-                "limit, a warning is being displayed and no further data is being shown. "
-                "A normal user can override this limit with one mouse click."
-            ),
-            minvalue=1,
-        )
-
-
-class ConfigVariableHardQueryLimit(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "hard_query_limit"
-
-    def valuespec(self) -> ValueSpec:
-        return Integer(
-            title=_("Hard query limit"),
-            help=_(
-                "Whenever the number of returned datasets of a view would exceed this "
-                "limit, an error message is shown. The normal user cannot override "
-                "the hard limit. The purpose of the hard limit is to secure the server "
-                "against useless queries with huge result sets."
-            ),
-            minvalue=1,
-        )
-
-
-class ConfigVariableQuicksearchDropdownLimit(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "quicksearch_dropdown_limit"
-
-    def valuespec(self) -> ValueSpec:
-        return Integer(
-            title=_("Number of elements to show in Quicksearch"),
-            help=_(
-                "When typing a texts in the Quicksearch snap-in, a dropdown will "
-                "appear listing all matching host names containing that text. "
-                "That list is limited in size so that the dropdown will not get "
-                "too large when you have a huge number of lists. "
-            ),
-            minvalue=1,
-        )
-
-
-class ConfigVariableQuicksearchSearchOrder(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "quicksearch_search_order"
-
-    def valuespec(self) -> ValueSpec:
-        return ListOf(
-            valuespec=Tuple(
-                elements=[
-                    DropdownChoice(
-                        title=_("Search filter"),
-                        choices=[
-                            ("menu", _("Monitor menu entries")),
-                            ("h", _("Host name")),
-                            ("al", _("Host alias")),
-                            ("ad", _("Host address")),
-                            ("tg", _("Host tag")),
-                            ("hg", _("Host group")),
-                            ("sg", _("Service group")),
-                            ("s", _("Service name")),
-                        ],
+ConfigVariableExperimentalFeatures = ConfigVariable(
+    group=ConfigVariableGroupDeveloperTools,
+    domain=ConfigDomainGUI,
+    ident="vue_experimental_features",
+    valuespec=lambda: Dictionary(
+        title=_("Vue experimental features"),
+        help=_("These settings only affect features that are currently under development."),
+        elements=[
+            (
+                "rule_render_mode",
+                DropdownChoice(
+                    title=_("Rule rendering mode"),
+                    help=_(
+                        "Enable experimental rendering modes for form specs. Keep in mind that"
+                        "some form specs are always rendered in the frontend, regardless "
+                        "of this setting."
                     ),
-                    DropdownChoice(
-                        title=_("Match behaviour"),
-                        choices=[
-                            ("continue", _("Continue search")),
-                            (
-                                "finished",
-                                _("Search finished: Also show all results of previous filters"),
-                            ),
-                            (
-                                "finished_distinct",
-                                _("Search finished: Only show results of this filter"),
-                            ),
-                        ],
-                    ),
-                ],
+                    choices=[
+                        ("backend", "Backend (legacy rendering)"),
+                        ("frontend", "Frontend (vue rendering)"),
+                        ("backend_and_frontend", "Backend and Frontend"),
+                    ],
+                ),
             ),
-            title=_("Quicksearch search order"),
-            add_label=_("Add search filter"),
+        ],
+        optional_keys=False,
+    ),
+)
+
+ConfigVariableInjectJsProfiling = ConfigVariable(
+    group=ConfigVariableGroupDeveloperTools,
+    domain=ConfigDomainGUI,
+    ident="inject_js_profiling_code",
+    valuespec=lambda: Checkbox(
+        title=_("Inject JavaScript profiling code"),
+        default_value=False,
+    ),
+)
+
+ConfigVariableLoadFrontendVue = ConfigVariable(
+    group=ConfigVariableGroupDeveloperTools,
+    domain=ConfigDomainGUI,
+    ident="load_frontend_vue",
+    valuespec=lambda: DropdownChoice(
+        title=_("Inject frontend_vue files via vite client"),
+        help=_(
+            "If you change this to 'inject' and there is no vite dev server running "
+            "you may not be able to deactivate this option via UI, so be careful!"
+        ),
+        choices=[
+            ("static_files", "Load JavaScript from shipped, static files"),
+            ("inject", "Inject vite client to enable auto hot reloading"),
+        ],
+    ),
+)
+
+ConfigVariableTableRowLimit = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="table_row_limit",
+    valuespec=lambda: Integer(
+        title=_("Limit the number of rows shown in tables"),
+        help=_(
+            "Several pages which use tables to show data in rows, like the "
+            '"Users" configuration page, can be configured to show '
+            "only a limited number of rows when accessing the pages."
+        ),
+        minvalue=1,
+        unit=_("rows"),
+    ),
+)
+
+ConfigVariableStartURL = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="start_url",
+    valuespec=lambda: TextInput(
+        title=_("Start URL to display in main frame"),
+        help=_(
+            "When you point your browser to the Checkmk GUI, usually the dashboard "
+            "is shown in the main (right) frame. You can replace this with any other "
+            "URL you like here."
+        ),
+        size=80,
+        allow_empty=False,
+        validate=validate_start_url,
+    ),
+)
+
+ConfigVariablePageHeading = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="page_heading",
+    valuespec=lambda: TextInput(
+        title=_("Page title"),
+        help=_(
+            "This title will be displayed in your browser's title bar or tab. You can use "
+            "a <tt>%s</tt> to insert the alias of your monitoring site to the title."
+        ),
+        size=80,
+    ),
+)
+
+ConfigVariableBIDefaultLayout = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="default_bi_layout",
+    valuespec=lambda: Dictionary(
+        title=_("Default BI visualization settings"),
+        elements=[
+            (
+                "node_style",
+                DropdownChoice(
+                    title=_("Default layout"),
+                    help=_(
+                        "Specifies the default layout to be used when an aggregation "
+                        "has no explicit layout assigned"
+                    ),
+                    choices=_get_layout_style_choices(),
+                ),
+            ),
+            (
+                "line_style",
+                DropdownChoice(
+                    title=_("Default line style"),
+                    help=_("Specifies the default line style"),
+                    choices=_get_line_style_choices(),
+                ),
+            ),
+        ],
+        optional_keys=[],
+    ),
+)
+
+
+def _get_layout_style_choices():
+    return [
+        ("builtin_force", _("Force layout")),
+        ("builtin_hierarchy", _("Hierarchical layout")),
+        ("builtin_radial", _("Radial layout")),
+    ]
+
+
+def _get_line_style_choices():
+    return [("round", _("Round")), ("straight", _("Straight")), ("elbow", _("Elbow"))]
+
+
+ConfigVariablePagetitleDateFormat = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="pagetitle_date_format",
+    valuespec=lambda: DropdownChoice(
+        title=_("Date format for page titles"),
+        help=_(
+            "When enabled, the headline of each page also displays the date in addition the time."
+        ),
+        choices=[
+            (None, _("Do not display a date")),
+            ("yyyy-mm-dd", _("YYYY-MM-DD")),
+            ("dd.mm.yyyy", _("DD.MM.YYYY")),
+        ],
+    ),
+)
+
+ConfigVariableEscapePluginOutput = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="escape_plugin_output",
+    valuespec=lambda: Checkbox(
+        title=_("Escape HTML in service output (Dangerous to deactivate - read help)"),
+        help=_(
+            "By default, for security reasons, the GUI does not interpret any HTML "
+            "code received from external sources, like service output or log messages. "
+            "If you are really sure what you are doing and need to have HTML codes, like "
+            "links rendered, disable this option. Be aware, you might open the way "
+            "for several injection attacks. "
         )
+        + _(
+            "Instead of disabling this option globally it is highly recommended to "
+            "disable the escaping selectively for individual hosts and services with "
+            'the rulesets "Escape HTML in host output" and "Escape HTML in '
+            'service output". The rulesets have the additional advantage that the '
+            "configured value is accessible in the notification context."
+        ),
+        label=_("Prevent loading HTML from service output or log messages"),
+    ),
+)
 
+ConfigVariableDrawRuleIcon = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="multisite_draw_ruleicon",
+    valuespec=lambda: Checkbox(
+        title=_("Show icon linking to Setup parameter editor for services"),
+        label=_("Show Setup icon"),
+        help=_(
+            "When enabled a rule editor icon is displayed for each "
+            "service in the multisite views. It is only displayed if the user "
+            "does have the permission to edit rules."
+        ),
+    ),
+)
 
-class ConfigVariableExperimentalFeatures(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupDeveloperTools
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "vue_experimental_features"
-
-    def valuespec(self) -> ValueSpec:
-        return Dictionary(
-            title=_("Vue experimental features"),
-            help=_("These settings only affect features that are currently under development."),
+ConfigVariableVirtualHostTrees = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="virtual_host_trees",
+    valuespec=lambda: ListOf(
+        valuespec=Dictionary(
             elements=[
                 (
-                    "rule_render_mode",
-                    DropdownChoice(
-                        title=_("Rule rendering mode"),
-                        help=_(
-                            "Enable experimental rendering modes for form specs. Keep in mind that"
-                            "some form specs are always rendered in the frontend, regardless "
-                            "of this setting."
-                        ),
-                        choices=[
-                            ("backend", "Backend (legacy rendering)"),
-                            ("frontend", "Frontend (vue rendering)"),
-                            ("backend_and_frontend", "Backend and Frontend"),
-                        ],
-                    ),
-                ),
-            ],
-            optional_keys=False,
-        )
-
-
-class ConfigVariableInjectJsProfiling(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupDeveloperTools
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "inject_js_profiling_code"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("Inject JavaScript profiling code"),
-            default_value=False,
-        )
-
-
-class ConfigVariableLoadFrontendVue(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupDeveloperTools
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "load_frontend_vue"
-
-    def valuespec(self) -> ValueSpec:
-        return DropdownChoice(
-            title=_("Inject frontend_vue files via vite client"),
-            help=_(
-                "If you change this to 'inject' and there is no vite dev server running "
-                "you may not be able to deactivate this option via UI, so be careful!"
-            ),
-            choices=[
-                ("static_files", "Load JavaScript from shipped, static files"),
-                ("inject", "Inject vite client to enable auto hot reloading"),
-            ],
-        )
-
-
-class ConfigVariableTableRowLimit(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "table_row_limit"
-
-    def valuespec(self) -> ValueSpec:
-        return Integer(
-            title=_("Limit the number of rows shown in tables"),
-            help=_(
-                "Several pages which use tables to show data in rows, like the "
-                '"Users" configuration page, can be configured to show '
-                "only a limited number of rows when accessing the pages."
-            ),
-            minvalue=1,
-            unit=_("rows"),
-        )
-
-
-class ConfigVariableStartURL(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "start_url"
-
-    def valuespec(self) -> ValueSpec:
-        return TextInput(
-            title=_("Start URL to display in main frame"),
-            help=_(
-                "When you point your browser to the Checkmk GUI, usually the dashboard "
-                "is shown in the main (right) frame. You can replace this with any other "
-                "URL you like here."
-            ),
-            size=80,
-            allow_empty=False,
-            validate=validate_start_url,
-        )
-
-
-class ConfigVariablePageHeading(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "page_heading"
-
-    def valuespec(self) -> ValueSpec:
-        return TextInput(
-            title=_("Page title"),
-            help=_(
-                "This title will be displayed in your browser's title bar or tab. You can use "
-                "a <tt>%s</tt> to insert the alias of your monitoring site to the title."
-            ),
-            size=80,
-        )
-
-
-class ConfigVariableBIDefaultLayout(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "default_bi_layout"
-
-    def valuespec(self) -> ValueSpec:
-        return Dictionary(
-            title=_("Default BI visualization settings"),
-            elements=[
-                (
-                    "node_style",
-                    DropdownChoice(
-                        title=_("Default layout"),
-                        help=_(
-                            "Specifies the default layout to be used when an aggregation "
-                            "has no explicit layout assigned"
-                        ),
-                        choices=self.get_layout_style_choices(),
+                    "id",
+                    ID(
+                        title=_("ID"),
+                        allow_empty=False,
                     ),
                 ),
                 (
-                    "line_style",
-                    DropdownChoice(
-                        title=_("Default line style"),
-                        help=_("Specifies the default line style"),
-                        choices=self.get_line_style_choices(),
+                    "title",
+                    TextInput(
+                        title=_("Title of the tree"),
+                        allow_empty=False,
+                    ),
+                ),
+                (
+                    "exclude_empty_tag_choices",
+                    Checkbox(
+                        title=_("Exclude empty tag choices"),
+                        default_value=False,
+                    ),
+                ),
+                (
+                    "tree_spec",
+                    ListOf(
+                        valuespec=DropdownChoice(
+                            choices=_virtual_host_tree_choices,
+                        ),
+                        title=_("Tree levels"),
+                        allow_empty=False,
+                        magic="#!#",
                     ),
                 ),
             ],
             optional_keys=[],
-        )
+        ),
+        add_label=_("Create new virtual host tree configuration"),
+        title=_("Virtual host trees"),
+        help=_(
+            "Here you can define tree configurations for the snap-in <i>Virtual Host-Trees</i>. "
+            "These trees organize your hosts based on their values in certain host tag groups. "
+            "Each host tag group you select will create one level in the tree."
+        ),
+        validate=_validate_virtual_host_trees,
+        movable=False,
+    ),
+)
 
-    @classmethod
-    def get_layout_style_choices(cls):
-        return [
-            ("builtin_force", _("Force layout")),
-            ("builtin_hierarchy", _("Hierarchical layout")),
-            ("builtin_radial", _("Radial layout")),
-        ]
 
-    @classmethod
-    def get_line_style_choices(cls):
-        return [("round", _("Round")), ("straight", _("Straight")), ("elbow", _("Elbow"))]
+def _virtual_host_tree_choices():
+    return (
+        _wato_host_tag_group_choices()
+        + [("foldertree:", _("Folder tree"))]
+        + [("folder:%d" % l, _("Folder level %d") % l) for l in range(1, 7)]
+    )
 
 
-class ConfigVariablePagetitleDateFormat(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
+def _wato_host_tag_group_choices():
+    # We add to the choices:
+    # 1. All host tag groups with their id
+    # 2. All *topics* that:
+    #  - consist only of checkbox tags
+    #  - contain at least two entries
+    choices: list[tuple[TagGroupID, str]] = []
+    by_topic: dict[str, list[TagGroup]] = {}
+    for tag_group in active_config.tags.tag_groups:
+        choices.append((tag_group.id, tag_group.title))
+        by_topic.setdefault(tag_group.topic or _("Tags"), []).append(tag_group)
 
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
+    # Now search for checkbox-only-topics
+    for topic, tag_groups in by_topic.items():
+        for tag_group in tag_groups:
+            if len(tag_group.tags) != 1:
+                break
+        else:
+            if len(tag_groups) > 1:
+                choices.append(
+                    (
+                        TagGroupID("topic:" + topic),
+                        _("Topic") + ": " + topic,
+                    )
+                )
 
-    def ident(self) -> str:
-        return "pagetitle_date_format"
+    return choices
 
-    def valuespec(self) -> ValueSpec:
-        return DropdownChoice(
-            title=_("Date format for page titles"),
-            help=_(
-                "When enabled, the headline of each page also displays "
-                "the date in addition the time."
-            ),
-            choices=[
-                (None, _("Do not display a date")),
-                ("yyyy-mm-dd", _("YYYY-MM-DD")),
-                ("dd.mm.yyyy", _("DD.MM.YYYY")),
+
+def _validate_virtual_host_trees(value, varprefix):
+    tree_ids = set()
+    for tree in value:
+        if tree["id"] in tree_ids:
+            raise MKUserError(varprefix, _("The ID needs to be unique."))
+        tree_ids.add(tree["id"])
+
+        # Validate that each element is selected once
+        seen = set()
+        for element in tree["tree_spec"]:
+            if element in seen:
+                raise MKUserError(
+                    varprefix,
+                    _(
+                        "Found '%s' a second time in tree '%s'. Each element can only be "
+                        "chosen once."
+                    )
+                    % (element, tree["id"]),
+                )
+
+            seen.add(element)
+
+
+ConfigVariableRescheduleTimeout = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="reschedule_timeout",
+    valuespec=lambda: Float(
+        title=_("Timeout for rescheduling checks in Multisite"),
+        help=_(
+            "When you reschedule a check by clicking on the &quot;arrow&quot;-icon "
+            "then Multisite will use this number of seconds as a timeout. If the "
+            "monitoring core has not executed the check within this time, an error "
+            "will be displayed and the page not reloaded."
+        ),
+        minvalue=1.0,
+        unit="sec",
+        display_format="%.1f",
+    ),
+)
+
+ConfigVariableSidebarUpdateInterval = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="sidebar_update_interval",
+    valuespec=lambda: Float(
+        title=_("Interval of sidebar status updates"),
+        help=_(
+            "The information provided by the sidebar snap-ins is refreshed in a regular "
+            "interval. You can change the refresh interval to fit your needs here. This "
+            "value means that all snap-ins which request a regular refresh are updated "
+            "in this interval."
+        ),
+        minvalue=10.0,
+        unit="sec",
+        display_format="%.1f",
+    ),
+)
+
+ConfigVariableSidebarNotifyInterval = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="sidebar_notify_interval",
+    valuespec=lambda: Optional(
+        valuespec=Float(
+            minvalue=10.0,
+            unit="sec",
+            display_format="%.1f",
+        ),
+        title=_("Interval of sidebar popup notification updates"),
+        help=_(
+            "The sidebar can be configured to regularly check for pending popup notifications. "
+            "This is disabled by default."
+        ),
+        none_label=_("(disabled)"),
+    ),
+)
+
+ConfigVariableiAdHocDowntime = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="adhoc_downtime",
+    valuespec=lambda: Optional(
+        valuespec=Dictionary(
+            optional_keys=False,
+            elements=[
+                (
+                    "duration",
+                    Integer(
+                        title=_("Duration"),
+                        help=_("The duration in minutes of the ad hoc downtime."),
+                        minvalue=1,
+                        unit=_("minutes"),
+                        default_value=60,
+                    ),
+                ),
+                (
+                    "comment",
+                    TextInput(
+                        title=_("Ad hoc comment"),
+                        help=_("The comment which is automatically sent with an ad hoc downtime"),
+                        size=80,
+                        allow_empty=False,
+                    ),
+                ),
             ],
-        )
+        ),
+        title=_("Ad hoc downtime"),
+        label=_("Enable ad hoc downtime"),
+        help=_(
+            "This setting allows to set an ad hoc downtime comment and its duration. "
+            "When enabled a new button <i>Ad hoc downtime for __ minutes</i> will "
+            "be available in the command form."
+        ),
+    ),
+)
 
-
-class ConfigVariableEscapePluginOutput(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "escape_plugin_output"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("Escape HTML in service output (Dangerous to deactivate - read help)"),
-            help=_(
-                "By default, for security reasons, the GUI does not interpret any HTML "
-                "code received from external sources, like service output or log messages. "
-                "If you are really sure what you are doing and need to have HTML codes, like "
-                "links rendered, disable this option. Be aware, you might open the way "
-                "for several injection attacks. "
-            )
-            + _(
-                "Instead of disabling this option globally it is highly recommended to "
-                "disable the escaping selectively for individual hosts and services with "
-                'the rulesets "Escape HTML in host output" and "Escape HTML in '
-                'service output". The rulesets have the additional advantage that the '
-                "configured value is accessible in the notification context."
+ConfigVariableAuthByHTTPHeader = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="auth_by_http_header",
+    valuespec=lambda: Migrate(
+        Optional(
+            valuespec=TextInput(
+                label=_("HTTP request header variable"),
+                help=_(
+                    "Configure the name of the HTTP request header variable to read "
+                    "from the incoming HTTP requests"
+                ),
+                default_value="X-Remote-User",
+                regex=re.compile("^[A-Za-z0-9-]+$"),
+                regex_error=_("Only A-Z, a-z, 0-9 and minus (-) are allowed."),
             ),
-            label=_("Prevent loading HTML from service output or log messages"),
-        )
-
-
-class ConfigVariableDrawRuleIcon(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "multisite_draw_ruleicon"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("Show icon linking to Setup parameter editor for services"),
-            label=_("Show Setup icon"),
-            help=_(
-                "When enabled a rule editor icon is displayed for each "
-                "service in the multisite views. It is only displayed if the user "
-                "does have the permission to edit rules."
+            title=_("Authenticate users by incoming HTTP requests"),
+            label=_(
+                "Activate HTTP header authentication (Warning: Only activate "
+                "in trusted environments, see help for details)"
             ),
-        )
+            help=_(
+                "If this option is enabled, the GUI reads the configured HTTP header "
+                "variable from the incoming HTTP request and simply takes the string "
+                "in this variable as name of the authenticated user. "
+                "Be warned: Only allow access from trusted IP addresses "
+                "(Apache <tt>Allow from</tt>), like proxy "
+                "servers, to this webpage. A user with access to this page could simply fake "
+                "the authentication information. This option can be useful to "
+                "realize authentication in reverse proxy environments. As of version 1.6 and "
+                "on all platforms using Apache 2.4+ only A-Z, a-z, 0-9 and minus (-) are "
+                "to be used for the variable name."
+            ),
+            none_label=_("Don't use HTTP header authentication"),
+            indent=False,
+        ),
+        # We accidentally used False instead of None in the past.
+        migrate=lambda x: None if x is False else x,
+    ),
+)
 
+EnableLoginViaGet = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="enable_login_via_get",
+    valuespec=lambda: Checkbox(
+        title=_("Login via GET requests"),
+        help=_(
+            "Using the GET method to authenticate against login.py leaks user credentials "
+            "in the Apache logs (see more details in our Werk 14261). We disable logging  "
+            "in via this method by default. Use this property to enable logging in via the "
+            "GET method for all users."
+        ),
+    ),
+)
 
-class ConfigVariableVirtualHostTrees(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
+EnableDeprecatedAutomationuserAuthentication = ConfigVariable(
+    # See Werk #16223
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="enable_deprecated_automation_user_authentication",
+    valuespec=lambda: Checkbox(
+        title=_("Automation user authentication via HTTP parameters"),
+        help=_(
+            "In previous Checkmk versions, it was possible to use an automation user to display "
+            "specific pages within Checkmk. To authenticate these requests, it was possible to "
+            "add the _username and _secret parameters to the parameters (e.g. append them to the "
+            "URL). GET parameters are usually logged by proxies and web servers and are not "
+            "deemed secure for secrets. See Werk #16223 for more information."
+        ),
+        default_value=False,
+    ),
+)
 
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
+ConfigVariableStalenessThreshold = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="staleness_threshold",
+    valuespec=lambda: Float(
+        title=_("Staleness value to mark hosts / services stale"),
+        help=_(
+            "The staleness value of a host / service is calculated by measuring the "
+            "configured check intervals a check result is old. A value of 1.5 means the "
+            "current check result has been gathered one and a half check intervals of an object. "
+            "This would mean 90 seconds in case of a check which is checked each 60 seconds."
+        ),
+        minvalue=1,
+    ),
+)
 
-    def ident(self) -> str:
-        return "virtual_host_trees"
+ConfigVariableLoginScreen = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="login_screen",
+    valuespec=lambda: Dictionary(
+        title=_("Customize login screen"),
+        elements=[
+            (
+                "hide_version",
+                FixedValue(
+                    value=True,
+                    title=_("Hide Checkmk version"),
+                    totext=_("Hide the Checkmk version from the login box"),
+                ),
+            ),
+            (
+                "login_message",
+                TextInput(
+                    title=_("Show a login message"),
+                    help=_(
+                        "You may use this option to give your users an informational text before logging in."
+                    ),
+                    size=80,
+                ),
+            ),
+            (
+                "footer_links",
+                ListOf(
+                    valuespec=Tuple(
+                        elements=[
+                            TextInput(
+                                title=_("Title"),
+                            ),
+                            TextInput(
+                                title=_("URL"),
+                                size=80,
+                            ),
+                            DropdownChoice(
+                                title=_("Open in"),
+                                choices=[
+                                    ("_blank", _("Load in a new window / tab")),
+                                    ("_top", _("Load in current window / tab")),
+                                ],
+                            ),
+                        ],
+                        orientation="horizontal",
+                    ),
+                    totext=_("%d links"),
+                    title=_("Custom footer links"),
+                ),
+            ),
+        ],
+        required_keys=[],
+    ),
+)
 
-    def valuespec(self) -> ValueSpec:
-        return ListOf(
+ConfigVariableUserLocalizations = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="user_localizations",
+    valuespec=lambda: Transform(
+        valuespec=ListOf(
+            valuespec=Tuple(
+                elements=[
+                    TextInput(title=_("Original Text"), size=40),
+                    Dictionary(
+                        title=_("Translations"),
+                        elements=lambda: [
+                            (l, TextInput(title=a, size=32)) for (l, a) in get_languages()
+                        ],
+                        columns=2,
+                    ),
+                ],
+            ),
+            title=_("Custom localizations"),
+            movable=False,
+            totext=_("%d translations"),
+        ),
+        to_valuespec=lambda d: sorted(d.items()),
+        from_valuespec=dict,
+    ),
+)
+
+ConfigVariableUserIconsAndActions = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="user_icons_and_actions",
+    valuespec=lambda: Transform(
+        valuespec=ListOf(
+            valuespec=Tuple(
+                elements=[
+                    ID(
+                        title=_("ID"),
+                        allow_empty=False,
+                    ),
+                    Dictionary(
+                        elements=[
+                            (
+                                "icon",
+                                IconSelector(
+                                    title=_("Icon"),
+                                    allow_empty=False,
+                                    with_emblem=False,
+                                ),
+                            ),
+                            (
+                                "title",
+                                TextInput(
+                                    title=_("Title"),
+                                ),
+                            ),
+                            (
+                                "url",
+                                Tuple(
+                                    title=_("Action"),
+                                    elements=[
+                                        TextInput(
+                                            title=_("URL"),
+                                            help=_(
+                                                "This URL is opened when clicking on the action / icon. You "
+                                                "can use some macros within the URL which are dynamically "
+                                                "replaced for each object. These are:<br>"
+                                                "<ul>"
+                                                "<li>$HOSTNAME$: Contains the name of the host</li>"
+                                                "<li>$HOSTNAME_URL_ENCODED$: Same as above but URL encoded</li>"
+                                                "<li>$SERVICEDESC$: Contains the service name "
+                                                "(in case this is a service)</li>"
+                                                "<li>$SERVICEDESC_URL_ENCODED$: Same as above but URL encoded</li>"
+                                                "<li>$HOSTADDRESS$: Contains the network address of the host</li>"
+                                                "<li>$HOSTADDRESS_URL_ENCODED$: Same as above but URL encoded</li>"
+                                                "<li>$USER_ID$: The user ID of the currently active user</li>"
+                                                "</ul>"
+                                            ),
+                                            size=80,
+                                        ),
+                                        DropdownChoice(
+                                            title=_("Open in"),
+                                            choices=[
+                                                ("_blank", _("Load in a new window / tab")),
+                                                (
+                                                    "_self",
+                                                    _(
+                                                        "Load in current content area (keep sidebar)"
+                                                    ),
+                                                ),
+                                                (
+                                                    "_top",
+                                                    _("Load as new page (hide sidebar)"),
+                                                ),
+                                            ],
+                                        ),
+                                    ],
+                                ),
+                            ),
+                            (
+                                "toplevel",
+                                FixedValue(
+                                    value=True,
+                                    title=_("Show in column"),
+                                    totext=_("Directly show the action icon in the column"),
+                                    help=_(
+                                        "Makes the icon appear in the column instead "
+                                        "of the dropdown menu."
+                                    ),
+                                ),
+                            ),
+                            (
+                                "sort_index",
+                                Integer(
+                                    title=_("Sort index"),
+                                    help=_(
+                                        "You can use the sort index to control the order of the "
+                                        "elements in the column and the menu. The elements are sorted "
+                                        "from smaller to higher numbers. The action menu icon "
+                                        "has a sort index of <tt>10</tt>, the graph icon a sort index "
+                                        "of <tt>20</tt>. All other default icons have a sort index of "
+                                        "<tt>30</tt> configured."
+                                    ),
+                                    minvalue=0,
+                                    default_value=15,
+                                ),
+                            ),
+                        ],
+                        optional_keys=["title", "url", "toplevel", "sort_index"],
+                    ),
+                ],
+            ),
+            title=_("Custom icons and actions"),
+            movable=False,
+            totext=_("%d icons and actions"),
+        ),
+        to_valuespec=lambda d: sorted(d.items()),
+        from_valuespec=dict,
+    ),
+)
+
+ConfigVariableCustomServiceAttributes = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="custom_service_attributes",
+    valuespec=lambda: Transform(
+        valuespec=ListOf(
             valuespec=Dictionary(
                 elements=[
                     (
-                        "id",
-                        ID(
+                        "ident",
+                        TextInput(
                             title=_("ID"),
-                            allow_empty=False,
+                            help=_(
+                                "The ID will be used as internal identifier and the custom "
+                                "service attribute will be computed based on the ID. The "
+                                "custom service attribute will be named <tt>_[ID]</tt> in "
+                                "the core configuration and can be gathered using the "
+                                "Livestatus column <tt>custom_variables</tt> using the "
+                                "<tt>[ID]</tt>. The custom service attributes are available "
+                                "to notification scripts as environment variable named "
+                                "<tt>SERVICE_[ID]</tt>."
+                            ),
+                            validate=_validate_id,
+                            regex=re.compile("^[A-Z_][-A-Z0-9_]*$"),
+                            regex_error=_(
+                                "An identifier must only consist of letters, digits, dash and "
+                                "underscore and it must start with a letter or underscore."
+                            )
+                            + " "
+                            + _("Only upper case letters are allowed"),
                         ),
                     ),
                     (
                         "title",
                         TextInput(
-                            title=_("Title of the tree"),
-                            allow_empty=False,
+                            title=_("Title"),
                         ),
                     ),
                     (
-                        "exclude_empty_tag_choices",
-                        Checkbox(
-                            title=_("Exclude empty tag choices"),
-                            default_value=False,
-                        ),
-                    ),
-                    (
-                        "tree_spec",
-                        ListOf(
-                            valuespec=DropdownChoice(
-                                choices=self._virtual_host_tree_choices,
-                            ),
-                            title=_("Tree levels"),
-                            allow_empty=False,
-                            magic="#!#",
+                        "type",
+                        DropdownChoice(
+                            title=_("Data type"),
+                            choices=[
+                                ("TextAscii", _("Simple Text")),
+                            ],
                         ),
                     ),
                 ],
                 optional_keys=[],
             ),
-            add_label=_("Create new virtual host tree configuration"),
-            title=_("Virtual host trees"),
+            title=_("Custom service attributes"),
             help=_(
-                "Here you can define tree configurations for the snap-in <i>Virtual Host-Trees</i>. "
-                "These trees organize your hosts based on their values in certain host tag groups. "
-                "Each host tag group you select will create one level in the tree."
+                "These custom service attributes can be assigned to services "
+                'using the ruleset <a href="%s">%s</a>.'
+            )
+            % (
+                "wato.py?mode=edit_ruleset&varname=custom_service_attributes",
+                _("Custom service attributes"),
             ),
-            validate=self._validate_virtual_host_trees,
             movable=False,
-        )
-
-    def _virtual_host_tree_choices(self):
-        return (
-            self._wato_host_tag_group_choices()
-            + [("foldertree:", _("Folder tree"))]
-            + [("folder:%d" % l, _("Folder level %d") % l) for l in range(1, 7)]
-        )
-
-    def _wato_host_tag_group_choices(self):
-        # We add to the choices:
-        # 1. All host tag groups with their id
-        # 2. All *topics* that:
-        #  - consist only of checkbox tags
-        #  - contain at least two entries
-        choices: list[tuple[TagGroupID, str]] = []
-        by_topic: dict[str, list[TagGroup]] = {}
-        for tag_group in active_config.tags.tag_groups:
-            choices.append((tag_group.id, tag_group.title))
-            by_topic.setdefault(tag_group.topic or _("Tags"), []).append(tag_group)
-
-        # Now search for checkbox-only-topics
-        for topic, tag_groups in by_topic.items():
-            for tag_group in tag_groups:
-                if len(tag_group.tags) != 1:
-                    break
-            else:
-                if len(tag_groups) > 1:
-                    choices.append(
-                        (
-                            TagGroupID("topic:" + topic),
-                            _("Topic") + ": " + topic,
-                        )
-                    )
-
-        return choices
-
-    def _validate_virtual_host_trees(self, value, varprefix):
-        tree_ids = set()
-        for tree in value:
-            if tree["id"] in tree_ids:
-                raise MKUserError(varprefix, _("The ID needs to be unique."))
-            tree_ids.add(tree["id"])
-
-            # Validate that each element is selected once
-            seen = set()
-            for element in tree["tree_spec"]:
-                if element in seen:
-                    raise MKUserError(
-                        varprefix,
-                        _(
-                            "Found '%s' a second time in tree '%s'. Each element can only be "
-                            "chosen once."
-                        )
-                        % (element, tree["id"]),
-                    )
-
-                seen.add(element)
-
-
-class ConfigVariableRescheduleTimeout(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "reschedule_timeout"
-
-    def valuespec(self) -> ValueSpec:
-        return Float(
-            title=_("Timeout for rescheduling checks in Multisite"),
-            help=_(
-                "When you reschedule a check by clicking on the &quot;arrow&quot;-icon "
-                "then Multisite will use this number of seconds as a timeout. If the "
-                "monitoring core has not executed the check within this time, an error "
-                "will be displayed and the page not reloaded."
-            ),
-            minvalue=1.0,
-            unit="sec",
-            display_format="%.1f",
-        )
-
-
-class ConfigVariableSidebarUpdateInterval(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "sidebar_update_interval"
-
-    def valuespec(self) -> ValueSpec:
-        return Float(
-            title=_("Interval of sidebar status updates"),
-            help=_(
-                "The information provided by the sidebar snap-ins is refreshed in a regular "
-                "interval. You can change the refresh interval to fit your needs here. This "
-                "value means that all snap-ins which request a regular refresh are updated "
-                "in this interval."
-            ),
-            minvalue=10.0,
-            unit="sec",
-            display_format="%.1f",
-        )
-
-
-class ConfigVariableSidebarNotifyInterval(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "sidebar_notify_interval"
-
-    def valuespec(self) -> ValueSpec:
-        return Optional(
-            valuespec=Float(
-                minvalue=10.0,
-                unit="sec",
-                display_format="%.1f",
-            ),
-            title=_("Interval of sidebar popup notification updates"),
-            help=_(
-                "The sidebar can be configured to regularly check for pending popup notifications. "
-                "This is disabled by default."
-            ),
-            none_label=_("(disabled)"),
-        )
-
-
-class ConfigVariableiAdHocDowntime(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "adhoc_downtime"
-
-    def valuespec(self) -> ValueSpec:
-        return Optional(
-            valuespec=Dictionary(
-                optional_keys=False,
-                elements=[
-                    (
-                        "duration",
-                        Integer(
-                            title=_("Duration"),
-                            help=_("The duration in minutes of the ad hoc downtime."),
-                            minvalue=1,
-                            unit=_("minutes"),
-                            default_value=60,
-                        ),
-                    ),
-                    (
-                        "comment",
-                        TextInput(
-                            title=_("Ad hoc comment"),
-                            help=_(
-                                "The comment which is automatically sent with an ad hoc downtime"
-                            ),
-                            size=80,
-                            allow_empty=False,
-                        ),
-                    ),
-                ],
-            ),
-            title=_("Ad hoc downtime"),
-            label=_("Enable ad hoc downtime"),
-            help=_(
-                "This setting allows to set an ad hoc downtime comment and its duration. "
-                "When enabled a new button <i>Ad hoc downtime for __ minutes</i> will "
-                "be available in the command form."
-            ),
-        )
-
-
-class ConfigVariableAuthByHTTPHeader(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "auth_by_http_header"
-
-    def valuespec(self) -> ValueSpec:
-        return Migrate(
-            Optional(
-                valuespec=TextInput(
-                    label=_("HTTP request header variable"),
-                    help=_(
-                        "Configure the name of the HTTP request header variable to read "
-                        "from the incoming HTTP requests"
-                    ),
-                    default_value="X-Remote-User",
-                    regex=re.compile("^[A-Za-z0-9-]+$"),
-                    regex_error=_("Only A-Z, a-z, 0-9 and minus (-) are allowed."),
-                ),
-                title=_("Authenticate users by incoming HTTP requests"),
-                label=_(
-                    "Activate HTTP header authentication (Warning: Only activate "
-                    "in trusted environments, see help for details)"
-                ),
-                help=_(
-                    "If this option is enabled, the GUI reads the configured HTTP header "
-                    "variable from the incoming HTTP request and simply takes the string "
-                    "in this variable as name of the authenticated user. "
-                    "Be warned: Only allow access from trusted IP addresses "
-                    "(Apache <tt>Allow from</tt>), like proxy "
-                    "servers, to this webpage. A user with access to this page could simply fake "
-                    "the authentication information. This option can be useful to "
-                    "realize authentication in reverse proxy environments. As of version 1.6 and "
-                    "on all platforms using Apache 2.4+ only A-Z, a-z, 0-9 and minus (-) are "
-                    "to be used for the variable name."
-                ),
-                none_label=_("Don't use HTTP header authentication"),
-                indent=False,
-            ),
-            # We accidentally used False instead of None in the past.
-            migrate=lambda x: None if x is False else x,
-        )
-
-
-class EnableLoginViaGet(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "enable_login_via_get"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("Login via GET requests"),
-            help=_(
-                "Using the GET method to authenticate against login.py leaks user credentials "
-                "in the Apache logs (see more details in our Werk 14261). We disable logging  "
-                "in via this method by default. Use this property to enable logging in via the "
-                "GET method for all users."
-            ),
-        )
-
-
-class EnableDeprecatedAutomationuserAuthentication(ConfigVariable):
-    """See Werk #16223"""
-
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "enable_deprecated_automation_user_authentication"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("Automation user authentication via HTTP parameters"),
-            help=_(
-                "In previous Checkmk versions, it was possible to use an automation user to display "
-                "specific pages within Checkmk. To authenticate these requests, it was possible to "
-                "add the _username and _secret parameters to the parameters (e.g. append them to the "
-                "URL). GET parameters are usually logged by proxies and web servers and are not "
-                "deemed secure for secrets. See Werk #16223 for more information."
-            ),
-            default_value=False,
-        )
-
-
-class ConfigVariableStalenessThreshold(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "staleness_threshold"
-
-    def valuespec(self) -> ValueSpec:
-        return Float(
-            title=_("Staleness value to mark hosts / services stale"),
-            help=_(
-                "The staleness value of a host / service is calculated by measuring the "
-                "configured check intervals a check result is old. A value of 1.5 means the "
-                "current check result has been gathered one and a half check intervals of an object. "
-                "This would mean 90 seconds in case of a check which is checked each 60 seconds."
-            ),
-            minvalue=1,
-        )
-
-
-class ConfigVariableLoginScreen(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "login_screen"
-
-    def valuespec(self) -> ValueSpec:
-        return Dictionary(
-            title=_("Customize login screen"),
-            elements=[
-                (
-                    "hide_version",
-                    FixedValue(
-                        value=True,
-                        title=_("Hide Checkmk version"),
-                        totext=_("Hide the Checkmk version from the login box"),
-                    ),
-                ),
-                (
-                    "login_message",
-                    TextInput(
-                        title=_("Show a login message"),
-                        help=_(
-                            "You may use this option to give your users an informational text before logging in."
-                        ),
-                        size=80,
-                    ),
-                ),
-                (
-                    "footer_links",
-                    ListOf(
-                        valuespec=Tuple(
-                            elements=[
-                                TextInput(
-                                    title=_("Title"),
-                                ),
-                                TextInput(
-                                    title=_("URL"),
-                                    size=80,
-                                ),
-                                DropdownChoice(
-                                    title=_("Open in"),
-                                    choices=[
-                                        ("_blank", _("Load in a new window / tab")),
-                                        ("_top", _("Load in current window / tab")),
-                                    ],
-                                ),
-                            ],
-                            orientation="horizontal",
-                        ),
-                        totext=_("%d links"),
-                        title=_("Custom footer links"),
-                    ),
-                ),
-            ],
-            required_keys=[],
-        )
-
-
-class ConfigVariableUserLocalizations(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "user_localizations"
-
-    def valuespec(self) -> ValueSpec:
-        return Transform(
-            valuespec=ListOf(
-                valuespec=Tuple(
-                    elements=[
-                        TextInput(title=_("Original Text"), size=40),
-                        Dictionary(
-                            title=_("Translations"),
-                            elements=lambda: [
-                                (l, TextInput(title=a, size=32)) for (l, a) in get_languages()
-                            ],
-                            columns=2,
-                        ),
-                    ],
-                ),
-                title=_("Custom localizations"),
-                movable=False,
-                totext=_("%d translations"),
-            ),
-            to_valuespec=lambda d: sorted(d.items()),
-            from_valuespec=dict,
-        )
-
-
-class ConfigVariableUserIconsAndActions(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "user_icons_and_actions"
-
-    def valuespec(self) -> ValueSpec:
-        return Transform(
-            valuespec=ListOf(
-                valuespec=Tuple(
-                    elements=[
-                        ID(
-                            title=_("ID"),
-                            allow_empty=False,
-                        ),
-                        Dictionary(
-                            elements=[
-                                (
-                                    "icon",
-                                    IconSelector(
-                                        title=_("Icon"),
-                                        allow_empty=False,
-                                        with_emblem=False,
-                                    ),
-                                ),
-                                (
-                                    "title",
-                                    TextInput(
-                                        title=_("Title"),
-                                    ),
-                                ),
-                                (
-                                    "url",
-                                    Tuple(
-                                        title=_("Action"),
-                                        elements=[
-                                            TextInput(
-                                                title=_("URL"),
-                                                help=_(
-                                                    "This URL is opened when clicking on the action / icon. You "
-                                                    "can use some macros within the URL which are dynamically "
-                                                    "replaced for each object. These are:<br>"
-                                                    "<ul>"
-                                                    "<li>$HOSTNAME$: Contains the name of the host</li>"
-                                                    "<li>$HOSTNAME_URL_ENCODED$: Same as above but URL encoded</li>"
-                                                    "<li>$SERVICEDESC$: Contains the service name "
-                                                    "(in case this is a service)</li>"
-                                                    "<li>$SERVICEDESC_URL_ENCODED$: Same as above but URL encoded</li>"
-                                                    "<li>$HOSTADDRESS$: Contains the network address of the host</li>"
-                                                    "<li>$HOSTADDRESS_URL_ENCODED$: Same as above but URL encoded</li>"
-                                                    "<li>$USER_ID$: The user ID of the currently active user</li>"
-                                                    "</ul>"
-                                                ),
-                                                size=80,
-                                            ),
-                                            DropdownChoice(
-                                                title=_("Open in"),
-                                                choices=[
-                                                    ("_blank", _("Load in a new window / tab")),
-                                                    (
-                                                        "_self",
-                                                        _(
-                                                            "Load in current content area (keep sidebar)"
-                                                        ),
-                                                    ),
-                                                    (
-                                                        "_top",
-                                                        _("Load as new page (hide sidebar)"),
-                                                    ),
-                                                ],
-                                            ),
-                                        ],
-                                    ),
-                                ),
-                                (
-                                    "toplevel",
-                                    FixedValue(
-                                        value=True,
-                                        title=_("Show in column"),
-                                        totext=_("Directly show the action icon in the column"),
-                                        help=_(
-                                            "Makes the icon appear in the column instead "
-                                            "of the dropdown menu."
-                                        ),
-                                    ),
-                                ),
-                                (
-                                    "sort_index",
-                                    Integer(
-                                        title=_("Sort index"),
-                                        help=_(
-                                            "You can use the sort index to control the order of the "
-                                            "elements in the column and the menu. The elements are sorted "
-                                            "from smaller to higher numbers. The action menu icon "
-                                            "has a sort index of <tt>10</tt>, the graph icon a sort index "
-                                            "of <tt>20</tt>. All other default icons have a sort index of "
-                                            "<tt>30</tt> configured."
-                                        ),
-                                        minvalue=0,
-                                        default_value=15,
-                                    ),
-                                ),
-                            ],
-                            optional_keys=["title", "url", "toplevel", "sort_index"],
-                        ),
-                    ],
-                ),
-                title=_("Custom icons and actions"),
-                movable=False,
-                totext=_("%d icons and actions"),
-            ),
-            to_valuespec=lambda d: sorted(d.items()),
-            from_valuespec=dict,
-        )
-
-
-class ConfigVariableCustomServiceAttributes(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "custom_service_attributes"
-
-    def valuespec(self) -> ValueSpec:
-        return Transform(
-            valuespec=ListOf(
-                valuespec=Dictionary(
-                    elements=[
-                        (
-                            "ident",
-                            TextInput(
-                                title=_("ID"),
-                                help=_(
-                                    "The ID will be used as internal identifier and the custom "
-                                    "service attribute will be computed based on the ID. The "
-                                    "custom service attribute will be named <tt>_[ID]</tt> in "
-                                    "the core configuration and can be gathered using the "
-                                    "Livestatus column <tt>custom_variables</tt> using the "
-                                    "<tt>[ID]</tt>. The custom service attributes are available "
-                                    "to notification scripts as environment variable named "
-                                    "<tt>SERVICE_[ID]</tt>."
-                                ),
-                                validate=self._validate_id,
-                                regex=re.compile("^[A-Z_][-A-Z0-9_]*$"),
-                                regex_error=_(
-                                    "An identifier must only consist of letters, digits, dash and "
-                                    "underscore and it must start with a letter or underscore."
-                                )
-                                + " "
-                                + _("Only upper case letters are allowed"),
-                            ),
-                        ),
-                        (
-                            "title",
-                            TextInput(
-                                title=_("Title"),
-                            ),
-                        ),
-                        (
-                            "type",
-                            DropdownChoice(
-                                title=_("Data type"),
-                                choices=[
-                                    ("TextAscii", _("Simple Text")),
-                                ],
-                            ),
-                        ),
-                    ],
-                    optional_keys=[],
-                ),
-                title=_("Custom service attributes"),
-                help=_(
-                    "These custom service attributes can be assigned to services "
-                    'using the ruleset <a href="%s">%s</a>.'
-                )
-                % (
-                    "wato.py?mode=edit_ruleset&varname=custom_service_attributes",
-                    _("Custom service attributes"),
-                ),
-                movable=False,
-                totext=_("%d custom service attributes"),
-                allow_empty=False,
-                # Unique IDs are ensured by the transform below. The Transform is executed
-                # before the validation function has the chance to validate it and print a
-                # custom error message.
-                validate=self._validate_unique_entries,
-            ),
-            to_valuespec=lambda v: v.values(),
-            from_valuespec=lambda v: {p["ident"]: p for p in v},
-        )
-
-    def _validate_id(self, value, varprefix):
-        internal_ids = [
-            "ESCAPE_PLUGIN_OUTPUT",
-            "EC_SL",
-            "EC_CONTACT",
-            "SERVICE_PERIOD",
-            "ACTIONS",
-        ]
-        if value.upper() in internal_ids:
-            raise MKUserError(varprefix, _("This ID can not be used as custom attribute"))
-
-    def _validate_unique_entries(self, value, varprefix):
-        seen_titles = []
-        for entry in value:
-            if entry["title"] in seen_titles:
-                raise MKUserError(
-                    varprefix, _("Found multiple entries using the title '%s'") % entry["title"]
-                )
-            seen_titles.append(entry["title"])
+            totext=_("%d custom service attributes"),
+            allow_empty=False,
+            # Unique IDs are ensured by the transform below. The Transform is executed
+            # before the validation function has the chance to validate it and print a
+            # custom error message.
+            validate=_validate_unique_entries,
+        ),
+        to_valuespec=lambda v: v.values(),
+        from_valuespec=lambda v: {p["ident"]: p for p in v},
+    ),
+)
+
+
+def _validate_id(value, varprefix):
+    internal_ids = [
+        "ESCAPE_PLUGIN_OUTPUT",
+        "EC_SL",
+        "EC_CONTACT",
+        "SERVICE_PERIOD",
+        "ACTIONS",
+    ]
+    if value.upper() in internal_ids:
+        raise MKUserError(varprefix, _("This ID can not be used as custom attribute"))
+
+
+def _validate_unique_entries(value, varprefix):
+    seen_titles = []
+    for entry in value:
+        if entry["title"] in seen_titles:
+            raise MKUserError(
+                varprefix, _("Found multiple entries using the title '%s'") % entry["title"]
+            )
+        seen_titles.append(entry["title"])
 
 
 def _custom_service_attributes_validate_unique_entries(value, varprefix):
@@ -1834,386 +1553,330 @@ def _service_tag_rules_tag_group_choices():
     return sorted(choices, key=lambda x: x[1])
 
 
-class ConfigVariableUserDowntimeTimeranges(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "user_downtime_timeranges"
-
-    def valuespec(self) -> ValueSpec:
-        return ListOf(
-            valuespec=Dictionary(
-                elements=[
-                    (
-                        "title",
-                        TextInput(
-                            title=_("Title"),
-                        ),
-                    ),
-                    (
-                        "end",
-                        Alternative(
-                            title=_("To"),
-                            elements=[
-                                Age(
-                                    title=_("Duration"),
-                                    display=["minutes", "hours", "days"],
-                                ),
-                                DropdownChoice(
-                                    title=_("Until"),
-                                    choices=[
-                                        ("next_day", _("Start of next day")),
-                                        ("next_week", _("Start of next week")),
-                                        ("next_month", _("Start of next month")),
-                                        ("next_year", _("Start of next year")),
-                                    ],
-                                    default_value="next_day",
-                                ),
-                            ],
-                            default_value=24 * 60 * 60,
-                        ),
-                    ),
-                ],
-                optional_keys=[],
-            ),
-            title=_("Downtime duration presets"),
-            movable=True,
-            totext=_("%d time ranges"),
-        )
-
-
-class ConfigVariableBuiltinIconVisibility(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "builtin_icon_visibility"
-
-    def valuespec(self) -> ValueSpec:
-        return Transform(
-            valuespec=ListOf(
-                valuespec=Tuple(
-                    elements=[
-                        DropdownChoice(
-                            title=_("Icon"),
-                            choices=self._get_builtin_icons,
-                            sorted=True,
-                        ),
-                        Dictionary(
-                            elements=[
-                                (
-                                    "toplevel",
-                                    Checkbox(
-                                        title=_("Show in column"),
-                                        label=_("Directly show the action icon in the column"),
-                                        help=_(
-                                            "Makes the icon appear in the column instead "
-                                            "of the dropdown menu."
-                                        ),
-                                        default_value=True,
-                                    ),
-                                ),
-                                (
-                                    "sort_index",
-                                    Integer(
-                                        title=_("Sort index"),
-                                        help=_(
-                                            "You can use the sort index to control the order of the "
-                                            "elements in the column and the menu. The elements are sorted "
-                                            "from smaller to higher numbers. The action menu icon "
-                                            "has a sort index of <tt>10</tt>, the graph icon a sort index "
-                                            "of <tt>20</tt>. All other default icons have a sort index of "
-                                            "<tt>30</tt> configured."
-                                        ),
-                                        minvalue=0,
-                                    ),
-                                ),
-                            ],
-                            optional_keys=["toplevel", "sort_index"],
-                        ),
-                    ],
-                ),
-                title=_("Built-in icon visibility"),
-                movable=False,
-                totext=_("%d icons customized"),
-                help=_(
-                    "You can use this option to change the default visibility "
-                    "options of the built-in icons. You can change whether or not "
-                    "the icons are shown in the popup menu or on top level and "
-                    "change the sorting of the icons."
-                ),
-            ),
-            to_valuespec=lambda d: sorted(d.items()),
-            from_valuespec=dict,
-        )
-
-    def _get_builtin_icons(self):
-        return [(id_, class_.title()) for id_, class_ in icon_and_action_registry.items()]
-
-
-class ConfigVariableServiceViewGrouping(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "service_view_grouping"
-
-    def valuespec(self) -> ValueSpec:
-        return ListOf(
-            valuespec=Dictionary(
-                elements=[
-                    (
-                        "title",
-                        TextInput(
-                            title=_("Title to show for the group"),
-                        ),
-                    ),
-                    (
-                        "pattern",
-                        RegExp(
-                            title=_("Grouping expression"),
-                            help=_(
-                                "This regular expression is used to match the services to be put "
-                                "into this group. You can use prefix match "
-                                "regular expressions here. In the regular "
-                                "expressions, you can use match groups. Matched "
-                                "services with the same match groups will be put "
-                                "in the same group."
-                            ),
-                            mode=RegExp.prefix,
-                        ),
-                    ),
-                    (
-                        "min_items",
-                        Integer(
-                            title=_("Minimum number of items to create a group"),
-                            help=_(
-                                "When less than these items are found for a group, the services "
-                                "are not shown grouped together."
-                            ),
-                            minvalue=2,
-                            default_value=2,
-                        ),
-                    ),
-                ],
-                optional_keys=[],
-            ),
-            title=_("Grouping of services in table views"),
-            help=_(
-                "You can use this option to make the service table views fold services matching "
-                "the given patterns into groups. Only services in state <i>OK</i> will be folded "
-                "together. Groups of only one service will not be rendered. If multiple patterns "
-                "match a service, the service will be added to the first matching group."
-            ),
-            add_label=_("Add new grouping definition"),
-        )
-
-
-class ConfigVariableAcknowledgeProblems(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "acknowledge_problems"
-
-    def valuespec(self) -> ValueSpec:
-        return Dictionary(
-            title=_("Acknowledge problems"),
+ConfigVariableUserDowntimeTimeranges = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="user_downtime_timeranges",
+    valuespec=lambda: ListOf(
+        valuespec=Dictionary(
             elements=[
                 (
-                    "ack_sticky",
-                    Checkbox(
-                        title=_(
-                            "Ignore status changes until services/hosts are OK/UP again (sticky)"
-                        ),
-                        label=_("Enable"),
-                        default_value=False,
+                    "title",
+                    TextInput(
+                        title=_("Title"),
                     ),
                 ),
                 (
-                    "ack_persistent",
-                    Checkbox(
-                        title=_("Keep comment after acknowledgment expires (persistent comment)"),
-                        label=_("Enable"),
-                        default_value=False,
-                    ),
-                ),
-                (
-                    "ack_notify",
-                    Checkbox(
-                        title=_(
-                            "Notify affected users if notification rules are in place (send notifications)"
-                        ),
-                        label=_("Enable"),
-                        default_value=True,
-                    ),
-                ),
-                (
-                    "ack_expire",
-                    Age(
-                        title=_("Default expiration time (relative)"),
-                        display=["days", "hours", "minutes"],
-                        default_value=3600,
-                        minvalue=60,
+                    "end",
+                    Alternative(
+                        title=_("To"),
+                        elements=[
+                            Age(
+                                title=_("Duration"),
+                                display=["minutes", "hours", "days"],
+                            ),
+                            DropdownChoice(
+                                title=_("Until"),
+                                choices=[
+                                    ("next_day", _("Start of next day")),
+                                    ("next_week", _("Start of next week")),
+                                    ("next_month", _("Start of next month")),
+                                    ("next_year", _("Start of next year")),
+                                ],
+                                default_value="next_day",
+                            ),
+                        ],
+                        default_value=24 * 60 * 60,
                     ),
                 ),
             ],
             optional_keys=[],
-        )
+        ),
+        title=_("Downtime duration presets"),
+        movable=True,
+        totext=_("%d time ranges"),
+    ),
+)
 
-
-class ConfigVariableDefaultTemperatureUnit(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "default_temperature_unit"
-
-    def valuespec(self) -> ValueSpec:
-        return DropdownChoice(
-            title=_("Default temperature unit"),
-            help=_(
-                "Set the default temperature unit used for graphs and perfometers. The option can "
-                "be configured individually for each user in the user settings."
-            ),
-            choices=temperature_unit_choices(),
-        )
-
-
-class ConfigVariableTrustedCertificateAuthorities(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupSiteManagement
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainCACertificates()
-
-    def ident(self) -> str:
-        return "trusted_certificate_authorities"
-
-    def valuespec(self) -> ValueSpec:
-        return Dictionary(
-            title=_("Trusted certificate authorities for SSL"),
-            help=_(
-                "Whenever a server component of Checkmk opens a SSL connection it uses the "
-                "certificate authorities configured here for verifying the SSL certificate of "
-                "the destination server. This is used for example when performing Setup "
-                "replication to slave sites or when special agents are communicating via HTTPS. "
-                "The CA certificates configured here will be written to the CA bundle %s."
-            )
-            % site_neutral_path(ConfigDomainCACertificates.trusted_cas_file),
-            elements=[
-                (
-                    "use_system_wide_cas",
-                    Checkbox(
-                        title=_("Use system wide CAs"),
-                        help=_(
-                            "All supported linux distributions provide a mechanism of managing "
-                            "trusted CAs. Depending on your linux distributions the paths where "
-                            "these CAs are stored and the commands to manage the CAs differ. "
-                            "Please check out the documentation of your linux distribution "
-                            "in case you want to customize trusted CAs system wide. You can "
-                            "choose here to trust the system wide CAs here. Checkmk will search "
-                            "these directories for system wide CAs: %s"
-                        )
-                        % ", ".join(ConfigDomainCACertificates.system_wide_trusted_ca_search_paths),
-                        label=_("Trust system wide configured CAs"),
-                    ),
-                ),
-                (
-                    "trusted_cas",
-                    ListOfCAs(
-                        title=_("Manually added"),
-                        allow_empty=True,
-                    ),
-                ),
-            ],
-            optional_keys=False,
-        )
-
-
-class ConfigVariableAgentControllerCertificates(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupSiteManagement
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "agent_controller_certificates"
-
-    def valuespec(self) -> ValueSpec:
-        return Dictionary(
-            title=_("Agent certificates"),
-            help=_("Settings for certificates issued to registered agents."),
-            elements=[
-                (
-                    "lifetime_in_months",
+ConfigVariableBuiltinIconVisibility = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="builtin_icon_visibility",
+    valuespec=lambda: Transform(
+        valuespec=ListOf(
+            valuespec=Tuple(
+                elements=[
                     DropdownChoice(
-                        title=_("Lifetime of certificates"),
-                        help=_(
-                            "This setting limits the validity of agent certificates."
-                            " Active agents (i.e., the agent controller is running as a daemon)"
-                            " will automatically call the Checkmk site for renewal when"
-                            " certificates are about to expire. Hence, with this"
-                            " setting, you can assure that registrations of inactive agents"
-                            " expire after a given time."
-                        ),
-                        choices=[
-                            (3, _("3 months")),
-                            (6, _("6 months")),
-                            (12, _("1 year")),
-                            (24, _("2 years")),
-                            (60, _("5 years")),
-                            (120, _("10 years")),
-                            (600, _("50 years")),
+                        title=_("Icon"),
+                        choices=_get_builtin_icons,
+                        sorted=True,
+                    ),
+                    Dictionary(
+                        elements=[
+                            (
+                                "toplevel",
+                                Checkbox(
+                                    title=_("Show in column"),
+                                    label=_("Directly show the action icon in the column"),
+                                    help=_(
+                                        "Makes the icon appear in the column instead "
+                                        "of the dropdown menu."
+                                    ),
+                                    default_value=True,
+                                ),
+                            ),
+                            (
+                                "sort_index",
+                                Integer(
+                                    title=_("Sort index"),
+                                    help=_(
+                                        "You can use the sort index to control the order of the "
+                                        "elements in the column and the menu. The elements are sorted "
+                                        "from smaller to higher numbers. The action menu icon "
+                                        "has a sort index of <tt>10</tt>, the graph icon a sort index "
+                                        "of <tt>20</tt>. All other default icons have a sort index of "
+                                        "<tt>30</tt> configured."
+                                    ),
+                                    minvalue=0,
+                                ),
+                            ),
                         ],
+                        optional_keys=["toplevel", "sort_index"],
+                    ),
+                ],
+            ),
+            title=_("Built-in icon visibility"),
+            movable=False,
+            totext=_("%d icons customized"),
+            help=_(
+                "You can use this option to change the default visibility "
+                "options of the built-in icons. You can change whether or not "
+                "the icons are shown in the popup menu or on top level and "
+                "change the sorting of the icons."
+            ),
+        ),
+        to_valuespec=lambda d: sorted(d.items()),
+        from_valuespec=dict,
+    ),
+)
+
+
+def _get_builtin_icons():
+    return [(id_, class_.title()) for id_, class_ in icon_and_action_registry.items()]
+
+
+ConfigVariableServiceViewGrouping = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="service_view_grouping",
+    valuespec=lambda: ListOf(
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "title",
+                    TextInput(
+                        title=_("Title to show for the group"),
+                    ),
+                ),
+                (
+                    "pattern",
+                    RegExp(
+                        title=_("Grouping expression"),
+                        help=_(
+                            "This regular expression is used to match the services to be put "
+                            "into this group. You can use prefix match "
+                            "regular expressions here. In the regular "
+                            "expressions, you can use match groups. Matched "
+                            "services with the same match groups will be put "
+                            "in the same group."
+                        ),
+                        mode=RegExp.prefix,
+                    ),
+                ),
+                (
+                    "min_items",
+                    Integer(
+                        title=_("Minimum number of items to create a group"),
+                        help=_(
+                            "When less than these items are found for a group, the services "
+                            "are not shown grouped together."
+                        ),
+                        minvalue=2,
+                        default_value=2,
                     ),
                 ),
             ],
-            optional_keys=False,
-        )
+            optional_keys=[],
+        ),
+        title=_("Grouping of services in table views"),
+        help=_(
+            "You can use this option to make the service table views fold services matching "
+            "the given patterns into groups. Only services in state <i>OK</i> will be folded "
+            "together. Groups of only one service will not be rendered. If multiple patterns "
+            "match a service, the service will be added to the first matching group."
+        ),
+        add_label=_("Add new grouping definition"),
+    ),
+)
 
-
-class RestAPIETagLocking(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupSiteManagement
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "rest_api_etag_locking"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("REST API: Use HTTP ETags for optimistic locking"),
-            help=_(
-                "When multiple HTTP clients want to update an object at the same time, "
-                "it can happen that the slower client will overwrite changes by the faster one. "
-                "This is commonly referred to as the 'lost update problem'. To prevent this "
-                "situation from happening, Checkmk's REST API does 'optimistic locking' using "
-                "HTTP ETag headers. In this case the Object's ETag has to be sent to the server "
-                "with a HTTP If-Match header. This behavior can be deactivated, but this will "
-                "allow the 'lost update problem' to occur."
+ConfigVariableAcknowledgeProblems = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="acknowledge_problems",
+    valuespec=lambda: Dictionary(
+        title=_("Acknowledge problems"),
+        elements=[
+            (
+                "ack_sticky",
+                Checkbox(
+                    title=_("Ignore status changes until services/hosts are OK/UP again (sticky)"),
+                    label=_("Enable"),
+                    default_value=False,
+                ),
             ),
-        )
+            (
+                "ack_persistent",
+                Checkbox(
+                    title=_("Keep comment after acknowledgment expires (persistent comment)"),
+                    label=_("Enable"),
+                    default_value=False,
+                ),
+            ),
+            (
+                "ack_notify",
+                Checkbox(
+                    title=_(
+                        "Notify affected users if notification rules are in place (send notifications)"
+                    ),
+                    label=_("Enable"),
+                    default_value=True,
+                ),
+            ),
+            (
+                "ack_expire",
+                Age(
+                    title=_("Default expiration time (relative)"),
+                    display=["days", "hours", "minutes"],
+                    default_value=3600,
+                    minvalue=60,
+                ),
+            ),
+        ],
+        optional_keys=[],
+    ),
+)
 
+ConfigVariableDefaultTemperatureUnit = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    domain=ConfigDomainGUI,
+    ident="default_temperature_unit",
+    valuespec=lambda: DropdownChoice(
+        title=_("Default temperature unit"),
+        help=_(
+            "Set the default temperature unit used for graphs and perfometers. The option can "
+            "be configured individually for each user in the user settings."
+        ),
+        choices=temperature_unit_choices(),
+    ),
+)
+
+ConfigVariableTrustedCertificateAuthorities = ConfigVariable(
+    group=ConfigVariableGroupSiteManagement,
+    domain=ConfigDomainCACertificates,
+    ident="trusted_certificate_authorities",
+    valuespec=lambda: Dictionary(
+        title=_("Trusted certificate authorities for SSL"),
+        help=_(
+            "Whenever a server component of Checkmk opens a SSL connection it uses the "
+            "certificate authorities configured here for verifying the SSL certificate of "
+            "the destination server. This is used for example when performing Setup "
+            "replication to slave sites or when special agents are communicating via HTTPS. "
+            "The CA certificates configured here will be written to the CA bundle %s."
+        )
+        % site_neutral_path(ConfigDomainCACertificates.trusted_cas_file),
+        elements=[
+            (
+                "use_system_wide_cas",
+                Checkbox(
+                    title=_("Use system wide CAs"),
+                    help=_(
+                        "All supported linux distributions provide a mechanism of managing "
+                        "trusted CAs. Depending on your linux distributions the paths where "
+                        "these CAs are stored and the commands to manage the CAs differ. "
+                        "Please check out the documentation of your linux distribution "
+                        "in case you want to customize trusted CAs system wide. You can "
+                        "choose here to trust the system wide CAs here. Checkmk will search "
+                        "these directories for system wide CAs: %s"
+                    )
+                    % ", ".join(ConfigDomainCACertificates.system_wide_trusted_ca_search_paths),
+                    label=_("Trust system wide configured CAs"),
+                ),
+            ),
+            (
+                "trusted_cas",
+                ListOfCAs(
+                    title=_("Manually added"),
+                    allow_empty=True,
+                ),
+            ),
+        ],
+        optional_keys=False,
+    ),
+)
+
+ConfigVariableAgentControllerCertificates = ConfigVariable(
+    group=ConfigVariableGroupSiteManagement,
+    domain=ConfigDomainGUI,
+    ident="agent_controller_certificates",
+    valuespec=lambda: Dictionary(
+        title=_("Agent certificates"),
+        help=_("Settings for certificates issued to registered agents."),
+        elements=[
+            (
+                "lifetime_in_months",
+                DropdownChoice(
+                    title=_("Lifetime of certificates"),
+                    help=_(
+                        "This setting limits the validity of agent certificates."
+                        " Active agents (i.e., the agent controller is running as a daemon)"
+                        " will automatically call the Checkmk site for renewal when"
+                        " certificates are about to expire. Hence, with this"
+                        " setting, you can assure that registrations of inactive agents"
+                        " expire after a given time."
+                    ),
+                    choices=[
+                        (3, _("3 months")),
+                        (6, _("6 months")),
+                        (12, _("1 year")),
+                        (24, _("2 years")),
+                        (60, _("5 years")),
+                        (120, _("10 years")),
+                        (600, _("50 years")),
+                    ],
+                ),
+            ),
+        ],
+        optional_keys=False,
+    ),
+)
+
+RestAPIETagLocking = ConfigVariable(
+    group=ConfigVariableGroupSiteManagement,
+    domain=ConfigDomainGUI,
+    ident="rest_api_etag_locking",
+    valuespec=lambda: Checkbox(
+        title=_("REST API: Use HTTP ETags for optimistic locking"),
+        help=_(
+            "When multiple HTTP clients want to update an object at the same time, "
+            "it can happen that the slower client will overwrite changes by the faster one. "
+            "This is commonly referred to as the 'lost update problem'. To prevent this "
+            "situation from happening, Checkmk's REST API does 'optimistic locking' using "
+            "HTTP ETag headers. In this case the Object's ETag has to be sent to the server "
+            "with a HTTP If-Match header. This behavior can be deactivated, but this will "
+            "allow the 'lost update problem' to occur."
+        ),
+    ),
+)
 
 # .
 #   .--Setup---------------------------------------------------------------.
@@ -2228,236 +1891,166 @@ class RestAPIETagLocking(ConfigVariable):
 #   '----------------------------------------------------------------------'
 
 
-class ConfigVariableWATOMaxSnapshots(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupWATO
+ConfigVariableWATOMaxSnapshots = ConfigVariable(
+    group=ConfigVariableGroupWATO,
+    domain=ConfigDomainGUI,
+    ident="wato_max_snapshots",
+    valuespec=lambda: Integer(
+        title=_("Number of configuration snapshots to keep"),
+        help=_(
+            "Whenever you successfully activate changes a snapshot of the configuration "
+            "will be created. You can also create snapshots manually. Setup will delete old "
+            "snapshots when the maximum number of snapshots is reached."
+        ),
+        minvalue=1,
+    ),
+)
 
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
+ConfigVariableWATOActivateChangesCommentMode = ConfigVariable(
+    group=ConfigVariableGroupWATO,
+    domain=ConfigDomainGUI,
+    ident="wato_activate_changes_comment_mode",
+    valuespec=lambda: DropdownChoice(
+        title=_("Comment for activation of changes"),
+        help=_(
+            "Whether or not Checkmk should ask the user for a comment before activating a "
+            "configuration change."
+        ),
+        choices=[
+            ("enforce", _("Require a comment")),
+            ("optional", _("Ask for an optional comment")),
+            ("disabled", _("Do not ask for a comment")),
+        ],
+    ),
+)
 
-    def ident(self) -> str:
-        return "wato_max_snapshots"
+ConfigVariableWATOActivationMethod = ConfigVariable(
+    group=ConfigVariableGroupWATO,
+    domain=ConfigDomainGUI,
+    ident="wato_activation_method",
+    valuespec=lambda: DropdownChoice(
+        title=_("Restart mode for Nagios"),
+        help=_("Restart or reload Nagios when changes are activated"),
+        choices=[
+            ("restart", _("Restart")),
+            ("reload", _("Reload")),
+        ],
+    ),
+)
 
-    def valuespec(self) -> ValueSpec:
-        return Integer(
-            title=_("Number of configuration snapshots to keep"),
-            help=_(
-                "Whenever you successfully activate changes a snapshot of the configuration "
-                "will be created. You can also create snapshots manually. Setup will delete old "
-                "snapshots when the maximum number of snapshots is reached."
-            ),
-            minvalue=1,
-        )
+ConfigVariableWATOHideFilenames = ConfigVariable(
+    group=ConfigVariableGroupWATO,
+    domain=ConfigDomainGUI,
+    ident="wato_hide_filenames",
+    valuespec=lambda: Checkbox(
+        title=_("Hide internal folder names in Setup"),
+        label=_("hide folder names"),
+        help=_(
+            "When enabled, then the internal names of Setup folder in the filesystem "
+            "are not shown. They will automatically be derived from the name of the folder "
+            "when a new folder is being created. Disable this option if you want to see and "
+            "set the filenames manually."
+        ),
+    ),
+)
 
+ConfigVariableWATOHideHosttags = ConfigVariable(
+    group=ConfigVariableGroupWATO,
+    domain=ConfigDomainGUI,
+    ident="wato_hide_hosttags",
+    valuespec=lambda: Checkbox(
+        title=_("Hide hosttags in Setup folder view"),
+        label=_("hide hosttags"),
+        help=_("When enabled, hosttags are no longer shown within the Setup folder view"),
+    ),
+)
 
-class ConfigVariableWATOActivateChangesCommentMode(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupWATO
+ConfigVariableWATOHideVarnames = ConfigVariable(
+    group=ConfigVariableGroupWATO,
+    domain=ConfigDomainGUI,
+    ident="wato_hide_varnames",
+    valuespec=lambda: Checkbox(
+        title=_("Hide names of configuration variables"),
+        label=_("hide variable names"),
+        help=_(
+            "When enabled, internal configuration variable names of Checkmk are hidden "
+            "from the user (for example in the rule editor)"
+        ),
+    ),
+)
 
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
+ConfigVariableWATOUseGit = ConfigVariable(
+    group=ConfigVariableGroupWATO,
+    domain=ConfigDomainGUI,
+    ident="wato_use_git",
+    valuespec=lambda: Checkbox(
+        title=_("Use GIT version control for Setup"),
+        label=_("enable GIT version control"),
+        help=_(
+            "When enabled, all changes of configuration files are tracked with the "
+            "version control system GIT. You need to make sure that git is installed "
+            "on your monitoring server. The version history currently cannot be viewed "
+            "via the web GUI. Please use git command line tools within your Checkmk "
+            "configuration directory. If you want easier tracking of configuration file changes "
+            "simply enable the global settings option <tt>Pretty print configuration files</tt>"
+        ),
+    ),
+)
 
-    def ident(self) -> str:
-        return "wato_activate_changes_comment_mode"
+ConfigVariableWATOPrettyPrintConfig = ConfigVariable(
+    group=ConfigVariableGroupWATO,
+    domain=ConfigDomainGUI,
+    ident="wato_pprint_config",
+    valuespec=lambda: Checkbox(
+        title=_("Pretty-Print configuration files"),
+        label=_("pretty-print configuration files"),
+        help=_(
+            "When enabled, most of the configuration files are pretty printed and easier to read. "
+            "On the downside, however, pretty printing bigger configurations can be quite slow - "
+            "so the overall Setup GUI performance will decrease."
+        ),
+    ),
+)
 
-    def valuespec(self) -> ValueSpec:
-        return DropdownChoice(
-            title=_("Comment for activation of changes"),
-            help=_(
-                "Whether or not Checkmk should ask the user for a comment before activating a "
-                "configuration change."
-            ),
-            choices=[
-                ("enforce", _("Require a comment")),
-                ("optional", _("Ask for an optional comment")),
-                ("disabled", _("Do not ask for a comment")),
+ConfigVariableWATOHideFoldersWithoutReadPermissions = ConfigVariable(
+    group=ConfigVariableGroupWATO,
+    domain=ConfigDomainGUI,
+    ident="wato_hide_folders_without_read_permissions",
+    valuespec=lambda: Checkbox(
+        title=_("Hide folders without read permissions"),
+        label=_("hide folders without read permissions"),
+        help=_(
+            "When enabled, a subfolder is not shown, when the user does not have sufficient "
+            "permissions to this folder and all of its subfolders. However, the subfolder is "
+            "shown if the user has permissions to any of its subfolder."
+        ),
+    ),
+)
+
+ConfigVariableWATOIconCategories = ConfigVariable(
+    group=ConfigVariableGroupWATO,
+    domain=ConfigDomainGUI,
+    ident="wato_icon_categories",
+    valuespec=lambda: ListOf(
+        valuespec=Tuple(
+            elements=[
+                ID(
+                    title=_("ID"),
+                ),
+                TextInput(
+                    title=_("Title"),
+                ),
             ],
-        )
-
-
-class ConfigVariableWATOActivationMethod(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupWATO
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "wato_activation_method"
-
-    def valuespec(self) -> ValueSpec:
-        return DropdownChoice(
-            title=_("Restart mode for Nagios"),
-            help=_("Restart or reload Nagios when changes are activated"),
-            choices=[
-                ("restart", _("Restart")),
-                ("reload", _("Reload")),
-            ],
-        )
-
-
-class ConfigVariableWATOHideFilenames(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupWATO
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "wato_hide_filenames"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("Hide internal folder names in Setup"),
-            label=_("hide folder names"),
-            help=_(
-                "When enabled, then the internal names of Setup folder in the filesystem "
-                "are not shown. They will automatically be derived from the name of the folder "
-                "when a new folder is being created. Disable this option if you want to see and "
-                "set the filenames manually."
-            ),
-        )
-
-
-class ConfigVariableWATOHideHosttags(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupWATO
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "wato_hide_hosttags"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("Hide hosttags in Setup folder view"),
-            label=_("hide hosttags"),
-            help=_("When enabled, hosttags are no longer shown within the Setup folder view"),
-        )
-
-
-class ConfigVariableWATOHideVarnames(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupWATO
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "wato_hide_varnames"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("Hide names of configuration variables"),
-            label=_("hide variable names"),
-            help=_(
-                "When enabled, internal configuration variable names of Checkmk are hidden "
-                "from the user (for example in the rule editor)"
-            ),
-        )
-
-
-class ConfigVariableWATOUseGit(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupWATO
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "wato_use_git"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("Use GIT version control for Setup"),
-            label=_("enable GIT version control"),
-            help=_(
-                "When enabled, all changes of configuration files are tracked with the "
-                "version control system GIT. You need to make sure that git is installed "
-                "on your monitoring server. The version history currently cannot be viewed "
-                "via the web GUI. Please use git command line tools within your Checkmk "
-                "configuration directory. If you want easier tracking of configuration file changes "
-                "simply enable the global settings option <tt>Pretty print configuration files</tt>"
-            ),
-        )
-
-
-class ConfigVariableWATOPrettyPrintConfig(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupWATO
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "wato_pprint_config"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("Pretty-Print configuration files"),
-            label=_("pretty-print configuration files"),
-            help=_(
-                "When enabled, most of the configuration files are pretty printed and easier to read. "
-                "On the downside, however, pretty printing bigger configurations can be quite slow - "
-                "so the overall Setup GUI performance will decrease."
-            ),
-        )
-
-
-class ConfigVariableWATOHideFoldersWithoutReadPermissions(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupWATO
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "wato_hide_folders_without_read_permissions"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("Hide folders without read permissions"),
-            label=_("hide folders without read permissions"),
-            help=_(
-                "When enabled, a subfolder is not shown, when the user does not have sufficient "
-                "permissions to this folder and all of its subfolders. However, the subfolder is "
-                "shown if the user has permissions to any of its subfolder."
-            ),
-        )
-
-
-class ConfigVariableWATOIconCategories(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupWATO
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "wato_icon_categories"
-
-    def valuespec(self) -> ValueSpec:
-        return ListOf(
-            valuespec=Tuple(
-                elements=[
-                    ID(
-                        title=_("ID"),
-                    ),
-                    TextInput(
-                        title=_("Title"),
-                    ),
-                ],
-                orientation="horizontal",
-            ),
-            title=_("Icon categories"),
-            help=_(
-                "You can customize the list of icon categories to be able to assign "
-                'your <a href="wato.py?mode=icons">custom icons</a> to these categories. '
-                "They will then be shown under this category in the icon selector."
-            ),
-        )
-
+            orientation="horizontal",
+        ),
+        title=_("Icon categories"),
+        help=_(
+            "You can customize the list of icon categories to be able to assign "
+            'your <a href="wato.py?mode=icons">custom icons</a> to these categories. '
+            "They will then be shown under this category in the icon selector."
+        ),
+    ),
+)
 
 # .
 #   .--User management-----------------------------------------------------.
@@ -2478,383 +2071,321 @@ ConfigVariableGroupUserManagement = ConfigVariableGroup(
 )
 
 
-class ConfigVariableDefaultDynamicVisualsPermission(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserManagement
+ConfigVariableDefaultDynamicVisualsPermission = ConfigVariable(
+    group=ConfigVariableGroupUserManagement,
+    domain=ConfigDomainGUI,
+    ident="default_dynamic_visual_permission",
+    valuespec=lambda: DropdownChoice(
+        title=_("Default dynamic visuals permission"),
+        help=_(
+            "Default permission for dynamic visuals (dashboards, views, etc.). If set to 'yes' "
+            "all roles (including built-in roles) will have the permission to view dynamic "
+            "visuals by default. If set to 'no' only the admin role can view dynamic visuals "
+            "by default. "
+            "Note: Applying this setting will cause a reload of apache."
+        ),
+        choices=[
+            ("yes", _("yes")),
+            ("no", _("no")),
+        ],
+    ),
+    # Reload of apache required because dynamic visual permissions are registered during startup
+    need_apache_reload=True,
+)
 
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
+ConfigVariableLogLogonFailures = ConfigVariable(
+    group=ConfigVariableGroupUserManagement,
+    domain=ConfigDomainGUI,
+    ident="log_logon_failures",
+    valuespec=lambda: Checkbox(
+        title=_("Logging of logon failures"),
+        label=_("Enable logging of logon failures"),
+        help=_(
+            "This options enables automatic logging of failed logons. "
+            "If enabled, the username and client IP, the request "
+            "is coming from, is logged."
+        ),
+    ),
+)
 
-    def ident(self) -> str:
-        return "default_dynamic_visual_permission"
+ConfigVariableRequireTwoFactorAllUsers = ConfigVariable(
+    group=ConfigVariableGroupUserManagement,
+    domain=ConfigDomainGUI,
+    ident="require_two_factor_all_users",
+    valuespec=lambda: Checkbox(
+        title=_("Enforce two factor authentication"),
+        help=_(
+            "Enabling this option will enforce two factor authentication for all users. "
+            "Enabling this setting will overide role based two factor enforcement."
+        ),
+        label=_("Enforce for all users"),
+    ),
+)
 
-    def valuespec(self) -> ValueSpec:
-        return DropdownChoice(
-            title=_("Default dynamic visuals permission"),
-            help=_(
-                "Default permission for dynamic visuals (dashboards, views, etc.). If set to 'yes' "
-                "all roles (including built-in roles) will have the permission to view dynamic "
-                "visuals by default. If set to 'no' only the admin role can view dynamic visuals "
-                "by default. "
-                "Note: Applying this setting will cause a reload of apache."
+ConfigVariableLockOnLogonFailures = ConfigVariable(
+    group=ConfigVariableGroupUserManagement,
+    domain=ConfigDomainGUI,
+    ident="lock_on_logon_failures",
+    valuespec=lambda: Optional(
+        valuespec=Integer(
+            label=_("Number of logon failures to lock the account"),
+            minvalue=1,
+        ),
+        title=_("Lock user accounts after N logon failures"),
+        label=_("Activate automatic locking of user accounts"),
+        help=_(
+            "This options enables automatic locking of user accounts after "
+            "the configured number of consecutive invalid login attempts. "
+            "These attempts include failed Two Factor authentication events. "
+            "Once the account is locked only an admin user can unlock it. "
+            "Beware: Also the admin users will be locked that way. You need "
+            "to manually edit <tt>etc/htpasswd</tt> and remove the <tt>!</tt> "
+            "in case you are locked out completely."
+        ),
+    ),
+)
+
+ConfigVariablePasswordPolicy = ConfigVariable(
+    group=ConfigVariableGroupUserManagement,
+    domain=ConfigDomainGUI,
+    ident="password_policy",
+    valuespec=lambda: Dictionary(
+        title=_("Password policy for local accounts"),
+        help=_(
+            "You can define some rules to which each user password ahers. By default "
+            "all passwords are accepted, even ones which are made of only a single character, "
+            "which is obviously a bad idea. Using this option you can enforce your users "
+            "to choose more secure passwords."
+        ),
+        elements=[
+            (
+                "min_length",
+                Integer(
+                    title=_("Minimum password length"),
+                    minvalue=1,
+                    default_value=12,
+                ),
             ),
-            choices=[
-                ("yes", _("yes")),
-                ("no", _("no")),
-            ],
-        )
-
-    def need_apache_reload(self) -> bool:
-        # Reload of apache required because dynamic visual permissions are registered during startup
-        return True
-
-
-class ConfigVariableLogLogonFailures(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserManagement
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "log_logon_failures"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("Logging of logon failures"),
-            label=_("Enable logging of logon failures"),
-            help=_(
-                "This options enables automatic logging of failed logons. "
-                "If enabled, the username and client IP, the request "
-                "is coming from, is logged."
-            ),
-        )
-
-
-class ConfigVariableRequireTwoFactorAllUsers(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserManagement
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "require_two_factor_all_users"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("Enforce two factor authentication"),
-            help=_(
-                "Enabling this option will enforce two factor authentication for all users. "
-                "Enabling this setting will overide role based two factor enforcement."
-            ),
-            label=_("Enforce for all users"),
-        )
-
-
-class ConfigVariableLockOnLogonFailures(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserManagement
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "lock_on_logon_failures"
-
-    def valuespec(self) -> ValueSpec:
-        return Optional(
-            valuespec=Integer(
-                label=_("Number of logon failures to lock the account"),
-                minvalue=1,
-            ),
-            title=_("Lock user accounts after N logon failures"),
-            label=_("Activate automatic locking of user accounts"),
-            help=_(
-                "This options enables automatic locking of user accounts after "
-                "the configured number of consecutive invalid login attempts. "
-                "These attempts include failed Two Factor authentication events. "
-                "Once the account is locked only an admin user can unlock it. "
-                "Beware: Also the admin users will be locked that way. You need "
-                "to manually edit <tt>etc/htpasswd</tt> and remove the <tt>!</tt> "
-                "in case you are locked out completely."
-            ),
-        )
-
-
-class ConfigVariablePasswordPolicy(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserManagement
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "password_policy"
-
-    def valuespec(self) -> ValueSpec:
-        return Dictionary(
-            title=_("Password policy for local accounts"),
-            help=_(
-                "You can define some rules to which each user password ahers. By default "
-                "all passwords are accepted, even ones which are made of only a single character, "
-                "which is obviously a bad idea. Using this option you can enforce your users "
-                "to choose more secure passwords."
-            ),
-            elements=[
-                (
-                    "min_length",
-                    Integer(
-                        title=_("Minimum password length"),
-                        minvalue=1,
-                        default_value=12,
+            (
+                "num_groups",
+                Integer(
+                    title=_("Number of character groups to use"),
+                    minvalue=1,
+                    maxvalue=4,
+                    help=_(
+                        "Force the user to choose a password that contains characters from at least "
+                        "this number of different character groups. "
+                        "Character groups are: <ul>"
+                        "<li>lowercase letters</li>"
+                        "<li>uppercase letters</li>"
+                        "<li>digits</li>"
+                        "<li>special characters such as an underscore or dash</li>"
+                        "</ul>"
                     ),
                 ),
-                (
-                    "num_groups",
-                    Integer(
-                        title=_("Number of character groups to use"),
-                        minvalue=1,
-                        maxvalue=4,
-                        help=_(
-                            "Force the user to choose a password that contains characters from at least "
-                            "this number of different character groups. "
-                            "Character groups are: <ul>"
-                            "<li>lowercase letters</li>"
-                            "<li>uppercase letters</li>"
-                            "<li>digits</li>"
-                            "<li>special characters such as an underscore or dash</li>"
-                            "</ul>"
-                        ),
-                    ),
+            ),
+            (
+                "max_age",
+                Age(
+                    title=_("Maximum age of passwords"),
+                    minvalue=1,
+                    display=["days"],
+                    default_value=365 * 86400,
                 ),
-                (
-                    "max_age",
-                    Age(
-                        title=_("Maximum age of passwords"),
-                        minvalue=1,
-                        display=["days"],
-                        default_value=365 * 86400,
-                    ),
-                ),
-            ],
-        )
+            ),
+        ],
+    ),
+)
 
-
-class ConfigVariableSessionManagement(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserManagement
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "session_mgmt"
-
-    def valuespec(self) -> ValueSpec:
-        def _validate_max_duration(d: dict, varprefix: str) -> None:
-            if "enforce_reauth_warning_threshold" not in d:
-                return
-            if d["enforce_reauth"] > d["enforce_reauth_warning_threshold"]:
-                return
-            raise MKUserError(
-                varprefix, _("Warning threshold must be smaller than maximum session duration")
-            )
-
-        return Dictionary(
-            title=_("Session management"),
-            elements=[
-                (
-                    "max_duration",
-                    Dictionary(
-                        title=_("Maximum session duration"),
-                        elements=[
-                            (
-                                "enforce_reauth",
-                                Age(
-                                    title=_("Enforce re-authentication after"),
-                                    display=["minutes", "hours", "days"],
-                                    minvalue=60,
-                                    help=_(
-                                        "Define the maximum allowed session "
-                                        "duration. If reached, the user has to "
-                                        "re-authenticate. Sessions are not set "
-                                        "to persist on browser termination.",
-                                    ),
-                                    default_value=86400,
+ConfigVariableSessionManagement = ConfigVariable(
+    group=ConfigVariableGroupUserManagement,
+    domain=ConfigDomainGUI,
+    ident="session_mgmt",
+    valuespec=lambda: Dictionary(
+        title=_("Session management"),
+        elements=[
+            (
+                "max_duration",
+                Dictionary(
+                    title=_("Maximum session duration"),
+                    elements=[
+                        (
+                            "enforce_reauth",
+                            Age(
+                                title=_("Enforce re-authentication after"),
+                                display=["minutes", "hours", "days"],
+                                minvalue=60,
+                                help=_(
+                                    "Define the maximum allowed session "
+                                    "duration. If reached, the user has to "
+                                    "re-authenticate. Sessions are not set "
+                                    "to persist on browser termination.",
                                 ),
+                                default_value=86400,
                             ),
-                            (
-                                "enforce_reauth_warning_threshold",
-                                Age(
-                                    title=_("Advise re-authentication before termination"),
-                                    display=["minutes", "hours", "days"],
-                                    minvalue=60,
-                                    help=_(
-                                        "Warn the user at a specificied time before"
-                                        "the maximum session duration is reached"
-                                        "to aid users in preserving data.",
-                                    ),
-                                    default_value=900,
+                        ),
+                        (
+                            "enforce_reauth_warning_threshold",
+                            Age(
+                                title=_("Advise re-authentication before termination"),
+                                display=["minutes", "hours", "days"],
+                                minvalue=60,
+                                help=_(
+                                    "Warn the user at a specificied time before"
+                                    "the maximum session duration is reached"
+                                    "to aid users in preserving data.",
                                 ),
+                                default_value=900,
                             ),
-                        ],
-                        required_keys=["enforce_reauth"],
-                        validate=_validate_max_duration,
-                    ),
-                ),
-                (
-                    "user_idle_timeout",
-                    vs_idle_timeout_duration(),
-                ),
-            ],
-            optional_keys=["max_duration", "user_idle_timeout"],
-        )
-
-
-class ConfigVariableSingleUserSession(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserManagement
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "single_user_session"
-
-    def valuespec(self) -> ValueSpec:
-        return Optional(
-            valuespec=Age(
-                display=["minutes", "hours"],
-                label=_("Session timeout:"),
-                minvalue=30,
-                default_value=60,
-            ),
-            title=_("Limit login to single session at a time"),
-            label=_("Users can only login from one client at a time"),
-            help=_(
-                "Normally a user can login to the GUI from unlimited number of clients at "
-                "the same time. If you want to enforce your users to be able to login only once "
-                " (from one client which means device and browser), you can enable this option. "
-                "When the user logs out or is inactive for the configured amount of time, the "
-                "session is invalidated automatically and the user has to log in again from the "
-                "current or another device."
-            ),
-        )
-
-
-class ConfigVariableUserSecurityNotifications(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserManagement
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "user_security_notification_duration"
-
-    def valuespec(self) -> ValueSpec:
-        return Dictionary(
-            title=_("User security notification duration"),
-            help=_(
-                "If a user has an email address associated with their account, "
-                "the user will not be shown a security notification in their user "
-                "tab."
-                "If a user does not have an associated email they will be shown "
-                "an undismissable message in their user tab for the duration "
-                "defined by this setting."
-            ),
-            elements=[
-                (
-                    "max_duration",
-                    Age(
-                        display=["days", "minutes", "hours"],
-                        label=_("Session timeout:"),
-                        default_value=604800,
-                        title=_("Display time for user security messages"),
-                        validate=self._validate_min,
-                    ),
-                ),
-                (
-                    "update_existing_duration",
-                    Checkbox(
-                        title=_("Update existing security notifications"),
-                        label=_("Retroactively apply max duration to existing notifications"),
-                        help=_(
-                            "Update existing security notifications to use the new max duration."
                         ),
-                        default_value=False,
-                    ),
+                    ],
+                    required_keys=["enforce_reauth"],
+                    validate=_validate_max_duration,
                 ),
-            ],
-            optional_keys=[],
-        )
-
-    def _validate_min(self, value, varprefix):
-        if value < 900:
-            raise MKUserError(varprefix, _("The minimum duration may not be less than 15 minutes"))
-
-
-class ConfigVariableDefaultUserProfile(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupUserManagement
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainGUI()
-
-    def ident(self) -> str:
-        return "default_user_profile"
-
-    def valuespec(self) -> ValueSpec:
-        return Dictionary(
-            title=_("Default user profile"),
-            help=_(
-                "With this option you can specify the attributes a user which is created during "
-                'its initial login gets added. For example, the default is to add the role "user" '
-                "to all automatically created users."
             ),
-            elements=[
-                (
-                    "roles",
-                    ListChoice(
-                        title=_("User roles"),
-                        help=_("Specify the initial roles of an automatically created user."),
-                        default_value=["user"],
-                        choices=self._list_roles,
-                    ),
-                ),
-                (
-                    "contactgroups",
-                    ListChoice(
-                        title=_("Contact groups"),
-                        help=_(
-                            "Specify the initial contact groups of an automatically created user."
-                        ),
-                        default_value=[],
-                        choices=self._list_contactgroups,
-                    ),
-                ),
-                (
-                    "force_authuser",
-                    Checkbox(
-                        title=_("Visibility of hosts/services"),
-                        label=_("Only show hosts and services the user is a contact for"),
-                        help=_("Specify the initial setting for an automatically created user."),
-                        default_value=False,
-                    ),
-                ),
-            ],
-            optional_keys=[],
-        )
+            (
+                "user_idle_timeout",
+                vs_idle_timeout_duration(),
+            ),
+        ],
+        optional_keys=["max_duration", "user_idle_timeout"],
+    ),
+)
 
-    def _list_roles(self):
-        roles = load_roles()
-        return [(i, r["alias"]) for i, r in roles.items()]
 
-    def _list_contactgroups(self):
-        contact_groups = load_contact_group_information()
-        entries = [(c, g["alias"]) for c, g in contact_groups.items()]
-        return sorted(entries)
+def _validate_max_duration(d: dict, varprefix: str) -> None:
+    if "enforce_reauth_warning_threshold" not in d:
+        return
+    if d["enforce_reauth"] > d["enforce_reauth_warning_threshold"]:
+        return
+    raise MKUserError(
+        varprefix, _("Warning threshold must be smaller than maximum session duration")
+    )
+
+
+ConfigVariableSingleUserSession = ConfigVariable(
+    group=ConfigVariableGroupUserManagement,
+    domain=ConfigDomainGUI,
+    ident="single_user_session",
+    valuespec=lambda: Optional(
+        valuespec=Age(
+            display=["minutes", "hours"],
+            label=_("Session timeout:"),
+            minvalue=30,
+            default_value=60,
+        ),
+        title=_("Limit login to single session at a time"),
+        label=_("Users can only login from one client at a time"),
+        help=_(
+            "Normally a user can login to the GUI from unlimited number of clients at "
+            "the same time. If you want to enforce your users to be able to login only once "
+            " (from one client which means device and browser), you can enable this option. "
+            "When the user logs out or is inactive for the configured amount of time, the "
+            "session is invalidated automatically and the user has to log in again from the "
+            "current or another device."
+        ),
+    ),
+)
+
+ConfigVariableUserSecurityNotifications = ConfigVariable(
+    group=ConfigVariableGroupUserManagement,
+    domain=ConfigDomainGUI,
+    ident="user_security_notification_duration",
+    valuespec=lambda: Dictionary(
+        title=_("User security notification duration"),
+        help=_(
+            "If a user has an email address associated with their account, "
+            "the user will not be shown a security notification in their user "
+            "tab."
+            "If a user does not have an associated email they will be shown "
+            "an undismissable message in their user tab for the duration "
+            "defined by this setting."
+        ),
+        elements=[
+            (
+                "max_duration",
+                Age(
+                    display=["days", "minutes", "hours"],
+                    label=_("Session timeout:"),
+                    default_value=604800,
+                    title=_("Display time for user security messages"),
+                    validate=_validate_min,
+                ),
+            ),
+            (
+                "update_existing_duration",
+                Checkbox(
+                    title=_("Update existing security notifications"),
+                    label=_("Retroactively apply max duration to existing notifications"),
+                    help=_("Update existing security notifications to use the new max duration."),
+                    default_value=False,
+                ),
+            ),
+        ],
+        optional_keys=[],
+    ),
+)
+
+
+def _validate_min(value, varprefix):
+    if value < 900:
+        raise MKUserError(varprefix, _("The minimum duration may not be less than 15 minutes"))
+
+
+ConfigVariableDefaultUserProfile = ConfigVariable(
+    group=ConfigVariableGroupUserManagement,
+    domain=ConfigDomainGUI,
+    ident="default_user_profile",
+    valuespec=lambda: Dictionary(
+        title=_("Default user profile"),
+        help=_(
+            "With this option you can specify the attributes a user which is created during "
+            'its initial login gets added. For example, the default is to add the role "user" '
+            "to all automatically created users."
+        ),
+        elements=[
+            (
+                "roles",
+                ListChoice(
+                    title=_("User roles"),
+                    help=_("Specify the initial roles of an automatically created user."),
+                    default_value=["user"],
+                    choices=_list_roles,
+                ),
+            ),
+            (
+                "contactgroups",
+                ListChoice(
+                    title=_("Contact groups"),
+                    help=_("Specify the initial contact groups of an automatically created user."),
+                    default_value=[],
+                    choices=_list_contactgroups,
+                ),
+            ),
+            (
+                "force_authuser",
+                Checkbox(
+                    title=_("Visibility of hosts/services"),
+                    label=_("Only show hosts and services the user is a contact for"),
+                    help=_("Specify the initial setting for an automatically created user."),
+                    default_value=False,
+                ),
+            ),
+        ],
+        optional_keys=[],
+    ),
+)
+
+
+def _list_roles():
+    roles = load_roles()
+    return [(i, r["alias"]) for i, r in roles.items()]
+
+
+def _list_contactgroups():
+    contact_groups = load_contact_group_information()
+    entries = [(c, g["alias"]) for c, g in contact_groups.items()]
+    return sorted(entries)
 
 
 def find_usages_of_contact_group_in_default_user_profile(
@@ -2862,8 +2393,7 @@ def find_usages_of_contact_group_in_default_user_profile(
 ) -> list[tuple[str, str]]:
     """Used in default_user_profile?"""
     used_in = []
-    config_variable = ConfigVariableDefaultUserProfile()
-    domain = config_variable.domain()
+    domain = ConfigVariableDefaultUserProfile.domain()
     configured = global_config.get("default_user_profile", {})
     default_value = domain.default_globals()["default_user_profile"]
     if (configured and name in configured["contactgroups"]) or name in default_value[
@@ -2899,361 +2429,292 @@ ConfigVariableGroupCheckExecution = ConfigVariableGroup(
 )
 
 
-class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupCheckExecution
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainCore()
-
-    def ident(self) -> str:
-        return "use_new_descriptions_for"
-
-    def valuespec(self) -> ValueSpec:
-        return ListChoice(
-            title=_("Use new service names"),
-            help=_(
-                "In order to make Checkmk more consistent, "
-                "the descriptions of several services have been renamed in newer "
-                "Checkmk versions. One example is the filesystem services that have "
-                "been renamed from <tt>fs_</tt> into <tt>Filesystem</tt>. But since renaming "
-                "of existing services has many implications - including existing rules, performance "
-                "data and availability history - these renamings are disabled per default for "
-                "existing installations. Here you can switch to the new descriptions for "
-                "selected check types"
+ConfigVariableUseNewDescriptionsFor = ConfigVariable(
+    group=ConfigVariableGroupCheckExecution,
+    domain=ConfigDomainCore,
+    ident="use_new_descriptions_for",
+    valuespec=lambda: ListChoice(
+        title=_("Use new service names"),
+        help=_(
+            "In order to make Checkmk more consistent, "
+            "the descriptions of several services have been renamed in newer "
+            "Checkmk versions. One example is the filesystem services that have "
+            "been renamed from <tt>fs_</tt> into <tt>Filesystem</tt>. But since renaming "
+            "of existing services has many implications - including existing rules, performance "
+            "data and availability history - these renamings are disabled per default for "
+            "existing installations. Here you can switch to the new descriptions for "
+            "selected check types"
+        ),
+        choices=[
+            ("aix_memory", _("Memory usage for %s hosts") % "AIX"),
+            ("barracuda_mailqueues", _("Barracuda: Mail Queue")),
+            ("brocade_sys_mem", _("Main memory usage for Brocade fibre channel switches")),
+            ("casa_cpu_temp", _("Casa module: CPU temperature")),
+            ("cisco_mem", _("Cisco memory usage (%s)") % "cisco_mem"),
+            ("cisco_mem_asa", _("Cisco memory usage (%s)") % "cisco_mem_asa"),
+            ("cisco_mem_asa64", _("Cisco memory usage (%s)") % "cisco_mem_asa64"),
+            ("cmciii_psm_current", _("Rittal CMC-III Units: Current")),
+            ("cmciii_temp", _("Rittal CMC-III Units: Temperatures")),
+            ("cmciii_lcp_airin", _("Rittal CMC-III LCP: Air In and Temperature")),
+            ("cmciii_lcp_airout", _("Rittal CMC-III LCP: Air Out Temperature")),
+            ("cmciii_lcp_water", _("Rittal CMC-III LCP: Water In/Out Temperature")),
+            (
+                "cmk_inventory",
+                _("Monitor hosts for unchecked services (Checkmk Discovery)"),
             ),
-            choices=[
-                ("aix_memory", _("Memory usage for %s hosts") % "AIX"),
-                ("barracuda_mailqueues", _("Barracuda: Mail Queue")),
-                ("brocade_sys_mem", _("Main memory usage for Brocade fibre channel switches")),
-                ("casa_cpu_temp", _("Casa module: CPU temperature")),
-                ("cisco_mem", _("Cisco memory usage (%s)") % "cisco_mem"),
-                ("cisco_mem_asa", _("Cisco memory usage (%s)") % "cisco_mem_asa"),
-                ("cisco_mem_asa64", _("Cisco memory usage (%s)") % "cisco_mem_asa64"),
-                ("cmciii_psm_current", _("Rittal CMC-III Units: Current")),
-                ("cmciii_temp", _("Rittal CMC-III Units: Temperatures")),
-                ("cmciii_lcp_airin", _("Rittal CMC-III LCP: Air In and Temperature")),
-                ("cmciii_lcp_airout", _("Rittal CMC-III LCP: Air Out Temperature")),
-                ("cmciii_lcp_water", _("Rittal CMC-III LCP: Water In/Out Temperature")),
-                (
-                    "cmk_inventory",
-                    _("Monitor hosts for unchecked services (Checkmk Discovery)"),
-                ),
-                ("db2_mem", _("DB2 memory usage")),
-                ("df", _("Used space in filesystems")),
-                ("df_netapp", _("NetApp Filers: Used Space in Filesystems")),
-                (
-                    "df_netapp32",
-                    _("NetApp Filers: Used space in Filesystem Using 32-Bit Counters"),
-                ),
-                ("docker_container_mem", _("Memory usage of Docker containers")),
-                ("enterasys_temp", _("Enterasys Switch: Temperature")),
-                ("esx_vsphere_datastores", _("VMware ESX host systems: Used space")),
-                ("esx_vsphere_hostsystem_mem_usage", _("Main memory usage of ESX host system")),
-                ("esx_vsphere_hostsystem_mem_usage_cluster", _("Memory usage of ESX Clusters")),
-                ("etherbox_temp", _("Etherbox / MessPC: Sensor Temperature")),
-                ("fortigate_memory", _("Memory usage of Fortigate devices (fortigate_memory)")),
-                (
-                    "fortigate_memory_base",
-                    _("Memory usage of Fortigate devices (fortigate_memory_base)"),
-                ),
-                ("fortigate_node_memory", _("Fortigate node memory")),
-                ("hr_fs", _("Used space in filesystems via SNMP")),
-                ("hr_mem", _("HR: Used memory via SNMP")),
-                # TODO: can be removed when
-                #  cmk.update_config.plugins.actions.rulesets._force_old_http_service_description
-                #  can be removed
-                (
-                    "http",
-                    _(
-                        "Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections (Deprecated/ineffective)"
-                    ),
-                ),
-                (
-                    "huawei_switch_mem",
-                    _("Memory percentage used of devices with modules (Huawei)"),
-                ),
-                ("hyperv_vms", _("Hyper-V Server: State of VMs")),
-                (
-                    "ibm_svc_mdiskgrp",
-                    _("IBM SVC / Storwize V3700 / V7000: Status and Usage of MDisksGrps"),
-                ),
-                ("ibm_svc_system", _("IBM SVC / V7000: System Info")),
-                ("ibm_svc_systemstats_cache", _("IBM SVC / V7000: Cache Usage in Total")),
-                (
-                    "ibm_svc_systemstats_disk_latency",
-                    _("IBM SVC / V7000: Latency for Drives/MDisks/VDisks in Total"),
-                ),
-                (
-                    "ibm_svc_systemstats_diskio",
-                    _("IBM SVC / V7000: Disk Throughput for Drives/MDisks/VDisks in Total"),
-                ),
-                (
-                    "ibm_svc_systemstats_iops",
-                    _("IBM SVC / V7000: IO operations/sec for Drives/MDisks/VDisks in Total"),
-                ),
-                ("innovaphone_mem", _("Innovaphone memory usage")),
-                ("innovaphone_temp", _("Innovaphone Gateway: Current Temperature")),
-                ("juniper_mem", _("Juniper memory usage (%s)") % "juniper_mem"),
-                (
-                    "juniper_screenos_mem",
-                    _("Juniper memory usage (%s)") % "juniper_screenos_mem",
-                ),
-                ("juniper_trpz_mem", _("Juniper memory usage (%s)") % "juniper_trpz_mem"),
-                ("liebert_bat_temp", _("Liebert UPS Device: Temperature sensor")),
-                ("logwatch", _("Check logfiles for relevant new messages")),
-                ("logwatch_groups", _("Check logfile groups")),
-                ("megaraid_pdisks", _("LSI MegaRAID: Physical Disks")),
-                ("megaraid_ldisks", _("LSI MegaRAID: Logical Disks")),
-                ("megaraid_bbu", _("LSI MegaRAID: Battery Backup Unit")),
-                ("mem_used", _("Main memory usage (UNIX / Other Devices)")),
-                ("mem_win", _("Memory usage for %s hosts") % "Windows"),
-                ("mknotifyd", _("Notification Spooler")),
-                ("mknotifyd_connection", _("Notification Spooler Connection")),
-                ("mssql_backup", _("MSSQL Backup")),
-                ("mssql_blocked_sessions", _("MSSQL Blocked Sessions")),
-                ("mssql_counters_cache_hits", _("MSSQL Cache Hits")),
-                ("mssql_counters_file_sizes", _("MSSQL File Sizes")),
-                ("mssql_counters_locks", _("MSSQL Locks")),
-                ("mssql_counters_locks_per_batch", _("MSSQL Locks per Batch")),
-                ("mssql_counters_pageactivity", _("MSSQL Page Activity")),
-                ("mssql_counters_sqlstats", _("MSSQL SQL Stats")),
-                ("mssql_counters_transactions", _("MSSQL Transactions")),
-                ("mssql_databases", _("MSSQL Database")),
-                ("mssql_datafiles", _("MSSQL Datafile")),
-                ("mssql_tablespaces", _("MSSQL Tablespace")),
-                ("mssql_transactionlogs", _("MSSQL Transactionlog")),
-                ("mssql_versions", _("MSSQL Version")),
-                ("netscaler_mem", _("Netscaler memory Usage")),
-                ("nullmailer_mailq", _("Nullmailer: Mail Queue")),
-                ("prism_alerts", _("Nutanix: Prism Alerts")),
-                ("prism_containers", _("Nutanix: Containers")),
-                ("prism_info", _("Nutanix: Prism Cluster")),
-                ("prism_storage_pools", _("Nutanix: Storage Pools")),
-                ("nvidia_temp", _("Temperatures of NVIDIA graphics card")),
-                ("postfix_mailq", _("Postfix: Mail Queue")),
-                ("ps", _("State and Count of Processes")),
-                ("qmail_stats", _("Qmail: Mail Queue")),
-                ("raritan_emx", _("Raritan EMX Rack: Temperature")),
-                ("raritan_pdu_inlet", _("Raritan PDU: Input Phases")),
-                ("services", _("Windows Services")),
-                ("solaris_mem", _("Memory usage for %s hosts") % "Solaris"),
-                ("sophos_memory", _("Sophos Memory utilization")),
-                ("statgrab_mem", _("Statgrab memory usage")),
-                ("tplink_mem", _("TP Link: Used memory via SNMP")),
-                ("ups_bat_temp", _("Generic UPS Device: Temperature sensor")),
-                ("vms_diskstat_df", _("Disk space on OpenVMS")),
-                ("wmic_process", _("Resource consumption of Windows processes")),
-                ("zfsget", _("Used space in ZFS pools and filesystems")),
-            ],
-            render_orientation="vertical",
-        )
-
-
-class ConfigVariableTCPConnectTimeout(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupCheckExecution
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainCore()
-
-    def ident(self) -> str:
-        return "tcp_connect_timeout"
-
-    def valuespec(self) -> ValueSpec:
-        return Float(
-            title=_("Agent TCP connect timeout"),
-            help=_(
-                "Timeout for TCP connect to agent in seconds. If the connection "
-                "to the agent cannot be established within this time, it is considered to be unreachable. "
-                "Note: This does <b>not</b> limit the time the agent needs to "
-                "generate its output."
+            ("db2_mem", _("DB2 memory usage")),
+            ("df", _("Used space in filesystems")),
+            ("df_netapp", _("NetApp Filers: Used Space in Filesystems")),
+            (
+                "df_netapp32",
+                _("NetApp Filers: Used space in Filesystem Using 32-Bit Counters"),
             ),
-            minvalue=1.0,
-            unit="sec",
-        )
-
-
-class ConfigVariableSimulationMode(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupCheckExecution
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainCore()
-
-    def ident(self) -> str:
-        return "simulation_mode"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("Simulation mode"),
-            label=_("Run in simulation mode"),
-            help=_(
-                "This boolean variable allows you to bring Checkmk into a dry run mode. "
-                "No hosts will be contacted, no DNS lookups will take place and data is read "
-                "from cache files that have been created during normal operation or have "
-                "been copied here from another monitoring site."
+            ("docker_container_mem", _("Memory usage of Docker containers")),
+            ("enterasys_temp", _("Enterasys Switch: Temperature")),
+            ("esx_vsphere_datastores", _("VMware ESX host systems: Used space")),
+            ("esx_vsphere_hostsystem_mem_usage", _("Main memory usage of ESX host system")),
+            ("esx_vsphere_hostsystem_mem_usage_cluster", _("Memory usage of ESX Clusters")),
+            ("etherbox_temp", _("Etherbox / MessPC: Sensor Temperature")),
+            ("fortigate_memory", _("Memory usage of Fortigate devices (fortigate_memory)")),
+            (
+                "fortigate_memory_base",
+                _("Memory usage of Fortigate devices (fortigate_memory_base)"),
             ),
-        )
-
-
-class ConfigVariableRestartLocking(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupCheckExecution
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainCore()
-
-    def ident(self) -> str:
-        return "restart_locking"
-
-    def valuespec(self) -> ValueSpec:
-        return DropdownChoice(
-            title=_("Simultaneous activation of changes"),
-            help=_(
-                "When two users simultaneously try to activate the changes then "
-                "you can decide to abort with an error (default) or have the requests "
-                "serialized. It is also possible - but not recommended - to turn "
-                "off locking altogether."
+            ("fortigate_node_memory", _("Fortigate node memory")),
+            ("hr_fs", _("Used space in filesystems via SNMP")),
+            ("hr_mem", _("HR: Used memory via SNMP")),
+            # TODO: can be removed when
+            #  cmk.update_config.plugins.actions.rulesets._force_old_http_service_description
+            #  can be removed
+            (
+                "http",
+                _(
+                    "Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections (Deprecated/ineffective)"
+                ),
             ),
-            choices=[
-                ("abort", _("Abort with an error")),
-                ("wait", _("Wait until the other has finished")),
-                (None, _("Disable locking")),
-            ],
-        )
-
-
-class ConfigVariableDelayPrecompile(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupCheckExecution
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainCore()
-
-    def ident(self) -> str:
-        return "delay_precompile"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("Delay precompiling of host checks"),
-            label=_("delay precompiling"),
-            help=_(
-                "If you enable this option, then Checkmk will not directly Python-bytecompile "
-                "all host checks when activating the configuration and restarting Nagios. "
-                "Instead it will delay this to the first "
-                "time the host is actually checked being by Nagios.<p>This reduces the time needed "
-                "for the operation, but on the other hand will lead to a slightly higher load "
-                "of Nagios for the first couple of minutes after the restart. "
+            (
+                "huawei_switch_mem",
+                _("Memory percentage used of devices with modules (Huawei)"),
             ),
-        )
-
-
-class ConfigVariableClusterMaxCachefileAge(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupCheckExecution
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainCore()
-
-    def ident(self) -> str:
-        return "cluster_max_cachefile_age"
-
-    def valuespec(self) -> ValueSpec:
-        return Integer(
-            title=_("Maximum cache file age for clusters"),
-            label=_("seconds"),
-            help=_(
-                "The number of seconds a cache file may be old if Checkmk should "
-                "use it instead of getting information from the target hosts while "
-                "checking a cluster. Per default this is enabled and set to 90 seconds. "
-                "If your check cycle is set to a larger value than one minute then "
-                "you should increase this accordingly."
+            ("hyperv_vms", _("Hyper-V Server: State of VMs")),
+            (
+                "ibm_svc_mdiskgrp",
+                _("IBM SVC / Storwize V3700 / V7000: Status and Usage of MDisksGrps"),
             ),
-        )
-
-
-class ConfigVariablePiggybackMaxCachefileAge(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupCheckExecution
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainCore()
-
-    def ident(self) -> str:
-        return "piggyback_max_cachefile_age"
-
-    def valuespec(self) -> ValueSpec:
-        return Age(
-            title=_("Maximum age for piggyback files"),
-            help=_(
-                "The maximum age for piggy back data from another host to be valid for monitoring. "
-                "Older files are deleted before processing them. Please make sure that this age is "
-                "at least as large as you normal check interval for piggy hosts."
+            ("ibm_svc_system", _("IBM SVC / V7000: System Info")),
+            ("ibm_svc_systemstats_cache", _("IBM SVC / V7000: Cache Usage in Total")),
+            (
+                "ibm_svc_systemstats_disk_latency",
+                _("IBM SVC / V7000: Latency for Drives/MDisks/VDisks in Total"),
             ),
-        )
-
-
-class ConfigVariableCheckMKPerfdataWithTimes(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupCheckExecution
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainCore()
-
-    def ident(self) -> str:
-        return "check_mk_perfdata_with_times"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("Checkmk with times performance data"),
-            label=_("Return process times within performance data"),
-            help=_(
-                "Enabling this option results in additional performance data "
-                "for the Checkmk output, giving information regarding the process times. "
-                "It provides the following fields: user_time, system_time, children_user_time "
-                "and children_system_time"
+            (
+                "ibm_svc_systemstats_diskio",
+                _("IBM SVC / V7000: Disk Throughput for Drives/MDisks/VDisks in Total"),
             ),
-        )
-
-
-class ConfigVariableUseDNSCache(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupCheckExecution
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainCore()
-
-    def ident(self) -> str:
-        return "use_dns_cache"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("Use DNS lookup cache"),
-            label=_("Prevent DNS lookups by use of a cache file"),
-            help=_(
-                "When this option is enabled (which is the default), then Checkmk tries to "
-                "prevent IP address lookups during the configuration generation. This can speed "
-                "up this process greatly when you have a larger number of hosts. The cache is stored "
-                "in a simple file. Note: when the cache is enabled then changes of the IP address "
-                "of a host in your name server will not be detected immediately. If you need an "
-                "immediate update then simply disable the cache once, activate the changes and "
-                "enabled it again. OMD based installations automatically update the cache once "
-                "a day."
+            (
+                "ibm_svc_systemstats_iops",
+                _("IBM SVC / V7000: IO operations/sec for Drives/MDisks/VDisks in Total"),
             ),
-        )
+            ("innovaphone_mem", _("Innovaphone memory usage")),
+            ("innovaphone_temp", _("Innovaphone Gateway: Current Temperature")),
+            ("juniper_mem", _("Juniper memory usage (%s)") % "juniper_mem"),
+            (
+                "juniper_screenos_mem",
+                _("Juniper memory usage (%s)") % "juniper_screenos_mem",
+            ),
+            ("juniper_trpz_mem", _("Juniper memory usage (%s)") % "juniper_trpz_mem"),
+            ("liebert_bat_temp", _("Liebert UPS Device: Temperature sensor")),
+            ("logwatch", _("Check logfiles for relevant new messages")),
+            ("logwatch_groups", _("Check logfile groups")),
+            ("megaraid_pdisks", _("LSI MegaRAID: Physical Disks")),
+            ("megaraid_ldisks", _("LSI MegaRAID: Logical Disks")),
+            ("megaraid_bbu", _("LSI MegaRAID: Battery Backup Unit")),
+            ("mem_used", _("Main memory usage (UNIX / Other Devices)")),
+            ("mem_win", _("Memory usage for %s hosts") % "Windows"),
+            ("mknotifyd", _("Notification Spooler")),
+            ("mknotifyd_connection", _("Notification Spooler Connection")),
+            ("mssql_backup", _("MSSQL Backup")),
+            ("mssql_blocked_sessions", _("MSSQL Blocked Sessions")),
+            ("mssql_counters_cache_hits", _("MSSQL Cache Hits")),
+            ("mssql_counters_file_sizes", _("MSSQL File Sizes")),
+            ("mssql_counters_locks", _("MSSQL Locks")),
+            ("mssql_counters_locks_per_batch", _("MSSQL Locks per Batch")),
+            ("mssql_counters_pageactivity", _("MSSQL Page Activity")),
+            ("mssql_counters_sqlstats", _("MSSQL SQL Stats")),
+            ("mssql_counters_transactions", _("MSSQL Transactions")),
+            ("mssql_databases", _("MSSQL Database")),
+            ("mssql_datafiles", _("MSSQL Datafile")),
+            ("mssql_tablespaces", _("MSSQL Tablespace")),
+            ("mssql_transactionlogs", _("MSSQL Transactionlog")),
+            ("mssql_versions", _("MSSQL Version")),
+            ("netscaler_mem", _("Netscaler memory Usage")),
+            ("nullmailer_mailq", _("Nullmailer: Mail Queue")),
+            ("prism_alerts", _("Nutanix: Prism Alerts")),
+            ("prism_containers", _("Nutanix: Containers")),
+            ("prism_info", _("Nutanix: Prism Cluster")),
+            ("prism_storage_pools", _("Nutanix: Storage Pools")),
+            ("nvidia_temp", _("Temperatures of NVIDIA graphics card")),
+            ("postfix_mailq", _("Postfix: Mail Queue")),
+            ("ps", _("State and Count of Processes")),
+            ("qmail_stats", _("Qmail: Mail Queue")),
+            ("raritan_emx", _("Raritan EMX Rack: Temperature")),
+            ("raritan_pdu_inlet", _("Raritan PDU: Input Phases")),
+            ("services", _("Windows Services")),
+            ("solaris_mem", _("Memory usage for %s hosts") % "Solaris"),
+            ("sophos_memory", _("Sophos Memory utilization")),
+            ("statgrab_mem", _("Statgrab memory usage")),
+            ("tplink_mem", _("TP Link: Used memory via SNMP")),
+            ("ups_bat_temp", _("Generic UPS Device: Temperature sensor")),
+            ("vms_diskstat_df", _("Disk space on OpenVMS")),
+            ("wmic_process", _("Resource consumption of Windows processes")),
+            ("zfsget", _("Used space in ZFS pools and filesystems")),
+        ],
+        render_orientation="vertical",
+    ),
+)
+
+ConfigVariableTCPConnectTimeout = ConfigVariable(
+    group=ConfigVariableGroupCheckExecution,
+    domain=ConfigDomainCore,
+    ident="tcp_connect_timeout",
+    valuespec=lambda: Float(
+        title=_("Agent TCP connect timeout"),
+        help=_(
+            "Timeout for TCP connect to agent in seconds. If the connection "
+            "to the agent cannot be established within this time, it is considered to be unreachable. "
+            "Note: This does <b>not</b> limit the time the agent needs to "
+            "generate its output."
+        ),
+        minvalue=1.0,
+        unit="sec",
+    ),
+)
+
+ConfigVariableSimulationMode = ConfigVariable(
+    group=ConfigVariableGroupCheckExecution,
+    domain=ConfigDomainCore,
+    ident="simulation_mode",
+    valuespec=lambda: Checkbox(
+        title=_("Simulation mode"),
+        label=_("Run in simulation mode"),
+        help=_(
+            "This boolean variable allows you to bring Checkmk into a dry run mode. "
+            "No hosts will be contacted, no DNS lookups will take place and data is read "
+            "from cache files that have been created during normal operation or have "
+            "been copied here from another monitoring site."
+        ),
+    ),
+)
+
+ConfigVariableRestartLocking = ConfigVariable(
+    group=ConfigVariableGroupCheckExecution,
+    domain=ConfigDomainCore,
+    ident="restart_locking",
+    valuespec=lambda: DropdownChoice(
+        title=_("Simultaneous activation of changes"),
+        help=_(
+            "When two users simultaneously try to activate the changes then "
+            "you can decide to abort with an error (default) or have the requests "
+            "serialized. It is also possible - but not recommended - to turn "
+            "off locking altogether."
+        ),
+        choices=[
+            ("abort", _("Abort with an error")),
+            ("wait", _("Wait until the other has finished")),
+            (None, _("Disable locking")),
+        ],
+    ),
+)
+
+ConfigVariableDelayPrecompile = ConfigVariable(
+    group=ConfigVariableGroupCheckExecution,
+    domain=ConfigDomainCore,
+    ident="delay_precompile",
+    valuespec=lambda: Checkbox(
+        title=_("Delay precompiling of host checks"),
+        label=_("delay precompiling"),
+        help=_(
+            "If you enable this option, then Checkmk will not directly Python-bytecompile "
+            "all host checks when activating the configuration and restarting Nagios. "
+            "Instead it will delay this to the first "
+            "time the host is actually checked being by Nagios.<p>This reduces the time needed "
+            "for the operation, but on the other hand will lead to a slightly higher load "
+            "of Nagios for the first couple of minutes after the restart. "
+        ),
+    ),
+)
+
+ConfigVariableClusterMaxCachefileAge = ConfigVariable(
+    group=ConfigVariableGroupCheckExecution,
+    domain=ConfigDomainCore,
+    ident="cluster_max_cachefile_age",
+    valuespec=lambda: Integer(
+        title=_("Maximum cache file age for clusters"),
+        label=_("seconds"),
+        help=_(
+            "The number of seconds a cache file may be old if Checkmk should "
+            "use it instead of getting information from the target hosts while "
+            "checking a cluster. Per default this is enabled and set to 90 seconds. "
+            "If your check cycle is set to a larger value than one minute then "
+            "you should increase this accordingly."
+        ),
+    ),
+)
+
+ConfigVariablePiggybackMaxCachefileAge = ConfigVariable(
+    group=ConfigVariableGroupCheckExecution,
+    domain=ConfigDomainCore,
+    ident="piggyback_max_cachefile_age",
+    valuespec=lambda: Age(
+        title=_("Maximum age for piggyback files"),
+        help=_(
+            "The maximum age for piggy back data from another host to be valid for monitoring. "
+            "Older files are deleted before processing them. Please make sure that this age is "
+            "at least as large as you normal check interval for piggy hosts."
+        ),
+    ),
+)
+
+ConfigVariableCheckMKPerfdataWithTimes = ConfigVariable(
+    group=ConfigVariableGroupCheckExecution,
+    domain=ConfigDomainCore,
+    ident="check_mk_perfdata_with_times",
+    valuespec=lambda: Checkbox(
+        title=_("Checkmk with times performance data"),
+        label=_("Return process times within performance data"),
+        help=_(
+            "Enabling this option results in additional performance data "
+            "for the Checkmk output, giving information regarding the process times. "
+            "It provides the following fields: user_time, system_time, children_user_time "
+            "and children_system_time"
+        ),
+    ),
+)
+
+ConfigVariableUseDNSCache = ConfigVariable(
+    group=ConfigVariableGroupCheckExecution,
+    domain=ConfigDomainCore,
+    ident="use_dns_cache",
+    valuespec=lambda: Checkbox(
+        title=_("Use DNS lookup cache"),
+        label=_("Prevent DNS lookups by use of a cache file"),
+        help=_(
+            "When this option is enabled (which is the default), then Checkmk tries to "
+            "prevent IP address lookups during the configuration generation. This can speed "
+            "up this process greatly when you have a larger number of hosts. The cache is stored "
+            "in a simple file. Note: when the cache is enabled then changes of the IP address "
+            "of a host in your name server will not be detected immediately. If you need an "
+            "immediate update then simply disable the cache once, activate the changes and "
+            "enabled it again. OMD based installations automatically update the cache once "
+            "a day."
+        ),
+    ),
+)
 
 
-def transform_snmp_backend_default_to_valuespec(
-    backend: Literal["classic", "inline"],
-) -> SNMPBackendEnum:
-    return {
-        "classic": SNMPBackendEnum.CLASSIC,
-        "inline": SNMPBackendEnum.INLINE,
-    }[backend]
-
-
-def transform_snmp_backend_from_valuespec(backend: SNMPBackendEnum) -> Literal["classic", "inline"]:
+def _transform_snmp_backend_from_valuespec(
+    backend: SNMPBackendEnum,
+) -> Literal["classic", "inline"]:
     match backend:
         case SNMPBackendEnum.CLASSIC:
             return "classic"
@@ -3263,111 +2724,99 @@ def transform_snmp_backend_from_valuespec(backend: SNMPBackendEnum) -> Literal["
             raise MKConfigError("SNMPBackendEnum %r not implemented" % backend)
 
 
-class ConfigVariableChooseSNMPBackend(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupCheckExecution
+ConfigVariableChooseSNMPBackend = ConfigVariable(
+    group=ConfigVariableGroupCheckExecution,
+    domain=ConfigDomainCore,
+    ident="snmp_backend_default",
+    valuespec=lambda: Transform(
+        valuespec=DropdownChoice(
+            title=cmk_version.mark_edition_only(
+                _("Choose SNMP backend"), [cmk_version.Edition.CME, cmk_version.Edition.CEE]
+            ),
+            choices=[
+                (SNMPBackendEnum.CLASSIC, _("Use Classic SNMP Backend")),
+                (SNMPBackendEnum.INLINE, _("Use Inline SNMP Backend")),
+            ],
+            help=_(
+                "By default Checkmk uses command line calls of Net-SNMP tools like snmpget or "
+                "snmpwalk to gather SNMP information. For each request a new command line "
+                "program is being executed. It is now possible to use the Inline SNMP implementation "
+                "which calls the respective libraries directly via its python bindings. This "
+                "should increase the performance of SNMP checks in a significant way. Both "
+                "SNMP modes are features which improve the performance for large installations and are "
+                "only available via our subscription."
+            ),
+        ),
+        to_valuespec=_transform_snmp_backend_hosts_to_valuespec,
+        from_valuespec=_transform_snmp_backend_from_valuespec,
+    ),
+)
 
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainCore()
-
-    def ident(self) -> str:
-        return "snmp_backend_default"
-
-    def valuespec(self) -> ValueSpec:
-        return Transform(
-            valuespec=DropdownChoice(
-                title=cmk_version.mark_edition_only(
-                    _("Choose SNMP backend"), [cmk_version.Edition.CME, cmk_version.Edition.CEE]
-                ),
-                choices=[
-                    (SNMPBackendEnum.CLASSIC, _("Use Classic SNMP Backend")),
-                    (SNMPBackendEnum.INLINE, _("Use Inline SNMP Backend")),
+ConfigVariableHTTPProxies = ConfigVariable(
+    group=ConfigVariableGroupCheckExecution,
+    domain=ConfigDomainCore,
+    ident="http_proxies",
+    valuespec=lambda: Transform(
+        valuespec=ListOf(
+            valuespec=Dictionary(
+                title=_("HTTP proxy"),
+                elements=[
+                    (
+                        "ident",
+                        ID(
+                            title=_("Unique ID"),
+                            help=_(
+                                "The ID must be a unique text. It will be used as an internal key "
+                                "when objects refer to this object."
+                            ),
+                            allow_empty=False,
+                        ),
+                    ),
+                    (
+                        "title",
+                        TextInput(
+                            title=_("Title"),
+                            help=_("The title of the %s. It will be used as display name.")
+                            % _("HTTP proxy"),
+                            allow_empty=False,
+                            size=80,
+                        ),
+                    ),
+                    ("proxy_url", HTTPProxyInput()),
                 ],
-                help=_(
-                    "By default Checkmk uses command line calls of Net-SNMP tools like snmpget or "
-                    "snmpwalk to gather SNMP information. For each request a new command line "
-                    "program is being executed. It is now possible to use the Inline SNMP implementation "
-                    "which calls the respective libraries directly via its python bindings. This "
-                    "should increase the performance of SNMP checks in a significant way. Both "
-                    "SNMP modes are features which improve the performance for large installations and are "
-                    "only available via our subscription."
-                ),
+                optional_keys=False,
             ),
-            to_valuespec=transform_snmp_backend_hosts_to_valuespec,
-            from_valuespec=transform_snmp_backend_from_valuespec,
-        )
-
-
-class ConfigVariableHTTPProxies(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupCheckExecution
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainCore()
-
-    def ident(self) -> str:
-        return "http_proxies"
-
-    def valuespec(self) -> ValueSpec:
-        return Transform(
-            valuespec=ListOf(
-                valuespec=Dictionary(
-                    title=_("HTTP proxy"),
-                    elements=[
-                        (
-                            "ident",
-                            ID(
-                                title=_("Unique ID"),
-                                help=_(
-                                    "The ID must be a unique text. It will be used as an internal key "
-                                    "when objects refer to this object."
-                                ),
-                                allow_empty=False,
-                            ),
-                        ),
-                        (
-                            "title",
-                            TextInput(
-                                title=_("Title"),
-                                help=_("The title of the %s. It will be used as display name.")
-                                % _("HTTP proxy"),
-                                allow_empty=False,
-                                size=80,
-                            ),
-                        ),
-                        ("proxy_url", HTTPProxyInput()),
-                    ],
-                    optional_keys=False,
-                ),
-                title=_("HTTP proxies"),
-                movable=False,
-                totext=_("%d HTTP proxy servers configured"),
-                help=_(
-                    "Use this option to configure one or several proxy servers that can then be "
-                    "used in different places to establish connections to services using these "
-                    "HTTP proxies."
-                ),
-                validate=self._validate_proxies,
+            title=_("HTTP proxies"),
+            movable=False,
+            totext=_("%d HTTP proxy servers configured"),
+            help=_(
+                "Use this option to configure one or several proxy servers that can then be "
+                "used in different places to establish connections to services using these "
+                "HTTP proxies."
             ),
-            to_valuespec=lambda v: v.values(),
-            from_valuespec=lambda v: {p["ident"]: p for p in v},
-        )
+            validate=_validate_proxies,
+        ),
+        to_valuespec=lambda v: v.values(),
+        from_valuespec=lambda v: {p["ident"]: p for p in v},
+    ),
+)
 
-    def _validate_proxies(self, value, varprefix):
-        seen_idents, seen_titles = [], []
-        for http_proxy in value:
-            if http_proxy["ident"] in seen_idents:
-                raise MKUserError(
-                    varprefix, _("Found multiple proxies using the ID '%s'") % http_proxy["ident"]
-                )
-            seen_idents.append(http_proxy["ident"])
 
-            if http_proxy["title"] in seen_titles:
-                raise MKUserError(
-                    varprefix,
-                    _("Found multiple proxies using the title '%s'") % http_proxy["title"],
-                )
-            seen_titles.append(http_proxy["title"])
+def _validate_proxies(value, varprefix):
+    seen_idents, seen_titles = [], []
+    for http_proxy in value:
+        if http_proxy["ident"] in seen_idents:
+            raise MKUserError(
+                varprefix, _("Found multiple proxies using the ID '%s'") % http_proxy["ident"]
+            )
+        seen_idents.append(http_proxy["ident"])
+
+        if http_proxy["title"] in seen_titles:
+            raise MKUserError(
+                varprefix,
+                _("Found multiple proxies using the title '%s'") % http_proxy["title"],
+            )
+        seen_titles.append(http_proxy["title"])
 
 
 ConfigVariableGroupServiceDiscovery = ConfigVariableGroup(
@@ -3376,88 +2825,67 @@ ConfigVariableGroupServiceDiscovery = ConfigVariableGroup(
 )
 
 
-class ConfigVariableInventoryCheckInterval(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupServiceDiscovery
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainCore()
-
-    def ident(self) -> str:
-        return "inventory_check_interval"
-
-    def valuespec(self) -> ValueSpec:
-        return Optional(
-            valuespec=Integer(
-                title=_("Perform service discovery check every"),
-                unit=_("minutes"),
-                minvalue=1,
-                default_value=720,
-            ),
-            title=_("Enable regular service discovery checks (deprecated)"),
-            help=_(
-                "If enabled, Checkmk will create one additional service per host "
-                "that does a regular check, if the service discovery would find new services "
-                "currently un-monitored. <b>Note:</b> This option is deprecated and has been "
-                "replaced by the rule set <a href='%s'>Periodic Service Discovery</a>, "
-                "which allows a per-host configuration and additional features such as "
-                "automatic rediscovery. Rules in that rule set will override the global "
-                "settings done here."
-            )
-            % "wato.py?mode=edit_ruleset&varname=periodic_discovery",
+ConfigVariableInventoryCheckInterval = ConfigVariable(
+    group=ConfigVariableGroupServiceDiscovery,
+    domain=ConfigDomainCore,
+    ident="inventory_check_interval",
+    valuespec=lambda: Optional(
+        valuespec=Integer(
+            title=_("Perform service discovery check every"),
+            unit=_("minutes"),
+            minvalue=1,
+            default_value=720,
+        ),
+        title=_("Enable regular service discovery checks (deprecated)"),
+        help=_(
+            "If enabled, Checkmk will create one additional service per host "
+            "that does a regular check, if the service discovery would find new services "
+            "currently un-monitored. <b>Note:</b> This option is deprecated and has been "
+            "replaced by the rule set <a href='%s'>Periodic Service Discovery</a>, "
+            "which allows a per-host configuration and additional features such as "
+            "automatic rediscovery. Rules in that rule set will override the global "
+            "settings done here."
         )
+        % "wato.py?mode=edit_ruleset&varname=periodic_discovery",
+    ),
+)
 
+ConfigVariableInventoryCheckSeverity = ConfigVariable(
+    group=ConfigVariableGroupServiceDiscovery,
+    domain=ConfigDomainCore,
+    ident="inventory_check_severity",
+    valuespec=lambda: DropdownChoice(
+        title=_("Severity of failed service discovery check"),
+        help=_(
+            "Please select which alarm state the service discovery check services "
+            "shall assume in case that un-monitored services are found."
+        ),
+        choices=[
+            (0, _("OK - do not alert, just display")),
+            (1, _("Warning")),
+            (2, _("Critical")),
+            (3, _("Unknown")),
+        ],
+    ),
+)
 
-class ConfigVariableInventoryCheckSeverity(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupServiceDiscovery
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainCore()
-
-    def ident(self) -> str:
-        return "inventory_check_severity"
-
-    def valuespec(self) -> ValueSpec:
-        return DropdownChoice(
-            title=_("Severity of failed service discovery check"),
-            help=_(
-                "Please select which alarm state the service discovery check services "
-                "shall assume in case that un-monitored services are found."
-            ),
-            choices=[
-                (0, _("OK - do not alert, just display")),
-                (1, _("Warning")),
-                (2, _("Critical")),
-                (3, _("Unknown")),
-            ],
-        )
-
-
-class ConfigVariableInventoryCheckAutotrigger(ConfigVariable):
-    def group(self) -> ConfigVariableGroup:
-        return ConfigVariableGroupServiceDiscovery
-
-    def domain(self) -> ABCConfigDomain:
-        return ConfigDomainCore()
-
-    def ident(self) -> str:
-        return "inventory_check_autotrigger"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("Service discovery triggers service discovery check"),
-            label=_(
-                "Automatically schedule service discovery check after service configuration changes"
-            ),
-            help=_(
-                "When this option is enabled then after each change of the service "
-                "configuration of a host via Setup - may it be via manual changes or a bulk "
-                "discovery - the service discovery check is automatically rescheduled in order "
-                "to reflect the new service state correctly immediately."
-            ),
-        )
-
+ConfigVariableInventoryCheckAutotrigger = ConfigVariable(
+    group=ConfigVariableGroupServiceDiscovery,
+    domain=ConfigDomainCore,
+    ident="inventory_check_autotrigger",
+    valuespec=lambda: Checkbox(
+        title=_("Service discovery triggers service discovery check"),
+        label=_(
+            "Automatically schedule service discovery check after service configuration changes"
+        ),
+        help=_(
+            "When this option is enabled then after each change of the service "
+            "configuration of a host via Setup - may it be via manual changes or a bulk "
+            "discovery - the service discovery check is automatically rescheduled in order "
+            "to reflect the new service state correctly immediately."
+        ),
+    ),
+)
 
 # .
 #   .--Rulesets------------------------------------------------------------.
@@ -5693,7 +5121,7 @@ def _help_snmp_backend():
     )
 
 
-def transform_snmp_backend_hosts_to_valuespec(backend):
+def _transform_snmp_backend_hosts_to_valuespec(backend):
     # During 2.0.0 Beta you could configure inline_legacy backend that's why
     # we need to accept this as value as well.
     if backend in [False, "inline", "inline_legacy"]:
@@ -5714,8 +5142,8 @@ def _valuespec_snmp_backend():
                 (SNMPBackendEnum.CLASSIC, _("Use Classic backend")),
             ],
         ),
-        to_valuespec=transform_snmp_backend_hosts_to_valuespec,
-        from_valuespec=transform_snmp_backend_from_valuespec,
+        to_valuespec=_transform_snmp_backend_hosts_to_valuespec,
+        from_valuespec=_transform_snmp_backend_from_valuespec,
     )
 
 

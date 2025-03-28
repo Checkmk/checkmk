@@ -36,7 +36,7 @@ def test_valuespec_to_marshmallow_all_global_settings(fake_user: LoggedInUser) -
     if fake_user.id:
         with gui_context(), UserContext(fake_user.id):
             for name, config_variable in config_variable_registry.items():
-                valuespec_to_marshmallow(config_variable().valuespec(), name=name)
+                valuespec_to_marshmallow(config_variable.valuespec(), name=name)
 
 
 @pytest.mark.usefixtures("request_context")

@@ -102,8 +102,7 @@ class ABCGlobalSettingsMode(WatoMode):
 
         for group in config_variable_group_registry.values():
             add = False
-            for config_variable_class in group.config_variables():
-                config_variable = config_variable_class()
+            for config_variable in group.config_variables():
                 if not show_all and (
                     not config_variable.in_global_settings()
                     or not config_variable.domain().in_global_settings
@@ -177,8 +176,7 @@ class ABCGlobalSettingsMode(WatoMode):
                 group,
                 (
                     config_variable
-                    for config_variable_class in group.config_variables()
-                    for config_variable in [config_variable_class()]
+                    for config_variable in group.config_variables()
                     if self._should_show_config_variable(config_variable)
                 ),
             )
@@ -301,7 +299,7 @@ class ABCEditGlobalSettingMode(WatoMode):
     def _from_vars(self):
         self._varname = request.get_ascii_input_mandatory("varname")
         try:
-            self._config_variable = config_variable_registry[self._varname]()
+            self._config_variable = config_variable_registry[self._varname]
             self._valuespec = self._config_variable.valuespec()
         except KeyError:
             raise MKUserError(
@@ -543,7 +541,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
 
         action = request.var("_action")
 
-        config_variable = config_variable_registry[varname]()
+        config_variable = config_variable_registry[varname]
         def_value = self._default_values[varname]
 
         if not transactions.check_transaction():

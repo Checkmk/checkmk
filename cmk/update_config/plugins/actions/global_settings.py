@@ -172,10 +172,10 @@ def _remove_options(
 
 def _transform_global_config_value(config_var: str, config_val: object) -> object:
     try:
-        config_variable_cls = config_variable_registry[config_var]
+        config_variable = config_variable_registry[config_var]
     except KeyError:
         return config_val
-    return config_variable_cls().valuespec().transform_value(config_val)
+    return config_variable.valuespec().transform_value(config_val)
 
 
 def _transform_global_config_values(global_config: GlobalSettings) -> GlobalSettings:

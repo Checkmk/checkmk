@@ -1611,7 +1611,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         if varname not in config_variable_registry:
             return None
 
-        config_variable = config_variable_registry[varname]()
+        config_variable = config_variable_registry[varname]
         def_value = self._global_settings.get(varname, self._default_values[varname])
 
         if not transactions.check_transaction():
@@ -1793,7 +1793,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         if cert_pem is None:
             raise MKGeneralException(_("Failed to find matching certificate in chain"))
 
-        config_variable = config_variable_registry["trusted_certificate_authorities"]()
+        config_variable = config_variable_registry["trusted_certificate_authorities"]
 
         global_settings = load_configuration_settings()
         trusted = global_settings.get(

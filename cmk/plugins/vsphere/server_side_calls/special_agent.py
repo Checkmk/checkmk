@@ -38,7 +38,7 @@ def commands_function(params: Params, host_config: HostConfig) -> Iterable[Speci
         command_arguments += ["-p", "%d" % params.tcp_port]
 
     command_arguments += ["-u", params.user]
-    command_arguments += [f"-s={params.secret.unsafe()}"]
+    command_arguments += [params.secret.unsafe("-s=%s")]
     command_arguments += ["-i", ",".join(params.infos)]
 
     #  host_system: Queried host is a host system

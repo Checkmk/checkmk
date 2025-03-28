@@ -80,6 +80,11 @@ class PrivateKey:
     def generate_rsa(cls, key_size: int) -> PrivateKey:
         return cls(rsa.generate_private_key(public_exponent=65537, key_size=key_size))
 
+    @classmethod
+    def generate_elliptic_curve(cls) -> PrivateKey:
+        """Generate a private key for the elliptic curve secp256r1 (NIST P-256)"""
+        return cls(ec.generate_private_key(ec.SECP256R1()))
+
     @overload
     @classmethod
     def load_pem(cls, pem_data: PlaintextPrivateKeyPEM, password: None = None) -> PrivateKey: ...

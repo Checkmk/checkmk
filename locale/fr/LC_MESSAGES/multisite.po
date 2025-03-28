@@ -31,9 +31,6 @@ msgstr " %s, durée de la panne %s"
 msgid " (%d times)"
 msgstr " (%d temps)"
 
-msgid " (Copy)"
-msgstr " (copier)"
-
 msgid " (Data incomplete, maximum number of nodes reached)"
 msgstr " Le nombre maximum de noeuds est dépassé %d/%d"
 
@@ -14221,9 +14218,6 @@ msgstr "Condition"
 msgid "Condition type"
 msgstr "Type de condition"
 
-msgid "Conditional: Always create new user. Fail if it already exists."
-msgstr ""
-
 msgid "Conditions"
 msgstr "Conditions"
 
@@ -17021,16 +17015,12 @@ msgid "Customize GUI design"
 msgstr "Personnaliser la conception de l'interface graphique"
 
 #, fuzzy
-msgid "Customize agent package (UNIX)"
+msgid "Customize agent package (Linux)"
 msgstr "Nom des paquets de l'agent (Linux, UNIX)"
 
 #, python-format
 msgid "Customize and use %s"
 msgstr "Personnaliser et utiliser %s"
-
-#, fuzzy
-msgid "Customize installation directories"
-msgstr "Audit de l'installation de l'agent Checkmk"
 
 msgid "Customize login screen"
 msgstr "Personnaliser l'écran de connexion"
@@ -25420,6 +25410,16 @@ msgid ""
 "members assigned to them."
 msgstr ""
 
+#, fuzzy
+msgid ""
+"Filters hosts or services assigned to the selected contact groups. This "
+"filter only works with Checkmk Micro Core (CMC). If you are not using CMC, "
+"the filter will have no effect."
+msgstr ""
+"L'hôte/le service doit faire partie de l'un des groupes de contacts "
+"sélectionnés. Ceci ne fonctionne qu'avec Checkmk Micro Core. Si vous "
+"n'utilisez pas le CMC, ce filtre ne s'appliquera pas"
+
 msgid "Final notification result"
 msgstr "Résultat de la notification finale"
 
@@ -26656,13 +26656,6 @@ msgid ""
 "GUI extensions in <tt>'%s'</tt> are marked as 'deprecated' and will be "
 "ignored in future Checkmk versions (official deprecation timeline not "
 "decided yet)."
-msgstr ""
-
-msgid ""
-"Gain a complete view of your entire IT infrastructure: from public cloud "
-"providers, to your data centers, across servers, networks, containers, and "
-"more. Checkmk enables ITOps and DevOps teams to run your IT at peak "
-"performance."
 msgstr ""
 
 msgid "Gamelan"
@@ -28829,8 +28822,8 @@ msgstr "Cacher les actions du tableau"
 msgid "Hide the Checkmk version from the login box"
 msgstr "Masquer la version de Checkmk de la boîte de connexion"
 
-#, python-format
-msgid "Hide this %s in dropdown menus"
+#, fuzzy, python-format
+msgid "Hide this %s in drop-down menus"
 msgstr "Cacher ce %s dans les menus déroulants"
 
 #, python-format
@@ -34661,6 +34654,10 @@ msgid "Installation"
 msgstr "Installation"
 
 #, fuzzy
+msgid "Installation directories"
+msgstr "Audit de l'installation de l'agent Checkmk"
+
+#, fuzzy
 msgid "Installation paths for agent files (Linux, UNIX) (deprecated)"
 msgstr "Chemins d'installation des fichiers d'agent (Linux, UNIX)"
 
@@ -37579,9 +37576,6 @@ msgstr "Caractéristique de la licence"
 
 msgid "License Usage"
 msgstr "Utilisation de la licence"
-
-msgid "License agreement"
-msgstr "Contrat de licence"
 
 msgid "License details"
 msgstr "Détails de la licence"
@@ -46714,18 +46708,6 @@ msgstr ""
 "regroupées en un seul service (résumé) ou si chaque unité se voit attribuer "
 "un service individuel (simple)."
 
-msgid ""
-"Optional GID that will be used to create the user's group under the "
-"specified name (with <i>Conditional</i> or <i>Automatic</i> option). Can "
-"also be used to add or verify the group membership to a differently named "
-"group (with <i>Automatic</i> or <i>No user creation</i> option)."
-msgstr ""
-
-msgid ""
-"Optional UID that will be used to create the user under the specified name, "
-"or that will be checked to be associated to the specified username."
-msgstr ""
-
 msgid "Optional general information"
 msgstr "Informations générales facultatives"
 
@@ -46752,6 +46734,20 @@ msgstr "Sélection facultative du groupe de services"
 
 msgid "Optional variable prefix"
 msgstr "Préfixe de variable facultatif"
+
+msgid ""
+"Optional. Usage depends on user creation option:<br><i>Automatic</i>: Create "
+"the user under the specified UID, or verify that it's associated to it if "
+"UID and/or username already exist.<i>No user creation</i>: Verify that the "
+"UID exists and is associated to the specified username."
+msgstr ""
+
+msgid ""
+"Optional. Usage depends on user creation option:<br><i>Automatic</i>: Create "
+"the users's group with the specified GID, or add the user to the GID's group "
+"if it already exists.<br><i>No user creation</i>: Verify that the user is "
+"member of the GID's group."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -55342,12 +55338,6 @@ msgstr "Processus en cours"
 
 msgid "Running sessions"
 msgstr "Séances d'entraînement"
-
-msgid ""
-"Running the agent or agent controller under a custom user requires "
-"deployment under the new directory structure. Please enable the \"Customize "
-"installation directory\" option."
-msgstr ""
 
 msgid "Runtime"
 msgstr "Temps d'exécution"
@@ -67418,6 +67408,19 @@ msgid "The operational transmit power"
 msgstr "La puissance d'émission opérationnelle"
 
 msgid ""
+"The option 'Display a summary over all SLA periods' aggregates all results "
+"of SLA calculations into one result. This means it will show how many "
+"percent of SLA periods have broken the SLA, for example if 1 SLA period of "
+"10 has been broken it will show 10%."
+msgstr ""
+
+msgid ""
+"The option 'Show aggregated info over all SLA periods' combines all SLA "
+"periods but each SLA period is calculated separately. So it will show the "
+"average of all SLA periods."
+msgstr ""
+
+msgid ""
 "The option to use a custom command can only be configured with the "
 "permission \"Can add or modify executables\"."
 msgstr ""
@@ -68078,8 +68081,9 @@ msgstr ""
 msgid ""
 "The selected automation user needs rights for agent registration and "
 "download. If no user is selected, the Agent Bakery tries to find an "
-"\"automation\" automation user.<br>This setting is only obeyed when the "
-"central site version is 2.3.0 and this setting will be removed in a future "
+"\"automation\" automation user.<br>This is only required when the central "
+"site's version is 2.3.0 as from 2.4.0 the connection mode does not require "
+"an automation user anymore. This setting will be thus removed in a future "
 "version."
 msgstr ""
 "L'utilisateur d'automatisation sélectionné a besoin de droits pour "
@@ -72055,8 +72059,8 @@ msgstr ""
 
 msgid ""
 "This rule allows you to customize the user and installation directory of the "
-"agent. If you want to customize the user, such as deploying as an "
-"unprivileged user, you must also configure the installation directory."
+"agent. When using this rule, all agent files will be installed into a "
+"directory defined in this rule."
 msgstr ""
 
 #, fuzzy
@@ -82222,10 +82226,6 @@ msgstr "Visible"
 msgid "Visit Checkmk exchange"
 msgstr "Visitez la bourse Checkmk"
 
-#, python-format
-msgid "Visit our %s to learn more about Checkmk and about the %s."
-msgstr "Visitez notre %s pour en savoir plus sur Checkmk et sur le %s."
-
 msgid "Vista API"
 msgstr "API Vista"
 
@@ -86756,10 +86756,6 @@ msgstr "Votre tâche de planification a été enregistrée."
 msgid "Your Checkmk license expires %s"
 msgstr "Votre licence Checkmk expire en %s"
 
-#, fuzzy
-msgid "Your IT monitoring platform"
-msgstr "Votre machine de surveillance"
-
 msgid "Your WebAuthn credential is already in use"
 msgstr "Votre identifiant WebAuthn est déjà utilisé"
 
@@ -88189,9 +88185,6 @@ msgstr "laserFault"
 msgid "last notification"
 msgstr "dernière notification"
 
-msgid "latest version"
-msgstr "nouvelle version"
-
 msgid "latin1"
 msgstr "latin1"
 
@@ -89259,9 +89252,6 @@ msgstr "avertissement si moins de alors"
 msgid "warning if older than"
 msgstr "avertissement si plus ancien que"
 
-msgid "website"
-msgstr "site web"
-
 msgid "week"
 msgstr "semaine"
 
@@ -89349,10 +89339,6 @@ msgstr ""
 msgid "{} - {}"
 msgstr ""
 
-#, python-format
-msgid "© %s Checkmk GmbH. All Rights Reserved."
-msgstr "© %s Checkmk GmbH. Tous droits réservés."
-
 msgid ""
 "‘Activate changes' is blocked until you go below your service limit by "
 "deleting one or more hosts from your config."
@@ -89365,6 +89351,30 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
+
+#~ msgid " (Copy)"
+#~ msgstr " (copier)"
+
+#~ msgid "License agreement"
+#~ msgstr "Contrat de licence"
+
+#, python-format
+#~ msgid "Visit our %s to learn more about Checkmk and about the %s."
+#~ msgstr "Visitez notre %s pour en savoir plus sur Checkmk et sur le %s."
+
+#, fuzzy
+#~ msgid "Your IT monitoring platform"
+#~ msgstr "Votre machine de surveillance"
+
+#~ msgid "latest version"
+#~ msgstr "nouvelle version"
+
+#~ msgid "website"
+#~ msgstr "site web"
+
+#, python-format
+#~ msgid "© %s Checkmk GmbH. All Rights Reserved."
+#~ msgstr "© %s Checkmk GmbH. Tous droits réservés."
 
 #, fuzzy
 #~ msgid "Unsorted"

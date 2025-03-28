@@ -1221,8 +1221,9 @@ section_omd() {
         ${MK_RUN_SYNC_PARTS} || return
 
         for sitedir in /omd/sites/*; do
-            site="${sitedir#/omd/sites/}"
-            find -L "/omd/sites/${site}/bin" -type f -user "root" -name "cmk-monitor-*" -exec sudo --non-interactive --user="${site}" {} \;
+            site_version="$(basename "$(realpath "${sitedir}/version")")"
+            site=${sitedir#/omd/sites/}
+            find -L "/omd/versions/${site_version}/bin" -type f -user "root" -name "cmk-monitor-*" -exec sudo --non-interactive --user="${site}" {} \;
         done
 
         echo '<<<mknotifyd:sep(0)>>>'

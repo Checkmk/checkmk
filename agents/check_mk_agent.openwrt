@@ -915,30 +915,51 @@ section_nullmailer() {
     fi
 }
 
-section_mknotify() {
-    # Check status of OMD sites and Checkmk Notification spooler
+section_omd() {
     if inpath omd; then
         # 60 is _probably_ the agents polling interval. Why would you use that??
-        _run_cached_internal "omd_status" 60 60 180 120 "echo <<<omd_status>>>; omd status --bare --auto || true"
-        echo '<<<mknotifyd:sep(0)>>>'
-        get_epoch
-        for statefile in /omd/sites/*/var/log/mknotifyd.state; do
-            if [ -e "${statefile}" ]; then
-                site=${statefile%/var/log*}
-                site=${site#/omd/sites/}
-                echo "[${site}]"
-                grep -v '^#' <"${statefile}"
-            fi
-        done
-    fi
-}
+        _run_cached_internal "omd_status" 60 60 180 120 "echo '<<<omd_status>>>'; MK_SOURCE_AGENT=yes . '${0}'; sudo_as_root omd status --bare || true"
 
-section_omd_apache() {
-    if inpath omd; then
+        ${MK_RUN_SYNC_PARTS} || return
+
+        for sitedir in /omd/sites/*; do
+            site_version="$(basename "$(realpath "${sitedir}/version")")"
+            site=${sitedir#/omd/sites/}
+            find -L "/omd/versions/${site_version}/bin" -type f -user "root" -name "cmk-monitor-*" -exec sudo --non-interactive --user="${site}" {} \;
+        done
+
+        echo '<<<omd_info:sep(59)>>>'
+        echo '[versions]'
+        echo 'version;number;edition;demo'
+        for versiondir in /omd/versions/*; do
+            version=${versiondir#/omd/versions/}
+
+            # filter out special directory 'default'
+            if [ "${version}" = "default" ]; then
+                continue
+            fi
+
+            number=${version}
+            demo="0"
+            if [ "${version##*.}" = "demo" ]; then
+                number=${version%.demo}
+                demo="1"
+            fi
+            edition=${number##*.}
+            number=${number%.*}
+            echo "${version};${number};${edition};${demo}"
+        done
+        echo '[sites]'
+        echo 'site;used_version;autostart'
         for sitedir in /omd/sites/*; do
             site=${sitedir#/omd/sites/}
-            script="$(realpath "${sitedir}/bin/cmk-monitor-omd_apache")"
-            [ -e "${script}" ] && [ "$(stat "${script}" -c '%U')" = "root" ] && sudo_as_root OMD_SITE="${site}" "${script}"
+            used_version=$(readlink "${sitedir}"/version)
+            used_version=${used_version##*/}
+            autostart="0"
+            if grep -q "CONFIG_AUTOSTART[[:blank:]]*=[[:blank:]]*'on'" "${sitedir}"/etc/omd/site.conf; then
+                autostart="1"
+            fi
+            echo "${site};${used_version};${autostart}"
         done
     fi
 }
@@ -1513,7 +1534,7 @@ run_purely_synchronous_sections() {
 
     section_nullmailer
 
-    section_mknotify
+    section_omd
 
     section_omd_apache
 

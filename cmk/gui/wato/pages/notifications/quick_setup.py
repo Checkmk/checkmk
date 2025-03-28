@@ -2,6 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import re
 from collections.abc import Mapping, Sequence
 from typing import Any, assert_never, cast, Final, get_args, Literal
 
@@ -476,6 +477,23 @@ class NonEmptyString:
             raise ValidationError(self.error_msg)
 
 
+class IsValidRegularExpression:
+    """Custom validator that checks if the string is a valid regular expression."""
+
+    def __init__(self) -> None:
+        self.error_msg: Final = Message(
+            "Your search statement is not valid. You need to provide a regular expression (regex). For example"
+            " you need to use \\\\ instead of \\ if you want to search for a"
+            " single backslash."
+        )
+
+    def __call__(self, value: str) -> None:
+        try:
+            re.compile(value)
+        except re.error:
+            raise ValidationError(self.error_msg)
+
+
 def filter_for_hosts_and_services() -> QuickSetupStage:
     def _components() -> Sequence[Widget]:
         return [
@@ -664,7 +682,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                         custom_validate=[
                                             not_empty(
                                                 error_msg=Message("Please add at least one host.")
-                                            )
+                                            ),
                                         ],
                                     ),
                                 ),
@@ -746,6 +764,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 title=Title("Services"),
                                                 string_spec=String(
                                                     field_size=FieldSize.MEDIUM,
+                                                    custom_validate=[IsValidRegularExpression()],
                                                 ),
                                                 custom_validate=[
                                                     not_empty(
@@ -761,6 +780,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 title=Title("Exclude services"),
                                                 string_spec=String(
                                                     field_size=FieldSize.MEDIUM,
+                                                    custom_validate=[IsValidRegularExpression()],
                                                 ),
                                                 custom_validate=[
                                                     not_empty(

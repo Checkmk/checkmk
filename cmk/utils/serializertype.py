@@ -46,7 +46,7 @@ class Serializer(Protocol):
         return bytes(other) + bytes(self)
 
     def __len__(self) -> int:
-        return len(bytes(self))
+        return sum(len(memoryview(b)) for b in self)
 
     def __bytes__(self) -> bytes:
         return b"".join(self)

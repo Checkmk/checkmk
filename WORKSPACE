@@ -1,28 +1,11 @@
 workspace(name = "omd_packages")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-load("//:bazel_variables.bzl", "RUFF_VERSION", "UPSTREAM_MIRROR_URL")
-
-RULES_PKG_VERSION = "0.9.1"
-
-http_archive(
-    name = "rules_pkg",
-    sha256 = "8f9ee2dc10c1ae514ee599a8b42ed99fa262b757058f65ad3c384289ff70c4b8",
-    urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/rules_pkg/releases/download/" + RULES_PKG_VERSION + "/rules_pkg-" + RULES_PKG_VERSION + ".tar.gz",
-        "https://github.com/bazelbuild/rules_pkg/releases/download/" + RULES_PKG_VERSION + "/rules_pkg-" + RULES_PKG_VERSION + ".tar.gz",
-        UPSTREAM_MIRROR_URL + "rules_pkg-" + RULES_PKG_VERSION + ".tar.gz",
-    ],
-)
-
 load("@rules_rust//crate_universe:defs.bzl", "crate", "crates_repository")
+load("//:bazel_variables.bzl", "RUFF_VERSION")
 load("//bazel/rules:rust_workspace.bzl", "rust_workspace")
 
 rust_workspace()
-
-load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
-
-rules_pkg_dependencies()
 
 #   .--PACKAGES------------------------------------------------------------.
 #   |           ____   _    ____ _  __    _    ____ _____ ____             |

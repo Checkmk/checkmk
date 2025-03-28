@@ -75,9 +75,9 @@ class CustomSnapinParamsRowModel(BaseModel):
 
 class CustomSnapinParamsModel(BaseModel):
     rows: list[CustomSnapinParamsRowModel]
-    show_failed_notifications: bool
-    show_sites_not_connected: bool
-    show_stale: bool
+    show_failed_notifications: bool = True
+    show_sites_not_connected: bool = True
+    show_stale: bool = True
 
 
 class CustomSnapinsModel(pagetypes.OverridableModel):

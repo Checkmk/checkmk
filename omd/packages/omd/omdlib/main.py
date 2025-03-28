@@ -2941,7 +2941,7 @@ def main_update(  # pylint: disable=too-many-branches
     if (
         is_major_update
         and access_to_from_version
-        and get_site_distributed_setup() == SiteDistributedSetup.DISTRIBUTED_REMOTE
+        and get_site_distributed_setup() != SiteDistributedSetup.DISTRIBUTED_REMOTE
     ):
         unack_werks = unacknowledged_incompatible_werks()
         if len(unack_werks):

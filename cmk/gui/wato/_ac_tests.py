@@ -28,7 +28,7 @@ from cmk.utils.paths import (
     local_pnp_templates_dir,
     local_web_dir,
 )
-from cmk.utils.rulesets.definition import RuleGroup
+from cmk.utils.rulesets.definition import RuleGroup, RuleGroupType
 from cmk.utils.user import UserId
 
 import cmk.gui.userdb.ldap_connector as ldap
@@ -1355,10 +1355,16 @@ class ACTestDeprecatedRuleSets(ACTest):
 
     def execute(self) -> Iterator[ACSingleResult]:
         site_id = omd_site()
+        unknown_check_parameter_rule_sets = [
+            f"{RuleGroupType.CHECKGROUP_PARAMETERS.value}:{r}"
+            for r in find_unknown_check_parameter_rule_sets().result
+        ]
         if deprecated_rule_sets := [
             r
             for r in AllRulesets.load_all_rulesets().get_rulesets().values()
-            if r.is_deprecated() and r.num_rules()
+            if r.is_deprecated()
+            and r.num_rules()
+            and r.name not in unknown_check_parameter_rule_sets
         ]:
             for rule_set in deprecated_rule_sets:
                 yield ACSingleResult(

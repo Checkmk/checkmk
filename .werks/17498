@@ -1,0 +1,16 @@
+Title: Support v7 APC UPS Firmware and monitor UPS connection
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1743491776
+Edition: cre
+Level: 1
+Version: 2.2.0p42
+
+The apc_symmetra rule to monitor aspects of an APC Symmetra UPS 
+did not result in any services when running on the v7 firmware.
+
+This was caused by a shorter identifying OID for the v7 version of the firmware.
+
+In this werk, we add support for the v7 firmware and additionally
+monitor whether the connection to the UPS can be established.

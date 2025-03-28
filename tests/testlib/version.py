@@ -12,14 +12,12 @@ import time
 from collections.abc import Callable
 from typing import Final, Self
 
-import git
 from packaging.version import Version
 
 from tests.testlib.common.repo import (
     branch_from_env,
     current_base_branch_name,
     current_branch_version,
-    repo_path,
 )
 from tests.testlib.common.utils import version_spec_from_env
 
@@ -355,7 +353,3 @@ def edition_from_env(fallback: Edition = CMKEdition.CEE) -> CMKEditionType:
 def get_min_version() -> CMKVersion:
     """Minimal version supported for an update to the daily version of this branch."""
     return CMKVersion(os.getenv("MIN_VERSION", "2.4.0b1"))
-
-
-def git_tag_exists(version: CMKVersion) -> bool:
-    return f"v{version.version}" in [str(t) for t in git.Repo(repo_path()).tags]

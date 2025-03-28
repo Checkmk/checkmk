@@ -441,6 +441,22 @@ def test_sign_csr(
     )
 
 
+def test_csr_serialization() -> None:
+    private_key = PrivateKey.generate_elliptic_curve()
+    csr = CertificateSigningRequest.create(
+        subject_name=X509Name.create(
+            common_name="test_csr_serialization", organization_name="cmk.crypto.unittest"
+        ),
+        subject_private_key=private_key,
+    )
+
+    csr_pem = csr.dump_pem()
+    loaded_csr = CertificateSigningRequest.load_pem(csr_pem)
+
+    assert loaded_csr.subject == csr.subject
+    assert loaded_csr.public_key == csr.public_key
+
+
 def test_may_sign_certificates() -> None:
     pem = CertificatePEM(
         # openssl req -x509 -newkey rsa:1024 -sha256 -nodes -keyout key.pem -out cert.pem -days 365

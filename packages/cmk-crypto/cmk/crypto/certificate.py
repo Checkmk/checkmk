@@ -702,6 +702,10 @@ class X509Name:
         return self.name.rfc4514_string()
 
 
+class CertificateSigningRequestPEM(_PEMData):
+    """A Certificate Signing Request in pem format"""
+
+
 @dataclass
 class CertificateSigningRequest:
     """A request for some certificate authority to create and sign a certifiate for the requesting
@@ -746,3 +750,15 @@ class CertificateSigningRequest:
     @property
     def is_signature_valid(self) -> bool:
         return self.csr.is_signature_valid
+
+    def dump_pem(self) -> CertificateSigningRequestPEM:
+        """Return the CSR in PEM format"""
+        return CertificateSigningRequestPEM(self.csr.public_bytes(serialization.Encoding.PEM))
+
+    @classmethod
+    def load_pem(cls, pem_data: CertificateSigningRequestPEM) -> CertificateSigningRequest:
+        """Load a CSR from PEM format"""
+        try:
+            return cls(x509.load_pem_x509_csr(pem_data.bytes))
+        except ValueError as exc:
+            raise PEMDecodingError("Unable to load CSR.") from exc

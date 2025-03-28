@@ -49,6 +49,7 @@ const cascadingSingleChoiceSpec: FormSpec.CascadingSingleChoice = {
   help: 'fooHelp',
   validators: [],
   input_hint: '',
+  no_elements_text: '',
   elements: [
     {
       name: 'stringChoice',

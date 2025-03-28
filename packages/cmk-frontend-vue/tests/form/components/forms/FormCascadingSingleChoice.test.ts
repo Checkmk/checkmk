@@ -50,6 +50,7 @@ const spec: FormSpec.CascadingSingleChoice = {
   help: 'fooHelp',
   validators: [],
   input_hint: '',
+  no_elements_text: '',
   elements: [
     {
       name: 'stringChoice',
@@ -218,6 +219,7 @@ test('FormCascadingSingleChoice does not poisen the template value', async () =>
     help: 'fooHelp',
     validators: [],
     input_hint: '',
+    no_elements_text: '',
     elements: [
       {
         name: 'dictChoice',

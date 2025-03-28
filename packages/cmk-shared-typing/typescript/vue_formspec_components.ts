@@ -105,6 +105,7 @@ export type SingleChoice = FormSpec & {
 export type CascadingSingleChoice = FormSpec & {
   type: "cascading_single_choice";
   elements: CascadingSingleChoiceElement[];
+  no_elements_text: string;
   label: string | null;
   input_hint: string | null;
   layout: CascadingSingleChoiceLayout;

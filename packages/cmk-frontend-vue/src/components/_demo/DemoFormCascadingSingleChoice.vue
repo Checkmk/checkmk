@@ -27,6 +27,7 @@ const spec = computed(() => {
     label: 'some label',
     layout: layout.value,
     input_hint: '',
+    no_elements_text: '',
     elements: [
       {
         name: 'integerChoice',
@@ -73,6 +74,7 @@ const spec = computed(() => {
           input_hint: 'nestedChoiceInputHint',
           field_size: 'SMALL',
           layout: nestedLayout.value,
+          no_elements_text: '',
           elements: [
             {
               name: 'integerChoice',

@@ -21,6 +21,7 @@ from ._utils import (
     compute_validators,
     get_prefill_default,
     get_title_and_help,
+    localize,
 )
 
 _ParsedValueModel = tuple[str, object]
@@ -85,6 +86,7 @@ class CascadingSingleChoiceVisitor(
                 help=help_text,
                 i18n_base=base_i18n_form_spec(),
                 elements=vue_elements,
+                no_elements_text=localize(self.form_spec.no_elements_text),
                 validators=build_vue_validators(compute_validators(self.form_spec)),
                 input_hint=compute_title_input_hint(self.form_spec.prefill),
                 layout=self.form_spec.layout,

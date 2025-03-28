@@ -2079,12 +2079,17 @@ def _convert_to_legacy_levels(
         case ruleset_api_v1.form_specs.Integer() | ruleset_api_v1.form_specs.DataSize():
             prefill_value = to_convert.prefill_fixed_levels.value
 
+    validate = None
+    if to_convert.custom_validate is not None:
+        validate = _convert_to_legacy_validation(to_convert.custom_validate, localizer)
     return legacy_valuespecs.Transform(
         legacy_valuespecs.CascadingDropdown(
             title=_localize_optional(to_convert.title, localizer),
             help=_localize_optional(to_convert.help_text, localizer),
             choices=choices,
             default_value=_make_levels_default_value(to_convert, prefill_value),
+            # Mypy does not see, to see Literal["..."] as a str
+            validate=validate,  # type: ignore[arg-type]
         ),
         back=_transform_levels_back,
         forth=_transform_levels_forth,

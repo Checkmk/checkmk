@@ -2393,6 +2393,68 @@ def test_level_conversion(
     )
 
 
+def test_levels_formspec_template_custom_validate() -> None:
+    api_v1_levels = api_v1.form_specs.SimpleLevels(
+        form_spec_template=api_v1.form_specs.Float(
+            custom_validate=(api_v1.form_specs.validators.NumberInRange(0, None),)
+        ),
+        level_direction=api_v1.form_specs.LevelDirection.UPPER,
+        prefill_fixed_levels=api_v1.form_specs.DefaultValue((23.0, 42.0)),
+    )
+    legacy_levels = convert_to_legacy_valuespec(api_v1_levels, translate_to_current_language)
+    with pytest.raises(MKUserError, match="The minimum allowed value is 0"):
+        legacy_levels.validate_value(("fixed", (-10.0, -5.0)), "var_prefix")
+
+
+def test_simple_levels_custom_validate() -> None:
+    def _simple_levels_example_validator(
+        x: api_v1.form_specs.SimpleLevelsConfigModel[float],
+    ) -> None:
+        match x:
+            case ("fixed", (float(warn), float(crit))):
+                if warn > crit:
+                    raise api_v1.form_specs.validators.ValidationError(
+                        message=api_v1.Message("Warning level must be lower than critical level")
+                    )
+
+    api_v1_levels = api_v1.form_specs.SimpleLevels(
+        form_spec_template=api_v1.form_specs.Float(),
+        level_direction=api_v1.form_specs.LevelDirection.UPPER,
+        prefill_fixed_levels=api_v1.form_specs.DefaultValue((23.0, 42.0)),
+        custom_validate=(_simple_levels_example_validator,),
+    )
+    legacy_levels = convert_to_legacy_valuespec(api_v1_levels, translate_to_current_language)
+    with pytest.raises(MKUserError, match="Warning level must be lower than critical level"):
+        legacy_levels.validate_value(("fixed", (10.0, 5.0)), "var_prefix")
+
+
+def test_levels_custom_validate() -> None:
+    def _levels_example_validator(x: api_v1.form_specs.LevelsConfigModel[float]) -> None:
+        match x:
+            case ("fixed", (float(warn), float(crit))):
+                if warn > crit:
+                    raise api_v1.form_specs.validators.ValidationError(
+                        message=api_v1.Message("Warning level must be lower than critical level")
+                    )
+
+    api_v1_levels = api_v1.form_specs.Levels(
+        form_spec_template=api_v1.form_specs.Float(),
+        level_direction=api_v1.form_specs.LevelDirection.UPPER,
+        prefill_fixed_levels=api_v1.form_specs.DefaultValue((23.0, 42.0)),
+        predictive=api_v1.form_specs.PredictiveLevels(
+            reference_metric="my_metric",
+            prefill_abs_diff=api_v1.form_specs.DefaultValue((5.0, 10.0)),
+            prefill_rel_diff=api_v1.form_specs.DefaultValue((10.0, 20.0)),
+            prefill_stdev_diff=api_v1.form_specs.DefaultValue((2.0, 4.0)),
+        ),
+        custom_validate=(_levels_example_validator,),
+    )
+    legacy_levels = convert_to_legacy_valuespec(api_v1_levels, translate_to_current_language)
+
+    with pytest.raises(MKUserError, match="Warning level must be lower than critical level"):
+        legacy_levels.validate_value(("fixed", (10.0, 5.0)), "var_prefix")
+
+
 @pytest.mark.parametrize(
     ["input_elements", "consumer_model", "form_model"],
     [
@@ -2423,7 +2485,8 @@ def test_level_conversion(
                 "b": api_v1.form_specs.DictElement(
                     parameter_form=api_v1.form_specs.Integer(),
                     group=api_v1.form_specs.DictGroup(
-                        title=api_v1.Title("Group title"), help_text=api_v1.Help("Help text")
+                        title=api_v1.Title("Group title"),
+                        help_text=api_v1.Help("Help text"),
                     ),
                 ),
             },
@@ -2836,7 +2899,8 @@ def _out_migration(values: object) -> dict[str, object]:
                         parameter_form=api_v1.form_specs.Dictionary(
                             elements={
                                 "a_nested": api_v1.form_specs.DictElement(
-                                    parameter_form=api_v1.form_specs.Integer(), required=True
+                                    parameter_form=api_v1.form_specs.Integer(),
+                                    required=True,
                                 ),
                             }
                         ),
@@ -3080,7 +3144,8 @@ def test_dictionary_groups_legacy_validation(
                         parameter_form=api_v1.form_specs.Dictionary(
                             elements={
                                 "a_nested": api_v1.form_specs.DictElement(
-                                    parameter_form=api_v1.form_specs.Integer(), required=True
+                                    parameter_form=api_v1.form_specs.Integer(),
+                                    required=True,
                                 ),
                             }
                         ),

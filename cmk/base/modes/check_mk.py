@@ -93,7 +93,15 @@ from cmk.checkengine.parser import (
     ParserFunction,
     SectionNameCollection,
 )
-from cmk.checkengine.plugins import CheckPluginName, InventoryPlugin, InventoryPluginName
+from cmk.checkengine.plugins import (
+    AgentBasedPlugins,
+    AgentSectionPlugin,
+    CheckPlugin,
+    CheckPluginName,
+    InventoryPlugin,
+    InventoryPluginName,
+    SNMPSectionPlugin,
+)
 from cmk.checkengine.sectionparser import SectionPlugin
 from cmk.checkengine.submitters import get_submitter, ServiceState
 from cmk.checkengine.summarize import summarize, SummarizerFunction
@@ -105,12 +113,6 @@ import cmk.base.diagnostics
 import cmk.base.dump_host
 import cmk.base.parent_scan
 from cmk.base import config, profiling, sources
-from cmk.base.api.agent_based.plugin_classes import (
-    AgentBasedPlugins,
-    AgentSectionPlugin,
-    CheckPlugin,
-    SNMPSectionPlugin,
-)
 from cmk.base.api.agent_based.register import (
     extract_known_discovery_rulesets,
     filter_relevant_raw_sections,

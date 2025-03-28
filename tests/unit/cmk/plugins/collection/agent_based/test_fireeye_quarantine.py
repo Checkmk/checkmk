@@ -4,18 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Callable
+
 import pytest
 
-from cmk.checkengine.plugins import CheckPluginName
-
-from cmk.base.api.agent_based.plugin_classes import (
+from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     CheckFunction,
     CheckPlugin,
-    DiscoveryFunction,
+    CheckPluginName,
 )
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import DiscoveryResult, Metric, Result, Service, State
+
+type DiscoveryFunction = Callable[..., DiscoveryResult]
 
 _PLUGIN = CheckPluginName("fireeye_quarantine")
 

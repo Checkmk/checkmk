@@ -10,7 +10,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from cmk.base.api.agent_based.plugin_classes import (
+from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     AgentSectionPlugin,
     CheckPlugin,

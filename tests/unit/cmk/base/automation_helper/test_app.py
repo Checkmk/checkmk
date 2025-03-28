@@ -24,7 +24,8 @@ from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.automations.helper_api import AutomationPayload, AutomationResponse
 from cmk.automations.results import ABCAutomationResult, SerializedResult
 
-from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
+from cmk.checkengine.plugins import AgentBasedPlugins
+
 from cmk.base.automation_helper._app import (
     _reloader_task,
     _State,

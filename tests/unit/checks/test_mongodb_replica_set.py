@@ -11,9 +11,7 @@ import time_machine
 
 from cmk.utils.sectionname import SectionName
 
-from cmk.checkengine.plugins import CheckPluginName
-
-from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins, CheckPlugin
+from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, CheckPluginName
 
 from cmk.agent_based.v2 import Result, Service, State
 

@@ -11,15 +11,16 @@ from typing import Final, get_args, Literal, NoReturn, Union
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.sectionname import SectionName
 
-from cmk.checkengine.plugins import CheckPluginName, InventoryPlugin, InventoryPluginName
-from cmk.checkengine.sectionparser import ParsedSectionName
-
-from cmk.base.api.agent_based.plugin_classes import (
+from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     CheckPlugin,
+    CheckPluginName,
+    InventoryPlugin,
+    InventoryPluginName,
     SectionPlugin,
     SNMPSectionPlugin,
 )
+from cmk.checkengine.sectionparser import ParsedSectionName
 
 from cmk.agent_based.v1.register import RuleSetType
 

@@ -8,8 +8,9 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
+from cmk.checkengine.plugins import AgentBasedPlugins, LegacyPluginLocation
+
 import cmk.base.api.agent_based.register as agent_based_register
-from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins, LegacyPluginLocation
 
 from cmk.discover_plugins import PluginLocation
 

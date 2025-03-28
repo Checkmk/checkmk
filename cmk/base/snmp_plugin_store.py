@@ -8,7 +8,7 @@ from cmk.snmplib import BackendSNMPTree, SNMPDetectSpec
 
 from cmk.fetchers.snmp import SNMPPluginStore, SNMPPluginStoreItem
 
-from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
+from cmk.checkengine.plugins import AgentBasedPlugins
 
 __all__ = ["make_plugin_store"]
 

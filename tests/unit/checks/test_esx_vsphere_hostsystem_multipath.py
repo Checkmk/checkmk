@@ -5,9 +5,7 @@
 
 import pytest
 
-from cmk.checkengine.plugins import CheckPluginName
-
-from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
+from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
 
 from cmk.agent_based.v1 import Result, State
 from cmk.agent_based.v1.type_defs import CheckResult

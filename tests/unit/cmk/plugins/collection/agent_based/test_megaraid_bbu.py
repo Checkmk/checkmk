@@ -4,22 +4,24 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Callable
+
 import pytest
 
 from cmk.utils.sectionname import SectionName
 
-from cmk.checkengine.plugins import CheckPluginName
-
-from cmk.base.api.agent_based.plugin_classes import (
+from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     CheckFunction,
     CheckPlugin,
-    DiscoveryFunction,
+    CheckPluginName,
 )
 
-from cmk.agent_based.v2 import Result, Service, State
+from cmk.agent_based.v2 import DiscoveryResult, Result, Service, State
 
 check_name = "megaraid_bbu"
+
+type DiscoveryFunction = Callable[..., DiscoveryResult]
 
 
 # TODO: drop this after migration

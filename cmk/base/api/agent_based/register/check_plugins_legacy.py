@@ -14,8 +14,8 @@ from contextlib import suppress
 from typing import Any
 
 from cmk.checkengine.parameters import Parameters
+from cmk.checkengine.plugins import CheckPlugin, LegacyPluginLocation
 
-from cmk.base.api.agent_based.plugin_classes import CheckPlugin, LegacyPluginLocation
 from cmk.base.api.agent_based.register.check_plugins import (
     create_check_plugin,
 )

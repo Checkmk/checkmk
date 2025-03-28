@@ -16,10 +16,9 @@ from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.checkengine.discovery import AutochecksStore
 from cmk.checkengine.legacy import LegacyCheckParameters
-from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
+from cmk.checkengine.plugins import AutocheckEntry, CheckPlugin, CheckPluginName
 
 from cmk.base.api.agent_based import register
-from cmk.base.api.agent_based.plugin_classes import CheckPlugin
 from cmk.base.config import load_all_plugins
 
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection

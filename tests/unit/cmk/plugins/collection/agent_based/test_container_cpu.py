@@ -7,9 +7,7 @@ import pytest
 
 from cmk.utils.sectionname import SectionName
 
-from cmk.checkengine.plugins import CheckPluginName
-
-from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
+from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
 
 from cmk.agent_based.v2 import GetRateError, Metric, Result, State, StringTable
 

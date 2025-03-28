@@ -122,24 +122,22 @@ from cmk.checkengine.parser import (
     SNMPParser,
 )
 from cmk.checkengine.plugins import (
+    AgentBasedPlugins,
+    AgentSectionPlugin,
     AutocheckEntry,
+    CheckPlugin,
     CheckPluginName,
     ConfiguredService,
     InventoryPlugin,
+    RuleSetTypeName,
     ServiceID,
+    SNMPSectionPlugin,
 )
 from cmk.checkengine.summarize import SummaryConfig
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import default_config
 from cmk.base.api.agent_based.cluster_mode import ClusterMode
-from cmk.base.api.agent_based.plugin_classes import (
-    AgentBasedPlugins,
-    AgentSectionPlugin,
-    CheckPlugin,
-    RuleSetTypeName,
-    SNMPSectionPlugin,
-)
 from cmk.base.api.agent_based.register.check_plugins_legacy import convert_legacy_check_plugins
 from cmk.base.api.agent_based.register.section_plugins_legacy import (
     convert_legacy_sections,

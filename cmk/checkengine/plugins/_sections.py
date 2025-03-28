@@ -6,36 +6,23 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass
-from typing import Any, Literal, NamedTuple, Protocol, Self
+from typing import Any, Literal, NamedTuple, Protocol
 
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib import SNMPDetectBaseType
 
-from cmk.checkengine.plugins import CheckPluginName, InventoryPlugin, InventoryPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 from cmk.agent_based.v2 import (
-    CheckResult,
-    DiscoveryResult,
     HostLabelGenerator,
     StringByteTable,
     StringTable,
 )
 from cmk.discover_plugins import PluginLocation
 
-
-@dataclass(frozen=True)
-class LegacyPluginLocation:
-    file_name: str
-
-
-CheckFunction = Callable[..., CheckResult]
-DiscoveryFunction = Callable[..., DiscoveryResult]
-
-RuleSetTypeName = Literal["merged", "all"]
+from ._common import LegacyPluginLocation, RuleSetTypeName
 
 AgentParseFunction = Callable[[StringTable], Any]
 
@@ -93,37 +80,3 @@ class SNMPSectionPlugin(NamedTuple):
 
 
 SectionPlugin = AgentSectionPlugin | SNMPSectionPlugin
-
-
-class CheckPlugin(NamedTuple):
-    name: CheckPluginName
-    sections: list[ParsedSectionName]
-    service_name: str
-    discovery_function: DiscoveryFunction
-    discovery_default_parameters: Mapping[str, object] | None
-    discovery_ruleset_name: RuleSetName | None
-    discovery_ruleset_type: RuleSetTypeName
-    check_function: CheckFunction
-    check_default_parameters: Mapping[str, object] | None
-    check_ruleset_name: RuleSetName | None
-    cluster_check_function: CheckFunction | None
-    location: PluginLocation | LegacyPluginLocation
-
-
-@dataclass(frozen=True, kw_only=True)
-class AgentBasedPlugins:
-    agent_sections: Mapping[SectionName, AgentSectionPlugin]
-    snmp_sections: Mapping[SectionName, SNMPSectionPlugin]
-    check_plugins: Mapping[CheckPluginName, CheckPlugin]
-    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin]
-    errors: Sequence[str]
-
-    @classmethod
-    def empty(cls) -> Self:
-        return cls(
-            agent_sections={},
-            snmp_sections={},
-            check_plugins={},
-            inventory_plugins={},
-            errors=(),
-        )

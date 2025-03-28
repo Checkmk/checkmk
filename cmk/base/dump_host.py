@@ -38,10 +38,10 @@ from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.checkengine.fetcher import SourceType
 from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.parser import NO_SELECTION
+from cmk.checkengine.plugins import AgentBasedPlugins
 
 import cmk.base.core
 from cmk.base import sources
-from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.config import (
     ConfigCache,
     ConfiguredIPLookup,

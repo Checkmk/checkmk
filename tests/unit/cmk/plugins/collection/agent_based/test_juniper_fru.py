@@ -11,9 +11,7 @@ from tests.unit.cmk.plugins.collection.agent_based.snmp import (
     snmp_is_detected,
 )
 
-from cmk.checkengine.plugins import CheckPluginName
-
-from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
+from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
 
 from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.juniper.agent_based.juniper_fru_section import snmp_section_juniper_fru

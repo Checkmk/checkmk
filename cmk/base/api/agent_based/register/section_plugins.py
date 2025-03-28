@@ -18,9 +18,7 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib import SNMPDetectBaseType
 
-from cmk.checkengine.sectionparser import ParsedSectionName
-
-from cmk.base.api.agent_based.plugin_classes import (
+from cmk.checkengine.plugins import (
     AgentParseFunction,
     AgentSectionPlugin,
     HostLabelFunction,
@@ -29,6 +27,8 @@ from cmk.base.api.agent_based.plugin_classes import (
     SNMPParseFunction,
     SNMPSectionPlugin,
 )
+from cmk.checkengine.sectionparser import ParsedSectionName
+
 from cmk.base.api.agent_based.register.utils import (
     validate_default_parameters,
     validate_function_arguments,

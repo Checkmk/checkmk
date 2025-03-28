@@ -23,8 +23,9 @@ from cmk.utils.timeout import Timeout
 
 from cmk.automations.results import ABCAutomationResult
 
+from cmk.checkengine.plugins import AgentBasedPlugins
+
 from cmk.base import config, profiling
-from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 
 from cmk import trace
 

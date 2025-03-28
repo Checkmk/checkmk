@@ -34,12 +34,11 @@ from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.servicename import MAX_SERVICE_NAME_LEN, ServiceName
 from cmk.utils.timeperiod import add_builtin_timeperiods
 
-from cmk.checkengine.plugins import CheckPluginName
+from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, CheckPluginName
 
 import cmk.base.utils
 from cmk.base import config, core_config
 from cmk.base.api.agent_based import plugin_index
-from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins, CheckPlugin
 from cmk.base.api.agent_based.register import get_check_plugin
 from cmk.base.config import ConfigCache, HostgroupName, ObjectAttributes, ServicegroupName
 from cmk.base.core_config import (

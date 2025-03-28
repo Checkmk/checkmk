@@ -45,13 +45,13 @@ from cmk.checkengine.plugins import (
     ConfiguredService,
     InventoryPlugin,
     InventoryPluginName,
+    LegacyPluginLocation,
     ServiceID,
 )
+from cmk.checkengine.plugins import CheckPlugin as CheckPluginAPI
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config
-from cmk.base.api.agent_based.plugin_classes import CheckPlugin as CheckPluginAPI
-from cmk.base.api.agent_based.plugin_classes import LegacyPluginLocation
 from cmk.base.api.agent_based.register.check_plugins_legacy import convert_legacy_check_plugins
 from cmk.base.api.agent_based.register.section_plugins_legacy import convert_legacy_sections
 from cmk.base.config import ConfigCache, ConfiguredIPLookup, handle_ip_lookup_failure

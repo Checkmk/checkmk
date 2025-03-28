@@ -28,14 +28,13 @@ from cmk.checkengine.discovery._autochecks import AutochecksStore
 from cmk.checkengine.fetcher import SourceInfo
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.parser import NO_SELECTION
-from cmk.checkengine.plugins import ConfiguredService
+from cmk.checkengine.plugins import AgentBasedPlugins, ConfiguredService
 from cmk.checkengine.submitters import (
     FormattedSubmittee,
     Submitter,
 )
 from cmk.checkengine.summarize import SummaryConfig
 
-from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.checkers import (
     CMKParser,
     CMKSummarizer,

@@ -7,11 +7,12 @@
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import cast
 
-from cmk.base.api.agent_based.plugin_classes import (
+from cmk.checkengine.plugins import (
     AgentSectionPlugin,
     LegacyPluginLocation,
     SNMPSectionPlugin,
 )
+
 from cmk.base.api.agent_based.register.section_plugins import (
     create_agent_section_plugin,
     create_snmp_section_plugin,

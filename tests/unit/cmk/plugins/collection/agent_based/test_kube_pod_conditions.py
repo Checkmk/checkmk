@@ -10,7 +10,7 @@ import pytest
 from polyfactory.factories.pydantic_factory import ModelFactory
 from pydantic import ValidationError
 
-from cmk.base.api.agent_based.plugin_classes import (
+from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     AgentSectionPlugin,
     CheckPlugin,

@@ -57,7 +57,7 @@ from cmk.checkengine.discovery._filters import RediscoveryParameters, ServiceFil
 from cmk.checkengine.discovery._utils import DiscoveredItem
 from cmk.checkengine.fetcher import HostKey, SourceType
 from cmk.checkengine.parser import AgentRawDataSection, HostSections, NO_SELECTION
-from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName, ServiceID
+from cmk.checkengine.plugins import AgentBasedPlugins, AutocheckEntry, CheckPluginName, ServiceID
 from cmk.checkengine.sectionparser import (
     ParsedSectionName,
     ParsedSectionsResolver,
@@ -67,7 +67,6 @@ from cmk.checkengine.sectionparser import (
 )
 
 from cmk.base import config
-from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.checkers import (
     CMKFetcher,
     CMKParser,

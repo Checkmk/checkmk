@@ -10,15 +10,15 @@ from typing import Any
 
 from cmk.utils.rulesets import RuleSetName
 
-from cmk.checkengine.plugins import CheckPluginName
-from cmk.checkengine.sectionparser import ParsedSectionName
-
-from cmk.base.api.agent_based.plugin_classes import (
+from cmk.checkengine.plugins import (
     CheckFunction,
     CheckPlugin,
+    CheckPluginName,
     DiscoveryFunction,
     LegacyPluginLocation,
 )
+from cmk.checkengine.sectionparser import ParsedSectionName
+
 from cmk.base.api.agent_based.register.utils import (
     create_subscribed_sections,
     ITEM_VARIABLE,

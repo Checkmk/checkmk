@@ -32,10 +32,9 @@ from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.tags import TagGroupID, TagID
 
-from cmk.checkengine.plugins import ServiceID
+from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
 
 from cmk.base import config
-from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.nagios_utils import do_check_nagiosconfig
 

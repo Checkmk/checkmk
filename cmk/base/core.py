@@ -23,9 +23,10 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 
+from cmk.checkengine.plugins import AgentBasedPlugins
+
 import cmk.base.nagios_utils
 from cmk.base import core_config
-from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
 from cmk.base.config import ConfigCache, ConfiguredIPLookup
 from cmk.base.core_config import MonitoringCore
 

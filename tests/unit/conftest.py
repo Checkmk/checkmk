@@ -40,7 +40,7 @@ from cmk.utils.livestatus_helpers.testing import (
     MockLiveStatusConnection,
 )
 
-from cmk.base.api.agent_based.plugin_classes import (  # pylint: disable=cmk-module-layer-violation
+from cmk.checkengine.plugins import (  # pylint: disable=cmk-module-layer-violation
     AgentBasedPlugins,
 )
 

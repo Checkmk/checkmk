@@ -13,13 +13,11 @@ import pytest
 from cmk.utils.hostaddress import HostName
 
 from cmk.checkengine import value_store
-from cmk.checkengine.plugins import CheckPluginName, ServiceID
+from cmk.checkengine.plugins import CheckFunction, CheckPlugin, CheckPluginName, ServiceID
 
 from cmk.base.api.agent_based import cluster_mode
-from cmk.base.api.agent_based.plugin_classes import CheckFunction, CheckPlugin
 
-from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric, Result, State
-from cmk.agent_based.v1.type_defs import CheckResult
+from cmk.agent_based.v2 import CheckResult, IgnoreResults, IgnoreResultsError, Metric, Result, State
 from cmk.discover_plugins import PluginLocation
 
 TEST_SERVICE_ID = ServiceID(CheckPluginName("unit_test_plugin"), "unit_test_item")

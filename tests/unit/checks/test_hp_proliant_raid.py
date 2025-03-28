@@ -8,11 +8,10 @@ import pytest
 
 from cmk.utils.sectionname import SectionName
 
-from cmk.checkengine.plugins import CheckPluginName
-
-from cmk.base.api.agent_based.plugin_classes import (
+from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     CheckPlugin,
+    CheckPluginName,
     SNMPSectionPlugin,
 )
 

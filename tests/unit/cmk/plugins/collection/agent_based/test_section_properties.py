@@ -8,10 +8,11 @@ from collections.abc import Hashable, Mapping
 
 from cmk.utils.sectionname import SectionName
 
-from cmk.base.api.agent_based.plugin_classes import (
+from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     SectionPlugin,
 )
+
 from cmk.base.api.agent_based.register import filter_relevant_raw_sections
 
 

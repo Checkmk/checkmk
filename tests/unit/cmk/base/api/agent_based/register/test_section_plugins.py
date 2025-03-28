@@ -10,9 +10,9 @@ import pytest
 
 from cmk.utils.sectionname import SectionName
 
+from cmk.checkengine.plugins import AgentSectionPlugin, SNMPSectionPlugin
 from cmk.checkengine.sectionparser import ParsedSectionName
 
-from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin, SNMPSectionPlugin
 from cmk.base.api.agent_based.register import section_plugins
 
 from cmk.agent_based.v2 import (

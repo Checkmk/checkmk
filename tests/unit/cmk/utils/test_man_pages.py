@@ -16,7 +16,7 @@ from tests.unit.mocks_and_helpers import FixPluginLegacy
 
 from cmk.utils import man_pages
 
-from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
+from cmk.checkengine.plugins import AgentBasedPlugins
 
 from cmk.agent_based.v2 import CheckPlugin
 from cmk.discover_plugins import discover_all_plugins, discover_families, PluginGroup

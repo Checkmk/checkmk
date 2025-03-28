@@ -60,6 +60,7 @@ from cmk.checkengine.fetcher import HostKey, SourceInfo, SourceType
 from cmk.checkengine.parameters import Parameters
 from cmk.checkengine.parser import HostSections, NO_SELECTION, parse_raw_data, SectionNameCollection
 from cmk.checkengine.plugins import (
+    AgentBasedPlugins,
     AggregatedResult,
     AutocheckEntry,
     CheckerPlugin,
@@ -67,6 +68,9 @@ from cmk.checkengine.plugins import (
     ConfiguredService,
     DiscoveryPlugin,
 )
+from cmk.checkengine.plugins import AgentSectionPlugin as AgentSectionPluginAPI
+from cmk.checkengine.plugins import CheckPlugin as CheckPluginAPI
+from cmk.checkengine.plugins import SNMPSectionPlugin as SNMPSectionPluginAPI
 from cmk.checkengine.sectionparser import ParsedSectionName, Provider, ResolvedResult, SectionPlugin
 from cmk.checkengine.sectionparserutils import (
     get_cache_info,
@@ -79,10 +83,6 @@ from cmk.checkengine.value_store import ValueStoreManager
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based import cluster_mode
-from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
-from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin as AgentSectionPluginAPI
-from cmk.base.api.agent_based.plugin_classes import CheckPlugin as CheckPluginAPI
-from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin as SNMPSectionPluginAPI
 from cmk.base.config import (
     ConfigCache,
     IPLookup,

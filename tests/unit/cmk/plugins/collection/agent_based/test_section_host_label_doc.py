@@ -18,7 +18,7 @@ import cmk.ccc.version as cmk_version
 from cmk.utils import paths
 from cmk.utils.sectionname import SectionName
 
-from cmk.base.api.agent_based.plugin_classes import (
+from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     AgentSectionPlugin,
     SNMPSectionPlugin,

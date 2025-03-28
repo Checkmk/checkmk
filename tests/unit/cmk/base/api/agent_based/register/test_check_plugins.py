@@ -9,10 +9,14 @@ from typing import Any
 
 import pytest
 
-from cmk.checkengine.plugins import CheckPluginName, InventoryPluginName
+from cmk.checkengine.plugins import (
+    AgentBasedPlugins,
+    CheckPlugin,
+    CheckPluginName,
+    InventoryPluginName,
+)
 from cmk.checkengine.sectionparser import ParsedSectionName
 
-from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins, CheckPlugin
 from cmk.base.api.agent_based.register import check_plugins
 from cmk.base.api.agent_based.register.utils import (
     create_subscribed_sections,

@@ -38,8 +38,7 @@ from cmk.fetchers.filecache import (
 
 from cmk.checkengine.fetcher import FetcherType, SourceInfo, SourceType
 from cmk.checkengine.parser import SectionNameCollection
-
-from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins
+from cmk.checkengine.plugins import AgentBasedPlugins
 
 from ._api import Source
 

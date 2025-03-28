@@ -2,17 +2,16 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Sequence
+
+from collections.abc import Callable, Sequence
 
 import pytest
 
-from cmk.checkengine.plugins import CheckPluginName
-
-from cmk.base.api.agent_based.plugin_classes import (
+from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     CheckFunction,
     CheckPlugin,
-    DiscoveryFunction,
+    CheckPluginName,
 )
 
 from cmk.agent_based.v2 import (
@@ -23,6 +22,9 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+
+type DiscoveryFunction = Callable[..., DiscoveryResult]
+
 
 check_name = "fast_lta_headunit_replication"
 

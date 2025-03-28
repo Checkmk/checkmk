@@ -12,9 +12,7 @@ from pprint import pformat
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets.definition import RuleGroup
 
-from cmk.checkengine.plugins import InventoryPlugin
-
-from cmk.base.api.agent_based.plugin_classes import AgentBasedPlugins, CheckPlugin
+from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, InventoryPlugin
 
 from cmk.gui.inventory import RulespecGroupInventory
 from cmk.gui.plugins.wato.utils import RulespecGroupCheckParametersDiscovery

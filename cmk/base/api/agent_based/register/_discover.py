@@ -10,10 +10,7 @@ from typing import assert_never
 
 from cmk.utils.sectionname import SectionName
 
-from cmk.checkengine.plugins import CheckPluginName, InventoryPluginName
-from cmk.checkengine.plugins import InventoryPlugin as BackendInventoryPlugin
-
-from cmk.base.api.agent_based import plugin_classes as plugins
+from cmk.checkengine import plugins
 
 from cmk import trace
 from cmk.agent_based import v2
@@ -50,8 +47,8 @@ def load_all_plugins(
 
     registered_agent_sections: dict[SectionName, plugins.AgentSectionPlugin] = {}
     registered_snmp_sections: dict[SectionName, plugins.SNMPSectionPlugin] = {}
-    registered_check_plugins: dict[CheckPluginName, plugins.CheckPlugin] = {}
-    registered_inventory_plugins: dict[InventoryPluginName, BackendInventoryPlugin] = {}
+    registered_check_plugins: dict[plugins.CheckPluginName, plugins.CheckPlugin] = {}
+    registered_inventory_plugins: dict[plugins.InventoryPluginName, plugins.InventoryPlugin] = {}
     errors = [
         *legacy_errors,
         *(f"Error in agent based plugin: {exc}" for exc in discovered_plugins.errors),
@@ -94,8 +91,8 @@ def load_selected_plugins(
 ) -> plugins.AgentBasedPlugins:
     registered_agent_sections: dict[SectionName, plugins.AgentSectionPlugin] = {}
     registered_snmp_sections: dict[SectionName, plugins.SNMPSectionPlugin] = {}
-    registered_check_plugins: dict[CheckPluginName, plugins.CheckPlugin] = {}
-    registered_inventory_plugins: dict[InventoryPluginName, BackendInventoryPlugin] = {}
+    registered_check_plugins: dict[plugins.CheckPluginName, plugins.CheckPlugin] = {}
+    registered_inventory_plugins: dict[plugins.InventoryPluginName, plugins.InventoryPlugin] = {}
     for location in locations:
         module = import_module(location.module)
         if location.name is not None:
@@ -128,8 +125,8 @@ def _register_plugin_by_type(
     | v2.InventoryPlugin,
     registered_agent_sections: dict[SectionName, plugins.AgentSectionPlugin],
     registered_snmp_sections: dict[SectionName, plugins.SNMPSectionPlugin],
-    registered_check_plugins: dict[CheckPluginName, plugins.CheckPlugin],
-    registered_inventory_plugins: dict[InventoryPluginName, BackendInventoryPlugin],
+    registered_check_plugins: dict[plugins.CheckPluginName, plugins.CheckPlugin],
+    registered_inventory_plugins: dict[plugins.InventoryPluginName, plugins.InventoryPlugin],
     *,
     validate: bool,
 ) -> None:
@@ -193,7 +190,7 @@ def _register_snmp_section(
 def _register_check_plugin(
     check: v2.CheckPlugin,
     location: PluginLocation,
-    registered_check_plugins: dict[CheckPluginName, plugins.CheckPlugin],
+    registered_check_plugins: dict[plugins.CheckPluginName, plugins.CheckPlugin],
 ) -> None:
     plugin = create_check_plugin(
         name=check.name,
@@ -221,7 +218,7 @@ def _register_check_plugin(
 def _register_inventory_plugin(
     inventory: v2.InventoryPlugin,
     location: PluginLocation,
-    registered_inventory_plugins: dict[InventoryPluginName, BackendInventoryPlugin],
+    registered_inventory_plugins: dict[plugins.InventoryPluginName, plugins.InventoryPlugin],
 ) -> None:
     plugin = create_inventory_plugin(
         name=inventory.name,
@@ -254,7 +251,7 @@ def _add_legacy_sections(
 
 def _add_legacy_checks(
     checks: Iterable[plugins.CheckPlugin],
-    registered_check_plugins: dict[CheckPluginName, plugins.CheckPlugin],
+    registered_check_plugins: dict[plugins.CheckPluginName, plugins.CheckPlugin],
 ) -> None:
     for check in checks:
         if check.name in registered_check_plugins:

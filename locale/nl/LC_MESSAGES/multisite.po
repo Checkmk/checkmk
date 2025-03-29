@@ -11928,6 +11928,11 @@ msgid "Changes since last dump"
 msgstr "Veranderingen sinds de laatste dump"
 
 msgid ""
+"Changes to a user's two-factor settings within remote sites will be "
+"overritten by changes to the user's settings in the central site."
+msgstr ""
+
+msgid ""
 "Changing this setting triggers a full restart of all affected sites during "
 "activate changes."
 msgstr ""
@@ -19168,6 +19173,10 @@ msgstr "Verlengingen repliceren"
 msgid "Deprecated plug-in: %s"
 msgstr "Verouderde controleplugins"
 
+#, fuzzy
+msgid "Deprecated rule sets"
+msgstr "Afgeschreven regelsets"
+
 msgid "Deprecated rulesets"
 msgstr "Afgeschreven regelsets"
 
@@ -25988,6 +25997,10 @@ msgstr ""
 msgid "Found all %d groups."
 msgstr "Alle %d groepen gevonden."
 
+#, fuzzy, python-format
+msgid "Found configured rules of deprecated rule set %r."
+msgstr "Geen geconfigureerde regels worden beïnvloed"
+
 #, python-format
 msgid "Found configured rules of unknown check parameter rule set %r."
 msgstr ""
@@ -26775,10 +26788,6 @@ msgstr "Google Compute Engine (GCE)"
 
 msgid "Got invalid data"
 msgstr "Ongeldige gegevens"
-
-#, fuzzy, python-format
-msgid "Got invalid status of remote site %s"
-msgstr "Afgemeld van externe site %s"
 
 msgid "Got no data from any site"
 msgstr "Ik heb geen gegevens van geen enkele site"
@@ -43378,6 +43387,10 @@ msgstr "Geen gegevens."
 
 msgid "No datasource defined."
 msgstr "Geen datasource gedefinieerd."
+
+#, fuzzy
+msgid "No deprecated rule sets found."
+msgstr "Afgeschreven regelsets"
 
 #, python-format
 msgid ""
@@ -61696,6 +61709,10 @@ msgstr "Status van laatste synchronisatie: <b>%s</b>"
 msgid "Status of service in case of disabled job"
 msgstr "Status van de dienst in geval van arbeidsongeschiktheid"
 
+#, fuzzy
+msgid "Status of service in case of disabled schedule and enabled jobs"
+msgstr "Status van de dienst in geval van arbeidsongeschiktheid"
+
 msgid "Status of service in case of missing job"
 msgstr "Status van de dienst in geval van een ontbrekende opdracht"
 
@@ -68656,6 +68673,14 @@ msgid ""
 "These options allow specifying the most common command line parameters for "
 "the Robot Framework. In order to use other parameters, you can use the "
 "option \"Arguments file\"."
+msgstr ""
+
+msgid ""
+"These rule sets are configured in your site, but marked as deprecated. They "
+"still work, but need to be migrated to their successor or be removed before "
+"the update to the next major release. There should be a werk for each of "
+"these rules providing you with further information on what to do "
+"specifically."
 msgstr ""
 
 msgid ""
@@ -88534,6 +88559,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy, python-format
+#~ msgid "Got invalid status of remote site %s"
+#~ msgstr "Afgemeld van externe site %s"
 
 #~ msgid " (Copy)"
 #~ msgstr " (Kopiëren)"

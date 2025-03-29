@@ -11954,6 +11954,11 @@ msgid "Changes since last dump"
 msgstr "Modificări de la ultima descărcare de gestiune"
 
 msgid ""
+"Changes to a user's two-factor settings within remote sites will be "
+"overritten by changes to the user's settings in the central site."
+msgstr ""
+
+msgid ""
 "Changing this setting triggers a full restart of all affected sites during "
 "activate changes."
 msgstr ""
@@ -19192,6 +19197,10 @@ msgstr "Replicați extensiile"
 msgid "Deprecated plug-in: %s"
 msgstr "Plugin-uri de verificare depreciate"
 
+#, fuzzy
+msgid "Deprecated rule sets"
+msgstr "Seturi de reguli depreciate"
+
 msgid "Deprecated rulesets"
 msgstr "Seturi de reguli depreciate"
 
@@ -26029,6 +26038,10 @@ msgstr ""
 msgid "Found all %d groups."
 msgstr "Am găsit toate grupurile %d."
 
+#, fuzzy, python-format
+msgid "Found configured rules of deprecated rule set %r."
+msgstr "Nu sunt afectate regulile configurate"
+
 #, python-format
 msgid "Found configured rules of unknown check parameter rule set %r."
 msgstr ""
@@ -26812,10 +26825,6 @@ msgstr "Google Compute Engine (GCE)"
 
 msgid "Got invalid data"
 msgstr "Am primit date invalide"
-
-#, fuzzy, python-format
-msgid "Got invalid status of remote site %s"
-msgstr "Deconectat de pe site-ul de la distanță %s"
 
 msgid "Got no data from any site"
 msgstr "Nu am primit date de pe niciun site"
@@ -43447,6 +43456,10 @@ msgstr "Nu există date."
 
 msgid "No datasource defined."
 msgstr "Nu este definită nicio sursă de date."
+
+#, fuzzy
+msgid "No deprecated rule sets found."
+msgstr "Seturi de reguli depreciate"
 
 #, python-format
 msgid ""
@@ -61865,6 +61878,10 @@ msgstr "Starea ultimei sincronizări: <b>%s</b>."
 msgid "Status of service in case of disabled job"
 msgstr "Situația serviciului în cazul unui loc de muncă cu handicap"
 
+#, fuzzy
+msgid "Status of service in case of disabled schedule and enabled jobs"
+msgstr "Situația serviciului în cazul unui loc de muncă cu handicap"
+
 msgid "Status of service in case of missing job"
 msgstr "Starea serviciului în cazul unui loc de muncă lipsă"
 
@@ -68846,6 +68863,14 @@ msgstr ""
 "<a href=\"https://robotframework.org/robotframework/latest/"
 "RobotFrameworkUserGuide.html#all-command-line-options\">Toate opțiunile de "
 "linie de comandă</a>), puteți utiliza opțiunea <i>Fișier de argumente</i>."
+
+msgid ""
+"These rule sets are configured in your site, but marked as deprecated. They "
+"still work, but need to be migrated to their successor or be removed before "
+"the update to the next major release. There should be a werk for each of "
+"these rules providing you with further information on what to do "
+"specifically."
+msgstr ""
 
 msgid ""
 "These rule sets are configured in your site, but not used by any check plug-"
@@ -88720,6 +88745,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, fuzzy, python-format
+#~ msgid "Got invalid status of remote site %s"
+#~ msgstr "Deconectat de pe site-ul de la distanță %s"
 
 #~ msgid " (Copy)"
 #~ msgstr " (Copiază)"

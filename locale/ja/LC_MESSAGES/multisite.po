@@ -11318,6 +11318,11 @@ msgid "Changes since last dump"
 msgstr "前回ダンプ時からの変更点"
 
 msgid ""
+"Changes to a user's two-factor settings within remote sites will be "
+"overritten by changes to the user's settings in the central site."
+msgstr ""
+
+msgid ""
 "Changing this setting triggers a full restart of all affected sites during "
 "activate changes."
 msgstr ""
@@ -18202,6 +18207,10 @@ msgstr "拡張機能を複製する"
 msgid "Deprecated plug-in: %s"
 msgstr "非推奨のチェックプラグイン"
 
+#, fuzzy
+msgid "Deprecated rule sets"
+msgstr "非推奨のルールセット"
+
 msgid "Deprecated rulesets"
 msgstr "非推奨のルールセット"
 
@@ -24745,6 +24754,10 @@ msgstr ""
 msgid "Found all %d groups."
 msgstr "すべての%dグループが見つかりました。"
 
+#, fuzzy, python-format
+msgid "Found configured rules of deprecated rule set %r."
+msgstr "構成されたルールは影響を受けません"
+
 #, python-format
 msgid "Found configured rules of unknown check parameter rule set %r."
 msgstr ""
@@ -25503,10 +25516,6 @@ msgstr "Google Compute Engine (GCE)"
 
 msgid "Got invalid data"
 msgstr "無効なデータを取得しました"
-
-#, fuzzy, python-format
-msgid "Got invalid status of remote site %s"
-msgstr "リモートサイト %s からログアウトしました"
 
 msgid "Got no data from any site"
 msgstr "どのサイトからもデータを取得していません"
@@ -41444,6 +41453,10 @@ msgstr "データなし。"
 
 msgid "No datasource defined."
 msgstr "データソースが定義されていません。"
+
+#, fuzzy
+msgid "No deprecated rule sets found."
+msgstr "非推奨のルールセット"
 
 #, python-format
 msgid ""
@@ -58999,6 +59012,10 @@ msgstr "最後の同期ステータス: <b>%s</b>"
 msgid "Status of service in case of disabled job"
 msgstr "ジョブが無効になっている場合のサービスのステータス"
 
+#, fuzzy
+msgid "Status of service in case of disabled schedule and enabled jobs"
+msgstr "ジョブが無効になっている場合のサービスのステータス"
+
 msgid "Status of service in case of missing job"
 msgstr "ジョブが見つからない場合のサービスの状態"
 
@@ -65621,6 +65638,14 @@ msgid ""
 msgstr ""
 "これらのオプションは、Robot Frameworkの最も一般的なコマンドラインパラメータを"
 "指定します。他のパラメータを使うには、\"引数ファイル\" オプションを使います。"
+
+msgid ""
+"These rule sets are configured in your site, but marked as deprecated. They "
+"still work, but need to be migrated to their successor or be removed before "
+"the update to the next major release. There should be a werk for each of "
+"these rules providing you with further information on what to do "
+"specifically."
+msgstr ""
 
 msgid ""
 "These rule sets are configured in your site, but not used by any check plug-"
@@ -84217,6 +84242,10 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用不可</b>"
+
+#, fuzzy, python-format
+#~ msgid "Got invalid status of remote site %s"
+#~ msgstr "リモートサイト %s からログアウトしました"
 
 #~ msgid " (Copy)"
 #~ msgstr " (コピー)"

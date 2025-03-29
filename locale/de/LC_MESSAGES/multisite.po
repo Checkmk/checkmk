@@ -11547,6 +11547,11 @@ msgid "Changes since last dump"
 msgstr "Anzahl der Änderungen seit dem letzten Dump"
 
 msgid ""
+"Changes to a user's two-factor settings within remote sites will be "
+"overritten by changes to the user's settings in the central site."
+msgstr ""
+
+msgid ""
 "Changing this setting triggers a full restart of all affected sites during "
 "activate changes."
 msgstr ""
@@ -18558,6 +18563,10 @@ msgstr "Veraltete Legacy GUI-Erweiterungen"
 msgid "Deprecated plug-in: %s"
 msgstr "Veraltetes Plugin: %s"
 
+#, fuzzy
+msgid "Deprecated rule sets"
+msgstr "Veraltete Regelsätze"
+
 msgid "Deprecated rulesets"
 msgstr "Veraltete Regelsätze"
 
@@ -25175,6 +25184,12 @@ msgstr ""
 msgid "Found all %d groups."
 msgstr "Alle %d Gruppen gefunden."
 
+#, fuzzy, python-format
+msgid "Found configured rules of deprecated rule set %r."
+msgstr ""
+"Es wurden konfigurierte Regeln des unbekannten Check-Parameter-Regelsatzes "
+"%r gefunden."
+
 #, python-format
 msgid "Found configured rules of unknown check parameter rule set %r."
 msgstr ""
@@ -25948,10 +25963,6 @@ msgstr "Google Compute Engine (GCE)"
 
 msgid "Got invalid data"
 msgstr "Ungültige Daten empfangen"
-
-#, python-format
-msgid "Got invalid status of remote site %s"
-msgstr "Ungültigen Status von Remote-Instanz %s erhalten"
 
 msgid "Got no data from any site"
 msgstr "Von keiner Instanz Daten erhalten"
@@ -41795,6 +41806,10 @@ msgstr "Keine Daten."
 
 msgid "No datasource defined."
 msgstr "Keine Datenquelle definiert."
+
+#, fuzzy
+msgid "No deprecated rule sets found."
+msgstr "Veraltete Regelsätze"
 
 #, python-format
 msgid ""
@@ -59341,6 +59356,10 @@ msgstr "Zustand der letzten Synchronisation: <b>%s</b>"
 msgid "Status of service in case of disabled job"
 msgstr "Zustand des Services, falls der Job deaktiviert ist"
 
+#, fuzzy
+msgid "Status of service in case of disabled schedule and enabled jobs"
+msgstr "Zustand des Services, falls der Job deaktiviert ist"
+
 msgid "Status of service in case of missing job"
 msgstr "Zustand des Services, falls der Job fehlt"
 
@@ -66360,6 +66379,14 @@ msgstr ""
 "Diese Optionen ermöglichen die Angabe der gebräuchlichsten "
 "Kommandozeilenparameter für das Robot Framework. Um andere Parameter zu "
 "verwenden, können Sie die Option \"Argument-Datei\" nutzen."
+
+msgid ""
+"These rule sets are configured in your site, but marked as deprecated. They "
+"still work, but need to be migrated to their successor or be removed before "
+"the update to the next major release. There should be a werk for each of "
+"these rules providing you with further information on what to do "
+"specifically."
+msgstr ""
 
 msgid ""
 "These rule sets are configured in your site, but not used by any check plug-"
@@ -85438,6 +85465,10 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
+
+#, python-format
+#~ msgid "Got invalid status of remote site %s"
+#~ msgstr "Ungültigen Status von Remote-Instanz %s erhalten"
 
 #~ msgid " (Copy)"
 #~ msgstr " (Kopie)"

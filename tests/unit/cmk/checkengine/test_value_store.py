@@ -110,8 +110,8 @@ class Test_ValueStore:
     def test_setitem_mutable(self) -> None:
         vs = self._get_vs()
         my_dict = vs.setdefault("mutable", {})
-        my_dict["foo"] = "bar"
-        assert vs["mutable"]["foo"] == "bar"
+        my_dict["foo"] = "bar"  # type: ignore[index]
+        assert vs["mutable"]["foo"] == "bar"  # type: ignore[index]
 
     def test_setitem_bad_key(self) -> None:
         vs = self._get_vs()

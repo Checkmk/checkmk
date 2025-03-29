@@ -48,8 +48,7 @@ from typing import Any, Protocol, TypeVar
 
 class _ValueStoreManagerProtocol(Protocol):
     @property
-    def active_service_interface(self) -> MutableMapping[str, Any] | None:  # type: ignore[misc,explicit-any]
-        ...
+    def active_service_interface(self) -> MutableMapping[str, object] | None: ...
 
     def save(self) -> None: ...
 
@@ -66,9 +65,9 @@ def get_value_store() -> MutableMapping[str, Any]:  # type: ignore[explicit-any]
     """
     assert (
         _active_host_value_store is not None
-        and _active_host_value_store.active_service_interface is not None  # type: ignore[misc]
+        and _active_host_value_store.active_service_interface is not None
     )
-    return _active_host_value_store.active_service_interface  # type: ignore[misc]
+    return _active_host_value_store.active_service_interface
 
 
 _TypeValueStoreManager = TypeVar("_TypeValueStoreManager", bound=_ValueStoreManagerProtocol)

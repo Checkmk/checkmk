@@ -14,7 +14,7 @@ from collections.abc import (
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Final
+from typing import Final
 
 from cmk.ccc import store
 
@@ -112,7 +112,7 @@ class AllValueStoresStore:
             self._last_known_state = _LastState(timestamp=self.path.stat().st_mtime, data=new_data)
 
 
-class ValueStore(MutableMapping[str, Any]):
+class ValueStore(MutableMapping[str, object]):
     """Implements the mutable mapping that is exposed to the plugins
 
     This class ensures that users indeed use strings as keys, and that the
@@ -156,7 +156,7 @@ class ValueStore(MutableMapping[str, Any]):
             raise TypeError(f"value store key must be `str`, got {key!r}")
         return key
 
-    def __getitem__(self, key: str) -> Any:
+    def __getitem__(self, key: str) -> object:
         key = self._validate_key(key)
         try:
             return self._accessed[key]
@@ -164,7 +164,7 @@ class ValueStore(MutableMapping[str, Any]):
             pass
         return self._accessed.setdefault(key, self._deserialize(self._serialized[key]))
 
-    def __setitem__(self, key: str, value: Any) -> None:
+    def __setitem__(self, key: str, value: object) -> None:
         """
         It would be nice to serialize immediately (to raise errors in plugin scope),
         but that will not allow users to keep a reference to the object and modify it.

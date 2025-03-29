@@ -5,6 +5,7 @@
 """Performing the actual checks."""
 
 import itertools
+from abc import ABC, abstractmethod
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from typing import NamedTuple
 
@@ -48,9 +49,25 @@ from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.submitters import Submittee, Submitter
 from cmk.checkengine.summarize import SummarizerFunction
 
-__all__ = ["execute_checkmk_checks", "check_host_services", "check_plugins_missing_data"]
+__all__ = [
+    "execute_checkmk_checks",
+    "check_host_services",
+    "check_plugins_missing_data",
+    "ABCCheckingConfig",
+]
 
 type _Labels = Mapping[str, str]
+
+
+class ABCCheckingConfig(ABC):
+    @abstractmethod
+    def __call__(
+        self,
+        host_name: HostName,
+        item: str | None,
+        service_labels: Mapping[str, str],
+        ruleset_name: str,
+    ) -> Sequence[Mapping[str, object]]: ...
 
 
 def execute_checkmk_checks(

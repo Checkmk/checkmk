@@ -100,6 +100,7 @@ from cmk.fetchers.filecache import MaxAge
 
 import cmk.checkengine.plugin_backend as agent_based_register
 from cmk.checkengine.checking import (
+    ABCCheckingConfig,
     merge_enforced_services,
     ServiceConfigurer,
 )
@@ -1528,38 +1529,6 @@ def load_and_convert_legacy_checks(
 #   '----------------------------------------------------------------------'
 
 
-def _make_compute_check_parameters_cb(
-    checking_config: CheckingConfig,
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
-) -> Callable[
-    [HostName, CheckPluginName, Item, Labels, Mapping[str, object]],
-    TimespecificParameters,
-]:
-    """Replacement for functools.partial(compute_check_parameters, matcher)
-
-    functools.partial is not supported by the mypy type checker.
-    """
-
-    def callback(
-        host_name: HostName,
-        plugin_name: CheckPluginName,
-        item: Item,
-        service_labels: Labels,
-        params: Mapping[str, object],
-    ) -> TimespecificParameters:
-        return compute_check_parameters(
-            checking_config,
-            check_plugins,
-            host_name,
-            plugin_name,
-            item,
-            service_labels,
-            params,
-        )
-
-    return callback
-
-
 def compute_enforced_service_parameters(
     plugins: Mapping[CheckPluginName, CheckPlugin],
     plugin_name: CheckPluginName,
@@ -1582,64 +1551,7 @@ def compute_enforced_service_parameters(
     )
 
 
-def compute_check_parameters(
-    checking_config: CheckingConfig,
-    plugins: Mapping[CheckPluginName, CheckPlugin],
-    host_name: HostName,
-    plugin_name: CheckPluginName,
-    item: Item,
-    service_labels: Labels,
-    params: Mapping[str, object],
-) -> TimespecificParameters:
-    """Compute effective check parameters.
-
-    Honoring (in order of precedence):
-     * the configured parameters
-     * the discovered parameters
-     * the plugins defaults
-    """
-    check_plugin = agent_based_register.get_check_plugin(plugin_name, plugins)
-    if check_plugin is None:  # handle vanished check plug-in
-        return TimespecificParameters()
-
-    configured_parameters = _get_configured_parameters(
-        checking_config,
-        host_name,
-        service_labels,
-        ruleset_name=check_plugin.check_ruleset_name,
-        item=item,
-    )
-
-    return TimespecificParameters(
-        [
-            *configured_parameters.entries,
-            TimespecificParameterSet.from_parameters(params),
-            TimespecificParameterSet.from_parameters(check_plugin.check_default_parameters or {}),
-        ]
-    )
-
-
-def _get_configured_parameters(
-    checking_config: CheckingConfig,
-    host_name: HostName,
-    service_labels: Labels,
-    *,  # the following are all the same type :-(
-    ruleset_name: RuleSetName | None,
-    item: Item,
-) -> TimespecificParameters:
-    if ruleset_name is None:
-        return TimespecificParameters()
-
-    return TimespecificParameters(
-        [
-            # parameters configured via checkgroup_parameters
-            TimespecificParameterSet.from_parameters(p)
-            for p in checking_config(host_name, item, service_labels, str(ruleset_name))
-        ]
-    )
-
-
-class CheckingConfig:
+class CheckingConfig(ABCCheckingConfig):
     def __init__(
         self,
         matcher: RulesetMatcher,
@@ -2033,15 +1945,13 @@ class ConfigCache:
         # This function is not part of the checkengine, because it still has
         # hidden dependencies to the loaded config in the global scope of this module.
         return ServiceConfigurer(
-            _make_compute_check_parameters_cb(
-                CheckingConfig(
-                    self.ruleset_matcher,
-                    self.label_manager.labels_of_host,
-                    self._loaded_config.checkgroup_parameters,
-                    service_rule_groups,
-                ),
-                check_plugins,
+            CheckingConfig(
+                self.ruleset_matcher,
+                self.label_manager.labels_of_host,
+                self._loaded_config.checkgroup_parameters,
+                service_rule_groups,
             ),
+            check_plugins,
             _make_service_description_cb(
                 self.ruleset_matcher, self.label_manager.labels_of_host, check_plugins
             ),

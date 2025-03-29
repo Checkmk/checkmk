@@ -11,10 +11,19 @@ from typing import Protocol
 
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.parameters import merge_parameters
+from cmk.utils.rulesets import RuleSetName
 from cmk.utils.servicename import Item, ServiceName
 
-from cmk.checkengine.parameters import TimespecificParameters
-from cmk.checkengine.plugins import CheckPluginName, ConfiguredService, ServiceID
+from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
+from cmk.checkengine.plugin_backend import get_check_plugin
+from cmk.checkengine.plugins import (
+    CheckPlugin,
+    CheckPluginName,
+    ConfiguredService,
+    ServiceID,
+)
+
+from ._checking import ABCCheckingConfig
 
 __all__ = [
     "ServiceConfigurer",
@@ -44,15 +53,14 @@ class AutocheckEntryProtocol(Protocol):
 class ServiceConfigurer:
     def __init__(
         self,
-        compute_check_parameters: Callable[
-            [HostName, CheckPluginName, Item, _Labels, Mapping[str, object]],
-            TimespecificParameters,
-        ],
+        checking_config: ABCCheckingConfig,
+        plugins: Mapping[CheckPluginName, CheckPlugin],
         get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
         get_effective_host: Callable[[HostName, ServiceName, _Labels], HostName],
         get_service_labels: Callable[[HostName, ServiceName, _DiscoveredLabels], _Labels],
     ) -> None:
-        self._compute_check_parameters = compute_check_parameters
+        self._checking_config = checking_config
+        self._plugins = plugins
         self._get_service_description = get_service_description
         self._get_effective_host = get_effective_host
         self._get_service_labels = get_service_labels
@@ -72,7 +80,9 @@ class ServiceConfigurer:
             check_plugin_name=autocheck_entry.check_plugin_name,
             item=autocheck_entry.item,
             description=service_name,
-            parameters=self._compute_check_parameters(
+            parameters=compute_check_parameters(
+                self._checking_config,
+                self._plugins,
                 self._get_effective_host(hostname, service_name, labels),
                 autocheck_entry.check_plugin_name,
                 autocheck_entry.item,
@@ -124,3 +134,60 @@ def merge_enforced_services(
         )
         for sid, entries in entries_by_id.items()
     ]
+
+
+def compute_check_parameters(
+    checking_config: ABCCheckingConfig,
+    plugins: Mapping[CheckPluginName, CheckPlugin],
+    host_name: HostName,
+    plugin_name: CheckPluginName,
+    item: Item,
+    service_labels: Mapping[str, str],
+    params: Mapping[str, object],
+) -> TimespecificParameters:
+    """Compute effective check parameters.
+
+    Honoring (in order of precedence):
+     * the configured parameters
+     * the discovered parameters
+     * the plugins defaults
+    """
+    check_plugin = get_check_plugin(plugin_name, plugins)
+    if check_plugin is None:  # handle vanished check plug-in
+        return TimespecificParameters()
+
+    configured_parameters = _get_configured_parameters(
+        checking_config,
+        host_name,
+        service_labels,
+        ruleset_name=check_plugin.check_ruleset_name,
+        item=item,
+    )
+
+    return TimespecificParameters(
+        [
+            *configured_parameters.entries,
+            TimespecificParameterSet.from_parameters(params),
+            TimespecificParameterSet.from_parameters(check_plugin.check_default_parameters or {}),
+        ]
+    )
+
+
+def _get_configured_parameters(
+    checking_config: ABCCheckingConfig,
+    host_name: HostName,
+    service_labels: Mapping[str, str],
+    *,  # the following are all the same type :-(
+    ruleset_name: RuleSetName | None,
+    item: Item,
+) -> TimespecificParameters:
+    if ruleset_name is None:
+        return TimespecificParameters()
+
+    return TimespecificParameters(
+        [
+            # parameters configured via checkgroup_parameters
+            TimespecificParameterSet.from_parameters(p)
+            for p in checking_config(host_name, item, service_labels, str(ruleset_name))
+        ]
+    )

@@ -130,7 +130,7 @@ from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.fetchers.snmp import make_backend as make_snmp_backend
 
-from cmk.checkengine.checking import ServiceConfigurer
+from cmk.checkengine.checking import compute_check_parameters, ServiceConfigurer
 from cmk.checkengine.discovery import (
     autodiscovery,
     automation_discovery,
@@ -640,6 +640,7 @@ def _active_check_preview_rows(
     ]
 
 
+# TODO: see if we should consolidate this with ServiceConfigurer
 def _make_compute_check_parameters_of_autocheck(
     checking_config: config.CheckingConfig,
     ruleset_matcher: RulesetMatcher,
@@ -661,7 +662,7 @@ def _make_compute_check_parameters_of_autocheck(
             ),
             item=entry.item,
         )
-        return config.compute_check_parameters(
+        return compute_check_parameters(
             checking_config,
             check_plugins,
             host_name,

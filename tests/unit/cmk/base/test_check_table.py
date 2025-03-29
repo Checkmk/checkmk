@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import dataclasses
+from collections.abc import Mapping, Sequence
 
 import pytest
 
@@ -10,9 +12,12 @@ import pytest
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
 from cmk.utils.hostaddress import HostName
+from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import TagGroupID, TagID
 
+from cmk.checkengine.checking import ABCCheckingConfig, ServiceConfigurer
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
+from cmk.checkengine.plugin_backend import get_check_plugin
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     AutocheckEntry,
@@ -21,8 +26,17 @@ from cmk.checkengine.plugins import (
     ServiceID,
 )
 
-from cmk.base import config
-from cmk.base.config import FilterMode, HostCheckTable
+from cmk.base.config import FilterMode, HostCheckTable, service_description
+
+
+@dataclasses.dataclass(frozen=True)
+class CheckingConfigTest(ABCCheckingConfig):
+    rules: Mapping[HostName, Sequence[Mapping[str, object]]]
+
+    def __call__(
+        self, host_name: HostName, item: object, service_labels: object, ruleset_name: object
+    ) -> Sequence[Mapping[str, object]]:
+        return self.rules.get(host_name, [])
 
 
 def test_cluster_ignores_nodes_parameters(
@@ -52,23 +66,36 @@ def test_cluster_ignores_nodes_parameters(
     ts.set_autochecks(node, [AutocheckEntry(*service_id, {}, {})])
     config_cache = ts.apply(monkeypatch)
 
+    def service_description_callback(
+        hostname: HostName, check_plugin_name: CheckPluginName, item: str | None
+    ) -> ServiceName:
+        return service_description(
+            config_cache.ruleset_matcher,
+            config_cache.label_manager.labels_of_host,
+            hostname,
+            check_plugin_name,
+            service_name_template=(
+                None
+                if (p := get_check_plugin(check_plugin_name, agent_based_plugins.check_plugins))
+                is None
+                else p.service_name
+            ),
+            item=item,
+        )
+
     # a rule for the node:
-    monkeypatch.setattr(
-        config,
-        "_get_configured_parameters",
-        lambda host, *args, **kw: (
-            TimespecificParameters(
-                (TimespecificParameterSet.from_parameters({"levels_for_node": (1, 2)}),)
-            )
-            if host == node
-            else TimespecificParameters()
-        ),
+    service_configurer = ServiceConfigurer(
+        CheckingConfigTest({node: [{"levels_for_node": (1, 2)}]}),
+        plugins=agent_based_plugins.check_plugins,
+        get_service_description=service_description_callback,
+        get_effective_host=config_cache.effective_host,
+        get_service_labels=config_cache.label_manager.labels_of_service,
     )
 
     clustered_service = config_cache.check_table(
         cluster,
         agent_based_plugins.check_plugins,
-        config_cache.make_service_configurer(agent_based_plugins.check_plugins),
+        service_configurer=service_configurer,
     )[service_id]
     assert clustered_service.parameters.entries == (
         TimespecificParameterSet({}, ()),

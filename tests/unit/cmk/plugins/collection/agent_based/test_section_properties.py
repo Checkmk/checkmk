@@ -8,12 +8,11 @@ from collections.abc import Hashable, Mapping
 
 from cmk.utils.sectionname import SectionName
 
+from cmk.checkengine.plugin_backend import filter_relevant_raw_sections
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     SectionPlugin,
 )
-
-from cmk.base.api.agent_based.register import filter_relevant_raw_sections
 
 
 def test_detect_spec_dedup(

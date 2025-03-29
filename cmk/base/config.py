@@ -99,10 +99,12 @@ from cmk.fetchers import (
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
 
+import cmk.checkengine.plugin_backend as agent_based_register
 from cmk.checkengine.checking import (
     merge_enforced_services,
     ServiceConfigurer,
 )
+from cmk.checkengine.checking.cluster_mode import ClusterMode
 from cmk.checkengine.discovery import (
     AutochecksManager,
     CheckPreviewEntry,
@@ -121,6 +123,10 @@ from cmk.checkengine.parser import (
     SectionStore,
     SNMPParser,
 )
+from cmk.checkengine.plugin_backend.check_plugins_legacy import convert_legacy_check_plugins
+from cmk.checkengine.plugin_backend.section_plugins_legacy import (
+    convert_legacy_sections,
+)
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     AgentSectionPlugin,
@@ -135,13 +141,7 @@ from cmk.checkengine.plugins import (
 )
 from cmk.checkengine.summarize import SummaryConfig
 
-import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import default_config
-from cmk.base.api.agent_based.cluster_mode import ClusterMode
-from cmk.base.api.agent_based.register.check_plugins_legacy import convert_legacy_check_plugins
-from cmk.base.api.agent_based.register.section_plugins_legacy import (
-    convert_legacy_sections,
-)
 from cmk.base.default_config import *  # noqa: F403
 from cmk.base.parent_scan import ScanConfig as ParentScanConfig
 from cmk.base.sources import SNMPFetcherConfig

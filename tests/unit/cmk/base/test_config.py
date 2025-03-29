@@ -34,11 +34,14 @@ from cmk.snmplib import SNMPBackendEnum
 
 from cmk.fetchers import Mode, TCPEncryptionHandling
 
+import cmk.checkengine.plugin_backend as agent_based_register
 from cmk.checkengine.discovery import (
     DiscoveryCheckParameters,
     RediscoveryParameters,
 )
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
+from cmk.checkengine.plugin_backend.check_plugins_legacy import convert_legacy_check_plugins
+from cmk.checkengine.plugin_backend.section_plugins_legacy import convert_legacy_sections
 from cmk.checkengine.plugins import (
     AutocheckEntry,
     CheckPluginName,
@@ -50,10 +53,7 @@ from cmk.checkengine.plugins import (
 )
 from cmk.checkengine.plugins import CheckPlugin as CheckPluginAPI
 
-import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config
-from cmk.base.api.agent_based.register.check_plugins_legacy import convert_legacy_check_plugins
-from cmk.base.api.agent_based.register.section_plugins_legacy import convert_legacy_sections
 from cmk.base.config import ConfigCache, ConfiguredIPLookup, handle_ip_lookup_failure
 from cmk.base.default_config.base import _PeriodicDiscovery
 

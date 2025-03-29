@@ -16,9 +16,9 @@ from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.checkengine.discovery import AutochecksStore
 from cmk.checkengine.legacy import LegacyCheckParameters
+from cmk.checkengine.plugin_backend import get_check_plugin
 from cmk.checkengine.plugins import AutocheckEntry, CheckPlugin, CheckPluginName
 
-from cmk.base.api.agent_based import register
 from cmk.base.config import load_all_plugins
 
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
@@ -183,7 +183,7 @@ def _get_ruleset(
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
 ) -> Ruleset | None:
     if (
-        check_plugin := register.get_check_plugin(plugin_name, check_plugins)
+        check_plugin := get_check_plugin(plugin_name, check_plugins)
     ) is None or check_plugin.check_ruleset_name is None:
         return None
 

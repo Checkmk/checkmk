@@ -21,7 +21,7 @@ from cmk.snmplib import (
 from cmk.fetchers._snmpscan import _evaluate_snmp_detection as evaluate_snmp_detection
 from cmk.fetchers.snmp_backend import StoredWalkSNMPBackend
 
-from cmk.base.api.agent_based.register.section_plugins import create_snmp_section_plugin
+from cmk.checkengine.plugin_backend.section_plugins import create_snmp_section_plugin
 
 from cmk.agent_based.v2 import SimpleSNMPSection, SNMPSection
 from cmk.discover_plugins import PluginLocation

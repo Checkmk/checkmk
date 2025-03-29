@@ -13,11 +13,6 @@ from cmk.checkengine.plugins import (
     SNMPSectionPlugin,
 )
 
-from cmk.base.api.agent_based.register.section_plugins import (
-    create_agent_section_plugin,
-    create_snmp_section_plugin,
-)
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -26,6 +21,11 @@ from cmk.agent_based.v2 import (
     SNMPSection,
     SNMPTree,
     StringTable,
+)
+
+from .section_plugins import (
+    create_agent_section_plugin,
+    create_snmp_section_plugin,
 )
 
 

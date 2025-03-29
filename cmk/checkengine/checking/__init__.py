@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from . import cluster_mode as cluster_mode
 from ._checking import check_host_services as check_host_services
 from ._checking import check_plugins_missing_data as check_plugins_missing_data
 from ._checking import execute_checkmk_checks as execute_checkmk_checks

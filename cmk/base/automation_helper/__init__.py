@@ -16,12 +16,12 @@ from cmk.utils.paths import omd_root
 from cmk.utils.redis import get_redis_client
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 
+from cmk.checkengine.plugin_backend import (
+    extract_known_discovery_rulesets,
+)
 from cmk.checkengine.plugins import AgentBasedPlugins
 
 from cmk.base import config
-from cmk.base.api.agent_based.register import (
-    extract_known_discovery_rulesets,
-)
 from cmk.base.automations import automations
 
 from ._app import make_application

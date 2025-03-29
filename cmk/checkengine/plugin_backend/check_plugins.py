@@ -19,17 +19,17 @@ from cmk.checkengine.plugins import (
 )
 from cmk.checkengine.sectionparser import ParsedSectionName
 
-from cmk.base.api.agent_based.register.utils import (
+from cmk.agent_based.v1 import IgnoreResults, Metric, Result, Service
+from cmk.agent_based.v1.register import RuleSetType
+from cmk.discover_plugins import PluginLocation
+
+from .utils import (
     create_subscribed_sections,
     ITEM_VARIABLE,
     validate_default_parameters,
     validate_function_arguments,
     validate_ruleset_type,
 )
-
-from cmk.agent_based.v1 import IgnoreResults, Metric, Result, Service
-from cmk.agent_based.v1.register import RuleSetType
-from cmk.discover_plugins import PluginLocation
 
 MANAGEMENT_DESCR_PREFIX = "Management Interface: "
 

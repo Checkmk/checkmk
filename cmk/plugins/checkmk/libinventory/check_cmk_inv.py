@@ -28,15 +28,15 @@ from cmk.checkengine.checking import make_timing_results
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.inventory import HWSWInventoryParameters
 from cmk.checkengine.parser import NO_SELECTION
+from cmk.checkengine.plugin_backend import (
+    extract_known_discovery_rulesets,
+    load_selected_plugins,
+    plugin_index,
+)
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.checkengine.submitters import ServiceState
 
 from cmk.base import config
-from cmk.base.api.agent_based import plugin_index
-from cmk.base.api.agent_based.register import (
-    extract_known_discovery_rulesets,
-    load_selected_plugins,
-)
 from cmk.base.checkers import (
     CMKFetcher,
     CMKParser,

@@ -16,12 +16,12 @@ from typing import Any
 from cmk.checkengine.parameters import Parameters
 from cmk.checkengine.plugins import CheckPlugin, LegacyPluginLocation
 
-from cmk.base.api.agent_based.register.check_plugins import (
-    create_check_plugin,
-)
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import CheckResult, IgnoreResults, Metric, Result, Service, State
+
+from .check_plugins import (
+    create_check_plugin,
+)
 
 
 def _create_discovery_function(check_info_element: LegacyCheckDefinition) -> Callable:

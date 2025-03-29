@@ -145,6 +145,7 @@ from cmk.checkengine.discovery import (
 from cmk.checkengine.fetcher import FetcherFunction, FetcherType, SourceType
 from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.parser import NO_SELECTION, parse_raw_data
+from cmk.checkengine.plugin_backend import extract_known_discovery_rulesets, get_check_plugin
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     AutocheckEntry,
@@ -159,7 +160,6 @@ import cmk.base.core
 import cmk.base.nagios_utils
 import cmk.base.parent_scan
 from cmk.base import config, core_config, notify, sources
-from cmk.base.api.agent_based.register import extract_known_discovery_rulesets, get_check_plugin
 from cmk.base.automations import (
     Automation,
     automations,

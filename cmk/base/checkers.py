@@ -43,6 +43,8 @@ from cmk.fetchers import Fetcher, get_raw_data, Mode, SNMPScanConfig, TLSConfig
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 
+import cmk.checkengine.plugin_backend as agent_based_register
+from cmk.checkengine.checking import cluster_mode
 from cmk.checkengine.checkresults import (
     ActiveCheckResult,
     MetricTuple,
@@ -81,8 +83,6 @@ from cmk.checkengine.submitters import ServiceState
 from cmk.checkengine.summarize import summarize, SummaryConfig
 from cmk.checkengine.value_store import ValueStoreManager
 
-import cmk.base.api.agent_based.register as agent_based_register
-from cmk.base.api.agent_based import cluster_mode
 from cmk.base.config import (
     ConfigCache,
     IPLookup,

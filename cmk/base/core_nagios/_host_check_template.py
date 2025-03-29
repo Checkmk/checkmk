@@ -14,12 +14,13 @@ from cmk.utils.config_path import LATEST_CONFIG
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.password_store import core_password_store_path
 
-import cmk.base.utils
-from cmk.base import config
-from cmk.base.api.agent_based.register import (
+from cmk.checkengine.plugin_backend import (
     extract_known_discovery_rulesets,
     load_selected_plugins,
 )
+
+import cmk.base.utils
+from cmk.base import config
 from cmk.base.core_nagios import HostCheckConfig
 from cmk.base.modes.check_mk import run_checking
 

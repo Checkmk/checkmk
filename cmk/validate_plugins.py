@@ -20,6 +20,9 @@ from cmk.utils.rulesets.definition import RuleGroup
 from cmk.checkengine.checkresults import (  # pylint: disable=cmk-module-layer-violation
     ActiveCheckResult,
 )
+from cmk.checkengine.plugin_backend import (  # pylint: disable=cmk-module-layer-violation
+    extract_known_discovery_rulesets,
+)
 from cmk.checkengine.plugins import (  # pylint: disable=cmk-module-layer-violation  # pylint: disable=cmk-module-layer-violation
     AgentBasedPlugins,
     CheckPlugin,
@@ -27,9 +30,6 @@ from cmk.checkengine.plugins import (  # pylint: disable=cmk-module-layer-violat
     InventoryPluginName,
 )
 
-from cmk.base.api.agent_based.register import (  # pylint: disable=cmk-module-layer-violation
-    extract_known_discovery_rulesets,
-)
 from cmk.base.config import (  # pylint: disable=cmk-module-layer-violation
     load_all_plugins,
 )

@@ -10,9 +10,9 @@ from pathlib import Path
 
 from cmk.checkengine.plugins import AgentBasedPlugins, LegacyPluginLocation
 
-import cmk.base.api.agent_based.register as agent_based_register
-
 from cmk.discover_plugins import PluginLocation
+
+from .utils import filter_relevant_raw_sections
 
 _PLUGINS_FILE_NAME = "inventory_plugins_index.json"
 
@@ -36,7 +36,7 @@ def load_plugin_index(config_path: Path) -> PluginIndex:
 
 
 def create_plugin_index(plugins: AgentBasedPlugins) -> str:
-    sections = agent_based_register.filter_relevant_raw_sections(
+    sections = filter_relevant_raw_sections(
         consumers=plugins.inventory_plugins.values(),
         sections=[*plugins.agent_sections.values(), *plugins.snmp_sections.values()],
     )

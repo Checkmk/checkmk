@@ -29,17 +29,17 @@ from cmk.checkengine.plugins import (
 )
 from cmk.checkengine.sectionparser import ParsedSectionName
 
-from cmk.base.api.agent_based.register.utils import (
-    validate_default_parameters,
-    validate_function_arguments,
-    validate_ruleset_type,
-)
-
 from cmk.agent_based.v1 import HostLabel, SNMPTree
 from cmk.agent_based.v1.register import RuleSetType
 from cmk.agent_based.v1.type_defs import StringByteTable, StringTable
 from cmk.agent_based.v2 import AgentSection, SimpleSNMPSection, SNMPSection
 from cmk.discover_plugins import PluginLocation
+
+from .utils import (
+    validate_default_parameters,
+    validate_function_arguments,
+    validate_ruleset_type,
+)
 
 
 def create_parse_annotation(

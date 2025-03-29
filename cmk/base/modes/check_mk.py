@@ -93,6 +93,10 @@ from cmk.checkengine.parser import (
     ParserFunction,
     SectionNameCollection,
 )
+from cmk.checkengine.plugin_backend import (
+    extract_known_discovery_rulesets,
+    filter_relevant_raw_sections,
+)
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     AgentSectionPlugin,
@@ -113,10 +117,6 @@ import cmk.base.diagnostics
 import cmk.base.dump_host
 import cmk.base.parent_scan
 from cmk.base import config, profiling, sources
-from cmk.base.api.agent_based.register import (
-    extract_known_discovery_rulesets,
-    filter_relevant_raw_sections,
-)
 from cmk.base.checkers import (
     CheckerPluginMapper,
     CMKFetcher,

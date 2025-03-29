@@ -12,14 +12,14 @@ from cmk.utils.rulesets import RuleSetName
 
 from cmk.checkengine.plugins import InventoryPlugin, InventoryPluginName
 
-from cmk.base.api.agent_based.register.utils import (
+from cmk.agent_based.v2 import Attributes, InventoryResult, TableRow
+from cmk.discover_plugins import PluginLocation
+
+from .utils import (
     create_subscribed_sections,
     validate_default_parameters,
     validate_function_arguments,
 )
-
-from cmk.agent_based.v2 import Attributes, InventoryResult, TableRow
-from cmk.discover_plugins import PluginLocation
 
 
 def _filter_inventory(

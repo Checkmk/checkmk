@@ -13,17 +13,10 @@ from cmk.utils.sectionname import SectionName
 from cmk.checkengine.plugins import CheckPluginName, InventoryPluginName
 from cmk.checkengine.plugins import InventoryPlugin as BackendInventoryPlugin
 
-from cmk.base.api.agent_based import plugin_classes as backend
+from cmk.base.api.agent_based import plugin_classes as plugins
 
 from cmk import trace
-from cmk.agent_based.v2 import (
-    AgentSection,
-    CheckPlugin,
-    entry_point_prefixes,
-    InventoryPlugin,
-    SimpleSNMPSection,
-    SNMPSection,
-)
+from cmk.agent_based import v2
 from cmk.discover_plugins import (
     discover_all_plugins,
     DiscoveredPlugins,
@@ -35,27 +28,29 @@ from .check_plugins import create_check_plugin
 from .inventory_plugins import create_inventory_plugin
 from .section_plugins import create_agent_section_plugin, create_snmp_section_plugin
 
-_ABPlugins = SimpleSNMPSection | SNMPSection | AgentSection | CheckPlugin | InventoryPlugin
+_ABPlugins = (
+    v2.SimpleSNMPSection | v2.SNMPSection | v2.AgentSection | v2.CheckPlugin | v2.InventoryPlugin
+)
 
 tracer = trace.get_tracer()
 
 
 @tracer.instrument("load_all_plugins")
 def load_all_plugins(
-    sections: Iterable[backend.SNMPSectionPlugin | backend.AgentSectionPlugin],
-    checks: Iterable[backend.CheckPlugin],
+    sections: Iterable[plugins.SNMPSectionPlugin | plugins.AgentSectionPlugin],
+    checks: Iterable[plugins.CheckPlugin],
     *,
     legacy_errors: Iterable[str],
     raise_errors: bool,
-) -> backend.AgentBasedPlugins:
+) -> plugins.AgentBasedPlugins:
     with tracer.span("discover_plugins"):
         discovered_plugins: DiscoveredPlugins[_ABPlugins] = discover_all_plugins(
-            PluginGroup.AGENT_BASED, entry_point_prefixes(), raise_errors=raise_errors
+            PluginGroup.AGENT_BASED, v2.entry_point_prefixes(), raise_errors=raise_errors
         )
 
-    registered_agent_sections: dict[SectionName, backend.AgentSectionPlugin] = {}
-    registered_snmp_sections: dict[SectionName, backend.SNMPSectionPlugin] = {}
-    registered_check_plugins: dict[CheckPluginName, backend.CheckPlugin] = {}
+    registered_agent_sections: dict[SectionName, plugins.AgentSectionPlugin] = {}
+    registered_snmp_sections: dict[SectionName, plugins.SNMPSectionPlugin] = {}
+    registered_check_plugins: dict[CheckPluginName, plugins.CheckPlugin] = {}
     registered_inventory_plugins: dict[InventoryPluginName, BackendInventoryPlugin] = {}
     errors = [
         *legacy_errors,
@@ -81,7 +76,7 @@ def load_all_plugins(
 
     _add_legacy_sections(sections, registered_agent_sections, registered_snmp_sections)
     _add_legacy_checks(checks, registered_check_plugins)
-    return backend.AgentBasedPlugins(
+    return plugins.AgentBasedPlugins(
         agent_sections=registered_agent_sections,
         snmp_sections=registered_snmp_sections,
         check_plugins=registered_check_plugins,
@@ -92,14 +87,14 @@ def load_all_plugins(
 
 def load_selected_plugins(
     locations: Iterable[PluginLocation],
-    sections: Iterable[backend.SNMPSectionPlugin | backend.AgentSectionPlugin],
-    checks: Iterable[backend.CheckPlugin],
+    sections: Iterable[plugins.SNMPSectionPlugin | plugins.AgentSectionPlugin],
+    checks: Iterable[plugins.CheckPlugin],
     *,
     validate: bool,
-) -> backend.AgentBasedPlugins:
-    registered_agent_sections: dict[SectionName, backend.AgentSectionPlugin] = {}
-    registered_snmp_sections: dict[SectionName, backend.SNMPSectionPlugin] = {}
-    registered_check_plugins: dict[CheckPluginName, backend.CheckPlugin] = {}
+) -> plugins.AgentBasedPlugins:
+    registered_agent_sections: dict[SectionName, plugins.AgentSectionPlugin] = {}
+    registered_snmp_sections: dict[SectionName, plugins.SNMPSectionPlugin] = {}
+    registered_check_plugins: dict[CheckPluginName, plugins.CheckPlugin] = {}
     registered_inventory_plugins: dict[InventoryPluginName, BackendInventoryPlugin] = {}
     for location in locations:
         module = import_module(location.module)
@@ -115,7 +110,7 @@ def load_selected_plugins(
             )
     _add_legacy_sections(sections, registered_agent_sections, registered_snmp_sections)
     _add_legacy_checks(checks, registered_check_plugins)
-    return backend.AgentBasedPlugins(
+    return plugins.AgentBasedPlugins(
         agent_sections=registered_agent_sections,
         snmp_sections=registered_snmp_sections,
         check_plugins=registered_check_plugins,
@@ -126,16 +121,20 @@ def load_selected_plugins(
 
 def _register_plugin_by_type(
     location: PluginLocation,
-    plugin: AgentSection | SimpleSNMPSection | SNMPSection | CheckPlugin | InventoryPlugin,
-    registered_agent_sections: dict[SectionName, backend.AgentSectionPlugin],
-    registered_snmp_sections: dict[SectionName, backend.SNMPSectionPlugin],
-    registered_check_plugins: dict[CheckPluginName, backend.CheckPlugin],
+    plugin: v2.AgentSection
+    | v2.SimpleSNMPSection
+    | v2.SNMPSection
+    | v2.CheckPlugin
+    | v2.InventoryPlugin,
+    registered_agent_sections: dict[SectionName, plugins.AgentSectionPlugin],
+    registered_snmp_sections: dict[SectionName, plugins.SNMPSectionPlugin],
+    registered_check_plugins: dict[CheckPluginName, plugins.CheckPlugin],
     registered_inventory_plugins: dict[InventoryPluginName, BackendInventoryPlugin],
     *,
     validate: bool,
 ) -> None:
     match plugin:
-        case AgentSection():
+        case v2.AgentSection():
             _register_agent_section(
                 plugin,
                 location,
@@ -143,7 +142,7 @@ def _register_plugin_by_type(
                 registered_snmp_sections,
                 validate=validate,
             )
-        case SimpleSNMPSection() | SNMPSection():
+        case v2.SimpleSNMPSection() | v2.SNMPSection():
             _register_snmp_section(
                 plugin,
                 location,
@@ -151,19 +150,19 @@ def _register_plugin_by_type(
                 registered_snmp_sections,
                 validate=validate,
             )
-        case CheckPlugin():
+        case v2.CheckPlugin():
             _register_check_plugin(plugin, location, registered_check_plugins)
-        case InventoryPlugin():
+        case v2.InventoryPlugin():
             _register_inventory_plugin(plugin, location, registered_inventory_plugins)
         case unreachable:
             assert_never(unreachable)
 
 
 def _register_agent_section(
-    section: AgentSection,
+    section: v2.AgentSection,
     location: PluginLocation,
-    registered_agent_sections: dict[SectionName, backend.AgentSectionPlugin],
-    registered_snmp_sections: dict[SectionName, backend.SNMPSectionPlugin],
+    registered_agent_sections: dict[SectionName, plugins.AgentSectionPlugin],
+    registered_snmp_sections: dict[SectionName, plugins.SNMPSectionPlugin],
     *,
     validate: bool,
 ) -> None:
@@ -176,10 +175,10 @@ def _register_agent_section(
 
 
 def _register_snmp_section(
-    section: SimpleSNMPSection | SNMPSection,
+    section: v2.SimpleSNMPSection | v2.SNMPSection,
     location: PluginLocation,
-    registered_agent_sections: dict[SectionName, backend.AgentSectionPlugin],
-    registered_snmp_sections: dict[SectionName, backend.SNMPSectionPlugin],
+    registered_agent_sections: dict[SectionName, plugins.AgentSectionPlugin],
+    registered_snmp_sections: dict[SectionName, plugins.SNMPSectionPlugin],
     *,
     validate: bool,
 ) -> None:
@@ -192,9 +191,9 @@ def _register_snmp_section(
 
 
 def _register_check_plugin(
-    check: CheckPlugin,
+    check: v2.CheckPlugin,
     location: PluginLocation,
-    registered_check_plugins: dict[CheckPluginName, backend.CheckPlugin],
+    registered_check_plugins: dict[CheckPluginName, plugins.CheckPlugin],
 ) -> None:
     plugin = create_check_plugin(
         name=check.name,
@@ -220,7 +219,7 @@ def _register_check_plugin(
 
 
 def _register_inventory_plugin(
-    inventory: InventoryPlugin,
+    inventory: v2.InventoryPlugin,
     location: PluginLocation,
     registered_inventory_plugins: dict[InventoryPluginName, BackendInventoryPlugin],
 ) -> None:
@@ -240,22 +239,22 @@ def _register_inventory_plugin(
 
 
 def _add_legacy_sections(
-    sections: Iterable[backend.SNMPSectionPlugin | backend.AgentSectionPlugin],
-    registered_agent_sections: dict[SectionName, backend.AgentSectionPlugin],
-    registered_snmp_sections: dict[SectionName, backend.SNMPSectionPlugin],
+    sections: Iterable[plugins.SNMPSectionPlugin | plugins.AgentSectionPlugin],
+    registered_agent_sections: dict[SectionName, plugins.AgentSectionPlugin],
+    registered_snmp_sections: dict[SectionName, plugins.SNMPSectionPlugin],
 ) -> None:
     for section in sections:
         if section.name in registered_agent_sections or section.name in registered_snmp_sections:
             continue
-        if isinstance(section, backend.AgentSectionPlugin):
+        if isinstance(section, plugins.AgentSectionPlugin):
             registered_agent_sections[section.name] = section
         else:
             registered_snmp_sections[section.name] = section
 
 
 def _add_legacy_checks(
-    checks: Iterable[backend.CheckPlugin],
-    registered_check_plugins: dict[CheckPluginName, backend.CheckPlugin],
+    checks: Iterable[plugins.CheckPlugin],
+    registered_check_plugins: dict[CheckPluginName, plugins.CheckPlugin],
 ) -> None:
     for check in checks:
         if check.name in registered_check_plugins:

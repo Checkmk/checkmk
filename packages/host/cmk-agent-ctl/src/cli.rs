@@ -98,7 +98,10 @@ pub struct RegisterOpts {
 #[derive(Parser)]
 pub struct RegistrationConnectionOpts {
     /// Address of the Checkmk site in the format "<server>" or "<server>:<port>"
-    #[arg(long = "server", short = 's', value_parser = clap::value_parser!(site_spec::ServerSpec))]
+    ///
+    /// "<server>" can be an IPv4/6 address or a hostname. IPv6 addresses must be enclosed in square brackets.
+    /// Examples: checkmk.server.com, checkmk.server.com:8000, 127.0.0.1, 127.0.0.1:8000, [3a02:87b0:504::2], [3a02:87b0:504::2]:8000.
+    #[arg(long = "server", short = 's', value_parser = clap::value_parser!(site_spec::ServerSpec), verbatim_doc_comment)]
     pub server_spec: site_spec::ServerSpec,
 
     /// Name of the Checkmk site

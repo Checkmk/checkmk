@@ -115,7 +115,6 @@ def _is_allowed_import(imported: ModuleName) -> bool:
             imported.in_component(Component("cmk.automations")),
             imported.in_component(Component("cmk.bi")),
             imported.in_component(Component("cmk.piggyback")),
-            imported.in_component(Component("cmk.piggyback_hub")),
             imported.in_component(Component("cmk.plugins.mail")),
             imported.in_component(Component("cmk.plugins.collection")),
             imported.in_component(Component("cmk.discover_plugins")),
@@ -534,7 +533,6 @@ def _is_allowed_for_legacy_checks(
             imported.in_component(Component("cmk.plugins")),
             imported.in_component(Component("cmk.base.config")),
             imported.in_component(Component("cmk.agent_based.legacy.v0_unstable")),
-            imported.in_component(Component("cmk.base.plugins.agent_based")),
             imported.in_component(Component("cmk.agent_based")),
         )
     )

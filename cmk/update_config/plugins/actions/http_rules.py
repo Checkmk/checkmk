@@ -21,13 +21,13 @@ class CheckHTTPRules(UpdateAction):
             if (count := len(http_ruleset.get_rules())) > 0:
                 logger.info(
                     tty.format_warning(
-                        f"You have {tty.yellow}{count} {tty.white}{'rule' if count == 1 else 'rules'} "
-                        f"using the ruleset {tty.yellow}Check HTTP service deprecated{tty.white}.\n"
+                        f"You have {tty.yellow}{count} {tty.normal}{'rule' if count == 1 else 'rules'} "
+                        f"using the ruleset {tty.yellow}Check HTTP service deprecated{tty.normal}.\n"
                         "This ruleset will be deprecated along with the old HTTP "
                         "monitoring plug-in in the next version(s) of Checkmk.\n"
                         "Rules must therefore be migrated to the new ruleset which is used by the httpv2 plugin.\n"
                         f"Rule migration can be done manually or by calling {tty.yellow}cmk-migrate-http "
-                        f"{tty.white}as site user. See cmk-migrate-http --help "
+                        f"{tty.normal}as site user. See cmk-migrate-http --help "
                         "for more information on this helper script.\n"
                         "For additional information on the deprecation of the HTTP plug-in see the werk #17665."
                     )

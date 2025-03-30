@@ -37,7 +37,6 @@ from cmk.update_config.https.conflict_options import (
     Config,
     ConflictType,
     ExpectResponseHeader,
-    HTTP10NotSupported,
     MethodUnavailable,
     OnlyStatusCodesAllowed,
     SSLIncompatible,
@@ -837,48 +836,6 @@ EXAMPLE_99: Mapping[str, object] = {
     "rule_value, conflict",
     [
         (
-            EXAMPLE_3,
-            Conflict(
-                type_=ConflictType.http_1_0_not_supported,
-                host_fields=["virthost"],
-            ),
-        ),
-        (
-            EXAMPLE_5,
-            Conflict(
-                type_=ConflictType.http_1_0_not_supported,
-                host_fields=["virthost"],
-            ),
-        ),
-        (
-            EXAMPLE_6,
-            Conflict(
-                type_=ConflictType.http_1_0_not_supported,
-                host_fields=["virthost"],
-            ),
-        ),
-        (
-            EXAMPLE_7,
-            Conflict(
-                type_=ConflictType.http_1_0_not_supported,
-                host_fields=["virthost"],
-            ),
-        ),
-        (
-            EXAMPLE_8,
-            Conflict(
-                type_=ConflictType.http_1_0_not_supported,
-                host_fields=["virthost"],
-            ),
-        ),
-        (
-            EXAMPLE_9,
-            Conflict(
-                type_=ConflictType.http_1_0_not_supported,
-                host_fields=["virthost"],
-            ),
-        ),
-        (
             EXAMPLE_13,
             Conflict(
                 type_=ConflictType.cant_migrate_proxy,
@@ -1055,21 +1012,7 @@ EXAMPLE_99: Mapping[str, object] = {
             ),
         ),
         (
-            EXAMPLE_94,
-            Conflict(
-                type_=ConflictType.http_1_0_not_supported,
-                host_fields=["virthost"],
-            ),
-        ),
-        (
             EXAMPLE_19,
-            Conflict(
-                type_=ConflictType.cant_construct_url,
-                host_fields=["address", "uri", "virthost"],
-            ),
-        ),
-        (
-            EXAMPLE_4,
             Conflict(
                 type_=ConflictType.cant_construct_url,
                 host_fields=["address", "uri", "virthost"],
@@ -1114,6 +1057,13 @@ def test_nothing_to_assert_rules(rule_value: Mapping[str, object], config: Confi
 @pytest.mark.parametrize(
     "rule_value, config, url, server",
     [
+        (EXAMPLE_3, DEFAULT, "http://$HOSTADDRESS$", "$HOSTADDRESS$"),
+        (EXAMPLE_4, DEFAULT, "https://$HOSTADDRESS$", "$HOSTADDRESS$"),
+        (EXAMPLE_5, DEFAULT, "http://$HOSTADDRESS$", "$HOSTADDRESS$"),
+        (EXAMPLE_6, DEFAULT, "http://$HOSTADDRESS$", "$HOSTADDRESS$"),
+        (EXAMPLE_7, DEFAULT, "http://$HOSTADDRESS$", "$HOSTADDRESS$"),
+        (EXAMPLE_8, DEFAULT, "http://$HOSTADDRESS$", "$HOSTADDRESS$"),
+        (EXAMPLE_9, DEFAULT, "http://$HOSTADDRESS$:443", "$HOSTADDRESS$"),
         (EXAMPLE_10, DEFAULT, "http://facebook.de", "google.com"),
         (EXAMPLE_15, DEFAULT, "http://google.com", "google.com"),
         (EXAMPLE_16, DEFAULT, "http://127.0.0.1", "127.0.0.1"),
@@ -1916,9 +1866,7 @@ def test_preserve_http_version() -> None:
     [
         (
             EXAMPLE_94,
-            Config(
-                http_1_0_not_supported=HTTP10NotSupported.ignore,
-            ),
+            DEFAULT,
             "http://[::1]",
         ),
     ],

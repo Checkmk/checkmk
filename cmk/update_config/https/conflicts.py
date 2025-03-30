@@ -21,7 +21,6 @@ from cmk.update_config.https.conflict_options import (
     Config,
     ConflictType,
     ExpectResponseHeader,
-    HTTP10NotSupported,
     MethodUnavailable,
     OnlyStatusCodesAllowed,
     SSLIncompatible,
@@ -35,55 +34,6 @@ def _migrate_header(header: str) -> dict[str, str] | None:
         case [name, value]:
             return {"header_name": name, "header_value": value.strip()}
     return None
-
-
-MACROS = {
-    "$HOSTNAME$",
-    "$HOSTADDRESS$",
-    "$HOSTALIAS$",
-    "$HOST_TAGS$",
-    "$_HOSTTAGS$",
-    "$HOST__TAG_site$",
-    "$_HOST_TAG_site$",
-    "$HOST__TAG_address_family$",
-    "$_HOST_TAG_address_family$",
-    "$HOST__TAG_ip-v4$",
-    "$_HOST_TAG_ip-v4$",
-    "$HOST__TAG_agent$",
-    "$_HOST_TAG_agent$",
-    "$HOST__TAG_tcp$",
-    "$_HOST_TAG_tcp$",
-    "$HOST__TAG_checkmk-agent$",
-    "$_HOST_TAG_checkmk-agent$",
-    "$HOST__TAG_piggyback$",
-    "$_HOST_TAG_piggyback$",
-    "$HOST__TAG_snmp_ds$",
-    "$_HOST_TAG_snmp_ds$",
-    "$HOST__TAG_criticality$",
-    "$_HOST_TAG_criticality$",
-    "$HOST__TAG_networking$",
-    "$_HOST_TAG_networking$",
-    "$HOST__LABEL_cmk/site$",
-    "$_HOST_LABEL_cmk/site$",
-    "$HOST__LABELSOURCE_cmk/site$",
-    "$_HOST_LABELSOURCE_cmk/site$",
-    "$HOST_ADDRESS_4$",
-    "$_HOSTADDRESS_4$",
-    "$HOST_ADDRESS_6$",
-    "$_HOSTADDRESS_6$",
-    "$HOST_ADDRESS_FAMILY$",
-    "$_HOSTADDRESS_FAMILY$",
-    "$HOST_ADDRESSES_4$",
-    "$_HOSTADDRESSES_4$",
-    "$HOST_ADDRESSES_6$",
-    "$_HOSTADDRESSES_6$",
-    "$HOST_FILENAME$",
-    "$_HOSTFILENAME$",
-    "$USER1$",
-    "$USER2$",
-    "$USER3$",
-    "$USER4$",
-}
 
 
 class MigratableUrl(V1Url):
@@ -187,9 +137,9 @@ class Conflict:
 
     def render(self) -> str:
         name = self.type_.value
-        if self.type_ in (ConflictType.cant_migrate_proxy, ConflictType.invalid_value):
-            return f"{name}, no automatic migration possible."
-        return name
+        if self.type_ in (ConflictType.cant_migrate_proxy, ConflictType.cant_have_regex_and_string):
+            return f"{name}, migration using the script is not possible."
+        return f"--{name}"
 
 
 class UrlType(enum.Enum):
@@ -216,15 +166,6 @@ def detect_conflicts(config: Config, rule_value: Mapping[str, object]) -> Confli
         return Conflict(
             type_=ConflictType.cant_migrate_proxy,
             host_fields=["address"],
-        )
-    if (
-        config.http_1_0_not_supported is HTTP10NotSupported.skip
-        and not value.uses_https()
-        and value.host.virthost is None
-    ):
-        return Conflict(
-            type_=ConflictType.http_1_0_not_supported,
-            host_fields=["virthost"],
         )
     mode = value.mode[1]
     if isinstance(mode, V1Url):
@@ -328,11 +269,6 @@ def detect_conflicts(config: Config, rule_value: Mapping[str, object]) -> Confli
     if config.cant_construct_url is CantConstructURL.skip:
         url = migratable_value.url()
         if _classify(url) is UrlType.INVALID:
-            return Conflict(
-                type_=ConflictType.cant_construct_url,
-                host_fields=["address", "uri", "virthost"],
-            )
-        if any(macro in url for macro in MACROS):
             return Conflict(
                 type_=ConflictType.cant_construct_url,
                 host_fields=["address", "uri", "virthost"],

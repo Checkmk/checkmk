@@ -12,7 +12,6 @@ from pydantic import BaseModel
 
 class ConflictType(enum.Enum):
     invalid_value = "invalid-value"
-    http_1_0_not_supported = "http-1-0-not-supported"
     ssl_incompatible = "ssl-incompatible"
     add_headers_incompatible = "add-headers-incompatible"
     expect_response_header = "expect-response-header"
@@ -24,31 +23,6 @@ class ConflictType(enum.Enum):
     cant_construct_url = "cant-construct-url"
     cant_migrate_proxy = "cant-migrate-proxy"
     cant_have_regex_and_string = "cant-have-regex-and-string"
-
-
-class HTTP10NotSupported(enum.Enum):
-    skip = "skip"
-    ignore = "ignore"
-
-    @classmethod
-    def type_(cls) -> ConflictType:
-        return ConflictType.http_1_0_not_supported
-
-    @classmethod
-    def default(cls) -> "HTTP10NotSupported":
-        return cls.skip
-
-    def help(self) -> str:
-        cls = type(self)
-        match self:
-            case cls.skip:
-                return "do not migrate rule"
-            case cls.ignore:
-                return "use HTTP/1.1 with virtual host set to the address"
-
-    @classmethod
-    def help_header(cls) -> str:
-        return "v2 does not support HTTP/1.0"
 
 
 class SSLIncompatible(enum.Enum):
@@ -170,13 +144,15 @@ class CantPostData(enum.Enum):
             case CantPostData.skip:
                 return "do not migrate rule"
             case CantPostData.post:
-                return "use POST method if post data is present"
+                return "use POST method with migrating post data"
             case CantPostData.prefermethod:
-                return "migrate `HTTP method` if post data is present, don't migrate data option"
+                return "migrate `HTTP method` without migrating post data"
 
     @classmethod
     def help_header(cls) -> str:
-        return "the option `Send HTTP POST data` is incompatible with GET, DELETE, HEAD"
+        return (
+            "the option `Send HTTP POST data` is incompatible with HTTP methods GET, DELETE, HEAD"
+        )
 
 
 class MethodUnavailable(enum.Enum):
@@ -196,7 +172,7 @@ class MethodUnavailable(enum.Enum):
             case MethodUnavailable.skip:
                 return "do not migrate rule"
             case MethodUnavailable.ignore:
-                return "ignore this option during migration, use `GET` method or `POST` if post data is present"
+                return "ignore unsupported HTTP method and use POST if post data is present, otherwise use GET"
 
     @classmethod
     def help_header(cls) -> str:
@@ -303,7 +279,6 @@ class CantHaveRegexAndString(enum.Enum):
 
 
 class Config(BaseModel):
-    http_1_0_not_supported: HTTP10NotSupported = HTTP10NotSupported.default()
     ssl_incompatible: SSLIncompatible = SSLIncompatible.default()
     add_headers_incompatible: AdditionalHeaders = AdditionalHeaders.default()
     expect_response_header: ExpectResponseHeader = ExpectResponseHeader.default()
@@ -317,12 +292,23 @@ class Config(BaseModel):
 
 
 def add_migrate_parsing(parser: ArgumentParser) -> ArgumentParser:
-    parser.add_argument(
+    parser.add_argument_group()
+    write_or_dry_run_group = parser.add_mutually_exclusive_group(required=True)
+    write_or_dry_run_group.add_argument(
         "--write",
         action="store_true",
         help="Persist changes on disk, v2 rules are created as deactivated, will have ‘migrated’ suffix in the service name and a reference to the original v1 rule in the description, use Finalize to clean this up.",
+        dest="write",
     )
-    _add_argument(parser, HTTP10NotSupported, HTTP10NotSupported.default())
+    write_or_dry_run_group.add_argument(
+        "--dry-run",
+        action="store_false",
+        help=(
+            "Attempts to migrate the rules as it would with ‘--write’, but does not save the rules in the end. "
+            "Use this option to understand which conflicts will be encountered."
+        ),
+        dest="write",
+    )
     _add_argument(parser, SSLIncompatible, SSLIncompatible.default())
     _add_argument(parser, AdditionalHeaders, AdditionalHeaders.default())
     _add_argument(parser, ExpectResponseHeader, ExpectResponseHeader.default())

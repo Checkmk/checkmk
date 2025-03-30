@@ -112,7 +112,7 @@ class AllValueStoresStore:
             self._last_known_state = _LastState(timestamp=self.path.stat().st_mtime, data=new_data)
 
 
-class ValueStore(MutableMapping[str, object]):
+class _ValueStore(MutableMapping[str, object]):
     """Implements the mutable mapping that is exposed to the plugins
 
     This class ensures that users indeed use strings as keys, and that the
@@ -206,8 +206,8 @@ class ValueStoreManager:
     def __init__(self, host_name: HostName, all_stores_store: AllValueStoresStore) -> None:
         self._store: Final = all_stores_store
         self._all_stores = {**all_stores_store.load()}
-        self._accessed_stores: dict[ValueStoreKey, ValueStore] = {}
-        self.active_service_interface: ValueStore | None = None
+        self._accessed_stores: dict[ValueStoreKey, _ValueStore] = {}
+        self.active_service_interface: _ValueStore | None = None
         self._host_name = host_name
 
     def _make_value_store_key(
@@ -224,7 +224,7 @@ class ValueStoreManager:
         In the corresponding context the value store for the given service is active
         """
         vs_key = self._make_value_store_key(host_name, service_id)
-        vs = ValueStore(self._all_stores.get(self._make_value_store_key(host_name, service_id), {}))
+        vs = _ValueStore(self._all_stores.get(vs_key, {}))
 
         old_sif = self.active_service_interface
         self.active_service_interface = vs

@@ -80,8 +80,8 @@ class _BrokenRepr(str):
 
 class Test_ValueStore:
     @staticmethod
-    def _get_vs() -> value_store.ValueStore:
-        return value_store.ValueStore(
+    def _get_vs() -> value_store._ValueStore:
+        return value_store._ValueStore(
             {
                 "good_key": "'value'",
                 "bad_key": "inf",
@@ -137,7 +137,7 @@ class Test_ValueStore:
         assert vs["rogue"] is rogue
 
         # next time we access it, it will raise
-        next_times_vs = value_store.ValueStore(vs.export())
+        next_times_vs = value_store._ValueStore(vs.export())
         with pytest.raises(SyntaxError):
             _ = next_times_vs["rogue"]
 

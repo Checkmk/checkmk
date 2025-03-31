@@ -1,0 +1,14 @@
+Title: Fix startup during system boot
+Class: fix
+Compatible: compat
+Component: deb
+Date: 1743447395
+Edition: cre
+Level: 2
+Version: 2.2.0p42
+
+This change fixes issues in the detection of the systemd environment which makes
+the package installation deploy and enable the systemd unit <code>omd.service</code> again.
+
+SUP-23203
+CMK-22639

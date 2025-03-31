@@ -68,10 +68,10 @@ def _operation_dicts(spec: APISpec, endpoint: Endpoint) -> Iterator[tuple[str, O
     if endpoint.deprecated_urls is not None:
         for url, werk_id in endpoint.deprecated_urls.items():
             deprecate_self |= url == endpoint.path
-            yield url, _endpoint_to_operation_dict(spec, endpoint, werk_id)
+            yield url, _marshmallow_endpoint_to_operation_dict(spec, endpoint, werk_id)
 
     if not deprecate_self:
-        yield endpoint.path, _endpoint_to_operation_dict(spec, endpoint)
+        yield endpoint.path, _marshmallow_endpoint_to_operation_dict(spec, endpoint)
 
 
 class DefaultStatusCodeDescription(enum.Enum):
@@ -147,7 +147,7 @@ DEFAULT_STATUS_CODE_SCHEMAS = {
 }
 
 
-def _endpoint_to_operation_dict(
+def _marshmallow_endpoint_to_operation_dict(
     spec: APISpec, endpoint: Endpoint, werk_id: int | None = None
 ) -> OperationObject:
     assert endpoint.func is not None, "This object must be used in a decorator environment."

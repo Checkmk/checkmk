@@ -232,6 +232,7 @@ def _process_icon(
     # b) single string - the icon name (without .png)
     # c) tuple         - icon, title
     # d) triple        - icon, title, url
+    result = None
     try:
         result = icon.render(what, row, tags, custom_vars)
     except Exception:

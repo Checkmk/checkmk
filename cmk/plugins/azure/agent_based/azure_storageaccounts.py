@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.v1 import check_levels  # we can only use v2 after migrating the ruleset!
 from cmk.agent_based.v2 import (
     AgentSection,
-    # check_levels,
+    check_levels,
     CheckPlugin,
     render,
 )
@@ -41,10 +40,11 @@ agent_section_azure_storageaccounts = AgentSection(
 check_plugin_azure_storageaccounts = CheckPlugin(
     name="azure_storageaccounts",
     service_name="Storage %s account",
+    sections=["azure_storageaccounts"],
     discovery_function=create_discover_by_metrics_function("total_UsedCapacity"),
     check_function=create_check_azure_storage(),
-    check_ruleset_name="azure_storageaccounts",
-    check_default_parameters={},
+    check_ruleset_name="azure_storageaccounts_usage",
+    check_default_parameters={"used_capacity_levels": ("no_levels", None)},
 )
 
 
@@ -77,8 +77,10 @@ check_plugin_azure_storageaccounts_flow = CheckPlugin(
     sections=["azure_storageaccounts"],
     discovery_function=create_discover_by_metrics_function(*FLOW_METRICS.keys()),
     check_function=create_check_azure_storageaccounts_flow(),
-    check_ruleset_name="azure_storageaccounts",
-    check_default_parameters={},
+    check_ruleset_name="azure_storageaccounts_flow",
+    check_default_parameters={
+        f"{metric_key[6:].lower()}_levels": ("no_levels", None) for metric_key in FLOW_METRICS
+    },
 )
 
 
@@ -140,6 +142,8 @@ check_plugin_azure_storageaccounts_performance = CheckPlugin(
     sections=["azure_storageaccounts"],
     discovery_function=create_discover_by_metrics_function(*PERFORMANCE_METRICS.keys()),
     check_function=create_check_azure_storageaccounts_performance(),
-    check_ruleset_name="azure_storageaccounts",
-    check_default_parameters={},
+    check_ruleset_name="azure_storageaccounts_performance",
+    check_default_parameters={
+        f"{value[-2] or value[-1]}": ("no_levels", None) for value in PERFORMANCE_METRICS.values()
+    },
 )

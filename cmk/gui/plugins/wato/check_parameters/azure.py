@@ -246,6 +246,7 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_storageaccounts,
         title=lambda: _("Azure Storage"),
+        is_deprecated=True,
     )
 )
 

@@ -104,7 +104,7 @@ def section_fixture() -> Section:
         ),
         pytest.param(
             "st0ragetestaccount",
-            {"used_capacity_levels": LEVELS_USED},
+            {"used_capacity_levels": ("fixed", LEVELS_USED)},
             [
                 Result(
                     state=State.WARN,
@@ -145,7 +145,7 @@ def test_check_azure_storageaccounts(
         ),
         pytest.param(
             "st0ragetestaccount",
-            {"egress_levels": LEVELS_EGRESS},
+            {"egress_levels": ("fixed", LEVELS_EGRESS)},
             [
                 Result(state=State.OK, summary="Ingress: 30.9 KiB"),
                 Metric(name="ingress", value=31620),
@@ -189,7 +189,7 @@ def test_check_azure_storageaccounts_flow(
         ),
         pytest.param(
             "st0ragetestaccount",
-            {"availability_levels": LEVELS_AVAILABILITY},
+            {"availability_levels": ("fixed", LEVELS_AVAILABILITY)},
             [
                 Result(state=State.OK, summary="Success server latency: 5624 ms"),
                 Metric(name="server_latency", value=5624),

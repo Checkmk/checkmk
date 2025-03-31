@@ -57,6 +57,7 @@ class ConfigBundle(TypedDict):
     comment: str
 
     # Bundle specific properties
+    owned_by: str | None  # user id
     group: str  # e.g. rulespec_name    # special_agent:aws
     program_id: str  # PROGRAM_ID_QUICK_SETUP
     customer: NotRequired[str]  # CME specific

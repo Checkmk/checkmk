@@ -578,6 +578,7 @@ def _setup_rules(rule_a_locked: bool, rule_b_locked: bool) -> tuple[Ruleset, Fol
         bundle={
             "title": "bundle_title",
             "comment": "bundle_comment",
+            "owned_by": "user_id",
             "group": "bundle_group",
             "program_id": program_id,
         },

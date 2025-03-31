@@ -25,6 +25,7 @@ from cmk.utils.password_store import Password
 from cmk.utils.rulesets.definition import RuleGroupType
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 
+from cmk.gui.logged_in import user
 from cmk.gui.watolib import check_mk_automations
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundle, ConfigBundleStore
 from cmk.gui.watolib.host_attributes import HostAttributes
@@ -147,7 +148,10 @@ def valid_special_agent_bundle(bundle: BundleReferences) -> bool:
 def identify_bundle_references(
     bundle_group: str | None, bundle_ids: set[BundleId], *, rulespecs_hint: set[str] | None = None
 ) -> Mapping[BundleId, BundleReferences]:
-    """Identify the configuration references of the configuration bundles."""
+    """Identify the configuration references of the configuration bundles.
+
+    NOTE: This may not return all references, as individual entities may not be accessible by the
+    current user. (Like passwords)"""
     bundle_id_finder = _prepare_id_finder(PROGRAM_ID_QUICK_SETUP, bundle_ids)
     affected_entities = _get_affected_entities(bundle_group)
 
@@ -382,6 +386,7 @@ def _prepare_create_passwords(
         for pw in create_passwords:
             spec = pw["spec"]
             spec["locked_by"] = bundle_ident
+            spec["owned_by"] = user.id
             save_password(pw["id"], spec, new_password=True)
 
     return create

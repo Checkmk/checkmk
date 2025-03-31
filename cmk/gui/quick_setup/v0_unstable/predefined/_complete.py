@@ -19,6 +19,7 @@ from cmk.utils.rulesets.ruleset_matcher import RuleConditionsSpec, RuleOptionsSp
 from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.quick_setup.v0_unstable.definitions import (
     QSHostName,
     QSHostPath,
@@ -168,7 +169,6 @@ def create_special_agent_host_from_form_data(
 
 def create_passwords(
     passwords: Mapping[str, str],
-    rulespec_name: str,
     bundle_id: BundleId,
 ) -> Sequence[CreatePassword]:
     return [
@@ -179,7 +179,7 @@ def create_passwords(
                 comment="",
                 docu_url="",
                 password=password,
-                owned_by=None,
+                owned_by=user.id,
                 shared_with=[],
             ),
         )
@@ -324,6 +324,7 @@ def _create_and_save_special_agent_bundle(
         bundle=ConfigBundle(
             title=f"{bundle_id}_config",
             comment="",
+            owned_by=user.id,
             group=rulespec_name,
             program_id=PROGRAM_ID_QUICK_SETUP,
         ),
@@ -335,7 +336,6 @@ def _create_and_save_special_agent_bundle(
             ],
             passwords=create_passwords(
                 passwords=explicit_passwords,
-                rulespec_name=rulespec_name,
                 bundle_id=bundle_id,
             ),
             rules=[

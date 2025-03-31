@@ -23,7 +23,7 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import LoggedInUser, user
-from cmk.gui.type_defs import UserContactDetails, UserObject, Users, UserSpec
+from cmk.gui.type_defs import AnnotatedUserId, UserContactDetails, UserObject, Users, UserSpec
 from cmk.gui.userdb import add_internal_attributes, get_user_attributes
 from cmk.gui.userdb._connections import get_connection
 from cmk.gui.utils.security_log_events import UserManagementEvent
@@ -366,14 +366,14 @@ class UsersConfigFile(WatoSingleConfigFile[Users]):
         )
 
 
-class ContactsConfigFile(WatoSingleConfigFile[dict[UserId, UserContactDetails]]):
+class ContactsConfigFile(WatoSingleConfigFile[dict[AnnotatedUserId, UserContactDetails]]):
     """Handles reading and writing contacts.mk file"""
 
     def __init__(self) -> None:
         super().__init__(
             config_file_path=Path(wato_root_dir()) / "contacts.mk",
             config_variable="contacts",
-            spec_class=dict[UserId, UserContactDetails],
+            spec_class=dict[AnnotatedUserId, UserContactDetails],
         )
 
 

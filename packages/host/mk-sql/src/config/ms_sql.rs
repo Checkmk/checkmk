@@ -425,6 +425,8 @@ impl Backend {
         match value.as_ref() {
             "auto" => Some(Self::Auto),
             "tcp" => Some(Self::Tcp),
+            #[cfg(unix)]
+            "odbc" => Some(Self::Auto), // at the moment unix ignores odbc
             #[cfg(windows)]
             "odbc" => Some(Self::Odbc),
             _ => None,
@@ -480,7 +482,10 @@ impl Connection {
                     defaults::CONNECTION_TIMEOUT
                 }),
                 backend: {
-                    let value: String = conn.get_string(keys::BACKEND).unwrap_or_default();
+                    let value: String = conn
+                        .get_string(keys::BACKEND)
+                        .unwrap_or_default()
+                        .to_lowercase();
                     Backend::from_string(value.as_str()).unwrap_or_else(|| {
                         log::error!("Unknown backend '{}'", &value);
                         Backend::default()
@@ -1539,7 +1544,7 @@ connection:
         assert_eq!(c.instances()[0].name().to_string(), "INST1");
         let inst1 = &c.instances()[0];
         #[cfg(unix)]
-        assert_eq!(inst1.conn().backend(), &Backend::default());
+        assert_eq!(inst1.conn().backend(), &Backend::Auto);
         #[cfg(windows)]
         assert_eq!(inst1.conn().backend(), &Backend::Odbc);
         let inst2 = &c.instances()[1];

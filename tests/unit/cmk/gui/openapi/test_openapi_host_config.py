@@ -56,6 +56,7 @@ def quick_setup_config_bundle() -> Iterator[tuple[BundleId, str]]:
         bundle={
             "title": "bundle_title",
             "comment": "bundle_comment",
+            "owned_by": "cmkadmin",
             "group": "bundle_group",
             "program_id": program_id,
         },

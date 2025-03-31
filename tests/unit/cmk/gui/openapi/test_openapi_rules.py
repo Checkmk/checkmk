@@ -510,6 +510,7 @@ def fixture_locked_rule_id() -> Iterable[str]:
         bundle={
             "title": "bundle_title",
             "comment": "bundle_comment",
+            "owned_by": "user_id",
             "group": "bundle_group",
             "program_id": program_id,
         },

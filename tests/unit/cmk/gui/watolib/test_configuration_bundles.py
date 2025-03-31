@@ -40,9 +40,13 @@ logger = logging.getLogger(__name__)
 
 
 def _make_bundle(
-    bundle_id: str = "test-bundle-id", group: str = "special_agents:aws"
+    bundle_id: str = "test-bundle-id",
+    group: str = "special_agents:aws",
+    owned_by: str | None = "cmkadmin",
 ) -> tuple[BundleId, ConfigBundle]:
-    bundle = ConfigBundle(title="", comment="", group=group, program_id="quick_setup")
+    bundle = ConfigBundle(
+        title="", comment="", owned_by=owned_by, group=group, program_id="quick_setup"
+    )
     return BundleId(bundle_id), bundle
 
 

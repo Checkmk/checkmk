@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import dataclass
-from typing import Callable, Mapping, Sequence
+from typing import Mapping, Sequence
 
 from marshmallow import Schema
 
@@ -30,7 +30,8 @@ class MarshmallowSchemaDefinitions:
 
 @dataclass
 class SpecEndpoint:
-    func: Callable
+    title: str
+    description: str | None
     path: str
     operation_id: str
     family_name: str

@@ -7,7 +7,7 @@
 import enum
 import http.client
 from collections.abc import Iterator, Mapping, Sequence
-from typing import Any
+from typing import Any, Callable
 
 from apispec import APISpec
 from werkzeug.utils import import_string
@@ -169,8 +169,14 @@ def _endpoint_to_operation_dict(
         error_schemas=endpoint.error_schemas,
     )
 
+    endpoint_title, endpoint_description = _endpoint_title_and_description_from_docstring(
+        endpoint.func,
+        endpoint.operation_id,
+    )
+
     spec_endpoint = SpecEndpoint(
-        func=endpoint.func,
+        title=endpoint_title,
+        description=endpoint_description,
         path=endpoint.path,
         operation_id=endpoint.operation_id,
         family_name=family_name,
@@ -187,18 +193,34 @@ def _endpoint_to_operation_dict(
     return _to_operation_dict(spec, spec_endpoint, schema_definitions, werk_id)
 
 
+def _endpoint_title_and_description_from_docstring(
+    endpoint_func: Callable, operation_id: str
+) -> tuple[str, str | None]:
+    module_obj = import_string(endpoint_func.__module__)
+
+    try:
+        docstring_name = _docstring_name(endpoint_func.__doc__)
+    except ValueError as exc:
+        raise ValueError(
+            f"Function {module_obj.__name__}:{endpoint_func.__name__} has no docstring."
+        ) from exc
+
+    if not docstring_name:
+        raise RuntimeError(f"Please put a docstring onto {operation_id}")
+
+    docstring_description = _docstring_description(endpoint_func.__doc__)
+    return docstring_name, docstring_description
+
+
 def _to_operation_dict(
     spec: APISpec,
     spec_endpoint: SpecEndpoint,
     schema_definitions: MarshmallowSchemaDefinitions,
     werk_id: int | None = None,
 ) -> OperationObject:
-    assert spec_endpoint.func is not None, "This object must be used in a decorator environment."
     assert spec_endpoint.operation_id is not None, (
         "This object must be used in a decorator environment."
     )
-
-    module_obj = import_string(spec_endpoint.func.__module__)
 
     response_headers: dict[str, OpenAPIParameter] = {}
     for header_to_add in [CONTENT_TYPE, HEADER_CHECKMK_EDITION, HEADER_CHECKMK_VERSION]:
@@ -231,7 +253,13 @@ def _to_operation_dict(
 
     operation_spec: OperationSpecType = {
         "tags": [spec_endpoint.family_name],
-        "description": "",
+        "description": _build_spec_description(
+            endpoint_description=spec_endpoint.description,
+            werk_id=werk_id,
+            permissions_required=spec_endpoint.permissions_required,
+            permissions_description=spec_endpoint.permissions_description,
+        ),
+        "summary": spec_endpoint.title,
     }
     if werk_id:
         operation_spec["deprecated"] = True
@@ -290,27 +318,21 @@ def _to_operation_dict(
     if not operation_spec["parameters"]:
         del operation_spec["parameters"]
 
-    try:
-        docstring_name = _docstring_name(spec_endpoint.func.__doc__)
-    except ValueError as exc:
-        raise ValueError(
-            f"Function {module_obj.__name__}:{spec_endpoint.func.__name__} has no docstring."
-        ) from exc
+    return {spec_endpoint.method: operation_spec}
 
-    if docstring_name:
-        operation_spec["summary"] = docstring_name
-    else:
-        raise RuntimeError(f"Please put a docstring onto {spec_endpoint.operation_id}")
 
-    if description := _build_description(
-        _docstring_description(spec_endpoint.func.__doc__), werk_id
-    ):
-        # The validator will complain on empty descriptions being set, even though it's valid.
-        operation_spec["description"] = description
+def _build_spec_description(
+    endpoint_description: str | None,
+    werk_id: int | None,
+    permissions_required: permissions.BasePerm | None,
+    permissions_description: Mapping[str, str] | None,
+) -> str:
+    # The validator will complain on empty descriptions being set, even though it's valid.
+    spec_description = _build_description(endpoint_description, werk_id)
 
-    if spec_endpoint.permissions_required is not None:
+    if permissions_required is not None:
         # Check that all the names are known to the system.
-        for perm in spec_endpoint.permissions_required.iter_perms():
+        for perm in permissions_required.iter_perms():
             if isinstance(perm, permissions.OkayToIgnorePerm):
                 continue
 
@@ -323,15 +345,14 @@ def _to_operation_dict(
                 )
 
         # Write permission documentation in openapi spec.
-        if description := _permission_descriptions(
-            spec_endpoint.permissions_required, spec_endpoint.permissions_description
+        if permissions_spec_description := _permission_descriptions(
+            permissions_required, permissions_description
         ):
-            operation_spec.setdefault("description", "")
-            if not operation_spec["description"]:
-                operation_spec["description"] += "\n\n"
-            operation_spec["description"] += description
+            if not spec_description:
+                spec_description += "\n\n"
+            spec_description += permissions_spec_description
 
-    return {spec_endpoint.method: operation_spec}
+    return spec_description
 
 
 def _build_tag_obj_from_family(family_name: str) -> OpenAPITag:

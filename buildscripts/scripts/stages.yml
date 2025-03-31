@@ -6,6 +6,11 @@
 # - `make` is not needed at this level (but make-target could still call validate_changes.py)
 # - running inside docker should be optional
 # - some variables are not needed
+#
+# WARNING
+#
+# ENV_VAR_LIST and SEC_VAR_LIST shall not contain elements with "#", see test-gerrit.groovy
+#
 
 VARIABLES:
     - NAME: PATCHSET_REVISION
@@ -199,7 +204,11 @@ STAGES:
       DIR: "tests"
       ENV_VARS:
           MYPY_ADDOPTS: "--no-color-output --junit-xml ${RESULTS}/mypy.xml --no-incremental"
-      COMMAND: "make --quiet test-mypy &> ${RESULTS}/python-typing.txt"
+      # create venv and build protobuf files a priori to avoid compiler warnings during the MyPy command causing the warnings parser to fail
+      COMMAND: |
+        make -C ../ .venv
+        make prepare-protobuf-files
+        make --quiet test-mypy &> ${RESULTS}/python-typing.txt
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No Python files changed"
       RESULT_CHECK_TYPE: "MYPY"

@@ -121,7 +121,7 @@ def to_stage_info(raw_stage: Mapping[Any, Any]) -> StageInfo:
         GIT_FETCH_TAGS=bool(raw_stage.get("GIT_FETCH_TAGS", False)),
         GIT_FETCH_NOTES=bool(raw_stage.get("GIT_FETCH_NOTES", False)),
         BAZEL_LOCKS_AMOUNT=int(raw_stage.get("BAZEL_LOCKS_AMOUNT", -1)),
-        COMMAND=str(raw_stage["COMMAND"]),
+        COMMAND=str(raw_stage["COMMAND"]).replace("\n", ";"),
         TEXT_ON_SKIP=str(raw_stage.get("TEXT_ON_SKIP", "")),
         RESULT_CHECK_TYPE=str(raw_stage.get("RESULT_CHECK_TYPE", "")),
         RESULT_CHECK_FILE_PATTERN=str(raw_stage.get("RESULT_CHECK_FILE_PATTERN", "")),

@@ -38,6 +38,7 @@ def check_mem_linux(_no_item, params, section):
         + section.get("SReclaimable", 0)
     )
 
+    # RAM, https://github.com/Checkmk/checkmk/commit/1657414506bfe8f4001f3e10ef648947276ad75d
     section["MemUsed"] = section["MemTotal"] - section["MemFree"] - section["Caches"]
     section["SwapUsed"] = section["SwapTotal"] - section["SwapFree"]
     section["TotalTotal"] = section["MemTotal"] + section["SwapTotal"]

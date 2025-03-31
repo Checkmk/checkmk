@@ -90,12 +90,12 @@ pkg_files(
 )
 
 pkg_files(
-    name = "skel_750",
+    name = "skel_755",
     srcs = [
         "skel/etc/init.d/jaeger",
     ],
     attributes = pkg_attributes(
-        mode = "0750",
+        mode = "0755",
     ),
     strip_prefix = strip_prefix.from_pkg(""),
 )
@@ -113,7 +113,7 @@ pkg_tar(
         ":jaeger_bin_pkg",
         ":jaeger_lib_hooks_pkg",
         ":skel",
-        ":skel_750",
+        ":skel_755",
     ],
     visibility = ["//omd:__pkg__"],
 )

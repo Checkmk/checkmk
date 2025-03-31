@@ -395,7 +395,7 @@ class ABCMainModuleQuickSetup(ABCMainModule, ABC):
 
     @property
     def permission(self) -> None | str:
-        return "wato"
+        return "wato.rulesets"
 
     @property
     def is_show_more(self) -> bool:

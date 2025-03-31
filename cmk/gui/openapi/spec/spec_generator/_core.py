@@ -412,7 +412,7 @@ from cmk.gui.openapi import endpoint_registry
 from cmk.gui.openapi.restful_objects import Endpoint
 from cmk.gui.openapi.restful_objects.documentation import table_definitions
 from cmk.gui.openapi.restful_objects.parameters import ACCEPT_HEADER
-from cmk.gui.openapi.restful_objects.params import to_openapi
+from cmk.gui.openapi.restful_objects.params import marshmallow_to_openapi
 from cmk.gui.openapi.restful_objects.type_defs import EndpointTarget, OperationObject
 from cmk.gui.openapi.spec.plugin_marshmallow import CheckmkMarshmallowPlugin
 from cmk.gui.openapi.spec.spec_generator._operations import _add_cookie_auth, _operation_dicts
@@ -535,7 +535,7 @@ def _make_spec() -> apispec.APISpec:
         spec.components.parameter(
             header_name,
             "header",
-            dict(to_openapi([{header_name: field}], "header")[0]),
+            dict(marshmallow_to_openapi([{header_name: field}], "header")[0]),
         )
 
     return spec

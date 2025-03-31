@@ -43,7 +43,7 @@ def path_parameters(path: str) -> list[str]:
     return PARAM_RE.findall(path)
 
 
-def to_openapi(
+def marshmallow_to_openapi(
     params: RawParameter | Sequence[RawParameter] | None,
     location: LocationType,
 ) -> Sequence[OpenAPIParameter]:
@@ -55,33 +55,33 @@ def to_openapi(
         ...      field1 = fields.String(required=True, allow_none=True)
         ...      field2 = fields.String(example="foo", required=False)
 
-        >>> to_openapi([Params], 'query')
+        >>> marshmallow_to_openapi([Params], 'query')
         [{'name': 'field1', 'in': 'query', 'required': True, 'allowEmptyValue': True, \
 'schema': {'type': 'string'}}, \
 {'name': 'field2', 'in': 'query', 'required': False, 'allowEmptyValue': False, \
 'example': 'foo', 'schema': {'type': 'string'}}]
 
-        >>> to_openapi([{'field1': fields.String()}], 'query')
+        >>> marshmallow_to_openapi([{'field1': fields.String()}], 'query')
         [{'name': 'field1', 'in': 'query', 'required': False, 'allowEmptyValue': False, \
 'schema': {'type': 'string'}}]
 
-        >>> to_openapi([{'field2': fields.String()}], 'query')
+        >>> marshmallow_to_openapi([{'field2': fields.String()}], 'query')
         [{'name': 'field2', 'in': 'query', 'required': False, 'allowEmptyValue': False, \
 'schema': {'type': 'string'}}]
 
-        >>> to_openapi([{'field1': fields.String(), 'field2': fields.String()}], 'query')
+        >>> marshmallow_to_openapi([{'field1': fields.String(), 'field2': fields.String()}], 'query')
         [{'name': 'field1', 'in': 'query', 'required': False, 'allowEmptyValue': False, \
 'schema': {'type': 'string'}}, \
 {'name': 'field2', 'in': 'query', 'required': False, 'allowEmptyValue': False, 'schema': \
 {'type': 'string'}}]
 
-        >>> to_openapi([Schema], 'query')
+        >>> marshmallow_to_openapi([Schema], 'query')
         []
 
-        >>> to_openapi([{}], 'query')
+        >>> marshmallow_to_openapi([{}], 'query')
         []
 
-        >>> to_openapi(None, 'query')
+        >>> marshmallow_to_openapi(None, 'query')
         []
 
     Args:
@@ -165,7 +165,7 @@ def to_schema(params: Sequence[RawParameter] | RawParameter | None) -> type[Sche
         ... })().declared_fields['foo'] # doctest: +ELLIPSIS
         <fields.String(...)>
 
-        >>> to_schema(to_openapi([{'name': fields.String(description="Foo")}], 'path'))
+        >>> to_schema(marshmallow_to_openapi([{'name': fields.String(description="Foo")}], 'path'))
         <class 'abc.GeneratedSchema'>
 
         >>> s = to_schema(

@@ -38,7 +38,7 @@ from cmk.gui.openapi.permission_tracking import (
 from cmk.gui.openapi.restful_objects.api_error import ApiError
 from cmk.gui.openapi.restful_objects.content_decoder import KnownContentType
 from cmk.gui.openapi.restful_objects.parameters import CONTENT_TYPE
-from cmk.gui.openapi.restful_objects.params import to_openapi, to_schema
+from cmk.gui.openapi.restful_objects.params import marshmallow_to_openapi, to_schema
 from cmk.gui.openapi.restful_objects.type_defs import (
     EndpointTarget,
     ErrorStatusCodeInt,
@@ -704,7 +704,7 @@ class Endpoint:
     def default_path(self) -> str:
         replace = {}
         if self.path_params is not None:
-            parameters = to_openapi(self.path_params, "path")
+            parameters = marshmallow_to_openapi(self.path_params, "path")
             for param in parameters:
                 name = param["name"]
                 replace[name] = f"<string:{name}>"

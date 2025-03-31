@@ -28,7 +28,7 @@ from cmk.utils.jsontype import JsonSerializable
 
 from cmk.gui import fields
 from cmk.gui.fields.base import BaseSchema
-from cmk.gui.openapi.restful_objects.params import fill_out_path_template, to_openapi
+from cmk.gui.openapi.restful_objects.params import fill_out_path_template, marshmallow_to_openapi
 from cmk.gui.openapi.restful_objects.type_defs import CodeSample, OpenAPIParameter, RawParameter
 from cmk.gui.openapi.spec.spec_generator._type_defs import (
     MarshmallowSchemaDefinitions,
@@ -475,9 +475,9 @@ def code_samples(
                     password="test123",
                     content_type=spec_endpoint.content_type,
                     does_redirects=spec_endpoint.does_redirects,
-                    path_params=to_openapi(path_params, "path"),
-                    query_params=to_openapi(query_params, "query"),
-                    header_params=to_openapi(header_params, "header"),
+                    path_params=marshmallow_to_openapi(path_params, "path"),
+                    query_params=marshmallow_to_openapi(query_params, "query"),
+                    header_params=marshmallow_to_openapi(header_params, "header"),
                     includes_redirect=(
                         "redirect" in schema.declared_fields if schema is not None else False
                     ),

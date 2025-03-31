@@ -29,7 +29,7 @@ from cmk.gui.openapi.restful_objects.parameters import (
     HEADER_CHECKMK_EDITION,
     HEADER_CHECKMK_VERSION,
 )
-from cmk.gui.openapi.restful_objects.params import to_openapi
+from cmk.gui.openapi.restful_objects.params import marshmallow_to_openapi
 from cmk.gui.openapi.restful_objects.type_defs import (
     ContentObject,
     ErrorStatusCodeInt,
@@ -224,12 +224,12 @@ def _to_operation_dict(
 
     response_headers: dict[str, OpenAPIParameter] = {}
     for header_to_add in [CONTENT_TYPE, HEADER_CHECKMK_EDITION, HEADER_CHECKMK_VERSION]:
-        openapi_header = to_openapi([header_to_add], "header")[0]
+        openapi_header = marshmallow_to_openapi([header_to_add], "header")[0]
         del openapi_header["in"]
         response_headers[openapi_header.pop("name")] = openapi_header
 
     if spec_endpoint.etag in ("output", "both"):
-        etag_header = to_openapi([ETAG_HEADER_PARAM], "header")[0]
+        etag_header = marshmallow_to_openapi([ETAG_HEADER_PARAM], "header")[0]
         del etag_header["in"]
         response_headers[etag_header.pop("name")] = etag_header
 

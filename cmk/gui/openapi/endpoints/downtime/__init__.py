@@ -354,12 +354,12 @@ def _show_downtimes(param: Mapping[str, Any]) -> Response:
 
         >>> import json
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
-        >>> from cmk.gui.openapi.restful_objects.params import to_openapi
+        >>> from cmk.gui.openapi.restful_objects.params import marshmallow_to_openapi
         >>> from cmk.gui.fields.utils import tree_to_expr
         >>> with simple_expect() as live:
         ...    _ = live.expect_query("GET downtimes\\nColumns: host_name type\\nFilter: host_name = example.com\\nFilter: type = 0\\nAnd: 2")
         ...    q = Query([Downtimes.host_name, Downtimes.type])
-        ...    q = q.filter(tree_to_expr(json.loads(to_openapi([DowntimeParameter], "query")[0]['example']), "downtimes"))
+        ...    q = q.filter(tree_to_expr(json.loads(marshmallow_to_openapi([DowntimeParameter], "query")[0]['example']), "downtimes"))
         ...    list(q.iterate(live))
         []
 

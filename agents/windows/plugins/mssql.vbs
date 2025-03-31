@@ -34,7 +34,7 @@
 ' -----------------------------------------------------------------------------
 
 Option Explicit
-Const CMK_VERSION = "2.3.0p30"
+Const CMK_VERSION = "2.3.0p31"
 
 Dim WMI, FSO, objStdout, SHO, items, objItem, prop, instVersion, registry
 Dim sources, instances, instance, instance_id, instance_name, instance_excluded, service_name

@@ -13,9 +13,16 @@ from pathlib import Path
 import pytest
 
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import get_supported_distros
+from tests.testlib.utils import (
+    get_services_with_status,
+    get_supported_distros,
+    parse_files,
+    ServiceInfo,
+    version_spec_from_env,
+)
 from tests.testlib.version import (
     CMKEdition,
+    CMKEditionType,
     CMKPackageInfo,
     CMKVersion,
     edition_from_env,
@@ -94,6 +101,10 @@ def create_site(base_package: CMKPackageInfo) -> Site:
     return site
 
 
+def get_target_package(target_edition: CMKEditionType) -> CMKPackageInfo:
+    return CMKPackageInfo(CMKVersion(version_spec_from_env(CMKVersion.DAILY)), target_edition)
+
+
 def update_site(base_site: Site, target_package: CMKPackageInfo, interactive: bool) -> Site:
     site_factory = _get_site_factory(target_package)
     min_version = get_min_version()
@@ -109,6 +120,11 @@ def update_site(base_site: Site, target_package: CMKPackageInfo, interactive: bo
         target_site = site_factory.update_as_site_user(
             base_site, target_package, min_version=min_version
         )
+
+    # get the service status codes and check them
+    assert get_site_status(target_site) == "running", "Invalid service status after updating!"
+
+    logger.info("Successfully updated '%s' > '%s'!", base_site.package, target_site.package)
 
     return target_site
 
@@ -134,6 +150,8 @@ def inject_rules(site: Site) -> None:
         _ for _ in os.listdir(RULES_DIR) if _.endswith(".json") and _ not in ignore_list
     ]
     for rules_file_name in rules_file_names:
+        if edition_from_env().edition == CMKEdition.CRE and rules_file_name.startswith("cmc_"):
+            continue
         rules_file_path = RULES_DIR / rules_file_name
         with open(rules_file_path, encoding="UTF-8") as ruleset_file:
             logger.info('Importing rules file "%s"...', rules_file_path)
@@ -146,6 +164,53 @@ def inject_rules(site: Site) -> None:
 def cleanup_cmk_package(site: Site, request: pytest.FixtureRequest) -> None:
     if os.getenv("CLEANUP", "1") == "1" and not request.config.getoption(name="--skip-uninstall"):
         site.uninstall_cmk()
+
+
+def check_agent_receiver_error_log(site: Site) -> None:
+    """Assert that there are no unexpected errors in the agent receiver log."""
+    error_match_dict = parse_files(pathname=site.logs_dir / "**/*log*", pattern="error")
+
+    # TODO: Remove the following block after CMK-18520 is done
+    agent_receiver_error_log = str(site.logs_dir / "agent-receiver/error.log")
+    if agent_receiver_error_log in error_match_dict:
+        error_match_dict.pop(agent_receiver_error_log)
+
+    assert not error_match_dict, f"Error string found in one or more log files: {error_match_dict}"
+
+
+def check_services(site: Site, hostname: str, base_data: dict[str, ServiceInfo]) -> None:
+    """Assert that current service status matches previous service status."""
+    # get update monitoring data
+    target_data = site.get_host_services(hostname)
+
+    base_ok_services = get_services_with_status(base_data, 0)
+    target_ok_services = get_services_with_status(target_data, 0)
+
+    not_found_services = [service for service in base_data if service not in target_data]
+    err_msg = (
+        f"The following services were found in base-version but not in target-version: "
+        f"{not_found_services}"
+    )
+    assert len(target_data) >= len(base_data), err_msg
+
+    not_ok_services = [service for service in base_ok_services if service not in target_ok_services]
+    err_details = [
+        (s, "state: " + str(target_data[s].state), target_data[s].summary) for s in not_ok_services
+    ]
+    err_msg = (
+        f"The following services were `OK` in base-version but not in target-version: "
+        f"{not_ok_services}"
+        f"\nDetails: {err_details})"
+    )
+    assert base_ok_services.issubset(target_ok_services), err_msg
+
+
+def bulk_discover_and_schedule(site: Site, hostname: str) -> None:
+    """Run service bulk discovery for a single host (ignoring errors), activate changes and schedule checks."""
+    logger.debug("Discovering services and waiting for completion...")
+    site.openapi.service_discovery.run_bulk_discovery_and_wait_for_completion([hostname])
+    site.openapi.changes.activate_and_wait_for_completion()
+    site.schedule_check(hostname, "Check_MK", 0)
 
 
 @dataclass

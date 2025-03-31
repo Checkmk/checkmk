@@ -5,9 +5,8 @@
 
 """Runs and observes regular jobs in the cmk.gui context"""
 
-from ._scheduler import load_last_job_runs, save_last_job_runs
+from ._scheduler import reset_scheduling
 
 __all__ = [
-    "load_last_job_runs",
-    "save_last_job_runs",
+    "reset_scheduling",
 ]

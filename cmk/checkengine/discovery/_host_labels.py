@@ -16,8 +16,8 @@ from cmk.ccc.exceptions import MKGeneralException, MKTimeout, OnError
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel as _HostLabel
+from cmk.utils.labels import merge_cluster_labels
 from cmk.utils.log import console
-from cmk.utils.rulesets.ruleset_matcher import merge_cluster_labels
 from cmk.utils.sectionname import SectionMap
 
 from cmk.checkengine.discovery._utils import QualifiedDiscovery

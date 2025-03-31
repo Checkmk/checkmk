@@ -14,8 +14,6 @@ from tests.testlib.unit.base_configuration_scenario import Scenario
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.ruleset_matcher import (
-    ABCLabelConfig,
-    LabelManager,
     matches_tag_condition,
     RuleConditionsSpec,
     RulesetMatcher,
@@ -24,24 +22,6 @@ from cmk.utils.rulesets.ruleset_matcher import (
 )
 from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import TagConfig, TagGroupID, TagID
-
-
-class _LabelConfig(ABCLabelConfig):
-    def __init__(
-        self,
-        *,
-        host_labels: Mapping[str, str] | None = None,
-        service_labels: Mapping[str, str] | None = None,
-    ) -> None:
-        self._host_labels = host_labels or {}
-        self._service_labels = service_labels or {}
-
-    def host_labels(self, *args: object) -> Mapping[str, str]:
-        return self._host_labels
-
-    def service_labels(self, *args: object) -> Mapping[str, str]:
-        return self._service_labels
-
 
 ruleset: Sequence[RuleSpec[str]] = [
     {
@@ -162,74 +142,21 @@ def test_ruleset_matcher_get_host_values_labels(
         nodes_of={},
     )
 
-    label_manager = LabelManager(
-        label_config=_LabelConfig(),
-        nodes_of={},
-        explicit_host_labels={
+    def labels_of_host(hostname: HostName) -> Mapping[str, str]:
+        return {
             HostName("host1"): {"os": "linux", "abc": "xä", "hu": "ha"},
             HostName("host2"): {"cmk/site": "some_site"},
             HostName("host3"): {},
-        },
-        get_builtin_host_labels=lambda: {},
-    )
+        }[hostname]
+
     assert (
         list(
             matcher.get_host_values(
-                hostname, ruleset=host_label_ruleset, labels_of_host=label_manager.labels_of_host
+                hostname, ruleset=host_label_ruleset, labels_of_host=labels_of_host
             )
         )
         == expected_result
     )
-
-
-def test_labels_of_service() -> None:
-    test_host = HostName("test-host")
-
-    label_manager = LabelManager(
-        label_config=_LabelConfig(
-            service_labels={
-                "label1": "val1",
-                "label2": "val2",
-            }
-        ),
-        nodes_of={},
-        explicit_host_labels={},
-        get_builtin_host_labels=lambda: {},
-    )
-
-    assert label_manager.labels_of_service(test_host, "CPU load", {}) == {
-        "label1": "val1",
-        "label2": "val2",
-    }
-    assert label_manager.label_sources_of_service(test_host, "CPU load", {}) == {
-        "label1": "ruleset",
-        "label2": "ruleset",
-    }
-
-
-def test_labels_of_service_discovered_labels() -> None:
-    test_host = HostName("test-host")
-    xyz_host = HostName("xyz")
-    discovered_labels = {"äzzzz": "eeeeez"}
-    label_manager = LabelManager(
-        label_config=_LabelConfig(),
-        nodes_of={},
-        explicit_host_labels={},
-        get_builtin_host_labels=lambda: {},
-    )
-
-    service_description = "CPU load"
-
-    assert not label_manager.labels_of_service(xyz_host, service_description, {})
-    assert not label_manager.label_sources_of_service(xyz_host, service_description, {})
-
-    assert (
-        label_manager.labels_of_service(test_host, service_description, discovered_labels)
-        == discovered_labels
-    )
-    assert label_manager.label_sources_of_service(
-        test_host, service_description, discovered_labels
-    ) == {"äzzzz": "discovered"}
 
 
 def test_basic_get_host_values() -> None:
@@ -454,34 +381,28 @@ def test_basic_host_ruleset_get_host_bool_value() -> None:
         clusters_of={},
         nodes_of={},
     )
-    label_manager = LabelManager(
-        label_config=_LabelConfig(),
-        nodes_of={},
-        explicit_host_labels={},
-        get_builtin_host_labels=lambda: {},
-    )
 
     assert (
         matcher.get_host_bool_value(
-            HostName("abc"), ruleset=binary_ruleset, labels_of_host=label_manager.labels_of_host
+            HostName("abc"), ruleset=binary_ruleset, labels_of_host=lambda x: {}
         )
         is False
     )
     assert (
         matcher.get_host_bool_value(
-            HostName("xyz"), ruleset=binary_ruleset, labels_of_host=label_manager.labels_of_host
+            HostName("xyz"), ruleset=binary_ruleset, labels_of_host=lambda x: {}
         )
         is False
     )
     assert (
         matcher.get_host_bool_value(
-            HostName("host1"), ruleset=binary_ruleset, labels_of_host=label_manager.labels_of_host
+            HostName("host1"), ruleset=binary_ruleset, labels_of_host=lambda x: {}
         )
         is True
     )
     assert (
         matcher.get_host_bool_value(
-            HostName("host2"), ruleset=binary_ruleset, labels_of_host=label_manager.labels_of_host
+            HostName("host2"), ruleset=binary_ruleset, labels_of_host=lambda x: {}
         )
         is False
     )

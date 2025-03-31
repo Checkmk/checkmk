@@ -58,14 +58,12 @@ from cmk.utils.host_storage import apply_hosts_file_to_object, get_host_storage_
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
 from cmk.utils.ip_lookup import IPStackConfig
-from cmk.utils.labels import Labels, LabelSources
+from cmk.utils.labels import ABCLabelConfig, LabelManager, Labels, LabelSources
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.regex import regex
 from cmk.utils.rulesets import ruleset_matcher, RuleSetName, tuple_rulesets
 from cmk.utils.rulesets.ruleset_matcher import (
-    ABCLabelConfig,
-    LabelManager,
     RulesetMatcher,
     RulesetName,
     RuleSpec,
@@ -1936,6 +1934,7 @@ class LabelConfig(ABCLabelConfig):
         host_name: HostName,
         service_name: ServiceName,
         labels_of_host: Callable[[HostName], Labels],
+        /,
     ) -> Labels:
         """Returns the configured labels for a service"""
         return self.matcher.get_service_merged_dict(

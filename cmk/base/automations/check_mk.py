@@ -45,7 +45,7 @@ from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParame
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
-from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
+from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel, LabelManager
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.paths import (
@@ -67,7 +67,7 @@ from cmk.utils.paths import (
     tmp_dir,
     var_dir,
 )
-from cmk.utils.rulesets.ruleset_matcher import LabelManager, RulesetMatcher, RuleSpec
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RuleSpec
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.timeout import Timeout

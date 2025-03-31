@@ -3074,9 +3074,9 @@ pytest-asyncio==0.25.3 \
     --hash=sha256:9e89518e0f9bd08928f97a3482fdc4e244df17529460bc038291ccaf8f85c7c3 \
     --hash=sha256:fc1da2cf9f125ada7e710b4ddad05518d4cee187ae9412e9ac9271003497f07a
     # via -r requirements_dev.txt
-pytest-check==2.4.1 \
-    --hash=sha256:5224efcef059bf7f0cda253f8d0f62704b4819ff48c93f51c675aea6a014f650 \
-    --hash=sha256:74f38938183880d9921aeb85662437d2b13e1e053e1bed7d186d54613d3068c7
+pytest-check==2.5.2 \
+    --hash=sha256:131fa57ad2f0e21e39886e05255142bb584e61881a5e4584fd06b14aae63ee5d \
+    --hash=sha256:e736cbfce5152ef904adf0e13584123a7813532725b7fc8ceca097fc8b232758
     # via -r requirements_dev.txt
 pytest-html==4.1.1 \
     --hash=sha256:70a01e8ae5800f4a074b56a4cb1025c8f4f9b038bba5fe31e3c98eb996686f07 \

@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Final
 
 import pytest
-import pytest_check  # type: ignore[import-untyped]
+import pytest_check
 from playwright.sync_api import TimeoutError as PWTimeoutError
 from pytest_metadata.plugin import metadata_key  # type: ignore[import-untyped]
 

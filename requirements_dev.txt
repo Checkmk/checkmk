@@ -45,7 +45,7 @@ pytest-html==4.1.1 # used to generate HTML reports for test suites
 pytest-mock==3.14.0 # used by quite a few unit/integration tests via the mocker fixture
 pytest-random-order==1.1.1 # used to test resiliency
 pytest-xdist==3.6.1 # used to limit number of procs in e2e tests
-pytest-check==2.4.1 # used to queue failed assertions and continue test execution
+pytest-check==2.5.2 # used to queue failed assertions and continue test execution
 pytest-opentelemetry==1.0.1 # instrument pytest runs
 python-lsp-server==1.12.0 # Note: There are extras, but the default seems sensible.
 requirements-parser==0.11.0 # used to parse requirements.txt file for testing

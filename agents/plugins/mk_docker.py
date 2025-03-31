@@ -280,7 +280,7 @@ class MKDockerClient(docker.DockerClient):  # type: ignore[misc]
             self.all_containers = {c.attrs["Id"]: c for c in all_containers}
         elif config["container_id"] == "combined":
             self.all_containers = {
-                f'{os.uname()[1].split(".")[0]}_{c.attrs["Name"].lstrip("/")}': c
+                f"{os.uname()[1].split('.')[0]}_{c.attrs['Name'].lstrip('/')}": c
                 for c in all_containers
             }
         else:

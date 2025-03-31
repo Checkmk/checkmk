@@ -94,7 +94,7 @@ def parse_zpool_status(
             start_pool = False
             continue
 
-        elif start_pool is True:
+        elif start_pool is True and not line[0].lower() == "dedup":
             if line[1] != "ONLINE":
                 error_pools[line[0]] = tuple(line[1:])
             elif saveint(line[4]) != 0:

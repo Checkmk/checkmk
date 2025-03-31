@@ -671,7 +671,7 @@ def perfometer_check_mk_printer_supply(
     cyan_in_description = any(c in s for c in ("cyan", "zyan", "cian"))
 
     if black_in_description or ("ink" not in s and s[-1] == "k"):
-        colors = ["#000000", "#6E6F00", "#6F0000"]
+        colors = ["#797979", "#999999", "#C2C2C2"]
     elif magenta_in_description or s[-1] == "m":
         colors = ["#FC00FF", "#FC7FFF", "#FEDFFF"]
     elif yellow_in_description or s[-1] == "y":
@@ -679,7 +679,7 @@ def perfometer_check_mk_printer_supply(
     elif cyan_in_description or s[-1] == "c":
         colors = ["#00FFFF", "#7FFFFF", "#DFFFFF"]
     else:
-        colors = ["#CCCCCC", "#ffff00", "#ff0000"]
+        colors = ["#996A3A", "#C7996B", "#DDC2A6"]
 
     st = min(2, row["service_state"])
     color = colors[st]

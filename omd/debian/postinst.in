@@ -36,118 +36,118 @@ setperm() {
     shift 4
     # only do something when no setting exists
     if ! dpkg-statoverride --list "$file" >/dev/null 2>&1; then
-      chown "$user":"$group" "$file"
-      chmod "$mode" "$file"
+        chown "$user":"$group" "$file"
+        chmod "$mode" "$file"
     fi
 }
 
 case "$1" in
-  configure)
-    ln -sfn /opt/omd /omd
-    if [ ! -d /etc/bash_completion.d ]; then
-        mkdir /etc/bash_completion.d
-    fi
-    update-alternatives --install /omd/versions/default \
-       omd /omd/versions/###OMD_VERSION### ###OMD_SERIAL### \
-       --slave /usr/bin/omd omd.bin /omd/versions/###OMD_VERSION###/bin/omd \
-       --slave /etc/bash_completion.d/omd omd.bash_completion /omd/versions/###OMD_VERSION###/lib/omd/bash_completion \
-       --slave /usr/share/man/man8/omd.8.gz omd.man8 \
-               /omd/versions/###OMD_VERSION###/share/man/man8/omd.8.gz
+    configure)
+        ln -sfn /opt/omd /omd
+        if [ ! -d /etc/bash_completion.d ]; then
+            mkdir /etc/bash_completion.d
+        fi
+        update-alternatives --install /omd/versions/default \
+            omd /omd/versions/###OMD_VERSION### \
+            --slave /usr/bin/omd omd.bin /omd/versions/###OMD_VERSION###/bin/omd \
+            --slave /etc/bash_completion.d/omd omd.bash_completion /omd/versions/###OMD_VERSION###/lib/omd/bash_completion \
+            --slave /usr/share/man/man8/omd.8.gz omd.man8 \
+            /omd/versions/###OMD_VERSION###/share/man/man8/omd.8.gz ###OMD_SERIAL### \
 
-    # -- looking for group nagios, create it, if not exist
-    if ! getent group omd > /dev/null ; then
-      echo 'Adding system group omd' 1>&2
-      addgroup --system --force-badname omd > /dev/null
-    fi
-
-    for PROGRAM in $CAP_PROGRAMS; do
-      PROGRAM_PATH=$BASE_PATH/$PROGRAM
-      if [ -f "$PROGRAM_PATH" ]; then
-        setperm root omd 750 "$PROGRAM_PATH"
-
-        if [ "$PROGRAM" = "lib/nagios/plugins/check_icmp" ]; then
-            CAP="cap_net_raw+ep"
-        elif [ "$PROGRAM" = "lib/nagios/plugins/check_dhcp" ]; then
-            CAP="cap_net_raw,cap_net_bind_service=+ep"
-        elif [ "$PROGRAM" = "lib/cmc/icmpsender" ]; then
-            CAP="cap_net_raw+ep"
-        elif [ "$PROGRAM" = "lib/cmc/icmpreceiver" ]; then
-            CAP="cap_net_raw+ep"
-        elif [ "$PROGRAM" = "bin/mkeventd_open514" ]; then
-	    CAP="cap_net_bind_service+ep"
+        # -- looking for group nagios, create it, if not exist
+        if ! getent group omd >/dev/null; then
+            echo 'Adding system group omd' 1>&2
+            addgroup --system --force-badname omd >/dev/null
         fi
 
-        # On some platforms the linux capabilities don't work as expected for different reasons.
-        # Some have too old kernels or kernels without capabilities supprt. There are propably
-        # other conditions, like filesystems without support for this. To keep Checkmk working
-        # as before on these systems and as secure as possible on newer systems we first try to
-        # set the capabilities and once that fails we fall back to setuid.
-        if ! setcap "$CAP" "$PROGRAM_PATH"; then
-            echo "Failed to set capabilities $CAP for $PROGRAM. Falling back to setuid."
-            chmod 4750 "$PROGRAM"
+        for PROGRAM in $CAP_PROGRAMS; do
+            PROGRAM_PATH=$BASE_PATH/$PROGRAM
+            if [ -f "$PROGRAM_PATH" ]; then
+                setperm root omd 750 "$PROGRAM_PATH"
+
+                if [ "$PROGRAM" = "lib/nagios/plugins/check_icmp" ]; then
+                    CAP="cap_net_raw+ep"
+                elif [ "$PROGRAM" = "lib/nagios/plugins/check_dhcp" ]; then
+                    CAP="cap_net_raw,cap_net_bind_service=+ep"
+                elif [ "$PROGRAM" = "lib/cmc/icmpsender" ]; then
+                    CAP="cap_net_raw+ep"
+                elif [ "$PROGRAM" = "lib/cmc/icmpreceiver" ]; then
+                    CAP="cap_net_raw+ep"
+                elif [ "$PROGRAM" = "bin/mkeventd_open514" ]; then
+                    CAP="cap_net_bind_service+ep"
+                fi
+
+                # On some platforms the linux capabilities don't work as expected for different reasons.
+                # Some have too old kernels or kernels without capabilities supprt. There are propably
+                # other conditions, like filesystems without support for this. To keep Checkmk working
+                # as before on these systems and as secure as possible on newer systems we first try to
+                # set the capabilities and once that fails we fall back to setuid.
+                if ! setcap "$CAP" "$PROGRAM_PATH"; then
+                    echo "Failed to set capabilities $CAP for $PROGRAM. Falling back to setuid."
+                    chmod 4750 "$PROGRAM"
+                fi
+            fi
+        done
+
+        db_stop
+        # -- create apache config include if not exist
+        if test -d /etc/apache2/conf-available; then
+            # On e.g. ubuntu 13.10 conf.d is not loaded anymore, use conf-available
+            APACHE_OMD_CONF="/etc/apache2/conf-available/zzz_omd.conf"
         fi
-      fi
-    done
 
-    db_stop
-    # -- create apache config include if not exist
-    if test -d /etc/apache2/conf-available; then
-      # On e.g. ubuntu 13.10 conf.d is not loaded anymore, use conf-available
-      APACHE_OMD_CONF="/etc/apache2/conf-available/zzz_omd.conf"
-    fi
+        if ! test -e $APACHE_OMD_CONF; then
+            echo "Include /omd/apache/*.conf" >$APACHE_OMD_CONF
+            # avoid apache error message including /omd/apache if no site exist
+            touch "/omd/apache/empty.conf"
 
-    if ! test -e $APACHE_OMD_CONF; then
-      echo "Include /omd/apache/*.conf" > $APACHE_OMD_CONF
-      # avoid apache error message including /omd/apache if no site exist
-      touch "/omd/apache/empty.conf"
+            # -- enable conf include, when available
+            ! test -x /usr/sbin/a2enconf || a2enconf zzz_omd
+        fi
 
-      # -- enable conf include, when available
-      ! test -x /usr/sbin/a2enconf || a2enconf zzz_omd
-    fi
+        # -- enable apache modules
+        if ! test -e /etc/apache2/mods-enabled/proxy_http.load; then
+            a2enmod proxy_http # also enables dependend modules
+        fi
+        if ! test -e /etc/apache2/mods-enabled/rewrite.load; then
+            a2enmod rewrite
+        fi
 
-    # -- enable apache modules
-    if ! test -e /etc/apache2/mods-enabled/proxy_http.load; then
-       a2enmod proxy_http	# also enables dependend modules
-    fi
-    if ! test -e /etc/apache2/mods-enabled/rewrite.load; then
-       a2enmod rewrite
-    fi
+        echo "New default version is ###OMD_VERSION###."
+        update-alternatives --set omd /omd/versions/###OMD_VERSION###
 
-    echo "New default version is ###OMD_VERSION###."
-    update-alternatives --set omd /omd/versions/###OMD_VERSION###
+        DEFAULT=/etc/default/omd
 
-    DEFAULT=/etc/default/omd
+        # Detect whether or not manage startup through systemd or SysV
+        if test -d /usr/lib/systemd && dpkg -S /sbin/init 2>/dev/null | grep ^systemd >/dev/null; then
+            echo "Installing systemd service: omd.init"
 
-    # Detect whether or not manage startup through systemd or SysV
-    if test -d /usr/lib/systemd && dpkg -S /sbin/init 2>/dev/null | grep ^systemd >/dev/null; then
-        echo "Installing systemd service: omd.init"
-    
-        echo "Disabling startup through SysV (/etc/init.d/*) scripts"
-        echo "AUTOSTART=0" > $DEFAULT
-    
-        echo "Activating startup during system boot"
-        cp /omd/versions/default/share/omd/omd.service /etc/systemd/system/omd.service
-        systemctl daemon-reload
-        systemctl enable omd
-    
-    else
-        # -- default for init
-        if ! test -e $DEFAULT ; then
+            echo "Disabling startup through SysV (/etc/init.d/*) scripts"
+            echo "AUTOSTART=0" >$DEFAULT
+
             echo "Activating startup during system boot"
-            echo "AUTOSTART=1" > $DEFAULT
+            cp /omd/versions/default/share/omd/omd.service /etc/systemd/system/omd.service
+            systemctl daemon-reload
+            systemctl enable omd
+
+        else
+            # -- default for init
+            if ! test -e $DEFAULT; then
+                echo "Activating startup during system boot"
+                echo "AUTOSTART=1" >$DEFAULT
+            fi
         fi
-    fi
 
-    ;;
+        ;;
 
-  abort-upgrade|abort-remove|abort-deconfigure)
-    exit 0
-    ;;
+    abort-upgrade | abort-remove | abort-deconfigure)
+        exit 0
+        ;;
 
-  *)
-    echo "postinst called with unknown argument \`$1'" >&2
-    exit 1
-    ;;
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+        ;;
 esac
 
 # dh_installdeb will replace this with shell code automatically

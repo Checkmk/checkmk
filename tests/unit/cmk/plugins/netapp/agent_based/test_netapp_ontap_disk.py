@@ -83,6 +83,8 @@ _DISK_MODELS = [
         pytest.param(
             {},
             [
+                Result(state=State.OK, summary="Spare disks: 1"),
+                Metric("spare_disks", 1.0),
                 Result(state=State.OK, summary="Failed disks: 0"),
                 Metric("failed_disks", 0.0),
             ],
@@ -90,11 +92,12 @@ _DISK_MODELS = [
         ),
         pytest.param(
             {
-                "number_of_spare_disks": (1.0, 50.0),
+                "number_of_spare_disks": (2.0, 1.0),
             },
             [
                 Result(
-                    state=State.WARN, summary="Spare disks: 1: 1.00 (warn/crit below 50.00/1.00)"
+                    state=State.WARN,
+                    summary="Spare disks: 1 (warn/crit below 2/1)",
                 ),
                 Metric("spare_disks", 1.0),
                 Result(state=State.OK, summary="Failed disks: 0"),
@@ -136,12 +139,14 @@ def test_check_netapp_ontap_disk_summary_failed() -> None:
 
     result = list(check_netapp_ontap_disk_summary(params=params, section=disk_models))
 
-    assert result[4] == Result(state=State.OK, summary="Failed disks: 1")
-    assert isinstance(result[5], Metric)
-    assert result[5].name == "failed_disks"
-    assert result[6] == Result(
+    assert result[4] == Result(state=State.OK, summary="Spare disks: 0")
+    assert result[5] == Metric("spare_disks", 0.0)
+    assert result[6] == Result(state=State.OK, summary="Failed disks: 1")
+    assert isinstance(result[7], Metric)
+    assert result[7].name == "failed_disks"
+    assert result[8] == Result(
         state=State.OK, summary="failed Disk Details: Serial: failed_disk, Size: 50 B"
     )
-    assert isinstance(result[7], Result)
-    assert result[7].state == State.CRIT
-    assert result[7].summary.startswith("Too many failed disks")
+    assert isinstance(result[9], Result)
+    assert result[9].state == State.CRIT
+    assert result[9].summary.startswith("Too many failed disks")

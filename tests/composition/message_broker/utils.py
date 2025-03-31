@@ -229,6 +229,6 @@ def rabbitmq_info_on_failure(sites: Sequence[Site]) -> Iterator[None]:
                     )
                 )
             except Exception as exc:
-                error_message = f"Could not determine rabbitmq status: {exc}\n"
+                error_message += f"Error occurred trying to determine rabbitmq status: {exc}\n"
                 continue
         raise type(e)(error_message) from e

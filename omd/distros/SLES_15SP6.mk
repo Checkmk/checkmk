@@ -14,6 +14,7 @@ OS_PACKAGES    += graphviz
 OS_PACKAGES    += libpng16-16
 OS_PACKAGES    += libevent-2_1-8
 OS_PACKAGES    += libltdl7
+OS_PACKAGES    += libnsl1 # needed for navicli
 OS_PACKAGES    += libreadline7
 OS_PACKAGES    += libuuid1
 OS_PACKAGES    += logrotate

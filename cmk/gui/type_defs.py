@@ -240,7 +240,7 @@ class UserSpec(TypedDict, total=False):
     ui_sidebar_position: Any  # TODO: Improve this
     ui_saas_onboarding_button_toggle: Literal["invisible"] | None
     ui_theme: Any  # TODO: Improve this
-    user_id: UserId
+    user_id: AnnotatedUserId
     user_scheme_serial: int
     nav_hide_icons_title: NotRequired[Literal["hide"] | None]
     icons_per_item: NotRequired[Literal["entry"] | None]
@@ -255,7 +255,9 @@ class UserObjectValue(TypedDict):
 
 UserObject = dict[UserId, UserObjectValue]
 
-Users = dict[UserId, UserSpec]  # TODO: Improve this type
+AnnotatedUserId = Annotated[UserId, PlainValidator(UserId.parse)]
+
+Users = dict[AnnotatedUserId, UserSpec]  # TODO: Improve this type
 
 # Visual specific
 FilterName = str
@@ -697,9 +699,6 @@ class ViewProcessTracking:
     duration_fetch_rows: Snapshot = Snapshot.null()
     duration_filter_rows: Snapshot = Snapshot.null()
     duration_view_render: Snapshot = Snapshot.null()
-
-
-AnnotatedUserId = Annotated[UserId, PlainValidator(UserId.parse)]
 
 
 class Key(BaseModel):

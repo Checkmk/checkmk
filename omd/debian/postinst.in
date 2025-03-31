@@ -118,18 +118,19 @@ case "$1" in
 
     DEFAULT=/etc/default/omd
 
-    # Detect whether or not manage startup through systemd or SysV
-    if test -d /usr/lib/systemd && dpkg -S /sbin/init 2>/dev/null | grep ^systemd >/dev/null; then
-        echo "Installing systemd service: omd.init"
-    
-        echo "Disabling startup through SysV (/etc/init.d/*) scripts"
-        echo "AUTOSTART=0" > $DEFAULT
-    
+    if [ -d /run/systemd/system ]; then
+        echo "Installing systemd unit: omd.service"
+
+        # Disable startup through check-mk-[edition]-[version] related init scripts related to
+        # other Checkmk versions. The startup of all sites shall be managed through the single
+        # omd.service
+        echo "AUTOSTART=0" >$DEFAULT
+
         echo "Activating startup during system boot"
         cp /omd/versions/default/share/omd/omd.service /etc/systemd/system/omd.service
         systemctl daemon-reload
         systemctl enable omd
-    
+
     else
         # -- default for init
         if ! test -e $DEFAULT ; then

@@ -9,10 +9,12 @@ import hashlib
 import itertools
 import multiprocessing
 import os
+import re
 import subprocess
 import tarfile
 import time
 import traceback
+from collections.abc import Container
 from pathlib import Path
 from typing import NamedTuple
 
@@ -35,6 +37,9 @@ from cmk.messaging import rabbitmq
 Command = list[str]
 
 
+_PATTERN_INTERMEDIATE_STORE_FILES = re.compile(r"^\..*\.new.*")
+
+
 class _BaseReplicationPath(NamedTuple):
     """Needed for the ReplicationPath class to call __new__ method."""
 
@@ -49,19 +54,12 @@ class ReplicationPath(_BaseReplicationPath):
         if site_path.startswith("/"):
             raise Exception("ReplicationPath.path must be a path relative to the site root")
         cleaned_path = site_path.rstrip("/")
-
-        if ".*new*" not in excludes:
-            final_excludes = excludes[:]
-            final_excludes.append(".*new*")  # exclude all temporary files
-        else:
-            final_excludes = excludes
-
         return super().__new__(
             cls,
             ty=ty,
             ident=ident,
             site_path=cleaned_path,
-            excludes=final_excludes,
+            excludes=excludes,
         )
 
 
@@ -71,6 +69,10 @@ class ReplicationPathRegistry(Registry[ReplicationPath]):
 
 
 replication_path_registry = ReplicationPathRegistry()
+
+
+def is_entry_excluded(entry: str, excludes_exact_match: Container[str]) -> bool:
+    return (entry in excludes_exact_match) or bool(_PATTERN_INTERMEDIATE_STORE_FILES.match(entry))
 
 
 class SnapshotSettings(NamedTuple):

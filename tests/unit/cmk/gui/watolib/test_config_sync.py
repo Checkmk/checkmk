@@ -33,6 +33,18 @@ from cmk.bi.type_defs import frozen_aggregations_dir
 from cmk.messaging import rabbitmq
 
 
+def test_is_entry_excluded_not_excluded() -> None:
+    assert not config_sync.is_entry_excluded("some_dir", ["hosts.mk"])
+
+
+def test_is_entry_excluded_by_exact_match() -> None:
+    assert config_sync.is_entry_excluded("hosts.mk", ["hosts.mk"])
+
+
+def test_is_entry_excluded_intermediate_store_file() -> None:
+    assert config_sync.is_entry_excluded(".filename.mk.new123abc", [])
+
+
 @pytest.fixture(name="mocked_responses")
 def fixture_mocked_responses() -> Iterable[responses.RequestsMock]:
     with responses.RequestsMock() as rsps:

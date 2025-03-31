@@ -117,6 +117,7 @@ from cmk.gui.watolib.config_domain_name import (
 from cmk.gui.watolib.config_domain_name import OMD as OMDDomainName
 from cmk.gui.watolib.config_sync import (
     create_rabbitmq_new_definitions_file,
+    is_entry_excluded,
     replication_path_registry,
     ReplicationPath,
     ReplicationPathRegistry,
@@ -2017,7 +2018,9 @@ def _get_replication_dir_config_sync_file_infos_per_inode(
     # Use os functionality instead of pathlib since it is faster
     for root, dir_names, file_names in os.walk(replication_path):
         root_name = os.path.basename(root)
-        if root_name == GENERAL_DIR_EXCLUDE or root_name in replication_path_excludes:
+        if root_name == GENERAL_DIR_EXCLUDE or is_entry_excluded(
+            root_name, replication_path_excludes
+        ):
             continue
 
         for dir_name in dir_names:
@@ -2981,15 +2984,17 @@ def _get_config_sync_paths(
         if (
             os.path.islink(dir_path)
             and not dir_name == general_dir_exclude
-            and dir_name not in replication_path_excludes
+            and not is_entry_excluded(dir_name, replication_path_excludes)
         ):
             valid_entries.append(dir_path)
 
     for file_name in file_names:
         file_path = os.path.join(root_path, file_name)
-        if (
-            os.path.basename(os.path.dirname(file_path)) not in replication_path_excludes
-            and file_name not in replication_path_excludes
+        if not (
+            is_entry_excluded(
+                os.path.basename(os.path.dirname(file_path)), replication_path_excludes
+            )
+            or is_entry_excluded(file_name, replication_path_excludes)
         ):
             valid_entries.append(file_path)
 
@@ -3045,7 +3050,9 @@ def _get_replication_dir_config_sync_file_infos(
     for root, dir_names, file_names in os.walk(replication_path):
         root_name = os.path.basename(root)
 
-        if root_name == GENERAL_DIR_EXCLUDE or root_name in replication_path_excludes:
+        if root_name == GENERAL_DIR_EXCLUDE or is_entry_excluded(
+            root_name, replication_path_excludes
+        ):
             continue
 
         config_sync_paths = _get_config_sync_paths(

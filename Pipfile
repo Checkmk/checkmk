@@ -193,6 +193,9 @@ icalendar = "==5.0.7"  # used for importing .ical files
 recurring_ical_events = "==2.0.2"  # used for parsing recurring events in icalendar objects
 netapp-ontap = "==9.14.1.0"  # used by netapp special agent
 
+[scripts]
+werk = {call = "cmk.werks.cli:main()"}
+
 [requires]
 # As pipenv {sync,lock} does currently not support env variable expansion in and out Pipfile.lock,
 # we do not require a python_version here and defines.make is our single point of truth.

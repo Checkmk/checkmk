@@ -73,7 +73,7 @@ def _run_scheduler(
     logger.info("Stopped scheduler")
 
 
-def load_last_job_runs() -> dict[str, datetime.datetime]:
+def _load_last_job_runs() -> dict[str, datetime.datetime]:
     return {
         ident: datetime.datetime.fromtimestamp(ts, tz=datetime.UTC)
         for ident, ts in store.load_object_from_file(
@@ -82,7 +82,7 @@ def load_last_job_runs() -> dict[str, datetime.datetime]:
     }
 
 
-def save_last_job_runs(runs: Mapping[str, datetime.datetime]) -> None:
+def _save_last_job_runs(runs: Mapping[str, datetime.datetime]) -> None:
     store.save_object_to_file(
         Path(paths.var_dir) / "last_job_runs.mk",
         {ident: dt.timestamp() for ident, dt in runs.items()},
@@ -106,7 +106,7 @@ def run_scheduled_jobs(
 ) -> None:
     logger.debug("Starting cron jobs")
 
-    for job in _jobs_to_run(jobs, job_runs := load_last_job_runs()):
+    for job in _jobs_to_run(jobs, job_runs := _load_last_job_runs()):
         try:
             if job.name in state.running_jobs:
                 logger.debug("Skipping [%s] as it is already running", job.name)
@@ -150,7 +150,7 @@ def run_scheduled_jobs(
                 "Exception in cron job (Job: %s Crash ID: %s)", job.name, crash_msg, exc_info=True
             )
         job_runs[job.name] = datetime.datetime.now()
-    save_last_job_runs(job_runs)
+    _save_last_job_runs(job_runs)
 
     logger.debug("Finished all cron jobs")
 
@@ -219,3 +219,13 @@ class SchedulerState:
     next_cycle_start: int = 0
     running_jobs: dict[str, ScheduledJob] = field(default_factory=dict)
     job_executions: Counter[str] = field(default_factory=Counter)
+
+
+def reset_scheduling(reset_ident: str) -> None:
+    _save_last_job_runs(
+        {
+            ident: datetime
+            for ident, datetime in _load_last_job_runs().items()
+            if ident != reset_ident
+        }
+    )

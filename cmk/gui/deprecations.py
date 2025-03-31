@@ -29,7 +29,6 @@ from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.job_scheduler import load_last_job_runs, save_last_job_runs
 from cmk.gui.log import logger
 from cmk.gui.message import get_gui_messages, Message, message_gui, MessageText
 from cmk.gui.site_config import get_site_config, is_wato_slave_site
@@ -43,16 +42,6 @@ from cmk.gui.watolib.analyze_configuration import ACResultState, ACTestResult, p
 
 from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
 from cmk.mkp_tool import get_stored_manifests, Manifest, PackageStore, PathConfig
-
-
-def reset_scheduling() -> None:
-    save_last_job_runs(
-        {
-            ident: datetime
-            for ident, datetime in load_last_job_runs().items()
-            if ident != "execute_deprecation_tests_and_notify_users"
-        }
-    )
 
 
 @dataclass(frozen=True)

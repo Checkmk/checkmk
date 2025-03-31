@@ -6,6 +6,11 @@
 # - `make` is not needed at this level (but make-target could still call validate_changes.py)
 # - running inside docker should be optional
 # - some variables are not needed
+#
+# WARNING
+#
+# ENV_VAR_LIST and SEC_VAR_LIST shall not contain elements with "#", see test-gerrit.groovy
+#
 
 VARIABLES:
     - NAME: PATCHSET_REVISION
@@ -312,13 +317,13 @@ STAGES:
     - NAME: "Python Werks Commands"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_WERK_CODE_FILES,CHANGED_RUN_UVENV_SCRIPT
       DIR: ""
+      # we don't have access to the fixup notes in ci, we might have to fetch them, or temporarily disable this check:
       COMMAND: |
           scripts/run-uvenv python3 -m cmk.werks.utils collect cmk . --substitute-branches $(git symbolic-ref --short HEAD):HEAD &> ${RESULTS}/werk_commands.txt
           scripts/run-uvenv python3 -m cmk.utils.werks announce .werks $(make print-VERSION) --format md &>> ${RESULTS}/werk_commands.txt
           scripts/run-uvenv python3 -m cmk.utils.werks announce .werks $(make print-VERSION) --format txt &>> ${RESULTS}/werk_commands.txt
           scripts/run-uvenv python3 -m cmk.werks.utils precompile .werks precompiled.json &>> ${RESULTS}/werk_commands.txt
           scripts/run-uvenv python3 -m cmk.werks.utils changelog CHANGELOG precompiled.json &>> ${RESULTS}/werk_commands.txt
-          # we don't have access to the fixup notes in ci, we might have to fetch them, or temporarily disable this check:
           scripts/run-uvenv python3 -m cmk.utils.werks mail . HEAD werk_mail --assume-no-notes-but=$(git log --before="$(date --date="4 weeks ago" --iso=seconds)" --format="%H" --max-count=1) &>> ${RESULTS}/werk_commands.txt
           scripts/run-uvenv werk list &>> ${RESULTS}/werk_commands.txt
       TEXT_ON_SKIP: "No Werk code files changed"

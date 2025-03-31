@@ -117,7 +117,7 @@ def to_stage_info(raw_stage: Mapping[Any, Any]) -> StageInfo:
         SEC_VAR_LIST=list(raw_stage.get("SEC_VAR_LIST", [])),
         JENKINS_API_ACCESS=bool(raw_stage.get("JENKINS_API_ACCESS", False)),
         BAZEL_LOCKS_AMOUNT=int(raw_stage.get("BAZEL_LOCKS_AMOUNT", -1)),
-        COMMAND=str(raw_stage["COMMAND"]),
+        COMMAND=str(raw_stage["COMMAND"]).replace("\n", ";"),
         TEXT_ON_SKIP=str(raw_stage.get("TEXT_ON_SKIP", "")),
         RESULT_CHECK_TYPE=str(raw_stage.get("RESULT_CHECK_TYPE", "")),
         RESULT_CHECK_FILE_PATTERN=str(raw_stage.get("RESULT_CHECK_FILE_PATTERN", "")),

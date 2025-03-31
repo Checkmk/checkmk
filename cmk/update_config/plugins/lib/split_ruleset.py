@@ -7,9 +7,11 @@ Utilities for migrating rules of a ruleset that gets split up
 """
 
 from abc import abstractmethod
-from collections.abc import Generator
+from collections.abc import Generator, Iterable
 from dataclasses import dataclass
+from itertools import groupby
 from logging import Logger
+from typing import Any
 
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, Ruleset
 
@@ -19,6 +21,7 @@ class MigrationDetail:
     new_ruleset_name: str
     old_value_name: str
     new_value_name: str
+    default_value: Any = None
 
 
 @dataclass(frozen=True)
@@ -38,36 +41,59 @@ class RulesetSplitMigration:
 
     @property
     @abstractmethod
-    def rule_mapping(self) -> dict[str, MigrationDetail]: ...
+    def migration_rules(self) -> Iterable[MigrationDetail]: ...
 
     def __init__(self, logger: Logger, all_rulesets: AllRulesets) -> None:
         self.all_rulesets = all_rulesets
         self.logger = logger
 
-    def _create_ruleset(self, old_ruleset: Ruleset, migration_detail: MigrationDetail) -> None:
+    def _create_ruleset(
+        self,
+        old_ruleset: Ruleset,
+        new_ruleset_name: str,
+        migration_details: Iterable[MigrationDetail],
+    ) -> None:
         try:
-            new_ruleset = self.all_rulesets.get(migration_detail.new_ruleset_name)
+            new_ruleset = self.all_rulesets.get(new_ruleset_name)
             self.logger.debug("Adding migrated rules to existing ruleset %s", new_ruleset.name)
         except KeyError:
             new_ruleset = Ruleset(
-                name=migration_detail.new_ruleset_name,
+                name=new_ruleset_name,
                 tag_to_group_map=old_ruleset.tag_to_group_map,
             )
-            self.all_rulesets.set(migration_detail.new_ruleset_name, new_ruleset)
+            self.all_rulesets.set(new_ruleset_name, new_ruleset)
             self.logger.debug("Created new ruleset %s", new_ruleset.name)
 
-        self._clone_rules(old_ruleset, new_ruleset, migration_detail)
+        self._clone_rules(old_ruleset, new_ruleset, migration_details)
 
     def _clone_rules(
-        self, old_ruleset: Ruleset, new_ruleset: Ruleset, migration_detail: MigrationDetail
+        self,
+        old_ruleset: Ruleset,
+        new_ruleset: Ruleset,
+        migration_details: Iterable[MigrationDetail],
     ) -> None:
         for name, rules in old_ruleset.rules.items():
             for idx, rule in enumerate(rules):
-                if migration_detail.old_value_name not in rule.value:
-                    self.logger.debug("No value for rule %s. Skipping", name)
-                    continue
+                value = {}
+                for migration_detail in migration_details:
+                    if (
+                        migration_detail.old_value_name not in rule.value
+                        and migration_detail.default_value is None
+                    ):
+                        self.logger.debug(
+                            "No value for rule %s. Skipping", migration_detail.old_value_name
+                        )
+                        continue
 
-                self.logger.debug("Adding rule %s to ruleset %s", name, new_ruleset.name)
+                    self.logger.debug(
+                        "Adding value %s to rule %s",
+                        migration_detail.old_value_name,
+                        new_ruleset.name,
+                    )
+                    value[migration_detail.new_value_name] = rule.value.get(
+                        migration_detail.old_value_name, migration_detail.default_value
+                    )
+
                 new_ruleset.append_rule(
                     folder=rule.folder,
                     rule=Rule(
@@ -76,11 +102,7 @@ class RulesetSplitMigration:
                         ruleset=new_ruleset,
                         conditions=rule.conditions,
                         options=rule.rule_options,
-                        value={
-                            migration_detail.new_value_name: rule.value[
-                                migration_detail.old_value_name
-                            ]
-                        },
+                        value=value,
                     ),
                 )
 
@@ -95,16 +117,27 @@ class RulesetSplitMigration:
             self.logger.debug(f"{self.ruleset_title} ruleset has no rules.")
             return None
 
-        for rule_param, migration_detail in self.rule_mapping.items():
+        sort_func = lambda item: item.new_ruleset_name
+
+        for new_ruleset_name, migration_group in groupby(
+            sorted(self.migration_rules, key=sort_func), key=sort_func
+        ):
+            _migration_group: list[MigrationDetail] = list(migration_group)
             self.logger.debug(
-                f"Migrating {self.ruleset_title} rule value %s to new ruleset", rule_param
+                "Migrating %s rule values %s to new ruleset",
+                self.ruleset_title,
+                [detail.old_value_name for detail in _migration_group],
             )
             try:
-                self._create_ruleset(old_ruleset=old_ruleset, migration_detail=migration_detail)
+                self._create_ruleset(
+                    old_ruleset=old_ruleset,
+                    new_ruleset_name=new_ruleset_name,
+                    migration_details=_migration_group,
+                )
             except Exception as exc:
                 yield MigrationError(
                     exception=exc,
-                    message=f"Failed to create new ruleset {migration_detail.new_ruleset_name} for {self.old_ruleset_name.split(':', 1)[-1]} ruleset migration",
+                    message=f"Failed to create new ruleset {new_ruleset_name} for {self.old_ruleset_name.split(':', 1)[-1]} ruleset migration",
                 )
 
         try:

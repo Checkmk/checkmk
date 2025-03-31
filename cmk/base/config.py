@@ -64,6 +64,7 @@ from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.regex import regex
 from cmk.utils.rulesets import ruleset_matcher, RuleSetName, tuple_rulesets
 from cmk.utils.rulesets.ruleset_matcher import (
+    ABCLabelConfig,
     LabelManager,
     RulesetMatcher,
     RulesetName,
@@ -1915,6 +1916,38 @@ class AutochecksConfigurer:
         )
 
 
+@dataclasses.dataclass(frozen=True)
+class LabelConfig(ABCLabelConfig):
+    matcher: RulesetMatcher
+    host_label_rules: Sequence[RuleSpec[Mapping[str, str]]]
+    service_label_rules: Sequence[RuleSpec[Mapping[str, str]]]
+
+    def host_labels(self, host_name: HostName, /) -> Labels:
+        """Returns the configured labels for a host"""
+        return self.matcher.get_host_merged_dict(
+            host_name,
+            self.host_label_rules,
+            # these cannot match on host labels, for obvious reasons
+            lambda _: {},
+        )
+
+    def service_labels(
+        self,
+        host_name: HostName,
+        service_name: ServiceName,
+        labels_of_host: Callable[[HostName], Labels],
+    ) -> Labels:
+        """Returns the configured labels for a service"""
+        return self.matcher.get_service_merged_dict(
+            host_name,
+            service_name,
+            # these do not match on service labels
+            {},
+            self.service_label_rules,
+            labels_of_host,
+        )
+
+
 class ConfigCache:
     def __init__(self, loaded_config: LoadedConfigFragment) -> None:
         super().__init__()
@@ -1986,11 +2019,13 @@ class ConfigCache:
             ),
         )
         self.label_manager = LabelManager(
-            self.ruleset_matcher,
+            LabelConfig(
+                self.ruleset_matcher,
+                host_label_rules,
+                service_label_rules,
+            ),
             self._nodes_cache,
             host_labels,
-            host_label_rules,
-            service_label_rules,
             get_builtin_host_labels=get_builtin_host_labels,
         )
 

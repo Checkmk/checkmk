@@ -5,6 +5,7 @@
 """This module provides generic Check_MK ruleset processing functionality"""
 
 import contextlib
+from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from re import Pattern
 from typing import (
@@ -360,24 +361,36 @@ class RulesetMatcher:
                 yield value
 
 
+class ABCLabelConfig(ABC):
+    @abstractmethod
+    def host_labels(self, host_name: HostName, /) -> Labels:
+        """Returns the configured labels for a host"""
+
+    @abstractmethod
+    def service_labels(
+        self,
+        host_name: HostName,
+        service_name: ServiceName,
+        labels_of_host: Callable[[HostName], Labels],
+        /,
+    ) -> Labels:
+        """Returns the configured labels for a service"""
+
+
 class LabelManager:
     """Helper class to manage access to the host and service labels"""
 
     def __init__(
         self,
-        matcher: RulesetMatcher,
+        label_config: ABCLabelConfig,
         nodes_of: Mapping[HostName, Sequence[HostName]],
         explicit_host_labels: Mapping[HostName, Labels],
-        host_label_rules: Sequence[RuleSpec[Mapping[str, str]]],
-        service_label_rules: Sequence[RuleSpec[Mapping[str, str]]],
         get_builtin_host_labels: Callable[[], Labels],
     ) -> None:
-        self._matcher: Final = matcher
         self._nodes_of: Final = nodes_of
+        self._label_config: Final = label_config
         self._get_builtin_host_labels: Final = get_builtin_host_labels
         self.explicit_host_labels: Mapping[HostName, Labels] = explicit_host_labels
-        self.host_label_rules: Sequence[RuleSpec[Mapping[str, str]]] = host_label_rules
-        self.service_label_rules: Sequence[RuleSpec[Mapping[str, str]]] = service_label_rules
 
         self.__labels_of_host: dict[HostName, Labels] = {}
 
@@ -399,7 +412,7 @@ class LabelManager:
             hostname,
             {
                 **self._discovered_labels_of_host(hostname),
-                **self._ruleset_labels_of_host(hostname),
+                **self._label_config.host_labels(hostname),
                 **self._get_builtin_host_labels(),
                 **self.explicit_host_labels.get(hostname, {}),
             },
@@ -412,17 +425,9 @@ class LabelManager:
         labels: LabelSources = {}
         labels.update({k: "discovered" for k in self._discovered_labels_of_host(hostname).keys()})
         labels.update({k: "discovered" for k in self._get_builtin_host_labels()})
-        labels.update({k: "ruleset" for k in self._ruleset_labels_of_host(hostname)})
+        labels.update({k: "ruleset" for k in self._label_config.host_labels(hostname)})
         labels.update({k: "explicit" for k in self.explicit_host_labels.get(hostname, {}).keys()})
         return labels
-
-    def _ruleset_labels_of_host(self, hostname: HostName) -> Labels:
-        return self._matcher.get_host_merged_dict(
-            hostname,
-            self.host_label_rules,
-            # host label rulese cannot match on host labels, for obvious reasons
-            lambda _: {},
-        )
 
     def _discovered_labels_of_host(self, hostname: HostName) -> Labels:
         host_labels = (
@@ -447,7 +452,9 @@ class LabelManager:
         """
         labels: dict[str, str] = {}
         labels.update(discovered_labels)
-        labels.update(self._ruleset_labels_of_service(hostname, service_desc))
+        labels.update(
+            self._label_config.service_labels(hostname, service_desc, self.labels_of_host)
+        )
 
         return labels
 
@@ -463,22 +470,15 @@ class LabelManager:
         labels: LabelSources = {}
         labels.update({k: "discovered" for k in discovered_labels})
         labels.update(
-            {k: "ruleset" for k in self._ruleset_labels_of_service(hostname, service_desc)}
+            {
+                k: "ruleset"
+                for k in self._label_config.service_labels(
+                    hostname, service_desc, self.labels_of_host
+                )
+            }
         )
 
         return labels
-
-    def _ruleset_labels_of_service(self, hostname: HostName, service_desc: ServiceName) -> Labels:
-        return merge_parameters(
-            self._matcher.service_extra_conf(
-                hostname,
-                service_desc,
-                {},
-                self.service_label_rules,
-                self.labels_of_host,
-            ),
-            default={},
-        )
 
 
 def merge_cluster_labels(all_node_labels: Iterable[Iterable[HostLabel]]) -> Sequence[HostLabel]:

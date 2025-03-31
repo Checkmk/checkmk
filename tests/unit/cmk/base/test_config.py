@@ -26,7 +26,7 @@ from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.hostaddress import HostName
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.rulesets import RuleSetName
-from cmk.utils.rulesets.ruleset_matcher import RuleSpec
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RuleSpec
 from cmk.utils.sectionname import SectionName
 from cmk.utils.tags import TagGroupID, TagID
 
@@ -54,7 +54,12 @@ from cmk.checkengine.plugins import (
 from cmk.checkengine.plugins import CheckPlugin as CheckPluginAPI
 
 from cmk.base import config
-from cmk.base.config import ConfigCache, ConfiguredIPLookup, handle_ip_lookup_failure
+from cmk.base.config import (
+    ConfigCache,
+    ConfiguredIPLookup,
+    handle_ip_lookup_failure,
+    LabelConfig,
+)
 from cmk.base.default_config.base import _PeriodicDiscovery
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
@@ -3252,3 +3257,80 @@ def test_get_active_service_data_crash(
         captured.err
         == "\nWARNING: Config creation for active check my_active_check failed on test_host: division by zero\n"
     )
+
+
+class TestLabelsConfig:
+    def test_host_labels(self) -> None:
+        test_host = HostName("test-host")
+        xyz_host = HostName("xyz")
+        ruleset_matcher = RulesetMatcher(
+            host_tags={test_host: {TagGroupID("agent"): TagID("no-agent")}, xyz_host: {}},
+            host_paths={},
+            all_configured_hosts=frozenset([test_host, xyz_host]),
+            clusters_of={},
+            nodes_of={},
+        )
+
+        config = LabelConfig(
+            ruleset_matcher,
+            host_label_rules=(
+                {
+                    "condition": {
+                        "host_name": [str(xyz_host)],
+                    },
+                    "id": "01",
+                    "value": {"label": "val1"},
+                },
+                {
+                    "condition": {
+                        "host_tags": {TagGroupID("agent"): TagID("no-agent")},
+                    },
+                    "id": "02",
+                    "value": {"label": "val2"},
+                },
+            ),
+            service_label_rules=(),
+        )
+
+        assert config.host_labels(xyz_host) == {"label": "val1"}
+        assert config.host_labels(test_host) == {"label": "val2"}
+
+    def test_service_labels(self) -> None:
+        test_host = HostName("test-host")
+        xyz_host = HostName("xyz")
+        ruleset_matcher = RulesetMatcher(
+            host_tags={test_host: {TagGroupID("agent"): TagID("no-agent")}, xyz_host: {}},
+            host_paths={},
+            all_configured_hosts=frozenset([test_host, xyz_host]),
+            clusters_of={},
+            nodes_of={},
+        )
+
+        config = LabelConfig(
+            ruleset_matcher,
+            host_label_rules=(),
+            service_label_rules=[
+                {
+                    "condition": {
+                        "service_description": [{"$regex": "CPU load$"}],
+                        "host_tags": {TagGroupID("agent"): TagID("no-agent")},
+                    },
+                    "id": "01",
+                    "value": {"label1": "val1"},
+                },
+                {
+                    "condition": {
+                        "service_description": [{"$regex": "CPU load$"}],
+                        "host_tags": {TagGroupID("agent"): TagID("no-agent")},
+                    },
+                    "id": "02",
+                    "value": {"label2": "val2"},
+                },
+            ],
+        )
+
+        assert not config.service_labels(xyz_host, "CPU load", lambda h: {})
+        assert config.service_labels(test_host, "CPU load", lambda h: {}) == {
+            "label1": "val1",
+            "label2": "val2",
+        }

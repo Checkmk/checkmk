@@ -14,6 +14,7 @@ from tests.testlib.unit.base_configuration_scenario import Scenario
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.ruleset_matcher import (
+    ABCLabelConfig,
     LabelManager,
     matches_tag_condition,
     RuleConditionsSpec,
@@ -23,6 +24,24 @@ from cmk.utils.rulesets.ruleset_matcher import (
 )
 from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import TagConfig, TagGroupID, TagID
+
+
+class _LabelConfig(ABCLabelConfig):
+    def __init__(
+        self,
+        *,
+        host_labels: Mapping[str, str] | None = None,
+        service_labels: Mapping[str, str] | None = None,
+    ) -> None:
+        self._host_labels = host_labels or {}
+        self._service_labels = service_labels or {}
+
+    def host_labels(self, *args: object) -> Mapping[str, str]:
+        return self._host_labels
+
+    def service_labels(self, *args: object) -> Mapping[str, str]:
+        return self._service_labels
+
 
 ruleset: Sequence[RuleSpec[str]] = [
     {
@@ -144,15 +163,13 @@ def test_ruleset_matcher_get_host_values_labels(
     )
 
     label_manager = LabelManager(
-        matcher,
+        label_config=_LabelConfig(),
         nodes_of={},
         explicit_host_labels={
             HostName("host1"): {"os": "linux", "abc": "xä", "hu": "ha"},
             HostName("host2"): {"cmk/site": "some_site"},
             HostName("host3"): {},
         },
-        host_label_rules=(),
-        service_label_rules=(),
         get_builtin_host_labels=lambda: {},
     )
     assert (
@@ -167,42 +184,18 @@ def test_ruleset_matcher_get_host_values_labels(
 
 def test_labels_of_service() -> None:
     test_host = HostName("test-host")
-    xyz_host = HostName("xyz")
-    ruleset_matcher = RulesetMatcher(
-        host_tags={test_host: {TagGroupID("agent"): TagID("no-agent")}, xyz_host: {}},
-        host_paths={},
-        all_configured_hosts=frozenset([test_host, xyz_host]),
-        clusters_of={},
-        nodes_of={},
-    )
+
     label_manager = LabelManager(
-        ruleset_matcher,
+        label_config=_LabelConfig(
+            service_labels={
+                "label1": "val1",
+                "label2": "val2",
+            }
+        ),
         nodes_of={},
         explicit_host_labels={},
-        host_label_rules=(),
-        service_label_rules=[
-            {
-                "condition": {
-                    "service_description": [{"$regex": "CPU load$"}],
-                    "host_tags": {TagGroupID("agent"): TagID("no-agent")},
-                },
-                "id": "01",
-                "value": {"label1": "val1"},
-            },
-            {
-                "condition": {
-                    "service_description": [{"$regex": "CPU load$"}],
-                    "host_tags": {TagGroupID("agent"): TagID("no-agent")},
-                },
-                "id": "02",
-                "value": {"label2": "val2"},
-            },
-        ],
         get_builtin_host_labels=lambda: {},
     )
-
-    assert not label_manager.labels_of_service(xyz_host, "CPU load", {})
-    assert not label_manager.label_sources_of_service(xyz_host, "CPU load", {})
 
     assert label_manager.labels_of_service(test_host, "CPU load", {}) == {
         "label1": "val1",
@@ -218,19 +211,10 @@ def test_labels_of_service_discovered_labels() -> None:
     test_host = HostName("test-host")
     xyz_host = HostName("xyz")
     discovered_labels = {"äzzzz": "eeeeez"}
-    ruleset_matcher = RulesetMatcher(
-        host_tags={test_host: {}},
-        host_paths={},
-        all_configured_hosts=frozenset([test_host]),
-        clusters_of={},
-        nodes_of={},
-    )
     label_manager = LabelManager(
-        ruleset_matcher,
+        label_config=_LabelConfig(),
         nodes_of={},
         explicit_host_labels={},
-        host_label_rules=(),
-        service_label_rules=(),
         get_builtin_host_labels=lambda: {},
     )
 
@@ -471,11 +455,9 @@ def test_basic_host_ruleset_get_host_bool_value() -> None:
         nodes_of={},
     )
     label_manager = LabelManager(
-        matcher,
+        label_config=_LabelConfig(),
         nodes_of={},
         explicit_host_labels={},
-        host_label_rules=(),
-        service_label_rules=(),
         get_builtin_host_labels=lambda: {},
     )
 

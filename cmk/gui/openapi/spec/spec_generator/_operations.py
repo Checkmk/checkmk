@@ -14,7 +14,6 @@ from werkzeug.utils import import_string
 
 from livestatus import SiteId
 
-from cmk.gui.config import active_config
 from cmk.gui.openapi import endpoint_family_registry
 from cmk.gui.openapi.restful_objects import Endpoint
 from cmk.gui.openapi.restful_objects.api_error import (
@@ -277,7 +276,7 @@ def _to_operation_dict(
         schema_definitions.path_params if schema_definitions.path_params is not None else []
     )
 
-    if active_config.rest_api_etag_locking and spec_endpoint.etag in ("input", "both"):
+    if spec_endpoint.etag in ("input", "both"):
         header_params.append(ETAG_IF_MATCH_HEADER)
 
     if schema_definitions.request_schema:

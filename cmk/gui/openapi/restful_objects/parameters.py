@@ -91,8 +91,9 @@ ETAG_IF_MATCH_HEADER = {
         required=True,
         description=(
             "The value of the, to be modified, object's ETag header. You can get this value "
-            "by displaying the object it individually. To update this object the currently "
-            "stored ETag needs to be the same as the one sent. The content of the ETag can "
+            "by displaying the object it individually. When ETag validation is enabled in the "
+            "REST API, update operations require that the ETag value you provide matches the "
+            "object's current server-side ETag. The content of the ETag can "
             "potentially be anything and should be treated as semantically opaque."
         ),
         example='"a20ceacf346041dc"',

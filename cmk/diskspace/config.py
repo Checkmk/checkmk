@@ -29,4 +29,4 @@ def read_config(path: Path) -> Config:
     )
     if "diskspace_cleanup" not in raw_config:
         return DEFAULT_CONFIG
-    return _Config.parse_obj(raw_config).diskspace_cleanup
+    return _Config.model_validate(raw_config).diskspace_cleanup

@@ -154,6 +154,43 @@ def test_zpool_status_discover(section: Section, expected_result: Sequence[Servi
         ),
         (
             [
+                ["pool:", "mytank"],
+                ["state:", "DEGRADED"],
+                [
+                    "status:",
+                    "my",
+                    "status",
+                    "message",
+                ],
+                [
+                    "scan:",
+                    "resilver",
+                    "in",
+                    "progress.",
+                ],
+                ["config:"],
+                ["NAME", "STATE", "READ", "WRITE", "CKSUM"],
+                ["mytank", "DEGRADED", "0", "0", "0"],
+                ["mymirror-0", "ONLINE", "0", "0", "0"],
+                ["myblockdevice-01", "ONLINE", "0", "0", "0"],
+                ["myblockdevice-02", "ONLINE", "0", "0", "0"],
+                ["mymirror-1", "DEGRADED", "0", "0", "0"],
+                ["myblockdevice-03", "ONLINE", "0", "0", "0"],
+                ["replacing-0", "DEGRADED", "0", "0", "0"],
+                ["myblockdevice-04", "OFFLINE", "3", "0", "1"],
+                ["myblockdevice-05", "ONLINE", "0", "0", "0"],
+                ["dedup"],
+                ["mymirror-2", "ONLINE", "0", "0", "0"],
+                ["myblockdevice-06", "ONLINE", "0", "0", "0"],
+                ["myblockdevice-07", "ONLINE", "0", "0", "0"],
+            ],
+            Result(
+                state=State.CRIT,
+                summary="DEGRADED State, mytank: my status message, mytank state: DEGRADED, mymirror-1 state: DEGRADED, replacing-0 state: DEGRADED, myblockdevice-04 state: OFFLINE",
+            ),
+        ),
+        (
+            [
                 ["pool:", "storage"],
                 ["state:", "ONLINE"],
                 [

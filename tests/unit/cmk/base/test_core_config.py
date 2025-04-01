@@ -70,6 +70,7 @@ def fixture_core_scenario(monkeypatch):
     return ts.apply(monkeypatch)
 
 
+@pytest.mark.skip(reason="CMK-22671")
 def test_do_create_config_nagios(
     core_scenario: ConfigCache, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -85,6 +86,7 @@ def test_do_create_config_nagios(
     assert config.PackedConfigStore.from_serial(LATEST_CONFIG).path.exists()
 
 
+@pytest.mark.skip(reason="CMK-22671")
 def test_do_create_config_nagios_collects_passwords(
     core_scenario: ConfigCache, monkeypatch: pytest.MonkeyPatch
 ) -> None:

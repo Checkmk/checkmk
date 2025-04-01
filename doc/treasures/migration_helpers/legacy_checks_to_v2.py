@@ -654,7 +654,8 @@ class RegistrationTransformer(cst.CSTTransformer):
                         ),
                     ),
                 ),
-            )
+            ),
+            leading_lines=(cst.EmptyLine(), cst.EmptyLine()),
         )
 
 

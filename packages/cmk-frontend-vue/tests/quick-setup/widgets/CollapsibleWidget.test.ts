@@ -28,7 +28,7 @@ test('CollapsibleWidget renders values and label', async () => {
 
   const trigger = screen.getByRole('button', { name: '?' })
   await fireEvent.click(trigger)
-  await screen.findByText('I am a super helpful help text')
+  await screen.findAllByText('I am a super helpful help text')
   screen.getByText('Welcome')
   screen.getByText('to Jurassic Park')
 })

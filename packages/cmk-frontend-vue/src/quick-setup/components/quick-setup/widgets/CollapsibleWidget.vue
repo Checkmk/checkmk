@@ -8,6 +8,7 @@ import { ref, watch, type Ref } from 'vue'
 import CollapsibleTitle from '@/quick-setup/components/CollapsibleTitle.vue'
 import CompositeWidget from './CompositeWidget.vue'
 import { type CollapsibleWidgetProps } from './widget_types'
+import FormHelp from '@/form/private/FormHelp.vue'
 
 const props = defineProps<CollapsibleWidgetProps>()
 const emits = defineEmits(['update'])
@@ -40,6 +41,7 @@ const updateData = (id: string, value: Ref) => {
     @toggle-open="toggleOpen"
   />
   <div v-show="isOpen" :aria-expanded="isOpen" :aria-label="props.title">
+    <FormHelp v-if="props.help_text" :help="props.help_text" />
     <CompositeWidget
       :items="props.items"
       :data="props?.data || {}"

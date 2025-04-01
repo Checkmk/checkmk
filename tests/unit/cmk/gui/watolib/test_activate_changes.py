@@ -614,7 +614,6 @@ def test_get_file_names_to_sync_with_ldap_sync(request_context: None) -> None:
             "central-link-remote-file",
             "link-changed",
             "central-link-remote-dir-with-file",
-            "var/check_mk/web/orphaned/some_file",
         ]
     )
 

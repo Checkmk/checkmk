@@ -30,6 +30,7 @@ from cmk.utils.livestatus_helpers.tables import Services
 from cmk.gui import fields as gui_fields
 from cmk.gui import sites
 from cmk.gui.fields import HostField
+from cmk.gui.fields.base import BaseSchema
 from cmk.gui.http import Response
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_schemas
 from cmk.gui.openapi.restful_objects.constructors import object_action_href
@@ -38,6 +39,44 @@ from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.utils import permission_verification as permissions
 
 from cmk import fields
+
+
+class _BaseParameters(BaseSchema):
+    """Site and column parameters for the list services endpoints."""
+
+    sites = fields.List(
+        gui_fields.SiteField(),
+        description="Restrict the query to this particular site.",
+        load_default=[],
+        example=["heute"],
+    )
+    columns = gui_fields.column_field(
+        Services,
+        mandatory=[Services.host_name, Services.description],
+        example=["host_name", "description"],
+    )
+
+
+class ServiceParameters(_BaseParameters):
+    """All the parameters for the list services endpoints."""
+
+    query = gui_fields.query_field(
+        Services,
+        required=False,
+        example={"op": "=", "left": "host_name", "right": "example.com"},
+    )
+
+
+class ServiceParametersWithHost(ServiceParameters):
+    """All the parameters for the list services endpoints with optional host filter."""
+
+    host_name = HostField(
+        description="A host name.",
+        should_exist=True,
+        required=False,
+        permission_type="monitor",
+    )
+
 
 PERMISSIONS = permissions.Undocumented(
     permissions.AnyPerm(
@@ -50,28 +89,13 @@ PERMISSIONS = permissions.Undocumented(
     )
 )
 
-PARAMETERS = [
-    {
-        "sites": fields.List(
-            gui_fields.SiteField(),
-            description="Restrict the query to this particular site.",
-            load_default=list,
-        ),
-        "query": gui_fields.query_field(
-            Services,
-            required=False,
-            example='{"op": "=", "left": "host_name", "right": "example.com"}',
-        ),
-        "columns": gui_fields.column_field(
-            Services,
-            mandatory=[
-                Services.host_name,
-                Services.description,
-            ],
-            example=["host_name", "description"],
-        ),
-    }
-]
+QUERY_FIELD = {
+    "query": gui_fields.query_field(
+        Services,
+        required=False,
+        example='{"op": "=", "left": "host_name", "right": "example.com"}',
+    ),
+}
 
 HOST_NAME = {
     "host_name": HostField(
@@ -153,18 +177,20 @@ def show_service(params: Mapping[str, Any]) -> Response:
     )
 
 
+# TODO: DEPRECATED(17512) - remove in 2.5
 @Endpoint(
     constructors.domain_object_collection_href("host", "{host_name}", "services"),
     ".../collection",
     method="get",
     path_params=[HOST_NAME],
-    query_params=PARAMETERS,
+    query_params=[_BaseParameters, QUERY_FIELD],
     tag_group="Monitoring",
     blacklist_in=["swagger-ui"],
     response_schema=response_schemas.DomainObjectCollection,
     permissions_required=PERMISSIONS,
+    deprecated_urls={"/objects/host/{host_name}/collections/services": 17512},
 )
-def _list_host_services(params: Mapping[str, Any]) -> Response:
+def _list_host_services_deprecated(params: Mapping[str, Any]) -> Response:
     """Show the monitored services of a host
 
     This list is filterable by various parameters."""
@@ -172,20 +198,59 @@ def _list_host_services(params: Mapping[str, Any]) -> Response:
 
 
 @Endpoint(
+    constructors.domain_object_collection_href("host", "{host_name}", "services"),
+    "cmk/list",
+    method="post",
+    path_params=[HOST_NAME],
+    tag_group="Monitoring",
+    request_schema=ServiceParameters,
+    response_schema=response_schemas.DomainObjectCollection,
+    permissions_required=PERMISSIONS,
+    update_config_generation=False,
+)
+def _list_host_services(params: Mapping[str, Any]) -> Response:
+    """Show the monitored services of a host
+
+    This list is filterable by various parameters."""
+    # merge body and path parameters
+    params["body"]["host_name"] = params["host_name"]
+    return _list_services(params["body"])
+
+
+# TODO: DEPRECATED(17512) - remove in 2.5
+@Endpoint(
     constructors.collection_href("service"),
     ".../collection",
     method="get",
-    query_params=[OPTIONAL_HOST_NAME, *PARAMETERS],
+    query_params=[_BaseParameters, QUERY_FIELD, OPTIONAL_HOST_NAME],
     tag_group="Monitoring",
     blacklist_in=["swagger-ui"],
     response_schema=response_schemas.DomainObjectCollection,
     permissions_required=PERMISSIONS,
+    deprecated_urls={"/domain-types/service/collections/all": 17512},
+)
+def _list_all_services_deprecated(params: Mapping[str, Any]) -> Response:
+    """Show all monitored services
+
+    This list is filterable by various parameters."""
+    return _list_services(params)
+
+
+@Endpoint(
+    constructors.collection_href("service"),
+    "cmk/list",
+    method="post",
+    tag_group="Monitoring",
+    request_schema=ServiceParametersWithHost,
+    response_schema=response_schemas.DomainObjectCollection,
+    permissions_required=PERMISSIONS,
+    update_config_generation=False,
 )
 def _list_all_services(params: Mapping[str, Any]) -> Response:
     """Show all monitored services
 
     This list is filterable by various parameters."""
-    return _list_services(params)
+    return _list_services(params["body"])
 
 
 def _list_services(params: Mapping[str, Any]) -> Response:
@@ -236,5 +301,7 @@ def _list_services(params: Mapping[str, Any]) -> Response:
 
 def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(show_service)
+    endpoint_registry.register(_list_host_services_deprecated)
     endpoint_registry.register(_list_host_services)
+    endpoint_registry.register(_list_all_services_deprecated)
     endpoint_registry.register(_list_all_services)

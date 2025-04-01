@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Pre update checks, executed before any configuration is changed."""
 
+import warnings
 from dataclasses import dataclass
 from logging import Logger
 from typing import override
@@ -18,6 +19,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import GroupSpec
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
+from cmk.gui.valuespec.definitions import RegexFutureWarning
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
@@ -65,7 +67,6 @@ class PreUpdateRulesets(PreUpdateAction):
                     logger.exception("This is the exception: ")
                     if _continue_on_broken_ruleset(conflict_mode).is_abort():
                         raise MKUserError(None, "broken ruleset")
-
         if not result:
             raise MKUserError(None, "failed ruleset validation")
 
@@ -130,31 +131,47 @@ def _validate_rule_values(
 
         for folder, index, rule in ruleset.get_rules():
             logger.log(VERBOSE, f"Validating ruleset '{ruleset.name}' in folder '{folder.name()}'")
-            try:
-                transformed_value = ruleset.rulespec.valuespec.transform_value(rule.value)
-                ruleset.rulespec.valuespec.validate_datatype(
-                    transformed_value,
-                    "",
-                )
-                ruleset.rulespec.valuespec.validate_value(
-                    transformed_value,
-                    "",
-                )
-            except (MKUserError, AssertionError, ValueError, TypeError) as e:
-                error_messages = [
-                    "WARNING: Invalid rule configuration detected",
-                    f"Ruleset: {ruleset.name}",
-                    f"Title: {ruleset.title()}",
-                    f"Folder: {folder.path() or 'main'}",
-                    f"Rule nr: {index + 1}",
-                    f"Exception: {e}\n",
-                ]
-                add_info = _additional_info(ruleset, rule.value, contact_groups)
-                logger.error("\n".join(error_messages + add_info.messages))
-                if add_info.skip_user_input:
-                    continue
-                if _continue_on_invalid_rule(conflict_mode).is_abort():
-                    return False
+            with warnings.catch_warnings(action="error", category=RegexFutureWarning):
+                try:
+                    transformed_value = ruleset.rulespec.valuespec.transform_value(rule.value)
+                    ruleset.rulespec.valuespec.validate_datatype(
+                        transformed_value,
+                        "",
+                    )
+                    ruleset.rulespec.valuespec.validate_value(
+                        transformed_value,
+                        "",
+                    )
+
+                except RegexFutureWarning as e:
+                    error_messages = [
+                        f"WARNING: {e}",
+                        f"Ruleset: {ruleset.name}",
+                        f"Title: {ruleset.title()}",
+                        f"Folder: {folder.path() or 'main'}",
+                        f"Rule nr: {index + 1}",
+                        "At the moment your regex works correctly, but it might stop working or",
+                        "behave differently in a future Python version. Please consider updating it.",
+                        "",
+                    ]
+                    add_info = _additional_info(ruleset, rule.value, contact_groups)
+                    logger.warning("\n".join(error_messages + add_info.messages))
+
+                except (MKUserError, AssertionError, ValueError, TypeError) as e:
+                    error_messages = [
+                        "WARNING: Invalid rule configuration detected",
+                        f"Ruleset: {ruleset.name}",
+                        f"Title: {ruleset.title()}",
+                        f"Folder: {folder.path() or 'main'}",
+                        f"Rule nr: {index + 1}",
+                        f"Exception: {e}\n",
+                    ]
+                    add_info = _additional_info(ruleset, rule.value, contact_groups)
+                    logger.error("\n".join(error_messages + add_info.messages))
+                    if add_info.skip_user_input:
+                        continue
+                    if _continue_on_invalid_rule(conflict_mode).is_abort():
+                        return False
 
     return True
 

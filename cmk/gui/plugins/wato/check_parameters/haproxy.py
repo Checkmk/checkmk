@@ -12,7 +12,16 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 
 FRONTEND_STATES = [("OPEN", 0), ("STOP", 2)]
-SERVER_STATES = [("UP", 0), ("DOWN", 2), ("NOLB", 2), ("MAINT", 2), ("DRAIN", 2), ("no check", 2)]
+SERVER_STATES = [
+    ("UP", 0),
+    ("DOWN", 2),
+    ("NOLB", 2),
+    ("MAINT", 2),
+    ("MAINT (via)", 1),
+    ("MAINT (resolution)", 1),
+    ("DRAIN", 2),
+    ("no check", 2),
+]
 
 
 def _parameter_valuespec_haproxy_frontend() -> Dictionary:

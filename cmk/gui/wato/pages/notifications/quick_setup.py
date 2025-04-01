@@ -511,7 +511,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                             parameter_form=ListExtended(
                                                 title=Title("Rule IDs"),
                                                 element_template=String(
-                                                    field_size=FieldSize.SMALL,
+                                                    field_size=FieldSize.MEDIUM,
                                                     custom_validate=[
                                                         NonEmptyString(
                                                             Message("Please add a Rule ID.")

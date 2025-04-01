@@ -500,11 +500,21 @@ export function calculate_dashboard() {
     const oDash = document.getElementById("dashboard");
     if (!oDash) throw new Error("oDash shouldn't be null!");
     const dashboard_rect = oDash.getBoundingClientRect();
+    const oContainer = oDash.parentElement;
+    const container_padding_right = parseInt(
+        window.getComputedStyle(oContainer!, null).paddingRight,
+        10,
+    );
 
     g_dashboard_top = dashboard_rect.top;
     g_dashboard_left = dashboard_rect.left;
-    g_dashboard_width = (page_width() || 0) - g_dashboard_left;
-    g_dashboard_height = (page_height() || 0) - g_dashboard_top;
+    // For Firefox we need to substitute the container's padding-right from the dashboard width to
+    // prevent unnecessary scroll bars
+    g_dashboard_width =
+        (page_width() || 0) - g_dashboard_left - container_padding_right;
+    // For some reason a cache removing reload on Firefox breaks this height caluclation by 1px.
+    // Thus the '- 1' hack here, so the dashboard does not overflow and no scrollbar is needed.
+    g_dashboard_height = (page_height() || 0) - g_dashboard_top - 1;
     oDash.style.width = g_dashboard_width + "px";
     oDash.style.height = g_dashboard_height + "px";
 

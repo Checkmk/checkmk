@@ -3,14 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# fmt: off
-# mypy: disable-error-code=var-annotated
+from cmk.base.legacy_checks.oracle_locks import (
+    check_oracle_locks,
+    inventory_oracle_locks,
+    parse_oracle_locks,
+)
 
+from cmk.agent_based.v2 import Result, Service, State
 
-checkname = "oracle_locks"
-
-
-info = [
+INFO = [
     [
         "TUX12C",
         "",
@@ -266,39 +267,52 @@ info = [
 ]
 
 
-discovery = {
-    "": [
-        ("TUX12C", {}),
-        ("newdb", {}),
-        ("newdb1", {}),
-        ("newdb1", {}),
-        ("newdb1", {}),
-        ("newdb1", {}),
-        ("newdb1", {}),
-        ("newdb1", {}),
-        ("newdb1", {}),
-        ("newdb1", {}),
-        ("newdb1", {}),
-        ("newdb1", {}),
-        ("newdb1", {}),
+def test_discovery() -> None:
+    assert list(inventory_oracle_locks(parse_oracle_locks(INFO))) == [
+        Service(item="TUX12C"),
+        Service(item="newdb"),
+        Service(item="newdb1"),
+        Service(item="newdb1"),
+        Service(item="newdb1"),
+        Service(item="newdb1"),
+        Service(item="newdb1"),
+        Service(item="newdb1"),
+        Service(item="newdb1"),
+        Service(item="newdb1"),
+        Service(item="newdb1"),
+        Service(item="newdb1"),
+        Service(item="newdb1"),
     ]
-}
 
 
-checks = {
-    "": [
-        ("TUX12C", {"levels": (1800, 3600)}, [(0, "No locks existing", [])]),
-        (
-            "newdb",
-            {"levels": (1800, 3600)},
-            [
-                (
-                    2,
-                    "locktime 1 hour 3 minutes (!!) Session (sid,serial, proc) 25,15231,13275 machine ol6131 osuser oracle object: . ; ",
-                    [],
-                )
-            ],
+def test_check_no_locks() -> None:
+    assert list(
+        check_oracle_locks("TUX12C", {"levels": (1800, 3600)}, parse_oracle_locks(INFO))
+    ) == [
+        Result(
+            state=State.OK,
+            summary="No locks existing",
         ),
-        ("newdb1", {"levels": (1800, 3600)}, [(1, "more then 10 locks existing!", [])]),
     ]
-}
+
+
+def test_check_locks() -> None:
+    assert list(
+        check_oracle_locks("newdb", {"levels": (1800, 3600)}, parse_oracle_locks(INFO))
+    ) == [
+        Result(
+            state=State.CRIT,
+            summary="locktime 1 hour 3 minutes (!!) Session (sid,serial, proc) 25,15231,13275 machine ol6131 osuser oracle object: . ; ",
+        )
+    ]
+
+
+def test_check_too_many_locks() -> None:
+    assert list(
+        check_oracle_locks("newdb1", {"levels": (1800, 3600)}, parse_oracle_locks(INFO))
+    ) == [
+        Result(
+            state=State.WARN,
+            summary="more then 10 locks existing!",
+        )
+    ]

@@ -10,70 +10,74 @@
 # ORACLE_SID serial# machine process osuser program last_call_el sql_id
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import IgnoreResultsError, render, StringTable
+from collections.abc import Mapping
+from typing import Any
 
-check_info = {}
+from cmk.agent_based.v2 import (
+    AgentSection,
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    IgnoreResultsError,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 
-def inventory_oracle_longactivesessions(info):
-    return [(line[0], {}) for line in info]
+def inventory_oracle_longactivesessions(section: StringTable) -> DiscoveryResult:
+    yield from (Service(item=line[0]) for line in section)
 
 
-def check_oracle_longactivesessions(item, params, info):
+def check_oracle_longactivesessions(
+    item: str, params: Mapping[str, Any], section: StringTable
+) -> CheckResult:
     sessioncount = 0
-    state = 3
     itemfound = False
+    longoutput: None | str = None
 
-    for line in info:
-        if len(line) <= 1:
+    for line in section:
+        if len(line) <= 1 or line[0] != item:
             continue
 
-        warn, crit = params["levels"]
-
-        if line[0] == item:
-            itemfound = True
-
-        if line[0] == item and line[1] != "":
+        itemfound = True
+        if line[1] != "":
             sessioncount += 1
             _sid, sidnr, serial, machine, process, osuser, program, last_call_el, sql_id = line
 
             longoutput = f"Session (sid,serial,proc) {sidnr} {serial} {process} active for {render.timespan(int(last_call_el))} from {machine} osuser {osuser} program {program} sql_id {sql_id} "
 
-    if itemfound:
-        infotext = "%s" % sessioncount
-        perfdata = [("count", sessioncount, warn, crit)]
-        if sessioncount == 0:
-            return 0, infotext, perfdata
+    if not itemfound:
+        # In case of missing information we assume that the login into
+        # the database has failed and we simply skip this check. It won't
+        # switch to UNKNOWN, but will get stale.
+        raise IgnoreResultsError("no info from database. Check ORA %s Instance" % item)
 
-        if sessioncount >= crit:
-            state = 2
-        elif sessioncount >= warn:
-            state = 1
-        else:
-            state = 0
-
-        if state:
-            infotext += " (warn/crit at %d/%d)" % (warn, crit)
-
-        if sessioncount <= 10:
-            infotext += " %s" % longoutput
-
-        return state, infotext, perfdata
-
-    # In case of missing information we assume that the login into
-    # the database has failed and we simply skip this check. It won't
-    # switch to UNKNOWN, but will get stale.
-    raise IgnoreResultsError("no info from database. Check ORA %s Instance" % item)
+    yield from check_levels(
+        sessioncount,
+        metric_name="count",
+        levels_upper=("fixed", params["levels"]),
+        render_func=str,
+    )
+    if longoutput:
+        yield Result(state=State.OK, notice=longoutput)
 
 
 def parse_oracle_longactivesessions(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["oracle_longactivesessions"] = LegacyCheckDefinition(
+agent_section_oracle_longactivesessions = AgentSection(
     name="oracle_longactivesessions",
     parse_function=parse_oracle_longactivesessions,
+)
+
+
+check_plugin_oracle_longactivesessions = CheckPlugin(
+    name="oracle_longactivesessions",
     service_name="ORA %s Long Active Sessions",
     discovery_function=inventory_oracle_longactivesessions,
     check_function=check_oracle_longactivesessions,

@@ -6,10 +6,21 @@
 # In cooperation with Thorsten Bruhns from OPITZ Consulting
 
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import IgnoreResultsError, render
+from collections.abc import Mapping
+from typing import Any
 
-check_info = {}
+from cmk.agent_based.v2 import (
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    IgnoreResultsError,
+    LevelsT,
+    render,
+    Result,
+    Service,
+    State,
+)
 
 # <<<oracle_dataguard_stats:sep(124)>>>
 # TESTDB|TESTDBU2|PHYSICAL STANDBY|apply finish time|+00 00:00:00.000|NOT ALLOWED|ENABLED|MAXIMUM PERFORMANCE|DISABLED||||APPLYING_LOG
@@ -21,9 +32,9 @@ check_info = {}
 # TUX12C|TUXSTDB|PHYSICAL STANDBY|estimated startup time|20
 
 
-def inventory_oracle_dataguard_stats(parsed):
-    for instance in parsed:
-        yield instance, {}
+def inventory_oracle_dataguard_stats(section: Any) -> DiscoveryResult:
+    for instance in section:
+        yield Service(item=instance)
 
 
 def _get_seconds(timestamp: str) -> int | None:
@@ -38,31 +49,33 @@ def _get_seconds(timestamp: str) -> int | None:
     return sec + 60 * min_ + 3600 * h + 86400 * days
 
 
-def check_oracle_dataguard_stats(item, params, parsed):
+def check_oracle_dataguard_stats(item: str, params: Mapping[str, Any], section: Any) -> CheckResult:
     try:
-        dgdata = parsed[item]
+        dgdata = section[item]
     except KeyError:
         # In case of missing information we assume that the login into
         # the database has failed and we simply skip this check. It won't
         # switch to UNKNOWN, but will get stale.
         raise IgnoreResultsError("Dataguard disabled or Instance not running")
 
-    yield 0, "Database Role %s" % (dgdata["database_role"].lower())
+    yield Result(state=State.OK, summary="Database Role %s" % (dgdata["database_role"].lower()))
 
     if "protection_mode" in dgdata:
-        yield 0, "Protection Mode %s" % (dgdata["protection_mode"].lower())
+        yield Result(
+            state=State.OK, summary="Protection Mode %s" % (dgdata["protection_mode"].lower())
+        )
 
     if "broker_state" in dgdata:
-        yield 0, "Broker %s" % (dgdata["broker_state"].lower())
+        yield Result(state=State.OK, summary="Broker %s" % (dgdata["broker_state"].lower()))
 
         # Observer is only usable with enabled Fast Start Failover!
         if "fs_failover_status" in dgdata and dgdata["fs_failover_status"] != "DISABLED":
             if dgdata["fs_failover_observer_present"] != "YES":
-                yield 2, "Observer not connected"
+                yield Result(state=State.CRIT, summary="Observer not connected")
             else:
-                yield (
-                    0,
-                    "Observer connected {} from host {}".format(
+                yield Result(
+                    state=State.OK,
+                    summary="Observer connected {} from host {}".format(
                         dgdata["fs_failover_observer_present"].lower(),
                         dgdata["fs_failover_observer_host"],
                     ),
@@ -75,10 +88,13 @@ def check_oracle_dataguard_stats(item, params, parsed):
                     dgdata["protection_mode"] == "MAXIMUM AVAILABILITY"
                     and dgdata["fs_failover_status"] == "SYNCHRONIZED"
                 ):
-                    state = 0
+                    state = State.OK
                 else:
-                    state = 1
-                yield state, "Fast Start Failover %s" % (dgdata["fs_failover_status"].lower())
+                    state = State.WARN
+                yield Result(
+                    state=state,
+                    summary="Fast Start Failover %s" % (dgdata["fs_failover_status"].lower()),
+                )
 
     # switchover_status is important for non broker environemnts as well.
     if "switchover_status" in dgdata:
@@ -89,40 +105,46 @@ def check_oracle_dataguard_stats(item, params, parsed):
                 "RESOLVABLE GAP",
                 "LOG SWITCH GAP",
             ):
-                yield 0, "Switchover to standby possible"
+                yield Result(state=State.OK, summary="Switchover to standby possible")
             else:
                 primary_broker_state = params.get("primary_broker_state")
                 if primary_broker_state or dgdata["broker_state"].lower() == "enabled":
                     # We need primary_broker_state False for Data-Guards without Broker
-                    yield (
-                        2,
-                        "Switchover to standby not possible! reason: %s"
+                    yield Result(
+                        state=State.CRIT,
+                        summary="Switchover to standby not possible! reason: %s"
                         % dgdata["switchover_status"].lower(),
                     )
                 else:
-                    yield 0, "Switchoverstate ignored "
+                    yield Result(state=State.OK, summary="Switchoverstate ignored ")
 
         elif dgdata["database_role"] == "PHYSICAL STANDBY":
             # don't show the ok state, due to distracting 'NOT ALLOWED' state!
             if dgdata["switchover_status"] in ("SYNCHRONIZED", "NOT ALLOWED", "SESSIONS ACTIVE"):
-                yield 0, "Switchover to primary possible"
+                yield Result(state=State.OK, summary="Switchover to primary possible")
             else:
-                yield (
-                    2,
-                    "Switchover to primary not possible! reason: %s" % dgdata["switchover_status"],
+                yield Result(
+                    state=State.CRIT,
+                    summary="Switchover to primary not possible! reason: %s"
+                    % dgdata["switchover_status"],
                 )
 
     if dgdata["database_role"] != "PHYSICAL STANDBY":
         return
 
     if mrp_status := dgdata.get("mrp_status"):
-        yield 0, "Managed Recovery Process state %s" % mrp_status.lower()
+        yield Result(
+            state=State.OK, summary="Managed Recovery Process state %s" % mrp_status.lower()
+        )
 
         if dgdata.get("open_mode", "") == "READ ONLY WITH APPLY":
-            yield params.get("active_dataguard_option"), "Active Data-Guard found"
+            yield Result(
+                state=State(params.get("active_dataguard_option")),
+                summary="Active Data-Guard found",
+            )
 
     elif mrp_status is not None:
-        yield 0, "Managed Recovery Process not started"
+        yield Result(state=State.OK, summary="Managed Recovery Process not started")
 
     for dgstat_param in ("apply finish time", "apply lag", "transport lag"):
         raw_value = dgdata["dgstat"][dgstat_param]
@@ -132,18 +154,22 @@ def check_oracle_dataguard_stats(item, params, parsed):
         # NOTE: not all of these metrics have params implemented, that's why we have to use 'get'
 
         if seconds is None:
-            yield params.get(f"missing_{pkey}_state", 0), f"{label}: {raw_value or 'no value'}"
+            yield Result(
+                state=State(params.get(f"missing_{pkey}_state", 0)),
+                summary=f"{label}: {raw_value or 'no value'}",
+            )
             continue
 
         levels_upper = params.get(pkey) or (None, None)
         levels_lower = params.get(f"{pkey}_min") or (None, None)
 
-        yield check_levels(
+        yield from check_levels(
             seconds,
-            pkey,
-            levels_upper + levels_lower,
-            human_readable_func=render.time_offset,
-            infoname=label,
+            levels_lower=_modernize_levels(levels_lower),
+            levels_upper=_modernize_levels(levels_upper),
+            metric_name=pkey,
+            render_func=render.time_offset,
+            label=label,
         )
 
     if (
@@ -154,12 +180,20 @@ def check_oracle_dataguard_stats(item, params, parsed):
     ):
         # old sql cannot detect a started standby database without running media recovery
         # => add an information for old plug-in with possible wrong result
-        yield 0, "old plug-in data found, recovery active?"
+        yield Result(state=State.OK, summary="old plug-in data found, recovery active?")
 
 
-check_info["oracle_dataguard_stats"] = LegacyCheckDefinition(
+def _modernize_levels(levels: None | tuple) -> LevelsT:
+    match levels:
+        case None | (None, None):
+            return ("no_levels", None)
+        case (warn, crit):
+            return ("fixed", (warn, crit))
+    raise ValueError(levels)
+
+
+check_plugin_oracle_dataguard_stats = CheckPlugin(
     name="oracle_dataguard_stats",
-    # section is already migrated!
     service_name="ORA %s Dataguard-Stats",
     discovery_function=inventory_oracle_dataguard_stats,
     check_function=check_oracle_dataguard_stats,

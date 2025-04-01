@@ -9,24 +9,30 @@
 # 1. ONLINE   0a6884c063904f50bf7ef4516b728a2d (/dev/oracleasm/disks/DATA1) [DATA1]
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import IgnoreResultsError, StringTable
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    IgnoreResultsError,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-check_info = {}
+
+def inventory_oracle_crs_voting(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
 
 
-def inventory_oracle_crs_voting(info):
-    for _line in info:
-        return [(None, {})]
-
-
-def check_oracle_crs_voting(_no_item, _no_params, info):
+def check_oracle_crs_voting(section: StringTable) -> CheckResult:
     # state = -1 => no data for Service
-    state = -1
     infotext = ""
     votecount = 0
     votedisk = ""
-    for line in info:
+    for line in section:
         if line[1] == "ONLINE":
             votecount += 1
             votedisk += "[%s] " % line[3]
@@ -35,25 +41,29 @@ def check_oracle_crs_voting(_no_item, _no_params, info):
             votedisk += "[%s] " % line[2]
 
     if votecount in (1, 3, 5):
-        state = 0
         infotext = "%d Voting Disks found. %s" % (votecount, votedisk)
-        return state, infotext
+        yield Result(state=State.OK, summary=infotext)
+        return
+
     if votecount == 0:
         # cssd could not start without an existing voting disk!
         raise IgnoreResultsError("No Voting Disk(s) found. Maybe the cssd/crsd is not running!")
 
-    state = 2
     infotext = "missing Voting Disks (!!). %d Votes found %s" % (votecount, votedisk)
-    return state, infotext
+    yield Result(state=State.CRIT, summary=infotext)
 
 
 def parse_oracle_crs_voting(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["oracle_crs_voting"] = LegacyCheckDefinition(
+agent_section_oracle_crs_voting = AgentSection(
     name="oracle_crs_voting",
     parse_function=parse_oracle_crs_voting,
+)
+
+check_plugin_oracle_crs_voting = CheckPlugin(
+    name="oracle_crs_voting",
     service_name="ORA-GI Voting",
     discovery_function=inventory_oracle_crs_voting,
     check_function=check_oracle_crs_voting,

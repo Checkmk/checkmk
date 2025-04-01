@@ -4,20 +4,28 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import IgnoreResultsError, StringTable
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    IgnoreResultsError,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-check_info = {}
+
+def inventory_oracle_crs_version(section: StringTable) -> DiscoveryResult:
+    for _line in section:
+        yield Service()
 
 
-def inventory_oracle_crs_version(info):
-    for _line in info:
-        return [(None, {})]
-
-
-def check_oracle_crs_version(_no_item, _no_params, info):
-    for line in info:
-        return (0, line[0])
+def check_oracle_crs_version(section: StringTable) -> CheckResult:
+    for line in section:
+        yield Result(state=State.OK, summary=line[0])
+        return
 
     # In case of missing information we assume that the clusterware
     # is not running and we simple skip the result
@@ -28,9 +36,13 @@ def parse_oracle_crs_version(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["oracle_crs_version"] = LegacyCheckDefinition(
+agent_section_oracle_crs_version = AgentSection(
     name="oracle_crs_version",
     parse_function=parse_oracle_crs_version,
+)
+
+check_plugin_oracle_crs_version = CheckPlugin(
+    name="oracle_crs_version",
     service_name="ORA-GI Version",
     discovery_function=inventory_oracle_crs_version,
     check_function=check_oracle_crs_version,

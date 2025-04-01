@@ -4,35 +4,50 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Mapping
+from typing import Any, assert_never
+
 from cmk.base.check_legacy_includes.oracle import oracle_handle_ora_errors
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import IgnoreResultsError, render, StringTable
-
-check_info = {}
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    IgnoreResultsError,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 # <<<oracle_locks>>>
 # TUX12C|273|2985|ora12c.local|sqlplus@ora12c.local (TNS V1-V3)|46148|oracle|633|NULL|NULL
 # newdb|25|15231|ol6131|sqlplus@ol6131 (TNS V1-V3)|13275|oracle|SYS|3782|VALID|1|407|1463|ol6131|sqlplus@ol6131 (TNS V1-V3)|13018|oracle|SYS
 
 
-def inventory_oracle_locks(info):
-    return [(line[0], {}) for line in info if len(line) >= 10]
+def inventory_oracle_locks(section: StringTable) -> DiscoveryResult:
+    yield from [Service(item=line[0]) for line in section if len(line) >= 10]
 
 
-def check_oracle_locks(item, params, info):
+def check_oracle_locks(item: str, params: Mapping[str, Any], section: StringTable) -> CheckResult:
     lockcount = 0
-    state = -1
+    state: State | None = None
     infotext = ""
 
-    for line in info:
+    for line in section:
         warn, crit = params["levels"]
         if line[0] == item and line[1] != "":
             err = oracle_handle_ora_errors(line)
             if err is False:
                 continue
-            if isinstance(err, tuple):
-                return err
+            elif isinstance(err, Result):
+                yield err
+            elif err is None:
+                pass
+            else:
+                assert_never(err)
 
             if len(line) == 10:
                 # old format from locks_old in current plugin
@@ -44,7 +59,7 @@ def check_oracle_locks(item, params, info):
                     _program,
                     process,
                     osuser,
-                    ctime,
+                    raw_ctime,
                     object_owner,
                     object_name,
                 ) = line
@@ -59,7 +74,7 @@ def check_oracle_locks(item, params, info):
                     process,
                     osuser,
                     _dbusername,
-                    ctime,
+                    raw_ctime,
                     _block_status,
                     _blk_inst_id,
                     _blk_sid,
@@ -77,30 +92,31 @@ def check_oracle_locks(item, params, info):
             else:
                 raise IgnoreResultsError("Unknow number of items in agent output")
 
-            ctime = int(ctime)
+            ctime = int(raw_ctime)
 
             if not crit and not warn:
                 infotext += f"locktime {render.time_offset(ctime)} Session (sid,serial, proc) {sidnr},{serial},{process} machine {machine} osuser {osuser} object: {object_owner}.{object_name} ; "
             elif ctime >= crit:
-                state = 2
+                state = State.CRIT
                 lockcount += 1
                 infotext += f"locktime {render.time_offset(ctime)} (!!) Session (sid,serial, proc) {sidnr},{serial},{process} machine {machine} osuser {osuser} object: {object_owner}.{object_name} ; "
 
             elif ctime >= warn:
-                state = max(1, state)
+                state = State.worst(State.WARN, state or State.OK)
                 lockcount += 1
                 infotext += f"locktime {render.time_offset(ctime)} (!) Session (sid,serial, proc) {sidnr},{serial},{process} machine {machine} osuser {osuser} object: {object_owner}.{object_name} ; "
 
         if line[0] == item and line[1] == "":
-            state = max(0, state)
+            state = state or State.OK
 
     if infotext == "":
         infotext = "No locks existing"
     elif lockcount > 10:
         infotext = "more then 10 locks existing!"
 
-    if state != -1:
-        return (state, infotext)
+    if state:
+        yield Result(state=state, summary=infotext)
+        return
 
     # In case of missing information we assume that the login into
     # the database has failed and we simply skip this check. It won't
@@ -112,9 +128,14 @@ def parse_oracle_locks(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["oracle_locks"] = LegacyCheckDefinition(
+agent_section_oracle_locks = AgentSection(
     name="oracle_locks",
     parse_function=parse_oracle_locks,
+)
+
+
+check_plugin_oracle_locks = CheckPlugin(
+    name="oracle_locks",
     service_name="ORA %s Locks",
     discovery_function=inventory_oracle_locks,
     check_function=check_oracle_locks,

@@ -20,32 +20,43 @@
 # PV|PV|PRIMARY|READ WRITE|400|||ONLINE|||0
 # PV|PV|PRIMARY|READ WRITE|401|||ONLINE|||0
 
+from collections.abc import Mapping
+from typing import Any
 
-# mypy: disable-error-code="arg-type"
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    IgnoreResultsError,
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import IgnoreResultsError, render, StringTable
 
-check_info = {}
-
-
-def inventory_oracle_recovery_status(info):
-    return [(line[0], {}) for line in info]
+def inventory_oracle_recovery_status(section: StringTable) -> DiscoveryResult:
+    yield from (Service(item=line[0]) for line in section)
 
 
-def check_oracle_recovery_status(item, params, info):
-    state = 0
+def check_oracle_recovery_status(
+    item: str, params: Mapping[str, Any], section: StringTable
+) -> CheckResult:
+    state = State.OK
     offlinecount = 0
     filemissingcount = 0
-    oldest_checkpoint_age = None
+    oldest_checkpoint_age: int | None = None
 
     oldest_backup_age = -1
     backup_count = 0
 
-    perfdata = []
+    perfdata: list[Metric] = []
 
     itemfound = False
-    for line in info:
+    for line in section:
         if line[0] == item:
             itemfound = True
 
@@ -84,10 +95,8 @@ def check_oracle_recovery_status(item, params, info):
                 ) = line
 
             else:
-                return 2, ", ".join(line)
-
-            if params.get("levels"):
-                warn, crit = params["levels"]
+                yield Result(state=State.CRIT, summary=", ".join(line))
+                return
 
             if backup_state == "ACTIVE":
                 backup_count += 1
@@ -97,122 +106,134 @@ def check_oracle_recovery_status(item, params, info):
                 if backup_state == "FILE MISSING":
                     filemissingcount += 1
                 elif checkpoint_age:
-                    checkpoint_age = int(checkpoint_age)
+                    checkpoint_age = int(checkpoint_age)  # type: ignore[assignment]
 
                     if oldest_checkpoint_age is None:
-                        oldest_checkpoint_age = checkpoint_age
+                        oldest_checkpoint_age = int(checkpoint_age)
                     else:
-                        oldest_checkpoint_age = max(oldest_checkpoint_age, checkpoint_age)
+                        oldest_checkpoint_age = max(oldest_checkpoint_age, int(checkpoint_age))
 
             else:
                 offlinecount += 1
 
-    if itemfound is True:
-        infotext = "%s database" % (database_role.lower())
+    if not itemfound:
+        # In case of missing information we assume that the login into
+        # the database has failed and we simply skip this check. It won't
+        # switch to UNKNOWN, but will get stale.
+        raise IgnoreResultsError("Login into database failed")
 
-        if oldest_checkpoint_age is None:
-            infotext += ", no online datafiles found(!!)"
-            state = 2
+    infotext = "%s database" % (database_role.lower())
 
-        elif oldest_checkpoint_age <= -1:
-            # we found a negative time for last checkpoint
-            infotext += (
-                ", oldest checkpoint is in the future  %s(!), check the time on the server"
-                % render.timespan(int(oldest_checkpoint_age) * -1)
-            )
-            state = max(state, 1)
+    if oldest_checkpoint_age is None:
+        infotext += ", no online datafiles found(!!)"
+        state = State.CRIT
 
-        else:
-            infotext += ", oldest Checkpoint %s ago" % (render.timespan(int(oldest_checkpoint_age)))
+    elif oldest_checkpoint_age <= -1:
+        # we found a negative time for last checkpoint
+        infotext += (
+            ", oldest checkpoint is in the future  %s(!), check the time on the server"
+            % render.timespan(int(oldest_checkpoint_age) * -1)
+        )
+        state = State.worst(state, State.WARN)
 
-        if (
-            (database_role == "PRIMARY" and db_name == "_MGMTDB" and db_unique_name == "_mgmtdb")
-            or not params.get("levels")
-        ) or db_name[db_name.rfind(".") + 1 :] == "PDB$SEED":
-            # We ignore the state of the check when no parameters are known
-            # _mgmtdb is new internal instance from 12.1.0.2 on Grid-Infrastructure
-            # ignore PDB$SEED because this PDB is always in READ ONLY mode
-            perfdata.append(("checkpoint_age", oldest_checkpoint_age))
-        else:
-            if database_role == "PRIMARY":
-                # checkpoint age should not higher on primary as well
-                # There is no CRIT for older checkoint age as this is mostly not a
-                # serios issue.
-                # otherwise the standby will produca a warning or crit as well
-                if oldest_checkpoint_age >= warn:
-                    infotext += "(!)"
-                    state = max(1, state)
+    else:
+        infotext += ", oldest Checkpoint %s ago" % (render.timespan(int(oldest_checkpoint_age)))
 
-                perfdata.append(("checkpoint_age", oldest_checkpoint_age, warn))
-            else:
+    if (
+        (database_role == "PRIMARY" and db_name == "_MGMTDB" and db_unique_name == "_mgmtdb")
+        or not params.get("levels")
+    ) or db_name[db_name.rfind(".") + 1 :] == "PDB$SEED":
+        # We ignore the state of the check when no parameters are known
+        # _mgmtdb is new internal instance from 12.1.0.2 on Grid-Infrastructure
+        # ignore PDB$SEED because this PDB is always in READ ONLY mode
+        if oldest_checkpoint_age is not None:  # for mypy, this seems to have been the case always.
+            perfdata.append(Metric("checkpoint_age", oldest_checkpoint_age))
+    else:
+        warn, crit = params["levels"]
+        if database_role == "PRIMARY":
+            # checkpoint age should not higher on primary as well
+            # There is no CRIT for older checkoint age as this is mostly not a
+            # serios issue.
+            # otherwise the standby will produca a warning or crit as well
+            if oldest_checkpoint_age >= warn:
+                infotext += "(!)"
+                state = State.worst(state, State.WARN)
+
+            if (
+                oldest_checkpoint_age is not None
+            ):  # for mypy, this seems to have been the case always.
                 perfdata.append(
-                    (
-                        "checkpoint_age",
-                        oldest_checkpoint_age,
-                        warn,
-                        crit,
-                    )
+                    Metric("checkpoint_age", oldest_checkpoint_age, levels=(warn, float("inf")))
+                )
+        else:
+            if (
+                oldest_checkpoint_age is not None
+            ):  # for mypy, this seems to have been the case always.
+                perfdata.append(
+                    Metric("checkpoint_age", oldest_checkpoint_age, levels=(warn, crit))
                 )
 
-                # check the checkpoint age on a non primary database!
-                if oldest_checkpoint_age >= crit:
-                    infotext += "(!!)"
-                    state = 2
-                elif oldest_checkpoint_age >= warn:
-                    infotext += "(!)"
-                    state = max(1, state)
+            # check the checkpoint age on a non primary database!
+            if oldest_checkpoint_age >= crit:
+                infotext += "(!!)"
+                state = State.CRIT
+            elif oldest_checkpoint_age >= warn:
+                infotext += "(!)"
+                state = State.worst(state, State.WARN)
 
-            infotext += f" (warn/crit at {render.timespan(warn)}/{render.timespan(crit)} )"
+        infotext += f" (warn/crit at {render.timespan(warn)}/{render.timespan(crit)} )"
 
-        if offlinecount > 0:
-            infotext += " %i datafiles offline(!!)" % (offlinecount)
-            state = 2
+    if offlinecount > 0:
+        infotext += " %i datafiles offline(!!)" % (offlinecount)
+        state = State.CRIT
 
-        if filemissingcount > 0:
-            infotext += " %i missing datafiles(!!)" % (filemissingcount)
-            state = 2
+    if filemissingcount > 0:
+        infotext += " %i missing datafiles(!!)" % (filemissingcount)
+        state = State.CRIT
 
-        if oldest_backup_age > 0:
-            infotext += " %i datafiles in backup mode oldest is %s" % (
-                backup_count,
-                render.timespan(oldest_backup_age),
-            )
+    if oldest_backup_age > 0:
+        infotext += " %i datafiles in backup mode oldest is %s" % (
+            backup_count,
+            render.timespan(oldest_backup_age),
+        )
 
-            if params.get("backup_age"):
-                warn, crit = params["backup_age"]
-                infotext += f" (warn/crit at {render.timespan(warn)}/{render.timespan(crit)})"
-                perfdata.append(("backup_age", oldest_backup_age, warn, crit))
+        if params.get("backup_age"):
+            warn, crit = params["backup_age"]
+            infotext += f" (warn/crit at {render.timespan(warn)}/{render.timespan(crit)})"
+            perfdata.append(Metric("backup_age", oldest_backup_age, levels=(warn, crit)))
 
-                if oldest_backup_age >= crit:
-                    infotext += "(!!)"
-                    state = 2
-                elif oldest_backup_age >= warn:
-                    infotext += "(!)"
-                    state = max(1, state)
-            else:
-                perfdata.append(("backup_age", oldest_backup_age))
+            if oldest_backup_age >= crit:
+                infotext += "(!!)"
+                state = State.CRIT
+            elif oldest_backup_age >= warn:
+                infotext += "(!)"
+                state = State.worst(state, State.WARN)
         else:
-            # create a 'dummy' performance data with 0
-            # => The age from plug-in is only valid when a datafile is in backup mode!
-            perfdata.append(("backup_age", 0))
+            perfdata.append(Metric("backup_age", oldest_backup_age))
+    else:
+        # create a 'dummy' performance data with 0
+        # => The age from plug-in is only valid when a datafile is in backup mode!
+        perfdata.append(Metric("backup_age", 0))
 
-        return state, infotext, perfdata
-
-    # In case of missing information we assume that the login into
-    # the database has failed and we simply skip this check. It won't
-    # switch to UNKNOWN, but will get stale.
-    raise IgnoreResultsError("Login into database failed")
+    yield Result(state=state, summary=infotext)
+    yield from perfdata
 
 
 def parse_oracle_recovery_status(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["oracle_recovery_status"] = LegacyCheckDefinition(
+agent_section_oracle_recovery_status = AgentSection(
     name="oracle_recovery_status",
     parse_function=parse_oracle_recovery_status,
+)
+
+
+check_plugin_oracle_recovery_status = CheckPlugin(
+    name="oracle_recovery_status",
     service_name="ORA %s Recovery Status",
     discovery_function=inventory_oracle_recovery_status,
     check_function=check_oracle_recovery_status,
+    check_default_parameters={},
     check_ruleset_name="oracle_recovery_status",
 )

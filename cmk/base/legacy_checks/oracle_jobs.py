@@ -31,32 +31,43 @@
 # QS1|DBADMIN|DATENEXPORT-FUR|COMPLETED|0|3|FALSE|22-AUG-14 01.11.00.000000 AM EUROPE/BERLIN|-|
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import IgnoreResultsError, render, StringTable
+from collections.abc import Mapping
+from typing import Any
 
-check_info = {}
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    IgnoreResultsError,
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 
-def inventory_oracle_jobs(info):
-    for line in info:
+def inventory_oracle_jobs(section: StringTable) -> DiscoveryResult:
+    for line in section:
         if len(line) <= 2:
             continue
         # old format < RDBMS 12.1
         if 3 <= len(line) <= 10:
-            yield f"{line[0]}.{line[1]}.{line[2]}", {}
+            yield Service(item=f"{line[0]}.{line[1]}.{line[2]}")
         else:
             # new format: sid.pdb_name.job_owner.job_name
-            yield f"{line[0]}.{line[1]}.{line[2]}.{line[3]}", {}
+            yield Service(item=f"{line[0]}.{line[1]}.{line[2]}.{line[3]}")
 
 
-def check_oracle_jobs(item, params, info):
+def check_oracle_jobs(item: str, params: Mapping[str, Any], section: StringTable) -> CheckResult:
     # only extract the sid from item.
     sid = item[0 : item.index(".", 0)]
 
     data_found = False
-    state = 0
 
-    for line in info:
+    for line in section:
         service_found = False
 
         if len(line) < 2:
@@ -165,19 +176,20 @@ def check_oracle_jobs(item, params, info):
     if not service_found:
         # 'missingjob' was once used in the default parameters, so we still need to keep this key
         # for old autochecks file to continue working.
-        return (
-            max(state, params.get("status_missing_jobs", params.get("missingjob", 2))),
-            "Job is missing",
+        yield Result(
+            state=State(params.get("status_missing_jobs", params.get("missingjob", 2))),
+            summary="Job is missing",
         )
+        return
 
-    state = 0
+    state = State.OK
     output = []
     perfdata = []
 
     txt = "Job-State: %s" % job_state
     if job_state == "BROKEN":
         txt += "(!!)"
-        state = max(state, 2)
+        state = State.CRIT
     output.append(txt)
 
     txt = "Enabled: %s" % (job_enabled == "TRUE" and "Yes" or "No")
@@ -186,7 +198,7 @@ def check_oracle_jobs(item, params, info):
             txt += " (ignored)"
         else:
             txt += "(!)"
-            state = max(state, 1)
+            state = State.worst(state, State.WARN)
     output.append(txt)
 
     if job_runtime in {"", "SCHEDULED"}:
@@ -203,18 +215,18 @@ def check_oracle_jobs(item, params, info):
 
         if last_duration >= crit:
             output.append("(!!)")
-            state = max(state, 2)
+            state = State.worst(state, State.CRIT)
         elif last_duration >= warn:
             output.append("(!)")
-            state = max(state, 1)
+            state = State.worst(state, State.WARN)
 
-    perfdata.append(("duration", last_duration))
+    perfdata.append(Metric("duration", last_duration))
 
     # 01.05.13 01:01:01,000000 +01:00
     if job_nextrun.startswith("01.01.70 00:00:00"):
         if job_schedule == "-" and job_state != "DISABLED":
             job_nextrun = "not scheduled(!)"
-            state = max(state, 1)
+            state = State.worst(state, State.WARN)
         else:
             job_nextrun = job_schedule
     output.append("Next Run: %s" % job_nextrun)
@@ -242,30 +254,35 @@ def check_oracle_jobs(item, params, info):
             txt += "(?)"
         output.append(txt)
 
-        state = max(state, missinglog)
+        state = State.worst(state, State(missinglog))
 
     else:
         txt = "Last Run Status: %s" % (job_last_state)
 
         if job_enabled == "TRUE" and job_last_state != "SUCCEEDED":
-            state = max(state, 2)
+            state = State.worst(state, State.CRIT)
         else:
             txt += " (ignored disabled Job)"
         output.append(txt)
 
     if job_state == "DISABLED" and "status_disabled_jobs" in params:
-        state = params["status_disabled_jobs"]
+        state = State(params["status_disabled_jobs"])
 
-    return (state, ", ".join(output), perfdata)
+    yield Result(state=state, summary=", ".join(output))
+    yield from perfdata
 
 
 def parse_oracle_jobs(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["oracle_jobs"] = LegacyCheckDefinition(
+agent_section_oracle_jobs = AgentSection(
     name="oracle_jobs",
     parse_function=parse_oracle_jobs,
+)
+
+check_plugin_oracle_jobs = CheckPlugin(
+    name="oracle_jobs",
     service_name="ORA %s Job",
     discovery_function=inventory_oracle_jobs,
     check_function=check_oracle_jobs,

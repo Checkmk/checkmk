@@ -9,23 +9,38 @@
 # TUX2 160 0 1081 300 0
 
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import IgnoreResultsError, render
+from collections.abc import Mapping, Sequence
+from typing import Any
 
-check_info = {}
+from cmk.agent_based.v2 import (
+    AgentSection,
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    IgnoreResultsError,
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
+
+type Section = Mapping[str, Sequence[int]]
 
 
-def parse_oracle_undostat(string_table):
+def parse_oracle_undostat(string_table: StringTable) -> Section:
     return {line[0]: [int(v) for v in line[1:]] for line in string_table if len(line) == 6}
 
 
-def discover_oracle_undostat(parsed):
-    for item in parsed:
-        yield item, {}
+def discover_oracle_undostat(section: Section) -> DiscoveryResult:
+    for item in section:
+        yield Service(item=item)
 
 
-def check_oracle_undostat(item, params, parsed):
-    data = parsed.get(item)
+def check_oracle_undostat(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    data = section.get(item)
     if data is None:
         # In case of missing information we assume that the login into
         # the database has failed and we simply skip this check. It won't
@@ -35,39 +50,36 @@ def check_oracle_undostat(item, params, parsed):
     activeblks, maxconcurrency, tuned_undoretention, maxquerylen, nospaceerrcnt = data
     warn, crit = params["levels"]
 
-    yield check_levels(
+    yield from check_levels(
         tuned_undoretention,
-        None,
-        params=None if tuned_undoretention == -1 else (None, None, warn, crit),
-        human_readable_func=str if tuned_undoretention == -1 else render.timespan,
-        infoname="Undo retention",
+        levels_lower=("no_levels", None) if tuned_undoretention == -1 else ("fixed", (warn, crit)),
+        render_func=str if tuned_undoretention == -1 else render.timespan,
+        label="Undo retention",
     )
 
     if tuned_undoretention >= 0:
-        yield 0, "Active undo blocks: %d" % activeblks
+        yield Result(state=State.OK, summary="Active undo blocks: %d" % activeblks)
 
-    yield 0, "Max concurrent transactions: %d" % maxconcurrency
-    yield 0, "Max querylen: %s" % render.timespan(maxquerylen)
-    state_errcnt = params["nospaceerrcnt_state"] if nospaceerrcnt else 0
-    yield state_errcnt, "Space errors: %d" % nospaceerrcnt
+    yield Result(state=State.OK, summary="Max concurrent transactions: %d" % maxconcurrency)
+    yield Result(state=State.OK, summary="Max querylen: %s" % render.timespan(maxquerylen))
+    state_errcnt = State(params["nospaceerrcnt_state"]) if nospaceerrcnt else State.OK
+    yield Result(state=state_errcnt, summary="Space errors: %d" % nospaceerrcnt)
 
-    yield (
-        0,
-        "",
-        [
-            ("activeblk", activeblks),
-            ("transconcurrent", maxconcurrency),
-            # lower levels are unorthodox here (at least), but we keep it for compatibility (for now)
-            ("tunedretention", tuned_undoretention, warn, crit),
-            ("querylen", maxquerylen),
-            ("nonspaceerrcount", nospaceerrcnt),
-        ],
-    )
+    yield Metric("activeblk", activeblks)
+    yield Metric("transconcurrent", maxconcurrency)
+    # lower levels are unorthodox here (at least), but we keep it for compatibility (for now)
+    yield Metric("tunedretention", tuned_undoretention, levels=(warn, crit))
+    yield Metric("querylen", maxquerylen)
+    yield Metric("nonspaceerrcount", nospaceerrcnt)
 
 
-check_info["oracle_undostat"] = LegacyCheckDefinition(
+agent_section_oracle_undostat = AgentSection(
     name="oracle_undostat",
     parse_function=parse_oracle_undostat,
+)
+
+check_plugin_oracle_undostat = CheckPlugin(
+    name="oracle_undostat",
     service_name="ORA %s Undo Retention",
     discovery_function=discover_oracle_undostat,
     check_function=check_oracle_undostat,

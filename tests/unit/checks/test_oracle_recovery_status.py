@@ -5,9 +5,12 @@
 
 import pytest
 
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
+from cmk.base.legacy_checks.oracle_recovery_status import (
+    check_oracle_recovery_status,
+    parse_oracle_recovery_status,
+)
 
-from cmk.agent_based.v2 import CheckResult, Result, State
+from cmk.agent_based.v2 import CheckResult, Metric, Result, State
 
 
 @pytest.mark.parametrize(
@@ -32,11 +35,191 @@ from cmk.agent_based.v2 import CheckResult, Result, State
     ],
 )
 def test_check_oracle_recovery_status(
-    agent_based_plugins: AgentBasedPlugins,
-    item: str,
-    info: list[list[str]],
-    expected_result: CheckResult,
+    item: str, info: list[list[str]], expected_result: CheckResult
 ) -> None:
-    check_plugin = agent_based_plugins.check_plugins[CheckPluginName("oracle_recovery_status")]
-    result = list(check_plugin.check_function(item=item, params={}, section=info))
-    assert result == expected_result
+    assert (
+        list(check_oracle_recovery_status(item, {}, parse_oracle_recovery_status(info)))
+        == expected_result
+    )
+
+
+def test_check_oracle_recovery_status_good() -> None:
+    section = parse_oracle_recovery_status(
+        [
+            [
+                "ORCL",
+                "orcl",
+                "PRIMARY",
+                "READ WRITE",
+                "1",
+                "1722989170",
+                "717",
+                "ONLINE",
+                "NO",
+                "YES",
+                "1966755",
+                "NOT ACTIVE",
+                "0",
+            ],
+            [
+                "ORCL",
+                "orcl",
+                "PRIMARY",
+                "READ WRITE",
+                "3",
+                "1722989170",
+                "717",
+                "ONLINE",
+                "NO",
+                "YES",
+                "1966755",
+                "NOT ACTIVE",
+                "0",
+            ],
+            [
+                "ORCL",
+                "orcl",
+                "PRIMARY",
+                "READ WRITE",
+                "4",
+                "1722989170",
+                "717",
+                "ONLINE",
+                "NO",
+                "YES",
+                "1966755",
+                "NOT ACTIVE",
+                "0",
+            ],
+            [
+                "ORCL",
+                "orcl",
+                "PRIMARY",
+                "READ WRITE",
+                "5",
+                "1722988478",
+                "1409",
+                "ONLINE",
+                "",
+                "NO",
+                "1959981",
+                "NOT ACTIVE",
+                "0",
+            ],
+            [
+                "ORCL",
+                "orcl",
+                "PRIMARY",
+                "READ WRITE",
+                "6",
+                "1722988478",
+                "1409",
+                "ONLINE",
+                "",
+                "NO",
+                "1959981",
+                "NOT ACTIVE",
+                "0",
+            ],
+            [
+                "ORCL",
+                "orcl",
+                "PRIMARY",
+                "READ WRITE",
+                "7",
+                "1722989170",
+                "717",
+                "ONLINE",
+                "NO",
+                "YES",
+                "1966755",
+                "NOT ACTIVE",
+                "0",
+            ],
+            [
+                "ORCL",
+                "orcl",
+                "PRIMARY",
+                "READ WRITE",
+                "8",
+                "1722988478",
+                "1409",
+                "ONLINE",
+                "",
+                "NO",
+                "1959981",
+                "NOT ACTIVE",
+                "0",
+            ],
+            [
+                "ORCL",
+                "orcl",
+                "PRIMARY",
+                "READ WRITE",
+                "9",
+                "1722989067",
+                "820",
+                "ONLINE",
+                "",
+                "NO",
+                "1966021",
+                "NOT VERIFIED",
+                "0",
+            ],
+            [
+                "ORCL",
+                "orcl",
+                "PRIMARY",
+                "READ WRITE",
+                "10",
+                "1722989067",
+                "820",
+                "ONLINE",
+                "",
+                "NO",
+                "1966021",
+                "NOT VERIFIED",
+                "0",
+            ],
+            [
+                "ORCL",
+                "orcl",
+                "PRIMARY",
+                "READ WRITE",
+                "11",
+                "1722989067",
+                "820",
+                "ONLINE",
+                "",
+                "NO",
+                "1966021",
+                "NOT VERIFIED",
+                "0",
+            ],
+            [
+                "ORCL",
+                "orcl",
+                "PRIMARY",
+                "READ WRITE",
+                "12",
+                "1722989067",
+                "820",
+                "ONLINE",
+                "",
+                "NO",
+                "1966021",
+                "NOT VERIFIED",
+                "0",
+            ],
+        ]
+    )
+    assert list(check_oracle_recovery_status("ORCL", {}, section)) == [
+        Result(
+            state=State.OK, summary="primary database, oldest Checkpoint 23 minutes 29 seconds ago"
+        ),
+        Metric(
+            "checkpoint_age",
+            1409,
+        ),
+        Metric("backup_age", 0.0),
+    ]

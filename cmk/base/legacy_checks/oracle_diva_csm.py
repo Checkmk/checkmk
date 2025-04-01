@@ -32,12 +32,24 @@
 #   '----------------------------------------------------------------------'
 
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import equals, SNMPTree, StringTable
-
-check_info = {}
+from cmk.agent_based.v2 import (
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    equals,
+    LevelsT,
+    Metric,
+    Result,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 
 
 def item_name_oracle_diva_csm(name, element_id):
@@ -81,17 +93,21 @@ def parse_oracle_diva_csm(string_table: Sequence[StringTable]) -> Sequence[Strin
     return string_table
 
 
-def discover_oracle_diva_csm(info):
-    return inventory_oracle_diva_csm_status("Library", 0, info)
+def discover_oracle_diva_csm(section: Sequence[StringTable]) -> DiscoveryResult:
+    yield from [
+        Service(item=item, parameters=parameters)
+        for (item, parameters) in inventory_oracle_diva_csm_status("Library", 0, section)
+    ]
 
 
-def check_oracle_diva_csm(item, params, info):
-    return check_oracle_diva_csm_status("Library", 0, item, params, info)
+def check_oracle_diva_csm(
+    item: str, params: Mapping[str, Any], section: Sequence[StringTable]
+) -> CheckResult:
+    yield from check_oracle_diva_csm_status("Library", 0, item, params, section)
 
 
-check_info["oracle_diva_csm"] = LegacyCheckDefinition(
+snmp_section_oracle_diva_csm = SNMPSection(
     name="oracle_diva_csm",
-    parse_function=parse_oracle_diva_csm,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.311.1.1.3.1.2"),
     fetch=[
         SNMPTree(
@@ -119,60 +135,85 @@ check_info["oracle_diva_csm"] = LegacyCheckDefinition(
             oids=["3"],
         ),
     ],
-    service_name="DIVA Status %s",
-    discovery_function=discover_oracle_diva_csm,
-    check_function=check_oracle_diva_csm,
+    parse_function=parse_oracle_diva_csm,
 )
 
 
-def discover_oracle_diva_csm_drive(info):
-    return inventory_oracle_diva_csm_status("Drive", 1, info)
+check_plugin_oracle_diva_csm = CheckPlugin(
+    name="oracle_diva_csm",
+    service_name="DIVA Status %s",
+    discovery_function=discover_oracle_diva_csm,
+    check_function=check_oracle_diva_csm,
+    check_default_parameters={},
+)
 
 
-def check_oracle_diva_csm_drive(item, params, info):
-    return check_oracle_diva_csm_status("Drive", 1, item, params, info)
+def discover_oracle_diva_csm_drive(section: Sequence[StringTable]) -> DiscoveryResult:
+    yield from [
+        Service(item=item, parameters=parameters)
+        for (item, parameters) in inventory_oracle_diva_csm_status("Drive", 1, section)
+    ]
 
 
-check_info["oracle_diva_csm.drive"] = LegacyCheckDefinition(
+def check_oracle_diva_csm_drive(
+    item: str, params: Mapping[str, Any], section: Sequence[StringTable]
+) -> CheckResult:
+    yield from check_oracle_diva_csm_status("Drive", 1, item, params, section)
+
+
+check_plugin_oracle_diva_csm_drive = CheckPlugin(
     name="oracle_diva_csm_drive",
     service_name="DIVA Status %s",
     sections=["oracle_diva_csm"],
     discovery_function=discover_oracle_diva_csm_drive,
     check_function=check_oracle_diva_csm_drive,
+    check_default_parameters={},
 )
 
 
-def discover_oracle_diva_csm_actor(info):
-    return inventory_oracle_diva_csm_status("Actor", 2, info)
+def discover_oracle_diva_csm_actor(section: Sequence[StringTable]) -> DiscoveryResult:
+    yield from [
+        Service(item=item, parameters=parameters)
+        for (item, parameters) in inventory_oracle_diva_csm_status("Actor", 2, section)
+    ]
 
 
-def check_oracle_diva_csm_actor(item, params, info):
-    return check_oracle_diva_csm_status("Actor", 2, item, params, info)
+def check_oracle_diva_csm_actor(
+    item: str, params: Mapping[str, Any], section: Sequence[StringTable]
+) -> CheckResult:
+    yield from check_oracle_diva_csm_status("Actor", 2, item, params, section)
 
 
-check_info["oracle_diva_csm.actor"] = LegacyCheckDefinition(
+check_plugin_oracle_diva_csm_actor = CheckPlugin(
     name="oracle_diva_csm_actor",
     service_name="DIVA Status %s",
     sections=["oracle_diva_csm"],
     discovery_function=discover_oracle_diva_csm_actor,
     check_function=check_oracle_diva_csm_actor,
+    check_default_parameters={},
 )
 
 
-def discover_oracle_diva_csm_archive(info):
-    return inventory_oracle_diva_csm_status("Manager", 3, info)
+def discover_oracle_diva_csm_archive(section: Sequence[StringTable]) -> DiscoveryResult:
+    yield from [
+        Service(item=item, parameters=parameters)
+        for (item, parameters) in inventory_oracle_diva_csm_status("Manager", 3, section)
+    ]
 
 
-def check_oracle_diva_csm_archive(item, params, info):
-    return check_oracle_diva_csm_status("Manager", 3, item, params, info)
+def check_oracle_diva_csm_archive(
+    item: str, params: Mapping[str, Any], section: Sequence[StringTable]
+) -> CheckResult:
+    yield from check_oracle_diva_csm_status("Manager", 3, item, params, section)
 
 
-check_info["oracle_diva_csm.archive"] = LegacyCheckDefinition(
+check_plugin_oracle_diva_csm_archive = CheckPlugin(
     name="oracle_diva_csm_archive",
     service_name="DIVA Status %s",
     sections=["oracle_diva_csm"],
     discovery_function=discover_oracle_diva_csm_archive,
     check_function=check_oracle_diva_csm_archive,
+    check_default_parameters={},
 )
 
 # .
@@ -192,37 +233,33 @@ check_info["oracle_diva_csm.archive"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_oracle_diva_csm_objects(info):
-    if len(info) > 4 and len(info[4]) > 0:
-        yield None, None
+def inventory_oracle_diva_csm_objects(section: Sequence[StringTable]) -> DiscoveryResult:
+    if len(section) > 4 and len(section[4]) > 0:
+        yield Service()
 
 
-def check_oracle_diva_csm_objects(item, params, info):
+def check_oracle_diva_csm_objects(section: Sequence[StringTable]) -> CheckResult:
     GB = 1024 * 1024 * 1024
-    if len(info) > 4 and len(info[4]) > 0:
-        object_count, remaining_size, total_size = map(int, info[4][0])
+    if len(section) > 4 and len(section[4]) > 0:
+        object_count, remaining_size, total_size = map(int, section[4][0])
 
         infotext = f"managed objects: {object_count}, remaining size: {remaining_size} GB of {total_size} GB"
 
-        return (
-            0,
-            infotext,
-            [
-                ("managed_object_count", object_count),
-                (
-                    "storage_used",
-                    (total_size - remaining_size) * GB,
-                    None,
-                    None,
-                    0,
-                    total_size * GB,
-                ),
-            ],
+        yield Result(state=State.OK, summary=infotext)
+        yield Metric("managed_object_count", object_count)
+        yield Metric(
+            "storage_used",
+            (total_size - remaining_size) * GB,
+            boundaries=(
+                0,
+                total_size * GB,
+            ),
         )
+        return
     return None
 
 
-check_info["oracle_diva_csm.objects"] = LegacyCheckDefinition(
+check_plugin_oracle_diva_csm_objects = CheckPlugin(
     name="oracle_diva_csm_objects",
     service_name="DIVA Managed Objects",
     sections=["oracle_diva_csm"],
@@ -241,27 +278,35 @@ check_info["oracle_diva_csm.objects"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_oracle_diva_csm_tapes(info):
-    if len(info) > 5 and len(info[5]) > 0 and len(info[5][0]) > 0:
-        yield None, {}
+def inventory_oracle_diva_csm_tapes(section: Sequence[StringTable]) -> DiscoveryResult:
+    if len(section) > 5 and len(section[5]) > 0 and len(section[5][0]) > 0:
+        yield Service()
 
 
-def check_oracle_diva_csm_tapes(item, params, info):
+def check_oracle_diva_csm_tapes(
+    params: Mapping[str, Any], section: Sequence[StringTable]
+) -> CheckResult:
     try:
-        blank_tapes = int(info[5][0][0])
+        blank_tapes = int(section[5][0][0])
     except IndexError:
         return
 
-    yield check_levels(
+    match params["levels_lower"]:
+        case None:
+            levels_lower: LevelsT = ("no_levels", None)
+        case (warn, crit):
+            levels_lower = ("fixed", (warn, crit))
+
+    yield from check_levels(
         blank_tapes,
-        "tapes_free",
-        (None, None) + (params["levels_lower"] or (None, None)),
-        human_readable_func=str,
-        infoname="Blank tapes",
+        levels_lower=levels_lower,
+        metric_name="tapes_free",
+        render_func=str,
+        label="Blank tapes",
     )
 
 
-check_info["oracle_diva_csm.tapes"] = LegacyCheckDefinition(
+check_plugin_oracle_diva_csm_tapes = CheckPlugin(
     name="oracle_diva_csm_tapes",
     service_name="DIVA Blank Tapes",
     sections=["oracle_diva_csm"],

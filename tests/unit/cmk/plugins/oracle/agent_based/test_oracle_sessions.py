@@ -3,14 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# fmt: off
-# mypy: disable-error-code=var-annotated
+
+from cmk.base.legacy_checks.oracle_sessions import inventory_oracle_sessions, parse_oracle_sessions
 
 
-checkname = "oracle_sessions"
-
-
-info = [["foo", "FAILURE"], ["bar", "FAILURE"]]
-
-
-discovery = {"": []}
+def test_inventory_oracle_sessions_fail():
+    assert not list(
+        inventory_oracle_sessions(parse_oracle_sessions([["foo", "FAILURE"], ["bar", "FAILURE"]]))
+    )

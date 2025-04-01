@@ -10,18 +10,32 @@
 # ORACLE_SID used_pct size used reclaimable
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import IgnoreResultsError, render, StringTable
+from collections.abc import Mapping
+from typing import Any
 
-check_info = {}
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    IgnoreResultsError,
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 
-def inventory_oracle_recovery_area(info):
-    return [(line[0], {}) for line in info]
+def inventory_oracle_recovery_area(section: StringTable) -> DiscoveryResult:
+    yield from (Service(item=line[0]) for line in section)
 
 
-def check_oracle_recovery_area(item, params, info):
-    for line in info:
+def check_oracle_recovery_area(
+    item: str, params: Mapping[str, Any], section: StringTable
+) -> CheckResult:
+    for line in section:
         if len(line) < 5:
             continue
         if line[0] == item:
@@ -36,16 +50,16 @@ def check_oracle_recovery_area(item, params, info):
             crit_mb = size_mb * crit / 100
 
             if perc_used >= crit:
-                state = 2
+                state = State.CRIT
             elif perc_used >= warn:
-                state = 1
+                state = State.WARN
             else:
-                state = 0
+                state = State.OK
 
             mb = 1024 * 1024
-            return (
-                state,
-                "%s out of %s used (%.1f%%, warn/crit at %s%%/%s%%), %s reclaimable"
+            yield Result(
+                state=state,
+                summary="%s out of %s used (%.1f%%, warn/crit at %s%%/%s%%), %s reclaimable"
                 % (
                     render.bytes(used_mb * mb),
                     render.bytes(size_mb * mb),
@@ -54,8 +68,10 @@ def check_oracle_recovery_area(item, params, info):
                     crit,
                     render.bytes(reclaimable_mb * mb),
                 ),
-                [("used", used_mb, warn_mb, crit_mb, 0, size_mb), ("reclaimable", reclaimable_mb)],
             )
+            yield Metric("used", used_mb, levels=(warn_mb, crit_mb), boundaries=(0, size_mb))
+            yield Metric("reclaimable", reclaimable_mb)
+            return
 
     # In case of missing information we assume that the login into
     # the database has failed and we simply skip this check. It won't
@@ -67,9 +83,14 @@ def parse_oracle_recovery_area(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["oracle_recovery_area"] = LegacyCheckDefinition(
+agent_section_oracle_recovery_area = AgentSection(
     name="oracle_recovery_area",
     parse_function=parse_oracle_recovery_area,
+)
+
+
+check_plugin_oracle_recovery_area = CheckPlugin(
+    name="oracle_recovery_area",
     service_name="ORA %s Recovery Area",
     discovery_function=inventory_oracle_recovery_area,
     check_function=check_oracle_recovery_area,

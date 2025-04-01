@@ -11,10 +11,21 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import IgnoreResultsError
+from collections.abc import Mapping
+from typing import Any
 
-check_info = {}
+from cmk.agent_based.v2 import (
+    AgentSection,
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    IgnoreResultsError,
+    render,
+    Result,
+    Service,
+    State,
+)
 
 
 def parse_oracle_sessions(string_table):
@@ -29,61 +40,56 @@ def parse_oracle_sessions(string_table):
     return parsed
 
 
-def inventory_oracle_sessions(parsed):
-    for sid in parsed:
-        yield sid, {}
+def inventory_oracle_sessions(section: Any) -> DiscoveryResult:
+    for sid in section:
+        yield Service(item=sid)
 
 
-def check_oracle_sessions(item, params, parsed):
+def check_oracle_sessions(item: str, params: Mapping[str, Any], section: Any) -> CheckResult:
     if isinstance(params, tuple):
         params = {"sessions_abs": params}
 
-    if item in parsed and "cursess" in parsed[item]:
-        data = parsed[item]
-        sessions = data["cursess"]
-        sessions_max = data.get("maxsess")
+    if (data := section.get(item)) is None or "cursess" not in data:
+        # In case of missing information we assume that the login into
+        # the database has failed and we simply skip this check. It won't
+        # switch to UNKNOWN, but will get stale.
+        raise IgnoreResultsError("Login into database failed")
 
-        if sessions_max is not None:
-            state = 0
-            infotext = "%d of %d sessions" % (sessions, sessions_max)
-            sessions_perc = 100.0 * sessions / sessions_max
-            infotext_perc = "%.2f%%" % sessions_perc
-            if "sessions_perc" in params:
-                warn_perc, crit_perc = params["sessions_perc"]
-                if sessions_perc >= crit_perc:
-                    state = 2
-                elif sessions_perc >= warn_perc:
-                    state = 1
-                if state:
-                    infotext_perc += f" (warn/crit at {warn_perc:.1f}%/{crit_perc:.1f}%)"
-            yield state, infotext_perc
+    sessions = data["cursess"]
+    sessions_max = data.get("maxsess")
 
-        else:
-            infotext = "%d sessions" % sessions
+    yield from check_levels(
+        sessions,
+        metric_name="sessions",
+        levels_upper=("fixed", levels)
+        if (levels := params["sessions_abs"]) is not None
+        else ("no_levels", None),
+        render_func=str,
+        label="Sessions",
+        boundaries=(0, sessions_max),
+    )
 
-        state = 0
-        warn, crit = None, None
-        if "sessions_abs" in params and params["sessions_abs"] is not None:
-            warn, crit = params["sessions_abs"]
-            if sessions >= crit:
-                state = 2
-            elif sessions >= warn:
-                state = 1
-            if state:
-                infotext += " (warn/crit at %d/%d)" % (warn, crit)
-        yield state, infotext, [("sessions", sessions, warn, crit, 0, sessions_max)]
-
-        return
-
-    # In case of missing information we assume that the login into
-    # the database has failed and we simply skip this check. It won't
-    # switch to UNKNOWN, but will get stale.
-    raise IgnoreResultsError("Login into database failed")
+    if sessions_max is not None:
+        sessions_perc = 100.0 * sessions / sessions_max
+        yield from check_levels(
+            sessions_perc,
+            levels_upper=("fixed", params["sessions_perc"])
+            if "sessions_perc" in params
+            else ("no_levels", None),
+            render_func=render.percent,
+            label=f"Sessions ({sessions} of {sessions_max})",
+        )
+        yield Result(state=State.OK, summary=f"Maximum: {sessions_max}")
 
 
-check_info["oracle_sessions"] = LegacyCheckDefinition(
+agent_section_oracle_sessions = AgentSection(
     name="oracle_sessions",
     parse_function=parse_oracle_sessions,
+)
+
+
+check_plugin_oracle_sessions = CheckPlugin(
+    name="oracle_sessions",
     service_name="ORA %s Sessions",
     discovery_function=inventory_oracle_sessions,
     check_function=check_oracle_sessions,

@@ -340,7 +340,7 @@ def test_update(client: docker.DockerClient) -> None:
     # 1. create container with old version and add a file to mark the pre-update state
     container_volumes = [f"{container_name}:/omd/sites"]
     with CheckmkApp(
-        client, version=base_version, name=container_name, volumes=["/omd/sites"]
+        client, version=base_version, name=container_name, volumes=container_volumes
     ) as cmk_orig:
         assert (
             cmk_orig.container.exec_run(

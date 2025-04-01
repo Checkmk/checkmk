@@ -2800,12 +2800,11 @@ def get_file_names_to_sync(
     # New files
     central_files = set(sync_state.central_file_infos.keys())
     remote_files_set = set(sync_state.remote_file_infos.keys())
-    remote_files = _filter_remote_files(remote_files_set) if ldap_sync_enabled else remote_files_set
-    to_sync_new = list(central_files - remote_files)
+    to_sync_new = list(central_files - remote_files_set)
 
     # Add differing files
     to_sync_changed = []
-    for existing in central_files.intersection(remote_files):
+    for existing in central_files.intersection(remote_files_set):
         if sync_state.central_file_infos[existing] != sync_state.remote_file_infos[existing]:
             site_logger.debug(
                 "Sync needed %s: %r <> %r",
@@ -2816,7 +2815,10 @@ def get_file_names_to_sync(
             to_sync_changed.append(existing)
 
     # Files to be deleted
-    to_delete = list(remote_files - central_files)
+    to_delete = list(
+        (_filter_remote_files(remote_files_set) if ldap_sync_enabled else remote_files_set)
+        - central_files
+    )
 
     if file_filter_func is not None:
         to_sync_new = list(filterfalse(file_filter_func, to_sync_new))

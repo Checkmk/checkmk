@@ -1,5 +1,5 @@
 {
-  "checksum": "c23f646b66acded8648e86ba0c89c1a2667027a59224b2f57fe5cd18d41d6891",
+  "checksum": "0272c622d90191594e4afaac3aa5ff08be55a4a090fccc71a960e9aa2a259499",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -4101,6 +4101,10 @@
             {
               "id": "gethostname 0.5.0",
               "target": "gethostname"
+            },
+            {
+              "id": "hostname-validator 1.1.1",
+              "target": "hostname_validator"
             },
             {
               "id": "http 1.2.0",
@@ -8412,6 +8416,44 @@
         "MIT"
       ],
       "license_file": "LICENSE-APACHE"
+    },
+    "hostname-validator 1.1.1": {
+      "name": "hostname-validator",
+      "version": "1.1.1",
+      "package_url": "https://github.com/pop-os/hostname-validator",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/hostname-validator/1.1.1/download",
+          "sha256": "f558a64ac9af88b5ba400d99b579451af0d39c6d360980045b91aac966d705e2"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "hostname_validator",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "hostname_validator",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "edition": "2015",
+        "version": "1.1.1"
+      },
+      "license": "MIT",
+      "license_ids": [
+        "MIT"
+      ],
+      "license_file": "LICENSE"
     },
     "http 1.2.0": {
       "name": "http",
@@ -30945,6 +30987,7 @@
     "flexi_logger 0.29.8",
     "futures 0.3.31",
     "gethostname 0.5.0",
+    "hostname-validator 1.1.1",
     "http 1.2.0",
     "ipnet 2.11.0",
     "is_elevated 0.1.2",

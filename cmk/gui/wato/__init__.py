@@ -82,8 +82,6 @@ from cmk.gui.watolib.notification_parameter import (
     NotificationParameterRegistry as NotificationParameterRegistry,
 )
 from cmk.gui.watolib.notification_parameter import register_notification_parameters
-from cmk.gui.watolib.rulespecs import register_check_parameters as register_check_parameters
-from cmk.gui.watolib.rulespecs import register_rule as register_rule
 from cmk.gui.watolib.sites import LivestatusViaTCP
 from cmk.gui.watolib.translation import HostnameTranslation
 

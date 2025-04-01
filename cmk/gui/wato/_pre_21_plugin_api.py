@@ -58,7 +58,6 @@ from cmk.gui.watolib.notification_parameter import (
     NotificationParameter,
     register_notification_parameters,
 )
-from cmk.gui.watolib.rulespecs import register_check_parameters, register_rule
 
 from ._check_mk_configuration import monitoring_macro_help, PluginCommandLine, UserIconOrAction
 from ._group_selection import ContactGroupSelection, HostGroupSelection, ServiceGroupSelection
@@ -115,7 +114,6 @@ def register() -> None:
         ("register_notification_parameters", register_notification_parameters),
         ("NotificationParameter", NotificationParameter),
         ("notification_parameter_registry", notification_parameter_registry),
-        ("register_check_parameters", register_check_parameters),
         ("MainModuleTopicAgents", MainModuleTopicAgents),
         ("MainModuleTopicEvents", MainModuleTopicEvents),
         ("MainModuleTopicExporter", MainModuleTopicExporter),
@@ -130,7 +128,6 @@ def register() -> None:
         ("IndividualOrStoredPassword", IndividualOrStoredPassword),
         ("PasswordFromStore", PasswordFromStore),
         ("MigrateToIndividualOrStoredPassword", MigrateToIndividualOrStoredPassword),
-        ("register_rule", register_rule),
         ("register_hook", register_hook),
         ("UserIconOrAction", UserIconOrAction),
         ("PluginCommandLine", PluginCommandLine),

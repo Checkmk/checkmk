@@ -178,6 +178,8 @@ write_file(
             'relative_packages_path_non_free = "../../../../non-free/packages"',
             "for p in os.listdir(os.path.join(dirname, relative_packages_path_non_free)):",
             "    sys.path.append(os.path.abspath(os.path.join(dirname, relative_packages_path_non_free, p)))",
+            # needed for composition tests: they want to 'import cmk_update_agent' via the .venv
+            "sys.path.append(os.path.abspath(os.path.join(dirname, '../../../../non-free/cmk-update-agent')))",
         ],
     }),
 )

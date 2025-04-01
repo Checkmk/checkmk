@@ -354,6 +354,34 @@ class SecurityNotificationEvent(Enum):
     )
 
 
+def user_friendly_gui_message(event: SecurityNotificationEvent) -> str:
+    advice_message = _(
+        " If this action was not triggered by you, contact your administrator for further investigation."
+    )
+    match event:
+        case SecurityNotificationEvent.password_change:
+            message = _("Your Checkmk Password has been changed.")
+        case SecurityNotificationEvent.webauthn_added:
+            message = _("A Two-factor security token has been added to your Checkmk account.")
+        case SecurityNotificationEvent.webauthn_removed:
+            message = _("A Two-factor security token has been removed from your Checkmk account.")
+        case SecurityNotificationEvent.totp_added:
+            message = _("A Two-factor Authenticator app has been added to your Checkmk account.")
+        case SecurityNotificationEvent.totp_removed:
+            message = _(
+                "A Two-factor Authenticator app has been removed from your Checkmk account."
+            )
+        case SecurityNotificationEvent.backup_used:
+            message = _("Your account has been accessed using a backup code.")
+        case SecurityNotificationEvent.backup_reset:
+            message = _("The backup codes associated with your account have been reset.")
+        case SecurityNotificationEvent.backup_revoked:
+            message = _("All backup codes associated with this account have been revoked.")
+        case _:
+            raise AssertionError(_("Unknown security event"))
+    return message + advice_message
+
+
 def send_security_message(user_id: UserId | None, event: SecurityNotificationEvent) -> None:
     users = userdb.load_users(lock=False)
     if user_id is None:
@@ -414,7 +442,7 @@ def _send_gui(user_id: UserId, event: SecurityNotificationEvent, event_time: dat
     message_gui(
         user_id,
         Message(
-            text=MessageText(content_type="text", content=str(event.value[0])),
+            text=MessageText(content_type="text", content=user_friendly_gui_message(event)),
             dest=("list", [user_id]),
             methods=["gui_hint"],
             valid_till=timestamp + duration,  # 1 week

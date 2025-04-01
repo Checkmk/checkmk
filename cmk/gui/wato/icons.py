@@ -13,9 +13,9 @@ from cmk.gui.display_options import display_options
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import Row
+from cmk.gui.type_defs import HTTPVariables, Row
 from cmk.gui.utils.mobile import is_mobile
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.views.icon import Icon
 
 
@@ -59,16 +59,19 @@ def _wato_link(
         return None
 
     if display_options.enabled(display_options.X):
-        url = f"wato.py?folder={urlencode(folder)}&host={urlencode(hostname)}"
+        vars: HTTPVariables = [
+            ("folder", folder),
+            ("host", hostname),
+        ]
         if where == "inventory":
-            url += "&mode=inventory"
+            vars.append(("mode", "inventory"))
             help_txt = _("Run service discovery")
             icon = "services"
         else:
-            url += "&mode=edit_host"
+            vars.append(("mode", "edit_host"))
             help_txt = _("Edit this host")
             icon = "wato"
-        return icon, help_txt, url
+        return icon, help_txt, makeuri_contextless(request, vars, filename="wato.py")
 
     return None
 

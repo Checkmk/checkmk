@@ -15,7 +15,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Icon as IconSpec
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.urls import makeuri_contextless, urlencode
+from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.views.icon import Icon, IconRegistry
 
 from ._compiler import is_part_of_aggregation
@@ -88,9 +88,19 @@ def _render_aggregation_icon(
         aggr_name = aggr_name.replace("$HOSTADDRESS$", row["host_address"])
         aggr_name = aggr_name.replace("$HOSTNAME$", row["host_name"])
 
-        url = f"{base_url}/check_mk/view.py?view_name=aggr_single&aggr_name={urlencode(aggr_name)}"
+        return (
+            "aggr",
+            _("Open this Aggregation"),
+            makeuri_contextless(
+                request,
+                [
+                    ("view_name", "aggr_single"),
+                    ("aggr_name", aggr_name),
+                ],
+                filename="view.py",
+            ),
+        )
 
-        return "aggr", _("Open this Aggregation"), url
     return None
 
 

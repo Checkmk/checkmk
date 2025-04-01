@@ -11,11 +11,11 @@ from typing import Literal
 from cmk.utils.tags import TagID
 
 from cmk.gui.config import active_config
+from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
-from cmk.gui.site_config import get_site_config
 from cmk.gui.sites import get_alias_of_host
 from cmk.gui.type_defs import Row
-from cmk.gui.utils.urls import urlencode_vars
+from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.views.icon import Icon
 
 
@@ -67,15 +67,6 @@ def _render_mkeventd_icon(
     if not host:
         return None
 
-    # It is possible to have a central event console, this is the default case.
-    # Another possible architecture is to have an event console in each site in
-    # a distributed environment. For the later case the base url need to be
-    # constructed here
-    url_prefix = ""
-    if getattr(active_config, "mkeventd_distributed", False):
-        site = get_site_config(active_config, row["site"])
-        url_prefix = site["url_prefix"] + "check_mk/"
-
     url_vars = [
         ("view_name", "ec_events_of_monhost"),
         ("site", row["site"]),
@@ -89,9 +80,7 @@ def _render_mkeventd_icon(
         title = _('Events of Application "%s" on Host %s') % (app, host)
         url_vars.append(("event_application", app))
 
-    url = "view.py?" + urlencode_vars(url_vars)
-
-    return "mkeventd", title, url_prefix + url
+    return "mkeventd", title, makeuri_contextless(request, url_vars, filename="view.py")
 
 
 MkeventdIcon = Icon(

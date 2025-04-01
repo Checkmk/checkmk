@@ -24,6 +24,7 @@ faccess.workspace = true
 flate2.workspace = true
 flexi_logger.workspace = true
 gethostname.workspace = true
+hostname-validator.workspace = true
 http.workspace = true
 ipnet.workspace = true
 log.workspace = true

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable
 from typing import Literal
 
 from pydantic import BaseModel
@@ -11,11 +11,13 @@ from pydantic import BaseModel
 from cmk.server_side_calls.v1 import HostConfig, SpecialAgentCommand, SpecialAgentConfig
 from cmk.server_side_calls.v1._utils import Secret
 
+from ..lib import InfoSelection, QueryType
+
 
 class Params(BaseModel):
     user: str
     secret: Secret
-    direct: str
+    direct: tuple[QueryType, list[InfoSelection]]
     tcp_port: int | None = None
     ssl: (
         tuple[Literal["deactivated"], None]
@@ -23,13 +25,16 @@ class Params(BaseModel):
         | tuple[Literal["custom_hostname"], str]
     )
     timeout: int | None = None
-    infos: Sequence[str]
     skip_placeholder_vms: bool
     host_pwr_display: str | None = None
     vm_pwr_display: str | None = None
     snapshots_on_host: bool
     vm_piggyname: str | None = None
     spaces: str
+
+    @property
+    def infos(self) -> list[InfoSelection]:
+        return self.direct[1]
 
 
 def commands_function(  # pylint: disable=too-many-branches
@@ -43,9 +48,7 @@ def commands_function(  # pylint: disable=too-many-branches
     command_arguments += [params.secret.unsafe("-s=%s")]
     command_arguments += ["-i", ",".join(params.infos)]
 
-    #  host_system: Queried host is a host system
-    #  vcenter: Queried host is the vCenter
-    if params.direct == "host_system":
+    if params.direct[0] == QueryType.HOST_SYSTEM:
         command_arguments += ["--direct", "--hostname", host_config.name]
 
     if params.skip_placeholder_vms:

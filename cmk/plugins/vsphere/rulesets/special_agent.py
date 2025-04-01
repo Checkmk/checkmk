@@ -2,9 +2,9 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import cast, Literal
 
-from typing import Literal
-
+from cmk.plugins.vsphere.lib import InfoSelection, QueryType
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
@@ -34,6 +34,7 @@ def parameter_form() -> Dictionary:
             "This rule allows monitoring of VMware ESX via the vSphere API. "
             "You can configure your connection settings here.",
         ),
+        migrate=_migrate_direct_infos,
         elements={
             "user": DictElement(
                 required=True,
@@ -52,19 +53,28 @@ def parameter_form() -> Dictionary:
             ),
             "direct": DictElement(
                 required=True,
-                parameter_form=SingleChoice(
-                    migrate=_migrate_direct,
+                parameter_form=CascadingSingleChoice(
                     title=Title("Type of query"),
                     elements=[
-                        SingleChoiceElement(
-                            name="host_system",
-                            title=Title("Queried host is a host system"),
+                        CascadingSingleChoiceElement(
+                            name=QueryType.HOST_SYSTEM,
+                            title=Title("Queried host is a ESXi host (vCenter integrated)"),
+                            parameter_form=_info_form_for_host(QueryType.HOST_SYSTEM),
                         ),
-                        SingleChoiceElement(
-                            name="vcenter",
-                            title=Title("Queried host is the vCenter"),
+                        CascadingSingleChoiceElement(
+                            name=QueryType.VCENTER,
+                            title=Title("Queried host is a vCenter"),
+                            parameter_form=_info_form_for_host(QueryType.VCENTER),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name=QueryType.STANDALONE,
+                            title=Title(
+                                "Queried host is a ESXi host (Standalone / not vCenter integrated)"
+                            ),
+                            parameter_form=_info_form_for_host(QueryType.STANDALONE),
                         ),
                     ],
+                    prefill=DefaultValue(QueryType.VCENTER),
                 ),
             ),
             "tcp_port": DictElement(
@@ -118,22 +128,6 @@ def parameter_form() -> Dictionary:
                     prefill=DefaultValue(60),
                     custom_validate=(validators.NumberInRange(min_value=1),),
                     unit_symbol="seconds",
-                ),
-            ),
-            "infos": DictElement(
-                required=True,
-                parameter_form=MultipleChoice(
-                    title=Title("Retrieve information about..."),
-                    elements=[
-                        MultipleChoiceElement(name="hostsystem", title=Title("Host Systems")),
-                        MultipleChoiceElement(
-                            name="virtualmachine", title=Title("Virtual Machines")
-                        ),
-                        MultipleChoiceElement(name="datastore", title=Title("Datastores")),
-                        MultipleChoiceElement(name="counters", title=Title("Performance counters")),
-                        MultipleChoiceElement(name="licenses", title=Title("License Usage")),
-                    ],
-                    prefill=DefaultValue(["hostsystem", "virtualmachine", "datastore", "counters"]),
                 ),
             ),
             "skip_placeholder_vms": DictElement(
@@ -230,10 +224,48 @@ def parameter_form() -> Dictionary:
     )
 
 
-def _migrate_direct(value: object) -> str:
-    if value is True:
-        return "host_system"
-    return "vcenter"
+def _default_infos_for_host(query_type: QueryType) -> list[InfoSelection]:
+    match query_type:
+        case QueryType.HOST_SYSTEM:
+            return ["hostsystem", "counters"]
+        case _:
+            return ["hostsystem", "virtualmachine", "datastore", "counters"]
+
+
+def _info_form_for_host(query_type: QueryType) -> MultipleChoice:
+    default = _default_infos_for_host(query_type)
+    return MultipleChoice(
+        title=Title("Retrieve information about..."),
+        elements=[
+            MultipleChoiceElement(name="hostsystem", title=Title("Host Systems")),
+            MultipleChoiceElement(name="virtualmachine", title=Title("Virtual Machines")),
+            MultipleChoiceElement(name="datastore", title=Title("Datastores")),
+            MultipleChoiceElement(name="counters", title=Title("Performance counters")),
+            MultipleChoiceElement(name="licenses", title=Title("License Usage")),
+        ],
+        prefill=DefaultValue(default),
+    )
+
+
+def _migrate_direct_infos(x: object) -> dict[str, object]:
+    x = cast(dict[str, object], x)
+    infos = x.pop("infos", [])
+    query_type = x["direct"]
+
+    match query_type:
+        case QueryType():
+            x["direct"] = (query_type, infos)
+        case str():
+            x["direct"] = (QueryType(query_type), infos)
+        case True:
+            x["direct"] = (
+                QueryType.HOST_SYSTEM,
+                infos or _default_infos_for_host(QueryType.HOST_SYSTEM),
+            )
+        case False:
+            x["direct"] = (QueryType.VCENTER, infos or _default_infos_for_host(QueryType.VCENTER))
+
+    return x
 
 
 def _migrate_ssl(

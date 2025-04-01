@@ -8,6 +8,7 @@ from collections.abc import Mapping
 
 import pytest
 
+from cmk.plugins.vsphere.lib import QueryType
 from cmk.plugins.vsphere.server_side_calls.special_agent import special_agent_vsphere
 from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgentCommand
 
@@ -18,14 +19,16 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
         pytest.param(
             {
                 "tcp_port": 443,
-                "direct": "host_system",
+                "direct": (
+                    QueryType.HOST_SYSTEM,
+                    ["hostsystem", "virtualmachine", "datastore", "counters"],
+                ),
                 "skip_placeholder_vms": True,
                 "ssl": ("deactivated", None),
                 "secret": Secret(23),
                 "spaces": "cut",
                 "user": "username",
                 "snapshots_on_host": False,
-                "infos": ["hostsystem", "virtualmachine", "datastore", "counters"],
             },
             HostConfig(
                 name="host",
@@ -57,7 +60,10 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
                 "tcp_port": 443,
                 "host_pwr_display": None,
                 "vm_pwr_display": None,
-                "direct": "host_system",
+                "direct": (
+                    QueryType.HOST_SYSTEM,
+                    ["hostsystem", "virtualmachine", "datastore", "counters"],
+                ),
                 "vm_piggyname": "alias",
                 "skip_placeholder_vms": True,
                 "ssl": ("hostname", None),
@@ -65,7 +71,6 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
                 "spaces": "cut",
                 "user": "username",
                 "snapshots_on_host": False,
-                "infos": ["hostsystem", "virtualmachine", "datastore", "counters"],
             },
             HostConfig(name="host"),
             SpecialAgentCommand(

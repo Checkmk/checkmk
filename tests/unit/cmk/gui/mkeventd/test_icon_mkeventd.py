@@ -252,7 +252,7 @@ def test_icon_options(
     request_context: None,
 ) -> None:
     """Creation of title and url for links to event console entries of host"""
-    icon = icon_and_action_registry["mkeventd"]()
+    icon = icon_and_action_registry["mkeventd"]
 
     def _get_dummy_hostname(args, row):
         args_splitted = args[0].split("/")

@@ -14,11 +14,11 @@ from .base import Icon
 from .config_icons import config_based_icons, update_builtin_icons_from_config
 
 
-class IconRegistry(Registry[type[Icon]]):
-    def plugin_name(self, instance):
-        return instance.ident()
+class IconRegistry(Registry[Icon]):
+    def plugin_name(self, instance: Icon) -> str:
+        return instance.ident
 
-    def registration_hook(self, instance):
+    def registration_hook(self, instance: Icon) -> None:
         ident = self.plugin_name(instance)
         declare_permission(
             "icons_and_actions.%s" % ident,
@@ -34,6 +34,6 @@ icon_and_action_registry = IconRegistry()
 @request_memoize()
 def all_icons() -> dict[str, Icon]:
     return update_builtin_icons_from_config(
-        {ident: cls() for ident, cls in icon_and_action_registry.items()},
+        dict(icon_and_action_registry),
         active_config.builtin_icon_visibility,
     ) | config_based_icons(active_config.user_icons_and_actions)

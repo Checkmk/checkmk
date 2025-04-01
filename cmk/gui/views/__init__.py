@@ -237,21 +237,15 @@ def _register_pre_21_plugin_api() -> None:
 # Transform pre 1.6 icon plugins. Deprecate this one day.
 def register_legacy_icons() -> None:
     for icon_id, icon_spec in multisite_icons_and_actions.items():
-        icon_class = type(
-            "LegacyIcon%s" % icon_id.title(),
-            (Icon,),
-            {
-                "_ident": icon_id,
-                "_icon_spec": icon_spec,
-                "ident": classmethod(lambda cls: cls._ident),
-                "title": classmethod(lambda cls: cls._title),
-                "sort_index": lambda self: self._icon_spec.get("sort_index", 30),
-                "toplevel": lambda self: self._icon_spec.get("toplevel", False),
-                "render": lambda self, *args: self._icon_spec["paint"](*args),
-                "columns": lambda self: self._icon_spec.get("columns", []),
-                "host_columns": lambda self: self._icon_spec.get("host_columns", []),
-                "service_columns": lambda self: self._icon_spec.get("service_columns", []),
-            },
+        icon_and_action_registry.register(
+            Icon(
+                ident=icon_id,
+                title=icon_spec.get("title", icon_id),
+                sort_index=icon_spec.get("sort_index", 30),
+                toplevel=icon_spec.get("toplevel", False),
+                columns=icon_spec.get("columns", []),
+                host_columns=icon_spec.get("host_columns", []),
+                service_columns=icon_spec.get("service_columns", []),
+                render=icon_spec["paint"],
+            )
         )
-
-        icon_and_action_registry.register(icon_class)

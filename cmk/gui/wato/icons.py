@@ -11,7 +11,7 @@ from cmk.utils.tags import TagID
 from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
 from cmk.gui.http import request, response
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.mobile import is_mobile
@@ -19,116 +19,94 @@ from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 from cmk.gui.views.icon import Icon
 
 
-class WatoIcon(Icon):
-    @classmethod
-    def ident(cls) -> str:
-        return "wato"
+def _render_wato_icon(
+    what: Literal["host", "service"],
+    row: Row,
+    tags: Sequence[TagID],
+    custom_vars: Mapping[str, str],
+) -> tuple[str, str, str] | None:
+    def may_see_hosts() -> bool:
+        return user.may("wato.use") and (user.may("wato.seeall") or user.may("wato.hosts"))
 
-    @classmethod
-    def title(cls) -> str:
-        return _("Setup (formerly Wato)")
-
-    def host_columns(self) -> list[str]:
-        return ["filename"]
-
-    def render(
-        self,
-        what: Literal["host", "service"],
-        row: Row,
-        tags: Sequence[TagID],
-        custom_vars: Mapping[str, str],
-    ) -> tuple[str, str, str] | None:
-        def may_see_hosts() -> bool:
-            return user.may("wato.use") and (user.may("wato.seeall") or user.may("wato.hosts"))
-
-        if not may_see_hosts() or is_mobile(request, response):
-            return None
-
-        wato_folder = _wato_folder_from_filename(row["host_filename"])
-        if wato_folder is None:
-            return None
-
-        if what == "host":
-            return self._wato_link(wato_folder, row["host_name"], "edithost")
-
-        if row["service_description"] in ["Check_MK inventory", "Check_MK Discovery"]:
-            return self._wato_link(wato_folder, row["host_name"], "inventory")
-
+    if not may_see_hosts() or is_mobile(request, response):
         return None
 
-    def _wato_link(
-        self, folder: str, hostname: str, where: Literal["edithost", "inventory"]
-    ) -> tuple[str, str, str] | None:
-        if not active_config.wato_enabled:
-            return None
-
-        if display_options.enabled(display_options.X):
-            url = f"wato.py?folder={urlencode(folder)}&host={urlencode(hostname)}"
-            if where == "inventory":
-                url += "&mode=inventory"
-                help_txt = _("Run service discovery")
-                icon = "services"
-            else:
-                url += "&mode=edit_host"
-                help_txt = _("Edit this host")
-                icon = "wato"
-            return icon, help_txt, url
-
+    wato_folder = _wato_folder_from_filename(row["host_filename"])
+    if wato_folder is None:
         return None
 
+    if what == "host":
+        return _wato_link(wato_folder, row["host_name"], "edithost")
 
-class DownloadAgentOutputIcon(Icon):
-    """Action for downloading the current agent output."""
+    if row["service_description"] in ["Check_MK inventory", "Check_MK Discovery"]:
+        return _wato_link(wato_folder, row["host_name"], "inventory")
 
-    @classmethod
-    def ident(cls) -> str:
-        return "download_agent_output"
-
-    @classmethod
-    def title(cls) -> str:
-        return _("Download agent output")
-
-    def default_sort_index(self) -> int:
-        return 50
-
-    def host_columns(self) -> list[str]:
-        return ["filename", "check_type"]
-
-    def render(
-        self,
-        what: Literal["host", "service"],
-        row: Row,
-        tags: Sequence[TagID],
-        custom_vars: Mapping[str, str],
-    ) -> tuple[str, str, str] | None:
-        return _paint_download_host_info(what, row, tags, custom_vars, ty="agent")
+    return None
 
 
-class DownloadSnmpWalkIcon(Icon):
-    """Action for downloading the current snmp output."""
+WatoIcon = Icon(
+    ident="wato",
+    title=_l("Setup (formerly Wato)"),
+    host_columns=["filename"],
+    render=_render_wato_icon,
+)
 
-    @classmethod
-    def ident(cls) -> str:
-        return "download_snmp_walk"
 
-    @classmethod
-    def title(cls) -> str:
-        return _("Download snmp walk")
+def _wato_link(
+    folder: str, hostname: str, where: Literal["edithost", "inventory"]
+) -> tuple[str, str, str] | None:
+    if not active_config.wato_enabled:
+        return None
 
-    def host_columns(self):
-        return ["filename", "check_type"]
+    if display_options.enabled(display_options.X):
+        url = f"wato.py?folder={urlencode(folder)}&host={urlencode(hostname)}"
+        if where == "inventory":
+            url += "&mode=inventory"
+            help_txt = _("Run service discovery")
+            icon = "services"
+        else:
+            url += "&mode=edit_host"
+            help_txt = _("Edit this host")
+            icon = "wato"
+        return icon, help_txt, url
 
-    def default_sort_index(self):
-        return 50
+    return None
 
-    def render(
-        self,
-        what: Literal["host", "service"],
-        row: Row,
-        tags: Sequence[TagID],
-        custom_vars: Mapping[str, str],
-    ) -> tuple[str, str, str] | None:
-        return _paint_download_host_info(what, row, tags, custom_vars, ty="walk")
+
+def _render_download_agent_output_icon(
+    what: Literal["host", "service"],
+    row: Row,
+    tags: Sequence[TagID],
+    custom_vars: Mapping[str, str],
+) -> tuple[str, str, str] | None:
+    return _paint_download_host_info(what, row, tags, custom_vars, ty="agent")
+
+
+DownloadAgentOutputIcon = Icon(
+    ident="download_agent_output",
+    title=_l("Download agent output"),
+    sort_index=50,
+    host_columns=["filename", "check_type"],
+    render=_render_download_agent_output_icon,
+)
+
+
+def _render_download_snmp_walk_icon(
+    what: Literal["host", "service"],
+    row: Row,
+    tags: Sequence[TagID],
+    custom_vars: Mapping[str, str],
+) -> tuple[str, str, str] | None:
+    return _paint_download_host_info(what, row, tags, custom_vars, ty="walk")
+
+
+DownloadSnmpWalkIcon = Icon(
+    ident="download_snmp_walk",
+    title=_l("Download snmp walk"),
+    host_columns=["filename", "check_type"],
+    sort_index=50,
+    render=_render_download_snmp_walk_icon,
+)
 
 
 def _paint_download_host_info(

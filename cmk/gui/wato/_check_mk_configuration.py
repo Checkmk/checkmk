@@ -1661,8 +1661,8 @@ ConfigVariableBuiltinIconVisibility = ConfigVariable(
 )
 
 
-def _get_builtin_icons():
-    return [(id_, class_.title()) for id_, class_ in icon_and_action_registry.items()]
+def _get_builtin_icons() -> list[tuple[str, str]]:
+    return [(id_, class_.title) for id_, class_ in icon_and_action_registry.items()]
 
 
 ConfigVariableServiceViewGrouping = ConfigVariable(

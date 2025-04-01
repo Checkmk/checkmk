@@ -20,10 +20,8 @@ def update_builtin_icons_from_config(
         if icon is None:
             continue
 
-        if "toplevel" in cfg:
-            icon.override_toplevel(cfg["toplevel"])
-        if "sort_index" in cfg:
-            icon.override_sort_index(cfg["sort_index"])
+        icon.override_toplevel(cfg.get("toplevel"))
+        icon.override_sort_index(cfg.get("sort_index"))
 
     return icons
 
@@ -32,24 +30,21 @@ def config_based_icons(user_icons_and_actions: dict[str, IconSpec]) -> dict[str,
     declare_icons_and_actions_perm(user_icons_and_actions)
 
     return {
-        icon_id: type(
-            "CustomIcon%s" % icon_id.title(),
-            (Icon,),
-            {
-                "_ident": icon_id,
-                "_icon_spec": icon_cfg,
-                "ident": classmethod(lambda cls: cls._ident),
-                "title": classmethod(lambda cls: cls._icon_spec.get("title", cls._ident)),
-                "type": classmethod(lambda cls: "custom_icon"),
-                "sort_index": lambda self: self._icon_spec.get("sort_index", 15),
-                "toplevel": lambda self: self._icon_spec.get("toplevel", False),
-                "render": lambda self, *args: (
-                    self._icon_spec["icon"],
-                    self._icon_spec.get("title"),
-                    self._icon_spec.get("url"),
-                ),
-            },
-        )()
+        icon_id: Icon(
+            ident=icon_id,
+            title=icon_cfg.get("title", icon_id),
+            columns=[],
+            host_columns=[],
+            service_columns=[],
+            render=lambda *args: (  # type: ignore[arg-type]
+                icon_cfg["icon"],
+                icon_cfg.get("title"),
+                icon_cfg.get("url"),
+            ),
+            type_="custom_icon",
+            sort_index=icon_cfg.get("sort_index", 15),
+            toplevel=icon_cfg.get("toplevel", False),
+        )
         for icon_id, icon_cfg in user_icons_and_actions.items()
     }
 

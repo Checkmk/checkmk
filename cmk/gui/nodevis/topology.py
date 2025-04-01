@@ -2,12 +2,14 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import abc
 import glob
 import json
 import os
 import re
 import traceback
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from datetime import timedelta
 from pathlib import Path
@@ -21,6 +23,7 @@ from cmk.ccc.store import locked
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
+from cmk.utils.tags import TagID
 from cmk.utils.user import UserId
 
 import cmk.gui.visuals
@@ -75,7 +78,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import AjaxPage, Page, PageRegistry, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import ColumnSpec, PainterParameters, Visual, VisualLinkSpec
+from cmk.gui.type_defs import ColumnSpec, PainterParameters, Row, Visual, VisualLinkSpec
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.views.icon import Icon, IconRegistry
 from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
@@ -99,7 +102,7 @@ def register(
     page_registry.register_page("network_topology")(NetworkTopologyPage)
     page_registry.register_page("ajax_initial_topology_filters")(AjaxInitialTopologyFilters)
     page_registry.register_page("ajax_fetch_topology")(AjaxFetchTopology)
-    icon_and_action_registry.register(NetworkTopology)
+    icon_and_action_registry.register(NetworkTopologyIcon)
     cron_job_registry.register(
         CronJob(
             name="cleanup_topology_layouts",
@@ -114,31 +117,30 @@ def register(
     _register_builtin_views()
 
 
-class NetworkTopology(Icon):
-    @classmethod
-    def ident(cls):
-        return "network_topology"
+def _render_network_topology_icon(
+    what: Literal["host", "service"],
+    row: Row,
+    tags: Sequence[TagID],
+    custom_vars: Mapping[str, str],
+) -> tuple[str, str, str] | None:
+    # Only show this icon if topology data is available
+    files = glob.glob("data_*.json", root_dir=topology_data_dir / "default")
+    if not files:
+        return None
 
-    @classmethod
-    def title(cls):
-        return _("Network topology")
+    url = makeuri_contextless(
+        request, [("host_regex", f"{row['host_name']}$")], filename="network_topology.py"
+    )
+    return "aggr", _("Network topology"), url
 
-    def host_columns(self):
-        return ["name"]
 
-    def default_sort_index(self):
-        return 51
-
-    def render(self, what, row, tags, custom_vars):
-        # Only show this icon if topology data is available
-        files = glob.glob("data_*.json", root_dir=topology_data_dir / "default")
-        if not files:
-            return None
-
-        url = makeuri_contextless(
-            request, [("host_regex", f"{row['host_name']}$")], filename="network_topology.py"
-        )
-        return "aggr", _("Network topology"), url
+NetworkTopologyIcon = Icon(
+    ident="network_topology",
+    title=_l("Network topology"),
+    host_columns=["name"],
+    sort_index=51,
+    render=_render_network_topology_icon,
+)
 
 
 def _delete_topology_configuration(topology_configuration: TopologyConfiguration) -> None:

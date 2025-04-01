@@ -87,13 +87,13 @@ def test_legacy_icon_plugin(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setitem(cmk.gui.views.multisite_icons_and_actions, "legacy", icon)
     cmk.gui.views.register_legacy_icons()
 
-    registered_icon = registry["legacy"]()
-    assert registered_icon.columns() == icon["columns"]
-    assert registered_icon.host_columns() == icon["host_columns"]
-    assert registered_icon.service_columns() == icon["service_columns"]
+    registered_icon = registry["legacy"]
+    assert registered_icon.columns == icon["columns"]
+    assert registered_icon.host_columns == icon["host_columns"]
+    assert registered_icon.service_columns == icon["service_columns"]
     assert registered_icon.render("host", {}, [], {}) == icon["paint"]("host", {}, [], {})
-    assert registered_icon.toplevel() is True
-    assert registered_icon.sort_index() == 10
+    assert registered_icon.toplevel is True
+    assert registered_icon.sort_index == 10
 
 
 def test_legacy_icon_plugin_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -109,29 +109,21 @@ def test_legacy_icon_plugin_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setitem(cmk.gui.views.multisite_icons_and_actions, "legacy", icon)
     cmk.gui.views.register_legacy_icons()
 
-    registered_icon = registry["legacy"]()
-    assert registered_icon.toplevel() is False
-    assert registered_icon.sort_index() == 30
+    registered_icon = registry["legacy"]
+    assert registered_icon.toplevel is False
+    assert registered_icon.sort_index == 30
 
 
 def test_register_icon_plugin_with_default_registry_works(monkeypatch: pytest.MonkeyPatch) -> None:
-    class TestIcon(Icon):
-        @classmethod
-        def ident(cls):
-            return "test_icon"
+    def render(what, row, tags, custom_vars):
+        return "agents", "Title", "url"
 
-        @classmethod
-        def title(cls) -> str:
-            return "Test icon"
-
-        def default_sort_index(self):
-            return 50
-
-        def host_columns(self):
-            return []
-
-        def render(self, what, row, tags, custom_vars):
-            return "agents", "Title", "url"
+    TestIcon = Icon(
+        ident="test_icon",
+        title="Test icon",
+        sort_index=50,
+        render=render,
+    )
 
     monkeypatch.setattr(
         icon_registry, "icon_and_action_registry", registry := icon_registry.IconRegistry()
@@ -169,23 +161,10 @@ def test_config_override_builtin_icons(monkeypatch: pytest.MonkeyPatch) -> None:
         icon_registry, "icon_and_action_registry", registry := icon_registry.IconRegistry()
     )
 
-    class TestIcon(Icon):
-        @classmethod
-        def ident(cls):
-            return "test_icon"
+    def render(what, row, tags, custom_vars):
+        return "agents", "Title", "url"
 
-        @classmethod
-        def title(cls) -> str:
-            return "Test icon"
-
-        def default_sort_index(self):
-            return 50
-
-        def host_columns(self):
-            return []
-
-        def render(self, what, row, tags, custom_vars):
-            return "agents", "Title", "url"
+    TestIcon = Icon(ident="test_icon", title="Test icon", sort_index=50, render=render)
 
     registry.register(TestIcon)
 
@@ -201,4 +180,4 @@ def test_config_override_builtin_icons(monkeypatch: pytest.MonkeyPatch) -> None:
                 ),
             },
         )
-        assert icon_registry.all_icons()["test_icon"].toplevel() is True
+        assert icon_registry.all_icons()["test_icon"].toplevel is True

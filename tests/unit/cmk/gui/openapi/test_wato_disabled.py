@@ -5,30 +5,23 @@
 
 import pytest
 
-from tests.unit.cmk.web_test_app import SetConfig, WebTestAppForCMK
+from tests.testlib.unit.rest_api_client import ClientRegistry
+
+from tests.unit.cmk.web_test_app import SetConfig
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_wato_disabled_blocks_query(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
     set_config: SetConfig,
 ) -> None:
     live: MockLiveStatusConnection = mock_livestatus
 
-    base = "/NO_SITE/check_mk/api/1.0"
-
     # add a host, so we can query it
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/host_config/collections/all",
-        params='{"host_name": "neute", "folder": "/"}',
-        headers={"Accept": "application/json"},
-        status=200,
-        content_type="application/json",
-    )
+    clients.HostConfig.create("neute", folder="/")
 
     live.expect_query(
         [
@@ -38,27 +31,12 @@ def test_openapi_wato_disabled_blocks_query(
     )
 
     # calls to setup endpoints work correctly
-    aut_user_auth_wsgi_app.call_method(
-        "get",
-        base + "/objects/host_config/neute",
-        headers={"Accept": "application/json"},
-        status=200,
-    )
+    clients.HostConfig.get("neute")
 
     # disable wato
     with set_config(wato_enabled=False):
         # calls to setup endpoints are forbidden
-        aut_user_auth_wsgi_app.call_method(
-            "get",
-            base + "/objects/host_config/neute",
-            headers={"Accept": "application/json"},
-            status=403,
-        )
+        clients.HostConfig.get("neute", expect_ok=False).assert_status_code(403)
         with live:
             # calls to monitoring endpoints should be allowed
-            aut_user_auth_wsgi_app.call_method(
-                "get",
-                base + "/domain-types/service/collections/all",
-                headers={"Accept": "application/json"},
-                status=200,
-            )
+            clients.Service.get_all()

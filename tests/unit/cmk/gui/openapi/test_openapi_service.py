@@ -3,13 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import urllib
 
 import pytest
 
 from tests.testlib.unit.rest_api_client import ClientRegistry
-
-from tests.unit.cmk.web_test_app import CmkTestResponse, WebTestAppForCMK
 
 from cmk.ccc import version
 
@@ -22,8 +19,8 @@ managedtest = pytest.mark.skipif(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
-def test_openapi_livestatus_service(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
+def test_openapi_livestatus_service_list(
+    clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     live: MockLiveStatusConnection = mock_livestatus
@@ -60,14 +57,7 @@ def test_openapi_livestatus_service(
     )
 
     with live:
-        base = "/NO_SITE/check_mk/api/1.0"
-
-        resp = aut_user_auth_wsgi_app.call_method(
-            "get",
-            base + "/domain-types/service/collections/all",
-            headers={"Accept": "application/json"},
-            status=200,
-        )
+        resp = clients.Service.get_all()
         assert len(resp.json["value"]) == 2
 
     live.expect_query(
@@ -79,14 +69,41 @@ def test_openapi_livestatus_service(
     )
 
     with live:
-        resp = aut_user_auth_wsgi_app.call_method(
-            "get",
-            base
-            + '/domain-types/service/collections/all?query={"op": "~", "left": "host_alias", "right": "heute"}',
-            headers={"Accept": "application/json"},
-            status=200,
-        )
-        assert len(resp.json["value"]) == 1
+        resp = clients.Service.get_all(query={"op": "~", "left": "host_alias", "right": "heute"})
+
+    assert len(resp.json["value"]) == 1
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
+def test_openapi_livestatus_service_list_for_host(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    live: MockLiveStatusConnection = mock_livestatus
+
+    live.add_table(
+        "services",
+        [
+            {
+                "host_name": "heute",
+                "host_alias": "heute",
+                "description": "Filesystem /opt/omd/sites/heute/tmp",
+                "state": 0,
+                "state_type": "hard",
+                "last_check": 1593697877,
+                "acknowledged": 0,
+            },
+            {
+                "host_name": "example.com",
+                "host_alias": "example.com",
+                "description": "Filesystem /boot",
+                "state": 0,
+                "state_type": "hard",
+                "last_check": 0,
+                "acknowledged": 0,
+            },
+        ],
+    )
 
     live.expect_query(
         [
@@ -96,18 +113,14 @@ def test_openapi_livestatus_service(
         ]
     )
     with live:
-        resp = aut_user_auth_wsgi_app.call_method(
-            "get",
-            base + "/objects/host/example.com/collections/services",
-            headers={"Accept": "application/json"},
-            status=200,
-        )
-        assert len(resp.json["value"]) == 1
+        resp = clients.Host.get_all_services("example.com")
+
+    assert len(resp.json["value"]) == 1
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
 def test_openapi_livestatus_collection_link(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     live: MockLiveStatusConnection = mock_livestatus
@@ -144,25 +157,17 @@ def test_openapi_livestatus_collection_link(
     )
 
     with live:
-        base = "/NO_SITE/check_mk/api/1.0"
+        resp = clients.Service.get_all()
 
-        resp: CmkTestResponse = aut_user_auth_wsgi_app.call_method(
-            "get",
-            base + "/domain-types/service/collections/all",
-            headers={"Accept": "application/json"},
-            params='{"include_links": True}',
-            status=200,
-        )
-
-        assert (
-            resp.json_body["value"][0]["links"][0]["href"]  # mypy: disable-error-code=index
-            == "http://localhost/NO_SITE/check_mk/api/1.0/objects/host/heute/actions/show_service/invoke?service_description=Filesystem+%2Fopt%2Fomd%2Fsites%2Fheute%2Ftmp"
-        )
+    assert (
+        resp.json["value"][0]["links"][0]["href"]
+        == "http://localhost/NO_SITE/check_mk/api/1.0/objects/host/heute/actions/show_service/invoke?service_description=Filesystem+%2Fopt%2Fomd%2Fsites%2Fheute%2Ftmp"
+    )
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
 def test_openapi_specific_service(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     live: MockLiveStatusConnection = mock_livestatus
@@ -201,26 +206,20 @@ def test_openapi_specific_service(
         ]
     )
     with live:
-        base = "/NO_SITE/check_mk/api/1.0"
+        resp = clients.Host.get_service("heute", "Filesystem")
 
-        resp = aut_user_auth_wsgi_app.call_method(
-            "get",
-            base + "/objects/host/heute/actions/show_service/invoke?service_description=Filesystem",
-            headers={"Accept": "application/json"},
-            status=200,
-        )
-        assert resp.json_body["extensions"] == {
-            "description": "Filesystem",
-            "host_name": "heute",
-            "state_type": "hard",
-            "state": 0,
-            "last_check": 1593697877,
-        }
+    assert resp.json["extensions"] == {
+        "description": "Filesystem",
+        "host_name": "heute",
+        "state_type": "hard",
+        "state": 0,
+        "last_check": 1593697877,
+    }
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
 def test_openapi_specific_service_specific_columns(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     live: MockLiveStatusConnection = mock_livestatus
@@ -259,24 +258,17 @@ def test_openapi_specific_service_specific_columns(
         ]
     )
     with live:
-        base = "/NO_SITE/check_mk/api/1.0"
+        resp = clients.Host.get_service("heute", "Filesystem", columns=["state", "state_type"])
 
-        resp = aut_user_auth_wsgi_app.call_method(
-            "get",
-            base
-            + "/objects/host/heute/actions/show_service/invoke?service_description=Filesystem&columns=state&columns=state_type",
-            headers={"Accept": "application/json"},
-            status=200,
-        )
-        assert resp.json_body["extensions"] == {
-            "state": 0,
-            "state_type": "hard",
-        }
+    assert resp.json["extensions"] == {
+        "state": 0,
+        "state_type": "hard",
+    }
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
 def test_openapi_service_with_slash_character(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     live: MockLiveStatusConnection = mock_livestatus
@@ -315,28 +307,20 @@ def test_openapi_service_with_slash_character(
         ]
     )
     with live:
-        base = "/NO_SITE/check_mk/api/1.0"
-        service_description = urllib.parse.quote("Filesystem /böot", safe=" ").replace(" ", "+")
+        resp = clients.Host.get_service("example.com", "Filesystem /böot")
 
-        resp = aut_user_auth_wsgi_app.call_method(
-            "get",
-            base
-            + f"/objects/host/example.com/actions/show_service/invoke?service_description={service_description}",
-            headers={"Accept": "application/json"},
-            status=200,
-        )
-        assert resp.json_body["extensions"] == {
-            "description": "Filesystem /böot",
-            "host_name": "example.com",
-            "state_type": "hard",
-            "state": 0,
-            "last_check": 0,
-        }
+    assert resp.json["extensions"] == {
+        "description": "Filesystem /böot",
+        "host_name": "example.com",
+        "state_type": "hard",
+        "state": 0,
+        "last_check": 0,
+    }
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
 def test_openapi_non_existing_service(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     live: MockLiveStatusConnection = mock_livestatus
@@ -376,22 +360,13 @@ def test_openapi_non_existing_service(
     )
 
     with live:
-        base = "/NO_SITE/check_mk/api/1.0"
-
-        _ = aut_user_auth_wsgi_app.call_method(
-            "get",
-            base + "/objects/host/heute/actions/show_service/invoke?service_description=CPU",
-            headers={"Accept": "application/json"},
-            status=404,
-        )
+        clients.Host.get_service("heute", "CPU", expect_ok=False).assert_status_code(404)
 
 
 @managedtest
 def test_openapi_get_host_services_with_guest_user(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus: MockLiveStatusConnection,
     clients: ClientRegistry,
-    base: str,
 ) -> None:
     mock_livestatus.add_table(
         "services",
@@ -428,10 +403,6 @@ def test_openapi_get_host_services_with_guest_user(
         ]
     )
     with mock_livestatus:
-        resp = aut_user_auth_wsgi_app.call_method(
-            "get",
-            base + "/objects/host/heute/collections/services",
-            headers={"Accept": "application/json"},
-            status=200,
-        )
-        assert len(resp.json["value"]) == 1
+        resp = clients.Host.get_all_services("heute")
+
+    assert len(resp.json["value"]) == 1

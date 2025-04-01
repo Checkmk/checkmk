@@ -1965,6 +1965,46 @@ class HostClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def get_service(
+        self,
+        host_name: str,
+        service_description: str,
+        *,
+        columns: Sequence[str] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/host/{host_name}/actions/show_service/invoke",
+            expect_ok=expect_ok,
+            query_params=_only_set_keys(
+                {
+                    "service_description": service_description,
+                    "columns": columns,
+                }
+            ),
+        )
+
+    def get_all_services(
+        self,
+        host_name: str,
+        *,
+        query: dict[str, object] | None = None,
+        columns: Sequence[str] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/objects/{self.domain}/{host_name}/collections/services",
+            expect_ok=expect_ok,
+            body=_only_set_keys(
+                {
+                    "query": query,
+                    "columns": columns,
+                }
+            ),
+        )
+
 
 class RuleNotificationClient(RestApiClient):
     domain: API_DOMAIN = "notification_rule"
@@ -2767,15 +2807,19 @@ class ServiceClient(RestApiClient):
     def get_all(
         self,
         *,
+        query: dict[str, object] | None = None,
+        columns: Sequence[str] | None = None,
         host_name: str | None = None,
         expect_ok: bool = True,
     ) -> Response:
         return self.request(
-            "get",
+            "post",
             url=f"/domain-types/{self.domain}/collections/all",
             expect_ok=expect_ok,
-            query_params=_only_set_keys(
+            body=_only_set_keys(
                 {
+                    "query": query,
+                    "columns": columns,
                     "host_name": host_name,
                 }
             ),

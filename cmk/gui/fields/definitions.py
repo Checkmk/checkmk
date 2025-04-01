@@ -370,8 +370,8 @@ class _ExprNested(base.Nested):
         return tree_to_expr(_data, table=self.metadata["table"])
 
 
-def query_field(  # type: ignore[no-untyped-def]
-    table: type[Table], required: bool = False, example=None
+def query_field(
+    table: type[Table], required: bool = False, example: str | dict[str, object] | None = None
 ) -> base.Nested:
     """Returns a Nested ExprSchema Field which validates a Livestatus query.
 
@@ -381,7 +381,8 @@ def query_field(  # type: ignore[no-untyped-def]
         required:
             Whether the field shall be required.
         example:
-            optional query example
+            optional query example. For query parameters this should be a string, within the request
+            body string and nested JSON is allowed, so a dict example is better.
 
     Returns:
         A marshmallow Nested field.

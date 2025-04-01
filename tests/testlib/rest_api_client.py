@@ -56,6 +56,7 @@ API_DOMAIN = Literal[
     "bi_rule",
     "user_role",
     "autocomplete",
+    "service",
     "service_discovery",
     "discovery_run",
     "parent_scan",
@@ -1822,6 +1823,26 @@ class HostClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def get_all_services(
+        self,
+        host_name: str,
+        *,
+        query: dict[str, object] | None = None,
+        columns: Sequence[str] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/objects/{self.domain}/{host_name}/collections/services",
+            expect_ok=expect_ok,
+            body=_only_set_keys(
+                {
+                    "query": query,
+                    "columns": columns,
+                }
+            ),
+        )
+
 
 class RuleNotificationClient(RestApiClient):
     domain: API_DOMAIN = "notification_rule"
@@ -2575,6 +2596,31 @@ class AutocompleteClient(RestApiClient):
         )
 
 
+class ServiceClient(RestApiClient):
+    domain: API_DOMAIN = "service"
+
+    def get_all(
+        self,
+        *,
+        query: dict[str, object] | None = None,
+        columns: Sequence[str] | None = None,
+        host_name: str | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+            body=_only_set_keys(
+                {
+                    "query": query,
+                    "columns": columns,
+                    "host_name": host_name,
+                }
+            ),
+        )
+
+
 class ServiceDiscoveryClient(RestApiClient):
     service_discovery_domain: API_DOMAIN = "service_discovery"
     discovery_run_domain: API_DOMAIN = "discovery_run"
@@ -2695,6 +2741,7 @@ class ClientRegistry:
     BiRule: BiRuleClient
     UserRole: UserRoleClient
     AutoComplete: AutocompleteClient
+    Service: ServiceClient
     ServiceDiscovery: ServiceDiscoveryClient
     ParentScan: ParentScanClient
 
@@ -2729,6 +2776,7 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         BiRule=BiRuleClient(request_handler, url_prefix),
         UserRole=UserRoleClient(request_handler, url_prefix),
         AutoComplete=AutocompleteClient(request_handler, url_prefix),
+        Service=ServiceClient(request_handler, url_prefix),
         ServiceDiscovery=ServiceDiscoveryClient(request_handler, url_prefix),
         ParentScan=ParentScanClient(request_handler, url_prefix),
     )

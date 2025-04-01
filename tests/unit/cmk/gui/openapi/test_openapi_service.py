@@ -102,6 +102,104 @@ def test_openapi_livestatus_service(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
+def test_openapi_livestatus_service_list(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    live: MockLiveStatusConnection = mock_livestatus
+
+    live.add_table(
+        "services",
+        [
+            {
+                "host_name": "heute",
+                "host_alias": "heute",
+                "description": "Filesystem /opt/omd/sites/heute/tmp",
+                "state": 0,
+                "state_type": "hard",
+                "last_check": 1593697877,
+                "acknowledged": 0,
+            },
+            {
+                "host_name": "example.com",
+                "host_alias": "example.com",
+                "description": "Filesystem /boot",
+                "state": 0,
+                "state_type": "hard",
+                "last_check": 0,
+                "acknowledged": 0,
+            },
+        ],
+    )
+
+    live.expect_query(
+        [
+            "GET services",
+            "Columns: host_name description",
+        ],
+    )
+
+    with live:
+        resp = clients.Service.get_all()
+        assert len(resp.json["value"]) == 2
+
+    live.expect_query(
+        [
+            "GET services",
+            "Columns: host_name description",
+            "Filter: host_alias ~ heute",
+        ],
+    )
+
+    with live:
+        resp = clients.Service.get_all(query={"op": "~", "left": "host_alias", "right": "heute"})
+        assert len(resp.json["value"]) == 1
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
+def test_openapi_livestatus_service_list_for_host(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    live: MockLiveStatusConnection = mock_livestatus
+
+    live.add_table(
+        "services",
+        [
+            {
+                "host_name": "heute",
+                "host_alias": "heute",
+                "description": "Filesystem /opt/omd/sites/heute/tmp",
+                "state": 0,
+                "state_type": "hard",
+                "last_check": 1593697877,
+                "acknowledged": 0,
+            },
+            {
+                "host_name": "example.com",
+                "host_alias": "example.com",
+                "description": "Filesystem /boot",
+                "state": 0,
+                "state_type": "hard",
+                "last_check": 0,
+                "acknowledged": 0,
+            },
+        ],
+    )
+
+    live.expect_query(
+        [
+            "GET services",
+            "Columns: host_name description",
+            "Filter: host_name = example.com",
+        ]
+    )
+    with live:
+        resp = clients.Host.get_all_services("example.com")
+        assert len(resp.json["value"]) == 1
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
 def test_openapi_livestatus_collection_link(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus: MockLiveStatusConnection,

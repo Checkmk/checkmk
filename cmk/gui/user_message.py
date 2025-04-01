@@ -150,8 +150,15 @@ def show_user_messages() -> None:
         html.show_message(_("Currently you have no received messages"))
         return
 
-    for num, entry in enumerate(sorted(messages, key=lambda e: e["time"], reverse=True)):
-        forms.header(_("Message #%d") % (num + 1))
+    security_count = 0
+    for num, entry in enumerate(
+        sorted(messages, key=lambda e: (e.get("security"), e["time"]), reverse=True)
+    ):
+        if entry.get("security"):
+            security_count = num + 1
+            forms.header(_("Security message #%d") % security_count)
+        else:
+            forms.header(_("Message #%d") % (num + 1 - security_count))
         forms.container()
         html.open_div(class_="container")
         msg_text = entry["text"]

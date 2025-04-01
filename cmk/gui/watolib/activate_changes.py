@@ -781,7 +781,12 @@ def calc_sync_delta(
         try:
             _set_sync_state(site_activation_state, _("Computing differences"))
 
-            sync_delta = get_file_names_to_sync(site_id, site_logger, sync_state, file_filter_func)
+            sync_delta = get_file_names_to_sync(
+                site_logger,
+                sync_state,
+                bool(get_site_config(active_config, site_id).get("sync_files")),
+                file_filter_func,
+            )
 
             site_logger.debug("New files to be synchronized: %r", sync_delta.to_sync_new)
             site_logger.debug("Changed files to be synchronized: %r", sync_delta.to_sync_changed)
@@ -2778,9 +2783,9 @@ def _get_replication_components(site_config: SiteConfiguration) -> list[Replicat
 
 
 def get_file_names_to_sync(
-    site_id: SiteId,
     site_logger: logging.Logger,
     sync_state: SyncState,
+    ldap_sync_enabled: bool,
     file_filter_func: FileFilterFunc,
 ) -> SyncDelta:
     """Compare the response with the site_config directory of the site
@@ -2795,12 +2800,7 @@ def get_file_names_to_sync(
     # New files
     central_files = set(sync_state.central_file_infos.keys())
     remote_files_set = set(sync_state.remote_file_infos.keys())
-    remote_site_config = get_site_config(active_config, site_id)
-    remote_files = (
-        _filter_remote_files(remote_files_set)
-        if remote_site_config.get("user_sync")
-        else remote_files_set
-    )
+    remote_files = _filter_remote_files(remote_files_set) if ldap_sync_enabled else remote_files_set
     to_sync_new = list(central_files - remote_files)
 
     # Add differing files

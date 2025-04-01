@@ -13,7 +13,6 @@
 # - Some reordering, e.g. move specific valuspecs / factories to the bottom of
 #   the file
 # - Refactor "orientation" argument to use some Enum, similar to Labels.World
-
 import abc
 import base64
 import datetime
@@ -30,6 +29,7 @@ import socket
 import time
 import urllib.parse
 import uuid
+import warnings
 from collections.abc import (
     Callable,
     Collection,
@@ -131,6 +131,9 @@ seconds_per_day = 86400
 
 class Sentinel:
     pass
+
+
+class RegexFutureWarning(FutureWarning): ...
 
 
 # Some arbitrary object for checking whether or not default_value was set
@@ -1320,7 +1323,13 @@ class RegExp(TextInput):
 
         # Check if the string is a valid regex
         try:
+            with warnings.catch_warnings(action="error", category=FutureWarning):
+                compiled = re.compile(value)
+
+        except FutureWarning as e:
+            warnings.warn(f"{e} in {value}", RegexFutureWarning)
             compiled = re.compile(value)
+
         except re.error as e:
             raise MKUserError(varprefix, _("Invalid regular expression: %s") % e)
 

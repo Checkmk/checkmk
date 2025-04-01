@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Pre update checks, executed before any configuration is changed."""
 
+import warnings
 from collections.abc import Sequence
 from logging import Logger
 
@@ -16,6 +17,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import GroupSpec, load_contact_group_information
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
+from cmk.gui.valuespec import RegexFutureWarning
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
@@ -63,7 +65,6 @@ class PreUpdateRulesets(PreUpdateAction):
                     logger.exception("This is the exception: ")
                     if _continue_on_broken_ruleset(conflict_mode).is_abort():
                         raise MKUserError(None, "broken ruleset")
-
         if not result:
             raise MKUserError(None, "failed ruleset validation")
         return None
@@ -147,35 +148,68 @@ def _validate_rule_values(
                 VERBOSE,
                 f"Validating ruleset '{ruleset.name}' in folder '{folder.name()}'",
             )
-            try:
-                ruleset.rulespec.valuespec.validate_value(
-                    rule.value,
-                    "",
-                )
-            except (MKUserError, AssertionError, ValueError, TypeError) as e:
-                if version.edition() is version.Edition.CME and ruleset.name in (
-                    "host_contactgroups",
-                    "host_groups",
-                    "service_contactgroups",
-                    "service_groups",
-                ):
-                    addition_info = [
-                        "Note:",
-                        (
-                            f"The group {rule.value!r} may not be synchronized to this site because"
-                            " the customer setting of the group is not set to global."
-                        ),
-                        (
-                            "If you continue the invalid rule does not have any effect but should"
-                            " be fixed anyway.\n"
-                        ),
+            with warnings.catch_warnings(action="error", category=RegexFutureWarning):
+                try:
+                    ruleset.rulespec.valuespec.validate_value(
+                        rule.value,
+                        "",
+                    )
+                except RegexFutureWarning as e:
+                    error_messages = [
+                        f"WARNING: {e}",
+                        f"Ruleset: {ruleset.name}",
+                        f"Title: {ruleset.title()}",
+                        f"Folder: {folder.path() or 'main'}",
+                        f"Rule nr: {index + 1}",
+                        "At the moment your regex works correctly, but it might stop working or",
+                        "behave differently in a future Python version. Please consider updating it.",
+                        "",
                     ]
-                else:
-                    addition_info = []
-                error_message = _error_message(ruleset, folder, index, e, addition_info)
-                logger.error(error_message)
-                if _continue_on_invalid_rule(conflict_mode).is_abort():
-                    return False
+
+                    if version.edition() is version.Edition.CME and ruleset.name in (
+                        "host_contactgroups",
+                        "host_groups",
+                        "service_contactgroups",
+                        "service_groups",
+                    ):
+                        error_messages += [
+                            "Note:",
+                            (
+                                f"The group {rule.value!r} may not be synchronized to this site because"
+                                " the customer setting of the group is not set to global."
+                            ),
+                            (
+                                "If you continue the invalid rule does not have any effect but should"
+                                " be fixed anyway.\n"
+                            ),
+                        ]
+
+                    logger.warning("\n".join(error_messages))
+
+                except (MKUserError, AssertionError, ValueError, TypeError) as e:
+                    if version.edition() is version.Edition.CME and ruleset.name in (
+                        "host_contactgroups",
+                        "host_groups",
+                        "service_contactgroups",
+                        "service_groups",
+                    ):
+                        addition_info = [
+                            "Note:",
+                            (
+                                f"The group {rule.value!r} may not be synchronized to this site because"
+                                " the customer setting of the group is not set to global."
+                            ),
+                            (
+                                "If you continue the invalid rule does not have any effect but should"
+                                " be fixed anyway.\n"
+                            ),
+                        ]
+                    else:
+                        addition_info = []
+                    error_message = _error_message(ruleset, folder, index, e, addition_info)
+                    logger.error(error_message)
+                    if _continue_on_invalid_rule(conflict_mode).is_abort():
+                        return False
 
     return True
 

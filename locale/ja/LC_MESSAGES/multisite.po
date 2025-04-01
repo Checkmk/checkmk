@@ -7380,6 +7380,10 @@ msgstr ""
 "自動：利用可能な場合は既存のユーザーを使用。そうでない場合は新規ユーザーを作"
 "成します。"
 
+#, fuzzy
+msgid "Automatically  select best type of backend"
+msgstr "ピギーバックデータなしでホストを自動的に削除します"
+
 msgid "Automatically activate changes"
 msgstr "変更を自動的にアクティブ化する"
 
@@ -14732,7 +14736,9 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Could not access your Azure account. Please check your credentials."
+msgid ""
+"Could not access your Azure account. Please check your credentials and/or "
+"HTTP proxy setting."
 msgstr ""
 "同期するユーザーオブジェクトが見つかりませんでした。フィルタ設定を確認してく"
 "ださい。"
@@ -37118,6 +37124,12 @@ msgstr "%s' がありません"
 msgid "MK Remote Plug-in Executor (MRPE)"
 msgstr "MKリモートプラグインエグゼキュータ(MRPE)"
 
+msgid ""
+"MK SQL plugin may use different monitoring backends. In some cases you may "
+"want to use ODBC backend: typical use cases are firewall problems, "
+"misconfigured network and for testing purposes"
+msgstr ""
+
 msgid "MKEventd"
 msgstr "MKEventd"
 
@@ -39839,6 +39851,10 @@ msgid "Monitoring agent"
 msgstr "監視エージェント"
 
 msgid "Monitoring agents"
+msgstr "監視エージェント"
+
+#, fuzzy
+msgid "Monitoring backend"
 msgstr "監視エージェント"
 
 msgid "Monitoring core"
@@ -64757,6 +64773,18 @@ msgid "The source host"
 msgstr "ソースホスト"
 
 msgid ""
+"The special agent is deprecated and will be removed in Checkmk 2.5.0. If you "
+"still require it, will be made available on the Checkmk Exchange (exchange."
+"checkmk.com). Dell EMC VNX has been replaced in 2016 by Dell EMC Unity and "
+"is not supported anymore. Thus, naviseccli, the tool required for monitoring "
+"Dell EMC VNX is not maintained as well anymore, with potentially insecure "
+"dependencies.This rule selects the EMC VNX agent instead of the normal "
+"Checkmk Agent and allows monitoring of EMC VNX storage systems by calling "
+"naviseccli commandline tool locally on the monitoring system. Make sure it "
+"is installed and working. You can configure your connection settings here."
+msgstr ""
+
+msgid ""
 "The staleness value of a host / service is calculated by measuring the "
 "configured check intervals a check result is old. A value of 1.5 means the "
 "current check result has been gathered one and a half check intervals of an "
@@ -68644,17 +68672,6 @@ msgid ""
 msgstr ""
 "このルールは、Ruckus Spot のWebインターフェイスを通じてデータを収集する通常の"
 "Checkmkエージェントではなく、Ruckus Spotエージェントを選択します"
-
-msgid ""
-"This rule selects the EMC VNX agent instead of the normal Checkmk Agent and "
-"allows monitoring of EMC VNX storage systems by calling naviseccli "
-"commandline tool locally on the monitoring system. Make sure it is installed "
-"and working. You can configure your connection settings here."
-msgstr ""
-"このルールは、通常のCheckmkKエージェントの代わりにEMC VNXエージェントを選択"
-"し、監視システムでローカルにnaviseccliコマンドラインツールを呼び出すことによ"
-"り、EMCVNXストレージシステムの監視を可能にします。インストールされ、機能して"
-"いることを確認してください。ここで接続設定を構成できます。"
 
 msgid ""
 "This rule selects the Fritz!Box agent, which uses UPNP to gather information "
@@ -75033,6 +75050,9 @@ msgstr "LDAPS(SSL)を使用する"
 
 msgid "Use Livestatus Proxy Daemon"
 msgstr "Livestatusプロキシデーモンを使用する"
+
+msgid "Use Odbc backend if plugin deployed on Windows"
+msgstr ""
 
 msgid "Use Piggyback"
 msgstr "ピギーバックを使用する"
@@ -84242,6 +84262,17 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用不可</b>"
+
+#~ msgid ""
+#~ "This rule selects the EMC VNX agent instead of the normal Checkmk Agent "
+#~ "and allows monitoring of EMC VNX storage systems by calling naviseccli "
+#~ "commandline tool locally on the monitoring system. Make sure it is "
+#~ "installed and working. You can configure your connection settings here."
+#~ msgstr ""
+#~ "このルールは、通常のCheckmkKエージェントの代わりにEMC VNXエージェントを選"
+#~ "択し、監視システムでローカルにnaviseccliコマンドラインツールを呼び出すこと"
+#~ "により、EMCVNXストレージシステムの監視を可能にします。インストールされ、機"
+#~ "能していることを確認してください。ここで接続設定を構成できます。"
 
 #, fuzzy, python-format
 #~ msgid "Got invalid status of remote site %s"

@@ -7720,6 +7720,10 @@ msgstr "Aggiornamenti automatici"
 msgid "Automatic: Use existing user, if available. Otherwise create new user."
 msgstr ""
 
+#, fuzzy
+msgid "Automatically  select best type of backend"
+msgstr "Elimina automaticamente gli host senza dati di piggyback"
+
 msgid "Automatically activate changes"
 msgstr "Attivare automaticamente le modifiche"
 
@@ -15397,7 +15401,9 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Could not access your Azure account. Please check your credentials."
+msgid ""
+"Could not access your Azure account. Please check your credentials and/or "
+"HTTP proxy setting."
 msgstr ""
 "Trovato nessun oggetto utente per la sincronizzazione. Per favore controlla "
 "le impostazioni del tuo filtro."
@@ -38579,6 +38585,12 @@ msgstr "MANCANTE '%s'"
 msgid "MK Remote Plug-in Executor (MRPE)"
 msgstr "Esecutore remoto di plugin MK (MRPE)"
 
+msgid ""
+"MK SQL plugin may use different monitoring backends. In some cases you may "
+"want to use ODBC backend: typical use cases are firewall problems, "
+"misconfigured network and for testing purposes"
+msgstr ""
+
 msgid "MKEventd"
 msgstr "MKEventd"
 
@@ -41373,6 +41385,10 @@ msgstr "Agente di monitoraggio"
 
 msgid "Monitoring agents"
 msgstr "Agenti di monitoraggio"
+
+#, fuzzy
+msgid "Monitoring backend"
+msgstr "Agente di monitoraggio"
 
 msgid "Monitoring core"
 msgstr "Nucleo di monitoraggio"
@@ -67215,6 +67231,18 @@ msgid "The source host"
 msgstr "L'host di origine"
 
 msgid ""
+"The special agent is deprecated and will be removed in Checkmk 2.5.0. If you "
+"still require it, will be made available on the Checkmk Exchange (exchange."
+"checkmk.com). Dell EMC VNX has been replaced in 2016 by Dell EMC Unity and "
+"is not supported anymore. Thus, naviseccli, the tool required for monitoring "
+"Dell EMC VNX is not maintained as well anymore, with potentially insecure "
+"dependencies.This rule selects the EMC VNX agent instead of the normal "
+"Checkmk Agent and allows monitoring of EMC VNX storage systems by calling "
+"naviseccli commandline tool locally on the monitoring system. Make sure it "
+"is installed and working. You can configure your connection settings here."
+msgstr ""
+
+msgid ""
 "The staleness value of a host / service is calculated by measuring the "
 "configured check intervals a check result is old. A value of 1.5 means the "
 "current check result has been gathered one and a half check intervals of an "
@@ -71303,18 +71331,6 @@ msgid ""
 msgstr ""
 "Questa regola seleziona l'agente Ruckus Spot invece del normale agente "
 "Checkmk che raccoglie i dati attraverso l'interfaccia web di Ruckus Spot"
-
-msgid ""
-"This rule selects the EMC VNX agent instead of the normal Checkmk Agent and "
-"allows monitoring of EMC VNX storage systems by calling naviseccli "
-"commandline tool locally on the monitoring system. Make sure it is installed "
-"and working. You can configure your connection settings here."
-msgstr ""
-"Questa regola seleziona l'agente EMC VNX invece del normale agente Checkmk e "
-"consente il monitoraggio dei sistemi di storage EMC VNX richiamando lo "
-"strumento da riga di comando naviseccli localmente sul sistema di "
-"monitoraggio. Assicurarsi che sia installato e funzionante. È possibile "
-"configurare le impostazioni di connessione qui."
 
 msgid ""
 "This rule selects the Fritz!Box agent, which uses UPNP to gather information "
@@ -78318,6 +78334,9 @@ msgstr "Utilizzare LDAPS (SSL)"
 
 msgid "Use Livestatus Proxy Daemon"
 msgstr "Utilizzare il demone proxy Livestatus"
+
+msgid "Use Odbc backend if plugin deployed on Windows"
+msgstr ""
 
 msgid "Use Piggyback"
 msgstr "Utilizzare Piggyback"
@@ -87801,6 +87820,18 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usa SSL per la connessione."
+
+#~ msgid ""
+#~ "This rule selects the EMC VNX agent instead of the normal Checkmk Agent "
+#~ "and allows monitoring of EMC VNX storage systems by calling naviseccli "
+#~ "commandline tool locally on the monitoring system. Make sure it is "
+#~ "installed and working. You can configure your connection settings here."
+#~ msgstr ""
+#~ "Questa regola seleziona l'agente EMC VNX invece del normale agente "
+#~ "Checkmk e consente il monitoraggio dei sistemi di storage EMC VNX "
+#~ "richiamando lo strumento da riga di comando naviseccli localmente sul "
+#~ "sistema di monitoraggio. Assicurarsi che sia installato e funzionante. È "
+#~ "possibile configurare le impostazioni di connessione qui."
 
 #, fuzzy, python-format
 #~ msgid "Got invalid status of remote site %s"

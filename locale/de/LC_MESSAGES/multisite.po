@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-03-28 01:50+0000\n"
+"PO-Revision-Date: 2025-03-31 18:50+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -7612,6 +7612,10 @@ msgstr ""
 "Automatisch: Vorhandenen Benutzer verwenden, falls vorhanden. Andernfalls "
 "erstellen Sie einen neuen Benutzer."
 
+#, fuzzy
+msgid "Automatically  select best type of backend"
+msgstr "Automatisches Löschen von Hosts ohne Piggyback-Daten"
+
 msgid "Automatically activate changes"
 msgstr "Änderungen automatisch aktivieren"
 
@@ -11550,6 +11554,9 @@ msgid ""
 "Changes to a user's two-factor settings within remote sites will be "
 "overritten by changes to the user's settings in the central site."
 msgstr ""
+"Änderungen an den Zwei-Faktor-Einstellungen eines Benutzers in Remote-"
+"Instanzen werden durch Änderungen an den Einstellungen des Benutzers in der "
+"Zentralinstanz überschrieben."
 
 msgid ""
 "Changing this setting triggers a full restart of all affected sites during "
@@ -15065,7 +15072,10 @@ msgstr ""
 "Der Zugriff auf Ihr AWS-Konto war nicht möglich. Bitte überprüfen Sie Ihren "
 "Zugangs- und Geheimschlüssel und versuchen Sie es erneut."
 
-msgid "Could not access your Azure account. Please check your credentials."
+#, fuzzy
+msgid ""
+"Could not access your Azure account. Please check your credentials and/or "
+"HTTP proxy setting."
 msgstr ""
 "Der Zugriff auf Ihr Azure-Konto war nicht möglich. Bitte überprüfen Sie Ihre "
 "Zugangsdaten."
@@ -16402,9 +16412,8 @@ msgstr "Die %s anpassen und benutzen"
 msgid "Customize GUI design"
 msgstr "GUI-Design anpassen"
 
-#, fuzzy
 msgid "Customize agent package (Linux)"
-msgstr "Agenten-Paket (Unix) anpassen"
+msgstr "Agenten-Paket (Linux) anpassen"
 
 #, python-format
 msgid "Customize and use %s"
@@ -18563,7 +18572,6 @@ msgstr "Veraltete Legacy GUI-Erweiterungen"
 msgid "Deprecated plug-in: %s"
 msgstr "Veraltetes Plugin: %s"
 
-#, fuzzy
 msgid "Deprecated rule sets"
 msgstr "Veraltete Regelsätze"
 
@@ -24431,15 +24439,14 @@ msgstr ""
 "Filtert nach Hosts oder Services, denen mindestens eines der Mitglieder der "
 "Kontaktgruppe zugewiesen ist."
 
-#, fuzzy
 msgid ""
 "Filters hosts or services assigned to the selected contact groups. This "
 "filter only works with Checkmk Micro Core (CMC). If you are not using CMC, "
 "the filter will have no effect."
 msgstr ""
-"Der Host/Service muss in einer der gewählten Kontaktgruppen enthalten sein. "
-"Dies funktioniert nur mit dem Checkmk Micro Core. Wenn Sie nicht den CMC "
-"verwenden, wird der Filter nicht greifen"
+"Filtert Hosts oder Dienste, die den ausgewählten Kontaktgruppen zugeordnet "
+"sind. Dieser Filter funktioniert nur mit Checkmk Micro Core (CMC). Wenn Sie "
+"nicht mit CMC arbeiten, hat der Filter keine Wirkung."
 
 msgid "Final notification result"
 msgstr "Endgültiges Benachrichtigungsergebnis"
@@ -25184,11 +25191,9 @@ msgstr ""
 msgid "Found all %d groups."
 msgstr "Alle %d Gruppen gefunden."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Found configured rules of deprecated rule set %r."
-msgstr ""
-"Es wurden konfigurierte Regeln des unbekannten Check-Parameter-Regelsatzes "
-"%r gefunden."
+msgstr "Es wurden konfigurierte Regeln des veralteten Regelsatzes %r gefunden."
 
 #, python-format
 msgid "Found configured rules of unknown check parameter rule set %r."
@@ -27720,9 +27725,9 @@ msgstr "Tabellenaktionen verstecken"
 msgid "Hide the Checkmk version from the login box"
 msgstr "Die Checkmk-Version auf der Login-Box verbergen"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Hide this %s in drop-down menus"
-msgstr "%s im Drop-down-Menü"
+msgstr "%s in Drop-down-Menüs ausblenden"
 
 #, python-format
 msgid "Hide this %s in the monitor menu"
@@ -33150,9 +33155,8 @@ msgstr ""
 msgid "Installation"
 msgstr "Installation"
 
-#, fuzzy
 msgid "Installation directories"
-msgstr "Installationsverzeichnisse anpassen"
+msgstr "Installationsverzeichnisse"
 
 msgid "Installation paths for agent files (Linux, UNIX) (deprecated)"
 msgstr "Installationspfade für Agentendateien (Linux, Unix) (veraltet)"
@@ -37500,6 +37504,12 @@ msgstr "FEHLT '%s'"
 msgid "MK Remote Plug-in Executor (MRPE)"
 msgstr "MK Remote Plugin Executor (MRPE)"
 
+msgid ""
+"MK SQL plugin may use different monitoring backends. In some cases you may "
+"want to use ODBC backend: typical use cases are firewall problems, "
+"misconfigured network and for testing purposes"
+msgstr ""
+
 msgid "MKEventd"
 msgstr "MKEventd"
 
@@ -40237,6 +40247,10 @@ msgstr "Monitoring-Agent"
 msgid "Monitoring agents"
 msgstr "Monitoring-Agenten"
 
+#, fuzzy
+msgid "Monitoring backend"
+msgstr "Monitoring-Agent"
+
 msgid "Monitoring core"
 msgstr "Monitoring-Kern"
 
@@ -41807,9 +41821,8 @@ msgstr "Keine Daten."
 msgid "No datasource defined."
 msgstr "Keine Datenquelle definiert."
 
-#, fuzzy
 msgid "No deprecated rule sets found."
-msgstr "Veraltete Regelsätze"
+msgstr "Es wurden keine veralteten Regelsätze gefunden."
 
 #, python-format
 msgid ""
@@ -59356,9 +59369,8 @@ msgstr "Zustand der letzten Synchronisation: <b>%s</b>"
 msgid "Status of service in case of disabled job"
 msgstr "Zustand des Services, falls der Job deaktiviert ist"
 
-#, fuzzy
 msgid "Status of service in case of disabled schedule and enabled jobs"
-msgstr "Zustand des Services, falls der Job deaktiviert ist"
+msgstr "Zustand des Services bei deaktiviertem Plan und aktivierten Jobs"
 
 msgid "Status of service in case of missing job"
 msgstr "Zustand des Services, falls der Job fehlt"
@@ -65174,7 +65186,6 @@ msgstr ""
 "Einzeldatei-Aggregation zu verwenden, fügen Sie <tt>%s</tt> an den "
 "Abschnittsnamen an."
 
-#, fuzzy
 msgid ""
 "The selected automation user needs rights for agent registration and "
 "download. If no user is selected, the Agent Bakery tries to find an "
@@ -65186,9 +65197,10 @@ msgstr ""
 "Der ausgewählte Automationsbenutzer benötigt Rechte für die "
 "Agentenregistrierung und den Download. Wenn kein Benutzer ausgewählt ist, "
 "versucht die Agentenbäckerei, einen Automationsbenutzer namens \"automation"
-"\" zu finden.<br>Diese Einstellung wird nur berücksichtigt, wenn die "
-"Zentralinstanz die Version 2.3.0 hat. Sie wird in einer zukünftigen Version "
-"entfernt werden."
+"\" zu finden.<br>Dies ist nur erforderlich, wenn die Version der "
+"Zentralinstanz 2.3.0 ist. Ab 2.4.0 ist für den Verbindungsmodus kein "
+"Automatisierungsbenutzer mehr erforderlich. Diese Einstellung wird daher in "
+"einer zukünftigen Version entfernt werden."
 
 msgid ""
 "The selected automation user needs rights for registering new agents. I.e., "
@@ -65443,6 +65455,18 @@ msgstr ""
 
 msgid "The source host"
 msgstr "Der Quell-Host"
+
+msgid ""
+"The special agent is deprecated and will be removed in Checkmk 2.5.0. If you "
+"still require it, will be made available on the Checkmk Exchange (exchange."
+"checkmk.com). Dell EMC VNX has been replaced in 2016 by Dell EMC Unity and "
+"is not supported anymore. Thus, naviseccli, the tool required for monitoring "
+"Dell EMC VNX is not maintained as well anymore, with potentially insecure "
+"dependencies.This rule selects the EMC VNX agent instead of the normal "
+"Checkmk Agent and allows monitoring of EMC VNX storage systems by calling "
+"naviseccli commandline tool locally on the monitoring system. Make sure it "
+"is installed and working. You can configure your connection settings here."
+msgstr ""
 
 msgid ""
 "The staleness value of a host / service is calculated by measuring the "
@@ -69154,16 +69178,14 @@ msgstr ""
 "Mit dieser Regel können Sie die Anzahl der maximalen Verbindungen für eine "
 "bestimmte VSID konfigurieren."
 
-#, fuzzy
 msgid ""
 "This rule allows you to customize the user and installation directory of the "
 "agent. When using this rule, all agent files will be installed into a "
 "directory defined in this rule."
 msgstr ""
 "Mit dieser Regel können Sie den Benutzer und das Installationsverzeichnis "
-"des Agenten anpassen. Wenn Sie den Benutzer anpassen möchten, z. B. die "
-"Verteilung als nicht-privilegierter Benutzer, müssen Sie auch das "
-"Installationsverzeichnis konfigurieren."
+"des Agenten anpassen. Wenn Sie diese Regel verwenden, werden alle "
+"Agentendateien in ein in dieser Regel definiertes Verzeichnis installiert."
 
 msgid ""
 "This rule allows you to restrict the access to the Checkmk agent to certain "
@@ -69589,18 +69611,6 @@ msgid ""
 msgstr ""
 "Diese Regel wählt den Ruckus Spot-Agenten statt dem normalen Checkmk-Agenten "
 "aus, der über das Ruckus Spot Weboberfläche Daten sammelt"
-
-msgid ""
-"This rule selects the EMC VNX agent instead of the normal Checkmk Agent and "
-"allows monitoring of EMC VNX storage systems by calling naviseccli "
-"commandline tool locally on the monitoring system. Make sure it is installed "
-"and working. You can configure your connection settings here."
-msgstr ""
-"Diese Regel wählt den EMC VNX-Agent anstelle des normalen Checkmk-Agenten "
-"aus und ermöglicht das Monitoring von EMC VNX-Speichersystemen durch den "
-"lokalen Aufruf des Befehlszeilentools naviseccli auf dem Monitoring-System. "
-"Stellen Sie sicher, dass es installiert ist und funktioniert. Sie können "
-"Ihre Verbindungseinstellungen hier konfigurieren."
 
 msgid ""
 "This rule selects the Fritz!Box agent, which uses UPNP to gather information "
@@ -76086,6 +76096,9 @@ msgstr "LDAPS (SSL) verwenden"
 
 msgid "Use Livestatus Proxy Daemon"
 msgstr "Livestatus Proxy Daemon verwenden"
+
+msgid "Use Odbc backend if plugin deployed on Windows"
+msgstr ""
 
 msgid "Use Piggyback"
 msgstr "Piggyback-Modus verwenden"
@@ -85465,6 +85478,18 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid ""
+#~ "This rule selects the EMC VNX agent instead of the normal Checkmk Agent "
+#~ "and allows monitoring of EMC VNX storage systems by calling naviseccli "
+#~ "commandline tool locally on the monitoring system. Make sure it is "
+#~ "installed and working. You can configure your connection settings here."
+#~ msgstr ""
+#~ "Diese Regel wählt den EMC VNX-Agent anstelle des normalen Checkmk-Agenten "
+#~ "aus und ermöglicht das Monitoring von EMC VNX-Speichersystemen durch den "
+#~ "lokalen Aufruf des Befehlszeilentools naviseccli auf dem Monitoring-"
+#~ "System. Stellen Sie sicher, dass es installiert ist und funktioniert. Sie "
+#~ "können Ihre Verbindungseinstellungen hier konfigurieren."
 
 #, python-format
 #~ msgid "Got invalid status of remote site %s"

@@ -1127,6 +1127,7 @@ def register_log_filters(filter_registry: FilterRegistry) -> None:
             query_filter=query_filters.TextQuery(
                 ident="log_plugin_output",
                 op="~~",
+                negateable=True,
             ),
         )
     )

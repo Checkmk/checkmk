@@ -1,0 +1,16 @@
+Title: UpdateAction: only remove user profiles that fail validation
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1743500271
+Edition: cre
+Level: 1
+Version: 2.2.0p42
+
+In a previous werk (#17817) we introduced an update action that would
+remove any user profiles that weren't also current Checkmk users, in
+an attempt to clean up user IDs that weren't valid. However, this change
+didn't check the validation of these user IDs which was incorrect.
+
+With this werk we now check first if the user profile user ID is
+not valid, and only then delete it.

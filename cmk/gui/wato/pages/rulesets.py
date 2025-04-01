@@ -60,6 +60,7 @@ from cmk.gui.http import mandatory_parameter, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
+    make_confirmed_form_submit_link,
     make_form_submit_link,
     make_simple_form_page_menu,
     make_simple_link,
@@ -3300,6 +3301,29 @@ class ModeUnknownRulesets(WatoMode):
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(
+                    name="rulesets",
+                    title=_("Rulesets"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("On selected rules"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Delete selected rules"),
+                                    shortcut_title=_("Delete selected rules"),
+                                    icon_name="delete",
+                                    item=make_confirmed_form_submit_link(
+                                        form_name="bulk_delete_selected_unknown_rulesets",
+                                        button_name="_bulk_delete_selected_unknown_rulesets",
+                                        title=_("Delete selected rulesets"),
+                                    ),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                )
+                            ],
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
                     name="related",
                     title=_("Related"),
                     topics=[
@@ -3339,6 +3363,19 @@ class ModeUnknownRulesets(WatoMode):
     def _show_row(self, table: Table, unknown_ruleset_name: str, rule_nr: int, rule: Rule) -> None:
         table.row()
 
+        table.cell(
+            html.render_input(
+                "_toggle_group",
+                type_="button",
+                class_="checkgroup",
+                onclick="cmk.selection.toggle_group_rows(this);",
+                value="X",
+            ),
+            sortable=False,
+            css=["checkbox"],
+        )
+        html.checkbox("_c_unknown_rule_%s" % rule.id)
+
         table.cell(_("Actions"), css=["buttons"])
         html.icon_button(
             make_confirm_delete_link(
@@ -3371,43 +3408,72 @@ class ModeUnknownRulesets(WatoMode):
         )
 
     def page(self) -> None:
-        for unknown_ruleset in self._unknown_rulesets():
+        with html.form_context("bulk_delete_selected_unknown_rulesets", method="POST"):
+            html.hidden_field("mode", "unknown_rulesets", add_var=True)
             with table_element(
-                f"{self.name()}_{unknown_ruleset.name}",
-                title=_("Unknown ruleset: %s") % unknown_ruleset.name,
+                self.name(),
+                title=None,
                 searchable=False,
                 sortable=False,
                 foldable=Foldable.FOLDABLE_SAVE_STATE,
                 limit=None,
             ) as table:
-                for rules in unknown_ruleset.rules.values():
-                    for rule_nr, rule in enumerate(rules):
-                        self._show_row(table, unknown_ruleset.name, rule_nr, rule)
+                for unknown_ruleset in self._unknown_rulesets():
+                    table.groupheader(_("Unknown ruleset: %s") % unknown_ruleset.name)
+                    for rules in unknown_ruleset.rules.values():
+                        for rule_nr, rule in enumerate(rules):
+                            self._show_row(table, unknown_ruleset.name, rule_nr, rule)
 
-    def action(self) -> ActionResult:
-        check_csrf_token()
+    def _delete_rule(self, rulesets: AllRulesets, ruleset: Ruleset, rule: Rule) -> None:
+        if is_locked_by_quick_setup(rule.locked_by):
+            raise MKUserError(None, _("Cannot delete rules that are managed by Quick setup."))
 
-        if not (d_ruleset_name := request.var("_delete_ruleset_name")) or not (
-            d_rule_id := request.var("_delete_rule_id")
-        ):
-            return None
+        ruleset.delete_rule(rule)
+        rulesets.save_folder(rule.folder)
 
+    def _bulk_delete_selected_rules(self, selected_rule_ids: Sequence[str]) -> ActionResult:
         rulesets = AllRulesets.load_all_rulesets()
-        if not (ruleset := rulesets.get_rulesets().get(d_ruleset_name)):
+        for ruleset in rulesets.get_rulesets().values():
+            for rules in ruleset.rules.values():
+                for rule in rules:
+                    if rule.id in selected_rule_ids:
+                        self._delete_rule(rulesets, ruleset, rule)
+
+        # TODO causes import-cycles
+        # reset_scheduling("execute_deprecation_tests_and_notify_users")
+        return redirect(self.mode_url())
+
+    def _delete_selected_rule(
+        self, selected_ruleset_name: str, selected_rule_id: str
+    ) -> ActionResult:
+        rulesets = AllRulesets.load_all_rulesets()
+        if not (ruleset := rulesets.get_rulesets().get(selected_ruleset_name)):
             return None
 
         for rules in ruleset.rules.values():
             for rule in rules:
-                if rule.id == d_rule_id:
-                    if is_locked_by_quick_setup(rule.locked_by):
-                        raise MKUserError(
-                            None, _("Cannot delete rules that are managed by Quick setup.")
-                        )
-
-                    ruleset.delete_rule(rule)
-                    rulesets.save_folder(rule.folder)
+                if rule.id == selected_rule_id:
+                    self._delete_rule(rulesets, ruleset, rule)
                     # TODO causes import-cycles
                     # reset_scheduling("execute_deprecation_tests_and_notify_users")
                     return redirect(self.mode_url())
+
+        return None
+
+    def action(self) -> ActionResult:
+        check_csrf_token()
+
+        if request.var("_bulk_delete_selected_unknown_rulesets") and (
+            d_rule_ids := [
+                vn.split("_c_unknown_rule_")[-1]
+                for vn, _vv in request.itervars(prefix="_c_unknown_rule")
+            ]
+        ):
+            return self._bulk_delete_selected_rules(d_rule_ids)
+
+        if (d_ruleset_name := request.var("_delete_ruleset_name")) and (
+            d_rule_id := request.var("_delete_rule_id")
+        ):
+            return self._delete_selected_rule(d_ruleset_name, d_rule_id)
 
         return None

@@ -26,3 +26,10 @@ def test_migrate_credentials() -> None:
         "credentials",
         {"user": "USER", "secret": "SECRET"},
     )
+
+
+def test_migrate_credentials_configured() -> None:
+    assert migrate_credentials(("configured", ("bi_user", ("password", "SECRET")))) == (
+        "credentials",
+        {"user": "bi_user", "secret": "SECRET"},
+    )

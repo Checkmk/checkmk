@@ -36,6 +36,8 @@ def migrate_credentials(
             return "automation", None
         case "credentials", ((user, secret) | {"user": user, "secret": secret}):
             return "credentials", {"user": user, "secret": secret}
+        case "configured", (user, ("password", secret)):
+            return "credentials", {"user": user, "secret": secret}
     raise ValueError(params)
 
 

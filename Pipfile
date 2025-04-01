@@ -124,7 +124,7 @@ requests = "~=2.31"
 requests-kerberos = "==0.14.0"  # needed by check_bi_aggr
 markupsafe = "==2.1.2"  # needed by jinja2
 itsdangerous = "==2.1.2"  # needed by flask
-jinja2 = "==3.1.5"  # needed by flask
+jinja2 = "==3.1.6"  # needed by flask
 more-itertools = "==9.1.0"  # needed by connexion through zipp, pytest
 pyrsistent = "==0.19.3"  # needed by jsonschema
 werkzeug = "==3.0.6"  # direct dependency and needed by flask

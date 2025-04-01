@@ -514,9 +514,9 @@ check-manifest==0.50 \
     --hash=sha256:6ab3e3aa72a008da3314b432f4c768c9647b4d6d8032f9e1a4672a572118e48c \
     --hash=sha256:d300f9f292986aa1a30424af44eb45c5644e0a810e392e62d553b24bb3393494
     # via devpi-client
-checkmk-dev-tools==0.4.4 \
-    --hash=sha256:99478f7657bdb56f9ef79daf624ed4cd1364cac0570bf13b10ece7b729647449 \
-    --hash=sha256:c017ade4b5bc7bc6d2d5695ff55c103209c8e32324630b795e9c412a90c01660
+checkmk-dev-tools==0.6.0 \
+    --hash=sha256:5c392a2743cb7d3edfa0702a3d040e318abb64eb59a8a5be5b72c600d8d7f2dc \
+    --hash=sha256:69ba8545afb96a66b6d5f306688fb8a4c934414fe880d5ad2b50a50822de381b
     # via -r requirements_dev.txt
 click==8.1.8 \
     --hash=sha256:63c132bbbed01578a06712a2d1f497bb62d9c1c0d329b7903a866228027263b2 \

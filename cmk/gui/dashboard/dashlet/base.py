@@ -342,7 +342,7 @@ class Dashlet(abc.ABC, Generic[T]):
                 return f"(function() {{{on_refresh}}})"
             return f'"{self._add_context_vars_to_url(url)}"'  # url to dashboard_dashlet.py
         except Exception:
-            # Ignore the exceptions in non debug mode, assuming the exception also occures
+            # Ignore the exceptions in non debug mode, assuming the exception also occurs
             # while dashlet rendering, which is then shown in the dashlet itselfs.
             if active_config.debug:
                 raise

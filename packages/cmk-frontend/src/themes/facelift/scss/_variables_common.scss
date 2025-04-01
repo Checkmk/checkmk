@@ -20,7 +20,7 @@ $black: rgb(0, 0, 0);
 $warning: rgb(255, 254, 68); // alt (more of an orange): rgb(255, 160, 66)
 $danger: rgb(255, 50, 50);
 $danger-dimmed: color.adjust($danger, $lightness: -25%);
-// TODO: Exchange the variable $success with $new-success and adjust the occurences of $new-success
+// TODO: Exchange the variable $success with $new-success and adjust the occurrences of $new-success
 //       in _login.scss. Rebranding and the 2.2.0 release made this temporary hack necessary.
 //       See https://jira.lan.tribe29.com/browse/CMK-13295
 $new-success: rgb(21, 209, 160);

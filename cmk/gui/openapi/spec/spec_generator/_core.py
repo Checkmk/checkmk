@@ -428,7 +428,7 @@ __version__ = "1.0"
 def main() -> int:
     main_modules.load_plugins()
     if errors := get_failed_plugins():
-        raise Exception(f"The following errors occured during plug-in loading: {errors}")
+        raise Exception(f"The following errors occurred during plug-in loading: {errors}")
 
     with gui_context(), SuperUserContext():
         for target in get_args(EndpointTarget):

@@ -899,7 +899,7 @@ def _execute_update_file(
                     ("abort", "Stop here and abort update!"),
                 ]
                 choice = ask_user_choices(
-                    "Problem occured",
+                    "Problem occurred",
                     "We detected an exception (printed above). You have the "
                     "chance to fix things and retry the operation now.",
                     options,

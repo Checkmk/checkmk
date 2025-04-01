@@ -7,7 +7,7 @@ description:
  Checks the Airflow Deviation from Set Point of Detectors in
  Wagner Titanus Top Sens devices. The value is in percent from the chosen
  air flow limits within the devices  where an air flow fault condition
- occures.
+ occurs.
 
  Returns {WARN} or {CRIT} if the value is out of the given ranges and
  {OK} otherwise.

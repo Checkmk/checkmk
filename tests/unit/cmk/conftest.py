@@ -140,7 +140,7 @@ def load_config(request_context: None) -> Iterator[None]:
 def load_plugins() -> None:
     main_modules.load_plugins()
     if errors := get_failed_plugins():
-        raise Exception(f"The following errors occured during plug-in loading: {errors}")
+        raise Exception(f"The following errors occurred during plug-in loading: {errors}")
 
 
 @pytest.fixture()

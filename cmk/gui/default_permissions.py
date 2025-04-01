@@ -271,7 +271,7 @@ PermissionSeeFailedNotifications24H = Permission(
         "If Checkmk is unable to notify users about problems, the site will warn about this situation "
         "very visibly inside the UI (both in the tactical overview and the dashboard). This affects only "
         "users with this permission. Users with this permission will only see failed notifications "
-        "that occured within the last 24 hours."
+        "that occurred within the last 24 hours."
     ),
     defaults=["user"],
 )

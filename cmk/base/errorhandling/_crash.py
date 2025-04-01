@@ -74,7 +74,7 @@ def create_check_crash_dump(
     snmp_backend: SNMPBackendEnum,
     rtc_package: AgentRawData | None,
 ) -> str:
-    """Create a crash dump from an exception occured during check execution
+    """Create a crash dump from an exception occurred during check execution
 
     The crash dump is put into a tarball, base64 encoded and appended to the long output
     of the check. The GUI (cmk.gui.crash_reporting) is able to parse it and send it to

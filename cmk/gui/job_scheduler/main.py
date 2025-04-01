@@ -101,7 +101,7 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
 
             main_modules.load_plugins()
             if errors := get_failed_plugins():
-                logger.error("The following errors occured during plug-in loading: %r", errors)
+                logger.error("The following errors occurred during plug-in loading: %r", errors)
 
             scheduler_thread = run_scheduler_threaded(
                 crash_report_callback,

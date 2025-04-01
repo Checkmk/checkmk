@@ -168,7 +168,7 @@ def check_cbl_airlaser_hw(params: Mapping[str, Any], section: Section) -> CheckR
                 state = State.CRIT
             elif val == "warning":
                 state = State.worst(state, State.WARN)
-            # go here if no explicit error occured,
+            # go here if no explicit error occurred,
             # no handling undefined and not_installed
             else:
                 continue

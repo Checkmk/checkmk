@@ -248,7 +248,7 @@ class ProblemException(HTTPException):
     def __init__(
         self,
         status: int = 400,
-        title: str = "A problem occured.",
+        title: str = "A problem occurred.",
         detail: str = "",
         type_: str | None = None,
         fields: FIELDS | None = None,

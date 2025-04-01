@@ -148,7 +148,7 @@ class PageCrash(ABCCrashReportPage):
             html.show_error("<b>{}:</b> {}".format(_("Internal error"), crash_info["exc_value"]))
             html.p(
                 _(
-                    "An internal error occured while processing your request. "
+                    "An internal error occurred while processing your request. "
                     "You can report this issue to the Checkmk team to help "
                     "fixing this issue. Please use the form below for reporting."
                 )

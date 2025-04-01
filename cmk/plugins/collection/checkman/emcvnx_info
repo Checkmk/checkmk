@@ -5,7 +5,7 @@ license: GPLv2
 distribution: check_mk
 description:
  Reports information about the Server IP address, the system time, serial
- number and the occurence of errors.
+ number and the occurrence of errors.
 
  The check returns {CRIT} if an error is found in the agent section or the
  system fault led is on. Otherwise the check returns {OK}.

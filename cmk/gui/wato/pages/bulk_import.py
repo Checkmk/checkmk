@@ -377,7 +377,7 @@ class ModeBulkImport(WatoMode):
 
         msg = _("Imported %d hosts into the current folder.") % num_succeeded
         if num_failed:
-            msg += "<br><br>" + (_("%d errors occured:") % num_failed)
+            msg += "<br><br>" + (_("%d errors occurred:") % num_failed)
             msg += "<ul>"
             for fail_msg in error_msgs:
                 msg += "<li>%s</li>" % fail_msg

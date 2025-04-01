@@ -7,7 +7,7 @@ description:
  This check monitors the backup status and expected time of
  Delta Energy Systems devices which support the ORION-MIB.
 
- The check goes WARN if the status is 'inactive' or 'occured',
+ The check goes WARN if the status is 'inactive' or 'occurred',
  CRIT if 'fail' is reported, otherwise OK.
 
 discovery:

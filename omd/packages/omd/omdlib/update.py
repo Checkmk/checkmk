@@ -176,7 +176,7 @@ class ManageUpdate:
         if self.backup_dir.exists():
             sys.exit(
                 f"The folder {self.backup_dir} contains data from a failed update attempt. This "
-                "only happens, if a serious error occured during a previous update attempt. "
+                "only happens, if a serious error occurred during a previous update attempt. "
                 f"Please contact support. A crash report may be available in {crash_dir}. "
                 "Since the root cause of this error is not known to OMD, the site is an "
                 "unknown state and both, restarting or updating the site, can have unknown effects.\n"
@@ -213,7 +213,7 @@ class ManageUpdate:
             except Exception:
                 identity = report_crash()
                 sys.stderr.write(
-                    f"A serious error occured, which resulted in a crash with id: {identity}\n"
+                    f"A serious error occurred, which resulted in a crash with id: {identity}\n"
                     "Please contact support with this crash id.\n"
                     "Since the root cause of this error is not known to OMD, the site is an "
                     "unknown state and both, restarting or updating the site, can have unknown effects.\n"

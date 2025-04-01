@@ -98,7 +98,7 @@ async function interceptor({ request }: { request: Request }) {
     } else if (apiError.value === 'error') {
       return HttpResponse.json(
         {
-          title: 'An exception occured',
+          title: 'An exception occurred',
           status: 500,
           detail: 'Some error message, maybe even with <b><tt>html</tt></b> tags'
         },

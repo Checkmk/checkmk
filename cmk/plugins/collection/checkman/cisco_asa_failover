@@ -9,7 +9,7 @@ description:
  or if it has failed over to the partner device.
 
  The check will report {OK} as long as the correct unit has the role
- "active" or "standby". If a failover has occured, the check will report
+ "active" or "standby". If a failover has occurred, the check will report
  {WARN}. Furthermore, the check also monitors the state of the local and
  the remote device and goes {WARN} if they are not active or standby.
  Finally, the check will go {CRIT} if the failover link is not up.

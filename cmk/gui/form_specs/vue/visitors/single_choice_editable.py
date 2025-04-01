@@ -104,7 +104,7 @@ class SingleChoiceEditableVisitor(
                     create=localize(self.form_spec.create_element_label),
                     loading=_("Loading ..."),
                     validation_error=_("Could not validate form, errors are shown in the form"),
-                    fatal_error=_("An fatal error occured:"),
+                    fatal_error=_("An fatal error occurred:"),
                     fatal_error_reload=_("reload"),
                     no_objects=_("No options available"),
                     no_selection=input_hint,

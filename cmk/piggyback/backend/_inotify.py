@@ -164,7 +164,7 @@ class INotify:
             yield from self.read()
 
     def read(self, timeout: int | None = None) -> Sequence[Event]:
-        """Read occured events once.
+        """Read occurred events once.
 
         If timeout is set and there are no events, wait up to `timeout`
         seconds. Otherwise block until there are events.

@@ -167,7 +167,7 @@ def event_data_available(loop_interval: int | None) -> bool:
 
 def pipe_decode_raw_context(raw_context: EventContext) -> None:
     """
-    cmk_base replaces all occurences of the pipe symbol in the infotext with
+    cmk_base replaces all occurrences of the pipe symbol in the infotext with
     the character "Light vertical bar" before a check result is submitted to
     the core. We remove this special encoding here since it may result in
     gibberish output when deliered via a notification plug-in.

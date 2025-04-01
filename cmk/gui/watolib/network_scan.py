@@ -108,7 +108,7 @@ def execute_network_scan_job() -> None:
             result.update(
                 {
                     "state": False,
-                    "output": _("An exception occured: %s") % e,
+                    "output": _("An exception occurred: %s") % e,
                 }
             )
             logger.error("Exception in network scan:\n%s", traceback.format_exc())

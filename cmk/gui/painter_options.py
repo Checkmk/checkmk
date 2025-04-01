@@ -165,7 +165,7 @@ class PainterOptions:
                 # Some view options (that are not declared as display options)
                 # like "refresh" don't have a valuespec. So they need to default
                 # to None.
-                # TODO: Find all occurences and simply declare them as "invisible"
+                # TODO: Find all occurrences and simply declare them as "invisible"
                 # painter options.
                 pass
         return self._options.get(name, dflt)

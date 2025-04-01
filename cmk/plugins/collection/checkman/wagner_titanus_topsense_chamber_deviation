@@ -6,7 +6,7 @@ distribution: check_mk
 description:
  Reports the Chamber Deviation from Calibration Point of Detectors in
  Wagner Titanus Top Sens devices. The value is in percent from the chamber
- deviation limits, where a chamber fault condition occures.
+ deviation limits, where a chamber fault condition occurs.
 
  The check is informational only and returns always {OK}.
 

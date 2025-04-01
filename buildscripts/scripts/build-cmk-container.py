@@ -259,7 +259,7 @@ def docker_push(args: argparse.Namespace, version_tag: str, registry: str, folde
     for line in resp:
         LOG.debug(line)
         if "error" in line:
-            raise ValueError(f"Some error occured during upload: {line}")
+            raise ValueError(f"Some error occurred during upload: {line}")
 
     if args.set_branch_latest_tag:
         LOG.info("Pushing '%s' as '%s-latest' ...", this_repository, args.branch)
@@ -275,7 +275,7 @@ def docker_push(args: argparse.Namespace, version_tag: str, registry: str, folde
     for line in resp:
         LOG.debug(line)
         if "error" in line:
-            raise ValueError(f"Some error occured during upload: {line}")
+            raise ValueError(f"Some error occurred during upload: {line}")
 
     if args.set_latest_tag:
         LOG.info("Pushing '%s' as 'latest' ...", this_repository)
@@ -285,7 +285,7 @@ def docker_push(args: argparse.Namespace, version_tag: str, registry: str, folde
         for line in resp:
             LOG.debug(line)
             if "error" in line:
-                raise ValueError(f"Some error occured during upload: {line}")
+                raise ValueError(f"Some error occurred during upload: {line}")
 
 
 def needed_packages(mk_file: str, output_file: str) -> None:

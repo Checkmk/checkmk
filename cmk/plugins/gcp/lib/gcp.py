@@ -226,7 +226,7 @@ def _filter_by_value(result: GCPResult, filter_by: Filter) -> bool:
 
 def get_value(timeseries: Sequence[GCPResult], spec: MetricExtractionSpec) -> float:
     # GCP does not always deliver all metrics. i.e. api/request_count only contains values if
-    # api requests have occured. To ensure all metrics are displayed in check mk we default to
+    # api requests have occurred. To ensure all metrics are displayed in check mk we default to
     # 0 in the absence of data.
 
     if spec.filter_by is not None:

@@ -145,7 +145,7 @@ def _parse_lsblk_v2_row(row: Sequence[str]) -> tuple[str, str | None]:
             return name, uuid
         case [name, *uuid_with_spaces]:
             return name, " ".join(uuid_with_spaces)
-    raise ValueError(f"An error occured while parsing {row}")
+    raise ValueError(f"An error occurred while parsing {row}")
 
 
 def _parse_lsblk_v2_subsection(lsblk_subsection: StringTable) -> LsblkMap:

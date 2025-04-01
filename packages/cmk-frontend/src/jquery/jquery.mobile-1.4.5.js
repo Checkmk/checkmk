@@ -4897,7 +4897,7 @@
 
 				// Check to see if the page already exists in the DOM.
 				// NOTE do _not_ use the :jqmData pseudo selector because parenthesis
-				//      are a valid url char and it breaks on the first occurence
+				//      are a valid url char and it breaks on the first occurrence
 				page = this.element
 					.children("[data-" + this._getNs() +
 						"url='" + $.mobile.path.hashToSelector(dataUrl) + "']");
@@ -12811,7 +12811,7 @@
 				var paddingBottom = parseFloat($(".ui-page-active").css("padding-bottom"));
 				//trigger page redraw to fix incorrectly positioned fixed elements
 				$(".ui-page-active").css("padding-bottom", (paddingBottom + 1) + "px");
-				//if the padding is reset with out a timeout the reposition will not occure.
+				//if the padding is reset with out a timeout the reposition will not occur.
 				//this is independant of JQM the browser seems to need the time to react.
 				setTimeout(function() {
 					$(".ui-page-active").css("padding-bottom", paddingBottom + "px");

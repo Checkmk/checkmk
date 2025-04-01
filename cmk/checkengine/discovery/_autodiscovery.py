@@ -68,7 +68,7 @@ class DiscoveryResult:
     clustered_vanished: int = 0
     clustered_ignored: int = 0
 
-    # None  -> No error occured
+    # None  -> No error occurred
     # ""    -> Not monitored (disabled host)
     # "..." -> An error message about the failed discovery
     error_text: str | None = None

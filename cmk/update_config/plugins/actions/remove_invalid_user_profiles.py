@@ -8,6 +8,7 @@ from logging import Logger
 
 from cmk.utils import tty
 from cmk.utils.paths import profile_dir
+from cmk.utils.user import UserId
 
 from cmk.gui.userdb import load_contacts, load_multisite_users
 
@@ -26,10 +27,13 @@ class RemoveInvalidUserProfiles(UpdateAction):
         valid_usernames = set(list(load_contacts()) + list(load_multisite_users()))
         user_profile_dirs = {pd.name for pd in profile_dir.iterdir() if pd.is_dir()}
         for invalid_profile_dir in user_profile_dirs - valid_usernames:
-            shutil.rmtree(profile_dir / invalid_profile_dir)
-            logger.error(
-                f"\t{tty.warn} Removed invalid user profile from disk: '{invalid_profile_dir}'{tty.normal}"
-            )
+            try:
+                UserId(invalid_profile_dir)
+            except ValueError:
+                shutil.rmtree(profile_dir / invalid_profile_dir)
+                logger.error(
+                    f"\t{tty.warn} Removed invalid user profile from disk: '{invalid_profile_dir}'{tty.normal}"
+                )
 
 
 update_action_registry.register(

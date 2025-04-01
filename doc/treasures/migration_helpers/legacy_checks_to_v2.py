@@ -625,7 +625,7 @@ class RegistrationTransformer(cst.CSTTransformer):
                         args=(
                             cst.Arg(cst.SimpleString(f'"{section_name}"'), cst.Name("name")),
                             *(
-                                cst.Arg(kwargs[kw], cst.Name(kw))
+                                cst.Arg(kwargs[kw], cst.Name(kw), comma=cst.Comma())
                                 for kw in self.section_kwargs
                                 if kw in kwargs
                             ),

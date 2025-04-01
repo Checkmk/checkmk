@@ -128,6 +128,14 @@ def _make_path_config() -> PathConfig | None:
     )
 
 
+def _try_rel_path(site_id: SiteId, abs_path: Path) -> Path:
+    try:
+        return abs_path.relative_to(Path("/omd/sites", site_id))
+    except ValueError:
+        # Not a subpath, should not happen
+        return abs_path
+
+
 def _group_manifests_by_rel_path(
     site_id: SiteId, path_config: PathConfig, manifests: Sequence[Manifest]
 ) -> Mapping[Path, Manifest]:
@@ -139,14 +147,6 @@ def _group_manifests_by_rel_path(
                     _try_rel_path(site_id, Path(path_config.get_path(part)) / file)
                 ] = manifest
     return manifests_by_path
-
-
-def _try_rel_path(site_id: SiteId, abs_path: Path) -> Path:
-    try:
-        return abs_path.relative_to(Path("/omd/sites", site_id))
-    except ValueError:
-        # Not a subpath, should not happen
-        return abs_path
 
 
 class _NotificationCategory(Enum):
@@ -170,16 +170,8 @@ class _ACTestResultProblem:
 
     def text(self) -> str:
         words = []
-        for state, text, rel_path in sorted(
-            set(
-                (
-                    r.state,
-                    r.text,
-                    _try_rel_path(s, r.path) if r.path else None,
-                )
-                for s, rs in self._ac_test_results.items()
-                for r in rs
-            )
+        for state, text in sorted(
+            set((r.state, r.text) for rs in self._ac_test_results.values() for r in rs)
         ):
             match state:
                 case ACResultState.CRIT:
@@ -188,9 +180,6 @@ class _ACTestResultProblem:
                     words.append(f"[WARN] Result: {text}")
                 case _:
                     words.append(f"Result: {text}")
-
-            if rel_path:
-                words.append(f"File: {rel_path}")
 
         return ", ".join(words)
 
@@ -260,47 +249,26 @@ class _ACTestResultProblem:
         html_code += HTMLWriter.render_p(_("Details:"))
 
         table_content = HTML("", escape=False)
-        for idx, (state, text, rel_path) in enumerate(
-            sorted(
-                set(
-                    (
-                        r.state,
-                        r.text,
-                        _try_rel_path(s, r.path) if r.path else None,
-                    )
-                    for s, rs in self._ac_test_results.items()
-                    for r in rs
-                )
-            )
+        for idx, (state, text) in enumerate(
+            sorted(set((r.state, r.text) for rs in self._ac_test_results.values() for r in rs))
         ):
             match state:
                 case ACResultState.CRIT:
                     state_td = HTMLWriter.render_td(
                         HTML(replace_state_markers("(!!)"), escape=False),
-                        rowspan="2",
                         class_="state svcstate",
                     )
                 case ACResultState.WARN:
                     state_td = HTMLWriter.render_td(
                         HTML(replace_state_markers("(!)"), escape=False),
-                        rowspan="2",
                         class_="state svcstate",
                     )
                 case _:
                     state_td = HTMLWriter.render_td("")
 
-            class_ = "even0" if idx % 2 == 0 else "odd0"
             table_content += HTMLWriter.render_tr(
                 HTMLWriter.render_td(text) + state_td,
-                class_=class_,
-            )
-            table_content += HTMLWriter.render_tr(
-                (
-                    HTMLWriter.render_td(f"File: {rel_path}")
-                    if rel_path
-                    else HTMLWriter.render_td("")
-                ),
-                class_=class_,
+                class_="even0" if idx % 2 == 0 else "odd0",
             )
 
         html_code += HTMLWriter.render_table(table_content, class_="data table")

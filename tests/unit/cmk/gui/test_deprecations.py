@@ -698,16 +698,7 @@ def test_render_problem(problem: _ACTestResultProblem, title: str, box: str) -> 
                             [],
                         ),
                     ],
-                    content=(
-                        '<h2>A text</h2><div class="error">This may partially work in '
-                        "Checkmk 2.3.0 but will stop working from the next major "
-                        "version onwards.</div><p>We highly recommend solving this "
-                        "issue already in your installation.</p><p>Affected sites: "
-                        'site_id</p><p>Details:</p><table class="data table"><tr '
-                        'class="even0"><td>A text</td><td rowspan="2" class="state '
-                        'svcstate"><b class="stmark state1">WARN</b></td></tr><tr '
-                        'class="even0"><td></td></tr></table>'
-                    ),
+                    content='<h2>A text</h2><div class="error">This may partially work in Checkmk 2.3.0 but will stop working from the next major version onwards.</div><p>We highly recommend solving this issue already in your installation.</p><p>Affected sites: site_id</p><p>Details:</p><table class="data table"><tr class="even0"><td>A text</td><td class="state svcstate"><b class="stmark state1">WARN</b></td></tr></table>',
                 ),
             ],
             id="manage-mkps",
@@ -755,16 +746,7 @@ def test_render_problem(problem: _ACTestResultProblem, title: str, box: str) -> 
                             [],
                         ),
                     ],
-                    content=(
-                        '<h2>A text</h2><div class="error">This may partially work in '
-                        "Checkmk 2.3.0 but will stop working from the next major "
-                        "version onwards.</div><p>We highly recommend solving this "
-                        "issue already in your installation.</p><p>Affected sites: "
-                        'site_id</p><p>Details:</p><table class="data table"><tr '
-                        'class="even0"><td>A text</td><td rowspan="2" class="state '
-                        'svcstate"><b class="stmark state1">WARN</b></td></tr><tr '
-                        'class="even0"><td></td></tr></table>'
-                    ),
+                    content='<h2>A text</h2><div class="error">This may partially work in Checkmk 2.3.0 but will stop working from the next major version onwards.</div><p>We highly recommend solving this issue already in your installation.</p><p>Affected sites: site_id</p><p>Details:</p><table class="data table"><tr class="even0"><td>A text</td><td class="state svcstate"><b class="stmark state1">WARN</b></td></tr></table>',
                 ),
             ],
             id="rule-sets",

@@ -27,7 +27,7 @@ description:
  If any of these counters increase, the check goes {CRIT}.
  It will become {OK} again if the service is rediscovered.
  Additionally, the check compares the reallocated events to the corresponding
- tresholds reported via smartctl.
+ thresholds reported via smartctl.
 
  The check requires enabling agent plugin {smart_posix}.
  Moreover, the monitored device needs support the ATA protocol.

@@ -11,9 +11,9 @@ description:
  - the output power
 
  transmitted by the transceiver.
- The powers are reported in dBm. Each of these powers are then compared to the alarm tresholds
+ The powers are reported in dBm. Each of these powers are then compared to the alarm thresholds
  reported by the device. The check returns {CRIT} if either of the powers falls below or rises above
- an alarm treshold. Otherwise, the check returns {OK}. The device itself reports the power in
+ an alarm threshold. Otherwise, the check returns {OK}. The device itself reports the power in
  microwatt, which is then converted to dBm.
 
  This check supports the Ciena 5171 Packetwave Platform and 5142 Service Aggregation Switch.

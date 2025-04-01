@@ -8,7 +8,7 @@ description:
  It reports how many sessions there are in total, how many of them are
  active, and at what rate new sessions are generated.
 
- It allows to set {WARN} and {CRIT} tresholds on any of these parameters.
+ It allows to set {WARN} and {CRIT} thresholds on any of these parameters.
 
  The data is gathered from the {show global status} query.
 

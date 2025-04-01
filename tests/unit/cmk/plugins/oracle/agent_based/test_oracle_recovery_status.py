@@ -5,12 +5,11 @@
 
 import pytest
 
-from cmk.base.legacy_checks.oracle_recovery_status import (
+from cmk.agent_based.v2 import CheckResult, Metric, Result, State
+from cmk.plugins.oracle.agent_based.oracle_recovery_status import (
     check_oracle_recovery_status,
     parse_oracle_recovery_status,
 )
-
-from cmk.agent_based.v2 import CheckResult, Metric, Result, State
 
 
 @pytest.mark.parametrize(

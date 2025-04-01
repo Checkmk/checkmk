@@ -8,8 +8,6 @@ from collections.abc import Sequence
 
 import pytest
 
-from tests.unit.cmk.plugins.oracle.agent_based.utils_inventory import sort_inventory_result
-
 from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
 
 from cmk.agent_based.v2 import (
@@ -113,6 +111,4 @@ def test_check_oracle_recovery_area(
 def test_inventory_oracle_recovery_area(
     string_table: StringTable, expected_result: InventoryResult
 ) -> None:
-    assert sort_inventory_result(
-        inventory_oracle_recovery_area(string_table)
-    ) == sort_inventory_result(expected_result)
+    assert list(inventory_oracle_recovery_area(string_table)) == expected_result

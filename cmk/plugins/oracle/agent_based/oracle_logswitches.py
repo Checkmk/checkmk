@@ -7,11 +7,6 @@
 from collections.abc import Mapping
 from typing import Any, assert_never
 
-from cmk.base.check_legacy_includes.oracle import (
-    oracle_handle_ora_errors,
-    oracle_handle_ora_errors_discovery,
-)
-
 from cmk.agent_based.v2 import (
     AgentSection,
     check_levels,
@@ -22,6 +17,11 @@ from cmk.agent_based.v2 import (
     Result,
     Service,
     StringTable,
+)
+
+from .liboracle import (
+    oracle_handle_ora_errors,
+    oracle_handle_ora_errors_discovery,
 )
 
 # <<<oracle_logswitches>>>

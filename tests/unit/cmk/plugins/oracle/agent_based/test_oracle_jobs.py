@@ -7,14 +7,13 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.base.legacy_checks.oracle_jobs import (
+from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, Service, State
+from cmk.plugins.oracle.agent_based.oracle_jobs import (
     check_oracle_jobs,
     inventory_oracle_jobs,
     parse_oracle_jobs,
 )
-
-from cmk.agent_based.v1.type_defs import StringTable
-from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, Service, State
 
 _broken_info = [
     [

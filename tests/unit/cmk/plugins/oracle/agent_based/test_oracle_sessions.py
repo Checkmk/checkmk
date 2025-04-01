@@ -4,7 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.legacy_checks.oracle_sessions import inventory_oracle_sessions, parse_oracle_sessions
+from cmk.plugins.oracle.agent_based.oracle_sessions import (
+    inventory_oracle_sessions,
+    parse_oracle_sessions,
+)
 
 
 def test_inventory_oracle_sessions_fail():

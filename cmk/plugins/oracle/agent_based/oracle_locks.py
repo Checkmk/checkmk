@@ -7,8 +7,6 @@
 from collections.abc import Mapping
 from typing import Any, assert_never
 
-from cmk.base.check_legacy_includes.oracle import oracle_handle_ora_errors
-
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -21,6 +19,8 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+
+from .liboracle import oracle_handle_ora_errors
 
 # <<<oracle_locks>>>
 # TUX12C|273|2985|ora12c.local|sqlplus@ora12c.local (TNS V1-V3)|46148|oracle|633|NULL|NULL

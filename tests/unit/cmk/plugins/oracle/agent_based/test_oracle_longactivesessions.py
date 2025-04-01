@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.legacy_checks.oracle_longactivesessions import (
+from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.plugins.oracle.agent_based.oracle_longactivesessions import (
     check_oracle_longactivesessions,
     inventory_oracle_longactivesessions,
     parse_oracle_longactivesessions,
 )
-
-from cmk.agent_based.v2 import Metric, Result, Service, State
 
 INFO = [
     ["orcl", "TUX12C", "Serial Number", "machine", "0", "osuser", "4800", "19", "0"],

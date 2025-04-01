@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.legacy_checks.oracle_locks import (
+from cmk.agent_based.v2 import Result, Service, State
+from cmk.plugins.oracle.agent_based.oracle_locks import (
     check_oracle_locks,
     inventory_oracle_locks,
     parse_oracle_locks,
 )
-
-from cmk.agent_based.v2 import Result, Service, State
 
 INFO = [
     [

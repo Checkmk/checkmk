@@ -135,7 +135,7 @@ def main() {
             condition: true,
             raiseOnError: false,) {
         smart_build(
-            job: "${edition_base_folder}/build-cmk-deliverables",
+            job: "${base_folder}/build-cmk-deliverables",
             parameters: job_parameters
         );
     }

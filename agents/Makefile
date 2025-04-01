@@ -82,9 +82,8 @@ setversion:
 	    check_mk_agent.openwrt \
 	    check_mk_agent.solaris
 	sed -i 's/__version__ = \"[0-9.a-z-]*\"/__version__ = \"$(NEW_VERSION)\"/g' \
-		$(SPECIAL_AGENTS_DIR)/agent_splunk.py \
-		$(SPECIAL_AGENTS_DIR)/agent_vsphere.py \
-		$(SPECIAL_AGENTS_DIR)/agent_jolokia.py
+		$(shell find $(SPECIAL_AGENTS_DIR) -name "*agent_*.py" -type f) \
+		$(shell find $(REPO_PATH)/cmk/plugins -name "agent*.py" -type f)
 	sed -i "s/^#define CMK_WIN_AGENT_VERSION .*/#define CMK_WIN_AGENT_VERSION \"$(NEW_VERSION)\"/" wnx/include/common/wnx_version.h
 	sed -i 's/std::wstring_view kAgentProductName.*;/std::wstring_view kAgentProductName{L"Checkmk Agent $(NEW_VERSION_MAJOR)"};/' wnx/include/wnx/install_api.h
 	sed -i 's/define ProductName = "Checkmk Agent [^"]*"/define ProductName = "Checkmk Agent $(NEW_VERSION_MAJOR)"/' wnx/install/version.wxi

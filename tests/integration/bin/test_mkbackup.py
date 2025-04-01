@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.common.utils import run
+from tests.testlib.common.utils import DISTROS_MISSING_WHITELIST_ENVIRONMENT_FOR_SU, run
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.site import get_site_factory, Site
 from tests.testlib.web_session import CMKWebSession
@@ -315,6 +315,10 @@ def test_mkbackup_encrypted_backup(site_for_mkbackup_tests: Site) -> None:
 
 
 @pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
+@pytest.mark.skipif(
+    os.environ.get("DISTRO") in DISTROS_MISSING_WHITELIST_ENVIRONMENT_FOR_SU,
+    reason="This test would use preserve-env, which needs --white-list-environment under alma-8, which is not available",
+)
 def test_mkbackup_encrypted_backup_and_restore(site_for_mkbackup_tests: Site) -> None:
     backup_id = _execute_backup(site_for_mkbackup_tests, job_id="testjob-encrypted")
 

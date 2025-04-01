@@ -9,10 +9,11 @@ from __future__ import annotations
 import http.client
 import json
 import logging
-from collections.abc import Sequence
-from typing import Any
+from collections.abc import Iterable, Mapping, Sequence
+from typing import Any, NoReturn
 from urllib import parse
 
+import pydantic
 from marshmallow import fields as ma_fields
 from marshmallow import Schema, ValidationError
 from werkzeug.datastructures import MIMEAccept, MultiDict
@@ -52,7 +53,7 @@ class ContentTypeValidator:
     @staticmethod
     def validate(
         has_schema: bool,
-        content_type: str,
+        content_type: str | None,
         accepted_types: Sequence[str],
         method: HTTPMethod,
     ) -> None:
@@ -293,6 +294,25 @@ class RequestDataValidator:
         except MKAuthException as exc:
             raise RequestDataValidator._auth_exception(exc.args[0])
 
+    @staticmethod
+    def _format_pydantic_location(location: Iterable[str | int]) -> str:
+        return ".".join(str(loc) for loc in location)
+
+    @staticmethod
+    def raise_formatted_pydantic_error(
+        validation_error: pydantic.ValidationError,
+    ) -> NoReturn:
+        """Convert a Pydantic validation error to a RestAPIRequestDataValidationException."""
+        errors = {
+            RequestDataValidator._format_pydantic_location(error["loc"]): error
+            for error in validation_error.errors()
+        }
+        raise RestAPIRequestDataValidationException(
+            title=http.client.responses[400],
+            detail=f"These fields have problems: {_format_fields(errors)}",
+            fields=FIELDS(errors),
+        ) from validation_error
+
 
 class HeaderValidator:
     """Utility class for validating HTTP headers in API endpoints."""
@@ -340,7 +360,7 @@ class ResponseValidator:
     @staticmethod
     def validate_permissions(
         endpoint: str,
-        params: dict,
+        params: Mapping[str, object],
         permissions_required: permissions.BasePerm | None,
         used_permissions: set[str],
         is_testing: bool = False,
@@ -513,7 +533,5 @@ def _from_multi_dict(multi_dict: MultiDict, list_fields: tuple[str, ...]) -> Arg
     return ret
 
 
-def _format_fields(_messages: list | dict) -> str:
-    if isinstance(_messages, list):
-        return ", ".join(_messages)
-    return ", ".join(_messages.keys())
+def _format_fields(_messages: Iterable[str]) -> str:
+    return ", ".join(_messages)

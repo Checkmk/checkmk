@@ -7,3 +7,12 @@
 These types and functions are used to define the versioned REST API of Checkmk.
 Once all endpoints are migrated to the new framework, the old marshmallow-based code can be removed.
 """
+
+from ._types import FromHeader, FromPath, FromQuery, RawRequestData
+
+__all__ = [
+    "FromHeader",
+    "FromPath",
+    "FromQuery",
+    "RawRequestData",
+]

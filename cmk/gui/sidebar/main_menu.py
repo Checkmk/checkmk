@@ -7,7 +7,7 @@
 Cares about the main navigation of our GUI. This is a) the small sidebar and b) the mega menu
 """
 
-from typing import NamedTuple
+from typing import NamedTuple, TypedDict
 
 from cmk.gui import message
 from cmk.gui.config import active_config
@@ -124,16 +124,21 @@ def ajax_message_read():
         html.write_text_permissive("ERROR")
 
 
+class PopUpMessage(TypedDict):
+    id: str
+    text: str
+
+
 class PageAjaxSidebarGetMessages(AjaxPage):
     def page(self) -> PageResult:
-        popup_msg: list = []
+        popup_msg: list[PopUpMessage] = []
         hint_msg: int = 0
 
         for msg in message.get_gui_messages():
             if "gui_hint" in msg["methods"] and not msg.get("acknowledged"):
                 hint_msg += 1
             if "gui_popup" in msg["methods"]:
-                popup_msg.append({"id": msg["id"], "text": msg["text"]})
+                popup_msg.append(PopUpMessage(id=msg["id"], text=msg["text"]["content"]))
 
         return {
             "popup_messages": popup_msg,

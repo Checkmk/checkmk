@@ -31,9 +31,9 @@ from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 from cmk.utils.version import __version__, Edition, edition, Version
 
-import cmk.gui.userdb as userdb
 import cmk.gui.userdb.ldap_connector as ldap
 import cmk.gui.utils
+from cmk.gui import userdb
 from cmk.gui.backup.handler import Config as BackupConfig
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -1340,6 +1340,14 @@ class ACTestESXDatasources(ACTest):
             )
 
 
+def _try_rel_path(site_id: SiteId, abs_path: Path) -> Path:
+    try:
+        return abs_path.relative_to(Path("/omd/sites", site_id))
+    except ValueError:
+        # Not a subpath, should not happen
+        return abs_path
+
+
 def _compute_deprecation_result(
     *,
     version: str,
@@ -1358,14 +1366,17 @@ def _compute_deprecation_result(
     assert deprecated_base is not None
     assert removed_base > deprecated_base
 
+    rel_path = _try_rel_path(site_id, path)
+
     if base > removed_base:
         return ACSingleResult(
             state=ACResultState.CRIT,
-            text=_("%s uses an API (%s) which was removed in Checkmk %s.")
+            text=_("%s uses an API (%s) which was removed in Checkmk %s (File: %s).")
             % (
                 title_entity,
                 title_api,
                 removed_version,
+                rel_path,
             ),
             site_id=site_id,
             path=path,
@@ -1376,13 +1387,14 @@ def _compute_deprecation_result(
             state=ACResultState.CRIT,
             text=_(
                 "%s uses an API (%s) which was marked as deprecated in"
-                " Checkmk %s and is removed in Checkmk %s."
+                " Checkmk %s and is removed in Checkmk %s (File: %s)."
             )
             % (
                 title_entity,
                 title_api,
                 deprecated_version,
                 removed_version,
+                rel_path,
             ),
             site_id=site_id,
             path=path,
@@ -1393,13 +1405,14 @@ def _compute_deprecation_result(
             state=ACResultState.WARN,
             text=_(
                 "%s uses an API (%s) which was marked as deprecated in"
-                " Checkmk %s and will be removed in Checkmk %s."
+                " Checkmk %s and will be removed in Checkmk %s (File: %s)."
             )
             % (
                 title_entity,
                 title_api,
                 deprecated_version,
                 removed_version,
+                rel_path,
             ),
             site_id=site_id,
             path=path,
@@ -1410,13 +1423,14 @@ def _compute_deprecation_result(
             state=ACResultState.WARN,
             text=_(
                 "%s uses an API (%s) which is marked as deprecated in"
-                " Checkmk %s and will be removed in Checkmk %s."
+                " Checkmk %s and will be removed in Checkmk %s (File: %s)."
             )
             % (
                 title_entity,
                 title_api,
                 deprecated_version,
                 removed_version,
+                rel_path,
             ),
             site_id=site_id,
             path=path,
@@ -1660,9 +1674,9 @@ class ACTestDeprecatedGUIExtensions(ACTest):
                     text=(
                         _(
                             "GUI extension in %r uses an API which is marked as deprecated and may"
-                            " not work anymore due to unknown imports or objects."
+                            " not work anymore due to unknown imports or objects (File: %s)."
                         )
-                        % plugin_filepath.parent.name
+                        % (plugin_filepath.parent.name, _try_rel_path(site_id, plugin_filepath))
                     ),
                     site_id=site_id,
                     path=plugin_filepath,
@@ -1723,9 +1737,12 @@ class ACTestDeprecatedLegacyGUIExtensions(ACTest):
                                 _(
                                     "Legacy GUI extension in %r uses an API which is marked as"
                                     " deprecated and may not work anymore due to unknown imports or"
-                                    " objects."
+                                    " objects (File: %s)."
                                 )
-                                % plugin_filepath.parent.name
+                                % (
+                                    plugin_filepath.parent.name,
+                                    _try_rel_path(site_id, plugin_filepath),
+                                )
                             ),
                             site_id=site_id,
                             path=plugin_filepath,
@@ -1769,8 +1786,9 @@ class ACTestDeprecatedPNPTemplates(ACTest):
                 yield ACSingleResult(
                     state=ACResultState.CRIT,
                     text=_(
-                        "PNP template uses an API which was removed in an ealier Checkmk version."
-                    ),
+                        "PNP template uses an API which was removed in an ealier Checkmk version (File: %s)."
+                    )
+                    % _try_rel_path(site_id, plugin_filepath),
                     site_id=site_id,
                     path=plugin_filepath,
                 )

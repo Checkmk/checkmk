@@ -17,6 +17,8 @@ SERVER_STATES = [
     ("DOWN", 2),
     ("NOLB", 2),
     ("MAINT", 2),
+    ("MAINT (via)", 1),
+    ("MAINT (resolution)", 1),
     ("DRAIN", 2),
     ("no check", 2),
 ]

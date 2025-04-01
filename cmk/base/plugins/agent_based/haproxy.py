@@ -27,10 +27,21 @@ class HAProxyFrontendStatus(Enum):
 
 
 class HAProxyServerStatus(Enum):
+    """
+    https://www.haproxy.com/documentation/haproxy-configuration-manual/2-5r1/management/
+
+    Notes:
+        * MAINT (resolution) and MAINT (via) are listed explicitly as states in the linked
+        documentation, therefore including them in the enum instead of treating them as a partial
+        status.
+    """
+
     UP = "UP"
     DOWN = "DOWN"
     NOLB = "NOLB"
     MAINT = "MAINT"
+    MAINT_RES = "MAINT (resolution)"
+    MAINT_VIA = "MAINT (via)"
     DRAIN = "DRAIN"
     NO_CHECK = "no check"
 
@@ -68,7 +79,7 @@ def status_result(status: str, params: Mapping[str, Any]) -> CheckResult:
     if status in params:
         yield Result(state=State(params[status]), summary=f"Status: {status}")
     else:
-        # covers partial statuses like DOWN 1/2 and MAINT(via)
+        # covers partial statuses like DOWN 1/2
         yield Result(
             state=State.WARN,
             summary=f"Status: {status}",
@@ -191,6 +202,8 @@ register.check_plugin(
         HAProxyServerStatus.DOWN.value: State.CRIT.value,
         HAProxyServerStatus.NOLB.value: State.CRIT.value,
         HAProxyServerStatus.MAINT.value: State.CRIT.value,
+        HAProxyServerStatus.MAINT_VIA.value: State.WARN.value,
+        HAProxyServerStatus.MAINT_RES.value: State.WARN.value,
         HAProxyServerStatus.DRAIN.value: State.CRIT.value,
         HAProxyServerStatus.NO_CHECK.value: State.CRIT.value,
     },

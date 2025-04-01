@@ -1300,6 +1300,7 @@ filter_registry.register(
         query_filter=query_filters.TextQuery(
             ident="log_plugin_output",
             op="~~",
+            negateable=True,
         ),
     )
 )

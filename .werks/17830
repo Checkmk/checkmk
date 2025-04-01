@@ -1,0 +1,13 @@
+Title: Enable negate for "Log: plug-in output (regex)" filter
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1743516458
+Edition: cre
+Level: 1
+Version: 2.2.0p42
+
+The "Log: Plugin output (regex)" filter, required for the 'Events of host & service" view,
+did not have a negate option.
+
+This option is now enabled.

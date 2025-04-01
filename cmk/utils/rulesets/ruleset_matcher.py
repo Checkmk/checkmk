@@ -405,7 +405,6 @@ class LabelManager:
         Last one wins.
         """
         with contextlib.suppress(KeyError):
-            # Also cached in `ConfigCache.labels(HostName) -> Labels`
             return self.__labels_of_host[hostname]
 
         return self.__labels_of_host.setdefault(

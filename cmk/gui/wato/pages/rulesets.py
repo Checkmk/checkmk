@@ -458,7 +458,12 @@ class ModeRuleSearch(ABCRulesetMode):
                         ),
                         PageMenuTopic(
                             title=_("Predefined searches"),
-                            entries=list(_page_menu_entries_predefined_searches(self._group_name)),
+                            entries=list(
+                                _page_menu_entries_predefined_searches(
+                                    self._group_name,
+                                    self._page_type,
+                                )
+                            ),
                         ),
                     ],
                 ),
@@ -555,11 +560,13 @@ def _is_var_to_delete(form_prefix: str, varname: str, value: str) -> bool:
     return True
 
 
-def _page_menu_entries_predefined_searches(group: str | None) -> Iterable[PageMenuEntry]:
-    for search_title, search_emblem, search_term in [
-        ("Used rulesets", "enable", "ruleset_used"),
-        ("Ineffective rules", "disable", "rule_ineffective"),
-        ("Deprecated rules", "warning", "ruleset_deprecated"),
+def _page_menu_entries_predefined_searches(
+    group: str | None, page_type: PageType
+) -> Iterable[PageMenuEntry]:
+    for search_title, search_emblem, search_term, search_type in [
+        ("Used rulesets", "enable", "ruleset_used", PageType.UsedRulesets),
+        ("Ineffective rules", "disable", "rule_ineffective", PageType.IneffectiveRules),
+        ("Deprecated rules", "warning", "ruleset_deprecated", PageType.DeprecatedRulesets),
     ]:
         uri_params: list[tuple[str, None | int | str]] = [
             ("mode", "rule_search"),
@@ -567,7 +574,7 @@ def _page_menu_entries_predefined_searches(group: str | None) -> Iterable[PageMe
             ("search_p_%s_USE" % search_term, "on"),
         ]
 
-        if search_term == "ruleset_deprecated":
+        if search_type == PageType.DeprecatedRulesets:
             uri_params += [
                 ("search", ""),
                 ("filled_in", "search"),
@@ -586,7 +593,7 @@ def _page_menu_entries_predefined_searches(group: str | None) -> Iterable[PageMe
                 "icon": "rulesets",
                 "emblem": search_emblem,
             },
-            is_shortcut=search_term == "ruleset_used",
+            is_shortcut=search_type != page_type,
             item=make_simple_link(folder_preserving_link(uri_params)),
         )
 
@@ -715,7 +722,7 @@ class ModeRulesetGroup(ABCRulesetMode):
             self._page_type,
         )
 
-        yield from _page_menu_entries_predefined_searches(self._group_name)
+        yield from _page_menu_entries_predefined_searches(self._group_name, self._page_type)
 
 
 def _page_menu_entry_predefined_conditions() -> PageMenuEntry:

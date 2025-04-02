@@ -1034,9 +1034,7 @@ class TestDiscovery:
                     "my-description": _make_autocheck_entry("new"),
                 },
                 nodes_services={
-                    HostName("node1"): {
-                        "my-description": _make_autocheck_entry("old"),  # FIXME
-                    },
+                    HostName("node1"): {},
                     HostName("node2"): {
                         "my-description": _make_autocheck_entry("new"),
                     },
@@ -1074,7 +1072,7 @@ class TestDiscovery:
                 discovered_host=target_host,
                 target_services={"my-description": _make_autocheck_entry("new")},
                 nodes_services={
-                    HostName("node1"): {"my-description": _make_autocheck_entry("old")},  # FIXME
+                    HostName("node1"): {},
                     HostName("node2"): {"my-description": _make_autocheck_entry("new")},
                 },
             ),

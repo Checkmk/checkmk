@@ -13,6 +13,7 @@ import sys
 import time
 from collections import Counter
 from collections.abc import Callable, Iterator, Mapping, Sequence
+from datetime import datetime, timedelta
 from typing import Any
 from xml.dom import minidom
 
@@ -79,6 +80,8 @@ REQUESTED_COUNTERS_KEYS = (
     "datastore.datastoreReadIops",
     "datastore.datastoreWriteIops",
 )
+
+COOKIE_MAX_AGE_HOURS = 4
 
 
 class SoapTemplates:
@@ -1199,35 +1202,33 @@ class ESXConnection:
         return self._perf_samples
 
     def login(self, user: str, password: str) -> None:
-        if self._server_cookie_path.exists():
-            self._session.headers["Cookie"] = self._server_cookie_path.open(encoding="utf-8").read()
+        if self._is_cookie_valid():
+            self._session.headers["Cookie"] = self._server_cookie_path.read_text(encoding="utf-8")
             return
 
         auth = {"username": self._escape_xml(user), "password": self._escape_xml(password)}
         response = self._session.postsoap(self._soap_templates.login % auth)
 
-        server_cookie = response.headers.get("set-cookie")
-
         if response.status_code != 200:
             raise SystemExit(
-                "Cannot login to vSphere Server (reason: [%s] %s). Please check the "
-                "credentials." % (response.status_code, response.reason)
+                f"Cannot login to vSphere Server (reason: [{response.status_code}] {response.reason}). "
+                "Please check the credentials."
             )
 
-        if not server_cookie:
+        if not (server_cookie := response.headers.get("set-cookie")):
             return
 
-        with self._server_cookie_path.open("w", encoding="utf-8") as f_handle:
-            f_handle.write(server_cookie)
-
+        self._server_cookie_path.write_text(server_cookie, encoding="utf-8")
         self._session.headers["Cookie"] = server_cookie
-        return
+
+    def _is_cookie_valid(self) -> bool:
+        if not self._server_cookie_path.exists():
+            return False
+        cookie_mtime = datetime.fromtimestamp(self._server_cookie_path.stat().st_mtime)
+        return datetime.now() - cookie_mtime < timedelta(hours=COOKIE_MAX_AGE_HOURS)
 
     def delete_server_cookie(self) -> None:
-        try:
-            self._server_cookie_path.unlink()
-        except FileNotFoundError:
-            pass
+        self._server_cookie_path.unlink(missing_ok=True)
 
 
 # .

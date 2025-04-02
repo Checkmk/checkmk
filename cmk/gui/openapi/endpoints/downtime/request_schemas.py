@@ -112,18 +112,30 @@ class CreateDowntimeBase(BaseSchema):
 class CreateHostDowntimeBase(CreateDowntimeBase):
     downtime_type = fields.String(
         required=True,
-        description="The type of downtime to create.",
         enum=["host", "hostgroup", "host_by_query"],
         example="host",
+        description=(
+            "The type of downtime to create.\n\n"
+            "Valid options are:\n\n"
+            " * `host` - Schedule downtimes for a host identified by host name or IP address\n"
+            " * `hostgroup` - Schedule downtimes for all hosts belonging to the specified hostgroup\n"
+            " * `host_by_query` - Schedule downtimes for all host matching the query\n"
+        ),
     )
 
 
 class CreateServiceDowntimeBase(CreateDowntimeBase):
     downtime_type = fields.String(
         required=True,
-        description="The type of downtime to create.",
         enum=["service", "servicegroup", "service_by_query"],
         example="service",
+        description=(
+            "The type of downtime to create.\n\n"
+            "Valid options are:\n\n"
+            " * `service` - Schedule downtimes for services whose names are listed in service_descriptions and belongs to the host identified by name or IP address in host_name.\n"
+            " * `servicegroup` - Schedule downtimes for all services in a given service group\n"
+            " * `service_by_query` - Schedule downtimes for services matching the query\n"
+        ),
     )
 
 

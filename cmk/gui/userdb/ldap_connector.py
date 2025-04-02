@@ -1646,7 +1646,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             locked.update(plugin.lock_attributes(params))
         return list(locked)
 
-    # Calculates the attributes added in this connector which shal be written to
+    # Calculates the attributes added in this connector which shall be written to
     # the multisites users.mk
     def multisite_attributes(self) -> list[str]:
         attrs: set[str] = set()

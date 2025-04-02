@@ -504,7 +504,7 @@ def _set_livestatus_auth(user: LoggedInUser, force_authuser: UserId | None) -> N
     g.live.set_auth_domain("read")
 
 
-# Returns either None when no auth user shal be set or the name of the user
+# Returns either None when no auth user shall be set or the name of the user
 # to be used as livestatus auth user
 def _livestatus_auth_user(user: LoggedInUser, force_authuser: UserId | None) -> UserId | None:
     if not user.may("general.see_all"):

@@ -10,7 +10,7 @@
 ' agent service is running access to the MSSQL database.
 '
 ' Another option is to create a mssql.ini file in MK_CONFDIR and write the
-' credentials of a database user to it which shal be used for monitoring:
+' credentials of a database user to it which shall be used for monitoring:
 '
 ' The config file mssql.ini may contain a list of instances to exclude
 ' from monitoring. By default, every running instance is monitored.

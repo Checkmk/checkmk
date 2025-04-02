@@ -573,7 +573,7 @@ ConfigVariableSiteRRDCachedTuning = ConfigVariable(
                     title=_("Disk flush interval of old data"),
                     help=_(
                         "The entire cache is searched in the interval configured here for old "
-                        "values which shal be written to disk. This only concerns RRD files to "
+                        "values which shall be written to disk. This only concerns RRD files to "
                         "which updates have stopped, so setting this to a high value is "
                         "acceptable in most cases."
                     ),

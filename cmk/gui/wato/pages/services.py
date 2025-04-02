@@ -803,7 +803,7 @@ class DiscoveryPageRenderer:
         html.show_message(
             _(
                 "Could not find any service for your cluster. You first need to "
-                "specify which services of your nodes shal be added to the "
+                "specify which services of your nodes shall be added to the "
                 'cluster. This is done using the <a href="%s">%s</a> ruleset.'
             )
             % (url, _("Clustered services"))

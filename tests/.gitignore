@@ -1,4 +1,4 @@
 bandit.ini
 .py-import-cycles.txt
 **/docs/html/*
-**/.dummy_agent_dump_piggyback_idx*
+**/*dummy_agent_dump*

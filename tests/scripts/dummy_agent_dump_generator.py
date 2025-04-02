@@ -20,10 +20,30 @@ from argparse import ArgumentParser, Namespace
 from datetime import datetime
 from pathlib import Path
 from random import randrange
-from typing import Final
+from typing import Any, Final, TextIO
+
+DIR_MODULE = Path(__file__).parent
+ENCODING = "utf-8"
+PREFIX = "dummy_agent_dump"
+SUFFIX = "out"
+SEPARATOR = "\n"
 
 
-def generate_local_services(hostname: str, number_of_services: int) -> list[str]:
+def generate_data(
+    hostname: str, number_of_services: int, payload: int, debug: bool = False
+) -> list[str]:
+    stdout = ["<<<local>>>"]
+    stdout += _generate_local_services(hostname, number_of_services)
+    if payload > 0:
+        stdout += _generate_payload(payload)
+    if debug:
+        debug_filepath = DIR_MODULE / f"{PREFIX}.{hostname}.{SUFFIX}"
+        with open(debug_filepath, encoding=ENCODING, mode="w") as debug_file:
+            print_data(*stdout, file=debug_file)
+    return stdout
+
+
+def _generate_local_services(hostname: str, number_of_services: int) -> list[str]:
     """Generate text to simulate service data, corresponding to a host.
 
     Services are prefixed with the 'hostname'. Out of all the services created,
@@ -62,51 +82,15 @@ def generate_local_services(hostname: str, number_of_services: int) -> list[str]
     # ~70% of the total services have OK state
     ok = ServiceData(0, number_of_services - (crit.count + warn.count), (70, 100))
 
+    stdout = []
     start_idx = 1
-    stdout = ["<<<local>>>"]
     for service_data in (crit, warn, ok):
         stdout += _local_services(start_idx, service_data, hostname)
         start_idx = start_idx + service_data.count
     return stdout
 
 
-def generate_piggyback_hosts(
-    parent_host: str,
-    number_hosts: int,
-    number_services_per_host: int,
-    payload: int,
-    new_hosts: bool,
-) -> list[str]:
-    """Generate text to simulate piggyback hosts and corresponding services.
-
-    Piggyback data is generated within data meant for a 'parent_host'.
-    Piggyback hosts named as '<parent_host>-pb-<idx>'.
-
-    'new_hosts' enables generation of new set of piggyback hosts.
-    It is used to simulate vanishing hosts and services and addition of new ones.
-    """
-    filename = Path(__file__).parent / f".dummy_agent_dump_piggyback_idx.{parent_host}"
-    stdout = []
-    if new_hosts:
-        start_idx = 0 if not filename.exists() else int(filename.read_text())
-    else:
-        start_idx = 0
-
-    for host_idx in range(start_idx, start_idx + number_hosts):
-        pb_hostname = f"{parent_host}-pb-{host_idx + 1}"
-        stdout += [f"<<<<{pb_hostname}>>>>"]
-        stdout += generate_local_services(pb_hostname, number_services_per_host)
-        if payload > 0:
-            stdout += generate_payload(payload)
-        stdout.append("<<<<>>>>")
-
-    if new_hosts:
-        filename.write_text(str(host_idx + 1))
-
-    return stdout
-
-
-def generate_payload(units: int) -> list[str]:
+def _generate_payload(units: int) -> list[str]:
     """Add extra text information within the data, corresponding to a host.
 
     Data is increased by 'units' x 10 bytes.
@@ -119,7 +103,56 @@ def generate_payload(units: int) -> list[str]:
     return stdout
 
 
+def generate_piggyback_hosts(
+    parent_host: str,
+    number_hosts: int,
+    number_services_per_host: int,
+    payload: int,
+    new_hosts: bool,
+    debug: bool,
+) -> list[str]:
+    """Generate data to simulate piggyback hosts and corresponding services.
+
+    Piggyback data is generated within data meant for a 'parent_host'.
+    Piggyback hosts named as '<parent_host>-pb-<idx>'.
+
+    'new_hosts' enables generation of new set of piggyback hosts.
+    It is used to simulate vanishing hosts and services and addition of new ones.
+    """
+    count_filename = DIR_MODULE / f"{PREFIX}.{parent_host}.piggyback_idx.{SUFFIX}"
+    stdout = []
+    if new_hosts:
+        start_idx = 0 if not count_filename.exists() else int(count_filename.read_text())
+    else:
+        start_idx = 0
+
+    for host_idx in range(start_idx, start_idx + number_hosts):
+        pb_hostname = f"{parent_host}-pb-{host_idx + 1}"
+        stdout += [f"<<<<{pb_hostname}>>>>"]
+        stdout += generate_data(pb_hostname, number_services_per_host, payload)
+        stdout.append("<<<<>>>>")
+
+    if new_hosts:
+        count_filename.write_text(str(host_idx + 1))
+
+    if debug:
+        debug_filepath = DIR_MODULE / f"{PREFIX}.{parent_host}.piggyback_data.{SUFFIX}"
+        with open(debug_filepath, encoding=ENCODING, mode="w") as debug_file:
+            print_data(*stdout, file=debug_file)
+
+    return stdout
+
+
+def print_data(*data: object, file: TextIO | None = None, **kwargs: Any) -> None:
+    """Override  arguments to `print` statement with script specific constraints."""
+    kwargs["sep"] = SEPARATOR
+    kwargs["end"] = SEPARATOR
+    kwargs["file"] = file
+    print(*data, **kwargs)
+
+
 class TypeCliArgs(Namespace):
+    debug: bool
     host_name: str
     service_count: int
     payload: int
@@ -132,7 +165,18 @@ def parse_cli_args() -> type[TypeCliArgs]:
     """Document CLI arguments."""
 
     parser = ArgumentParser(description=__doc__)
-    classic_parser = parser.add_argument_group(title="Generate data")
+    # script specific args
+    parser.add_argument(
+        "--debug",
+        dest="debug",
+        action="store_true",
+        help=(
+            "Enable debug mode. Store the generated data in a text-file, additionally. "
+            "Text-file is always appended with information."
+        ),
+    )
+    # host and services specific args
+    classic_parser = parser.add_argument_group(title="Generate agent data")
     classic_parser.add_argument(
         "-n",
         "--host-name",
@@ -203,10 +247,8 @@ def parse_cli_args() -> type[TypeCliArgs]:
 
 
 if __name__ == "__main__":
-    desired_encoding = "utf-8"
-    assert sys.stdout.encoding == desired_encoding, (
-        f"Expected 'stdout' text-encoding to be '{desired_encoding}'! "
-        f"Observed: '{sys.stdout.encoding}'"
+    assert sys.stdout.encoding == ENCODING, (
+        f"Expected 'stdout' text-encoding to be '{ENCODING}'! Observed: '{sys.stdout.encoding}'"
     )
     args = parse_cli_args()
     entries = []
@@ -218,12 +260,11 @@ if __name__ == "__main__":
             number_services_per_host=args.piggyback_services,
             payload=args.payload,
             new_hosts=args.piggyback_new_hosts,
+            debug=args.debug,
         )
 
     # generate host data
-    entries += generate_local_services(args.host_name, args.service_count)
-    if args.payload > 0:
-        entries += generate_payload(args.payload)
+    entries += generate_data(args.host_name, args.service_count, args.payload, args.debug)
 
     # list to string conversion
-    print(*entries, sep="\n", end="\n")
+    print_data(*entries)

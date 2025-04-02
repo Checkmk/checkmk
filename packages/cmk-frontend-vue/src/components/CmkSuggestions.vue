@@ -54,12 +54,6 @@ const suggestionInputRef = ref<HTMLInputElement | null>(null)
 const filteredSuggestions = ref<Array<Suggestion>>([])
 const currentlySelectedElement: Ref<Suggestion | null> = ref(null) // null means first element
 
-immediateWatch(
-  () => suggestions.suggestions,
-  (newValue: Suggestion[]) => {
-    filteredSuggestions.value = newValue
-  }
-)
 function isSuggestionSelected(suggestion: Suggestion, index: number): boolean {
   if (currentlySelectedElement.value === null && index === 0) {
     return true
@@ -99,12 +93,15 @@ function getCurrentlySelectedAsIndex(): number {
   return currentElement.index
 }
 
-function filterUpdated(newFilterString: string) {
-  filterString.value = newFilterString
-  filteredSuggestions.value = suggestions.suggestions.filter(({ title }) =>
-    title.toLowerCase().includes(newFilterString.toLowerCase())
-  )
-}
+immediateWatch(
+  () => ({ newSuggestions: suggestions, newFilterString: filterString }),
+  ({ newSuggestions, newFilterString }) => {
+    filteredSuggestions.value = newSuggestions.suggestions.filter(({ title }) =>
+      title.toLowerCase().includes(newFilterString.value.toLowerCase())
+    )
+  },
+  { deep: 2 }
+)
 
 function onKeyEnter(event: InputEvent): void {
   event.stopPropagation()
@@ -171,12 +168,7 @@ defineExpose({
     @keydown.up.prevent="selectPreviousElement"
   >
     <span :class="{ hidden: !showFilter, input: true }">
-      <input
-        ref="suggestionInputRef"
-        v-model="filterString"
-        type="text"
-        @update:model-value="filterUpdated"
-      />
+      <input ref="suggestionInputRef" v-model="filterString" type="text" />
     </span>
     <CmkScrollContainer :max-height="'200px'">
       <li v-if="error" class="cmk-suggestions--error"><CmkHtml :html="error" /></li>

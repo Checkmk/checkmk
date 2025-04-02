@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { watch, onBeforeMount } from 'vue'
+import { watch, onBeforeMount, type WatchOptions } from 'vue'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isAsyncFunction<T, A extends any[]>(
@@ -14,7 +14,8 @@ function isAsyncFunction<T, A extends any[]>(
 
 export function immediateWatch<T>(
   getter: () => T,
-  callback: ((value: T) => void) | ((value: T) => Promise<void>)
+  callback: ((value: T) => void) | ((value: T) => Promise<void>),
+  options?: WatchOptions
 ) {
   // This fixes a bug only visible in the browser.
   // Use this instead of the immediate flag on the watcher.
@@ -25,5 +26,5 @@ export function immediateWatch<T>(
   } else {
     onBeforeMount(() => callback(getter()))
   }
-  watch(getter, callback)
+  watch(getter, callback, options)
 }

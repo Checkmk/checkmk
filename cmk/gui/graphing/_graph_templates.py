@@ -17,7 +17,6 @@ from livestatus import SiteId
 
 from cmk.ccc.exceptions import MKGeneralException
 
-from cmk.utils import pnp_cleanup
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
@@ -44,34 +43,23 @@ from ._graph_specification import (
 )
 from ._graphs_order import GRAPHS_ORDER
 from ._metric_expression import (
-    Average,
     BaseMetricExpression,
     Constant,
     CriticalOf,
-    Difference,
     Evaluated,
-    Fraction,
     Maximum,
     MaximumOf,
-    Merge,
     Metric,
     MetricExpression,
     Minimum,
     MinimumOf,
     parse_base_expression_from_api,
     parse_expression_from_api,
-    Product,
-    Sum,
     WarningOf,
 )
 from ._metric_operation import (
     AnnotatedHostName,
     GraphConsolidationFunction,
-    MetricOpConstant,
-    MetricOpConstantNA,
-    MetricOperation,
-    MetricOpOperator,
-    MetricOpRRDSource,
 )
 from ._translated_metrics import translated_metrics_from_row, TranslatedMetric
 from ._unit import ConvertibleUnitSpecification
@@ -451,198 +439,6 @@ def graph_and_single_metric_templates_choices_for_context(
     return graph_template_choices, single_metric_template_choices
 
 
-def _to_metric_operation(
-    site_id: SiteId,
-    host_name: HostName,
-    service_name: ServiceName,
-    base_metric_expression: BaseMetricExpression,
-    translated_metrics: Mapping[str, TranslatedMetric],
-    consolidation_function: GraphConsolidationFunction | None,
-) -> MetricOperation:
-    match base_metric_expression:
-        case Constant():
-            return MetricOpConstant(value=float(base_metric_expression.value))
-        case Metric():
-            metrics = [
-                MetricOpRRDSource(
-                    site_id=site_id,
-                    host_name=host_name,
-                    service_name=service_name,
-                    metric_name=pnp_cleanup(o.name),
-                    consolidation_func_name=(
-                        base_metric_expression.consolidation or consolidation_function
-                    ),
-                    scale=o.scale,
-                )
-                for o in translated_metrics[base_metric_expression.name].originals
-            ]
-            if len(metrics) > 1:
-                return MetricOpOperator(operator_name="MERGE", operands=metrics)
-            return metrics[0]
-        case Sum():
-            return MetricOpOperator(
-                operator_name="+",
-                operands=[
-                    _to_metric_operation(
-                        site_id,
-                        host_name,
-                        service_name,
-                        s,
-                        translated_metrics,
-                        consolidation_function,
-                    )
-                    for s in base_metric_expression.summands
-                ],
-            )
-        case Product():
-            return MetricOpOperator(
-                operator_name="*",
-                operands=[
-                    _to_metric_operation(
-                        site_id,
-                        host_name,
-                        service_name,
-                        f,
-                        translated_metrics,
-                        consolidation_function,
-                    )
-                    for f in base_metric_expression.factors
-                ],
-            )
-        case Difference():
-            return MetricOpOperator(
-                operator_name="-",
-                operands=[
-                    _to_metric_operation(
-                        site_id,
-                        host_name,
-                        service_name,
-                        base_metric_expression.minuend,
-                        translated_metrics,
-                        consolidation_function,
-                    ),
-                    _to_metric_operation(
-                        site_id,
-                        host_name,
-                        service_name,
-                        base_metric_expression.subtrahend,
-                        translated_metrics,
-                        consolidation_function,
-                    ),
-                ],
-            )
-        case Fraction():
-            return MetricOpOperator(
-                operator_name="/",
-                operands=[
-                    _to_metric_operation(
-                        site_id,
-                        host_name,
-                        service_name,
-                        base_metric_expression.dividend,
-                        translated_metrics,
-                        consolidation_function,
-                    ),
-                    _to_metric_operation(
-                        site_id,
-                        host_name,
-                        service_name,
-                        base_metric_expression.divisor,
-                        translated_metrics,
-                        consolidation_function,
-                    ),
-                ],
-            )
-        case Maximum():
-            return MetricOpOperator(
-                operator_name="MAX",
-                operands=[
-                    _to_metric_operation(
-                        site_id,
-                        host_name,
-                        service_name,
-                        o,
-                        translated_metrics,
-                        consolidation_function,
-                    )
-                    for o in base_metric_expression.operands
-                ],
-            )
-        case Minimum():
-            return MetricOpOperator(
-                operator_name="MIN",
-                operands=[
-                    _to_metric_operation(
-                        site_id,
-                        host_name,
-                        service_name,
-                        o,
-                        translated_metrics,
-                        consolidation_function,
-                    )
-                    for o in base_metric_expression.operands
-                ],
-            )
-        case Average():
-            return MetricOpOperator(
-                operator_name="AVERAGE",
-                operands=[
-                    _to_metric_operation(
-                        site_id,
-                        host_name,
-                        service_name,
-                        o,
-                        translated_metrics,
-                        consolidation_function,
-                    )
-                    for o in base_metric_expression.operands
-                ],
-            )
-        case Merge():
-            return MetricOpOperator(
-                operator_name="MERGE",
-                operands=[
-                    _to_metric_operation(
-                        site_id,
-                        host_name,
-                        service_name,
-                        o,
-                        translated_metrics,
-                        consolidation_function,
-                    )
-                    for o in base_metric_expression.operands
-                ],
-            )
-        case MaximumOf() | MinimumOf() | WarningOf() | CriticalOf():
-            return (
-                MetricOpConstant(value=float(evaluation_result.ok.value))
-                if (
-                    evaluation_result := base_metric_expression.evaluate(translated_metrics)
-                ).is_ok()
-                else MetricOpConstantNA()
-            )
-        case _:
-            raise TypeError(base_metric_expression)
-
-
-def metric_expression_to_graph_recipe_expression(
-    site_id: SiteId,
-    host_name: HostName,
-    service_name: ServiceName,
-    base_metric_expression: BaseMetricExpression,
-    translated_metrics: Mapping[str, TranslatedMetric],
-    consolidation_function: GraphConsolidationFunction | None,
-) -> MetricOperation:
-    return _to_metric_operation(
-        site_id,
-        host_name,
-        service_name,
-        base_metric_expression,
-        translated_metrics,
-        consolidation_function,
-    )
-
-
 def _evaluate_graph_template_range_boundary(
     base_metric_expression: BaseMetricExpression, translated_metrics: Mapping[str, TranslatedMetric]
 ) -> float | None:
@@ -684,11 +480,10 @@ def _create_graph_recipe_from_template(
         GraphMetric(
             title=evaluated.title,
             line_type=evaluated.line_type,
-            operation=metric_expression_to_graph_recipe_expression(
+            operation=evaluated.base.to_metric_operation(
                 site_id,
                 host_name,
                 service_name,
-                evaluated.base,
                 translated_metrics,
                 graph_template.consolidation_function,
             ),

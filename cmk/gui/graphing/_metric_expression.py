@@ -10,8 +10,13 @@ from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 from dataclasses import dataclass, KW_ONLY
 from typing import Literal, override
 
+from livestatus import SiteId
+
+from cmk.utils import pnp_cleanup
+from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
 from cmk.utils.resulttype import Error, OK, Result
+from cmk.utils.servicename import ServiceName
 
 from cmk.gui.i18n import _, translate_to_current_language
 
@@ -24,6 +29,11 @@ from ._metric_operation import (
     GraphConsolidationFunction,
     line_type_mirror,
     LineType,
+    MetricOpConstant,
+    MetricOpConstantNA,
+    MetricOperation,
+    MetricOpOperator,
+    MetricOpRRDSource,
 )
 from ._metrics import get_metric_spec
 from ._translated_metrics import TranslatedMetric
@@ -118,6 +128,16 @@ class BaseMetricExpression(abc.ABC):
     @abc.abstractmethod
     def scalar_names(self) -> Iterable[ScalarName]: ...
 
+    @abc.abstractmethod
+    def to_metric_operation(
+        self,
+        site_id: SiteId,
+        host_name: HostName,
+        service_name: ServiceName,
+        translated_metrics: Mapping[str, TranslatedMetric],
+        consolidation_function: GraphConsolidationFunction | None,
+    ) -> MetricOperation: ...
+
 
 @dataclass(frozen=True)
 class Constant(BaseMetricExpression):
@@ -152,6 +172,17 @@ class Constant(BaseMetricExpression):
     def scalar_names(self) -> Generator[ScalarName]:
         yield from ()
 
+    @override
+    def to_metric_operation(
+        self,
+        site_id: SiteId,
+        host_name: HostName,
+        service_name: ServiceName,
+        translated_metrics: Mapping[str, TranslatedMetric],
+        consolidation_function: GraphConsolidationFunction | None,
+    ) -> MetricOpConstant:
+        return MetricOpConstant(value=float(self.value))
+
 
 @dataclass(frozen=True)
 class Metric(BaseMetricExpression):
@@ -184,6 +215,30 @@ class Metric(BaseMetricExpression):
     @override
     def scalar_names(self) -> Generator[ScalarName]:
         yield from ()
+
+    @override
+    def to_metric_operation(
+        self,
+        site_id: SiteId,
+        host_name: HostName,
+        service_name: ServiceName,
+        translated_metrics: Mapping[str, TranslatedMetric],
+        consolidation_function: GraphConsolidationFunction | None,
+    ) -> MetricOpRRDSource | MetricOpOperator:
+        metrics = [
+            MetricOpRRDSource(
+                site_id=site_id,
+                host_name=host_name,
+                service_name=service_name,
+                metric_name=pnp_cleanup(o.name),
+                consolidation_func_name=(self.consolidation or consolidation_function),
+                scale=o.scale,
+            )
+            for o in translated_metrics[self.name].originals
+        ]
+        if len(metrics) > 1:
+            return MetricOpOperator(operator_name="MERGE", operands=metrics)
+        return metrics[0]
 
 
 @dataclass(frozen=True)
@@ -225,6 +280,21 @@ class WarningOf(BaseMetricExpression):
     def scalar_names(self) -> Generator[ScalarName]:
         yield ScalarName(self.metric.name, "warn")
 
+    @override
+    def to_metric_operation(
+        self,
+        site_id: SiteId,
+        host_name: HostName,
+        service_name: ServiceName,
+        translated_metrics: Mapping[str, TranslatedMetric],
+        consolidation_function: GraphConsolidationFunction | None,
+    ) -> MetricOpConstant | MetricOpConstantNA:
+        return (
+            MetricOpConstant(value=evaluatation_result.ok.value)
+            if (evaluatation_result := self.evaluate(translated_metrics)).is_ok()
+            else MetricOpConstantNA()
+        )
+
 
 @dataclass(frozen=True)
 class CriticalOf(BaseMetricExpression):
@@ -264,6 +334,21 @@ class CriticalOf(BaseMetricExpression):
     @override
     def scalar_names(self) -> Generator[ScalarName]:
         yield ScalarName(self.metric.name, "crit")
+
+    @override
+    def to_metric_operation(
+        self,
+        site_id: SiteId,
+        host_name: HostName,
+        service_name: ServiceName,
+        translated_metrics: Mapping[str, TranslatedMetric],
+        consolidation_function: GraphConsolidationFunction | None,
+    ) -> MetricOpConstant | MetricOpConstantNA:
+        return (
+            MetricOpConstant(value=evaluatation_result.ok.value)
+            if (evaluatation_result := self.evaluate(translated_metrics)).is_ok()
+            else MetricOpConstantNA()
+        )
 
 
 @dataclass(frozen=True)
@@ -305,6 +390,21 @@ class MinimumOf(BaseMetricExpression):
     def scalar_names(self) -> Generator[ScalarName]:
         yield ScalarName(self.metric.name, "min")
 
+    @override
+    def to_metric_operation(
+        self,
+        site_id: SiteId,
+        host_name: HostName,
+        service_name: ServiceName,
+        translated_metrics: Mapping[str, TranslatedMetric],
+        consolidation_function: GraphConsolidationFunction | None,
+    ) -> MetricOpConstant | MetricOpConstantNA:
+        return (
+            MetricOpConstant(value=evaluatation_result.ok.value)
+            if (evaluatation_result := self.evaluate(translated_metrics)).is_ok()
+            else MetricOpConstantNA()
+        )
+
 
 @dataclass(frozen=True)
 class MaximumOf(BaseMetricExpression):
@@ -344,6 +444,21 @@ class MaximumOf(BaseMetricExpression):
     @override
     def scalar_names(self) -> Generator[ScalarName]:
         yield ScalarName(self.metric.name, "max")
+
+    @override
+    def to_metric_operation(
+        self,
+        site_id: SiteId,
+        host_name: HostName,
+        service_name: ServiceName,
+        translated_metrics: Mapping[str, TranslatedMetric],
+        consolidation_function: GraphConsolidationFunction | None,
+    ) -> MetricOpConstant | MetricOpConstantNA:
+        return (
+            MetricOpConstant(value=evaluatation_result.ok.value)
+            if (evaluatation_result := self.evaluate(translated_metrics)).is_ok()
+            else MetricOpConstantNA()
+        )
 
 
 @dataclass(frozen=True)
@@ -386,6 +501,29 @@ class Sum(BaseMetricExpression):
     def scalar_names(self) -> Generator[ScalarName]:
         yield from (n for s in self.summands for n in s.scalar_names())
 
+    @override
+    def to_metric_operation(
+        self,
+        site_id: SiteId,
+        host_name: HostName,
+        service_name: ServiceName,
+        translated_metrics: Mapping[str, TranslatedMetric],
+        consolidation_function: GraphConsolidationFunction | None,
+    ) -> MetricOpOperator:
+        return MetricOpOperator(
+            operator_name="+",
+            operands=[
+                s.to_metric_operation(
+                    site_id,
+                    host_name,
+                    service_name,
+                    translated_metrics,
+                    consolidation_function,
+                )
+                for s in self.summands
+            ],
+        )
+
 
 @dataclass(frozen=True)
 class Product(BaseMetricExpression):
@@ -426,6 +564,29 @@ class Product(BaseMetricExpression):
     @override
     def scalar_names(self) -> Generator[ScalarName]:
         yield from (n for f in self.factors for n in f.scalar_names())
+
+    @override
+    def to_metric_operation(
+        self,
+        site_id: SiteId,
+        host_name: HostName,
+        service_name: ServiceName,
+        translated_metrics: Mapping[str, TranslatedMetric],
+        consolidation_function: GraphConsolidationFunction | None,
+    ) -> MetricOpOperator:
+        return MetricOpOperator(
+            operator_name="*",
+            operands=[
+                f.to_metric_operation(
+                    site_id,
+                    host_name,
+                    service_name,
+                    translated_metrics,
+                    consolidation_function,
+                )
+                for f in self.factors
+            ],
+        )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -470,6 +631,35 @@ class Difference(BaseMetricExpression):
         yield from self.minuend.scalar_names()
         yield from self.subtrahend.scalar_names()
 
+    @override
+    def to_metric_operation(
+        self,
+        site_id: SiteId,
+        host_name: HostName,
+        service_name: ServiceName,
+        translated_metrics: Mapping[str, TranslatedMetric],
+        consolidation_function: GraphConsolidationFunction | None,
+    ) -> MetricOpOperator:
+        return MetricOpOperator(
+            operator_name="-",
+            operands=[
+                self.minuend.to_metric_operation(
+                    site_id,
+                    host_name,
+                    service_name,
+                    translated_metrics,
+                    consolidation_function,
+                ),
+                self.subtrahend.to_metric_operation(
+                    site_id,
+                    host_name,
+                    service_name,
+                    translated_metrics,
+                    consolidation_function,
+                ),
+            ],
+        )
+
 
 @dataclass(frozen=True, kw_only=True)
 class Fraction(BaseMetricExpression):
@@ -513,6 +703,35 @@ class Fraction(BaseMetricExpression):
         yield from self.dividend.scalar_names()
         yield from self.divisor.scalar_names()
 
+    @override
+    def to_metric_operation(
+        self,
+        site_id: SiteId,
+        host_name: HostName,
+        service_name: ServiceName,
+        translated_metrics: Mapping[str, TranslatedMetric],
+        consolidation_function: GraphConsolidationFunction | None,
+    ) -> MetricOpOperator:
+        return MetricOpOperator(
+            operator_name="/",
+            operands=[
+                self.dividend.to_metric_operation(
+                    site_id,
+                    host_name,
+                    service_name,
+                    translated_metrics,
+                    consolidation_function,
+                ),
+                self.divisor.to_metric_operation(
+                    site_id,
+                    host_name,
+                    service_name,
+                    translated_metrics,
+                    consolidation_function,
+                ),
+            ],
+        )
+
 
 @dataclass(frozen=True)
 class Minimum(BaseMetricExpression):
@@ -550,6 +769,29 @@ class Minimum(BaseMetricExpression):
     def scalar_names(self) -> Generator[ScalarName]:
         yield from (n for o in self.operands for n in o.scalar_names())
 
+    @override
+    def to_metric_operation(
+        self,
+        site_id: SiteId,
+        host_name: HostName,
+        service_name: ServiceName,
+        translated_metrics: Mapping[str, TranslatedMetric],
+        consolidation_function: GraphConsolidationFunction | None,
+    ) -> MetricOpOperator:
+        return MetricOpOperator(
+            operator_name="MIN",
+            operands=[
+                o.to_metric_operation(
+                    site_id,
+                    host_name,
+                    service_name,
+                    translated_metrics,
+                    consolidation_function,
+                )
+                for o in self.operands
+            ],
+        )
+
 
 @dataclass(frozen=True)
 class Maximum(BaseMetricExpression):
@@ -586,6 +828,29 @@ class Maximum(BaseMetricExpression):
     @override
     def scalar_names(self) -> Generator[ScalarName]:
         yield from (n for o in self.operands for n in o.scalar_names())
+
+    @override
+    def to_metric_operation(
+        self,
+        site_id: SiteId,
+        host_name: HostName,
+        service_name: ServiceName,
+        translated_metrics: Mapping[str, TranslatedMetric],
+        consolidation_function: GraphConsolidationFunction | None,
+    ) -> MetricOpOperator:
+        return MetricOpOperator(
+            operator_name="MAX",
+            operands=[
+                o.to_metric_operation(
+                    site_id,
+                    host_name,
+                    service_name,
+                    translated_metrics,
+                    consolidation_function,
+                )
+                for o in self.operands
+            ],
+        )
 
 
 # Special metric declarations for custom graphs
@@ -626,6 +891,29 @@ class Average(BaseMetricExpression):
     def scalar_names(self) -> Generator[ScalarName]:
         yield from (n for o in self.operands for n in o.scalar_names())
 
+    @override
+    def to_metric_operation(
+        self,
+        site_id: SiteId,
+        host_name: HostName,
+        service_name: ServiceName,
+        translated_metrics: Mapping[str, TranslatedMetric],
+        consolidation_function: GraphConsolidationFunction | None,
+    ) -> MetricOpOperator:
+        return MetricOpOperator(
+            operator_name="AVERAGE",
+            operands=[
+                o.to_metric_operation(
+                    site_id,
+                    host_name,
+                    service_name,
+                    translated_metrics,
+                    consolidation_function,
+                )
+                for o in self.operands
+            ],
+        )
+
 
 @dataclass(frozen=True)
 class Merge(BaseMetricExpression):
@@ -659,6 +947,29 @@ class Merge(BaseMetricExpression):
     @override
     def scalar_names(self) -> Generator[ScalarName]:
         yield from (n for o in self.operands for n in o.scalar_names())
+
+    @override
+    def to_metric_operation(
+        self,
+        site_id: SiteId,
+        host_name: HostName,
+        service_name: ServiceName,
+        translated_metrics: Mapping[str, TranslatedMetric],
+        consolidation_function: GraphConsolidationFunction | None,
+    ) -> MetricOpOperator:
+        return MetricOpOperator(
+            operator_name="MERGE",
+            operands=[
+                o.to_metric_operation(
+                    site_id,
+                    host_name,
+                    service_name,
+                    translated_metrics,
+                    consolidation_function,
+                )
+                for o in self.operands
+            ],
+        )
 
 
 @dataclass(frozen=True)

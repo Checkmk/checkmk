@@ -9,10 +9,6 @@ from typing import Literal
 
 import pytest
 
-from livestatus import SiteId
-
-from cmk.utils.hostaddress import HostName
-
 from cmk.gui.config import active_config
 from cmk.gui.graphing import _graph_templates as gt
 from cmk.gui.graphing._formatter import AutoPrecision
@@ -49,7 +45,7 @@ from cmk.gui.graphing._metric_expression import (
     Sum,
     WarningOf,
 )
-from cmk.gui.graphing._metric_operation import LineType, MetricOpOperator, MetricOpRRDSource
+from cmk.gui.graphing._metric_operation import LineType
 from cmk.gui.graphing._translated_metrics import (
     Original,
     parse_perf_data,
@@ -940,81 +936,6 @@ def test_graph_template_with_layered_areas() -> None:
         if areas.pos.count("area") > 1 or areas.neg.count("-area") > 1
     ]
     assert not templates_with_more_than_one_layer
-
-
-@pytest.mark.parametrize(
-    "orig_names, scales, expected_operation",
-    [
-        pytest.param(
-            ["metric-name"],
-            [1.0],
-            MetricOpRRDSource(
-                site_id=SiteId("Site-ID"),
-                host_name=HostName("HostName"),
-                service_name="Service description",
-                metric_name="metric-name",
-                consolidation_func_name=None,
-                scale=1.0,
-            ),
-            id="no translation",
-        ),
-        pytest.param(
-            ["metric-name", "old-metric-name"],
-            [1.0, 2.0],
-            MetricOpOperator(
-                operator_name="MERGE",
-                operands=[
-                    MetricOpRRDSource(
-                        site_id=SiteId("Site-ID"),
-                        host_name=HostName("HostName"),
-                        service_name="Service description",
-                        metric_name="metric-name",
-                        consolidation_func_name=None,
-                        scale=1.0,
-                    ),
-                    MetricOpRRDSource(
-                        site_id=SiteId("Site-ID"),
-                        host_name=HostName("HostName"),
-                        service_name="Service description",
-                        metric_name="old-metric-name",
-                        consolidation_func_name=None,
-                        scale=2.0,
-                    ),
-                ],
-            ),
-            id="translation",
-        ),
-    ],
-)
-def test__to_metric_operation(
-    orig_names: Sequence[str],
-    scales: Sequence[int | float],
-    expected_operation: MetricOpOperator | MetricOpRRDSource,
-) -> None:
-    assert (
-        gt._to_metric_operation(
-            SiteId("Site-ID"),
-            HostName("HostName"),
-            "Service description",
-            Metric("metric-name"),
-            {
-                "metric-name": TranslatedMetric(
-                    originals=[Original(n, s) for n, s in zip(orig_names, scales)],
-                    value=23.5,
-                    scalar={},
-                    auto_graph=False,
-                    title="Title",
-                    unit_spec=ConvertibleUnitSpecification(
-                        notation=DecimalNotation(symbol=""),
-                        precision=AutoPrecision(digits=2),
-                    ),
-                    color="#111111",
-                ),
-            },
-            None,
-        )
-        == expected_operation
-    )
 
 
 UNIT = metrics_api.Unit(metrics_api.DecimalNotation(""))

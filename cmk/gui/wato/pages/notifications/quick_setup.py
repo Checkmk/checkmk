@@ -492,7 +492,7 @@ class IsValidRegularExpression:
 
     def __init__(self) -> None:
         self.error_msg: Final = Message(
-            "Your search statement is not valid. You need to provide a regular expression (regex). For example"
+            "Your input is not valid. You need to provide a regular expression (regex). For example"
             " you need to use \\\\ instead of \\ if you want to search for a"
             " single backslash."
         )
@@ -748,6 +748,50 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 ],
                                             ),
                                         ),
+                                        "match_servicegroups_regex": DictElement(
+                                            parameter_form=CascadingSingleChoiceExtended(
+                                                prefill=DefaultValue("match_id"),
+                                                layout=CascadingSingleChoiceLayout.button_group,
+                                                help_text=Help(
+                                                    "The text entered here is "
+                                                    "handled as a regular "
+                                                    "expression pattern. The "
+                                                    "pattern is case-sensitive "
+                                                    "and matches from the start. "
+                                                    "Add '$' to match the whole "
+                                                    "text."
+                                                ),
+                                                title=Title("Service groups (regex)"),
+                                                elements=[
+                                                    CascadingSingleChoiceElement(
+                                                        name="match_id",
+                                                        title=Title(
+                                                            "Match the internal identifier"
+                                                        ),
+                                                        parameter_form=ListOfStrings(
+                                                            string_spec=String(
+                                                                field_size=FieldSize.MEDIUM,
+                                                                custom_validate=[
+                                                                    IsValidRegularExpression()
+                                                                ],
+                                                            ),
+                                                        ),
+                                                    ),
+                                                    CascadingSingleChoiceElement(
+                                                        name="match_alias",
+                                                        title=Title("Match the alias"),
+                                                        parameter_form=ListOfStrings(
+                                                            string_spec=String(
+                                                                field_size=FieldSize.MEDIUM,
+                                                                custom_validate=[
+                                                                    IsValidRegularExpression()
+                                                                ],
+                                                            ),
+                                                        ),
+                                                    ),
+                                                ],
+                                            ),
+                                        ),
                                         "exclude_service_groups": DictElement(
                                             parameter_form=MultipleChoiceExtended(
                                                 title=Title("Exclude service groups"),
@@ -766,6 +810,48 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                             "Please add at least one service group."
                                                         )
                                                     )
+                                                ],
+                                            ),
+                                        ),
+                                        "match_exclude_servicegroups_regex": DictElement(
+                                            parameter_form=CascadingSingleChoiceExtended(
+                                                prefill=DefaultValue("match_id"),
+                                                layout=CascadingSingleChoiceLayout.button_group,
+                                                help_text=Help(
+                                                    "The text entered here is "
+                                                    "handled as a regular "
+                                                    "expression pattern. The "
+                                                    "pattern is case-sensitive "
+                                                    "and matches from the start. "
+                                                    "Add '$' to match the whole "
+                                                    "text."
+                                                ),
+                                                title=Title("Exclude service groups (regex)"),
+                                                elements=[
+                                                    CascadingSingleChoiceElement(
+                                                        name="match_id",
+                                                        title=Title("Internal identifier"),
+                                                        parameter_form=ListOfStrings(
+                                                            string_spec=String(
+                                                                field_size=FieldSize.MEDIUM,
+                                                                custom_validate=[
+                                                                    IsValidRegularExpression()
+                                                                ],
+                                                            ),
+                                                        ),
+                                                    ),
+                                                    CascadingSingleChoiceElement(
+                                                        name="match_alias",
+                                                        title=Title("Alias"),
+                                                        parameter_form=ListOfStrings(
+                                                            string_spec=String(
+                                                                field_size=FieldSize.MEDIUM,
+                                                                custom_validate=[
+                                                                    IsValidRegularExpression()
+                                                                ],
+                                                            ),
+                                                        ),
+                                                    ),
                                                 ],
                                             ),
                                         ),

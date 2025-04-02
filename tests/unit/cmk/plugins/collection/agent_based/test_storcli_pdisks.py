@@ -103,6 +103,42 @@ NS-Namespace|LU-Logical Unit|LUN-Logical Unit Number|NSID-Namespace ID|Alt-EID-A
 """
 
 
+# SUP-23147
+SECTION_V3 = """CLI Version = 007.3205.0000.0000 Oct 09, 2024
+Operating system = Windows Server 2019
+Controller = 0
+Status = Success
+Description = Show Drive Information Succeeded.
+
+
+Drive Information :
+=================
+
+-----------------------------------------------------------------------------------
+EID:Slt DID State DG Size Intf Med SED PI SeSz Model Sp Type
+-----------------------------------------------------------------------------------
+8:0 10 JBOD - 10.914 TB SATA HDD N N 512B TOSHIBA MG07ACA12TE U -
+8:1 15 JBOD - 10.914 TB SATA HDD N N 512B ST12000VN0008-2YS101 U -
+8:2 11 JBOD - 10.914 TB SATA HDD N N 512B TOSHIBA MG07ACA12TE U -
+8:3 17 JBOD - 10.914 TB SATA HDD N N 512B TOSHIBA MG07ACA12TE U -
+9:10 36 Onln 0 931.000 GB SATA HDD N N 512B ST1000NM0008-2F2100 U -
+9:11 34 Onln 0 931.000 GB SATA HDD N N 512B ST1000NM0008-2F2100 U -
+-----------------------------------------------------------------------------------
+
+EID=Enclosure Device ID|Slt=Slot No|DID=Device ID|DG=DriveGroup
+DHS=Dedicated Hot Spare|UGood=Unconfigured Good|GHS=Global Hotspare
+UBad=Unconfigured Bad|Sntze=Sanitize|Onln=Online|Offln=Offline|Intf=Interface
+Med=Media Type|SED=Self Encryptive Drive|PI=PI Eligible
+SeSz=Sector Size|Sp=Spun|U=Up|D=Down|T=Transition|F=Foreign
+UGUnsp=UGood Unsupported|UGShld=UGood shielded|HSPShld=Hotspare shielded
+CFShld=Configured shielded|Cpybck=CopyBack|CBShld=Copyback Shielded
+UBUnsp=UBad Unsupported|Rbld=Rebuild
+
+
+
+"""
+
+
 def _to_string_table(raw: str) -> StringTable:
     return [list(re.split(" +", line.strip())) for line in raw.strip().split("\n") if line]
 
@@ -132,6 +168,17 @@ def test_parse_v2():
     }
 
 
+def test_parse_v3():
+    assert parse_storcli_pdisks(_to_string_table(SECTION_V3)) == {
+        "C0.8:0-10": StorcliPDisk(size=(10.914, "TB"), state="JBOD"),
+        "C0.8:1-15": StorcliPDisk(size=(10.914, "TB"), state="JBOD"),
+        "C0.8:2-11": StorcliPDisk(size=(10.914, "TB"), state="JBOD"),
+        "C0.8:3-17": StorcliPDisk(size=(10.914, "TB"), state="JBOD"),
+        "C0.9:10-36": StorcliPDisk(size=(931, "GB"), state="Online"),
+        "C0.9:11-34": StorcliPDisk(size=(931, "GB"), state="Online"),
+    }
+
+
 def test_check_simple() -> None:
     result = list(
         check_storcli_pdisks(
@@ -144,4 +191,19 @@ def test_check_simple() -> None:
     )
     assert result == [
         Result(state=State.OK, summary="Size: 953.343 GB, Disk State: Online"),
+    ]
+
+
+def test_check_jbod() -> None:
+    result = list(
+        check_storcli_pdisks(
+            item="C0.8:0-10",
+            params=megaraid.PDISKS_DEFAULTS,
+            section=parse_storcli_pdisks(
+                _to_string_table(SECTION_V3),
+            ),
+        )
+    )
+    assert result == [
+        Result(state=State.OK, summary="Size: 10.914 TB, Disk State: JBOD"),
     ]

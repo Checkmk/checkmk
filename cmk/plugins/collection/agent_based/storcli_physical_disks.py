@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import AgentSection, StringTable
-from cmk.plugins.lib import megaraid
+from cmk.plugins.broadcom_storage.lib import megaraid
 
 
 def parse_storcli_physical_disks(string_table: StringTable) -> megaraid.SectionPDisks:

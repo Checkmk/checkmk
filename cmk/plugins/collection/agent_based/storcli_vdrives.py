@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.megaraid import expand_abbreviation, LDISKS_DEFAULTS
+from cmk.plugins.broadcom_storage.lib.megaraid import expand_abbreviation, LDISKS_DEFAULTS
 
 
 class StorcliVDrive(NamedTuple):

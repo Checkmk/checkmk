@@ -28,7 +28,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib import megaraid
+from cmk.plugins.broadcom_storage.lib import megaraid
 
 # This makes service names backward compatible to match
 # inventory made by older versions that didn't support multiple

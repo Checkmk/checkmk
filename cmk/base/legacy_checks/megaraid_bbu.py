@@ -8,7 +8,7 @@
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import State
-from cmk.plugins.lib.megaraid import check_state
+from cmk.plugins.broadcom_storage.lib.megaraid import check_state
 
 check_info = {}
 

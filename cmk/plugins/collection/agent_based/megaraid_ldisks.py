@@ -15,7 +15,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib import megaraid
+from cmk.plugins.broadcom_storage.lib import megaraid
 
 # Example output from agent:
 # Adapter 0 -- Virtual Drive Information:

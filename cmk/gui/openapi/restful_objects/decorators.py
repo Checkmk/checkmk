@@ -49,6 +49,7 @@ from cmk.gui.openapi.restful_objects.type_defs import (
     StatusCodeInt,
     TagGroup,
 )
+from cmk.gui.openapi.restful_objects.utils import endpoint_ident
 from cmk.gui.openapi.restful_objects.validators import (
     ContentTypeValidator,
     HeaderValidator,
@@ -696,10 +697,9 @@ class Endpoint:
 
     @property
     def ident(self) -> str:
-        """Provide an identity for the Endpoint
-
-        This can be used for keys in a dictionary, e.g. the ENDPOINT_REGISTRY."""
-        return f"{self.method}:{self.default_path}:{self.content_type}"
+        return endpoint_ident(
+            method=self.method, route_path=self.default_path, content_type=self.content_type
+        )
 
     @property
     def default_path(self) -> str:

@@ -15,13 +15,13 @@ docker  # used by test_docker test and mk_docker agent plugin
 dockerpty  # used by dockerized tests for opening debug shells
 fakeredis[lua]  # used for testing code which uses Redis (lua is needed for faking features like "lock")
 furo  # sphinx theme
-grequests  # redfixh server mocker for integration tests
+grequests  # redfish server mocker for integration tests
 hypothesis    # used by unit tests
 hypothesis-jsonschema  # used by unit tests
 jsonschema
 libcst # concrete syntax trees for plugin migration helpers
 msrest
-multipart  # redfixh server mocker for integration tests
+multipart  # redfish server mocker for integration tests
 mypy # used by test/Makefile's test-mypy target
 mypy-protobuf # for mypy
 networkx # needed for py-import-cycles

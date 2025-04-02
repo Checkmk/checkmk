@@ -154,6 +154,12 @@ def test_linked_libraries(site: Site) -> None:
         "lib/python3.12/site-packages/psycopg2/_psycopg.cpython-312-x86_64-linux-gnu.so",
     ]
 
+    if os.environ["DISTRO"] == "almalinux-8":
+        # ToDo: dbm links on almalinux-8 to /lib64/libcrypto.so.1.1, see CMK-22718
+        exclude_from_forbidden_links_check.append(
+            "lib/python3.12/lib-dynload/_dbm.cpython-312-x86_64-linux-gnu.so"
+        )
+
     for file in files:
         if _is_in_exclude_list(file, exclude_entirely):
             continue

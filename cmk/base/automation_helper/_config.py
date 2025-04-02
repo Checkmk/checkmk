@@ -12,7 +12,8 @@ RELATIVE_CONFIG_PATH_FOR_TESTING = "automation_helper_config.json"
 
 
 class ServerConfig(BaseModel, frozen=True):
-    unix_socket: Path
+    unix_socket_path: Path
+    unix_socket_permissions: int
     pid_file: Path
     access_log: Path
     error_log: Path
@@ -50,7 +51,8 @@ def default_config(
 ) -> Config:
     return Config(
         server_config=ServerConfig(
-            unix_socket=run_directory / "automation-helper.sock",
+            unix_socket_path=run_directory / "automation-helper.sock",
+            unix_socket_permissions=0o600,
             pid_file=run_directory / "automation-helper.pid",
             access_log=log_directory / "access.log",
             error_log=log_directory / "error.log",

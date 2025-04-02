@@ -139,7 +139,8 @@ def _disable_automation_helper_reloader_and_set_worker_count_to_one(site: Site) 
     )
     adjusted_configuration = Config(
         server_config=ServerConfig(
-            unix_socket=default_configuration.server_config.unix_socket,
+            unix_socket_path=default_configuration.server_config.unix_socket_path,
+            unix_socket_permissions=default_configuration.server_config.unix_socket_permissions,
             pid_file=default_configuration.server_config.pid_file,
             access_log=default_configuration.server_config.access_log,
             error_log=default_configuration.server_config.error_log,
@@ -170,7 +171,8 @@ def _set_automation_helper_worker_count_to_one(site: Site) -> Generator[None]:
     )
     adjusted_configuration = Config(
         server_config=ServerConfig(
-            unix_socket=default_configuration.server_config.unix_socket,
+            unix_socket_path=default_configuration.server_config.unix_socket_path,
+            unix_socket_permissions=default_configuration.server_config.unix_socket_permissions,
             pid_file=default_configuration.server_config.pid_file,
             access_log=default_configuration.server_config.access_log,
             error_log=default_configuration.server_config.error_log,

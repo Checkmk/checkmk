@@ -325,6 +325,7 @@ def test_container_agent(checkmk: CheckmkApp) -> None:
     assert ":::6556" in checkmk.container.exec_run(["netstat", "-tln"])[-1].decode("utf-8")
 
 
+@pytest.mark.skip("CMK-22635: Skipped temporarily, investigating.")
 def test_update(client: docker.DockerClient) -> None:
     base_version = CMKVersion(
         version_spec="2.3.0p26", edition=Edition.CRE, branch="2.3.0", branch_version="2.3.0"

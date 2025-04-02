@@ -1365,7 +1365,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
 
                 analyse_url = makeuri(request, [("analyse", str(nr))])
                 html.icon_button(
-                    analyse_url, _("Analyze ruleset with this notification"), "analyze"
+                    analyse_url, _("Analyze rule set with this notification"), "analyze"
                 )
 
                 html.icon_button(

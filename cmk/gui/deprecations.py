@@ -334,6 +334,8 @@ class _NotifiableUser:
 
 def _filter_notifiable_users(users: Users) -> Iterator[_NotifiableUser]:
     for user_id, user_spec in users.items():
+        if user_id is None:
+            continue
         notification_categories = []
         if user_may(user_id, "wato.manage_mkps"):
             notification_categories.append(_NotificationCategory.manage_mkps)

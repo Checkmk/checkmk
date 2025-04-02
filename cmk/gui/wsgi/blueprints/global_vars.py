@@ -28,8 +28,6 @@ def set_global_vars() -> None:
     set_global_var("translation", None)
 
     output_format = get_output_format(request.args.get("output_format", default="html", type=str))
-    set_global_var("output_format", output_format)
-
     response = cast(http.Response, current_app.make_response(""))
     response.mimetype = get_mime_type_from_output_format(output_format)
 

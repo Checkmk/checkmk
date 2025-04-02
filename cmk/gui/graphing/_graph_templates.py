@@ -22,16 +22,20 @@ from cmk.gui.type_defs import Row
 from ._expression import (
     Average,
     Constant,
+    CriticalOf,
     Difference,
     Fraction,
     Maximum,
+    MaximumOf,
     Merge,
     Metric,
     MetricExpression,
     Minimum,
+    MinimumOf,
     parse_expression,
     Product,
     Sum,
+    WarningOf,
 )
 from ._graph_specification import (
     FixedVerticalRange,
@@ -40,6 +44,8 @@ from ._graph_specification import (
     GraphSpecification,
     HorizontalRule,
     MetricOpConstant,
+    MetricOpConstantNA,
+    MetricOperation,
     MetricOpOperator,
     MetricOpRRDSource,
     MinimalVerticalRange,
@@ -285,12 +291,12 @@ def _evaluate_graph_template_range_boundary(
         return None
 
 
-def _to_metric_operation(
+def _to_metric_operation(  # pylint: disable=too-many-branches
     expression: MetricExpression,
     translated_metrics: Mapping[str, TranslatedMetric],
     lq_row: Row,
     enforced_consolidation_function: GraphConsoldiationFunction | None,
-) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
+) -> MetricOperation:
     if isinstance(expression, Constant):
         return MetricOpConstant(value=float(expression.value))
     if isinstance(expression, Metric):
@@ -427,6 +433,12 @@ def _to_metric_operation(
                 for o in expression.operands
             ],
         )
+    if isinstance(expression, (MaximumOf | MinimumOf | WarningOf | CriticalOf)):
+        try:
+            evaluation_result = expression.evaluate(translated_metrics)
+        except KeyError:
+            return MetricOpConstantNA()
+        return MetricOpConstant(value=float(evaluation_result.value))
     raise TypeError(expression)
 
 
@@ -435,7 +447,7 @@ def metric_expression_to_graph_recipe_expression(
     translated_metrics: Mapping[str, TranslatedMetric],
     lq_row: Row,
     enforced_consolidation_function: GraphConsoldiationFunction | None,
-) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
+) -> MetricOperation:
     return _to_metric_operation(
         metric_expression,
         translated_metrics,

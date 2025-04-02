@@ -16,7 +16,6 @@ T = TypeVar("T")
 VarName = Literal[
     "config",
     "display_options",
-    "endpoint",
     "html",
     "output_format",
     "output_funnel",

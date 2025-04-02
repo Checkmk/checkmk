@@ -25,7 +25,6 @@ def set_global_vars() -> None:
     # *Flask* will clear them after the request finished.
 
     # Be aware that the order, in which these initialized is intentional.
-    set_global_var("endpoint", None)
     set_global_var("translation", None)
 
     output_format = get_output_format(request.args.get("output_format", default="html", type=str))

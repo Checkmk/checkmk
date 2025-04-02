@@ -686,23 +686,23 @@ msgstr "%s trafego"
 #, python-format
 msgid ""
 "%s uses an API (%s) which is marked as deprecated in Checkmk %s and will be "
-"removed in Checkmk %s."
+"removed in Checkmk %s (File: %s)."
 msgstr ""
 
 #, python-format
 msgid ""
 "%s uses an API (%s) which was marked as deprecated in Checkmk %s and is "
-"removed in Checkmk %s."
+"removed in Checkmk %s (File: %s)."
 msgstr ""
 
 #, python-format
 msgid ""
 "%s uses an API (%s) which was marked as deprecated in Checkmk %s and will be "
-"removed in Checkmk %s."
+"removed in Checkmk %s (File: %s)."
 msgstr ""
 
 #, python-format
-msgid "%s uses an API (%s) which was removed in Checkmk %s."
+msgid "%s uses an API (%s) which was removed in Checkmk %s (File: %s)."
 msgstr ""
 
 #, python-format
@@ -24174,7 +24174,7 @@ msgstr "desenho GUI"
 #, python-format
 msgid ""
 "GUI extension in %r uses an API which is marked as deprecated and may not "
-"work anymore due to unknown imports or objects."
+"work anymore due to unknown imports or objects (File: %s)."
 msgstr ""
 
 #, fuzzy
@@ -32634,7 +32634,7 @@ msgstr "Extensões GUI herdadas"
 #, python-format
 msgid ""
 "Legacy GUI extension in %r uses an API which is marked as deprecated and may "
-"not work anymore due to unknown imports or objects."
+"not work anymore due to unknown imports or objects (File: %s)."
 msgstr ""
 
 #, fuzzy
@@ -42485,8 +42485,10 @@ msgstr "PING e parâmetros de verificação do hospedeiro"
 msgid "PLL lock voltages by freqency"
 msgstr "Tensões de bloqueio PLL por freqência"
 
+#, python-format
 msgid ""
-"PNP template uses an API which was removed in an ealier Checkmk version."
+"PNP template uses an API which was removed in an ealier Checkmk version "
+"(File: %s)."
 msgstr ""
 
 #, python-format

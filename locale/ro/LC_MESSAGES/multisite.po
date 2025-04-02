@@ -685,23 +685,23 @@ msgstr "%s trafic"
 #, python-format
 msgid ""
 "%s uses an API (%s) which is marked as deprecated in Checkmk %s and will be "
-"removed in Checkmk %s."
+"removed in Checkmk %s (File: %s)."
 msgstr ""
 
 #, python-format
 msgid ""
 "%s uses an API (%s) which was marked as deprecated in Checkmk %s and is "
-"removed in Checkmk %s."
+"removed in Checkmk %s (File: %s)."
 msgstr ""
 
 #, python-format
 msgid ""
 "%s uses an API (%s) which was marked as deprecated in Checkmk %s and will be "
-"removed in Checkmk %s."
+"removed in Checkmk %s (File: %s)."
 msgstr ""
 
 #, python-format
-msgid "%s uses an API (%s) which was removed in Checkmk %s."
+msgid "%s uses an API (%s) which was removed in Checkmk %s (File: %s)."
 msgstr ""
 
 #, python-format
@@ -24207,7 +24207,7 @@ msgstr "Proiectare GUI"
 #, python-format
 msgid ""
 "GUI extension in %r uses an API which is marked as deprecated and may not "
-"work anymore due to unknown imports or objects."
+"work anymore due to unknown imports or objects (File: %s)."
 msgstr ""
 
 msgid "GUI extensions (deprecated)"
@@ -32715,7 +32715,7 @@ msgstr "Extensii GUI vechi (depreciate)"
 #, python-format
 msgid ""
 "Legacy GUI extension in %r uses an API which is marked as deprecated and may "
-"not work anymore due to unknown imports or objects."
+"not work anymore due to unknown imports or objects (File: %s)."
 msgstr ""
 
 msgid "Legacy GUI extensions (deprecated)"
@@ -42567,8 +42567,10 @@ msgstr "Parametrii de verificare PING și gazdă"
 msgid "PLL lock voltages by freqency"
 msgstr "Tensiuni de blocare PLL în funcție de frecvență"
 
+#, python-format
 msgid ""
-"PNP template uses an API which was removed in an ealier Checkmk version."
+"PNP template uses an API which was removed in an ealier Checkmk version "
+"(File: %s)."
 msgstr ""
 
 #, python-format

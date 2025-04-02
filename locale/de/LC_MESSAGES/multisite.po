@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2025-03-31 18:50+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
@@ -682,32 +682,32 @@ msgstr "Diesen Kunden %s"
 msgid "%s traffic"
 msgstr "%s Verkehr"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "%s uses an API (%s) which is marked as deprecated in Checkmk %s and will be "
-"removed in Checkmk %s."
+"removed in Checkmk %s (File: %s)."
 msgstr ""
 "%s verwendet eine API (%s), die in Checkmk %s als veraltet markiert ist und "
 "in Checkmk %s entfernt werden wird."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "%s uses an API (%s) which was marked as deprecated in Checkmk %s and is "
-"removed in Checkmk %s."
+"removed in Checkmk %s (File: %s)."
 msgstr ""
 "%s verwendet eine API (%s), die in Checkmk %s als veraltet markiert wurde "
 "und in Checkmk %s entfernt wird."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "%s uses an API (%s) which was marked as deprecated in Checkmk %s and will be "
-"removed in Checkmk %s."
+"removed in Checkmk %s (File: %s)."
 msgstr ""
 "%s verwendet eine API (%s), die in Checkmk %s als veraltet markiert wurde "
 "und in Checkmk %s entfernt werden wird."
 
-#, python-format
-msgid "%s uses an API (%s) which was removed in Checkmk %s."
+#, fuzzy, python-format
+msgid "%s uses an API (%s) which was removed in Checkmk %s (File: %s)."
 msgstr "%s verwendet eine API (%s), die in Checkmk %s entfernt wurde."
 
 #, python-format
@@ -23685,10 +23685,10 @@ msgstr "GUI"
 msgid "GUI design"
 msgstr "GUI-Design"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "GUI extension in %r uses an API which is marked as deprecated and may not "
-"work anymore due to unknown imports or objects."
+"work anymore due to unknown imports or objects (File: %s)."
 msgstr ""
 "Die GUI-Erweiterung in %r verwendet eine API, die als veraltet "
 "gekennzeichnet ist und aufgrund von unbekannten Importen oder Objekten "
@@ -31991,10 +31991,10 @@ msgstr ""
 msgid "Legacy GUI extension in %r"
 msgstr "Legacy GUI-Erweiterung in %r"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Legacy GUI extension in %r uses an API which is marked as deprecated and may "
-"not work anymore due to unknown imports or objects."
+"not work anymore due to unknown imports or objects (File: %s)."
 msgstr ""
 "Die Legacy GUI-Erweiterung in %r verwendet eine API, die als veraltet "
 "gekennzeichnet ist und aufgrund unbekannter Importe oder Objekte "
@@ -41587,8 +41587,10 @@ msgstr "PING und Host Check-Parameter"
 msgid "PLL lock voltages by freqency"
 msgstr "PLL Verriegelungsspannung nach Frequenz"
 
+#, fuzzy, python-format
 msgid ""
-"PNP template uses an API which was removed in an ealier Checkmk version."
+"PNP template uses an API which was removed in an ealier Checkmk version "
+"(File: %s)."
 msgstr ""
 "Die PNP-Vorlage verwendet eine API, die in einer früheren Checkmk-Version "
 "entfernt wurde."

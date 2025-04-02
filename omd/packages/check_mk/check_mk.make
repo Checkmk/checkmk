@@ -113,7 +113,9 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk
 	install -m 644 $(REPO_PATH)/{COPYING,AUTHORS} $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk
 	install -m 644 $(CHECK_MK_CHANGELOG_PATH) $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk
-	tar -c -C $(REPO_PATH)/doc $(CHECK_MK_TAROPTS) --exclude plugin-api \
+	tar -c -C $(REPO_PATH)/doc $(CHECK_MK_TAROPTS) \
+	    --exclude plugin-api \
+	    --exclude  treasures\
 	    . | tar -x -C $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk/
 	tar -c -C $(REPO_PATH)/doc \
 	    --transform "s/^plugin-api\/build/plugin-api/" \

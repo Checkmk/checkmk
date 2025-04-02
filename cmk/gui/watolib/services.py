@@ -524,18 +524,33 @@ class Discovery:
         def _entry_key(entry: CheckPreviewEntry) -> tuple[str, Item]:
             return entry.check_plugin_name, entry.item
 
-        cluster_entries_lookup = {
-            _entry_key(cluster_entry) for cluster_entry in discovery_result.check_table
+        cluster_entries_nodes = {
+            _entry_key(cluster_entry): cluster_entry.found_on_nodes
+            for cluster_entry in discovery_result.check_table
         }
 
+        def _should_be_kept(node_name: HostName, entry: CheckPreviewEntry) -> bool:
+            try:
+                found_on_nodes = cluster_entries_nodes[_entry_key(entry)]
+            except KeyError:
+                return False  # not clustered at all -> not of interest here.
+            if found_on_nodes:
+                # The service is found on some nodes.
+                # We need to drop it from all other nodes, so that the newly
+                # discovered parameters can not be overwritten by other, older
+                # discovered parameters (and labels, respectively).
+                return node_name in found_on_nodes
+            # The service is not found on any node.
+            # Me must not remove it, otherwise the user will experience "vanished"
+            # services being silently dropped.
+            return True
+
         return {
-            target_host_name: list(discovery_result.check_table),
+            target_host_name: discovery_result.check_table,
             # Only relevant for clusters. Find the affected check tables on the nodes and run
             # all the discovery actions on the nodes as well.
             **{
-                node_name: [
-                    entry for entry in check_table if _entry_key(entry) in cluster_entries_lookup
-                ]
+                node_name: [entry for entry in check_table if _should_be_kept(node_name, entry)]
                 for node_name, check_table in discovery_result.nodes_check_table.items()
             },
         }

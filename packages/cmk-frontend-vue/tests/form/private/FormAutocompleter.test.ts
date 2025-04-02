@@ -36,7 +36,7 @@ describe('FormAutocompleter', () => {
         id: 'test'
       }
     })
-    expect(screen.getByPlaceholderText('Search...')).toBeInTheDocument()
+    expect(screen.getByText('Search...')).toBeInTheDocument()
   })
 
   test('shoud emit entered item on pressing enter key on input without selecting any item from dropdown list', async () => {
@@ -55,7 +55,9 @@ describe('FormAutocompleter', () => {
       }
     })
 
-    const input = screen.getByPlaceholderText('Search...')
+    const dropdown = screen.getByRole('combobox')
+    await userEvent.click(dropdown)
+    const input = screen.getByRole('textbox')
     await fireEvent.update(input, 'os:windows')
     // TODO: we probably should switch to user-event, see
     // https://testing-library.com/docs/dom-testing-library/api-events/
@@ -81,7 +83,9 @@ describe('FormAutocompleter', () => {
       }
     })
 
-    const input = screen.getByPlaceholderText('Add some labels')
+    const dropdown = screen.getByRole('combobox')
+    await userEvent.click(dropdown)
+    const input = screen.getByRole('textbox')
     await fireEvent.focus(input)
 
     await waitFor(() => {
@@ -102,7 +106,9 @@ describe('FormAutocompleter', () => {
       }
     })
 
-    const input = screen.getByPlaceholderText('Add some labels')
+    const dropdown = screen.getByRole('combobox')
+    await userEvent.click(dropdown)
+    const input = screen.getByRole('textbox')
     await fireEvent.update(input, 'os')
 
     await waitFor(() => {
@@ -123,7 +129,9 @@ describe('FormAutocompleter', () => {
       }
     })
 
-    const input = screen.getByPlaceholderText('Add some labels')
+    const dropdown = screen.getByRole('combobox')
+    await userEvent.click(dropdown)
+    const input = screen.getByRole('textbox')
     await fireEvent.update(input, 'os:w')
 
     await waitFor(() => {
@@ -148,7 +156,9 @@ describe('FormAutocompleter', () => {
       }
     })
 
-    const input = screen.getByPlaceholderText('Add some labels')
+    const dropdown = screen.getByRole('combobox')
+    await userEvent.click(dropdown)
+    const input = screen.getByRole('textbox')
     await fireEvent.update(input, 'os')
 
     await waitFor(() => {
@@ -175,10 +185,10 @@ describe('FormAutocompleter', () => {
       }
     })
 
-    const input = screen.getByPlaceholderText('Add some labels')
+    const dropdown = screen.getByRole('combobox')
 
-    // set cursor into text input field
-    await userEvent.click(input)
+    // show suggestions of dropdown
+    await userEvent.click(dropdown)
 
     // suggestions should show up
     await waitFor(() => {
@@ -186,7 +196,7 @@ describe('FormAutocompleter', () => {
       expect(screen.getByText('OS Linux')).toBeInTheDocument()
     })
 
-    await userEvent.type(input, 'linux')
+    await userEvent.type(screen.getByRole('textbox'), 'linux')
 
     // suggestions are filtered, so windows should go away
     await waitForElementToBeRemoved(() => screen.getByText('OS Windows'))
@@ -197,33 +207,5 @@ describe('FormAutocompleter', () => {
     await waitFor(() => {
       expect(selectedValue).toBe('os:linux')
     })
-  })
-
-  test('should reset to saved value after blur', async () => {
-    // the autcompleter should behave like a dropdown, so the value should only
-    // be changed if it was chosen from the suggestions
-    render(FormAutocompleter, {
-      props: {
-        placeholder: 'placeholder',
-        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
-        filterOn: [],
-        resetInputOnAdd: false,
-        size: 7,
-        id: 'ut_test',
-        modelValue: 'some_value'
-      }
-    })
-
-    const input = screen.getByPlaceholderText<HTMLInputElement>('placeholder')
-
-    await waitFor(() => {
-      expect(input.value).toBe('some_value')
-    })
-
-    await userEvent.type(input, '[Backspace][Backspace]')
-    expect(input.value).toBe('some_val')
-
-    await userEvent.click(document.body) // close suggestions values
-    expect(input.value).toBe('some_value')
   })
 })

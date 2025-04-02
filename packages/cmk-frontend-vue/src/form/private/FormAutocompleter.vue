@@ -4,14 +4,9 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import CmkDropdown from '@/components/CmkDropdown.vue'
 import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { X } from 'lucide-vue-next'
-import CmkSuggestions from '@/components/CmkSuggestions.vue'
-import useClickOutside from '@/lib/useClickOutside'
-import { useId } from '@/form/utils'
-import { type Suggestion, ErrorResponse } from '@/components/suggestions'
-
+import { type Suggestion, ErrorResponse, Response } from '@/components/suggestions'
 import { fetchSuggestions } from '@/form/components/utils/autocompleter'
 
 const props = defineProps<{
@@ -19,184 +14,42 @@ const props = defineProps<{
   placeholder: string
   autocompleter?: Autocompleter
   filterOn: string[]
+  startOfGroup?: boolean
   size: number
   resetInputOnAdd: boolean
+  label?: string
 }>()
 
 const model = defineModel<string>({ default: '' })
-const visibleInputValue = ref<string>('')
 
-const autocompleterError = ref<string>('')
-
-const filteredSuggestions = ref<Suggestion[]>([])
-const suggestionsRef = ref<InstanceType<typeof CmkSuggestions> | null>(null)
-const showSuggestions = ref<boolean>(false)
-
-const selectFirstSuggestion = async () => {
-  if (filteredSuggestions.value.length > 0) {
-    const suggestion = filteredSuggestions.value[0]
-    if (suggestion) {
-      await selectSuggestion(suggestion)
-    }
-  }
-}
-
-const selectSuggestion = async (suggestion: Suggestion) => {
-  model.value = suggestion.name
-  visibleInputValue.value = suggestion.title
-  if (props.resetInputOnAdd) {
-    await resetVisibleInput()
-  }
-  showSuggestions.value = false
-}
-
-const deleteSelection = async () => {
-  model.value = ''
-  await resetVisibleInput()
-}
-
-const resetVisibleInput = async () => {
-  visibleInputValue.value = ''
-  await updateSuggestions('')
-}
-
-onMounted(() => {
-  if (model.value) {
-    visibleInputValue.value = model.value
-  }
-})
-
-async function updateSuggestions(query: string) {
+async function suggestionCallback(query: string): Promise<ErrorResponse | Response> {
   if (props.autocompleter === undefined) {
-    return
+    return new ErrorResponse('internal: props.autocompleter undefined')
   }
-  autocompleterError.value = ''
   const newValue = await fetchSuggestions(props.autocompleter, query)
   if (newValue instanceof ErrorResponse) {
-    autocompleterError.value = newValue.error
-    return
+    return newValue
   }
-  filteredSuggestions.value = []
 
-  filteredSuggestions.value.push(
+  const result: Array<Suggestion> = []
+
+  result.push(
     ...newValue.choices
       .filter((element: Suggestion) => element.name.length > 0 && element.title.length > 0)
       .filter((element: Suggestion) => !props.filterOn.includes(element.name))
   )
+
+  return new Response(result)
 }
-
-watch(visibleInputValue, async (value) => {
-  await updateSuggestions(value)
-  showSuggestions.value = true
-})
-
-function onInputKeyUpDown() {
-  suggestionsRef.value?.focus()
-  suggestionsRef.value?.selectPreviousElement()
-}
-
-function onInputKeyDownDown() {
-  suggestionsRef.value?.focus()
-  suggestionsRef.value?.selectNextElement()
-}
-
-const vClickOutside = useClickOutside()
-const componentId = useId()
 </script>
 
 <template>
-  <div
-    v-click-outside="
-      () => {
-        showSuggestions = false
-        visibleInputValue = model
-      }
-    "
-    class="form-autocompleter"
-  >
-    <span style="display: flex; align-items: center">
-      <input
-        :id="props.id ?? componentId"
-        v-model="visibleInputValue"
-        class="item new-item"
-        type="text"
-        autocomplete="on"
-        :size="props.size"
-        :placeholder="props.placeholder"
-        @keydown.enter.prevent="selectFirstSuggestion"
-        @focus="
-          async () => {
-            await updateSuggestions('')
-            showSuggestions = true
-          }
-        "
-        @keydown.up.prevent="onInputKeyUpDown"
-        @keydown.down.prevent="onInputKeyDownDown"
-      />
-      <X
-        :style="{
-          opacity: !!visibleInputValue ? 1 : 0,
-          cursor: !!visibleInputValue ? 'pointer' : 'unset'
-        }"
-        class="item-delete-btn"
-        @click="deleteSelection"
-      />
-    </span>
-    <CmkSuggestions
-      v-if="(filteredSuggestions.length > 0 || autocompleterError) && !!showSuggestions"
-      ref="suggestionsRef"
-      role="suggestion"
-      :error="autocompleterError"
-      :suggestions="{ type: 'fixed', suggestions: filteredSuggestions }"
-      @select="(suggestion) => selectSuggestion(suggestion)"
-    />
-  </div>
+  <CmkDropdown
+    v-model:selected-option="model"
+    :options="{ type: 'callback-filtered', querySuggestions: suggestionCallback }"
+    :input-hint="placeholder"
+    :label="label || ''"
+    :start-of-group="startOfGroup || false"
+    width="wide"
+  />
 </template>
-
-<style scoped>
-table.nform input {
-  margin: 0 5px;
-  padding: 2px;
-}
-
-.item {
-  background-color: var(--default-form-element-bg-color);
-
-  &:focus,
-  &:active {
-    background-color: var(--default-form-element-border-color);
-  }
-}
-
-.new-item {
-  padding: 4px;
-}
-
-.item-delete-btn {
-  cursor: pointer;
-  margin: 0 5px;
-  padding: 0;
-  border-radius: 50%;
-  width: 10px;
-  height: 10px;
-  border: none;
-
-  &:hover {
-    background-color: #c77777;
-  }
-}
-
-.form-autocompleter {
-  position: relative;
-  width: fit-content;
-  border-radius: 5px;
-
-  background-color: var(--default-form-element-bg-color);
-  margin: 0;
-  padding: 0;
-
-  &:focus-within {
-    background-color: var(--default-form-element-border-color);
-  }
-}
-</style>

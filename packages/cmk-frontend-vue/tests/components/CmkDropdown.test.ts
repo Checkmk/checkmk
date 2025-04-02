@@ -5,6 +5,7 @@
  */
 
 import CmkDropdown from '@/components/CmkDropdown.vue'
+import { Response } from '@/components/suggestions'
 import userEvent from '@testing-library/user-event'
 import { render, screen, fireEvent, waitFor } from '@testing-library/vue'
 import { defineComponent, ref } from 'vue'
@@ -375,4 +376,41 @@ test('dropdown doesnt interfere with tab order', async () => {
 
   // We remain on dropdown
   expect(document.activeElement).toBe(dropdown)
+})
+
+test('dropdown with callback and freeform element in first place still selects correclty', async () => {
+  let selectedOption: string | null = ''
+  render(CmkDropdown, {
+    props: {
+      options: {
+        type: 'callback-filtered',
+        querySuggestions: async (query) => {
+          const first = []
+          if (query !== '') {
+            first.push({ name: query, title: query })
+          }
+          return new Response([
+            ...first,
+            { name: 'one', title: 'one' },
+            { name: 'three', title: 'three' },
+            { name: 'four', title: 'four' }
+          ])
+        }
+      },
+      selectedOption: null,
+      inputHint: 'Select an option',
+      label: 'some aria label',
+      'onUpdate:selectedOption': (option: string | null) => {
+        selectedOption = option
+      }
+    }
+  })
+
+  const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
+  await fireEvent.click(dropdown)
+  const input = screen.getByRole('textbox', { name: 'filter' })
+  await screen.findByText('four') // make sure suggestions are loaded
+  await fireEvent.update(input, 'ut_something')
+  await fireEvent.click(await screen.findByText('three'))
+  await waitFor(() => expect(selectedOption).toBe('three'))
 })

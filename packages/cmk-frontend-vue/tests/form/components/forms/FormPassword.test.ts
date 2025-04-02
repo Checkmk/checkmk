@@ -105,7 +105,7 @@ test('FormPassword selected first password store choice if present', async () =>
     name: 'i18n choose_password_type'
   })
   await fireEvent.click(element)
-  await fireEvent.click(screen.getByText('password_store_i18n'))
+  await fireEvent.click(await screen.findByText('password_store_i18n'))
 
   expect(getCurrentData()).toBe('["stored_password","pw_id0","",false]')
 })

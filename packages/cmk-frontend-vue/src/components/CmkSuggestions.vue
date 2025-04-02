@@ -4,12 +4,13 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type Ref, useTemplateRef, computed, ref } from 'vue'
+import { type Ref, nextTick, useTemplateRef, computed, ref } from 'vue'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkScrollContainer from './CmkScrollContainer.vue'
 import CmkHtml from '@/components/CmkHtml.vue'
-import { type Suggestion } from './suggestions'
+
+import { type Suggestion, ErrorResponse, Response } from './suggestions'
 
 type SuggestionsFixed = {
   type: 'fixed'
@@ -21,10 +22,15 @@ type SuggestionsFiltered = {
   suggestions: Array<Suggestion>
 }
 
-export type Suggestions = SuggestionsFixed | SuggestionsFiltered
+type SuggestionsCallbackFiltered = {
+  type: 'callback-filtered'
+  querySuggestions: (query: string) => Promise<ErrorResponse | Response>
+  getTitle?: (name: string) => Promise<ErrorResponse | string>
+}
+
+export type Suggestions = SuggestionsFixed | SuggestionsFiltered | SuggestionsCallbackFiltered
 
 const {
-  error = '',
   noResultsHint = '',
   suggestions,
   role
@@ -32,17 +38,18 @@ const {
   suggestions: Suggestions
   role: 'suggestion' | 'option'
   noResultsHint?: string
-  error?: string
 }>()
 
 const showFilter = computed<boolean>(() => {
-  return suggestions.type === 'filtered'
+  return suggestions.type === 'filtered' || suggestions.type === 'callback-filtered'
 })
 
 const emit = defineEmits<{
   select: [suggestion: Suggestion]
+  blur: []
 }>()
 
+const error = ref<string>('')
 const suggestionRefs = useTemplateRef('suggestionRefs')
 const filterString = ref<string>('')
 const suggestionInputRef = ref<HTMLInputElement | null>(null)
@@ -91,12 +98,35 @@ function getCurrentlySelectedAsIndex(): number | null {
   return currentElement.index
 }
 
+async function getSuggestions(
+  suggestions: Suggestions,
+  query: string
+): Promise<Response | ErrorResponse> {
+  switch (suggestions.type) {
+    case 'filtered':
+      return new Response(
+        suggestions.suggestions.filter(({ title }) =>
+          title.toLowerCase().includes(query.toLowerCase())
+        )
+      )
+    case 'callback-filtered':
+      return await suggestions.querySuggestions(query)
+    case 'fixed':
+      return new Response(suggestions.suggestions)
+  }
+}
+
 immediateWatch(
   () => ({ newSuggestions: suggestions, newFilterString: filterString }),
-  ({ newSuggestions, newFilterString }) => {
-    filteredSuggestions.value = newSuggestions.suggestions.filter(({ title }) =>
-      title.toLowerCase().includes(newFilterString.value.toLowerCase())
-    )
+  async ({ newSuggestions, newFilterString }) => {
+    const result = await getSuggestions(newSuggestions, newFilterString.value)
+
+    if (result instanceof ErrorResponse) {
+      error.value = result.error
+    } else {
+      error.value = ''
+      filteredSuggestions.value = result.choices
+    }
   },
   { deep: 2 }
 )
@@ -144,14 +174,32 @@ function selectPreviousElement() {
   scrollCurrentlySelectedIntoView()
 }
 
-function focus(): void {
+async function focus(): Promise<void> {
   if (showFilter.value) {
     suggestionInputRef.value?.focus()
   } else if (filteredSuggestions.value.length > 0) {
-    if (suggestionRefs.value && suggestionRefs.value[0]) {
-      suggestionRefs.value[0].focus()
+    await nextTick()
+    if (suggestionRefs.value === null || suggestionRefs.value[0] === undefined) {
+      throw new Error('CmkSuggestions: internal: can not focus')
+    }
+    suggestionRefs.value[0].focus()
+  }
+}
+
+function inputLostFocus(event: unknown) {
+  // the click event is not triggered, so we have to use the native browser
+  // events to figure out what element actually got clicked.
+  if (suggestionRefs.value === null) {
+    return
+  }
+  const elementClicked = (event as FocusEvent).relatedTarget
+  for (const [index, suggestionRef] of suggestionRefs.value.entries()) {
+    if (suggestionRef === elementClicked) {
+      emit('select', filteredSuggestions.value[index]!)
+      return
     }
   }
+  emit('blur')
 }
 
 defineExpose({
@@ -164,25 +212,34 @@ defineExpose({
 <template>
   <ul
     class="cmk-suggestions"
+    role="listbox"
     @keydown.enter.prevent="onKeyEnter"
     @keydown.down.prevent="selectNextElement"
     @keydown.up.prevent="selectPreviousElement"
   >
     <span :class="{ hidden: !showFilter, input: true }">
-      <input ref="suggestionInputRef" v-model="filterString" type="text" />
+      <input
+        ref="suggestionInputRef"
+        v-model="filterString"
+        aria-label="filter"
+        type="text"
+        @blur="inputLostFocus"
+        @keydown.escape.prevent="emit('blur')"
+      />
     </span>
     <CmkScrollContainer :max-height="'200px'">
       <li v-if="error" class="cmk-suggestions--error"><CmkHtml :html="error" /></li>
+      <!-- eslint-disable vue/valid-v-for vue/require-v-for-key since the index in suggestionRefs does not get correctly updated when using the suggestion name as key -->
       <li
         v-for="(suggestion, index) in filteredSuggestions"
         ref="suggestionRefs"
-        :key="suggestion.name"
         tabindex="-1"
         :role="role"
         class="selectable"
         :class="{ selected: isSuggestionSelected(suggestion, index) }"
-        @click.prevent="onClickSuggestion(suggestion)"
+        @click="onClickSuggestion(suggestion)"
       >
+        <!-- eslint-enable vue/valid-v-for vue/require-v-for-key -->
         {{ suggestion.title }}
       </li>
       <li v-if="filteredSuggestions.length === 0 && noResultsHint !== ''">

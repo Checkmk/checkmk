@@ -232,6 +232,8 @@ sw-documentation:
 
 # Use this target to update the requirements_*_lock.txt files
 # TODO: Find a _way_ better ways to handle this
+# HINT: If you want to update dependencies and only running `make relock_venv`
+#       does not work, remove `requirements.txt` and try again.
 relock_venv:
 	touch requirements.txt
 	touch runtime-requirements.txt

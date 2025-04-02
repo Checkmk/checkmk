@@ -489,12 +489,8 @@ class Discovery:
         # Only relevant for clusters. Find the affected check tables on the nodes and run
         # all the discovery actions on the nodes as well.
         for host_name, check_table in discovery_result.nodes_check_table.items():
-            table_entries = {_entry_key(e): e for e in check_table}
             effective_check_tables[host_name].extend(
-                [
-                    table_entries[key]
-                    for key in cluster_entries_lookup.intersection(set(table_entries.keys()))
-                ]
+                [entry for entry in check_table if _entry_key(entry) in cluster_entries_lookup]
             )
         return effective_check_tables
 

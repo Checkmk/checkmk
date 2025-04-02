@@ -22,6 +22,7 @@ import subprocess
 import tempfile
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+from pathlib import Path
 from textwrap import wrap
 from typing import Literal, NewType, overload, Protocol
 
@@ -739,6 +740,14 @@ class Document:
         height_mm: SizeMM,
         path: str,
     ) -> None:
+        # TODO Some painters use .svg icons which PIL currently doesn't
+        # support. For now, we ship both the .png and .svg icons. Here we
+        # switch to .png only if available.
+        # Find alternatives to PIL that support .svg
+        png_path = Path(path.replace(".svg", ".png"))
+        if path.endswith(".svg") and png_path.exists():
+            path = str(png_path)
+
         pil = PngImagePlugin.PngImageFile(fp=path)
         ir = ImageReader(pil)
         try:

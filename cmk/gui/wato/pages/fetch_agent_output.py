@@ -46,6 +46,7 @@ from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCom
 from cmk.gui.watolib.automations import AnnotatedHostName, do_remote_automation
 from cmk.gui.watolib.check_mk_automations import get_agent_output
 from cmk.gui.watolib.hosts_and_folders import folder_from_request, Host
+from cmk.gui.watolib.mode import mode_url
 
 
 def register(
@@ -335,14 +336,34 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
             self._agent_type,
             timeout=int(active_config.reschedule_timeout)
             if self._agent_type == "agent"
-            else (15 * 60),  # 15 minutes for snmp walks
+            else int(active_config.snmp_walk_download_timeout),
         )
 
         if not agent_output_result.success:
+            global_setting_name = (
+                "reschedule_timeout"
+                if self._agent_type == "agent"
+                else "snmp_walk_download_timeout"
+            )
             job_interface.send_progress_update(
                 _("Failed: %s") % agent_output_result.service_details
             )
             if agent_output_result.service_details.find("timed out"):
+                url = mode_url("edit_configvar", varname=global_setting_name)
+                result = (
+                    _("Background job timed out due to the global setting ")
+                    + f"'<a href=\"{url}\">{global_setting_name}</a>'. "
+                    + _("%s Click on the icon to review.")
+                    % HTMLGenerator.render_icon_button(
+                        url=url,
+                        title=_("Global setting '%s'") % global_setting_name,
+                        icon="configuration",
+                        theme=make_theme(validate_choices=False),
+                    )
+                )
+
+                job_interface.send_result_message(result)
+
                 raise MKTimeout
             raise MKGeneralException()
 

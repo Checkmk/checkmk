@@ -64,6 +64,7 @@ def test_default_config_from_plugins() -> None:
         "page_heading",
         "login_screen",
         "reschedule_timeout",
+        "snmp_walk_download_timeout",
         "filter_columns",
         "default_language",
         "hide_languages",

@@ -288,6 +288,9 @@ class CREConfig:
     # Timeout for rescheduling of host- and servicechecks
     reschedule_timeout: float = 10.0
 
+    # Timeout for SNMP walks in seconds
+    snmp_walk_download_timeout: float = 900
+
     # Number of columsn in "Filter" form
     filter_columns: int = 2
 

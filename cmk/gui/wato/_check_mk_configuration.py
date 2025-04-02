@@ -211,6 +211,7 @@ def register(
     config_variable_registry.register(ConfigVariableCheckMKPerfdataWithTimes)
     config_variable_registry.register(ConfigVariableUseDNSCache)
     config_variable_registry.register(ConfigVariableChooseSNMPBackend)
+    config_variable_registry.register(ConfigVariableSNMPwalkDownloadTimeout)
     config_variable_registry.register(ConfigVariableHTTPProxies)
     config_variable_group_registry.register(ConfigVariableGroupServiceDiscovery)
     config_variable_registry.register(ConfigVariableInventoryCheckInterval)
@@ -2749,6 +2750,20 @@ ConfigVariableChooseSNMPBackend = ConfigVariable(
         ),
         to_valuespec=_transform_snmp_backend_hosts_to_valuespec,
         from_valuespec=_transform_snmp_backend_from_valuespec,
+    ),
+)
+
+ConfigVariableSNMPwalkDownloadTimeout = ConfigVariable(
+    group=ConfigVariableGroupCheckExecution,
+    domain=ConfigDomainGUI,
+    ident="snmp_walk_download_timeout",
+    valuespec=lambda: Age(
+        title=_("SNMP walk download timeout"),
+        help=_(
+            "This configuration option sets the timeout used when downloading "
+            "SNMP walks via the user interface."
+        ),
+        minvalue=1,
     ),
 )
 

@@ -158,6 +158,7 @@ def test_registered_configvars() -> None:
         "replication",
         "require_two_factor_all_users",
         "reschedule_timeout",
+        "snmp_walk_download_timeout",
         "restart_locking",
         "retention_interval",
         "rrdcached_tuning",

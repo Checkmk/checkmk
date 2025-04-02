@@ -190,8 +190,6 @@ def _execute_function(
     except MKTerminate:
         raise
     except MKTimeout:
-        crash = create_gui_crash_report()
-        logger.exception("Background job timed out (Crash ID: %s)", crash.ident_to_text())
         raise
     except Exception as e:
         crash = create_gui_crash_report()

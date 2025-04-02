@@ -65,6 +65,13 @@ def _parameter_valuespec_storcli_pdisks():
                     default_value=2,
                 ),
             ),
+            (
+                "JBOD",
+                MonitoringState(
+                    title=_("State for <i>JBOD</i>"),
+                    default_value=0,
+                ),
+            ),
         ],
     )
 

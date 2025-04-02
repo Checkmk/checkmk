@@ -3184,8 +3184,6 @@ class Host:
         effective = self.effective_attributes()
         for attr in self._folder.tree.all_host_attributes().values():
             value = effective.get(attr.name())
-            # from cmk.gui.log import logger
-            # logger.warning(f"check attr {value} {attr}")
             tag_groups.update(attr.get_tag_groups(value))
 
         # When a host as been configured not to use the agent and not to use

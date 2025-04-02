@@ -25,6 +25,7 @@ py_library(
     deps = [
         requirement("pika"),
         requirement("pydantic"),
+        "//packages/cmk-ccc:site",
     ],
 )
 

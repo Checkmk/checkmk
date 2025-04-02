@@ -4,23 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Configuraton values"""
 
+import os
 import ssl
 import subprocess
-from collections.abc import Callable, Iterator
+from collections.abc import Iterator
 from pathlib import Path
-from typing import TYPE_CHECKING, TypeVar
 
 import pika
 from pydantic import BaseModel
 
-if TYPE_CHECKING:
-    F = TypeVar("F", bound=Callable[[], int])
-
-    def lru_cache(_f: F) -> F: ...
-
-else:
-    from functools import lru_cache
-
+from cmk.ccc.site import get_omd_config
 
 _TLS_PATH = ("etc", "rabbitmq", "ssl")
 _TLS_PATH_MULTISITE_CAS = (*_TLS_PATH, "multisite_cas")
@@ -35,10 +28,15 @@ class BrokerCertificates(BaseModel):
     additionally_trusted_ca: bytes = b""
 
 
-@lru_cache
+def _omd_root() -> Path:
+    return Path(os.environ["OMD_ROOT"])
+
+
 def get_local_port() -> int:
     """Get the port of the local messaging broker"""
-    return int(subprocess.check_output(["omd", "config", "show", "RABBITMQ_PORT"]))
+    if (port := get_omd_config(_omd_root()).get("CONFIG_RABBITMQ_PORT")) is None:
+        raise RuntimeError("Could not read rabbitmq port")
+    return int(port)
 
 
 #

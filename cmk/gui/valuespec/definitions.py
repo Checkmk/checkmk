@@ -4797,7 +4797,7 @@ class AbsoluteDate(ValueSpec[None | float]):
         if (not self._allow_empty and value is None) or (
             value is not None and (value < 0 or int(value) > (2**31 - 1))
         ):
-            raise MKUserError(varprefix, _("%s is not a valid UNIX timestamp") % value)
+            raise MKUserError(varprefix, _("%s is not a valid Unix timestamp") % value)
 
 
 TimeofdayValue = tuple[int, int] | None

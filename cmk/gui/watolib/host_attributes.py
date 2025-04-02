@@ -947,7 +947,7 @@ class ABCHostAttributeText(ABCHostAttribute, abc.ABC):
         if not self._allow_empty and (value is None or not value.strip()):
             raise MKUserError(
                 varprefix + "attr_" + self.name(),
-                _("%s may be missing, if must not be empty if it is set.") % self.title(),
+                _("%s may be missing, it must not be empty if it is set.") % self.title(),
             )
 
     def filter_matches(self, crit: str, value: str | None, hostname: HostName) -> bool:

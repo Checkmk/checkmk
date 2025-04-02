@@ -245,7 +245,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
     @classmethod
     @override
     def gui_title(cls) -> str:
-        return _("Bulk Discovery")
+        return _("Bulk discovery")
 
     def __init__(self) -> None:
         job_id = f"{self.job_prefix}-{gen_id()}"

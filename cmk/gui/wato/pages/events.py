@@ -54,7 +54,7 @@ class ABCEventsMode(WatoMode, abc.ABC, Generic[_T_EventSpec]):
             add_choices = [
                 ("f", _("Start or end of flapping state")),
                 ("s", _("Start or end of a scheduled downtime")),
-                ("x", _("Acknowledgement of problem")),
+                ("x", _("Acknowledgment of problem")),
                 ("as", _("Alert handler execution, successful")),
                 ("af", _("Alert handler execution, failed")),
             ]

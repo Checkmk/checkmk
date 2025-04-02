@@ -41,7 +41,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="cisco_wlc",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextInput(title=_("Access Point")),
+        item_spec=lambda: TextInput(title=_("Access point")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_cisco_wlc,
         title=lambda: _("Cisco WLAN AP"),

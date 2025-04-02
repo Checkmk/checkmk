@@ -17,8 +17,8 @@ from .utils import expect_validate_failure, expect_validate_success, raise_excep
 
 class TestAbsoluteDate:
     def test_validate(self) -> None:
-        expect_validate_failure(vs.AbsoluteDate(), -1, match="not a valid UNIX timestamp")
-        expect_validate_failure(vs.AbsoluteDate(), 2**31, match="not a valid UNIX timestamp")
+        expect_validate_failure(vs.AbsoluteDate(), -1, match="not a valid Unix timestamp")
+        expect_validate_failure(vs.AbsoluteDate(), 2**31, match="not a valid Unix timestamp")
         expect_validate_success(vs.AbsoluteDate(), 1662989393)
         expect_validate_failure(vs.AbsoluteDate(), None)
         expect_validate_success(vs.AbsoluteDate(allow_empty=True), None)

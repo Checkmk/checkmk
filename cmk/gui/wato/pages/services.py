@@ -2235,7 +2235,7 @@ def ajax_popup_service_action_menu() -> None:
     hostname = request.get_validated_type_input_mandatory(HostName, "hostname")
     entry = CheckPreviewEntry(*json.loads(request.get_ascii_input_mandatory("entry")))
     if checkbox_name is None or hostname is None:
-        html.show_error(_("Cannot render dropdown: Missing required information"))
+        html.show_error(_("Cannot render drop-down: Missing required information"))
         return
 
     html.open_a(href=DiscoveryPageRenderer.rulesets_button_link(entry.description, hostname))

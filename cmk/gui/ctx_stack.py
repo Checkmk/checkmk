@@ -17,7 +17,6 @@ VarName = Literal[
     "config",
     "display_options",
     "html",
-    "output_format",
     "output_funnel",
     "permission_tracking",
     "response",

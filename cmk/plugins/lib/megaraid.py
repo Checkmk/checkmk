@@ -99,6 +99,7 @@ PDISKS_DEFAULTS: Final = {
     "Unconfigured Bad": 1,
     "Online": 0,
     "Offline": 2,
+    "JBOD": 0,
 }
 
 

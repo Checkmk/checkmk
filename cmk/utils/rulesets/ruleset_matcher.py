@@ -227,6 +227,11 @@ class RulesetMatcher:
 
         return optimized_ruleset.get(hostname, [])
 
+    def matches_any_host(
+        self, ruleset: Sequence[RuleSpec[TRuleValue]], with_foreign_hosts: bool
+    ) -> bool:
+        return len(self.ruleset_optimizer.get_host_ruleset(ruleset, with_foreign_hosts)) > 0
+
     def cache_service_labels(
         self, hostname: HostName, description: ServiceName, labels: Labels
     ) -> None:

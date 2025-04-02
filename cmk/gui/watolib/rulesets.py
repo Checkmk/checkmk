@@ -1259,11 +1259,7 @@ class Rule:
         Interesting: This has always tried host matching. Whether or not a service ruleset
         does not match any service has never been tested. Probably because this would be
         too expensive."""
-        hosts = Host.all()
-        for host_name, host in hosts.items():
-            if self.matches_host_conditions(host.folder(), host_name):
-                return False
-        return True
+        return not _get_ruleset_matcher().matches_any_host(self.to_single_base_ruleset(), True)
 
     def matches_host_conditions(self, host_folder, hostname):
         """Whether or not the given folder/host matches this rule

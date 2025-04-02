@@ -1,0 +1,19 @@
+Title: Rename "Authorized sites" to "Monitored sites"
+Class: security
+Compatible: incomp
+Component: wato
+Date: 1743583278
+Edition: cre
+Level: 1
+Version: 2.2.0p42
+
+When viewing the states of services or hosts the Checkmk site queries that information from all remote sites.
+In larger deployments this can take some time so in order to decrease the amount of remote sites that need to be queried an option to limit this number was introduced with <a href="https://checkmk.com/werk/4921">Werk #4921</a>.
+
+Unfortunately the naming is misleading since it has nothing to do with Authorization.
+This could and has in some instances mislead users so this option is now renamed to <em>Monitored sites</em>.
+The help text was also adjusted.
+
+<em>Vulnerability Management</em>:
+
+To aid automated scanning we assign a CVSS score of 0.0 None (<code>CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:N/SC:N/SI:N/SA:N</code>).

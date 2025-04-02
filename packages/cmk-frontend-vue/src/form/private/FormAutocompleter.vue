@@ -150,8 +150,7 @@ const componentId = useId()
       ref="suggestionsRef"
       role="suggestion"
       :error="autocompleterError"
-      :suggestions="filteredSuggestions"
-      :show-filter="false"
+      :suggestions="{ type: 'fixed', suggestions: filteredSuggestions }"
       @select="(suggestion) => selectSuggestion(suggestion)"
     />
   </div>

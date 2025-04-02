@@ -3,10 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import subprocess
+
 import pytest
 
 from tests.integration.linux_test_host import create_linux_test_host
 
+from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
 
 from cmk.checkengine.discovery._autochecks import _AutochecksSerializer
@@ -60,7 +63,7 @@ check_plugin_test_check_1 = CheckPlugin(
     )
 
     site.activate_changes_and_wait_for_core_reload()
-    _restart_automation_helpers(site)
+    _restart_automation_helpers_and_wait_until_reachable(site)
 
     site.openapi.service_discovery.run_discovery_and_wait_for_completion(host_name)
 
@@ -145,7 +148,7 @@ check_plugin_test_check_2 = CheckPlugin(
     )
 
     site.activate_changes_and_wait_for_core_reload()
-    _restart_automation_helpers(site)
+    _restart_automation_helpers_and_wait_until_reachable(site)
 
     site.openapi.service_discovery.run_discovery_and_wait_for_completion(host_name)
 
@@ -181,5 +184,17 @@ check_plugin_test_check_2 = CheckPlugin(
         raise AssertionError('"test_check_2" not discovered')
 
 
-def _restart_automation_helpers(site: Site) -> None:
+def _restart_automation_helpers_and_wait_until_reachable(site: Site) -> None:
+    def automation_helper_socket_reachable() -> bool:
+        try:
+            site.python_helper("_helper_connect_to_automation_helper_socket.py").check_output()
+        except subprocess.CalledProcessError:
+            return False
+        return True
+
     site.omd("restart", "automation-helper")
+    wait_until(
+        automation_helper_socket_reachable,
+        timeout=10,
+        interval=0.25,
+    )

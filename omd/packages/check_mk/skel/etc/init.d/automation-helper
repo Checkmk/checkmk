@@ -88,19 +88,8 @@ case "$1" in
         exit_failure 'failed'
         ;;
 
-    restart)
+    restart | reload)
         $0 stop && $0 start
-        ;;
-
-    reload)
-        echo -n 'Reloading automation-helper...'
-        if [ -z "$THE_PID" ]; then
-            echo 'not running.'
-            exit 1
-        else
-            echo "killing $THE_PID with SIGHUP..."
-            kill -HUP "$THE_PID"
-        fi
         ;;
 
     status)

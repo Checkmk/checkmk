@@ -10,7 +10,6 @@ import time
 from collections.abc import AsyncGenerator, Awaitable, Callable, Iterator
 from contextlib import asynccontextmanager, contextmanager, redirect_stderr, redirect_stdout
 from dataclasses import dataclass
-from logging import Formatter, getLogger
 from typing import assert_never, Protocol
 
 from fastapi import FastAPI, Request
@@ -107,11 +106,6 @@ def make_application(
 
 @asynccontextmanager
 async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    # Setting the access log format via config did not work as intended with uvicorn. This
-    # seems to be a known issue: https://github.com/encode/uvicorn/issues/527
-    for handler in getLogger("uvicorn.access").handlers:
-        handler.setFormatter(Formatter("%(asctime)s %(message)s"))
-
     dependencies: _ApplicationDependencies = app.state.dependencies
     dependencies.state.last_reload_at = time.time()
 

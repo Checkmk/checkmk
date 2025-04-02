@@ -16,7 +16,6 @@ google-api-python-client
 google-auth
 google-cloud-asset
 google-cloud-monitoring
-gunicorn
 icalendar
 jinja2
 jira
@@ -82,7 +81,6 @@ snmpsim-lextudio
 tenacity
 urllib3
 uvicorn
-uvicorn-worker
 vcrpy
 watchdog
 werkzeug

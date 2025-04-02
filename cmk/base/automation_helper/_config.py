@@ -54,6 +54,17 @@ def default_config(
             pid_file=run_directory / "automation-helper.pid",
             access_log=log_directory / "access.log",
             error_log=log_directory / "error.log",
+            # Ideally, we would use a single worker and synchronous endpoints. In that case, requests
+            # would be handled concurrently via a thread pool. However, `cmk.base` is currently not
+            # thread-safe, at least due to two reasons:
+            # * Global states. See also the `clear_caches_before_each_call` argument to `make_application`.
+            # * Forking. The CMC config creation can use a process pool for parallelism, see also
+            #   `_reset_global_multiprocessing_start_method_to_platform_default`. Combining forking
+            #   and multithreading is a no-go.
+            # Note that our async endpoints are effectively blocking, so we currently have no concurrency.
+            # In the case where the automation helper is continously bombarded with requests, it is
+            # possible that the reloader task is never executed. This is not a problem, since the
+            # automation endpoint anyway reloads on its own if needed.
             num_workers=2,
         ),
         watcher_config=WatcherConfig(

@@ -433,7 +433,7 @@ class ModeEditSite(WatoMode):
                     ],
                     help=_(
                         "By specifying a status host for each non-local connection "
-                        "you prevent Multisite from running into timeouts when remote sites do not respond. "
+                        "you prevent graphical user interface (GUI) from running into timeouts when remote sites do not respond. "
                         "You need to add the remote monitoring servers as hosts into your local monitoring "
                         "site and use their host state as a reachability state of the remote site. Please "
                         "refer to the <a target=_blank href='%s'>online documentation</a> for details."

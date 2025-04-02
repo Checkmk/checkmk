@@ -63,7 +63,7 @@ def _valuespec_active_checks_cmk_inv() -> Dictionary:
     return Dictionary(
         title=_("Do hardware/software inventory"),
         help=_(
-            "All hosts configured via this ruleset will do a hardware and "
+            "All hosts configured via this rule set will do a hardware and "
             "software inventory. For each configured host a new active check "
             "will be created. You should also create a rule for changing the "
             "normal interval for that check to something between a couple of "
@@ -112,7 +112,7 @@ def _valuespec_active_checks_cmk_inv() -> Dictionary:
                 DropdownChoice(
                     title=_("Status data inventory"),
                     help=_(
-                        "All hosts configured via this ruleset will do a hardware and "
+                        "All hosts configured via this rule set will do a hardware and "
                         "software inventory after every check cycle if there's at least "
                         "one inventory plug-in which processes status data. "
                         "<b>Note:</b> in order to get any useful "

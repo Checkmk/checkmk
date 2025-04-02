@@ -28,7 +28,7 @@ def _item_spec_docker_node_disk_usage():
 def _parameter_valuespec_docker_node_disk_usage():
     return Dictionary(
         help=_(
-            "Allows to define levels for the counts and size of Docker Containers, Images, Local Volumes, and the Build Cache."
+            "Allows to define levels for the counts and size of Docker containers, images, local volumes, and the build cache."
         ),
         elements=[
             (

@@ -371,9 +371,9 @@ class ModeDiagnostics(WatoMode):
                     title=_("OMD Config"),
                     help=_(
                         "Apache mode and TCP address and port, Core, "
-                        "Liveproxy daemon and livestatus TCP mode, "
-                        "Event daemon config, Multiste authorisation, "
-                        "NSCA mode, TMP filesystem mode"
+                        "Liveproxy daemon and Livestatus TCP mode, "
+                        "event daemon config, graphical user interface (GUI) authorisation, "
+                        "NSCA mode, TMP file system mode"
                     ),
                 ),
             ),
@@ -430,8 +430,8 @@ class ModeDiagnostics(WatoMode):
                         totext="",
                         title=_("Performance Graphs of Checkmk Server"),
                         help=_(
-                            "CPU load and utilization, Number of threads, Kernel Performance, "
-                            "OMD, Filesystem, Apache Status, TCP Connections of the time ranges "
+                            "CPU load and utilization, number of threads, Kernel performance, "
+                            "OMD, file system, Apache status, TCP connections of the time ranges "
                             "25 hours and 35 days"
                         ),
                     ),

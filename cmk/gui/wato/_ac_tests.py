@@ -286,11 +286,11 @@ class ACTestTmpfs(ACTest):
 
     def help(self) -> str:
         return _(
-            "<p>By default each Checkmk site has it's own temporary filesystem "
+            "<p>By default each Checkmk site has its own temporary file system "
             "(a ramdisk) mounted to <tt>[SITE]/tmp</tt>. In case the mount is not "
-            "possible Checkmk starts without this temporary filesystem.</p>"
+            "possible, Checkmk starts without this temporary file system.</p>"
             "<p>Even if this is possible, it is not recommended to use Checkmk this "
-            "way because it may reduce the overall performance of Checkmk.</p>"
+            "way, because it may reduce the overall performance of Checkmk.</p>"
         )
 
     def is_relevant(self) -> bool:

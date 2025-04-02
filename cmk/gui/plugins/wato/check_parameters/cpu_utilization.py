@@ -250,7 +250,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersOperatingSystem,
         match_type="dict",
         parameter_valuespec=_cpu_util_common_elements,
-        title=lambda: _("CPU utilization on Linux/UNIX"),
+        title=lambda: _("CPU utilization on Linux/Unix"),
     )
 )
 
@@ -308,7 +308,7 @@ rulespec_registry.register(
         check_group_name="cpu_utilization",
         group=RulespecGroupCheckParametersOperatingSystem,
         parameter_valuespec=_parameter_valuespec_cpu_utilization,
-        title=lambda: _("CPU utilization for Appliances"),
+        title=lambda: _("CPU utilization for appliances"),
     )
 )
 

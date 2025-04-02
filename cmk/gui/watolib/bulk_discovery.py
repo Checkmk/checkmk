@@ -225,7 +225,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
 
     @classmethod
     def gui_title(cls) -> str:
-        return _("Bulk Discovery")
+        return _("Bulk discovery")
 
     def __init__(self) -> None:
         super().__init__(

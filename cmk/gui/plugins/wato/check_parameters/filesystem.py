@@ -212,12 +212,12 @@ def _list_of_filesystem_groups_specs_elements() -> DictionaryEntry:
         add_label=_("Add group"),
         title=_("Filesystem grouping patterns"),
         help=_(
-            "By default, the filesystem checks (<tt>df</tt>, <tt>hr_fs</tt> and others) will "
-            "create a single service for each filesystem. By defining grouping patterns, you "
-            "can handle groups of filesystems like one filesystem. For each group, you can "
-            "define one or several include and exclude patterns. The filesystems matching one "
-            "of the include patterns will be monitored like one big filesystem in a single "
-            "service. The filesystems matching one of the exclude patterns will be excluded "
+            "By default, the file system checks (<tt>df</tt>, <tt>hr_fs</tt> and others) will "
+            "create a single service for each file system. By defining grouping patterns, you "
+            "can handle groups of file systems like one file system. For each group, you can "
+            "define one or several include and exclude patterns. The file systems matching one "
+            "of the include patterns will be monitored like one big file system in a single "
+            "service. The file systems matching one of the exclude patterns will be excluded "
             "from the group and monitored individually."
         ),
     )

@@ -9,6 +9,7 @@ import cmk.ccc.version as cmk_version
 
 from cmk.utils import paths
 
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_simple_link, PageMenuDropdown, PageMenuEntry, PageMenuTopic
@@ -34,6 +35,8 @@ def _page_menu_entries_related(
 ) -> Iterator[PageMenuEntry]:
     is_cse_edition = cmk_version.edition(paths.omd_root) == cmk_version.Edition.CSE
 
+    must_change_password = request.get_ascii_input("reason") in ("expired", "enforced")
+
     if page_name != "user_change_pw" and not is_cse_edition:
         yield PageMenuEntry(
             title=_("Change password"),
@@ -46,6 +49,7 @@ def _page_menu_entries_related(
         page_name != "user_two_factor_overview"
         and user.may("general.manage_2fa")
         and not is_cse_edition
+        and not must_change_password
     ):
         yield PageMenuEntry(
             title=_("Edit two-factor authentication"),
@@ -54,7 +58,11 @@ def _page_menu_entries_related(
             is_shortcut=show_shortcuts,
         )
 
-    if page_name != "user_profile":
+    if (
+        page_name != "user_profile"
+        and user.may("general.edit_profile")
+        and not must_change_password
+    ):
         yield PageMenuEntry(
             title=_("Edit profile"),
             icon_name="topic_profile",
@@ -62,7 +70,11 @@ def _page_menu_entries_related(
             is_shortcut=show_shortcuts,
         )
 
-    if page_name != "user_notifications_p" and user.may("general.edit_notifications"):
+    if (
+        page_name != "user_notifications_p"
+        and user.may("general.edit_notifications")
+        and not must_change_password
+    ):
         yield PageMenuEntry(
             title=_("Notification rules"),
             icon_name="topic_events",

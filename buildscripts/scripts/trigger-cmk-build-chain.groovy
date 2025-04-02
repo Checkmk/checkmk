@@ -99,7 +99,7 @@ def main() {
             job: "${edition_base_folder}/build-cmk-deliverables",
             parameters: job_parameters
         );
-    }
+    }[0]
 
     success &= smart_stage(
             name: "Build CMK IMAGE",
@@ -109,7 +109,7 @@ def main() {
             job: "${edition_base_folder}/build-cmk-image",
             parameters: job_parameters
         );
-    }
+    }[0]
 
     /// Run system tests in parallel.
     parallel([
@@ -122,7 +122,7 @@ def main() {
                     job: "${edition_base_folder}/test-integration-docker",
                     parameters: job_parameters
                 );
-            }
+            }[0]
         },
         "Integration Test for Packages": {
             success &= smart_stage(
@@ -133,7 +133,7 @@ def main() {
                     job: "${edition_base_folder}/test-integration-packages",
                     parameters: job_parameters
                 );
-            }
+            }[0]
         },
         "Composition Test for Packages": {
             success &= smart_stage(
@@ -144,7 +144,7 @@ def main() {
                     job: "${edition_base_folder}/test-composition",
                     parameters: job_parameters
                 );
-            }
+            }[0]
         },
         "Update Test": {
             success &= smart_stage(
@@ -155,7 +155,7 @@ def main() {
                     job: "${edition_base_folder}/test-update",
                     parameters: job_parameters
                 );
-            }
+            }[0]
         },
         "System Tests for FIPS compliance": {
             success &= smart_stage(
@@ -177,7 +177,7 @@ def main() {
                     parameters: job_parameters_common + job_parameters_fips,
                     wait: false,
                 );
-            }
+            }[0]
         },
     ]);
 
@@ -189,7 +189,7 @@ def main() {
             job: "${edition_base_folder}/build-cmk-deliverables",
             parameters: job_parameters
         );
-    }
+    }[0]
 
     success &= smart_stage(
             name: "Trigger SaaS Gitlab jobs",
@@ -199,7 +199,7 @@ def main() {
             job: "${edition_base_folder}/trigger-saas-gitlab",
             parameters: job_parameters
         );
-    }
+    }[0]
 
     currentBuild.result = success ? "SUCCESS" : "FAILURE";
 }

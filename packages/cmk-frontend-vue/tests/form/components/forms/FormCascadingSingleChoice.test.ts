@@ -106,7 +106,7 @@ test('FormCascadingSingleChoice sets default on switch', async () => {
 
   const element = screen.getByRole<HTMLInputElement>('combobox', { name: 'fooLabel' })
   await fireEvent.click(element)
-  await fireEvent.click(screen.getByText('integerChoiceTitle'))
+  await fireEvent.click(await screen.findByText('integerChoiceTitle'))
 
   const integerElement = screen.getByRole<HTMLInputElement>('spinbutton', {
     name: 'nestedIntegerLabel'
@@ -135,13 +135,13 @@ test('FormCascadingSingleChoice keeps previously inserted data', async () => {
   // switch to integer input
   const element = screen.getByRole<HTMLInputElement>('combobox', { name: 'fooLabel' })
   await fireEvent.click(element)
-  await fireEvent.click(screen.getByText('integerChoiceTitle'))
+  await fireEvent.click(await screen.findByText('integerChoiceTitle'))
   // make sure the default value is propagated
   expect(getCurrentData()).toMatch('["integerChoice",5]')
 
   // now switch back to the string
   await fireEvent.click(element)
-  await fireEvent.click(screen.getByText('stringChoiceTitle'))
+  await fireEvent.click(await screen.findByText('stringChoiceTitle'))
 
   // now the other value should still be there, not the default value
   expect(getCurrentData()).toMatch('["stringChoice","other_value"]')
@@ -243,7 +243,7 @@ test('FormCascadingSingleChoice does not poisen the template value', async () =>
   // the dictionary with values
   const element = screen.getByRole<HTMLInputElement>('combobox', { name: 'fooLabel' })
   await fireEvent.click(element)
-  await fireEvent.update(screen.getByText('stringChoiceTitle'))
+  await fireEvent.update(await screen.findByText('stringChoiceTitle'))
 
   // now we change the nested value of said default value
   const stringElement = screen.getByRole<HTMLInputElement>('textbox')

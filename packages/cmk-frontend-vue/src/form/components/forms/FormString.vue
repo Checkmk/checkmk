@@ -12,8 +12,10 @@ import FormAutocompleter from '@/form/private/FormAutocompleter.vue'
 import { useId } from '@/form/utils'
 import { inputSizes } from '../utils/sizes'
 import CmkSpace from '@/components/CmkSpace.vue'
+import CmkDropdownButton from '@/components/CmkDropdownButton.vue'
 import FormRequired from '@/form/private/FormRequired.vue'
 import FormLabel from '@/form/private/FormLabel.vue'
+import { X } from 'lucide-vue-next'
 
 defineOptions({
   inheritAttrs: false
@@ -52,16 +54,35 @@ const componentId = useId()
     type="text"
     :size="inputSizes[props.spec.field_size].width"
   />
-  <FormAutocompleter
-    v-if="spec.autocompleter"
-    :id="componentId"
-    v-model="value"
-    :size="inputSizes[props.spec.field_size].width"
-    :reset-input-on-add="false"
-    :autocompleter="spec.autocompleter"
-    :placeholder="spec.input_hint ?? ''"
-    :filter-on="[]"
-    :show-icon="true"
-  />
+  <template v-if="spec.autocompleter">
+    <div class="cmk-form-string--dropdown-container">
+      <FormAutocompleter
+        :id="componentId"
+        v-model="value"
+        class="cmk-form-string--dropdown"
+        :size="inputSizes[props.spec.field_size].width"
+        :reset-input-on-add="false"
+        :autocompleter="spec.autocompleter"
+        :placeholder="spec.input_hint ?? ''"
+        :filter-on="[]"
+        :label="spec.label || ''"
+        :start-of-group="true"
+        :show-icon="true"
+      /><CmkDropdownButton group="end" @click="value = ''">
+        <X class="form-string__button-clear-x" />
+      </CmkDropdownButton>
+    </div>
+  </template>
   <FormValidation :validation="validation"></FormValidation>
 </template>
+
+<style scoped>
+.form-string__button-clear-x {
+  width: 13px;
+}
+.cmk-form-string--dropdown {
+  display: block;
+  float: left; /* align nicely with clear button*/
+  margin-right: 1px;
+}
+</style>

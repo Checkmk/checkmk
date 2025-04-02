@@ -136,8 +136,8 @@ test('FormString with autocompleter loads value', async () => {
     }
   })
 
-  const element = screen.getByRole<HTMLInputElement>('textbox', { name: 'ut_label' })
+  const element = screen.getByRole<HTMLInputElement>('combobox', { name: 'ut_label' })
   await waitFor(() => {
-    expect(element.value).toBe('some value')
+    expect(element.textContent).toBe('some value')
   })
 })

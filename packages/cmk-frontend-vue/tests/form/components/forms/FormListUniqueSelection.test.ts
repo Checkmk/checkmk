@@ -121,7 +121,7 @@ test('FormListUniqueSelection (CascadingSingleChoice) no add button if selected 
   expect(singleChoiceElements).toHaveLength(2)
   const secondSingleChoiceElement = singleChoiceElements[1] as HTMLInputElement
   await fireEvent.click(secondSingleChoiceElement)
-  await fireEvent.click(screen.getByText('stringChoiceTitle'))
+  await fireEvent.click(await screen.findByText('stringChoiceTitle'))
   expect(screen.queryByText('Add element')).toBeNull()
   expect(getCurrentData()).toBe('[["integerChoice",10],["stringChoice","bar"]]')
 })
@@ -139,7 +139,7 @@ test('FormListUniqueSelection (SingleChoice) no add button if selected and both 
   expect(singleChoiceElements).toHaveLength(2)
   const secondSingleChoiceElement = singleChoiceElements[1] as HTMLInputElement
   await fireEvent.click(secondSingleChoiceElement)
-  await fireEvent.click(screen.getByText('Choice 2'))
+  await fireEvent.click(await screen.findByText('Choice 2'))
   expect(screen.queryByText('Add element')).toBeNull()
   expect(getCurrentData()).toBe('["choice1","choice2"]')
 })

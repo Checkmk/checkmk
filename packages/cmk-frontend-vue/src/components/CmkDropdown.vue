@@ -4,8 +4,9 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type Ref, computed, useTemplateRef, nextTick, ref, watch } from 'vue'
+import { computed, useTemplateRef, nextTick, ref } from 'vue'
 import useClickOutside from '@/lib/useClickOutside'
+import { immediateWatch } from '@/lib/watch'
 import FormRequired from '@/form/private/FormRequired.vue'
 import CmkDropdownButton from './CmkDropdownButton.vue'
 import CmkSuggestions from './CmkSuggestions.vue'
@@ -16,6 +17,7 @@ export interface DropdownOption {
   name: string
   title: string
 }
+import { type Suggestion, ErrorResponse } from './suggestions'
 
 const {
   inputHint = '',
@@ -24,6 +26,8 @@ const {
   componentId = null,
   noElementsText = '',
   requiredText = '',
+  startOfGroup = false,
+  width,
   options,
   label
 } = defineProps<{
@@ -35,40 +39,63 @@ const {
   noElementsText?: string
   requiredText?: string
   label: string
+  startOfGroup?: boolean
+  width?: 'wide' | 'default'
 }>()
 
 const vClickOutside = useClickOutside()
 
 const selectedOption = defineModel<string | null>('selectedOption', { required: true })
-const dropdownButtonLabel = computed(() =>
-  options.suggestions.length === 0
-    ? noElementsText
-    : (options.suggestions.find(({ name }) => name === selectedOption.value)?.title ?? inputHint)
+const dropdownButtonLabel = ref<string>(inputHint)
+
+immediateWatch(
+  () => ({ newOptions: options, newSelectedOption: selectedOption }),
+  async ({ newOptions, newSelectedOption }) => {
+    async function getDropdownButtonLabel(): Promise<string> {
+      // function makes sure that all branches return a value
+      if (newSelectedOption.value === null) {
+        return inputHint
+      }
+      if (newOptions.type === 'filtered' || newOptions.type === 'fixed') {
+        if (newOptions.suggestions.length === 0) {
+          return noElementsText
+        } else {
+          return (
+            newOptions.suggestions.find(({ name }) => name === newSelectedOption.value)?.title ??
+            inputHint
+          )
+        }
+      } else {
+        if (newOptions.getTitle !== undefined) {
+          const result = await newOptions.getTitle(newSelectedOption.value)
+          if (result instanceof ErrorResponse) {
+            console.error('CmkDropdown: internal: getTtitle returned an error:', result.error)
+            return `id: ${newSelectedOption.value}`
+          }
+          return result
+        }
+        // return the internal id, if we have no chance to look up the value
+        return newSelectedOption.value
+      }
+    }
+    dropdownButtonLabel.value = await getDropdownButtonLabel()
+  },
+  { deep: 2 }
 )
 
-const multipleChoicesAvailable = computed(() => options.suggestions.length !== 0)
+const multipleChoicesAvailable = computed(() => {
+  if (options.type === 'filtered' || options.type === 'fixed') {
+    return options.suggestions.length !== 0
+  }
+  return true // assume something is available via callback/backend
+  // we don't know the number of available suggestions, as this is handled by CmkSuggestions,
+  // so we just assume we have something to display, although maybe, we don't have.
+})
 
 const suggestionsShown = ref(false)
 const suggestionsRef = ref<InstanceType<typeof CmkSuggestions> | null>(null)
 const comboboxButtonRef =
   useTemplateRef<InstanceType<typeof CmkDropdownButton>>('comboboxButtonRef')
-
-const filterString = ref('')
-const filteredOptions = ref<number[]>(options.suggestions.map((_, index) => index))
-const selectedSuggestionOptionIndex: Ref<number | null> = ref(
-  options.suggestions.length > 0 ? 0 : null
-)
-
-watch(filterString, (newFilterString) => {
-  filteredOptions.value = options.suggestions
-    .map((option, index) => ({
-      option,
-      index
-    }))
-    .filter(({ option }) => option.title.toLowerCase().includes(newFilterString.toLowerCase()))
-    .map(({ index }) => index)
-  selectedSuggestionOptionIndex.value = filteredOptions.value[0] ?? null
-})
 
 function showSuggestions(): void {
   if (!disabled && multipleChoicesAvailable.value) {
@@ -76,11 +103,8 @@ function showSuggestions(): void {
     if (!suggestionsShown.value) {
       return
     }
-    filterString.value = ''
-    filteredOptions.value = options.suggestions.map((_, index) => index)
-    selectedSuggestionOptionIndex.value = filteredOptions.value[0] ?? null
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    nextTick(() => {
+    nextTick(async () => {
       if (suggestionsRef.value) {
         const suggestionsRect = suggestionsRef.value.$el.getBoundingClientRect()
         if (window.innerHeight - suggestionsRect.bottom < suggestionsRect.height) {
@@ -88,7 +112,7 @@ function showSuggestions(): void {
         } else {
           suggestionsRef.value.$el.style.removeProperty('bottom')
         }
-        suggestionsRef.value.focus()
+        await suggestionsRef.value.focus()
       }
     })
   }
@@ -99,7 +123,7 @@ function hideSuggestions(): void {
   comboboxButtonRef.value?.focus()
 }
 
-function selectOption(option: DropdownOption): void {
+function selectOption(option: Suggestion): void {
   selectedOption.value = option.name
   hideSuggestions()
 }
@@ -123,14 +147,19 @@ function selectOption(option: DropdownOption): void {
       :multiple-choices-available="multipleChoicesAvailable"
       :value-is-selected="selectedOption !== null"
       :open="suggestionsShown"
+      :group="startOfGroup ? 'start' : 'no'"
+      :width="width"
       @click.prevent="showSuggestions"
     >
-      {{ dropdownButtonLabel
-      }}<template v-if="requiredText !== '' && selectedOption === null">
-        {{ ' ' }}<FormRequired :show="true" :space="'before'" :i18n-required="requiredText"
-      /></template>
-      <ArrowDown class="cmk-dropdown-button_arrow" :class="{ rotated: suggestionsShown }" />
-    </CmkDropdownButton>
+      <span class="cmk-dropdown--text"
+        >{{ dropdownButtonLabel
+        }}<template v-if="requiredText !== '' && selectedOption === null">
+          {{ ' ' }}<FormRequired :show="true" :space="'before'" :i18n-required="requiredText"
+        /></template>
+        <template v-if="!dropdownButtonLabel">&nbsp;</template>
+      </span>
+      <ArrowDown class="cmk-dropdown--arrow" :class="{ rotated: suggestionsShown }"
+    /></CmkDropdownButton>
     <CmkSuggestions
       v-if="!!suggestionsShown"
       ref="suggestionsRef"
@@ -150,13 +179,13 @@ function selectOption(option: DropdownOption): void {
   position: relative;
   white-space: nowrap;
 
-  .cmk-dropdown-button_arrow {
-    padding-left: 0.8em;
+  .cmk-dropdown--arrow {
     width: 0.7em;
     /* This replicates the dropdown in checkmk, which useses select2 which
        uses #888 as color by default. The color is not themed there, so we
        also don't theme it. */
     color: #888;
+    margin: 0 3px 0 10px;
 
     &.rotated {
       transform: rotate(180deg);

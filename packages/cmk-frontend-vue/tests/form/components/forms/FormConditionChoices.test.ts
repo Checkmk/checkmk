@@ -65,7 +65,7 @@ test('FormConditionChoices shows backendValidation', async () => {
   })
 
   screen.getByText('some message')
-  screen.getByText('Condition 1')
+  await screen.findByText('Condition 1')
 })
 
 test('FormConditionChoices shows required', async () => {

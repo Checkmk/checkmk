@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render, screen } from '@testing-library/vue'
+import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import FormSingleChoice from '@/form/components/forms/FormSingleChoice.vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
@@ -24,7 +24,7 @@ const spec: FormSpec.SingleChoice = {
   validators: []
 }
 
-test('FormSingleChoice renders value', () => {
+test('FormSingleChoice renders value', async () => {
   render(FormSingleChoice, {
     props: {
       spec,
@@ -36,7 +36,7 @@ test('FormSingleChoice renders value', () => {
   const element = screen.getByLabelText<HTMLInputElement>('fooLabel')
 
   expect(element).toHaveAccessibleName('fooLabel')
-  expect(element).toHaveTextContent('Choice 1')
+  await waitFor(() => expect(element).toHaveTextContent('Choice 1'))
 })
 
 test('FormSingleChoice renders something when noting is selected', () => {
@@ -63,7 +63,8 @@ test('FormSingleChoice updates data', async () => {
 
   const element = screen.getByLabelText<HTMLInputElement>('fooLabel')
   await fireEvent.click(element)
-  await fireEvent.click(screen.getByText('Choice 2'))
+
+  await fireEvent.click(await screen.findByText('Choice 2'))
 
   expect(getCurrentData()).toBe('"choice2"')
 })

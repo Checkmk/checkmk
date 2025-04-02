@@ -1402,8 +1402,10 @@ class ModeEditUser(WatoMode):
 
     def _vs_sites(self):
         return Alternative(
-            title=_("Authorized sites"),
-            help=_("The sites the user is authorized to see in the GUI."),
+            title=_("Monitored sites"),
+            help=_(
+                "Select sites to monitor. This selection helps improve performance but does not affect permissions."
+            ),
             default_value=None,
             elements=[
                 FixedValue(

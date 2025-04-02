@@ -90,7 +90,7 @@ def main() {
             condition: build_image,
             raiseOnError: false) {
         build(job: "${base_folder}/build-cmk-image", parameters: job_parameters);
-    }
+    }[0]
 
     parallel([
         "Integration Test for Docker Container": {
@@ -99,7 +99,7 @@ def main() {
                     condition: run_image_tests,
                     raiseOnError: false) {
                 build(job: "${base_folder}/test-integration-docker", parameters: job_parameters);
-            }
+            }[0]
         },
 
         "Composition Test for Packages": {
@@ -108,7 +108,7 @@ def main() {
                     condition: run_integration_tests,
                     raiseOnError: false) {
                 build(job: "${base_folder}/test-composition", parameters: job_parameters);
-            }
+            }[0]
         }
     ])
 
@@ -117,14 +117,14 @@ def main() {
             condition: run_integration_tests,
             raiseOnError: false) {
         build(job: "${base_folder}/test-integration-packages", parameters: job_parameters);
-    }
+    }[0]
 
     success &= smart_stage(
             name: "Update Test",
             condition: run_update_tests,
             raiseOnError: false) {
         build(job: "${base_folder}/test-update", parameters: job_parameters);
-    }
+    }[0]
 
     currentBuild.result = success ? "SUCCESS" : "FAILURE";
 }

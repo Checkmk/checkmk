@@ -5,6 +5,7 @@
 
 import abc
 
+from cmk.gui import session
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
@@ -45,8 +46,14 @@ class ABCUserProfilePage(Page):
         if not user.id:
             raise MKUserError(None, _("Not logged in."))
 
-        if not user.may(permission):
-            raise MKAuthException(_("You are not allowed to edit your user profile."))
+        # If the user is obligated to change his password, or 2FA is
+        # enforced, he should be allowed to do so.
+        if (
+            request.get_ascii_input("reason") not in ("expired", "enforced")
+            and not session.session.two_factor_enforced()
+        ):
+            if not user.may(permission):
+                raise MKAuthException(_("You are not allowed to edit your user profile."))
 
         if not active_config.wato_enabled:
             raise MKAuthException(_("User profiles can not be edited (Setup is disabled)."))

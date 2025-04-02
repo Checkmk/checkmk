@@ -6,9 +6,9 @@
 from __future__ import annotations
 
 import abc
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 from dataclasses import dataclass, KW_ONLY
-from typing import Literal
+from typing import Literal, override
 
 from cmk.utils.metrics import MetricName
 from cmk.utils.resulttype import Error, OK, Result
@@ -20,7 +20,11 @@ from cmk.graphing.v1 import metrics as metrics_api
 from ._color import mix_colors, parse_color, parse_color_from_api, render_color, scalar_colors
 from ._formatter import AutoPrecision, StrictPrecision
 from ._from_api import parse_unit_from_api, RegisteredMetric
-from ._metric_operation import GraphConsolidationFunction, line_type_mirror, LineType
+from ._metric_operation import (
+    GraphConsolidationFunction,
+    line_type_mirror,
+    LineType,
+)
 from ._metrics import get_metric_spec
 from ._translated_metrics import TranslatedMetric
 from ._unit import ConvertibleUnitSpecification, DecimalNotation
@@ -100,32 +104,30 @@ class ScalarName:
 
 class BaseMetricExpression(abc.ABC):
     @abc.abstractmethod
-    def ident(self) -> str:
-        raise NotImplementedError()
+    def ident(self) -> str: ...
 
     @abc.abstractmethod
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
-    ) -> Result[BaseEvaluated, EvaluationError]:
-        raise NotImplementedError()
+    ) -> Result[BaseEvaluated, EvaluationError]: ...
 
     @abc.abstractmethod
-    def metric_names(self) -> Iterator[str]:
-        raise NotImplementedError()
+    def metric_names(self) -> Iterable[str]: ...
 
     @abc.abstractmethod
-    def scalar_names(self) -> Iterator[ScalarName]:
-        raise NotImplementedError()
+    def scalar_names(self) -> Iterable[ScalarName]: ...
 
 
 @dataclass(frozen=True)
 class Constant(BaseMetricExpression):
     value: int | float
 
+    @override
     def ident(self) -> str:
         return f"{self.__class__.__name__}({self.value})"
 
+    @override
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
@@ -142,10 +144,12 @@ class Constant(BaseMetricExpression):
             )
         )
 
-    def metric_names(self) -> Iterator[str]:
+    @override
+    def metric_names(self) -> Generator[str]:
         yield from ()
 
-    def scalar_names(self) -> Iterator[ScalarName]:
+    @override
+    def scalar_names(self) -> Generator[ScalarName]:
         yield from ()
 
 
@@ -154,9 +158,11 @@ class Metric(BaseMetricExpression):
     name: MetricName
     consolidation: GraphConsolidationFunction | None = None
 
+    @override
     def ident(self) -> str:
         return f"{self.__class__.__name__}({self.name},{self.consolidation})"
 
+    @override
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
@@ -171,10 +177,12 @@ class Metric(BaseMetricExpression):
             )
         )
 
-    def metric_names(self) -> Iterator[str]:
+    @override
+    def metric_names(self) -> Generator[str]:
         yield self.name
 
-    def scalar_names(self) -> Iterator[ScalarName]:
+    @override
+    def scalar_names(self) -> Generator[ScalarName]:
         yield from ()
 
 
@@ -182,9 +190,11 @@ class Metric(BaseMetricExpression):
 class WarningOf(BaseMetricExpression):
     metric: Metric
 
+    @override
     def ident(self) -> str:
         return f"{self.__class__.__name__}({self.metric.ident()})"
 
+    @override
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
@@ -207,10 +217,12 @@ class WarningOf(BaseMetricExpression):
 
         return OK(BaseEvaluated(warn_value, result.ok.unit_spec, scalar_colors["warn"]))
 
-    def metric_names(self) -> Iterator[str]:
+    @override
+    def metric_names(self) -> Generator[str]:
         yield from self.metric.metric_names()
 
-    def scalar_names(self) -> Iterator[ScalarName]:
+    @override
+    def scalar_names(self) -> Generator[ScalarName]:
         yield ScalarName(self.metric.name, "warn")
 
 
@@ -218,9 +230,11 @@ class WarningOf(BaseMetricExpression):
 class CriticalOf(BaseMetricExpression):
     metric: Metric
 
+    @override
     def ident(self) -> str:
         return f"{self.__class__.__name__}({self.metric.ident()})"
 
+    @override
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
@@ -243,10 +257,12 @@ class CriticalOf(BaseMetricExpression):
 
         return OK(BaseEvaluated(crit_value, result.ok.unit_spec, scalar_colors["crit"]))
 
-    def metric_names(self) -> Iterator[str]:
+    @override
+    def metric_names(self) -> Generator[str]:
         yield from self.metric.metric_names()
 
-    def scalar_names(self) -> Iterator[ScalarName]:
+    @override
+    def scalar_names(self) -> Generator[ScalarName]:
         yield ScalarName(self.metric.name, "crit")
 
 
@@ -254,9 +270,11 @@ class CriticalOf(BaseMetricExpression):
 class MinimumOf(BaseMetricExpression):
     metric: Metric
 
+    @override
     def ident(self) -> str:
         return f"{self.__class__.__name__}({self.metric.ident()})"
 
+    @override
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
@@ -279,10 +297,12 @@ class MinimumOf(BaseMetricExpression):
 
         return OK(BaseEvaluated(min_value, result.ok.unit_spec, "#808080"))
 
-    def metric_names(self) -> Iterator[str]:
+    @override
+    def metric_names(self) -> Generator[str]:
         yield from self.metric.metric_names()
 
-    def scalar_names(self) -> Iterator[ScalarName]:
+    @override
+    def scalar_names(self) -> Generator[ScalarName]:
         yield ScalarName(self.metric.name, "min")
 
 
@@ -290,9 +310,11 @@ class MinimumOf(BaseMetricExpression):
 class MaximumOf(BaseMetricExpression):
     metric: Metric
 
+    @override
     def ident(self) -> str:
         return f"{self.__class__.__name__}({self.metric.ident()})"
 
+    @override
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
@@ -315,10 +337,12 @@ class MaximumOf(BaseMetricExpression):
 
         return OK(BaseEvaluated(max_value, result.ok.unit_spec, "#808080"))
 
-    def metric_names(self) -> Iterator[str]:
+    @override
+    def metric_names(self) -> Generator[str]:
         yield from self.metric.metric_names()
 
-    def scalar_names(self) -> Iterator[ScalarName]:
+    @override
+    def scalar_names(self) -> Generator[ScalarName]:
         yield ScalarName(self.metric.name, "max")
 
 
@@ -326,9 +350,11 @@ class MaximumOf(BaseMetricExpression):
 class Sum(BaseMetricExpression):
     summands: Sequence[BaseMetricExpression]
 
+    @override
     def ident(self) -> str:
         return f"{self.__class__.__name__}({','.join(s.ident() for s in self.summands)})"
 
+    @override
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
@@ -352,10 +378,12 @@ class Sum(BaseMetricExpression):
 
         return OK(BaseEvaluated(sum(values), unit_spec, color))
 
-    def metric_names(self) -> Iterator[str]:
+    @override
+    def metric_names(self) -> Generator[str]:
         yield from (n for s in self.summands for n in s.metric_names())
 
-    def scalar_names(self) -> Iterator[ScalarName]:
+    @override
+    def scalar_names(self) -> Generator[ScalarName]:
         yield from (n for s in self.summands for n in s.scalar_names())
 
 
@@ -363,9 +391,11 @@ class Sum(BaseMetricExpression):
 class Product(BaseMetricExpression):
     factors: Sequence[BaseMetricExpression]
 
+    @override
     def ident(self) -> str:
         return f"{self.__class__.__name__}({','.join(f.ident() for f in self.factors)})"
 
+    @override
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
@@ -389,10 +419,12 @@ class Product(BaseMetricExpression):
 
         return OK(BaseEvaluated(product, unit_spec, color))
 
-    def metric_names(self) -> Iterator[str]:
+    @override
+    def metric_names(self) -> Generator[str]:
         yield from (n for f in self.factors for n in f.metric_names())
 
-    def scalar_names(self) -> Iterator[ScalarName]:
+    @override
+    def scalar_names(self) -> Generator[ScalarName]:
         yield from (n for f in self.factors for n in f.scalar_names())
 
 
@@ -401,9 +433,11 @@ class Difference(BaseMetricExpression):
     minuend: BaseMetricExpression
     subtrahend: BaseMetricExpression
 
+    @override
     def ident(self) -> str:
         return f"{self.__class__.__name__}({self.minuend.ident()},{self.subtrahend.ident()})"
 
+    @override
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
@@ -426,11 +460,13 @@ class Difference(BaseMetricExpression):
             )
         )
 
-    def metric_names(self) -> Iterator[str]:
+    @override
+    def metric_names(self) -> Generator[str]:
         yield from self.minuend.metric_names()
         yield from self.subtrahend.metric_names()
 
-    def scalar_names(self) -> Iterator[ScalarName]:
+    @override
+    def scalar_names(self) -> Generator[ScalarName]:
         yield from self.minuend.scalar_names()
         yield from self.subtrahend.scalar_names()
 
@@ -440,9 +476,11 @@ class Fraction(BaseMetricExpression):
     dividend: BaseMetricExpression
     divisor: BaseMetricExpression
 
+    @override
     def ident(self) -> str:
         return f"{self.__class__.__name__}({self.dividend.ident()},{self.divisor.ident()})"
 
+    @override
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
@@ -465,11 +503,13 @@ class Fraction(BaseMetricExpression):
             )
         )
 
-    def metric_names(self) -> Iterator[str]:
+    @override
+    def metric_names(self) -> Generator[str]:
         yield from self.dividend.metric_names()
         yield from self.divisor.metric_names()
 
-    def scalar_names(self) -> Iterator[ScalarName]:
+    @override
+    def scalar_names(self) -> Generator[ScalarName]:
         yield from self.dividend.scalar_names()
         yield from self.divisor.scalar_names()
 
@@ -478,9 +518,11 @@ class Fraction(BaseMetricExpression):
 class Minimum(BaseMetricExpression):
     operands: Sequence[BaseMetricExpression]
 
+    @override
     def ident(self) -> str:
         return f"{self.__class__.__name__}({','.join(o.ident() for o in self.operands)})"
 
+    @override
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
@@ -500,10 +542,12 @@ class Minimum(BaseMetricExpression):
 
         return minimum_result
 
-    def metric_names(self) -> Iterator[str]:
+    @override
+    def metric_names(self) -> Generator[str]:
         yield from (n for o in self.operands for n in o.metric_names())
 
-    def scalar_names(self) -> Iterator[ScalarName]:
+    @override
+    def scalar_names(self) -> Generator[ScalarName]:
         yield from (n for o in self.operands for n in o.scalar_names())
 
 
@@ -511,9 +555,11 @@ class Minimum(BaseMetricExpression):
 class Maximum(BaseMetricExpression):
     operands: Sequence[BaseMetricExpression]
 
+    @override
     def ident(self) -> str:
         return f"{self.__class__.__name__}({','.join(o.ident() for o in self.operands)})"
 
+    @override
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
@@ -533,10 +579,12 @@ class Maximum(BaseMetricExpression):
 
         return maximum_result
 
-    def metric_names(self) -> Iterator[str]:
+    @override
+    def metric_names(self) -> Generator[str]:
         yield from (n for o in self.operands for n in o.metric_names())
 
-    def scalar_names(self) -> Iterator[ScalarName]:
+    @override
+    def scalar_names(self) -> Generator[ScalarName]:
         yield from (n for o in self.operands for n in o.scalar_names())
 
 
@@ -547,9 +595,11 @@ class Maximum(BaseMetricExpression):
 class Average(BaseMetricExpression):
     operands: Sequence[BaseMetricExpression]
 
+    @override
     def ident(self) -> str:
         return f"{self.__class__.__name__}({','.join(o.ident() for o in self.operands)})"
 
+    @override
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
@@ -568,10 +618,12 @@ class Average(BaseMetricExpression):
             )
         )
 
-    def metric_names(self) -> Iterator[str]:
+    @override
+    def metric_names(self) -> Generator[str]:
         yield from (n for o in self.operands for n in o.metric_names())
 
-    def scalar_names(self) -> Iterator[ScalarName]:
+    @override
+    def scalar_names(self) -> Generator[ScalarName]:
         yield from (n for o in self.operands for n in o.scalar_names())
 
 
@@ -579,9 +631,11 @@ class Average(BaseMetricExpression):
 class Merge(BaseMetricExpression):
     operands: Sequence[BaseMetricExpression]
 
+    @override
     def ident(self) -> str:
         return f"{self.__class__.__name__}({','.join(o.ident() for o in self.operands)})"
 
+    @override
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
@@ -598,10 +652,12 @@ class Merge(BaseMetricExpression):
 
         return Error(EvaluationError("Unable to evaluate operands"))
 
-    def metric_names(self) -> Iterator[str]:
+    @override
+    def metric_names(self) -> Generator[str]:
         yield from (n for o in self.operands for n in o.metric_names())
 
-    def scalar_names(self) -> Iterator[ScalarName]:
+    @override
+    def scalar_names(self) -> Generator[ScalarName]:
         yield from (n for o in self.operands for n in o.scalar_names())
 
 
@@ -617,7 +673,7 @@ class Evaluated:
     def ident(self) -> str:
         return self.base.ident()
 
-    def metric_names(self) -> Iterator[str]:
+    def metric_names(self) -> Generator[str]:
         yield from self.base.metric_names()
 
     def mirror(self) -> Evaluated:

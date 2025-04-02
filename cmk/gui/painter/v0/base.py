@@ -590,11 +590,11 @@ class Cell:
                 else:
                     content = img_filename
 
-            if isinstance(txt, HTML):
-                content = escaping.strip_tags(unescape(str(txt)))
-
-            elif not isinstance(txt, tuple):
-                content = escaping.strip_tags(unescape(txt))
+            if not content:
+                if isinstance(txt, HTML):
+                    content = escaping.strip_tags(unescape(str(txt)))
+                elif not isinstance(txt, tuple):
+                    content = escaping.strip_tags(unescape(txt))
 
             return css_classes.split(), content
         except Exception:

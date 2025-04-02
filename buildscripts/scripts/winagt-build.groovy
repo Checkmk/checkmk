@@ -17,15 +17,18 @@ def main() {
             bat("make -C agents\\wnx NEW_VERSION='${cmk_version}' setversion")
         }
 
-        withCredentials([
-            usernamePassword(
-                credentialsId: 'win_sign',
-                passwordVariable: 'WIN_SIGN_PASSWORD',
-                usernameVariable: '')]) {
-            windows.build(
-                TARGET: 'agent_with_sign',
-                PASSWORD: WIN_SIGN_PASSWORD,
-            )
+        lock(label: "win_sign_key", quantity: 1, resource : null) {
+            withCredentials([
+                usernamePassword(
+                    credentialsId: 'win_sign',
+                    passwordVariable: 'WIN_SIGN_PASSWORD',
+                    usernameVariable: '')]) {
+                // The windows.build function will create stages.
+                windows.build(
+                    TARGET: 'agent_with_sign',
+                    PASSWORD: WIN_SIGN_PASSWORD,
+                )
+            }
         }
 
         stage("detach") {

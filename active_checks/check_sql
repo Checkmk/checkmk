@@ -255,9 +255,9 @@ def mysql_execute(
 
 
 def mssql_connect(host: str, port: int, db_name: str, user: str, pwd: str) -> Any:
-    import pymssql  # type: ignore[import-untyped]
+    import pymssql
 
-    return pymssql.connect(host=host, port=port, database=db_name, user=user, password=pwd)
+    return pymssql.connect(host=host, port=str(port), database=db_name, user=user, password=pwd)
 
 
 def mssql_execute(

@@ -8,3 +8,5 @@ pyasn1==0.6.0
 pysmi-lextudio==1.4.3
 pysnmp-lextudio==6.1.2
 snmpsim-lextudio==1.1.0
+boto3<1.37.25  # Pinned due to 1.37.25 not being presented as suitable for our builds -> builds fail
+pydantic<2.11  # Newer versions lead to test failures

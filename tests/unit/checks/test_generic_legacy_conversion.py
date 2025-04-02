@@ -791,7 +791,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "mongodb_cluster_collections",
         "mongodb_cluster_balancer",
         "mongodb_collections",
-        "mongodb_connections",
         "mongodb_counters",
         "mongodb_flushing",
         "mongodb_instance",

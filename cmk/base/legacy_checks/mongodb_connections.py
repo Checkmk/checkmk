@@ -9,20 +9,31 @@
 # totalCreated 108141
 
 import time
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import get_rate, get_value_store, render, StringTable
+from cmk.agent_based.v1 import check_levels  # we can only use v2 after migrating the ruleset!
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_rate,
+    get_value_store,
+    render,
+    Service,
+    StringTable,
+)
 
-check_info = {}
+
+def inventory_mongodb_connections(section: StringTable) -> DiscoveryResult:
+    yield Service(item="Connections")
 
 
-def inventory_mongodb_connections(info):
-    return [("Connections", {})]
-
-
-def check_mongodb_connections(item, params, info):
-    info_dict = {x[0]: x[1] for x in info}
+def check_mongodb_connections(
+    item: str, params: Mapping[str, Any], section: StringTable
+) -> CheckResult:
+    info_dict = {x[0]: x[1] for x in section}
 
     if not _is_int(["current", "available", "totalCreated"], info_dict):
         return
@@ -32,20 +43,19 @@ def check_mongodb_connections(item, params, info):
     maximum = current + available
     used_perc = float(current) / maximum * 100
 
-    yield check_levels(
+    yield from check_levels(
         current,
-        "connections",
-        params.get("levels_abs"),
-        human_readable_func=lambda x: "%d" % (x),
-        infoname="Used connections",
+        metric_name="connections",
+        levels_upper=params.get("levels_abs"),
+        render_func=str,
+        label="Used connections",
     )
 
-    yield check_levels(
+    yield from check_levels(
         used_perc,
-        None,
-        params.get("levels_perc"),
-        human_readable_func=render.percent,
-        infoname="Used percentage",
+        levels_upper=params.get("levels_perc"),
+        render_func=render.percent,
+        label="Used percentage",
     )
 
     rate = get_rate(
@@ -55,10 +65,15 @@ def check_mongodb_connections(item, params, info):
         int(info_dict["totalCreated"]),
         raise_overflow=True,
     )
-    yield 0, "Rate: %s/sec" % rate, [("connections_rate", rate)]
+    yield from check_levels(
+        rate,
+        metric_name="connections_rate",
+        render_func=lambda x: f"{x}/sec",
+        label="Rate",
+    )
 
 
-def _is_int(key_list: Sequence[str], info_dict: dict[str, object]) -> bool:
+def _is_int(key_list: Sequence[str], info_dict: Mapping[str, object]) -> bool:
     """
     check if key is in dict and value is an integer
     :param key_list: list of keys
@@ -77,9 +92,14 @@ def parse_mongodb_connections(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["mongodb_connections"] = LegacyCheckDefinition(
+agent_section_mongodb_connections = AgentSection(
     name="mongodb_connections",
     parse_function=parse_mongodb_connections,
+)
+
+
+check_plugin_mongodb_connections = CheckPlugin(
+    name="mongodb_connections",
     service_name="MongoDB %s",
     discovery_function=inventory_mongodb_connections,
     check_function=check_mongodb_connections,

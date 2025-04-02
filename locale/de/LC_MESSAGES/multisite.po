@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-03-31 18:50+0000\n"
+"PO-Revision-Date: 2025-04-01 18:50+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -757,32 +757,32 @@ msgstr "%s Server"
 msgid "%s this customer"
 msgstr "Diesen Kunden %s"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "%s uses an API (%s) which is marked as deprecated in Checkmk %s and will be "
-"removed in Checkmk %s."
+"removed in Checkmk %s (File: %s)."
 msgstr ""
 "%s verwendet eine API (%s), die in Checkmk %s als veraltet markiert ist und "
 "in Checkmk %s entfernt werden wird."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "%s uses an API (%s) which was marked as deprecated in Checkmk %s and is "
-"removed in Checkmk %s."
+"removed in Checkmk %s (File: %s)."
 msgstr ""
 "%s verwendet eine API (%s), die in Checkmk %s als veraltet markiert wurde "
 "und in Checkmk %s entfernt wird."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "%s uses an API (%s) which was marked as deprecated in Checkmk %s and will be "
-"removed in Checkmk %s."
+"removed in Checkmk %s (File: %s)."
 msgstr ""
 "%s verwendet eine API (%s), die in Checkmk %s als veraltet markiert wurde "
 "und in Checkmk %s entfernt werden wird."
 
-#, python-format
-msgid "%s uses an API (%s) which was removed in Checkmk %s."
+#, fuzzy, python-format
+msgid "%s uses an API (%s) which was removed in Checkmk %s (File: %s)."
 msgstr "%s verwendet eine API (%s), die in Checkmk %s entfernt wurde."
 
 #, python-format
@@ -4804,12 +4804,13 @@ msgstr ""
 "durchführen, muss ein solcher gebackener Agent, der das Plugin enthält, "
 "installiert sein. Dies muss einmalig manuell durchgeführt werden."
 
+#, fuzzy
 msgid ""
 "After download, upload the license usage report to the Checkmk customer "
-"portal.<br>Navigate to 'Subscription' in the customer portal and select your "
-"active subscription. Click on 'Upload' under 'Upload License Information' "
-"and complete the dialog.<br>If everything is correct, you will receive the "
-"license information file now containing your subscription details."
+"portal.<br>Navigate to 'My Licenses' in the customer portal and select your "
+"active license. Click on 'Upload' under 'Licensing Information Upload' and "
+"complete the dialog.<br>If everything is correct, you will receive the "
+"license information file now containing your license details."
 msgstr ""
 "Nach dem Download laden Sie den Lizenznutzungsbericht in das Checkmk-"
 "Kundenportal hoch.<br>Navigieren Sie im Kundenportal zu 'Subskription' und "
@@ -4818,12 +4819,13 @@ msgstr ""
 "alles korrekt ist, erhalten Sie jetzt die Lizenzinformationsdatei mit Ihren "
 "Subskriptionsdaten."
 
+#, fuzzy
 msgid ""
 "After download, upload the verification request to the Checkmk customer "
-"portal.<br>Navigate to 'Subscription' in the customer portal and select your "
-"active subscription. Click on 'Upload' under 'Upload License Information' "
-"and complete the dialog.<br>If everything is correct, you will receive the "
-"verification response file now containing your subscription details."
+"portal.<br>Navigate to 'My Licenses' in the customer portal and select your "
+"active license. Click on 'Upload' under 'Licensing Information Upload' and "
+"complete the dialog.<br>If everything is correct, you will receive the "
+"verification response file now containing your license details."
 msgstr ""
 "Nach dem Download laden Sie die Verifizierungsanfrage in das Checkmk-"
 "Kundenportal hoch.<br>Navigieren Sie im Kundenportal zu 'Subskription' und "
@@ -7612,9 +7614,8 @@ msgstr ""
 "Automatisch: Vorhandenen Benutzer verwenden, falls vorhanden. Andernfalls "
 "erstellen Sie einen neuen Benutzer."
 
-#, fuzzy
 msgid "Automatically  select best type of backend"
-msgstr "Automatisches Löschen von Hosts ohne Piggyback-Daten"
+msgstr ""
 
 msgid "Automatically activate changes"
 msgstr "Änderungen automatisch aktivieren"
@@ -11551,6 +11552,12 @@ msgid "Changes since last dump"
 msgstr "Anzahl der Änderungen seit dem letzten Dump"
 
 msgid ""
+"Changes submitted through this form will be immediately applied to your "
+"configuration. However, you may still need to activate them for them to take "
+"effect."
+msgstr ""
+
+msgid ""
 "Changes to a user's two-factor settings within remote sites will be "
 "overritten by changes to the user's settings in the central site."
 msgstr ""
@@ -15072,13 +15079,12 @@ msgstr ""
 "Der Zugriff auf Ihr AWS-Konto war nicht möglich. Bitte überprüfen Sie Ihren "
 "Zugangs- und Geheimschlüssel und versuchen Sie es erneut."
 
-#, fuzzy
 msgid ""
 "Could not access your Azure account. Please check your credentials and/or "
 "HTTP proxy setting."
 msgstr ""
 "Der Zugriff auf Ihr Azure-Konto war nicht möglich. Bitte überprüfen Sie Ihre "
-"Zugangsdaten."
+"Zugangsdaten und/oder Ihre HTTP Proxy-Einstellungen."
 
 msgid "Could not access your GCP account. Please check your credentials."
 msgstr ""
@@ -24872,18 +24878,19 @@ msgstr ""
 msgid "For more help have a look at the %s."
 msgstr "Weitere Hilfe finden Sie unter %s."
 
+#, fuzzy
 msgid ""
-"For offline submission, we need to add the subscription details to your "
-"license usage report. To do this, you must first download your license usage "
-"report."
+"For offline submission, we need to add the license details to your license "
+"usage report. To do this, you must first download your license usage report."
 msgstr ""
 "Für die Offline-Übermittlung müssen wir die Subskriptionsdetails zu Ihrem "
 "Lizenznutzungsbericht hinzufügen. Zu diesem Zweck müssen Sie zunächst Ihren "
 "Lizenznutzungsbericht herunterladen."
 
+#, fuzzy
 msgid ""
-"For offline verification, we need to verify your subscription in the "
-"customer portal. To do this, you must first download a verification request."
+"For offline verification, we need to verify your license in the customer "
+"portal. To do this, you must first download a verification request."
 msgstr ""
 "Für die Offline-Verifizierung müssen wir Ihre Subskription im Kundenportal "
 "prüfen. Zu diesem Zweck müssen Sie zunächst eine Verifizierungsanfrage "
@@ -25642,10 +25649,10 @@ msgstr "GUI"
 msgid "GUI design"
 msgstr "GUI-Design"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "GUI extension in %r uses an API which is marked as deprecated and may not "
-"work anymore due to unknown imports or objects."
+"work anymore due to unknown imports or objects (File: %s)."
 msgstr ""
 "Die GUI-Erweiterung in %r verwendet eine API, die als veraltet "
 "gekennzeichnet ist und aufgrund von unbekannten Importen oder Objekten "
@@ -32564,18 +32571,20 @@ msgstr ""
 msgid "In this folder"
 msgstr "In diesem Ordner"
 
+#, fuzzy
 msgid ""
 "In this form, use 'Select file' to select the license information file you "
-"have downloaded in the customer portal. Click on 'Upload response' to "
+"have downloaded from the customer portal. Click on 'Upload response' to "
 "complete the submission."
 msgstr ""
 "Wählen Sie in diesem Formular mit „Datei auswählen“ die "
 "Lizenzinformationsdatei aus, die Sie im Kundenportal heruntergeladen haben. "
 "Klicken Sie auf „Antwort hochladen“, um die Übermittlung abzuschließen."
 
+#, fuzzy
 msgid ""
 "In this form, use 'Select file' to select the verification response file you "
-"have downloaded in the customer portal. Click on 'Upload response' to "
+"have downloaded from the customer portal. Click on 'Upload response' to "
 "complete the verification."
 msgstr ""
 "Wählen Sie in diesem Formular mit „Datei auswählen“ die Datei mit der "
@@ -35210,10 +35219,10 @@ msgstr ""
 msgid "Legacy GUI extension in %r"
 msgstr "Legacy GUI-Erweiterung in %r"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Legacy GUI extension in %r uses an API which is marked as deprecated and may "
-"not work anymore due to unknown imports or objects."
+"not work anymore due to unknown imports or objects (File: %s)."
 msgstr ""
 "Die Legacy GUI-Erweiterung in %r verwendet eine API, die als veraltet "
 "gekennzeichnet ist und aufgrund unbekannter Importe oder Objekte "
@@ -40247,9 +40256,8 @@ msgstr "Monitoring-Agent"
 msgid "Monitoring agents"
 msgstr "Monitoring-Agenten"
 
-#, fuzzy
 msgid "Monitoring backend"
-msgstr "Monitoring-Agent"
+msgstr "Monitoring Backend"
 
 msgid "Monitoring core"
 msgstr "Monitoring-Kern"
@@ -46189,8 +46197,10 @@ msgstr "PING und Host Check-Parameter"
 msgid "PLL lock voltages by freqency"
 msgstr "PLL Verriegelungsspannung nach Frequenz"
 
+#, fuzzy, python-format
 msgid ""
-"PNP template uses an API which was removed in an ealier Checkmk version."
+"PNP template uses an API which was removed in an ealier Checkmk version "
+"(File: %s)."
 msgstr ""
 "Die PNP-Vorlage verwendet eine API, die in einer früheren Checkmk-Version "
 "entfernt wurde."
@@ -83179,6 +83189,16 @@ msgid ""
 "Your search statement is not valid. You need to provide a regular expression "
 "(regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> if "
 "you like to search for a single backslash."
+msgstr ""
+"Ihre Suchanweisung ist nicht gültig. Sie müssen einen regulären Ausdruck "
+"(regex) angeben. Zum Beispiel müssen Sie <tt>\\\\</tt> statt <tt>\\</tt> "
+"verwenden, wenn Sie nach einem einzelnen Backslash suchen möchten."
+
+#, fuzzy
+msgid ""
+"Your search statement is not valid. You need to provide a regular expression "
+"(regex). For example you need to use \\\\ instead of \\ if you want to "
+"search for a single backslash."
 msgstr ""
 "Ihre Suchanweisung ist nicht gültig. Sie müssen einen regulären Ausdruck "
 "(regex) angeben. Zum Beispiel müssen Sie <tt>\\\\</tt> statt <tt>\\</tt> "

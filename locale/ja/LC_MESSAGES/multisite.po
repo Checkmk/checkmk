@@ -745,23 +745,23 @@ msgstr "%s この顧客"
 #, python-format
 msgid ""
 "%s uses an API (%s) which is marked as deprecated in Checkmk %s and will be "
-"removed in Checkmk %s."
+"removed in Checkmk %s (File: %s)."
 msgstr ""
 
 #, python-format
 msgid ""
 "%s uses an API (%s) which was marked as deprecated in Checkmk %s and is "
-"removed in Checkmk %s."
+"removed in Checkmk %s (File: %s)."
 msgstr ""
 
 #, python-format
 msgid ""
 "%s uses an API (%s) which was marked as deprecated in Checkmk %s and will be "
-"removed in Checkmk %s."
+"removed in Checkmk %s (File: %s)."
 msgstr ""
 
 #, python-format
-msgid "%s uses an API (%s) which was removed in Checkmk %s."
+msgid "%s uses an API (%s) which was removed in Checkmk %s (File: %s)."
 msgstr ""
 
 #, python-format
@@ -4658,12 +4658,13 @@ msgstr ""
 "うなベイク済エージェントをインストールする必要があります。これは手動で行う必"
 "要があります(１度だけ)。"
 
+#, fuzzy
 msgid ""
 "After download, upload the license usage report to the Checkmk customer "
-"portal.<br>Navigate to 'Subscription' in the customer portal and select your "
-"active subscription. Click on 'Upload' under 'Upload License Information' "
-"and complete the dialog.<br>If everything is correct, you will receive the "
-"license information file now containing your subscription details."
+"portal.<br>Navigate to 'My Licenses' in the customer portal and select your "
+"active license. Click on 'Upload' under 'Licensing Information Upload' and "
+"complete the dialog.<br>If everything is correct, you will receive the "
+"license information file now containing your license details."
 msgstr ""
 "ダウンロード後、ライセンス使用レポートをCheckmkカスタマーポータルにアップロー"
 "ドします。<br>カスタマーポータルの「サブスクリプション」に移動し、アクティブ"
@@ -4671,12 +4672,13 @@ msgstr ""
 "「アップロード」をクリックし、ダイアログを完了します。<br>すべてが正常であれ"
 "ば、サブスクリプションの詳細を含むライセンス情報ファイルが送信されます。"
 
+#, fuzzy
 msgid ""
 "After download, upload the verification request to the Checkmk customer "
-"portal.<br>Navigate to 'Subscription' in the customer portal and select your "
-"active subscription. Click on 'Upload' under 'Upload License Information' "
-"and complete the dialog.<br>If everything is correct, you will receive the "
-"verification response file now containing your subscription details."
+"portal.<br>Navigate to 'My Licenses' in the customer portal and select your "
+"active license. Click on 'Upload' under 'Licensing Information Upload' and "
+"complete the dialog.<br>If everything is correct, you will receive the "
+"verification response file now containing your license details."
 msgstr ""
 "ダウンロード後、認証リクエストをCheckmkカスタマーポータルにアップロードしま"
 "す。<br>カスタマーポータルの「サブスクリプション」に移動し、アクティブなサブ"
@@ -11320,6 +11322,12 @@ msgstr "アクティベートされたことがない"
 
 msgid "Changes since last dump"
 msgstr "前回ダンプ時からの変更点"
+
+msgid ""
+"Changes submitted through this form will be immediately applied to your "
+"configuration. However, you may still need to activate them for them to take "
+"effect."
+msgstr ""
 
 msgid ""
 "Changes to a user's two-factor settings within remote sites will be "
@@ -24454,18 +24462,19 @@ msgstr ""
 msgid "For more help have a look at the %s."
 msgstr "詳しくは%sをご覧ください。"
 
+#, fuzzy
 msgid ""
-"For offline submission, we need to add the subscription details to your "
-"license usage report. To do this, you must first download your license usage "
-"report."
+"For offline submission, we need to add the license details to your license "
+"usage report. To do this, you must first download your license usage report."
 msgstr ""
 "オフラインで提出するには、ライセンス使用状況レポートにサブスクリプションの詳"
 "細を追加する必要があります。これを行うには、まずライセンス使用レポートをダウ"
 "ンロードする必要があります。"
 
+#, fuzzy
 msgid ""
-"For offline verification, we need to verify your subscription in the "
-"customer portal. To do this, you must first download a verification request."
+"For offline verification, we need to verify your license in the customer "
+"portal. To do this, you must first download a verification request."
 msgstr ""
 "オフラインで検証するには、カスタマー ポータルでサブスクリプションを検証する必"
 "要があります。これを行うには、まず検証リクエストをダウンロードする必要があり"
@@ -25204,7 +25213,7 @@ msgstr "GUIデザイン"
 #, python-format
 msgid ""
 "GUI extension in %r uses an API which is marked as deprecated and may not "
-"work anymore due to unknown imports or objects."
+"work anymore due to unknown imports or objects (File: %s)."
 msgstr ""
 
 msgid "GUI extensions (deprecated)"
@@ -32203,18 +32212,20 @@ msgstr ""
 msgid "In this folder"
 msgstr "このフォルダ内"
 
+#, fuzzy
 msgid ""
 "In this form, use 'Select file' to select the license information file you "
-"have downloaded in the customer portal. Click on 'Upload response' to "
+"have downloaded from the customer portal. Click on 'Upload response' to "
 "complete the submission."
 msgstr ""
 "このフォームでは、「ファイルを選択」を使用して、カスタマーポータルでダウン"
 "ロードしたライセンス情報ファイルを選択します。「Upload response」をクリックし"
 "て送信を完了します。"
 
+#, fuzzy
 msgid ""
 "In this form, use 'Select file' to select the verification response file you "
-"have downloaded in the customer portal. Click on 'Upload response' to "
+"have downloaded from the customer portal. Click on 'Upload response' to "
 "complete the verification."
 msgstr ""
 "このフォームでは、「ファイルを選択」を使用して、カスタマーポータルでダウン"
@@ -34873,7 +34884,7 @@ msgstr "レガシーGUI拡張機能（非推奨）"
 #, python-format
 msgid ""
 "Legacy GUI extension in %r uses an API which is marked as deprecated and may "
-"not work anymore due to unknown imports or objects."
+"not work anymore due to unknown imports or objects (File: %s)."
 msgstr ""
 
 msgid "Legacy GUI extensions (deprecated)"
@@ -45977,8 +45988,10 @@ msgstr "PINGおよびホストチェックパラメータ"
 msgid "PLL lock voltages by freqency"
 msgstr "周波数によるPLLロック電圧"
 
+#, python-format
 msgid ""
-"PNP template uses an API which was removed in an ealier Checkmk version."
+"PNP template uses an API which was removed in an ealier Checkmk version "
+"(File: %s)."
 msgstr ""
 
 #, python-format
@@ -81958,6 +81971,16 @@ msgid ""
 "Your search statement is not valid. You need to provide a regular expression "
 "(regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> if "
 "you like to search for a single backslash."
+msgstr ""
+"その検索文は無効です。正規表現（regex）を指定する必要があります。例えば、バッ"
+"クスラッシュを１つだけ検索したい場合は<tt>\\\\</tt>を<tt>\\</tt>の代わりに使"
+"用する必要があります。"
+
+#, fuzzy
+msgid ""
+"Your search statement is not valid. You need to provide a regular expression "
+"(regex). For example you need to use \\\\ instead of \\ if you want to "
+"search for a single backslash."
 msgstr ""
 "その検索文は無効です。正規表現（regex）を指定する必要があります。例えば、バッ"
 "クスラッシュを１つだけ検索したい場合は<tt>\\\\</tt>を<tt>\\</tt>の代わりに使"

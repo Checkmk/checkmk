@@ -757,23 +757,23 @@ msgstr "%s questo cliente"
 #, python-format
 msgid ""
 "%s uses an API (%s) which is marked as deprecated in Checkmk %s and will be "
-"removed in Checkmk %s."
+"removed in Checkmk %s (File: %s)."
 msgstr ""
 
 #, python-format
 msgid ""
 "%s uses an API (%s) which was marked as deprecated in Checkmk %s and is "
-"removed in Checkmk %s."
+"removed in Checkmk %s (File: %s)."
 msgstr ""
 
 #, python-format
 msgid ""
 "%s uses an API (%s) which was marked as deprecated in Checkmk %s and will be "
-"removed in Checkmk %s."
+"removed in Checkmk %s (File: %s)."
 msgstr ""
 
 #, python-format
-msgid "%s uses an API (%s) which was removed in Checkmk %s."
+msgid "%s uses an API (%s) which was removed in Checkmk %s (File: %s)."
 msgstr ""
 
 #, python-format
@@ -4873,12 +4873,13 @@ msgstr ""
 "aggiornamenti automatici è necessario installare un agente bake che contenga "
 "il plugin. Questo deve essere fatto manualmente (per l'ultima volta)."
 
+#, fuzzy
 msgid ""
 "After download, upload the license usage report to the Checkmk customer "
-"portal.<br>Navigate to 'Subscription' in the customer portal and select your "
-"active subscription. Click on 'Upload' under 'Upload License Information' "
-"and complete the dialog.<br>If everything is correct, you will receive the "
-"license information file now containing your subscription details."
+"portal.<br>Navigate to 'My Licenses' in the customer portal and select your "
+"active license. Click on 'Upload' under 'Licensing Information Upload' and "
+"complete the dialog.<br>If everything is correct, you will receive the "
+"license information file now containing your license details."
 msgstr ""
 "Dopo il download, caricare il rapporto sull'utilizzo della licenza nel "
 "portale clienti di Checkmk.<br>Navigare su 'Subscription' nel portale "
@@ -4887,12 +4888,13 @@ msgstr ""
 "<br>Se tutto è corretto, si riceverà il file di risposta alla verifica "
 "contenente i dettagli dell'abbonamento."
 
+#, fuzzy
 msgid ""
 "After download, upload the verification request to the Checkmk customer "
-"portal.<br>Navigate to 'Subscription' in the customer portal and select your "
-"active subscription. Click on 'Upload' under 'Upload License Information' "
-"and complete the dialog.<br>If everything is correct, you will receive the "
-"verification response file now containing your subscription details."
+"portal.<br>Navigate to 'My Licenses' in the customer portal and select your "
+"active license. Click on 'Upload' under 'Licensing Information Upload' and "
+"complete the dialog.<br>If everything is correct, you will receive the "
+"verification response file now containing your license details."
 msgstr ""
 "Dopo il download, caricare la richiesta di verifica nel portale clienti di "
 "Checkmk.<br>Viaggiare su \"Abbonamento\" nel portale clienti e selezionare "
@@ -11824,6 +11826,12 @@ msgstr "Non è mai stato attivato"
 
 msgid "Changes since last dump"
 msgstr "Cambiamenti dall'ultimo dump"
+
+msgid ""
+"Changes submitted through this form will be immediately applied to your "
+"configuration. However, you may still need to activate them for them to take "
+"effect."
+msgstr ""
 
 msgid ""
 "Changes to a user's two-factor settings within remote sites will be "
@@ -25467,18 +25475,19 @@ msgstr ""
 msgid "For more help have a look at the %s."
 msgstr ""
 
+#, fuzzy
 msgid ""
-"For offline submission, we need to add the subscription details to your "
-"license usage report. To do this, you must first download your license usage "
-"report."
+"For offline submission, we need to add the license details to your license "
+"usage report. To do this, you must first download your license usage report."
 msgstr ""
 "Per l'invio offline, è necessario aggiungere i dettagli dell'abbonamento al "
 "rapporto di utilizzo della licenza. A tal fine, è necessario scaricare il "
 "rapporto di utilizzo della licenza."
 
+#, fuzzy
 msgid ""
-"For offline verification, we need to verify your subscription in the "
-"customer portal. To do this, you must first download a verification request."
+"For offline verification, we need to verify your license in the customer "
+"portal. To do this, you must first download a verification request."
 msgstr ""
 "Per la verifica offline, è necessario verificare l'abbonamento nel portale "
 "clienti. A tal fine, è necessario scaricare una richiesta di verifica."
@@ -26245,7 +26254,7 @@ msgstr "Progettazione GUI"
 #, python-format
 msgid ""
 "GUI extension in %r uses an API which is marked as deprecated and may not "
-"work anymore due to unknown imports or objects."
+"work anymore due to unknown imports or objects (File: %s)."
 msgstr ""
 
 msgid "GUI extensions (deprecated)"
@@ -33509,18 +33518,20 @@ msgstr ""
 msgid "In this folder"
 msgstr "In questa cartella"
 
+#, fuzzy
 msgid ""
 "In this form, use 'Select file' to select the license information file you "
-"have downloaded in the customer portal. Click on 'Upload response' to "
+"have downloaded from the customer portal. Click on 'Upload response' to "
 "complete the submission."
 msgstr ""
 "In questo modulo, utilizzare \"Seleziona file\" per selezionare il file di "
 "informazioni sulla licenza scaricato nel portale clienti. Fare clic su "
 "\"Carica risposta\" per completare l'invio."
 
+#, fuzzy
 msgid ""
 "In this form, use 'Select file' to select the verification response file you "
-"have downloaded in the customer portal. Click on 'Upload response' to "
+"have downloaded from the customer portal. Click on 'Upload response' to "
 "complete the verification."
 msgstr ""
 "In questo modulo, utilizzare \"Seleziona file\" per selezionare il file di "
@@ -36249,7 +36260,7 @@ msgstr "Estensioni dell'interfaccia grafica legacy (deprecate)"
 #, python-format
 msgid ""
 "Legacy GUI extension in %r uses an API which is marked as deprecated and may "
-"not work anymore due to unknown imports or objects."
+"not work anymore due to unknown imports or objects (File: %s)."
 msgstr ""
 
 msgid "Legacy GUI extensions (deprecated)"
@@ -47697,8 +47708,10 @@ msgstr "PING e parametri di controllo dell'host"
 msgid "PLL lock voltages by freqency"
 msgstr "Tensioni di blocco PLL per frequenza"
 
+#, python-format
 msgid ""
-"PNP template uses an API which was removed in an ealier Checkmk version."
+"PNP template uses an API which was removed in an ealier Checkmk version "
+"(File: %s)."
 msgstr ""
 
 #, python-format
@@ -85497,6 +85510,16 @@ msgid ""
 "Your search statement is not valid. You need to provide a regular expression "
 "(regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> if "
 "you like to search for a single backslash."
+msgstr ""
+"L'istruzione di ricerca non è valida. È necessario fornire un'espressione "
+"regolare (regex). Ad esempio, è necessario utilizzare <tt>\\\\</tt> invece "
+"di <tt>\\</tt> se si desidera cercare un singolo backslash."
+
+#, fuzzy
+msgid ""
+"Your search statement is not valid. You need to provide a regular expression "
+"(regex). For example you need to use \\\\ instead of \\ if you want to "
+"search for a single backslash."
 msgstr ""
 "L'istruzione di ricerca non è valida. È necessario fornire un'espressione "
 "regolare (regex). Ad esempio, è necessario utilizzare <tt>\\\\</tt> invece "

@@ -2086,7 +2086,7 @@ run_runas_executor() {
                     echo "<<<local:sep(0)>>>"
                 fi
 
-                find "${configfile}" -executable -type f |
+                ${prefix} find "${configfile}" -executable -type f |
                     while read -r filename; do
                         if [ -n "${prefix}" ]; then
                             # SC2086: We don't want to quote since prefix should not be treated as a

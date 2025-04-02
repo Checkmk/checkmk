@@ -92,7 +92,7 @@ def _filter_non_ok_ac_test_results(
 
 
 def _filter_extension_managing_users(user_ids: Sequence[UserId]) -> Sequence[UserId]:
-    return [u for u in user_ids if user_may(u, "wato.manage_mkps")]
+    return [u for u in user_ids if u is not None and user_may(u, "wato.manage_mkps")]
 
 
 def _make_path_config() -> PathConfig | None:

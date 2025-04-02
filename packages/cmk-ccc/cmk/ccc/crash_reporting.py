@@ -11,6 +11,7 @@ from __future__ import annotations
 import abc
 import base64
 import inspect
+import itertools
 import json
 import pprint
 import sys
@@ -233,6 +234,15 @@ class ABCCrashReport(Generic[T], abc.ABC):
         )
 
 
+def _follow_exception_chain(exc: BaseException | None) -> list[BaseException]:
+    if exc is None:
+        return []
+
+    return [exc] + _follow_exception_chain(
+        exc.__context__ if exc.__cause__ is None and not exc.__suppress_context__ else exc.__cause__
+    )
+
+
 def _get_generic_crash_info(
     type_name: str,
     version_info: VersionInfo,
@@ -242,9 +252,13 @@ def _get_generic_crash_info(
 
     The top level keys of the crash info dict are standardized and need
     to be set for all crash reports."""
-    exc_type, exc_value, exc_traceback = sys.exc_info()
+    exc_type, exc_value, _ = sys.exc_info()
 
-    tb_list = traceback.extract_tb(exc_traceback)
+    tb_list = list(
+        itertools.chain.from_iterable(
+            [traceback.extract_tb(exc.__traceback__) for exc in _follow_exception_chain(exc_value)]
+        )
+    )
 
     return CrashInfo(
         id=str(uuid.uuid1()),

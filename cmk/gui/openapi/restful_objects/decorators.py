@@ -16,6 +16,7 @@ import functools
 import http.client
 import json
 import logging
+import re
 import warnings
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from typing import Any, Final, TypeVar
@@ -38,7 +39,7 @@ from cmk.gui.openapi.permission_tracking import (
 from cmk.gui.openapi.restful_objects.api_error import ApiError
 from cmk.gui.openapi.restful_objects.content_decoder import KnownContentType
 from cmk.gui.openapi.restful_objects.parameters import CONTENT_TYPE
-from cmk.gui.openapi.restful_objects.params import marshmallow_to_openapi, to_schema
+from cmk.gui.openapi.restful_objects.params import to_schema
 from cmk.gui.openapi.restful_objects.type_defs import (
     EndpointTarget,
     ErrorStatusCodeInt,
@@ -702,19 +703,7 @@ class Endpoint:
 
     @property
     def default_path(self) -> str:
-        replace = {}
-        if self.path_params is not None:
-            parameters = marshmallow_to_openapi(self.path_params, "path")
-            for param in parameters:
-                name = param["name"]
-                replace[name] = f"<string:{name}>"
-        try:
-            path = self.path.format(**replace)
-        except KeyError:
-            raise AttributeError(
-                f"Endpoint {self.path} has unspecified path parameters. Specified: {replace}"
-            )
-        return path
+        return format_to_routing_path(self.path)
 
     def make_url(self, parameter_values: dict[str, Any]) -> str:
         return self.path.format(**parameter_values)
@@ -759,3 +748,19 @@ def identify_expected_status_codes(
         expected_status_codes.add(428)  # precondition required
 
     return expected_status_codes
+
+
+def format_to_routing_path(endpoint_path: str) -> str:
+    """
+    Examples:
+        >>> format_to_routing_path('/objects/folder_config/{folder_id}')
+        '/objects/folder_config/<string:folder_id>'
+
+        >>> format_to_routing_path('/objects/{object_type}/{object_id}/config')
+        '/objects/<string:object_type>/<string:object_id>/config'
+
+        >>> format_to_routing_path('A string with no replacements')
+        'A string with no replacements'
+    """
+    pattern = r"\{([^{}]+)\}"
+    return re.sub(pattern, lambda m: f"<string:{m.group(1)}>", endpoint_path)

@@ -482,17 +482,17 @@ class Discovery:
             _entry_key(cluster_entry) for cluster_entry in discovery_result.check_table
         }
 
-        effective_check_tables: Mapping[HostName, list[CheckPreviewEntry]] = {
-            **{target_host_name: list(discovery_result.check_table)},
-            **{node_host_name: [] for node_host_name in discovery_result.nodes_check_table.keys()},
+        return {
+            target_host_name: list(discovery_result.check_table),
+            # Only relevant for clusters. Find the affected check tables on the nodes and run
+            # all the discovery actions on the nodes as well.
+            **{
+                node_name: [
+                    entry for entry in check_table if _entry_key(entry) in cluster_entries_lookup
+                ]
+                for node_name, check_table in discovery_result.nodes_check_table.items()
+            },
         }
-        # Only relevant for clusters. Find the affected check tables on the nodes and run
-        # all the discovery actions on the nodes as well.
-        for host_name, check_table in discovery_result.nodes_check_table.items():
-            effective_check_tables[host_name].extend(
-                [entry for entry in check_table if _entry_key(entry) in cluster_entries_lookup]
-            )
-        return effective_check_tables
 
 
 @contextmanager

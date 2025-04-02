@@ -31,6 +31,8 @@ $(DEPS_INSTALL_BAZEL):
 	# NOTE: this might result in unexpected build behavior, when dependencies of //omd:intermediate_install
 	#       are built somewhere else without --define git-ssl-no-verify=true being specified, likely
 	#       resulting in different builds
+	# IMPORTANT: Keep the executio log file name in sync with what bazel_logs.groovy cleans-up.
+	# TODO: Find a better way to sync the generation and its clean up.
 	bazel build --cmk_version=$(VERSION) --cmk_edition=$(EDITION_SHORT) \
 	    $(if $(filter sles15%,$(DISTRO_CODE)),--define git-ssl-no-verify=true) \
 	    --execution_log_json_file="$(REPO_PATH)/deps_install.json" \

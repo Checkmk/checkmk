@@ -479,14 +479,14 @@ class Discovery:
         def _entry_key(entry: CheckPreviewEntry) -> tuple[str, Item]:
             return entry.check_plugin_name, entry.item
 
-        effective_check_tables: Mapping[HostName, list[CheckPreviewEntry]] = {
-            **{target_host_name: list(discovery_result.check_table)},
-            **{node_host_name: [] for node_host_name in discovery_result.nodes_check_table.keys()},
-        }
         cluster_entries_lookup = {
             _entry_key(cluster_entry) for cluster_entry in discovery_result.check_table
         }
 
+        effective_check_tables: Mapping[HostName, list[CheckPreviewEntry]] = {
+            **{target_host_name: list(discovery_result.check_table)},
+            **{node_host_name: [] for node_host_name in discovery_result.nodes_check_table.keys()},
+        }
         # Only relevant for clusters. Find the affected check tables on the nodes and run
         # all the discovery actions on the nodes as well.
         for host_name, check_table in discovery_result.nodes_check_table.items():

@@ -932,7 +932,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_aws_elb_backend_connection_errors,
-        title=lambda: _("AWS/ELB Backend Connection Errors"),
+        title=lambda: _("AWS/ELB back-end connection errors"),
     )
 )
 

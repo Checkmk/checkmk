@@ -87,7 +87,7 @@ def page_show():
 
 # Shows a list of all problematic logfiles grouped by host
 def show_log_list():
-    title = _("All problematic logfiles")
+    title = _("All problematic log files")
     breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), title)
     make_header(html, title, breadcrumb, _log_list_page_menu(breadcrumb))
 

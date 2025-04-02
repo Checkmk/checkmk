@@ -21,18 +21,18 @@ def _parameter_valuespec_general_flash_usage():
                     Alternative(
                         elements=[
                             Tuple(
-                                title=_("Specify levels in percentage of total Flash"),
+                                title=_("Specify levels in percentage of total flash"),
                                 elements=[
                                     Percentage(
                                         title=_("Warning at a usage of"),
                                         # xgettext: no-python-format
-                                        label=_("% of Flash"),
+                                        label=_("% of flash"),
                                         maxvalue=None,
                                     ),
                                     Percentage(
                                         title=_("Critical at a usage of"),
                                         # xgettext: no-python-format
-                                        label=_("% of Flash"),
+                                        label=_("% of flash"),
                                         maxvalue=None,
                                     ),
                                 ],

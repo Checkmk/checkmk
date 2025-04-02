@@ -28,7 +28,7 @@ def _valuespec_datasource_programs():
             "to make the individual program call run correctly in all execution contexts (UI and console)."
         ),
         label=_("Command line to execute"),
-        empty_text=_("Access Checkmk Agent via TCP"),
+        empty_text=_("Access Checkmk agent via TCP"),
         size=80,
     )
 

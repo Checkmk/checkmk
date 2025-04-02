@@ -892,7 +892,7 @@ class ModeNotifications(ABCNotificationsMode):
             html.icon("downtime", _("Downtime"))
         elif nottype.startswith("ACK"):
             table.cell(_("State"))
-            html.icon("ack", _("Acknowledgement"))
+            html.icon("ack", _("Acknowledgment"))
         elif nottype.startswith("FLAP"):
             table.cell(_("State"))
             html.icon("flapping", _("Flapping"))

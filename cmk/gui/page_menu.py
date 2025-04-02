@@ -445,7 +445,7 @@ def make_help_dropdown() -> PageMenuDropdown:
                 ],
             ),
             PageMenuTopic(
-                title=_("Articles in the user guide"),
+                title=_("Articles in the User Guide"),
                 entries=[
                     PageMenuEntry(
                         title=_("The official Checkmk user guide"),

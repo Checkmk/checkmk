@@ -184,7 +184,7 @@ class ConfigDomainGUI(ABCConfigDomain):
             raise MKUserError(
                 "",
                 _(
-                    "'git' command was not found on this system, but it is required for versioning the configuration."
+                    "'git' command was not found on this system, but it is required for versioning the configuration. "
                     "Please either install 'git' or disable git configuration tracking in setup."
                 ),
             )

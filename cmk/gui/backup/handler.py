@@ -629,13 +629,13 @@ class PageBackup:
                         duration = state.finished - state.started
 
                     if state.size is not None:
-                        size_txt = "Size: %s, " % render.fmt_bytes(state.size)
+                        size_txt = " Size: %s," % render.fmt_bytes(state.size)
                     else:
                         size_txt = ""
 
                     assert state.bytes_per_second is not None
                     html.write_text_permissive(
-                        _(" (Duration: %s, %sIO: %s/s)")
+                        _(" (Duration: %s,%s IO: %s/s)")
                         % (
                             render.timespan(duration),
                             size_txt,

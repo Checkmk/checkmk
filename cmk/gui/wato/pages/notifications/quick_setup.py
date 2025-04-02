@@ -300,6 +300,11 @@ def triggering_events() -> QuickSetupStage:
                                     "host_events": DictElement(
                                         parameter_form=ListUniqueSelection(
                                             title=Title("Host events"),
+                                            help_text=Help(
+                                                "Notifications are sent only for event types "
+                                                "defined by the 'Notified events for "
+                                                "hosts' ruleset"
+                                            ),
                                             prefill=DefaultValue([]),
                                             single_choice_type=CascadingSingleChoice,
                                             cascading_single_choice_layout=CascadingSingleChoiceLayout.horizontal,
@@ -311,6 +316,11 @@ def triggering_events() -> QuickSetupStage:
                                     "service_events": DictElement(
                                         parameter_form=ListUniqueSelection(
                                             title=Title("Service events"),
+                                            help_text=Help(
+                                                "Notifications are sent only for event types "
+                                                "defined by the 'Notified events for "
+                                                "services' ruleset"
+                                            ),
                                             prefill=DefaultValue([]),
                                             single_choice_type=CascadingSingleChoice,
                                             cascading_single_choice_layout=CascadingSingleChoiceLayout.horizontal,
@@ -762,6 +772,15 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                         "match_services": DictElement(
                                             parameter_form=ListOfStrings(
                                                 title=Title("Services"),
+                                                help_text=Help(
+                                                    "The text entered here is "
+                                                    "handled as a regular "
+                                                    "expression pattern. The "
+                                                    "pattern is case-sensitive "
+                                                    "and matches from the start. "
+                                                    "Add '$' to match the whole "
+                                                    "text."
+                                                ),
                                                 string_spec=String(
                                                     field_size=FieldSize.MEDIUM,
                                                     custom_validate=[IsValidRegularExpression()],
@@ -778,6 +797,15 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                         "exclude_services": DictElement(
                                             parameter_form=ListOfStrings(
                                                 title=Title("Exclude services"),
+                                                help_text=Help(
+                                                    "The text entered here is "
+                                                    "handled as a regular "
+                                                    "expression pattern. The "
+                                                    "pattern is case-sensitive "
+                                                    "and matches from the start. "
+                                                    "Add '$' to match the whole "
+                                                    "text."
+                                                ),
                                                 string_spec=String(
                                                     field_size=FieldSize.MEDIUM,
                                                     custom_validate=[IsValidRegularExpression()],
@@ -921,7 +949,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                 ),
                                 "folder": DictElement(
                                     parameter_form=SingleChoiceExtended(
-                                        title=Title("Folder"),
+                                        title=Title("Folder (including subfolders)"),
                                         elements=[
                                             SingleChoiceElementExtended(
                                                 name=name,
@@ -953,6 +981,14 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                 "check_type_plugin": DictElement(
                                     parameter_form=MultipleChoiceExtended(
                                         title=Title("Check types"),
+                                        help_text=Help(
+                                            "Only apply the rule if the "
+                                            "notification originates from "
+                                            "certain types of check plug-ins. "
+                                            "Note: Host notifications never "
+                                            "match this rule, if this option is "
+                                            "being used."
+                                        ),
                                         elements=Autocompleter(
                                             data=AutocompleterData(
                                                 ident="check_types",
@@ -1616,7 +1652,7 @@ def sending_conditions() -> QuickSetupStage:
                                         parameter_form=Tuple(
                                             title=Title("Throttling of 'Periodic notifications'"),
                                             help_text=Help(
-                                                "Only applies if `Periodic notifications` are enabled"
+                                                "Only applies to problem notifications and if periodic notifications are enabled."
                                             ),
                                             elements=[
                                                 Integer(
@@ -1646,6 +1682,14 @@ def sending_conditions() -> QuickSetupStage:
                                     "by_plugin_output": DictElement(
                                         parameter_form=String(
                                             title=Title("By plugin output"),
+                                            help_text=Help(
+                                                "The text entered here is "
+                                                "handled as a regular expression "
+                                                "pattern. The pattern is "
+                                                "case-sensitive and matches from "
+                                                "the start. Add '$' to match the "
+                                                "whole text."
+                                            ),
                                             custom_validate=[
                                                 not_empty(
                                                     error_msg=Message(
@@ -1659,7 +1703,12 @@ def sending_conditions() -> QuickSetupStage:
                                         parameter_form=String(
                                             title=Title("'Custom notifications' by comment"),
                                             help_text=Help(
-                                                "Only applies to notifications triggered by the command `Custom notifications`"
+                                                "The text entered here is "
+                                                "handled as a regular expression "
+                                                "pattern. The pattern is "
+                                                "case-sensitive and matches from "
+                                                "the start. Add '$' to match the "
+                                                "whole text."
                                             ),
                                             custom_validate=[
                                                 not_empty(

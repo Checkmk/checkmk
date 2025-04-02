@@ -48,10 +48,12 @@ from ._metric_expression import (
     Evaluated,
     Fraction,
     Maximum,
+    MaximumOf,
     Merge,
     Metric,
     MetricExpression,
     Minimum,
+    MinimumOf,
     parse_base_expression_from_api,
     parse_expression_from_api,
     parse_legacy_base_expression,
@@ -66,6 +68,8 @@ from ._metric_operation import (
     GraphConsolidationFunction,
     LineType,
     MetricOpConstant,
+    MetricOpConstantNA,
+    MetricOperation,
     MetricOpOperator,
     MetricOpRRDSource,
 )
@@ -426,7 +430,7 @@ def _to_metric_operation(
     base_metric_expression: BaseMetricExpression,
     translated_metrics: Mapping[str, TranslatedMetric],
     consolidation_function: GraphConsolidationFunction | None,
-) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
+) -> MetricOperation:
     match base_metric_expression:
         case Constant():
             return MetricOpConstant(value=float(base_metric_expression.value))
@@ -581,6 +585,14 @@ def _to_metric_operation(
                     for o in base_metric_expression.operands
                 ],
             )
+        case MaximumOf() | MinimumOf() | WarningOf() | CriticalOf():
+            return (
+                MetricOpConstant(value=float(evaluation_result.ok.value))
+                if (
+                    evaluation_result := base_metric_expression.evaluate(translated_metrics)
+                ).is_ok()
+                else MetricOpConstantNA()
+            )
         case _:
             raise TypeError(base_metric_expression)
 
@@ -592,7 +604,7 @@ def metric_expression_to_graph_recipe_expression(
     base_metric_expression: BaseMetricExpression,
     translated_metrics: Mapping[str, TranslatedMetric],
     consolidation_function: GraphConsolidationFunction | None,
-) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
+) -> MetricOperation:
     return _to_metric_operation(
         site_id,
         host_name,

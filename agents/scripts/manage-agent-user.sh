@@ -92,7 +92,7 @@ _update_user() {
     # 3. If agent user exist, add it to specified group.
     # 4. If agent user doesn't exist, create it with specified uid and gid. Abort if this fails.
 
-    [ -n "${AGENT_USER_UID}" ] && [ ! "$(id -u "${AGENT_USER}")" = "${AGENT_USER_UID}" ] && {
+    [ -n "${AGENT_USER_UID}" ] && id "${AGENT_USER}" >/dev/null 2>&1 && [ ! "$(id -u "${AGENT_USER}")" = "${AGENT_USER_UID}" ] && {
         printf "Agent user %s exists, but doesn't have specified uid %s, aborting.\n" "${AGENT_USER}" "${AGENT_USER_UID}"
         exit 1
     }

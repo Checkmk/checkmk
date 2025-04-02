@@ -13,7 +13,6 @@ from cmk.gui.display_options import DisplayOptions
 from cmk.gui.htmllib.html import HTMLGenerator
 from cmk.gui.http import request
 from cmk.gui.theme import make_theme
-from cmk.gui.utils.logging_filters import PrependURLFilter
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.timeout_manager import TimeoutManager
@@ -46,7 +45,6 @@ def set_global_vars() -> None:
     set_global_var("display_options", DisplayOptions())
     set_global_var("response", response)
     set_global_var("timeout_manager", TimeoutManager())
-    set_global_var("url_filter", PrependURLFilter())
     set_global_var("user_errors", UserErrors())
     set_global_var(
         "html",

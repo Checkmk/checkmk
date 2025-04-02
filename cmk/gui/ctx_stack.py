@@ -25,7 +25,6 @@ VarName = Literal[
     "theme",
     "timeout_manager",
     "translation",
-    "url_filter",
     "user_errors",
 ]
 

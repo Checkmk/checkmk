@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type Ref, useTemplateRef, ref } from 'vue'
+import { type Ref, useTemplateRef, computed, ref } from 'vue'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkScrollContainer from './CmkScrollContainer.vue'
@@ -15,19 +15,33 @@ export interface Suggestion {
   title: string
 }
 
+type SuggestionsFixed = {
+  type: 'fixed'
+  suggestions: Array<Suggestion>
+}
+
+type SuggestionsFiltered = {
+  type: 'filtered'
+  suggestions: Array<Suggestion>
+}
+
+type Suggestions = SuggestionsFixed | SuggestionsFiltered
+
 const {
   error = '',
   noResultsHint = '',
   suggestions,
-  showFilter,
   role
 } = defineProps<{
-  suggestions: Suggestion[]
-  showFilter: boolean
+  suggestions: Suggestions
   role: 'suggestion' | 'option'
   noResultsHint?: string
   error?: string
 }>()
+
+const showFilter = computed<boolean>(() => {
+  return suggestions.type === 'filtered'
+})
 
 const emit = defineEmits<{
   select: [suggestion: Suggestion]
@@ -41,7 +55,7 @@ const filteredSuggestions = ref<Array<Suggestion>>([])
 const currentlySelectedElement: Ref<Suggestion | null> = ref(null) // null means first element
 
 immediateWatch(
-  () => suggestions,
+  () => suggestions.suggestions,
   (newValue: Suggestion[]) => {
     filteredSuggestions.value = newValue
   }
@@ -87,7 +101,7 @@ function getCurrentlySelectedAsIndex(): number {
 
 function filterUpdated(newFilterString: string) {
   filterString.value = newFilterString
-  filteredSuggestions.value = suggestions.filter(({ title }) =>
+  filteredSuggestions.value = suggestions.suggestions.filter(({ title }) =>
     title.toLowerCase().includes(newFilterString.toLowerCase())
   )
 }
@@ -133,7 +147,7 @@ function selectPreviousElement() {
 }
 
 function focus(): void {
-  if (showFilter) {
+  if (showFilter.value) {
     suggestionInputRef.value?.focus()
   } else if (filteredSuggestions.value.length > 0) {
     if (suggestionRefs.value && suggestionRefs.value[0]) {

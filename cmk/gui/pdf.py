@@ -715,6 +715,14 @@ class Document:
     def render_image(
         self, left_mm: SizeMM, top_mm: SizeMM, width_mm: SizeMM, height_mm: SizeMM, path: str
     ) -> None:
+        # TODO Some painters use .svg icons which PIL currently doesn't
+        # support. For now, we ship both the .png and .svg icons. Here we
+        # switch to .png only if available.
+        # Find alternatives to PIL that support .svg
+        png_path = Path(path.replace(".svg", ".png"))
+        if path.endswith(".svg") and png_path.exists():
+            path = str(png_path)
+
         image = CMKImage.from_path(Path(path), ImageType.PNG)
         ir = ImageReader(image.pil())
         try:

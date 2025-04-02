@@ -2,11 +2,19 @@
 
 /// file: bazel_logs.groovy
 
+def cache_hits_file_name(distro, bazel_log_prefix) {
+    return "${bazel_log_prefix}cache_hits_${distro}.csv";
+}
+
+def summary_file_name(distro, bazel_log_prefix) {
+    return "${bazel_log_prefix}execution_summary_${distro}.json";
+}
+
 def try_parse_bazel_execution_log(distro, distro_dir, bazel_log_prefix) {
     try {
         dir("${distro_dir}") {
-            def summary_file="${distro_dir}/${bazel_log_prefix}execution_summary_${distro}.json";
-            def cache_hits_file="${distro_dir}/${bazel_log_prefix}cache_hits_${distro}.csv";
+            def summary_file = distro_dir + "/" + summary_file_name(distro, bazel_log_prefix);
+            def cache_hits_file = distro_dir + "/" + cache_hits_file_name(distro, bazel_log_prefix);
             sh("""bash \
                 buildscripts/scripts/bazel_execution_log_parser.sh \
                 --execution_logs_root "${distro_dir}" \
@@ -29,7 +37,7 @@ def try_plot_cache_hits(bazel_log_prefix, distros) {
         plot(
             csvFileName: 'bazel_cache_hits.csv',
             csvSeries:
-                distros.collect {[file: "${bazel_log_prefix}cache_hits_${it}.csv"]},
+                distros.collect {[file: cache_hits_file_name(it, bazel_log_prefix)]},
             description: 'Bazel Remote Cache Analysis',
             group: 'Bazel Cache',
             numBuilds: '30',

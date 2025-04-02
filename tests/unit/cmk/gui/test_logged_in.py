@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Iterator, Sequence
 from pathlib import Path
-from typing import ContextManager
 
 import pytest
 from pytest import MonkeyPatch
@@ -29,7 +28,7 @@ from cmk.gui.config import (
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, LoggedInUser
 from cmk.gui.logged_in import user as global_user
-from cmk.gui.session import UserContext
+from cmk.gui.session import SuperUserContext, UserContext
 from cmk.gui.watolib.utils import may_edit_ruleset
 
 
@@ -42,11 +41,9 @@ def test_user_context(with_user: tuple[UserId, str]) -> None:
 
 
 @pytest.mark.usefixtures("request_context")
-def test_super_user_context(
-    run_as_superuser: Callable[[], ContextManager[None]],
-) -> None:
+def test_super_user_context() -> None:
     assert global_user.id is None
-    with run_as_superuser():
+    with SuperUserContext():
         assert global_user.role_ids == ["admin"]
     assert global_user.id is None
 

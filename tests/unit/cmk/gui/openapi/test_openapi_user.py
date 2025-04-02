@@ -5,9 +5,9 @@
 import datetime
 import random
 import string
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
-from typing import Any, ContextManager
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -33,6 +33,7 @@ from cmk.gui.openapi.endpoints.user_config import (
     _load_user,
 )
 from cmk.gui.openapi.endpoints.utils import complement_customer
+from cmk.gui.session import SuperUserContext
 from cmk.gui.type_defs import CustomUserAttrSpec, UserObject
 from cmk.gui.userdb import ConnectorType, UserRole
 from cmk.gui.userdb._connections import Fixed, LDAPConnectionConfigFixed, LDAPUserConnectionConfig
@@ -137,12 +138,11 @@ def test_openapi_customer(clients: ClientRegistry, monkeypatch: MonkeyPatch) -> 
 @managedtest
 def test_openapi_user_minimal_settings(
     monkeypatch: MonkeyPatch,
-    run_as_superuser: Callable[[], ContextManager[None]],
     request_context: None,
 ) -> None:
     with (
         time_machine.travel(datetime.datetime.fromisoformat("2021-09-24 12:36:00Z")),
-        run_as_superuser(),
+        SuperUserContext(),
     ):
         user_object: UserObject = {
             UserId("user"): {
@@ -298,7 +298,6 @@ def test_openapi_user_config(
 @managedtest
 def test_openapi_user_internal_with_notifications(
     monkeypatch: MonkeyPatch,
-    run_as_superuser: Callable[[], ContextManager[None]],
     request_context: None,
 ) -> None:
     name = UserId(_random_string(10))
@@ -331,7 +330,7 @@ def test_openapi_user_internal_with_notifications(
             "is_new_user": True,
         }
     }
-    with run_as_superuser():
+    with SuperUserContext():
         edit_users(user_object, default_sites)
 
     assert _load_internal_attributes(name) == {
@@ -496,7 +495,6 @@ def test_openapi_incomplete_auth_options(clients: ClientRegistry, auth_type: str
 @managedtest
 def test_openapi_user_internal_auth_handling(
     monkeypatch: MonkeyPatch,
-    run_as_superuser: Callable[[], ContextManager[None]],
     request_context: None,
 ) -> None:
     monkeypatch.setattr(
@@ -536,7 +534,7 @@ def test_openapi_user_internal_auth_handling(
     }
 
     with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:30:00Z")):
-        with run_as_superuser():
+        with SuperUserContext():
             edit_users(user_object, default_sites)
 
     assert _load_internal_attributes(name) == {
@@ -564,7 +562,7 @@ def test_openapi_user_internal_auth_handling(
             _load_user(name),
             {"auth_option": {"secret": "QWXWBFUCSUOXNCPJUMS@", "auth_type": "automation"}},
         )
-        with run_as_superuser():
+        with SuperUserContext():
             edit_users(
                 {
                     name: {
@@ -600,7 +598,7 @@ def test_openapi_user_internal_auth_handling(
         updated_internal_attributes = _api_to_internal_format(
             _load_user(name), {"auth_option": {"auth_type": "remove"}}
         )
-        with run_as_superuser():
+        with SuperUserContext():
             edit_users(
                 {
                     name: {
@@ -646,7 +644,6 @@ def test_openapi_managed_global_edition(clients: ClientRegistry, monkeypatch: Mo
 @managedtest
 def test_managed_global_internal(
     monkeypatch: MonkeyPatch,
-    run_as_superuser: Callable[[], ContextManager[None]],
     request_context: None,
 ) -> None:
     # this test uses the internal mechanics of the user endpoint
@@ -675,7 +672,7 @@ def test_managed_global_internal(
             "is_new_user": True,
         }
     }
-    with run_as_superuser():
+    with SuperUserContext():
         edit_users(user_object, default_sites)
     user_internal = _load_user(UserId("user"))
     user_endpoint_attrs = complement_customer(_internal_to_api_format(user_internal))
@@ -731,7 +728,6 @@ def test_global_full_configuration(clients: ClientRegistry) -> None:
 def test_managed_idle_internal(
     with_automation_user: tuple[UserId, str],
     monkeypatch: MonkeyPatch,
-    run_as_superuser: Callable[[], ContextManager[None]],
 ) -> None:
     # this test uses the internal mechanics of the user endpoint
     username, _secret = with_automation_user
@@ -760,7 +756,7 @@ def test_managed_idle_internal(
             "is_new_user": True,
         }
     }
-    with run_as_superuser():
+    with SuperUserContext():
         edit_users(user_object, default_sites)
 
     user_internal = _load_user(UserId("user"))
@@ -1390,7 +1386,7 @@ def fixture_mock_ldap_locked_attributes(request_context: None, mocker: MockerFix
 @pytest.mark.usefixtures("mock_ldap_locked_attributes")
 @managedtest
 def test_edit_ldap_user_with_locked_attributes(
-    clients: ClientRegistry, run_as_superuser: Callable[[], ContextManager[None]]
+    clients: ClientRegistry,
 ) -> None:
     name = UserId("foo")
     user_object: UserObject = {
@@ -1421,7 +1417,7 @@ def test_edit_ldap_user_with_locked_attributes(
             "is_new_user": True,
         },
     }
-    with run_as_superuser():
+    with SuperUserContext():
         edit_users(user_object, default_sites)
 
     clients.User.edit(

@@ -4,13 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Callable
-from typing import ContextManager
-
 import pytest
 
 import cmk.utils.paths
 
+from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.script_helpers import application_and_request_context
 from cmk.gui.watolib import groups_io
 from cmk.gui.watolib.groups import contact_group_usage_finder_registry
@@ -28,15 +26,15 @@ def patch_config_paths(monkeypatch, tmp_path):
 
 
 @pytest.mark.usefixtures("tmp_path")
-def test_load_group_information_empty(run_as_superuser: Callable[[], ContextManager[None]]) -> None:
-    with application_and_request_context(), run_as_superuser():
+def test_load_group_information_empty() -> None:
+    with application_and_request_context(), SuperUserContext():
         assert groups_io.load_contact_group_information() == {}
         assert groups_io.load_host_group_information() == {}
         assert groups_io.load_service_group_information() == {}
 
 
 @pytest.mark.usefixtures("tmp_path")
-def test_load_group_information(run_as_superuser: Callable[[], ContextManager[None]]) -> None:
+def test_load_group_information() -> None:
     with open(cmk.utils.paths.check_mk_config_dir + "/wato/groups.mk", "w") as f:
         f.write(
             """# encoding: utf-8
@@ -71,7 +69,7 @@ multisite_contactgroups = {
 """
         )
 
-    with application_and_request_context(), run_as_superuser():
+    with application_and_request_context(), SuperUserContext():
         assert groups_io.load_group_information() == {
             "host": {
                 "all_hosts": {

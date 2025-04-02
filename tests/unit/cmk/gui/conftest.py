@@ -9,9 +9,9 @@ from __future__ import annotations
 import json
 import threading
 import typing
-from collections.abc import Callable, Iterator
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Any, ContextManager, NamedTuple
+from typing import Any, NamedTuple
 from unittest import mock
 from unittest.mock import MagicMock, patch
 
@@ -43,7 +43,7 @@ import cmk.gui.watolib.password_store
 from cmk.gui import http, userdb
 from cmk.gui.config import active_config
 from cmk.gui.livestatus_utils.testing import mock_livestatus
-from cmk.gui.session import session, SuperUserContext, UserContext
+from cmk.gui.session import session
 from cmk.gui.type_defs import SessionInfo
 from cmk.gui.userdb.session import load_session_infos
 from cmk.gui.utils.json import patch_json
@@ -359,52 +359,6 @@ def with_host(
 @pytest.fixture
 def mock__add_extensions_for_license_usage(monkeypatch):
     monkeypatch.setattr(activate_changes, "_add_extensions_for_license_usage", lambda: None)
-
-
-@pytest.fixture
-def run_as_user() -> Callable[[UserId], ContextManager[None]]:
-    """Fixture to run parts of test-code as another user
-
-    Examples:
-
-        def test_function(run_as_user) -> None:
-            print("Run as Nobody")
-            with run_as_user(UserID("egon")):
-                print("Run as 'egon'")
-            print("Run again as Nobody")
-
-    """
-
-    @contextmanager
-    def _run_as_user(user_id: UserId) -> Iterator[None]:
-        config_module.load_config()
-        with UserContext(user_id):
-            yield None
-
-    return _run_as_user
-
-
-@pytest.fixture
-def run_as_superuser() -> Callable[[], ContextManager[None]]:
-    """Fixture to run parts of test-code as the superuser
-
-    Examples:
-
-        def test_function(run_as_superuser) -> None:
-            print("Run as Nobody")
-            with run_as_superuser():
-                print("Run as Superuser")
-            print("Run again as Nobody")
-
-    """
-
-    @contextmanager
-    def _run_as_superuser() -> Iterator[None]:
-        config_module.load_config()
-        with SuperUserContext():
-            yield None
-
-    return _run_as_superuser
 
 
 @pytest.fixture()

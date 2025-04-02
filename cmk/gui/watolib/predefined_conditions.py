@@ -32,7 +32,9 @@ class PredefinedConditionStore(WatoSimpleConfigFile[PredefinedConditionSpec]):
             spec_class=PredefinedConditionSpec,
         )
 
-    def filter_usable_entries(self, entries):
+    def filter_usable_entries(
+        self, entries: dict[str, PredefinedConditionSpec]
+    ) -> dict[str, PredefinedConditionSpec]:
         if user.may("wato.edit_all_predefined_conditions"):
             return entries
 
@@ -43,7 +45,9 @@ class PredefinedConditionStore(WatoSimpleConfigFile[PredefinedConditionSpec]):
         entries.update({k: v for k, v in entries.items() if v["shared_with"] in user_groups})
         return entries
 
-    def filter_editable_entries(self, entries):
+    def filter_editable_entries(
+        self, entries: dict[str, PredefinedConditionSpec]
+    ) -> dict[str, PredefinedConditionSpec]:
         if user.may("wato.edit_all_predefined_conditions"):
             return entries
 

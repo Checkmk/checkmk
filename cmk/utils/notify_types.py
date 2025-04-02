@@ -797,8 +797,8 @@ NotifyPluginParamsDict = (
 NotifyPluginParams = NotifyPluginParamsList | NotifyPluginParamsDict
 
 
-custom_plugin_type_adapter = TypeAdapter(CustomPluginType)
-known_plugin_type_adapter = TypeAdapter(KnownPlugins)
+custom_plugin_type_adapter: TypeAdapter[CustomPluginType] = TypeAdapter(CustomPluginType)
+known_plugin_type_adapter: TypeAdapter[KnownPlugins] = TypeAdapter(KnownPlugins)
 
 
 def validate_plugin(value: Any, _handler: ValidationInfo) -> NotifyPlugin:

@@ -120,7 +120,9 @@ class MetricOpConstantNA(MetricOperation, frozen=True):
 class MetricOpOperator(MetricOperation, frozen=True):
     ident: Literal["operator"] = "operator"
     operator_name: Operators
-    operands: Sequence[Annotated[MetricOperation, PlainValidator(parse_metric_operation)]] = []
+    operands: Sequence[
+        Annotated[SerializeAsAny[MetricOperation], PlainValidator(parse_metric_operation)]
+    ] = []
 
     @staticmethod
     def name() -> str:
@@ -189,7 +191,7 @@ MetricOpOperator.model_rebuild()
 class GraphMetric(BaseModel, frozen=True):
     title: str
     line_type: LineType
-    operation: Annotated[MetricOperation, PlainValidator(parse_metric_operation)]
+    operation: Annotated[SerializeAsAny[MetricOperation], PlainValidator(parse_metric_operation)]
     unit: str
     color: str
     visible: bool

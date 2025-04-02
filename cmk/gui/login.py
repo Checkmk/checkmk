@@ -232,10 +232,7 @@ class LoginPage(Page):
                     )
 
                 # Having this before password updating to prevent redirect access issues
-                if (
-                    active_config.require_two_factor_all_users
-                    or roles.is_two_factor_required(username)
-                ) and not session.session_info.two_factor_completed:
+                if session.two_factor_enforced():
                     session.session_info.two_factor_required = True
                     raise HTTPRedirect(
                         "user_two_factor_enforce.py?_origtarget=%s"

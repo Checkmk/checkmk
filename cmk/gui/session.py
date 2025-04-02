@@ -28,10 +28,12 @@ from cmk.gui.auth import (
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInNobody, LoggedInRemoteSite, LoggedInSuperUser, LoggedInUser
+from cmk.gui.logged_in import user as logged_in_user
 from cmk.gui.pseudo_users import PseudoUserId, RemoteSitePseudoUser, SiteInternalPseudoUser
 from cmk.gui.type_defs import AuthType, SessionId, SessionInfo
 from cmk.gui.userdb.session import auth_cookie_value
 from cmk.gui.userdb.store import convert_idle_timeout, load_custom_attr
+from cmk.gui.utils import roles
 from cmk.gui.utils.flashed_messages import MsgType
 from cmk.gui.utils.security_log_events import AuthenticationSuccessEvent
 from cmk.gui.wsgi.utils import dict_property
@@ -270,6 +272,12 @@ class CheckmkFileBasedSession(dict, SessionMixin):
             userdb.is_two_factor_login_enabled(self.user.ident)
             and not self.session_info.two_factor_completed
         )
+
+    def two_factor_enforced(self) -> bool:
+        return (
+            config.active_config.require_two_factor_all_users
+            or roles.is_two_factor_required(logged_in_user.ident)
+        ) and not self.session_info.two_factor_completed
 
 
 class FileBasedSession(SessionInterface):

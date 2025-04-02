@@ -939,7 +939,9 @@ def _serialize_webauthn_state(state: dict) -> WebAuthnActionState:
 class UserWebAuthnRegisterBegin(JsonPage):
     def page(self) -> JsonSerializable:
         assert user.id is not None
-        user.need_permission("general.manage_2fa")
+
+        if not session.two_factor_enforced():
+            user.need_permission("general.manage_2fa")
 
         registration_data, state = make_fido2_server().register_begin(
             PublicKeyCredentialUserEntity(
@@ -963,7 +965,9 @@ class UserWebAuthnRegisterBegin(JsonPage):
 class UserWebAuthnRegisterComplete(JsonPage):
     def page(self) -> JsonSerializable:
         assert user.id is not None
-        user.need_permission("general.manage_2fa")
+
+        if not session.two_factor_enforced():
+            user.need_permission("general.manage_2fa")
 
         raw_data = request.get_data()
         logger.debug("Raw request: %r", raw_data)

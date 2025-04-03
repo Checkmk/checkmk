@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-03-31 18:50+0000\n"
+"PO-Revision-Date: 2025-04-03 14:44+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -682,33 +682,34 @@ msgstr "Diesen Kunden %s"
 msgid "%s traffic"
 msgstr "%s Verkehr"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "%s uses an API (%s) which is marked as deprecated in Checkmk %s and will be "
 "removed in Checkmk %s (File: %s)."
 msgstr ""
 "%s verwendet eine API (%s), die in Checkmk %s als veraltet markiert ist und "
-"in Checkmk %s entfernt werden wird."
+"in Checkmk %s entfernt werden wird (Datei: %s)."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "%s uses an API (%s) which was marked as deprecated in Checkmk %s and is "
 "removed in Checkmk %s (File: %s)."
 msgstr ""
 "%s verwendet eine API (%s), die in Checkmk %s als veraltet markiert wurde "
-"und in Checkmk %s entfernt wird."
+"und in Checkmk %s entfernt wird (Datei: %s)."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "%s uses an API (%s) which was marked as deprecated in Checkmk %s and will be "
 "removed in Checkmk %s (File: %s)."
 msgstr ""
 "%s verwendet eine API (%s), die in Checkmk %s als veraltet markiert wurde "
-"und in Checkmk %s entfernt werden wird."
+"und in Checkmk %s entfernt werden wird (Datei: %s)."
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s uses an API (%s) which was removed in Checkmk %s (File: %s)."
-msgstr "%s verwendet eine API (%s), die in Checkmk %s entfernt wurde."
+msgstr ""
+"%s verwendet eine API (%s), die in Checkmk %s entfernt wurde (Datei: %s)."
 
 #, python-format
 msgid "%s was stopped after %s at %s."
@@ -23685,14 +23686,14 @@ msgstr "GUI"
 msgid "GUI design"
 msgstr "GUI-Design"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "GUI extension in %r uses an API which is marked as deprecated and may not "
 "work anymore due to unknown imports or objects (File: %s)."
 msgstr ""
 "Die GUI-Erweiterung in %r verwendet eine API, die als veraltet "
 "gekennzeichnet ist und aufgrund von unbekannten Importen oder Objekten "
-"möglicherweise nicht mehr funktioniert."
+"möglicherweise nicht mehr funktioniert (Datei: %s)."
 
 msgid "GUI extensions (deprecated)"
 msgstr "GUI-Erweiterungen (veraltet)"
@@ -31991,14 +31992,14 @@ msgstr ""
 msgid "Legacy GUI extension in %r"
 msgstr "Legacy GUI-Erweiterung in %r"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Legacy GUI extension in %r uses an API which is marked as deprecated and may "
 "not work anymore due to unknown imports or objects (File: %s)."
 msgstr ""
 "Die Legacy GUI-Erweiterung in %r verwendet eine API, die als veraltet "
 "gekennzeichnet ist und aufgrund unbekannter Importe oder Objekte "
-"möglicherweise nicht mehr funktioniert."
+"möglicherweise nicht mehr funktioniert (Datei: %s)."
 
 msgid "Legacy GUI extensions (deprecated)"
 msgstr "Legacy GUI-Erweiterungen (veraltet)"
@@ -41587,13 +41588,13 @@ msgstr "PING und Host Check-Parameter"
 msgid "PLL lock voltages by freqency"
 msgstr "PLL Verriegelungsspannung nach Frequenz"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "PNP template uses an API which was removed in an ealier Checkmk version "
 "(File: %s)."
 msgstr ""
 "Die PNP-Vorlage verwendet eine API, die in einer früheren Checkmk-Version "
-"entfernt wurde."
+"entfernt wurde (Datei: %s)."
 
 #, python-format
 msgid ""
@@ -53103,6 +53104,9 @@ msgstr "Zustand bei <i>Degraded</i>"
 msgid "State for <i>Global Hot Spare</i>"
 msgstr "Zustand bei <i>Global Hot Spare</i>"
 
+msgid "State for <i>JBOD</i>"
+msgstr "Zustand für <i>JBOD</i>"
+
 msgid "State for <i>Offline</i>"
 msgstr "Zustand bei <i>Offline</i>"
 
@@ -58537,12 +58541,19 @@ msgid ""
 "percent of SLA periods have broken the SLA, for example if 1 SLA period of "
 "10 has been broken it will show 10%."
 msgstr ""
+"Die Option 'Zusammenfassung über alle SLA-Zeiträume anzeigen' fasst alle "
+"Ergebnisse der SLA-Berechnungen in einem Ergebnis zusammen. Das heißt, es "
+"wird angezeigt, wie viel Prozent der SLA-Zeiträume gegen das SLA verstoßen "
+"haben, z. B. wenn 1 SLA-Zeitraum von 10 verletzt wurde, wird 10 % angezeigt."
 
 msgid ""
 "The option 'Show aggregated info over all SLA periods' combines all SLA "
 "periods but each SLA period is calculated separately. So it will show the "
 "average of all SLA periods."
 msgstr ""
+"Die Option 'Aggregierte Informationen über alle SLA-Zeiträume anzeigen' "
+"kombiniert alle SLA-Zeiträume, aber jeder SLA-Zeitraum wird separat "
+"berechnet. Es wird also der Durchschnitt aller SLA-Zeiträume angezeigt."
 
 msgid ""
 "The option to use a custom command can only be configured with the "

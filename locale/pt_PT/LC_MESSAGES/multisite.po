@@ -54269,6 +54269,10 @@ msgstr "Estado para <i>Degradado</i>"
 msgid "State for <i>Global Hot Spare</i>"
 msgstr "Estado para <i>Peças Sobressalentes Quentes Globais</i>"
 
+#, fuzzy
+msgid "State for <i>JBOD</i>"
+msgstr "Estado para <i>Online</i>"
+
 msgid "State for <i>Offline</i>"
 msgstr "Estado para <i>Offline</i>"
 

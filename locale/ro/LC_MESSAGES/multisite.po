@@ -54397,6 +54397,10 @@ msgstr "Starea pentru <i>Degradat</i>"
 msgid "State for <i>Global Hot Spare</i>"
 msgstr "Stare pentru <i>Global Hot Spare</i>"
 
+#, fuzzy
+msgid "State for <i>JBOD</i>"
+msgstr "Statul pentru <i>Online</i>"
+
 msgid "State for <i>Offline</i>"
 msgstr "Starea pentru <i>Offline</i>"
 

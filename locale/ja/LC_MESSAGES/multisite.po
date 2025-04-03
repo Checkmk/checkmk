@@ -51745,6 +51745,10 @@ msgstr "<i>劣化</i>状態"
 msgid "State for <i>Global Hot Spare</i>"
 msgstr "<i>グローバルホットスペア</i>の状態"
 
+#, fuzzy
+msgid "State for <i>JBOD</i>"
+msgstr "<i>オンライン</i>の状態"
+
 msgid "State for <i>Offline</i>"
 msgstr "<i>オフライン</i>の状態"
 

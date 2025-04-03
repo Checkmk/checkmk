@@ -54280,6 +54280,10 @@ msgstr "Staat voor <i>Gedegradeerd</i>"
 msgid "State for <i>Global Hot Spare</i>"
 msgstr "Staat voor <i>Global Hot Spare</i>"
 
+#, fuzzy
+msgid "State for <i>JBOD</i>"
+msgstr "Staat voor <i>Online</i>"
+
 msgid "State for <i>Offline</i>"
 msgstr "Staat voor <i>Offline</i>"
 

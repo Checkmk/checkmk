@@ -18,16 +18,26 @@ StreamType = Literal["stderr", "stdout"]
 
 @dataclass(frozen=True)
 class MonitoringPlugin:
+    """Data corresponding to 3rd party plugins.
+
+    These plugins are maintained by 'Monitoring Plugins'
+    (https://www.monitoring-plugins.org/).
+    """
+
     binary_name: str
     path: str = "lib/nagios/plugins"
+    # by default, output the version of the plugin
     cmd_line_option: str = "-V"
     expected: str = "v2.4.0"
 
 
 @dataclass(frozen=True)
 class CheckmkActiveCheck:
+    """Data corresponding to Checkmk active checks."""
+
     binary_name: str
     path: str = "lib/nagios/plugins"
+    usage_text: str = "usage"
 
     @property
     def cmd_line_option(self) -> str:
@@ -35,7 +45,7 @@ class CheckmkActiveCheck:
 
     @property
     def expected(self) -> str:
-        return f"usage: {self.binary_name} "
+        return f"{self.usage_text}: {self.binary_name} "
 
 
 Plugin = MonitoringPlugin | CheckmkActiveCheck
@@ -101,6 +111,7 @@ MONITORING_PLUGINS: Sequence[Plugin] = (
     MonitoringPlugin("urlize"),
     MonitoringPlugin("check_mysql"),
     MonitoringPlugin("check_mysql_query"),
+    CheckmkActiveCheck("check_httpv2", usage_text="Usage"),
     CheckmkActiveCheck("check_always_crit"),
     CheckmkActiveCheck("check_sftp"),
     CheckmkActiveCheck(
@@ -143,6 +154,7 @@ MONITORING_PLUGINS: Sequence[Plugin] = (
     (pytest.param(p, id=f"{p.binary_name}") for p in MONITORING_PLUGINS),
 )
 def test_monitoring_plugins_can_be_executed(plugin: Plugin, site: Site) -> None:
+    """Validate the plugin's presence and version in the site."""
     abort_if_not_containerized(
         plugin.binary_name == "check_mysql"
     )  # What? Why? Is printing the version dangerous?

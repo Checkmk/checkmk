@@ -58,7 +58,9 @@ def set_quick_setup_params(triggering_events: TriggeringEvents) -> NotificationQ
         "service_filters": {
             "service_labels": {"label1": "value1", "label2": "value2"},
             "match_service_groups": ["group1", "group2", "group3"],
+            "match_service_groups_regex": ("match_alias", [".*"]),
             "exclude_service_groups": ["group4", "group5", "group6"],
+            "exclude_service_groups_regex": ("match_id", ["my_id_regex$"]),
             "match_services": ["service1", "service2", "service3"],
             "exclude_services": ["service4", "service5", "service6"],
         },
@@ -171,7 +173,9 @@ def get_expected_event_rule(
     if "service" in trigger_events:
         event_rule["match_servicelabels"] = {"label1": "value1", "label2": "value2"}
         event_rule["match_servicegroups"] = ["group1", "group2", "group3"]
+        event_rule["match_servicegroups_regex"] = ("match_alias", [".*"])
         event_rule["match_exclude_servicegroups"] = ["group4", "group5", "group6"]
+        event_rule["match_exclude_servicegroups_regex"] = ("match_id", ["my_id_regex$"])
         event_rule["match_services"] = ["service1", "service2", "service3"]
         event_rule["match_exclude_services"] = ["service4", "service5", "service6"]
         event_rule["match_service_event"] = ["?r", "wc", "ur", "s", "as"]

@@ -35,7 +35,7 @@ from cmk.gui.background_job import (
     simple_job_target,
 )
 from cmk.gui.ctx_stack import g
-from cmk.gui.exceptions import MKAuthException
+from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.global_config import get_global_config
 from cmk.gui.http import request
 from cmk.gui.i18n import (
@@ -278,7 +278,7 @@ def _set_current_folder(folder_name: str) -> None:
     g.wato_current_folder = g.wato_folders[folder_name]
 
 
-def is_url_permitted(url: str) -> bool:
+def may_see_url(url: str) -> bool:
     file_name, query_vars = file_name_and_query_vars_from_url(url)
     _set_query_vars(query_vars)
 
@@ -294,6 +294,21 @@ def is_url_permitted(url: str) -> bool:
             _try_page(file_name)
         return True
     except MKAuthException:
+        return False
+    except MKUserError:
+        # In case a page initialization fails with a user error (invalid input) for some reason,
+        # we don't want to show the search result.
+        #
+        # A possible scenario is (see also CMK-22600):
+        #
+        # 1. We are a non-admin user (which triggers this function)
+        # 2. A host xyz exists, is in the search index and can be searched.
+        # 3. The host is deleted in setup
+        # 4. Before the search index is being rebuilt and the entry for the hosts edit mode is
+        #    removed from the index, the search is used to find the host xyz.
+        #
+        # In this case the code above would create an instance of ModeEditHost, which would raise
+        # a MKUserError because the host does not exist anymore.
         return False
 
 
@@ -332,15 +347,15 @@ class PermissionsHandler:
         _, query_vars = file_name_and_query_vars_from_url(url)
         return get_global_config().global_settings.is_activated(query_vars["varname"][0])
 
-    def permissions_for_items(self) -> Mapping[str, Callable[[str], bool]]:
+    def may_see_items(self) -> Mapping[str, Callable[[str], bool]]:
         return {
             "global_settings": self._permission_global_setting,
             "rules": self._permissions_rule,
             "hosts": lambda url: (
                 any(user.may(perm) for perm in ("wato.all_folders", "wato.see_all_folders"))
-                or is_url_permitted(url)
+                or may_see_url(url)
             ),
-            "setup": is_url_permitted,
+            "setup": may_see_url,
         }
 
 
@@ -354,7 +369,7 @@ class IndexSearcher:
         if not redis_server_reachable(self._redis_client):
             raise RuntimeError("Redis server is not reachable")
         self._may_see_category = permissions_handler.may_see_category
-        self._may_see_item_func = permissions_handler.permissions_for_items()
+        self._may_see_item_func = permissions_handler.may_see_items()
         self._user_id = user.ident
 
     def search(self, query: SearchQuery) -> SearchResultsByTopic:
@@ -373,7 +388,7 @@ class IndexSearcher:
 
     def _search_redis(
         self, query: SearchQuery
-    ) -> dict[str, list[_SearchResultWithPermissionsCheck]]:
+    ) -> dict[str, list[_SearchResultWithVisibilityCheck]]:
         if not IndexBuilder.index_is_built(self._redis_client):
             self._launch_index_building_in_background_job()
             raise IndexNotFoundException
@@ -424,7 +439,7 @@ class IndexSearcher:
         query: str,
         key_categories: str,
         key_prefix_match_items: str,
-    ) -> defaultdict[str, list[_SearchResultWithPermissionsCheck]]:
+    ) -> defaultdict[str, list[_SearchResultWithVisibilityCheck]]:
         results = defaultdict(list)
         for category in self._redis_client.smembers(key_categories):
             if not self._may_see_category(category):
@@ -434,7 +449,7 @@ class IndexSearcher:
                 key_prefix_match_items,
                 category,
             )
-            permissions_check = self._may_see_item_func.get(category, lambda _url: True)
+            visibility_check = self._may_see_item_func.get(category, lambda _url: True)
 
             for _matched_text, idx_matched_item in self._redis_client.hscan_iter(
                 IndexBuilder.key_match_texts(prefix_category),
@@ -451,12 +466,12 @@ class IndexSearcher:
                 # found hosts would be displayed under the topic "Hosts" instead of "Hôtes" in the
                 # setup search.
                 results[translate_to_current_language(match_item_dict["topic"])].append(
-                    _SearchResultWithPermissionsCheck(
+                    _SearchResultWithVisibilityCheck(
                         SearchResult(
                             match_item_dict["title"],
                             match_item_dict["url"],
                         ),
-                        permissions_check,
+                        visibility_check,
                     )
                 )
         return results
@@ -464,8 +479,8 @@ class IndexSearcher:
     @classmethod
     def _sort_search_results(
         cls,
-        results: Mapping[str, Iterable[_SearchResultWithPermissionsCheck]],
-    ) -> Iterator[tuple[str, Iterable[_SearchResultWithPermissionsCheck]]]:
+        results: Mapping[str, Iterable[_SearchResultWithVisibilityCheck]],
+    ) -> Iterator[tuple[str, Iterable[_SearchResultWithVisibilityCheck]]]:
         first_topics = cls._first_topics()
         last_topics = cls._last_topics()
         middle_topics = sorted(set(results.keys()) - set(first_topics) - set(last_topics))
@@ -515,25 +530,21 @@ class IndexSearcher:
 
     @staticmethod
     def _filter_results_by_user_permissions(
-        results_by_topic: Iterable[tuple[str, Iterable[_SearchResultWithPermissionsCheck]]],
+        results_by_topic: Iterable[tuple[str, Iterable[_SearchResultWithVisibilityCheck]]],
     ) -> SearchResultsByTopic:
         yield from (
             (
                 topic,
-                (
-                    result.result
-                    for result in results
-                    if result.permissions_check(result.result.url)
-                ),
+                (result.result for result in results if result.visibility_check(result.result.url)),
             )
             for topic, results in results_by_topic
         )
 
 
 @dataclass(frozen=True)
-class _SearchResultWithPermissionsCheck:
+class _SearchResultWithVisibilityCheck:
     result: SearchResult
-    permissions_check: Callable[[str], bool]
+    visibility_check: Callable[[str], bool]
 
 
 def _index_building_in_background_job(

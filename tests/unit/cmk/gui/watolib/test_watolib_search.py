@@ -35,10 +35,10 @@ from cmk.gui.watolib.search import (
     IndexBuilder,
     IndexNotFoundException,
     IndexSearcher,
-    is_url_permitted,
     MatchItem,
     MatchItemGeneratorRegistry,
     MatchItems,
+    may_see_url,
     PermissionsHandler,
 )
 from cmk.gui.watolib.search import (
@@ -322,27 +322,27 @@ def fixture_created_host_url() -> str:
 
 
 @pytest.mark.usefixtures("request_context")
-def test_is_url_permitted_false() -> None:
-    assert not is_url_permitted("wato.py?folder=&mode=service_groups")
+def test_may_see_url_false() -> None:
+    assert not may_see_url("wato.py?folder=&mode=service_groups")
 
 
 @pytest.mark.usefixtures("with_admin_login")
-def test_is_url_permitted_true() -> None:
-    assert is_url_permitted("wato.py?folder=&mode=service_groups")
+def test_may_see_url_true() -> None:
+    assert may_see_url("wato.py?folder=&mode=service_groups")
 
 
 @pytest.mark.usefixtures("with_admin_login")
-def test_is_url_permitted_host_true(
+def test_may_see_url_host_true(
     created_host_url: str,
 ) -> None:
-    assert is_url_permitted(created_host_url)
+    assert may_see_url(created_host_url)
 
 
 @pytest.mark.usefixtures("with_admin_login")
-def test_is_url_permitted_host_false(monkeypatch: MonkeyPatch, created_host_url: str) -> None:
+def test_may_see_url_host_false(monkeypatch: MonkeyPatch, created_host_url: str) -> None:
     with monkeypatch.context() as m:
         m.setattr(user, "may", lambda pname: False)
-        assert not is_url_permitted(created_host_url)
+        assert not may_see_url(created_host_url)
 
 
 class TestPermissionHandler:
@@ -372,31 +372,31 @@ class TestIndexSearcher:
             IndexSearcher._sort_search_results(
                 {
                     "Hosts": [
-                        search._SearchResultWithPermissionsCheck(
+                        search._SearchResultWithVisibilityCheck(
                             SearchResult(title="host", url=""),
                             fake_permissions_check,
                         )
                     ],
                     "Setup": [
-                        search._SearchResultWithPermissionsCheck(
+                        search._SearchResultWithVisibilityCheck(
                             SearchResult(title="setup_menu_entry", url=""),
                             fake_permissions_check,
                         )
                     ],
                     "Global settings": [
-                        search._SearchResultWithPermissionsCheck(
+                        search._SearchResultWithVisibilityCheck(
                             SearchResult(title="global_setting", url=""),
                             fake_permissions_check,
                         )
                     ],
                     "Other topic": [
-                        search._SearchResultWithPermissionsCheck(
+                        search._SearchResultWithVisibilityCheck(
                             SearchResult(title="other_item", url=""),
                             fake_permissions_check,
                         )
                     ],
                     "Another topic": [
-                        search._SearchResultWithPermissionsCheck(
+                        search._SearchResultWithVisibilityCheck(
                             SearchResult(title="another_item", url=""),
                             fake_permissions_check,
                         )
@@ -407,7 +407,7 @@ class TestIndexSearcher:
             (
                 "Setup",
                 [
-                    search._SearchResultWithPermissionsCheck(
+                    search._SearchResultWithVisibilityCheck(
                         SearchResult(title="setup_menu_entry", url=""),
                         fake_permissions_check,
                     )
@@ -416,7 +416,7 @@ class TestIndexSearcher:
             (
                 "Hosts",
                 [
-                    search._SearchResultWithPermissionsCheck(
+                    search._SearchResultWithVisibilityCheck(
                         SearchResult(title="host", url=""),
                         fake_permissions_check,
                     )
@@ -425,7 +425,7 @@ class TestIndexSearcher:
             (
                 "Another topic",
                 [
-                    search._SearchResultWithPermissionsCheck(
+                    search._SearchResultWithVisibilityCheck(
                         SearchResult(title="another_item", url=""),
                         fake_permissions_check,
                     )
@@ -434,7 +434,7 @@ class TestIndexSearcher:
             (
                 "Other topic",
                 [
-                    search._SearchResultWithPermissionsCheck(
+                    search._SearchResultWithVisibilityCheck(
                         SearchResult(title="other_item", url=""),
                         fake_permissions_check,
                     )
@@ -443,7 +443,7 @@ class TestIndexSearcher:
             (
                 "Global settings",
                 [
-                    search._SearchResultWithPermissionsCheck(
+                    search._SearchResultWithVisibilityCheck(
                         SearchResult(title="global_setting", url=""),
                         fake_permissions_check,
                     )

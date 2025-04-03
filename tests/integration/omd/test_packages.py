@@ -3,17 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import subprocess
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Literal
 
 import pytest
 
 from tests.testlib.pytest_helpers.calls import abort_if_not_containerized
 from tests.testlib.site import Site
-
-StreamType = Literal["stderr", "stdout"]
 
 
 @dataclass(frozen=True)
@@ -160,49 +156,63 @@ def test_monitoring_plugins_can_be_executed(plugin: Plugin, site: Site) -> None:
     )  # What? Why? Is printing the version dangerous?
 
     cmd_line = [(site.root / plugin.path / plugin.binary_name).as_posix(), plugin.cmd_line_option]
-
-    p = site.execute(cmd_line, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    assert p.stdout and p.stderr  # for mypy
-
-    assert plugin.expected in p.stdout.read()
-
-    assert not p.stderr.read()
+    # check=False; '<plugin-name> -V' returns in exit-code 3 for most plugins!
+    process = site.run(cmd_line, check=False)
+    assert plugin.expected in process.stdout, (
+        f"Expected command:'{' '.join(cmd_line)}'\nto result in output having '{plugin.expected}'!"
+    )
+    assert not process.stderr
 
 
 def test_heirloommailx(site: Site) -> None:
-    p = site.execute(["heirloom-mailx", "-V"], stdout=subprocess.PIPE)
-    version = p.stdout.read() if p.stdout else "<NO STDOUT>"
+    expected_version = "12.5"
+    process = site.run(cmd := ["heirloom-mailx", "-V"])
+    version = process.stdout if process.stdout else "<NO STDOUT>"
     # TODO: Sync this with a global version for heirloom (like we do it for python)
-    assert "12.5" in version
+    assert expected_version in version, (
+        f"Expected 'heirloom-mailx' version: {expected_version} in output! Command: "
+        f"`{' '.join(cmd)}`"
+    )
 
 
 def test_heirloompkgtools_pkgmk(site: Site) -> None:
-    p = site.execute(["pkgmk"], stderr=subprocess.PIPE)
-    message = p.stderr.read() if p.stderr else "<NO STDERR>"
-    assert "pkgmk: ERROR: unable to find info for device <spool>" in message
+    process = site.run([tool := "pkgmk"], check=False)
+    message = process.stderr if process.stderr else "<NO STDERR>"
+    assert "pkgmk: ERROR: unable to find info for device <spool>" in message, (
+        f"'{tool}' is not present in Checkmk '{site.version.version}'!"
+    )
 
 
 def test_heirloompkgtools_pkgtrans(site: Site) -> None:
-    p = site.execute(["pkgtrans"], stderr=subprocess.PIPE)
-    message = p.stderr.read() if p.stderr else "<NO STDERR>"
-    assert "usage: pkgtrans [-cinos] srcdev dstdev [pkg [pkg...]]" in message
+    process = site.run([tool := "pkgtrans"], check=False)
+    message = process.stderr if process.stderr else "<NO STDERR>"
+    assert "usage: pkgtrans [-cinos] srcdev dstdev [pkg [pkg...]]" in message, (
+        f"'{tool}' is not present in Checkmk '{site.version.version}'!"
+    )
 
 
 def test_stunnel(site: Site) -> None:
-    p = site.execute(["stunnel", "-help"], stderr=subprocess.PIPE)
-    help_text = p.stderr.read() if p.stderr else ""
+    expected_version = "5.63"
+    process = site.run(cmd := ["stunnel", "-help"])
+    help_text = process.stderr if process.stderr else "<EXPECTED ERROR; OBSERVED NO ERROR>"
     # TODO: Sync this with a global version for stunnel (like we do it for python)
-    assert "stunnel 5.63" in help_text
+    assert f"stunnel {expected_version}" in help_text, (
+        f"Expected 'stunnel' version: {expected_version} in the output! Command: `{' '.join(cmd)}`"
+    )
 
 
 def test_unixcat(site: Site) -> None:
-    p = site.execute(["unixcat"], stderr=subprocess.PIPE)
-    message = p.stderr.read() if p.stderr else "<NO STDERR>"
-    assert "Usage: unixcat UNIX-socket" in message
+    tool = "unixcat"
+    process = site.run([tool], check=False)
+    message = process.stderr if process.stderr else "<NO STDERR>"
+    assert "Usage: unixcat UNIX-socket" in message, (
+        f"'{tool}' is not present in Checkmk '{site.version.version}'!"
+    )
 
 
 def test_navicli(site: Site) -> None:
-    p = site.execute(["naviseccli", "-Help"], stdout=subprocess.PIPE)
-    help_text = p.stdout.read() if p.stdout else ""
+    version = "7.33.9.1.84"
+    process = site.run([tool := "naviseccli", "-Help"], check=False)
+    help_text = process.stdout if process.stdout else "<EXPECTED OUTPUT; OBSERVED NO OUTPUT>"
     # TODO: Sync this with a global version for navicli (like we do it for python)
-    assert "Revision 7.33.9.1.84" in help_text
+    assert f"Revision {version}" in help_text, f"Expected '{tool}' to have version: {version}!"

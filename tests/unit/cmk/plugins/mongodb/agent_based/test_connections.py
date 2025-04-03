@@ -7,11 +7,10 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import get_value_store, Metric, Result, State, StringTable
-from cmk.plugins.mongodb.agent_based import connections as mongodb_connections
+from cmk.agent_based.v2 import Metric, Result, State, StringTable
+from cmk.plugins.mongodb.agent_based import connections
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "info",
     [
@@ -29,15 +28,14 @@ def test_check_function_invalid_input_item_not_found(info: StringTable) -> None:
     """
 
     assert not list(
-        mongodb_connections.check_mongodb_connections(
+        connections.check_mongodb_connections(
             "Connections",
             {"levels_perc": (80.0, 90.0)},
-            mongodb_connections.parse_mongodb_connections(info),
+            connections.parse_mongodb_connections(info),
         )
     )
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "info,expected",
     [
@@ -59,18 +57,19 @@ def test_check_function_invalid_input_item_not_found(info: StringTable) -> None:
         ),
     ],
 )
-def test_check_function(info: StringTable, expected: Sequence[Result | Metric]) -> None:
+def test_check_function(
+    monkeypatch: pytest.MonkeyPatch, info: StringTable, expected: Sequence[Result | Metric]
+) -> None:
     """
     Checks funny connections values
     """
-
-    get_value_store()["total_created"] = (0.0, 0)
+    monkeypatch.setattr(connections, "get_value_store", lambda: {"total_created": (0.0, 0)})
 
     result = list(
-        mongodb_connections.check_mongodb_connections(
+        connections.check_mongodb_connections(
             "Connections",
             {"levels_perc": (80.0, 90.0)},
-            mongodb_connections.parse_mongodb_connections(info),
+            connections.parse_mongodb_connections(info),
         )
     )[:-2]  # we are not testing the get_rate function here assuming it works
     assert result == expected

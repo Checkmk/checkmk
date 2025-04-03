@@ -299,7 +299,7 @@ def _query_hosts_service_count(site: Site, hostname: HostName) -> int:
         len(services_response.json()["value"])
         # the host might not yet exist at the point where we start waiting
         if (
-            services_response := site.openapi.post(f"objects/host/{hostname}/collections/services")
+            services_response := site.openapi.get(f"objects/host/{hostname}/collections/services")
         ).ok
         else 0
     )

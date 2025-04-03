@@ -31,8 +31,9 @@ from cmk import trace
 from cmk.trace.export import exporter_from_config, init_span_processor
 from cmk.trace.logs import add_span_log_handler
 
-from ._background_jobs import default_config, get_application, make_process_health, run_server
+from ._fast_api_app import get_application, make_process_health
 from ._scheduler import run_scheduler_threaded, SchedulerState
+from ._server import default_config, run_server
 
 """Runs and observes regular jobs in the cmk.gui context"""
 

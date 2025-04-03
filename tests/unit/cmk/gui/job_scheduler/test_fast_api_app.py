@@ -28,7 +28,7 @@ from cmk.gui.background_job import (
     StartupError,
     TerminateRequest,
 )
-from cmk.gui.job_scheduler._background_jobs._app import get_application
+from cmk.gui.job_scheduler._fast_api_app import get_application
 from cmk.gui.job_scheduler._scheduler import ScheduledJob, SchedulerState
 
 logger = logging.getLogger(__name__)

@@ -10,6 +10,7 @@ from typing import Literal
 
 import pytest
 
+from tests.testlib.common.repo import current_branch_version
 from tests.testlib.pytest_helpers.calls import abort_if_not_containerized
 from tests.testlib.site import Site
 
@@ -21,7 +22,7 @@ class MonitoringPlugin:
     binary_name: str
     path: str = "lib/nagios/plugins"
     cmd_line_option: str = "-V"
-    expected: str = "v2.4.0"
+    expected: str = current_branch_version()
 
 
 @dataclass(frozen=True)
@@ -57,6 +58,7 @@ MONITORING_PLUGINS: Sequence[Plugin] = (
     MonitoringPlugin("check_host"),
     MonitoringPlugin("check_hpjd"),
     MonitoringPlugin("check_http"),
+    MonitoringPlugin("check_httpv2"),
     MonitoringPlugin("check_icmp"),
     MonitoringPlugin("check_ide_smart"),
     MonitoringPlugin("check_imap"),
@@ -143,6 +145,7 @@ MONITORING_PLUGINS: Sequence[Plugin] = (
     (pytest.param(p, id=f"{p.binary_name}") for p in MONITORING_PLUGINS),
 )
 def test_monitoring_plugins_can_be_executed(plugin: Plugin, site: Site) -> None:
+    """Validate the plugin's presence and version in the site."""
     abort_if_not_containerized(
         plugin.binary_name == "check_mysql"
     )  # What? Why? Is printing the version dangerous?

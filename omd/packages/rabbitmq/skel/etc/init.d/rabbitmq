@@ -24,6 +24,10 @@ MALLOC_ARENA_MAX="1"
 INITLOG="${RABBITMQ_LOG_BASE}/init.log"
 REMOTE_PIGGYBACK_HUB_STATES_FILE="${OMD_ROOT}/etc/check_mk/remote_piggyback_hub_status"
 
+services_needing_rabbitmq() {
+    printf "%s\n" "piggyback_hub"
+}
+
 getpid() {
     cat "${1}" 2>/dev/null
 }
@@ -111,17 +115,22 @@ stop_process() {
     kill "${1}" 2>/dev/null
 }
 
-local_rabbimq_enabled() {
-    # only enable rabbitmq if there's at least one service that needs it
-    # on the local or remote sites
-    [ "${CONFIG_PIGGYBACK_HUB:?}" = "on" ]
+required_by_local_services() {
+    while read -r service; do
+        omd -v status -b "${service}" | grep -q "^${service} 5$" || return 0
+    done <<<"$(services_needing_rabbitmq)"
+    return 1
 }
 
-remote_rabbimq_enabled() {
+required_by_remote_services() {
     cut -d' ' -f2 "${REMOTE_PIGGYBACK_HUB_STATES_FILE}" 2>/dev/null | grep -q "on"
 }
 
-local_rabbimq_enabled || remote_rabbimq_enabled || exit 5
+is_enabled() {
+    required_by_local_services || required_by_remote_services
+}
+
+is_enabled || exit 5
 
 case "$1" in
 

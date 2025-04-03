@@ -27,6 +27,12 @@ class CreateUserRole(BaseSchema):
         description="A new alias that you want to give to the newly created user role.",
         example="user_a",
     )
+    enforce_two_factor_authentication = fields.Boolean(
+        required=False,
+        description="If enabled, all users with this role will be required to setup two"
+        " factor authentication and will be logged out of any current sessions.",
+        example=False,
+    )
 
 
 class EditUserRole(BaseSchema):
@@ -57,4 +63,10 @@ class EditUserRole(BaseSchema):
         "'yes' - the permission is active for this role."
         "'no' - the permission is deactivated for this role, even if it was active in the role it was based on."
         "'default' - takes the activation state from the role this role was based on. ",
+    )
+    enforce_two_factor_authentication = fields.Boolean(
+        required=False,
+        description="If enabled, all users with this role will be required to setup two"
+        " factor authentication and will be logged out of any current sessions.",
+        example=False,
     )

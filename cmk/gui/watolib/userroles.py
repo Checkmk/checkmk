@@ -27,7 +27,10 @@ RoleID = NewType("RoleID", str)
 
 
 def clone_role(
-    role_id: RoleID, new_role_id: str | None = None, new_alias: str | None = None
+    role_id: RoleID,
+    new_role_id: str | None = None,
+    new_alias: str | None = None,
+    two_factor: bool | None = None,
 ) -> UserRole:
     all_roles: dict[RoleID, UserRole] = get_all_roles()
     role_to_clone: UserRole = get_role(role_id)
@@ -47,7 +50,7 @@ def clone_role(
     cloned_user_role = UserRole(
         name=new_role_id,
         basedon=role_to_clone.basedon or role_to_clone.name,
-        two_factor=role_to_clone.two_factor,
+        two_factor=role_to_clone.two_factor if two_factor is None else two_factor,
         alias=new_alias,
         permissions=role_to_clone.permissions,
     )

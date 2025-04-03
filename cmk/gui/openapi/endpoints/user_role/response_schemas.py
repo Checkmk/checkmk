@@ -21,6 +21,11 @@ class UserRoleAttributes(BaseSchema):
         required=True,
         description="True if it's a built-in user role, otherwise False.",
     )
+    enforce_two_factor_authentication = fields.Boolean(
+        required=False,
+        description="If enabled, all users with this role will be required to setup two"
+        " factor authentication and will be logged out of any current sessions.",
+    )
     basedon = fields.String(
         enum=builtin_role_ids,
         required=False,

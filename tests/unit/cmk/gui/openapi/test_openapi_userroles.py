@@ -10,7 +10,12 @@ from cmk.gui.config import builtin_role_ids
 
 def test_get_userrole_endpoint(clients: ClientRegistry) -> None:
     resp = clients.UserRole.get(role_id="admin")
-    assert resp.json["extensions"].keys() == {"alias", "permissions", "builtin"}
+    assert resp.json["extensions"].keys() == {
+        "alias",
+        "permissions",
+        "builtin",
+        "enforce_two_factor_authentication",
+    }
     assert {link["method"] for link in resp.json["links"]} == {"GET", "PUT"}
 
 
@@ -22,7 +27,13 @@ def test_get_userroles_endpoint(clients: ClientRegistry) -> None:
 def test_post_userrole_endpoint(clients: ClientRegistry) -> None:
     clients.UserRole.clone(body={"role_id": "admin"})
     resp = clients.UserRole.get(role_id="adminx")
-    assert resp.json["extensions"].keys() == {"alias", "permissions", "builtin", "basedon"}
+    assert resp.json["extensions"].keys() == {
+        "alias",
+        "permissions",
+        "builtin",
+        "basedon",
+        "enforce_two_factor_authentication",
+    }
     assert resp.json["id"] == "adminx"
     assert {link["method"] for link in resp.json["links"]} == {"GET", "PUT", "DELETE"}
 
@@ -36,6 +47,12 @@ def test_post_clone_userrole_new_alias(clients: ClientRegistry) -> None:
     clients.UserRole.clone(body={"role_id": "admin", "new_alias": "mr_silly"})
     resp = clients.UserRole.get(role_id="adminx")
     assert resp.json["extensions"]["alias"] == "mr_silly"
+
+
+def test_post_clone_userrole_new_two_factor(clients: ClientRegistry) -> None:
+    clients.UserRole.clone(body={"role_id": "admin", "enforce_two_factor_authentication": True})
+    resp = clients.UserRole.get(role_id="adminx")
+    assert resp.json["extensions"]["enforce_two_factor_authentication"] is True
 
 
 def test_delete_cloned_userrole(clients: ClientRegistry) -> None:
@@ -57,6 +74,12 @@ def test_delete_builtin_userrole(clients: ClientRegistry) -> None:
     assert (
         "The role should be a custom role but it's not: 'admin'" in resp.json["fields"]["role_id"]
     )
+
+
+def test_edit_cloned_userrole_two_factor(clients: ClientRegistry) -> None:
+    clients.UserRole.clone(body={"role_id": "admin"})
+    resp = clients.UserRole.edit(role_id="adminx", body={"enforce_two_factor_authentication": True})
+    assert resp.json["extensions"]["enforce_two_factor_authentication"] is True
 
 
 def test_edit_cloned_userrole_basedon(clients: ClientRegistry) -> None:

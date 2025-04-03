@@ -763,21 +763,13 @@ def _get_cluster_services(
         hn: make_table(hn, entries, autochecks_config)
         for hn, entries in nodes_discovery_results.items()
     }
-    active_nodes = [
-        hn
-        for hn, q in nodes_discovery_results.items()
-        for e in q.current
-        if appears_on_cluster(hn, e)
-    ]
     clusters_discovery_result = QualifiedDiscovery(
         preexisting=merge_cluster_autochecks(
             {hn: q.preexisting for hn, q in nodes_discovery_results.items()},
-            active_nodes,
             appears_on_cluster,
         ),
         current=merge_cluster_autochecks(
             {hn: q.current for hn, q in nodes_discovery_results.items()},
-            active_nodes,
             appears_on_cluster,
         ),
     )

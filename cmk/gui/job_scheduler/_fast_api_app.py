@@ -29,7 +29,8 @@ from cmk.gui.background_job import (
     StartResponse,
     TerminateRequest,
 )
-from cmk.gui.job_scheduler._scheduler import filter_running_jobs, SchedulerState
+
+from ._scheduler import filter_running_jobs, SchedulerState
 
 
 def get_application(

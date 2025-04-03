@@ -10,12 +10,25 @@ from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI
+from pydantic import BaseModel
 
-from ._config import ServerConfig
+
+class ServerConfig(BaseModel, frozen=True):
+    unix_socket: Path
+    access_log: Path
+    error_log: Path
+
+
+def default_config(omd_root: Path, run_path: Path, log_path: Path) -> ServerConfig:
+    return ServerConfig(
+        unix_socket=run_path / "ui-job-scheduler.sock",
+        access_log=log_path / "access.log",
+        error_log=log_path / "error.log",
+    )
 
 
 def run_server(config: ServerConfig, app: FastAPI, logger: Logger) -> None:
-    logger.info("Starting background job server")
+    logger.info("Starting server")
     try:
         with fix_uvicorn_unix_socket_permissions(config.unix_socket):
             uvicorn.run(
@@ -59,7 +72,7 @@ def run_server(config: ServerConfig, app: FastAPI, logger: Logger) -> None:
                 },
             )
     finally:
-        logger.info("Stopped background job server")
+        logger.info("Stopped server")
 
 
 @contextmanager

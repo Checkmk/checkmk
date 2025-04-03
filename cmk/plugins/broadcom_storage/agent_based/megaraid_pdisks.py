@@ -126,13 +126,16 @@ def discover_megaraid_pdisks(section: megaraid.SectionPDisks) -> DiscoveryResult
 
 def check_megaraid_pdisks(
     item: str,
-    params: Mapping[str, int],
+    params: Mapping[megaraid.RawState, int],
     section: megaraid.SectionPDisks,
 ) -> CheckResult:
     if (disk := section.get(item)) is None:
         return
 
-    state_map = {**_FIXED_STATES, **params}
+    state_map = {
+        **_FIXED_STATES,
+        **{megaraid.expand_abbreviation(key): value for key, value in params.items()},
+    }
     yield Result(
         state=State(state_map.get(disk.state, 3)),
         summary=f"{disk.state.capitalize()}",

@@ -8,7 +8,10 @@ from typing import Final, NamedTuple, TypeVar
 
 from cmk.agent_based.v2 import Result, State
 
-_ABBREVIATIONS: Final = {
+type RawState = str
+type StateLabel = str
+
+_ABBREVIATIONS: Final[dict[RawState, StateLabel]] = {
     "awb": "Always WriteBack",
     "b": "Blocked",
     "cac": "CacheCade",
@@ -92,14 +95,14 @@ def check_state(missmatch_state: State, label: str, actual: _T, expected: _T) ->
     return Result(state=missmatch_state, summary=f"{short} (expected: {expected})")
 
 
-PDISKS_DEFAULTS: Final = {
-    "Dedicated Hot Spare": 0,
-    "Global Hot Spare": 0,
-    "Unconfigured Good": 0,
-    "Unconfigured Bad": 1,
-    "Online": 0,
-    "Offline": 2,
-    "JBOD": 0,
+PDISKS_DEFAULTS: Final[dict[RawState, int]] = {
+    "dhs": State.OK.value,
+    "ghs": State.OK.value,
+    "ugood": State.OK.value,
+    "ubad": State.WARN.value,
+    "onln": State.OK.value,
+    "ofln": State.WARN.value,
+    "jbod": State.OK.value,
 }
 
 
@@ -112,7 +115,7 @@ LDISKS_DEFAULTS: Final = {
 }
 
 
-def expand_abbreviation(short: str) -> str:
+def expand_abbreviation(short: RawState) -> StateLabel:
     """
     >>> expand_abbreviation('Optl')
     'Optimal'

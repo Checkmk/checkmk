@@ -145,15 +145,15 @@ def _to_string_table(raw: str) -> StringTable:
 
 def test_parse_v1():
     assert parse_storcli_pdisks(_to_string_table(SECTION_V1)) == {
-        "C0.8:0-15": StorcliPDisk(size=(953.343, "GB"), state="Online"),
-        "C0.8:1-23": StorcliPDisk(size=(953.343, "GB"), state="Online"),
-        "C0.8:2-18": StorcliPDisk(size=(953.343, "GB"), state="Online"),
-        "C0.8:3-21": StorcliPDisk(size=(5.457, "TB"), state="Online"),
-        "C0.8:4-10": StorcliPDisk(size=(5.457, "TB"), state="Online"),
-        "C0.8:5-14": StorcliPDisk(size=(5.457, "TB"), state="Online"),
-        "C0.8:6-17": StorcliPDisk(size=(5.457, "TB"), state="Online"),
-        "C0.8:7-20": StorcliPDisk(size=(5.457, "TB"), state="Online"),
-        "C0.8:8-9": StorcliPDisk(size=(5.457, "TB"), state="Online"),
+        "C0.8:0-15": StorcliPDisk(size=(953.343, "GB"), state="Onln"),
+        "C0.8:1-23": StorcliPDisk(size=(953.343, "GB"), state="Onln"),
+        "C0.8:2-18": StorcliPDisk(size=(953.343, "GB"), state="Onln"),
+        "C0.8:3-21": StorcliPDisk(size=(5.457, "TB"), state="Onln"),
+        "C0.8:4-10": StorcliPDisk(size=(5.457, "TB"), state="Onln"),
+        "C0.8:5-14": StorcliPDisk(size=(5.457, "TB"), state="Onln"),
+        "C0.8:6-17": StorcliPDisk(size=(5.457, "TB"), state="Onln"),
+        "C0.8:7-20": StorcliPDisk(size=(5.457, "TB"), state="Onln"),
+        "C0.8:8-9": StorcliPDisk(size=(5.457, "TB"), state="Onln"),
     }
 
 
@@ -174,8 +174,8 @@ def test_parse_v3():
         "C0.8:1-15": StorcliPDisk(size=(10.914, "TB"), state="JBOD"),
         "C0.8:2-11": StorcliPDisk(size=(10.914, "TB"), state="JBOD"),
         "C0.8:3-17": StorcliPDisk(size=(10.914, "TB"), state="JBOD"),
-        "C0.9:10-36": StorcliPDisk(size=(931, "GB"), state="Online"),
-        "C0.9:11-34": StorcliPDisk(size=(931, "GB"), state="Online"),
+        "C0.9:10-36": StorcliPDisk(size=(931, "GB"), state="Onln"),
+        "C0.9:11-34": StorcliPDisk(size=(931, "GB"), state="Onln"),
     }
 
 

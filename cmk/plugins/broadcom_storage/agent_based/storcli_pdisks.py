@@ -20,7 +20,7 @@ from cmk.plugins.broadcom_storage.lib import megaraid
 
 
 class StorcliPDisk(NamedTuple):
-    state: str
+    state: megaraid.RawState
     size: tuple[float, str]
 
 
@@ -94,7 +94,7 @@ def parse_storcli_pdisks(string_table: StringTable) -> Section:
                 eid_and_slot, device_id, state, _status, _driver_group, size, size_unit = line[:7]
                 item_name = "C%i.%s-%s" % (controller_num, eid_and_slot, device_id)
                 section[item_name] = StorcliPDisk(
-                    state=megaraid.expand_abbreviation(state),
+                    state=state,
                     size=(float(size), size_unit),
                 )
         else:
@@ -102,7 +102,7 @@ def parse_storcli_pdisks(string_table: StringTable) -> Section:
                 eid_and_slot, device, state, _drivegroup, size, size_unit = line[:6]
                 item_name = "C%i.%s-%s" % (controller_num, eid_and_slot, device)
                 section[item_name] = StorcliPDisk(
-                    state=megaraid.expand_abbreviation(state),
+                    state=state,
                     size=(float(size), size_unit),
                 )
         controller_num += 1
@@ -122,19 +122,18 @@ def discover_storcli_pdisks(section: Section) -> DiscoveryResult:
 
 def check_storcli_pdisks(
     item: str,
-    params: Mapping[str, int],
+    params: Mapping[megaraid.RawState, int],
     section: Section,
 ) -> CheckResult:
     if item not in section:
         return
 
     size = section[item].size
-    infotext = f"Size: {size[0]} {size[1]}"
-
-    diskstate = section[item].state
-    infotext += ", Disk State: %s" % diskstate
-
-    status = params.get(diskstate, 3)
+    infotext = (
+        f"Size: {size[0]} {size[1]}, "
+        f"Disk State: {megaraid.expand_abbreviation(section[item].state)}"
+    )
+    status = params.get(section[item].state.lower(), State.UNKNOWN)
 
     yield Result(state=State(status), summary=infotext)
 

@@ -23,6 +23,7 @@ from cmk.gui.userdb import (
     get_ldap_connections,
     GroupsToAttributes,
     GroupsToContactGroups,
+    GroupsToRoles,
     GroupsToSync,
     ICONS_PER_ITEM,
     LDAPConnectionConfigDiscover,
@@ -660,6 +661,7 @@ class APIGroupsWithConnectionID(TypedDict):
 
 
 class APIGroupsToRoles(APICheckboxEnabled, total=False):
+    handle_nested: bool
     admin: list[APIGroupsWithConnectionID]
     agent_registration: list[APIGroupsWithConnectionID]
     guest: list[APIGroupsWithConnectionID]
@@ -978,21 +980,26 @@ def groups_to_attributes_api_to_int(
 
 def groups_to_roles_req_to_int(
     data: APIGroupsToRoles | APICheckboxDisabled | None,
-) -> None | dict[str, list[tuple[str, str | None]]]:
+) -> None | GroupsToRoles:
     if data is None:
         return None
 
     if data["state"] == "disabled":
         return None
 
-    groups_to_roles: dict[str, list[tuple[str, str | None]]] = {}
+    groups_to_roles: GroupsToRoles = {}
+
     for role, groups in {k: v for k, v in data.items() if isinstance(v, list)}.items():
-        groups_to_roles[role] = []
-        for group in groups:
-            if group["search_in"] == "this_connection":
-                groups_to_roles[role].append((group["group_dn"], None))
-            else:
-                groups_to_roles[role].append((group["group_dn"], group["search_in"]))
+        groups_to_roles[role] = [
+            (
+                group["group_dn"],
+                None if group["search_in"] == "this_connection" else group["search_in"],
+            )
+            for group in groups
+        ]
+
+    if "handle_nested" in data and data["handle_nested"]:
+        groups_to_roles["nested"] = True
 
     return groups_to_roles
 
@@ -1099,6 +1106,10 @@ class SyncPlugins:
         if internal_groups_to_roles := self.active_plugins.get("groups_to_roles"):
             groups_to_roles: APIGroupsToRoles = {"state": "enabled"}
             for k, v in internal_groups_to_roles.items():
+                if v is True:
+                    groups_to_roles["handle_nested"] = True
+                    continue
+
                 groups_to_roles[k] = [  # type: ignore[literal-required]
                     {
                         "group_dn": groupdn,

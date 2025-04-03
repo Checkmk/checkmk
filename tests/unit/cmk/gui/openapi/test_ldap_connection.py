@@ -161,6 +161,7 @@ def ldap_api_schema(ldap_id: str) -> dict:
                 "user": [
                     {"group_dn": "CN=cmk_AD_users,ou=Gruppen,dc=corp,dc=de", "search_in": "LDAP_1"}
                 ],
+                "handle_nested": True,
             },
         },
         "other": {

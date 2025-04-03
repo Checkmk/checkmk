@@ -1040,8 +1040,8 @@ class ModeEditLDAPConnection(WatoMode):
 
         num_groups = 0
         for role_id, group_specs in active_plugins["groups_to_roles"].items():
-            if not isinstance(group_specs, list):
-                group_specs = [group_specs]
+            if group_specs is True:
+                continue
 
             for group_spec in group_specs:
                 if isinstance(group_spec, str):

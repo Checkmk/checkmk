@@ -415,6 +415,19 @@ class Discovery:
             affected_host_name,
             len(autochecks_table.target_services),
         )
+        self._add_service_change(message, need_sync, old_autochecks, autochecks_table)
+        set_autochecks_v2(
+            self._host.site_id(),
+            autochecks_table,
+        )
+
+    def _add_service_change(
+        self,
+        message: str,
+        need_sync: bool,
+        old_autochecks: SetAutochecksInput,
+        autochecks_table: SetAutochecksInput,
+    ) -> None:
         _changes.add_service_change(
             action_name="set-autochecks",
             text=message,
@@ -427,10 +440,6 @@ class Discovery:
                 _make_host_audit_log_object(old_autochecks),
                 _make_host_audit_log_object(autochecks_table),
             ),
-        )
-        set_autochecks_v2(
-            self._host.site_id(),
-            autochecks_table,
         )
 
     def _get_table_target(self, entry: CheckPreviewEntry) -> str:

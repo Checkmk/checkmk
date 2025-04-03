@@ -321,7 +321,7 @@ class Discovery:
             need_sync = False
             if remove_disabled_rule or add_disabled_rule:
                 add_disabled_rule = add_disabled_rule - remove_disabled_rule - saved_services
-                EnabledDisabledServicesEditor(self._host).save_host_service_enable_disable_rules(
+                self._save_host_service_enable_disable_rules(
                     remove_disabled_rule, add_disabled_rule
                 )
                 need_sync = True
@@ -335,6 +335,13 @@ class Discovery:
                 ),
                 need_sync,
             )
+
+    def _save_host_service_enable_disable_rules(
+        self, remove_disabled_rule: set[str], add_disabled_rule: set[str]
+    ) -> None:
+        EnabledDisabledServicesEditor(self._host).save_host_service_enable_disable_rules(
+            remove_disabled_rule, add_disabled_rule
+        )
 
     def _verify_permissions(self, table_target: str, entry: CheckPreviewEntry) -> None:
         if entry.check_source != table_target:

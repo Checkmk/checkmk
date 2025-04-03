@@ -47,6 +47,7 @@ from . import (
     _snapins,
     _tracing,
     filters,
+    piggyback_hub,
 )
 from . import pages as wato_pages
 from ._notification_parameter import registration as _notification_parameter_registration
@@ -141,3 +142,4 @@ def register(
     _notification_settings.register(config_variable_registry)
     _notification_parameter_registration.register(notification_parameter_registry)
     snapin_registry.register(VirtualHostTree)
+    piggyback_hub.register(config_variable_registry)

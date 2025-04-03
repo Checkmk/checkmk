@@ -178,6 +178,7 @@ def test_registered_configvars() -> None:
         "site_core",
         "site_livestatus_tcp",
         "site_mkeventd",
+        "site_piggyback_hub",
         "slow_views_duration_threshold",
         "snmp_credentials",
         "socket_queue_len",

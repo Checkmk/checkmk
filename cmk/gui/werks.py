@@ -54,7 +54,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import Page, PageRegistry, PageResult
 from cmk.gui.table import Table, table_element
 from cmk.gui.utils.escaping import escape_to_html_permissive, strip_tags
-from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
+from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
@@ -187,8 +187,7 @@ def handle_acknowledgement() -> None:
     elif request.var("_ack_all"):
         num = len(unacknowledged_incompatible_werks())
         acknowledge_all_werks()
-        flash(_("%d incompatible Werks have been acknowledged.") % num)
-        html.reload_whole_page()
+        html.show_message(_("%d incompatible Werks have been acknowledged.") % num)
 
 
 def _page_menu_entries_ack_all_werks() -> Iterator[PageMenuEntry]:

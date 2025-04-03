@@ -8,8 +8,8 @@ from typing import Final
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State
+from cmk.plugins.broadcom_storage.agent_based import megaraid_pdisks
 from cmk.plugins.broadcom_storage.lib import megaraid
-from cmk.plugins.collection.agent_based import megaraid_pdisks
 
 STRING_TABLE: Final = [
     ["Enclosure", "Device", "ID:", "10"],

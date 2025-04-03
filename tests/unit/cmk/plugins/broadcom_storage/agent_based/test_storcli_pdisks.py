@@ -6,12 +6,12 @@
 import re
 
 from cmk.agent_based.v2 import Result, State, StringTable
-from cmk.plugins.broadcom_storage.lib import megaraid
-from cmk.plugins.collection.agent_based.storcli_pdisks import (
+from cmk.plugins.broadcom_storage.agent_based.storcli_pdisks import (
     check_storcli_pdisks,
     parse_storcli_pdisks,
     StorcliPDisk,
 )
+from cmk.plugins.broadcom_storage.lib import megaraid
 
 # agent_output/CMK-7584-storcli_pdisks
 SECTION_V1 = """CLI Version = 007.1017.0000.0000 May 10, 2019

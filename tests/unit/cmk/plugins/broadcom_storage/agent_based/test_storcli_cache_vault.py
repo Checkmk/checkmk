@@ -7,7 +7,7 @@ from typing import Final
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.plugins.collection.agent_based import storcli_cache_vault as mcv
+from cmk.plugins.broadcom_storage.agent_based import storcli_cache_vault as mcv
 
 OUTPUT: Final = """
 CLI Version = 007.0916.0000.0000 Apr 05, 2019

@@ -6,8 +6,10 @@ from typing import Final
 
 import pytest
 
+from cmk.plugins.broadcom_storage.agent_based.storcli_physical_disks import (
+    parse_storcli_physical_disks,
+)
 from cmk.plugins.broadcom_storage.lib import megaraid
-from cmk.plugins.collection.agent_based.storcli_physical_disks import parse_storcli_physical_disks
 
 OUTPUT: Final = """
 CLI Version = 007.0709.0000.0000 Aug 14, 2018

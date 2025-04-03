@@ -7,12 +7,12 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.plugins.broadcom_storage.lib.megaraid import LDISKS_DEFAULTS
-from cmk.plugins.collection.agent_based.storcli_vdrives import (
+from cmk.plugins.broadcom_storage.agent_based.storcli_vdrives import (
     check_storcli_vdrives,
     discover_storcli_vdrives,
     parse_storcli_vdrives,
 )
+from cmk.plugins.broadcom_storage.lib.megaraid import LDISKS_DEFAULTS
 
 STRING_TABLE = [
     ["------------------------------------------------------------------------"],

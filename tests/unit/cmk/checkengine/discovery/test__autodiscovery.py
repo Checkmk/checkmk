@@ -54,11 +54,11 @@ AUTOCHECK_3B = AutocheckEntry(
     {"parameter_common": "b"},
     {"label_common": "b"},
 )
-AUTOCHECK_3_MERGED_B_ACTIVE = AutocheckEntry(
+AUTOCHECK_3C = AutocheckEntry(
     CheckPluginName("check_plugin_3"),
     "Item",
-    {"parameter_common": "b"},
-    {"label_common": "b"},
+    {"parameter_common": "c"},
+    {"label_common": "c"},
 )
 
 
@@ -307,13 +307,51 @@ def test_get_host_services_by_host_name_params_prio_on_active_nodes() -> None:
         autochecks_config=_AutochecksConfigDummy(effective_host=CLUSTER),
         enforced_services={},
     )[CLUSTER] == {
-        "unchanged": [
+        "unchanged": [  # FIXME
+            # I believe the above should be "changed". The service *now* is discovered on NODE_2,
+            # but that does not mean we should prioritize NODE_2 over NODE_1 when computing the
+            # previous service. When both nodes had the service in the autochecks, the checking
+            # will have prioritized NODE_1, so the transition described here is a change.
             AutocheckServiceWithNodes(
                 service=DiscoveredItem(
-                    previous=AUTOCHECK_3_MERGED_B_ACTIVE, new=AUTOCHECK_3_MERGED_B_ACTIVE
+                    previous=AUTOCHECK_3B,  # FIXME
+                    new=AUTOCHECK_3B,
                 ),
                 nodes=[NODE_2],
             )
+        ],
+    }
+
+
+def test_get_host_services_by_host_name_params_prio_on_active_nodes_multiple_nodes() -> None:
+    assert get_host_services_by_host_name(
+        CLUSTER,
+        existing_services={
+            NODE_1: [AUTOCHECK_3A, AUTOCHECK_1A],
+            NODE_2: [AUTOCHECK_3B],
+            NODE_3: [AUTOCHECK_3C],
+        },
+        discovered_services={
+            NODE_1: [AUTOCHECK_1A],
+            NODE_2: [AUTOCHECK_3B],
+            NODE_3: [],
+        },
+        is_cluster=True,
+        cluster_nodes=(NODE_1, NODE_2, NODE_3),
+        autochecks_config=_AutochecksConfigDummy(effective_host=CLUSTER),
+        enforced_services={},
+    )[CLUSTER] == {
+        "unchanged": [
+            AutocheckServiceWithNodes(
+                service=DiscoveredItem(previous=AUTOCHECK_1A, new=AUTOCHECK_1A),
+                nodes=[NODE_1],
+            )
+        ],
+        "changed": [
+            AutocheckServiceWithNodes(
+                service=DiscoveredItem(previous=AUTOCHECK_3A, new=AUTOCHECK_3B),
+                nodes=[NODE_2],
+            ),
         ],
     }
 
@@ -328,8 +366,8 @@ def test_get_host_services_by_host_name_move_mutiple_nodes_and_autochecks() -> N
         },
         discovered_services={
             NODE_1: [],
-            NODE_2: [],
-            NODE_3: [AUTOCHECK_1A, AUTOCHECK_2],
+            NODE_2: [AUTOCHECK_1A],
+            NODE_3: [AUTOCHECK_2],
         },
         is_cluster=True,
         cluster_nodes=(NODE_1, NODE_2, NODE_3),
@@ -339,7 +377,7 @@ def test_get_host_services_by_host_name_move_mutiple_nodes_and_autochecks() -> N
         "unchanged": [
             AutocheckServiceWithNodes(
                 service=DiscoveredItem(previous=AUTOCHECK_1A, new=AUTOCHECK_1A),
-                nodes=[NODE_3],
+                nodes=[NODE_2],
             ),
             AutocheckServiceWithNodes(
                 service=DiscoveredItem(previous=AUTOCHECK_2, new=AUTOCHECK_2),

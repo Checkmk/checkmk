@@ -119,6 +119,13 @@ def main() {
                                 DISTRO: "ubuntu-22.04",
                                 EDITION: "enterprise",
                             ];
+                            break;
+                        case "Python Werks Commands":
+                            relative_job_name = "${branch_base_folder}/cv/test-werks-commands";
+                            build_params << [
+                                CUSTOM_GIT_REF: GERRIT_PATCHSET_REVISION,
+                            ];
+                            break;
                         default:
                             relative_job_name = "${branch_base_folder}/cv/test-gerrit-single";
                             build_params << [
@@ -133,6 +140,7 @@ def main() {
                                 CIPARAM_RESULT_CHECK_FILE_PATTERN: item.RESULT_CHECK_FILE_PATTERN,
                                 CIPARAM_BAZEL_LOCKS_AMOUNT: item.BAZEL_LOCKS_AMOUNT,
                             ];
+                            break;
                     }
                     build_instance = smart_build(
                         // see global-defaults.yml, needs to run in minimal container

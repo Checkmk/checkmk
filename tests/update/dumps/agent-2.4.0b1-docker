@@ -1,0 +1,318 @@
+<<<check_mk>>>
+Version: 2.4.0b1
+AgentOS: linux
+Hostname: 96f345a3f69c
+AgentDirectory: /etc/check_mk
+DataDirectory: /var/lib/check_mk_agent
+SpoolDirectory: /var/lib/check_mk_agent/spool
+PluginsDirectory: /usr/lib/check_mk_agent/plugins
+LocalDirectory: /usr/lib/check_mk_agent/local
+OSType: linux
+OSName: Ubuntu
+OSVersion: 22.04
+OSPlatform: ubuntu
+FailedPythonReason:
+SSHClient:
+<<<cmk_agent_ctl_status:sep(0)>>>
+{"version":"2.4.0b1","agent_socket_operational":true,"ip_allowlist":[],"allow_legacy_pull":false,"connections":[]}
+<<<checkmk_agent_plugins_lnx:sep(0)>>>
+pluginsdir /usr/lib/check_mk_agent/plugins
+localdir /usr/lib/check_mk_agent/local
+<<<labels:sep(0)>>>
+{"cmk/device_type":"container"}
+<<<systemd_units>>>
+[list-unit-files]
+[status]
+[all]
+<<<nfsmounts_v2:sep(0)>>>
+<<<cifsmounts>>>
+<<<mounts>>>
+/dev/mapper/vgubuntu-root /usr/sbin/docker-init ext4 ro,relatime,errors=remount-ro 0 0
+/dev/mapper/vgubuntu-root /git-lowerdir ext4 ro,relatime,errors=remount-ro 0 0
+/dev/mapper/vgubuntu-root /etc/.cmk-credentials ext4 ro,relatime,errors=remount-ro 0 0
+/dev/mapper/vgubuntu-root /etc/resolv.conf ext4 rw,relatime,errors=remount-ro 0 0
+/dev/mapper/vgubuntu-root /etc/hostname ext4 rw,relatime,errors=remount-ro 0 0
+/dev/mapper/vgubuntu-root /etc/hosts ext4 rw,relatime,errors=remount-ro 0 0
+<<<ps_lnx>>>
+[time]
+1742304608
+[processes]
+[header] CGROUP USER VSZ RSS TIME ELAPSED PID COMMAND
+- root 1136 512 00:00:00 07:38 1 /sbin/docker-init -- /opt/entrypoint.sh /bin/bash
+- root 5048 3968 00:00:00 07:38 7 /bin/bash
+- testuser 26791448 1112480 00:01:20 07:02 166 bazel(git) --add-opens=java.base/java.lang=ALL-UNNAMED -Xverify:none -Djava.util.logging.config.file=/home/testuser/.cache/bazel/_bazel_testuser/8d4041f058dd2262e83830e1db38cc6d/javalog.properties -Dcom.google.devtools.build.lib.util.LogHandlerQuerier.class=com.google.devtools.build.lib.util.SimpleLogHandler$HandlerQuerier -XX:-MaxFDLimit -Djava.library.path=/home/testuser/.cache/bazel/_bazel_testuser/install/937e6e0d806e40997135c14c1d61532a/embedded_tools/jdk/lib:/home/testuser/.cache/bazel/_bazel_testuser/install/937e6e0d806e40997135c14c1d61532a/embedded_tools/jdk/lib/server:/home/testuser/.cache/bazel/_bazel_testuser/install/937e6e0d806e40997135c14c1d61532a/ -Dfile.encoding=ISO-8859-1 -Duser.country= -Duser.language= -Duser.variant= -jar /home/testuser/.cache/bazel/_bazel_testuser/install/937e6e0d806e40997135c14c1d61532a/A-server.jar --max_idle_secs=10800 --noshutdown_on_low_sys_mem --connect_timeout_secs=30 --output_user_root=/home/testuser/.cache/bazel/_bazel_testuser --install_base=/home/testuser/.cache/bazel/_bazel_testuser/install/937e6e0d806e40997135c14c1d61532a --install_md5=937e6e0d806e40997135c14c1d61532a --output_base=/home/testuser/.cache/bazel/_bazel_testuser/8d4041f058dd2262e83830e1db38cc6d --workspace_directory=/git --default_system_javabase= --failure_detail_out=/home/testuser/.cache/bazel/_bazel_testuser/8d4041f058dd2262e83830e1db38cc6d/failure_detail.rawproto --expand_configs_in_place --idle_server_tasks --write_command_log --nowatchfs --nofatal_event_bus_exceptions --nowindows_enable_symlinks --client_debug=false --product_name=Bazel --option_sources=
+- root 8908 5248 00:00:00 06:48 2183 sudo su --pty - testuser -c source /git/.venv/bin/activate; bash
+- root 8908 2416 00:00:00 06:47 2189 sudo su --pty - testuser -c source /git/.venv/bin/activate; bash
+- root 7652 4736 00:00:00 06:47 2190 su --pty - testuser -c source /git/.venv/bin/activate; bash
+- testuser 4628 3712 00:00:00 06:47 2191 bash
+- root 7168 5224 00:00:00 04:49 4648 /usr/sbin/apache2 -k graceful
+- testuser 433604 109996 00:00:01 01:12 15031 /git/.venv/bin/python3 /git/.venv/bin/pytest -T integration test_checks_sanity.py --log-cli-level=INFO -k test_checks_sanity
+- root 5048 3968 00:00:00 00:58 15208 bash
+- www-data 1998620 5100 00:00:00 00:50 15227 /usr/sbin/apache2 -k graceful
+- www-data 1998620 5100 00:00:00 00:50 15228 /usr/sbin/apache2 -k graceful
+- int_test 37404 23952 00:00:00 00:42 17758 gunicorn: master [cmk.agent_receiver.main:main_app()]
+- int_test 75616 61808 00:00:00 00:41 17763 gunicorn: worker [cmk.agent_receiver.main:main_app()]
+- int_test 216760 43000 00:00:00 00:41 17765 python3 /omd/sites/int_test/bin/mkeventd
+- int_test 68844 37528 00:00:00 00:41 17773 liveproxyd[master]
+- int_test 46444 26712 00:00:00 00:41 17787 python3 /omd/sites/int_test/bin/mknotifyd
+- int_test 90552 2236 00:00:00 00:41 17791 /omd/sites/int_test/bin/rrdcached -t 4 -w 3600 -z 1800 -f 7200 -s int_test -m 660 -l unix:/omd/sites/int_test/tmp/run/rrdcached.sock -p /omd/sites/int_test/tmp/rrdcached.pid -j /omd/sites/int_test/var/rrdcached -o /omd/sites/int_test/var/log/rrdcached.log
+- int_test 73484 13472 00:00:00 00:41 17802 /omd/sites/int_test/bin/redis-server unixsocket:/omd/sites/int_test/tmp/run/redis
+- int_test 924532 77640 00:00:00 00:40 17815 gunicorn: master [automation-helper]
+- int_test 986136 140372 00:00:01 00:40 17827 gunicorn: worker [automation-helper]
+- int_test 1005656 162912 00:00:01 00:40 17828 gunicorn: worker [automation-helper]
+- int_test 877900 321796 00:00:05 00:39 17842 cmk-ui-job-scheduler
+- int_test 1799536 13948 00:00:00 00:39 17856 /omd/sites/int_test/bin/cmc /omd/sites/int_test/var/check_mk/core/config.pb
+- int_test 92604 42060 00:00:00 00:39 17880 python3 /omd/sites/int_test/bin/cmk-create-rrd
+- int_test 158580 139160 00:00:01 00:39 17882 python3 /omd/sites/int_test/bin/cmk --handle-alerts
+- int_test 6304 3200 00:00:00 00:39 17886 /omd/sites/int_test/lib/cmc/checkhelper
+- int_test 6304 3328 00:00:00 00:39 17887 /omd/sites/int_test/lib/cmc/checkhelper
+- int_test 157632 137776 00:00:01 00:39 17888 python3 /omd/sites/int_test/bin/cmk -v --checker
+- int_test 157748 138804 00:00:01 00:39 17889 python3 /omd/sites/int_test/bin/cmk -v --checker
+- int_test 61268 51000 00:00:00 00:39 17890 python3 /omd/sites/int_test/bin/fetcher
+- int_test 61268 51128 00:00:00 00:39 17891 python3 /omd/sites/int_test/bin/fetcher
+- int_test 97452 79484 00:00:00 00:39 17892 python3 /omd/sites/int_test/bin/cmk --notify --keepalive
+- int_test 4624 2048 00:00:00 00:39 17893 /omd/sites/int_test/lib/cmc/icmpsender 8 0 1000
+- int_test 10676 5632 00:00:00 00:39 17894 /omd/sites/int_test/lib/cmc/icmpreceiver
+- int_test 15672 6872 00:00:00 00:39 17925 /usr/sbin/apache2 -f /omd/sites/int_test/etc/apache/apache.conf
+- int_test 15648 3424 00:00:00 00:39 17928 /usr/sbin/apache2 -f /omd/sites/int_test/etc/apache/apache.conf
+- int_test 332656 263008 00:00:03 00:39 17929 /usr/sbin/apache2 -f /omd/sites/int_test/etc/apache/apache.conf
+- int_test 286104 46460 00:00:00 00:38 17945 dcd
+- int_test 5588 2572 00:00:00 00:38 17957 /omd/sites/int_test/var/tmp/xinetd -pidfile /omd/sites/int_test/tmp/run/xinetd.pid -filelog /omd/sites/int_test/var/log/xinetd.log -f /omd/sites/int_test/etc/xinetd.conf
+- int_test 408424 264872 00:00:06 00:35 18245 /usr/sbin/apache2 -f /omd/sites/int_test/etc/apache/apache.conf
+- int_test 332660 262872 00:00:04 00:31 18306 /usr/sbin/apache2 -f /omd/sites/int_test/etc/apache/apache.conf
+- int_test 332812 262956 00:00:03 00:26 18318 /usr/sbin/apache2 -f /omd/sites/int_test/etc/apache/apache.conf
+- int_test 310744 248888 00:00:03 00:22 18319 /usr/sbin/apache2 -f /omd/sites/int_test/etc/apache/apache.conf
+- root 8860 5248 00:00:00 00:14 19126 sudo --preserve-env=TRACEPARENT /git/.venv/bin/python3 -B /git/tests/scripts/agent_controller_daemon.py --agent-controller-path /usr/bin/cmk-agent-ctl
+- root 39608 20864 00:00:00 00:14 19128 /git/.venv/bin/python3 -B /git/tests/scripts/agent_controller_daemon.py --agent-controller-path /usr/bin/cmk-agent-ctl
+- root 39608 15596 00:00:00 00:14 19132 /git/.venv/bin/python3 -B /git/tests/scripts/agent_controller_daemon.py --agent-controller-path /usr/bin/cmk-agent-ctl
+- cmk-agent 18584 4608 00:00:00 00:14 19133 /usr/bin/cmk-agent-ctl daemon
+- cmk-agent 12304 4224 00:00:00 00:00 19504 cmk-agent-ctl dump
+- root 5972 4352 00:00:00 00:00 19505 /bin/bash /usr/bin/check_mk_agent
+- root 5972 3452 00:00:00 00:00 19523 /bin/bash /usr/bin/check_mk_agent
+- root 5972 3068 00:00:00 00:00 19524 /bin/bash /usr/bin/check_mk_agent
+- root 3352 1664 00:00:00 00:00 19526 cat
+- root 5972 2876 00:00:00 00:00 19551 /bin/bash /usr/bin/check_mk_agent
+- root 7484 3072 00:00:00 00:00 19552 ps ax -ww -o cgroup:512,user:32,vsz,rss,cputime,etime,pid,command
+- root 3236 1792 00:00:00 00:00 19553 tr -s
+<<<docker_container_mem_cgroupv2>>>
+anon 3656720384
+file 3394113536
+kernel 489283584
+kernel_stack 5013504
+pagetables 15155200
+sec_pagetables 0
+percpu 25128
+sock 8192
+vmalloc 69632
+shmem 1004998656
+zswap 0
+zswapped 0
+file_mapped 50667520
+file_dirty 18239488
+file_writeback 0
+swapcached 0
+anon_thp 0
+file_thp 0
+shmem_thp 0
+inactive_anon 987095040
+active_anon 3674443776
+inactive_file 2318782464
+active_file 70463488
+unevictable 0
+slab_reclaimable 426676320
+slab_unreclaimable 41855560
+slab 468531880
+workingset_refault_anon 0
+workingset_refault_file 11856
+workingset_activate_anon 0
+workingset_activate_file 11856
+workingset_restore_anon 0
+workingset_restore_file 9223
+workingset_nodereclaim 0
+pgscan 312960
+pgsteal 308743
+pgscan_kswapd 308608
+pgscan_direct 4352
+pgscan_khugepaged 0
+pgsteal_kswapd 304391
+pgsteal_direct 4352
+pgsteal_khugepaged 0
+pgfault 8508528
+pgmajfault 320
+pgrefill 11319
+pgactivate 141
+pgdeactivate 0
+pglazyfree 5967
+pglazyfreed 0
+zswpin 0
+zswpout 0
+zswpwb 0
+thp_fault_alloc 0
+thp_collapse_alloc 0
+thp_swpout 0
+thp_swpout_fallback 0
+memory.current 7541264384
+memory.max max
+MemTotal:       65560332 kB
+<<<docker_container_cpu_cgroupv2>>>
+uptime 21926.91 315005.84
+num_cpus 16
+usage_usec 366486778
+user_usec 319343478
+system_usec 47143299
+core_sched.force_idle_usec 0
+nr_periods 0
+nr_throttled 0
+throttled_usec 0
+nr_bursts 0
+burst_usec 0
+<<<uptime>>>
+458
+<<<lnx_if:sep(58)>>>
+    lo: 17256788    4692    0    0    0     0          0         0 17256788    4692    0    0    0     0       0          0
+  eth0: 143506499   68348    0    0    0     0          0         0  2273872   28928    0    0    0     0       0          0
+[lo]
+Address: 00:00:00:00:00:00
+[eth0]
+Speed: 10000Mb/s
+Address: be:5e:1e:b6:23:7f
+<<<tcp_conn_stats>>>
+08 2
+01 2
+0A 5
+05 2
+06 5
+<<<docker_container_diskstat_cgroupv2>>>
+[time]
+1742304608
+[io.stat]
+259:0 rbytes=57958400 wbytes=0 rios=1940 wios=2979 dbytes=0 dios=0
+252:0 rbytes=57958400 wbytes=3850305536 rios=1940 wios=66820 dbytes=0 dios=0
+252:1 rbytes=57958400 wbytes=4077060096 rios=1940 wios=86320 dbytes=0 dios=0
+[names]
+dm-0 252:0
+dm-1 252:1
+dm-2 252:2
+loop0 7:0
+loop1 7:1
+loop10 7:10
+loop11 7:11
+loop12 7:12
+loop13 7:13
+loop14 7:14
+loop15 7:15
+loop16 7:16
+loop17 7:17
+loop18 7:18
+loop19 7:19
+loop2 7:2
+loop20 7:20
+loop21 7:21
+loop22 7:22
+loop23 7:23
+loop24 7:24
+loop25 7:25
+loop26 7:26
+loop27 7:27
+loop28 7:28
+loop3 7:3
+loop4 7:4
+loop5 7:5
+loop6 7:6
+loop7 7:7
+loop8 7:8
+loop9 7:9
+nvme0n1 259:0
+sda 8:0
+sdb 8:16
+<<<md>>>
+Personalities :
+unused devices: <none>
+<<<vbox_guest>>>
+<<<nullmailer_mailq>>>
+4 0 deferred
+4 0 failed
+<<<livestatus_status:sep(59)>>>
+[int_test]
+accept_passive_host_checks;accept_passive_service_checks;average_latency_checker;average_latency_fetcher;average_latency_generic;average_latency_real_time;average_runnable_jobs_checker;average_runnable_jobs_fetcher;cached_log_messages;carbon_bytes_sent;carbon_bytes_sent_rate;carbon_overflows;carbon_overflows_rate;carbon_queue_usage;carbon_queue_usage_rate;check_external_commands;check_host_freshness;check_service_freshness;connections;connections_rate;core_pid;edition;enable_event_handlers;enable_flap_detection;enable_notifications;execute_host_checks;execute_service_checks;external_command_buffer_max;external_command_buffer_slots;external_command_buffer_usage;external_commands;external_commands_rate;forks;forks_rate;has_event_handlers;helper_usage_checker;helper_usage_fetcher;helper_usage_generic;helper_usage_real_time;host_checks;host_checks_rate;influxdb_bytes_sent;influxdb_bytes_sent_rate;influxdb_overflows;influxdb_overflows_rate;influxdb_queue_usage;influxdb_queue_usage_rate;interval_length;last_command_check;last_log_rotation;license_usage_history;livechecks;livechecks_rate;livestatus_active_connections;livestatus_overflows;livestatus_overflows_rate;livestatus_queued_connections;livestatus_threads;livestatus_usage;livestatus_version;log_messages;log_messages_rate;max_long_output_size;metrics_count;metrics_count_rate;mk_inventory_last;nagios_pid;neb_callbacks;neb_callbacks_rate;num_hosts;num_queued_alerts;num_queued_notifications;num_services;obsess_over_hosts;obsess_over_services;perf_data_count;perf_data_count_rate;process_performance_data;program_start;program_version;requests;requests_rate;rrdcached_bytes_sent;rrdcached_bytes_sent_rate;rrdcached_overflows;rrdcached_overflows_rate;rrdcached_queue_usage;rrdcached_queue_usage_rate;service_checks;service_checks_rate;state_file_created
+1;1;0;0;0;0;0;0;0;0;0;0;0;0;0;1;1;1;14;0.402979;17856;enterprise;1;1;1;1;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;60;0;1742304569;LQ't#$x~}Qi Qb]`Q[ Q9:DE@CJQi ,LQ:?DE2?460:5Qi Q5h25fd_d\c6_h\c6bb\heg6\gf5fd6a2_2a6Q[ QD:E6092D9Qi Qa7egh5ah525_cg5bb`5266e2___37ffa_74e`2cd54da_6edd6656gd55fb47bd5Q[ QG6CD:@?Qi Qa]c]_3`]466Q[ Q65:E:@?Qi Q466Q[ QA=2E7@C>Qi Q&3F?EF aa]_c]d {%$Q[ Q:D04>2Qi 72=D6[ QD2>A=60E:>6Qi `fcaade___[ QE:>6K@?6Qi Q&%rQ[ Q?F>09@DEDQi _[ Q?F>09@DED04=@F5Qi _[ Q?F>09@DED0D925@HQi _[ Q?F>09@DED06I4=F565Qi _[ Q?F>0D6CG:46DQi _[ Q?F>0D6CG:46D04=@F5Qi _[ Q?F>0D6CG:46D0D925@HQi _[ Q?F>0D6CG:46D06I4=F565Qi _[ Q?F>0DJ?E96E:40E6DEDQi _[ Q?F>0DJ?E96E:40E6DED06I4=F565Qi _[ Q?F>0DJ?E96E:40<A:DQi _[ Q?F>0DJ?E96E:40<A:D06I4=F565Qi _[ Q6IE6?D:@?0?E@AQi 72=D6N.N;0;0;1;0;0;0;20;0;2.4.0b1;6;0.198633;2000;0;0;0;17856;0;0;0;0;0;0;0;0;0;0;1;1742304592;Check_MK 2.4.0b1;29;0.862207;0;0;0;0;0;0;0;0;0
+<<<livestatus_ssl_certs:sep(124)>>>
+[int_test]
+/omd/sites/int_test/etc/ssl/ca.pem|2057837339
+/omd/sites/int_test/etc/ssl/sites/int_test.pem|2057837340
+<<<mkeventd_status:sep(0)>>>
+["int_test"]
+[["status_config_load_time", "status_num_open_events", "status_virtual_memory_size", "status_messages", "status_message_rate", "status_average_message_rate", "status_rule_tries", "status_rule_trie_rate", "status_average_rule_trie_rate", "status_rule_hits", "status_rule_hit_rate", "status_average_rule_hit_rate", "status_drops", "status_drop_rate", "status_average_drop_rate", "status_overflows", "status_overflow_rate", "status_average_overflow_rate", "status_events", "status_event_rate", "status_average_event_rate", "status_connects", "status_connect_rate", "status_average_connect_rate", "status_average_processing_time", "status_average_sync_time", "status_average_request_time", "status_replication_slavemode", "status_replication_last_sync", "status_replication_success", "status_event_limit_host", "status_event_limit_rule", "status_event_limit_overall", "status_event_limit_active_hosts", "status_event_limit_active_rules", "status_event_limit_active_overall"], [1742304567, 0, 221962240, 0, 0.0, 0.0, 0, 0.0, 0.0, 0, 0.0, 0.0, 0, 0.0, 0.0, 0, 0.0, 0.0, 0, 0.0, 0.0, 3, 0.0, 0.030779085882655714, 0.0, 0.0, 0.00014307498931884766, "master", 0.0, false, 1000, 1000, 10000, [], [], false]]
+<<<cmk_site_statistics:sep(59)>>>
+[int_test]
+0;0;0;0
+0;0;0;0;0;0
+<<<job>>>
+<<<omd_status:cached(1742304595,60)>>>
+[int_test]
+agent-receiver 0
+mkeventd 0
+liveproxyd 0
+mknotifyd 0
+rrdcached 0
+redis 0
+automation-helper 0
+ui-job-scheduler 0
+cmc 0
+apache 0
+dcd 0
+xinetd 0
+crontab 0
+OVERALL 0
+<<<omd_broker_status:sep(0)>>>
+
+<<<omd_broker_queues:sep(0)>>>
+
+<<<omd_broker_shovels:sep(0)>>>
+
+<<<mknotifyd:sep(0)>>>
+1742304608
+[int_test]
+Version:         2.4.0b1
+Updated:         1742304608 (2025-03-18 13:30:08)
+Started:         1742304567 (2025-03-18 13:29:27, 41 sec ago)
+Configuration:   1742304567 (2025-03-18 13:29:27, 41 sec ago)
+Listening FD:    None
+
+Spool:           New
+Count:           0
+Oldest:          -
+Youngest:        -
+
+Spool:           Deferred
+Count:           0
+Oldest:          -
+Youngest:        -
+
+Spool:           Corrupted
+Count:           0
+Oldest:          -
+Youngest:        -
+<<<omd_apache:sep(124)>>>
+[int_test]
+
+<<<omd_diskusage:sep(0)>>>
+[site int_test]
+74251738	/omd/sites/int_test
+83843	/omd/sites/int_test/var/log
+4096	/omd/sites/int_test/var/check_mk/rrd
+20480	/omd/sites/int_test/var/pnp4nagios/
+4205	/omd/sites/int_test/tmp/
+323595	/omd/sites/int_test/local/
+63628583	/omd/sites/int_test/var/check_mk/agents/
+28672	/omd/sites/int_test/var/mkeventd/history/
+1081906	/omd/sites/int_test/var/check_mk/core/
+0 /omd/sites/int_test/var/check_mk/inventory_archive/
+<<<omd_info:sep(59)>>>
+[versions]
+version;number;edition;demo
+2.4.0b1.cee;2.4.0b1;cee;0
+[sites]
+site;used_version;autostart
+int_test;2.4.0b1.cee;0
+<<<local:sep(0)>>>

@@ -61,7 +61,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import Page, PageRegistry, PageResult
 from cmk.gui.table import Table, table_element
 from cmk.gui.utils.escaping import escape_to_html, escape_to_html_permissive, strip_tags
-from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
+from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.theme import theme
@@ -265,8 +265,7 @@ def handle_acknowledgement() -> None:
     elif request.var("_ack_all"):
         num = len(unacknowledged_incompatible_werks())
         acknowledge_all_werks()
-        flash(_("%d incompatible Werks have been acknowledged.") % num)
-        html.reload_whole_page()
+        html.show_message(_("%d incompatible Werks have been acknowledged.") % num)
 
 
 def _page_menu_entries_ack_all_werks() -> Iterator[PageMenuEntry]:
@@ -670,9 +669,7 @@ def render_werks_table(werk_table_options: WerkTableOptions) -> None:
     number_of_werks = 0
     sorter, grouper = _SORT_AND_GROUP[werk_table_options["grouping"]]
     list_of_werks = sorter(
-        werk
-        for werk in load_werk_entries()
-        if werk_matches_options(werk, werk_table_options)  #
+        werk for werk in load_werk_entries() if werk_matches_options(werk, werk_table_options)
     )
     groups = itertools.groupby(list_of_werks, key=grouper)
     for group_title, werks in itertools.islice(groups, werk_table_options["group_limit"]):

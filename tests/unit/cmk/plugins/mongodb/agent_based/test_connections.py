@@ -7,9 +7,8 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.base.legacy_checks import mongodb_connections
-
 from cmk.agent_based.v2 import get_value_store, Metric, Result, State, StringTable
+from cmk.plugins.mongodb.agent_based import connections as mongodb_connections
 
 
 @pytest.mark.usefixtures("initialised_item_state")

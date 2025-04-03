@@ -398,7 +398,6 @@ def _get_clustered_services(
             cluster_name,
             merge_cluster_autochecks(
                 {node: get_autochecks(node) for node in nodes},
-                nodes,
                 appears_on_cluster,
             ),
         )

@@ -12,7 +12,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from typing import Annotated, Any, Literal, NamedTuple, NewType, NotRequired, TypedDict
 
-from pydantic import BaseModel, PlainValidator
+from pydantic import BaseModel, PlainValidator, WithJsonSchema
 
 from cmk.ccc.site import SiteId
 
@@ -257,7 +257,11 @@ class UserObjectValue(TypedDict):
 
 UserObject = dict[UserId, UserObjectValue]
 
-AnnotatedUserId = Annotated[UserId, PlainValidator(UserId.parse)]
+AnnotatedUserId = Annotated[
+    UserId,
+    PlainValidator(UserId.parse),
+    WithJsonSchema({"type": "string"}, mode="serialization"),
+]
 
 Users = dict[AnnotatedUserId, UserSpec]  # TODO: Improve this type
 

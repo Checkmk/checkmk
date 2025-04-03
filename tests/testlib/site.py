@@ -1483,6 +1483,9 @@ class Site:
                 continue
             crash_type = crash.get("exc_type", "")
             crash_detail = crash.get("exc_value", "")
+            if re.search("list index out of range", crash_detail):
+                logger.warning("Ignored crash report due to CMK-18633!")
+                continue
             if re.search("Cannot render negative timespan", crash_detail):
                 logger.warning("Ignored crash report due to CMK-18635!")
                 continue

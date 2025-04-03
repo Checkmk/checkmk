@@ -183,28 +183,31 @@ def main() {
                         unique_parser_name: "${item.RESULT_CHECK_FILE_PATTERN}".replaceAll("""([^A-Za-z0-9\\-\\_]+)""", "-"),
                     ];
 
-                    // as issue analysis can not be run in parallel, do it sequential, old school
-                    // https://groups.google.com/g/jenkinsci-dev/c/vEHMw4kp6iQ
-                    // https://stackoverflow.com/questions/61428125/how-to-use-the-three-steps-of-jenkins-warnings-next-generation-plugin-properly
-                    def issues = test_jenkins_helper.analyse_issues(
-                        item.RESULT_CHECK_TYPE,
-                        item.RESULT_CHECK_FILE_PATTERN,
-                        false,  // do not run analysis as dedicated stage
-                    );
+                    // ensure the parser and publisher are able to find the files
+                    dir("${checkout_dir}") {
+                        // as issue analysis can not be run in parallel, do it sequential, old school
+                        // https://groups.google.com/g/jenkinsci-dev/c/vEHMw4kp6iQ
+                        // https://stackoverflow.com/questions/61428125/how-to-use-the-three-steps-of-jenkins-warnings-next-generation-plugin-properly
+                        def issues = test_jenkins_helper.analyse_issues(
+                            item.RESULT_CHECK_TYPE,
+                            item.RESULT_CHECK_FILE_PATTERN,
+                            false,  // do not run analysis as dedicated stage
+                        );
 
-                    publishIssues(
-                        issues: issues,
-                        name: "${item.NAME}",
-                        // Only characters, digits, dashes and underscores allowed
-                        // ID must match the regex \p{Alnum}[\p{Alnum}-_]*).
-                        id: "${item.RESULT_CHECK_FILE_PATTERN}".replaceAll("""([^A-Za-z0-9\\-\\_]+)""", "-"),
-                        trendChartType: "TOOLS_ONLY",
-                        qualityGates: [[
-                            threshold: 1,
-                            type: "TOTAL",
-                            unstable: false,
-                        ]],
-                    );
+                        publishIssues(
+                            issues: issues,
+                            name: "${item.NAME}",
+                            // Only characters, digits, dashes and underscores allowed
+                            // ID must match the regex \p{Alnum}[\p{Alnum}-_]*).
+                            id: "${item.RESULT_CHECK_FILE_PATTERN}".replaceAll("""([^A-Za-z0-9\\-\\_]+)""", "-"),
+                            trendChartType: "TOOLS_ONLY",
+                            qualityGates: [[
+                                threshold: 1,
+                                type: "TOTAL",
+                                unstable: false,
+                            ]],
+                        );
+                    }
                 }
             }
         }]

@@ -11,8 +11,113 @@
   "Number of threads": {
     "expected_state": 0
   },
-  "JVM myinstance\ufffdtomcat\ufffd10.1.28\ufffd2.0.3": {
-    "expected_state": 3
+  "JVM myinstance,Catalina:J2EEApplication=none,J2EEServer=none,WebModule=//localhost/,j2eeType=Servlet,name=default MBean myspecialmetric.requestCount": {
+    "expected_state": 0
+  },
+  "JVM myinstance,Catalina:J2EEApplication=none,J2EEServer=none,WebModule=//localhost/docs,j2eeType=Servlet,name=default MBean myspecialmetric.requestCount": {
+    "expected_state": 0
+  },
+  "JVM myinstance,Catalina:J2EEApplication=none,J2EEServer=none,WebModule=//localhost/examples,j2eeType=Servlet,name=default MBean myspecialmetric.requestCount": {
+    "expected_state": 0
+  },
+  "JVM myinstance,Catalina:J2EEApplication=none,J2EEServer=none,WebModule=//localhost/host-manager,j2eeType=Servlet,name=default MBean myspecialmetric.requestCount": {
+    "expected_state": 0
+  },
+  "JVM myinstance,Catalina:J2EEApplication=none,J2EEServer=none,WebModule=//localhost/jolokia,j2eeType=Servlet,name=default MBean myspecialmetric.requestCount": {
+    "expected_state": 0
+  },
+  "JVM myinstance,Catalina:J2EEApplication=none,J2EEServer=none,WebModule=//localhost/manager,j2eeType=Servlet,name=default MBean myspecialmetric.requestCount": {
+    "expected_state": 0
+  },
+  "JVM myinstance": {
+    "expected_state": 0
+  },
+  "JVM myinstance Memory": {
+    "expected_state": 0
+  },
+  "JVM myinstance Memory Pool CodeHeap 'non-nmethods'": {
+    "expected_state": 0
+  },
+  "JVM myinstance Memory Pool CodeHeap 'non-profiled nmethods'": {
+    "expected_state": 0
+  },
+  "JVM myinstance Memory Pool CodeHeap 'profiled nmethods'": {
+    "expected_state": 0
+  },
+  "JVM myinstance Memory Pool Compressed Class Space": {
+    "expected_state": 0
+  },
+  "JVM myinstance Memory Pool Metaspace": {
+    "expected_state": 0
+  },
+  "JVM myinstance Memory Pool PS Eden Space": {
+    "expected_state": 0
+  },
+  "JVM myinstance Memory Pool PS Old Gen": {
+    "expected_state": 0
+  },
+  "JVM myinstance Memory Pool PS Survivor Space": {
+    "expected_state": 0
+  },
+  "JVM myinstance Uptime": {
+    "expected_state": 0
+  },
+  "JVM myinstance ThreadPool http-nio-8080": {
+    "expected_state": 0
+  },
+  "JVM myinstance / Sessions": {
+    "expected_state": 0
+  },
+  "JVM myinstance /docs Sessions": {
+    "expected_state": 0
+  },
+  "JVM myinstance /examples Sessions": {
+    "expected_state": 0
+  },
+  "JVM myinstance /host-manager Sessions": {
+    "expected_state": 0
+  },
+  "JVM myinstance /jolokia Sessions": {
+    "expected_state": 0
+  },
+  "JVM myinstance /manager Sessions": {
+    "expected_state": 0
+  },
+  "JVM myinstance / State": {
+    "expected_state": 0
+  },
+  "JVM myinstance /docs State": {
+    "expected_state": 0
+  },
+  "JVM myinstance /examples State": {
+    "expected_state": 0
+  },
+  "JVM myinstance /host-manager State": {
+    "expected_state": 0
+  },
+  "JVM myinstance /jolokia State": {
+    "expected_state": 0
+  },
+  "JVM myinstance /manager State": {
+    "expected_state": 0
+  },
+  "JVM myinstance / Requests": {
+    "expected_state": 0
+  },
+  "JVM myinstance /docs Requests": {
+    "expected_state": 0
+  },
+  "JVM myinstance /examples Requests": {
+    "expected_state": 0
+  },
+  "JVM myinstance /host-manager Requests": {
+    "expected_state": 0
+  },
+  "JVM myinstance /jolokia Requests": {
+    "expected_state": 0
+  },
+  "JVM myinstance /manager Requests": {
+    "expected_state": 0
   },
   "CPU utilization": {
     "expected_state": 0

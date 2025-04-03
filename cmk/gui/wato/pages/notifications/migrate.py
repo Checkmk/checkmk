@@ -186,8 +186,14 @@ def _get_service_filters(event_rule: EventRule) -> ServiceFilters:
         service_filters["service_labels"] = event_rule["match_servicelabels"]
     if "match_servicegroups" in event_rule:
         service_filters["match_service_groups"] = event_rule["match_servicegroups"]
+    if "match_servicegroups_regex" in event_rule:
+        service_filters["match_service_groups_regex"] = event_rule["match_servicegroups_regex"]
     if "match_exclude_servicegroups" in event_rule:
         service_filters["exclude_service_groups"] = event_rule["match_exclude_servicegroups"]
+    if "match_exclude_servicegroups_regex" in event_rule:
+        service_filters["exclude_service_groups_regex"] = event_rule[
+            "match_exclude_servicegroups_regex"
+        ]
     if "match_services" in event_rule:
         service_filters["match_services"] = event_rule["match_services"]
     if "match_exclude_services" in event_rule:
@@ -384,9 +390,11 @@ def migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> Notificat
         for k in [
             "match_servicelabels",
             "match_servicegroups",
+            "match_servicegroups_regex",
             "match_exclude_servicegroups",
             "match_services",
             "match_exclude_services",
+            "match_exclude_servicegroups_regex",
         ]
     ):
         spec["service_filters"] = _get_service_filters(event_rule)
@@ -485,8 +493,14 @@ def _set_service_filters(event_rule: EventRule, notification: NotificationQuickS
         event_rule["match_servicelabels"] = service_filters["service_labels"]
     if "match_service_groups" in service_filters:
         event_rule["match_servicegroups"] = service_filters["match_service_groups"]
+    if "match_service_groups_regex" in service_filters:
+        event_rule["match_servicegroups_regex"] = service_filters["match_service_groups_regex"]
     if "exclude_service_groups" in service_filters:
         event_rule["match_exclude_servicegroups"] = service_filters["exclude_service_groups"]
+    if "exclude_service_groups_regex" in service_filters:
+        event_rule["match_exclude_servicegroups_regex"] = service_filters[
+            "exclude_service_groups_regex"
+        ]
     if "match_services" in service_filters:
         event_rule["match_services"] = service_filters["match_services"]
     if "exclude_services" in service_filters:

@@ -748,7 +748,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 ],
                                             ),
                                         ),
-                                        "match_servicegroups_regex": DictElement(
+                                        "match_service_groups_regex": DictElement(
                                             parameter_form=CascadingSingleChoiceExtended(
                                                 prefill=DefaultValue("match_id"),
                                                 layout=CascadingSingleChoiceLayout.button_group,
@@ -813,7 +813,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 ],
                                             ),
                                         ),
-                                        "match_exclude_servicegroups_regex": DictElement(
+                                        "exclude_service_groups_regex": DictElement(
                                             parameter_form=CascadingSingleChoiceExtended(
                                                 prefill=DefaultValue("match_id"),
                                                 layout=CascadingSingleChoiceLayout.button_group,

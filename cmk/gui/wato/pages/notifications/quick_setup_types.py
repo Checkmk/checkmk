@@ -59,7 +59,9 @@ class HostFilters(TypedDict):
 class ServiceFilters(TypedDict):
     service_labels: NotRequired[dict[str, str]]  # TODO: double check this type after implementation
     match_service_groups: NotRequired[list[str]]
+    match_service_groups_regex: NotRequired[tuple[Literal["match_id", "match_alias"], list[str]]]
     exclude_service_groups: NotRequired[list[str]]
+    exclude_service_groups_regex: NotRequired[tuple[Literal["match_id", "match_alias"], list[str]]]
     match_services: NotRequired[list[str]]
     exclude_services: NotRequired[list[str]]
 

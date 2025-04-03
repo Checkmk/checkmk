@@ -99,7 +99,11 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
                     "user_two_factor_enforce.py?_origtarget=%s" % urlencode(makeuri(request, []))
                 )
 
-            if not two_factor_login_pages and requested_file_name(request) != "user_change_pw":
+            if (
+                not two_factor_registration_pages
+                and not two_factor_login_pages
+                and requested_file_name(request) != "user_change_pw"
+            ):
                 if change_reason := userdb.need_to_change_pw(user_id, datetime.now()):
                     raise HTTPRedirect(
                         f"user_change_pw.py?_origtarget={urlencode(makeuri(request, []))}&reason={change_reason}"

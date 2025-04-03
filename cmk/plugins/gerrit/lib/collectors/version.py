@@ -65,10 +65,11 @@ class GerritVersion:
 
     @staticmethod
     def _get_latest_versions(current: SemanticVersion) -> LatestVersions:
-        gerrit_releases_url = "https://www.googleapis.com/storage/v1/b/gerrit-releases/o"
-        query = "?projection=noAcl&fields=items(name)&matchGlob=gerrit-[0-9]*.[0-9]*.[0-9]*.war"
+        url = "https://www.googleapis.com/storage/v1/b/gerrit-releases/o"
+        query = "?projection=noAcl&fields=items(name)&matchGlob="
+        glob = "gerrit-{[0-9],[0-9][0-9]}.{[0-9],[0-9][0-9]}.{[0-9],[0-9][0-9]}.war"
 
-        resp = requests.get(gerrit_releases_url + query, timeout=30)
+        resp = requests.get(url + query + glob, timeout=30)
         resp.raise_for_status()
 
         versions = {SemanticVersion.from_string(item["name"]) for item in resp.json()["items"]}

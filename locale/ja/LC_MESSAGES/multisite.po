@@ -251,6 +251,10 @@ msgstr "#%s - サイクルの詳細"
 msgid "# Containers"
 msgstr "# コンテナ"
 
+#, fuzzy, python-format
+msgid "#%s of unknown ruleset %r"
+msgstr "不明なアラートの数"
+
 msgid "#Containers"
 msgstr "#コンテナ"
 
@@ -17574,6 +17578,10 @@ msgstr "選択したホストを削除"
 msgid "Delete selected rules"
 msgstr "選択したルールを削除"
 
+#, fuzzy
+msgid "Delete selected rulesets"
+msgstr "選択したルールを削除"
+
 msgid "Delete selected users"
 msgstr "選択したユーザーを削除します"
 
@@ -17707,6 +17715,10 @@ msgstr "期間を削除"
 
 msgid "Delete time range"
 msgstr "時間範囲を削除"
+
+#, fuzzy
+msgid "Delete unknown rule"
+msgstr "ルールを削除"
 
 msgid "Delete unpackaged file"
 msgstr "パッケージ化されていないファイルを削除"
@@ -58342,6 +58354,10 @@ msgstr "<i>劣化</i>状態"
 msgid "State for <i>Global Hot Spare</i>"
 msgstr "<i>グローバルホットスペア</i>の状態"
 
+#, fuzzy
+msgid "State for <i>JBOD</i>"
+msgstr "<i>オンライン</i>の状態"
+
 msgid "State for <i>Offline</i>"
 msgstr "<i>オフライン</i>の状態"
 
@@ -73914,6 +73930,14 @@ msgstr "不明なパス"
 #, fuzzy, python-format
 msgid "Unknown rule with ID %s"
 msgstr "不明なサイト%s"
+
+#, fuzzy, python-format
+msgid "Unknown ruleset: %s"
+msgstr "不明なユーザー: %s"
+
+#, fuzzy
+msgid "Unknown rulesets"
+msgstr "不明なユーザー"
 
 msgid "Unknown service"
 msgstr "不明なサービス"

@@ -258,6 +258,10 @@ msgstr "Détails du service BI"
 msgid "# Containers"
 msgstr "# Conteneurs"
 
+#, fuzzy, python-format
+msgid "#%s of unknown ruleset %r"
+msgstr "Nombre d'alertes inconnues"
+
 msgid "#Containers"
 msgstr "#Conteneurs"
 
@@ -18598,6 +18602,10 @@ msgstr "Supprimer les hôtes sélectionnés"
 msgid "Delete selected rules"
 msgstr "Supprimer les règles sélectionnées"
 
+#, fuzzy
+msgid "Delete selected rulesets"
+msgstr "Supprimer les règles sélectionnées"
+
 msgid "Delete selected users"
 msgstr "Supprimer les utilisateurs sélectionnés"
 
@@ -18732,6 +18740,10 @@ msgstr "Supprimer une période"
 
 msgid "Delete time range"
 msgstr "Supprimer la plage horaire"
+
+#, fuzzy
+msgid "Delete unknown rule"
+msgstr "Supprimer la règle"
 
 msgid "Delete unpackaged file"
 msgstr "Supprimer le fichier non emballé"
@@ -61536,6 +61548,10 @@ msgstr "État pour <i>Dégradé</i>"
 msgid "State for <i>Global Hot Spare</i>"
 msgstr "État pour <i>Global Hot Spare</i>"
 
+#, fuzzy
+msgid "State for <i>JBOD</i>"
+msgstr "État pour <i>Online</i>"
+
 msgid "State for <i>Offline</i>"
 msgstr "État pour <i>Offline</i>"
 
@@ -78512,6 +78528,14 @@ msgstr "Chemins inconnus"
 #, fuzzy, python-format
 msgid "Unknown rule with ID %s"
 msgstr "Site inconnu %s"
+
+#, fuzzy, python-format
+msgid "Unknown ruleset: %s"
+msgstr "Utilisateur inconnu : %s"
+
+#, fuzzy
+msgid "Unknown rulesets"
+msgstr "Utilisateur inconnu"
 
 #, fuzzy
 msgid "Unknown service"

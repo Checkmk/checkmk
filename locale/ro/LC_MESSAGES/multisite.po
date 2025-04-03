@@ -260,6 +260,10 @@ msgstr "Detalii despre serviciul BI"
 msgid "# Containers"
 msgstr "# Containere"
 
+#, fuzzy, python-format
+msgid "#%s of unknown ruleset %r"
+msgstr "Numărul de alerte necunoscute"
+
 msgid "#Containers"
 msgstr "#Containere"
 
@@ -18486,6 +18490,10 @@ msgstr "Ștergeți gazdele selectate"
 msgid "Delete selected rules"
 msgstr "Ștergeți regulile selectate"
 
+#, fuzzy
+msgid "Delete selected rulesets"
+msgstr "Ștergeți regulile selectate"
+
 msgid "Delete selected users"
 msgstr "Ștergeți utilizatorii selectați"
 
@@ -18620,6 +18628,10 @@ msgstr "Ștergeți perioada de timp"
 
 msgid "Delete time range"
 msgstr "Ștergeți intervalul de timp"
+
+#, fuzzy
+msgid "Delete unknown rule"
+msgstr "Ștergeți regula"
 
 msgid "Delete unpackaged file"
 msgstr "Ștergeți fișierul neambalat"
@@ -61162,6 +61174,10 @@ msgstr "Starea pentru <i>Degradat</i>"
 msgid "State for <i>Global Hot Spare</i>"
 msgstr "Stare pentru <i>Global Hot Spare</i>"
 
+#, fuzzy
+msgid "State for <i>JBOD</i>"
+msgstr "Statul pentru <i>Online</i>"
+
 msgid "State for <i>Offline</i>"
 msgstr "Starea pentru <i>Offline</i>"
 
@@ -77998,6 +78014,14 @@ msgstr "Trasee necunoscute"
 #, fuzzy, python-format
 msgid "Unknown rule with ID %s"
 msgstr "Site necunoscut %s"
+
+#, fuzzy, python-format
+msgid "Unknown ruleset: %s"
+msgstr "Utilizator necunoscut: %s."
+
+#, fuzzy
+msgid "Unknown rulesets"
+msgstr "Utilizator necunoscut"
 
 msgid "Unknown service"
 msgstr "Serviciu necunoscut"

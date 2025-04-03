@@ -262,6 +262,10 @@ msgstr "Details BI-dienst"
 msgid "# Containers"
 msgstr "# Containers"
 
+#, fuzzy, python-format
+msgid "#%s of unknown ruleset %r"
+msgstr "Aantal onbekende signaleringen"
+
 msgid "#Containers"
 msgstr "#Containers"
 
@@ -18471,6 +18475,10 @@ msgstr "Geselecteerde hosts verwijderen"
 msgid "Delete selected rules"
 msgstr "Geselecteerde regels verwijderen"
 
+#, fuzzy
+msgid "Delete selected rulesets"
+msgstr "Geselecteerde regels verwijderen"
+
 msgid "Delete selected users"
 msgstr "Verwijder geselecteerde gebruikers"
 
@@ -18605,6 +18613,10 @@ msgstr "Tijdsperiode verwijderen"
 
 msgid "Delete time range"
 msgstr "Tijdsbereik wissen"
+
+#, fuzzy
+msgid "Delete unknown rule"
+msgstr "Regels verwijderen"
 
 msgid "Delete unpackaged file"
 msgstr "Uitgepakt bestand verwijderen"
@@ -61006,6 +61018,10 @@ msgstr "Staat voor <i>Gedegradeerd</i>"
 msgid "State for <i>Global Hot Spare</i>"
 msgstr "Staat voor <i>Global Hot Spare</i>"
 
+#, fuzzy
+msgid "State for <i>JBOD</i>"
+msgstr "Staat voor <i>Online</i>"
+
 msgid "State for <i>Offline</i>"
 msgstr "Staat voor <i>Offline</i>"
 
@@ -77824,6 +77840,14 @@ msgstr "Onbekende paden"
 #, fuzzy, python-format
 msgid "Unknown rule with ID %s"
 msgstr "Onbekende site %s"
+
+#, fuzzy, python-format
+msgid "Unknown ruleset: %s"
+msgstr "Onbekende gebruiker: %s"
+
+#, fuzzy
+msgid "Unknown rulesets"
+msgstr "Onbekende gebruiker"
 
 #, fuzzy
 msgid "Unknown service"

@@ -1,0 +1,15 @@
+[
+  {
+    "ruleset": "fileinfo_groups",
+    "folder": "/",
+    "properties": {
+      "disabled": false
+    },
+    "value_raw": "{'group_patterns': [('TESTGROUP', ('*gwia*', ''))]}",
+    "conditions": {
+      "host_tags": [],
+      "host_label_groups": [],
+      "service_label_groups": []
+    }
+  }
+]

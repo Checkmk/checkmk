@@ -1,0 +1,15 @@
+[
+  {
+    "ruleset": "management_bulkwalk_hosts",
+    "folder": "/",
+    "properties": {
+      "description": "All management boards use SNMPv2 and bulk walk"
+    },
+    "value_raw": "True",
+    "conditions": {
+      "host_tags": [],
+      "host_label_groups": [],
+      "service_label_groups": []
+    }
+  }
+]

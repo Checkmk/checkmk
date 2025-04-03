@@ -1,0 +1,13 @@
+[
+  {
+    "ruleset": "special_agents:mqtt",
+    "folder": "/",
+    "properties": {
+        "disabled": "True",
+        "description": "My mqtt rule",
+        "comment": "My mqtt rule"
+    },
+    "value_raw": "{'password': ('store', 'mydummypass')}",
+    "conditions": {}
+  }
+]

@@ -88,10 +88,13 @@ class GroupsToAttributes(TypedDict, total=True):
     groups: list[GroupsToSync]
 
 
+type GroupsToRoles = dict[str, list[tuple[str, str | None]] | Literal[True]]
+
+
 class ActivePlugins(TypedDict, total=True):
     alias: NotRequired[SyncAttribute]
     auth_expire: NotRequired[SyncAttribute]
-    groups_to_roles: NotRequired[dict[str, list[tuple[str, str | None]]]]
+    groups_to_roles: NotRequired[GroupsToRoles]
     groups_to_contactgroups: NotRequired[GroupsToContactGroups]
     groups_to_attributes: NotRequired[GroupsToAttributes]
     disable_notifications: NotRequired[SyncAttribute]

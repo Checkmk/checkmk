@@ -692,6 +692,14 @@ class LDAPRoleElementRequest(BaseSchema):
 
 
 class LDAPGroupsToRolesRequest(LDAPCheckboxEnabledRequest):
+    handle_nested = fields.Boolean(
+        required=False,
+        description="Once you enable this option, this plug-in will not only handle direct group "
+        "memberships, instead it will also dig into nested groups and treat the members of those "
+        "groups as contact group members as well. Please bear in mind that this feature might "
+        "increase the execution time of your LDAP sync",
+        load_default=False,
+    )
     admin = fields.Nested(
         LDAPRoleElementRequest,
         many=True,
@@ -950,7 +958,7 @@ class LDAPConnectionConfigRequest(BaseSchema):
     def _post_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
         group_base_dn = data["groups"]["group_base_dn"]
         for key, grouplist in data["sync_plugins"].get("groups_to_roles", {}).items():
-            if key == "state":
+            if key in {"state", "handle_nested"}:
                 continue
             for group in grouplist:
                 if not group["group_dn"].lower().endswith(group_base_dn.lower()):

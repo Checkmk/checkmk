@@ -78,15 +78,6 @@ host_label_ruleset: Sequence[RuleSpec[str]] = [
         },
         "options": {},
     },
-    # test overwritten builtin label match
-    {
-        "id": "id1",
-        "value": "some_other_site",
-        "condition": {
-            "host_label_groups": [("and", [("and", "cmk/site:some_site")])],
-        },
-        "options": {},
-    },
     # test implicit AND and unicode value match
     {
         "id": "id2",
@@ -127,7 +118,6 @@ host_label_ruleset: Sequence[RuleSpec[str]] = [
     "hostname, expected_result",
     [
         (HostName("host1"), ["os_linux", "abc", "BLA"]),
-        (HostName("host2"), ["some_other_site", "hu", "BLA"]),
         (HostName("host3"), ["hu", "BLA"]),
     ],
 )
@@ -145,7 +135,7 @@ def test_ruleset_matcher_get_host_values_labels(
     def labels_of_host(hostname: HostName) -> Mapping[str, str]:
         return {
             HostName("host1"): {"os": "linux", "abc": "xä", "hu": "ha"},
-            HostName("host2"): {"cmk/site": "some_site"},
+            HostName("host2"): {},
             HostName("host3"): {},
         }[hostname]
 

@@ -105,7 +105,7 @@ def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
     ) == AnalyseHostResult(
         label_sources=label_sources | additional_label_sources,
         labels={
-            "cmk/site": "NO_SITE",
+            "cmk/site": "unit",
             "explicit": "ding",
         }
         | additional_labels,

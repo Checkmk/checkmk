@@ -17,6 +17,8 @@ from pytest import MonkeyPatch
 
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
+from livestatus import SiteId
+
 import cmk.ccc.debug
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.version import Edition, edition
@@ -2108,10 +2110,10 @@ def test_labels(monkeypatch: MonkeyPatch) -> None:
 
     config_cache = ts.apply(monkeypatch)
     assert config_cache.label_manager.labels_of_host(xyz_host) == {
-        "cmk/site": "NO_SITE",
+        "cmk/site": "unit",
     } | {k: v["value"] for k, v in additional_labels.items()}
     assert config_cache.label_manager.labels_of_host(test_host) == {
-        "cmk/site": "NO_SITE",
+        "cmk/site": "unit",
         "explicit": "ding",
         "from-rule": "rule1",
         "from-rule2": "rule2",
@@ -2122,6 +2124,26 @@ def test_labels(monkeypatch: MonkeyPatch) -> None:
         "from-rule": "ruleset",
         "from-rule2": "ruleset",
     } | {k: v["source"] for k, v in additional_labels.items()}
+
+
+def test_site_labels(monkeypatch: MonkeyPatch) -> None:
+    additional_labels = {}
+    if edition(cmk.utils.paths.omd_root) is Edition.CME:
+        additional_labels = {"cmk/customer": {"value": "provider", "source": "discovered"}}
+    test_host = HostName("test-host")
+    xyz_host = HostName("xyz")
+
+    ts = Scenario()
+    ts.add_host(test_host)
+    ts.add_host(xyz_host, site=SiteId("some_site"))
+
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.label_manager.labels_of_host(xyz_host) == {
+        "cmk/site": "some_site",
+    } | {k: v["value"] for k, v in additional_labels.items()}
+    assert config_cache.label_manager.labels_of_host(test_host) == {
+        "cmk/site": "unit",
+    } | {k: v["value"] for k, v in additional_labels.items()}
 
 
 def test_host_labels_of_host_discovered_labels(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
@@ -2139,7 +2161,7 @@ def test_host_labels_of_host_discovered_labels(monkeypatch: MonkeyPatch, tmp_pat
 
     config_cache = ts.apply(monkeypatch)
     assert config_cache.label_manager.labels_of_host(test_host) == {
-        "cmk/site": "NO_SITE",
+        "cmk/site": "unit",
         "äzzzz": "eeeeez",
     } | {k: v["value"] for k, v in additional_labels.items()}
     assert config_cache.label_manager.label_sources_of_host(test_host) == {

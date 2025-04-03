@@ -17,6 +17,8 @@ from pytest import MonkeyPatch
 
 from tests.testlib.utils import get_standard_linux_agent_output
 
+from livestatus import SiteId
+
 import cmk.utils.tags
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
@@ -64,6 +66,7 @@ class Scenario:
             "host_paths": {},
             "host_tags": {},
             "host_labels": {},
+            "host_attributes": {},
             "clusters": {},
         }
         self.config_cache = self._get_config_cache()
@@ -75,6 +78,7 @@ class Scenario:
         host_path: str = "/wato/hosts.mk",
         labels: dict[str, str] | None = None,
         ipaddress: HostAddress | None = None,
+        site: SiteId | None = None,
     ) -> None:
         if tags is None:
             tags = {}
@@ -86,7 +90,7 @@ class Scenario:
 
         self.config["all_hosts"].append(hostname)
         self.config["host_paths"][hostname] = host_path
-        self.config["host_tags"][hostname] = self._get_effective_tag_config(tags)
+        self.config["host_tags"][hostname] = self._get_effective_tag_config(tags, site)
         self.config["host_labels"][hostname] = labels
 
         if ipaddress is not None:
@@ -133,7 +137,9 @@ class Scenario:
     # is currently responsible for calulcating the host tags of a host.
     # Would be better to untie the GUI code there and move it over to cmk.utils.tags.
     def _get_effective_tag_config(
-        self, tags: Mapping[TagGroupID, TagID]
+        self,
+        tags: Mapping[TagGroupID, TagID],
+        site: SiteId | None = None,
     ) -> Mapping[TagGroupID, TagID]:
         """Returns a full set of tag groups
 
@@ -142,6 +148,7 @@ class Scenario:
 
         Auxiliary tags will be added automatically.
         """
+        site_tag = TagID(site) if site else TagID(self.site_id)
 
         # TODO: Compute this dynamically with self.tags
         tag_config = {
@@ -150,7 +157,7 @@ class Scenario:
             TagGroupID("agent"): TagID("cmk-agent"),
             TagGroupID("criticality"): TagID("prod"),
             TagGroupID("snmp_ds"): TagID("no-snmp"),
-            TagGroupID("site"): TagID(self.site_id),
+            TagGroupID("site"): site_tag,
             TagGroupID("address_family"): TagID("ip-v4-only"),
         }
         tag_config.update(tags)

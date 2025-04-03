@@ -5,29 +5,35 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Literal
 
 import pytest
 
-from tests.testlib.common.repo import current_branch_version
 from tests.testlib.pytest_helpers.calls import abort_if_not_containerized
 from tests.testlib.site import Site
-
-StreamType = Literal["stderr", "stdout"]
 
 
 @dataclass(frozen=True)
 class MonitoringPlugin:
+    """Data corresponding to 3rd party plugins.
+
+    These plugins are maintained by 'Monitoring Plugins'
+    (https://www.monitoring-plugins.org/).
+    """
+
     binary_name: str
     path: str = "lib/nagios/plugins"
+    # by default, output the version of the plugin
     cmd_line_option: str = "-V"
-    expected: str = current_branch_version()
+    expected: str = "v2.4.0"
 
 
 @dataclass(frozen=True)
 class CheckmkActiveCheck:
+    """Data corresponding to Checkmk active checks."""
+
     binary_name: str
     path: str = "lib/nagios/plugins"
+    usage_text: str = "usage"
 
     @property
     def cmd_line_option(self) -> str:
@@ -35,7 +41,7 @@ class CheckmkActiveCheck:
 
     @property
     def expected(self) -> str:
-        return f"usage: {self.binary_name} "
+        return f"{self.usage_text}: {self.binary_name} "
 
 
 Plugin = MonitoringPlugin | CheckmkActiveCheck
@@ -57,7 +63,6 @@ MONITORING_PLUGINS: Sequence[Plugin] = (
     MonitoringPlugin("check_host"),
     MonitoringPlugin("check_hpjd"),
     MonitoringPlugin("check_http"),
-    MonitoringPlugin("check_httpv2"),
     MonitoringPlugin("check_icmp"),
     MonitoringPlugin("check_ide_smart"),
     MonitoringPlugin("check_imap"),
@@ -102,6 +107,7 @@ MONITORING_PLUGINS: Sequence[Plugin] = (
     MonitoringPlugin("urlize"),
     MonitoringPlugin("check_mysql"),
     MonitoringPlugin("check_mysql_query"),
+    CheckmkActiveCheck("check_httpv2", usage_text="Usage"),
     CheckmkActiveCheck("check_always_crit"),
     CheckmkActiveCheck("check_sftp"),
     CheckmkActiveCheck(
@@ -152,10 +158,9 @@ def test_monitoring_plugins_can_be_executed(plugin: Plugin, site: Site) -> None:
     cmd_line = [(site.root / plugin.path / plugin.binary_name).as_posix(), plugin.cmd_line_option]
     # check=False; '<plugin-name> -V' returns in exit-code 3 for most plugins!
     process = site.run(cmd_line, check=False)
-    assert plugin.expected in process.stdout, (
-        f"Expected '{plugin.binary_name}' version: {plugin.expected} in the output! Command: "
-        f"`{' '.join(cmd_line)}`"
-    )
+    assert (
+        plugin.expected in process.stdout
+    ), f"Expected command:'{' '.join(cmd_line)}'\nto result in output having '{plugin.expected}'!"
     assert not process.stderr
 
 

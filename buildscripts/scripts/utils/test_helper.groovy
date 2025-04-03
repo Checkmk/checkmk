@@ -36,9 +36,13 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
     def issues = [];
     def parserId = '';  // used for custom groovyScript parser
 
+    // using the same parser of scanForIssues multiple times in one Jenkins job will cause
+    // java.lang.IllegalStateException: ID maven-warnings is already used by another action
+    // therefore a unique name can be given to each parser to avoid this issue
+
     switch (result_check_type) {
         case "BAZELFORMAT":
-            parserId = 'bazel-format';
+            parserId = "bazelformat";
             update_custom_parser([
                 id: parserId, // ID
                 name: 'Bazel Format', // Name shown on left side menu
@@ -55,7 +59,7 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
             ));
             break;
         case "BAZELLINT":
-            parserId = 'bazel-lint';
+            parserId = "bazellint";
             update_custom_parser([
                 id: parserId, // ID
                 name: 'Bazel Lint', // Name shown on left side menu
@@ -86,7 +90,7 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
             ));
             break;
         case "PRETTIER":
-            parserId = 'prettier';
+            parserId = "prettier";
             update_custom_parser([
                 id: parserId, // ID
                 name: 'CSS Format', // Name shown on left side menu
@@ -117,10 +121,10 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
             ));
             break;
         case "GROOVY":
-            parserId = 'groovy-lint';
+            parserId = "groovy-lint";
             update_custom_parser([
                 id: parserId, // ID
-                name: 'Grooy Lint', // Name shown on left side menu
+                name: 'Groovy Lint', // Name shown on left side menu
                 regex: '(.*\\.groovy$)\\n(\\s{2})(\\d+)(\\s+)(\\w+)(\\s{2,})(.*?)(?=\\s{2})(\\s{2})(\\w+)', // RegEx
                 mapping: 'return builder.setFileName(matcher.group(1)).setMessage(matcher.group(7)).setLineStart(Integer.parseInt(matcher.group(3))).setCategory(matcher.group(5)).setType(matcher.group(9)).buildOptional()', // Mapping script
                 example: """/home/jonasscharpf/git/check_mk/buildscripts/scripts/utils/upload_artifacts.groovy
@@ -158,7 +162,7 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
             ));
             break;
         case "SHELLCHECK":
-            parserId = 'shellcheck';
+            parserId = "shellcheck";
             update_custom_parser([
                 id: parserId, // ID
                 name: 'Shellcheck', // Name shown on left side menu
@@ -179,7 +183,7 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
             ));
             break;
         case "SHELLUNIT":
-            parserId = 'shell-unit';
+            parserId = "shellunit";
             update_custom_parser([
                 id: parserId, // ID
                 name: 'Shell Unittests', // Name shown on left side menu
@@ -200,7 +204,7 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
             ));
             break;
         case "TSJSBUILD":
-            parserId = 'ts-build';
+            parserId = "tsjsbuild";
             update_custom_parser([
                 id: parserId, // ID
                 name: 'TS/JS build', // Name shown on left side menu
@@ -217,7 +221,7 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
             ));
             break;
         case "TSJSTYPES":
-            parserId = 'ts-types';
+            parserId = "tsjstypes";
             update_custom_parser([
                 id: parserId, // ID
                 name: 'TS/JS types', // Name shown on left side menu
@@ -234,7 +238,7 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
             ));
             break;
         case "RUFFFORMAT":
-            parserId = 'ruff-format';
+            parserId = "ruffformat";
             update_custom_parser([
                 id: parserId, // ID
                 name: 'Ruff Format', // Name shown on left side menu

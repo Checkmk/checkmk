@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any
+from typing import Any, MutableMapping
 
-from marshmallow import post_load, ValidationError
+from marshmallow import INCLUDE, post_load, ValidationError
 from marshmallow_oneofschema import OneOfSchema
 
 from cmk.gui.fields import LDAPConnectionID, Timestamp
@@ -691,7 +691,17 @@ class LDAPRoleElementRequest(BaseSchema):
         return data
 
 
-class LDAPGroupsToRolesRequest(LDAPCheckboxEnabledRequest):
+class LDAPEnableGroupsToRoles(BaseSchema):
+    class Meta:
+        unknown = INCLUDE
+
+    state = fields.Constant(
+        "enabled",
+        required=True,
+        example="enabled",
+        description="This config parameter is enabled.",
+    )
+
     admin = fields.Nested(
         LDAPRoleElementRequest,
         many=True,
@@ -713,20 +723,40 @@ class LDAPGroupsToRolesRequest(LDAPCheckboxEnabledRequest):
         required=False,
     )
 
+    @post_load(pass_original=True)
+    def _validate_extra_attributes(
+        self,
+        result_data: dict[str, Any],
+        original_data: MutableMapping[str, Any],
+        **_unused_args: Any,
+    ) -> dict[str, Any]:
+        for field in self.fields:
+            original_data.pop(field, None)
 
-def ldap_group_to_roles_request_schema() -> type[LDAPGroupsToRolesRequest]:
-    return LDAPGroupsToRolesRequest.from_dict(
-        {
-            name: fields.Nested(LDAPRoleElementRequest, many=True, required=False)
-            for name in UserRolesConfigFile().load_for_reading()
-        },
-        name="LDAPGroupsToRolesRequestWithCustomRoles",
-    )
+        if not original_data:
+            return result_data
+
+        roles = UserRolesConfigFile().load_for_reading()
+        test_field = fields.Nested(LDAPRoleElementRequest, many=True, required=False)
+
+        for name, value in original_data.items():
+            if name not in roles:
+                raise ValidationError(f"Unknown user role: {name!r}")
+
+            try:
+                test_field.deserialize(value)
+
+            except ValidationError as e:
+                raise ValidationError(f"Invalid value for {name!r}: {e.messages}")
+
+            result_data[name] = value
+
+        return result_data
 
 
 class LDAPGroupsToRolesSelector(LDAPCheckboxSelector):
     type_schemas = {
-        "enabled": ldap_group_to_roles_request_schema(),
+        "enabled": LDAPEnableGroupsToRoles,
         "disabled": LDAPCheckboxDisabledRequest,
     }
 

@@ -19,6 +19,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 from pprint import pformat
+from stat import filemode
 from typing import Any, assert_never, overload
 
 import pexpect  # type: ignore[import-untyped]
@@ -551,3 +552,11 @@ def get_supported_distros() -> list[str]:
         yaml_file = yaml.safe_load(stream)
 
     return yaml_file["common"]
+
+
+def check_permissions(file_path: Path, expected_permissions: str) -> None:
+    """Check if the file has the expected permissions."""
+    actual_permissions = filemode(file_path.stat().st_mode)
+    assert actual_permissions == expected_permissions, (
+        f"Unexpected permissions for {file_path}: {actual_permissions}"
+    )

@@ -41,8 +41,8 @@ from cmk.gui.utils import permission_verification as permissions
 from cmk import fields
 
 
-class ServiceParameters(BaseSchema):
-    """All the parameters for the list services endpoints."""
+class _BaseParameters(BaseSchema):
+    """Site and column parameters for the list services endpoints."""
 
     sites = fields.List(
         gui_fields.SiteField(),
@@ -55,6 +55,11 @@ class ServiceParameters(BaseSchema):
         mandatory=[Services.host_name, Services.description],
         example=["host_name", "description"],
     )
+
+
+class ServiceParameters(_BaseParameters):
+    """All the parameters for the list services endpoints."""
+
     query = gui_fields.query_field(
         Services,
         required=False,
@@ -84,10 +89,27 @@ PERMISSIONS = permissions.Undocumented(
     )
 )
 
+QUERY_FIELD = {
+    "query": gui_fields.query_field(
+        Services,
+        required=False,
+        example='{"op": "=", "left": "host_name", "right": "example.com"}',
+    ),
+}
+
 HOST_NAME = {
     "host_name": HostField(
         description="A host name.",
         should_exist=True,
+        permission_type="monitor",
+    )
+}
+
+OPTIONAL_HOST_NAME = {
+    "host_name": HostField(
+        description="A host name.",
+        should_exist=True,
+        required=False,
         permission_type="monitor",
     )
 }
@@ -155,6 +177,26 @@ def show_service(params: Mapping[str, Any]) -> Response:
     )
 
 
+# TODO: DEPRECATED(17512) - remove in 2.5, still used for the "REST API exports" in the UI
+@Endpoint(
+    constructors.domain_object_collection_href("host", "{host_name}", "services"),
+    ".../collection",
+    method="get",
+    path_params=[HOST_NAME],
+    query_params=[_BaseParameters, QUERY_FIELD],
+    tag_group="Monitoring",
+    blacklist_in=["swagger-ui"],
+    response_schema=response_schemas.DomainObjectCollection,
+    permissions_required=PERMISSIONS,
+    deprecated_urls={"/objects/host/{host_name}/collections/services": 17512},
+)
+def _list_host_services_deprecated(params: Mapping[str, Any]) -> Response:
+    """Show the monitored services of a host
+
+    This list is filterable by various parameters."""
+    return _list_services(params)
+
+
 @Endpoint(
     constructors.domain_object_collection_href("host", "{host_name}", "services"),
     "cmk/list",
@@ -173,6 +215,25 @@ def _list_host_services(params: Mapping[str, Any]) -> Response:
     # merge body and path parameters
     params["body"]["host_name"] = params["host_name"]
     return _list_services(params["body"])
+
+
+# TODO: DEPRECATED(17512) - remove in 2.5, still used for the "REST API exports" in the UI
+@Endpoint(
+    constructors.collection_href("service"),
+    ".../collection",
+    method="get",
+    query_params=[_BaseParameters, QUERY_FIELD, OPTIONAL_HOST_NAME],
+    tag_group="Monitoring",
+    blacklist_in=["swagger-ui"],
+    response_schema=response_schemas.DomainObjectCollection,
+    permissions_required=PERMISSIONS,
+    deprecated_urls={"/domain-types/service/collections/all": 17512},
+)
+def _list_all_services_deprecated(params: Mapping[str, Any]) -> Response:
+    """Show all monitored services
+
+    This list is filterable by various parameters."""
+    return _list_services(params)
 
 
 @Endpoint(
@@ -240,5 +301,7 @@ def _list_services(params: Mapping[str, Any]) -> Response:
 
 def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(show_service)
+    endpoint_registry.register(_list_host_services_deprecated)
     endpoint_registry.register(_list_host_services)
+    endpoint_registry.register(_list_all_services_deprecated)
     endpoint_registry.register(_list_all_services)

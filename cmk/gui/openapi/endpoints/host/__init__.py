@@ -126,7 +126,7 @@ def _list_hosts(params: Mapping[str, Any]) -> Response:
     )
 
 
-# TODO: DEPRECATED(17003) - remove in 2.5
+# TODO: DEPRECATED(17003) - remove in 2.5, still used for the "REST API exports" in the UI
 @Endpoint(
     constructors.collection_href("host"),
     ".../collection",

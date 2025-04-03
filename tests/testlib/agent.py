@@ -21,15 +21,15 @@ from pathlib import Path
 from typing import Any, assert_never, Literal
 
 from tests.testlib.common.repo import repo_path
-from tests.testlib.common.utils import (
+from tests.testlib.common.utils import wait_until
+from tests.testlib.site import Site
+from tests.testlib.utils import (
     daemon,
     DaemonTerminationMode,
     execute,
     is_containerized,
     run,
-    wait_until,
 )
-from tests.testlib.site import Site
 
 from cmk.utils.hostaddress import HostName
 

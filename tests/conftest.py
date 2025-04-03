@@ -27,12 +27,12 @@ from tests.testlib.common.repo import (  # noqa: E402
     add_python_paths,
     current_base_branch_name,
 )
-from tests.testlib.common.utils import (  # noqa: E402
+from tests.testlib.pytest_helpers.timeouts import MonitorTimeout, SessionTimeoutError  # noqa: E402
+from tests.testlib.utils import (  # noqa: E402
     is_containerized,
     run,
     verbose_called_process_error,
 )
-from tests.testlib.pytest_helpers.timeouts import MonitorTimeout, SessionTimeoutError  # noqa: E402
 
 logger = logging.getLogger(__name__)
 

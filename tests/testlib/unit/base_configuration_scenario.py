@@ -10,7 +10,7 @@ from typing import Any
 
 from pytest import MonkeyPatch
 
-from tests.testlib.common.utils import get_standard_linux_agent_output
+from tests.testlib.utils import get_standard_linux_agent_output
 
 import cmk.utils.tags
 from cmk.utils.hostaddress import HostAddress, HostName

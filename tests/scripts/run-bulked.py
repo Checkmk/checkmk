@@ -12,7 +12,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 from tests.testlib.common.repo import repo_path
-from tests.testlib.common.utils import run
+from tests.testlib.utils import run
 
 logger = logging.getLogger("pytest-bulked")
 

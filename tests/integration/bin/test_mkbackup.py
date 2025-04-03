@@ -14,9 +14,9 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.common.utils import DISTROS_MISSING_WHITELIST_ENVIRONMENT_FOR_SU, run
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.site import get_site_factory, Site
+from tests.testlib.utils import DISTROS_MISSING_WHITELIST_ENVIRONMENT_FOR_SU, run
 from tests.testlib.web_session import CMKWebSession
 
 from cmk.utils.paths import mkbackup_lock_dir

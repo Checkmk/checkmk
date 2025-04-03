@@ -19,8 +19,8 @@ from typing import Any
 import pytest
 
 from tests.testlib.common.repo import qa_test_data_path
-from tests.testlib.common.utils import run
 from tests.testlib.site import Site
+from tests.testlib.utils import run
 
 logger = logging.getLogger(__name__)
 dump_path_site = Path("var/check_mk/dumps")

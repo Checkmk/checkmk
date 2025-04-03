@@ -11,8 +11,8 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import IO, Literal
 
-from tests.testlib.common.utils import ServiceInfo
 from tests.testlib.site import Site
+from tests.testlib.utils import ServiceInfo
 
 
 @dataclass

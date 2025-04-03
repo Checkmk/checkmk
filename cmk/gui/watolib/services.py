@@ -12,7 +12,7 @@ import hashlib
 import json
 import sys
 import time
-from collections.abc import Container, Iterator, Mapping, MutableMapping, Sequence
+from collections.abc import Callable, Container, Iterator, Mapping, MutableMapping, Sequence
 from contextlib import contextmanager
 from pathlib import Path
 from typing import assert_never, Final, Literal, NamedTuple
@@ -251,12 +251,14 @@ class Discovery:
         update_target: str | None,
         update_source: str | None = None,
         selected_services: Container[tuple[str, Item]],
+        user_need_permission: Callable[[str], None],
     ) -> None:
         self._host = host
         self._action = action
         self._update_source = update_source
         self._update_target = update_target
         self._selected_services = selected_services
+        self.user_need_permission: Final = user_need_permission
 
     def do_discovery(self, discovery_result: DiscoveryResult, target_host_name: HostName) -> None:
         changed_target_services: MutableMapping[ServiceName, AutocheckEntry] = {}
@@ -335,23 +337,22 @@ class Discovery:
                 need_sync,
             )
 
-    @staticmethod
-    def _verify_permissions(table_target: str, entry: CheckPreviewEntry) -> None:
+    def _verify_permissions(self, table_target: str, entry: CheckPreviewEntry) -> None:
         if entry.check_source != table_target:
             match table_target:
                 case DiscoveryState.UNDECIDED:
-                    user.need_permission("wato.service_discovery_to_undecided")
+                    self.user_need_permission("wato.service_discovery_to_undecided")
                 case (
                     DiscoveryState.MONITORED
                     | DiscoveryState.CHANGED
                     | DiscoveryState.CLUSTERED_NEW
                     | DiscoveryState.CLUSTERED_OLD
                 ):
-                    user.need_permission("wato.service_discovery_to_monitored")
+                    self.user_need_permission("wato.service_discovery_to_monitored")
                 case DiscoveryState.IGNORED:
-                    user.need_permission("wato.service_discovery_to_ignored")
+                    self.user_need_permission("wato.service_discovery_to_ignored")
                 case DiscoveryState.REMOVED:
-                    user.need_permission("wato.service_discovery_to_removed")
+                    self.user_need_permission("wato.service_discovery_to_removed")
 
     def _get_autochecks_values(
         self, table_target: str, entry: CheckPreviewEntry
@@ -524,6 +525,7 @@ def perform_fix_all(
             update_target=None,
             update_source=None,
             selected_services=(),  # does not matter in case of "FIX_ALL"
+            user_need_permission=user.need_permission,
         ).do_discovery(discovery_result, host.name())
         discovery_result = get_check_table(host, DiscoveryAction.FIX_ALL, raise_errors=raise_errors)
     return discovery_result
@@ -563,6 +565,7 @@ def perform_service_discovery(
             update_target=update_target,
             update_source=update_source,
             selected_services=selected_services,
+            user_need_permission=user.need_permission,
         ).do_discovery(discovery_result, host.name())
         discovery_result = get_check_table(host, action, raise_errors=raise_errors)
     return discovery_result

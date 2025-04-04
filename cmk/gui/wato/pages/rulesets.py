@@ -41,7 +41,7 @@ from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.tags import GroupedTag, TagGroupID, TagID
 
 import cmk.gui.watolib.changes as _changes
-from cmk.gui import forms
+from cmk.gui import deprecations, forms
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
@@ -3468,8 +3468,7 @@ class ModeUnknownRulesets(WatoMode):
                     if rule.id in selected_rule_ids:
                         self._delete_rule(rulesets, ruleset, rule)
 
-        # TODO causes import-cycles
-        # reset_scheduling("execute_deprecation_tests_and_notify_users")
+        deprecations.reset_scheduling()
         return redirect(self.mode_url())
 
     def _delete_selected_rule(
@@ -3483,8 +3482,7 @@ class ModeUnknownRulesets(WatoMode):
             for rule in rules:
                 if rule.id == selected_rule_id:
                     self._delete_rule(rulesets, ruleset, rule)
-                    # TODO causes import-cycles
-                    # reset_scheduling("execute_deprecation_tests_and_notify_users")
+                    deprecations.reset_scheduling()
                     return redirect(self.mode_url())
 
         return None

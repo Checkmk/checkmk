@@ -29,6 +29,7 @@ from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.job_scheduler_client import JobSchedulerClient
 from cmk.gui.log import logger
 from cmk.gui.message import get_gui_messages, Message, message_gui, MessageText
 from cmk.gui.site_config import get_site_config, is_wato_slave_site
@@ -467,3 +468,12 @@ def register(cron_job_registry: CronJobRegistry) -> None:
             interval=datetime.timedelta(days=1),
         )
     )
+
+
+def reset_scheduling() -> None:
+    response = JobSchedulerClient().post(
+        "reset_scheduling",
+        {"job_id": "execute_deprecation_tests_and_notify_users"},
+    )
+    if response.is_error():
+        logger.error("Cannot reset scheduler: %r", response.error)

@@ -231,10 +231,10 @@ class BaseVersions:
         # do not use a set to retain the order
         return list(dict.fromkeys(earliest_versions + latest_versions))
 
-    MIN_VERSION = get_min_version()
+    min_version = get_min_version()
 
     if edition_from_env().is_saas_edition():
-        BASE_PACKAGES = [
+        base_packages = [
             CMKPackageInfo(
                 CMKVersion(CMKVersion.DAILY, "2.4.0", "2.4.0"), CMKEdition(CMKEdition.CSE)
             )
@@ -243,23 +243,23 @@ class BaseVersions:
         base_versions_pb_file = MODULE_PATH / "base_versions_previous_branch.json"
         if not base_versions_pb_file.exists():
             base_versions_pb_file = MODULE_PATH / "base_versions.json"
-        BASE_VERSIONS_PB = _limit_versions(
-            json.loads(base_versions_pb_file.read_text(encoding="utf-8")), MIN_VERSION
+        base_versions_pb = _limit_versions(
+            json.loads(base_versions_pb_file.read_text(encoding="utf-8")), min_version
         )
 
         base_versions_cb_file = MODULE_PATH / "base_versions_current_branch.json"
-        BASE_VERSIONS_CB = (
+        base_versions_cb = (
             _limit_versions(
                 json.loads(base_versions_cb_file.read_text(encoding="utf-8")),
-                MIN_VERSION,
+                min_version,
             )
             if base_versions_cb_file.exists()
             else []
         )
 
-        BASE_PACKAGES = [
+        base_packages = [
             CMKPackageInfo(CMKVersion(base_version_str), edition_from_env())
-            for base_version_str in BASE_VERSIONS_PB + BASE_VERSIONS_CB
+            for base_version_str in base_versions_pb + base_versions_cb
         ]
 
 
@@ -280,7 +280,7 @@ class TestParams:
             id=f"base-version={base_package.version.version}|interactive-mode={interactive_mode}",
         )
         for base_package, interactive_mode in itertools.product(
-            BaseVersions.BASE_PACKAGES, INTERACTIVE_MODE
+            BaseVersions.base_packages, INTERACTIVE_MODE
         )
         # interactive mode enabled for some specific distros
         if interactive_mode == (os.environ.get("DISTRO") in InteractiveModeDistros.DISTROS)

@@ -427,7 +427,7 @@ function Start-BinarySigning {
 
 function Start-Ps1Signing {
     if ($argSign -ne $true) {
-        Write-Host "Skipping Signing..." -ForegroundColor Yellow
+        Write-Host "Skipping PS1 Signing..." -ForegroundColor Yellow
         return
     }
 
@@ -467,6 +467,30 @@ function Start-Ps1Signing {
     }
 
     Write-Host "Success PS1 signing" -foreground Green
+}
+
+function Start-BazelSigning {
+    if ($argSign -ne $true) {
+        Write-Host "Skipping Bazel Signing..." -ForegroundColor Yellow
+        return
+    }
+
+    Write-Host "Bazel signing..." -ForegroundColor White
+
+    try {
+        &bazel build //agents/windows/plugins:all
+        if ($LASTEXITCODE -eq 0) {
+            $signed_dir = (&bazel info bazel-bin )
+            Write-Host "Signed files are located in $signed_dir"
+        }
+        else {
+            Write-Host "Error during signing $LASTEXITCODE"
+        }
+        Write-Host "Success Bazel signing" -foreground Green
+    }
+    catch {
+        Write-Host "Exception during Bazel signing: $_" -ForegroundColor Red
+    }
 }
 
 
@@ -629,6 +653,7 @@ try {
     }
     Start-BinarySigning
     Start-Ps1Signing
+    Start-BazelSigning
     Start-ArtifactUploading
     Start-MsiPatching
     Start-MsiSigning

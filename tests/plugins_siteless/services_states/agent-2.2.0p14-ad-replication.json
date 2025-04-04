@@ -1,8 +1,0 @@
-{
-  "AD Replication Bergheim/BM-VM-DC-003": {
-    "expected_state": 0
-  },
-  "Check_MK Agent": {
-    "expected_state": 0
-  }
-}

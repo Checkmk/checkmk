@@ -45,8 +45,9 @@ from cmk.base.checkers import (
 from cmk.base.config import ConfigCache, ParserFactory
 
 LOGGER = logging.getLogger(__name__)
-DUMPS_DIR = qa_test_data_path() / "plugins_siteless" / "agent_data"
-SERVICES_STATES_DIR = Path(__file__).parent.resolve() / "services_states"
+DATA_DIR = qa_test_data_path() / "plugins_siteless"
+DUMPS_DIR = DATA_DIR / "agent_data"
+SERVICES_STATES_DIR = DATA_DIR / "services_states"
 
 
 class BasicSubmitter(Submitter):

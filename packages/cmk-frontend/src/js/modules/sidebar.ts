@@ -1218,25 +1218,8 @@ function handle_update_messages(_data: any, response_text: string) {
             title: messages_title,
             text: msg.text,
         });
-        mark_message_read(msg.id, messages_text, messages_count);
+        mark_message_read(msg.id);
     });
-
-    if (result.popup_messages.length != 0) {
-        remove_mega_menu_hints();
-    }
-}
-
-function remove_mega_menu_hints() {
-    // If a popup was shown and clicked, there is no need for a hint in the
-    // user menu
-    const msg_mega_menu_hint = document.getElementById("messages_label");
-    if (msg_mega_menu_hint) {
-        msg_mega_menu_hint.remove();
-    }
-    const msg_user_menu_link = document.getElementById("messages_link");
-    if (msg_user_menu_link) {
-        msg_user_menu_link.remove();
-    }
 }
 
 function update_messages() {
@@ -1273,15 +1256,8 @@ export function update_message_trigger(msg_text: string, msg_count: number) {
     }
 }
 
-function mark_message_read(
-    msg_id: string,
-    msg_text: string,
-    msg_count: number,
-) {
+function mark_message_read(msg_id: string) {
     call_ajax("sidebar_message_read.py?id=" + msg_id);
-
-    // Update the button state
-    update_message_trigger(msg_text, msg_count);
 }
 
 interface AjaxSidebarGetUnackIncompWerks {

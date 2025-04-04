@@ -156,6 +156,15 @@ def delete_gui_message(msg_id: str) -> None:
     messages = get_gui_messages()
     for index, msg in enumerate(messages):
         if msg["id"] == msg_id and not msg.get("security"):
+            # If "Show popup message" and other options are combined,
+            # we have only to remove the popup method to avoid the
+            # popup appearing again
+            msg_methods = msg["methods"]
+            if len(msg_methods) != 1 and "gui_popup" in msg_methods:
+                messages[index]["methods"] = [
+                    method for method in msg_methods if method != "gui_popup"
+                ]
+                continue
             messages.pop(index)
     save_gui_messages(messages)
 

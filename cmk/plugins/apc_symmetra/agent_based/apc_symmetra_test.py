@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -32,12 +32,21 @@
 
 
 import datetime
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.lib.apc import DETECT
-
-check_info = {}
 
 
 def _days_difference(date: str, today: datetime.date) -> int:
@@ -62,12 +71,13 @@ def _days_difference(date: str, today: datetime.date) -> int:
 # TODO: check this for common code with ups_test
 
 
-def check_apc_test(item, params, info):
-    days_warn, days_crit = params.get("levels_elapsed_time") or (0, 0)  # TODO: clean this up
-    if not info:
-        return 3, "Data Missing"
-    last_result = int(info[0][0])
-    last_date = info[0][1]
+def check_apc_test(params: Mapping[str, Any], section: StringTable) -> CheckResult:
+    if not section:
+        yield Result(state=State.UNKNOWN, summary="Data Missing")
+        return
+
+    last_result = int(section[0][0])
+    last_date = section[0][1]
 
     try:
         # I don't have any SNMP walk to confirm this, but in some cases
@@ -75,58 +85,62 @@ def check_apc_test(item, params, info):
         # code.
         days_diff = _days_difference(last_date, datetime.date.today())
     except ValueError:
-        return 3, "Date of last self test is unknown"
+        yield Result(state=State.UNKNOWN, summary="Date of last self test is unknown")
+        return
 
     diagnostic_status_text = {1: "OK", 2: "failed", 3: "invalid", 4: "in progress"}
 
-    state = 0
-    diag_label = ""
-    if last_result == 2:
-        state = 2
-        diag_label = "(!!)"
-    elif last_result == 3:
-        state = 1
-        diag_label = "(!)"
+    test_state = State.OK
+    if last_result == State.CRIT.value:
+        test_state = State.CRIT
+    elif last_result == State.UNKNOWN.value:
+        test_state = State.WARN
 
-    time_label = ""
-    if days_crit and days_diff >= days_crit:
-        state = 2
-        time_label = "(!!)"
-    elif days_warn and days_diff >= days_warn:
-        state = max(state, 1)
-        time_label = "(!)"
+    yield Result(
+        state=test_state,
+        summary="Result of self test: {}".format(diagnostic_status_text.get(last_result, "-")),
+    )
 
-    return state, "Result of self test: {}{}, Date of last test: {}{}".format(
-        diagnostic_status_text.get(last_result, "-"),
-        diag_label,
-        last_date,
-        time_label,
+    state = State.OK
+    match params:
+        case {"levels_elapsed_time": ("fixed", (warn, crit))}:
+            if days_diff >= crit:
+                state = State.CRIT
+            elif days_diff >= warn:
+                state = State.WARN
+
+    yield Result(
+        state=state,
+        summary="Date of last test: {}".format(last_date),
     )
 
 
-def inventory_apc_test(info):
-    if info:
-        return [(None, {})]
-    return []
+def discover_apc_test(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
 
 
 def parse_apc_symmetra_test(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["apc_symmetra_test"] = LegacyCheckDefinition(
+snmp_section_apc_symmetra_test = SimpleSNMPSection(
     name="apc_symmetra_test",
-    parse_function=parse_apc_symmetra_test,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.1.7.2",
         oids=["3", "4"],
     ),
+    parse_function=parse_apc_symmetra_test,
+)
+
+check_plugin_apc_symmetra_test = CheckPlugin(
+    name="apc_symmetra_test",
     service_name="Self Test",
-    discovery_function=inventory_apc_test,
+    discovery_function=discover_apc_test,
     check_function=check_apc_test,
     check_ruleset_name="ups_test",
     check_default_parameters={
-        "levels_elapsed_time": None,
+        "levels_elapsed_time": ("no_levels", None),
     },
 )

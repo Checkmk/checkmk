@@ -32,8 +32,8 @@ msgstr " (Date incomplete, numărul maxim de noduri atins)"
 msgid " (Duration: %s)"
 msgstr " (Durata: %s)"
 
-#, python-format
-msgid " (Duration: %s, %sIO: %s/s)"
+#, fuzzy, python-format
+msgid " (Duration: %s,%s IO: %s/s)"
 msgstr " (Durata: %s, %sIO: %s/s)"
 
 msgid " (copy)"
@@ -283,12 +283,12 @@ msgid "% memory left"
 msgstr "% memorie liberă"
 
 #, no-python-format
-msgid "% of Flash"
-msgstr "% din Flash"
-
-#, no-python-format
 msgid "% of RAM"
 msgstr "% din RAM"
+
+#, fuzzy, no-python-format
+msgid "% of flash"
+msgstr "% din Flash"
 
 #, no-python-format
 msgid "% of maximum active connections"
@@ -574,8 +574,8 @@ msgstr "%s a fost șters."
 msgid "%s instances"
 msgstr "%s instanțe"
 
-#, python-format
-msgid "%s is not a valid UNIX timestamp"
+#, fuzzy, python-format
+msgid "%s is not a valid Unix timestamp"
 msgstr "%s nu este o ștampilă de timp UNIX validă"
 
 #, python-format
@@ -614,8 +614,8 @@ msgstr "rămasă în procesul gratuit"
 msgid "%s matching labels: %s"
 msgstr "%s etichete corespunzătoare: %s"
 
-#, python-format
-msgid "%s may be missing, if must not be empty if it is set."
+#, fuzzy, python-format
+msgid "%s may be missing, it must not be empty if it is set."
 msgstr "%s ar putea să lipsească, dacă nu trebuie să fie gol dacă este setat."
 
 #, python-format
@@ -829,9 +829,10 @@ msgstr "Starea \"Minor"
 msgid "'Warning' state"
 msgstr "Starea \"Avertizare"
 
+#, fuzzy
 msgid ""
 "'git' command was not found on this system, but it is required for "
-"versioning the configuration.Please either install 'git' or disable git "
+"versioning the configuration. Please either install 'git' or disable git "
 "configuration tracking in setup."
 msgstr ""
 "Comanda 'git' nu a fost găsită pe acest sistem, dar este necesară pentru "
@@ -1474,11 +1475,12 @@ msgstr "<li>Nu se pot șterge gazdele din folderul %s: %s</li>"
 msgid "<li>Cannot move hosts from folder %s: %s</li>"
 msgstr "<li>Nu se pot muta gazdele din folderul %s: %s</li>"
 
+#, fuzzy
 msgid ""
-"<p>By default each Checkmk site has it's own temporary filesystem (a "
-"ramdisk) mounted to <tt>[SITE]/tmp</tt>. In case the mount is not possible "
-"Checkmk starts without this temporary filesystem.</p><p>Even if this is "
-"possible, it is not recommended to use Checkmk this way because it may "
+"<p>By default each Checkmk site has its own temporary file system (a "
+"ramdisk) mounted to <tt>[SITE]/tmp</tt>. In case the mount is not possible, "
+"Checkmk starts without this temporary file system.</p><p>Even if this is "
+"possible, it is not recommended to use Checkmk this way, because it may "
 "reduce the overall performance of Checkmk.</p>"
 msgstr ""
 "<p>În mod implicit, fiecare site Checkmk are propriul sistem de fișiere "
@@ -2261,10 +2263,11 @@ msgstr ""
 msgid "A provisioning of over 100% means over provisioning."
 msgstr "O dotare de peste 100% înseamnă o dotare excesivă."
 
+#, fuzzy
 msgid ""
-"A regular expression matching the <b>beginning</b> of a service description. "
-"You can use a trailing <tt>$</tt> in order to define an exact match. For "
-"each matching service on the specified hosts one child node will be created. "
+"A regular expression matching the <b>beginning</b> of a service name. You "
+"can use a trailing <tt>$</tt> in order to define an exact match. For each "
+"matching service on the specified hosts one child node will be created. "
 msgstr ""
 "O expresie regulată care se potrivește cu <b>începutul</b> descrierii unui "
 "serviciu. Puteți utiliza un <tt>$</tt> la sfârșit pentru a defini o "
@@ -2704,9 +2707,6 @@ msgstr "Limitele AWS/EC2"
 msgid "AWS/ECS Limits"
 msgstr "Limitele AWS/ECS"
 
-msgid "AWS/ELB Backend Connection Errors"
-msgstr "Erori de conectare AWS/ELB Backend"
-
 msgid "AWS/ELB HTTP Errors"
 msgstr "Erori HTTP AWS/ELB"
 
@@ -2721,6 +2721,10 @@ msgstr "Limitele AWS/ELB"
 
 msgid "AWS/ELB Statistics"
 msgstr "Statistici AWS/ELB"
+
+#, fuzzy
+msgid "AWS/ELB back-end connection errors"
+msgstr "Erori de conectare AWS/ELB Backend"
 
 msgid "AWS/ELBApplication Target Errors"
 msgstr "Erorile țintă ale aplicației AWS/ELBApplication Target"
@@ -3001,17 +3005,19 @@ msgstr ""
 msgid "Access"
 msgstr "Accesați"
 
-msgid "Access Checkmk Agent via TCP"
+#, fuzzy
+msgid "Access Checkmk agent via TCP"
 msgstr "Accesați Checkmk Agent prin TCP"
-
-msgid "Access Point"
-msgstr "Punct de Acces"
 
 msgid "Access analyze configuration"
 msgstr "Accesul analizează configurația"
 
 msgid "Access key"
 msgstr "Cheie de acces"
+
+#, fuzzy
+msgid "Access point"
+msgstr "Puncte de acces"
 
 msgid "Access point name"
 msgstr "Numele punctului de acces"
@@ -3219,14 +3225,15 @@ msgstr "Autorul Confirmației"
 msgid "Acknowledgement comment"
 msgstr "Comentariul Confirmației"
 
-msgid "Acknowledgement of problem"
-msgstr "Recunoașterea problemei"
-
 msgid "Acknowledging problems"
 msgstr "Recunoașterea problemelor"
 
 msgid "Acknowledgment expires:"
 msgstr "Confirmarea expiră:"
+
+#, fuzzy
+msgid "Acknowledgment of problem"
+msgstr "Recunoașterea problemei"
 
 msgid "Acknowledgments: "
 msgstr "Recunoștințe: "
@@ -4901,7 +4908,7 @@ msgid "Agent plug-ins"
 msgstr "Plugin-uri agent"
 
 #, fuzzy
-msgid "Agent plug-ins: Regular expression to exclude plugins"
+msgid "Agent plug-ins: Regular expression to exclude plug-ins"
 msgstr "Plugin-uri agent: Expresie regulată pentru a exclude plugin-uri"
 
 #, fuzzy
@@ -5430,7 +5437,7 @@ msgstr "Toate gazdele"
 
 #, fuzzy
 msgid ""
-"All hosts configured via this ruleset will do a hardware and software "
+"All hosts configured via this rule set will do a hardware and software "
 "inventory after every check cycle if there's at least one inventory plug-in "
 "which processes status data. <b>Note:</b> in order to get any useful result "
 "for agent based hosts make sure that you have installed the agent plug-in "
@@ -5444,7 +5451,7 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"All hosts configured via this ruleset will do a hardware and software "
+"All hosts configured via this rule set will do a hardware and software "
 "inventory. For each configured host a new active check will be created. You "
 "should also create a rule for changing the normal interval for that check to "
 "something between a couple of hours and one day. <b>Note:</b> in order to "
@@ -5547,7 +5554,8 @@ msgstr ""
 "Toate serviciile cu probleme ale unei anumite gazde. Gazda și site-ul "
 "trebuie să fie setate prin variabile HTTP."
 
-msgid "All problematic logfiles"
+#, fuzzy
+msgid "All problematic log files"
 msgstr "Toate fișierele jurnal problematice"
 
 msgid "All problems of services not currently in a downtime."
@@ -5884,9 +5892,10 @@ msgstr ""
 "Permite definirea nivelurilor absolute pentru containerele în funcțiune, în "
 "așteptare, terminate și totale."
 
+#, fuzzy
 msgid ""
-"Allows to define levels for the counts and size of Docker Containers, "
-"Images, Local Volumes, and the Build Cache."
+"Allows to define levels for the counts and size of Docker containers, "
+"images, local volumes, and the build cache."
 msgstr ""
 "Permite definirea nivelurilor pentru numărul și dimensiunea containerelor "
 "Docker, a imaginilor, a volumelor locale și a Build Cache."
@@ -6229,11 +6238,11 @@ msgstr ""
 "durata feliei sale de timp sau când sistemul identifică un fir cu prioritate "
 "mai mare pentru a rula."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"An optional URL pointing to documentation or any other page. This will be "
-"displayed as an icon %s and open a new page when clicked. You can use either "
-"global URLs (beginning with <tt>http://</tt>), absolute local urls "
+"An optional URL pointing to the documentation or any other page. It will be "
+"displayed as an icon %s and opens a new page when clicked. You can use "
+"either global URLs (beginning with <tt>http://</tt>), absolute local URLs "
 "(beginning with <tt>/</tt>) or relative URLs (that are relative to "
 "<tt>check_mk/</tt>)."
 msgstr ""
@@ -6396,6 +6405,16 @@ msgstr "Starea Apache"
 #, fuzzy
 msgid "Apache local password file (htpasswd)"
 msgstr "Fișier local de parole Apache (htpasswd)"
+
+#, fuzzy
+msgid ""
+"Apache mode and TCP address and port, Core, Liveproxy daemon and Livestatus "
+"TCP mode, event daemon config, graphical user interface (GUI) authorisation, "
+"NSCA mode, TMP file system mode"
+msgstr ""
+"Modul Apache și adresa și portul TCP, Core, daemonul Liveproxy și modul TCP "
+"livestatus, configurația daemonului de evenimente, autorizarea Multiste, "
+"modul NSCA, modul sistemului de fișiere TMP"
 
 msgid ""
 "Apache mode and TCP address and port, Core, Liveproxy daemon and livestatus "
@@ -6738,7 +6757,8 @@ msgstr "Argumente:"
 msgid "Arrays (Controllers)"
 msgstr "Array-uri (controlere)"
 
-msgid "Articles in the user guide"
+#, fuzzy
+msgid "Articles in the User Guide"
 msgstr "Articolele din ghidul utilizatorului"
 
 msgid "Artificial slowdown of logfile parsing (for testing!)"
@@ -8541,9 +8561,6 @@ msgstr "Built-in: Radial"
 msgid "Bulk"
 msgstr "În vrac"
 
-msgid "Bulk Discovery"
-msgstr "Descoperire în vrac"
-
 msgid "Bulk ID"
 msgstr "Identificare în vrac"
 
@@ -9356,13 +9373,14 @@ msgstr ""
 "țintă și se conectează direct (de exemplu, atunci când se interoghează "
 "portul receptorului agentului din Checkmk REST API)."
 
+#, fuzzy
 msgid ""
-"By default, the filesystem checks (<tt>df</tt>, <tt>hr_fs</tt> and others) "
-"will create a single service for each filesystem. By defining grouping "
-"patterns, you can handle groups of filesystems like one filesystem. For each "
-"group, you can define one or several include and exclude patterns. The "
-"filesystems matching one of the include patterns will be monitored like one "
-"big filesystem in a single service. The filesystems matching one of the "
+"By default, the file system checks (<tt>df</tt>, <tt>hr_fs</tt> and others) "
+"will create a single service for each file system. By defining grouping "
+"patterns, you can handle groups of file systems like one file system. For "
+"each group, you can define one or several include and exclude patterns. The "
+"file systems matching one of the include patterns will be monitored like one "
+"big file system in a single service. The file systems matching one of the "
 "exclude patterns will be excluded from the group and monitored individually."
 msgstr ""
 "În mod implicit, verificările sistemelor de fișiere (<tt>df</tt>, <tt>hr_fs</"
@@ -9427,13 +9445,13 @@ msgstr ""
 "disponibil pe toate site-urile dumneavoastră. În caz contrar, acesta va fi "
 "disponibil doar pentru site-urile alocate cu clientul selectat."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "By specifying a status host for each non-local connection you prevent "
-"Multisite from running into timeouts when remote sites do not respond. You "
-"need to add the remote monitoring servers as hosts into your local "
-"monitoring site and use their host state as a reachability state of the "
-"remote site. Please refer to the <a target=_blank href='%s'>online "
+"graphical user interface (GUI) from running into timeouts when remote sites "
+"do not respond. You need to add the remote monitoring servers as hosts into "
+"your local monitoring site and use their host state as a reachability state "
+"of the remote site. Please refer to the <a target=_blank href='%s'>online "
 "documentation</a> for details."
 msgstr ""
 "Prin specificarea unei gazde de stare pentru fiecare conexiune nelocală, "
@@ -9683,6 +9701,16 @@ msgstr ""
 "performanța nucleului, OMD, sistemul de fișiere, starea Apache, conexiunile "
 "TCP din intervalele de timp 25 de ore și 35 de zile."
 
+#, fuzzy
+msgid ""
+"CPU load and utilization, number of threads, Kernel performance, OMD, file "
+"system, Apache status, TCP connections of the time ranges 25 hours and 35 "
+"days"
+msgstr ""
+"Încărcarea și utilizarea procesorului, numărul de fire de execuție, "
+"performanța nucleului, OMD, sistemul de fișiere, starea Apache, conexiunile "
+"TCP din intervalele de timp 25 de ore și 35 de zile."
+
 msgid "CPU load average of last 15 minutes"
 msgstr "Media încărcării CPU din ultimele 15 minute"
 
@@ -9804,7 +9832,8 @@ msgstr "Utilizare CPU (percentila 99)"
 msgid "CPU utilization (average)"
 msgstr "Utilizare CPU (medie)"
 
-msgid "CPU utilization for Appliances"
+#, fuzzy
+msgid "CPU utilization for appliances"
 msgstr "Utilizare CPU pentru aparate"
 
 msgid "CPU utilization for simple devices"
@@ -9839,7 +9868,8 @@ msgstr "Utilizare CPU în ultima secundă"
 msgid "CPU utilization of Devices with Modules"
 msgstr "Utilizarea CPU a dispozitivelor cu module"
 
-msgid "CPU utilization on Linux/UNIX"
+#, fuzzy
+msgid "CPU utilization on Linux/Unix"
 msgstr "Utilizare CPU pe Linux/UNIX"
 
 msgid "CPU utilization: Cluster"
@@ -10263,7 +10293,8 @@ msgstr "Nu se poate citi fișierul de configurare %s: %s:"
 msgid "Cannot read file \"%s\": %s"
 msgstr "Nu se poate citi fișierul \"%s\": %s."
 
-msgid "Cannot render dropdown: Missing required information"
+#, fuzzy
+msgid "Cannot render drop-down: Missing required information"
 msgstr "Nu se poate reda lista derulantă: Lipsesc informațiile necesare"
 
 #, python-format
@@ -11018,7 +11049,7 @@ msgid ""
 "total number of notifications sent by the local monitoring core and creates "
 "graphs for each individual contact. You can configure thresholds on the "
 "number of notifications per contact in a defined time interval. This plug-in "
-"queries livestatus to extract the notification related log entries from the "
+"queries Livestatus to extract the notification related log entries from the "
 "log file of your monitoring core."
 msgstr ""
 "Verificați numărul de notificări trimise per contact folosind plugin-ul "
@@ -53620,11 +53651,12 @@ msgid "Specify levels in percentage of storage processor usage"
 msgstr ""
 "Specificați nivelurile în procente de utilizare a procesorului de stocare"
 
-msgid "Specify levels in percentage of total Flash"
-msgstr "Specificați nivelurile în procente din totalul Flash"
-
 msgid "Specify levels in percentage of total RAM"
 msgstr "Specificați nivelurile în procente din totalul RAM"
+
+#, fuzzy
+msgid "Specify levels in percentage of total flash"
+msgstr "Specificați nivelurile în procente din totalul Flash"
 
 msgid "Specify levels in percentage of total memory usage"
 msgstr "Specificați nivelurile în procente din utilizarea totală a memoriei"
@@ -80292,6 +80324,12 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#~ msgid "Access Point"
+#~ msgstr "Punct de Acces"
+
+#~ msgid "Bulk Discovery"
+#~ msgstr "Descoperire în vrac"
 
 #~ msgid " (Copy)"
 #~ msgstr " (Copiază)"

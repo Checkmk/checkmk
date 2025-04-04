@@ -31,8 +31,8 @@ msgstr " (Numero massimo di nodi superato)"
 msgid " (Duration: %s)"
 msgstr " (Durata: %s)"
 
-#, python-format
-msgid " (Duration: %s, %sIO: %s/s)"
+#, fuzzy, python-format
+msgid " (Duration: %s,%s IO: %s/s)"
 msgstr " (Durata: %s, %sIO: %s/s)"
 
 msgid " (copy)"
@@ -281,12 +281,12 @@ msgid "% memory left"
 msgstr "% di memoria residua"
 
 #, no-python-format
-msgid "% of Flash"
-msgstr "% di Flash"
-
-#, no-python-format
 msgid "% of RAM"
 msgstr "% di RAM"
+
+#, fuzzy, no-python-format
+msgid "% of flash"
+msgstr "% di Flash"
 
 #, no-python-format
 msgid "% of maximum active connections"
@@ -570,8 +570,8 @@ msgstr "%s è stato eliminato."
 msgid "%s instances"
 msgstr "%s Istanze"
 
-#, python-format
-msgid "%s is not a valid UNIX timestamp"
+#, fuzzy, python-format
+msgid "%s is not a valid Unix timestamp"
 msgstr "%s non è un timestamp UNIX valido"
 
 #, python-format
@@ -610,8 +610,8 @@ msgstr ""
 msgid "%s matching labels: %s"
 msgstr "%s etichette corrispondenti: %s"
 
-#, python-format
-msgid "%s may be missing, if must not be empty if it is set."
+#, fuzzy, python-format
+msgid "%s may be missing, it must not be empty if it is set."
 msgstr "%s può mancare, se non deve essere vuoto se è impostato."
 
 #, fuzzy, python-format
@@ -822,7 +822,7 @@ msgstr "Stato 'Warning' (Attenzione)"
 
 msgid ""
 "'git' command was not found on this system, but it is required for "
-"versioning the configuration.Please either install 'git' or disable git "
+"versioning the configuration. Please either install 'git' or disable git "
 "configuration tracking in setup."
 msgstr ""
 
@@ -1455,11 +1455,12 @@ msgstr "<li>Non è possibile cancellare gli host nella cartella %s: %s</li>"
 msgid "<li>Cannot move hosts from folder %s: %s</li>"
 msgstr "<li>Non è possibile spostare gli host dalla cartella %s: %s</li>"
 
+#, fuzzy
 msgid ""
-"<p>By default each Checkmk site has it's own temporary filesystem (a "
-"ramdisk) mounted to <tt>[SITE]/tmp</tt>. In case the mount is not possible "
-"Checkmk starts without this temporary filesystem.</p><p>Even if this is "
-"possible, it is not recommended to use Checkmk this way because it may "
+"<p>By default each Checkmk site has its own temporary file system (a "
+"ramdisk) mounted to <tt>[SITE]/tmp</tt>. In case the mount is not possible, "
+"Checkmk starts without this temporary file system.</p><p>Even if this is "
+"possible, it is not recommended to use Checkmk this way, because it may "
 "reduce the overall performance of Checkmk.</p>"
 msgstr ""
 "<p>Di default ogni sito Checkmk ha il suo filesystem temporaneo (un ramdisk) "
@@ -2237,10 +2238,11 @@ msgid "A provisioning of over 100% means over provisioning."
 msgstr ""
 "Un accantonamento superiore al 100% significa un accantonamento eccessivo."
 
+#, fuzzy
 msgid ""
-"A regular expression matching the <b>beginning</b> of a service description. "
-"You can use a trailing <tt>$</tt> in order to define an exact match. For "
-"each matching service on the specified hosts one child node will be created. "
+"A regular expression matching the <b>beginning</b> of a service name. You "
+"can use a trailing <tt>$</tt> in order to define an exact match. For each "
+"matching service on the specified hosts one child node will be created. "
 msgstr ""
 "Un'espressione regolare che corrisponde all'<b>inizio</b> della descrizione "
 "di un servizio. Puoi usare un <tt>$</tt> finale per definire una "
@@ -2677,9 +2679,6 @@ msgstr "Limiti AWS/EC2"
 msgid "AWS/ECS Limits"
 msgstr "Limiti AWS/EC2"
 
-msgid "AWS/ELB Backend Connection Errors"
-msgstr "Errori di connessione del backend AWS/ELB"
-
 msgid "AWS/ELB HTTP Errors"
 msgstr "Errori HTTP di AWS/ELB"
 
@@ -2694,6 +2693,10 @@ msgstr "Limiti AWS/ELB"
 
 msgid "AWS/ELB Statistics"
 msgstr "Statistiche AWS/ELB"
+
+#, fuzzy
+msgid "AWS/ELB back-end connection errors"
+msgstr "Errori di connessione del backend AWS/ELB"
 
 msgid "AWS/ELBApplication Target Errors"
 msgstr "Errori di destinazione di AWS/ELBApplication"
@@ -2973,17 +2976,19 @@ msgstr ""
 msgid "Access"
 msgstr "Accesso"
 
-msgid "Access Checkmk Agent via TCP"
+#, fuzzy
+msgid "Access Checkmk agent via TCP"
 msgstr "Accesso all'agente Checkmk via TCP"
-
-msgid "Access Point"
-msgstr "Punto di accesso"
 
 msgid "Access analyze configuration"
 msgstr "L'accesso analizza la configurazione"
 
 msgid "Access key"
 msgstr "Chiave di accesso"
+
+#, fuzzy
+msgid "Access point"
+msgstr "Punto di accesso"
 
 msgid "Access point name"
 msgstr "Nome del punto di accesso"
@@ -3189,14 +3194,15 @@ msgstr "Riconoscimento Autore"
 msgid "Acknowledgement comment"
 msgstr "Riconoscimento Commento"
 
-msgid "Acknowledgement of problem"
-msgstr "Riconoscimento del problema"
-
 msgid "Acknowledging problems"
 msgstr "Riconoscere i problemi"
 
 msgid "Acknowledgment expires:"
 msgstr "Il riconoscimento scade:"
+
+#, fuzzy
+msgid "Acknowledgment of problem"
+msgstr "Riconoscimento del problema"
 
 msgid "Acknowledgments: "
 msgstr "Ringraziamenti: "
@@ -4865,7 +4871,7 @@ msgid "Agent plug-ins"
 msgstr "Plugin per agenti"
 
 #, fuzzy
-msgid "Agent plug-ins: Regular expression to exclude plugins"
+msgid "Agent plug-ins: Regular expression to exclude plug-ins"
 msgstr "Plugin dell'agente: Espressione regolare per escludere i plugin"
 
 #, fuzzy
@@ -5392,7 +5398,7 @@ msgstr "Tutti gli host"
 
 #, fuzzy
 msgid ""
-"All hosts configured via this ruleset will do a hardware and software "
+"All hosts configured via this rule set will do a hardware and software "
 "inventory after every check cycle if there's at least one inventory plug-in "
 "which processes status data. <b>Note:</b> in order to get any useful result "
 "for agent based hosts make sure that you have installed the agent plug-in "
@@ -5407,7 +5413,7 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"All hosts configured via this ruleset will do a hardware and software "
+"All hosts configured via this rule set will do a hardware and software "
 "inventory. For each configured host a new active check will be created. You "
 "should also create a rule for changing the normal interval for that check to "
 "something between a couple of hours and one day. <b>Note:</b> in order to "
@@ -5510,7 +5516,8 @@ msgstr ""
 "Tutti i servizi problematici di un dato host. L'host e il sito devono essere "
 "impostati tramite variabili HTTP."
 
-msgid "All problematic logfiles"
+#, fuzzy
+msgid "All problematic log files"
 msgstr "Tutti i file di log problematici"
 
 msgid "All problems of services not currently in a downtime."
@@ -5843,9 +5850,10 @@ msgstr ""
 "Consente di definire livelli assoluti per i contenitori in esecuzione, in "
 "attesa, terminati e totali."
 
+#, fuzzy
 msgid ""
-"Allows to define levels for the counts and size of Docker Containers, "
-"Images, Local Volumes, and the Build Cache."
+"Allows to define levels for the counts and size of Docker containers, "
+"images, local volumes, and the build cache."
 msgstr ""
 "Permette di definire i livelli per i conteggi e le dimensioni dei "
 "contenitori Docker, delle immagini, dei volumi locali e della build cache."
@@ -6185,11 +6193,11 @@ msgstr ""
 "per la durata della sua fetta di tempo o quando il sistema identifica un "
 "thread a priorità più alta da eseguire"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"An optional URL pointing to documentation or any other page. This will be "
-"displayed as an icon %s and open a new page when clicked. You can use either "
-"global URLs (beginning with <tt>http://</tt>), absolute local urls "
+"An optional URL pointing to the documentation or any other page. It will be "
+"displayed as an icon %s and opens a new page when clicked. You can use "
+"either global URLs (beginning with <tt>http://</tt>), absolute local URLs "
 "(beginning with <tt>/</tt>) or relative URLs (that are relative to "
 "<tt>check_mk/</tt>)."
 msgstr ""
@@ -6347,6 +6355,16 @@ msgstr "Stato di Apache"
 #, fuzzy
 msgid "Apache local password file (htpasswd)"
 msgstr "File di password locale di Apache (htpasswd)"
+
+#, fuzzy
+msgid ""
+"Apache mode and TCP address and port, Core, Liveproxy daemon and Livestatus "
+"TCP mode, event daemon config, graphical user interface (GUI) authorisation, "
+"NSCA mode, TMP file system mode"
+msgstr ""
+"Modalità Apache e indirizzo e porta TCP, Core, demone Liveproxy e modalità "
+"TCP livestatus, configurazione demone evento, autorizzazione Multiste, "
+"modalità NSCA, modalità filesystem TMP"
 
 msgid ""
 "Apache mode and TCP address and port, Core, Liveproxy daemon and livestatus "
@@ -6686,7 +6704,8 @@ msgstr "Argomenti:"
 msgid "Arrays (Controllers)"
 msgstr "Array (Controllori)"
 
-msgid "Articles in the user guide"
+#, fuzzy
+msgid "Articles in the User Guide"
 msgstr "Articoli nella guida utente"
 
 msgid "Artificial slowdown of logfile parsing (for testing!)"
@@ -8476,9 +8495,6 @@ msgstr "Incorporato: Radiale"
 msgid "Bulk"
 msgstr "Bulk"
 
-msgid "Bulk Discovery"
-msgstr "Scoperta di massa"
-
 msgid "Bulk ID"
 msgstr "ID di massa"
 
@@ -9246,13 +9262,14 @@ msgstr ""
 "esempio, quando si interroga la porta del ricevitore dell'agente dall'API "
 "REST di Checkmk)."
 
+#, fuzzy
 msgid ""
-"By default, the filesystem checks (<tt>df</tt>, <tt>hr_fs</tt> and others) "
-"will create a single service for each filesystem. By defining grouping "
-"patterns, you can handle groups of filesystems like one filesystem. For each "
-"group, you can define one or several include and exclude patterns. The "
-"filesystems matching one of the include patterns will be monitored like one "
-"big filesystem in a single service. The filesystems matching one of the "
+"By default, the file system checks (<tt>df</tt>, <tt>hr_fs</tt> and others) "
+"will create a single service for each file system. By defining grouping "
+"patterns, you can handle groups of file systems like one file system. For "
+"each group, you can define one or several include and exclude patterns. The "
+"file systems matching one of the include patterns will be monitored like one "
+"big file system in a single service. The file systems matching one of the "
 "exclude patterns will be excluded from the group and monitored individually."
 msgstr ""
 "Per impostazione predefinita, i controlli dei filesystem (<tt>df</tt>, "
@@ -9316,13 +9333,13 @@ msgstr ""
 "disponibile. Se selezioni globale, sarà disponibile su tutti i tuoi siti. "
 "Altrimenti sarà disponibile solo per i siti assegnati al cliente selezionato."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "By specifying a status host for each non-local connection you prevent "
-"Multisite from running into timeouts when remote sites do not respond. You "
-"need to add the remote monitoring servers as hosts into your local "
-"monitoring site and use their host state as a reachability state of the "
-"remote site. Please refer to the <a target=_blank href='%s'>online "
+"graphical user interface (GUI) from running into timeouts when remote sites "
+"do not respond. You need to add the remote monitoring servers as hosts into "
+"your local monitoring site and use their host state as a reachability state "
+"of the remote site. Please refer to the <a target=_blank href='%s'>online "
 "documentation</a> for details."
 msgstr ""
 "Specificando uno stato host per ogni connessione non locale eviti che "
@@ -9565,6 +9582,16 @@ msgstr ""
 "filesystem, stato di Apache, connessioni TCP degli intervalli di tempo 25 "
 "ore e 35 giorni"
 
+#, fuzzy
+msgid ""
+"CPU load and utilization, number of threads, Kernel performance, OMD, file "
+"system, Apache status, TCP connections of the time ranges 25 hours and 35 "
+"days"
+msgstr ""
+"Carico e utilizzo della CPU, numero di thread, prestazioni del kernel, OMD, "
+"filesystem, stato di Apache, connessioni TCP degli intervalli di tempo 25 "
+"ore e 35 giorni"
+
 msgid "CPU load average of last 15 minutes"
 msgstr "Media del carico della CPU degli ultimi 15 minuti"
 
@@ -9684,7 +9711,8 @@ msgstr "Utilizzo della CPU (99° percentile)"
 msgid "CPU utilization (average)"
 msgstr "Utilizzo della CPU (media)"
 
-msgid "CPU utilization for Appliances"
+#, fuzzy
+msgid "CPU utilization for appliances"
 msgstr "Utilizzo della CPU per gli apparecchi"
 
 msgid "CPU utilization for simple devices"
@@ -9719,7 +9747,8 @@ msgstr "Utilizzo della CPU nell'ultimo secondo"
 msgid "CPU utilization of Devices with Modules"
 msgstr "Utilizzo della CPU di dispositivi con moduli"
 
-msgid "CPU utilization on Linux/UNIX"
+#, fuzzy
+msgid "CPU utilization on Linux/Unix"
 msgstr "Utilizzo della CPU su Linux/UNIX"
 
 msgid "CPU utilization: Cluster"
@@ -10144,7 +10173,8 @@ msgstr "Impossibile leggere il file di configurazione %s: %s:"
 msgid "Cannot read file \"%s\": %s"
 msgstr "Impossibile leggere il file \"%s\": %s"
 
-msgid "Cannot render dropdown: Missing required information"
+#, fuzzy
+msgid "Cannot render drop-down: Missing required information"
 msgstr ""
 "Impossibile visualizzare il menu a tendina: Mancano le informazioni richieste"
 
@@ -10891,7 +10921,7 @@ msgid ""
 "total number of notifications sent by the local monitoring core and creates "
 "graphs for each individual contact. You can configure thresholds on the "
 "number of notifications per contact in a defined time interval. This plug-in "
-"queries livestatus to extract the notification related log entries from the "
+"queries Livestatus to extract the notification related log entries from the "
 "log file of your monitoring core."
 msgstr ""
 "Controllare il numero di notifiche inviate per contatto utilizzando il "
@@ -53010,11 +53040,12 @@ msgid "Specify levels in percentage of storage processor usage"
 msgstr ""
 "Specificare i livelli in percentuale dell'uso del processore di archiviazione"
 
-msgid "Specify levels in percentage of total Flash"
-msgstr "Specificare i livelli in percentuale del totale di Flash"
-
 msgid "Specify levels in percentage of total RAM"
 msgstr "Specificare i livelli in percentuale della RAM totale"
+
+#, fuzzy
+msgid "Specify levels in percentage of total flash"
+msgstr "Specificare i livelli in percentuale del totale di Flash"
 
 msgid "Specify levels in percentage of total memory usage"
 msgstr "Specificare i livelli in percentuale dell'uso totale della memoria"
@@ -79369,6 +79400,12 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#~ msgid "Access Point"
+#~ msgstr "Punto di accesso"
+
+#~ msgid "Bulk Discovery"
+#~ msgstr "Scoperta di massa"
 
 #~ msgid " (Copy)"
 #~ msgstr " (Copia)"

@@ -123,7 +123,7 @@ setup_env_variables() {
 
 collect_user_input() {
     print_green "Collect user input ... to get artifacts instead of building from scratch"
-    read -rp "Enter Nexus Username: " NEXUS_USERNAME
+    read -rp "Enter Nexus Username (or LDAP Username): " NEXUS_USERNAME
     export NEXUS_USERNAME
     read -rsp "Enter Nexus Password: " NEXUS_PASSWORD
     export NEXUS_PASSWORD
@@ -138,7 +138,7 @@ collect_user_input() {
     # test for valid credentials
     output=$(curl -sSL -u "${NEXUS_USERNAME}:${NEXUS_PASSWORD}" -X GET -G $NEXUS_ARCHIVES_URL)
     if [ -n "$output" ]; then
-        print_green "Nexus login successfull"
+        print_green "Nexus login successful"
     else
         print_red "Failed to login to Nexus"
         read -rp "Retry entering correct Nexus Username and Password (y/n): " RETRY_LOGIN

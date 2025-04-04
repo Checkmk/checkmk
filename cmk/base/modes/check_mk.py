@@ -1846,7 +1846,7 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
     ruleset_matcher = config_cache.ruleset_matcher
     ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
     autochecks_config = config.AutochecksConfigurer(config_cache, plugins.check_plugins)
-    discovery_config = config.DiscoveryConfigurer(
+    discovery_config = config.DiscoveryConfig(
         ruleset_matcher,
         loading_result.config_cache.label_manager.labels_of_host,
         loading_result.loaded_config.discovery_rules,
@@ -1918,11 +1918,11 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
                     rtc_package=None,
                 ),
                 host_label_plugins=HostLabelPluginMapper(
-                    config_getter=discovery_config,
+                    discovery_config=discovery_config,
                     sections={**plugins.agent_sections, **plugins.snmp_sections},
                 ),
                 plugins=DiscoveryPluginMapper(
-                    config_getter=discovery_config,
+                    discovery_config=discovery_config,
                     check_plugins=plugins.check_plugins,
                 ),
                 autochecks_config=autochecks_config,
@@ -2132,7 +2132,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     plugins = load_checks()
     loading_result = load_config(plugins)
     config_cache = loading_result.config_cache
-    discovery_config = config.DiscoveryConfigurer(
+    discovery_config = config.DiscoveryConfig(
         loading_result.config_cache.ruleset_matcher,
         loading_result.config_cache.label_manager.labels_of_host,
         loading_result.loaded_config.discovery_rules,
@@ -2226,11 +2226,11 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
             ),
             section_error_handling=section_error_handling,
             host_label_plugins=HostLabelPluginMapper(
-                config_getter=discovery_config,
+                discovery_config=discovery_config,
                 sections={**plugins.agent_sections, **plugins.snmp_sections},
             ),
             plugins=DiscoveryPluginMapper(
-                config_getter=discovery_config,
+                discovery_config=discovery_config,
                 check_plugins=plugins.check_plugins,
             ),
             run_plugin_names=run_plugin_names,

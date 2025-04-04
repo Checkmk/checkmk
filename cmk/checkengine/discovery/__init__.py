@@ -23,7 +23,7 @@ from ._autodiscovery import (
 from ._commandline import commandline_discovery
 from ._filters import RediscoveryParameters
 from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabelPlugin
-from ._params import ConfigGetter, DiscoveryCheckParameters, get_plugin_parameters
+from ._params import ABCDiscoveryConfig, DiscoveryCheckParameters, get_plugin_parameters
 from ._preview import CheckPreview, CheckPreviewEntry, get_check_preview
 from ._services import analyse_services, discover_services, find_plugins
 from ._utils import DiscoveryMode, DiscoverySettings, DiscoveryVsSettings, QualifiedDiscovery
@@ -38,7 +38,7 @@ __all__ = [
     "automation_discovery",
     "CheckPreview",
     "CheckPreviewEntry",
-    "ConfigGetter",
+    "ABCDiscoveryConfig",
     "commandline_discovery",
     "discover_host_labels",
     "discover_services",

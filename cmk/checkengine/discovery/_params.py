@@ -7,7 +7,8 @@ from __future__ import annotations
 
 import dataclasses
 import itertools
-from collections.abc import Callable, Mapping, Sequence
+from abc import ABC, abstractmethod
+from collections.abc import Mapping, Sequence
 from typing import Literal
 
 from cmk.utils.check_utils import ParametersTypeAlias
@@ -18,10 +19,19 @@ from cmk.checkengine.parameters import Parameters
 
 from ._filters import RediscoveryParameters
 
-type ConfigGetter = Callable[
-    [HostName, RuleSetName, Literal["merged", "all"]],
-    Mapping[str, object] | Sequence[Mapping[str, object]],
-]
+
+class ABCDiscoveryConfig(ABC):
+    @abstractmethod
+    def __call__(
+        self,
+        host_name: HostName,
+        rule_set_name: RuleSetName,
+        rule_set_type: Literal["merged", "all"],
+    ) -> Mapping[str, object] | Sequence[Mapping[str, object]]:
+        """
+        Returns a (sequence of) mapping of parameters for the given rule set name and type.
+        If the rule set type is "merged", a mapping will be returned, otherwise a sequence.
+        """
 
 
 @dataclasses.dataclass(frozen=True)
@@ -38,7 +48,7 @@ class DiscoveryCheckParameters:
 
 def get_plugin_parameters(
     host_name: HostName,
-    config_getter: ConfigGetter,
+    discovery_config: ABCDiscoveryConfig,
     *,
     default_parameters: ParametersTypeAlias | None,
     ruleset_name: RuleSetName | None,
@@ -52,7 +62,7 @@ def get_plugin_parameters(
         # Not very sensical for discovery functions, but not forbidden by the API either.
         return Parameters(default_parameters)
 
-    config = config_getter(host_name, ruleset_name, ruleset_type)
+    config = discovery_config(host_name, ruleset_name, ruleset_type)
     if isinstance(config, Sequence):
         return [Parameters(d) for d in itertools.chain(config, (default_parameters,))]
 

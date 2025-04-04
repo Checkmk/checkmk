@@ -29,6 +29,7 @@ from cmk.fetchers.filecache import FileCacheOptions
 
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.discovery import (
+    ABCDiscoveryConfig,
     analyse_cluster_labels,
     AutocheckServiceWithNodes,
     AutochecksStore,
@@ -1268,6 +1269,13 @@ _expected_host_labels = [
 ]
 
 
+class _EmptyDiscoveryConfig(ABCDiscoveryConfig):
+    def __call__(
+        self, host_name: object, rule_set_name: object, rule_set_type: str
+    ) -> Mapping[str, object] | Sequence[Mapping[str, object]]:
+        return [] if rule_set_type == "all" else {}
+
+
 @pytest.mark.usefixtures("patch_omd_site")
 def test_commandline_discovery(
     monkeypatch: MonkeyPatch,
@@ -1316,11 +1324,11 @@ def test_commandline_discovery(
         ),
         section_error_handling=lambda *args, **kw: "error",
         host_label_plugins=HostLabelPluginMapper(
-            config_getter=lambda hname, rname, type_: [] if type_ == "all" else {},
+            discovery_config=_EmptyDiscoveryConfig(),
             sections={**agent_based_plugins.agent_sections, **agent_based_plugins.snmp_sections},
         ),
         plugins=DiscoveryPluginMapper(
-            config_getter=lambda hname, rname, type_: [] if type_ == "all" else {},
+            discovery_config=_EmptyDiscoveryConfig(),
             check_plugins=agent_based_plugins.check_plugins,
         ),
         run_plugin_names=EVERYTHING,
@@ -1594,7 +1602,7 @@ def test__discovery_considers_host_labels(
 
     # arrange
     plugins = DiscoveryPluginMapper(
-        config_getter=config.DiscoveryConfigurer(
+        discovery_config=config.DiscoveryConfig(
             config_cache.ruleset_matcher,
             config_cache.label_manager.labels_of_host,
             rules={
@@ -1774,7 +1782,7 @@ def test__discover_host_labels_and_services_on_realhost(
 
     # arrange
     plugins = DiscoveryPluginMapper(
-        config_getter=lambda hname, rname, type_: [] if type_ == "all" else {},
+        discovery_config=_EmptyDiscoveryConfig(),
         check_plugins=agent_based_plugins.check_plugins,
     )
     plugin_names = find_plugins(
@@ -1813,7 +1821,7 @@ def test__perform_host_label_discovery_on_realhost(
         current=discover_host_labels(
             scenario.hostname,
             HostLabelPluginMapper(
-                config_getter=lambda hname, rname, type_: [] if type_ == "all" else {},
+                discovery_config=_EmptyDiscoveryConfig(),
                 sections={
                     **agent_based_plugins.agent_sections,
                     **agent_based_plugins.snmp_sections,
@@ -1841,7 +1849,7 @@ def test__discover_services_on_cluster(
         cluster_scenario.config_cache.nodes(cluster_scenario.parent),
         cluster_scenario.providers,
         DiscoveryPluginMapper(
-            config_getter=lambda hname, rname, type_: [] if type_ == "all" else {},
+            discovery_config=_EmptyDiscoveryConfig(),
             check_plugins=agent_based_plugins.check_plugins,
         ),
         OnError.RAISE,
@@ -1888,7 +1896,7 @@ def test__perform_host_label_discovery_on_cluster(
             node: discover_host_labels(
                 node,
                 HostLabelPluginMapper(
-                    config_getter=lambda *a: [],
+                    discovery_config=_EmptyDiscoveryConfig(),
                     sections={
                         **agent_based_plugins.agent_sections,
                         **agent_based_plugins.snmp_sections,

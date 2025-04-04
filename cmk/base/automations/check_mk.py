@@ -297,7 +297,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                 discovery_rulesets=extract_known_discovery_rulesets(plugins)
             )
 
-        discovery_config = config.DiscoveryConfigurer(
+        discovery_config = config.DiscoveryConfig(
             loading_result.config_cache.ruleset_matcher,
             loading_result.config_cache.label_manager.labels_of_host,
             loading_result.loaded_config.discovery_rules,
@@ -369,11 +369,11 @@ class AutomationDiscovery(DiscoveryAutomation):
                 ),
                 section_error_handling=section_error_handling,
                 host_label_plugins=HostLabelPluginMapper(
-                    config_getter=discovery_config,
+                    discovery_config=discovery_config,
                     sections={**plugins.agent_sections, **plugins.snmp_sections},
                 ),
                 plugins=DiscoveryPluginMapper(
-                    config_getter=discovery_config,
+                    discovery_config=discovery_config,
                     check_plugins=plugins.check_plugins,
                 ),
                 autochecks_config=autochecks_config,
@@ -687,7 +687,7 @@ def _execute_discovery(
     plugins: AgentBasedPlugins,
 ) -> CheckPreview:
     hosts_config = config.make_hosts_config()
-    discovery_config = config.DiscoveryConfigurer(
+    discovery_config = config.DiscoveryConfig(
         config_cache.ruleset_matcher,
         config_cache.label_manager.labels_of_host,
         loaded_config.discovery_rules,
@@ -746,7 +746,7 @@ def _execute_discovery(
                 rtc_package=None,
             ),
             host_label_plugins=HostLabelPluginMapper(
-                config_getter=discovery_config,
+                discovery_config=discovery_config,
                 sections={**plugins.agent_sections, **plugins.snmp_sections},
             ),
             check_plugins=check_plugins,
@@ -757,7 +757,7 @@ def _execute_discovery(
                 plugins.check_plugins,
             ),
             discovery_plugins=DiscoveryPluginMapper(
-                config_getter=discovery_config,
+                discovery_config=discovery_config,
                 check_plugins=plugins.check_plugins,
             ),
             autochecks_config=autochecks_config,
@@ -816,7 +816,7 @@ def _execute_autodiscovery(
 
     config_cache = loading_result.config_cache
     service_configurer = config_cache.make_service_configurer(ab_plugins.check_plugins)
-    discovery_config = config.DiscoveryConfigurer(
+    discovery_config = config.DiscoveryConfig(
         config_cache.ruleset_matcher,
         config_cache.label_manager.labels_of_host,
         loading_result.loaded_config.discovery_rules,
@@ -855,11 +855,11 @@ def _execute_autodiscovery(
     )
     section_plugins = SectionPluginMapper({**ab_plugins.agent_sections, **ab_plugins.snmp_sections})
     host_label_plugins = HostLabelPluginMapper(
-        config_getter=discovery_config,
+        discovery_config=discovery_config,
         sections={**ab_plugins.agent_sections, **ab_plugins.snmp_sections},
     )
     plugins = DiscoveryPluginMapper(
-        config_getter=discovery_config,
+        discovery_config=discovery_config,
         check_plugins=ab_plugins.check_plugins,
     )
     on_error = OnError.IGNORE

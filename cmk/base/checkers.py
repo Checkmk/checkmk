@@ -54,7 +54,7 @@ from cmk.checkengine.checkresults import (
     UnsubmittableServiceCheckResult,
 )
 from cmk.checkengine.discovery import (
-    ConfigGetter,
+    ABCDiscoveryConfig,
     get_plugin_parameters,
     HostLabelPlugin,
 )
@@ -496,7 +496,7 @@ class SectionPluginMapper(SectionMap[SectionPlugin]):
 
 
 def _make_parameters_getter(
-    config_getter: ConfigGetter,
+    discovery_config: ABCDiscoveryConfig,
     plugin: AgentSectionPluginAPI | SNMPSectionPluginAPI,
 ) -> Callable[[HostName], Sequence[Parameters] | Parameters | None]:
     """wrapper for partial, which is not supported by mypy"""
@@ -504,7 +504,7 @@ def _make_parameters_getter(
     def get_parameters(host_name: HostName) -> Sequence[Parameters] | Parameters | None:
         return get_plugin_parameters(
             host_name,
-            config_getter,
+            discovery_config,
             default_parameters=plugin.host_label_default_parameters,
             ruleset_name=plugin.host_label_ruleset_name,
             ruleset_type=plugin.host_label_ruleset_type,
@@ -517,11 +517,11 @@ class HostLabelPluginMapper(SectionMap[HostLabelPlugin]):
     def __init__(
         self,
         *,
-        config_getter: ConfigGetter,
+        discovery_config: ABCDiscoveryConfig,
         sections: Mapping[SectionName, AgentSectionPluginAPI | SNMPSectionPluginAPI],
     ) -> None:
         super().__init__()
-        self._config_getter: Final = config_getter
+        self._discovery_config: Final = discovery_config
         self._sections = sections
 
     def __getitem__(self, __key: SectionName) -> HostLabelPlugin:
@@ -529,7 +529,7 @@ class HostLabelPluginMapper(SectionMap[HostLabelPlugin]):
         return (
             HostLabelPlugin(
                 function=plugin.host_label_function,
-                parameters=_make_parameters_getter(self._config_getter, plugin),
+                parameters=_make_parameters_getter(self._discovery_config, plugin),
             )
             if plugin is not None
             else HostLabelPlugin.trivial()
@@ -1074,11 +1074,11 @@ class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
     def __init__(
         self,
         *,
-        config_getter: ConfigGetter,
+        discovery_config: ABCDiscoveryConfig,
         check_plugins: Mapping[CheckPluginName, CheckPluginAPI],
     ) -> None:
         super().__init__()
-        self._config_getter: Final = config_getter
+        self._discovery_config: Final = discovery_config
         self._check_plugins: Final = check_plugins
 
     def __getitem__(self, __key: CheckPluginName) -> DiscoveryPlugin:
@@ -1106,7 +1106,7 @@ class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
             sections=plugin.sections,
             function=__discovery_function,
             parameters=_make_discovery_parameters_getter(
-                config_getter=self._config_getter,
+                discovery_config=self._discovery_config,
                 check_plugin_name=plugin.name,
                 default_parameters=plugin.discovery_default_parameters,
                 ruleset_name=plugin.discovery_ruleset_name,
@@ -1122,7 +1122,7 @@ class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
 
 
 def _make_discovery_parameters_getter(
-    config_getter: ConfigGetter,
+    discovery_config: ABCDiscoveryConfig,
     check_plugin_name: CheckPluginName,
     *,
     default_parameters: ParametersTypeAlias | None,
@@ -1132,7 +1132,7 @@ def _make_discovery_parameters_getter(
     def get_discovery_parameters(host_name: HostName) -> None | Parameters | list[Parameters]:
         params = get_plugin_parameters(
             host_name,
-            config_getter,
+            discovery_config,
             default_parameters=default_parameters,
             ruleset_name=ruleset_name,
             ruleset_type=ruleset_type,

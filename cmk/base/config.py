@@ -106,6 +106,7 @@ from cmk.checkengine.checking import (
 )
 from cmk.checkengine.checking.cluster_mode import ClusterMode
 from cmk.checkengine.discovery import (
+    ABCDiscoveryConfig,
     AutochecksManager,
     CheckPreviewEntry,
     DiscoveryCheckParameters,
@@ -1738,28 +1739,23 @@ def _make_clusters_nodes_maps() -> tuple[
     return clusters_of_cache, nodes_cache
 
 
-class DiscoveryConfigurer:
+@dataclasses.dataclass(frozen=True)
+class DiscoveryConfig(ABCDiscoveryConfig):
     """Implementation of the discovery configuration"""
 
-    def __init__(
-        self,
-        matcher: RulesetMatcher,
-        labels_of_host: Callable[[HostName], Labels],
-        rules: Mapping[RuleSetName, Sequence[RuleSpec[Mapping[str, object]]]],
-    ):
-        self._matcher: Final = matcher
-        self._labels_of_host: Final = labels_of_host
-        self._rules: Final = rules
+    matcher: RulesetMatcher
+    labels_of_host: Callable[[HostName], Labels]
+    rules: Mapping[RuleSetName, Sequence[RuleSpec[Mapping[str, object]]]]
 
     def __call__(
-        self, host_name: HostName, ruleset_name: RuleSetName, type_: RuleSetTypeName
+        self, host_name: HostName, rule_set_name: RuleSetName, rule_set_type: RuleSetTypeName
     ) -> Mapping[str, object] | Sequence[Mapping[str, object]]:
-        rule = self._rules.get(ruleset_name, [])
-        if type_ == "merged":
-            return self._matcher.get_host_merged_dict(host_name, rule, self._labels_of_host)
-        elif type_ == "all":
-            return self._matcher.get_host_values(host_name, rule, self._labels_of_host)
-        assert_never(type_)
+        rule = self.rules.get(rule_set_name, [])
+        if rule_set_type == "merged":
+            return self.matcher.get_host_merged_dict(host_name, rule, self.labels_of_host)
+        if rule_set_type == "all":
+            return self.matcher.get_host_values(host_name, rule, self.labels_of_host)
+        assert_never(rule_set_type)
 
 
 class AutochecksConfigurer:

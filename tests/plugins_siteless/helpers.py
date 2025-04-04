@@ -23,7 +23,7 @@ from cmk.utils.resulttype import OK
 from cmk.fetchers import Mode
 from cmk.fetchers.filecache import AgentFileCache, FileCacheMode, MaxAge
 
-from cmk.checkengine.discovery import commandline_discovery
+from cmk.checkengine.discovery import ABCDiscoveryConfig, commandline_discovery
 from cmk.checkengine.discovery._autochecks import AutochecksStore
 from cmk.checkengine.fetcher import SourceInfo
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
@@ -148,6 +148,13 @@ def compare_services_states(
     )
 
 
+class _EmptyDiscoveryConfig(ABCDiscoveryConfig):
+    def __call__(
+        self, host_name: object, rule_set_name: object, rule_set_type: str
+    ) -> Mapping[str, object] | Sequence[Mapping[str, object]]:
+        return [] if rule_set_type == "all" else {}
+
+
 def discover_services(
     hostname: HostName,
     agent_data_filename: str,
@@ -168,14 +175,14 @@ def discover_services(
         ),
         section_error_handling=lambda *a: "",
         host_label_plugins=HostLabelPluginMapper(
-            config_getter=lambda _hn, _rn, rt: [] if rt == "all" else {},
+            discovery_config=_EmptyDiscoveryConfig(),
             sections={
                 **agent_based_plugins.agent_sections,
                 **agent_based_plugins.snmp_sections,
             },
         ),
         plugins=DiscoveryPluginMapper(
-            config_getter=lambda _hn, _rn, rt: [] if rt == "all" else {},
+            discovery_config=_EmptyDiscoveryConfig(),
             check_plugins=agent_based_plugins.check_plugins,
         ),
         run_plugin_names=EVERYTHING,

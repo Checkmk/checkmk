@@ -172,7 +172,7 @@ def delete_password(params: Mapping[str, Any]) -> Response:
     permissions_required=PERMISSIONS,
 )
 def show_password(params: Mapping[str, Any]) -> Response:
-    """Show a password"""
+    """Show password store entry"""
     user.need_permission("wato.passwords")
     ident = params["name"]
     passwords = load_passwords()

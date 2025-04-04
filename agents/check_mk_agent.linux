@@ -2072,7 +2072,7 @@ run_runas_executor() {
     _non_comment_lines "${MK_CONFDIR}/runas.cfg" | while read -r type user configfile; do
         prefix=""
         if [ "${user}" != "-" ]; then
-            prefix="su ${user} -c"
+            prefix="sudo --non-interactive --user ${user}"
         fi
 
         # mrpe includes

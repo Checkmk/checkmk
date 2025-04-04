@@ -1,0 +1,14 @@
+title: Raritan PX2 Residual Operating Current
+agents: snmp
+catalog: hw/environment/raritan
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the residual operating current.
+
+item:
+ Depending on the data the sensor provides, it can be 'Summary' or 'Phase' followed with the ID of the phase.
+ It will be 'Summary' if there is no resudial current data provided by the sensor.
+
+discovery:
+ Either one service for each pole, or just one Summary service.

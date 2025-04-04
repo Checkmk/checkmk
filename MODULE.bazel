@@ -28,6 +28,7 @@ single_version_override(
     patch_strip = 1,
     patches = ["//bazel/patches:0001-Quick-hack-avoid-color-codes-in-stdout.patch"],
 )
+
 bazel_dep(name = "rules_pkg", version = "1.1.0")
 bazel_dep(name = "rules_proto_grpc", version = "5.0.1")
 bazel_dep(name = "rules_python", version = "1.1.0")

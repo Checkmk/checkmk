@@ -202,8 +202,8 @@ def test_start_enable_mail(client: docker.DockerClient) -> None:
 
 def test_http_access_base_redirects_work(checkmk: CheckmkApp) -> None:
     for url, expectedLocation in {
-        f"http://{checkmk.ip}:5000": f"http://{checkmk.ip}:5000/cmk/",
-        f"http://{checkmk.ip}:5000/cmk": f"http://{checkmk.ip}:5000/cmk/check_mk/",
+        checkmk.url: f"{checkmk.url}/cmk/",
+        f"{checkmk.url}/cmk": f"{checkmk.url}/cmk/check_mk/",
     }.items():
         for checkUrl in (f"{url}", f"{url}/"):
             response = requests.get(
@@ -304,7 +304,7 @@ def test_redirects_work_with_custom_port(client: docker.DockerClient) -> None:
 
 def test_http_access_login_screen(checkmk: CheckmkApp) -> None:
     response = requests.get(
-        f"http://{checkmk.ip}:5000/cmk/check_mk/login.py?_origtarget=index.py",
+        f"{checkmk.url}/cmk/check_mk/login.py?_origtarget=index.py",
         allow_redirects=False,
         timeout=10,
     )

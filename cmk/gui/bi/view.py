@@ -33,7 +33,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _, _l, ungettext
-from cmk.gui.logged_in import LoggedInUser, user
+from cmk.gui.logged_in import LoggedInSuperUser, LoggedInUser, user
 from cmk.gui.painter.v0 import Cell, Painter
 from cmk.gui.painter_options import PainterOption, PainterOptions
 from cmk.gui.permissions import Permission, permission_registry
@@ -1026,7 +1026,8 @@ def render_tree_json(  # pylint: disable=redefined-outer-name
     if expansion_level != user.bi_expansion_level:
         treestate: dict[str, Any] = {}
         user.set_tree_states("bi", treestate)
-        user.save_tree_states()
+        if not isinstance(user, LoggedInSuperUser):
+            user.save_tree_states()
 
     def render_node_json(
         tree: BIAggrTreeState | BILeafTreeState, show_host: bool

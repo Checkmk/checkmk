@@ -15,4 +15,4 @@ class QueryType(StrEnum):
     STANDALONE = "standalone"
 
 
-InfoSelection = Literal["hostsystem", "virtualmachine", "datastore", "counters"]
+InfoSelection = Literal["hostsystem", "virtualmachine", "datastore", "counters", "licenses"]

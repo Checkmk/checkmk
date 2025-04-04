@@ -30,14 +30,17 @@ from cmk.rulesets.v1.rule_specs import ActiveCheck, Topic
 
 def migrate_credentials(
     params: object,
-) -> tuple[Literal["automation"], None] | tuple[Literal["credentials"], Mapping[str, object]]:
+) -> tuple[Literal["automation"], None] | tuple[Literal["configured"], Mapping[str, object]]:
     match params:
         case "automation" | ("automation", None):
             return "automation", None
-        case "credentials", ((user, secret) | {"user": user, "secret": secret}):
-            return "credentials", {"user": user, "secret": secret}
-        case "configured", (user, ("password", secret)):
-            return "credentials", {"user": user, "secret": secret}
+        case "credentials" | "configured", (user, str(secret)) | {
+            "user": user,
+            "secret": str(secret),
+        }:
+            return "configured", {"user": user, "secret": migrate_to_password(("password", secret))}
+        case "credentials" | "configured", (user, secret) | {"user": user, "secret": secret}:
+            return "configured", {"user": user, "secret": migrate_to_password(secret)}
     raise ValueError(params)
 
 
@@ -119,7 +122,6 @@ def _form_spec_active_checks_bi_aggr() -> Dictionary:
                                             custom_validate=(
                                                 validators.LengthInRange(min_value=1),
                                             ),
-                                            migrate=migrate_to_password,
                                         ),
                                     ),
                                 }

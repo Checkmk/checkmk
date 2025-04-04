@@ -41,7 +41,7 @@ HOST_CONFIG = HostConfig(
                 "base_url": "some/path",
                 "aggregation_name": "$HOST_NAME$",
                 "username": "bar",
-                "credentials": ("credentials", {"user": "my_user", "secret": Secret(0)}),
+                "credentials": ("configured", {"user": "my_user", "secret": Secret(0)}),
                 "optional": {},
             },
             ActiveCheckCommand(

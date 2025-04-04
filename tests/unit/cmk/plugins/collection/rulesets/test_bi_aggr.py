@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from unittest.mock import ANY
+
 from cmk.plugins.collection.rulesets.bi_aggr import migrate_credentials
 
 
@@ -16,20 +18,20 @@ def test_migrate_automation() -> None:
 
 def test_migrate_credentials_already_migrated() -> None:
     assert migrate_credentials(("credentials", {"user": "USER", "secret": "SECRET"})) == (
-        "credentials",
-        {"user": "USER", "secret": "SECRET"},
+        "configured",
+        {"user": "USER", "secret": ("cmk_postprocessed", "explicit_password", (ANY, "SECRET"))},
     )
 
 
 def test_migrate_credentials() -> None:
     assert migrate_credentials(("credentials", ("USER", "SECRET"))) == (
-        "credentials",
-        {"user": "USER", "secret": "SECRET"},
+        "configured",
+        {"user": "USER", "secret": ("cmk_postprocessed", "explicit_password", (ANY, "SECRET"))},
     )
 
 
 def test_migrate_credentials_configured() -> None:
     assert migrate_credentials(("configured", ("bi_user", ("password", "SECRET")))) == (
-        "credentials",
-        {"user": "bi_user", "secret": "SECRET"},
+        "configured",
+        {"user": "bi_user", "secret": ("cmk_postprocessed", "explicit_password", (ANY, "SECRET"))},
     )

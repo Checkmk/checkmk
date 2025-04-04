@@ -33,7 +33,7 @@ class OptionalParams(BaseModel, frozen=True):
 class BiAggrParams(BaseModel, frozen=True):
     base_url: str
     aggregation_name: str
-    credentials: tuple[Literal["automation"], None] | tuple[Literal["credentials"], Credentials]
+    credentials: tuple[Literal["automation"], None] | tuple[Literal["configured"], Credentials]
     optional: OptionalParams
 
 

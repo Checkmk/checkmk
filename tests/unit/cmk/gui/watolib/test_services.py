@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Generator, Mapping
+from collections.abc import Generator, Mapping, Sequence
 from unittest.mock import call, MagicMock, patch
 
 import pytest
@@ -30,8 +30,10 @@ from cmk.gui.utils import transaction_manager
 from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
 from cmk.gui.watolib.services import (
+    Discovery,
     DiscoveryAction,
     DiscoveryResult,
+    DiscoveryTransition,
     get_check_table,
     initial_discovery_result,
     perform_fix_all,
@@ -914,3 +916,166 @@ def test_perform_discovery_action_update_host_labels(
     assert [
         log_entry.text for log_entry in store.read() if log_entry.action == "update-host-labels"
     ] == [f"Updated discovered host labels of '{sample_host_name}' with 1 labels"]
+
+
+def _make_discovery_result(
+    check_table: Sequence[CheckPreviewEntry],
+    nodes_check_table: Mapping[HostName, Sequence[CheckPreviewEntry]],
+) -> DiscoveryResult:
+    """make a dummy discovery result from the values relevant for the test"""
+    return DiscoveryResult(
+        job_status={},
+        check_table_created=0,
+        check_table=check_table,
+        nodes_check_table=nodes_check_table,
+        host_labels={},
+        new_labels={},
+        vanished_labels={},
+        changed_labels={},
+        labels_by_host={},
+        sources={},
+    )
+
+
+def _make_preview_entry(
+    check_source: str,
+    old_params: Mapping[str, object],
+    new_params: Mapping[str, object],
+    found_on_nodes: list[HostName],
+) -> CheckPreviewEntry:
+    """make a dummy preview entry from the values relevant for the test"""
+    return CheckPreviewEntry(
+        check_source=check_source,
+        check_plugin_name="dummy_plugin",
+        ruleset_name=None,
+        discovery_ruleset_name=None,
+        item=None,
+        old_discovered_parameters=old_params,
+        new_discovered_parameters=new_params,
+        effective_parameters={},
+        description="my-description",
+        state=0,
+        output="",
+        metrics=[],
+        old_labels={},
+        new_labels={},
+        found_on_nodes=found_on_nodes,
+    )
+
+
+def _make_autocheck_entry(parameter_value: str) -> AutocheckEntry:
+    """make a dummy autocheck entry from the values relevant for the test"""
+    return AutocheckEntry(
+        check_plugin_name=CheckPluginName("dummy_plugin"),
+        item=None,
+        parameters={"p": parameter_value},
+        service_labels={},
+    )
+
+
+def _grant_all_permissions(_p: object) -> None:
+    pass
+
+
+class TestDiscovery:
+    @staticmethod
+    def _make_clustered_service_vanished_result() -> DiscoveryResult:
+        """Test scenario where a clustered service vanished from the primary node"""
+        return _make_discovery_result(
+            check_table=[
+                _make_preview_entry(
+                    check_source="changed",
+                    old_params={"p": "old"},
+                    new_params={"p": "new"},
+                    found_on_nodes=[HostName("node2")],
+                ),
+            ],
+            nodes_check_table={
+                HostName("node1"): [
+                    _make_preview_entry("clustered_vanished", {"p": "old"}, {"p": "old"}, []),
+                ],
+                HostName("node2"): [
+                    _make_preview_entry(
+                        "clustered_old", {"p": "new"}, {"p": "new"}, [HostName("node2")]
+                    ),
+                ],
+            },
+        )
+
+    def test_cluster_discovery_removes_outdated_node_services_fix_all(self) -> None:
+        """Tests that the discovery transition removes outdated node services
+        if other nodes discover newer services.
+
+        Failing to do this leads to wrong discovered parameters.
+        """
+        target_host = HostName("mycluster")
+        discovery_result = self._make_clustered_service_vanished_result()
+        assert Discovery(
+            host=object(),  # type: ignore[arg-type] # not accessed in this test
+            action=DiscoveryAction.FIX_ALL,
+            update_target=None,
+            selected_services=(),
+            user_need_permission=_grant_all_permissions,
+        ).compute_discovery_transition(discovery_result, target_host) == DiscoveryTransition(
+            need_sync=False,
+            add_disabled_rule=set(),
+            remove_disabled_rule=set(),
+            old_autochecks=SetAutochecksInput(
+                discovered_host=target_host,
+                target_services={"my-description": _make_autocheck_entry("old")},
+                nodes_services={  # why is this empty?
+                    HostName("node1"): {},
+                    HostName("node2"): {},
+                },
+            ),
+            new_autochecks=SetAutochecksInput(
+                discovered_host=target_host,
+                target_services={
+                    "my-description": _make_autocheck_entry("new"),
+                },
+                nodes_services={
+                    HostName("node1"): {
+                        "my-description": _make_autocheck_entry("old"),  # FIXME
+                    },
+                    HostName("node2"): {
+                        "my-description": _make_autocheck_entry("new"),
+                    },
+                },
+            ),
+        )
+
+    def test_cluster_discovery_removes_outdated_node_services_update_params(self) -> None:
+        """Tests that the discovery transition removes outdated node services
+        if other nodes discover newer services.
+
+        Failing to do this leads to wrong discovered parameters.
+        """
+        target_host = HostName("mycluster")
+        discovery_result = self._make_clustered_service_vanished_result()
+        assert Discovery(
+            host=object(),  # type: ignore[arg-type] # not accessed in this test
+            action=DiscoveryAction.UPDATE_DISCOVERY_PARAMETERS,
+            update_target="unchanged",
+            selected_services=(),
+            user_need_permission=_grant_all_permissions,
+        ).compute_discovery_transition(discovery_result, target_host) == DiscoveryTransition(
+            need_sync=False,
+            remove_disabled_rule=set(),
+            add_disabled_rule=set(),
+            old_autochecks=SetAutochecksInput(
+                discovered_host=target_host,
+                target_services={"my-description": _make_autocheck_entry("old")},
+                nodes_services={  # why is this empty?
+                    HostName("node1"): {},
+                    HostName("node2"): {},
+                },
+            ),
+            new_autochecks=SetAutochecksInput(
+                discovered_host=target_host,
+                target_services={"my-description": _make_autocheck_entry("new")},
+                nodes_services={
+                    HostName("node1"): {"my-description": _make_autocheck_entry("old")},  # FIXME
+                    HostName("node2"): {"my-description": _make_autocheck_entry("new")},
+                },
+            ),
+        )

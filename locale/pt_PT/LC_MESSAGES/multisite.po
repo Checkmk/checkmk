@@ -38,8 +38,8 @@ msgstr " (Dados incompletos, número máximo de nós atingido)"
 msgid " (Duration: %s)"
 msgstr " (Duração: %s)"
 
-#, python-format
-msgid " (Duration: %s, %sIO: %s/s)"
+#, fuzzy, python-format
+msgid " (Duration: %s,%s IO: %s/s)"
 msgstr " (Duração: %s, %sIO: %s/s)"
 
 msgid " (copy)"
@@ -116,6 +116,11 @@ msgstr ""
 #, python-format
 msgid " Finished at: %s."
 msgstr " Concluído em: %s."
+
+msgid ""
+" If this action was not triggered by you, contact your administrator for "
+"further investigation."
+msgstr ""
 
 msgid " Ignore this option"
 msgstr " Ignorar esta opção"
@@ -332,12 +337,12 @@ msgid "% memory left"
 msgstr "% memoria disponivel"
 
 #, no-python-format
-msgid "% of Flash"
-msgstr "% de Flash"
-
-#, no-python-format
 msgid "% of RAM"
 msgstr "% de RAM"
+
+#, fuzzy, no-python-format
+msgid "% of flash"
+msgstr "% de Flash"
 
 #, no-python-format
 msgid "% of maximum active connections"
@@ -677,8 +682,8 @@ msgstr "%s instâncias"
 msgid "%s is locked by Quick setup."
 msgstr "Configuração rápida"
 
-#, python-format
-msgid "%s is not a valid UNIX timestamp"
+#, fuzzy, python-format
+msgid "%s is not a valid Unix timestamp"
 msgstr "%s não é um UNIX timestamp válido"
 
 #, python-format
@@ -713,8 +718,8 @@ msgstr "%s de sobra na sua versão de teste gratuito"
 msgid "%s matching labels: "
 msgstr "%s etiquetas correspondentes: %s"
 
-#, python-format
-msgid "%s may be missing, if must not be empty if it is set."
+#, fuzzy, python-format
+msgid "%s may be missing, it must not be empty if it is set."
 msgstr "%s pode estar em falta. Não deverá estar vazio se estiver definido."
 
 #, fuzzy, python-format
@@ -882,9 +887,10 @@ msgstr "Estado 'Menor'"
 msgid "'Warning' state"
 msgstr "Estado de \"Advertência"
 
+#, fuzzy
 msgid ""
 "'git' command was not found on this system, but it is required for "
-"versioning the configuration.Please either install 'git' or disable git "
+"versioning the configuration. Please either install 'git' or disable git "
 "configuration tracking in setup."
 msgstr ""
 "O comando 'git' não foi encontrado neste sistema, mas é necessário para "
@@ -1037,7 +1043,7 @@ msgid "(unset)"
 msgstr "(não definido)"
 
 #, fuzzy
-msgid "(untitled ruleset)"
+msgid "(untitled rule set)"
 msgstr "(Módulo sem título)"
 
 msgid ", "
@@ -1593,11 +1599,12 @@ msgstr "<li>Não é possível excluir hosts na pasta %s: %s</li>"
 msgid "<li>Cannot move hosts from folder %s: %s</li>"
 msgstr "<li>Não é possível mover hosts da pasta %s: %s</li>"
 
+#, fuzzy
 msgid ""
-"<p>By default each Checkmk site has it's own temporary filesystem (a "
-"ramdisk) mounted to <tt>[SITE]/tmp</tt>. In case the mount is not possible "
-"Checkmk starts without this temporary filesystem.</p><p>Even if this is "
-"possible, it is not recommended to use Checkmk this way because it may "
+"<p>By default each Checkmk site has its own temporary file system (a "
+"ramdisk) mounted to <tt>[SITE]/tmp</tt>. In case the mount is not possible, "
+"Checkmk starts without this temporary file system.</p><p>Even if this is "
+"possible, it is not recommended to use Checkmk this way, because it may "
 "reduce the overall performance of Checkmk.</p>"
 msgstr ""
 "<p>Por padrão cada site Checkmk tem seu próprio sistema de arquivos "
@@ -2119,6 +2126,21 @@ msgstr ""
 "condição pode estar num estado de falha antes dos alertas de verificação."
 
 #, fuzzy
+msgid "A Two-factor Authenticator app has been added to your Checkmk account."
+msgstr "Autenticação de dois factores não activada"
+
+#, fuzzy
+msgid ""
+"A Two-factor Authenticator app has been removed from your Checkmk account."
+msgstr "Autenticação de dois factores não activada"
+
+msgid "A Two-factor security token has been added to your Checkmk account."
+msgstr ""
+
+msgid "A Two-factor security token has been removed from your Checkmk account."
+msgstr ""
+
+#, fuzzy
 msgid ""
 "A cache age limit on plug-ins and local checks. If set, the output of plug-"
 "ins is cached and reused until this much time has passed."
@@ -2389,10 +2411,11 @@ msgstr ""
 msgid "A regular expression is required"
 msgstr "Expressão regular a esperar no conteúdo"
 
+#, fuzzy
 msgid ""
-"A regular expression matching the <b>beginning</b> of a service description. "
-"You can use a trailing <tt>$</tt> in order to define an exact match. For "
-"each matching service on the specified hosts one child node will be created. "
+"A regular expression matching the <b>beginning</b> of a service name. You "
+"can use a trailing <tt>$</tt> in order to define an exact match. For each "
+"matching service on the specified hosts one child node will be created. "
 msgstr ""
 "Uma expressão regular que corresponde ao <b>início</b> de uma descrição de "
 "serviço. Você pode usar um trailing <tt>$</tt> a fim de definir uma "
@@ -2854,9 +2877,6 @@ msgstr "AWS/EC2 Limites"
 msgid "AWS/ECS Limits"
 msgstr "Limites AWS/ECS"
 
-msgid "AWS/ELB Backend Connection Errors"
-msgstr "Erros de ligação de backend AWS/ELB"
-
 msgid "AWS/ELB HTTP Errors"
 msgstr "Erros HTTP AWS/ELB"
 
@@ -2871,6 +2891,10 @@ msgstr "Limites AWS/ELB"
 
 msgid "AWS/ELB Statistics"
 msgstr "Estatísticas AWS/ELB"
+
+#, fuzzy
+msgid "AWS/ELB back-end connection errors"
+msgstr "Erros de ligação de backend AWS/ELB"
 
 msgid "AWS/ELBApplication Target Errors"
 msgstr "Erros de Alvo AWS/ELBApplication"
@@ -3166,11 +3190,9 @@ msgstr ""
 msgid "Access"
 msgstr "Acesse"
 
-msgid "Access Checkmk Agent via TCP"
+#, fuzzy
+msgid "Access Checkmk agent via TCP"
 msgstr "Aceder ao agente Checkmk via TCP"
-
-msgid "Access Point"
-msgstr "Ponto de Acesso"
 
 msgid "Access analyze configuration"
 msgstr "Configuração da análise de acesso"
@@ -3192,6 +3214,10 @@ msgstr ""
 #, fuzzy
 msgid "Access key information"
 msgstr "Informação sobre o anfitrião"
+
+#, fuzzy
+msgid "Access point"
+msgstr "Pontos de Acesso"
 
 msgid "Access point name"
 msgstr "Nome do ponto de acesso"
@@ -3414,12 +3440,20 @@ msgid "Acknowledging problems"
 msgstr "Reconhecer os problemas"
 
 #, fuzzy
+msgid "Acknowledgment"
+msgstr "Agradecimentos"
+
+#, fuzzy
 msgid "Acknowledgment author"
 msgstr "Agradecimento Autor"
 
 #, fuzzy
 msgid "Acknowledgment expires:"
 msgstr "Reconhecer os problemas"
+
+#, fuzzy
+msgid "Acknowledgment of problem"
+msgstr "Reconhecimento do problema"
 
 #, fuzzy
 msgid "Acknowledgments: "
@@ -5224,7 +5258,7 @@ msgid "Agent plug-ins"
 msgstr "Plugins de Agente"
 
 #, fuzzy
-msgid "Agent plug-ins: Regular expression to exclude plugins"
+msgid "Agent plug-ins: Regular expression to exclude plug-ins"
 msgstr "Plugins do agente: Expressão regular para excluir plugins"
 
 #, fuzzy
@@ -5658,6 +5692,10 @@ msgstr "Todas as execuções de alertas de manipuladores."
 msgid "All applications"
 msgstr "Todas as aplicações"
 
+#, fuzzy
+msgid "All backup codes associated with this account have been revoked."
+msgstr "Todos os códigos de salvaguarda foram eliminados"
+
 msgid "All backup codes have been deleted"
 msgstr "Todos os códigos de salvaguarda foram eliminados"
 
@@ -5795,7 +5833,7 @@ msgstr "Todos os anfitriões"
 
 #, fuzzy
 msgid ""
-"All hosts configured via this ruleset will do a hardware and software "
+"All hosts configured via this rule set will do a hardware and software "
 "inventory after every check cycle if there's at least one inventory plug-in "
 "which processes status data. <b>Note:</b> in order to get any useful result "
 "for agent based hosts make sure that you have installed the agent plug-in "
@@ -5810,7 +5848,7 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"All hosts configured via this ruleset will do a hardware and software "
+"All hosts configured via this rule set will do a hardware and software "
 "inventory. For each configured host a new active check will be created. You "
 "should also create a rule for changing the normal interval for that check to "
 "something between a couple of hours and one day. <b>Note:</b> in order to "
@@ -5921,7 +5959,8 @@ msgstr ""
 "Todos os serviços problemáticos de um determinado anfitrião. O host e o site "
 "devem ser definidos através de variáveis HTTP."
 
-msgid "All problematic logfiles"
+#, fuzzy
+msgid "All problematic log files"
 msgstr "Todos os ficheiros de registo problemáticos"
 
 msgid "All problems of services not currently in a downtime."
@@ -6263,9 +6302,10 @@ msgstr ""
 "Permite definir níveis absolutos para os contentores em curso, em espera, "
 "terminados e totais."
 
+#, fuzzy
 msgid ""
-"Allows to define levels for the counts and size of Docker Containers, "
-"Images, Local Volumes, and the Build Cache."
+"Allows to define levels for the counts and size of Docker containers, "
+"images, local volumes, and the build cache."
 msgstr ""
 "Permite definir níveis para a contagem e tamanho dos Docker Containers, "
 "Imagens, Volumes Locais, e o Build Cache."
@@ -6623,10 +6663,10 @@ msgstr ""
 msgid "An old configuration is required for existing connections."
 msgstr "Ligações de configuração dinâmica do anfitrião"
 
-#, python-format
+#, fuzzy
 msgid ""
 "An optional URL pointing to documentation or any other page. This will be "
-"displayed as an icon %s and open a new page when clicked. You can use either "
+"displayed as an icon and open a new page when clicked. You can use either "
 "global URLs (beginning with <tt>http://</tt>), absolute local urls "
 "(beginning with <tt>/</tt>) or relative URLs (that are relative to "
 "<tt>check_mk/</tt>)."
@@ -6637,11 +6677,11 @@ msgstr ""
 "absolutos (começando com <tt>/</tt>) ou URLs relativas (que são relativas a "
 "<tt>check_mk/</tt>)."
 
-#, fuzzy
+#, fuzzy, python-format
 msgid ""
-"An optional URL pointing to documentation or any other page. This will be "
-"displayed as an icon and open a new page when clicked. You can use either "
-"global URLs (beginning with <tt>http://</tt>), absolute local urls "
+"An optional URL pointing to the documentation or any other page. It will be "
+"displayed as an icon %s and opens a new page when clicked. You can use "
+"either global URLs (beginning with <tt>http://</tt>), absolute local URLs "
 "(beginning with <tt>/</tt>) or relative URLs (that are relative to "
 "<tt>check_mk/</tt>)."
 msgstr ""
@@ -6698,7 +6738,8 @@ msgstr "última notificação"
 msgid "Analyze recent notifications with your current ruleset"
 msgstr "Criar uma cópia desta regra de notificação"
 
-msgid "Analyze ruleset with this notification"
+#, fuzzy
+msgid "Analyze rule set with this notification"
 msgstr "Analisar o conjunto de regras com esta notificação"
 
 msgid "Analyze the utilization of your IT infrastructure data center."
@@ -6795,6 +6836,16 @@ msgstr "Estado Apache"
 #, fuzzy
 msgid "Apache local password file (htpasswd)"
 msgstr "Apache Local Password File (htpasswd)"
+
+#, fuzzy
+msgid ""
+"Apache mode and TCP address and port, Core, Liveproxy daemon and Livestatus "
+"TCP mode, event daemon config, graphical user interface (GUI) authorisation, "
+"NSCA mode, TMP file system mode"
+msgstr ""
+"Modo Apache e endereço e porta TCP, Core, daemon Liveproxy e modo TCP, "
+"Configuração de daemon de evento, Autorização Multiste, Modo NSCA, Modo de "
+"sistema de ficheiros TMP"
 
 msgid ""
 "Apache mode and TCP address and port, Core, Liveproxy daemon and livestatus "
@@ -7176,7 +7227,8 @@ msgstr "Arrays (Controladores)"
 msgid "Arrays (Controllers)"
 msgstr "Arrays (Controladores)"
 
-msgid "Articles in the user guide"
+#, fuzzy
+msgid "Articles in the User Guide"
 msgstr "Artigos no guia do usuário"
 
 msgid "Artificial slowdown of logfile parsing (for testing!)"
@@ -9666,9 +9718,6 @@ msgstr "Integrado: Radial"
 msgid "Bulk"
 msgstr "A granel"
 
-msgid "Bulk Discovery"
-msgstr "Descoberta a Granel"
-
 msgid "Bulk ID"
 msgstr "Identificação de Granel"
 
@@ -10441,13 +10490,14 @@ msgstr ""
 "sistema de destino e liga-se directamente (por exemplo, ao consultar a porta "
 "receptora do agente a partir da API REST do Checkmk)."
 
+#, fuzzy
 msgid ""
-"By default, the filesystem checks (<tt>df</tt>, <tt>hr_fs</tt> and others) "
-"will create a single service for each filesystem. By defining grouping "
-"patterns, you can handle groups of filesystems like one filesystem. For each "
-"group, you can define one or several include and exclude patterns. The "
-"filesystems matching one of the include patterns will be monitored like one "
-"big filesystem in a single service. The filesystems matching one of the "
+"By default, the file system checks (<tt>df</tt>, <tt>hr_fs</tt> and others) "
+"will create a single service for each file system. By defining grouping "
+"patterns, you can handle groups of file systems like one file system. For "
+"each group, you can define one or several include and exclude patterns. The "
+"file systems matching one of the include patterns will be monitored like one "
+"big file system in a single service. The file systems matching one of the "
 "exclude patterns will be excluded from the group and monitored individually."
 msgstr ""
 "Por defeito, as verificações do sistema de ficheiros (<tt>df</tt>, "
@@ -10522,13 +10572,13 @@ msgstr ""
 "todos os seus sites. Caso contrário, ele só estará disponível para os sites "
 "designados com o cliente selecionado."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "By specifying a status host for each non-local connection you prevent "
-"Multisite from running into timeouts when remote sites do not respond. You "
-"need to add the remote monitoring servers as hosts into your local "
-"monitoring site and use their host state as a reachability state of the "
-"remote site. Please refer to the <a target=_blank href='%s'>online "
+"graphical user interface (GUI) from running into timeouts when remote sites "
+"do not respond. You need to add the remote monitoring servers as hosts into "
+"your local monitoring site and use their host state as a reachability state "
+"of the remote site. Please refer to the <a target=_blank href='%s'>online "
 "documentation</a> for details."
 msgstr ""
 "Ao especificar um host de status para cada conexão não-local, você evita que "
@@ -10848,6 +10898,16 @@ msgstr ""
 "Sistema de Arquivos, Estado do Apache, Conexões TCP dos intervalos de tempo "
 "25 horas e 35 dias"
 
+#, fuzzy
+msgid ""
+"CPU load and utilization, number of threads, Kernel performance, OMD, file "
+"system, Apache status, TCP connections of the time ranges 25 hours and 35 "
+"days"
+msgstr ""
+"Carga e utilização da CPU, Número de threads, Desempenho do Kernel, OMD, "
+"Sistema de Arquivos, Estado do Apache, Conexões TCP dos intervalos de tempo "
+"25 horas e 35 dias"
+
 msgid "CPU load average of last 15 minutes"
 msgstr "Média de carga da CPU dos últimos 15 minutos"
 
@@ -10953,7 +11013,8 @@ msgstr "Utilização da CPU (percentil 99)"
 msgid "CPU utilization (average)"
 msgstr "Utilização da CPU (média)"
 
-msgid "CPU utilization for Appliances"
+#, fuzzy
+msgid "CPU utilization for appliances"
 msgstr "Utilização de CPU para Aparelhos"
 
 msgid "CPU utilization for simple devices"
@@ -10991,7 +11052,8 @@ msgstr "Utilização da CPU no último segundo"
 msgid "CPU utilization of Devices with Modules"
 msgstr "Utilização de CPU de Dispositivos com Módulos"
 
-msgid "CPU utilization on Linux/UNIX"
+#, fuzzy
+msgid "CPU utilization on Linux/Unix"
 msgstr "Utilização da CPU no Linux/UNIX"
 
 msgid "CPU utilization: Cluster"
@@ -11504,7 +11566,7 @@ msgid "Cannot read file \"%s\": %s"
 msgstr "Não é possível ler o ficheiro \"%s\": %s"
 
 #, fuzzy
-msgid "Cannot render dropdown: Missing required information"
+msgid "Cannot render drop-down: Missing required information"
 msgstr "Falta de informação de contexto necessária"
 
 #, python-format
@@ -12311,7 +12373,7 @@ msgid ""
 "total number of notifications sent by the local monitoring core and creates "
 "graphs for each individual contact. You can configure thresholds on the "
 "number of notifications per contact in a defined time interval. This plug-in "
-"queries livestatus to extract the notification related log entries from the "
+"queries Livestatus to extract the notification related log entries from the "
 "log file of your monitoring core."
 msgstr ""
 "Verifique o número de notificações enviadas por contacto utilizando o plugin "
@@ -25483,6 +25545,10 @@ msgstr "A pasta %r não existe."
 msgid "Folder %s not found."
 msgstr "Pastas %s não encontradas."
 
+#, fuzzy
+msgid "Folder (including subfolders)"
+msgstr "Pesquisar também em subpastas"
+
 msgid "Folder - complete path"
 msgstr "Pasta - caminho completo"
 
@@ -34607,6 +34673,10 @@ msgid ""
 msgstr ""
 "Erro interno: %s\n"
 "%s"
+
+#, fuzzy
+msgid "Internal identifier"
+msgstr "Identificador de instância"
 
 #, fuzzy
 msgid "Internal plan_id"
@@ -44501,6 +44571,16 @@ msgstr "Notificações são desativadas manualmente para esta %s"
 msgid "Notifications are manually enabled for this %s"
 msgstr "Notificações são habilitadas manualmente para esta %s"
 
+msgid ""
+"Notifications are sent only for event types defined by the 'Notified events "
+"for hosts' ruleset"
+msgstr ""
+
+msgid ""
+"Notifications are sent only for event types defined by the 'Notified events "
+"for services' ruleset"
+msgstr ""
+
 #, fuzzy, python-format
 msgid "Notifications disabled on %d of %d %s"
 msgstr "Notificações são desativadas para esta %s"
@@ -45872,13 +45952,10 @@ msgstr ""
 "alguns serviços, que não são mostrados!"
 
 #, fuzzy
-msgid "Only applies if `Periodic notifications` are enabled"
-msgstr "Habilitar notificações periódicas"
-
-#, fuzzy
 msgid ""
-"Only applies to notifications triggered by the command `Custom notifications`"
-msgstr "Ordem de ordenação de notificação para notificações em massa"
+"Only applies to problem notifications and if periodic notifications are "
+"enabled."
+msgstr "Habilitar notificações periódicas"
 
 #, fuzzy
 msgid ""
@@ -51565,10 +51642,15 @@ msgstr "Status de armazenamento quântico"
 msgid "Quarantine Usage"
 msgstr "Uso em Quarentena"
 
-msgid "Queried host is a host system"
-msgstr "O anfitrião consultado é um sistema anfitrião"
+msgid "Queried host is a ESXi host (Standalone / not vCenter integrated)"
+msgstr ""
 
-msgid "Queried host is the vCenter"
+#, fuzzy
+msgid "Queried host is a ESXi host (vCenter integrated)"
+msgstr "O anfitrião consultado é o vCenter"
+
+#, fuzzy
+msgid "Queried host is a vCenter"
 msgstr "O anfitrião consultado é o vCenter"
 
 #, fuzzy
@@ -56080,6 +56162,10 @@ msgstr "Nome de segurança"
 msgid "Security fix"
 msgstr "Correcção de segurança"
 
+#, fuzzy, python-format
+msgid "Security message #%d"
+msgstr "Nome de segurança"
+
 msgid "Security name"
 msgstr "Nome de segurança"
 
@@ -57033,6 +57119,10 @@ msgstr "Nome do grupo de serviços"
 
 msgid "Service groups"
 msgstr "Grupos de serviço"
+
+#, fuzzy
+msgid "Service groups (regex)"
+msgstr "Grupo de serviços (regex)"
 
 msgid "Service groups the service is member of"
 msgstr "Grupos de serviço dos quais o serviço é membro"
@@ -60175,11 +60265,12 @@ msgstr ""
 "Especificar níveis em porcentagem da utilização do processador de "
 "armazenamento"
 
-msgid "Specify levels in percentage of total Flash"
-msgstr "Especificar níveis em percentagem do Flash total"
-
 msgid "Specify levels in percentage of total RAM"
 msgstr "Especificar níveis em porcentagem do total de RAM"
+
+#, fuzzy
+msgid "Specify levels in percentage of total flash"
+msgstr "Especificar níveis em percentagem do Flash total"
 
 msgid "Specify levels in percentage of total memory usage"
 msgstr "Especificar níveis em porcentagem do uso total de memória"
@@ -62545,10 +62636,6 @@ msgid "Synthetic Monitoring"
 msgstr "Pesquisa em Monitorização"
 
 #, fuzzy
-msgid "Synthetic Monitoring is an add-on."
-msgstr "Pesquisa em Monitorização"
-
-#, fuzzy
 msgid "Synthetic Monitoring tests"
 msgstr "Pesquisa em Monitorização"
 
@@ -62559,6 +62646,10 @@ msgstr "Pesquisa em Monitorização"
 #, python-format
 msgid "Synthetic monitoring (licensed tests: %s)"
 msgstr ""
+
+#, fuzzy
+msgid "Synthetic monitoring is an add-on."
+msgstr "Pesquisa em Monitorização"
 
 #, fuzzy
 msgid "Synthetic tests"
@@ -64562,6 +64653,9 @@ msgstr ""
 "processadas é limitado. É possível aumentar esse limite aqui se for "
 "realmente necessário processar uma grande quantidade de dados. Defina este "
 "limite para zero para desativar o limite."
+
+msgid "The backup codes associated with your account have been reset."
+msgstr ""
 
 msgid "The backup has been deleted."
 msgstr "O backup foi apagado."
@@ -67958,6 +68052,12 @@ msgstr "O texto"
 msgid "The text entered here is handled as a regular expression pattern."
 msgstr ""
 "O texto aqui introduzido é tratado como um padrão de expressão regular."
+
+msgid ""
+"The text entered here is handled as a regular expression pattern. The "
+"pattern is case-sensitive and matches from the start. Add '$' to match the "
+"whole text."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -77808,6 +77908,10 @@ msgid "Unknown rulesets"
 msgstr "Usuário desconhecido"
 
 #, fuzzy
+msgid "Unknown security event"
+msgstr "Usuário desconhecido"
+
+#, fuzzy
 msgid "Unknown service"
 msgstr "Usuário desconhecido"
 
@@ -85915,12 +86019,19 @@ msgstr "As suas %s foram salvas."
 msgid "Your Checkmk Password has been changed"
 msgstr "A sua tarefa de agenda foi salva."
 
+#, fuzzy
+msgid "Your Checkmk Password has been changed."
+msgstr "A sua tarefa de agenda foi salva."
+
 #, python-format
 msgid "Your Checkmk license expires %s"
 msgstr "A sua licença Checkmk expira %s"
 
 msgid "Your WebAuthn credential is already in use"
 msgstr "A sua credencial WebAuthn já está a ser utilizada"
+
+msgid "Your account has been accessed using a backup code."
+msgstr ""
 
 msgid ""
 "Your administrator has enforced two factor authentication for your account. "
@@ -86014,6 +86125,16 @@ msgstr "todos os usuários com e endereço de e-mail"
 #, fuzzy
 msgid "Your input is not a valid hostname or IP address."
 msgstr "todos os usuários com e endereço de e-mail"
+
+#, fuzzy
+msgid ""
+"Your input is not valid. You need to provide a regular expression (regex). "
+"For example you need to use \\\\ instead of \\ if you want to search for a "
+"single backslash."
+msgstr ""
+"A sua declaração de pesquisa não é válida. Você precisa de fornecer uma "
+"expressão regular (regex). Por exemplo, você precisa usar <tt>\\\\</tt> em "
+"vez de <tt>\\</tt> se você gosta de procurar por uma única contrabarra."
 
 #, python-format
 msgid ""
@@ -86170,16 +86291,6 @@ msgid ""
 "Your search statement is not valid. You need to provide a regular expression "
 "(regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> if "
 "you like to search for a single backslash."
-msgstr ""
-"A sua declaração de pesquisa não é válida. Você precisa de fornecer uma "
-"expressão regular (regex). Por exemplo, você precisa usar <tt>\\\\</tt> em "
-"vez de <tt>\\</tt> se você gosta de procurar por uma única contrabarra."
-
-#, fuzzy
-msgid ""
-"Your search statement is not valid. You need to provide a regular expression "
-"(regex). For example you need to use \\\\ instead of \\ if you want to "
-"search for a single backslash."
 msgstr ""
 "A sua declaração de pesquisa não é válida. Você precisa de fornecer uma "
 "expressão regular (regex). Por exemplo, você precisa usar <tt>\\\\</tt> em "
@@ -88526,6 +88637,21 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
+
+#~ msgid "Access Point"
+#~ msgstr "Ponto de Acesso"
+
+#~ msgid "Bulk Discovery"
+#~ msgstr "Descoberta a Granel"
+
+#, fuzzy
+#~ msgid ""
+#~ "Only applies to notifications triggered by the command `Custom "
+#~ "notifications`"
+#~ msgstr "Ordem de ordenação de notificação para notificações em massa"
+
+#~ msgid "Queried host is a host system"
+#~ msgstr "O anfitrião consultado é um sistema anfitrião"
 
 #~ msgid ""
 #~ "This rule selects the EMC VNX agent instead of the normal Checkmk Agent "

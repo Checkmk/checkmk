@@ -38,8 +38,8 @@ msgstr " (データ不完全、最大ノード数に到達)"
 msgid " (Duration: %s)"
 msgstr " (継続期間: %s)"
 
-#, python-format
-msgid " (Duration: %s, %sIO: %s/s)"
+#, fuzzy, python-format
+msgid " (Duration: %s,%s IO: %s/s)"
 msgstr " (期間: %s、%sIO: %s/s)"
 
 msgid " (copy)"
@@ -114,6 +114,11 @@ msgstr ""
 #, python-format
 msgid " Finished at: %s."
 msgstr " 終了: %s."
+
+msgid ""
+" If this action was not triggered by you, contact your administrator for "
+"further investigation."
+msgstr ""
 
 msgid " Ignore this option"
 msgstr " このオプションは無視してください"
@@ -320,12 +325,12 @@ msgid "% memory left"
 msgstr "% 残りのメモリ"
 
 #, no-python-format
-msgid "% of Flash"
-msgstr "% フラッシュ"
-
-#, no-python-format
 msgid "% of RAM"
 msgstr "RAMの %"
+
+#, fuzzy, no-python-format
+msgid "% of flash"
+msgstr "% フラッシュ"
 
 #, no-python-format
 msgid "% of maximum active connections"
@@ -656,8 +661,8 @@ msgstr "%s インスタンス"
 msgid "%s is locked by Quick setup."
 msgstr "%s はクイックセットアップでロックされています。"
 
-#, python-format
-msgid "%s is not a valid UNIX timestamp"
+#, fuzzy, python-format
+msgid "%s is not a valid Unix timestamp"
 msgstr "%sは有効なUNIXタイムスタンプではありません"
 
 #, python-format
@@ -692,8 +697,8 @@ msgstr "無料トライアル残り%s日"
 msgid "%s matching labels: "
 msgstr "%s ラベルが一致する： "
 
-#, python-format
-msgid "%s may be missing, if must not be empty if it is set."
+#, fuzzy, python-format
+msgid "%s may be missing, it must not be empty if it is set."
 msgstr ""
 "%sは、設定されている場合は空であってはならないので、見つからないことがありま"
 "す。"
@@ -862,9 +867,10 @@ msgstr "マイナー' 状態"
 msgid "'Warning' state"
 msgstr "'警告' 状態"
 
+#, fuzzy
 msgid ""
 "'git' command was not found on this system, but it is required for "
-"versioning the configuration.Please either install 'git' or disable git "
+"versioning the configuration. Please either install 'git' or disable git "
 "configuration tracking in setup."
 msgstr ""
 "'git'コマンドはこのシステムには見つかりませんでしたが、コンフィギュレーション"
@@ -1010,7 +1016,8 @@ msgstr "(不明: %d)"
 msgid "(unset)"
 msgstr "(未設定)"
 
-msgid "(untitled ruleset)"
+#, fuzzy
+msgid "(untitled rule set)"
 msgstr "(無題のルールセット)"
 
 msgid ", "
@@ -1551,11 +1558,12 @@ msgstr "<li>フォルダ %s内のホストを削除できません: %s</li>"
 msgid "<li>Cannot move hosts from folder %s: %s</li>"
 msgstr "<li>フォルダ%sからホストを移動できません: %s</li>"
 
+#, fuzzy
 msgid ""
-"<p>By default each Checkmk site has it's own temporary filesystem (a "
-"ramdisk) mounted to <tt>[SITE]/tmp</tt>. In case the mount is not possible "
-"Checkmk starts without this temporary filesystem.</p><p>Even if this is "
-"possible, it is not recommended to use Checkmk this way because it may "
+"<p>By default each Checkmk site has its own temporary file system (a "
+"ramdisk) mounted to <tt>[SITE]/tmp</tt>. In case the mount is not possible, "
+"Checkmk starts without this temporary file system.</p><p>Even if this is "
+"possible, it is not recommended to use Checkmk this way, because it may "
 "reduce the overall performance of Checkmk.</p>"
 msgstr ""
 "<p>デフォルトでは、各Checkmkサイトには、 <tt>[SITE]/tmp</tt>にマウントされた"
@@ -2043,6 +2051,21 @@ msgstr ""
 "す。チェックが警告される前に、条件が失敗した状態でどれくらいの時間が許される"
 "かを設定することができます。"
 
+#, fuzzy
+msgid "A Two-factor Authenticator app has been added to your Checkmk account."
+msgstr "2要素認証が無効"
+
+#, fuzzy
+msgid ""
+"A Two-factor Authenticator app has been removed from your Checkmk account."
+msgstr "2要素認証が無効"
+
+msgid "A Two-factor security token has been added to your Checkmk account."
+msgstr ""
+
+msgid "A Two-factor security token has been removed from your Checkmk account."
+msgstr ""
+
 msgid ""
 "A cache age limit on plug-ins and local checks. If set, the output of plug-"
 "ins is cached and reused until this much time has passed."
@@ -2293,10 +2316,11 @@ msgstr "100%を超えるプロビジョニングは、過剰なプロビジョ�
 msgid "A regular expression is required"
 msgstr "正規表現が必要"
 
+#, fuzzy
 msgid ""
-"A regular expression matching the <b>beginning</b> of a service description. "
-"You can use a trailing <tt>$</tt> in order to define an exact match. For "
-"each matching service on the specified hosts one child node will be created. "
+"A regular expression matching the <b>beginning</b> of a service name. You "
+"can use a trailing <tt>$</tt> in order to define an exact match. For each "
+"matching service on the specified hosts one child node will be created. "
 msgstr ""
 "サービスの説明の<b>始まり</b>に一致する正規表現。完全一致を定義するために、末"
 "尾の<tt> $ </tt>を使用できます。指定されたホスト上の一致するサービスごとに、1"
@@ -2732,9 +2756,6 @@ msgstr "AWS/EC2の制限"
 msgid "AWS/ECS Limits"
 msgstr "AWS / ECSの制限"
 
-msgid "AWS/ELB Backend Connection Errors"
-msgstr "AWS/ELBバックエンド接続エラー"
-
 msgid "AWS/ELB HTTP Errors"
 msgstr "AWS/ELBHTTPエラー"
 
@@ -2749,6 +2770,10 @@ msgstr "AWS/ELBの制限"
 
 msgid "AWS/ELB Statistics"
 msgstr "AWS/ELB 統計"
+
+#, fuzzy
+msgid "AWS/ELB back-end connection errors"
+msgstr "AWS/ELBバックエンド接続エラー"
 
 msgid "AWS/ELBApplication Target Errors"
 msgstr "AWS/ELBApplicationターゲットエラー"
@@ -3034,11 +3059,9 @@ msgstr ""
 msgid "Access"
 msgstr "アクセス"
 
-msgid "Access Checkmk Agent via TCP"
+#, fuzzy
+msgid "Access Checkmk agent via TCP"
 msgstr "TCP経由でCheckmkエージェントにアクセスする"
-
-msgid "Access Point"
-msgstr "アクセスポイント"
 
 msgid "Access analyze configuration"
 msgstr "アクセス解析設定"
@@ -3057,6 +3080,10 @@ msgstr "アクセスキーIDは必須だが、指定はない。"
 
 msgid "Access key information"
 msgstr "主要情報へのアクセス"
+
+#, fuzzy
+msgid "Access point"
+msgstr "アクセスポイント"
 
 msgid "Access point name"
 msgstr "アクセスポイント名"
@@ -3261,11 +3288,19 @@ msgstr "問題の確認"
 msgid "Acknowledging problems"
 msgstr "問題の認知"
 
+#, fuzzy
+msgid "Acknowledgment"
+msgstr "了承"
+
 msgid "Acknowledgment author"
 msgstr "承認作成者"
 
 msgid "Acknowledgment expires:"
 msgstr "承認期限切れ:"
+
+#, fuzzy
+msgid "Acknowledgment of problem"
+msgstr "問題の確認"
 
 msgid "Acknowledgments: "
 msgstr "了承 "
@@ -4951,7 +4986,8 @@ msgstr "エージェントペアリング"
 msgid "Agent plug-ins"
 msgstr "エージェントプラグイン"
 
-msgid "Agent plug-ins: Regular expression to exclude plugins"
+#, fuzzy
+msgid "Agent plug-ins: Regular expression to exclude plug-ins"
 msgstr "エージェントプラグイン: プラグイン除外のための正規表現"
 
 msgid "Agent plug-ins: versions"
@@ -5364,6 +5400,10 @@ msgstr "すべてのアラートハンドラの実行。"
 msgid "All applications"
 msgstr "すべてのアプリケーション"
 
+#, fuzzy
+msgid "All backup codes associated with this account have been revoked."
+msgstr "すべてのバックアップコードが削除されました"
+
 msgid "All backup codes have been deleted"
 msgstr "すべてのバックアップコードが削除されました"
 
@@ -5488,8 +5528,9 @@ msgstr "すべてのホストおよびサービスのダウンタイム(IDを含
 msgid "All hosts"
 msgstr "すべてのホスト"
 
+#, fuzzy
 msgid ""
-"All hosts configured via this ruleset will do a hardware and software "
+"All hosts configured via this rule set will do a hardware and software "
 "inventory after every check cycle if there's at least one inventory plug-in "
 "which processes status data. <b>Note:</b> in order to get any useful result "
 "for agent based hosts make sure that you have installed the agent plug-in "
@@ -5501,8 +5542,9 @@ msgstr ""
 "ントベースのホストで有用な結果を得るには、これらのホストにエージェントプラグ"
 "イン<tt>mk_inventory</tt>がインストールされていることを確認してください。"
 
+#, fuzzy
 msgid ""
-"All hosts configured via this ruleset will do a hardware and software "
+"All hosts configured via this rule set will do a hardware and software "
 "inventory. For each configured host a new active check will be created. You "
 "should also create a rule for changing the normal interval for that check to "
 "something between a couple of hours and one day. <b>Note:</b> in order to "
@@ -5609,7 +5651,8 @@ msgstr ""
 "特定ホストの問題サービス全てホストとサイトはHTTP変数を介して設定する必要があ"
 "ります。"
 
-msgid "All problematic logfiles"
+#, fuzzy
+msgid "All problematic log files"
 msgstr "問題のあるすべてのログファイル"
 
 msgid "All problems of services not currently in a downtime."
@@ -5922,9 +5965,10 @@ msgid ""
 "containers."
 msgstr "実行中、待機中、終了したすべてのコンテナーの絶対レベルを定義できます。"
 
+#, fuzzy
 msgid ""
-"Allows to define levels for the counts and size of Docker Containers, "
-"Images, Local Volumes, and the Build Cache."
+"Allows to define levels for the counts and size of Docker containers, "
+"images, local volumes, and the build cache."
 msgstr ""
 "Dockerコンテナー、イメージ、ローカルボリューム、およびビルドキャッシュの数と"
 "サイズのレベルを定義できます。"
@@ -6260,19 +6304,6 @@ msgstr ""
 msgid "An old configuration is required for existing connections."
 msgstr "既存の接続には古い構成が必要です。"
 
-#, python-format
-msgid ""
-"An optional URL pointing to documentation or any other page. This will be "
-"displayed as an icon %s and open a new page when clicked. You can use either "
-"global URLs (beginning with <tt>http://</tt>), absolute local urls "
-"(beginning with <tt>/</tt>) or relative URLs (that are relative to "
-"<tt>check_mk/</tt>)."
-msgstr ""
-"ドキュメントまたはその他のページを指すオプションのURL。これはアイコン%sとして"
-"表示され、クリックすると新しいページが開きます。グローバルURL(<tt> http://</"
-"tt>で始まる)、絶対ローカルURL(<tt>/</tt>で始まる)、または相対URL(<tt> "
-"check_mk/に相対的)のいずれかを使用できます。 </tt>)。"
-
 msgid ""
 "An optional URL pointing to documentation or any other page. This will be "
 "displayed as an icon and open a new page when clicked. You can use either "
@@ -6284,6 +6315,19 @@ msgstr ""
 "れ、クリックすると新しいページが開きます。グローバルURL（<tt>http://</tt> で"
 "始まる）、絶対ローカルURL（<tt>/</tt> で始まる）、相対URL（<tt>check_mk/</"
 "tt> からの相対）のいずれかを使用できます。"
+
+#, fuzzy, python-format
+msgid ""
+"An optional URL pointing to the documentation or any other page. It will be "
+"displayed as an icon %s and opens a new page when clicked. You can use "
+"either global URLs (beginning with <tt>http://</tt>), absolute local URLs "
+"(beginning with <tt>/</tt>) or relative URLs (that are relative to "
+"<tt>check_mk/</tt>)."
+msgstr ""
+"ドキュメントまたはその他のページを指すオプションのURL。これはアイコン%sとして"
+"表示され、クリックすると新しいページが開きます。グローバルURL(<tt> http://</"
+"tt>で始まる)、絶対ローカルURL(<tt>/</tt>で始まる)、または相対URL(<tt> "
+"check_mk/に相対的)のいずれかを使用できます。 </tt>)。"
 
 msgid "An optional alias name for your MySQL socket"
 msgstr "mysqlソケットのエイリアス名 オプション"
@@ -6325,7 +6369,8 @@ msgstr "最近の通知の分析"
 msgid "Analyze recent notifications with your current ruleset"
 msgstr "現在のルールセットで最近の通知を分析する"
 
-msgid "Analyze ruleset with this notification"
+#, fuzzy
+msgid "Analyze rule set with this notification"
 msgstr "この通知でルールセットを分析する"
 
 msgid "Analyze the utilization of your IT infrastructure data center."
@@ -6424,6 +6469,16 @@ msgstr "Apacheステータス"
 
 msgid "Apache local password file (htpasswd)"
 msgstr "Apacheローカルパスワードファイル(htpasswd)"
+
+#, fuzzy
+msgid ""
+"Apache mode and TCP address and port, Core, Liveproxy daemon and Livestatus "
+"TCP mode, event daemon config, graphical user interface (GUI) authorisation, "
+"NSCA mode, TMP file system mode"
+msgstr ""
+"ApacheモードとTCPアドレスとポート、コア、Liveproxyデーモンとlivestatus TCP"
+"モード、イベントデーモン構成、Multiste認証、NSCAモード、TMPファイルシステム"
+"モード"
 
 msgid ""
 "Apache mode and TCP address and port, Core, Liveproxy daemon and livestatus "
@@ -6779,7 +6834,8 @@ msgstr "アレイコントローラー"
 msgid "Arrays (Controllers)"
 msgstr "アレイ(コントローラー)"
 
-msgid "Articles in the user guide"
+#, fuzzy
+msgid "Articles in the User Guide"
 msgstr "ユーザーガイドの記事"
 
 msgid "Artificial slowdown of logfile parsing (for testing!)"
@@ -9125,9 +9181,6 @@ msgstr "ビルトイン: ラジアル"
 msgid "Bulk"
 msgstr "バルク"
 
-msgid "Bulk Discovery"
-msgstr "バルクディスカバリー"
-
 msgid "Bulk ID"
 msgstr "バルクID"
 
@@ -9877,13 +9930,14 @@ msgstr ""
 "を無視し、直接接続します (Checkmk REST API からエージェント受信ポートを問い合"
 "わせる場合など)。"
 
+#, fuzzy
 msgid ""
-"By default, the filesystem checks (<tt>df</tt>, <tt>hr_fs</tt> and others) "
-"will create a single service for each filesystem. By defining grouping "
-"patterns, you can handle groups of filesystems like one filesystem. For each "
-"group, you can define one or several include and exclude patterns. The "
-"filesystems matching one of the include patterns will be monitored like one "
-"big filesystem in a single service. The filesystems matching one of the "
+"By default, the file system checks (<tt>df</tt>, <tt>hr_fs</tt> and others) "
+"will create a single service for each file system. By defining grouping "
+"patterns, you can handle groups of file systems like one file system. For "
+"each group, you can define one or several include and exclude patterns. The "
+"file systems matching one of the include patterns will be monitored like one "
+"big file system in a single service. The file systems matching one of the "
 "exclude patterns will be excluded from the group and monitored individually."
 msgstr ""
 "デフォルトでは、ファイルシステム・チェック(<tt>df</tt>, <tt>hr_fs</tt> , その"
@@ -9951,13 +10005,13 @@ msgstr ""
 "す。それ以外の場合は、選択したカスタマーに割り当てられたサイトでのみ利用でき"
 "ます。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "By specifying a status host for each non-local connection you prevent "
-"Multisite from running into timeouts when remote sites do not respond. You "
-"need to add the remote monitoring servers as hosts into your local "
-"monitoring site and use their host state as a reachability state of the "
-"remote site. Please refer to the <a target=_blank href='%s'>online "
+"graphical user interface (GUI) from running into timeouts when remote sites "
+"do not respond. You need to add the remote monitoring servers as hosts into "
+"your local monitoring site and use their host state as a reachability state "
+"of the remote site. Please refer to the <a target=_blank href='%s'>online "
 "documentation</a> for details."
 msgstr ""
 "非ローカル接続ごとにステータスホストを指定することにより、リモートサイトが応"
@@ -10273,6 +10327,15 @@ msgstr ""
 "CPUの負荷と使用率、スレッド数、カーネルパフォーマンス、OMD、ファイルシステ"
 "ム、Apacheステータス、25時間35日の時間範囲のTCP接続"
 
+#, fuzzy
+msgid ""
+"CPU load and utilization, number of threads, Kernel performance, OMD, file "
+"system, Apache status, TCP connections of the time ranges 25 hours and 35 "
+"days"
+msgstr ""
+"CPUの負荷と使用率、スレッド数、カーネルパフォーマンス、OMD、ファイルシステ"
+"ム、Apacheステータス、25時間35日の時間範囲のTCP接続"
+
 msgid "CPU load average of last 15 minutes"
 msgstr "過去15分間のCPU負荷平均"
 
@@ -10376,7 +10439,8 @@ msgstr "CPU使用率(99パーセンタイル)"
 msgid "CPU utilization (average)"
 msgstr "CPU使用率(平均)"
 
-msgid "CPU utilization for Appliances"
+#, fuzzy
+msgid "CPU utilization for appliances"
 msgstr "アプライアンスのCPU使用率"
 
 msgid "CPU utilization for simple devices"
@@ -10413,7 +10477,8 @@ msgstr "最後の1秒のCPU使用率"
 msgid "CPU utilization of Devices with Modules"
 msgstr "モジュールを備えたデバイスのCPU使用率"
 
-msgid "CPU utilization on Linux/UNIX"
+#, fuzzy
+msgid "CPU utilization on Linux/Unix"
 msgstr "Linux/UNIXでのCPU使用率"
 
 msgid "CPU utilization: Cluster"
@@ -10905,7 +10970,8 @@ msgstr "設定ファイル %s を読み取れません: %s:"
 msgid "Cannot read file \"%s\": %s"
 msgstr "ファイル \"%s\"を読み取れません: %s"
 
-msgid "Cannot render dropdown: Missing required information"
+#, fuzzy
+msgid "Cannot render drop-down: Missing required information"
 msgstr "ドロップダウンをレンダリングできません： 必要な情報がありません"
 
 #, python-format
@@ -11666,13 +11732,14 @@ msgstr ""
 msgid "Check the URL"
 msgstr "URLを確認する"
 
+#, fuzzy
 msgid ""
 "Check the number of sent notifications per contact using the plug-in "
 "<tt>check_notify_count</tt> provided with Checkmk. This plug-in counts the "
 "total number of notifications sent by the local monitoring core and creates "
 "graphs for each individual contact. You can configure thresholds on the "
 "number of notifications per contact in a defined time interval. This plug-in "
-"queries livestatus to extract the notification related log entries from the "
+"queries Livestatus to extract the notification related log entries from the "
 "log file of your monitoring core."
 msgstr ""
 "Checkmkで提供されるプラグイン<tt>check_notify_count</tt>を使用して、連絡先ご"
@@ -24272,6 +24339,10 @@ msgstr "フォルダ %rは存在しません。"
 msgid "Folder %s not found."
 msgstr "フォルダ%sが見つかりません。"
 
+#, fuzzy
+msgid "Folder (including subfolders)"
+msgstr "サブフォルダも検索"
+
 msgid "Folder - complete path"
 msgstr "フォルダー-完全なパス"
 
@@ -33021,6 +33092,10 @@ msgid ""
 msgstr ""
 "内部エラー: %s\n"
 "%s"
+
+#, fuzzy
+msgid "Internal identifier"
+msgstr "インスタンス識別子"
 
 msgid "Internal plan_id"
 msgstr "内部プランID"
@@ -42530,6 +42605,16 @@ msgstr "この%sの通知は手動で無効にされます"
 msgid "Notifications are manually enabled for this %s"
 msgstr "この %s の通知は手動で有効になります"
 
+msgid ""
+"Notifications are sent only for event types defined by the 'Notified events "
+"for hosts' ruleset"
+msgstr ""
+
+msgid ""
+"Notifications are sent only for event types defined by the 'Notified events "
+"for services' ruleset"
+msgstr ""
+
 #, python-format
 msgid "Notifications disabled on %d of %d %s"
 msgstr "%d の%d %sの通知は無効"
@@ -43852,13 +43937,10 @@ msgstr ""
 "なる可能性があることに注意してください！"
 
 #, fuzzy
-msgid "Only applies if `Periodic notifications` are enabled"
-msgstr "定期的な通知を有効にする"
-
-#, fuzzy
 msgid ""
-"Only applies to notifications triggered by the command `Custom notifications`"
-msgstr "一括通知の通知の並べ替え順序"
+"Only applies to problem notifications and if periodic notifications are "
+"enabled."
+msgstr "定期的な通知を有効にする"
 
 msgid ""
 "Only apply the rule if the notification originates from certain types of "
@@ -49301,10 +49383,15 @@ msgstr "クアンタムストレージステータス"
 msgid "Quarantine Usage"
 msgstr "検疫の使用"
 
-msgid "Queried host is a host system"
-msgstr "クエリされたホストはホストシステムです"
+msgid "Queried host is a ESXi host (Standalone / not vCenter integrated)"
+msgstr ""
 
-msgid "Queried host is the vCenter"
+#, fuzzy
+msgid "Queried host is a ESXi host (vCenter integrated)"
+msgstr "クエリされたホストはvCenterです"
+
+#, fuzzy
+msgid "Queried host is a vCenter"
 msgstr "クエリされたホストはvCenterです"
 
 msgid "Queried host name or IP address"
@@ -53635,6 +53722,10 @@ msgstr "セキュリティに関するアドバイス"
 msgid "Security fix"
 msgstr "セキュリティ修正"
 
+#, fuzzy, python-format
+msgid "Security message #%d"
+msgstr "セキュリティ名"
+
 msgid "Security name"
 msgstr "セキュリティ名"
 
@@ -54570,6 +54661,10 @@ msgstr "サービスグループ名"
 
 msgid "Service groups"
 msgstr "サービスグループ"
+
+#, fuzzy
+msgid "Service groups (regex)"
+msgstr "サービスグループ(正規表現)"
 
 msgid "Service groups the service is member of"
 msgstr "サービスがメンバーであるサービスグループ"
@@ -57571,11 +57666,12 @@ msgstr "CPU使用量のパーセンテージでレベル指定する"
 msgid "Specify levels in percentage of storage processor usage"
 msgstr "ストレージプロセッサの使用率でレベルを指定します"
 
-msgid "Specify levels in percentage of total Flash"
-msgstr "フラッシュ全体のパーセンテージでレベルを指定します"
-
 msgid "Specify levels in percentage of total RAM"
 msgstr "合計RAMのパーセンテージでレベルを指定します"
+
+#, fuzzy
+msgid "Specify levels in percentage of total flash"
+msgstr "フラッシュ全体のパーセンテージでレベルを指定します"
 
 msgid "Specify levels in percentage of total memory usage"
 msgstr "合計メモリ使用量のパーセンテージでレベルを指定します"
@@ -59812,9 +59908,6 @@ msgstr "Systemdサービス"
 msgid "Synthetic Monitoring"
 msgstr "外形監視"
 
-msgid "Synthetic Monitoring is an add-on."
-msgstr "シンセティック・モニタリングはアドオンです。"
-
 msgid "Synthetic Monitoring tests"
 msgstr "外形監視テスト"
 
@@ -59824,6 +59917,10 @@ msgstr "外形監視"
 #, python-format
 msgid "Synthetic monitoring (licensed tests: %s)"
 msgstr "合成モニタリング (ライセンスされたテスト: %s)"
+
+#, fuzzy
+msgid "Synthetic monitoring is an add-on."
+msgstr "シンセティック・モニタリングはアドオンです。"
 
 msgid "Synthetic tests"
 msgstr "Synthetic テスト"
@@ -61712,6 +61809,9 @@ msgstr ""
 "け入れる場合にシステムがハングするのを避けるために、処理されるエントリの数は"
 "制限されています。本当に大量のデータを処理する必要がある場合は、ここでこの制"
 "限を上げることができます。制限を無効にするには、これをゼロに設定します。"
+
+msgid "The backup codes associated with your account have been reset."
+msgstr ""
 
 msgid "The backup has been deleted."
 msgstr "バックアップが削除されました。"
@@ -64963,6 +65063,12 @@ msgstr "テキスト"
 
 msgid "The text entered here is handled as a regular expression pattern."
 msgstr "ここに入力されたテキストは、正規表現パターンとして処理されます。"
+
+msgid ""
+"The text entered here is handled as a regular expression pattern. The "
+"pattern is case-sensitive and matches from the start. Add '$' to match the "
+"whole text."
+msgstr ""
 
 msgid ""
 "The text entered here well be prefixed to the host name. Ending the prefix "
@@ -73939,6 +74045,10 @@ msgstr "不明なユーザー: %s"
 msgid "Unknown rulesets"
 msgstr "不明なユーザー"
 
+#, fuzzy
+msgid "Unknown security event"
+msgstr "不明なサービス"
+
 msgid "Unknown service"
 msgstr "不明なサービス"
 
@@ -81746,12 +81856,19 @@ msgstr "%s が保存されました。"
 msgid "Your Checkmk Password has been changed"
 msgstr "スケジュールタスクが保存されました。"
 
+#, fuzzy
+msgid "Your Checkmk Password has been changed."
+msgstr "スケジュールタスクが保存されました。"
+
 #, python-format
 msgid "Your Checkmk license expires %s"
 msgstr "Checkmkライセンスの有効期限は%sです"
 
 msgid "Your WebAuthn credential is already in use"
 msgstr "WebAuthn認証はすでに使用されています"
+
+msgid "Your account has been accessed using a backup code."
+msgstr ""
 
 msgid ""
 "Your administrator has enforced two factor authentication for your account. "
@@ -81844,6 +81961,16 @@ msgstr "入力されたメールアドレスは有効ではありません。"
 #, fuzzy
 msgid "Your input is not a valid hostname or IP address."
 msgstr "入力されたメールアドレスは有効ではありません。"
+
+#, fuzzy
+msgid ""
+"Your input is not valid. You need to provide a regular expression (regex). "
+"For example you need to use \\\\ instead of \\ if you want to search for a "
+"single backslash."
+msgstr ""
+"その検索文は無効です。正規表現（regex）を指定する必要があります。例えば、バッ"
+"クスラッシュを１つだけ検索したい場合は<tt>\\\\</tt>を<tt>\\</tt>の代わりに使"
+"用する必要があります。"
 
 #, python-format
 msgid ""
@@ -81995,16 +82122,6 @@ msgid ""
 "Your search statement is not valid. You need to provide a regular expression "
 "(regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> if "
 "you like to search for a single backslash."
-msgstr ""
-"その検索文は無効です。正規表現（regex）を指定する必要があります。例えば、バッ"
-"クスラッシュを１つだけ検索したい場合は<tt>\\\\</tt>を<tt>\\</tt>の代わりに使"
-"用する必要があります。"
-
-#, fuzzy
-msgid ""
-"Your search statement is not valid. You need to provide a regular expression "
-"(regex). For example you need to use \\\\ instead of \\ if you want to "
-"search for a single backslash."
 msgstr ""
 "その検索文は無効です。正規表現（regex）を指定する必要があります。例えば、バッ"
 "クスラッシュを１つだけ検索したい場合は<tt>\\\\</tt>を<tt>\\</tt>の代わりに使"
@@ -84309,6 +84426,21 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用不可</b>"
+
+#~ msgid "Access Point"
+#~ msgstr "アクセスポイント"
+
+#~ msgid "Bulk Discovery"
+#~ msgstr "バルクディスカバリー"
+
+#, fuzzy
+#~ msgid ""
+#~ "Only applies to notifications triggered by the command `Custom "
+#~ "notifications`"
+#~ msgstr "一括通知の通知の並べ替え順序"
+
+#~ msgid "Queried host is a host system"
+#~ msgstr "クエリされたホストはホストシステムです"
 
 #~ msgid ""
 #~ "This rule selects the EMC VNX agent instead of the normal Checkmk Agent "

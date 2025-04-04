@@ -27,11 +27,11 @@ from cmk.gui.background_job import (
     BackgroundProcessInterface,
     InitialStatusArgs,
     JobTarget,
-    StartupError,
 )
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.job_scheduler_client import StartupError
 from cmk.gui.logged_in import user
 from cmk.gui.utils import gen_id
 from cmk.gui.utils.request_context import copy_request_context

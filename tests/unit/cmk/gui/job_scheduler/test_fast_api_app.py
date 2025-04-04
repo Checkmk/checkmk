@@ -25,11 +25,11 @@ from cmk.gui.background_job import (
     SpanContextModel,
     StartRequest,
     StartResponse,
-    StartupError,
     TerminateRequest,
 )
 from cmk.gui.job_scheduler._fast_api_app import get_application
 from cmk.gui.job_scheduler._scheduler import ScheduledJob, SchedulerState
+from cmk.gui.job_scheduler_client import StartupError
 
 logger = logging.getLogger(__name__)
 

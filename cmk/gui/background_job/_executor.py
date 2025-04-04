@@ -16,6 +16,8 @@ from typing import override, Protocol
 
 import cmk.utils.resulttype as result
 
+from cmk.gui.job_scheduler_client import StartupError
+
 from cmk.trace import get_current_span, get_tracer
 
 from ._interface import JobParameters, JobTarget, SpanContextModel
@@ -23,9 +25,6 @@ from ._status import InitialStatusArgs, JobStatusSpec, JobStatusStates
 from ._store import JobStatusStore
 
 tracer = get_tracer()
-
-
-class StartupError(Exception): ...
 
 
 class AlreadyRunningError(Exception): ...

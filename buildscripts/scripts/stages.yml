@@ -438,7 +438,7 @@ STAGES:
       DIR: "tests"
       COMMAND: "make --quiet test-format-toml &> ${RESULTS}/toml-format.txt"
       BAZEL_LOCKS_AMOUNT: 1
-      RESULT_CHECK_FILE_PATTERN:
+      RESULT_CHECK_FILE_PATTERN: "results/toml-format.txt"
 
     ########## packages ########################################################
 

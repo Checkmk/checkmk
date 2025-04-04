@@ -43,6 +43,5 @@ socket="unix:###ROOT###/tmp/run/live"
 [backend_###SITE###_bi]
 backendtype="mkbi"
 base_url="http://localhost/###SITE###/check_mk/"
-auth_user="automation"
-auth_secret_file="###ROOT###/var/check_mk/web/automation/automation.secret"
+site_internal_auth=1
 timeout=10

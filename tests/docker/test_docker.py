@@ -338,7 +338,7 @@ def test_update(client: docker.DockerClient) -> None:
         CMKEdition(CMKEdition.CRE),
     )
     update_package = CMKPackageInfo(version_from_env(), edition_from_env())
-    container_name = f"{update_package.version.branch}-monitoring"
+    container_name = f"checkmk-{update_package.version.branch}_{randint(10000000, 99999999)}"
 
     update_compatibility = versions_compatible(
         Version.from_str(base_package.version.version),

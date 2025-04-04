@@ -132,6 +132,7 @@ from cmk.base.config import (
     handle_ip_lookup_failure,
     lookup_mgmt_board_ip_address,
 )
+from cmk.base.configlib.checkengine import DiscoveryConfig
 from cmk.base.core_factory import create_core, get_licensing_handler_type
 from cmk.base.errorhandling import CheckResultErrorHandler, create_section_crash_dump
 from cmk.base.modes import Mode, modes, Option
@@ -1846,7 +1847,7 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
     ruleset_matcher = config_cache.ruleset_matcher
     ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
     autochecks_config = config.AutochecksConfigurer(config_cache, plugins.check_plugins)
-    discovery_config = config.DiscoveryConfig(
+    discovery_config = DiscoveryConfig(
         ruleset_matcher,
         loading_result.config_cache.label_manager.labels_of_host,
         loading_result.loaded_config.discovery_rules,
@@ -2132,7 +2133,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     plugins = load_checks()
     loading_result = load_config(plugins)
     config_cache = loading_result.config_cache
-    discovery_config = config.DiscoveryConfig(
+    discovery_config = DiscoveryConfig(
         loading_result.config_cache.ruleset_matcher,
         loading_result.config_cache.label_manager.labels_of_host,
         loading_result.loaded_config.discovery_rules,

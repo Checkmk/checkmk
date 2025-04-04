@@ -184,6 +184,7 @@ from cmk.base.config import (
     lookup_mgmt_board_ip_address,
     snmp_default_community,
 )
+from cmk.base.configlib.checkengine import CheckingConfig, DiscoveryConfig
 from cmk.base.core import CoreAction, do_restart
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
@@ -297,7 +298,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                 discovery_rulesets=extract_known_discovery_rulesets(plugins)
             )
 
-        discovery_config = config.DiscoveryConfig(
+        discovery_config = DiscoveryConfig(
             loading_result.config_cache.ruleset_matcher,
             loading_result.config_cache.label_manager.labels_of_host,
             loading_result.loaded_config.discovery_rules,
@@ -642,7 +643,7 @@ def _active_check_preview_rows(
 
 # TODO: see if we should consolidate this with ServiceConfigurer
 def _make_compute_check_parameters_of_autocheck(
-    checking_config: config.CheckingConfig,
+    checking_config: CheckingConfig,
     ruleset_matcher: RulesetMatcher,
     label_manager: LabelManager,
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
@@ -687,12 +688,12 @@ def _execute_discovery(
     plugins: AgentBasedPlugins,
 ) -> CheckPreview:
     hosts_config = config.make_hosts_config()
-    discovery_config = config.DiscoveryConfig(
+    discovery_config = DiscoveryConfig(
         config_cache.ruleset_matcher,
         config_cache.label_manager.labels_of_host,
         loaded_config.discovery_rules,
     )
-    checking_config = config.CheckingConfig(
+    checking_config = CheckingConfig(
         config_cache.ruleset_matcher,
         config_cache.label_manager.labels_of_host,
         loaded_config.checkgroup_parameters,
@@ -816,7 +817,7 @@ def _execute_autodiscovery(
 
     config_cache = loading_result.config_cache
     service_configurer = config_cache.make_service_configurer(ab_plugins.check_plugins)
-    discovery_config = config.DiscoveryConfig(
+    discovery_config = DiscoveryConfig(
         config_cache.ruleset_matcher,
         config_cache.label_manager.labels_of_host,
         loading_result.loaded_config.discovery_rules,

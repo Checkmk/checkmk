@@ -58,7 +58,7 @@ from cmk.utils.host_storage import apply_hosts_file_to_object, get_host_storage_
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
 from cmk.utils.ip_lookup import IPStackConfig
-from cmk.utils.labels import ABCLabelConfig, LabelManager, Labels, LabelSources
+from cmk.utils.labels import LabelManager, Labels, LabelSources
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.regex import regex
@@ -100,13 +100,11 @@ from cmk.fetchers.filecache import MaxAge
 
 import cmk.checkengine.plugin_backend as agent_based_register
 from cmk.checkengine.checking import (
-    ABCCheckingConfig,
     merge_enforced_services,
     ServiceConfigurer,
 )
 from cmk.checkengine.checking.cluster_mode import ClusterMode
 from cmk.checkengine.discovery import (
-    ABCDiscoveryConfig,
     AutochecksManager,
     CheckPreviewEntry,
     DiscoveryCheckParameters,
@@ -136,13 +134,14 @@ from cmk.checkengine.plugins import (
     CheckPluginName,
     ConfiguredService,
     InventoryPlugin,
-    RuleSetTypeName,
     ServiceID,
     SNMPSectionPlugin,
 )
 from cmk.checkengine.summarize import SummaryConfig
 
 from cmk.base import default_config
+from cmk.base.configlib.checkengine import CheckingConfig
+from cmk.base.configlib.labels import LabelConfig
 from cmk.base.default_config import *  # noqa: F403
 from cmk.base.parent_scan import ScanConfig as ParentScanConfig
 from cmk.base.sources import SNMPFetcherConfig
@@ -1552,38 +1551,6 @@ def compute_enforced_service_parameters(
     )
 
 
-class CheckingConfig(ABCCheckingConfig):
-    def __init__(
-        self,
-        matcher: RulesetMatcher,
-        labels_of_host: Callable[[HostName], Labels],
-        parameter_rules: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]],
-        service_rule_names: Container[str],
-    ) -> None:
-        self._matcher = matcher
-        self._parameter_rules = parameter_rules
-        self._labels_of_host = labels_of_host
-        self._service_rule_names = service_rule_names
-
-    def __call__(
-        self, host_name: HostName, item: Item, service_labels: Labels, ruleset_name: RulesetName
-    ) -> Sequence[Mapping[str, object]]:
-        rules = self._parameter_rules.get(ruleset_name)
-        if not rules:
-            return []
-
-        try:
-            if item is None and ruleset_name not in self._service_rule_names:
-                return self._matcher.get_host_values(host_name, rules, self._labels_of_host)
-
-            # checks with an item need service-specific rules
-            return self._matcher.get_checkgroup_ruleset_values(
-                host_name, item, service_labels, rules, self._labels_of_host
-            )
-        except MKGeneralException as e:
-            raise MKGeneralException(f"{e} (on host {host_name}, checkgroup {ruleset_name})")
-
-
 def lookup_mgmt_board_ip_address(
     config_cache: ConfigCache, host_name: HostName
 ) -> HostAddress | None:
@@ -1739,25 +1706,6 @@ def _make_clusters_nodes_maps() -> tuple[
     return clusters_of_cache, nodes_cache
 
 
-@dataclasses.dataclass(frozen=True)
-class DiscoveryConfig(ABCDiscoveryConfig):
-    """Implementation of the discovery configuration"""
-
-    matcher: RulesetMatcher
-    labels_of_host: Callable[[HostName], Labels]
-    rules: Mapping[RuleSetName, Sequence[RuleSpec[Mapping[str, object]]]]
-
-    def __call__(
-        self, host_name: HostName, rule_set_name: RuleSetName, rule_set_type: RuleSetTypeName
-    ) -> Mapping[str, object] | Sequence[Mapping[str, object]]:
-        rule = self.rules.get(rule_set_name, [])
-        if rule_set_type == "merged":
-            return self.matcher.get_host_merged_dict(host_name, rule, self.labels_of_host)
-        if rule_set_type == "all":
-            return self.matcher.get_host_values(host_name, rule, self.labels_of_host)
-        assert_never(rule_set_type)
-
-
 class AutochecksConfigurer:
     """Implementation of the autochecks configuration"""
 
@@ -1809,39 +1757,6 @@ class AutochecksConfigurer:
             host_name,
             self.service_description(host_name, entry),
             entry.service_labels,
-        )
-
-
-@dataclasses.dataclass(frozen=True)
-class LabelConfig(ABCLabelConfig):
-    matcher: RulesetMatcher
-    host_label_rules: Sequence[RuleSpec[Mapping[str, str]]]
-    service_label_rules: Sequence[RuleSpec[Mapping[str, str]]]
-
-    def host_labels(self, host_name: HostName, /) -> Labels:
-        """Returns the configured labels for a host"""
-        return self.matcher.get_host_merged_dict(
-            host_name,
-            self.host_label_rules,
-            # these cannot match on host labels, for obvious reasons
-            lambda _: {},
-        )
-
-    def service_labels(
-        self,
-        host_name: HostName,
-        service_name: ServiceName,
-        labels_of_host: Callable[[HostName], Labels],
-        /,
-    ) -> Labels:
-        """Returns the configured labels for a service"""
-        return self.matcher.get_service_merged_dict(
-            host_name,
-            service_name,
-            # these do not match on service labels
-            {},
-            self.service_label_rules,
-            labels_of_host,
         )
 
 

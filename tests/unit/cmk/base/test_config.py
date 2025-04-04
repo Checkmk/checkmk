@@ -58,8 +58,9 @@ from cmk.base.config import (
     ConfigCache,
     ConfiguredIPLookup,
     handle_ip_lookup_failure,
-    LabelConfig,
 )
+from cmk.base.configlib.checkengine import CheckingConfig
+from cmk.base.configlib.labels import LabelConfig
 from cmk.base.default_config.base import _PeriodicDiscovery
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
@@ -3350,7 +3351,7 @@ def test_checking_config(
     ts.add_host(hostname)
     config_cache = ts.apply(monkeypatch)
 
-    config_getter = config.CheckingConfig(
+    config_getter = CheckingConfig(
         config_cache.ruleset_matcher,
         lambda hn: {},
         {

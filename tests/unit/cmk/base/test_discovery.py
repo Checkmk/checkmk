@@ -76,6 +76,7 @@ from cmk.base.checkers import (
     SectionPluginMapper,
 )
 from cmk.base.config import ConfigCache
+from cmk.base.configlib.checkengine import DiscoveryConfig
 
 from cmk.agent_based.v2 import AgentSection, SimpleSNMPSection
 from cmk.plugins.collection.agent_based.df_section import agent_section_df
@@ -1602,7 +1603,7 @@ def test__discovery_considers_host_labels(
 
     # arrange
     plugins = DiscoveryPluginMapper(
-        discovery_config=config.DiscoveryConfig(
+        discovery_config=DiscoveryConfig(
             config_cache.ruleset_matcher,
             config_cache.label_manager.labels_of_host,
             rules={

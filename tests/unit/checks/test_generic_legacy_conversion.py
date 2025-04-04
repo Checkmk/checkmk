@@ -125,7 +125,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "apc_symmetra_ext_temp",
         "apc_symmetra_input",
         "apc_symmetra_output",
-        "apc_symmetra_test",
         "appdynamics_memory",
         "appdynamics_sessions",
         "appdynamics_web_container",

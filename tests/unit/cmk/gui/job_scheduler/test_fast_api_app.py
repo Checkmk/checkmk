@@ -205,3 +205,11 @@ def test_on_scheduler_start_executed() -> None:
     HelloJob.on_scheduler_start_called = False
     with _get_test_client(loaded_at=1337):
         assert HelloJob.on_scheduler_start_called is True
+
+
+def test_reset_scheduling() -> None:
+    with _get_test_client(loaded_at=1337) as client:
+        resp = client.post("reset_scheduling", json={"job_id": "foo_bar"})
+
+    assert resp.status_code == 200
+    assert resp.text == "null"

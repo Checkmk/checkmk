@@ -5,14 +5,14 @@
 
 from logging import Logger
 
-from cmk.gui.job_scheduler import reset_scheduling
+from cmk.gui import deprecations
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
 class ResetDeprecationsScheduling(UpdateAction):  # pylint: disable=too-few-public-methods
     def __call__(self, logger: Logger) -> None:
-        reset_scheduling("execute_deprecation_tests_and_notify_users")
+        deprecations.reset_scheduling()
 
 
 update_action_registry.register(

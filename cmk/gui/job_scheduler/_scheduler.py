@@ -73,18 +73,23 @@ def _run_scheduler(
     logger.info("Stopped scheduler")
 
 
-def _load_last_job_runs() -> dict[str, datetime.datetime]:
+def last_job_runs_file_path() -> Path:
+    return Path(paths.var_dir) / "last_job_runs.mk"
+
+
+def load_last_job_runs() -> dict[str, datetime.datetime]:
     return {
         ident: datetime.datetime.fromtimestamp(ts, tz=datetime.UTC)
         for ident, ts in store.load_object_from_file(
-            Path(paths.var_dir) / "last_job_runs.mk", default={}
+            last_job_runs_file_path(),
+            default={},
         ).items()
     }
 
 
-def _save_last_job_runs(runs: Mapping[str, datetime.datetime]) -> None:
+def save_last_job_runs(runs: Mapping[str, datetime.datetime]) -> None:
     store.save_object_to_file(
-        Path(paths.var_dir) / "last_job_runs.mk",
+        last_job_runs_file_path(),
         {ident: dt.timestamp() for ident, dt in runs.items()},
     )
 
@@ -98,15 +103,13 @@ def _jobs_to_run(jobs: Sequence[CronJob], job_runs: dict[str, datetime.datetime]
     ]
 
 
-@tracer.start_as_current_span("run_scheduled_jobs")
-def run_scheduled_jobs(
+def _run_scheduled_jobs(
     jobs: Sequence[CronJob],
     state: SchedulerState,
     crash_report_callback: Callable[[Exception], str],
+    job_runs: dict[str, datetime.datetime],
 ) -> None:
-    logger.debug("Starting cron jobs")
-
-    for job in _jobs_to_run(jobs, job_runs := _load_last_job_runs()):
+    for job in _jobs_to_run(jobs, job_runs):
         try:
             if job.name in state.running_jobs:
                 logger.debug("Skipping [%s] as it is already running", job.name)
@@ -147,10 +150,26 @@ def run_scheduled_jobs(
         except Exception as exc:
             crash_msg = crash_report_callback(exc)
             logger.error(
-                "Exception in cron job (Job: %s Crash ID: %s)", job.name, crash_msg, exc_info=True
+                "Exception in cron job (Job: %s Crash ID: %s)",
+                job.name,
+                crash_msg,
+                exc_info=True,
             )
         job_runs[job.name] = datetime.datetime.now()
-    _save_last_job_runs(job_runs)
+
+
+@tracer.start_as_current_span("run_scheduled_jobs")
+def run_scheduled_jobs(
+    jobs: Sequence[CronJob],
+    state: SchedulerState,
+    crash_report_callback: Callable[[Exception], str],
+) -> None:
+    logger.debug("Starting cron jobs")
+
+    with store.locked(last_job_runs_file_path()):
+        last_job_runs = load_last_job_runs()
+        _run_scheduled_jobs(jobs, state, crash_report_callback, last_job_runs)
+        save_last_job_runs(last_job_runs)
 
     logger.debug("Finished all cron jobs")
 
@@ -215,13 +234,3 @@ class SchedulerState:
     next_cycle_start: int = 0
     running_jobs: dict[str, ScheduledJob] = field(default_factory=dict)
     job_executions: Counter[str] = field(default_factory=Counter)
-
-
-def reset_scheduling(reset_ident: str) -> None:
-    _save_last_job_runs(
-        {
-            ident: datetime
-            for ident, datetime in _load_last_job_runs().items()
-            if ident != reset_ident
-        }
-    )

@@ -16,9 +16,10 @@ const scrollContainerVariants = cva('', {
     type: 'inner'
   }
 })
+
 export type ScrollContainerVariants = VariantProps<typeof scrollContainerVariants>
 
-interface ScrollContainerProps {
+export interface ScrollContainerProps {
   maxHeight?: string
   type?: ScrollContainerVariants['type']
 }

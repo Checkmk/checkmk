@@ -331,7 +331,7 @@ def test_update(client: docker.DockerClient) -> None:
         version_spec="2.3.0p26", edition=Edition.CRE, branch="2.3.0", branch_version="2.3.0"
     )
     update_version = version_from_env()
-    container_name = "%s-monitoring" % update_version.branch
+    container_name = f"checkmk-{update_version.branch}_{randint(10000000, 99999999)}"
 
     update_compatibility = versions_compatible(
         Version.from_str(base_version.version), Version.from_str(update_version.version)

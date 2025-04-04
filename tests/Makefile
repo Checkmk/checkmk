@@ -362,18 +362,24 @@ test-werks:
 
 test-code-quality: test-license-headers test-requirements test-file-content test-werks
 
-test-mypy:
+test-mypy: test-mypy-cmk test-mypy-not-cmk test-mypy-agent-cisco-meraki
+
+test-mypy-cmk:
+	bazel build --config=mypy //cmk:lib_cmk_repo_no_meraki
+
+test-mypy-not-cmk:
 	cd .. && $(UVENV) mypy \
 	    $(MYPY_ADDOPTS) \
 	    $(ADDITIONAL_MYPY_ARGS) \
 	    --config-file="$(REPO_PATH)/pyproject.toml" \
 	    -- $$($(FIND_PYTHON_FILES) | grep -v "$(realpath ..)\/cmk\/")
+
+test-mypy-agent-cisco-meraki:
 	cd .. && $(UVENV) mypy \
 	    $(MYPY_ADDOPTS) \
 	    $(ADDITIONAL_MYPY_ARGS) \
 	    --config-file="$(REPO_PATH)/pyproject.toml" \
 	    -- cmk/special_agents/agent_cisco_meraki.py
-	bazel build --config=mypy //cmk:lib_cmk_repo_no_meraki
 
 test-mypy-raw:
 	$(MAKE) test-mypy ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"

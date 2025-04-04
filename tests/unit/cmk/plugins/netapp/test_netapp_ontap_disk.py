@@ -74,6 +74,11 @@ _DISK_MODELS = [
         bytes_per_sector=10,
         sector_count=5,
     ),
+    DiskModelFactory.build(
+        container_type="remote",
+        bytes_per_sector=10,
+        sector_count=5,
+    ),
 ]
 
 

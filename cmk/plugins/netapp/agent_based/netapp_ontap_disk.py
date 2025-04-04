@@ -95,6 +95,7 @@ def check_netapp_ontap_disk_summary(params: Mapping[str, Any], section: Section)
             capacity=disk_model.space(),
         )
         for disk_model in section
+        if disk_model.container_type not in ["remote", "partner"]
     ]
 
     yield from check_filer_disks(

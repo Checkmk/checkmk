@@ -7,7 +7,6 @@ from ._base import BackgroundJob as BackgroundJob
 from ._defines import BackgroundJobDefines as BackgroundJobDefines
 from ._executor import AlreadyRunningError as AlreadyRunningError
 from ._executor import JobExecutor as JobExecutor
-from ._executor import StartupError as StartupError
 from ._executor import ThreadedJobExecutor as ThreadedJobExecutor
 from ._interface import BackgroundProcessInterface as BackgroundProcessInterface
 from ._interface import JobTarget as JobTarget

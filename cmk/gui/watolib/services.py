@@ -242,6 +242,17 @@ class DiscoveryOptions(NamedTuple):
     ignore_errors: bool
 
 
+@dataclasses.dataclass(frozen=True)
+class DiscoveryTransition:
+    """Describes the computed transition of the discovery state"""
+
+    need_sync: bool
+    remove_disabled_rule: set[str]
+    add_disabled_rule: set[str]
+    old_autochecks: SetAutochecksInput
+    new_autochecks: SetAutochecksInput
+
+
 class Discovery:
     def __init__(
         self,
@@ -261,6 +272,26 @@ class Discovery:
         self.user_need_permission: Final = user_need_permission
 
     def do_discovery(self, discovery_result: DiscoveryResult, target_host_name: HostName) -> None:
+        if (
+            transition := self.compute_discovery_transition(discovery_result, target_host_name)
+        ) is None:
+            return
+
+        if transition.need_sync:
+            self._save_host_service_enable_disable_rules(
+                transition.remove_disabled_rule, transition.add_disabled_rule
+            )
+
+        self._save_services(
+            target_host_name,
+            transition.old_autochecks,
+            transition.new_autochecks,
+            transition.need_sync,
+        )
+
+    def compute_discovery_transition(
+        self, discovery_result: DiscoveryResult, target_host_name: HostName
+    ) -> DiscoveryTransition | None:
         changed_target_services: MutableMapping[ServiceName, AutocheckEntry] = {}
         changed_nodes_services: MutableMapping[
             HostName, MutableMapping[ServiceName, AutocheckEntry]
@@ -318,24 +349,22 @@ class Discovery:
                 unchanged_nodes_services[autochecks_host_name] = unchanged_services
                 changed_nodes_services[autochecks_host_name] = changed_services
 
-        if apply_changes:
-            need_sync = False
-            if remove_disabled_rule or add_disabled_rule:
-                add_disabled_rule = add_disabled_rule - remove_disabled_rule - saved_services
-                self._save_host_service_enable_disable_rules(
-                    remove_disabled_rule, add_disabled_rule
-                )
-                need_sync = True
-            self._save_services(
-                target_host_name,
-                SetAutochecksInput(
-                    target_host_name, unchanged_target_services, unchanged_nodes_services
-                ),
-                SetAutochecksInput(
-                    target_host_name, changed_target_services, changed_nodes_services
-                ),
-                need_sync,
-            )
+        if not apply_changes:
+            return None
+
+        return DiscoveryTransition(
+            need_sync=bool(
+                remove_disabled_rule or add_disabled_rule
+            ),  # Watch out! Can't be derived form the next two!
+            remove_disabled_rule=remove_disabled_rule,
+            add_disabled_rule=add_disabled_rule - remove_disabled_rule - saved_services,
+            old_autochecks=SetAutochecksInput(
+                target_host_name, unchanged_target_services, unchanged_nodes_services
+            ),
+            new_autochecks=SetAutochecksInput(
+                target_host_name, changed_target_services, changed_nodes_services
+            ),
+        )
 
     def _save_host_service_enable_disable_rules(
         self, remove_disabled_rule: set[str], add_disabled_rule: set[str]

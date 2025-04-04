@@ -769,6 +769,9 @@ class LDAPGroupsToRolesSelector(LDAPCheckboxSelector):
 
 
 class LDAPSyncPluginsRequest(BaseSchema):
+    class Meta:
+        unknown = INCLUDE
+
     alias = fields.Nested(
         LDAPSyncPluginAttrubuteSelector,
         description="Enables and populates the alias attribute of the Setup user by synchronizing an "
@@ -872,6 +875,36 @@ class LDAPSyncPluginsRequest(BaseSchema):
         load_default={"state": "disabled"},
     )
 
+    @post_load(pass_original=True)
+    def _validate_extra_attributes(
+        self,
+        result_data: dict[str, Any],
+        original_data: MutableMapping[str, Any],
+        **_unused_args: Any,
+    ) -> dict[str, Any]:
+        for field in self.fields:
+            original_data.pop(field, None)
+
+        if not original_data:
+            return result_data
+
+        custom_user_attributes = load_custom_attrs_from_mk_file(lock=False)["user"]
+        test_field = fields.Nested(LDAPSyncPluginCustomSelector, required=False)
+
+        for name, value in original_data.items():
+            if name not in {attr["title"] for attr in custom_user_attributes}:
+                raise ValidationError(f"Unknown custom user attribute: {name!r}")
+
+            try:
+                test_field.deserialize(value)
+
+            except ValidationError as e:
+                raise ValidationError(f"Invalid value for {name!r}: {e.messages}")
+
+            result_data[name] = value
+
+        return result_data
+
 
 class LDAPSyncPluginCustomRequest(LDAPCheckboxEnabledRequest):
     attribute_to_sync = fields.String(
@@ -886,17 +919,6 @@ class LDAPSyncPluginCustomSelector(LDAPCheckboxSelector):
         "enabled": LDAPSyncPluginCustomRequest,
         "disabled": LDAPCheckboxDisabledRequest,
     }
-
-
-def ldap_sync_plugins_request_schema() -> type[LDAPSyncPluginsRequest]:
-    custom_user_attributes = load_custom_attrs_from_mk_file(lock=False)["user"]
-    return LDAPSyncPluginsRequest.from_dict(
-        {
-            attr["title"]: fields.Nested(LDAPSyncPluginCustomSelector)
-            for attr in custom_user_attributes
-        },
-        name="LDAPSyncPluginsRequestWithCustomAttributes",
-    )
 
 
 class LDAPSyncIntervalRequest(BaseSchema):
@@ -971,7 +993,7 @@ class LDAPConnectionConfigRequest(BaseSchema):
         },
     )
     sync_plugins = fields.Nested(
-        ldap_sync_plugins_request_schema(),
+        LDAPSyncPluginsRequest,
         description="The LDAP sync plug-ins configuration",
         example={},
         load_default={},

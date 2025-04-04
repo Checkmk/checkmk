@@ -92,6 +92,7 @@ const catalog = ref<Catalog>({
     :header="{ title: 'some title', closeButton: true }"
     @close="scrollOpen = false"
   >
+    <input />
     <div v-for="i in 100" :key="i">{{ i }} <br /></div>
   </SlideIn>
 </template>

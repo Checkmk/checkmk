@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { ref, nextTick } from 'vue'
 import {
   DialogClose,
   DialogTitle,
@@ -26,6 +27,18 @@ export interface SlideInProps {
 
 defineProps<SlideInProps>()
 const emit = defineEmits(['close'])
+
+const scrollContainerRef = ref<InstanceType<typeof CmkScrollContainer> | null>(null)
+
+const focusOnSlideInContent = async () => {
+  await nextTick(() => {
+    ;(
+      scrollContainerRef.value?.$el.querySelector(
+        'input, select, textarea, button, object, a, area[href], [tabindex]'
+      ) as HTMLElement
+    )?.focus()
+  })
+}
 </script>
 
 <template>
@@ -37,6 +50,7 @@ const emit = defineEmits(['close'])
         class="cmk-vue-app slide-in__container"
         :aria-describedby="undefined"
         @escape-key-down="emit('close')"
+        @open-auto-focus="focusOnSlideInContent"
       >
         <DialogTitle v-if="header" class="slide-in__title">
           <CmkLabel variant="title">{{ header.title }}</CmkLabel>
@@ -45,7 +59,7 @@ const emit = defineEmits(['close'])
           </DialogClose>
         </DialogTitle>
 
-        <CmkScrollContainer type="outer" class="slide-in__content">
+        <CmkScrollContainer ref="scrollContainerRef" type="outer" class="slide-in__content">
           <slot />
         </CmkScrollContainer>
       </DialogContent>

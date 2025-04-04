@@ -6,7 +6,7 @@
 # <<<splunk_license_usage>>>
 # 524288000 5669830
 
-from typing import Self, TypeAlias, TypedDict
+from typing import Self, TypedDict
 
 import pydantic
 
@@ -73,7 +73,7 @@ def discover_splunk_license_usage(section: LicenseUsage) -> DiscoveryResult:
     yield Service()
 
 
-FloatLevels: TypeAlias = FixedLevelsT[float]
+type FloatLevels = FixedLevelsT[float]
 """Fixed warn and critical float threshold."""
 
 

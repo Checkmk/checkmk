@@ -16,7 +16,7 @@
 # Index_processor Disk_space green
 
 import enum
-from typing import Literal, NewType, TypeAlias, TypedDict
+from typing import Literal, NewType, TypedDict
 
 import pydantic
 
@@ -43,7 +43,7 @@ class HealthStatus(enum.StrEnum):
 SplunkServiceName = NewType("SplunkServiceName", str)
 """The name of the splunk main service."""
 
-FeatureHealth: TypeAlias = dict[str, HealthStatus]
+type FeatureHealth = dict[str, HealthStatus]
 """Dictionary that stores the health of each splunk feature related to the main service."""
 
 
@@ -111,7 +111,7 @@ def discover_splunk_health(section: HealthSection) -> DiscoveryResult:
     yield Service()
 
 
-StateValue: TypeAlias = Literal[0, 1, 2, 3]
+type StateValue = Literal[0, 1, 2, 3]
 """A valid integer code related to the result state."""
 
 

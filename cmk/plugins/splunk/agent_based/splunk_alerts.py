@@ -6,7 +6,7 @@
 # <<<splunk_alerts>>>
 # 5
 
-from typing import NewType, NotRequired, TypeAlias, TypedDict
+from typing import NewType, NotRequired, TypedDict
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -37,7 +37,7 @@ def discover_splunk_alerts(section: AlertCount | None) -> DiscoveryResult:
     yield Service()
 
 
-IntLevels: TypeAlias = FixedLevelsT[int]
+type IntLevels = FixedLevelsT[int]
 """Fixed warn and critical integer threshold."""
 
 

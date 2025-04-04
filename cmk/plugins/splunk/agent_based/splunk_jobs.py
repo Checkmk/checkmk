@@ -9,7 +9,7 @@
 
 import dataclasses
 import datetime
-from typing import NotRequired, Self, TypeAlias, TypedDict
+from typing import NotRequired, Self, TypedDict
 
 import pydantic
 
@@ -107,7 +107,7 @@ def discover_splunk_jobs(section: JobsInfo) -> DiscoveryResult:
     yield Service()
 
 
-IntLevels: TypeAlias = FixedLevelsT[int]
+type IntLevels = FixedLevelsT[int]
 """Fixed warn and critical integer threshold."""
 
 

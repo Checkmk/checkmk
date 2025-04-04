@@ -10,7 +10,7 @@ import re
 import sys
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Literal, NamedTuple
+from typing import Any, cast, Literal, NamedTuple
 
 import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKGeneralException
@@ -257,7 +257,7 @@ class RulespecGroupRegistry(cmk.ccc.plugin_registry.Registry[type[RulespecBaseGr
 rulespec_group_registry = RulespecGroupRegistry()
 
 
-def get_rulegroup(group_name):
+def get_rulegroup(group_name: str) -> RulespecBaseGroup:
     try:
         group_class = rulespec_group_registry[group_name]
     except KeyError:
@@ -267,7 +267,9 @@ def get_rulegroup(group_name):
     return group_class()
 
 
-def _get_legacy_rulespec_group_class(group_name, group_title, help_text):
+def _get_legacy_rulespec_group_class(
+    group_name: str, group_title: str | None, help_text: str | None
+) -> type[RulespecBaseGroup]:
     if "/" in group_name:
         main_group_name, sub_group_name = group_name.split("/", 1)
         sub_group_title = group_title or sub_group_name
@@ -276,26 +278,32 @@ def _get_legacy_rulespec_group_class(group_name, group_title, help_text):
         internal_sub_group_name = re.sub("[^a-zA-Z]", "", sub_group_name)
 
         main_group_class = get_rulegroup(main_group_name).__class__
-        return type(
-            "LegacyRulespecSubGroup%s" % internal_sub_group_name.title(),
-            (RulespecSubGroup,),
-            {
-                "main_group": main_group_class,
-                "sub_group_name": internal_sub_group_name.lower(),
-                "title": sub_group_title,
-            },
+        return cast(
+            type[RulespecSubGroup],
+            type(
+                "LegacyRulespecSubGroup%s" % internal_sub_group_name.title(),
+                (RulespecSubGroup,),
+                {
+                    "main_group": main_group_class,
+                    "sub_group_name": internal_sub_group_name.lower(),
+                    "title": sub_group_title,
+                },
+            ),
         )
 
     group_title = group_title or group_name
 
-    return type(
-        "LegacyRulespecGroup%s" % group_name.title(),
-        (RulespecGroup,),
-        {
-            "name": group_name,
-            "title": group_title,
-            "help": help_text,
-        },
+    return cast(
+        type[RulespecGroup],
+        type(
+            "LegacyRulespecGroup%s" % group_name.title(),
+            (RulespecGroup,),
+            {
+                "name": group_name,
+                "title": group_title,
+                "help": help_text,
+            },
+        ),
     )
 
 
@@ -1411,13 +1419,13 @@ class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
 
 
 def main_module_from_rulespec_group_name(
-    group_name: str,
+    main_group_name: str,
     main_module_reg: MainModuleRegistry,
 ) -> ABCMainModule:
     return main_module_reg[
         makeuri_contextless_rulespec_group(
             request,
-            group_name,
+            main_group_name,
         )
     ]()
 

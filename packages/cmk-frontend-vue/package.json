@@ -10,6 +10,7 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite",
+    "demo": "vite --config vite.config.demo.ts",
     "preview": "vite preview",
     "test": "vitest run",
     "test-eslint": "eslint --max-warnings 0 .",

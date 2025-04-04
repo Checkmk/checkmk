@@ -36,7 +36,7 @@ cmk-frontend-vue project.
       is the current reality: the code in `cmk-frontend-vue` is not really
       independent of `cmk-frontend`. The styling of `cmk-frontend` is necessary
       for many `FormEdit` sub-components.
-* run `npm run -- dev --config vite.config.demo.ts`
+* run `npm run demo`
 * surf to `http://localhost:5173/`
 
 

@@ -90,17 +90,21 @@ def default_user_menu_topics(
         ),
     ]
 
-    items = [
-        TopicMenuItem(
-            name="user_profile",
-            title=_("Edit profile"),
-            url="user_profile.py",
-            sort_index=10,
-            icon="topic_profile",
-        ),
-    ]
+    items = (
+        [
+            TopicMenuItem(
+                name="user_profile",
+                title=_("Edit profile"),
+                url="user_profile.py",
+                sort_index=10,
+                icon="topic_profile",
+            ),
+        ]
+        if user.may("general.edit_profile")
+        else []
+    )
 
-    if add_change_password_menu_item:
+    if user.may("general.change_password") and add_change_password_menu_item:
         items.append(
             TopicMenuItem(
                 name="change_password",
@@ -111,7 +115,7 @@ def default_user_menu_topics(
             )
         )
 
-    if add_two_factor_menu_item:
+    if user.may("general.manage_2fa") and add_two_factor_menu_item:
         items.append(
             TopicMenuItem(
                 name="two_factor",

@@ -373,7 +373,6 @@ class _ServiceFilter:
                 self._host_name,
                 service.description,
                 service.labels,
-                part_of_clusters=self._config_cache.clusters_of(self._host_name),
             )
             == self._host_name
         )
@@ -1807,7 +1806,7 @@ class ConfigCache:
         # has to exist at all).
         self.autochecks_manager = AutochecksManager()
         self._effective_host_cache: dict[
-            tuple[HostName, ServiceName, tuple[tuple[str, str], ...], tuple[HostName, ...]],
+            tuple[HostName, ServiceName, tuple[tuple[str, str], ...]],
             HostName,
         ] = {}
         self._check_mk_check_interval: dict[HostName, float] = {}
@@ -3910,7 +3909,6 @@ class ConfigCache:
         host_name: HostName,
         service_name: ServiceName,
         service_labels: Labels,
-        part_of_clusters: Sequence[HostName] = (),
     ) -> HostName:
         """Compute the effective host (node or cluster) of a service
 
@@ -3920,12 +3918,12 @@ class ConfigCache:
         If yes, return the cluster host of the service.
         If no, return the host name of the node.
         """
-        key = (host_name, service_name, tuple(service_labels.items()), tuple(part_of_clusters))
+        key = (host_name, service_name, tuple(service_labels.items()))
         if (actual_hostname := self._effective_host_cache.get(key)) is not None:
             return actual_hostname
 
         self._effective_host_cache[key] = self._effective_host(
-            host_name, service_name, service_labels, part_of_clusters
+            host_name, service_name, service_labels
         )
         return self._effective_host_cache[key]
 
@@ -3934,14 +3932,8 @@ class ConfigCache:
         node_name: HostName,
         service_name: ServiceName,
         service_labels: Labels,
-        part_of_clusters: Sequence[HostName],
     ) -> HostName:
-        if part_of_clusters:
-            the_clusters = part_of_clusters
-        else:
-            the_clusters = self.clusters_of(node_name)
-
-        if not the_clusters:
+        if not (the_clusters := self.clusters_of(node_name)):
             return node_name
 
         cluster_mapping = self.ruleset_matcher.service_extra_conf(

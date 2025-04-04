@@ -12,7 +12,7 @@ certifi= "==2023.11.17" # jolokia
 chardet = "==5.2.0"     # jolokia
 idna = "==3.6"          # jolokia
 requests = {extras = ["socks"], version = "2.31.0"}   # jolokia, cmk_update_agent
-urllib3 = "==2.1.0"     # jolokia
+urllib3 = "==2.3.0"     # jolokia
 pyopenssl = "~=24.0"    # cmk_update_agent
 pywin32 = "==306"       # logwatch
 

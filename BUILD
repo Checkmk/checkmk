@@ -165,17 +165,24 @@ write_file(
     content = [
         "from pathlib import Path",
         "import sys",
-        'repo_path = Path(__file__, "../../../../../").resolve()',
-        "sys.path.append(str(repo_path))",
-        'for p in repo_path.glob("packages/*"):',
-        "    sys.path.append(str(p))",
+        "",
+        "repo_path = Path(__file__, '../../../../../').resolve()",
+        "sys.path.insert(0, str(repo_path))",
+        "",
+        "def add_packages(from_path: Path) -> None:",
+        "    sys.path = [",
+        "        str(p)",
+        "        for p in sorted(from_path.glob('packages/*'))",
+        "        if p.joinpath('pyproject.toml').exists()",
+        "    ] + sys.path",
+        "",
+        "add_packages(repo_path)",
     ] + select({
         "@//:gpl_repo": [],
         "@//:gpl+enterprise_repo": [
-            'for p in repo_path.glob("non-free/packages/*"):',
-            "    sys.path.append(str(p))",
+            "add_packages(repo_path.joinpath('non-free'))",
             # needed for composition tests: they want to 'import cmk_update_agent' via the .venv
-            "sys.path.append(str(repo_path.joinpath('non-free/cmk-update-agent')))",
+            "sys.path.insert(0, str(repo_path.joinpath('non-free/cmk-update-agent')))",
         ],
     }),
 )

@@ -163,21 +163,19 @@ write_file(
     name = "sitecustomize",
     out = "sitecustomize.py",
     content = [
-        "import os",
+        "from pathlib import Path",
         "import sys",
-        "dirname = os.path.dirname(__file__)",
-        'sys.path.append(os.path.abspath(os.path.join(dirname, "../../../../")))',
-        'relative_packages_path = "../../../../packages"',
-        "for p in os.listdir(os.path.join(dirname, relative_packages_path)):",
-        "    sys.path.append(os.path.abspath(os.path.join(dirname, relative_packages_path, p)))",
+        'repo_path = Path(__file__, "../../../../../").resolve()',
+        "sys.path.append(str(repo_path))",
+        'for p in repo_path.glob("packages/*"):',
+        "    sys.path.append(str(p))",
     ] + select({
         "@//:gpl_repo": [],
         "@//:gpl+enterprise_repo": [
-            'relative_packages_path_non_free = "../../../../non-free/packages"',
-            "for p in os.listdir(os.path.join(dirname, relative_packages_path_non_free)):",
-            "    sys.path.append(os.path.abspath(os.path.join(dirname, relative_packages_path_non_free, p)))",
+            'for p in repo_path.glob("non-free/packages/*"):',
+            "    sys.path.append(str(p))",
             # needed for composition tests: they want to 'import cmk_update_agent' via the .venv
-            "sys.path.append(os.path.abspath(os.path.join(dirname, '../../../../non-free/cmk-update-agent')))",
+            "sys.path.append(str(repo_path.joinpath('non-free/cmk-update-agent')))",
         ],
     }),
 )

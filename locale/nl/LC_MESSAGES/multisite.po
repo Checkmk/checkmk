@@ -909,6 +909,10 @@ msgstr "Rapporten bewerken"
 msgid "(Max suggestions reached, be more specific)"
 msgstr "(Max suggesties bereikt, wees specifieker)"
 
+#, fuzzy
+msgid "(No choices available)"
+msgstr "Geen informatie beschikbaar"
+
 msgid "(No fallback email address configured!)"
 msgstr "(Geen fallback e-mail adres geconfigureerd!)"
 
@@ -7713,9 +7717,6 @@ msgstr "Autorisatie-instellingen"
 
 msgid "Authorizations per DB security group"
 msgstr "Autorisaties per DB-beveiligingsgroep"
-
-msgid "Authorized sites"
-msgstr "Toegestane sites"
 
 #, fuzzy
 msgid "Authorized users"
@@ -41790,6 +41791,10 @@ msgstr "Bewaakt ter plaatse"
 msgid "Monitored services"
 msgstr "Bewaakte diensten"
 
+#, fuzzy
+msgid "Monitored sites"
+msgstr "Bewaakt ter plaatse"
+
 msgid "Monitoring"
 msgstr "Toezicht"
 
@@ -56377,6 +56382,11 @@ msgstr ""
 "alle gebruikers van die sites bij de volgende activering van wijzigingen "
 "voor de geselecteerde sites."
 
+msgid ""
+"Select sites to monitor. This selection helps improve performance but does "
+"not affect permissions."
+msgstr ""
+
 msgid "Select sound"
 msgstr "Selecteer geluid"
 
@@ -67868,9 +67878,6 @@ msgid ""
 msgstr ""
 "De sites %s gebruiken de Checkmk Microcore niet. U zult niet in staat zijn "
 "om metrieken te gebruiken van hosts die door deze sites worden gemonitord."
-
-msgid "The sites the user is authorized to see in the GUI."
-msgstr "De sites die de gebruiker mag zien in de GUI."
 
 msgid ""
 "The size of one step is usually one minute (defined in this same rule set). "
@@ -88735,6 +88742,12 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#~ msgid "Authorized sites"
+#~ msgstr "Toegestane sites"
+
+#~ msgid "The sites the user is authorized to see in the GUI."
+#~ msgstr "De sites die de gebruiker mag zien in de GUI."
 
 #~ msgid "Access Point"
 #~ msgstr "Toegangspunt"

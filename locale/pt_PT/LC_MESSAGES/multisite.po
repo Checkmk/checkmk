@@ -914,6 +914,10 @@ msgstr "Editar Presets"
 msgid "(Max suggestions reached, be more specific)"
 msgstr "(Max sugestões alcançadas, seja mais específico)"
 
+#, fuzzy
+msgid "(No choices available)"
+msgstr "Não há informação disponível"
+
 msgid "(No fallback email address configured!)"
 msgstr "(Nenhum endereço de correio electrónico de recurso configurado!)"
 
@@ -7724,9 +7728,6 @@ msgstr "Definições de autorização"
 
 msgid "Authorizations per DB security group"
 msgstr "Autorizações por grupo de segurança do BD"
-
-msgid "Authorized sites"
-msgstr "Sites autorizados"
 
 #, fuzzy
 msgid "Authorized users"
@@ -41787,6 +41788,10 @@ msgstr "Monitorado no local"
 msgid "Monitored services"
 msgstr "Serviços monitorados"
 
+#, fuzzy
+msgid "Monitored sites"
+msgstr "Monitorado no local"
+
 msgid "Monitoring"
 msgstr "Monitorização"
 
@@ -56377,6 +56382,11 @@ msgstr ""
 "para todos os utilizadores desses sítios na próxima activação de alterações "
 "para os sítios seleccionados."
 
+msgid ""
+"Select sites to monitor. This selection helps improve performance but does "
+"not affect permissions."
+msgstr ""
+
 msgid "Select sound"
 msgstr "Selecione o som"
 
@@ -67849,9 +67859,6 @@ msgid ""
 msgstr ""
 "Os sites %s não estão a utilizar o Checkmk Microcore. Não será possível usar "
 "métricas de hosts monitorados por esses sites."
-
-msgid "The sites the user is authorized to see in the GUI."
-msgstr "Os sites que o usuário está autorizado a ver na GUI."
 
 msgid ""
 "The size of one step is usually one minute (defined in this same rule set). "
@@ -88637,6 +88644,12 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
+
+#~ msgid "Authorized sites"
+#~ msgstr "Sites autorizados"
+
+#~ msgid "The sites the user is authorized to see in the GUI."
+#~ msgstr "Os sites que o usuário está autorizado a ver na GUI."
 
 #~ msgid "Access Point"
 #~ msgstr "Ponto de Acesso"

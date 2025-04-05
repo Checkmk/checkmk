@@ -893,6 +893,10 @@ msgstr "(プリセットを編集する)"
 msgid "(Max suggestions reached, be more specific)"
 msgstr "(最大提案数到達、より具体的に）"
 
+#, fuzzy
+msgid "(No choices available)"
+msgstr "利用可能な情報はありません"
+
 msgid "(No fallback email address configured!)"
 msgstr "(フォールバックメールアドレスは設定されていません!)"
 
@@ -7309,9 +7313,6 @@ msgstr "承認設定"
 
 msgid "Authorizations per DB security group"
 msgstr "DBセキュリティグループごとの承認"
-
-msgid "Authorized sites"
-msgstr "認定サイト"
 
 msgid "Authorized users"
 msgstr "認証ユーザー"
@@ -39915,6 +39916,10 @@ msgstr "サイトで監視"
 msgid "Monitored services"
 msgstr "監視対象サービス"
 
+#, fuzzy
+msgid "Monitored sites"
+msgstr "サイトで監視"
+
 msgid "Monitoring"
 msgstr "モニタリング"
 
@@ -53929,6 +53934,11 @@ msgstr ""
 "サイトを選択して、%s を有効にします。選択されたサイトの変更が次に有効になる"
 "と、そのサイトのすべてのユーザーが利用できるようになります。"
 
+msgid ""
+"Select sites to monitor. This selection helps improve performance but does "
+"not affect permissions."
+msgstr ""
+
 msgid "Select sound"
 msgstr "サウンドを選択"
 
@@ -64876,9 +64886,6 @@ msgid ""
 msgstr ""
 "サイト %s はCheckmk Microcoreを使用していません。これらのサイトによって監視さ"
 "れているホストのメトリックを使用することはできません。"
-
-msgid "The sites the user is authorized to see in the GUI."
-msgstr "ユーザーがGUIで表示することを許可されているサイト。"
 
 msgid ""
 "The size of one step is usually one minute (defined in this same rule set). "
@@ -84426,6 +84433,12 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Robotmk Core MKP がインストールされているため ⚠<b>利用不可</b>"
+
+#~ msgid "Authorized sites"
+#~ msgstr "認定サイト"
+
+#~ msgid "The sites the user is authorized to see in the GUI."
+#~ msgstr "ユーザーがGUIで表示することを許可されているサイト。"
 
 #~ msgid "Access Point"
 #~ msgstr "アクセスポイント"

@@ -920,6 +920,10 @@ msgstr "(Editare preselecții)"
 msgid "(Max suggestions reached, be more specific)"
 msgstr "(sugestii maxime atinse, fiți mai specific)"
 
+#, fuzzy
+msgid "(No choices available)"
+msgstr "Nu există informații disponibile"
+
 msgid "(No fallback email address configured!)"
 msgstr "(Nu este configurată nicio adresă de e-mail de rezervă!)"
 
@@ -7712,9 +7716,6 @@ msgstr "Setări de autorizare"
 
 msgid "Authorizations per DB security group"
 msgstr "Autorizații per grup de securitate DB"
-
-msgid "Authorized sites"
-msgstr "Site-uri autorizate"
 
 #, fuzzy
 msgid "Authorized users"
@@ -41848,6 +41849,10 @@ msgstr "Monitorizat la fața locului"
 msgid "Monitored services"
 msgstr "Servicii monitorizate"
 
+#, fuzzy
+msgid "Monitored sites"
+msgstr "Monitorizat la fața locului"
+
 msgid "Monitoring"
 msgstr "Monitorizare"
 
@@ -56450,6 +56455,11 @@ msgstr ""
 "deveni disponibil pentru toți utilizatorii din site-urile respective la "
 "următoarea activare a modificărilor pentru site-urile selectate."
 
+msgid ""
+"Select sites to monitor. This selection helps improve performance but does "
+"not affect permissions."
+msgstr ""
+
 msgid "Select sound"
 msgstr "Selectați sunetul"
 
@@ -68052,9 +68062,6 @@ msgid ""
 msgstr ""
 "Site-urile %s nu utilizează Checkmk Microcore. Nu veți putea utiliza "
 "metricile gazdelor monitorizate de aceste site-uri."
-
-msgid "The sites the user is authorized to see in the GUI."
-msgstr "Site-urile pe care utilizatorul este autorizat să le vadă în GUI."
 
 msgid ""
 "The size of one step is usually one minute (defined in this same rule set). "
@@ -88924,6 +88931,12 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#~ msgid "Authorized sites"
+#~ msgstr "Site-uri autorizate"
+
+#~ msgid "The sites the user is authorized to see in the GUI."
+#~ msgstr "Site-urile pe care utilizatorul este autorizat să le vadă în GUI."
 
 #~ msgid "Access Point"
 #~ msgstr "Punct de Acces"

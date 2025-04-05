@@ -917,6 +917,10 @@ msgstr "(Voreinstellungen bearbeiten)"
 msgid "(Max suggestions reached, be more specific)"
 msgstr "(Maximale Anzahl von Vorschlägen erreicht, bitte genauer definieren)"
 
+#, fuzzy
+msgid "(No choices available)"
+msgstr "Keine Optionen vorhanden"
+
 msgid "(No fallback email address configured!)"
 msgstr "(Keine Fallback-E-Mail-Adresse konfiguriert!)"
 
@@ -7539,9 +7543,6 @@ msgstr "Einstellungen zur Berechtigung"
 
 msgid "Authorizations per DB security group"
 msgstr "Berechtigungen pro DB-Sicherheitsgruppe"
-
-msgid "Authorized sites"
-msgstr "Berechtigte Instanzen"
 
 msgid "Authorized users"
 msgstr "Berechtigte Benutzer"
@@ -40309,6 +40310,10 @@ msgstr "Überwacht auf Instanz"
 msgid "Monitored services"
 msgstr "Überwachte Services"
 
+#, fuzzy
+msgid "Monitored sites"
+msgstr "Überwacht auf Instanz"
+
 msgid "Monitoring"
 msgstr "Monitoring"
 
@@ -54151,6 +54156,11 @@ msgstr ""
 "Aktivierung der Änderungen für die ausgewählten Instanzen wird es für alle "
 "Benutzer dieser Instanzen verfügbar."
 
+msgid ""
+"Select sites to monitor. This selection helps improve performance but does "
+"not affect permissions."
+msgstr ""
+
 msgid "Select sound"
 msgstr "Klang auswählen"
 
@@ -65574,9 +65584,6 @@ msgid ""
 msgstr ""
 "Die Instanzen %s nutzen nicht den Checkmk Micro Core. Sie können keine "
 "Metriken von Hosts, die von diesen Instanzen überwacht werden, benutzen."
-
-msgid "The sites the user is authorized to see in the GUI."
-msgstr "Die Instanzen, die der Nutzer sehen darf."
 
 msgid ""
 "The size of one step is usually one minute (defined in this same rule set). "
@@ -85673,6 +85680,12 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid "Authorized sites"
+#~ msgstr "Berechtigte Instanzen"
+
+#~ msgid "The sites the user is authorized to see in the GUI."
+#~ msgstr "Die Instanzen, die der Nutzer sehen darf."
 
 #~ msgid "Access Point"
 #~ msgstr "Zugangspunkt"

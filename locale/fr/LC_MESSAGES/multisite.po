@@ -7255,9 +7255,6 @@ msgstr "Paramètres d'autorisation"
 msgid "Authorizations per DB security group"
 msgstr "Autorisations par groupe de sécurité de la BD"
 
-msgid "Authorized sites"
-msgstr "Sites autorisés"
-
 msgid "Auto (DEFAULT)"
 msgstr "Auto (par défaut)"
 
@@ -37994,6 +37991,10 @@ msgstr "Contrôlé sur place"
 msgid "Monitored services"
 msgstr "Services surveillés"
 
+#, fuzzy
+msgid "Monitored sites"
+msgstr "Contrôlé sur place"
+
 msgid "Monitoring"
 msgstr "Surveillance"
 
@@ -50378,6 +50379,11 @@ msgstr ""
 "disponible pour tous les utilisateurs de ces sites lors de la prochaine "
 "activation des modifications pour les sites sélectionnés."
 
+msgid ""
+"Select sites to monitor. This selection helps improve performance but does "
+"not affect permissions."
+msgstr ""
+
 msgid "Select sound"
 msgstr "Sélectionner le son"
 
@@ -61285,10 +61291,6 @@ msgid ""
 msgstr ""
 "Les sites %s n'utilisent pas le Checkmk Microcore. Vous ne pourrez pas "
 "utiliser les métriques des hôtes surveillés par ces sites."
-
-msgid "The sites the user is authorized to see in the GUI."
-msgstr ""
-"Les sites que l'utilisateur est autorisé à voir dans l'interface graphique."
 
 msgid ""
 "The size of one step is usually one minute (defined in this same rule set). "
@@ -81035,6 +81037,14 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#~ msgid "Authorized sites"
+#~ msgstr "Sites autorisés"
+
+#~ msgid "The sites the user is authorized to see in the GUI."
+#~ msgstr ""
+#~ "Les sites que l'utilisateur est autorisé à voir dans l'interface "
+#~ "graphique."
 
 #~ msgid "Access Point"
 #~ msgstr "Point d'accès"

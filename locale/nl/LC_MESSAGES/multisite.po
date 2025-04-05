@@ -7192,9 +7192,6 @@ msgstr "Autorisatie-instellingen"
 msgid "Authorizations per DB security group"
 msgstr "Autorisaties per DB-beveiligingsgroep"
 
-msgid "Authorized sites"
-msgstr "Toegestane sites"
-
 msgid "Auto (DEFAULT)"
 msgstr "Auto (DEFAULT)"
 
@@ -37650,6 +37647,10 @@ msgstr "Bewaakt ter plaatse"
 msgid "Monitored services"
 msgstr "Bewaakte diensten"
 
+#, fuzzy
+msgid "Monitored sites"
+msgstr "Bewaakt ter plaatse"
+
 msgid "Monitoring"
 msgstr "Toezicht"
 
@@ -49886,6 +49887,11 @@ msgstr ""
 "alle gebruikers van die sites bij de volgende activering van wijzigingen "
 "voor de geselecteerde sites."
 
+msgid ""
+"Select sites to monitor. This selection helps improve performance but does "
+"not affect permissions."
+msgstr ""
+
 msgid "Select sound"
 msgstr "Selecteer geluid"
 
@@ -60671,9 +60677,6 @@ msgid ""
 msgstr ""
 "De sites %s gebruiken de Checkmk Microcore niet. U zult niet in staat zijn "
 "om metrieken te gebruiken van hosts die door deze sites worden gemonitord."
-
-msgid "The sites the user is authorized to see in the GUI."
-msgstr "De sites die de gebruiker mag zien in de GUI."
 
 msgid ""
 "The size of one step is usually one minute (defined in this same rule set). "
@@ -80186,6 +80189,12 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#~ msgid "Authorized sites"
+#~ msgstr "Toegestane sites"
+
+#~ msgid "The sites the user is authorized to see in the GUI."
+#~ msgstr "De sites die de gebruiker mag zien in de GUI."
 
 #~ msgid "Access Point"
 #~ msgstr "Toegangspunt"

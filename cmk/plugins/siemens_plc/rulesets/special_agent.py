@@ -147,6 +147,7 @@ def _value_configuration_fields() -> dict[str, DictElement]:
                         parameter_form=Integer(
                             title=Title("DB Number"),
                             custom_validate=(validators.NumberInRange(min_value=1),),
+                            prefill=DefaultValue(1),
                         ),
                     ),
                     CascadingSingleChoiceElement(

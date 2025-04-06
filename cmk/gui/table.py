@@ -10,9 +10,9 @@ import contextlib
 import json
 import re
 from collections.abc import Iterator
-from contextlib import contextmanager, nullcontext
+from contextlib import AbstractContextManager, contextmanager, nullcontext
 from enum import auto, Enum
-from typing import Any, ContextManager, Final, Literal, NamedTuple
+from typing import Any, Final, Literal, NamedTuple
 
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.foldable_container import foldable_container
@@ -317,7 +317,7 @@ class Table:
             self._write_csv(csv_separator=request.get_str_input_mandatory("csv_separator", ";"))
             return
 
-        container: ContextManager[bool] = nullcontext(False)
+        container: AbstractContextManager[bool] = nullcontext(False)
         if self.title:
             if self.options["foldable"] in [
                 Foldable.FOLDABLE_SAVE_STATE,

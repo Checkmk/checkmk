@@ -358,7 +358,7 @@ class Table:
                         limited_rows.append(row)
                 # Display corrected number of rows
                 num_rows_unlimited -= len(
-                    [r for r in limited_rows if isinstance(row, GroupHeader) or r.fixed]
+                    [r for r in limited_rows if isinstance(r, GroupHeader) or r.fixed]
                 )
                 rows = limited_rows
 

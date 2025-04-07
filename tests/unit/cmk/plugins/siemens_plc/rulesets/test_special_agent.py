@@ -7,7 +7,11 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.plugins.siemens_plc.rulesets.special_agent import _migrate_value_entry, _validate_values
+from cmk.plugins.siemens_plc.rulesets.special_agent import (
+    _migrate_value_entry,
+    _validate_id,
+    _validate_values,
+)
 from cmk.rulesets.v1.form_specs.validators import ValidationError
 
 
@@ -175,3 +179,16 @@ def test_validate_values_error() -> None:
                 },
             ]
         )
+
+
+def test_validate_id_empty_ok() -> None:
+    _validate_id("")
+
+
+def test_validate_id_valid_ok() -> None:
+    _validate_id("abc-123")
+
+
+def test_validate_id_invalid_error() -> None:
+    with pytest.raises(ValidationError):
+        _validate_id("-invalid")

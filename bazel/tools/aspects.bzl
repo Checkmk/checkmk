@@ -7,6 +7,7 @@ mypy_aspect = mypy(
     mypy_cli = "@@//bazel/tools:mypy_cli",
     mypy_ini = "@@//:pyproject.toml",
     suppression_tags = ["no-mypy"],
+    color = False,
     # `rules_mypy//mypy:types.bzl` mostly takes care of this but needs help with some packages.
     types = {
         pkg: types_pkg

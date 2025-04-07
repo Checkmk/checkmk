@@ -138,6 +138,9 @@ class BaseMetricExpression(abc.ABC):
         consolidation_function: GraphConsolidationFunction | None,
     ) -> MetricOperation: ...
 
+    @abc.abstractmethod
+    def is_scalar(self) -> bool: ...
+
 
 @dataclass(frozen=True)
 class Constant(BaseMetricExpression):
@@ -182,6 +185,10 @@ class Constant(BaseMetricExpression):
         consolidation_function: GraphConsolidationFunction | None,
     ) -> MetricOpConstant:
         return MetricOpConstant(value=float(self.value))
+
+    @override
+    def is_scalar(self) -> bool:
+        return True
 
 
 @dataclass(frozen=True)
@@ -240,6 +247,10 @@ class Metric(BaseMetricExpression):
             return MetricOpOperator(operator_name="MERGE", operands=metrics)
         return metrics[0]
 
+    @override
+    def is_scalar(self) -> bool:
+        return False
+
 
 @dataclass(frozen=True)
 class WarningOf(BaseMetricExpression):
@@ -294,6 +305,10 @@ class WarningOf(BaseMetricExpression):
             if (evaluatation_result := self.evaluate(translated_metrics)).is_ok()
             else MetricOpConstantNA()
         )
+
+    @override
+    def is_scalar(self) -> bool:
+        return True
 
 
 @dataclass(frozen=True)
@@ -350,6 +365,10 @@ class CriticalOf(BaseMetricExpression):
             else MetricOpConstantNA()
         )
 
+    @override
+    def is_scalar(self) -> bool:
+        return True
+
 
 @dataclass(frozen=True)
 class MinimumOf(BaseMetricExpression):
@@ -405,6 +424,10 @@ class MinimumOf(BaseMetricExpression):
             else MetricOpConstantNA()
         )
 
+    @override
+    def is_scalar(self) -> bool:
+        return True
+
 
 @dataclass(frozen=True)
 class MaximumOf(BaseMetricExpression):
@@ -459,6 +482,10 @@ class MaximumOf(BaseMetricExpression):
             if (evaluatation_result := self.evaluate(translated_metrics)).is_ok()
             else MetricOpConstantNA()
         )
+
+    @override
+    def is_scalar(self) -> bool:
+        return True
 
 
 @dataclass(frozen=True)
@@ -524,6 +551,10 @@ class Sum(BaseMetricExpression):
             ],
         )
 
+    @override
+    def is_scalar(self) -> bool:
+        return all(s.is_scalar() for s in self.summands)
+
 
 @dataclass(frozen=True)
 class Product(BaseMetricExpression):
@@ -587,6 +618,10 @@ class Product(BaseMetricExpression):
                 for f in self.factors
             ],
         )
+
+    @override
+    def is_scalar(self) -> bool:
+        return all(f.is_scalar() for f in self.factors)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -660,6 +695,10 @@ class Difference(BaseMetricExpression):
             ],
         )
 
+    @override
+    def is_scalar(self) -> bool:
+        return self.minuend.is_scalar() and self.subtrahend.is_scalar()
+
 
 @dataclass(frozen=True, kw_only=True)
 class Fraction(BaseMetricExpression):
@@ -732,6 +771,10 @@ class Fraction(BaseMetricExpression):
             ],
         )
 
+    @override
+    def is_scalar(self) -> bool:
+        return self.dividend.is_scalar() and self.divisor.is_scalar()
+
 
 @dataclass(frozen=True)
 class Minimum(BaseMetricExpression):
@@ -792,6 +835,10 @@ class Minimum(BaseMetricExpression):
             ],
         )
 
+    @override
+    def is_scalar(self) -> bool:
+        return all(o.is_scalar() for o in self.operands)
+
 
 @dataclass(frozen=True)
 class Maximum(BaseMetricExpression):
@@ -851,6 +898,10 @@ class Maximum(BaseMetricExpression):
                 for o in self.operands
             ],
         )
+
+    @override
+    def is_scalar(self) -> bool:
+        return all(o.is_scalar() for o in self.operands)
 
 
 # Special metric declarations for custom graphs
@@ -914,6 +965,10 @@ class Average(BaseMetricExpression):
             ],
         )
 
+    @override
+    def is_scalar(self) -> bool:
+        return all(o.is_scalar() for o in self.operands)
+
 
 @dataclass(frozen=True)
 class Merge(BaseMetricExpression):
@@ -970,6 +1025,10 @@ class Merge(BaseMetricExpression):
                 for o in self.operands
             ],
         )
+
+    @override
+    def is_scalar(self) -> bool:
+        return all(o.is_scalar() for o in self.operands)
 
 
 @dataclass(frozen=True)
@@ -1043,6 +1102,9 @@ class MetricExpression:
             line_type=line_type_mirror(self.line_type),
             title=self.title,
         )
+
+    def is_scalar(self) -> bool:
+        return self.base.is_scalar()
 
 
 def parse_base_expression_from_api(

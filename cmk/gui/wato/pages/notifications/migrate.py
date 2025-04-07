@@ -198,6 +198,8 @@ def _get_service_filters(event_rule: EventRule) -> ServiceFilters:
         service_filters["match_services"] = event_rule["match_services"]
     if "match_exclude_services" in event_rule:
         service_filters["exclude_services"] = event_rule["match_exclude_services"]
+    if "match_checktype" in event_rule:
+        service_filters["check_type_plugin"] = event_rule["match_checktype"]
     return service_filters
 
 
@@ -221,8 +223,6 @@ def _get_general_filters(event_rule: EventRule) -> GeneralFilters:
         general_filters["folder"] = event_rule["match_folder"]
     if "match_site" in event_rule:
         general_filters["sites"] = event_rule["match_site"]
-    if "match_checktype" in event_rule:
-        general_filters["check_type_plugin"] = event_rule["match_checktype"]
     return general_filters
 
 
@@ -505,6 +505,8 @@ def _set_service_filters(event_rule: EventRule, notification: NotificationQuickS
         event_rule["match_services"] = service_filters["match_services"]
     if "exclude_services" in service_filters:
         event_rule["match_exclude_services"] = service_filters["exclude_services"]
+    if "check_type_plugin" in service_filters:
+        event_rule["match_checktype"] = service_filters["check_type_plugin"]
 
 
 def _set_assignee_filters(event_rule: EventRule, notification: NotificationQuickSetupSpec) -> None:
@@ -531,8 +533,6 @@ def _set_general_filters(event_rule: EventRule, notification: NotificationQuickS
         event_rule["match_folder"] = general_filters["folder"]
     if "sites" in general_filters:
         event_rule["match_site"] = general_filters["sites"]
-    if "check_type_plugin" in general_filters:
-        event_rule["match_checktype"] = general_filters["check_type_plugin"]
 
 
 def _set_notification_effect_parameters(

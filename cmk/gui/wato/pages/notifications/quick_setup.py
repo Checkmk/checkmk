@@ -905,6 +905,34 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 ],
                                             ),
                                         ),
+                                        "check_type_plugin": DictElement(
+                                            parameter_form=MultipleChoiceExtended(
+                                                title=Title("Check types"),
+                                                help_text=Help(
+                                                    "Only apply the rule if the "
+                                                    "notification originates from "
+                                                    "certain types of check plug-ins. "
+                                                    "Note: Host notifications never "
+                                                    "match this rule, if this option is "
+                                                    "being used."
+                                                ),
+                                                elements=Autocompleter(
+                                                    data=AutocompleterData(
+                                                        ident="check_types",
+                                                        params=AutocompleterParams(),
+                                                    ),
+                                                ),
+                                                show_toggle_all=True,
+                                                layout=MultipleChoiceExtendedLayout.dual_list,
+                                                custom_validate=[
+                                                    not_empty(
+                                                        error_msg=Message(
+                                                            "Please add at least one check type."
+                                                        )
+                                                    )
+                                                ],
+                                            ),
+                                        ),
                                     },
                                 ),
                             )
@@ -1060,34 +1088,6 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                         custom_validate=[
                                             not_empty(
                                                 error_msg=Message("Please add at least one site.")
-                                            )
-                                        ],
-                                    ),
-                                ),
-                                "check_type_plugin": DictElement(
-                                    parameter_form=MultipleChoiceExtended(
-                                        title=Title("Check types"),
-                                        help_text=Help(
-                                            "Only apply the rule if the "
-                                            "notification originates from "
-                                            "certain types of check plug-ins. "
-                                            "Note: Host notifications never "
-                                            "match this rule, if this option is "
-                                            "being used."
-                                        ),
-                                        elements=Autocompleter(
-                                            data=AutocompleterData(
-                                                ident="check_types",
-                                                params=AutocompleterParams(),
-                                            ),
-                                        ),
-                                        show_toggle_all=True,
-                                        layout=MultipleChoiceExtendedLayout.dual_list,
-                                        custom_validate=[
-                                            not_empty(
-                                                error_msg=Message(
-                                                    "Please add at least one check type."
-                                                )
                                             )
                                         ],
                                     ),

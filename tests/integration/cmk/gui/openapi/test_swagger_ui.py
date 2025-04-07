@@ -26,7 +26,10 @@ def test_swagger_ui_http(site: Site) -> None:
     session.login()
     resp = session.get(f"/{site.id}/check_mk/api/1.0.0/ui/index.html", expected_code=200)
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
-    assert "//" in resp.text
+    assert '<script src="./swagger-initializer.js"' in resp.text
+    resp = session.get(
+        f"/{site.id}/check_mk/api/1.0.0/ui/swagger-initializer.js", expected_code=200
+    )
     assert "petstore" not in resp.text
     assert "openapi-swagger-ui.yaml" in resp.text
 

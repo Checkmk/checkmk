@@ -5,4 +5,4 @@ src/js/modules/figures/cmk_stats.ts
 
 src/jquery/jquery.mobile-*.js
 src/openapi/redoc.standalone.js
-src/openapi/swagger-ui-3/swagger-ui*.js
+src/openapi/swagger-ui-*/swagger-*.js

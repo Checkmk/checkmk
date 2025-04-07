@@ -290,20 +290,12 @@ def _value_configuration_fields() -> dict[str, DictElement]:
             parameter_form=String(
                 title=Title("Ident of the value"),
                 help_text=Help(
-                    " An identifier of your choice. This identifier "
+                    "An identifier of your choice. This identifier "
                     "is used by the Checkmk checks to access "
                     "and identify the single values. The identifier "
                     "needs to be unique within a group of VALUETYPES."
                 ),
-                custom_validate=(
-                    validators.MatchRegex(
-                        re.compile(r"^[^\d\W][-\w]*$", re.ASCII),
-                        error_msg=Message(
-                            "An identifier must only consist of letters, digits, dash and "
-                            "underscore and it must start with a letter or underscore."
-                        ),
-                    ),
-                ),
+                custom_validate=(_validate_id,),
             ),
         ),
     }
@@ -315,6 +307,18 @@ def _validate_values(configured_values: Sequence[Mapping[str, object]]) -> None:
         raise validators.ValidationError(
             Message("The identifiers need to be unique per value type.")
         )
+
+
+def _validate_id(value: str) -> None:
+    if not value:
+        return
+    validators.MatchRegex(
+        re.compile(r"^[^\d\W][-\w]*$", re.ASCII),
+        error_msg=Message(
+            "An identifier must only consist of letters, digits, dash and "
+            "underscore and it must start with a letter or underscore."
+        ),
+    )(value)
 
 
 def _migrate_value_entry(value: object) -> dict[str, object]:

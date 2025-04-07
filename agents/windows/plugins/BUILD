@@ -33,9 +33,9 @@ TO_SIGN_SCRIPTS = [
         name = "sign_" + n,
         srcs = [n],
         outs = ["signed/" + n],
-        cmd_ps = "&$(execpath scripts/signer.ps1) $< $@",
+        cmd_bat = "$(execpath scripts/signer.bat) $< $@",
         executable = True,
-        tools = ["scripts/signer.ps1"],
+        tools = ["scripts/signer.bat"],
         visibility = ["//visibility:public"],
     )
     for n in TO_SIGN_SCRIPTS

@@ -328,3 +328,96 @@ _ALLOWED_BUNDLE_VIOLATIONS = (
         "cmk.plugins.robotmk.graphing.cee",
     }
 )
+
+
+_ALLOWED_DUPLICATES = {
+    "Active": {"docker_active", "mem_lnx_active"},
+    "Active connections": {
+        "active",
+        "active_connections",
+        "aws_active_connections",
+        "fw_connections_active",
+    },
+    "Allocatable": {"kube_memory_allocatable", "kube_pod_allocatable", "kube_cpu_allocatable"},
+    "Allocated space": {"mem_lnx_vmalloc_used", "allocated_size"},
+    "Available capacity": {"emcvnx_avail_capacity", "capacity_perc"},
+    "Average consumption": {"aws_dynamodb_consumed_wcu", "aws_dynamodb_consumed_rcu"},
+    "Average usage": {"aws_dynamodb_consumed_rcu_perc", "aws_dynamodb_consumed_wcu_perc"},
+    "CPU utilization": {"util_numcpu_as_max", "util"},
+    "Cluster utilization": {
+        "kube_cpu_cluster_allocatable_utilization",
+        "kube_memory_cluster_allocatable_utilization",
+    },
+    "Connection time": {"aws_route53_connection_time", "connection_time"},
+    "Failed connections": {"connections_failed_rate", "failed_connections"},
+    "Fan speed": {"fan_perc", "fan", "fan_speed"},
+    "HTTP 500 errors": {"http_5xx", "aws_http_500_rate"},
+    "Harddrive uncorrectable errors": {
+        "harddrive_uncorrectable_erros",
+        "harddrive_uncorrectable_errors",
+    },
+    "Limits": {"kube_cpu_limit", "kube_memory_limit"},
+    "Limits utilization": {"kube_cpu_limit_utilization", "kube_memory_limit_utilization"},
+    "Maximum single-request consumption": {
+        "aws_dynamodb_maximum_consumed_wcu",
+        "aws_dynamodb_maximum_consumed_rcu",
+    },
+    "Memory used": {"memused_couchbase_bucket", "memory_used"},
+    "Minimum single-request consumption": {
+        "aws_dynamodb_minimum_consumed_rcu",
+        "aws_dynamodb_minimum_consumed_wcu",
+    },
+    "New connections": {"new_connections", "aws_new_connections"},
+    "Node utilization": {
+        "kube_cpu_node_allocatable_utilization",
+        "kube_memory_node_allocatable_utilization",
+    },
+    "Nodes": {"number_of_nodes", "aws_elasticache_nodes"},
+    "Non-compliant devices": {"mobileiron_non_compliant", "mobileiron_non_compliant_summary"},
+    "Power Usage": {"power_usage", "power_usage_percentage"},
+    "Pressure": {"pressure_pa", "pressure"},
+    "Queue length": {"queue", "queue_length"},
+    "Read latency": {"db_read_latency_s", "read_latency"},
+    "Read operations": {"disk_read_ios", "read_ops"},
+    "Requests": {"kube_memory_request", "kube_cpu_request", "aws_cloudfront_requests"},
+    "Requests per second": {"requests", "requests_per_sec", "requests_per_second"},
+    "Requests utilization": {"kube_memory_request_utilization", "kube_cpu_request_utilization"},
+    "Reserved space": {"reserved_size", "reserved"},
+    "Running containers": {"docker_running_containers", "kube_node_container_count_running"},
+    "Shared memory": {"mem_esx_shared", "mem_lnx_shmem"},
+    "Smoke": {"smoke_perc", "smoke_ppm"},
+    "Storage space used": {"storage_used", "storage_percent"},
+    "Streams": {"streams", "num_streams"},
+    "Swap used": {"swap_used", "swap_used_percent"},
+    "System": {"system", "system_size"},
+    "Total devices": {"ap_devices_total", "mobileiron_devices_total"},
+    "Total size": {"fs_size", "elasticsearch_size"},
+    "Total virtual memory": {"mem_lnx_total_total", "mem_total_virtual_in_bytes"},
+    "Usage": {"kube_cpu_usage", "pd_exclusivesnapshot", "kube_memory_usage"},
+    "Used licenses": {"licenses", "license_percentage"},
+    "Used virtual memory": {"pagefile_used_percent", "pagefile_used"},
+    "Used virtual memory (averaged)": {"pagefile_used_percent_avg", "pagefile_used_avg"},
+    "User": {"user", "num_user"},
+    "Utilization": {"cisco_sma_queue_utilization", "generic_util"},
+    "Write latency": {"write_latency", "db_write_latency_s"},
+    "Write operations": {"write_ops_s", "disk_write_ios"},
+}
+
+
+def test_duplicate_metric_titles() -> None:
+    metric_names_by_title: dict[str, set[str]] = {}
+    for plugin in _load_graphing_plugins().plugins.values():
+        if isinstance(plugin, metrics_api.Metric):
+            metric_names_by_title.setdefault(plugin.title.localize(str), set()).add(plugin.name)
+
+    duplicates = {t: mns for t, mns in metric_names_by_title.items() if len(mns) > 1}
+
+    new = {t: mns for t, mns in duplicates.items() if t not in _ALLOWED_DUPLICATES}
+    assert not new, "Found new duplicates:\n" + "\n".join(
+        [f"- {t}: {', '.join(mns)}" for t, mns in new.items()]
+    )
+
+    already_fixed = {t: mns for t, mns in _ALLOWED_DUPLICATES.items() if t not in duplicates}
+    assert not already_fixed, "Found already fixed duplicates:\n" + "\n".join(
+        [f"- {t}: {', '.join(mns)}" for t, mns in already_fixed.items()]
+    )
